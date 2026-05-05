@@ -277,9 +277,17 @@ bot.callbackQuery("look", async (ctx) => {
   const view = await renderLocation(player.currentLocationId);
 
   await ctx.answerCallbackQuery();
-  await ctx.editMessageText(view.text, {
-    reply_markup: view.keyboard,
-  });
+  try {
+    await ctx.editMessageText(view.text, {
+      reply_markup: view.keyboard,
+    });
+  } catch (error) {
+    console.error("Failed to edit message:", error);
+
+    await ctx.reply(view.text, {
+      reply_markup: view.keyboard,
+    });
+  }
 });
 
 bot.callbackQuery(/^move:(NORTH|EAST|SOUTH|WEST|UP|DOWN|INSIDE|OUTSIDE)$/, async (ctx) => {
@@ -344,6 +352,10 @@ bot.callbackQuery(/^move:(NORTH|EAST|SOUTH|WEST|UP|DOWN|INSIDE|OUTSIDE)$/, async
 
 bot.on("message", async (ctx) => {
   await ctx.reply("Я ще вчуся, але світ уже дихає.");
+});
+
+bot.catch((err) => {
+  console.error("Bot handler error:", err.error);
 });
 
 async function main() {
