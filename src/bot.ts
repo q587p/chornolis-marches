@@ -4,8 +4,23 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-const bot = new Bot(process.env.BOT_TOKEN!);
-const prisma = new PrismaClient();
+// 🔐 Перевірки ДО створення клієнтів
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL is not set");
+}
+
+if (!process.env.BOT_TOKEN) {
+  throw new Error("BOT_TOKEN is not set");
+}
+
+// ✅ Один PrismaClient
+const prisma = new PrismaClient({
+  datasource: {
+    url: process.env.DATABASE_URL,
+  },
+});
+
+const bot = new Bot(process.env.BOT_TOKEN);
 
 bot.command("start", async (ctx) => {
   const from = ctx.from;
@@ -44,6 +59,9 @@ bot.on("message", async (ctx) => {
 console.log("Bot starting...");
 bot.start();
 
-process.on("SIGTERM", () => {
+// 🧹 Graceful shutdown (важливо для Render)
+process.on("SIGTERM", async () => {
   console.log("World is updating...");
+  await prisma.$disconnect();
+  process.exit(0);
 });
