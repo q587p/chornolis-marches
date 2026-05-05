@@ -11,11 +11,15 @@ if (!process.env.DATABASE_URL) {
 
 const { Pool } = pg;
 
+const isRenderInternalDb = process.env.DATABASE_URL.includes(".internal");
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false,
-  },
+  ssl: isRenderInternalDb
+    ? false
+    : {
+        rejectUnauthorized: false,
+      },
 });
 
 const adapter = new PrismaPg(pool);
@@ -87,6 +91,80 @@ const locations = [
   },
 ];
 
+const resourceTypes = [
+  { key: "berries", name: "ягоди", description: "Темні лісові ягоди." },
+  { key: "mushrooms", name: "гриби", description: "Гриби біля коріння та пнів." },
+  { key: "herbs", name: "трави", description: "Корисні лісові трави." },
+];
+
+const creatureSpecies = [
+  {
+    key: "rabbit",
+    name: "заєць",
+    description: "Швидкий лісовий заєць.",
+    kind: "ANIMAL",
+    diet: "HERBIVORE",
+    baseHp: 4,
+    strength: 1,
+    agility: 8,
+    perception: 6,
+    endurance: 3,
+    instinct: 7,
+  },
+  {
+    key: "mouse",
+    name: "миша",
+    description: "Мала польова миша.",
+    kind: "ANIMAL",
+    diet: "HERBIVORE",
+    baseHp: 1,
+    strength: 1,
+    agility: 7,
+    perception: 5,
+    endurance: 2,
+    instinct: 6,
+  },
+  {
+    key: "fox",
+    name: "лисиця",
+    description: "Обережна руда мисливиця.",
+    kind: "ANIMAL",
+    diet: "CARNIVORE",
+    baseHp: 10,
+    strength: 3,
+    agility: 7,
+    perception: 7,
+    endurance: 4,
+    instinct: 8,
+  },
+  {
+    key: "wolf",
+    name: "вовк",
+    description: "Сірий вовк, що тримається стежок і тіні.",
+    kind: "ANIMAL",
+    diet: "CARNIVORE",
+    baseHp: 18,
+    strength: 7,
+    agility: 5,
+    perception: 7,
+    endurance: 7,
+    instinct: 8,
+  },
+  {
+    key: "lesovyk",
+    name: "лісовик",
+    description: "Дух і хазяїн лісової межі.",
+    kind: "SPIRIT",
+    diet: "SPIRITUAL",
+    baseHp: 80,
+    strength: 8,
+    agility: 6,
+    perception: 10,
+    endurance: 9,
+    instinct: 10,
+  },
+] as const;
+
 function directionFromDelta(dx: number, dy: number) {
   if (dx === 0 && dy === 1) return "NORTH";
   if (dx === 1 && dy === 0) return "EAST";
@@ -95,10 +173,64 @@ function directionFromDelta(dx: number, dy: number) {
   return null;
 }
 
+function resourceAmountForLocation(resourceKey: string, locationKey: string) {
+  if (resourceKey === "berries" && locationKey === "east_berry_thicket") return 30;
+  if (resourceKey === "berries" && locationKey.includes("wood")) return 10;
+  if (resourceKey === "mushrooms" && locationKey === "south_east_old_stump") return 28;
+  if (resourceKey === "mushrooms" && locationKey.includes("moss")) return 14;
+  if (resourceKey === "herbs" && locationKey.includes("clearing")) return 16;
+  if (resourceKey === "herbs" && locationKey.includes("edge")) return 8;
+  return 3;
+}
+
+async function createCreatures(
+  speciesKey: string,
+  locationKey: string,
+  count: number,
+  name?: string
+) {
+  const species = await prisma.creatureSpecies.findUniqueOrThrow({
+    where: { key: speciesKey },
+  });
+
+  const location = await prisma.cellLocation.findUniqueOrThrow({
+    where: { key: locationKey },
+  });
+
+  const existingCount = await prisma.creature.count({
+    where: {
+      speciesId: species.id,
+      locationId: location.id,
+      name: name ?? null,
+      isAlive: true,
+    },
+  });
+
+  const missingCount = Math.max(0, count - existingCount);
+
+  for (let i = 0; i < missingCount; i++) {
+    await prisma.creature.create({
+      data: {
+        speciesId: species.id,
+        locationId: location.id,
+        name: name ?? null,
+        hp: species.baseHp,
+        stamina: 20,
+        hunger: 0,
+        age: "ADULT",
+        sex: Math.random() > 0.5 ? "MALE" : "FEMALE",
+      },
+    });
+  }
+}
+
 async function main() {
   const region = await prisma.region.upsert({
     where: { key: "chornolis_border" },
-    update: {},
+    update: {
+      name: "Порубіжжя Чорнолісу",
+      description: "Перший регіон живого світу.",
+    },
     create: {
       key: "chornolis_border",
       name: "Порубіжжя Чорнолісу",
@@ -118,7 +250,7 @@ async function main() {
         z: 0,
         regionId: region.id,
         biome: "FOREST",
-        dangerLevel: 1,
+        dangerLevel: loc.key.includes("wolf") ? 2 : 1,
       },
     });
   }
@@ -144,6 +276,7 @@ async function main() {
         },
         update: {
           toLocationId: to.id,
+          isHidden: false,
         },
         create: {
           fromLocationId: from.id,
@@ -154,6 +287,56 @@ async function main() {
       });
     }
   }
+
+  for (const resource of resourceTypes) {
+    await prisma.resourceType.upsert({
+      where: { key: resource.key },
+      update: resource,
+      create: resource,
+    });
+  }
+
+  const allResourceTypes = await prisma.resourceType.findMany();
+
+  for (const loc of all) {
+    for (const resourceType of allResourceTypes) {
+      const amount = resourceAmountForLocation(resourceType.key, loc.key);
+
+      await prisma.resourceNode.upsert({
+        where: {
+          locationId_resourceTypeId: {
+            locationId: loc.id,
+            resourceTypeId: resourceType.id,
+          },
+        },
+        update: {
+          amount,
+          maxAmount: 100,
+        },
+        create: {
+          locationId: loc.id,
+          resourceTypeId: resourceType.id,
+          amount,
+          maxAmount: 100,
+        },
+      });
+    }
+  }
+
+  for (const species of creatureSpecies) {
+    await prisma.creatureSpecies.upsert({
+      where: { key: species.key },
+      update: species,
+      create: species,
+    });
+  }
+
+  await createCreatures("rabbit", "north_east_burrow", 5);
+  await createCreatures("rabbit", "south_moss_clearing", 3);
+  await createCreatures("mouse", "east_berry_thicket", 6);
+  await createCreatures("fox", "west_fox_path", 1);
+  await createCreatures("wolf", "south_wolf_track", 1);
+  await createCreatures("lesovyk", "north_old_pine", 1, "Дід Чорноліс");
 
   console.log("Seed completed.");
 }

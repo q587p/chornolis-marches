@@ -1,93 +1,116 @@
 # 🌲 Chornolis Marches
 
-Text-based Telegram RPG with a living ecosystem, inspired by MUDs, Ultima Online, and Ukrainian folklore.
+Text-based Telegram RPG with a living forest world, cell-based movement, resources, creatures, and Ukrainian folklore.
 
-## ✨ Features (MVP)
+## Current MVP
 
-* Telegram bot interface
-* Persistent players (PostgreSQL)
-* World state stored in database
-* Basic commands:
+- Telegram bot on grammY
+- Render Web Service with a tiny HTTP health endpoint
+- PostgreSQL on Render
+- Prisma 7 with PostgreSQL adapter
+- Persistent players
+- 3×3 cell-based starter region
+- MUD-like movement buttons:
+  - North / East / South / West
+- `/look` for location details
+- Resource nodes:
+  - berries
+  - mushrooms
+  - herbs
+- Basic gathering action
+- Creature species seeded:
+  - rabbit
+  - mouse
+  - fox
+  - wolf
+  - lisovyk
 
-  * `/start` — create player
-  * `/me` — show player info
-  * `/world` — world statistics
+## Commands
 
-## 🧠 Vision
+- `/start` — enter the world or refresh player data
+- `/me` — show player state
+- `/world` — show technical world stats
+- `/look` — inspect current location details
 
-A living world simulation:
+Movement and gathering are available through inline buttons.
 
-* 🐺 Wolves hunt rabbits
-* 🦊 Foxes compete for prey
-* 🐇 Rabbits reproduce
-* 🌿 Resources grow and get depleted
-* 👤 Players interfere and upset the balance
-
-No levels — only skills, actions, and consequences.
-
-## 🏗 Tech Stack
-
-* TypeScript + Node.js
-* grammY (Telegram bot)
-* PostgreSQL
-* Prisma ORM
-* Render (hosting)
-
-## 🚀 Local setup
+## Local setup
 
 ```bash
-git clone https://github.com/q587p/chornolis-marches.git
-cd chornolis-marches
-
 npm install
 ```
 
 Create `.env`:
 
 ```env
-BOT_TOKEN=your_telegram_token
-DATABASE_URL=your_database_url
+BOT_TOKEN=your_telegram_bot_token
+DATABASE_URL=your_external_render_postgres_url
 ```
 
-Run:
+For local development use Render **External Database URL**.
+
+For Render service environment use Render **Internal Database URL**.
+
+## Database
+
+Generate Prisma client:
+
+```bash
+npx prisma generate
+```
+
+Run migrations:
+
+```bash
+npx prisma migrate dev --name init
+```
+
+Seed world:
+
+```bash
+npm run seed
+```
+
+## Run locally
 
 ```bash
 npm run dev
 ```
 
-## 🛠 Deployment
+Only one bot instance can use long polling. Stop local bot before running the Render instance with the same token.
 
-* Connected to Render
-* Auto-deploy on push to `main`
-* Uses environment variables:
+## Render
 
-  * `BOT_TOKEN`
-  * `DATABASE_URL`
+Recommended Web Service settings:
 
-## 🌍 Roadmap
+Build Command:
 
-* [ ] Cell-based world (grid)
-* [ ] Creatures (wolves, rabbits, etc.)
-* [ ] Movement (/north, /south, etc.)
-* [ ] Resource system
-* [ ] Ecosystem simulation
-* [ ] Combat system
-* [ ] Crafting & professions
-* [ ] Events and world history
+```bash
+npm install && npx prisma migrate deploy && npm run build && npm run seed
+```
 
-## ⚙️ Dev notes
+Start Command:
 
-* Only one bot instance can run (Telegram polling limitation)
-* Prisma 7 uses adapter-based connection
-* Database migrations required before deploy
+```bash
+npm start
+```
 
-## 🧙 Inspiration
+Environment variables:
 
-* Ultima Online
-* MUDs
-* Dwarf Fortress
-* Ukrainian mythology
+```env
+BOT_TOKEN=...
+DATABASE_URL=...
+```
 
----
+The bot opens a tiny HTTP endpoint so Render Web Service sees an open port.
 
-🌲 The forest is watching.
+## Roadmap
+
+- Inventory
+- Track system with fading footprints/scents/signs
+- Skills: gathering, tracking, hunting, stealth
+- Individual creature movement between cells
+- Ecosystem ticks
+- Hunting and traps
+- Events and world history
+- Admin commands
