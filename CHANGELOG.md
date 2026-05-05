@@ -1,6 +1,32 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+---
+
+## [0.2.2] - 2026-05-05
+
+### Changed
+- add delayed actions lisovyk trigger and release workflow
+- 0.2.1
+- 0.1.1
+- fix movement messages character text and world counts
+- fix movement text status counts and html formatting
+- add status page health check and deploy announcement
+- add detailed look gathering npc and stats
+- add detailed look and gathering
+- add bot error handling
+- add cell world movement and look
+- added hack for Render
+- Broadcast
+- add world tables
+- add world status command
+- safer start
+- added me
+- fix prisma pg adapter
+- fix prisma client init
+- fix prisma config and ts build
+- add postgres player storage
+
 The format is loosely based on Keep a Changelog and this project follows semantic-ish versioning.
 
 ---
