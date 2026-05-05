@@ -124,6 +124,11 @@ bot.on("message", async (ctx) => {
 async function main() {
   console.log("Bot starting...");
   await bot.start();
+
+  // невелика затримка, щоб Telegram устаканився
+  setTimeout(() => {
+    broadcastWorldUpdate();
+  }, 3000);
 }
 
 main().catch(async (error) => {
@@ -138,3 +143,36 @@ process.on("SIGTERM", async () => {
   await prisma.$disconnect();
   process.exit(0);
 });
+
+async function broadcastWorldUpdate() {
+  const players = await prisma.player.findMany({
+    select: {
+      telegramId: true,
+    },
+  });
+
+  let success = 0;
+  let failed = 0;
+
+  for (const p of players) {
+    try {
+      await bot.api.sendMessage(
+        p.telegramId,
+        `⚙️ Світ Чорнолісу оновився.
+
+Зміни:
+- нові механіки
+- виправлення
+- світ трохи зрушився
+
+🌲 Можеш продовжувати гру.`
+      );
+      success++;
+    } catch (e) {
+      failed++;
+    }
+  }
+
+  console.log(`Broadcast done. Success: ${success}, Failed: ${failed}`);
+}
+
