@@ -1,38 +1,31 @@
 # 🌲 Chornolis Marches
 
-Text-based Telegram RPG with a living forest world, cell-based movement, resources, creatures, and Ukrainian folklore.
+Telegram RPG prototype with a cell-based living world, PostgreSQL persistence, resources, movement buttons, and first NPC behavior.
 
-## Current MVP
+## Current features
 
-- Telegram bot on grammY
-- Render Web Service with a tiny HTTP health endpoint
-- PostgreSQL on Render
-- Prisma 7 with PostgreSQL adapter
-- Persistent players
-- 3×3 cell-based starter region
-- MUD-like movement buttons:
-  - North / East / South / West
-- `/look` for location details
-- Resource nodes:
-  - berries
-  - mushrooms
-  - herbs
-- Basic gathering action
-- Creature species seeded:
-  - rabbit
-  - mouse
-  - fox
-  - wolf
-  - lisovyk
-
-## Commands
-
-- `/start` — enter the world or refresh player data
-- `/me` — show player state
-- `/world` — show technical world stats
-- `/look` — inspect current location details
-
-Movement and gathering are available through inline buttons.
+- Telegram bot via grammY
+- Render Web Service compatibility through a tiny HTTP health endpoint
+- PostgreSQL + Prisma 7 adapter-based connection
+- Cell-based world map
+- Movement buttons: north, east, south, west, and future extra exits
+- `/start` — create/update player and enter the world
+- `/me` — character stats and inventory
+- `/world` — technical world status
+- `/look` — detailed location inspection
+- `/say <text>` — say something to everyone in the same location
+- Resource nodes: berries, mushrooms, herbs
+- Gathering buttons with random success:
+  - mushrooms: 1/3
+  - berries: 1/4
+  - herbs: 1/5
+- Time tick cooldowns for actions
+- Basic journal through `WorldEvent`
+- First NPC: herbalist
+  - moves through exits
+  - looks for herbs
+  - gathers herbs randomly
+  - sometimes says ambient phrases
 
 ## Local setup
 
@@ -44,52 +37,46 @@ Create `.env`:
 
 ```env
 BOT_TOKEN=your_telegram_bot_token
-DATABASE_URL=your_external_render_postgres_url
+DATABASE_URL=your_external_database_url_for_local_dev
 ```
 
-For local development use Render **External Database URL**.
-
-For Render service environment use Render **Internal Database URL**.
-
-## Database
-
-Generate Prisma client:
+Build:
 
 ```bash
-npx prisma generate
+npm run build
 ```
 
-Run migrations:
+Migrate:
 
 ```bash
-npx prisma migrate dev --name init
+npx prisma migrate dev --name add_npc_stats_and_inventory
 ```
 
-Seed world:
+Seed:
 
 ```bash
 npm run seed
 ```
 
-## Run locally
+Run locally:
 
 ```bash
 npm run dev
 ```
 
-Only one bot instance can use long polling. Stop local bot before running the Render instance with the same token.
+Only one bot instance can use Telegram long polling at a time. Stop Render or local dev before starting another instance with the same token.
 
 ## Render
 
-Recommended Web Service settings:
+Use Web Service, not Worker, for the current budget setup. The bot opens a small HTTP port so Render considers the service healthy.
 
-Build Command:
+Build command:
 
 ```bash
 npm install && npx prisma migrate deploy && npm run build && npm run seed
 ```
 
-Start Command:
+Start command:
 
 ```bash
 npm start
@@ -98,19 +85,16 @@ npm start
 Environment variables:
 
 ```env
-BOT_TOKEN=...
-DATABASE_URL=...
+BOT_TOKEN=your_telegram_bot_token
+DATABASE_URL=your_internal_render_database_url
 ```
-
-The bot opens a tiny HTTP endpoint so Render Web Service sees an open port.
 
 ## Roadmap
 
-- Inventory
-- Track system with fading footprints/scents/signs
-- Skills: gathering, tracking, hunting, stealth
-- Individual creature movement between cells
-- Ecosystem ticks
-- Hunting and traps
-- Events and world history
-- Admin commands
+- Stealth and visibility
+- Skills and skill progression
+- Better action queue
+- Tracks that decay over time
+- Animal ecosystem with individual creatures
+- Combat, traps, trading, theft
+- Admin/status commands

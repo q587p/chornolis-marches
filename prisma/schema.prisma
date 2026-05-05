@@ -20,6 +20,19 @@ model Player {
   stamina Int @default(20)
   hunger  Int @default(0)
 
+  steps             Int @default(0)
+  looks             Int @default(0)
+  greetings         Int @default(0)
+  says              Int @default(0)
+  gatherAttempts    Int @default(0)
+  successfulGathers Int @default(0)
+
+  lastActionAt DateTime?
+  lastSayAt    DateTime?
+
+  inventory PlayerResource[]
+  events    WorldEvent[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -55,6 +68,7 @@ model CellLocation {
   players   Player[]
   creatures Creature[]
   resources ResourceNode[]
+  events    WorldEvent[]
 
   exitsFrom LocationExit[] @relation("ExitFrom")
   exitsTo   LocationExit[] @relation("ExitTo")
@@ -162,6 +176,14 @@ model Creature {
   sex CreatureSex?
   age CreatureAge  @default(ADULT)
 
+  activity CreatureActivity @default(IDLE)
+
+  steps             Int @default(0)
+  looks             Int @default(0)
+  says              Int @default(0)
+  gatherAttempts    Int @default(0)
+  successfulGathers Int @default(0)
+
   isAlive Boolean @default(true)
 
   createdAt DateTime @default(now())
@@ -179,13 +201,24 @@ enum CreatureAge {
   OLD
 }
 
+enum CreatureActivity {
+  IDLE
+  LOOKING
+  MOVING
+  GATHERING
+  SPEAKING
+  FIGHTING
+  SETTING_TRAP
+}
+
 model ResourceType {
   id          Int     @id @default(autoincrement())
   key         String  @unique
   name        String
   description String?
 
-  nodes ResourceNode[]
+  nodes             ResourceNode[]
+  playerInventories PlayerResource[]
 }
 
 model ResourceNode {
@@ -204,4 +237,51 @@ model ResourceNode {
   updatedAt DateTime @updatedAt
 
   @@unique([locationId, resourceTypeId])
+}
+
+model PlayerResource {
+  id Int @id @default(autoincrement())
+
+  playerId Int
+  player   Player @relation(fields: [playerId], references: [id])
+
+  resourceTypeId Int
+  resourceType   ResourceType @relation(fields: [resourceTypeId], references: [id])
+
+  amount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([playerId, resourceTypeId])
+}
+
+model WorldEvent {
+  id Int @id @default(autoincrement())
+
+  type        WorldEventType
+  title       String
+  description String?
+
+  locationId Int?
+  location   CellLocation? @relation(fields: [locationId], references: [id])
+
+  playerId Int?
+  player   Player? @relation(fields: [playerId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+enum WorldEventType {
+  LOOK
+  MOVE
+  SAY
+  GREET
+  INSPECT
+  GATHER_ATTEMPT
+  GATHER_SUCCESS
+  GATHER_FAIL
+  NPC_MOVE
+  NPC_SAY
+  SYSTEM
 }
