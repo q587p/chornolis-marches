@@ -85,8 +85,16 @@ bot.on("message", async (ctx) => {
   await ctx.reply("Я ще вчуся, але світ уже дихає.");
 });
 
-console.log("Bot starting...");
-bot.start();
+async function main() {
+  console.log("Bot starting...");
+  await bot.start();
+}
+
+main().catch(async (error) => {
+  console.error("Bot crashed:", error);
+  await prisma.$disconnect();
+  process.exit(1);
+});
 
 // 🧹 Graceful shutdown (важливо для Render)
 process.on("SIGTERM", async () => {
