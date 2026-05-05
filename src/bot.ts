@@ -3,6 +3,18 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
 import * as dotenv from "dotenv";
+import http from "http";
+
+const port = process.env.PORT || 3000;
+
+http
+  .createServer((req, res) => {
+    res.writeHead(200);
+    res.end("Chornolis Marches bot is alive 🌲");
+  })
+  .listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
 
 dotenv.config();
 
