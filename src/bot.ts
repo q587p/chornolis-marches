@@ -15,3 +15,7 @@ bot.on("message", (ctx) => {
 
 console.log("Bot starting...");
 bot.start();
+
+process.on("SIGTERM", () => {
+  console.log("World is updating...");
+});
