@@ -1,15 +1,40 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-The format is loosely based on Keep a Changelog
-and this project follows semantic-ish versioning.
+The format is loosely based on Keep a Changelog and this project follows semantic-ish versioning.
+
+---
+
+## [Unreleased]
+
+### ✨ Added
+- Hidden `/all` debug command with all players, NPC/creatures, coordinates, HP and current actions.
+- Attack interaction button (`⚔️ Атакувати`) for future combat. For now it replies that combat is still in development.
+- Region-wide warning and Lisovyk awakening trigger when a resource node is fully depleted.
+- `lisovyk` remains available as a species key, but Дід Чорноліс no longer starts alive on the map.
+
+### 🎮 Gameplay
+- Movement remains instant.
+- `/look`, `Придивитися`, and gathering now complete after a short delay instead of resolving instantly.
+- Detailed look keeps the base location description and then adds details.
+- Interaction buttons are shown when visible characters are present.
+
+### 🛠 Technical
+- `getAppVersion()` now prefers `package.json` over `APP_VERSION`, so Render does not need a hardcoded version env var.
+- Added GitHub Actions release workflow for semver bumps, changelog updates and git tags.
+- Added GitHub Actions CI workflow for build checks.
+
+### 📝 Notes
+- Animal “tracks/movement” are still based on static creature records for now. Full movement/tracking requires a later world-tick system.
 
 ---
 
 ## [0.2.1] - 12026-05-05
 
 ### 🐛 Fixed
-- Movement messages, formating
+- Movement messages and formatting.
+
+---
 
 ## [0.2.0] - 12026-05-05
 

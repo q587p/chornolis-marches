@@ -52,7 +52,7 @@ function getAppVersion() {
   try {
     const pkgPath = path.join(process.cwd(), "package.json");
     const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
-    return String(process.env.APP_VERSION || pkg.version || "dev");
+    return String(pkg.version || process.env.APP_VERSION || "dev");
   } catch {
     return String(process.env.APP_VERSION || "dev");
   }
@@ -67,12 +67,26 @@ function escapeHtml(text: string) {
     .replace(/'/g, "&#039;");
 }
 
+function stripUnsafeText(text: string) {
+  return text.replace(/[\u0000-\u001f\u007f]/g, "").trim();
+}
+
 function canSpendTicks(key: string, ticks = 1) {
   const now = Date.now();
   const until = actionCooldown.get(key) || 0;
   if (now < until) return false;
   actionCooldown.set(key, now + ticks * TICK_MS);
   return true;
+}
+
+function runDelayed(label: string, ticks: number, action: () => Promise<void>) {
+  setTimeout(() => {
+    action().catch((error) => {
+      lastRuntimeError = String(error);
+      console.error(`${label} failed:`, error);
+      logEvent("ERROR", `${label} failed`, lastRuntimeError).catch(() => undefined);
+    });
+  }, ticks * TICK_MS);
 }
 
 async function logEvent(type: any, title: string, description?: string, locationId?: number) {
@@ -99,10 +113,12 @@ function buildMovementKeyboard(exits: any[]) {
   return keyboard;
 }
 
-function buildArrivalKeyboard() {
+function buildInteractionKeyboard() {
   return new InlineKeyboard()
     .text("👋 Привітатися", "social:greet")
-    .text("👁 Придивитися", "social:inspect");
+    .text("👁 Придивитися", "social:inspect")
+    .row()
+    .text("⚔️ Атакувати", "social:attack");
 }
 
 async function safeAnswerCallbackQuery(ctx: any, text?: string) {
@@ -129,6 +145,10 @@ function characterCount(location: any, viewerPlayerId?: number) {
   return otherPlayers + nonAnimalCreatures;
 }
 
+function hasVisibleCharacters(location: any, viewerPlayerId?: number) {
+  return characterCount(location, viewerPlayerId) > 0;
+}
+
 async function renderLocationBrief(locationId: number, viewerPlayerId?: number) {
   const location = await prisma.cellLocation.findUnique({
     where: { id: locationId },
@@ -145,7 +165,7 @@ async function renderLocationBrief(locationId: number, viewerPlayerId?: number) 
     ? location.exitsFrom.map((exit) => `- ${directionLabels[exit.direction]} → ${exit.toLocation.name}`).join("\n")
     : "Виходів не видно.";
 
-  const othersText = characterCount(location, viewerPlayerId) > 0 ? "\n\n<i>Поруч хтось є.</i>" : "";
+  const othersText = hasVisibleCharacters(location, viewerPlayerId) ? "\n\n<i>Поруч хтось є.</i>" : "";
 
   return {
     text: `<b>${escapeHtml(location.name)}</b>\n\n${escapeHtml(location.description ?? "")}${othersText}\n\nВиходи:\n${escapeHtml(exitsText)}`,
@@ -198,6 +218,15 @@ async function renderLocationDetails(locationId: number, viewerPlayerId?: number
     const durationText = cfg ? ` (${Math.round((cfg.ticks * TICK_MS) / 1000)} с)` : "";
     keyboard.text(`Зібрати: ${resource.resourceType.name}${durationText}`, `gather:${resource.resourceType.key}`).row();
   }
+
+  if (visibleCharacters.length > 0) {
+    keyboard.text("👋 Привітатися", "social:greet")
+      .text("👁 Придивитися", "social:inspect")
+      .row()
+      .text("⚔️ Атакувати", "social:attack")
+      .row();
+  }
+
   const movement = buildMovementKeyboard(location.exitsFrom);
   for (const row of movement.inline_keyboard) {
     for (const button of row) {
@@ -207,7 +236,7 @@ async function renderLocationDetails(locationId: number, viewerPlayerId?: number
   }
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n\n<i>Ви придивляєтесь.</i>\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}${resourcesText}${charactersText ? escapeHtml(charactersText) : ""}${tracksText}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n\n${escapeHtml(location.description ?? "")}\n\n<i>Ви придивляєтесь.</i>\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}${resourcesText}${charactersText ? escapeHtml(charactersText) : ""}${tracksText}`,
     keyboard,
   };
 }
@@ -221,6 +250,68 @@ async function notifyLocation(locationId: number, exceptPlayerId: number, text: 
       console.warn("Failed to notify location player:", error);
     }
   }
+}
+
+async function notifyRegion(regionId: number, text: string) {
+  const players = await prisma.player.findMany({
+    where: { currentLocation: { regionId } },
+  });
+
+  for (const player of players) {
+    try {
+      await bot.api.sendMessage(player.telegramId, text);
+    } catch (error) {
+      console.warn("Failed to notify region player:", error);
+    }
+  }
+}
+
+async function summonLisovykIfResourceDepleted(resourceName: string, regionId: number) {
+  const species = await prisma.creatureSpecies.findUnique({ where: { key: "lisovyk" } });
+  if (!species) return;
+
+  const alreadyAlive = await prisma.creature.findFirst({
+    where: { speciesId: species.id, name: "Дід Чорноліс", isAlive: true },
+  });
+
+  if (alreadyAlive) return;
+
+  const locations = await prisma.cellLocation.findMany({ where: { regionId } });
+  if (!locations.length) return;
+
+  const location = locations[Math.floor(Math.random() * locations.length)];
+
+  const existing = await prisma.creature.findFirst({
+    where: { speciesId: species.id, name: "Дід Чорноліс" },
+  });
+
+  if (existing) {
+    await prisma.creature.update({
+      where: { id: existing.id },
+      data: {
+        locationId: location.id,
+        isAlive: true,
+        hp: species.baseHp,
+        currentAction: "обурено ходить між деревами",
+        activity: "MOVING",
+      },
+    });
+  } else {
+    await prisma.creature.create({
+      data: {
+        speciesId: species.id,
+        locationId: location.id,
+        name: "Дід Чорноліс",
+        hp: species.baseHp,
+        isAlive: true,
+        currentAction: "обурено ходить між деревами",
+        activity: "MOVING",
+      },
+    });
+  }
+
+  await notifyRegion(regionId, `🌲 О ні, люди зібрали всі ${resourceName}! Десь у Чорнолісі прокинувся Дід Чорноліс.`);
+  await logEvent("SYSTEM", "Lisovyk awakened", `Resource depleted: ${resourceName}`, location.id);
 }
 
 async function announceWorldUpdatedOnce() {
@@ -323,34 +414,65 @@ bot.command("world", async (ctx) => {
   await ctx.reply(`🌲 Стан Порубіжжя Чорнолісу\n\nВерсія: ${s.version}\nПерсонажів гравців у базі: ${s.playersCount}\nРегіонів: ${s.regionsCount}\nЛокацій-клітинок: ${s.locationsCount}\nПереходів між клітинками: ${s.exitsCount}\nЖивих тварин: ${s.aliveAnimalsCount}\nNPC / не-тварин: ${s.npcCount}\nЖивих істот загалом: ${s.aliveCreaturesCount}\nВузлів ресурсів: ${s.resourcesCount}\nПодій у журналі: ${s.eventsCount}\n\nПоточна подія: ${s.latestEvent?.title ?? "немає"}\nОстання помилка: ${s.lastRuntimeError ?? "немає"}`);
 });
 
+bot.command("all", async (ctx) => {
+  const [players, creatures] = await Promise.all([
+    prisma.player.findMany({ include: { currentLocation: true }, orderBy: { id: "asc" } }),
+    prisma.creature.findMany({ include: { location: true, species: true }, orderBy: { id: "asc" } }),
+  ]);
+
+  const playerLines = players.map((p) => {
+    const loc = p.currentLocation ? `${p.currentLocation.name} (${p.currentLocation.x},${p.currentLocation.y},${p.currentLocation.z})` : "невідомо";
+    return `#${p.id} ${p.firstName ?? p.username ?? "мандрівник"} — ${loc}; HP ${p.hp}; stamina ${p.stamina}; hunger ${p.hunger}`;
+  });
+
+  const creatureLines = creatures.map((c) => {
+    const loc = c.location ? `${c.location.name} (${c.location.x},${c.location.y},${c.location.z})` : "невідомо";
+    const state = c.isAlive ? "alive" : "inactive/dead";
+    return `#${c.id} ${c.name ?? c.species.name} [${c.species.key}] — ${loc}; ${state}; HP ${c.hp}; ${c.activity ?? "IDLE"}; ${c.currentAction ?? "без дії"}`;
+  });
+
+  const text = `🧾 Усі персонажі\n\nГравці:\n${playerLines.join("\n") || "немає"}\n\nNPC / істоти:\n${creatureLines.join("\n") || "немає"}`;
+
+  for (let i = 0; i < text.length; i += 3500) {
+    await ctx.reply(text.slice(i, i + 3500));
+  }
+});
+
 bot.command("look", async (ctx) => {
   const from = ctx.from;
   if (!from) return;
 
   const player = await getPlayerByTelegramId(from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
-  if (!canSpendTicks(String(from.id), 1)) return void (await ctx.reply("Ти ще зайнятий."));
+
+  const ticks = 1;
+  const seconds = Math.round((ticks * TICK_MS) / 1000);
+  if (!canSpendTicks(String(from.id), ticks)) return void (await ctx.reply("Ти ще зайнятий."));
+
   const locationId = player.currentLocationId ?? (await getStartLocationId());
-  await prisma.player.update({ where: { id: player.id }, data: { currentLocationId: locationId, looks: { increment: 1 } } });
-  const view = await renderLocationDetails(locationId, player.id);
-  await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+  await ctx.reply(`Ви починаєте уважно оглядатися (${seconds} с).`);
+
+  runDelayed("look", ticks, async () => {
+    await prisma.player.update({ where: { id: player.id }, data: { currentLocationId: locationId, looks: { increment: 1 } } });
+    const view = await renderLocationDetails(locationId, player.id);
+    await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+  });
 });
 
 bot.command("say", async (ctx) => {
   const from = ctx.from;
   if (!from) return;
 
-  const text = String(ctx.match || "").trim().slice(0, 300);
+  const text = stripUnsafeText(String(ctx.match || "").slice(0, 300));
   if (!text) return void (await ctx.reply("Напиши так: /say текст"));
 
   const player = await getPlayerByTelegramId(from.id);
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
   if (!canSpendTicks(`say:${from.id}`, 1)) return void (await ctx.reply("Ти ще не можеш говорити так швидко."));
-  const safeText = text.replace(/[\u0000-\u001f\u007f]/g, "");
   await prisma.player.update({ where: { id: player.id }, data: { says: { increment: 1 } } });
-  await notifyLocation(player.currentLocationId, player.id, `Хтось каже: «${safeText}»`);
-  await ctx.reply(`Ви кажете: «${safeText}»`);
-  await logEvent("SAY", "Player said something", safeText, player.currentLocationId);
+  await notifyLocation(player.currentLocationId, player.id, `Хтось каже: «${text}»`);
+  await ctx.reply(`Ви кажете: «${text}»`);
+  await logEvent("SAY", "Player said something", text, player.currentLocationId);
 });
 
 bot.callbackQuery("look", async (ctx) => {
@@ -359,17 +481,19 @@ bot.callbackQuery("look", async (ctx) => {
     await safeAnswerCallbackQuery(ctx);
     return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
   }
-  if (!canSpendTicks(String(ctx.from.id), 1)) return void (await safeAnswerCallbackQuery(ctx, "Ти ще зайнятий."));
-  await prisma.player.update({ where: { id: player.id }, data: { looks: { increment: 1 } } });
-  const view = await renderLocationDetails(player.currentLocationId, player.id);
-  await safeAnswerCallbackQuery(ctx);
-  try {
-    await ctx.editMessageText(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
-  } catch (error: any) {
-    if (!String(error?.description || "").includes("message is not modified")) {
-      await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
-    }
-  }
+
+  const ticks = 1;
+  const seconds = Math.round((ticks * TICK_MS) / 1000);
+  if (!canSpendTicks(String(ctx.from.id), ticks)) return void (await safeAnswerCallbackQuery(ctx, "Ти ще зайнятий."));
+
+  await safeAnswerCallbackQuery(ctx, `Огляд займе ${seconds} с.`);
+  await ctx.reply(`Ви починаєте уважно оглядатися (${seconds} с).`);
+
+  runDelayed("look callback", ticks, async () => {
+    await prisma.player.update({ where: { id: player.id }, data: { looks: { increment: 1 } } });
+    const view = await renderLocationDetails(player.currentLocationId!, player.id);
+    await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+  });
 });
 
 bot.callbackQuery(/^move:(NORTH|EAST|SOUTH|WEST|UP|DOWN|INSIDE|OUTSIDE)$/, async (ctx) => {
@@ -385,7 +509,7 @@ bot.callbackQuery(/^move:(NORTH|EAST|SOUTH|WEST|UP|DOWN|INSIDE|OUTSIDE)$/, async
 
   await notifyLocation(currentLocationId, player.id, "Хтось пішов звідси.");
   await prisma.player.update({ where: { id: player.id }, data: { currentLocationId: exit.toLocationId, steps: { increment: 1 } } });
-  await notifyLocation(exit.toLocationId, player.id, "Хтось прийшов сюди.", buildArrivalKeyboard());
+  await notifyLocation(exit.toLocationId, player.id, "Хтось прийшов сюди.", buildInteractionKeyboard());
   await logEvent("MOVE", "Player moved", direction, exit.toLocationId);
 
   const view = await renderLocationBrief(exit.toLocationId, player.id);
@@ -401,39 +525,55 @@ bot.callbackQuery(/^gather:(berries|mushrooms|herbs)$/, async (ctx) => {
     await safeAnswerCallbackQuery(ctx);
     return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
   }
+
   const cfg = gatherConfig[key];
   const durationSeconds = Math.round((cfg.ticks * TICK_MS) / 1000);
   if (!canSpendTicks(String(ctx.from.id), cfg.ticks)) return void (await safeAnswerCallbackQuery(ctx, "Ти ще зайнятий."));
 
-  const resource = await prisma.resourceNode.findFirst({ where: { locationId: player.currentLocationId, resourceType: { key }, amount: { gt: 0 } }, include: { resourceType: true } });
-  await prisma.player.update({ where: { id: player.id }, data: { gatherAttempts: { increment: 1 } } });
-  if (!resource || Math.random() > cfg.chance) {
-    await safeAnswerCallbackQuery(ctx);
-    await ctx.reply(`Ти витрачаєш час на пошуки (${durationSeconds} с), але нічого корисного не знаходиш.`);
-    await logEvent("GATHER", "Gather failed", key, player.currentLocationId);
-    return;
-  }
+  const locationId = player.currentLocationId;
+  await safeAnswerCallbackQuery(ctx, `Збір займе ${durationSeconds} с.`);
+  await ctx.reply(`Ви починаєте пошуки (${durationSeconds} с).`);
 
-  const found = Math.min(resource.amount, Math.floor(Math.random() * 3) + 1);
-  await prisma.resourceNode.update({ where: { id: resource.id }, data: { amount: resource.amount - found } });
-  await prisma.playerResource.upsert({
-    where: {
-      playerId_resourceTypeId: {
+  runDelayed("gather", cfg.ticks, async () => {
+    const resource = await prisma.resourceNode.findFirst({
+      where: { locationId, resourceType: { key }, amount: { gt: 0 } },
+      include: { resourceType: true, location: true },
+    });
+
+    await prisma.player.update({ where: { id: player.id }, data: { gatherAttempts: { increment: 1 } } });
+
+    if (!resource || Math.random() > cfg.chance) {
+      await ctx.reply(`Ви витратили час на пошуки (${durationSeconds} с), але нічого корисного не знайшли.`);
+      await logEvent("GATHER", "Gather failed", key, locationId);
+      return;
+    }
+
+    const found = Math.min(resource.amount, Math.floor(Math.random() * 3) + 1);
+    const nextAmount = resource.amount - found;
+
+    await prisma.resourceNode.update({ where: { id: resource.id }, data: { amount: nextAmount } });
+    await prisma.playerResource.upsert({
+      where: {
+        playerId_resourceTypeId: {
+          playerId: player.id,
+          resourceTypeId: resource.resourceTypeId,
+        },
+      },
+      update: { amount: { increment: found } },
+      create: {
         playerId: player.id,
         resourceTypeId: resource.resourceTypeId,
+        amount: found,
       },
-    },
-    update: { amount: { increment: found } },
-    create: {
-      playerId: player.id,
-      resourceTypeId: resource.resourceTypeId,
-      amount: found,
-    },
+    });
+    await prisma.player.update({ where: { id: player.id }, data: { successfulGathers: { increment: 1 } } });
+    await ctx.reply(`Ви витратили час на пошуки (${durationSeconds} с) і знайшли: ${resource.resourceType.name} ×${found}.`);
+    await logEvent("GATHER", "Gather succeeded", `${resource.resourceType.name} ×${found}`, locationId);
+
+    if (resource.amount > 0 && nextAmount <= 0) {
+      await summonLisovykIfResourceDepleted(resource.resourceType.name, resource.location.regionId);
+    }
   });
-  await prisma.player.update({ where: { id: player.id }, data: { successfulGathers: { increment: 1 } } });
-  await safeAnswerCallbackQuery(ctx);
-  await ctx.reply(`Ти витрачаєш час на пошуки (${durationSeconds} с) і знаходиш: ${resource.resourceType.name} ×${found}.`);
-  await logEvent("GATHER", "Gather succeeded", `${resource.resourceType.name} ×${found}`, player.currentLocationId);
 });
 
 bot.callbackQuery("social:greet", async (ctx) => {
@@ -447,10 +587,32 @@ bot.callbackQuery("social:greet", async (ctx) => {
 bot.callbackQuery("social:inspect", async (ctx) => {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player || !player.currentLocationId) return void (await safeAnswerCallbackQuery(ctx));
-  await prisma.player.update({ where: { id: player.id }, data: { looks: { increment: 1 } } });
-  const others = await prisma.player.findMany({ where: { currentLocationId: player.currentLocationId, NOT: { id: player.id } } });
+  const ticks = 1;
+  const seconds = Math.round((ticks * TICK_MS) / 1000);
+  if (!canSpendTicks(`inspect:${ctx.from.id}`, ticks)) return void (await safeAnswerCallbackQuery(ctx, "Ти ще зайнятий."));
+
+  await safeAnswerCallbackQuery(ctx, `Придивитися займе ${seconds} с.`);
+  await ctx.reply(`Ви починаєте придивлятися (${seconds} с).`);
+
+  runDelayed("inspect", ticks, async () => {
+    await prisma.player.update({ where: { id: player.id }, data: { looks: { increment: 1 } } });
+    const [others, npcs] = await Promise.all([
+      prisma.player.findMany({ where: { currentLocationId: player.currentLocationId!, NOT: { id: player.id } } }),
+      prisma.creature.findMany({ where: { locationId: player.currentLocationId!, isAlive: true, species: { kind: { not: "ANIMAL" } } }, include: { species: true } }),
+    ]);
+
+    const names = [
+      ...others.map((p) => p.firstName ?? p.username ?? "мандрівник"),
+      ...npcs.map((c) => c.name ?? c.species.name),
+    ];
+
+    await ctx.reply(names.length ? `Ви придивляєтесь: ${names.join(", ")}` : "Ви не бачите нікого достатньо близько.");
+  });
+});
+
+bot.callbackQuery("social:attack", async (ctx) => {
   await safeAnswerCallbackQuery(ctx);
-  await ctx.reply(others.length ? `Ви придивляєтесь: ${others.map((p) => p.firstName ?? p.username ?? "мандрівник").join(", ")}` : "Ви не бачите нікого достатньо близько.");
+  await ctx.reply("⚔️ Атака ще в розробці.");
 });
 
 bot.on("message", async (ctx) => {
