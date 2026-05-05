@@ -1,10 +1,11 @@
 import { Bot } from "grammy";
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
 import * as dotenv from "dotenv";
 
 dotenv.config();
 
-// 🔐 Перевірки ДО створення клієнтів
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is not set");
 }
@@ -13,11 +14,16 @@ if (!process.env.BOT_TOKEN) {
   throw new Error("BOT_TOKEN is not set");
 }
 
-// ✅ Один PrismaClient
+const { Pool } = pg;
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+const adapter = new PrismaPg(pool);
+
 const prisma = new PrismaClient({
-  datasource: {
-    url: process.env.DATABASE_URL,
-  },
+  adapter,
 });
 
 const bot = new Bot(process.env.BOT_TOKEN);
