@@ -58,6 +58,29 @@ bot.command("start", async (ctx) => {
   );
 });
 
+bot.command("me", async (ctx) => {
+  const from = ctx.from;
+
+  if (!from) return;
+
+  const player = await prisma.player.findUnique({
+    where: {
+      telegramId: String(from.id),
+    },
+  });
+
+  if (!player) {
+    await ctx.reply("Ти ще не увійшов у світ. Напиши /start");
+    return;
+  }
+
+  await ctx.reply(
+    `🧍 Ти:\n\nID: ${player.telegramId}\nІм’я: ${
+      player.firstName ?? "невідомо"
+    }`
+  );
+});
+
 bot.on("message", async (ctx) => {
   await ctx.reply("Я ще вчуся, але світ уже дихає.");
 });
