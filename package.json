@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node-dev src/bot.ts",
-    "build": "tsc",
-    "start": "node dist/bot.js"
+    "build": "prisma generate && tsc",
+    "start": "node dist/bot.js",
+    "migrate:deploy": "prisma migrate deploy"
   },
   "repository": {
     "type": "git",
@@ -21,8 +22,10 @@
   },
   "homepage": "https://github.com/q587p/chornolis-marches#readme",
   "dependencies": {
+    "@prisma/client": "^7.8.0",
     "dotenv": "^17.4.2",
     "grammy": "^1.42.0",
+    "prisma": "^7.8.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^6.0.3"
   },
