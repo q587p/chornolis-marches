@@ -81,6 +81,20 @@ bot.command("me", async (ctx) => {
   );
 });
 
+bot.command("world", async (ctx) => {
+  const playersCount = await prisma.player.count();
+
+  await ctx.reply(
+    `🌲 Стан Порубіжжя Чорнолісу
+
+Гравців у базі: ${playersCount}
+
+Локацій: ще не створено
+Істот: ще не створено
+Поточна подія: світ тільки прокидається`
+  );
+});
+
 bot.on("message", async (ctx) => {
   await ctx.reply("Я ще вчуся, але світ уже дихає.");
 });
