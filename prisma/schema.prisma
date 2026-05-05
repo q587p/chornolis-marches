@@ -7,8 +7,8 @@ datasource db {
 }
 
 model Player {
-  id          Int      @id @default(autoincrement())
-  telegramId String   @unique
+  id         Int     @id @default(autoincrement())
+  telegramId String  @unique
   username   String?
   firstName  String?
   lastName   String?
@@ -16,17 +16,17 @@ model Player {
   currentLocationId Int?
   currentLocation   CellLocation? @relation(fields: [currentLocationId], references: [id])
 
-  hp        Int @default(20)
-  stamina   Int @default(20)
-  hunger    Int @default(0)
+  hp      Int @default(20)
+  stamina Int @default(20)
+  hunger  Int @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Region {
-  id          Int      @id @default(autoincrement())
-  key         String   @unique
+  id          Int     @id @default(autoincrement())
+  key         String  @unique
   name        String
   description String?
 
@@ -65,6 +65,26 @@ model CellLocation {
   @@unique([regionId, x, y, z])
 }
 
+model LocationExit {
+  id Int @id @default(autoincrement())
+
+  fromLocationId Int
+  fromLocation   CellLocation @relation("ExitFrom", fields: [fromLocationId], references: [id])
+
+  toLocationId Int
+  toLocation   CellLocation @relation("ExitTo", fields: [toLocationId], references: [id])
+
+  direction  Direction
+  label      String?
+  travelCost Int       @default(1)
+
+  isHidden Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@unique([fromLocationId, direction])
+}
+
 enum BiomeType {
   FOREST
   DEEP_FOREST
@@ -75,26 +95,6 @@ enum BiomeType {
   CAVE
   RUINS
   VILLAGE
-}
-
-model LocationExit {
-  id Int @id @default(autoincrement())
-
-  fromLocationId Int
-  fromLocation   CellLocation @relation("ExitFrom", fields: [fromLocationId], references: [id])
-
-  toLocationId Int
-  toLocation   CellLocation @relation("ExitTo", fields: [toLocationId], references: [id])
-
-  direction Direction
-  label     String?
-  travelCost Int @default(1)
-
-  isHidden Boolean @default(false)
-
-  createdAt DateTime @default(now())
-
-  @@unique([fromLocationId, direction])
 }
 
 enum Direction {
@@ -160,7 +160,7 @@ model Creature {
   stamina Int @default(20)
 
   sex CreatureSex?
-  age CreatureAge @default(ADULT)
+  age CreatureAge  @default(ADULT)
 
   isAlive Boolean @default(true)
 

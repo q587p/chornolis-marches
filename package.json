@@ -7,7 +7,8 @@
     "dev": "ts-node-dev src/bot.ts",
     "build": "prisma generate && tsc",
     "start": "node dist/bot.js",
-    "migrate:deploy": "prisma migrate deploy"
+    "migrate:deploy": "prisma migrate deploy",
+    "seed": "ts-node prisma/seed.ts"
   },
   "repository": {
     "type": "git",
@@ -34,6 +35,7 @@
   "devDependencies": {
     "@types/node": "^25.6.0",
     "@types/node-fetch": "^2.6.13",
-    "@types/pg": "^8.20.0"
+    "@types/pg": "^8.20.0",
+    "ts-node": "^10.9.2"
   }
 }
