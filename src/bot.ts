@@ -82,16 +82,38 @@ bot.command("me", async (ctx) => {
 });
 
 bot.command("world", async (ctx) => {
-  const playersCount = await prisma.player.count();
+  const [playersCount, locationsCount, creaturesCount, aliveCreaturesCount] =
+    await Promise.all([
+      prisma.player.count(),
+      prisma.cellLocation.count(),
+      prisma.creature.count(),
+      prisma.creature.count({
+        where: {
+          isAlive: true,
+        },
+      }),
+    ]);
+
+  const speciesStats = await prisma.creature.groupBy({
+    by: ["speciesId"],
+    where: {
+      isAlive: true,
+    },
+    _count: {
+      id: true,
+    },
+  });
 
   await ctx.reply(
     `🌲 Стан Порубіжжя Чорнолісу
 
 Гравців у базі: ${playersCount}
+Локацій-клітинок: ${locationsCount}
+Істот загалом: ${creaturesCount}
+Живих істот: ${aliveCreaturesCount}
 
-Локацій: ще не створено
-Істот: ще не створено
-Поточна подія: світ тільки прокидається`
+Видів у світі: ${speciesStats.length}
+Поточна подія: світ дихає спокійно`
   );
 });
 

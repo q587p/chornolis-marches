@@ -7,11 +7,201 @@ datasource db {
 }
 
 model Player {
-  id         Int      @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   telegramId String   @unique
   username   String?
   firstName  String?
   lastName   String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+
+  currentLocationId Int?
+  currentLocation   CellLocation? @relation(fields: [currentLocationId], references: [id])
+
+  hp        Int @default(20)
+  stamina   Int @default(20)
+  hunger    Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Region {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  name        String
+  description String?
+
+  locations CellLocation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CellLocation {
+  id          Int     @id @default(autoincrement())
+  key         String  @unique
+  name        String
+  description String?
+
+  regionId Int
+  region   Region @relation(fields: [regionId], references: [id])
+
+  x Int
+  y Int
+  z Int @default(0)
+
+  biome       BiomeType @default(FOREST)
+  dangerLevel Int       @default(1)
+
+  players   Player[]
+  creatures Creature[]
+  resources ResourceNode[]
+
+  exitsFrom LocationExit[] @relation("ExitFrom")
+  exitsTo   LocationExit[] @relation("ExitTo")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([regionId, x, y, z])
+}
+
+enum BiomeType {
+  FOREST
+  DEEP_FOREST
+  CLEARING
+  SWAMP
+  RIVER
+  HILL
+  CAVE
+  RUINS
+  VILLAGE
+}
+
+model LocationExit {
+  id Int @id @default(autoincrement())
+
+  fromLocationId Int
+  fromLocation   CellLocation @relation("ExitFrom", fields: [fromLocationId], references: [id])
+
+  toLocationId Int
+  toLocation   CellLocation @relation("ExitTo", fields: [toLocationId], references: [id])
+
+  direction Direction
+  label     String?
+  travelCost Int @default(1)
+
+  isHidden Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@unique([fromLocationId, direction])
+}
+
+enum Direction {
+  NORTH
+  SOUTH
+  EAST
+  WEST
+  UP
+  DOWN
+  INSIDE
+  OUTSIDE
+}
+
+model CreatureSpecies {
+  id          Int     @id @default(autoincrement())
+  key         String  @unique
+  name        String
+  description String?
+
+  kind CreatureKind
+  diet DietType
+
+  baseHp     Int
+  strength   Int
+  agility    Int
+  perception Int
+  endurance  Int
+  instinct   Int
+
+  creatures Creature[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum CreatureKind {
+  ANIMAL
+  HUMAN
+  MONSTER
+  SPIRIT
+}
+
+enum DietType {
+  HERBIVORE
+  CARNIVORE
+  OMNIVORE
+  SPIRITUAL
+}
+
+model Creature {
+  id Int @id @default(autoincrement())
+
+  speciesId Int
+  species   CreatureSpecies @relation(fields: [speciesId], references: [id])
+
+  locationId Int
+  location   CellLocation @relation(fields: [locationId], references: [id])
+
+  name String?
+
+  hp      Int
+  hunger  Int @default(0)
+  stamina Int @default(20)
+
+  sex CreatureSex?
+  age CreatureAge @default(ADULT)
+
+  isAlive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum CreatureSex {
+  MALE
+  FEMALE
+}
+
+enum CreatureAge {
+  YOUNG
+  ADULT
+  OLD
+}
+
+model ResourceType {
+  id          Int     @id @default(autoincrement())
+  key         String  @unique
+  name        String
+  description String?
+
+  nodes ResourceNode[]
+}
+
+model ResourceNode {
+  id Int @id @default(autoincrement())
+
+  locationId Int
+  location   CellLocation @relation(fields: [locationId], references: [id])
+
+  resourceTypeId Int
+  resourceType   ResourceType @relation(fields: [resourceTypeId], references: [id])
+
+  amount    Int @default(0)
+  maxAmount Int @default(100)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([locationId, resourceTypeId])
 }
