@@ -6,7 +6,12 @@ and this project follows semantic-ish versioning.
 
 ---
 
-## [0.2.0] - 2026-05-05
+## [0.2.1] - 12026-05-05
+
+### 🐛 Fixed
+- Movement messages, formating
+
+## [0.2.0] - 12026-05-05
 
 ### ✨ Added
 - Detailed `/look` system:
@@ -74,7 +79,7 @@ and this project follows semantic-ish versioning.
 
 ---
 
-## [0.1.0] - 2026-05-04
+## [0.1.0] - 12026-05-04
 
 ### ✨ Added
 - Initial Telegram bot using grammY
