@@ -21,21 +21,39 @@ A living world simulation:
 * Prisma ORM
 * Render (hosting)
 
+## 🧩 Code structure
+
+The bot entry point is intentionally thin. Most logic is split by responsibility:
+
+```txt
+src/
+  bot.ts                 # bot composition and startup
+  config.ts              # env and app version
+  db.ts                  # PostgreSQL pool + Prisma client
+  gameConfig.ts          # ticks and gameplay constants
+  runtimeState.ts        # last runtime error for status page
+  handlers/              # Telegram commands and callback handlers
+  services/              # game/domain services
+  server/                # HTTP status server
+  ui/                    # labels and keyboards
+  utils/                 # small helpers
+```
+
 ## 🌍 Roadmap
 
 * [x] Cell-based world (grid)
-* [x] Movement (/north, /south, etc.)
-* [+] Resource system
-* [ ] Inventory
+* [x] Movement via inline buttons
+* [x] Resource system
+* [x] Basic inventory display
+* [x] Creatures and simple NPC/animal visibility
+* [x] Admin/status commands
 * [ ] Track system with fading footprints/scents/signs
 * [ ] Stealth and visibility
-* [ ] Creatures (wolves, rabbits, etc.)
 * [ ] Ecosystem simulation/ticks
 * [ ] Hunting and traps
 * [ ] Combat system
 * [ ] Crafting & professions
-* [ ] Events and world history
-* [ ] Admin/status commands
+* [ ] Events and world history expansion
 
 ## Commands
 
@@ -43,6 +61,7 @@ A living world simulation:
 - `/me` — show character state and inventory
 - `/look` — spend a tick to inspect the current location
 - `/world` — show technical world status
+- `/all` — show all players and creatures
 - `/say text` — say something to everyone in the current location
 
 ## Status
@@ -101,6 +120,7 @@ Environment variables:
 * Only one bot instance can run (Telegram polling limitation)
 * Prisma 7 uses adapter-based connection
 * Database migrations required before deploy
+* Keep `src/bot.ts` as composition only; add new gameplay in `handlers/` and `services/`
 
 ## 🧙 Inspiration
 

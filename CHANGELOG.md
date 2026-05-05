@@ -8,7 +8,40 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
-## [0.2.2] - 12026-05-05
+## 0.3.0 - bot.ts refactor - 12026-05-06
+
+### Changed
+
+- Split the large `src/bot.ts` into focused modules:
+  - `src/config.ts` for environment and app version.
+  - `src/db.ts` for PostgreSQL/Prisma setup.
+  - `src/server/statusServer.ts` for `/` and `/health`.
+  - `src/handlers/*` for Telegram commands and callbacks.
+  - `src/services/*` for domain logic: locations, notifications, resources, status, cooldowns, delayed actions, deploy announcements and world events.
+  - `src/ui/*` for inline keyboards and labels.
+  - `src/utils/*` for small helpers.
+- Kept `src/bot.ts` as the app composition/startup file.
+- Updated README with the new code structure and current command list.
+
+### Preserved
+
+- Existing gameplay behavior for `/start`, `/me`, `/look`, `/world`, `/all`, `/say`, movement, gathering and basic social actions.
+- Existing Prisma schema and seed world content.
+- Existing Render status page and health endpoint behavior.
+
+### Notes
+
+- This is a structural refactor intended to make future work on combat, traps, hunting, ecosystem ticks and crafting easier.
+- I could not run a full `npm install && npm run build` in the sandbox because external package download was unavailable.
+
+---
+
+## [0.2.3] - 12026-05-06
+
+### 🐛 Fixed
+- GitHub release workflow.
+
+## [0.2.2] - 12026-05-06
 
 ### ✨ Added
 - Hidden `/all` debug command with all players, NPC/creatures, coordinates, HP and current actions.
@@ -32,7 +65,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
-## [0.2.1] - 12026-05-05
+## [0.2.1] - 12026-05-06
 
 ### 🐛 Fixed
 - Movement messages and formatting.

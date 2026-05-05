@@ -1,0 +1,24 @@
+import { Bot, InlineKeyboard } from "grammy";
+import { prisma } from "../db";
+
+export async function notifyLocation(bot: Bot, locationId: number, exceptPlayerId: number, text: string, keyboard?: InlineKeyboard) {
+  const players = await prisma.player.findMany({ where: { currentLocationId: locationId, NOT: { id: exceptPlayerId } } });
+  for (const player of players) {
+    try {
+      await bot.api.sendMessage(player.telegramId, text, keyboard ? { reply_markup: keyboard } : undefined);
+    } catch (error) {
+      console.warn("Failed to notify location player:", error);
+    }
+  }
+}
+
+export async function notifyRegion(bot: Bot, regionId: number, text: string) {
+  const players = await prisma.player.findMany({ where: { currentLocation: { regionId } } });
+  for (const player of players) {
+    try {
+      await bot.api.sendMessage(player.telegramId, text);
+    } catch (error) {
+      console.warn("Failed to notify region player:", error);
+    }
+  }
+}
