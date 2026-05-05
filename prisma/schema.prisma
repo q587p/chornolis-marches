@@ -6,6 +6,10 @@ datasource db {
   provider = "postgresql"
 }
 
+// =======================
+// PLAYER
+// =======================
+
 model Player {
   id         Int     @id @default(autoincrement())
   telegramId String  @unique
@@ -20,22 +24,25 @@ model Player {
   stamina Int @default(20)
   hunger  Int @default(0)
 
+  // статистика
   steps             Int @default(0)
   looks             Int @default(0)
-  greetings         Int @default(0)
   says              Int @default(0)
   gatherAttempts    Int @default(0)
   successfulGathers Int @default(0)
+  greetings         Int @default(0)
 
   lastActionAt DateTime?
-  lastSayAt    DateTime?
 
-  inventory PlayerResource[]
-  events    WorldEvent[]
+  resources PlayerResource[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// =======================
+// WORLD STRUCTURE
+// =======================
 
 model Region {
   id          Int     @id @default(autoincrement())
@@ -68,10 +75,11 @@ model CellLocation {
   players   Player[]
   creatures Creature[]
   resources ResourceNode[]
-  events    WorldEvent[]
 
   exitsFrom LocationExit[] @relation("ExitFrom")
   exitsTo   LocationExit[] @relation("ExitTo")
+
+  events WorldEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -99,28 +107,9 @@ model LocationExit {
   @@unique([fromLocationId, direction])
 }
 
-enum BiomeType {
-  FOREST
-  DEEP_FOREST
-  CLEARING
-  SWAMP
-  RIVER
-  HILL
-  CAVE
-  RUINS
-  VILLAGE
-}
-
-enum Direction {
-  NORTH
-  SOUTH
-  EAST
-  WEST
-  UP
-  DOWN
-  INSIDE
-  OUTSIDE
-}
+// =======================
+// CREATURES
+// =======================
 
 model CreatureSpecies {
   id          Int     @id @default(autoincrement())
@@ -144,20 +133,6 @@ model CreatureSpecies {
   updatedAt DateTime @updatedAt
 }
 
-enum CreatureKind {
-  ANIMAL
-  HUMAN
-  MONSTER
-  SPIRIT
-}
-
-enum DietType {
-  HERBIVORE
-  CARNIVORE
-  OMNIVORE
-  SPIRITUAL
-}
-
 model Creature {
   id Int @id @default(autoincrement())
 
@@ -173,16 +148,19 @@ model Creature {
   hunger  Int @default(0)
   stamina Int @default(20)
 
-  sex CreatureSex?
-  age CreatureAge  @default(ADULT)
+  // 🔥 ВАЖЛИВО
+  activity      CreatureActivity?
+  currentAction String? // текст типу "збирає трави"
 
-  activity CreatureActivity @default(IDLE)
-
+  // статистика
   steps             Int @default(0)
   looks             Int @default(0)
   says              Int @default(0)
   gatherAttempts    Int @default(0)
   successfulGathers Int @default(0)
+
+  sex CreatureSex?
+  age CreatureAge  @default(ADULT)
 
   isAlive Boolean @default(true)
 
@@ -190,26 +168,9 @@ model Creature {
   updatedAt DateTime @updatedAt
 }
 
-enum CreatureSex {
-  MALE
-  FEMALE
-}
-
-enum CreatureAge {
-  YOUNG
-  ADULT
-  OLD
-}
-
-enum CreatureActivity {
-  IDLE
-  LOOKING
-  MOVING
-  GATHERING
-  SPEAKING
-  FIGHTING
-  SETTING_TRAP
-}
+// =======================
+// RESOURCES
+// =======================
 
 model ResourceType {
   id          Int     @id @default(autoincrement())
@@ -217,8 +178,8 @@ model ResourceType {
   name        String
   description String?
 
-  nodes             ResourceNode[]
-  playerInventories PlayerResource[]
+  nodes           ResourceNode[]
+  playerResources PlayerResource[]
 }
 
 model ResourceNode {
@@ -239,6 +200,10 @@ model ResourceNode {
   @@unique([locationId, resourceTypeId])
 }
 
+// =======================
+// INVENTORY
+// =======================
+
 model PlayerResource {
   id Int @id @default(autoincrement())
 
@@ -256,6 +221,10 @@ model PlayerResource {
   @@unique([playerId, resourceTypeId])
 }
 
+// =======================
+// EVENTS
+// =======================
+
 model WorldEvent {
   id Int @id @default(autoincrement())
 
@@ -263,19 +232,88 @@ model WorldEvent {
   title       String
   description String?
 
+  playerId   Int?
   locationId Int?
-  location   CellLocation? @relation(fields: [locationId], references: [id])
 
-  playerId Int?
-  player   Player? @relation(fields: [playerId], references: [id])
+  location CellLocation? @relation(fields: [locationId], references: [id])
 
   createdAt DateTime @default(now())
 }
 
+// =======================
+// ENUMS
+// =======================
+
+enum Direction {
+  NORTH
+  SOUTH
+  EAST
+  WEST
+  UP
+  DOWN
+  INSIDE
+  OUTSIDE
+}
+
+enum BiomeType {
+  FOREST
+  DEEP_FOREST
+  CLEARING
+  SWAMP
+  RIVER
+  HILL
+  CAVE
+  RUINS
+  VILLAGE
+}
+
+enum CreatureKind {
+  ANIMAL
+  HUMAN
+  MONSTER
+  SPIRIT
+}
+
+enum DietType {
+  HERBIVORE
+  CARNIVORE
+  OMNIVORE
+  SPIRITUAL
+}
+
+enum CreatureSex {
+  MALE
+  FEMALE
+}
+
+enum CreatureAge {
+  YOUNG
+  ADULT
+  OLD
+}
+
+enum CreatureActivity {
+  IDLE
+  MOVING
+  LOOKING
+  GATHERING
+  RESTING
+  TALKING
+  SPEAKING
+  FIGHTING
+  SETTING_TRAP
+}
+
+// 🔥 НЕ ЗВУЖУВАТИ!
 enum WorldEventType {
-  LOOK
+  SYSTEM
+  PLAYER_ACTION
+  NPC_ACTION
   MOVE
+  GATHER
   SAY
+  ERROR
+  LOOK
   GREET
   INSPECT
   GATHER_ATTEMPT
@@ -283,5 +321,4 @@ enum WorldEventType {
   GATHER_FAIL
   NPC_MOVE
   NPC_SAY
-  SYSTEM
 }

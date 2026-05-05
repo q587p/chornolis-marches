@@ -1,31 +1,58 @@
 # 🌲 Chornolis Marches
 
-Telegram RPG prototype with a cell-based living world, PostgreSQL persistence, resources, movement buttons, and first NPC behavior.
+Text-based Telegram RPG with a living ecosystem, inspired by MUDs, Ultima Online, and Ukrainian folklore.
+Tech: living cell-based world, PostgreSQL persistence, Render deployment, and a simple status page.
 
-## Current features
+## 🧠 Vision
 
-- Telegram bot via grammY
-- Render Web Service compatibility through a tiny HTTP health endpoint
-- PostgreSQL + Prisma 7 adapter-based connection
-- Cell-based world map
-- Movement buttons: north, east, south, west, and future extra exits
-- `/start` — create/update player and enter the world
-- `/me` — character stats and inventory
-- `/world` — technical world status
-- `/look` — detailed location inspection
-- `/say <text>` — say something to everyone in the same location
-- Resource nodes: berries, mushrooms, herbs
-- Gathering buttons with random success:
-  - mushrooms: 1/3
-  - berries: 1/4
-  - herbs: 1/5
-- Time tick cooldowns for actions
-- Basic journal through `WorldEvent`
-- First NPC: herbalist
-  - moves through exits
-  - looks for herbs
-  - gathers herbs randomly
-  - sometimes says ambient phrases
+A living world simulation:
+
+* 🐺 Wolves hunt rabbits
+* 🦊 Foxes compete for prey
+* 🐇 Rabbits reproduce
+* 🌿 Resources grow and get depleted
+* 👤 Players interfere and upset the balance
+
+## 🏗 Tech Stack
+
+* TypeScript + Node.js
+* grammY (Telegram bot)
+* PostgreSQL
+* Prisma ORM
+* Render (hosting)
+
+## 🌍 Roadmap
+
+* [x] Cell-based world (grid)
+* [x] Movement (/north, /south, etc.)
+* [+] Resource system
+* [ ] Inventory
+* [ ] Track system with fading footprints/scents/signs
+* [ ] Stealth and visibility
+* [ ] Creatures (wolves, rabbits, etc.)
+* [ ] Ecosystem simulation/ticks
+* [ ] Hunting and traps
+* [ ] Combat system
+* [ ] Crafting & professions
+* [ ] Events and world history
+* [ ] Admin/status commands
+
+## Commands
+
+- `/start` — enter the world
+- `/me` — show character state and inventory
+- `/look` — spend a tick to inspect the current location
+- `/world` — show technical world status
+- `/say text` — say something to everyone in the current location
+
+## Status
+
+Render Web Service exposes:
+
+- `/` — human-readable status page
+- `/health` — JSON health check
+
+The status page shows version, player count, locations, alive creatures/NPC, resource nodes, latest world event, and latest runtime error.
 
 ## Local setup
 
@@ -36,41 +63,22 @@ npm install
 Create `.env`:
 
 ```env
-BOT_TOKEN=your_telegram_bot_token
-DATABASE_URL=your_external_database_url_for_local_dev
+BOT_TOKEN=...
+DATABASE_URL=...
 ```
 
-Build:
+Run migrations and seed:
 
 ```bash
-npm run build
-```
-
-Migrate:
-
-```bash
-npx prisma migrate dev --name add_npc_stats_and_inventory
-```
-
-Seed:
-
-```bash
+npx prisma db push
 npm run seed
-```
-
-Run locally:
-
-```bash
+npm run build
 npm run dev
 ```
 
-Only one bot instance can use Telegram long polling at a time. Stop Render or local dev before starting another instance with the same token.
-
 ## Render
 
-Use Web Service, not Worker, for the current budget setup. The bot opens a small HTTP port so Render considers the service healthy.
-
-Build command:
+Recommended build command:
 
 ```bash
 npm install && npx prisma migrate deploy && npm run build && npm run seed
@@ -84,17 +92,23 @@ npm start
 
 Environment variables:
 
-```env
-BOT_TOKEN=your_telegram_bot_token
-DATABASE_URL=your_internal_render_database_url
-```
+- `BOT_TOKEN`
+- `DATABASE_URL`
+- optional `APP_VERSION`
 
-## Roadmap
+## ⚙️ Dev notes
 
-- Stealth and visibility
-- Skills and skill progression
-- Better action queue
-- Tracks that decay over time
-- Animal ecosystem with individual creatures
-- Combat, traps, trading, theft
-- Admin/status commands
+* Only one bot instance can run (Telegram polling limitation)
+* Prisma 7 uses adapter-based connection
+* Database migrations required before deploy
+
+## 🧙 Inspiration
+
+* Ultima Online
+* MUDs
+* Dwarf Fortress
+* Ukrainian mythology
+
+---
+
+🌲 The forest is watching.

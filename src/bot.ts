@@ -4,28 +4,16 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
 import * as dotenv from "dotenv";
 import http from "http";
+import fs from "fs";
+import path from "path";
 
 dotenv.config();
 
-const port = process.env.PORT || 3000;
+if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not set");
+if (!process.env.BOT_TOKEN) throw new Error("BOT_TOKEN is not set");
 
-http
-  .createServer((_req, res) => {
-    res.writeHead(200);
-    res.end("Chornolis Marches bot is alive 🌲");
-  })
-  .listen(port, () => {
-    console.log(`Server running on port ${port}`);
-  });
-
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL is not set");
-}
-
-if (!process.env.BOT_TOKEN) {
-  throw new Error("BOT_TOKEN is not set");
-}
-
+const appVersion = getAppVersion();
+const port = Number(process.env.PORT || 3000);
 const { Pool } = pg;
 const isRenderInternalDb = process.env.DATABASE_URL.includes(".internal");
 
@@ -38,8 +26,7 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 const bot = new Bot(process.env.BOT_TOKEN);
 
-const TICK_MS = Number(process.env.TICK_MS ?? 5000);
-const NPC_TICK_MS = Number(process.env.NPC_TICK_MS ?? 12000);
+let lastRuntimeError: string | null = null;
 
 const directionLabels: Record<string, string> = {
   NORTH: "Північ",
@@ -52,75 +39,75 @@ const directionLabels: Record<string, string> = {
   OUTSIDE: "Назовні",
 };
 
-const directionButtons: Record<string, string> = {
-  NORTH: "⬆️ Північ",
-  EAST: "Схід ➡️",
-  SOUTH: "⬇️ Південь",
-  WEST: "⬅️ Захід",
-  UP: "⬆️ Вгору",
-  DOWN: "⬇️ Вниз",
-  INSIDE: "🚪 Всередину",
-  OUTSIDE: "🚪 Назовні",
+const gatherConfig: Record<string, { chance: number; ticks: number }> = {
+  mushrooms: { chance: 1 / 3, ticks: 2 },
+  berries: { chance: 1 / 4, ticks: 2 },
+  herbs: { chance: 1 / 5, ticks: 3 },
 };
 
-const gatherRules: Record<string, { chance: number; ticks: number; label: string }> = {
-  mushrooms: { chance: 1 / 3, ticks: 2, label: "гриби" },
-  berries: { chance: 1 / 4, ticks: 1, label: "ягоди" },
-  herbs: { chance: 1 / 5, ticks: 3, label: "трави" },
-};
+const actionCooldown = new Map<string, number>();
+const sayCooldown = new Map<string, number>();
+const TICK_MS = 1500;
 
-const herbalistPhrases = [
-  "Не кожна трава лікує, але кожна щось пам’ятає.",
-  "Після дощу гриби не питають дозволу.",
-  "Там, де мох темний, краще ступати тихо.",
-  "Чорноліс не любить поспіху.",
-  "Ягоди гарні, та не всі для живих.",
-  "Сліди на землі брешуть менше, ніж люди.",
-  "Якщо ліс мовчить — слухай уважніше.",
-  "Траву треба зрізати з подякою, не рвати зі злістю.",
-  "Старі дерева знають дорогу назад.",
-  "Лісовика краще вітати першим.",
-];
-
-const greetingPhrases = [
-  "Здоров будь.",
-  "Нехай стежка буде легкою.",
-  "Мир тобі під цим гіллям.",
-  "Хай Чорноліс тебе не забере.",
-  "Доброго шляху.",
-];
-
-function escapeMd(text: string) {
-  return text.replace(/[_*[\]()~`>#+\-=|{}.!]/g, "\\$&");
-}
-
-function plainName(player: { firstName: string | null; username: string | null }) {
-  return player.firstName ?? player.username ?? "мандрівник";
-}
-
-function resourceAmountLabel(amount: number) {
-  if (amount >= 20) return "багато";
-  if (amount >= 8) return "трохи";
-  return "майже немає";
-}
-
-function creatureActivityText(activity: string) {
-  switch (activity) {
-    case "LOOKING":
-      return "придивляється до місцевості";
-    case "MOVING":
-      return "збирається рушати далі";
-    case "GATHERING":
-      return "щось збирає";
-    case "SPEAKING":
-      return "щось бурмоче собі під ніс";
-    case "FIGHTING":
-      return "б’ється";
-    case "SETTING_TRAP":
-      return "ставить пастку";
-    default:
-      return "стоїть поруч";
+function getAppVersion() {
+  try {
+    const pkgPath = path.join(process.cwd(), "package.json");
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+    return String(process.env.APP_VERSION || pkg.version || "dev");
+  } catch {
+    return String(process.env.APP_VERSION || "dev");
   }
+}
+
+function escapeMarkdownV2(text: string) {
+  return text.replace(/[_*\[\]()~`>#+\-=|{}.!]/g, "\\$&");
+}
+
+function escapeHtml(text: string) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function canSpendTicks(key: string, ticks = 1) {
+  const now = Date.now();
+  const until = actionCooldown.get(key) || 0;
+  if (now < until) return false;
+  actionCooldown.set(key, now + ticks * TICK_MS);
+  return true;
+}
+
+async function logEvent(type: any, title: string, description?: string, locationId?: number) {
+  try {
+    await prisma.worldEvent.create({ data: { type, title, description, locationId } });
+  } catch (error) {
+    console.warn("Failed to write world event:", error);
+  }
+}
+
+function buildMovementKeyboard(exits: any[]) {
+  const keyboard = new InlineKeyboard();
+  const north = exits.find((e) => e.direction === "NORTH");
+  const east = exits.find((e) => e.direction === "EAST");
+  const south = exits.find((e) => e.direction === "SOUTH");
+  const west = exits.find((e) => e.direction === "WEST");
+
+  if (north) keyboard.text("⬆️ Північ", "move:NORTH").row();
+  if (west) keyboard.text("⬅️ Захід", "move:WEST");
+  if (east) keyboard.text("Схід ➡️", "move:EAST");
+  if (west || east) keyboard.row();
+  if (south) keyboard.text("⬇️ Південь", "move:SOUTH").row();
+  keyboard.text("🔎 Оглянутися", "look");
+  return keyboard;
+}
+
+function buildArrivalKeyboard() {
+  return new InlineKeyboard()
+    .text("👋 Привітатися", "social:greet")
+    .text("👁 Придивитися", "social:inspect");
 }
 
 async function safeAnswerCallbackQuery(ctx: any, text?: string) {
@@ -131,113 +118,14 @@ async function safeAnswerCallbackQuery(ctx: any, text?: string) {
   }
 }
 
-async function safeEditOrReply(ctx: any, text: string, keyboard?: InlineKeyboard) {
-  try {
-    await ctx.editMessageText(text, {
-      parse_mode: "MarkdownV2",
-      reply_markup: keyboard,
-    });
-  } catch (error: any) {
-    const description = error?.description ?? "";
-    if (description.includes("message is not modified")) return;
-
-    console.warn("editMessageText failed, sending new message:", error);
-    await ctx.reply(text, {
-      parse_mode: "MarkdownV2",
-      reply_markup: keyboard,
-    });
-  }
-}
-
-async function sendMarkdown(chatId: string, text: string, keyboard?: InlineKeyboard) {
-  try {
-    await bot.api.sendMessage(chatId, text, {
-      parse_mode: "MarkdownV2",
-      reply_markup: keyboard,
-    });
-  } catch (error) {
-    console.warn("sendMessage failed:", error);
-  }
-}
-
-async function logEvent(data: {
-  type: string;
-  title: string;
-  description?: string;
-  locationId?: number | null;
-  playerId?: number | null;
-}) {
-  try {
-    await prisma.worldEvent.create({
-      data: data as any,
-    });
-  } catch (error) {
-    console.warn("Failed to write world event:", error);
-  }
-}
-
 async function getStartLocationId() {
-  const location = await prisma.cellLocation.findUnique({
-    where: { key: "center_chornolis_edge" },
-  });
-
-  if (!location) {
-    throw new Error("Start location not found. Run npm run seed first.");
-  }
-
+  const location = await prisma.cellLocation.findUnique({ where: { key: "center_chornolis_edge" } });
+  if (!location) throw new Error("Start location not found. Run npm run seed first.");
   return location.id;
 }
 
-async function consumeTicks(playerId: number, ticks: number) {
-  const player = await prisma.player.findUnique({ where: { id: playerId } });
-  if (!player) return { ok: false, message: "Персонажа не знайдено." };
-
-  const now = Date.now();
-  const last = player.lastActionAt?.getTime() ?? 0;
-  const cooldown = ticks * TICK_MS;
-  const elapsed = now - last;
-
-  if (elapsed < cooldown) {
-    const left = Math.ceil((cooldown - elapsed) / 1000);
-    return { ok: false, message: `Ти ще зайнятий\. Зачекай ${left} с\.` };
-  }
-
-  await prisma.player.update({
-    where: { id: playerId },
-    data: { lastActionAt: new Date() },
-  });
-
-  return { ok: true, message: "" };
-}
-
-function buildMovementKeyboard(exits: Array<{ direction: string }>) {
-  const keyboard = new InlineKeyboard();
-  const north = exits.find((e) => e.direction === "NORTH");
-  const east = exits.find((e) => e.direction === "EAST");
-  const south = exits.find((e) => e.direction === "SOUTH");
-  const west = exits.find((e) => e.direction === "WEST");
-
-  if (north) keyboard.text(directionButtons.NORTH, "move:NORTH").row();
-  if (west) keyboard.text(directionButtons.WEST, "move:WEST");
-  if (east) keyboard.text(directionButtons.EAST, "move:EAST");
-  if (west || east) keyboard.row();
-  if (south) keyboard.text(directionButtons.SOUTH, "move:SOUTH").row();
-
-  const extraDirections = exits.filter(
-    (e) => !["NORTH", "EAST", "SOUTH", "WEST"].includes(e.direction)
-  );
-  for (const exit of extraDirections) {
-    keyboard.text(directionButtons[exit.direction] ?? directionLabels[exit.direction], `move:${exit.direction}`).row();
-  }
-
-  keyboard.text("🔎 Оглянутися", "look").row();
-  return keyboard;
-}
-
-function socialKeyboard(targetType: "player" | "creature", targetId: number) {
-  return new InlineKeyboard()
-    .text("👋 Привітатися", `greet:${targetType}:${targetId}`)
-    .text("👁 Придивитися", `inspect:${targetType}:${targetId}`);
+async function getPlayerByTelegramId(telegramId: number) {
+  return prisma.player.findUnique({ where: { telegramId: String(telegramId) } });
 }
 
 async function renderLocationBrief(locationId: number, viewerPlayerId?: number) {
@@ -246,28 +134,22 @@ async function renderLocationBrief(locationId: number, viewerPlayerId?: number) 
     include: {
       players: true,
       creatures: { where: { isAlive: true }, include: { species: true } },
-      exitsFrom: {
-        where: { isHidden: false },
-        include: { toLocation: true },
-        orderBy: { direction: "asc" },
-      },
+      exitsFrom: { where: { isHidden: false }, include: { toLocation: true }, orderBy: { direction: "asc" } },
     },
   });
 
   if (!location) throw new Error("Location not found");
 
   const exitsText = location.exitsFrom.length
-    ? location.exitsFrom
-        .map((exit) => `\- ${escapeMd(directionLabels[exit.direction])} → ${escapeMd(exit.toLocation.name)}`)
-        .join("\n")
-    : "Виходів не видно\.";
+    ? location.exitsFrom.map((exit) => `- ${directionLabels[exit.direction]} → ${exit.toLocation.name}`).join("\n")
+    : "Виходів не видно.";
 
-  const otherPlayers = location.players.filter((p) => p.id !== viewerPlayerId);
-  const charactersCount = otherPlayers.length + location.creatures.length;
-  const charactersText = charactersCount > 0 ? `\n\nПоруч хтось є\.` : "";
+  const othersCount =
+    location.players.filter((p) => p.id !== viewerPlayerId).length + location.creatures.filter((c) => c.species.kind !== "ANIMAL").length;
+  const othersText = othersCount > 0 ? "\n\nПоруч хтось є." : "";
 
   return {
-    text: `🌲 *${escapeMd(location.name)}*\n\n${escapeMd(location.description ?? "")}\n\nВиходи:\n${exitsText}${charactersText}`,
+    text: `*${escapeMarkdownV2(location.name)}*\n\n${escapeMarkdownV2(location.description ?? "")}\n${escapeMarkdownV2(othersText)}\n\nВиходи:\n${escapeMarkdownV2(exitsText)}`,
     keyboard: buildMovementKeyboard(location.exitsFrom),
   };
 }
@@ -279,103 +161,135 @@ async function renderLocationDetails(locationId: number, viewerPlayerId?: number
       players: true,
       creatures: { where: { isAlive: true }, include: { species: true } },
       resources: { include: { resourceType: true } },
-      exitsFrom: {
-        where: { isHidden: false },
-        include: { toLocation: true },
-        orderBy: { direction: "asc" },
-      },
+      exitsFrom: { where: { isHidden: false }, include: { toLocation: true }, orderBy: { direction: "asc" } },
     },
   });
 
   if (!location) throw new Error("Location not found");
 
   const otherPlayers = location.players.filter((p) => p.id !== viewerPlayerId);
-  const characterLines = [
-    ...otherPlayers.map((p) => `\- ${escapeMd(plainName(p))}: ${escapeMd("стоїть поруч")}`),
-    ...location.creatures.map((c) => {
-      const name = c.name ?? c.species.name;
-      return `\- ${escapeMd(name)}: ${escapeMd(creatureActivityText(c.activity))}`;
-    }),
+  const npcs = location.creatures.filter((c) => c.species.kind !== "ANIMAL");
+  const visibleCharacters = [
+    ...otherPlayers.map((p) => p.firstName ?? p.username ?? "мандрівник"),
+    ...npcs.map((c) => c.name ?? c.species.name),
   ];
-
-  const charactersText = characterLines.length ? `\n\nПоруч:\n${characterLines.join("\n")}` : "";
+  const charactersText = visibleCharacters.length ? `\n\nТут є:\n${visibleCharacters.map((x) => `- ${x}`).join("\n")}` : "";
 
   const resourceLines = location.resources
     .filter((r) => r.amount > 0)
-    .map((r) => `\- _${escapeMd(r.resourceType.name)}: ${escapeMd(resourceAmountLabel(r.amount))}_`);
+    .map((r) => {
+      const amount = r.amount >= 20 ? "багато" : r.amount >= 8 ? "трохи" : "майже немає";
+      return `- ${r.resourceType.name}: ${amount}`;
+    });
+  const resourcesText = resourceLines.length ? `\n\nТи помічаєш:\n${resourceLines.join("\n")}` : "";
 
-  const resourcesText = resourceLines.length
-    ? `\n\nТи помічаєш:\n${resourceLines.join("\n")}`
-    : "";
+  const creatureHints = location.creatures
+    .filter((c) => c.species.kind === "ANIMAL")
+    .slice(0, 5)
+    .map((c) => `${c.species.name}: ${c.currentAction ?? "проходить"}`);
+  const tracksText = creatureHints.length ? `\n\nСліди та рух:\n${creatureHints.map((x) => `- ${x}`).join("\n")}` : "";
 
   const keyboard = new InlineKeyboard();
   for (const resource of location.resources.filter((r) => r.amount > 0)) {
-    keyboard.text(`Зібрати: ${resource.resourceType.name}`, `gather:${resource.resourceType.key}`).row();
+    const cfg = gatherConfig[resource.resourceType.key];
+    const durationText = cfg ? ` (${Math.round((cfg.ticks * TICK_MS) / 1000)} с)` : "";
+    keyboard.text(`Зібрати: ${resource.resourceType.name}${durationText}`, `gather:${resource.resourceType.key}`).row();
   }
-
-  const movementKeyboard = buildMovementKeyboard(location.exitsFrom);
-  for (const row of movementKeyboard.inline_keyboard) {
+  const movement = buildMovementKeyboard(location.exitsFrom);
+  for (const row of movement.inline_keyboard) {
     for (const button of row) {
-      if ("text" in button && "callback_data" in button) {
-        keyboard.text(button.text, button.callback_data);
-      }
+      if ("text" in button && "callback_data" in button) keyboard.text(button.text, button.callback_data);
     }
     keyboard.row();
   }
 
   return {
-    text: `🔎 *${escapeMd(location.name)}*\n\n_${escapeMd("Ти витрачаєш трохи часу й придивляєшся до місця.")}_\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}${resourcesText}${charactersText}`,
+    text: `*${escapeMarkdownV2(location.name)}*\n\n_Ти уважно оглядаєш місце\._\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}${escapeMarkdownV2(resourcesText)}${escapeMarkdownV2(charactersText)}${escapeMarkdownV2(tracksText)}`,
     keyboard,
   };
 }
 
-async function getOrCreatePlayer(from: NonNullable<any["from"]>) {
-  const startLocationId = await getStartLocationId();
-  return prisma.player.upsert({
-    where: { telegramId: String(from.id) },
-    update: {
-      username: from.username ?? null,
-      firstName: from.first_name ?? null,
-      lastName: from.last_name ?? null,
-      currentLocationId: startLocationId,
-    },
-    create: {
-      telegramId: String(from.id),
-      username: from.username ?? null,
-      firstName: from.first_name ?? null,
-      lastName: from.last_name ?? null,
-      currentLocationId: startLocationId,
-    },
-  });
+async function notifyLocation(locationId: number, exceptPlayerId: number, text: string, keyboard?: InlineKeyboard) {
+  const players = await prisma.player.findMany({ where: { currentLocationId: locationId, NOT: { id: exceptPlayerId } } });
+  for (const player of players) {
+    try {
+      await bot.api.sendMessage(player.telegramId, text, keyboard ? { reply_markup: keyboard } : undefined);
+    } catch (error) {
+      console.warn("Failed to notify location player:", error);
+    }
+  }
 }
 
-async function notifyLocation(locationId: number, exceptPlayerId: number | null, text: string, keyboard?: InlineKeyboard) {
-  const players = await prisma.player.findMany({
-    where: {
-      currentLocationId: locationId,
-      ...(exceptPlayerId ? { NOT: { id: exceptPlayerId } } : {}),
-    },
-  });
+async function announceWorldUpdatedOnce() {
+  const eventTitle = `DEPLOY:${appVersion}`;
+  const alreadySent = await prisma.worldEvent.findFirst({ where: { type: "SYSTEM", title: eventTitle } });
+  if (alreadySent) return;
 
+  const players = await prisma.player.findMany({ select: { telegramId: true } });
+  let success = 0;
+  let failed = 0;
   for (const player of players) {
-    await sendMarkdown(player.telegramId, text, keyboard);
+    try {
+      await bot.api.sendMessage(player.telegramId, `⚙️ Світ Чорнолісу оновився.\n\nВерсія: ${appVersion}\n\nМожна продовжувати гру.`);
+      success++;
+    } catch (error) {
+      failed++;
+      console.warn("Failed to notify player about deploy:", error);
+    }
   }
+
+  await logEvent("SYSTEM", eventTitle, `World update notification sent. Success: ${success}. Failed: ${failed}.`);
+}
+
+async function getStatusData() {
+  const [playersCount, regionsCount, locationsCount, exitsCount, creaturesCount, resourcesCount, eventsCount, latestEvent] = await Promise.all([
+    prisma.player.count(),
+    prisma.region.count(),
+    prisma.cellLocation.count(),
+    prisma.locationExit.count(),
+    prisma.creature.count({ where: { isAlive: true } }),
+    prisma.resourceNode.count(),
+    prisma.worldEvent.count(),
+    prisma.worldEvent.findFirst({ orderBy: { createdAt: "desc" } }),
+  ]);
+
+  return { version: appVersion, playersCount, regionsCount, locationsCount, exitsCount, creaturesCount, resourcesCount, eventsCount, latestEvent, lastRuntimeError };
+}
+
+function startHttpServer() {
+  http
+    .createServer(async (req, res) => {
+      try {
+        const status = await getStatusData();
+        if (req.url === "/health") {
+          res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+          res.end(JSON.stringify({ ok: true, version: status.version, lastRuntimeError: status.lastRuntimeError, latestEvent: status.latestEvent?.title ?? null }));
+          return;
+        }
+
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        res.end(`<!doctype html><html lang="uk"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Chornolis Marches status</title><style>body{font-family:system-ui,sans-serif;max-width:760px;margin:40px auto;padding:0 18px;background:#10170f;color:#e8e0c9} .card{border:1px solid #3b4a2f;border-radius:16px;padding:18px;background:#172114} code{color:#d8b55d}</style></head><body><h1>🌲 Chornolis Marches</h1><div class="card"><p>Status: <strong>online</strong></p><p>Version: <strong>${escapeHtml(status.version)}</strong></p><p>Players: ${status.playersCount}</p><p>Regions: ${status.regionsCount}</p><p>Locations: ${status.locationsCount}</p><p>Exits: ${status.exitsCount}</p><p>Alive creatures / NPC: ${status.creaturesCount}</p><p>Resource nodes: ${status.resourcesCount}</p><p>World events: ${status.eventsCount}</p><p>Latest event: <code>${escapeHtml(status.latestEvent?.title ?? "none")}</code></p><p>Last runtime error: <code>${escapeHtml(status.lastRuntimeError ?? "none")}</code></p></div><p><a href="/health" style="color:#d8b55d">/health JSON</a></p></body></html>`);
+      } catch (error) {
+        lastRuntimeError = String(error);
+        res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ ok: false, error: lastRuntimeError }));
+      }
+    })
+    .listen(port, () => console.log(`Server running on port ${port}`));
 }
 
 bot.command("start", async (ctx) => {
   const from = ctx.from;
-  if (!from) {
-    await ctx.reply("Не бачу дані Telegram-користувача.");
-    return;
-  }
-
-  const player = await getOrCreatePlayer(from);
-  const view = await renderLocationBrief(player.currentLocationId!, player.id);
-
-  await ctx.reply(
-    `🌲 Порубіжжя Чорнолісу ожили\.\n\nВітаю, ${escapeMd(player.firstName ?? "мандрівнику")}\. Твій слід збережено в Чорнолісі\.\n\n${view.text}`,
-    { parse_mode: "MarkdownV2", reply_markup: view.keyboard }
-  );
+  if (!from) return;
+  const startLocationId = await getStartLocationId();
+  const player = await prisma.player.upsert({
+    where: { telegramId: String(from.id) },
+    update: { username: from.username ?? null, firstName: from.first_name ?? null, lastName: from.last_name ?? null, currentLocationId: startLocationId },
+    create: { telegramId: String(from.id), username: from.username ?? null, firstName: from.first_name ?? null, lastName: from.last_name ?? null, currentLocationId: startLocationId },
+  });
+  const view = await renderLocationBrief(startLocationId, player.id);
+  await ctx.reply(`🌲 Порубіжжя Чорнолісу ожили.\n\nВітаю, ${player.firstName ?? "мандрівнику"}. Твій слід збережено в Чорнолісі.`);
+  await ctx.reply(view.text, { parse_mode: "MarkdownV2", reply_markup: view.keyboard });
 });
 
 bot.command("me", async (ctx) => {
@@ -384,64 +298,44 @@ bot.command("me", async (ctx) => {
 
   const player = await prisma.player.findUnique({
     where: { telegramId: String(from.id) },
-    include: { currentLocation: true, inventory: { include: { resourceType: true } } },
+    include: {
+      currentLocation: true,
+      resources: { include: { resourceType: true } },
+    },
   });
 
-  if (!player) {
-    await ctx.reply("Ти ще не увійшов у світ. Напиши /start");
-    return;
-  }
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
-  const inventoryText = player.inventory.length
-    ? player.inventory.map((i) => `\- ${escapeMd(i.resourceType.name)} ×${i.amount}`).join("\n")
+  const items = player.resources.length
+    ? player.resources.map((i) => `${i.resourceType.name} ×${i.amount}`).join("\n")
     : "порожньо";
 
-  await ctx.reply(
-    `🧍 *${escapeMd(plainName(player))}*\n\nHP: ${player.hp}\nВитривалість: ${player.stamina}\nГолод: ${player.hunger}\nЛокація: ${escapeMd(player.currentLocation?.name ?? "невідомо")}\n\nСтатистика:\n\- кроків: ${player.steps}\n\- оглядів: ${player.looks}\n\- вітань: ${player.greetings}\n\- сказано фраз: ${player.says}\n\- пошуків ресурсів: ${player.gatherAttempts}\n\- успішних зборів: ${player.successfulGathers}\n\nІнвентар:\n${inventoryText}`,
-    { parse_mode: "MarkdownV2" }
-  );
+  await ctx.reply(`🧍 Ти:
+
+Ім’я: ${player.firstName ?? "невідомо"}
+HP: ${player.hp}
+Витривалість: ${player.stamina}
+Голод: ${player.hunger}
+Локація: ${player.currentLocation?.name ?? "невідомо"}
+
+Інвентар:
+${items}`);
 });
 
 bot.command("world", async (ctx) => {
-  const [playersCount, regionsCount, locationsCount, exitsCount, creaturesCount, resourcesCount, eventsCount] =
-    await Promise.all([
-      prisma.player.count(),
-      prisma.region.count(),
-      prisma.cellLocation.count(),
-      prisma.locationExit.count(),
-      prisma.creature.count({ where: { isAlive: true } }),
-      prisma.resourceNode.count({ where: { amount: { gt: 0 } } }),
-      prisma.worldEvent.count(),
-    ]);
-
-  const lastEvent = await prisma.worldEvent.findFirst({ orderBy: { createdAt: "desc" } });
-
-  await ctx.reply(
-    `🌲 *Стан Порубіжжя Чорнолісу*\n\nПерсонажів гравців у базі: ${playersCount}\nРегіонів: ${regionsCount}\nЛокацій\-клітинок: ${locationsCount}\nПереходів між клітинками: ${exitsCount}\nЖивих істот / NPC: ${creaturesCount}\nВузлів ресурсів: ${resourcesCount}\nПодій у журналі: ${eventsCount}\n\nПоточна подія: ${escapeMd(lastEvent?.title ?? "світ дихає спокійно")}`,
-    { parse_mode: "MarkdownV2" }
-  );
+  const s = await getStatusData();
+  await ctx.reply(`🌲 Стан Порубіжжя Чорнолісу\n\nВерсія: ${s.version}\nПерсонажів гравців у базі: ${s.playersCount}\nРегіонів: ${s.regionsCount}\nЛокацій-клітинок: ${s.locationsCount}\nПереходів між клітинками: ${s.exitsCount}\nЖивих істот / NPC: ${s.creaturesCount}\nВузлів ресурсів: ${s.resourcesCount}\nПодій у журналі: ${s.eventsCount}\n\nПоточна подія: ${s.latestEvent?.title ?? "немає"}\nОстання помилка: ${s.lastRuntimeError ?? "немає"}`);
 });
 
 bot.command("look", async (ctx) => {
   const from = ctx.from;
   if (!from) return;
 
-  const player = await prisma.player.findUnique({ where: { telegramId: String(from.id) } });
-  if (!player) {
-    await ctx.reply("Ти ще не увійшов у світ. Напиши /start");
-    return;
-  }
-
-  const cooldown = await consumeTicks(player.id, 1);
-  if (!cooldown.ok) {
-    await ctx.reply(cooldown.message, { parse_mode: "MarkdownV2" });
-    return;
-  }
-
+  const player = await getPlayerByTelegramId(from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  if (!canSpendTicks(String(from.id), 1)) return void (await ctx.reply("Ти ще зайнятий."));
   const locationId = player.currentLocationId ?? (await getStartLocationId());
   await prisma.player.update({ where: { id: player.id }, data: { currentLocationId: locationId, looks: { increment: 1 } } });
-  await logEvent({ type: "LOOK", title: `${plainName(player)} оглядається`, locationId, playerId: player.id });
-
   const view = await renderLocationDetails(locationId, player.id);
   await ctx.reply(view.text, { parse_mode: "MarkdownV2", reply_markup: view.keyboard });
 });
@@ -450,266 +344,140 @@ bot.command("say", async (ctx) => {
   const from = ctx.from;
   if (!from) return;
 
-  const text = String(ctx.match ?? "").trim().slice(0, 300);
-  if (!text) {
-    await ctx.reply("Напиши так: /say текст");
-    return;
-  }
+  const text = String(ctx.match || "").trim().slice(0, 300);
+  if (!text) return void (await ctx.reply("Напиши так: /say текст"));
 
-  const player = await prisma.player.findUnique({ where: { telegramId: String(from.id) } });
-  if (!player || !player.currentLocationId) {
-    await ctx.reply("Ти ще не увійшов у світ. Напиши /start");
-    return;
-  }
-
-  const now = Date.now();
-  const lastSay = player.lastSayAt?.getTime() ?? 0;
-  if (now - lastSay < TICK_MS) {
-    await ctx.reply("Ти щойно говорив. Зачекай один тік.");
-    return;
-  }
-
-  await prisma.player.update({ where: { id: player.id }, data: { lastSayAt: new Date(), says: { increment: 1 } } });
-  await logEvent({ type: "SAY", title: `${plainName(player)} каже щось`, description: text, locationId: player.currentLocationId, playerId: player.id });
-
-  await notifyLocation(
-    player.currentLocationId,
-    null,
-    `💬 ${escapeMd(plainName(player))} каже: “${escapeMd(text)}”`
-  );
+  const player = await getPlayerByTelegramId(from.id);
+  if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  if (!canSpendTicks(`say:${from.id}`, 1)) return void (await ctx.reply("Ти ще не можеш говорити так швидко."));
+  const safeText = text.replace(/[\u0000-\u001f\u007f]/g, "");
+  await prisma.player.update({ where: { id: player.id }, data: { says: { increment: 1 } } });
+  await notifyLocation(player.currentLocationId, player.id, `Хтось каже: «${safeText}»`);
+  await ctx.reply(`Ти кажеш: «${safeText}»`);
+  await logEvent("SAY", "Player said something", safeText, player.currentLocationId);
 });
 
 bot.callbackQuery("look", async (ctx) => {
-  const player = await prisma.player.findUnique({ where: { telegramId: String(ctx.from.id) } });
+  const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player || !player.currentLocationId) {
     await safeAnswerCallbackQuery(ctx);
-    await ctx.reply("Ти ще не увійшов у світ. Напиши /start");
-    return;
+    return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
   }
-
-  const cooldown = await consumeTicks(player.id, 1);
-  if (!cooldown.ok) {
-    await safeAnswerCallbackQuery(ctx, cooldown.message.replace(/\\/g, ""));
-    return;
-  }
-
+  if (!canSpendTicks(String(ctx.from.id), 1)) return void (await safeAnswerCallbackQuery(ctx, "Ти ще зайнятий."));
   await prisma.player.update({ where: { id: player.id }, data: { looks: { increment: 1 } } });
-  await logEvent({ type: "LOOK", title: `${plainName(player)} оглядається`, locationId: player.currentLocationId, playerId: player.id });
-
   const view = await renderLocationDetails(player.currentLocationId, player.id);
   await safeAnswerCallbackQuery(ctx);
-  await safeEditOrReply(ctx, view.text, view.keyboard);
+  try {
+    await ctx.editMessageText(view.text, { parse_mode: "MarkdownV2", reply_markup: view.keyboard });
+  } catch (error: any) {
+    if (!String(error?.description || "").includes("message is not modified")) {
+      await ctx.reply(view.text, { parse_mode: "MarkdownV2", reply_markup: view.keyboard });
+    }
+  }
 });
 
 bot.callbackQuery(/^move:(NORTH|EAST|SOUTH|WEST|UP|DOWN|INSIDE|OUTSIDE)$/, async (ctx) => {
-  const direction = ctx.match[1];
-  const player = await prisma.player.findUnique({ where: { telegramId: String(ctx.from.id) } });
-
+  const direction = ctx.match[1] as any;
+  const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) {
     await safeAnswerCallbackQuery(ctx);
-    await ctx.reply("Ти ще не увійшов у світ. Напиши /start");
-    return;
+    return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
   }
-
-  const cooldown = await consumeTicks(player.id, 1);
-  if (!cooldown.ok) {
-    await safeAnswerCallbackQuery(ctx, cooldown.message.replace(/\\/g, ""));
-    return;
-  }
-
   const currentLocationId = player.currentLocationId ?? (await getStartLocationId());
-  const exit = await prisma.locationExit.findUnique({
-    where: { fromLocationId_direction: { fromLocationId: currentLocationId, direction: direction as any } },
-  });
+  const exit = await prisma.locationExit.findUnique({ where: { fromLocationId_direction: { fromLocationId: currentLocationId, direction } } });
+  if (!exit || exit.isHidden) return void (await safeAnswerCallbackQuery(ctx, "Туди немає видимого шляху."));
 
-  if (!exit || exit.isHidden) {
-    await safeAnswerCallbackQuery(ctx, "Туди немає видимого шляху.");
-    return;
-  }
-
-  await notifyLocation(currentLocationId, player.id, "🚶 Хтось пішов звідси\.");
-
-  await prisma.player.update({
-    where: { id: player.id },
-    data: {
-      currentLocationId: exit.toLocationId,
-      stamina: Math.max(0, player.stamina - exit.travelCost),
-      steps: { increment: 1 },
-    },
-  });
-
-  await logEvent({
-    type: "MOVE",
-    title: `${plainName(player)} рухається`,
-    description: direction,
-    locationId: exit.toLocationId,
-    playerId: player.id,
-  });
-
-  await notifyLocation(
-    exit.toLocationId,
-    player.id,
-    "🚶 Хтось прийшов сюди\.",
-    socialKeyboard("player", player.id)
-  );
+  await notifyLocation(currentLocationId, player.id, "Хтось пішов звідси.");
+  await prisma.player.update({ where: { id: player.id }, data: { currentLocationId: exit.toLocationId, steps: { increment: 1 } } });
+  await notifyLocation(exit.toLocationId, player.id, "Хтось прийшов сюди.", buildArrivalKeyboard());
+  await logEvent("MOVE", "Player moved", direction, exit.toLocationId);
 
   const view = await renderLocationBrief(exit.toLocationId, player.id);
-  await safeAnswerCallbackQuery(ctx, `Ти рушив: ${directionLabels[direction]}`);
-  await safeEditOrReply(ctx, view.text, view.keyboard);
+  await safeAnswerCallbackQuery(ctx);
+  await ctx.reply(`Ти рушив: ${directionLabels[direction]}\n\n${view.text}`, { parse_mode: "MarkdownV2", reply_markup: view.keyboard });
 });
 
 bot.callbackQuery(/^gather:(berries|mushrooms|herbs)$/, async (ctx) => {
-  const resourceKey = ctx.match[1];
-  const rule = gatherRules[resourceKey];
-  const player = await prisma.player.findUnique({ where: { telegramId: String(ctx.from.id) } });
-
+  const key = ctx.match[1];
+  const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player || !player.currentLocationId) {
     await safeAnswerCallbackQuery(ctx);
-    await ctx.reply("Ти ще не увійшов у світ. Напиши /start");
-    return;
+    return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
   }
+  const cfg = gatherConfig[key];
+  const durationSeconds = Math.round((cfg.ticks * TICK_MS) / 1000);
+  if (!canSpendTicks(String(ctx.from.id), cfg.ticks)) return void (await safeAnswerCallbackQuery(ctx, "Ти ще зайнятий."));
 
-  const cooldown = await consumeTicks(player.id, rule.ticks);
-  if (!cooldown.ok) {
-    await safeAnswerCallbackQuery(ctx, cooldown.message.replace(/\\/g, ""));
-    return;
-  }
-
-  const resource = await prisma.resourceNode.findFirst({
-    where: {
-      locationId: player.currentLocationId,
-      resourceType: { key: resourceKey },
-      amount: { gt: 0 },
-    },
-    include: { resourceType: true },
-  });
-
-  await prisma.player.update({ where: { id: player.id }, data: { gatherAttempts: { increment: 1 }, stamina: Math.max(0, player.stamina - rule.ticks) } });
-  await logEvent({ type: "GATHER_ATTEMPT", title: `${plainName(player)} шукає ${rule.label}`, locationId: player.currentLocationId, playerId: player.id });
-
-  if (!resource || Math.random() > rule.chance) {
-    await logEvent({ type: "GATHER_FAIL", title: `${plainName(player)} нічого не знаходить`, locationId: player.currentLocationId, playerId: player.id });
+  const resource = await prisma.resourceNode.findFirst({ where: { locationId: player.currentLocationId, resourceType: { key }, amount: { gt: 0 } }, include: { resourceType: true } });
+  await prisma.player.update({ where: { id: player.id }, data: { gatherAttempts: { increment: 1 } } });
+  if (!resource || Math.random() > cfg.chance) {
     await safeAnswerCallbackQuery(ctx);
-    await ctx.reply(`_${escapeMd("Ти витрачаєш час, але нічого не знаходиш.")}_`, { parse_mode: "MarkdownV2" });
+    await ctx.reply(`Ти витрачаєш час на пошуки (${durationSeconds} с), але нічого корисного не знаходиш.`);
+    await logEvent("GATHER", "Gather failed", key, player.currentLocationId);
     return;
   }
 
   const found = Math.min(resource.amount, Math.floor(Math.random() * 3) + 1);
   await prisma.resourceNode.update({ where: { id: resource.id }, data: { amount: resource.amount - found } });
-  await prisma.player.update({ where: { id: player.id }, data: { successfulGathers: { increment: 1 } } });
   await prisma.playerResource.upsert({
-    where: { playerId_resourceTypeId: { playerId: player.id, resourceTypeId: resource.resourceTypeId } },
+    where: {
+      playerId_resourceTypeId: {
+        playerId: player.id,
+        resourceTypeId: resource.resourceTypeId,
+      },
+    },
     update: { amount: { increment: found } },
-    create: { playerId: player.id, resourceTypeId: resource.resourceTypeId, amount: found },
+    create: {
+      playerId: player.id,
+      resourceTypeId: resource.resourceTypeId,
+      amount: found,
+    },
   });
-
-  await logEvent({ type: "GATHER_SUCCESS", title: `${plainName(player)} знаходить ${resource.resourceType.name}`, locationId: player.currentLocationId, playerId: player.id });
+  await prisma.player.update({ where: { id: player.id }, data: { successfulGathers: { increment: 1 } } });
   await safeAnswerCallbackQuery(ctx);
-  await ctx.reply(`🌿 _${escapeMd(`Ти знаходиш: ${resource.resourceType.name} ×${found}.`)}_`, { parse_mode: "MarkdownV2" });
+  await ctx.reply(`Ти витрачаєш час на пошуки (${durationSeconds} с) і знаходиш: ${resource.resourceType.name} ×${found}.`);
+  await logEvent("GATHER", "Gather succeeded", `${resource.resourceType.name} ×${found}`, player.currentLocationId);
 });
 
-bot.callbackQuery(/^greet:(player|creature):(\d+)$/, async (ctx) => {
-  const targetType = ctx.match[1] as "player" | "creature";
-  const targetId = Number(ctx.match[2]);
-  const player = await prisma.player.findUnique({ where: { telegramId: String(ctx.from.id) } });
-  if (!player || !player.currentLocationId) {
-    await safeAnswerCallbackQuery(ctx);
-    return;
-  }
-
-  const phrase = greetingPhrases[Math.floor(Math.random() * greetingPhrases.length)];
-  await prisma.player.update({ where: { id: player.id }, data: { greetings: { increment: 1 } } });
-  await logEvent({ type: "GREET", title: `${plainName(player)} вітається`, description: `${targetType}:${targetId}`, locationId: player.currentLocationId, playerId: player.id });
-  await safeAnswerCallbackQuery(ctx, "Ти вітаєшся.");
-  await notifyLocation(player.currentLocationId, null, `👋 ${escapeMd(plainName(player))}: “${escapeMd(phrase)}”`);
+bot.callbackQuery("social:greet", async (ctx) => {
+  const greetings = ["Доброго здоров’я.", "Хай ліс буде прихильним.", "Мирного шляху.", "Не заблукай у Чорнолісі."];
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (player) await prisma.player.update({ where: { id: player.id }, data: { greetings: { increment: 1 } } });
+  await safeAnswerCallbackQuery(ctx);
+  await ctx.reply(greetings[Math.floor(Math.random() * greetings.length)]);
 });
 
-bot.callbackQuery(/^inspect:(player|creature):(\d+)$/, async (ctx) => {
-  const targetType = ctx.match[1] as "player" | "creature";
-  const targetId = Number(ctx.match[2]);
-
-  let text = "Нікого такого поруч не видно\.";
-  if (targetType === "player") {
-    const target = await prisma.player.findUnique({ where: { id: targetId } });
-    if (target) text = `👁 Ти придивляєшся: *${escapeMd(plainName(target))}*\.`;
-  } else {
-    const target = await prisma.creature.findUnique({ where: { id: targetId }, include: { species: true } });
-    if (target) text = `👁 Ти придивляєшся: *${escapeMd(target.name ?? target.species.name)}*\. ${escapeMd(creatureActivityText(target.activity))}\.`;
-  }
-
+bot.callbackQuery("social:inspect", async (ctx) => {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player || !player.currentLocationId) return void (await safeAnswerCallbackQuery(ctx));
+  await prisma.player.update({ where: { id: player.id }, data: { looks: { increment: 1 } } });
+  const others = await prisma.player.findMany({ where: { currentLocationId: player.currentLocationId, NOT: { id: player.id } } });
   await safeAnswerCallbackQuery(ctx);
-  await ctx.reply(text, { parse_mode: "MarkdownV2" });
+  await ctx.reply(others.length ? `Ти придивляєшся: ${others.map((p) => p.firstName ?? p.username ?? "мандрівник").join(", ")}` : "Ти не бачиш нікого достатньо близько.");
 });
 
 bot.on("message", async (ctx) => {
   await ctx.reply("Я ще вчуся, але світ уже дихає.");
 });
 
-async function runHerbalistTick() {
-  const herbalist = await prisma.creature.findFirst({
-    where: { species: { key: "human_herbalist" }, isAlive: true },
-    include: { location: { include: { exitsFrom: { where: { isHidden: false } } } }, species: true },
-  });
-  if (!herbalist) return;
-
-  const locationId = herbalist.locationId;
-
-  if (Math.random() < 0.2) {
-    const phrase = herbalistPhrases[Math.floor(Math.random() * herbalistPhrases.length)];
-    await prisma.creature.update({ where: { id: herbalist.id }, data: { activity: "SPEAKING", says: { increment: 1 } } });
-    await logEvent({ type: "NPC_SAY", title: "Травник говорить", description: phrase, locationId });
-    await notifyLocation(locationId, null, `💬 ${escapeMd(herbalist.name ?? "Травник")}: “${escapeMd(phrase)}”`);
-    return;
-  }
-
-  const herbs = await prisma.resourceNode.findFirst({
-    where: { locationId, resourceType: { key: "herbs" }, amount: { gt: 0 } },
-    include: { resourceType: true },
-  });
-
-  if (herbs && Math.random() < 0.67) {
-    await prisma.creature.update({ where: { id: herbalist.id }, data: { activity: "GATHERING", gatherAttempts: { increment: 1 } } });
-
-    if (Math.random() < gatherRules.herbs.chance) {
-      await prisma.resourceNode.update({ where: { id: herbs.id }, data: { amount: Math.max(0, herbs.amount - 1) } });
-      await prisma.creature.update({ where: { id: herbalist.id }, data: { successfulGathers: { increment: 1 } } });
-      await logEvent({ type: "GATHER_SUCCESS", title: "Травник знаходить трави", locationId });
-    } else {
-      await logEvent({ type: "GATHER_FAIL", title: "Травник шукає трави, але нічого не знаходить", locationId });
-    }
-    return;
-  }
-
-  const exits = herbalist.location.exitsFrom;
-  if (exits.length === 0) return;
-
-  const exit = exits[Math.floor(Math.random() * exits.length)];
-  await notifyLocation(locationId, null, `🚶 ${escapeMd(herbalist.name ?? "Травник")} пішов звідси\.`);
-  await prisma.creature.update({
-    where: { id: herbalist.id },
-    data: { locationId: exit.toLocationId, activity: "MOVING", steps: { increment: 1 } },
-  });
-  await logEvent({ type: "NPC_MOVE", title: "Травник рухається", description: exit.direction, locationId: exit.toLocationId });
-  await notifyLocation(exit.toLocationId, null, `🚶 Хтось прийшов сюди\.`, socialKeyboard("creature", herbalist.id));
-}
-
 bot.catch((err) => {
+  lastRuntimeError = String(err.error);
   console.error("Bot handler error:", err.error);
+  logEvent("ERROR", "Bot handler error", lastRuntimeError).catch(() => undefined);
 });
 
 async function main() {
   console.log("Bot starting...");
-  setInterval(() => {
-    runHerbalistTick().catch((error) => console.error("Herbalist tick failed:", error));
-  }, NPC_TICK_MS);
-
-  await bot.start();
+  startHttpServer();
+  await announceWorldUpdatedOnce();
+  bot.start();
 }
 
 main().catch(async (error) => {
+  lastRuntimeError = String(error);
   console.error("Bot crashed:", error);
+  await logEvent("ERROR", "Bot crashed", lastRuntimeError);
   await prisma.$disconnect();
-  await pool.end();
   process.exit(1);
 });
 
