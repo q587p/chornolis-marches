@@ -39,10 +39,10 @@ const directionLabels: Record<string, string> = {
   OUTSIDE: "Назовні",
 };
 
-const gatherConfig: Record<string, { chance: number; ticks: number }> = {
-  mushrooms: { chance: 1 / 3, ticks: 2 },
-  berries: { chance: 1 / 4, ticks: 2 },
-  herbs: { chance: 1 / 5, ticks: 3 },
+const gatherConfig: Record<string, { chance: number; ticks: number; foundField: string; searchedField: string }> = {
+  mushrooms: { chance: 1 / 3, ticks: 2, foundField: "foundMushrooms", searchedField: "searchedMushrooms" },
+  berries: { chance: 1 / 4, ticks: 2, foundField: "foundBerries", searchedField: "searchedBerries" },
+  herbs: { chance: 1 / 5, ticks: 3, foundField: "foundHerbs", searchedField: "searchedHerbs" },
 };
 
 const actionCooldown = new Map<string, number>();
@@ -146,10 +146,10 @@ async function renderLocationBrief(locationId: number, viewerPlayerId?: number) 
 
   const othersCount =
     location.players.filter((p) => p.id !== viewerPlayerId).length + location.creatures.filter((c) => c.species.kind !== "ANIMAL").length;
-  const othersText = othersCount > 0 ? "\n\nПоруч хтось є." : "";
+  const othersText = othersCount > 0 ? "\n\n<i>Поруч хтось є.</i>" : "";
 
   return {
-    text: `*${escapeMarkdownV2(location.name)}*\n\n${escapeMarkdownV2(location.description ?? "")}\n${escapeMarkdownV2(othersText)}\n\nВиходи:\n${escapeMarkdownV2(exitsText)}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n\n${escapeHtml(location.description ?? "")}${othersText}\n\nВиходи:\n${escapeHtml(exitsText)}`,
     keyboard: buildMovementKeyboard(location.exitsFrom),
   };
 }
@@ -171,7 +171,10 @@ async function renderLocationDetails(locationId: number, viewerPlayerId?: number
   const npcs = location.creatures.filter((c) => c.species.kind !== "ANIMAL");
   const visibleCharacters = [
     ...otherPlayers.map((p) => p.firstName ?? p.username ?? "мандрівник"),
-    ...npcs.map((c) => c.name ?? c.species.name),
+    ...npcs.map((c) => {
+      const name = c.name ?? c.species.name;
+      return c.currentAction ? `${name} — ${c.currentAction}` : name;
+    }),
   ];
   const charactersText = visibleCharacters.length ? `\n\nТут є:\n${visibleCharacters.map((x) => `- ${x}`).join("\n")}` : "";
 
@@ -179,9 +182,9 @@ async function renderLocationDetails(locationId: number, viewerPlayerId?: number
     .filter((r) => r.amount > 0)
     .map((r) => {
       const amount = r.amount >= 20 ? "багато" : r.amount >= 8 ? "трохи" : "майже немає";
-      return `- ${r.resourceType.name}: ${amount}`;
+      return `- <i>${escapeHtml(r.resourceType.name)}: ${amount}</i>`;
     });
-  const resourcesText = resourceLines.length ? `\n\nТи помічаєш:\n${resourceLines.join("\n")}` : "";
+  const resourcesText = resourceLines.length ? `\n\nВи помічаєте:\n${resourceLines.join("\n")}` : "";
 
   const creatureHints = location.creatures
     .filter((c) => c.species.kind === "ANIMAL")
@@ -204,7 +207,7 @@ async function renderLocationDetails(locationId: number, viewerPlayerId?: number
   }
 
   return {
-    text: `*${escapeMarkdownV2(location.name)}*\n\n_Ти уважно оглядаєш місце\._\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}${escapeMarkdownV2(resourcesText)}${escapeMarkdownV2(charactersText)}${escapeMarkdownV2(tracksText)}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n\n<i>Ви придивляєтесь.</i>\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}${resourcesText}${escapeHtml(charactersText)}${escapeHtml(tracksText)}`,
     keyboard,
   };
 }
@@ -242,18 +245,19 @@ async function announceWorldUpdatedOnce() {
 }
 
 async function getStatusData() {
-  const [playersCount, regionsCount, locationsCount, exitsCount, creaturesCount, resourcesCount, eventsCount, latestEvent] = await Promise.all([
+  const [playersCount, regionsCount, locationsCount, exitsCount, aliveCreaturesCount, npcCount, resourcesCount, eventsCount, latestEvent] = await Promise.all([
     prisma.player.count(),
     prisma.region.count(),
     prisma.cellLocation.count(),
     prisma.locationExit.count(),
     prisma.creature.count({ where: { isAlive: true } }),
+    prisma.creature.count({ where: { isAlive: true, species: { kind: { not: "ANIMAL" } } } }),
     prisma.resourceNode.count(),
     prisma.worldEvent.count(),
     prisma.worldEvent.findFirst({ orderBy: { createdAt: "desc" } }),
   ]);
 
-  return { version: appVersion, playersCount, regionsCount, locationsCount, exitsCount, creaturesCount, resourcesCount, eventsCount, latestEvent, lastRuntimeError };
+  return { version: appVersion, playersCount, regionsCount, locationsCount, exitsCount, aliveCreaturesCount, npcCount, resourcesCount, eventsCount, latestEvent, lastRuntimeError };
 }
 
 function startHttpServer() {
@@ -268,7 +272,7 @@ function startHttpServer() {
         }
 
         res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-        res.end(`<!doctype html><html lang="uk"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Chornolis Marches status</title><style>body{font-family:system-ui,sans-serif;max-width:760px;margin:40px auto;padding:0 18px;background:#10170f;color:#e8e0c9} .card{border:1px solid #3b4a2f;border-radius:16px;padding:18px;background:#172114} code{color:#d8b55d}</style></head><body><h1>🌲 Chornolis Marches</h1><div class="card"><p>Status: <strong>online</strong></p><p>Version: <strong>${escapeHtml(status.version)}</strong></p><p>Players: ${status.playersCount}</p><p>Regions: ${status.regionsCount}</p><p>Locations: ${status.locationsCount}</p><p>Exits: ${status.exitsCount}</p><p>Alive creatures / NPC: ${status.creaturesCount}</p><p>Resource nodes: ${status.resourcesCount}</p><p>World events: ${status.eventsCount}</p><p>Latest event: <code>${escapeHtml(status.latestEvent?.title ?? "none")}</code></p><p>Last runtime error: <code>${escapeHtml(status.lastRuntimeError ?? "none")}</code></p></div><p><a href="/health" style="color:#d8b55d">/health JSON</a></p></body></html>`);
+        res.end(`<!doctype html><html lang="uk"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Chornolis Marches status</title><style>body{font-family:system-ui,sans-serif;max-width:760px;margin:40px auto;padding:0 18px;background:#10170f;color:#e8e0c9} .card{border:1px solid #3b4a2f;border-radius:16px;padding:18px;background:#172114} code{color:#d8b55d}</style></head><body><h1>🌲 Chornolis Marches</h1><div class="card"><p>Status: <strong>online</strong></p><p>Version: <strong>${escapeHtml(status.version)}</strong></p><p>Players: ${status.playersCount}</p><p>Regions: ${status.regionsCount}</p><p>Locations: ${status.locationsCount}</p><p>Exits: ${status.exitsCount}</p><p>Alive creatures: ${status.aliveCreaturesCount}</p><p>NPC / non-animals: ${status.npcCount}</p><p>Resource nodes: ${status.resourcesCount}</p><p>World events: ${status.eventsCount}</p><p>Latest event: <code>${escapeHtml(status.latestEvent?.title ?? "none")}</code></p><p>Last runtime error: <code>${escapeHtml(status.lastRuntimeError ?? "none")}</code></p></div><p><a href="/health" style="color:#d8b55d">/health JSON</a></p></body></html>`);
       } catch (error) {
         lastRuntimeError = String(error);
         res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
@@ -289,67 +293,38 @@ bot.command("start", async (ctx) => {
   });
   const view = await renderLocationBrief(startLocationId, player.id);
   await ctx.reply(`🌲 Порубіжжя Чорнолісу ожили.\n\nВітаю, ${player.firstName ?? "мандрівнику"}. Твій слід збережено в Чорнолісі.`);
-  await ctx.reply(view.text, { parse_mode: "MarkdownV2", reply_markup: view.keyboard });
+  await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
 });
 
 bot.command("me", async (ctx) => {
-  const from = ctx.from;
-  if (!from) return;
-
-  const player = await prisma.player.findUnique({
-    where: { telegramId: String(from.id) },
-    include: {
-      currentLocation: true,
-      resources: { include: { resourceType: true } },
-    },
-  });
-
+  const player = await prisma.player.findUnique({ where: { telegramId: String(ctx.from?.id) }, include: { currentLocation: true, inventory: true } });
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
-
-  const items = player.resources.length
-    ? player.resources.map((i) => `${i.resourceType.name} ×${i.amount}`).join("\n")
-    : "порожньо";
-
-  await ctx.reply(`🧍 Ти:
-
-Ім’я: ${player.firstName ?? "невідомо"}
-HP: ${player.hp}
-Витривалість: ${player.stamina}
-Голод: ${player.hunger}
-Локація: ${player.currentLocation?.name ?? "невідомо"}
-
-Інвентар:
-${items}`);
+  const items = player.inventory.length ? player.inventory.map((i) => `${i.name} ×${i.quantity}`).join("\n") : "порожньо";
+  await ctx.reply(`🧍 Ти:\n\nІм’я: ${player.firstName ?? "невідомо"}\nHP: ${player.hp}\nВитривалість: ${player.stamina}\nГолод: ${player.hunger}\nЛокація: ${player.currentLocation?.name ?? "невідомо"}\n\nІнвентар:\n${items}`);
 });
 
 bot.command("world", async (ctx) => {
   const s = await getStatusData();
-  await ctx.reply(`🌲 Стан Порубіжжя Чорнолісу\n\nВерсія: ${s.version}\nПерсонажів гравців у базі: ${s.playersCount}\nРегіонів: ${s.regionsCount}\nЛокацій-клітинок: ${s.locationsCount}\nПереходів між клітинками: ${s.exitsCount}\nЖивих істот / NPC: ${s.creaturesCount}\nВузлів ресурсів: ${s.resourcesCount}\nПодій у журналі: ${s.eventsCount}\n\nПоточна подія: ${s.latestEvent?.title ?? "немає"}\nОстання помилка: ${s.lastRuntimeError ?? "немає"}`);
+  await ctx.reply(`🌲 Стан Порубіжжя Чорнолісу\n\nВерсія: ${s.version}\nПерсонажів гравців у базі: ${s.playersCount}\nРегіонів: ${s.regionsCount}\nЛокацій-клітинок: ${s.locationsCount}\nПереходів між клітинками: ${s.exitsCount}\nЖивих істот: ${s.aliveCreaturesCount}
+NPC / не-тварин: ${s.npcCount}\nВузлів ресурсів: ${s.resourcesCount}\nПодій у журналі: ${s.eventsCount}\n\nПоточна подія: ${s.latestEvent?.title ?? "немає"}\nОстання помилка: ${s.lastRuntimeError ?? "немає"}`);
 });
 
 bot.command("look", async (ctx) => {
-  const from = ctx.from;
-  if (!from) return;
-
-  const player = await getPlayerByTelegramId(from.id);
+  const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
-  if (!canSpendTicks(String(from.id), 1)) return void (await ctx.reply("Ти ще зайнятий."));
+  if (!canSpendTicks(String(ctx.from.id), 1)) return void (await ctx.reply("Ти ще зайнятий."));
   const locationId = player.currentLocationId ?? (await getStartLocationId());
   await prisma.player.update({ where: { id: player.id }, data: { currentLocationId: locationId, looks: { increment: 1 } } });
   const view = await renderLocationDetails(locationId, player.id);
-  await ctx.reply(view.text, { parse_mode: "MarkdownV2", reply_markup: view.keyboard });
+  await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
 });
 
 bot.command("say", async (ctx) => {
-  const from = ctx.from;
-  if (!from) return;
-
   const text = String(ctx.match || "").trim().slice(0, 300);
   if (!text) return void (await ctx.reply("Напиши так: /say текст"));
-
-  const player = await getPlayerByTelegramId(from.id);
+  const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
-  if (!canSpendTicks(`say:${from.id}`, 1)) return void (await ctx.reply("Ти ще не можеш говорити так швидко."));
+  if (!canSpendTicks(`say:${ctx.from.id}`, 1)) return void (await ctx.reply("Ти ще не можеш говорити так швидко."));
   const safeText = text.replace(/[\u0000-\u001f\u007f]/g, "");
   await prisma.player.update({ where: { id: player.id }, data: { says: { increment: 1 } } });
   await notifyLocation(player.currentLocationId, player.id, `Хтось каже: «${safeText}»`);
@@ -368,10 +343,10 @@ bot.callbackQuery("look", async (ctx) => {
   const view = await renderLocationDetails(player.currentLocationId, player.id);
   await safeAnswerCallbackQuery(ctx);
   try {
-    await ctx.editMessageText(view.text, { parse_mode: "MarkdownV2", reply_markup: view.keyboard });
+    await ctx.editMessageText(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
   } catch (error: any) {
     if (!String(error?.description || "").includes("message is not modified")) {
-      await ctx.reply(view.text, { parse_mode: "MarkdownV2", reply_markup: view.keyboard });
+      await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
     }
   }
 });
@@ -394,7 +369,8 @@ bot.callbackQuery(/^move:(NORTH|EAST|SOUTH|WEST|UP|DOWN|INSIDE|OUTSIDE)$/, async
 
   const view = await renderLocationBrief(exit.toLocationId, player.id);
   await safeAnswerCallbackQuery(ctx);
-  await ctx.reply(`Ти рушив: ${directionLabels[direction]}\n\n${view.text}`, { parse_mode: "MarkdownV2", reply_markup: view.keyboard });
+  await ctx.reply(`Ти рушив: ${directionLabels[direction]}`);
+  await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
 });
 
 bot.callbackQuery(/^gather:(berries|mushrooms|herbs)$/, async (ctx) => {
@@ -409,7 +385,7 @@ bot.callbackQuery(/^gather:(berries|mushrooms|herbs)$/, async (ctx) => {
   if (!canSpendTicks(String(ctx.from.id), cfg.ticks)) return void (await safeAnswerCallbackQuery(ctx, "Ти ще зайнятий."));
 
   const resource = await prisma.resourceNode.findFirst({ where: { locationId: player.currentLocationId, resourceType: { key }, amount: { gt: 0 } }, include: { resourceType: true } });
-  await prisma.player.update({ where: { id: player.id }, data: { gatherAttempts: { increment: 1 } } });
+  await prisma.player.update({ where: { id: player.id }, data: { gathers: { increment: 1 }, [cfg.searchedField]: { increment: 1 } } as any });
   if (!resource || Math.random() > cfg.chance) {
     await safeAnswerCallbackQuery(ctx);
     await ctx.reply(`Ти витрачаєш час на пошуки (${durationSeconds} с), але нічого корисного не знаходиш.`);
@@ -419,41 +395,28 @@ bot.callbackQuery(/^gather:(berries|mushrooms|herbs)$/, async (ctx) => {
 
   const found = Math.min(resource.amount, Math.floor(Math.random() * 3) + 1);
   await prisma.resourceNode.update({ where: { id: resource.id }, data: { amount: resource.amount - found } });
-  await prisma.playerResource.upsert({
-    where: {
-      playerId_resourceTypeId: {
-        playerId: player.id,
-        resourceTypeId: resource.resourceTypeId,
-      },
-    },
-    update: { amount: { increment: found } },
-    create: {
-      playerId: player.id,
-      resourceTypeId: resource.resourceTypeId,
-      amount: found,
-    },
-  });
-  await prisma.player.update({ where: { id: player.id }, data: { successfulGathers: { increment: 1 } } });
+  await prisma.inventoryItem.upsert({ where: { playerId_key: { playerId: player.id, key } }, update: { quantity: { increment: found } }, create: { playerId: player.id, key, name: resource.resourceType.name, quantity: found } });
+  await prisma.player.update({ where: { id: player.id }, data: { successfulGathers: { increment: 1 }, [cfg.foundField]: { increment: found } } as any });
   await safeAnswerCallbackQuery(ctx);
   await ctx.reply(`Ти витрачаєш час на пошуки (${durationSeconds} с) і знаходиш: ${resource.resourceType.name} ×${found}.`);
   await logEvent("GATHER", "Gather succeeded", `${resource.resourceType.name} ×${found}`, player.currentLocationId);
 });
 
 bot.callbackQuery("social:greet", async (ctx) => {
-  const greetings = ["Доброго здоров’я.", "Хай ліс буде прихильним.", "Мирного шляху.", "Не заблукай у Чорнолісі."];
+  const greeting = "Доброго здоров’я.";
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (player) await prisma.player.update({ where: { id: player.id }, data: { greetings: { increment: 1 } } });
   await safeAnswerCallbackQuery(ctx);
-  await ctx.reply(greetings[Math.floor(Math.random() * greetings.length)]);
+  await ctx.reply(`Ви сказали: «${greeting}»`);
 });
 
 bot.callbackQuery("social:inspect", async (ctx) => {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player || !player.currentLocationId) return void (await safeAnswerCallbackQuery(ctx));
-  await prisma.player.update({ where: { id: player.id }, data: { looks: { increment: 1 } } });
+  await prisma.player.update({ where: { id: player.id }, data: { inspections: { increment: 1 } } });
   const others = await prisma.player.findMany({ where: { currentLocationId: player.currentLocationId, NOT: { id: player.id } } });
   await safeAnswerCallbackQuery(ctx);
-  await ctx.reply(others.length ? `Ти придивляєшся: ${others.map((p) => p.firstName ?? p.username ?? "мандрівник").join(", ")}` : "Ти не бачиш нікого достатньо близько.");
+  await ctx.reply(others.length ? `Ви придивляєтесь: ${others.map((p) => p.firstName ?? p.username ?? "мандрівник").join(", ")}` : "Ви не бачите нікого достатньо близько.");
 });
 
 bot.on("message", async (ctx) => {

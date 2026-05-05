@@ -39,7 +39,7 @@ const species = [
   { key: "mouse", name: "миша", kind: "ANIMAL", diet: "HERBIVORE", baseHp: 1, strength: 1, agility: 7, perception: 5, endurance: 2, instinct: 6 },
   { key: "fox", name: "лисиця", kind: "ANIMAL", diet: "CARNIVORE", baseHp: 8, strength: 3, agility: 8, perception: 7, endurance: 5, instinct: 8 },
   { key: "wolf", name: "вовк", kind: "ANIMAL", diet: "CARNIVORE", baseHp: 14, strength: 7, agility: 6, perception: 7, endurance: 7, instinct: 8 },
-  { key: "lisovyk", name: "лісовик", kind: "SPIRIT", diet: "SPIRITUAL", baseHp: 80, strength: 8, agility: 6, perception: 10, endurance: 9, instinct: 10 },
+  { key: "lesovyk", name: "лісовик", kind: "SPIRIT", diet: "SPIRITUAL", baseHp: 80, strength: 8, agility: 6, perception: 10, endurance: 9, instinct: 10 },
   { key: "herbalist", name: "травник", kind: "HUMAN", diet: "OMNIVORE", baseHp: 18, strength: 3, agility: 4, perception: 8, endurance: 5, instinct: 6 },
 ] as const;
 
@@ -61,9 +61,36 @@ function resourceAmount(resourceKey: string, locationKey: string) {
 async function createCreatures(speciesKey: string, locationKey: string, count: number, name?: string, action?: string) {
   const sp = await prisma.creatureSpecies.findUniqueOrThrow({ where: { key: speciesKey } });
   const loc = await prisma.cellLocation.findUniqueOrThrow({ where: { key: locationKey } });
-  const existing = await prisma.creature.count({ where: { speciesId: sp.id, locationId: loc.id, name: name ?? null, isAlive: true } });
+
+  // Named creatures are unique NPCs/spirits. Re-running seed should not create extra copies.
+  if (name) {
+    const existingNamed = await prisma.creature.findMany({
+      where: { speciesId: sp.id, name, isAlive: true },
+      orderBy: { id: "asc" },
+    });
+
+    for (const duplicate of existingNamed.slice(count)) {
+      await prisma.creature.update({ where: { id: duplicate.id }, data: { isAlive: false, currentAction: "зник" } });
+    }
+
+    for (const creature of existingNamed.slice(0, count)) {
+      await prisma.creature.update({
+        where: { id: creature.id },
+        data: { locationId: loc.id, hp: sp.baseHp, currentAction: action ?? "проходить" },
+      });
+    }
+
+    for (let i = existingNamed.length; i < count; i++) {
+      await prisma.creature.create({
+        data: { speciesId: sp.id, locationId: loc.id, name, hp: sp.baseHp, currentAction: action ?? "проходить" },
+      });
+    }
+    return;
+  }
+
+  const existing = await prisma.creature.count({ where: { speciesId: sp.id, locationId: loc.id, name: null, isAlive: true } });
   for (let i = existing; i < count; i++) {
-    await prisma.creature.create({ data: { speciesId: sp.id, locationId: loc.id, name: name ?? null, hp: sp.baseHp, currentAction: action ?? "проходить" } });
+    await prisma.creature.create({ data: { speciesId: sp.id, locationId: loc.id, name: null, hp: sp.baseHp, currentAction: action ?? "проходить" } });
   }
 }
 
