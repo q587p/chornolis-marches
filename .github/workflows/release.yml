@@ -3,7 +3,7 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
-      release_type:
+      version:
         description: "Version bump type"
         required: true
         default: "patch"
@@ -12,87 +12,37 @@ on:
           - patch
           - minor
           - major
-      title:
-        description: "Changelog title / release summary"
-        required: false
-        default: "Release"
-
-permissions:
-  contents: write
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    env:
-      DATABASE_URL: postgresql://user:pass@localhost:5432/chornolis_release
-      BOT_TOKEN: 000000:test-token
+
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: npm
+          node-version: 20
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install deps
+        run: npm install
 
-      - name: Build before release
-        run: npm run build
-
-      - name: Configure Git
+      - name: Bump version
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          npm version ${{ github.event.inputs.version }} -m "release: %s"
 
-      - name: Bump package version
+      - name: Push changes
         run: |
-          npm version "${{ inputs.release_type }}" --no-git-tag-version
-          echo "VERSION=$(node -p "require('./package.json').version")" >> "$GITHUB_ENV"
+          git push
+          git push --tags
 
-      - name: Update changelog
-        shell: bash
-        run: |
-          DATE=$(date +%Y-%m-%d)
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
-
-          if [ -n "$LATEST_TAG" ]; then
-            COMMITS=$(git log "$LATEST_TAG"..HEAD --pretty=format:"- %s" --no-merges)
-          else
-            COMMITS=$(git log --pretty=format:"- %s" --no-merges -n 20)
-          fi
-
-          if [ -z "$COMMITS" ]; then
-            COMMITS="- ${{ inputs.title }}"
-          fi
-
-          {
-            echo "# Changelog"
-            echo "All notable changes to this project will be documented in this file."
-            echo
-            echo "---"
-            echo
-            echo "## [$VERSION] - $DATE"
-            echo
-            echo "### Changed"
-            echo "$COMMITS"
-            echo
-            if [ -f CHANGELOG.md ]; then
-              tail -n +2 CHANGELOG.md | sed '1{/^All notable changes/d;}' | sed '1{/^$/d;}'
-            fi
-          } > CHANGELOG.new.md
-
-          mv CHANGELOG.new.md CHANGELOG.md
-
-      - name: Commit and tag release
-        run: |
-          git add package.json package-lock.json CHANGELOG.md
-          git commit -m "chore(release): v$VERSION"
-          git tag "v$VERSION"
-          git push origin HEAD:main
-          git push origin "v$VERSION"
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
