@@ -1,21 +1,18 @@
-import { Bot, Keyboard } from "grammy";
+import { Bot } from "grammy";
 import { prisma } from "../db";
 import { getStartLocationId } from "../services/players";
 import { renderLocationBrief } from "../services/locations";
-
-const mainMenu = new Keyboard()
-  .text("/start")
-  .text("/me")
-  .resized()
-  .persistent();
+import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
 
 export function registerStartHandlers(bot: Bot) {
-  bot.api
-    .setMyCommands([
-      { command: "start", description: "Почати / оновити локацію" },
-      { command: "me", description: "Показати персонажа та інвентар" },
-    ])
-    .catch((error) => console.warn("Failed to set bot commands:", error));
+  bot.api.setMyCommands([
+    { command: "me", description: "Персонаж" },
+    { command: "location", description: "Поточна локація" },
+    { command: "look", description: "Оглянутися" },
+    { command: "auto", description: "Увімкнути автоматичні дії" },
+    { command: "autostop", description: "Зупинити автоматичні дії" },
+    { command: "world", description: "Стан світу" },
+  ]).catch((error) => console.warn("Failed to set bot commands:", error));
 
   bot.command("start", async (ctx) => {
     const from = ctx.from;
@@ -28,7 +25,7 @@ export function registerStartHandlers(bot: Bot) {
     });
     const view = await renderLocationBrief(startLocationId, player.id);
     await ctx.reply(`🌲 Порубіжжя Чорнолісу ожили.\n\nВітаю, ${player.firstName ?? "мандрівнику"}. Твій слід збережено в Чорнолісі.`, {
-      reply_markup: mainMenu,
+      reply_markup: buildMainReplyKeyboard(false),
     });
     await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
   });

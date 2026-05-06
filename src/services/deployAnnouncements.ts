@@ -1,6 +1,7 @@
 import { Bot } from "grammy";
 import { prisma } from "../db";
 import { config } from "../config";
+import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
 import { logEvent } from "./worldEvents";
 
 export async function announceWorldUpdatedOnce(bot: Bot) {
@@ -13,7 +14,11 @@ export async function announceWorldUpdatedOnce(bot: Bot) {
   let failed = 0;
   for (const player of players) {
     try {
-      await bot.api.sendMessage(player.telegramId, `⚙️ Світ Чорнолісу оновився.\n\nВерсія: ${config.appVersion}\n\nМожна продовжувати гру.`);
+      await bot.api.sendMessage(
+        player.telegramId,
+        `⚙️ Світ Чорнолісу оновився.\n\nВерсія: ${config.appVersion}\n\nМожна продовжувати гру.`,
+        { reply_markup: buildMainReplyKeyboard(false) }
+      );
       success++;
     } catch (error) {
       failed++;

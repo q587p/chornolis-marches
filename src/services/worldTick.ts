@@ -1,10 +1,11 @@
 import { Bot } from "grammy";
 import { LocationExit } from "@prisma/client";
 import { prisma } from "../db";
-import { notifyRegion } from "./notifications";
+import { notifyLocationAll, notifyRegion } from "./notifications";
+import { buildAnimalInteractionKeyboard } from "../ui/keyboards";
 
 const DEFAULT_TICK_INTERVAL_MS = Number(process.env.WORLD_TICK_INTERVAL_MS || 60000);
-const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
+const DEBUG = process.env.WORLD_DEBUG === "true";
 const RESOURCE_REGEN_EVERY_TICKS = Number(process.env.WORLD_RESOURCE_REGEN_EVERY_TICKS || 10);
 const RESOURCE_REGEN_AMOUNT = Number(process.env.WORLD_RESOURCE_REGEN_AMOUNT || 1);
 
@@ -13,10 +14,6 @@ let tickTimer: NodeJS.Timeout | null = null;
 let running = false;
 let botInstance: Bot | null = null;
 let tickNumber = 0;
-
-function debugLog(message: string) {
-  if (DEBUG) console.log(message);
-}
 
 function chance(p: number) {
   return Math.random() * 100 < p;
@@ -34,6 +31,10 @@ function isExit(value: unknown): value is LocationExit {
 async function move(c: any, toLocationId: number, action: string) {
   if (c.locationId === toLocationId) return;
 
+  const fromLocationId = c.locationId;
+  const isAnimal = c.species?.kind === "ANIMAL";
+  const name = c.name ?? c.species?.name ?? "істота";
+
   await prisma.creature.update({
     where: { id: c.id },
     data: {
@@ -45,7 +46,15 @@ async function move(c: any, toLocationId: number, action: string) {
     },
   });
 
-  debugLog(`[WORLD TICK] #${c.id} ${c.name ?? c.species?.key ?? "creature"} moved to location #${toLocationId}: ${action}`);
+  if (botInstance) {
+    if (isAnimal) {
+      await notifyLocationAll(botInstance, fromLocationId, `Щось пішло звідси. ${name} зникло між деревами.`, buildAnimalInteractionKeyboard());
+      await notifyLocationAll(botInstance, toLocationId, `Щось зайшло сюди. Здається, це ${name}.`, buildAnimalInteractionKeyboard());
+    } else {
+      await notifyLocationAll(botInstance, fromLocationId, `${name} пішов звідси.`);
+      await notifyLocationAll(botInstance, toLocationId, `${name} прийшов сюди.`);
+    }
+  }
 }
 
 async function tickHerbalist(c: any) {
@@ -65,7 +74,6 @@ async function tickHerbalist(c: any) {
       },
     });
 
-    debugLog(`[WORLD TICK] herbalist #${c.id} gathered herbs at ${c.location.key}`);
     return "gathered";
   }
 
@@ -109,7 +117,6 @@ async function tickCarnivore(c: any) {
       where: { id: c.id },
       data: { activity: "LOOKING", currentAction: "вистежує здобич" },
     });
-    debugLog(`[WORLD TICK] carnivore #${c.id} tracks prey #${prey.id} at ${c.location.key}`);
     return "looking";
   }
 
@@ -213,8 +220,6 @@ async function wakeLisovykIfNeeded() {
     });
   }
 
-  debugLog(`[WORLD TICK] Lisovyk awakened: depleted ${depleted.resourceKey}`);
-
   await prisma.worldEvent.create({
     data: {
       type: "NPC_SAY",
@@ -228,8 +233,7 @@ async function wakeLisovykIfNeeded() {
     await notifyRegion(
       botInstance,
       depleted.regionId,
-      `🌲 Дід Чорноліс прокинувся.\n\nУ всьому регіоні зник ресурс «${depleted.resourceName}».`,
-      { includeLocationBrief: true }
+      `🌲 Дід Чорноліс прокинувся.\n\nУ всьому регіоні зник ресурс «${depleted.resourceName}».`
     );
   }
 
@@ -272,8 +276,6 @@ async function putLisovykToSleepIfForestRecovered() {
     },
   });
 
-  debugLog(`[WORLD TICK] Lisovyk slept: ${resourceKey} recovered`);
-
   await prisma.worldEvent.create({
     data: {
       type: "NPC_SAY",
@@ -287,8 +289,7 @@ async function putLisovykToSleepIfForestRecovered() {
     await notifyRegion(
       botInstance,
       regionId,
-      `🌲 Дід Чорноліс відчув, що ліс відновився.\n\nВін перестає полювати за людьми в лісі, ховається між деревами й засинає.`,
-      { includeLocationBrief: true }
+      `🌲 Дід Чорноліс відчув, що ліс відновився.\n\nВін перестає полювати за людьми в лісі, ховається між деревами й засинає.`
     );
   }
 
@@ -323,7 +324,6 @@ async function regenerateResourcesIfNeeded() {
         description: `Ліс повільно відновив ${regenerated} ресурсних вузлів: +${RESOURCE_REGEN_AMOUNT}.`,
       },
     });
-    debugLog(`[WORLD TICK] regenerated resource nodes=${regenerated}`);
   }
 
   return regenerated;
@@ -331,7 +331,7 @@ async function regenerateResourcesIfNeeded() {
 
 export async function worldTick() {
   if (running) {
-    debugLog("[WORLD TICK] skipped: previous tick is still running");
+    if (DEBUG) console.log("[WORLD TICK] skipped: already running");
     return;
   }
   running = true;
@@ -346,7 +346,7 @@ export async function worldTick() {
   let lisovykSlept = false;
 
   try {
-    debugLog(`[WORLD TICK] start ${new Date().toISOString()}`);
+    if (DEBUG) console.log(`[WORLD TICK] start ${new Date().toISOString()}`);
 
     tickNumber++;
 
@@ -367,7 +367,7 @@ export async function worldTick() {
       },
     });
 
-    debugLog(`[WORLD TICK] processing living creatures=${creatures.length}`);
+    if (DEBUG) console.log(`[WORLD TICK] creatures=${creatures.length}`);
 
     for (const c of creatures) {
       try {
@@ -388,9 +388,11 @@ export async function worldTick() {
       }
     }
 
-    debugLog(
-      `[WORLD TICK] done: processed=${moved + gathered + idle + looking}, moved=${moved}, gathered=${gathered}, looking=${looking}, idle=${idle}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}`
-    );
+    if (DEBUG) {
+      console.log(
+        `[WORLD TICK] done: processed=${moved + gathered + idle + looking}, moved=${moved}, gathered=${gathered}, looking=${looking}, idle=${idle}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}`
+      );
+    }
 
     await prisma.worldEvent.create({
       data: {
@@ -406,8 +408,7 @@ export async function worldTick() {
         await notifyRegion(
           botInstance,
           region.id,
-          `🌿 Світ ворухнувся.\n\nТік #${tickNumber}: рухів — ${moved}, збору — ${gathered}, відновлено вузлів — ${regenerated}.\n\nКоманди швидкого доступу: /start /me`,
-          { includeLocationBrief: true }
+          `🌿 Світ ворухнувся.\n\nТік #${tickNumber}: рухів — ${moved}, збору — ${gathered}, відновлено вузлів — ${regenerated}.`
         );
       }
     }
@@ -423,8 +424,11 @@ function restartWorldTickTimer() {
     worldTick().catch(console.error);
   }, tickIntervalMs);
 
-  debugLog("TICK INTERVAL ENV: " + process.env.WORLD_TICK_INTERVAL_MS);
-  debugLog(`World tick loop started: every ${tickIntervalMs}ms`);
+  if (DEBUG) {
+    console.log("TICK INTERVAL ENV:", process.env.WORLD_TICK_INTERVAL_MS);
+    console.log("WORLD_DEBUG:", process.env.WORLD_DEBUG);
+    console.log(`World tick loop started: every ${tickIntervalMs}ms`);
+  }
 }
 
 function registerTickCommands(bot: Bot) {
@@ -435,7 +439,7 @@ function registerTickCommands(bot: Bot) {
 
   bot.command(["tickGet", "tickget"], async (ctx) => {
     await ctx.reply(
-      `🌲 World tick\n\nІнтервал: ${tickIntervalMs} ms\nTick #: ${tickNumber}\nРегенерація ресурсів: раз на ${RESOURCE_REGEN_EVERY_TICKS} тіків, +${RESOURCE_REGEN_AMOUNT}\nDebug logs: ${DEBUG ? "on" : "off"}`
+      `🌲 World tick\n\nІнтервал: ${tickIntervalMs} ms\nTick #: ${tickNumber}\nРегенерація ресурсів: раз на ${RESOURCE_REGEN_EVERY_TICKS} тіків, +${RESOURCE_REGEN_AMOUNT}\nDebug: ${DEBUG ? "true" : "false"}`
     );
   });
 

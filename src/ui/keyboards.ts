@@ -23,3 +23,9 @@ export function buildInteractionKeyboard() {
     .row()
     .text("⚔️ Атакувати", "social:attack");
 }
+
+export function buildAnimalInteractionKeyboard() {
+  return new InlineKeyboard()
+    .text("👁 Оглянути", "social:inspect")
+    .text("⚔️ Атакувати", "social:attack");
+}

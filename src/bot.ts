@@ -4,6 +4,7 @@ import { setLastRuntimeError } from "./runtimeState";
 import { startHttpServer } from "./server/statusServer";
 import { announceWorldUpdatedOnce } from "./services/deployAnnouncements";
 import { startWorldTickLoop } from "./services/worldTick";
+import { registerAutoHandlers } from "./handlers/auto";
 import { registerGatherHandlers } from "./handlers/gather";
 import { registerLookHandlers } from "./handlers/look";
 import { registerMovementHandlers } from "./handlers/movement";
@@ -23,6 +24,7 @@ registerSayHandlers(bot);
 registerMovementHandlers(bot);
 registerGatherHandlers(bot);
 registerSocialHandlers(bot);
+registerAutoHandlers(bot);
 
 bot.catch((error) => {
   setLastRuntimeError(error.error);

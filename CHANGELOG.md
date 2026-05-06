@@ -8,6 +8,42 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.4.8 - player auto mode and cleaner Telegram menu - 12026-05-06
+
+### ✨ Added
+
+- Added `/location` / `/loc` command and the persistent `📍 Локація` button.
+- Added persistent `Персонаж` button for `/me`.
+- Added `/auto` and `/autoStop` (`/autostop`) player auto mode:
+  - auto mode periodically chooses between gathering, looking around, and moving;
+  - the persistent keyboard changes from `🤖 Авто` to `⏹ Стоп`;
+  - auto mode is in-memory for now and resets on bot restart.
+
+### 🐛 Fixed
+
+- Removed `/start` from the persistent keyboard.
+- Removed quick-access command hints from deploy/world tick broadcasts.
+- Broadcasts now keep the persistent keyboard attached so location/player buttons remain available.
+- Animal movement notifications now use “щось” instead of “хтось”.
+- Animal presence is visible in location descriptions as `Поруч щось є`.
+- Locations with animals show only `Оглянути` and `Атакувати` interaction buttons, without greeting.
+
+### 🎮 Gameplay
+
+- Animals entering/leaving locations now notify players:
+  - “Щось пішло звідси...”
+  - “Щось зайшло сюди...”
+- Auto mode gives the player a simple temporary behavior loop similar in spirit to the herbalist: gather, look, or move.
+
+### 🛠 Technical
+
+- Added `src/handlers/auto.ts`.
+- Added `src/ui/replyKeyboard.ts`.
+- Region and location notifications now reuse the main persistent reply keyboard.
+- This patch is cumulative with 0.4.7 creature control changes.
+
+---
+
 ## 0.4.7 - creature control and debug status UX - 12026-05-06
 
 ### ✨ Added
