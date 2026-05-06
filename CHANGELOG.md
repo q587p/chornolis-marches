@@ -8,6 +8,22 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.4.1 - world tick debug overlay - 12026-05-06
+
+### Added
+
+- Added optional world tick debug heartbeat:
+  - `WORLD_TICK_DEBUG=true` prints start/done tick logs to console.
+  - `WORLD_TICK_DEBUG_EVENT=true` writes a `SYSTEM` world event with tick stats.
+- Added per-tick counters for processed creatures, movement, gathering, looking/idling, Lisovyk awakening and per-creature errors.
+
+### Changed
+
+- World tick internals now collect action statistics while preserving existing autonomous behavior.
+- Re-entrant ticks now log a debug skip message when `WORLD_TICK_DEBUG=true`.
+
+---
+
 ## 0.4.0 - world tick - 12026-05-06
 
 ### Added

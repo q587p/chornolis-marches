@@ -4,6 +4,8 @@ import { prisma } from "../db";
 const DEFAULT_WORLD_TICK_INTERVAL_MS = 60_000;
 const WORLD_TICK_INTERVAL_MS = Number(process.env.WORLD_TICK_INTERVAL_MS || DEFAULT_WORLD_TICK_INTERVAL_MS);
 const WORLD_TICK_CREATURE_LIMIT = Number(process.env.WORLD_TICK_CREATURE_LIMIT || 30);
+const WORLD_TICK_DEBUG = process.env.WORLD_TICK_DEBUG === "true";
+const WORLD_TICK_DEBUG_EVENT = process.env.WORLD_TICK_DEBUG_EVENT === "true";
 
 type CreatureWithWorldData = Creature & {
   species: CreatureSpecies;
@@ -16,8 +18,38 @@ type CreatureWithWorldData = Creature & {
   };
 };
 
+type WorldTickStats = {
+  processed: number;
+  moved: number;
+  gathered: number;
+  looking: number;
+  idle: number;
+  lisovykAwakened: number;
+  errors: number;
+};
+
 let tickTimer: NodeJS.Timeout | null = null;
 let tickInProgress = false;
+
+function createStats(): WorldTickStats {
+  return {
+    processed: 0,
+    moved: 0,
+    gathered: 0,
+    looking: 0,
+    idle: 0,
+    lisovykAwakened: 0,
+    errors: 0,
+  };
+}
+
+function formatStats(stats: WorldTickStats) {
+  return `processed=${stats.processed}, moved=${stats.moved}, gathered=${stats.gathered}, looking=${stats.looking}, idle=${stats.idle}, lisovykAwakened=${stats.lisovykAwakened}, errors=${stats.errors}`;
+}
+
+function debugLog(message: string) {
+  if (WORLD_TICK_DEBUG) console.log(`[WORLD TICK] ${message}`);
+}
 
 function chance(percent: number) {
   return Math.random() * 100 < percent;
@@ -32,7 +64,7 @@ function randomInt(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-async function moveCreature(creature: CreatureWithWorldData, toLocationId: number, action: string) {
+async function moveCreature(creature: CreatureWithWorldData, toLocationId: number, action: string, stats: WorldTickStats) {
   if (creature.locationId === toLocationId) return;
 
   await prisma.creature.update({
@@ -47,6 +79,8 @@ async function moveCreature(creature: CreatureWithWorldData, toLocationId: numbe
     },
   });
 
+  stats.moved += 1;
+
   await prisma.worldEvent.create({
     data: {
       type: "NPC_MOVE",
@@ -57,11 +91,11 @@ async function moveCreature(creature: CreatureWithWorldData, toLocationId: numbe
   });
 }
 
-async function moveRandomly(creature: CreatureWithWorldData, action = "бродить лісом") {
+async function moveRandomly(creature: CreatureWithWorldData, stats: WorldTickStats, action = "бродить лісом") {
   const exit = pickOne(creature.location.exitsFrom.filter((item) => !item.isHidden));
   if (!exit) return;
 
-  await moveCreature(creature, exit.toLocationId, action);
+  await moveCreature(creature, exit.toLocationId, action, stats);
 }
 
 async function findNeighborWithResource(creature: CreatureWithWorldData, resourceKey: string) {
@@ -80,7 +114,7 @@ async function findNeighborWithResource(creature: CreatureWithWorldData, resourc
   return node?.locationId ?? null;
 }
 
-async function tickHerbalist(creature: CreatureWithWorldData) {
+async function tickHerbalist(creature: CreatureWithWorldData, stats: WorldTickStats) {
   const herbs = creature.location.resources.find((node) => node.resourceType.key === "herbs");
 
   if (herbs && herbs.amount > 0) {
@@ -111,12 +145,13 @@ async function tickHerbalist(creature: CreatureWithWorldData) {
       }),
     ]);
 
+    stats.gathered += 1;
     return;
   }
 
   const targetLocationId = await findNeighborWithResource(creature, "herbs");
   if (targetLocationId) {
-    await moveCreature(creature, targetLocationId, "йде туди, де пахне травами");
+    await moveCreature(creature, targetLocationId, "йде туди, де пахне травами", stats);
     return;
   }
 
@@ -124,21 +159,22 @@ async function tickHerbalist(creature: CreatureWithWorldData) {
     where: { id: creature.id },
     data: { activity: "LOOKING", currentAction: "шукає трави", looks: { increment: 1 } },
   });
+  stats.looking += 1;
 }
 
-async function tickHerbivore(creature: CreatureWithWorldData) {
+async function tickHerbivore(creature: CreatureWithWorldData, stats: WorldTickStats) {
   if (chance(45)) {
     const resourceKey = creature.species.key === "mouse" ? "mushrooms" : "berries";
     const targetLocationId = await findNeighborWithResource(creature, resourceKey);
 
     if (targetLocationId) {
-      await moveCreature(creature, targetLocationId, "перебирається ближче до їжі");
+      await moveCreature(creature, targetLocationId, "перебирається ближче до їжі", stats);
       return;
     }
   }
 
   if (chance(35)) {
-    await moveRandomly(creature, "стрибає між кущами");
+    await moveRandomly(creature, stats, "стрибає між кущами");
     return;
   }
 
@@ -146,9 +182,10 @@ async function tickHerbivore(creature: CreatureWithWorldData) {
     where: { id: creature.id },
     data: { activity: "IDLE", currentAction: "насторожено прислухається" },
   });
+  stats.idle += 1;
 }
 
-async function tickCarnivore(creature: CreatureWithWorldData) {
+async function tickCarnivore(creature: CreatureWithWorldData, stats: WorldTickStats) {
   const nearbyLocationIds = [creature.locationId, ...creature.location.exitsFrom.map((exit) => exit.toLocationId)];
   const prey = await prisma.creature.findFirst({
     where: {
@@ -160,7 +197,7 @@ async function tickCarnivore(creature: CreatureWithWorldData) {
   });
 
   if (prey && prey.locationId !== creature.locationId) {
-    await moveCreature(creature, prey.locationId, "виходить на свіжий слід");
+    await moveCreature(creature, prey.locationId, "виходить на свіжий слід", stats);
     return;
   }
 
@@ -169,13 +206,19 @@ async function tickCarnivore(creature: CreatureWithWorldData) {
       where: { id: creature.id },
       data: { activity: "LOOKING", currentAction: "вистежує здобич", looks: { increment: 1 }, hunger: { increment: 1 } },
     });
+    stats.looking += 1;
     return;
   }
 
-  if (chance(45)) await moveRandomly(creature, "патрулює свою стежку");
+  if (chance(45)) {
+    await moveRandomly(creature, stats, "патрулює свою стежку");
+    return;
+  }
+
+  stats.idle += 1;
 }
 
-async function wakeLisovykIfNeeded() {
+async function wakeLisovykIfNeeded(stats: WorldTickStats) {
   const depletedNode = await prisma.resourceNode.findFirst({
     where: { amount: { lte: 0 } },
     include: { location: true, resourceType: true },
@@ -215,6 +258,8 @@ async function wakeLisovykIfNeeded() {
     });
   }
 
+  stats.lisovykAwakened += 1;
+
   await prisma.worldEvent.create({
     data: {
       type: "NPC_SAY",
@@ -225,7 +270,7 @@ async function wakeLisovykIfNeeded() {
   });
 }
 
-async function tickLisovyk(creature: CreatureWithWorldData) {
+async function tickLisovyk(creature: CreatureWithWorldData, stats: WorldTickStats) {
   const depletedHere = creature.location.resources.some((node) => node.amount <= 0);
 
   if (depletedHere) {
@@ -233,11 +278,12 @@ async function tickLisovyk(creature: CreatureWithWorldData) {
       where: { id: creature.id },
       data: { activity: "SPEAKING", currentAction: "бурмоче про порушену рівновагу", says: { increment: 1 } },
     });
+    stats.looking += 1;
     return;
   }
 
   if (chance(25)) {
-    await moveRandomly(creature, "безшумно переходить між деревами");
+    await moveRandomly(creature, stats, "безшумно переходить між деревами");
     return;
   }
 
@@ -245,23 +291,47 @@ async function tickLisovyk(creature: CreatureWithWorldData) {
     where: { id: creature.id },
     data: { activity: "LOOKING", currentAction: "стежить за рівновагою лісу", looks: { increment: 1 } },
   });
+  stats.looking += 1;
 }
 
-async function tickCreature(creature: CreatureWithWorldData) {
-  if (creature.species.key === "herbalist") return tickHerbalist(creature);
-  if (creature.species.key === "lisovyk") return tickLisovyk(creature);
-  if (creature.species.diet === "HERBIVORE") return tickHerbivore(creature);
-  if (creature.species.diet === "CARNIVORE") return tickCarnivore(creature);
+async function tickCreature(creature: CreatureWithWorldData, stats: WorldTickStats) {
+  if (creature.species.key === "herbalist") return tickHerbalist(creature, stats);
+  if (creature.species.key === "lisovyk") return tickLisovyk(creature, stats);
+  if (creature.species.diet === "HERBIVORE") return tickHerbivore(creature, stats);
+  if (creature.species.diet === "CARNIVORE") return tickCarnivore(creature, stats);
 
-  if (chance(25)) await moveRandomly(creature);
+  if (chance(25)) {
+    await moveRandomly(creature, stats);
+    return;
+  }
+
+  stats.idle += 1;
+}
+
+async function writeDebugEvent(stats: WorldTickStats) {
+  if (!WORLD_TICK_DEBUG_EVENT) return;
+
+  await prisma.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: "World Tick Debug",
+      description: formatStats(stats),
+    },
+  });
 }
 
 export async function runWorldTick() {
-  if (tickInProgress) return;
+  if (tickInProgress) {
+    debugLog("skip: previous tick is still running");
+    return;
+  }
+
+  const stats = createStats();
   tickInProgress = true;
+  debugLog(`start ${new Date().toISOString()}`);
 
   try {
-    await wakeLisovykIfNeeded();
+    await wakeLisovykIfNeeded(stats);
 
     const creatures = await prisma.creature.findMany({
       where: { isAlive: true },
@@ -279,12 +349,18 @@ export async function runWorldTick() {
     });
 
     for (const creature of creatures) {
+      stats.processed += 1;
+
       try {
-        await tickCreature(creature);
+        await tickCreature(creature, stats);
       } catch (error) {
+        stats.errors += 1;
         console.warn(`World tick failed for creature ${creature.id}:`, error);
       }
     }
+
+    await writeDebugEvent(stats);
+    debugLog(`done: ${formatStats(stats)}`);
   } finally {
     tickInProgress = false;
   }
