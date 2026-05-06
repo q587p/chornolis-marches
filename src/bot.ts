@@ -34,6 +34,6 @@ announceWorldUpdatedOnce(bot).catch((error) => {
   setLastRuntimeError(error);
   console.warn("World update announcement failed:", error);
 });
-startWorldTickLoop();
+startWorldTick(bot);
 
 bot.start();
