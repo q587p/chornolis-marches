@@ -4,7 +4,7 @@ import { prisma } from "../db";
 import { notifyRegion } from "./notifications";
 
 const DEFAULT_TICK_INTERVAL_MS = Number(process.env.WORLD_TICK_INTERVAL_MS || 60000);
-const DEBUG = process.env.WORLD_DEBUG === "true";
+const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
 const RESOURCE_REGEN_EVERY_TICKS = Number(process.env.WORLD_RESOURCE_REGEN_EVERY_TICKS || 10);
 const RESOURCE_REGEN_AMOUNT = Number(process.env.WORLD_RESOURCE_REGEN_AMOUNT || 1);
 
@@ -13,6 +13,10 @@ let tickTimer: NodeJS.Timeout | null = null;
 let running = false;
 let botInstance: Bot | null = null;
 let tickNumber = 0;
+
+function debugLog(message: string) {
+  if (DEBUG) console.log(message);
+}
 
 function chance(p: number) {
   return Math.random() * 100 < p;
@@ -40,6 +44,8 @@ async function move(c: any, toLocationId: number, action: string) {
       hunger: { increment: 1 },
     },
   });
+
+  debugLog(`[WORLD TICK] #${c.id} ${c.name ?? c.species?.key ?? "creature"} moved to location #${toLocationId}: ${action}`);
 }
 
 async function tickHerbalist(c: any) {
@@ -59,6 +65,7 @@ async function tickHerbalist(c: any) {
       },
     });
 
+    debugLog(`[WORLD TICK] herbalist #${c.id} gathered herbs at ${c.location.key}`);
     return "gathered";
   }
 
@@ -102,6 +109,7 @@ async function tickCarnivore(c: any) {
       where: { id: c.id },
       data: { activity: "LOOKING", currentAction: "вистежує здобич" },
     });
+    debugLog(`[WORLD TICK] carnivore #${c.id} tracks prey #${prey.id} at ${c.location.key}`);
     return "looking";
   }
 
@@ -205,6 +213,8 @@ async function wakeLisovykIfNeeded() {
     });
   }
 
+  debugLog(`[WORLD TICK] Lisovyk awakened: depleted ${depleted.resourceKey}`);
+
   await prisma.worldEvent.create({
     data: {
       type: "NPC_SAY",
@@ -218,7 +228,8 @@ async function wakeLisovykIfNeeded() {
     await notifyRegion(
       botInstance,
       depleted.regionId,
-      `🌲 Дід Чорноліс прокинувся.\n\nУ всьому регіоні зник ресурс «${depleted.resourceName}».`
+      `🌲 Дід Чорноліс прокинувся.\n\nУ всьому регіоні зник ресурс «${depleted.resourceName}».`,
+      { includeLocationBrief: true }
     );
   }
 
@@ -261,6 +272,8 @@ async function putLisovykToSleepIfForestRecovered() {
     },
   });
 
+  debugLog(`[WORLD TICK] Lisovyk slept: ${resourceKey} recovered`);
+
   await prisma.worldEvent.create({
     data: {
       type: "NPC_SAY",
@@ -274,7 +287,8 @@ async function putLisovykToSleepIfForestRecovered() {
     await notifyRegion(
       botInstance,
       regionId,
-      `🌲 Дід Чорноліс відчув, що ліс відновився.\n\nВін перестає полювати за людьми в лісі, ховається між деревами й засинає.`
+      `🌲 Дід Чорноліс відчув, що ліс відновився.\n\nВін перестає полювати за людьми в лісі, ховається між деревами й засинає.`,
+      { includeLocationBrief: true }
     );
   }
 
@@ -309,14 +323,17 @@ async function regenerateResourcesIfNeeded() {
         description: `Ліс повільно відновив ${regenerated} ресурсних вузлів: +${RESOURCE_REGEN_AMOUNT}.`,
       },
     });
+    debugLog(`[WORLD TICK] regenerated resource nodes=${regenerated}`);
   }
 
   return regenerated;
 }
 
-
 export async function worldTick() {
-  if (running) return;
+  if (running) {
+    debugLog("[WORLD TICK] skipped: previous tick is still running");
+    return;
+  }
   running = true;
 
   let moved = 0;
@@ -329,7 +346,7 @@ export async function worldTick() {
   let lisovykSlept = false;
 
   try {
-    if (DEBUG) console.log(`[WORLD TICK] start ${new Date().toISOString()}`);
+    debugLog(`[WORLD TICK] start ${new Date().toISOString()}`);
 
     tickNumber++;
 
@@ -350,6 +367,8 @@ export async function worldTick() {
       },
     });
 
+    debugLog(`[WORLD TICK] processing living creatures=${creatures.length}`);
+
     for (const c of creatures) {
       try {
         let result = "idle";
@@ -369,11 +388,9 @@ export async function worldTick() {
       }
     }
 
-    if (DEBUG) {
-      console.log(
-        `[WORLD TICK] done: processed=${moved + gathered + idle + looking}, moved=${moved}, gathered=${gathered}, looking=${looking}, idle=${idle}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}`
-      );
-    }
+    debugLog(
+      `[WORLD TICK] done: processed=${moved + gathered + idle + looking}, moved=${moved}, gathered=${gathered}, looking=${looking}, idle=${idle}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}`
+    );
 
     await prisma.worldEvent.create({
       data: {
@@ -389,7 +406,8 @@ export async function worldTick() {
         await notifyRegion(
           botInstance,
           region.id,
-          `🌿 Світ ворухнувся.\n\nТік #${tickNumber}: рухів — ${moved}, збору — ${gathered}, відновлено вузлів — ${regenerated}.`
+          `🌿 Світ ворухнувся.\n\nТік #${tickNumber}: рухів — ${moved}, збору — ${gathered}, відновлено вузлів — ${regenerated}.\n\nКоманди швидкого доступу: /start /me`,
+          { includeLocationBrief: true }
         );
       }
     }
@@ -405,10 +423,8 @@ function restartWorldTickTimer() {
     worldTick().catch(console.error);
   }, tickIntervalMs);
 
-  if (DEBUG) {
-    console.log("TICK INTERVAL ENV:", process.env.WORLD_TICK_INTERVAL_MS);
-    console.log(`World tick loop started: every ${tickIntervalMs}ms`);
-  }
+  debugLog("TICK INTERVAL ENV: " + process.env.WORLD_TICK_INTERVAL_MS);
+  debugLog(`World tick loop started: every ${tickIntervalMs}ms`);
 }
 
 function registerTickCommands(bot: Bot) {
@@ -419,7 +435,7 @@ function registerTickCommands(bot: Bot) {
 
   bot.command(["tickGet", "tickget"], async (ctx) => {
     await ctx.reply(
-      `🌲 World tick\n\nІнтервал: ${tickIntervalMs} ms\nTick #: ${tickNumber}\nРегенерація ресурсів: раз на ${RESOURCE_REGEN_EVERY_TICKS} тіків, +${RESOURCE_REGEN_AMOUNT}`
+      `🌲 World tick\n\nІнтервал: ${tickIntervalMs} ms\nTick #: ${tickNumber}\nРегенерація ресурсів: раз на ${RESOURCE_REGEN_EVERY_TICKS} тіків, +${RESOURCE_REGEN_AMOUNT}\nDebug logs: ${DEBUG ? "on" : "off"}`
     );
   });
 

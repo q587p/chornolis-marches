@@ -1,5 +1,11 @@
-import { Bot } from "grammy";
+import { Bot, Keyboard } from "grammy";
 import { prisma } from "../db";
+
+const mainMenu = new Keyboard()
+  .text("/start")
+  .text("/me")
+  .resized()
+  .persistent();
 
 export function registerPlayerHandlers(bot: Bot) {
   bot.command("me", async (ctx) => {
@@ -11,12 +17,15 @@ export function registerPlayerHandlers(bot: Bot) {
       include: { currentLocation: true, resources: { include: { resourceType: true } } },
     });
 
-    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start", { reply_markup: mainMenu }));
 
     const items = player.resources.length
       ? player.resources.map((i) => `${i.resourceType.name} ×${i.amount}`).join("\n")
       : "порожньо";
 
-    await ctx.reply(`🧍 Ти:\n\nІм’я: ${player.firstName ?? "невідомо"}\nHP: ${player.hp}\nВитривалість: ${player.stamina}\nГолод: ${player.hunger}\nЛокація: ${player.currentLocation?.name ?? "невідомо"}\n\nІнвентар:\n${items}`);
+    await ctx.reply(
+      `🧍 Ти:\n\nІм’я: ${player.firstName ?? "невідомо"}\nHP: ${player.hp}\nВитривалість: ${player.stamina}\nГолод: ${player.hunger}\nЛокація: ${player.currentLocation?.name ?? "невідомо"}\n\nІнвентар:\n${items}`,
+      { reply_markup: mainMenu }
+    );
   });
 }

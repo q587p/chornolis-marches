@@ -58,29 +58,12 @@ function resourceAmount(resourceKey: string, locationKey: string) {
   return 0;
 }
 
-async function createCreatures(speciesKey: string, locationKey: string, count: number, name?: string, action?: string) {
-  const sp = await prisma.creatureSpecies.findUniqueOrThrow({ where: { key: speciesKey } });
-  const loc = await prisma.cellLocation.findUniqueOrThrow({ where: { key: locationKey } });
-
-  const existing = await prisma.creature.count({
-    where: { speciesId: sp.id, locationId: loc.id, name: name ?? null, isAlive: true },
-  });
-
-  for (let i = existing; i < count; i++) {
-    await prisma.creature.create({
-      data: {
-        speciesId: sp.id,
-        locationId: loc.id,
-        name: name ?? null,
-        hp: sp.baseHp,
-        currentAction: action ?? "проходить",
-        activity: "IDLE",
-      },
-    });
-  }
-}
-
-async function ensureUniqueCreature(speciesKey: string, locationKey: string, name: string, options: { isAlive: boolean; action: string; activity: "IDLE" | "GATHERING" | "RESTING" | "LOOKING" }) {
+async function ensureUniqueCreature(
+  speciesKey: string,
+  locationKey: string,
+  name: string,
+  options: { isAlive: boolean; action: string; activity: "IDLE" | "GATHERING" | "RESTING" | "LOOKING" }
+) {
   const sp = await prisma.creatureSpecies.findUniqueOrThrow({ where: { key: speciesKey } });
   const loc = await prisma.cellLocation.findUniqueOrThrow({ where: { key: locationKey } });
 
@@ -176,10 +159,8 @@ async function main() {
     await prisma.creatureSpecies.upsert({ where: { key: sp.key }, update: sp as any, create: sp as any });
   }
 
-  await createCreatures("rabbit", "north_east_burrow", 6, undefined, "нишпорить між норами");
-  await createCreatures("mouse", "south_moss_clearing", 8, undefined, "шурхотить у моху");
-  await createCreatures("fox", "west_fox_path", 2, undefined, "нюхає сліди");
-  await createCreatures("wolf", "south_wolf_track", 1, undefined, "проходить стежкою");
+  // Seed deliberately does not spawn animals.
+  // Test animals should be added manually with /addCreature until reproduction/migration systems exist.
 
   await ensureUniqueCreature("lisovyk", "north_west_wood", "Дід Чорноліс", {
     isAlive: false,
@@ -193,8 +174,8 @@ async function main() {
     activity: "GATHERING",
   });
 
-  await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "Seed completed", description: "Initial Chornolis world seeded." } });
-  console.log("Seed completed.");
+  await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "Seed completed", description: "Chornolis world structure seeded without animal spawning." } });
+  console.log("Seed completed without animal spawning.");
 }
 
 main()

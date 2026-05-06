@@ -96,10 +96,69 @@ async function normalizeUniqueNpc(npc: UniqueNpcSpec) {
   return { speciesKey: npc.speciesKey, keptId: kept.id, removed, created, skipped: false };
 }
 
+function parseAddCreatureArgs(input: string) {
+  const parts = input.trim().split(/\s+/).filter(Boolean);
+  const [speciesKey, locationArg, maybeCount, ...nameParts] = parts;
+  const count = maybeCount && /^\d+$/.test(maybeCount) ? Number(maybeCount) : 1;
+  const name = maybeCount && !/^\d+$/.test(maybeCount) ? [maybeCount, ...nameParts].join(" ") : nameParts.join(" ");
+
+  return {
+    speciesKey,
+    locationArg,
+    count: Math.min(Math.max(count, 1), 20),
+    name: name.trim() || undefined,
+  };
+}
+
+async function findLocation(locationArg: string) {
+  const coords = locationArg.match(/^(-?\d+),(-?\d+),(-?\d+)$/);
+  if (coords) {
+    const [, x, y, z] = coords;
+    return prisma.cellLocation.findFirst({
+      where: { x: Number(x), y: Number(y), z: Number(z) },
+    });
+  }
+
+  return prisma.cellLocation.findFirst({
+    where: {
+      OR: [
+        { key: locationArg },
+        { name: { equals: locationArg, mode: "insensitive" } },
+      ],
+    },
+  });
+}
+
+function formatWorldEvents(events: Awaited<ReturnType<typeof getStatusData>>["latestEvents"]) {
+  if (!events.length) return "немає";
+
+  return events
+    .map((event) => {
+      const created = event.createdAt.toISOString().replace("T", " ").slice(0, 16);
+      const description = event.description ? ` — ${event.description}` : "";
+      return `- #${event.id} ${created}: ${event.title}${description}`;
+    })
+    .join("\n");
+}
+
 export function registerStatusHandlers(bot: Bot) {
   bot.command("world", async (ctx) => {
     const s = await getStatusData();
-    await ctx.reply(`🌲 Стан Порубіжжя Чорнолісу\n\nВерсія: ${s.version}\nПерсонажів гравців у базі: ${s.playersCount}\nРегіонів: ${s.regionsCount}\nЛокацій-клітинок: ${s.locationsCount}\nПереходів між клітинками: ${s.exitsCount}\nЖивих тварин: ${s.aliveAnimalsCount}\nNPC / не-тварин: ${s.npcCount}\nЖивих істот загалом: ${s.aliveCreaturesCount}\nВузлів ресурсів: ${s.resourcesCount}\nПодій у журналі: ${s.eventsCount}\n\nПоточна подія: ${s.latestEvent?.title ?? "немає"}\nОстання помилка: ${s.lastRuntimeError ?? "немає"}`);
+    await ctx.reply(
+      `🌲 Стан Порубіжжя Чорнолісу\n\n` +
+        `Версія: ${s.version}\n` +
+        `Персонажів гравців у базі: ${s.playersCount}\n` +
+        `Регіонів: ${s.regionsCount}\n` +
+        `Локацій-клітинок: ${s.locationsCount}\n` +
+        `Переходів між клітинками: ${s.exitsCount}\n` +
+        `Живих тварин: ${s.aliveAnimalsCount}\n` +
+        `NPC / не-тварин: ${s.npcCount}\n` +
+        `Живих істот загалом: ${s.aliveCreaturesCount}\n` +
+        `Вузлів ресурсів: ${s.resourcesCount}\n` +
+        `Подій у журналі: ${s.eventsCount}\n\n` +
+        `Останні події:\n${formatWorldEvents(s.latestEvents)}\n\n` +
+        `Остання помилка: ${s.lastRuntimeError ?? "немає"}`
+    );
   });
 
   bot.command("all", async (ctx) => {
@@ -139,6 +198,10 @@ export function registerStatusHandlers(bot: Bot) {
       if (result.keptId) keepIds.push(result.keptId);
     }
 
+    const animalsCleanup = await prisma.creature.deleteMany({
+      where: { species: { kind: "ANIMAL" } },
+    });
+
     const deadCleanup = await prisma.creature.deleteMany({
       where: {
         isAlive: false,
@@ -153,7 +216,7 @@ export function registerStatusHandlers(bot: Bot) {
       data: {
         type: "SYSTEM",
         title: "Creature cleanup",
-        description: `Removed dead=${deadCleanup.count}; unique NPC duplicates=${duplicateCount}.`,
+        description: `Removed animals=${animalsCleanup.count}; dead=${deadCleanup.count}; unique NPC duplicates=${duplicateCount}.`,
       },
     });
 
@@ -163,7 +226,73 @@ export function registerStatusHandlers(bot: Bot) {
     });
 
     await ctx.reply(
-      `🧹 Creature cleanup done.\n\n${lines.join("\n")}\nDead/inactive removed: ${deadCleanup.count}\n\nAlive animals: ${fresh.aliveAnimalsCount}\nNPC / non-animals: ${fresh.npcCount}\nAlive creatures total: ${fresh.aliveCreaturesCount}`
+      `🧹 Creature cleanup done.\n\n` +
+        `${lines.join("\n")}\n` +
+        `Animals removed: ${animalsCleanup.count}\n` +
+        `Dead/inactive removed: ${deadCleanup.count}\n\n` +
+        `Alive animals: ${fresh.aliveAnimalsCount}\n` +
+        `NPC / non-animals: ${fresh.npcCount}\n` +
+        `Alive creatures total: ${fresh.aliveCreaturesCount}`
+    );
+  });
+
+  bot.command(["addCreature", "addcreature"], async (ctx) => {
+    const args = parseAddCreatureArgs(ctx.match ?? "");
+
+    if (!args.speciesKey || !args.locationArg) {
+      await ctx.reply(
+        "⚠️ Формат:\n" +
+          "/addCreature <speciesKey> <locationKey|x,y,z> [count] [name]\n\n" +
+          "Приклади:\n" +
+          "/addCreature rabbit center_chornolis_edge 3\n" +
+          "/addCreature wolf -1,-1,0\n" +
+          "/addCreature fox west_fox_path 2"
+      );
+      return;
+    }
+
+    const species = await prisma.creatureSpecies.findUnique({ where: { key: args.speciesKey } });
+    const location = await findLocation(args.locationArg);
+
+    if (!species) {
+      await ctx.reply(`⚠️ Невідомий speciesKey: ${args.speciesKey}`);
+      return;
+    }
+
+    if (!location) {
+      await ctx.reply(`⚠️ Не знайшов локацію: ${args.locationArg}`);
+      return;
+    }
+
+    const created = [];
+    for (let i = 0; i < args.count; i++) {
+      const creature = await prisma.creature.create({
+        data: {
+          speciesId: species.id,
+          locationId: location.id,
+          name: args.name ?? null,
+          hp: species.baseHp,
+          activity: "IDLE",
+          currentAction: "прислухається",
+        },
+      });
+      created.push(creature.id);
+    }
+
+    await prisma.worldEvent.create({
+      data: {
+        type: "SYSTEM",
+        title: "Creature added",
+        description: `Added ${args.count} × ${species.key} at ${location.key}.`,
+        locationId: location.id,
+      },
+    });
+
+    await ctx.reply(
+      `✅ Додано істот: ${args.count}\n` +
+        `Вид: ${species.name} [${species.key}]\n` +
+        `Локація: ${location.name} (${location.x},${location.y},${location.z})\n` +
+        `ID: ${created.map((id) => `#${id}`).join(", ")}`
     );
   });
 }

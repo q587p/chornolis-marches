@@ -8,6 +8,41 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.4.7 - creature control and debug status UX - 12026-05-06
+
+### ✨ Added
+
+- Added `/addCreature <speciesKey> <locationKey|x,y,z> [count] [name]` debug command.
+  - Examples:
+    - `/addCreature rabbit center_chornolis_edge 3`
+    - `/addCreature wolf -1,-1,0`
+    - `/addCreature fox west_fox_path 2`
+- Added a minimal persistent Telegram keyboard with `/start` and `/me`.
+- `/world`, `/health`, and the status page now expose the latest 10 world events instead of only one latest event.
+- Region broadcasts can now optionally re-send the current location view with movement buttons after the broadcast.
+
+### 🐛 Fixed
+
+- `/cleanupCreatures` now removes all animals and leaves only canonical unique NPCs:
+  - one `Травник`;
+  - one `Дід Чорноліс`.
+- Seed no longer spawns rabbits, mice, foxes or wolves on every deploy/seed run.
+- Repeated `npm run seed` no longer repopulates animals by accident.
+- World tick debug logging now supports both `WORLD_DEBUG=true` and the older `WORLD_TICK_DEBUG=true`.
+
+### 🎮 Gameplay
+
+- Animals are now test-controlled through `/addCreature` until reproduction, migration and danger-pressure mechanics are implemented later.
+- World tick broadcasts now include a short hint for `/start` and `/me`, and restore location buttons for players in the region.
+
+### 🛠 Technical
+
+- `getStatusData()` now returns `latestEvents` while keeping `latestEvent` for compatibility.
+- Status server renders recent events as a short HTML list and exposes them in `/health`.
+- Seed remains responsible for world structure, resources, species and unique NPCs only.
+
+---
+
 ## 0.4.6 - creature cleanup and unique NPC normalization - 12026-05-06
 
 ### ✨ Added
