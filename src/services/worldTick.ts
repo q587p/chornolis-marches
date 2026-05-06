@@ -1,10 +1,15 @@
 import { Bot } from "grammy";
+import { LocationExit } from "@prisma/client";
 import { prisma } from "../db";
 import { notifyRegion } from "./notifications";
 
-const TICK_INTERVAL = Number(process.env.WORLD_TICK_INTERVAL_MS || 60000);
+const DEFAULT_TICK_INTERVAL_MS = Number(process.env.WORLD_TICK_INTERVAL_MS || 60000);
 const DEBUG = process.env.WORLD_DEBUG === "true";
+const RESOURCE_REGEN_EVERY_TICKS = Number(process.env.WORLD_RESOURCE_REGEN_EVERY_TICKS || 10);
+const RESOURCE_REGEN_AMOUNT = Number(process.env.WORLD_RESOURCE_REGEN_AMOUNT || 1);
 
+let tickIntervalMs = DEFAULT_TICK_INTERVAL_MS;
+let tickTimer: NodeJS.Timeout | null = null;
 let running = false;
 let botInstance: Bot | null = null;
 let tickNumber = 0;
@@ -16,6 +21,10 @@ function chance(p: number) {
 function pick<T>(arr: T[]): T | undefined {
   if (arr.length === 0) return undefined;
   return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function isExit(value: unknown): value is LocationExit {
+  return Boolean(value && typeof value === "object" && "toLocationId" in value);
 }
 
 async function move(c: any, toLocationId: number, action: string) {
@@ -53,8 +62,8 @@ async function tickHerbalist(c: any) {
     return "gathered";
   }
 
-  const exit = pick<any>(c.location.exitsFrom);
-  if (exit) {
+  const exit = pick(c.location.exitsFrom);
+  if (isExit(exit)) {
     await move(c, exit.toLocationId, "шукає трави");
     return "moved";
   }
@@ -64,8 +73,8 @@ async function tickHerbalist(c: any) {
 
 async function tickHerbivore(c: any) {
   if (chance(50)) {
-    const exit = pick<any>(c.location.exitsFrom);
-    if (exit) {
+    const exit = pick(c.location.exitsFrom);
+    if (isExit(exit)) {
       await move(c, exit.toLocationId, "шукає їжу");
       return "moved";
     }
@@ -73,7 +82,7 @@ async function tickHerbivore(c: any) {
 
   await prisma.creature.update({
     where: { id: c.id },
-    data: { currentAction: "прислухається" },
+    data: { activity: "IDLE", currentAction: "прислухається" },
   });
 
   return "idle";
@@ -91,14 +100,14 @@ async function tickCarnivore(c: any) {
   if (prey) {
     await prisma.creature.update({
       where: { id: c.id },
-      data: { currentAction: "вистежує здобич" },
+      data: { activity: "LOOKING", currentAction: "вистежує здобич" },
     });
     return "looking";
   }
 
   if (chance(50)) {
-    const exit = pick<any>(c.location.exitsFrom);
-    if (exit) {
+    const exit = pick(c.location.exitsFrom);
+    if (isExit(exit)) {
       await move(c, exit.toLocationId, "патрулює");
       return "moved";
     }
@@ -107,13 +116,22 @@ async function tickCarnivore(c: any) {
   return "idle";
 }
 
-async function wakeLisovykIfRegionDepleted() {
+type DepletedRegionResource = {
+  regionId: number;
+  regionName: string;
+  resourceKey: string;
+  resourceName: string;
+  locationId: number;
+};
+
+async function findRegionDepletedResource(): Promise<DepletedRegionResource | null> {
   const regions = await prisma.region.findMany({
     include: {
       locations: {
         include: {
           resources: { include: { resourceType: true } },
         },
+        orderBy: { id: "asc" },
       },
     },
   });
@@ -121,68 +139,181 @@ async function wakeLisovykIfRegionDepleted() {
   for (const region of regions) {
     const resourceKeys = new Set<string>();
 
-    region.locations.forEach((l) =>
-      l.resources.forEach((r) => resourceKeys.add(r.resourceType.key))
-    );
+    for (const location of region.locations) {
+      for (const node of location.resources) resourceKeys.add(node.resourceType.key);
+    }
 
-    for (const key of resourceKeys) {
-      const nodes = region.locations.flatMap((l) =>
-        l.resources.filter((r) => r.resourceType.key === key)
+    for (const resourceKey of resourceKeys) {
+      const nodes = region.locations.flatMap((location) =>
+        location.resources.filter((node) => node.resourceType.key === resourceKey)
       );
-
-      const total = nodes.reduce((s, n) => s + n.amount, 0);
+      const total = nodes.reduce((sum, node) => sum + node.amount, 0);
       if (total > 0) continue;
 
-      const name = nodes[0]?.resourceType.name ?? key;
-
-      const species = await prisma.creatureSpecies.findUnique({
-        where: { key: "lisovyk" },
-      });
-
-      if (!species) return false;
-
-      const existing = await prisma.creature.findFirst({
-        where: { speciesId: species.id, name: "Дід Чорноліс" },
-      });
-
-      if (existing?.isAlive) return false;
-
       const location = region.locations[0];
+      if (!location) continue;
 
-      await prisma.creature.create({
-        data: {
-          speciesId: species.id,
-          name: "Дід Чорноліс",
-          locationId: location.id,
-          hp: species.baseHp,
-          activity: "LOOKING",
-          currentAction: `прокинувся: зник ресурс ${name}`,
-        },
-      });
-
-      await prisma.worldEvent.create({
-        data: {
-          type: "NPC_SAY",
-          title: "Лісовик прокинувся",
-          description: `У регіоні «${region.name}» зник ресурс «${name}».`,
-          locationId: location.id,
-        },
-      });
-
-      if (botInstance) {
-        await notifyRegion(
-          botInstance,
-          region.id,
-          `🌲 Дід Чорноліс прокинувся.\n\nУ всьому регіоні зник ресурс «${name}».`
-        );
-      }
-
-      return true;
+      return {
+        regionId: region.id,
+        regionName: region.name,
+        resourceKey,
+        resourceName: nodes[0]?.resourceType.name ?? resourceKey,
+        locationId: location.id,
+      };
     }
   }
 
-  return false;
+  return null;
 }
+
+async function wakeLisovykIfNeeded() {
+  const depleted = await findRegionDepletedResource();
+  if (!depleted) return false;
+
+  const species = await prisma.creatureSpecies.findUnique({ where: { key: "lisovyk" } });
+  if (!species) return false;
+
+  const existing = await prisma.creature.findFirst({
+    where: { speciesId: species.id, name: "Дід Чорноліс" },
+  });
+
+  if (existing?.isAlive) return false;
+
+  const action = `полює через те, що в регіоні зник ресурс ${depleted.resourceKey}`;
+
+  if (existing) {
+    await prisma.creature.update({
+      where: { id: existing.id },
+      data: {
+        isAlive: true,
+        locationId: depleted.locationId,
+        hp: species.baseHp,
+        activity: "LOOKING",
+        currentAction: action,
+      },
+    });
+  } else {
+    await prisma.creature.create({
+      data: {
+        speciesId: species.id,
+        name: "Дід Чорноліс",
+        locationId: depleted.locationId,
+        hp: species.baseHp,
+        activity: "LOOKING",
+        currentAction: action,
+      },
+    });
+  }
+
+  await prisma.worldEvent.create({
+    data: {
+      type: "NPC_SAY",
+      title: "Лісовик прокинувся",
+      description: `У регіоні «${depleted.regionName}» зник ресурс «${depleted.resourceName}». Дід Чорноліс прокинувся і почав полювання.`,
+      locationId: depleted.locationId,
+    },
+  });
+
+  if (botInstance) {
+    await notifyRegion(
+      botInstance,
+      depleted.regionId,
+      `🌲 Дід Чорноліс прокинувся.\n\nУ всьому регіоні зник ресурс «${depleted.resourceName}».`
+    );
+  }
+
+  return true;
+}
+
+async function putLisovykToSleepIfForestRecovered() {
+  const species = await prisma.creatureSpecies.findUnique({ where: { key: "lisovyk" } });
+  if (!species) return false;
+
+  const lisovyk = await prisma.creature.findFirst({
+    where: { speciesId: species.id, name: "Дід Чорноліс", isAlive: true },
+    include: { location: true },
+  });
+
+  const match = lisovyk?.currentAction?.match(/зник ресурс ([a-zA-Z0-9_-]+)/);
+  if (!lisovyk || !match) return false;
+
+  const resourceKey = match[1];
+  const regionId = lisovyk.location.regionId;
+
+  const total = await prisma.resourceNode.aggregate({
+    where: {
+      location: { regionId },
+      resourceType: { key: resourceKey },
+    },
+    _sum: { amount: true },
+  });
+
+  if ((total._sum.amount ?? 0) <= 0) return false;
+
+  const resource = await prisma.resourceType.findUnique({ where: { key: resourceKey } });
+
+  await prisma.creature.update({
+    where: { id: lisovyk.id },
+    data: {
+      isAlive: false,
+      activity: "RESTING",
+      currentAction: `заснув: ресурс ${resourceKey} відновився`,
+    },
+  });
+
+  await prisma.worldEvent.create({
+    data: {
+      type: "NPC_SAY",
+      title: "Лісовик заснув",
+      description: `Дід Чорноліс відчув, що ресурс «${resource?.name ?? resourceKey}» у лісі відновився. Він перестає полювати на людей і ховається там, де був.`,
+      locationId: lisovyk.locationId,
+    },
+  });
+
+  if (botInstance) {
+    await notifyRegion(
+      botInstance,
+      regionId,
+      `🌲 Дід Чорноліс відчув, що ліс відновився.\n\nВін перестає полювати за людьми в лісі, ховається між деревами й засинає.`
+    );
+  }
+
+  return true;
+}
+
+async function regenerateResourcesIfNeeded() {
+  if (tickNumber === 0 || tickNumber % RESOURCE_REGEN_EVERY_TICKS !== 0) return 0;
+
+  const nodes = await prisma.resourceNode.findMany({
+    where: { amount: { gt: -1 } },
+  });
+
+  let regenerated = 0;
+
+  for (const node of nodes) {
+    if (node.amount >= node.maxAmount) continue;
+
+    await prisma.resourceNode.update({
+      where: { id: node.id },
+      data: { amount: Math.min(node.maxAmount, node.amount + RESOURCE_REGEN_AMOUNT) },
+    });
+
+    regenerated++;
+  }
+
+  if (regenerated > 0) {
+    await prisma.worldEvent.create({
+      data: {
+        type: "SYSTEM",
+        title: "Ресурси відновлюються",
+        description: `Ліс повільно відновив ${regenerated} ресурсних вузлів: +${RESOURCE_REGEN_AMOUNT}.`,
+      },
+    });
+  }
+
+  return regenerated;
+}
+
 
 export async function worldTick() {
   if (running) return;
@@ -193,13 +324,18 @@ export async function worldTick() {
   let idle = 0;
   let looking = 0;
   let errors = 0;
+  let regenerated = 0;
+  let lisovykAwakened = false;
+  let lisovykSlept = false;
 
   try {
-    if (DEBUG) {
-      console.log(`[WORLD TICK] start ${new Date().toISOString()}`);
-    }
+    if (DEBUG) console.log(`[WORLD TICK] start ${new Date().toISOString()}`);
 
-    const lisovykAwakened = await wakeLisovykIfRegionDepleted();
+    tickNumber++;
+
+    lisovykAwakened = await wakeLisovykIfNeeded();
+    regenerated = await regenerateResourcesIfNeeded();
+    if (!lisovykAwakened) lisovykSlept = await putLisovykToSleepIfForestRecovered();
 
     const creatures = await prisma.creature.findMany({
       where: { isAlive: true },
@@ -219,7 +355,7 @@ export async function worldTick() {
         let result = "idle";
 
         if (c.species.key === "herbalist") result = await tickHerbalist(c);
-        else if (c.species.key === "lisovyk") result = "idle";
+        else if (c.species.key === "lisovyk") result = "looking";
         else if (c.species.diet === "HERBIVORE") result = await tickHerbivore(c);
         else if (c.species.diet === "CARNIVORE") result = await tickCarnivore(c);
 
@@ -227,16 +363,15 @@ export async function worldTick() {
         else if (result === "gathered") gathered++;
         else if (result === "looking") looking++;
         else idle++;
-      } catch {
+      } catch (error) {
         errors++;
+        if (DEBUG) console.warn("Creature tick failed:", error);
       }
     }
 
-    tickNumber++;
-
     if (DEBUG) {
       console.log(
-        `[WORLD TICK] done: moved=${moved}, gathered=${gathered}, idle=${idle}, errors=${errors}`
+        `[WORLD TICK] done: processed=${moved + gathered + idle + looking}, moved=${moved}, gathered=${gathered}, looking=${looking}, idle=${idle}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}`
       );
     }
 
@@ -244,7 +379,7 @@ export async function worldTick() {
       data: {
         type: "SYSTEM",
         title: "World Tick",
-        description: `Tick #${tickNumber}: moved=${moved}, gathered=${gathered}, idle=${idle}, lisovyk=${lisovykAwakened}`,
+        description: `Tick #${tickNumber}: moved=${moved}, gathered=${gathered}, looking=${looking}, idle=${idle}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}`,
       },
     });
 
@@ -254,7 +389,7 @@ export async function worldTick() {
         await notifyRegion(
           botInstance,
           region.id,
-          `🌿 Світ ворухнувся.\n\nРух: ${moved}, збір: ${gathered}`
+          `🌿 Світ ворухнувся.\n\nТік #${tickNumber}: рухів — ${moved}, збору — ${gathered}, відновлено вузлів — ${regenerated}.`
         );
       }
     }
@@ -263,15 +398,49 @@ export async function worldTick() {
   }
 }
 
-export function startWorldTickLoop(bot?: Bot) {
-  botInstance = bot ?? null;
+function restartWorldTickTimer() {
+  if (tickTimer) clearInterval(tickTimer);
+
+  tickTimer = setInterval(() => {
+    worldTick().catch(console.error);
+  }, tickIntervalMs);
 
   if (DEBUG) {
     console.log("TICK INTERVAL ENV:", process.env.WORLD_TICK_INTERVAL_MS);
-    console.log(`World tick loop started: every ${TICK_INTERVAL}ms`);
+    console.log(`World tick loop started: every ${tickIntervalMs}ms`);
   }
+}
 
-  setInterval(() => {
-    worldTick().catch(console.error);
-  }, TICK_INTERVAL);
+function registerTickCommands(bot: Bot) {
+  bot.command("tick", async (ctx) => {
+    await worldTick();
+    await ctx.reply("✅ World tick запущено вручну.");
+  });
+
+  bot.command(["tickGet", "tickget"], async (ctx) => {
+    await ctx.reply(
+      `🌲 World tick\n\nІнтервал: ${tickIntervalMs} ms\nTick #: ${tickNumber}\nРегенерація ресурсів: раз на ${RESOURCE_REGEN_EVERY_TICKS} тіків, +${RESOURCE_REGEN_AMOUNT}`
+    );
+  });
+
+  bot.command(["tickSet", "tickset"], async (ctx) => {
+    const value = Number(ctx.match?.trim());
+
+    if (!Number.isFinite(value) || value < 1000) {
+      await ctx.reply("⚠️ Формат: /tickSet 5000\nМінімум: 1000 ms.");
+      return;
+    }
+
+    tickIntervalMs = Math.floor(value);
+    restartWorldTickTimer();
+
+    await ctx.reply(`✅ World tick interval set to ${tickIntervalMs} ms.`);
+  });
+}
+
+export function startWorldTickLoop(bot?: Bot) {
+  botInstance = bot ?? null;
+
+  if (botInstance) registerTickCommands(botInstance);
+  restartWorldTickTimer();
 }

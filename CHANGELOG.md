@@ -8,6 +8,38 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.4.5 - tick commands, resource regeneration, Lisovyk recovery - 12026-05-06
+
+### ✨ Added
+
+- Manual world tick debug commands:
+  - `/tick` runs one world tick immediately.
+  - `/tickGet` shows the current world tick interval and tick counter.
+  - `/tickSet <ms>` changes the world tick interval at runtime without restarting the server.
+- Slow resource regeneration:
+  - resources recover by a small amount every configured number of ticks.
+  - defaults: every 10 ticks, +1 per resource node.
+- Lisovyk recovery state:
+  - when the resource that woke Дід Чорноліс returns anywhere in the region, he stops hunting, hides where he is and becomes inactive again.
+  - the recovery is written to `WorldEvent` and broadcast to players in the region.
+
+### 🐛 Fixed
+
+- Prevented repeated spam broadcasts for the same Lisovyk awakening condition.
+- Lisovyk awakening now sends the “resource depleted” broadcast only once while he is already awake.
+
+### 🎮 Gameplay
+
+- The world now has a basic depletion → guardian awakening → resource recovery → guardian sleep loop.
+- Periodic tick messages include resource regeneration counts.
+
+### 🛠 Technical
+
+- World tick loop can now restart its interval timer in-process after `/tickSet`.
+- Tick diagnostics are still integrated with `WorldEvent`, so `/world` and the status page can see the latest tick result.
+
+---
+
 ## 0.4.4 - Region-wide ecosystem logic - 12026-05-06
 
 ### ✨ Added
