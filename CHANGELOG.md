@@ -8,6 +8,32 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.4.6 - creature cleanup and unique NPC normalization - 12026-05-06
+
+### ✨ Added
+
+- Added `/cleanupCreatures` debug/admin command:
+  - keeps one canonical `Травник`.
+  - keeps one canonical `Дід Чорноліс`.
+  - removes duplicate named NPC rows.
+  - removes dead/inactive creature rows that are not the canonical sleeping Lisovyk.
+  - writes a `Creature cleanup` system event.
+
+### 🐛 Fixed
+
+- `/all` now shows only living creatures by default, so it matches `/world` more closely.
+- Added `/all dead` for full debug output including inactive/dead creature records.
+- Fixed repeated `Травник` spawning after repeated seed runs when the existing herbalist had moved away from his original location.
+- Fixed seed behavior for unique named NPCs by checking for them globally by species + name instead of by starting location.
+- Reduced accumulation of duplicate `Дід Чорноліс` records.
+
+### 🎮 Gameplay
+
+- `Травник` is now treated as one moving NPC, not as a spawn slot in one fixed cell.
+- `Дід Чорноліс` remains a single guardian instance that sleeps, wakes when resources are depleted, and can sleep again after recovery.
+
+---
+
 ## 0.4.5 - tick commands, resource regeneration, Lisovyk recovery - 12026-05-06
 
 ### ✨ Added

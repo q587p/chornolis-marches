@@ -80,6 +80,55 @@ async function createCreatures(speciesKey: string, locationKey: string, count: n
   }
 }
 
+async function ensureUniqueCreature(speciesKey: string, locationKey: string, name: string, options: { isAlive: boolean; action: string; activity: "IDLE" | "GATHERING" | "RESTING" | "LOOKING" }) {
+  const sp = await prisma.creatureSpecies.findUniqueOrThrow({ where: { key: speciesKey } });
+  const loc = await prisma.cellLocation.findUniqueOrThrow({ where: { key: locationKey } });
+
+  const existing = await prisma.creature.findMany({
+    where: { speciesId: sp.id, name },
+    orderBy: [{ isAlive: "desc" }, { updatedAt: "desc" }, { id: "asc" }],
+  });
+
+  const keep = existing[0];
+
+  if (!keep) {
+    await prisma.creature.create({
+      data: {
+        speciesId: sp.id,
+        locationId: loc.id,
+        name,
+        hp: sp.baseHp,
+        isAlive: options.isAlive,
+        currentAction: options.action,
+        activity: options.activity,
+      },
+    });
+    return;
+  }
+
+  const duplicateIds = existing.filter((c) => c.id !== keep.id).map((c) => c.id);
+  if (duplicateIds.length > 0) {
+    await prisma.creature.deleteMany({ where: { id: { in: duplicateIds } } });
+  }
+
+  if (speciesKey === "herbalist" && !keep.isAlive) {
+    await prisma.creature.update({
+      where: { id: keep.id },
+      data: {
+        isAlive: true,
+        locationId: loc.id,
+        hp: sp.baseHp,
+        currentAction: options.action,
+        activity: options.activity,
+      },
+    });
+  }
+
+  if (speciesKey === "lisovyk" && keep.hp <= 0) {
+    await prisma.creature.update({ where: { id: keep.id }, data: { hp: sp.baseHp } });
+  }
+}
+
 async function main() {
   const region = await prisma.region.upsert({
     where: { key: "chornolis_border" },
@@ -132,16 +181,17 @@ async function main() {
   await createCreatures("fox", "west_fox_path", 2, undefined, "нюхає сліди");
   await createCreatures("wolf", "south_wolf_track", 1, undefined, "проходить стежкою");
 
-  // Лісовик є як вид, але не стартує на мапі. Він з’являється, коли в регіоні повністю зникає якийсь ресурс.
-  const lisovykSpecies = await prisma.creatureSpecies.findUnique({ where: { key: "lisovyk" } });
-  if (lisovykSpecies) {
-    await prisma.creature.updateMany({
-      where: { speciesId: lisovykSpecies.id, name: "Дід Чорноліс" },
-      data: { isAlive: false, currentAction: "спить у глибині Чорнолісу", activity: "RESTING" },
-    });
-  }
+  await ensureUniqueCreature("lisovyk", "north_west_wood", "Дід Чорноліс", {
+    isAlive: false,
+    action: "спить у глибині Чорнолісу",
+    activity: "RESTING",
+  });
 
-  await createCreatures("herbalist", "south_moss_clearing", 1, "Травник", "збирає трави");
+  await ensureUniqueCreature("herbalist", "south_moss_clearing", "Травник", {
+    isAlive: true,
+    action: "збирає трави",
+    activity: "GATHERING",
+  });
 
   await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "Seed completed", description: "Initial Chornolis world seeded." } });
   console.log("Seed completed.");
