@@ -3,6 +3,7 @@ import { config } from "./config";
 import { setLastRuntimeError } from "./runtimeState";
 import { startHttpServer } from "./server/statusServer";
 import { announceWorldUpdatedOnce } from "./services/deployAnnouncements";
+import { startWorldTickLoop } from "./services/worldTick";
 import { registerGatherHandlers } from "./handlers/gather";
 import { registerLookHandlers } from "./handlers/look";
 import { registerMovementHandlers } from "./handlers/movement";
@@ -33,5 +34,6 @@ announceWorldUpdatedOnce(bot).catch((error) => {
   setLastRuntimeError(error);
   console.warn("World update announcement failed:", error);
 });
+startWorldTickLoop();
 
 bot.start();

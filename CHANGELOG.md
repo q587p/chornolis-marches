@@ -8,6 +8,27 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.4.0 - world tick - 12026-05-06
+
+### Added
+
+- Added basic async world tick service in `src/services/worldTick.ts`.
+- World tick now periodically updates living creatures without requiring player actions.
+- Animals now perform simple autonomous behavior:
+  - herbivores move toward food or wander;
+  - carnivores follow nearby herbivores or patrol.
+- Herbalist now autonomously gathers herbs and moves toward nearby herb sources.
+- Lisovyk awakening is now handled by world tick when any resource node is depleted.
+- Added `WORLD_TICK_INTERVAL_MS` env override for tick frequency.
+- Added `WORLD_TICK_CREATURE_LIMIT` env override to cap processed creatures per tick.
+
+### Changed
+
+- `src/bot.ts` now starts the world tick loop during bot startup.
+- The first world tick implementation is intentionally non-lethal: predators track prey but do not kill yet, to keep the MVP world stable.
+
+---
+
 ## 0.3.0 - bot.ts refactor - 12026-05-06
 
 ### Changed
