@@ -8,6 +8,23 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.4.4 - Region-wide ecosystem logic - 12026-05-06
+
+### ✨ Added
+
+- Region-wide ecosystem logic:
+  - Lisovyk now awakens only when a resource is depleted across the entire region (not a single location).
+- System `WorldEvent` entries for each tick (visible in `/world` and status page).
+- Periodic world notifications to players:
+  - "Світ ворухнувся" every few ticks.
+- Lisovyk awakening now broadcasts to the entire region.
+
+---
+
+## 0.4.3 - chore: finalize husky setup - 12026-05-06
+
+---
+
 ## 0.4.2 - fix: Github Action release workflow - 12026-05-06
 
 ---
