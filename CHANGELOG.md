@@ -8,6 +8,10 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.4.2 - fix: Github Action release workflow - 12026-05-06
+
+---
+
 ## 0.4.1 - world tick debug overlay - 12026-05-06
 
 ### Added
