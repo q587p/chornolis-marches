@@ -8,6 +8,31 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.4.10 - deploy news and menu polish - 12026-05-07
+
+### ✨ Added
+
+- Deploy announcement now includes a short summary of the latest `news.md` entry.
+- Deploy announcement now asks players to press `/start` to refresh menu buttons after an update.
+- `/start` is back as the first item in the persistent reply keyboard.
+- Added icons to the main menu buttons:
+  - `🌲 /start`
+  - `📍 Локація`
+  - `🧍 Персонаж`
+  - `🤖 Авто` / `⏹ Стоп`
+  - `📰 Новини`
+
+### 🐛 Fixed
+
+- Character button now works with the new `🧍 Персонаж` label while keeping backward compatibility with the old `Персонаж` text.
+- `/me` now displays auto-mode status only when auto-mode is enabled.
+
+### 🎮 UX
+
+- The update message is now more useful after deploys: it shows the version, latest news and how to refresh the menu.
+
+---
+
 ## 0.4.9 - targeted interactions, admin help, news and speech - 12026-05-06
 
 ### ✨ Added

@@ -13,12 +13,14 @@ async function showCharacter(bot: Bot, telegramId: number, reply: (text: string,
 
   if (!player) return void (await reply("Ти ще не увійшов у світ. Напиши /start", { reply_markup: buildMainReplyKeyboard(false) }));
 
+  const autoEnabled = isPlayerAutoEnabled(telegramId);
+  const autoText = autoEnabled ? "\nРежим авто: увімкнено 🤖" : "";
   const items = player.resources.length
     ? player.resources.map((i) => `${i.resourceType.name} ×${i.amount}`).join("\n")
     : "порожньо";
 
-  await reply(`🧍 Ти:\n\nІм’я: ${player.firstName ?? "невідомо"}\nHP: ${player.hp}\nВитривалість: ${player.stamina}\nГолод: ${player.hunger}\nЛокація: ${player.currentLocation?.name ?? "невідомо"}\n\nІнвентар:\n${items}`, {
-    reply_markup: buildMainReplyKeyboard(isPlayerAutoEnabled(telegramId)),
+  await reply(`🧍 Ти:\n\nІм’я: ${player.firstName ?? "невідомо"}\nHP: ${player.hp}\nВитривалість: ${player.stamina}\nГолод: ${player.hunger}\nЛокація: ${player.currentLocation?.name ?? "невідомо"}${autoText}\n\nІнвентар:\n${items}`, {
+    reply_markup: buildMainReplyKeyboard(autoEnabled),
   });
 }
 
@@ -40,7 +42,7 @@ export function registerPlayerHandlers(bot: Bot) {
     await showCharacter(bot, ctx.from.id, (text, options) => ctx.reply(text, options));
   });
 
-  bot.hears("Персонаж", async (ctx) => {
+  bot.hears(["Персонаж", "🧍 Персонаж"], async (ctx) => {
     if (!ctx.from) return;
     await showCharacter(bot, ctx.from.id, (text, options) => ctx.reply(text, options));
   });
