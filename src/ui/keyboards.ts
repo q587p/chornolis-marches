@@ -16,16 +16,26 @@ export function buildMovementKeyboard(exits: any[]) {
   return keyboard;
 }
 
-export function buildInteractionKeyboard() {
-  return new InlineKeyboard()
-    .text("👋 Привітатися", "social:greet")
-    .text("👁 Придивитися", "social:inspect")
-    .row()
-    .text("⚔️ Атакувати", "social:attack");
+export function buildTrackKeyboard() {
+  return new InlineKeyboard().text("👣 Відслідкувати", "track");
 }
 
-export function buildAnimalInteractionKeyboard() {
+export function buildTargetKeyboard(targets: { type: "player" | "creature"; id: number; label: string; canGreet: boolean }[]) {
+  const keyboard = new InlineKeyboard();
+
+  for (const target of targets) {
+    keyboard.text(`👁 ${target.label}`, `social:inspect:${target.type}:${target.id}`);
+    keyboard.text(`⚔️ ${target.label}`, `social:attack:${target.type}:${target.id}`).row();
+    if (target.canGreet) keyboard.text(`👋 ${target.label}`, `social:greet:${target.type}:${target.id}`).row();
+  }
+
+  return keyboard;
+}
+
+
+export function buildInteractionKeyboard() {
   return new InlineKeyboard()
-    .text("👁 Оглянути", "social:inspect")
-    .text("⚔️ Атакувати", "social:attack");
+    .text("👁 Оглянути", "look")
+    .row()
+    .text("⚔️ Атакувати", "social:attack:creature:0");
 }

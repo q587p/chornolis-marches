@@ -8,6 +8,48 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.4.9 - targeted interactions, admin help, news and speech - 12026-05-06
+
+### ✨ Added
+
+- Added `/adminHelp` with a compact list of gameplay/debug commands.
+- Added `/locationAll` to list all location keys, coordinates, danger level and region.
+- Added `/addCreatureHelp` to list all animal `speciesKey` values usable with `/addCreature`.
+- Added `/cleanupCreature [speciesKey]`:
+  - removes one living animal from the player’s current location;
+  - if `speciesKey` is omitted, removes the first living animal found there;
+  - if `speciesKey` is provided, removes one animal of that species in the current location.
+- Added `/news` and the persistent “📰 Новини” menu button.
+- Added `news.md` as the source for the latest 13 short Ukrainian news entries.
+- Added targeted social actions:
+  - greet a specific character/NPC;
+  - inspect a specific player/NPC/animal;
+  - attempt to attack a specific player/NPC/animal.
+- Added multiple randomized greeting phrases.
+- Added animal inspection details: state, HP, sex, age and current action.
+- Added “👣 Відслідкувати” button for departure messages.
+- Herbalist can now occasionally speak aloud during world ticks.
+- Player auto-mode can now occasionally say short phrases aloud.
+
+### 🐛 Fixed
+
+- Departure notifications no longer show generic inspect/attack buttons for a target that already left.
+- Animal movement notifications now distinguish “something” from “someone”.
+- Nearby animals are now included in location visibility/interactions instead of being only vague traces.
+
+### 🎮 Gameplay
+
+- Location details now create per-target interaction buttons, preparing the UI for future equipment/appearance/combat systems.
+- Tracking is still a placeholder, but the UI now has a proper action entry point.
+
+### 🛠 Technical
+
+- Added `src/handlers/news.ts`.
+- Updated social callback format to `social:<action>:<targetType>:<targetId>`.
+- Kept compatibility stub for the older interaction keyboard export while newer UI uses target-specific buttons.
+
+---
+
 ## 0.4.8 - player auto mode and cleaner Telegram menu - 12026-05-06
 
 ### ✨ Added

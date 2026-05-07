@@ -8,6 +8,7 @@ import { registerAutoHandlers } from "./handlers/auto";
 import { registerGatherHandlers } from "./handlers/gather";
 import { registerLookHandlers } from "./handlers/look";
 import { registerMovementHandlers } from "./handlers/movement";
+import { registerNewsHandlers } from "./handlers/news";
 import { registerPlayerHandlers } from "./handlers/player";
 import { registerSayHandlers } from "./handlers/say";
 import { registerSocialHandlers } from "./handlers/social";
@@ -17,14 +18,15 @@ import { registerStatusHandlers } from "./handlers/status";
 const bot = new Bot(config.botToken);
 
 registerStartHandlers(bot);
+registerAutoHandlers(bot);
 registerPlayerHandlers(bot);
+registerNewsHandlers(bot);
 registerStatusHandlers(bot);
 registerLookHandlers(bot);
 registerSayHandlers(bot);
 registerMovementHandlers(bot);
 registerGatherHandlers(bot);
 registerSocialHandlers(bot);
-registerAutoHandlers(bot);
 
 bot.catch((error) => {
   setLastRuntimeError(error.error);

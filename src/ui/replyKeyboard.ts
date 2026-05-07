@@ -6,6 +6,7 @@ export function buildMainReplyKeyboard(isAuto = false) {
     .text("Персонаж")
     .row()
     .text(isAuto ? "⏹ Стоп" : "🤖 Авто")
+    .text("📰 Новини")
     .resized()
     .persistent();
 }

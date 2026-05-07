@@ -2,24 +2,33 @@ import { InlineKeyboard } from "grammy";
 import { prisma } from "../db";
 import { TICK_MS, gatherConfig } from "../gameConfig";
 import { directionLabels } from "../ui/labels";
-import { buildMovementKeyboard } from "../ui/keyboards";
+import { buildMovementKeyboard, buildTargetKeyboard } from "../ui/keyboards";
 import { escapeHtml } from "../utils/text";
 
-function visibleCounts(location: any, viewerPlayerId?: number) {
-  const otherPlayers = location.players.filter((p: any) => p.id !== viewerPlayerId).length;
-  const nonAnimalCreatures = location.creatures.filter((c: any) => c.species.kind !== "ANIMAL").length;
-  const animals = location.creatures.filter((c: any) => c.species.kind === "ANIMAL").length;
-  return { otherPlayers, nonAnimalCreatures, animals };
+function visibleTargets(location: any, viewerPlayerId?: number) {
+  const players = location.players
+    .filter((p: any) => p.id !== viewerPlayerId)
+    .map((p: any) => ({ type: "player" as const, id: p.id, label: p.firstName ?? p.username ?? "мандрівник", canGreet: true }));
+
+  const creatures = location.creatures.map((c: any) => ({
+    type: "creature" as const,
+    id: c.id,
+    label: c.name ?? c.species.name,
+    canGreet: c.species.kind !== "ANIMAL",
+  }));
+
+  return [...players, ...creatures];
 }
 
-function hasVisibleCharacters(location: any, viewerPlayerId?: number) {
-  const counts = visibleCounts(location, viewerPlayerId);
-  return counts.otherPlayers + counts.nonAnimalCreatures > 0;
-}
+function presenceText(location: any, viewerPlayerId?: number) {
+  const targets = visibleTargets(location, viewerPlayerId);
+  const hasCharacters = targets.some((t) => t.canGreet);
+  const hasAnimals = location.creatures.some((c: any) => c.species.kind === "ANIMAL");
 
-function hasVisibleAnimals(location: any) {
-  const counts = visibleCounts(location);
-  return counts.animals > 0;
+  if (hasCharacters && hasAnimals) return "\n\n<i>Поруч хтось або щось є.</i>";
+  if (hasCharacters) return "\n\n<i>Поруч хтось є.</i>";
+  if (hasAnimals) return "\n\n<i>Поруч щось ворушиться.</i>";
+  return "";
 }
 
 export async function renderLocationBrief(locationId: number, viewerPlayerId?: number) {
@@ -38,11 +47,8 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
     ? location.exitsFrom.map((exit) => `- ${directionLabels[exit.direction]} → ${exit.toLocation.name}`).join("\n")
     : "Виходів не видно.";
 
-  const peopleText = hasVisibleCharacters(location, viewerPlayerId) ? "\n\n<i>Поруч хтось є.</i>" : "";
-  const animalText = hasVisibleAnimals(location) ? "\n<i>Поруч щось є.</i>" : "";
-
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n\n${escapeHtml(location.description ?? "")}${peopleText}${animalText}\n\nВиходи:\n${escapeHtml(exitsText)}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n\n${escapeHtml(location.description ?? "")}${presenceText(location, viewerPlayerId)}\n\nВиходи:\n${escapeHtml(exitsText)}`,
     keyboard: buildMovementKeyboard(location.exitsFrom),
   };
 }
@@ -60,20 +66,9 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
 
   if (!location) throw new Error("Location not found");
 
-  const otherPlayers = location.players.filter((p) => p.id !== viewerPlayerId);
-  const npcs = location.creatures.filter((c) => c.species.kind !== "ANIMAL");
-  const animals = location.creatures.filter((c) => c.species.kind === "ANIMAL");
-  const visibleCharacters = [
-    ...otherPlayers.map((p) => p.firstName ?? p.username ?? "мандрівник"),
-    ...npcs.map((c) => c.name ?? c.species.name),
-  ];
-
-  const charactersText = visibleCharacters.length
-    ? `\n\nПоруч:\n${visibleCharacters.map((x) => `- ${x}`).join("\n")}`
-    : "";
-
-  const animalsText = animals.length
-    ? `\n\nПоруч рухається щось живе:\n${animals.slice(0, 8).map((c) => `- ${c.species.name}: ${c.currentAction ?? "проходить"}`).join("\n")}${animals.length > 8 ? `\n- ...і ще ${animals.length - 8}` : ""}`
+  const targets = visibleTargets(location, viewerPlayerId);
+  const charactersText = targets.length
+    ? `\n\nПоруч:\n${targets.map((x) => `- ${escapeHtml(x.label)}${x.canGreet ? "" : " <i>(тварина)</i>"}`).join("\n")}`
     : "";
 
   const resourceLines = location.resources
@@ -84,6 +79,14 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     });
   const resourcesText = resourceLines.length ? `\n\nВи помічаєте:\n${resourceLines.join("\n")}` : "";
 
+  const creatureHints = location.creatures
+    .filter((c) => c.species.kind === "ANIMAL")
+    .slice(0, 8)
+    .map((c) => `${c.species.name}: ${c.currentAction ?? "проходить"}`);
+  const tracksText = creatureHints.length
+    ? `\n\nСліди та рух:\n${creatureHints.map((x) => `- ${escapeHtml(x)}`).join("\n")}`
+    : "";
+
   const keyboard = new InlineKeyboard();
   for (const resource of location.resources.filter((r) => r.amount > 0)) {
     const cfg = gatherConfig[resource.resourceType.key];
@@ -91,30 +94,20 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     keyboard.text(`Зібрати: ${resource.resourceType.name}${durationText}`, `gather:${resource.resourceType.key}`).row();
   }
 
-  if (visibleCharacters.length > 0) {
-    keyboard.text("👋 Привітатися", "social:greet")
-      .text("👁 Придивитися", "social:inspect")
-      .row()
-      .text("⚔️ Атакувати", "social:attack")
-      .row();
-  }
-
-  if (animals.length > 0) {
-    keyboard.text("👁 Оглянути", "social:inspect")
-      .text("⚔️ Атакувати", "social:attack")
-      .row();
+  const targetKeyboard = buildTargetKeyboard(targets);
+  for (const row of targetKeyboard.inline_keyboard) {
+    for (const button of row) if ("text" in button && "callback_data" in button) keyboard.text(button.text, button.callback_data);
+    keyboard.row();
   }
 
   const movement = buildMovementKeyboard(location.exitsFrom);
   for (const row of movement.inline_keyboard) {
-    for (const button of row) {
-      if ("text" in button && "callback_data" in button) keyboard.text(button.text, button.callback_data);
-    }
+    for (const button of row) if ("text" in button && "callback_data" in button) keyboard.text(button.text, button.callback_data);
     keyboard.row();
   }
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n\n${escapeHtml(location.description ?? "")}\n\n<i>Ви придивляєтесь.</i>\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}${resourcesText}${charactersText ? escapeHtml(charactersText) : ""}${animalsText ? escapeHtml(animalsText) : ""}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n\n${escapeHtml(location.description ?? "")}\n\n<i>Ви придивляєтесь.</i>\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}${resourcesText}${charactersText}${tracksText}`,
     keyboard,
   };
 }
