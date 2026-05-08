@@ -1,9 +1,6 @@
 UPDATE "Creature"
 SET
-  "isAlive" = false,
-  "currentAction" = 'зник у старій версії світу',
-  "activity" = 'RESTING',
-  "updatedAt" = NOW()
+  "isAlive" = false
 WHERE "speciesId" IN (
   SELECT "id"
   FROM "CreatureSpecies"
