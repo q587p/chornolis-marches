@@ -30,6 +30,20 @@ function formatSex(sex: string | null | undefined) {
   return "невідомо";
 }
 
+function targetKindText(target: { kind: "player" | "creature"; isAnimal?: boolean }) {
+  if (target.kind === "player") return "до когось поруч";
+  if (target.isAnimal) return "до чогось поруч";
+  return "до когось поруч";
+}
+
+async function editOrReply(ctx: any, text: string) {
+  try {
+    await ctx.editMessageText(text);
+  } catch {
+    await ctx.reply(text);
+  }
+}
+
 async function resolveTarget(type: string, id: number, locationId: number) {
   if (type === "player") {
     const target = await prisma.player.findFirst({ where: { id, currentLocationId: locationId } });
@@ -38,6 +52,7 @@ async function resolveTarget(type: string, id: number, locationId: number) {
       kind: "player" as const,
       id: target.id,
       name: target.firstName ?? target.username ?? "мандрівник",
+      isAnimal: false,
       canGreet: true,
       inspect: `Ви бачите ${target.firstName ?? target.username ?? "мандрівника"}.\n\nHP: ${target.hp}\nВитривалість: ${target.stamina}\nГолод: ${target.hunger}`,
     };
@@ -55,6 +70,7 @@ async function resolveTarget(type: string, id: number, locationId: number) {
       kind: "creature" as const,
       id: target.id,
       name,
+      isAnimal,
       canGreet: !isAnimal,
       inspect: isAnimal
         ? `${name}\n\nСтан: ${target.isAlive ? "жива" : "мертва"}\nHP: ${target.hp}\nСтать: ${formatSex(target.sex)}\nВік: ${target.age}\nДія: ${target.currentAction ?? "невідомо"}`
@@ -79,38 +95,38 @@ export function registerSocialHandlers(bot: Bot) {
     const target = await resolveTarget(type, targetId, player.currentLocationId);
     if (!target) {
       await safeAnswerCallbackQuery(ctx, "Цілі вже немає поруч.");
-      return void (await ctx.reply("Цілі вже немає поруч. Можна спробувати відслідкувати слід."));
+      return void (await editOrReply(ctx, "Цілі вже немає поруч. Можна спробувати відслідкувати слід."));
     }
 
     if (action === "greet") {
       if (!target.canGreet) {
         await safeAnswerCallbackQuery(ctx, "Тварина не відповість на привітання.");
-        return void (await ctx.reply(`${target.name} не виглядає співрозмовником.`));
+        return void (await editOrReply(ctx, "Це не виглядає співрозмовником."));
       }
 
       const greeting = pick(GREETINGS);
       await prisma.player.update({ where: { id: player.id }, data: { greetings: { increment: 1 } } });
       await notifyLocation(bot, player.currentLocationId, player.id, `Хтось звертається до ${target.name}: «${greeting}»`);
       await safeAnswerCallbackQuery(ctx, "Ви привітались.");
-      await ctx.reply(`Ви сказали ${target.name}: «${greeting}»`);
+      await editOrReply(ctx, `Ви сказали ${target.name}: «${greeting}»`);
       await logEvent("GREET", "Player greeted target", `${target.kind}:${target.id}`, player.currentLocationId);
       return;
     }
 
     if (action === "inspect") {
       await safeAnswerCallbackQuery(ctx);
-      await ctx.reply(`👁 Ви придивляєтесь до ${target.name}.\n\n${target.inspect}`);
+      await editOrReply(ctx, `👁 Ви придивляєтесь ${targetKindText(target)}.\n\n${target.inspect}`);
       await logEvent("INSPECT", "Player inspected target", `${target.kind}:${target.id}`, player.currentLocationId);
       return;
     }
 
     await safeAnswerCallbackQuery(ctx, "Бойова система ще не готова.");
-    await ctx.reply(`⚔️ Ви готуєтесь атакувати ${target.name}, але бойова система ще не готова.`);
+    await editOrReply(ctx, `⚔️ Ви готуєтесь атакувати, але бойова система ще не готова.`);
     await logEvent("PLAYER_ACTION", "Player tried to attack target", `${target.kind}:${target.id}`, player.currentLocationId);
   });
 
   bot.callbackQuery("track", async (ctx) => {
     await safeAnswerCallbackQuery(ctx, "Система слідів ще в розробці.");
-    await ctx.reply("👣 Ви вдивляєтесь у сліди. Поки що відслідковування ще не реалізоване, але напрямок втечі відчутний у землі й траві.");
+    await editOrReply(ctx, "👣 Ви вдивляєтесь у сліди. Поки що відслідковування ще не реалізоване, але напрямок втечі відчутний у землі й траві.");
   });
 }

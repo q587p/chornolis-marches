@@ -41,7 +41,7 @@ async function setBotCommandsWithRetry(bot: Bot, attempts = 3) {
   for (let i = 1; i <= attempts; i++) {
     try {
       await bot.api.setMyCommands([
-        { command: "start", description: "Оновити меню та увійти у світ" },
+        { command: "start", description: "Перезапустити" },
         { command: "me", description: "Персонаж" },
         { command: "location", description: "Поточна локація" },
         { command: "look", description: "Оглянутися" },

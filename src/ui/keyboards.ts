@@ -20,18 +20,23 @@ export function buildTrackKeyboard() {
   return new InlineKeyboard().text("👣 Відслідкувати", "track");
 }
 
-export function buildTargetKeyboard(targets: { type: "player" | "creature"; id: number; label: string; canGreet: boolean }[]) {
+export function buildTargetKeyboard(targets: { type: "player" | "creature"; id: number; label?: string; canGreet: boolean }[]) {
   const keyboard = new InlineKeyboard();
+  const useNumbers = targets.length > 1;
 
-  for (const target of targets) {
-    keyboard.text(`👁 ${target.label}`, `social:inspect:${target.type}:${target.id}`);
-    keyboard.text(`⚔️ ${target.label}`, `social:attack:${target.type}:${target.id}`).row();
-    if (target.canGreet) keyboard.text(`👋 ${target.label}`, `social:greet:${target.type}:${target.id}`).row();
-  }
+  targets.forEach((target, index) => {
+    const suffix = useNumbers ? ` ${index + 1}` : "";
+
+    keyboard.text(`👁 Оглянути${suffix}`, `social:inspect:${target.type}:${target.id}`);
+    keyboard.text(`⚔️ Атакувати${suffix}`, `social:attack:${target.type}:${target.id}`).row();
+
+    if (target.canGreet) {
+      keyboard.text(`👋 Привітати${suffix}`, `social:greet:${target.type}:${target.id}`).row();
+    }
+  });
 
   return keyboard;
 }
-
 
 export function buildInteractionKeyboard() {
   return new InlineKeyboard()

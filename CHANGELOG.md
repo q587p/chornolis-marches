@@ -8,6 +8,27 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.4.11 - mysterious movement messages and anonymous target buttons - 12026-05-08
+
+### 🐛 Fixed
+
+- Creature arrival notifications now show the direction of approach instead of the previous location name.
+- Target action buttons no longer reveal creature or character names in notification messages.
+- Inspecting a creature no longer produces awkward text like “до заєць”.
+
+### 🎮 Gameplay / UX
+
+- Arrival messages now keep uncertainty: “Щось зайшло сюди з півночі/півдня/заходу/сходу.”
+- Target buttons are anonymous: “Оглянути”, “Атакувати”, and “Привітати”.
+- Inspect and attack callbacks now try to edit the original message instead of sending a separate new message.
+
+### 🛠 Technical
+
+- Added direction-to-arrival-side helpers for creature and player movement notifications.
+- Kept callback target IDs internal while hiding names from button text.
+
+---
+
 ## 0.4.10 - deploy news and menu polish - 12026-05-07
 
 ### ✨ Added

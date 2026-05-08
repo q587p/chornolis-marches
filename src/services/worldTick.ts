@@ -1,5 +1,5 @@
 import { Bot } from "grammy";
-import { LocationExit } from "@prisma/client";
+import { Direction, LocationExit } from "@prisma/client";
 import { prisma } from "../db";
 import { notifyLocation, notifyRegion } from "./notifications";
 import { buildTargetKeyboard, buildTrackKeyboard } from "../ui/keyboards";
@@ -42,6 +42,18 @@ function isExit(value: unknown): value is LocationExit {
   return Boolean(value && typeof value === "object" && "toLocationId" in value);
 }
 
+function arrivalFromDirection(direction: Direction) {
+  if (direction === "NORTH") return "з півдня";
+  if (direction === "SOUTH") return "з півночі";
+  if (direction === "EAST") return "із заходу";
+  if (direction === "WEST") return "зі сходу";
+  if (direction === "UP") return "знизу";
+  if (direction === "DOWN") return "згори";
+  if (direction === "INSIDE") return "ззовні";
+  if (direction === "OUTSIDE") return "зсередини";
+  return "звідкись";
+}
+
 async function maybeHerbalistSpeak(c: any) {
   if (!botInstance || !chance(HERBALIST_SPEAK_CHANCE)) return;
   const line = pick(HERBALIST_LINES);
@@ -50,13 +62,13 @@ async function maybeHerbalistSpeak(c: any) {
   await prisma.worldEvent.create({ data: { type: "NPC_SAY", title: "Травник промовляє", description: line, locationId: c.locationId } });
 }
 
-async function move(c: any, toLocationId: number, action: string) {
-  if (c.locationId === toLocationId) return;
+async function move(c: any, exit: LocationExit, action: string) {
+  if (c.locationId === exit.toLocationId) return;
 
   const fromLocationId = c.locationId;
-  const fromLocation = c.location?.name ?? "десь";
   const isAnimal = c.species?.kind === "ANIMAL";
   const name = c.name ?? c.species?.name ?? "істота";
+  const incomingSide = arrivalFromDirection(exit.direction);
 
   if (botInstance) {
     await notifyLocation(botInstance, fromLocationId, -1, isAnimal ? "Щось пішло звідси." : `${name} пішов звідси.`, buildTrackKeyboard());
@@ -64,12 +76,12 @@ async function move(c: any, toLocationId: number, action: string) {
 
   await prisma.creature.update({
     where: { id: c.id },
-    data: { locationId: toLocationId, activity: "MOVING", currentAction: action, steps: { increment: 1 }, hunger: { increment: 1 } },
+    data: { locationId: exit.toLocationId, activity: "MOVING", currentAction: action, steps: { increment: 1 }, hunger: { increment: 1 } },
   });
 
   if (botInstance) {
     const keyboard = buildTargetKeyboard([{ type: "creature", id: c.id, label: name, canGreet: !isAnimal }]);
-    await notifyLocation(botInstance, toLocationId, -1, isAnimal ? `Щось зайшло сюди з боку: ${fromLocation}.` : `${name} прийшов сюди.`, keyboard);
+    await notifyLocation(botInstance, exit.toLocationId, -1, isAnimal ? `Щось зайшло сюди ${incomingSide}.` : `Хтось зайшов сюди ${incomingSide}.`, keyboard);
   }
 }
 
@@ -85,7 +97,7 @@ async function tickHerbalist(c: any) {
 
   const exit = pick(c.location.exitsFrom);
   if (isExit(exit)) {
-    await move(c, exit.toLocationId, "шукає трави");
+    await move(c, exit, "шукає трави");
     return "moved";
   }
 
@@ -96,7 +108,7 @@ async function tickHerbivore(c: any) {
   if (chance(50)) {
     const exit = pick(c.location.exitsFrom);
     if (isExit(exit)) {
-      await move(c, exit.toLocationId, "шукає їжу");
+      await move(c, exit, "шукає їжу");
       return "moved";
     }
   }
@@ -113,7 +125,7 @@ async function tickCarnivore(c: any) {
   if (chance(50)) {
     const exit = pick(c.location.exitsFrom);
     if (isExit(exit)) {
-      await move(c, exit.toLocationId, "патрулює");
+      await move(c, exit, "патрулює");
       return "moved";
     }
   }
