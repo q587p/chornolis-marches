@@ -41,11 +41,11 @@ async function setBotCommandsWithRetry(bot: Bot, attempts = 3) {
   for (let i = 1; i <= attempts; i++) {
     try {
       await bot.api.setMyCommands([
-        { command: "start", description: "Перезапустити" },
-        { command: "me", description: "Персонаж" },
-        { command: "location", description: "Поточна локація" },
-        { command: "look", description: "Оглянутися" },
-        { command: "news", description: "Останні новини світу" },
+        { command: "start", description: "🌲 Перезапустити" },
+        { command: "me", description: "🧍 Персонаж" },
+        { command: "location", description: "📍 Поточна локація" },
+        { command: "look", description: "🔎 Придивитися" },
+        { command: "news", description: "📰 Останні новини світу" },
       ]);
 
       console.log("Telegram bot commands updated.");

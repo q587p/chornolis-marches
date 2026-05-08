@@ -5,10 +5,28 @@ import { canSpendTicks } from "../services/cooldown";
 import { runDelayed } from "../services/delayedActions";
 import { getPlayerByTelegramId } from "../services/players";
 import { summonLisovykIfResourceDepleted } from "../services/resources";
+import { buildGatherMenuForLocation } from "../services/locations";
 import { logEvent } from "../services/worldEvents";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 
 export function registerGatherHandlers(bot: Bot) {
+  bot.callbackQuery("gather:menu", async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player || !player.currentLocationId) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    const keyboard = await buildGatherMenuForLocation(player.currentLocationId);
+    await safeAnswerCallbackQuery(ctx);
+
+    try {
+      await ctx.editMessageText("Що саме зібрати?", { reply_markup: keyboard });
+    } catch {
+      await ctx.reply("Що саме зібрати?", { reply_markup: keyboard });
+    }
+  });
+
   bot.callbackQuery(/^gather:(berries|mushrooms|herbs)$/, async (ctx) => {
     const key = ctx.match[1];
     const player = await getPlayerByTelegramId(ctx.from.id);

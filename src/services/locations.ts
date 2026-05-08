@@ -2,7 +2,7 @@ import { InlineKeyboard } from "grammy";
 import { prisma } from "../db";
 import { TICK_MS, gatherConfig } from "../gameConfig";
 import { directionLabels } from "../ui/labels";
-import { buildMovementKeyboard, buildTargetKeyboard } from "../ui/keyboards";
+import { buildMovementKeyboard, buildResourceMenuKeyboard, buildTargetListKeyboard } from "../ui/keyboards";
 import { escapeHtml } from "../utils/text";
 
 function visibleTargets(location: any, viewerPlayerId?: number) {
@@ -29,6 +29,16 @@ function presenceText(location: any, viewerPlayerId?: number) {
   if (hasCharacters) return "\n\n<i>Поруч хтось є.</i>";
   if (hasAnimals) return "\n\n<i>Поруч щось ворушиться.</i>";
   return "";
+}
+
+function resourceButtonData(resources: any[]) {
+  return resources
+    .filter((r) => r.amount > 0)
+    .map((resource) => {
+      const cfg = gatherConfig[resource.resourceType.key];
+      const durationText = cfg ? ` (${Math.round((cfg.ticks * TICK_MS) / 1000)} с)` : "";
+      return { key: resource.resourceType.key, name: resource.resourceType.name, durationText };
+    });
 }
 
 export async function renderLocationBrief(locationId: number, viewerPlayerId?: number) {
@@ -88,16 +98,21 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     : "";
 
   const keyboard = new InlineKeyboard();
-  for (const resource of location.resources.filter((r) => r.amount > 0)) {
-    const cfg = gatherConfig[resource.resourceType.key];
-    const durationText = cfg ? ` (${Math.round((cfg.ticks * TICK_MS) / 1000)} с)` : "";
-    keyboard.text(`Зібрати: ${resource.resourceType.name}${durationText}`, `gather:${resource.resourceType.key}`).row();
+  const resources = resourceButtonData(location.resources);
+
+  if (resources.length === 1) {
+    const resource = resources[0];
+    keyboard.text(`🌿 Зібрати: ${resource.name}${resource.durationText}`, `gather:${resource.key}`).row();
+  } else if (resources.length > 1) {
+    keyboard.text("🌿 Зібрати", "gather:menu").row();
   }
 
-  const targetKeyboard = buildTargetKeyboard(targets);
-  for (const row of targetKeyboard.inline_keyboard) {
-    for (const button of row) if ("text" in button && "callback_data" in button) keyboard.text(button.text, button.callback_data);
-    keyboard.row();
+  if (targets.length > 0) {
+    const targetKeyboard = buildTargetListKeyboard(targets);
+    for (const row of targetKeyboard.inline_keyboard) {
+      for (const button of row) if ("text" in button && "callback_data" in button) keyboard.text(button.text, button.callback_data);
+      keyboard.row();
+    }
   }
 
   const movement = buildMovementKeyboard(location.exitsFrom);
@@ -110,4 +125,14 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     text: `<b>${escapeHtml(location.name)}</b>\n\n${escapeHtml(location.description ?? "")}\n\n<i>Ви придивляєтесь.</i>\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}${resourcesText}${charactersText}${tracksText}`,
     keyboard,
   };
+}
+
+export async function buildGatherMenuForLocation(locationId: number) {
+  const resources = await prisma.resourceNode.findMany({
+    where: { locationId, amount: { gt: 0 } },
+    include: { resourceType: true },
+    orderBy: { id: "asc" },
+  });
+
+  return buildResourceMenuKeyboard(resourceButtonData(resources));
 }

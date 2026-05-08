@@ -8,6 +8,33 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.4.12 - mystery actions and compact gather menu - 12026-05-08
+
+### ✨ Added
+
+- Added compact target-selection flow after detailed location inspection:
+  - first tap a visible target by name;
+  - then choose inspect, attack, or greet for that exact target.
+- Added anonymous action buttons for newly arrived unknown creatures/characters:
+  - `Оглянути`, `Атакувати`, and `Привітати` where applicable.
+- Added a compact gather menu:
+  - one resource still shows a direct gather button;
+  - multiple resources collapse into one `Зібрати` button and expand into resource choices.
+
+### 🐛 Fixed
+
+- Inspecting a target now keeps target action buttons available after the message is updated.
+- Creature arrival messages now show direction of arrival instead of the source location name.
+- Mystery inspect text no longer says “до заєць”; it uses neutral phrasing for unknown creatures.
+
+### 🎮 Gameplay / UX
+
+- Renamed `Оглянутися` to `Придивитися` in movement/location controls.
+- Telegram command descriptions now include small icons for faster scanning.
+- Unknown movement stays mysterious until the player explicitly inspects the target.
+
+---
+
 ## 0.4.11 - mysterious movement messages and anonymous target buttons - 12026-05-08
 
 ### 🐛 Fixed

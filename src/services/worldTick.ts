@@ -1,8 +1,8 @@
 import { Bot } from "grammy";
-import { Direction, LocationExit } from "@prisma/client";
+import { LocationExit } from "@prisma/client";
 import { prisma } from "../db";
 import { notifyLocation, notifyRegion } from "./notifications";
-import { buildTargetKeyboard, buildTrackKeyboard } from "../ui/keyboards";
+import { buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
 
 const DEFAULT_TICK_INTERVAL_MS = Number(process.env.WORLD_TICK_INTERVAL_MS || 60000);
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
@@ -29,6 +29,17 @@ const HERBALIST_LINES = [
   "Тиша теж буває голодною.",
 ];
 
+const FROM_DIRECTION_LABELS: Record<string, string> = {
+  NORTH: "з півдня",
+  EAST: "із заходу",
+  SOUTH: "з півночі",
+  WEST: "зі сходу",
+  UP: "знизу",
+  DOWN: "згори",
+  INSIDE: "ззовні",
+  OUTSIDE: "зсередини",
+};
+
 function chance(p: number) {
   return Math.random() * 100 < p;
 }
@@ -40,18 +51,6 @@ function pick<T>(arr: T[]): T | undefined {
 
 function isExit(value: unknown): value is LocationExit {
   return Boolean(value && typeof value === "object" && "toLocationId" in value);
-}
-
-function arrivalFromDirection(direction: Direction) {
-  if (direction === "NORTH") return "з півдня";
-  if (direction === "SOUTH") return "з півночі";
-  if (direction === "EAST") return "із заходу";
-  if (direction === "WEST") return "зі сходу";
-  if (direction === "UP") return "знизу";
-  if (direction === "DOWN") return "згори";
-  if (direction === "INSIDE") return "ззовні";
-  if (direction === "OUTSIDE") return "зсередини";
-  return "звідкись";
 }
 
 async function maybeHerbalistSpeak(c: any) {
@@ -67,8 +66,9 @@ async function move(c: any, exit: LocationExit, action: string) {
 
   const fromLocationId = c.locationId;
   const isAnimal = c.species?.kind === "ANIMAL";
+  const label = isAnimal ? "Щось" : "Хтось";
   const name = c.name ?? c.species?.name ?? "істота";
-  const incomingSide = arrivalFromDirection(exit.direction);
+  const cameFrom = FROM_DIRECTION_LABELS[exit.direction] ?? "звідкись";
 
   if (botInstance) {
     await notifyLocation(botInstance, fromLocationId, -1, isAnimal ? "Щось пішло звідси." : `${name} пішов звідси.`, buildTrackKeyboard());
@@ -80,8 +80,18 @@ async function move(c: any, exit: LocationExit, action: string) {
   });
 
   if (botInstance) {
-    const keyboard = buildTargetKeyboard([{ type: "creature", id: c.id, label: name, canGreet: !isAnimal }]);
-    await notifyLocation(botInstance, exit.toLocationId, -1, isAnimal ? `Щось зайшло сюди ${incomingSide}.` : `Хтось зайшов сюди ${incomingSide}.`, keyboard);
+    const keyboard = buildTargetListKeyboard([
+      {
+        type: "creature",
+        id: c.id,
+        label,
+        canGreet: !isAnimal,
+      },
+    ])
+  const text = isAnimal
+    ? `Щось зайшло сюди ${cameFrom}.`
+    : `Хтось зайшов сюди ${cameFrom}.`;
+    await notifyLocation(botInstance, exit.toLocationId, -1, text, keyboard);
   }
 }
 
@@ -162,7 +172,9 @@ async function wakeLisovykIfNeeded() {
   if (existing) await prisma.creature.update({ where: { id: existing.id }, data: { isAlive: true, locationId: depleted.locationId, hp: species.baseHp, activity: "LOOKING", currentAction: action } });
   else await prisma.creature.create({ data: { speciesId: species.id, name: "Дід Чорноліс", locationId: depleted.locationId, hp: species.baseHp, activity: "LOOKING", currentAction: action } });
   await prisma.worldEvent.create({ data: { type: "NPC_SAY", title: "Лісовик прокинувся", description: `У регіоні «${depleted.regionName}» зник ресурс «${depleted.resourceName}». Дід Чорноліс прокинувся і почав полювання.`, locationId: depleted.locationId } });
-  if (botInstance) await notifyRegion(botInstance, depleted.regionId, `🌲 Дід Чорноліс прокинувся.\n\nУ всьому регіоні зник ресурс «${depleted.resourceName}».`);
+  if (botInstance) await notifyRegion(botInstance, depleted.regionId, `🌲 Дід Чорноліс прокинувся.
+
+У всьому регіоні зник ресурс «${depleted.resourceName}».`);
   return true;
 }
 
@@ -179,7 +191,9 @@ async function putLisovykToSleepIfForestRecovered() {
   const resource = await prisma.resourceType.findUnique({ where: { key: resourceKey } });
   await prisma.creature.update({ where: { id: lisovyk.id }, data: { isAlive: false, activity: "RESTING", currentAction: `заснув: ресурс ${resourceKey} відновився` } });
   await prisma.worldEvent.create({ data: { type: "NPC_SAY", title: "Лісовик заснув", description: `Дід Чорноліс відчув, що ресурс «${resource?.name ?? resourceKey}» у лісі відновився. Він перестає полювати на людей і ховається там, де був.`, locationId: lisovyk.locationId } });
-  if (botInstance) await notifyRegion(botInstance, regionId, `🌲 Дід Чорноліс відчув, що ліс відновився.\n\nВін перестає полювати за людьми в лісі, ховається між деревами й засинає.`);
+  if (botInstance) await notifyRegion(botInstance, regionId, `🌲 Дід Чорноліс відчув, що ліс відновився.
+
+Він перестає полювати за людьми в лісі, ховається між деревами й засинає.`);
   return true;
 }
 
@@ -222,7 +236,9 @@ export async function worldTick() {
     await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "World Tick", description: `Tick #${tickNumber}: moved=${moved}, gathered=${gathered}, looking=${looking}, idle=${idle}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}` } });
     if (botInstance && tickNumber % 5 === 0) {
       const region = await prisma.region.findFirst();
-      if (region) await notifyRegion(botInstance, region.id, `🌿 Світ ворухнувся.\n\nТік #${tickNumber}: рухів — ${moved}, збору — ${gathered}, відновлено вузлів — ${regenerated}.`);
+      if (region) await notifyRegion(botInstance, region.id, `🌿 Світ ворухнувся.
+
+Тік #${tickNumber}: рухів — ${moved}, збору — ${gathered}, відновлено вузлів — ${regenerated}.`);
     }
   } finally { running = false; }
 }
@@ -238,10 +254,17 @@ function restartWorldTickTimer() {
 
 function registerTickCommands(bot: Bot) {
   bot.command("tick", async (ctx) => { await worldTick(); await ctx.reply("✅ World tick запущено вручну."); });
-  bot.command(["tickGet", "tickget"], async (ctx) => { await ctx.reply(`🌲 World tick\n\nІнтервал: ${tickIntervalMs} ms\nTick #: ${tickNumber}\nРегенерація ресурсів: раз на ${RESOURCE_REGEN_EVERY_TICKS} тіків, +${RESOURCE_REGEN_AMOUNT}`); });
+  bot.command(["tickGet", "tickget"], async (ctx) => { await ctx.reply(`🌲 World tick
+
+Інтервал: ${tickIntervalMs} ms
+Tick #: ${tickNumber}
+Регенерація ресурсів: раз на ${RESOURCE_REGEN_EVERY_TICKS} тіків, +${RESOURCE_REGEN_AMOUNT}`); });
   bot.command(["tickSet", "tickset"], async (ctx) => {
     const value = Number(ctx.match?.trim());
-    if (!Number.isFinite(value) || value < 1000) return void (await ctx.reply("⚠️ Формат: /tickSet 5000\nМінімум: 1000 ms."));
+    if (!Number.isFinite(value) || value < 1000) {
+      await ctx.reply("⚠️ Формат: /tickSet 5000\nМінімум: 1000 ms.");
+      return;
+    }
     tickIntervalMs = Math.floor(value);
     restartWorldTickTimer();
     await ctx.reply(`✅ World tick interval set to ${tickIntervalMs} ms.`);

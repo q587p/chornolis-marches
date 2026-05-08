@@ -2,7 +2,7 @@ import { Bot } from "grammy";
 import { Direction } from "@prisma/client";
 import { prisma } from "../db";
 import { directionLabels } from "../ui/labels";
-import { buildTargetKeyboard, buildTrackKeyboard } from "../ui/keyboards";
+import { buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
 import { notifyLocation } from "../services/notifications";
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { renderLocationBrief } from "../services/locations";
@@ -41,7 +41,14 @@ export function registerMovementHandlers(bot: Bot) {
       exit.toLocationId,
       player.id,
       `Хтось зайшов сюди ${arrivalFromDirection(direction)}.`,
-      buildTargetKeyboard([{ type: "player", id: player.id, canGreet: true }])
+      buildTargetListKeyboard([
+        {
+          type: "player",
+          id: player.id,
+          label: "Хтось",
+          canGreet: true,
+        }
+      ])
     );
     await logEvent("MOVE", "Player moved", direction, exit.toLocationId);
 
