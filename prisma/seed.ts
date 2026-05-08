@@ -35,10 +35,10 @@ const resourceTypes = [
 ];
 
 const species = [
-  { key: "rabbit", name: "заєць", kind: "ANIMAL", diet: "HERBIVORE", baseHp: 3, strength: 1, agility: 8, perception: 6, endurance: 3, instinct: 7 },
-  { key: "mouse", name: "миша", kind: "ANIMAL", diet: "HERBIVORE", baseHp: 1, strength: 1, agility: 7, perception: 5, endurance: 2, instinct: 6 },
-  { key: "fox", name: "лисиця", kind: "ANIMAL", diet: "CARNIVORE", baseHp: 8, strength: 3, agility: 8, perception: 7, endurance: 5, instinct: 8 },
-  { key: "wolf", name: "вовк", kind: "ANIMAL", diet: "CARNIVORE", baseHp: 14, strength: 7, agility: 6, perception: 7, endurance: 7, instinct: 8 },
+  { key: "rabbit", name: "заєць", kind: "ANIMAL", diet: "HERBIVORE", baseHp: 3, strength: 1, agility: 8, perception: 6, endurance: 3, instinct: 7, childTicks: 8, youngTicks: 24, adultTicks: 80, oldTicks: 36, oldDeathChancePermille: 10, oldDeathChanceGrowthPermille: 2, corpseDecayTicks: 18, mushroomBonusOnDecay: 2 },
+  { key: "mouse", name: "миша", kind: "ANIMAL", diet: "HERBIVORE", baseHp: 1, strength: 1, agility: 7, perception: 5, endurance: 2, instinct: 6, childTicks: 4, youngTicks: 12, adultTicks: 36, oldTicks: 18, oldDeathChancePermille: 20, oldDeathChanceGrowthPermille: 4, corpseDecayTicks: 10, mushroomBonusOnDecay: 1 },
+  { key: "fox", name: "лисиця", kind: "ANIMAL", diet: "CARNIVORE", baseHp: 8, strength: 3, agility: 8, perception: 7, endurance: 5, instinct: 8, childTicks: 20, youngTicks: 60, adultTicks: 180, oldTicks: 80, oldDeathChancePermille: 5, oldDeathChanceGrowthPermille: 1, corpseDecayTicks: 24, mushroomBonusOnDecay: 3 },
+  { key: "wolf", name: "вовк", kind: "ANIMAL", diet: "CARNIVORE", baseHp: 14, strength: 7, agility: 6, perception: 7, endurance: 7, instinct: 8, childTicks: 32, youngTicks: 100, adultTicks: 300, oldTicks: 120, oldDeathChancePermille: 3, oldDeathChanceGrowthPermille: 1, corpseDecayTicks: 30, mushroomBonusOnDecay: 4 },
   { key: "lisovyk", name: "лісовик", kind: "SPIRIT", diet: "SPIRITUAL", baseHp: 80, strength: 8, agility: 6, perception: 10, endurance: 9, instinct: 10 },
   { key: "herbalist", name: "травник", kind: "HUMAN", diet: "OMNIVORE", baseHp: 18, strength: 3, agility: 4, perception: 8, endurance: 5, instinct: 6 },
 ] as const;
@@ -82,6 +82,7 @@ async function ensureUniqueCreature(
         name,
         hp: sp.baseHp,
         isAlive: options.isAlive,
+        isGone: false,
         currentAction: options.action,
         activity: options.activity,
       },
@@ -99,6 +100,7 @@ async function ensureUniqueCreature(
       where: { id: keep.id },
       data: {
         isAlive: true,
+        isGone: false,
         locationId: loc.id,
         hp: sp.baseHp,
         currentAction: options.action,
@@ -108,7 +110,7 @@ async function ensureUniqueCreature(
   }
 
   if (speciesKey === "lisovyk" && keep.hp <= 0) {
-    await prisma.creature.update({ where: { id: keep.id }, data: { hp: sp.baseHp } });
+    await prisma.creature.update({ where: { id: keep.id }, data: { hp: sp.baseHp, isGone: false } });
   }
 }
 
@@ -174,7 +176,7 @@ async function main() {
     activity: "GATHERING",
   });
 
-  await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "Seed completed", description: "Chornolis world structure seeded without animal spawning." } });
+  await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "Seed completed", description: "Chornolis world structure seeded with lifecycle profiles and without animal spawning." } });
   console.log("Seed completed without animal spawning.");
 }
 

@@ -8,118 +8,61 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
-## 0.4.12 - mystery actions and compact gather menu - 12026-05-08
+## 0.5.0 - aging and corpse lifecycle - 12026-05-08
 
 ### ✨ Added
 
-- Added compact target-selection flow after detailed location inspection:
-  - first tap a visible target by name;
-  - then choose inspect, attack, or greet for that exact target.
-- Added anonymous action buttons for newly arrived unknown creatures/characters:
-  - `Оглянути`, `Атакувати`, and `Привітати` where applicable.
-- Added a compact gather menu:
-  - one resource still shows a direct gather button;
-  - multiple resources collapse into one `Зібрати` button and expand into resource choices.
-
-### 🐛 Fixed
-
-- Inspecting a target now keeps target action buttons available after the message is updated.
-- Creature arrival messages now show direction of arrival instead of the source location name.
-- Mystery inspect text no longer says “до заєць”; it uses neutral phrasing for unknown creatures.
-
-### 🎮 Gameplay / UX
-
-- Renamed `Оглянутися` to `Придивитися` in movement/location controls.
-- Telegram command descriptions now include small icons for faster scanning.
-- Unknown movement stays mysterious until the player explicitly inspects the target.
-
----
-
-## 0.4.11 - mysterious movement messages and anonymous target buttons - 12026-05-08
-
-### 🐛 Fixed
-
-- Creature arrival notifications now show the direction of approach instead of the previous location name.
-- Target action buttons no longer reveal creature or character names in notification messages.
-- Inspecting a creature no longer produces awkward text like “до заєць”.
-
-### 🎮 Gameplay / UX
-
-- Arrival messages now keep uncertainty: “Щось зайшло сюди з півночі/півдня/заходу/сходу.”
-- Target buttons are anonymous: “Оглянути”, “Атакувати”, and “Привітати”.
-- Inspect and attack callbacks now try to edit the original message instead of sending a separate new message.
-
-### 🛠 Technical
-
-- Added direction-to-arrival-side helpers for creature and player movement notifications.
-- Kept callback target IDs internal while hiding names from button text.
-
----
-
-## 0.4.10 - deploy news and menu polish - 12026-05-07
-
-### ✨ Added
-
-- Deploy announcement now includes a short summary of the latest `news.md` entry.
-- Deploy announcement now asks players to press `/start` to refresh menu buttons after an update.
-- `/start` is back as the first item in the persistent reply keyboard.
-- Added icons to the main menu buttons:
-  - `🌲 /start`
-  - `📍 Локація`
-  - `🧍 Персонаж`
-  - `🤖 Авто` / `⏹ Стоп`
-  - `📰 Новини`
-
-### 🐛 Fixed
-
-- Character button now works with the new `🧍 Персонаж` label while keeping backward compatibility with the old `Персонаж` text.
-- `/me` now displays auto-mode status only when auto-mode is enabled.
-
-### 🎮 UX
-
-- The update message is now more useful after deploys: it shows the version, latest news and how to refresh the menu.
-
----
-
-## 0.4.9 - targeted interactions, admin help, news and speech - 12026-05-06
-
-### ✨ Added
-
-- Added `/adminHelp` with a compact list of gameplay/debug commands.
-- Added `/locationAll` to list all location keys, coordinates, danger level and region.
-- Added `/addCreatureHelp` to list all animal `speciesKey` values usable with `/addCreature`.
-- Added `/cleanupCreature [speciesKey]`:
-  - removes one living animal from the player’s current location;
-  - if `speciesKey` is omitted, removes the first living animal found there;
-  - if `speciesKey` is provided, removes one animal of that species in the current location.
-- Added `/news` and the persistent “📰 Новини” menu button.
-- Added `news.md` as the source for the latest 13 short Ukrainian news entries.
-- Added targeted social actions:
-  - greet a specific character/NPC;
-  - inspect a specific player/NPC/animal;
-  - attempt to attack a specific player/NPC/animal.
-- Added multiple randomized greeting phrases.
-- Added animal inspection details: state, HP, sex, age and current action.
-- Added “👣 Відслідкувати” button for departure messages.
-- Herbalist can now occasionally speak aloud during world ticks.
-- Player auto-mode can now occasionally say short phrases aloud.
-
-### 🐛 Fixed
-
-- Departure notifications no longer show generic inspect/attack buttons for a target that already left.
-- Animal movement notifications now distinguish “something” from “someone”.
-- Nearby animals are now included in location visibility/interactions instead of being only vague traces.
+- Added animal aging to the world tick loop.
+- Added lifecycle profile fields to `CreatureSpecies`:
+  - child/young/adult/old duration in ticks;
+  - old-age death chance and growth;
+  - corpse decay duration;
+  - mushroom bonus after decay.
+- Added lifecycle fields to `Creature`:
+  - `ageTicks`;
+  - `diedAtTick`;
+  - `corpseDecayTicksLeft`;
+  - `isGone`.
+- Added `CHILD` and `CORPSE` stages to `CreatureAge`.
+- Added visible animal corpses to location details.
+- Added mushroom growth after corpse decay.
+- `/world` and status data now show animal corpse and gone-animal counts.
+- `/all dead` now shows age, age ticks, corpse state, and decay counter.
 
 ### 🎮 Gameplay
 
-- Location details now create per-target interaction buttons, preparing the UI for future equipment/appearance/combat systems.
-- Tracking is still a placeholder, but the UI now has a proper action entry point.
+- Player and NPC time is still effectively stopped for aging purposes.
+- Animals now age every world tick.
+- Old animals have a growing chance to die from old age.
+- Dead animals remain as corpses for several ticks before disappearing.
+- Corpse decay feeds the forest by increasing mushrooms in the same location.
+- Existing movement, herbalist behavior, resource regeneration, Lisovyk awakening/recovery and debug tick commands are preserved from 0.4.x.
 
 ### 🛠 Technical
 
-- Added `src/handlers/news.ts`.
-- Updated social callback format to `social:<action>:<targetType>:<targetId>`.
-- Kept compatibility stub for the older interaction keyboard export while newer UI uses target-specific buttons.
+- The 0.5.0 patch is based on 0.4.12 and keeps the 0.4.x `worldTick.ts` changes:
+  - `notifyLocation` / `notifyRegion`;
+  - `buildTargetListKeyboard` / `buildTrackKeyboard`;
+  - `WORLD_DEBUG` / `WORLD_TICK_DEBUG`;
+  - `HERBALIST_SPEAK_CHANCE` and herbalist phrases;
+  - directional entry text;
+  - manual `/tick`, `/tickGet`, `/tickSet` commands.
+- Seed now updates lifecycle profile values for animal species but still does not spawn animals automatically.
+
+### 📝 Notes
+
+- Reproduction is intentionally not included in 0.5.0.
+- Predator hunting priority by old/weak prey is planned for a later version.
+- Full track freshness system is still planned separately.
+
+---
+
+## 0.4.12 - latest 0.4.x baseline - 12026-05-06
+
+### 🛠 Technical
+
+- 0.5.0 was prepared on top of this version.
+- See Git history for detailed 0.4.9–0.4.12 changes.
 
 ---
 
@@ -129,10 +72,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Added `/location` / `/loc` command and the persistent `📍 Локація` button.
 - Added persistent `Персонаж` button for `/me`.
-- Added `/auto` and `/autoStop` (`/autostop`) player auto mode:
-  - auto mode periodically chooses between gathering, looking around, and moving;
-  - the persistent keyboard changes from `🤖 Авто` to `⏹ Стоп`;
-  - auto mode is in-memory for now and resets on bot restart.
+- Added `/auto` and `/autoStop` (`/autostop`) player auto mode.
 
 ### 🐛 Fixed
 
@@ -143,149 +83,20 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Animal presence is visible in location descriptions as `Поруч щось є`.
 - Locations with animals show only `Оглянути` and `Атакувати` interaction buttons, without greeting.
 
-### 🎮 Gameplay
-
-- Animals entering/leaving locations now notify players:
-  - “Щось пішло звідси...”
-  - “Щось зайшло сюди...”
-- Auto mode gives the player a simple temporary behavior loop similar in spirit to the herbalist: gather, look, or move.
-
-### 🛠 Technical
-
-- Added `src/handlers/auto.ts`.
-- Added `src/ui/replyKeyboard.ts`.
-- Region and location notifications now reuse the main persistent reply keyboard.
-- This patch is cumulative with 0.4.7 creature control changes.
-
 ---
 
 ## 0.4.7 - creature control and debug status UX - 12026-05-06
 
 ### ✨ Added
 
-- Added `/addCreature <speciesKey> <locationKey|x,y,z> [count] [name]` debug command.
-  - Examples:
-    - `/addCreature rabbit center_chornolis_edge 3`
-    - `/addCreature wolf -1,-1,0`
-    - `/addCreature fox west_fox_path 2`
-- Added a minimal persistent Telegram keyboard with `/start` and `/me`.
-- `/world`, `/health`, and the status page now expose the latest 10 world events instead of only one latest event.
-- Region broadcasts can now optionally re-send the current location view with movement buttons after the broadcast.
+- Added `/addCreature <speciesKey> <locationKey|x,y,z> [count]` debug command.
+- Added a minimal persistent Telegram keyboard.
+- `/world`, `/health`, and the status page expose latest world events.
 
 ### 🐛 Fixed
 
-- `/cleanupCreatures` now removes all animals and leaves only canonical unique NPCs:
-  - one `Травник`;
-  - one `Дід Чорноліс`.
-- Seed no longer spawns rabbits, mice, foxes or wolves on every deploy/seed run.
-- Repeated `npm run seed` no longer repopulates animals by accident.
-- World tick debug logging now supports both `WORLD_DEBUG=true` and the older `WORLD_TICK_DEBUG=true`.
-
-### 🎮 Gameplay
-
-- Animals are now test-controlled through `/addCreature` until reproduction, migration and danger-pressure mechanics are implemented later.
-- World tick broadcasts now include a short hint for `/start` and `/me`, and restore location buttons for players in the region.
-
-### 🛠 Technical
-
-- `getStatusData()` now returns `latestEvents` while keeping `latestEvent` for compatibility.
-- Status server renders recent events as a short HTML list and exposes them in `/health`.
-- Seed remains responsible for world structure, resources, species and unique NPCs only.
-
----
-
-## 0.4.6 - creature cleanup and unique NPC normalization - 12026-05-06
-
-### ✨ Added
-
-- Added `/cleanupCreatures` debug/admin command:
-  - keeps one canonical `Травник`.
-  - keeps one canonical `Дід Чорноліс`.
-  - removes duplicate named NPC rows.
-  - removes dead/inactive creature rows that are not the canonical sleeping Lisovyk.
-  - writes a `Creature cleanup` system event.
-
-### 🐛 Fixed
-
-- `/all` now shows only living creatures by default, so it matches `/world` more closely.
-- Added `/all dead` for full debug output including inactive/dead creature records.
-- Fixed repeated `Травник` spawning after repeated seed runs when the existing herbalist had moved away from his original location.
-- Fixed seed behavior for unique named NPCs by checking for them globally by species + name instead of by starting location.
-- Reduced accumulation of duplicate `Дід Чорноліс` records.
-
-### 🎮 Gameplay
-
-- `Травник` is now treated as one moving NPC, not as a spawn slot in one fixed cell.
-- `Дід Чорноліс` remains a single guardian instance that sleeps, wakes when resources are depleted, and can sleep again after recovery.
-
----
-
-## 0.4.5 - tick commands, resource regeneration, Lisovyk recovery - 12026-05-06
-
-### ✨ Added
-
-- Manual world tick debug commands:
-  - `/tick` runs one world tick immediately.
-  - `/tickGet` shows the current world tick interval and tick counter.
-  - `/tickSet <ms>` changes the world tick interval at runtime without restarting the server.
-- Slow resource regeneration:
-  - resources recover by a small amount every configured number of ticks.
-  - defaults: every 10 ticks, +1 per resource node.
-- Lisovyk recovery state:
-  - when the resource that woke Дід Чорноліс returns anywhere in the region, he stops hunting, hides where he is and becomes inactive again.
-  - the recovery is written to `WorldEvent` and broadcast to players in the region.
-
-### 🐛 Fixed
-
-- Prevented repeated spam broadcasts for the same Lisovyk awakening condition.
-- Lisovyk awakening now sends the “resource depleted” broadcast only once while he is already awake.
-
-### 🎮 Gameplay
-
-- The world now has a basic depletion → guardian awakening → resource recovery → guardian sleep loop.
-- Periodic tick messages include resource regeneration counts.
-
-### 🛠 Technical
-
-- World tick loop can now restart its interval timer in-process after `/tickSet`.
-- Tick diagnostics are still integrated with `WorldEvent`, so `/world` and the status page can see the latest tick result.
-
----
-
-## 0.4.4 - Region-wide ecosystem logic - 12026-05-06
-
-### ✨ Added
-
-- Region-wide ecosystem logic:
-  - Lisovyk now awakens only when a resource is depleted across the entire region (not a single location).
-- System `WorldEvent` entries for each tick (visible in `/world` and status page).
-- Periodic world notifications to players:
-  - "Світ ворухнувся" every few ticks.
-- Lisovyk awakening now broadcasts to the entire region.
-
----
-
-## 0.4.3 - chore: finalize husky setup - 12026-05-06
-
----
-
-## 0.4.2 - fix: Github Action release workflow - 12026-05-06
-
----
-
-## 0.4.1 - world tick debug overlay - 12026-05-06
-
-### Added
-
-- Added optional world tick debug heartbeat:
-  - `WORLD_TICK_DEBUG=true` prints start/done tick logs to console.
-  - `WORLD_TICK_DEBUG_EVENT=true` writes a `SYSTEM` world event with tick stats.
-- Added per-tick counters for processed creatures, movement, gathering, looking/idling, Lisovyk awakening and per-creature errors.
-
-### Changed
-
-- World tick internals now collect action statistics while preserving existing autonomous behavior.
-- Re-entrant ticks now log a debug skip message when `WORLD_TICK_DEBUG=true`.
+- `/cleanupCreatures` removes all animals and leaves only canonical unique NPCs.
+- Seed no longer spawns animals on every deploy/seed run.
 
 ---
 
@@ -293,20 +104,10 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ### Added
 
-- Added basic async world tick service in `src/services/worldTick.ts`.
-- World tick now periodically updates living creatures without requiring player actions.
-- Animals now perform simple autonomous behavior:
-  - herbivores move toward food or wander;
-  - carnivores follow nearby herbivores or patrol.
-- Herbalist now autonomously gathers herbs and moves toward nearby herb sources.
-- Lisovyk awakening is now handled by world tick when any resource node is depleted.
-- Added `WORLD_TICK_INTERVAL_MS` env override for tick frequency.
-- Added `WORLD_TICK_CREATURE_LIMIT` env override to cap processed creatures per tick.
-
-### Changed
-
-- `src/bot.ts` now starts the world tick loop during bot startup.
-- The first world tick implementation is intentionally non-lethal: predators track prey but do not kill yet, to keep the MVP world stable.
+- Added basic async world tick service.
+- World tick periodically updates living creatures without requiring player actions.
+- Herbalist autonomously gathers herbs and moves toward nearby herb sources.
+- Lisovyk awakening is handled by world tick when resources are depleted.
 
 ---
 
@@ -314,192 +115,36 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ### Changed
 
-- Split the large `src/bot.ts` into focused modules:
-  - `src/config.ts` for environment and app version.
-  - `src/db.ts` for PostgreSQL/Prisma setup.
-  - `src/server/statusServer.ts` for `/` and `/health`.
-  - `src/handlers/*` for Telegram commands and callbacks.
-  - `src/services/*` for domain logic: locations, notifications, resources, status, cooldowns, delayed actions, deploy announcements and world events.
-  - `src/ui/*` for inline keyboards and labels.
-  - `src/utils/*` for small helpers.
-- Kept `src/bot.ts` as the app composition/startup file.
-- Updated README with the new code structure and current command list.
-
-### Preserved
-
-- Existing gameplay behavior for `/start`, `/me`, `/look`, `/world`, `/all`, `/say`, movement, gathering and basic social actions.
-- Existing Prisma schema and seed world content.
-- Existing Render status page and health endpoint behavior.
-
-### Notes
-
-- This is a structural refactor intended to make future work on combat, traps, hunting, ecosystem ticks and crafting easier.
-- I could not run a full `npm install && npm run build` in the sandbox because external package download was unavailable.
-
----
-
-## [0.2.3] - 12026-05-06
-
-### 🐛 Fixed
-- GitHub release workflow.
-
-## [0.2.2] - 12026-05-06
-
-### ✨ Added
-- Hidden `/all` debug command with all players, NPC/creatures, coordinates, HP and current actions.
-- Attack interaction button (`⚔️ Атакувати`) for future combat. For now it replies that combat is still in development.
-- Region-wide warning and Lisovyk awakening trigger when a resource node is fully depleted.
-- `lisovyk` remains available as a species key, but Дід Чорноліс no longer starts alive on the map.
-
-### 🎮 Gameplay
-- Movement remains instant.
-- `/look`, `Придивитися`, and gathering now complete after a short delay instead of resolving instantly.
-- Detailed look keeps the base location description and then adds details.
-- Interaction buttons are shown when visible characters are present.
-
-### 🛠 Technical
-- `getAppVersion()` now prefers `package.json` over `APP_VERSION`, so Render does not need a hardcoded version env var.
-- Added GitHub Actions release workflow for semver bumps, changelog updates and git tags.
-- Added GitHub Actions CI workflow for build checks.
-
-### 📝 Notes
-- Animal “tracks/movement” are still based on static creature records for now. Full movement/tracking requires a later world-tick system.
-
----
-
-## [0.2.1] - 12026-05-06
-
-### 🐛 Fixed
-- Movement messages and formatting.
+- Split large `src/bot.ts` into focused modules.
+- Kept `src/bot.ts` as app composition/startup file.
 
 ---
 
 ## [0.2.0] - 12026-05-05
 
 ### ✨ Added
-- Detailed `/look` system:
-  - shows resources (berries, mushrooms, herbs)
-  - shows nearby characters
-- Resource gathering system:
-  - chance-based (berries 1/4, mushrooms 1/3, herbs 1/5)
-  - time cost displayed on buttons (seconds)
-- Basic inventory support (PlayerResource)
-- World events logging (WorldEvent)
 
-### 🎮 Gameplay
-- Movement is now instant (no tick cost)
-- Actions (look, gather, say) consume time (ticks)
-- “Look” now shows contextual details instead of repeating location description
-
-### 👥 Social
-- `/say` command (broadcast in location)
-- Greeting interaction:
-  - "Привітатися" button
-  - response: "Ви сказали: «...»"
-- Arrival/departure notifications:
-  - “Хтось прийшов”
-  - “Хтось пішов”
-
-### 🌍 World
-- First NPC: **Травник**
-  - moves randomly
-  - gathers herbs
-  - speaks occasionally (frequency reduced)
-
-### 🧠 UX / Text
-- Switched to neutral form:
-  - "Ви придивляєтесь"
-- Location names bold
-- Resources italicized
-- "Поруч хтось є" shown in italics
-- Movement feedback split:
-  - "Ти рушив: ..." as separate message
-
-### 🧮 Stats
-- Player statistics:
-  - steps
-  - looks
-  - says
-  - gatherAttempts
-  - successfulGathers
-- World stats command `/world`
-
-### 🛠 Technical
-- HTML formatting instead of MarkdownV2 (fix Telegram parsing errors)
-- Health check endpoint `/health`
-- Status page with:
-  - version
-  - players count
-  - NPC count
-  - last event
-
-### 🐛 Fixed
-- Telegram MarkdownV2 crashes ('.', '-', etc.)
-- Duplicate NPC spawning on seed
-- Movement not showing new location
-- Inventory typing errors in TypeScript
-- Prisma schema mismatch issues
+- Detailed `/look` system.
+- Resource gathering system.
+- Basic inventory support.
+- World events logging.
 
 ---
 
 ## [0.1.0] - 12026-05-04
 
 ### ✨ Added
-- Initial Telegram bot using grammY
-- Player creation via `/start`
-- Basic `/me` command
-- PostgreSQL + Prisma integration
-- Deployment to Render
 
-### 🌍 World
-- Grid-based locations (3x3)
-- Movement system (N/E/S/W)
-- Regions and cell locations
-- Location exits
-
-### 🧠 Mechanics
-- Skill-based (no levels)
-- Core stats system:
-  - Strength
-  - Agility
-  - Perception
-  - Endurance
-  - Instinct
-
-### 🌱 Ecosystem (foundation)
-- Creature species system
-- Individual creature instances
-- Resource nodes (berries, herbs, mushrooms)
-
-### 🛠 Technical
-- Prisma schema v7 migration
-- Adapter-pg setup
-- Seed script for world generation
+- Initial Telegram bot using grammY.
+- Player creation via `/start`.
+- PostgreSQL + Prisma integration.
+- Deployment to Render.
 
 ---
 
 ## [0.0.x] - Early prototype
 
 ### ✨ Added
-- Initial project idea: Telegram-based RPG
-- Concept:
-  - living ecosystem
-  - no classes, only skills
-  - open PvP
-  - player-driven economy
-- Naming:
-  - **Chornolis Marches**
-  - Ukrainian flavor + dark fantasy setting
 
----
-
-# 🔮 Planned
-
-- NPC AI expansion (state machines)
-- Tracking system (animal traces)
-- Combat system
-- Inventory UI improvements
-- Crafting (potions, traps)
-- Reputation & factions
-- Stealth mechanics
-- Async world ticks / worker system
+- Initial project idea: Telegram-based RPG.
+- Naming: **Chornolis Marches**.

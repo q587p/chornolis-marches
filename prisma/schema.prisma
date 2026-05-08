@@ -127,6 +127,16 @@ model CreatureSpecies {
   endurance  Int
   instinct   Int
 
+  // Lifecycle profile; used for animals only for now.
+  childTicks                   Int @default(0)
+  youngTicks                   Int @default(24)
+  adultTicks                   Int @default(72)
+  oldTicks                     Int @default(36)
+  oldDeathChancePermille       Int @default(5)
+  oldDeathChanceGrowthPermille Int @default(1)
+  corpseDecayTicks             Int @default(24)
+  mushroomBonusOnDecay         Int @default(2)
+
   creatures Creature[]
 
   createdAt DateTime @default(now())
@@ -148,9 +158,15 @@ model Creature {
   hunger  Int @default(0)
   stamina Int @default(20)
 
-  // 🔥 ВАЖЛИВО
   activity      CreatureActivity?
-  currentAction String? // текст типу "збирає трави"
+  currentAction String?
+
+  // Lifecycle. Time is stopped for players and named/NPC creatures; animals keep aging.
+  age                 CreatureAge @default(ADULT)
+  ageTicks            Int @default(0)
+  diedAtTick          Int?
+  corpseDecayTicksLeft Int?
+  isGone              Boolean @default(false)
 
   // статистика
   steps             Int @default(0)
@@ -160,7 +176,6 @@ model Creature {
   successfulGathers Int @default(0)
 
   sex CreatureSex?
-  age CreatureAge  @default(ADULT)
 
   isAlive Boolean @default(true)
 
@@ -287,9 +302,11 @@ enum CreatureSex {
 }
 
 enum CreatureAge {
+  CHILD
   YOUNG
   ADULT
   OLD
+  CORPSE
 }
 
 enum CreatureActivity {

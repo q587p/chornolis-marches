@@ -5,29 +5,55 @@ import { directionLabels } from "../ui/labels";
 import { buildMovementKeyboard, buildResourceMenuKeyboard, buildTargetListKeyboard } from "../ui/keyboards";
 import { escapeHtml } from "../utils/text";
 
+function isVisibleCorpse(c: any) {
+  return !c.isAlive && !c.isGone && c.age === "CORPSE";
+}
+
+function isVisibleLivingCreature(c: any) {
+  return c.isAlive && !c.isGone;
+}
+
 function visibleTargets(location: any, viewerPlayerId?: number) {
   const players = location.players
     .filter((p: any) => p.id !== viewerPlayerId)
-    .map((p: any) => ({ type: "player" as const, id: p.id, label: p.firstName ?? p.username ?? "мандрівник", canGreet: true }));
+    .map((p: any) => ({
+      type: "player" as const,
+      id: p.id,
+      label: p.firstName ?? p.username ?? "мандрівник",
+      canGreet: true,
+    }));
 
-  const creatures = location.creatures.map((c: any) => ({
-    type: "creature" as const,
-    id: c.id,
-    label: c.name ?? c.species.name,
-    canGreet: c.species.kind !== "ANIMAL",
-  }));
+  const livingCreatures = location.creatures
+    .filter(isVisibleLivingCreature)
+    .map((c: any) => ({
+      type: "creature" as const,
+      id: c.id,
+      label: c.name ?? c.species.name,
+      canGreet: c.species.kind !== "ANIMAL",
+    }));
 
-  return [...players, ...creatures];
+  const corpses = location.creatures
+    .filter(isVisibleCorpse)
+    .map((c: any) => ({
+      type: "creature" as const,
+      id: c.id,
+      label: `труп: ${c.species.name}`,
+      canGreet: false,
+    }));
+
+  return [...players, ...livingCreatures, ...corpses];
 }
 
 function presenceText(location: any, viewerPlayerId?: number) {
   const targets = visibleTargets(location, viewerPlayerId);
   const hasCharacters = targets.some((t) => t.canGreet);
-  const hasAnimals = location.creatures.some((c: any) => c.species.kind === "ANIMAL");
+  const hasAnimals = location.creatures.some((c: any) => isVisibleLivingCreature(c) && c.species.kind === "ANIMAL");
+  const hasCorpses = location.creatures.some(isVisibleCorpse);
 
   if (hasCharacters && hasAnimals) return "\n\n<i>Поруч хтось або щось є.</i>";
   if (hasCharacters) return "\n\n<i>Поруч хтось є.</i>";
   if (hasAnimals) return "\n\n<i>Поруч щось ворушиться.</i>";
+  if (hasCorpses) return "\n\n<i>Поруч щось лежить нерухомо.</i>";
   return "";
 }
 
@@ -46,7 +72,7 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
     where: { id: locationId },
     include: {
       players: true,
-      creatures: { where: { isAlive: true }, include: { species: true } },
+      creatures: { where: { isGone: false }, include: { species: true } },
       exitsFrom: { where: { isHidden: false }, include: { toLocation: true }, orderBy: { direction: "asc" } },
     },
   });
@@ -68,7 +94,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     where: { id: locationId },
     include: {
       players: true,
-      creatures: { where: { isAlive: true }, include: { species: true } },
+      creatures: { where: { isGone: false }, include: { species: true } },
       resources: { include: { resourceType: true } },
       exitsFrom: { where: { isHidden: false }, include: { toLocation: true }, orderBy: { direction: "asc" } },
     },
@@ -78,7 +104,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
 
   const targets = visibleTargets(location, viewerPlayerId);
   const charactersText = targets.length
-    ? `\n\nПоруч:\n${targets.map((x) => `- ${escapeHtml(x.label)}${x.canGreet ? "" : " <i>(тварина)</i>"}`).join("\n")}`
+    ? `\n\nПоруч:\n${targets.map((x) => `- ${escapeHtml(x.label)}${x.canGreet ? "" : " <i>(тварина/об’єкт)</i>"}`).join("\n")}`
     : "";
 
   const resourceLines = location.resources
@@ -89,12 +115,23 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     });
   const resourcesText = resourceLines.length ? `\n\nВи помічаєте:\n${resourceLines.join("\n")}` : "";
 
-  const creatureHints = location.creatures
-    .filter((c) => c.species.kind === "ANIMAL")
-    .slice(0, 8)
-    .map((c) => `${c.species.name}: ${c.currentAction ?? "проходить"}`);
-  const tracksText = creatureHints.length
-    ? `\n\nСліди та рух:\n${creatureHints.map((x) => `- ${escapeHtml(x)}`).join("\n")}`
+  const livingAnimals = location.creatures.filter((c) => isVisibleLivingCreature(c) && c.species.kind === "ANIMAL");
+  const tracksText = livingAnimals.length
+    ? `\n\nСліди та рух:\n${livingAnimals
+        .slice(0, 8)
+        .map((c) => {
+          const ageText = c.ageTicks !== undefined && c.age ? ` (${String(c.age).toLowerCase()}, ${c.ageTicks} тіків)` : "";
+          return `- ${escapeHtml(`${c.species.name}${ageText}: ${c.currentAction ?? "проходить"}`)}`;
+        })
+        .join("\n")}${livingAnimals.length > 8 ? `\n- ...і ще ${livingAnimals.length - 8}` : ""}`
+    : "";
+
+  const corpses = location.creatures.filter(isVisibleCorpse);
+  const corpsesText = corpses.length
+    ? `\n\nПоруч лежить:\n${corpses
+        .slice(0, 8)
+        .map((c) => `- ${escapeHtml(`труп: ${c.species.name}; зникне приблизно за ${c.corpseDecayTicksLeft ?? "?"} тіків`)}`)
+        .join("\n")}${corpses.length > 8 ? `\n- ...і ще ${corpses.length - 8}` : ""}`
     : "";
 
   const keyboard = new InlineKeyboard();
@@ -122,7 +159,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   }
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n\n${escapeHtml(location.description ?? "")}\n\n<i>Ви придивляєтесь.</i>\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}${resourcesText}${charactersText}${tracksText}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n\n${escapeHtml(location.description ?? "")}\n\n<i>Ви придивляєтесь.</i>\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}${resourcesText}${charactersText}${tracksText}${corpsesText}`,
     keyboard,
   };
 }
