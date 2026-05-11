@@ -5,6 +5,26 @@ import { renderLocationBrief } from "../services/locations";
 import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
 import { isPlayerAutoEnabled } from "./auto";
 
+function formatPercent(success: number, attempts: number) {
+  if (!attempts) return "0%";
+  return `${Math.round((success / attempts) * 100)}%`;
+}
+
+function formatPlayerStats(player: any) {
+  return [
+    `Пройдено локацій: ${player.steps}`,
+    `Оглядів: ${player.looks}`,
+    `Сказано фраз: ${player.says}`,
+    `Привітань: ${player.greetings}`,
+    `Спроб збору: ${player.gatherAttempts}`,
+    `Вдалого збору: ${player.successfulGathers} (${formatPercent(player.successfulGathers, player.gatherAttempts)})`,
+    `Зібрано ягід: ${player.berriesGathered}`,
+    `Зібрано грибів: ${player.mushroomsGathered}`,
+    `Зібрано трав: ${player.herbsGathered}`,
+    `Убито тварин: ${player.animalsKilled}`,
+  ].join("\n");
+}
+
 async function showCharacter(bot: Bot, telegramId: number, reply: (text: string, options?: any) => Promise<unknown>) {
   const player = await prisma.player.findUnique({
     where: { telegramId: String(telegramId) },
@@ -19,7 +39,7 @@ async function showCharacter(bot: Bot, telegramId: number, reply: (text: string,
     ? player.resources.map((i) => `${i.resourceType.name} ×${i.amount}`).join("\n")
     : "порожньо";
 
-  await reply(`🧍 Ти:\n\nІм’я: ${player.firstName ?? "невідомо"}\nHP: ${player.hp}\nВитривалість: ${player.stamina}\nГолод: ${player.hunger}\nЛокація: ${player.currentLocation?.name ?? "невідомо"}${autoText}\n\nІнвентар:\n${items}`, {
+  await reply(`🧍 Ти:\n\nІм’я: ${player.firstName ?? "невідомо"}\nHP: ${player.hp}\nВитривалість: ${player.stamina}\nГолод: ${player.hunger}\nЛокація: ${player.currentLocation?.name ?? "невідомо"}${autoText}\n\nІнвентар:\n${items}\n\nСтатистика:\n${formatPlayerStats(player)}`, {
     reply_markup: buildMainReplyKeyboard(autoEnabled),
   });
 }

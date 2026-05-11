@@ -8,6 +8,34 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.5.3 - corpse inspection, greetings and stats UX - 12026-05-11
+
+### ✨ Added
+
+- Corpses can now be inspected as targets after an animal is killed.
+- Fresh corpses show an `Освіжувати` action while enough decay time remains.
+- `/me` now shows player statistics:
+  - steps;
+  - looks;
+  - sayings;
+  - greetings;
+  - gather attempts and success rate;
+  - gathered berries/mushrooms/herbs;
+  - killed animals.
+- Inspecting another player now shows the same statistics.
+
+### 🐛 Fixed
+
+- Inspecting a corpse no longer says that the target is gone while the corpse still exists.
+- `/news` now shows only the latest five news entries instead of the full history.
+
+### 🛠 Technical
+
+- Greeting actions continue to notify other players in the same location.
+- Greeting actions continue to write `GREET` world events.
+
+---
+
 ## 0.5.2 - debug hunting and expanded stats - 12026-05-11
 
 ### ✨ Added

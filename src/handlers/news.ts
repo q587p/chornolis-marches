@@ -12,7 +12,7 @@ async function readNews() {
       .split(/\n(?=##\s+)/)
       .map((section) => section.trim())
       .filter((section) => section.startsWith("## "))
-      .slice(0, 13);
+      .slice(0, 5);
     return sections.join("\n\n---\n\n") || "Новин поки немає.";
   } catch {
     return "Новини поки недоступні: файл news.md не знайдено.";
