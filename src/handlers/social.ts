@@ -152,9 +152,74 @@ export function registerSocialHandlers(bot: Bot) {
       return;
     }
 
-    await safeAnswerCallbackQuery(ctx, "Бойова система ще не готова.");
-    await editOrReply(ctx, `⚔️ Ви готуєтесь атакувати ${target.name}, але бойова система ще не готова.`, keyboard);
-    await logEvent("PLAYER_ACTION", "Player tried to attack target", `${target.kind}:${target.id}`, player.currentLocationId);
+    if (action === "attack") {
+      if (target.kind !== "creature" || !target.isAnimal) {
+        await safeAnswerCallbackQuery(ctx, "Поки що можна атакувати тільки тварин.");
+        await editOrReply(ctx, "⚔️ Бойова система для цієї цілі ще не готова.", keyboard);
+        return;
+      }
+
+      const creature = await prisma.creature.findFirst({
+        where: {
+          id: target.id,
+          locationId: player.currentLocationId,
+          isAlive: true,
+          isGone: false,
+        },
+        include: {
+          species: true,
+        },
+      });
+
+      if (!creature) {
+        await safeAnswerCallbackQuery(ctx, "Цілі вже немає поруч.");
+        await editOrReply(ctx, "Цілі вже немає поруч. Можна спробувати відслідкувати слід.");
+        return;
+      }
+
+      await prisma.creature.update({
+        where: { id: creature.id },
+        data: {
+          hp: 0,
+          isAlive: false,
+          age: "CORPSE",
+          diedAtTick: null,
+          corpseDecayTicksLeft: creature.species.corpseDecayTicks,
+          activity: "RESTING",
+          currentAction: "лежить нерухомо",
+        },
+      });
+
+      await prisma.player.update({
+        where: { id: player.id },
+        data: {
+          animalsKilled: { increment: 1 },
+        },
+      });
+
+      await notifyLocation(
+        bot,
+        player.currentLocationId,
+        player.id,
+        `Хтось атакує і вбиває ${target.name}.`
+      );
+
+      await safeAnswerCallbackQuery(ctx, "Тварину вбито.");
+      await editOrReply(
+        ctx,
+        `⚔️ Ви атакували і вбили ${target.name}. Труп лишився на землі.`,
+        keyboard
+      );
+
+      await logEvent(
+        "PLAYER_ACTION",
+        "Player killed animal",
+        `${target.kind}:${target.id}`,
+        player.currentLocationId
+      );
+
+      return;
+    }
   });
 
   bot.callbackQuery("track", async (ctx) => {

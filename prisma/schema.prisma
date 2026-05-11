@@ -31,6 +31,10 @@ model Player {
   gatherAttempts    Int @default(0)
   successfulGathers Int @default(0)
   greetings         Int @default(0)
+  animalsKilled     Int @default(0)
+  berriesGathered   Int @default(0)
+  mushroomsGathered Int @default(0)
+  herbsGathered     Int @default(0)
 
   lastActionAt DateTime?
 

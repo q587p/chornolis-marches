@@ -8,6 +8,33 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.5.2 - debug hunting and expanded stats - 12026-05-11
+
+### ✨ Added
+
+- Added temporary debug attack system for animals.
+- Attacking an animal now:
+  - kills it instantly;
+  - creates a corpse;
+  - starts corpse decay lifecycle.
+- Added expanded player statistics:
+  - `animalsKilled`
+  - `berriesGathered`
+  - `mushroomsGathered`
+  - `herbsGathered`
+
+### 🎮 Gameplay
+
+- `⚔️ Атакувати` now works on animals instead of showing a placeholder message.
+- Corpses produced by attacks integrate into the existing aging/corpse lifecycle system.
+
+### 🛠 Technical
+
+- Updated social interaction handler for creature combat debug flow.
+- Extended Prisma Player schema with gathering/hunting counters.
+
+---
+
 ## 0.5.1 - creature debug helpers and safer addCreature - 12026-05-11
 
 ### ✨ Added

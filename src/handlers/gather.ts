@@ -28,7 +28,7 @@ export function registerGatherHandlers(bot: Bot) {
   });
 
   bot.callbackQuery(/^gather:(berries|mushrooms|herbs)$/, async (ctx) => {
-    const key = ctx.match[1];
+    const key = ctx.match[1] as "berries" | "mushrooms" | "herbs";
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player || !player.currentLocationId) {
       await safeAnswerCallbackQuery(ctx);
@@ -49,8 +49,6 @@ export function registerGatherHandlers(bot: Bot) {
         include: { resourceType: true, location: true },
       });
 
-      await prisma.player.update({ where: { id: player.id }, data: { gatherAttempts: { increment: 1 } } });
-
       if (!resource || Math.random() > cfg.chance) {
         await ctx.reply(`Ви витратили час на пошуки (${durationSeconds} с), але нічого корисного не знайшли.`);
         await logEvent("GATHER", "Gather failed", key, locationId);
@@ -60,13 +58,41 @@ export function registerGatherHandlers(bot: Bot) {
       const found = Math.min(resource.amount, Math.floor(Math.random() * 3) + 1);
       const nextAmount = resource.amount - found;
 
-      await prisma.resourceNode.update({ where: { id: resource.id }, data: { amount: nextAmount } });
-      await prisma.playerResource.upsert({
-        where: { playerId_resourceTypeId: { playerId: player.id, resourceTypeId: resource.resourceTypeId } },
-        update: { amount: { increment: found } },
-        create: { playerId: player.id, resourceTypeId: resource.resourceTypeId, amount: found },
+      const statFieldMap = {
+        berries: "berriesGathered",
+        mushrooms: "mushroomsGathered",
+        herbs: "herbsGathered",
+      } as const;
+
+      const statField = statFieldMap[key];
+
+      await prisma.resourceNode.update({
+        where: { id: resource.id },
+        data: { amount: nextAmount },
       });
-      await prisma.player.update({ where: { id: player.id }, data: { successfulGathers: { increment: 1 } } });
+
+      await prisma.playerResource.upsert({
+        where: {
+          playerId_resourceTypeId: {
+            playerId: player.id,
+            resourceTypeId: resource.resourceTypeId,
+          },
+        },
+        update: { amount: { increment: found } },
+        create: {
+          playerId: player.id,
+          resourceTypeId: resource.resourceTypeId,
+          amount: found,
+        },
+      });
+
+      await prisma.player.update({
+        where: { id: player.id },
+        data: {
+          successfulGathers: { increment: 1 },
+          [statField]: { increment: found },
+        },
+      });
       await ctx.reply(`Ви витратили час на пошуки (${durationSeconds} с) і знайшли: ${resource.resourceType.name} ×${found}.`);
       await logEvent("GATHER", "Gather succeeded", `${resource.resourceType.name} ×${found}`, locationId);
 
