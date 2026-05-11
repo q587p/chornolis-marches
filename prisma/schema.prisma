@@ -155,6 +155,7 @@ model Creature {
   name String?
 
   hp      Int
+  maxHp   Int?
   hunger  Int @default(0)
   stamina Int @default(20)
 

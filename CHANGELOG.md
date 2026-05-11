@@ -8,7 +8,28 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
-## 0.5.0 - aging and corpse lifecycle - 12026-05-08
+## 0.5.1 - creature debug helpers and safer addCreature - 12026-05-11
+
+### ✨ Added
+
+- Added `/forceOld [speciesKey] [count]` debug command to force selected animals in the current location into old age for testing aging, old-age death and corpse decay.
+- Extended `/addCreature` to accept either `locationKey` or `x,y,z` coordinates.
+- Extended `/addCreature` with optional age: `YOUNG`, `ADULT` or `OLD`.
+- `/addCreatureHelp` now shows species lifecycle parameters.
+
+### 🐛 Fixed
+
+- Restored admin/status commands from 0.4.x after the aging patch.
+- Fixed `/addCreature` diagnostics for unknown species and locations.
+- Removed the invalid `maxHp` write from `/addCreature` so the command matches the current Prisma schema.
+
+### 🧪 Testing
+
+- Added a quicker manual way to verify non-zero old-age deaths and corpse decay counters by spawning old animals and running `/tick`.
+
+---
+
+## 0.5.0 - aging and corpse lifecycle - 12026-05-06
 
 ### ✨ Added
 
@@ -23,7 +44,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
   - `diedAtTick`;
   - `corpseDecayTicksLeft`;
   - `isGone`.
-- Added `CHILD` and `CORPSE` stages to `CreatureAge`.
+- Aging currently uses the existing `CreatureAge` stages: `YOUNG`, `ADULT`, `OLD`; corpse state is represented by `isAlive`, `isGone`, `diedAtTick` and `corpseDecayTicksLeft`.
 - Added visible animal corpses to location details.
 - Added mushroom growth after corpse decay.
 - `/world` and status data now show animal corpse and gone-animal counts.
