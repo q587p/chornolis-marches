@@ -6,6 +6,69 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+# Changelog
+All notable changes to this project will be documented in this file.
+The format is loosely based on Keep a Changelog and this project follows semantic-ish versioning.
+
+---
+
+## [Unreleased]
+
+---
+
+## 0.6.0 - Ukrainian grammar and character onboarding - 12026-05-14
+
+### ✨ Added
+
+- Added first-login character onboarding for new players:
+  - pronoun selection: `Він`, `Вона`, `Вони`;
+  - character name validation;
+  - Cyrillic/Latin-only name policy without mixed alphabets;
+  - Unicode NFKC normalization and invisible/bidi character stripping;
+  - Ukrainian case confirmation for Cyrillic names.
+- Added player name forms:
+  - nominative;
+  - genitive;
+  - dative;
+  - accusative;
+  - instrumental;
+  - locative;
+  - vocative.
+- Added grammar fields for creature species and unique named creatures.
+- Added `src/services/grammar.ts` as a reusable Ukrainian grammar layer for names, forms, animacy and simple fallback declension.
+- Added Prisma enums:
+  - `GrammaticalGender`;
+  - `Animacy`;
+  - `PlayerPronoun`.
+- Added migration `20260511060000_ukrainian_grammar_onboarding`.
+
+### 🎮 Gameplay / UX
+
+- Social/combat text can now use correct Ukrainian cases:
+  - `Ви сказали Травнику`;
+  - `Ви атакували зайця`;
+  - `Ви придивляєтесь до вовка`;
+  - `Ви освіжували труп зайця`.
+- Existing players are marked as onboarded during migration so deployment does not lock old accounts behind the new flow.
+- New players must complete onboarding before entering the world.
+
+### 🛠 Technical
+
+- Creature species now store canonical Ukrainian forms seeded for:
+  - заєць;
+  - миша;
+  - лисиця;
+  - вовк;
+  - лісовик;
+  - травник.
+- Unique NPCs can override species forms, e.g. `Дід Чорноліс` and `Травник`.
+- `package.json` bumped from `0.5.3` to `0.6.0`.
+
+### 📝 Notes
+
+- This is a foundation for fuller localization, not a complete Ukrainian morphology engine.
+- Manual forms remain the source of truth for NPCs, monsters, fantasy names and future quest entities.
+
 ---
 
 ## 0.5.3 - corpse inspection, greetings and stats UX - 12026-05-11

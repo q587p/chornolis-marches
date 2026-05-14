@@ -24,6 +24,19 @@ model Player {
   stamina Int @default(20)
   hunger  Int @default(0)
 
+  // Ukrainian grammar / onboarding
+  onboardingComplete Boolean @default(false)
+  pronoun            PlayerPronoun?
+  nameNominative     String?
+  nameGenitive       String?
+  nameDative         String?
+  nameAccusative     String?
+  nameInstrumental   String?
+  nameLocative       String?
+  nameVocative       String?
+  grammaticalGender  GrammaticalGender?
+  animacy            Animacy @default(ANIMATE)
+
   // статистика
   steps             Int @default(0)
   looks             Int @default(0)
@@ -121,6 +134,15 @@ model CreatureSpecies {
   name        String
   description String?
 
+  nameGenitive     String?
+  nameDative       String?
+  nameAccusative   String?
+  nameInstrumental String?
+  nameLocative     String?
+  nameVocative     String?
+  grammaticalGender GrammaticalGender @default(MASCULINE)
+  animacy           Animacy @default(ANIMATE)
+
   kind CreatureKind
   diet DietType
 
@@ -157,6 +179,14 @@ model Creature {
   location   CellLocation @relation(fields: [locationId], references: [id])
 
   name String?
+
+  // Optional override for named NPCs/unique creatures.
+  nameGenitive     String?
+  nameDative       String?
+  nameAccusative   String?
+  nameInstrumental String?
+  nameLocative     String?
+  nameVocative     String?
 
   hp      Int
   maxHp   Int?
@@ -324,6 +354,24 @@ enum CreatureActivity {
   SPEAKING
   FIGHTING
   SETTING_TRAP
+}
+
+enum GrammaticalGender {
+  MASCULINE
+  FEMININE
+  NEUTER
+  PLURAL
+}
+
+enum Animacy {
+  ANIMATE
+  INANIMATE
+}
+
+enum PlayerPronoun {
+  HE
+  SHE
+  THEY
 }
 
 // 🔥 НЕ ЗВУЖУВАТИ!

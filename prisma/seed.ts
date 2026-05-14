@@ -35,12 +35,158 @@ const resourceTypes = [
 ];
 
 const species = [
-  { key: "rabbit", name: "заєць", kind: "ANIMAL", diet: "HERBIVORE", baseHp: 3, strength: 1, agility: 8, perception: 6, endurance: 3, instinct: 7, childTicks: 8, youngTicks: 24, adultTicks: 80, oldTicks: 36, oldDeathChancePermille: 10, oldDeathChanceGrowthPermille: 2, corpseDecayTicks: 18, mushroomBonusOnDecay: 2 },
-  { key: "mouse", name: "миша", kind: "ANIMAL", diet: "HERBIVORE", baseHp: 1, strength: 1, agility: 7, perception: 5, endurance: 2, instinct: 6, childTicks: 4, youngTicks: 12, adultTicks: 36, oldTicks: 18, oldDeathChancePermille: 20, oldDeathChanceGrowthPermille: 4, corpseDecayTicks: 10, mushroomBonusOnDecay: 1 },
-  { key: "fox", name: "лисиця", kind: "ANIMAL", diet: "CARNIVORE", baseHp: 8, strength: 3, agility: 8, perception: 7, endurance: 5, instinct: 8, childTicks: 20, youngTicks: 60, adultTicks: 180, oldTicks: 80, oldDeathChancePermille: 5, oldDeathChanceGrowthPermille: 1, corpseDecayTicks: 24, mushroomBonusOnDecay: 3 },
-  { key: "wolf", name: "вовк", kind: "ANIMAL", diet: "CARNIVORE", baseHp: 14, strength: 7, agility: 6, perception: 7, endurance: 7, instinct: 8, childTicks: 32, youngTicks: 100, adultTicks: 300, oldTicks: 120, oldDeathChancePermille: 3, oldDeathChanceGrowthPermille: 1, corpseDecayTicks: 30, mushroomBonusOnDecay: 4 },
-  { key: "lisovyk", name: "лісовик", kind: "SPIRIT", diet: "SPIRITUAL", baseHp: 80, strength: 8, agility: 6, perception: 10, endurance: 9, instinct: 10 },
-  { key: "herbalist", name: "травник", kind: "HUMAN", diet: "OMNIVORE", baseHp: 18, strength: 3, agility: 4, perception: 8, endurance: 5, instinct: 6 },
+  {
+    key: "rabbit",
+    name: "заєць",
+    nameGenitive: "зайця",
+    nameDative: "зайцю",
+    nameAccusative: "зайця",
+    nameInstrumental: "зайцем",
+    nameLocative: "зайці",
+    nameVocative: "зайцю",
+    grammaticalGender: "MASCULINE",
+    animacy: "ANIMATE",
+    kind: "ANIMAL",
+    diet: "HERBIVORE",
+    baseHp: 3,
+    strength: 1,
+    agility: 8,
+    perception: 6,
+    endurance: 3,
+    instinct: 7,
+    childTicks: 8,
+    youngTicks: 24,
+    adultTicks: 80,
+    oldTicks: 36,
+    oldDeathChancePermille: 10,
+    oldDeathChanceGrowthPermille: 2,
+    corpseDecayTicks: 18,
+    mushroomBonusOnDecay: 2,
+  },
+  {
+    key: "mouse",
+    name: "миша",
+    nameGenitive: "миші",
+    nameDative: "миші",
+    nameAccusative: "мишу",
+    nameInstrumental: "мишею",
+    nameLocative: "миші",
+    nameVocative: "мише",
+    grammaticalGender: "FEMININE",
+    animacy: "ANIMATE",
+    kind: "ANIMAL",
+    diet: "HERBIVORE",
+    baseHp: 1,
+    strength: 1,
+    agility: 7,
+    perception: 5,
+    endurance: 2,
+    instinct: 6,
+    childTicks: 4,
+    youngTicks: 12,
+    adultTicks: 36,
+    oldTicks: 18,
+    oldDeathChancePermille: 20,
+    oldDeathChanceGrowthPermille: 4,
+    corpseDecayTicks: 10,
+    mushroomBonusOnDecay: 1,
+  },
+  {
+    key: "fox",
+    name: "лисиця",
+    nameGenitive: "лисиці",
+    nameDative: "лисиці",
+    nameAccusative: "лисицю",
+    nameInstrumental: "лисицею",
+    nameLocative: "лисиці",
+    nameVocative: "лисице",
+    grammaticalGender: "FEMININE",
+    animacy: "ANIMATE",
+    kind: "ANIMAL",
+    diet: "CARNIVORE",
+    baseHp: 8,
+    strength: 3,
+    agility: 8,
+    perception: 7,
+    endurance: 5,
+    instinct: 8,
+    childTicks: 20,
+    youngTicks: 60,
+    adultTicks: 180,
+    oldTicks: 80,
+    oldDeathChancePermille: 5,
+    oldDeathChanceGrowthPermille: 1,
+    corpseDecayTicks: 24,
+    mushroomBonusOnDecay: 3,
+  },
+  {
+    key: "wolf",
+    name: "вовк",
+    nameGenitive: "вовка",
+    nameDative: "вовку",
+    nameAccusative: "вовка",
+    nameInstrumental: "вовком",
+    nameLocative: "вовку",
+    nameVocative: "вовче",
+    grammaticalGender: "MASCULINE",
+    animacy: "ANIMATE",
+    kind: "ANIMAL",
+    diet: "CARNIVORE",
+    baseHp: 14,
+    strength: 7,
+    agility: 6,
+    perception: 7,
+    endurance: 7,
+    instinct: 8,
+    childTicks: 32,
+    youngTicks: 100,
+    adultTicks: 300,
+    oldTicks: 120,
+    oldDeathChancePermille: 3,
+    oldDeathChanceGrowthPermille: 1,
+    corpseDecayTicks: 30,
+    mushroomBonusOnDecay: 4,
+  },
+  {
+    key: "lisovyk",
+    name: "лісовик",
+    nameGenitive: "лісовика",
+    nameDative: "лісовику",
+    nameAccusative: "лісовика",
+    nameInstrumental: "лісовиком",
+    nameLocative: "лісовику",
+    nameVocative: "лісовику",
+    grammaticalGender: "MASCULINE",
+    animacy: "ANIMATE",
+    kind: "SPIRIT",
+    diet: "SPIRITUAL",
+    baseHp: 80,
+    strength: 8,
+    agility: 6,
+    perception: 10,
+    endurance: 9,
+    instinct: 10,
+  },
+  {
+    key: "herbalist",
+    name: "травник",
+    nameGenitive: "травника",
+    nameDative: "травнику",
+    nameAccusative: "травника",
+    nameInstrumental: "травником",
+    nameLocative: "травнику",
+    nameVocative: "травнику",
+    grammaticalGender: "MASCULINE",
+    animacy: "ANIMATE",
+    kind: "HUMAN",
+    diet: "OMNIVORE",
+    baseHp: 18,
+    strength: 3,
+    agility: 4,
+    perception: 8,
+    endurance: 5,
+    instinct: 6,
+  },
 ] as const;
 
 function directionFromDelta(dx: number, dy: number) {
@@ -58,11 +204,25 @@ function resourceAmount(resourceKey: string, locationKey: string) {
   return 0;
 }
 
+type CreatureNameOverrides = {
+  nameGenitive?: string;
+  nameDative?: string;
+  nameAccusative?: string;
+  nameInstrumental?: string;
+  nameLocative?: string;
+  nameVocative?: string;
+};
+
 async function ensureUniqueCreature(
   speciesKey: string,
   locationKey: string,
   name: string,
-  options: { isAlive: boolean; action: string; activity: "IDLE" | "GATHERING" | "RESTING" | "LOOKING" }
+  options: {
+    isAlive: boolean;
+    action: string;
+    activity: "IDLE" | "GATHERING" | "RESTING" | "LOOKING";
+    nameOverrides?: CreatureNameOverrides;
+  }
 ) {
   const sp = await prisma.creatureSpecies.findUniqueOrThrow({ where: { key: speciesKey } });
   const loc = await prisma.cellLocation.findUniqueOrThrow({ where: { key: locationKey } });
@@ -80,6 +240,7 @@ async function ensureUniqueCreature(
         speciesId: sp.id,
         locationId: loc.id,
         name,
+        ...options.nameOverrides,
         hp: sp.baseHp,
         isAlive: options.isAlive,
         isGone: false,
@@ -99,6 +260,7 @@ async function ensureUniqueCreature(
     await prisma.creature.update({
       where: { id: keep.id },
       data: {
+        ...options.nameOverrides,
         isAlive: true,
         isGone: false,
         locationId: loc.id,
@@ -107,6 +269,10 @@ async function ensureUniqueCreature(
         activity: options.activity,
       },
     });
+  }
+
+  if (options.nameOverrides) {
+    await prisma.creature.update({ where: { id: keep.id }, data: options.nameOverrides });
   }
 
   if (speciesKey === "lisovyk" && keep.hp <= 0) {
@@ -168,12 +334,28 @@ async function main() {
     isAlive: false,
     action: "спить у глибині Чорнолісу",
     activity: "RESTING",
+    nameOverrides: {
+      nameGenitive: "Діда Чорноліса",
+      nameDative: "Діду Чорнолісу",
+      nameAccusative: "Діда Чорноліса",
+      nameInstrumental: "Дідом Чорнолісом",
+      nameLocative: "Діді Чорнолісі",
+      nameVocative: "Діду Чорнолісе",
+    },
   });
 
   await ensureUniqueCreature("herbalist", "south_moss_clearing", "Травник", {
     isAlive: true,
     action: "збирає трави",
     activity: "GATHERING",
+    nameOverrides: {
+      nameGenitive: "Травника",
+      nameDative: "Травнику",
+      nameAccusative: "Травника",
+      nameInstrumental: "Травником",
+      nameLocative: "Травнику",
+      nameVocative: "Травнику",
+    },
   });
 
   await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "Seed completed", description: "Chornolis world structure seeded with lifecycle profiles and without animal spawning." } });
