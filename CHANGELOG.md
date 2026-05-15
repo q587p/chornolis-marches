@@ -16,6 +16,26 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.6.1 - restart onboarding reset command - 12026-05-16
+
+### ✨ Added
+
+- Added `/restart` debug/admin command for resetting the current player character.
+- `/restart` removes the current player's inventory/resources and then deletes the player row.
+- After `/restart`, `/start` begins the 0.6.0 onboarding flow again from the beginning.
+
+### 🛠 Technical
+
+- Exported `stopPlayerAuto()` from `src/handlers/auto.ts` so reset can stop in-memory auto mode before deleting the character.
+- Added a `SYSTEM` world event when a player reset is performed.
+- No Prisma migration is needed.
+
+### 📝 Notes
+
+- `/restart` resets only the current Telegram user's own character. It does not delete other players.
+
+---
+
 ## 0.6.0 - Ukrainian grammar and character onboarding - 12026-05-14
 
 ### ✨ Added

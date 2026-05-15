@@ -3,6 +3,8 @@ import { CreatureActivity, CreatureAge } from "@prisma/client";
 import { prisma } from "../db";
 import { getStatusData } from "../services/status";
 import { getPlayerByTelegramId } from "../services/players";
+import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
+import { stopPlayerAuto } from "./auto";
 
 const ADMIN_COMMANDS = [
   "/adminHelp — список команд",
@@ -22,6 +24,7 @@ const ADMIN_COMMANDS = [
   "/auto — увімкнути авто-режим гравця",
   "/autoStop — зупинити авто-режим",
   "/news — останні новини гри",
+  "/restart — видалити свого персонажа, інвентар і статистику; наступний /start почне онбордінґ з нуля",
 ].join("\n");
 
 type UniqueNpcSpec = {
@@ -123,6 +126,44 @@ export function registerStatusHandlers(bot: Bot) {
   bot.command(["adminHelp", "adminhelp"], async (ctx) => {
     await ctx.reply(`🛠 Admin / debug commands\n\n${ADMIN_COMMANDS}`);
   });
+  
+  bot.command("restart", async (ctx) => {
+    if (!ctx.from) return;
+
+    const telegramId = String(ctx.from.id);
+    stopPlayerAuto(ctx.from.id);
+
+    const player = await prisma.player.findUnique({
+      where: { telegramId },
+      include: { currentLocation: true },
+    });
+
+    if (!player) {
+      await ctx.reply("Персонажа ще немає. Напиши /start, щоб почати онбординг.", {
+        reply_markup: buildMainReplyKeyboard(false),
+      });
+      return;
+    }
+
+    const removedResources = await prisma.playerResource.deleteMany({
+      where: { playerId: player.id },
+    });
+
+    await prisma.player.delete({ where: { id: player.id } });
+
+    await prisma.worldEvent.create({
+      data: {
+        type: "SYSTEM",
+        title: "Player restarted onboarding",
+        description: `telegramId=${telegramId}; oldPlayerId=${player.id}; removedResources=${removedResources.count}`,
+        locationId: player.currentLocationId,
+      },
+    });
+
+    await ctx.reply("♻️ Персонажа видалено разом з інвентарем і статистикою. Напиши /start, щоб пройти онбордінґ з нуля.", {
+      reply_markup: buildMainReplyKeyboard(false),
+    });
+  });  
 
   bot.command(["locationAll", "locationall"], async (ctx) => {
     const locations = await prisma.cellLocation.findMany({ include: { region: true }, orderBy: [{ z: "asc" }, { y: "desc" }, { x: "asc" }] });

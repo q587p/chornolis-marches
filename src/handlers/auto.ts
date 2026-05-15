@@ -130,6 +130,9 @@ function stopAuto(telegramId: number) {
   autoPlayers.delete(telegramId);
   return true;
 }
+export function stopPlayerAuto(telegramId: number) {
+  return stopAuto(telegramId);
+}
 
 export function registerAutoHandlers(bot: Bot) {
   bot.command("auto", async (ctx) => {
