@@ -1,18 +1,38 @@
+---
+## [Unreleased]
 # Changelog
 All notable changes to this project will be documented in this file.
 The format is loosely based on Keep a Changelog and this project follows semantic-ish versioning.
 
 ---
 
-## [Unreleased]
+## 0.6.2 - compound Ukrainian names grammar - 12026-05-16
 
-# Changelog
-All notable changes to this project will be documented in this file.
-The format is loosely based on Keep a Changelog and this project follows semantic-ish versioning.
+### ✨ Added
 
----
+- `guessNameForms()` now declines every word in a Cyrillic compound name instead of changing only the last word.
+- Added support for hyphenated name parts by declining each hyphen-separated piece.
+- Added a small indeclinable-parts list for particles such as:
+  - `де`;
+  - `фон`;
+  - `ван`;
+  - `аль`;
+  - `ібн`;
+  - `огли`.
 
-## [Unreleased]
+### 🎮 Gameplay / UX
+
+- Suggested onboarding forms are better for names like:
+  - `Дід Чорноліс` → `Діда Чорноліса`;
+  - `Сірий Вовк` → `Сірого Вовка`;
+  - `Трегол Син Туману` → `Трегола Сина Туману`;
+  - `Око-Буревій` → `Ока-Буревія`.
+- Character name length limit increased from 32 to 64 characters for two- and three-word names.
+
+### 🛠 Technical
+
+- No Prisma migration required.
+- Stored full-case forms remain the source of truth after onboarding confirmation.
 
 ---
 
@@ -82,7 +102,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
   - лісовик;
   - травник.
 - Unique NPCs can override species forms, e.g. `Дід Чорноліс` and `Травник`.
-- `package.json` bumped from `0.5.3` to `0.6.0`.
 
 ### 📝 Notes
 

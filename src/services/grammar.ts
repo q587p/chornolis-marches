@@ -12,10 +12,28 @@ export type Gender = "MASCULINE" | "FEMININE" | "NEUTER" | "PLURAL";
 export type Animacy = "ANIMATE" | "INANIMATE";
 
 const INVISIBLE_OR_BIDI = /[\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g;
-const CYRILLIC_NAME = /^[\p{Script=Cyrillic}][\p{Script=Cyrillic}'’\- ]{1,31}$/u;
-const LATIN_NAME = /^[\p{Script=Latin}][\p{Script=Latin}'’\- ]{1,31}$/u;
+const CYRILLIC_NAME = /^[\p{Script=Cyrillic}][\p{Script=Cyrillic}'’\- ]{1,63}$/u;
+const LATIN_NAME = /^[\p{Script=Latin}][\p{Script=Latin}'’\- ]{1,63}$/u;
 const HAS_CYRILLIC = /\p{Script=Cyrillic}/u;
 const HAS_LATIN = /\p{Script=Latin}/u;
+
+const INDECLINABLE_PARTS = new Set([
+  "де",
+  "фон",
+  "ван",
+  "аль",
+  "ал",
+  "ель",
+  "ібн",
+  "бін",
+  "огли",
+  "кизи",
+  "ла",
+  "ле",
+  "да",
+  "ді",
+  "дю",
+]);
 
 const KNOWN_FORMS: Record<string, Partial<NameForms> & { gender?: Gender; animacy?: Animacy }> = {
   "заєць": {
@@ -81,12 +99,16 @@ const KNOWN_FORMS: Record<string, Partial<NameForms> & { gender?: Gender; animac
 };
 
 export function normalizeCharacterName(raw: string) {
-  return raw.normalize("NFKC").replace(INVISIBLE_OR_BIDI, "").replace(/\s+/g, " ").trim();
+  return raw
+    .normalize("NFKC")
+    .replace(INVISIBLE_OR_BIDI, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function validateCharacterName(raw: string): { ok: true; value: string; script: "cyrillic" | "latin" } | { ok: false; error: string } {
   const value = normalizeCharacterName(raw);
-  if (value.length < 2 || value.length > 32) return { ok: false, error: "Ім’я має бути від 2 до 32 символів." };
+  if (value.length < 2 || value.length > 64) return { ok: false, error: "Ім’я має бути від 2 до 64 символів." };
   if (HAS_CYRILLIC.test(value) && HAS_LATIN.test(value)) return { ok: false, error: "Не змішуйте кирилицю та латинку в одному імені." };
   if (CYRILLIC_NAME.test(value)) return { ok: true, value, script: "cyrillic" };
   if (LATIN_NAME.test(value)) return { ok: true, value, script: "latin" };
@@ -99,26 +121,50 @@ export function guessGenderFromPronoun(pronoun?: string | null): Gender {
   return "MASCULINE";
 }
 
-function declineCyrillicSingleWord(name: string, gender: Gender = "MASCULINE", animacy: Animacy = "ANIMATE"): NameForms {
-  const lower = name.toLocaleLowerCase("uk-UA");
+function preserveCase(original: string, declined: string) {
+  if (original === original.toLocaleUpperCase("uk-UA")) return declined.toLocaleUpperCase("uk-UA");
+  const first = original[0];
+  if (first === first.toLocaleUpperCase("uk-UA")) {
+    return declined[0].toLocaleUpperCase("uk-UA") + declined.slice(1);
+  }
+  return declined;
+}
+
+function sameForms(value: string): NameForms {
+  return {
+    nominative: value,
+    genitive: value,
+    dative: value,
+    accusative: value,
+    instrumental: value,
+    locative: value,
+    vocative: value,
+  };
+}
+
+function declineCyrillicSimpleWord(word: string, gender: Gender = "MASCULINE", animacy: Animacy = "ANIMATE"): NameForms {
+  const lower = word.toLocaleLowerCase("uk-UA");
+
+  if (INDECLINABLE_PARTS.has(lower)) return sameForms(word);
+
   const known = KNOWN_FORMS[lower];
   if (known) {
     return {
-      nominative: name,
-      genitive: known.genitive ?? name,
-      dative: known.dative ?? name,
-      accusative: known.accusative ?? name,
-      instrumental: known.instrumental ?? name,
-      locative: known.locative ?? name,
-      vocative: known.vocative ?? name,
+      nominative: word,
+      genitive: preserveCase(word, known.genitive ?? word),
+      dative: preserveCase(word, known.dative ?? word),
+      accusative: preserveCase(word, known.accusative ?? word),
+      instrumental: preserveCase(word, known.instrumental ?? word),
+      locative: preserveCase(word, known.locative ?? word),
+      vocative: preserveCase(word, known.vocative ?? word),
     };
   }
 
   if (gender === "FEMININE" || lower.endsWith("а") || lower.endsWith("я")) {
-    const stem = name.slice(0, -1);
+    const stem = word.slice(0, -1);
     if (lower.endsWith("я")) {
       return {
-        nominative: name,
+        nominative: word,
         genitive: `${stem}і`,
         dative: `${stem}і`,
         accusative: `${stem}ю`,
@@ -128,7 +174,7 @@ function declineCyrillicSingleWord(name: string, gender: Gender = "MASCULINE", a
       };
     }
     return {
-      nominative: name,
+      nominative: word,
       genitive: `${stem}и`,
       dative: `${stem}і`,
       accusative: `${stem}у`,
@@ -139,57 +185,69 @@ function declineCyrillicSingleWord(name: string, gender: Gender = "MASCULINE", a
   }
 
   if (gender === "PLURAL") {
-    return {
-      nominative: name,
-      genitive: name,
-      dative: name,
-      accusative: name,
-      instrumental: name,
-      locative: name,
-      vocative: name,
-    };
+    return sameForms(word);
   }
 
-  const genitive = `${name}а`;
+  if (lower.endsWith("о") || lower.endsWith("е")) {
+    return sameForms(word);
+  }
+
+  const genitive = `${word}а`;
   return {
-    nominative: name,
+    nominative: word,
     genitive,
-    dative: `${name}у`,
-    accusative: animacy === "ANIMATE" ? genitive : name,
-    instrumental: `${name}ом`,
-    locative: `${name}і`,
-    vocative: `${name}е`,
+    dative: `${word}у`,
+    accusative: animacy === "ANIMATE" ? genitive : word,
+    instrumental: `${word}ом`,
+    locative: `${word}і`,
+    vocative: `${word}е`,
+  };
+}
+
+function joinHyphenatedForms(parts: NameForms[]): NameForms {
+  return {
+    nominative: parts.map((p) => p.nominative).join("-"),
+    genitive: parts.map((p) => p.genitive).join("-"),
+    dative: parts.map((p) => p.dative).join("-"),
+    accusative: parts.map((p) => p.accusative).join("-"),
+    instrumental: parts.map((p) => p.instrumental).join("-"),
+    locative: parts.map((p) => p.locative).join("-"),
+    vocative: parts.map((p) => p.vocative).join("-"),
+  };
+}
+
+function declineCyrillicNamePart(part: string, gender: Gender = "MASCULINE", animacy: Animacy = "ANIMATE"): NameForms {
+  if (!part.includes("-")) return declineCyrillicSimpleWord(part, gender, animacy);
+
+  const forms = part
+    .split("-")
+    .map((piece) => declineCyrillicSimpleWord(piece, gender, animacy));
+
+  return joinHyphenatedForms(forms);
+}
+
+function joinWordForms(parts: NameForms[]): NameForms {
+  return {
+    nominative: parts.map((p) => p.nominative).join(" "),
+    genitive: parts.map((p) => p.genitive).join(" "),
+    dative: parts.map((p) => p.dative).join(" "),
+    accusative: parts.map((p) => p.accusative).join(" "),
+    instrumental: parts.map((p) => p.instrumental).join(" "),
+    locative: parts.map((p) => p.locative).join(" "),
+    vocative: parts.map((p) => p.vocative).join(" "),
   };
 }
 
 export function guessNameForms(name: string, gender: Gender = "MASCULINE", animacy: Animacy = "ANIMATE"): NameForms {
   const normalized = normalizeCharacterName(name);
-  if (!HAS_CYRILLIC.test(normalized)) {
-    return {
-      nominative: normalized,
-      genitive: normalized,
-      dative: normalized,
-      accusative: normalized,
-      instrumental: normalized,
-      locative: normalized,
-      vocative: normalized,
-    };
-  }
+  if (!HAS_CYRILLIC.test(normalized)) return sameForms(normalized);
 
-  const parts = normalized.split(/\s+/);
-  if (parts.length === 1) return declineCyrillicSingleWord(normalized, gender, animacy);
+  const parts = normalized
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => declineCyrillicNamePart(part, gender, animacy));
 
-  const last = declineCyrillicSingleWord(parts[parts.length - 1], gender, animacy);
-  const prefix = parts.slice(0, -1).join(" ");
-  return {
-    nominative: normalized,
-    genitive: `${prefix} ${last.genitive}`,
-    dative: `${prefix} ${last.dative}`,
-    accusative: `${prefix} ${last.accusative}`,
-    instrumental: `${prefix} ${last.instrumental}`,
-    locative: `${prefix} ${last.locative}`,
-    vocative: `${prefix} ${last.vocative}`,
-  };
+  return joinWordForms(parts);
 }
 
 export function speciesForms(species: any): NameForms {
