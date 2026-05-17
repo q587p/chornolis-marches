@@ -1,8 +1,8 @@
 import { Bot } from "grammy";
-import { Creature, CreatureAge, LocationExit } from "@prisma/client";
+import { CreatureAge, Direction, LocationExit } from "@prisma/client";
 import { prisma } from "../db";
-import { notifyLocation, notifyRegion } from "./notifications";
-import { buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
+import { notifyRegion } from "./notifications";
+import { actionDurationMs, enqueueCreatureAction, gatherDurationMs, hasActiveCreatureActions, movementDurationMs } from "./actionQueue";
 
 const DEFAULT_TICK_INTERVAL_MS = Number(process.env.WORLD_TICK_INTERVAL_MS || 60000);
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
@@ -28,17 +28,6 @@ const HERBALIST_LINES = [
   "Хто забирає все, той будить старше за себе.",
   "Тиша теж буває голодною.",
 ];
-
-const FROM_DIRECTION_LABELS: Record<string, string> = {
-  NORTH: "з півдня",
-  EAST: "із заходу",
-  SOUTH: "з півночі",
-  WEST: "зі сходу",
-  UP: "знизу",
-  DOWN: "згори",
-  INSIDE: "ззовні",
-  OUTSIDE: "зсередини",
-};
 
 const STAGE_HP_MULTIPLIER: Record<CreatureAge, number> = {
   CHILD: 0.35,
@@ -83,6 +72,11 @@ function stageMaxHp(creature: any, stage: CreatureAge) {
 }
 
 async function killAnimalFromOldAge(creature: any) {
+  await prisma.worldAction.updateMany({
+    where: { actorType: "CREATURE", creatureId: creature.id, status: { in: ["QUEUED", "RUNNING"] } },
+    data: { status: "CANCELLED" },
+  });
+
   await prisma.creature.update({
     where: { id: creature.id },
     data: {
@@ -140,65 +134,25 @@ async function decayCorpse(creature: any) {
   if (decayLeft > 1) {
     await prisma.creature.update({
       where: { id: creature.id },
-      data: {
-        age: "CORPSE",
-        isAlive: false,
-        corpseDecayTicksLeft: decayLeft - 1,
-        currentAction: `розкладається; залишилось ${decayLeft - 1} тіків`,
-      },
+      data: { age: "CORPSE", isAlive: false, corpseDecayTicksLeft: decayLeft - 1, currentAction: `розкладається; залишилось ${decayLeft - 1} тіків` },
     });
     return "decaying";
   }
 
-  const mushrooms = await prisma.resourceNode.findFirst({
-    where: { locationId: creature.locationId, resourceType: { key: "mushrooms" } },
-  });
-
+  const mushrooms = await prisma.resourceNode.findFirst({ where: { locationId: creature.locationId, resourceType: { key: "mushrooms" } } });
   if (mushrooms) {
-    await prisma.resourceNode.update({
-      where: { id: mushrooms.id },
-      data: {
-        amount: Math.min(mushrooms.maxAmount, mushrooms.amount + creature.species.mushroomBonusOnDecay),
-      },
-    });
+    await prisma.resourceNode.update({ where: { id: mushrooms.id }, data: { amount: Math.min(mushrooms.maxAmount, mushrooms.amount + creature.species.mushroomBonusOnDecay) } });
   }
 
-  await prisma.creature.update({
-    where: { id: creature.id },
-    data: {
-      isGone: true,
-      corpseDecayTicksLeft: 0,
-      currentAction: "зникло, лишивши слід у землі",
-    },
-  });
-
-  await prisma.worldEvent.create({
-    data: {
-      type: "SYSTEM",
-      title: "Труп зник",
-      description: `Труп істоти «${creature.name ?? creature.species.name}» зник. Гриби в цій локації отримали +${creature.species.mushroomBonusOnDecay}.`,
-      locationId: creature.locationId,
-    },
-  });
-
+  await prisma.creature.update({ where: { id: creature.id }, data: { isGone: true, corpseDecayTicksLeft: 0, currentAction: "зникло, лишивши слід у землі" } });
+  await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "Труп зник", description: `Труп істоти «${creature.name ?? creature.species.name}» зник. Гриби в цій локації отримали +${creature.species.mushroomBonusOnDecay}.`, locationId: creature.locationId } });
   return "gone";
 }
 
 async function processAnimalLifecycle() {
-  const livingAnimals = await prisma.creature.findMany({
-    where: { isAlive: true, isGone: false, species: { kind: "ANIMAL" } },
-    include: { species: true },
-  });
-
-  const corpses = await prisma.creature.findMany({
-    where: { isAlive: false, isGone: false, species: { kind: "ANIMAL" } },
-    include: { species: true },
-  });
-
-  let aged = 0;
-  let died = 0;
-  let decayed = 0;
-  let gone = 0;
+  const livingAnimals = await prisma.creature.findMany({ where: { isAlive: true, isGone: false, species: { kind: "ANIMAL" } }, include: { species: true } });
+  const corpses = await prisma.creature.findMany({ where: { isAlive: false, isGone: false, species: { kind: "ANIMAL" } }, include: { species: true } });
+  let aged = 0, died = 0, decayed = 0, gone = 0;
 
   for (const creature of livingAnimals) {
     const result = await ageLivingAnimal(creature);
@@ -216,92 +170,63 @@ async function processAnimalLifecycle() {
 }
 
 async function maybeHerbalistSpeak(c: any) {
-  if (!botInstance || !chance(HERBALIST_SPEAK_CHANCE)) return;
+  if (!chance(HERBALIST_SPEAK_CHANCE)) return false;
   const line = pick(HERBALIST_LINES);
-  if (!line) return;
-  await notifyLocation(botInstance, c.locationId, -1, `Травник промовляє: «${line}»`);
-  await prisma.worldEvent.create({ data: { type: "NPC_SAY", title: "Травник промовляє", description: line, locationId: c.locationId } });
+  if (!line) return false;
+  await enqueueCreatureAction({ creatureId: c.id, type: "SAY", payload: { text: line }, durationMs: actionDurationMs("SAY") });
+  return true;
 }
 
-async function move(c: any, exit: LocationExit, action: string) {
-  if (c.locationId === exit.toLocationId) return;
-
-  const fromLocationId = c.locationId;
-  const isAnimal = c.species?.kind === "ANIMAL";
-  const label = isAnimal ? "Щось" : "Хтось";
-  const name = c.name ?? c.species?.name ?? "істота";
-  const cameFrom = FROM_DIRECTION_LABELS[exit.direction] ?? "звідкись";
-
-  if (botInstance) {
-    await notifyLocation(botInstance, fromLocationId, -1, isAnimal ? "Щось пішло звідси." : `${name} пішов звідси.`, buildTrackKeyboard());
-  }
-
-  await prisma.creature.update({
-    where: { id: c.id },
-    data: { locationId: exit.toLocationId, activity: "MOVING", currentAction: action, steps: { increment: 1 }, hunger: { increment: 1 } },
-  });
-
-  if (botInstance) {
-    const keyboard = buildTargetListKeyboard([
-      {
-        type: "creature",
-        id: c.id,
-        label,
-        canGreet: !isAnimal,
-      },
-    ]);
-    const text = isAnimal
-      ? `Щось зайшло сюди ${cameFrom}.`
-      : `Хтось зайшов сюди ${cameFrom}.`;
-    await notifyLocation(botInstance, exit.toLocationId, -1, text, keyboard);
-  }
+async function queueMove(c: any, exit: LocationExit, reason: string) {
+  await enqueueCreatureAction({ creatureId: c.id, type: "MOVE", payload: { direction: exit.direction as Direction, reason }, durationMs: movementDurationMs(exit.travelCost) });
+  return "queuedMove";
 }
 
 async function tickHerbalist(c: any) {
-  await maybeHerbalistSpeak(c);
-  const herbs = c.location.resources.find((r: any) => r.resourceType.key === "herbs");
+  if (await maybeHerbalistSpeak(c)) return "queuedSay";
 
+  const herbs = c.location.resources.find((r: any) => r.resourceType.key === "herbs");
   if (herbs && herbs.amount > 0) {
-    await prisma.resourceNode.update({ where: { id: herbs.id }, data: { amount: { decrement: 1 } } });
-    await prisma.creature.update({ where: { id: c.id }, data: { activity: "GATHERING", currentAction: "збирає трави" } });
-    return "gathered";
+    await enqueueCreatureAction({ creatureId: c.id, type: "GATHER_SPECIFIC", payload: { resourceKey: "herbs" }, durationMs: gatherDurationMs("herbs") });
+    return "queuedGather";
   }
 
   const exit = pick(c.location.exitsFrom);
-  if (isExit(exit)) {
-    await move(c, exit, "шукає трави");
-    return "moved";
-  }
-
-  return "idle";
+  if (isExit(exit)) return queueMove(c, exit, "шукає трави");
+  await enqueueCreatureAction({ creatureId: c.id, type: "REST", payload: {}, durationMs: actionDurationMs("REST") });
+  return "queuedRest";
 }
 
 async function tickHerbivore(c: any) {
+  const hasFood = c.location.resources.some((r: any) => r.amount > 0 && ["berries", "herbs", "mushrooms"].includes(r.resourceType.key));
+  if (hasFood && c.hunger > 0 && chance(60)) {
+    await enqueueCreatureAction({ creatureId: c.id, type: "EAT", payload: {}, durationMs: actionDurationMs("EAT") });
+    return "queuedEat";
+  }
+
   if (chance(50)) {
     const exit = pick(c.location.exitsFrom);
-    if (isExit(exit)) {
-      await move(c, exit, "шукає їжу");
-      return "moved";
-    }
+    if (isExit(exit)) return queueMove(c, exit, "шукає їжу");
   }
-  await prisma.creature.update({ where: { id: c.id }, data: { activity: "IDLE", currentAction: "прислухається" } });
-  return "idle";
+
+  await enqueueCreatureAction({ creatureId: c.id, type: "LOOK", payload: {}, durationMs: actionDurationMs("LOOK") });
+  return "queuedLook";
 }
 
 async function tickCarnivore(c: any) {
   const prey = await prisma.creature.findFirst({ where: { isAlive: true, isGone: false, locationId: c.locationId, species: { diet: "HERBIVORE" } } });
   if (prey) {
-    await prisma.creature.update({ where: { id: c.id }, data: { activity: "LOOKING", currentAction: "вистежує здобич" } });
-    return "looking";
+    await enqueueCreatureAction({ creatureId: c.id, type: "LOOK", payload: { targetType: "creature", targetId: prey.id }, durationMs: actionDurationMs("LOOK") });
+    return "queuedLook";
   }
+
   if (chance(50)) {
     const exit = pick(c.location.exitsFrom);
-    if (isExit(exit)) {
-      await move(c, exit, "патрулює");
-      return "moved";
-    }
+    if (isExit(exit)) return queueMove(c, exit, "патрулює");
   }
-  return "idle";
+
+  await enqueueCreatureAction({ creatureId: c.id, type: "REST", payload: {}, durationMs: actionDurationMs("REST") });
+  return "queuedRest";
 }
 
 type DepletedRegionResource = { regionId: number; regionName: string; resourceKey: string; resourceName: string; locationId: number };
@@ -349,6 +274,7 @@ async function putLisovykToSleepIfForestRecovered() {
   const total = await prisma.resourceNode.aggregate({ where: { location: { regionId }, resourceType: { key: resourceKey } }, _sum: { amount: true } });
   if ((total._sum.amount ?? 0) <= 0) return false;
   const resource = await prisma.resourceType.findUnique({ where: { key: resourceKey } });
+  await prisma.worldAction.updateMany({ where: { actorType: "CREATURE", creatureId: lisovyk.id, status: { in: ["QUEUED", "RUNNING"] } }, data: { status: "CANCELLED" } });
   await prisma.creature.update({ where: { id: lisovyk.id }, data: { isAlive: false, activity: "RESTING", currentAction: `заснув: ресурс ${resourceKey} відновився` } });
   await prisma.worldEvent.create({ data: { type: "NPC_SAY", title: "Лісовик заснув", description: `Дід Чорноліс відчув, що ресурс «${resource?.name ?? resourceKey}» у лісі відновився. Він перестає полювати на людей і ховається там, де був.`, locationId: lisovyk.locationId } });
   if (botInstance) await notifyRegion(botInstance, regionId, `🌲 Дід Чорноліс відчув, що ліс відновився.\n\nВін перестає полювати за людьми в лісі, ховається між деревами й засинає.`);
@@ -371,7 +297,7 @@ async function regenerateResourcesIfNeeded() {
 export async function worldTick() {
   if (running) return;
   running = true;
-  let moved = 0, gathered = 0, idle = 0, looking = 0, errors = 0, regenerated = 0;
+  let queuedMove = 0, queuedGather = 0, queuedEat = 0, queuedLook = 0, queuedSay = 0, queuedRest = 0, skippedBusy = 0, errors = 0, regenerated = 0;
   let aged = 0, oldAgeDeaths = 0, corpsesDecaying = 0, corpsesGone = 0;
   let lisovykAwakened = false, lisovykSlept = false;
   try {
@@ -386,24 +312,50 @@ export async function worldTick() {
     lisovykAwakened = await wakeLisovykIfNeeded();
     regenerated = await regenerateResourcesIfNeeded();
     if (!lisovykAwakened) lisovykSlept = await putLisovykToSleepIfForestRecovered();
-    const creatures = await prisma.creature.findMany({ where: { isAlive: true, isGone: false }, include: { species: true, location: { include: { exitsFrom: true, resources: { include: { resourceType: true } } } } } });
+
+    const creatures = await prisma.creature.findMany({
+      where: { isAlive: true, isGone: false },
+      include: { species: true, location: { include: { exitsFrom: true, resources: { include: { resourceType: true } } } } },
+    });
+
     for (const c of creatures) {
       try {
-        let result = "idle";
+        if (await hasActiveCreatureActions(c.id)) {
+          skippedBusy++;
+          continue;
+        }
+
+        let result = "queuedRest";
         if (c.species.key === "herbalist") result = await tickHerbalist(c);
-        else if (c.species.key === "lisovyk") result = "looking";
+        else if (c.species.key === "lisovyk") result = "queuedLook";
         else if (c.species.diet === "HERBIVORE") result = await tickHerbivore(c);
         else if (c.species.diet === "CARNIVORE") result = await tickCarnivore(c);
-        if (result === "moved") moved++; else if (result === "gathered") gathered++; else if (result === "looking") looking++; else idle++;
-      } catch (error) { errors++; if (DEBUG) console.warn("Creature tick failed:", error); }
+        else {
+          await enqueueCreatureAction({ creatureId: c.id, type: "REST", payload: {}, durationMs: actionDurationMs("REST") });
+          result = "queuedRest";
+        }
+
+        if (result === "queuedMove") queuedMove++;
+        else if (result === "queuedGather") queuedGather++;
+        else if (result === "queuedEat") queuedEat++;
+        else if (result === "queuedLook") queuedLook++;
+        else if (result === "queuedSay") queuedSay++;
+        else queuedRest++;
+      } catch (error) {
+        errors++;
+        if (DEBUG) console.warn("Creature tick failed:", error);
+      }
     }
-    if (DEBUG) console.log(`[WORLD TICK] done: processed=${moved + gathered + idle + looking}, moved=${moved}, gathered=${gathered}, looking=${looking}, idle=${idle}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}`);
-    await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "World Tick", description: `Tick #${tickNumber}: moved=${moved}, gathered=${gathered}, looking=${looking}, idle=${idle}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}` } });
+
+    if (DEBUG) console.log(`[WORLD TICK] done: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}`);
+    await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "World Tick", description: `Tick #${tickNumber}: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}` } });
     if (botInstance && tickNumber % 5 === 0) {
       const region = await prisma.region.findFirst();
-      if (region) await notifyRegion(botInstance, region.id, `🌿 Світ ворухнувся.\n\nТік #${tickNumber}: рухів — ${moved}, збору — ${gathered}, старість — ${aged}, смертей від старості — ${oldAgeDeaths}, зниклих трупів — ${corpsesGone}, відновлено вузлів — ${regenerated}.`);
+      if (region) await notifyRegion(botInstance, region.id, `🌿 Світ ворухнувся.\n\nТік #${tickNumber}: заплановано рухів — ${queuedMove}, збору — ${queuedGather}, їжі — ${queuedEat}, оглядів — ${queuedLook}, зайнятих істот — ${skippedBusy}, старість — ${aged}, смертей від старості — ${oldAgeDeaths}, зниклих трупів — ${corpsesGone}, відновлено вузлів — ${regenerated}.`);
     }
-  } finally { running = false; }
+  } finally {
+    running = false;
+  }
 }
 
 function restartWorldTickTimer() {
@@ -417,7 +369,7 @@ function restartWorldTickTimer() {
 
 function registerTickCommands(bot: Bot) {
   bot.command("tick", async (ctx) => { await worldTick(); await ctx.reply("✅ World tick запущено вручну."); });
-  bot.command(["tickGet", "tickget"], async (ctx) => { await ctx.reply(`🌲 World tick\n\nІнтервал: ${tickIntervalMs} ms\nTick #: ${tickNumber}\nРегенерація ресурсів: раз на ${RESOURCE_REGEN_EVERY_TICKS} тіків, +${RESOURCE_REGEN_AMOUNT}`); });
+  bot.command(["tickGet", "tickget"], async (ctx) => { await ctx.reply(`🌲 World tick\n\nІнтервал: ${tickIntervalMs} ms\nTick #: ${tickNumber}\nРегенерація ресурсів: раз на ${RESOURCE_REGEN_EVERY_TICKS} тіків, +${RESOURCE_REGEN_AMOUNT}\nNPC/тварини: дії плануються через WorldAction queue.`); });
   bot.command(["tickSet", "tickset"], async (ctx) => {
     const value = Number(ctx.match?.trim());
     if (!Number.isFinite(value) || value < 1000) {

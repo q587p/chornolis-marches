@@ -1,7 +1,7 @@
 # 🌲 Chornolis Marches
 
 Text-based Telegram RPG with a living ecosystem, inspired by MUDs, Ultima Online, and Ukrainian folklore.
-Tech: living cell-based world, PostgreSQL persistence, Render deployment, world ticks, creature aging, corpse lifecycle, and a simple status page.
+Tech: living cell-based world, PostgreSQL persistence, Render deployment, world ticks, creature aging, corpse lifecycle, delayed player action queues, and a simple status page.
 
 ## 🧠 Vision
 
@@ -13,6 +13,7 @@ A living world simulation:
 * 🌿 Resources grow and get depleted
 * 🦴 Animals age, die, leave corpses, and feed the forest
 * 👤 Players interfere and upset the balance
+* 🧭 Player actions take time and can be queued into routes and plans
 
 ## 🏗 Tech Stack
 
@@ -43,12 +44,19 @@ src/
 ## 🌍 Current features
 
 * Cell-based world grid with directional movement.
+* Persistent delayed action queue for players, NPCs and animals.
+* Delayed player action queue:
+  * movement is no longer instant;
+  * repeated movement/resource buttons append actions to a visible plan;
+  * `/queue` shows current and queued actions;
+  * queue buttons can cancel the running action or clear waiting actions.
 * Resource nodes: berries, mushrooms, herbs.
 * Player inventory for gathered resources.
+* Queued player actions: movement, gathering, look, inspect, greet, attack, freshen, say and track placeholder.
 * Individual creature records, not abstract population counters.
 * World tick loop:
   * autonomous herbalist;
-  * simple animal wandering/tracking;
+  * simple animal wandering/tracking through queued creature actions;
   * resource regeneration;
   * Lisovyk awakening/recovery loop;
   * animal aging and corpse decay.
@@ -67,8 +75,14 @@ src/
 * [x] Creatures and simple NPC/animal visibility
 * [x] Admin/status commands
 * [x] Async world ticks
+* [x] Persistent delayed action queue
 * [x] Creature aging
 * [x] Corpse lifecycle
+* [x] Delayed player action queue
+* [x] Queued movement and gathering
+* [ ] Queue-aware interruption by combat, traps, danger and death
+* [ ] Skill/stat modifiers for action duration
+* [ ] Queue-aware skinning, trap setting, resting and crafting
 * [ ] Reproduction and offspring
 * [ ] Predator hunting priority by age/HP/sex
 * [ ] Track system with fading footprints/scents/signs
@@ -82,11 +96,12 @@ src/
 
 - `/start` — enter the world
 - `/me` — show character state and inventory
-- `/look` — spend a tick to inspect the current location
+- `/look` — queue a careful inspection of the current location
+- `/say text` — queue speech to everyone in the current location
+- `/queue` — show current queued player actions
 - `/world` — show technical world status
 - `/all` — show living players and creatures
 - `/all dead` — show all creature records, including corpses/gone records
-- `/say text` — say something to everyone in the current location
 - `/tick` — manually run one world tick
 - `/tickGet` — show world tick settings
 - `/tickSet <ms>` — change tick interval at runtime
@@ -117,7 +132,7 @@ DATABASE_URL=...
 Run migrations and seed:
 
 ```bash
-npx prisma db push
+npx prisma migrate deploy
 npm run seed
 npm run build
 npm run dev
@@ -153,6 +168,7 @@ Environment variables:
 * Database migrations are required before deploy.
 * Keep `src/bot.ts` as composition only; add new gameplay in `handlers/` and `services/`.
 * `npm run seed` seeds world structure, resources, species, lifecycle profiles, and unique NPCs only; animals are debug-spawned via `/addCreature` for now.
+* Player/NPC/animal action delays are persisted in `WorldAction`, not stored in memory-only `setTimeout` jobs.
 
 ## 🧙 Inspiration
 

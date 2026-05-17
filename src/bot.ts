@@ -3,7 +3,9 @@ import { config } from "./config";
 import { setLastRuntimeError } from "./runtimeState";
 import { startHttpServer } from "./server/statusServer";
 import { announceWorldUpdatedOnce } from "./services/deployAnnouncements";
+import { startActionQueueLoop } from "./services/actionQueue";
 import { startWorldTickLoop } from "./services/worldTick";
+import { registerActionQueueHandlers } from "./handlers/actionQueue";
 import { registerAutoHandlers } from "./handlers/auto";
 import { registerGatherHandlers } from "./handlers/gather";
 import { registerLookHandlers } from "./handlers/look";
@@ -27,6 +29,7 @@ registerSayHandlers(bot);
 registerMovementHandlers(bot);
 registerGatherHandlers(bot);
 registerSocialHandlers(bot);
+registerActionQueueHandlers(bot);
 
 bot.catch((error) => {
   setLastRuntimeError(error.error);
@@ -39,5 +42,6 @@ announceWorldUpdatedOnce(bot).catch((error) => {
   console.warn("World update announcement failed:", error);
 });
 startWorldTickLoop(bot);
+startActionQueueLoop(bot);
 
 bot.start();

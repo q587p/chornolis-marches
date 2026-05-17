@@ -24,19 +24,6 @@ model Player {
   stamina Int @default(20)
   hunger  Int @default(0)
 
-  // Ukrainian grammar / onboarding
-  onboardingComplete Boolean @default(false)
-  pronoun            PlayerPronoun?
-  nameNominative     String?
-  nameGenitive       String?
-  nameDative         String?
-  nameAccusative     String?
-  nameInstrumental   String?
-  nameLocative       String?
-  nameVocative       String?
-  grammaticalGender  GrammaticalGender?
-  animacy            Animacy @default(ANIMATE)
-
   // статистика
   steps             Int @default(0)
   looks             Int @default(0)
@@ -51,7 +38,20 @@ model Player {
 
   lastActionAt DateTime?
 
+  onboardingComplete Boolean @default(false)
+  pronoun            PlayerPronoun?
+  nameNominative     String?
+  nameGenitive       String?
+  nameDative         String?
+  nameAccusative     String?
+  nameInstrumental   String?
+  nameLocative       String?
+  nameVocative       String?
+  grammaticalGender  GrammaticalGender?
+  animacy            Animacy @default(ANIMATE)
+
   resources PlayerResource[]
+  actions   WorldAction[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -134,14 +134,14 @@ model CreatureSpecies {
   name        String
   description String?
 
-  nameGenitive     String?
-  nameDative       String?
-  nameAccusative   String?
-  nameInstrumental String?
-  nameLocative     String?
-  nameVocative     String?
-  grammaticalGender GrammaticalGender @default(MASCULINE)
-  animacy           Animacy @default(ANIMATE)
+  nameGenitive       String?
+  nameDative         String?
+  nameAccusative     String?
+  nameInstrumental   String?
+  nameLocative       String?
+  nameVocative       String?
+  grammaticalGender  GrammaticalGender @default(MASCULINE)
+  animacy            Animacy @default(ANIMATE)
 
   kind CreatureKind
   diet DietType
@@ -178,9 +178,7 @@ model Creature {
   locationId Int
   location   CellLocation @relation(fields: [locationId], references: [id])
 
-  name String?
-
-  // Optional override for named NPCs/unique creatures.
+  name             String?
   nameGenitive     String?
   nameDative       String?
   nameAccusative   String?
@@ -197,11 +195,11 @@ model Creature {
   currentAction String?
 
   // Lifecycle. Time is stopped for players and named/NPC creatures; animals keep aging.
-  age                 CreatureAge @default(ADULT)
-  ageTicks            Int @default(0)
-  diedAtTick          Int?
+  age                  CreatureAge @default(ADULT)
+  ageTicks             Int @default(0)
+  diedAtTick           Int?
   corpseDecayTicksLeft Int?
-  isGone              Boolean @default(false)
+  isGone               Boolean @default(false)
 
   // статистика
   steps             Int @default(0)
@@ -213,6 +211,8 @@ model Creature {
   sex CreatureSex?
 
   isAlive Boolean @default(true)
+
+  actions   WorldAction[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -269,6 +269,42 @@ model PlayerResource {
   updatedAt DateTime @updatedAt
 
   @@unique([playerId, resourceTypeId])
+}
+
+// =======================
+// ACTION QUEUE
+// =======================
+
+model WorldAction {
+  id Int @id @default(autoincrement())
+
+  actorType WorldActorType
+
+  playerId Int?
+  player   Player? @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  creatureId Int?
+  creature   Creature? @relation(fields: [creatureId], references: [id], onDelete: Cascade)
+
+  type   WorldActionType
+  status WorldActionStatus @default(QUEUED)
+
+  payload Json
+
+  position   Int
+  durationMs Int
+  startedAt  DateTime?
+  executeAt  DateTime?
+
+  chatId    String?
+  messageId Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([actorType, playerId, status, position])
+  @@index([actorType, creatureId, status, position])
+  @@index([status, executeAt])
 }
 
 // =======================
@@ -372,6 +408,36 @@ enum PlayerPronoun {
   HE
   SHE
   THEY
+}
+
+enum WorldActorType {
+  PLAYER
+  CREATURE
+}
+
+enum WorldActionType {
+  MOVE
+  GATHER
+  GATHER_SPECIFIC
+  EAT
+  LOOK
+  INSPECT
+  GREET
+  ATTACK
+  FRESHEN
+  SAY
+  TRACK
+  REST
+  SET_TRAP
+  WAIT
+}
+
+enum WorldActionStatus {
+  QUEUED
+  RUNNING
+  DONE
+  FAILED
+  CANCELLED
 }
 
 // 🔥 НЕ ЗВУЖУВАТИ!

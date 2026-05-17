@@ -23,6 +23,14 @@ export function buildMovementKeyboard(exits: any[]) {
   return keyboard;
 }
 
+export function buildActionQueueKeyboard() {
+  return new InlineKeyboard()
+    .text("📋 Черга", "queue:status")
+    .text("✋ Скасувати поточну", "queue:cancel-current")
+    .row()
+    .text("🧹 Очистити чергу", "queue:clear");
+}
+
 export function buildTrackKeyboard() {
   return new InlineKeyboard().text("👣 Відслідкувати", "track");
 }

@@ -6,6 +6,80 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.7.0 - universal delayed action queue - 12026-05-17
+
+### ✨ Added
+
+- Added persistent universal world action queue stored in PostgreSQL via new `WorldAction` model.
+- Added Prisma enums:
+  - `WorldActorType`;
+  - `WorldActionType`;
+  - `WorldActionStatus`.
+- `WorldAction` supports both actor kinds:
+  - players;
+  - creatures, including animals and NPCs.
+- Added action queue service:
+  - starts queued actions;
+  - completes due actions;
+  - validates action state at execution time;
+  - survives bot restarts/deploys because actions are no longer only in memory.
+- Added `/queue` command for showing the current player action plan.
+- Added inline queue controls:
+  - `📋 Черга`;
+  - `✋ Скасувати поточну`;
+  - `🧹 Очистити чергу`.
+
+### 🎮 Gameplay / UX
+
+- Movement is no longer instant for players.
+- Pressing a direction button now adds movement to the player's action queue.
+- Repeated movement presses build a route-like plan, e.g. north → east → south.
+- Gathering also goes through the same queue, so players can mix movement and gathering in one plan.
+- Player actions now queued:
+  - movement;
+  - gathering;
+  - `/look` / `Придивитися`;
+  - target inspection;
+  - greeting;
+  - attack;
+  - corpse freshening;
+  - `/say`;
+  - tracking placeholder.
+- NPCs and animals now use the same queue for world tick actions:
+  - movement;
+  - gathering;
+  - eating;
+  - looking/tracking behavior;
+  - speaking;
+  - resting/waiting.
+- World tick now plans creature actions instead of instantly moving or gathering with creatures.
+- Movement notifications and location changes happen when the movement action finishes, not when the action is planned.
+- Gathering and social actions check the current location, target and resource availability at completion time, so stale queued actions can fail naturally if the world changed.
+
+### 🛠 Technical
+
+- Added `src/services/actionQueue.ts` as the central queue processor for players and creatures.
+- Added `src/handlers/actionQueue.ts` for `/queue` and queue control callbacks.
+- Updated `src/handlers/movement.ts` to enqueue movement instead of directly changing `currentLocationId`.
+- Updated `src/handlers/gather.ts` to enqueue gathering instead of using memory-only `runDelayed()`.
+- Updated `src/handlers/look.ts`, `src/handlers/social.ts` and `src/handlers/say.ts` to enqueue active player actions.
+- Updated `src/services/worldTick.ts` so animal/NPC behavior queues `WorldAction` records instead of applying movement/gather/eat instantly.
+- Added action queue gameplay constants:
+  - `DEFAULT_ACTION_DURATION_MS = 13_000`;
+  - `ACTION_QUEUE_POLL_MS = 1_000`;
+  - `MIN_ACTION_DURATION_MS = 1_000`;
+  - `MAX_QUEUED_ACTIONS_PER_ACTOR = 12`;
+  - per-action durations in `actionDurationConfig`.
+- `startActionQueueLoop(bot)` now starts beside the world tick loop in `src/bot.ts`.
+
+### 📝 Notes
+
+- This release intentionally keeps combat simple: queued attack still uses the current debug animal-kill behavior.
+- Predator hunting can later become queued `ATTACK`/`EAT` behavior without changing the overall queue architecture.
+- Future crafting, traps, resting effects, gathering professions and travel skills should reuse `WorldAction`.
+
+---
+
 ## 0.6.2 - compound Ukrainian names grammar - 12026-05-16
 
 ### ✨ Added

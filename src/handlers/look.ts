@@ -1,10 +1,7 @@
 import { Bot } from "grammy";
-import { TICK_MS } from "../gameConfig";
-import { prisma } from "../db";
-import { canSpendTicks } from "../services/cooldown";
-import { runDelayed } from "../services/delayedActions";
-import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
-import { renderLocationDetails } from "../services/locations";
+import { actionDurationMs, enqueuePlayerAction, renderPlayerActionQueue } from "../services/actionQueue";
+import { buildActionQueueKeyboard } from "../ui/keyboards";
+import { getPlayerByTelegramId } from "../services/players";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 
 export function registerLookHandlers(bot: Bot) {
@@ -15,18 +12,14 @@ export function registerLookHandlers(bot: Bot) {
     const player = await getPlayerByTelegramId(from.id);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
-    const ticks = 1;
-    const seconds = Math.round((ticks * TICK_MS) / 1000);
-    if (!canSpendTicks(String(from.id), ticks)) return void (await ctx.reply("Ти ще зайнятий."));
+    const durationMs = actionDurationMs("LOOK");
+    try {
+      await enqueuePlayerAction({ playerId: player.id, type: "LOOK", payload: {}, durationMs, chatId: ctx.chat?.id });
+    } catch (error) {
+      return void (await ctx.reply(error instanceof Error ? error.message : "Не вдалося додати дію."));
+    }
 
-    const locationId = player.currentLocationId ?? (await getStartLocationId());
-    await ctx.reply(`Ви починаєте уважно оглядатися (${seconds} с).`);
-
-    runDelayed("look", ticks, async () => {
-      await prisma.player.update({ where: { id: player.id }, data: { currentLocationId: locationId, looks: { increment: 1 } } });
-      const view = await renderLocationDetails(locationId, player.id);
-      await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
-    });
+    await ctx.reply(await renderPlayerActionQueue(player.id), { reply_markup: buildActionQueueKeyboard() });
   });
 
   bot.callbackQuery("look", async (ctx) => {
@@ -36,17 +29,22 @@ export function registerLookHandlers(bot: Bot) {
       return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
     }
 
-    const ticks = 1;
-    const seconds = Math.round((ticks * TICK_MS) / 1000);
-    if (!canSpendTicks(String(ctx.from.id), ticks)) return void (await safeAnswerCallbackQuery(ctx, "Ти ще зайнятий."));
+    const durationMs = actionDurationMs("LOOK");
+    try {
+      await enqueuePlayerAction({
+        playerId: player.id,
+        type: "LOOK",
+        payload: {},
+        durationMs,
+        chatId: ctx.chat?.id,
+        messageId: ctx.callbackQuery.message?.message_id,
+      });
+    } catch (error) {
+      await safeAnswerCallbackQuery(ctx, error instanceof Error ? error.message : "Не вдалося додати дію.");
+      return;
+    }
 
-    await safeAnswerCallbackQuery(ctx, `Огляд займе ${seconds} с.`);
-    await ctx.reply(`Ви починаєте уважно оглядатися (${seconds} с).`);
-
-    runDelayed("look callback", ticks, async () => {
-      await prisma.player.update({ where: { id: player.id }, data: { looks: { increment: 1 } } });
-      const view = await renderLocationDetails(player.currentLocationId!, player.id);
-      await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
-    });
+    await safeAnswerCallbackQuery(ctx, `Огляд додано в чергу (${Math.ceil(durationMs / 1000)} с).`);
+    await ctx.reply(await renderPlayerActionQueue(player.id), { reply_markup: buildActionQueueKeyboard() });
   });
 }

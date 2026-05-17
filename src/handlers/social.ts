@@ -1,30 +1,11 @@
 import { Bot, InlineKeyboard } from "grammy";
 import { prisma } from "../db";
 import { getPlayerByTelegramId } from "../services/players";
-import { notifyLocation } from "../services/notifications";
 import { buildTargetActionKeyboard } from "../ui/keyboards";
-import { logEvent } from "../services/worldEvents";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { creatureForms, playerForms, type NameForms } from "../services/grammar";
-
-const GREETINGS = [
-  "Вітаю тебе в тіні Чорнолісу.",
-  "Хай стежка буде м’якою під ногами.",
-  "Доброго здоров’я, подорожній.",
-  "Ліс бачить нас обох.",
-  "Мир тобі, поки мир тримається.",
-  "Нехай коріння не плутає твої кроки.",
-  "Слава добрій зустрічі.",
-  "Хай вітер несе добрі вісті.",
-  "Не бійся тіні, якщо вона твоя.",
-  "Радий бачити живу душу тут.",
-  "Вітаю, поки ніч не стала густішою.",
-  "Хай Чорноліс сьогодні мовчить до тебе лагідно.",
-];
-
-function pick<T>(items: T[]) {
-  return items[Math.floor(Math.random() * items.length)];
-}
+import { actionDurationMs, enqueuePlayerAction, renderPlayerActionQueue } from "../services/actionQueue";
+import { buildActionQueueKeyboard } from "../ui/keyboards";
 
 function formatSex(sex: string | null | undefined) {
   if (sex === "MALE") return "самець";
@@ -52,13 +33,6 @@ function formatPlayerStats(target: any) {
   ].join("\n");
 }
 
-function formatTargetIntro(target: ResolvedTarget, isMystery: boolean) {
-  if (!isMystery) return `👁 Ви придивляєтесь до ${target.forms.genitive}.`;
-  if (target.kind === "creature" && target.isCorpse) return "👁 Ви придивляєтесь до того, що лежить нерухомо.";
-  if (target.kind === "creature" && target.isAnimal) return "👁 Ви придивляєтесь до цієї істоти.";
-  return "👁 Ви придивляєтесь до цієї постаті.";
-}
-
 type ResolvedTarget = {
   kind: "player" | "creature";
   id: number;
@@ -72,14 +46,8 @@ type ResolvedTarget = {
 };
 
 function buildCorpseActionKeyboard(target: ResolvedTarget) {
-  const keyboard = new InlineKeyboard()
-    .text("👁 Оглянути ще раз", `social:inspect:${target.kind}:${target.id}:known`)
-    .row();
-
-  if (target.canFreshen) {
-    keyboard.text("🔪 Освіжувати", `social:freshen:${target.kind}:${target.id}:known`).row();
-  }
-
+  const keyboard = new InlineKeyboard().text("👁 Оглянути ще раз", `social:inspect:${target.kind}:${target.id}:known`).row();
+  if (target.canFreshen) keyboard.text("🔪 Освіжувати", `social:freshen:${target.kind}:${target.id}:known`).row();
   return keyboard;
 }
 
@@ -92,9 +60,7 @@ async function resolveTarget(type: string, id: number, locationId: number): Prom
   if (type === "player") {
     const target = await prisma.player.findFirst({ where: { id, currentLocationId: locationId } });
     if (!target) return null;
-
     const forms = playerForms(target);
-
     return {
       kind: "player",
       id: target.id,
@@ -109,12 +75,8 @@ async function resolveTarget(type: string, id: number, locationId: number): Prom
   }
 
   if (type === "creature") {
-    const target = await prisma.creature.findFirst({
-      where: { id, locationId, isGone: false },
-      include: { species: true },
-    });
+    const target = await prisma.creature.findFirst({ where: { id, locationId, isGone: false }, include: { species: true } });
     if (!target) return null;
-
     const forms = creatureForms(target);
     const isAnimal = target.species.kind === "ANIMAL";
     const isCorpse = !target.isAlive && target.age === "CORPSE";
@@ -190,10 +152,10 @@ export function registerSocialHandlers(bot: Bot) {
   });
 
   bot.callbackQuery(/^social:(greet|inspect|attack|freshen):(player|creature):(\d+)(?::(known|mystery))?$/, async (ctx) => {
-    const action = ctx.match[1];
-    const type = ctx.match[2];
+    const action = ctx.match[1] as "greet" | "inspect" | "attack" | "freshen";
+    const type = ctx.match[2] as "player" | "creature";
     const targetId = Number(ctx.match[3]);
-    const mode = ctx.match[4] ?? "known";
+    const mode = (ctx.match[4] ?? "known") as "known" | "mystery";
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player || !player.currentLocationId) {
       await safeAnswerCallbackQuery(ctx);
@@ -206,104 +168,47 @@ export function registerSocialHandlers(bot: Bot) {
       return void (await editOrReply(ctx, "Цілі вже немає поруч. Можна спробувати відслідкувати слід."));
     }
 
-    const keyboard = buildActionKeyboard(target, true);
+    if (action === "greet" && !target.canGreet) return void (await safeAnswerCallbackQuery(ctx, "Ця ціль не відповість на привітання."));
+    if (action === "attack" && (target.kind !== "creature" || !target.isAnimal || target.isCorpse)) return void (await safeAnswerCallbackQuery(ctx, "Поки що можна атакувати тільки живих тварин."));
+    if (action === "freshen" && (!target.isCorpse || !target.canFreshen)) return void (await safeAnswerCallbackQuery(ctx, "Труп уже не підходить."));
 
-    if (action === "greet") {
-      if (!target.canGreet) {
-        await safeAnswerCallbackQuery(ctx, "Ця ціль не відповість на привітання.");
-        return void (await editOrReply(ctx, `${target.forms.nominative} не виглядає співрозмовником.`, keyboard));
-      }
+    const typeMap = { greet: "GREET", inspect: "INSPECT", attack: "ATTACK", freshen: "FRESHEN" } as const;
+    const durationMs = actionDurationMs(typeMap[action]);
 
-      const greeting = pick(GREETINGS);
-      await prisma.player.update({ where: { id: player.id }, data: { greetings: { increment: 1 } } });
-
-      await notifyLocation(bot, player.currentLocationId, player.id, `Хтось звертається до ${target.forms.genitive}: «${greeting}»`);
-      await safeAnswerCallbackQuery(ctx, "Ви привітались.");
-      await editOrReply(ctx, `Ви сказали ${target.forms.dative}: «${greeting}»`, keyboard);
-      await logEvent("GREET", "Player greeted target", `${target.kind}:${target.id}: ${greeting}`, player.currentLocationId);
-      return;
-    }
-
-    if (action === "inspect") {
-      await safeAnswerCallbackQuery(ctx);
-      await editOrReply(ctx, `${formatTargetIntro(target, mode === "mystery")}\n\n${target.inspect}`, keyboard);
-      await logEvent("INSPECT", "Player inspected target", `${target.kind}:${target.id}`, player.currentLocationId);
-      return;
-    }
-
-    if (action === "freshen") {
-      if (!target.isCorpse || !target.canFreshen) {
-        await safeAnswerCallbackQuery(ctx, "Труп уже не підходить.");
-        return void (await editOrReply(ctx, `${target.forms.nominative} уже надто розклався для освіжування.`, keyboard));
-      }
-
-      await safeAnswerCallbackQuery(ctx, "Ви освіжували труп.");
-      await editOrReply(ctx, `🔪 Ви освіжували ${target.forms.accusative}.\n\nПоки що це debug-дія без здобичі; пізніше тут будуть шкіра, м’ясо, кістки тощо.`, keyboard);
-      await logEvent("PLAYER_ACTION", "Player freshened corpse", `${target.kind}:${target.id}`, player.currentLocationId);
-      return;
-    }
-
-    if (action === "attack") {
-      if (target.kind !== "creature" || !target.isAnimal || target.isCorpse) {
-        await safeAnswerCallbackQuery(ctx, "Поки що можна атакувати тільки живих тварин.");
-        await editOrReply(ctx, "⚔️ Бойова система для цієї цілі ще не готова.", keyboard);
-        return;
-      }
-
-      const creature = await prisma.creature.findFirst({
-        where: {
-          id: target.id,
-          locationId: player.currentLocationId,
-          isAlive: true,
-          isGone: false,
-        },
-        include: {
-          species: true,
-        },
+    try {
+      await enqueuePlayerAction({
+        playerId: player.id,
+        type: typeMap[action],
+        payload: { targetType: type, targetId, mode },
+        durationMs,
+        chatId: ctx.chat?.id,
+        messageId: ctx.callbackQuery.message?.message_id,
       });
-
-      if (!creature) {
-        await safeAnswerCallbackQuery(ctx, "Цілі вже немає поруч.");
-        await editOrReply(ctx, "Цілі вже немає поруч. Можна спробувати відслідкувати слід.");
-        return;
-      }
-
-      await prisma.creature.update({
-        where: { id: creature.id },
-        data: {
-          hp: 0,
-          isAlive: false,
-          age: "CORPSE",
-          diedAtTick: null,
-          corpseDecayTicksLeft: creature.species.corpseDecayTicks,
-          activity: "RESTING",
-          currentAction: "лежить нерухомо",
-        },
-      });
-
-      await prisma.player.update({
-        where: { id: player.id },
-        data: {
-          animalsKilled: { increment: 1 },
-        },
-      });
-
-      await notifyLocation(bot, player.currentLocationId, player.id, `Хтось атакує і вбиває ${target.forms.accusative}.`);
-
-      const corpseTarget = await resolveTarget("creature", creature.id, player.currentLocationId);
-      const corpseKeyboard = corpseTarget ? buildActionKeyboard(corpseTarget, true) : keyboard;
-
-      await safeAnswerCallbackQuery(ctx, "Тварину вбито.");
-      await editOrReply(ctx, `⚔️ Ви атакували і вбили ${target.forms.accusative}. Труп лишився на землі.`, corpseKeyboard);
-
-      await logEvent("PLAYER_ACTION", "Player killed animal", `${target.kind}:${target.id}`, player.currentLocationId);
-
+    } catch (error) {
+      await safeAnswerCallbackQuery(ctx, error instanceof Error ? error.message : "Не вдалося додати дію.");
       return;
     }
+
+    await safeAnswerCallbackQuery(ctx, `Дію додано в чергу (${Math.ceil(durationMs / 1000)} с).`);
+    await ctx.reply(await renderPlayerActionQueue(player.id), { reply_markup: buildActionQueueKeyboard() });
   });
 
   bot.callbackQuery("track", async (ctx) => {
-    await safeAnswerCallbackQuery(ctx, "Система слідів ще в розробці.");
-    await ctx.reply("👣 Ви вдивляєтесь у сліди. Поки що відслідковування ще не реалізоване, але напрямок втечі відчутний у землі й траві.");
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    const durationMs = actionDurationMs("TRACK");
+    try {
+      await enqueuePlayerAction({ playerId: player.id, type: "TRACK", payload: {}, durationMs, chatId: ctx.chat?.id });
+    } catch (error) {
+      await safeAnswerCallbackQuery(ctx, error instanceof Error ? error.message : "Не вдалося додати дію.");
+      return;
+    }
+
+    await safeAnswerCallbackQuery(ctx, `Вистежування додано в чергу (${Math.ceil(durationMs / 1000)} с).`);
+    await ctx.reply(await renderPlayerActionQueue(player.id), { reply_markup: buildActionQueueKeyboard() });
   });
 }
