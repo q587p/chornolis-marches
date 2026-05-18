@@ -8,13 +8,29 @@ async function queueOptions(playerId: number) {
   return (await hasPlayerActionQueueControls(playerId)) ? { reply_markup: buildActionQueueKeyboard(true) } : undefined;
 }
 
+async function showQueue(ctx: any, playerId: number, prefix?: string) {
+  const text = `${prefix ? `${prefix}\n\n` : ""}${await renderPlayerActionQueue(playerId)}`;
+  const options = await queueOptions(playerId);
+
+  if (ctx.callbackQuery?.message) {
+    try {
+      await ctx.editMessageText(text, options);
+      return;
+    } catch {
+      // Fall back to a new message if Telegram cannot edit the source message.
+    }
+  }
+
+  await ctx.reply(text, options);
+}
+
 export function registerActionQueueHandlers(bot: Bot) {
   async function sendQueue(ctx: any) {
     if (!ctx.from) return;
 
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
-    await ctx.reply(await renderPlayerActionQueue(player.id), await queueOptions(player.id));
+    await showQueue(ctx, player.id);
   }
 
   bot.command("queue", async (ctx) => {
@@ -26,19 +42,17 @@ export function registerActionQueueHandlers(bot: Bot) {
     const arg = String(ctx.match || "").trim().toLowerCase();
     if (arg === "clear") {
       const result = await clearQueuedPlayerActions(player.id);
-      const text = `Прибрано з черги: ${result.count}.\n\n${await renderPlayerActionQueue(player.id)}`;
-      await ctx.reply(text, await queueOptions(player.id));
+      await showQueue(ctx, player.id, `Прибрано з черги/відпочинку: ${result.count}.`);
       return;
     }
 
     if (arg === "cancel" || arg === "cancel-current") {
       const result = await cancelCurrentPlayerAction(player.id);
-      const text = `Скасовано поточних дій: ${result.count}.\n\n${await renderPlayerActionQueue(player.id)}`;
-      await ctx.reply(text, await queueOptions(player.id));
+      await showQueue(ctx, player.id, `Скасовано поточних дій/відпочинку: ${result.count}.`);
       return;
     }
 
-    await ctx.reply(await renderPlayerActionQueue(player.id), await queueOptions(player.id));
+    await showQueue(ctx, player.id);
   });
   bot.hears("📋 Черга", sendQueue);
 
@@ -50,7 +64,7 @@ export function registerActionQueueHandlers(bot: Bot) {
     }
 
     await safeAnswerCallbackQuery(ctx);
-    await ctx.reply(await renderPlayerActionQueue(player.id), await queueOptions(player.id));
+    await showQueue(ctx, player.id);
   });
 
   bot.callbackQuery("queue:clear", async (ctx) => {
@@ -61,8 +75,8 @@ export function registerActionQueueHandlers(bot: Bot) {
     }
 
     const result = await clearQueuedPlayerActions(player.id);
-    await safeAnswerCallbackQuery(ctx, `Прибрано з черги: ${result.count}.`);
-    await ctx.reply(await renderPlayerActionQueue(player.id), await queueOptions(player.id));
+    await safeAnswerCallbackQuery(ctx, `Прибрано: ${result.count}.`);
+    await showQueue(ctx, player.id, `Прибрано з черги/відпочинку: ${result.count}.`);
   });
 
   bot.callbackQuery("queue:cancel-current", async (ctx) => {
@@ -73,7 +87,7 @@ export function registerActionQueueHandlers(bot: Bot) {
     }
 
     const result = await cancelCurrentPlayerAction(player.id);
-    await safeAnswerCallbackQuery(ctx, `Скасовано дій: ${result.count}.`);
-    await ctx.reply(await renderPlayerActionQueue(player.id), await queueOptions(player.id));
+    await safeAnswerCallbackQuery(ctx, `Скасовано: ${result.count}.`);
+    await showQueue(ctx, player.id, `Скасовано поточних дій/відпочинку: ${result.count}.`);
   });
 }

@@ -14,14 +14,14 @@ export function buildMovementKeyboard(exits: any[]) {
   const south = exits.find((e) => e.direction === "SOUTH");
   const west = exits.find((e) => e.direction === "WEST");
 
-  if (north) keyboard.text("⬆️ Північ", "move:NORTH").row();
+  if (north) keyboard.text("⬆️ Північ", "cmd:north").row();
 
-  if (west) keyboard.text("⬅️ Захід", "move:WEST");
+  if (west) keyboard.text("⬅️ Захід", "cmd:west");
   keyboard.text("🔎 Придивитися", "look");
-  if (east) keyboard.text("Схід ➡️", "move:EAST");
+  if (east) keyboard.text("Схід ➡️", "cmd:east");
   keyboard.row();
 
-  if (south) keyboard.text("⬇️ Південь", "move:SOUTH").row();
+  if (south) keyboard.text("⬇️ Південь", "cmd:south").row();
   return keyboard;
 }
 

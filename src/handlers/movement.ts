@@ -7,35 +7,67 @@ import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 
+const COMMAND_DIRECTIONS: Record<string, Direction> = {
+  north: "NORTH",
+  n: "NORTH",
+  south: "SOUTH",
+  s: "SOUTH",
+  west: "WEST",
+  w: "WEST",
+  east: "EAST",
+  e: "EAST",
+};
+
+async function submitMove(bot: Bot, ctx: any, direction: Direction, answerCallback = false) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) {
+    if (answerCallback) await safeAnswerCallbackQuery(ctx);
+    return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  }
+
+  const currentLocationId = player.currentLocationId ?? (await getStartLocationId());
+  const exit = await prisma.locationExit.findUnique({ where: { fromLocationId_direction: { fromLocationId: currentLocationId, direction } } });
+  if (!exit || exit.isHidden) {
+    if (answerCallback) return void (await safeAnswerCallbackQuery(ctx, "Туди немає видимого шляху."));
+    return void (await ctx.reply("Туди немає видимого шляху."));
+  }
+
+  const durationMs = movementDurationMs(exit.travelCost, player.stamina);
+
+  try {
+    const result = await performOrQueuePlayerAction(bot, {
+      playerId: player.id,
+      type: "MOVE",
+      payload: { direction },
+      durationMs,
+      chatId: ctx.chat?.id,
+      messageId: ctx.callbackQuery?.message?.message_id,
+    });
+
+    if (answerCallback) {
+      await safeAnswerCallbackQuery(ctx, result.mode === "immediate" ? `Ви рушили: ${directionLabels[direction].toLowerCase()}.` : `Додано: ${directionLabels[direction].toLowerCase()}.`);
+    }
+    await sendActionSubmitFeedback(ctx, player.id, result);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Не вдалося виконати дію.";
+    if (answerCallback) await safeAnswerCallbackQuery(ctx, message);
+    else await ctx.reply(message);
+  }
+}
+
 export function registerMovementHandlers(bot: Bot) {
   bot.callbackQuery(/^move:(NORTH|EAST|SOUTH|WEST|UP|DOWN|INSIDE|OUTSIDE)$/, async (ctx) => {
-    const direction = ctx.match[1] as Direction;
-    const player = await getPlayerByTelegramId(ctx.from.id);
-    if (!player) {
-      await safeAnswerCallbackQuery(ctx);
-      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
-    }
+    await submitMove(bot, ctx, ctx.match[1] as Direction, true);
+  });
 
-    const currentLocationId = player.currentLocationId ?? (await getStartLocationId());
-    const exit = await prisma.locationExit.findUnique({ where: { fromLocationId_direction: { fromLocationId: currentLocationId, direction } } });
-    if (!exit || exit.isHidden) return void (await safeAnswerCallbackQuery(ctx, "Туди немає видимого шляху."));
+  bot.callbackQuery(/^cmd:(north|south|west|east)$/, async (ctx) => {
+    await submitMove(bot, ctx, COMMAND_DIRECTIONS[ctx.match[1]], true);
+  });
 
-    const durationMs = movementDurationMs(exit.travelCost, player.stamina);
-
-    try {
-      const result = await performOrQueuePlayerAction(bot, {
-        playerId: player.id,
-        type: "MOVE",
-        payload: { direction },
-        durationMs,
-        chatId: ctx.chat?.id,
-        messageId: ctx.callbackQuery.message?.message_id,
-      });
-
-      await safeAnswerCallbackQuery(ctx, result.mode === "immediate" ? `Ви рушили: ${directionLabels[direction].toLowerCase()}.` : `Додано: ${directionLabels[direction].toLowerCase()}.`);
-      await sendActionSubmitFeedback(ctx, player.id, result);
-    } catch (error) {
-      await safeAnswerCallbackQuery(ctx, error instanceof Error ? error.message : "Не вдалося виконати дію.");
-    }
+  bot.command(["north", "n", "south", "s", "west", "w", "east", "e"], async (ctx) => {
+    const command = ctx.message?.text?.split(/\s+/)[0]?.replace(/^\//, "").toLowerCase();
+    const direction = command ? COMMAND_DIRECTIONS[command] : undefined;
+    if (!direction) return void (await ctx.reply("Невідомий напрямок."));
+    await submitMove(bot, ctx, direction, false);
   });
 }

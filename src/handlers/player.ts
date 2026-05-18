@@ -1,5 +1,6 @@
 import { Bot } from "grammy";
 import { prisma } from "../db";
+import { PASSIVE_STAMINA_REGEN_PER_INTERVAL, REST_STAMINA_REGEN_PER_INTERVAL } from "../gameConfig";
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { renderLocationBrief } from "../services/locations";
 import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
@@ -17,6 +18,17 @@ function fatigueText(player: any) {
   return "Відпочивший";
 }
 
+function recoveryText(player: any) {
+  const staminaMax = player.staminaMax ?? 13;
+  const remaining = Math.max(0, staminaMax - player.stamina);
+  if (remaining <= 0) return "";
+
+  const passiveMinutes = Math.ceil(remaining / PASSIVE_STAMINA_REGEN_PER_INTERVAL);
+  const restMinutes = Math.ceil(remaining / REST_STAMINA_REGEN_PER_INTERVAL);
+  if (player.isResting) return `\nВідновлення: приблизно ${restMinutes} хв під час відпочинку.`;
+  return `\nВідновлення без відпочинку: приблизно ${passiveMinutes} хв. Через /rest або 🛌 Відпочити: приблизно ${restMinutes} хв.`;
+}
+
 function formatPlayerStats(player: any) {
   return [
     `Пройдено локацій: ${player.steps}`,
@@ -29,6 +41,8 @@ function formatPlayerStats(player: any) {
     `Зібрано грибів: ${player.mushroomsGathered}`,
     `Зібрано трав: ${player.herbsGathered}`,
     `Убито тварин: ${player.animalsKilled}`,
+    `Почато відпочинків: ${player.restStarts ?? 0}`,
+    `Повних відновлень: ${player.restFullRecoveries ?? 0}`,
   ].join("\n");
 }
 
@@ -45,7 +59,7 @@ async function showCharacter(bot: Bot, telegramId: number, reply: (text: string,
   const items = player.resources.length ? player.resources.map((i) => `${i.resourceType.name} ×${i.amount}`).join("\n") : "порожньо";
   const staminaMax = player.staminaMax ?? 13;
 
-  await reply(`🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\nHP: ${player.hp}\nВитривалість: ${player.stamina}/${staminaMax}\nСтан: ${fatigueText(player)}\nГолод: ${player.hunger}\nЛокація: ${player.currentLocation?.name ?? "невідомо"}${autoText}\n\nІнвентар:\n${items}\n\nСтатистика:\n${formatPlayerStats(player)}`, {
+  await reply(`🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\nHP: ${player.hp}\nВитривалість: ${player.stamina}/${staminaMax}\nСтан: ${fatigueText(player)}${recoveryText(player)}\nГолод: ${player.hunger}\nЛокація: ${player.currentLocation?.name ?? "невідомо"}${autoText}\n\nІнвентар:\n${items}\n\nСтатистика:\n${formatPlayerStats(player)}`, {
     reply_markup: buildMainReplyKeyboard(autoEnabled),
   });
 }

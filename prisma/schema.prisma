@@ -38,6 +38,8 @@ model Player {
   berriesGathered   Int @default(0)
   mushroomsGathered Int @default(0)
   herbsGathered     Int @default(0)
+  restStarts        Int @default(0)
+  restFullRecoveries Int @default(0)
 
   lastActionAt DateTime?
   lastStaminaRegenAt DateTime @default(now())

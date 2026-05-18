@@ -5,11 +5,23 @@ import { buildRestWithQueueChoiceKeyboard } from "../ui/keyboards";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { actionQueueReplyOptions } from "../utils/actionQueueUi";
 
+async function replyOrEdit(ctx: any, text: string, options?: any) {
+  if (ctx.callbackQuery?.message) {
+    try {
+      await ctx.editMessageText(text, options);
+      return;
+    } catch {
+      // Fall back to a new message when Telegram cannot edit the source message.
+    }
+  }
+  await ctx.reply(text, options);
+}
+
 async function beginRestNow(ctx: any, playerId: number) {
   const hadQueue = await hasPlayerActionQueueControls(playerId);
   await startPlayerRest(playerId);
   const suffix = hadQueue ? "\n\nПоточну дію та чергу скасовано." : "";
-  await ctx.reply(`${await playerRestStatusText(playerId)}${suffix}`);
+  await replyOrEdit(ctx, `${await playerRestStatusText(playerId)}${suffix}`);
 }
 
 async function startRest(ctx: any) {
@@ -20,12 +32,12 @@ async function startRest(ctx: any) {
 
   const max = player.staminaMax ?? 13;
   if (player.stamina >= max && !player.isResting) {
-    await ctx.reply(`Ви вже відпочили й готові до дій. Витривалість: ${player.stamina}/${max}.`);
+    await replyOrEdit(ctx, `Ви вже відпочили й готові до дій. Витривалість: ${player.stamina}/${max}.`);
     return;
   }
 
   if (await hasPlayerActionQueueControls(player.id)) {
-    await ctx.reply("У вас зараз є черга дій. Почати відпочинок зараз і скасувати її, чи додати відпочинок у кінець черги?", {
+    await replyOrEdit(ctx, "У вас зараз є черга дій. Почати відпочинок зараз і скасувати її, чи додати відпочинок у кінець черги?", {
       reply_markup: buildRestWithQueueChoiceKeyboard(),
     });
     return;
@@ -63,7 +75,7 @@ export function registerRestHandlers(bot: Bot) {
 
     await queuePlayerRest(player.id, ctx.chat?.id);
     await safeAnswerCallbackQuery(ctx, "Відпочинок додано в чергу.");
-    await ctx.reply(await renderPlayerActionQueue(player.id), await actionQueueReplyOptions(player.id));
+    await replyOrEdit(ctx, await renderPlayerActionQueue(player.id), await actionQueueReplyOptions(player.id));
   });
 
   bot.callbackQuery("rest:interrupt", async (ctx) => {
@@ -76,7 +88,7 @@ export function registerRestHandlers(bot: Bot) {
     await stopPlayerRest(player.id);
     const accelerated = await accelerateFirstQueuedPlayerAction(player.id);
     await safeAnswerCallbackQuery(ctx, accelerated ? "Відпочинок перервано, дія починається." : "Відпочинок перервано.");
-    await ctx.reply(`Ви перервали відпочинок.\n\n${await renderPlayerActionQueue(player.id)}`, await actionQueueReplyOptions(player.id));
+    await replyOrEdit(ctx, `Ви перервали відпочинок.\n\n${await renderPlayerActionQueue(player.id)}`, await actionQueueReplyOptions(player.id));
   });
 
   bot.callbackQuery("rest:queue", async (ctx) => {
@@ -87,6 +99,6 @@ export function registerRestHandlers(bot: Bot) {
     }
 
     await safeAnswerCallbackQuery(ctx, "Дію залишено після відпочинку.");
-    await ctx.reply(`${await playerRestStatusText(player.id)}\n\n${await renderPlayerActionQueue(player.id)}`, await actionQueueReplyOptions(player.id));
+    await replyOrEdit(ctx, `${await playerRestStatusText(player.id)}\n\n${await renderPlayerActionQueue(player.id)}`, await actionQueueReplyOptions(player.id));
   });
 }

@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is loosely based on Keep a Changelog and this project follows semantic-ish versioning.
 ---
 
+### 0.7.3 - rest/queue/navigation follow-up - 12026-05-18
+
+### ✨ Added
+
+- Added typed movement commands:
+  - `/north` / `/n`;
+  - `/south` / `/s`;
+  - `/west` / `/w`;
+  - `/east` / `/e`.
+- Movement buttons now call the same command-style movement flow as typed commands.
+- Added `/gather` for general gathering from available local resources.
+- `/gather herbs`, `/gather berries`, and `/gather mushrooms` can still target a specific material.
+- Added rest statistics:
+  - how many times rest was started;
+  - how many times stamina was fully restored.
+- `/me` now shows approximate time to recover stamina passively and by active rest.
+
+### 🎮 Gameplay / UX
+
+- Queue start notifications no longer create a separate `Починаємо...` message; the queue/status message stays the main UI surface.
+- Rest interruption and rest queue choices now edit the existing prompt when possible instead of adding another message below it.
+- Queue `cancel current` and `clear` now also stop active rest, because rest is shown as part of the action plan.
+- `Очистити чергу` now cancels both queued and running interruptible player actions.
+- General and specific gathering now both use the same stamina cost: `5`, so the expected base duration is `65 с`, not `78 с`.
+
+### 🛠 Technical
+
+- Added migration `20260518072200_rest_statistics` for rest counters on `Player`.
+
+---
+
 ## 0.7.2 - stamina/rest queue UX fixes - 12026-05-18
 
 ### 🐛 Fixed

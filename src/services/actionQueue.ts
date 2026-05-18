@@ -18,7 +18,7 @@ import {
 } from "../gameConfig";
 import { setLastRuntimeError } from "../runtimeState";
 import { directionLabels } from "../ui/labels";
-import { buildActionQueueKeyboard, buildFatigueRestKeyboard, buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
+import { buildFatigueRestKeyboard, buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
 import { creatureForms, playerForms, type NameForms } from "./grammar";
 import { renderLocationBrief, renderLocationDetails } from "./locations";
 import { notifyLocation } from "./notifications";
@@ -31,7 +31,7 @@ type ActorRef =
   | { actorType: "CREATURE"; creatureId: number; playerId?: never };
 
 type MovePayload = { direction: Direction; reason?: string };
-type GatherPayload = { resourceKey: "berries" | "mushrooms" | "herbs" };
+type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
 type EatPayload = { resourceKey?: string };
 type SayPayload = { text: string };
 type SocialPayload = { targetType: "player" | "creature"; targetId: number; mode?: "known" | "mystery" };
@@ -189,11 +189,12 @@ function actionTitle(action: Pick<WorldAction, "type" | "payload" | "durationMs"
 
   if (action.type === "GATHER" || action.type === "GATHER_SPECIFIC") {
     const payload = action.payload as unknown as GatherPayload;
-    const names: Record<GatherPayload["resourceKey"], string> = {
+    const names: Record<NonNullable<GatherPayload["resourceKey"]>, string> = {
       berries: "ягоди",
       mushrooms: "гриби",
       herbs: "трави",
     };
+    if (!payload.resourceKey) return "збираємо щось поблизу";
     return `збираємо ${names[payload.resourceKey] ?? payload.resourceKey}`;
   }
 
@@ -430,6 +431,7 @@ export async function startPlayerRest(playerId: number) {
       isResting: true,
       fatigueState: fatigueStateFor(player.stamina, max),
       lastStaminaRegenAt: new Date(),
+      restStarts: player.isResting ? undefined : { increment: 1 },
     },
   });
 }
@@ -535,17 +537,39 @@ export async function hasPlayerActionQueueControls(playerId: number) {
 }
 
 export async function clearQueuedPlayerActions(playerId: number) {
-  return prisma.worldAction.updateMany({
+  const result = await prisma.worldAction.updateMany({
     where: { actorType: "PLAYER", playerId, status: { in: ["QUEUED", "RUNNING"] } },
     data: { status: "CANCELLED", note: "очищено гравцем" },
   });
+
+  const player = await prisma.player.findUnique({ where: { id: playerId } });
+  const stoppedRest = Boolean(player?.isResting);
+  if (stoppedRest) {
+    await prisma.player.update({
+      where: { id: playerId },
+      data: { isResting: false, fatigueState: fatigueStateFor(player!.stamina, player!.staminaMax ?? BASE_STAMINA), lastStaminaRegenAt: new Date() },
+    });
+  }
+
+  return { count: result.count + (stoppedRest ? 1 : 0) };
 }
 
 export async function cancelCurrentPlayerAction(playerId: number) {
-  return prisma.worldAction.updateMany({
+  const result = await prisma.worldAction.updateMany({
     where: { actorType: "PLAYER", playerId, status: "RUNNING", interruptible: true },
     data: { status: "CANCELLED", note: "скасовано гравцем" },
   });
+
+  const player = await prisma.player.findUnique({ where: { id: playerId } });
+  const stoppedRest = Boolean(player?.isResting);
+  if (stoppedRest) {
+    await prisma.player.update({
+      where: { id: playerId },
+      data: { isResting: false, fatigueState: fatigueStateFor(player!.stamina, player!.staminaMax ?? BASE_STAMINA), lastStaminaRegenAt: new Date() },
+    });
+  }
+
+  return { count: result.count + (stoppedRest ? 1 : 0) };
 }
 
 async function resolveTarget(type: string, id: number, locationId: number): Promise<ResolvedTarget | null> {
@@ -622,9 +646,10 @@ async function startNextQueuedAction(action: WorldAction) {
   });
 
   if (action.actorType === "PLAYER" && action.playerId && action.type === "REST") {
+    const player = await prisma.player.findUnique({ where: { id: action.playerId } });
     await prisma.player.update({
       where: { id: action.playerId },
-      data: { isResting: true, lastStaminaRegenAt: new Date() },
+      data: { isResting: true, lastStaminaRegenAt: new Date(), restStarts: player?.isResting ? undefined : { increment: 1 } },
     });
   }
 
@@ -771,34 +796,38 @@ async function completeMove(bot: Bot, action: WorldAction) {
 
 async function completeGather(bot: Bot, action: WorldAction) {
   const payload = payloadOf<GatherPayload>(action);
-  const cfg = gatherConfig[payload.resourceKey];
   const chatId = chatIdFromAction(action);
   const isPlayer = action.actorType === "PLAYER";
   const actor = isPlayer
     ? action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null
     : action.creatureId ? await prisma.creature.findUnique({ where: { id: action.creatureId }, include: { species: true } }) : null;
 
-  if (!actor || (isPlayer && !(actor as any).currentLocationId) || !cfg) {
+  if (!actor || (isPlayer && !(actor as any).currentLocationId)) {
     await prisma.worldAction.update({ where: { id: action.id }, data: { status: "FAILED" } });
     return;
   }
 
   const locationId = isPlayer ? (actor as any).currentLocationId : (actor as any).locationId;
   const durationSeconds = msToSeconds(action.durationMs);
-  const resource = await prisma.resourceNode.findFirst({ where: { locationId, resourceType: { key: payload.resourceKey }, amount: { gt: 0 } }, include: { resourceType: true, location: true } });
+  const resource = payload.resourceKey
+    ? await prisma.resourceNode.findFirst({ where: { locationId, resourceType: { key: payload.resourceKey }, amount: { gt: 0 } }, include: { resourceType: true, location: true } })
+    : pick(await prisma.resourceNode.findMany({ where: { locationId, amount: { gt: 0 }, resourceType: { key: { in: ["berries", "mushrooms", "herbs"] } } }, include: { resourceType: true, location: true } }));
+
+  const resourceKey = resource?.resourceType.key as "berries" | "mushrooms" | "herbs" | undefined;
+  const cfg = resourceKey ? gatherConfig[resourceKey] : undefined;
 
   if (isPlayer) {
     await spendPlayerStamina(bot, (actor as any).id, action.type, chatId);
     await prisma.player.update({ where: { id: (actor as any).id }, data: { gatherAttempts: { increment: 1 } } });
   } else {
     await spendCreatureStamina(actor as any, actionCost(action.type));
-    await prisma.creature.update({ where: { id: (actor as any).id }, data: { gatherAttempts: { increment: 1 }, activity: "GATHERING", currentAction: `збирає ${payload.resourceKey}` } });
+    await prisma.creature.update({ where: { id: (actor as any).id }, data: { gatherAttempts: { increment: 1 }, activity: "GATHERING", currentAction: resourceKey ? `збирає ${resourceKey}` : "шукає поживу" } });
   }
 
-  if (!resource || Math.random() > cfg.chance) {
+  if (!resource || !resourceKey || !cfg || Math.random() > cfg.chance) {
     await prisma.worldAction.update({ where: { id: action.id }, data: { status: "DONE" } });
     if (chatId) await bot.api.sendMessage(chatId, `Ви витратили час на пошуки (${durationSeconds} с), але нічого корисного не знайшли.`);
-    await logEvent(isPlayer ? "GATHER" : "NPC_ACTION", "Queued gather failed", payload.resourceKey, locationId);
+    await logEvent(isPlayer ? "GATHER" : "NPC_ACTION", "Queued gather failed", resourceKey ?? "random", locationId);
     return;
   }
 
@@ -813,7 +842,7 @@ async function completeGather(bot: Bot, action: WorldAction) {
       update: { amount: { increment: found } },
       create: { playerId: (actor as any).id, resourceTypeId: resource.resourceTypeId, amount: found },
     });
-    await prisma.player.update({ where: { id: (actor as any).id }, data: { successfulGathers: { increment: 1 }, [statFieldMap[payload.resourceKey]]: { increment: found } } });
+    await prisma.player.update({ where: { id: (actor as any).id }, data: { successfulGathers: { increment: 1 }, [statFieldMap[resourceKey]]: { increment: found } } });
     if (chatId) await bot.api.sendMessage(chatId, `Ви витратили час на пошуки (${durationSeconds} с) і знайшли: ${resource.resourceType.name} ×${found}.`);
   } else {
     await prisma.creature.update({ where: { id: (actor as any).id }, data: { successfulGathers: { increment: 1 }, currentAction: `зібрав ${resource.resourceType.name} ×${found}` } });
@@ -1051,7 +1080,15 @@ async function completeSimple(action: WorldAction) {
         const max = player.staminaMax ?? BASE_STAMINA;
         const payload = payloadOf<{ untilFull?: boolean }>(action);
         const next = payload.untilFull ? max : Math.min(max, player.stamina + REST_STAMINA_REGEN_PER_INTERVAL);
-        await prisma.player.update({ where: { id: player.id }, data: { stamina: next, fatigueState: fatigueStateFor(next, max), isResting: false } });
+        await prisma.player.update({
+          where: { id: player.id },
+          data: {
+            stamina: next,
+            fatigueState: fatigueStateFor(next, max),
+            isResting: false,
+            restFullRecoveries: next >= max && player.stamina < max ? { increment: 1 } : undefined,
+          },
+        });
       }
     }
     if (action.actorType === "CREATURE" && action.creatureId) {
@@ -1106,6 +1143,7 @@ async function recoverStamina(bot: Bot) {
         fatigueState: nextState,
         isResting: player.isResting && !fullyRested,
         lastStaminaRegenAt: nextRegenAt,
+        restFullRecoveries: fullyRested && player.isResting && before < max ? { increment: 1 } : undefined,
       },
     });
 
@@ -1165,8 +1203,6 @@ async function processActionQueue(bot: Bot) {
     if (running > 0) continue;
     startedActors.add(key);
     await startNextQueuedAction(action);
-    const chatId = chatIdFromAction(action);
-    if (chatId) await bot.api.sendMessage(chatId, `Починаємо: ${actionTitle(action)} (${msToSeconds(action.durationMs)} с).`, { reply_markup: buildActionQueueKeyboard(true) });
   }
 }
 
