@@ -1,6 +1,7 @@
 import { Bot } from "grammy";
 import { actionDurationMs, performOrQueuePlayerAction } from "../services/actionQueue";
 import { getPlayerByTelegramId } from "../services/players";
+import { renderLocationDetails } from "../services/locations";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 
@@ -44,4 +45,20 @@ export function registerLookHandlers(bot: Bot) {
       await safeAnswerCallbackQuery(ctx, error instanceof Error ? error.message : "Не вдалося виконати дію.");
     }
   });
+  bot.callbackQuery("location:details", async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player || !player.currentLocationId) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    const view = await renderLocationDetails(player.currentLocationId, player.id);
+    await safeAnswerCallbackQuery(ctx);
+    try {
+      await ctx.editMessageText(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+    } catch {
+      await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+    }
+  });
+
 }

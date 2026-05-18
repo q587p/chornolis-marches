@@ -377,7 +377,7 @@ export async function performOrQueuePlayerAction(bot: Bot, input: PlayerActionRe
         durationMs: 0,
         position: 1,
         startedAt: new Date(),
-        executeAt: new Date(),
+        executeAt: null,
         chatId: normalizedInput.chatId === undefined ? undefined : String(normalizedInput.chatId),
         messageId: normalizedInput.messageId,
       },
@@ -505,7 +505,7 @@ export async function renderPlayerActionQueue(playerId: number) {
     return `${prefix} Потім ${actionTitle(action)}`;
   }));
 
-  return `План дій:\n${lines.join("\\n")}`;
+  return `План дій:\n${lines.join("\n")}`;
 }
 
 
@@ -536,7 +536,7 @@ export async function hasPlayerActionQueueControls(playerId: number) {
 
 export async function clearQueuedPlayerActions(playerId: number) {
   return prisma.worldAction.updateMany({
-    where: { actorType: "PLAYER", playerId, status: "QUEUED" },
+    where: { actorType: "PLAYER", playerId, status: { in: ["QUEUED", "RUNNING"] } },
     data: { status: "CANCELLED", note: "очищено гравцем" },
   });
 }
@@ -635,7 +635,8 @@ async function startNextQueuedAction(action: WorldAction) {
 }
 
 async function completeAction(bot: Bot, action: WorldAction) {
-  if (action.status === "CANCELLED") return;
+  const latest = await prisma.worldAction.findUnique({ where: { id: action.id } });
+  if (!latest || latest.status !== "RUNNING") return;
   if (action.type === "MOVE") return completeMove(bot, action);
   if (action.type === "GATHER" || action.type === "GATHER_SPECIFIC") return completeGather(bot, action);
   if (action.type === "EAT") return completeEat(action);
@@ -850,6 +851,14 @@ async function completeLook(bot: Bot, action: WorldAction) {
     await prisma.worldAction.update({ where: { id: action.id }, data: { status: "DONE" } });
     if (chatId) {
       const view = await renderLocationDetails(locationId, player.id);
+      if (action.messageId && typeof chatId === "number") {
+        try {
+          await bot.api.editMessageText(chatId, action.messageId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+          return;
+        } catch {
+          // Fall back to a new message when Telegram cannot edit the source message.
+        }
+      }
       await bot.api.sendMessage(chatId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
     }
     return;

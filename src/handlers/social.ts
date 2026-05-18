@@ -48,6 +48,7 @@ type ResolvedTarget = {
 function buildCorpseActionKeyboard(target: ResolvedTarget) {
   const keyboard = new InlineKeyboard().text("👁 Оглянути ще раз", `social:inspect:${target.kind}:${target.id}:known`).row();
   if (target.canFreshen) keyboard.text("🔪 Освіжувати", `social:freshen:${target.kind}:${target.id}:known`).row();
+  keyboard.text("↩️ Назад", "location:details").row();
   return keyboard;
 }
 

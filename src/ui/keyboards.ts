@@ -63,6 +63,7 @@ export function buildAnonymousTargetKeyboard(target: Pick<TargetRef, "type" | "i
     .row();
 
   if (target.canGreet) keyboard.text("👋 Привітати", `social:greet:${target.type}:${target.id}:mystery`).row();
+  keyboard.text("↩️ Назад", "location:details").row();
   return keyboard;
 }
 
@@ -73,6 +74,7 @@ export function buildTargetActionKeyboard(target: Pick<TargetRef, "type" | "id" 
     .row();
 
   if (target.canGreet) keyboard.text("👋 Привітати", `social:greet:${target.type}:${target.id}:known`).row();
+  keyboard.text("↩️ Назад", "location:details").row();
   return keyboard;
 }
 
@@ -93,6 +95,7 @@ export function buildResourceMenuKeyboard(resources: { key: string; name: string
     keyboard.text(`🌿 ${resource.name}${resource.durationText ?? ""}`, `gather:${resource.key}`).row();
   }
 
+  keyboard.text("↩️ Назад", "location:details").row();
   return keyboard;
 }
 

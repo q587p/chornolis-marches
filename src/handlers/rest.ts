@@ -6,8 +6,10 @@ import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { actionQueueReplyOptions } from "../utils/actionQueueUi";
 
 async function beginRestNow(ctx: any, playerId: number) {
+  const hadQueue = await hasPlayerActionQueueControls(playerId);
   await startPlayerRest(playerId);
-  await ctx.reply(`${await playerRestStatusText(playerId)}\n\nПоточну дію та чергу скасовано.`);
+  const suffix = hadQueue ? "\n\nПоточну дію та чергу скасовано." : "";
+  await ctx.reply(`${await playerRestStatusText(playerId)}${suffix}`);
 }
 
 async function startRest(ctx: any) {

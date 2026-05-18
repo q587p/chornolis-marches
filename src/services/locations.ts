@@ -47,6 +47,36 @@ function actionSeconds(action: keyof typeof playerStaminaCostConfig) {
   return Math.ceil((cost * ACTION_BASE_DURATION_MS) / 1000);
 }
 
+
+function activeActionLabel(action: any) {
+  if (!action) return undefined;
+  if (action.type === "MOVE") return "йде";
+  if (action.type === "GATHER" || action.type === "GATHER_SPECIFIC") return "збирає";
+  if (action.type === "LOOK") return "придивляється";
+  if (action.type === "INSPECT") return "оглядає";
+  if (action.type === "GREET") return "вітається";
+  if (action.type === "ATTACK") return "атакує";
+  if (action.type === "FRESHEN") return "освіжує труп";
+  if (action.type === "SAY") return "говорить";
+  if (action.type === "TRACK") return "вистежує";
+  if (action.type === "REST") return "відпочиває";
+  if (action.type === "SET_TRAP") return "ставить пастку";
+  return "зайнятий";
+}
+
+function visibleActionText(target: { type: "player" | "creature"; id: number }, activeActions: Map<string, any>, location: any) {
+  const key = `${target.type}:${target.id}`;
+  const queued = activeActionLabel(activeActions.get(key));
+  if (queued) return ` — ${queued}`;
+
+  if (target.type === "creature") {
+    const creature = location.creatures.find((c: any) => c.id === target.id);
+    if (creature?.currentAction) return ` — ${creature.currentAction}`;
+  }
+
+  return "";
+}
+
 function resourceButtonData(resources: any[]) {
   return resources
     .filter((r) => r.amount > 0)
@@ -93,8 +123,25 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   if (!location) throw new Error("Location not found");
 
   const targets = visibleTargets(location, viewerPlayerId);
+  const playerTargetIds = targets.filter((t) => t.type === "player").map((t) => t.id);
+  const creatureTargetIds = targets.filter((t) => t.type === "creature").map((t) => t.id);
+  const activeActionsRaw = await prisma.worldAction.findMany({
+    where: {
+      status: { in: ["QUEUED", "RUNNING"] },
+      OR: [
+        playerTargetIds.length ? { actorType: "PLAYER", playerId: { in: playerTargetIds } } : { id: -1 },
+        creatureTargetIds.length ? { actorType: "CREATURE", creatureId: { in: creatureTargetIds } } : { id: -1 },
+      ],
+    },
+    orderBy: [{ status: "desc" }, { position: "asc" }, { id: "asc" }],
+  });
+  const activeActions = new Map<string, any>();
+  for (const action of activeActionsRaw) {
+    const key = action.actorType === "PLAYER" ? `player:${action.playerId}` : `creature:${action.creatureId}`;
+    if (!activeActions.has(key)) activeActions.set(key, action);
+  }
   const charactersText = targets.length
-    ? `\n\nПоруч:\n${targets.map((x) => `- ${escapeHtml(x.label)}${x.canGreet ? "" : " <i>(тварина/об’єкт)</i>"}`).join("\n")}`
+    ? `\n\nПоруч:\n${targets.map((x) => `- ${escapeHtml(x.label)}${x.canGreet ? "" : " <i>(тварина/об’єкт)</i>"}${escapeHtml(visibleActionText(x, activeActions, location))}`).join("\n")}`
     : "";
 
   const resourceLines = location.resources
