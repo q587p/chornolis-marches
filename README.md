@@ -51,15 +51,15 @@ src/
   * `Втомлений`;
   * `Дуже втомлений`;
   * `Відпочиває` while active rest is running.
-* Action priorities: urgent actions such as attacks can jump ahead of slower plans.
-* Interrupts: urgent queued actions can cancel interruptible running/waiting actions.
+* Action priorities are used for interruption, not for reordering normal route plans.
+* Interrupts: urgent actions such as attacks can cancel interruptible running/waiting actions.
 * Fading `WorldTrack` records for movement; `/track` can now report recent traces around the current location.
-* Stamina/rest loop: base stamina is 13; action duration is stamina cost × 13 seconds; rest restores stamina faster than passive recovery.
+* Stamina/rest loop: base stamina is 13; while stamina is non-negative, player actions execute immediately; tired actions go into the queue with duration = stamina cost × 13 seconds.
 * Delayed player action queue:
-  * movement is no longer instant;
-  * repeated movement/resource buttons append actions to a visible plan;
-  * `/queue` shows current and queued actions;
-  * queue buttons can cancel the running action or clear waiting actions.
+  * actions execute immediately while the player still has stamina;
+  * tired actions append to a visible plan in FIFO order;
+  * `/queue` shows current and queued actions; when it is empty, it shows only `Черга дій порожня.`;
+  * queue buttons can cancel the running action or clear waiting actions, and are hidden when there is nothing to manage.
 * Resource nodes: berries, mushrooms, herbs.
 * Player inventory for gathered resources.
 * Queued player actions: movement, gathering, look, inspect, greet, attack, freshen, say and track placeholder.
@@ -110,13 +110,13 @@ src/
 
 - `/start` — enter the world
 - `/me` — show character state and inventory
-- `/look` — queue a careful inspection of the current location
-- `/queue` — show current action plan and queue controls
+- `/look` — inspect the current location immediately while rested, or queue it while tired
+- `/queue` — show current action plan; empty queues show no inline controls
 - `/rest` — cancel active/waiting actions and start active rest
 - `/world` — show technical world status
 - `/all` — show living players and creatures
 - `/all dead` — show all creature records, including corpses/gone records
-- `/say text` — queue speech to everyone in the current location
+- `/say text` — speak immediately while rested, or queue speech while tired
 - `/queue clear` — remove waiting actions
 - `/queue cancel` — cancel the current interruptible action
 - `🛌 Відпочити` — start rest from the reply keyboard

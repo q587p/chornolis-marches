@@ -18,7 +18,7 @@ import {
 } from "../gameConfig";
 import { setLastRuntimeError } from "../runtimeState";
 import { directionLabels } from "../ui/labels";
-import { buildActionQueueKeyboard, buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
+import { buildActionQueueKeyboard, buildFatigueRestKeyboard, buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
 import { creatureForms, playerForms, type NameForms } from "./grammar";
 import { renderLocationBrief, renderLocationDetails } from "./locations";
 import { notifyLocation } from "./notifications";
@@ -148,7 +148,8 @@ function fatigueStateFor(stamina: number, staminaMax = BASE_STAMINA): FatigueSta
   return "RESTED";
 }
 
-function fatigueLabel(state: FatigueState) {
+function fatigueLabel(state: FatigueState, isResting = false) {
+  if (isResting) return "Відпочиває";
   if (state === "VERY_TIRED") return "Дуже втомлений";
   if (state === "TIRED") return "Втомлений";
   return "Відпочивший";
@@ -304,7 +305,7 @@ export async function enqueueWorldAction(input: EnqueueInput) {
   });
 }
 
-export async function enqueuePlayerAction(input: {
+type PlayerActionRequest = {
   playerId: number;
   type: WorldActionType;
   payload?: ActionPayload;
@@ -316,7 +317,17 @@ export async function enqueuePlayerAction(input: {
   note?: string;
   chatId?: number | string;
   messageId?: number;
-}) {
+};
+
+type PlayerActionSubmitResult = {
+  action: WorldAction;
+  mode: "queued" | "immediate";
+  wasResting: boolean;
+  shouldPromptRestChoice: boolean;
+  remainingToMax: number;
+};
+
+export async function enqueuePlayerAction(input: PlayerActionRequest): Promise<PlayerActionSubmitResult> {
   const player = await prisma.player.findUnique({ where: { id: input.playerId } });
   const queuedBefore = await prisma.worldAction.count({
     where: { actorType: "PLAYER", playerId: input.playerId, status: { in: ["QUEUED", "RUNNING"] } },
@@ -326,10 +337,82 @@ export async function enqueuePlayerAction(input: {
 
   return {
     action,
+    mode: "queued",
     wasResting,
     shouldPromptRestChoice: wasResting && queuedBefore === 0,
     remainingToMax: player ? Math.max(0, (player.staminaMax ?? BASE_STAMINA) - player.stamina) : 0,
   };
+}
+
+export async function performOrQueuePlayerAction(bot: Bot, input: PlayerActionRequest): Promise<PlayerActionSubmitResult> {
+  const player = await prisma.player.findUnique({ where: { id: input.playerId } });
+  if (!player) throw new Error("Персонажа не знайдено.");
+
+  const wasResting = Boolean(player.isResting);
+  const remainingToMax = Math.max(0, (player.staminaMax ?? BASE_STAMINA) - player.stamina);
+  const normalizedInput = { ...input };
+
+  if (normalizedInput.interruptCurrent) {
+    await interruptActorActions({ actorType: "PLAYER", playerId: input.playerId }, `перервано дією ${input.type}`, Boolean(input.interruptQueued));
+    normalizedInput.interruptCurrent = false;
+    normalizedInput.interruptQueued = false;
+  }
+
+  const activeCount = await prisma.worldAction.count({
+    where: { actorType: "PLAYER", playerId: input.playerId, status: { in: ["QUEUED", "RUNNING"] } },
+  });
+
+  if (!player.isResting && player.stamina >= 0 && activeCount === 0) {
+    const priority = normalizedInput.priority ?? actionPriority(normalizedInput.type);
+    const action = await prisma.worldAction.create({
+      data: {
+        actorType: "PLAYER",
+        playerId: input.playerId,
+        type: normalizedInput.type,
+        status: "RUNNING",
+        priority,
+        interruptible: normalizedInput.interruptible ?? true,
+        note: normalizedInput.note,
+        payload: (normalizedInput.payload ?? {}) as Prisma.InputJsonValue,
+        durationMs: 0,
+        position: 1,
+        startedAt: new Date(),
+        executeAt: new Date(),
+        chatId: normalizedInput.chatId === undefined ? undefined : String(normalizedInput.chatId),
+        messageId: normalizedInput.messageId,
+      },
+    });
+
+    await completeAction(bot, action);
+
+    return {
+      action,
+      mode: "immediate",
+      wasResting,
+      shouldPromptRestChoice: false,
+      remainingToMax,
+    };
+  }
+
+  const result = await enqueuePlayerAction(normalizedInput);
+  return { ...result, wasResting, shouldPromptRestChoice: wasResting && activeCount === 0, remainingToMax };
+}
+
+export async function queuePlayerRest(playerId: number, chatId?: number | string) {
+  const player = await prisma.player.findUnique({ where: { id: playerId } });
+  if (!player) return null;
+  const max = player.staminaMax ?? BASE_STAMINA;
+  const remaining = Math.max(0, max - player.stamina);
+  const intervals = Math.max(1, Math.ceil(remaining / REST_STAMINA_REGEN_PER_INTERVAL));
+  return enqueuePlayerAction({
+    playerId,
+    type: "REST",
+    payload: { untilFull: true },
+    durationMs: intervals * STAMINA_REGEN_INTERVAL_MS,
+    chatId,
+    interruptible: true,
+    note: "відпочинок у черзі",
+  });
 }
 
 export async function startPlayerRest(playerId: number) {
@@ -369,7 +452,7 @@ export async function playerRestStatusText(playerId: number) {
   if (!player) return "Персонажа не знайдено.";
   const max = player.staminaMax ?? BASE_STAMINA;
   const remaining = Math.max(0, max - player.stamina);
-  const state = fatigueLabel(fatigueStateFor(player.stamina, max));
+  const state = fatigueLabel(fatigueStateFor(player.stamina, max), player.isResting);
   if (remaining <= 0) return `Ви вже відпочивші й готові до дій. Витривалість: ${player.stamina}/${max}.`;
   const minutes = Math.ceil(remaining / REST_STAMINA_REGEN_PER_INTERVAL);
   return `Ви відпочиваєте. Стан: ${state}. Витривалість: ${player.stamina}/${max}. До повного відновлення приблизно: ${minutes} хв.`;
@@ -401,25 +484,54 @@ export async function hasActiveCreatureActions(creatureId: number) {
 export async function renderPlayerActionQueue(playerId: number) {
   const actions = await prisma.worldAction.findMany({
     where: { actorType: "PLAYER", playerId, status: { in: ["QUEUED", "RUNNING"] } },
-    orderBy: [{ priority: "desc" }, { position: "asc" }, { id: "asc" }],
+    orderBy: [{ position: "asc" }, { id: "asc" }],
   });
 
   const player = await prisma.player.findUnique({ where: { id: playerId } });
   if (!actions.length && !player?.isResting) return "Черга дій порожня.";
 
   const now = Date.now();
-  const lines = actions.map((action, index) => {
-    const priorityText = action.priority >= 100 ? " ⚡" : action.priority >= 40 ? " !" : "";
+  const lines: string[] = [];
+  if (player?.isResting) lines.push("▶️ Відпочиваєте");
+
+  lines.push(...actions.map((action, index) => {
+    const queueIndex = player?.isResting ? index + 1 : index;
     if (action.status === "RUNNING") {
       const leftMs = action.executeAt ? Math.max(0, action.executeAt.getTime() - now) : action.durationMs;
-      return `▶️ ${actionTitle(action)}${priorityText} — виконується, ${msToSeconds(leftMs)} с`;
+      return `▶️ ${actionTitle(action)} — виконується, ${msToSeconds(leftMs)} с`;
     }
 
-    const prefix = index === 0 ? "⏳" : `⏳ ${orderedPosition(index)}.`;
-    return `${prefix} Потім ${actionTitle(action)}${priorityText}`;
+    const prefix = queueIndex === 0 ? "⏳" : `⏳ ${orderedPosition(queueIndex)}.`;
+    return `${prefix} Потім ${actionTitle(action)}`;
+  }));
+
+  return `План дій:\n${lines.join("\\n")}`;
+}
+
+
+export async function accelerateFirstQueuedPlayerAction(playerId: number) {
+  const player = await prisma.player.findUnique({ where: { id: playerId } });
+  if (!player || player.stamina < 0) return false;
+
+  const first = await prisma.worldAction.findFirst({
+    where: { actorType: "PLAYER", playerId, status: "QUEUED" },
+    orderBy: [{ position: "asc" }, { id: "asc" }],
+  });
+  if (!first) return false;
+
+  await prisma.worldAction.update({
+    where: { id: first.id },
+    data: { status: "RUNNING", durationMs: 0, startedAt: new Date(), executeAt: new Date() },
   });
 
-  return `План дій:\n${lines.join("\n")}`;
+  return true;
+}
+
+export async function hasPlayerActionQueueControls(playerId: number) {
+  const count = await prisma.worldAction.count({
+    where: { actorType: "PLAYER", playerId, status: { in: ["QUEUED", "RUNNING"] } },
+  });
+  return count > 0;
 }
 
 export async function clearQueuedPlayerActions(playerId: number) {
@@ -509,6 +621,13 @@ async function startNextQueuedAction(action: WorldAction) {
     data: { status: "RUNNING", startedAt: new Date(), executeAt: new Date(Date.now() + action.durationMs) },
   });
 
+  if (action.actorType === "PLAYER" && action.playerId && action.type === "REST") {
+    await prisma.player.update({
+      where: { id: action.playerId },
+      data: { isResting: true, lastStaminaRegenAt: new Date() },
+    });
+  }
+
   if (action.actorType === "CREATURE" && action.creatureId) {
     const activity = action.type === "MOVE" ? "MOVING" : action.type === "GATHER" || action.type === "GATHER_SPECIFIC" ? "GATHERING" : action.type === "LOOK" || action.type === "INSPECT" || action.type === "TRACK" ? "LOOKING" : action.type === "ATTACK" ? "FIGHTING" : action.type === "SAY" || action.type === "GREET" ? "SPEAKING" : action.type === "REST" ? "RESTING" : undefined;
     await prisma.creature.update({ where: { id: action.creatureId }, data: { activity, currentAction: actionTitle(action) } });
@@ -574,16 +693,27 @@ async function spendPlayerStamina(bot: Bot, playerId: number, type: WorldActionT
 
   const messages = thresholdMessages(before, after, max, tookHp);
   if (chatId && messages.length) {
-    for (const message of messages) await bot.api.sendMessage(chatId, message);
+    for (const message of messages) {
+      const shouldSuggestRest = message.includes("втом") || message.includes("Виснаження");
+      await bot.api.sendMessage(chatId, message, shouldSuggestRest ? { reply_markup: buildFatigueRestKeyboard() } : undefined);
+    }
   }
 }
 
-async function spendCreatureStamina(creature: { id: number; stamina: number; staminaMax?: number | null }, cost = 1) {
+async function spendCreatureStamina(creature: { id: number; hp?: number; stamina: number; staminaMax?: number | null }, cost = 1) {
   const max = creature.staminaMax ?? BASE_STAMINA;
   const after = creature.stamina - cost;
+  const tookHp = creature.stamina <= VERY_TIRED_STAMINA;
+  const nextHp = tookHp && creature.hp !== undefined ? Math.max(0, creature.hp - 1) : creature.hp;
   await prisma.creature.update({
     where: { id: creature.id },
-    data: { stamina: after, fatigueState: fatigueStateFor(after, max), lastStaminaRegenAt: new Date() },
+    data: {
+      stamina: after,
+      hp: nextHp,
+      fatigueState: fatigueStateFor(after, max),
+      lastStaminaRegenAt: new Date(),
+      currentAction: tookHp ? "виснажується" : undefined,
+    },
   });
 }
 
@@ -631,7 +761,7 @@ async function completeMove(bot: Bot, action: WorldAction) {
   const name = creature.name ?? creature.species.name;
   await notifyLocation(bot, creature.locationId, -1, isAnimal ? "Щось пішло звідси." : `${name} пішов звідси.`, buildTrackKeyboard());
   await createTrack({ actorType: "CREATURE", creatureId: creature.id }, creature.locationId, exit.toLocationId, payload.direction, isAnimal ? `сліди: ${creature.species.name}` : `слід: ${name}`);
-  await spendCreatureStamina(creature, 1);
+  await spendCreatureStamina(creature, actionCost("MOVE"));
   await prisma.creature.update({ where: { id: creature.id }, data: { locationId: exit.toLocationId, activity: "MOVING", currentAction: payload.reason ?? actionTitle(action), steps: { increment: 1 }, hunger: { increment: 1 } } });
   await notifyLocation(bot, exit.toLocationId, -1, `Хтось зайшов сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, buildTargetListKeyboard([{ type: "creature", id: creature.id, label, canGreet: !isAnimal }]));
   await prisma.worldAction.update({ where: { id: action.id }, data: { status: "DONE" } });
@@ -660,7 +790,7 @@ async function completeGather(bot: Bot, action: WorldAction) {
     await spendPlayerStamina(bot, (actor as any).id, action.type, chatId);
     await prisma.player.update({ where: { id: (actor as any).id }, data: { gatherAttempts: { increment: 1 } } });
   } else {
-    await spendCreatureStamina(actor as any, 1);
+    await spendCreatureStamina(actor as any, actionCost(action.type));
     await prisma.creature.update({ where: { id: (actor as any).id }, data: { gatherAttempts: { increment: 1 }, activity: "GATHERING", currentAction: `збирає ${payload.resourceKey}` } });
   }
 
@@ -792,7 +922,7 @@ async function completeCreatureAttack(bot: Bot, action: WorldAction) {
 
   const damage = Math.max(1, attacker.species.strength + Math.floor(Math.random() * 3));
   const nextHp = target.hp - damage;
-  await spendCreatureStamina(attacker, 2);
+  await spendCreatureStamina(attacker, actionCost("ATTACK"));
 
   if (nextHp <= 0) {
     await prisma.creature.update({ where: { id: target.id }, data: { hp: 0, isAlive: false, age: "CORPSE", diedAtTick: null, corpseDecayTicksLeft: target.species.corpseDecayTicks, activity: "RESTING", currentAction: "лежить нерухомо" } });
@@ -910,8 +1040,9 @@ async function completeSimple(action: WorldAction) {
       const player = await prisma.player.findUnique({ where: { id: action.playerId } });
       if (player) {
         const max = player.staminaMax ?? BASE_STAMINA;
-        const next = Math.min(max, player.stamina + REST_STAMINA_REGEN_PER_INTERVAL);
-        await prisma.player.update({ where: { id: player.id }, data: { stamina: next, fatigueState: fatigueStateFor(next, max) } });
+        const payload = payloadOf<{ untilFull?: boolean }>(action);
+        const next = payload.untilFull ? max : Math.min(max, player.stamina + REST_STAMINA_REGEN_PER_INTERVAL);
+        await prisma.player.update({ where: { id: player.id }, data: { stamina: next, fatigueState: fatigueStateFor(next, max), isResting: false } });
       }
     }
     if (action.actorType === "CREATURE" && action.creatureId) {
@@ -971,7 +1102,10 @@ async function recoverStamina(bot: Bot) {
 
     const chatId = Number(player.telegramId);
     if (Number.isSafeInteger(chatId)) {
-      for (const message of messages) await bot.api.sendMessage(chatId, message);
+      for (const message of messages) {
+        const shouldSuggestRest = message.includes("втом") || message.includes("Виснаження");
+        await bot.api.sendMessage(chatId, message, shouldSuggestRest ? { reply_markup: buildFatigueRestKeyboard() } : undefined);
+      }
     }
   }
 
@@ -1008,7 +1142,7 @@ async function processActionQueue(bot: Bot) {
   const dueRunning = await prisma.worldAction.findMany({ where: { status: "RUNNING", executeAt: { lte: new Date() } }, orderBy: [{ executeAt: "asc" }, { id: "asc" }], take: 50 });
   for (const action of dueRunning) await completeAction(bot, action);
 
-  const nextQueued = await prisma.worldAction.findMany({ where: { status: "QUEUED" }, orderBy: [{ priority: "desc" }, { position: "asc" }, { id: "asc" }], take: 100 });
+  const nextQueued = await prisma.worldAction.findMany({ where: { status: "QUEUED" }, orderBy: [{ position: "asc" }, { id: "asc" }], take: 100 });
   const startedActors = new Set<string>();
 
   for (const action of nextQueued) {
@@ -1023,7 +1157,7 @@ async function processActionQueue(bot: Bot) {
     startedActors.add(key);
     await startNextQueuedAction(action);
     const chatId = chatIdFromAction(action);
-    if (chatId) await bot.api.sendMessage(chatId, `Починаємо: ${actionTitle(action)} (${msToSeconds(action.durationMs)} с).`, { reply_markup: buildActionQueueKeyboard() });
+    if (chatId) await bot.api.sendMessage(chatId, `Починаємо: ${actionTitle(action)} (${msToSeconds(action.durationMs)} с).`, { reply_markup: buildActionQueueKeyboard(true) });
   }
 }
 

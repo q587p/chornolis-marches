@@ -1,10 +1,10 @@
 import { Bot } from "grammy";
 import { gatherConfig } from "../gameConfig";
-import { buildActionQueueKeyboard, buildRestingActionChoiceKeyboard } from "../ui/keyboards";
-import { enqueuePlayerAction, gatherDurationMs, renderPlayerActionQueue } from "../services/actionQueue";
+import { performOrQueuePlayerAction, gatherDurationMs } from "../services/actionQueue";
 import { getPlayerByTelegramId } from "../services/players";
 import { buildGatherMenuForLocation } from "../services/locations";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
+import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 
 export function registerGatherHandlers(bot: Bot) {
   bot.callbackQuery("gather:menu", async (ctx) => {
@@ -39,9 +39,8 @@ export function registerGatherHandlers(bot: Bot) {
 
     const durationMs = gatherDurationMs(resourceKey);
 
-    let enqueueResult: Awaited<ReturnType<typeof enqueuePlayerAction>>;
     try {
-      enqueueResult = await enqueuePlayerAction({
+      const result = await performOrQueuePlayerAction(bot, {
         playerId: player.id,
         type: "GATHER_SPECIFIC",
         payload: { resourceKey },
@@ -49,17 +48,11 @@ export function registerGatherHandlers(bot: Bot) {
         chatId: ctx.chat?.id,
         messageId: ctx.callbackQuery.message?.message_id,
       });
-    } catch (error) {
-      await safeAnswerCallbackQuery(ctx, error instanceof Error ? error.message : "Не вдалося додати дію.");
-      return;
-    }
 
-    const queueText = await renderPlayerActionQueue(player.id);
-    await safeAnswerCallbackQuery(ctx, `Додано в чергу (${Math.ceil(durationMs / 1000)} с).`);
-    if (enqueueResult.shouldPromptRestChoice) {
-      await ctx.reply(`Ви зараз відпочиваєте. До повного відновлення лишилось ${enqueueResult.remainingToMax} витривалості. Перервати відпочинок чи поставити дію в чергу після відпочинку?`, { reply_markup: buildRestingActionChoiceKeyboard() });
-    } else {
-      await ctx.reply(queueText, { reply_markup: buildActionQueueKeyboard() });
+      await safeAnswerCallbackQuery(ctx, result.mode === "immediate" ? "Ви почали пошук." : `Додано в чергу (${Math.ceil(durationMs / 1000)} с).`);
+      await sendActionSubmitFeedback(ctx, player.id, result);
+    } catch (error) {
+      await safeAnswerCallbackQuery(ctx, error instanceof Error ? error.message : "Не вдалося виконати дію.");
     }
   });
 }

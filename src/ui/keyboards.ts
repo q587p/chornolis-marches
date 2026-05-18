@@ -15,27 +15,41 @@ export function buildMovementKeyboard(exits: any[]) {
   const west = exits.find((e) => e.direction === "WEST");
 
   if (north) keyboard.text("⬆️ Північ", "move:NORTH").row();
+
   if (west) keyboard.text("⬅️ Захід", "move:WEST");
-  if (east) keyboard.text("Схід ➡️", "move:EAST");
-  if (west || east) keyboard.row();
-  if (south) keyboard.text("⬇️ Південь", "move:SOUTH").row();
   keyboard.text("🔎 Придивитися", "look");
+  if (east) keyboard.text("Схід ➡️", "move:EAST");
+  keyboard.row();
+
+  if (south) keyboard.text("⬇️ Південь", "move:SOUTH").row();
   return keyboard;
 }
 
-export function buildActionQueueKeyboard() {
-  return new InlineKeyboard()
-    .text("📋 Черга", "queue:status")
+export function buildActionQueueKeyboard(hasActions = true) {
+  const keyboard = new InlineKeyboard();
+  if (!hasActions) return keyboard;
+
+  return keyboard
     .text("✋ Скасувати поточну", "queue:cancel-current")
     .row()
-    .text("🧹 Очистити чергу", "queue:clear")
-    .text("🛌 Відпочити", "rest:start");
+    .text("🧹 Очистити чергу", "queue:clear");
+}
+
+export function buildFatigueRestKeyboard() {
+  return new InlineKeyboard().text("🛌 Відпочити", "rest:start");
 }
 
 export function buildRestingActionChoiceKeyboard() {
   return new InlineKeyboard()
     .text("✋ Перервати", "rest:interrupt")
     .text("📋 Поставити в чергу", "rest:queue");
+}
+
+export function buildRestWithQueueChoiceKeyboard() {
+  return new InlineKeyboard()
+    .text("Так, почати відпочинок", "rest:confirm-start")
+    .row()
+    .text("Ні, додати в чергу", "rest:queue-rest");
 }
 
 export function buildTrackKeyboard() {

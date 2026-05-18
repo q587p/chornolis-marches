@@ -2,10 +2,10 @@ import { Bot } from "grammy";
 import { Direction } from "@prisma/client";
 import { prisma } from "../db";
 import { directionLabels } from "../ui/labels";
-import { buildActionQueueKeyboard, buildRestingActionChoiceKeyboard } from "../ui/keyboards";
-import { enqueuePlayerAction, movementDurationMs, renderPlayerActionQueue } from "../services/actionQueue";
+import { movementDurationMs, performOrQueuePlayerAction } from "../services/actionQueue";
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
+import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 
 export function registerMovementHandlers(bot: Bot) {
   bot.callbackQuery(/^move:(NORTH|EAST|SOUTH|WEST|UP|DOWN|INSIDE|OUTSIDE)$/, async (ctx) => {
@@ -22,9 +22,8 @@ export function registerMovementHandlers(bot: Bot) {
 
     const durationMs = movementDurationMs(exit.travelCost, player.stamina);
 
-    let enqueueResult: Awaited<ReturnType<typeof enqueuePlayerAction>>;
     try {
-      enqueueResult = await enqueuePlayerAction({
+      const result = await performOrQueuePlayerAction(bot, {
         playerId: player.id,
         type: "MOVE",
         payload: { direction },
@@ -32,17 +31,11 @@ export function registerMovementHandlers(bot: Bot) {
         chatId: ctx.chat?.id,
         messageId: ctx.callbackQuery.message?.message_id,
       });
-    } catch (error) {
-      await safeAnswerCallbackQuery(ctx, error instanceof Error ? error.message : "Не вдалося додати дію.");
-      return;
-    }
 
-    const queueText = await renderPlayerActionQueue(player.id);
-    await safeAnswerCallbackQuery(ctx, `Додано: ${directionLabels[direction].toLowerCase()}.`);
-    if (enqueueResult.shouldPromptRestChoice) {
-      await ctx.reply(`Ви зараз відпочиваєте. До повного відновлення лишилось ${enqueueResult.remainingToMax} витривалості. Перервати відпочинок чи поставити дію в чергу після відпочинку?`, { reply_markup: buildRestingActionChoiceKeyboard() });
-    } else {
-      await ctx.reply(queueText, { reply_markup: buildActionQueueKeyboard() });
+      await safeAnswerCallbackQuery(ctx, result.mode === "immediate" ? `Ви рушили: ${directionLabels[direction].toLowerCase()}.` : `Додано: ${directionLabels[direction].toLowerCase()}.`);
+      await sendActionSubmitFeedback(ctx, player.id, result);
+    } catch (error) {
+      await safeAnswerCallbackQuery(ctx, error instanceof Error ? error.message : "Не вдалося виконати дію.");
     }
   });
 }

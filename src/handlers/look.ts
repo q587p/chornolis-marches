@@ -1,8 +1,8 @@
 import { Bot } from "grammy";
-import { actionDurationMs, enqueuePlayerAction, renderPlayerActionQueue } from "../services/actionQueue";
-import { buildActionQueueKeyboard, buildRestingActionChoiceKeyboard } from "../ui/keyboards";
+import { actionDurationMs, performOrQueuePlayerAction } from "../services/actionQueue";
 import { getPlayerByTelegramId } from "../services/players";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
+import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 
 export function registerLookHandlers(bot: Bot) {
   bot.command("look", async (ctx) => {
@@ -13,17 +13,11 @@ export function registerLookHandlers(bot: Bot) {
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
     const durationMs = actionDurationMs("LOOK", player.stamina);
-    let enqueueResult: Awaited<ReturnType<typeof enqueuePlayerAction>>;
     try {
-      enqueueResult = await enqueuePlayerAction({ playerId: player.id, type: "LOOK", payload: {}, durationMs, chatId: ctx.chat?.id });
+      const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "LOOK", payload: {}, durationMs, chatId: ctx.chat?.id });
+      await sendActionSubmitFeedback(ctx, player.id, result);
     } catch (error) {
-      return void (await ctx.reply(error instanceof Error ? error.message : "Не вдалося додати дію."));
-    }
-
-    if (enqueueResult.shouldPromptRestChoice) {
-      await ctx.reply(`Ви зараз відпочиваєте. До повного відновлення лишилось ${enqueueResult.remainingToMax} витривалості. Перервати відпочинок чи поставити дію в чергу після відпочинку?`, { reply_markup: buildRestingActionChoiceKeyboard() });
-    } else {
-      await ctx.reply(await renderPlayerActionQueue(player.id), { reply_markup: buildActionQueueKeyboard() });
+      await ctx.reply(error instanceof Error ? error.message : "Не вдалося виконати дію.");
     }
   });
 
@@ -35,9 +29,8 @@ export function registerLookHandlers(bot: Bot) {
     }
 
     const durationMs = actionDurationMs("LOOK", player.stamina);
-    let enqueueResult: Awaited<ReturnType<typeof enqueuePlayerAction>>;
     try {
-      enqueueResult = await enqueuePlayerAction({
+      const result = await performOrQueuePlayerAction(bot, {
         playerId: player.id,
         type: "LOOK",
         payload: {},
@@ -45,16 +38,10 @@ export function registerLookHandlers(bot: Bot) {
         chatId: ctx.chat?.id,
         messageId: ctx.callbackQuery.message?.message_id,
       });
+      await safeAnswerCallbackQuery(ctx, result.mode === "immediate" ? "Ви придивляєтесь." : `Огляд додано в чергу (${Math.ceil(durationMs / 1000)} с).`);
+      await sendActionSubmitFeedback(ctx, player.id, result);
     } catch (error) {
-      await safeAnswerCallbackQuery(ctx, error instanceof Error ? error.message : "Не вдалося додати дію.");
-      return;
-    }
-
-    await safeAnswerCallbackQuery(ctx, `Огляд додано в чергу (${Math.ceil(durationMs / 1000)} с).`);
-    if (enqueueResult.shouldPromptRestChoice) {
-      await ctx.reply(`Ви зараз відпочиваєте. До повного відновлення лишилось ${enqueueResult.remainingToMax} витривалості. Перервати відпочинок чи поставити дію в чергу після відпочинку?`, { reply_markup: buildRestingActionChoiceKeyboard() });
-    } else {
-      await ctx.reply(await renderPlayerActionQueue(player.id), { reply_markup: buildActionQueueKeyboard() });
+      await safeAnswerCallbackQuery(ctx, error instanceof Error ? error.message : "Не вдалося виконати дію.");
     }
   });
 }

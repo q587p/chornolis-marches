@@ -3,6 +3,7 @@ import { CreatureAge, Direction, LocationExit } from "@prisma/client";
 import { prisma } from "../db";
 import { notifyRegion } from "./notifications";
 import { actionDurationMs, enqueueCreatureAction, gatherDurationMs, hasActiveCreatureActions, movementDurationMs } from "./actionQueue";
+import { BASE_STAMINA, VERY_TIRED_STAMINA } from "../gameConfig";
 
 const DEFAULT_TICK_INTERVAL_MS = Number(process.env.WORLD_TICK_INTERVAL_MS || 60000);
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
@@ -52,6 +53,31 @@ function pick<T>(arr: T[]): T | undefined {
 
 function isExit(value: unknown): value is LocationExit {
   return Boolean(value && typeof value === "object" && "toLocationId" in value);
+}
+
+function creatureRestChance(c: any) {
+  if (c.stamina >= 0) return 0;
+  const debt = Math.abs(Math.min(0, c.stamina));
+  const ratio = Math.min(1, debt / Math.abs(VERY_TIRED_STAMINA));
+  let restChance = 20 + Math.round(ratio * 70);
+
+  if (c.species?.diet === "HERBIVORE" && c.location?.dangerLevel >= 4) {
+    restChance = Math.max(5, Math.round(restChance / (c.location.dangerLevel >= 7 ? 4 : 2)));
+  }
+
+  return Math.min(95, restChance);
+}
+
+async function maybeQueueCreatureRest(c: any) {
+  const restChance = creatureRestChance(c);
+  if (restChance <= 0 || !chance(restChance)) return false;
+  await enqueueCreatureAction({
+    creatureId: c.id,
+    type: "REST",
+    payload: { reason: c.stamina <= VERY_TIRED_STAMINA ? "ледь тримається на ногах" : "відчуває втому" },
+    durationMs: actionDurationMs("REST", c.stamina),
+  });
+  return true;
 }
 
 function stageFor(creature: any, nextAgeTicks: number): CreatureAge {
@@ -333,6 +359,11 @@ export async function worldTick() {
       try {
         if (await hasActiveCreatureActions(c.id)) {
           skippedBusy++;
+          continue;
+        }
+
+        if (await maybeQueueCreatureRest(c)) {
+          queuedRest++;
           continue;
         }
 

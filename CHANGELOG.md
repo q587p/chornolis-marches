@@ -5,7 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is loosely based on Keep a Changelog and this project follows semantic-ish versioning.
 ---
 
+## 0.7.2 - stamina/rest queue UX fixes - 12026-05-18
+
+### 🐛 Fixed
+
+- Player actions now execute immediately while stamina is non-negative and there is no active player queue.
+- Once stamina drops below zero, subsequent player actions are added to the queue and use `stamina cost × 13 seconds` duration.
+- Normal queue order is FIFO again: priorities can interrupt actions, but they no longer reorder planned movement routes.
+- Empty `/queue` output now shows only `Черга дій порожня.` without inline queue/rest buttons.
+- Queue controls no longer include `📋 Черга` or `🛌 Відпочити`; rest remains available from the persistent reply keyboard and tired-state prompts.
+- Queue status messages are edited/redrawn when possible instead of appending a new queue message every time.
+- Rest button behavior was revised:
+  - if there is no active queue, it starts active rest without queue buttons;
+  - if a queue exists, the player is asked whether to cancel it and rest now or add rest to the end of the queue;
+  - while resting, queued actions render as `Відпочиваєте` followed by `Потім ...`.
+- NPCs and animals can now decide to rest when tired; the chance grows as they approach `Дуже втомлений`.
+- Herbivores in dangerous locations can ignore fatigue and keep moving, risking HP loss from exhaustion.
+- Auto mode now uses the same stamina rule: immediate actions while stamina is non-negative, queued actions when tired.
+- The location movement keyboard is more compact: `Придивитися` sits between `Захід` and `Схід`.
+
+### 🎮 Gameplay / UX
+
+- Positive stamina now means quick, immediate actions instead of forcing everything through a delayed queue.
+- Tiredness remains meaningful: after stamina drops below zero, the player starts planning slower queued actions until they recover.
+- Rest is clearer and less noisy: the persistent `🛌 Відпочити` button is the main rest entry point, while fatigue warnings can suggest rest contextually.
+- Planned routes are stable again: movement is appended to the end of the plan instead of jumping to the front because of priority.
+
+### 🛠 Technical
+
+- No new Prisma migration is required beyond the existing 0.7.1 stamina/rest and track migrations.
+- Priority remains available for interruption logic, but normal queue ordering is FIFO.
+- Auto mode uses the same stamina/action flow as manual player input.
+
+### 📝 Notes
+
+- This release supersedes the previous 0.7.1 fix3 archive and should be applied on top of committed 0.7.1.
+
+---
+
 ## 0.7.1 - stamina, rest, priorities and tracks - 12026-05-18
+
 
 ### ✨ Added
 

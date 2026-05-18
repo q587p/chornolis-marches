@@ -4,8 +4,8 @@ import { getPlayerByTelegramId } from "../services/players";
 import { buildTargetActionKeyboard } from "../ui/keyboards";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { creatureForms, playerForms, type NameForms } from "../services/grammar";
-import { actionDurationMs, enqueuePlayerAction, renderPlayerActionQueue } from "../services/actionQueue";
-import { buildActionQueueKeyboard, buildRestingActionChoiceKeyboard } from "../ui/keyboards";
+import { actionDurationMs, performOrQueuePlayerAction } from "../services/actionQueue";
+import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 
 function formatSex(sex: string | null | undefined) {
   if (sex === "MALE") return "самець";
@@ -175,9 +175,9 @@ export function registerSocialHandlers(bot: Bot) {
     const typeMap = { greet: "GREET", inspect: "INSPECT", attack: "ATTACK", freshen: "FRESHEN" } as const;
     const durationMs = actionDurationMs(typeMap[action], player.stamina);
 
-    let enqueueResult: Awaited<ReturnType<typeof enqueuePlayerAction>>;
+    let result: Awaited<ReturnType<typeof performOrQueuePlayerAction>>;
     try {
-      enqueueResult = await enqueuePlayerAction({
+      result = await performOrQueuePlayerAction(bot, {
         playerId: player.id,
         type: typeMap[action],
         payload: { targetType: type, targetId, mode },
@@ -192,12 +192,8 @@ export function registerSocialHandlers(bot: Bot) {
       return;
     }
 
-    await safeAnswerCallbackQuery(ctx, `Дію додано в чергу (${Math.ceil(durationMs / 1000)} с).`);
-    if (enqueueResult.shouldPromptRestChoice) {
-      await ctx.reply(`Ви зараз відпочиваєте. До повного відновлення лишилось ${enqueueResult.remainingToMax} витривалості. Перервати відпочинок чи поставити дію в чергу після відпочинку?`, { reply_markup: buildRestingActionChoiceKeyboard() });
-    } else {
-      await ctx.reply(await renderPlayerActionQueue(player.id), { reply_markup: buildActionQueueKeyboard() });
-    }
+    await safeAnswerCallbackQuery(ctx, result.mode === "immediate" ? "Дію виконано." : `Дію додано в чергу (${Math.ceil(durationMs / 1000)} с).`);
+    await sendActionSubmitFeedback(ctx, player.id, result);
   });
 
   bot.callbackQuery("track", async (ctx) => {
@@ -208,19 +204,15 @@ export function registerSocialHandlers(bot: Bot) {
     }
 
     const durationMs = actionDurationMs("TRACK", player.stamina);
-    let enqueueResult: Awaited<ReturnType<typeof enqueuePlayerAction>>;
+    let result: Awaited<ReturnType<typeof performOrQueuePlayerAction>>;
     try {
-      enqueueResult = await enqueuePlayerAction({ playerId: player.id, type: "TRACK", payload: {}, durationMs, chatId: ctx.chat?.id, interruptQueued: true });
+      result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "TRACK", payload: {}, durationMs, chatId: ctx.chat?.id, interruptQueued: true });
     } catch (error) {
       await safeAnswerCallbackQuery(ctx, error instanceof Error ? error.message : "Не вдалося додати дію.");
       return;
     }
 
-    await safeAnswerCallbackQuery(ctx, `Вистежування додано в чергу (${Math.ceil(durationMs / 1000)} с).`);
-    if (enqueueResult.shouldPromptRestChoice) {
-      await ctx.reply(`Ви зараз відпочиваєте. До повного відновлення лишилось ${enqueueResult.remainingToMax} витривалості. Перервати відпочинок чи поставити дію в чергу після відпочинку?`, { reply_markup: buildRestingActionChoiceKeyboard() });
-    } else {
-      await ctx.reply(await renderPlayerActionQueue(player.id), { reply_markup: buildActionQueueKeyboard() });
-    }
+    await safeAnswerCallbackQuery(ctx, result.mode === "immediate" ? "Ви вдивляєтесь у сліди." : `Вистежування додано в чергу (${Math.ceil(durationMs / 1000)} с).`);
+    await sendActionSubmitFeedback(ctx, player.id, result);
   });
 }
