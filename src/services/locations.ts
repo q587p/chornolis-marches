@@ -1,6 +1,6 @@
 import { InlineKeyboard } from "grammy";
 import { prisma } from "../db";
-import { TICK_MS, gatherConfig } from "../gameConfig";
+import { ACTION_BASE_DURATION_MS, playerStaminaCostConfig } from "../gameConfig";
 import { directionLabels } from "../ui/labels";
 import { buildMovementKeyboard, buildResourceMenuKeyboard, buildTargetListKeyboard } from "../ui/keyboards";
 import { escapeHtml } from "../utils/text";
@@ -16,30 +16,15 @@ function isVisibleLivingCreature(c: any) {
 function visibleTargets(location: any, viewerPlayerId?: number) {
   const players = location.players
     .filter((p: any) => p.id !== viewerPlayerId)
-    .map((p: any) => ({
-      type: "player" as const,
-      id: p.id,
-      label: p.firstName ?? p.username ?? "мандрівник",
-      canGreet: true,
-    }));
+    .map((p: any) => ({ type: "player" as const, id: p.id, label: p.firstName ?? p.username ?? "мандрівник", canGreet: true }));
 
   const livingCreatures = location.creatures
     .filter(isVisibleLivingCreature)
-    .map((c: any) => ({
-      type: "creature" as const,
-      id: c.id,
-      label: c.name ?? c.species.name,
-      canGreet: c.species.kind !== "ANIMAL",
-    }));
+    .map((c: any) => ({ type: "creature" as const, id: c.id, label: c.name ?? c.species.name, canGreet: c.species.kind !== "ANIMAL" }));
 
   const corpses = location.creatures
     .filter(isVisibleCorpse)
-    .map((c: any) => ({
-      type: "creature" as const,
-      id: c.id,
-      label: `труп: ${c.species.name}`,
-      canGreet: false,
-    }));
+    .map((c: any) => ({ type: "creature" as const, id: c.id, label: `труп: ${c.species.name}`, canGreet: false }));
 
   return [...players, ...livingCreatures, ...corpses];
 }
@@ -57,14 +42,19 @@ function presenceText(location: any, viewerPlayerId?: number) {
   return "";
 }
 
+function actionSeconds(action: keyof typeof playerStaminaCostConfig) {
+  const cost = playerStaminaCostConfig[action] ?? 1;
+  return Math.ceil((cost * ACTION_BASE_DURATION_MS) / 1000);
+}
+
 function resourceButtonData(resources: any[]) {
   return resources
     .filter((r) => r.amount > 0)
-    .map((resource) => {
-      const cfg = gatherConfig[resource.resourceType.key];
-      const durationText = cfg ? ` (${Math.round((cfg.ticks * TICK_MS) / 1000)} с)` : "";
-      return { key: resource.resourceType.key, name: resource.resourceType.name, durationText };
-    });
+    .map((resource) => ({
+      key: resource.resourceType.key,
+      name: resource.resourceType.name,
+      durationText: ` (${actionSeconds("GATHER_SPECIFIC")} с)`,
+    }));
 }
 
 export async function renderLocationBrief(locationId: number, viewerPlayerId?: number) {

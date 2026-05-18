@@ -21,7 +21,10 @@ model Player {
   currentLocation   CellLocation? @relation(fields: [currentLocationId], references: [id])
 
   hp      Int @default(20)
-  stamina Int @default(20)
+  stamina Int @default(13)
+  staminaMax Int @default(13)
+  fatigueState FatigueState @default(RESTED)
+  isResting Boolean @default(false)
   hunger  Int @default(0)
 
   // статистика
@@ -37,6 +40,7 @@ model Player {
   herbsGathered     Int @default(0)
 
   lastActionAt DateTime?
+  lastStaminaRegenAt DateTime @default(now())
 
   onboardingComplete Boolean @default(false)
   pronoun            PlayerPronoun?
@@ -52,6 +56,7 @@ model Player {
 
   resources PlayerResource[]
   actions   WorldAction[]
+  tracks    WorldTrack[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -97,6 +102,9 @@ model CellLocation {
   exitsTo   LocationExit[] @relation("ExitTo")
 
   events WorldEvent[]
+
+  tracksFrom WorldTrack[] @relation("TrackFrom")
+  tracksTo   WorldTrack[] @relation("TrackTo")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -189,7 +197,10 @@ model Creature {
   hp      Int
   maxHp   Int?
   hunger  Int @default(0)
-  stamina Int @default(20)
+  stamina Int @default(13)
+  staminaMax Int @default(13)
+  fatigueState FatigueState @default(RESTED)
+  lastStaminaRegenAt DateTime @default(now())
 
   activity      CreatureActivity?
   currentAction String?
@@ -212,7 +223,8 @@ model Creature {
 
   isAlive Boolean @default(true)
 
-  actions   WorldAction[]
+  actions WorldAction[]
+  tracks  WorldTrack[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -289,6 +301,10 @@ model WorldAction {
   type   WorldActionType
   status WorldActionStatus @default(QUEUED)
 
+  priority      Int     @default(0)
+  interruptible Boolean @default(true)
+  note          String?
+
   payload Json
 
   position   Int
@@ -304,7 +320,38 @@ model WorldAction {
 
   @@index([actorType, playerId, status, position])
   @@index([actorType, creatureId, status, position])
+  @@index([status, priority, position])
   @@index([status, executeAt])
+}
+
+model WorldTrack {
+  id Int @id @default(autoincrement())
+
+  actorType WorldActorType
+
+  playerId Int?
+  player   Player? @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  creatureId Int?
+  creature   Creature? @relation(fields: [creatureId], references: [id], onDelete: Cascade)
+
+  fromLocationId Int
+  fromLocation   CellLocation @relation("TrackFrom", fields: [fromLocationId], references: [id], onDelete: Cascade)
+
+  toLocationId Int
+  toLocation   CellLocation @relation("TrackTo", fields: [toLocationId], references: [id], onDelete: Cascade)
+
+  direction Direction
+  label     String
+  strength  Int @default(3)
+
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([fromLocationId, expiresAt])
+  @@index([toLocationId, expiresAt])
+  @@index([actorType, playerId])
+  @@index([actorType, creatureId])
 }
 
 // =======================
@@ -402,6 +449,12 @@ enum GrammaticalGender {
 enum Animacy {
   ANIMATE
   INANIMATE
+}
+
+enum FatigueState {
+  RESTED
+  TIRED
+  VERY_TIRED
 }
 
 enum PlayerPronoun {

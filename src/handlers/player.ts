@@ -10,6 +10,13 @@ function formatPercent(success: number, attempts: number) {
   return `${Math.round((success / attempts) * 100)}%`;
 }
 
+function fatigueText(player: any) {
+  if (player.isResting) return "Відпочиває";
+  if (player.fatigueState === "VERY_TIRED") return "Дуже втомлений";
+  if (player.fatigueState === "TIRED") return "Втомлений";
+  return "Відпочивший";
+}
+
 function formatPlayerStats(player: any) {
   return [
     `Пройдено локацій: ${player.steps}`,
@@ -35,11 +42,10 @@ async function showCharacter(bot: Bot, telegramId: number, reply: (text: string,
 
   const autoEnabled = isPlayerAutoEnabled(telegramId);
   const autoText = autoEnabled ? "\nРежим авто: увімкнено 🤖" : "";
-  const items = player.resources.length
-    ? player.resources.map((i) => `${i.resourceType.name} ×${i.amount}`).join("\n")
-    : "порожньо";
+  const items = player.resources.length ? player.resources.map((i) => `${i.resourceType.name} ×${i.amount}`).join("\n") : "порожньо";
+  const staminaMax = player.staminaMax ?? 13;
 
-  await reply(`🧍 Ти:\n\nІм’я: ${player.firstName ?? "невідомо"}\nHP: ${player.hp}\nВитривалість: ${player.stamina}\nГолод: ${player.hunger}\nЛокація: ${player.currentLocation?.name ?? "невідомо"}${autoText}\n\nІнвентар:\n${items}\n\nСтатистика:\n${formatPlayerStats(player)}`, {
+  await reply(`🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\nHP: ${player.hp}\nВитривалість: ${player.stamina}/${staminaMax}\nСтан: ${fatigueText(player)}\nГолод: ${player.hunger}\nЛокація: ${player.currentLocation?.name ?? "невідомо"}${autoText}\n\nІнвентар:\n${items}\n\nСтатистика:\n${formatPlayerStats(player)}`, {
     reply_markup: buildMainReplyKeyboard(autoEnabled),
   });
 }
@@ -50,10 +56,7 @@ export async function showLocationForPlayer(telegramId: number, reply: (text: st
 
   const locationId = player.currentLocationId ?? (await getStartLocationId());
   const view = await renderLocationBrief(locationId, player.id);
-  await reply(view.text, {
-    parse_mode: "HTML",
-    reply_markup: view.keyboard,
-  });
+  await reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
 }
 
 export function registerPlayerHandlers(bot: Bot) {

@@ -13,6 +13,7 @@ import { registerMovementHandlers } from "./handlers/movement";
 import { registerNewsHandlers } from "./handlers/news";
 import { registerPlayerHandlers } from "./handlers/player";
 import { registerSayHandlers } from "./handlers/say";
+import { registerRestHandlers } from "./handlers/rest";
 import { registerSocialHandlers } from "./handlers/social";
 import { registerStartHandlers } from "./handlers/start";
 import { registerStatusHandlers } from "./handlers/status";
@@ -29,6 +30,7 @@ registerSayHandlers(bot);
 registerMovementHandlers(bot);
 registerGatherHandlers(bot);
 registerSocialHandlers(bot);
+registerRestHandlers(bot);
 registerActionQueueHandlers(bot);
 
 bot.catch((error) => {

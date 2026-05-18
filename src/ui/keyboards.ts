@@ -28,7 +28,14 @@ export function buildActionQueueKeyboard() {
     .text("📋 Черга", "queue:status")
     .text("✋ Скасувати поточну", "queue:cancel-current")
     .row()
-    .text("🧹 Очистити чергу", "queue:clear");
+    .text("🧹 Очистити чергу", "queue:clear")
+    .text("🛌 Відпочити", "rest:start");
+}
+
+export function buildRestingActionChoiceKeyboard() {
+  return new InlineKeyboard()
+    .text("✋ Перервати", "rest:interrupt")
+    .text("📋 Поставити в чергу", "rest:queue");
 }
 
 export function buildTrackKeyboard() {

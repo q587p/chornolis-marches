@@ -173,12 +173,12 @@ async function maybeHerbalistSpeak(c: any) {
   if (!chance(HERBALIST_SPEAK_CHANCE)) return false;
   const line = pick(HERBALIST_LINES);
   if (!line) return false;
-  await enqueueCreatureAction({ creatureId: c.id, type: "SAY", payload: { text: line }, durationMs: actionDurationMs("SAY") });
+  await enqueueCreatureAction({ creatureId: c.id, type: "SAY", payload: { text: line }, durationMs: actionDurationMs("SAY", c.stamina) });
   return true;
 }
 
 async function queueMove(c: any, exit: LocationExit, reason: string) {
-  await enqueueCreatureAction({ creatureId: c.id, type: "MOVE", payload: { direction: exit.direction as Direction, reason }, durationMs: movementDurationMs(exit.travelCost) });
+  await enqueueCreatureAction({ creatureId: c.id, type: "MOVE", payload: { direction: exit.direction as Direction, reason }, durationMs: movementDurationMs(exit.travelCost, c.stamina) });
   return "queuedMove";
 }
 
@@ -187,20 +187,20 @@ async function tickHerbalist(c: any) {
 
   const herbs = c.location.resources.find((r: any) => r.resourceType.key === "herbs");
   if (herbs && herbs.amount > 0) {
-    await enqueueCreatureAction({ creatureId: c.id, type: "GATHER_SPECIFIC", payload: { resourceKey: "herbs" }, durationMs: gatherDurationMs("herbs") });
+    await enqueueCreatureAction({ creatureId: c.id, type: "GATHER_SPECIFIC", payload: { resourceKey: "herbs" }, durationMs: gatherDurationMs("herbs", c.stamina) });
     return "queuedGather";
   }
 
   const exit = pick(c.location.exitsFrom);
   if (isExit(exit)) return queueMove(c, exit, "шукає трави");
-  await enqueueCreatureAction({ creatureId: c.id, type: "REST", payload: {}, durationMs: actionDurationMs("REST") });
+  await enqueueCreatureAction({ creatureId: c.id, type: "REST", payload: {}, durationMs: actionDurationMs("REST", c.stamina) });
   return "queuedRest";
 }
 
 async function tickHerbivore(c: any) {
   const hasFood = c.location.resources.some((r: any) => r.amount > 0 && ["berries", "herbs", "mushrooms"].includes(r.resourceType.key));
   if (hasFood && c.hunger > 0 && chance(60)) {
-    await enqueueCreatureAction({ creatureId: c.id, type: "EAT", payload: {}, durationMs: actionDurationMs("EAT") });
+    await enqueueCreatureAction({ creatureId: c.id, type: "EAT", payload: {}, durationMs: actionDurationMs("EAT", c.stamina) });
     return "queuedEat";
   }
 
@@ -209,14 +209,25 @@ async function tickHerbivore(c: any) {
     if (isExit(exit)) return queueMove(c, exit, "шукає їжу");
   }
 
-  await enqueueCreatureAction({ creatureId: c.id, type: "LOOK", payload: {}, durationMs: actionDurationMs("LOOK") });
+  await enqueueCreatureAction({ creatureId: c.id, type: "LOOK", payload: {}, durationMs: actionDurationMs("LOOK", c.stamina) });
   return "queuedLook";
 }
 
 async function tickCarnivore(c: any) {
   const prey = await prisma.creature.findFirst({ where: { isAlive: true, isGone: false, locationId: c.locationId, species: { diet: "HERBIVORE" } } });
   if (prey) {
-    await enqueueCreatureAction({ creatureId: c.id, type: "LOOK", payload: { targetType: "creature", targetId: prey.id }, durationMs: actionDurationMs("LOOK") });
+    if (chance(35)) {
+      await enqueueCreatureAction({
+        creatureId: c.id,
+        type: "ATTACK",
+        payload: { targetType: "creature", targetId: prey.id, mode: "mystery" },
+        durationMs: actionDurationMs("ATTACK", c.stamina),
+        interruptQueued: true,
+      });
+      return "queuedAttack";
+    }
+
+    await enqueueCreatureAction({ creatureId: c.id, type: "LOOK", payload: { targetType: "creature", targetId: prey.id }, durationMs: actionDurationMs("LOOK", c.stamina) });
     return "queuedLook";
   }
 
@@ -225,7 +236,7 @@ async function tickCarnivore(c: any) {
     if (isExit(exit)) return queueMove(c, exit, "патрулює");
   }
 
-  await enqueueCreatureAction({ creatureId: c.id, type: "REST", payload: {}, durationMs: actionDurationMs("REST") });
+  await enqueueCreatureAction({ creatureId: c.id, type: "REST", payload: {}, durationMs: actionDurationMs("REST", c.stamina) });
   return "queuedRest";
 }
 
@@ -297,7 +308,7 @@ async function regenerateResourcesIfNeeded() {
 export async function worldTick() {
   if (running) return;
   running = true;
-  let queuedMove = 0, queuedGather = 0, queuedEat = 0, queuedLook = 0, queuedSay = 0, queuedRest = 0, skippedBusy = 0, errors = 0, regenerated = 0;
+  let queuedMove = 0, queuedGather = 0, queuedEat = 0, queuedLook = 0, queuedSay = 0, queuedRest = 0, queuedAttack = 0, skippedBusy = 0, errors = 0, regenerated = 0;
   let aged = 0, oldAgeDeaths = 0, corpsesDecaying = 0, corpsesGone = 0;
   let lisovykAwakened = false, lisovykSlept = false;
   try {
@@ -327,11 +338,24 @@ export async function worldTick() {
 
         let result = "queuedRest";
         if (c.species.key === "herbalist") result = await tickHerbalist(c);
-        else if (c.species.key === "lisovyk") result = "queuedLook";
+        else if (c.species.key === "lisovyk") {
+          const exit = pick(c.location.exitsFrom);
+          if (isExit(exit) && chance(50)) {
+            result = await queueMove(c, exit, "нишпорить між деревами");
+          } else {
+            await enqueueCreatureAction({
+              creatureId: c.id,
+              type: "LOOK",
+              payload: { reason: "полює й дослухається до лісу" },
+              durationMs: actionDurationMs("LOOK", c.stamina),
+            });
+            result = "queuedLook";
+          }
+        }
         else if (c.species.diet === "HERBIVORE") result = await tickHerbivore(c);
         else if (c.species.diet === "CARNIVORE") result = await tickCarnivore(c);
         else {
-          await enqueueCreatureAction({ creatureId: c.id, type: "REST", payload: {}, durationMs: actionDurationMs("REST") });
+          await enqueueCreatureAction({ creatureId: c.id, type: "REST", payload: {}, durationMs: actionDurationMs("REST", c.stamina) });
           result = "queuedRest";
         }
 
@@ -340,6 +364,7 @@ export async function worldTick() {
         else if (result === "queuedEat") queuedEat++;
         else if (result === "queuedLook") queuedLook++;
         else if (result === "queuedSay") queuedSay++;
+        else if (result === "queuedAttack") queuedAttack++;
         else queuedRest++;
       } catch (error) {
         errors++;
@@ -347,11 +372,11 @@ export async function worldTick() {
       }
     }
 
-    if (DEBUG) console.log(`[WORLD TICK] done: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}`);
-    await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "World Tick", description: `Tick #${tickNumber}: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}` } });
+    if (DEBUG) console.log(`[WORLD TICK] done: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}`);
+    await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "World Tick", description: `Tick #${tickNumber}: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}` } });
     if (botInstance && tickNumber % 5 === 0) {
       const region = await prisma.region.findFirst();
-      if (region) await notifyRegion(botInstance, region.id, `🌿 Світ ворухнувся.\n\nТік #${tickNumber}: заплановано рухів — ${queuedMove}, збору — ${queuedGather}, їжі — ${queuedEat}, оглядів — ${queuedLook}, зайнятих істот — ${skippedBusy}, старість — ${aged}, смертей від старості — ${oldAgeDeaths}, зниклих трупів — ${corpsesGone}, відновлено вузлів — ${regenerated}.`);
+      if (region) await notifyRegion(botInstance, region.id, `🌿 Світ ворухнувся.\n\nТік #${tickNumber}: заплановано рухів — ${queuedMove}, збору — ${queuedGather}, їжі — ${queuedEat}, оглядів — ${queuedLook}, атак — ${queuedAttack}, зайнятих істот — ${skippedBusy}, старість — ${aged}, смертей від старості — ${oldAgeDeaths}, зниклих трупів — ${corpsesGone}, відновлено вузлів — ${regenerated}.`);
     }
   } finally {
     running = false;

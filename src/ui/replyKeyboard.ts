@@ -6,8 +6,9 @@ export function buildMainReplyKeyboard(isAuto = false) {
     .text("🧍 Персонаж")
     .row()
     .text("📋 Черга")
-    .text(isAuto ? "⏹ Стоп" : "🤖 Авто")
+    .text("🛌 Відпочити")
     .row()
+    .text(isAuto ? "⏹ Стоп" : "🤖 Авто")
     .text("📰 Новини")
     .resized()
     .persistent();

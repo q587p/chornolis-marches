@@ -1,6 +1,6 @@
 import { Bot } from "grammy";
 import { gatherConfig } from "../gameConfig";
-import { buildActionQueueKeyboard } from "../ui/keyboards";
+import { buildActionQueueKeyboard, buildRestingActionChoiceKeyboard } from "../ui/keyboards";
 import { enqueuePlayerAction, gatherDurationMs, renderPlayerActionQueue } from "../services/actionQueue";
 import { getPlayerByTelegramId } from "../services/players";
 import { buildGatherMenuForLocation } from "../services/locations";
@@ -39,8 +39,9 @@ export function registerGatherHandlers(bot: Bot) {
 
     const durationMs = gatherDurationMs(resourceKey);
 
+    let enqueueResult: Awaited<ReturnType<typeof enqueuePlayerAction>>;
     try {
-      await enqueuePlayerAction({
+      enqueueResult = await enqueuePlayerAction({
         playerId: player.id,
         type: "GATHER_SPECIFIC",
         payload: { resourceKey },
@@ -55,6 +56,10 @@ export function registerGatherHandlers(bot: Bot) {
 
     const queueText = await renderPlayerActionQueue(player.id);
     await safeAnswerCallbackQuery(ctx, `Додано в чергу (${Math.ceil(durationMs / 1000)} с).`);
-    await ctx.reply(queueText, { reply_markup: buildActionQueueKeyboard() });
+    if (enqueueResult.shouldPromptRestChoice) {
+      await ctx.reply(`Ви зараз відпочиваєте. До повного відновлення лишилось ${enqueueResult.remainingToMax} витривалості. Перервати відпочинок чи поставити дію в чергу після відпочинку?`, { reply_markup: buildRestingActionChoiceKeyboard() });
+    } else {
+      await ctx.reply(queueText, { reply_markup: buildActionQueueKeyboard() });
+    }
   });
 }

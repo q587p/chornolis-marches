@@ -1,7 +1,8 @@
 # 🌲 Chornolis Marches
 
 Text-based Telegram RPG with a living ecosystem, inspired by MUDs, Ultima Online, and Ukrainian folklore.
-Tech: living cell-based world, PostgreSQL persistence, Render deployment, world ticks, creature aging, corpse lifecycle, delayed player action queues, and a simple status page.
+
+Tech: living cell-based world, PostgreSQL persistence, Render deployment, world ticks, creature aging, corpse lifecycle, prioritized universal action queues, stamina/rest state, fading tracks, and a simple status page.
 
 ## 🧠 Vision
 
@@ -13,7 +14,7 @@ A living world simulation:
 * 🌿 Resources grow and get depleted
 * 🦴 Animals age, die, leave corpses, and feed the forest
 * 👤 Players interfere and upset the balance
-* 🧭 Player actions take time and can be queued into routes and plans
+* 🧭 Player/NPC/animal actions take time, can be queued, interrupted and leave tracks
 
 ## 🏗 Tech Stack
 
@@ -45,6 +46,15 @@ src/
 
 * Cell-based world grid with directional movement.
 * Persistent delayed action queue for players, NPCs and animals.
+* Stamina states:
+  * `Відпочивший`;
+  * `Втомлений`;
+  * `Дуже втомлений`;
+  * `Відпочиває` while active rest is running.
+* Action priorities: urgent actions such as attacks can jump ahead of slower plans.
+* Interrupts: urgent queued actions can cancel interruptible running/waiting actions.
+* Fading `WorldTrack` records for movement; `/track` can now report recent traces around the current location.
+* Stamina/rest loop: base stamina is 13; action duration is stamina cost × 13 seconds; rest restores stamina faster than passive recovery.
 * Delayed player action queue:
   * movement is no longer instant;
   * repeated movement/resource buttons append actions to a visible plan;
@@ -57,6 +67,7 @@ src/
 * World tick loop:
   * autonomous herbalist;
   * simple animal wandering/tracking through queued creature actions;
+  * carnivores can queue attacks against prey;
   * resource regeneration;
   * Lisovyk awakening/recovery loop;
   * animal aging and corpse decay.
@@ -80,12 +91,15 @@ src/
 * [x] Corpse lifecycle
 * [x] Delayed player action queue
 * [x] Queued movement and gathering
-* [ ] Queue-aware interruption by combat, traps, danger and death
-* [ ] Skill/stat modifiers for action duration
-* [ ] Queue-aware skinning, trap setting, resting and crafting
+* [x] Queue-aware interruption by urgent actions and death
+* [x] Stamina costs, fatigue states and active rest
+* [x] First fading track records
+* [ ] Skill/stat modifiers beyond stamina
+* [ ] Queue-aware skinning, trap setting and crafting
 * [ ] Reproduction and offspring
 * [ ] Predator hunting priority by age/HP/sex
-* [ ] Track system with fading footprints/scents/signs
+* [x] First track system with fading footprints/signs
+* [ ] Rich scent/noise/footprint interpretation
 * [ ] Stealth and visibility
 * [ ] Hunting and traps
 * [ ] Combat system
@@ -97,11 +111,15 @@ src/
 - `/start` — enter the world
 - `/me` — show character state and inventory
 - `/look` — queue a careful inspection of the current location
-- `/say text` — queue speech to everyone in the current location
-- `/queue` — show current queued player actions
+- `/queue` — show current action plan and queue controls
+- `/rest` — cancel active/waiting actions and start active rest
 - `/world` — show technical world status
 - `/all` — show living players and creatures
 - `/all dead` — show all creature records, including corpses/gone records
+- `/say text` — queue speech to everyone in the current location
+- `/queue clear` — remove waiting actions
+- `/queue cancel` — cancel the current interruptible action
+- `🛌 Відпочити` — start rest from the reply keyboard
 - `/tick` — manually run one world tick
 - `/tickGet` — show world tick settings
 - `/tickSet <ms>` — change tick interval at runtime

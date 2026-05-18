@@ -2,7 +2,7 @@ import { Bot } from "grammy";
 import { Direction } from "@prisma/client";
 import { prisma } from "../db";
 import { directionLabels } from "../ui/labels";
-import { buildActionQueueKeyboard } from "../ui/keyboards";
+import { buildActionQueueKeyboard, buildRestingActionChoiceKeyboard } from "../ui/keyboards";
 import { enqueuePlayerAction, movementDurationMs, renderPlayerActionQueue } from "../services/actionQueue";
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
@@ -20,10 +20,11 @@ export function registerMovementHandlers(bot: Bot) {
     const exit = await prisma.locationExit.findUnique({ where: { fromLocationId_direction: { fromLocationId: currentLocationId, direction } } });
     if (!exit || exit.isHidden) return void (await safeAnswerCallbackQuery(ctx, "Туди немає видимого шляху."));
 
-    const durationMs = movementDurationMs(exit.travelCost);
+    const durationMs = movementDurationMs(exit.travelCost, player.stamina);
 
+    let enqueueResult: Awaited<ReturnType<typeof enqueuePlayerAction>>;
     try {
-      await enqueuePlayerAction({
+      enqueueResult = await enqueuePlayerAction({
         playerId: player.id,
         type: "MOVE",
         payload: { direction },
@@ -38,6 +39,10 @@ export function registerMovementHandlers(bot: Bot) {
 
     const queueText = await renderPlayerActionQueue(player.id);
     await safeAnswerCallbackQuery(ctx, `Додано: ${directionLabels[direction].toLowerCase()}.`);
-    await ctx.reply(queueText, { reply_markup: buildActionQueueKeyboard() });
+    if (enqueueResult.shouldPromptRestChoice) {
+      await ctx.reply(`Ви зараз відпочиваєте. До повного відновлення лишилось ${enqueueResult.remainingToMax} витривалості. Перервати відпочинок чи поставити дію в чергу після відпочинку?`, { reply_markup: buildRestingActionChoiceKeyboard() });
+    } else {
+      await ctx.reply(queueText, { reply_markup: buildActionQueueKeyboard() });
+    }
   });
 }
