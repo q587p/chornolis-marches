@@ -54,7 +54,9 @@ src/
 * Action priorities are used for interruption, not for reordering normal route plans.
 * Interrupts: urgent actions such as attacks can cancel interruptible running/waiting actions.
 * Fading `WorldTrack` records for movement; `/track` can now report recent traces around the current location.
-* Stamina/rest loop: base stamina is 13; while stamina is non-negative, player actions execute immediately; tired actions go into the queue with duration = stamina cost × 13 seconds.
+* Unified tick timing: `WORLD_TICK_INTERVAL_MS` / `TICK_MS` drives the world loop and tick-derived action/recovery durations at process start.
+* Stamina/rest loop: base stamina is 13; while stamina is non-negative, player actions execute immediately; tired actions go into the queue with duration based on action ticks and the configured tick length.
+* HP recovery: passive health recovery happens only while idle; active rest is faster. At `HP = 0`, the player is unconscious, the queue is cleared, and only rest is available until HP reaches at least 1.
 * Delayed player action queue:
   * actions execute immediately while the player still has stamina;
   * tired actions append to a visible plan in FIFO order;
@@ -109,6 +111,7 @@ src/
 ## Commands
 
 - `/start` — enter the world
+- `/help` — newcomer hints and core commands
 - `/me` — show character state and inventory
 - `/look` — inspect the current location immediately while rested, or queue it while tired
 - `/queue` — show current action plan; empty queues show no inline controls
@@ -145,6 +148,7 @@ Create `.env`:
 ```env
 BOT_TOKEN=...
 DATABASE_URL=...
+WORLD_TICK_INTERVAL_MS=1500
 ```
 
 Run migrations and seed:
@@ -174,7 +178,8 @@ Environment variables:
 
 - `BOT_TOKEN`
 - `DATABASE_URL`
-- optional `WORLD_TICK_INTERVAL_MS`
+- optional `WORLD_TICK_INTERVAL_MS` — main timing knob for world ticks, action durations, regeneration and track TTL at startup
+- optional `TICK_MS` — legacy alias used only when `WORLD_TICK_INTERVAL_MS` is absent
 - optional `WORLD_DEBUG=true` or `WORLD_TICK_DEBUG=true`
 
 `APP_VERSION` is no longer required. The app reads version from `package.json` first.

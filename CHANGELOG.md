@@ -3,6 +3,42 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 The format is loosely based on Keep a Changelog and this project follows semantic-ish versioning.
+
+### 0.7.4 - unified tick, help and knockout - 12026-05-18
+
+### ✨ Added
+
+- Added `hpMax` and `lastHpRegenAt` to `Player`.
+- Added migration `20260518194500_hp_recovery_knockout`.
+- Added `/help` and persistent `🧭 Допомога` reply-keyboard button.
+- Added newcomer help after onboarding completion.
+- Added location region display in location cards and `/me`.
+
+### 🎮 Gameplay / UX
+
+- `WORLD_TICK_INTERVAL_MS` is now the main tick value used at startup by:
+  - world tick loop;
+  - action duration calculations;
+  - stamina recovery intervals;
+  - health recovery intervals;
+  - track TTL.
+- `TICK_MS` is kept as a legacy alias only when `WORLD_TICK_INTERVAL_MS` is absent.
+- Movement, general actions and gathering are now derived from tick counts instead of being hardcoded to separate millisecond constants.
+- Gathering duration now respects each resource's `gatherConfig.ticks`.
+- `/news` now shows the latest news section fully and the previous 12 sections as titles only.
+- When player HP reaches 0:
+  - the player becomes unconscious;
+  - active and queued actions are cancelled;
+  - rest starts automatically;
+  - non-rest actions are blocked until HP recovers to at least 1.
+- Passive HP recovery works only while idle; active rest recovers HP faster.
+- When HP rises from 0 to 1, the player receives a warning that actions are available again but they are still very weak.
+
+### 🛠 Technical
+
+- Added `config.tickMs` and centralized tick-derived gameplay constants in `src/gameConfig.ts`.
+- Updated `/tickGet` / `/tickSet` messaging to clarify runtime tick changes versus env-driven boot configuration.
+
 ---
 
 ### 0.7.3 - rest/queue/navigation follow-up - 12026-05-18

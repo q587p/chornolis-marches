@@ -1,5 +1,6 @@
 import { Bot } from "grammy";
 import { getPlayerByTelegramId } from "../services/players";
+import { BASE_HP } from "../gameConfig";
 import { accelerateFirstQueuedPlayerAction, hasPlayerActionQueueControls, playerRestStatusText, queuePlayerRest, renderPlayerActionQueue, startPlayerRest, stopPlayerRest } from "../services/actionQueue";
 import { buildRestWithQueueChoiceKeyboard } from "../ui/keyboards";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
@@ -31,12 +32,13 @@ async function startRest(ctx: any) {
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const max = player.staminaMax ?? 13;
-  if (player.stamina >= max && !player.isResting) {
-    await replyOrEdit(ctx, `Ви вже відпочили й готові до дій. Витривалість: ${player.stamina}/${max}.`);
+  const hpMax = player.hpMax ?? BASE_HP;
+  if (player.stamina >= max && player.hp >= hpMax && !player.isResting) {
+    await replyOrEdit(ctx, `Ви вже відпочили й готові до дій. HP: ${player.hp}/${hpMax}. Витривалість: ${player.stamina}/${max}.`);
     return;
   }
 
-  if (await hasPlayerActionQueueControls(player.id)) {
+  if (player.hp > 0 && await hasPlayerActionQueueControls(player.id)) {
     await replyOrEdit(ctx, "У вас зараз є черга дій. Почати відпочинок зараз і скасувати її, чи додати відпочинок у кінець черги?", {
       reply_markup: buildRestWithQueueChoiceKeyboard(),
     });

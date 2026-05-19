@@ -1,19 +1,33 @@
 import { WorldActionType } from "@prisma/client";
+import { config } from "./config";
 
-export const TICK_MS = 1500;
+export const TICK_MS = config.tickMs;
 
 export const BASE_STAMINA = 13;
+export const BASE_HP = 20;
+export const LOW_HP_WARNING = 3;
 export const VERY_TIRED_STAMINA = -(BASE_STAMINA * 3);
-export const ACTION_BASE_DURATION_MS = 13_000;
+
+export const ACTION_BASE_TICKS = 9;
+export const ACTION_BASE_DURATION_MS = TICK_MS * ACTION_BASE_TICKS;
 export const DEFAULT_ACTION_DURATION_MS = ACTION_BASE_DURATION_MS;
 export const MIN_ACTION_DURATION_MS = 1_000;
-export const ACTION_QUEUE_POLL_MS = 1_000;
+export const ACTION_QUEUE_POLL_MS = Math.max(500, Math.min(TICK_MS, 5_000));
 export const MAX_QUEUED_ACTIONS_PER_ACTOR = 12;
 
-export const STAMINA_REGEN_INTERVAL_MS = 60_000;
+export const STAMINA_REGEN_INTERVAL_TICKS = 40;
+export const STAMINA_REGEN_INTERVAL_MS = TICK_MS * STAMINA_REGEN_INTERVAL_TICKS;
 export const PASSIVE_STAMINA_REGEN_PER_INTERVAL = 1;
 export const REST_STAMINA_REGEN_PER_INTERVAL = BASE_STAMINA;
-export const TRACK_TTL_MS = 10 * 60_000;
+
+export const PASSIVE_HEALTH_REGEN_INTERVAL_TICKS = 520;
+export const REST_HEALTH_REGEN_INTERVAL_TICKS = 390;
+export const PASSIVE_HEALTH_REGEN_INTERVAL_MS = TICK_MS * PASSIVE_HEALTH_REGEN_INTERVAL_TICKS;
+export const REST_HEALTH_REGEN_INTERVAL_MS = TICK_MS * REST_HEALTH_REGEN_INTERVAL_TICKS;
+export const HEALTH_REGEN_PER_INTERVAL = 1;
+
+export const TRACK_TTL_TICKS = 400;
+export const TRACK_TTL_MS = TICK_MS * TRACK_TTL_TICKS;
 
 export const actionPriorityConfig: Partial<Record<WorldActionType, number>> = {
   ATTACK: 100,

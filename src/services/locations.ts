@@ -1,6 +1,6 @@
 import { InlineKeyboard } from "grammy";
 import { prisma } from "../db";
-import { ACTION_BASE_DURATION_MS, playerStaminaCostConfig } from "../gameConfig";
+import { ACTION_BASE_TICKS, TICK_MS, gatherConfig, playerStaminaCostConfig } from "../gameConfig";
 import { directionLabels } from "../ui/labels";
 import { buildMovementKeyboard, buildResourceMenuKeyboard, buildTargetListKeyboard } from "../ui/keyboards";
 import { escapeHtml } from "../utils/text";
@@ -42,9 +42,8 @@ function presenceText(location: any, viewerPlayerId?: number) {
   return "";
 }
 
-function actionSeconds(action: keyof typeof playerStaminaCostConfig) {
-  const cost = playerStaminaCostConfig[action] ?? 1;
-  return Math.ceil((cost * ACTION_BASE_DURATION_MS) / 1000);
+function resourceSeconds(resourceKey: string) {
+  return Math.ceil(((gatherConfig[resourceKey]?.ticks ?? playerStaminaCostConfig.GATHER_SPECIFIC ?? 1) * ACTION_BASE_TICKS * TICK_MS) / 1000);
 }
 
 
@@ -83,7 +82,7 @@ function resourceButtonData(resources: any[]) {
     .map((resource) => ({
       key: resource.resourceType.key,
       name: resource.resourceType.name,
-      durationText: ` (${actionSeconds("GATHER_SPECIFIC")} с)`,
+      durationText: ` (${resourceSeconds(resource.resourceType.key)} с)`,
     }));
 }
 
@@ -93,6 +92,7 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
     include: {
       players: true,
       creatures: { where: { isGone: false }, include: { species: true } },
+      region: true,
       exitsFrom: { where: { isHidden: false }, include: { toLocation: true }, orderBy: { direction: "asc" } },
     },
   });
@@ -104,7 +104,7 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
     : "Виходів не видно.";
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n\n${escapeHtml(location.description ?? "")}${presenceText(location, viewerPlayerId)}\n\nВиходи:\n${escapeHtml(exitsText)}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${presenceText(location, viewerPlayerId)}\n\nВиходи:\n${escapeHtml(exitsText)}`,
     keyboard: buildMovementKeyboard(location.exitsFrom),
   };
 }
@@ -116,6 +116,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
       players: true,
       creatures: { where: { isGone: false }, include: { species: true } },
       resources: { include: { resourceType: true } },
+      region: true,
       exitsFrom: { where: { isHidden: false }, include: { toLocation: true }, orderBy: { direction: "asc" } },
     },
   });
@@ -196,7 +197,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   }
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n\n${escapeHtml(location.description ?? "")}\n\n<i>Ви придивляєтесь.</i>\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}${resourcesText}${charactersText}${tracksText}${corpsesText}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}\n\n<i>Ви придивляєтесь.</i>\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}${resourcesText}${charactersText}${tracksText}${corpsesText}`,
     keyboard,
   };
 }

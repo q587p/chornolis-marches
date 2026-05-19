@@ -4,6 +4,10 @@ import path from "path";
 import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
 import { isPlayerAutoEnabled } from "./auto";
 
+function sectionTitle(section: string) {
+  return section.split("\n")[0]?.replace(/^##\s+/, "").trim() || "Без заголовка";
+}
+
 async function readNews() {
   const filePath = path.join(process.cwd(), "news.md");
   try {
@@ -12,8 +16,15 @@ async function readNews() {
       .split(/\n(?=##\s+)/)
       .map((section) => section.trim())
       .filter((section) => section.startsWith("## "))
-      .slice(0, 5);
-    return sections.join("\n\n---\n\n") || "Новин поки немає.";
+    const [latest, ...previous] = sections;
+    if (!latest) return "Новин поки немає.";
+
+    const previousTitles = previous
+      .slice(0, 12)
+      .map((section) => `- ${sectionTitle(section)}`)
+      .join("\n");
+
+    return previousTitles ? `${latest}\n\n---\n\nПопередні новини:\n${previousTitles}` : latest;
   } catch {
     return "Новини поки недоступні: файл news.md не знайдено.";
   }

@@ -4,6 +4,7 @@ import { getStartLocationId } from "../services/players";
 import { renderLocationBrief } from "../services/locations";
 import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
 import { guessGenderFromPronoun, guessNameForms, normalizeCharacterName, validateCharacterName, type NameForms } from "../services/grammar";
+import { HELP_TEXT } from "./help";
 
 const CASE_PROMPTS: Array<{ key: keyof NameForms; question: string; prefix?: string }> = [
   { key: "genitive", question: "Ім’я в родовому відмінку (Немає КОГО?)" },
@@ -114,6 +115,11 @@ async function finishOnboarding(ctx: any, state: OnboardingState) {
     { reply_markup: buildMainReplyKeyboard(false) }
   );
 
+  await ctx.reply(HELP_TEXT, {
+    parse_mode: "HTML",
+    reply_markup: buildMainReplyKeyboard(false),
+  });
+
   const view = await renderLocationBrief(startLocationId, player.id);
   await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
 }
@@ -183,6 +189,7 @@ async function setBotCommandsWithRetry(bot: Bot, attempts = 3) {
         { command: "location", description: "📍 Поточна локація" },
         { command: "look", description: "🔎 Придивитися" },
         { command: "news", description: "📰 Останні новини світу" },
+        { command: "help", description: "🧭 Допомога новачку" },
       ]);
 
       console.log("Telegram bot commands updated.");

@@ -20,11 +20,12 @@ model Player {
   currentLocationId Int?
   currentLocation   CellLocation? @relation(fields: [currentLocationId], references: [id])
 
-  hp      Int @default(20)
-  stamina Int @default(13)
-  staminaMax Int @default(13)
+  hp           Int @default(20)
+  hpMax        Int @default(20)
+  stamina      Int @default(13)
+  staminaMax   Int @default(13)
   fatigueState FatigueState @default(RESTED)
-  isResting Boolean @default(false)
+  isResting    Boolean @default(false)
   hunger  Int @default(0)
 
   // статистика
@@ -43,6 +44,7 @@ model Player {
 
   lastActionAt DateTime?
   lastStaminaRegenAt DateTime @default(now())
+  lastHpRegenAt      DateTime @default(now())
 
   onboardingComplete Boolean @default(false)
   pronoun            PlayerPronoun?

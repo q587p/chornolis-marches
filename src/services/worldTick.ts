@@ -3,9 +3,9 @@ import { CreatureAge, Direction, LocationExit } from "@prisma/client";
 import { prisma } from "../db";
 import { notifyRegion } from "./notifications";
 import { actionDurationMs, enqueueCreatureAction, gatherDurationMs, hasActiveCreatureActions, movementDurationMs } from "./actionQueue";
-import { BASE_STAMINA, VERY_TIRED_STAMINA } from "../gameConfig";
+import { BASE_STAMINA, TICK_MS, VERY_TIRED_STAMINA } from "../gameConfig";
 
-const DEFAULT_TICK_INTERVAL_MS = Number(process.env.WORLD_TICK_INTERVAL_MS || 60000);
+const DEFAULT_TICK_INTERVAL_MS = TICK_MS;
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
 const RESOURCE_REGEN_EVERY_TICKS = Number(process.env.WORLD_RESOURCE_REGEN_EVERY_TICKS || 10);
 const RESOURCE_REGEN_AMOUNT = Number(process.env.WORLD_RESOURCE_REGEN_AMOUNT || 1);
@@ -434,7 +434,7 @@ function registerTickCommands(bot: Bot) {
     }
     tickIntervalMs = Math.floor(value);
     restartWorldTickTimer();
-    await ctx.reply(`✅ World tick interval set to ${tickIntervalMs} ms.`);
+    await ctx.reply(`✅ World tick interval set to ${tickIntervalMs} ms. Дії та відновлення, що рахуються від базового тіку, беруть значення з .env під час старту процесу.`);
   });
 }
 
