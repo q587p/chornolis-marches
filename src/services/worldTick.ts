@@ -4,6 +4,7 @@ import { prisma } from "../db";
 import { notifyRegion } from "./notifications";
 import { actionDurationMs, enqueueCreatureAction, gatherDurationMs, hasActiveCreatureActions, movementDurationMs, restartActionQueueLoop } from "./actionQueue";
 import { BASE_STAMINA, TICK_MS, VERY_TIRED_STAMINA, getRuntimeTimingConfig, setRuntimeTickMs } from "../gameConfig";
+import { restartPlayerAutoTimers } from "../handlers/auto";
 
 const DEFAULT_TICK_INTERVAL_MS = TICK_MS;
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
@@ -407,7 +408,7 @@ export async function worldTick() {
     await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "World Tick", description: `Tick #${tickNumber}: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}` } });
     if (botInstance && tickNumber % 5 === 0) {
       const region = await prisma.region.findFirst();
-      if (region) await notifyRegion(botInstance, region.id, `🌿 Світ ворухнувся.\n\nТік #${tickNumber}: заплановано рухів — ${queuedMove}, збору — ${queuedGather}, їжі — ${queuedEat}, оглядів — ${queuedLook}, атак — ${queuedAttack}, зайнятих істот — ${skippedBusy}, старість — ${aged}, смертей від старості — ${oldAgeDeaths}, зниклих трупів — ${corpsesGone}, відновлено вузлів — ${regenerated}.`);
+      if (region) await notifyRegion(botInstance, region.id, `🌿 Світ ворухнувся.\n\nПублічний звіт раз на 5 тіків. Поточний тік #${tickNumber}: заплановано рухів — ${queuedMove}, збору — ${queuedGather}, їжі — ${queuedEat}, оглядів — ${queuedLook}, атак — ${queuedAttack}, зайнятих істот — ${skippedBusy}, старість — ${aged}, смертей від старості — ${oldAgeDeaths}, зниклих трупів — ${corpsesGone}, відновлено вузлів — ${regenerated}.`);
     }
   } finally {
     running = false;
@@ -437,6 +438,7 @@ function runtimeTickStatusText() {
     `World tick: кожен 1 тік`,
     `Action/recovery loop: кожен 1 тік (${timing.actionQueuePollMs} ms)`,
     `Публічне повідомлення «Світ ворухнувся»: кожні 5 тіків`,
+    `Авто-режим: кожні ${timing.autoIntervalTicks} тіків ≈ ${formatDuration(timing.autoIntervalMs)}`,
     `Tick #: ${tickNumber}`,
     "",
     "Дії:",
@@ -471,7 +473,8 @@ function registerTickCommands(bot: Bot) {
     tickIntervalMs = TICK_MS;
     restartWorldTickTimer();
     restartActionQueueLoop();
-    await ctx.reply(`✅ Час світу змінено runtime: ${TICK_MS} ms.\n\n${runtimeTickStatusText()}`);
+    restartPlayerAutoTimers(bot);
+    await ctx.reply(`✅ Час світу змінено runtime: ${TICK_MS} ms. Перезапущено world tick, action/recovery loop і авто-таймери.\n\n${runtimeTickStatusText()}`);
   });
 }
 

@@ -1,6 +1,6 @@
 import { Bot } from "grammy";
 import { prisma } from "../db";
-import { gatherConfig } from "../gameConfig";
+import { AUTO_INTERVAL_MS, AUTO_INTERVAL_TICKS, gatherConfig } from "../gameConfig";
 import {
   actionDurationMs,
   gatherDurationMs,
@@ -13,12 +13,12 @@ import { directionLabels } from "../ui/labels";
 import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
 import { logEvent } from "../services/worldEvents";
 
-const AUTO_INTERVAL_MS = Number(process.env.PLAYER_AUTO_INTERVAL_MS || 30000);
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
 const AUTO_SAY_CHANCE = Number(process.env.PLAYER_AUTO_SAY_CHANCE || 15);
 
 type AutoState = { timer: NodeJS.Timeout; running: boolean };
 const autoPlayers = new Map<number, AutoState>();
+let autoBot: Bot | null = null;
 
 const AUTO_LINES = [
   "Треба триматися стежки... якщо вона справді стежка.",
@@ -166,14 +166,21 @@ async function runAutoStep(bot: Bot, telegramId: number) {
   }
 }
 
-function startAuto(bot: Bot, telegramId: number) {
-  if (autoPlayers.has(telegramId)) return false;
-
-  const timer = setInterval(() => {
+function scheduleAutoTimer(bot: Bot, telegramId: number) {
+  return setInterval(() => {
     runAutoStep(bot, telegramId).catch((error) => console.warn("Player auto timer failed:", error));
   }, AUTO_INTERVAL_MS);
+}
+
+function startAuto(bot: Bot, telegramId: number) {
+  autoBot = bot;
+  if (autoPlayers.has(telegramId)) return false;
+
+  const timer = scheduleAutoTimer(bot, telegramId);
 
   autoPlayers.set(telegramId, { timer, running: false });
+  // First auto step happens immediately, but the action itself now enters WorldAction
+  // and finishes through the tick-based queue instead of bypassing time.
   runAutoStep(bot, telegramId).catch((error) => console.warn("Initial player auto step failed:", error));
   return true;
 }
@@ -191,7 +198,24 @@ export function stopPlayerAuto(telegramId: number) {
   return stopAuto(telegramId);
 }
 
+export function restartPlayerAutoTimers(bot = autoBot) {
+  if (!bot) return;
+  autoBot = bot;
+
+  for (const [telegramId, state] of autoPlayers.entries()) {
+    clearInterval(state.timer);
+    state.timer = scheduleAutoTimer(bot, telegramId);
+  }
+}
+
+export function playerAutoTimingText() {
+  const seconds = Math.ceil(AUTO_INTERVAL_MS / 1000);
+  return `кожні ${AUTO_INTERVAL_TICKS} тіків ≈ ${seconds} с`;
+}
+
 export function registerAutoHandlers(bot: Bot) {
+  autoBot = bot;
+
   bot.command("auto", async (ctx) => {
     if (!ctx.from) return;
     const started = startAuto(bot, ctx.from.id);

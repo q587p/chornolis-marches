@@ -4,6 +4,30 @@
 All notable changes to this project will be documented in this file.
 The format is loosely based on Keep a Changelog and this project follows semantic-ish versioning.
 
+### 0.7.6 - unified player actions and auto timing - 12026-05-20
+
+### 🎮 Gameplay / UX
+
+- Player actions no longer complete immediately when stamina is non-negative and the queue is empty.
+- Manual actions, auto-mode actions, NPC actions and animal actions now all go through `WorldAction` and resolve through tick-based duration.
+- Auto-mode is now based on `AUTO_INTERVAL_TICKS` instead of an independent `PLAYER_AUTO_INTERVAL_MS` timer.
+- `/tickSet <ms>` now restarts player auto timers together with the world tick and action/recovery loop.
+- `/tickGet` now includes auto-mode timing.
+- Public “Світ ворухнувся” reports now explicitly say that they are shown once per 5 ticks.
+
+### 🐛 Fixed
+
+- Fixed inconsistent gather result text such as “Ви витратили час на пошуки (1 с)” caused by immediate actions using `durationMs: 0`.
+- The first auto action is still scheduled immediately after enabling auto, but it now enters the action queue and completes through normal time.
+
+### 🛠 Technical
+
+- Added live `AUTO_INTERVAL_MS` derived from runtime `TICK_MS`.
+- Added auto timer restart support after runtime tick changes.
+- `package.json` and `package-lock.json` are intentionally untouched; version bump remains manual.
+
+---
+
 ### 0.7.5 - runtime tick tuning - 12026-05-19
 
 ### ✨ Added

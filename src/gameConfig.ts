@@ -21,6 +21,7 @@ export const REST_HEALTH_REGEN_INTERVAL_TICKS = 78;
 export const HEALTH_REGEN_PER_INTERVAL = 1;
 
 export const TRACK_TTL_TICKS = 400;
+export const AUTO_INTERVAL_TICKS = 6;
 
 export let TICK_MS = config.tickMs;
 export let ACTION_BASE_DURATION_MS = TICK_MS * ACTION_BASE_TICKS;
@@ -30,6 +31,7 @@ export let STAMINA_REGEN_INTERVAL_MS = TICK_MS * STAMINA_REGEN_INTERVAL_TICKS;
 export let PASSIVE_HEALTH_REGEN_INTERVAL_MS = TICK_MS * PASSIVE_HEALTH_REGEN_INTERVAL_TICKS;
 export let REST_HEALTH_REGEN_INTERVAL_MS = TICK_MS * REST_HEALTH_REGEN_INTERVAL_TICKS;
 export let TRACK_TTL_MS = TICK_MS * TRACK_TTL_TICKS;
+export let AUTO_INTERVAL_MS = TICK_MS * AUTO_INTERVAL_TICKS;
 
 function recalculateTickDerivedConfig() {
   ACTION_BASE_DURATION_MS = TICK_MS * ACTION_BASE_TICKS;
@@ -39,6 +41,7 @@ function recalculateTickDerivedConfig() {
   PASSIVE_HEALTH_REGEN_INTERVAL_MS = TICK_MS * PASSIVE_HEALTH_REGEN_INTERVAL_TICKS;
   REST_HEALTH_REGEN_INTERVAL_MS = TICK_MS * REST_HEALTH_REGEN_INTERVAL_TICKS;
   TRACK_TTL_MS = TICK_MS * TRACK_TTL_TICKS;
+  AUTO_INTERVAL_MS = TICK_MS * AUTO_INTERVAL_TICKS;
 }
 
 export function setRuntimeTickMs(value: number) {
@@ -67,6 +70,8 @@ export function getRuntimeTimingConfig() {
     restHealthRegenMs: REST_HEALTH_REGEN_INTERVAL_MS,
     trackTtlTicks: TRACK_TTL_TICKS,
     trackTtlMs: TRACK_TTL_MS,
+    autoIntervalTicks: AUTO_INTERVAL_TICKS,
+    autoIntervalMs: AUTO_INTERVAL_MS,
     actions: {
       moveMs: actionMs("MOVE"),
       lookMs: actionMs("LOOK"),

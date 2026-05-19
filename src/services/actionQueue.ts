@@ -402,38 +402,9 @@ export async function performOrQueuePlayerAction(bot: Bot, input: PlayerActionRe
     where: { actorType: "PLAYER", playerId: input.playerId, status: { in: ["QUEUED", "RUNNING"] } },
   });
 
-  if (!player.isResting && player.stamina >= 0 && activeCount === 0) {
-    const priority = normalizedInput.priority ?? actionPriority(normalizedInput.type);
-    const action = await prisma.worldAction.create({
-      data: {
-        actorType: "PLAYER",
-        playerId: input.playerId,
-        type: normalizedInput.type,
-        status: "RUNNING",
-        priority,
-        interruptible: normalizedInput.interruptible ?? true,
-        note: normalizedInput.note,
-        payload: (normalizedInput.payload ?? {}) as Prisma.InputJsonValue,
-        durationMs: 0,
-        position: 1,
-        startedAt: new Date(),
-        executeAt: null,
-        chatId: normalizedInput.chatId === undefined ? undefined : String(normalizedInput.chatId),
-        messageId: normalizedInput.messageId,
-      },
-    });
-
-    await completeAction(bot, action);
-
-    return {
-      action,
-      mode: "immediate",
-      wasResting,
-      shouldPromptRestChoice: false,
-      remainingToMax,
-    };
-  }
-
+  // 0.7.6: player actions no longer bypass time through immediate completion.
+  // Even the first action goes through WorldAction, so manual actions and auto-mode
+  // use the same tick-based duration model as animals and NPCs.
   const result = await enqueuePlayerAction(normalizedInput);
   return { ...result, wasResting, shouldPromptRestChoice: wasResting && activeCount === 0, remainingToMax };
 }
