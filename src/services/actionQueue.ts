@@ -496,18 +496,43 @@ export async function stopPlayerRest(playerId: number) {
 export async function playerRestStatusText(playerId: number) {
   const player = await prisma.player.findUnique({ where: { id: playerId } });
   if (!player) return "Персонажа не знайдено.";
+
   const max = player.staminaMax ?? BASE_STAMINA;
   const hpMax = player.hpMax ?? BASE_HP;
-  const remaining = Math.max(0, max - player.stamina);
+  const staminaRemaining = Math.max(0, max - player.stamina);
   const hpRemaining = Math.max(0, hpMax - player.hp);
   const state = fatigueLabel(fatigueStateFor(player.stamina, max), player.isResting);
-  if (remaining <= 0 && hpRemaining <= 0) {
+
+  if (staminaRemaining <= 0 && hpRemaining <= 0) {
     return `Ви вже відпочивші й готові до дій. HP: ${player.hp}/${hpMax}. Витривалість: ${player.stamina}/${max}.`;
   }
-  const staminaMinutes = Math.ceil(remaining / REST_STAMINA_REGEN_PER_INTERVAL) * msToMinutes(STAMINA_REGEN_INTERVAL_MS);
-  const hpMinutes = Math.ceil(hpRemaining / HEALTH_REGEN_PER_INTERVAL) * msToMinutes(REST_HEALTH_REGEN_INTERVAL_MS);
-  const minutes = Math.max(staminaMinutes, hpMinutes);
-  return `Ви відпочиваєте. Стан: ${state}. HP: ${player.hp}/${hpMax}. Витривалість: ${player.stamina}/${max}. До повного відновлення приблизно: ${minutes} хв.`;
+
+  const lines = [
+    `Ви відпочиваєте.`,
+    `Стан: ${state}.`,
+    `HP: ${player.hp}/${hpMax}.`,
+    `Витривалість: ${player.stamina}/${max}${staminaRemaining <= 0 ? " — повністю відновлена" : ""}.`,
+  ];
+
+  if (player.hp <= 0) {
+    lines.push(`До притомности: приблизно ${msToMinutes(REST_HEALTH_REGEN_INTERVAL_MS)} хв.`);
+  }
+
+  if (staminaRemaining > 0) {
+    const staminaMinutes = Math.ceil(staminaRemaining / REST_STAMINA_REGEN_PER_INTERVAL) * msToMinutes(STAMINA_REGEN_INTERVAL_MS);
+    lines.push(`До повної витривалости: приблизно ${staminaMinutes} хв.`);
+  }
+
+  if (hpRemaining > 0) {
+    const hpMinutes = Math.ceil(hpRemaining / HEALTH_REGEN_PER_INTERVAL) * msToMinutes(REST_HEALTH_REGEN_INTERVAL_MS);
+    lines.push(`До повного здоров’я: приблизно ${hpMinutes} хв.`);
+  }
+
+  if (player.hp > 0 && player.hp <= LOW_HP_WARNING) {
+    lines.push("Ви вже можете діяти, але дуже слабі. Вам би ще відновитися.");
+  }
+
+  return lines.join("\n");
 }
 
 export async function enqueueCreatureAction(input: {
@@ -699,7 +724,7 @@ async function startNextQueuedAction(action: WorldAction) {
     const player = await prisma.player.findUnique({ where: { id: action.playerId } });
     await prisma.player.update({
       where: { id: action.playerId },
-      data: { isResting: true, lastStaminaRegenAt: new Date(), restStarts: player?.isResting ? undefined : { increment: 1 } },
+      data: { isResting: true, lastStaminaRegenAt: new Date(), lastHpRegenAt: new Date(), restStarts: player?.isResting ? undefined : { increment: 1 } },
     });
   }
 
@@ -1287,12 +1312,24 @@ async function processActionQueue(bot: Bot) {
   }
 }
 
+let actionQueueTimer: NodeJS.Timeout | null = null;
+let actionQueueBot: Bot | null = null;
+
+function runActionQueueLoop(bot: Bot) {
+  processActionQueue(bot).catch((error) => {
+    setLastRuntimeError(error);
+    console.error("Action queue failed:", error);
+    logEvent("ERROR", "Action queue failed", String(error)).catch(() => undefined);
+  });
+}
+
+export function restartActionQueueLoop() {
+  if (!actionQueueBot) return;
+  if (actionQueueTimer) clearInterval(actionQueueTimer);
+  actionQueueTimer = setInterval(() => runActionQueueLoop(actionQueueBot!), ACTION_QUEUE_POLL_MS);
+}
+
 export function startActionQueueLoop(bot: Bot) {
-  setInterval(() => {
-    processActionQueue(bot).catch((error) => {
-      setLastRuntimeError(error);
-      console.error("Action queue failed:", error);
-      logEvent("ERROR", "Action queue failed", String(error)).catch(() => undefined);
-    });
-  }, ACTION_QUEUE_POLL_MS);
+  actionQueueBot = bot;
+  restartActionQueueLoop();
 }

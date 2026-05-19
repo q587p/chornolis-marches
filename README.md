@@ -54,7 +54,7 @@ src/
 * Action priorities are used for interruption, not for reordering normal route plans.
 * Interrupts: urgent actions such as attacks can cancel interruptible running/waiting actions.
 * Fading `WorldTrack` records for movement; `/track` can now report recent traces around the current location.
-* Unified tick timing: `WORLD_TICK_INTERVAL_MS` / `TICK_MS` drives the world loop and tick-derived action/recovery durations at process start.
+* Runtime tick timing: `WORLD_TICK_INTERVAL_MS` / `TICK_MS` sets the initial world time, and `/tickSet <ms>` can recalculate tick-derived durations without restarting the process.
 * Stamina/rest loop: base stamina is 13; while stamina is non-negative, player actions execute immediately; tired actions go into the queue with duration based on action ticks and the configured tick length.
 * HP recovery: passive health recovery happens only while idle; active rest is faster. At `HP = 0`, the player is unconscious, the queue is cleared, and only rest is available until HP reaches at least 1.
 * Delayed player action queue:
@@ -125,7 +125,7 @@ src/
 - `🛌 Відпочити` — start rest from the reply keyboard
 - `/tick` — manually run one world tick
 - `/tickGet` — show world tick settings
-- `/tickSet <ms>` — change tick interval at runtime
+- `/tickSet <ms>` — change runtime world timing: world tick, action/recovery loop and tick-derived durations
 - `/addCreature <speciesKey> <locationKey> [count]` — debug-spawn test animals
 
 ## Status

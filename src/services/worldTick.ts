@@ -2,8 +2,8 @@ import { Bot } from "grammy";
 import { CreatureAge, Direction, LocationExit } from "@prisma/client";
 import { prisma } from "../db";
 import { notifyRegion } from "./notifications";
-import { actionDurationMs, enqueueCreatureAction, gatherDurationMs, hasActiveCreatureActions, movementDurationMs } from "./actionQueue";
-import { BASE_STAMINA, TICK_MS, VERY_TIRED_STAMINA } from "../gameConfig";
+import { actionDurationMs, enqueueCreatureAction, gatherDurationMs, hasActiveCreatureActions, movementDurationMs, restartActionQueueLoop } from "./actionQueue";
+import { BASE_STAMINA, TICK_MS, VERY_TIRED_STAMINA, getRuntimeTimingConfig, setRuntimeTickMs } from "../gameConfig";
 
 const DEFAULT_TICK_INTERVAL_MS = TICK_MS;
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
@@ -423,18 +423,55 @@ function restartWorldTickTimer() {
   }
 }
 
+function formatDuration(ms: number) {
+  if (ms < 60_000) return `${Math.ceil(ms / 1000)} с`;
+  return `${Math.ceil(ms / 60_000)} хв`;
+}
+
+function runtimeTickStatusText() {
+  const timing = getRuntimeTimingConfig();
+  return [
+    "🌲 Час світу",
+    "",
+    `Базовий тік: ${timing.tickMs} ms`,
+    `World tick: кожен 1 тік`,
+    `Action/recovery loop: кожен 1 тік (${timing.actionQueuePollMs} ms)`,
+    `Публічне повідомлення «Світ ворухнувся»: кожні 5 тіків`,
+    `Tick #: ${tickNumber}`,
+    "",
+    "Дії:",
+    `- рух: ${timing.actionBaseTicks} тіків ≈ ${formatDuration(timing.actions.moveMs)}`,
+    `- огляд/вистежування: ${timing.actionBaseTicks * 3} тіків ≈ ${formatDuration(timing.actions.lookMs)}`,
+    `- збір: ${timing.actionBaseTicks * 5} тіків ≈ ${formatDuration(timing.actions.gatherMs)}`,
+    `- атака: ${timing.actionBaseTicks * 7} тіків ≈ ${formatDuration(timing.actions.attackMs)}`,
+    "",
+    "Відновлення:",
+    `- витривалість: раз на ${timing.staminaRegenTicks} тіків ≈ ${formatDuration(timing.staminaRegenMs)}`,
+    `- HP без відпочинку: +1 раз на ${timing.passiveHealthRegenTicks} тіків ≈ ${formatDuration(timing.passiveHealthRegenMs)}`,
+    `- HP під час відпочинку: +1 раз на ${timing.restHealthRegenTicks} тіків ≈ ${formatDuration(timing.restHealthRegenMs)}`,
+    "",
+    `Регенерація ресурсів: раз на ${RESOURCE_REGEN_EVERY_TICKS} world ticks, +${RESOURCE_REGEN_AMOUNT}`,
+    `Сліди живуть: ${timing.trackTtlTicks} тіків ≈ ${formatDuration(timing.trackTtlMs)}`,
+    "",
+    "Змінити runtime без рестарту: /tickSet <ms>",
+  ].join("\n");
+}
+
 function registerTickCommands(bot: Bot) {
   bot.command("tick", async (ctx) => { await worldTick(); await ctx.reply("✅ World tick запущено вручну."); });
-  bot.command(["tickGet", "tickget"], async (ctx) => { await ctx.reply(`🌲 World tick\n\nІнтервал: ${tickIntervalMs} ms\nTick #: ${tickNumber}\nРегенерація ресурсів: раз на ${RESOURCE_REGEN_EVERY_TICKS} тіків, +${RESOURCE_REGEN_AMOUNT}\nNPC/тварини: дії плануються через WorldAction queue.`); });
+  bot.command(["tickGet", "tickget"], async (ctx) => { await ctx.reply(runtimeTickStatusText()); });
   bot.command(["tickSet", "tickset"], async (ctx) => {
     const value = Number(ctx.match?.trim());
     if (!Number.isFinite(value) || value < 1000) {
       await ctx.reply("⚠️ Формат: /tickSet 5000\nМінімум: 1000 ms.");
       return;
     }
-    tickIntervalMs = Math.floor(value);
+
+    setRuntimeTickMs(value);
+    tickIntervalMs = TICK_MS;
     restartWorldTickTimer();
-    await ctx.reply(`✅ World tick interval set to ${tickIntervalMs} ms. Дії та відновлення, що рахуються від базового тіку, беруть значення з .env під час старту процесу.`);
+    restartActionQueueLoop();
+    await ctx.reply(`✅ Час світу змінено runtime: ${TICK_MS} ms.\n\n${runtimeTickStatusText()}`);
   });
 }
 

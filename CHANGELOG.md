@@ -4,6 +4,28 @@
 All notable changes to this project will be documented in this file.
 The format is loosely based on Keep a Changelog and this project follows semantic-ish versioning.
 
+### 0.7.5 - runtime tick tuning - 12026-05-19
+
+### ✨ Added
+
+- Added runtime tick reconfiguration through `/tickSet <ms>` without process restart.
+- Added `getRuntimeTimingConfig()` / `setRuntimeTickMs()` in `src/gameConfig.ts`.
+- `/tickGet` now explains the full timing model: base tick, world tick, action/recovery loop, action durations, regeneration intervals, resource regeneration and track TTL.
+
+### 🎮 Gameplay / UX
+
+- HP recovery is now faster: passive +1 per 156 ticks, active rest +1 per 78 ticks.
+- Rest status text now separates time to regain consciousness, full stamina and full health.
+- The old confusing single “До повного відновлення” number is removed.
+
+### 🛠 Technical
+
+- Tick-derived constants in `gameConfig.ts` are now live `let` exports recalculated by `setRuntimeTickMs()`.
+- The action/recovery loop can be restarted after runtime tick changes.
+- `package.json` and `package-lock.json` are intentionally untouched; version bump remains manual.
+
+---
+
 ### 0.7.4 - unified tick, help and knockout - 12026-05-18
 
 ### ✨ Added
