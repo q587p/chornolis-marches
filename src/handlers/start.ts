@@ -5,6 +5,7 @@ import { renderLocationBrief } from "../services/locations";
 import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
 import { guessGenderFromPronoun, guessNameForms, normalizeCharacterName, validateCharacterName, type NameForms } from "../services/grammar";
 import { HELP_TEXT } from "./help";
+import { BASE_STAMINA } from "../gameConfig";
 
 const CASE_PROMPTS: Array<{ key: keyof NameForms; question: string; prefix?: string }> = [
   { key: "genitive", question: "Ім’я в родовому відмінку (Немає КОГО?)" },
@@ -65,6 +66,7 @@ async function enterWorld(ctx: any, isMenuRefresh = false) {
       firstName: from.first_name ?? null,
       lastName: from.last_name ?? null,
       currentLocationId: startLocationId,
+      stamina: BASE_STAMINA * 3,
     },
   });
 
@@ -104,6 +106,7 @@ async function finishOnboarding(ctx: any, state: OnboardingState) {
       grammaticalGender: gender,
       animacy: "ANIMATE",
       onboardingComplete: true,
+      stamina: BASE_STAMINA * 3,
       currentLocationId: startLocationId,
     },
   });

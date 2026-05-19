@@ -11,6 +11,7 @@ import {
   LOW_HP_WARNING,
   MAX_QUEUED_ACTIONS_PER_ACTOR,
   MIN_ACTION_DURATION_MS,
+  QUICK_PLAYER_ACTION_DURATION_MS,
   PASSIVE_HEALTH_REGEN_INTERVAL_MS,
   PASSIVE_STAMINA_REGEN_PER_INTERVAL,
   REST_HEALTH_REGEN_INTERVAL_MS,
@@ -205,6 +206,11 @@ function hpRecoveryMessages(before: number, after: number, max: number) {
 
 function actionTicks(type: WorldActionType) {
   return Math.max(1, (playerStaminaCostConfig[type] ?? 1) * ACTION_BASE_TICKS);
+}
+
+function effectivePlayerActionDurationMs(player: { stamina: number } | null | undefined, type: WorldActionType, requestedDurationMs: number) {
+  if (type !== "REST" && type !== "WAIT" && player && player.stamina > 0) return QUICK_PLAYER_ACTION_DURATION_MS;
+  return requestedDurationMs;
 }
 
 function actionTitle(action: Pick<WorldAction, "type" | "payload" | "durationMs">) {
@@ -402,9 +408,38 @@ export async function performOrQueuePlayerAction(bot: Bot, input: PlayerActionRe
     where: { actorType: "PLAYER", playerId: input.playerId, status: { in: ["QUEUED", "RUNNING"] } },
   });
 
-  // 0.7.6: player actions no longer bypass time through immediate completion.
-  // Even the first action goes through WorldAction, so manual actions and auto-mode
-  // use the same tick-based duration model as animals and NPCs.
+  if (!player.isResting && player.stamina > 0 && activeCount === 0) {
+    const priority = normalizedInput.priority ?? actionPriority(normalizedInput.type);
+    const durationMs = effectivePlayerActionDurationMs(player, normalizedInput.type, normalizedInput.durationMs);
+    const startedAt = new Date();
+    const action = await prisma.worldAction.create({
+      data: {
+        actorType: "PLAYER",
+        playerId: input.playerId,
+        type: normalizedInput.type,
+        status: "RUNNING",
+        priority,
+        interruptible: normalizedInput.interruptible ?? true,
+        note: normalizedInput.note,
+        payload: (normalizedInput.payload ?? {}) as Prisma.InputJsonValue,
+        durationMs,
+        position: 1,
+        startedAt,
+        executeAt: new Date(startedAt.getTime() + durationMs),
+        chatId: normalizedInput.chatId === undefined ? undefined : String(normalizedInput.chatId),
+        messageId: normalizedInput.messageId,
+      },
+    });
+
+    return {
+      action,
+      mode: "immediate",
+      wasResting,
+      shouldPromptRestChoice: false,
+      remainingToMax,
+    };
+  }
+
   const result = await enqueuePlayerAction(normalizedInput);
   return { ...result, wasResting, shouldPromptRestChoice: wasResting && activeCount === 0, remainingToMax };
 }
@@ -567,9 +602,11 @@ export async function accelerateFirstQueuedPlayerAction(playerId: number) {
   });
   if (!first) return false;
 
+  const startedAt = new Date();
+  const durationMs = effectivePlayerActionDurationMs(player, first.type, first.durationMs);
   await prisma.worldAction.update({
     where: { id: first.id },
-    data: { status: "RUNNING", durationMs: 0, startedAt: new Date(), executeAt: new Date() },
+    data: { status: "RUNNING", durationMs, startedAt, executeAt: new Date(startedAt.getTime() + durationMs) },
   });
 
   return true;
@@ -686,9 +723,16 @@ async function resolveTarget(type: string, id: number, locationId: number): Prom
 }
 
 async function startNextQueuedAction(action: WorldAction) {
+  const startedAt = new Date();
+  let durationMs = action.durationMs;
+  if (action.actorType === "PLAYER" && action.playerId) {
+    const player = await prisma.player.findUnique({ where: { id: action.playerId } });
+    durationMs = effectivePlayerActionDurationMs(player, action.type, action.durationMs);
+  }
+
   await prisma.worldAction.update({
     where: { id: action.id },
-    data: { status: "RUNNING", startedAt: new Date(), executeAt: new Date(Date.now() + action.durationMs) },
+    data: { status: "RUNNING", durationMs, startedAt, executeAt: new Date(startedAt.getTime() + durationMs) },
   });
 
   if (action.actorType === "PLAYER" && action.playerId && action.type === "REST") {
