@@ -1,6 +1,6 @@
 import { InlineKeyboard } from "grammy";
 import { prisma } from "../db";
-import { ACTION_BASE_TICKS, TICK_MS, gatherConfig, playerStaminaCostConfig } from "../gameConfig";
+import { ACTION_BASE_TICKS, QUICK_PLAYER_ACTION_DURATION_MS, TICK_MS, gatherConfig, playerStaminaCostConfig } from "../gameConfig";
 import { directionLabels } from "../ui/labels";
 import { buildMovementKeyboard, buildResourceMenuKeyboard, buildTargetListKeyboard } from "../ui/keyboards";
 import { escapeHtml } from "../utils/text";
@@ -42,8 +42,30 @@ function presenceText(location: any, viewerPlayerId?: number) {
   return "";
 }
 
-function resourceSeconds(resourceKey: string) {
+function slowResourceSeconds(resourceKey: string) {
   return Math.ceil(((gatherConfig[resourceKey]?.ticks ?? playerStaminaCostConfig.GATHER_SPECIFIC ?? 1) * ACTION_BASE_TICKS * TICK_MS) / 1000);
+}
+
+function formatSeconds(ms: number) {
+  return Math.max(1, Math.ceil(ms / 1000));
+}
+
+async function usesQuickPlayerActionDuration(viewerPlayerId?: number) {
+  if (!viewerPlayerId) return false;
+
+  const player = await prisma.player.findUnique({ where: { id: viewerPlayerId }, select: { hp: true, isResting: true, stamina: true } });
+  if (!player || player.hp <= 0 || player.isResting || player.stamina <= 0) return false;
+
+  const activeActions = await prisma.worldAction.count({
+    where: { actorType: "PLAYER", playerId: viewerPlayerId, status: { in: ["QUEUED", "RUNNING"] } },
+  });
+
+  return activeActions === 0;
+}
+
+function resourceDurationText(resourceKey: string, quick: boolean) {
+  const ms = quick ? QUICK_PLAYER_ACTION_DURATION_MS : slowResourceSeconds(resourceKey) * 1000;
+  return ` (${formatSeconds(ms)} с)`;
 }
 
 
@@ -76,13 +98,14 @@ function visibleActionText(target: { type: "player" | "creature"; id: number }, 
   return "";
 }
 
-function resourceButtonData(resources: any[]) {
+async function resourceButtonData(resources: any[], viewerPlayerId?: number) {
+  const quick = await usesQuickPlayerActionDuration(viewerPlayerId);
   return resources
     .filter((r) => r.amount > 0)
     .map((resource) => ({
       key: resource.resourceType.key,
       name: resource.resourceType.name,
-      durationText: ` (${resourceSeconds(resource.resourceType.key)} с)`,
+      durationText: resourceDurationText(resource.resourceType.key, quick),
     }));
 }
 
@@ -173,7 +196,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     : "";
 
   const keyboard = new InlineKeyboard();
-  const resources = resourceButtonData(location.resources);
+  const resources = await resourceButtonData(location.resources, viewerPlayerId);
 
   if (resources.length === 1) {
     const resource = resources[0];
@@ -202,12 +225,12 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   };
 }
 
-export async function buildGatherMenuForLocation(locationId: number) {
+export async function buildGatherMenuForLocation(locationId: number, viewerPlayerId?: number) {
   const resources = await prisma.resourceNode.findMany({
     where: { locationId, amount: { gt: 0 } },
     include: { resourceType: true },
     orderBy: { id: "asc" },
   });
 
-  return buildResourceMenuKeyboard(resourceButtonData(resources));
+  return buildResourceMenuKeyboard(await resourceButtonData(resources, viewerPlayerId));
 }

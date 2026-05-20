@@ -1,11 +1,12 @@
 import { Bot } from "grammy";
 import { buildActionQueueKeyboard } from "../ui/keyboards";
-import { cancelCurrentPlayerAction, clearQueuedPlayerActions, hasPlayerActionQueueControls, renderPlayerActionQueue } from "../services/actionQueue";
+import { cancelCurrentPlayerAction, clearQueuedPlayerActions, playerActionQueueControlCount, renderPlayerActionQueue } from "../services/actionQueue";
 import { getPlayerByTelegramId } from "../services/players";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 
 async function queueOptions(playerId: number) {
-  return (await hasPlayerActionQueueControls(playerId)) ? { reply_markup: buildActionQueueKeyboard(true) } : undefined;
+  const count = await playerActionQueueControlCount(playerId);
+  return count > 0 ? { reply_markup: buildActionQueueKeyboard(count) } : undefined;
 }
 
 async function showQueue(ctx: any, playerId: number, prefix?: string) {

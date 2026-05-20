@@ -612,11 +612,19 @@ export async function accelerateFirstQueuedPlayerAction(playerId: number) {
   return true;
 }
 
+export async function playerActionQueueControlCount(playerId: number) {
+  const [actionCount, player] = await Promise.all([
+    prisma.worldAction.count({
+      where: { actorType: "PLAYER", playerId, status: { in: ["QUEUED", "RUNNING"] } },
+    }),
+    prisma.player.findUnique({ where: { id: playerId }, select: { isResting: true } }),
+  ]);
+
+  return actionCount + (player?.isResting ? 1 : 0);
+}
+
 export async function hasPlayerActionQueueControls(playerId: number) {
-  const count = await prisma.worldAction.count({
-    where: { actorType: "PLAYER", playerId, status: { in: ["QUEUED", "RUNNING"] } },
-  });
-  return count > 0;
+  return (await playerActionQueueControlCount(playerId)) > 0;
 }
 
 export async function clearQueuedPlayerActions(playerId: number) {

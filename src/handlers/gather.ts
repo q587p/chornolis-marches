@@ -77,7 +77,7 @@ export function registerGatherHandlers(bot: Bot) {
       return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
     }
 
-    const keyboard = await buildGatherMenuForLocation(player.currentLocationId);
+    const keyboard = await buildGatherMenuForLocation(player.currentLocationId, player.id);
     await safeAnswerCallbackQuery(ctx);
 
     try {

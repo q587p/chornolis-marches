@@ -1,8 +1,9 @@
 import { buildActionQueueKeyboard, buildRestingActionChoiceKeyboard } from "../ui/keyboards";
-import { hasPlayerActionQueueControls, renderPlayerActionQueue } from "../services/actionQueue";
+import { playerActionQueueControlCount, renderPlayerActionQueue } from "../services/actionQueue";
 
 export async function actionQueueReplyOptions(playerId: number) {
-  return (await hasPlayerActionQueueControls(playerId)) ? { reply_markup: buildActionQueueKeyboard(true) } : undefined;
+  const count = await playerActionQueueControlCount(playerId);
+  return count > 0 ? { reply_markup: buildActionQueueKeyboard(count) } : undefined;
 }
 
 

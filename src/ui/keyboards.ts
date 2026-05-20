@@ -25,14 +25,17 @@ export function buildMovementKeyboard(exits: any[]) {
   return keyboard;
 }
 
-export function buildActionQueueKeyboard(hasActions = true) {
+export function buildActionQueueKeyboard(actionCount: number | boolean = true) {
   const keyboard = new InlineKeyboard();
-  if (!hasActions) return keyboard;
+  const count = typeof actionCount === "boolean" ? (actionCount ? 2 : 0) : actionCount;
+  if (count <= 0) return keyboard;
+
+  if (count === 1) return keyboard.text("✋ Скасувати дію", "queue:clear");
 
   return keyboard
     .text("✋ Скасувати поточну", "queue:cancel-current")
     .row()
-    .text("🧹 Очистити чергу", "queue:clear");
+    .text("🧹 Очистити все", "queue:clear");
 }
 
 export function buildFatigueRestKeyboard() {

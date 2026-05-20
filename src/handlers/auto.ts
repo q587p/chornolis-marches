@@ -1,12 +1,13 @@
 import { Bot } from "grammy";
 import { prisma } from "../db";
-import { AUTO_INTERVAL_MS, AUTO_INTERVAL_TICKS, gatherConfig } from "../gameConfig";
+import { AUTO_INTERVAL_MS, AUTO_INTERVAL_TICKS, VERY_TIRED_STAMINA, gatherConfig } from "../gameConfig";
 import {
   actionDurationMs,
   gatherDurationMs,
   movementDurationMs,
   performOrQueuePlayerAction,
   renderPlayerActionQueue,
+  startPlayerRest,
 } from "../services/actionQueue";
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { directionLabels } from "../ui/labels";
@@ -39,6 +40,43 @@ function chance(p: number) {
 
 function pick<T>(items: T[]) {
   return items.length ? items[Math.floor(Math.random() * items.length)] : undefined;
+}
+
+function autoRestChance(player: any) {
+  if (player.hp <= 0 || player.stamina <= VERY_TIRED_STAMINA) return 100;
+  if (player.stamina >= 0) return 0;
+
+  const veryTiredDebt = Math.max(1, Math.abs(VERY_TIRED_STAMINA));
+  const debtRatio = Math.min(1, Math.abs(player.stamina) / veryTiredDebt);
+
+  return Math.min(95, 15 + Math.round(debtRatio * 75));
+}
+
+async function maybeStartAutoRest(bot: Bot, telegramId: number, player: any, locationId: number) {
+  if (player.isResting) return true;
+
+  const restChance = autoRestChance(player);
+  if (restChance <= 0 || !chance(restChance)) return false;
+
+  await startPlayerRest(player.id);
+  await logEvent("PLAYER_ACTION", "Auto started player rest", `stamina=${player.stamina}; chance=${restChance}`, locationId).catch(() => undefined);
+
+  const reason = player.stamina <= VERY_TIRED_STAMINA
+    ? "ви дуже втомлені"
+    : "втома вже бере своє";
+
+  await bot.api.sendMessage(
+    telegramId,
+    [
+      `🤖 Авто: ${reason}, тому персонаж сам починає відпочинок.`,
+      "",
+      "Поточну дію та чергу очищено. Нові дії під час відпочинку ставатимуть у чергу.",
+      await renderPlayerActionQueue(player.id),
+    ].join("\n"),
+    { reply_markup: buildMainReplyKeyboard(true) }
+  );
+
+  return true;
 }
 
 export function isPlayerAutoEnabled(telegramId: number) {
@@ -149,6 +187,8 @@ async function runAutoStep(bot: Bot, telegramId: number) {
 
     const locationId = player.currentLocationId ?? (await getStartLocationId());
     if (DEBUG) console.log(`[PLAYER AUTO] telegramId=${telegramId} locationId=${locationId}`);
+
+    if (await maybeStartAutoRest(bot, telegramId, player, locationId)) return;
 
     if (await maybeAutoSay(bot, telegramId, player, locationId)) return;
 
