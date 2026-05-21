@@ -20,6 +20,7 @@ It is not a trash bin and not a promise. It is cold storage for ideas that need 
 - Player camps, shelters and construction.
 - Full PvP bounty and witness system.
 - Moon phases and deep calendar simulation.
+- Web `/map`, shared map view service and future MUD-client gateway.
 
 ## Review rhythm
 

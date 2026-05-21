@@ -7,6 +7,27 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.8.3 - Web map and multi-client server idea in Icebox - 12026-05-21
+
+### Added
+
+- Added Icebox planning item `WEB-001: Web map, multi-client server and future MUD gateway`.
+- Captured the long-term direction where Telegram, web and MUD clients are different interfaces over the same game core.
+- Added first design notes for a future web `/map` page:
+  - ASCII/table/grid rendering;
+  - location, exit, resource, player, NPC and animal markers;
+  - optional `z` and render-mode query parameters;
+  - future `/api/map.json` endpoint.
+- Added the idea of a shared `MapViewService` so Telegram `/map`, web `/map`, debug tools and a future MUD `map` command can reuse the same data model.
+- Added a future MUD/Telnet gateway concept with limited commands such as `look`, `map`, movement, `say`, `inventory`, `attack`, `gather`, `track` and `help`.
+
+### Changed
+
+- Clarified that Telegram should remain an important client, but not the only place where game logic lives.
+- Framed web and MUD support as a future multi-client server direction rather than an immediate implementation task.
+
+---
+
 ## 0.8.2 - Planning-as-code and portable backlog - 12026-05-21
 
 ### Added
