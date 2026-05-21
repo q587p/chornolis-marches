@@ -7,6 +7,35 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.8.4 - Visual identity and generated art prompts - 12026-05-21
+
+### Added
+
+- Added first visual identity notes for Chornolis Marches under `docs/art/visual_identity.md`.
+- Added preserved generation prompts under `docs/art/prompts/chornolis_art_prompts.md`.
+- Added generated concept art assets under `assets/art/generated/`:
+  - emblem/logo direction;
+  - Telegram welcome screen direction;
+  - Ukrainian-inspired forest frontier concept art.
+- Captured the main visual palette:
+  - dark green;
+  - black;
+  - deep red;
+  - muted gold;
+  - cold gray fog.
+
+### Changed
+
+- Documented the preferred visual style as dark Ukrainian / Slavic inspired forest frontier fantasy.
+- Clarified that generated images are concept/direction references for Telegram UI, README, landing page, future banners and icon work.
+
+### Notes
+
+- These assets are not gameplay code and do not require a Prisma migration.
+- If version files are updated manually, use `npm version patch --no-git-tag-version` before final build/commit.
+
+---
+
 ## 0.8.3 - Web map and multi-client server idea in Icebox - 12026-05-21
 
 ### Added

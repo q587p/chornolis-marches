@@ -16,6 +16,14 @@ A living world simulation:
 * 👤 Players interfere and upset the balance
 * 🧭 Player/NPC/animal actions take time, can be queued, interrupted and leave tracks
 
+## 🎨 Visual direction
+
+Visual identity notes and generated concept prompts live in [`docs/art/visual_identity.md`](docs/art/visual_identity.md) and [`docs/art/prompts/chornolis_art_prompts.md`](docs/art/prompts/chornolis_art_prompts.md).
+
+Current direction: a dark Ukrainian / Slavic inspired forest frontier with carved wooden border markers, twisted roots, geometric embroidery-like ornament, lantern light, fog, deep green and black shadows, deep red accents and muted gold details.
+
+Generated concept assets are stored under `assets/art/generated/` and should be treated as direction references rather than final production UI.
+
 ## 🏗 Tech Stack
 
 * TypeScript + Node.js

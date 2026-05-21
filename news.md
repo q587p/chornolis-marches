@@ -1,3 +1,13 @@
+## 0.8.4 — Візуальний напрям, емблеми й welcome-art
+
+- Додано перший візуальний напрям для Chornolis Marches: темне Порубіжжя Чорнолісу з українським / словʼянським орнаментом, давніми деревʼяними межовими знаками, ліхтарями, туманом і живим лісом.
+- Додано документацію для арт-напряму в `docs/art/visual_identity.md`.
+- Додано збережені промпти для логотипу, емблеми, welcome screen і forest frontier concept art у `docs/art/prompts/chornolis_art_prompts.md`.
+- Додано перші generated/concept art assets у `assets/art/generated/`.
+- Зафіксовано палітру: темно-зелений, чорний, глибокий червоний, приглушене золото й холодний сірий туман.
+- Окремо зафіксовано, чого уникати: cartoon style, modern corporate logo, glossy MMO fantasy, неонові кольори й занадто чистий high fantasy.
+- Ці зображення поки вважаються concept/direction references, а не фінальним production UI.
+
 ## 0.8.3 — Web-мапа, сервер гри й майбутні MUD-клієнти
 
 - Додано Icebox-ідею `WEB-001`: веб-мапа, multi-client server і майбутній MUD gateway.
