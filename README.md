@@ -81,17 +81,19 @@ src/
 
 ## 🌍 Roadmap
 
-The detailed long-term plan now lives in [`ROADMAP.md`](ROADMAP.md).
+The detailed long-term plan now lives in [`ROADMAP.md`](ROADMAP.md). Core design pillars are described in [`GAME_DESIGN.md`](GAME_DESIGN.md).
 
 Current focus:
 
+- liminal frontier identity: Chornolis Marches as a threshold between settlement, wilderness and myth;
 - beginner onboarding and helper flow;
 - `/respawn` for early lost characters;
 - day/night cycle;
 - campfires, light and night visibility;
 - starter settlement and NPCs;
 - fishing;
-- crafting, barter and survival foundations.
+- crafting, barter and survival foundations;
+- skill progression through use, observation and apprenticeship.
 
 ## 🌍 Checklist
 

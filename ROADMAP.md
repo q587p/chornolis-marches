@@ -26,6 +26,7 @@ This roadmap tracks planned gameplay systems and long-term direction for the pro
 - Barter with NPCs.
 - Basic trade between players.
 - Regional resource availability.
+- Observation-based learning: players can unlock or improve skills by watching more skilled beings act.
 
 ## Phase 3 — Living World
 
@@ -59,8 +60,11 @@ This roadmap tracks planned gameplay systems and long-term direction for the pro
 ## Strong Project Pillars
 
 - Ukrainian / Slavic dark fantasy atmosphere.
+- Liminal frontier fantasy: the world exists on thresholds between settlement, forest, myth, spirit and danger.
 - Living ecosystem instead of static mobs.
 - Incomplete information and exploration.
 - Survival over power fantasy.
+- Skill-based progression through use, observation and apprenticeship instead of abstract character levels.
+- Skills can be discovered by watching NPCs, animals, monsters or mythical beings use them.
 - Telegram-native UX.
 - Ukrainian grammar and cases as immersion, not decoration.
