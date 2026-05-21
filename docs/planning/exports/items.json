@@ -1,0 +1,192 @@
+[
+  {
+    "id": "ECO-001",
+    "title": "Reproduction and herbivore overpopulation",
+    "status": "next",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "high",
+    "tags": [
+      "ecology",
+      "reproduction",
+      "herbivores",
+      "rabbits",
+      "resources",
+      "world-reactivity"
+    ],
+    "depends_on": [
+      "ECO-BASE"
+    ],
+    "exports": {
+      "github_issue": true
+    }
+  },
+  {
+    "id": "ECON-001",
+    "title": "Barter and trade",
+    "status": "backlog",
+    "type": "feature",
+    "area": "economy",
+    "priority": "medium",
+    "tags": [
+      "barter",
+      "trade",
+      "npc",
+      "economy"
+    ],
+    "file": "docs/planning/items/ECON-001-barter-and-trade.md"
+  },
+  {
+    "id": "ICE-001",
+    "title": "Mythic skill learning from spirits",
+    "status": "icebox",
+    "type": "feature",
+    "area": "progression",
+    "priority": "low",
+    "tags": [
+      "liminality",
+      "skills",
+      "mythic",
+      "observation"
+    ],
+    "depends_on": [
+      "PROG-002"
+    ],
+    "file": "docs/planning/items/ICE-001-mythic-skills.md"
+  },
+  {
+    "id": "ICE-002",
+    "title": "Rituals and sacred days",
+    "status": "icebox",
+    "type": "feature",
+    "area": "mythic_systems",
+    "priority": "low",
+    "tags": [
+      "rituals",
+      "calendar",
+      "weather",
+      "mythic"
+    ],
+    "depends_on": [
+      "WORLD-001"
+    ],
+    "file": "docs/planning/items/ICE-002-rituals-and-sacred-days.md"
+  },
+  {
+    "id": "ICE-003",
+    "title": "Caravans and regional trade",
+    "status": "icebox",
+    "type": "feature",
+    "area": "economy",
+    "priority": "low",
+    "tags": [
+      "economy",
+      "settlements",
+      "npc",
+      "world_simulation"
+    ],
+    "depends_on": [
+      "SETTLE-001",
+      "ECON-001"
+    ],
+    "file": "docs/planning/items/ICE-003-caravans.md"
+  },
+  {
+    "id": "ICE-004",
+    "title": "Camps, shelters and construction",
+    "status": "icebox",
+    "type": "feature",
+    "area": "construction",
+    "priority": "low",
+    "tags": [
+      "survival",
+      "crafting",
+      "settlement",
+      "storage"
+    ],
+    "depends_on": [
+      "WORLD-002"
+    ],
+    "file": "docs/planning/items/ICE-004-construction.md"
+  },
+  {
+    "id": "PROG-002",
+    "title": "Observation-based learning",
+    "status": "backlog",
+    "type": "feature",
+    "area": "progression",
+    "priority": "medium",
+    "tags": [
+      "skills",
+      "observation",
+      "npc",
+      "animals",
+      "mythic"
+    ],
+    "depends_on": [
+      "PROG-001"
+    ],
+    "file": "docs/planning/items/PROG-002-observation-learning.md"
+  },
+  {
+    "id": "SETTLE-001",
+    "title": "Starter settlement",
+    "status": "backlog",
+    "type": "feature",
+    "area": "settlements",
+    "priority": "high",
+    "tags": [
+      "settlement",
+      "npc",
+      "onboarding"
+    ],
+    "file": "docs/planning/items/SETTLE-001-starter-settlement.md"
+  },
+  {
+    "id": "SURV-001",
+    "title": "Early respawn support",
+    "status": "next",
+    "type": "feature",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "onboarding",
+      "respawn",
+      "beginner"
+    ],
+    "file": "docs/planning/items/SURV-001-early-respawn.md"
+  },
+  {
+    "id": "WORLD-001",
+    "title": "Day/night cycle",
+    "status": "next",
+    "type": "feature",
+    "area": "world_time",
+    "priority": "high",
+    "tags": [
+      "world",
+      "atmosphere",
+      "visibility",
+      "liminality"
+    ],
+    "file": "docs/planning/items/WORLD-001-day-night-cycle.md"
+  },
+  {
+    "id": "WORLD-002",
+    "title": "Campfires and light",
+    "status": "next",
+    "type": "feature",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "survival",
+      "light",
+      "crafting",
+      "night"
+    ],
+    "depends_on": [
+      "WORLD-001"
+    ],
+    "file": "docs/planning/items/WORLD-002-campfires-and-light.md"
+  }
+]

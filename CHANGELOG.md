@@ -7,6 +7,51 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.8.2 - Planning-as-code and portable backlog - 12026-05-21
+
+### Added
+
+- Added planning-as-code structure under `docs/planning/`:
+  - `README.md`;
+  - `backlog.md`;
+  - `next.md`;
+  - `icebox.md`;
+  - `items/` with export-friendly Markdown planning items;
+  - `decisions/` with ADR/DDR-style design decision records;
+  - `exports/` with example JSON/CSV exports.
+- Added `scripts/planning/export-planning.mjs` for generating machine-readable exports from Markdown planning items.
+- Added example backlog/next items for:
+  - day/night cycle;
+  - campfires and light;
+  - early `/respawn`;
+  - starter settlement;
+  - barter and trade;
+  - observation-based learning.
+- Added example Icebox items for:
+  - mythic skills;
+  - rituals and sacred days;
+  - caravans;
+  - construction.
+- Added design decision records for:
+  - liminal frontier identity;
+  - use- and observation-based progression;
+  - repository-first planning.
+- Added first-priority ecology planning item:
+  - `ECO-001: Reproduction and herbivore overpopulation`.
+- Added reproduction as an early living-world priority:
+  - rabbits and other herbivores should reproduce when conditions allow;
+  - predator pressure should suppress runaway growth;
+  - player intervention can destabilize the ecosystem;
+  - herbivore overpopulation can consume herbs, berries and young growth.
+- Added example world events for rabbit overpopulation and overgrazing.
+
+### Changed
+
+- GitHub Issues/Projects are now treated as a working interface, not the only source of truth.
+- Roadmap/backlog ideas can now be stored, reviewed, exported and migrated as plain text files in the repository.
+
+---
+
 ## 0.8.1 - Liminal identity and progression design - 12026-05-20
 
 ### Added
