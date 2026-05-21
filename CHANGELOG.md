@@ -7,6 +7,29 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.8.1 - Liminal identity and progression design - 12026-05-20
+
+### Added
+
+- Added liminal frontier / Порубіжжя as a core design pillar.
+- Added project identity formula:
+  - Chornolis Marches is a liminal survival sandbox between settlement, wilderness and міт.
+- Added use-based and observation-based progression as a core design pillar.
+- Added `docs/systems/progression.md` with:
+  - no universal character level;
+  - skills improve through relevant actions;
+  - skills can be discovered by observing NPCs, animals, monsters or mythical beings;
+  - observation can improve a skill when the observed being is more skilled;
+  - learning chance depends on attributes, current skill, context, visibility, attention and skill gap.
+- Added example learning messages for herbalism, tracking and liminal/mythic observation.
+
+### Changed
+
+- Updated roadmap pillars to include liminality and skill progression through use, observation and apprenticeship.
+- Updated roadmap Phase 2 with observation-based learning.
+
+---
+
 ## 0.8.0 - Roadmap and design documentation - 12026-05-21
 
 ### Added
