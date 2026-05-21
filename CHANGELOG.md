@@ -1,8 +1,38 @@
----
-## [Unreleased]
 # Changelog
+
+## [Unreleased]
+
 All notable changes to this project will be documented in this file.
 The format is loosely based on Keep a Changelog and this project follows semantic-ish versioning.
+
+---
+
+## 0.8.0 - Roadmap and design documentation - 12026-05-21
+
+### Added
+
+- Added `ROADMAP.md` with long-term phases:
+  - Atmospheric MVP;
+  - Survival & Crafting;
+  - Living World;
+  - Settlements, Economy & Society;
+  - Deep Simulation.
+- Added `GAME_DESIGN.md` with project pillars:
+  - atmosphere first;
+  - incomplete information;
+  - living ecosystem;
+  - survival over power fantasy;
+  - world reactivity;
+  - Telegram-native play.
+- Added system design notes under `docs/systems/`:
+  - world time;
+  - survival;
+  - ecology;
+  - crafting;
+  - settlements.
+- Added GitHub workflow notes under `docs/ux/github_workflow.md`.
+
+---
 
 ### 0.7.6 - unified player actions and auto timing - 12026-05-20
 

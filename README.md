@@ -81,6 +81,20 @@ src/
 
 ## 🌍 Roadmap
 
+The detailed long-term plan now lives in [`ROADMAP.md`](ROADMAP.md).
+
+Current focus:
+
+- beginner onboarding and helper flow;
+- `/respawn` for early lost characters;
+- day/night cycle;
+- campfires, light and night visibility;
+- starter settlement and NPCs;
+- fishing;
+- crafting, barter and survival foundations.
+
+## 🌍 Checklist
+
 * [x] Cell-based world (grid)
 * [x] Movement via inline buttons
 * [x] Resource system
