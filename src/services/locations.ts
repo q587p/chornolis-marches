@@ -29,6 +29,29 @@ function visibleTargets(location: any, viewerPlayerId?: number) {
   return [...players, ...livingCreatures, ...corpses];
 }
 
+function featureLine(feature: any) {
+  const prefix = feature.type === "MAGIC_CAMPFIRE"
+    ? "🔥"
+    : feature.type === "BORDER_MARKER"
+      ? "🪧"
+      : feature.type === "BRIDGE"
+        ? "🌉"
+        : feature.type === "GATE"
+          ? "🚪"
+          : "✦";
+
+  const parts = [`${prefix} ${feature.name}`];
+  if (feature.providesLight) parts.push("дає світло");
+  if (feature.restStaminaCapMultiplier) parts.push(`відпочинок до ×${feature.restStaminaCapMultiplier} витривалости`);
+  return `- ${parts.join(" — ")}`;
+}
+
+function featuresText(location: any) {
+  const features = (location.features ?? []).filter((feature: any) => feature.isActive);
+  if (!features.length) return "";
+  return `\n\nОсобливості:\n${features.map(featureLine).join("\n")}`;
+}
+
 function presenceText(location: any, viewerPlayerId?: number) {
   const targets = visibleTargets(location, viewerPlayerId);
   const hasCharacters = targets.some((t) => t.canGreet);
@@ -67,7 +90,6 @@ function resourceDurationText(resourceKey: string, quick: boolean) {
   const ms = quick ? QUICK_PLAYER_ACTION_DURATION_MS : slowResourceSeconds(resourceKey) * 1000;
   return ` (${formatSeconds(ms)} с)`;
 }
-
 
 function activeActionLabel(action: any) {
   if (!action) return undefined;
@@ -115,6 +137,7 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
     include: {
       players: true,
       creatures: { where: { isGone: false }, include: { species: true } },
+      features: { where: { isActive: true }, orderBy: { id: "asc" } },
       region: true,
       exitsFrom: { where: { isHidden: false }, include: { toLocation: true }, orderBy: { direction: "asc" } },
     },
@@ -127,7 +150,7 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
     : "Виходів не видно.";
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${presenceText(location, viewerPlayerId)}\n\nВиходи:\n${escapeHtml(exitsText)}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location)}${presenceText(location, viewerPlayerId)}\n\nВиходи:\n${escapeHtml(exitsText)}`,
     keyboard: buildMovementKeyboard(location.exitsFrom),
   };
 }
@@ -139,6 +162,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
       players: true,
       creatures: { where: { isGone: false }, include: { species: true } },
       resources: { include: { resourceType: true } },
+      features: { where: { isActive: true }, orderBy: { id: "asc" } },
       region: true,
       exitsFrom: { where: { isHidden: false }, include: { toLocation: true }, orderBy: { direction: "asc" } },
     },
@@ -220,7 +244,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   }
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}\n\n<i>Ви придивляєтесь.</i>\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}${resourcesText}${charactersText}${tracksText}${corpsesText}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location)}\n\n<i>Ви придивляєтесь.</i>\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}${resourcesText}${charactersText}${tracksText}${corpsesText}`,
     keyboard,
   };
 }

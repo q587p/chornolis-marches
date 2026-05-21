@@ -21,6 +21,7 @@ It is not a trash bin and not a promise. It is cold storage for ideas that need 
 - Full PvP bounty and witness system.
 - Moon phases and deep calendar simulation.
 - Web `/map`, shared map view service and future MUD-client gateway.
+- `seedWorld()` refactor for `prisma/seed.ts`, once the current static world seed stabilizes.
 
 ## Review rhythm
 

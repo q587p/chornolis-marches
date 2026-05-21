@@ -7,6 +7,45 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.9.0 - Expanded world seed and bridge start - 12026-05-21
+
+### Added
+
+- Added data-driven static world seed under `prisma/data/chornolis_world_seed.json`.
+- Expanded the starter world from the old hardcoded 3×3 map into:
+  - western 10×10 starter forest;
+  - north, south and west impassable forest walls;
+  - widened dry luka / dry meadow east of the forest;
+  - separate riverbank region;
+  - impassable river cells;
+  - old bridge crossing;
+  - closed settlement gate;
+- Added authored exits instead of automatic full-grid neighbor linking.
+- Added blocked-cell metadata in the seed JSON for thickets, river cells and local obstacles.
+- Added `LocationFeature` model and `LocationFeatureType` enum for landmarks, bridge/gate objects, light sources and local rest modifiers.
+- Added start/respawn location key `start_border_camp`.
+- Added start location features:
+  - carved border marker;
+  - unfading magical campfire;
+  - location light flag;
+  - stamina rest cap multiplier `×5`.
+- Added `docs/world/world_map.md` with map assumptions and deferred work.
+- Added `MAP-002: Biome-based resources and spawn rules` to near-term planning.
+- Added `seedWorld()` refactor to Icebox instead of doing it in this patch.
+
+### Changed
+
+- Updated `prisma/seed.ts` to read static world data from JSON and seed regions, locations, exits, resource nodes, features and unique creatures.
+- Updated start location lookup to use `start_border_camp` instead of the old `center_chornolis_edge`.
+- Updated location rendering to show active local features such as campfires, border markers, bridges and gates.
+- Kept generic animal spawning out of seed until biome-based spawn rules are designed.
+
+### Notes
+
+- For a local dev database, the cleanest way to replace the old 3×3 map is still `npx prisma migrate reset` followed by `npm run seed`.
+
+---
+
 ## 0.8.4 - Visual identity and generated art prompts - 12026-05-21
 
 ### Added
@@ -172,7 +211,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Added live `AUTO_INTERVAL_MS` derived from runtime `TICK_MS`.
 - Added auto timer restart support after runtime tick changes.
-- `package.json` and `package-lock.json` are intentionally untouched; version bump remains manual.
 
 ---
 
@@ -194,7 +232,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Tick-derived constants in `gameConfig.ts` are now live `let` exports recalculated by `setRuntimeTickMs()`.
 - The action/recovery loop can be restarted after runtime tick changes.
-- `package.json` and `package-lock.json` are intentionally untouched; version bump remains manual.
 
 ---
 

@@ -1,5 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import fs from "fs";
+import path from "path";
 import pg from "pg";
 import * as dotenv from "dotenv";
 
@@ -16,23 +18,96 @@ const pool = new Pool({
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
-const locations = [
-  { x: -1, y: 1, key: "north_west_wood", name: "Похмуре узлісся", description: "Старі сосни тут стоять густо, а земля вкрита темним мохом." },
-  { x: 0, y: 1, key: "north_old_pine", name: "Стара сосна", description: "Величезна сосна скрипить на вітрі. На корі видно давні зарубки." },
-  { x: 1, y: 1, key: "north_east_burrow", name: "Заячі нори", description: "Між корінням видно дрібні нори й сліди лап." },
-  { x: -1, y: 0, key: "west_fox_path", name: "Лисяча стежка", description: "Вузька стежка петляє між кущами. Пахне звіром." },
-  { x: 0, y: 0, key: "center_chornolis_edge", name: "Порубіжжя Чорнолісу", description: "Тут починається Чорноліс. Ліс ніби дивиться у відповідь." },
-  { x: 1, y: 0, key: "east_berry_thicket", name: "Ягідні хащі", description: "Колючі кущі вкриті темними ягодами." },
-  { x: -1, y: -1, key: "south_wolf_track", name: "Вовча стежка", description: "На вологій землі видно великі сліди. Тут краще не шуміти." },
-  { x: 0, y: -1, key: "south_moss_clearing", name: "Мохова галявина", description: "Тиха галявина, де мох заглушує кроки." },
-  { x: 1, y: -1, key: "south_east_old_stump", name: "Старий пень", description: "Пень чорний від часу. Поруч ростуть гриби." },
-];
+type SeedRegion = {
+  key: string;
+  name: string;
+  description?: string;
+};
 
-const resourceTypes = [
-  { key: "berries", name: "ягоди", description: "Темні лісові ягоди." },
-  { key: "mushrooms", name: "гриби", description: "Гриби біля коріння та пнів." },
-  { key: "herbs", name: "трави", description: "Корисні лісові трави." },
-];
+type SeedLocation = {
+  key: string;
+  x: number;
+  y: number;
+  z: number;
+  name: string;
+  description?: string;
+  regionKey: string;
+  biome: string;
+  dangerLevel: number;
+};
+
+type SeedExit = {
+  fromKey: string;
+  toKey: string;
+  direction: string;
+  label?: string;
+  travelCost?: number;
+  isHidden?: boolean;
+};
+
+type SeedResourceType = {
+  key: string;
+  name: string;
+  description?: string;
+};
+
+type SeedResourceNode = {
+  locationKey: string;
+  resourceKey: string;
+  amount: number;
+  maxAmount: number;
+};
+
+type SeedFeature = {
+  key: string;
+  locationKey: string;
+  type: string;
+  name: string;
+  description?: string;
+  isActive?: boolean;
+  providesLight?: boolean;
+  restStaminaCapMultiplier?: number | null;
+  data?: Prisma.InputJsonValue;
+};
+
+type CreatureNameOverrides = {
+  nameGenitive?: string;
+  nameDative?: string;
+  nameAccusative?: string;
+  nameInstrumental?: string;
+  nameLocative?: string;
+  nameVocative?: string;
+};
+
+type SeedUniqueCreature = {
+  speciesKey: string;
+  locationKey: string;
+  name: string;
+  isAlive: boolean;
+  action: string;
+  activity: "IDLE" | "GATHERING" | "RESTING" | "LOOKING";
+  nameOverrides?: CreatureNameOverrides;
+};
+
+type WorldSeed = {
+  meta: {
+    version: string;
+    startLocationKey: string;
+    notes?: string[];
+  };
+  regions: SeedRegion[];
+  locations: SeedLocation[];
+  exits: SeedExit[];
+  resourceTypes: SeedResourceType[];
+  resourceNodes: SeedResourceNode[];
+  features: SeedFeature[];
+  uniqueCreatures: SeedUniqueCreature[];
+};
+
+function loadWorldSeed(): WorldSeed {
+  const filePath = path.join(__dirname, "data", "chornolis_world_seed.json");
+  return JSON.parse(fs.readFileSync(filePath, "utf-8")) as WorldSeed;
+}
 
 const species = [
   {
@@ -189,46 +264,12 @@ const species = [
   },
 ] as const;
 
-function directionFromDelta(dx: number, dy: number) {
-  if (dx === 0 && dy === 1) return "NORTH";
-  if (dx === 1 && dy === 0) return "EAST";
-  if (dx === 0 && dy === -1) return "SOUTH";
-  if (dx === -1 && dy === 0) return "WEST";
-  return null;
-}
-
-function resourceAmount(resourceKey: string, locationKey: string) {
-  if (resourceKey === "berries") return locationKey.includes("berry") ? 28 : 4;
-  if (resourceKey === "mushrooms") return locationKey.includes("stump") || locationKey.includes("moss") ? 22 : 3;
-  if (resourceKey === "herbs") return locationKey.includes("moss") || locationKey.includes("old_pine") ? 14 : 6;
-  return 0;
-}
-
-type CreatureNameOverrides = {
-  nameGenitive?: string;
-  nameDative?: string;
-  nameAccusative?: string;
-  nameInstrumental?: string;
-  nameLocative?: string;
-  nameVocative?: string;
-};
-
-async function ensureUniqueCreature(
-  speciesKey: string,
-  locationKey: string,
-  name: string,
-  options: {
-    isAlive: boolean;
-    action: string;
-    activity: "IDLE" | "GATHERING" | "RESTING" | "LOOKING";
-    nameOverrides?: CreatureNameOverrides;
-  }
-) {
-  const sp = await prisma.creatureSpecies.findUniqueOrThrow({ where: { key: speciesKey } });
-  const loc = await prisma.cellLocation.findUniqueOrThrow({ where: { key: locationKey } });
+async function ensureUniqueCreature(creature: SeedUniqueCreature) {
+  const sp = await prisma.creatureSpecies.findUniqueOrThrow({ where: { key: creature.speciesKey } });
+  const loc = await prisma.cellLocation.findUniqueOrThrow({ where: { key: creature.locationKey } });
 
   const existing = await prisma.creature.findMany({
-    where: { speciesId: sp.id, name },
+    where: { speciesId: sp.id, name: creature.name },
     orderBy: [{ isAlive: "desc" }, { updatedAt: "desc" }, { id: "asc" }],
   });
 
@@ -239,127 +280,155 @@ async function ensureUniqueCreature(
       data: {
         speciesId: sp.id,
         locationId: loc.id,
-        name,
-        ...options.nameOverrides,
+        name: creature.name,
+        ...creature.nameOverrides,
         hp: sp.baseHp,
-        isAlive: options.isAlive,
+        isAlive: creature.isAlive,
         isGone: false,
-        currentAction: options.action,
-        activity: options.activity,
+        currentAction: creature.action,
+        activity: creature.activity,
       },
     });
     return;
   }
 
   const duplicateIds = existing.filter((c) => c.id !== keep.id).map((c) => c.id);
-  if (duplicateIds.length > 0) {
-    await prisma.creature.deleteMany({ where: { id: { in: duplicateIds } } });
+  if (duplicateIds.length > 0) await prisma.creature.deleteMany({ where: { id: { in: duplicateIds } } });
+
+  await prisma.creature.update({
+    where: { id: keep.id },
+    data: {
+      ...creature.nameOverrides,
+      isAlive: creature.isAlive,
+      isGone: false,
+      locationId: loc.id,
+      hp: creature.isAlive || keep.hp <= 0 ? sp.baseHp : keep.hp,
+      currentAction: creature.action,
+      activity: creature.activity,
+    },
+  });
+}
+
+async function main() {
+  const world = loadWorldSeed();
+
+  for (const region of world.regions) {
+    await prisma.region.upsert({
+      where: { key: region.key },
+      update: { name: region.name, description: region.description },
+      create: region,
+    });
   }
 
-  if (speciesKey === "herbalist" && !keep.isAlive) {
-    await prisma.creature.update({
-      where: { id: keep.id },
-      data: {
-        ...options.nameOverrides,
-        isAlive: true,
-        isGone: false,
-        locationId: loc.id,
-        hp: sp.baseHp,
-        currentAction: options.action,
-        activity: options.activity,
+  for (const loc of world.locations) {
+    const region = await prisma.region.findUniqueOrThrow({ where: { key: loc.regionKey } });
+    await prisma.cellLocation.upsert({
+      where: { key: loc.key },
+      update: {
+        name: loc.name,
+        description: loc.description,
+        regionId: region.id,
+        x: loc.x,
+        y: loc.y,
+        z: loc.z,
+        biome: loc.biome as any,
+        dangerLevel: loc.dangerLevel,
+      },
+      create: {
+        key: loc.key,
+        name: loc.name,
+        description: loc.description,
+        regionId: region.id,
+        x: loc.x,
+        y: loc.y,
+        z: loc.z,
+        biome: loc.biome as any,
+        dangerLevel: loc.dangerLevel,
       },
     });
   }
 
-  if (options.nameOverrides) {
-    await prisma.creature.update({ where: { id: keep.id }, data: options.nameOverrides });
-  }
-
-  if (speciesKey === "lisovyk" && keep.hp <= 0) {
-    await prisma.creature.update({ where: { id: keep.id }, data: { hp: sp.baseHp, isGone: false } });
-  }
-}
-
-async function main() {
-  const region = await prisma.region.upsert({
-    where: { key: "chornolis_border" },
-    update: { name: "Порубіжжя Чорнолісу", description: "Перший регіон живого світу." },
-    create: { key: "chornolis_border", name: "Порубіжжя Чорнолісу", description: "Перший регіон живого світу." },
-  });
-
-  for (const loc of locations) {
-    await prisma.cellLocation.upsert({
-      where: { key: loc.key },
-      update: { name: loc.name, description: loc.description },
-      create: { ...loc, z: 0, regionId: region.id, biome: "FOREST", dangerLevel: loc.key.includes("wolf") ? 2 : 1 },
+  // Keep exits data-driven. No automatic full-grid linking here: dead ends and loops are authored in JSON.
+  for (const exit of world.exits) {
+    const from = await prisma.cellLocation.findUniqueOrThrow({ where: { key: exit.fromKey } });
+    const to = await prisma.cellLocation.findUniqueOrThrow({ where: { key: exit.toKey } });
+    await prisma.locationExit.upsert({
+      where: { fromLocationId_direction: { fromLocationId: from.id, direction: exit.direction as any } },
+      update: {
+        toLocationId: to.id,
+        label: exit.label,
+        travelCost: exit.travelCost ?? 1,
+        isHidden: exit.isHidden ?? false,
+      },
+      create: {
+        fromLocationId: from.id,
+        toLocationId: to.id,
+        direction: exit.direction as any,
+        label: exit.label,
+        travelCost: exit.travelCost ?? 1,
+        isHidden: exit.isHidden ?? false,
+      },
     });
   }
 
-  const all = await prisma.cellLocation.findMany({ where: { regionId: region.id } });
-  for (const from of all) {
-    for (const to of all) {
-      const direction = directionFromDelta(to.x - from.x, to.y - from.y);
-      if (!direction || from.z !== to.z) continue;
-      await prisma.locationExit.upsert({
-        where: { fromLocationId_direction: { fromLocationId: from.id, direction } },
-        update: { toLocationId: to.id },
-        create: { fromLocationId: from.id, toLocationId: to.id, direction, label: direction },
-      });
-    }
-  }
-
-  for (const resource of resourceTypes) {
+  for (const resource of world.resourceTypes) {
     await prisma.resourceType.upsert({ where: { key: resource.key }, update: resource, create: resource });
   }
 
-  const allResourceTypes = await prisma.resourceType.findMany();
-  for (const loc of all) {
-    for (const resourceType of allResourceTypes) {
-      await prisma.resourceNode.upsert({
-        where: { locationId_resourceTypeId: { locationId: loc.id, resourceTypeId: resourceType.id } },
-        update: { amount: resourceAmount(resourceType.key, loc.key), maxAmount: 100 },
-        create: { locationId: loc.id, resourceTypeId: resourceType.id, amount: resourceAmount(resourceType.key, loc.key), maxAmount: 100 },
-      });
-    }
+  for (const node of world.resourceNodes) {
+    const loc = await prisma.cellLocation.findUniqueOrThrow({ where: { key: node.locationKey } });
+    const resourceType = await prisma.resourceType.findUniqueOrThrow({ where: { key: node.resourceKey } });
+    await prisma.resourceNode.upsert({
+      where: { locationId_resourceTypeId: { locationId: loc.id, resourceTypeId: resourceType.id } },
+      update: { amount: node.amount, maxAmount: node.maxAmount },
+      create: { locationId: loc.id, resourceTypeId: resourceType.id, amount: node.amount, maxAmount: node.maxAmount },
+    });
+  }
+
+  for (const feature of world.features) {
+    const loc = await prisma.cellLocation.findUniqueOrThrow({ where: { key: feature.locationKey } });
+    await prisma.locationFeature.upsert({
+      where: { key: feature.key },
+      update: {
+        locationId: loc.id,
+        type: feature.type as any,
+        name: feature.name,
+        description: feature.description,
+        isActive: feature.isActive ?? true,
+        providesLight: feature.providesLight ?? false,
+        restStaminaCapMultiplier: feature.restStaminaCapMultiplier ?? null,
+        data: feature.data === undefined ? undefined : (feature.data as any),
+      },
+      create: {
+        key: feature.key,
+        locationId: loc.id,
+        type: feature.type as any,
+        name: feature.name,
+        description: feature.description,
+        isActive: feature.isActive ?? true,
+        providesLight: feature.providesLight ?? false,
+        restStaminaCapMultiplier: feature.restStaminaCapMultiplier ?? null,
+        data: feature.data === undefined ? undefined : (feature.data as any),
+      },
+    });
   }
 
   for (const sp of species) {
     await prisma.creatureSpecies.upsert({ where: { key: sp.key }, update: sp as any, create: sp as any });
   }
 
-  // Seed deliberately does not spawn animals.
-  // Test animals should be added manually with /addCreature until reproduction/migration systems exist.
+  // Seed deliberately does not spawn generic animals.
+  // Test animals should be added manually with /addCreature until reproduction/migration/spawn rules exist.
+  for (const creature of world.uniqueCreatures) await ensureUniqueCreature(creature);
 
-  await ensureUniqueCreature("lisovyk", "north_west_wood", "Дід Чорноліс", {
-    isAlive: false,
-    action: "спить у глибині Чорнолісу",
-    activity: "RESTING",
-    nameOverrides: {
-      nameGenitive: "Діда Чорноліса",
-      nameDative: "Діду Чорнолісу",
-      nameAccusative: "Діда Чорноліса",
-      nameInstrumental: "Дідом Чорнолісом",
-      nameLocative: "Діді Чорнолісі",
-      nameVocative: "Діду Чорнолісе",
+  await prisma.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: "Seed completed",
+      description: `World seed ${world.meta.version}: expanded western forest, dry luka, riverbank, bridge, closed gate and start camp.`,
     },
   });
-
-  await ensureUniqueCreature("herbalist", "south_moss_clearing", "Травник", {
-    isAlive: true,
-    action: "збирає трави",
-    activity: "GATHERING",
-    nameOverrides: {
-      nameGenitive: "Травника",
-      nameDative: "Травнику",
-      nameAccusative: "Травника",
-      nameInstrumental: "Травником",
-      nameLocative: "Травнику",
-      nameVocative: "Травнику",
-    },
-  });
-
-  await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "Seed completed", description: "Chornolis world structure seeded with lifecycle profiles and without animal spawning." } });
-  console.log("Seed completed without animal spawning.");
+  console.log(`Seed completed: ${world.locations.length} locations, ${world.exits.length} exits.`);
 }
 
 main()

@@ -30,6 +30,7 @@ import { buildFatigueRestKeyboard, buildTargetListKeyboard, buildTrackKeyboard }
 import { creatureForms, playerForms, type NameForms } from "./grammar";
 import { renderLocationBrief, renderLocationDetails } from "./locations";
 import { notifyLocation } from "./notifications";
+import { getPlayerRestStaminaCap } from "./locationFeatures";
 import { getStartLocationId } from "./players";
 import { summonLisovykIfResourceDepleted } from "./resources";
 import { logEvent } from "./worldEvents";
@@ -447,7 +448,7 @@ export async function performOrQueuePlayerAction(bot: Bot, input: PlayerActionRe
 export async function queuePlayerRest(playerId: number, chatId?: number | string) {
   const player = await prisma.player.findUnique({ where: { id: playerId } });
   if (!player) return null;
-  const max = player.staminaMax ?? BASE_STAMINA;
+  const max = await getPlayerRestStaminaCap(playerId);
   const hpMax = player.hpMax ?? BASE_HP;
   const remaining = Math.max(0, max - player.stamina);
   const staminaMs = Math.max(1, Math.ceil(remaining / REST_STAMINA_REGEN_PER_INTERVAL)) * STAMINA_REGEN_INTERVAL_MS;
@@ -470,7 +471,7 @@ export async function startPlayerRest(playerId: number) {
   });
   const player = await prisma.player.findUnique({ where: { id: playerId } });
   if (!player) return null;
-  const max = player.staminaMax ?? BASE_STAMINA;
+  const max = await getPlayerRestStaminaCap(playerId);
   const hpMax = player.hpMax ?? BASE_HP;
   if (player.stamina >= max && player.hp >= hpMax && !player.isResting) return player;
   return prisma.player.update({
@@ -503,7 +504,7 @@ export async function playerRestStatusText(playerId: number) {
   const player = await prisma.player.findUnique({ where: { id: playerId } });
   if (!player) return "Персонажа не знайдено.";
 
-  const max = player.staminaMax ?? BASE_STAMINA;
+  const max = await getPlayerRestStaminaCap(playerId);
   const hpMax = player.hpMax ?? BASE_HP;
   const staminaRemaining = Math.max(0, max - player.stamina);
   const hpRemaining = Math.max(0, hpMax - player.hp);

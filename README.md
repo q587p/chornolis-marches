@@ -86,6 +86,8 @@ src/
   * old animals have an increasing death chance;
   * corpses remain visible for a while;
   * decayed corpses disappear and increase mushrooms in that location.
+* Expanded static world seed: western starter forest, dry luka, riverbank, old bridge, closed settlement gate and start/respawn camp with a border marker and unfading campfire.
+
 
 ## 🌍 Roadmap
 
