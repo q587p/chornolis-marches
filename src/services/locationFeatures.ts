@@ -25,3 +25,27 @@ export async function getPlayerRestStaminaCap(playerId: number) {
 
   return getLocationRestStaminaCap(player?.currentLocationId, player?.staminaMax ?? BASE_STAMINA);
 }
+
+type CampfireLikeFeature = {
+  type: string;
+  key?: string | null;
+  name?: string | null;
+  providesLight?: boolean | null;
+};
+
+export function isCampfireFeature(feature: CampfireLikeFeature) {
+  if (feature.type === "CAMPFIRE" || feature.type === "MAGIC_CAMPFIRE") return true;
+  const key = String(feature.key ?? "").toLowerCase();
+  const name = String(feature.name ?? "").toLowerCase();
+  return (key.includes("campfire") || key.includes("fire") || name.includes("вогнище")) && Boolean(feature.providesLight);
+}
+
+export async function hasActiveCampfire(locationId: number | null | undefined) {
+  if (!locationId) return false;
+  const features = await prisma.locationFeature.findMany({
+    where: { locationId, isActive: true },
+    select: { type: true, key: true, name: true, providesLight: true },
+  });
+  return features.some(isCampfireFeature);
+}
+

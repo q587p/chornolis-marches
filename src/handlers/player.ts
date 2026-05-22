@@ -3,7 +3,7 @@ import { prisma } from "../db";
 import { BASE_HP, HEALTH_REGEN_PER_INTERVAL, PASSIVE_HEALTH_REGEN_INTERVAL_MS, PASSIVE_STAMINA_REGEN_PER_INTERVAL, REST_HEALTH_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_PER_INTERVAL, STAMINA_REGEN_INTERVAL_MS } from "../gameConfig";
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { renderLocationBrief } from "../services/locations";
-import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
+import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { isPlayerAutoEnabled } from "./auto";
 
 function minutes(ms: number) {
@@ -77,7 +77,7 @@ async function showCharacter(bot: Bot, telegramId: number, reply: (text: string,
     : "невідомо";
 
   await reply(`🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\nHP: ${player.hp}/${hpMax}\nВитривалість: ${player.stamina}/${staminaMax}\nСтан: ${fatigueText(player)}${recoveryText(player)}\nГолод: ${player.hunger}\nЛокація: ${locationText}${autoText}\n\nІнвентар:\n${items}\n\nСтатистика:\n${formatPlayerStats(player)}`, {
-    reply_markup: buildMainReplyKeyboard(autoEnabled),
+    reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, autoEnabled),
   });
 }
 

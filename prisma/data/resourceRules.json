@@ -1,0 +1,80 @@
+{
+  "maxAmount": 100,
+  "defaultsByBiome": {
+    "DEEP_FOREST": {
+      "berries": [
+        6,
+        12
+      ],
+      "mushrooms": [
+        8,
+        19
+      ],
+      "herbs": [
+        4,
+        11
+      ]
+    },
+    "FOREST": {
+      "berries": [
+        6,
+        12
+      ],
+      "mushrooms": [
+        8,
+        19
+      ],
+      "herbs": [
+        4,
+        11
+      ]
+    },
+    "CLEARING": {
+      "berries": [
+        1,
+        4
+      ],
+      "herbs": [
+        9,
+        20
+      ]
+    },
+    "RIVER": {
+      "herbs": [
+        6,
+        12
+      ]
+    },
+    "VILLAGE": {}
+  },
+  "locationOverrides": {
+    "start_border_camp": {
+      "berries": 0,
+      "mushrooms": 0,
+      "herbs": 0
+    },
+    "old_bridge_west_span": {
+      "berries": 0,
+      "mushrooms": 0,
+      "herbs": 0
+    },
+    "old_bridge_east_span": {
+      "berries": 0,
+      "mushrooms": 0,
+      "herbs": 0
+    },
+    "closed_east_gate": {
+      "berries": 0,
+      "mushrooms": 0,
+      "herbs": 0
+    }
+  },
+  "notes": [
+    "Resource nodes are generated deterministically from location biome and key.",
+    "Forest and deep forest: berries, mushrooms, herbs.",
+    "Dry luka / CLEARING: berries and herbs; no mushrooms.",
+    "Riverbank / RIVER: herbs only.",
+    "Bridge spans, start camp and closed gate intentionally have no gatherable resources.",
+    "Set a resource to 0 in locationOverrides to remove it from that location."
+  ]
+}

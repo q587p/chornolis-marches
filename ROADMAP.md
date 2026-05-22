@@ -68,3 +68,11 @@ This roadmap tracks planned gameplay systems and long-term direction for the pro
 - Skills can be discovered by watching NPCs, animals, monsters or mythical beings use them.
 - Telegram-native UX.
 - Ukrainian grammar and cases as immersion, not decoration.
+
+## Newly Captured TODOs
+
+- Add admin permissions before public testing: `/adminHelp` and `/reset` are open during development only.
+- Make NPC professions/fах derive from accumulated skills over time, so players can also become known as знахарі, мисливці, рибалки, ковалі, etc.
+- Keep bridge features passive until bridge/fishing/repair mechanics exist; then connect bridge metadata to fishing and crossing gameplay.
+- Support player/NPC-created location features later: signs, campfires, temporary markers, fading fires and relit fires.
+

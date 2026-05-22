@@ -1,6 +1,6 @@
 {
   "meta": {
-    "version": "0.9.0-world-layout-v3",
+    "version": "0.9.1-world-layout-v4",
     "startLocationKey": "start_border_camp",
     "notes": [
       "2D planar map for the current MVP; z stays 0.",
@@ -9,7 +9,10 @@
       "Forest is walled from north, south and west; the east opens into the widened dry luka.",
       "The dry luka is two cells wider than the first draft and has north/south impassable caps over its narrow ends.",
       "The central dry-luka footpath wraps northward from the northern edge to the southern edge, with a reciprocal southward exit.",
-      "The northern riverbank still wraps northward to the southern riverbank, with a reciprocal southward exit."
+      "The northern riverbank still wraps northward to the southern riverbank, with a reciprocal southward exit.",
+      "Bridge, start camp and closed gate have no gatherable resource nodes in the seed.",
+      "Riverbank locations seed herbs only; berries and mushrooms are kept to forest/luka logic.",
+      "The old bridge remains a passive terrain feature for future fishing/bridge mechanics, not a clickable feature yet."
     ]
   },
   "regions": [
@@ -34,9 +37,9 @@
       "description": "Старий дерев’яний міст через непрохідну річку."
     },
     {
-      "key": "closed_settlement_gate",
-      "name": "Зачинені ворота",
-      "description": "Зачинений східний вхід до майбутнього поселення."
+      "key": "settlement",
+      "name": "Поселення",
+      "description": "Людське поселення за річкою. Поки шлях усередину закритий воротами."
     }
   ],
   "locations": [
@@ -1345,7 +1348,7 @@
       "z": 0,
       "name": "Зачинені ворота поселення",
       "description": "Високі дерев’яні ворота замкнені зсередини. За ними починається майбутнє поселення, але цей шлях ще не відкрито.",
-      "regionKey": "closed_settlement_gate",
+      "regionKey": "settlement",
       "biome": "VILLAGE",
       "dangerLevel": 0
     }
@@ -5752,12 +5755,6 @@
     },
     {
       "locationKey": "meadow_10_00",
-      "resourceKey": "mushrooms",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_10_00",
       "resourceKey": "herbs",
       "amount": 17,
       "maxAmount": 100
@@ -5766,12 +5763,6 @@
       "locationKey": "meadow_11_00",
       "resourceKey": "berries",
       "amount": 4,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_11_00",
-      "resourceKey": "mushrooms",
-      "amount": 0,
       "maxAmount": 100
     },
     {
@@ -5788,26 +5779,8 @@
     },
     {
       "locationKey": "meadow_12_00",
-      "resourceKey": "mushrooms",
-      "amount": 1,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_12_00",
       "resourceKey": "herbs",
       "amount": 9,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "riverbank_13_00",
-      "resourceKey": "berries",
-      "amount": 3,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "riverbank_13_00",
-      "resourceKey": "mushrooms",
-      "amount": 6,
       "maxAmount": 100
     },
     {
@@ -5824,12 +5797,6 @@
     },
     {
       "locationKey": "meadow_10_01",
-      "resourceKey": "mushrooms",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_10_01",
       "resourceKey": "herbs",
       "amount": 18,
       "maxAmount": 100
@@ -5837,12 +5804,6 @@
     {
       "locationKey": "meadow_11_01",
       "resourceKey": "berries",
-      "amount": 1,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_11_01",
-      "resourceKey": "mushrooms",
       "amount": 1,
       "maxAmount": 100
     },
@@ -5860,26 +5821,8 @@
     },
     {
       "locationKey": "meadow_13_01",
-      "resourceKey": "mushrooms",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_13_01",
       "resourceKey": "herbs",
       "amount": 12,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "riverbank_14_01",
-      "resourceKey": "berries",
-      "amount": 2,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "riverbank_14_01",
-      "resourceKey": "mushrooms",
-      "amount": 4,
       "maxAmount": 100
     },
     {
@@ -5891,12 +5834,6 @@
     {
       "locationKey": "meadow_10_02",
       "resourceKey": "berries",
-      "amount": 1,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_10_02",
-      "resourceKey": "mushrooms",
       "amount": 1,
       "maxAmount": 100
     },
@@ -5914,12 +5851,6 @@
     },
     {
       "locationKey": "meadow_11_02",
-      "resourceKey": "mushrooms",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_11_02",
       "resourceKey": "herbs",
       "amount": 9,
       "maxAmount": 100
@@ -5928,12 +5859,6 @@
       "locationKey": "meadow_12_02",
       "resourceKey": "berries",
       "amount": 3,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_12_02",
-      "resourceKey": "mushrooms",
-      "amount": 0,
       "maxAmount": 100
     },
     {
@@ -5950,12 +5875,6 @@
     },
     {
       "locationKey": "meadow_13_02",
-      "resourceKey": "mushrooms",
-      "amount": 1,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_13_02",
       "resourceKey": "herbs",
       "amount": 13,
       "maxAmount": 100
@@ -5968,26 +5887,8 @@
     },
     {
       "locationKey": "meadow_14_02",
-      "resourceKey": "mushrooms",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_14_02",
       "resourceKey": "herbs",
       "amount": 15,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "riverbank_15_02",
-      "resourceKey": "berries",
-      "amount": 4,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "riverbank_15_02",
-      "resourceKey": "mushrooms",
-      "amount": 7,
       "maxAmount": 100
     },
     {
@@ -6004,12 +5905,6 @@
     },
     {
       "locationKey": "meadow_10_03",
-      "resourceKey": "mushrooms",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_10_03",
       "resourceKey": "herbs",
       "amount": 20,
       "maxAmount": 100
@@ -6018,12 +5913,6 @@
       "locationKey": "meadow_11_03",
       "resourceKey": "berries",
       "amount": 3,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_11_03",
-      "resourceKey": "mushrooms",
-      "amount": 0,
       "maxAmount": 100
     },
     {
@@ -6040,12 +5929,6 @@
     },
     {
       "locationKey": "meadow_12_03",
-      "resourceKey": "mushrooms",
-      "amount": 1,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_12_03",
       "resourceKey": "herbs",
       "amount": 12,
       "maxAmount": 100
@@ -6054,12 +5937,6 @@
       "locationKey": "meadow_14_03",
       "resourceKey": "berries",
       "amount": 2,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_14_03",
-      "resourceKey": "mushrooms",
-      "amount": 0,
       "maxAmount": 100
     },
     {
@@ -6076,26 +5953,8 @@
     },
     {
       "locationKey": "meadow_15_03",
-      "resourceKey": "mushrooms",
-      "amount": 1,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_15_03",
       "resourceKey": "herbs",
       "amount": 18,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "riverbank_16_03",
-      "resourceKey": "berries",
-      "amount": 3,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "riverbank_16_03",
-      "resourceKey": "mushrooms",
-      "amount": 5,
       "maxAmount": 100
     },
     {
@@ -6108,12 +5967,6 @@
       "locationKey": "meadow_10_04",
       "resourceKey": "berries",
       "amount": 3,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_10_04",
-      "resourceKey": "mushrooms",
-      "amount": 0,
       "maxAmount": 100
     },
     {
@@ -6130,12 +5983,6 @@
     },
     {
       "locationKey": "meadow_11_04",
-      "resourceKey": "mushrooms",
-      "amount": 1,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_11_04",
       "resourceKey": "herbs",
       "amount": 11,
       "maxAmount": 100
@@ -6148,12 +5995,6 @@
     },
     {
       "locationKey": "meadow_12_04",
-      "resourceKey": "mushrooms",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_12_04",
       "resourceKey": "herbs",
       "amount": 13,
       "maxAmount": 100
@@ -6162,12 +6003,6 @@
       "locationKey": "meadow_13_04",
       "resourceKey": "berries",
       "amount": 2,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_13_04",
-      "resourceKey": "mushrooms",
-      "amount": 0,
       "maxAmount": 100
     },
     {
@@ -6184,12 +6019,6 @@
     },
     {
       "locationKey": "meadow_14_04",
-      "resourceKey": "mushrooms",
-      "amount": 1,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_14_04",
       "resourceKey": "herbs",
       "amount": 17,
       "maxAmount": 100
@@ -6198,12 +6027,6 @@
       "locationKey": "meadow_15_04",
       "resourceKey": "berries",
       "amount": 4,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_15_04",
-      "resourceKey": "mushrooms",
-      "amount": 0,
       "maxAmount": 100
     },
     {
@@ -6220,26 +6043,8 @@
     },
     {
       "locationKey": "meadow_16_04",
-      "resourceKey": "mushrooms",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_16_04",
       "resourceKey": "herbs",
       "amount": 9,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "riverbank_17_04",
-      "resourceKey": "berries",
-      "amount": 2,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "riverbank_17_04",
-      "resourceKey": "mushrooms",
-      "amount": 3,
       "maxAmount": 100
     },
     {
@@ -6256,12 +6061,6 @@
     },
     {
       "locationKey": "meadow_10_05",
-      "resourceKey": "mushrooms",
-      "amount": 1,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_10_05",
       "resourceKey": "herbs",
       "amount": 10,
       "maxAmount": 100
@@ -6274,12 +6073,6 @@
     },
     {
       "locationKey": "meadow_11_05",
-      "resourceKey": "mushrooms",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_11_05",
       "resourceKey": "herbs",
       "amount": 12,
       "maxAmount": 100
@@ -6288,12 +6081,6 @@
       "locationKey": "meadow_12_05",
       "resourceKey": "berries",
       "amount": 2,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_12_05",
-      "resourceKey": "mushrooms",
-      "amount": 0,
       "maxAmount": 100
     },
     {
@@ -6310,12 +6097,6 @@
     },
     {
       "locationKey": "meadow_13_05",
-      "resourceKey": "mushrooms",
-      "amount": 1,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_13_05",
       "resourceKey": "herbs",
       "amount": 16,
       "maxAmount": 100
@@ -6324,12 +6105,6 @@
       "locationKey": "meadow_14_05",
       "resourceKey": "berries",
       "amount": 4,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_14_05",
-      "resourceKey": "mushrooms",
-      "amount": 0,
       "maxAmount": 100
     },
     {
@@ -6346,12 +6121,6 @@
     },
     {
       "locationKey": "meadow_15_05",
-      "resourceKey": "mushrooms",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_15_05",
       "resourceKey": "herbs",
       "amount": 20,
       "maxAmount": 100
@@ -6364,44 +6133,14 @@
     },
     {
       "locationKey": "meadow_16_05",
-      "resourceKey": "mushrooms",
-      "amount": 1,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_16_05",
       "resourceKey": "herbs",
       "amount": 10,
       "maxAmount": 100
     },
     {
-      "locationKey": "start_border_camp",
-      "resourceKey": "berries",
-      "amount": 3,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "start_border_camp",
-      "resourceKey": "mushrooms",
-      "amount": 5,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "start_border_camp",
-      "resourceKey": "herbs",
-      "amount": 13,
-      "maxAmount": 100
-    },
-    {
       "locationKey": "meadow_10_06",
       "resourceKey": "berries",
       "amount": 1,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_10_06",
-      "resourceKey": "mushrooms",
-      "amount": 0,
       "maxAmount": 100
     },
     {
@@ -6418,12 +6157,6 @@
     },
     {
       "locationKey": "meadow_11_06",
-      "resourceKey": "mushrooms",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_11_06",
       "resourceKey": "herbs",
       "amount": 13,
       "maxAmount": 100
@@ -6432,12 +6165,6 @@
       "locationKey": "meadow_12_06",
       "resourceKey": "berries",
       "amount": 3,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_12_06",
-      "resourceKey": "mushrooms",
-      "amount": 1,
       "maxAmount": 100
     },
     {
@@ -6454,12 +6181,6 @@
     },
     {
       "locationKey": "meadow_13_06",
-      "resourceKey": "mushrooms",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_13_06",
       "resourceKey": "herbs",
       "amount": 17,
       "maxAmount": 100
@@ -6472,26 +6193,8 @@
     },
     {
       "locationKey": "meadow_14_06",
-      "resourceKey": "mushrooms",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_14_06",
       "resourceKey": "herbs",
       "amount": 19,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "riverbank_16_06",
-      "resourceKey": "berries",
-      "amount": 3,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "riverbank_16_06",
-      "resourceKey": "mushrooms",
-      "amount": 6,
       "maxAmount": 100
     },
     {
@@ -6508,12 +6211,6 @@
     },
     {
       "locationKey": "meadow_10_07",
-      "resourceKey": "mushrooms",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_10_07",
       "resourceKey": "herbs",
       "amount": 12,
       "maxAmount": 100
@@ -6522,12 +6219,6 @@
       "locationKey": "meadow_11_07",
       "resourceKey": "berries",
       "amount": 3,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_11_07",
-      "resourceKey": "mushrooms",
-      "amount": 1,
       "maxAmount": 100
     },
     {
@@ -6544,12 +6235,6 @@
     },
     {
       "locationKey": "meadow_12_07",
-      "resourceKey": "mushrooms",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_12_07",
       "resourceKey": "herbs",
       "amount": 16,
       "maxAmount": 100
@@ -6558,12 +6243,6 @@
       "locationKey": "meadow_13_07",
       "resourceKey": "berries",
       "amount": 1,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_13_07",
-      "resourceKey": "mushrooms",
-      "amount": 0,
       "maxAmount": 100
     },
     {
@@ -6580,26 +6259,8 @@
     },
     {
       "locationKey": "meadow_14_07",
-      "resourceKey": "mushrooms",
-      "amount": 1,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_14_07",
       "resourceKey": "herbs",
       "amount": 20,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "riverbank_15_07",
-      "resourceKey": "berries",
-      "amount": 3,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "riverbank_15_07",
-      "resourceKey": "mushrooms",
-      "amount": 7,
       "maxAmount": 100
     },
     {
@@ -6616,12 +6277,6 @@
     },
     {
       "locationKey": "meadow_10_08",
-      "resourceKey": "mushrooms",
-      "amount": 1,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_10_08",
       "resourceKey": "herbs",
       "amount": 13,
       "maxAmount": 100
@@ -6630,12 +6285,6 @@
       "locationKey": "meadow_12_08",
       "resourceKey": "berries",
       "amount": 1,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_12_08",
-      "resourceKey": "mushrooms",
-      "amount": 0,
       "maxAmount": 100
     },
     {
@@ -6652,26 +6301,8 @@
     },
     {
       "locationKey": "meadow_13_08",
-      "resourceKey": "mushrooms",
-      "amount": 1,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_13_08",
       "resourceKey": "herbs",
       "amount": 19,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "riverbank_14_08",
-      "resourceKey": "berries",
-      "amount": 3,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "riverbank_14_08",
-      "resourceKey": "mushrooms",
-      "amount": 3,
       "maxAmount": 100
     },
     {
@@ -6688,12 +6319,6 @@
     },
     {
       "locationKey": "meadow_10_09",
-      "resourceKey": "mushrooms",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_10_09",
       "resourceKey": "herbs",
       "amount": 14,
       "maxAmount": 100
@@ -6702,12 +6327,6 @@
       "locationKey": "meadow_11_09",
       "resourceKey": "berries",
       "amount": 1,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_11_09",
-      "resourceKey": "mushrooms",
-      "amount": 0,
       "maxAmount": 100
     },
     {
@@ -6724,86 +6343,14 @@
     },
     {
       "locationKey": "meadow_12_09",
-      "resourceKey": "mushrooms",
-      "amount": 1,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "meadow_12_09",
       "resourceKey": "herbs",
       "amount": 18,
       "maxAmount": 100
     },
     {
       "locationKey": "riverbank_13_09",
-      "resourceKey": "berries",
-      "amount": 3,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "riverbank_13_09",
-      "resourceKey": "mushrooms",
-      "amount": 4,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "riverbank_13_09",
       "resourceKey": "herbs",
       "amount": 9,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "old_bridge_west_span",
-      "resourceKey": "berries",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "old_bridge_west_span",
-      "resourceKey": "mushrooms",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "old_bridge_west_span",
-      "resourceKey": "herbs",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "old_bridge_east_span",
-      "resourceKey": "berries",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "old_bridge_east_span",
-      "resourceKey": "mushrooms",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "old_bridge_east_span",
-      "resourceKey": "herbs",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "closed_east_gate",
-      "resourceKey": "berries",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "closed_east_gate",
-      "resourceKey": "mushrooms",
-      "amount": 0,
-      "maxAmount": 100
-    },
-    {
-      "locationKey": "closed_east_gate",
-      "resourceKey": "herbs",
-      "amount": 0,
       "maxAmount": 100
     }
   ],
@@ -6813,7 +6360,7 @@
       "locationKey": "start_border_camp",
       "type": "BORDER_MARKER",
       "name": "Межовий знак",
-      "description": "Старий дерев’яний знак із різьбленим геометричним орнаментом. Він позначає межу між легкою дорогою, лісом, річкою і поселенням за воротами.",
+      "description": "На межовому знаку схематично позначено цю територію: суху луку на заході, ліс за нею, річку з півночі на південь, поселення на сході й старий міст, що веде до воріт.",
       "providesLight": false,
       "restStaminaCapMultiplier": null,
       "data": {
@@ -6826,24 +6373,13 @@
       "locationKey": "start_border_camp",
       "type": "MAGIC_CAMPFIRE",
       "name": "Незгасне вогнище",
-      "description": "Полум’я горить рівно, не потребує хмизу й дає світло всій локації. Під час активного відпочинку тут можна відновити витривалість до п’ятикратного максимуму.",
+      "description": "Вогнище, що не згасає, освітлює все навколо. Відпочивши поряд, можна набратися додаткових сил.",
       "providesLight": true,
       "restStaminaCapMultiplier": 5,
       "data": {
         "rest_stamina_cap_multiplier": 5,
-        "night_light": "location"
-      }
-    },
-    {
-      "key": "old_bridge_planks",
-      "locationKey": "old_bridge_west_span",
-      "type": "BRIDGE",
-      "name": "Старі мостові дошки",
-      "description": "Дошки скриплять, але міст усе ще дає єдиний явний перехід через річку.",
-      "providesLight": false,
-      "restStaminaCapMultiplier": null,
-      "data": {
-        "river_crossing": true
+        "night_light": "location",
+        "is_campfire": true
       }
     },
     {
@@ -6851,7 +6387,7 @@
       "locationKey": "closed_east_gate",
       "type": "GATE",
       "name": "Зачинені ворота",
-      "description": "Ворота до поселення замкнені. Східний прохід буде відкритий пізніше, коли з’явиться саме поселення.",
+      "description": "Ви стукаєте у ворота, але вам ніхто не відповідає. За ними починається поселення, поки закрите для подорожніх.",
       "providesLight": false,
       "restStaminaCapMultiplier": null,
       "data": {
@@ -6864,33 +6400,43 @@
     {
       "speciesKey": "lisovyk",
       "locationKey": "forest_00_00",
-      "name": "Дід Чорноліс",
-      "isAlive": false,
-      "action": "спить у глибині Чорнолісу",
-      "activity": "RESTING",
+      "name": "Дід лісовик",
+      "legacyNames": [
+        "Дід Чорноліс"
+      ],
+      "isAlive": true,
+      "isHidden": true,
+      "action": "спить під корінням на самому краю старого лісу",
+      "activity": "SLEEPING",
       "nameOverrides": {
-        "nameGenitive": "Діда Чорноліса",
-        "nameDative": "Діду Чорнолісу",
-        "nameAccusative": "Діда Чорноліса",
-        "nameInstrumental": "Дідом Чорнолісом",
-        "nameLocative": "Діді Чорнолісі",
-        "nameVocative": "Діду Чорнолісе"
+        "nameGenitive": "Діда лісовика",
+        "nameDative": "Діду лісовику",
+        "nameAccusative": "Діда лісовика",
+        "nameInstrumental": "Дідом лісовиком",
+        "nameLocative": "Діді лісовику",
+        "nameVocative": "Діду лісовику"
       }
     },
     {
       "speciesKey": "herbalist",
-      "locationKey": "meadow_11_04",
-      "name": "Травник",
+      "locationKey": "start_border_camp",
+      "name": "Здравомир",
+      "legacyNames": [
+        "Травник"
+      ],
       "isAlive": true,
-      "action": "збирає трави на сухій луці",
-      "activity": "GATHERING",
+      "isHidden": false,
+      "professionKey": "znakhar",
+      "professionName": "знахар",
+      "action": "придивляється до межового вогню й сушить трави біля торби",
+      "activity": "LOOKING",
       "nameOverrides": {
-        "nameGenitive": "Травника",
-        "nameDative": "Травнику",
-        "nameAccusative": "Травника",
-        "nameInstrumental": "Травником",
-        "nameLocative": "Травнику",
-        "nameVocative": "Травнику"
+        "nameGenitive": "Здравомира",
+        "nameDative": "Здравомиру",
+        "nameAccusative": "Здравомира",
+        "nameInstrumental": "Здравомиром",
+        "nameLocative": "Здравомирі",
+        "nameVocative": "Здравомире"
       }
     }
   ]

@@ -1,7 +1,7 @@
 import { Bot } from "grammy";
 import { actionDurationMs, performOrQueuePlayerAction } from "../services/actionQueue";
 import { getPlayerByTelegramId } from "../services/players";
-import { renderLocationDetails } from "../services/locations";
+import { renderLocationDetails, renderLocationFeatureInteraction } from "../services/locations";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 
@@ -58,6 +58,25 @@ export function registerLookHandlers(bot: Bot) {
       await ctx.editMessageText(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
     } catch {
       await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+    }
+  });
+
+
+  bot.callbackQuery(/^feature:(\d+)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    const view = await renderLocationFeatureInteraction(Number(ctx.match[1]), player.id);
+    await safeAnswerCallbackQuery(ctx);
+    if (!view) return void (await ctx.reply("Цього вже не видно поруч."));
+
+    try {
+      await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
+    } catch {
+      await ctx.reply(view.text, { reply_markup: view.keyboard });
     }
   });
 

@@ -3,6 +3,7 @@ import { prisma } from "../db";
 import { ACTION_BASE_TICKS, QUICK_PLAYER_ACTION_DURATION_MS, TICK_MS, gatherConfig, playerStaminaCostConfig } from "../gameConfig";
 import { directionLabels } from "../ui/labels";
 import { buildMovementKeyboard, buildResourceMenuKeyboard, buildTargetListKeyboard } from "../ui/keyboards";
+import { isCampfireFeature } from "./locationFeatures";
 import { escapeHtml } from "../utils/text";
 
 function isVisibleCorpse(c: any) {
@@ -10,7 +11,7 @@ function isVisibleCorpse(c: any) {
 }
 
 function isVisibleLivingCreature(c: any) {
-  return c.isAlive && !c.isGone;
+  return c.isAlive && !c.isGone && !c.isHidden;
 }
 
 function visibleTargets(location: any, viewerPlayerId?: number) {
@@ -29,27 +30,34 @@ function visibleTargets(location: any, viewerPlayerId?: number) {
   return [...players, ...livingCreatures, ...corpses];
 }
 
-function featureLine(feature: any) {
-  const prefix = feature.type === "MAGIC_CAMPFIRE"
-    ? "🔥"
-    : feature.type === "BORDER_MARKER"
-      ? "🪧"
-      : feature.type === "BRIDGE"
-        ? "🌉"
-        : feature.type === "GATE"
-          ? "🚪"
-          : "✦";
+function featureIcon(feature: any) {
+  if (isCampfireFeature(feature)) return "🔥";
+  if (feature.type === "BORDER_MARKER") return "🪧";
+  if (feature.type === "GATE") return "🚪";
+  return "✦";
+}
 
-  const parts = [`${prefix} ${feature.name}`];
+function isInteractiveFeature(feature: any) {
+  return feature.isActive && ["BORDER_MARKER", "CAMPFIRE", "MAGIC_CAMPFIRE", "GATE", "LANDMARK"].includes(feature.type);
+}
+
+function featureLine(feature: any) {
+  const parts = [`${featureIcon(feature)} ${feature.name}`];
   if (feature.providesLight) parts.push("дає світло");
   if (feature.restStaminaCapMultiplier) parts.push(`відпочинок до ×${feature.restStaminaCapMultiplier} витривалости`);
   return `- ${parts.join(" — ")}`;
 }
 
 function featuresText(location: any) {
-  const features = (location.features ?? []).filter((feature: any) => feature.isActive);
+  const features = (location.features ?? []).filter(isInteractiveFeature);
   if (!features.length) return "";
-  return `\n\nОсобливості:\n${features.map(featureLine).join("\n")}`;
+  return `\n\n${features.map(featureLine).join("\n")}`;
+}
+
+function addFeatureButtons(keyboard: InlineKeyboard, features: any[]) {
+  for (const feature of features.filter(isInteractiveFeature)) {
+    keyboard.text(`${featureIcon(feature)} ${feature.name}`, `feature:${feature.id}`).row();
+  }
 }
 
 function presenceText(location: any, viewerPlayerId?: number) {
@@ -222,6 +230,8 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   const keyboard = new InlineKeyboard();
   const resources = await resourceButtonData(location.resources, viewerPlayerId);
 
+  addFeatureButtons(keyboard, location.features);
+
   if (resources.length === 1) {
     const resource = resources[0];
     keyboard.text(`🌿 Зібрати: ${resource.name}${resource.durationText}`, `gather:${resource.key}`).row();
@@ -258,3 +268,23 @@ export async function buildGatherMenuForLocation(locationId: number, viewerPlaye
 
   return buildResourceMenuKeyboard(await resourceButtonData(resources, viewerPlayerId));
 }
+
+
+export async function renderLocationFeatureInteraction(featureId: number, viewerPlayerId: number) {
+  const player = await prisma.player.findUnique({ where: { id: viewerPlayerId }, select: { currentLocationId: true } });
+  const feature = await prisma.locationFeature.findUnique({ where: { id: featureId }, include: { location: true } });
+  if (!player || !feature || !feature.isActive || player.currentLocationId !== feature.locationId || !isInteractiveFeature(feature)) return null;
+
+  let text = feature.description ?? "Тут є щось варте уваги.";
+  if (feature.type === "BORDER_MARKER") {
+    text = "Ви бачите межовий знак. На темному дереві вирізано просту, майже дитячу мапу: суха лука тягнеться на захід, за нею темніє ліс; річка йде з півночі на південь; на сході за мостом позначено поселення й зачинені ворота.";
+  } else if (isCampfireFeature(feature)) {
+    text = "Вогнище, що не згасає, освітлює все навколо. Поряд із ним легше відпочити, відігрітися й набратися додаткових сил.";
+  } else if (feature.type === "GATE") {
+    text = "Ви стукаєте у ворота, але вам ніхто не відповідає.";
+  }
+
+  const keyboard = new InlineKeyboard().text("↩️ Назад", "location:details");
+  return { text, keyboard };
+}
+

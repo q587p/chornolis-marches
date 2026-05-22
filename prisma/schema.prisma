@@ -237,6 +237,8 @@ model Creature {
 
   activity      CreatureActivity?
   currentAction String?
+  professionKey String?
+  professionName String?
 
   // Lifecycle. Time is stopped for players and named/NPC creatures; animals keep aging.
   age                  CreatureAge @default(ADULT)
@@ -244,6 +246,7 @@ model Creature {
   diedAtTick           Int?
   corpseDecayTicksLeft Int?
   isGone               Boolean @default(false)
+  isHidden             Boolean @default(false)
 
   // статистика
   steps             Int @default(0)
@@ -435,6 +438,7 @@ enum BiomeType {
 
 enum LocationFeatureType {
   BORDER_MARKER
+  CAMPFIRE
   MAGIC_CAMPFIRE
   BRIDGE
   GATE
@@ -474,6 +478,7 @@ enum CreatureActivity {
   LOOKING
   GATHERING
   RESTING
+  SLEEPING
   TALKING
   SPEAKING
   FIGHTING

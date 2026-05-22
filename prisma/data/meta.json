@@ -1,0 +1,16 @@
+{
+  "version": "0.9.1-world-layout-v4",
+  "startLocationKey": "start_border_camp",
+  "notes": [
+    "2D planar map for the current MVP; z stays 0.",
+    "The western forest keeps the authored 10x10 layout.",
+    "The river is impassable except through the old bridge.",
+    "Forest is walled from north, south and west; the east opens into the widened dry luka.",
+    "The dry luka is two cells wider than the first draft and has north/south impassable caps over its narrow ends.",
+    "The central dry-luka footpath wraps northward from the northern edge to the southern edge, with a reciprocal southward exit.",
+    "The northern riverbank still wraps northward to the southern riverbank, with a reciprocal southward exit.",
+    "Bridge, start camp and closed gate have no gatherable resource nodes in the seed.",
+    "Riverbank locations seed herbs only; berries and mushrooms are kept to forest/luka logic.",
+    "The old bridge remains a passive terrain feature for future fishing/bridge mechanics, not a clickable feature yet."
+  ]
+}

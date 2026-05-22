@@ -291,20 +291,30 @@ async function wakeLisovykIfNeeded() {
   if (!depleted) return false;
   const species = await prisma.creatureSpecies.findUnique({ where: { key: "lisovyk" } });
   if (!species) return false;
-  const existing = await prisma.creature.findFirst({ where: { speciesId: species.id, name: "Дід Чорноліс" } });
-  if (existing?.isAlive) return false;
+  const existing = await prisma.creature.findFirst({ where: { speciesId: species.id, name: { in: ["Дід лісовик", "Дід Чорноліс"] } } });
+  if (existing?.isAlive && !existing.isHidden && existing.activity !== "SLEEPING") return false;
   const action = `полює через те, що в регіоні зник ресурс ${depleted.resourceKey}`;
-  if (existing) await prisma.creature.update({ where: { id: existing.id }, data: { isAlive: true, isGone: false, locationId: depleted.locationId, hp: species.baseHp, activity: "LOOKING", currentAction: action } });
-  else await prisma.creature.create({ data: { speciesId: species.id, name: "Дід Чорноліс", locationId: depleted.locationId, hp: species.baseHp, activity: "LOOKING", currentAction: action } });
-  await prisma.worldEvent.create({ data: { type: "NPC_SAY", title: "Лісовик прокинувся", description: `У регіоні «${depleted.regionName}» зник ресурс «${depleted.resourceName}». Дід Чорноліс прокинувся і почав полювання.`, locationId: depleted.locationId } });
-  if (botInstance) await notifyRegion(botInstance, depleted.regionId, `🌲 Дід Чорноліс прокинувся.\n\nУ всьому регіоні зник ресурс «${depleted.resourceName}».`);
+  if (existing) await prisma.creature.update({ where: { id: existing.id }, data: { isAlive: true, isGone: false, locationId: depleted.locationId, hp: species.baseHp, name: "Дід лісовик", isHidden: false, activity: "LOOKING", currentAction: action } });
+  else await prisma.creature.create({
+  data: {
+    speciesId: species.id,
+    name: "Дід лісовик",
+    locationId: depleted.locationId,
+    hp: species.baseHp,
+    isHidden: false,
+    activity: "LOOKING",
+    currentAction: action,
+  },
+});
+  await prisma.worldEvent.create({ data: { type: "NPC_SAY", title: "Лісовик прокинувся", description: `У регіоні «${depleted.regionName}» зник ресурс «${depleted.resourceName}». Дід лісовик прокинувся і почав полювання.`, locationId: depleted.locationId } });
+  if (botInstance) await notifyRegion(botInstance, depleted.regionId, `🌲 Дід лісовик прокинувся.\n\nУ всьому регіоні зник ресурс «${depleted.resourceName}».`);
   return true;
 }
 
 async function putLisovykToSleepIfForestRecovered() {
   const species = await prisma.creatureSpecies.findUnique({ where: { key: "lisovyk" } });
   if (!species) return false;
-  const lisovyk = await prisma.creature.findFirst({ where: { speciesId: species.id, name: "Дід Чорноліс", isAlive: true }, include: { location: true } });
+  const lisovyk = await prisma.creature.findFirst({ where: { speciesId: species.id, name: { in: ["Дід лісовик", "Дід Чорноліс"] }, isAlive: true }, include: { location: true } });
   const match = lisovyk?.currentAction?.match(/зник ресурс ([a-zA-Z0-9_-]+)/);
   if (!lisovyk || !match) return false;
   const resourceKey = match[1];
@@ -313,9 +323,9 @@ async function putLisovykToSleepIfForestRecovered() {
   if ((total._sum.amount ?? 0) <= 0) return false;
   const resource = await prisma.resourceType.findUnique({ where: { key: resourceKey } });
   await prisma.worldAction.updateMany({ where: { actorType: "CREATURE", creatureId: lisovyk.id, status: { in: ["QUEUED", "RUNNING"] } }, data: { status: "CANCELLED" } });
-  await prisma.creature.update({ where: { id: lisovyk.id }, data: { isAlive: false, activity: "RESTING", currentAction: `заснув: ресурс ${resourceKey} відновився` } });
-  await prisma.worldEvent.create({ data: { type: "NPC_SAY", title: "Лісовик заснув", description: `Дід Чорноліс відчув, що ресурс «${resource?.name ?? resourceKey}» у лісі відновився. Він перестає полювати на людей і ховається там, де був.`, locationId: lisovyk.locationId } });
-  if (botInstance) await notifyRegion(botInstance, regionId, `🌲 Дід Чорноліс відчув, що ліс відновився.\n\nВін перестає полювати за людьми в лісі, ховається між деревами й засинає.`);
+  await prisma.creature.update({ where: { id: lisovyk.id }, data: { isAlive: true, isHidden: true, activity: "SLEEPING", currentAction: `спить: ресурс ${resourceKey} відновився` } });
+  await prisma.worldEvent.create({ data: { type: "NPC_SAY", title: "Лісовик заснув", description: `Дід лісовик відчув, що ресурс «${resource?.name ?? resourceKey}» у лісі відновився. Він перестає полювати на людей і ховається там, де був.`, locationId: lisovyk.locationId } });
+  if (botInstance) await notifyRegion(botInstance, regionId, `🌲 Дід лісовик відчув, що ліс відновився.\n\nВін перестає полювати за людьми в лісі, ховається між деревами й засинає.`);
   return true;
 }
 
@@ -358,6 +368,11 @@ export async function worldTick() {
 
     for (const c of creatures) {
       try {
+        if (c.activity === "SLEEPING") {
+          skippedBusy++;
+          continue;
+        }
+
         if (await hasActiveCreatureActions(c.id)) {
           skippedBusy++;
           continue;

@@ -50,7 +50,7 @@ async function startRest(ctx: any) {
 
 export function registerRestHandlers(bot: Bot) {
   bot.command("rest", startRest);
-  bot.hears("🛌 Відпочити", startRest);
+  bot.hears(["🛌 Відпочити", "🔥 Відпочити"], startRest);
 
   bot.callbackQuery("rest:start", async (ctx) => {
     await safeAnswerCallbackQuery(ctx);

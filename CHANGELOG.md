@@ -2,8 +2,32 @@
 
 ## [Unreleased]
 
+---
 All notable changes to this project will be documented in this file.
 The format is loosely based on Keep a Changelog and this project follows semantic-ish versioning.
+
+---
+
+## 0.9.1 - Improve menu, location features, added reset the world - 12026-05-22
+
+### Added
+
+- Added `/adminHelp` and development-only `/reset` for resetting non-player world state to the authored starter state.
+- Added starter reset rules: one hidden sleeping `Дід лісовик` at `forest_00_00`, `Здравомир` the знахар at the respawn camp, and a small starter rabbit population in forest and dry luka.
+- Added creature visibility/profession fields and `SLEEPING` activity state.
+- Added `CAMPFIRE` as a normal location feature type alongside `MAGIC_CAMPFIRE`.
+- Added documentation for NPC professions, player-like NPCs, and passive/interactive location features.
+
+### Changed
+
+- Moved `Новини`, `Допомога` and `Авто` under `☰ Меню` / `/menu`.
+- Main reply keyboard now shows `📋 Черга` only when there is an active queue/rest and shows `🛌/🔥 Відпочити` only when rest is useful.
+- Any active campfire-like feature can switch the rest button to `🔥 Відпочити`.
+- `Травник` is now represented as profession/fах; the starter NPC is named `Здравомир`.
+- `Зачинені ворота` now belongs to the `Поселення` region instead of being its own region.
+- Bridge plank features are no longer clickable until bridge/fishing mechanics exist.
+- World seed resources are normalized: no gatherables at bridge/start camp/gate, riverbanks seed herbs only, and dry luka has no mushrooms.
+- Chornolis split seed package
 
 ---
 

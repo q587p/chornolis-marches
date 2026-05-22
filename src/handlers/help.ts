@@ -1,5 +1,5 @@
 import { Bot } from "grammy";
-import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
+import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { isPlayerAutoEnabled } from "./auto";
 
 export const HELP_TEXT = [
@@ -34,7 +34,7 @@ async function sendHelp(ctx: any) {
   const auto = ctx.from ? isPlayerAutoEnabled(ctx.from.id) : false;
   await ctx.reply(HELP_TEXT, {
     parse_mode: "HTML",
-    reply_markup: buildMainReplyKeyboard(auto),
+    reply_markup: ctx.from ? await buildMainReplyKeyboardForTelegramId(ctx.from.id, auto) : undefined,
   });
 }
 

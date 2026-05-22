@@ -2,7 +2,7 @@ import { Bot, InlineKeyboard } from "grammy";
 import { prisma } from "../db";
 import { getStartLocationId } from "../services/players";
 import { renderLocationBrief } from "../services/locations";
-import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
+import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { guessGenderFromPronoun, guessNameForms, normalizeCharacterName, validateCharacterName, type NameForms } from "../services/grammar";
 import { HELP_TEXT } from "./help";
 import { BASE_STAMINA } from "../gameConfig";
@@ -83,7 +83,7 @@ async function enterWorld(ctx: any, isMenuRefresh = false) {
     ? `🌲 Меню оновлено.\n\nВітаю, ${displayName}.`
     : `🌲 Порубіжжя Чорнолісу ожили.\n\nВітаю, ${displayName}. Твій слід збережено в Чорнолісі.`;
 
-  await ctx.reply(text, { reply_markup: buildMainReplyKeyboard(false) });
+  await ctx.reply(text, { reply_markup: await buildMainReplyKeyboardForTelegramId(from.id, false) });
   await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
 }
 
@@ -115,12 +115,14 @@ async function finishOnboarding(ctx: any, state: OnboardingState) {
 
   await ctx.reply(
     `Готово. Чорноліс запам’ятав ім’я: ${player.nameNominative}.\n\nНаприклад: «Травник звертається до ${player.nameGenitive}» і «${player.nameVocative}, стежка чекає».`,
-    { reply_markup: buildMainReplyKeyboard(false) }
+    {
+      reply_markup: await buildMainReplyKeyboardForTelegramId(Number(state.telegramId), false),
+    }
   );
 
   await ctx.reply(HELP_TEXT, {
     parse_mode: "HTML",
-    reply_markup: buildMainReplyKeyboard(false),
+    reply_markup: await buildMainReplyKeyboardForTelegramId(Number(state.telegramId), false),
   });
 
   const view = await renderLocationBrief(startLocationId, player.id);
@@ -191,8 +193,10 @@ async function setBotCommandsWithRetry(bot: Bot, attempts = 3) {
         { command: "me", description: "🧍 Персонаж" },
         { command: "location", description: "📍 Поточна локація" },
         { command: "look", description: "🔎 Придивитися" },
+        { command: "menu", description: "☰ Меню" },
         { command: "news", description: "📰 Останні новини світу" },
         { command: "help", description: "🧭 Допомога новачку" },
+        { command: "adminHelp", description: "🛠 Адмінські команди" },
       ]);
 
       console.log("Telegram bot commands updated.");

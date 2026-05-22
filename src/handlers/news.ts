@@ -1,7 +1,7 @@
 import { Bot } from "grammy";
 import fs from "fs/promises";
 import path from "path";
-import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
+import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { isPlayerAutoEnabled } from "./auto";
 
 function sectionTitle(section: string) {
@@ -35,7 +35,7 @@ export function registerNewsHandlers(bot: Bot) {
     const text = await readNews();
     const auto = ctx.from ? isPlayerAutoEnabled(ctx.from.id) : false;
     for (let i = 0; i < text.length; i += 3500) {
-      await ctx.reply(text.slice(i, i + 3500), { reply_markup: buildMainReplyKeyboard(auto) });
+      await ctx.reply(text.slice(i, i + 3500), { reply_markup: ctx.from ? await buildMainReplyKeyboardForTelegramId(ctx.from.id, auto) : undefined });
     }
   }
 
