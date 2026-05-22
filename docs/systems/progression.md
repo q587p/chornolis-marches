@@ -20,6 +20,17 @@ Progression should happen through use, observation and lived experience. A chara
 - Failures can also teach, especially when the action was plausible.
 - NPCs, animals, monsters and mythical beings may use the same attribute/skill model.
 
+## Example Skills
+
+- Gathering
+- Tracking
+- Hunting
+- Fishing
+- Herbalism
+- Crafting
+- Combat
+- Ritual Lore
+
 ## Learning a New Skill
 
 A character may gain access to a new skill by observing someone use it.

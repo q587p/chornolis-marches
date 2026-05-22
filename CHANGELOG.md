@@ -8,6 +8,30 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.9.4 - Documentation restructure and canonical design docs - 12026-05-23
+
+### Added
+
+- Added canonical documentation structure under `docs/`.
+- Added `docs/game_design.md` as the primary long-form design pillar document.
+- Added `docs/roadmap.md` for roadmap phases and long-term direction.
+- Added `docs/systems/progression.md` for use- and observation-based progression design.
+- Added `docs/dev/local_setup.md` and deployment-oriented developer documentation.
+
+### Changed
+
+- README now acts as a cleaner landing page and project identity overview instead of storing full planning details.
+- Planning and system documentation are now grouped under `docs/planning/`, `docs/systems/` and `docs/dev/`.
+- Preserved core README sections such as Vision, Tech Stack, Current Features, Checklist and Inspirations.
+
+### Documentation
+
+- Standardized most technical/design documentation to English.
+- Kept `news.md` and in-world flavor text primarily Ukrainian for atmosphere and world identity.
+- Clarified liminal frontier identity and use-/observation-based progression pillars across the docs.
+
+---
+
 ## 0.9.3 - Admin help recovery, persistent auto and visible location features - 12026-05-22
 
 ### Added

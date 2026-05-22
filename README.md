@@ -2,19 +2,22 @@
 
 Text-based Telegram RPG with a living ecosystem, inspired by MUDs, Ultima Online, and Ukrainian folklore.
 
-Tech: living cell-based world, PostgreSQL persistence, Render deployment, world ticks, creature aging, corpse lifecycle, prioritized universal action queues, stamina/rest state, fading tracks, and a simple status page.
+Tech: living cell-based world simulation, PostgreSQL persistence, Render deployment, world ticks, creature aging, corpse lifecycle, prioritized universal action queues, stamina/rest states, fading tracks, and a lightweight Telegram-native interface.
 
 ## 🧠 Vision
 
-A living world simulation:
+A living liminal frontier simulation:
 
 * 🐺 Wolves hunt rabbits
 * 🦊 Foxes compete for prey
-* 🐇 Rabbits reproduce
-* 🌿 Resources grow and get depleted
-* 🦴 Animals age, die, leave corpses, and feed the forest
+* 🐇 Rabbits reproduce and migrate
+* 🌿 Resources grow, spread and get depleted
+* 🦴 Animals age, die, leave corpses and feed the forest
+* 🌫 Tracks, scents and signs fade over time
 * 👤 Players interfere and upset the balance
-* 🧭 Player/NPC/animal actions take time, can be queued, interrupted and leave tracks
+* 🧭 Actions take time, can be queued, interrupted and leave traces
+* 🔥 Settlements push back against wilderness while myths push back against settlement
+* 🌘 The world changes between day and night
 
 ## 🎨 Visual direction
 
@@ -34,76 +37,38 @@ Generated concept assets are stored under `assets/art/generated/` and should be 
 
 ## 🧩 Code structure
 
-The bot entry point is intentionally thin. Most logic is split by responsibility:
+The bot entry point is `src/bot.ts`. The TypeScript source lives under `src/`, while persistence, migrations and world seed data live under `prisma/`.
 
 ```txt
 src/
-  bot.ts                 # bot composition and startup
-  config.ts              # env and app version
-  db.ts                  # PostgreSQL pool + Prisma client
-  gameConfig.ts          # ticks and gameplay constants
-  runtimeState.ts        # last runtime error for status page
+  bot.ts                 # Telegram bot composition and startup
   handlers/              # Telegram commands and callback handlers
-  services/              # game/domain services
-  server/                # HTTP status server
-  ui/                    # labels and keyboards
-  utils/                 # small helpers
+  services/              # gameplay, world and domain logic
+  server/                # HTTP status / health endpoints
+  ui/                    # Telegram labels, keyboards and message UI
+  utils/                 # small shared helpers
+
+prisma/
+  schema.prisma          # database schema
+  migrations/            # database migrations
+  data/                  # authored world seed data
+  seed.ts                # world/database seed script
+
+docs/
+  art/                   # visual direction and prompts
+  planning/              # backlog, next, icebox and planning notes
+  systems/               # system design docs
 ```
 
-## 🌍 Current features
+The codebase is currently Telegram-first, but gameplay logic is gradually moving into reusable services so it can later support web tools, maps or alternative clients.
 
-* Cell-based world grid with directional movement.
-* Persistent delayed action queue for players, NPCs and animals.
-* Stamina states:
-  * `Відпочивший`;
-  * `Втомлений`;
-  * `Дуже втомлений`;
-  * `Відпочиває` while active rest is running.
-* Action priorities are used for interruption, not for reordering normal route plans.
-* Interrupts: urgent actions such as attacks can cancel interruptible running/waiting actions.
-* Fading `WorldTrack` records for movement; `/track` can now report recent traces around the current location.
-* Runtime tick timing: `WORLD_TICK_INTERVAL_MS` / `TICK_MS` sets the initial world time, and `/tickSet <ms>` can recalculate tick-derived durations without restarting the process.
-* Stamina/rest loop: base stamina is 13; while stamina is non-negative, player actions execute immediately; tired actions go into the queue with duration based on action ticks and the configured tick length.
-* HP recovery: passive health recovery happens only while idle; active rest is faster. At `HP = 0`, the player is unconscious, the queue is cleared, and only rest is available until HP reaches at least 1.
-* Delayed player action queue:
-  * actions execute immediately while the player still has stamina;
-  * tired actions append to a visible plan in FIFO order;
-  * `/queue` shows current and queued actions; when it is empty, it shows only `Черга дій порожня.`;
-  * queue buttons can cancel the running action or clear waiting actions, and are hidden when there is nothing to manage.
-* Resource nodes: berries, mushrooms, herbs.
-* Player inventory for gathered resources.
-* Queued player actions: movement, gathering, look, inspect, greet, attack, freshen, say and track placeholder.
-* Individual creature records, not abstract population counters.
-* World tick loop:
-  * autonomous herbalist;
-  * simple animal wandering/tracking through queued creature actions;
-  * carnivores can queue attacks against prey;
-  * resource regeneration;
-  * Lisovyk awakening/recovery loop;
-  * animal aging and corpse decay.
-* Corpse lifecycle:
-  * animals age by world ticks;
-  * old animals have an increasing death chance;
-  * corpses remain visible for a while;
-  * decayed corpses disappear and increase mushrooms in that location.
-* Expanded static world seed: western starter forest, dry luka, riverbank, old bridge, closed settlement gate and start/respawn camp with a border marker and unfading campfire.
+## 🌍 Documentation
 
-
-## 🌍 Roadmap
-
-The detailed long-term plan now lives in [`ROADMAP.md`](ROADMAP.md). Core design pillars are described in [`GAME_DESIGN.md`](GAME_DESIGN.md).
-
-Current focus:
-
-- liminal frontier identity: Chornolis Marches as a threshold between settlement, wilderness and myth;
-- beginner onboarding and helper flow;
-- `/respawn` for early lost characters;
-- day/night cycle;
-- campfires, light and night visibility;
-- starter settlement and NPCs;
-- fishing;
-- crafting, barter and survival foundations;
-- skill progression through use, observation and apprenticeship.
+- [`docs/game_design.md`](docs/game_design.md) — core design pillars, identity and long-term gameplay philosophy
+- [`docs/roadmap.md`](docs/roadmap.md) — roadmap phases and long-term direction
+- [`docs/systems/`](docs/systems/) — gameplay system design documents
+- [`docs/planning/`](docs/planning/) — backlog, next, icebox and planning notes
+- [`docs/dev/`](docs/dev/) — local setup, deployment and developer notes
 
 ## 🌍 Checklist
 
@@ -134,90 +99,12 @@ Current focus:
 * [ ] Crafting & professions
 * [ ] Events and world history expansion
 
-## Commands
+## 🛠 Developer setup
 
-- `/start` — enter the world
-- `/help` — newcomer hints and core commands
-- `/me` — show character state and inventory
-- `/look` — inspect the current location immediately while rested, or queue it while tired
-- `/queue` — show current action plan; empty queues show no inline controls
-- `/rest` — cancel active/waiting actions and start active rest
-- `/world` — show technical world status
-- `/all` — show living players and creatures
-- `/all dead` — show all creature records, including corpses/gone records
-- `/say text` — speak immediately while rested, or queue speech while tired
-- `/queue clear` — remove waiting actions
-- `/queue cancel` — cancel the current interruptible action
-- `🛌 Відпочити` — start rest from the reply keyboard
-- `/tick` — manually run one world tick
-- `/tickGet` — show world tick settings
-- `/tickSet <ms>` — change runtime world timing: world tick, action/recovery loop and tick-derived durations
-- `/addCreature <speciesKey> <locationKey> [count]` — debug-spawn test animals
+For local development and deployment setup, see:
 
-## Status
-
-Render Web Service exposes:
-
-- `/` — human-readable status page
-- `/health` — JSON health check
-
-The status page shows version, player count, locations, alive animals, animal corpses, NPC count, resource nodes, recent world events, and latest runtime error.
-
-## Local setup
-
-```bash
-npm install
-```
-
-Create `.env`:
-
-```env
-BOT_TOKEN=...
-DATABASE_URL=...
-WORLD_TICK_INTERVAL_MS=1500
-```
-
-Run migrations and seed:
-
-```bash
-npx prisma migrate deploy
-npm run seed
-npm run build
-npm run dev
-```
-
-## Render
-
-Recommended build command:
-
-```bash
-npm install && npx prisma migrate deploy && npm run build && npm run seed
-```
-
-Start command:
-
-```bash
-npm start
-```
-
-Environment variables:
-
-- `BOT_TOKEN`
-- `DATABASE_URL`
-- optional `WORLD_TICK_INTERVAL_MS` — main timing knob for world ticks, action durations, regeneration and track TTL at startup
-- optional `TICK_MS` — legacy alias used only when `WORLD_TICK_INTERVAL_MS` is absent
-- optional `WORLD_DEBUG=true` or `WORLD_TICK_DEBUG=true`
-
-`APP_VERSION` is no longer required. The app reads version from `package.json` first.
-
-## ⚙️ Dev notes
-
-* Only one bot instance can run (Telegram polling limitation).
-* Prisma 7 uses adapter-based connection.
-* Database migrations are required before deploy.
-* Keep `src/bot.ts` as composition only; add new gameplay in `handlers/` and `services/`.
-* `npm run seed` seeds world structure, resources, species, lifecycle profiles, and unique NPCs only; animals are debug-spawned via `/addCreature` for now.
-* Player/NPC/animal action delays are persisted in `WorldAction`, not stored in memory-only `setTimeout` jobs.
+- [`docs/dev/local_setup.md`](docs/dev/local_setup.md) — local development setup
+- [`docs/dev/render_deploy.md`](docs/dev/render_deploy.md) — Render deployment notes
 
 ## 🧙 Inspiration
 
