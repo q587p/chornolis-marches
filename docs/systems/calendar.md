@@ -1,0 +1,136 @@
+# Calendar and World Reckoning
+
+## Current public date
+
+The current starter date is:
+
+> 587 літо після Великого Відступу — Рік Сича під Тихим Вітром.
+
+This is intentionally not tied to Christianity, the Holocene calendar, Trypillia or real historical chronology. Chornolis Marches is a separate, loosely related mythic space.
+
+## Era
+
+The current era counts years **after the Great Retreat**.
+
+The Great Retreat is deliberately not fully explained yet. It may later become:
+
+- a historical collapse;
+- a retreat from the deep forest;
+- a retreat from old settlements;
+- a boundary event between people and the Chornolis;
+- a disputed story where villages, elders, volkhvy and spirits remember different truths.
+
+## Year names
+
+Years may have common folk names in addition to their number.
+
+The current format is:
+
+```text
+587 літо після Великого Відступу — Рік Сича під Тихим Вітром.
+```
+
+The year name should be usable in:
+
+- `/start` and onboarding text;
+- news;
+- rumors;
+- NPC speech;
+- world events;
+- future calendar UI.
+
+## 13 beasts of the year
+
+The long-term calendar should use 13 beasts instead of 12, so it can align better with 13 lunar circles.
+
+Draft beast cycle:
+
+1. Полівка
+2. Заєць
+3. Лис
+4. Вовк
+5. Рись
+6. Вепр
+7. Олень
+8. Тур
+9. Ведмідь
+10. Ворон
+11. Сич
+12. Журавель
+13. Змій
+
+`Змій` should sit at the edge between animal, omen and myth.
+
+## 13 year signs
+
+1. Молодий Корінь
+2. Мокра Стежка
+3. Тихий Вітер
+4. Гострий Серп
+5. Червоний Жар
+6. Медова Вода
+7. Чорна Земля
+8. Снігова Межа
+9. Вербовий Дим
+10. Сліпий Дощ
+11. Нічний Корінь
+12. Крива Стежка
+13. Довга Тінь
+
+In prose, use the instrumental form:
+
+```text
+Рік Сича під Тихим Вітром
+Рік Змія під Гострим Серпом
+Рік Вовка під Сніговою Межею
+```
+
+## Future lunar calendar
+
+The deeper calendar is intentionally Icebox-level for now.
+
+Preferred future direction:
+
+- 13 lunar circles in a year;
+- moon phases inside each circle;
+- 4 seasons layered over the year;
+- sacred, dangerous or unlucky days;
+- season- and moon-dependent creatures, resources, rituals and events;
+- local names for circles may differ between settlements, volkhvy, hunters and spirits.
+
+Possible working names for the 13 lunar circles:
+
+1. Коло Паморозі
+2. Коло Вовчого Сліду
+3. Коло Проталин
+4. Коло Соку
+5. Коло Зеленого Шуму
+6. Коло Купальського Жару
+7. Коло Липового Меду
+8. Коло Серпа
+9. Коло Вересу
+10. Коло Жовтого Листу
+11. Коло Чорної Стежки
+12. Коло Груддя
+13. Коло Довгої Ночі
+
+## Design notes
+
+The calendar should be readable first and mythic second.
+
+A player should understand that it is the 587th year after some important Retreat, but not immediately know everything about the event.
+
+Good text examples:
+
+```text
+Зараз 587 літо після Великого Відступу — Рік Сича під Тихим Вітром.
+```
+
+```text
+Старі кажуть: у Рік Сича ліс рідко говорить першим, зате добре чує тих, хто заходить надто далеко.
+```
+
+```text
+Це сталося за три літа до Року Сича, коли річка двічі вставала туманом.
+```
+

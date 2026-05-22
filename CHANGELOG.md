@@ -8,6 +8,21 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.9.2 - Chornolis calendar service - 12026-05-22
+
+### Added
+
+- Added a lightweight Chornolis calendar service with the current world year line: `587 літо після Великого Відступу — Рік Сича під Тихим Вітром.`
+- Added `docs/systems/calendar.md` with the basic era, year naming, 13 lunar circles and 13 year-creature cycle direction.
+- Added Icebox planning item `CAL-001` for deeper calendar simulation: moon phases, seasons, sacred/dangerous days and generated year names.
+
+### Changed
+
+- `/start` and the post-onboarding welcome message now mention the current Chornolis year.
+- Calendar text uses explicit `\n` line breaks in Telegram strings instead of physical newlines inside template literals.
+
+---
+
 ## 0.9.1 - Improve menu, location features, added reset the world - 12026-05-22
 
 ### Added
@@ -91,11 +106,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Documented the preferred visual style as dark Ukrainian / Slavic inspired forest frontier fantasy.
 - Clarified that generated images are concept/direction references for Telegram UI, README, landing page, future banners and icon work.
-
-### Notes
-
-- These assets are not gameplay code and do not require a Prisma migration.
-- If version files are updated manually, use `npm version patch --no-git-tag-version` before final build/commit.
 
 ---
 

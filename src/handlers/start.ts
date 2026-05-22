@@ -6,6 +6,7 @@ import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../
 import { guessGenderFromPronoun, guessNameForms, normalizeCharacterName, validateCharacterName, type NameForms } from "../services/grammar";
 import { HELP_TEXT } from "./help";
 import { BASE_STAMINA } from "../gameConfig";
+import { renderCurrentWorldYearLine } from "../services/calendar";
 
 const CASE_PROMPTS: Array<{ key: keyof NameForms; question: string; prefix?: string }> = [
   { key: "genitive", question: "Ім’я в родовому відмінку (Немає КОГО?)" },
@@ -78,10 +79,11 @@ async function enterWorld(ctx: any, isMenuRefresh = false) {
 
   const view = await renderLocationBrief(startLocationId, player.id);
   const displayName = player.nameNominative ?? player.firstName ?? "мандрівнику";
+  const yearLine = renderCurrentWorldYearLine();
 
   const text = isMenuRefresh
-    ? `🌲 Меню оновлено.\n\nВітаю, ${displayName}.`
-    : `🌲 Порубіжжя Чорнолісу ожили.\n\nВітаю, ${displayName}. Твій слід збережено в Чорнолісі.`;
+    ? `🌲 Меню оновлено.\n${yearLine}\n\nВітаю, ${displayName}.`
+    : `🌲 Порубіжжя Чорнолісу ожили.\n${yearLine}\n\nВітаю, ${displayName}. Твій слід збережено в Чорнолісі.`;
 
   await ctx.reply(text, { reply_markup: await buildMainReplyKeyboardForTelegramId(from.id, false) });
   await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
@@ -114,7 +116,7 @@ async function finishOnboarding(ctx: any, state: OnboardingState) {
   onboarding.delete(state.telegramId);
 
   await ctx.reply(
-    `Готово. Чорноліс запам’ятав ім’я: ${player.nameNominative}.\n\nНаприклад: «Травник звертається до ${player.nameGenitive}» і «${player.nameVocative}, стежка чекає».`,
+    `Готово. Чорноліс запам’ятав ім’я: ${player.nameNominative}.\n\n${renderCurrentWorldYearLine()}\n\nНаприклад: «Травник звертається до ${player.nameGenitive}» і «${player.nameVocative}, стежка чекає».`,
     {
       reply_markup: await buildMainReplyKeyboardForTelegramId(Number(state.telegramId), false),
     }
