@@ -22,6 +22,8 @@ It is not a trash bin and not a promise. It is cold storage for ideas that need 
 - Moon phases and deep calendar simulation.
 - Web `/map`, shared map view service and future MUD-client gateway.
 - `seedWorld()` refactor for `prisma/seed.ts`, once the current static world seed stabilizes.
+- Deep bridge mechanics: bridge condition, repairs, risky crossings and links to future fishing.
+- Advanced persistent automation: auto-behavior presets, safety rules, profession-aware choices and temporary delegation to companions/NPCs.
 
 ## Review rhythm
 

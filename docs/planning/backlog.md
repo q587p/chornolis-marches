@@ -16,6 +16,8 @@ Backlog differs from Icebox: backlog means “we probably want this, but not rig
 - Barter and trade.
 - Use- and observation-based skill progression.
 - Tracks, stealth and visibility.
+- Admin/debug permissions for commands such as `/reset`, `/tickSet`, `/cleanupCreatures` and other dangerous tools.
+- Richer auto-mode profiles and player-configurable auto behavior.
 
 ## Promotion rules
 

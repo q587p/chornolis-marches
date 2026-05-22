@@ -16,11 +16,35 @@ const STARTER_RABBITS: Array<{ locationKey: string; count: number }> = [
   { locationKey: "meadow_14_05", count: 1 },
 ];
 
+type SeedMeta = {
+  version: string;
+  startLocationKey: string;
+  notes?: string[];
+};
+
+type SeedLocation = {
+  key: string;
+  biome: string;
+};
+
+type SeedResourceType = {
+  key: string;
+};
+
 type SeedResourceNode = {
   locationKey: string;
   resourceKey: string;
   amount: number;
   maxAmount: number;
+};
+
+type SeedResourceAmountRule = number | [number, number] | null;
+
+type SeedResourceRules = {
+  maxAmount?: number;
+  defaultsByBiome: Record<string, Record<string, SeedResourceAmountRule>>;
+  locationOverrides?: Record<string, Record<string, SeedResourceAmountRule>>;
+  notes?: string[];
 };
 
 type SeedUniqueCreature = {
@@ -38,9 +62,11 @@ type SeedUniqueCreature = {
 };
 
 type WorldSeed = {
-  meta: { version: string; startLocationKey: string };
-  locations: Array<{ key: string }>;
+  meta: SeedMeta;
+  locations: SeedLocation[];
+  resourceTypes: SeedResourceType[];
   resourceNodes: SeedResourceNode[];
+  resourceRules?: SeedResourceRules;
   uniqueCreatures: SeedUniqueCreature[];
 };
 
@@ -51,11 +77,88 @@ type ResetSummary = {
   resetUniqueCreatures: number;
   removedDuplicateUniqueCreatures: number;
   rabbitsCreated: number;
+  playerAutoStatesCleared: number;
 };
 
+function readJsonFile<T>(filePath: string): T {
+  return JSON.parse(fs.readFileSync(filePath, "utf-8")) as T;
+}
+
+function fileExists(filePath: string): boolean {
+  return fs.existsSync(filePath) && fs.statSync(filePath).isFile();
+}
+
+function stableHash(input: string): number {
+  let hash = 2166136261;
+  for (let i = 0; i < input.length; i += 1) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function amountFromRule(rule: SeedResourceAmountRule | undefined, seedKey: string): number | null {
+  if (rule === undefined || rule === null) return null;
+  if (typeof rule === "number") return rule > 0 ? rule : null;
+
+  const [min, max] = rule;
+  if (max <= 0) return null;
+  if (min >= max) return min > 0 ? min : null;
+
+  return min + (stableHash(seedKey) % (max - min + 1));
+}
+
+function buildResourceNodes(world: WorldSeed): SeedResourceNode[] {
+  if (!world.resourceRules) return world.resourceNodes ?? [];
+
+  const nodes: SeedResourceNode[] = [];
+  const maxAmount = world.resourceRules.maxAmount ?? 100;
+  const resourceKeys = world.resourceTypes.map((resource) => resource.key);
+
+  for (const location of world.locations) {
+    const biomeRules = world.resourceRules.defaultsByBiome[location.biome] ?? {};
+    const locationOverrides = world.resourceRules.locationOverrides?.[location.key] ?? {};
+    const candidateResourceKeys = new Set([...Object.keys(biomeRules), ...Object.keys(locationOverrides)]);
+
+    for (const resourceKey of candidateResourceKeys) {
+      if (!resourceKeys.includes(resourceKey)) continue;
+
+      const rule = Object.prototype.hasOwnProperty.call(locationOverrides, resourceKey)
+        ? locationOverrides[resourceKey]
+        : biomeRules[resourceKey];
+
+      const amount = amountFromRule(rule, `${world.meta.version}:${location.key}:${resourceKey}`);
+      if (amount === null) continue;
+
+      nodes.push({ locationKey: location.key, resourceKey, amount, maxAmount });
+    }
+  }
+
+  return nodes;
+}
+
 function loadWorldSeed(): WorldSeed {
+  const splitDir = path.join(process.cwd(), "prisma", "data", "world");
+
+  if (fs.existsSync(splitDir) && fs.statSync(splitDir).isDirectory()) {
+    const explicitResourceNodesPath = path.join(splitDir, "resourceNodes.json");
+    const resourceRulesPath = path.join(splitDir, "resourceRules.json");
+    const world: WorldSeed = {
+      meta: readJsonFile<SeedMeta>(path.join(splitDir, "meta.json")),
+      locations: readJsonFile<SeedLocation[]>(path.join(splitDir, "locations.json")),
+      resourceTypes: readJsonFile<SeedResourceType[]>(path.join(splitDir, "resourceTypes.json")),
+      resourceNodes: fileExists(explicitResourceNodesPath) ? readJsonFile<SeedResourceNode[]>(explicitResourceNodesPath) : [],
+      resourceRules: fileExists(resourceRulesPath) ? readJsonFile<SeedResourceRules>(resourceRulesPath) : undefined,
+      uniqueCreatures: readJsonFile<SeedUniqueCreature[]>(path.join(splitDir, "uniqueCreatures.json")),
+    };
+    world.resourceNodes = buildResourceNodes(world);
+    return world;
+  }
+
   const filePath = path.join(process.cwd(), "prisma", "data", "chornolis_world_seed.json");
-  return JSON.parse(fs.readFileSync(filePath, "utf-8")) as WorldSeed;
+  const world = readJsonFile<WorldSeed>(filePath);
+  world.resourceNodes = buildResourceNodes(world);
+  return world;
 }
 
 async function resetResources(world: WorldSeed) {
@@ -73,10 +176,23 @@ async function resetResources(world: WorldSeed) {
   }
   if (removedIds.length > 0) await prisma.resourceNode.deleteMany({ where: { id: { in: removedIds } } });
 
+  const dbLocations = await prisma.cellLocation.findMany({
+    where: { key: { in: world.locations.map((location) => location.key) } },
+    select: { id: true, key: true },
+  });
+  const dbResourceTypes = await prisma.resourceType.findMany({
+    select: { id: true, key: true },
+  });
+  const locationsByKey = new Map(dbLocations.map((location) => [location.key, location]));
+  const resourceTypesByKey = new Map(dbResourceTypes.map((resourceType) => [resourceType.key, resourceType]));
+
   let reset = 0;
   for (const node of world.resourceNodes) {
-    const location = await prisma.cellLocation.findUniqueOrThrow({ where: { key: node.locationKey } });
-    const resourceType = await prisma.resourceType.findUniqueOrThrow({ where: { key: node.resourceKey } });
+    const location = locationsByKey.get(node.locationKey);
+    const resourceType = resourceTypesByKey.get(node.resourceKey);
+    if (!location) throw new Error(`Unknown location key for reset resource node: ${node.locationKey}`);
+    if (!resourceType) throw new Error(`Unknown resource key for reset resource node: ${node.resourceKey}`);
+
     await prisma.resourceNode.upsert({
       where: { locationId_resourceTypeId: { locationId: location.id, resourceTypeId: resourceType.id } },
       update: { amount: node.amount, maxAmount: node.maxAmount },
@@ -116,8 +232,8 @@ async function resetUniqueCreature(creature: SeedUniqueCreature) {
     isGone: false,
     isHidden: creature.isHidden ?? false,
     isAlive: creature.isAlive,
-    professionKey: creature.professionKey,
-    professionName: creature.professionName,
+    professionKey: creature.professionKey ?? null,
+    professionName: creature.professionName ?? null,
   };
 
   const keep = existing[0];
@@ -210,6 +326,14 @@ async function resetStarterRabbits() {
   return created;
 }
 
+async function clearPlayerAutoState() {
+  const result = await prisma.player.updateMany({
+    where: { isAutoEnabled: true },
+    data: { isAutoEnabled: false },
+  });
+  return result.count;
+}
+
 export async function resetWorldState(): Promise<ResetSummary> {
   const world = loadWorldSeed();
 
@@ -218,6 +342,7 @@ export async function resetWorldState(): Promise<ResetSummary> {
   await prisma.worldEvent.deleteMany();
   await prisma.locationFeature.deleteMany({ where: { key: "old_bridge_planks" } });
 
+  const playerAutoStatesCleared = await clearPlayerAutoState();
   const resources = await resetResources(world);
   const unique = await resetUniqueCreatures(world);
   const rabbitsCreated = await resetStarterRabbits();
@@ -227,7 +352,7 @@ export async function resetWorldState(): Promise<ResetSummary> {
     data: {
       type: "SYSTEM",
       title: "Світ скинуто",
-      description: `Reset to ${world.meta.version}: лісовик спить і прихований у forest_00_00, Здравомир стоїть у стартовому таборі, зайці повернулись у ліс і луку.`,
+      description: `Reset to ${world.meta.version}: лісовик спить і прихований у forest_00_00, Здравомир стоїть у стартовому таборі, зайці повернулись у ліс і луку, авто-режими вимкнено.`,
       locationId: start?.id,
     },
   });
@@ -239,5 +364,6 @@ export async function resetWorldState(): Promise<ResetSummary> {
     resetUniqueCreatures: unique.reset,
     removedDuplicateUniqueCreatures: unique.duplicates,
     rabbitsCreated,
+    playerAutoStatesCleared,
   };
 }

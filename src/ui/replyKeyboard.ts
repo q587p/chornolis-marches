@@ -39,12 +39,10 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
     .persistent();
 }
 
-export function buildMenuReplyKeyboard(isAuto = false) {
+export function buildMenuReplyKeyboard() {
   return new Keyboard()
     .text("📰 Новини")
     .text("🧭 Допомога")
-    .row()
-    .text(isAuto ? "⏹ Стоп" : "🤖 Авто")
     .row()
     .text("↩️ Назад")
     .resized()

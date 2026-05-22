@@ -11,7 +11,7 @@ import {
 } from "../services/actionQueue";
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { directionLabels } from "../ui/labels";
-import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
+import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { logEvent } from "../services/worldEvents";
 
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
@@ -73,7 +73,7 @@ async function maybeStartAutoRest(bot: Bot, telegramId: number, player: any, loc
       "Поточну дію та чергу очищено. Нові дії під час відпочинку ставатимуть у чергу.",
       await renderPlayerActionQueue(player.id),
     ].join("\n"),
-    { reply_markup: buildMainReplyKeyboard(true) }
+    { reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, true) }
   );
 
   return true;
@@ -83,12 +83,19 @@ export function isPlayerAutoEnabled(telegramId: number) {
   return autoPlayers.has(telegramId);
 }
 
+async function persistPlayerAutoState(telegramId: number, isAutoEnabled: boolean) {
+  await prisma.player.updateMany({
+    where: { telegramId: String(telegramId) },
+    data: { isAutoEnabled },
+  });
+}
+
 async function notifyQueuedIfNeeded(bot: Bot, telegramId: number, playerId: number, mode: "queued" | "immediate", description: string, locationId?: number) {
   if (mode !== "queued") return;
 
   await logEvent("PLAYER_ACTION", "Auto queued player action", description, locationId).catch(() => undefined);
   await bot.api.sendMessage(telegramId, `🤖 Авто: ви вже втомлені або зайняті, тож дія стала в чергу.\n\n${await renderPlayerActionQueue(playerId)}`, {
-    reply_markup: buildMainReplyKeyboard(true),
+    reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, true),
   });
 }
 
@@ -166,7 +173,7 @@ async function autoMove(bot: Bot, telegramId: number, player: any, locationId: n
   if (result.mode === "queued") {
     await notifyQueuedIfNeeded(bot, telegramId, player.id, result.mode, `move:${exit.direction}`, locationId);
   } else {
-    await bot.api.sendMessage(telegramId, `🤖 Авто: обрано рух — ${directionLabels[exit.direction]}.`, { reply_markup: buildMainReplyKeyboard(true) });
+    await bot.api.sendMessage(telegramId, `🤖 Авто: обрано рух — ${directionLabels[exit.direction]}.`, { reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, true) });
   }
 
   return true;
@@ -180,7 +187,7 @@ async function runAutoStep(bot: Bot, telegramId: number) {
   try {
     const player = await getPlayerByTelegramId(telegramId);
     if (!player) {
-      stopAuto(telegramId);
+      await disablePlayerAuto(telegramId);
       await bot.api.sendMessage(telegramId, "Авто зупинено: персонажа не знайдено. Напиши /start.", { reply_markup: buildMainReplyKeyboard(false) });
       return;
     }
@@ -212,20 +219,20 @@ function scheduleAutoTimer(bot: Bot, telegramId: number) {
   }, AUTO_INTERVAL_MS);
 }
 
-function startAuto(bot: Bot, telegramId: number) {
+function startAutoTimer(bot: Bot, telegramId: number) {
   autoBot = bot;
   if (autoPlayers.has(telegramId)) return false;
 
   const timer = scheduleAutoTimer(bot, telegramId);
 
   autoPlayers.set(telegramId, { timer, running: false });
-  // First auto step happens immediately, but the action itself now enters WorldAction
+  // First auto step happens immediately, but the action itself enters WorldAction
   // and finishes through the tick-based queue instead of bypassing time.
   runAutoStep(bot, telegramId).catch((error) => console.warn("Initial player auto step failed:", error));
   return true;
 }
 
-function stopAuto(telegramId: number) {
+function stopAutoTimer(telegramId: number) {
   const state = autoPlayers.get(telegramId);
   if (!state) return false;
 
@@ -234,8 +241,36 @@ function stopAuto(telegramId: number) {
   return true;
 }
 
+export async function enablePlayerAuto(bot: Bot, telegramId: number) {
+  const started = startAutoTimer(bot, telegramId);
+  await persistPlayerAutoState(telegramId, true);
+  return started;
+}
+
+export async function disablePlayerAuto(telegramId: number) {
+  const stopped = stopAutoTimer(telegramId);
+  const updated = await prisma.player.updateMany({
+    where: { telegramId: String(telegramId) },
+    data: { isAutoEnabled: false },
+  });
+  return stopped || updated.count > 0;
+}
+
 export function stopPlayerAuto(telegramId: number) {
-  return stopAuto(telegramId);
+  return stopAutoTimer(telegramId);
+}
+
+export async function stopAllPlayerAuto() {
+  const stopped = autoPlayers.size;
+  for (const state of autoPlayers.values()) clearInterval(state.timer);
+  autoPlayers.clear();
+
+  const updated = await prisma.player.updateMany({
+    where: { isAutoEnabled: true },
+    data: { isAutoEnabled: false },
+  });
+
+  return Math.max(stopped, updated.count);
 }
 
 export function restartPlayerAutoTimers(bot = autoBot) {
@@ -248,6 +283,22 @@ export function restartPlayerAutoTimers(bot = autoBot) {
   }
 }
 
+async function restorePersistentAutoPlayers(bot: Bot) {
+  const players = await prisma.player.findMany({
+    where: { isAutoEnabled: true },
+    select: { telegramId: true },
+  });
+
+  let restored = 0;
+  for (const player of players) {
+    const telegramId = Number(player.telegramId);
+    if (!Number.isSafeInteger(telegramId)) continue;
+    if (startAutoTimer(bot, telegramId)) restored++;
+  }
+
+  if (restored > 0) console.log(`[PLAYER AUTO] restored ${restored} persisted auto timers`);
+}
+
 export function playerAutoTimingText() {
   const seconds = Math.ceil(AUTO_INTERVAL_MS / 1000);
   return `кожні ${AUTO_INTERVAL_TICKS} тіків ≈ ${seconds} с`;
@@ -256,27 +307,29 @@ export function playerAutoTimingText() {
 export function registerAutoHandlers(bot: Bot) {
   autoBot = bot;
 
+  restorePersistentAutoPlayers(bot).catch((error) => console.warn("Persistent auto restore failed:", error));
+
   bot.command("auto", async (ctx) => {
     if (!ctx.from) return;
-    const started = startAuto(bot, ctx.from.id);
-    await ctx.reply(started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено.", { reply_markup: buildMainReplyKeyboard(true) });
+    const started = await enablePlayerAuto(bot, ctx.from.id);
+    await ctx.reply(started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено.", { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, true) });
   });
 
   bot.hears("🤖 Авто", async (ctx) => {
     if (!ctx.from) return;
-    const started = startAuto(bot, ctx.from.id);
-    await ctx.reply(started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено.", { reply_markup: buildMainReplyKeyboard(true) });
+    const started = await enablePlayerAuto(bot, ctx.from.id);
+    await ctx.reply(started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено.", { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, true) });
   });
 
   bot.command(["autoStop", "autostop"], async (ctx) => {
     if (!ctx.from) return;
-    const stopped = stopAuto(ctx.from.id);
-    await ctx.reply(stopped ? "⏹ Авто-режим зупинено." : "⏹ Авто-режим не був увімкнений.", { reply_markup: buildMainReplyKeyboard(false) });
+    const stopped = await disablePlayerAuto(ctx.from.id);
+    await ctx.reply(stopped ? "⏹ Авто-режим зупинено." : "⏹ Авто-режим не був увімкнений.", { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
   });
 
   bot.hears("⏹ Стоп", async (ctx) => {
     if (!ctx.from) return;
-    const stopped = stopAuto(ctx.from.id);
-    await ctx.reply(stopped ? "⏹ Авто-режим зупинено." : "⏹ Авто-режим не був увімкнений.", { reply_markup: buildMainReplyKeyboard(false) });
+    const stopped = await disablePlayerAuto(ctx.from.id);
+    await ctx.reply(stopped ? "⏹ Авто-режим зупинено." : "⏹ Авто-режим не був увімкнений.", { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
   });
 }

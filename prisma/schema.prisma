@@ -26,6 +26,7 @@ model Player {
   staminaMax   Int @default(13)
   fatigueState FatigueState @default(RESTED)
   isResting    Boolean @default(false)
+  isAutoEnabled Boolean @default(false)
   hunger  Int @default(0)
 
   // статистика

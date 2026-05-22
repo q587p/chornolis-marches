@@ -5,7 +5,7 @@ import { buildMainReplyKeyboardForTelegramId, buildMenuReplyKeyboard } from "../
 export function registerMenuHandlers(bot: Bot) {
   async function showMenu(ctx: any) {
     const auto = ctx.from ? isPlayerAutoEnabled(ctx.from.id) : false;
-    await ctx.reply("☰ Меню", { reply_markup: buildMenuReplyKeyboard(auto) });
+    await ctx.reply("☰ Меню", { reply_markup: buildMenuReplyKeyboard() });
   }
 
   async function backToMain(ctx: any) {

@@ -8,6 +8,32 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.9.3 - Admin help recovery, persistent auto and visible location features - 12026-05-22
+
+### Added
+
+- Added persistent player auto-state through `Player.isAutoEnabled` and migration `20260522193000_persistent_player_auto`.
+- Added automatic restore of enabled auto timers after process restart/deploy.
+- Added `docs/systems/admin_commands.md` with the current admin/debug command list and future access-control TODO.
+- Added `docs/systems/auto_mode.md` for current auto-mode behavior, persistence and reset rules.
+- Added a manual `/tick` wrapper that returns the latest `World Tick` summary after running a tick.
+
+### Changed
+
+- Restored `/adminHelp` as the full command list instead of the short reset-only list.
+- Kept `/reset` in `/adminHelp` without removing older debug commands such as `/world`, `/all`, `/locationAll`, `/addCreature`, `/cleanupCreatures`, `/tickGet`, `/tickSet`, `/auto`, `/autoStop`, `/news` and `/restart`.
+- Moved auto-mode out of `☰ Меню`; it is now controlled from the character card and text commands `/auto` / `/autoStop`.
+- `📍 Локація` now shows interactive location features such as `🪧 Межовий знак`, `🔥 Незгасне вогнище` and `🚪 Зачинені ворота` immediately, without requiring an extra look/details step.
+- `/reset` now clears persistent auto-state together with the rest of the runtime/world reset.
+- Planning docs now keep admin permissions and richer auto-mode profiles in backlog/icebox.
+
+### Fixed
+
+- Avoided the duplicate `/adminHelp` behavior where the new short admin handler could hide the older full debug command list.
+- Made manual tick feedback more useful for checking animal/NPC behavior by surfacing the world tick counters in chat.
+
+---
+
 ## 0.9.2 - Chornolis calendar service - 12026-05-22
 
 ### Added

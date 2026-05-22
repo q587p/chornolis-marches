@@ -60,6 +60,15 @@ function addFeatureButtons(keyboard: InlineKeyboard, features: any[]) {
   }
 }
 
+function addInlineRows(target: InlineKeyboard, source: InlineKeyboard) {
+  for (const row of source.inline_keyboard) {
+    for (const button of row) {
+      if ("text" in button && "callback_data" in button) target.text(button.text, button.callback_data);
+    }
+    target.row();
+  }
+}
+
 function presenceText(location: any, viewerPlayerId?: number) {
   const targets = visibleTargets(location, viewerPlayerId);
   const hasCharacters = targets.some((t) => t.canGreet);
@@ -157,9 +166,13 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
     ? location.exitsFrom.map((exit) => `- ${directionLabels[exit.direction]} → ${exit.toLocation.name}`).join("\n")
     : "Виходів не видно.";
 
+  const keyboard = new InlineKeyboard();
+  addFeatureButtons(keyboard, location.features);
+  addInlineRows(keyboard, buildMovementKeyboard(location.exitsFrom));
+
   return {
     text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location)}${presenceText(location, viewerPlayerId)}\n\nВиходи:\n${escapeHtml(exitsText)}`,
-    keyboard: buildMovementKeyboard(location.exitsFrom),
+    keyboard,
   };
 }
 
@@ -240,18 +253,10 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   }
 
   if (targets.length > 0) {
-    const targetKeyboard = buildTargetListKeyboard(targets);
-    for (const row of targetKeyboard.inline_keyboard) {
-      for (const button of row) if ("text" in button && "callback_data" in button) keyboard.text(button.text, button.callback_data);
-      keyboard.row();
-    }
+    addInlineRows(keyboard, buildTargetListKeyboard(targets));
   }
 
-  const movement = buildMovementKeyboard(location.exitsFrom);
-  for (const row of movement.inline_keyboard) {
-    for (const button of row) if ("text" in button && "callback_data" in button) keyboard.text(button.text, button.callback_data);
-    keyboard.row();
-  }
+  addInlineRows(keyboard, buildMovementKeyboard(location.exitsFrom));
 
   return {
     text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location)}\n\n<i>Ви придивляєтесь.</i>\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}${resourcesText}${charactersText}${tracksText}${corpsesText}`,
@@ -268,7 +273,6 @@ export async function buildGatherMenuForLocation(locationId: number, viewerPlaye
 
   return buildResourceMenuKeyboard(await resourceButtonData(resources, viewerPlayerId));
 }
-
 
 export async function renderLocationFeatureInteraction(featureId: number, viewerPlayerId: number) {
   const player = await prisma.player.findUnique({ where: { id: viewerPlayerId }, select: { currentLocationId: true } });
@@ -287,4 +291,3 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
   const keyboard = new InlineKeyboard().text("↩️ Назад", "location:details");
   return { text, keyboard };
 }
-

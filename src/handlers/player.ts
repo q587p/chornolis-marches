@@ -1,10 +1,11 @@
-import { Bot } from "grammy";
+import { Bot, InlineKeyboard } from "grammy";
 import { prisma } from "../db";
 import { BASE_HP, HEALTH_REGEN_PER_INTERVAL, PASSIVE_HEALTH_REGEN_INTERVAL_MS, PASSIVE_STAMINA_REGEN_PER_INTERVAL, REST_HEALTH_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_PER_INTERVAL, STAMINA_REGEN_INTERVAL_MS } from "../gameConfig";
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { renderLocationBrief } from "../services/locations";
-import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
-import { isPlayerAutoEnabled } from "./auto";
+import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
+import { disablePlayerAuto, enablePlayerAuto, isPlayerAutoEnabled } from "./auto";
+import { safeAnswerCallbackQuery } from "../utils/telegram";
 
 function minutes(ms: number) {
   return Math.max(1, Math.ceil(ms / 60_000));
@@ -36,10 +37,8 @@ function recoveryText(player: any) {
   const passiveMinutes = Math.max(passiveStaminaMinutes, passiveHpMinutes);
   const restMinutes = Math.max(restStaminaMinutes, restHpMinutes);
 
-  if (player.isResting) return `
-Відновлення: приблизно ${restMinutes} хв під час відпочинку.`;
-  return `
-Відновлення без відпочинку: приблизно ${passiveMinutes} хв. Через /rest або 🛌 Відпочити: приблизно ${restMinutes} хв.`;
+  if (player.isResting) return `\nВідновлення: приблизно ${restMinutes} хв під час відпочинку.`;
+  return `\nВідновлення без відпочинку: приблизно ${passiveMinutes} хв. Через /rest або 🛌 Відпочити: приблизно ${restMinutes} хв.`;
 }
 
 function formatPlayerStats(player: any) {
@@ -59,16 +58,21 @@ function formatPlayerStats(player: any) {
   ].join("\n");
 }
 
-async function showCharacter(bot: Bot, telegramId: number, reply: (text: string, options?: any) => Promise<unknown>) {
+function buildCharacterAutoKeyboard(autoEnabled: boolean) {
+  return new InlineKeyboard()
+    .text(autoEnabled ? "⏹ Зупинити авто" : "🤖 Увімкнути авто", autoEnabled ? "character:auto:stop" : "character:auto:start");
+}
+
+async function renderCharacterView(telegramId: number) {
   const player = await prisma.player.findUnique({
     where: { telegramId: String(telegramId) },
     include: { currentLocation: { include: { region: true } }, resources: { include: { resourceType: true } } },
   });
 
-  if (!player) return void (await reply("Ти ще не увійшов у світ. Напиши /start", { reply_markup: buildMainReplyKeyboard(false) }));
+  if (!player) return null;
 
-  const autoEnabled = isPlayerAutoEnabled(telegramId);
-  const autoText = autoEnabled ? "\nРежим авто: увімкнено 🤖" : "";
+  const autoEnabled = Boolean(player.isAutoEnabled || isPlayerAutoEnabled(telegramId));
+  const autoText = autoEnabled ? "увімкнено 🤖" : "вимкнено";
   const items = player.resources.length ? player.resources.map((i) => `${i.resourceType.name} ×${i.amount}`).join("\n") : "порожньо";
   const staminaMax = player.staminaMax ?? 13;
   const hpMax = player.hpMax ?? BASE_HP;
@@ -76,9 +80,17 @@ async function showCharacter(bot: Bot, telegramId: number, reply: (text: string,
     ? `${player.currentLocation.region.name} / ${player.currentLocation.name}`
     : "невідомо";
 
-  await reply(`🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\nHP: ${player.hp}/${hpMax}\nВитривалість: ${player.stamina}/${staminaMax}\nСтан: ${fatigueText(player)}${recoveryText(player)}\nГолод: ${player.hunger}\nЛокація: ${locationText}${autoText}\n\nІнвентар:\n${items}\n\nСтатистика:\n${formatPlayerStats(player)}`, {
-    reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, autoEnabled),
-  });
+  return {
+    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\nHP: ${player.hp}/${hpMax}\nВитривалість: ${player.stamina}/${staminaMax}\nСтан: ${fatigueText(player)}${recoveryText(player)}\nГолод: ${player.hunger}\nЛокація: ${locationText}\nАвто-режим: ${autoText}\n\nІнвентар:\n${items}\n\nСтатистика:\n${formatPlayerStats(player)}`,
+    keyboard: buildCharacterAutoKeyboard(autoEnabled),
+  };
+}
+
+async function showCharacter(telegramId: number, reply: (text: string, options?: any) => Promise<unknown>) {
+  const view = await renderCharacterView(telegramId);
+  if (!view) return void (await reply("Ти ще не увійшов у світ. Напиши /start", { reply_markup: buildMainReplyKeyboard(false) }));
+
+  await reply(view.text, { reply_markup: view.keyboard });
 }
 
 export async function showLocationForPlayer(telegramId: number, reply: (text: string, options?: any) => Promise<unknown>) {
@@ -93,12 +105,28 @@ export async function showLocationForPlayer(telegramId: number, reply: (text: st
 export function registerPlayerHandlers(bot: Bot) {
   bot.command("me", async (ctx) => {
     if (!ctx.from) return;
-    await showCharacter(bot, ctx.from.id, (text, options) => ctx.reply(text, options));
+    await showCharacter(ctx.from.id, (text, options) => ctx.reply(text, options));
   });
 
   bot.hears(["Персонаж", "🧍 Персонаж"], async (ctx) => {
     if (!ctx.from) return;
-    await showCharacter(bot, ctx.from.id, (text, options) => ctx.reply(text, options));
+    await showCharacter(ctx.from.id, (text, options) => ctx.reply(text, options));
+  });
+
+  bot.callbackQuery(/^character:auto:(start|stop)$/, async (ctx) => {
+    const mode = ctx.match[1];
+    if (mode === "start") await enablePlayerAuto(bot, ctx.from.id);
+    else await disablePlayerAuto(ctx.from.id);
+
+    const view = await renderCharacterView(ctx.from.id);
+    await safeAnswerCallbackQuery(ctx, mode === "start" ? "Авто увімкнено." : "Авто зупинено.");
+    if (!view) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+    try {
+      await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
+    } catch {
+      await ctx.reply(view.text, { reply_markup: view.keyboard });
+    }
   });
 
   bot.command(["location", "loc"], async (ctx) => {
