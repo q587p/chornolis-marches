@@ -392,7 +392,7 @@ model WorldTrack {
 }
 
 // =======================
-// EVENTS
+// EVENTS / WORLD STATE
 // =======================
 
 model WorldEvent {
@@ -410,9 +410,31 @@ model WorldEvent {
   createdAt DateTime @default(now())
 }
 
+model WorldState {
+  id                  Int         @id @default(1)
+  absoluteMinute      Int         @default(360)
+  lastAdvancedAt      DateTime    @default(now())
+  weather             WeatherType @default(CLOUDY)
+  weatherIntensity    Int         @default(35)
+  weatherEndsAtMinute Int         @default(720)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 // =======================
 // ENUMS
 // =======================
+
+enum WeatherType {
+  CLEAR
+  CLOUDY
+  FOG
+  DRIZZLE
+  RAIN
+  STORM
+  SNOW
+}
 
 enum Direction {
   NORTH
