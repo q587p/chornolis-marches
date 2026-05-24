@@ -9,6 +9,20 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.9.10 - Planning export CI validation - 12026-05-25
+
+### Changed
+
+- Added CI validation for planning exports: `npm run planning:export` now runs in GitHub Actions and fails if generated JSON/CSV differ from committed files.
+- Bumped package metadata to `0.9.10`.
+
+### Documentation
+
+- Updated `news.md` with the 0.9.10 technical note.
+- Updated `docs/planning/next.md` after completing planning export CI validation.
+
+---
+
 ## 0.9.9 - Planning export script - 12026-05-25
 
 ### Added

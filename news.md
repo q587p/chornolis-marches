@@ -1,3 +1,9 @@
+## 0.9.10 — planning export тепер перевіряється в CI
+
+- GitHub Actions тепер запускає `npm run planning:export` перед build.
+- CI впаде, якщо `docs/planning/exports/items.json` або `docs/planning/exports/issues.csv` не відповідають Markdown planning items.
+- З `next` прибрано пункт про CI validation для planning exports: локальний генератор і перевірка в CI вже на місці.
+
 ## 0.9.9 — planning export став командою
 
 - Додано `npm run planning:export`: команда читає planning items із `docs/planning/items/*.md` і генерує `docs/planning/exports/items.json` та `docs/planning/exports/issues.csv`.

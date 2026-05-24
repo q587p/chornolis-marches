@@ -31,5 +31,10 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
 
+      - name: Validate planning exports
+        run: |
+          npm run planning:export
+          git diff --exit-code -- docs/planning/exports/items.json docs/planning/exports/issues.csv
+
       - name: Build
         run: npm run build
