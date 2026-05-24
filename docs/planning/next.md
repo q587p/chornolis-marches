@@ -70,7 +70,6 @@ The expanded map should not just be larger. Different regions should feel and be
 - Add debug mode persistence and `/debugGet` / `/debugSet` commands before more hidden-vs-technical UI work.
 - Add first foraging/firewood iteration: хмиз/small sticks near campfires and biome-dependent minor finds.
 - Add name approval admin flow after the `isNameApproved` field is available.
-- Continue action queue refactoring: split `src/services/actionQueue.ts` completion handlers into focused modules.
 
 ## Review checklist
 

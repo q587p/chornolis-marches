@@ -9,6 +9,22 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.9.12 - Action completion refactor - 12026-05-25
+
+### Changed
+
+- Split action completion handlers into `src/services/actionCompletions.ts`.
+- Reduced `src/services/actionQueue.ts` to loop wiring and public re-exports.
+- Kept existing handler and world tick imports compatible through `src/services/actionQueue.ts`.
+- Bumped package metadata to `0.9.12`.
+
+### Documentation
+
+- Updated `news.md` with the 0.9.12 technical note.
+- Updated `docs/planning/next.md` after completing the action queue completion-handler split.
+
+---
+
 ## 0.9.11 - Action lifecycle refactor - 12026-05-25
 
 ### Changed

@@ -1,3 +1,9 @@
+## 0.9.12 — completion handlers винесено з actionQueue
+
+- Завершення MOVE/GATHER/EAT/LOOK/INSPECT/GREET/FRESHEN/ATTACK/SAY/TRACK/REST винесено в `actionCompletions.ts`.
+- `actionQueue.ts` тепер лишився тонким фасадом: старі re-export-и API, loop timer і виклик `processActionQueue`.
+- У `next` прибрано завершений пункт про split completion handlers.
+
 ## 0.9.11 — lifecycle черги дій винесено окремо
 
 - Запуск черги, постановку дій, immediate/queued рішення для гравця, старт/стоп відпочинку, скасування й очищення черги винесено в `actionLifecycle.ts`.
