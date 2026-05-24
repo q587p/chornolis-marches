@@ -27,13 +27,13 @@ import {
 import { setLastRuntimeError } from "../runtimeState";
 import { directionLabels } from "../ui/labels";
 import { buildFatigueRestKeyboard, buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
-import { creatureForms, playerForms, type NameForms } from "./grammar";
 import { renderLocationBrief, renderLocationDetails } from "./locations";
 import { notifyLocation } from "./notifications";
 import { getPlayerRestStaminaCap } from "./locationFeatures";
 import { getStartLocationId } from "./players";
 import { summonLisovykIfResourceDepleted } from "./resources";
 import { logEvent } from "./worldEvents";
+import { resolveTarget, type ResolvedTarget } from "./targets";
 
 type ActorRef =
   | { actorType: "PLAYER"; playerId: number; creatureId?: never }
@@ -57,18 +57,6 @@ type EnqueueInput = ActorRef & {
   note?: string;
   chatId?: number | string;
   messageId?: number;
-};
-
-type ResolvedTarget = {
-  kind: "player" | "creature";
-  id: number;
-  name: string;
-  canGreet: boolean;
-  isAnimal: boolean;
-  isCorpse: boolean;
-  canFreshen: boolean;
-  inspect: string;
-  forms: NameForms;
 };
 
 const FROM_DIRECTION_LABELS: Record<string, string> = {
@@ -133,17 +121,6 @@ function msToMinutes(ms: number) {
 
 function payloadOf<T>(action: WorldAction): T {
   return (action.payload ?? {}) as unknown as T;
-}
-
-function formatSex(sex: string | null | undefined) {
-  if (sex === "MALE") return "самець";
-  if (sex === "FEMALE") return "самиця";
-  return "невідомо";
-}
-
-function formatPercent(success: number, attempts: number) {
-  if (!attempts) return "0%";
-  return `${Math.round((success / attempts) * 100)}%`;
 }
 
 function actionPriority(type: WorldActionType) {
@@ -245,21 +222,6 @@ function actionTitle(action: Pick<WorldAction, "type" | "payload" | "durationMs"
   if (action.type === "WAIT") return "чекаємо";
 
   return String(action.type).toLowerCase();
-}
-
-function formatPlayerStats(target: any) {
-  return [
-    `Пройдено локацій: ${target.steps}`,
-    `Оглядів: ${target.looks}`,
-    `Сказано фраз: ${target.says}`,
-    `Привітань: ${target.greetings}`,
-    `Спроб збору: ${target.gatherAttempts}`,
-    `Вдалого збору: ${target.successfulGathers} (${formatPercent(target.successfulGathers, target.gatherAttempts)})`,
-    `Зібрано ягід: ${target.berriesGathered}`,
-    `Зібрано грибів: ${target.mushroomsGathered}`,
-    `Зібрано трав: ${target.herbsGathered}`,
-    `Убито тварин: ${target.animalsKilled}`,
-  ].join("\n");
 }
 
 function orderedPosition(index: number) {
@@ -662,73 +624,6 @@ export async function cancelCurrentPlayerAction(playerId: number) {
   }
 
   return { count: result.count + (stoppedRest ? 1 : 0) };
-}
-
-async function resolveTarget(type: string, id: number, locationId: number): Promise<ResolvedTarget | null> {
-  if (type === "player") {
-    const target = await prisma.player.findFirst({ where: { id, currentLocationId: locationId } });
-    if (!target) return null;
-    const forms = playerForms(target);
-    return {
-      kind: "player",
-      id: target.id,
-      name: forms.nominative,
-      forms,
-      canGreet: true,
-      isAnimal: false,
-      isCorpse: false,
-      canFreshen: false,
-      inspect: `Ви бачите ${forms.accusative}.\n\nHP: ${target.hp}/${target.hpMax ?? BASE_HP}\nВитривалість: ${target.stamina}\nГолод: ${target.hunger}\n\nСтатистика:\n${formatPlayerStats(target)}`,
-    };
-  }
-
-  if (type === "creature") {
-    const target = await prisma.creature.findFirst({ where: { id, locationId, isGone: false }, include: { species: true } });
-    if (!target) return null;
-    const forms = creatureForms(target);
-    const isAnimal = target.species.kind === "ANIMAL";
-    const isCorpse = !target.isAlive && target.age === "CORPSE";
-    const corpseLeft = target.corpseDecayTicksLeft ?? target.species.corpseDecayTicks;
-    const canFreshen = isCorpse && corpseLeft > Math.floor(target.species.corpseDecayTicks / 2);
-
-    if (isCorpse) {
-      return {
-        kind: "creature",
-        id: target.id,
-        name: `труп: ${forms.genitive}`,
-        forms: {
-          nominative: `труп: ${forms.genitive}`,
-          genitive: `трупа ${forms.genitive}`,
-          dative: `трупу ${forms.genitive}`,
-          accusative: `труп ${forms.genitive}`,
-          instrumental: `трупом ${forms.genitive}`,
-          locative: `трупі ${forms.genitive}`,
-          vocative: `трупе ${forms.genitive}`,
-        },
-        canGreet: false,
-        isAnimal,
-        isCorpse: true,
-        canFreshen,
-        inspect: `Це труп ${forms.genitive}.\n\nВін розкладається.\nДо зникнення лишилось приблизно: ${corpseLeft} тіків.\n${canFreshen ? "\nТруп ще відносно свіжий. Його можна спробувати освіжувати." : "\nТруп уже надто далеко розклався для освіжування."}`,
-      };
-    }
-
-    return {
-      kind: "creature",
-      id: target.id,
-      name: forms.nominative,
-      forms,
-      canGreet: !isAnimal,
-      isAnimal,
-      isCorpse: false,
-      canFreshen: false,
-      inspect: isAnimal
-        ? `Це ${forms.nominative}.\n\nСтан: ${target.isAlive ? "жива" : "мертва"}\nHP: ${target.hp}\nСтать: ${formatSex(target.sex)}\nВік: ${target.age}\nТіків віку: ${target.ageTicks}\nДія: ${target.currentAction ?? "невідомо"}`
-        : `${forms.nominative}\n\nСтан: ${target.isAlive ? "живий/активний" : "неактивний"}\nHP: ${target.hp}\nДія: ${target.currentAction ?? "невідомо"}\n\nСтатистика:\nПройдено локацій: ${target.steps}\nОглядів: ${target.looks}\nСказано фраз: ${target.says}\nСпроб збору: ${target.gatherAttempts}\nВдалого збору: ${target.successfulGathers}`,
-    };
-  }
-
-  return null;
 }
 
 async function startNextQueuedAction(action: WorldAction) {

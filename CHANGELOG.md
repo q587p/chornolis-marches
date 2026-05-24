@@ -9,6 +9,20 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.9.6 - Озирнутися, stamina 42, character card and static time - 12026-05-24
+
+### Changed
+
+- Refactored shared target resolution into `src/services/targets.ts`, so social target actions and queued action completions use the same inspect/interaction model.
+- Refactored shared player text formatting into `src/utils/playerText.ts`, removing duplicated player stats and fatigue formatting from handlers and action queue code.
+
+### Documentation
+
+- Added this technical refactor note to `news.md`, `CHANGELOG.md` and near-term planning notes.
+- Added a follow-up planning note to continue splitting the large `src/services/actionQueue.ts` into smaller queue, completion, stamina/rest and rendering modules.
+
+---
+
 ## 0.9.5 - Озирнутися, stamina 42, character card and static time - 12026-05-24
 
 ### Added

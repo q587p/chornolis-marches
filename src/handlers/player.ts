@@ -6,21 +6,10 @@ import { renderLocationBrief } from "../services/locations";
 import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
 import { disablePlayerAuto, enablePlayerAuto, isPlayerAutoEnabled } from "./auto";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
+import { formatFatigueText, formatPlayerStats } from "../utils/playerText";
 
 function minutes(ms: number) {
   return Math.max(1, Math.ceil(ms / 60_000));
-}
-
-function formatPercent(success: number, attempts: number) {
-  if (!attempts) return "0%";
-  return `${Math.round((success / attempts) * 100)}%`;
-}
-
-function fatigueText(player: any) {
-  if (player.isResting) return "Відпочиває";
-  if (player.fatigueState === "VERY_TIRED") return "Дуже втомлений";
-  if (player.fatigueState === "TIRED") return "Втомлений";
-  return "Відпочивший";
 }
 
 function formatDateTime(value: Date | string | null | undefined) {
@@ -53,23 +42,6 @@ function recoveryText(player: any) {
 
   if (player.isResting) return `\nВідновлення: приблизно ${restMinutes} хв під час відпочинку.`;
   return `\nВідновлення без відпочинку: приблизно ${passiveMinutes} хв. Через /rest або 🧘 Відпочити: приблизно ${restMinutes} хв.`;
-}
-
-function formatPlayerStats(player: any) {
-  return [
-    `Пройдено локацій: ${player.steps}`,
-    `Оглядів: ${player.looks}`,
-    `Сказано фраз: ${player.says}`,
-    `Привітань: ${player.greetings}`,
-    `Спроб збору: ${player.gatherAttempts}`,
-    `Вдалого збору: ${player.successfulGathers} (${formatPercent(player.successfulGathers, player.gatherAttempts)})`,
-    `Зібрано ягід: ${player.berriesGathered}`,
-    `Зібрано грибів: ${player.mushroomsGathered}`,
-    `Зібрано трав: ${player.herbsGathered}`,
-    `Убито тварин: ${player.animalsKilled}`,
-    `Почато відпочинків: ${player.restStarts ?? 0}`,
-    `Повних відновлень: ${player.restFullRecoveries ?? 0}`,
-  ].join("\n");
 }
 
 function buildCharacterAutoKeyboard(autoEnabled: boolean) {
@@ -121,7 +93,7 @@ async function renderCharacterView(telegramId: number) {
   const nameApprovedText = player.isNameApproved ? "так" : "ні, потребує перевірки";
 
   return {
-    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\nІм’я схвалене: ${nameApprovedText}\n\nВідмінки імені:\n${nameCasesText(player)}\n\nHP: ${player.hp}/${hpMax}\nВитривалість: ${player.stamina}/${staminaMax}\nСтан: ${fatigueText(player)}${recoveryText(player)}\nГолод: ${player.hunger}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}\nЗареєстровано: ${formatDateTime(player.createdAt)}\nАктивний час у грі: поки не рахується окремо.\n\nІнвентар:\n${items}\n\nСтатистика:\n${formatPlayerStats(player)}`,
+    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\nІм’я схвалене: ${nameApprovedText}\n\nВідмінки імені:\n${nameCasesText(player)}\n\nHP: ${player.hp}/${hpMax}\nВитривалість: ${player.stamina}/${staminaMax}\nСтан: ${formatFatigueText(player)}${recoveryText(player)}\nГолод: ${player.hunger}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}\nЗареєстровано: ${formatDateTime(player.createdAt)}\nАктивний час у грі: поки не рахується окремо.\n\nІнвентар:\n${items}\n\nСтатистика:\n${formatPlayerStats(player, { includeRestStats: true })}`,
     keyboard: buildCharacterAutoKeyboard(autoEnabled),
   };
 }
