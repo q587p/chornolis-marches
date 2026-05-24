@@ -11,7 +11,7 @@ const ADMIN_COMMANDS = [
   "/world — стан світу й останні події",
   "/all — усі живі персонажі та істоти",
   "/all dead — усі записи істот, включно з inactive/dead/corpse/gone",
-  "/location або кнопка 📍 Локація — показати поточну локацію",
+  "/location або кнопка 👀 Озирнутися — показати поточну місцину",
   "/locationAll — список усіх локацій і ключів",
   "/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD] — додати тварин",
   "/addCreatureHelp — список speciesKey для тварин",

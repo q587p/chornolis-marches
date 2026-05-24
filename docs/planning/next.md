@@ -67,12 +67,11 @@ The expanded map should not just be larger. Different regions should feel and be
 - Add campfire light source behavior and firewood gathering.
 - Add starter settlement skeleton and first NPC roles beyond the closed gate.
 - Add first planning export script to CI or local workflow.
-- Finish terminology cleanup in queued action texts and logs after the visible UI pass: `Озирнутися`, `Місцина`, `Роздивитися`.
 - Turn the new static `/time` output into a world-time service with season, moon circle/month, day and daypart progression.
 - Add debug mode persistence and `/debugGet` / `/debugSet` commands before more hidden-vs-technical UI work.
 - Add first foraging/firewood iteration: хмиз/small sticks near campfires and biome-dependent minor finds.
 - Add name approval admin flow after the `isNameApproved` field is available.
-- Continue action queue refactoring: split `src/services/actionQueue.ts` into smaller modules for queue lifecycle, action completion handlers, stamina/rest recovery and queue rendering.
+- Continue action queue refactoring: split `src/services/actionQueue.ts` further into queue lifecycle, action completion handlers and stamina/rest recovery modules.
 
 ## Review checklist
 

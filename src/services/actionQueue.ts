@@ -3,24 +3,18 @@ import { Direction, FatigueState, Prisma, WorldAction, WorldActionType, WorldAct
 import { prisma } from "../db";
 import {
   ACTION_QUEUE_POLL_MS,
-  ACTION_BASE_DURATION_MS,
-  ACTION_BASE_TICKS,
   BASE_HP,
   BASE_STAMINA,
   HEALTH_REGEN_PER_INTERVAL,
   LOW_HP_WARNING,
   MAX_QUEUED_ACTIONS_PER_ACTOR,
-  MIN_ACTION_DURATION_MS,
-  QUICK_PLAYER_ACTION_DURATION_MS,
   PASSIVE_HEALTH_REGEN_INTERVAL_MS,
   PASSIVE_STAMINA_REGEN_PER_INTERVAL,
   REST_HEALTH_REGEN_INTERVAL_MS,
   REST_STAMINA_REGEN_PER_INTERVAL,
   STAMINA_REGEN_INTERVAL_MS,
-  TICK_MS,
   TRACK_TTL_MS,
   VERY_TIRED_STAMINA,
-  actionPriorityConfig,
   gatherConfig,
   playerStaminaCostConfig,
 } from "../gameConfig";
@@ -34,6 +28,10 @@ import { getStartLocationId } from "./players";
 import { summonLisovykIfResourceDepleted } from "./resources";
 import { logEvent } from "./worldEvents";
 import { resolveTarget, type ResolvedTarget } from "./targets";
+import { actionCost, actionPriority, actionTitle, effectivePlayerActionDurationMs } from "./actionRules";
+
+export { actionDurationMs, actionStaminaCost, gatherDurationMs, movementDurationMs } from "./actionRules";
+export { playerRestStatusText, renderPlayerActionQueue } from "./actionQueueView";
 
 type ActorRef =
   | { actorType: "PLAYER"; playerId: number; creatureId?: never }
@@ -115,20 +113,8 @@ function msToSeconds(ms: number) {
   return Math.max(1, Math.ceil(ms / 1000));
 }
 
-function msToMinutes(ms: number) {
-  return Math.max(1, Math.ceil(ms / 60_000));
-}
-
 function payloadOf<T>(action: WorldAction): T {
   return (action.payload ?? {}) as unknown as T;
-}
-
-function actionPriority(type: WorldActionType) {
-  return actionPriorityConfig[type] ?? 0;
-}
-
-function actionCost(type: WorldActionType) {
-  return playerStaminaCostConfig[type] ?? 1;
 }
 
 function fatigueStateFor(stamina: number, staminaMax = BASE_STAMINA): FatigueState {
@@ -136,13 +122,6 @@ function fatigueStateFor(stamina: number, staminaMax = BASE_STAMINA): FatigueSta
   if (stamina < 0) return "TIRED";
   if (stamina >= staminaMax) return "RESTED";
   return "RESTED";
-}
-
-function fatigueLabel(state: FatigueState, isResting = false) {
-  if (isResting) return "Відпочиває";
-  if (state === "VERY_TIRED") return "Дуже втомлений";
-  if (state === "TIRED") return "Втомлений";
-  return "Відпочивший";
 }
 
 function thresholdMessages(before: number, after: number, max: number, tookHp = false) {
@@ -182,73 +161,11 @@ function hpRecoveryMessages(before: number, after: number, max: number) {
   return messages;
 }
 
-function actionTicks(type: WorldActionType) {
-  return Math.max(1, (playerStaminaCostConfig[type] ?? 1) * ACTION_BASE_TICKS);
-}
-
-function effectivePlayerActionDurationMs(player: { stamina: number } | null | undefined, type: WorldActionType, requestedDurationMs: number) {
-  if (type !== "REST" && type !== "WAIT" && player && player.stamina > 0) return QUICK_PLAYER_ACTION_DURATION_MS;
-  return requestedDurationMs;
-}
-
-function actionTitle(action: Pick<WorldAction, "type" | "payload" | "durationMs">) {
-  if (action.type === "MOVE") {
-    const payload = action.payload as unknown as MovePayload;
-    const direction = payload.direction ? directionLabels[payload.direction].toLowerCase() : "невідомий напрямок";
-    return `йдемо на ${direction}`;
-  }
-
-  if (action.type === "GATHER" || action.type === "GATHER_SPECIFIC") {
-    const payload = action.payload as unknown as GatherPayload;
-    const names: Record<NonNullable<GatherPayload["resourceKey"]>, string> = {
-      berries: "ягоди",
-      mushrooms: "гриби",
-      herbs: "трави",
-    };
-    if (!payload.resourceKey) return "збираємо щось поблизу";
-    return `збираємо ${names[payload.resourceKey] ?? payload.resourceKey}`;
-  }
-
-  if (action.type === "EAT") return "їмо";
-  if (action.type === "LOOK") return "озираємось";
-  if (action.type === "INSPECT") return "роздивляємось ціль";
-  if (action.type === "GREET") return "вітаємось";
-  if (action.type === "ATTACK") return "атакуємо";
-  if (action.type === "FRESHEN") return "освіжуємо труп";
-  if (action.type === "SAY") return "говоримо";
-  if (action.type === "TRACK") return "вистежуємо";
-  if (action.type === "REST") return "відпочиваємо";
-  if (action.type === "SET_TRAP") return "ставимо пастку";
-  if (action.type === "WAIT") return "чекаємо";
-
-  return String(action.type).toLowerCase();
-}
-
-function orderedPosition(index: number) {
-  return index + 1;
-}
-
 function targetIntro(target: ResolvedTarget, isMystery: boolean) {
   if (!isMystery) return `👁 Ви роздивляєтесь ${target.forms.accusative}.`;
   if (target.kind === "creature" && target.isCorpse) return "👁 Ви роздивляєтесь те, що лежить нерухомо.";
   if (target.kind === "creature" && target.isAnimal) return "👁 Ви роздивляєтесь цю істоту.";
   return "👁 Ви роздивляєтесь цю постать.";
-}
-
-export function movementDurationMs(travelCost = 1, _stamina = BASE_STAMINA) {
-  return Math.max(MIN_ACTION_DURATION_MS, actionTicks("MOVE") * TICK_MS * Math.max(1, travelCost));
-}
-
-export function gatherDurationMs(resourceKey: keyof typeof gatherConfig, _stamina = BASE_STAMINA) {
-  return Math.max(MIN_ACTION_DURATION_MS, (gatherConfig[resourceKey]?.ticks ?? actionTicks("GATHER_SPECIFIC")) * ACTION_BASE_TICKS * TICK_MS);
-}
-
-export function actionDurationMs(type: WorldActionType, _stamina = BASE_STAMINA) {
-  return Math.max(MIN_ACTION_DURATION_MS, actionTicks(type) * TICK_MS);
-}
-
-export function actionStaminaCost(type: WorldActionType) {
-  return actionCost(type);
 }
 
 export async function interruptActorActions(ref: ActorRef, reason = "перервано", includeQueued = true) {
@@ -462,48 +379,6 @@ export async function stopPlayerRest(playerId: number) {
   });
 }
 
-export async function playerRestStatusText(playerId: number) {
-  const player = await prisma.player.findUnique({ where: { id: playerId } });
-  if (!player) return "Персонажа не знайдено.";
-
-  const max = await getPlayerRestStaminaCap(playerId);
-  const hpMax = player.hpMax ?? BASE_HP;
-  const staminaRemaining = Math.max(0, max - player.stamina);
-  const hpRemaining = Math.max(0, hpMax - player.hp);
-  const state = fatigueLabel(fatigueStateFor(player.stamina, max), player.isResting);
-
-  if (staminaRemaining <= 0 && hpRemaining <= 0) {
-    return `Ви вже відпочивші й готові до дій. HP: ${player.hp}/${hpMax}. Витривалість: ${player.stamina}/${max}.`;
-  }
-
-  const lines = [
-    `Ви відпочиваєте.`,
-    `Стан: ${state}.`,
-    `HP: ${player.hp}/${hpMax}.`,
-    `Витривалість: ${player.stamina}/${max}${staminaRemaining <= 0 ? " — повністю відновлена" : ""}.`,
-  ];
-
-  if (player.hp <= 0) {
-    lines.push(`До притомности: приблизно ${msToMinutes(REST_HEALTH_REGEN_INTERVAL_MS)} хв.`);
-  }
-
-  if (staminaRemaining > 0) {
-    const staminaMinutes = Math.ceil(staminaRemaining / REST_STAMINA_REGEN_PER_INTERVAL) * msToMinutes(STAMINA_REGEN_INTERVAL_MS);
-    lines.push(`До повної витривалости: приблизно ${staminaMinutes} хв.`);
-  }
-
-  if (hpRemaining > 0) {
-    const hpMinutes = Math.ceil(hpRemaining / HEALTH_REGEN_PER_INTERVAL) * msToMinutes(REST_HEALTH_REGEN_INTERVAL_MS);
-    lines.push(`До повного здоров’я: приблизно ${hpMinutes} хв.`);
-  }
-
-  if (player.hp > 0 && player.hp <= LOW_HP_WARNING) {
-    lines.push("Ви вже можете діяти, але дуже слабі. Вам би ще відновитися.");
-  }
-
-  return lines.join("\n");
-}
-
 export async function enqueueCreatureAction(input: {
   creatureId: number;
   type: WorldActionType;
@@ -526,34 +401,6 @@ export async function hasActiveCreatureActions(creatureId: number) {
   });
   return count > 0;
 }
-
-export async function renderPlayerActionQueue(playerId: number) {
-  const actions = await prisma.worldAction.findMany({
-    where: { actorType: "PLAYER", playerId, status: { in: ["QUEUED", "RUNNING"] } },
-    orderBy: [{ position: "asc" }, { id: "asc" }],
-  });
-
-  const player = await prisma.player.findUnique({ where: { id: playerId } });
-  if (!actions.length && !player?.isResting) return "Черга дій порожня.";
-
-  const now = Date.now();
-  const lines: string[] = [];
-  if (player?.isResting) lines.push("▶️ Відпочиваєте");
-
-  lines.push(...actions.map((action, index) => {
-    const queueIndex = player?.isResting ? index + 1 : index;
-    if (action.status === "RUNNING") {
-      const leftMs = action.executeAt ? Math.max(0, action.executeAt.getTime() - now) : action.durationMs;
-      return `▶️ ${actionTitle(action)} — виконується, ${msToSeconds(leftMs)} с`;
-    }
-
-    const prefix = queueIndex === 0 ? "⏳" : `⏳ ${orderedPosition(queueIndex)}.`;
-    return `${prefix} Потім ${actionTitle(action)}`;
-  }));
-
-  return `План дій:\n${lines.join("\n")}`;
-}
-
 
 export async function accelerateFirstQueuedPlayerAction(playerId: number) {
   const player = await prisma.player.findUnique({ where: { id: playerId } });

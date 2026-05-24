@@ -9,7 +9,24 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
-## 0.9.6 - Озирнутися, stamina 42, character card and static time - 12026-05-24
+## 0.9.7 - Action queue refactoring and terminology cleanup - 12026-05-24
+
+### Changed
+
+- Split action queue rules and display text into `src/services/actionRules.ts`, keeping duration, priority, stamina cost and queued action titles outside the main queue runner.
+- Split player queue and rest status rendering into `src/services/actionQueueView.ts`.
+- Kept the existing public imports from `src/services/actionQueue.ts` through re-exports, so handlers and world tick code do not need broad import churn.
+- Updated help and admin/debug command text to use `Озирнутися`, `Роздивитися` and `місцина` terminology consistently.
+- Bumped package metadata to `0.9.7`.
+
+### Documentation
+
+- Updated `news.md` with the 0.9.7 technical notes.
+- Updated `docs/planning/next.md` after completing the queued-action terminology cleanup and the first queue rendering/rules split.
+
+---
+
+## 0.9.6 - Refactoring - 12026-05-24
 
 ### Changed
 
