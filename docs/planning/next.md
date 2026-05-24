@@ -66,7 +66,7 @@ The expanded map should not just be larger. Different regions should feel and be
 - Add day/night world state.
 - Add campfire light source behavior and firewood gathering.
 - Add starter settlement skeleton and first NPC roles beyond the closed gate.
-- Add first planning export script to CI or local workflow.
+- Add CI validation for planning exports so generated JSON/CSV stay in sync with Markdown items.
 - Turn the new static `/time` output into a world-time service with season, moon circle/month, day and daypart progression.
 - Add debug mode persistence and `/debugGet` / `/debugSet` commands before more hidden-vs-technical UI work.
 - Add first foraging/firewood iteration: хмиз/small sticks near campfires and biome-dependent minor finds.

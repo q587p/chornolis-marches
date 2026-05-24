@@ -1,5 +1,7 @@
 id,title,status,type,area,priority,tags,file
-ECO-001,Reproduction and herbivore overpopulation,next,feature,ecology,high,"ecology,reproduction,herbivores,rabbits,resources,world-reactivity"
+ADM-001,Admin permissions and restricted reset,backlog,feature,admin,high,"admin,permissions,reset",docs/planning/items/ADM-001-admin-rights.md
+CAL-001,"Calendar, moon phases and named years",icebox,system,world_time,medium,"calendar,world-time,moon-phases,seasons,folklore,atmosphere",docs/planning/items/CAL-001_calendar_moon_phases_and_named_years.md
+ECO-001,Reproduction and herbivore overpopulation,next,feature,ecology,high,"ecology,reproduction,herbivores,rabbits,resources,world-reactivity",docs/planning/items/ECO-001-reproduction-and-overpopulation.md
 ECON-001,Barter and trade,backlog,feature,economy,medium,"barter,trade,npc,economy",docs/planning/items/ECON-001-barter-and-trade.md
 ICE-001,Mythic skill learning from spirits,icebox,feature,progression,low,"liminality,skills,mythic,observation",docs/planning/items/ICE-001-mythic-skills.md
 ICE-002,Rituals and sacred days,icebox,feature,mythic_systems,low,"rituals,calendar,weather,mythic",docs/planning/items/ICE-002-rituals-and-sacred-days.md
@@ -8,5 +10,6 @@ ICE-004,"Camps, shelters and construction",icebox,feature,construction,low,"surv
 PROG-002,Observation-based learning,backlog,feature,progression,medium,"skills,observation,npc,animals,mythic",docs/planning/items/PROG-002-observation-learning.md
 SETTLE-001,Starter settlement,backlog,feature,settlements,high,"settlement,npc,onboarding",docs/planning/items/SETTLE-001-starter-settlement.md
 SURV-001,Early respawn support,next,feature,survival,high,"onboarding,respawn,beginner",docs/planning/items/SURV-001-early-respawn.md
+WEB-001,"Web map, multi-client game server and limited MUD gateway",icebox,feature,server,medium,"web,map,mud,server,multi-client,architecture",docs/planning/items/web-001-web-map-and-mud-gateway.md
 WORLD-001,Day/night cycle,next,feature,world_time,high,"world,atmosphere,visibility,liminality",docs/planning/items/WORLD-001-day-night-cycle.md
 WORLD-002,Campfires and light,next,feature,survival,high,"survival,light,crafting,night",docs/planning/items/WORLD-002-campfires-and-light.md

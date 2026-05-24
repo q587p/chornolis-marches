@@ -1,3 +1,9 @@
+## 0.9.9 — planning export став командою
+
+- Додано `npm run planning:export`: команда читає planning items із `docs/planning/items/*.md` і генерує `docs/planning/exports/items.json` та `docs/planning/exports/issues.csv`.
+- Експорт тепер включає всі planning items, а не лише старий статичний приклад.
+- Planning README оновлено: репозиторій тепер має локальний спосіб оновлювати JSON/CSV для майбутнього GitHub Issues/Projects sync.
+
 ## 0.9.8 — відновлення винесено з черги дій
 
 - Витрату витривалости, виснаження, втрату свідомости, відновлення HP і stamina винесено з `actionQueue.ts` в окремий `actionRecovery.ts`.

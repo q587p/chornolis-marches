@@ -1,5 +1,42 @@
 [
   {
+    "id": "ADM-001",
+    "title": "Admin permissions and restricted reset",
+    "status": "backlog",
+    "type": "feature",
+    "area": "admin",
+    "priority": "high",
+    "tags": [
+      "admin",
+      "permissions",
+      "reset"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/ADM-001-admin-rights.md"
+  },
+  {
+    "id": "CAL-001",
+    "title": "Calendar, moon phases and named years",
+    "status": "icebox",
+    "type": "system",
+    "area": "world_time",
+    "priority": "medium",
+    "tags": [
+      "calendar",
+      "world-time",
+      "moon-phases",
+      "seasons",
+      "folklore",
+      "atmosphere"
+    ],
+    "depends_on": [
+      "day-night-cycle"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/CAL-001_calendar_moon_phases_and_named_years.md"
+  },
+  {
     "id": "ECO-001",
     "title": "Reproduction and herbivore overpopulation",
     "status": "next",
@@ -19,7 +56,8 @@
     ],
     "exports": {
       "github_issue": true
-    }
+    },
+    "file": "docs/planning/items/ECO-001-reproduction-and-overpopulation.md"
   },
   {
     "id": "ECON-001",
@@ -34,6 +72,8 @@
       "npc",
       "economy"
     ],
+    "depends_on": [],
+    "exports": {},
     "file": "docs/planning/items/ECON-001-barter-and-trade.md"
   },
   {
@@ -52,6 +92,7 @@
     "depends_on": [
       "PROG-002"
     ],
+    "exports": {},
     "file": "docs/planning/items/ICE-001-mythic-skills.md"
   },
   {
@@ -70,6 +111,7 @@
     "depends_on": [
       "WORLD-001"
     ],
+    "exports": {},
     "file": "docs/planning/items/ICE-002-rituals-and-sacred-days.md"
   },
   {
@@ -89,6 +131,7 @@
       "SETTLE-001",
       "ECON-001"
     ],
+    "exports": {},
     "file": "docs/planning/items/ICE-003-caravans.md"
   },
   {
@@ -107,6 +150,7 @@
     "depends_on": [
       "WORLD-002"
     ],
+    "exports": {},
     "file": "docs/planning/items/ICE-004-construction.md"
   },
   {
@@ -126,6 +170,7 @@
     "depends_on": [
       "PROG-001"
     ],
+    "exports": {},
     "file": "docs/planning/items/PROG-002-observation-learning.md"
   },
   {
@@ -140,6 +185,8 @@
       "npc",
       "onboarding"
     ],
+    "depends_on": [],
+    "exports": {},
     "file": "docs/planning/items/SETTLE-001-starter-settlement.md"
   },
   {
@@ -154,7 +201,33 @@
       "respawn",
       "beginner"
     ],
+    "depends_on": [],
+    "exports": {},
     "file": "docs/planning/items/SURV-001-early-respawn.md"
+  },
+  {
+    "id": "WEB-001",
+    "title": "Web map, multi-client game server and limited MUD gateway",
+    "status": "icebox",
+    "type": "feature",
+    "area": "server",
+    "priority": "medium",
+    "tags": [
+      "web",
+      "map",
+      "mud",
+      "server",
+      "multi-client",
+      "architecture"
+    ],
+    "depends_on": [
+      "planning-as-code",
+      "action-queue",
+      "world-tick",
+      "map-view-service"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/web-001-web-map-and-mud-gateway.md"
   },
   {
     "id": "WORLD-001",
@@ -169,6 +242,8 @@
       "visibility",
       "liminality"
     ],
+    "depends_on": [],
+    "exports": {},
     "file": "docs/planning/items/WORLD-001-day-night-cycle.md"
   },
   {
@@ -187,6 +262,7 @@
     "depends_on": [
       "WORLD-001"
     ],
+    "exports": {},
     "file": "docs/planning/items/WORLD-002-campfires-and-light.md"
   }
 ]

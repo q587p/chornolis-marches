@@ -9,6 +9,26 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.9.9 - Planning export script - 12026-05-25
+
+### Added
+
+- Added `scripts/planning/export-planning.mjs` to generate planning exports from Markdown item front matter.
+- Added `npm run planning:export`.
+
+### Changed
+
+- Regenerated `docs/planning/exports/items.json` and `docs/planning/exports/issues.csv` from all planning item files.
+- Bumped package metadata to `0.9.9`.
+
+### Documentation
+
+- Updated planning docs to describe the export command.
+- Updated `news.md` with the 0.9.9 technical note.
+- Updated `docs/planning/next.md` after completing the local planning export workflow.
+
+---
+
 ## 0.9.8 - Action recovery refactor - 12026-05-24
 
 ### Changed

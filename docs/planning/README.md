@@ -42,6 +42,17 @@ GitHub Issues/Projects may mirror them for convenience, but if there is a confli
 
 ## Export
 
-`docs/planning/exports/` contains static JSON/CSV examples generated from the Markdown planning items.
+`docs/planning/exports/` contains JSON/CSV generated from the Markdown planning items.
 
-A generator script can be added later if the planning format stabilizes and automatic sync becomes useful.
+Regenerate exports after editing `docs/planning/items/*.md`:
+
+```bash
+npm run planning:export
+```
+
+The command writes:
+
+- `docs/planning/exports/items.json`
+- `docs/planning/exports/issues.csv`
+
+These files are intended as a portable bridge for future GitHub Issues/Projects sync or other planning dashboards.
