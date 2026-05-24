@@ -976,7 +976,8 @@ async function completeEat(action: WorldAction) {
   const resource = await prisma.resourceNode.findFirst({ where: { locationId: creature.locationId, amount: { gt: 0 }, resourceType: { key: { in: ["berries", "herbs", "mushrooms"] } } }, include: { resourceType: true } });
   if (resource && creature.species.diet !== "CARNIVORE") {
     await prisma.resourceNode.update({ where: { id: resource.id }, data: { amount: { decrement: 1 } } });
-    await prisma.creature.update({ where: { id: creature.id }, data: { hunger: Math.max(0, creature.hunger - 3), stamina: Math.min(20, creature.stamina + 1), activity: "RESTING", currentAction: `їсть ${resource.resourceType.name}` } });
+    const staminaMax = creature.staminaMax ?? BASE_STAMINA;
+    await prisma.creature.update({ where: { id: creature.id }, data: { hunger: Math.max(0, creature.hunger - 3), stamina: Math.min(staminaMax, creature.stamina + 1), activity: "RESTING", currentAction: `їсть ${resource.resourceType.name}` } });
   } else {
     await prisma.creature.update({ where: { id: creature.id }, data: { hunger: { increment: 1 }, activity: "LOOKING", currentAction: "шукає їжу" } });
   }
@@ -1191,7 +1192,7 @@ async function completeSimple(action: WorldAction) {
     if (action.actorType === "PLAYER" && action.playerId) {
       const player = await prisma.player.findUnique({ where: { id: action.playerId } });
       if (player) {
-        const max = player.staminaMax ?? BASE_STAMINA;
+        const max = await getPlayerRestStaminaCap(player.id);
         const hpMax = player.hpMax ?? BASE_HP;
         const payload = payloadOf<{ untilFull?: boolean }>(action);
         const next = payload.untilFull ? max : Math.min(max, player.stamina + REST_STAMINA_REGEN_PER_INTERVAL);
@@ -1229,7 +1230,8 @@ async function recoverStamina(bot: Bot) {
   const players = await prisma.player.findMany();
 
   for (const player of players) {
-    const max = player.staminaMax ?? BASE_STAMINA;
+    const baseMax = player.staminaMax ?? BASE_STAMINA;
+    const max = player.isResting ? Math.max(baseMax, await getPlayerRestStaminaCap(player.id)) : baseMax;
     const hpMax = player.hpMax ?? BASE_HP;
     if (player.stamina >= max && player.hp >= hpMax && !player.isResting) continue;
 
