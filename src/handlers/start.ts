@@ -68,6 +68,7 @@ async function enterWorld(ctx: any, isMenuRefresh = false) {
       lastName: from.last_name ?? null,
       currentLocationId: startLocationId,
       stamina: BASE_STAMINA * 3,
+      staminaMax: BASE_STAMINA,
     },
   });
 
@@ -108,7 +109,9 @@ async function finishOnboarding(ctx: any, state: OnboardingState) {
       grammaticalGender: gender,
       animacy: "ANIMATE",
       onboardingComplete: true,
+      isNameApproved: false,
       stamina: BASE_STAMINA * 3,
+      staminaMax: BASE_STAMINA,
       currentLocationId: startLocationId,
     },
   });
@@ -193,8 +196,9 @@ async function setBotCommandsWithRetry(bot: Bot, attempts = 3) {
       await bot.api.setMyCommands([
         { command: "start", description: "🌲 Перезапустити" },
         { command: "me", description: "🧍 Персонаж" },
-        { command: "location", description: "📍 Поточна локація" },
-        { command: "look", description: "🔎 Придивитися" },
+        { command: "location", description: "👀 Озирнутися" },
+        { command: "look", description: "👁 Роздивитися" },
+        { command: "time", description: "🕯 Час Порубіжжя" },
         { command: "menu", description: "☰ Меню" },
         { command: "news", description: "📰 Останні новини світу" },
         { command: "help", description: "🧭 Допомога новачку" },

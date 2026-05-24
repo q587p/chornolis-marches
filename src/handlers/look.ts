@@ -39,7 +39,7 @@ export function registerLookHandlers(bot: Bot) {
         chatId: ctx.chat?.id,
         messageId: ctx.callbackQuery.message?.message_id,
       });
-      await safeAnswerCallbackQuery(ctx, result.mode === "immediate" ? "Ви придивляєтесь." : `Огляд додано в чергу (${Math.ceil(durationMs / 1000)} с).`);
+      await safeAnswerCallbackQuery(ctx, result.mode === "immediate" ? "Ви роздивляєтесь." : `Роздивляння додано в чергу (${Math.ceil(durationMs / 1000)} с).`);
       await sendActionSubmitFeedback(ctx, player.id, result);
     } catch (error) {
       await safeAnswerCallbackQuery(ctx, error instanceof Error ? error.message : "Не вдалося виконати дію.");

@@ -1,10 +1,12 @@
 import { InlineKeyboard } from "grammy";
 import { prisma } from "../db";
 import { ACTION_BASE_TICKS, QUICK_PLAYER_ACTION_DURATION_MS, TICK_MS, gatherConfig, playerStaminaCostConfig } from "../gameConfig";
-import { directionLabels } from "../ui/labels";
+import { directionLabels, directionShortLabels } from "../ui/labels";
 import { buildMovementKeyboard, buildResourceMenuKeyboard, buildTargetListKeyboard } from "../ui/keyboards";
 import { isCampfireFeature } from "./locationFeatures";
 import { escapeHtml } from "../utils/text";
+
+const COMPACT_EXIT_ORDER = ["NORTH", "WEST", "SOUTH", "EAST", "UP", "DOWN", "INSIDE", "OUTSIDE"];
 
 function isVisibleCorpse(c: any) {
   return !c.isAlive && !c.isGone && c.age === "CORPSE";
@@ -17,7 +19,7 @@ function isVisibleLivingCreature(c: any) {
 function visibleTargets(location: any, viewerPlayerId?: number) {
   const players = location.players
     .filter((p: any) => p.id !== viewerPlayerId)
-    .map((p: any) => ({ type: "player" as const, id: p.id, label: p.firstName ?? p.username ?? "мандрівник", canGreet: true }));
+    .map((p: any) => ({ type: "player" as const, id: p.id, label: p.nameNominative ?? p.firstName ?? p.username ?? "мандрівник", canGreet: true }));
 
   const livingCreatures = location.creatures
     .filter(isVisibleLivingCreature)
@@ -69,17 +71,43 @@ function addInlineRows(target: InlineKeyboard, source: InlineKeyboard) {
   }
 }
 
-function presenceText(location: any, viewerPlayerId?: number) {
+function hasCampfireInLocation(location: any) {
+  return Boolean((location.features ?? []).some((feature: any) => feature.isActive && isCampfireFeature(feature)));
+}
+
+function presenceText(location: any, viewerPlayerId?: number, revealTargets = false) {
   const targets = visibleTargets(location, viewerPlayerId);
   const hasCharacters = targets.some((t) => t.canGreet);
   const hasAnimals = location.creatures.some((c: any) => isVisibleLivingCreature(c) && c.species.kind === "ANIMAL");
   const hasCorpses = location.creatures.some(isVisibleCorpse);
+
+  if (revealTargets && targets.length) {
+    return `\n\nПоруч:\n${targets.map((target) => `- ${escapeHtml(target.label)}${target.canGreet ? "" : " <i>(тварина/об’єкт)</i>"}`).join("\n")}`;
+  }
 
   if (hasCharacters && hasAnimals) return "\n\n<i>Поруч хтось або щось є.</i>";
   if (hasCharacters) return "\n\n<i>Поруч хтось є.</i>";
   if (hasAnimals) return "\n\n<i>Поруч щось ворушиться.</i>";
   if (hasCorpses) return "\n\n<i>Поруч щось лежить нерухомо.</i>";
   return "";
+}
+
+function sortedExits(exits: any[]) {
+  return [...exits].sort((a, b) => {
+    const aIndex = COMPACT_EXIT_ORDER.indexOf(a.direction);
+    const bIndex = COMPACT_EXIT_ORDER.indexOf(b.direction);
+    return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex);
+  });
+}
+
+function compactExitsText(exits: any[]) {
+  if (!exits.length) return "Виходів не видно.";
+  return `Виходи: ${sortedExits(exits).map((exit) => directionShortLabels[exit.direction] ?? exit.direction).join("")}`;
+}
+
+function detailedExitsText(exits: any[]) {
+  if (!exits.length) return "Виходів не видно.";
+  return `Виходи:\n${exits.map((exit) => `- ${directionLabels[exit.direction]} → ${exit.toLocation.name}`).join("\n")}`;
 }
 
 function slowResourceSeconds(resourceKey: string) {
@@ -112,8 +140,8 @@ function activeActionLabel(action: any) {
   if (!action) return undefined;
   if (action.type === "MOVE") return "йде";
   if (action.type === "GATHER" || action.type === "GATHER_SPECIFIC") return "збирає";
-  if (action.type === "LOOK") return "придивляється";
-  if (action.type === "INSPECT") return "оглядає";
+  if (action.type === "LOOK") return "роздивляється";
+  if (action.type === "INSPECT") return "роздивляється";
   if (action.type === "GREET") return "вітається";
   if (action.type === "ATTACK") return "атакує";
   if (action.type === "FRESHEN") return "освіжує труп";
@@ -162,16 +190,15 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
 
   if (!location) throw new Error("Location not found");
 
-  const exitsText = location.exitsFrom.length
-    ? location.exitsFrom.map((exit) => `- ${directionLabels[exit.direction]} → ${exit.toLocation.name}`).join("\n")
-    : "Виходів не видно.";
-
+  const revealTargets = hasCampfireInLocation(location);
+  const targets = visibleTargets(location, viewerPlayerId);
   const keyboard = new InlineKeyboard();
   addFeatureButtons(keyboard, location.features);
+  if (revealTargets && targets.length) addInlineRows(keyboard, buildTargetListKeyboard(targets));
   addInlineRows(keyboard, buildMovementKeyboard(location.exitsFrom));
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location)}${presenceText(location, viewerPlayerId)}\n\nВиходи:\n${escapeHtml(exitsText)}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location)}${presenceText(location, viewerPlayerId, revealTargets)}\n\n${escapeHtml(compactExitsText(location.exitsFrom))}`,
     keyboard,
   };
 }
@@ -259,7 +286,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   addInlineRows(keyboard, buildMovementKeyboard(location.exitsFrom));
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location)}\n\n<i>Ви придивляєтесь.</i>\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}${resourcesText}${charactersText}${tracksText}${corpsesText}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location)}\n\n<i>Ви роздивляєтесь.</i>\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}\n\n${escapeHtml(detailedExitsText(location.exitsFrom))}${resourcesText}${charactersText}${tracksText}${corpsesText}`,
     keyboard,
   };
 }

@@ -6,6 +6,12 @@ export type YearBeast = {
 export const CURRENT_WORLD_YEAR = 587;
 export const WORLD_ERA_NAME = "після Великого Відступу";
 
+// Temporary public date until world time starts advancing through ticks.
+export const CURRENT_WORLD_SEASON = "пізня весна";
+export const CURRENT_WORLD_MOON_CIRCLE = "Коло Зеленого Шуму";
+export const CURRENT_WORLD_DAY = 17;
+export const CURRENT_WORLD_DAYTIME = "передвечір’я";
+
 export const YEAR_BEASTS: YearBeast[] = [
   { nominative: "Полівка", genitive: "Полівки" },
   { nominative: "Заєць", genitive: "Зайця" },
@@ -74,4 +80,18 @@ export function formatCurrentWorldYear() {
 
 export function renderCurrentWorldYearLine() {
   return `${formatCurrentWorldYear()}.`;
+}
+
+export function renderCurrentWorldTime() {
+  return [
+    "🕯 Час Порубіжжя",
+    "",
+    renderCurrentWorldYearLine(),
+    `Пора: ${CURRENT_WORLD_SEASON}.`,
+    `Місячне коло: ${CURRENT_WORLD_MOON_CIRCLE}.`,
+    `День кола: ${CURRENT_WORLD_DAY}.`,
+    `Час доби: ${CURRENT_WORLD_DAYTIME}.`,
+    "",
+    "Поки це статична дата. Плин часу, сезони, місяці, дні та час доби винесені в todo.",
+  ].join("\n");
 }

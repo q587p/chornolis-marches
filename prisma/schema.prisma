@@ -22,8 +22,8 @@ model Player {
 
   hp           Int @default(20)
   hpMax        Int @default(20)
-  stamina      Int @default(13)
-  staminaMax   Int @default(13)
+  stamina      Int @default(42)
+  staminaMax   Int @default(42)
   fatigueState FatigueState @default(RESTED)
   isResting    Boolean @default(false)
   isAutoEnabled Boolean @default(false)
@@ -56,6 +56,7 @@ model Player {
   nameInstrumental   String?
   nameLocative       String?
   nameVocative       String?
+  isNameApproved     Boolean @default(false)
   grammaticalGender  GrammaticalGender?
   animacy            Animacy @default(ANIMATE)
 
@@ -231,8 +232,8 @@ model Creature {
   hp      Int
   maxHp   Int?
   hunger  Int @default(0)
-  stamina Int @default(13)
-  staminaMax Int @default(13)
+  stamina Int @default(42)
+  staminaMax Int @default(42)
   fatigueState FatigueState @default(RESTED)
   lastStaminaRegenAt DateTime @default(now())
 

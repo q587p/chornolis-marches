@@ -18,7 +18,7 @@ function normalizeState(input: MainKeyboardState | boolean = {}) {
 export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean = {}) {
   const state = normalizeState(stateOrAuto);
   const keyboard = new Keyboard()
-    .text("📍 Локація")
+    .text("👀 Озирнутися")
     .text("🧍 Персонаж")
     .row();
 
@@ -28,7 +28,7 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
     hasUtilityRow = true;
   }
   if (state.canRest) {
-    keyboard.text(`${state.hasCampfire ? "🔥" : "🛌"} Відпочити`);
+    keyboard.text(`${state.hasCampfire ? "🔥" : "🧘"} Відпочити`);
     hasUtilityRow = true;
   }
   if (hasUtilityRow) keyboard.row();
@@ -44,6 +44,7 @@ export function buildMenuReplyKeyboard() {
     .text("📰 Новини")
     .text("🧭 Допомога")
     .row()
+    .text("🕯 Час")
     .text("↩️ Назад")
     .resized()
     .persistent();

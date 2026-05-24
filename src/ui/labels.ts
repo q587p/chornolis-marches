@@ -8,3 +8,14 @@ export const directionLabels: Record<string, string> = {
   INSIDE: "Всередину",
   OUTSIDE: "Назовні",
 };
+
+export const directionShortLabels: Record<string, string> = {
+  NORTH: "Пн",
+  WEST: "Зх",
+  SOUTH: "Пд",
+  EAST: "Сх",
+  UP: "Вг",
+  DOWN: "Вн",
+  INSIDE: "Вср",
+  OUTSIDE: "Наз",
+};

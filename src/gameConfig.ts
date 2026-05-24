@@ -1,7 +1,7 @@
 import { WorldActionType } from "@prisma/client";
 import { config } from "./config";
 
-export const BASE_STAMINA = 13;
+export const BASE_STAMINA = 42;
 export const BASE_HP = 20;
 export const LOW_HP_WARNING = 3;
 export const VERY_TIRED_STAMINA = -(BASE_STAMINA * 3);

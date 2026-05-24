@@ -1,6 +1,6 @@
 import { Bot, InlineKeyboard } from "grammy";
 import { prisma } from "../db";
-import { BASE_HP, HEALTH_REGEN_PER_INTERVAL, PASSIVE_HEALTH_REGEN_INTERVAL_MS, PASSIVE_STAMINA_REGEN_PER_INTERVAL, REST_HEALTH_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_PER_INTERVAL, STAMINA_REGEN_INTERVAL_MS } from "../gameConfig";
+import { BASE_HP, BASE_STAMINA, HEALTH_REGEN_PER_INTERVAL, PASSIVE_HEALTH_REGEN_INTERVAL_MS, PASSIVE_STAMINA_REGEN_PER_INTERVAL, REST_HEALTH_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_PER_INTERVAL, STAMINA_REGEN_INTERVAL_MS } from "../gameConfig";
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { renderLocationBrief } from "../services/locations";
 import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
@@ -23,8 +23,22 @@ function fatigueText(player: any) {
   return "Відпочивший";
 }
 
+function formatDateTime(value: Date | string | null | undefined) {
+  if (!value) return "невідомо";
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "невідомо";
+  return new Intl.DateTimeFormat("uk-UA", {
+    timeZone: "Europe/Kyiv",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
 function recoveryText(player: any) {
-  const staminaMax = player.staminaMax ?? 13;
+  const staminaMax = player.staminaMax ?? BASE_STAMINA;
   const hpMax = player.hpMax ?? BASE_HP;
   const staminaRemaining = Math.max(0, staminaMax - player.stamina);
   const hpRemaining = Math.max(0, hpMax - player.hp);
@@ -38,7 +52,7 @@ function recoveryText(player: any) {
   const restMinutes = Math.max(restStaminaMinutes, restHpMinutes);
 
   if (player.isResting) return `\nВідновлення: приблизно ${restMinutes} хв під час відпочинку.`;
-  return `\nВідновлення без відпочинку: приблизно ${passiveMinutes} хв. Через /rest або 🛌 Відпочити: приблизно ${restMinutes} хв.`;
+  return `\nВідновлення без відпочинку: приблизно ${passiveMinutes} хв. Через /rest або 🧘 Відпочити: приблизно ${restMinutes} хв.`;
 }
 
 function formatPlayerStats(player: any) {
@@ -63,6 +77,31 @@ function buildCharacterAutoKeyboard(autoEnabled: boolean) {
     .text(autoEnabled ? "⏹ Зупинити авто" : "🤖 Увімкнути авто", autoEnabled ? "character:auto:stop" : "character:auto:start");
 }
 
+function nameCasesText(player: any) {
+  return [
+    `Називний: ${player.nameNominative ?? "—"}`,
+    `Родовий: ${player.nameGenitive ?? "—"}`,
+    `Давальний: ${player.nameDative ?? "—"}`,
+    `Знахідний: ${player.nameAccusative ?? "—"}`,
+    `Орудний: ${player.nameInstrumental ?? "—"}`,
+    `Місцевий: ${player.nameLocative ?? "—"}`,
+    `Кличний: ${player.nameVocative ?? "—"}`,
+  ].join("\n");
+}
+
+function amountForResourceKeys(resources: any[], keys: string[]) {
+  const normalized = new Set(keys.map((key) => key.toLowerCase()));
+  return resources
+    .filter((item) => normalized.has(String(item.resourceType.key).toLowerCase()))
+    .reduce((sum, item) => sum + item.amount, 0);
+}
+
+function moneyText(resources: any[]) {
+  const hryvnias = amountForResourceKeys(resources, ["hryvnia", "hryvnias", "gryvnia", "gryvnias", "grivna", "grivnas", "гривня", "ґривня"]);
+  const shahs = amountForResourceKeys(resources, ["shah", "shahy", "shahs", "шаг", "шаги"]);
+  return `${hryvnias} ґривень, ${shahs} шагів`;
+}
+
 async function renderCharacterView(telegramId: number) {
   const player = await prisma.player.findUnique({
     where: { telegramId: String(telegramId) },
@@ -74,14 +113,15 @@ async function renderCharacterView(telegramId: number) {
   const autoEnabled = Boolean(player.isAutoEnabled || isPlayerAutoEnabled(telegramId));
   const autoText = autoEnabled ? "увімкнено 🤖" : "вимкнено";
   const items = player.resources.length ? player.resources.map((i) => `${i.resourceType.name} ×${i.amount}`).join("\n") : "порожньо";
-  const staminaMax = player.staminaMax ?? 13;
+  const staminaMax = player.staminaMax ?? BASE_STAMINA;
   const hpMax = player.hpMax ?? BASE_HP;
   const locationText = player.currentLocation
     ? `${player.currentLocation.region.name} / ${player.currentLocation.name}`
     : "невідомо";
+  const nameApprovedText = player.isNameApproved ? "так" : "ні, потребує перевірки";
 
   return {
-    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\nHP: ${player.hp}/${hpMax}\nВитривалість: ${player.stamina}/${staminaMax}\nСтан: ${fatigueText(player)}${recoveryText(player)}\nГолод: ${player.hunger}\nЛокація: ${locationText}\nАвто-режим: ${autoText}\n\nІнвентар:\n${items}\n\nСтатистика:\n${formatPlayerStats(player)}`,
+    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\nІм’я схвалене: ${nameApprovedText}\n\nВідмінки імені:\n${nameCasesText(player)}\n\nHP: ${player.hp}/${hpMax}\nВитривалість: ${player.stamina}/${staminaMax}\nСтан: ${fatigueText(player)}${recoveryText(player)}\nГолод: ${player.hunger}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}\nЗареєстровано: ${formatDateTime(player.createdAt)}\nАктивний час у грі: поки не рахується окремо.\n\nІнвентар:\n${items}\n\nСтатистика:\n${formatPlayerStats(player)}`,
     keyboard: buildCharacterAutoKeyboard(autoEnabled),
   };
 }
@@ -134,7 +174,7 @@ export function registerPlayerHandlers(bot: Bot) {
     await showLocationForPlayer(ctx.from.id, (text, options) => ctx.reply(text, options));
   });
 
-  bot.hears("📍 Локація", async (ctx) => {
+  bot.hears(["👀 Озирнутися", "Озирнутися", "📍 Локація"], async (ctx) => {
     if (!ctx.from) return;
     await showLocationForPlayer(ctx.from.id, (text, options) => ctx.reply(text, options));
   });

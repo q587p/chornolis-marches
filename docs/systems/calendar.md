@@ -6,6 +6,14 @@ The current starter date is:
 
 > 587 літо після Великого Відступу — Рік Сича під Тихим Вітром.
 
+The current static in-world time shown by `/time` is:
+
+```text
+Пізня весна, Коло Зеленого Шуму, 17 день, передвечір’я.
+```
+
+This is a fixed MVP value for now. A later world-time service should advance season, moon circle/month, day and time of day from the actual world tick/time model.
+
 This is intentionally not tied to Christianity, the Holocene calendar, Trypillia or real historical chronology. Chornolis Marches is a separate, loosely related mythic space.
 
 ## Era
@@ -33,6 +41,7 @@ The current format is:
 The year name should be usable in:
 
 - `/start` and onboarding text;
+- `/time`;
 - news;
 - rumors;
 - NPC speech;
@@ -133,4 +142,3 @@ Good text examples:
 ```text
 Це сталося за три літа до Року Сича, коли річка двічі вставала туманом.
 ```
-

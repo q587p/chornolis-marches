@@ -31,7 +31,7 @@ async function startRest(ctx: any) {
   const player = await getPlayerByTelegramId(from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
-  const max = player.staminaMax ?? 13;
+  const max = player.staminaMax ?? 42;
   const hpMax = player.hpMax ?? BASE_HP;
   if (player.stamina >= max && player.hp >= hpMax && !player.isResting) {
     await replyOrEdit(ctx, `Ви вже відпочили й готові до дій. HP: ${player.hp}/${hpMax}. Витривалість: ${player.stamina}/${max}.`);
@@ -50,7 +50,7 @@ async function startRest(ctx: any) {
 
 export function registerRestHandlers(bot: Bot) {
   bot.command("rest", startRest);
-  bot.hears(["🛌 Відпочити", "🔥 Відпочити"], startRest);
+  bot.hears(["🧘 Відпочити", "🛌 Відпочити", "🔥 Відпочити"], startRest);
 
   bot.callbackQuery("rest:start", async (ctx) => {
     await safeAnswerCallbackQuery(ctx);

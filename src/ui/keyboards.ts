@@ -17,7 +17,7 @@ export function buildMovementKeyboard(exits: any[]) {
   if (north) keyboard.text("⬆️ Північ", "cmd:north").row();
 
   if (west) keyboard.text("⬅️ Захід", "cmd:west");
-  keyboard.text("🔎 Придивитися", "look");
+  keyboard.text("👁 Роздивитися", "look");
   if (east) keyboard.text("Схід ➡️", "cmd:east");
   keyboard.row();
 
@@ -39,7 +39,7 @@ export function buildActionQueueKeyboard(actionCount: number | boolean = true) {
 }
 
 export function buildFatigueRestKeyboard() {
-  return new InlineKeyboard().text("🛌 Відпочити", "rest:start");
+  return new InlineKeyboard().text("🧘 Відпочити", "rest:start");
 }
 
 export function buildRestingActionChoiceKeyboard() {
@@ -61,7 +61,7 @@ export function buildTrackKeyboard() {
 
 export function buildAnonymousTargetKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet">) {
   const keyboard = new InlineKeyboard()
-    .text("👁 Оглянути", `social:inspect:${target.type}:${target.id}:mystery`)
+    .text("👁 Роздивитися", `social:inspect:${target.type}:${target.id}:mystery`)
     .text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:mystery`)
     .row();
 
@@ -72,7 +72,7 @@ export function buildAnonymousTargetKeyboard(target: Pick<TargetRef, "type" | "i
 
 export function buildTargetActionKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet">, again = false) {
   const keyboard = new InlineKeyboard()
-    .text(again ? "👁 Оглянути ще раз" : "👁 Оглянути", `social:inspect:${target.type}:${target.id}:known`)
+    .text(again ? "👁 Роздивитися ще раз" : "👁 Роздивитися", `social:inspect:${target.type}:${target.id}:known`)
     .text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:known`)
     .row();
 
@@ -104,7 +104,7 @@ export function buildResourceMenuKeyboard(resources: { key: string; name: string
 
 export function buildInteractionKeyboard() {
   return new InlineKeyboard()
-    .text("👁 Оглянути", "look")
+    .text("👁 Роздивитися", "look")
     .row()
     .text("⚔️ Атакувати", "social:attack:creature:0:mystery");
 }

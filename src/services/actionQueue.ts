@@ -233,8 +233,8 @@ function actionTitle(action: Pick<WorldAction, "type" | "payload" | "durationMs"
   }
 
   if (action.type === "EAT") return "їмо";
-  if (action.type === "LOOK") return "придивляємось";
-  if (action.type === "INSPECT") return "оглядаємо ціль";
+  if (action.type === "LOOK") return "озираємось";
+  if (action.type === "INSPECT") return "роздивляємось ціль";
   if (action.type === "GREET") return "вітаємось";
   if (action.type === "ATTACK") return "атакуємо";
   if (action.type === "FRESHEN") return "освіжуємо труп";
@@ -267,10 +267,10 @@ function orderedPosition(index: number) {
 }
 
 function targetIntro(target: ResolvedTarget, isMystery: boolean) {
-  if (!isMystery) return `👁 Ви придивляєтесь до ${target.forms.genitive}.`;
-  if (target.kind === "creature" && target.isCorpse) return "👁 Ви придивляєтесь до того, що лежить нерухомо.";
-  if (target.kind === "creature" && target.isAnimal) return "👁 Ви придивляєтесь до цієї істоти.";
-  return "👁 Ви придивляєтесь до цієї постаті.";
+  if (!isMystery) return `👁 Ви роздивляєтесь ${target.forms.accusative}.`;
+  if (target.kind === "creature" && target.isCorpse) return "👁 Ви роздивляєтесь те, що лежить нерухомо.";
+  if (target.kind === "creature" && target.isAnimal) return "👁 Ви роздивляєтесь цю істоту.";
+  return "👁 Ви роздивляєтесь цю постать.";
 }
 
 export function movementDurationMs(travelCost = 1, _stamina = BASE_STAMINA) {
@@ -1007,7 +1007,7 @@ async function completeLook(bot: Bot, action: WorldAction) {
     return;
   }
 
-  if (action.creatureId) await prisma.creature.update({ where: { id: action.creatureId }, data: { looks: { increment: 1 }, activity: "LOOKING", currentAction: "придивляється" } });
+  if (action.creatureId) await prisma.creature.update({ where: { id: action.creatureId }, data: { looks: { increment: 1 }, activity: "LOOKING", currentAction: "озирається" } });
   await prisma.worldAction.update({ where: { id: action.id }, data: { status: "DONE" } });
 }
 

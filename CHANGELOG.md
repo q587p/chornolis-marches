@@ -1,10 +1,47 @@
 # Changelog
 
+All notable changes to this project will be documented in this file.
+The format is loosely based on Keep a Changelog and this project follows semantic-ish versioning.
+
+---
+
 ## [Unreleased]
 
 ---
-All notable changes to this project will be documented in this file.
-The format is loosely based on Keep a Changelog and this project follows semantic-ish versioning.
+
+## 0.9.5 - Озирнутися, stamina 42, character card and static time - 12026-05-24
+
+### Added
+
+- Added `/time` and the `🕯 Час` menu button with the current static Chornolis time.
+- Added static starter time fields: late spring, `Коло Зеленого Шуму`, day 17 and `передвечір’я`.
+- Added `Player.isNameApproved` to support future custom-name moderation and approved pre-generated names.
+- Added a Prisma migration for stamina defaults and name approval.
+- Added planning notes for random names, name validation, foraging, debug mode, action collisions, weather, contacts/groups, combat, opponent assessment, dream tutorial, cowardice/flee thresholds, water sources and food.
+
+### Changed
+
+- Replaced the main location reply button with `👀 Озирнутися`.
+- Replaced visible `Придивитися` UI wording with `Роздивитися` in location and target buttons.
+- Replaced `Локація` wording in the character card with `Місцина`.
+- Increased base stamina from `13` to `42` for players and creatures.
+- New players still begin with a temporary over-rested stamina buffer of `BASE_STAMINA × 3`, now `126/42`.
+- Changed the normal rest button from the bed icon to `🧘 Відпочити`; the bed icon is reserved for future sleep mode.
+- Basic `Озирнутися` now shows exits compactly on one line, for example `Виходи: ПнЗхПдСх`.
+- Detailed `Роздивитися` now shows full named exits with destination names.
+- Brief location view near active campfires now reveals nearby visible targets and adds direct interaction buttons.
+- Character view now shows name cases, name approval status, registration date/time, money line and a placeholder for future active play-time tracking.
+- Render deployment docs now list the env variables currently read by `src/config.ts` and mark unused tick/debug placeholders clearly.
+
+### Documentation
+
+- Updated planning backlog/next/icebox with the new design and admin TODOs.
+- Updated calendar documentation to mention the current static `/time` output and future dynamic time model.
+
+### Notes
+
+- `package.json` and `package-lock.json` are intentionally not included in this archive.
+- Some older queued-action internal phrasing may still say `придивляється`; the visible UI pass is covered here, and the remaining large `actionQueue.ts` wording can be cleaned in a smaller follow-up when editing the full file directly.
 
 ---
 
