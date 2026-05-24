@@ -9,6 +9,21 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.9.8 - Action recovery refactor - 12026-05-24
+
+### Changed
+
+- Split stamina spending, exhaustion messages and passive/rest recovery into `src/services/actionRecovery.ts`.
+- Reduced `src/services/actionQueue.ts` further by moving recovery logic out of the queue runner.
+- Bumped package metadata to `0.9.8`.
+
+### Documentation
+
+- Updated `news.md` with the 0.9.8 technical note.
+- Updated `docs/planning/next.md` to remove stamina/rest recovery from the remaining action queue refactor TODO.
+
+---
+
 ## 0.9.7 - Action queue refactoring and terminology cleanup - 12026-05-24
 
 ### Changed
