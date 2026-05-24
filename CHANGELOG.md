@@ -9,6 +9,22 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.9.11 - Action lifecycle refactor - 12026-05-25
+
+### Changed
+
+- Split action queue lifecycle into `src/services/actionLifecycle.ts`: enqueueing, immediate-vs-queued player actions, rest start/stop, queue controls and queued action startup.
+- Kept the existing public imports from `src/services/actionQueue.ts` through re-exports.
+- Reduced `src/services/actionQueue.ts` to the action completion handlers and loop wiring.
+- Bumped package metadata to `0.9.11`.
+
+### Documentation
+
+- Updated `news.md` with the 0.9.11 technical note.
+- Updated `docs/planning/next.md` so the remaining action queue refactor item only covers completion handler modules.
+
+---
+
 ## 0.9.10 - Planning export CI validation - 12026-05-25
 
 ### Changed

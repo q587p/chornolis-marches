@@ -1,3 +1,10 @@
+## 0.9.11 — lifecycle черги дій винесено окремо
+
+- Запуск черги, постановку дій, immediate/queued рішення для гравця, старт/стоп відпочинку, скасування й очищення черги винесено в `actionLifecycle.ts`.
+- `actionQueue.ts` тепер тримає переважно completion handlers і wiring циклу обробки.
+- Старий публічний API через `actionQueue.ts` залишився сумісним для handlers і world tick.
+- У `next` для action queue лишився останній великий шмат: винести completion handlers.
+
 ## 0.9.10 — planning export тепер перевіряється в CI
 
 - GitHub Actions тепер запускає `npm run planning:export` перед build.
