@@ -20,6 +20,7 @@ import { registerRestHandlers } from "./handlers/rest";
 import { registerSocialHandlers } from "./handlers/social";
 import { registerStartHandlers } from "./handlers/start";
 import { registerStatusHandlers } from "./handlers/status";
+import { registerTimeHandlers } from "./handlers/time";
 import { registerManualTickReportHandlers } from "./handlers/tickReport";
 
 const bot = new Bot(config.botToken);
@@ -32,6 +33,7 @@ registerNewsHandlers(bot);
 registerMenuHandlers(bot);
 registerAdminHandlers(bot);
 registerStatusHandlers(bot);
+registerTimeHandlers(bot);
 registerManualTickReportHandlers(bot);
 registerLookHandlers(bot);
 registerSayHandlers(bot);
