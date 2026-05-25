@@ -17,6 +17,7 @@ const pool = new Pool({
 });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
+const SEED_CONCURRENCY = Math.max(1, Number(process.env.SEED_CONCURRENCY || 12));
 
 type SeedMeta = {
   version: string;
@@ -252,6 +253,22 @@ function progress(label: string, current: number, total: number, every = 50) {
   }
 }
 
+async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T, index: number) => Promise<R>): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+
+  async function worker() {
+    while (nextIndex < items.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      results[index] = await fn(items[index], index);
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, () => worker()));
+  return results;
+}
+
 async function deleteResourceNodesRemovedFromSeed(world: WorldSeed) {
   const allowed = new Set(world.resourceNodes.map((node) => `${node.locationKey}:${node.resourceKey}`));
   const locations = await prisma.cellLocation.findMany({
@@ -305,11 +322,11 @@ const STARTER_RABBITS: StarterRabbitGroup[] = [
 ];
 
 const STARTER_MICE: StarterAnimalGroup[] = [
-  { speciesKey: "mouse", locationKey: "forest_03_01", count: 2, age: "ADULT", sex: "FEMALE" },
-  { speciesKey: "mouse", locationKey: "forest_03_01", count: 1, age: "ADULT", sex: "MALE" },
-  { speciesKey: "mouse", locationKey: "forest_05_03", count: 4, age: "CHILD" },
-  { speciesKey: "mouse", locationKey: "forest_05_03", count: 3, age: "YOUNG" },
-  { speciesKey: "mouse", locationKey: "forest_01_05", count: 2, age: "OLD" },
+  { speciesKey: "mouse", locationKey: "forest_03_02", count: 2, age: "ADULT", sex: "FEMALE" },
+  { speciesKey: "mouse", locationKey: "forest_03_02", count: 1, age: "ADULT", sex: "MALE" },
+  { speciesKey: "mouse", locationKey: "forest_04_03", count: 4, age: "CHILD" },
+  { speciesKey: "mouse", locationKey: "forest_04_03", count: 3, age: "YOUNG" },
+  { speciesKey: "mouse", locationKey: "forest_02_05", count: 2, age: "OLD" },
   { speciesKey: "mouse", locationKey: "meadow_11_04", count: 2, age: "ADULT", sex: "FEMALE" },
   { speciesKey: "mouse", locationKey: "meadow_11_04", count: 1, age: "ADULT", sex: "MALE" },
   { speciesKey: "mouse", locationKey: "meadow_13_06", count: 3, age: "YOUNG" },
@@ -591,34 +608,37 @@ async function ensureStarterAnimals(
       where: { speciesId: species.id, locationId: location.id, isAlive: true, isGone: false },
     });
     const missing = Math.max(0, group.count - existing);
+    const data: Prisma.CreatureCreateManyInput[] = [];
 
     for (let i = 0; i < missing; i++) {
       const ageTicks = starterAnimalAgeTicks(species, group.age, i);
       const isCorpse = group.age === "CORPSE";
       const hp = starterAnimalHp(species.baseHp, group.age);
-      await prisma.creature.create({
-        data: {
-          speciesId: species.id,
-          locationId: location.id,
-          hp: isCorpse ? 0 : hp,
-          maxHp: hp,
-          hunger: 0,
-          stamina: 13,
-          staminaMax: 13,
-          fatigueState: "RESTED",
-          activity: isCorpse ? "RESTING" : "IDLE",
-          currentAction: starterAnimalAction(group.speciesKey, group.age),
-          age: group.age,
-          ageTicks,
-          diedAtTick: isCorpse ? 0 : undefined,
-          corpseDecayTicksLeft: isCorpse ? Math.max(1, (species.corpseDecayTicks ?? 180) - i * 20) : undefined,
-          sex: group.sex ?? (i % 2 === 0 ? "FEMALE" : "MALE"),
-          isAlive: !isCorpse,
-          isGone: false,
-          isHidden: false,
-        },
+      data.push({
+        speciesId: species.id,
+        locationId: location.id,
+        hp: isCorpse ? 0 : hp,
+        maxHp: hp,
+        hunger: 0,
+        stamina: 13,
+        staminaMax: 13,
+        fatigueState: "RESTED",
+        activity: isCorpse ? "RESTING" : "IDLE",
+        currentAction: starterAnimalAction(group.speciesKey, group.age),
+        age: group.age,
+        ageTicks,
+        diedAtTick: isCorpse ? 0 : undefined,
+        corpseDecayTicksLeft: isCorpse ? Math.max(1, (species.corpseDecayTicks ?? 180) - i * 20) : undefined,
+        sex: group.sex ?? (i % 2 === 0 ? "FEMALE" : "MALE"),
+        isAlive: !isCorpse,
+        isGone: false,
+        isHidden: false,
       });
-      created++;
+    }
+
+    if (data.length > 0) {
+      const result = await prisma.creature.createMany({ data });
+      created += result.count;
     }
   }
 
@@ -636,22 +656,23 @@ async function main() {
 
   const regionsByKey = new Map<string, { id: number }>();
   await seedStep("Regions", async () => {
-    for (let i = 0; i < world.regions.length; i += 1) {
-      const region = world.regions[i];
+    let done = 0;
+    await mapLimit(world.regions, SEED_CONCURRENCY, async (region) => {
       const saved = await prisma.region.upsert({
         where: { key: region.key },
         update: { name: region.name, description: region.description },
         create: region,
       });
       regionsByKey.set(region.key, saved);
-      progress("regions", i + 1, world.regions.length, 25);
-    }
+      done += 1;
+      progress("regions", done, world.regions.length, 25);
+    });
   });
 
   const locationsByKey = new Map<string, { id: number }>();
   await seedStep("Locations", async () => {
-    for (let i = 0; i < world.locations.length; i += 1) {
-      const loc = world.locations[i];
+    let done = 0;
+    await mapLimit(world.locations, SEED_CONCURRENCY, async (loc) => {
       const region = regionsByKey.get(loc.regionKey);
       if (!region) throw new Error(`Unknown region key for location ${loc.key}: ${loc.regionKey}`);
 
@@ -681,13 +702,14 @@ async function main() {
       });
 
       locationsByKey.set(loc.key, saved);
-      progress("locations", i + 1, world.locations.length, 25);
-    }
+      done += 1;
+      progress("locations", done, world.locations.length, 25);
+    });
   });
 
   await seedStep("Exits", async () => {
-    for (let i = 0; i < world.exits.length; i += 1) {
-      const exit = world.exits[i];
+    let done = 0;
+    await mapLimit(world.exits, SEED_CONCURRENCY, async (exit) => {
       const from = locationsByKey.get(exit.fromKey);
       const to = locationsByKey.get(exit.toKey);
 
@@ -711,27 +733,29 @@ async function main() {
           isHidden: exit.isHidden ?? false,
         },
       });
-      progress("exits", i + 1, world.exits.length, 50);
-    }
+      done += 1;
+      progress("exits", done, world.exits.length, 50);
+    });
   });
 
   const resourceTypesByKey = new Map<string, { id: number }>();
   await seedStep("Resource types", async () => {
-    for (let i = 0; i < world.resourceTypes.length; i += 1) {
-      const resource = world.resourceTypes[i];
+    let done = 0;
+    await mapLimit(world.resourceTypes, SEED_CONCURRENCY, async (resource) => {
       const saved = await prisma.resourceType.upsert({
         where: { key: resource.key },
         update: resource,
         create: resource,
       });
       resourceTypesByKey.set(resource.key, saved);
-      progress("resource types", i + 1, world.resourceTypes.length, 25);
-    }
+      done += 1;
+      progress("resource types", done, world.resourceTypes.length, 25);
+    });
   });
 
   await seedStep("Resource nodes", async () => {
-    for (let i = 0; i < world.resourceNodes.length; i += 1) {
-      const node = world.resourceNodes[i];
+    let done = 0;
+    await mapLimit(world.resourceNodes, SEED_CONCURRENCY, async (node) => {
       const loc = locationsByKey.get(node.locationKey);
       const resourceType = resourceTypesByKey.get(node.resourceKey);
 
@@ -743,8 +767,9 @@ async function main() {
         update: { amount: node.amount, maxAmount: node.maxAmount },
         create: { locationId: loc.id, resourceTypeId: resourceType.id, amount: node.amount, maxAmount: node.maxAmount },
       });
-      progress("resource nodes", i + 1, world.resourceNodes.length, 50);
-    }
+      done += 1;
+      progress("resource nodes", done, world.resourceNodes.length, 50);
+    });
 
     await deleteResourceNodesRemovedFromSeed(world);
   });
@@ -754,8 +779,8 @@ async function main() {
   });
 
   await seedStep("Location features", async () => {
-    for (let i = 0; i < world.features.length; i += 1) {
-      const feature = world.features[i];
+    let done = 0;
+    await mapLimit(world.features, SEED_CONCURRENCY, async (feature) => {
       const loc = locationsByKey.get(feature.locationKey);
       if (!loc) throw new Error(`Unknown location key for feature ${feature.key}: ${feature.locationKey}`);
 
@@ -783,22 +808,24 @@ async function main() {
           data: feature.data === undefined ? undefined : (feature.data as any),
         },
       });
-      progress("features", i + 1, world.features.length, 25);
-    }
+      done += 1;
+      progress("features", done, world.features.length, 25);
+    });
   });
 
   const speciesByKey = new Map<string, { id: number; baseHp: number; childTicks?: number; youngTicks?: number; adultTicks?: number; corpseDecayTicks?: number }>();
   await seedStep("Creature species", async () => {
-    for (let i = 0; i < species.length; i += 1) {
-      const sp = species[i];
+    let done = 0;
+    await mapLimit([...species], SEED_CONCURRENCY, async (sp) => {
       const saved = await prisma.creatureSpecies.upsert({
         where: { key: sp.key },
         update: sp as any,
         create: sp as any,
       });
       speciesByKey.set(sp.key, saved);
-      progress("species", i + 1, species.length, 25);
-    }
+      done += 1;
+      progress("species", done, species.length, 25);
+    });
   });
 
   await seedStep("Unique creatures", async () => {

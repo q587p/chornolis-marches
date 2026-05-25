@@ -35,11 +35,11 @@ const STARTER_RABBITS: StarterRabbitGroup[] = [
 ];
 
 const STARTER_MICE: StarterAnimalGroup[] = [
-  { speciesKey: "mouse", locationKey: "forest_03_01", count: 2, age: "ADULT", sex: "FEMALE" },
-  { speciesKey: "mouse", locationKey: "forest_03_01", count: 1, age: "ADULT", sex: "MALE" },
-  { speciesKey: "mouse", locationKey: "forest_05_03", count: 4, age: "CHILD" },
-  { speciesKey: "mouse", locationKey: "forest_05_03", count: 3, age: "YOUNG" },
-  { speciesKey: "mouse", locationKey: "forest_01_05", count: 2, age: "OLD" },
+  { speciesKey: "mouse", locationKey: "forest_03_02", count: 2, age: "ADULT", sex: "FEMALE" },
+  { speciesKey: "mouse", locationKey: "forest_03_02", count: 1, age: "ADULT", sex: "MALE" },
+  { speciesKey: "mouse", locationKey: "forest_04_03", count: 4, age: "CHILD" },
+  { speciesKey: "mouse", locationKey: "forest_04_03", count: 3, age: "YOUNG" },
+  { speciesKey: "mouse", locationKey: "forest_02_05", count: 2, age: "OLD" },
   { speciesKey: "mouse", locationKey: "meadow_11_04", count: 2, age: "ADULT", sex: "FEMALE" },
   { speciesKey: "mouse", locationKey: "meadow_11_04", count: 1, age: "ADULT", sex: "MALE" },
   { speciesKey: "mouse", locationKey: "meadow_13_06", count: 3, age: "YOUNG" },

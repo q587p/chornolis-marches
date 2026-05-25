@@ -22,6 +22,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Slowed the mouse lifecycle from seconds-scale growth to a short but readable cycle that remains faster than rabbits.
 - Mouse reproduction now runs faster than rabbit reproduction and uses smaller 4-8 offspring litters.
+- Seed upserts now use bounded concurrency and starter animal `createMany` batches to reduce database round trips.
 - Bumped package metadata to `0.10.6`.
 
 ### Documentation

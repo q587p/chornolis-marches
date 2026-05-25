@@ -6,6 +6,8 @@ Recommended build command:
 npm install && npx prisma migrate deploy && npm run build && npm run seed
 ```
 
+`npm run seed` uses bounded parallel database writes. The default `SEED_CONCURRENCY` is `12`; lower it if the database is under pressure, or raise it cautiously for a nearby/local database.
+
 Optional post-seed smoke check:
 
 ```bash
@@ -34,6 +36,7 @@ Optional:
 - `WORLD_TICK_INTERVAL_MS` — primary boot-time world/action tick value. Minimum effective value is `1000` ms.
 - `TICK_MS` — legacy fallback used only when `WORLD_TICK_INTERVAL_MS` is absent.
 - `APP_VERSION` — fallback version label when `package.json` cannot be read.
+- `SEED_CONCURRENCY` — optional seed parallelism limit. Defaults to `12`.
 
 Currently not wired in `src/config.ts`:
 

@@ -24,6 +24,11 @@ function assertKnown(set, key, message) {
   assert.ok(set.has(key), `${message}: ${key}`);
 }
 
+function sourceLocationKeys(filePath) {
+  const source = fs.readFileSync(path.join(root, filePath), "utf8");
+  return [...source.matchAll(/locationKey:\s*"([^"]+)"/g)].map((match) => match[1]);
+}
+
 const meta = readJson("meta.json");
 const regions = readJson("regions.json");
 const locations = readJson("locations.json");
@@ -72,6 +77,12 @@ for (const feature of features) {
 
 for (const creature of uniqueCreatures) {
   assertKnown(locationKeys, creature.locationKey, `Unknown locationKey for unique creature ${creature.name}`);
+}
+
+for (const filePath of ["prisma/seed.ts", "src/services/worldReset.ts"]) {
+  for (const locationKey of sourceLocationKeys(filePath)) {
+    assertKnown(locationKeys, locationKey, `Unknown hardcoded starter location in ${filePath}`);
+  }
 }
 
 console.log(`World seed OK: ${locations.length} locations, ${exits.length} exits, start=${meta.startLocationKey}`);
