@@ -9,6 +9,22 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.10.1 - Rabbit litter tuning - 12026-05-25
+
+### Changed
+
+- Changed successful rabbit reproduction from 1-2 offspring to configurable litters of 5-10 offspring.
+- Added `WORLD_RABBIT_MIN_LITTER_SIZE` and `WORLD_RABBIT_MAX_LITTER_SIZE` tuning knobs.
+- Bumped package metadata to `0.10.1`.
+
+### Documentation
+
+- Updated ecology docs and ECO-001 notes with the 5-10 litter size.
+- Added a future Icebox note for opportunistic rabbit consumption of small bird prey or carrion after birds, carcasses and deeper attack systems exist.
+- Updated `news.md` with the 0.10.1 balance note.
+
+---
+
 ## 0.10.0 - Rabbit reproduction and overgrazing - 12026-05-25
 
 ### Added

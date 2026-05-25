@@ -29,6 +29,7 @@ It is not a trash bin and not a promise. It is cold storage for ideas that need 
 - Socials should support different messages for actor, target and observers; NPCs or creatures may later react to them.
 - Deep settlement/group structures such as kurінь, січ, households, sworn groups, contacts and longer-term social obligations.
 - Deeper food, thirst and cooking simulation after basic hunger and water sources become useful.
+- Opportunistic herbivore behavior after birds, carcasses and creature attack systems exist: rabbits remain herbivores by default, but may sometimes tear into small bird prey or carrion such as partridge-like game.
 - Weather-driven survival loops: soaked clothes, cold, firewood quality, mud, snow, heat and shelter.
 
 ## Review rhythm

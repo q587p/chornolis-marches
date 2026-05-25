@@ -29,6 +29,7 @@ The forest should feel alive even when players do nothing.
 
 - A small adult rabbit population is seeded in the forest and dry luka.
 - During world ticks, adult rabbits in the same location can reproduce if edible resources are available.
+- A successful rabbit breeding event creates a litter of 5-10 offspring.
 - Predator pressure, local danger and crowding reduce reproduction.
 - If a location has too many rabbits, they consume `berries`, `herbs` and `mushrooms` as background overgrazing.
 - World tick summaries and system events report rabbit births and overgrazing pressure for balancing.

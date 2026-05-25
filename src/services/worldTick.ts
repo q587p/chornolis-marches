@@ -12,6 +12,8 @@ const RESOURCE_REGEN_EVERY_TICKS = Number(process.env.WORLD_RESOURCE_REGEN_EVERY
 const RESOURCE_REGEN_AMOUNT = Number(process.env.WORLD_RESOURCE_REGEN_AMOUNT || 1);
 const HERBALIST_SPEAK_CHANCE = Number(process.env.HERBALIST_SPEAK_CHANCE || 12);
 const RABBIT_REPRODUCTION_EVERY_TICKS = Number(process.env.WORLD_RABBIT_REPRODUCTION_EVERY_TICKS || 3);
+const RABBIT_MIN_LITTER_SIZE = Number(process.env.WORLD_RABBIT_MIN_LITTER_SIZE || 5);
+const RABBIT_MAX_LITTER_SIZE = Number(process.env.WORLD_RABBIT_MAX_LITTER_SIZE || 10);
 const RABBIT_LOCAL_SOFT_CAP = Number(process.env.WORLD_RABBIT_LOCAL_SOFT_CAP || 6);
 const RABBIT_WORLD_HARD_CAP = Number(process.env.WORLD_RABBIT_WORLD_HARD_CAP || 300);
 const OVERGRAZING_RABBIT_THRESHOLD = Number(process.env.WORLD_OVERGRAZING_RABBIT_THRESHOLD || 5);
@@ -55,6 +57,12 @@ function chancePermille(p: number) {
 function pick<T>(arr: T[]): T | undefined {
   if (arr.length === 0) return undefined;
   return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function randomInt(min: number, max: number) {
+  const low = Math.ceil(Math.min(min, max));
+  const high = Math.floor(Math.max(min, max));
+  return low + Math.floor(Math.random() * (high - low + 1));
 }
 
 function isExit(value: unknown): value is LocationExit {
@@ -238,7 +246,7 @@ async function processRabbitReproductionAndOvergrazing() {
         });
 
         if (birthChance > 0 && chance(birthChance)) {
-          const litterSize = predatorsInRegion === 0 && adultRabbits >= 4 && chance(25) ? 2 : 1;
+          const litterSize = randomInt(RABBIT_MIN_LITTER_SIZE, RABBIT_MAX_LITTER_SIZE);
           const allowedBirths = Math.min(litterSize, RABBIT_WORLD_HARD_CAP - aliveRabbitCount - rabbitBirths);
           for (let i = 0; i < allowedBirths; i++) await createRabbitOffspring(rabbitSpecies, location.id);
           rabbitBirths += allowedBirths;
@@ -655,7 +663,7 @@ function runtimeTickStatusText() {
     `- HP під час відпочинку: +1 раз на ${timing.restHealthRegenTicks} тіків ≈ ${formatDuration(timing.restHealthRegenMs)}`,
     "",
     `Регенерація ресурсів: раз на ${RESOURCE_REGEN_EVERY_TICKS} world ticks, +${RESOURCE_REGEN_AMOUNT}`,
-    `Розмноження зайців: раз на ${RABBIT_REPRODUCTION_EVERY_TICKS} world ticks; локальний м'який поріг ${RABBIT_LOCAL_SOFT_CAP}, світовий максимум ${RABBIT_WORLD_HARD_CAP}`,
+    `Розмноження зайців: раз на ${RABBIT_REPRODUCTION_EVERY_TICKS} world ticks; виводок ${RABBIT_MIN_LITTER_SIZE}-${RABBIT_MAX_LITTER_SIZE}, локальний м'який поріг ${RABBIT_LOCAL_SOFT_CAP}, світовий максимум ${RABBIT_WORLD_HARD_CAP}`,
     `Надмірний випас: від ${OVERGRAZING_RABBIT_THRESHOLD} зайців у локації`,
     `Сліди живуть: ${timing.trackTtlTicks} тіків ≈ ${formatDuration(timing.trackTtlMs)}`,
     "",

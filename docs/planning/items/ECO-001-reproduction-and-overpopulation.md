@@ -54,6 +54,7 @@ The player should be able to create problems by “solving” other problems:
 
 - Adult rabbits in the same location can produce offspring during world ticks.
 - Reproduction uses individual creature records and starts newborns as `CHILD` creatures.
+- A successful rabbit breeding event creates a litter of 5-10 offspring.
 - Available edible resources increase viability; local danger, predator pressure and crowding suppress reproduction.
 - Crowded rabbit locations consume `berries`, `herbs` and `mushrooms` as overgrazing pressure.
 - World tick summaries expose rabbit births, overgrazed locations and resource damage counters.
