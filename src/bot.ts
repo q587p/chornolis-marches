@@ -22,6 +22,7 @@ import { registerStartHandlers } from "./handlers/start";
 import { registerStatusHandlers } from "./handlers/status";
 import { registerManualTickReportHandlers } from "./handlers/tickReport";
 import { registerTimeHandlers } from "./handlers/time";
+import { registerFallbackHandlers } from "./handlers/fallback";
 
 const bot = new Bot(config.botToken);
 
@@ -42,6 +43,7 @@ registerGatherHandlers(bot);
 registerSocialHandlers(bot);
 registerRestHandlers(bot);
 registerActionQueueHandlers(bot);
+registerFallbackHandlers(bot);
 
 bot.catch((error) => {
   setLastRuntimeError(error.error);

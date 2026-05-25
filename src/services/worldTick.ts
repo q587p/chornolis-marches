@@ -18,6 +18,12 @@ const RABBIT_LOCAL_SOFT_CAP = Number(process.env.WORLD_RABBIT_LOCAL_SOFT_CAP || 
 const OVERGRAZING_RABBIT_THRESHOLD = Number(process.env.WORLD_OVERGRAZING_RABBIT_THRESHOLD || 5);
 const RABBIT_SPREAD_EVERY_TICKS = Number(process.env.WORLD_RABBIT_SPREAD_EVERY_TICKS || 20);
 const RABBIT_MAX_SPREAD_PER_LOCATION = Number(process.env.WORLD_RABBIT_MAX_SPREAD_PER_LOCATION || 4);
+const MOUSE_REPRODUCTION_EVERY_TICKS = Number(process.env.WORLD_MOUSE_REPRODUCTION_EVERY_TICKS || 25);
+const MOUSE_MIN_LITTER_SIZE = Number(process.env.WORLD_MOUSE_MIN_LITTER_SIZE || 4);
+const MOUSE_MAX_LITTER_SIZE = Number(process.env.WORLD_MOUSE_MAX_LITTER_SIZE || 8);
+const MOUSE_LOCAL_SOFT_CAP = Number(process.env.WORLD_MOUSE_LOCAL_SOFT_CAP || 8);
+const MOUSE_SPREAD_EVERY_TICKS = Number(process.env.WORLD_MOUSE_SPREAD_EVERY_TICKS || 15);
+const MOUSE_MAX_SPREAD_PER_LOCATION = Number(process.env.WORLD_MOUSE_MAX_SPREAD_PER_LOCATION || 6);
 const EDIBLE_RESOURCE_KEYS = ["berries", "herbs", "mushrooms"] as const;
 
 let tickIntervalMs = DEFAULT_TICK_INTERVAL_MS;
@@ -116,16 +122,16 @@ function isEdibleResourceKey(key: string) {
   return (EDIBLE_RESOURCE_KEYS as readonly string[]).includes(key);
 }
 
-function canBreedRabbit(creature: any) {
-  return creature.species?.key === "rabbit" && creature.isAlive && !creature.isGone && creature.age === "ADULT";
+function canBreedSpecies(creature: any, speciesKey: string) {
+  return creature.species?.key === speciesKey && creature.isAlive && !creature.isGone && creature.age === "ADULT";
 }
 
-function hasBreedingPair(rabbits: any[]) {
-  const adults = rabbits.filter(canBreedRabbit);
+function hasBreedingPair(creatures: any[], speciesKey: string) {
+  const adults = creatures.filter((creature) => canBreedSpecies(creature, speciesKey));
   if (adults.length < 2) return false;
 
-  const males = adults.filter((rabbit) => rabbit.sex === "MALE").length;
-  const females = adults.filter((rabbit) => rabbit.sex === "FEMALE").length;
+  const males = adults.filter((creature) => creature.sex === "MALE").length;
+  const females = adults.filter((creature) => creature.sex === "FEMALE").length;
   const unknown = adults.length - males - females;
 
   return (males > 0 || unknown > 0) && (females > 0 || unknown > 0);
@@ -137,23 +143,23 @@ function localFoodAmount(location: any) {
     .reduce((sum: number, resource: any) => sum + resource.amount, 0);
 }
 
-function rabbitBirthChance(input: { adultRabbits: number; localRabbits: number; food: number; predatorsInRegion: number; dangerLevel: number }) {
+function smallHerbivoreBirthChance(input: { adults: number; localCount: number; food: number; predatorsInRegion: number; dangerLevel: number; localSoftCap: number; baseChance: number }) {
   if (input.food <= 0) return 0;
 
-  const adultBonus = Math.min(30, input.adultRabbits * 6);
+  const adultBonus = Math.min(30, input.adults * 6);
   const foodBonus = Math.min(20, Math.floor(input.food / 5));
   const predatorPenalty = input.predatorsInRegion * 18;
   const dangerPenalty = Math.max(0, input.dangerLevel - 1) * 6;
-  const crowdedPenalty = input.localRabbits > RABBIT_LOCAL_SOFT_CAP ? (input.localRabbits - RABBIT_LOCAL_SOFT_CAP) * 4 : 0;
+  const crowdedPenalty = input.localCount > input.localSoftCap ? (input.localCount - input.localSoftCap) * 4 : 0;
 
-  return Math.max(0, Math.min(85, 25 + adultBonus + foodBonus - predatorPenalty - dangerPenalty - crowdedPenalty));
+  return Math.max(0, Math.min(85, input.baseChance + adultBonus + foodBonus - predatorPenalty - dangerPenalty - crowdedPenalty));
 }
 
-async function createRabbitOffspring(rabbitSpecies: any, locationId: number) {
-  const maxHp = Math.max(1, Math.round(rabbitSpecies.baseHp * STAGE_HP_MULTIPLIER.CHILD));
+async function createSmallHerbivoreOffspring(species: any, locationId: number) {
+  const maxHp = Math.max(1, Math.round(species.baseHp * STAGE_HP_MULTIPLIER.CHILD));
   await prisma.creature.create({
     data: {
-      speciesId: rabbitSpecies.id,
+      speciesId: species.id,
       locationId,
       hp: maxHp,
       maxHp,
@@ -200,40 +206,40 @@ async function consumeOvergrazedResources(location: any, rabbitCount: number) {
   return { consumed, depleted };
 }
 
-async function spreadOvercrowdedRabbits(location: any, rabbits: any[], rabbitCountsByLocationId: Map<number, number>) {
-  if (tickNumber === 0 || tickNumber % RABBIT_SPREAD_EVERY_TICKS !== 0) return 0;
-  if (rabbits.length <= RABBIT_LOCAL_SOFT_CAP) return 0;
+async function spreadOvercrowdedAnimals(location: any, animals: any[], countsByLocationId: Map<number, number>, config: { everyTicks: number; localSoftCap: number; maxSpread: number; action: string }) {
+  if (tickNumber === 0 || tickNumber % config.everyTicks !== 0) return 0;
+  if (animals.length <= config.localSoftCap) return 0;
 
   const exits = location.exitsFrom.filter((exit: any) => !exit.isHidden);
   if (!exits.length) return 0;
 
-  const movable = rabbits
-    .filter((rabbit) => rabbit.age !== "CHILD")
+  const movable = animals
+    .filter((animal) => animal.age !== "CHILD")
     .sort((a, b) => (b.ageTicks ?? 0) - (a.ageTicks ?? 0));
-  const spreadCount = Math.min(rabbits.length - RABBIT_LOCAL_SOFT_CAP, movable.length, RABBIT_MAX_SPREAD_PER_LOCATION);
+  const spreadCount = Math.min(animals.length - config.localSoftCap, movable.length, config.maxSpread);
   let spread = 0;
 
   for (let i = 0; i < spreadCount; i++) {
-    const rabbit = movable[i];
-    if (!rabbit) break;
+    const animal = movable[i];
+    if (!animal) break;
 
     const exit = exits
       .slice()
-      .sort((a: any, b: any) => (rabbitCountsByLocationId.get(a.toLocationId) ?? 0) - (rabbitCountsByLocationId.get(b.toLocationId) ?? 0))[0];
+      .sort((a: any, b: any) => (countsByLocationId.get(a.toLocationId) ?? 0) - (countsByLocationId.get(b.toLocationId) ?? 0))[0];
     if (!exit) break;
 
     await prisma.worldAction.updateMany({
-      where: { actorType: "CREATURE", creatureId: rabbit.id, status: { in: ["QUEUED", "RUNNING"] } },
+      where: { actorType: "CREATURE", creatureId: animal.id, status: { in: ["QUEUED", "RUNNING"] } },
       data: { status: "CANCELLED" },
     });
     const moved = await prisma.creature.updateMany({
-      where: { id: rabbit.id, isAlive: true, isGone: false },
-      data: { locationId: exit.toLocationId, activity: "MOVING", currentAction: "розбігається від тиску зграї" },
+      where: { id: animal.id, isAlive: true, isGone: false },
+      data: { locationId: exit.toLocationId, activity: "MOVING", currentAction: config.action },
     });
     if (moved.count === 0) continue;
 
-    rabbitCountsByLocationId.set(location.id, Math.max(0, (rabbitCountsByLocationId.get(location.id) ?? rabbits.length) - 1));
-    rabbitCountsByLocationId.set(exit.toLocationId, (rabbitCountsByLocationId.get(exit.toLocationId) ?? 0) + 1);
+    countsByLocationId.set(location.id, Math.max(0, (countsByLocationId.get(location.id) ?? animals.length) - 1));
+    countsByLocationId.set(exit.toLocationId, (countsByLocationId.get(exit.toLocationId) ?? 0) + 1);
     spread++;
   }
 
@@ -242,11 +248,13 @@ async function spreadOvercrowdedRabbits(location: any, rabbits: any[], rabbitCou
 
 async function processRabbitReproductionAndOvergrazing() {
   const canReproduceThisTick = tickNumber > 0 && tickNumber % RABBIT_REPRODUCTION_EVERY_TICKS === 0;
-  const canSpreadThisTick = tickNumber > 0 && tickNumber % RABBIT_SPREAD_EVERY_TICKS === 0;
-  if (!canReproduceThisTick && !canSpreadThisTick) return { rabbitBirths: 0, rabbitsSpread: 0, overgrazedLocations: 0, overgrazedResources: 0, depletedByOvergrazing: 0 };
+  const canMouseReproduceThisTick = tickNumber > 0 && tickNumber % MOUSE_REPRODUCTION_EVERY_TICKS === 0;
+  const canSpreadThisTick = tickNumber > 0 && (tickNumber % RABBIT_SPREAD_EVERY_TICKS === 0 || tickNumber % MOUSE_SPREAD_EVERY_TICKS === 0);
+  if (!canReproduceThisTick && !canMouseReproduceThisTick && !canSpreadThisTick) return { rabbitBirths: 0, mouseBirths: 0, rabbitsSpread: 0, miceSpread: 0, overgrazedLocations: 0, overgrazedResources: 0, depletedByOvergrazing: 0 };
 
   const rabbitSpecies = await prisma.creatureSpecies.findUnique({ where: { key: "rabbit" } });
-  if (!rabbitSpecies) return { rabbitBirths: 0, rabbitsSpread: 0, overgrazedLocations: 0, overgrazedResources: 0, depletedByOvergrazing: 0 };
+  const mouseSpecies = await prisma.creatureSpecies.findUnique({ where: { key: "mouse" } });
+  if (!rabbitSpecies && !mouseSpecies) return { rabbitBirths: 0, mouseBirths: 0, rabbitsSpread: 0, miceSpread: 0, overgrazedLocations: 0, overgrazedResources: 0, depletedByOvergrazing: 0 };
 
   const regions = await prisma.region.findMany({
     include: {
@@ -261,7 +269,9 @@ async function processRabbitReproductionAndOvergrazing() {
   });
 
   let rabbitBirths = 0;
+  let mouseBirths = 0;
   let rabbitsSpread = 0;
+  let miceSpread = 0;
   let overgrazedLocations = 0;
   let overgrazedResources = 0;
   let depletedByOvergrazing = 0;
@@ -273,37 +283,66 @@ async function processRabbitReproductionAndOvergrazing() {
     );
 
     let regionBirths = 0;
+    let regionMouseBirths = 0;
     let regionConsumed = 0;
     let regionSpread = 0;
+    let regionMiceSpread = 0;
     const rabbitCountsByLocationId = new Map<number, number>();
+    const mouseCountsByLocationId = new Map<number, number>();
     for (const location of region.locations) {
       rabbitCountsByLocationId.set(location.id, location.creatures.filter((creature: any) => creature.species.key === "rabbit").length);
+      mouseCountsByLocationId.set(location.id, location.creatures.filter((creature: any) => creature.species.key === "mouse").length);
     }
 
     for (const location of region.locations) {
       const rabbits = location.creatures.filter((creature: any) => creature.species.key === "rabbit");
-      const adultRabbits = rabbits.filter(canBreedRabbit).length;
+      const mice = location.creatures.filter((creature: any) => creature.species.key === "mouse");
+      const adultRabbits = rabbits.filter((creature: any) => canBreedSpecies(creature, "rabbit")).length;
+      const adultMice = mice.filter((creature: any) => canBreedSpecies(creature, "mouse")).length;
 
-      if (canReproduceThisTick && hasBreedingPair(rabbits)) {
+      if (rabbitSpecies && canReproduceThisTick && hasBreedingPair(rabbits, "rabbit")) {
         const food = localFoodAmount(location);
-        const birthChance = rabbitBirthChance({
-          adultRabbits,
-          localRabbits: rabbits.length,
+        const birthChance = smallHerbivoreBirthChance({
+          adults: adultRabbits,
+          localCount: rabbits.length,
           food,
           predatorsInRegion,
           dangerLevel: location.dangerLevel,
+          localSoftCap: RABBIT_LOCAL_SOFT_CAP,
+          baseChance: 25,
         });
 
         if (birthChance > 0 && chance(birthChance)) {
           const litterSize = randomInt(RABBIT_MIN_LITTER_SIZE, RABBIT_MAX_LITTER_SIZE);
-          for (let i = 0; i < litterSize; i++) await createRabbitOffspring(rabbitSpecies, location.id);
+          for (let i = 0; i < litterSize; i++) await createSmallHerbivoreOffspring(rabbitSpecies, location.id);
           rabbitBirths += litterSize;
           regionBirths += litterSize;
           rabbitCountsByLocationId.set(location.id, (rabbitCountsByLocationId.get(location.id) ?? rabbits.length) + litterSize);
         }
       }
 
-      const overgrazing = await consumeOvergrazedResources(location, rabbits.length);
+      if (mouseSpecies && canMouseReproduceThisTick && hasBreedingPair(mice, "mouse")) {
+        const food = localFoodAmount(location);
+        const birthChance = smallHerbivoreBirthChance({
+          adults: adultMice,
+          localCount: mice.length,
+          food,
+          predatorsInRegion,
+          dangerLevel: location.dangerLevel,
+          localSoftCap: MOUSE_LOCAL_SOFT_CAP,
+          baseChance: 35,
+        });
+
+        if (birthChance > 0 && chance(birthChance)) {
+          const litterSize = randomInt(MOUSE_MIN_LITTER_SIZE, MOUSE_MAX_LITTER_SIZE);
+          for (let i = 0; i < litterSize; i++) await createSmallHerbivoreOffspring(mouseSpecies, location.id);
+          mouseBirths += litterSize;
+          regionMouseBirths += litterSize;
+          mouseCountsByLocationId.set(location.id, (mouseCountsByLocationId.get(location.id) ?? mice.length) + litterSize);
+        }
+      }
+
+      const overgrazing = await consumeOvergrazedResources(location, rabbits.length + Math.ceil(mice.length / 2));
       if (overgrazing.consumed > 0) {
         overgrazedLocations++;
         overgrazedResources += overgrazing.consumed;
@@ -311,10 +350,26 @@ async function processRabbitReproductionAndOvergrazing() {
         regionConsumed += overgrazing.consumed;
       }
 
-      const spread = await spreadOvercrowdedRabbits(location, rabbits, rabbitCountsByLocationId);
+      const spread = await spreadOvercrowdedAnimals(location, rabbits, rabbitCountsByLocationId, {
+        everyTicks: RABBIT_SPREAD_EVERY_TICKS,
+        localSoftCap: RABBIT_LOCAL_SOFT_CAP,
+        maxSpread: RABBIT_MAX_SPREAD_PER_LOCATION,
+        action: "розбігається від тиску зграї",
+      });
       if (spread > 0) {
         rabbitsSpread += spread;
         regionSpread += spread;
+      }
+
+      const mouseSpread = await spreadOvercrowdedAnimals(location, mice, mouseCountsByLocationId, {
+        everyTicks: MOUSE_SPREAD_EVERY_TICKS,
+        localSoftCap: MOUSE_LOCAL_SOFT_CAP,
+        maxSpread: MOUSE_MAX_SPREAD_PER_LOCATION,
+        action: "розбігається тонкими стежками між корінням",
+      });
+      if (mouseSpread > 0) {
+        miceSpread += mouseSpread;
+        regionMiceSpread += mouseSpread;
       }
     }
 
@@ -347,9 +402,31 @@ async function processRabbitReproductionAndOvergrazing() {
         },
       });
     }
+
+    if (regionMouseBirths > 0) {
+      await prisma.worldEvent.create({
+        data: {
+          type: "SYSTEM",
+          title: "Миші швидко множаться",
+          description: `У регіоні «${region.name}» народилося мишенят: ${regionMouseBirths}. Їхній цикл коротший за заячий, тож популяція реагує швидше.`,
+          locationId: region.locations[0]?.id,
+        },
+      });
+    }
+
+    if (regionMiceSpread > 0) {
+      await prisma.worldEvent.create({
+        data: {
+          type: "SYSTEM",
+          title: "Миші розбігаються",
+          description: `У регіоні «${region.name}» перенаселені миші перейшли в сусідні місцини: ${regionMiceSpread}.`,
+          locationId: region.locations[0]?.id,
+        },
+      });
+    }
   }
 
-  return { rabbitBirths, rabbitsSpread, overgrazedLocations, overgrazedResources, depletedByOvergrazing };
+  return { rabbitBirths, mouseBirths, rabbitsSpread, miceSpread, overgrazedLocations, overgrazedResources, depletedByOvergrazing };
 }
 
 async function killAnimalFromOldAge(creature: any) {
@@ -621,7 +698,7 @@ export async function worldTick() {
   running = true;
   let queuedMove = 0, queuedGather = 0, queuedEat = 0, queuedLook = 0, queuedSay = 0, queuedRest = 0, queuedAttack = 0, skippedBusy = 0, errors = 0, regenerated = 0;
   let aged = 0, oldAgeDeaths = 0, corpsesDecaying = 0, corpsesGone = 0;
-  let rabbitBirths = 0, rabbitsSpread = 0, overgrazedLocations = 0, overgrazedResources = 0, depletedByOvergrazing = 0;
+  let rabbitBirths = 0, mouseBirths = 0, rabbitsSpread = 0, miceSpread = 0, overgrazedLocations = 0, overgrazedResources = 0, depletedByOvergrazing = 0;
   let lisovykAwakened = false, lisovykSlept = false;
   try {
     if (DEBUG) console.log(`[WORLD TICK] start ${new Date().toISOString()}`);
@@ -634,7 +711,9 @@ export async function worldTick() {
 
     const ecology = await processRabbitReproductionAndOvergrazing();
     rabbitBirths = ecology.rabbitBirths;
+    mouseBirths = ecology.mouseBirths;
     rabbitsSpread = ecology.rabbitsSpread;
+    miceSpread = ecology.miceSpread;
     overgrazedLocations = ecology.overgrazedLocations;
     overgrazedResources = ecology.overgrazedResources;
     depletedByOvergrazing = ecology.depletedByOvergrazing;
@@ -701,11 +780,11 @@ export async function worldTick() {
       }
     }
 
-    if (DEBUG) console.log(`[WORLD TICK] done: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, rabbitBirths=${rabbitBirths}, rabbitsSpread=${rabbitsSpread}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}`);
-    await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "World Tick", description: `Tick #${tickNumber}: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, rabbitBirths=${rabbitBirths}, rabbitsSpread=${rabbitsSpread}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}` } });
+    if (DEBUG) console.log(`[WORLD TICK] done: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, rabbitBirths=${rabbitBirths}, mouseBirths=${mouseBirths}, rabbitsSpread=${rabbitsSpread}, miceSpread=${miceSpread}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}`);
+    await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "World Tick", description: `Tick #${tickNumber}: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, rabbitBirths=${rabbitBirths}, mouseBirths=${mouseBirths}, rabbitsSpread=${rabbitsSpread}, miceSpread=${miceSpread}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}` } });
     if (botInstance && tickNumber % 5 === 0) {
       const region = await prisma.region.findFirst();
-      if (region) await notifyRegion(botInstance, region.id, `🌿 Світ ворухнувся.\n\nПублічний звіт раз на 5 тіків. Поточний тік #${tickNumber}: заплановано рухів — ${queuedMove}, збору — ${queuedGather}, їжі — ${queuedEat}, оглядів — ${queuedLook}, атак — ${queuedAttack}, зайнятих істот — ${skippedBusy}, старість — ${aged}, смертей від старості — ${oldAgeDeaths}, зниклих трупів — ${corpsesGone}, народилося зайченят — ${rabbitBirths}, зайців розбіглося — ${rabbitsSpread}, об'їдено ресурсів — ${overgrazedResources}, відновлено вузлів — ${regenerated}.`);
+      if (region) await notifyRegion(botInstance, region.id, `🌿 Світ ворухнувся.\n\nПублічний звіт раз на 5 тіків. Поточний тік #${tickNumber}: заплановано рухів — ${queuedMove}, збору — ${queuedGather}, їжі — ${queuedEat}, оглядів — ${queuedLook}, атак — ${queuedAttack}, зайнятих істот — ${skippedBusy}, старість — ${aged}, смертей від старості — ${oldAgeDeaths}, зниклих трупів — ${corpsesGone}, народилося зайченят — ${rabbitBirths}, мишенят — ${mouseBirths}, зайців розбіглося — ${rabbitsSpread}, мишей — ${miceSpread}, об'їдено ресурсів — ${overgrazedResources}, відновлено вузлів — ${regenerated}.`);
     }
   } finally {
     running = false;
@@ -751,8 +830,10 @@ function runtimeTickStatusText() {
     "",
     `Регенерація ресурсів: раз на ${RESOURCE_REGEN_EVERY_TICKS} world ticks, +${RESOURCE_REGEN_AMOUNT}`,
     `Розмноження зайців: раз на ${RABBIT_REPRODUCTION_EVERY_TICKS} world ticks; виводок ${RABBIT_MIN_LITTER_SIZE}-${RABBIT_MAX_LITTER_SIZE}; світового ліміту немає`,
+    `Розмноження мишей: раз на ${MOUSE_REPRODUCTION_EVERY_TICKS} world ticks; виводок ${MOUSE_MIN_LITTER_SIZE}-${MOUSE_MAX_LITTER_SIZE}; цикл коротший за заячий`,
     `Локальний тиск зайців: м'який поріг ${RABBIT_LOCAL_SOFT_CAP}; вище нього падає шанс народження й запускається розселення`,
     `Розселення зайців: раз на ${RABBIT_SPREAD_EVERY_TICKS} world ticks; до ${RABBIT_MAX_SPREAD_PER_LOCATION} з перенаселеної локації`,
+    `Розселення мишей: раз на ${MOUSE_SPREAD_EVERY_TICKS} world ticks; до ${MOUSE_MAX_SPREAD_PER_LOCATION} з перенаселеної локації`,
     `Надмірний випас: від ${OVERGRAZING_RABBIT_THRESHOLD} зайців у локації`,
     `Сліди живуть: ${timing.trackTtlTicks} тіків ≈ ${formatDuration(timing.trackTtlMs)}`,
     "",

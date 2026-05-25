@@ -90,7 +90,9 @@ async function renderEcologyStatsPage() {
       <div class="card"><div class="metric">${stats.totals.totalAnimals}</div><div class="label">тваринних записів загалом</div></div>
       <div class="card"><div class="metric">${stats.totals.occupiedAnimalLocations}/${stats.totals.locationCount}</div><div class="label">локацій із живими тваринами</div></div>
       <div class="card"><div class="metric">${c.rabbitBirths}</div><div class="label">зайченят за останні ${stats.recent.eventCount} tick-звітів</div></div>
+      <div class="card"><div class="metric">${c.mouseBirths}</div><div class="label">мишенят за останні ${stats.recent.eventCount} tick-звітів</div></div>
       <div class="card"><div class="metric">${c.rabbitsSpread}</div><div class="label">зайців розселилося</div></div>
+      <div class="card"><div class="metric">${c.miceSpread}</div><div class="label">мишей розселилося</div></div>
       <div class="card"><div class="metric">${c.oldAgeDeaths}</div><div class="label">смертей від старості</div></div>
     </div>
 
@@ -98,7 +100,9 @@ async function renderEcologyStatsPage() {
     <p class="muted">Вікно: ${stats.recent.eventCount} tick-звітів, приблизно ${formatNumber(stats.recent.observedMinutes, 1)} хв. Останній tick: ${latest?.tickNumber ?? "немає"}.</p>
     <table><thead><tr><th>Подія</th><th>Сума</th><th>Оцінка на годину</th></tr></thead><tbody>
       <tr><td>Народження зайців</td><td>${c.rabbitBirths}</td><td>${formatNumber(r.rabbitBirths, 1)}</td></tr>
+      <tr><td>Народження мишей</td><td>${c.mouseBirths}</td><td>${formatNumber(r.mouseBirths, 1)}</td></tr>
       <tr><td>Розселення зайців</td><td>${c.rabbitsSpread}</td><td>${formatNumber(r.rabbitsSpread, 1)}</td></tr>
+      <tr><td>Розселення мишей</td><td>${c.miceSpread}</td><td>${formatNumber(r.miceSpread, 1)}</td></tr>
       <tr><td>Об'їдені ресурси</td><td>${c.overgrazedResources}</td><td>${formatNumber(r.overgrazedResources, 1)}</td></tr>
       <tr><td>Виснажені вузли від випасу</td><td>${c.depletedByOvergrazing}</td><td>${formatNumber(r.depletedByOvergrazing, 1)}</td></tr>
       <tr><td>Смерті від старості</td><td>${c.oldAgeDeaths}</td><td>${formatNumber(r.oldAgeDeaths, 1)}</td></tr>

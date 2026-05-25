@@ -9,6 +9,27 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.10.6 - Unknown command fallback - 12026-05-25
+
+### Added
+
+- Added a Telegram fallback for unrecognized slash commands with pointers to `/help` and `/menu`.
+- Added a specific `/respawn` placeholder response while the real respawn flow remains planned under `SURV-001`.
+- Added mixed starter mice: children, young mice, adults, old mice and corpses.
+- Added mouse reproduction and overcrowding spread counters alongside rabbit ecology counters.
+
+### Changed
+
+- Slowed the mouse lifecycle from seconds-scale growth to a short but readable cycle that remains faster than rabbits.
+- Mouse reproduction now runs faster than rabbit reproduction and uses smaller 4-8 offspring litters.
+- Bumped package metadata to `0.10.6`.
+
+### Documentation
+
+- Updated `news.md` and release notes for 0.10.6.
+
+---
+
 ## 0.10.5 - World map v7 and starter ecology - 12026-05-25
 
 ### Added

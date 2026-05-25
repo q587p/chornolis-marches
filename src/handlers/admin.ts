@@ -46,6 +46,7 @@ export function registerAdminHandlers(bot: Bot) {
       `Унікальних NPC скинуто: ${summary.resetUniqueCreatures}`,
       `Дублів унікальних NPC прибрано: ${summary.removedDuplicateUniqueCreatures}`,
       `Зайців створено: ${summary.rabbitsCreated}`,
+      `Мишей створено: ${summary.miceCreated}`,
       `Авто-режимів вимкнено: ${autoStopped}`,
       "",
       "Унікальні NPC:",

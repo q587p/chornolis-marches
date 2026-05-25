@@ -9,7 +9,7 @@ The forest should feel alive even when players do nothing.
 - Individual creature records, not abstract counters.
 - Animal aging.
 - Corpse lifecycle.
-- Rabbit reproduction and offspring.
+- Rabbit and mouse reproduction and offspring.
 - Rabbit overpopulation pressure on edible resources.
 - Longer animal corpse windows for inspection, freshening and future scavengers.
 - Resource regeneration.
@@ -18,7 +18,7 @@ The forest should feel alive even when players do nothing.
 
 ## Planned Systems
 
-- Reproduction for herbivores beyond rabbits.
+- Reproduction for herbivores beyond rabbits and mice.
 - Predator priority by age, HP and vulnerability.
 - Animal hunger.
 - Migration.
@@ -28,7 +28,7 @@ The forest should feel alive even when players do nothing.
 
 ## Current Rabbit Loop
 
-- A small adult rabbit population is seeded in the forest and dry luka.
+- Mixed starter rabbit and mouse populations are seeded in the forest and dry luka.
 - During world ticks, adult rabbits in the same location can reproduce if edible resources are available.
 - A successful rabbit breeding event creates a litter of 5-10 offspring.
 - By default, rabbit reproduction is checked every 40 world ticks. With the default 1.5s tick, this is about once per minute.
@@ -38,6 +38,8 @@ The forest should feel alive even when players do nothing.
 - Overcrowded rabbit locations spread up to 4 non-child rabbits into neighboring cells every 20 world ticks.
 - Rabbit corpses remain for 180 world ticks by default. With the default 1.5s tick, this is about 4.5 minutes.
 - World tick summaries and system events report rabbit births, spread and overgrazing pressure for balancing.
+- Mice use the same early ecology pattern, but faster: reproduction is checked every 25 world ticks by default, litters are 4-8 offspring, and they spread from overcrowded locations every 15 world ticks.
+- Mice have a shorter lifecycle than rabbits, but no longer use the old seconds-scale test values.
 
 ## Near Follow-Up
 

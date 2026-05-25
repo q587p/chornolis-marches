@@ -5,7 +5,9 @@ import { getRuntimeTimingConfig } from "../gameConfig";
 const TICK_EVENT_TAKE = 120;
 const TICK_COUNTER_KEYS = [
   "rabbitBirths",
+  "mouseBirths",
   "rabbitsSpread",
+  "miceSpread",
   "overgrazedLocations",
   "overgrazedResources",
   "depletedByOvergrazing",

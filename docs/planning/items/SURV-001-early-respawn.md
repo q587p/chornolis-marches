@@ -17,6 +17,10 @@ tags:
 
 Add `/respawn` for new or weak characters who get lost.
 
+## Current placeholder
+
+- As of 0.10.6, `/respawn` has a Telegram fallback message explaining that the real respawn flow is still planned.
+
 ## Rules
 
 - Available only before a defined progression threshold.

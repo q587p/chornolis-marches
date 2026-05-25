@@ -52,7 +52,7 @@ The player should be able to create problems by “solving” other problems:
 
 ## Implemented in 0.10.0
 
-- Adult rabbits in the same location can produce offspring during world ticks.
+- Adult rabbits and mice in the same location can produce offspring during world ticks.
 - Reproduction uses individual creature records and starts newborns as `CHILD` creatures.
 - A successful rabbit breeding event creates a litter of 5-10 offspring.
 - Reproduction is checked every 40 world ticks by default.
@@ -61,15 +61,15 @@ The player should be able to create problems by “solving” other problems:
 - Crowded rabbit locations consume `berries`, `herbs` and `mushrooms` as overgrazing pressure.
 - Overcrowded rabbit locations spread excess non-child rabbits into neighboring cells.
 - Rabbit corpses remain for 180 world ticks by default, long enough to observe the aftermath and support future freshening/scavenger loops.
-- World tick summaries expose rabbit births, rabbit spread, overgrazed locations and resource damage counters.
-- The regular seed flow and `/reset` both provide a small starter rabbit population.
+- World tick summaries expose rabbit/mouse births, rabbit/mouse spread, overgrazed locations and resource damage counters.
+- The regular seed flow and `/reset` both provide small mixed starter rabbit and mouse populations.
 
 ## Remaining follow-up
 
 - Tune reproduction and overgrazing numbers after live or simulated observation.
 - Make severe overgrazing visibly alter location or region descriptions, not only resource amounts and world events.
 - Track recent player hunting as an explicit local pressure term instead of relying only on current surviving population.
-- Extend the same pattern to mice and other herbivores when their ecosystem role is clearer.
+- Extend the same pattern to other herbivores when their ecosystem role is clearer.
 
 ## Possible mechanics
 

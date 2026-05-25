@@ -286,6 +286,10 @@ type StarterRabbitGroup = {
   sex?: "MALE" | "FEMALE";
 };
 
+type StarterAnimalGroup = StarterRabbitGroup & {
+  speciesKey: "rabbit" | "mouse";
+};
+
 const STARTER_RABBITS: StarterRabbitGroup[] = [
   { locationKey: "forest_04_00", count: 1, age: "ADULT", sex: "FEMALE" },
   { locationKey: "forest_04_00", count: 1, age: "ADULT", sex: "MALE" },
@@ -298,6 +302,19 @@ const STARTER_RABBITS: StarterRabbitGroup[] = [
   { locationKey: "meadow_12_07", count: 2, age: "YOUNG" },
   { locationKey: "meadow_12_07", count: 1, age: "OLD" },
   { locationKey: "meadow_14_05", count: 2, age: "CORPSE" },
+];
+
+const STARTER_MICE: StarterAnimalGroup[] = [
+  { speciesKey: "mouse", locationKey: "forest_03_01", count: 2, age: "ADULT", sex: "FEMALE" },
+  { speciesKey: "mouse", locationKey: "forest_03_01", count: 1, age: "ADULT", sex: "MALE" },
+  { speciesKey: "mouse", locationKey: "forest_05_03", count: 4, age: "CHILD" },
+  { speciesKey: "mouse", locationKey: "forest_05_03", count: 3, age: "YOUNG" },
+  { speciesKey: "mouse", locationKey: "forest_01_05", count: 2, age: "OLD" },
+  { speciesKey: "mouse", locationKey: "meadow_11_04", count: 2, age: "ADULT", sex: "FEMALE" },
+  { speciesKey: "mouse", locationKey: "meadow_11_04", count: 1, age: "ADULT", sex: "MALE" },
+  { speciesKey: "mouse", locationKey: "meadow_13_06", count: 3, age: "YOUNG" },
+  { speciesKey: "mouse", locationKey: "meadow_13_06", count: 2, age: "CHILD" },
+  { speciesKey: "mouse", locationKey: "meadow_14_05", count: 2, age: "CORPSE" },
 ];
 
 const species = [
@@ -348,13 +365,13 @@ const species = [
     perception: 5,
     endurance: 2,
     instinct: 6,
-    childTicks: 4,
-    youngTicks: 12,
-    adultTicks: 36,
-    oldTicks: 18,
-    oldDeathChancePermille: 20,
-    oldDeathChanceGrowthPermille: 4,
-    corpseDecayTicks: 90,
+    childTicks: 40,
+    youngTicks: 80,
+    adultTicks: 420,
+    oldTicks: 120,
+    oldDeathChancePermille: 4,
+    oldDeathChanceGrowthPermille: 2,
+    corpseDecayTicks: 120,
     mushroomBonusOnDecay: 1,
   },
   {
@@ -518,14 +535,14 @@ async function ensureUniqueCreature(
   });
 }
 
-function starterRabbitAgeTicks(
-  rabbit: { childTicks?: number; youngTicks?: number; adultTicks?: number },
+function starterAnimalAgeTicks(
+  species: { childTicks?: number; youngTicks?: number; adultTicks?: number },
   age: StarterRabbitAge,
   index: number
 ) {
-  const childTicks = rabbit.childTicks ?? 0;
-  const youngTicks = rabbit.youngTicks ?? 0;
-  const adultTicks = rabbit.adultTicks ?? 0;
+  const childTicks = species.childTicks ?? 0;
+  const youngTicks = species.youngTicks ?? 0;
+  const adultTicks = species.adultTicks ?? 0;
 
   if (age === "CHILD") return Math.min(Math.max(0, childTicks - 1), 8 + index * 7);
   if (age === "YOUNG") return childTicks + 8 + index * 9;
@@ -534,7 +551,7 @@ function starterRabbitAgeTicks(
   return childTicks + youngTicks + adultTicks + 40 + index * 20;
 }
 
-function starterRabbitHp(baseHp: number, age: StarterRabbitAge) {
+function starterAnimalHp(baseHp: number, age: StarterRabbitAge) {
   if (age === "CHILD") return Math.max(1, Math.round(baseHp * 0.35));
   if (age === "YOUNG") return Math.max(1, Math.round(baseHp * 0.75));
   if (age === "OLD") return Math.max(1, Math.round(baseHp * 0.65));
@@ -542,7 +559,14 @@ function starterRabbitHp(baseHp: number, age: StarterRabbitAge) {
   return baseHp;
 }
 
-function starterRabbitAction(age: StarterRabbitAge) {
+function starterAnimalAction(speciesKey: string, age: StarterRabbitAge) {
+  if (speciesKey === "mouse") {
+    if (age === "CHILD") return "пищить у сухій траві";
+    if (age === "YOUNG") return "шурхотить між корінням";
+    if (age === "OLD") return "повільно гріється під листям";
+    if (age === "CORPSE") return "лежить нерухомо в прим'ятому мосі";
+    return "прислухається й смикає вусами";
+  }
   if (age === "CHILD") return "ховається в траві біля нори";
   if (age === "YOUNG") return "обережно вивчає нові запахи";
   if (age === "OLD") return "повільно ворушить вухами";
@@ -550,31 +574,31 @@ function starterRabbitAction(age: StarterRabbitAge) {
   return "насторожено прислухається";
 }
 
-async function ensureStarterRabbits(
+async function ensureStarterAnimals(
   speciesByKey: Map<string, { id: number; baseHp: number; childTicks?: number; youngTicks?: number; adultTicks?: number; corpseDecayTicks?: number }>,
-  locationsByKey: Map<string, { id: number }>
+  locationsByKey: Map<string, { id: number }>,
+  groups: StarterAnimalGroup[]
 ) {
-  const rabbit = speciesByKey.get("rabbit");
-  if (!rabbit) throw new Error("Missing rabbit species for starter rabbits");
-
   let created = 0;
 
-  for (const group of STARTER_RABBITS) {
+  for (const group of groups) {
+    const species = speciesByKey.get(group.speciesKey);
+    if (!species) throw new Error(`Missing ${group.speciesKey} species for starter animals`);
     const location = locationsByKey.get(group.locationKey);
-    if (!location) throw new Error(`Unknown starter rabbit location: ${group.locationKey}`);
+    if (!location) throw new Error(`Unknown starter ${group.speciesKey} location: ${group.locationKey}`);
 
     const existing = await prisma.creature.count({
-      where: { speciesId: rabbit.id, locationId: location.id, isAlive: true, isGone: false },
+      where: { speciesId: species.id, locationId: location.id, isAlive: true, isGone: false },
     });
     const missing = Math.max(0, group.count - existing);
 
     for (let i = 0; i < missing; i++) {
-      const ageTicks = starterRabbitAgeTicks(rabbit, group.age, i);
+      const ageTicks = starterAnimalAgeTicks(species, group.age, i);
       const isCorpse = group.age === "CORPSE";
-      const hp = starterRabbitHp(rabbit.baseHp, group.age);
+      const hp = starterAnimalHp(species.baseHp, group.age);
       await prisma.creature.create({
         data: {
-          speciesId: rabbit.id,
+          speciesId: species.id,
           locationId: location.id,
           hp: isCorpse ? 0 : hp,
           maxHp: hp,
@@ -583,11 +607,11 @@ async function ensureStarterRabbits(
           staminaMax: 13,
           fatigueState: "RESTED",
           activity: isCorpse ? "RESTING" : "IDLE",
-          currentAction: starterRabbitAction(group.age),
+          currentAction: starterAnimalAction(group.speciesKey, group.age),
           age: group.age,
           ageTicks,
           diedAtTick: isCorpse ? 0 : undefined,
-          corpseDecayTicksLeft: isCorpse ? Math.max(1, (rabbit.corpseDecayTicks ?? 180) - i * 20) : undefined,
+          corpseDecayTicksLeft: isCorpse ? Math.max(1, (species.corpseDecayTicks ?? 180) - i * 20) : undefined,
           sex: group.sex ?? (i % 2 === 0 ? "FEMALE" : "MALE"),
           isAlive: !isCorpse,
           isGone: false,
@@ -785,8 +809,13 @@ async function main() {
   });
 
   await seedStep("Starter rabbits", async () => {
-    const created = await ensureStarterRabbits(speciesByKey, locationsByKey);
+    const created = await ensureStarterAnimals(speciesByKey, locationsByKey, STARTER_RABBITS.map((group) => ({ ...group, speciesKey: "rabbit" })));
     console.log(`  - starter rabbits created: ${created}`);
+  });
+
+  await seedStep("Starter mice", async () => {
+    const created = await ensureStarterAnimals(speciesByKey, locationsByKey, STARTER_MICE);
+    console.log(`  - starter mice created: ${created}`);
   });
 
   await seedStep("World event", async () => {
