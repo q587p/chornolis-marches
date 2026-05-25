@@ -48,7 +48,7 @@ function featureLine(feature: any) {
   const parts = [`${featureIcon(feature)} ${feature.name}`];
   if (feature.providesLight) parts.push("дає світло");
   if (feature.restStaminaCapMultiplier) parts.push(`відпочинок до ×${feature.restStaminaCapMultiplier} витривалости`);
-  return `- ${parts.join(" — ")}`;
+  return parts.join(" — ");
 }
 
 function featuresText(location: any) {
@@ -103,7 +103,7 @@ function sortedExits(exits: any[]) {
 
 function compactExitsText(exits: any[]) {
   if (!exits.length) return "Виходів не видно.";
-  return `Виходи: ${sortedExits(exits).map((exit) => directionShortLabels[exit.direction] ?? exit.direction).join("")}`;
+  return `Виходи: ${sortedExits(exits).map((exit) => directionShortLabels[exit.direction] ?? exit.direction).join(" ")}`;
 }
 
 function detailedExitsText(exits: any[]) {

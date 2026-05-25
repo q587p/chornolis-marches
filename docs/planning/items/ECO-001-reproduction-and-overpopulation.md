@@ -72,6 +72,7 @@ The player should be able to create problems by “solving” other problems:
 
 - Tune reproduction, overgrazing and regeneration numbers after live or simulated observation.
 - Add hunger and starvation deaths when herbivores cannot find food.
+- Restore visible animal movement in a cheaper form: local signs, fresh tracks, aggregated migration notices, `/stat` deltas or opt-in/debug client views, not raw Telegram departure/arrival spam for every animal step.
 - Add weather and magic hooks that reduce exhausted-vegetation recovery time.
 - Track recent player hunting as an explicit local pressure term instead of relying only on current surviving population.
 - Extend the same pattern to other herbivores when their ecosystem role is clearer.

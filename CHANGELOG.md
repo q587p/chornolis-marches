@@ -14,6 +14,11 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Fixed
 
 - Made the action queue loop run immediately on start/restart and read the current runtime poll interval, preventing completed movement actions from sitting in `RUNNING` until another restart.
+- Prioritized player due/queued actions ahead of creature backlog so animal/NPC activity cannot make player movement feel stuck.
+- Increased creature action batches and kept player batches separate, so large animal populations can drain their own backlog faster without swallowing player actions.
+- Made ordinary animal movement silent in location chat; movement still updates location, stamina, and tracks, while NPC/special creature movement remains visible.
+- Removed the extra list dash before visible location features such as `Винищена трава`.
+- Added spaces between compact exit labels so `Зх Сх` does not render as `ЗхСх`.
 
 ### Changed
 

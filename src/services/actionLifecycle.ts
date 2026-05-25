@@ -57,6 +57,11 @@ type PlayerActionSubmitResult = {
   remainingToMax: number;
 };
 
+const PLAYER_RUNNING_ACTION_BATCH = 100;
+const CREATURE_RUNNING_ACTION_BATCH = 500;
+const PLAYER_QUEUED_ACTION_BATCH = 200;
+const CREATURE_QUEUED_ACTION_BATCH = 1000;
+
 export function actorWhere(ref: ActorRef) {
   return ref.actorType === "PLAYER"
     ? { actorType: "PLAYER" as WorldActorType, playerId: ref.playerId }
@@ -392,7 +397,18 @@ async function startNextQueuedAction(action: WorldAction) {
 
 export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, action: WorldAction) => Promise<unknown>) {
   await recoverStamina(bot);
-  const dueRunning = await prisma.worldAction.findMany({ where: { status: "RUNNING", executeAt: { lte: new Date() } }, orderBy: [{ executeAt: "asc" }, { id: "asc" }], take: 50 });
+  const now = new Date();
+  const duePlayerRunning = await prisma.worldAction.findMany({
+    where: { actorType: "PLAYER", status: "RUNNING", executeAt: { lte: now } },
+    orderBy: [{ executeAt: "asc" }, { id: "asc" }],
+    take: PLAYER_RUNNING_ACTION_BATCH,
+  });
+  const dueCreatureRunning = await prisma.worldAction.findMany({
+    where: { actorType: "CREATURE", status: "RUNNING", executeAt: { lte: now } },
+    orderBy: [{ executeAt: "asc" }, { id: "asc" }],
+    take: CREATURE_RUNNING_ACTION_BATCH,
+  });
+  const dueRunning = [...duePlayerRunning, ...dueCreatureRunning];
   for (const action of dueRunning) {
     try {
       await completeAction(bot, action);
@@ -401,7 +417,17 @@ export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, ac
     }
   }
 
-  const nextQueued = await prisma.worldAction.findMany({ where: { status: "QUEUED" }, orderBy: [{ position: "asc" }, { id: "asc" }], take: 100 });
+  const nextQueuedPlayers = await prisma.worldAction.findMany({
+    where: { actorType: "PLAYER", status: "QUEUED" },
+    orderBy: [{ position: "asc" }, { id: "asc" }],
+    take: PLAYER_QUEUED_ACTION_BATCH,
+  });
+  const nextQueuedCreatures = await prisma.worldAction.findMany({
+    where: { actorType: "CREATURE", status: "QUEUED" },
+    orderBy: [{ position: "asc" }, { id: "asc" }],
+    take: CREATURE_QUEUED_ACTION_BATCH,
+  });
+  const nextQueued = [...nextQueuedPlayers, ...nextQueuedCreatures];
   const startedActors = new Set<string>();
 
   for (const action of nextQueued) {

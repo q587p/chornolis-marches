@@ -158,11 +158,15 @@ async function completeMove(bot: Bot, action: WorldAction) {
   const isAnimal = creature.species.kind === "ANIMAL";
   const label = isAnimal ? "Щось" : "Хтось";
   const name = creature.name ?? creature.species.name;
-  await notifyLocation(bot, creature.locationId, -1, isAnimal ? "Щось пішло звідси." : `${name} пішов звідси.`, buildTrackKeyboard());
+  if (!isAnimal) {
+    await notifyLocation(bot, creature.locationId, -1, `${name} пішов звідси.`, buildTrackKeyboard());
+  }
   await createTrack({ actorType: "CREATURE", creatureId: creature.id }, creature.locationId, exit.toLocationId, payload.direction, isAnimal ? `сліди: ${creature.species.name}` : `слід: ${name}`);
   await spendCreatureStamina(creature, actionCost("MOVE"));
   await prisma.creature.updateMany({ where: { id: creature.id }, data: { locationId: exit.toLocationId, activity: "MOVING", currentAction: payload.reason ?? actionTitle(action), steps: { increment: 1 }, hunger: { increment: 1 } } });
-  await notifyLocation(bot, exit.toLocationId, -1, `Хтось зайшов сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, buildTargetListKeyboard([{ type: "creature", id: creature.id, label, canGreet: !isAnimal }]));
+  if (!isAnimal) {
+    await notifyLocation(bot, exit.toLocationId, -1, `Хтось зайшов сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, buildTargetListKeyboard([{ type: "creature", id: creature.id, label, canGreet: true }]));
+  }
   await setActionStatus(action, "DONE");
   await logEvent("NPC_MOVE", "Creature queued move completed", `${creature.id}:${payload.direction}`, exit.toLocationId);
 }
