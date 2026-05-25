@@ -4,6 +4,7 @@ import path from "path";
 
 const NEWS_ENTRY_PAGE_SIZE = 8;
 const NEWS_TEXT_MAX_CHARS = 3300;
+const NEWS_PREVIOUS_TITLE_COUNT = 12;
 
 type NewsEntry = {
   index: number;
@@ -85,8 +86,13 @@ async function buildNewsIndexPage(requestedListPage: number) {
   const latest = entries[0];
   const rangeStart = listPage * NEWS_ENTRY_PAGE_SIZE + 1;
   const rangeEnd = Math.min(entries.length, rangeStart + NEWS_ENTRY_PAGE_SIZE - 1);
+  const previousTitles = entries
+    .slice(1, NEWS_PREVIOUS_TITLE_COUNT + 1)
+    .map((entry) => `- ${entry.title}`)
+    .join("\n");
   const text = [
     latest.text,
+    ...(previousTitles ? ["", "---", "", "Попередні новини:", previousTitles] : []),
     "",
     "---",
     "",
@@ -100,7 +106,7 @@ async function buildNewsIndexPage(requestedListPage: number) {
   };
 }
 
-function buildNewsEntryKeyboard(entryIndex: number, entryPage: number, entryPages: number, listPage: number) {
+function buildNewsEntryKeyboard(entryIndex: number, entryPage: number, entryPages: number, listPage: number, totalEntries: number) {
   const keyboard = new InlineKeyboard();
 
   if (entryPages > 1) {
@@ -108,6 +114,10 @@ function buildNewsEntryKeyboard(entryIndex: number, entryPage: number, entryPage
     if (entryPage < entryPages - 1) keyboard.text("Далі ▶️", `news:entry:${entryIndex}:${entryPage + 1}:${listPage}`);
     keyboard.row();
   }
+
+  if (entryIndex > 0) keyboard.text("◀️ Новіша", `news:entry:${entryIndex - 1}:0:${Math.floor((entryIndex - 1) / NEWS_ENTRY_PAGE_SIZE)}`);
+  if (entryIndex < totalEntries - 1) keyboard.text("Старіша ▶️", `news:entry:${entryIndex + 1}:0:${Math.floor((entryIndex + 1) / NEWS_ENTRY_PAGE_SIZE)}`);
+  if (entryIndex > 0 || entryIndex < totalEntries - 1) keyboard.row();
 
   keyboard.text("↩️ До архіву", `news:list:${listPage}`);
   return keyboard;
@@ -126,7 +136,7 @@ async function buildNewsEntryPage(entryIndex: number, requestedEntryPage: number
 
   return {
     text: `${prefix}${entryPages[entryPage]}`,
-    keyboard: buildNewsEntryKeyboard(entry.index, entryPage, entryPages.length, listPage),
+    keyboard: buildNewsEntryKeyboard(entry.index, entryPage, entryPages.length, listPage, entries.length),
   };
 }
 
