@@ -1,7 +1,7 @@
 ---
 id: ECO-001
 title: Reproduction and herbivore overpopulation
-status: next
+status: testing
 type: feature
 area: ecology
 priority: high
@@ -49,6 +49,23 @@ The player should be able to create problems by “solving” other problems:
 - Predator pressure from wolves, foxes or other hunters suppresses runaway growth.
 - Herbivore overpopulation consumes herbs, berries and other edible resources.
 - Severe overpopulation can create world events and visible location/region changes.
+
+## Implemented in 0.10.0
+
+- Adult rabbits in the same location can produce offspring during world ticks.
+- Reproduction uses individual creature records and starts newborns as `CHILD` creatures.
+- Available edible resources increase viability; local danger, predator pressure and crowding suppress reproduction.
+- Crowded rabbit locations consume `berries`, `herbs` and `mushrooms` as overgrazing pressure.
+- World tick summaries expose rabbit births, overgrazed locations and resource damage counters.
+- The regular seed flow and `/reset` both provide a small starter rabbit population.
+
+## Remaining follow-up
+
+- Tune reproduction and overgrazing numbers after live or simulated observation.
+- Add migration/spread behavior so overpopulation can fill neighboring cells more deliberately.
+- Make severe overgrazing visibly alter location or region descriptions, not only resource amounts and world events.
+- Track recent player hunting as an explicit local pressure term instead of relying only on current surviving population.
+- Extend the same pattern to mice and other herbivores when their ecosystem role is clearer.
 
 ## Possible mechanics
 

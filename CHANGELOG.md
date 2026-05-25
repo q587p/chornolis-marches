@@ -9,6 +9,28 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.10.0 - Rabbit reproduction and overgrazing - 12026-05-25
+
+### Added
+
+- Added the first ECO-001 ecology loop: adult rabbits can reproduce during world ticks when local food exists.
+- Added predator, danger and crowding pressure to reduce rabbit reproduction chances.
+- Added overgrazing pressure: crowded rabbit locations consume edible resource nodes (`berries`, `herbs`, `mushrooms`) outside the normal action queue.
+- Added ecology counters to world tick summaries: rabbit births, overgrazed locations, overgrazed resources and resources depleted by overgrazing.
+- Added starter rabbits to the regular seed flow, not only `/reset`.
+
+### Changed
+
+- Reset starter rabbits now begin as mature adults with alternating sex, so the reproduction loop can start after a reset.
+- Bumped package metadata to `0.10.0`.
+
+### Documentation
+
+- Updated `news.md` with the 0.10.0 ecology note.
+- Updated ecology and planning docs after implementing the first ECO-001 slice.
+
+---
+
 ## 0.9.12 - Action completion refactor - 12026-05-25
 
 ### Changed

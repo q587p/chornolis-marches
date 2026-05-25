@@ -1,7 +1,7 @@
 id,title,status,type,area,priority,tags,file
 ADM-001,Admin permissions and restricted reset,backlog,feature,admin,high,"admin,permissions,reset",docs/planning/items/ADM-001-admin-rights.md
 CAL-001,"Calendar, moon phases and named years",icebox,system,world_time,medium,"calendar,world-time,moon-phases,seasons,folklore,atmosphere",docs/planning/items/CAL-001_calendar_moon_phases_and_named_years.md
-ECO-001,Reproduction and herbivore overpopulation,next,feature,ecology,high,"ecology,reproduction,herbivores,rabbits,resources,world-reactivity",docs/planning/items/ECO-001-reproduction-and-overpopulation.md
+ECO-001,Reproduction and herbivore overpopulation,testing,feature,ecology,high,"ecology,reproduction,herbivores,rabbits,resources,world-reactivity",docs/planning/items/ECO-001-reproduction-and-overpopulation.md
 ECON-001,Barter and trade,backlog,feature,economy,medium,"barter,trade,npc,economy",docs/planning/items/ECON-001-barter-and-trade.md
 ICE-001,Mythic skill learning from spirits,icebox,feature,progression,low,"liminality,skills,mythic,observation",docs/planning/items/ICE-001-mythic-skills.md
 ICE-002,Rituals and sacred days,icebox,feature,mythic_systems,low,"rituals,calendar,weather,mythic",docs/planning/items/ICE-002-rituals-and-sacred-days.md

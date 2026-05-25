@@ -6,7 +6,7 @@ Backlog differs from Icebox: backlog means “we probably want this, but not rig
 
 ## Current backlog themes
 
-- Reproducing.
+- Ecology balancing after first rabbit reproduction: growth rates, overgrazing severity, migration/spread and visible degradation.
 - Day/night and light.
 - Campfires and firewood.
 - Early `/respawn` support.

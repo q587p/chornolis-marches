@@ -39,7 +39,7 @@
   {
     "id": "ECO-001",
     "title": "Reproduction and herbivore overpopulation",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "ecology",
     "priority": "high",

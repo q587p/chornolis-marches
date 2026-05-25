@@ -298,6 +298,7 @@ async function resetStarterRabbits() {
   await prisma.creature.deleteMany({ where: { speciesId: rabbit.id } });
 
   let created = 0;
+  const adultAgeTicks = rabbit.childTicks + rabbit.youngTicks;
   for (const group of STARTER_RABBITS) {
     const location = await prisma.cellLocation.findUniqueOrThrow({ where: { key: group.locationKey } });
     for (let i = 0; i < group.count; i++) {
@@ -314,7 +315,8 @@ async function resetStarterRabbits() {
           activity: "IDLE",
           currentAction: "насторожено прислухається",
           age: "ADULT",
-          ageTicks: 0,
+          ageTicks: adultAgeTicks,
+          sex: i % 2 === 0 ? "FEMALE" : "MALE",
           isAlive: true,
           isGone: false,
           isHidden: false,

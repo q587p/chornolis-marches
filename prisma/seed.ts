@@ -276,6 +276,15 @@ async function deleteDeprecatedSeedFeatures() {
   if (result.count > 0) console.log(`  - removed deprecated features: ${result.count}`);
 }
 
+const STARTER_RABBITS: Array<{ locationKey: string; count: number }> = [
+  { locationKey: "forest_04_00", count: 2 },
+  { locationKey: "forest_07_02", count: 2 },
+  { locationKey: "forest_02_06", count: 2 },
+  { locationKey: "meadow_10_03", count: 2 },
+  { locationKey: "meadow_12_07", count: 2 },
+  { locationKey: "meadow_14_05", count: 1 },
+];
+
 const species = [
   {
     key: "rabbit",
@@ -434,7 +443,7 @@ const species = [
 
 async function ensureUniqueCreature(
   creature: SeedUniqueCreature,
-  speciesByKey: Map<string, { id: number; baseHp: number }>,
+  speciesByKey: Map<string, { id: number; baseHp: number; childTicks?: number; youngTicks?: number }>,
   locationsByKey: Map<string, { id: number }>
 ) {
   const sp = speciesByKey.get(creature.speciesKey);
@@ -490,6 +499,53 @@ async function ensureUniqueCreature(
       professionName: creature.professionName,
     },
   });
+}
+
+async function ensureStarterRabbits(
+  speciesByKey: Map<string, { id: number; baseHp: number; childTicks?: number; youngTicks?: number }>,
+  locationsByKey: Map<string, { id: number }>
+) {
+  const rabbit = speciesByKey.get("rabbit");
+  if (!rabbit) throw new Error("Missing rabbit species for starter rabbits");
+
+  let created = 0;
+  const adultAgeTicks = (rabbit.childTicks ?? 0) + (rabbit.youngTicks ?? 0);
+
+  for (const group of STARTER_RABBITS) {
+    const location = locationsByKey.get(group.locationKey);
+    if (!location) throw new Error(`Unknown starter rabbit location: ${group.locationKey}`);
+
+    const existing = await prisma.creature.count({
+      where: { speciesId: rabbit.id, locationId: location.id, isAlive: true, isGone: false },
+    });
+    const missing = Math.max(0, group.count - existing);
+
+    for (let i = 0; i < missing; i++) {
+      await prisma.creature.create({
+        data: {
+          speciesId: rabbit.id,
+          locationId: location.id,
+          hp: rabbit.baseHp,
+          maxHp: rabbit.baseHp,
+          hunger: 0,
+          stamina: 13,
+          staminaMax: 13,
+          fatigueState: "RESTED",
+          activity: "IDLE",
+          currentAction: "насторожено прислухається",
+          age: "ADULT",
+          ageTicks: adultAgeTicks,
+          sex: i % 2 === 0 ? "FEMALE" : "MALE",
+          isAlive: true,
+          isGone: false,
+          isHidden: false,
+        },
+      });
+      created++;
+    }
+  }
+
+  return created;
 }
 
 async function main() {
@@ -654,7 +710,7 @@ async function main() {
     }
   });
 
-  const speciesByKey = new Map<string, { id: number; baseHp: number }>();
+  const speciesByKey = new Map<string, { id: number; baseHp: number; childTicks?: number; youngTicks?: number }>();
   await seedStep("Creature species", async () => {
     for (let i = 0; i < species.length; i += 1) {
       const sp = species[i];
@@ -673,6 +729,11 @@ async function main() {
       await ensureUniqueCreature(world.uniqueCreatures[i], speciesByKey, locationsByKey);
       progress("unique creatures", i + 1, world.uniqueCreatures.length, 25);
     }
+  });
+
+  await seedStep("Starter rabbits", async () => {
+    const created = await ensureStarterRabbits(speciesByKey, locationsByKey);
+    console.log(`  - starter rabbits created: ${created}`);
   });
 
   await seedStep("World event", async () => {
