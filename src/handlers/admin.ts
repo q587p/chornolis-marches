@@ -48,7 +48,8 @@ export function registerAdminHandlers(bot: Bot) {
       `Зайців створено: ${summary.rabbitsCreated}`,
       `Авто-режимів вимкнено: ${autoStopped}`,
       "",
-      "Дід лісовик спить прихованим у forest_00_00. Здравомир-знахар стоїть у межовому таборі.",
+      "Унікальні NPC:",
+      ...summary.uniqueCreatureSummaries.map((item) => `- ${item}`),
     ].join("\n"));
   });
 }

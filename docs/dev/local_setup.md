@@ -21,3 +21,15 @@ npm run seed
 npm run build
 npm run dev
 ```
+
+Check the static world seed data:
+
+```bash
+npm test
+```
+
+Check that the current database has the seeded start location and map basics:
+
+```bash
+npm run test:db
+```

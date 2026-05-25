@@ -95,26 +95,34 @@ async function finishOnboarding(ctx: any, state: OnboardingState) {
   const gender = guessGenderFromPronoun(state.pronoun);
   const startLocationId = await getStartLocationId();
 
-  const player = await prisma.player.update({
+  const data = {
+    pronoun: state.pronoun,
+    nameNominative: state.forms.nominative,
+    nameGenitive: state.forms.genitive,
+    nameDative: state.forms.dative,
+    nameAccusative: state.forms.accusative,
+    nameInstrumental: state.forms.instrumental,
+    nameLocative: state.forms.locative,
+    nameVocative: state.forms.vocative,
+    grammaticalGender: gender,
+    animacy: "ANIMATE" as const,
+    onboardingComplete: true,
+    isNameApproved: false,
+    stamina: BASE_STAMINA * 3,
+    staminaMax: BASE_STAMINA,
+    currentLocationId: startLocationId,
+  };
+
+  const updated = await prisma.player.updateMany({
     where: { telegramId: state.telegramId },
-    data: {
-      pronoun: state.pronoun,
-      nameNominative: state.forms.nominative,
-      nameGenitive: state.forms.genitive,
-      nameDative: state.forms.dative,
-      nameAccusative: state.forms.accusative,
-      nameInstrumental: state.forms.instrumental,
-      nameLocative: state.forms.locative,
-      nameVocative: state.forms.vocative,
-      grammaticalGender: gender,
-      animacy: "ANIMATE",
-      onboardingComplete: true,
-      isNameApproved: false,
-      stamina: BASE_STAMINA * 3,
-      staminaMax: BASE_STAMINA,
-      currentLocationId: startLocationId,
-    },
+    data,
   });
+  const player = updated.count > 0 ? await prisma.player.findUnique({ where: { telegramId: state.telegramId } }) : null;
+  if (!player) {
+    onboarding.delete(state.telegramId);
+    await ctx.reply("Персонажа вже немає. Напиши /start, щоб почати онбордінґ знову.");
+    return;
+  }
 
   onboarding.delete(state.telegramId);
 

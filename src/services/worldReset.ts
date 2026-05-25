@@ -91,6 +91,7 @@ type ResetSummary = {
   removedResourceNodes: number;
   resetUniqueCreatures: number;
   removedDuplicateUniqueCreatures: number;
+  uniqueCreatureSummaries: string[];
   rabbitsCreated: number;
   playerAutoStatesCleared: number;
 };
@@ -257,7 +258,7 @@ async function resetUniqueCreature(creature: SeedUniqueCreature) {
   if (duplicateIds.length > 0) await prisma.creature.deleteMany({ where: { id: { in: duplicateIds } } });
 
   if (keep) {
-    await prisma.creature.update({ where: { id: keep.id }, data });
+    await prisma.creature.updateMany({ where: { id: keep.id }, data });
     return { removedDuplicates: duplicateIds.length };
   }
 
@@ -308,6 +309,12 @@ async function resetUniqueCreatures(world: WorldSeed) {
   }
 
   return { reset, duplicates };
+}
+
+function uniqueCreatureSummary(creature: SeedUniqueCreature) {
+  const profession = creature.professionName ? `, ${creature.professionName}` : "";
+  const hidden = creature.isHidden ? ", приховано" : "";
+  return `${creature.name}${profession}: ${creature.locationKey}${hidden}, ${creature.action}`;
 }
 
 function starterRabbitAgeTicks(
@@ -403,7 +410,7 @@ export async function resetWorldState(): Promise<ResetSummary> {
     data: {
       type: "SYSTEM",
       title: "Світ скинуто",
-      description: `Reset to ${world.meta.version}: лісовик спить і прихований у forest_00_00, Здравомир стоїть у стартовому таборі, зайці повернулись у ліс і луку, авто-режими вимкнено.`,
+      description: `Reset to ${world.meta.version}: ${world.uniqueCreatures.map(uniqueCreatureSummary).join("; ")}. Зайці повернулись у ліс і луку, авто-режими вимкнено.`,
       locationId: start?.id,
     },
   });
@@ -414,6 +421,7 @@ export async function resetWorldState(): Promise<ResetSummary> {
     removedResourceNodes: resources.removed,
     resetUniqueCreatures: unique.reset,
     removedDuplicateUniqueCreatures: unique.duplicates,
+    uniqueCreatureSummaries: world.uniqueCreatures.map(uniqueCreatureSummary),
     rabbitsCreated,
     playerAutoStatesCleared,
   };

@@ -73,6 +73,10 @@ function actorKey(action: Pick<WorldAction, "actorType" | "playerId" | "creature
   return action.actorType === "PLAYER" ? `PLAYER:${action.playerId}` : `CREATURE:${action.creatureId}`;
 }
 
+function isMissingRecordError(error: unknown) {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025";
+}
+
 export async function interruptActorActions(ref: ActorRef, reason = "перервано", includeQueued = true) {
   const where = actorWhere(ref);
   return prisma.worldAction.updateMany({
@@ -236,7 +240,7 @@ export async function startPlayerRest(playerId: number) {
   const max = await getPlayerRestStaminaCap(playerId);
   const hpMax = player.hpMax ?? BASE_HP;
   if (player.stamina >= max && player.hp >= hpMax && !player.isResting) return player;
-  return prisma.player.update({
+  const updated = await prisma.player.updateMany({
     where: { id: playerId },
     data: {
       isResting: true,
@@ -246,12 +250,13 @@ export async function startPlayerRest(playerId: number) {
       restStarts: player.isResting ? undefined : { increment: 1 },
     },
   });
+  return updated.count > 0 ? player : null;
 }
 
 export async function stopPlayerRest(playerId: number) {
   const player = await prisma.player.findUnique({ where: { id: playerId } });
   if (!player) return null;
-  return prisma.player.update({
+  const updated = await prisma.player.updateMany({
     where: { id: playerId },
     data: {
       isResting: false,
@@ -260,6 +265,7 @@ export async function stopPlayerRest(playerId: number) {
       lastHpRegenAt: new Date(),
     },
   });
+  return updated.count > 0 ? player : null;
 }
 
 export async function enqueueCreatureAction(input: {
@@ -297,12 +303,12 @@ export async function accelerateFirstQueuedPlayerAction(playerId: number) {
 
   const startedAt = new Date();
   const durationMs = effectivePlayerActionDurationMs(player, first.type, first.durationMs);
-  await prisma.worldAction.update({
-    where: { id: first.id },
+  const result = await prisma.worldAction.updateMany({
+    where: { id: first.id, status: "QUEUED" },
     data: { status: "RUNNING", durationMs, startedAt, executeAt: new Date(startedAt.getTime() + durationMs) },
   });
 
-  return true;
+  return result.count > 0;
 }
 
 export async function playerActionQueueControlCount(playerId: number) {
@@ -329,7 +335,7 @@ export async function clearQueuedPlayerActions(playerId: number) {
   const player = await prisma.player.findUnique({ where: { id: playerId } });
   const stoppedRest = Boolean(player?.isResting);
   if (stoppedRest) {
-    await prisma.player.update({
+    await prisma.player.updateMany({
       where: { id: playerId },
       data: { isResting: false, fatigueState: fatigueStateFor(player!.stamina, player!.staminaMax ?? BASE_STAMINA), lastStaminaRegenAt: new Date() },
     });
@@ -347,7 +353,7 @@ export async function cancelCurrentPlayerAction(playerId: number) {
   const player = await prisma.player.findUnique({ where: { id: playerId } });
   const stoppedRest = Boolean(player?.isResting);
   if (stoppedRest) {
-    await prisma.player.update({
+    await prisma.player.updateMany({
       where: { id: playerId },
       data: { isResting: false, fatigueState: fatigueStateFor(player!.stamina, player!.staminaMax ?? BASE_STAMINA), lastStaminaRegenAt: new Date() },
     });
@@ -364,14 +370,15 @@ async function startNextQueuedAction(action: WorldAction) {
     durationMs = effectivePlayerActionDurationMs(player, action.type, action.durationMs);
   }
 
-  await prisma.worldAction.update({
-    where: { id: action.id },
+  const result = await prisma.worldAction.updateMany({
+    where: { id: action.id, status: "QUEUED" },
     data: { status: "RUNNING", durationMs, startedAt, executeAt: new Date(startedAt.getTime() + durationMs) },
   });
+  if (result.count === 0) return;
 
   if (action.actorType === "PLAYER" && action.playerId && action.type === "REST") {
     const player = await prisma.player.findUnique({ where: { id: action.playerId } });
-    await prisma.player.update({
+    await prisma.player.updateMany({
       where: { id: action.playerId },
       data: { isResting: true, lastStaminaRegenAt: new Date(), lastHpRegenAt: new Date(), restStarts: player?.isResting ? undefined : { increment: 1 } },
     });
@@ -379,14 +386,20 @@ async function startNextQueuedAction(action: WorldAction) {
 
   if (action.actorType === "CREATURE" && action.creatureId) {
     const activity = action.type === "MOVE" ? "MOVING" : action.type === "GATHER" || action.type === "GATHER_SPECIFIC" ? "GATHERING" : action.type === "LOOK" || action.type === "INSPECT" || action.type === "TRACK" ? "LOOKING" : action.type === "ATTACK" ? "FIGHTING" : action.type === "SAY" || action.type === "GREET" ? "SPEAKING" : action.type === "REST" ? "RESTING" : undefined;
-    await prisma.creature.update({ where: { id: action.creatureId }, data: { activity, currentAction: actionTitle(action) } });
+    await prisma.creature.updateMany({ where: { id: action.creatureId, isGone: false }, data: { activity, currentAction: actionTitle(action) } });
   }
 }
 
 export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, action: WorldAction) => Promise<unknown>) {
   await recoverStamina(bot);
   const dueRunning = await prisma.worldAction.findMany({ where: { status: "RUNNING", executeAt: { lte: new Date() } }, orderBy: [{ executeAt: "asc" }, { id: "asc" }], take: 50 });
-  for (const action of dueRunning) await completeAction(bot, action);
+  for (const action of dueRunning) {
+    try {
+      await completeAction(bot, action);
+    } catch (error) {
+      if (!isMissingRecordError(error)) throw error;
+    }
+  }
 
   const nextQueued = await prisma.worldAction.findMany({ where: { status: "QUEUED" }, orderBy: [{ position: "asc" }, { id: "asc" }], take: 100 });
   const startedActors = new Set<string>();
@@ -401,6 +414,10 @@ export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, ac
     const running = await prisma.worldAction.count({ where: { ...actorWhereFromAction(action), status: "RUNNING" } });
     if (running > 0) continue;
     startedActors.add(key);
-    await startNextQueuedAction(action);
+    try {
+      await startNextQueuedAction(action);
+    } catch (error) {
+      if (!isMissingRecordError(error)) throw error;
+    }
   }
 }

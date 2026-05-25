@@ -189,10 +189,12 @@ async function consumeOvergrazedResources(location: any, rabbitCount: number) {
     if (remainingDamage <= 0) break;
     const amount = Math.min(resource.amount, remainingDamage);
     const nextAmount = resource.amount - amount;
-    await prisma.resourceNode.update({ where: { id: resource.id }, data: { amount: nextAmount } });
-    consumed += amount;
-    remainingDamage -= amount;
-    if (nextAmount <= 0) depleted++;
+    const updated = await prisma.resourceNode.updateMany({ where: { id: resource.id }, data: { amount: nextAmount } });
+    if (updated.count > 0) {
+      consumed += amount;
+      remainingDamage -= amount;
+      if (nextAmount <= 0) depleted++;
+    }
   }
 
   return { consumed, depleted };
@@ -224,10 +226,11 @@ async function spreadOvercrowdedRabbits(location: any, rabbits: any[], rabbitCou
       where: { actorType: "CREATURE", creatureId: rabbit.id, status: { in: ["QUEUED", "RUNNING"] } },
       data: { status: "CANCELLED" },
     });
-    await prisma.creature.update({
-      where: { id: rabbit.id },
+    const moved = await prisma.creature.updateMany({
+      where: { id: rabbit.id, isAlive: true, isGone: false },
       data: { locationId: exit.toLocationId, activity: "MOVING", currentAction: "розбігається від тиску зграї" },
     });
+    if (moved.count === 0) continue;
 
     rabbitCountsByLocationId.set(location.id, Math.max(0, (rabbitCountsByLocationId.get(location.id) ?? rabbits.length) - 1));
     rabbitCountsByLocationId.set(exit.toLocationId, (rabbitCountsByLocationId.get(exit.toLocationId) ?? 0) + 1);
@@ -355,8 +358,8 @@ async function killAnimalFromOldAge(creature: any) {
     data: { status: "CANCELLED" },
   });
 
-  await prisma.creature.update({
-    where: { id: creature.id },
+  const killed = await prisma.creature.updateMany({
+    where: { id: creature.id, isAlive: true, isGone: false },
     data: {
       isAlive: false,
       age: "CORPSE",
@@ -367,6 +370,7 @@ async function killAnimalFromOldAge(creature: any) {
       currentAction: "лежить нерухомо",
     },
   });
+  if (killed.count === 0) return;
 
   await prisma.worldEvent.create({
     data: {
@@ -402,7 +406,8 @@ async function ageLivingAnimal(creature: any) {
     }
   }
 
-  await prisma.creature.update({ where: { id: creature.id }, data });
+  const aged = await prisma.creature.updateMany({ where: { id: creature.id, isAlive: true, isGone: false }, data });
+  if (aged.count === 0) return "same";
   return nextStage !== creature.age ? "aged" : "same";
 }
 
@@ -410,19 +415,21 @@ async function decayCorpse(creature: any) {
   const decayLeft = creature.corpseDecayTicksLeft ?? creature.species.corpseDecayTicks;
 
   if (decayLeft > 1) {
-    await prisma.creature.update({
-      where: { id: creature.id },
+    const decayed = await prisma.creature.updateMany({
+      where: { id: creature.id, isAlive: false, isGone: false },
       data: { age: "CORPSE", isAlive: false, corpseDecayTicksLeft: decayLeft - 1, currentAction: `розкладається; залишилось ${decayLeft - 1} тіків` },
     });
+    if (decayed.count === 0) return "gone";
     return "decaying";
   }
 
   const mushrooms = await prisma.resourceNode.findFirst({ where: { locationId: creature.locationId, resourceType: { key: "mushrooms" } } });
   if (mushrooms) {
-    await prisma.resourceNode.update({ where: { id: mushrooms.id }, data: { amount: Math.min(mushrooms.maxAmount, mushrooms.amount + creature.species.mushroomBonusOnDecay) } });
+    await prisma.resourceNode.updateMany({ where: { id: mushrooms.id }, data: { amount: Math.min(mushrooms.maxAmount, mushrooms.amount + creature.species.mushroomBonusOnDecay) } });
   }
 
-  await prisma.creature.update({ where: { id: creature.id }, data: { isGone: true, corpseDecayTicksLeft: 0, currentAction: "зникло, лишивши слід у землі" } });
+  const gone = await prisma.creature.updateMany({ where: { id: creature.id, isAlive: false, isGone: false }, data: { isGone: true, corpseDecayTicksLeft: 0, currentAction: "зникло, лишивши слід у землі" } });
+  if (gone.count === 0) return "gone";
   await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "Труп зник", description: `Труп істоти «${creature.name ?? creature.species.name}» зник. Гриби в цій локації отримали +${creature.species.mushroomBonusOnDecay}.`, locationId: creature.locationId } });
   return "gone";
 }
@@ -520,6 +527,15 @@ async function tickCarnivore(c: any) {
 
 type DepletedRegionResource = { regionId: number; regionName: string; resourceKey: string; resourceName: string; locationId: number };
 
+function lisovykWakeText(resourceName: string) {
+  return `Дід лісовик гарчить: «О, де всі ${resourceName}? Хто винищив їх до нуля?!»`;
+}
+
+function lisovykSleepText(resourceName?: string) {
+  const resourcePart = resourceName ? `«${resourceName}» знову є в лісі` : "виснажені ресурси знову є в лісі";
+  return `Дід лісовик гарчить: «${resourcePart}. Йду спати, але стережіться там».`;
+}
+
 async function findRegionDepletedResource(): Promise<DepletedRegionResource | null> {
   const regions = await prisma.region.findMany({ include: { locations: { include: { resources: { include: { resourceType: true } } }, orderBy: { id: "asc" } } } });
   for (const region of regions) {
@@ -545,7 +561,7 @@ async function wakeLisovykIfNeeded() {
   const existing = await prisma.creature.findFirst({ where: { speciesId: species.id, name: { in: ["Дід лісовик", "Дід Чорноліс"] } } });
   if (existing?.isAlive && !existing.isHidden && existing.activity !== "SLEEPING") return false;
   const action = `полює через те, що в регіоні зник ресурс ${depleted.resourceKey}`;
-  if (existing) await prisma.creature.update({ where: { id: existing.id }, data: { isAlive: true, isGone: false, locationId: depleted.locationId, hp: species.baseHp, name: "Дід лісовик", isHidden: false, activity: "LOOKING", currentAction: action } });
+  if (existing) await prisma.creature.updateMany({ where: { id: existing.id }, data: { isAlive: true, isGone: false, locationId: depleted.locationId, hp: species.baseHp, name: "Дід лісовик", isHidden: false, activity: "LOOKING", currentAction: action } });
   else await prisma.creature.create({
   data: {
     speciesId: species.id,
@@ -557,8 +573,9 @@ async function wakeLisovykIfNeeded() {
     currentAction: action,
   },
 });
-  await prisma.worldEvent.create({ data: { type: "NPC_SAY", title: "Лісовик прокинувся", description: `У регіоні «${depleted.regionName}» зник ресурс «${depleted.resourceName}». Дід лісовик прокинувся і почав полювання.`, locationId: depleted.locationId } });
-  if (botInstance) await notifyRegion(botInstance, depleted.regionId, `🌲 Дід лісовик прокинувся.\n\nУ всьому регіоні зник ресурс «${depleted.resourceName}».`);
+  const message = lisovykWakeText(depleted.resourceName);
+  await prisma.worldEvent.create({ data: { type: "NPC_SAY", title: "Лісовик прокинувся", description: `У регіоні «${depleted.regionName}» зник ресурс «${depleted.resourceName}». ${message}`, locationId: depleted.locationId } });
+  if (botInstance) await notifyRegion(botInstance, depleted.regionId, `🌲 Дід лісовик прокинувся.\n\n${message}`);
   return true;
 }
 
@@ -567,16 +584,22 @@ async function putLisovykToSleepIfForestRecovered() {
   if (!species) return false;
   const lisovyk = await prisma.creature.findFirst({ where: { speciesId: species.id, name: { in: ["Дід лісовик", "Дід Чорноліс"] }, isAlive: true }, include: { location: true } });
   const match = lisovyk?.currentAction?.match(/зник ресурс ([a-zA-Z0-9_-]+)/);
-  if (!lisovyk || !match) return false;
-  const resourceKey = match[1];
+  if (!lisovyk || lisovyk.isHidden || lisovyk.activity === "SLEEPING") return false;
+  const resourceKey = match?.[1];
   const regionId = lisovyk.location.regionId;
-  const total = await prisma.resourceNode.aggregate({ where: { location: { regionId }, resourceType: { key: resourceKey } }, _sum: { amount: true } });
-  if ((total._sum.amount ?? 0) <= 0) return false;
-  const resource = await prisma.resourceType.findUnique({ where: { key: resourceKey } });
+  if (resourceKey) {
+    const total = await prisma.resourceNode.aggregate({ where: { location: { regionId }, resourceType: { key: resourceKey } }, _sum: { amount: true } });
+    if ((total._sum.amount ?? 0) <= 0) return false;
+  } else if (await findRegionDepletedResource()) {
+    return false;
+  }
+  const resource = resourceKey ? await prisma.resourceType.findUnique({ where: { key: resourceKey } }) : null;
   await prisma.worldAction.updateMany({ where: { actorType: "CREATURE", creatureId: lisovyk.id, status: { in: ["QUEUED", "RUNNING"] } }, data: { status: "CANCELLED" } });
-  await prisma.creature.update({ where: { id: lisovyk.id }, data: { isAlive: true, isHidden: true, activity: "SLEEPING", currentAction: `спить: ресурс ${resourceKey} відновився` } });
-  await prisma.worldEvent.create({ data: { type: "NPC_SAY", title: "Лісовик заснув", description: `Дід лісовик відчув, що ресурс «${resource?.name ?? resourceKey}» у лісі відновився. Він перестає полювати на людей і ховається там, де був.`, locationId: lisovyk.locationId } });
-  if (botInstance) await notifyRegion(botInstance, regionId, `🌲 Дід лісовик відчув, що ліс відновився.\n\nВін перестає полювати за людьми в лісі, ховається між деревами й засинає.`);
+  const slept = await prisma.creature.updateMany({ where: { id: lisovyk.id, isAlive: true }, data: { isAlive: true, isHidden: true, activity: "SLEEPING", currentAction: resourceKey ? `спить: ресурс ${resourceKey} відновився` : "спить: виснажені ресурси відновилися" } });
+  if (slept.count === 0) return false;
+  const message = lisovykSleepText(resource?.name ?? resourceKey);
+  await prisma.worldEvent.create({ data: { type: "NPC_SAY", title: "Лісовик заснув", description: message, locationId: lisovyk.locationId } });
+  if (botInstance) await notifyRegion(botInstance, regionId, `🌲 Дід лісовик засинає.\n\n${message}`);
   return true;
 }
 
@@ -586,8 +609,8 @@ async function regenerateResourcesIfNeeded() {
   let regenerated = 0;
   for (const node of nodes) {
     if (node.amount >= node.maxAmount) continue;
-    await prisma.resourceNode.update({ where: { id: node.id }, data: { amount: Math.min(node.maxAmount, node.amount + RESOURCE_REGEN_AMOUNT) } });
-    regenerated++;
+    const updated = await prisma.resourceNode.updateMany({ where: { id: node.id }, data: { amount: Math.min(node.maxAmount, node.amount + RESOURCE_REGEN_AMOUNT) } });
+    if (updated.count > 0) regenerated++;
   }
   if (regenerated > 0) await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "Ресурси відновлюються", description: `Ліс повільно відновив ${regenerated} ресурсних вузлів: +${RESOURCE_REGEN_AMOUNT}.` } });
   return regenerated;

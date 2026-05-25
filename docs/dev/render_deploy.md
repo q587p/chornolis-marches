@@ -6,6 +6,14 @@ Recommended build command:
 npm install && npx prisma migrate deploy && npm run build && npm run seed
 ```
 
+Optional post-seed smoke check:
+
+```bash
+npm run test:db
+```
+
+This verifies that the configured database contains the current `meta.startLocationKey` location and basic map tables.
+
 Start command:
 
 ```bash

@@ -65,7 +65,7 @@ async function knockOutPlayer(bot: Bot, player: { id: number }, chatId?: number 
     where: { actorType: "PLAYER", playerId: player.id, status: { in: ["QUEUED", "RUNNING"] } },
     data: { status: "CANCELLED", note: "персонаж знепритомнів" },
   });
-  await prisma.player.update({
+  await prisma.player.updateMany({
     where: { id: player.id },
     data: { hp: 0, isResting: true, fatigueState: "VERY_TIRED", lastHpRegenAt: new Date(), lastStaminaRegenAt: new Date() },
   });
@@ -87,7 +87,7 @@ export async function spendPlayerStamina(bot: Bot, playerId: number, type: World
   const nextHp = tookHp ? Math.max(0, player.hp - 1) : player.hp;
   const nextState = fatigueStateFor(after, max);
 
-  await prisma.player.update({
+  const updated = await prisma.player.updateMany({
     where: { id: playerId },
     data: {
       stamina: after,
@@ -99,6 +99,7 @@ export async function spendPlayerStamina(bot: Bot, playerId: number, type: World
       hunger: { increment: cost > 1 ? 1 : 0 },
     },
   });
+  if (updated.count === 0) return;
   if (nextHp <= 0 && player.hp > 0) await knockOutPlayer(bot, player, chatId);
 
   const messages = thresholdMessages(before, after, max, tookHp);
@@ -115,7 +116,7 @@ export async function spendCreatureStamina(creature: { id: number; hp?: number; 
   const after = creature.stamina - cost;
   const tookHp = creature.stamina <= VERY_TIRED_STAMINA;
   const nextHp = tookHp && creature.hp !== undefined ? Math.max(0, creature.hp - 1) : creature.hp;
-  await prisma.creature.update({
+  await prisma.creature.updateMany({
     where: { id: creature.id },
     data: {
       stamina: after,
@@ -142,7 +143,7 @@ export async function recoverStamina(bot: Bot) {
     });
 
     if (activeActions > 0 && !player.isResting) {
-      await prisma.player.update({ where: { id: player.id }, data: { lastStaminaRegenAt: now, lastHpRegenAt: now } });
+      await prisma.player.updateMany({ where: { id: player.id }, data: { lastStaminaRegenAt: now, lastHpRegenAt: now } });
       continue;
     }
 
@@ -176,7 +177,7 @@ export async function recoverStamina(bot: Bot) {
     if (intervals > 0) data.lastStaminaRegenAt = new Date(last.getTime() + intervals * STAMINA_REGEN_INTERVAL_MS);
     if (hpIntervals > 0) data.lastHpRegenAt = new Date(hpLast.getTime() + hpIntervals * hpIntervalMs);
 
-    await prisma.player.update({
+    await prisma.player.updateMany({
       where: { id: player.id },
       data,
     });
@@ -199,7 +200,7 @@ export async function recoverStamina(bot: Bot) {
       where: { actorType: "CREATURE", creatureId: creature.id, status: { in: ["QUEUED", "RUNNING"] } },
     });
     if (activeActions > 0) {
-      await prisma.creature.update({ where: { id: creature.id }, data: { lastStaminaRegenAt: now } });
+      await prisma.creature.updateMany({ where: { id: creature.id }, data: { lastStaminaRegenAt: now } });
       continue;
     }
 
@@ -207,7 +208,7 @@ export async function recoverStamina(bot: Bot) {
     const intervals = Math.floor((now.getTime() - last.getTime()) / STAMINA_REGEN_INTERVAL_MS);
     if (intervals <= 0) continue;
     const after = Math.min(max, creature.stamina + intervals * PASSIVE_STAMINA_REGEN_PER_INTERVAL);
-    await prisma.creature.update({
+    await prisma.creature.updateMany({
       where: { id: creature.id },
       data: {
         stamina: after,

@@ -17,6 +17,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added Ведана as a female herbalist-like NPC while preserving the current Здравомир and Дід лісовик setup.
 - Added `scripts/world/render-map-ascii.mjs` and `docs/world/map_editing.md`.
 - Added a mixed starter rabbit population: children, young rabbits, adults, old rabbits and corpses.
+- Added first seed tests: `npm test` validates split world seed references and `npm run test:db` checks the current database start location.
 
 ### Changed
 
@@ -24,6 +25,9 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Removed direct bridge-deck vertical exits to the under-bridge location in the active seed data.
 - `getStartLocationId()` now reads `meta.startLocationKey` from split or legacy seed metadata.
 - `/resetWorld` now restores the same mixed starter rabbit population.
+- Lisovyk wake/sleep regional notifications and world events now use in-world growled speech about depleted and recovered resources.
+- Hardened action, recovery, world-tick and debug/reset writes against records that were already removed by reset, cleanup or another concurrent loop.
+- CI now runs the static world seed test before build.
 - Bumped package metadata to `0.10.5`.
 
 ### Documentation

@@ -121,14 +121,15 @@ async function normalizeUniqueNpc(npc: UniqueNpcSpec) {
   }
 
   if (npc.speciesKey === "herbalist" && (!kept.isAlive || kept.isGone)) {
-    kept = await prisma.creature.update({
-      where: { id: kept.id },
-      data: { isAlive: true, isGone: false, locationId: fallbackLocation.id, hp: species.baseHp, activity: npc.activity, currentAction: npc.currentAction },
-    });
+    const data = { isAlive: true, isGone: false, locationId: fallbackLocation.id, hp: species.baseHp, activity: npc.activity, currentAction: npc.currentAction };
+    const updated = await prisma.creature.updateMany({ where: { id: kept.id }, data });
+    if (updated.count > 0) kept = { ...kept, ...data };
   }
 
   if (npc.speciesKey === "lisovyk" && kept.hp <= 0) {
-    kept = await prisma.creature.update({ where: { id: kept.id }, data: { hp: species.baseHp, isGone: false } });
+    const data = { hp: species.baseHp, isGone: false };
+    const updated = await prisma.creature.updateMany({ where: { id: kept.id }, data });
+    if (updated.count > 0) kept = { ...kept, ...data };
   }
 
   const duplicateIds = creatures.filter((c) => c.id !== kept.id).map((c) => c.id);
@@ -283,7 +284,13 @@ export function registerStatusHandlers(bot: Bot) {
       where: { playerId: player.id },
     });
 
-    await prisma.player.delete({ where: { id: player.id } });
+    const deletedPlayer = await prisma.player.deleteMany({ where: { id: player.id } });
+    if (deletedPlayer.count === 0) {
+      await ctx.reply("Персонажа вже немає. Напиши /start, щоб почати онбордінґ з нуля.", {
+        reply_markup: buildMainReplyKeyboard(false),
+      });
+      return;
+    }
 
     await prisma.worldEvent.create({
       data: {
@@ -397,7 +404,8 @@ export function registerStatusHandlers(bot: Bot) {
     });
 
     if (!creature) return void (await ctx.reply(speciesKey ? `У поточній локації немає живої тварини виду ${speciesKey}.` : "У поточній локації немає живих тварин."));
-    await prisma.creature.delete({ where: { id: creature.id } });
+    const deleted = await prisma.creature.deleteMany({ where: { id: creature.id } });
+    if (deleted.count === 0) return void (await ctx.reply("Цю тварину вже прибрали іншим процесом."));
     await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "Creature removed", description: `Removed ${creature.species.key} #${creature.id} from current location.`, locationId: creature.locationId } });
     await ctx.reply(`🧹 Видалено: #${creature.id} ${creature.species.name} [${creature.species.key}] — ${creature.location.name}`);
   });
@@ -465,8 +473,8 @@ export function registerStatusHandlers(bot: Bot) {
 
     for (const creature of creatures) {
       const ageTicks = ageTicksFor(creature.species, "OLD") + (creature.species.oldTicks ?? 0);
-      await prisma.creature.update({
-        where: { id: creature.id },
+      await prisma.creature.updateMany({
+        where: { id: creature.id, isAlive: true, isGone: false },
         data: { age: "OLD", ageTicks, hp: hpForAge(creature.species, "OLD"), currentAction: "ледь тримається на лапах" },
       });
     }
