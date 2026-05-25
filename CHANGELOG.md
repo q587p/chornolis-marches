@@ -9,6 +9,23 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.10.4 - Ecology web stats - 12026-05-25
+
+### Added
+
+- Added `/stat`, an auto-refreshing ecology statistics page for animal age groups, resources and recent tick counters.
+- Added `/stat.json` for raw ecology statistics.
+
+### Changed
+
+- Bumped package metadata to `0.10.4`.
+
+### Documentation
+
+- Updated `news.md` with the 0.10.4 web stats note.
+
+---
+
 ## 0.10.3 - Rabbit pacing and spread - 12026-05-25
 
 ### Changed
