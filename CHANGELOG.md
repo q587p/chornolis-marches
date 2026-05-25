@@ -9,6 +9,24 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.10.3 - Rabbit pacing and spread - 12026-05-25
+
+### Changed
+
+- Slowed rabbit reproduction checks from every 3 world ticks to every 40 world ticks by default.
+- Extended rabbit growth: offspring now become adults after 240 world ticks by default.
+- Extended rabbit adult lifespan and reduced old-age death pressure.
+- Added direct overcrowding spread: excess non-child rabbits can move into neighboring cells every 20 world ticks.
+- Added `rabbitsSpread` to world tick summaries and public tick reports.
+- Bumped package metadata to `0.10.3`.
+
+### Documentation
+
+- Updated ecology docs and ECO-001 notes with the slower pacing and overcrowding spread behavior.
+- Updated `news.md` with the 0.10.3 balance note.
+
+---
+
 ## 0.10.2 - Paginated long Telegram outputs - 12026-05-25
 
 ### Added

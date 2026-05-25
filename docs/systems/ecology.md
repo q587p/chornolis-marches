@@ -30,14 +30,16 @@ The forest should feel alive even when players do nothing.
 - A small adult rabbit population is seeded in the forest and dry luka.
 - During world ticks, adult rabbits in the same location can reproduce if edible resources are available.
 - A successful rabbit breeding event creates a litter of 5-10 offspring.
+- By default, rabbit reproduction is checked every 40 world ticks. With the default 1.5s tick, this is about once per minute.
+- Rabbit offspring become adults after 240 world ticks. With the default 1.5s tick, this is about 6 minutes.
 - Predator pressure, local danger and crowding reduce reproduction.
 - If a location has too many rabbits, they consume `berries`, `herbs` and `mushrooms` as background overgrazing.
-- World tick summaries and system events report rabbit births and overgrazing pressure for balancing.
+- Overcrowded rabbit locations spread up to 4 non-child rabbits into neighboring cells every 20 world ticks.
+- World tick summaries and system events report rabbit births, spread and overgrazing pressure for balancing.
 
 ## Near Follow-Up
 
 - Tune growth rates and resource damage after observation.
-- Let overcrowded herbivores spread into neighboring cells.
 - Surface severe overgrazing in location/region descriptions.
 - Add explicit recent hunting pressure from players and NPCs.
 
