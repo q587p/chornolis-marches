@@ -16,3 +16,5 @@ Files:
 
 Resource rules are intentionally biome-based, so map edits do not require hundreds of manual resource-node rows.
 Bridge spans, the start camp and the closed gate have no resources. Riverbank locations seed herbs only.
+
+0.10.7 note: `grass` is ecology-only forage for herbivores, hidden from player gather menus. Bridge spans should not have grass; under-bridge riverbank locations can.

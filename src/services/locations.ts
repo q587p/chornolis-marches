@@ -7,6 +7,7 @@ import { isCampfireFeature } from "./locationFeatures";
 import { escapeHtml } from "../utils/text";
 
 const COMPACT_EXIT_ORDER = ["NORTH", "WEST", "SOUTH", "EAST", "UP", "DOWN", "INSIDE", "OUTSIDE"];
+const GATHERABLE_RESOURCE_KEYS = ["berries", "mushrooms", "herbs"] as const;
 
 function isVisibleCorpse(c: any) {
   return !c.isAlive && !c.isGone && c.age === "CORPSE";
@@ -168,7 +169,7 @@ function visibleActionText(target: { type: "player" | "creature"; id: number }, 
 async function resourceButtonData(resources: any[], viewerPlayerId?: number) {
   const quick = await usesQuickPlayerActionDuration(viewerPlayerId);
   return resources
-    .filter((r) => r.amount > 0)
+    .filter((r) => r.amount > 0 && (GATHERABLE_RESOURCE_KEYS as readonly string[]).includes(r.resourceType.key))
     .map((resource) => ({
       key: resource.resourceType.key,
       name: resource.resourceType.name,
@@ -241,7 +242,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     : "";
 
   const resourceLines = location.resources
-    .filter((r) => r.amount > 0)
+    .filter((r) => r.amount > 0 && (GATHERABLE_RESOURCE_KEYS as readonly string[]).includes(r.resourceType.key))
     .map((r) => {
       const amount = r.amount >= 20 ? "багато" : r.amount >= 8 ? "трохи" : "майже немає";
       return `- <i>${escapeHtml(r.resourceType.name)}</i>: ${escapeHtml(amount)}`;

@@ -8,23 +8,28 @@ import { restartPlayerAutoTimers } from "../handlers/auto";
 
 const DEFAULT_TICK_INTERVAL_MS = TICK_MS;
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
-const RESOURCE_REGEN_EVERY_TICKS = Number(process.env.WORLD_RESOURCE_REGEN_EVERY_TICKS || 10);
+const RESOURCE_REGEN_EVERY_TICKS = Number(process.env.WORLD_RESOURCE_REGEN_EVERY_TICKS || 40);
 const RESOURCE_REGEN_AMOUNT = Number(process.env.WORLD_RESOURCE_REGEN_AMOUNT || 1);
+const GRASS_REGEN_EVERY_TICKS = Number(process.env.WORLD_GRASS_REGEN_EVERY_TICKS || 30);
+const EXHAUSTED_LOCATION_REGEN_EVERY_TICKS = Number(process.env.WORLD_EXHAUSTED_LOCATION_REGEN_EVERY_TICKS || 240);
 const HERBALIST_SPEAK_CHANCE = Number(process.env.HERBALIST_SPEAK_CHANCE || 12);
-const RABBIT_REPRODUCTION_EVERY_TICKS = Number(process.env.WORLD_RABBIT_REPRODUCTION_EVERY_TICKS || 40);
+const RABBIT_REPRODUCTION_EVERY_TICKS = Number(process.env.WORLD_RABBIT_REPRODUCTION_EVERY_TICKS || 120);
 const RABBIT_MIN_LITTER_SIZE = Number(process.env.WORLD_RABBIT_MIN_LITTER_SIZE || 5);
 const RABBIT_MAX_LITTER_SIZE = Number(process.env.WORLD_RABBIT_MAX_LITTER_SIZE || 10);
+const RABBIT_MAX_LITTERS_PER_LOCATION = Number(process.env.WORLD_RABBIT_MAX_LITTERS_PER_LOCATION || 2);
 const RABBIT_LOCAL_SOFT_CAP = Number(process.env.WORLD_RABBIT_LOCAL_SOFT_CAP || 6);
 const OVERGRAZING_RABBIT_THRESHOLD = Number(process.env.WORLD_OVERGRAZING_RABBIT_THRESHOLD || 5);
 const RABBIT_SPREAD_EVERY_TICKS = Number(process.env.WORLD_RABBIT_SPREAD_EVERY_TICKS || 20);
 const RABBIT_MAX_SPREAD_PER_LOCATION = Number(process.env.WORLD_RABBIT_MAX_SPREAD_PER_LOCATION || 4);
-const MOUSE_REPRODUCTION_EVERY_TICKS = Number(process.env.WORLD_MOUSE_REPRODUCTION_EVERY_TICKS || 25);
-const MOUSE_MIN_LITTER_SIZE = Number(process.env.WORLD_MOUSE_MIN_LITTER_SIZE || 4);
-const MOUSE_MAX_LITTER_SIZE = Number(process.env.WORLD_MOUSE_MAX_LITTER_SIZE || 8);
+const MOUSE_REPRODUCTION_EVERY_TICKS = Number(process.env.WORLD_MOUSE_REPRODUCTION_EVERY_TICKS || 20);
+const MOUSE_MIN_LITTER_SIZE = Number(process.env.WORLD_MOUSE_MIN_LITTER_SIZE || 5);
+const MOUSE_MAX_LITTER_SIZE = Number(process.env.WORLD_MOUSE_MAX_LITTER_SIZE || 10);
+const MOUSE_MAX_LITTERS_PER_LOCATION = Number(process.env.WORLD_MOUSE_MAX_LITTERS_PER_LOCATION || 8);
 const MOUSE_LOCAL_SOFT_CAP = Number(process.env.WORLD_MOUSE_LOCAL_SOFT_CAP || 8);
 const MOUSE_SPREAD_EVERY_TICKS = Number(process.env.WORLD_MOUSE_SPREAD_EVERY_TICKS || 15);
 const MOUSE_MAX_SPREAD_PER_LOCATION = Number(process.env.WORLD_MOUSE_MAX_SPREAD_PER_LOCATION || 6);
-const EDIBLE_RESOURCE_KEYS = ["berries", "herbs", "mushrooms"] as const;
+const EDIBLE_RESOURCE_KEYS = ["grass", "berries", "herbs", "mushrooms"] as const;
+const DEPLETED_VEGETATION_FEATURE_PREFIX = "depleted_vegetation_";
 
 let tickIntervalMs = DEFAULT_TICK_INTERVAL_MS;
 let tickTimer: NodeJS.Timeout | null = null;
@@ -137,6 +142,18 @@ function hasBreedingPair(creatures: any[], speciesKey: string) {
   return (males > 0 || unknown > 0) && (females > 0 || unknown > 0);
 }
 
+function breedingFemaleCapacity(creatures: any[], speciesKey: string) {
+  const adults = creatures.filter((creature) => canBreedSpecies(creature, speciesKey));
+  if (adults.length < 2) return 0;
+
+  const males = adults.filter((creature) => creature.sex === "MALE").length;
+  const females = adults.filter((creature) => creature.sex === "FEMALE").length;
+  const unknown = adults.length - males - females;
+  if (males <= 0 && unknown <= 0) return 0;
+
+  return Math.max(females, Math.floor(unknown / 2));
+}
+
 function localFoodAmount(location: any) {
   return location.resources
     .filter((resource: any) => isEdibleResourceKey(resource.resourceType.key))
@@ -156,9 +173,14 @@ function smallHerbivoreBirthChance(input: { adults: number; localCount: number; 
 }
 
 async function createSmallHerbivoreOffspring(species: any, locationId: number) {
+  await createSmallHerbivoreOffspringMany(species, locationId, 1);
+}
+
+async function createSmallHerbivoreOffspringMany(species: any, locationId: number, count: number) {
   const maxHp = Math.max(1, Math.round(species.baseHp * STAGE_HP_MULTIPLIER.CHILD));
-  await prisma.creature.create({
-    data: {
+  if (count <= 0) return;
+  await prisma.creature.createMany({
+    data: Array.from({ length: count }, () => ({
       speciesId: species.id,
       locationId,
       hp: maxHp,
@@ -175,8 +197,45 @@ async function createSmallHerbivoreOffspring(species: any, locationId: number) {
       isAlive: true,
       isGone: false,
       isHidden: false,
+    })),
+  });
+}
+
+function depletedVegetationFeatureKey(locationKey: string) {
+  return `${DEPLETED_VEGETATION_FEATURE_PREFIX}${locationKey}`;
+}
+
+async function markLocationVegetationDepleted(location: { id: number; key: string }) {
+  await prisma.locationFeature.upsert({
+    where: { key: depletedVegetationFeatureKey(location.key) },
+    update: {
+      isActive: true,
+      name: "Винищена трава",
+      description: "Ви бачите, як гризуни виїли всю траву. Її відновлення займе довший час, якщо не допоможуть дощ, магія чи спокій.",
+      data: { ecology: "depleted_vegetation", depletedAtTick: tickNumber, minRecoverTick: tickNumber + EXHAUSTED_LOCATION_REGEN_EVERY_TICKS },
+    },
+    create: {
+      key: depletedVegetationFeatureKey(location.key),
+      locationId: location.id,
+      type: "LANDMARK",
+      name: "Винищена трава",
+      description: "Ви бачите, як гризуни виїли всю траву. Її відновлення займе довший час, якщо не допоможуть дощ, магія чи спокій.",
+      isActive: true,
+      data: { ecology: "depleted_vegetation", depletedAtTick: tickNumber, minRecoverTick: tickNumber + EXHAUSTED_LOCATION_REGEN_EVERY_TICKS },
     },
   });
+}
+
+async function maybeMarkLocationVegetationDepleted(location: { id: number; key: string }) {
+  const edibleNodes = await prisma.resourceNode.findMany({
+    where: { locationId: location.id, resourceType: { key: { in: [...EDIBLE_RESOURCE_KEYS] } } },
+    include: { resourceType: true },
+  });
+  if (edibleNodes.length === 0) return false;
+  const total = edibleNodes.reduce((sum, node) => sum + node.amount, 0);
+  if (total > 0) return false;
+  await markLocationVegetationDepleted(location);
+  return true;
 }
 
 async function consumeOvergrazedResources(location: any, rabbitCount: number) {
@@ -302,6 +361,7 @@ async function processRabbitReproductionAndOvergrazing() {
 
       if (rabbitSpecies && canReproduceThisTick && hasBreedingPair(rabbits, "rabbit")) {
         const food = localFoodAmount(location);
+        const breedingFemales = breedingFemaleCapacity(rabbits, "rabbit");
         const birthChance = smallHerbivoreBirthChance({
           adults: adultRabbits,
           localCount: rabbits.length,
@@ -313,16 +373,19 @@ async function processRabbitReproductionAndOvergrazing() {
         });
 
         if (birthChance > 0 && chance(birthChance)) {
-          const litterSize = randomInt(RABBIT_MIN_LITTER_SIZE, RABBIT_MAX_LITTER_SIZE);
-          for (let i = 0; i < litterSize; i++) await createSmallHerbivoreOffspring(rabbitSpecies, location.id);
-          rabbitBirths += litterSize;
-          regionBirths += litterSize;
-          rabbitCountsByLocationId.set(location.id, (rabbitCountsByLocationId.get(location.id) ?? rabbits.length) + litterSize);
+          const litters = Math.max(1, Math.min(breedingFemales, RABBIT_MAX_LITTERS_PER_LOCATION));
+          let born = 0;
+          for (let i = 0; i < litters; i++) born += randomInt(RABBIT_MIN_LITTER_SIZE, RABBIT_MAX_LITTER_SIZE);
+          await createSmallHerbivoreOffspringMany(rabbitSpecies, location.id, born);
+          rabbitBirths += born;
+          regionBirths += born;
+          rabbitCountsByLocationId.set(location.id, (rabbitCountsByLocationId.get(location.id) ?? rabbits.length) + born);
         }
       }
 
       if (mouseSpecies && canMouseReproduceThisTick && hasBreedingPair(mice, "mouse")) {
         const food = localFoodAmount(location);
+        const breedingFemales = breedingFemaleCapacity(mice, "mouse");
         const birthChance = smallHerbivoreBirthChance({
           adults: adultMice,
           localCount: mice.length,
@@ -330,15 +393,17 @@ async function processRabbitReproductionAndOvergrazing() {
           predatorsInRegion,
           dangerLevel: location.dangerLevel,
           localSoftCap: MOUSE_LOCAL_SOFT_CAP,
-          baseChance: 35,
+          baseChance: 60,
         });
 
         if (birthChance > 0 && chance(birthChance)) {
-          const litterSize = randomInt(MOUSE_MIN_LITTER_SIZE, MOUSE_MAX_LITTER_SIZE);
-          for (let i = 0; i < litterSize; i++) await createSmallHerbivoreOffspring(mouseSpecies, location.id);
-          mouseBirths += litterSize;
-          regionMouseBirths += litterSize;
-          mouseCountsByLocationId.set(location.id, (mouseCountsByLocationId.get(location.id) ?? mice.length) + litterSize);
+          const litters = Math.max(1, Math.min(breedingFemales, MOUSE_MAX_LITTERS_PER_LOCATION));
+          let born = 0;
+          for (let i = 0; i < litters; i++) born += randomInt(MOUSE_MIN_LITTER_SIZE, MOUSE_MAX_LITTER_SIZE);
+          await createSmallHerbivoreOffspringMany(mouseSpecies, location.id, born);
+          mouseBirths += born;
+          regionMouseBirths += born;
+          mouseCountsByLocationId.set(location.id, (mouseCountsByLocationId.get(location.id) ?? mice.length) + born);
         }
       }
 
@@ -348,6 +413,7 @@ async function processRabbitReproductionAndOvergrazing() {
         overgrazedResources += overgrazing.consumed;
         depletedByOvergrazing += overgrazing.depleted;
         regionConsumed += overgrazing.consumed;
+        if (overgrazing.depleted > 0) await maybeMarkLocationVegetationDepleted(location);
       }
 
       const spread = await spreadOvercrowdedAnimals(location, rabbits, rabbitCountsByLocationId, {
@@ -560,13 +626,14 @@ async function tickHerbalist(c: any) {
 }
 
 async function tickHerbivore(c: any) {
-  const hasFood = c.location.resources.some((r: any) => r.amount > 0 && ["berries", "herbs", "mushrooms"].includes(r.resourceType.key));
+  const hasFood = c.location.resources.some((r: any) => r.amount > 0 && isEdibleResourceKey(r.resourceType.key));
+  const exhausted = c.location.features?.some((feature: any) => feature.isActive && String(feature.key).startsWith(DEPLETED_VEGETATION_FEATURE_PREFIX));
   if (hasFood && c.hunger > 0 && chance(60)) {
     await enqueueCreatureAction({ creatureId: c.id, type: "EAT", payload: {}, durationMs: actionDurationMs("EAT", c.stamina) });
     return "queuedEat";
   }
 
-  if (chance(50)) {
+  if (!hasFood || exhausted || chance(50)) {
     const exit = pick(c.location.exitsFrom);
     if (isExit(exit)) return queueMove(c, exit, "шукає їжу");
   }
@@ -681,13 +748,34 @@ async function putLisovykToSleepIfForestRecovered() {
 }
 
 async function regenerateResourcesIfNeeded() {
-  if (tickNumber === 0 || tickNumber % RESOURCE_REGEN_EVERY_TICKS !== 0) return 0;
-  const nodes = await prisma.resourceNode.findMany({ where: { amount: { gt: -1 } } });
+  if (tickNumber === 0) return 0;
+  const nodes = await prisma.resourceNode.findMany({
+    where: { amount: { gt: -1 } },
+    include: {
+      resourceType: true,
+      location: { include: { features: { where: { isActive: true } } } },
+    },
+  });
   let regenerated = 0;
   for (const node of nodes) {
     if (node.amount >= node.maxAmount) continue;
+    const isExhausted = node.location.features.some((feature) => String(feature.key).startsWith(DEPLETED_VEGETATION_FEATURE_PREFIX));
+    const interval = isExhausted
+      ? EXHAUSTED_LOCATION_REGEN_EVERY_TICKS
+      : node.resourceType.key === "grass"
+        ? GRASS_REGEN_EVERY_TICKS
+        : RESOURCE_REGEN_EVERY_TICKS;
+    if (tickNumber % interval !== 0) continue;
     const updated = await prisma.resourceNode.updateMany({ where: { id: node.id }, data: { amount: Math.min(node.maxAmount, node.amount + RESOURCE_REGEN_AMOUNT) } });
-    if (updated.count > 0) regenerated++;
+    if (updated.count > 0) {
+      regenerated++;
+      if (isExhausted && node.resourceType.key === "grass" && node.amount + RESOURCE_REGEN_AMOUNT >= Math.ceil(node.maxAmount / 4)) {
+        await prisma.locationFeature.updateMany({
+          where: { locationId: node.locationId, key: { startsWith: DEPLETED_VEGETATION_FEATURE_PREFIX } },
+          data: { isActive: false },
+        });
+      }
+    }
   }
   if (regenerated > 0) await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "Ресурси відновлюються", description: `Ліс повільно відновив ${regenerated} ресурсних вузлів: +${RESOURCE_REGEN_AMOUNT}.` } });
   return regenerated;
@@ -724,7 +812,7 @@ export async function worldTick() {
 
     const creatures = await prisma.creature.findMany({
       where: { isAlive: true, isGone: false },
-      include: { species: true, location: { include: { exitsFrom: true, resources: { include: { resourceType: true } } } } },
+      include: { species: true, location: { include: { exitsFrom: true, features: { where: { isActive: true } }, resources: { include: { resourceType: true } } } } },
     });
 
     for (const c of creatures) {

@@ -1,4 +1,4 @@
-import { Bot } from "grammy";
+import { Bot, InlineKeyboard } from "grammy";
 import { resetWorldState } from "../services/worldReset";
 import { stopAllPlayerAuto } from "./auto";
 
@@ -34,7 +34,7 @@ export function registerAdminHandlers(bot: Bot) {
     await ctx.reply(ADMIN_HELP_TEXT);
   });
 
-  bot.command("reset", async (ctx) => {
+  async function runReset(ctx: any) {
     const autoStopped = await stopAllPlayerAuto();
     const summary = await resetWorldState();
     await ctx.reply([
@@ -52,5 +52,45 @@ export function registerAdminHandlers(bot: Bot) {
       "Унікальні NPC:",
       ...summary.uniqueCreatureSummaries.map((item) => `- ${item}`),
     ].join("\n"));
+  }
+
+  bot.command("reset", async (ctx) => {
+    const userId = ctx.from?.id;
+    if (!userId) return;
+
+    await ctx.reply(
+      [
+        "⚠️ /reset скине світ до стартового seed-стану.",
+        "",
+        "Буде очищено черги дій, сліди, події, тварин і runtime-стани авто-режиму. Персонажі гравців лишаться, але світ навколо повернеться до старту.",
+        "",
+        "Підтвердити?",
+      ].join("\n"),
+      {
+        reply_markup: new InlineKeyboard()
+          .text("✅ Так, скинути світ", `reset:confirm:${userId}`)
+          .text("↩️ Скасувати", `reset:cancel:${userId}`),
+      }
+    );
+  });
+
+  bot.callbackQuery(/^reset:(confirm|cancel):(\d+)$/, async (ctx) => {
+    const action = ctx.match[1];
+    const requestedBy = Number(ctx.match[2]);
+
+    if (ctx.from.id !== requestedBy) {
+      await ctx.answerCallbackQuery({ text: "Це підтвердження не для тебе.", show_alert: true });
+      return;
+    }
+
+    await ctx.answerCallbackQuery();
+
+    if (action === "cancel") {
+      await ctx.editMessageText("↩️ Reset скасовано.");
+      return;
+    }
+
+    await ctx.editMessageText("⏳ Reset підтверджено. Скидаю світ...");
+    await runReset(ctx);
   });
 }

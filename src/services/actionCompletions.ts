@@ -232,7 +232,7 @@ async function completeEat(action: WorldAction) {
   const creature = await prisma.creature.findUnique({ where: { id: action.creatureId }, include: { species: true } });
   if (!creature || !creature.isAlive || creature.isGone) return void (await setActionStatus(action, "FAILED"));
 
-  const resource = await prisma.resourceNode.findFirst({ where: { locationId: creature.locationId, amount: { gt: 0 }, resourceType: { key: { in: ["berries", "herbs", "mushrooms"] } } }, include: { resourceType: true } });
+  const resource = await prisma.resourceNode.findFirst({ where: { locationId: creature.locationId, amount: { gt: 0 }, resourceType: { key: { in: ["grass", "berries", "herbs", "mushrooms"] } } }, include: { resourceType: true } });
   if (resource && creature.species.diet !== "CARNIVORE") {
     await prisma.resourceNode.updateMany({ where: { id: resource.id }, data: { amount: { decrement: 1 } } });
     const staminaMax = creature.staminaMax ?? BASE_STAMINA;

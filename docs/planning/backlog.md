@@ -7,6 +7,8 @@ Backlog differs from Icebox: backlog means “we probably want this, but not rig
 ## Current backlog themes
 
 - Ecology balancing after first rabbit reproduction: growth rates, overgrazing severity, migration/spread and visible degradation.
+- Animal hunger/starvation follow-up: increase hunger when herbivores fail to find food, kill from starvation after sustained hunger, and expose starvation counters in `/stat`.
+- Weather/magic ecology hooks: rain and restoration magic should shorten exhausted-vegetation recovery.
 - Day/night and light.
 - Campfires and firewood.
 - Early `/respawn` support.

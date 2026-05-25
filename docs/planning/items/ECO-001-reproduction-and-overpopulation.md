@@ -55,10 +55,14 @@ The player should be able to create problems by “solving” other problems:
 - Adult rabbits and mice in the same location can produce offspring during world ticks.
 - Reproduction uses individual creature records and starts newborns as `CHILD` creatures.
 - A successful rabbit breeding event creates a litter of 5-10 offspring.
-- Reproduction is checked every 40 world ticks by default.
+- Rabbit reproduction is checked every 120 world ticks by default and can create multiple litters in one location when several adult females have access to a mate.
 - Rabbit offspring become adults after 240 world ticks by default.
 - Available edible resources increase viability; local danger, predator pressure and crowding suppress reproduction.
-- Crowded rabbit locations consume `berries`, `herbs` and `mushrooms` as overgrazing pressure.
+- Mouse reproduction is checked every 20 world ticks by default; mouse litters are 5-10 offspring and mice reach adult breeding age after about 42 world ticks.
+- Crowded rabbit and mouse locations consume `grass`, `berries`, `herbs` and `mushrooms` as overgrazing pressure.
+- `grass` is an ecology-only forage resource and is hidden from player gather menus.
+- Severe local depletion creates an active `Винищена трава` location feature and slows recovery.
+- `meadow_16_05` starts as an exhausted-vegetation test location.
 - Overcrowded rabbit locations spread excess non-child rabbits into neighboring cells.
 - Rabbit corpses remain for 180 world ticks by default, long enough to observe the aftermath and support future freshening/scavenger loops.
 - World tick summaries expose rabbit/mouse births, rabbit/mouse spread, overgrazed locations and resource damage counters.
@@ -66,8 +70,9 @@ The player should be able to create problems by “solving” other problems:
 
 ## Remaining follow-up
 
-- Tune reproduction and overgrazing numbers after live or simulated observation.
-- Make severe overgrazing visibly alter location or region descriptions, not only resource amounts and world events.
+- Tune reproduction, overgrazing and regeneration numbers after live or simulated observation.
+- Add hunger and starvation deaths when herbivores cannot find food.
+- Add weather and magic hooks that reduce exhausted-vegetation recovery time.
 - Track recent player hunting as an explicit local pressure term instead of relying only on current surviving population.
 - Extend the same pattern to other herbivores when their ecosystem role is clearer.
 

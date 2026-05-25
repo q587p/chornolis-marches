@@ -78,6 +78,18 @@ type SeedResourceRules = {
   notes?: string[];
 };
 
+type SeedFeature = {
+  key: string;
+  locationKey: string;
+  type: string;
+  name: string;
+  description?: string;
+  isActive?: boolean;
+  providesLight?: boolean;
+  restStaminaCapMultiplier?: number | null;
+  data?: Prisma.InputJsonValue;
+};
+
 type SeedUniqueCreature = {
   speciesKey: string;
   locationKey: string;
@@ -99,6 +111,7 @@ type WorldSeed = {
   resourceTypes: SeedResourceType[];
   resourceNodes: SeedResourceNode[];
   resourceRules?: SeedResourceRules;
+  features: SeedFeature[];
   uniqueCreatures: SeedUniqueCreature[];
 };
 
@@ -183,6 +196,7 @@ function loadWorldSeed(): WorldSeed {
       resourceTypes: readJsonFile<SeedResourceType[]>(path.join(splitDir, "resourceTypes.json")),
       resourceNodes: fileExists(explicitResourceNodesPath) ? readJsonFile<SeedResourceNode[]>(explicitResourceNodesPath) : [],
       resourceRules: fileExists(resourceRulesPath) ? readJsonFile<SeedResourceRules>(resourceRulesPath) : undefined,
+      features: readJsonFile<SeedFeature[]>(path.join(splitDir, "features.json")),
       uniqueCreatures: readJsonFile<SeedUniqueCreature[]>(path.join(splitDir, "uniqueCreatures.json")),
     };
     world.resourceNodes = buildResourceNodes(world);
@@ -236,6 +250,28 @@ async function resetResources(world: WorldSeed) {
   }
 
   return { reset, removed: removedIds.length };
+}
+
+async function resetEcologyDepletionFeatures(world: WorldSeed) {
+  await prisma.locationFeature.deleteMany({ where: { key: { startsWith: "depleted_vegetation_" } } });
+
+  for (const feature of world.features.filter((item) => item.key.startsWith("depleted_vegetation_"))) {
+    const location = await prisma.cellLocation.findUnique({ where: { key: feature.locationKey } });
+    if (!location) throw new Error(`Unknown ecology depletion feature location: ${feature.locationKey}`);
+    await prisma.locationFeature.create({
+      data: {
+        key: feature.key,
+        locationId: location.id,
+        type: feature.type as any,
+        name: feature.name,
+        description: feature.description,
+        isActive: feature.isActive ?? true,
+        providesLight: feature.providesLight ?? false,
+        restStaminaCapMultiplier: feature.restStaminaCapMultiplier ?? null,
+        data: feature.data === undefined ? undefined : (feature.data as any),
+      },
+    });
+  }
 }
 
 async function resetUniqueCreature(creature: SeedUniqueCreature) {
@@ -427,6 +463,7 @@ export async function resetWorldState(): Promise<ResetSummary> {
 
   const playerAutoStatesCleared = await clearPlayerAutoState();
   const resources = await resetResources(world);
+  await resetEcologyDepletionFeatures(world);
   const unique = await resetUniqueCreatures(world);
   const rabbitsCreated = await resetStarterAnimals("rabbit", STARTER_RABBITS.map((group) => ({ ...group, speciesKey: "rabbit" })));
   const miceCreated = await resetStarterAnimals("mouse", STARTER_MICE);

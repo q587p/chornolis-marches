@@ -52,6 +52,20 @@
     }
   },
   {
+    "key": "depleted_vegetation_meadow_16_05",
+    "locationKey": "meadow_16_05",
+    "type": "LANDMARK",
+    "name": "Винищена трава",
+    "description": "Ви бачите, як гризуни виїли всю траву. Її відновлення займе довший час, якщо не допоможуть дощ, магія чи спокій.",
+    "isActive": true,
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "ecology": "depleted_vegetation",
+      "starter_example": true
+    }
+  },
+  {
     "key": "meadow_dry_well",
     "locationKey": "meadow_13_05",
     "type": "LANDMARK",

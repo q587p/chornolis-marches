@@ -43,7 +43,6 @@ registerGatherHandlers(bot);
 registerSocialHandlers(bot);
 registerRestHandlers(bot);
 registerActionQueueHandlers(bot);
-registerFallbackHandlers(bot);
 
 bot.catch((error) => {
   setLastRuntimeError(error.error);
@@ -57,5 +56,6 @@ announceWorldUpdatedOnce(bot).catch((error) => {
 });
 startWorldTickLoop(bot);
 startActionQueueLoop(bot);
+registerFallbackHandlers(bot);
 
 bot.start();
