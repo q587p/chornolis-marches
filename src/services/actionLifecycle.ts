@@ -8,8 +8,8 @@ import {
   LOW_HP_WARNING,
   MAX_QUEUED_ACTIONS_PER_ACTOR,
   REST_HEALTH_REGEN_INTERVAL_MS,
+  REST_STAMINA_REGEN_INTERVAL_MS,
   REST_STAMINA_REGEN_PER_INTERVAL,
-  STAMINA_REGEN_INTERVAL_MS,
 } from "../gameConfig";
 import { buildFatigueRestKeyboard } from "../ui/keyboards";
 import { actionPriority, actionTitle, effectivePlayerActionDurationMs } from "./actionRules";
@@ -217,7 +217,7 @@ export async function queuePlayerRest(playerId: number, chatId?: number | string
   const max = await getPlayerRestStaminaCap(playerId);
   const hpMax = player.hpMax ?? BASE_HP;
   const remaining = Math.max(0, max - player.stamina);
-  const staminaMs = Math.max(1, Math.ceil(remaining / REST_STAMINA_REGEN_PER_INTERVAL)) * STAMINA_REGEN_INTERVAL_MS;
+  const staminaMs = Math.max(1, Math.ceil(remaining / REST_STAMINA_REGEN_PER_INTERVAL)) * REST_STAMINA_REGEN_INTERVAL_MS;
   const hpMs = Math.max(1, Math.ceil(Math.max(0, hpMax - player.hp) / HEALTH_REGEN_PER_INTERVAL)) * REST_HEALTH_REGEN_INTERVAL_MS;
   return enqueuePlayerAction({
     playerId,

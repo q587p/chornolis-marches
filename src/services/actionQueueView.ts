@@ -6,8 +6,8 @@ import {
   HEALTH_REGEN_PER_INTERVAL,
   LOW_HP_WARNING,
   REST_HEALTH_REGEN_INTERVAL_MS,
+  REST_STAMINA_REGEN_INTERVAL_MS,
   REST_STAMINA_REGEN_PER_INTERVAL,
-  STAMINA_REGEN_INTERVAL_MS,
   VERY_TIRED_STAMINA,
 } from "../gameConfig";
 import { actionTitle } from "./actionRules";
@@ -65,7 +65,7 @@ export async function playerRestStatusText(playerId: number) {
   }
 
   if (staminaRemaining > 0) {
-    const staminaMinutes = Math.ceil(staminaRemaining / REST_STAMINA_REGEN_PER_INTERVAL) * msToMinutes(STAMINA_REGEN_INTERVAL_MS);
+    const staminaMinutes = Math.ceil(staminaRemaining / REST_STAMINA_REGEN_PER_INTERVAL) * msToMinutes(REST_STAMINA_REGEN_INTERVAL_MS);
     lines.push(`До повної витривалости: приблизно ${staminaMinutes} хв.`);
   }
 

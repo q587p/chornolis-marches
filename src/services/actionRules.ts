@@ -5,6 +5,7 @@ import {
   MIN_ACTION_DURATION_MS,
   QUICK_PLAYER_ACTION_DURATION_MS,
   TICK_MS,
+  actionDurationTicks,
   actionPriorityConfig,
   gatherConfig,
   playerStaminaCostConfig,
@@ -20,10 +21,6 @@ export function actionPriority(type: WorldActionType) {
 
 export function actionCost(type: WorldActionType) {
   return playerStaminaCostConfig[type] ?? 1;
-}
-
-function actionTicks(type: WorldActionType) {
-  return Math.max(1, (playerStaminaCostConfig[type] ?? 1) * ACTION_BASE_TICKS);
 }
 
 export function effectivePlayerActionDurationMs(player: { stamina: number } | null | undefined, type: WorldActionType, requestedDurationMs: number) {
@@ -65,15 +62,15 @@ export function actionTitle(action: Pick<WorldAction, "type" | "payload" | "dura
 }
 
 export function movementDurationMs(travelCost = 1, _stamina = BASE_STAMINA) {
-  return Math.max(MIN_ACTION_DURATION_MS, actionTicks("MOVE") * TICK_MS * Math.max(1, travelCost));
+  return Math.max(MIN_ACTION_DURATION_MS, actionDurationTicks("MOVE") * TICK_MS * Math.max(1, travelCost));
 }
 
 export function gatherDurationMs(resourceKey: keyof typeof gatherConfig, _stamina = BASE_STAMINA) {
-  return Math.max(MIN_ACTION_DURATION_MS, (gatherConfig[resourceKey]?.ticks ?? actionTicks("GATHER_SPECIFIC")) * ACTION_BASE_TICKS * TICK_MS);
+  return Math.max(MIN_ACTION_DURATION_MS, (gatherConfig[resourceKey]?.ticks ?? actionDurationTicks("GATHER_SPECIFIC")) * ACTION_BASE_TICKS * TICK_MS);
 }
 
 export function actionDurationMs(type: WorldActionType, _stamina = BASE_STAMINA) {
-  return Math.max(MIN_ACTION_DURATION_MS, actionTicks(type) * TICK_MS);
+  return Math.max(MIN_ACTION_DURATION_MS, actionDurationTicks(type) * TICK_MS);
 }
 
 export function actionStaminaCost(type: WorldActionType) {

@@ -9,6 +9,26 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.10.8 - Timing and action queue fixes - 12026-05-25
+
+### Fixed
+
+- Made the action queue loop run immediately on start/restart and read the current runtime poll interval, preventing completed movement actions from sitting in `RUNNING` until another restart.
+
+### Changed
+
+- Bumped package metadata to `0.10.8`.
+- Changed rest stamina recovery from one large +42 jump every 40 ticks to +1 every 4 ticks, while passive stamina remains +1 every 40 ticks.
+- Reduced tired/non-quick action durations by lowering `ACTION_BASE_TICKS` from 9 to 3, and clarified `/tickGet` that those action durations apply during fatigue or to creatures without quick mode.
+- Reduced quick player action duration to 0.1s and action queue polling to 0.1s so quick actions complete promptly.
+- Decoupled attack duration from stamina cost: tired/non-quick attacks now take 2x movement time while still costing more stamina.
+
+### Documentation
+
+- Updated `news.md` and release notes for 0.10.8.
+
+---
+
 ## 0.10.7 - Safer reset and tick commands - 12026-05-25
 
 ### Added

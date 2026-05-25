@@ -8,6 +8,7 @@ import {
   PASSIVE_HEALTH_REGEN_INTERVAL_MS,
   PASSIVE_STAMINA_REGEN_PER_INTERVAL,
   REST_HEALTH_REGEN_INTERVAL_MS,
+  REST_STAMINA_REGEN_INTERVAL_MS,
   REST_STAMINA_REGEN_PER_INTERVAL,
   STAMINA_REGEN_INTERVAL_MS,
   VERY_TIRED_STAMINA,
@@ -148,7 +149,8 @@ export async function recoverStamina(bot: Bot) {
     }
 
     const last = player.lastStaminaRegenAt ?? player.updatedAt ?? now;
-    const intervals = Math.floor((now.getTime() - last.getTime()) / STAMINA_REGEN_INTERVAL_MS);
+    const staminaIntervalMs = player.isResting ? REST_STAMINA_REGEN_INTERVAL_MS : STAMINA_REGEN_INTERVAL_MS;
+    const intervals = Math.floor((now.getTime() - last.getTime()) / staminaIntervalMs);
 
     const before = player.stamina;
     const rate = player.isResting ? REST_STAMINA_REGEN_PER_INTERVAL : PASSIVE_STAMINA_REGEN_PER_INTERVAL;
@@ -174,7 +176,7 @@ export async function recoverStamina(bot: Bot) {
       restFullRecoveries: fullyRested && player.isResting && (before < max || hpBefore < hpMax) ? { increment: 1 } : undefined,
     };
 
-    if (intervals > 0) data.lastStaminaRegenAt = new Date(last.getTime() + intervals * STAMINA_REGEN_INTERVAL_MS);
+    if (intervals > 0) data.lastStaminaRegenAt = new Date(last.getTime() + intervals * staminaIntervalMs);
     if (hpIntervals > 0) data.lastHpRegenAt = new Date(hpLast.getTime() + hpIntervals * hpIntervalMs);
 
     await prisma.player.updateMany({

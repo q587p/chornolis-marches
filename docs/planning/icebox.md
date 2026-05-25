@@ -30,6 +30,11 @@ It is not a trash bin and not a promise. It is cold storage for ideas that need 
 - Deep settlement/group structures such as kurінь, січ, households, sworn groups, contacts and longer-term social obligations.
 - Deeper food, thirst and cooking simulation after basic hunger and water sources become useful.
 - Opportunistic herbivore behavior after birds, carcasses and creature attack systems exist: rabbits remain herbivores by default, but may sometimes tear into small bird prey or carrion such as partridge-like game.
+- Biome-specific herbivore roster for later ecology expansion:
+  - forest/deep forest: squirrel, dormouse, forest mouse, roe deer, mountain hare or similar woodland hare;
+  - dry luka / clearing: brown hare, field mouse, vole, possibly ground squirrel or marmot-like steppe species if the setting supports them;
+  - riverbank / under-bridge wet edges: water vole, muskrat-like herbivore, later beaver as a larger map-changing animal.
+- Future herbivore species should have explicit ecology weights such as grazing pressure, preferred food resources, reproduction profile, habitat affinity and migration preference.
 - Weather-driven survival loops: soaked clothes, cold, firewood quality, mud, snow, heat and shelter.
 
 ## Review rhythm

@@ -30,6 +30,7 @@ const MOUSE_SPREAD_EVERY_TICKS = Number(process.env.WORLD_MOUSE_SPREAD_EVERY_TIC
 const MOUSE_MAX_SPREAD_PER_LOCATION = Number(process.env.WORLD_MOUSE_MAX_SPREAD_PER_LOCATION || 6);
 const EDIBLE_RESOURCE_KEYS = ["grass", "berries", "herbs", "mushrooms"] as const;
 const DEPLETED_VEGETATION_FEATURE_PREFIX = "depleted_vegetation_";
+const MOUSE_OVERGRAZING_PRESSURE_DIVISOR = 2;
 
 let tickIntervalMs = DEFAULT_TICK_INTERVAL_MS;
 let tickTimer: NodeJS.Timeout | null = null;
@@ -407,7 +408,7 @@ async function processRabbitReproductionAndOvergrazing() {
         }
       }
 
-      const overgrazing = await consumeOvergrazedResources(location, rabbits.length + Math.ceil(mice.length / 2));
+      const overgrazing = await consumeOvergrazedResources(location, rabbits.length + Math.ceil(mice.length / MOUSE_OVERGRAZING_PRESSURE_DIVISOR));
       if (overgrazing.consumed > 0) {
         overgrazedLocations++;
         overgrazedResources += overgrazing.consumed;
@@ -900,19 +901,21 @@ function runtimeTickStatusText() {
     "",
     `Базовий тік: ${timing.tickMs} ms`,
     `World tick: кожен 1 тік`,
-    `Action/recovery loop: кожен 1 тік (${timing.actionQueuePollMs} ms)`,
+    `Action/recovery loop: кожні ${timing.actionQueuePollMs} ms`,
     `Публічне повідомлення «Світ ворухнувся»: кожні 5 тіків`,
     `Авто-режим: кожні ${timing.autoIntervalTicks} тіків ≈ ${formatDuration(timing.autoIntervalMs)}`,
     `Tick #: ${tickNumber}`,
     "",
-    "Дії:",
-    `- рух: ${timing.actionBaseTicks} тіків ≈ ${formatDuration(timing.actions.moveMs)}`,
-    `- огляд/вистежування: ${timing.actionBaseTicks * 3} тіків ≈ ${formatDuration(timing.actions.lookMs)}`,
-    `- збір: ${timing.actionBaseTicks * 5} тіків ≈ ${formatDuration(timing.actions.gatherMs)}`,
-    `- атака: ${timing.actionBaseTicks * 7} тіків ≈ ${formatDuration(timing.actions.attackMs)}`,
+    "Дії під час втоми або для істот без quick-режиму:",
+    `- quick-дії гравця з витривалістю > 0: ${formatDuration(timing.actions.quickMs)}`,
+    `- рух: ${timing.actions.moveTicks} тіків ≈ ${formatDuration(timing.actions.moveMs)}`,
+    `- огляд/вистежування: ${timing.actions.lookTicks} тіків ≈ ${formatDuration(timing.actions.lookMs)}`,
+    `- збір: ${timing.actions.gatherTicks} тіків ≈ ${formatDuration(timing.actions.gatherMs)}`,
+    `- атака: ${timing.actions.attackTicks} тіків ≈ ${formatDuration(timing.actions.attackMs)} (×2 від руху за часом)`,
     "",
     "Відновлення:",
-    `- витривалість: раз на ${timing.staminaRegenTicks} тіків ≈ ${formatDuration(timing.staminaRegenMs)}`,
+    `- витривалість без відпочинку: +${timing.passiveStaminaRegenAmount} раз на ${timing.staminaRegenTicks} тіків ≈ ${formatDuration(timing.staminaRegenMs)}`,
+    `- витривалість під час відпочинку: +${timing.restStaminaRegenAmount} раз на ${timing.restStaminaRegenTicks} тіків ≈ ${formatDuration(timing.restStaminaRegenMs)}`,
     `- HP без відпочинку: +1 раз на ${timing.passiveHealthRegenTicks} тіків ≈ ${formatDuration(timing.passiveHealthRegenMs)}`,
     `- HP під час відпочинку: +1 раз на ${timing.restHealthRegenTicks} тіків ≈ ${formatDuration(timing.restHealthRegenMs)}`,
     "",
@@ -922,7 +925,7 @@ function runtimeTickStatusText() {
     `Локальний тиск зайців: м'який поріг ${RABBIT_LOCAL_SOFT_CAP}; вище нього падає шанс народження й запускається розселення`,
     `Розселення зайців: раз на ${RABBIT_SPREAD_EVERY_TICKS} world ticks; до ${RABBIT_MAX_SPREAD_PER_LOCATION} з перенаселеної локації`,
     `Розселення мишей: раз на ${MOUSE_SPREAD_EVERY_TICKS} world ticks; до ${MOUSE_MAX_SPREAD_PER_LOCATION} з перенаселеної локації`,
-    `Надмірний випас: від ${OVERGRAZING_RABBIT_THRESHOLD} зайців у локації`,
+    `Надмірний випас: від ${OVERGRAZING_RABBIT_THRESHOLD} одиниць травоїдного тиску в локації; 1 заєць = 1, ${MOUSE_OVERGRAZING_PRESSURE_DIVISOR} миші ≈ 1`,
     `Сліди живуть: ${timing.trackTtlTicks} тіків ≈ ${formatDuration(timing.trackTtlMs)}`,
     "",
     "Змінити runtime без рестарту: /tickSet <ms>",
