@@ -9,14 +9,32 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.10.9 - Animal pressure and ecology danger - 12026-05-25
+
+### Fixed
+
+- Increased creature action batches and kept player batches separate, so large animal populations can drain their own backlog faster without swallowing player actions.
+- Made ordinary animal movement silent in location chat; movement still updates location, stamina and tracks, while NPC/special creature movement remains visible.
+
+### Added
+
+- Added dynamic crowd danger: locations with more than 13 creatures/players now become much more dangerous for ecology logic, suppressing herbivore reproduction and making herbivores drift away more often.
+- Attacks now leave a temporary local danger marker, making herbivores more likely to leave the attacked location for several world ticks.
+
+### Documentation
+
+- Added follow-up planning for visible animal migration without Telegram spam.
+- Added Icebox notes for future species-specific fear, aggression and offspring-defense behavior.
+- Updated `news.md`, ecology docs and release notes for 0.10.9.
+
+---
+
 ## 0.10.8 - Timing and action queue fixes - 12026-05-25
 
 ### Fixed
 
 - Made the action queue loop run immediately on start/restart and read the current runtime poll interval, preventing completed movement actions from sitting in `RUNNING` until another restart.
 - Prioritized player due/queued actions ahead of creature backlog so animal/NPC activity cannot make player movement feel stuck.
-- Increased creature action batches and kept player batches separate, so large animal populations can drain their own backlog faster without swallowing player actions.
-- Made ordinary animal movement silent in location chat; movement still updates location, stamina, and tracks, while NPC/special creature movement remains visible.
 - Removed the extra list dash before visible location features such as `Винищена трава`.
 - Added spaces between compact exit labels so `Зх Сх` does not render as `ЗхСх`.
 

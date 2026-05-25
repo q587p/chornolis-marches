@@ -28,6 +28,14 @@ const MOUSE_MAX_LITTERS_PER_LOCATION = Number(process.env.WORLD_MOUSE_MAX_LITTER
 const MOUSE_LOCAL_SOFT_CAP = Number(process.env.WORLD_MOUSE_LOCAL_SOFT_CAP || 8);
 const MOUSE_SPREAD_EVERY_TICKS = Number(process.env.WORLD_MOUSE_SPREAD_EVERY_TICKS || 15);
 const MOUSE_MAX_SPREAD_PER_LOCATION = Number(process.env.WORLD_MOUSE_MAX_SPREAD_PER_LOCATION || 6);
+const CROWD_DANGER_THRESHOLD = Number(process.env.WORLD_CROWD_DANGER_THRESHOLD || 13);
+const CROWD_DANGER_INITIAL_BONUS = Number(process.env.WORLD_CROWD_DANGER_INITIAL_BONUS || 4);
+const CROWD_DANGER_STEP = Number(process.env.WORLD_CROWD_DANGER_STEP || 4);
+const CROWD_DANGER_STEP_BONUS = Number(process.env.WORLD_CROWD_DANGER_STEP_BONUS || 1);
+const CROWD_HERBIVORE_MOVE_BASE_CHANCE = Number(process.env.WORLD_CROWD_HERBIVORE_MOVE_BASE_CHANCE || 12);
+const CROWD_HERBIVORE_MOVE_PER_EXTRA_CHANCE = Number(process.env.WORLD_CROWD_HERBIVORE_MOVE_PER_EXTRA_CHANCE || 4);
+const CROWD_HERBIVORE_MOVE_MAX_CHANCE = Number(process.env.WORLD_CROWD_HERBIVORE_MOVE_MAX_CHANCE || 55);
+const RECENT_ATTACK_FEATURE_PREFIX = "recent_attack_";
 const EDIBLE_RESOURCE_KEYS = ["grass", "berries", "herbs", "mushrooms"] as const;
 const DEPLETED_VEGETATION_FEATURE_PREFIX = "depleted_vegetation_";
 const MOUSE_OVERGRAZING_PRESSURE_DIVISOR = 2;
@@ -78,6 +86,38 @@ function randomInt(min: number, max: number) {
   return low + Math.floor(Math.random() * (high - low + 1));
 }
 
+function crowdDangerBonus(presenceCount: number) {
+  if (presenceCount <= CROWD_DANGER_THRESHOLD) return 0;
+  const extra = presenceCount - CROWD_DANGER_THRESHOLD;
+  return CROWD_DANGER_INITIAL_BONUS + Math.ceil(extra / Math.max(1, CROWD_DANGER_STEP)) * CROWD_DANGER_STEP_BONUS;
+}
+
+function activeRecentAttackFeature(feature: any) {
+  if (!feature?.isActive || !String(feature.key).startsWith(RECENT_ATTACK_FEATURE_PREFIX)) return false;
+  const expiresAt = typeof feature.data === "object" && feature.data ? (feature.data as any).expiresAt : null;
+  return !expiresAt || new Date(String(expiresAt)).getTime() > Date.now();
+}
+
+function recentAttackDangerBonus(features: any[] | undefined) {
+  return features?.some(activeRecentAttackFeature) ? 5 : 0;
+}
+
+function recentAttackHerbivoreMoveBonus(features: any[] | undefined) {
+  return features?.some(activeRecentAttackFeature) ? 25 : 0;
+}
+
+function effectiveLocationDanger(baseDangerLevel: number, presenceCount: number, features?: any[]) {
+  return baseDangerLevel + crowdDangerBonus(presenceCount) + recentAttackDangerBonus(features);
+}
+
+function herbivorePressureMoveChance(presenceCount: number, features?: any[]) {
+  let result = recentAttackHerbivoreMoveBonus(features);
+  if (presenceCount <= CROWD_DANGER_THRESHOLD) return result;
+  const extra = presenceCount - CROWD_DANGER_THRESHOLD;
+  result += CROWD_HERBIVORE_MOVE_BASE_CHANCE + extra * CROWD_HERBIVORE_MOVE_PER_EXTRA_CHANCE;
+  return Math.min(CROWD_HERBIVORE_MOVE_MAX_CHANCE, result);
+}
+
 function isExit(value: unknown): value is LocationExit {
   return Boolean(value && typeof value === "object" && "toLocationId" in value);
 }
@@ -88,8 +128,9 @@ function creatureRestChance(c: any) {
   const ratio = Math.min(1, debt / Math.abs(VERY_TIRED_STAMINA));
   let restChance = 20 + Math.round(ratio * 70);
 
-  if (c.species?.diet === "HERBIVORE" && c.location?.dangerLevel >= 4) {
-    restChance = Math.max(5, Math.round(restChance / (c.location.dangerLevel >= 7 ? 4 : 2)));
+  const dangerLevel = c.location?.effectiveDangerLevel ?? c.location?.dangerLevel ?? 0;
+  if (c.species?.diet === "HERBIVORE" && dangerLevel >= 4) {
+    restChance = Math.max(5, Math.round(restChance / (dangerLevel >= 7 ? 4 : 2)));
   }
 
   return Math.min(95, restChance);
@@ -323,6 +364,8 @@ async function processRabbitReproductionAndOvergrazing() {
           creatures: { where: { isAlive: true, isGone: false }, include: { species: true } },
           exitsFrom: true,
           resources: { include: { resourceType: true } },
+          features: { where: { isActive: true } },
+          _count: { select: { players: true } },
         },
       },
     },
@@ -368,7 +411,7 @@ async function processRabbitReproductionAndOvergrazing() {
           localCount: rabbits.length,
           food,
           predatorsInRegion,
-          dangerLevel: location.dangerLevel,
+          dangerLevel: effectiveLocationDanger(location.dangerLevel, location.creatures.length + (location._count?.players ?? 0), location.features),
           localSoftCap: RABBIT_LOCAL_SOFT_CAP,
           baseChance: 25,
         });
@@ -392,7 +435,7 @@ async function processRabbitReproductionAndOvergrazing() {
           localCount: mice.length,
           food,
           predatorsInRegion,
-          dangerLevel: location.dangerLevel,
+          dangerLevel: effectiveLocationDanger(location.dangerLevel, location.creatures.length + (location._count?.players ?? 0), location.features),
           localSoftCap: MOUSE_LOCAL_SOFT_CAP,
           baseChance: 60,
         });
@@ -626,9 +669,16 @@ async function tickHerbalist(c: any) {
   return "queuedRest";
 }
 
-async function tickHerbivore(c: any) {
+async function tickHerbivore(c: any, localPresenceCount: number) {
   const hasFood = c.location.resources.some((r: any) => r.amount > 0 && isEdibleResourceKey(r.resourceType.key));
   const exhausted = c.location.features?.some((feature: any) => feature.isActive && String(feature.key).startsWith(DEPLETED_VEGETATION_FEATURE_PREFIX));
+  const pressureMoveChance = herbivorePressureMoveChance(localPresenceCount, c.location.features);
+  if (pressureMoveChance > 0 && chance(pressureMoveChance)) {
+    const exit = pick(c.location.exitsFrom);
+    const reason = recentAttackHerbivoreMoveBonus(c.location.features) > 0 ? "лякається недавнього нападу" : "уникає тисняви й надто людного місця";
+    if (isExit(exit)) return queueMove(c, exit, reason);
+  }
+
   if (hasFood && c.hunger > 0 && chance(60)) {
     await enqueueCreatureAction({ creatureId: c.id, type: "EAT", payload: {}, durationMs: actionDurationMs("EAT", c.stamina) });
     return "queuedEat";
@@ -815,9 +865,23 @@ export async function worldTick() {
       where: { isAlive: true, isGone: false },
       include: { species: true, location: { include: { exitsFrom: true, features: { where: { isActive: true } }, resources: { include: { resourceType: true } } } } },
     });
+    const playerLocationCounts = await prisma.player.groupBy({
+      by: ["currentLocationId"],
+      where: { currentLocationId: { not: null } },
+      _count: { _all: true },
+    });
+    const creatureLocationCounts = new Map<number, number>();
+    const playerCountsByLocationId = new Map<number, number>();
+    for (const c of creatures) creatureLocationCounts.set(c.locationId, (creatureLocationCounts.get(c.locationId) ?? 0) + 1);
+    for (const row of playerLocationCounts) {
+      if (row.currentLocationId) playerCountsByLocationId.set(row.currentLocationId, row._count._all);
+    }
 
     for (const c of creatures) {
       try {
+        const localPresenceCount = (creatureLocationCounts.get(c.locationId) ?? 0) + (playerCountsByLocationId.get(c.locationId) ?? 0);
+        (c.location as any).effectiveDangerLevel = effectiveLocationDanger(c.location.dangerLevel, localPresenceCount, c.location.features);
+
         if (c.activity === "SLEEPING") {
           skippedBusy++;
           continue;
@@ -849,7 +913,7 @@ export async function worldTick() {
             result = "queuedLook";
           }
         }
-        else if (c.species.diet === "HERBIVORE") result = await tickHerbivore(c);
+        else if (c.species.diet === "HERBIVORE") result = await tickHerbivore(c, localPresenceCount);
         else if (c.species.diet === "CARNIVORE") result = await tickCarnivore(c);
         else {
           await enqueueCreatureAction({ creatureId: c.id, type: "REST", payload: {}, durationMs: actionDurationMs("REST", c.stamina) });

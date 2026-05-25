@@ -29,6 +29,10 @@ type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
 type SayPayload = { text: string };
 type SocialPayload = { targetType: "player" | "creature"; targetId: number; mode?: "known" | "mystery" };
 
+const RECENT_ATTACK_FEATURE_PREFIX = "recent_attack_";
+const RECENT_ATTACK_DANGER_TICKS = Number(process.env.WORLD_RECENT_ATTACK_DANGER_TICKS || 20);
+const RECENT_ATTACK_DANGER_MS = RECENT_ATTACK_DANGER_TICKS * Number(process.env.WORLD_TICK_INTERVAL_MS || 1500);
+
 const FROM_DIRECTION_LABELS: Record<string, string> = {
   NORTH: "з півдня",
   EAST: "із заходу",
@@ -112,6 +116,26 @@ async function createTrack(actor: ActorRef, fromLocationId: number, toLocationId
       label,
       strength: 3,
       expiresAt: new Date(Date.now() + TRACK_TTL_MS),
+    },
+  });
+}
+
+async function markRecentAttackDanger(locationId: number) {
+  const expiresAt = new Date(Date.now() + RECENT_ATTACK_DANGER_MS).toISOString();
+  await prisma.locationFeature.upsert({
+    where: { key: `${RECENT_ATTACK_FEATURE_PREFIX}${locationId}` },
+    update: {
+      isActive: true,
+      data: { ecology: "recent_attack", expiresAt, ticks: RECENT_ATTACK_DANGER_TICKS },
+    },
+    create: {
+      key: `${RECENT_ATTACK_FEATURE_PREFIX}${locationId}`,
+      locationId,
+      type: "BRIDGE",
+      name: "Свіжий напад",
+      description: "Нещодавній напад тривожить тварин у цій місцині.",
+      isActive: true,
+      data: { ecology: "recent_attack", expiresAt, ticks: RECENT_ATTACK_DANGER_TICKS },
     },
   });
 }
@@ -339,6 +363,7 @@ async function completeCreatureAttack(bot: Bot, action: WorldAction) {
   const damage = Math.max(1, attacker.species.strength + Math.floor(Math.random() * 3));
   const nextHp = target.hp - damage;
   await spendCreatureStamina(attacker, actionCost("ATTACK"));
+  await markRecentAttackDanger(attacker.locationId);
 
   if (nextHp <= 0) {
     await prisma.creature.updateMany({ where: { id: target.id }, data: { hp: 0, isAlive: false, age: "CORPSE", diedAtTick: null, corpseDecayTicksLeft: target.species.corpseDecayTicks, activity: "RESTING", currentAction: "лежить нерухомо" } });
@@ -378,6 +403,7 @@ async function completeAttack(bot: Bot, action: WorldAction) {
   }
 
   await spendPlayerStamina(bot, player.id, "ATTACK", chatId);
+  await markRecentAttackDanger(player.currentLocationId);
   await prisma.creature.updateMany({ where: { id: creature.id }, data: { hp: 0, isAlive: false, age: "CORPSE", diedAtTick: null, corpseDecayTicksLeft: creature.species.corpseDecayTicks, activity: "RESTING", currentAction: "лежить нерухомо" } });
   await interruptActorActions({ actorType: "CREATURE", creatureId: creature.id }, "істоту вбито", true);
   await prisma.player.updateMany({ where: { id: player.id }, data: { animalsKilled: { increment: 1 } } });

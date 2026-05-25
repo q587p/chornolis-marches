@@ -37,6 +37,9 @@ The forest should feel alive even when players do nothing.
 - By default, rabbit reproduction is checked every 120 world ticks. This keeps the test loop readable while approximating a three-litters-per-year cadence better than the earlier rapid loop.
 - Rabbit offspring become adults after 240 world ticks. With the default 1.5s tick, this is about 6 minutes.
 - Predator pressure, local danger and crowding reduce reproduction.
+- If more than 13 creatures or player characters are present in one location, that crowd adds a strong dynamic danger bonus for ecology decisions.
+- Herbivores react to crowded danger gradually: they do not all flee instantly, but their chance to choose movement rises noticeably while the crowd remains.
+- Recent attacks add temporary local danger for ecology decisions. Herbivores become more likely to leave the attacked location for several world ticks.
 - If a location has too many rabbits or mice, they consume `grass`, `berries`, `herbs` and `mushrooms` as background overgrazing.
 - Overcrowded rabbit locations spread up to 4 non-child rabbits into neighboring cells every 20 world ticks.
 - Rabbit corpses remain for 180 world ticks by default. With the default 1.5s tick, this is about 4.5 minutes.
@@ -55,6 +58,7 @@ The forest should feel alive even when players do nothing.
 - Add hunger pressure, starvation deaths and starvation counters to ecology stats.
 - Add weather and magic hooks that can shorten exhausted-vegetation recovery.
 - Add explicit recent hunting pressure from players and NPCs.
+- Add species-specific fear and aggression profiles.
 
 ## Example Consequences
 

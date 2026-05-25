@@ -35,6 +35,7 @@ It is not a trash bin and not a promise. It is cold storage for ideas that need 
   - dry luka / clearing: brown hare, field mouse, vole, possibly ground squirrel or marmot-like steppe species if the setting supports them;
   - riverbank / under-bridge wet edges: water vole, muskrat-like herbivore, later beaver as a larger map-changing animal.
 - Future herbivore species should have explicit ecology weights such as grazing pressure, preferred food resources, reproduction profile, habitat affinity and migration preference.
+- Future animal behavior profiles: deer and hares should be more skittish, rabbits skittish but less dramatically so, while large herbivores such as moose may defend themselves or their young and can initiate attacks despite not being predators.
 - Weather-driven survival loops: soaked clothes, cold, firewood quality, mud, snow, heat and shelter.
 
 ## Review rhythm
