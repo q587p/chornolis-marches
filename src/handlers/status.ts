@@ -1,4 +1,4 @@
-import { Bot } from "grammy";
+import { Bot, InlineKeyboard } from "grammy";
 import { CreatureActivity, CreatureAge } from "@prisma/client";
 import { prisma } from "../db";
 import { getStatusData } from "../services/status";
@@ -26,6 +26,9 @@ const ADMIN_COMMANDS = [
   "/news — останні новини гри",
   "/restart — видалити свого персонажа, інвентар і статистику; наступний /start почне онбордінґ з нуля",
 ].join("\n");
+
+const ALL_PAGE_MAX_CHARS = 3300;
+const LOCATION_PAGE_MAX_CHARS = 3300;
 
 type UniqueNpcSpec = {
   speciesKey: string;
@@ -122,6 +125,92 @@ function hpForAge(species: any, age: CreatureAge) {
   return Math.max(1, Math.round(species.baseHp * multiplier));
 }
 
+function buildAllPaginationKeyboard(showDead: boolean, page: number, totalPages: number) {
+  if (totalPages <= 1) return undefined;
+  const keyboard = new InlineKeyboard();
+  const mode = showDead ? "dead" : "live";
+  if (page > 0) keyboard.text("◀️ Назад", `all:${mode}:${page - 1}`);
+  if (page < totalPages - 1) keyboard.text("Далі ▶️", `all:${mode}:${page + 1}`);
+  return keyboard;
+}
+
+function splitLinesIntoPages(lines: string[], maxChars: number) {
+  const pages: string[][] = [];
+  let current: string[] = [];
+  let currentLength = 0;
+
+  for (const line of lines) {
+    const lineLength = line.length + 1;
+    if (current.length > 0 && currentLength + lineLength > maxChars) {
+      pages.push(current);
+      current = [];
+      currentLength = 0;
+    }
+
+    current.push(line);
+    currentLength += lineLength;
+  }
+
+  if (current.length > 0) pages.push(current);
+  return pages.length ? pages : [["немає записів"]];
+}
+
+function buildLocationAllPaginationKeyboard(page: number, totalPages: number) {
+  if (totalPages <= 1) return undefined;
+  const keyboard = new InlineKeyboard();
+  if (page > 0) keyboard.text("◀️ Назад", `locationAll:${page - 1}`);
+  if (page < totalPages - 1) keyboard.text("Далі ▶️", `locationAll:${page + 1}`);
+  return keyboard;
+}
+
+async function buildLocationAllPage(requestedPage: number) {
+  const locations = await prisma.cellLocation.findMany({ include: { region: true }, orderBy: [{ z: "asc" }, { y: "desc" }, { x: "asc" }] });
+  const lines = locations.map((l) => `${l.key} — ${l.name} (${l.x},${l.y},${l.z}); danger=${l.dangerLevel}; region=${l.region.name}`);
+  const pages = splitLinesIntoPages(lines.length ? lines : ["немає"], LOCATION_PAGE_MAX_CHARS);
+  const page = Math.max(0, Math.min(requestedPage, pages.length - 1));
+
+  return {
+    text: `📍 Усі локації\nСторінка ${page + 1}/${pages.length}; локацій ${locations.length}\n\n${pages[page].join("\n")}`,
+    keyboard: buildLocationAllPaginationKeyboard(page, pages.length),
+  };
+}
+
+async function buildAllPage(showDead: boolean, requestedPage: number) {
+  const [players, creatures] = await Promise.all([
+    prisma.player.findMany({ include: { currentLocation: true }, orderBy: { id: "asc" } }),
+    prisma.creature.findMany({ where: showDead ? undefined : { isAlive: true, isGone: false }, include: { location: true, species: true }, orderBy: { id: "asc" } }),
+  ]);
+
+  const playerLines = players.map((p) => {
+    const loc = p.currentLocation ? `${p.currentLocation.name} (${p.currentLocation.x},${p.currentLocation.y},${p.currentLocation.z})` : "невідомо";
+    return `#${p.id} ${p.firstName ?? p.username ?? "мандрівник"} — ${loc}; HP ${p.hp}; stamina ${p.stamina}; hunger ${p.hunger}`;
+  });
+
+  const creatureLines = creatures.map((c) => {
+    const loc = c.location ? `${c.location.name} (${c.location.x},${c.location.y},${c.location.z})` : "невідомо";
+    const state = c.isGone ? "gone" : c.isAlive ? "alive" : "corpse/inactive";
+    const decay = !c.isAlive && !c.isGone ? `; decay ${c.corpseDecayTicksLeft ?? "?"}` : "";
+    return `#${c.id} ${c.name ?? c.species.name} [${c.species.key}] — ${loc}; ${state}; HP ${c.hp}; age ${c.age}/${c.ageTicks}; ${c.activity ?? "IDLE"}; ${c.currentAction ?? "без дії"}${decay}`;
+  });
+
+  const bodyLines = [
+    "Гравці:",
+    ...(playerLines.length ? playerLines : ["немає"]),
+    "",
+    "NPC / істоти:",
+    ...(creatureLines.length ? creatureLines : ["немає"]),
+  ];
+  const pages = splitLinesIntoPages(bodyLines, ALL_PAGE_MAX_CHARS);
+  const page = Math.max(0, Math.min(requestedPage, pages.length - 1));
+  const mode = showDead ? "усі записи" : "тільки живі; /all dead покаже всі записи";
+  const text = `🧾 Усі персонажі (${mode})\nСторінка ${page + 1}/${pages.length}; гравців ${players.length}, істот ${creatures.length}\n\n${pages[page].join("\n")}`;
+
+  return {
+    text,
+    keyboard: buildAllPaginationKeyboard(showDead, page, pages.length),
+  };
+}
+
 export function registerStatusHandlers(bot: Bot) {
   bot.command(["adminHelp", "adminhelp"], async (ctx) => {
     await ctx.reply(`🛠 Admin / debug commands\n\n${ADMIN_COMMANDS}`);
@@ -166,10 +255,21 @@ export function registerStatusHandlers(bot: Bot) {
   });  
 
   bot.command(["locationAll", "locationall"], async (ctx) => {
-    const locations = await prisma.cellLocation.findMany({ include: { region: true }, orderBy: [{ z: "asc" }, { y: "desc" }, { x: "asc" }] });
-    const lines = locations.map((l) => `${l.key} — ${l.name} (${l.x},${l.y},${l.z}); danger=${l.dangerLevel}; region=${l.region.name}`);
-    const text = `📍 Усі локації\n\n${lines.join("\n") || "немає"}`;
-    for (let i = 0; i < text.length; i += 3500) await ctx.reply(text.slice(i, i + 3500));
+    const page = await buildLocationAllPage(0);
+    await ctx.reply(page.text, { reply_markup: page.keyboard });
+  });
+
+  bot.callbackQuery(/^locationAll:(\d+)$/, async (ctx) => {
+    const requestedPage = Number(ctx.match[1]);
+    const page = await buildLocationAllPage(Number.isFinite(requestedPage) ? requestedPage : 0);
+    await ctx.answerCallbackQuery();
+
+    if (ctx.callbackQuery.message) {
+      await ctx.editMessageText(page.text, { reply_markup: page.keyboard });
+      return;
+    }
+
+    await ctx.reply(page.text, { reply_markup: page.keyboard });
   });
 
   bot.command(["addCreatureHelp", "addcreaturehelp"], async (ctx) => {
@@ -190,26 +290,22 @@ export function registerStatusHandlers(bot: Bot) {
 
   bot.command("all", async (ctx) => {
     const showDead = ctx.match?.trim().toLowerCase() === "dead";
-    const [players, creatures] = await Promise.all([
-      prisma.player.findMany({ include: { currentLocation: true }, orderBy: { id: "asc" } }),
-      prisma.creature.findMany({ where: showDead ? undefined : { isAlive: true, isGone: false }, include: { location: true, species: true }, orderBy: { id: "asc" } }),
-    ]);
+    const page = await buildAllPage(showDead, 0);
+    await ctx.reply(page.text, { reply_markup: page.keyboard });
+  });
 
-    const playerLines = players.map((p) => {
-      const loc = p.currentLocation ? `${p.currentLocation.name} (${p.currentLocation.x},${p.currentLocation.y},${p.currentLocation.z})` : "невідомо";
-      return `#${p.id} ${p.firstName ?? p.username ?? "мандрівник"} — ${loc}; HP ${p.hp}; stamina ${p.stamina}; hunger ${p.hunger}`;
-    });
+  bot.callbackQuery(/^all:(live|dead):(\d+)$/, async (ctx) => {
+    const showDead = ctx.match[1] === "dead";
+    const requestedPage = Number(ctx.match[2]);
+    const page = await buildAllPage(showDead, Number.isFinite(requestedPage) ? requestedPage : 0);
+    await ctx.answerCallbackQuery();
 
-    const creatureLines = creatures.map((c) => {
-      const loc = c.location ? `${c.location.name} (${c.location.x},${c.location.y},${c.location.z})` : "невідомо";
-      const state = c.isGone ? "gone" : c.isAlive ? "alive" : "corpse/inactive";
-      const decay = !c.isAlive && !c.isGone ? `; decay ${c.corpseDecayTicksLeft ?? "?"}` : "";
-      return `#${c.id} ${c.name ?? c.species.name} [${c.species.key}] — ${loc}; ${state}; HP ${c.hp}; age ${c.age}/${c.ageTicks}; ${c.activity ?? "IDLE"}; ${c.currentAction ?? "без дії"}${decay}`;
-    });
+    if (ctx.callbackQuery.message) {
+      await ctx.editMessageText(page.text, { reply_markup: page.keyboard });
+      return;
+    }
 
-    const mode = showDead ? "усі записи" : "тільки живі; /all dead покаже всі записи";
-    const text = `🧾 Усі персонажі (${mode})\n\nГравці:\n${playerLines.join("\n") || "немає"}\n\nNPC / істоти:\n${creatureLines.join("\n") || "немає"}`;
-    for (let i = 0; i < text.length; i += 3500) await ctx.reply(text.slice(i, i + 3500));
+    await ctx.reply(page.text, { reply_markup: page.keyboard });
   });
 
   bot.command(["cleanupCreatures", "cleanupcreatures"], async (ctx) => {

@@ -9,6 +9,26 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.10.2 - Paginated long Telegram outputs - 12026-05-25
+
+### Added
+
+- Added inline pagination for `/all` and `/all dead`.
+- Added inline pagination for `/locationAll`.
+- Added a browsable `/news` archive: the latest entry is shown in full, version buttons open full historical entries and the archive list can be paged deeper into history.
+
+### Changed
+
+- Replaced manual 3500-character chunking in long admin outputs with page builders and `Next` / `Back` callbacks.
+- Kept page sizes below Telegram's 4096-character message limit with a 3300-character target.
+- Bumped package metadata to `0.10.2`.
+
+### Documentation
+
+- Updated `news.md` with the 0.10.2 pagination note.
+
+---
+
 ## 0.10.1 - Rabbit litter tuning - 12026-05-25
 
 ### Changed
