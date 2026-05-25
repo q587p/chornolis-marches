@@ -311,7 +311,7 @@ const species = [
     oldTicks: 360,
     oldDeathChancePermille: 1,
     oldDeathChanceGrowthPermille: 1,
-    corpseDecayTicks: 18,
+    corpseDecayTicks: 180,
     mushroomBonusOnDecay: 2,
   },
   {
@@ -339,7 +339,7 @@ const species = [
     oldTicks: 18,
     oldDeathChancePermille: 20,
     oldDeathChanceGrowthPermille: 4,
-    corpseDecayTicks: 10,
+    corpseDecayTicks: 90,
     mushroomBonusOnDecay: 1,
   },
   {
@@ -367,7 +367,7 @@ const species = [
     oldTicks: 80,
     oldDeathChancePermille: 5,
     oldDeathChanceGrowthPermille: 1,
-    corpseDecayTicks: 24,
+    corpseDecayTicks: 300,
     mushroomBonusOnDecay: 3,
   },
   {
@@ -395,7 +395,7 @@ const species = [
     oldTicks: 120,
     oldDeathChancePermille: 3,
     oldDeathChanceGrowthPermille: 1,
-    corpseDecayTicks: 30,
+    corpseDecayTicks: 420,
     mushroomBonusOnDecay: 4,
   },
   {

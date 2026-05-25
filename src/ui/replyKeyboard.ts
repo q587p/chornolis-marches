@@ -42,6 +42,8 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
 export function buildMenuReplyKeyboard() {
   return new Keyboard()
     .text("📰 Новини")
+    .text("📊 Статистика")
+    .row()
     .text("🧭 Допомога")
     .row()
     .text("🕯 Час")

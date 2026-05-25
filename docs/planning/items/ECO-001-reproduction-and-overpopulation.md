@@ -60,6 +60,7 @@ The player should be able to create problems by “solving” other problems:
 - Available edible resources increase viability; local danger, predator pressure and crowding suppress reproduction.
 - Crowded rabbit locations consume `berries`, `herbs` and `mushrooms` as overgrazing pressure.
 - Overcrowded rabbit locations spread excess non-child rabbits into neighboring cells.
+- Rabbit corpses remain for 180 world ticks by default, long enough to observe the aftermath and support future freshening/scavenger loops.
 - World tick summaries expose rabbit births, rabbit spread, overgrazed locations and resource damage counters.
 - The regular seed flow and `/reset` both provide a small starter rabbit population.
 

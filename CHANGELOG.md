@@ -15,14 +15,19 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Added `/stat`, an auto-refreshing ecology statistics page for animal age groups, resources and recent tick counters.
 - Added `/stat.json` for raw ecology statistics.
+- Added a main status page link to `/stat`.
+- Added Telegram `/stat` / `/stats` and a menu button with a compact ecology summary and a link to the full web page.
 
 ### Changed
 
+- Added `PUBLIC_BASE_URL` for configurable Telegram web links.
+- Removed the global rabbit population hard cap; only local crowding, food, danger and predators constrain reproduction now.
+- Lengthened animal corpse decay windows after the rabbit lifecycle slowdown.
 - Bumped package metadata to `0.10.4`.
 
 ### Documentation
 
-- Updated `news.md` with the 0.10.4 web stats note.
+- Updated `news.md`, release notes and deployment docs with the 0.10.4 stats notes.
 
 ---
 

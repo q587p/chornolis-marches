@@ -11,6 +11,7 @@ The forest should feel alive even when players do nothing.
 - Corpse lifecycle.
 - Rabbit reproduction and offspring.
 - Rabbit overpopulation pressure on edible resources.
+- Longer animal corpse windows for inspection, freshening and future scavengers.
 - Resource regeneration.
 - Mushrooms grow from decayed corpses.
 - Players can interfere with the balance.
@@ -35,6 +36,7 @@ The forest should feel alive even when players do nothing.
 - Predator pressure, local danger and crowding reduce reproduction.
 - If a location has too many rabbits, they consume `berries`, `herbs` and `mushrooms` as background overgrazing.
 - Overcrowded rabbit locations spread up to 4 non-child rabbits into neighboring cells every 20 world ticks.
+- Rabbit corpses remain for 180 world ticks by default. With the default 1.5s tick, this is about 4.5 minutes.
 - World tick summaries and system events report rabbit births, spread and overgrazing pressure for balancing.
 
 ## Near Follow-Up

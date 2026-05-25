@@ -201,6 +201,7 @@ async function setBotCommandsWithRetry(bot: Bot, attempts = 3) {
         { command: "time", description: "🕯 Час Порубіжжя" },
         { command: "menu", description: "☰ Меню" },
         { command: "news", description: "📰 Останні новини світу" },
+        { command: "stat", description: "Екологічна статистика світу" },
         { command: "help", description: "🧭 Допомога новачку" },
         { command: "adminHelp", description: "🛠 Адмінські команди" },
       ]);

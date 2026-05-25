@@ -15,7 +15,6 @@ const RABBIT_REPRODUCTION_EVERY_TICKS = Number(process.env.WORLD_RABBIT_REPRODUC
 const RABBIT_MIN_LITTER_SIZE = Number(process.env.WORLD_RABBIT_MIN_LITTER_SIZE || 5);
 const RABBIT_MAX_LITTER_SIZE = Number(process.env.WORLD_RABBIT_MAX_LITTER_SIZE || 10);
 const RABBIT_LOCAL_SOFT_CAP = Number(process.env.WORLD_RABBIT_LOCAL_SOFT_CAP || 6);
-const RABBIT_WORLD_HARD_CAP = Number(process.env.WORLD_RABBIT_WORLD_HARD_CAP || 300);
 const OVERGRAZING_RABBIT_THRESHOLD = Number(process.env.WORLD_OVERGRAZING_RABBIT_THRESHOLD || 5);
 const RABBIT_SPREAD_EVERY_TICKS = Number(process.env.WORLD_RABBIT_SPREAD_EVERY_TICKS || 20);
 const RABBIT_MAX_SPREAD_PER_LOCATION = Number(process.env.WORLD_RABBIT_MAX_SPREAD_PER_LOCATION || 4);
@@ -246,7 +245,6 @@ async function processRabbitReproductionAndOvergrazing() {
   const rabbitSpecies = await prisma.creatureSpecies.findUnique({ where: { key: "rabbit" } });
   if (!rabbitSpecies) return { rabbitBirths: 0, rabbitsSpread: 0, overgrazedLocations: 0, overgrazedResources: 0, depletedByOvergrazing: 0 };
 
-  const aliveRabbitCount = await prisma.creature.count({ where: { isAlive: true, isGone: false, species: { key: "rabbit" } } });
   const regions = await prisma.region.findMany({
     include: {
       locations: {
@@ -283,7 +281,7 @@ async function processRabbitReproductionAndOvergrazing() {
       const rabbits = location.creatures.filter((creature: any) => creature.species.key === "rabbit");
       const adultRabbits = rabbits.filter(canBreedRabbit).length;
 
-      if (canReproduceThisTick && aliveRabbitCount + rabbitBirths < RABBIT_WORLD_HARD_CAP && hasBreedingPair(rabbits)) {
+      if (canReproduceThisTick && hasBreedingPair(rabbits)) {
         const food = localFoodAmount(location);
         const birthChance = rabbitBirthChance({
           adultRabbits,
@@ -295,11 +293,10 @@ async function processRabbitReproductionAndOvergrazing() {
 
         if (birthChance > 0 && chance(birthChance)) {
           const litterSize = randomInt(RABBIT_MIN_LITTER_SIZE, RABBIT_MAX_LITTER_SIZE);
-          const allowedBirths = Math.min(litterSize, RABBIT_WORLD_HARD_CAP - aliveRabbitCount - rabbitBirths);
-          for (let i = 0; i < allowedBirths; i++) await createRabbitOffspring(rabbitSpecies, location.id);
-          rabbitBirths += allowedBirths;
-          regionBirths += allowedBirths;
-          rabbitCountsByLocationId.set(location.id, (rabbitCountsByLocationId.get(location.id) ?? rabbits.length) + allowedBirths);
+          for (let i = 0; i < litterSize; i++) await createRabbitOffspring(rabbitSpecies, location.id);
+          rabbitBirths += litterSize;
+          regionBirths += litterSize;
+          rabbitCountsByLocationId.set(location.id, (rabbitCountsByLocationId.get(location.id) ?? rabbits.length) + litterSize);
         }
       }
 
@@ -730,7 +727,8 @@ function runtimeTickStatusText() {
     `- HP під час відпочинку: +1 раз на ${timing.restHealthRegenTicks} тіків ≈ ${formatDuration(timing.restHealthRegenMs)}`,
     "",
     `Регенерація ресурсів: раз на ${RESOURCE_REGEN_EVERY_TICKS} world ticks, +${RESOURCE_REGEN_AMOUNT}`,
-    `Розмноження зайців: раз на ${RABBIT_REPRODUCTION_EVERY_TICKS} world ticks; виводок ${RABBIT_MIN_LITTER_SIZE}-${RABBIT_MAX_LITTER_SIZE}, локальний м'який поріг ${RABBIT_LOCAL_SOFT_CAP}, світовий максимум ${RABBIT_WORLD_HARD_CAP}`,
+    `Розмноження зайців: раз на ${RABBIT_REPRODUCTION_EVERY_TICKS} world ticks; виводок ${RABBIT_MIN_LITTER_SIZE}-${RABBIT_MAX_LITTER_SIZE}; світового ліміту немає`,
+    `Локальний тиск зайців: м'який поріг ${RABBIT_LOCAL_SOFT_CAP}; вище нього падає шанс народження й запускається розселення`,
     `Розселення зайців: раз на ${RABBIT_SPREAD_EVERY_TICKS} world ticks; до ${RABBIT_MAX_SPREAD_PER_LOCATION} з перенаселеної локації`,
     `Надмірний випас: від ${OVERGRAZING_RABBIT_THRESHOLD} зайців у локації`,
     `Сліди живуть: ${timing.trackTtlTicks} тіків ≈ ${formatDuration(timing.trackTtlMs)}`,

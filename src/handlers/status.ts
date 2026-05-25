@@ -1,6 +1,8 @@
 import { Bot, InlineKeyboard } from "grammy";
 import { CreatureActivity, CreatureAge } from "@prisma/client";
+import { config } from "../config";
 import { prisma } from "../db";
+import { getEcologyStats } from "../services/ecologyStats";
 import { getStatusData } from "../services/status";
 import { getPlayerByTelegramId } from "../services/players";
 import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
@@ -9,6 +11,7 @@ import { stopPlayerAuto } from "./auto";
 const ADMIN_COMMANDS = [
   "/adminHelp — список команд",
   "/world — стан світу й останні події",
+  "/stat — коротка екологічна статистика й посилання на веб-/stat",
   "/all — усі живі персонажі та істоти",
   "/all dead — усі записи істот, включно з inactive/dead/corpse/gone",
   "/location або кнопка 👀 Озирнутися — показати поточну місцину",
@@ -47,6 +50,48 @@ const UNIQUE_NPCS: UniqueNpcSpec[] = [
 function formatEvent(event: any) {
   const description = event.description ? ` — ${event.description}` : "";
   return `#${event.id} ${event.title}${description}`;
+}
+
+function formatStatNumber(value: number, maximumFractionDigits = 0) {
+  return value.toLocaleString("uk-UA", { maximumFractionDigits });
+}
+
+function formatRate(value: number) {
+  return formatStatNumber(value, value >= 10 ? 0 : 1);
+}
+
+async function buildStatBrief() {
+  const stats = await getEcologyStats();
+  const statUrl = `${config.publicBaseUrl}/stat`;
+  const speciesLines = stats.speciesRows
+    .filter((row) => row.total > 0)
+    .map((row) => `${row.name} [${row.key}]: живі ${formatStatNumber(row.alive)}; вік ${row.ages.CHILD}/${row.ages.YOUNG}/${row.ages.ADULT}/${row.ages.OLD}; трупи ${formatStatNumber(row.corpses)}`);
+  const counters = stats.recent.counters;
+  const rates = stats.recent.ratesPerHour;
+  const observed = stats.recent.eventCount
+    ? `${formatStatNumber(stats.recent.observedTicks)} ticks / ${formatStatNumber(stats.recent.observedMinutes, 1)} хв`
+    : "ще немає world tick подій";
+
+  return {
+    text: [
+      "Екологія Чорнолісу",
+      "",
+      `Тварини: живі ${formatStatNumber(stats.totals.aliveAnimals)}, трупи ${formatStatNumber(stats.totals.corpseAnimals)}, зниклі ${formatStatNumber(stats.totals.goneAnimals)}, записів усього ${formatStatNumber(stats.totals.totalAnimals)}.`,
+      `Заселені клітинки: ${formatStatNumber(stats.totals.occupiedAnimalLocations)} / ${formatStatNumber(stats.totals.locationCount)}.`,
+      "",
+      "Види:",
+      speciesLines.length ? speciesLines.join("\n") : "поки немає тварин",
+      "",
+      `Останнє вікно: ${observed}.`,
+      `Народження: ${formatStatNumber(counters.rabbitBirths)} (${formatRate(rates.rabbitBirths)}/год).`,
+      `Розселення: ${formatStatNumber(counters.rabbitsSpread)} (${formatRate(rates.rabbitsSpread)}/год).`,
+      `Переїдено ресурсів: ${formatStatNumber(counters.overgrazedResources)} (${formatRate(rates.overgrazedResources)}/год).`,
+      `Смерті від старості: ${formatStatNumber(counters.oldAgeDeaths)} (${formatRate(rates.oldAgeDeaths)}/год).`,
+      "",
+      `Повна статистика: ${statUrl}`,
+    ].join("\n"),
+    keyboard: new InlineKeyboard().url("Відкрити повну /stat", statUrl),
+  };
 }
 
 async function normalizeUniqueNpc(npc: UniqueNpcSpec) {
@@ -286,6 +331,16 @@ export function registerStatusHandlers(bot: Bot) {
     const s = await getStatusData();
     const latestEvents = s.latestEvents.length ? s.latestEvents.map(formatEvent).join("\n") : "немає";
     await ctx.reply(`🌲 Стан Порубіжжя Чорнолісу\n\nВерсія: ${s.version}\nПерсонажів гравців у базі: ${s.playersCount}\nРегіонів: ${s.regionsCount}\nЛокацій-клітинок: ${s.locationsCount}\nПереходів між клітинками: ${s.exitsCount}\nЖивих тварин: ${s.aliveAnimalsCount}\nТрупів тварин: ${s.animalCorpsesCount}\nЗниклих тварин: ${s.goneAnimalsCount}\nNPC / не-тварин: ${s.npcCount}\nЖивих істот загалом: ${s.aliveCreaturesCount}\nВузлів ресурсів: ${s.resourcesCount}\nПодій у журналі: ${s.eventsCount}\n\nОстанні події:\n${latestEvents}\n\nОстання помилка: ${s.lastRuntimeError ?? "немає"}`);
+  });
+
+  bot.command(["stat", "stats"], async (ctx) => {
+    const stat = await buildStatBrief();
+    await ctx.reply(stat.text, { reply_markup: stat.keyboard });
+  });
+
+  bot.hears(["📊 Статистика", "Статистика"], async (ctx) => {
+    const stat = await buildStatBrief();
+    await ctx.reply(stat.text, { reply_markup: stat.keyboard });
   });
 
   bot.command("all", async (ctx) => {
