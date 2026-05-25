@@ -77,6 +77,26 @@
     "file": "docs/planning/items/ECON-001-barter-and-trade.md"
   },
   {
+    "id": "FISH-001",
+    "title": "Riverbank fishing and fisher NPC",
+    "status": "backlog",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "fishing",
+      "npc",
+      "skills",
+      "riverbank",
+      "observation"
+    ],
+    "depends_on": [
+      "PROG-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FISH-001-riverbank-fishing-and-fisher-npc.md"
+  },
+  {
     "id": "ICE-001",
     "title": "Mythic skill learning from spirits",
     "status": "icebox",

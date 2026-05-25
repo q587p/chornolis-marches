@@ -23,6 +23,16 @@ Examples:
 
 A player should be able to earn the same social/professional labels that NPCs have.
 
+## Future fisher NPC
+
+A fisher NPC is planned for the riverbank. They should move between fishing spots, visibly prepare line or net, wait, catch or fail to catch fish, and become a source for learning basic fishing through observation or conversation.
+
+This NPC should connect three systems:
+
+- profession behavior: a person earns the label by repeatedly doing the work;
+- survival/economy: fish can become food, barter goods or cooking input;
+- progression: watching a successful catch may unlock Fishing once observation-based learning exists.
+
 ## Visibility and confusion
 
 Without relevant observation/recognition skills, NPCs may look very similar to players:

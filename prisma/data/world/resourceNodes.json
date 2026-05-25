@@ -1,0 +1,2234 @@
+[
+  {
+    "locationKey": "closed_east_gate",
+    "resourceKey": "berries",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "closed_east_gate",
+    "resourceKey": "herbs",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "closed_east_gate",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_00_00",
+    "resourceKey": "berries",
+    "amount": 6,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_00_00",
+    "resourceKey": "herbs",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_00_00",
+    "resourceKey": "mushrooms",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_00_02",
+    "resourceKey": "berries",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_00_02",
+    "resourceKey": "herbs",
+    "amount": 6,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_00_02",
+    "resourceKey": "mushrooms",
+    "amount": 12,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_00_03",
+    "resourceKey": "berries",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_00_03",
+    "resourceKey": "herbs",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_00_03",
+    "resourceKey": "mushrooms",
+    "amount": 14,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_00_04",
+    "resourceKey": "berries",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_00_04",
+    "resourceKey": "herbs",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_00_04",
+    "resourceKey": "mushrooms",
+    "amount": 16,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_00_06",
+    "resourceKey": "berries",
+    "amount": 12,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_00_06",
+    "resourceKey": "herbs",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_00_06",
+    "resourceKey": "mushrooms",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_00_07",
+    "resourceKey": "berries",
+    "amount": 6,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_00_07",
+    "resourceKey": "herbs",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_00_07",
+    "resourceKey": "mushrooms",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_00_08",
+    "resourceKey": "berries",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_00_08",
+    "resourceKey": "herbs",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_00_08",
+    "resourceKey": "mushrooms",
+    "amount": 12,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_01_00",
+    "resourceKey": "berries",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_01_00",
+    "resourceKey": "herbs",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_01_00",
+    "resourceKey": "mushrooms",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_01_02",
+    "resourceKey": "berries",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_01_02",
+    "resourceKey": "herbs",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_01_02",
+    "resourceKey": "mushrooms",
+    "amount": 13,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_01_04",
+    "resourceKey": "berries",
+    "amount": 6,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_01_04",
+    "resourceKey": "herbs",
+    "amount": 5,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_01_04",
+    "resourceKey": "mushrooms",
+    "amount": 17,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_01_06",
+    "resourceKey": "berries",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_01_06",
+    "resourceKey": "herbs",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_01_06",
+    "resourceKey": "mushrooms",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_01_08",
+    "resourceKey": "berries",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_01_08",
+    "resourceKey": "herbs",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_01_08",
+    "resourceKey": "mushrooms",
+    "amount": 13,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_00",
+    "resourceKey": "berries",
+    "amount": 12,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_00",
+    "resourceKey": "herbs",
+    "amount": 6,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_00",
+    "resourceKey": "mushrooms",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_01",
+    "resourceKey": "berries",
+    "amount": 6,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_01",
+    "resourceKey": "herbs",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_01",
+    "resourceKey": "mushrooms",
+    "amount": 12,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_02",
+    "resourceKey": "berries",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_02",
+    "resourceKey": "herbs",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_02",
+    "resourceKey": "mushrooms",
+    "amount": 14,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_04",
+    "resourceKey": "berries",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_04",
+    "resourceKey": "herbs",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_04",
+    "resourceKey": "mushrooms",
+    "amount": 18,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_05",
+    "resourceKey": "berries",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_05",
+    "resourceKey": "herbs",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_05",
+    "resourceKey": "mushrooms",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_06",
+    "resourceKey": "berries",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_06",
+    "resourceKey": "herbs",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_06",
+    "resourceKey": "mushrooms",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_08",
+    "resourceKey": "berries",
+    "amount": 6,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_08",
+    "resourceKey": "herbs",
+    "amount": 6,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_08",
+    "resourceKey": "mushrooms",
+    "amount": 14,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_09",
+    "resourceKey": "berries",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_09",
+    "resourceKey": "herbs",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_09",
+    "resourceKey": "mushrooms",
+    "amount": 16,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_03_02",
+    "resourceKey": "berries",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_03_02",
+    "resourceKey": "herbs",
+    "amount": 5,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_03_02",
+    "resourceKey": "mushrooms",
+    "amount": 15,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_03_06",
+    "resourceKey": "berries",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_03_06",
+    "resourceKey": "herbs",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_03_06",
+    "resourceKey": "mushrooms",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_00",
+    "resourceKey": "berries",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_00",
+    "resourceKey": "herbs",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_00",
+    "resourceKey": "mushrooms",
+    "amount": 12,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_01",
+    "resourceKey": "berries",
+    "amount": 12,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_01",
+    "resourceKey": "herbs",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_01",
+    "resourceKey": "mushrooms",
+    "amount": 14,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_02",
+    "resourceKey": "berries",
+    "amount": 6,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_02",
+    "resourceKey": "herbs",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_02",
+    "resourceKey": "mushrooms",
+    "amount": 16,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_03",
+    "resourceKey": "berries",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_03",
+    "resourceKey": "herbs",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_03",
+    "resourceKey": "mushrooms",
+    "amount": 18,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_04",
+    "resourceKey": "berries",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_04",
+    "resourceKey": "herbs",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_04",
+    "resourceKey": "mushrooms",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_06",
+    "resourceKey": "berries",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_06",
+    "resourceKey": "herbs",
+    "amount": 6,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_06",
+    "resourceKey": "mushrooms",
+    "amount": 12,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_07",
+    "resourceKey": "berries",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_07",
+    "resourceKey": "herbs",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_07",
+    "resourceKey": "mushrooms",
+    "amount": 14,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_08",
+    "resourceKey": "berries",
+    "amount": 12,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_08",
+    "resourceKey": "herbs",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_08",
+    "resourceKey": "mushrooms",
+    "amount": 16,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_05_00",
+    "resourceKey": "berries",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_05_00",
+    "resourceKey": "herbs",
+    "amount": 5,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_05_00",
+    "resourceKey": "mushrooms",
+    "amount": 13,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_05_04",
+    "resourceKey": "berries",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_05_04",
+    "resourceKey": "herbs",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_05_04",
+    "resourceKey": "mushrooms",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_05_08",
+    "resourceKey": "berries",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_05_08",
+    "resourceKey": "herbs",
+    "amount": 5,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_05_08",
+    "resourceKey": "mushrooms",
+    "amount": 17,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_06_00",
+    "resourceKey": "berries",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_06_00",
+    "resourceKey": "herbs",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_06_00",
+    "resourceKey": "mushrooms",
+    "amount": 14,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_06_02",
+    "resourceKey": "berries",
+    "amount": 12,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_06_02",
+    "resourceKey": "herbs",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_06_02",
+    "resourceKey": "mushrooms",
+    "amount": 18,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_06_03",
+    "resourceKey": "berries",
+    "amount": 6,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_06_03",
+    "resourceKey": "herbs",
+    "amount": 5,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_06_03",
+    "resourceKey": "mushrooms",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_06_04",
+    "resourceKey": "berries",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_06_04",
+    "resourceKey": "herbs",
+    "amount": 6,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_06_04",
+    "resourceKey": "mushrooms",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_06_05",
+    "resourceKey": "berries",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_06_05",
+    "resourceKey": "herbs",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_06_05",
+    "resourceKey": "mushrooms",
+    "amount": 12,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_06_06",
+    "resourceKey": "berries",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_06_06",
+    "resourceKey": "herbs",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_06_06",
+    "resourceKey": "mushrooms",
+    "amount": 14,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_06_08",
+    "resourceKey": "berries",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_06_08",
+    "resourceKey": "herbs",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_06_08",
+    "resourceKey": "mushrooms",
+    "amount": 18,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_07_00",
+    "resourceKey": "berries",
+    "amount": 6,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_07_00",
+    "resourceKey": "herbs",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_07_00",
+    "resourceKey": "mushrooms",
+    "amount": 15,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_07_01",
+    "resourceKey": "berries",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_07_01",
+    "resourceKey": "herbs",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_07_01",
+    "resourceKey": "mushrooms",
+    "amount": 17,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_07_02",
+    "resourceKey": "berries",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_07_02",
+    "resourceKey": "herbs",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_07_02",
+    "resourceKey": "mushrooms",
+    "amount": 19,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_07_06",
+    "resourceKey": "berries",
+    "amount": 12,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_07_06",
+    "resourceKey": "herbs",
+    "amount": 5,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_07_06",
+    "resourceKey": "mushrooms",
+    "amount": 15,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_07_08",
+    "resourceKey": "berries",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_07_08",
+    "resourceKey": "herbs",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_07_08",
+    "resourceKey": "mushrooms",
+    "amount": 19,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_08_02",
+    "resourceKey": "berries",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_08_02",
+    "resourceKey": "herbs",
+    "amount": 6,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_08_02",
+    "resourceKey": "mushrooms",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_08_04",
+    "resourceKey": "berries",
+    "amount": 6,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_08_04",
+    "resourceKey": "herbs",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_08_04",
+    "resourceKey": "mushrooms",
+    "amount": 12,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_08_05",
+    "resourceKey": "berries",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_08_05",
+    "resourceKey": "herbs",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_08_05",
+    "resourceKey": "mushrooms",
+    "amount": 14,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_08_06",
+    "resourceKey": "berries",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_08_06",
+    "resourceKey": "herbs",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_08_06",
+    "resourceKey": "mushrooms",
+    "amount": 16,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_08_07",
+    "resourceKey": "berries",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_08_07",
+    "resourceKey": "herbs",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_08_07",
+    "resourceKey": "mushrooms",
+    "amount": 18,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_08_08",
+    "resourceKey": "berries",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_08_08",
+    "resourceKey": "herbs",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_08_08",
+    "resourceKey": "mushrooms",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_08_09",
+    "resourceKey": "berries",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_08_09",
+    "resourceKey": "herbs",
+    "amount": 5,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_08_09",
+    "resourceKey": "mushrooms",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_00",
+    "resourceKey": "berries",
+    "amount": 12,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_00",
+    "resourceKey": "herbs",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_00",
+    "resourceKey": "mushrooms",
+    "amount": 17,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_01",
+    "resourceKey": "berries",
+    "amount": 6,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_01",
+    "resourceKey": "herbs",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_01",
+    "resourceKey": "mushrooms",
+    "amount": 19,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_02",
+    "resourceKey": "berries",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_02",
+    "resourceKey": "herbs",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_02",
+    "resourceKey": "mushrooms",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_03",
+    "resourceKey": "berries",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_03",
+    "resourceKey": "herbs",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_03",
+    "resourceKey": "mushrooms",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_04",
+    "resourceKey": "berries",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_04",
+    "resourceKey": "herbs",
+    "amount": 5,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_04",
+    "resourceKey": "mushrooms",
+    "amount": 13,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_06",
+    "resourceKey": "berries",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_06",
+    "resourceKey": "herbs",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_06",
+    "resourceKey": "mushrooms",
+    "amount": 17,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_07",
+    "resourceKey": "berries",
+    "amount": 12,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_07",
+    "resourceKey": "herbs",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_07",
+    "resourceKey": "mushrooms",
+    "amount": 19,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_09",
+    "resourceKey": "berries",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_09",
+    "resourceKey": "herbs",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_09_09",
+    "resourceKey": "mushrooms",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_00",
+    "resourceKey": "berries",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_00",
+    "resourceKey": "herbs",
+    "amount": 17,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_00",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_01",
+    "resourceKey": "berries",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_01",
+    "resourceKey": "herbs",
+    "amount": 18,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_01",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_02",
+    "resourceKey": "berries",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_02",
+    "resourceKey": "herbs",
+    "amount": 19,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_02",
+    "resourceKey": "mushrooms",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_03",
+    "resourceKey": "berries",
+    "amount": 2,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_03",
+    "resourceKey": "herbs",
+    "amount": 20,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_03",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_04",
+    "resourceKey": "berries",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_04",
+    "resourceKey": "herbs",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_04",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_05",
+    "resourceKey": "berries",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_05",
+    "resourceKey": "herbs",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_05",
+    "resourceKey": "mushrooms",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_06",
+    "resourceKey": "berries",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_06",
+    "resourceKey": "herbs",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_06",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_07",
+    "resourceKey": "berries",
+    "amount": 2,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_07",
+    "resourceKey": "herbs",
+    "amount": 12,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_07",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_08",
+    "resourceKey": "berries",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_08",
+    "resourceKey": "herbs",
+    "amount": 13,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_08",
+    "resourceKey": "mushrooms",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_09",
+    "resourceKey": "berries",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_09",
+    "resourceKey": "herbs",
+    "amount": 14,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_10_09",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_00",
+    "resourceKey": "berries",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_00",
+    "resourceKey": "herbs",
+    "amount": 19,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_00",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_01",
+    "resourceKey": "berries",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_01",
+    "resourceKey": "herbs",
+    "amount": 20,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_01",
+    "resourceKey": "mushrooms",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_02",
+    "resourceKey": "berries",
+    "amount": 2,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_02",
+    "resourceKey": "herbs",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_02",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_03",
+    "resourceKey": "berries",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_03",
+    "resourceKey": "herbs",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_03",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_04",
+    "resourceKey": "berries",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_04",
+    "resourceKey": "herbs",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_04",
+    "resourceKey": "mushrooms",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_05",
+    "resourceKey": "berries",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_05",
+    "resourceKey": "herbs",
+    "amount": 12,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_05",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_06",
+    "resourceKey": "berries",
+    "amount": 2,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_06",
+    "resourceKey": "herbs",
+    "amount": 13,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_06",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_07",
+    "resourceKey": "berries",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_07",
+    "resourceKey": "herbs",
+    "amount": 14,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_07",
+    "resourceKey": "mushrooms",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_09",
+    "resourceKey": "berries",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_09",
+    "resourceKey": "herbs",
+    "amount": 16,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_11_09",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_00",
+    "resourceKey": "berries",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_00",
+    "resourceKey": "herbs",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_00",
+    "resourceKey": "mushrooms",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_02",
+    "resourceKey": "berries",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_02",
+    "resourceKey": "herbs",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_02",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_03",
+    "resourceKey": "berries",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_03",
+    "resourceKey": "herbs",
+    "amount": 12,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_03",
+    "resourceKey": "mushrooms",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_04",
+    "resourceKey": "berries",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_04",
+    "resourceKey": "herbs",
+    "amount": 13,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_04",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_05",
+    "resourceKey": "berries",
+    "amount": 2,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_05",
+    "resourceKey": "herbs",
+    "amount": 14,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_05",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_06",
+    "resourceKey": "berries",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_06",
+    "resourceKey": "herbs",
+    "amount": 15,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_06",
+    "resourceKey": "mushrooms",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_07",
+    "resourceKey": "berries",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_07",
+    "resourceKey": "herbs",
+    "amount": 16,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_07",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_08",
+    "resourceKey": "berries",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_08",
+    "resourceKey": "herbs",
+    "amount": 17,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_08",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_09",
+    "resourceKey": "berries",
+    "amount": 2,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_09",
+    "resourceKey": "herbs",
+    "amount": 18,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_12_09",
+    "resourceKey": "mushrooms",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_13_01",
+    "resourceKey": "berries",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_13_01",
+    "resourceKey": "herbs",
+    "amount": 12,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_13_01",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_13_02",
+    "resourceKey": "berries",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_13_02",
+    "resourceKey": "herbs",
+    "amount": 13,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_13_02",
+    "resourceKey": "mushrooms",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_13_04",
+    "resourceKey": "berries",
+    "amount": 2,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_13_04",
+    "resourceKey": "herbs",
+    "amount": 15,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_13_04",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_13_05",
+    "resourceKey": "berries",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_13_05",
+    "resourceKey": "herbs",
+    "amount": 16,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_13_05",
+    "resourceKey": "mushrooms",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_13_06",
+    "resourceKey": "berries",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_13_06",
+    "resourceKey": "herbs",
+    "amount": 17,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_13_06",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_13_07",
+    "resourceKey": "berries",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_13_07",
+    "resourceKey": "herbs",
+    "amount": 18,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_13_07",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_13_08",
+    "resourceKey": "berries",
+    "amount": 2,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_13_08",
+    "resourceKey": "herbs",
+    "amount": 19,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_13_08",
+    "resourceKey": "mushrooms",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_14_02",
+    "resourceKey": "berries",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_14_02",
+    "resourceKey": "herbs",
+    "amount": 15,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_14_02",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_14_03",
+    "resourceKey": "berries",
+    "amount": 2,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_14_03",
+    "resourceKey": "herbs",
+    "amount": 16,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_14_03",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_14_04",
+    "resourceKey": "berries",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_14_04",
+    "resourceKey": "herbs",
+    "amount": 17,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_14_04",
+    "resourceKey": "mushrooms",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_14_05",
+    "resourceKey": "berries",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_14_05",
+    "resourceKey": "herbs",
+    "amount": 18,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_14_05",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_14_06",
+    "resourceKey": "berries",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_14_06",
+    "resourceKey": "herbs",
+    "amount": 19,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_14_06",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_14_07",
+    "resourceKey": "berries",
+    "amount": 2,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_14_07",
+    "resourceKey": "herbs",
+    "amount": 20,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_14_07",
+    "resourceKey": "mushrooms",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_15_03",
+    "resourceKey": "berries",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_15_03",
+    "resourceKey": "herbs",
+    "amount": 18,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_15_03",
+    "resourceKey": "mushrooms",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_15_04",
+    "resourceKey": "berries",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_15_04",
+    "resourceKey": "herbs",
+    "amount": 19,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_15_04",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_15_05",
+    "resourceKey": "berries",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_15_05",
+    "resourceKey": "herbs",
+    "amount": 20,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_15_05",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_16_04",
+    "resourceKey": "berries",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_16_04",
+    "resourceKey": "herbs",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_16_04",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_16_05",
+    "resourceKey": "berries",
+    "amount": 2,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_16_05",
+    "resourceKey": "herbs",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "meadow_16_05",
+    "resourceKey": "mushrooms",
+    "amount": 1,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "old_bridge_east_span",
+    "resourceKey": "berries",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "old_bridge_east_span",
+    "resourceKey": "herbs",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "old_bridge_east_span",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "old_bridge_west_span",
+    "resourceKey": "berries",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "old_bridge_west_span",
+    "resourceKey": "herbs",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "old_bridge_west_span",
+    "resourceKey": "mushrooms",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_13_00",
+    "resourceKey": "berries",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_13_00",
+    "resourceKey": "herbs",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_13_00",
+    "resourceKey": "mushrooms",
+    "amount": 6,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_13_09",
+    "resourceKey": "berries",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_13_09",
+    "resourceKey": "herbs",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_13_09",
+    "resourceKey": "mushrooms",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_14_01",
+    "resourceKey": "berries",
+    "amount": 2,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_14_01",
+    "resourceKey": "herbs",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_14_01",
+    "resourceKey": "mushrooms",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_14_08",
+    "resourceKey": "berries",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_14_08",
+    "resourceKey": "herbs",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_14_08",
+    "resourceKey": "mushrooms",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_15_02",
+    "resourceKey": "berries",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_15_02",
+    "resourceKey": "herbs",
+    "amount": 6,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_15_02",
+    "resourceKey": "mushrooms",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_15_07",
+    "resourceKey": "berries",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_15_07",
+    "resourceKey": "herbs",
+    "amount": 11,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_15_07",
+    "resourceKey": "mushrooms",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_16_03",
+    "resourceKey": "berries",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_16_03",
+    "resourceKey": "herbs",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_16_03",
+    "resourceKey": "mushrooms",
+    "amount": 5,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_16_06",
+    "resourceKey": "berries",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_16_06",
+    "resourceKey": "herbs",
+    "amount": 12,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_16_06",
+    "resourceKey": "mushrooms",
+    "amount": 6,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_16_07",
+    "resourceKey": "berries",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_16_07",
+    "resourceKey": "herbs",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_16_07",
+    "resourceKey": "mushrooms",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_17_04",
+    "resourceKey": "berries",
+    "amount": 2,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_17_04",
+    "resourceKey": "herbs",
+    "amount": 12,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_17_04",
+    "resourceKey": "mushrooms",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_17_06",
+    "resourceKey": "berries",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_17_06",
+    "resourceKey": "herbs",
+    "amount": 12,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_17_06",
+    "resourceKey": "mushrooms",
+    "amount": 6,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_18_04",
+    "resourceKey": "berries",
+    "amount": 2,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_18_04",
+    "resourceKey": "herbs",
+    "amount": 7,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_18_04",
+    "resourceKey": "mushrooms",
+    "amount": 10,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_18_06",
+    "resourceKey": "berries",
+    "amount": 2,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_18_06",
+    "resourceKey": "herbs",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "riverbank_18_06",
+    "resourceKey": "mushrooms",
+    "amount": 9,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "start_border_camp",
+    "resourceKey": "berries",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "start_border_camp",
+    "resourceKey": "herbs",
+    "amount": 13,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "start_border_camp",
+    "resourceKey": "mushrooms",
+    "amount": 5,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "under_bridge_18_05",
+    "resourceKey": "berries",
+    "amount": 0,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "under_bridge_18_05",
+    "resourceKey": "herbs",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "under_bridge_18_05",
+    "resourceKey": "mushrooms",
+    "amount": 14,
+    "maxAmount": 100
+  }
+]

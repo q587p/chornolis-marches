@@ -9,6 +9,29 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.10.5 - World map v7 and starter ecology - 12026-05-25
+
+### Added
+
+- Added split `prisma/data/world/*.json` seed data from the v7 world patch as the active seed source.
+- Added Ведана as a female herbalist-like NPC while preserving the current Здравомир and Дід лісовик setup.
+- Added `scripts/world/render-map-ascii.mjs` and `docs/world/map_editing.md`.
+- Added a mixed starter rabbit population: children, young rabbits, adults, old rabbits and corpses.
+
+### Changed
+
+- Updated the world map docs for the v7 riverbank and under-bridge layout.
+- Removed direct bridge-deck vertical exits to the under-bridge location in the active seed data.
+- `getStartLocationId()` now reads `meta.startLocationKey` from split or legacy seed metadata.
+- `/resetWorld` now restores the same mixed starter rabbit population.
+- Bumped package metadata to `0.10.5`.
+
+### Documentation
+
+- Added release notes for 0.10.5 and updated `news.md`.
+
+---
+
 ## 0.10.4 - Ecology web stats - 12026-05-25
 
 ### Added

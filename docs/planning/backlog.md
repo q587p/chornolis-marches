@@ -11,7 +11,7 @@ Backlog differs from Icebox: backlog means “we probably want this, but not rig
 - Campfires and firewood.
 - Early `/respawn` support.
 - Starter settlement and NPCs.
-- Fishing.
+- Fishing: riverbank fishing loop, fisher NPC, and learning basic fishing by watching or speaking with them.
 - Basic crafting.
 - Barter and trade.
 - Use- and observation-based skill progression.
@@ -28,6 +28,7 @@ Backlog differs from Icebox: backlog means “we probably want this, but not rig
 - Hide exact HP/stamina/queue/resource numbers outside debug mode and use descriptive states such as healthy, wounded, exhausted, almost unconscious.
 - Collision handling for gathering, attacks, freshening and similar actions: random events, speed/skill dependence, and messages to other characters nearby.
 - Refactor `src/services/actionQueue.ts`: split the large queue/orchestration file into smaller action-specific modules and clarify action completion boundaries.
+- Map docs drift check: add `map:check` and CI/pre-commit coverage so changes under `prisma/data/world/` fail when `docs/world/world_map.md` was not regenerated.
 - Character card expansion: name cases, name approval status, registration date/time, active play time, and current money.
 - Real active time tracking for players based on actions/activity rather than account age.
 - Dynamic `/time` model after the static starter date: season, moon circle/month, day and time of day should advance with world time.

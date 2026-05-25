@@ -1,0 +1,13 @@
+{
+  "version": "0.10.3-world-layout-v7",
+  "startLocationKey": "start_border_camp",
+  "notes": [
+    "2D planar map for the current MVP; z stays 0 except for the under-bridge location at z=-1.",
+    "The western forest keeps the authored 10x10 layout.",
+    "The river is impassable except through the old bridge; the under-bridge path is separate from the bridge deck.",
+    "Forest is walled from north, south and west; the east opens into the widened dry luka.",
+    "The dry luka has north/south impassable caps and a central footpath wrap between its northern and southern edge.",
+    "The northern riverbank still wraps northward to the southern riverbank, with a reciprocal southward exit.",
+    "The bridge area has expanded riverbank cells and a z=-1 under-bridge location connected only to nearby riverbank locations, not to the bridge deck."
+  ]
+}

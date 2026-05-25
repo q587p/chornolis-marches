@@ -1,0 +1,131 @@
+[
+  {
+    "key": "closed_settlement_gate",
+    "locationKey": "closed_east_gate",
+    "type": "GATE",
+    "name": "Зачинені ворота",
+    "description": "Ворота до поселення замкнені. Східний прохід буде відкритий пізніше, коли з’явиться саме поселення.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "locked": true,
+      "future_area": "starter_settlement"
+    }
+  },
+  {
+    "key": "forest_moss_gravestone",
+    "locationKey": "forest_02_02",
+    "type": "LANDMARK",
+    "name": "Вивітрений могильний камінь",
+    "description": "На камені лишилися лише кілька рисок і знак, схожий на око між гілками.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "inspectable": true,
+      "tone": "old_grave"
+    }
+  },
+  {
+    "key": "forest_broken_wooden_idol",
+    "locationKey": "forest_05_04",
+    "type": "LANDMARK",
+    "name": "Зламаний дерев’яний ідол",
+    "description": "Половина обличчя стерта до темної тріски, але різьблений орнамент ще видно.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "inspectable": true,
+      "tone": "forest_spirit"
+    }
+  },
+  {
+    "key": "meadow_boundary_stone",
+    "locationKey": "meadow_11_09",
+    "type": "LANDMARK",
+    "name": "Камінь північної стежки",
+    "description": "Камінь стоїть там, де лука ніби мала б закінчитися. Стежка від нього дивно повертає на південь.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "inspectable": true,
+      "wrap_hint": "dry_luka_north_south"
+    }
+  },
+  {
+    "key": "meadow_dry_well",
+    "locationKey": "meadow_13_05",
+    "type": "LANDMARK",
+    "name": "Суха криниця",
+    "description": "Кам’яне кільце майже заросло травою. Знизу тягне холодом, але води не чути.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "inspectable": true,
+      "future_hook": "water_or_echo"
+    }
+  },
+  {
+    "key": "old_bridge_planks",
+    "locationKey": "old_bridge_west_span",
+    "type": "BRIDGE",
+    "name": "Старі мостові дошки",
+    "description": "Дошки скриплять, але міст усе ще дає єдиний явний перехід через річку.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "river_crossing": true
+    }
+  },
+  {
+    "key": "riverbank_fisher_post",
+    "locationKey": "riverbank_16_07",
+    "type": "LANDMARK",
+    "name": "Похилений рибальський кілок",
+    "description": "До кілка прив’язаний старий уривок мотузки. Можливо, тут колись ставили сітки.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "inspectable": true,
+      "future_hook": "fishing"
+    }
+  },
+  {
+    "key": "start_border_marker",
+    "locationKey": "start_border_camp",
+    "type": "BORDER_MARKER",
+    "name": "Межовий знак",
+    "description": "Старий дерев’яний знак із різьбленим геометричним орнаментом. Він позначає межу між легкою дорогою, лісом, річкою і поселенням за воротами.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "ornament": "ukrainian_geometric",
+      "role": "respawn_marker"
+    }
+  },
+  {
+    "key": "start_unfading_campfire",
+    "locationKey": "start_border_camp",
+    "type": "MAGIC_CAMPFIRE",
+    "name": "Незгасне вогнище",
+    "description": "Полум’я горить рівно, не потребує хмизу й дає світло всій локації. Під час активного відпочинку тут можна відновити витривалість до п’ятикратного максимуму.",
+    "providesLight": true,
+    "restStaminaCapMultiplier": 5,
+    "data": {
+      "rest_stamina_cap_multiplier": 5,
+      "night_light": "location"
+    }
+  },
+  {
+    "key": "under_bridge_wet_pillars",
+    "locationKey": "under_bridge_18_05",
+    "type": "BRIDGE",
+    "name": "Мокрі палі мосту",
+    "description": "Палі вкриті мулом і темними зарубками. У воді під ними щось часом ледь ворушиться.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "inspectable": true,
+      "under_bridge": true
+    }
+  }
+]

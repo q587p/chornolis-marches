@@ -1,0 +1,64 @@
+[
+  {
+    "speciesKey": "lisovyk",
+    "locationKey": "forest_00_00",
+    "name": "Дід лісовик",
+    "legacyNames": [
+      "Дід Чорноліс"
+    ],
+    "isAlive": true,
+    "isHidden": true,
+    "action": "спить під корінням на самому краю старого лісу",
+    "activity": "SLEEPING",
+    "nameOverrides": {
+      "nameGenitive": "Діда лісовика",
+      "nameDative": "Діду лісовику",
+      "nameAccusative": "Діда лісовика",
+      "nameInstrumental": "Дідом лісовиком",
+      "nameLocative": "Діді лісовику",
+      "nameVocative": "Діду лісовику"
+    }
+  },
+  {
+    "speciesKey": "herbalist",
+    "locationKey": "start_border_camp",
+    "name": "Здравомир",
+    "legacyNames": [
+      "Травник"
+    ],
+    "isAlive": true,
+    "isHidden": false,
+    "professionKey": "znakhar",
+    "professionName": "знахар",
+    "action": "придивляється до межового вогню й сушить трави біля торби",
+    "activity": "LOOKING",
+    "nameOverrides": {
+      "nameGenitive": "Здравомира",
+      "nameDative": "Здравомиру",
+      "nameAccusative": "Здравомира",
+      "nameInstrumental": "Здравомиром",
+      "nameLocative": "Здравомирі",
+      "nameVocative": "Здравомире"
+    }
+  },
+  {
+    "speciesKey": "herbalist",
+    "locationKey": "forest_04_04",
+    "name": "Ведана",
+    "sex": "FEMALE",
+    "isAlive": true,
+    "isHidden": false,
+    "professionKey": "travnytsia",
+    "professionName": "травниця",
+    "action": "збирає кору й шепоче над травами",
+    "activity": "GATHERING",
+    "nameOverrides": {
+      "nameGenitive": "Ведани",
+      "nameDative": "Ведані",
+      "nameAccusative": "Ведану",
+      "nameInstrumental": "Веданою",
+      "nameLocative": "Ведані",
+      "nameVocative": "Ведано"
+    }
+  }
+]

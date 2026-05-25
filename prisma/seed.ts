@@ -110,6 +110,7 @@ type SeedUniqueCreature = {
   action: string;
   activity: "IDLE" | "GATHERING" | "RESTING" | "LOOKING" | "SLEEPING";
   legacyNames?: string[];
+  sex?: "MALE" | "FEMALE";
   isHidden?: boolean;
   professionKey?: string;
   professionName?: string;
@@ -276,13 +277,27 @@ async function deleteDeprecatedSeedFeatures() {
   if (result.count > 0) console.log(`  - removed deprecated features: ${result.count}`);
 }
 
-const STARTER_RABBITS: Array<{ locationKey: string; count: number }> = [
-  { locationKey: "forest_04_00", count: 2 },
-  { locationKey: "forest_07_02", count: 2 },
-  { locationKey: "forest_02_06", count: 2 },
-  { locationKey: "meadow_10_03", count: 2 },
-  { locationKey: "meadow_12_07", count: 2 },
-  { locationKey: "meadow_14_05", count: 1 },
+type StarterRabbitAge = "CHILD" | "YOUNG" | "ADULT" | "OLD" | "CORPSE";
+
+type StarterRabbitGroup = {
+  locationKey: string;
+  count: number;
+  age: StarterRabbitAge;
+  sex?: "MALE" | "FEMALE";
+};
+
+const STARTER_RABBITS: StarterRabbitGroup[] = [
+  { locationKey: "forest_04_00", count: 1, age: "ADULT", sex: "FEMALE" },
+  { locationKey: "forest_04_00", count: 1, age: "ADULT", sex: "MALE" },
+  { locationKey: "forest_07_02", count: 3, age: "CHILD" },
+  { locationKey: "forest_07_02", count: 2, age: "YOUNG" },
+  { locationKey: "forest_02_06", count: 2, age: "OLD" },
+  { locationKey: "meadow_10_03", count: 1, age: "ADULT", sex: "FEMALE" },
+  { locationKey: "meadow_10_03", count: 1, age: "ADULT", sex: "MALE" },
+  { locationKey: "meadow_10_03", count: 2, age: "CHILD" },
+  { locationKey: "meadow_12_07", count: 2, age: "YOUNG" },
+  { locationKey: "meadow_12_07", count: 1, age: "OLD" },
+  { locationKey: "meadow_14_05", count: 2, age: "CORPSE" },
 ];
 
 const species = [
@@ -472,6 +487,7 @@ async function ensureUniqueCreature(
         isGone: false,
         currentAction: creature.action,
         activity: creature.activity as any,
+        sex: creature.sex,
         isHidden: creature.isHidden ?? false,
         professionKey: creature.professionKey,
         professionName: creature.professionName,
@@ -494,6 +510,7 @@ async function ensureUniqueCreature(
       hp: creature.isAlive || keep.hp <= 0 ? sp.baseHp : keep.hp,
       currentAction: creature.action,
       activity: creature.activity as any,
+      sex: creature.sex,
       isHidden: creature.isHidden ?? false,
       professionKey: creature.professionKey,
       professionName: creature.professionName,
@@ -501,15 +518,46 @@ async function ensureUniqueCreature(
   });
 }
 
+function starterRabbitAgeTicks(
+  rabbit: { childTicks?: number; youngTicks?: number; adultTicks?: number },
+  age: StarterRabbitAge,
+  index: number
+) {
+  const childTicks = rabbit.childTicks ?? 0;
+  const youngTicks = rabbit.youngTicks ?? 0;
+  const adultTicks = rabbit.adultTicks ?? 0;
+
+  if (age === "CHILD") return Math.min(Math.max(0, childTicks - 1), 8 + index * 7);
+  if (age === "YOUNG") return childTicks + 8 + index * 9;
+  if (age === "ADULT") return childTicks + youngTicks + index * 12;
+  if (age === "OLD") return childTicks + youngTicks + adultTicks + 10 + index * 18;
+  return childTicks + youngTicks + adultTicks + 40 + index * 20;
+}
+
+function starterRabbitHp(baseHp: number, age: StarterRabbitAge) {
+  if (age === "CHILD") return Math.max(1, Math.round(baseHp * 0.35));
+  if (age === "YOUNG") return Math.max(1, Math.round(baseHp * 0.75));
+  if (age === "OLD") return Math.max(1, Math.round(baseHp * 0.65));
+  if (age === "CORPSE") return 0;
+  return baseHp;
+}
+
+function starterRabbitAction(age: StarterRabbitAge) {
+  if (age === "CHILD") return "ховається в траві біля нори";
+  if (age === "YOUNG") return "обережно вивчає нові запахи";
+  if (age === "OLD") return "повільно ворушить вухами";
+  if (age === "CORPSE") return "лежить нерухомо серед притоптаної трави";
+  return "насторожено прислухається";
+}
+
 async function ensureStarterRabbits(
-  speciesByKey: Map<string, { id: number; baseHp: number; childTicks?: number; youngTicks?: number }>,
+  speciesByKey: Map<string, { id: number; baseHp: number; childTicks?: number; youngTicks?: number; adultTicks?: number; corpseDecayTicks?: number }>,
   locationsByKey: Map<string, { id: number }>
 ) {
   const rabbit = speciesByKey.get("rabbit");
   if (!rabbit) throw new Error("Missing rabbit species for starter rabbits");
 
   let created = 0;
-  const adultAgeTicks = (rabbit.childTicks ?? 0) + (rabbit.youngTicks ?? 0);
 
   for (const group of STARTER_RABBITS) {
     const location = locationsByKey.get(group.locationKey);
@@ -521,22 +569,27 @@ async function ensureStarterRabbits(
     const missing = Math.max(0, group.count - existing);
 
     for (let i = 0; i < missing; i++) {
+      const ageTicks = starterRabbitAgeTicks(rabbit, group.age, i);
+      const isCorpse = group.age === "CORPSE";
+      const hp = starterRabbitHp(rabbit.baseHp, group.age);
       await prisma.creature.create({
         data: {
           speciesId: rabbit.id,
           locationId: location.id,
-          hp: rabbit.baseHp,
-          maxHp: rabbit.baseHp,
+          hp: isCorpse ? 0 : hp,
+          maxHp: hp,
           hunger: 0,
           stamina: 13,
           staminaMax: 13,
           fatigueState: "RESTED",
-          activity: "IDLE",
-          currentAction: "насторожено прислухається",
-          age: "ADULT",
-          ageTicks: adultAgeTicks,
-          sex: i % 2 === 0 ? "FEMALE" : "MALE",
-          isAlive: true,
+          activity: isCorpse ? "RESTING" : "IDLE",
+          currentAction: starterRabbitAction(group.age),
+          age: group.age,
+          ageTicks,
+          diedAtTick: isCorpse ? 0 : undefined,
+          corpseDecayTicksLeft: isCorpse ? Math.max(1, (rabbit.corpseDecayTicks ?? 180) - i * 20) : undefined,
+          sex: group.sex ?? (i % 2 === 0 ? "FEMALE" : "MALE"),
+          isAlive: !isCorpse,
           isGone: false,
           isHidden: false,
         },
@@ -710,7 +763,7 @@ async function main() {
     }
   });
 
-  const speciesByKey = new Map<string, { id: number; baseHp: number; childTicks?: number; youngTicks?: number }>();
+  const speciesByKey = new Map<string, { id: number; baseHp: number; childTicks?: number; youngTicks?: number; adultTicks?: number; corpseDecayTicks?: number }>();
   await seedStep("Creature species", async () => {
     for (let i = 0; i < species.length; i += 1) {
       const sp = species[i];
