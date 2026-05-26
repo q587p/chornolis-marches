@@ -25,6 +25,7 @@ export type ParsedAliasCommand =
   | { kind: "queue"; mode: QueueAliasMode }
   | { kind: "track" }
   | { kind: "wait" }
+  | { kind: "add-twigs-campfire" }
   | { kind: "say"; text: string }
   | { kind: "target-action"; action: TargetAction; target: string }
   | { kind: "pickup-target"; target: string }
@@ -244,6 +245,11 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "зачекати": { kind: "wait" },
   "нічого не робити": { kind: "wait" },
   "пропустити": { kind: "wait" },
+
+  "add twigs campfire": { kind: "add-twigs-campfire" },
+  "додати хмиз": { kind: "add-twigs-campfire" },
+  "підкинути хмиз": { kind: "add-twigs-campfire" },
+  "додати хмиз у вогнище": { kind: "add-twigs-campfire" },
 };
 
 const COMPACT_ALIASES: Record<string, ParsedAliasCommand> = {
@@ -251,6 +257,8 @@ const COMPACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "дея": { kind: "location" },
   whereami: { kind: "location" },
 };
+
+const SUGGESTABLE_ALIASES = Object.keys(EXACT_ALIASES);
 
 function normalizeSlashCommand(text: string) {
   return text.replace(/^\/([^\s@]+)@[A-Za-z0-9_]+/, "/$1");
@@ -271,6 +279,36 @@ function withoutLeadingSlash(text: string) {
 
 function compactKey(text: string) {
   return text.replace(/[\s_-]+/g, "");
+}
+
+function aliasSuggestionScore(query: string, candidate: string) {
+  if (!query) return Number.POSITIVE_INFINITY;
+
+  const compactQuery = compactKey(query);
+  const compactCandidate = compactKey(candidate);
+
+  if (candidate === query) return 0;
+  if (candidate.startsWith(query)) return 1;
+  if (candidate.includes(query)) return 2;
+  if (compactCandidate.startsWith(compactQuery)) return 3;
+  if (compactCandidate.includes(compactQuery)) return 4;
+
+  const queryWords = query.split(" ").filter(Boolean);
+  if (queryWords.some((word) => word.length > 1 && candidate.split(" ").some((candidateWord) => candidateWord.startsWith(word)))) return 5;
+
+  return Number.POSITIVE_INFINITY;
+}
+
+export function suggestAliasInputs(raw: string, limit = 4) {
+  const query = withoutLeadingSlash(normalizeInput(raw));
+  if (!query) return [];
+
+  return SUGGESTABLE_ALIASES
+    .map((alias) => ({ alias, score: aliasSuggestionScore(query, alias) }))
+    .filter((item) => Number.isFinite(item.score) && item.alias !== query)
+    .sort((a, b) => a.score - b.score || a.alias.length - b.alias.length || a.alias.localeCompare(b.alias, "uk"))
+    .slice(0, limit)
+    .map((item) => item.alias);
 }
 
 function directionFrom(raw: string) {
@@ -306,6 +344,7 @@ function parseGather(text: string): ParsedAliasCommand | null {
   if (["berries", "berry", "ягоди", "ягід"].includes(resource)) return { kind: "gather", resourceKey: "berries" };
   if (["mushrooms", "mushroom", "гриби", "грибів"].includes(resource)) return { kind: "gather", resourceKey: "mushrooms" };
   if (["herbs", "herb", "трави", "трав", "лікарські трави", "зілля", "зіллячко"].includes(resource)) return { kind: "gather", resourceKey: "herbs" };
+  if (["torch", "torches", "факел", "факели", "факела", "факелів"].includes(resource)) return { kind: "pickup-target", target: resource };
   return null;
 }
 
@@ -316,6 +355,13 @@ function parseSay(raw: string, text: string): ParsedAliasCommand | null {
   const rawMatch = raw.match(/^(?:\/say|say|\/сказати|сказати|мовити|промовити|крикнути)\s+(.+)$/i);
   const said = (rawMatch?.[1] ?? match[1]).trim().slice(0, 300);
   return said ? { kind: "say", text: said } : null;
+}
+
+function parseTrackIntent(text: string): ParsedAliasCommand | null {
+  if (/^(?:examine|inspect|look|x|роздивитися|роздивитись|придивитися|придивитись|оглянути|глянути)(?:\s+(?:tracks|track|сліди|слід)|\s+до\s+(?:слідів|сліду))$/.test(text)) {
+    return { kind: "track" };
+  }
+  return null;
 }
 
 function parseTargetAction(text: string): ParsedAliasCommand | null {
@@ -366,6 +412,9 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
 
   const say = parseSay(raw, text);
   if (say) return say;
+
+  const trackIntent = parseTrackIntent(text);
+  if (trackIntent) return trackIntent;
 
   const target = parseTargetAction(text);
   if (target) return target;

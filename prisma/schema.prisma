@@ -59,6 +59,7 @@ model Player {
   isNameApproved     Boolean @default(false)
   grammaticalGender  GrammaticalGender?
   animacy            Animacy @default(ANIMATE)
+  role               PlayerRole @default(PLAYER)
 
   resources PlayerResource[]
   actions   WorldAction[]
@@ -512,6 +513,11 @@ enum PlayerPronoun {
   HE
   SHE
   THEY
+}
+
+enum PlayerRole {
+  PLAYER
+  SCRIBE
 }
 
 enum WorldActorType {

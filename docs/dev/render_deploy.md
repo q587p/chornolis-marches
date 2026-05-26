@@ -84,6 +84,7 @@ Optional:
 
 - `PORT` — HTTP status server port. Defaults to `3000`.
 - `PUBLIC_BASE_URL` — public web base URL used in Telegram links. Defaults to `https://chornolis-marches.onrender.com`.
+- `ADMIN_SET_SECRET` — secret for the hidden `/adminSet <secret>` Telegram command that grants the current character the `Писар Порубіжжя` role. Store it only in Render environment variables and local `.env`.
 - `WORLD_TICK_INTERVAL_MS` — primary boot-time world/action tick value. Minimum effective value is `1000` ms.
 - `TICK_MS` — legacy fallback used only when `WORLD_TICK_INTERVAL_MS` is absent.
 - `APP_VERSION` — fallback version label when `package.json` cannot be read.

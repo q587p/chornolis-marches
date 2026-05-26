@@ -1,6 +1,6 @@
 ---
 id: WEB-001
-title: Web map, multi-client game server and limited MUD gateway
+title: Web map, multi-client game server, messenger bridges and limited MUD gateway
 status: icebox
 area: server
 priority: medium
@@ -18,13 +18,13 @@ depends_on:
   - map-view-service
 ---
 
-# WEB-001: Web map, multi-client game server and limited MUD gateway
+# WEB-001: Web map, multi-client game server, messenger bridges and limited MUD gateway
 
 ## Summary
 
 Prepare Chornolis Marches for a future where Telegram is one client among several, not the only way to play.
 
-The first visible step should be a web `/map` page that renders the current forest/frontier map and shows movement of players, NPCs and animals. A later step can expose a limited MUD/Telnet gateway for classic MUD clients.
+The first visible step should be a web `/map` page that renders the current forest/frontier map and shows movement of players, NPCs and animals. Later steps can expose bot adapters for other messengers, a Discord bridge, and a limited MUD/Telnet or Mudlet/GMCP-like gateway for classic or semi-rich MUD clients.
 
 ## Current context
 
@@ -42,7 +42,7 @@ The project is currently a Telegram-first text RPG, but the setting and mechanic
 
 - Keep Telegram as the main MVP client.
 - Avoid making Telegram handlers the source of game rules.
-- Move toward a shared game core used by Telegram, web and future MUD clients.
+- Move toward a shared game core used by Telegram, web, future messenger adapters and future MUD clients.
 - Add a lightweight web map for debugging, observation and atmosphere.
 - Keep the first implementation simple enough to ship without a full frontend rewrite.
 
@@ -65,6 +65,8 @@ game core
 client adapters
   Telegram bot
   Web HTTP pages/API
+  Signal / WhatsApp / other messenger bots
+  Discord bridge
   future MUD/Telnet gateway
 ```
 
@@ -97,6 +99,11 @@ src/
     mudServer.ts
     mudSession.ts
     mudCommands.ts
+
+  bridges/
+    discordBridge.ts
+    signalAdapter.ts
+    whatsappAdapter.ts
 
   bot/
     telegramClient.ts
@@ -212,7 +219,18 @@ WebSocket
 
 SSE is probably enough for world-tick updates and simpler than full bidirectional WebSocket.
 
-## Future MUD gateway
+## Future messenger and Discord adapters
+
+Telegram should remain the MVP client, but later adapters can let people play through other bot-capable messengers if their APIs and terms allow it:
+
+- Signal bot or bridge, if a maintainable bot path exists.
+- WhatsApp bot, if an official or acceptable integration path exists.
+- Discord bridge for speech, presence, admin/event relay and later limited commands.
+- Other small chat adapters only if they can reuse the same command registry and account/session layer.
+
+These adapters should not fork gameplay rules. They should translate messages, buttons and callbacks into the same shared command/action layer as Telegram.
+
+## Future MUD Gateway
 
 A limited Telnet/MUD adapter could expose commands such as:
 
@@ -234,6 +252,15 @@ help
 
 The MUD layer should call the same game services as Telegram. It should not directly mutate the database.
 
+A richer Mudlet/GMCP-like mode can later expose structured state for capable clients:
+
+- room/location id, title, exits and visible targets;
+- vitals such as `Життя` and `Снага`;
+- queue state and current action;
+- inventory summaries;
+- map snippets and movement updates;
+- chat/signal events.
+
 ```txt
 Telegram handler -> gameService.move()
 MUD command      -> gameService.move()
@@ -244,7 +271,7 @@ Web button       -> gameService.move()
 
 - `/map` can start as public read-only if it does not reveal private user data.
 - Debug mode should be protected or disabled in production.
-- MUD/Telnet should be disabled by default through env config.
+- Messenger adapters, Discord bridges and MUD/Telnet should be disabled by default through env config.
 - Avoid exposing Telegram IDs, internal player IDs or exact admin/debug metadata publicly.
 - Consider rate limits for public HTTP and future MUD sessions.
 - Keep one world tick loop per deployment.
@@ -256,7 +283,7 @@ Web button       -> gameService.move()
 3. Add `/map` as HTML `<pre>`.
 4. Add Telegram `/map` using the same service.
 5. Add debug-only `/map?debug=1`.
-6. Later decide whether MUD gateway is worth implementing.
+6. Later decide whether messenger adapters, Discord bridge or MUD gateway are worth implementing.
 
 ## Open questions
 
@@ -264,4 +291,7 @@ Web button       -> gameService.move()
 - Should `/map` show exact animal movement or only signs/tracks?
 - Should the map be fully visible or limited by explored/known regions?
 - Should MUD access require account linking through Telegram?
+- Should Signal, WhatsApp, Discord and MUD access all require one shared account-linking flow?
+- Which non-Telegram platforms have stable, acceptable bot APIs for this use case?
+- Should Mudlet/GMCP-like structured output be a first-class mode or a later enhancement after plain Telnet?
 - Should the web route eventually become an admin dashboard, public world viewer or player UI?

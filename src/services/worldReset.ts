@@ -12,6 +12,7 @@ import {
   type StarterAnimalSpeciesKey,
 } from "../data/starterAnimals";
 import { prisma } from "../db";
+import { ensureTorchResourceTypes } from "./fire";
 
 const START_LOCATION_KEY = "start_border_camp";
 const LISOVYK_NAME = "Дід лісовик";
@@ -129,9 +130,20 @@ function amountFromRule(rule: SeedResourceAmountRule | undefined, seedKey: strin
 function buildResourceNodes(world: WorldSeed): SeedResourceNode[] {
   if (!world.resourceRules) return world.resourceNodes ?? [];
 
-  const nodes: SeedResourceNode[] = [];
+  const nodesByKey = new Map<string, SeedResourceNode>();
+  const ruledResourceKeys = new Set<string>();
+  for (const rules of Object.values(world.resourceRules.defaultsByBiome)) {
+    for (const key of Object.keys(rules)) ruledResourceKeys.add(key);
+  }
+  for (const rules of Object.values(world.resourceRules.locationOverrides ?? {})) {
+    for (const key of Object.keys(rules)) ruledResourceKeys.add(key);
+  }
   const maxAmount = world.resourceRules.maxAmount ?? 100;
   const resourceKeys = world.resourceTypes.map((resource) => resource.key);
+
+  for (const node of world.resourceNodes ?? []) {
+    if (!ruledResourceKeys.has(node.resourceKey)) nodesByKey.set(`${node.locationKey}:${node.resourceKey}`, node);
+  }
 
   for (const location of world.locations) {
     const biomeRules = world.resourceRules.defaultsByBiome[location.biome] ?? {};
@@ -148,11 +160,12 @@ function buildResourceNodes(world: WorldSeed): SeedResourceNode[] {
       const amount = amountFromRule(rule, `${world.meta.version}:${location.key}:${resourceKey}`);
       if (amount === null) continue;
 
-      nodes.push({ locationKey: location.key, resourceKey, amount, maxAmount });
+      const key = `${location.key}:${resourceKey}`;
+      if (!nodesByKey.has(key)) nodesByKey.set(key, { locationKey: location.key, resourceKey, amount, maxAmount });
     }
   }
 
-  return nodes;
+  return [...nodesByKey.values()];
 }
 
 function loadWorldSeed(): WorldSeed {
@@ -231,6 +244,44 @@ async function resetEcologyDepletionFeatures(world: WorldSeed) {
     if (!location) throw new Error(`Unknown ecology depletion feature location: ${feature.locationKey}`);
     await prisma.locationFeature.create({
       data: {
+        key: feature.key,
+        locationId: location.id,
+        type: feature.type as any,
+        name: feature.name,
+        description: feature.description,
+        isActive: feature.isActive ?? true,
+        providesLight: feature.providesLight ?? false,
+        restStaminaCapMultiplier: feature.restStaminaCapMultiplier ?? null,
+        data: feature.data === undefined ? undefined : (feature.data as any),
+      },
+    });
+  }
+}
+
+async function resetSeedFeatures(world: WorldSeed) {
+  const dbLocations = await prisma.cellLocation.findMany({
+    where: { key: { in: world.locations.map((location) => location.key) } },
+    select: { id: true, key: true },
+  });
+  const locationsByKey = new Map(dbLocations.map((location) => [location.key, location]));
+
+  for (const feature of world.features) {
+    const location = locationsByKey.get(feature.locationKey);
+    if (!location) throw new Error(`Unknown feature location: ${feature.locationKey}`);
+
+    await prisma.locationFeature.upsert({
+      where: { key: feature.key },
+      update: {
+        locationId: location.id,
+        type: feature.type as any,
+        name: feature.name,
+        description: feature.description,
+        isActive: feature.isActive ?? true,
+        providesLight: feature.providesLight ?? false,
+        restStaminaCapMultiplier: feature.restStaminaCapMultiplier ?? null,
+        data: feature.data === undefined ? undefined : (feature.data as any),
+      },
+      create: {
         key: feature.key,
         locationId: location.id,
         type: feature.type as any,
@@ -392,6 +443,7 @@ async function clearPlayerAutoState() {
 export async function resetWorldState(): Promise<ResetSummary> {
   const world = loadWorldSeed();
 
+  await ensureTorchResourceTypes();
   await prisma.worldAction.deleteMany();
   await prisma.worldTrack.deleteMany();
   await prisma.worldEvent.deleteMany();
@@ -399,6 +451,7 @@ export async function resetWorldState(): Promise<ResetSummary> {
 
   const playerAutoStatesCleared = await clearPlayerAutoState();
   const resources = await resetResources(world);
+  await resetSeedFeatures(world);
   await resetEcologyDepletionFeatures(world);
   const unique = await resetUniqueCreatures(world);
   const rabbitsCreated = await resetStarterAnimals("rabbit", STARTER_RABBITS);

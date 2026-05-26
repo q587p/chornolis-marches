@@ -39,6 +39,36 @@
     }
   },
   {
+    "key": "forest_old_campfire_02_02",
+    "locationKey": "forest_02_02",
+    "type": "CAMPFIRE",
+    "name": "Згасле вогнище",
+    "description": "Кільце з каменів і чорний попіл під мохом. Тут можна знову розвести вогонь, якщо маєте полум’я.",
+    "isActive": true,
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "is_campfire": true,
+      "seeded": true,
+      "extinguished": true
+    }
+  },
+  {
+    "key": "forest_old_campfire_07_02",
+    "locationKey": "forest_07_02",
+    "type": "CAMPFIRE",
+    "name": "Згасле вогнище",
+    "description": "Старе місце ночівлі: прим’ята земля, попіл і кілька обгорілих гілок.",
+    "isActive": true,
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "is_campfire": true,
+      "seeded": true,
+      "extinguished": true
+    }
+  },
+  {
     "key": "meadow_boundary_stone",
     "locationKey": "meadow_11_09",
     "type": "LANDMARK",
@@ -49,6 +79,21 @@
     "data": {
       "inspectable": true,
       "wrap_hint": "dry_luka_north_south"
+    }
+  },
+  {
+    "key": "meadow_old_campfire_11_04",
+    "locationKey": "meadow_11_04",
+    "type": "CAMPFIRE",
+    "name": "Згасле вогнище",
+    "description": "Низьке попелище на сухій луці. Вітер уже розніс частину попелу, але місце для вогню ще придатне.",
+    "isActive": true,
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "is_campfire": true,
+      "seeded": true,
+      "extinguished": true
     }
   },
   {

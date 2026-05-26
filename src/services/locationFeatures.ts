@@ -1,5 +1,6 @@
 import { prisma } from "../db";
 import { BASE_STAMINA } from "../gameConfig";
+import { expireTimedCampfires } from "./fire";
 
 export async function getLocationRestStaminaCap(locationId: number | null | undefined, baseMax = BASE_STAMINA) {
   if (!locationId) return baseMax;
@@ -42,6 +43,7 @@ export function isCampfireFeature(feature: CampfireLikeFeature) {
 
 export async function hasActiveCampfire(locationId: number | null | undefined) {
   if (!locationId) return false;
+  await expireTimedCampfires(locationId);
   const features = await prisma.locationFeature.findMany({
     where: { locationId, isActive: true },
     select: { type: true, key: true, name: true, providesLight: true },

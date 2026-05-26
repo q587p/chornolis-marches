@@ -1,18 +1,37 @@
 import { Bot } from "grammy";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
+import { suggestAliasInputs } from "../input/aliases";
+import { stripUnsafeText } from "../utils/text";
 
 function commandName(text: string) {
-  const match = text.trim().match(/^\/([a-zA-Z0-9_]+)(?:@\w+)?(?:\s|$)/);
+  const match = text.trim().match(/^\/([^\s@]+)(?:@\w+)?(?:\s|$)/u);
   return match?.[1].toLowerCase();
 }
 
 export function registerFallbackHandlers(bot: Bot) {
   bot.on("message:text", async (ctx) => {
     const text = ctx.message.text;
-    if (!text.trim().startsWith("/")) return;
+    const replyMarkup = ctx.from ? await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) : undefined;
+
+    if (!text.trim().startsWith("/")) {
+      const safeText = stripUnsafeText(text).trim().slice(0, 80);
+      const suggestions = suggestAliasInputs(text);
+      const suggestionText = suggestions.length
+        ? `\n\nМожливо, ти мав на увазі:\n${suggestions.map((suggestion) => `- ${suggestion}`).join("\n")}`
+        : "";
+
+      await ctx.reply(
+        `Не зовсім розумію${safeText ? `: “${safeText}”` : ""}.${suggestionText}\n\nСпробуй /help або відкрий /menu.`,
+        { reply_markup: replyMarkup }
+      );
+      return;
+    }
 
     const command = commandName(text);
-    const replyMarkup = ctx.from ? await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) : undefined;
+    const suggestions = suggestAliasInputs(text);
+    const suggestionText = suggestions.length
+      ? `\n\nМожливо, ти мав на увазі:\n${suggestions.map((suggestion) => `- ${suggestion}`).join("\n")}`
+      : "";
 
     if (command === "respawn") {
       await ctx.reply(
@@ -23,7 +42,7 @@ export function registerFallbackHandlers(bot: Bot) {
     }
 
     await ctx.reply(
-      `Не впізнаю команду ${command ? `/${command}` : "з таким записом"}.\n\nСпробуй /help або відкрий /menu.`,
+      `Не впізнаю команду ${command ? `/${command}` : "з таким записом"}.${suggestionText}\n\nСпробуй /help або відкрий /menu.`,
       { reply_markup: replyMarkup }
     );
   });

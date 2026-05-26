@@ -2230,5 +2230,41 @@
     "resourceKey": "mushrooms",
     "amount": 14,
     "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_02",
+    "resourceKey": "torch",
+    "amount": 1,
+    "maxAmount": 1
+  },
+  {
+    "locationKey": "forest_05_04",
+    "resourceKey": "torch",
+    "amount": 1,
+    "maxAmount": 1
+  },
+  {
+    "locationKey": "forest_08_05",
+    "resourceKey": "torch",
+    "amount": 1,
+    "maxAmount": 1
+  },
+  {
+    "locationKey": "meadow_11_04",
+    "resourceKey": "torch",
+    "amount": 1,
+    "maxAmount": 1
+  },
+  {
+    "locationKey": "meadow_14_05",
+    "resourceKey": "torch",
+    "amount": 1,
+    "maxAmount": 1
+  },
+  {
+    "locationKey": "riverbank_16_07",
+    "resourceKey": "torch",
+    "amount": 1,
+    "maxAmount": 1
   }
 ]

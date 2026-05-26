@@ -2,22 +2,28 @@ import { InlineKeyboard } from "grammy";
 import { prisma } from "../db";
 import { ACTION_BASE_TICKS, QUICK_PLAYER_ACTION_DURATION_MS, TICK_MS, gatherConfig, playerStaminaCostConfig } from "../gameConfig";
 import { directionLabels, directionShortLabels } from "../ui/labels";
-import { buildMovementKeyboard, buildResourceMenuKeyboard, buildTargetListKeyboard } from "../ui/keyboards";
+import { buildMovementKeyboard, buildResourceMenuKeyboard, buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
 import { isCampfireFeature } from "./locationFeatures";
+import {
+  campfireStateLine,
+  canAddTwigsToCampfire,
+  expireTimedCampfires,
+  getPlayerTorchState,
+  hasActiveLightAtLocation,
+  isExtinguishedCampfire,
+  lightCampfireFromTorch,
+} from "./fire";
+import { isPickableResourceKey } from "./groundItems";
 import { escapeHtml } from "../utils/text";
 
 const COMPACT_EXIT_ORDER = ["NORTH", "WEST", "SOUTH", "EAST", "UP", "DOWN", "INSIDE", "OUTSIDE"];
 const GATHERABLE_RESOURCE_KEYS = ["berries", "mushrooms", "herbs"] as const;
 const TARGET_TEXT_LIMIT = 8;
-const FROM_DIRECTION_LABELS: Record<string, string> = {
-  NORTH: "з півдня",
-  EAST: "із заходу",
-  SOUTH: "з півночі",
-  WEST: "зі сходу",
-  UP: "знизу",
-  DOWN: "згори",
-  INSIDE: "ззовні",
-  OUTSIDE: "зсередини",
+const CREATURE_AGE_LABELS: Record<string, string> = {
+  CHILD: "дитинча",
+  YOUNG: "молодняк",
+  ADULT: "доросла особина",
+  OLD: "стара особина",
 };
 
 type LocationRenderOptions = {
@@ -39,13 +45,37 @@ function visibleTargets(location: any, viewerPlayerId?: number) {
 
   const livingCreatures = location.creatures
     .filter(isVisibleLivingCreature)
-    .map((c: any) => ({ type: "creature" as const, id: c.id, label: c.name ?? c.species.name, canGreet: c.species.kind !== "ANIMAL" }));
+    .map((c: any) => ({
+      type: "creature" as const,
+      id: c.id,
+      label: c.name ?? c.species.name,
+      actionLabel: normalizeCreatureActionText(c.currentAction),
+      canGreet: c.species.kind !== "ANIMAL",
+      isAnimal: c.species.kind === "ANIMAL",
+      isCorpse: false,
+    }));
 
   const corpses = location.creatures
     .filter(isVisibleCorpse)
-    .map((c: any) => ({ type: "creature" as const, id: c.id, label: `труп: ${c.species.name}`, canGreet: false }));
+    .map((c: any) => ({
+      type: "creature" as const,
+      id: c.id,
+      label: `труп: ${c.species.name}`,
+      actionLabel: c.currentAction ? normalizeCreatureActionText(c.currentAction) : undefined,
+      canGreet: false,
+      isAnimal: c.species.kind === "ANIMAL",
+      isCorpse: true,
+    }));
 
   return [...players, ...livingCreatures, ...corpses];
+}
+
+function isLivingTarget(target: ReturnType<typeof visibleTargets>[number]) {
+  return !("isCorpse" in target && target.isCorpse);
+}
+
+function isCorpseTarget(target: ReturnType<typeof visibleTargets>[number]) {
+  return "isCorpse" in target && target.isCorpse;
 }
 
 function featureIcon(feature: any) {
@@ -62,6 +92,8 @@ function isInteractiveFeature(feature: any) {
 function featureLine(feature: any) {
   const parts = [`${featureIcon(feature)} ${feature.name}`];
   if (feature.providesLight) parts.push("дає світло");
+  const fireState = isCampfireFeature(feature) ? campfireStateLine(feature) : null;
+  if (fireState) parts.push(fireState);
   if (feature.restStaminaCapMultiplier) parts.push(`відпочинок до ×${feature.restStaminaCapMultiplier} снаги`);
   return parts.join(" — ");
 }
@@ -87,10 +119,6 @@ function addInlineRows(target: InlineKeyboard, source: InlineKeyboard) {
   }
 }
 
-function hasCampfireInLocation(location: any) {
-  return Boolean((location.features ?? []).some((feature: any) => feature.isActive && isCampfireFeature(feature)));
-}
-
 function presenceText(location: any, viewerPlayerId?: number, revealTargets = false) {
   const targets = visibleTargets(location, viewerPlayerId);
   const hasCharacters = targets.some((t) => t.canGreet);
@@ -98,11 +126,26 @@ function presenceText(location: any, viewerPlayerId?: number, revealTargets = fa
   const hasCorpses = location.creatures.some(isVisibleCorpse);
 
   if (revealTargets && targets.length) {
-    const lines = targets
+    const livingLines = targets
+      .filter(isLivingTarget)
       .slice(0, TARGET_TEXT_LIMIT)
-      .map((target) => `- ${escapeHtml(target.label)}${target.canGreet ? "" : " <i>(тварина/об’єкт)</i>"}`);
-    if (targets.length > TARGET_TEXT_LIMIT) lines.push(`- ...і ще ${targets.length - TARGET_TEXT_LIMIT}`);
-    return `\n\nПоруч:\n${lines.join("\n")}`;
+      .map((target) => `- ${escapeHtml(visibleActionSentence(target, new Map(), location))}`);
+    const corpseLines = targets
+      .filter(isCorpseTarget)
+      .slice(0, TARGET_TEXT_LIMIT)
+      .map((target) => `- ${escapeHtml(target.label)}`);
+
+    const sections: string[] = [];
+    if (livingLines.length) {
+      if (targets.filter(isLivingTarget).length > TARGET_TEXT_LIMIT) livingLines.push(`- ...і ще ${targets.filter(isLivingTarget).length - TARGET_TEXT_LIMIT}`);
+      sections.push(`Поруч:\n${livingLines.join("\n")}`);
+    }
+    if (corpseLines.length) {
+      if (targets.filter(isCorpseTarget).length > TARGET_TEXT_LIMIT) corpseLines.push(`- ...і ще ${targets.filter(isCorpseTarget).length - TARGET_TEXT_LIMIT}`);
+      sections.push(`Лежить:\n${corpseLines.join("\n")}`);
+    }
+
+    return sections.length ? `\n\n${sections.join("\n\n")}` : "";
   }
 
   if (hasCharacters && hasAnimals) return "\n\n<i>Поруч хтось або щось є.</i>";
@@ -158,7 +201,10 @@ function resourceDurationText(resourceKey: string, quick: boolean) {
 
 function activeActionLabel(action: any) {
   if (!action) return undefined;
-  if (action.type === "MOVE") return "йде";
+  if (action.type === "MOVE") {
+    const direction = (action.payload as any)?.direction;
+    return direction ? `йде на ${String(directionLabels[direction] ?? direction).toLowerCase()}` : "йде";
+  }
   if (action.type === "GATHER" || action.type === "GATHER_SPECIFIC") return "збирає";
   if (action.type === "LOOK") return "роздивляється";
   if (action.type === "INSPECT") return "роздивляється";
@@ -172,6 +218,31 @@ function activeActionLabel(action: any) {
   return "зайнятий";
 }
 
+function normalizeCreatureActionText(action: string | null | undefined) {
+  if (!action) return "проходить";
+  return action
+    .replace(/^йдемо на /, "йде на ")
+    .replace(/^збираємо щось поблизу$/, "збирає щось поблизу")
+    .replace(/^збираємо /, "збирає ")
+    .replace(/^їмо$/, "їсть")
+    .replace(/^озираємось$/, "озирається")
+    .replace(/^роздивляємось ціль$/, "роздивляється")
+    .replace(/^вітаємось$/, "вітається")
+    .replace(/^атакуємо$/, "атакує")
+    .replace(/^освіжуємо труп$/, "освіжує труп")
+    .replace(/^говоримо$/, "говорить")
+    .replace(/^вистежуємо$/, "вистежує")
+    .replace(/^відпочиваємо$/, "відпочиває")
+    .replace(/^ставимо пастку$/, "ставить пастку")
+    .replace(/^чекаємо$/, "чекає");
+}
+
+function animalAgeText(creature: any) {
+  const age = CREATURE_AGE_LABELS[creature.age] ?? String(creature.age ?? "невідомий вік").toLowerCase();
+  const ticks = Number.isFinite(creature.ageTicks) ? `, ${creature.ageTicks} тіків` : "";
+  return ` (${age}${ticks})`;
+}
+
 function visibleActionText(target: { type: "player" | "creature"; id: number }, activeActions: Map<string, any>, location: any) {
   const key = `${target.type}:${target.id}`;
   const queued = activeActionLabel(activeActions.get(key));
@@ -179,44 +250,53 @@ function visibleActionText(target: { type: "player" | "creature"; id: number }, 
 
   if (target.type === "creature") {
     const creature = location.creatures.find((c: any) => c.id === target.id);
-    if (creature?.currentAction) return ` — ${creature.currentAction}`;
+    if (creature?.currentAction) return ` — ${normalizeCreatureActionText(creature.currentAction)}`;
   }
 
   return "";
 }
 
+function visibleActionSentence(target: { type: "player" | "creature"; id: number; label: string }, activeActions: Map<string, any>, location: any) {
+  const action = visibleActionText(target, activeActions, location).replace(/^ — /, "");
+  return action ? `${target.label} ${action}` : target.label;
+}
+
+function visibleActionLabel(target: { type: "player" | "creature"; id: number }, activeActions: Map<string, any>, location: any) {
+  return visibleActionText(target, activeActions, location).replace(/^ — /, "") || undefined;
+}
+
 function visibleTargetsText(targets: ReturnType<typeof visibleTargets>, activeActions: Map<string, any>, location: any) {
   if (!targets.length) return "";
 
-  const lines = targets
+  const livingTargets = targets.filter(isLivingTarget);
+  const lines = livingTargets
     .slice(0, TARGET_TEXT_LIMIT)
-    .map((x) => `- ${escapeHtml(x.label)}${x.canGreet ? "" : " <i>(тварина/об’єкт)</i>"}${escapeHtml(visibleActionText(x, activeActions, location))}`);
-  if (targets.length > TARGET_TEXT_LIMIT) lines.push(`- ...і ще ${targets.length - TARGET_TEXT_LIMIT}`);
+    .map((x) => `- ${escapeHtml(visibleActionSentence(x, activeActions, location))}`);
+  if (livingTargets.length > TARGET_TEXT_LIMIT) lines.push(`- ...і ще ${livingTargets.length - TARGET_TEXT_LIMIT}`);
 
-  return `\n\nПоруч:\n${lines.join("\n")}`;
+  return lines.length ? `\n\nПоруч:\n${lines.join("\n")}` : "";
 }
 
-function formatTrackLine(track: any, locationId: number) {
-  const direction = track.fromLocationId === locationId
-    ? `пішло на ${directionLabels[track.direction].toLowerCase()}`
-    : `прийшло ${FROM_DIRECTION_LABELS[track.direction] ?? "звідкись"}`;
-  const freshness = track.strength >= 3 ? "свіжий" : track.strength === 2 ? "помітний" : "ледь помітний";
-  return `- ${freshness} слід: ${track.label}; ${direction}`;
-}
-
-async function visibleTracksText(locationId: number) {
+async function visibleTracksHint(locationId: number) {
   const now = new Date();
-  const tracks = await prisma.worldTrack.findMany({
+  const trackCount = await prisma.worldTrack.count({
     where: {
       expiresAt: { gt: now },
       OR: [{ fromLocationId: locationId }, { toLocationId: locationId }],
     },
-    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    take: 8,
   });
 
-  if (!tracks.length) return "";
-  return `\n\nСвіжі сліди:\n${tracks.map((track) => escapeHtml(formatTrackLine(track, locationId))).join("\n")}`;
+  return {
+    hasTracks: trackCount > 0,
+    text: trackCount > 0 ? "\n\nВи бачите різні сліди тут." : "",
+  };
+}
+
+async function playerTorchWarningText(viewerPlayerId?: number) {
+  if (!viewerPlayerId) return "";
+  const torchState = await getPlayerTorchState(viewerPlayerId);
+  if (!torchState.isFading) return "";
+  return "\n\n<i>Ваш факел догорає. Варто пошукати вогнище, щоб підпалити його знову.</i>";
 }
 
 async function resourceButtonData(resources: any[], viewerPlayerId?: number) {
@@ -231,6 +311,7 @@ async function resourceButtonData(resources: any[], viewerPlayerId?: number) {
 }
 
 export async function renderLocationBrief(locationId: number, viewerPlayerId?: number, options: LocationRenderOptions = {}) {
+  await expireTimedCampfires(locationId);
   const location = await prisma.cellLocation.findUnique({
     where: { id: locationId },
     include: {
@@ -244,20 +325,22 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
 
   if (!location) throw new Error("Location not found");
 
-  const revealTargets = hasCampfireInLocation(location);
+  const revealTargets = await hasActiveLightAtLocation(location.id);
   const targets = visibleTargets(location, viewerPlayerId);
+  const torchWarning = await playerTorchWarningText(viewerPlayerId);
   const keyboard = new InlineKeyboard();
   addFeatureButtons(keyboard, location.features);
   if (revealTargets && targets.length) addInlineRows(keyboard, buildTargetListKeyboard(targets, { page: options.targetPage, pageCallbackPrefix: "targetPage:brief" }));
   addInlineRows(keyboard, buildMovementKeyboard(location.exitsFrom));
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location)}${presenceText(location, viewerPlayerId, revealTargets)}\n\n${escapeHtml(compactExitsText(location.exitsFrom))}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location)}${presenceText(location, viewerPlayerId, revealTargets)}${torchWarning}\n\n${escapeHtml(compactExitsText(location.exitsFrom))}`,
     keyboard,
   };
 }
 
 export async function renderLocationDetails(locationId: number, viewerPlayerId?: number, options: LocationRenderOptions = {}) {
+  await expireTimedCampfires(locationId);
   const location = await prisma.cellLocation.findUnique({
     where: { id: locationId },
     include: {
@@ -290,6 +373,10 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     const key = action.actorType === "PLAYER" ? `player:${action.playerId}` : `creature:${action.creatureId}`;
     if (!activeActions.has(key)) activeActions.set(key, action);
   }
+  const actionLabeledTargets = targets.map((target) => ({
+    ...target,
+    actionLabel: visibleActionLabel(target, activeActions, location) ?? ("actionLabel" in target ? target.actionLabel : undefined),
+  }));
   const charactersText = visibleTargetsText(targets, activeActions, location);
 
   const resourceLines = location.resources
@@ -304,20 +391,23 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   const animalMovementText = livingAnimals.length
     ? `\n\nРух поруч:\n${livingAnimals
         .slice(0, 8)
-        .map((c) => {
-          const ageText = c.ageTicks !== undefined && c.age ? ` (${String(c.age).toLowerCase()}, ${c.ageTicks} тіків)` : "";
-          return `- ${escapeHtml(`${c.species.name}${ageText}: ${c.currentAction ?? "проходить"}`)}`;
-        })
+        .map((c) => `- ${escapeHtml(`${c.species.name}${animalAgeText(c)}: ${normalizeCreatureActionText(c.currentAction)}`)}`)
         .join("\n")}${livingAnimals.length > 8 ? `\n- ...і ще ${livingAnimals.length - 8}` : ""}`
     : "";
-  const tracksText = await visibleTracksText(location.id);
+  const tracksHint = await visibleTracksHint(location.id);
+  const torchWarning = await playerTorchWarningText(viewerPlayerId);
 
   const corpses = location.creatures.filter(isVisibleCorpse);
-  const corpsesText = corpses.length
-    ? `\n\nПоруч лежить:\n${corpses
+  const groundItems = location.resources.filter((r) => r.amount > 0 && isPickableResourceKey(r.resourceType.key));
+  const lyingLines = [
+    ...corpses.map((c) => `труп: ${c.species.name}; зникне приблизно за ${c.corpseDecayTicksLeft ?? "?"} тіків`),
+    ...groundItems.map((r) => `${r.resourceType.name}${r.amount > 1 ? ` ×${r.amount}` : ""}`),
+  ];
+  const lyingText = lyingLines.length
+    ? `\n\nЛежить:\n${lyingLines
         .slice(0, 8)
-        .map((c) => `- ${escapeHtml(`труп: ${c.species.name}; зникне приблизно за ${c.corpseDecayTicksLeft ?? "?"} тіків`)}`)
-        .join("\n")}${corpses.length > 8 ? `\n- ...і ще ${corpses.length - 8}` : ""}`
+        .map((line) => `- ${escapeHtml(line)}`)
+        .join("\n")}${lyingLines.length > 8 ? `\n- ...і ще ${lyingLines.length - 8}` : ""}`
     : "";
 
   const keyboard = new InlineKeyboard();
@@ -332,14 +422,22 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     keyboard.text("🌿 Зібрати", "gather:menu").row();
   }
 
+  for (const item of groundItems) {
+    keyboard.text(`🤲 Підібрати: ${item.resourceType.name}`, `item:pickup:${item.id}`).row();
+  }
+
+  if (tracksHint.hasTracks) {
+    addInlineRows(keyboard, buildTrackKeyboard());
+  }
+
   if (targets.length > 0) {
-    addInlineRows(keyboard, buildTargetListKeyboard(targets, { page: options.targetPage, pageCallbackPrefix: "targetPage:details" }));
+    addInlineRows(keyboard, buildTargetListKeyboard(actionLabeledTargets, { page: options.targetPage, pageCallbackPrefix: "targetPage:details" }));
   }
 
   addInlineRows(keyboard, buildMovementKeyboard(location.exitsFrom));
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location)}\n\n<i>Ви роздивляєтесь.</i>\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}\n\n${escapeHtml(detailedExitsText(location.exitsFrom))}${resourcesText}${charactersText}${tracksText}${animalMovementText}${corpsesText}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location)}${torchWarning}\n\n<i>Ви роздивляєтесь.</i>\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}\n\n${escapeHtml(detailedExitsText(location.exitsFrom))}${resourcesText}${charactersText}${tracksHint.text}${animalMovementText}${lyingText}`,
     keyboard,
   };
 }
@@ -357,19 +455,43 @@ export async function buildGatherMenuForLocation(locationId: number, viewerPlaye
 export async function renderLocationFeatureInteraction(featureId: number, viewerPlayerId: number) {
   const player = await prisma.player.findUnique({ where: { id: viewerPlayerId }, select: { currentLocationId: true } });
   const feature = await prisma.locationFeature.findUnique({ where: { id: featureId }, include: { location: true } });
+  if (feature?.locationId) await expireTimedCampfires(feature.locationId);
   if (!player || !feature || !feature.isActive || player.currentLocationId !== feature.locationId || !isInteractiveFeature(feature)) return null;
 
   let text = feature.description ?? "Тут є щось варте уваги.";
   if (feature.type === "BORDER_MARKER") {
     text = "Ви бачите межовий знак. На темному дереві вирізано просту, майже дитячу мапу: суха лука тягнеться на захід, за нею темніє ліс; річка йде з півночі на південь; на сході за мостом позначено поселення й зачинені ворота.";
   } else if (isCampfireFeature(feature)) {
-    text = "Вогнище, що не згасає, освітлює все навколо. Поряд із ним легше відпочити, відігрітися й набратися додаткових сил.";
+    if (isExtinguishedCampfire(feature)) {
+      text = "Згасле вогнище лишило по собі попіл і чорні головешки. Світла й тепла воно не дає.";
+    } else {
+      text = "Вогнище освітлює все навколо. Поряд із ним легше відпочити, відігрітися й набратися додаткових сил.";
+      const fireState = campfireStateLine(feature);
+      if (fireState) text += `\n\nПолум'я нижчає. Скоро згасне; варто додати хмизу.`;
+    }
   } else if (feature.type === "GATE") {
     text = "Ви стукаєте у ворота, але вам ніхто не відповідає.";
   }
 
   const keyboard = new InlineKeyboard();
-  if (isCampfireFeature(feature)) keyboard.text("🔥 Відпочити", "rest:start").row();
+  if (isCampfireFeature(feature)) {
+    const torchState = await getPlayerTorchState(viewerPlayerId);
+    if (isExtinguishedCampfire(feature)) {
+      if (torchState.isLit) keyboard.text("🔥 Підпалити", `fire:light:${feature.id}`).row();
+    } else {
+      keyboard.text("🔥 Відпочити", "rest:start").row();
+      if (canAddTwigsToCampfire(feature)) keyboard.text("🪵 Додати хмиз", `fire:addTwigs:${feature.id}`).row();
+      if (torchState.hasTorch) {
+        keyboard
+          .text(torchState.isLit ? "🔥 Оновити вогонь на факелі" : "🔥 Підпалити факел", `torch:light:${feature.id}`)
+          .row();
+      }
+    }
+  }
   keyboard.text("↩️ Назад", "location:details");
   return { text, keyboard };
+}
+
+export async function lightLocationCampfire(featureId: number, viewerPlayerId: number) {
+  return lightCampfireFromTorch(viewerPlayerId, featureId);
 }

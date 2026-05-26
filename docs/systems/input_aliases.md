@@ -9,7 +9,7 @@ When a player-facing button performs an in-world action, there should usually be
 - Keep canonical slash commands stable: `/look`, `/examine`, `/me`, `/stat`, `/chat`, `/time`, `/news`, `/help`, `/menu`, `/gather`, `/rest`, `/queue`, `/say`, movement commands and admin/debug commands.
 - Add Ukrainian aliases as a convenience layer over the same handlers where possible.
 - Preserve existing callback buttons for Telegram ergonomics.
-- Let unknown text pass through without noisy replies unless it is an unknown slash command.
+- Reply to unknown text with a short "не зрозуміли" message, `/help` / `/menu` hints and close alias suggestions where possible.
 
 ## Examples
 
@@ -38,7 +38,9 @@ Actions:
 - `збирати трави`, `збирати ягоди`, `збирати гриби`.
 - `відпочити`, `додати відпочинок у чергу`, `перервати відпочинок`.
 - `черга`, `скасувати`, `очистити чергу`.
+- `/track`, `/examine tracks`, `роздивитися сліди`, `придивитися до слідів`.
 - `сказати Привіт`.
+- `додати хмиз`, `підкинути хмиз`, `/add twigs campfire` -> reserved campfire-firewood placeholder.
 - `увімкнути авто`, `зупинити авто`.
 
 Targets and signals:
@@ -48,6 +50,8 @@ Targets and signals:
 - `кивнути 1`, `помахати мандрівник`, `вказати на вовка`, `насупитися вовк`.
 
 Target commands resolve visible nearby targets by number, id or visible name. If several targets match, the bot asks the player to clarify.
+
+0.11.6 note: ordinary location buttons should avoid adding technical numbering to duplicate animals, corpses or objects. Numbering and internal ids belong in a future debug/scribe detail mode, not in the default player-facing view.
 
 ## Button parity rule
 

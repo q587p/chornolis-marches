@@ -9,6 +9,36 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.11.6 - Fire, light, nearby text and scribe access - 12026-05-26
+
+### Added
+
+- Added timed debug campfires: repeated `/addCampfire` calls now create separate campfires, each burning for 8 in-game hours / 16 real minutes and warning when the flame is close to going out.
+- Added torches as world items: a carried torch can be lit or refreshed near a campfire, and a lit torch gives local light for 5 in-game hours / 10 real minutes.
+- Added seeded loose torches in several forest, dry luka and riverbank locations.
+- Added seeded згаслі campfires in the forest and dry luka.
+- Added `docs/systems/fire_and_light.md` documenting the current campfire and torch timing model.
+
+### Changed
+
+- Nearby output is less technical: ordinary location text no longer labels animals as `тварина/об’єкт`, duplicate target buttons no longer show numbering by default, visible actions are shown directly in `Поруч`, and corpses are separated into `Лежить`.
+- Target lists and target buttons now include an active or last known creature action where available, so picking a creature also shows what it is doing.
+- Unrecognized text input now gets a short fallback reply with `/help` / `/menu` hints and close alias suggestions instead of going silent.
+- Detailed `/examine` now only hints that tracks are present and shows a `🔎 Сліди` action; `/track`, `/examine tracks` and text aliases then spend time/stamina to reveal track details.
+- Detailed `/examine` movement output now uses Ukrainian age labels and third-person action wording, such as `миша (доросла особина, 148 тіків): шукає їжу` or `миша (молодняк, 29 тіків): йде на схід`.
+- The main reply keyboard now puts `☰ Меню` in the former `Персонаж` slot; the character card remains available through `/me`, text aliases and the `❤️`/`⚡` status button.
+- Campfire and torch light can now reveal nearby targets from the current location view; fading torches and fading campfires produce player-facing warnings.
+- Expired timed campfires now remain in the місцина as `Згасле вогнище`, stop giving light/rest benefits, and can be relit with a burning torch.
+- Added `/addTorch [player]` and `/addTwigs [player]`, scribe/admin commands listed in `/adminHelp` that add a torch or twigs to the current or named player's inventory for configured admin Telegram IDs.
+- `/addCampfire` now accepts an optional location key, `x,y,z` coordinate, or player name; without a parameter it still creates a campfire in the current location.
+- Ordinary bot startup, `/start` and `/reset` no longer restore torches directly into player inventory; torches exist in seed/reset world objects or can be added by `/addTorch`.
+- Loose torches are now picked up as ground items, not gathered through `/gather`: they appear under `Лежить`, use `Підібрати`, have no chance roll or delay, and require the character not to be exhausted.
+- Corpse inventory labels now include sex-aware Ukrainian names for foxes and wolves, such as `труп лиса`, `труп лисиці`, `труп вовка` and `труп вовчиці`.
+- Admin/debug commands now use scribe access: configured admin Telegram IDs still work, and a hidden `/adminSet <secret>` can grant the current character the `Писар Порубіжжя` role when `ADMIN_SET_SECRET` is configured for the environment.
+- The Telegram command menu keeps `/adminHelp` hidden globally, but adds it back as a chat-scoped command for players who already have `Писар Порубіжжя` access.
+
+---
+
 ## 0.11.5 - Ukrainian command aliases and button parity - 12026-05-26
 
 ### Added

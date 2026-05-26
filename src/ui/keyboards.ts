@@ -6,8 +6,10 @@ type TargetRef = {
   type: "player" | "creature";
   id: number;
   label: string;
+  actionLabel?: string;
   canGreet: boolean;
   isAnimal?: boolean;
+  isCorpse?: boolean;
 };
 
 const TARGETS_PER_PAGE = 8;
@@ -15,6 +17,7 @@ const TARGETS_PER_PAGE = 8;
 type TargetListOptions = {
   page?: number;
   pageCallbackPrefix?: string;
+  showDisambiguators?: boolean;
 };
 
 export function buildMovementKeyboard(exits: any[]) {
@@ -67,7 +70,7 @@ export function buildRestWithQueueChoiceKeyboard() {
 }
 
 export function buildTrackKeyboard() {
-  return new InlineKeyboard().text("👣 Відслідкувати", "track");
+  return new InlineKeyboard().text("🔎 Сліди", "track");
 }
 
 export function buildAnonymousTargetKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet" | "isAnimal">) {
@@ -117,18 +120,23 @@ export function buildCorpseActionKeyboard(target: ResolvedTarget) {
   return keyboard;
 }
 
+function targetButtonLabel(target: TargetRef) {
+  return target.actionLabel ? `${target.label} — ${target.actionLabel}` : target.label;
+}
+
 function targetButtonLabels(targets: TargetRef[]) {
   const counts = new Map<string, number>();
   const seen = new Map<string, number>();
   for (const target of targets) counts.set(target.label, (counts.get(target.label) ?? 0) + 1);
 
   return targets.map((target) => {
+    const label = targetButtonLabel(target);
     const total = counts.get(target.label) ?? 1;
-    if (total <= 1) return target.label;
+    if (total <= 1) return label;
 
     const index = (seen.get(target.label) ?? 0) + 1;
     seen.set(target.label, index);
-    return `${target.label} ${index}/${total}`;
+    return `${label} ${index}/${total}`;
   });
 }
 
@@ -138,7 +146,7 @@ export function buildTargetListKeyboard(targets: TargetRef[], options: TargetLis
   const page = Math.min(Math.max(options.page ?? 0, 0), totalPages - 1);
   const start = page * TARGETS_PER_PAGE;
   const pageTargets = targets.slice(start, start + TARGETS_PER_PAGE);
-  const labels = targetButtonLabels(targets);
+  const labels = options.showDisambiguators ? targetButtonLabels(targets) : targets.map(targetButtonLabel);
 
   for (const [index, target] of pageTargets.entries()) {
     keyboard.text(labels[start + index] ?? target.label, `target:${target.type}:${target.id}`).row();

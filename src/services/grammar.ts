@@ -100,6 +100,15 @@ const KNOWN_FORMS: Record<string, Partial<NameForms> & { gender?: Gender; animac
 
 const KNOWN_SEXED_SPECIES_FORMS: Record<string, Partial<Record<"MALE" | "FEMALE", NameForms>>> = {
   rabbit: {
+    MALE: {
+      nominative: "заєць",
+      genitive: "зайця",
+      dative: "зайцеві",
+      accusative: "зайця",
+      instrumental: "зайцем",
+      locative: "зайцеві",
+      vocative: "зайцю",
+    },
     FEMALE: {
       nominative: "зайчиха",
       genitive: "зайчихи",
@@ -108,6 +117,46 @@ const KNOWN_SEXED_SPECIES_FORMS: Record<string, Partial<Record<"MALE" | "FEMALE"
       instrumental: "зайчихою",
       locative: "зайчисі",
       vocative: "зайчихо",
+    },
+  },
+  fox: {
+    MALE: {
+      nominative: "лис",
+      genitive: "лиса",
+      dative: "лисові",
+      accusative: "лиса",
+      instrumental: "лисом",
+      locative: "лисові",
+      vocative: "лисе",
+    },
+    FEMALE: {
+      nominative: "лисиця",
+      genitive: "лисиці",
+      dative: "лисиці",
+      accusative: "лисицю",
+      instrumental: "лисицею",
+      locative: "лисиці",
+      vocative: "лисице",
+    },
+  },
+  wolf: {
+    MALE: {
+      nominative: "вовк",
+      genitive: "вовка",
+      dative: "вовкові",
+      accusative: "вовка",
+      instrumental: "вовком",
+      locative: "вовкові",
+      vocative: "вовче",
+    },
+    FEMALE: {
+      nominative: "вовчиця",
+      genitive: "вовчиці",
+      dative: "вовчиці",
+      accusative: "вовчицю",
+      instrumental: "вовчицею",
+      locative: "вовчиці",
+      vocative: "вовчице",
     },
   },
 };

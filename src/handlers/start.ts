@@ -7,6 +7,7 @@ import { guessGenderFromPronoun, guessNameForms, normalizeCharacterName, validat
 import { HELP_TEXT } from "./help";
 import { BASE_STAMINA } from "../gameConfig";
 import { renderCurrentWorldYearLine } from "../services/calendar";
+import { setDefaultBotCommandsWithRetry, syncChatBotCommandsForTelegramId } from "../services/telegramCommands";
 
 const CASE_PROMPTS: Array<{ key: keyof NameForms; question: string; prefix?: string }> = [
   { key: "genitive", question: "Ім’я в родовому відмінку (Немає КОГО?)" },
@@ -78,6 +79,8 @@ async function enterWorld(ctx: any, isMenuRefresh = false) {
     return;
   }
 
+  if (ctx.chat?.id) await syncChatBotCommandsForTelegramId(ctx.api, ctx.chat.id, from.id);
+
   const view = await renderLocationBrief(startLocationId, player.id);
   const displayName = player.nameNominative ?? player.firstName ?? "мандрівнику";
   const yearLine = renderCurrentWorldYearLine();
@@ -125,6 +128,8 @@ async function finishOnboarding(ctx: any, state: OnboardingState) {
   }
 
   onboarding.delete(state.telegramId);
+
+  if (ctx.chat?.id) await syncChatBotCommandsForTelegramId(ctx.api, ctx.chat.id, state.telegramId);
 
   await ctx.reply(
     `Готово. Чорноліс запам’ятав ім’я: ${player.nameNominative}.\n\n${renderCurrentWorldYearLine()}\n\nНаприклад: «Травник звертається до ${player.nameGenitive}» і «${player.nameVocative}, стежка чекає».`,
@@ -198,33 +203,8 @@ async function handleOnboardingText(ctx: any) {
   return false;
 }
 
-async function setBotCommandsWithRetry(bot: Bot, attempts = 3) {
-  for (let i = 1; i <= attempts; i++) {
-    try {
-      await bot.api.setMyCommands([
-        { command: "start", description: "🌲 Перезапустити" },
-        { command: "me", description: "🧍 Персонаж" },
-        { command: "look", description: "👀 Озирнутися" },
-        { command: "examine", description: "👁 Роздивитися" },
-        { command: "time", description: "🕯 Час Порубіжжя" },
-        { command: "menu", description: "☰ Меню" },
-        { command: "news", description: "📰 Останні новини світу" },
-        { command: "stat", description: "Екологічна статистика світу" },
-        { command: "help", description: "🧭 Допомога новачку" },
-        { command: "adminHelp", description: "🛠 Адмінські команди" },
-      ]);
-
-      console.log("Telegram bot commands updated.");
-      return;
-    } catch (error) {
-      console.warn(`Failed to set bot commands, attempt ${i}/${attempts}:`, error);
-      await new Promise((resolve) => setTimeout(resolve, i * 3000));
-    }
-  }
-}
-
 export function registerStartHandlers(bot: Bot) {
-  setBotCommandsWithRetry(bot).catch((error) =>
+  setDefaultBotCommandsWithRetry(bot).catch((error) =>
     console.warn("Failed to set bot commands permanently:", error)
   );
 

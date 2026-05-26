@@ -17,9 +17,8 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   const state = normalizeState(stateOrAuto);
   const keyboard = new Keyboard().text("👀 Озирнутися");
   if (state.hasQueue) keyboard.text("📋 Черга");
-  keyboard.text("🧍 Персонаж").row();
-
   keyboard.text("☰ Меню").row();
+
   if (state.statusLabel) keyboard.text(state.statusLabel).row();
 
   return keyboard.resized().persistent();

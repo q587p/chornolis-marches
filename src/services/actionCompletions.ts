@@ -314,7 +314,13 @@ async function completeGather(bot: Bot, action: WorldAction) {
       update: { amount: { increment: found } },
       create: { playerId: (actor as any).id, resourceTypeId: resource.resourceTypeId, amount: found },
     });
-    await prisma.player.updateMany({ where: { id: (actor as any).id }, data: { successfulGathers: { increment: 1 }, [statFieldMap[resourceKey]]: { increment: found } } });
+    await prisma.player.updateMany({
+      where: { id: (actor as any).id },
+      data: {
+        successfulGathers: { increment: 1 },
+        ...(resourceKey in statFieldMap ? { [statFieldMap[resourceKey as keyof typeof statFieldMap]]: { increment: found } } : {}),
+      },
+    });
     if (chatId) await bot.api.sendMessage(chatId, `Ви витратили час на пошуки (${durationSeconds} с) і знайшли: ${resource.resourceType.name} ×${found}.`);
   } else {
     await prisma.creature.updateMany({ where: { id: (actor as any).id }, data: { successfulGathers: { increment: 1 }, currentAction: `зібрав ${resource.resourceType.name} ×${found}` } });
@@ -594,12 +600,25 @@ async function completeTrack(bot: Bot, action: WorldAction) {
     return;
   }
 
+  const cleanTrackLabel = (label: string) =>
+    label
+      .replace(/^сліди:\s*/i, "")
+      .replace(/^слід:\s*/i, "")
+      .replace(/^свіжий слід:\s*/i, "")
+      .trim();
+  const trackVerb = (label: string, verb: "arrived" | "left") => {
+    const normalized = label.toLowerCase();
+    const feminine = /[ая]$/.test(normalized) && !/(дитинча|звіря|лоша|щеня)$/.test(normalized);
+    if (verb === "arrived") return feminine ? "прийшла" : "прийшов";
+    return feminine ? "пішла" : "пішов";
+  };
+
   const lines = tracks.map((track) => {
+    const label = cleanTrackLabel(String(track.label ?? "хтось"));
     const direction = track.fromLocationId === player.currentLocationId
-      ? `пішло на ${directionLabels[track.direction].toLowerCase()}`
-      : `прийшло ${FROM_DIRECTION_LABELS[track.direction] ?? "звідкись"}`;
-    const freshness = track.strength >= 3 ? "свіжий" : track.strength === 2 ? "помітний" : "ледь помітний";
-    return `- ${freshness} слід: ${track.label}; ${direction}`;
+      ? `${trackVerb(label, "left")} на ${directionLabels[track.direction].toLowerCase()}`
+      : `${trackVerb(label, "arrived")} ${FROM_DIRECTION_LABELS[track.direction] ?? "звідкись"}`;
+    return `- ${label} ${direction}`;
   });
 
   await bot.api.sendMessage(chatId, `👣 Ви знаходите сліди:\n${lines.join("\n")}`);

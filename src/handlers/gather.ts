@@ -72,7 +72,7 @@ export function registerGatherHandlers(bot: Bot) {
     const arg = String(ctx.match || "").trim().toLowerCase();
     const resourceKey = arg ? GATHER_ALIASES[arg] : undefined;
     if (arg && !resourceKey) {
-      await ctx.reply("Не знаю, що саме збирати. Спробуйте /gather, /gather herbs, /gather berries або /gather mushrooms.");
+      await ctx.reply("Не знаю, що саме збирати. Спробуйте /gather, /gather herbs, /gather berries або /gather mushrooms. Факел, якщо він лежить поруч, можна підняти окремо.");
       return;
     }
     await submitGather(bot, ctx, resourceKey, false);

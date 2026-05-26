@@ -207,9 +207,20 @@ function amountFromRule(rule: SeedResourceAmountRule | undefined, seedKey: strin
 function buildResourceNodes(world: WorldSeed): SeedResourceNode[] {
   if (!world.resourceRules) return world.resourceNodes ?? [];
 
-  const nodes: SeedResourceNode[] = [];
+  const nodesByKey = new Map<string, SeedResourceNode>();
+  const ruledResourceKeys = new Set<string>();
+  for (const rules of Object.values(world.resourceRules.defaultsByBiome)) {
+    for (const key of Object.keys(rules)) ruledResourceKeys.add(key);
+  }
+  for (const rules of Object.values(world.resourceRules.locationOverrides ?? {})) {
+    for (const key of Object.keys(rules)) ruledResourceKeys.add(key);
+  }
   const maxAmount = world.resourceRules.maxAmount ?? 100;
   const resourceKeys = world.resourceTypes.map((resource) => resource.key);
+
+  for (const node of world.resourceNodes ?? []) {
+    if (!ruledResourceKeys.has(node.resourceKey)) nodesByKey.set(`${node.locationKey}:${node.resourceKey}`, node);
+  }
 
   for (const location of world.locations) {
     const biomeRules = world.resourceRules.defaultsByBiome[location.biome] ?? {};
@@ -227,11 +238,12 @@ function buildResourceNodes(world: WorldSeed): SeedResourceNode[] {
       const amount = amountFromRule(rule, `${world.meta.version}:${location.key}:${resourceKey}`);
       if (amount === null) continue;
 
-      nodes.push({ locationKey: location.key, resourceKey, amount, maxAmount });
+      const key = `${location.key}:${resourceKey}`;
+      if (!nodesByKey.has(key)) nodesByKey.set(key, { locationKey: location.key, resourceKey, amount, maxAmount });
     }
   }
 
-  return nodes;
+  return [...nodesByKey.values()];
 }
 
 function nowMs() {

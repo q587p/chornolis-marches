@@ -3,6 +3,18 @@ import { creatureForms } from "./grammar";
 
 const CARRIED_CORPSE_MARKER = "carried_corpse_by_player:";
 
+const CORPSE_RESOURCE_DISPLAY_NAMES: Record<string, string> = {
+  corpse_rabbit: "труп зайця",
+  corpse_rabbit_male: "труп зайця",
+  corpse_rabbit_female: "труп зайчихи",
+  corpse_fox: "труп лисиці",
+  corpse_fox_male: "труп лиса",
+  corpse_fox_female: "труп лисиці",
+  corpse_wolf: "труп вовка",
+  corpse_wolf_male: "труп вовка",
+  corpse_wolf_female: "труп вовчиці",
+};
+
 type CorpseResourceCreature = {
   sex?: string | null;
   species: {
@@ -30,9 +42,9 @@ export function corpseResourceName(creature: CorpseResourceCreature) {
 }
 
 export function resourceTypeDisplayName(resourceType: { key: string; name: string }) {
-  if (resourceType.key === "corpse_rabbit" || resourceType.key === "corpse_rabbit_male") return "труп зайця";
-  if (resourceType.key === "corpse_rabbit_female") return "труп зайчихи";
-  return resourceType.name;
+  if (resourceType.key === "torch") return "факел";
+  if (resourceType.key === "lit_torch") return "запалений факел";
+  return CORPSE_RESOURCE_DISPLAY_NAMES[resourceType.key] ?? resourceType.name;
 }
 
 export function carriedCorpseAction(playerId: number, decayLeft: number) {

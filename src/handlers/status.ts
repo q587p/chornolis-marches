@@ -7,6 +7,7 @@ import { chatLogWindowLabel, chatLogWindowToken, getChatLog, normalizeChatLogWin
 import { getEcologyStats } from "../services/ecologyStats";
 import { getStatusData } from "../services/status";
 import { getPlayerByTelegramId } from "../services/players";
+import { isScribeAdmin, requireScribeAdmin } from "../services/adminAccess";
 import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
 import { stopPlayerAuto } from "./auto";
 
@@ -336,11 +337,18 @@ export function registerStatusHandlers(bot: Bot) {
   });  
 
   bot.command(["locationAll", "locationall"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+
     const page = await buildLocationAllPage(0);
     await ctx.reply(page.text, { reply_markup: page.keyboard });
   });
 
   bot.callbackQuery(/^locationAll:(\d+)$/, async (ctx) => {
+    if (!(await isScribeAdmin(ctx.from?.id))) {
+      await ctx.answerCallbackQuery({ text: "Ця дія доступна тільки писарям Порубіжжя.", show_alert: true });
+      return;
+    }
+
     const requestedPage = Number(ctx.match[1]);
     const page = await buildLocationAllPage(Number.isFinite(requestedPage) ? requestedPage : 0);
     await ctx.answerCallbackQuery();
@@ -354,6 +362,8 @@ export function registerStatusHandlers(bot: Bot) {
   });
 
   bot.command(["addCreatureHelp", "addcreaturehelp"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+
     const species = await prisma.creatureSpecies.findMany({ where: { kind: "ANIMAL" }, orderBy: { key: "asc" } });
     const lines = species.map(
       (s) => `${s.key} — ${s.name}; життя=${s.baseHp}; diet=${s.diet}; lifecycle=${s.childTicks}/${s.youngTicks}/${s.adultTicks}/${s.oldTicks}; corpse=${s.corpseDecayTicks}`
@@ -364,6 +374,8 @@ export function registerStatusHandlers(bot: Bot) {
   });
 
   bot.command("world", async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+
     const s = await getStatusData();
     const latestEvents = s.latestEvents.length ? s.latestEvents.map(formatEvent).join("\n") : "немає";
     const q = s.actionQueue;
@@ -411,6 +423,8 @@ export function registerStatusHandlers(bot: Bot) {
   });
 
   bot.command(["restAdmin", "restadmin"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+
     if (!ctx.from) return;
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
@@ -436,12 +450,19 @@ export function registerStatusHandlers(bot: Bot) {
   });
 
   bot.command("all", async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+
     const showDead = ctx.match?.trim().toLowerCase() === "dead";
     const page = await buildAllPage(showDead, 0);
     await ctx.reply(page.text, { reply_markup: page.keyboard });
   });
 
   bot.callbackQuery(/^all:(live|dead):(\d+)$/, async (ctx) => {
+    if (!(await isScribeAdmin(ctx.from?.id))) {
+      await ctx.answerCallbackQuery({ text: "Ця дія доступна тільки писарям Порубіжжя.", show_alert: true });
+      return;
+    }
+
     const showDead = ctx.match[1] === "dead";
     const requestedPage = Number(ctx.match[2]);
     const page = await buildAllPage(showDead, Number.isFinite(requestedPage) ? requestedPage : 0);
@@ -456,6 +477,8 @@ export function registerStatusHandlers(bot: Bot) {
   });
 
   bot.command(["cleanupCreatures", "cleanupcreatures"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+
     const uniqueResults = [];
     const keepIds: number[] = [];
 
@@ -477,6 +500,8 @@ export function registerStatusHandlers(bot: Bot) {
   });
 
   bot.command(["cleanupCreature", "cleanupcreature"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+
     if (!ctx.from) return;
     const speciesKey = ctx.match?.trim() || undefined;
     const player = await getPlayerByTelegramId(ctx.from.id);
@@ -496,6 +521,8 @@ export function registerStatusHandlers(bot: Bot) {
   });
 
   bot.command(["addCreature", "addcreature"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+
     const args = ctx.match?.trim().split(/\s+/).filter(Boolean) ?? [];
     const [speciesKey, locationArg, rawCount, rawAge] = args;
     const parsedCount = Number(rawCount || 1);
@@ -539,6 +566,8 @@ export function registerStatusHandlers(bot: Bot) {
   });
 
   bot.command(["forceOld", "forceold"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+
     if (!ctx.from) return;
     const args = ctx.match?.trim().split(/\s+/).filter(Boolean) ?? [];
     const speciesKey = args[0];

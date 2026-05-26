@@ -287,7 +287,7 @@
   },
   {
     "id": "WEB-001",
-    "title": "Web map, multi-client game server and limited MUD gateway",
+    "title": "Web map, multi-client game server, messenger bridges and limited MUD gateway",
     "status": "icebox",
     "type": "feature",
     "area": "server",

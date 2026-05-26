@@ -11,9 +11,12 @@ BOT_TOKEN=...
 DATABASE_URL=...
 PUBLIC_BASE_URL=http://localhost:3000
 WORLD_TICK_INTERVAL_MS=1500
+ADMIN_SET_SECRET=...
 ```
 
 `WORLD_TICK_INTERVAL_MS` is the main boot-time timing knob for world ticks, action durations, regeneration and track TTL. `TICK_MS` is a legacy alias used only when `WORLD_TICK_INTERVAL_MS` is absent.
+
+`ADMIN_SET_SECRET` is a local-only secret for the hidden `/adminSet <secret>` command. It grants the current player the `Писар Порубіжжя` role in the database. Keep the same value in local `.env` and in Render environment variables; do not commit the secret.
 
 Run migrations and seed:
 

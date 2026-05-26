@@ -109,7 +109,7 @@ Goal: let the world grow into a true living sandbox.
 - Player/NPC-created location features: signs, campfires, temporary markers, fading fires and relit fires.
 - Deep bridge mechanics: bridge condition, repairs, risky crossings and links to fishing.
 - Moon phases and deeper calendar simulation.
-- Web `/map`, shared map view service and future MUD-client gateway.
+- Web `/map`, shared map view service, future messenger bridges and MUD-client gateway.
 - Endgame mysteries of the Chornolis.
 
 ## Current Backlog Themes

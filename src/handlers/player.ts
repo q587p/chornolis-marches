@@ -8,6 +8,7 @@ import { disablePlayerAuto, enablePlayerAuto, isPlayerAutoEnabled } from "./auto
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { formatFatigueText, formatPlayerStats } from "../utils/playerText";
 import { resourceTypeDisplayName } from "../services/corpses";
+import { getPlayerTorchState } from "../services/fire";
 
 function minutes(ms: number) {
   return Math.max(1, Math.ceil(ms / 60_000));
@@ -78,6 +79,9 @@ function moneyText(resources: any[]) {
 }
 
 async function renderCharacterView(telegramId: number) {
+  const playerRef = await prisma.player.findUnique({ where: { telegramId: String(telegramId) }, select: { id: true } });
+  if (!playerRef) return null;
+
   const player = await prisma.player.findUnique({
     where: { telegramId: String(telegramId) },
     include: { currentLocation: { include: { region: true } }, resources: { include: { resourceType: true } } },
@@ -85,9 +89,14 @@ async function renderCharacterView(telegramId: number) {
 
   if (!player) return null;
 
+  const torchState = await getPlayerTorchState(player.id);
   const autoEnabled = Boolean(player.isAutoEnabled || isPlayerAutoEnabled(telegramId));
   const autoText = autoEnabled ? "увімкнено 🤖" : "вимкнено";
-  const items = player.resources.length ? player.resources.map((i) => `${resourceTypeDisplayName(i.resourceType)} ×${i.amount}`).join("\n") : "порожньо";
+  const itemLines = player.resources
+    .filter((i) => i.amount > 0)
+    .map((i) => `${resourceTypeDisplayName(i.resourceType)} ×${i.amount}`);
+  if (torchState.isFading) itemLines.push("⚠️ Запалений факел гасне; варто пошукати вогнище, щоб підпалити його знову.");
+  const items = itemLines.length ? itemLines.join("\n") : "порожньо";
   const staminaMax = player.staminaMax ?? BASE_STAMINA;
   const hpMax = player.hpMax ?? BASE_HP;
   const locationText = player.currentLocation

@@ -6,6 +6,7 @@ import { actionDurationMs, enqueueCreatureAction, gatherDurationMs, movementDura
 import { BASE_STAMINA, TICK_MS, VERY_TIRED_STAMINA, getRuntimeTimingConfig, setRuntimeTickMs } from "../gameConfig";
 import { restartPlayerAutoTimers } from "../handlers/auto";
 import { carriedCorpseAction, carriedCorpseOwnerId, removeDecayedCorpseFromInventory } from "./corpses";
+import { requireScribeAdmin } from "./adminAccess";
 
 const DEFAULT_TICK_INTERVAL_MS = TICK_MS;
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
@@ -1186,9 +1187,18 @@ function runtimeTickStatusText() {
 }
 
 function registerTickCommands(bot: Bot) {
-  bot.command("tick", async (ctx) => { await worldTick(); await ctx.reply("✅ World tick запущено вручну."); });
-  bot.command(["tickGet", "tickget"], async (ctx) => { await ctx.reply(runtimeTickStatusText()); });
+  bot.command("tick", async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+    await worldTick();
+    await ctx.reply("✅ World tick запущено вручну.");
+  });
+  bot.command(["tickGet", "tickget"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+    await ctx.reply(runtimeTickStatusText());
+  });
   bot.command(["tickSet", "tickset"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+
     const value = Number(ctx.match?.trim());
     if (!Number.isFinite(value) || value < 1000) {
       await ctx.reply("⚠️ Формат: /tickSet 5000\nМінімум: 1000 ms.");

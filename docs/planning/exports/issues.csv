@@ -14,6 +14,6 @@ PROG-002,Observation-based learning,backlog,feature,progression,medium,"skills,o
 PROG-003,Animal experience and titles,backlog,feature,progression,medium,"animals,ecology,progression,combat",docs/planning/items/PROG-003-animal-experience-and-titles.md
 SETTLE-001,Starter settlement,backlog,feature,settlements,high,"settlement,npc,onboarding",docs/planning/items/SETTLE-001-starter-settlement.md
 SURV-001,Early respawn support,next,feature,survival,high,"onboarding,respawn,beginner",docs/planning/items/SURV-001-early-respawn.md
-WEB-001,"Web map, multi-client game server and limited MUD gateway",icebox,feature,server,medium,"web,map,mud,server,multi-client,architecture",docs/planning/items/web-001-web-map-and-mud-gateway.md
+WEB-001,"Web map, multi-client game server, messenger bridges and limited MUD gateway",icebox,feature,server,medium,"web,map,mud,server,multi-client,architecture",docs/planning/items/web-001-web-map-and-mud-gateway.md
 WORLD-001,Day/night cycle,next,feature,world_time,high,"world,atmosphere,visibility,liminality",docs/planning/items/WORLD-001-day-night-cycle.md
 WORLD-002,Campfires and light,next,feature,survival,high,"survival,light,crafting,night",docs/planning/items/WORLD-002-campfires-and-light.md

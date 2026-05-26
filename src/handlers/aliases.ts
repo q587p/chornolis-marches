@@ -33,11 +33,14 @@ import { submitMove as submitCanonicalMove } from "./movement";
 import { submitGather as submitCanonicalGather } from "./gather";
 import { addCorpseToInventory, resourceTypeDisplayName } from "../services/corpses";
 import { performSocialSignal } from "../services/socialSignals";
+import { addTwigsPlaceholderText } from "../services/fire";
+import { pickUpFirstGroundResourceByKey } from "../services/groundItems";
 
 type TextTargetRef = {
   type: "player" | "creature";
   id: number;
   label: string;
+  actionLabel?: string;
   canGreet: boolean;
   searchKeys: string[];
 };
@@ -100,6 +103,29 @@ function targetSearchKeysForCreature(creature: any) {
   ]);
 }
 
+function normalizeCreatureActionText(action: string | null | undefined) {
+  if (!action) return undefined;
+  return action
+    .replace(/^йдемо на /, "йде на ")
+    .replace(/^збираємо щось поблизу$/, "збирає щось поблизу")
+    .replace(/^збираємо /, "збирає ")
+    .replace(/^їмо$/, "їсть")
+    .replace(/^озираємось$/, "озирається")
+    .replace(/^роздивляємось ціль$/, "роздивляється")
+    .replace(/^вітаємось$/, "вітається")
+    .replace(/^атакуємо$/, "атакує")
+    .replace(/^освіжуємо труп$/, "освіжує труп")
+    .replace(/^говоримо$/, "говорить")
+    .replace(/^вистежуємо$/, "вистежує")
+    .replace(/^відпочиваємо$/, "відпочиває")
+    .replace(/^ставимо пастку$/, "ставить пастку")
+    .replace(/^чекаємо$/, "чекає");
+}
+
+function targetDisplayLabel(target: TextTargetRef) {
+  return target.actionLabel ? `${target.label} — ${target.actionLabel}` : target.label;
+}
+
 async function visibleTextTargets(locationId: number, viewerPlayerId: number): Promise<TextTargetRef[]> {
   const [players, creatures] = await Promise.all([
     prisma.player.findMany({ where: { currentLocationId: locationId, id: { not: viewerPlayerId } }, orderBy: { id: "asc" } }),
@@ -131,6 +157,7 @@ async function visibleTextTargets(locationId: number, viewerPlayerId: number): P
       type: "creature" as const,
       id: creature.id,
       label: isCorpse ? `труп: ${creature.species.name}` : creature.name ?? creature.species.name,
+      actionLabel: normalizeCreatureActionText(creature.currentAction),
       canGreet: !isCorpse && creature.species.kind !== "ANIMAL",
       searchKeys: targetSearchKeysForCreature(creature),
     };
@@ -140,7 +167,7 @@ async function visibleTextTargets(locationId: number, viewerPlayerId: number): P
 }
 
 function targetListText(targets: TextTargetRef[]) {
-  return targets.map((target, index) => `${index + 1}. ${target.label}`).join("\n");
+  return targets.map((target, index) => `${index + 1}. ${targetDisplayLabel(target)}`).join("\n");
 }
 
 function bestTargetMatch(query: string, targets: TextTargetRef[]) {
@@ -340,7 +367,7 @@ async function submitTargetAction(bot: Bot, ctx: any, action: TargetAction, targ
 
   if (match.kind === "many") {
     const keyboard = new InlineKeyboard();
-    match.targets.forEach((target, index) => keyboard.text(`${index + 1}. ${target.label}`, `target:${target.type}:${target.id}`).row());
+    match.targets.forEach((target, index) => keyboard.text(`${index + 1}. ${targetDisplayLabel(target)}`, `target:${target.type}:${target.id}`).row());
     await ctx.reply(`Знайшов кілька схожих цілей. Уточни назвою або номером із повного списку поруч.\n\nВидимі цілі:\n${targetListText(visibleTargets)}`, { reply_markup: keyboard });
     return;
   }
@@ -406,6 +433,19 @@ async function resolveVisibleTargetForAlias(ctx: any, targetQuery: string) {
 }
 
 async function submitPickupTarget(ctx: any, targetQuery: string) {
+  const normalizedTarget = normalizeTargetKey(targetQuery);
+  if (["torch", "torches", "факел", "факели", "факела", "факелів"].includes(normalizedTarget)) {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    try {
+      const item = await pickUpFirstGroundResourceByKey(player.id, "torch");
+      await ctx.reply(`Ви підняли ${item.name}.`);
+    } catch (error) {
+      await ctx.reply(error instanceof Error ? error.message : "Не вдалося підняти це.");
+    }
+    return;
+  }
+
   const resolved = await resolveVisibleTargetForAlias(ctx, targetQuery);
   if (!resolved) return;
 
@@ -469,6 +509,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "queue") return submitQueue(ctx, parsed.mode);
     if (parsed.kind === "track") return submitTrack(bot, ctx);
     if (parsed.kind === "wait") return submitWait(bot, ctx);
+    if (parsed.kind === "add-twigs-campfire") return ctx.reply(addTwigsPlaceholderText());
     if (parsed.kind === "say") return submitSay(bot, ctx, parsed.text);
     if (parsed.kind === "target-action") return submitTargetAction(bot, ctx, parsed.action, parsed.target);
     if (parsed.kind === "pickup-target") return submitPickupTarget(ctx, parsed.target);

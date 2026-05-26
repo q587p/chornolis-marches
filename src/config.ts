@@ -26,6 +26,13 @@ function normalizeBaseUrl(value: string) {
   return value.replace(/\/+$/, "");
 }
 
+function optionalStringListEnv(name: string) {
+  return (process.env[name] ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
 function getAppVersion() {
   try {
     const pkgPath = path.join(process.cwd(), "package.json");
@@ -46,4 +53,6 @@ export const config = {
   port: Number(process.env.PORT || 3000),
   publicBaseUrl,
   tickMs: Math.max(1000, Math.floor(configuredTickMs)),
+  adminTelegramIds: optionalStringListEnv("ADMIN_TELEGRAM_IDS"),
+  adminSetSecret: optionalStringEnv("ADMIN_SET_SECRET"),
 };
