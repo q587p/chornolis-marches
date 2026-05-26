@@ -31,7 +31,7 @@ User preference:
 2. run build;
 3. after green build, user handles version bump manually;
 4. avoid separate manual GitHub Action commits just to bump version;
-5. prefer proper npm-based versioning over hand-editing `package.json` and `package-lock.json`.
+5. for version bumps, prefer proper npm-based versioning over hand-editing package metadata.
 
 ## Changelog/news rule
 

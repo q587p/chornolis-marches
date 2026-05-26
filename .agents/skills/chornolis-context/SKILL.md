@@ -23,7 +23,6 @@ For map/world changes, also read:
 
 Hard reminders:
 
-- Do not change `package.json` or `package-lock.json` unless explicitly requested.
 - Do not mention internal package/version workflow notes in public news/changelog.
 - Preserve current behavior unless explicitly asked to replace it.
 - Keep the liminal Ukrainian dark-fantasy tone.

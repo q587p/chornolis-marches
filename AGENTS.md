@@ -10,7 +10,6 @@
 
 ## Always preserve these rules
 
-- Do **not** update `package.json` or `package-lock.json` unless explicitly requested.
 - The user usually bumps versions manually after a green build with:
 
 ```bash
