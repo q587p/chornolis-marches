@@ -6,7 +6,7 @@ import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 
 export function registerLookHandlers(bot: Bot) {
-  bot.command("look", async (ctx) => {
+  async function examineCurrentLocation(ctx: any) {
     const from = ctx.from;
     if (!from) return;
 
@@ -20,9 +20,11 @@ export function registerLookHandlers(bot: Bot) {
     } catch (error) {
       await ctx.reply(error instanceof Error ? error.message : "Не вдалося виконати дію.");
     }
-  });
+  }
 
-  bot.callbackQuery("look", async (ctx) => {
+  bot.command("examine", examineCurrentLocation);
+
+  bot.callbackQuery(["examine", "look"], async (ctx) => {
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player || !player.currentLocationId) {
       await safeAnswerCallbackQuery(ctx);

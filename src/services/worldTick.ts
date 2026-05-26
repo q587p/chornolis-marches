@@ -668,7 +668,7 @@ async function killAnimalFromOldAge(creature: any) {
     data: {
       type: "SYSTEM",
       title: "Тварина померла від старості",
-      description: `${creature.species.name} помирає від старості. Труп лишається в локації на ${creature.species.corpseDecayTicks} тіків.`,
+      description: `${creature.species.name} помирає від старості. Труп лишається в місцині на ${creature.species.corpseDecayTicks} тіків.`,
       locationId: creature.locationId,
     },
   });
@@ -722,7 +722,7 @@ async function decayCorpse(creature: any) {
 
   const gone = await prisma.creature.updateMany({ where: { id: creature.id, isAlive: false, isGone: false }, data: { isGone: true, corpseDecayTicksLeft: 0, currentAction: "зникло, лишивши слід у землі" } });
   if (gone.count === 0) return "gone";
-  await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "Труп зник", description: `Труп істоти «${creature.name ?? creature.species.name}» зник. Гриби в цій локації отримали +${creature.species.mushroomBonusOnDecay}.`, locationId: creature.locationId } });
+  await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "Труп зник", description: `Труп істоти «${creature.name ?? creature.species.name}» зник. Гриби в цій місцині отримали +${creature.species.mushroomBonusOnDecay}.`, locationId: creature.locationId } });
   return "gone";
 }
 
@@ -1154,9 +1154,9 @@ function runtimeTickStatusText() {
     "Вагітність хижаків: ще не реалізована; MVP народжує виводок одразу при рідкісній успішній перевірці",
     "Prey units: для лисиць mouse=1, rabbit=4; для вовків rabbit=4, mouse майже ігнорується",
     `Локальний тиск зайців: м'який поріг ${RABBIT_LOCAL_SOFT_CAP}; вище нього падає шанс народження й запускається розселення`,
-    `Розселення зайців: раз на ${RABBIT_SPREAD_EVERY_TICKS} world ticks; до ${RABBIT_MAX_SPREAD_PER_LOCATION} з перенаселеної локації`,
-    `Розселення мишей: раз на ${MOUSE_SPREAD_EVERY_TICKS} world ticks; до ${MOUSE_MAX_SPREAD_PER_LOCATION} з перенаселеної локації`,
-    `Надмірний випас: від ${OVERGRAZING_RABBIT_THRESHOLD} одиниць травоїдного тиску в локації; 1 заєць = 1, ${MOUSE_OVERGRAZING_PRESSURE_DIVISOR} миші ≈ 1`,
+    `Розселення зайців: раз на ${RABBIT_SPREAD_EVERY_TICKS} world ticks; до ${RABBIT_MAX_SPREAD_PER_LOCATION} з перенаселеної місцини`,
+    `Розселення мишей: раз на ${MOUSE_SPREAD_EVERY_TICKS} world ticks; до ${MOUSE_MAX_SPREAD_PER_LOCATION} з перенаселеної місцини`,
+    `Надмірний випас: від ${OVERGRAZING_RABBIT_THRESHOLD} одиниць травоїдного тиску в місцині; 1 заєць = 1, ${MOUSE_OVERGRAZING_PRESSURE_DIVISOR} миші ≈ 1`,
     `Сліди живуть: ${timing.trackTtlTicks} тіків ≈ ${formatDuration(timing.trackTtlMs)}`,
     "",
     "Змінити runtime без рестарту: /tickSet <ms>",

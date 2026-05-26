@@ -1,23 +1,38 @@
 # 🌲 Chornolis Marches
 
-Text-based Telegram RPG with a living ecosystem, inspired by MUDs, Ultima Online, and Ukrainian folklore.
+Text-based Telegram RPG with a living ecosystem, inspired by MUDs, Ultima Online, S.T.A.L.K.E.R. A-Life, Dwarf Fortress and Ukrainian folklore.
 
 Tech: living cell-based world simulation, PostgreSQL persistence, Render deployment, world ticks, creature aging, corpse lifecycle, prioritized universal action queues, stamina/rest states, fading tracks, and a lightweight Telegram-native interface.
 
 ## 🧠 Vision
 
-A living liminal frontier simulation:
+A living liminal frontier simulation where wilderness, settlements, factions and myth continue to move even when the player is not watching.
 
-* 🐺 Wolves hunt rabbits
-* 🦊 Foxes compete for prey
-* 🐇 Rabbits reproduce and migrate
-* 🌿 Resources grow, spread and get depleted
-* 🦴 Animals age, die, leave corpses and feed the forest
-* 🌫 Tracks, scents and signs fade over time
-* 👤 Players interfere and upset the balance
-* 🧭 Actions take time, can be queued, interrupted and leave traces
-* 🔥 Settlements push back against wilderness while myths push back against settlement
-* 🌘 The world changes between day and night
+Chornolis Marches is not a heroic theme park MMO. The world is meant to feel older, stranger and less controlled than the player. Settlements survive only where people can hold back the forest, the creatures within it and the things that move through forgotten places at night.
+
+* 🌲 The wilderness exists independently of the player
+* 🧭 Exploration is dangerous, incomplete and uncertain
+* 🐺 Predators hunt prey, compete, age, die and migrate
+* 🌿 Resources grow, spread, decay and get depleted
+* 🦴 Corpses, remains and abandoned places feed the forest back
+* 👣 Tracks, scents, blood trails and other signs fade over time
+* ⚔ Factions, settlements and hostile groups compete for survival
+* 👤 Players interfere with ecosystems, trade routes and local balance
+* 🔥 The border between settlement and wilderness constantly shifts
+* 🌘 Myth, spirits and old places become more dangerous at night
+* ⏳ Actions take time, can be queued, interrupted, observed and remembered by the world
+
+## 🌫 Tone
+
+Chornolis Marches is closer to a living frontier simulator than to a traditional MMORPG.
+
+The world should feel:
+
+- dangerous;
+- liminal;
+- partially unknowable;
+- alive without the player;
+- shaped by migration, scarcity, memory and old powers.
 
 ## 🎨 Visual direction
 
@@ -44,7 +59,7 @@ src/
   bot.ts                 # Telegram bot composition and startup
   handlers/              # Telegram commands and callback handlers
   services/              # gameplay, world and domain logic
-  server/                # HTTP status / health endpoints
+  server/                # HTTP status, health and ecology stat endpoints
   ui/                    # Telegram labels, keyboards and message UI
   utils/                 # small shared helpers
 
@@ -56,6 +71,8 @@ prisma/
 
 docs/
   art/                   # visual direction and prompts
+  design/                # canonical terminology and design vocabulary
+  dev/                   # local setup and deployment notes
   planning/              # backlog, next, icebox and planning notes
   systems/               # system design docs
 ```
@@ -66,6 +83,7 @@ The codebase is currently Telegram-first, but gameplay logic is gradually moving
 
 - [`docs/game_design.md`](docs/game_design.md) — core design pillars, identity and long-term gameplay philosophy
 - [`docs/roadmap.md`](docs/roadmap.md) — roadmap phases and long-term direction
+- [`docs/design/terminology.md`](docs/design/terminology.md) — canonical Ukrainian UI/gameplay terminology
 - [`docs/systems/`](docs/systems/) — gameplay system design documents
 - [`docs/planning/`](docs/planning/) — backlog, next, icebox and planning notes
 - [`docs/dev/`](docs/dev/) — local setup, deployment and developer notes
@@ -111,7 +129,10 @@ For local development and deployment setup, see:
 * Ultima Online
 * MUDs
 * Dwarf Fortress
+* S.T.A.L.K.E.R. A-Life
 * Ukrainian mythology
+
+S.T.A.L.K.E.R. is an inspiration not for modern firearms or post-apocalypse aesthetics, but for autonomous world simulation, dangerous exploration, faction tension, emergent encounters and a living territory that exists independently of the player.
 
 ---
 

@@ -1,13 +1,9 @@
 import { Keyboard } from "grammy";
 import { prisma } from "../db";
-import { BASE_HP, BASE_STAMINA } from "../gameConfig";
-import { hasActiveCampfire } from "../services/locationFeatures";
 
 type MainKeyboardState = {
   isAuto?: boolean;
   hasQueue?: boolean;
-  canRest?: boolean;
-  hasCampfire?: boolean;
 };
 
 function normalizeState(input: MainKeyboardState | boolean = {}) {
@@ -25,10 +21,6 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   let hasUtilityRow = false;
   if (state.hasQueue) {
     keyboard.text("📋 Черга");
-    hasUtilityRow = true;
-  }
-  if (state.canRest) {
-    keyboard.text(`${state.hasCampfire ? "🔥" : "🧘"} Відпочити`);
     hasUtilityRow = true;
   }
   if (hasUtilityRow) keyboard.row();
@@ -60,19 +52,10 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
 
   if (!player) return buildMainReplyKeyboard({ isAuto });
 
-  const [queueCount, hasCampfire] = await Promise.all([
-    prisma.worldAction.count({ where: { actorType: "PLAYER", playerId: player.id, status: { in: ["QUEUED", "RUNNING"] } } }),
-    hasActiveCampfire(player.currentLocationId),
-  ]);
-
-  const hpMax = player.hpMax ?? BASE_HP;
-  const defaultStamina = player.staminaMax ?? BASE_STAMINA;
-  const canRest = player.isResting || player.hp < hpMax || player.stamina < defaultStamina;
+  const queueCount = await prisma.worldAction.count({ where: { actorType: "PLAYER", playerId: player.id, status: { in: ["QUEUED", "RUNNING"] } } });
 
   return buildMainReplyKeyboard({
     isAuto,
     hasQueue: queueCount > 0 || player.isResting,
-    canRest,
-    hasCampfire,
   });
 }

@@ -316,6 +316,8 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
     text = "Ви стукаєте у ворота, але вам ніхто не відповідає.";
   }
 
-  const keyboard = new InlineKeyboard().text("↩️ Назад", "location:details");
+  const keyboard = new InlineKeyboard();
+  if (isCampfireFeature(feature)) keyboard.text("🔥 Відпочити", "rest:start").row();
+  keyboard.text("↩️ Назад", "location:details");
   return { text, keyboard };
 }

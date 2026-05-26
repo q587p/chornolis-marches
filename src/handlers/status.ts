@@ -2,6 +2,7 @@ import { Bot, InlineKeyboard } from "grammy";
 import { CreatureActivity, CreatureAge } from "@prisma/client";
 import { config } from "../config";
 import { prisma } from "../db";
+import { BASE_STAMINA, REST_ADMIN_STAMINA_CAP_MULTIPLIER } from "../gameConfig";
 import { getEcologyStats } from "../services/ecologyStats";
 import { getStatusData } from "../services/status";
 import { getPlayerByTelegramId } from "../services/players";
@@ -14,13 +15,16 @@ const ADMIN_COMMANDS = [
   "/stat — коротка екологічна статистика й посилання на веб-/stat",
   "/all — усі живі персонажі та істоти",
   "/all dead — усі записи істот, включно з inactive/dead/corpse/gone",
-  "/location або кнопка 👀 Озирнутися — показати поточну місцину",
-  "/locationAll — список усіх локацій і ключів",
+  "/look або кнопка 👀 Озирнутися — показати поточну місцину",
+  "/location або /loc — старі сумісні назви для /look",
+  "/examine або кнопка 👁 Роздивитися — уважніше роздивитися поточну місцину",
+  "/locationAll — список усіх місцин і ключів",
   "/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD] — додати тварин",
   "/addCreatureHelp — список speciesKey для тварин",
-  "/forceOld [speciesKey] [count] — зробити кілька тварин у поточній локації похилими для тесту старіння",
-  "/cleanupCreature [speciesKey] — видалити одну тварину в поточній локації",
+  "/forceOld [speciesKey] [count] — зробити кілька тварин у поточній місцині похилими для тесту старіння",
+  "/cleanupCreature [speciesKey] — видалити одну тварину в поточній місцині",
   "/cleanupCreatures — очистити всіх тварин і нормалізувати унікальних NPC",
+  "/restAdmin — одразу відновити снагу до адмінського максимуму",
   "/tick — вручну запустити world tick",
   "/tickGet — показати tick-налаштування",
   "/tickSet <ms> — змінити інтервал tick",
@@ -225,7 +229,7 @@ async function buildLocationAllPage(requestedPage: number) {
   const page = Math.max(0, Math.min(requestedPage, pages.length - 1));
 
   return {
-    text: `📍 Усі локації\nСторінка ${page + 1}/${pages.length}; локацій ${locations.length}\n\n${pages[page].join("\n")}`,
+    text: `📍 Усі місцини\nСторінка ${page + 1}/${pages.length}; місцин ${locations.length}\n\n${pages[page].join("\n")}`,
     keyboard: buildLocationAllPaginationKeyboard(page, pages.length),
   };
 }
@@ -353,12 +357,32 @@ export function registerStatusHandlers(bot: Bot) {
       `Разом: queued=${q.totalQueued}, running=${q.totalRunning}, overdue=${q.overdueRunning}`,
       `Найстаріша queued: ${Math.round(q.oldestQueuedAgeMs / 1000)} с; max overdue: ${Math.round(q.maxOverdueMs / 1000)} с`,
     ].join("\n");
-    await ctx.reply(`🌲 Стан Порубіжжя Чорнолісу\n\nВерсія: ${s.version}\nПерсонажів гравців у базі: ${s.playersCount}\nРегіонів: ${s.regionsCount}\nЛокацій-клітинок: ${s.locationsCount}\nПереходів між клітинками: ${s.exitsCount}\nЖивих тварин: ${s.aliveAnimalsCount}\nТрупів тварин: ${s.animalCorpsesCount}\nЗниклих тварин: ${s.goneAnimalsCount}\nNPC / не-тварин: ${s.npcCount}\nЖивих істот загалом: ${s.aliveCreaturesCount}\nВузлів ресурсів: ${s.resourcesCount}\nПодій у журналі: ${s.eventsCount}\n\nЧерга дій:\n${queueText}\n\nОстанні події:\n${latestEvents}\n\nОстання помилка: ${s.lastRuntimeError ?? "немає"}`);
+    await ctx.reply(`🌲 Стан Порубіжжя Чорнолісу\n\nВерсія: ${s.version}\nПерсонажів гравців у базі: ${s.playersCount}\nРегіонів: ${s.regionsCount}\nМісцин-клітинок: ${s.locationsCount}\nПереходів між клітинками: ${s.exitsCount}\nЖивих тварин: ${s.aliveAnimalsCount}\nТрупів тварин: ${s.animalCorpsesCount}\nЗниклих тварин: ${s.goneAnimalsCount}\nNPC / не-тварин: ${s.npcCount}\nЖивих істот загалом: ${s.aliveCreaturesCount}\nВузлів ресурсів: ${s.resourcesCount}\nПодій у журналі: ${s.eventsCount}\n\nЧерга дій:\n${queueText}\n\nОстанні події:\n${latestEvents}\n\nОстання помилка: ${s.lastRuntimeError ?? "немає"}`);
   });
 
   bot.command(["stat", "stats"], async (ctx) => {
     const stat = await buildStatBrief();
     await ctx.reply(stat.text, { reply_markup: stat.keyboard });
+  });
+
+  bot.command(["restAdmin", "restadmin"], async (ctx) => {
+    if (!ctx.from) return;
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+    const baseMax = player.staminaMax ?? BASE_STAMINA;
+    const adminMax = baseMax * REST_ADMIN_STAMINA_CAP_MULTIPLIER;
+    await prisma.player.updateMany({
+      where: { id: player.id },
+      data: {
+        stamina: adminMax,
+        isResting: false,
+        fatigueState: "RESTED",
+        lastStaminaRegenAt: new Date(),
+      },
+    });
+
+    await ctx.reply(`✨ Снагу відновлено до ${adminMax}/${baseMax}. Адмінський множник: ×${REST_ADMIN_STAMINA_CAP_MULTIPLIER}.`);
   });
 
   bot.hears(["📊 Статистика", "Статистика"], async (ctx) => {
@@ -419,7 +443,7 @@ export function registerStatusHandlers(bot: Bot) {
       orderBy: { id: "asc" },
     });
 
-    if (!creature) return void (await ctx.reply(speciesKey ? `У поточній локації немає живої тварини виду ${speciesKey}.` : "У поточній локації немає живих тварин."));
+    if (!creature) return void (await ctx.reply(speciesKey ? `У поточній місцині немає живої тварини виду ${speciesKey}.` : "У поточній місцині немає живих тварин."));
     const deleted = await prisma.creature.deleteMany({ where: { id: creature.id } });
     if (deleted.count === 0) return void (await ctx.reply("Цю тварину вже прибрали іншим процесом."));
     await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "Creature removed", description: `Removed ${creature.species.key} #${creature.id} from current location.`, locationId: creature.locationId } });
@@ -440,7 +464,7 @@ export function registerStatusHandlers(bot: Bot) {
     const location = await findLocationByKeyOrCoords(locationArg);
 
     if (!species) return void (await ctx.reply(`⚠️ Невідомий вид: ${speciesKey}. Спробуй /addCreatureHelp.`));
-    if (!location) return void (await ctx.reply(`⚠️ Невідома локація: ${locationArg}. Спробуй /locationAll або координати типу 0,0,0.`));
+    if (!location) return void (await ctx.reply(`⚠️ Невідома місцина: ${locationArg}. Спробуй /locationAll або координати типу 0,0,0.`));
     if (species.kind !== "ANIMAL") return void (await ctx.reply("⚠️ /addCreature зараз призначена для тварин. Унікальні NPC керуються seed/cleanup."));
 
     const age = normalizeAge(rawAge);
@@ -485,7 +509,7 @@ export function registerStatusHandlers(bot: Bot) {
       orderBy: { id: "asc" },
     });
 
-    if (!creatures.length) return void (await ctx.reply(speciesKey ? `У поточній локації немає живих тварин виду ${speciesKey}.` : "У поточній локації немає живих тварин."));
+    if (!creatures.length) return void (await ctx.reply(speciesKey ? `У поточній місцині немає живих тварин виду ${speciesKey}.` : "У поточній місцині немає живих тварин."));
 
     for (const creature of creatures) {
       const ageTicks = ageTicksFor(creature.species, "OLD") + (creature.species.oldTicks ?? 0);

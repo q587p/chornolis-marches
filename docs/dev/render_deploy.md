@@ -58,6 +58,15 @@ npm run test:db
 
 This verifies that the configured database contains the current `meta.startLocationKey` location and basic map tables.
 
+## Status endpoints
+
+Render Web Service exposes:
+
+- `/` — human-readable status page.
+- `/health` — JSON health check.
+- `/stat` — human-readable ecology statistics page.
+- `/stat.json` — JSON ecology statistics.
+
 Start command:
 
 ```bash

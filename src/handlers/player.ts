@@ -46,6 +46,8 @@ function recoveryText(player: any) {
 
 function buildCharacterAutoKeyboard(autoEnabled: boolean) {
   return new InlineKeyboard()
+    .text("🧘 Відпочити", "rest:start")
+    .row()
     .text(autoEnabled ? "⏹ Зупинити авто" : "🤖 Увімкнути авто", autoEnabled ? "character:auto:stop" : "character:auto:start");
 }
 
@@ -93,7 +95,7 @@ async function renderCharacterView(telegramId: number) {
   const nameApprovedText = player.isNameApproved ? "так" : "ні, потребує перевірки";
 
   return {
-    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\nІм’я схвалене: ${nameApprovedText}\n\nВідмінки імені:\n${nameCasesText(player)}\n\nHP: ${player.hp}/${hpMax}\nВитривалість: ${player.stamina}/${staminaMax}\nСтан: ${formatFatigueText(player)}${recoveryText(player)}\nГолод: ${player.hunger}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}\nЗареєстровано: ${formatDateTime(player.createdAt)}\nАктивний час у грі: поки не рахується окремо.\n\nІнвентар:\n${items}\n\nСтатистика:\n${formatPlayerStats(player, { includeRestStats: true })}`,
+    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\nІм’я схвалене: ${nameApprovedText}\n\nВідмінки імені:\n${nameCasesText(player)}\n\nHP: ${player.hp}/${hpMax}\nСнага: ${player.stamina}/${staminaMax}\nСтан: ${formatFatigueText(player)}${recoveryText(player)}\nГолод: ${player.hunger}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}\nЗареєстровано: ${formatDateTime(player.createdAt)}\nАктивний час у грі: поки не рахується окремо.\n\nРечі:\n${items}\n\nСтатистика:\n${formatPlayerStats(player, { includeRestStats: true })}`,
     keyboard: buildCharacterAutoKeyboard(autoEnabled),
   };
 }
@@ -141,12 +143,12 @@ export function registerPlayerHandlers(bot: Bot) {
     }
   });
 
-  bot.command(["location", "loc"], async (ctx) => {
+  bot.command(["look", "location", "loc"], async (ctx) => {
     if (!ctx.from) return;
     await showLocationForPlayer(ctx.from.id, (text, options) => ctx.reply(text, options));
   });
 
-  bot.hears(["👀 Озирнутися", "Озирнутися", "📍 Локація"], async (ctx) => {
+  bot.hears(["👀 Озирнутися", "Озирнутися", "📍 Місцина"], async (ctx) => {
     if (!ctx.from) return;
     await showLocationForPlayer(ctx.from.id, (text, options) => ctx.reply(text, options));
   });

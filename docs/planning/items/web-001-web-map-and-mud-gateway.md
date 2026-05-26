@@ -35,7 +35,7 @@ The project is currently a Telegram-first text RPG, but the setting and mechanic
 - queued actions for players, NPCs and animals;
 - creature movement, aging, corpses and ecology;
 - PostgreSQL persistence;
-- HTTP status/health server;
+- HTTP status/health/ecology-stat server;
 - MUD and Ultima Online inspiration.
 
 ## Goals
@@ -76,6 +76,7 @@ src/
     commands/
       moveCommand.ts
       lookCommand.ts
+      examineCommand.ts
       sayCommand.ts
     queries/
       getMapView.ts
@@ -217,11 +218,15 @@ A limited Telnet/MUD adapter could expose commands such as:
 
 ```txt
 look
+examine
 map
 n / s / e / w / up / down
 say <text>
 who
 inventory
+time
+rest
+queue
 attack <target>
 track
 help

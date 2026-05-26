@@ -103,7 +103,7 @@ async function renderEcologyStatsPage() {
     <div class="grid">
       <div class="card"><div class="metric">${stats.totals.aliveAnimals}</div><div class="label">живих тварин</div></div>
       <div class="card"><div class="metric">${stats.totals.totalAnimals}</div><div class="label">тваринних записів загалом</div></div>
-      <div class="card"><div class="metric">${stats.totals.occupiedAnimalLocations}/${stats.totals.locationCount}</div><div class="label">локацій із живими тваринами</div></div>
+      <div class="card"><div class="metric">${stats.totals.occupiedAnimalLocations}/${stats.totals.locationCount}</div><div class="label">місцин із живими тваринами</div></div>
       <div class="card"><div class="metric">${c.rabbitBirths}</div><div class="label">зайченят за останні ${stats.recent.eventCount} tick-звітів</div></div>
       <div class="card"><div class="metric">${c.mouseBirths}</div><div class="label">мишенят за останні ${stats.recent.eventCount} tick-звітів</div></div>
       <div class="card"><div class="metric">${c.foxBirths}</div><div class="label">лисенят за останні ${stats.recent.eventCount} tick-звітів</div></div>

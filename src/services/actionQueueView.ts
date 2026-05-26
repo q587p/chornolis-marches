@@ -50,14 +50,14 @@ export async function playerRestStatusText(playerId: number) {
   const state = fatigueLabel(fatigueStateFor(player.stamina, max), player.isResting);
 
   if (staminaRemaining <= 0 && hpRemaining <= 0) {
-    return `Ви вже відпочивші й готові до дій. HP: ${player.hp}/${hpMax}. Витривалість: ${player.stamina}/${max}.`;
+    return `Ви вже відпочивші й готові до дій. HP: ${player.hp}/${hpMax}. Снага: ${player.stamina}/${max}.`;
   }
 
   const lines = [
     "Ви відпочиваєте.",
     `Стан: ${state}.`,
     `HP: ${player.hp}/${hpMax}.`,
-    `Витривалість: ${player.stamina}/${max}${staminaRemaining <= 0 ? " — повністю відновлена" : ""}.`,
+    `Снага: ${player.stamina}/${max}${staminaRemaining <= 0 ? " — повністю відновлена" : ""}.`,
   ];
 
   if (player.hp <= 0) {

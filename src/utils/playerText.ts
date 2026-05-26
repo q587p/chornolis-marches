@@ -32,7 +32,7 @@ export function formatFatigueText(player: PlayerFatigue) {
 
 export function formatPlayerStats(player: PlayerStats, options: { includeRestStats?: boolean } = {}) {
   const lines = [
-    `Пройдено локацій: ${player.steps}`,
+    `Переходів між місцинами: ${player.steps}`,
     `Оглядів: ${player.looks}`,
     `Сказано фраз: ${player.says}`,
     `Привітань: ${player.greetings}`,

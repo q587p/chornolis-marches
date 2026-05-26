@@ -30,6 +30,7 @@ Chornolis Marches is a Ukrainian dark-fantasy Telegram RPG / living-world sandbo
 - Core design: `02-design-pillars.md`
 - Roadmap/icebox: `03-roadmap-and-icebox.md`
 - Ukrainian language/style: `04-terminology-and-language.md`
+- Canonical UI/gameplay terminology: `../design/terminology.md`
 - Version/build/release rules: `05-workflow-and-versioning.md`
 - Tech stack and architecture: `06-technical-context.md`
 - Map/world seed: `07-world-and-map-notes.md`

@@ -17,20 +17,23 @@ This is not a universal hard rule for every Ukrainian word, but it is a strong s
 
 ## Fixed or preferred game terms
 
+Canonical terminology source: `docs/design/terminology.md`.
+
 | English / generic term | Preferred Ukrainian term | Notes |
 |---|---|---|
 | Look | **Озирнутися** | Main look/location action. |
 | Location | **Місцина** | Prefer over direct “Локація” in player-facing UI where suitable. |
 | Examine / inspect | **Роздивитися** / **Придивитися** | Choose by tone/context. |
-| Stamina | **Витривалість** | Current accepted term; base stamina should be 42. |
+| Stamina | **Снага** | Player-facing stamina/resource term; base stamina should be 42. |
 | Rest | **Відпочити** | Means sit/rest briefly, not sleep. |
 | Sleep | future sleep mode | Reserve bed iconography for this later feature. |
-| HP | avoid raw abbreviation when possible | Consider diegetic body-state wording. |
-| Inventory | avoid direct calque if a better term fits | Keep clear UX, but prefer world-flavored Ukrainian where possible. |
+| HP | **Життя** / **Стан** | Avoid raw abbreviation in player-facing text. |
+| Inventory | **Речі** / **Поклажа** | Prefer over direct “Інвентар” in player-facing UI. |
 
 ## Commands and UI labels mentioned
 
 - `/look`
+- `/examine`
 - `/me`
 - `/world`
 - `/all`
@@ -40,6 +43,10 @@ This is not a universal hard rule for every Ukrainian word, but it is a strong s
 - `/restart`
 - `/north`, `/south`, `/west`, `/east`
 - `/n`, `/s`, `/w`, `/e`
+
+`/look` is the player-facing command for **Озирнутися** / current location overview.
+`/examine` is the player-facing command for **Роздивитися** / closer inspection.
+`/location` and `/loc` may remain as legacy aliases for `/look`, but player-facing menus should prefer `/look`.
 
 Possible buttons/labels:
 

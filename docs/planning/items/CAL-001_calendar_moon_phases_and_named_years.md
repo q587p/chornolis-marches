@@ -36,7 +36,7 @@ The calendar should support:
 - named years;
 - sacred, dangerous or strange days;
 - NPC rumors and world events tied to time;
-- future display in `/news`, `/look`, `/world` or a separate calendar command.
+- future display in `/time`, `/news`, `/look`, `/examine`, `/world` or a separate calendar command.
 
 ## Era
 

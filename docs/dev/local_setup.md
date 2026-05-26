@@ -13,6 +13,8 @@ PUBLIC_BASE_URL=http://localhost:3000
 WORLD_TICK_INTERVAL_MS=1500
 ```
 
+`WORLD_TICK_INTERVAL_MS` is the main boot-time timing knob for world ticks, action durations, regeneration and track TTL. `TICK_MS` is a legacy alias used only when `WORLD_TICK_INTERVAL_MS` is absent.
+
 Run migrations and seed:
 
 ```bash
@@ -39,3 +41,9 @@ Check that the current database has the seeded start location and map basics:
 ```bash
 npm run test:db
 ```
+
+## Notes
+
+- Only one bot instance can run at a time because Telegram polling allows one active poller.
+- Database migrations are required before deploy.
+- `npm run seed` seeds world structure, resources, species, lifecycle profiles and unique NPCs.

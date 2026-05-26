@@ -10,8 +10,10 @@ import {
   REST_HEALTH_REGEN_INTERVAL_MS,
   REST_STAMINA_REGEN_INTERVAL_MS,
   REST_STAMINA_REGEN_PER_INTERVAL,
+  QUICK_PLAYER_ACTION_DURATION_MS,
 } from "../gameConfig";
 import { buildFatigueRestKeyboard } from "../ui/keyboards";
+import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { actionPriority, actionTitle, effectivePlayerActionDurationMs } from "./actionRules";
 import { fatigueStateFor, recoverStamina } from "./actionRecovery";
 import { getPlayerRestStaminaCap } from "./locationFeatures";
@@ -80,6 +82,28 @@ function actorKey(action: Pick<WorldAction, "actorType" | "playerId" | "creature
 
 function isMissingRecordError(error: unknown) {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025";
+}
+
+function chatIdFromAction(action: WorldAction) {
+  if (!action.chatId) return undefined;
+  const numeric = Number(action.chatId);
+  return Number.isSafeInteger(numeric) ? numeric : action.chatId;
+}
+
+async function refreshKeyboardWhenPlayerQueueEnds(bot: Bot, action: WorldAction) {
+  if (action.actorType !== "PLAYER" || !action.playerId || action.durationMs <= QUICK_PLAYER_ACTION_DURATION_MS) return;
+  const chatId = chatIdFromAction(action);
+  if (!chatId) return;
+
+  const [activeCount, player] = await Promise.all([
+    prisma.worldAction.count({ where: { actorType: "PLAYER", playerId: action.playerId, status: { in: ["QUEUED", "RUNNING"] } } }),
+    prisma.player.findUnique({ where: { id: action.playerId }, select: { telegramId: true, isResting: true } }),
+  ]);
+
+  if (activeCount > 0 || !player || player.isResting) return;
+  await bot.api.sendMessage(chatId, "Черга дій завершена.", {
+    reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false),
+  });
 }
 
 export async function interruptActorActions(ref: ActorRef, reason = "перервано", includeQueued = true) {
@@ -438,6 +462,7 @@ async function startQueuedActionsForActorType(actorType: WorldActorType, take: n
 export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, action: WorldAction) => Promise<unknown>) {
   await recoverStamina(bot);
   const now = new Date();
+  const completedPlayerActions: WorldAction[] = [];
   const duePlayerRunning = await prisma.worldAction.findMany({
     where: { actorType: "PLAYER", status: "RUNNING", executeAt: { lte: now } },
     orderBy: [{ executeAt: "asc" }, { id: "asc" }],
@@ -446,12 +471,16 @@ export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, ac
   for (const action of duePlayerRunning) {
     try {
       await completeAction(bot, action);
+      completedPlayerActions.push(action);
     } catch (error) {
       if (!isMissingRecordError(error)) throw error;
     }
   }
 
   await startQueuedActionsForActorType("PLAYER", PLAYER_QUEUED_ACTION_BATCH);
+  for (const action of completedPlayerActions) {
+    await refreshKeyboardWhenPlayerQueueEnds(bot, action);
+  }
 
   const dueCreatureRunning = await prisma.worldAction.findMany({
     where: { actorType: "CREATURE", status: "RUNNING", executeAt: { lte: now } },

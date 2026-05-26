@@ -17,7 +17,7 @@ export function buildMovementKeyboard(exits: any[]) {
   if (north) keyboard.text("⬆️ Північ", "cmd:north").row();
 
   if (west) keyboard.text("⬅️ Захід", "cmd:west");
-  keyboard.text("👁 Роздивитися", "look");
+  keyboard.text("👁 Роздивитися", "examine");
   if (east) keyboard.text("Схід ➡️", "cmd:east");
   keyboard.row();
 
@@ -30,6 +30,7 @@ export function buildActionQueueKeyboard(actionCount: number | boolean = true) {
   const count = typeof actionCount === "boolean" ? (actionCount ? 2 : 0) : actionCount;
   if (count <= 0) return keyboard;
 
+  keyboard.text("🧘 Відпочити", "rest:queue-rest").row();
   if (count === 1) return keyboard.text("✋ Скасувати дію", "queue:clear");
 
   return keyboard
@@ -104,7 +105,7 @@ export function buildResourceMenuKeyboard(resources: { key: string; name: string
 
 export function buildInteractionKeyboard() {
   return new InlineKeyboard()
-    .text("👁 Роздивитися", "look")
+    .text("👁 Роздивитися", "examine")
     .row()
     .text("⚔️ Атакувати", "social:attack:creature:0:mystery");
 }

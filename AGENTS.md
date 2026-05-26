@@ -31,11 +31,13 @@ npm version minor --no-git-tag-version
 ## Language and terminology
 
 - Use Ukrainian UI/text where appropriate.
+- Canonical terminology source: `docs/design/terminology.md`.
 - Preferred spelling/style includes: `онбордінґ`, `ґенерація`, `мітологія`, `етер`, `Атени`; use `ґ` where it fits naturally.
 - Important fixed UI terms:
   - Look → **Озирнутися**
   - Location → **Місцина**
   - Examine / inspect → **Роздивитися** / **Придивитися** depending on context.
+- Player-facing Stamina → **Снага**.
 - Base stamina should be **42**.
 - Basic **Відпочити** means sit/rest briefly, not sleep. Reserve bed/sleep iconography for a future sleep mode.
 
@@ -50,7 +52,10 @@ npm version minor --no-git-tag-version
 
 ## Core commands / UI concepts to respect
 
-- Existing/recurring commands include `/look`, `/me`, `/world`, `/all`, `/time`, `/adminHelp`, `/tick`, `/restart`.
+- Existing/recurring commands include `/look`, `/examine`, `/me`, `/world`, `/all`, `/time`, `/adminHelp`, `/tick`, `/restart`.
+- `/look` is the player-facing command for **Озирнутися** / current location overview.
+- `/examine` is the player-facing command for **Роздивитися** / closer inspection.
+- `/location` and `/loc` may remain as legacy aliases for `/look`, but player-facing menus should prefer `/look`.
 - Direction commands may include `/north /south /west /east` and `/n /s /w /e`.
 - `/adminHelp` should keep the full admin command list visible.
 - `/tick` should report animals/NPC/actions summary.

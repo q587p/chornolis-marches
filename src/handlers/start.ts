@@ -204,8 +204,8 @@ async function setBotCommandsWithRetry(bot: Bot, attempts = 3) {
       await bot.api.setMyCommands([
         { command: "start", description: "🌲 Перезапустити" },
         { command: "me", description: "🧍 Персонаж" },
-        { command: "location", description: "👀 Озирнутися" },
-        { command: "look", description: "👁 Роздивитися" },
+        { command: "look", description: "👀 Озирнутися" },
+        { command: "examine", description: "👁 Роздивитися" },
         { command: "time", description: "🕯 Час Порубіжжя" },
         { command: "menu", description: "☰ Меню" },
         { command: "news", description: "📰 Останні новини світу" },

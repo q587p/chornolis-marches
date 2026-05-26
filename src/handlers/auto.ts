@@ -149,7 +149,7 @@ async function autoLook(bot: Bot, telegramId: number, player: any, locationId: n
     chatId: telegramId,
   });
 
-  await notifyQueuedIfNeeded(bot, telegramId, player.id, result.mode, "look", locationId);
+  await notifyQueuedIfNeeded(bot, telegramId, player.id, result.mode, "examine", locationId);
   return true;
 }
 

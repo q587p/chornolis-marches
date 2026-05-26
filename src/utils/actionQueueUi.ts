@@ -12,7 +12,7 @@ export async function sendActionSubmitFeedback(ctx: any, playerId: number, resul
 
   if (result.shouldPromptRestChoice) {
     await ctx.reply(
-      `Ви зараз відпочиваєте. До повного відновлення лишилось ${result.remainingToMax} витривалості. Перервати відпочинок чи поставити дію в чергу після відпочинку?`,
+      `Ви зараз відпочиваєте. До повного відновлення лишилось ${result.remainingToMax} снаги. Перервати відпочинок чи поставити дію в чергу після відпочинку?`,
       { reply_markup: buildRestingActionChoiceKeyboard() }
     );
     return;

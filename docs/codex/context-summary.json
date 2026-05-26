@@ -15,10 +15,13 @@
     "For MVP Telegram bot, prefer long polling over webhook unless explicitly changed."
   ],
   "terminology": {
+    "canonical_source": "docs/design/terminology.md",
     "Look": "Озирнутися",
     "Location": "Місцина",
     "Examine": "Роздивитися / Придивитися",
-    "Stamina": "Витривалість",
+    "Stamina": "Снага",
+    "HP": "Життя / Стан",
+    "Inventory": "Речі / Поклажа",
     "Rest": "Відпочити means brief rest, not sleep",
     "base_stamina": 42
   },

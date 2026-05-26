@@ -9,6 +9,33 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.11.0 - Terminology, rest flow and project vision - 12026-05-26
+
+### Added
+
+- Added `docs/design/terminology.md` as the canonical Ukrainian terminology source for player-facing UI, gameplay copy and future docs.
+- Added `/restAdmin`, an admin command that immediately restores player stamina to an elevated admin rest cap.
+- Added a configurable admin/magical-rest stamina cap multiplier, with a backlog note for future moon phase, holiday or event-based variation.
+- Added a rest action button to the action queue, character view and campfire interactions.
+- Added a new 0.11.0 release note document.
+
+### Changed
+
+- The Telegram command menu now presents `/look` as `Озирнутися` and `/examine` as `Роздивитися`; `/location` and `/loc` remain available as legacy aliases for `/look`.
+- The side menu and docs now prefer `Поточна місцина` and `Місцина` over direct `локація` calques.
+- Player-facing stamina and inventory text in touched UI surfaces now prefers `Снага` and `Речі`.
+- The main reply keyboard is leaner: `Відпочити` moved out of the always-visible keyboard and into contextual places.
+- The action queue screen shows controls only while there is an active queue or rest state.
+- Vision, roadmap, setup and design docs were refreshed around the current Chornolis Marches direction.
+
+### Fixed
+
+- When the last long queued player action finishes and no new action starts, the bot now redraws the main reply keyboard.
+- The rest UI no longer advertises bed iconography for the basic `Відпочити` action.
+- Help and admin command lists now point to `/look` / `Озирнутися`, `/examine` / `Роздивитися` and updated terminology.
+
+---
+
 ## 0.10.13 - Action queue diagnostics and latency cleanup - 12026-05-26
 
 ### Added
@@ -403,7 +430,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ### Notes
 
-- `package.json` and `package-lock.json` are intentionally not included in this archive.
 - Some older queued-action internal phrasing may still say `придивляється`; the visible UI pass is covered here, and the remaining large `actionQueue.ts` wording can be cleaned in a smaller follow-up when editing the full file directly.
 
 ---

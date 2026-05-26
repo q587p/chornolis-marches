@@ -12,6 +12,7 @@ Backlog differs from Icebox: backlog means “we probably want this, but not rig
 - Visible animal migration follow-up: show animal movement in clients through aggregated local signs, tracks, `/stat` deltas or opt-in/debug views instead of one Telegram message per animal step.
 - Budgeted and aggregated creature simulation: cap individual creature thinking per world tick, process background animals by location/species/diet where possible, and reserve individual `WorldAction` rows for visible, important or dangerous actors.
 - Weather/magic ecology hooks: rain and restoration magic should shorten exhausted-vegetation recovery.
+- Dynamic magical-rest cap: the current admin/magic-fire rest multiplier is a config constant, but later it can vary by moon phase, sacred day, holiday or world event.
 - Day/night and light.
 - Campfires and firewood.
 - Early `/respawn` support.

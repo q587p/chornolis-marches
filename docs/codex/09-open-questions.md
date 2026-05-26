@@ -11,9 +11,9 @@ These items should be verified against the current repository before implementin
 
 ## Design decisions still flexible
 
-- Final canonical Ukrainian equivalent for HP/body state.
-- Final canonical term for inventory.
-- Whether `Витривалість` remains the best term for Stamina long-term.
+- Whether future code should migrate all player-facing Stamina labels to `Снага`.
+- Which existing HP/body-state labels should migrate first to `Життя` / `Стан`.
+- Which existing inventory labels should migrate first to `Речі` / `Поклажа`.
 - Exact mechanics of skill progression through use and observation.
 - Exact model for fear/cowardice, escape, and animal agility.
 - How much of the ecology simulation belongs in MVP vs later phases.

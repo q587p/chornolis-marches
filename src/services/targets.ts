@@ -32,7 +32,7 @@ function formatCreatureStats(target: {
   kills: number;
 }) {
   return [
-    `Пройдено локацій: ${target.steps}`,
+    `Переходів між місцинами: ${target.steps}`,
     `Оглядів: ${target.looks}`,
     `Сказано фраз: ${target.says}`,
     `Спроб збору: ${target.gatherAttempts}`,
@@ -57,7 +57,7 @@ export async function resolveTarget(type: string, id: number, locationId: number
       isAnimal: false,
       isCorpse: false,
       canFreshen: false,
-      inspect: `Ви бачите ${forms.accusative}.\n\nHP: ${target.hp}/${target.hpMax ?? BASE_HP}\nВитривалість: ${target.stamina}\nГолод: ${target.hunger}\n\nСтатистика:\n${formatPlayerStats(target)}`,
+      inspect: `Ви бачите ${forms.accusative}.\n\nHP: ${target.hp}/${target.hpMax ?? BASE_HP}\nСнага: ${target.stamina}\nГолод: ${target.hunger}\n\nСтатистика:\n${formatPlayerStats(target)}`,
     };
   }
 

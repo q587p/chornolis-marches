@@ -16,7 +16,7 @@ export function registerFallbackHandlers(bot: Bot) {
 
     if (command === "respawn") {
       await ctx.reply(
-        "Команди /respawn поки що немає в грі. Вона вже є в планах як раннє повернення до межового табору для нових або слабких персонажів.\n\nПоки що можна скористатися /location, /rest або /help.",
+        "Команди /respawn поки що немає в грі. Вона вже є в планах як раннє повернення до межового табору для нових або слабких персонажів.\n\nПоки що можна скористатися /look, /rest або /help.",
         { reply_markup: replyMarkup }
       );
       return;
