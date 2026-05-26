@@ -2,3 +2,8 @@ node_modules
 dist
 .env
 .DS_Store
+
+# Local/exported Codex context bundles
+chornolis-codex-context-pack.zip
+CHORNOLIS_*.md
+source-notes/
