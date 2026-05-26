@@ -9,6 +9,26 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.10.13 - Action queue diagnostics and latency cleanup - 12026-05-26
+
+### Added
+
+- Added action queue diagnostics to `/world`: queued/running player actions, queued/running creature actions, overdue running actions and oldest queue delay.
+- Added the same action queue diagnostics to the HTTP status page and `/health` JSON.
+
+### Changed
+
+- `/tickGet` now formats `100ms` quick actions as `0,1 с` instead of rounding them up to `1 с`.
+- Player queue completion and queued-action startup now run ahead of creature backlog in the action loop.
+- Reduced the completed-creature batch per action-loop pass from 500 to 100 so animal backlogs cannot monopolize the loop as long.
+- World ticks now preload active creature action IDs once instead of running one active-action count per living creature.
+
+### Fixed
+
+- Quick action timing text now matches the actual `100ms` player quick-action duration.
+
+---
+
 ## 0.10.12 - Seed typecheck and deploy announcements - 12026-05-26
 
 ### Fixed
@@ -18,11 +38,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Deploy announcements now suppress older version messages when a same-or-newer `DEPLOY:x.y.z` world event already exists.
 - Added a deployment checklist that documents when a migration is needed, when seed should run and the manual deploy order.
 - Renamed the visible gatherable `herbs` resource to `лікарські трави` while keeping the stable `herbs` key and command alias.
-
-### Changed
-
-- Bumped package metadata to `0.10.12`.
-- Added release notes for 0.10.12 and updated `news.md` with the technical patch note.
 
 ---
 
@@ -38,11 +53,10 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Renamed the small herbivore ecology processor away from the rabbit-only name.
 - `/tickGet` now documents foxes, wolves, pregnancy-state limitations and prey units.
-- Bumped package metadata to `0.10.11`.
 
 ### Documentation
 
-- Added release notes for 0.10.11 and updated ecology docs/news for starter predators and predator reproduction.
+- Updated ecology docs for starter predators and predator reproduction.
 
 ---
 
@@ -61,11 +75,10 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Predator hunger recovery now uses prey food value instead of a flat value for every kill.
 - Fox and wolf lifecycle seed values are now much slower, leaving predator reproduction room to be added without herbivore-speed generations.
 - Predator kills now mark corpses with the predator species key in their current action text.
-- Bumped package metadata to `0.10.10`.
 
 ### Documentation
 
-- Added release notes for 0.10.10 and updated ecology docs/news with predator-stat notes.
+- Updated ecology docs with predator-stat notes.
 - Added a backlog item for animal experience and titles based on hunting history.
 - Added a backlog item for creature aggression and defense against people or threats.
 
@@ -87,7 +100,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Added follow-up planning for visible animal migration without Telegram spam.
 - Added Icebox notes for future species-specific fear, aggression and offspring-defense behavior.
-- Updated `news.md`, ecology docs and release notes for 0.10.9.
+- Updated ecology docs for animal pressure and recent-attack danger.
 
 ---
 
@@ -102,15 +115,10 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ### Changed
 
-- Bumped package metadata to `0.10.8`.
 - Changed rest stamina recovery from one large +42 jump every 40 ticks to +1 every 4 ticks, while passive stamina remains +1 every 40 ticks.
 - Reduced tired/non-quick action durations by lowering `ACTION_BASE_TICKS` from 9 to 3, and clarified `/tickGet` that those action durations apply during fatigue or to creatures without quick mode.
 - Reduced quick player action duration to 0.1s and action queue polling to 0.1s so quick actions complete promptly.
 - Decoupled attack duration from stamina cost: tired/non-quick attacks now take 2x movement time while still costing more stamina.
-
-### Documentation
-
-- Updated `news.md` and release notes for 0.10.8.
 
 ---
 
@@ -130,14 +138,13 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ### Changed
 
-- Bumped package metadata to `0.10.7`.
 - Retuned herbivore reproduction: rabbits check every 120 world ticks with 5-10 offspring per litter; mice check every 20 world ticks with 5-10 offspring per litter and earlier maturity.
 - Slowed normal gatherable-resource regeneration and made exhausted vegetation recover much more slowly.
 - Kept grass off bridge spans while leaving under-bridge riverbank vegetation enabled.
 
 ### Documentation
 
-- Updated `news.md`, release notes and admin command docs.
+- Updated admin command docs.
 
 ---
 
@@ -155,11 +162,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Slowed the mouse lifecycle from seconds-scale growth to a short but readable cycle that remains faster than rabbits.
 - Mouse reproduction now runs faster than rabbit reproduction and uses smaller 4-8 offspring litters.
 - Seed upserts now use bounded concurrency and starter animal `createMany` batches to reduce database round trips.
-- Bumped package metadata to `0.10.6`.
-
-### Documentation
-
-- Updated `news.md` and release notes for 0.10.6.
 
 ---
 
@@ -182,11 +184,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Lisovyk wake/sleep regional notifications and world events now use in-world growled speech about depleted and recovered resources.
 - Hardened action, recovery, world-tick and debug/reset writes against records that were already removed by reset, cleanup or another concurrent loop.
 - CI now runs the static world seed test before build.
-- Bumped package metadata to `0.10.5`.
-
-### Documentation
-
-- Added release notes for 0.10.5 and updated `news.md`.
 
 ---
 
@@ -204,11 +201,10 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added `PUBLIC_BASE_URL` for configurable Telegram web links.
 - Removed the global rabbit population hard cap; only local crowding, food, danger and predators constrain reproduction now.
 - Lengthened animal corpse decay windows after the rabbit lifecycle slowdown.
-- Bumped package metadata to `0.10.4`.
 
 ### Documentation
 
-- Updated `news.md`, release notes and deployment docs with the 0.10.4 stats notes.
+- Updated deployment docs with the 0.10.4 stats notes.
 
 ---
 
@@ -221,12 +217,10 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Extended rabbit adult lifespan and reduced old-age death pressure.
 - Added direct overcrowding spread: excess non-child rabbits can move into neighboring cells every 20 world ticks.
 - Added `rabbitsSpread` to world tick summaries and public tick reports.
-- Bumped package metadata to `0.10.3`.
 
 ### Documentation
 
 - Updated ecology docs and ECO-001 notes with the slower pacing and overcrowding spread behavior.
-- Updated `news.md` with the 0.10.3 balance note.
 
 ---
 
@@ -242,11 +236,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Replaced manual 3500-character chunking in long admin outputs with page builders and `Next` / `Back` callbacks.
 - Kept page sizes below Telegram's 4096-character message limit with a 3300-character target.
-- Bumped package metadata to `0.10.2`.
-
-### Documentation
-
-- Updated `news.md` with the 0.10.2 pagination note.
 
 ---
 
@@ -256,13 +245,11 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Changed successful rabbit reproduction from 1-2 offspring to configurable litters of 5-10 offspring.
 - Added `WORLD_RABBIT_MIN_LITTER_SIZE` and `WORLD_RABBIT_MAX_LITTER_SIZE` tuning knobs.
-- Bumped package metadata to `0.10.1`.
 
 ### Documentation
 
 - Updated ecology docs and ECO-001 notes with the 5-10 litter size.
 - Added a future Icebox note for opportunistic rabbit consumption of small bird prey or carrion after birds, carcasses and deeper attack systems exist.
-- Updated `news.md` with the 0.10.1 balance note.
 
 ---
 
@@ -279,11 +266,9 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Changed
 
 - Reset starter rabbits now begin as mature adults with alternating sex, so the reproduction loop can start after a reset.
-- Bumped package metadata to `0.10.0`.
 
 ### Documentation
 
-- Updated `news.md` with the 0.10.0 ecology note.
 - Updated ecology and planning docs after implementing the first ECO-001 slice.
 
 ---
@@ -295,11 +280,9 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Split action completion handlers into `src/services/actionCompletions.ts`.
 - Reduced `src/services/actionQueue.ts` to loop wiring and public re-exports.
 - Kept existing handler and world tick imports compatible through `src/services/actionQueue.ts`.
-- Bumped package metadata to `0.9.12`.
 
 ### Documentation
 
-- Updated `news.md` with the 0.9.12 technical note.
 - Updated `docs/planning/next.md` after completing the action queue completion-handler split.
 
 ---
@@ -311,11 +294,9 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Split action queue lifecycle into `src/services/actionLifecycle.ts`: enqueueing, immediate-vs-queued player actions, rest start/stop, queue controls and queued action startup.
 - Kept the existing public imports from `src/services/actionQueue.ts` through re-exports.
 - Reduced `src/services/actionQueue.ts` to the action completion handlers and loop wiring.
-- Bumped package metadata to `0.9.11`.
 
 ### Documentation
 
-- Updated `news.md` with the 0.9.11 technical note.
 - Updated `docs/planning/next.md` so the remaining action queue refactor item only covers completion handler modules.
 
 ---
@@ -325,11 +306,9 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Changed
 
 - Added CI validation for planning exports: `npm run planning:export` now runs in GitHub Actions and fails if generated JSON/CSV differ from committed files.
-- Bumped package metadata to `0.9.10`.
 
 ### Documentation
 
-- Updated `news.md` with the 0.9.10 technical note.
 - Updated `docs/planning/next.md` after completing planning export CI validation.
 
 ---
@@ -344,12 +323,10 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Changed
 
 - Regenerated `docs/planning/exports/items.json` and `docs/planning/exports/issues.csv` from all planning item files.
-- Bumped package metadata to `0.9.9`.
 
 ### Documentation
 
 - Updated planning docs to describe the export command.
-- Updated `news.md` with the 0.9.9 technical note.
 - Updated `docs/planning/next.md` after completing the local planning export workflow.
 
 ---
@@ -360,11 +337,9 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Split stamina spending, exhaustion messages and passive/rest recovery into `src/services/actionRecovery.ts`.
 - Reduced `src/services/actionQueue.ts` further by moving recovery logic out of the queue runner.
-- Bumped package metadata to `0.9.8`.
 
 ### Documentation
 
-- Updated `news.md` with the 0.9.8 technical note.
 - Updated `docs/planning/next.md` to remove stamina/rest recovery from the remaining action queue refactor TODO.
 
 ---
@@ -377,11 +352,9 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Split player queue and rest status rendering into `src/services/actionQueueView.ts`.
 - Kept the existing public imports from `src/services/actionQueue.ts` through re-exports, so handlers and world tick code do not need broad import churn.
 - Updated help and admin/debug command text to use `Озирнутися`, `Роздивитися` and `місцина` terminology consistently.
-- Bumped package metadata to `0.9.7`.
 
 ### Documentation
 
-- Updated `news.md` with the 0.9.7 technical notes.
 - Updated `docs/planning/next.md` after completing the queued-action terminology cleanup and the first queue rendering/rules split.
 
 ---
@@ -395,7 +368,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ### Documentation
 
-- Added this technical refactor note to `news.md`, `CHANGELOG.md` and near-term planning notes.
 - Added a follow-up planning note to continue splitting the large `src/services/actionQueue.ts` into smaller queue, completion, stamina/rest and rendering modules.
 
 ---

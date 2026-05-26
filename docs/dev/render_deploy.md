@@ -44,6 +44,12 @@ Use this before committing or pushing a release patch.
 
    On Render this can stay combined in the build command, but when doing it manually keep this order: schema first, compiled app second, authored data third, smoke check last.
 
+5. Release-note hygiene:
+
+   - `CHANGELOG.md` and `news.md` should describe player-visible, admin-visible or operationally meaningful changes.
+   - Do not add bookkeeping-only bullets such as "Bumped package metadata to x.y.z", "Added release notes for x.y.z", or "Updated news/changelog".
+   - Version bumps, release-note files and documentation bookkeeping can stay in the commit diff; they do not need their own changelog/news bullets unless they change behavior or workflow.
+
 Optional post-seed smoke check:
 
 ```bash

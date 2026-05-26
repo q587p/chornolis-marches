@@ -346,7 +346,14 @@ export function registerStatusHandlers(bot: Bot) {
   bot.command("world", async (ctx) => {
     const s = await getStatusData();
     const latestEvents = s.latestEvents.length ? s.latestEvents.map(formatEvent).join("\n") : "немає";
-    await ctx.reply(`🌲 Стан Порубіжжя Чорнолісу\n\nВерсія: ${s.version}\nПерсонажів гравців у базі: ${s.playersCount}\nРегіонів: ${s.regionsCount}\nЛокацій-клітинок: ${s.locationsCount}\nПереходів між клітинками: ${s.exitsCount}\nЖивих тварин: ${s.aliveAnimalsCount}\nТрупів тварин: ${s.animalCorpsesCount}\nЗниклих тварин: ${s.goneAnimalsCount}\nNPC / не-тварин: ${s.npcCount}\nЖивих істот загалом: ${s.aliveCreaturesCount}\nВузлів ресурсів: ${s.resourcesCount}\nПодій у журналі: ${s.eventsCount}\n\nОстанні події:\n${latestEvents}\n\nОстання помилка: ${s.lastRuntimeError ?? "немає"}`);
+    const q = s.actionQueue;
+    const queueText = [
+      `Гравці: queued=${q.playerQueued}, running=${q.playerRunning}`,
+      `Істоти: queued=${q.creatureQueued}, running=${q.creatureRunning}`,
+      `Разом: queued=${q.totalQueued}, running=${q.totalRunning}, overdue=${q.overdueRunning}`,
+      `Найстаріша queued: ${Math.round(q.oldestQueuedAgeMs / 1000)} с; max overdue: ${Math.round(q.maxOverdueMs / 1000)} с`,
+    ].join("\n");
+    await ctx.reply(`🌲 Стан Порубіжжя Чорнолісу\n\nВерсія: ${s.version}\nПерсонажів гравців у базі: ${s.playersCount}\nРегіонів: ${s.regionsCount}\nЛокацій-клітинок: ${s.locationsCount}\nПереходів між клітинками: ${s.exitsCount}\nЖивих тварин: ${s.aliveAnimalsCount}\nТрупів тварин: ${s.animalCorpsesCount}\nЗниклих тварин: ${s.goneAnimalsCount}\nNPC / не-тварин: ${s.npcCount}\nЖивих істот загалом: ${s.aliveCreaturesCount}\nВузлів ресурсів: ${s.resourcesCount}\nПодій у журналі: ${s.eventsCount}\n\nЧерга дій:\n${queueText}\n\nОстанні події:\n${latestEvents}\n\nОстання помилка: ${s.lastRuntimeError ?? "немає"}`);
   });
 
   bot.command(["stat", "stats"], async (ctx) => {

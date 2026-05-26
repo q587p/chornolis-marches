@@ -2,7 +2,7 @@ import { Bot } from "grammy";
 import { CreatureAge, Direction, LocationExit } from "@prisma/client";
 import { prisma } from "../db";
 import { notifyRegion } from "./notifications";
-import { actionDurationMs, enqueueCreatureAction, gatherDurationMs, hasActiveCreatureActions, movementDurationMs, restartActionQueueLoop } from "./actionQueue";
+import { actionDurationMs, enqueueCreatureAction, gatherDurationMs, movementDurationMs, restartActionQueueLoop } from "./actionQueue";
 import { BASE_STAMINA, TICK_MS, VERY_TIRED_STAMINA, getRuntimeTimingConfig, setRuntimeTickMs } from "../gameConfig";
 import { restartPlayerAutoTimers } from "../handlers/auto";
 
@@ -1016,15 +1016,22 @@ export async function worldTick() {
     regenerated = await regenerateResourcesIfNeeded();
     if (!lisovykAwakened) lisovykSlept = await putLisovykToSleepIfForestRecovered();
 
-    const creatures = await prisma.creature.findMany({
-      where: { isAlive: true, isGone: false },
-      include: { species: true, location: { include: { exitsFrom: true, features: { where: { isActive: true } }, resources: { include: { resourceType: true } } } } },
-    });
-    const playerLocationCounts = await prisma.player.groupBy({
-      by: ["currentLocationId"],
-      where: { currentLocationId: { not: null } },
-      _count: { _all: true },
-    });
+    const [creatures, playerLocationCounts, activeCreatureActions] = await Promise.all([
+      prisma.creature.findMany({
+        where: { isAlive: true, isGone: false },
+        include: { species: true, location: { include: { exitsFrom: true, features: { where: { isActive: true } }, resources: { include: { resourceType: true } } } } },
+      }),
+      prisma.player.groupBy({
+        by: ["currentLocationId"],
+        where: { currentLocationId: { not: null } },
+        _count: { _all: true },
+      }),
+      prisma.worldAction.findMany({
+        where: { actorType: "CREATURE", status: { in: ["QUEUED", "RUNNING"] }, creatureId: { not: null } },
+        select: { creatureId: true },
+      }),
+    ]);
+    const activeCreatureActionIds = new Set(activeCreatureActions.map((action) => action.creatureId).filter((id): id is number => Boolean(id)));
     const creatureLocationCounts = new Map<number, number>();
     const playerCountsByLocationId = new Map<number, number>();
     for (const c of creatures) creatureLocationCounts.set(c.locationId, (creatureLocationCounts.get(c.locationId) ?? 0) + 1);
@@ -1042,7 +1049,7 @@ export async function worldTick() {
           continue;
         }
 
-        if (await hasActiveCreatureActions(c.id)) {
+        if (activeCreatureActionIds.has(c.id)) {
           skippedBusy++;
           continue;
         }
@@ -1109,6 +1116,7 @@ function restartWorldTickTimer() {
 }
 
 function formatDuration(ms: number) {
+  if (ms < 1000) return `${(ms / 1000).toLocaleString("uk-UA", { maximumFractionDigits: 1 })} с`;
   if (ms < 60_000) return `${Math.ceil(ms / 1000)} с`;
   return `${Math.ceil(ms / 60_000)} хв`;
 }

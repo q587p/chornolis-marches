@@ -58,7 +58,7 @@ type PlayerActionSubmitResult = {
 };
 
 const PLAYER_RUNNING_ACTION_BATCH = 100;
-const CREATURE_RUNNING_ACTION_BATCH = 500;
+const CREATURE_RUNNING_ACTION_BATCH = 100;
 const PLAYER_QUEUED_ACTION_BATCH = 200;
 const CREATURE_QUEUED_ACTION_BATCH = 1000;
 
@@ -395,6 +395,46 @@ async function startNextQueuedAction(action: WorldAction) {
   }
 }
 
+async function startQueuedActionsForActorType(actorType: WorldActorType, take: number) {
+  const nextQueued = await prisma.worldAction.findMany({
+    where: { actorType, status: "QUEUED" },
+    orderBy: [{ position: "asc" }, { id: "asc" }],
+    take,
+  });
+  if (nextQueued.length === 0) return;
+
+  const runningActions = await prisma.worldAction.findMany({
+    where: { actorType, status: "RUNNING" },
+    select: { actorType: true, playerId: true, creatureId: true },
+  });
+  const runningActors = new Set(runningActions.map(actorKey));
+  const startedActors = new Set<string>();
+  let restingPlayerIds = new Set<number>();
+
+  if (actorType === "PLAYER") {
+    const playerIds = [...new Set(nextQueued.map((action) => action.playerId).filter((id): id is number => Boolean(id)))];
+    if (playerIds.length > 0) {
+      const restingPlayers = await prisma.player.findMany({
+        where: { id: { in: playerIds }, isResting: true },
+        select: { id: true },
+      });
+      restingPlayerIds = new Set(restingPlayers.map((player) => player.id));
+    }
+  }
+
+  for (const action of nextQueued) {
+    const key = actorKey(action);
+    if (startedActors.has(key) || runningActors.has(key)) continue;
+    if (action.actorType === "PLAYER" && action.playerId && restingPlayerIds.has(action.playerId)) continue;
+    startedActors.add(key);
+    try {
+      await startNextQueuedAction(action);
+    } catch (error) {
+      if (!isMissingRecordError(error)) throw error;
+    }
+  }
+}
+
 export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, action: WorldAction) => Promise<unknown>) {
   await recoverStamina(bot);
   const now = new Date();
@@ -403,13 +443,7 @@ export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, ac
     orderBy: [{ executeAt: "asc" }, { id: "asc" }],
     take: PLAYER_RUNNING_ACTION_BATCH,
   });
-  const dueCreatureRunning = await prisma.worldAction.findMany({
-    where: { actorType: "CREATURE", status: "RUNNING", executeAt: { lte: now } },
-    orderBy: [{ executeAt: "asc" }, { id: "asc" }],
-    take: CREATURE_RUNNING_ACTION_BATCH,
-  });
-  const dueRunning = [...duePlayerRunning, ...dueCreatureRunning];
-  for (const action of dueRunning) {
+  for (const action of duePlayerRunning) {
     try {
       await completeAction(bot, action);
     } catch (error) {
@@ -417,33 +451,21 @@ export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, ac
     }
   }
 
-  const nextQueuedPlayers = await prisma.worldAction.findMany({
-    where: { actorType: "PLAYER", status: "QUEUED" },
-    orderBy: [{ position: "asc" }, { id: "asc" }],
-    take: PLAYER_QUEUED_ACTION_BATCH,
-  });
-  const nextQueuedCreatures = await prisma.worldAction.findMany({
-    where: { actorType: "CREATURE", status: "QUEUED" },
-    orderBy: [{ position: "asc" }, { id: "asc" }],
-    take: CREATURE_QUEUED_ACTION_BATCH,
-  });
-  const nextQueued = [...nextQueuedPlayers, ...nextQueuedCreatures];
-  const startedActors = new Set<string>();
+  await startQueuedActionsForActorType("PLAYER", PLAYER_QUEUED_ACTION_BATCH);
 
-  for (const action of nextQueued) {
-    const key = actorKey(action);
-    if (startedActors.has(key)) continue;
-    if (action.actorType === "PLAYER" && action.playerId) {
-      const player = await prisma.player.findUnique({ where: { id: action.playerId } });
-      if (player?.isResting) continue;
-    }
-    const running = await prisma.worldAction.count({ where: { ...actorWhereFromAction(action), status: "RUNNING" } });
-    if (running > 0) continue;
-    startedActors.add(key);
+  const dueCreatureRunning = await prisma.worldAction.findMany({
+    where: { actorType: "CREATURE", status: "RUNNING", executeAt: { lte: now } },
+    orderBy: [{ executeAt: "asc" }, { id: "asc" }],
+    take: CREATURE_RUNNING_ACTION_BATCH,
+  });
+  for (const action of dueCreatureRunning) {
     try {
-      await startNextQueuedAction(action);
+      await completeAction(bot, action);
     } catch (error) {
       if (!isMissingRecordError(error)) throw error;
     }
   }
+
+  await startQueuedActionsForActorType("PLAYER", PLAYER_QUEUED_ACTION_BATCH);
+  await startQueuedActionsForActorType("CREATURE", CREATURE_QUEUED_ACTION_BATCH);
 }

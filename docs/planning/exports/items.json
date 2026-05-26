@@ -193,6 +193,28 @@
     "file": "docs/planning/items/ICE-004-construction.md"
   },
   {
+    "id": "PERF-001",
+    "title": "Budgeted and aggregated creature simulation",
+    "status": "backlog",
+    "type": "technical",
+    "area": "performance",
+    "priority": "high",
+    "tags": [
+      "performance",
+      "ecology",
+      "creatures",
+      "action-queue",
+      "simulation"
+    ],
+    "depends_on": [
+      "ECO-001"
+    ],
+    "exports": {
+      "github_issue": true
+    },
+    "file": "docs/planning/items/PERF-001-budgeted-and-aggregated-creature-simulation.md"
+  },
+  {
     "id": "PROG-002",
     "title": "Observation-based learning",
     "status": "backlog",
