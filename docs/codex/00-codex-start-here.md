@@ -14,6 +14,7 @@ Chornolis Marches is a Ukrainian dark-fantasy Telegram RPG / living-world sandbo
 4. Use `docs/codex/` files for context before editing unfamiliar systems.
 5. For map edits, start with `prisma/data/chornolis_world_seed.json` and read `docs/codex/07-world-and-map-notes.md`.
 6. For release/update tasks, read `docs/codex/05-workflow-and-versioning.md`.
+7. Release/update dates should use the local project date with Holocene calendar year, e.g. `12026-05-26`.
 
 ## Preferred workflow for code tasks
 

@@ -123,7 +123,7 @@ export function registerPlayerHandlers(bot: Bot) {
     await showCharacter(ctx.from.id, (text, options) => ctx.reply(text, options));
   });
 
-  bot.hears(/^(?:🧍\s*)?Персонаж$|^🧍\s+Ж\s+/u, async (ctx) => {
+  bot.hears(/^(?:🧍\s*)?Персонаж$|^❤️\s+/u, async (ctx) => {
     if (!ctx.from) return;
     await showCharacter(ctx.from.id, (text, options) => ctx.reply(text, options));
   });

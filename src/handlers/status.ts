@@ -23,6 +23,7 @@ const ADMIN_COMMANDS = [
   "/locationAll — список усіх місцин і ключів",
   "/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD] — додати тварин",
   "/addCreatureHelp — список speciesKey для тварин",
+  "/addCampfire — додати звичайне вогнище у поточній місцині",
   "/forceOld [speciesKey] [count] — зробити кілька тварин у поточній місцині похилими для тесту старіння",
   "/cleanupCreature [speciesKey] — видалити одну тварину в поточній місцині",
   "/cleanupCreatures — очистити всіх тварин і нормалізувати унікальних NPC",

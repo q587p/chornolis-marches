@@ -5,7 +5,7 @@ import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 type MainKeyboardState = {
   isAuto?: boolean;
   hasQueue?: boolean;
-  characterLabel?: string;
+  statusLabel?: string;
 };
 
 function normalizeState(input: MainKeyboardState | boolean = {}) {
@@ -17,12 +17,12 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   const state = normalizeState(stateOrAuto);
   const keyboard = new Keyboard().text("👀 Озирнутися");
   if (state.hasQueue) keyboard.text("📋 Черга");
-  keyboard.text(state.characterLabel ?? "🧍 Персонаж").row();
+  keyboard.text("🧍 Персонаж").row();
 
-  return keyboard
-    .text("☰ Меню")
-    .resized()
-    .persistent();
+  keyboard.text("☰ Меню").row();
+  if (state.statusLabel) keyboard.text(state.statusLabel).row();
+
+  return keyboard.resized().persistent();
 }
 
 function resourceState(value: number, max: number, zeroLabel = "нема") {
@@ -40,10 +40,10 @@ function lifeState(value: number, max: number) {
   return resourceState(value, max, "кепсько");
 }
 
-function characterButtonLabel(player: { hp: number; hpMax: number | null; stamina: number; staminaMax: number | null }) {
+function statusButtonLabel(player: { hp: number; hpMax: number | null; stamina: number; staminaMax: number | null }) {
   const hpMax = player.hpMax ?? BASE_HP;
   const staminaMax = player.staminaMax ?? BASE_STAMINA;
-  return `🧍 Ж ${lifeState(player.hp, hpMax)} · С ${resourceState(player.stamina, staminaMax)}`;
+  return `❤️ ${lifeState(player.hp, hpMax)} · ⚡ ${resourceState(player.stamina, staminaMax)}`;
 }
 
 export function buildMenuReplyKeyboard() {
@@ -72,6 +72,6 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
   return buildMainReplyKeyboard({
     isAuto,
     hasQueue: queueCount > 0 || player.isResting,
-    characterLabel: characterButtonLabel(player),
+    statusLabel: statusButtonLabel(player),
   });
 }

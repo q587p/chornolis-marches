@@ -1,5 +1,7 @@
 import { Bot, InlineKeyboard } from "grammy";
+import { prisma } from "../db";
 import { resetWorldState } from "../services/worldReset";
+import { logEvent } from "../services/worldEvents";
 import { stopAllPlayerAuto } from "./auto";
 
 export const ADMIN_HELP_TEXT = [
@@ -15,6 +17,7 @@ export const ADMIN_HELP_TEXT = [
   "/locationAll — список усіх місцин і ключів",
   "/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD] — додати тварин",
   "/addCreatureHelp — список speciesKey для тварин",
+  "/addCampfire — додати звичайне вогнище у поточній місцині",
   "/forceOld [speciesKey] [count] — зробити кілька тварин у поточній місцині похилими для тесту старіння",
   "/cleanupCreature [speciesKey] — видалити одну тварину в поточній місцині",
   "/cleanupCreatures — очистити всіх тварин і нормалізувати унікальних NPC",
@@ -35,6 +38,65 @@ export const ADMIN_HELP_TEXT = [
 export function registerAdminHandlers(bot: Bot) {
   bot.command(["adminHelp", "adminhelp"], async (ctx) => {
     await ctx.reply(ADMIN_HELP_TEXT);
+  });
+
+  bot.command("addCampfire", async (ctx) => {
+    const telegramId = ctx.from?.id;
+    if (!telegramId) return;
+
+    const player = await prisma.player.findUnique({
+      where: { telegramId: String(telegramId) },
+      select: { currentLocationId: true },
+    });
+
+    if (!player?.currentLocationId) {
+      await ctx.reply("Спершу увійди у світ через /start, щоб мати поточну місцину.");
+      return;
+    }
+
+    const location = await prisma.cellLocation.findUnique({ where: { id: player.currentLocationId } });
+    if (!location) {
+      await ctx.reply("Поточну місцину не знайдено.");
+      return;
+    }
+
+    const key = `debug_campfire_${player.currentLocationId}`;
+    const feature = await prisma.locationFeature.upsert({
+      where: { key },
+      update: {
+        isActive: true,
+        type: "CAMPFIRE",
+        name: "Вогнище",
+        description: "Звичайне вогнище потріскує й дає тепле світло. Воно не має магічної сили незгасного полум’я.",
+        providesLight: true,
+        restStaminaCapMultiplier: null,
+        data: {
+          debug: true,
+          is_campfire: true,
+          created_by: "addCampfire",
+          magical: false,
+        },
+      },
+      create: {
+        key,
+        locationId: player.currentLocationId,
+        type: "CAMPFIRE",
+        name: "Вогнище",
+        description: "Звичайне вогнище потріскує й дає тепле світло. Воно не має магічної сили незгасного полум’я.",
+        isActive: true,
+        providesLight: true,
+        restStaminaCapMultiplier: null,
+        data: {
+          debug: true,
+          is_campfire: true,
+          created_by: "addCampfire",
+          magical: false,
+        },
+      },
+    });
+
+    await logEvent("SYSTEM", "Debug campfire added", `${feature.key} at ${location.key}`, player.currentLocationId);
+    await ctx.reply(`🔥 Додано звичайне вогнище у місцині: ${location.name}.\nКлюч: ${feature.key}`);
   });
 
   async function runReset(ctx: any) {

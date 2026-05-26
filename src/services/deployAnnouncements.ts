@@ -1,9 +1,8 @@
-import { Bot } from "grammy";
+import { Bot, InlineKeyboard } from "grammy";
 import fs from "fs/promises";
 import path from "path";
 import { prisma } from "../db";
 import { config } from "../config";
-import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
 import { logEvent } from "./worldEvents";
 
 async function readLatestNewsSummary() {
@@ -85,10 +84,11 @@ export async function announceWorldUpdatedOnce(bot: Bot) {
     "",
     "Можна продовжувати гру. Натисніть /start для оновлення меню та кнопок.",
   ].join("\n");
+  const keyboard = new InlineKeyboard().text("Архів новин", "news:list:0");
 
   for (const player of players) {
     try {
-      await bot.api.sendMessage(player.telegramId, text, { reply_markup: buildMainReplyKeyboard(false) });
+      await bot.api.sendMessage(player.telegramId, text, { reply_markup: keyboard });
       success++;
     } catch (error) {
       failed++;

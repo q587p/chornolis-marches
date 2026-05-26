@@ -1,5 +1,5 @@
 import { Bot } from "grammy";
-import { Direction, WorldAction } from "@prisma/client";
+import { Direction, LocationExit, WorldAction } from "@prisma/client";
 import { prisma } from "../db";
 import {
   BASE_HP,
@@ -21,9 +21,9 @@ import { summonLisovykIfResourceDepleted } from "./resources";
 import { logEvent } from "./worldEvents";
 import { resolveTarget, type ResolvedTarget } from "./targets";
 import { playerForms } from "./grammar";
-import { actionCost, actionTitle } from "./actionRules";
+import { actionCost, actionTitle, movementDurationMs } from "./actionRules";
 import { fatigueStateFor, spendCreatureStamina, spendPlayerStamina } from "./actionRecovery";
-import { actorWhere, interruptActorActions, type ActorRef } from "./actionLifecycle";
+import { actorWhere, enqueueCreatureAction, interruptActorActions, type ActorRef } from "./actionLifecycle";
 import { escapeHtml } from "../utils/text";
 
 type MovePayload = { direction: Direction; reason?: string };
@@ -34,6 +34,9 @@ type SocialPayload = { targetType: "player" | "creature"; targetId: number; mode
 const RECENT_ATTACK_FEATURE_PREFIX = "recent_attack_";
 const RECENT_ATTACK_DANGER_TICKS = Number(process.env.WORLD_RECENT_ATTACK_DANGER_TICKS || 20);
 const RECENT_ATTACK_DANGER_MS = RECENT_ATTACK_DANGER_TICKS * Number(process.env.WORLD_TICK_INTERVAL_MS || 1500);
+const PANIC_HERBIVORE_FLEE_CHANCE = Number(process.env.WORLD_PANIC_HERBIVORE_FLEE_CHANCE || 85);
+const PANIC_HERBIVORE_MAX_FLEE = Number(process.env.WORLD_PANIC_HERBIVORE_MAX_FLEE || 18);
+const PANIC_HERBIVORE_MOVE_PRIORITY = Number(process.env.WORLD_PANIC_HERBIVORE_MOVE_PRIORITY || 60);
 
 const FROM_DIRECTION_LABELS: Record<string, string> = {
   NORTH: "з півдня",
@@ -63,6 +66,14 @@ const GREETINGS = [
 
 function pick<T>(items: T[]) {
   return items[Math.floor(Math.random() * items.length)];
+}
+
+function chance(p: number) {
+  return Math.random() * 100 < p;
+}
+
+function shuffle<T>(items: T[]) {
+  return [...items].sort(() => Math.random() - 0.5);
 }
 
 function chatIdFromAction(action: WorldAction) {
@@ -151,6 +162,53 @@ async function markRecentAttackDanger(locationId: number) {
       data: { ecology: "recent_attack", expiresAt, ticks: RECENT_ATTACK_DANGER_TICKS },
     },
   });
+}
+
+async function triggerHerbivorePanic(locationId: number, victimCreatureId: number, reason = "лякається крові й різкого руху") {
+  const maxFlee = Math.max(0, Math.floor(PANIC_HERBIVORE_MAX_FLEE));
+  if (maxFlee <= 0) return 0;
+
+  const location = await prisma.cellLocation.findUnique({
+    where: { id: locationId },
+    include: { exitsFrom: true },
+  });
+  if (!location || location.exitsFrom.length === 0) return 0;
+
+  const herbivores = await prisma.creature.findMany({
+    where: {
+      locationId,
+      isAlive: true,
+      isGone: false,
+      id: { not: victimCreatureId },
+      species: { diet: "HERBIVORE" },
+    },
+    include: { species: true },
+    take: Math.max(maxFlee * 4, maxFlee),
+  });
+
+  const fleeing = shuffle(herbivores)
+    .filter(() => chance(PANIC_HERBIVORE_FLEE_CHANCE))
+    .slice(0, maxFlee);
+
+  for (const creature of fleeing) {
+    const exit = pick(location.exitsFrom) as LocationExit | undefined;
+    if (!exit) continue;
+    await interruptActorActions({ actorType: "CREATURE", creatureId: creature.id }, "злякалося нападу", true);
+    await enqueueCreatureAction({
+      creatureId: creature.id,
+      type: "MOVE",
+      payload: { direction: exit.direction as Direction, reason },
+      durationMs: movementDurationMs(exit.travelCost, creature.stamina),
+      priority: PANIC_HERBIVORE_MOVE_PRIORITY,
+      interruptQueued: true,
+    });
+  }
+
+  if (fleeing.length > 0) {
+    await logEvent("NPC_ACTION", "Herbivores panicked after attack", `location=${locationId}; fleeing=${fleeing.length}; victim=${victimCreatureId}`, locationId);
+  }
+
+  return fleeing.length;
 }
 
 async function completeMove(bot: Bot, action: WorldAction) {
@@ -360,7 +418,7 @@ async function completeGreet(bot: Bot, action: WorldAction) {
     { parseMode: "HTML" },
   );
   await setActionStatus(action, "DONE");
-  await logEvent("GREET", "Player greeted target", `${target.kind}:${target.id}: ${greeting}`, player.currentLocationId);
+  await logEvent("GREET", `${actorForms.nominative} ${verb} ${target.forms.dative}`, greeting, player.currentLocationId);
   if (chatId) await bot.api.sendMessage(chatId, `Ви сказали ${escapeHtml(target.forms.dative)}:\n${quoteBlock(greeting)}`, { parse_mode: "HTML" });
 }
 
@@ -409,6 +467,7 @@ async function completeCreatureAttack(bot: Bot, action: WorldAction) {
         kills: { increment: 1 },
       },
     });
+    await triggerHerbivorePanic(attacker.locationId, target.id, "лякається хижака й крові");
     await notifyLocation(bot, attacker.locationId, -1, `Щось кидається на здобич. За мить ${target.species.name} падає нерухомо.`);
     await logEvent("NPC_ACTION", "Creature killed prey", `${attacker.species.key} #${attacker.id} -> ${target.species.key} #${target.id}; food=${foodValue}`, attacker.locationId);
   } else {
@@ -457,6 +516,7 @@ async function completeAttack(bot: Bot, action: WorldAction) {
   await prisma.creature.updateMany({ where: { id: creature.id }, data: { hp: 0, isAlive: false, age: "CORPSE", diedAtTick: null, corpseDecayTicksLeft: creature.species.corpseDecayTicks, activity: "RESTING", currentAction: "лежить нерухомо" } });
   await interruptActorActions({ actorType: "CREATURE", creatureId: creature.id }, "істоту вбито", true);
   await prisma.player.updateMany({ where: { id: player.id }, data: { animalsKilled: { increment: 1 } } });
+  await triggerHerbivorePanic(player.currentLocationId, creature.id, "лякається нападу й людського запаху");
   await notifyLocation(bot, player.currentLocationId, player.id, `Хтось атакує і вбиває ${target.forms.accusative}.`);
   await setActionStatus(action, "DONE");
   await logEvent("PLAYER_ACTION", "Player killed animal", `${target.kind}:${target.id}`, player.currentLocationId);
@@ -489,7 +549,7 @@ async function completeSay(bot: Bot, action: WorldAction) {
       { parseMode: "HTML" },
     );
     await setActionStatus(action, "DONE");
-    await logEvent("SAY", "Player said something", text, player.currentLocationId);
+    await logEvent("SAY", `${playerForms(player).nominative} каже`, text, player.currentLocationId);
     if (chatId) await bot.api.sendMessage(chatId, `Ви кажете:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
     return;
   }
@@ -505,7 +565,7 @@ async function completeSay(bot: Bot, action: WorldAction) {
     { parseMode: "HTML" },
   );
   await setActionStatus(action, "DONE");
-  await logEvent("NPC_SAY", "Creature said something", text, creature.locationId);
+  await logEvent("NPC_SAY", `${creature.name ?? creature.species.name} промовляє`, text, creature.locationId);
 }
 
 async function completeTrack(bot: Bot, action: WorldAction) {

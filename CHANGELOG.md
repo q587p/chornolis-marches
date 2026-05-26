@@ -9,6 +9,27 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.11.3 - Chat polish, campfire debug and panic reaction - 12026-05-26
+
+### Added
+
+- Added `/addCampfire`, an admin/debug command that creates or reactivates a normal non-magical campfire feature in the current location.
+- World update announcements now include an `Архів новин` inline button that opens the paginated news archive.
+
+### Changed
+
+- Deadly attacks by players or predators now trigger an immediate local panic response: nearby herbivores may interrupt their current actions and flee through an exit with high-priority movement, while the existing recent-attack danger still lingers for follow-up ticks.
+- New `/chat` speech events now store the speaker name in the event title instead of generic `Player said` / `Creature said` labels.
+- `/chat` now includes greeting/addressed speech events, with new entries storing the speaker, target and quote text instead of technical target ids.
+- The main reply keyboard now keeps `Персонаж` as a plain navigation button and shows `❤️`/`⚡` life and stamina state as a separate button below `Меню`.
+
+### Documentation
+
+- Added agent/workflow notes that release and update dates should use the local project date with the Holocene calendar year.
+- Added backlog planning for speech range and privacy modes such as whispering, shouting and wider announcement-like speech.
+
+---
+
 ## 0.11.2 - Player action responsiveness, chat log and UI terminology - 12026-05-26
 
 ### Added

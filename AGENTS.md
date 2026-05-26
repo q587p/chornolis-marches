@@ -24,6 +24,7 @@ npm version minor --no-git-tag-version
 
 - Do **not** put internal workflow notes about `package.json` / `package-lock.json` into public news or changelog entries.
 - Before suggesting commit/push, prefer this order: apply changes → run build/tests/checks → only then version bump if the user asks or confirms.
+- When documenting release/update dates, use the local project date and Holocene calendar year, e.g. `12026-05-26`.
 - Preserve existing functionality unless the user explicitly asks to replace it.
 - Prefer ready changed files/archives over patch files/scripts when the user asks for “архів” or “changed files”.
 - For MVP Telegram bot mode, long polling is preferred over webhook unless the user explicitly changes this.

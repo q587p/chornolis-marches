@@ -66,7 +66,7 @@ async function renderChatPage(url: string | undefined) {
     <p class="actions">
       <a href="/chat?hours=1">1 год</a><a href="/chat?hours=24">24 год</a><a href="/chat?hours=all">Усі</a><a href="/chat.json?hours=${log.window === "all" ? "all" : log.window}&page=${log.page}&perPage=${log.perPage}">JSON</a><a href="/">Status</a>
     </p>
-    <table><thead><tr><th>Час</th><th>Тип</th><th>Місцина</th><th>Подія</th><th>Текст</th></tr></thead><tbody>${renderChatRows(log.events)}</tbody></table>
+    <table><thead><tr><th>Час</th><th>Тип</th><th>Місцина</th><th>Мовець</th><th>Текст</th></tr></thead><tbody>${renderChatRows(log.events)}</tbody></table>
     <p class="actions">${prev ? `<a href="${prev}">Назад</a>` : ""}${next ? `<a href="${next}">Далі</a>` : ""}</p>
   </body></html>`;
 }
