@@ -9,6 +9,19 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.11.8 - Chat privacy, stable keyboard grid and web stat polish - 12026-05-27
+
+### Changed
+
+- The main keyboard now keeps a stable 3-column layout: missing north/west/east/south exits and an empty inventory slot render as quiet blank cells instead of collapsing the row.
+- Moved `Допомога` from the secondary menu into the main keyboard row before `Південь`, keeping `Меню` as a shorter navigation button.
+- Web `/stat` now includes the same top-player block as Telegram `/stat`, showing player hunting, gathering, greeting, speech and movement counters alongside the top predator list.
+- Ordinary human-like NPC speech now appears as `SAY` in Telegram `/chat`, the web chat page and `/chat.json`; visibly non-human voices such as the lisovyk elder still keep `NPC_SAY`.
+- Telegram `/chat` and the scribe `/world` status now trim oversized pages before sending, preventing Telegram `message is too long` runtime errors while keeping full records available on the web/JSON views.
+- The public website home page now gives `emblem-logo-01.png` more visual weight and lets the long tone line span the full tone grid instead of wrapping as a narrow column.
+
+---
+
 ## 0.11.7 - Local detail mode, keyboard UX and public web status - 12026-05-27
 
 ### Added
@@ -18,7 +31,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Kept `/debugGet` and `/debugSet` available through `/adminHelp`, direct commands and the character-card toggle without adding them to the scribe-scoped Telegram command menu.
 - Added a dedicated `Речі` view for the current inventory; `/inventory`, `речі` and `інвентар` open the same list.
 - Added public `/who` and the `Хто активний` menu button for characters active in the last real hour.
-- Added public web `/who` and `/who.json` with the same active-character list and summary counts.
+- Added public web `/who` and `/who.json` with the same active-character list and a shared active-character count that does not distinguish players from NPCs.
 - Added `/playerAdmin <#id|name|username>` for scribes to inspect player details from anywhere; Telegram `/all` now includes player detail buttons for the current page.
 - Added `docs/systems/item_lifetime_and_grammar.md` documenting lifetime bands, sex-aware names, animacy and Ukrainian cases.
 
@@ -42,7 +55,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Fading torch warnings are no longer rendered as part of location text; the world tick sends a separate chat message when a carried lit torch enters its final minutes.
 - Fading campfires now also send a local chat warning when their flame starts going out.
 - Fading campfires now change their visible location and feature text to say they are burning low while still lighting the місцина.
-- `/stat` now includes a top-player block alongside the top predator list, showing player hunting, gathering, greeting, speech and movement counters.
+- Telegram `/stat` now includes a top-player block alongside the top predator list, showing player hunting, gathering, greeting, speech and movement counters.
 - Social signals now write `SOCIAL_SIGNAL` world events and appear in `/chat`.
 - Player auto-mode can occasionally use a visible social signal when someone or something is nearby.
 - Herbalist NPCs can now use a small signature social vocabulary: they may ask for quiet, nod to nearby characters, or point out animals.
@@ -50,7 +63,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - The periodic `Світ ворухнувся` tick summary is now a local technical report and is sent only to scribe/admin players who enabled technical details, not to every player in the region.
 - The lisovyk elder no longer wakes, appears or wanders into the Old Bridge region or locations with an active magical campfire.
 - Added a protected web `/all` page that asks for `ADMIN_SET_SECRET` before showing the service list of players and creatures.
-- Reworked the public website home page into a Ukrainian status and project overview page with `запущено`, version, active `/who` count, navigation links, `emblem-logo-01.png`, and a short description of the living-world vision and tone; the detailed world/status diagnostics moved to protected `/world` behind `ADMIN_SET_SECRET`.
+- Reworked the public website home page into a Ukrainian status and project overview page with `запущено`, version, shared active-character `/who` count, navigation links, `emblem-logo-01.png`, and a short description of the living-world vision and tone; the detailed world/status diagnostics moved to protected `/world` behind `ADMIN_SET_SECRET`.
 - Added a temporary infinite torch stand at the closed settlement gate.
 - Trimmed the public Telegram command menu to the core entries: `/start`, `/me`, `/look`, `/menu`, `/news` and `/help`.
 

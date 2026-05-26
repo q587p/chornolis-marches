@@ -12,6 +12,8 @@ type MainKeyboardState = {
   statusLabel?: string;
 };
 
+export const EMPTY_KEYBOARD_BUTTON = "⠀";
+
 function normalizeState(input: MainKeyboardState | boolean = {}) {
   if (typeof input === "boolean") return { isAuto: input } satisfies MainKeyboardState;
   return input;
@@ -22,15 +24,16 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   const exits = new Set(state.exits ?? []);
   const keyboard = new Keyboard()
     .text("👀 Озирнутися");
-  if (exits.has("NORTH")) keyboard.text("⬆️ Північ");
+  keyboard.text(exits.has("NORTH") ? "⬆️ Північ" : EMPTY_KEYBOARD_BUTTON);
   keyboard.text("👁 Роздивитися").row();
 
-  if (exits.has("WEST")) keyboard.text("⬅️ Захід");
-  if (state.hasInventory) keyboard.text("🎒 Речі");
-  if (exits.has("EAST")) keyboard.text("Схід ➡️");
+  keyboard.text(exits.has("WEST") ? "⬅️ Захід" : EMPTY_KEYBOARD_BUTTON);
+  keyboard.text(state.hasInventory ? "🎒 Речі" : EMPTY_KEYBOARD_BUTTON);
+  keyboard.text(exits.has("EAST") ? "Схід ➡️" : EMPTY_KEYBOARD_BUTTON);
   keyboard.row();
 
-  if (exits.has("SOUTH")) keyboard.text("⬇️ Південь");
+  keyboard.text("🧭 Допомога");
+  keyboard.text(exits.has("SOUTH") ? "⬇️ Південь" : EMPTY_KEYBOARD_BUTTON);
   keyboard.text("☰ Меню").row();
 
   if (state.statusLabel) keyboard.text(state.statusLabel).row();
@@ -55,8 +58,6 @@ export function buildMenuReplyKeyboard() {
     .row()
     .text("💬 Репліки")
     .text("👥 Хто активний")
-    .row()
-    .text("🧭 Допомога")
     .row()
     .text("🕯 Час")
     .text("↩️ Назад")

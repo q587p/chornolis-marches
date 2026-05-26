@@ -1,5 +1,5 @@
 import { Bot } from "grammy";
-import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
+import { buildMainReplyKeyboardForTelegramId, EMPTY_KEYBOARD_BUTTON } from "../ui/replyKeyboard";
 import { suggestAliasInputs } from "../input/aliases";
 import { stripUnsafeText } from "../utils/text";
 
@@ -11,6 +11,8 @@ function commandName(text: string) {
 export function registerFallbackHandlers(bot: Bot) {
   bot.on("message:text", async (ctx) => {
     const text = ctx.message.text;
+    if (text === EMPTY_KEYBOARD_BUTTON || text.trim() === "") return;
+
     const replyMarkup = ctx.from ? await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) : undefined;
 
     if (!text.trim().startsWith("/")) {

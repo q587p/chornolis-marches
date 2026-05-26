@@ -2,8 +2,16 @@ import { WorldEventType } from "@prisma/client";
 import { prisma } from "../db";
 
 const CHAT_EVENT_TYPES: WorldEventType[] = ["SAY", "NPC_SAY", "GREET", "SOCIAL_SIGNAL"];
+const CREATURE_SPEECH_MARKERS = ["лісовик"];
 
 export type ChatLogWindow = number | "all";
+export type ChatLogResult = Awaited<ReturnType<typeof getChatLog>>;
+
+type PublicChatEventInput = {
+  type: WorldEventType | string;
+  title?: string | null;
+  description?: string | null;
+};
 
 export function normalizeChatLogWindow(raw?: string | null): ChatLogWindow {
   const value = raw?.trim().toLowerCase();
@@ -21,6 +29,27 @@ export function chatLogWindowLabel(window: ChatLogWindow) {
 
 export function chatLogWindowToken(window: ChatLogWindow) {
   return window === "all" ? "all" : String(window);
+}
+
+function isCreatureSpeechEvent(event: PublicChatEventInput) {
+  if (event.type !== "NPC_SAY") return false;
+  const haystack = `${event.title ?? ""}\n${event.description ?? ""}`.toLocaleLowerCase("uk-UA");
+  return CREATURE_SPEECH_MARKERS.some((marker) => haystack.includes(marker));
+}
+
+export function publicChatEventType(event: PublicChatEventInput) {
+  if (event.type === "NPC_SAY" && !isCreatureSpeechEvent(event)) return "SAY";
+  return String(event.type);
+}
+
+export function publicChatLog<T extends { events: PublicChatEventInput[] }>(log: T) {
+  return {
+    ...log,
+    events: log.events.map((event) => ({
+      ...event,
+      type: publicChatEventType(event),
+    })),
+  };
 }
 
 export async function getChatLog(input: { window?: ChatLogWindow; page?: number; perPage?: number } = {}) {

@@ -4,7 +4,7 @@ import path from "path";
 import { config } from "../config";
 import { buildAllPage, buildWhoData, buildWhoText } from "../handlers/status";
 import { setLastRuntimeError } from "../runtimeState";
-import { chatLogWindowLabel, getChatLog, normalizeChatLogWindow } from "../services/chatLog";
+import { chatLogWindowLabel, getChatLog, normalizeChatLogWindow, publicChatEventType, publicChatLog } from "../services/chatLog";
 import { getEcologyStats } from "../services/ecologyStats";
 import { adminSecretMatches } from "../services/adminSecret";
 import { getStatusData } from "../services/status";
@@ -122,7 +122,7 @@ async function renderWhoPage() {
   </style></head><body>
     <h1>Хто активний</h1>
     <p class="muted">Публічний список персонажів, активних за останню реальну годину.</p>
-    <div class="actions"><span>Разом: ${data.totalCount}</span><span>Писарів: ${data.scribeCount}</span><span>Гравців: ${data.playerCount}</span><span>NPC: ${data.npcCount}</span></div>
+    <div class="actions"><span>Разом персонажів: ${data.totalCount}</span></div>
     <p class="actions"><a href="/">Status</a><a href="/stat">/stat</a><a href="/chat">/chat</a><a href="/who.json">JSON</a></p>
     <pre>${escapeHtml(text)}</pre>
   </body></html>`;
@@ -138,7 +138,7 @@ async function renderHomePage(status: Awaited<ReturnType<typeof getStatusData>>)
   const who = await buildWhoData();
   return `<!doctype html><html lang="uk"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Порубіжжя Чорнолісу</title><style>
     body{font-family:system-ui,sans-serif;margin:0;background:#10170f;color:#e8e0c9;line-height:1.55}
-    main{max-width:1040px;margin:0 auto;padding:42px 18px;display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:28px;align-items:start}
+    main{max-width:1120px;margin:0 auto;padding:42px 18px;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:32px;align-items:start}
     h1{margin:0 0 12px;font-size:34px;color:#f1d98a}
     h2{margin:26px 0 10px;font-size:21px;color:#f1d98a}
     p{margin:0 0 12px}
@@ -146,12 +146,12 @@ async function renderHomePage(status: Awaited<ReturnType<typeof getStatusData>>)
     .status{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:18px 0}
     .metric{border:1px solid #2d3a25;border-radius:8px;padding:12px;background:#1d2a18}
     .label{font-size:13px;color:#b9b08f}.value{font-size:24px;font-weight:700;color:#f1d98a}
-    .emblem{width:100%;max-width:220px;justify-self:center;opacity:.94}
+    .emblem{width:100%;max-width:340px;justify-self:center;opacity:.96}
     a{color:#d8b55d}.actions a{display:inline-block;border:1px solid #5d6f3c;border-radius:8px;padding:8px 10px;margin:0 8px 8px 0;text-decoration:none;background:#1d2a18}
     ul{padding-left:22px;margin:10px 0 0}
     li{margin:6px 0}
-    .muted{color:#b9b08f}.lead{font-size:18px;color:#efe5c9}.section{margin-top:18px}.tech{color:#d7cfb3}.tone{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;padding-left:0;list-style:none}.tone li{border-left:3px solid #5d6f3c;padding-left:10px}
-    @media (max-width:720px){main{grid-template-columns:1fr;padding-top:28px}.emblem{max-width:160px;grid-row:1}}
+    .muted{color:#b9b08f}.lead{font-size:18px;color:#efe5c9}.section{margin-top:18px}.tech{color:#d7cfb3}.tone{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;padding-left:0;list-style:none}.tone li{border-left:3px solid #5d6f3c;padding-left:10px}.tone li:last-child{grid-column:1/-1;max-width:620px}
+    @media (max-width:720px){main{grid-template-columns:1fr;padding-top:28px}.emblem{max-width:240px;grid-row:1}}
   </style></head><body><main>
     <section class="card">
       <h1>Порубіжжя Чорнолісу</h1>
@@ -161,7 +161,7 @@ async function renderHomePage(status: Awaited<ReturnType<typeof getStatusData>>)
         <div class="metric"><div class="label">Версія</div><div class="value">${escapeHtml(status.version)}</div></div>
         <div class="metric"><div class="label">У /who</div><div class="value">${who.totalCount}</div></div>
       </div>
-      <p class="muted">У /who зараз: писарів ${who.scribeCount}, гравців ${who.playerCount}, NPC ${who.npcCount}.</p>
+      <p class="muted">У /who зараз: ${who.totalCount} персонажів.</p>
       <p class="actions"><a href="/who">Хто активний /who</a><a href="/stat">Екологія /stat</a><a href="/chat">Репліки /chat</a><a href="/world">Світ /world</a><a href="/all">Службовий /all</a><a href="/health">Health JSON</a></p>
 
       <div class="section">
@@ -209,7 +209,7 @@ function renderChatRows(events: Awaited<ReturnType<typeof getChatLog>>["events"]
   return events
     .map((event) => `<tr>
       <td><code>${escapeHtml(formatDate(event.createdAt))}</code></td>
-      <td>${escapeHtml(event.type)}</td>
+      <td>${escapeHtml(publicChatEventType(event))}</td>
       <td>${event.location ? escapeHtml(event.location.name) : "<span class=\"muted\">невідомо</span>"}</td>
       <td>${escapeHtml(event.title)}</td>
       <td><blockquote>${escapeHtml(event.description ?? "")}</blockquote></td>
@@ -295,6 +295,22 @@ function renderTopHunterRows(rows: EcologyStats["topHunters"]) {
     .join("");
 }
 
+function renderTopPlayerRows(rows: EcologyStats["topPlayers"]) {
+  if (rows.length === 0) return `<tr><td colspan="8"><code>none</code></td></tr>`;
+  return rows
+    .map((row) => `<tr>
+      <td><code>#${row.id}</code></td>
+      <td>${escapeHtml(row.name)}</td>
+      <td>${row.locationName ? escapeHtml(row.locationName) : "<span class=\"muted\">невідомо</span>"}</td>
+      <td>${formatNumber(row.animalsKilled)}</td>
+      <td>${formatNumber(row.successfulGathers)}</td>
+      <td>${formatNumber(row.greetings)}</td>
+      <td>${formatNumber(row.says)}</td>
+      <td>${formatNumber(row.steps)}</td>
+    </tr>`)
+    .join("");
+}
+
 async function renderEcologyStatsPage() {
   const stats = await getEcologyStats();
   const c = stats.recent.counters;
@@ -363,6 +379,9 @@ async function renderEcologyStatsPage() {
 
     <h2>Найвдаліші хижаки</h2>
     <table><thead><tr><th>ID</th><th>Ім'я</th><th>Вид</th><th>Стан</th><th>Атак</th><th>Влучних атак</th><th>Убивств</th></tr></thead><tbody>${renderTopHunterRows(stats.topHunters)}</tbody></table>
+
+    <h2>Персонажі Порубіжжя</h2>
+    <table><thead><tr><th>ID</th><th>Ім'я</th><th>Місцина</th><th>Вполював/ла</th><th>Зібрав/ла</th><th>Привітань</th><th>Реплік</th><th>Кроків</th></tr></thead><tbody>${renderTopPlayerRows(stats.topPlayers)}</tbody></table>
 
     <h2>Ресурси</h2>
     <table><thead><tr><th>Ключ</th><th>Назва</th><th>Вузлів</th><th>Кількість</th><th>%</th></tr></thead><tbody>${renderResourceRows(stats.resourceRows)}</tbody></table>
@@ -433,7 +452,7 @@ export function startHttpServer() {
             perPage: Number(parsed.searchParams.get("perPage") ?? 50) || 50,
           });
           res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
-          res.end(JSON.stringify(chat));
+          res.end(JSON.stringify(publicChatLog(chat)));
           return;
         }
 
@@ -446,7 +465,15 @@ export function startHttpServer() {
         if (path === "/who.json") {
           const [text, data] = await Promise.all([buildWhoText(), buildWhoData()]);
           res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
-          res.end(JSON.stringify({ ...data, text }));
+          res.end(JSON.stringify({
+            since: data.since,
+            totalCount: data.totalCount,
+            scribeCount: data.scribeCount,
+            mixedCount: data.mixedCount,
+            scribes: data.scribes,
+            characters: data.mixedCharacters,
+            text,
+          }));
           return;
         }
 

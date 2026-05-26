@@ -3,7 +3,7 @@ import { CreatureActivity, CreatureAge } from "@prisma/client";
 import { config } from "../config";
 import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA, REST_ADMIN_STAMINA_CAP_MULTIPLIER } from "../gameConfig";
-import { chatLogWindowLabel, chatLogWindowToken, getChatLog, normalizeChatLogWindow, type ChatLogWindow } from "../services/chatLog";
+import { chatLogWindowLabel, chatLogWindowToken, getChatLog, normalizeChatLogWindow, publicChatEventType, type ChatLogWindow } from "../services/chatLog";
 import { getEcologyStats } from "../services/ecologyStats";
 import { getStatusData } from "../services/status";
 import { getPlayerByTelegramId } from "../services/players";
@@ -14,6 +14,9 @@ import { creatureForms, playerForms } from "../services/grammar";
 
 const ALL_PAGE_MAX_CHARS = 3300;
 const LOCATION_PAGE_MAX_CHARS = 3300;
+const TELEGRAM_TEXT_MAX_CHARS = 3900;
+const CHAT_LOG_TEXT_MAX_CHARS = 3400;
+const CHAT_LOG_ENTRY_MAX_CHARS = 1100;
 const CHAT_LOG_PAGE_SIZE = 12;
 const WHO_ACTIVE_WINDOW_MS = 60 * 60 * 1000;
 
@@ -204,6 +207,28 @@ function splitLinesIntoPages(lines: string[], maxChars: number) {
   return pages.length ? pages : [["немає записів"]];
 }
 
+function truncateTelegramText(text: string, maxChars = TELEGRAM_TEXT_MAX_CHARS) {
+  if (text.length <= maxChars) return text;
+  const suffix = "\n\n…текст скорочено для Telegram.";
+  return `${text.slice(0, Math.max(0, maxChars - suffix.length)).trimEnd()}${suffix}`;
+}
+
+function joinLinesWithinLimit(lines: string[], maxChars: number, separator = "\n\n") {
+  const visible: string[] = [];
+  let length = 0;
+
+  for (const line of lines) {
+    const nextLength = length + (visible.length ? separator.length : 0) + line.length;
+    if (visible.length > 0 && nextLength > maxChars) break;
+    visible.push(line.length > maxChars ? truncateTelegramText(line, maxChars) : line);
+    length += (visible.length > 1 ? separator.length : 0) + visible[visible.length - 1].length;
+  }
+
+  const hidden = Math.max(0, lines.length - visible.length);
+  if (hidden > 0) visible.push(`…ще ${hidden} записів на цій сторінці приховано через ліміт Telegram. Відкрийте веб-/chat або JSON.`);
+  return visible;
+}
+
 function sortUk(values: string[]) {
   return [...values].sort((a, b) => a.localeCompare(b, "uk-UA", { sensitivity: "base" }));
 }
@@ -377,12 +402,12 @@ export async function buildWhoText(now = new Date()) {
   return [
     "👥 Хто активний",
     "За останню реальну годину.",
-    `Разом: ${data.totalCount}; писарів: ${data.scribeCount}; гравців: ${data.playerCount}; NPC: ${data.npcCount}.`,
+    `Разом персонажів: ${data.totalCount}.`,
     "",
     "Писарі Порубіжжя:",
     ...(data.scribes.length ? data.scribes.map((name) => `- ${name}`) : ["- нікого не видно"]),
     "",
-    "Гравці:",
+    "Персонажі:",
     ...(data.mixedCharacters.length ? data.mixedCharacters.map((name) => `- ${name}`) : ["- нікого не видно"]),
   ].join("\n");
 }
@@ -422,18 +447,23 @@ export async function buildChatLogPage(window: ChatLogWindow, requestedPage: num
   const lines = log.events.map((event) => {
     const location = event.location ? ` @ ${event.location.name}` : "";
     const text = event.description ? `\n«${event.description}»` : "";
-    return `#${event.id} ${formatChatEventTime(event.createdAt)} ${event.type}${location}\n${event.title}${text}`;
+    return truncateTelegramText(`#${event.id} ${formatChatEventTime(event.createdAt)} ${publicChatEventType(event)}${location}\n${event.title}${text}`, CHAT_LOG_ENTRY_MAX_CHARS);
   });
+  const header = [
+    "Репліки Порубіжжя",
+    `Вікно: ${chatLogWindowLabel(log.window)}. Сторінка ${page + 1}/${log.totalPages}; записів ${log.total}.`,
+    "",
+  ].join("\n");
+  const footer = [
+    "",
+    "",
+    "Формат: /chat [години|all]. Наприклад: /chat 1 або /chat all.",
+  ].join("\n");
+  const maxBodyChars = Math.max(500, CHAT_LOG_TEXT_MAX_CHARS - header.length - footer.length);
+  const body = lines.length ? joinLinesWithinLimit(lines, maxBodyChars).join("\n\n") : "За цей час реплік не знайдено.";
 
   return {
-    text: [
-      "Репліки Порубіжжя",
-      `Вікно: ${chatLogWindowLabel(log.window)}. Сторінка ${page + 1}/${log.totalPages}; записів ${log.total}.`,
-      "",
-      lines.length ? lines.join("\n\n") : "За цей час реплік не знайдено.",
-      "",
-      "Формат: /chat [години|all]. Наприклад: /chat 1 або /chat all.",
-    ].join("\n"),
+    text: truncateTelegramText(`${header}${body}${footer}`, TELEGRAM_TEXT_MAX_CHARS),
     keyboard: buildChatLogKeyboard(log.window, page, log.totalPages),
   };
 }
@@ -610,7 +640,8 @@ export function registerStatusHandlers(bot: Bot) {
     if (!(await requireScribeAdmin(ctx))) return;
 
     const s = await getStatusData();
-    const latestEvents = s.latestEvents.length ? s.latestEvents.map(formatEvent).join("\n") : "немає";
+    const latestEventLines = s.latestEvents.map((event) => truncateTelegramText(formatEvent(event), 450));
+    const latestEvents = latestEventLines.length ? joinLinesWithinLimit(latestEventLines, 1400, "\n").join("\n") : "немає";
     const q = s.actionQueue;
     const queueText = [
       `Гравці: queued=${q.playerQueued}, running=${q.playerRunning}`,
@@ -618,7 +649,8 @@ export function registerStatusHandlers(bot: Bot) {
       `Разом: queued=${q.totalQueued}, running=${q.totalRunning}, overdue=${q.overdueRunning}`,
       `Найстаріша queued: ${Math.round(q.oldestQueuedAgeMs / 1000)} с; max overdue: ${Math.round(q.maxOverdueMs / 1000)} с`,
     ].join("\n");
-    await ctx.reply(`🌲 Стан Порубіжжя Чорнолісу\n\nВерсія: ${s.version}\nПерсонажів гравців у базі: ${s.playersCount}\nРегіонів: ${s.regionsCount}\nМісцин-клітинок: ${s.locationsCount}\nПереходів між клітинками: ${s.exitsCount}\nЖивих тварин: ${s.aliveAnimalsCount}\nТрупів тварин: ${s.animalCorpsesCount}\nЗниклих тварин: ${s.goneAnimalsCount}\nNPC / не-тварин: ${s.npcCount}\nЖивих істот загалом: ${s.aliveCreaturesCount}\nВузлів ресурсів: ${s.resourcesCount}\nПодій у журналі: ${s.eventsCount}\n\nЧерга дій:\n${queueText}\n\nОстанні події:\n${latestEvents}\n\nОстання помилка: ${s.lastRuntimeError ?? "немає"}`);
+    const runtimeError = s.lastRuntimeError ? truncateTelegramText(s.lastRuntimeError, 700) : "немає";
+    await ctx.reply(truncateTelegramText(`🌲 Стан Порубіжжя Чорнолісу\n\nВерсія: ${s.version}\nПерсонажів гравців у базі: ${s.playersCount}\nРегіонів: ${s.regionsCount}\nМісцин-клітинок: ${s.locationsCount}\nПереходів між клітинками: ${s.exitsCount}\nЖивих тварин: ${s.aliveAnimalsCount}\nТрупів тварин: ${s.animalCorpsesCount}\nЗниклих тварин: ${s.goneAnimalsCount}\nNPC / не-тварин: ${s.npcCount}\nЖивих істот загалом: ${s.aliveCreaturesCount}\nВузлів ресурсів: ${s.resourcesCount}\nПодій у журналі: ${s.eventsCount}\n\nЧерга дій:\n${queueText}\n\nОстанні події:\n${latestEvents}\n\nОстання помилка: ${runtimeError}`));
   });
 
   bot.command(["stat", "stats"], async (ctx) => {

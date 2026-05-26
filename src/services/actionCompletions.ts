@@ -581,7 +581,7 @@ async function completeSay(bot: Bot, action: WorldAction) {
     { parseMode: "HTML" },
   );
   await setActionStatus(action, "DONE");
-  await logEvent("NPC_SAY", `${creature.name ?? creature.species.name} промовляє`, text, creature.locationId);
+  await logEvent(creature.species.kind === "HUMAN" ? "SAY" : "NPC_SAY", `${creature.name ?? creature.species.name} промовляє`, text, creature.locationId);
 }
 
 async function completeTrack(bot: Bot, action: WorldAction) {
