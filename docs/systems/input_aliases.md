@@ -6,7 +6,7 @@ When a player-facing button performs an in-world action, there should usually be
 
 ## Current intent
 
-- Keep canonical slash commands stable: `/look`, `/examine`, `/me`, `/stat`, `/chat`, `/time`, `/news`, `/help`, `/menu`, `/gather`, `/rest`, `/queue`, `/say`, movement commands and admin/debug commands.
+- Keep canonical slash commands stable: `/look`, `/examine`, `/me`, `/inventory`, `/stat`, `/chat`, `/who`, `/time`, `/news`, `/help`, `/menu`, `/gather`, `/rest`, `/queue`, `/say`, movement commands and admin/debug commands.
 - Add Ukrainian aliases as a convenience layer over the same handlers where possible.
 - Preserve existing callback buttons for Telegram ergonomics.
 - Reply to unknown text with a short "не зрозуміли" message, `/help` / `/menu` hints and close alias suggestions where possible.
@@ -17,12 +17,14 @@ Location and character:
 
 - `озирнутися`, `/озирнутися`, `де я`, `місцина` -> current location view.
 - `роздивитися`, `/роздивитися`, `що видно` -> closer look action.
-- `хто я`, `хтоя`, `персонаж`, `речі` -> character card.
+- `хто я`, `хтоя`, `персонаж` -> character card.
+- `речі`, `інвентар`, `/inventory`, `що в мене` -> dedicated inventory view.
 
 Menu and status:
 
 - `статистика`, `/статистика` -> canonical `/stat` view.
 - `репліки`, `/репліки` -> canonical `/chat` view.
+- `хто активний` -> canonical `/who` view.
 - `час`, `/час` -> canonical `/time` view.
 - `новини`, `/новини` -> canonical `/news` view.
 - `допомога`, `/допомога` -> canonical `/help` view.
@@ -32,6 +34,7 @@ Movement:
 - `північ`, `південь`, `схід`, `захід`.
 - `йти на південь`, `рушити на захід`.
 - Short aliases such as `пн`, `пд`, `сх`, `зх` are supported where unambiguous.
+- The persistent reply keyboard may also show available direction buttons directly, such as `⬆️ Північ`, `⬅️ Захід`, `Схід ➡️` and `⬇️ Південь`.
 
 Actions:
 
@@ -45,7 +48,7 @@ Actions:
 
 Targets and signals:
 
-- `роздивитися труп`, `атакувати вовка`, `привітати 1`, `освіжити труп`.
+- `роздивитися труп`, `атакувати мишу`, `привітати 1`, `освіжити труп`.
 - `підібрати труп`.
 - `кивнути 1`, `помахати мандрівник`, `вказати на вовка`, `насупитися вовк`.
 

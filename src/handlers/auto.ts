@@ -13,6 +13,7 @@ import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { directionLabels } from "../ui/labels";
 import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { logEvent } from "../services/worldEvents";
+import { maybePerformPlayerAutoSignal } from "../services/socialAutonomy";
 
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
 const AUTO_SAY_CHANCE = Number(process.env.PLAYER_AUTO_SAY_CHANCE || 15);
@@ -196,6 +197,8 @@ async function runAutoStep(bot: Bot, telegramId: number) {
     if (DEBUG) console.log(`[PLAYER AUTO] telegramId=${telegramId} locationId=${locationId}`);
 
     if (await maybeStartAutoRest(bot, telegramId, player, locationId)) return;
+
+    if (await maybePerformPlayerAutoSignal(bot, player, telegramId)) return;
 
     if (await maybeAutoSay(bot, telegramId, player, locationId)) return;
 

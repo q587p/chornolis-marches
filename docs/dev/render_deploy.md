@@ -62,8 +62,12 @@ This verifies that the configured database contains the current `meta.startLocat
 
 Render Web Service exposes:
 
-- `/` — human-readable status page.
+- `/` — public Ukrainian status and project overview page with `запущено`, version, active `/who` count, navigation links, emblem, vision and tone.
+- `/world` — protected service status page with world counts, action queue diagnostics and latest events; asks for `ADMIN_SET_SECRET`.
+- `/all` — protected service view of `/all`; asks for `ADMIN_SET_SECRET` before showing the list.
 - `/health` — JSON health check.
+- `/who` — public active-character list.
+- `/who.json` — JSON active-character list and counts.
 - `/stat` — human-readable ecology statistics page.
 - `/stat.json` — JSON ecology statistics.
 

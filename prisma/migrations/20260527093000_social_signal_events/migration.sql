@@ -1,0 +1,1 @@
+ALTER TYPE "WorldEventType" ADD VALUE 'SOCIAL_SIGNAL';

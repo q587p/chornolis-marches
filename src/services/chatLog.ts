@@ -1,7 +1,7 @@
 import { WorldEventType } from "@prisma/client";
 import { prisma } from "../db";
 
-const CHAT_EVENT_TYPES: WorldEventType[] = ["SAY", "NPC_SAY", "GREET"];
+const CHAT_EVENT_TYPES: WorldEventType[] = ["SAY", "NPC_SAY", "GREET", "SOCIAL_SIGNAL"];
 
 export type ChatLogWindow = number | "all";
 

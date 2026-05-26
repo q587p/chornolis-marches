@@ -13,6 +13,20 @@
     }
   },
   {
+    "key": "closed_gate_torch_stand",
+    "locationKey": "closed_east_gate",
+    "type": "LANDMARK",
+    "name": "Смоляна поставка з факелами",
+    "description": "Біля воріт стоїть важка смоляна поставка: у темних пазах лежать сухі факели для тих, кому треба вертатися назад у ніч.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "torch_source": true,
+      "infinite_for_now": true,
+      "future_limited_stock": true
+    }
+  },
+  {
     "key": "forest_moss_gravestone",
     "locationKey": "forest_02_02",
     "type": "LANDMARK",

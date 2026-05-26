@@ -1,7 +1,7 @@
 import { Bot } from "grammy";
 import { actionDurationMs, performOrQueuePlayerAction } from "../services/actionQueue";
 import { getPlayerByTelegramId } from "../services/players";
-import { lightLocationCampfire, renderLocationBrief, renderLocationDetails, renderLocationFeatureInteraction } from "../services/locations";
+import { lightLocationCampfire, renderLocationBrief, renderLocationDetails, renderLocationFeatureInteraction, takeTorchFromLocationFeature } from "../services/locations";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { addTwigsPlaceholderText, lightPlayerTorchAtCampfire } from "../services/fire";
@@ -45,6 +45,8 @@ export function registerLookHandlers(bot: Bot) {
   }
 
   bot.command("examine", examineCurrentLocation);
+
+  bot.hears(["👁 Роздивитися", "Роздивитися"], examineCurrentLocation);
 
   bot.callbackQuery(["examine", "look"], async (ctx) => {
     const player = await getPlayerByTelegramId(ctx.from.id);
@@ -155,6 +157,18 @@ export function registerLookHandlers(bot: Bot) {
     }
 
     const text = await lightPlayerTorchAtCampfire(player.id, Number(ctx.match[1]));
+    await safeAnswerCallbackQuery(ctx);
+    await ctx.reply(text);
+  });
+
+  bot.callbackQuery(/^torch:take:(\d+)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    const text = await takeTorchFromLocationFeature(Number(ctx.match[1]), player.id);
     await safeAnswerCallbackQuery(ctx);
     await ctx.reply(text);
   });

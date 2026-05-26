@@ -2,6 +2,7 @@ import { Bot } from "grammy";
 import { prisma } from "../db";
 import { logEvent } from "./worldEvents";
 import { notifyRegion } from "./notifications";
+import { filterLisovykAllowedLocations, isLisovykForbiddenRegion } from "./lisovykBoundaries";
 
 export async function summonLisovykIfResourceDepleted(bot: Bot, resourceName: string, regionId: number) {
   const species = await prisma.creatureSpecies.findUnique({ where: { key: "lisovyk" } });
@@ -12,7 +13,16 @@ export async function summonLisovykIfResourceDepleted(bot: Bot, resourceName: st
   });
   if (alreadyAwake) return;
 
-  const locations = await prisma.cellLocation.findMany({ where: { regionId } });
+  const region = await prisma.region.findUnique({ where: { id: regionId } });
+  if (isLisovykForbiddenRegion(region)) return;
+
+  const locations = filterLisovykAllowedLocations(await prisma.cellLocation.findMany({
+    where: { regionId },
+    include: {
+      region: true,
+      features: { where: { isActive: true, type: "MAGIC_CAMPFIRE" } },
+    },
+  }));
   if (!locations.length) return;
   const location = locations[Math.floor(Math.random() * locations.length)];
 

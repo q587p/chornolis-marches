@@ -11,7 +11,13 @@ import { performSocialSignal, socialDefinitionById } from "../services/socialSig
 
 function buildActionKeyboard(target: ResolvedTarget, again = false) {
   if (target.isCorpse) return buildCorpseActionKeyboard(target);
-  return buildTargetActionKeyboard({ type: target.kind, id: target.id, canGreet: target.canGreet, isAnimal: target.isAnimal }, again);
+  return buildTargetActionKeyboard({ type: target.kind, id: target.id, canGreet: target.canGreet, canAttack: target.canAttack, isAnimal: target.isAnimal }, again);
+}
+
+function attackUnavailableText(target: ResolvedTarget) {
+  if (target.isCorpse) return "Це вже труп.";
+  if (target.kind === "player" || !target.isAnimal || !target.canAttack) return "Бій із хижаками й іншими персонажами ще не реалізований.";
+  return "Цю ціль зараз не можна затоптати.";
 }
 
 async function editOrReply(ctx: any, text: string, keyboard?: InlineKeyboard) {
@@ -150,7 +156,7 @@ export function registerSocialHandlers(bot: Bot) {
     }
 
     if (action === "greet" && !target.canGreet) return void (await safeAnswerCallbackQuery(ctx, "Ця ціль не відповість на привітання."));
-    if (action === "attack" && (target.kind !== "creature" || !target.isAnimal || target.isCorpse)) return void (await safeAnswerCallbackQuery(ctx, "Поки що можна атакувати тільки живих тварин."));
+    if (action === "attack" && !target.canAttack) return void (await safeAnswerCallbackQuery(ctx, attackUnavailableText(target)));
     if (action === "freshen" && (!target.isCorpse || !target.canFreshen)) return void (await safeAnswerCallbackQuery(ctx, "Труп уже не підходить."));
 
     const typeMap = { greet: "GREET", inspect: "INSPECT", attack: "ATTACK", freshen: "FRESHEN" } as const;

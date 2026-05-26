@@ -9,6 +9,53 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.11.7 - Local detail mode, keyboard UX and public web status - 12026-05-27
+
+### Added
+
+- Added scribe-only `/debugGet` and `/debugSet <0|1>` as a local per-character technical detail toggle, with `true`/`false` aliases.
+- Added a scribe-only technical-details button under the character card auto controls.
+- Kept `/debugGet` and `/debugSet` available through `/adminHelp`, direct commands and the character-card toggle without adding them to the scribe-scoped Telegram command menu.
+- Added a dedicated `Речі` view for the current inventory; `/inventory`, `речі` and `інвентар` open the same list.
+- Added public `/who` and the `Хто активний` menu button for characters active in the last real hour.
+- Added public web `/who` and `/who.json` with the same active-character list and summary counts.
+- Added `/playerAdmin <#id|name|username>` for scribes to inspect player details from anywhere; Telegram `/all` now includes player detail buttons for the current page.
+- Added `docs/systems/item_lifetime_and_grammar.md` documenting lifetime bands, sex-aware names, animacy and Ukrainian cases.
+
+### Changed
+
+- Main movement buttons now live in the persistent reply keyboard instead of under the location message. The keyboard shows available north/west/east/south exits, `Озирнутися`, `Роздивитися`, `Меню`, an inventory button when the character carries items, and a bottom life/stamina strip.
+- The life/stamina strip stays qualitative by default and shows exact `Життя` / `Снага` numbers only when the current player is a scribe/admin with local technical details enabled.
+- The character card no longer prints the full inventory inline; it keeps the character summary and opens `Речі` as a separate view above rest/auto controls.
+- Character and player-inspection views now hide exact life, stamina, hunger and statistics unless the viewer is a scribe/admin with local technical details enabled; ordinary text uses visible states such as standing/sitting, rested/tired and hunger intensity.
+- Detailed location inspection now hides coordinates and danger unless the viewer is a scribe/admin with local technical details enabled.
+- Inspecting another player now also shows a gender-aware visible state, a simple unarmed/no-weapon line, and what they visibly hold in their hands.
+- Player hunger is capped to the current simple 13-point scale for new action updates.
+- Empty money now appears as `немає` instead of `0 ґривень, 0 шагів`; carried money is still summarized when present.
+- Inspecting another player no longer reveals their hunger, money or inventory, but a lit torch is visible.
+- Lit torches are limited to two active carried flames; a third torch cannot be lit because the character has no free hands.
+- Player attack buttons stay generically labeled as `Атакувати`; successful unarmed attacks against small prey are currently described as trampling, predator and character attacks answer that this combat is not implemented yet, and corpse follow-up buttons say `Оглянути труп`.
+- Feature rows now hide technical light/rest bonuses such as `дає світло` and `відпочинок до ×5 снаги` unless the current player is a scribe/admin with local technical details enabled.
+- Corpse inspection and `Лежить` output now use condition bands by default instead of exact decay ticks: `жахливо`, `скоро зіпсується`, `не дуже добре`, `середньо`, `ідеально`.
+- Exact corpse ticks are shown only for scribes/admins who enabled local technical details.
+- `/say` and text aliases now first try to parse the opening word or phrase as a visible speech target, so `/say Аїд Доброго вечора, ми з України` addresses Аїд when that target is visible.
+- Fading torch warnings are no longer rendered as part of location text; the world tick sends a separate chat message when a carried lit torch enters its final minutes.
+- Fading campfires now also send a local chat warning when their flame starts going out.
+- Fading campfires now change their visible location and feature text to say they are burning low while still lighting the місцина.
+- `/stat` now includes a top-player block alongside the top predator list, showing player hunting, gathering, greeting, speech and movement counters.
+- Social signals now write `SOCIAL_SIGNAL` world events and appear in `/chat`.
+- Player auto-mode can occasionally use a visible social signal when someone or something is nearby.
+- Herbalist NPCs can now use a small signature social vocabulary: they may ask for quiet, nod to nearby characters, or point out animals.
+- Living animals can now make a simple reaction to directed social signals: a startled animal may cancel what it was doing and flee to another location.
+- The periodic `Світ ворухнувся` tick summary is now a local technical report and is sent only to scribe/admin players who enabled technical details, not to every player in the region.
+- The lisovyk elder no longer wakes, appears or wanders into the Old Bridge region or locations with an active magical campfire.
+- Added a protected web `/all` page that asks for `ADMIN_SET_SECRET` before showing the service list of players and creatures.
+- Reworked the public website home page into a Ukrainian status and project overview page with `запущено`, version, active `/who` count, navigation links, `emblem-logo-01.png`, and a short description of the living-world vision and tone; the detailed world/status diagnostics moved to protected `/world` behind `ADMIN_SET_SECRET`.
+- Added a temporary infinite torch stand at the closed settlement gate.
+- Trimmed the public Telegram command menu to the core entries: `/start`, `/me`, `/look`, `/menu`, `/news` and `/help`.
+
+---
+
 ## 0.11.6 - Fire, light, nearby text and scribe access - 12026-05-26
 
 ### Added

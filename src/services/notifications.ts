@@ -1,4 +1,5 @@
 import { Bot, InlineKeyboard } from "grammy";
+import { config } from "../config";
 import { prisma } from "../db";
 import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
 
@@ -47,6 +48,47 @@ export async function notifyRegion(bot: Bot, regionId: number, text: string) {
       await bot.api.sendMessage(player.telegramId, text, { reply_markup: buildMainReplyKeyboard(false) });
     } catch (error) {
       console.warn("Failed to notify region player:", error);
+    }
+  }
+}
+
+export async function notifyRegionScribeAdmins(bot: Bot, regionId: number, text: string) {
+  const players = await prisma.player.findMany({
+    where: {
+      currentLocation: { regionId },
+      OR: [
+        { role: "SCRIBE" },
+        ...(config.adminTelegramIds.length ? [{ telegramId: { in: config.adminTelegramIds } }] : []),
+      ],
+    },
+  });
+
+  for (const player of players) {
+    try {
+      await bot.api.sendMessage(player.telegramId, text, { reply_markup: buildMainReplyKeyboard(false) });
+    } catch (error) {
+      console.warn("Failed to notify region scribe/admin:", error);
+    }
+  }
+}
+
+export async function notifyRegionTechnicalScribes(bot: Bot, regionId: number, text: string) {
+  const players = await prisma.player.findMany({
+    where: {
+      currentLocation: { regionId },
+      showTechnicalDetails: true,
+      OR: [
+        { role: "SCRIBE" },
+        ...(config.adminTelegramIds.length ? [{ telegramId: { in: config.adminTelegramIds } }] : []),
+      ],
+    },
+  });
+
+  for (const player of players) {
+    try {
+      await bot.api.sendMessage(player.telegramId, text, { reply_markup: buildMainReplyKeyboard(false) });
+    } catch (error) {
+      console.warn("Failed to notify region technical scribe/admin:", error);
     }
   }
 }

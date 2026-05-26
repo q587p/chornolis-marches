@@ -1,14 +1,16 @@
 import { Bot, InlineKeyboard } from "grammy";
 import { prisma } from "../db";
-import { BASE_HP, BASE_STAMINA, HEALTH_REGEN_PER_INTERVAL, PASSIVE_HEALTH_REGEN_INTERVAL_MS, PASSIVE_STAMINA_REGEN_PER_INTERVAL, REST_HEALTH_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_PER_INTERVAL, STAMINA_REGEN_INTERVAL_MS } from "../gameConfig";
+import { BASE_HP, BASE_STAMINA, HEALTH_REGEN_PER_INTERVAL, PASSIVE_HEALTH_REGEN_INTERVAL_MS, PASSIVE_STAMINA_REGEN_PER_INTERVAL, PLAYER_HUNGER_MAX, REST_HEALTH_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_PER_INTERVAL, STAMINA_REGEN_INTERVAL_MS } from "../gameConfig";
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { renderLocationBrief } from "../services/locations";
 import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
 import { disablePlayerAuto, enablePlayerAuto, isPlayerAutoEnabled } from "./auto";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
-import { formatFatigueText, formatPlayerStats } from "../utils/playerText";
+import { formatFatigueText, formatHungerState, formatPlayerStats, formatPostureText, formatVitalsLine } from "../utils/playerText";
 import { resourceTypeDisplayName } from "../services/corpses";
 import { getPlayerTorchState } from "../services/fire";
+import { isScribeAdmin } from "../services/adminAccess";
+import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
 
 function minutes(ms: number) {
   return Math.max(1, Math.ceil(ms / 60_000));
@@ -46,11 +48,25 @@ function recoveryText(player: any) {
   return `\nВідновлення без відпочинку: приблизно ${passiveMinutes} хв. Через /rest або 🧘 Відпочити: приблизно ${restMinutes} хв.`;
 }
 
-function buildCharacterAutoKeyboard(autoEnabled: boolean) {
-  return new InlineKeyboard()
+function buildCharacterAutoKeyboard(autoEnabled: boolean, options: { canToggleTechnicalDetails?: boolean; showTechnicalDetails?: boolean } = {}) {
+  const keyboard = new InlineKeyboard()
+    .text("🎒 Речі", "character:inventory")
+    .row()
     .text("🧘 Відпочити", "rest:start")
     .row()
     .text(autoEnabled ? "⏹ Зупинити авто" : "🤖 Увімкнути авто", autoEnabled ? "character:auto:stop" : "character:auto:start");
+
+  if (options.canToggleTechnicalDetails) {
+    keyboard
+      .row()
+      .text(options.showTechnicalDetails ? "🔧 Сховати технічні деталі" : "🔧 Технічні деталі", "character:debug:toggle");
+  }
+
+  return keyboard;
+}
+
+function buildInventoryKeyboard() {
+  return new InlineKeyboard().text("↩️ Назад", "character:back");
 }
 
 function nameCasesText(player: any) {
@@ -75,7 +91,11 @@ function amountForResourceKeys(resources: any[], keys: string[]) {
 function moneyText(resources: any[]) {
   const hryvnias = amountForResourceKeys(resources, ["hryvnia", "hryvnias", "gryvnia", "gryvnias", "grivna", "grivnas", "гривня", "ґривня"]);
   const shahs = amountForResourceKeys(resources, ["shah", "shahy", "shahs", "шаг", "шаги"]);
-  return `${hryvnias} ґривень, ${shahs} шагів`;
+  if (hryvnias <= 0 && shahs <= 0) return "немає";
+  return [
+    hryvnias > 0 ? `${hryvnias} ґривень` : "",
+    shahs > 0 ? `${shahs} шагів` : "",
+  ].filter(Boolean).join(", ");
 }
 
 async function renderCharacterView(telegramId: number) {
@@ -89,29 +109,60 @@ async function renderCharacterView(telegramId: number) {
 
   if (!player) return null;
 
-  const torchState = await getPlayerTorchState(player.id);
   const autoEnabled = Boolean(player.isAutoEnabled || isPlayerAutoEnabled(telegramId));
   const autoText = autoEnabled ? "увімкнено 🤖" : "вимкнено";
-  const itemLines = player.resources
-    .filter((i) => i.amount > 0)
-    .map((i) => `${resourceTypeDisplayName(i.resourceType)} ×${i.amount}`);
-  if (torchState.isFading) itemLines.push("⚠️ Запалений факел гасне; варто пошукати вогнище, щоб підпалити його знову.");
-  const items = itemLines.length ? itemLines.join("\n") : "порожньо";
-  const staminaMax = player.staminaMax ?? BASE_STAMINA;
-  const hpMax = player.hpMax ?? BASE_HP;
+  const torchState = await getPlayerTorchState(player.id);
+  const canToggleTechnicalDetails = await isScribeAdmin(telegramId);
+  const showTechnicalDetails = playerCanShowTechnicalDetails(player);
+  const vitals = formatVitalsLine(player, { showTechnicalDetails, hpFallback: BASE_HP, staminaFallback: BASE_STAMINA });
+  const hungerText = showTechnicalDetails ? `Голод: ${Math.min(PLAYER_HUNGER_MAX, Math.max(0, player.hunger))}/${PLAYER_HUNGER_MAX}` : formatHungerState(player.hunger, PLAYER_HUNGER_MAX);
+  const statsText = showTechnicalDetails ? `\n\nСтатистика:\n${formatPlayerStats(player, { includeRestStats: true })}` : "";
+  const torchText = torchState.isLit
+    ? torchState.litAmount > 1
+      ? `\nУ вас горять запалені факели (${torchState.litAmount}).`
+      : "\nУ вас горить запалений факел."
+    : "";
   const locationText = player.currentLocation
     ? `${player.currentLocation.region.name} / ${player.currentLocation.name}`
     : "невідомо";
   const nameApprovedText = player.isNameApproved ? "Ім’я схвалене." : "Ім’я ще не схвалене. Зверніться до писарів Порубіжжя.";
 
   return {
-    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}\n\nЖиття: ${player.hp}/${hpMax}\nСнага: ${player.stamina}/${staminaMax}\nСтан: ${formatFatigueText(player)}${recoveryText(player)}\nГолод: ${player.hunger}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}\nЗареєстровано: ${formatDateTime(player.createdAt)}\n\nРечі:\n${items}\n\nСтатистика:\n${formatPlayerStats(player, { includeRestStats: true })}`,
-    keyboard: buildCharacterAutoKeyboard(autoEnabled),
+    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}\n\n${formatPostureText(player)}${torchText}\n${vitals.join("\n")}\nСтан: ${formatFatigueText(player)}${recoveryText(player)}\n${hungerText}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}\nЗареєстровано: ${formatDateTime(player.createdAt)}${statsText}`,
+    keyboard: buildCharacterAutoKeyboard(autoEnabled, { canToggleTechnicalDetails, showTechnicalDetails }),
+  };
+}
+
+async function renderInventoryView(telegramId: number) {
+  const player = await prisma.player.findUnique({
+    where: { telegramId: String(telegramId) },
+    include: { resources: { include: { resourceType: true }, orderBy: { id: "asc" } } },
+  });
+
+  if (!player) return null;
+
+  const torchState = await getPlayerTorchState(player.id);
+  const itemLines = player.resources
+    .filter((i) => i.amount > 0)
+    .map((i) => `- ${resourceTypeDisplayName(i.resourceType)} ×${i.amount}`);
+
+  if (torchState.isFading) itemLines.push("- ⚠️ Запалений факел гасне; варто пошукати вогнище, щоб підпалити його знову.");
+
+  return {
+    text: `🎒 Речі\n\n${itemLines.length ? itemLines.join("\n") : "Поки порожньо."}`,
+    keyboard: buildInventoryKeyboard(),
   };
 }
 
 export async function showCharacter(telegramId: number, reply: (text: string, options?: any) => Promise<unknown>) {
   const view = await renderCharacterView(telegramId);
+  if (!view) return void (await reply("Ти ще не увійшов у світ. Напиши /start", { reply_markup: buildMainReplyKeyboard(false) }));
+
+  await reply(view.text, { reply_markup: view.keyboard });
+}
+
+export async function showInventory(telegramId: number, reply: (text: string, options?: any) => Promise<unknown>) {
+  const view = await renderInventoryView(telegramId);
   if (!view) return void (await reply("Ти ще не увійшов у світ. Напиши /start", { reply_markup: buildMainReplyKeyboard(false) }));
 
   await reply(view.text, { reply_markup: view.keyboard });
@@ -132,9 +183,43 @@ export function registerPlayerHandlers(bot: Bot) {
     await showCharacter(ctx.from.id, (text, options) => ctx.reply(text, options));
   });
 
+  bot.command("inventory", async (ctx) => {
+    if (!ctx.from) return;
+    await showInventory(ctx.from.id, (text, options) => ctx.reply(text, options));
+  });
+
   bot.hears(/^(?:🧍\s*)?Персонаж$|^❤️\s+/u, async (ctx) => {
     if (!ctx.from) return;
     await showCharacter(ctx.from.id, (text, options) => ctx.reply(text, options));
+  });
+
+  bot.hears(["🎒 Речі", "Речі"], async (ctx) => {
+    if (!ctx.from) return;
+    await showInventory(ctx.from.id, (text, options) => ctx.reply(text, options));
+  });
+
+  bot.callbackQuery("character:inventory", async (ctx) => {
+    const view = await renderInventoryView(ctx.from.id);
+    await safeAnswerCallbackQuery(ctx);
+    if (!view) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+    try {
+      await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
+    } catch {
+      await ctx.reply(view.text, { reply_markup: view.keyboard });
+    }
+  });
+
+  bot.callbackQuery("character:back", async (ctx) => {
+    const view = await renderCharacterView(ctx.from.id);
+    await safeAnswerCallbackQuery(ctx);
+    if (!view) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+    try {
+      await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
+    } catch {
+      await ctx.reply(view.text, { reply_markup: view.keyboard });
+    }
   });
 
   bot.callbackQuery(/^character:auto:(start|stop)$/, async (ctx) => {
@@ -145,6 +230,36 @@ export function registerPlayerHandlers(bot: Bot) {
     const view = await renderCharacterView(ctx.from.id);
     await safeAnswerCallbackQuery(ctx, mode === "start" ? "Авто увімкнено." : "Авто зупинено.");
     if (!view) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+    try {
+      await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
+    } catch {
+      await ctx.reply(view.text, { reply_markup: view.keyboard });
+    }
+  });
+
+  bot.callbackQuery("character:debug:toggle", async (ctx) => {
+    if (!(await isScribeAdmin(ctx.from.id))) {
+      await safeAnswerCallbackQuery(ctx, "Ця опція доступна тільки писарям Порубіжжя.");
+      return;
+    }
+
+    const player = await prisma.player.findUnique({
+      where: { telegramId: String(ctx.from.id) },
+      select: { id: true, showTechnicalDetails: true },
+    });
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      await ctx.reply("Ти ще не увійшов у світ. Напиши /start");
+      return;
+    }
+
+    const enabled = !player.showTechnicalDetails;
+    await prisma.player.update({ where: { id: player.id }, data: { showTechnicalDetails: enabled } });
+
+    const view = await renderCharacterView(ctx.from.id);
+    await safeAnswerCallbackQuery(ctx, enabled ? "Технічні деталі увімкнено." : "Технічні деталі приховано.");
+    if (!view) return;
 
     try {
       await ctx.editMessageText(view.text, { reply_markup: view.keyboard });

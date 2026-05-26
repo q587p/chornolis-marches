@@ -1,25 +1,16 @@
 import { Bot, InlineKeyboard } from "grammy";
-import { timingSafeEqual } from "crypto";
 import { config } from "../config";
 import { prisma } from "../db";
 import { resetWorldState } from "../services/worldReset";
 import { logEvent } from "../services/worldEvents";
 import { createDebugCampfire, ensureTorchResourceTypes } from "../services/fire";
 import { requireScribeAdmin } from "../services/adminAccess";
+import { adminSecretMatches } from "../services/adminSecret";
 import { syncChatBotCommandsForTelegramId } from "../services/telegramCommands";
 import { stopAllPlayerAuto } from "./auto";
 
 function normalizeLookup(value: string | null | undefined) {
   return String(value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
-}
-
-function adminSecretMatches(input: string) {
-  const secret = config.adminSetSecret;
-  if (!secret) return false;
-
-  const inputBuffer = Buffer.from(input, "utf8");
-  const secretBuffer = Buffer.from(secret, "utf8");
-  return inputBuffer.length === secretBuffer.length && timingSafeEqual(inputBuffer, secretBuffer);
 }
 
 function playerDisplayName(player: { nameNominative?: string | null; firstName?: string | null; username?: string | null; id: number }) {
@@ -118,6 +109,9 @@ export const ADMIN_HELP_TEXT = [
   "/chat [hours|all] — репліки гравців і NPC з паґінацією; веб-/chat",
   "/all — усі живі персонажі та істоти",
   "/all dead — усі записи істот, включно з inactive/dead/corpse/gone",
+  "/playerAdmin <#id|ім’я|username> — детальна службова картка гравця з будь-якої місцини",
+  "/debugGet — показати, чи ввімкнені технічні деталі для вашого персонажа",
+  "/debugSet <0|1> — вимкнути або ввімкнути технічні деталі для вашого персонажа; true/false теж працюють",
   "/look або кнопка 👀 Озирнутися — показати поточну місцину",
   "/location або /loc — старі сумісні назви для /look",
   "/examine або кнопка 👁 Роздивитися — уважніше роздивитися поточну місцину",

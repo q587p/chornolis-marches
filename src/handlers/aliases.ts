@@ -24,7 +24,7 @@ import { actionQueueReplyOptions, sendActionSubmitFeedback } from "../utils/acti
 import { stripUnsafeText } from "../utils/text";
 import { sendHelp } from "./help";
 import { disablePlayerAuto, enablePlayerAuto, isPlayerAutoEnabled } from "./auto";
-import { showCharacter, showLocationForPlayer } from "./player";
+import { showCharacter, showInventory, showLocationForPlayer } from "./player";
 import { buildChatLogPage, buildStatBrief } from "./status";
 import { buildNewsIndexPage } from "./news";
 import { backToMain, showMenu } from "./menu";
@@ -35,6 +35,7 @@ import { addCorpseToInventory, resourceTypeDisplayName } from "../services/corps
 import { performSocialSignal } from "../services/socialSignals";
 import { addTwigsPlaceholderText } from "../services/fire";
 import { pickUpFirstGroundResourceByKey } from "../services/groundItems";
+import { parseSpeechTarget } from "../services/speechTargets";
 
 type TextTargetRef = {
   type: "player" | "creature";
@@ -337,7 +338,8 @@ async function submitSay(bot: Bot, ctx: any, text: string) {
 
   const durationMs = actionDurationMs("SAY", player.stamina);
   try {
-    const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "SAY", payload: { text: safeText }, durationMs, chatId: ctx.chat?.id });
+    const payload = await parseSpeechTarget(safeText, player.currentLocationId, player.id);
+    const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "SAY", payload, durationMs, chatId: ctx.chat?.id });
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {
     await ctx.reply(error instanceof Error ? error.message : "Не вдалося виконати дію.");
@@ -346,7 +348,11 @@ async function submitSay(bot: Bot, ctx: any, text: string) {
 
 function validateTargetAction(action: TargetAction, target: ResolvedTarget) {
   if (action === "greet" && !target.canGreet) return "Ця ціль не відповість на привітання.";
-  if (action === "attack" && (target.kind !== "creature" || !target.isAnimal || target.isCorpse)) return "Поки що можна атакувати тільки живих тварин.";
+  if (action === "attack" && !target.canAttack) {
+    if (target.isCorpse) return "Це вже труп.";
+    if (target.kind === "player" || !target.isAnimal || !target.canAttack) return "Бій із хижаками й іншими персонажами ще не реалізований.";
+    return "Цю ціль зараз не можна затоптати.";
+  }
   if (action === "freshen" && (!target.isCorpse || !target.canFreshen)) return "Труп уже не підходить.";
   return null;
 }
@@ -495,6 +501,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "location") return showLocationForPlayer(ctx.from.id, (text, options) => ctx.reply(text, options));
     if (parsed.kind === "look-action") return submitLookAction(bot, ctx);
     if (parsed.kind === "me") return showCharacter(ctx.from.id, (text, options) => ctx.reply(text, options));
+    if (parsed.kind === "inventory") return showInventory(ctx.from.id, (text, options) => ctx.reply(text, options));
     if (parsed.kind === "help") return sendHelp(ctx);
     if (parsed.kind === "news") return replyWithNews(ctx);
     if (parsed.kind === "stat") return replyWithStat(ctx);

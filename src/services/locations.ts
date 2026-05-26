@@ -2,7 +2,7 @@ import { InlineKeyboard } from "grammy";
 import { prisma } from "../db";
 import { ACTION_BASE_TICKS, QUICK_PLAYER_ACTION_DURATION_MS, TICK_MS, gatherConfig, playerStaminaCostConfig } from "../gameConfig";
 import { directionLabels, directionShortLabels } from "../ui/labels";
-import { buildMovementKeyboard, buildResourceMenuKeyboard, buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
+import { buildResourceMenuKeyboard, buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
 import { isCampfireFeature } from "./locationFeatures";
 import {
   campfireStateLine,
@@ -10,11 +10,16 @@ import {
   expireTimedCampfires,
   getPlayerTorchState,
   hasActiveLightAtLocation,
+  isCampfireFading,
   isExtinguishedCampfire,
   lightCampfireFromTorch,
+  takeTorchFromFeature,
 } from "./fire";
 import { isPickableResourceKey } from "./groundItems";
 import { escapeHtml } from "../utils/text";
+import { creatureForms } from "./grammar";
+import { lifetimeSummary } from "./itemLifetime";
+import { playerShowsTechnicalDetails } from "./technicalDetails";
 
 const COMPACT_EXIT_ORDER = ["NORTH", "WEST", "SOUTH", "EAST", "UP", "DOWN", "INSIDE", "OUTSIDE"];
 const GATHERABLE_RESOURCE_KEYS = ["berries", "mushrooms", "herbs"] as const;
@@ -25,6 +30,10 @@ const CREATURE_AGE_LABELS: Record<string, string> = {
   ADULT: "доросла особина",
   OLD: "стара особина",
 };
+
+function featureData(feature: any) {
+  return feature.data && typeof feature.data === "object" && !Array.isArray(feature.data) ? feature.data as Record<string, unknown> : {};
+}
 
 type LocationRenderOptions = {
   targetPage?: number;
@@ -78,6 +87,15 @@ function isCorpseTarget(target: ReturnType<typeof visibleTargets>[number]) {
   return "isCorpse" in target && target.isCorpse;
 }
 
+function isTorchSourceFeature(feature: any) {
+  return featureData(feature).torch_source === true;
+}
+
+function torchLightButtonText(torchState: { isLit: boolean; plainAmount: number; litAmount: number }) {
+  if (torchState.isLit && torchState.plainAmount > 0) return "🔥 Підпалити ще один факел";
+  return torchState.isLit ? "🔥 Оновити вогонь на факелі" : "🔥 Підпалити факел";
+}
+
 function featureIcon(feature: any) {
   if (isCampfireFeature(feature)) return "🔥";
   if (feature.type === "BORDER_MARKER") return "🪧";
@@ -89,19 +107,30 @@ function isInteractiveFeature(feature: any) {
   return feature.isActive && ["BORDER_MARKER", "CAMPFIRE", "MAGIC_CAMPFIRE", "GATE", "LANDMARK"].includes(feature.type);
 }
 
-function featureLine(feature: any) {
-  const parts = [`${featureIcon(feature)} ${feature.name}`];
-  if (feature.providesLight) parts.push("дає світло");
+function featureLine(feature: any, showTechnicalDetails = false) {
+  let line = `${featureIcon(feature)} ${feature.name}`;
+  const details: string[] = [];
+  if (isCampfireFeature(feature) && feature.providesLight) {
+    if (isCampfireFading(feature)) {
+      line = `${line} догорає`;
+      details.push("ще освітлює місцину");
+    } else if (showTechnicalDetails) {
+      line = `${line} горить і освітлює місцину`;
+    }
+  } else if (showTechnicalDetails && feature.providesLight) {
+    if (isCampfireFeature(feature)) line = `${line} горить і освітлює місцину`;
+    else details.push("освітлює місцину");
+  }
   const fireState = isCampfireFeature(feature) ? campfireStateLine(feature) : null;
-  if (fireState) parts.push(fireState);
-  if (feature.restStaminaCapMultiplier) parts.push(`відпочинок до ×${feature.restStaminaCapMultiplier} снаги`);
-  return parts.join(" — ");
+  if (fireState) details.push(fireState);
+  if (showTechnicalDetails && feature.restStaminaCapMultiplier) details.push(`відпочинок до ×${feature.restStaminaCapMultiplier} снаги`);
+  return details.length ? `${line}; ${details.join("; ")}` : line;
 }
 
-function featuresText(location: any) {
+function featuresText(location: any, showTechnicalDetails = false) {
   const features = (location.features ?? []).filter(isInteractiveFeature);
   if (!features.length) return "";
-  return `\n\n${features.map(featureLine).join("\n")}`;
+  return `\n\n${features.map((feature: any) => featureLine(feature, showTechnicalDetails)).join("\n")}`;
 }
 
 function addFeatureButtons(keyboard: InlineKeyboard, features: any[]) {
@@ -292,13 +321,6 @@ async function visibleTracksHint(locationId: number) {
   };
 }
 
-async function playerTorchWarningText(viewerPlayerId?: number) {
-  if (!viewerPlayerId) return "";
-  const torchState = await getPlayerTorchState(viewerPlayerId);
-  if (!torchState.isFading) return "";
-  return "\n\n<i>Ваш факел догорає. Варто пошукати вогнище, щоб підпалити його знову.</i>";
-}
-
 async function resourceButtonData(resources: any[], viewerPlayerId?: number) {
   const quick = await usesQuickPlayerActionDuration(viewerPlayerId);
   return resources
@@ -326,15 +348,14 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
   if (!location) throw new Error("Location not found");
 
   const revealTargets = await hasActiveLightAtLocation(location.id);
+  const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
   const targets = visibleTargets(location, viewerPlayerId);
-  const torchWarning = await playerTorchWarningText(viewerPlayerId);
   const keyboard = new InlineKeyboard();
   addFeatureButtons(keyboard, location.features);
   if (revealTargets && targets.length) addInlineRows(keyboard, buildTargetListKeyboard(targets, { page: options.targetPage, pageCallbackPrefix: "targetPage:brief" }));
-  addInlineRows(keyboard, buildMovementKeyboard(location.exitsFrom));
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location)}${presenceText(location, viewerPlayerId, revealTargets)}${torchWarning}\n\n${escapeHtml(compactExitsText(location.exitsFrom))}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location, showTechnicalDetails)}${presenceText(location, viewerPlayerId, revealTargets)}\n\n${escapeHtml(compactExitsText(location.exitsFrom))}`,
     keyboard,
   };
 }
@@ -355,6 +376,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
 
   if (!location) throw new Error("Location not found");
 
+  const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
   const targets = visibleTargets(location, viewerPlayerId);
   const playerTargetIds = targets.filter((t) => t.type === "player").map((t) => t.id);
   const creatureTargetIds = targets.filter((t) => t.type === "creature").map((t) => t.id);
@@ -395,12 +417,11 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
         .join("\n")}${livingAnimals.length > 8 ? `\n- ...і ще ${livingAnimals.length - 8}` : ""}`
     : "";
   const tracksHint = await visibleTracksHint(location.id);
-  const torchWarning = await playerTorchWarningText(viewerPlayerId);
 
   const corpses = location.creatures.filter(isVisibleCorpse);
   const groundItems = location.resources.filter((r) => r.amount > 0 && isPickableResourceKey(r.resourceType.key));
   const lyingLines = [
-    ...corpses.map((c) => `труп: ${c.species.name}; зникне приблизно за ${c.corpseDecayTicksLeft ?? "?"} тіків`),
+    ...corpses.map((c) => `труп ${creatureForms(c).genitive}; стан: ${lifetimeSummary(c.corpseDecayTicksLeft, c.species.corpseDecayTicks, { showTechnicalDetails })}`),
     ...groundItems.map((r) => `${r.resourceType.name}${r.amount > 1 ? ` ×${r.amount}` : ""}`),
   ];
   const lyingText = lyingLines.length
@@ -434,10 +455,12 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     addInlineRows(keyboard, buildTargetListKeyboard(actionLabeledTargets, { page: options.targetPage, pageCallbackPrefix: "targetPage:details" }));
   }
 
-  addInlineRows(keyboard, buildMovementKeyboard(location.exitsFrom));
+  const technicalLocationText = showTechnicalDetails
+    ? `\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}`
+    : "";
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location)}${torchWarning}\n\n<i>Ви роздивляєтесь.</i>\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}\n\n${escapeHtml(detailedExitsText(location.exitsFrom))}${resourcesText}${charactersText}${tracksHint.text}${animalMovementText}${lyingText}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location, showTechnicalDetails)}\n\n<i>Ви роздивляєтесь.</i>${technicalLocationText}\n\n${escapeHtml(detailedExitsText(location.exitsFrom))}${resourcesText}${charactersText}${tracksHint.text}${animalMovementText}${lyingText}`,
     keyboard,
   };
 }
@@ -464,6 +487,8 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
   } else if (isCampfireFeature(feature)) {
     if (isExtinguishedCampfire(feature)) {
       text = "Згасле вогнище лишило по собі попіл і чорні головешки. Світла й тепла воно не дає.";
+    } else if (isCampfireFading(feature)) {
+      text = "Вогнище догорає, але ще освітлює місцину. Полум'я нижчає, жар просідає в попіл; скоро варто буде додати хмизу.";
     } else {
       text = "Вогнище освітлює все навколо. Поряд із ним легше відпочити, відігрітися й набратися додаткових сил.";
       const fireState = campfireStateLine(feature);
@@ -471,6 +496,8 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
     }
   } else if (feature.type === "GATE") {
     text = "Ви стукаєте у ворота, але вам ніхто не відповідає.";
+  } else if (isTorchSourceFeature(feature)) {
+    text = feature.description ?? "Тут лежать сухі факели. Один можна взяти з собою.";
   }
 
   const keyboard = new InlineKeyboard();
@@ -482,16 +509,19 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
       keyboard.text("🔥 Відпочити", "rest:start").row();
       if (canAddTwigsToCampfire(feature)) keyboard.text("🪵 Додати хмиз", `fire:addTwigs:${feature.id}`).row();
       if (torchState.hasTorch) {
-        keyboard
-          .text(torchState.isLit ? "🔥 Оновити вогонь на факелі" : "🔥 Підпалити факел", `torch:light:${feature.id}`)
-          .row();
+        keyboard.text(torchLightButtonText(torchState), `torch:light:${feature.id}`).row();
       }
     }
   }
+  if (isTorchSourceFeature(feature)) keyboard.text("🕯 Взяти факел", `torch:take:${feature.id}`).row();
   keyboard.text("↩️ Назад", "location:details");
   return { text, keyboard };
 }
 
 export async function lightLocationCampfire(featureId: number, viewerPlayerId: number) {
   return lightCampfireFromTorch(viewerPlayerId, featureId);
+}
+
+export async function takeTorchFromLocationFeature(featureId: number, viewerPlayerId: number) {
+  return takeTorchFromFeature(viewerPlayerId, featureId);
 }

@@ -11,6 +11,7 @@ export type ParsedAliasCommand =
   | { kind: "location" }
   | { kind: "look-action" }
   | { kind: "me" }
+  | { kind: "inventory" }
   | { kind: "help" }
   | { kind: "news" }
   | { kind: "stat" }
@@ -125,9 +126,9 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "мій персонаж": { kind: "me" },
   "стан": { kind: "me" },
   "статус": { kind: "me" },
-  "інвентар": { kind: "me" },
-  "речі": { kind: "me" },
-  "що в мене": { kind: "me" },
+  "інвентар": { kind: "inventory" },
+  "речі": { kind: "inventory" },
+  "що в мене": { kind: "inventory" },
   hp: { kind: "me" },
   "хп": { kind: "me" },
   "здоров'я": { kind: "me" },

@@ -7,11 +7,8 @@ const DEFAULT_BOT_COMMANDS = [
   { command: "start", description: "🌲 Перезапустити" },
   { command: "me", description: "🧍 Персонаж" },
   { command: "look", description: "👀 Озирнутися" },
-  { command: "examine", description: "👁 Роздивитися" },
-  { command: "time", description: "🕯 Час Порубіжжя" },
   { command: "menu", description: "☰ Меню" },
   { command: "news", description: "📰 Останні новини світу" },
-  { command: "stat", description: "Екологічна статистика світу" },
   { command: "help", description: "🧭 Допомога новачку" },
 ];
 

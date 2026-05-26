@@ -3,6 +3,7 @@ import { actionDurationMs, performOrQueuePlayerAction } from "../services/action
 import { getPlayerByTelegramId } from "../services/players";
 import { stripUnsafeText } from "../utils/text";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
+import { parseSpeechTarget } from "../services/speechTargets";
 
 export function registerSayHandlers(bot: Bot) {
   bot.command("say", async (ctx) => {
@@ -17,7 +18,8 @@ export function registerSayHandlers(bot: Bot) {
 
     const durationMs = actionDurationMs("SAY", player.stamina);
     try {
-      const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "SAY", payload: { text }, durationMs, chatId: ctx.chat?.id });
+      const payload = await parseSpeechTarget(text, player.currentLocationId, player.id);
+      const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "SAY", payload, durationMs, chatId: ctx.chat?.id });
       await sendActionSubmitFeedback(ctx, player.id, result);
     } catch (error) {
       await ctx.reply(error instanceof Error ? error.message : "Не вдалося виконати дію.");

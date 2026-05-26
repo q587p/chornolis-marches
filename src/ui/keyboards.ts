@@ -8,6 +8,7 @@ type TargetRef = {
   label: string;
   actionLabel?: string;
   canGreet: boolean;
+  canAttack?: boolean;
   isAnimal?: boolean;
   isCorpse?: boolean;
 };
@@ -73,11 +74,11 @@ export function buildTrackKeyboard() {
   return new InlineKeyboard().text("🔎 Сліди", "track");
 }
 
-export function buildAnonymousTargetKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet" | "isAnimal">) {
+export function buildAnonymousTargetKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet" | "canAttack" | "isAnimal">) {
   const keyboard = new InlineKeyboard()
-    .text("👁 Роздивитися", `social:inspect:${target.type}:${target.id}:mystery`)
-    .text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:mystery`)
-    .row();
+    .text("👁 Роздивитися", `social:inspect:${target.type}:${target.id}:mystery`);
+  keyboard.text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:mystery`);
+  keyboard.row();
 
   if (target.canGreet) keyboard.text("💬 Привітати", `social:greet:${target.type}:${target.id}:mystery`).row();
   keyboard.text("✨ Сигнали", `signalMenu:${target.type}:${target.id}:mystery`).row();
@@ -85,11 +86,11 @@ export function buildAnonymousTargetKeyboard(target: Pick<TargetRef, "type" | "i
   return keyboard;
 }
 
-export function buildTargetActionKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet" | "isAnimal">, again = false) {
+export function buildTargetActionKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet" | "canAttack" | "isAnimal">, again = false) {
   const keyboard = new InlineKeyboard()
-    .text(again ? "👁 Роздивитися ще раз" : "👁 Роздивитися", `social:inspect:${target.type}:${target.id}:known`)
-    .text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:known`)
-    .row();
+    .text(again ? "👁 Роздивитися ще раз" : "👁 Роздивитися", `social:inspect:${target.type}:${target.id}:known`);
+  keyboard.text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:known`);
+  keyboard.row();
 
   if (target.canGreet) keyboard.text("💬 Привітати", `social:greet:${target.type}:${target.id}:known`).row();
   for (const socialId of quickSocialsForTarget({ kind: target.type, isAnimal: Boolean(target.isAnimal), canGreet: target.canGreet })) {
@@ -113,7 +114,7 @@ export function buildSocialSignalKeyboard(target: Pick<TargetRef, "type" | "id">
 }
 
 export function buildCorpseActionKeyboard(target: ResolvedTarget) {
-  const keyboard = new InlineKeyboard().text("👁 Оглянути ще раз", `social:inspect:${target.kind}:${target.id}:known`).row();
+  const keyboard = new InlineKeyboard().text("👁 Оглянути труп", `social:inspect:${target.kind}:${target.id}:known`).row();
   keyboard.text("🤲 Підібрати", `social:pickup:${target.kind}:${target.id}`).row();
   if (target.canFreshen) keyboard.text("🔪 Освіжувати", `social:freshen:${target.kind}:${target.id}:known`).row();
   keyboard.text("↩️ Назад", "location:details").row();

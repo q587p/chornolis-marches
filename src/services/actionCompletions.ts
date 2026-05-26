@@ -28,7 +28,7 @@ import { escapeHtml } from "../utils/text";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
-type SayPayload = { text: string };
+type SayPayload = { text: string; targetType?: "player" | "creature"; targetId?: number; targetName?: string; targetDative?: string };
 type SocialPayload = { targetType: "player" | "creature"; targetId: number; mode?: "known" | "mystery" };
 
 const RECENT_ATTACK_FEATURE_PREFIX = "recent_attack_";
@@ -381,7 +381,7 @@ async function completeInspect(bot: Bot, action: WorldAction) {
   const player = action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null;
   const chatId = chatIdFromAction(action);
   if (!player || !player.currentLocationId || action.actorType !== "PLAYER") return void (await setActionStatus(action, "FAILED"));
-  const target = await resolveTarget(payload.targetType, payload.targetId, player.currentLocationId);
+  const target = await resolveTarget(payload.targetType, payload.targetId, player.currentLocationId, { viewerPlayerId: player.id });
   await setActionStatus(action, target ? "DONE" : "FAILED");
   if (!target) {
     if (chatId) await bot.api.sendMessage(chatId, "Цілі вже немає поруч. Можна спробувати відслідкувати слід.");
@@ -504,9 +504,16 @@ async function completeAttack(bot: Bot, action: WorldAction) {
   const chatId = chatIdFromAction(action);
   if (!player || !player.currentLocationId || action.actorType !== "PLAYER") return void (await setActionStatus(action, "FAILED"));
   const target = await resolveTarget(payload.targetType, payload.targetId, player.currentLocationId);
-  if (!target || target.kind !== "creature" || !target.isAnimal || target.isCorpse) {
+  if (!target || !target.canAttack) {
     await setActionStatus(action, "FAILED");
-    if (chatId) await bot.api.sendMessage(chatId, !target ? "Цілі вже немає поруч." : "⚔️ Поки що можна атакувати тільки живих тварин.");
+    if (chatId) {
+      const message = !target
+        ? "Цілі вже немає поруч."
+        : target.isCorpse
+          ? "Це вже труп."
+          : "Бій із хижаками й іншими персонажами ще не реалізований.";
+      await bot.api.sendMessage(chatId, message);
+    }
     return;
   }
 
@@ -523,14 +530,14 @@ async function completeAttack(bot: Bot, action: WorldAction) {
   await interruptActorActions({ actorType: "CREATURE", creatureId: creature.id }, "істоту вбито", true);
   await prisma.player.updateMany({ where: { id: player.id }, data: { animalsKilled: { increment: 1 } } });
   await triggerHerbivorePanic(player.currentLocationId, creature.id, "лякається нападу й людського запаху");
-  await notifyLocation(bot, player.currentLocationId, player.id, `Хтось атакує і вбиває ${target.forms.accusative}.`);
+  await notifyLocation(bot, player.currentLocationId, player.id, `Хтось затоптує ${target.forms.accusative}. Труп лишається на землі.`);
   await setActionStatus(action, "DONE");
   await logEvent("PLAYER_ACTION", "Player killed animal", `${target.kind}:${target.id}`, player.currentLocationId);
   if (chatId) {
     const corpseTarget = await resolveTarget("creature", creature.id, player.currentLocationId);
     await bot.api.sendMessage(
       chatId,
-      `⚔️ Ви атакували і вбили ${target.forms.accusative}. Труп лишився на землі.`,
+      `⚔️ Ви затоптали ${target.forms.accusative}. Труп лишився на землі.`,
       corpseTarget?.isCorpse ? { reply_markup: buildCorpseActionKeyboard(corpseTarget) } : undefined,
     );
   }
@@ -547,16 +554,19 @@ async function completeSay(bot: Bot, action: WorldAction) {
     if (!player || !player.currentLocationId) return void (await setActionStatus(action, "FAILED"));
     await spendPlayerStamina(bot, player.id, "SAY", chatId);
     await prisma.player.updateMany({ where: { id: player.id }, data: { says: { increment: 1 } } });
+    const targetDative = payload.targetDative || payload.targetName;
     await notifyLocationExcept(
       bot,
       player.currentLocationId,
       [player.id],
-      `Хтось каже:\n${quoteBlock(text)}`,
+      targetDative ? `Хтось каже ${escapeHtml(targetDative)}:\n${quoteBlock(text)}` : `Хтось каже:\n${quoteBlock(text)}`,
       { parseMode: "HTML" },
     );
     await setActionStatus(action, "DONE");
-    await logEvent("SAY", `${playerForms(player).nominative} каже`, text, player.currentLocationId);
-    if (chatId) await bot.api.sendMessage(chatId, `Ви кажете:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
+    await logEvent("SAY", `${playerForms(player).nominative} каже${targetDative ? ` ${targetDative}` : ""}`, text, player.currentLocationId);
+    if (chatId) {
+      await bot.api.sendMessage(chatId, targetDative ? `Ви кажете ${escapeHtml(targetDative)}:\n${quoteBlock(text)}` : `Ви кажете:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
+    }
     return;
   }
 

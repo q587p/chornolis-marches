@@ -5,6 +5,7 @@ import {
   BASE_HP,
   BASE_STAMINA,
   HEALTH_REGEN_PER_INTERVAL,
+  PLAYER_HUNGER_MAX,
   PASSIVE_HEALTH_REGEN_INTERVAL_MS,
   PASSIVE_STAMINA_REGEN_PER_INTERVAL,
   REST_HEALTH_REGEN_INTERVAL_MS,
@@ -97,7 +98,7 @@ export async function spendPlayerStamina(bot: Bot, playerId: number, type: World
       isResting: false,
       lastActionAt: new Date(),
       lastStaminaRegenAt: new Date(),
-      hunger: { increment: cost > 1 ? 1 : 0 },
+      hunger: cost > 1 ? Math.min(PLAYER_HUNGER_MAX, player.hunger + 1) : player.hunger,
     },
   });
   if (updated.count === 0) return;

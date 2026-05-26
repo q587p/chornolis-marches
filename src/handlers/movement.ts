@@ -70,4 +70,20 @@ export function registerMovementHandlers(bot: Bot) {
     if (!direction) return void (await ctx.reply("Невідомий напрямок."));
     await submitMove(bot, ctx, direction, false);
   });
+
+  bot.hears("⬆️ Північ", async (ctx) => {
+    await submitMove(bot, ctx, "NORTH", false);
+  });
+
+  bot.hears("⬇️ Південь", async (ctx) => {
+    await submitMove(bot, ctx, "SOUTH", false);
+  });
+
+  bot.hears("⬅️ Захід", async (ctx) => {
+    await submitMove(bot, ctx, "WEST", false);
+  });
+
+  bot.hears("Схід ➡️", async (ctx) => {
+    await submitMove(bot, ctx, "EAST", false);
+  });
 }

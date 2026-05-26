@@ -63,6 +63,7 @@ export async function getEcologyStats() {
     occupiedLocations,
     latestTickEvents,
     topHunters,
+    topPlayers,
   ] = await Promise.all([
     prisma.creatureSpecies.findMany({ where: { kind: "ANIMAL" }, orderBy: { key: "asc" } }),
     prisma.creature.groupBy({
@@ -100,6 +101,27 @@ export async function getEcologyStats() {
         { kills: "desc" },
         { successfulAttacks: "desc" },
         { attackAttempts: "desc" },
+        { id: "asc" },
+      ],
+      take: 10,
+    }),
+    prisma.player.findMany({
+      where: {
+        OR: [
+          { animalsKilled: { gt: 0 } },
+          { successfulGathers: { gt: 0 } },
+          { greetings: { gt: 0 } },
+          { says: { gt: 0 } },
+          { steps: { gt: 0 } },
+        ],
+      },
+      include: { currentLocation: true },
+      orderBy: [
+        { animalsKilled: "desc" },
+        { successfulGathers: "desc" },
+        { greetings: "desc" },
+        { says: "desc" },
+        { steps: "desc" },
         { id: "asc" },
       ],
       take: 10,
@@ -223,6 +245,17 @@ export async function getEcologyStats() {
       attackAttempts: creature.attackAttempts,
       successfulAttacks: creature.successfulAttacks,
       kills: creature.kills,
+    })),
+    topPlayers: topPlayers.map((player) => ({
+      id: player.id,
+      name: player.nameNominative ?? player.firstName ?? player.username ?? "мандрівник",
+      locationKey: player.currentLocation?.key ?? null,
+      locationName: player.currentLocation?.name ?? null,
+      animalsKilled: player.animalsKilled,
+      successfulGathers: player.successfulGathers,
+      greetings: player.greetings,
+      says: player.says,
+      steps: player.steps,
     })),
     latestTick,
     recent: {

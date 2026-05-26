@@ -27,6 +27,7 @@ model Player {
   fatigueState FatigueState @default(RESTED)
   isResting    Boolean @default(false)
   isAutoEnabled Boolean @default(false)
+  showTechnicalDetails Boolean @default(false)
   hunger  Int @default(0)
 
   // статистика
@@ -555,6 +556,7 @@ enum WorldEventType {
   SYSTEM
   PLAYER_ACTION
   NPC_ACTION
+  SOCIAL_SIGNAL
   MOVE
   GATHER
   SAY

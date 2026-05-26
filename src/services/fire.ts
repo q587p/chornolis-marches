@@ -1,10 +1,14 @@
+import { Bot } from "grammy";
 import { prisma } from "../db";
+import { notifyLocationAll } from "./notifications";
+import { canPickUpGroundItem } from "./groundItems";
 
 export const CAMPFIRE_DURATION_MS = 16 * 60_000;
 export const CAMPFIRE_FADING_MS = 4 * 60_000;
 export const CAMPFIRE_TWIGS_AFTER_MS = 2 * 60_000;
 export const TORCH_DURATION_MS = 10 * 60_000;
 export const TORCH_FADING_MS = 2 * 60_000;
+export const MAX_LIT_TORCHES_IN_HANDS = 2;
 
 const TORCH_KEY = "torch";
 const LIT_TORCH_KEY = "lit_torch";
@@ -52,6 +56,10 @@ function relitFireData(data: unknown, createdBy: string) {
     extinguished: false,
     relitAt: base.litAt,
   };
+}
+
+function featureData(value: unknown): JsonRecord {
+  return jsonRecord(value);
 }
 
 function remainingMs(expiresAt: Date, now = new Date()) {
@@ -122,6 +130,84 @@ export async function expireTimedCampfires(locationId?: number | null) {
   return expired.length;
 }
 
+async function hasTimerWarning(marker: string) {
+  const existing = await prisma.worldEvent.findFirst({
+    where: { type: "SYSTEM", title: "Timer warning", description: marker },
+    select: { id: true },
+  });
+  return Boolean(existing);
+}
+
+async function markTimerWarning(marker: string, locationId?: number | null, playerId?: number | null) {
+  await prisma.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: "Timer warning",
+      description: marker,
+      locationId: locationId ?? undefined,
+      playerId: playerId ?? undefined,
+    },
+  });
+}
+
+export async function notifyFadingFireTimers(bot: Bot) {
+  const now = new Date();
+  await expireTimedCampfires();
+
+  const fadingCampfires = await prisma.locationFeature.findMany({
+    where: {
+      isActive: true,
+      providesLight: true,
+      type: { in: ["CAMPFIRE", "MAGIC_CAMPFIRE"] },
+    },
+    select: { id: true, data: true, locationId: true, name: true },
+  });
+
+  for (const feature of fadingCampfires.filter((feature) => isCampfireFading(feature, now))) {
+    const expiresAt = campfireExpiresAt(feature);
+    if (!expiresAt) continue;
+
+    const marker = `campfire-fading:${feature.id}:${expiresAt.toISOString()}`;
+    if (await hasTimerWarning(marker)) continue;
+
+    await notifyLocationAll(bot, feature.locationId, `🔥 ${feature.name} починає згасати. Полум'я нижчає; скоро варто буде додати хмизу.`);
+    await markTimerWarning(marker, feature.locationId);
+  }
+
+  const { litTorch } = await ensureTorchResourceTypes();
+  const expiredSince = new Date(now.getTime() - TORCH_DURATION_MS);
+  const fadingSince = new Date(now.getTime() - (TORCH_DURATION_MS - TORCH_FADING_MS));
+
+  const expiredTorches = await prisma.playerResource.findMany({
+    where: { resourceTypeId: litTorch.id, amount: { gt: 0 }, updatedAt: { lte: expiredSince } },
+    select: { playerId: true },
+  });
+  for (const resource of expiredTorches) {
+    await syncPlayerTorchState(resource.playerId);
+  }
+
+  const fadingTorches = await prisma.playerResource.findMany({
+    where: {
+      resourceTypeId: litTorch.id,
+      amount: { gt: 0 },
+      updatedAt: { gt: expiredSince, lte: fadingSince },
+    },
+    include: { player: true },
+  });
+
+  for (const resource of fadingTorches) {
+    const marker = `torch-fading:${resource.playerId}:${resource.updatedAt.toISOString()}`;
+    if (await hasTimerWarning(marker)) continue;
+
+    try {
+      await bot.api.sendMessage(resource.player.telegramId, "🔥 Ваш факел догорає. Варто пошукати вогнище, щоб підпалити його знову.");
+      await markTimerWarning(marker, resource.player.currentLocationId, resource.playerId);
+    } catch (error) {
+      console.warn("Failed to notify fading torch:", error);
+    }
+  }
+}
+
 export async function createDebugCampfire(locationId: number) {
   const key = `debug_campfire_${locationId}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   return prisma.locationFeature.create({
@@ -189,6 +275,8 @@ export async function getPlayerTorchState(playerId: number) {
     hasTorch: Boolean((plain?.amount ?? 0) > 0 || (lit?.amount ?? 0) > 0),
     isLit: Boolean(litAt && left > 0),
     isFading: Boolean(litAt && left > 0 && left <= TORCH_FADING_MS),
+    plainAmount: plain?.amount ?? 0,
+    litAmount: litAt && left > 0 ? lit?.amount ?? 0 : 0,
     litAt,
     expiresAt,
   };
@@ -207,12 +295,16 @@ export async function lightPlayerTorchAtCampfire(playerId: number, featureId: nu
   const plain = await prisma.playerResource.findUnique({ where: { playerId_resourceTypeId: { playerId, resourceTypeId: torch.id } } });
   const lit = await prisma.playerResource.findUnique({ where: { playerId_resourceTypeId: { playerId, resourceTypeId: litTorch.id } } });
   const wasLit = Boolean(lit && lit.amount > 0);
+  const litAmount = lit?.amount ?? 0;
+  if (litAmount >= MAX_LIT_TORCHES_IN_HANDS && plain && plain.amount > 0) {
+    return "🔥 У вас уже горять два факелі. Куди ви візьмете ще стільки вогню?";
+  }
   if (!wasLit && (!plain || plain.amount <= 0)) {
     return "Потрібен факел у речах, щоб підпалити його біля вогнища.";
   }
 
   const consumePlainTorch =
-    plain && plain.amount > 0 && !wasLit
+    plain && plain.amount > 0 && (!wasLit || litAmount < MAX_LIT_TORCHES_IN_HANDS)
       ? plain.amount > 1
         ? prisma.playerResource.update({
             where: { playerId_resourceTypeId: { playerId, resourceTypeId: torch.id } },
@@ -227,14 +319,41 @@ export async function lightPlayerTorchAtCampfire(playerId: number, featureId: nu
     ...(consumePlainTorch ? [consumePlainTorch] : []),
     prisma.playerResource.upsert({
       where: { playerId_resourceTypeId: { playerId, resourceTypeId: litTorch.id } },
-      update: { amount: Math.max(1, lit?.amount ?? 1), updatedAt: new Date() },
+      update: { amount: consumePlainTorch ? Math.min(MAX_LIT_TORCHES_IN_HANDS, litAmount + 1) : Math.max(1, litAmount), updatedAt: new Date() },
       create: { playerId, resourceTypeId: litTorch.id, amount: 1 },
     }),
   ]);
 
+  if (wasLit && consumePlainTorch) return "🔥 Ви підпалили ще один факел. Два вогники ледве вміщаються в руках.";
   return wasLit
     ? "🔥 Ви оновили вогонь на факелі. Полум'я знову триматиметься довше."
     : "🔥 Ви підпалили факел. Тепер він дає світло поруч із вами.";
+}
+
+export async function takeTorchFromFeature(playerId: number, featureId: number) {
+  const { torch } = await ensureTorchResourceTypes();
+  const player = await prisma.player.findUnique({
+    where: { id: playerId },
+    select: { currentLocationId: true, hp: true, stamina: true, isResting: true },
+  });
+  if (!player?.currentLocationId) return "Ти ще не увійшов у світ. Напиши /start";
+  if (!canPickUpGroundItem(player)) return "Ви надто втомлені, щоб брати це просто зараз. Спершу перепочиньте.";
+
+  const feature = await prisma.locationFeature.findUnique({
+    where: { id: featureId },
+    select: { locationId: true, isActive: true, data: true },
+  });
+  if (!feature?.isActive || feature.locationId !== player.currentLocationId || featureData(feature.data).torch_source !== true) {
+    return "Тут уже не видно, звідки взяти факел.";
+  }
+
+  await prisma.playerResource.upsert({
+    where: { playerId_resourceTypeId: { playerId, resourceTypeId: torch.id } },
+    update: { amount: { increment: 1 } },
+    create: { playerId, resourceTypeId: torch.id, amount: 1 },
+  });
+
+  return "🕯 Ви взяли сухий факел.";
 }
 
 export async function lightCampfireFromTorch(playerId: number, featureId: number) {
