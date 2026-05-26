@@ -47,6 +47,9 @@ The forest should feel alive even when players do nothing.
 - Predator hunger recovery uses prey food value: mice are light food, rabbit children/old rabbits are partial food, healthy young/adult rabbits are worth more.
 - Individual animals keep hunting counters, and `/stat` can show the most successful hunters.
 - Fox and wolf lifecycle values are deliberately slower than rabbits and mice, so future predator reproduction does not explode as quickly as herbivore reproduction.
+- Starter predators now include a fox pair near `forest_07_02`, lone foxes near the dry luka, and a cautious wolf pair in remote `DEEP_FOREST`.
+- Predator reproduction runs after small-herbivore ecology and before ordinary carnivore ticks. It uses prey-unit thresholds and very slow wolf checks.
+- Fox prey units count mice and rabbits; wolf prey units currently count rabbits while mice are mostly ignored.
 - If a location has too many rabbits or mice, they consume `grass`, `berries`, `herbs` and `mushrooms` as background overgrazing.
 - Overcrowded rabbit locations spread up to 4 non-child rabbits into neighboring cells every 20 world ticks.
 - Rabbit corpses remain for 180 world ticks by default. With the default 1.5s tick, this is about 4.5 minutes.
@@ -63,6 +66,7 @@ The forest should feel alive even when players do nothing.
 
 - Tune growth rates and resource damage after observation.
 - Add hunger pressure, starvation deaths and starvation counters to ecology stats.
+- Replace direct predator births with a persistent pregnancy/den state when the creature lifecycle model is ready.
 - Add weather and magic hooks that can shorten exhausted-vegetation recovery.
 - Add explicit recent hunting pressure from players and NPCs.
 - Add species-specific fear and aggression profiles.

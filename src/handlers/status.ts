@@ -87,6 +87,8 @@ async function buildStatBrief() {
       "",
       `Останнє вікно: ${observed}.`,
       `Народження: зайці ${formatStatNumber(counters.rabbitBirths)} (${formatRate(rates.rabbitBirths)}/год), миші ${formatStatNumber(counters.mouseBirths)} (${formatRate(rates.mouseBirths)}/год).`,
+      `Хижаки: лисенята ${formatStatNumber(counters.foxBirths)} (${formatRate(rates.foxBirths)}/год), вовченята ${formatStatNumber(counters.wolfBirths)} (${formatRate(rates.wolfBirths)}/год).`,
+      `Prey units: для лисиць ${formatStatNumber(counters.foxPreyUnits)}, для вовків ${formatStatNumber(counters.wolfPreyUnits)}.`,
       `Розселення: зайці ${formatStatNumber(counters.rabbitsSpread)} (${formatRate(rates.rabbitsSpread)}/год), миші ${formatStatNumber(counters.miceSpread)} (${formatRate(rates.miceSpread)}/год).`,
       `Переїдено ресурсів: ${formatStatNumber(counters.overgrazedResources)} (${formatRate(rates.overgrazedResources)}/год).`,
       `Смерті від старості: ${formatStatNumber(counters.oldAgeDeaths)} (${formatRate(rates.oldAgeDeaths)}/год).`,

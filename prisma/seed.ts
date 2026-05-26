@@ -294,17 +294,17 @@ async function deleteDeprecatedSeedFeatures() {
   if (result.count > 0) console.log(`  - removed deprecated features: ${result.count}`);
 }
 
-type StarterRabbitAge = "CHILD" | "YOUNG" | "ADULT" | "OLD" | "CORPSE";
+type StarterAnimalAge = "CHILD" | "YOUNG" | "ADULT" | "OLD" | "CORPSE";
 
 type StarterRabbitGroup = {
   locationKey: string;
   count: number;
-  age: StarterRabbitAge;
+  age: StarterAnimalAge;
   sex?: "MALE" | "FEMALE";
 };
 
 type StarterAnimalGroup = StarterRabbitGroup & {
-  speciesKey: "rabbit" | "mouse";
+  speciesKey: "rabbit" | "mouse" | "fox" | "wolf";
 };
 
 const STARTER_RABBITS: StarterRabbitGroup[] = [
@@ -332,6 +332,15 @@ const STARTER_MICE: StarterAnimalGroup[] = [
   { speciesKey: "mouse", locationKey: "meadow_13_06", count: 3, age: "YOUNG" },
   { speciesKey: "mouse", locationKey: "meadow_13_06", count: 2, age: "CHILD" },
   { speciesKey: "mouse", locationKey: "meadow_14_05", count: 2, age: "CORPSE" },
+];
+
+const STARTER_PREDATORS: StarterAnimalGroup[] = [
+  { speciesKey: "fox", locationKey: "forest_07_02", count: 1, age: "ADULT", sex: "FEMALE" },
+  { speciesKey: "fox", locationKey: "forest_07_02", count: 1, age: "ADULT", sex: "MALE" },
+  { speciesKey: "fox", locationKey: "meadow_10_03", count: 1, age: "ADULT", sex: "FEMALE" },
+  { speciesKey: "fox", locationKey: "meadow_13_04", count: 1, age: "YOUNG", sex: "MALE" },
+  { speciesKey: "wolf", locationKey: "forest_00_08", count: 1, age: "ADULT", sex: "FEMALE" },
+  { speciesKey: "wolf", locationKey: "forest_02_09", count: 1, age: "ADULT", sex: "MALE" },
 ];
 
 const species = [
@@ -554,7 +563,7 @@ async function ensureUniqueCreature(
 
 function starterAnimalAgeTicks(
   species: { childTicks?: number; youngTicks?: number; adultTicks?: number },
-  age: StarterRabbitAge,
+  age: StarterAnimalAge,
   index: number
 ) {
   const childTicks = species.childTicks ?? 0;
@@ -568,7 +577,7 @@ function starterAnimalAgeTicks(
   return childTicks + youngTicks + adultTicks + 40 + index * 20;
 }
 
-function starterAnimalHp(baseHp: number, age: StarterRabbitAge) {
+function starterAnimalHp(baseHp: number, age: StarterAnimalAge) {
   if (age === "CHILD") return Math.max(1, Math.round(baseHp * 0.35));
   if (age === "YOUNG") return Math.max(1, Math.round(baseHp * 0.75));
   if (age === "OLD") return Math.max(1, Math.round(baseHp * 0.65));
@@ -576,7 +585,17 @@ function starterAnimalHp(baseHp: number, age: StarterRabbitAge) {
   return baseHp;
 }
 
-function starterAnimalAction(speciesKey: string, age: StarterRabbitAge) {
+function starterAnimalAction(speciesKey: string, age: StarterAnimalAge) {
+  if (speciesKey === "fox") {
+    if (age === "YOUNG") return "винюхує мишачі ходи";
+    if (age === "OLD") return "лежить у сухій траві й прислухається";
+    return "крадеться низько між кущами";
+  }
+  if (speciesKey === "wolf") {
+    if (age === "YOUNG") return "тримається краю зграї";
+    if (age === "OLD") return "стереже старий слід";
+    return "патрулює глибоку стежку";
+  }
   if (speciesKey === "mouse") {
     if (age === "CHILD") return "пищить у сухій траві";
     if (age === "YOUNG") return "шурхотить між корінням";
@@ -843,6 +862,11 @@ async function main() {
   await seedStep("Starter mice", async () => {
     const created = await ensureStarterAnimals(speciesByKey, locationsByKey, STARTER_MICE);
     console.log(`  - starter mice created: ${created}`);
+  });
+
+  await seedStep("Starter predators", async () => {
+    const created = await ensureStarterAnimals(speciesByKey, locationsByKey, STARTER_PREDATORS);
+    console.log(`  - starter predators created: ${created}`);
   });
 
   await seedStep("World event", async () => {

@@ -6,8 +6,12 @@ const TICK_EVENT_TAKE = 120;
 const TICK_COUNTER_KEYS = [
   "rabbitBirths",
   "mouseBirths",
+  "foxBirths",
+  "wolfBirths",
   "rabbitsSpread",
   "miceSpread",
+  "foxPreyUnits",
+  "wolfPreyUnits",
   "overgrazedLocations",
   "overgrazedResources",
   "depletedByOvergrazing",

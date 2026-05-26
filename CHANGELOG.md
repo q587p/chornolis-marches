@@ -9,6 +9,26 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.10.11 - Starter predators and predator ecology - 12026-05-26
+
+### Added
+
+- Added starter foxes and wolves to seed and `/reset`.
+- Added conservative predator reproduction after small-herbivore ecology and before ordinary carnivore ticks.
+- Added fox/wolf birth counters and prey-unit counters to `/stat` and `/stat.json`.
+
+### Changed
+
+- Renamed the small herbivore ecology processor away from the rabbit-only name.
+- `/tickGet` now documents foxes, wolves, pregnancy-state limitations and prey units.
+- Bumped package metadata to `0.10.11`.
+
+### Documentation
+
+- Added release notes for 0.10.11 and updated ecology docs/news for starter predators and predator reproduction.
+
+---
+
 ## 0.10.10 - Predator kills in ecology stats - 12026-05-26
 
 ### Added

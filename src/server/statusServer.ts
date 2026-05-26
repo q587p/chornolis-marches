@@ -106,6 +106,8 @@ async function renderEcologyStatsPage() {
       <div class="card"><div class="metric">${stats.totals.occupiedAnimalLocations}/${stats.totals.locationCount}</div><div class="label">локацій із живими тваринами</div></div>
       <div class="card"><div class="metric">${c.rabbitBirths}</div><div class="label">зайченят за останні ${stats.recent.eventCount} tick-звітів</div></div>
       <div class="card"><div class="metric">${c.mouseBirths}</div><div class="label">мишенят за останні ${stats.recent.eventCount} tick-звітів</div></div>
+      <div class="card"><div class="metric">${c.foxBirths}</div><div class="label">лисенят за останні ${stats.recent.eventCount} tick-звітів</div></div>
+      <div class="card"><div class="metric">${c.wolfBirths}</div><div class="label">вовченят за останні ${stats.recent.eventCount} tick-звітів</div></div>
       <div class="card"><div class="metric">${c.rabbitsSpread}</div><div class="label">зайців розселилося</div></div>
       <div class="card"><div class="metric">${c.miceSpread}</div><div class="label">мишей розселилося</div></div>
       <div class="card"><div class="metric">${c.oldAgeDeaths}</div><div class="label">смертей від старості</div></div>
@@ -118,8 +120,12 @@ async function renderEcologyStatsPage() {
     <table><thead><tr><th>Подія</th><th>Сума</th><th>Оцінка на годину</th></tr></thead><tbody>
       <tr><td>Народження зайців</td><td>${c.rabbitBirths}</td><td>${formatNumber(r.rabbitBirths, 1)}</td></tr>
       <tr><td>Народження мишей</td><td>${c.mouseBirths}</td><td>${formatNumber(r.mouseBirths, 1)}</td></tr>
+      <tr><td>Народження лисиць</td><td>${c.foxBirths}</td><td>${formatNumber(r.foxBirths, 1)}</td></tr>
+      <tr><td>Народження вовків</td><td>${c.wolfBirths}</td><td>${formatNumber(r.wolfBirths, 1)}</td></tr>
       <tr><td>Розселення зайців</td><td>${c.rabbitsSpread}</td><td>${formatNumber(r.rabbitsSpread, 1)}</td></tr>
       <tr><td>Розселення мишей</td><td>${c.miceSpread}</td><td>${formatNumber(r.miceSpread, 1)}</td></tr>
+      <tr><td>Prey units для лисиць</td><td>${c.foxPreyUnits}</td><td>${formatNumber(r.foxPreyUnits, 1)}</td></tr>
+      <tr><td>Prey units для вовків</td><td>${c.wolfPreyUnits}</td><td>${formatNumber(r.wolfPreyUnits, 1)}</td></tr>
       <tr><td>Об'їдені ресурси</td><td>${c.overgrazedResources}</td><td>${formatNumber(r.overgrazedResources, 1)}</td></tr>
       <tr><td>Виснажені вузли від випасу</td><td>${c.depletedByOvergrazing}</td><td>${formatNumber(r.depletedByOvergrazing, 1)}</td></tr>
       <tr><td>Смерті від старості</td><td>${c.oldAgeDeaths}</td><td>${formatNumber(r.oldAgeDeaths, 1)}</td></tr>

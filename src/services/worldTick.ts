@@ -28,6 +28,16 @@ const MOUSE_MAX_LITTERS_PER_LOCATION = Number(process.env.WORLD_MOUSE_MAX_LITTER
 const MOUSE_LOCAL_SOFT_CAP = Number(process.env.WORLD_MOUSE_LOCAL_SOFT_CAP || 8);
 const MOUSE_SPREAD_EVERY_TICKS = Number(process.env.WORLD_MOUSE_SPREAD_EVERY_TICKS || 15);
 const MOUSE_MAX_SPREAD_PER_LOCATION = Number(process.env.WORLD_MOUSE_MAX_SPREAD_PER_LOCATION || 6);
+const FOX_REPRODUCTION_EVERY_TICKS = Number(process.env.WORLD_FOX_REPRODUCTION_EVERY_TICKS || 720);
+const FOX_MIN_LITTER_SIZE = Number(process.env.WORLD_FOX_MIN_LITTER_SIZE || 2);
+const FOX_MAX_LITTER_SIZE = Number(process.env.WORLD_FOX_MAX_LITTER_SIZE || 5);
+const FOX_PREY_UNITS_REQUIRED_BASE = Number(process.env.WORLD_FOX_PREY_UNITS_REQUIRED_BASE || 12);
+const FOX_PREY_UNITS_REQUIRED_PER_FOX = Number(process.env.WORLD_FOX_PREY_UNITS_REQUIRED_PER_FOX || 6);
+const WOLF_REPRODUCTION_EVERY_TICKS = Number(process.env.WORLD_WOLF_REPRODUCTION_EVERY_TICKS || 2400);
+const WOLF_MIN_LITTER_SIZE = Number(process.env.WORLD_WOLF_MIN_LITTER_SIZE || 2);
+const WOLF_MAX_LITTER_SIZE = Number(process.env.WORLD_WOLF_MAX_LITTER_SIZE || 4);
+const WOLF_PREY_UNITS_REQUIRED_BASE = Number(process.env.WORLD_WOLF_PREY_UNITS_REQUIRED_BASE || 60);
+const WOLF_PREY_UNITS_REQUIRED_PER_WOLF = Number(process.env.WORLD_WOLF_PREY_UNITS_REQUIRED_PER_WOLF || 20);
 const CROWD_DANGER_THRESHOLD = Number(process.env.WORLD_CROWD_DANGER_THRESHOLD || 13);
 const CROWD_DANGER_INITIAL_BONUS = Number(process.env.WORLD_CROWD_DANGER_INITIAL_BONUS || 4);
 const CROWD_DANGER_STEP = Number(process.env.WORLD_CROWD_DANGER_STEP || 4);
@@ -347,7 +357,7 @@ async function spreadOvercrowdedAnimals(location: any, animals: any[], countsByL
   return spread;
 }
 
-async function processRabbitReproductionAndOvergrazing() {
+async function processSmallHerbivoreEcology() {
   const canReproduceThisTick = tickNumber > 0 && tickNumber % RABBIT_REPRODUCTION_EVERY_TICKS === 0;
   const canMouseReproduceThisTick = tickNumber > 0 && tickNumber % MOUSE_REPRODUCTION_EVERY_TICKS === 0;
   const canSpreadThisTick = tickNumber > 0 && (tickNumber % RABBIT_SPREAD_EVERY_TICKS === 0 || tickNumber % MOUSE_SPREAD_EVERY_TICKS === 0);
@@ -537,6 +547,101 @@ async function processRabbitReproductionAndOvergrazing() {
   }
 
   return { rabbitBirths, mouseBirths, rabbitsSpread, miceSpread, overgrazedLocations, overgrazedResources, depletedByOvergrazing };
+}
+
+function preyUnitsForFox(creatures: any[]) {
+  return creatures.reduce((sum, creature) => {
+    if (creature.species.key === "mouse") return sum + 1;
+    if (creature.species.key === "rabbit") return sum + 4;
+    return sum;
+  }, 0);
+}
+
+function preyUnitsForWolf(creatures: any[]) {
+  return creatures.reduce((sum, creature) => creature.species.key === "rabbit" ? sum + 4 : sum, 0);
+}
+
+async function createPredatorOffspringMany(species: any, locationId: number, count: number) {
+  const maxHp = Math.max(1, Math.round(species.baseHp * STAGE_HP_MULTIPLIER.CHILD));
+  if (count <= 0) return;
+  await prisma.creature.createMany({
+    data: Array.from({ length: count }, () => ({
+      speciesId: species.id,
+      locationId,
+      hp: maxHp,
+      maxHp,
+      hunger: 0,
+      stamina: BASE_STAMINA,
+      staminaMax: BASE_STAMINA,
+      fatigueState: "RESTED",
+      activity: "IDLE",
+      currentAction: species.key === "wolf" ? "народилося й тримається лігва" : "народилося й ховається біля нори",
+      age: "CHILD",
+      ageTicks: 0,
+      sex: Math.random() < 0.5 ? "MALE" : "FEMALE",
+      isAlive: true,
+      isGone: false,
+      isHidden: false,
+    })),
+  });
+}
+
+async function processPredatorReproduction() {
+  const canFoxReproduce = tickNumber > 0 && tickNumber % FOX_REPRODUCTION_EVERY_TICKS === 0;
+  const canWolfReproduce = tickNumber > 0 && tickNumber % WOLF_REPRODUCTION_EVERY_TICKS === 0;
+
+  const [foxSpecies, wolfSpecies, regions] = await Promise.all([
+    prisma.creatureSpecies.findUnique({ where: { key: "fox" } }),
+    prisma.creatureSpecies.findUnique({ where: { key: "wolf" } }),
+    prisma.region.findMany({
+      include: {
+        locations: {
+          include: {
+            creatures: { where: { isAlive: true, isGone: false }, include: { species: true } },
+          },
+        },
+      },
+    }),
+  ]);
+
+  let foxBirths = 0;
+  let wolfBirths = 0;
+  let foxPreyUnits = 0;
+  let wolfPreyUnits = 0;
+
+  for (const region of regions) {
+    const creatures = region.locations.flatMap((location) => location.creatures);
+    const foxes = creatures.filter((creature: any) => creature.species.key === "fox");
+    const wolves = creatures.filter((creature: any) => creature.species.key === "wolf");
+    const regionFoxPreyUnits = preyUnitsForFox(creatures);
+    const regionWolfPreyUnits = preyUnitsForWolf(creatures);
+    foxPreyUnits += regionFoxPreyUnits;
+    wolfPreyUnits += regionWolfPreyUnits;
+
+    if (foxSpecies && canFoxReproduce && hasBreedingPair(foxes, "fox")) {
+      const required = FOX_PREY_UNITS_REQUIRED_BASE + foxes.length * FOX_PREY_UNITS_REQUIRED_PER_FOX;
+      const den = region.locations.find((location: any) => location.biome === "FOREST" || location.biome === "DEEP_FOREST") ?? region.locations[0];
+      if (den && regionFoxPreyUnits >= required && chance(25)) {
+        const born = randomInt(FOX_MIN_LITTER_SIZE, FOX_MAX_LITTER_SIZE);
+        await createPredatorOffspringMany(foxSpecies, den.id, born);
+        foxBirths += born;
+        await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "Лисиці вивели лисенят", description: `У регіоні «${region.name}» народилося лисенят: ${born}. Prey units: ${regionFoxPreyUnits}/${required}.`, locationId: den.id } });
+      }
+    }
+
+    if (wolfSpecies && canWolfReproduce && hasBreedingPair(wolves, "wolf")) {
+      const required = WOLF_PREY_UNITS_REQUIRED_BASE + wolves.length * WOLF_PREY_UNITS_REQUIRED_PER_WOLF;
+      const den = region.locations.find((location: any) => location.biome === "DEEP_FOREST") ?? null;
+      if (den && regionWolfPreyUnits >= required && chance(10)) {
+        const born = randomInt(WOLF_MIN_LITTER_SIZE, WOLF_MAX_LITTER_SIZE);
+        await createPredatorOffspringMany(wolfSpecies, den.id, born);
+        wolfBirths += born;
+        await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "Вовки вивели вовченят", description: `У регіоні «${region.name}» народилося вовченят: ${born}. Prey units: ${regionWolfPreyUnits}/${required}.`, locationId: den.id } });
+      }
+    }
+  }
+
+  return { foxBirths, wolfBirths, foxPreyUnits, wolfPreyUnits };
 }
 
 async function killAnimalFromOldAge(creature: any) {
@@ -881,6 +986,7 @@ export async function worldTick() {
   let queuedMove = 0, queuedGather = 0, queuedEat = 0, queuedLook = 0, queuedSay = 0, queuedRest = 0, queuedAttack = 0, skippedBusy = 0, errors = 0, regenerated = 0;
   let aged = 0, oldAgeDeaths = 0, corpsesDecaying = 0, corpsesGone = 0;
   let rabbitBirths = 0, mouseBirths = 0, rabbitsSpread = 0, miceSpread = 0, overgrazedLocations = 0, overgrazedResources = 0, depletedByOvergrazing = 0;
+  let foxBirths = 0, wolfBirths = 0, foxPreyUnits = 0, wolfPreyUnits = 0;
   let lisovykAwakened = false, lisovykSlept = false;
   try {
     if (DEBUG) console.log(`[WORLD TICK] start ${new Date().toISOString()}`);
@@ -891,7 +997,7 @@ export async function worldTick() {
     corpsesDecaying = lifecycle.decayed;
     corpsesGone = lifecycle.gone;
 
-    const ecology = await processRabbitReproductionAndOvergrazing();
+    const ecology = await processSmallHerbivoreEcology();
     rabbitBirths = ecology.rabbitBirths;
     mouseBirths = ecology.mouseBirths;
     rabbitsSpread = ecology.rabbitsSpread;
@@ -899,6 +1005,12 @@ export async function worldTick() {
     overgrazedLocations = ecology.overgrazedLocations;
     overgrazedResources = ecology.overgrazedResources;
     depletedByOvergrazing = ecology.depletedByOvergrazing;
+
+    const predatorEcology = await processPredatorReproduction();
+    foxBirths = predatorEcology.foxBirths;
+    wolfBirths = predatorEcology.wolfBirths;
+    foxPreyUnits = predatorEcology.foxPreyUnits;
+    wolfPreyUnits = predatorEcology.wolfPreyUnits;
 
     lisovykAwakened = await wakeLisovykIfNeeded();
     regenerated = await regenerateResourcesIfNeeded();
@@ -976,11 +1088,11 @@ export async function worldTick() {
       }
     }
 
-    if (DEBUG) console.log(`[WORLD TICK] done: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, rabbitBirths=${rabbitBirths}, mouseBirths=${mouseBirths}, rabbitsSpread=${rabbitsSpread}, miceSpread=${miceSpread}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}`);
-    await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "World Tick", description: `Tick #${tickNumber}: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, rabbitBirths=${rabbitBirths}, mouseBirths=${mouseBirths}, rabbitsSpread=${rabbitsSpread}, miceSpread=${miceSpread}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}` } });
+    if (DEBUG) console.log(`[WORLD TICK] done: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, rabbitBirths=${rabbitBirths}, mouseBirths=${mouseBirths}, rabbitsSpread=${rabbitsSpread}, miceSpread=${miceSpread}, foxBirths=${foxBirths}, wolfBirths=${wolfBirths}, foxPreyUnits=${foxPreyUnits}, wolfPreyUnits=${wolfPreyUnits}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}`);
+    await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "World Tick", description: `Tick #${tickNumber}: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, rabbitBirths=${rabbitBirths}, mouseBirths=${mouseBirths}, rabbitsSpread=${rabbitsSpread}, miceSpread=${miceSpread}, foxBirths=${foxBirths}, wolfBirths=${wolfBirths}, foxPreyUnits=${foxPreyUnits}, wolfPreyUnits=${wolfPreyUnits}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}` } });
     if (botInstance && tickNumber % 5 === 0) {
       const region = await prisma.region.findFirst();
-      if (region) await notifyRegion(botInstance, region.id, `🌿 Світ ворухнувся.\n\nПублічний звіт раз на 5 тіків. Поточний тік #${tickNumber}: заплановано рухів — ${queuedMove}, збору — ${queuedGather}, їжі — ${queuedEat}, оглядів — ${queuedLook}, атак — ${queuedAttack}, зайнятих істот — ${skippedBusy}, старість — ${aged}, смертей від старості — ${oldAgeDeaths}, зниклих трупів — ${corpsesGone}, народилося зайченят — ${rabbitBirths}, мишенят — ${mouseBirths}, зайців розбіглося — ${rabbitsSpread}, мишей — ${miceSpread}, об'їдено ресурсів — ${overgrazedResources}, відновлено вузлів — ${regenerated}.`);
+      if (region) await notifyRegion(botInstance, region.id, `🌿 Світ ворухнувся.\n\nПублічний звіт раз на 5 тіків. Поточний тік #${tickNumber}: заплановано рухів — ${queuedMove}, збору — ${queuedGather}, їжі — ${queuedEat}, оглядів — ${queuedLook}, атак — ${queuedAttack}, зайнятих істот — ${skippedBusy}, старість — ${aged}, смертей від старості — ${oldAgeDeaths}, зниклих трупів — ${corpsesGone}, народилося зайченят — ${rabbitBirths}, мишенят — ${mouseBirths}, лисенят — ${foxBirths}, вовченят — ${wolfBirths}, зайців розбіглося — ${rabbitsSpread}, мишей — ${miceSpread}, об'їдено ресурсів — ${overgrazedResources}, відновлено вузлів — ${regenerated}.`);
     }
   } finally {
     running = false;
@@ -1029,6 +1141,10 @@ function runtimeTickStatusText() {
     `Регенерація ресурсів: раз на ${RESOURCE_REGEN_EVERY_TICKS} world ticks, +${RESOURCE_REGEN_AMOUNT}`,
     `Розмноження зайців: раз на ${RABBIT_REPRODUCTION_EVERY_TICKS} world ticks; виводок ${RABBIT_MIN_LITTER_SIZE}-${RABBIT_MAX_LITTER_SIZE}; світового ліміту немає`,
     `Розмноження мишей: раз на ${MOUSE_REPRODUCTION_EVERY_TICKS} world ticks; виводок ${MOUSE_MIN_LITTER_SIZE}-${MOUSE_MAX_LITTER_SIZE}; цикл коротший за заячий`,
+    `Розмноження лисиць: раз на ${FOX_REPRODUCTION_EVERY_TICKS} world ticks; виводок ${FOX_MIN_LITTER_SIZE}-${FOX_MAX_LITTER_SIZE}; поріг prey units ${FOX_PREY_UNITS_REQUIRED_BASE} + ${FOX_PREY_UNITS_REQUIRED_PER_FOX} за лисицю`,
+    `Розмноження вовків: раз на ${WOLF_REPRODUCTION_EVERY_TICKS} world ticks; виводок ${WOLF_MIN_LITTER_SIZE}-${WOLF_MAX_LITTER_SIZE}; поріг prey units ${WOLF_PREY_UNITS_REQUIRED_BASE} + ${WOLF_PREY_UNITS_REQUIRED_PER_WOLF} за вовка`,
+    "Вагітність хижаків: ще не реалізована; MVP народжує виводок одразу при рідкісній успішній перевірці",
+    "Prey units: для лисиць mouse=1, rabbit=4; для вовків rabbit=4, mouse майже ігнорується",
     `Локальний тиск зайців: м'який поріг ${RABBIT_LOCAL_SOFT_CAP}; вище нього падає шанс народження й запускається розселення`,
     `Розселення зайців: раз на ${RABBIT_SPREAD_EVERY_TICKS} world ticks; до ${RABBIT_MAX_SPREAD_PER_LOCATION} з перенаселеної локації`,
     `Розселення мишей: раз на ${MOUSE_SPREAD_EVERY_TICKS} world ticks; до ${MOUSE_MAX_SPREAD_PER_LOCATION} з перенаселеної локації`,
