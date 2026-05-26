@@ -37,6 +37,22 @@ The full **Ще сигнали** menu shows the whole MVP set for the selected t
 
 Do not add generic `/emote <text>` in this iteration. Freeform emotes can blur the line between expressive text and real game actions.
 
+## Text input
+
+Social signals also have Ukrainian/MUD-style text aliases through the input alias layer.
+
+Examples:
+
+- `кивнути 1`
+- `помахати мандрівник`
+- `усміхнутися травник`
+- `вказати на вовка`
+- `насупитися вовк`
+
+Target text resolves against visible nearby targets by number, id or visible name. If several targets match, the bot asks the player to clarify.
+
+See `docs/systems/input_aliases.md` for the broader button/command parity rule.
+
 ## Message Model
 
 Each signal should support separate text for:

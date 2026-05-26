@@ -18,7 +18,7 @@ const COMMAND_DIRECTIONS: Record<string, Direction> = {
   e: "EAST",
 };
 
-async function submitMove(bot: Bot, ctx: any, direction: Direction, answerCallback = false) {
+export async function submitMove(bot: Bot, ctx: any, direction: Direction, answerCallback = false) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) {
     if (answerCallback) await safeAnswerCallbackQuery(ctx);

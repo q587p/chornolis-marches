@@ -9,6 +9,8 @@ Preferred spelling/style for this project:
 - `онбордінґ`
 - `ґенерація`
 - `мітологія`
+- `паґінація`
+- `паґінаційний`
 - `етер`
 - `Атени`
 - use `ґ` where it naturally fits and supports the style.

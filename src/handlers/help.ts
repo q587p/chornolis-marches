@@ -33,7 +33,7 @@ export const HELP_TEXT = [
   "• Голод зараз переважно debug-показник: він росте від виснажливих дій, але ще не має окремих штрафів для гравця.",
 ].join("\n");
 
-async function sendHelp(ctx: any) {
+export async function sendHelp(ctx: any) {
   const auto = ctx.from ? isPlayerAutoEnabled(ctx.from.id) : false;
   await ctx.reply(HELP_TEXT, {
     parse_mode: "HTML",

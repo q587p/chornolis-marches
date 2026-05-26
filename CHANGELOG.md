@@ -9,6 +9,26 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.11.5 - Ukrainian command aliases and button parity - 12026-05-26
+
+### Added
+
+- Added Ukrainian text/slash aliases for common player actions, including `озирнутися`, `роздивитися`, `де я`, `хто я`, `статистика`, `репліки`, `час`, `новини`, `допомога`, movement directions, gathering, rest, queue, auto, speech and target-focused actions.
+- Added MUD-style text inputs for several target actions and social signals, such as `кивнути 1`, `помахати мандрівник`, `атакувати вовка`, `роздивитися труп`, `освіжити труп` and `підібрати труп`.
+- Added `docs/systems/input_aliases.md` documenting the Ukrainian alias layer and the rule that Telegram buttons should have equivalent text/server commands where practical.
+
+### Changed
+
+- Menu buttons now have canonical command-equivalent paths: `Статистика` maps to `/stat`, `Репліки` to `/chat`, `Час` to `/time`, `Новини` to `/news`, and shared renderers are reused to avoid drift.
+- Existing slash commands and buttons remain available; the new alias layer sits before the unknown-command fallback and passes through unrecognized text.
+- Movement and gathering aliases now reuse the same command handlers as `/north`/`/south`/`/gather`, instead of maintaining parallel behavior.
+
+### Documentation
+
+- Updated release notes, system docs and planning notes for command/button parity and future shared command registry work.
+
+---
+
 ## 0.11.4 - Social signals, chat menu and planning refresh - 12026-05-26
 
 ### Added

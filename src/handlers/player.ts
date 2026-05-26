@@ -101,7 +101,7 @@ async function renderCharacterView(telegramId: number) {
   };
 }
 
-async function showCharacter(telegramId: number, reply: (text: string, options?: any) => Promise<unknown>) {
+export async function showCharacter(telegramId: number, reply: (text: string, options?: any) => Promise<unknown>) {
   const view = await renderCharacterView(telegramId);
   if (!view) return void (await reply("Ти ще не увійшов у світ. Напиши /start", { reply_markup: buildMainReplyKeyboard(false) }));
 

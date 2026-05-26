@@ -76,8 +76,8 @@ export function buildAnonymousTargetKeyboard(target: Pick<TargetRef, "type" | "i
     .text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:mystery`)
     .row();
 
-  if (target.canGreet) keyboard.text("👋 Привітати", `social:greet:${target.type}:${target.id}:mystery`).row();
-  keyboard.text("🪧 Сигнали", `signalMenu:${target.type}:${target.id}:mystery`).row();
+  if (target.canGreet) keyboard.text("💬 Привітати", `social:greet:${target.type}:${target.id}:mystery`).row();
+  keyboard.text("✨ Сигнали", `signalMenu:${target.type}:${target.id}:mystery`).row();
   keyboard.text("↩️ Назад", "location:details").row();
   return keyboard;
 }
@@ -88,12 +88,12 @@ export function buildTargetActionKeyboard(target: Pick<TargetRef, "type" | "id" 
     .text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:known`)
     .row();
 
-  if (target.canGreet) keyboard.text("👋 Привітати", `social:greet:${target.type}:${target.id}:known`).row();
+  if (target.canGreet) keyboard.text("💬 Привітати", `social:greet:${target.type}:${target.id}:known`).row();
   for (const socialId of quickSocialsForTarget({ kind: target.type, isAnimal: Boolean(target.isAnimal), canGreet: target.canGreet })) {
     const social = SOCIAL_DEFINITIONS.find((item) => item.id === socialId);
     if (social) keyboard.text(social.label, `signal:${social.id}:${target.type}:${target.id}:known`);
   }
-  keyboard.row().text("🪧 Ще сигнали", `signalMenu:${target.type}:${target.id}:known`).row();
+  keyboard.row().text("✨ Ще сигнали", `signalMenu:${target.type}:${target.id}:known`).row();
   keyboard.text("↩️ Назад", "location:details").row();
   return keyboard;
 }

@@ -6,6 +6,7 @@ import { announceWorldUpdatedOnce } from "./services/deployAnnouncements";
 import { startActionQueueLoop } from "./services/actionQueue";
 import { startWorldTickLoop } from "./services/worldTick";
 import { registerActionQueueHandlers } from "./handlers/actionQueue";
+import { registerAliasHandlers } from "./handlers/aliases";
 import { registerAutoHandlers } from "./handlers/auto";
 import { registerGatherHandlers } from "./handlers/gather";
 import { registerLookHandlers } from "./handlers/look";
@@ -43,6 +44,7 @@ registerGatherHandlers(bot);
 registerSocialHandlers(bot);
 registerRestHandlers(bot);
 registerActionQueueHandlers(bot);
+registerAliasHandlers(bot);
 
 bot.catch((error) => {
   setLastRuntimeError(error.error);

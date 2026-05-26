@@ -33,7 +33,7 @@ npm version minor --no-git-tag-version
 
 - Use Ukrainian UI/text where appropriate.
 - Canonical terminology source: `docs/design/terminology.md`.
-- Preferred spelling/style includes: `онбордінґ`, `ґенерація`, `мітологія`, `етер`, `Атени`; use `ґ` where it fits naturally.
+- Preferred spelling/style includes: `онбордінґ`, `ґенерація`, `мітологія`, `паґінація`, `паґінаційний`, `етер`, `Атени`; use `ґ` where it fits naturally.
 - Important fixed UI terms:
   - Look → **Озирнутися**
   - Location → **Місцина**

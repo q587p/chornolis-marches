@@ -41,7 +41,7 @@ function formatRate(value: number) {
   return formatStatNumber(value, value >= 10 ? 0 : 1);
 }
 
-async function buildStatBrief() {
+export async function buildStatBrief() {
   const stats = await getEcologyStats();
   const statUrl = `${config.publicBaseUrl}/stat`;
   const speciesLines = stats.speciesRows
@@ -220,7 +220,7 @@ function buildChatLogKeyboard(window: ChatLogWindow, page: number, totalPages: n
   return keyboard;
 }
 
-async function buildChatLogPage(window: ChatLogWindow, requestedPage: number) {
+export async function buildChatLogPage(window: ChatLogWindow, requestedPage: number) {
   const log = await getChatLog({ window, page: requestedPage, perPage: CHAT_LOG_PAGE_SIZE });
   const page = Math.max(0, Math.min(log.page, log.totalPages - 1));
   const lines = log.events.map((event) => {

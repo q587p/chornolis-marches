@@ -6,7 +6,7 @@ import { buildGatherMenuForLocation } from "../services/locations";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 
-type GatherKey = "berries" | "mushrooms" | "herbs";
+export type GatherKey = "berries" | "mushrooms" | "herbs";
 
 const GATHER_ALIASES: Record<string, GatherKey> = {
   berries: "berries",
@@ -31,7 +31,7 @@ const GATHER_ALIASES: Record<string, GatherKey> = {
   "цілющих трав": "herbs",
 };
 
-async function submitGather(bot: Bot, ctx: any, resourceKey?: GatherKey, answerCallback = false) {
+export async function submitGather(bot: Bot, ctx: any, resourceKey?: GatherKey, answerCallback = false) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player || !player.currentLocationId) {
     if (answerCallback) await safeAnswerCallbackQuery(ctx);

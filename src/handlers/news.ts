@@ -77,7 +77,7 @@ function buildNewsIndexKeyboard(entries: NewsEntry[], listPage: number, totalLis
   return keyboard.inline_keyboard.length ? keyboard : undefined;
 }
 
-async function buildNewsIndexPage(requestedListPage: number) {
+export async function buildNewsIndexPage(requestedListPage: number) {
   const entries = await readNewsEntries();
   if (!entries.length) return { text: "Новини поки недоступні: файл news.md не знайдено або він порожній.", keyboard: undefined };
 
