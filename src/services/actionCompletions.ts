@@ -362,23 +362,44 @@ async function completeCreatureAttack(bot: Bot, action: WorldAction) {
 
   const damage = Math.max(1, attacker.species.strength + Math.floor(Math.random() * 3));
   const nextHp = target.hp - damage;
+  const foodValue = preyFoodValue(target);
   await spendCreatureStamina(attacker, actionCost("ATTACK"));
   await markRecentAttackDanger(attacker.locationId);
+  await prisma.creature.updateMany({ where: { id: attacker.id }, data: { attackAttempts: { increment: 1 } } });
 
   if (nextHp <= 0) {
-    await prisma.creature.updateMany({ where: { id: target.id }, data: { hp: 0, isAlive: false, age: "CORPSE", diedAtTick: null, corpseDecayTicksLeft: target.species.corpseDecayTicks, activity: "RESTING", currentAction: "лежить нерухомо" } });
+    await prisma.creature.updateMany({ where: { id: target.id }, data: { hp: 0, isAlive: false, age: "CORPSE", diedAtTick: null, corpseDecayTicksLeft: target.species.corpseDecayTicks, activity: "RESTING", currentAction: `убито хижаком: ${attacker.species.key}` } });
     await interruptActorActions({ actorType: "CREATURE", creatureId: target.id }, "істоту вбито", true);
-    await prisma.creature.updateMany({ where: { id: attacker.id }, data: { hunger: Math.max(0, attacker.hunger - 4), activity: "FIGHTING", currentAction: `убив ${target.species.name}` } });
+    await prisma.creature.updateMany({
+      where: { id: attacker.id },
+      data: {
+        hunger: Math.max(0, attacker.hunger - foodValue),
+        activity: "FIGHTING",
+        currentAction: `убив ${target.species.name}`,
+        successfulAttacks: { increment: 1 },
+        kills: { increment: 1 },
+      },
+    });
     await notifyLocation(bot, attacker.locationId, -1, `Щось кидається на здобич. За мить ${target.species.name} падає нерухомо.`);
-    await logEvent("NPC_ACTION", "Creature killed prey", `${attacker.id} -> ${target.id}`, attacker.locationId);
+    await logEvent("NPC_ACTION", "Creature killed prey", `${attacker.species.key} #${attacker.id} -> ${target.species.key} #${target.id}; food=${foodValue}`, attacker.locationId);
   } else {
     await prisma.creature.updateMany({ where: { id: target.id }, data: { hp: nextHp, currentAction: "поранено" } });
-    await prisma.creature.updateMany({ where: { id: attacker.id }, data: { activity: "FIGHTING", currentAction: `атакує ${target.species.name}` } });
+    await prisma.creature.updateMany({ where: { id: attacker.id }, data: { activity: "FIGHTING", currentAction: `атакує ${target.species.name}`, successfulAttacks: { increment: 1 } } });
     await notifyLocation(bot, attacker.locationId, -1, `Щось нападає на ${target.species.name}.`);
     await logEvent("NPC_ACTION", "Creature attacked prey", `${attacker.id} -> ${target.id}; damage=${damage}`, attacker.locationId);
   }
 
   await setActionStatus(action, "DONE");
+}
+
+function preyFoodValue(target: any) {
+  if (target.species.key === "mouse") return 1;
+  if (target.species.key === "rabbit") {
+    if (target.age === "CHILD") return 2;
+    if (target.age === "OLD") return 3;
+    return 4;
+  }
+  return Math.max(1, Math.round((target.species.baseHp ?? target.maxHp ?? 1) / 3));
 }
 
 async function completeAttack(bot: Bot, action: WorldAction) {

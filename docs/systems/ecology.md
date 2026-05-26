@@ -16,12 +16,14 @@ The forest should feel alive even when players do nothing.
 - Longer animal corpse windows for inspection, freshening and future scavengers.
 - Resource regeneration.
 - Mushrooms grow from decayed corpses.
+- Predator prey choice by age, HP and species preference.
+- Predator kill counters in `/stat`.
+- Individual predator hunting counters for attack attempts, successful attacks and kills.
 - Players can interfere with the balance.
 
 ## Planned Systems
 
 - Reproduction for herbivores beyond rabbits and mice.
-- Predator priority by age, HP and vulnerability.
 - Animal hunger and starvation.
 - Migration.
 - Richer overpopulation pressure, including region degradation.
@@ -40,6 +42,11 @@ The forest should feel alive even when players do nothing.
 - If more than 13 creatures or player characters are present in one location, that crowd adds a strong dynamic danger bonus for ecology decisions.
 - Herbivores react to crowded danger gradually: they do not all flee instantly, but their chance to choose movement rises noticeably while the crowd remains.
 - Recent attacks add temporary local danger for ecology decisions. Herbivores become more likely to leave the attacked location for several world ticks.
+- Foxes prefer mice, then vulnerable rabbits; wolves prefer rabbits, especially young, old or wounded prey.
+- Predator kills leave corpses, reduce predator hunger and are counted in `/stat` next to old-age deaths.
+- Predator hunger recovery uses prey food value: mice are light food, rabbit children/old rabbits are partial food, healthy young/adult rabbits are worth more.
+- Individual animals keep hunting counters, and `/stat` can show the most successful hunters.
+- Fox and wolf lifecycle values are deliberately slower than rabbits and mice, so future predator reproduction does not explode as quickly as herbivore reproduction.
 - If a location has too many rabbits or mice, they consume `grass`, `berries`, `herbs` and `mushrooms` as background overgrazing.
 - Overcrowded rabbit locations spread up to 4 non-child rabbits into neighboring cells every 20 world ticks.
 - Rabbit corpses remain for 180 world ticks by default. With the default 1.5s tick, this is about 4.5 minutes.
@@ -59,6 +66,8 @@ The forest should feel alive even when players do nothing.
 - Add weather and magic hooks that can shorten exhausted-vegetation recovery.
 - Add explicit recent hunting pressure from players and NPCs.
 - Add species-specific fear and aggression profiles.
+- Turn hunting history into animal experience, titles and bounded stat improvements.
+- Add creature aggression and defense profiles, including wolves attacking people and herbivores defending offspring or fighting when escape fails.
 
 ## Example Consequences
 

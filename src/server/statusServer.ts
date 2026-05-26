@@ -56,6 +56,21 @@ function renderResourceRows(rows: EcologyStats["resourceRows"]) {
     .join("");
 }
 
+function renderTopHunterRows(rows: EcologyStats["topHunters"]) {
+  if (rows.length === 0) return `<tr><td colspan="7"><code>none</code></td></tr>`;
+  return rows
+    .map((row) => `<tr>
+      <td><code>#${row.id}</code></td>
+      <td>${escapeHtml(row.name)}</td>
+      <td>${escapeHtml(row.speciesName)} <code>${escapeHtml(row.speciesKey)}</code></td>
+      <td>${row.isAlive ? "жива" : "труп/неактивна"}</td>
+      <td>${row.attackAttempts}</td>
+      <td>${row.successfulAttacks}</td>
+      <td>${row.kills}</td>
+    </tr>`)
+    .join("");
+}
+
 async function renderEcologyStatsPage() {
   const stats = await getEcologyStats();
   const c = stats.recent.counters;
@@ -94,6 +109,8 @@ async function renderEcologyStatsPage() {
       <div class="card"><div class="metric">${c.rabbitsSpread}</div><div class="label">зайців розселилося</div></div>
       <div class="card"><div class="metric">${c.miceSpread}</div><div class="label">мишей розселилося</div></div>
       <div class="card"><div class="metric">${c.oldAgeDeaths}</div><div class="label">смертей від старості</div></div>
+      <div class="card"><div class="metric">${c.predatorKills}</div><div class="label">смертей від хижаків у вікні</div></div>
+      <div class="card"><div class="metric">${stats.totals.predatorKills}</div><div class="label">смертей від хижаків загалом</div></div>
     </div>
 
     <h2>Темп за останнє вікно</h2>
@@ -106,12 +123,16 @@ async function renderEcologyStatsPage() {
       <tr><td>Об'їдені ресурси</td><td>${c.overgrazedResources}</td><td>${formatNumber(r.overgrazedResources, 1)}</td></tr>
       <tr><td>Виснажені вузли від випасу</td><td>${c.depletedByOvergrazing}</td><td>${formatNumber(r.depletedByOvergrazing, 1)}</td></tr>
       <tr><td>Смерті від старості</td><td>${c.oldAgeDeaths}</td><td>${formatNumber(r.oldAgeDeaths, 1)}</td></tr>
+      <tr><td>Смерті від хижаків</td><td>${c.predatorKills}</td><td>${formatNumber(r.predatorKills, 1)}</td></tr>
       <tr><td>Зниклі трупи</td><td>${c.corpsesGone}</td><td>${formatNumber(r.corpsesGone, 1)}</td></tr>
       <tr><td>Відновлені ресурсні вузли</td><td>${c.regenerated}</td><td>${formatNumber(r.regenerated, 1)}</td></tr>
     </tbody></table>
 
     <h2>Тварини за віком</h2>
     <table><thead><tr><th>Ключ</th><th>Вид</th><th>Усього</th><th>Живі</th><th>Діти</th><th>Молоді</th><th>Дорослі</th><th>Старі</th><th>Трупи</th><th>Зниклі</th></tr></thead><tbody>${renderStatTableRows(stats.speciesRows)}</tbody></table>
+
+    <h2>Найвдаліші хижаки</h2>
+    <table><thead><tr><th>ID</th><th>Ім'я</th><th>Вид</th><th>Стан</th><th>Атак</th><th>Влучних атак</th><th>Убивств</th></tr></thead><tbody>${renderTopHunterRows(stats.topHunters)}</tbody></table>
 
     <h2>Ресурси</h2>
     <table><thead><tr><th>Ключ</th><th>Назва</th><th>Вузлів</th><th>Кількість</th><th>%</th></tr></thead><tbody>${renderResourceRows(stats.resourceRows)}</tbody></table>

@@ -71,6 +71,9 @@ async function buildStatBrief() {
   const observed = stats.recent.eventCount
     ? `${formatStatNumber(stats.recent.observedTicks)} ticks / ${formatStatNumber(stats.recent.observedMinutes, 1)} хв`
     : "ще немає world tick подій";
+  const hunterLines = stats.topHunters
+    .slice(0, 5)
+    .map((hunter) => `#${hunter.id} ${hunter.name} [${hunter.speciesKey}]: убивств ${formatStatNumber(hunter.kills)}, атак ${formatStatNumber(hunter.attackAttempts)}, влучних ${formatStatNumber(hunter.successfulAttacks)}`);
 
   return {
     text: [
@@ -87,6 +90,10 @@ async function buildStatBrief() {
       `Розселення: зайці ${formatStatNumber(counters.rabbitsSpread)} (${formatRate(rates.rabbitsSpread)}/год), миші ${formatStatNumber(counters.miceSpread)} (${formatRate(rates.miceSpread)}/год).`,
       `Переїдено ресурсів: ${formatStatNumber(counters.overgrazedResources)} (${formatRate(rates.overgrazedResources)}/год).`,
       `Смерті від старості: ${formatStatNumber(counters.oldAgeDeaths)} (${formatRate(rates.oldAgeDeaths)}/год).`,
+      `Смерті від хижаків: ${formatStatNumber(counters.predatorKills)} (${formatRate(rates.predatorKills)}/год), усього ${formatStatNumber(stats.totals.predatorKills)}.`,
+      "",
+      "Найвдаліші хижаки:",
+      hunterLines.length ? hunterLines.join("\n") : "поки немає успішних мисливців",
       "",
       `Повна статистика: ${statUrl}`,
     ].join("\n"),

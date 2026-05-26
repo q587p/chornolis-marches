@@ -19,7 +19,9 @@ Backlog differs from Icebox: backlog means “we probably want this, but not rig
 - Basic crafting.
 - Barter and trade.
 - Use- and observation-based skill progression.
+- Animal experience and titles: successful hunters can become more dangerous or recognizable, such as `материй вовк` or `досвідчена лисиця`.
 - Tracks, stealth and visibility.
+- Creature aggression and defense: wolves can threaten people, smaller predators can defend themselves, and herbivores may fight if cornered or protecting offspring.
 - Admin/debug permissions for commands such as `/reset`, `/tickSet`, `/cleanupCreatures` and other dangerous tools.
 - Richer auto-mode profiles and player-configurable auto behavior.
 - Ukrainian interface terminology pass: `Озирнутися`, `Місцина`, `Роздивитися`, and similar diegetic wording instead of direct English/RPG calques.

@@ -256,6 +256,9 @@ model Creature {
   says              Int @default(0)
   gatherAttempts    Int @default(0)
   successfulGathers Int @default(0)
+  attackAttempts    Int @default(0)
+  successfulAttacks Int @default(0)
+  kills             Int @default(0)
 
   sex CreatureSex?
 

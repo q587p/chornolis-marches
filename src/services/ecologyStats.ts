@@ -12,6 +12,7 @@ const TICK_COUNTER_KEYS = [
   "overgrazedResources",
   "depletedByOvergrazing",
   "oldAgeDeaths",
+  "predatorKills",
   "corpsesGone",
   "regenerated",
 ] as const;
@@ -57,6 +58,7 @@ export async function getEcologyStats() {
     locationCount,
     occupiedLocations,
     latestTickEvents,
+    topHunters,
   ] = await Promise.all([
     prisma.creatureSpecies.findMany({ where: { kind: "ANIMAL" }, orderBy: { key: "asc" } }),
     prisma.creature.groupBy({
@@ -79,6 +81,24 @@ export async function getEcologyStats() {
       where: { title: "World Tick" },
       orderBy: { id: "desc" },
       take: TICK_EVENT_TAKE,
+    }),
+    prisma.creature.findMany({
+      where: {
+        species: { kind: "ANIMAL" },
+        isGone: false,
+        OR: [
+          { kills: { gt: 0 } },
+          { attackAttempts: { gt: 0 } },
+        ],
+      },
+      include: { species: true, location: true },
+      orderBy: [
+        { kills: "desc" },
+        { successfulAttacks: "desc" },
+        { attackAttempts: "desc" },
+        { id: "asc" },
+      ],
+      take: 10,
     }),
   ]);
 
@@ -148,6 +168,18 @@ export async function getEcologyStats() {
   const latestTick = tickEvents[0] ?? null;
   const recentCounters = { ...EMPTY_COUNTERS };
   for (const event of tickEvents) addCounters(recentCounters, event.counters);
+  if (tickEvents.length > 0) {
+    recentCounters.predatorKills = await prisma.worldEvent.count({
+      where: {
+        title: "Creature killed prey",
+        createdAt: {
+          gte: tickEvents[tickEvents.length - 1].createdAt,
+          lte: new Date(),
+        },
+      },
+    });
+  }
+  const totalPredatorKills = await prisma.worldEvent.count({ where: { title: "Creature killed prey" } });
 
   const latestTickNumber = latestTick?.tickNumber ?? null;
   const oldestTickNumber = tickEvents.length ? tickEvents[tickEvents.length - 1].tickNumber : null;
@@ -169,11 +201,25 @@ export async function getEcologyStats() {
       aliveAnimals,
       corpseAnimals,
       goneAnimals,
+      predatorKills: totalPredatorKills,
       locationCount,
       occupiedAnimalLocations: occupiedLocations.length,
     },
     speciesRows,
     resourceRows,
+    topHunters: topHunters.map((creature) => ({
+      id: creature.id,
+      name: creature.name ?? creature.species.name,
+      speciesKey: creature.species.key,
+      speciesName: creature.species.name,
+      locationKey: creature.location.key,
+      locationName: creature.location.name,
+      isAlive: creature.isAlive,
+      age: creature.age,
+      attackAttempts: creature.attackAttempts,
+      successfulAttacks: creature.successfulAttacks,
+      kills: creature.kills,
+    })),
     latestTick,
     recent: {
       eventCount: tickEvents.length,

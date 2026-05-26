@@ -9,6 +9,31 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.10.10 - Predator kills in ecology stats - 12026-05-26
+
+### Added
+
+- Added predator-caused death counters to `/stat`, `/stat.json` and Telegram `/stat`.
+- Added all-time predator kill totals to the ecology web stats.
+- Added per-creature combat counters: attack attempts, successful attacks and kills.
+- Added top hunter rows to web `/stat` and a compact hunter list to Telegram `/stat`.
+
+### Changed
+
+- Foxes and wolves now select prey by species preference, age and HP vulnerability instead of taking the first local herbivore.
+- Predator hunger recovery now uses prey food value instead of a flat value for every kill.
+- Fox and wolf lifecycle seed values are now much slower, leaving predator reproduction room to be added without herbivore-speed generations.
+- Predator kills now mark corpses with the predator species key in their current action text.
+- Bumped package metadata to `0.10.10`.
+
+### Documentation
+
+- Added release notes for 0.10.10 and updated ecology docs/news with predator-stat notes.
+- Added a backlog item for animal experience and titles based on hunting history.
+- Added a backlog item for creature aggression and defense against people or threats.
+
+---
+
 ## 0.10.9 - Animal pressure and ecology danger - 12026-05-25
 
 ### Fixed

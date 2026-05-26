@@ -694,9 +694,9 @@ async function tickHerbivore(c: any, localPresenceCount: number) {
 }
 
 async function tickCarnivore(c: any) {
-  const prey = await prisma.creature.findFirst({ where: { isAlive: true, isGone: false, locationId: c.locationId, species: { diet: "HERBIVORE" } } });
+  const prey = await selectPredatorPrey(c);
   if (prey) {
-    if (chance(35)) {
+    if (chance(predatorAttackChance(c, prey))) {
       await enqueueCreatureAction({
         creatureId: c.id,
         type: "ATTACK",
@@ -718,6 +718,49 @@ async function tickCarnivore(c: any) {
 
   await enqueueCreatureAction({ creatureId: c.id, type: "REST", payload: {}, durationMs: actionDurationMs("REST", c.stamina) });
   return "queuedRest";
+}
+
+function preyVulnerabilityScore(prey: any) {
+  const ageScore: Record<CreatureAge, number> = {
+    CHILD: 45,
+    YOUNG: 25,
+    ADULT: 0,
+    OLD: 20,
+    CORPSE: -200,
+  };
+  const hpRatio = prey.maxHp > 0 ? prey.hp / prey.maxHp : 1;
+  const woundedScore = Math.round((1 - hpRatio) * 35);
+  return (ageScore[prey.age as CreatureAge] ?? 0) + woundedScore - Math.max(0, prey.species.agility - 5) * 2;
+}
+
+function predatorPreyPreference(predator: any, prey: any) {
+  if (predator.species.key === "fox") {
+    if (prey.species.key === "mouse") return 80;
+    if (prey.species.key === "rabbit") return 35;
+  }
+  if (predator.species.key === "wolf") {
+    if (prey.species.key === "rabbit") return 70;
+    if (prey.species.key === "mouse") return 5;
+  }
+  return 25;
+}
+
+async function selectPredatorPrey(c: any) {
+  const prey = await prisma.creature.findMany({
+    where: { isAlive: true, isGone: false, locationId: c.locationId, species: { diet: "HERBIVORE" } },
+    include: { species: true },
+  });
+  return prey
+    .map((target) => ({ target, score: predatorPreyPreference(c, target) + preyVulnerabilityScore(target) + Math.floor(Math.random() * 12) }))
+    .sort((a, b) => b.score - a.score)[0]?.target;
+}
+
+function predatorAttackChance(predator: any, prey: any) {
+  const hungerBonus = Math.min(25, Math.max(0, predator.hunger ?? 0) * 3);
+  const strengthGap = Math.max(-20, Math.min(25, (predator.species.strength - prey.species.endurance) * 4));
+  const vulnerabilityBonus = Math.max(0, Math.min(20, Math.round(preyVulnerabilityScore(prey) / 3)));
+  const speciesBase = predator.species.key === "wolf" ? 45 : predator.species.key === "fox" ? 38 : 35;
+  return Math.max(12, Math.min(85, speciesBase + hungerBonus + strengthGap + vulnerabilityBonus));
 }
 
 type DepletedRegionResource = { regionId: number; regionName: string; resourceKey: string; resourceName: string; locationId: number };

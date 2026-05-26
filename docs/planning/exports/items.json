@@ -37,6 +37,25 @@
     "file": "docs/planning/items/CAL-001_calendar_moon_phases_and_named_years.md"
   },
   {
+    "id": "COMBAT-001",
+    "title": "Creature aggression and defense",
+    "status": "backlog",
+    "type": "feature",
+    "area": "combat",
+    "priority": "medium",
+    "tags": [
+      "animals",
+      "combat",
+      "predators",
+      "ecology"
+    ],
+    "depends_on": [
+      "PROG-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/COMBAT-001-creature-aggression-and-defense.md"
+  },
+  {
     "id": "ECO-001",
     "title": "Reproduction and herbivore overpopulation",
     "status": "testing",
@@ -192,6 +211,25 @@
     ],
     "exports": {},
     "file": "docs/planning/items/PROG-002-observation-learning.md"
+  },
+  {
+    "id": "PROG-003",
+    "title": "Animal experience and titles",
+    "status": "backlog",
+    "type": "feature",
+    "area": "progression",
+    "priority": "medium",
+    "tags": [
+      "animals",
+      "ecology",
+      "progression",
+      "combat"
+    ],
+    "depends_on": [
+      "PROG-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/PROG-003-animal-experience-and-titles.md"
   },
   {
     "id": "SETTLE-001",

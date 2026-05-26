@@ -21,6 +21,28 @@ function formatSex(sex: string | null | undefined) {
   return "невідомо";
 }
 
+function formatCreatureStats(target: {
+  steps: number;
+  looks: number;
+  says: number;
+  gatherAttempts: number;
+  successfulGathers: number;
+  attackAttempts: number;
+  successfulAttacks: number;
+  kills: number;
+}) {
+  return [
+    `Пройдено локацій: ${target.steps}`,
+    `Оглядів: ${target.looks}`,
+    `Сказано фраз: ${target.says}`,
+    `Спроб збору: ${target.gatherAttempts}`,
+    `Вдалого збору: ${target.successfulGathers}`,
+    `Атак: ${target.attackAttempts}`,
+    `Влучних атак: ${target.successfulAttacks}`,
+    `Убивств: ${target.kills}`,
+  ].join("\n");
+}
+
 export async function resolveTarget(type: string, id: number, locationId: number): Promise<ResolvedTarget | null> {
   if (type === "player") {
     const target = await prisma.player.findFirst({ where: { id, currentLocationId: locationId } });
@@ -80,8 +102,8 @@ export async function resolveTarget(type: string, id: number, locationId: number
       isCorpse: false,
       canFreshen: false,
       inspect: isAnimal
-        ? `Це ${forms.nominative}.\n\nСтан: ${target.isAlive ? "жива" : "мертва"}\nHP: ${target.hp}\nСтать: ${formatSex(target.sex)}\nВік: ${target.age}\nТіків віку: ${target.ageTicks}\nДія: ${target.currentAction ?? "невідомо"}`
-        : `${forms.nominative}\n\nСтан: ${target.isAlive ? "живий/активний" : "неактивний"}\nHP: ${target.hp}\nДія: ${target.currentAction ?? "невідомо"}\n\nСтатистика:\nПройдено локацій: ${target.steps}\nОглядів: ${target.looks}\nСказано фраз: ${target.says}\nСпроб збору: ${target.gatherAttempts}\nВдалого збору: ${target.successfulGathers}`,
+        ? `Це ${forms.nominative}.\n\nСтан: ${target.isAlive ? "жива" : "мертва"}\nHP: ${target.hp}\nСтать: ${formatSex(target.sex)}\nВік: ${target.age}\nТіків віку: ${target.ageTicks}\nДія: ${target.currentAction ?? "невідомо"}\n\nСтатистика:\n${formatCreatureStats(target)}`
+        : `${forms.nominative}\n\nСтан: ${target.isAlive ? "живий/активний" : "неактивний"}\nHP: ${target.hp}\nДія: ${target.currentAction ?? "невідомо"}\n\nСтатистика:\n${formatCreatureStats(target)}`,
     };
   }
 
