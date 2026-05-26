@@ -1,0 +1,52 @@
+{
+  "generated": "2026-05-26",
+  "project": {
+    "name_en": "Chornolis Marches",
+    "name_uk": "Порубіжжя Чорнолісу",
+    "short_name": "Chornolis",
+    "repo": "q587p/chornolis-marches",
+    "git_url": "https://github.com/q587p/chornolis-marches.git",
+    "local_path_seen": "C:\\587\\chornolis-marches"
+  },
+  "hard_rules": [
+    "Do not put internal package/version workflow notes into news or changelog.",
+    "Prefer ready changed files/archives over patch scripts when asked for archives.",
+    "Preserve current functionality unless explicitly asked to replace it.",
+    "For MVP Telegram bot, prefer long polling over webhook unless explicitly changed."
+  ],
+  "terminology": {
+    "Look": "Озирнутися",
+    "Location": "Місцина",
+    "Examine": "Роздивитися / Придивитися",
+    "Stamina": "Витривалість",
+    "Rest": "Відпочити means brief rest, not sleep",
+    "base_stamina": 42
+  },
+  "style": [
+    "онбордінґ",
+    "ґенерація",
+    "мітологія",
+    "етер",
+    "Атени",
+    "use ґ where natural"
+  ],
+  "map": {
+    "main_seed": "prisma/data/chornolis_world_seed.json",
+    "seed_reader": "prisma/seed.ts",
+    "ascii_map": "docs/world/world_map.md",
+    "constraints": [
+      "do not casually change z",
+      "do not create duplicate exits in one direction",
+      "blockedCells are documentation-only"
+    ]
+  },
+  "design_pillars": [
+    "liminal frontier",
+    "living ecosystem",
+    "skill growth through use",
+    "skill growth through observation",
+    "no universal levels",
+    "diegetic-first UI",
+    "incomplete information"
+  ]
+}
