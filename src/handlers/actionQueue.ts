@@ -1,5 +1,6 @@
 import { Bot } from "grammy";
 import { buildActionQueueKeyboard } from "../ui/keyboards";
+import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { cancelCurrentPlayerAction, clearQueuedPlayerActions, playerActionQueueControlCount, renderPlayerActionQueue } from "../services/actionQueue";
 import { getPlayerByTelegramId } from "../services/players";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
@@ -25,6 +26,13 @@ async function showQueue(ctx: any, playerId: number, prefix?: string) {
   await ctx.reply(text, options);
 }
 
+async function refreshMainKeyboard(ctx: any) {
+  if (!ctx.from) return;
+  await ctx.reply("Основні дії оновлено.", {
+    reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+  });
+}
+
 export function registerActionQueueHandlers(bot: Bot) {
   async function sendQueue(ctx: any) {
     if (!ctx.from) return;
@@ -44,12 +52,14 @@ export function registerActionQueueHandlers(bot: Bot) {
     if (arg === "clear") {
       const result = await clearQueuedPlayerActions(player.id);
       await showQueue(ctx, player.id, `Прибрано з черги: ${result.count}.`);
+      await refreshMainKeyboard(ctx);
       return;
     }
 
     if (arg === "cancel" || arg === "cancel-current") {
       const result = await cancelCurrentPlayerAction(player.id);
       await showQueue(ctx, player.id, `Скасовано поточних дій/відпочинку: ${result.count}.`);
+      await refreshMainKeyboard(ctx);
       return;
     }
 
@@ -78,6 +88,7 @@ export function registerActionQueueHandlers(bot: Bot) {
     const result = await clearQueuedPlayerActions(player.id);
     await safeAnswerCallbackQuery(ctx, `Прибрано: ${result.count}.`);
     await showQueue(ctx, player.id, `Прибрано з черги: ${result.count}.`);
+    await refreshMainKeyboard(ctx);
   });
 
   bot.callbackQuery("queue:cancel-current", async (ctx) => {
@@ -90,5 +101,6 @@ export function registerActionQueueHandlers(bot: Bot) {
     const result = await cancelCurrentPlayerAction(player.id);
     await safeAnswerCallbackQuery(ctx, `Скасовано: ${result.count}.`);
     await showQueue(ctx, player.id, `Скасовано поточних дій/відпочинку: ${result.count}.`);
+    await refreshMainKeyboard(ctx);
   });
 }

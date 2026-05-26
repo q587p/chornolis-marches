@@ -734,7 +734,7 @@ async function decayCorpse(creature: any) {
 
   const gone = await prisma.creature.updateMany({ where: { id: creature.id, isAlive: false, isGone: false }, data: { isGone: true, corpseDecayTicksLeft: 0, currentAction: "зникло, лишивши слід у землі" } });
   if (gone.count === 0) return "gone";
-  if (carriedByPlayerId) await removeDecayedCorpseFromInventory(carriedByPlayerId, creature.species);
+  if (carriedByPlayerId) await removeDecayedCorpseFromInventory(carriedByPlayerId, creature);
   await prisma.worldEvent.create({
     data: {
       type: "SYSTEM",
@@ -1156,17 +1156,17 @@ function runtimeTickStatusText() {
     `Tick #: ${tickNumber}`,
     "",
     "Дії під час втоми або для істот без quick-режиму:",
-    `- quick-дії гравця з витривалістю > 0: ${formatDuration(timing.actions.quickMs)}`,
+    `- quick-дії гравця зі снагою > 0: ${formatDuration(timing.actions.quickMs)}`,
     `- рух: ${timing.actions.moveTicks} тіків ≈ ${formatDuration(timing.actions.moveMs)}`,
     `- огляд/вистежування: ${timing.actions.lookTicks} тіків ≈ ${formatDuration(timing.actions.lookMs)}`,
     `- збір: ${timing.actions.gatherTicks} тіків ≈ ${formatDuration(timing.actions.gatherMs)}`,
     `- атака: ${timing.actions.attackTicks} тіків ≈ ${formatDuration(timing.actions.attackMs)} (×2 від руху за часом)`,
     "",
     "Відновлення:",
-    `- витривалість без відпочинку: +${timing.passiveStaminaRegenAmount} раз на ${timing.staminaRegenTicks} тіків ≈ ${formatDuration(timing.staminaRegenMs)}`,
-    `- витривалість під час відпочинку: +${timing.restStaminaRegenAmount} раз на ${timing.restStaminaRegenTicks} тіків ≈ ${formatDuration(timing.restStaminaRegenMs)}`,
-    `- HP без відпочинку: +1 раз на ${timing.passiveHealthRegenTicks} тіків ≈ ${formatDuration(timing.passiveHealthRegenMs)}`,
-    `- HP під час відпочинку: +1 раз на ${timing.restHealthRegenTicks} тіків ≈ ${formatDuration(timing.restHealthRegenMs)}`,
+    `- снага без відпочинку: +${timing.passiveStaminaRegenAmount} раз на ${timing.staminaRegenTicks} тіків ≈ ${formatDuration(timing.staminaRegenMs)}`,
+    `- снага під час відпочинку: +${timing.restStaminaRegenAmount} раз на ${timing.restStaminaRegenTicks} тіків ≈ ${formatDuration(timing.restStaminaRegenMs)}`,
+    `- життя без відпочинку: +1 раз на ${timing.passiveHealthRegenTicks} тіків ≈ ${formatDuration(timing.passiveHealthRegenMs)}`,
+    `- життя під час відпочинку: +1 раз на ${timing.restHealthRegenTicks} тіків ≈ ${formatDuration(timing.restHealthRegenMs)}`,
     "",
     `Регенерація ресурсів: раз на ${RESOURCE_REGEN_EVERY_TICKS} world ticks, +${RESOURCE_REGEN_AMOUNT}`,
     `Розмноження зайців: раз на ${RABBIT_REPRODUCTION_EVERY_TICKS} world ticks; виводок ${RABBIT_MIN_LITTER_SIZE}-${RABBIT_MAX_LITTER_SIZE}; світового ліміту немає`,

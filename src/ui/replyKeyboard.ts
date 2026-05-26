@@ -1,9 +1,11 @@
 import { Keyboard } from "grammy";
 import { prisma } from "../db";
+import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 
 type MainKeyboardState = {
   isAuto?: boolean;
   hasQueue?: boolean;
+  characterLabel?: string;
 };
 
 function normalizeState(input: MainKeyboardState | boolean = {}) {
@@ -15,12 +17,33 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   const state = normalizeState(stateOrAuto);
   const keyboard = new Keyboard().text("👀 Озирнутися");
   if (state.hasQueue) keyboard.text("📋 Черга");
-  keyboard.text("🧍 Персонаж").row();
+  keyboard.text(state.characterLabel ?? "🧍 Персонаж").row();
 
   return keyboard
     .text("☰ Меню")
     .resized()
     .persistent();
+}
+
+function resourceState(value: number, max: number, zeroLabel = "нема") {
+  if (value <= 0) return zeroLabel;
+  if (value > max) return "екстра";
+  const ratio = max > 0 ? value / max : 0;
+  if (ratio >= 1) return "повно";
+  if (ratio >= 0.75) return "багато";
+  if (ratio >= 0.4) return "середньо";
+  return "мало";
+}
+
+function lifeState(value: number, max: number) {
+  if (value <= 0) return "непритомн.";
+  return resourceState(value, max, "кепсько");
+}
+
+function characterButtonLabel(player: { hp: number; hpMax: number | null; stamina: number; staminaMax: number | null }) {
+  const hpMax = player.hpMax ?? BASE_HP;
+  const staminaMax = player.staminaMax ?? BASE_STAMINA;
+  return `🧍 Ж ${lifeState(player.hp, hpMax)} · С ${resourceState(player.stamina, staminaMax)}`;
 }
 
 export function buildMenuReplyKeyboard() {
@@ -49,5 +72,6 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
   return buildMainReplyKeyboard({
     isAuto,
     hasQueue: queueCount > 0 || player.isResting,
+    characterLabel: characterButtonLabel(player),
   });
 }

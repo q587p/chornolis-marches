@@ -1,4 +1,5 @@
 import { InlineKeyboard } from "grammy";
+import type { ResolvedTarget } from "../services/targets";
 
 type TargetRef = {
   type: "player" | "creature";
@@ -85,6 +86,14 @@ export function buildTargetActionKeyboard(target: Pick<TargetRef, "type" | "id" 
     .row();
 
   if (target.canGreet) keyboard.text("👋 Привітати", `social:greet:${target.type}:${target.id}:known`).row();
+  keyboard.text("↩️ Назад", "location:details").row();
+  return keyboard;
+}
+
+export function buildCorpseActionKeyboard(target: ResolvedTarget) {
+  const keyboard = new InlineKeyboard().text("👁 Оглянути ще раз", `social:inspect:${target.kind}:${target.id}:known`).row();
+  keyboard.text("🤲 Підібрати", `social:pickup:${target.kind}:${target.id}`).row();
+  if (target.canFreshen) keyboard.text("🔪 Освіжувати", `social:freshen:${target.kind}:${target.id}:known`).row();
   keyboard.text("↩️ Назад", "location:details").row();
   return keyboard;
 }

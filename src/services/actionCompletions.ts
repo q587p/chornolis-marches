@@ -12,7 +12,7 @@ import {
   gatherConfig,
 } from "../gameConfig";
 import { directionLabels } from "../ui/labels";
-import { buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
+import { buildCorpseActionKeyboard, buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
 import { renderLocationBrief, renderLocationDetails } from "./locations";
 import { notifyLocation, notifyLocationExcept } from "./notifications";
 import { getPlayerRestStaminaCap } from "./locationFeatures";
@@ -460,7 +460,14 @@ async function completeAttack(bot: Bot, action: WorldAction) {
   await notifyLocation(bot, player.currentLocationId, player.id, `Хтось атакує і вбиває ${target.forms.accusative}.`);
   await setActionStatus(action, "DONE");
   await logEvent("PLAYER_ACTION", "Player killed animal", `${target.kind}:${target.id}`, player.currentLocationId);
-  if (chatId) await bot.api.sendMessage(chatId, `⚔️ Ви атакували і вбили ${target.forms.accusative}. Труп лишився на землі.`);
+  if (chatId) {
+    const corpseTarget = await resolveTarget("creature", creature.id, player.currentLocationId);
+    await bot.api.sendMessage(
+      chatId,
+      `⚔️ Ви атакували і вбили ${target.forms.accusative}. Труп лишився на землі.`,
+      corpseTarget?.isCorpse ? { reply_markup: buildCorpseActionKeyboard(corpseTarget) } : undefined,
+    );
+  }
 }
 
 async function completeSay(bot: Bot, action: WorldAction) {
@@ -474,17 +481,29 @@ async function completeSay(bot: Bot, action: WorldAction) {
     if (!player || !player.currentLocationId) return void (await setActionStatus(action, "FAILED"));
     await spendPlayerStamina(bot, player.id, "SAY", chatId);
     await prisma.player.updateMany({ where: { id: player.id }, data: { says: { increment: 1 } } });
-    await notifyLocation(bot, player.currentLocationId, player.id, `Хтось каже: «${text}»`);
+    await notifyLocationExcept(
+      bot,
+      player.currentLocationId,
+      [player.id],
+      `Хтось каже:\n${quoteBlock(text)}`,
+      { parseMode: "HTML" },
+    );
     await setActionStatus(action, "DONE");
     await logEvent("SAY", "Player said something", text, player.currentLocationId);
-    if (chatId) await bot.api.sendMessage(chatId, `Ви кажете: «${text}»`);
+    if (chatId) await bot.api.sendMessage(chatId, `Ви кажете:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
     return;
   }
 
   const creature = action.creatureId ? await prisma.creature.findUnique({ where: { id: action.creatureId }, include: { species: true } }) : null;
   if (!creature || !creature.isAlive || creature.isGone) return void (await setActionStatus(action, "FAILED"));
   await prisma.creature.updateMany({ where: { id: creature.id }, data: { says: { increment: 1 }, activity: "SPEAKING", currentAction: "говорить" } });
-  await notifyLocation(bot, creature.locationId, -1, `${creature.name ?? creature.species.name} промовляє: «${text}»`);
+  await notifyLocationExcept(
+    bot,
+    creature.locationId,
+    [],
+    `${escapeHtml(creature.name ?? creature.species.name)} промовляє:\n${quoteBlock(text)}`,
+    { parseMode: "HTML" },
+  );
   await setActionStatus(action, "DONE");
   await logEvent("NPC_SAY", "Creature said something", text, creature.locationId);
 }

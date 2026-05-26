@@ -57,7 +57,7 @@ export async function resolveTarget(type: string, id: number, locationId: number
       isAnimal: false,
       isCorpse: false,
       canFreshen: false,
-      inspect: `Ви бачите ${forms.accusative}.\n\nHP: ${target.hp}/${target.hpMax ?? BASE_HP}\nСнага: ${target.stamina}\nГолод: ${target.hunger}\n\nСтатистика:\n${formatPlayerStats(target)}`,
+      inspect: `Ви бачите ${forms.accusative}.\n\nЖиття: ${target.hp}/${target.hpMax ?? BASE_HP}\nСнага: ${target.stamina}\nГолод: ${target.hunger}\n\nСтатистика:\n${formatPlayerStats(target)}`,
     };
   }
 
@@ -102,8 +102,8 @@ export async function resolveTarget(type: string, id: number, locationId: number
       isCorpse: false,
       canFreshen: false,
       inspect: isAnimal
-        ? `Це ${forms.nominative}.\n\nСтан: ${target.isAlive ? "жива" : "мертва"}\nHP: ${target.hp}\nСтать: ${formatSex(target.sex)}\nВік: ${target.age}\nТіків віку: ${target.ageTicks}\nДія: ${target.currentAction ?? "невідомо"}\n\nСтатистика:\n${formatCreatureStats(target)}`
-        : `${forms.nominative}\n\nСтан: ${target.isAlive ? "живий/активний" : "неактивний"}\nHP: ${target.hp}\nДія: ${target.currentAction ?? "невідомо"}\n\nСтатистика:\n${formatCreatureStats(target)}`,
+        ? `Це ${forms.nominative}.\n\nСтан: ${target.isAlive ? "жива" : "мертва"}\nЖиття: ${target.hp}\nСтать: ${formatSex(target.sex)}\nВік: ${target.age}\nТіків віку: ${target.ageTicks}\nДія: ${target.currentAction ?? "невідомо"}\n\nСтатистика:\n${formatCreatureStats(target)}`
+        : `${forms.nominative}\n\nСтан: ${target.isAlive ? "живий/активний" : "неактивний"}\nЖиття: ${target.hp}\nДія: ${target.currentAction ?? "невідомо"}\n\nСтатистика:\n${formatCreatureStats(target)}`,
     };
   }
 

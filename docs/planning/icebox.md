@@ -24,6 +24,7 @@ It is not a trash bin and not a promise. It is cold storage for ideas that need 
 - Moon phases and deep calendar simulation.
 - Web `/map`, shared map view service and future MUD-client gateway.
 - Personal chronicle / character memory: keep a player-specific record of what the character has seen, where they have been, which regions, locations, special signs, creatures, NPCs, objects and world events they personally witnessed, and when. This could power a later `Літопис`, journal, map memory or "where did I see that?" lookup without exposing unseen world knowledge.
+- Localization / i18n: keep Ukrainian as the canonical authored language and add a real localization layer for at least English as the first secondary locale. This should cover Telegram UI, commands/help text, web/status pages, system messages, release/news text where relevant, and authored world content such as location descriptions, features and species names. Plan for grammar-sensitive strings rather than raw string replacement: Ukrainian cases, English articles/plurals, gendered creature text, quote formatting, and terminology choices should live in locale-aware helpers. Start only after the core text surfaces stabilize enough to avoid churn.
 - `seedWorld()` refactor for `prisma/seed.ts`, once the current static world seed stabilizes.
 - Deep bridge mechanics: bridge condition, repairs, risky crossings and links to future fishing.
 - Advanced persistent automation: auto-behavior presets, safety rules, profession-aware choices and temporary delegation to companions/NPCs.

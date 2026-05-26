@@ -7,6 +7,7 @@ import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
 import { disablePlayerAuto, enablePlayerAuto, isPlayerAutoEnabled } from "./auto";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { formatFatigueText, formatPlayerStats } from "../utils/playerText";
+import { resourceTypeDisplayName } from "../services/corpses";
 
 function minutes(ms: number) {
   return Math.max(1, Math.ceil(ms / 60_000));
@@ -86,7 +87,7 @@ async function renderCharacterView(telegramId: number) {
 
   const autoEnabled = Boolean(player.isAutoEnabled || isPlayerAutoEnabled(telegramId));
   const autoText = autoEnabled ? "увімкнено 🤖" : "вимкнено";
-  const items = player.resources.length ? player.resources.map((i) => `${i.resourceType.name} ×${i.amount}`).join("\n") : "порожньо";
+  const items = player.resources.length ? player.resources.map((i) => `${resourceTypeDisplayName(i.resourceType)} ×${i.amount}`).join("\n") : "порожньо";
   const staminaMax = player.staminaMax ?? BASE_STAMINA;
   const hpMax = player.hpMax ?? BASE_HP;
   const locationText = player.currentLocation
@@ -95,7 +96,7 @@ async function renderCharacterView(telegramId: number) {
   const nameApprovedText = player.isNameApproved ? "Ім’я схвалене." : "Ім’я ще не схвалене. Зверніться до писарів Порубіжжя.";
 
   return {
-    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}\n\nHP: ${player.hp}/${hpMax}\nСнага: ${player.stamina}/${staminaMax}\nСтан: ${formatFatigueText(player)}${recoveryText(player)}\nГолод: ${player.hunger}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}\nЗареєстровано: ${formatDateTime(player.createdAt)}\n\nРечі:\n${items}\n\nСтатистика:\n${formatPlayerStats(player, { includeRestStats: true })}`,
+    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}\n\nЖиття: ${player.hp}/${hpMax}\nСнага: ${player.stamina}/${staminaMax}\nСтан: ${formatFatigueText(player)}${recoveryText(player)}\nГолод: ${player.hunger}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}\nЗареєстровано: ${formatDateTime(player.createdAt)}\n\nРечі:\n${items}\n\nСтатистика:\n${formatPlayerStats(player, { includeRestStats: true })}`,
     keyboard: buildCharacterAutoKeyboard(autoEnabled),
   };
 }
@@ -122,7 +123,7 @@ export function registerPlayerHandlers(bot: Bot) {
     await showCharacter(ctx.from.id, (text, options) => ctx.reply(text, options));
   });
 
-  bot.hears(["Персонаж", "🧍 Персонаж"], async (ctx) => {
+  bot.hears(/^(?:🧍\s*)?Персонаж$|^🧍\s+Ж\s+/u, async (ctx) => {
     if (!ctx.from) return;
     await showCharacter(ctx.from.id, (text, options) => ctx.reply(text, options));
   });

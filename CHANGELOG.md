@@ -9,6 +9,33 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.11.2 - Player action responsiveness, chat log and UI terminology - 12026-05-26
+
+### Added
+
+- Added `/chat` for admins with paginated recent speech, plus `/chat` and `/chat.json` pages on the status server.
+- Added fresh movement tracks to detailed `/examine` output so close inspection shows who recently passed through the місцина.
+- Added a dynamic character button that shows qualitative `Життя` and `Снага` state at a glance.
+
+### Changed
+
+- Player action processing now stays responsive even when the creature queue has a large backlog; creature queue work is handled separately from player completions.
+- Ordinary `/say` and NPC speech now render spoken text as Telegram quote blocks.
+- Killing an animal now immediately shows the corpse action buttons, including pickup and freshening when available.
+- Player-facing health and stamina text in touched surfaces now prefers `Життя` and `Снага` over `HP` and technical endurance wording.
+- Corpse inventory labels now use Ukrainian genitive forms such as `труп зайця`, with sex-aware forms for rabbits where known.
+
+### Fixed
+
+- Clearing or cancelling the action queue refreshes the main keyboard after the queue becomes empty.
+- Legacy corpse item keys now display with a readable Ukrainian fallback instead of raw species names.
+
+### Documentation
+
+- Added planning notes for visible local pickup/gather feedback, interactive map features, localization, vegetation recovery and deeper predator/resource ecology.
+
+---
+
 ## 0.11.1 - Creature queue throughput - 12026-05-26
 
 ### Changed

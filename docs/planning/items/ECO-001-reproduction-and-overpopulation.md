@@ -129,6 +129,7 @@ Players can affect balance by:
 - Full genetics.
 - Detailed mating pairs.
 - Complex seasonal breeding.
+- Predator mate-seeking, den/nest preparation, pregnancy or delayed litters.
 - Full ecosystem carrying capacity formulas.
 - Settlement agriculture damage.
 

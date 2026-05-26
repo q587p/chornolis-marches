@@ -98,6 +98,20 @@ const KNOWN_FORMS: Record<string, Partial<NameForms> & { gender?: Gender; animac
   },
 };
 
+const KNOWN_SEXED_SPECIES_FORMS: Record<string, Partial<Record<"MALE" | "FEMALE", NameForms>>> = {
+  rabbit: {
+    FEMALE: {
+      nominative: "зайчиха",
+      genitive: "зайчихи",
+      dative: "зайчисі",
+      accusative: "зайчиху",
+      instrumental: "зайчихою",
+      locative: "зайчисі",
+      vocative: "зайчихо",
+    },
+  },
+};
+
 export function normalizeCharacterName(raw: string) {
   return raw
     .normalize("NFKC")
@@ -264,15 +278,20 @@ export function speciesForms(species: any): NameForms {
 }
 
 export function creatureForms(creature: any): NameForms {
-  const base = creature.name ? guessNameForms(creature.name, creature.species?.grammaticalGender, creature.species?.animacy) : speciesForms(creature.species);
+  const speciesKey = typeof creature.species?.key === "string" ? creature.species.key : undefined;
+  const sex: "MALE" | "FEMALE" | undefined = creature.sex === "MALE" || creature.sex === "FEMALE" ? creature.sex : undefined;
+  const sexedSpeciesForms = speciesKey && sex ? KNOWN_SEXED_SPECIES_FORMS[speciesKey]?.[sex] : undefined;
+  const base = creature.name
+    ? guessNameForms(creature.name, creature.species?.grammaticalGender, creature.species?.animacy)
+    : sexedSpeciesForms ?? speciesForms(creature.species);
   return {
-    nominative: creature.name ?? creature.species.name,
-    genitive: creature.nameGenitive ?? creature.species?.nameGenitive ?? base.genitive,
-    dative: creature.nameDative ?? creature.species?.nameDative ?? base.dative,
-    accusative: creature.nameAccusative ?? creature.species?.nameAccusative ?? base.accusative,
-    instrumental: creature.nameInstrumental ?? creature.species?.nameInstrumental ?? base.instrumental,
-    locative: creature.nameLocative ?? creature.species?.nameLocative ?? base.locative,
-    vocative: creature.nameVocative ?? creature.species?.nameVocative ?? base.vocative,
+    nominative: creature.name ?? sexedSpeciesForms?.nominative ?? creature.species.name,
+    genitive: creature.nameGenitive ?? sexedSpeciesForms?.genitive ?? creature.species?.nameGenitive ?? base.genitive,
+    dative: creature.nameDative ?? sexedSpeciesForms?.dative ?? creature.species?.nameDative ?? base.dative,
+    accusative: creature.nameAccusative ?? sexedSpeciesForms?.accusative ?? creature.species?.nameAccusative ?? base.accusative,
+    instrumental: creature.nameInstrumental ?? sexedSpeciesForms?.instrumental ?? creature.species?.nameInstrumental ?? base.instrumental,
+    locative: creature.nameLocative ?? sexedSpeciesForms?.locative ?? creature.species?.nameLocative ?? base.locative,
+    vocative: creature.nameVocative ?? sexedSpeciesForms?.vocative ?? creature.species?.nameVocative ?? base.vocative,
   };
 }
 

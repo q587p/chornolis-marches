@@ -14,9 +14,11 @@ import {
 } from "../gameConfig";
 import { buildFatigueRestKeyboard } from "../ui/keyboards";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
+import { setLastRuntimeError } from "../runtimeState";
 import { actionPriority, actionTitle, effectivePlayerActionDurationMs } from "./actionRules";
 import { fatigueStateFor, recoverStamina } from "./actionRecovery";
 import { getPlayerRestStaminaCap } from "./locationFeatures";
+import { logEvent } from "./worldEvents";
 
 export type ActorRef =
   | { actorType: "PLAYER"; playerId: number; creatureId?: never }
@@ -64,6 +66,7 @@ const CREATURE_RUNNING_ACTION_BATCH = Number(process.env.CREATURE_RUNNING_ACTION
 const CREATURE_COMPLETION_CONCURRENCY = Number(process.env.CREATURE_COMPLETION_CONCURRENCY || 25);
 const PLAYER_QUEUED_ACTION_BATCH = 200;
 const CREATURE_QUEUED_ACTION_BATCH = 1000;
+let creatureQueueProcessing = false;
 
 async function runWithConcurrency<T>(items: T[], concurrency: number, worker: (item: T) => Promise<void>) {
   const limit = Math.max(1, Math.floor(concurrency));
@@ -472,6 +475,30 @@ async function startQueuedActionsForActorType(actorType: WorldActorType, take: n
   }
 }
 
+async function processCreatureActionQueue(bot: Bot, completeAction: (bot: Bot, action: WorldAction) => Promise<unknown>) {
+  if (creatureQueueProcessing) return;
+  creatureQueueProcessing = true;
+  try {
+    const now = new Date();
+    const dueCreatureRunning = await prisma.worldAction.findMany({
+      where: { actorType: "CREATURE", status: "RUNNING", executeAt: { lte: now } },
+      orderBy: [{ executeAt: "asc" }, { id: "asc" }],
+      take: CREATURE_RUNNING_ACTION_BATCH,
+    });
+    await runWithConcurrency(dueCreatureRunning, CREATURE_COMPLETION_CONCURRENCY, async (action) => {
+      try {
+        await completeAction(bot, action);
+      } catch (error) {
+        if (!isMissingRecordError(error)) throw error;
+      }
+    });
+
+    await startQueuedActionsForActorType("CREATURE", CREATURE_QUEUED_ACTION_BATCH);
+  } finally {
+    creatureQueueProcessing = false;
+  }
+}
+
 export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, action: WorldAction) => Promise<unknown>) {
   await recoverStamina(bot);
   const now = new Date();
@@ -495,19 +522,9 @@ export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, ac
     await refreshKeyboardWhenPlayerQueueEnds(bot, action);
   }
 
-  const dueCreatureRunning = await prisma.worldAction.findMany({
-    where: { actorType: "CREATURE", status: "RUNNING", executeAt: { lte: now } },
-    orderBy: [{ executeAt: "asc" }, { id: "asc" }],
-    take: CREATURE_RUNNING_ACTION_BATCH,
+  void processCreatureActionQueue(bot, completeAction).catch((error) => {
+    setLastRuntimeError(error);
+    console.error("Creature action queue failed:", error);
+    logEvent("ERROR", "Creature action queue failed", String(error)).catch(() => undefined);
   });
-  await runWithConcurrency(dueCreatureRunning, CREATURE_COMPLETION_CONCURRENCY, async (action) => {
-    try {
-      await completeAction(bot, action);
-    } catch (error) {
-      if (!isMissingRecordError(error)) throw error;
-    }
-  });
-
-  await startQueuedActionsForActorType("PLAYER", PLAYER_QUEUED_ACTION_BATCH);
-  await startQueuedActionsForActorType("CREATURE", CREATURE_QUEUED_ACTION_BATCH);
 }

@@ -1,13 +1,38 @@
 import { prisma } from "../db";
+import { creatureForms } from "./grammar";
 
 const CARRIED_CORPSE_MARKER = "carried_corpse_by_player:";
 
-export function corpseResourceKey(speciesKey: string) {
-  return `corpse_${speciesKey}`;
+type CorpseResourceCreature = {
+  sex?: string | null;
+  species: {
+    key: string;
+    name: string;
+    nameGenitive?: string | null;
+    nameDative?: string | null;
+    nameAccusative?: string | null;
+    nameInstrumental?: string | null;
+    nameLocative?: string | null;
+    nameVocative?: string | null;
+  };
+};
+
+export function corpseResourceKey(creature: CorpseResourceCreature | { key: string }) {
+  if ("species" in creature) {
+    const sexSuffix = creature.sex ? `_${String(creature.sex).toLowerCase()}` : "";
+    return `corpse_${creature.species.key}${sexSuffix}`;
+  }
+  return `corpse_${creature.key}`;
 }
 
-export function corpseResourceName(speciesName: string) {
-  return `труп ${speciesName}`;
+export function corpseResourceName(creature: CorpseResourceCreature) {
+  return `труп ${creatureForms(creature).genitive}`;
+}
+
+export function resourceTypeDisplayName(resourceType: { key: string; name: string }) {
+  if (resourceType.key === "corpse_rabbit" || resourceType.key === "corpse_rabbit_male") return "труп зайця";
+  if (resourceType.key === "corpse_rabbit_female") return "труп зайчихи";
+  return resourceType.name;
 }
 
 export function carriedCorpseAction(playerId: number, decayLeft: number) {
@@ -21,21 +46,22 @@ export function carriedCorpseOwnerId(currentAction: string | null | undefined) {
   return Number.isSafeInteger(playerId) ? playerId : null;
 }
 
-export async function ensureCorpseResourceType(species: { key: string; name: string }) {
-  const key = corpseResourceKey(species.key);
+export async function ensureCorpseResourceType(creature: CorpseResourceCreature) {
+  const key = corpseResourceKey(creature);
+  const name = corpseResourceName(creature);
   return prisma.resourceType.upsert({
     where: { key },
-    update: { name: corpseResourceName(species.name) },
+    update: { name },
     create: {
       key,
-      name: corpseResourceName(species.name),
+      name,
       description: "Підібраний труп істоти. Поки він у речах, він усе ще псується разом із тілом у світі.",
     },
   });
 }
 
-export async function addCorpseToInventory(playerId: number, creature: { id: number; corpseDecayTicksLeft: number | null; species: { key: string; name: string; corpseDecayTicks: number } }) {
-  const resourceType = await ensureCorpseResourceType(creature.species);
+export async function addCorpseToInventory(playerId: number, creature: { id: number; sex?: string | null; corpseDecayTicksLeft: number | null; species: CorpseResourceCreature["species"] & { corpseDecayTicks: number } }) {
+  const resourceType = await ensureCorpseResourceType(creature);
   const decayLeft = creature.corpseDecayTicksLeft ?? creature.species.corpseDecayTicks;
 
   await prisma.$transaction(async (tx) => {
@@ -55,8 +81,8 @@ export async function addCorpseToInventory(playerId: number, creature: { id: num
   return resourceType;
 }
 
-export async function removeDecayedCorpseFromInventory(playerId: number, species: { key: string }) {
-  const resourceType = await prisma.resourceType.findUnique({ where: { key: corpseResourceKey(species.key) } });
+export async function removeDecayedCorpseFromInventory(playerId: number, creature: CorpseResourceCreature) {
+  const resourceType = await prisma.resourceType.findUnique({ where: { key: corpseResourceKey(creature) } });
   if (!resourceType) return;
 
   const item = await prisma.playerResource.findUnique({

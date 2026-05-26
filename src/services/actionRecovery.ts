@@ -56,7 +56,7 @@ function hpRecoveryMessages(before: number, after: number, max: number) {
   } else if (before < max && after >= max) {
     messages.push("Рани більше не заважають рухатися: здоров’я повністю відновилося.");
   } else if (after > before) {
-    messages.push(`Тіло потроху відновлюється. HP: ${after}/${max}.`);
+    messages.push(`Тіло потроху відновлюється. Життя: ${after}/${max}.`);
   }
   return messages;
 }
@@ -71,7 +71,7 @@ async function knockOutPlayer(bot: Bot, player: { id: number }, chatId?: number 
     data: { hp: 0, isResting: true, fatigueState: "VERY_TIRED", lastHpRegenAt: new Date(), lastStaminaRegenAt: new Date() },
   });
   if (chatId) {
-    await bot.api.sendMessage(chatId, "HP впало до 0. Ви втрачаєте свідомість. Черга очищена, починається відпочинок. Поки HP не підніметься хоча б до 1, доступний лише відпочинок.", { reply_markup: buildFatigueRestKeyboard() });
+    await bot.api.sendMessage(chatId, "Життя впало до 0. Ви втрачаєте свідомість. Черга очищена, починається відпочинок. Поки життя не підніметься хоча б до 1, доступний лише відпочинок.", { reply_markup: buildFatigueRestKeyboard() });
   }
 }
 

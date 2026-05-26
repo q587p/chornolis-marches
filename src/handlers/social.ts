@@ -1,20 +1,12 @@
 import { Bot, InlineKeyboard } from "grammy";
 import { getPlayerByTelegramId } from "../services/players";
-import { buildTargetActionKeyboard } from "../ui/keyboards";
+import { buildCorpseActionKeyboard, buildTargetActionKeyboard } from "../ui/keyboards";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { actionDurationMs, performOrQueuePlayerAction } from "../services/actionQueue";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { resolveTarget, type ResolvedTarget } from "../services/targets";
 import { prisma } from "../db";
-import { addCorpseToInventory } from "../services/corpses";
-
-function buildCorpseActionKeyboard(target: ResolvedTarget) {
-  const keyboard = new InlineKeyboard().text("👁 Оглянути ще раз", `social:inspect:${target.kind}:${target.id}:known`).row();
-  keyboard.text("🤲 Підібрати", `social:pickup:${target.kind}:${target.id}`).row();
-  if (target.canFreshen) keyboard.text("🔪 Освіжувати", `social:freshen:${target.kind}:${target.id}:known`).row();
-  keyboard.text("↩️ Назад", "location:details").row();
-  return keyboard;
-}
+import { addCorpseToInventory, resourceTypeDisplayName } from "../services/corpses";
 
 function buildActionKeyboard(target: ResolvedTarget, again = false) {
   if (target.isCorpse) return buildCorpseActionKeyboard(target);
@@ -85,7 +77,7 @@ export function registerSocialHandlers(bot: Bot) {
     await safeAnswerCallbackQuery(ctx, "Підібрано.");
     await editOrReply(
       ctx,
-      `🤲 Ви підібрали ${resourceType.name}.\n\nВін лежить у ваших речах, але ще псується. Якщо забаритися, від нього лишиться тільки слід.`,
+      `🤲 Ви підібрали ${resourceTypeDisplayName(resourceType)}.\n\nВін лежить у ваших речах, але ще псується. Якщо забаритися, від нього лишиться тільки слід.`,
       new InlineKeyboard().text("↩️ Назад", "location:details").row(),
     );
   });

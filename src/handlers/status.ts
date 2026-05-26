@@ -3,6 +3,7 @@ import { CreatureActivity, CreatureAge } from "@prisma/client";
 import { config } from "../config";
 import { prisma } from "../db";
 import { BASE_STAMINA, REST_ADMIN_STAMINA_CAP_MULTIPLIER } from "../gameConfig";
+import { chatLogWindowLabel, chatLogWindowToken, getChatLog, normalizeChatLogWindow, type ChatLogWindow } from "../services/chatLog";
 import { getEcologyStats } from "../services/ecologyStats";
 import { getStatusData } from "../services/status";
 import { getPlayerByTelegramId } from "../services/players";
@@ -13,6 +14,7 @@ const ADMIN_COMMANDS = [
   "/adminHelp — список команд",
   "/world — стан світу й останні події",
   "/stat — коротка екологічна статистика й посилання на веб-/stat",
+  "/chat [hours|all] — репліки гравців і NPC з пагінацією; веб-/chat",
   "/all — усі живі персонажі та істоти",
   "/all dead — усі записи істот, включно з inactive/dead/corpse/gone",
   "/look або кнопка 👀 Озирнутися — показати поточну місцину",
@@ -36,6 +38,7 @@ const ADMIN_COMMANDS = [
 
 const ALL_PAGE_MAX_CHARS = 3300;
 const LOCATION_PAGE_MAX_CHARS = 3300;
+const CHAT_LOG_PAGE_SIZE = 12;
 
 type UniqueNpcSpec = {
   speciesKey: string;
@@ -222,6 +225,49 @@ function buildLocationAllPaginationKeyboard(page: number, totalPages: number) {
   return keyboard;
 }
 
+function formatChatEventTime(value: Date) {
+  return new Intl.DateTimeFormat("uk-UA", {
+    timeZone: "Europe/Kyiv",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(value);
+}
+
+function buildChatLogKeyboard(window: ChatLogWindow, page: number, totalPages: number) {
+  const keyboard = new InlineKeyboard().url("Відкрити веб-/chat", `${config.publicBaseUrl}/chat?hours=${chatLogWindowToken(window)}`);
+  if (totalPages > 1) {
+    keyboard.row();
+    if (page > 0) keyboard.text("◀️ Назад", `chat:${chatLogWindowToken(window)}:${page - 1}`);
+    keyboard.text(`${page + 1}/${totalPages}`, "chat:noop");
+    if (page < totalPages - 1) keyboard.text("Далі ▶️", `chat:${chatLogWindowToken(window)}:${page + 1}`);
+  }
+  return keyboard;
+}
+
+async function buildChatLogPage(window: ChatLogWindow, requestedPage: number) {
+  const log = await getChatLog({ window, page: requestedPage, perPage: CHAT_LOG_PAGE_SIZE });
+  const page = Math.max(0, Math.min(log.page, log.totalPages - 1));
+  const lines = log.events.map((event) => {
+    const location = event.location ? ` @ ${event.location.name}` : "";
+    const text = event.description ? `\n«${event.description}»` : "";
+    return `#${event.id} ${formatChatEventTime(event.createdAt)} ${event.type}${location}\n${event.title}${text}`;
+  });
+
+  return {
+    text: [
+      "Репліки Порубіжжя",
+      `Вікно: ${chatLogWindowLabel(log.window)}. Сторінка ${page + 1}/${log.totalPages}; записів ${log.total}.`,
+      "",
+      lines.length ? lines.join("\n\n") : "За цей час реплік не знайдено.",
+      "",
+      "Формат: /chat [години|all]. Наприклад: /chat 1 або /chat all.",
+    ].join("\n"),
+    keyboard: buildChatLogKeyboard(log.window, page, log.totalPages),
+  };
+}
+
 async function buildLocationAllPage(requestedPage: number) {
   const locations = await prisma.cellLocation.findMany({ include: { region: true }, orderBy: [{ z: "asc" }, { y: "desc" }, { x: "asc" }] });
   const lines = locations.map((l) => `${l.key} — ${l.name} (${l.x},${l.y},${l.z}); danger=${l.dangerLevel}; region=${l.region.name}`);
@@ -242,14 +288,14 @@ async function buildAllPage(showDead: boolean, requestedPage: number) {
 
   const playerLines = players.map((p) => {
     const loc = p.currentLocation ? `${p.currentLocation.name} (${p.currentLocation.x},${p.currentLocation.y},${p.currentLocation.z})` : "невідомо";
-    return `#${p.id} ${p.firstName ?? p.username ?? "мандрівник"} — ${loc}; HP ${p.hp}; stamina ${p.stamina}; hunger ${p.hunger}`;
+    return `#${p.id} ${p.firstName ?? p.username ?? "мандрівник"} — ${loc}; життя ${p.hp}; stamina ${p.stamina}; hunger ${p.hunger}`;
   });
 
   const creatureLines = creatures.map((c) => {
     const loc = c.location ? `${c.location.name} (${c.location.x},${c.location.y},${c.location.z})` : "невідомо";
     const state = c.isGone ? "gone" : c.isAlive ? "alive" : "corpse/inactive";
     const decay = !c.isAlive && !c.isGone ? `; decay ${c.corpseDecayTicksLeft ?? "?"}` : "";
-    return `#${c.id} ${c.name ?? c.species.name} [${c.species.key}] — ${loc}; ${state}; HP ${c.hp}; age ${c.age}/${c.ageTicks}; ${c.activity ?? "IDLE"}; ${c.currentAction ?? "без дії"}${decay}`;
+    return `#${c.id} ${c.name ?? c.species.name} [${c.species.key}] — ${loc}; ${state}; життя ${c.hp}; age ${c.age}/${c.ageTicks}; ${c.activity ?? "IDLE"}; ${c.currentAction ?? "без дії"}${decay}`;
   });
 
   const bodyLines = [
@@ -340,7 +386,7 @@ export function registerStatusHandlers(bot: Bot) {
   bot.command(["addCreatureHelp", "addcreaturehelp"], async (ctx) => {
     const species = await prisma.creatureSpecies.findMany({ where: { kind: "ANIMAL" }, orderBy: { key: "asc" } });
     const lines = species.map(
-      (s) => `${s.key} — ${s.name}; HP=${s.baseHp}; diet=${s.diet}; lifecycle=${s.childTicks}/${s.youngTicks}/${s.adultTicks}/${s.oldTicks}; corpse=${s.corpseDecayTicks}`
+      (s) => `${s.key} — ${s.name}; життя=${s.baseHp}; diet=${s.diet}; lifecycle=${s.childTicks}/${s.youngTicks}/${s.adultTicks}/${s.oldTicks}; corpse=${s.corpseDecayTicks}`
     );
     await ctx.reply(
       `🐾 Можливі тварини для /addCreature\n\n${lines.join("\n") || "немає"}\n\nФормат:\n/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD]\n\nПриклади:\n/addCreature rabbit center_chornolis_edge 3\n/addCreature mouse 0,0,0 5 YOUNG\n/addCreature wolf south_wolf_track 1 OLD`
@@ -363,6 +409,30 @@ export function registerStatusHandlers(bot: Bot) {
   bot.command(["stat", "stats"], async (ctx) => {
     const stat = await buildStatBrief();
     await ctx.reply(stat.text, { reply_markup: stat.keyboard });
+  });
+
+  bot.command("chat", async (ctx) => {
+    const window = normalizeChatLogWindow(ctx.match?.trim());
+    const page = await buildChatLogPage(window, 0);
+    await ctx.reply(page.text, { reply_markup: page.keyboard });
+  });
+
+  bot.callbackQuery(/^chat:(all|\d+(?:\.\d+)?):(\d+)$/, async (ctx) => {
+    const window = normalizeChatLogWindow(ctx.match[1]);
+    const requestedPage = Number(ctx.match[2]);
+    const page = await buildChatLogPage(window, Number.isFinite(requestedPage) ? requestedPage : 0);
+    await ctx.answerCallbackQuery();
+
+    if (ctx.callbackQuery.message) {
+      await ctx.editMessageText(page.text, { reply_markup: page.keyboard });
+      return;
+    }
+
+    await ctx.reply(page.text, { reply_markup: page.keyboard });
+  });
+
+  bot.callbackQuery("chat:noop", async (ctx) => {
+    await ctx.answerCallbackQuery();
   });
 
   bot.command(["restAdmin", "restadmin"], async (ctx) => {

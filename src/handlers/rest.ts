@@ -34,7 +34,7 @@ async function startRest(ctx: any) {
   const max = player.staminaMax ?? BASE_STAMINA;
   const hpMax = player.hpMax ?? BASE_HP;
   if (player.stamina >= max && player.hp >= hpMax && !player.isResting) {
-    await replyOrEdit(ctx, `Ви вже відпочили й готові до дій. HP: ${player.hp}/${hpMax}. Снага: ${player.stamina}/${max}.`);
+    await replyOrEdit(ctx, `Ви вже відпочили й готові до дій. Життя: ${player.hp}/${hpMax}. Снага: ${player.stamina}/${max}.`);
     return;
   }
 

@@ -9,6 +9,16 @@ import { escapeHtml } from "../utils/text";
 const COMPACT_EXIT_ORDER = ["NORTH", "WEST", "SOUTH", "EAST", "UP", "DOWN", "INSIDE", "OUTSIDE"];
 const GATHERABLE_RESOURCE_KEYS = ["berries", "mushrooms", "herbs"] as const;
 const TARGET_TEXT_LIMIT = 8;
+const FROM_DIRECTION_LABELS: Record<string, string> = {
+  NORTH: "з півдня",
+  EAST: "із заходу",
+  SOUTH: "з півночі",
+  WEST: "зі сходу",
+  UP: "знизу",
+  DOWN: "згори",
+  INSIDE: "ззовні",
+  OUTSIDE: "зсередини",
+};
 
 type LocationRenderOptions = {
   targetPage?: number;
@@ -52,7 +62,7 @@ function isInteractiveFeature(feature: any) {
 function featureLine(feature: any) {
   const parts = [`${featureIcon(feature)} ${feature.name}`];
   if (feature.providesLight) parts.push("дає світло");
-  if (feature.restStaminaCapMultiplier) parts.push(`відпочинок до ×${feature.restStaminaCapMultiplier} витривалости`);
+  if (feature.restStaminaCapMultiplier) parts.push(`відпочинок до ×${feature.restStaminaCapMultiplier} снаги`);
   return parts.join(" — ");
 }
 
@@ -186,6 +196,29 @@ function visibleTargetsText(targets: ReturnType<typeof visibleTargets>, activeAc
   return `\n\nПоруч:\n${lines.join("\n")}`;
 }
 
+function formatTrackLine(track: any, locationId: number) {
+  const direction = track.fromLocationId === locationId
+    ? `пішло на ${directionLabels[track.direction].toLowerCase()}`
+    : `прийшло ${FROM_DIRECTION_LABELS[track.direction] ?? "звідкись"}`;
+  const freshness = track.strength >= 3 ? "свіжий" : track.strength === 2 ? "помітний" : "ледь помітний";
+  return `- ${freshness} слід: ${track.label}; ${direction}`;
+}
+
+async function visibleTracksText(locationId: number) {
+  const now = new Date();
+  const tracks = await prisma.worldTrack.findMany({
+    where: {
+      expiresAt: { gt: now },
+      OR: [{ fromLocationId: locationId }, { toLocationId: locationId }],
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: 8,
+  });
+
+  if (!tracks.length) return "";
+  return `\n\nСвіжі сліди:\n${tracks.map((track) => escapeHtml(formatTrackLine(track, locationId))).join("\n")}`;
+}
+
 async function resourceButtonData(resources: any[], viewerPlayerId?: number) {
   const quick = await usesQuickPlayerActionDuration(viewerPlayerId);
   return resources
@@ -268,8 +301,8 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   const resourcesText = resourceLines.length ? `\n\nВи помічаєте:\n${resourceLines.join("\n")}` : "";
 
   const livingAnimals = location.creatures.filter((c) => isVisibleLivingCreature(c) && c.species.kind === "ANIMAL");
-  const tracksText = livingAnimals.length
-    ? `\n\nСліди та рух:\n${livingAnimals
+  const animalMovementText = livingAnimals.length
+    ? `\n\nРух поруч:\n${livingAnimals
         .slice(0, 8)
         .map((c) => {
           const ageText = c.ageTicks !== undefined && c.age ? ` (${String(c.age).toLowerCase()}, ${c.ageTicks} тіків)` : "";
@@ -277,6 +310,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
         })
         .join("\n")}${livingAnimals.length > 8 ? `\n- ...і ще ${livingAnimals.length - 8}` : ""}`
     : "";
+  const tracksText = await visibleTracksText(location.id);
 
   const corpses = location.creatures.filter(isVisibleCorpse);
   const corpsesText = corpses.length
@@ -305,7 +339,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   addInlineRows(keyboard, buildMovementKeyboard(location.exitsFrom));
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location)}\n\n<i>Ви роздивляєтесь.</i>\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}\n\n${escapeHtml(detailedExitsText(location.exitsFrom))}${resourcesText}${charactersText}${tracksText}${corpsesText}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location)}\n\n<i>Ви роздивляєтесь.</i>\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}\n\n${escapeHtml(detailedExitsText(location.exitsFrom))}${resourcesText}${charactersText}${tracksText}${animalMovementText}${corpsesText}`,
     keyboard,
   };
 }
