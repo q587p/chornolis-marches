@@ -40,7 +40,7 @@ export function formatPlayerStats(player: PlayerStats, options: { includeRestSta
     `Вдалого збору: ${player.successfulGathers} (${formatPercent(player.successfulGathers, player.gatherAttempts)})`,
     `Зібрано ягід: ${player.berriesGathered}`,
     `Зібрано грибів: ${player.mushroomsGathered}`,
-    `Зібрано трав: ${player.herbsGathered}`,
+    `Зібрано лікарських трав: ${player.herbsGathered}`,
     `Убито тварин: ${player.animalsKilled}`,
   ];
 

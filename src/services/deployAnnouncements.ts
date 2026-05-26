@@ -35,10 +35,41 @@ async function readLatestNewsSummary() {
   }
 }
 
+function parseVersion(version: string) {
+  const match = version.match(/^(\d+)\.(\d+)\.(\d+)$/);
+  if (!match) return null;
+  return match.slice(1).map((part) => Number(part));
+}
+
+function compareVersions(left: string, right: string) {
+  const parsedLeft = parseVersion(left);
+  const parsedRight = parseVersion(right);
+  if (!parsedLeft || !parsedRight) return left === right ? 0 : -1;
+
+  for (let i = 0; i < parsedLeft.length; i++) {
+    const diff = parsedLeft[i] - parsedRight[i];
+    if (diff !== 0) return diff;
+  }
+  return 0;
+}
+
+async function hasAnnouncedSameOrNewerDeploy() {
+  const deployEvents = await prisma.worldEvent.findMany({
+    where: { type: "SYSTEM", title: { startsWith: "DEPLOY:" } },
+    select: { title: true },
+    orderBy: { id: "desc" },
+    take: 20,
+  });
+
+  return deployEvents.some((event) => {
+    const announcedVersion = event.title.replace(/^DEPLOY:/, "");
+    return compareVersions(announcedVersion, config.appVersion) >= 0;
+  });
+}
+
 export async function announceWorldUpdatedOnce(bot: Bot) {
   const eventTitle = `DEPLOY:${config.appVersion}`;
-  const alreadySent = await prisma.worldEvent.findFirst({ where: { type: "SYSTEM", title: eventTitle } });
-  if (alreadySent) return;
+  if (await hasAnnouncedSameOrNewerDeploy()) return;
 
   const latestNews = await readLatestNewsSummary();
   const players = await prisma.player.findMany({ select: { telegramId: true } });

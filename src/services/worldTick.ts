@@ -769,7 +769,7 @@ async function tickHerbalist(c: any) {
   }
 
   const exit = pick(c.location.exitsFrom);
-  if (isExit(exit)) return queueMove(c, exit, "шукає трави");
+  if (isExit(exit)) return queueMove(c, exit, "шукає лікарські трави");
   await enqueueCreatureAction({ creatureId: c.id, type: "REST", payload: {}, durationMs: actionDurationMs("REST", c.stamina) });
   return "queuedRest";
 }

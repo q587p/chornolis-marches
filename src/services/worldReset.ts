@@ -1,60 +1,21 @@
 import fs from "fs";
 import path from "path";
 import { Prisma } from "@prisma/client";
+import {
+  STARTER_MICE,
+  STARTER_PREDATORS,
+  STARTER_RABBITS,
+  starterAnimalAction,
+  starterAnimalAgeTicks,
+  starterAnimalHp,
+  type StarterAnimalGroup,
+  type StarterAnimalSpeciesKey,
+} from "../data/starterAnimals";
 import { prisma } from "../db";
 
 const START_LOCATION_KEY = "start_border_camp";
 const LISOVYK_NAME = "Дід лісовик";
 const LISOVYK_LEGACY_NAMES = ["Дід Чорноліс"];
-
-type StarterAnimalAge = "CHILD" | "YOUNG" | "ADULT" | "OLD" | "CORPSE";
-
-type StarterRabbitGroup = {
-  locationKey: string;
-  count: number;
-  age: StarterAnimalAge;
-  sex?: "MALE" | "FEMALE";
-};
-
-type StarterAnimalGroup = StarterRabbitGroup & {
-  speciesKey: "rabbit" | "mouse" | "fox" | "wolf";
-};
-
-const STARTER_RABBITS: StarterRabbitGroup[] = [
-  { locationKey: "forest_04_00", count: 1, age: "ADULT", sex: "FEMALE" },
-  { locationKey: "forest_04_00", count: 1, age: "ADULT", sex: "MALE" },
-  { locationKey: "forest_07_02", count: 3, age: "CHILD" },
-  { locationKey: "forest_07_02", count: 2, age: "YOUNG" },
-  { locationKey: "forest_02_06", count: 2, age: "OLD" },
-  { locationKey: "meadow_10_03", count: 1, age: "ADULT", sex: "FEMALE" },
-  { locationKey: "meadow_10_03", count: 1, age: "ADULT", sex: "MALE" },
-  { locationKey: "meadow_10_03", count: 2, age: "CHILD" },
-  { locationKey: "meadow_12_07", count: 2, age: "YOUNG" },
-  { locationKey: "meadow_12_07", count: 1, age: "OLD" },
-  { locationKey: "meadow_14_05", count: 2, age: "CORPSE" },
-];
-
-const STARTER_MICE: StarterAnimalGroup[] = [
-  { speciesKey: "mouse", locationKey: "forest_03_02", count: 2, age: "ADULT", sex: "FEMALE" },
-  { speciesKey: "mouse", locationKey: "forest_03_02", count: 1, age: "ADULT", sex: "MALE" },
-  { speciesKey: "mouse", locationKey: "forest_04_03", count: 4, age: "CHILD" },
-  { speciesKey: "mouse", locationKey: "forest_04_03", count: 3, age: "YOUNG" },
-  { speciesKey: "mouse", locationKey: "forest_02_05", count: 2, age: "OLD" },
-  { speciesKey: "mouse", locationKey: "meadow_11_04", count: 2, age: "ADULT", sex: "FEMALE" },
-  { speciesKey: "mouse", locationKey: "meadow_11_04", count: 1, age: "ADULT", sex: "MALE" },
-  { speciesKey: "mouse", locationKey: "meadow_13_06", count: 3, age: "YOUNG" },
-  { speciesKey: "mouse", locationKey: "meadow_13_06", count: 2, age: "CHILD" },
-  { speciesKey: "mouse", locationKey: "meadow_14_05", count: 2, age: "CORPSE" },
-];
-
-const STARTER_PREDATORS: StarterAnimalGroup[] = [
-  { speciesKey: "fox", locationKey: "forest_07_02", count: 1, age: "ADULT", sex: "FEMALE" },
-  { speciesKey: "fox", locationKey: "forest_07_02", count: 1, age: "ADULT", sex: "MALE" },
-  { speciesKey: "fox", locationKey: "meadow_10_03", count: 1, age: "ADULT", sex: "FEMALE" },
-  { speciesKey: "fox", locationKey: "meadow_13_04", count: 1, age: "YOUNG", sex: "MALE" },
-  { speciesKey: "wolf", locationKey: "forest_00_08", count: 1, age: "ADULT", sex: "FEMALE" },
-  { speciesKey: "wolf", locationKey: "forest_02_09", count: 1, age: "ADULT", sex: "MALE" },
-];
 
 type SeedMeta = {
   version: string;
@@ -381,52 +342,7 @@ function uniqueCreatureSummary(creature: SeedUniqueCreature) {
   return `${creature.name}${profession}: ${creature.locationKey}${hidden}, ${creature.action}`;
 }
 
-function starterAnimalAgeTicks(
-  species: { childTicks: number; youngTicks: number; adultTicks: number },
-  age: StarterAnimalAge,
-  index: number
-) {
-  if (age === "CHILD") return Math.min(Math.max(0, species.childTicks - 1), 8 + index * 7);
-  if (age === "YOUNG") return species.childTicks + 8 + index * 9;
-  if (age === "ADULT") return species.childTicks + species.youngTicks + index * 12;
-  if (age === "OLD") return species.childTicks + species.youngTicks + species.adultTicks + 10 + index * 18;
-  return species.childTicks + species.youngTicks + species.adultTicks + 40 + index * 20;
-}
-
-function starterAnimalHp(baseHp: number, age: StarterAnimalAge) {
-  if (age === "CHILD") return Math.max(1, Math.round(baseHp * 0.35));
-  if (age === "YOUNG") return Math.max(1, Math.round(baseHp * 0.75));
-  if (age === "OLD") return Math.max(1, Math.round(baseHp * 0.65));
-  if (age === "CORPSE") return 0;
-  return baseHp;
-}
-
-function starterAnimalAction(speciesKey: string, age: StarterAnimalAge) {
-  if (speciesKey === "fox") {
-    if (age === "YOUNG") return "винюхує мишачі ходи";
-    if (age === "OLD") return "лежить у сухій траві й прислухається";
-    return "крадеться низько між кущами";
-  }
-  if (speciesKey === "wolf") {
-    if (age === "YOUNG") return "тримається краю зграї";
-    if (age === "OLD") return "стереже старий слід";
-    return "патрулює глибоку стежку";
-  }
-  if (speciesKey === "mouse") {
-    if (age === "CHILD") return "пищить у сухій траві";
-    if (age === "YOUNG") return "шурхотить між корінням";
-    if (age === "OLD") return "повільно гріється під листям";
-    if (age === "CORPSE") return "лежить нерухомо в прим'ятому мосі";
-    return "прислухається й смикає вусами";
-  }
-  if (age === "CHILD") return "ховається в траві біля нори";
-  if (age === "YOUNG") return "обережно вивчає нові запахи";
-  if (age === "OLD") return "повільно ворушить вухами";
-  if (age === "CORPSE") return "лежить нерухомо серед притоптаної трави";
-  return "насторожено прислухається";
-}
-
-async function resetStarterAnimals(speciesKey: "rabbit" | "mouse" | "fox" | "wolf", groups: StarterAnimalGroup[]) {
+async function resetStarterAnimals(speciesKey: StarterAnimalSpeciesKey, groups: StarterAnimalGroup[]) {
   const species = await prisma.creatureSpecies.findUniqueOrThrow({ where: { key: speciesKey } });
   await prisma.creature.deleteMany({ where: { speciesId: species.id } });
 
@@ -485,7 +401,7 @@ export async function resetWorldState(): Promise<ResetSummary> {
   const resources = await resetResources(world);
   await resetEcologyDepletionFeatures(world);
   const unique = await resetUniqueCreatures(world);
-  const rabbitsCreated = await resetStarterAnimals("rabbit", STARTER_RABBITS.map((group) => ({ ...group, speciesKey: "rabbit" })));
+  const rabbitsCreated = await resetStarterAnimals("rabbit", STARTER_RABBITS);
   const miceCreated = await resetStarterAnimals("mouse", STARTER_MICE);
   const foxesCreated = await resetStarterAnimals("fox", STARTER_PREDATORS.filter((group) => group.speciesKey === "fox"));
   const wolvesCreated = await resetStarterAnimals("wolf", STARTER_PREDATORS.filter((group) => group.speciesKey === "wolf"));

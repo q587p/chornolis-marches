@@ -8,6 +8,42 @@ npm install && npx prisma migrate deploy && npm run build && npm run seed
 
 `npm run seed` uses bounded parallel database writes. The default `SEED_CONCURRENCY` is `12`; lower it if the database is under pressure, or raise it cautiously for a nearby/local database.
 
+## Pre-deploy checklist
+
+Use this before committing or pushing a release patch.
+
+1. Run tests:
+
+   ```bash
+   npm test
+   ```
+
+   This checks static world seed data and type-checks `prisma/seed.ts` without writing to the database.
+
+2. Check whether a migration is needed:
+
+   - Needed when `prisma/schema.prisma` changes in a way that alters tables, columns, indexes, enums or relations.
+   - Needed when runtime code expects a new persisted field, such as a new counter on `Player` or `Creature`.
+   - Not needed for TypeScript-only logic, docs, `news.md`, balancing constants, `/stat` formatting or seed data that uses existing columns.
+
+3. Check whether `npm run seed` is needed after deploy:
+
+   - Needed when `prisma/data/world/**`, `prisma/seed.ts` or shared seed data such as `src/data/starterAnimals.ts` changes.
+   - Needed when species defaults, starter creatures, authored locations, exits, features, resource nodes or unique NPC seed definitions change.
+   - Usually not needed for pure runtime behavior such as combat logic, tick logic, Telegram handlers or display-only `/stat` changes.
+   - For local experiments, `/reset` can refresh runtime world state, but it is not a replacement for production seed data after deploy.
+
+4. Deploy order:
+
+   ```bash
+   npx prisma migrate deploy
+   npm run build
+   npm run seed
+   npm run test:db
+   ```
+
+   On Render this can stay combined in the build command, but when doing it manually keep this order: schema first, compiled app second, authored data third, smoke check last.
+
 Optional post-seed smoke check:
 
 ```bash

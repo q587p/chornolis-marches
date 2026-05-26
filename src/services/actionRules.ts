@@ -40,7 +40,7 @@ export function actionTitle(action: Pick<WorldAction, "type" | "payload" | "dura
     const names: Record<NonNullable<GatherPayload["resourceKey"]>, string> = {
       berries: "ягоди",
       mushrooms: "гриби",
-      herbs: "трави",
+      herbs: "лікарські трави",
     };
     if (!payload.resourceKey) return "збираємо щось поблизу";
     return `збираємо ${names[payload.resourceKey] ?? payload.resourceKey}`;

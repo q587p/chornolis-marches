@@ -21,6 +21,14 @@ const GATHER_ALIASES: Record<string, GatherKey> = {
   herb: "herbs",
   трави: "herbs",
   трав: "herbs",
+  лікарські: "herbs",
+  "лікарські трави": "herbs",
+  лікарських: "herbs",
+  "лікарських трав": "herbs",
+  цілющі: "herbs",
+  "цілющі трави": "herbs",
+  цілющих: "herbs",
+  "цілющих трав": "herbs",
 };
 
 async function submitGather(bot: Bot, ctx: any, resourceKey?: GatherKey, answerCallback = false) {

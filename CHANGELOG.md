@@ -9,6 +9,23 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.10.12 - Seed typecheck and deploy announcements - 12026-05-26
+
+### Fixed
+
+- Removed the remaining duplicated starter-animal declarations from `prisma/seed.ts` and `src/services/worldReset.ts`; both now use `src/data/starterAnimals.ts`.
+- Added a seed TypeScript check to `npm test` so `prisma/seed.ts` import/type errors are caught without running the database seed.
+- Deploy announcements now suppress older version messages when a same-or-newer `DEPLOY:x.y.z` world event already exists.
+- Added a deployment checklist that documents when a migration is needed, when seed should run and the manual deploy order.
+- Renamed the visible gatherable `herbs` resource to `лікарські трави` while keeping the stable `herbs` key and command alias.
+
+### Changed
+
+- Bumped package metadata to `0.10.12`.
+- Added release notes for 0.10.12 and updated `news.md` with the technical patch note.
+
+---
+
 ## 0.10.11 - Starter predators and predator ecology - 12026-05-26
 
 ### Added
