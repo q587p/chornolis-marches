@@ -13,6 +13,22 @@ export async function notifyLocation(bot: Bot, locationId: number, exceptPlayerI
   }
 }
 
+export async function notifyLocationExcept(bot: Bot, locationId: number, exceptPlayerIds: number[], text: string, options: { parseMode?: "HTML"; keyboard?: InlineKeyboard } = {}) {
+  const players = await prisma.player.findMany({
+    where: { currentLocationId: locationId, id: { notIn: exceptPlayerIds } },
+  });
+  for (const player of players) {
+    try {
+      await bot.api.sendMessage(player.telegramId, text, {
+        parse_mode: options.parseMode,
+        reply_markup: options.keyboard ?? buildMainReplyKeyboard(false),
+      });
+    } catch (error) {
+      console.warn("Failed to notify location player:", error);
+    }
+  }
+}
+
 export async function notifyLocationAll(bot: Bot, locationId: number, text: string, keyboard?: InlineKeyboard) {
   const players = await prisma.player.findMany({ where: { currentLocationId: locationId } });
   for (const player of players) {

@@ -7,6 +7,13 @@ type TargetRef = {
   canGreet: boolean;
 };
 
+const TARGETS_PER_PAGE = 8;
+
+type TargetListOptions = {
+  page?: number;
+  pageCallbackPrefix?: string;
+};
+
 export function buildMovementKeyboard(exits: any[]) {
   const keyboard = new InlineKeyboard();
   const north = exits.find((e) => e.direction === "NORTH");
@@ -82,11 +89,38 @@ export function buildTargetActionKeyboard(target: Pick<TargetRef, "type" | "id" 
   return keyboard;
 }
 
-export function buildTargetListKeyboard(targets: TargetRef[]) {
-  const keyboard = new InlineKeyboard();
+function targetButtonLabels(targets: TargetRef[]) {
+  const counts = new Map<string, number>();
+  const seen = new Map<string, number>();
+  for (const target of targets) counts.set(target.label, (counts.get(target.label) ?? 0) + 1);
 
-  for (const target of targets) {
-    keyboard.text(target.label, `target:${target.type}:${target.id}`).row();
+  return targets.map((target) => {
+    const total = counts.get(target.label) ?? 1;
+    if (total <= 1) return target.label;
+
+    const index = (seen.get(target.label) ?? 0) + 1;
+    seen.set(target.label, index);
+    return `${target.label} ${index}/${total}`;
+  });
+}
+
+export function buildTargetListKeyboard(targets: TargetRef[], options: TargetListOptions = {}) {
+  const keyboard = new InlineKeyboard();
+  const totalPages = Math.max(1, Math.ceil(targets.length / TARGETS_PER_PAGE));
+  const page = Math.min(Math.max(options.page ?? 0, 0), totalPages - 1);
+  const start = page * TARGETS_PER_PAGE;
+  const pageTargets = targets.slice(start, start + TARGETS_PER_PAGE);
+  const labels = targetButtonLabels(targets);
+
+  for (const [index, target] of pageTargets.entries()) {
+    keyboard.text(labels[start + index] ?? target.label, `target:${target.type}:${target.id}`).row();
+  }
+
+  if (totalPages > 1 && options.pageCallbackPrefix) {
+    if (page > 0) keyboard.text("◀️ Назад", `${options.pageCallbackPrefix}:${page - 1}`);
+    keyboard.text(`${page + 1}/${totalPages}`, "targetPage:noop");
+    if (page < totalPages - 1) keyboard.text("Далі ▶️", `${options.pageCallbackPrefix}:${page + 1}`);
+    keyboard.row();
   }
 
   return keyboard;

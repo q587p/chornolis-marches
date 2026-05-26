@@ -53,14 +53,14 @@ function buildCharacterAutoKeyboard(autoEnabled: boolean) {
 
 function nameCasesText(player: any) {
   return [
-    `Називний: ${player.nameNominative ?? "—"}`,
-    `Родовий: ${player.nameGenitive ?? "—"}`,
-    `Давальний: ${player.nameDative ?? "—"}`,
-    `Знахідний: ${player.nameAccusative ?? "—"}`,
-    `Орудний: ${player.nameInstrumental ?? "—"}`,
-    `Місцевий: ${player.nameLocative ?? "—"}`,
-    `Кличний: ${player.nameVocative ?? "—"}`,
-  ].join("\n");
+    player.nameNominative,
+    player.nameGenitive,
+    player.nameDative,
+    player.nameAccusative,
+    player.nameInstrumental,
+    player.nameLocative,
+    player.nameVocative,
+  ].map((value) => value ?? "—").join(" / ");
 }
 
 function amountForResourceKeys(resources: any[], keys: string[]) {
@@ -92,10 +92,10 @@ async function renderCharacterView(telegramId: number) {
   const locationText = player.currentLocation
     ? `${player.currentLocation.region.name} / ${player.currentLocation.name}`
     : "невідомо";
-  const nameApprovedText = player.isNameApproved ? "так" : "ні, потребує перевірки";
+  const nameApprovedText = player.isNameApproved ? "Ім’я схвалене." : "Ім’я ще не схвалене. Зверніться до писарів Порубіжжя.";
 
   return {
-    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\nІм’я схвалене: ${nameApprovedText}\n\nВідмінки імені:\n${nameCasesText(player)}\n\nHP: ${player.hp}/${hpMax}\nСнага: ${player.stamina}/${staminaMax}\nСтан: ${formatFatigueText(player)}${recoveryText(player)}\nГолод: ${player.hunger}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}\nЗареєстровано: ${formatDateTime(player.createdAt)}\nАктивний час у грі: поки не рахується окремо.\n\nРечі:\n${items}\n\nСтатистика:\n${formatPlayerStats(player, { includeRestStats: true })}`,
+    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}\n\nHP: ${player.hp}/${hpMax}\nСнага: ${player.stamina}/${staminaMax}\nСтан: ${formatFatigueText(player)}${recoveryText(player)}\nГолод: ${player.hunger}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}\nЗареєстровано: ${formatDateTime(player.createdAt)}\n\nРечі:\n${items}\n\nСтатистика:\n${formatPlayerStats(player, { includeRestStats: true })}`,
     keyboard: buildCharacterAutoKeyboard(autoEnabled),
   };
 }

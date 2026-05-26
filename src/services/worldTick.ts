@@ -5,6 +5,7 @@ import { notifyRegion } from "./notifications";
 import { actionDurationMs, enqueueCreatureAction, gatherDurationMs, movementDurationMs, restartActionQueueLoop } from "./actionQueue";
 import { BASE_STAMINA, TICK_MS, VERY_TIRED_STAMINA, getRuntimeTimingConfig, setRuntimeTickMs } from "../gameConfig";
 import { restartPlayerAutoTimers } from "../handlers/auto";
+import { carriedCorpseAction, carriedCorpseOwnerId, removeDecayedCorpseFromInventory } from "./corpses";
 
 const DEFAULT_TICK_INTERVAL_MS = TICK_MS;
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
@@ -705,24 +706,45 @@ async function ageLivingAnimal(creature: any) {
 
 async function decayCorpse(creature: any) {
   const decayLeft = creature.corpseDecayTicksLeft ?? creature.species.corpseDecayTicks;
+  const carriedByPlayerId = carriedCorpseOwnerId(creature.currentAction);
 
   if (decayLeft > 1) {
+    const nextDecayLeft = decayLeft - 1;
     const decayed = await prisma.creature.updateMany({
       where: { id: creature.id, isAlive: false, isGone: false },
-      data: { age: "CORPSE", isAlive: false, corpseDecayTicksLeft: decayLeft - 1, currentAction: `розкладається; залишилось ${decayLeft - 1} тіків` },
+      data: {
+        age: "CORPSE",
+        isAlive: false,
+        corpseDecayTicksLeft: nextDecayLeft,
+        currentAction: carriedByPlayerId ? carriedCorpseAction(carriedByPlayerId, nextDecayLeft) : `розкладається; залишилось ${nextDecayLeft} тіків`,
+      },
     });
     if (decayed.count === 0) return "gone";
     return "decaying";
   }
 
-  const mushrooms = await prisma.resourceNode.findFirst({ where: { locationId: creature.locationId, resourceType: { key: "mushrooms" } } });
-  if (mushrooms) {
-    await prisma.resourceNode.updateMany({ where: { id: mushrooms.id }, data: { amount: Math.min(mushrooms.maxAmount, mushrooms.amount + creature.species.mushroomBonusOnDecay) } });
+  let mushroomBonus = 0;
+  if (!carriedByPlayerId) {
+    const mushrooms = await prisma.resourceNode.findFirst({ where: { locationId: creature.locationId, resourceType: { key: "mushrooms" } } });
+    if (mushrooms) {
+      mushroomBonus = creature.species.mushroomBonusOnDecay;
+      await prisma.resourceNode.updateMany({ where: { id: mushrooms.id }, data: { amount: Math.min(mushrooms.maxAmount, mushrooms.amount + mushroomBonus) } });
+    }
   }
 
   const gone = await prisma.creature.updateMany({ where: { id: creature.id, isAlive: false, isGone: false }, data: { isGone: true, corpseDecayTicksLeft: 0, currentAction: "зникло, лишивши слід у землі" } });
   if (gone.count === 0) return "gone";
-  await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "Труп зник", description: `Труп істоти «${creature.name ?? creature.species.name}» зник. Гриби в цій місцині отримали +${creature.species.mushroomBonusOnDecay}.`, locationId: creature.locationId } });
+  if (carriedByPlayerId) await removeDecayedCorpseFromInventory(carriedByPlayerId, creature.species);
+  await prisma.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: "Труп зник",
+      description: carriedByPlayerId
+        ? `Підібраний труп істоти «${creature.name ?? creature.species.name}» остаточно зіпсувався й зник із речей.`
+        : `Труп істоти «${creature.name ?? creature.species.name}» зник. Гриби в цій місцині отримали +${mushroomBonus}.`,
+      locationId: creature.locationId,
+    },
+  });
   return "gone";
 }
 

@@ -62,7 +62,7 @@ export async function resolveTarget(type: string, id: number, locationId: number
   }
 
   if (type === "creature") {
-    const target = await prisma.creature.findFirst({ where: { id, locationId, isGone: false }, include: { species: true } });
+    const target = await prisma.creature.findFirst({ where: { id, locationId, isGone: false, isHidden: false }, include: { species: true } });
     if (!target) return null;
     const forms = creatureForms(target);
     const isAnimal = target.species.kind === "ANIMAL";

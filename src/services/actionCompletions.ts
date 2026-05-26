@@ -14,15 +14,17 @@ import {
 import { directionLabels } from "../ui/labels";
 import { buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
 import { renderLocationBrief, renderLocationDetails } from "./locations";
-import { notifyLocation } from "./notifications";
+import { notifyLocation, notifyLocationExcept } from "./notifications";
 import { getPlayerRestStaminaCap } from "./locationFeatures";
 import { getStartLocationId } from "./players";
 import { summonLisovykIfResourceDepleted } from "./resources";
 import { logEvent } from "./worldEvents";
 import { resolveTarget, type ResolvedTarget } from "./targets";
+import { playerForms } from "./grammar";
 import { actionCost, actionTitle } from "./actionRules";
 import { fatigueStateFor, spendCreatureStamina, spendPlayerStamina } from "./actionRecovery";
 import { actorWhere, interruptActorActions, type ActorRef } from "./actionLifecycle";
+import { escapeHtml } from "../utils/text";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
@@ -86,6 +88,17 @@ function targetIntro(target: ResolvedTarget, isMystery: boolean) {
   if (target.kind === "creature" && target.isCorpse) return "👁 Ви роздивляєтесь те, що лежить нерухомо.";
   if (target.kind === "creature" && target.isAnimal) return "👁 Ви роздивляєтесь цю істоту.";
   return "👁 Ви роздивляєтесь цю постать.";
+}
+
+function quoteBlock(text: string) {
+  return `<blockquote>${escapeHtml(text)}</blockquote>`;
+}
+
+function saidVerb(player: any) {
+  const gender = player.grammaticalGender ?? (player.pronoun === "SHE" ? "FEMININE" : player.pronoun === "THEY" ? "PLURAL" : "MASCULINE");
+  if (gender === "FEMININE") return "сказала";
+  if (gender === "PLURAL") return "сказали";
+  return "сказав";
 }
 
 export async function completeAction(bot: Bot, action: WorldAction) {
@@ -192,7 +205,7 @@ async function completeMove(bot: Bot, action: WorldAction) {
     await notifyLocation(bot, exit.toLocationId, -1, `Хтось зайшов сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, buildTargetListKeyboard([{ type: "creature", id: creature.id, label, canGreet: true }]));
   }
   await setActionStatus(action, "DONE");
-  await logEvent("NPC_MOVE", "Creature queued move completed", `${creature.id}:${payload.direction}`, exit.toLocationId);
+  if (!isAnimal) await logEvent("NPC_MOVE", "Creature queued move completed", `${creature.id}:${payload.direction}`, exit.toLocationId);
 }
 
 async function completeGather(bot: Bot, action: WorldAction) {
@@ -228,7 +241,7 @@ async function completeGather(bot: Bot, action: WorldAction) {
   if (!resource || !resourceKey || !cfg || Math.random() > cfg.chance) {
     await setActionStatus(action, "DONE");
     if (chatId) await bot.api.sendMessage(chatId, `Ви витратили час на пошуки (${durationSeconds} с), але нічого корисного не знайшли.`);
-    await logEvent(isPlayer ? "GATHER" : "NPC_ACTION", "Queued gather failed", resourceKey ?? "random", locationId);
+    if (isPlayer) await logEvent("GATHER", "Queued gather failed", resourceKey ?? "random", locationId);
     return;
   }
 
@@ -250,7 +263,7 @@ async function completeGather(bot: Bot, action: WorldAction) {
   }
 
   await setActionStatus(action, "DONE");
-  await logEvent(isPlayer ? "GATHER" : "NPC_ACTION", "Queued gather succeeded", `${resource.resourceType.name} ×${found}`, locationId);
+  if (isPlayer) await logEvent("GATHER", "Queued gather succeeded", `${resource.resourceType.name} ×${found}`, locationId);
 
   if (resource.amount > 0 && nextAmount <= 0) await summonLisovykIfResourceDepleted(bot, resource.resourceType.name, resource.location.regionId);
 }
@@ -327,12 +340,28 @@ async function completeGreet(bot: Bot, action: WorldAction) {
     return;
   }
   const greeting = pick(GREETINGS);
+  const actorForms = playerForms(player);
+  const verb = saidVerb(player);
+  const targetPlayer = target.kind === "player" ? await prisma.player.findUnique({ where: { id: target.id } }) : null;
   await spendPlayerStamina(bot, player.id, "GREET", chatId);
   await prisma.player.updateMany({ where: { id: player.id }, data: { greetings: { increment: 1 } } });
-  await notifyLocation(bot, player.currentLocationId, player.id, `Хтось звертається до ${target.forms.genitive}: «${greeting}»`);
+  if (targetPlayer) {
+    await bot.api.sendMessage(
+      targetPlayer.telegramId,
+      `${escapeHtml(actorForms.nominative)} ${verb} вам:\n${quoteBlock(greeting)}`,
+      { parse_mode: "HTML" },
+    );
+  }
+  await notifyLocationExcept(
+    bot,
+    player.currentLocationId,
+    [player.id, targetPlayer?.id].filter((id): id is number => Boolean(id)),
+    `${escapeHtml(actorForms.nominative)} ${verb} ${escapeHtml(target.forms.dative)}:\n${quoteBlock(greeting)}`,
+    { parseMode: "HTML" },
+  );
   await setActionStatus(action, "DONE");
   await logEvent("GREET", "Player greeted target", `${target.kind}:${target.id}: ${greeting}`, player.currentLocationId);
-  if (chatId) await bot.api.sendMessage(chatId, `Ви сказали ${target.forms.dative}: «${greeting}»`);
+  if (chatId) await bot.api.sendMessage(chatId, `Ви сказали ${escapeHtml(target.forms.dative)}:\n${quoteBlock(greeting)}`, { parse_mode: "HTML" });
 }
 
 async function completeFreshen(bot: Bot, action: WorldAction) {

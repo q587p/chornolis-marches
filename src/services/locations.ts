@@ -8,9 +8,14 @@ import { escapeHtml } from "../utils/text";
 
 const COMPACT_EXIT_ORDER = ["NORTH", "WEST", "SOUTH", "EAST", "UP", "DOWN", "INSIDE", "OUTSIDE"];
 const GATHERABLE_RESOURCE_KEYS = ["berries", "mushrooms", "herbs"] as const;
+const TARGET_TEXT_LIMIT = 8;
+
+type LocationRenderOptions = {
+  targetPage?: number;
+};
 
 function isVisibleCorpse(c: any) {
-  return !c.isAlive && !c.isGone && c.age === "CORPSE";
+  return !c.isAlive && !c.isGone && !c.isHidden && c.age === "CORPSE";
 }
 
 function isVisibleLivingCreature(c: any) {
@@ -83,7 +88,11 @@ function presenceText(location: any, viewerPlayerId?: number, revealTargets = fa
   const hasCorpses = location.creatures.some(isVisibleCorpse);
 
   if (revealTargets && targets.length) {
-    return `\n\nПоруч:\n${targets.map((target) => `- ${escapeHtml(target.label)}${target.canGreet ? "" : " <i>(тварина/об’єкт)</i>"}`).join("\n")}`;
+    const lines = targets
+      .slice(0, TARGET_TEXT_LIMIT)
+      .map((target) => `- ${escapeHtml(target.label)}${target.canGreet ? "" : " <i>(тварина/об’єкт)</i>"}`);
+    if (targets.length > TARGET_TEXT_LIMIT) lines.push(`- ...і ще ${targets.length - TARGET_TEXT_LIMIT}`);
+    return `\n\nПоруч:\n${lines.join("\n")}`;
   }
 
   if (hasCharacters && hasAnimals) return "\n\n<i>Поруч хтось або щось є.</i>";
@@ -166,6 +175,17 @@ function visibleActionText(target: { type: "player" | "creature"; id: number }, 
   return "";
 }
 
+function visibleTargetsText(targets: ReturnType<typeof visibleTargets>, activeActions: Map<string, any>, location: any) {
+  if (!targets.length) return "";
+
+  const lines = targets
+    .slice(0, TARGET_TEXT_LIMIT)
+    .map((x) => `- ${escapeHtml(x.label)}${x.canGreet ? "" : " <i>(тварина/об’єкт)</i>"}${escapeHtml(visibleActionText(x, activeActions, location))}`);
+  if (targets.length > TARGET_TEXT_LIMIT) lines.push(`- ...і ще ${targets.length - TARGET_TEXT_LIMIT}`);
+
+  return `\n\nПоруч:\n${lines.join("\n")}`;
+}
+
 async function resourceButtonData(resources: any[], viewerPlayerId?: number) {
   const quick = await usesQuickPlayerActionDuration(viewerPlayerId);
   return resources
@@ -177,7 +197,7 @@ async function resourceButtonData(resources: any[], viewerPlayerId?: number) {
     }));
 }
 
-export async function renderLocationBrief(locationId: number, viewerPlayerId?: number) {
+export async function renderLocationBrief(locationId: number, viewerPlayerId?: number, options: LocationRenderOptions = {}) {
   const location = await prisma.cellLocation.findUnique({
     where: { id: locationId },
     include: {
@@ -195,7 +215,7 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
   const targets = visibleTargets(location, viewerPlayerId);
   const keyboard = new InlineKeyboard();
   addFeatureButtons(keyboard, location.features);
-  if (revealTargets && targets.length) addInlineRows(keyboard, buildTargetListKeyboard(targets));
+  if (revealTargets && targets.length) addInlineRows(keyboard, buildTargetListKeyboard(targets, { page: options.targetPage, pageCallbackPrefix: "targetPage:brief" }));
   addInlineRows(keyboard, buildMovementKeyboard(location.exitsFrom));
 
   return {
@@ -204,7 +224,7 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
   };
 }
 
-export async function renderLocationDetails(locationId: number, viewerPlayerId?: number) {
+export async function renderLocationDetails(locationId: number, viewerPlayerId?: number, options: LocationRenderOptions = {}) {
   const location = await prisma.cellLocation.findUnique({
     where: { id: locationId },
     include: {
@@ -237,9 +257,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     const key = action.actorType === "PLAYER" ? `player:${action.playerId}` : `creature:${action.creatureId}`;
     if (!activeActions.has(key)) activeActions.set(key, action);
   }
-  const charactersText = targets.length
-    ? `\n\nПоруч:\n${targets.map((x) => `- ${escapeHtml(x.label)}${x.canGreet ? "" : " <i>(тварина/об’єкт)</i>"}${escapeHtml(visibleActionText(x, activeActions, location))}`).join("\n")}`
-    : "";
+  const charactersText = visibleTargetsText(targets, activeActions, location);
 
   const resourceLines = location.resources
     .filter((r) => r.amount > 0 && (GATHERABLE_RESOURCE_KEYS as readonly string[]).includes(r.resourceType.key))
@@ -281,7 +299,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   }
 
   if (targets.length > 0) {
-    addInlineRows(keyboard, buildTargetListKeyboard(targets));
+    addInlineRows(keyboard, buildTargetListKeyboard(targets, { page: options.targetPage, pageCallbackPrefix: "targetPage:details" }));
   }
 
   addInlineRows(keyboard, buildMovementKeyboard(location.exitsFrom));

@@ -5,9 +5,12 @@ import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { actionDurationMs, performOrQueuePlayerAction } from "../services/actionQueue";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { resolveTarget, type ResolvedTarget } from "../services/targets";
+import { prisma } from "../db";
+import { addCorpseToInventory } from "../services/corpses";
 
 function buildCorpseActionKeyboard(target: ResolvedTarget) {
   const keyboard = new InlineKeyboard().text("👁 Оглянути ще раз", `social:inspect:${target.kind}:${target.id}:known`).row();
+  keyboard.text("🤲 Підібрати", `social:pickup:${target.kind}:${target.id}`).row();
   if (target.canFreshen) keyboard.text("🔪 Освіжувати", `social:freshen:${target.kind}:${target.id}:known`).row();
   keyboard.text("↩️ Назад", "location:details").row();
   return keyboard;
@@ -44,6 +47,47 @@ export function registerSocialHandlers(bot: Bot) {
 
     await safeAnswerCallbackQuery(ctx);
     await editOrReply(ctx, `Ви зосереджуєтесь на: ${target.forms.locative}`, buildActionKeyboard(target));
+  });
+
+  bot.callbackQuery(/^social:pickup:creature:(\d+)$/, async (ctx) => {
+    const targetId = Number(ctx.match[1]);
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player || !player.currentLocationId) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    const creature = await prisma.creature.findFirst({
+      where: {
+        id: targetId,
+        locationId: player.currentLocationId,
+        isAlive: false,
+        isGone: false,
+        isHidden: false,
+        age: "CORPSE",
+      },
+      include: { species: true },
+    });
+
+    if (!creature) {
+      await safeAnswerCallbackQuery(ctx, "Трупа вже немає поруч.");
+      return void (await editOrReply(ctx, "Трупа вже немає поруч. Можна роздивитися місцину ще раз."));
+    }
+
+    let resourceType: Awaited<ReturnType<typeof addCorpseToInventory>>;
+    try {
+      resourceType = await addCorpseToInventory(player.id, creature);
+    } catch {
+      await safeAnswerCallbackQuery(ctx, "Трупа вже немає поруч.");
+      return void (await editOrReply(ctx, "Трупа вже немає поруч. Можна роздивитися місцину ще раз."));
+    }
+
+    await safeAnswerCallbackQuery(ctx, "Підібрано.");
+    await editOrReply(
+      ctx,
+      `🤲 Ви підібрали ${resourceType.name}.\n\nВін лежить у ваших речах, але ще псується. Якщо забаритися, від нього лишиться тільки слід.`,
+      new InlineKeyboard().text("↩️ Назад", "location:details").row(),
+    );
   });
 
   bot.callbackQuery(/^social:(greet|inspect|attack|freshen):(player|creature):(\d+)(?::(known|mystery))?$/, async (ctx) => {

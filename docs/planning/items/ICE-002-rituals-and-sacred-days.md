@@ -20,6 +20,10 @@ depends_on:
 
 Add special events tied to mythic weekdays, seasons and sacred places.
 
+Include calendar-to-world correspondences: some days can alter ecology, visibility, rumors, creature behavior or event chances. For example, a "frog day" could make frogs more common near wet places, add frog omens to `/look` or `/time`, or unlock a small frog-related event.
+
+Named days should avoid imported formulas such as "Thor's day". Use Ukrainian/Slavic-feeling, setting-local names rooted in animals, spirits, weather, work, thresholds, rivers, forest signs or sacred places.
+
 ## Why it fits
 
 Supports Порубіжжя, folklore atmosphere and world reactivity.

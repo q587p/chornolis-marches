@@ -11,11 +11,11 @@ tags:
   - beginner
 ---
 
-# Early respawn support
+# Early respawn support / Повернення
 
 ## Goal
 
-Add `/respawn` for new or weak characters who get lost.
+Add `/respawn` as **Повернення** for new or weak characters who get lost.
 
 ## Current placeholder
 
@@ -23,7 +23,7 @@ Add `/respawn` for new or weak characters who get lost.
 
 ## Rules
 
-- Available only before a defined progression threshold.
+- Available only before a defined progression threshold, such as early skill/progression totals, starter-phase flags, or another small “not yet established” character measure.
 - Returns character to starting location.
 - May have cooldown.
 - May apply fatigue, hunger or small resource loss.

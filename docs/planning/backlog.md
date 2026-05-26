@@ -17,38 +17,48 @@ Backlog differs from Icebox: backlog means “we probably want this, but not rig
 - Campfires and firewood.
 - Early `/respawn` support.
 - Starter settlement and NPCs.
+- Guard/warden NPC: add a camp/bridge guard who patrols the bridge and starter settlement, visibly watches the approaches, and attacks predators that enter protected areas. This should be an early example of a useful NPC with territory and purpose, not only dialogue.
 - Fishing: riverbank fishing loop, fisher NPC, and learning basic fishing by watching or speaking with them.
 - Basic crafting.
 - Barter and trade.
 - Use- and observation-based skill progression.
+- Follow/observe target action: when examining an animal, character or other creature, offer `Слідувати` as an action. The first version can simply keep the player moving after the target and observing their actions; later it should connect to group travel, apprenticeship, stealth/safety checks and learning skills through observation.
 - Animal experience and titles: successful hunters can become more dangerous or recognizable, such as `материй вовк` or `досвідчена лисиця`.
 - Tracks, stealth and visibility.
+- Track output UX and Ukrainian grammar: rewrite `/track` results so they read like natural observations instead of technical labels. Avoid duplicated `слід: слід:` phrasing, use correct direction/verb wording such as `пішов/пішла/пішли`, `прийшов/прийшла/прийшли`, improve cases for named characters, and group repeated similar tracks when many point the same way.
 - Creature aggression and defense: wolves can threaten people, smaller predators can defend themselves, and herbivores may fight if cornered or protecting offspring.
 - Admin/debug permissions for commands such as `/reset`, `/tickSet`, `/cleanupCreatures` and other dangerous tools.
-- Richer auto-mode profiles and player-configurable auto behavior.
+- Character/account protection: add an account model beyond Telegram-only identity, including email/password login, character ownership, and a controlled way for an authorized user/admin to enter as a character when needed.
+- Richer auto-mode profiles and player-configurable auto behavior: keep the current `Авто` behavior as a gathering/foraging-oriented profile, then add a separate auto-hunting profile that walks, looks for prey and attacks like a hunter/archer. Later versions should extend hunting with tracking, traps, ranged weapons and safety rules.
 - Ukrainian interface terminology pass: `Озирнутися`, `Місцина`, `Роздивитися`, and similar diegetic wording instead of direct English/RPG calques.
 - Random pre-generated Ukrainian names with database uniqueness checks.
 - Name approval workflow for custom names and their case forms.
 - Onboarding hardening: Ukrainian-only custom names, correct apostrophes/dashes, stripping emoji, bidi/right-to-left controls and invisible characters, and escaping user-entered names before display.
-- Foraging/firewood loop: dry sticks, moss, animal bones, tiny coin finds such as шаги/ґривні, and region- or location-specific finds.
+- Foraging/firewood loop: broaden `/gather` without arguments into a general local foraging/search action while keeping exact resource variants such as `/gather herbs`, `/gather berries` and `/gather mushrooms`. Possible finds include хмиз / dry sticks, dry branches, moss, medicinal moss variants, animal bones, small coin finds such as шаги, and rare ґривня or a few ґривні. Results should depend on region, biome, visibility and special location conditions/features, so a riverbank, dry luka, forest edge, bridge, den entrance or old camp can produce different tables and chances.
+- Ground money and small find objects: support authored and reset-seeded loose coins such as `ґривня` and `шаги` as objects in a location. They should be visible through ordinary `/look` when light/visibility allows, discoverable through `/examine` when dark, inspectable like corpses/other objects, and pickable into `Речі`.
 - Decide whether foraging stays separate or becomes a broader `/gather` mode with target categories.
-- Debug visibility toggle through `/debugGet` and `/debugSet`, with raw technical numbers only when debug mode is enabled.
-- Hide exact HP/stamina/queue/resource numbers outside debug mode and use descriptive states such as healthy, wounded, exhausted, almost unconscious.
-- Collision handling for gathering, attacks, freshening and similar actions: random events, speed/skill dependence, and messages to other characters nearby.
+- Debug visibility toggle through `/debugGet` and `/debugSet <true|false>`. When debug mode is enabled, technical details are visible to everyone: exact numbers, hidden counters, attributes, skills, queue/resource values and similar diagnostics. When debug mode is disabled, exact technical details should be hidden from ordinary players and replaced with descriptive states such as healthy, wounded, exhausted or almost unconscious.
+- Scribe-only technical details outside global debug mode: players with the `Писар` status/role should still be able to see exact details when debug mode is disabled, with a player-facing option for them to `Показати деталі` / `Приховати деталі`. This should not expose those numbers to everyone in the location.
+- Collision handling for gathering, eating, attacks, freshening and similar actions. If several players or creatures target the same resource, corpse or creature, completion should re-check and claim the target atomically so only one result wins. First version can resolve contested actions with a simple random roll; later versions can weigh speed, stamina, relevant skill, tool quality, creature size/strength, awareness and surprise. Losing actors should get a clear message such as the resource was already taken, the prey moved/died first, or the corpse is no longer usable; nearby characters should see an appropriate local message when the collision is visible.
 - Refactor `src/services/actionQueue.ts`: split the large queue/orchestration file into smaller action-specific modules and clarify action completion boundaries.
 - Map docs drift check: add `map:check` and CI/pre-commit coverage so changes under `prisma/data/world/` fail when `docs/world/world_map.md` was not regenerated.
 - Character card expansion: name cases, name approval status, registration date/time, active play time, and current money.
-- Real active time tracking for players based on actions/activity rather than account age.
+- Character achievements / titles: add a `Відзнаки` or `Титули` view with categories, pagination, earned dates and short diegetic descriptions. Use existing stats first, then expand to skills, story events, exploration, personal chronicle discoveries, fishing, hunting, gathering and rare world events. Avoid generic MMO level/mob-copy language; prefer Chornolis-flavored milestones such as first return from danger, first useful find, first witnessed omen, first personal chronicle entry, first fish, careful hunter, bridge-walker, listener at the fire, etc. Some achievements can unlock visible titles, but titles should feel like names people might actually use in-world.
+- Character inventory screen: add a `Речі` button in the character view that opens a dedicated inventory/poklazha screen. Keep the compact character summary, but let the inventory screen show separate item rows such as `лікарські трави ×2` with item actions.
+- Inventory item actions: support `Викинути` so items become objects on the ground in the current location. Dropped items should be visible immediately when light/visibility allows, and discoverable after `Роздивитися` when the location is dark. Add `Використати` as a placeholder action for later item-use systems.
+- Individual perishable item model: replace temporary resource-stack corpses with real item instances that can carry freshness, decay, origin creature and container/location state.
+- Real active time tracking for players based on actions/activity rather than account age, after the day/night loop and world-time service exist. Do not show a placeholder line in the player profile until this can report meaningful in-world time.
 - Dynamic `/time` model after the static starter date: season, moon circle/month, day and time of day should advance with world time.
 - Presence reveal near campfires and later in daylight: show names/animal labels and interaction buttons immediately when visibility conditions allow it.
 - Weather and weather effects on visibility, travel, gathering, tracks, rest, fire and creature behavior.
 - Contacts, groups, kurені/січі or similar social organization tools.
 - Combat system beyond the current simple animal attack/debug kill flow.
-- Opponent assessment: approximate comparison between the player and a character, animal, monster or spirit before conflict.
+- Opponent assessment: approximate comparison between the player and a character, animal, monster or spirit before conflict, after attributes, states and skills exist. When examining a target such as `Вправний мисливець Іван охороняє східні ворота табору`, offer an assessment option and command that estimates whether attacking would be trivial, risky, evenly matched, dangerous or practically impossible.
+- Newcomer helper / tutorial guide: add an optional diegetic helper for early play who nudges a new character through movement, `Озирнутися`, `Роздивитися`, `Відпочити`, `/time`, basic gathering, queue behavior and first danger. The helper can be a borderland scribe, local guide, dream figure, домовик-like presence, forest-adjacent spirit or animal companion; choose the form later based on tone. Keep it skippable and avoid turning the first screen into a mechanical checklist.
 - Dream tutorial after onboarding: the character sleeps and may learn basic controls in a dream, with an option to skip and wake up.
 - Cowardice/flee settings: player-configurable health threshold for trying to flee combat.
-- Water sources: wells, springs, streams and other places where characters can drink.
-- Food and hunger system beyond the current simple debug hunger counter.
+- Water sources as location features: wells, springs, streams and other visible places where characters can later drink, fill containers, fish, wash, set ambushes or notice animal tracks.
+- Food and hunger system beyond the current simple debug hunger counter: make hunger actively matter; add edible bread, basic cooking around ovens/печі, and cooked meat from freshened corpses. Fresh meat should come from `Освіжувати` a fresh corpse, then be roastable at a crafted campfire/костер or suitable fire feature, with cooking/firemaking/survival skills affecting quality, time and failure.
 
 ## Promotion rules
 

@@ -60,9 +60,22 @@ type PlayerActionSubmitResult = {
 };
 
 const PLAYER_RUNNING_ACTION_BATCH = 100;
-const CREATURE_RUNNING_ACTION_BATCH = 100;
+const CREATURE_RUNNING_ACTION_BATCH = Number(process.env.CREATURE_RUNNING_ACTION_BATCH || 1000);
+const CREATURE_COMPLETION_CONCURRENCY = Number(process.env.CREATURE_COMPLETION_CONCURRENCY || 25);
 const PLAYER_QUEUED_ACTION_BATCH = 200;
 const CREATURE_QUEUED_ACTION_BATCH = 1000;
+
+async function runWithConcurrency<T>(items: T[], concurrency: number, worker: (item: T) => Promise<void>) {
+  const limit = Math.max(1, Math.floor(concurrency));
+  let index = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (index < items.length) {
+      const item = items[index++];
+      await worker(item);
+    }
+  });
+  await Promise.all(workers);
+}
 
 export function actorWhere(ref: ActorRef) {
   return ref.actorType === "PLAYER"
@@ -487,13 +500,13 @@ export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, ac
     orderBy: [{ executeAt: "asc" }, { id: "asc" }],
     take: CREATURE_RUNNING_ACTION_BATCH,
   });
-  for (const action of dueCreatureRunning) {
+  await runWithConcurrency(dueCreatureRunning, CREATURE_COMPLETION_CONCURRENCY, async (action) => {
     try {
       await completeAction(bot, action);
     } catch (error) {
       if (!isMissingRecordError(error)) throw error;
     }
-  }
+  });
 
   await startQueuedActionsForActorType("PLAYER", PLAYER_QUEUED_ACTION_BATCH);
   await startQueuedActionsForActorType("CREATURE", CREATURE_QUEUED_ACTION_BATCH);

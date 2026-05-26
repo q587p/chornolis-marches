@@ -9,6 +9,19 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.11.1 - Creature queue throughput - 12026-05-26
+
+### Changed
+
+- Creature action completion now processes a larger due batch with bounded concurrency so animal backlogs clear faster.
+- Routine animal movement/gathering no longer writes a world event for every completed creature action.
+- Location target buttons are now paginated and duplicate creature labels are numbered, so crowded places no longer produce huge Telegram keyboards.
+- Corpse target cards now offer `Підібрати`; picked-up corpses appear in `Речі` and keep decaying until the world removes them.
+- Greeting/social output now uses separate actor, target and observer messages, with spoken text formatted as a quote block.
+- Render deployment docs now list the creature action batch/concurrency tuning knobs.
+
+---
+
 ## 0.11.0 - Terminology, rest flow and project vision - 12026-05-26
 
 ### Added

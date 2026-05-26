@@ -13,17 +13,9 @@ function normalizeState(input: MainKeyboardState | boolean = {}) {
 
 export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean = {}) {
   const state = normalizeState(stateOrAuto);
-  const keyboard = new Keyboard()
-    .text("👀 Озирнутися")
-    .text("🧍 Персонаж")
-    .row();
-
-  let hasUtilityRow = false;
-  if (state.hasQueue) {
-    keyboard.text("📋 Черга");
-    hasUtilityRow = true;
-  }
-  if (hasUtilityRow) keyboard.row();
+  const keyboard = new Keyboard().text("👀 Озирнутися");
+  if (state.hasQueue) keyboard.text("📋 Черга");
+  keyboard.text("🧍 Персонаж").row();
 
   return keyboard
     .text("☰ Меню")

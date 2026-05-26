@@ -1,7 +1,7 @@
 import { Bot } from "grammy";
 import { actionDurationMs, performOrQueuePlayerAction } from "../services/actionQueue";
 import { getPlayerByTelegramId } from "../services/players";
-import { renderLocationDetails, renderLocationFeatureInteraction } from "../services/locations";
+import { renderLocationBrief, renderLocationDetails, renderLocationFeatureInteraction } from "../services/locations";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 
@@ -55,6 +55,32 @@ export function registerLookHandlers(bot: Bot) {
     }
 
     const view = await renderLocationDetails(player.currentLocationId, player.id);
+    await safeAnswerCallbackQuery(ctx);
+    try {
+      await ctx.editMessageText(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+    } catch {
+      await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+    }
+  });
+
+  bot.callbackQuery("targetPage:noop", async (ctx) => {
+    await safeAnswerCallbackQuery(ctx);
+  });
+
+  bot.callbackQuery(/^targetPage:(brief|details):(\d+)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player || !player.currentLocationId) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    const mode = ctx.match[1];
+    const page = Number(ctx.match[2]);
+    const view =
+      mode === "brief"
+        ? await renderLocationBrief(player.currentLocationId, player.id, { targetPage: page })
+        : await renderLocationDetails(player.currentLocationId, player.id, { targetPage: page });
+
     await safeAnswerCallbackQuery(ctx);
     try {
       await ctx.editMessageText(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });

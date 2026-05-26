@@ -43,7 +43,7 @@ export function registerActionQueueHandlers(bot: Bot) {
     const arg = String(ctx.match || "").trim().toLowerCase();
     if (arg === "clear") {
       const result = await clearQueuedPlayerActions(player.id);
-      await showQueue(ctx, player.id, `Прибрано з черги/відпочинку: ${result.count}.`);
+      await showQueue(ctx, player.id, `Прибрано з черги: ${result.count}.`);
       return;
     }
 
@@ -77,7 +77,7 @@ export function registerActionQueueHandlers(bot: Bot) {
 
     const result = await clearQueuedPlayerActions(player.id);
     await safeAnswerCallbackQuery(ctx, `Прибрано: ${result.count}.`);
-    await showQueue(ctx, player.id, `Прибрано з черги/відпочинку: ${result.count}.`);
+    await showQueue(ctx, player.id, `Прибрано з черги: ${result.count}.`);
   });
 
   bot.callbackQuery("queue:cancel-current", async (ctx) => {

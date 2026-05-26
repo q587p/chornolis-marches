@@ -88,6 +88,8 @@ Optional:
 - `TICK_MS` — legacy fallback used only when `WORLD_TICK_INTERVAL_MS` is absent.
 - `APP_VERSION` — fallback version label when `package.json` cannot be read.
 - `SEED_CONCURRENCY` — optional seed parallelism limit. Defaults to `12`.
+- `CREATURE_RUNNING_ACTION_BATCH` — optional due creature-action completion batch size. Defaults to `1000`.
+- `CREATURE_COMPLETION_CONCURRENCY` — optional concurrency for completing due creature actions. Defaults to `25`.
 
 Currently not wired in `src/config.ts`:
 
