@@ -4,6 +4,7 @@ import { ACTION_BASE_TICKS, QUICK_PLAYER_ACTION_DURATION_MS, TICK_MS, gatherConf
 import { directionLabels } from "../ui/labels";
 import { buildMovementKeyboard, buildResourceMenuKeyboard, buildTargetListKeyboard } from "../ui/keyboards";
 import { isCampfireFeature } from "./locationFeatures";
+import { renderAmbientLocationLine } from "./worldTime";
 import { escapeHtml } from "../utils/text";
 
 function isVisibleCorpse(c: any) {
@@ -162,6 +163,7 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
 
   if (!location) throw new Error("Location not found");
 
+  const ambientLine = await renderAmbientLocationLine(location.features);
   const exitsText = location.exitsFrom.length
     ? location.exitsFrom.map((exit) => `- ${directionLabels[exit.direction]} → ${exit.toLocation.name}`).join("\n")
     : "Виходів не видно.";
@@ -171,7 +173,7 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
   addInlineRows(keyboard, buildMovementKeyboard(location.exitsFrom));
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location)}${presenceText(location, viewerPlayerId)}\n\nВиходи:\n${escapeHtml(exitsText)}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n<i>${escapeHtml(ambientLine)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location)}${presenceText(location, viewerPlayerId)}\n\nВиходи:\n${escapeHtml(exitsText)}`,
     keyboard,
   };
 }
@@ -191,6 +193,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
 
   if (!location) throw new Error("Location not found");
 
+  const ambientLine = await renderAmbientLocationLine(location.features);
   const targets = visibleTargets(location, viewerPlayerId);
   const playerTargetIds = targets.filter((t) => t.type === "player").map((t) => t.id);
   const creatureTargetIds = targets.filter((t) => t.type === "creature").map((t) => t.id);
@@ -259,7 +262,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   addInlineRows(keyboard, buildMovementKeyboard(location.exitsFrom));
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location)}\n\n<i>Ви придивляєтесь.</i>\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}${resourcesText}${charactersText}${tracksText}${corpsesText}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n<i>${escapeHtml(ambientLine)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location)}\n\n<i>Ви придивляєтесь.</i>\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}${resourcesText}${charactersText}${tracksText}${corpsesText}`,
     keyboard,
   };
 }
