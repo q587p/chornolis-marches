@@ -35,7 +35,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Loose torches are now picked up as ground items, not gathered through `/gather`: they appear under `Лежить`, use `Підібрати`, have no chance roll or delay, and require the character not to be exhausted.
 - Corpse inventory labels now include sex-aware Ukrainian names for foxes and wolves, such as `труп лиса`, `труп лисиці`, `труп вовка` and `труп вовчиці`.
 - Admin/debug commands now use scribe access: configured admin Telegram IDs still work, and a hidden `/adminSet <secret>` can grant the current character the `Писар Порубіжжя` role when `ADMIN_SET_SECRET` is configured for the environment.
-- The Telegram command menu keeps `/adminHelp` hidden globally, but adds it back as a chat-scoped command for players who already have `Писар Порубіжжя` access.
+- The Telegram command menu keeps `/adminHelp` hidden globally, but adds `/adminhelp` back as a chat-scoped command for players who already have `Писар Порубіжжя` access; the handler still accepts both `/adminHelp` and `/adminhelp`.
 
 ---
 

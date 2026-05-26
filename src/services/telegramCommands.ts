@@ -17,7 +17,7 @@ const DEFAULT_BOT_COMMANDS = [
 
 const SCRIBE_BOT_COMMANDS = [
   ...DEFAULT_BOT_COMMANDS,
-  { command: "adminHelp", description: "🛠 Команди писарів Порубіжжя" },
+  { command: "adminhelp", description: "🛠 Команди писарів Порубіжжя" },
 ];
 
 export async function setDefaultBotCommandsWithRetry(bot: Bot, attempts = 3) {
@@ -35,10 +35,14 @@ export async function setDefaultBotCommandsWithRetry(bot: Bot, attempts = 3) {
 
 export async function syncChatBotCommandsForTelegramId(api: TelegramCommandApi, chatId: number, telegramId: number | string | null | undefined) {
   const scope = { type: "chat" as const, chat_id: chatId };
-  if (await isScribeAdmin(telegramId)) {
-    await api.setMyCommands(SCRIBE_BOT_COMMANDS, { scope });
-    return;
-  }
+  try {
+    if (await isScribeAdmin(telegramId)) {
+      await api.setMyCommands(SCRIBE_BOT_COMMANDS, { scope });
+      return;
+    }
 
-  await api.deleteMyCommands({ scope });
+    await api.deleteMyCommands({ scope });
+  } catch (error) {
+    console.warn("Failed to sync chat-scoped Telegram commands:", error);
+  }
 }
