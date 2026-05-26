@@ -9,6 +9,25 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.11.4 - Social signals, chat menu and planning refresh - 12026-05-26
+
+### Added
+
+- Added MVP **Сигнали** for target-focused social gestures: `Усміхнутися`, `Засміятися`, `Кивнути`, `Вклонитися`, `Вказати`, `Насупитися`, `Зітхнути` and `Помахати`.
+- Added contextual target buttons and a full `Ще сигнали` menu after focusing on a visible player, NPC or creature.
+- Added separate social-signal messages for the actor, the target player and other observers in the same location.
+- Added `docs/systems/social-signals.md` with the MVP social signals model and future direction.
+- Added `💬 Репліки` to the `Меню` keyboard, opening the existing `/chat` log.
+- Added backlog planning for `/reply`, quick reply buttons and custom addressed replies.
+
+### Changed
+
+- `/adminHelp` now uses a single canonical handler again, avoiding drift between admin command lists.
+- `/adminHelp` and admin-command docs now include `/stat`, `/chat` and `/addCampfire`.
+- `docs/planning/next.md` now reflects the current `next` planning lane: biome resources, day/night, campfires/light and early respawn.
+
+---
+
 ## 0.11.3 - Chat polish, campfire debug and panic reaction - 12026-05-26
 
 ### Added

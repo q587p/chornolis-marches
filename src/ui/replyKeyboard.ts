@@ -51,6 +51,8 @@ export function buildMenuReplyKeyboard() {
     .text("📰 Новини")
     .text("📊 Статистика")
     .row()
+    .text("💬 Репліки")
+    .row()
     .text("🧭 Допомога")
     .row()
     .text("🕯 Час")

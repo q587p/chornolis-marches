@@ -1,11 +1,13 @@
 import { InlineKeyboard } from "grammy";
 import type { ResolvedTarget } from "../services/targets";
+import { SOCIAL_DEFINITIONS, quickSocialsForTarget } from "../services/socialSignals";
 
 type TargetRef = {
   type: "player" | "creature";
   id: number;
   label: string;
   canGreet: boolean;
+  isAnimal?: boolean;
 };
 
 const TARGETS_PER_PAGE = 8;
@@ -68,25 +70,42 @@ export function buildTrackKeyboard() {
   return new InlineKeyboard().text("👣 Відслідкувати", "track");
 }
 
-export function buildAnonymousTargetKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet">) {
+export function buildAnonymousTargetKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet" | "isAnimal">) {
   const keyboard = new InlineKeyboard()
     .text("👁 Роздивитися", `social:inspect:${target.type}:${target.id}:mystery`)
     .text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:mystery`)
     .row();
 
   if (target.canGreet) keyboard.text("👋 Привітати", `social:greet:${target.type}:${target.id}:mystery`).row();
+  keyboard.text("🪧 Сигнали", `signalMenu:${target.type}:${target.id}:mystery`).row();
   keyboard.text("↩️ Назад", "location:details").row();
   return keyboard;
 }
 
-export function buildTargetActionKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet">, again = false) {
+export function buildTargetActionKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet" | "isAnimal">, again = false) {
   const keyboard = new InlineKeyboard()
     .text(again ? "👁 Роздивитися ще раз" : "👁 Роздивитися", `social:inspect:${target.type}:${target.id}:known`)
     .text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:known`)
     .row();
 
   if (target.canGreet) keyboard.text("👋 Привітати", `social:greet:${target.type}:${target.id}:known`).row();
+  for (const socialId of quickSocialsForTarget({ kind: target.type, isAnimal: Boolean(target.isAnimal), canGreet: target.canGreet })) {
+    const social = SOCIAL_DEFINITIONS.find((item) => item.id === socialId);
+    if (social) keyboard.text(social.label, `signal:${social.id}:${target.type}:${target.id}:known`);
+  }
+  keyboard.row().text("🪧 Ще сигнали", `signalMenu:${target.type}:${target.id}:known`).row();
   keyboard.text("↩️ Назад", "location:details").row();
+  return keyboard;
+}
+
+export function buildSocialSignalKeyboard(target: Pick<TargetRef, "type" | "id">, mode: "known" | "mystery" = "known") {
+  const keyboard = new InlineKeyboard();
+  for (const [index, social] of SOCIAL_DEFINITIONS.entries()) {
+    keyboard.text(social.label, `signal:${social.id}:${target.type}:${target.id}:${mode}`);
+    if (index % 2 === 1) keyboard.row();
+  }
+  if (SOCIAL_DEFINITIONS.length % 2 === 1) keyboard.row();
+  keyboard.text("↩️ Назад", `target:${target.type}:${target.id}`).row();
   return keyboard;
 }
 

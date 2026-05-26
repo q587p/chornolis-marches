@@ -6,6 +6,8 @@
 
 - `/adminHelp` — список команд.
 - `/world` — стан світу й останні події.
+- `/stat` — коротка екологічна статистика й посилання на веб-/stat.
+- `/chat [hours|all]` — репліки гравців і NPC з пагінацією; веб-/chat.
 - `/all` — усі живі персонажі та істоти.
 - `/all dead` — усі записи істот, включно з inactive/dead/corpse/gone.
 - `/look` або кнопка `👀 Озирнутися` — показати поточну місцину.
@@ -14,6 +16,7 @@
 - `/locationAll` — список усіх місцин і ключів.
 - `/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD]` — додати тварин.
 - `/addCreatureHelp` — список speciesKey для тварин.
+- `/addCampfire` — додати звичайне вогнище у поточній місцині.
 - `/forceOld [speciesKey] [count]` — зробити кілька тварин у поточній місцині старими для тесту старіння.
 - `/cleanupCreature [speciesKey]` — видалити одну тварину в поточній місцині.
 - `/cleanupCreatures` — очистити всіх тварин і нормалізувати унікальних NPC.

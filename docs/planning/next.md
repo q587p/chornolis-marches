@@ -4,6 +4,10 @@ Candidate work for the next patch or minor versions.
 
 This file should stay small. If everything is “next”, nothing is next.
 
+## Current next lane
+
+These items are already marked `status: next` here or in `docs/planning/items/`.
+
 ## MAP-002 — Biome-based resources and spawn rules
 
 Status: next  
@@ -30,11 +34,63 @@ Make the new forest / dry luka / riverbank layout drive resource availability an
 
 The expanded map should not just be larger. Different regions should feel and behave differently, even before full settlement or deep Chornolis systems arrive.
 
+## WORLD-001 — Day/night cycle
+
+Status: next  
+Area: world_time  
+Priority: high  
+Tags: world, atmosphere, visibility, liminality
+
+### Goal
+
+Add dawn/day/dusk/night phases that change visibility, danger and available encounters.
+
+### First scope
+
+- Track current daypart in world state.
+- Make `/time` read from that state instead of only static flavor text.
+- Hide full location descriptions at night unless light reveals them.
+- Keep the first version simple enough to support campfires and later moon/calendar work.
+
+## WORLD-002 — Campfires and light
+
+Status: next  
+Area: survival  
+Priority: high  
+Tags: survival, light, crafting, night  
+Depends on: WORLD-001
+
+### Goal
+
+Make fire a basic survival and exploration tool.
+
+### First scope
+
+- Let campfires reveal night descriptions, exits, creatures, tracks and ground objects.
+- Connect existing campfire features and `/addCampfire` to visibility behavior.
+- Add the first firewood/hmyz gathering hook near forests and campfires.
+- Keep deeper crafting, fire lifetime and weather effects for later.
+
+## SURV-001 — Early respawn support / Повернення
+
+Status: next  
+Area: survival  
+Priority: high  
+Tags: onboarding, respawn, beginner
+
+### Goal
+
+Add `/respawn` as **Повернення** for new or weak characters who get lost or knocked out before they are established.
+
+### First scope
+
+- Return eligible early characters to `start_border_camp`.
+- Gate it behind a beginner/progression threshold.
+- Add a cooldown or small consequence so it does not become fast travel.
+- Keep the existing fallback text until the real flow is implemented.
+
 ## Recommended near-term candidates
 
-- Implement early `/respawn` / **Повернення** with a progression threshold and cooldown, using `start_border_camp` as the return point.
-- Add day/night world state.
-- Add campfire light source behavior and firewood gathering.
 - Add starter settlement skeleton and first NPC roles beyond the closed gate.
 - Turn the new static `/time` output into a world-time service with season, moon circle/month, day and daypart progression.
 - Add debug mode persistence and `/debugGet` / `/debugSet <true|false>` commands before more hidden-vs-technical UI work. Debug on should reveal technical details to everyone; debug off should keep exact details available only to `Писар` players through a `Показати деталі` / `Приховати деталі` option.
@@ -42,6 +98,14 @@ The expanded map should not just be larger. Different regions should feel and be
 - Seed a first small ground-money find on world start/reset: a ґривня under the bridge and a few scattered шаги elsewhere. These should behave like visible location objects: shown by `/look` when light/visibility allows, discoverable by `/examine` in darkness, inspectable like corpses/objects, and pickable into `Речі`.
 - Add a first NPC hunter/archer loop: a named hunter travels between nearby hunting grounds, looks for prey, attacks small animals, and leaves visible signs for players to observe. Later this should grow into tracking, traps and teaching hunting-related skills.
 - Add name approval admin flow after the `isNameApproved` field is available.
+
+## Promotion candidates to review
+
+These are still `backlog`, but recent work makes them worth reviewing before the next patch sequence.
+
+- PERF-001 — budgeted and aggregated creature simulation. Queue pressure is currently visible enough that this may need promotion before larger ecology work.
+- ADM-001 — admin permissions and restricted reset. The admin surface now includes `/chat`, `/addCampfire`, `/restAdmin`, cleanup and tick tools; before wider testing, this should stop being open to everyone.
+- Speech reply UX: `/reply`, `Відповісти` and `Відповісти як...` for addressed speech. This should probably stay behind the chat/social polish lane, not the ecology lane.
 
 ## Review checklist
 
