@@ -29,10 +29,15 @@ Keep these surfaces aligned:
 As of `0.12.0`, the first concrete newcomer path is the dream tutorial in `Дрімотна Межа` on map layer `z = -13`.
 
 - New characters enter the tutorial dream after name/pronoun onboarding.
+- The first tutorial location intentionally keeps the reply keyboard minimal: only `Озирнутися` and `Південь` are shown there, even if the character has inventory or technical details available.
+- Сон and Дрімота can comment on early tutorial movement: Сон encourages correct forward steps, while Дрімота provides a lightly antagonistic voice when the player turns back.
+- Сон and Дрімота also react when a player studies tutorial tracks closely: one rewards attention, the other tries to hurry the player onward.
 - `/sleep tutorial` returns a character to the saved tutorial dream position.
 - Plain `/sleep` routes to the tutorial while that character has not woken from it yet; after wake, normal sleep remains reserved for a later recovery system.
-- `Прокинутися`, `/wake`, `wake`, `прокинутися` and `прокинутись` leave the dream and restore a valid real-world location.
-- The first slice teaches movement and visible locked exits through `Сонні ворота`: the south exit is shown as locked, `/open` / `Відкрити` opens it for a short window, and the gate lazily closes again.
+- The character card includes `Сон` below `Відпочити`; if ordinary sleep is unavailable, the response should offer a direct `Навчальний сон` button.
+- `Прокинутися`, `/wake`, `wake`, `прокинутися` and `прокинутись` leave the dream and restore a valid real-world location. Keep direct commands available as an escape hatch, but do not offer the `Прокинутися` button in early tutorial steps; surface it only later as a suggestion after the first tutorial path has opened up.
+- The first slice teaches movement and visible locked exits through `Брама Сну`: the south exit stays visible, the reply keyboard wraps its direction label in parentheses while locked, `/open` / `Відкрити` opens it for about 30 seconds, and the gate lazily closes again.
+- The current hub exit point is the `Майбутні уроки` feature: inspecting it offers `Прокинутися`, while tutorial voice text explains that the player can later return to the same saved dream position.
 - Future tutorial branches should expand from the hub instead of overloading `/help`: social signals, observation/tracking, gathering, fire/light, rest/fatigue and basic danger.
 
 ## Design Rule

@@ -4,7 +4,7 @@ import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import { formatLifeState, formatResourceState } from "../utils/playerText";
 import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
-import { DREAM_GATE_FEATURE_KEY, isTutorialLocation } from "../services/tutorial";
+import { DREAM_GATE_FEATURE_KEY, TUTORIAL_HUB_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY, isTutorialLocation, lockedExitDirections } from "../services/tutorial";
 
 type MainKeyboardState = {
   isAuto?: boolean;
@@ -13,6 +13,8 @@ type MainKeyboardState = {
   statusLabel?: string;
   isTutorialDream?: boolean;
   canOpenDreamGate?: boolean;
+  canWakeFromTutorial?: boolean;
+  lockedExits?: Direction[];
 };
 
 export const EMPTY_KEYBOARD_BUTTON = "⠀";
@@ -25,27 +27,41 @@ function normalizeState(input: MainKeyboardState | boolean = {}) {
 export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean = {}) {
   const state = normalizeState(stateOrAuto);
   const exits = new Set(state.exits ?? []);
+  const lockedExits = new Set(state.lockedExits ?? []);
+  const directionButton = (direction: Direction, label: string) => exits.has(direction)
+    ? lockedExits.has(direction) ? `(${label})` : label
+    : EMPTY_KEYBOARD_BUTTON;
   const keyboard = new Keyboard()
     .text("👀 Озирнутися");
-  keyboard.text(exits.has("NORTH") ? "⬆️ Північ" : EMPTY_KEYBOARD_BUTTON);
+  keyboard.text(directionButton("NORTH", "⬆️ Північ"));
   keyboard.text("🔎 Роздивитися").row();
 
-  keyboard.text(exits.has("WEST") ? "⬅️ Захід" : EMPTY_KEYBOARD_BUTTON);
+  keyboard.text(directionButton("WEST", "⬅️ Захід"));
   keyboard.text(state.hasInventory ? "🎒 Речі" : EMPTY_KEYBOARD_BUTTON);
-  keyboard.text(exits.has("EAST") ? "Схід ➡️" : EMPTY_KEYBOARD_BUTTON);
+  keyboard.text(directionButton("EAST", "Схід ➡️"));
   keyboard.row();
 
   keyboard.text("🧭 Допомога");
-  keyboard.text(exits.has("SOUTH") ? "⬇️ Південь" : EMPTY_KEYBOARD_BUTTON);
+  keyboard.text(directionButton("SOUTH", "⬇️ Південь"));
   keyboard.text("☰ Меню").row();
 
   if (state.statusLabel) keyboard.text(state.statusLabel).row();
   if (state.isTutorialDream) {
     if (state.canOpenDreamGate) keyboard.text("🚪 Відкрити");
-    keyboard.text("🌅 Прокинутися").row();
+    if (state.canWakeFromTutorial) keyboard.text("🌅 Прокинутися");
+    if (state.canOpenDreamGate || state.canWakeFromTutorial) keyboard.row();
   }
 
   return keyboard.resized().persistent();
+}
+
+function buildTutorialStartReplyKeyboard() {
+  return new Keyboard()
+    .text("👀 Озирнутися")
+    .row()
+    .text("⬇️ Південь")
+    .resized()
+    .persistent();
 }
 
 function statusButtonLabel(player: { hp: number; hpMax: number | null; stamina: number; staminaMax: number | null }) {
@@ -77,6 +93,7 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
     where: { telegramId: String(telegramId) },
     select: {
       id: true,
+      currentLocationId: true,
       hp: true,
       hpMax: true,
       stamina: true,
@@ -104,8 +121,11 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
 
   if (!player) return buildMainReplyKeyboard({ isAuto });
 
+  if (player.currentLocation?.key === TUTORIAL_START_LOCATION_KEY) return buildTutorialStartReplyKeyboard();
+
   const inventoryCount = await prisma.playerResource.count({ where: { playerId: player.id, amount: { gt: 0 } } });
   const exits = player.currentLocation?.exitsFrom.map((exit) => exit.direction) ?? [];
+  const lockedExits = player.currentLocationId ? Array.from((await lockedExitDirections(player.currentLocationId)).keys()) : [];
   const showTechnicalDetails = playerCanShowTechnicalDetails(player);
   const isTutorialDream = player.currentLocation ? isTutorialLocation(player.currentLocation) : false;
 
@@ -116,5 +136,7 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
     statusLabel: showTechnicalDetails ? exactStatusButtonLabel(player) : statusButtonLabel(player),
     isTutorialDream,
     canOpenDreamGate: isTutorialDream && Boolean(player.currentLocation?.features.length),
+    canWakeFromTutorial: player.currentLocation?.key === TUTORIAL_HUB_LOCATION_KEY,
+    lockedExits,
   });
 }

@@ -77,6 +77,7 @@ The forest should feel alive even when players do nothing.
 - Add explicit recent hunting pressure from players and NPCs.
 - Add a first player-accessible prey recovery valve through animal-restoration offerings: hare/mouse statues, carved burrow markers or similar charms can accept berries, herbs or another fitting item, then later create a bounded pair of young prey animals if the local or regional population is dangerously low.
 - Add low-prey warnings from Дід Лісовик when rabbits, mice or another core prey species vanish from a region/world. If he is asleep, the warning should read like a dream-mutter heard across the Порубіжжя rather than an active intervention.
+- Дід Лісовик should not react to artificial carried/fuel resources such as torches or twigs disappearing from seed/resource nodes; his depletion warnings are for natural/ecological resources.
 - Add species-specific fear and aggression profiles.
 - Turn hunting history into animal experience, titles and bounded stat improvements.
 - Add creature aggression and defense profiles, including wolves attacking people and herbivores defending offspring or fighting when escape fails.

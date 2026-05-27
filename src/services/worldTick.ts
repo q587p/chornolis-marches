@@ -1,7 +1,7 @@
 import { Bot } from "grammy";
-import { CreatureAge, Direction, LocationExit } from "@prisma/client";
+import { CreatureAge, Direction, LocationExit, Prisma } from "@prisma/client";
 import { prisma } from "../db";
-import { notifyRegion, notifyRegionTechnicalScribes } from "./notifications";
+import { notifyLocationAll, notifyRegion, notifyRegionTechnicalScribes } from "./notifications";
 import { actionDurationMs, enqueueCreatureAction, gatherDurationMs, movementDurationMs, restartActionQueueLoop } from "./actionQueue";
 import { BASE_STAMINA, TICK_MS, VERY_TIRED_STAMINA, getRuntimeTimingConfig, setRuntimeTickMs } from "../gameConfig";
 import { restartPlayerAutoTimers } from "../handlers/auto";
@@ -10,6 +10,7 @@ import { requireScribeAdmin } from "./adminAccess";
 import { notifyFadingFireTimers } from "./fire";
 import { maybePerformHerbalistSignal } from "./socialAutonomy";
 import { filterLisovykAllowedLocations, isLisovykForbiddenLocation, isLisovykForbiddenRegion } from "./lisovykBoundaries";
+import { DREAM_GATE_FEATURE_KEY } from "./tutorial";
 import { chance, chancePermille, pickOptional as pick, randomInt } from "../utils/random";
 
 const DEFAULT_TICK_INTERVAL_MS = TICK_MS;
@@ -56,6 +57,7 @@ const CREATURE_STARVATION_BASE_CHANCE_PERMILLE = Number(process.env.WORLD_CREATU
 const CREATURE_STARVATION_EXTRA_CHANCE_PER_HUNGER_PERMILLE = Number(process.env.WORLD_CREATURE_STARVATION_EXTRA_CHANCE_PER_HUNGER_PERMILLE || 25);
 const RECENT_ATTACK_FEATURE_PREFIX = "recent_attack_";
 const EDIBLE_RESOURCE_KEYS = ["grass", "berries", "herbs", "mushrooms"] as const;
+const LISOVYK_IGNORED_DEPLETION_RESOURCE_KEYS = new Set(["torch", "lit_torch", "twigs"]);
 const DEPLETED_VEGETATION_FEATURE_PREFIX = "depleted_vegetation_";
 const MOUSE_OVERGRAZING_PRESSURE_DIVISOR = 2;
 
@@ -664,6 +666,68 @@ async function killAnimalFromOldAge(creature: any) {
   });
 }
 
+function jsonObject(value: unknown) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function expiredOpenUntil(data: Record<string, unknown>, now = Date.now()) {
+  const openUntil = typeof data.open_until === "string" ? data.open_until : typeof data.openUntil === "string" ? data.openUntil : null;
+  if (!openUntil) return null;
+  const ms = Date.parse(openUntil);
+  return Number.isFinite(ms) && ms <= now ? openUntil : null;
+}
+
+async function closeExpiredDreamGates(bot?: Bot | null) {
+  const features = await prisma.locationFeature.findMany({
+    where: { key: DREAM_GATE_FEATURE_KEY, isActive: true },
+    select: {
+      id: true,
+      locationId: true,
+      data: true,
+    },
+  });
+  let closed = 0;
+
+  for (const feature of features) {
+    const data = jsonObject(feature.data);
+    const openUntil = expiredOpenUntil(data);
+    if (!openUntil || data.last_closed_open_until === openUntil) continue;
+
+    const nextData = { ...data };
+    delete nextData.open_until;
+    delete nextData.openUntil;
+    nextData.closed_at = new Date().toISOString();
+    nextData.last_closed_open_until = openUntil;
+
+    await prisma.locationFeature.update({
+      where: { id: feature.id },
+      data: { data: nextData as Prisma.InputJsonValue },
+    });
+
+    const message = "Брама Сну стулилася без звуку. Південний шлях знову чекає правильного слова.";
+    await prisma.worldEvent.create({
+      data: {
+        type: "NPC_SAY",
+        title: "Брама Сну стулилася",
+        description: message,
+        locationId: feature.locationId,
+      },
+    });
+
+    if (bot) {
+      await notifyLocationAll(bot, feature.locationId, message);
+      const southExit = await prisma.locationExit.findUnique({
+        where: { fromLocationId_direction: { fromLocationId: feature.locationId, direction: "SOUTH" } },
+        select: { toLocationId: true },
+      });
+      if (southExit?.toLocationId && southExit.toLocationId !== feature.locationId) await notifyLocationAll(bot, southExit.toLocationId, message);
+    }
+    closed++;
+  }
+
+  return closed;
+}
+
 async function killAnimalFromStarvation(creature: any) {
   await prisma.worldAction.updateMany({
     where: { actorType: "CREATURE", creatureId: creature.id, status: { in: ["QUEUED", "RUNNING"] } },
@@ -930,8 +994,14 @@ function predatorAttackChance(predator: any, prey: any) {
 
 type DepletedRegionResource = { regionId: number; regionName: string; resourceKey: string; resourceName: string; locationId: number };
 
-function lisovykWakeText(resourceName: string) {
-  return `Дід лісовик гарчить: «О, де всі ${resourceName}? Хто винищив їх до нуля?!»`;
+function lisovykDepletionPhrase(resourceKey: string, resourceName: string) {
+  if (resourceKey === "grass") return "де вся трава";
+  if (["berries", "herbs", "mushrooms"].includes(resourceKey)) return `де всі ${resourceName}`;
+  return `де весь запас «${resourceName}»`;
+}
+
+function lisovykWakeText(resourceKey: string, resourceName: string) {
+  return `Дід лісовик гарчить: «О, ${lisovykDepletionPhrase(resourceKey, resourceName)}? Хто винищив це до нуля?!»`;
 }
 
 function lisovykSleepText(resourceName?: string) {
@@ -956,7 +1026,11 @@ async function findRegionDepletedResource(): Promise<DepletedRegionResource | nu
     const locations = filterLisovykAllowedLocations(region.locations.map((location) => ({ ...location, region })));
     if (!locations.length) continue;
     const resourceKeys = new Set<string>();
-    for (const location of locations) for (const node of location.resources) resourceKeys.add(node.resourceType.key);
+    for (const location of locations) {
+      for (const node of location.resources) {
+        if (!LISOVYK_IGNORED_DEPLETION_RESOURCE_KEYS.has(node.resourceType.key)) resourceKeys.add(node.resourceType.key);
+      }
+    }
     for (const resourceKey of resourceKeys) {
       const nodes = locations.flatMap((location) => location.resources.filter((node) => node.resourceType.key === resourceKey));
       const total = nodes.reduce((sum, node) => sum + node.amount, 0);
@@ -989,7 +1063,7 @@ async function wakeLisovykIfNeeded() {
     currentAction: action,
   },
 });
-  const message = lisovykWakeText(depleted.resourceName);
+  const message = lisovykWakeText(depleted.resourceKey, depleted.resourceName);
   await prisma.worldEvent.create({ data: { type: "NPC_SAY", title: "Лісовик прокинувся", description: `У регіоні «${depleted.regionName}» зник ресурс «${depleted.resourceName}». ${message}`, locationId: depleted.locationId } });
   if (botInstance) await notifyRegion(botInstance, depleted.regionId, `🌲 Дід лісовик прокинувся.\n\n${message}`);
   return true;
@@ -1061,9 +1135,11 @@ export async function worldTick() {
   let rabbitBirths = 0, mouseBirths = 0, rabbitsSpread = 0, miceSpread = 0, overgrazedLocations = 0, overgrazedResources = 0, depletedByOvergrazing = 0;
   let foxBirths = 0, wolfBirths = 0, foxPreyUnits = 0, wolfPreyUnits = 0;
   let lisovykAwakened = false, lisovykSlept = false;
+  let dreamGatesClosed = 0;
   try {
     if (DEBUG) console.log(`[WORLD TICK] start ${new Date().toISOString()}`);
     tickNumber++;
+    dreamGatesClosed = await closeExpiredDreamGates(botInstance);
     const lifecycle = await processAnimalLifecycle();
     aged = lifecycle.aged;
     oldAgeDeaths = lifecycle.died;
@@ -1187,8 +1263,8 @@ export async function worldTick() {
       }
     }
 
-    if (DEBUG) console.log(`[WORLD TICK] done: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, starvationDeaths=${starvationDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, rabbitBirths=${rabbitBirths}, mouseBirths=${mouseBirths}, rabbitsSpread=${rabbitsSpread}, miceSpread=${miceSpread}, foxBirths=${foxBirths}, wolfBirths=${wolfBirths}, foxPreyUnits=${foxPreyUnits}, wolfPreyUnits=${wolfPreyUnits}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}`);
-    await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "World Tick", description: `Tick #${tickNumber}: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, starvationDeaths=${starvationDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, rabbitBirths=${rabbitBirths}, mouseBirths=${mouseBirths}, rabbitsSpread=${rabbitsSpread}, miceSpread=${miceSpread}, foxBirths=${foxBirths}, wolfBirths=${wolfBirths}, foxPreyUnits=${foxPreyUnits}, wolfPreyUnits=${wolfPreyUnits}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}` } });
+    if (DEBUG) console.log(`[WORLD TICK] done: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, starvationDeaths=${starvationDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, rabbitBirths=${rabbitBirths}, mouseBirths=${mouseBirths}, rabbitsSpread=${rabbitsSpread}, miceSpread=${miceSpread}, foxBirths=${foxBirths}, wolfBirths=${wolfBirths}, foxPreyUnits=${foxPreyUnits}, wolfPreyUnits=${wolfPreyUnits}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, dreamGatesClosed=${dreamGatesClosed}, errors=${errors}`);
+    await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "World Tick", description: `Tick #${tickNumber}: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, starvationDeaths=${starvationDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, rabbitBirths=${rabbitBirths}, mouseBirths=${mouseBirths}, rabbitsSpread=${rabbitsSpread}, miceSpread=${miceSpread}, foxBirths=${foxBirths}, wolfBirths=${wolfBirths}, foxPreyUnits=${foxPreyUnits}, wolfPreyUnits=${wolfPreyUnits}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, dreamGatesClosed=${dreamGatesClosed}, errors=${errors}` } });
     if (botInstance && tickNumber % 5 === 0) {
       const region = await prisma.region.findFirst();
       if (region) await notifyRegionTechnicalScribes(botInstance, region.id, `🌿 Світ ворухнувся.\n\nТехнічний звіт раз на 5 тіків. Поточний тік #${tickNumber}: заплановано рухів — ${queuedMove}, збору — ${queuedGather}, їжі — ${queuedEat}, оглядів — ${queuedLook}, атак — ${queuedAttack}, зайнятих істот — ${skippedBusy}, старість — ${aged}, смертей від старості — ${oldAgeDeaths}, смертей від голоду — ${starvationDeaths}, зниклих трупів — ${corpsesGone}, народилося зайченят — ${rabbitBirths}, мишенят — ${mouseBirths}, лисенят — ${foxBirths}, вовченят — ${wolfBirths}, зайців розбіглося — ${rabbitsSpread}, мишей — ${miceSpread}, об'їдено ресурсів — ${overgrazedResources}, відновлено вузлів — ${regenerated}.`);

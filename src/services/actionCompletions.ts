@@ -29,6 +29,7 @@ import { actorWhere, enqueueCreatureAction, interruptActorActions, type ActorRef
 import { escapeHtml } from "../utils/text";
 import { playerCanShowTechnicalDetails } from "./technicalDetails";
 import { isLocationExitLocked } from "./tutorial";
+import { tutorialSpiritMoveComment, tutorialTrackComments } from "./tutorialVoices";
 import { chance, pick, shuffle } from "../utils/random";
 
 type MovePayload = { direction: Direction; reason?: string };
@@ -257,10 +258,13 @@ async function completeMove(bot: Bot, action: WorldAction) {
     await notifyLocation(bot, exit.toLocationId, player.id, `${arrivalLabel} зайшов сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, buildTargetListKeyboard([{ type: "player", id: player.id, label: arrivalLabel, canGreet: true }]));
     await setActionStatus(action, "DONE");
     await logEvent("MOVE", "Player queued move completed", payload.direction, exit.toLocationId);
+    const spiritComment = await tutorialSpiritMoveComment(currentLocationId, exit.toLocationId, payload.direction);
+    if (spiritComment) await logEvent("NPC_SAY", spiritComment.title, spiritComment.text, exit.toLocationId);
 
     if (chatId) {
       const view = await renderLocationBrief(exit.toLocationId, player.id);
       await bot.api.sendMessage(chatId, `Ви дійшли: ${directionLabels[payload.direction]}`, { reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false) });
+      if (spiritComment) await bot.api.sendMessage(chatId, `${spiritComment.title}:\n${quoteBlock(spiritComment.text)}`, { parse_mode: "HTML" });
       await bot.api.sendMessage(chatId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
     }
     return;
@@ -678,6 +682,11 @@ async function completeTrack(bot: Bot, action: WorldAction) {
 
   const header = detail ? "👣 Ви уважніше роздивляєтеся сліди:" : "👣 Ви знаходите сліди:";
   await bot.api.sendMessage(chatId, `${header}\n${lines.join("\n")}`, detail ? undefined : { reply_markup: buildExamineTracksKeyboard() });
+  const voiceComments = await tutorialTrackComments(player.currentLocationId, detail);
+  for (const comment of voiceComments) {
+    await logEvent("NPC_SAY", comment.title, comment.text, player.currentLocationId);
+    await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
+  }
 }
 
 async function completeSimple(action: WorldAction) {

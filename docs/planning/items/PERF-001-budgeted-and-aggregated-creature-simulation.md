@@ -25,6 +25,8 @@ Keep the world feeling alive without making every animal think and enqueue an in
 
 The current creature model is easy to reason about, but it does not scale well: each living animal can become its own action-queue actor. As animal populations grow, creature backlog can delay player-visible actions even when player quick actions are configured correctly.
 
+Recent playtesting after herbivore reproduction points to a sharper bottleneck: the visible slowdown appears to come from a mass of creature `RUNNING` actions after population growth, not from the player queue itself. Treat this as a high-priority follow-up before adding larger ecology loops that create still more animals.
+
 ## Why it fits
 
 Chornolis should support a living ecology on a larger map. That requires cheaper background simulation and clearer priority for player-facing interactions.
@@ -70,9 +72,12 @@ When a player enters a location, nearby animals can be promoted back into indivi
 
 Avoid creating routine creature `WorldAction` rows for background movement, grazing or idle looking. Reserve queued actions for events that players can notice, combat, special NPC behavior or debug-visible state.
 
+Investigate why large post-reproduction populations leave many creature actions in `RUNNING`, and either cap, aggregate, expire, coalesce or avoid those routine actions so they cannot build a persistent running tail.
+
 ## Acceptance notes
 
 - Player quick actions should remain responsive even with large animal populations.
+- `/world`, `/stat` and service diagnostics should distinguish player queue pressure from creature `RUNNING` pressure so future delays are easier to identify.
 - `/world`, `/stat` or tick summaries should make it obvious when aggregate simulation is carrying background ecology.
 - The first implementation can be conservative: it is acceptable for background animal movement to become less granular if ecology counters and local player-facing behavior stay believable.
 

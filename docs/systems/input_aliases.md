@@ -49,7 +49,7 @@ Actions:
 - `відпочити`, `додати відпочинок у чергу`, `перервати відпочинок`.
 - `/sleep tutorial`, `sleep tutorial`, `навчальний сон`, `сон навчання` -> enter or return to the dream tutorial. While the tutorial is incomplete, plain `/sleep` and `сон` route there too.
 - `/wake`, `wake`, `прокинутися`, `прокинутись` -> leave the dream tutorial and return to the saved real location.
-- `/open`, `open`, `відкрити` -> open the local interactive gate when the current location exposes one, currently the `Сонні ворота` in the dream tutorial.
+- `/open`, `open`, `відкрити` -> open the local interactive gate when the current location exposes one, currently the `Брама Сну` in the dream tutorial.
 - `черга`, `скасувати`, `очистити чергу`.
 - `/track`, `/examine tracks`, `роздивитися сліди`, `придивитися до слідів`. Future detail forms should include target-like aliases such as `роздивитися вовчий слід`, `роздивитися людський слід` and `роздивитися заячий слід`.
 - `сказати Привіт`.

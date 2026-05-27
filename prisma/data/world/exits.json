@@ -51,7 +51,7 @@
     "fromKey": "dream_tutorial_gate",
     "toKey": "dream_tutorial_hub",
     "direction": "SOUTH",
-    "label": "південь, сонні ворота",
+    "label": "південь, Брама Сну",
     "travelCost": 1,
     "isHidden": false
   },

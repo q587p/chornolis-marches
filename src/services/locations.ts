@@ -594,8 +594,10 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
     }
   } else if (feature.type === "GATE") {
     text = isDreamGateFeature(feature)
-      ? `${feature.description ?? "Перед вами стоять сонні ворота."}\n\n${dreamGateStatusText(feature)}`
+      ? `${feature.description ?? "Перед вами стоїть Брама Сну."}\n\n${dreamGateStatusText(feature)}`
       : feature.description ?? "Ви стукаєте у ворота, але вам ніхто не відповідає.";
+  } else if (featureData(feature).tutorial_wake_prompt === true) {
+    text = `${feature.description ?? "Десь збоку ворушаться майбутні уроки."}\n\n<i>Ви можете прокинутися зараз і повернутися до цього місця сну пізніше.</i>`;
   } else if (isTorchSourceFeature(feature)) {
     text = feature.description ?? "Тут лежать сухі факели. Один можна взяти з собою.";
   }
@@ -615,8 +617,8 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
     }
   }
   if (feature.type === "GATE" && isDreamGateFeature(feature)) keyboard.text("🚪 Відкрити", "tutorial:openGate").row();
+  if (featureData(feature).tutorial_wake_prompt === true) keyboard.text("🌅 Прокинутися", "tutorial:wake").row();
   if (isTorchSourceFeature(feature)) keyboard.text("🕯 Взяти факел", `torch:take:${feature.id}`).row();
-  if (player.currentLocationId && isDreamGateFeature(feature)) keyboard.text("🌅 Прокинутися", "tutorial:wake").row();
   keyboard.text("↩️ Назад", "location:details");
   return { text, keyboard };
 }

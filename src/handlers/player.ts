@@ -12,7 +12,8 @@ import { resourceTypeDisplayName } from "../services/corpses";
 import { canLightPlayerTorchFromInventory, getPlayerTorchState, lightPlayerTorchFromInventory, TORCH_DURATION_MS, TORCH_FADING_MS } from "../services/fire";
 import { isScribeAdmin } from "../services/adminAccess";
 import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
-import { dropInventoryResource, inspectInventoryResource, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
+import { dropInventoryResourceDetailed, inspectInventoryResource, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
+import { dropObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 
 function minutes(ms: number) {
   return Math.max(1, Math.ceil(ms / 60_000));
@@ -55,6 +56,8 @@ function buildCharacterAutoKeyboard(autoEnabled: boolean, options: { canToggleTe
     .text("🎒 Речі", "character:inventory")
     .row()
     .text("🧘 Відпочити", "rest:start")
+    .row()
+    .text("🌙 Сон", "character:sleep")
     .row()
     .text(autoEnabled ? "⏹ Зупинити авто" : "🤖 Увімкнути авто", autoEnabled ? "character:auto:stop" : "character:auto:start");
 
@@ -317,9 +320,17 @@ export function registerPlayerHandlers(bot: Bot) {
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
     try {
-      const resultText = await dropInventoryResource(player.id, ctx.match[1]);
+      const result = await dropInventoryResourceDetailed(player.id, ctx.match[1]);
+      await recordVisibleItemAction(bot, {
+        playerId: player.id,
+        locationId: result.locationId,
+        observerText: dropObserverText(player, result.droppedName),
+        eventTitle: "Player dropped item",
+        eventDescription: `player=${player.id}; item=${result.resourceKey}; name=${result.droppedName}`,
+        actionNote: `викинуто: ${result.droppedName}`,
+      });
       const view = await renderInventoryView(ctx.from.id);
-      const text = view ? `${resultText}\n\n${view.text}` : resultText;
+      const text = view ? `${result.text}\n\n${view.text}` : result.text;
       await ctx.editMessageText(text, view ? { reply_markup: view.keyboard } : undefined);
     } catch (error) {
       await ctx.reply(error instanceof Error ? error.message : "Не вдалося викинути це.");

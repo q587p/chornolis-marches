@@ -7,6 +7,7 @@ import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { durationSecondsSuffix } from "../utils/durationText";
 import { addTwigsToCampfire, lightPlayerTorchAtCampfire } from "../services/fire";
 import { pickUpGroundResource } from "../services/groundItems";
+import { pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 
 export function registerLookHandlers(bot: Bot) {
   async function examineTracks(ctx: any) {
@@ -191,6 +192,16 @@ export function registerLookHandlers(bot: Bot) {
 
     const text = await takeTorchFromLocationFeature(Number(ctx.match[1]), player.id);
     await safeAnswerCallbackQuery(ctx);
+    if (player.currentLocationId && text.includes("Ви взяли")) {
+      await recordVisibleItemAction(bot, {
+        playerId: player.id,
+        locationId: player.currentLocationId,
+        observerText: pickupObserverText(player, "факел"),
+        eventTitle: "Player took torch",
+        eventDescription: `player=${player.id}; item=torch; source=feature:${ctx.match[1]}`,
+        actionNote: "піднято: факел",
+      });
+    }
     await ctx.reply(text);
   });
 
@@ -204,6 +215,14 @@ export function registerLookHandlers(bot: Bot) {
     try {
       const item = await pickUpGroundResource(player.id, Number(ctx.match[1]));
       await safeAnswerCallbackQuery(ctx, "Підібрано.");
+      await recordVisibleItemAction(bot, {
+        playerId: player.id,
+        locationId: item.locationId,
+        observerText: pickupObserverText(player, item.name),
+        eventTitle: "Player picked up item",
+        eventDescription: `player=${player.id}; item=${item.key}; name=${item.name}`,
+        actionNote: `піднято: ${item.name}`,
+      });
       await ctx.reply(`Ви підняли ${item.name}.`);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Не вдалося підняти це.";

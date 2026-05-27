@@ -146,7 +146,7 @@ export async function inspectInventoryResource(playerId: number, resourceQuery: 
   return `🎒 ${name}${amount}${description}${torchDetails}`;
 }
 
-export async function dropInventoryResource(playerId: number, resourceQuery: string) {
+export async function dropInventoryResourceDetailed(playerId: number, resourceQuery: string) {
   const key = inventoryResourceKeyFromText(resourceQuery);
   const { twigs } = await ensureTorchResourceTypes();
   const player = await prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } });
@@ -169,9 +169,26 @@ export async function dropInventoryResource(playerId: number, resourceQuery: str
     });
 
     if (carried.resourceType.key === "lit_torch") {
-      return "Ви загасили й викинули залишок факела. На землі лишився хмиз.";
+      return {
+        text: "Ви загасили й викинули залишок факела. На землі лишився хмиз.",
+        locationId: player.currentLocationId!,
+        droppedName: "хмиз",
+        carriedName: resourceTypeDisplayName(carried.resourceType),
+        resourceKey: droppedResourceType.key,
+      };
     }
 
-    return `Ви викинули ${resourceTypeDisplayName(carried.resourceType)}.`;
+    const name = resourceTypeDisplayName(carried.resourceType);
+    return {
+      text: `Ви викинули ${name}.`,
+      locationId: player.currentLocationId!,
+      droppedName: name,
+      carriedName: name,
+      resourceKey: droppedResourceType.key,
+    };
   });
+}
+
+export async function dropInventoryResource(playerId: number, resourceQuery: string) {
+  return (await dropInventoryResourceDetailed(playerId, resourceQuery)).text;
 }

@@ -5,8 +5,11 @@ import { directionLabels } from "../ui/labels";
 
 export const TUTORIAL_REGION_KEY = "dream_tutorial";
 export const TUTORIAL_START_LOCATION_KEY = "dream_tutorial_threshold";
+export const TUTORIAL_SECOND_STEP_LOCATION_KEY = "dream_tutorial_second_step";
+export const TUTORIAL_GATE_LOCATION_KEY = "dream_tutorial_gate";
+export const TUTORIAL_HUB_LOCATION_KEY = "dream_tutorial_hub";
 export const DREAM_GATE_FEATURE_KEY = "dream_tutorial_sleep_gate";
-export const DREAM_GATE_OPEN_MS = 2 * 60 * 1000;
+export const DREAM_GATE_OPEN_MS = 30 * 1000;
 
 const RETURN_LOCATION_EVENT_TITLE = "Tutorial return location";
 const DREAM_LOCATION_EVENT_TITLE = "Tutorial dream location";
@@ -56,8 +59,8 @@ export function isDreamGateFeature(feature: { key: string; data: Prisma.JsonValu
 export function dreamGateStatusText(feature: { data: Prisma.JsonValue | null }) {
   const data = featureData(feature);
   return isLockedFeatureCurrentlyOpen(data)
-    ? "Ворота прочинені. Сон за ними дихає холодом і кличе на південь."
-    : "Ворота зімкнені. На дереві проступає знак: не всі шляхи є шляхами, доки їх не покличеш.";
+    ? "Брама прочинена. Сон за нею дихає холодом і кличе на південь."
+    : "Брама зімкнена. На дереві проступає знак: не всі шляхи є шляхами, доки їх не покличеш.";
 }
 
 export async function getTutorialStartLocationId() {
@@ -246,7 +249,7 @@ export async function openDreamGate(playerId: number) {
     },
   });
 
-  return "Сонні ворота розходяться без скрипу. Південний шлях відкритий, але сон не любить чекати.";
+  return "Брама Сну розходиться без скрипу. Південний шлях відкритий, але сон не любить чекати.";
 }
 
 export function lockedExitLabel(direction: Direction, reason: string) {

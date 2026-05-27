@@ -26,6 +26,7 @@ Expired timed campfires are turned into згаслі campfires lazily when locat
 
 - Seed data includes a few loose `факел` ground items in forest, dry luka and riverbank locations. They appear under `Лежить` and can be picked up without a gather chance roll or action delay when the character is not exhausted.
 - The closed settlement gate has a temporary infinite torch stand. Its feature action is `Взяти факел`; later it should become a limited-stock container or bundle.
+- Picking up a loose torch or taking one from a torch stand is visible to other characters in the location and is recorded for world/admin history.
 - `/start`, `/reset` and ordinary bot startup do not add torches directly to player inventory. Development/scribe placement uses `/addTorch [персонаж]`, which adds a torch to the current or named player's inventory.
 - Near an active light-giving campfire, a character with a torch can use `Підпалити факел`.
 - If the torch is already burning and the character carries another unlit torch, the action becomes `Підпалити ще один факел`.

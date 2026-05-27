@@ -48,6 +48,7 @@ export async function pickUpGroundResource(playerId: number, resourceNodeId: num
     return {
       key: node.resourceType.key as PickableResourceKey,
       name: resourceTypeDisplayName(node.resourceType),
+      locationId,
     };
   });
 }

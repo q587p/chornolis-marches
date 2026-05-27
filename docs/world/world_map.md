@@ -72,7 +72,7 @@ y
 - `riverbank_18_06` — SOUTH → `under_bridge_18_05`
 - `under_bridge_18_05` — NORTH → `riverbank_18_06`
 - `under_bridge_18_05` — SOUTH → `riverbank_18_04`
-- `dream_tutorial_gate` — SOUTH → `dream_tutorial_hub` is a visible locked exit until `Сонні ворота` are opened.
+- `dream_tutorial_gate` — SOUTH → `dream_tutorial_hub` is a visible locked exit until `Брама Сну` is opened.
 
 ## Editing
 

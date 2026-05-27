@@ -204,19 +204,31 @@
     }
   },
   {
+    "key": "dream_tutorial_future_lessons",
+    "locationKey": "dream_tutorial_hub",
+    "type": "LANDMARK",
+    "name": "Майбутні уроки",
+    "description": "Десь збоку ворушаться майбутні уроки, але зараз стежка дозволяє просто прокинутися.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "tutorial_wake_prompt": true
+    }
+  },
+  {
     "key": "dream_tutorial_sleep_gate",
     "locationKey": "dream_tutorial_gate",
     "type": "GATE",
-    "name": "Сонні ворота",
-    "description": "Ворота стоять просто на стежці, але тінь від них падає так, наче за ними є цілий мур. На дошках проступають слова: «Скажи шляху відчинитися».",
+    "name": "Брама Сну",
+    "description": "Брама стоїть просто на стежці, але тінь від неї падає так, наче за нею є цілий мур. На дошках проступають слова: «Скажи шляху відчинитися».",
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
       "tutorial_gate": true,
       "locked": true,
       "locks_exit_direction": "SOUTH",
-      "lock_reason": "сонні ворота",
-      "reset_after_ms": 120000
+      "lock_reason": "брама сну",
+      "reset_after_ms": 30000
     }
   }
 ]

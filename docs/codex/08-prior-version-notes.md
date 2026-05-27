@@ -86,8 +86,9 @@ Important remembered direction from the 0.11 line:
 - `/sleep tutorial` returns to the saved tutorial dream position; while the tutorial is incomplete, plain `/sleep` also routes there. After wake, plain `/sleep` remains reserved for a future normal sleep/recovery system.
 - `Прокинутися` / `/wake` exits the tutorial dream, stores the dream position and restores a valid real-world location.
 - Visible locked exits are now reusable: locked directions appear in exit lists in parentheses, movement gives a blocked reason, and queued movement re-checks the lock before completion.
-- `Сонні ворота` use the locked-exit flow: `/open` / `Відкрити` opens the south exit briefly, then the gate lazily closes again.
+- `Брама Сну` uses the locked-exit flow: `/open` / `Відкрити` opens the south exit for about 30 seconds, then the gate lazily closes again.
 - Inventory now has first modest item actions: berries restore a small amount of stamina, mushrooms ease hunger, herbs can restore a small amount of HP when wounded, dry torches can be lit when fire is available, and resource stacks can be inspected or dropped. Keep later item-use work diegetic and modest until cooking, medicine, herbalism and real item instances exist.
+- Immediate pickup/drop item actions should be room-visible, recorded as world events, and visible in scribe/admin recent-action history.
 - Carried lit torches burn out into `хмиз`, not dry torches. Inspecting another character shows visible lit torches in hand(s) or `Руки порожні.` only when no obvious held item is visible.
 - `Додати хмиз` / `/add twigs campfire` is implemented as the first `twigs` fuel loop: `twigs` can extend burning ordinary campfires or prepare extinguished ordinary campfires for relighting. Broader foraging, richer fuel types and player-made campfires remain future work.
 - Onboarding, `/help`, fallback hints and tutorial/newcomer-helper plans should be reviewed whenever early-game actions, resources, visibility or survival mechanics change.

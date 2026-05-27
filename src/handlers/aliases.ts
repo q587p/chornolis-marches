@@ -40,8 +40,9 @@ import { addTwigsToCampfire, lightPlayerTorchFromInventory } from "../services/f
 import { requireScribeAdmin } from "../services/adminAccess";
 import { pickUpFirstGroundResourceByKey } from "../services/groundItems";
 import { parseSpeechTarget } from "../services/speechTargets";
-import { dropInventoryResource, inspectInventoryResource, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
+import { dropInventoryResourceDetailed, inspectInventoryResource, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
 import { enterTutorialDream, hasCompletedTutorial, openDreamGate, wakeFromTutorialDream } from "../services/tutorial";
+import { dropObserverText, pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 
 type TextTargetRef = {
   type: "player" | "creature";
@@ -361,12 +362,21 @@ async function submitInventoryInspect(ctx: any, target: string) {
   }
 }
 
-async function submitInventoryDrop(ctx: any, target: string) {
+async function submitInventoryDrop(bot: Bot, ctx: any, target: string) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   try {
-    await ctx.reply(await dropInventoryResource(player.id, target));
+    const result = await dropInventoryResourceDetailed(player.id, target);
+    await recordVisibleItemAction(bot, {
+      playerId: player.id,
+      locationId: result.locationId,
+      observerText: dropObserverText(player, result.droppedName),
+      eventTitle: "Player dropped item",
+      eventDescription: `player=${player.id}; item=${result.resourceKey}; name=${result.droppedName}`,
+      actionNote: `викинуто: ${result.droppedName}`,
+    });
+    await ctx.reply(result.text);
   } catch (error) {
     await ctx.reply(error instanceof Error ? error.message : "Не вдалося викинути це.");
   }
@@ -483,13 +493,21 @@ async function resolveVisibleTargetForAlias(ctx: any, targetQuery: string) {
   return { player, locationId, targetRef: match.target, target };
 }
 
-async function submitPickupTarget(ctx: any, targetQuery: string) {
+async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
   const normalizedTarget = normalizeTargetKey(targetQuery);
   if (["torch", "torches", "факел", "факели", "факела", "факелів", "twigs", "хмиз"].includes(normalizedTarget)) {
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
     try {
       const item = await pickUpFirstGroundResourceByKey(player.id, ["twigs", "хмиз"].includes(normalizedTarget) ? "twigs" : "torch");
+      await recordVisibleItemAction(bot, {
+        playerId: player.id,
+        locationId: item.locationId,
+        observerText: pickupObserverText(player, item.name),
+        eventTitle: "Player picked up item",
+        eventDescription: `player=${player.id}; item=${item.key}; name=${item.name}`,
+        actionNote: `піднято: ${item.name}`,
+      });
       await ctx.reply(`Ви підняли ${item.name}.`);
     } catch (error) {
       await ctx.reply(error instanceof Error ? error.message : "Не вдалося підняти це.");
@@ -518,7 +536,16 @@ async function submitPickupTarget(ctx: any, targetQuery: string) {
 
   try {
     const resourceType = await addCorpseToInventory(resolved.player.id, { ...creature, species: creature.species });
-    await ctx.reply(`Ви підібрали ${resourceTypeDisplayName(resourceType)}.`);
+    const itemName = resourceTypeDisplayName(resourceType);
+    await recordVisibleItemAction(bot, {
+      playerId: resolved.player.id,
+      locationId: resolved.locationId,
+      observerText: pickupObserverText(resolved.player, itemName),
+      eventTitle: "Player picked up corpse",
+      eventDescription: `player=${resolved.player.id}; creature=${creature.id}; item=${resourceType.key}; name=${itemName}`,
+      actionNote: `піднято: ${itemName}`,
+    });
+    await ctx.reply(`Ви підібрали ${itemName}.`);
   } catch {
     await ctx.reply("Трупа вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() });
   }
@@ -540,7 +567,9 @@ async function submitSleep(ctx: any, tutorial = false) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
   if (!tutorial && await hasCompletedTutorial(player.id)) {
-    return void (await ctx.reply("Звичайний сон ще не вплетений у правила світу. Для навчального сну використайте /sleep tutorial."));
+    return void (await ctx.reply("Звичайний сон ще не вплетений у правила світу. Для навчального сну використайте /sleep tutorial.", {
+      reply_markup: new InlineKeyboard().text("🌙 Навчальний сон", "tutorial:sleep"),
+    }));
   }
 
   const result = await enterTutorialDream(player.id);
@@ -601,7 +630,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "wake") return submitWake(ctx);
     if (parsed.kind === "open") return submitOpen(ctx);
     if (parsed.kind === "inspect-inventory-item") return submitInventoryInspect(ctx, parsed.target);
-    if (parsed.kind === "drop-inventory-item") return submitInventoryDrop(ctx, parsed.target);
+    if (parsed.kind === "drop-inventory-item") return submitInventoryDrop(bot, ctx, parsed.target);
     if (parsed.kind === "add-twigs-campfire") {
       const player = await getPlayerByTelegramId(ctx.from.id);
       if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
@@ -609,7 +638,7 @@ export function registerAliasHandlers(bot: Bot) {
     }
     if (parsed.kind === "say") return submitSay(bot, ctx, parsed.text);
     if (parsed.kind === "target-action") return submitTargetAction(bot, ctx, parsed.action, parsed.target);
-    if (parsed.kind === "pickup-target") return submitPickupTarget(ctx, parsed.target);
+    if (parsed.kind === "pickup-target") return submitPickupTarget(bot, ctx, parsed.target);
     if (parsed.kind === "social-signal") return submitSocialSignal(bot, ctx, parsed.signal, parsed.target);
   });
 }

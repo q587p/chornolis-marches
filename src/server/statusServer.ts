@@ -330,10 +330,9 @@ function renderTopHunterRows(rows: EcologyStats["topHunters"]) {
 }
 
 function renderTopCharacterRows(rows: EcologyStats["topCharacters"]) {
-  if (rows.length === 0) return `<tr><td colspan="8"><code>none</code></td></tr>`;
+  if (rows.length === 0) return `<tr><td colspan="7"><code>none</code></td></tr>`;
   return rows
     .map((row) => `<tr>
-      <td><code>${escapeHtml(row.ref)}</code></td>
       <td>${escapeHtml(row.name)}</td>
       <td>${row.locationName ? escapeHtml(row.locationName) : "<span class=\"muted\">невідомо</span>"}</td>
       <td>${formatNumber(row.animalsKilled)}</td>
@@ -418,7 +417,7 @@ async function renderEcologyStatsPage() {
     <table><thead><tr><th>ID</th><th>Ім'я</th><th>Вид</th><th>Стан</th><th>Атак</th><th>Влучних атак</th><th>Убивств</th></tr></thead><tbody>${renderTopHunterRows(stats.topHunters)}</tbody></table>
 
     <h2>Персонажі Порубіжжя</h2>
-    <table><thead><tr><th>ID</th><th>Ім'я</th><th>Місцина</th><th>Вполювання</th><th>Збір</th><th>Привітань</th><th>Реплік</th><th>Кроків</th></tr></thead><tbody>${renderTopCharacterRows(stats.topCharacters)}</tbody></table>
+    <table><thead><tr><th>Ім'я</th><th>Місцина</th><th>Вполювання</th><th>Збір</th><th>Привітань</th><th>Реплік</th><th>Кроків</th></tr></thead><tbody>${renderTopCharacterRows(stats.topCharacters)}</tbody></table>
 
     <h2>Ресурси</h2>
     <table><thead><tr><th>Ключ</th><th>Назва</th><th>Вузлів</th><th>Кількість</th><th>%</th></tr></thead><tbody>${renderResourceRows(stats.resourceRows)}</tbody></table>

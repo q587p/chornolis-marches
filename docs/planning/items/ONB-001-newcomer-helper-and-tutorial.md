@@ -28,7 +28,7 @@ The first version should help a new character understand what they can do withou
 - `/sleep tutorial` returns to the saved tutorial position.
 - `/sleep` without arguments routes to the tutorial while the character has not woken from it yet.
 - `Прокинутися` / `/wake` leaves the dream and restores a valid real-world location.
-- `Сонні ворота` teach visible locked exits: a locked south exit is shown, blocked movement gives a reason, and `/open` / `Відкрити` opens the route for a short window.
+- `Брама Сну` teaches visible locked exits: a locked south exit is shown, blocked movement gives a reason, and `/open` / `Відкрити` opens the route for about 30 seconds.
 
 ## Remaining first scope
 

@@ -9,6 +9,7 @@ import { prisma } from "../db";
 import { addCorpseToInventory, resourceTypeDisplayName } from "../services/corpses";
 import { performSocialSignal, socialDefinitionById } from "../services/socialSignals";
 import { durationSecondsSuffix } from "../utils/durationText";
+import { pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 
 function buildActionKeyboard(target: ResolvedTarget, again = false) {
   if (target.isCorpse) return buildCorpseActionKeyboard(target);
@@ -83,9 +84,18 @@ export function registerSocialHandlers(bot: Bot) {
     }
 
     await safeAnswerCallbackQuery(ctx, "Підібрано.");
+    const itemName = resourceTypeDisplayName(resourceType);
+    await recordVisibleItemAction(bot, {
+      playerId: player.id,
+      locationId: player.currentLocationId,
+      observerText: pickupObserverText(player, itemName),
+      eventTitle: "Player picked up corpse",
+      eventDescription: `player=${player.id}; creature=${creature.id}; item=${resourceType.key}; name=${itemName}`,
+      actionNote: `піднято: ${itemName}`,
+    });
     await editOrReply(
       ctx,
-      `🤲 Ви підібрали ${resourceTypeDisplayName(resourceType)}.\n\nВін лежить у ваших речах, але ще псується. Якщо забаритися, від нього лишиться тільки слід.`,
+      `🤲 Ви підібрали ${itemName}.\n\nВін лежить у ваших речах, але ще псується. Якщо забаритися, від нього лишиться тільки слід.`,
       new InlineKeyboard().text("↩️ Назад", "location:details").row(),
     );
   });

@@ -18,6 +18,8 @@ For corpses, these states describe the current condition of the body. Later peri
 
 0.11.12 resource-stack drops are an intentionally simple bridge: `Викинути` removes one carried resource and returns it to the current location through the existing resource-node model. A dropped lit torch is extinguished and leaves `twigs`. Later item instances should preserve origin, quality, timers, freshness and richer ground-object behavior.
 
+Immediate pickup and drop actions should be visible to the room: nearby players receive an observer line, a world event is recorded, and the actor gets a recent-action entry for scribe/admin inspection. This currently covers loose ground resources, corpse pickup, torch-stand pickup and inventory drops.
+
 ## Sex, animacy and cases
 
 Ukrainian display text should be chosen through grammar helpers instead of hardcoded labels in gameplay code.

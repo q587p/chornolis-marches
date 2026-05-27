@@ -11,6 +11,28 @@ _No unreleased changes yet._
 
 ---
 
+## 0.12.1 - Tutorial dream polish and visible actions - 12026-05-27
+
+### Changed
+
+- Simplified the first tutorial dream location keyboard so the opening only shows the location overview action and the south movement button.
+- Hidden inventory, examine, help, menu and status buttons from the first tutorial step to keep the onboarding path focused.
+- Clarified the first tutorial dream location text so it points players toward the only visible path south.
+- Added first tutorial spirit voice comments for forward and backward movement in the dream, logged as NPC speech events.
+- Renamed the tutorial dream gate from `Сонні ворота` to `Брама Сну` to avoid implying that the gate itself is sleepy.
+- Moved the visible `Прокинутися` tutorial button out of the early gate step; direct wake commands still work as an escape hatch.
+- Direction buttons now mark visible locked exits with compact parentheses around the direction label while the lock is active.
+- Added a tutorial hub feature that offers the visible wake-up action after the first tutorial path opens, with voice text explaining that the player can return to the saved dream position later.
+- Expired tutorial dream gates now close as explicit world events and notify nearby dream locations instead of silently becoming locked again.
+- Track-detail buttons now use a clear `Сліди` label, and the tutorial dream voices react when a player studies tracks closely.
+- Clarified the second tutorial step text so it explicitly points players to the south button or text command.
+- Immediate pickup and drop item actions now notify other players in the location, write world events, and appear in admin recent-action history.
+- Lisovyk depletion warnings now ignore artificial torch/twigs resources and use more natural Ukrainian resource wording.
+- Public `/stat` character rows no longer expose whether a listed character is player-controlled or NPC-backed.
+- The character card now exposes a Sleep button, and unavailable normal sleep offers a direct tutorial sleep button.
+
+---
+
 ## 0.12.0 - Dream tutorial - 12026-05-27
 
 ### Added
@@ -19,7 +41,7 @@ _No unreleased changes yet._
 - New characters now enter the tutorial dream after onboarding, and `/sleep tutorial` can return a character to the saved tutorial position.
 - Added `/sleep` routing to the tutorial while it is incomplete, plus `/wake` / `Прокинутися` to leave the dream and restore a valid real-world location.
 - Added reusable visible locked exits: locked directions appear in location exit lists, movement into them is blocked with a reason, and queued moves re-check the lock before completing.
-- Added the first interactive gate, `Сонні ворота`: `/open` / `Відкрити` opens the locked south exit for a short window before it lazily closes again.
+- Added the first interactive gate, `Брама Сну`: `/open` / `Відкрити` opens the locked south exit for about 30 seconds before it lazily closes again.
 
 ### Changed
 

@@ -251,9 +251,7 @@ export async function getEcologyStats() {
   ) as TickCounterSummary;
 
   const playerCharacterRows = topPlayers.map((player) => ({
-    kind: "PLAYER" as const,
     id: player.id,
-    ref: `P#${player.id}`,
     name: player.nameNominative ?? player.firstName ?? player.username ?? "мандрівник",
     pronoun: player.pronoun,
     grammaticalGender: player.grammaticalGender,
@@ -266,9 +264,7 @@ export async function getEcologyStats() {
     steps: player.steps,
   }));
   const npcCharacterRows = topNpcs.map((creature) => ({
-    kind: "NPC" as const,
     id: creature.id,
-    ref: `NPC#${creature.id}`,
     name: creatureForms(creature).nominative,
     pronoun: null,
     grammaticalGender: creature.species.grammaticalGender,
@@ -287,7 +283,7 @@ export async function getEcologyStats() {
       || b.greetings - a.greetings
       || b.says - a.says
       || b.steps - a.steps
-      || a.ref.localeCompare(b.ref)
+      || a.name.localeCompare(b.name, "uk-UA")
     )
     .slice(0, 20);
 

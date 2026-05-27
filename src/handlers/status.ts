@@ -93,7 +93,7 @@ export async function buildStatBrief() {
       const location = character.locationName ? `; зараз: ${character.locationName}` : "";
       const hunted = genderedPast(character, "вполював", "вполювала", "вполювали");
       const gathered = genderedPast(character, "зібрав", "зібрала", "зібрали");
-      return `${character.ref} ${character.name}: ${hunted} ${formatStatNumber(character.animalsKilled)}, ${gathered} ${formatStatNumber(character.successfulGathers)}, привітань ${formatStatNumber(character.greetings)}, реплік ${formatStatNumber(character.says)}, кроків ${formatStatNumber(character.steps)}${location}`;
+      return `${character.name}: ${hunted} ${formatStatNumber(character.animalsKilled)}, ${gathered} ${formatStatNumber(character.successfulGathers)}, привітань ${formatStatNumber(character.greetings)}, реплік ${formatStatNumber(character.says)}, кроків ${formatStatNumber(character.steps)}${location}`;
     });
 
   return {

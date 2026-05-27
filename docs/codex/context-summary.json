@@ -74,6 +74,6 @@
     "/sleep tutorial returns to the saved tutorial dream position; plain /sleep routes there only while tutorial is incomplete.",
     "Прокинутися / /wake exits the tutorial dream and restores a valid real-world location.",
     "Visible locked exits appear in exit lists and block movement with a reason; queued movement re-checks locks before completion.",
-    "Сонні ворота are the first interactive gate: /open / Відкрити opens the south exit briefly."
+    "Брама Сну is the first interactive gate: /open / Відкрити opens the south exit for about 30 seconds."
   ]
 }

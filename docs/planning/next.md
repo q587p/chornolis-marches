@@ -10,7 +10,7 @@ These items are already marked `status: next` here or in `docs/planning/items/`.
 
 ## Recommended next slice after 0.12.0
 
-The 0.12.0 line landed the first dream tutorial slice: first-run entry, `/sleep tutorial`, wake/skip, visible locked exits and `Сонні ворота`. The next patches should deepen that lane without turning it into a long checklist.
+The 0.12.0 line landed the first dream tutorial slice: first-run entry, `/sleep tutorial`, wake/skip, visible locked exits and `Брама Сну`. The next patches should deepen that lane without turning it into a long checklist.
 
 Recommended order:
 
@@ -129,7 +129,7 @@ Add `/respawn` as **Повернення** for new or weak characters who get lo
 
 These are still `backlog`, but recent work makes them worth reviewing before the next patch sequence.
 
-- PERF-001 — budgeted and aggregated creature simulation. Queue pressure is currently visible enough that this may need promotion before larger ecology work.
+- PERF-001 — budgeted and aggregated creature simulation. Recent delay diagnosis points at mass creature `RUNNING` actions after reproduction, not the player queue itself; treat this as the highest-priority backlog item before adding larger ecology loops.
 - ADM-001 — admin permissions, name approval and restricted reset hardening. A first `Писар`/admin gate exists now, so remaining near-term work is audit logging, clearer role UX, first name-review tools and closing any leftover dangerous paths.
 - Speech reply UX: `/reply`, `Відповісти` and `Відповісти як...` for addressed speech. This should probably stay behind the chat/social polish lane, not the ecology lane.
 - Inventory item actions: the dedicated inventory view exists, and the 0.11.12 berries/mushrooms/herbs use pass proves the path. Item details, dropping, torches, corpses and richer per-item actions are now small enough to promote when the survival loop needs them.

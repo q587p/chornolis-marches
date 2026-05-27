@@ -86,7 +86,7 @@ export function buildExamineLocationKeyboard() {
 }
 
 export function buildExamineTracksKeyboard() {
-  return new InlineKeyboard().text("🔎 Роздивитися", "track:details");
+  return new InlineKeyboard().text("🐾 Сліди", "track:details");
 }
 
 export function buildAnonymousTargetKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet" | "canAttack" | "isAnimal">) {

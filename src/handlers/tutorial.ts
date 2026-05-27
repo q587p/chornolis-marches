@@ -1,9 +1,13 @@
-import { Bot } from "grammy";
+import { Bot, InlineKeyboard } from "grammy";
 import { getPlayerByTelegramId } from "../services/players";
 import { enterTutorialDream, hasCompletedTutorial, openDreamGate, wakeFromTutorialDream } from "../services/tutorial";
 import { renderLocationBrief } from "../services/locations";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
+
+function buildTutorialSleepKeyboard() {
+  return new InlineKeyboard().text("🌙 Навчальний сон", "tutorial:sleep");
+}
 
 async function replyWithLocation(ctx: any, locationId: number, playerId: number) {
   const view = await renderLocationBrief(locationId, playerId);
@@ -16,7 +20,7 @@ async function sleepTutorial(ctx: any, forceTutorial = false) {
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   if (!forceTutorial && await hasCompletedTutorial(player.id)) {
-    return void (await ctx.reply("Звичайний сон ще не вплетений у правила світу. Для навчального сну використайте /sleep tutorial."));
+    return void (await ctx.reply("Звичайний сон ще не вплетений у правила світу. Для навчального сну використайте /sleep tutorial.", { reply_markup: buildTutorialSleepKeyboard() }));
   }
 
   const result = await enterTutorialDream(player.id);
@@ -61,6 +65,11 @@ export function registerTutorialHandlers(bot: Bot) {
   bot.callbackQuery("tutorial:wake", async (ctx) => {
     await safeAnswerCallbackQuery(ctx);
     await wakeTutorial(ctx);
+  });
+
+  bot.callbackQuery(["tutorial:sleep", "character:sleep"], async (ctx) => {
+    await safeAnswerCallbackQuery(ctx);
+    await sleepTutorial(ctx, ctx.callbackQuery.data === "tutorial:sleep");
   });
 
   bot.callbackQuery("tutorial:openGate", async (ctx) => {
