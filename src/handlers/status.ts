@@ -35,6 +35,7 @@ const CHAT_LOG_ENTRY_MAX_CHARS = 1100;
 const CHAT_LOG_PAGE_SIZE = 12;
 const WHO_PAGE_SIZE = 20;
 const WHO_ACTIVE_WINDOW_MS = 60 * 60 * 1000;
+const STATUS_PERF_DEBUG = process.env.STATUS_PERF_DEBUG === "true";
 type AllReturnContext = { showDead: boolean; page: number };
 const pendingNameRejections = new Map<number, { playerId: number; returnContext: AllReturnContext }>();
 const pendingAdminTeleports = new Map<number, { playerId: number; returnContext: AllReturnContext }>();
@@ -64,6 +65,16 @@ function formatStatNumber(value: number, maximumFractionDigits = 0) {
 
 function formatRate(value: number) {
   return formatStatNumber(value, value >= 10 ? 0 : 1);
+}
+
+function statusPerfNow() {
+  return Date.now();
+}
+
+function logStatusPerf(scope: string, startedAt: number, extra = "") {
+  if (!STATUS_PERF_DEBUG) return;
+  const durationMs = Date.now() - startedAt;
+  console.log(`[STATUS PERF] ${scope}: ${durationMs}ms${extra ? `; ${extra}` : ""}`);
 }
 
 function genderedPast(player: { grammaticalGender?: string | null; pronoun?: string | null }, masculine: string, feminine: string, plural: string) {
@@ -857,10 +868,23 @@ export async function buildChatLogPage(mode: ChatLogMode, window: ChatLogWindow,
 }
 
 async function buildLocationAllPage(requestedPage: number) {
-  const locations = await prisma.cellLocation.findMany({ include: { region: true }, orderBy: [{ z: "asc" }, { y: "desc" }, { x: "asc" }] });
+  const startedAt = statusPerfNow();
+  const locations = await prisma.cellLocation.findMany({
+    select: {
+      key: true,
+      name: true,
+      x: true,
+      y: true,
+      z: true,
+      dangerLevel: true,
+      region: { select: { name: true } },
+    },
+    orderBy: [{ z: "asc" }, { y: "desc" }, { x: "asc" }],
+  });
   const lines = locations.map((l) => `${l.key} — ${l.name} (${l.x},${l.y},${l.z}); danger=${l.dangerLevel}; region=${l.region.name}`);
   const pages = splitLinesIntoPages(lines.length ? lines : ["немає"], LOCATION_PAGE_MAX_CHARS);
   const page = Math.max(0, Math.min(requestedPage, pages.length - 1));
+  logStatusPerf("buildLocationAllPage", startedAt, `locations=${locations.length}; pages=${pages.length}`);
 
   return {
     text: `📍 Усі місцини\nСторінка ${page + 1}/${pages.length}; місцин ${locations.length}\n\n${pages[page].join("\n")}`,
@@ -869,9 +893,43 @@ async function buildLocationAllPage(requestedPage: number) {
 }
 
 export async function buildAllPage(showDead: boolean, requestedPage: number) {
+  const startedAt = statusPerfNow();
   const [players, creatures] = await Promise.all([
-    prisma.player.findMany({ include: { currentLocation: true }, orderBy: { id: "asc" } }),
-    prisma.creature.findMany({ where: showDead ? undefined : { isAlive: true, isGone: false }, include: { location: true, species: true }, orderBy: { id: "asc" } }),
+    prisma.player.findMany({
+      select: {
+        id: true,
+        hp: true,
+        stamina: true,
+        hunger: true,
+        isAutoEnabled: true,
+        currentLocation: { select: { name: true, x: true, y: true, z: true } },
+        firstName: true,
+        lastName: true,
+        nickname: true,
+        grammarCaseOverrides: true,
+        pronoun: true,
+        grammaticalGender: true,
+      },
+      orderBy: { id: "asc" },
+    }),
+    prisma.creature.findMany({
+      where: showDead ? undefined : { isAlive: true, isGone: false },
+      select: {
+        id: true,
+        name: true,
+        hp: true,
+        age: true,
+        ageTicks: true,
+        activity: true,
+        currentAction: true,
+        isGone: true,
+        isAlive: true,
+        corpseDecayTicksLeft: true,
+        location: { select: { name: true, x: true, y: true, z: true } },
+        species: { select: { kind: true, key: true, name: true } },
+      },
+      orderBy: { id: "asc" },
+    }),
   ]);
 
   const playerLines = players.map((p) => {
@@ -923,6 +981,7 @@ export async function buildAllPage(showDead: boolean, requestedPage: number) {
   }
   const mode = showDead ? "усі записи" : "тільки живі; /all dead покаже всі записи";
   const text = `🧾 Усі персонажі (${mode})\nСторінка ${page + 1}/${pages.length}; гравців ${players.length}, істот ${creatures.length}\n\n${pages[page].join("\n")}`;
+  logStatusPerf("buildAllPage", startedAt, `players=${players.length}; creatures=${creatures.length}; pages=${pages.length}; showDead=${showDead}`);
 
   return {
     text,
