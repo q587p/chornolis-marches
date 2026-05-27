@@ -54,6 +54,8 @@ y
 ```text
       -1  0  1
 y
+  5       D
+  4       D
   3    D  D  D
   2       D
   1       D

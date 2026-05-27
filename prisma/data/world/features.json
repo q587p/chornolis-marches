@@ -210,7 +210,7 @@
     "locationKey": "dream_tutorial_hub",
     "type": "LANDMARK",
     "name": "Майбутні уроки",
-    "description": "На моху лежать три короткі зарубки: схід — роздивитися й зібрати; захід — відпочити; тут — прокинутися. Сон не вимагає всього одразу.",
+    "description": "На моху лежать чотири короткі зарубки: схід — роздивитися й зібрати; захід — відпочити; південь — спитати час і згадати безпечний відступ; тут — прокинутися. Сон не вимагає всього одразу.",
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
@@ -222,7 +222,7 @@
     "locationKey": "dream_tutorial_foraging",
     "type": "LANDMARK",
     "name": "Ягідна підказка",
-    "description": "Кущі стоять низько, майже на рівні долоні. Натисніть «Роздивитися» або напишіть /examine, щоб побачити, що саме можна зібрати; після збору з’являться «Речі».",
+    "description": "Кущі стоять низько, майже на рівні долоні. Натисніть «Роздивитися» або напишіть /examine, щоб побачити, що саме можна зібрати; після першого збору з’являться «Речі».",
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
@@ -234,12 +234,37 @@
     "locationKey": "dream_tutorial_rest",
     "type": "MAGIC_CAMPFIRE",
     "name": "Тихий жар сну",
-    "description": "Жар світиться без хмизу й диму. Біля такого місця зручно натиснути «Відпочити» або написати /rest: це не сон, а короткий перепочинок, щоб повернути снагу.",
+    "description": "Жар світиться без хмизу й диму. Якщо після входу в присілок тіло раптом обважніло, натисніть «Відпочити» або напишіть /rest: у навчальному сні перепочинок минає дуже швидко й іноді дає снаги понад звичну міру.",
     "providesLight": true,
     "restStaminaCapMultiplier": 2,
     "data": {
       "rest_stamina_cap_multiplier": 2,
       "tutorial_hint": "rest"
+    }
+  },
+  {
+    "key": "dream_tutorial_time_pool",
+    "locationKey": "dream_tutorial_time",
+    "type": "LANDMARK",
+    "name": "Плесо часу",
+    "description": "На воді миготить небо Порубіжжя. Натисніть «Час» або напишіть /time: це окрема коротка команда, яка допомагає звіритися з календарем і настроєм світу, не відкриваючи довгих меню.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "tutorial_time_prompt": true
+    }
+  },
+  {
+    "key": "dream_tutorial_safety_hint",
+    "locationKey": "dream_tutorial_safety",
+    "type": "LANDMARK",
+    "name": "Три зарубки безпеки",
+    "description": "Перша зарубка показує око: коли не певні, що робити, озирніться через /look. Друга схожа на зігнуте коліно: коли бракує снаги, /rest повертає короткий подих. Третя має форму власного імені: /me нагадує стан персонажа й речі. Якщо навчального сну досить, можна прокинутися й повернутися сюди пізніше.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "tutorial_safety_prompt": true,
+      "tutorial_wake_prompt": true
     }
   },
   {

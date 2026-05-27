@@ -96,6 +96,38 @@
     "isHidden": false
   },
   {
+    "fromKey": "dream_tutorial_hub",
+    "toKey": "dream_tutorial_time",
+    "direction": "SOUTH",
+    "label": "південь, плесо часу",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_time",
+    "toKey": "dream_tutorial_hub",
+    "direction": "NORTH",
+    "label": "північ, тиха галявина",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_time",
+    "toKey": "dream_tutorial_safety",
+    "direction": "SOUTH",
+    "label": "південь, затишок",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_safety",
+    "toKey": "dream_tutorial_time",
+    "direction": "NORTH",
+    "label": "північ, плесо часу",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
     "fromKey": "forest_00_00",
     "toKey": "forest_01_00",
     "direction": "EAST",

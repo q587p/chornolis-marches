@@ -60,6 +60,8 @@ User preference:
 ## Changelog/news rule
 
 - Include user-facing changes only.
+- For player-facing release work, update `news.md` together with `CHANGELOG.md` and release notes unless the user explicitly says not to publish a news entry.
+- Changelog and release-note titles should describe the final scope of the patch/minor after follow-up fixes and additions, not only the initial change that started the version.
 - Do not include internal operational reminders about package files.
 - Keep changelog useful and clear.
 - Avoid mentioning hidden implementation details unless they matter to users/admins.

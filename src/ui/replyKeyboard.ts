@@ -4,7 +4,7 @@ import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import { formatLifeState, formatResourceState } from "../utils/playerText";
 import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
-import { DREAM_GATE_FEATURE_KEY, TUTORIAL_HUB_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY, isTutorialLocation, lockedExitDirections } from "../services/tutorial";
+import { DREAM_GATE_FEATURE_KEY, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_HUB_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SAFETY_LOCATION_KEY, hasTutorialForagingSuccess, isTutorialLocation, lockedExitDirections } from "../services/tutorial";
 
 type MainKeyboardState = {
   isAuto?: boolean;
@@ -53,15 +53,6 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   }
 
   return keyboard.resized().persistent();
-}
-
-function buildTutorialStartReplyKeyboard() {
-  return new Keyboard()
-    .text("👀 Озирнутися")
-    .row()
-    .text("⬇️ Південь")
-    .resized()
-    .persistent();
 }
 
 function statusButtonLabel(player: { hp: number; hpMax: number | null; stamina: number; staminaMax: number | null }) {
@@ -121,22 +112,26 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
 
   if (!player) return buildMainReplyKeyboard({ isAuto });
 
-  if (player.currentLocation?.key === TUTORIAL_START_LOCATION_KEY) return buildTutorialStartReplyKeyboard();
-
   const inventoryCount = await prisma.playerResource.count({ where: { playerId: player.id, amount: { gt: 0 } } });
   const exits = player.currentLocation?.exitsFrom.map((exit) => exit.direction) ?? [];
   const lockedExits = player.currentLocationId ? Array.from((await lockedExitDirections(player.currentLocationId)).keys()) : [];
   const showTechnicalDetails = playerCanShowTechnicalDetails(player);
   const isTutorialDream = player.currentLocation ? isTutorialLocation(player.currentLocation) : false;
-
+  const hasInventory = inventoryCount > 0 && (
+    player.currentLocation?.key === TUTORIAL_FORAGING_LOCATION_KEY
+      ? await hasTutorialForagingSuccess(player.id)
+      : true
+  );
   return buildMainReplyKeyboard({
     isAuto,
     exits,
-    hasInventory: inventoryCount > 0,
-    statusLabel: showTechnicalDetails ? exactStatusButtonLabel(player) : statusButtonLabel(player),
+    hasInventory,
+    statusLabel: player.currentLocation?.key === TUTORIAL_REST_LOCATION_KEY
+      ? statusButtonLabel(player)
+      : showTechnicalDetails ? exactStatusButtonLabel(player) : statusButtonLabel(player),
     isTutorialDream,
     canOpenDreamGate: isTutorialDream && Boolean(player.currentLocation?.features.length),
-    canWakeFromTutorial: player.currentLocation?.key === TUTORIAL_HUB_LOCATION_KEY,
+    canWakeFromTutorial: player.currentLocation?.key === TUTORIAL_HUB_LOCATION_KEY || player.currentLocation?.key === TUTORIAL_SAFETY_LOCATION_KEY,
     lockedExits,
   });
 }

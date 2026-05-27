@@ -6,8 +6,10 @@ import {
   TUTORIAL_GATE_LOCATION_KEY,
   TUTORIAL_HUB_LOCATION_KEY,
   TUTORIAL_REST_LOCATION_KEY,
+  TUTORIAL_SAFETY_LOCATION_KEY,
   TUTORIAL_SECOND_STEP_LOCATION_KEY,
   TUTORIAL_START_LOCATION_KEY,
+  TUTORIAL_TIME_LOCATION_KEY,
 } from "./tutorial";
 
 export type TutorialVoiceComment = {
@@ -240,11 +242,35 @@ export async function tutorialSpiritMoveComment(fromLocationId: number, toLocati
     };
   }
 
-  if ((from.key === TUTORIAL_FORAGING_LOCATION_KEY || from.key === TUTORIAL_REST_LOCATION_KEY) && to.key === TUTORIAL_HUB_LOCATION_KEY) {
+  if (from.key === TUTORIAL_HUB_LOCATION_KEY && to.key === TUTORIAL_TIME_LOCATION_KEY && direction === "SOUTH") {
+    return {
+      speaker: "Сон",
+      title: "Сон показує плесо",
+      text: "Час у Порубіжжі не завжди кричить про себе. Іноді його треба спитати окремо: /time або кнопкою біля води.",
+    };
+  }
+
+  if (from.key === TUTORIAL_TIME_LOCATION_KEY && to.key === TUTORIAL_SAFETY_LOCATION_KEY && direction === "SOUTH") {
+    return {
+      speaker: "Сон",
+      title: "Сон говорить тихіше",
+      text: "Добрий шлях знає не тільки рух уперед. Він знає, коли озирнутися, коли відпочити й коли перевірити власний стан.",
+    };
+  }
+
+  if ([TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, TUTORIAL_TIME_LOCATION_KEY].includes(from.key) && to.key === TUTORIAL_HUB_LOCATION_KEY) {
     return {
       speaker: "Сон",
       title: "Сон шепоче",
       text: "Добре. У Порубіжжі не треба знати все одразу; достатньо пам’ятати, куди можна повернутися.",
+    };
+  }
+
+  if (from.key === TUTORIAL_SAFETY_LOCATION_KEY && to.key === TUTORIAL_TIME_LOCATION_KEY && direction === "NORTH") {
+    return {
+      speaker: "Сон",
+      title: "Сон шепоче",
+      text: "Назад до плеса, тоді до галявини. Навіть у сні корисно запам’ятовувати ланцюжок повернення.",
     };
   }
 

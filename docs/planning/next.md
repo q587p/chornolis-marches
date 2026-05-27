@@ -14,7 +14,7 @@ The 0.12.0 line landed the first dream tutorial slice: first-run entry, `/sleep 
 
 Recommended order:
 
-1. Expand **ONB-001** from the dream hub with one or two small branches: look/examine/move review, then one branch for gathering/inventory/fire or social signals.
+1. Expand **ONB-001** from the dream hub with the next missing branch: social signals, simple tracks/signs, or fire/light after day-night rules exist.
 2. Observe and tune the first **firewood / хмиз / campfire fuel** loop now that хмиз can extend or prepare ordinary campfires.
 3. Add the first real **world time / day-night** state and make `/time` read it.
 4. Add early **/respawn / Повернення** so dangerous exploration has a beginner safety valve.
@@ -22,7 +22,7 @@ Recommended order:
 
 Good small follow-ups if a narrow patch is wanted:
 
-- Expand ONB-001 tutorial branches from `Дрімотна Межа`: social signals, observation/tracks, gathering/inventory/fire/rest and basic safety.
+- Expand ONB-001 tutorial branches from `Дрімотна Межа`: social signals, observation/tracks, fire/light and deeper danger/respawn safety.
 - Add the next item-level inventory actions after the 0.11.12 first use/drop pass: better per-item details, corpses, safer dropped-item pickup, and future item instances for timers/quality/origin.
 - Tune the first berries/herbs use loop after playtesting: hunger relief, small healing text, edge cases and how this should grow into cooking, medicine and herbalism.
 - Add the first **animal-restoration offering** loop: small hare/mouse statues or similar forest charms where players can leave berries or herbs; after a delay, if local or regional prey population is low, a pair of young animals can appear without admin intervention.

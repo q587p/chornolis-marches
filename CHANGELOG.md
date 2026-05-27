@@ -11,6 +11,26 @@ _No unreleased changes yet._
 
 ---
 
+## 0.12.4 - Tutorial time and safety rooms - 12026-05-27
+
+### Added
+
+- Added two optional dream tutorial rooms south of the hub: one teaches `/time`, and one teaches basic safety habits around `/look`, `/rest`, `/me` and waking from the tutorial.
+- Added tutorial landmark prompts and a direct time button for the new `/time` lesson.
+- Added Сон voice comments for entering the new time and safety branches and returning toward the hub.
+- Added a stamina drop each time the player enters the tutorial rest room so `rest` has an immediate reason to matter there.
+
+### Changed
+
+- Updated the tutorial hub text and `Майбутні уроки` feature so the optional branch list includes the new south route.
+- The tutorial foraging room now guarantees berries/herbs gathering success and keeps the inventory button hidden there until the player gathers for the first time.
+- The tutorial rest room now keeps the reply keyboard stamina label qualitative, lets dream rest show `extra` stamina when it rises above the ordinary cap, and explains that dream surplus with a Сон comment.
+- `/start` now restores the current tutorial reply keyboard while preserving the player's saved dream position.
+- The tutorial now uses the same main 3×3 reply keyboard shape from the first room onward, with exits and tutorial actions opening by location.
+- Updated beginner guidance and ONB-001 planning notes for the new tutorial branch coverage.
+
+---
+
 ## 0.12.3 - Action queue performance pass - 12026-05-27
 
 ### Changed

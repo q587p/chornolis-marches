@@ -29,7 +29,7 @@ Keep these surfaces aligned:
 As of `0.12.0`, the first concrete newcomer path is the dream tutorial in `Дрімотна Межа` on map layer `z = -13`.
 
 - New characters enter the tutorial dream after name/pronoun onboarding.
-- The first tutorial location intentionally keeps the reply keyboard minimal: only `Озирнутися` and `Південь` are shown there, even if the character has inventory or technical details available.
+- The tutorial uses the same main 3×3 reply keyboard shape from the first room onward, with available exits and tutorial-only actions opening by location instead of switching to a special simplified keyboard.
 - Сон and Дрімота can comment on early tutorial movement: Сон encourages correct forward steps, while Дрімота provides a lightly antagonistic voice when the player turns back.
 - Сон and Дрімота also react when a player studies tutorial tracks closely: one rewards attention, the other tries to hurry the player onward.
 - `/sleep tutorial` returns a character to the saved tutorial dream position.
@@ -39,9 +39,12 @@ As of `0.12.0`, the first concrete newcomer path is the dream tutorial in `Др�
 - The first slice teaches movement and visible locked exits through `Брама Сну`: the south exit stays visible, the reply keyboard wraps its direction label in parentheses while locked, `/open` / `Відкрити` opens it for about 30 seconds, and the gate lazily closes again.
 - The current hub exit point is the `Майбутні уроки` feature: inspecting it offers `Прокинутися`, while tutorial voice text explains that the player can later return to the same saved dream position.
 - As of `0.12.2`, the hub also branches into short optional rooms:
-  - `Ягідний просвіт сну` teaches that `Роздивитися` / `/examine` reveals resources, and that gathered resources appear in `Речі`.
-  - `Теплий присілок сну` teaches `Відпочити` / `/rest` as a brief sit/rest action for stamina, with sleep kept separate.
-- Future tutorial branches should expand from the hub instead of overloading `/help`: social signals, observation/tracking, fire/light and basic danger.
+  - `Ягідний просвіт сну` teaches that `Роздивитися` / `/examine` reveals resources, that berries/herbs are guaranteed to gather inside the dream, and that `Речі` appears after the first successful gather there.
+  - `Теплий присілок сну` teaches `Відпочити` / `/rest` as a brief sit/rest action for stamina, with sleep kept separate: each entry leaves the character at roughly a third of ordinary stamina, and the dream fire restores stamina much faster than waking-world rest. The keyboard stays qualitative and may show `екстра` after dream rest, with Сон explaining that the surplus is a dream effect.
+- As of `0.12.4`, the hub has a south branch:
+  - `Плесо часу сну` teaches `/time` through a small landmark prompt and direct `Час` button.
+  - `Затишок останнього кроку` teaches basic safety habits: use `/look` if lost, `/rest` if exhausted, `/me` to check the character, and `Прокинутися` when ready to leave the tutorial.
+- Future tutorial branches should expand from the hub instead of overloading `/help`: social signals, observation/tracking, fire/light and basic danger beyond the first safety reminder.
 
 ## Design Rule
 

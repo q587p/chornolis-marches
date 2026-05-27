@@ -1,0 +1,2 @@
+docs/planning/exports/*.csv text eol=lf
+docs/planning/exports/*.json text eol=lf

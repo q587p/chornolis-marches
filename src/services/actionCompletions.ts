@@ -28,7 +28,7 @@ import { fatigueStateFor, spendCreatureStamina, spendPlayerStamina } from "./act
 import { actorWhere, enqueueCreatureAction, interruptActorActions, type ActorRef } from "./actionLifecycle";
 import { escapeHtml } from "../utils/text";
 import { playerCanShowTechnicalDetails } from "./technicalDetails";
-import { isLocationExitLocked } from "./tutorial";
+import { isLocationExitLocked, rememberTutorialForagingSuccess, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY } from "./tutorial";
 import { tutorialLookPaceComments, tutorialSpiritMoveComment, tutorialTrackComments, tutorialWaitPaceComments } from "./tutorialVoices";
 import { chance, pick, shuffle } from "../utils/random";
 
@@ -43,6 +43,12 @@ const RECENT_ATTACK_DANGER_MS = RECENT_ATTACK_DANGER_TICKS * Number(process.env.
 const PANIC_HERBIVORE_FLEE_CHANCE = Number(process.env.WORLD_PANIC_HERBIVORE_FLEE_CHANCE || 85);
 const PANIC_HERBIVORE_MAX_FLEE = Number(process.env.WORLD_PANIC_HERBIVORE_MAX_FLEE || 18);
 const PANIC_HERBIVORE_MOVE_PRIORITY = Number(process.env.WORLD_PANIC_HERBIVORE_MOVE_PRIORITY || 60);
+const TUTORIAL_REST_ENTRY_EVENT_TITLE = "Tutorial rest entry stamina lesson";
+const TUTORIAL_REST_REGEN_MULTIPLIER = 20;
+const TUTORIAL_FORAGING_RESOURCE_KEYS = new Set(["berries", "herbs"]);
+const TUTORIAL_FORAGING_SUCCESS_COMMENT = "Тут усе вдалося з першого разу, бо сон сам нахилив гілки до ваших рук. Не уві сні так буває не завжди: іноді доведеться спробувати ще раз, а з досвідом руки ставатимуть певніші й швидші.";
+const TUTORIAL_REST_FAST_COMMENT = "У навчальному сні жар повертає снагу дуже швидко, майже за один подих. Наяву відпочинок триватиме довше.";
+const TUTORIAL_REST_EXTRA_COMMENT = "Якщо на клавіатурі бачите «екстра», це не помилка. Сон на мить дає снаги більше, ніж тіло звикло тримати наяву: надлишок допомагає навчитися, але за межами сну таке буде рідкісним і недовгим.";
 
 const FROM_DIRECTION_LABELS: Record<string, string> = {
   NORTH: "з півдня",
@@ -177,6 +183,36 @@ async function markRecentAttackDanger(locationId: number) {
   });
 }
 
+async function applyTutorialRestEntryStaminaLesson(playerId: number, locationId: number) {
+  const location = await prisma.cellLocation.findUnique({ where: { id: locationId }, select: { key: true } });
+  if (location?.key !== TUTORIAL_REST_LOCATION_KEY) return null;
+
+  const player = await prisma.player.findUnique({ where: { id: playerId }, select: { id: true, stamina: true, staminaMax: true } });
+  if (!player) return null;
+
+  const max = player.staminaMax ?? BASE_STAMINA;
+  const next = Math.max(1, Math.ceil(max / 3));
+  await prisma.player.updateMany({
+    where: { id: player.id },
+    data: {
+      stamina: next,
+      fatigueState: fatigueStateFor(next, max),
+      lastStaminaRegenAt: new Date(),
+    },
+  });
+  await prisma.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: TUTORIAL_REST_ENTRY_EVENT_TITLE,
+      description: `stamina ${player.stamina}/${max} -> ${next}/${max}`,
+      playerId: player.id,
+      locationId,
+    },
+  });
+
+  return "Тепло сну раптом робить тіло важчим, ніби дорога згадала всі попередні кроки. Снаги лишається приблизно на третину. Тут саме час натиснути «Відпочити» або написати /rest.";
+}
+
 async function triggerHerbivorePanic(locationId: number, victimCreatureId: number, reason = "лякається крові й різкого руху") {
   const maxFlee = Math.max(0, Math.floor(PANIC_HERBIVORE_MAX_FLEE));
   if (maxFlee <= 0) return 0;
@@ -254,6 +290,7 @@ async function completeMove(bot: Bot, action: WorldAction) {
     await createTrack({ actorType: "PLAYER", playerId: player.id }, currentLocationId, exit.toLocationId, payload.direction, "людський слід");
     await spendPlayerStamina(bot, player.id, "MOVE", chatId);
     await prisma.player.updateMany({ where: { id: player.id }, data: { currentLocationId: exit.toLocationId, steps: { increment: 1 } } });
+    const tutorialRestEntryText = await applyTutorialRestEntryStaminaLesson(player.id, exit.toLocationId);
     const arrivalLabel = await visibleMoverLabel(exit.toLocationId, "Хтось", playerName);
     await notifyLocation(bot, exit.toLocationId, player.id, `${arrivalLabel} зайшов сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, buildTargetListKeyboard([{ type: "player", id: player.id, label: arrivalLabel, canGreet: true }]));
     await setActionStatus(action, "DONE");
@@ -265,6 +302,7 @@ async function completeMove(bot: Bot, action: WorldAction) {
       const view = await renderLocationBrief(exit.toLocationId, player.id);
       await bot.api.sendMessage(chatId, `Ви дійшли: ${directionLabels[payload.direction]}`, { reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false) });
       if (spiritComment) await bot.api.sendMessage(chatId, `${spiritComment.title}:\n${quoteBlock(spiritComment.text)}`, { parse_mode: "HTML" });
+      if (tutorialRestEntryText) await bot.api.sendMessage(chatId, tutorialRestEntryText, { reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false) });
       await bot.api.sendMessage(chatId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
     }
     return;
@@ -315,6 +353,10 @@ async function completeGather(bot: Bot, action: WorldAction) {
 
   const resourceKey = resource?.resourceType.key as "berries" | "mushrooms" | "herbs" | undefined;
   const cfg = resourceKey ? gatherConfig[resourceKey] : undefined;
+  const isTutorialForagingSuccess =
+    isPlayer
+    && resource?.location.key === TUTORIAL_FORAGING_LOCATION_KEY
+    && Boolean(resourceKey && TUTORIAL_FORAGING_RESOURCE_KEYS.has(resourceKey));
 
   if (isPlayer) {
     await spendPlayerStamina(bot, (actor as any).id, action.type, chatId);
@@ -324,7 +366,7 @@ async function completeGather(bot: Bot, action: WorldAction) {
     await prisma.creature.updateMany({ where: { id: (actor as any).id }, data: { gatherAttempts: { increment: 1 }, activity: "GATHERING", currentAction: resourceKey ? `збирає ${resourceKey}` : "шукає поживу" } });
   }
 
-  if (!resource || !resourceKey || !cfg || Math.random() > cfg.chance) {
+  if (!resource || !resourceKey || !cfg || (!isTutorialForagingSuccess && Math.random() > cfg.chance)) {
     await setActionStatus(action, "DONE");
     if (chatId) {
       if (resource && resourceKey && cfg) {
@@ -363,6 +405,13 @@ async function completeGather(bot: Bot, action: WorldAction) {
       },
     });
     if (chatId) await bot.api.sendMessage(chatId, `Ви витратили час на пошуки${durationText} і знайшли: ${resource.resourceType.name} ×${found}.`);
+    if (isTutorialForagingSuccess) {
+      const firstTutorialGather = await rememberTutorialForagingSuccess((actor as any).id, locationId, resourceKey);
+      if (firstTutorialGather) {
+        await logEvent("NPC_SAY", "Сон усміхається", TUTORIAL_FORAGING_SUCCESS_COMMENT, locationId);
+        if (chatId) await bot.api.sendMessage(chatId, `Сон усміхається:\n${quoteBlock(TUTORIAL_FORAGING_SUCCESS_COMMENT)}`, { parse_mode: "HTML" });
+      }
+    }
   } else {
     await prisma.creature.updateMany({ where: { id: (actor as any).id }, data: { successfulGathers: { increment: 1 }, currentAction: `зібрав ${resource.resourceType.name} ×${found}` } });
   }
@@ -702,11 +751,19 @@ async function completeSimple(bot: Bot, action: WorldAction) {
   if (action.type === "REST") {
     if (action.actorType === "PLAYER" && action.playerId) {
       const player = await prisma.player.findUnique({ where: { id: action.playerId } });
+      const chatId = chatIdFromAction(action);
       if (player) {
+        const location = player.currentLocationId
+          ? await prisma.cellLocation.findUnique({ where: { id: player.currentLocationId }, select: { key: true } })
+          : null;
+        const isTutorialRestRoom = location?.key === TUTORIAL_REST_LOCATION_KEY;
         const max = await getPlayerRestStaminaCap(player.id);
         const hpMax = player.hpMax ?? BASE_HP;
         const payload = payloadOf<{ untilFull?: boolean }>(action);
-        const next = payload.untilFull ? max : Math.min(max, player.stamina + REST_STAMINA_REGEN_PER_INTERVAL);
+        const staminaRegen = isTutorialRestRoom
+          ? REST_STAMINA_REGEN_PER_INTERVAL * TUTORIAL_REST_REGEN_MULTIPLIER
+          : REST_STAMINA_REGEN_PER_INTERVAL;
+        const next = payload.untilFull ? max : Math.min(max, player.stamina + staminaRegen);
         const nextHp = payload.untilFull ? hpMax : Math.min(hpMax, player.hp + HEALTH_REGEN_PER_INTERVAL);
         await prisma.player.updateMany({
           where: { id: player.id },
@@ -718,6 +775,16 @@ async function completeSimple(bot: Bot, action: WorldAction) {
             restFullRecoveries: next >= max && nextHp >= hpMax && (player.stamina < max || player.hp < hpMax) ? { increment: 1 } : undefined,
           },
         });
+        if (isTutorialRestRoom && chatId) {
+          const comment = next > (player.staminaMax ?? BASE_STAMINA)
+            ? `${TUTORIAL_REST_FAST_COMMENT}\n\n${TUTORIAL_REST_EXTRA_COMMENT}`
+            : TUTORIAL_REST_FAST_COMMENT;
+          await logEvent("NPC_SAY", "Сонний жар потріскує", comment, player.currentLocationId ?? undefined);
+          await bot.api.sendMessage(chatId, `Сонний жар потріскує:\n${quoteBlock(comment)}`, {
+            parse_mode: "HTML",
+            reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false),
+          });
+        }
       }
     }
     if (action.actorType === "CREATURE" && action.creatureId) {

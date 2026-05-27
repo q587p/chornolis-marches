@@ -30,16 +30,16 @@ The first version should help a new character understand what they can do withou
 - `Прокинутися` / `/wake` leaves the dream and restores a valid real-world location.
 - `Брама Сну` teaches visible locked exits: a locked south exit is shown, blocked movement gives a reason, and `/open` / `Відкрити` opens the route for about 30 seconds.
 - `0.12.2` adds two optional hub branches: `Ягідний просвіт сну` for `Роздивитися`, gathering and `Речі`, plus `Теплий присілок сну` for `Відпочити` as a brief stamina rest.
+- `0.12.4` adds a south hub branch: `Плесо часу сну` for `/time`, followed by `Затишок останнього кроку` for beginner safety habits around `/look`, `/rest`, `/me` and waking from the tutorial.
 
 ## Remaining first scope
 
 - Review and refresh `/start`, `/help`, fallback hints and the main keyboard so a brand-new player sees the current game, not an older slice of it.
 - Expand the dream tutorial with branches that nudge the player through:
-  - `Озирнутися` / `/look`;
-  - movement and visible exits;
-  - `/time`;
   - simple tracks and signs;
-  - basic safety: what to do if lost or exhausted.
+  - social signals and nearby characters/creatures;
+  - fire/light once the first real day-night loop is in place;
+  - deeper danger/respawn safety once `/respawn` exists.
 - Keep the helper skippable.
 - Prefer short contextual prompts over a long up-front explanation.
 - Keep exact numbers hidden unless the player is a scribe/admin with technical details enabled.

@@ -102,6 +102,22 @@ export function registerLookHandlers(bot: Bot) {
     }
   });
 
+  bot.callbackQuery("location:brief", async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player || !player.currentLocationId) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    const view = await renderLocationBrief(player.currentLocationId, player.id);
+    await safeAnswerCallbackQuery(ctx);
+    try {
+      await ctx.editMessageText(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+    } catch {
+      await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+    }
+  });
+
   bot.callbackQuery("targetPage:noop", async (ctx) => {
     await safeAnswerCallbackQuery(ctx);
   });

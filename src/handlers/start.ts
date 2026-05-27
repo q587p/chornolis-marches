@@ -98,17 +98,12 @@ async function enterWorld(ctx: any, isMenuRefresh = false) {
     : null;
   const isInTutorial = currentLocation ? isTutorialLocation(currentLocation) : false;
   const keyboardHint = isInTutorial
-    ? "Ти вже в навчальному сні. /start не змінює навчальні кнопки; вони лишаються біля місцини, а команди можна писати текстом."
+    ? "Ти вже в навчальному сні. /start не скидає сон і не переносить тебе, а просто повертає актуальні навчальні кнопки."
     : "Ти вже в грі. Клавіатура чекає під полем вводу, але всі команди можна і просто текстом вводити 👇";
 
   const text = isMenuRefresh
     ? `🌲 Меню оновлено.\n${yearLine}\n\nВітаю, ${displayName}.\n\n${keyboardHint}`
     : `🌲 Порубіжжя Чорнолісу ожили.\n${yearLine}\n\nВітаю, ${displayName}. Твій слід збережено в Чорнолісі.\n\n${keyboardHint}`;
-
-  if (isInTutorial) {
-    await ctx.reply(text);
-    return;
-  }
 
   await ctx.reply(text, { reply_markup: await buildMainReplyKeyboardForTelegramId(from.id, false) });
 }

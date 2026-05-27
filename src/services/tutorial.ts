@@ -10,8 +10,11 @@ export const TUTORIAL_GATE_LOCATION_KEY = "dream_tutorial_gate";
 export const TUTORIAL_HUB_LOCATION_KEY = "dream_tutorial_hub";
 export const TUTORIAL_FORAGING_LOCATION_KEY = "dream_tutorial_foraging";
 export const TUTORIAL_REST_LOCATION_KEY = "dream_tutorial_rest";
+export const TUTORIAL_TIME_LOCATION_KEY = "dream_tutorial_time";
+export const TUTORIAL_SAFETY_LOCATION_KEY = "dream_tutorial_safety";
 export const DREAM_GATE_FEATURE_KEY = "dream_tutorial_sleep_gate";
 export const DREAM_GATE_OPEN_MS = 30 * 1000;
+export const TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE = "Tutorial foraging success";
 
 const RETURN_LOCATION_EVENT_TITLE = "Tutorial return location";
 const DREAM_LOCATION_EVENT_TITLE = "Tutorial dream location";
@@ -105,6 +108,31 @@ export async function hasCompletedTutorial(playerId: number) {
     orderBy: { id: "desc" },
   });
   return Boolean(event);
+}
+
+export async function hasTutorialForagingSuccess(playerId: number) {
+  const event = await prisma.worldEvent.findFirst({
+    where: { playerId, type: "SYSTEM", title: TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE },
+    select: { id: true },
+    orderBy: { id: "desc" },
+  });
+  return Boolean(event);
+}
+
+export async function rememberTutorialForagingSuccess(playerId: number, locationId: number, resourceKey: string) {
+  const seen = await hasTutorialForagingSuccess(playerId);
+  if (seen) return false;
+
+  await prisma.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE,
+      description: resourceKey,
+      playerId,
+      locationId,
+    },
+  });
+  return true;
 }
 
 async function validLocationId(locationId: number | null, tutorial: boolean) {

@@ -115,6 +115,11 @@ function isInteractiveFeature(feature: any) {
   return feature.isActive && (isDepletedVegetationFeature(feature) || ["BORDER_MARKER", "CAMPFIRE", "MAGIC_CAMPFIRE", "GATE", "LANDMARK"].includes(feature.type));
 }
 
+function isTutorialPromptFeature(feature: any) {
+  const data = featureData(feature);
+  return data.tutorial_wake_prompt === true || data.tutorial_time_prompt === true || data.tutorial_safety_prompt === true;
+}
+
 function featureBriefLine(feature: any) {
   return `${featureIcon(feature)} ${feature.name}`;
 }
@@ -597,7 +602,7 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
       ? `${feature.description ?? "Перед вами стоїть Брама Сну."}\n\n${dreamGateStatusText(feature)}`
       : feature.description ?? "Ви стукаєте у ворота, але вам ніхто не відповідає.";
   } else if (featureData(feature).tutorial_wake_prompt === true) {
-    text = `${feature.description ?? "Десь збоку ворушаться майбутні уроки."}\n\n<i>Ви можете прокинутися зараз і повернутися до цього місця сну пізніше.</i>`;
+    text = `${feature.description ?? "Десь збоку ворушаться майбутні уроки."}\n\nВи можете прокинутися зараз і повернутися до цього місця сну пізніше.`;
   } else if (isTorchSourceFeature(feature)) {
     text = feature.description ?? "Тут лежать сухі факели. Один можна взяти з собою.";
   }
@@ -617,9 +622,10 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
     }
   }
   if (feature.type === "GATE" && isDreamGateFeature(feature)) keyboard.text("🚪 Відкрити", "tutorial:openGate").row();
+  if (featureData(feature).tutorial_time_prompt === true) keyboard.text("🕯 Час", "time:show").row();
   if (featureData(feature).tutorial_wake_prompt === true) keyboard.text("🌅 Прокинутися", "tutorial:wake").row();
   if (isTorchSourceFeature(feature)) keyboard.text("🕯 Взяти факел", `torch:take:${feature.id}`).row();
-  keyboard.text("↩️ Назад", "location:details");
+  keyboard.text("↩️ Назад", isTutorialPromptFeature(feature) ? "location:brief" : "location:details");
   return { text, keyboard };
 }
 
