@@ -197,7 +197,7 @@
   {
     "id": "ONB-001",
     "title": "Newcomer helper and tutorial",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "onboarding",
     "priority": "high",
@@ -316,7 +316,9 @@
       "architecture",
       "refactor",
       "maintainability",
-      "services"
+      "services",
+      "dead-code",
+      "cleanup"
     ],
     "depends_on": [],
     "exports": {

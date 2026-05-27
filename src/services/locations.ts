@@ -21,6 +21,7 @@ import { normalizeCreatureActionText } from "../utils/creatureActionText";
 import { creatureForms } from "./grammar";
 import { lifetimeSummary } from "./itemLifetime";
 import { playerShowsTechnicalDetails } from "./technicalDetails";
+import { dreamGateStatusText, isDreamGateFeature, lockedExitDirections, lockedExitLabel } from "./tutorial";
 
 const COMPACT_EXIT_ORDER = ["NORTH", "WEST", "SOUTH", "EAST", "UP", "DOWN", "INSIDE", "OUTSIDE"];
 const GATHERABLE_RESOURCE_KEYS = ["berries", "mushrooms", "herbs"] as const;
@@ -221,14 +222,24 @@ function sortedExits(exits: any[]) {
   });
 }
 
-function compactExitsText(exits: any[]) {
+function compactExitsText(exits: any[], locked = new Map<string, string>()) {
   if (!exits.length) return "Виходів не видно.";
-  return `Виходи: ${sortedExits(exits).map((exit) => directionShortLabels[exit.direction] ?? exit.direction).join(" ")}`;
+  return `Виходи: ${sortedExits(exits)
+    .map((exit) => {
+      const label = directionShortLabels[exit.direction] ?? exit.direction;
+      return locked.has(exit.direction) ? `(${label})` : label;
+    })
+    .join(" ")}`;
 }
 
-function detailedExitsText(exits: any[]) {
+function detailedExitsText(exits: any[], locked = new Map<string, string>()) {
   if (!exits.length) return "Виходів не видно.";
-  return `Виходи:\n${exits.map((exit) => `- ${directionLabels[exit.direction]} → ${exit.toLocation.name}`).join("\n")}`;
+  return `Виходи:\n${exits
+    .map((exit) => {
+      const reason = locked.get(exit.direction);
+      return reason ? `- ${lockedExitLabel(exit.direction, reason)}` : `- ${directionLabels[exit.direction]} → ${exit.toLocation.name}`;
+    })
+    .join("\n")}`;
 }
 
 function slowResourceSeconds(resourceKey: string) {
@@ -374,13 +385,14 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
 
   const revealTargets = await hasActiveLightAtLocation(location.id);
   const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
+  const lockedExits = await lockedExitDirections(location.id);
   const targets = visibleTargets(location, viewerPlayerId);
   const keyboard = new InlineKeyboard();
   addFeatureButtons(keyboard, location.features);
   if (revealTargets && targets.length) addInlineRows(keyboard, buildTargetListKeyboard(targets, { page: options.targetPage, pageCallbackPrefix: "targetPage:brief" }));
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location, "brief", showTechnicalDetails)}${presenceText(location, viewerPlayerId, revealTargets)}\n\n${escapeHtml(compactExitsText(location.exitsFrom))}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location, "brief", showTechnicalDetails)}${presenceText(location, viewerPlayerId, revealTargets)}\n\n${escapeHtml(compactExitsText(location.exitsFrom, lockedExits))}`,
     keyboard,
   };
 }
@@ -402,6 +414,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   if (!location) throw new Error("Location not found");
 
   const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
+  const lockedExits = await lockedExitDirections(location.id);
   const targets = visibleTargets(location, viewerPlayerId);
   const playerTargetIds = targets.filter((t) => t.type === "player").map((t) => t.id);
   const creatureTargetIds = targets.filter((t) => t.type === "creature").map((t) => t.id);
@@ -485,7 +498,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     : "";
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location, "details", showTechnicalDetails)}\n\n<i>Ви роздивляєтесь уважніше.</i>${technicalLocationText}\n\n${escapeHtml(detailedExitsText(location.exitsFrom))}${resourcesText}${charactersText}${tracksHint.text}${animalMovementText}${lyingText}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location, "details", showTechnicalDetails)}\n\n<i>Ви роздивляєтесь уважніше.</i>${technicalLocationText}\n\n${escapeHtml(detailedExitsText(location.exitsFrom, lockedExits))}${resourcesText}${charactersText}${tracksHint.text}${animalMovementText}${lyingText}`,
     keyboard,
   };
 }
@@ -580,7 +593,9 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
       if (fireState) text += `\n\nПолум'я нижчає. Скоро згасне; варто додати хмизу.`;
     }
   } else if (feature.type === "GATE") {
-    text = "Ви стукаєте у ворота, але вам ніхто не відповідає.";
+    text = isDreamGateFeature(feature)
+      ? `${feature.description ?? "Перед вами стоять сонні ворота."}\n\n${dreamGateStatusText(feature)}`
+      : feature.description ?? "Ви стукаєте у ворота, але вам ніхто не відповідає.";
   } else if (isTorchSourceFeature(feature)) {
     text = feature.description ?? "Тут лежать сухі факели. Один можна взяти з собою.";
   }
@@ -599,7 +614,9 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
       }
     }
   }
+  if (feature.type === "GATE" && isDreamGateFeature(feature)) keyboard.text("🚪 Відкрити", "tutorial:openGate").row();
   if (isTorchSourceFeature(feature)) keyboard.text("🕯 Взяти факел", `torch:take:${feature.id}`).row();
+  if (player.currentLocationId && isDreamGateFeature(feature)) keyboard.text("🌅 Прокинутися", "tutorial:wake").row();
   keyboard.text("↩️ Назад", "location:details");
   return { text, keyboard };
 }

@@ -847,6 +847,61 @@
     "dangerLevel": 0
   },
   {
+    "key": "settlement_inner_placeholder",
+    "x": 21,
+    "y": 5,
+    "z": 0,
+    "name": "За воротами поселення",
+    "description": "За зачиненими воротами починається майбутнє поселення. Поки цей шлях не відкрито.",
+    "regionKey": "closed_settlement_gate",
+    "biome": "VILLAGE",
+    "dangerLevel": 0
+  },
+  {
+    "key": "dream_tutorial_threshold",
+    "x": 0,
+    "y": 0,
+    "z": -13,
+    "name": "Поріг сну",
+    "description": "Туман лежить низько, наче хтось застелив землю білою вовною. Ви пам’ятаєте своє ім’я і майже нічого більше.",
+    "regionKey": "dream_tutorial",
+    "biome": "RUINS",
+    "dangerLevel": 0
+  },
+  {
+    "key": "dream_tutorial_second_step",
+    "x": 0,
+    "y": 1,
+    "z": -13,
+    "name": "Другий крок",
+    "description": "Стежка вчиться під вашими ногами: позаду лишається північ, попереду чекає південь.",
+    "regionKey": "dream_tutorial",
+    "biome": "RUINS",
+    "dangerLevel": 0
+  },
+  {
+    "key": "dream_tutorial_gate",
+    "x": 0,
+    "y": 2,
+    "z": -13,
+    "name": "Сонні ворота",
+    "description": "Перед вами стоять темні ворота без муру. Вони не зачиняють місце, вони зачиняють намір.",
+    "regionKey": "dream_tutorial",
+    "biome": "RUINS",
+    "dangerLevel": 0
+  },
+  {
+    "key": "dream_tutorial_hub",
+    "x": 0,
+    "y": 3,
+    "z": -13,
+    "name": "Тиха галявина сну",
+    "description": "За воротами сон ширшає. Десь збоку ворушаться майбутні уроки, але зараз стежка дозволяє просто прокинутися.",
+    "regionKey": "dream_tutorial",
+    "biome": "CLEARING",
+    "dangerLevel": 0
+  },
+  {
     "key": "forest_00_06",
     "x": 0,
     "y": 6,

@@ -57,8 +57,8 @@
 
 ## Map and world data
 
-- Main hand-edited map data file: `prisma/data/chornolis_world_seed.json`.
-- `prisma/seed.ts` reads this JSON and upserts regions, locations, exits, resource nodes, and features.
+- Active hand-edited map data lives in split JSON files under `prisma/data/world/` (`regions.json`, `locations.json`, `exits.json`, `features.json`, etc.).
+- `prisma/seed.ts` prefers `prisma/data/world/` when it exists; `prisma/data/chornolis_world_seed.json` is a legacy mirror/fallback and should not be the only file changed for live world edits.
 - ASCII map is separate documentation: `docs/world/world_map.md`.
 - Do not change `z` casually; currently it is expected to remain `0` unless the task explicitly requires verticality.
 - Do not create two exits from one location in the same direction.

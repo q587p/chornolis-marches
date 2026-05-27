@@ -40,6 +40,11 @@
       "key": "settlement",
       "name": "Поселення",
       "description": "Людське поселення за річкою. Поки шлях усередину закритий воротами."
+    },
+    {
+      "key": "dream_tutorial",
+      "name": "Дрімотна Межа",
+      "description": "Навчальний сон на межі між пам’яттю, стежкою і першим кроком у Чорноліс."
     }
   ],
   "locations": [
@@ -1350,6 +1355,61 @@
       "description": "Високі дерев’яні ворота замкнені зсередини. За ними починається майбутнє поселення, але цей шлях ще не відкрито.",
       "regionKey": "settlement",
       "biome": "VILLAGE",
+      "dangerLevel": 0
+    },
+    {
+      "key": "settlement_inner_placeholder",
+      "x": 21,
+      "y": 5,
+      "z": 0,
+      "name": "За воротами поселення",
+      "description": "За зачиненими воротами починається майбутнє поселення. Поки цей шлях не відкрито.",
+      "regionKey": "settlement",
+      "biome": "VILLAGE",
+      "dangerLevel": 0
+    },
+    {
+      "key": "dream_tutorial_threshold",
+      "x": 0,
+      "y": 0,
+      "z": -13,
+      "name": "Поріг сну",
+      "description": "Туман лежить низько, наче хтось застелив землю білою вовною. Ви пам’ятаєте своє ім’я і майже нічого більше.",
+      "regionKey": "dream_tutorial",
+      "biome": "RUINS",
+      "dangerLevel": 0
+    },
+    {
+      "key": "dream_tutorial_second_step",
+      "x": 0,
+      "y": 1,
+      "z": -13,
+      "name": "Другий крок",
+      "description": "Стежка вчиться під вашими ногами: позаду лишається північ, попереду чекає південь.",
+      "regionKey": "dream_tutorial",
+      "biome": "RUINS",
+      "dangerLevel": 0
+    },
+    {
+      "key": "dream_tutorial_gate",
+      "x": 0,
+      "y": 2,
+      "z": -13,
+      "name": "Сонні ворота",
+      "description": "Перед вами стоять темні ворота без муру. Вони не зачиняють місце, вони зачиняють намір.",
+      "regionKey": "dream_tutorial",
+      "biome": "RUINS",
+      "dangerLevel": 0
+    },
+    {
+      "key": "dream_tutorial_hub",
+      "x": 0,
+      "y": 3,
+      "z": -13,
+      "name": "Тиха галявина сну",
+      "description": "За воротами сон ширшає. Десь збоку ворушаться майбутні уроки, але зараз стежка дозволяє просто прокинутися.",
+      "regionKey": "dream_tutorial",
+      "biome": "CLEARING",
       "dangerLevel": 0
     }
   ],
@@ -4617,6 +4677,62 @@
       "isHidden": false
     },
     {
+      "fromKey": "closed_east_gate",
+      "toKey": "settlement_inner_placeholder",
+      "direction": "EAST",
+      "label": "схід, зачинені ворота",
+      "travelCost": 2,
+      "isHidden": false
+    },
+    {
+      "fromKey": "dream_tutorial_threshold",
+      "toKey": "dream_tutorial_second_step",
+      "direction": "SOUTH",
+      "label": "південь",
+      "travelCost": 1,
+      "isHidden": false
+    },
+    {
+      "fromKey": "dream_tutorial_second_step",
+      "toKey": "dream_tutorial_threshold",
+      "direction": "NORTH",
+      "label": "північ",
+      "travelCost": 1,
+      "isHidden": false
+    },
+    {
+      "fromKey": "dream_tutorial_second_step",
+      "toKey": "dream_tutorial_gate",
+      "direction": "SOUTH",
+      "label": "південь",
+      "travelCost": 1,
+      "isHidden": false
+    },
+    {
+      "fromKey": "dream_tutorial_gate",
+      "toKey": "dream_tutorial_second_step",
+      "direction": "NORTH",
+      "label": "північ",
+      "travelCost": 1,
+      "isHidden": false
+    },
+    {
+      "fromKey": "dream_tutorial_gate",
+      "toKey": "dream_tutorial_hub",
+      "direction": "SOUTH",
+      "label": "південь, сонні ворота",
+      "travelCost": 1,
+      "isHidden": false
+    },
+    {
+      "fromKey": "dream_tutorial_hub",
+      "toKey": "dream_tutorial_gate",
+      "direction": "NORTH",
+      "label": "північ",
+      "travelCost": 1,
+      "isHidden": false
+    },
+    {
       "fromKey": "riverbank_13_09",
       "toKey": "riverbank_13_00",
       "direction": "NORTH",
@@ -6392,7 +6508,25 @@
       "restStaminaCapMultiplier": null,
       "data": {
         "locked": true,
+        "locks_exit_direction": "EAST",
+        "lock_reason": "ворота",
         "future_area": "starter_settlement"
+      }
+    },
+    {
+      "key": "dream_tutorial_sleep_gate",
+      "locationKey": "dream_tutorial_gate",
+      "type": "GATE",
+      "name": "Сонні ворота",
+      "description": "Ворота стоять просто на стежці, але тінь від них падає так, наче за ними є цілий мур. На дошках проступають слова: «Скажи шляху відчинитися».",
+      "providesLight": false,
+      "restStaminaCapMultiplier": null,
+      "data": {
+        "tutorial_gate": true,
+        "locked": true,
+        "locks_exit_direction": "SOUTH",
+        "lock_reason": "сонні ворота",
+        "reset_after_ms": 120000
       }
     }
   ],

@@ -24,6 +24,17 @@ Keep these surfaces aligned:
 - planned dream tutorial after onboarding;
 - release notes when a feature changes early play.
 
+## Current Dream Tutorial
+
+As of `0.12.0`, the first concrete newcomer path is the dream tutorial in `Дрімотна Межа` on map layer `z = -13`.
+
+- New characters enter the tutorial dream after name/pronoun onboarding.
+- `/sleep tutorial` returns a character to the saved tutorial dream position.
+- Plain `/sleep` routes to the tutorial while that character has not woken from it yet; after wake, normal sleep remains reserved for a later recovery system.
+- `Прокинутися`, `/wake`, `wake`, `прокинутися` and `прокинутись` leave the dream and restore a valid real-world location.
+- The first slice teaches movement and visible locked exits through `Сонні ворота`: the south exit is shown as locked, `/open` / `Відкрити` opens it for a short window, and the gate lazily closes again.
+- Future tutorial branches should expand from the hub instead of overloading `/help`: social signals, observation/tracking, gathering, fire/light, rest/fatigue and basic danger.
+
 ## Design Rule
 
 Teach only what the player can meaningfully use now. Prefer small, diegetic nudges over a mechanical checklist.

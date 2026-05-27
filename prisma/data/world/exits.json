@@ -8,6 +8,62 @@
     "isHidden": false
   },
   {
+    "fromKey": "closed_east_gate",
+    "toKey": "settlement_inner_placeholder",
+    "direction": "EAST",
+    "label": "схід, зачинені ворота",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_threshold",
+    "toKey": "dream_tutorial_second_step",
+    "direction": "SOUTH",
+    "label": "південь",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_second_step",
+    "toKey": "dream_tutorial_threshold",
+    "direction": "NORTH",
+    "label": "північ",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_second_step",
+    "toKey": "dream_tutorial_gate",
+    "direction": "SOUTH",
+    "label": "південь",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_gate",
+    "toKey": "dream_tutorial_second_step",
+    "direction": "NORTH",
+    "label": "північ",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_gate",
+    "toKey": "dream_tutorial_hub",
+    "direction": "SOUTH",
+    "label": "південь, сонні ворота",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_hub",
+    "toKey": "dream_tutorial_gate",
+    "direction": "NORTH",
+    "label": "північ",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
     "fromKey": "forest_00_00",
     "toKey": "forest_01_00",
     "direction": "EAST",

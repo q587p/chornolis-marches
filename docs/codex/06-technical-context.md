@@ -34,8 +34,9 @@ Potential long-term architecture:
 
 ## Important systems / files mentioned
 
-- `prisma/data/chornolis_world_seed.json`: main hand-editable map/world seed data.
-- `prisma/seed.ts`: reads the JSON and upserts world data.
+- `prisma/data/world/*.json`: active hand-editable map/world seed data.
+- `prisma/data/chornolis_world_seed.json`: legacy single-file fallback/reference; do not edit it as the only live world source.
+- `prisma/seed.ts`: prefers the split world JSON directory and upserts world data.
 - `docs/world/world_map.md`: ASCII/documentation map.
 - `src/services/actionQueue.ts`: action queue, prior build issue involved imports.
 - `src/handlers/start.ts`: onboarding/start flow; prior context around world year line import.

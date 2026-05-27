@@ -1,6 +1,11 @@
 # World seed data
 
-`prisma/seed.ts` reads these files from `prisma/data/world/`.
+`prisma/seed.ts` reads active world seed files from `prisma/data/world/`.
+
+The top-level `prisma/data/*.json` split files were removed because they were stale duplicates of the active split seed. Keep only:
+
+- `prisma/data/world/*.json` — active seed source.
+- `prisma/data/chornolis_world_seed.json` — legacy single-file fallback/reference while older tooling still knows about it.
 
 Files:
 

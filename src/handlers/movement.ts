@@ -7,6 +7,7 @@ import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
+import { isLocationExitLocked } from "../services/tutorial";
 
 const COMMAND_DIRECTIONS: Record<string, Direction> = {
   north: "NORTH",
@@ -31,6 +32,12 @@ export async function submitMove(bot: Bot, ctx: any, direction: Direction, answe
   if (!exit || exit.isHidden) {
     if (answerCallback) return void (await safeAnswerCallbackQuery(ctx, "Туди немає видимого шляху."));
     return void (await ctx.reply("Туди немає видимого шляху.", { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) }));
+  }
+
+  const lockedMessage = await isLocationExitLocked(currentLocationId, direction);
+  if (lockedMessage) {
+    if (answerCallback) return void (await safeAnswerCallbackQuery(ctx, lockedMessage));
+    return void (await ctx.reply(lockedMessage, { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) }));
   }
 
   const durationMs = movementDurationMs(exit.travelCost, player.stamina);

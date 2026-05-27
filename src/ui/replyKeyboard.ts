@@ -4,12 +4,15 @@ import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import { formatLifeState, formatResourceState } from "../utils/playerText";
 import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
+import { DREAM_GATE_FEATURE_KEY, isTutorialLocation } from "../services/tutorial";
 
 type MainKeyboardState = {
   isAuto?: boolean;
   exits?: Direction[];
   hasInventory?: boolean;
   statusLabel?: string;
+  isTutorialDream?: boolean;
+  canOpenDreamGate?: boolean;
 };
 
 export const EMPTY_KEYBOARD_BUTTON = "⠀";
@@ -37,6 +40,10 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   keyboard.text("☰ Меню").row();
 
   if (state.statusLabel) keyboard.text(state.statusLabel).row();
+  if (state.isTutorialDream) {
+    if (state.canOpenDreamGate) keyboard.text("🚪 Відкрити");
+    keyboard.text("🌅 Прокинутися").row();
+  }
 
   return keyboard.resized().persistent();
 }
@@ -79,6 +86,13 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
       showTechnicalDetails: true,
       currentLocation: {
         select: {
+          key: true,
+          z: true,
+          region: { select: { key: true } },
+          features: {
+            where: { key: DREAM_GATE_FEATURE_KEY, isActive: true },
+            select: { id: true },
+          },
           exitsFrom: {
             where: { isHidden: false },
             select: { direction: true },
@@ -93,11 +107,14 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
   const inventoryCount = await prisma.playerResource.count({ where: { playerId: player.id, amount: { gt: 0 } } });
   const exits = player.currentLocation?.exitsFrom.map((exit) => exit.direction) ?? [];
   const showTechnicalDetails = playerCanShowTechnicalDetails(player);
+  const isTutorialDream = player.currentLocation ? isTutorialLocation(player.currentLocation) : false;
 
   return buildMainReplyKeyboard({
     isAuto,
     exits,
     hasInventory: inventoryCount > 0,
     statusLabel: showTechnicalDetails ? exactStatusButtonLabel(player) : statusButtonLabel(player),
+    isTutorialDream,
+    canOpenDreamGate: isTutorialDream && Boolean(player.currentLocation?.features.length),
   });
 }

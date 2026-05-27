@@ -2,12 +2,12 @@ import { Bot, InlineKeyboard } from "grammy";
 import { prisma } from "../db";
 import { getStartLocationId } from "../services/players";
 import { renderLocationBrief } from "../services/locations";
-import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
+import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { guessGenderFromPronoun, guessNameForms, normalizeCharacterName, validateCharacterName, type NameForms } from "../services/grammar";
-import { HELP_TEXT } from "./help";
 import { BASE_STAMINA } from "../gameConfig";
 import { renderCurrentWorldYearLine } from "../services/calendar";
 import { setDefaultBotCommandsWithRetry, syncChatBotCommandsForTelegramId } from "../services/telegramCommands";
+import { enterTutorialDream } from "../services/tutorial";
 
 const CASE_PROMPTS: Array<{ key: keyof NameForms; question: string; prefix?: string }> = [
   { key: "genitive", question: "Ім’я в родовому відмінку (Немає КОГО?)" },
@@ -132,19 +132,15 @@ async function finishOnboarding(ctx: any, state: OnboardingState) {
 
   if (ctx.chat?.id) await syncChatBotCommandsForTelegramId(ctx.api, ctx.chat.id, state.telegramId);
 
+  const dream = await enterTutorialDream(player.id, { forceStart: true });
   await ctx.reply(
-    `Готово. Чорноліс запам’ятав ім’я: ${player.nameNominative}.\n\n${renderCurrentWorldYearLine()}\n\nНаприклад: «Травник звертається до ${player.nameGenitive}» і «${player.nameVocative}, стежка чекає».`,
+    `Готово. Чорноліс запам’ятав ім’я: ${player.nameNominative}.\n\n${renderCurrentWorldYearLine()}\n\nНаприклад: «Травник звертається до ${player.nameGenitive}» і «${player.nameVocative}, стежка чекає».\n\n${dream.text}`,
     {
       reply_markup: await buildMainReplyKeyboardForTelegramId(Number(state.telegramId), false),
     }
   );
 
-  await ctx.reply(HELP_TEXT, {
-    parse_mode: "HTML",
-    reply_markup: await buildMainReplyKeyboardForTelegramId(Number(state.telegramId), false),
-  });
-
-  const view = await renderLocationBrief(startLocationId, player.id);
+  const view = await renderLocationBrief(dream.locationId, player.id);
   await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
 }
 

@@ -9,6 +9,8 @@
     "restStaminaCapMultiplier": null,
     "data": {
       "locked": true,
+      "locks_exit_direction": "EAST",
+      "lock_reason": "ворота",
       "future_area": "starter_settlement"
     }
   },
@@ -199,6 +201,22 @@
     "data": {
       "inspectable": true,
       "under_bridge": true
+    }
+  },
+  {
+    "key": "dream_tutorial_sleep_gate",
+    "locationKey": "dream_tutorial_gate",
+    "type": "GATE",
+    "name": "Сонні ворота",
+    "description": "Ворота стоять просто на стежці, але тінь від них падає так, наче за ними є цілий мур. На дошках проступають слова: «Скажи шляху відчинитися».",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "tutorial_gate": true,
+      "locked": true,
+      "locks_exit_direction": "SOUTH",
+      "lock_reason": "сонні ворота",
+      "reset_after_ms": 120000
     }
   }
 ]

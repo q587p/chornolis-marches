@@ -38,11 +38,13 @@
     "use ґ where natural"
   ],
   "map": {
-    "main_seed": "prisma/data/chornolis_world_seed.json",
+    "main_seed": "prisma/data/world/*.json",
+    "legacy_seed": "prisma/data/chornolis_world_seed.json",
     "seed_reader": "prisma/seed.ts",
     "ascii_map": "docs/world/world_map.md",
     "constraints": [
-      "do not casually change z",
+      "prisma/seed.ts prefers prisma/data/world/ when it exists; do not change only the legacy fallback for live world edits",
+      "do not casually change z; Дрімотна Межа intentionally uses z = -13 for the tutorial dream",
       "do not create duplicate exits in one direction",
       "blockedCells are documentation-only"
     ]
@@ -65,5 +67,13 @@
     "/chat supports time, location and character grouping modes in Telegram and web views.",
     "хмиз now has a first fuel loop: it can extend burning ordinary campfires or prepare згаслі ordinary campfires for relighting.",
     "Inventory now has first modest item actions: berries restore a small amount of stamina, mushrooms ease hunger a little, herbs restore a small amount of HP when wounded, dry torches can be lit when fire is available, and resource stacks can be inspected or dropped."
+  ],
+  "current_0_12_context": [
+    "Дрімотна Межа is the first dream tutorial region on z = -13.",
+    "New characters enter the dream after onboarding; existing /start must continue to preserve current location.",
+    "/sleep tutorial returns to the saved tutorial dream position; plain /sleep routes there only while tutorial is incomplete.",
+    "Прокинутися / /wake exits the tutorial dream and restores a valid real-world location.",
+    "Visible locked exits appear in exit lists and block movement with a reason; queued movement re-checks locks before completion.",
+    "Сонні ворота are the first interactive gate: /open / Відкрити opens the south exit briefly."
   ]
 }

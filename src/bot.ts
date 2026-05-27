@@ -23,6 +23,7 @@ import { registerStartHandlers } from "./handlers/start";
 import { registerStatusHandlers } from "./handlers/status";
 import { registerManualTickReportHandlers } from "./handlers/tickReport";
 import { registerTimeHandlers } from "./handlers/time";
+import { registerTutorialHandlers } from "./handlers/tutorial";
 import { registerFallbackHandlers } from "./handlers/fallback";
 
 const bot = new Bot(config.botToken);
@@ -37,6 +38,7 @@ registerAdminHandlers(bot);
 registerStatusHandlers(bot);
 registerManualTickReportHandlers(bot);
 registerTimeHandlers(bot);
+registerTutorialHandlers(bot);
 registerLookHandlers(bot);
 registerSayHandlers(bot);
 registerMovementHandlers(bot);

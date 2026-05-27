@@ -11,6 +11,24 @@ _No unreleased changes yet._
 
 ---
 
+## 0.12.0 - Dream tutorial - 12026-05-27
+
+### Added
+
+- Added the first tutorial dream region, `Дрімотна Межа`, on a separate `z = -13` map layer.
+- New characters now enter the tutorial dream after onboarding, and `/sleep tutorial` can return a character to the saved tutorial position.
+- Added `/sleep` routing to the tutorial while it is incomplete, plus `/wake` / `Прокинутися` to leave the dream and restore a valid real-world location.
+- Added reusable visible locked exits: locked directions appear in location exit lists, movement into them is blocked with a reason, and queued moves re-check the lock before completing.
+- Added the first interactive gate, `Сонні ворота`: `/open` / `Відкрити` opens the locked south exit for a short window before it lazily closes again.
+
+### Changed
+
+- The closed settlement gate now has a visible locked east exit instead of only being represented as a feature.
+- Updated onboarding, input-alias, map and release documentation for the new tutorial flow.
+- Removed stale top-level split seed JSON duplicates from `prisma/data/`; the active world seed source is now unambiguous under `prisma/data/world/`.
+
+---
+
 ## 0.11.12 - First inventory uses - 12026-05-27
 
 ### Added

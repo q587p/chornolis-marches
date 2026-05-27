@@ -20,6 +20,7 @@ node scripts/world/render-map-ascii.mjs --write
 - `=` — old bridge.
 - `G` — closed settlement gate.
 - `u` — under-bridge location at `z = -1`; it is not connected to the bridge deck.
+- `D` — dream tutorial location in `Дрімотна Межа` at `z = -13`.
 
 ## Layer z = 0
 
@@ -48,6 +49,19 @@ y
   5    u
 ```
 
+## Layer z = -13
+
+Tutorial dream layer:
+
+```text
+      0
+y
+  3    D  dream_tutorial_hub
+  2    D  dream_tutorial_gate
+  1    D  dream_tutorial_second_step
+  0    D  dream_tutorial_threshold
+```
+
 ## Special authored links
 
 - `meadow_11_00` — SOUTH → `meadow_11_09`
@@ -58,6 +72,7 @@ y
 - `riverbank_18_06` — SOUTH → `under_bridge_18_05`
 - `under_bridge_18_05` — NORTH → `riverbank_18_06`
 - `under_bridge_18_05` — SOUTH → `riverbank_18_04`
+- `dream_tutorial_gate` — SOUTH → `dream_tutorial_hub` is a visible locked exit until `Сонні ворота` are opened.
 
 ## Editing
 

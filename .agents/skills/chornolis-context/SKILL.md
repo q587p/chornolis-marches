@@ -18,7 +18,7 @@ For Ukrainian UI/text, also read:
 For map/world changes, also read:
 
 - `docs/codex/07-world-and-map-notes.md`
-- `prisma/data/chornolis_world_seed.json`
+- active split seed files under `prisma/data/world/`
 - `prisma/seed.ts`
 
 Hard reminders:

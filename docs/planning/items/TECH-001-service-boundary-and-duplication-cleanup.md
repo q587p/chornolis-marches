@@ -10,6 +10,8 @@ tags:
   - refactor
   - maintainability
   - services
+  - dead-code
+  - cleanup
 exports:
   github_issue: true
 ---
@@ -32,6 +34,8 @@ The current code is still workable, but several files are large enough that rela
 ## First scope
 
 - Continue extracting tiny shared helpers when duplication is obvious and behavior-preserving.
+- Audit stale code/data after the 0.12.0 seed cleanup: search for old files, unused legacy data, dead service helpers, unused exports, obsolete docs references and duplicate systems that are no longer called.
+- Remove or clearly mark dead pieces only after checking references with `rg`, validating seed/map consumers, and running tests/build.
 - Split pure formatting/rendering helpers away from handlers before changing behavior.
 - Keep side-effecting gameplay rules in services, not in Telegram/web adapters.
 - Prefer small files with clear ownership over one broad `utils` dumping ground.
@@ -63,6 +67,10 @@ The current code is still workable, but several files are large enough that rela
   - fire/torch feature actions.
 - command/action wiring:
   - move Telegram buttons, slash commands and Ukrainian text aliases toward a shared command/action registry.
+- stale data/docs/code:
+  - keep `prisma/data/world/*.json` as the active seed source and avoid reintroducing top-level split JSON duplicates under `prisma/data/`;
+  - check whether `prisma/data/chornolis_world_seed.json` is still useful as a legacy fallback/reference or should eventually become generated/archived/removed;
+  - scan for old command names, obsolete map notes, unused admin/debug paths and unused helper exports after each larger feature slice.
 
 ## Acceptance notes
 

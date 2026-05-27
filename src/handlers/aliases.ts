@@ -28,7 +28,7 @@ import { sendHelp } from "./help";
 import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } from "./auto";
 import { showCharacter, showInventory, showLocationForPlayer } from "./player";
 import { buildAllPage, buildChatLogPage, buildStatBrief, buildWhoPage } from "./status";
-import { renderDepletedVegetationInspection } from "../services/locations";
+import { renderDepletedVegetationInspection, renderLocationBrief } from "../services/locations";
 import { buildNewsIndexPage } from "./news";
 import { backToMain, showMenu } from "./menu";
 import { showTime } from "./time";
@@ -41,6 +41,7 @@ import { requireScribeAdmin } from "../services/adminAccess";
 import { pickUpFirstGroundResourceByKey } from "../services/groundItems";
 import { parseSpeechTarget } from "../services/speechTargets";
 import { dropInventoryResource, inspectInventoryResource, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
+import { enterTutorialDream, hasCompletedTutorial, openDreamGate, wakeFromTutorialDream } from "../services/tutorial";
 
 type TextTargetRef = {
   type: "player" | "creature";
@@ -535,6 +536,37 @@ async function submitSocialSignal(bot: Bot, ctx: any, signal: SocialSignalAlias,
   }
 }
 
+async function submitSleep(ctx: any, tutorial = false) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  if (!tutorial && await hasCompletedTutorial(player.id)) {
+    return void (await ctx.reply("Звичайний сон ще не вплетений у правила світу. Для навчального сну використайте /sleep tutorial."));
+  }
+
+  const result = await enterTutorialDream(player.id);
+  await ctx.reply(result.text, { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
+  const view = await renderLocationBrief(result.locationId, player.id);
+  await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+}
+
+async function submitWake(ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const result = await wakeFromTutorialDream(player.id);
+  await ctx.reply(result.text, { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
+  if (result.woke) {
+    const view = await renderLocationBrief(result.locationId, player.id);
+    await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+  }
+}
+
+async function submitOpen(ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  await ctx.reply(await openDreamGate(player.id), { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
+}
+
 export function registerAliasHandlers(bot: Bot) {
   bot.on("message:text", async (ctx, next) => {
     if (!ctx.from || !ctx.message?.text) return next();
@@ -565,6 +597,9 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "wait") return submitWait(bot, ctx);
     if (parsed.kind === "use-item") return submitUseItem(ctx, parsed.item);
     if (parsed.kind === "light-torch") return submitLightTorch(ctx);
+    if (parsed.kind === "sleep") return submitSleep(ctx, parsed.tutorial);
+    if (parsed.kind === "wake") return submitWake(ctx);
+    if (parsed.kind === "open") return submitOpen(ctx);
     if (parsed.kind === "inspect-inventory-item") return submitInventoryInspect(ctx, parsed.target);
     if (parsed.kind === "drop-inventory-item") return submitInventoryDrop(ctx, parsed.target);
     if (parsed.kind === "add-twigs-campfire") {

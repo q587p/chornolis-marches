@@ -1,7 +1,7 @@
 ---
 id: ONB-001
 title: Newcomer helper and tutorial
-status: next
+status: testing
 type: feature
 area: onboarding
 priority: high
@@ -21,10 +21,19 @@ Add a first diegetic beginner path for new players who are interested now, befor
 
 The first version should help a new character understand what they can do without turning the opening into a mechanical checklist or a generic MMO tutorial.
 
-## First scope
+## Implemented first slice
+
+- `Дрімотна Межа` tutorial dream region on `z = -13`.
+- New characters enter the dream after onboarding.
+- `/sleep tutorial` returns to the saved tutorial position.
+- `/sleep` without arguments routes to the tutorial while the character has not woken from it yet.
+- `Прокинутися` / `/wake` leaves the dream and restores a valid real-world location.
+- `Сонні ворота` teach visible locked exits: a locked south exit is shown, blocked movement gives a reason, and `/open` / `Відкрити` opens the route for a short window.
+
+## Remaining first scope
 
 - Review and refresh `/start`, `/help`, fallback hints and the main keyboard so a brand-new player sees the current game, not an older slice of it.
-- Add an optional newcomer helper / tutorial guide that can nudge the player through:
+- Expand the dream tutorial with branches that nudge the player through:
   - `Озирнутися` / `/look`;
   - `Роздивитися` / `/examine`;
   - movement and visible exits;
@@ -61,7 +70,6 @@ Avoid a corporate tutorial voice. The helper should feel like someone or somethi
 
 ## Later
 
-- Dream tutorial after onboarding.
 - Personalized prompts based on what the character has already done.
 - Referral / invited-by prompt if the referral system leaves icebox.
 - Teaching and observation links once skills/progression are implemented.

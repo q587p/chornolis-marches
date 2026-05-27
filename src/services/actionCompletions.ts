@@ -28,6 +28,7 @@ import { fatigueStateFor, spendCreatureStamina, spendPlayerStamina } from "./act
 import { actorWhere, enqueueCreatureAction, interruptActorActions, type ActorRef } from "./actionLifecycle";
 import { escapeHtml } from "../utils/text";
 import { playerCanShowTechnicalDetails } from "./technicalDetails";
+import { isLocationExitLocked } from "./tutorial";
 import { chance, pick, shuffle } from "../utils/random";
 
 type MovePayload = { direction: Direction; reason?: string };
@@ -238,6 +239,13 @@ async function completeMove(bot: Bot, action: WorldAction) {
       await logEvent("ERROR", "Queued player move failed", payload.direction, currentLocationId);
       return;
     }
+    const lockedMessage = await isLocationExitLocked(currentLocationId, payload.direction);
+    if (lockedMessage) {
+      await setActionStatus(action, "FAILED");
+      if (chatId) await bot.api.sendMessage(chatId, lockedMessage, { reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false) });
+      await logEvent("ERROR", "Queued player move blocked", payload.direction, currentLocationId);
+      return;
+    }
 
     const playerName = playerForms(player).nominative;
     const departureLabel = await visibleMoverLabel(currentLocationId, "Хтось", playerName);
@@ -263,6 +271,7 @@ async function completeMove(bot: Bot, action: WorldAction) {
 
   const exit = await prisma.locationExit.findUnique({ where: { fromLocationId_direction: { fromLocationId: creature.locationId, direction: payload.direction } } });
   if (!exit || exit.isHidden) return void (await setActionStatus(action, "FAILED"));
+  if (await isLocationExitLocked(creature.locationId, payload.direction)) return void (await setActionStatus(action, "FAILED"));
 
   const isAnimal = creature.species.kind === "ANIMAL";
   const name = creature.name ?? creature.species.name;

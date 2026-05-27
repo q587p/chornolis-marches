@@ -1,14 +1,33 @@
 # 07 — World and Map Notes
 
-## Main editable map file
+## Main editable map files
 
-The main hand-edited map/world data file is:
+The active hand-edited map/world data lives in split JSON files:
+
+```text
+prisma/data/world/
+```
+
+Important files:
+
+- `regions.json`
+- `locations.json`
+- `exits.json`
+- `features.json`
+- `resourceTypes.json`
+- `resourceRules.json`
+- `resourceNodes.json`
+- `uniqueCreatures.json`
+
+Legacy fallback/mirror:
 
 ```text
 prisma/data/chornolis_world_seed.json
 ```
 
-`prisma/seed.ts` reads this JSON and upserts:
+`prisma/seed.ts` prefers `prisma/data/world/` when that directory exists. Do not change only the legacy fallback for live map/world edits.
+
+The seed upserts:
 
 - regions;
 - locations;
@@ -38,6 +57,7 @@ In `prisma/data/chornolis_world_seed.json`, edits may include:
 ## Important constraints
 
 - Do not casually change `z`; currently it is expected to remain `0` unless a task explicitly introduces verticality.
+- `Дрімотна Межа`, the tutorial dream, intentionally uses `z = -13`; this is a separate authored layer, not a casual terrain-height edit.
 - Do not create two exits from one location in the same direction.
 - `blockedCells` are documentation-only; the game walks through `locations` and `exits`.
 - ASCII map is separate documentation in:
