@@ -50,6 +50,12 @@ function lockReason(data: Record<string, unknown>) {
       : "перешкода";
 }
 
+function lockedReasonLabel(reason: string) {
+  const trimmed = reason.trim();
+  if (!trimmed) return "Перешкода";
+  return `${trimmed.charAt(0).toLocaleUpperCase("uk-UA")}${trimmed.slice(1)}`;
+}
+
 export function isTutorialLocation(location: { key: string; z: number; region?: { key: string } | null }) {
   return location.z === -13 || location.region?.key === TUTORIAL_REGION_KEY || location.key.startsWith("dream_tutorial_");
 }
@@ -215,7 +221,7 @@ export async function isLocationExitLocked(locationId: number, direction: Direct
   const locked = await lockedExitDirections(locationId);
   const reason = locked.get(direction);
   if (!reason) return null;
-  return `Закрито (${reason}).`;
+  return `${lockedReasonLabel(reason)} (закрито).`;
 }
 
 export async function openDreamGate(playerId: number) {
@@ -255,5 +261,5 @@ export async function openDreamGate(playerId: number) {
 }
 
 export function lockedExitLabel(direction: Direction, reason: string) {
-  return `${directionLabels[direction] ?? direction} — закрито (${reason})`;
+  return `${directionLabels[direction] ?? direction} — ${lockedReasonLabel(reason)} (закрито)`;
 }

@@ -22,6 +22,7 @@ _No unreleased changes yet._
 - Changed `/start` so it does not repaint the reply keyboard while the player is inside the tutorial dream.
 - Varied tutorial pace comments and added escalating cooldowns so repeated idle/look reminders become less frequent.
 - Changed the character card in the tutorial dream to show sleeping posture, hide the Sleep button and warn that nested sleep is not implemented.
+- Reworded locked exit messages so the blocker name comes before the closed state, for example `Брама сну (закрито)`.
 
 ---
 
