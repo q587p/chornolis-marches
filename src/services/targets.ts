@@ -47,23 +47,34 @@ function formatCreatureStats(target: {
   ].join("\n");
 }
 
-function genderedPlayerState(player: { grammaticalGender?: string | null }) {
-  if (player.grammaticalGender === "FEMININE") return "жива/активна";
-  if (player.grammaticalGender === "PLURAL") return "живі/активні";
-  return "живий/активний";
+function playerGender(player: { grammaticalGender?: string | null; pronoun?: string | null }) {
+  if (player.grammaticalGender === "FEMININE" || player.grammaticalGender === "NEUTER" || player.grammaticalGender === "PLURAL") return player.grammaticalGender;
+  if (player.pronoun === "SHE") return "FEMININE";
+  if (player.pronoun === "THEY") return "PLURAL";
+  return "MASCULINE";
 }
 
-function genderedUnarmed(player: { grammaticalGender?: string | null }) {
-  if (player.grammaticalGender === "FEMININE") return "Виглядає беззбройною.";
-  if (player.grammaticalGender === "PLURAL") return "Виглядають беззбройними.";
-  return "Виглядає беззбройним.";
+function genderedPlayerState(player: { grammaticalGender?: string | null; pronoun?: string | null }) {
+  const gender = playerGender(player);
+  if (gender === "FEMININE") return "жива й активна";
+  if (gender === "NEUTER") return "живе й активне";
+  if (gender === "PLURAL") return "живі й активні";
+  return "живий і активний";
+}
+
+function genderedUnarmed(player: { grammaticalGender?: string | null; pronoun?: string | null }) {
+  const looks = playerGender(player) === "PLURAL" ? "Виглядають" : "Виглядає";
+  if (playerGender(player) === "FEMININE") return `${looks} беззбройною.`;
+  if (playerGender(player) === "NEUTER") return `${looks} беззбройним.`;
+  if (playerGender(player) === "PLURAL") return `${looks} беззбройними.`;
+  return `${looks} беззбройним.`;
 }
 
 function handsText(torchState: { isLit: boolean; litAmount?: number }) {
-  if (!torchState.isLit) return "У руках нічого не тримає.";
+  if (!torchState.isLit) return "Руки порожні.";
   const count = torchState.litAmount ?? 1;
-  if (count > 1) return `У руках горять запалені факели (${count}).`;
-  return "У руках горить запалений факел.";
+  if (count > 1) return "В обох руках горять запалені факели.";
+  return "У руці горить запалений факел.";
 }
 
 export async function resolveTarget(type: string, id: number, locationId: number, options: { viewerPlayerId?: number } = {}): Promise<ResolvedTarget | null> {

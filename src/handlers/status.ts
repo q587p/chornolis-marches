@@ -3,13 +3,26 @@ import { CreatureActivity, CreatureAge } from "@prisma/client";
 import { config } from "../config";
 import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA, REST_ADMIN_STAMINA_CAP_MULTIPLIER } from "../gameConfig";
-import { chatLogWindowLabel, chatLogWindowToken, getChatLog, normalizeChatLogWindow, publicChatEventType, type ChatLogWindow } from "../services/chatLog";
+import {
+  chatEventGroupLabel,
+  chatLogModeLabel,
+  chatLogModeToken,
+  chatLogWindowLabel,
+  chatLogWindowToken,
+  getChatLog,
+  normalizeChatLogMode,
+  normalizeChatLogWindow,
+  parseChatLogRequest,
+  publicChatEventType,
+  type ChatLogMode,
+  type ChatLogWindow,
+} from "../services/chatLog";
 import { getEcologyStats } from "../services/ecologyStats";
 import { getStatusData } from "../services/status";
 import { getPlayerByTelegramId } from "../services/players";
 import { isScribeAdmin, requireScribeAdmin } from "../services/adminAccess";
-import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
-import { stopPlayerAuto } from "./auto";
+import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
+import { disablePlayerAuto, enablePlayerAuto, stopPlayerAuto } from "./auto";
 import { creatureForms, playerForms } from "../services/grammar";
 
 const ALL_PAGE_MAX_CHARS = 3300;
@@ -47,6 +60,13 @@ function formatRate(value: number) {
   return formatStatNumber(value, value >= 10 ? 0 : 1);
 }
 
+function genderedPast(player: { grammaticalGender?: string | null; pronoun?: string | null }, masculine: string, feminine: string, plural: string) {
+  const gender = player.grammaticalGender ?? (player.pronoun === "SHE" ? "FEMININE" : player.pronoun === "THEY" ? "PLURAL" : "MASCULINE");
+  if (gender === "FEMININE") return feminine;
+  if (gender === "PLURAL") return plural;
+  return masculine;
+}
+
 export async function buildStatBrief() {
   const stats = await getEcologyStats();
   const statUrl = `${config.publicBaseUrl}/stat`;
@@ -61,16 +81,18 @@ export async function buildStatBrief() {
   const hunterLines = stats.topHunters
     .slice(0, 5)
     .map((hunter) => `#${hunter.id} ${hunter.name} [${hunter.speciesKey}]: убивств ${formatStatNumber(hunter.kills)}, атак ${formatStatNumber(hunter.attackAttempts)}, влучних ${formatStatNumber(hunter.successfulAttacks)}`);
-  const playerLines = stats.topPlayers
-    .slice(0, 5)
-    .map((player) => {
-      const location = player.locationName ? `; зараз: ${player.locationName}` : "";
-      return `#${player.id} ${player.name}: вполював/ла ${formatStatNumber(player.animalsKilled)}, зібрав/ла ${formatStatNumber(player.successfulGathers)}, привітань ${formatStatNumber(player.greetings)}, реплік ${formatStatNumber(player.says)}, кроків ${formatStatNumber(player.steps)}${location}`;
+  const characterLines = stats.topCharacters
+    .slice(0, 8)
+    .map((character) => {
+      const location = character.locationName ? `; зараз: ${character.locationName}` : "";
+      const hunted = genderedPast(character, "вполював", "вполювала", "вполювали");
+      const gathered = genderedPast(character, "зібрав", "зібрала", "зібрали");
+      return `${character.ref} ${character.name}: ${hunted} ${formatStatNumber(character.animalsKilled)}, ${gathered} ${formatStatNumber(character.successfulGathers)}, привітань ${formatStatNumber(character.greetings)}, реплік ${formatStatNumber(character.says)}, кроків ${formatStatNumber(character.steps)}${location}`;
     });
 
   return {
     text: [
-      "Екологія Чорнолісу",
+      "Статистика",
       "",
       `Тварини: живі ${formatStatNumber(stats.totals.aliveAnimals)}, трупи ${formatStatNumber(stats.totals.corpseAnimals)}, зниклі ${formatStatNumber(stats.totals.goneAnimals)}, записів усього ${formatStatNumber(stats.totals.totalAnimals)}.`,
       `Заселені клітинки: ${formatStatNumber(stats.totals.occupiedAnimalLocations)} / ${formatStatNumber(stats.totals.locationCount)}.`,
@@ -91,7 +113,7 @@ export async function buildStatBrief() {
       hunterLines.length ? hunterLines.join("\n") : "поки немає успішних мисливців",
       "",
       "Персонажі Порубіжжя:",
-      playerLines.length ? playerLines.join("\n") : "поки немає помітних дій персонажів",
+      characterLines.length ? characterLines.join("\n") : "поки немає помітних дій персонажів",
       "",
       `Повна статистика: ${statUrl}`,
     ].join("\n"),
@@ -176,10 +198,11 @@ function hpForAge(species: any, age: CreatureAge) {
   return Math.max(1, Math.round(species.baseHp * multiplier));
 }
 
-function buildAllPaginationKeyboard(showDead: boolean, page: number, totalPages: number, playerIds: number[] = []) {
-  if (totalPages <= 1 && playerIds.length === 0) return undefined;
+function buildAllPaginationKeyboard(showDead: boolean, page: number, totalPages: number, playerIds: number[] = [], npcIds: number[] = []) {
+  if (totalPages <= 1 && playerIds.length === 0 && npcIds.length === 0) return undefined;
   const keyboard = new InlineKeyboard();
   for (const playerId of playerIds) keyboard.text(`👤 #${playerId}`, `adminPlayer:${playerId}`).row();
+  for (const npcId of npcIds) keyboard.text(`🧩 NPC #${npcId}`, `adminCreature:${npcId}`).row();
   const mode = showDead ? "dead" : "live";
   if (page > 0) keyboard.text("◀️ Назад", `all:${mode}:${page - 1}`);
   if (page < totalPages - 1) keyboard.text("Далі ▶️", `all:${mode}:${page + 1}`);
@@ -253,6 +276,50 @@ function normalizePlayerLookup(value: string | null | undefined) {
   return String(value ?? "").trim().toLowerCase().replace(/^#/, "").replace(/\s+/g, " ");
 }
 
+function yesNo(value: boolean | null | undefined) {
+  return value ? "так" : "ні";
+}
+
+function nameCasesLine(player: any) {
+  return [
+    player.nameNominative,
+    player.nameGenitive,
+    player.nameDative,
+    player.nameAccusative,
+    player.nameInstrumental,
+    player.nameLocative,
+    player.nameVocative,
+  ].filter(Boolean).join(" / ") || "не заповнено";
+}
+
+async function playerActionOriginStats(playerId: number) {
+  const [autoActions, allActions] = await Promise.all([
+    prisma.worldAction.count({ where: { actorType: "PLAYER", playerId, note: { startsWith: "auto:" } } }),
+    prisma.worldAction.count({ where: { actorType: "PLAYER", playerId } }),
+  ]);
+
+  return { autoActions, manualActions: Math.max(0, allActions - autoActions), allActions };
+}
+
+function buildAdminPlayerKeyboard(player: { id: number; isNameApproved: boolean; isAutoEnabled: boolean }) {
+  const keyboard = new InlineKeyboard();
+  keyboard
+    .text(player.isNameApproved ? "✅ Ім’я схвалене" : "✅ Схвалити ім’я", `adminPlayerName:approve:${player.id}`)
+    .text(player.isNameApproved ? "↩️ Зняти схвалення" : "❌ Не схвалене", `adminPlayerName:reject:${player.id}`)
+    .row()
+    .text(player.isAutoEnabled ? "🤖 Вимкнути авто" : "🤖 Увімкнути авто", `adminPlayerAuto:${player.isAutoEnabled ? "off" : "on"}:${player.id}`)
+    .row()
+    .text("🔄 Оновити", `adminPlayer:${player.id}`);
+  return keyboard;
+}
+
+function buildAdminCreatureKeyboard(creatureId: number) {
+  return new InlineKeyboard()
+    .text("⚙️ Налаштування NPC пізніше", `adminCreatureConfig:${creatureId}`)
+    .row()
+    .text("🔄 Оновити", `adminCreature:${creatureId}`);
+}
+
 async function resolveAdminPlayer(rawTarget: string) {
   const target = normalizePlayerLookup(rawTarget);
   if (!target) return { player: null, error: "Формат: /playerAdmin <#id|ім’я|username>" };
@@ -287,7 +354,7 @@ async function resolveAdminPlayer(rawTarget: string) {
   return { player: null, error: "Не знайшов такого персонажа." };
 }
 
-async function buildAdminPlayerDetails(playerId: number) {
+async function buildAdminPlayerDetailsView(playerId: number) {
   const player = await prisma.player.findUnique({
     where: { id: playerId },
     include: {
@@ -296,12 +363,14 @@ async function buildAdminPlayerDetails(playerId: number) {
       actions: { orderBy: [{ updatedAt: "desc" }, { id: "desc" }], take: 8 },
     },
   });
-  if (!player) return "Персонажа не знайдено.";
+  if (!player) return { text: "Персонажа не знайдено.", keyboard: undefined };
 
   const forms = playerForms(player);
+  const actionOriginStats = await playerActionOriginStats(player.id);
   const location = player.currentLocation
     ? `${player.currentLocation.name} (${player.currentLocation.x},${player.currentLocation.y},${player.currentLocation.z}); регіон: ${player.currentLocation.region.name}`
     : "невідомо";
+  const locationKey = player.currentLocation ? ` (${player.currentLocation.key})` : "";
   const resources = player.resources.filter((resource) => resource.amount > 0);
   const resourcesText = resources.length
     ? resources.map((resource) => `- ${resource.resourceType.name} (${resource.resourceType.key}): ${resource.amount}`).join("\n")
@@ -310,21 +379,25 @@ async function buildAdminPlayerDetails(playerId: number) {
     ? player.actions.map((action) => `- #${action.id} ${action.type} ${action.status}; ${formatAdminDate(action.updatedAt)}; ${action.note ?? "без нотатки"}`).join("\n")
     : "- немає";
 
-  return [
+  const text = [
     `👤 Персонаж #${player.id}`,
     "",
     `Ім’я: ${forms.nominative}`,
+    `Відмінки: ${nameCasesLine(player)}`,
+    `Ім’я схвалене: ${yesNo(player.isNameApproved)}`,
     `Telegram: ${player.telegramId}${player.username ? ` (@${player.username})` : ""}`,
+    `Telegram name: ${[player.firstName, player.lastName].filter(Boolean).join(" ") || "немає"}`,
     `Роль: ${player.role}`,
-    `Місцина: ${location}`,
+    `Займенники: ${player.pronoun ?? "немає"}; граматика: ${player.grammaticalGender ?? "немає"}; істотність: ${player.animacy}`,
+    `Місцина: ${location}${locationKey}`,
     "",
     "Стан:",
     `- життя: ${player.hp}/${player.hpMax ?? BASE_HP}`,
     `- снага: ${player.stamina}/${player.staminaMax ?? BASE_STAMINA}`,
     `- голод: ${player.hunger}`,
-    `- відпочиває: ${player.isResting ? "так" : "ні"}`,
-    `- авто: ${player.isAutoEnabled ? "так" : "ні"}`,
-    `- технічні деталі: ${player.showTechnicalDetails ? "так" : "ні"}`,
+    `- відпочиває: ${yesNo(player.isResting)}`,
+    `- авто: ${yesNo(player.isAutoEnabled)}`,
+    `- технічні деталі: ${yesNo(player.showTechnicalDetails)}`,
     "",
     "Статистика:",
     `- кроків: ${player.steps}`,
@@ -333,9 +406,15 @@ async function buildAdminPlayerDetails(playerId: number) {
     `- привітань: ${player.greetings}`,
     `- спроб збору: ${player.gatherAttempts}`,
     `- вдалого збору: ${player.successfulGathers}`,
+    `- зібрано ягід: ${player.berriesGathered}`,
+    `- зібрано грибів: ${player.mushroomsGathered}`,
+    `- зібрано лікарських трав: ${player.herbsGathered}`,
     `- вбито тварин: ${player.animalsKilled}`,
     `- відпочинків: ${player.restStarts}`,
     `- повних відновлень снаги: ${player.restFullRecoveries}`,
+    `- дій усього: ${actionOriginStats.allActions}`,
+    `- авто-дій: ${actionOriginStats.autoActions}`,
+    `- ручних дій: ${actionOriginStats.manualActions}`,
     "",
     "Речі/ресурси:",
     resourcesText,
@@ -347,6 +426,87 @@ async function buildAdminPlayerDetails(playerId: number) {
     `Оновлено: ${formatAdminDate(player.updatedAt)}`,
     `Остання дія: ${formatAdminDate(player.lastActionAt)}`,
   ].join("\n");
+
+  return { text: truncateTelegramText(text), keyboard: buildAdminPlayerKeyboard(player) };
+}
+
+async function buildAdminCreatureDetailsView(creatureId: number) {
+  const creature = await prisma.creature.findUnique({
+    where: { id: creatureId },
+    include: {
+      species: true,
+      location: { include: { region: true } },
+      actions: { orderBy: [{ updatedAt: "desc" }, { id: "desc" }], take: 8 },
+    },
+  });
+  if (!creature) return { text: "NPC / істоту не знайдено.", keyboard: undefined };
+
+  const forms = creatureForms(creature);
+  const location = creature.location
+    ? `${creature.location.name} (${creature.location.x},${creature.location.y},${creature.location.z}); регіон: ${creature.location.region.name} (${creature.location.key})`
+    : "невідомо";
+  const state = creature.isGone ? "зникла/прибрана" : creature.isAlive ? "жива/активна" : "неактивна/труп";
+  const actionsText = creature.actions.length
+    ? creature.actions.map((action) => `- #${action.id} ${action.type} ${action.status}; ${formatAdminDate(action.updatedAt)}; ${action.note ?? "без нотатки"}`).join("\n")
+    : "- немає";
+
+  const text = [
+    `🧩 NPC / істота #${creature.id}`,
+    "",
+    `Ім’я: ${forms.nominative}`,
+    `Відмінки: ${[
+      forms.nominative,
+      forms.genitive,
+      forms.dative,
+      forms.accusative,
+      forms.instrumental,
+      forms.locative,
+      forms.vocative,
+    ].filter(Boolean).join(" / ")}`,
+    `Вид: ${creature.species.name} (${creature.species.key}); тип: ${creature.species.kind}; живлення: ${creature.species.diet}`,
+    `Професія: ${creature.professionName ?? "немає"}${creature.professionKey ? ` (${creature.professionKey})` : ""}`,
+    `Стать: ${creature.sex ?? "немає"}; вік: ${creature.age}/${creature.ageTicks}`,
+    `Місцина: ${location}`,
+    "",
+    "Стан:",
+    `- ${state}`,
+    `- життя: ${creature.hp}/${creature.maxHp ?? creature.species.baseHp}`,
+    `- снага: ${creature.stamina}/${creature.staminaMax ?? BASE_STAMINA}`,
+    `- голод: ${creature.hunger}`,
+    `- втома: ${creature.fatigueState}`,
+    `- приховано: ${yesNo(creature.isHidden)}`,
+    `- дія: ${creature.currentAction ?? "немає"}`,
+    `- активність: ${creature.activity ?? "немає"}`,
+    `- decay: ${creature.corpseDecayTicksLeft ?? "немає"}`,
+    "",
+    "Характеристики виду:",
+    `- сила: ${creature.species.strength}`,
+    `- спритність: ${creature.species.agility}`,
+    `- сприйняття: ${creature.species.perception}`,
+    `- живучість: ${creature.species.endurance}`,
+    `- інстинкт: ${creature.species.instinct}`,
+    "",
+    "Статистика:",
+    `- кроків: ${creature.steps}`,
+    `- оглядів: ${creature.looks}`,
+    `- реплік: ${creature.says}`,
+    `- спроб збору: ${creature.gatherAttempts}`,
+    `- вдалого збору: ${creature.successfulGathers}`,
+    `- атак: ${creature.attackAttempts}`,
+    `- влучних атак: ${creature.successfulAttacks}`,
+    `- убивств: ${creature.kills}`,
+    "",
+    "Останні дії:",
+    actionsText,
+    "",
+    "Налаштування:",
+    "- окрема адмінська поведінка NPC ще не реалізована; ця картка буде місцем для майбутніх режимів, не лише авто.",
+    "",
+    `Створено: ${formatAdminDate(creature.createdAt)}`,
+    `Оновлено: ${formatAdminDate(creature.updatedAt)}`,
+  ].join("\n");
+
+  return { text: truncateTelegramText(text), keyboard: buildAdminCreatureKeyboard(creature.id) };
 }
 
 export async function buildWhoData(now = new Date()) {
@@ -430,41 +590,51 @@ function formatChatEventTime(value: Date) {
   }).format(value);
 }
 
-function buildChatLogKeyboard(window: ChatLogWindow, page: number, totalPages: number) {
-  const keyboard = new InlineKeyboard().url("Відкрити веб-/chat", `${config.publicBaseUrl}/chat?hours=${chatLogWindowToken(window)}`);
+function buildChatLogKeyboard(mode: ChatLogMode, window: ChatLogWindow, page: number, totalPages: number) {
+  const modeToken = chatLogModeToken(mode);
+  const windowToken = chatLogWindowToken(window);
+  const keyboard = new InlineKeyboard().url("Відкрити веб-/chat", `${config.publicBaseUrl}/chat?mode=${modeToken}&hours=${windowToken}`);
+  keyboard.row()
+    .text(mode === "time" ? "✓ Час" : "Час", `chat:time:${windowToken}:0`)
+    .text(mode === "location" ? "✓ Місцини" : "Місцини", `chat:location:${windowToken}:0`)
+    .text(mode === "character" ? "✓ Персонажі" : "Персонажі", `chat:character:${windowToken}:0`);
   if (totalPages > 1) {
     keyboard.row();
-    if (page > 0) keyboard.text("◀️ Назад", `chat:${chatLogWindowToken(window)}:${page - 1}`);
+    if (page > 0) keyboard.text("◀️ Назад", `chat:${modeToken}:${windowToken}:${page - 1}`);
     keyboard.text(`${page + 1}/${totalPages}`, "chat:noop");
-    if (page < totalPages - 1) keyboard.text("Далі ▶️", `chat:${chatLogWindowToken(window)}:${page + 1}`);
+    if (page < totalPages - 1) keyboard.text("Далі ▶️", `chat:${modeToken}:${windowToken}:${page + 1}`);
   }
   return keyboard;
 }
 
-export async function buildChatLogPage(window: ChatLogWindow, requestedPage: number) {
-  const log = await getChatLog({ window, page: requestedPage, perPage: CHAT_LOG_PAGE_SIZE });
+export async function buildChatLogPage(mode: ChatLogMode, window: ChatLogWindow, requestedPage: number) {
+  const log = await getChatLog({ mode, window, page: requestedPage, perPage: CHAT_LOG_PAGE_SIZE });
   const page = Math.max(0, Math.min(log.page, log.totalPages - 1));
+  let lastGroup = "";
   const lines = log.events.map((event) => {
     const location = event.location ? ` @ ${event.location.name}` : "";
     const text = event.description ? `\n«${event.description}»` : "";
-    return truncateTelegramText(`#${event.id} ${formatChatEventTime(event.createdAt)} ${publicChatEventType(event)}${location}\n${event.title}${text}`, CHAT_LOG_ENTRY_MAX_CHARS);
+    const group = chatEventGroupLabel(event, mode);
+    const groupLine = group && group !== lastGroup ? `\n${group}\n` : "";
+    lastGroup = group;
+    return truncateTelegramText(`${groupLine}#${event.id} ${formatChatEventTime(event.createdAt)} ${publicChatEventType(event)}${location}\n${event.title}${text}`.trim(), CHAT_LOG_ENTRY_MAX_CHARS);
   });
   const header = [
     "Репліки Порубіжжя",
-    `Вікно: ${chatLogWindowLabel(log.window)}. Сторінка ${page + 1}/${log.totalPages}; записів ${log.total}.`,
+    `Рубрика: ${chatLogModeLabel(log.mode)}. Вікно: ${chatLogWindowLabel(log.window)}. Сторінка ${page + 1}/${log.totalPages}; записів ${log.total}.`,
     "",
   ].join("\n");
   const footer = [
     "",
     "",
-    "Формат: /chat [години|all]. Наприклад: /chat 1 або /chat all.",
+    "Формат: /chat time [години|all], /chat location [години|all], /chat character [години|all]. Старе /chat 1 теж працює.",
   ].join("\n");
   const maxBodyChars = Math.max(500, CHAT_LOG_TEXT_MAX_CHARS - header.length - footer.length);
   const body = lines.length ? joinLinesWithinLimit(lines, maxBodyChars).join("\n\n") : "За цей час реплік не знайдено.";
 
   return {
     text: truncateTelegramText(`${header}${body}${footer}`, TELEGRAM_TEXT_MAX_CHARS),
-    keyboard: buildChatLogKeyboard(log.window, page, log.totalPages),
+    keyboard: buildChatLogKeyboard(log.mode, log.window, page, log.totalPages),
   };
 }
 
@@ -488,14 +658,16 @@ export async function buildAllPage(showDead: boolean, requestedPage: number) {
 
   const playerLines = players.map((p) => {
     const loc = p.currentLocation ? `${p.currentLocation.name} (${p.currentLocation.x},${p.currentLocation.y},${p.currentLocation.z})` : "невідомо";
-    return `#${p.id} ${p.firstName ?? p.username ?? "мандрівник"} — ${loc}; життя ${p.hp}; stamina ${p.stamina}; hunger ${p.hunger}`;
+    const name = playerForms(p).nominative;
+    return `#${p.id} ${name} — ${loc}; життя ${p.hp}; снага ${p.stamina}; голод ${p.hunger}; авто ${yesNo(p.isAutoEnabled)}`;
   });
 
   const creatureLines = creatures.map((c) => {
     const loc = c.location ? `${c.location.name} (${c.location.x},${c.location.y},${c.location.z})` : "невідомо";
     const state = c.isGone ? "gone" : c.isAlive ? "alive" : "corpse/inactive";
     const decay = !c.isAlive && !c.isGone ? `; decay ${c.corpseDecayTicksLeft ?? "?"}` : "";
-    return `#${c.id} ${c.name ?? c.species.name} [${c.species.key}] — ${loc}; ${state}; життя ${c.hp}; age ${c.age}/${c.ageTicks}; ${c.activity ?? "IDLE"}; ${c.currentAction ?? "без дії"}${decay}`;
+    const marker = c.species.kind === "ANIMAL" ? "істота" : "NPC";
+    return `#${c.id} ${c.name ?? c.species.name} [${marker}] [${c.species.key}] — ${loc}; ${state}; життя ${c.hp}; age ${c.age}/${c.ageTicks}; ${c.activity ?? "IDLE"}; ${c.currentAction ?? "без дії"}${decay}`;
   });
 
   const bodyLines = [
@@ -508,23 +680,35 @@ export async function buildAllPage(showDead: boolean, requestedPage: number) {
   const pages = splitLinesIntoPages(bodyLines, ALL_PAGE_MAX_CHARS);
   const page = Math.max(0, Math.min(requestedPage, pages.length - 1));
   const visiblePlayerIds: number[] = [];
+  const visibleNpcIds: number[] = [];
   let inPlayers = false;
+  let inCreatures = false;
   for (const line of pages[page]) {
     if (line === "Гравці:") {
       inPlayers = true;
+      inCreatures = false;
       continue;
     }
-    if (line === "" || line.startsWith("NPC")) inPlayers = false;
-    if (!inPlayers) continue;
+    if (line.startsWith("NPC")) {
+      inPlayers = false;
+      inCreatures = true;
+      continue;
+    }
+    if (line === "") {
+      inPlayers = false;
+      inCreatures = false;
+      continue;
+    }
     const match = line.match(/^#(\d+)/);
-    if (match) visiblePlayerIds.push(Number(match[1]));
+    if (match && inPlayers) visiblePlayerIds.push(Number(match[1]));
+    if (match && inCreatures && line.includes("[NPC]")) visibleNpcIds.push(Number(match[1]));
   }
   const mode = showDead ? "усі записи" : "тільки живі; /all dead покаже всі записи";
   const text = `🧾 Усі персонажі (${mode})\nСторінка ${page + 1}/${pages.length}; гравців ${players.length}, істот ${creatures.length}\n\n${pages[page].join("\n")}`;
 
   return {
     text,
-    keyboard: buildAllPaginationKeyboard(showDead, page, pages.length, visiblePlayerIds),
+    keyboard: buildAllPaginationKeyboard(showDead, page, pages.length, visiblePlayerIds, visibleNpcIds),
   };
 }
 
@@ -632,7 +816,7 @@ export function registerStatusHandlers(bot: Bot) {
       (s) => `${s.key} — ${s.name}; життя=${s.baseHp}; diet=${s.diet}; lifecycle=${s.childTicks}/${s.youngTicks}/${s.adultTicks}/${s.oldTicks}; corpse=${s.corpseDecayTicks}`
     );
     await ctx.reply(
-      `🐾 Можливі тварини для /addCreature\n\n${lines.join("\n") || "немає"}\n\nФормат:\n/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD]\n\nПриклади:\n/addCreature rabbit center_chornolis_edge 3\n/addCreature mouse 0,0,0 5 YOUNG\n/addCreature wolf south_wolf_track 1 OLD`
+      `🐾 Можливі тварини для /addCreature\n\n${lines.join("\n") || "немає"}\n\nФормат:\n/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD]\n\nПриклади:\n/addCreature rabbit forest_04_00 3\n/addCreature mouse 0,0,0 5 YOUNG\n/addCreature wolf forest_00_08 1 OLD`
     );
   });
 
@@ -667,20 +851,35 @@ export function registerStatusHandlers(bot: Bot) {
   });
 
   bot.command("chat", async (ctx) => {
-    const window = normalizeChatLogWindow(ctx.match?.trim());
-    const page = await buildChatLogPage(window, 0);
+    const { mode, window } = parseChatLogRequest(ctx.match?.trim());
+    const page = await buildChatLogPage(mode, window, 0);
     await ctx.reply(page.text, { reply_markup: page.keyboard });
   });
 
   bot.hears(["💬 Репліки", "Репліки"], async (ctx) => {
-    const page = await buildChatLogPage(normalizeChatLogWindow(undefined), 0);
+    const page = await buildChatLogPage("time", normalizeChatLogWindow(undefined), 0);
+    await ctx.reply(page.text, { reply_markup: page.keyboard });
+  });
+
+  bot.callbackQuery(/^chat:(time|location|character):(all|\d+(?:\.\d+)?):(\d+)$/, async (ctx) => {
+    const mode = normalizeChatLogMode(ctx.match[1]);
+    const window = normalizeChatLogWindow(ctx.match[2]);
+    const requestedPage = Number(ctx.match[3]);
+    const page = await buildChatLogPage(mode, window, Number.isFinite(requestedPage) ? requestedPage : 0);
+    await ctx.answerCallbackQuery();
+
+    if (ctx.callbackQuery.message) {
+      await ctx.editMessageText(page.text, { reply_markup: page.keyboard });
+      return;
+    }
+
     await ctx.reply(page.text, { reply_markup: page.keyboard });
   });
 
   bot.callbackQuery(/^chat:(all|\d+(?:\.\d+)?):(\d+)$/, async (ctx) => {
     const window = normalizeChatLogWindow(ctx.match[1]);
     const requestedPage = Number(ctx.match[2]);
-    const page = await buildChatLogPage(window, Number.isFinite(requestedPage) ? requestedPage : 0);
+    const page = await buildChatLogPage("time", window, Number.isFinite(requestedPage) ? requestedPage : 0);
     await ctx.answerCallbackQuery();
 
     if (ctx.callbackQuery.message) {
@@ -739,7 +938,8 @@ export function registerStatusHandlers(bot: Bot) {
       return;
     }
 
-    await ctx.reply(await buildAdminPlayerDetails(resolved.player.id));
+    const view = await buildAdminPlayerDetailsView(resolved.player.id);
+    await ctx.reply(view.text, { reply_markup: view.keyboard });
   });
 
   bot.callbackQuery(/^adminPlayer:(\d+)$/, async (ctx) => {
@@ -750,7 +950,95 @@ export function registerStatusHandlers(bot: Bot) {
 
     const playerId = Number(ctx.match[1]);
     await ctx.answerCallbackQuery();
-    await ctx.reply(await buildAdminPlayerDetails(playerId));
+    const view = await buildAdminPlayerDetailsView(playerId);
+    await ctx.reply(view.text, { reply_markup: view.keyboard });
+  });
+
+  bot.callbackQuery(/^adminPlayerName:(approve|reject):(\d+)$/, async (ctx) => {
+    if (!(await isScribeAdmin(ctx.from?.id))) {
+      await ctx.answerCallbackQuery({ text: "Ця дія доступна тільки писарям Порубіжжя.", show_alert: true });
+      return;
+    }
+
+    const action = ctx.match[1];
+    const playerId = Number(ctx.match[2]);
+    const isNameApproved = action === "approve";
+    const updated = await prisma.player.update({ where: { id: playerId }, data: { isNameApproved } }).catch(() => null);
+    if (!updated) {
+      await ctx.answerCallbackQuery({ text: "Персонажа не знайдено.", show_alert: true });
+      return;
+    }
+
+    await ctx.answerCallbackQuery({ text: isNameApproved ? "Ім’я схвалено." : "Схвалення імені знято." });
+    const view = await buildAdminPlayerDetailsView(playerId);
+    if (ctx.callbackQuery.message) {
+      await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
+      return;
+    }
+    await ctx.reply(view.text, { reply_markup: view.keyboard });
+  });
+
+  bot.callbackQuery(/^adminPlayerAuto:(on|off):(\d+)$/, async (ctx) => {
+    if (!(await isScribeAdmin(ctx.from?.id))) {
+      await ctx.answerCallbackQuery({ text: "Ця дія доступна тільки писарям Порубіжжя.", show_alert: true });
+      return;
+    }
+
+    const action = ctx.match[1];
+    const playerId = Number(ctx.match[2]);
+    const player = await prisma.player.findUnique({ where: { id: playerId } });
+    if (!player) {
+      await ctx.answerCallbackQuery({ text: "Персонажа не знайдено.", show_alert: true });
+      return;
+    }
+
+    const telegramId = Number(player.telegramId);
+    if (!Number.isSafeInteger(telegramId)) {
+      await ctx.answerCallbackQuery({ text: "У персонажа некоректний Telegram ID.", show_alert: true });
+      return;
+    }
+
+    if (action === "on") {
+      await enablePlayerAuto(bot, telegramId);
+      await ctx.answerCallbackQuery({ text: "Авто увімкнено." });
+      await bot.api.sendMessage(telegramId, "🤖 Писар Порубіжжя увімкнув авто-режим для вашого персонажа.", {
+        reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, true),
+      }).catch(() => undefined);
+    } else {
+      await disablePlayerAuto(telegramId);
+      await ctx.answerCallbackQuery({ text: "Авто вимкнено." });
+      await bot.api.sendMessage(telegramId, "🤖 Писар Порубіжжя вимкнув авто-режим для вашого персонажа.", {
+        reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, false),
+      }).catch(() => undefined);
+    }
+
+    const view = await buildAdminPlayerDetailsView(playerId);
+    if (ctx.callbackQuery.message) {
+      await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
+      return;
+    }
+    await ctx.reply(view.text, { reply_markup: view.keyboard });
+  });
+
+  bot.callbackQuery(/^adminCreature:(\d+)$/, async (ctx) => {
+    if (!(await isScribeAdmin(ctx.from?.id))) {
+      await ctx.answerCallbackQuery({ text: "Ця дія доступна тільки писарям Порубіжжя.", show_alert: true });
+      return;
+    }
+
+    const creatureId = Number(ctx.match[1]);
+    await ctx.answerCallbackQuery();
+    const view = await buildAdminCreatureDetailsView(creatureId);
+    await ctx.reply(view.text, { reply_markup: view.keyboard });
+  });
+
+  bot.callbackQuery(/^adminCreatureConfig:(\d+)$/, async (ctx) => {
+    if (!(await isScribeAdmin(ctx.from?.id))) {
+      await ctx.answerCallbackQuery({ text: "Ця дія доступна тільки писарям Порубіжжя.", show_alert: true });
+      return;
+    }
+
+    await ctx.answerCallbackQuery({ text: "Налаштування NPC ще в планах.", show_alert: true });
   });
 
   bot.callbackQuery(/^all:(live|dead):(\d+)$/, async (ctx) => {
@@ -825,14 +1113,14 @@ export function registerStatusHandlers(bot: Bot) {
     const count = Number.isFinite(parsedCount) ? Math.max(1, Math.min(Math.floor(parsedCount), 50)) : NaN;
 
     if (!speciesKey || !locationArg || !Number.isFinite(count)) {
-      return void (await ctx.reply("⚠️ Формат: /addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD]\nНаприклад: /addCreature rabbit center_chornolis_edge 3"));
+      return void (await ctx.reply("⚠️ Формат: /addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD]\nНаприклад: /addCreature rabbit forest_04_00 3"));
     }
 
     const species = await prisma.creatureSpecies.findUnique({ where: { key: speciesKey } });
     const location = await findLocationByKeyOrCoords(locationArg);
 
     if (!species) return void (await ctx.reply(`⚠️ Невідомий вид: ${speciesKey}. Спробуй /addCreatureHelp.`));
-    if (!location) return void (await ctx.reply(`⚠️ Невідома місцина: ${locationArg}. Спробуй /locationAll або координати типу 0,0,0.`));
+    if (!location) return void (await ctx.reply(`⚠️ Невідома місцина: ${locationArg}. Спробуй /locationAll, реальний ключ на кшталт forest_04_00 або координати типу 0,0,0.`));
     if (species.kind !== "ANIMAL") return void (await ctx.reply("⚠️ /addCreature зараз призначена для тварин. Унікальні NPC керуються seed/cleanup."));
 
     const age = normalizeAge(rawAge);

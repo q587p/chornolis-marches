@@ -67,6 +67,21 @@ Remembered current-ish project state around late May 2026:
 - `Авто` should be in character/game flow, not a detached menu;
 - auto-state should persist across updates but reset on `/reset`.
 
+## 0.11.x context
+
+Important remembered direction from the 0.11 line:
+
+- `docs/design/terminology.md` is the canonical Ukrainian terminology source.
+- `/look` is the player-facing **Озирнутися** / current місцина overview; `/examine` is **Роздивитися** / closer inspection. `/location` and `/loc` may remain as legacy aliases, but menus should prefer `/look`.
+- `/start` should not teleport an existing character to the beginning. It should refresh greeting/menu state and continue from the current місцина.
+- Player-facing UI should avoid raw `HP`, `Stamina`, `Inventory` and `Location`; prefer `Життя` / `Стан`, `Снага`, `Речі` / `Поклажа`, and `Місцина`.
+- Ordinary UI should hide exact technical numbers unless the current character is a scribe/admin with local technical details enabled.
+- `/chat` has time, location and character grouping modes; web chat should stay aligned with Telegram chat views.
+- Scribe/admin surfaces include fuller `/playerAdmin` cards, visible NPC detail cards from `/all`, `/teleport`, `/addCampfire`, `/addTorch`, `/addTwigs`, `/debugGet` and `/debugSet`. Keep `/adminHelp` complete when adding admin commands.
+- Carried lit torches burn out into `хмиз`, not dry torches. Inspecting another character shows visible lit torches in hand(s) or `Руки порожні.` only when no obvious held item is visible.
+- `Додати хмиз` / `/add twigs campfire` is the next likely fire/light implementation step: make хмиз extend, refresh or prepare ordinary campfires.
+- Onboarding, `/help`, fallback hints and tutorial/newcomer-helper plans should be reviewed whenever early-game actions, resources, visibility or survival mechanics change.
+
 ## Prior build issue note
 
 A prior build error cause:

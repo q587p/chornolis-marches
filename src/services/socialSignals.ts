@@ -27,6 +27,15 @@ function actorName(ctx: SocialContext) {
   return escapeHtml(ctx.actor.forms.nominative);
 }
 
+function stripFinalPeriod(text: string) {
+  return text.replace(/\.$/, "");
+}
+
+function currentActionFromRoomMessage(ctx: SocialContext, message: string) {
+  const actorPrefix = `${actorName(ctx)} `;
+  return stripFinalPeriod(message.startsWith(actorPrefix) ? message.slice(actorPrefix.length) : message);
+}
+
 function targetDative(ctx: SocialContext) {
   return escapeHtml(ctx.target?.forms.dative ?? "комусь поруч");
 }
@@ -174,12 +183,12 @@ async function maybeReactToSocialSignal(bot: Bot, actor: SocialContext["actor"],
   await logEvent("NPC_ACTION", "Тварина злякалася сигналу", `${forms.nominative}; signal=${socialId}; exit=${exit.direction}`, actor.locationId);
 }
 
-async function writeSocialEvent(actorForms: NameForms, social: SocialDefinition, target: ResolvedTarget | null, locationId: number) {
+async function writeSocialEvent(title: string, target: ResolvedTarget | null, locationId: number) {
   const targetText = target ? `${target.kind}:${target.id}; ${target.forms.nominative}` : "location";
   await prisma.worldEvent.create({
     data: {
       type: "SOCIAL_SIGNAL",
-      title: `${actorForms.nominative}: ${social.label}`,
+      title,
       description: targetText,
       locationId,
     },
@@ -204,7 +213,8 @@ async function performSocialSignalForActor(bot: Bot, actor: SocialContext["actor
     { parseMode: "HTML" },
   );
 
-  await writeSocialEvent(actor.forms, social, target, actor.locationId);
+  const roomMessage = social.roomMessage(ctx);
+  await writeSocialEvent(roomMessage, target, actor.locationId);
 
   if (chatId) {
     await bot.api.sendMessage(chatId, social.actorMessage(ctx), { parse_mode: "HTML" });
@@ -220,11 +230,15 @@ export async function performSocialSignal(bot: Bot, player: any, target: Resolve
 }
 
 export async function performCreatureSocialSignal(bot: Bot, creature: any, target: ResolvedTarget, socialId: string) {
+  const social = socialDefinitionById(socialId);
+  if (!social) throw new Error("Невідомий сигнал.");
   const actorForms = creatureForms(creature);
-  await performSocialSignalForActor(bot, { kind: "creature", id: creature.id, locationId: creature.locationId, forms: actorForms }, target, socialId);
+  const actor = { kind: "creature" as const, id: creature.id, locationId: creature.locationId, forms: actorForms };
+  await performSocialSignalForActor(bot, actor, target, socialId);
+  const ctx: SocialContext = { actor, target };
   await prisma.creature.updateMany({
     where: { id: creature.id },
-    data: { activity: "LOOKING", currentAction: `подає сигнал: ${socialDefinitionById(socialId)?.label ?? socialId}` },
+    data: { activity: "LOOKING", currentAction: currentActionFromRoomMessage(ctx, social.roomMessage(ctx)) },
   });
 }
 
@@ -235,9 +249,9 @@ export async function performCreatureLocationSignal(bot: Bot, creature: any, soc
   const ctx: SocialContext = { actor: { kind: "creature", id: creature.id, locationId: creature.locationId, forms: actorForms } };
   const message = social.targetlessRoomMessage?.(ctx) ?? `${actorName(ctx)} подає знак.`;
   await notifyLocationAll(bot, creature.locationId, message);
-  await writeSocialEvent(actorForms, social, null, creature.locationId);
+  await writeSocialEvent(message, null, creature.locationId);
   await prisma.creature.updateMany({
     where: { id: creature.id },
-    data: { activity: "LOOKING", currentAction: `подає сигнал: ${social.label}` },
+    data: { activity: "LOOKING", currentAction: currentActionFromRoomMessage(ctx, message) },
   });
 }

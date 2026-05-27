@@ -7,6 +7,7 @@ import { createDebugCampfire, ensureTorchResourceTypes } from "../services/fire"
 import { requireScribeAdmin } from "../services/adminAccess";
 import { adminSecretMatches } from "../services/adminSecret";
 import { syncChatBotCommandsForTelegramId } from "../services/telegramCommands";
+import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { stopAllPlayerAuto } from "./auto";
 
 function normalizeLookup(value: string | null | undefined) {
@@ -100,21 +101,57 @@ async function resolveLocationForAdmin(ctx: any, rawTarget: string) {
   return null;
 }
 
+async function resolveLiteralLocation(rawTarget: string) {
+  const target = normalizeLookup(rawTarget);
+  if (!target) return null;
+
+  const coords = target.match(/^(-?\d+)\s*,\s*(-?\d+)(?:\s*,\s*(-?\d+))?$/);
+  if (coords) {
+    return prisma.cellLocation.findFirst({
+      where: { x: Number(coords[1]), y: Number(coords[2]), z: coords[3] ? Number(coords[3]) : 0 },
+    });
+  }
+
+  return prisma.cellLocation.findFirst({
+    where: {
+      OR: [{ key: rawTarget.trim() }, { name: rawTarget.trim() }],
+    },
+  });
+}
+
+function splitTeleportArgs(raw: string) {
+  const input = raw.trim();
+  if (!input) return { playerArg: "", locationArg: "" };
+
+  const separated = input.match(/^(.*?)\s*(?:->|=>| to | до )\s*(.+)$/i);
+  if (separated) return { playerArg: separated[1].trim(), locationArg: separated[2].trim() };
+
+  const coords = input.match(/^(?:(.+?)\s+)?(-?\d+\s*,\s*-?\d+(?:\s*,\s*-?\d+)?)$/);
+  if (coords) return { playerArg: (coords[1] ?? "").trim(), locationArg: coords[2].trim() };
+
+  const parts = input.split(/\s+/);
+  if (parts.length >= 2) return { playerArg: parts.slice(0, -1).join(" "), locationArg: parts[parts.length - 1] };
+  return { playerArg: "", locationArg: input };
+}
+
 export const ADMIN_HELP_TEXT = [
   "🛠 Admin / debug commands",
   "",
   "/adminHelp — список команд",
   "/world — стан світу й останні події",
-  "/stat — коротка екологічна статистика й посилання на веб-/stat",
-  "/chat [hours|all] — репліки гравців і NPC з паґінацією; веб-/chat",
+  "/stat — коротка статистика й посилання на веб-/stat",
+  "/chat time [hours|all] — репліки гравців і NPC за часом; старий формат /chat 1 теж працює",
+  "/chat location [hours|all] — репліки, впорядковані за місциною; веб-/chat?mode=location",
+  "/chat character [hours|all] — репліки, впорядковані за мовцем/персонажем; веб-/chat?mode=character",
   "/all — усі живі персонажі та істоти",
   "/all dead — усі записи істот, включно з inactive/dead/corpse/gone",
   "/playerAdmin <#id|ім’я|username> — детальна службова картка гравця з будь-якої місцини",
+  "/teleport [#id|ім’я|username] <locationKey|x,y,z> — перенести персонажа; без персонажа переносить вас",
   "/debugGet — показати, чи ввімкнені технічні деталі для вашого персонажа",
   "/debugSet <0|1> — вимкнути або ввімкнути технічні деталі для вашого персонажа; true/false теж працюють",
   "/look або кнопка 👀 Озирнутися — показати поточну місцину",
   "/location або /loc — старі сумісні назви для /look",
-  "/examine або кнопка 👁 Роздивитися — уважніше роздивитися поточну місцину",
+  "/examine або кнопка 🔎 Роздивитися — уважніше роздивитися поточну місцину",
   "/locationAll — список усіх місцин і ключів",
   "/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD] — додати тварин",
   "/addCreatureHelp — список speciesKey для тварин",
@@ -181,6 +218,38 @@ export function registerAdminHandlers(bot: Bot) {
 
     await logEvent("SYSTEM", "Debug campfire added", `${feature.key} at ${location.key}`, location.id);
     await ctx.reply(`🔥 Додано звичайне вогнище у місцині: ${location.name}.\nКлюч: ${feature.key}`);
+  });
+
+  bot.command("teleport", async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+
+    const raw = String(ctx.match ?? "").trim();
+    const directLocation = raw ? await resolveLiteralLocation(raw) : null;
+    const { playerArg, locationArg } = directLocation ? { playerArg: "", locationArg: raw } : splitTeleportArgs(raw);
+    const player = await resolvePlayerForAdmin(ctx, playerArg);
+    if (!player) return;
+    const location = directLocation ?? await resolveLiteralLocation(locationArg);
+    if (!location) {
+      await ctx.reply("Не знайшов такої місцини. Формат: /teleport [#id|ім’я|username] <locationKey|x,y,z>. Для назв із пробілами можна: /teleport персонаж -> назва місцини.");
+      return;
+    }
+
+    await prisma.player.updateMany({
+      where: { id: player.id },
+      data: {
+        currentLocationId: location.id,
+        isResting: false,
+      },
+    });
+    await logEvent("SYSTEM", "Admin teleported player", `player=${player.id}; location=${location.key}`, location.id);
+    await ctx.reply(`🧭 Перенесено ${playerDisplayName(player)} до місцини: ${location.name} (${location.key}).`);
+
+    const telegramId = Number(player.telegramId);
+    if (Number.isSafeInteger(telegramId)) {
+      await bot.api.sendMessage(telegramId, `🧭 Вас перенесено до місцини: ${location.name}.`, {
+        reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, Boolean(player.isAutoEnabled)),
+      }).catch(() => undefined);
+    }
   });
 
   bot.command("addTorch", async (ctx) => {

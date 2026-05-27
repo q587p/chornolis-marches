@@ -4,6 +4,7 @@ import { getPlayerByTelegramId } from "../services/players";
 import { lightLocationCampfire, renderLocationBrief, renderLocationDetails, renderLocationFeatureInteraction, takeTorchFromLocationFeature } from "../services/locations";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
+import { durationSecondsSuffix } from "../utils/durationText";
 import { addTwigsPlaceholderText, lightPlayerTorchAtCampfire } from "../services/fire";
 import { pickUpGroundResource } from "../services/groundItems";
 
@@ -18,7 +19,7 @@ export function registerLookHandlers(bot: Bot) {
     const durationMs = actionDurationMs("TRACK", player.stamina);
     try {
       const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "TRACK", payload: {}, durationMs, chatId: ctx.chat?.id, interruptQueued: true });
-      await ctx.reply(result.mode === "immediate" ? "Ви вдивляєтесь у сліди." : `Пошук слідів додано в чергу (${Math.ceil(durationMs / 1000)} с).`);
+      await ctx.reply(result.mode === "immediate" ? "Ви вдивляєтесь у сліди." : `Пошук слідів додано в чергу${durationSecondsSuffix(player, durationMs)}.`);
       await sendActionSubmitFeedback(ctx, player.id, result);
     } catch (error) {
       await ctx.reply(error instanceof Error ? error.message : "Не вдалося додати дію.");
@@ -46,7 +47,7 @@ export function registerLookHandlers(bot: Bot) {
 
   bot.command("examine", examineCurrentLocation);
 
-  bot.hears(["👁 Роздивитися", "Роздивитися"], examineCurrentLocation);
+  bot.hears(["🔎 Роздивитися", "👁 Роздивитися", "Роздивитися"], examineCurrentLocation);
 
   bot.callbackQuery(["examine", "look"], async (ctx) => {
     const player = await getPlayerByTelegramId(ctx.from.id);
@@ -65,7 +66,7 @@ export function registerLookHandlers(bot: Bot) {
         chatId: ctx.chat?.id,
         messageId: ctx.callbackQuery.message?.message_id,
       });
-      await safeAnswerCallbackQuery(ctx, result.mode === "immediate" ? "Ви роздивляєтесь." : `Роздивляння додано в чергу (${Math.ceil(durationMs / 1000)} с).`);
+      await safeAnswerCallbackQuery(ctx, result.mode === "immediate" ? "Ви роздивляєтесь." : `Роздивляння додано в чергу${durationSecondsSuffix(player, durationMs)}.`);
       await sendActionSubmitFeedback(ctx, player.id, result);
     } catch (error) {
       await safeAnswerCallbackQuery(ctx, error instanceof Error ? error.message : "Не вдалося виконати дію.");

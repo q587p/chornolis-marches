@@ -4,7 +4,19 @@ import path from "path";
 import { config } from "../config";
 import { buildAllPage, buildWhoData, buildWhoText } from "../handlers/status";
 import { setLastRuntimeError } from "../runtimeState";
-import { chatLogWindowLabel, getChatLog, normalizeChatLogWindow, publicChatEventType, publicChatLog } from "../services/chatLog";
+import {
+  chatEventGroupLabel,
+  chatLogModeLabel,
+  chatLogWindowLabel,
+  chatLogWindowToken,
+  getChatLog,
+  normalizeChatLogMode,
+  normalizeChatLogWindow,
+  publicChatEventType,
+  publicChatLog,
+  type ChatLogMode,
+  type ChatLogWindow,
+} from "../services/chatLog";
 import { getEcologyStats } from "../services/ecologyStats";
 import { adminSecretMatches } from "../services/adminSecret";
 import { getStatusData } from "../services/status";
@@ -131,7 +143,7 @@ async function renderWhoPage() {
 function renderWorldPage(status: Awaited<ReturnType<typeof getStatusData>>) {
   const queue = status.actionQueue;
   const queueHtml = `<h2>Черга дій</h2><p>Гравці: очікує=${queue.playerQueued}, виконується=${queue.playerRunning}</p><p>Істоти: очікує=${queue.creatureQueued}, виконується=${queue.creatureRunning}</p><p>Разом: очікує=${queue.totalQueued}, виконується=${queue.totalRunning}, прострочено=${queue.overdueRunning}</p><p>Найстаріша дія в черзі: ${Math.round(queue.oldestQueuedAgeMs / 1000)} с; найбільше прострочення: ${Math.round(queue.maxOverdueMs / 1000)} с</p>`;
-  return `<!doctype html><html lang="uk"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Chornolis world status</title><style>body{font-family:system-ui,sans-serif;max-width:760px;margin:40px auto;padding:0 18px;background:#10170f;color:#e8e0c9}.card{border:1px solid #3b4a2f;border-radius:16px;padding:18px;background:#172114}code{color:#d8b55d}li{margin:8px 0}a{color:#d8b55d}.actions a{display:inline-block;border:1px solid #5d6f3c;border-radius:8px;padding:8px 10px;margin-right:8px;text-decoration:none;background:#1d2a18}</style></head><body><h1>Світ Порубіжжя</h1><div class="card"><p>Статус: <strong>запущено</strong></p><p>Версія: <strong>${escapeHtml(status.version)}</strong></p><p>Гравців: ${status.playersCount}</p><p>Регіонів: ${status.regionsCount}</p><p>Місцин: ${status.locationsCount}</p><p>Переходів: ${status.exitsCount}</p><p>Живих тварин: ${status.aliveAnimalsCount}</p><p>Трупів тварин: ${status.animalCorpsesCount}</p><p>Зниклих тварин: ${status.goneAnimalsCount}</p><p>NPC / не-тварин: ${status.npcCount}</p><p>Живих істот загалом: ${status.aliveCreaturesCount}</p><p>Ресурсних вузлів: ${status.resourcesCount}</p><p>Подій світу: ${status.eventsCount}</p>${queueHtml}<p>Останні події:</p><ol>${renderEvents(status.latestEvents)}</ol><p>Остання runtime-помилка: <code>${escapeHtml(status.lastRuntimeError ?? "немає")}</code></p></div><p class="actions"><a href="/">Головна</a><a href="/stat">Екологія /stat</a><a href="/chat">Репліки /chat</a><a href="/who">Хто активний /who</a><a href="/all">Службовий /all</a><a href="/health">Health JSON</a></p></body></html>`;
+  return `<!doctype html><html lang="uk"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Chornolis world status</title><style>body{font-family:system-ui,sans-serif;max-width:760px;margin:40px auto;padding:0 18px;background:#10170f;color:#e8e0c9}.card{border:1px solid #3b4a2f;border-radius:16px;padding:18px;background:#172114}code{color:#d8b55d}li{margin:8px 0}a{color:#d8b55d}.actions a{display:inline-block;border:1px solid #5d6f3c;border-radius:8px;padding:8px 10px;margin-right:8px;text-decoration:none;background:#1d2a18}</style></head><body><h1>Світ Порубіжжя</h1><div class="card"><p>Статус: <strong>запущено</strong></p><p>Версія: <strong>${escapeHtml(status.version)}</strong></p><p>Гравців: ${status.playersCount}</p><p>Регіонів: ${status.regionsCount}</p><p>Місцин: ${status.locationsCount}</p><p>Переходів: ${status.exitsCount}</p><p>Живих тварин: ${status.aliveAnimalsCount}</p><p>Трупів тварин: ${status.animalCorpsesCount}</p><p>Зниклих тварин: ${status.goneAnimalsCount}</p><p>NPC / не-тварин: ${status.npcCount}</p><p>Живих істот загалом: ${status.aliveCreaturesCount}</p><p>Ресурсних вузлів: ${status.resourcesCount}</p><p>Подій світу: ${status.eventsCount}</p>${queueHtml}<p>Останні події:</p><ol>${renderEvents(status.latestEvents)}</ol><p>Остання runtime-помилка: <code>${escapeHtml(status.lastRuntimeError ?? "немає")}</code></p></div><p class="actions"><a href="/">Головна</a><a href="/stat">Статистика /stat</a><a href="/chat">Репліки /chat</a><a href="/who">Хто активний /who</a><a href="/all">Службовий /all</a><a href="/health">Health JSON</a></p></body></html>`;
 }
 
 async function renderHomePage(status: Awaited<ReturnType<typeof getStatusData>>) {
@@ -162,7 +174,7 @@ async function renderHomePage(status: Awaited<ReturnType<typeof getStatusData>>)
         <div class="metric"><div class="label">У /who</div><div class="value">${who.totalCount}</div></div>
       </div>
       <p class="muted">У /who зараз: ${who.totalCount} персонажів.</p>
-      <p class="actions"><a href="/who">Хто активний /who</a><a href="/stat">Екологія /stat</a><a href="/chat">Репліки /chat</a><a href="/world">Світ /world</a><a href="/all">Службовий /all</a><a href="/health">Health JSON</a></p>
+      <p class="actions"><a href="/who">Хто активний /who</a><a href="/stat">Статистика /stat</a><a href="/chat">Репліки /chat</a><a href="/world">Світ /world</a><a href="/all">Службовий /all</a><a href="/health">Health JSON</a></p>
 
       <div class="section">
         <h2>Що це</h2>
@@ -204,27 +216,39 @@ async function renderHomePage(status: Awaited<ReturnType<typeof getStatusData>>)
   </main></body></html>`;
 }
 
-function renderChatRows(events: Awaited<ReturnType<typeof getChatLog>>["events"]) {
+function chatUrl(mode: ChatLogMode, window: ChatLogWindow, page: number, perPage: number, format: "html" | "json" = "html") {
+  const path = format === "json" ? "/chat.json" : "/chat";
+  return `${path}?mode=${mode}&hours=${chatLogWindowToken(window)}&page=${page}&perPage=${perPage}`;
+}
+
+function renderChatRows(events: Awaited<ReturnType<typeof getChatLog>>["events"], mode: ChatLogMode) {
   if (events.length === 0) return `<tr><td colspan="5"><code>none</code></td></tr>`;
+  let lastGroup = "";
   return events
-    .map((event) => `<tr>
+    .map((event) => {
+      const group = chatEventGroupLabel(event, mode);
+      const groupRow = group && group !== lastGroup ? `<tr><th colspan="5">${escapeHtml(group)}</th></tr>` : "";
+      lastGroup = group;
+      return `${groupRow}<tr>
       <td><code>${escapeHtml(formatDate(event.createdAt))}</code></td>
       <td>${escapeHtml(publicChatEventType(event))}</td>
       <td>${event.location ? escapeHtml(event.location.name) : "<span class=\"muted\">невідомо</span>"}</td>
       <td>${escapeHtml(event.title)}</td>
       <td><blockquote>${escapeHtml(event.description ?? "")}</blockquote></td>
-    </tr>`)
+    </tr>`;
+    })
     .join("");
 }
 
 async function renderChatPage(url: string | undefined) {
   const parsed = parseQuery(url);
+  const mode = normalizeChatLogMode(parsed.searchParams.get("mode"));
   const window = normalizeChatLogWindow(parsed.searchParams.get("hours"));
   const page = Math.max(0, Number(parsed.searchParams.get("page") ?? 0) || 0);
   const perPage = Math.max(1, Math.min(Number(parsed.searchParams.get("perPage") ?? 50) || 50, 100));
-  const log = await getChatLog({ window, page, perPage });
-  const prev = log.page > 0 ? `/chat?hours=${chatLogWindowLabel(log.window) === "увесь час" ? "all" : log.window}&page=${log.page - 1}&perPage=${log.perPage}` : null;
-  const next = log.page < log.totalPages - 1 ? `/chat?hours=${chatLogWindowLabel(log.window) === "увесь час" ? "all" : log.window}&page=${log.page + 1}&perPage=${log.perPage}` : null;
+  const log = await getChatLog({ mode, window, page, perPage });
+  const prev = log.page > 0 ? chatUrl(log.mode, log.window, log.page - 1, log.perPage) : null;
+  const next = log.page < log.totalPages - 1 ? chatUrl(log.mode, log.window, log.page + 1, log.perPage) : null;
 
   return `<!doctype html><html lang="uk"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Chornolis chat log</title><style>
     body{font-family:system-ui,sans-serif;max-width:1120px;margin:32px auto;padding:0 18px;background:#10170f;color:#e8e0c9}
@@ -238,11 +262,11 @@ async function renderChatPage(url: string | undefined) {
     .actions a{display:inline-block;border:1px solid #5d6f3c;border-radius:8px;padding:8px 10px;margin-right:8px;text-decoration:none;background:#1d2a18}
   </style></head><body>
     <h1>Репліки Порубіжжя</h1>
-    <p class="muted">Вікно: ${escapeHtml(chatLogWindowLabel(log.window))}. Сторінка ${log.page + 1}/${log.totalPages}; записів ${log.total}.</p>
+    <p class="muted">Рубрика: ${escapeHtml(chatLogModeLabel(log.mode))}. Вікно: ${escapeHtml(chatLogWindowLabel(log.window))}. Сторінка ${log.page + 1}/${log.totalPages}; записів ${log.total}.</p>
     <p class="actions">
-      <a href="/chat?hours=1">1 год</a><a href="/chat?hours=24">24 год</a><a href="/chat?hours=all">Усі</a><a href="/chat.json?hours=${log.window === "all" ? "all" : log.window}&page=${log.page}&perPage=${log.perPage}">JSON</a><a href="/who">/who</a><a href="/">Status</a>
+      <a href="${chatUrl("time", log.window, 0, log.perPage)}">Час</a><a href="${chatUrl("location", log.window, 0, log.perPage)}">Місцини</a><a href="${chatUrl("character", log.window, 0, log.perPage)}">Персонажі</a><a href="${chatUrl(log.mode, 1, 0, log.perPage)}">1 год</a><a href="${chatUrl(log.mode, 24, 0, log.perPage)}">24 год</a><a href="${chatUrl(log.mode, "all", 0, log.perPage)}">Усі</a><a href="${chatUrl(log.mode, log.window, log.page, log.perPage, "json")}">JSON</a><a href="/who">/who</a><a href="/">Status</a>
     </p>
-    <table><thead><tr><th>Час</th><th>Тип</th><th>Місцина</th><th>Мовець</th><th>Текст</th></tr></thead><tbody>${renderChatRows(log.events)}</tbody></table>
+    <table><thead><tr><th>Час</th><th>Тип</th><th>Місцина</th><th>Мовець</th><th>Текст</th></tr></thead><tbody>${renderChatRows(log.events, log.mode)}</tbody></table>
     <p class="actions">${prev ? `<a href="${prev}">Назад</a>` : ""}${next ? `<a href="${next}">Далі</a>` : ""}</p>
   </body></html>`;
 }
@@ -295,11 +319,11 @@ function renderTopHunterRows(rows: EcologyStats["topHunters"]) {
     .join("");
 }
 
-function renderTopPlayerRows(rows: EcologyStats["topPlayers"]) {
+function renderTopCharacterRows(rows: EcologyStats["topCharacters"]) {
   if (rows.length === 0) return `<tr><td colspan="8"><code>none</code></td></tr>`;
   return rows
     .map((row) => `<tr>
-      <td><code>#${row.id}</code></td>
+      <td><code>${escapeHtml(row.ref)}</code></td>
       <td>${escapeHtml(row.name)}</td>
       <td>${row.locationName ? escapeHtml(row.locationName) : "<span class=\"muted\">невідомо</span>"}</td>
       <td>${formatNumber(row.animalsKilled)}</td>
@@ -317,7 +341,7 @@ async function renderEcologyStatsPage() {
   const r = stats.recent.ratesPerHour;
   const latest = stats.latestTick;
 
-  return `<!doctype html><html lang="uk"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta http-equiv="refresh" content="${stats.refreshSeconds}"/><title>Chornolis ecology stats</title><style>
+  return `<!doctype html><html lang="uk"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta http-equiv="refresh" content="${stats.refreshSeconds}"/><title>Chornolis stats</title><style>
     body{font-family:system-ui,sans-serif;max-width:1120px;margin:32px auto;padding:0 18px;background:#10170f;color:#e8e0c9}
     a{color:#d8b55d}
     .top{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap}
@@ -334,7 +358,7 @@ async function renderEcologyStatsPage() {
   </style></head><body>
     <div class="top">
       <div>
-        <h1>Екологія Чорнолісу</h1>
+        <h1>Статистика</h1>
         <p class="muted">Оновлено: ${escapeHtml(formatDate(stats.generatedAt))}. Auto-refresh: ${stats.refreshSeconds} с. Tick: ${stats.timing.tickMs} ms.</p>
       </div>
       <div class="actions"><a href="/stat">Оновити вручну</a><a href="/stat.json">JSON</a><a href="/who">/who</a><a href="/">Status</a></div>
@@ -381,7 +405,7 @@ async function renderEcologyStatsPage() {
     <table><thead><tr><th>ID</th><th>Ім'я</th><th>Вид</th><th>Стан</th><th>Атак</th><th>Влучних атак</th><th>Убивств</th></tr></thead><tbody>${renderTopHunterRows(stats.topHunters)}</tbody></table>
 
     <h2>Персонажі Порубіжжя</h2>
-    <table><thead><tr><th>ID</th><th>Ім'я</th><th>Місцина</th><th>Вполював/ла</th><th>Зібрав/ла</th><th>Привітань</th><th>Реплік</th><th>Кроків</th></tr></thead><tbody>${renderTopPlayerRows(stats.topPlayers)}</tbody></table>
+    <table><thead><tr><th>ID</th><th>Ім'я</th><th>Місцина</th><th>Вполювання</th><th>Збір</th><th>Привітань</th><th>Реплік</th><th>Кроків</th></tr></thead><tbody>${renderTopCharacterRows(stats.topCharacters)}</tbody></table>
 
     <h2>Ресурси</h2>
     <table><thead><tr><th>Ключ</th><th>Назва</th><th>Вузлів</th><th>Кількість</th><th>%</th></tr></thead><tbody>${renderResourceRows(stats.resourceRows)}</tbody></table>
@@ -447,6 +471,7 @@ export function startHttpServer() {
         if (path === "/chat.json") {
           const parsed = parseQuery(req.url);
           const chat = await getChatLog({
+            mode: normalizeChatLogMode(parsed.searchParams.get("mode")),
             window: normalizeChatLogWindow(parsed.searchParams.get("hours")),
             page: Number(parsed.searchParams.get("page") ?? 0) || 0,
             perPage: Number(parsed.searchParams.get("perPage") ?? 50) || 50,

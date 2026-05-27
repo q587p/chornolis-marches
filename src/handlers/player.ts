@@ -4,11 +4,11 @@ import { BASE_HP, BASE_STAMINA, HEALTH_REGEN_PER_INTERVAL, PASSIVE_HEALTH_REGEN_
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { renderLocationBrief } from "../services/locations";
 import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
-import { disablePlayerAuto, enablePlayerAuto, isPlayerAutoEnabled } from "./auto";
+import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } from "./auto";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { formatFatigueText, formatHungerState, formatPlayerStats, formatPostureText, formatVitalsLine } from "../utils/playerText";
 import { resourceTypeDisplayName } from "../services/corpses";
-import { getPlayerTorchState } from "../services/fire";
+import { getPlayerTorchState, TORCH_DURATION_MS, TORCH_FADING_MS } from "../services/fire";
 import { isScribeAdmin } from "../services/adminAccess";
 import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
 
@@ -98,6 +98,39 @@ function moneyText(resources: any[]) {
   ].filter(Boolean).join(", ");
 }
 
+function approximateDuration(ms: number) {
+  const safeMs = Math.max(0, ms);
+  const minutesLeft = Math.ceil(safeMs / 60_000);
+  if (minutesLeft <= 0) return "менш ніж хвилину";
+  if (minutesLeft === 1) return "приблизно 1 хвилину";
+  if (minutesLeft >= 5) return `приблизно ${minutesLeft} хвилин`;
+  return `приблизно ${minutesLeft} хвилини`;
+}
+
+function amountSuffix(amount: number) {
+  return amount > 1 ? ` ×${amount}` : "";
+}
+
+async function actionOriginStats(playerId: number) {
+  const [autoActions, allActions] = await Promise.all([
+    prisma.worldAction.count({ where: { actorType: "PLAYER", playerId, note: { startsWith: "auto:" } } }),
+    prisma.worldAction.count({ where: { actorType: "PLAYER", playerId } }),
+  ]);
+  return { autoActions, manualActions: Math.max(0, allActions - autoActions) };
+}
+
+function inventoryResourceLine(resource: any) {
+  const name = resourceTypeDisplayName(resource.resourceType);
+  const amount = Number(resource.amount ?? 0);
+  if (resource.resourceType.key !== "lit_torch") return `- ${name}${amountSuffix(amount)}`;
+
+  const leftMs = resource.updatedAt.getTime() + TORCH_DURATION_MS - Date.now();
+  const fading = leftMs > 0 && leftMs <= TORCH_FADING_MS;
+  if (fading) return `- ${name}${amountSuffix(amount)} (скоро погасне)`;
+  const state = "горітиме";
+  return `- ${name}${amountSuffix(amount)}; ${state} ще ${approximateDuration(leftMs)}`;
+}
+
 async function renderCharacterView(telegramId: number) {
   const playerRef = await prisma.player.findUnique({ where: { telegramId: String(telegramId) }, select: { id: true } });
   if (!playerRef) return null;
@@ -114,9 +147,11 @@ async function renderCharacterView(telegramId: number) {
   const torchState = await getPlayerTorchState(player.id);
   const canToggleTechnicalDetails = await isScribeAdmin(telegramId);
   const showTechnicalDetails = playerCanShowTechnicalDetails(player);
+  const technicalDetailsText = canToggleTechnicalDetails ? `\nТехнічні деталі: ${showTechnicalDetails ? "увімкнено 🔧" : "вимкнено"}` : "";
   const vitals = formatVitalsLine(player, { showTechnicalDetails, hpFallback: BASE_HP, staminaFallback: BASE_STAMINA });
   const hungerText = showTechnicalDetails ? `Голод: ${Math.min(PLAYER_HUNGER_MAX, Math.max(0, player.hunger))}/${PLAYER_HUNGER_MAX}` : formatHungerState(player.hunger, PLAYER_HUNGER_MAX);
-  const statsText = showTechnicalDetails ? `\n\nСтатистика:\n${formatPlayerStats(player, { includeRestStats: true })}` : "";
+  const originStats = showTechnicalDetails ? await actionOriginStats(player.id) : null;
+  const statsText = showTechnicalDetails ? `\n\nСтатистика:\n${formatPlayerStats(player, { includeRestStats: true })}\nАвто-дій: ${originStats?.autoActions ?? 0}\nРучних дій: ${originStats?.manualActions ?? 0}` : "";
   const torchText = torchState.isLit
     ? torchState.litAmount > 1
       ? `\nУ вас горять запалені факели (${torchState.litAmount}).`
@@ -128,25 +163,25 @@ async function renderCharacterView(telegramId: number) {
   const nameApprovedText = player.isNameApproved ? "Ім’я схвалене." : "Ім’я ще не схвалене. Зверніться до писарів Порубіжжя.";
 
   return {
-    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}\n\n${formatPostureText(player)}${torchText}\n${vitals.join("\n")}\nСтан: ${formatFatigueText(player)}${recoveryText(player)}\n${hungerText}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}\nЗареєстровано: ${formatDateTime(player.createdAt)}${statsText}`,
+    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}\n\n${formatPostureText(player)}${torchText}\n${vitals.join("\n")}\nСтан: ${formatFatigueText(player)}${recoveryText(player)}\n${hungerText}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}${technicalDetailsText}\nЗареєстровано: ${formatDateTime(player.createdAt)}${statsText}`,
     keyboard: buildCharacterAutoKeyboard(autoEnabled, { canToggleTechnicalDetails, showTechnicalDetails }),
   };
 }
 
 async function renderInventoryView(telegramId: number) {
+  const playerRef = await prisma.player.findUnique({ where: { telegramId: String(telegramId) }, select: { id: true } });
+  if (!playerRef) return null;
+  const torchState = await getPlayerTorchState(playerRef.id);
   const player = await prisma.player.findUnique({
-    where: { telegramId: String(telegramId) },
+    where: { id: playerRef.id },
     include: { resources: { include: { resourceType: true }, orderBy: { id: "asc" } } },
   });
 
   if (!player) return null;
 
-  const torchState = await getPlayerTorchState(player.id);
   const itemLines = player.resources
     .filter((i) => i.amount > 0)
-    .map((i) => `- ${resourceTypeDisplayName(i.resourceType)} ×${i.amount}`);
-
-  if (torchState.isFading) itemLines.push("- ⚠️ Запалений факел гасне; варто пошукати вогнище, щоб підпалити його знову.");
+    .map(inventoryResourceLine);
 
   return {
     text: `🎒 Речі\n\n${itemLines.length ? itemLines.join("\n") : "Поки порожньо."}`,
@@ -224,11 +259,16 @@ export function registerPlayerHandlers(bot: Bot) {
 
   bot.callbackQuery(/^character:auto:(start|stop)$/, async (ctx) => {
     const mode = ctx.match[1];
-    if (mode === "start") await enablePlayerAuto(bot, ctx.from.id);
-    else await disablePlayerAuto(ctx.from.id);
+    if (mode === "start") {
+      await safeAnswerCallbackQuery(ctx);
+      await requestOrEnablePlayerAuto(bot, ctx);
+      return;
+    }
+
+    await disablePlayerAuto(ctx.from.id);
 
     const view = await renderCharacterView(ctx.from.id);
-    await safeAnswerCallbackQuery(ctx, mode === "start" ? "Авто увімкнено." : "Авто зупинено.");
+    await safeAnswerCallbackQuery(ctx, "Авто зупинено.");
     if (!view) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
     try {

@@ -8,6 +8,25 @@ This file should stay small. If everything is “next”, nothing is next.
 
 These items are already marked `status: next` here or in `docs/planning/items/`.
 
+## Recommended next slice after 0.11.9
+
+The 0.11.5-0.11.9 line landed Ukrainian aliases, scribe detail mode, inventory view, first fire/light, web status polish, chat privacy, first social reactions and the first torch-to-хмиз cleanup. The next patch sequence should build on those foundations instead of starting another wide surface.
+
+Recommended order:
+
+1. Finish the first **firewood / хмиз / campfire fuel** loop so хмиз can extend or prepare ordinary campfires instead of only existing as a carried resource.
+2. Add the first real **world time / day-night** state and make `/time` read it.
+3. Add early **/respawn / Повернення** so dangerous exploration has a beginner safety valve.
+4. Then return to **MAP-002 biome resources** once fire/light/time rules can influence gathering and visibility.
+
+Good small follow-ups if a narrow patch is wanted:
+
+- Add item-level `Речі` actions: inspect/drop/use placeholder, starting with torches, berries and corpses.
+- Add edible berries as the first hunger interaction from inventory.
+- Add first ground-money objects under the bridge / in dark places, using the existing ground-item pickup path.
+- Add logs for who used `/reset` and other dangerous scribe tools.
+- Add the first scribe name-approval loop: `/all character` or an equivalent filtered character list, service-profile buttons to approve/reject names, and a rejection message sent to the character.
+
 ## MAP-002 — Biome-based resources and spawn rules
 
 Status: next  
@@ -49,8 +68,9 @@ Add dawn/day/dusk/night phases that change visibility, danger and available enco
 
 - Track current daypart in world state.
 - Make `/time` read from that state instead of only static flavor text.
-- Hide full location descriptions at night unless light reveals them.
-- Keep the first version simple enough to support campfires and later moon/calendar work.
+- Let existing campfire/torch light decide whether full location descriptions, nearby targets, tracks and ground objects are visible at night.
+- Add a simple dawn/day/dusk/night cycle before deeper moon phases or named weekday rules.
+- Keep the first version simple enough to support the darkness creature, campfire warnings and later calendar work.
 
 ## WORLD-002 — Campfires and light
 
@@ -66,11 +86,11 @@ Make fire a basic survival and exploration tool.
 
 ### First scope
 
-- Build on the 0.11.5 first pass: `/addCampfire` can now create multiple timed campfires, and campfire/torch light can reveal nearby targets.
-- Add the first real firewood/hmyz gathering hook near forests and campfires.
-- Implement `Додати хмиз` / `/add twigs campfire` so it extends or refreshes an existing campfire instead of returning the placeholder.
-- Connect light to the future day/night visibility rules once WORLD-001 lands: descriptions, exits, creatures, tracks and ground objects should depend on darkness/light.
-- Keep deeper crafting and weather effects for later.
+- Build on the first pass: `/addCampfire` can create multiple timed campfires, expired fires remain as `Згасле вогнище`, torches can be carried/lit/refreshed, and light can reveal nearby targets.
+- Add the first real firewood/hmyz gathering hook near forests, forest edges and old camps.
+- Implement `Додати хмиз` / `/add twigs campfire` so it extends, refreshes or prepares an existing campfire instead of returning the placeholder.
+- Keep the first fuel model intentionally small: dry twigs now, larger branches, wet fuel, smoke and weather later.
+- Connect fuel and light to WORLD-001 once day/night lands.
 
 ## SURV-001 — Early respawn support / Повернення
 
@@ -93,7 +113,7 @@ Add `/respawn` as **Повернення** for new or weak characters who get lo
 ## Recommended near-term candidates
 
 - Add starter settlement skeleton and first NPC roles beyond the closed gate.
-- Turn the new static `/time` output into a world-time service with season, moon circle/month, day and daypart progression.
+- Seed pickable хмиз as ground items across most forest locations and a smaller number of dry-luka locations. This should use the existing pickup path, appear under `Лежить`, and give the firewood loop a visible world source before broader `/gather` foraging grows.
 - Add first foraging/firewood iteration by broadening `/gather` without arguments into local foraging: хмиз/dry sticks near campfires and forest edges, moss where suitable, animal bones, and rare minor coin finds. Keep outcomes biome-, region- and location-feature-dependent, and wire хмиз into the existing `Додати хмиз` placeholder.
 - Seed a first small ground-money find on world start/reset: a ґривня under the bridge and a few scattered шаги elsewhere. These should behave like visible location objects: shown by `/look` when light/visibility allows, discoverable by `/examine` in darkness, inspectable like corpses/objects, and pickable into `Речі`.
 - Add a first NPC hunter/archer loop: a named hunter travels between nearby hunting grounds, looks for prey, attacks small animals, and leaves visible signs for players to observe. Later this should grow into tracking, traps and teaching hunting-related skills.
@@ -105,8 +125,10 @@ Add `/respawn` as **Повернення** for new or weak characters who get lo
 These are still `backlog`, but recent work makes them worth reviewing before the next patch sequence.
 
 - PERF-001 — budgeted and aggregated creature simulation. Queue pressure is currently visible enough that this may need promotion before larger ecology work.
-- ADM-001 — admin permissions and restricted reset. The admin surface now includes `/chat`, `/addCampfire`, `/addTorch`, `/addTwigs`, `/restAdmin`, cleanup and tick tools; before wider testing, this should move from temporary `ADMIN_TELEGRAM_IDS` checks to proper roles such as `Писар Порубіжжя`.
+- ADM-001 — admin permissions, name approval and restricted reset hardening. A first `Писар`/admin gate exists now, so remaining near-term work is audit logging, clearer role UX, first name-review tools and closing any leftover dangerous paths.
 - Speech reply UX: `/reply`, `Відповісти` and `Відповісти як...` for addressed speech. This should probably stay behind the chat/social polish lane, not the ecology lane.
+- Inventory item actions: the dedicated `Речі` view exists, so item details, dropping, using and eating berries are now small enough to promote when the survival loop needs them.
+- Darkness creature / small coin omen: this becomes much more attractive right after WORLD-001 because it explicitly depends on darkness, light and calm observation.
 
 ## Review checklist
 

@@ -43,12 +43,22 @@ Potential long-term architecture:
 
 ## Commands / behavior context
 
-- `/world` should count only alive entities in user-facing world stats.
-- `/all` can show all DB creatures for debug/admin, including dead/inactive duplicates, but should probably default to live-only or clearly indicate debug semantics.
+- `/start` should continue an existing character where they already are; explicit movement back to the beginning belongs to `/respawn` or admin `/teleport`, not ordinary start/menu refresh.
+- `/world` is a service/admin-style world view and should keep sensitive details behind scribe/admin access where applicable.
+- `/all` is a scribe/admin service list with player detail buttons and visible NPC detail buttons; keep exact service metadata out of ordinary player-facing UI.
 - `/cleanupCreatures` was discussed as a possible debug/admin cleanup for duplicate seeded unique NPCs.
 - `/restart` should delete character and character-related work and reset onboarding from zero.
 - `/adminHelp` should remain complete and visible.
 - `/tick` should summarize animals/NPCs/actions.
+- `/chat` supports `time`, `location` and `character` groupings; older `/chat 1` and `/chat all` remain compatible time-mode forms.
+- `/teleport [character] <locationKey|x,y,z>` is a scribe command. Without an explicit character, it moves the current character.
+
+## Current fire/light and visible-held-item context
+
+- Carried lit torches are stored as `lit_torch` resources with `updatedAt` as the burn timer.
+- Before inventory rendering, torch state is synchronized; expired `lit_torch` becomes `twigs` / `хмиз`, not an unlit `torch`.
+- A player can visibly hold up to two lit torches. Inspecting another character should show one lit torch, two lit torches, or `Руки порожні.` only when no obvious held item is visible.
+- `Додати хмиз` / `/add twigs campfire` is still the next fuel-loop hook, not a finished campfire-extension mechanic.
 
 ## Known data/seed issue to remember
 

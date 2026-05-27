@@ -15,6 +15,9 @@ Chornolis Marches is a Ukrainian dark-fantasy Telegram RPG / living-world sandbo
 5. For map edits, start with `prisma/data/chornolis_world_seed.json` and read `docs/codex/07-world-and-map-notes.md`.
 6. For release/update tasks, read `docs/codex/05-workflow-and-versioning.md`.
 7. Release/update dates should use the local project date with Holocene calendar year, e.g. `12026-05-26`.
+8. When adding or changing player-facing gameplay, check whether onboarding, `/help`, beginner guidance and tutorial/newcomer-helper plans need updating too.
+9. When adding admin/scribe commands, update `/adminHelp`, `docs/systems/admin_commands.md` and any matching web/status documentation together.
+10. Do not make `/start` reset position for existing characters; use explicit respawn/admin movement for relocation.
 
 ## Preferred workflow for code tasks
 
@@ -24,6 +27,8 @@ Chornolis Marches is a Ukrainian dark-fantasy Telegram RPG / living-world sandbo
 - Run the relevant build/check/test command if available.
 - Summarize changed files and any checks run.
 - Only mention version bump when explicitly relevant; the user usually handles it manually after a green build.
+- If the change introduces a new player action, menu item, command, resource use, visibility rule, survival mechanic, social flow or admin-visible beginner state, update the relevant beginner-facing docs/text or add a planning note explaining how onboarding should teach it.
+- If the change touches fire, light or carried items, check `docs/systems/fire_and_light.md` and `docs/systems/item_lifetime_and_grammar.md`; lit torches currently burn out into `хмиз`, and visible held items should be described diegetically.
 
 ## Context routing
 

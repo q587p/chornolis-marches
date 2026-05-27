@@ -68,8 +68,8 @@ Render Web Service exposes:
 - `/health` — JSON health check.
 - `/who` — public active-character list.
 - `/who.json` — JSON active-character list and shared public count.
-- `/stat` — human-readable ecology statistics page.
-- `/stat.json` — JSON ecology statistics.
+- `/stat` — human-readable statistics page.
+- `/stat.json` — JSON statistics.
 
 Start command:
 

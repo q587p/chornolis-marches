@@ -53,25 +53,28 @@ async function enterWorld(ctx: any, isMenuRefresh = false) {
   if (!from) return;
 
   const startLocationId = await getStartLocationId();
-
-  const player = await prisma.player.upsert({
-    where: { telegramId: String(from.id) },
-    update: {
-      username: from.username ?? null,
-      firstName: from.first_name ?? null,
-      lastName: from.last_name ?? null,
-      currentLocationId: startLocationId,
-    },
-    create: {
-      telegramId: String(from.id),
-      username: from.username ?? null,
-      firstName: from.first_name ?? null,
-      lastName: from.last_name ?? null,
-      currentLocationId: startLocationId,
-      stamina: BASE_STAMINA * 3,
-      staminaMax: BASE_STAMINA,
-    },
-  });
+  const existing = await prisma.player.findUnique({ where: { telegramId: String(from.id) } });
+  const player = existing
+    ? await prisma.player.update({
+        where: { id: existing.id },
+        data: {
+          username: from.username ?? null,
+          firstName: from.first_name ?? null,
+          lastName: from.last_name ?? null,
+          currentLocationId: existing.currentLocationId ?? startLocationId,
+        },
+      })
+    : await prisma.player.create({
+        data: {
+          telegramId: String(from.id),
+          username: from.username ?? null,
+          firstName: from.first_name ?? null,
+          lastName: from.last_name ?? null,
+          currentLocationId: startLocationId,
+          stamina: BASE_STAMINA * 3,
+          staminaMax: BASE_STAMINA,
+        },
+      });
 
   if (!player.onboardingComplete) {
     onboarding.set(String(from.id), { step: "name", telegramId: String(from.id), pronoun: "HE" });
@@ -81,7 +84,6 @@ async function enterWorld(ctx: any, isMenuRefresh = false) {
 
   if (ctx.chat?.id) await syncChatBotCommandsForTelegramId(ctx.api, ctx.chat.id, from.id);
 
-  const view = await renderLocationBrief(startLocationId, player.id);
   const displayName = player.nameNominative ?? player.firstName ?? "мандрівнику";
   const yearLine = renderCurrentWorldYearLine();
 
@@ -90,7 +92,6 @@ async function enterWorld(ctx: any, isMenuRefresh = false) {
     : `🌲 Порубіжжя Чорнолісу ожили.\n${yearLine}\n\nВітаю, ${displayName}. Твій слід збережено в Чорнолісі.`;
 
   await ctx.reply(text, { reply_markup: await buildMainReplyKeyboardForTelegramId(from.id, false) });
-  await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
 }
 
 async function finishOnboarding(ctx: any, state: OnboardingState) {

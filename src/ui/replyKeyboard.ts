@@ -25,7 +25,7 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   const keyboard = new Keyboard()
     .text("👀 Озирнутися");
   keyboard.text(exits.has("NORTH") ? "⬆️ Північ" : EMPTY_KEYBOARD_BUTTON);
-  keyboard.text("👁 Роздивитися").row();
+  keyboard.text("🔎 Роздивитися").row();
 
   keyboard.text(exits.has("WEST") ? "⬅️ Захід" : EMPTY_KEYBOARD_BUTTON);
   keyboard.text(state.hasInventory ? "🎒 Речі" : EMPTY_KEYBOARD_BUTTON);

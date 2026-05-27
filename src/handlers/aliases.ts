@@ -19,11 +19,12 @@ import {
 import { getPlayerByTelegramId } from "../services/players";
 import { resolveTarget, type ResolvedTarget } from "../services/targets";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
-import { buildRestWithQueueChoiceKeyboard } from "../ui/keyboards";
+import { buildExamineLocationKeyboard, buildRestWithQueueChoiceKeyboard } from "../ui/keyboards";
 import { actionQueueReplyOptions, sendActionSubmitFeedback } from "../utils/actionQueueUi";
+import { durationSecondsSuffix } from "../utils/durationText";
 import { stripUnsafeText } from "../utils/text";
 import { sendHelp } from "./help";
-import { disablePlayerAuto, enablePlayerAuto, isPlayerAutoEnabled } from "./auto";
+import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } from "./auto";
 import { showCharacter, showInventory, showLocationForPlayer } from "./player";
 import { buildChatLogPage, buildStatBrief } from "./status";
 import { buildNewsIndexPage } from "./news";
@@ -204,7 +205,7 @@ async function replyWithStat(ctx: any) {
 }
 
 async function replyWithChat(ctx: any) {
-  const page = await buildChatLogPage(normalizeChatLogWindow(undefined), 0);
+  const page = await buildChatLogPage("time", normalizeChatLogWindow(undefined), 0);
   await ctx.reply(page.text, { reply_markup: page.keyboard });
 }
 
@@ -264,10 +265,7 @@ async function submitRest(ctx: any, mode: RestAliasMode = "start") {
 
 async function submitAuto(bot: Bot, ctx: any, mode: "start" | "stop") {
   if (mode === "start") {
-    const started = await enablePlayerAuto(bot, ctx.from.id);
-    await ctx.reply(started ? "Авто-режим увімкнено." : "Авто-режим уже увімкнено.", {
-      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, true),
-    });
+    await requestOrEnablePlayerAuto(bot, ctx);
     return;
   }
 
@@ -308,7 +306,7 @@ async function submitTrack(bot: Bot, ctx: any) {
   const durationMs = actionDurationMs("TRACK", player.stamina);
   try {
     const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "TRACK", payload: {}, durationMs, chatId: ctx.chat?.id, interruptQueued: true });
-    await ctx.reply(result.mode === "immediate" ? "Ви вдивляєтесь у сліди." : `Вистежування додано в чергу (${Math.ceil(durationMs / 1000)} с).`);
+    await ctx.reply(result.mode === "immediate" ? "Ви вдивляєтесь у сліди." : `Вистежування додано в чергу${durationSecondsSuffix(player, durationMs)}.`);
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {
     await ctx.reply(error instanceof Error ? error.message : "Не вдалося додати дію.");
@@ -322,7 +320,7 @@ async function submitWait(bot: Bot, ctx: any) {
   const durationMs = actionDurationMs("WAIT", player.stamina);
   try {
     const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "WAIT", payload: {}, durationMs, chatId: ctx.chat?.id });
-    await ctx.reply(result.mode === "immediate" ? "Ви чекаєте." : `Очікування додано в чергу (${Math.ceil(durationMs / 1000)} с).`);
+    await ctx.reply(result.mode === "immediate" ? "Ви чекаєте." : `Очікування додано в чергу${durationSecondsSuffix(player, durationMs)}.`);
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {
     await ctx.reply(error instanceof Error ? error.message : "Не вдалося додати дію.");
@@ -379,7 +377,9 @@ async function submitTargetAction(bot: Bot, ctx: any, action: TargetAction, targ
   }
 
   const target = await resolveTarget(match.target.type, match.target.id, locationId);
-  if (!target) return void (await ctx.reply("Цілі вже немає поруч. Можна спробувати відслідкувати слід."));
+  if (!target) {
+    return void (await ctx.reply("Цілі вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() }));
+  }
 
   const validationError = validateTargetAction(action, target);
   if (validationError) return void (await ctx.reply(validationError));
@@ -397,7 +397,7 @@ async function submitTargetAction(bot: Bot, ctx: any, action: TargetAction, targ
       interruptCurrent: action === "attack",
       interruptQueued: action === "attack",
     });
-    await ctx.reply(result.mode === "immediate" ? "Дію виконано." : `Дію додано в чергу (${Math.ceil(durationMs / 1000)} с).`);
+    await ctx.reply(result.mode === "immediate" ? "Дію виконано." : `Дію додано в чергу${durationSecondsSuffix(player, durationMs)}.`);
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {
     await ctx.reply(error instanceof Error ? error.message : "Не вдалося додати дію.");
@@ -431,7 +431,7 @@ async function resolveVisibleTargetForAlias(ctx: any, targetQuery: string) {
 
   const target = await resolveTarget(match.target.type, match.target.id, locationId);
   if (!target) {
-    await ctx.reply("Цілі вже немає поруч. Можна спробувати відслідкувати слід.");
+    await ctx.reply("Цілі вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() });
     return null;
   }
 
@@ -469,13 +469,13 @@ async function submitPickupTarget(ctx: any, targetQuery: string) {
     },
     include: { species: true },
   });
-  if (!creature) return void (await ctx.reply("Трупа вже немає поруч."));
+  if (!creature) return void (await ctx.reply("Трупа вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() }));
 
   try {
     const resourceType = await addCorpseToInventory(resolved.player.id, { ...creature, species: creature.species });
     await ctx.reply(`Ви підібрали ${resourceTypeDisplayName(resourceType)}.`);
   } catch {
-    await ctx.reply("Трупа вже немає поруч.");
+    await ctx.reply("Трупа вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() });
   }
 }
 

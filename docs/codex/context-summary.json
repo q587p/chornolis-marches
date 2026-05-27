@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-26",
+  "generated": "12026-05-27",
   "project": {
     "name_en": "Chornolis Marches",
     "name_uk": "Порубіжжя Чорнолісу",
@@ -12,7 +12,9 @@
     "Do not put internal package/version workflow notes into news or changelog.",
     "Prefer ready changed files/archives over patch scripts when asked for archives.",
     "Preserve current functionality unless explicitly asked to replace it.",
-    "For MVP Telegram bot, prefer long polling over webhook unless explicitly changed."
+    "For MVP Telegram bot, prefer long polling over webhook unless explicitly changed.",
+    "Do not make /start teleport existing characters; use explicit respawn/admin movement for relocation.",
+    "When adding admin/scribe commands, keep /adminHelp and docs/systems/admin_commands.md complete."
   ],
   "terminology": {
     "canonical_source": "docs/design/terminology.md",
@@ -53,5 +55,14 @@
     "no universal levels",
     "diegetic-first UI",
     "incomplete information"
+  ],
+  "current_0_11_context": [
+    "/look is Озирнутися / current місцина overview; /examine is Роздивитися / closer inspection.",
+    "/location and /loc may stay as legacy aliases, but player-facing menus should prefer /look.",
+    "Ordinary UI should hide exact technical numbers unless local scribe/admin technical details are enabled.",
+    "Lit torches expire into twigs / хмиз, not dry torches.",
+    "Inspecting another character may show visible lit torches in hand(s); use Руки порожні only when no obvious held item is visible.",
+    "/chat supports time, location and character grouping modes in Telegram and web views.",
+    "The next fire/light slice is likely making хмиз actually extend, refresh or prepare ordinary campfires."
   ]
 }

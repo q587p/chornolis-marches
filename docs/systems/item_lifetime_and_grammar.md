@@ -25,3 +25,14 @@ Ukrainian display text should be chosen through grammar helpers instead of hardc
 - Animacy affects accusative wording: animate beings usually use genitive-like accusative forms, while inanimate objects usually keep nominative-like accusative forms.
 - Corpse text is a mixed case: the corpse object itself is inanimate, but the creature name after `труп` still uses the creature's genitive form.
 - UI code should ask the grammar layer for a context-specific form instead of checking resource keys such as `corpse_rabbit_female` inline.
+
+## Visible carried things
+
+Inspecting another character should describe only obvious visible state, not their private inventory.
+
+- A burning torch is visible in inspection text.
+- One lit torch is described as `У руці горить запалений факел.`
+- Two lit torches are described as `В обох руках горять запалені факели.`
+- `Руки порожні.` should appear only when the character has no obvious held item.
+
+Future equipment should extend this same visible-appearance layer: weapons, tools, packs and clothing can be shown when they are openly carried or worn, while hidden inventory remains private unless a later skill, search rule or scribe/debug view reveals it.

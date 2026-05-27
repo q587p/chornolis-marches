@@ -8,7 +8,9 @@ Chornolis uses fire as an early survival and visibility tool.
 - Multiple campfires can exist in the same місцина; every debug campfire receives its own key.
 - A debug campfire burns for 8 in-game hours, currently mapped to 16 real minutes.
 - During the final 2 in-game hours, currently 4 real minutes, location and feature text notes that the fire is fading.
-- In that fading window, the location feature line changes from the normal burning text to a low-fire state: the campfire is догорає, but still lights the місцина until it expires.
+- In that fading window, `/examine` shows the low-fire state: the campfire is догорає, but still lights the місцина until it expires.
+- `/look` lists campfires only as visible features. `/examine` shows the gameplay meaning: whether the fire gives light, whether it improves rest, and whether it is fading or extinguished.
+- In `/look`, an extinguished campfire should be listed only by name, e.g. `Згасле вогнище`. The ash/no-light/no-warmth details belong in `/examine`.
 - After at least 1 in-game hour, currently 2 real minutes, a campfire feature can show `Додати хмиз`.
 - `Додати хмиз` and `/add twigs campfire` are reserved placeholders for the later firewood loop.
 - When a timed campfire expires, it remains in the місцина as `Згасле вогнище`: it gives no light and no rest bonus.
@@ -28,12 +30,14 @@ Expired timed campfires are turned into згаслі campfires lazily when locat
 - A character can carry at most two lit torches at once, matching the current two-hands assumption.
 - A lit torch lasts 5 in-game hours, currently 10 real minutes.
 - During the final in-game hour, currently 2 real minutes, the world tick sends the character a separate chat warning that the torch is going out.
+- When a lit torch burns out, inventory sync consumes `lit_torch` and returns `хмиз` instead of a dry `torch`.
 - A lit torch gives light in the character's current місцина and can reveal nearby targets in the same way as campfire light.
 
 The current implementation stores torch state as inventory resources:
 
 - `torch` is an unlit torch.
 - `lit_torch` is a burning torch; its `updatedAt` timestamp is the active timer.
+- `twigs` / `хмиз` is the leftover fuel resource produced when a carried lit torch expires.
 
 This avoids a schema migration while preserving per-character torch timing.
 

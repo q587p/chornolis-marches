@@ -9,6 +9,34 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.11.9 - Softer player text, clearer admin tools and fire cleanup - 12026-05-27
+
+### Added
+
+- Added `/teleport [character] <locationKey|x,y,z>` for scribes to move the current or named character to a selected місцина.
+- Added location and character grouping modes for `/chat` in Telegram and on the web chat page.
+- Added service detail buttons for visible NPCs in `/all`, alongside existing player admin buttons.
+
+### Changed
+
+- `/start` now keeps an existing character in their current місцина instead of moving them back to the starting location.
+- Direction buttons refresh after movement so the persistent keyboard follows the exits available in the current місцина.
+- `/look` now keeps features as a compact visible list, while `/examine` explains gameplay details such as light, rest effects, torch stands and campfire state.
+- A carried lit torch now burns out into `хмиз` instead of turning back into a dry torch.
+- Inspecting another character now shows whether they visibly hold one lit torch, two lit torches, or have empty hands.
+- Inventory and action text hides more technical clutter by default: single items omit `×1`, simple action durations stay behind technical details, and fading torches use calmer inventory wording.
+- Player-facing text better respects grammatical gender for player inspection, social signals and statistics.
+- `/stat` is labelled simply as `Статистика`; deeper ecology pressure remains planned as a separate view.
+- Admin player cards now show fuller service details, name approval controls and auto toggles regardless of the viewer's local technical-detail setting.
+- `/addCreatureHelp` now uses current location examples and no longer suggests stale location keys.
+
+### Documentation
+
+- Updated fire/light documentation for the torch-to-хмиз lifecycle.
+- Added release notes for 0.11.9 and refreshed planning notes for onboarding upkeep, first gathered-resource uses, teaching, starter clothing and future NPC/admin controls.
+
+---
+
 ## 0.11.8 - Chat privacy, stable keyboard grid and web stat polish - 12026-05-27
 
 ### Changed

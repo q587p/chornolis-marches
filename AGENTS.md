@@ -10,18 +10,6 @@
 
 ## Always preserve these rules
 
-- The user usually bumps versions manually after a green build with:
-
-```bash
-npm version patch --no-git-tag-version
-```
-
-or, when explicitly appropriate:
-
-```bash
-npm version minor --no-git-tag-version
-```
-
 - Do **not** put internal workflow notes about `package.json` / `package-lock.json` into public news or changelog entries.
 - Before suggesting commit/push, prefer this order: apply changes → run build/tests/checks → only then version bump if the user asks or confirms.
 - When documenting release/update dates, use the local project date and Holocene calendar year, e.g. `12026-05-26`.

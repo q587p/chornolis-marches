@@ -6,10 +6,15 @@ Location features are persistent objects attached to a location: signs, campfire
 
 Only features with meaningful interaction should become buttons in the location UI.
 
+`/look` should keep features as a compact list of visible things in the місцина. It should show a згасле вогнище simply as `Згасле вогнище`, without appending state text such as `згасло; не дає світла`.
+
+`/examine` should explain what those features mean in play: a campfire gives light and improves rest, a torch stand has torches to take, a border marker helps with orientation, and so on. For extinguished campfires, prefer diegetic detail such as ash, blackened brands, and the lack of light or warmth instead of repeated technical state labels.
+
 Current interactive examples:
 
 - border marker: shows local orientation and nearby landmarks;
 - campfire / magic campfire: explains light and rest effects;
+- torch stand: shows that torches can be taken;
 - closed gate: explains that the settlement path is locked for now.
 
 ## Passive features

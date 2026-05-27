@@ -12,7 +12,8 @@ import {
   gatherConfig,
 } from "../gameConfig";
 import { directionLabels } from "../ui/labels";
-import { buildCorpseActionKeyboard, buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
+import { buildCorpseActionKeyboard, buildExamineLocationKeyboard, buildGatherRetryKeyboard, buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
+import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { renderLocationBrief, renderLocationDetails } from "./locations";
 import { notifyLocation, notifyLocationExcept } from "./notifications";
 import { getPlayerRestStaminaCap } from "./locationFeatures";
@@ -25,6 +26,7 @@ import { actionCost, actionTitle, movementDurationMs } from "./actionRules";
 import { fatigueStateFor, spendCreatureStamina, spendPlayerStamina } from "./actionRecovery";
 import { actorWhere, enqueueCreatureAction, interruptActorActions, type ActorRef } from "./actionLifecycle";
 import { escapeHtml } from "../utils/text";
+import { playerCanShowTechnicalDetails } from "./technicalDetails";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
@@ -84,6 +86,10 @@ function chatIdFromAction(action: WorldAction) {
 
 function msToSeconds(ms: number) {
   return Math.max(1, Math.ceil(ms / 1000));
+}
+
+function actionDurationPhrase(showTechnicalDetails: boolean, durationMs: number) {
+  return showTechnicalDetails ? ` (${msToSeconds(durationMs)} с)` : "";
 }
 
 function payloadOf<T>(action: WorldAction): T {
@@ -223,7 +229,7 @@ async function completeMove(bot: Bot, action: WorldAction) {
     const exit = await prisma.locationExit.findUnique({ where: { fromLocationId_direction: { fromLocationId: currentLocationId, direction: payload.direction } } });
     if (!exit || exit.isHidden) {
       await setActionStatus(action, "FAILED");
-      if (chatId) await bot.api.sendMessage(chatId, "Шлях, яким ви збиралися йти, більше не видно.");
+      if (chatId) await bot.api.sendMessage(chatId, "Шлях, яким ви збиралися йти, більше не видно.", { reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false) });
       await logEvent("ERROR", "Queued player move failed", payload.direction, currentLocationId);
       return;
     }
@@ -238,7 +244,7 @@ async function completeMove(bot: Bot, action: WorldAction) {
 
     if (chatId) {
       const view = await renderLocationBrief(exit.toLocationId, player.id);
-      await bot.api.sendMessage(chatId, `Ви дійшли: ${directionLabels[payload.direction]}`);
+      await bot.api.sendMessage(chatId, `Ви дійшли: ${directionLabels[payload.direction]}`, { reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false) });
       await bot.api.sendMessage(chatId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
     }
     return;
@@ -280,7 +286,7 @@ async function completeGather(bot: Bot, action: WorldAction) {
   }
 
   const locationId = isPlayer ? (actor as any).currentLocationId : (actor as any).locationId;
-  const durationSeconds = msToSeconds(action.durationMs);
+  const durationText = actionDurationPhrase(isPlayer && playerCanShowTechnicalDetails(actor as any), action.durationMs);
   const resource = payload.resourceKey
     ? await prisma.resourceNode.findFirst({ where: { locationId, resourceType: { key: payload.resourceKey }, amount: { gt: 0 } }, include: { resourceType: true, location: true } })
     : pick(await prisma.resourceNode.findMany({ where: { locationId, amount: { gt: 0 }, resourceType: { key: { in: ["berries", "mushrooms", "herbs"] } } }, include: { resourceType: true, location: true } }));
@@ -298,7 +304,20 @@ async function completeGather(bot: Bot, action: WorldAction) {
 
   if (!resource || !resourceKey || !cfg || Math.random() > cfg.chance) {
     await setActionStatus(action, "DONE");
-    if (chatId) await bot.api.sendMessage(chatId, `Ви витратили час на пошуки (${durationSeconds} с), але нічого корисного не знайшли.`);
+    if (chatId) {
+      if (resource && resourceKey && cfg) {
+        await bot.api.sendMessage(
+          chatId,
+          `Ви витратили час на пошуки${durationText}, але нічого корисного не знайшли.\n\nМожете спробувати пошукати ще.`,
+          { reply_markup: buildGatherRetryKeyboard(resourceKey) },
+        );
+      } else {
+        await bot.api.sendMessage(
+          chatId,
+          `Ви витратили час на пошуки${durationText}, але нічого корисного не знайшли.\n\nБільше ви тут цього не знайдете найближчий час. Спробуйте пізніше або в іншій місцині.`,
+        );
+      }
+    }
     if (isPlayer) await logEvent("GATHER", "Queued gather failed", resourceKey ?? "random", locationId);
     return;
   }
@@ -321,7 +340,7 @@ async function completeGather(bot: Bot, action: WorldAction) {
         ...(resourceKey in statFieldMap ? { [statFieldMap[resourceKey as keyof typeof statFieldMap]]: { increment: found } } : {}),
       },
     });
-    if (chatId) await bot.api.sendMessage(chatId, `Ви витратили час на пошуки (${durationSeconds} с) і знайшли: ${resource.resourceType.name} ×${found}.`);
+    if (chatId) await bot.api.sendMessage(chatId, `Ви витратили час на пошуки${durationText} і знайшли: ${resource.resourceType.name} ×${found}.`);
   } else {
     await prisma.creature.updateMany({ where: { id: (actor as any).id }, data: { successfulGathers: { increment: 1 }, currentAction: `зібрав ${resource.resourceType.name} ×${found}` } });
   }
@@ -384,7 +403,7 @@ async function completeInspect(bot: Bot, action: WorldAction) {
   const target = await resolveTarget(payload.targetType, payload.targetId, player.currentLocationId, { viewerPlayerId: player.id });
   await setActionStatus(action, target ? "DONE" : "FAILED");
   if (!target) {
-    if (chatId) await bot.api.sendMessage(chatId, "Цілі вже немає поруч. Можна спробувати відслідкувати слід.");
+    if (chatId) await bot.api.sendMessage(chatId, "Цілі вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() });
     return;
   }
   await spendPlayerStamina(bot, player.id, "INSPECT", chatId);
@@ -400,7 +419,13 @@ async function completeGreet(bot: Bot, action: WorldAction) {
   const target = await resolveTarget(payload.targetType, payload.targetId, player.currentLocationId);
   if (!target || !target.canGreet) {
     await setActionStatus(action, "FAILED");
-    if (chatId) await bot.api.sendMessage(chatId, !target ? "Цілі вже немає поруч." : `${target.forms.nominative} не виглядає співрозмовником.`);
+    if (chatId) {
+      if (!target) {
+        await bot.api.sendMessage(chatId, "Цілі вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() });
+      } else {
+        await bot.api.sendMessage(chatId, `${target.forms.nominative} не виглядає співрозмовником.`);
+      }
+    }
     return;
   }
   const greeting = pick(GREETINGS);
@@ -508,11 +533,11 @@ async function completeAttack(bot: Bot, action: WorldAction) {
     await setActionStatus(action, "FAILED");
     if (chatId) {
       const message = !target
-        ? "Цілі вже немає поруч."
+        ? "Цілі вже немає поруч. Можна роздивитися місцину ще раз."
         : target.isCorpse
           ? "Це вже труп."
           : "Бій із хижаками й іншими персонажами ще не реалізований.";
-      await bot.api.sendMessage(chatId, message);
+      await bot.api.sendMessage(chatId, message, !target ? { reply_markup: buildExamineLocationKeyboard() } : undefined);
     }
     return;
   }
@@ -520,7 +545,7 @@ async function completeAttack(bot: Bot, action: WorldAction) {
   const creature = await prisma.creature.findFirst({ where: { id: target.id, locationId: player.currentLocationId, isAlive: true, isGone: false }, include: { species: true } });
   if (!creature) {
     await setActionStatus(action, "FAILED");
-    if (chatId) await bot.api.sendMessage(chatId, "Цілі вже немає поруч. Можна спробувати відслідкувати слід.");
+    if (chatId) await bot.api.sendMessage(chatId, "Цілі вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() });
     return;
   }
 

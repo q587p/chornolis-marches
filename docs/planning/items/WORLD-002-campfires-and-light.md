@@ -24,7 +24,8 @@ Make fire a basic survival and exploration tool.
 
 - 0.11.5 first pass: debug campfires can exist multiple times in one місцина, burn on a timer, and count as local light.
 - 0.11.5/0.11.6 first pass: carried torches can be lit/refreshed near campfires and count as local light while burning; torches come from seed/reset world objects or explicit admin/Писар Порубіжжя placement, not automatic player inventory grants.
-- 0.11.6 follow-up: expired timed campfires remain as згаслі campfires and can be relit from a burning torch; fuel-aware relighting remains backlog.
+- 0.11.6 follow-up: expired timed campfires remain as згаслі campfires and can be relit from a burning torch; fuel-aware relighting remains the next missing piece.
+- 0.11.7/0.11.8 follow-up: light and technical details are now more carefully hidden from ordinary players, so future fire UI should keep exact timers/fuel numbers behind local technical details.
 - In forest regions, players can gather firewood.
 - Firewood can be used to start a campfire or extend an existing timed campfire.
 - Campfires reveal night descriptions and nearby things.

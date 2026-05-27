@@ -31,7 +31,7 @@ export function buildMovementKeyboard(exits: any[]) {
   if (north) keyboard.text("⬆️ Північ", "cmd:north").row();
 
   if (west) keyboard.text("⬅️ Захід", "cmd:west");
-  keyboard.text("👁 Роздивитися", "examine");
+  keyboard.text("🔎 Роздивитися", "examine");
   if (east) keyboard.text("Схід ➡️", "cmd:east");
   keyboard.row();
 
@@ -53,6 +53,13 @@ export function buildActionQueueKeyboard(actionCount: number | boolean = true) {
     .text("🧹 Очистити все", "queue:clear");
 }
 
+export function buildAutoConfirmKeyboard() {
+  return new InlineKeyboard()
+    .text("Так, увімкнути авто", "auto:confirm")
+    .row()
+    .text("Ні, лишити вручну", "auto:cancel");
+}
+
 export function buildFatigueRestKeyboard() {
   return new InlineKeyboard().text("🧘 Відпочити", "rest:start");
 }
@@ -71,12 +78,16 @@ export function buildRestWithQueueChoiceKeyboard() {
 }
 
 export function buildTrackKeyboard() {
-  return new InlineKeyboard().text("🔎 Сліди", "track");
+  return new InlineKeyboard().text("🐾 Сліди", "track");
+}
+
+export function buildExamineLocationKeyboard() {
+  return new InlineKeyboard().text("🔎 Роздивитися", "examine");
 }
 
 export function buildAnonymousTargetKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet" | "canAttack" | "isAnimal">) {
   const keyboard = new InlineKeyboard()
-    .text("👁 Роздивитися", `social:inspect:${target.type}:${target.id}:mystery`);
+    .text("🔎 Роздивитися", `social:inspect:${target.type}:${target.id}:mystery`);
   keyboard.text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:mystery`);
   keyboard.row();
 
@@ -88,7 +99,7 @@ export function buildAnonymousTargetKeyboard(target: Pick<TargetRef, "type" | "i
 
 export function buildTargetActionKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet" | "canAttack" | "isAnimal">, again = false) {
   const keyboard = new InlineKeyboard()
-    .text(again ? "👁 Роздивитися ще раз" : "👁 Роздивитися", `social:inspect:${target.type}:${target.id}:known`);
+    .text(again ? "🔎 Роздивитися ще раз" : "🔎 Роздивитися", `social:inspect:${target.type}:${target.id}:known`);
   keyboard.text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:known`);
   keyboard.row();
 
@@ -114,7 +125,7 @@ export function buildSocialSignalKeyboard(target: Pick<TargetRef, "type" | "id">
 }
 
 export function buildCorpseActionKeyboard(target: ResolvedTarget) {
-  const keyboard = new InlineKeyboard().text("👁 Оглянути труп", `social:inspect:${target.kind}:${target.id}:known`).row();
+  const keyboard = new InlineKeyboard().text("🔎 Оглянути труп", `social:inspect:${target.kind}:${target.id}:known`).row();
   keyboard.text("🤲 Підібрати", `social:pickup:${target.kind}:${target.id}`).row();
   if (target.canFreshen) keyboard.text("🔪 Освіжувати", `social:freshen:${target.kind}:${target.id}:known`).row();
   keyboard.text("↩️ Назад", "location:details").row();
@@ -174,9 +185,13 @@ export function buildResourceMenuKeyboard(resources: { key: string; name: string
   return keyboard;
 }
 
+export function buildGatherRetryKeyboard(resourceKey: string) {
+  return new InlineKeyboard().text("🌿 Пошукати ще", `gather:${resourceKey}`);
+}
+
 export function buildInteractionKeyboard() {
   return new InlineKeyboard()
-    .text("👁 Роздивитися", "examine")
+    .text("🔎 Роздивитися", "examine")
     .row()
     .text("⚔️ Атакувати", "social:attack:creature:0:mystery");
 }

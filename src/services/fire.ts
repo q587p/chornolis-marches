@@ -12,6 +12,7 @@ export const MAX_LIT_TORCHES_IN_HANDS = 2;
 
 const TORCH_KEY = "torch";
 const LIT_TORCH_KEY = "lit_torch";
+const TWIGS_KEY = "twigs";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -226,7 +227,7 @@ export async function createDebugCampfire(locationId: number) {
 }
 
 export async function ensureTorchResourceTypes() {
-  const [torch, litTorch] = await Promise.all([
+  const [torch, litTorch, twigs] = await Promise.all([
     prisma.resourceType.upsert({
       where: { key: TORCH_KEY },
       update: { name: "факел", description: "Сухий факел, який можна підпалити біля вогнища." },
@@ -237,12 +238,17 @@ export async function ensureTorchResourceTypes() {
       update: { name: "запалений факел", description: "Факел, що ще тримає полум'я." },
       create: { key: LIT_TORCH_KEY, name: "запалений факел", description: "Факел, що ще тримає полум'я." },
     }),
+    prisma.resourceType.upsert({
+      where: { key: TWIGS_KEY },
+      update: { name: "хмиз", description: "Сухі дрібні гілки для підкидання у вогнище." },
+      create: { key: TWIGS_KEY, name: "хмиз", description: "Сухі дрібні гілки для підкидання у вогнище." },
+    }),
   ]);
-  return { torch, litTorch };
+  return { torch, litTorch, twigs };
 }
 
 export async function syncPlayerTorchState(playerId: number) {
-  const { torch, litTorch } = await ensureTorchResourceTypes();
+  const { litTorch, twigs } = await ensureTorchResourceTypes();
   const lit = await prisma.playerResource.findUnique({
     where: { playerId_resourceTypeId: { playerId, resourceTypeId: litTorch.id } },
   });
@@ -253,9 +259,9 @@ export async function syncPlayerTorchState(playerId: number) {
   await prisma.$transaction([
     prisma.playerResource.delete({ where: { playerId_resourceTypeId: { playerId, resourceTypeId: litTorch.id } } }),
     prisma.playerResource.upsert({
-      where: { playerId_resourceTypeId: { playerId, resourceTypeId: torch.id } },
+      where: { playerId_resourceTypeId: { playerId, resourceTypeId: twigs.id } },
       update: { amount: { increment: lit.amount } },
-      create: { playerId, resourceTypeId: torch.id, amount: lit.amount },
+      create: { playerId, resourceTypeId: twigs.id, amount: lit.amount },
     }),
   ]);
 }

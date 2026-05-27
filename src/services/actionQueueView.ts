@@ -12,6 +12,8 @@ import {
 } from "../gameConfig";
 import { actionTitle } from "./actionRules";
 import { getPlayerRestStaminaCap } from "./locationFeatures";
+import { playerCanShowTechnicalDetails } from "./technicalDetails";
+import { actionProgressSuffix } from "../utils/durationText";
 
 function msToSeconds(ms: number) {
   return Math.max(1, Math.ceil(ms / 1000));
@@ -98,7 +100,7 @@ export async function renderPlayerActionQueue(playerId: number) {
     const queueIndex = player?.isResting ? index + 1 : index;
     if (action.status === "RUNNING") {
       const leftMs = action.executeAt ? Math.max(0, action.executeAt.getTime() - now) : action.durationMs;
-      return `▶️ ${actionTitle(action)} — виконується, ${msToSeconds(leftMs)} с`;
+      return `▶️ ${actionTitle(action)} — виконується${actionProgressSuffix(playerCanShowTechnicalDetails(player), leftMs)}`;
     }
 
     const prefix = queueIndex === 0 ? "⏳" : `⏳ ${orderedPosition(queueIndex)}.`;

@@ -11,9 +11,9 @@ These items should be verified against the current repository before implementin
 
 ## Design decisions still flexible
 
-- Whether future code should migrate all player-facing Stamina labels to `Снага`.
-- Which existing HP/body-state labels should migrate first to `Життя` / `Стан`.
-- Which existing inventory labels should migrate first to `Речі` / `Поклажа`.
+- Which remaining player-facing surfaces still need cleanup toward the canonical terms in `docs/design/terminology.md`: `Снага`, `Життя` / `Стан`, `Речі` / `Поклажа`, `Місцина`, `Озирнутися`, `Роздивитися`.
+- How to teach new fire/light and inventory behavior in onboarding, `/help`, fallback hints and future tutorial flow without overloading brand-new players.
+- Exact first implementation of `Додати хмиз`: extend an existing timed campfire, refresh its timer, prepare fuel on an extinguished campfire, or some deliberately small combination of those.
 - Exact mechanics of skill progression through use and observation.
 - Exact model for fear/cowardice, escape, and animal agility.
 - How much of the ecology simulation belongs in MVP vs later phases.

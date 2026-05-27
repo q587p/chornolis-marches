@@ -65,6 +65,16 @@ Location coordinates appear as three numbers, e.g. `(1,0,0)`:
 - `y`: north/south-like axis;
 - `z`: vertical/depth/layer axis, currently usually `0`.
 
+## Planned verticality
+
+There is a backlog direction to add a small, authored vertical/interior map pass. This should be explicit and diegetic, not a casual `z` change:
+
+- a climbable tree can use an `UP` exit to a high branch/lookout;
+- a bear den or similar lair can use an `INSIDE` exit into a real interior location;
+- a pit, ravine or hole can use a `DOWN` exit to a lower place.
+
+When this lands, update both the world seed and `docs/world/world_map.md`, and make the surface entry features inspectable so players understand the available movement.
+
 ## Bridge / threshold location note
 
 A small bridge before a settlement is a good place to express the project’s liminality. It does not have to be a combat encounter. It can be a boundary marker between ordinary settlement logic and the older/stranger Chornolis logic.

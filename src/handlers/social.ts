@@ -1,6 +1,6 @@
 import { Bot, InlineKeyboard } from "grammy";
 import { getPlayerByTelegramId } from "../services/players";
-import { buildCorpseActionKeyboard, buildSocialSignalKeyboard, buildTargetActionKeyboard } from "../ui/keyboards";
+import { buildCorpseActionKeyboard, buildExamineLocationKeyboard, buildSocialSignalKeyboard, buildTargetActionKeyboard } from "../ui/keyboards";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { actionDurationMs, performOrQueuePlayerAction } from "../services/actionQueue";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
@@ -8,6 +8,7 @@ import { resolveTarget, type ResolvedTarget } from "../services/targets";
 import { prisma } from "../db";
 import { addCorpseToInventory, resourceTypeDisplayName } from "../services/corpses";
 import { performSocialSignal, socialDefinitionById } from "../services/socialSignals";
+import { durationSecondsSuffix } from "../utils/durationText";
 
 function buildActionKeyboard(target: ResolvedTarget, again = false) {
   if (target.isCorpse) return buildCorpseActionKeyboard(target);
@@ -41,7 +42,7 @@ export function registerSocialHandlers(bot: Bot) {
     const target = await resolveTarget(type, targetId, player.currentLocationId);
     if (!target) {
       await safeAnswerCallbackQuery(ctx, "Цілі вже немає поруч.");
-      return void (await editOrReply(ctx, "Цілі вже немає поруч. Можна спробувати відслідкувати слід."));
+      return void (await editOrReply(ctx, "Цілі вже немає поруч. Можна роздивитися місцину ще раз.", buildExamineLocationKeyboard()));
     }
 
     await safeAnswerCallbackQuery(ctx);
@@ -70,7 +71,7 @@ export function registerSocialHandlers(bot: Bot) {
 
     if (!creature) {
       await safeAnswerCallbackQuery(ctx, "Трупа вже немає поруч.");
-      return void (await editOrReply(ctx, "Трупа вже немає поруч. Можна роздивитися місцину ще раз."));
+      return void (await editOrReply(ctx, "Трупа вже немає поруч. Можна роздивитися місцину ще раз.", buildExamineLocationKeyboard()));
     }
 
     let resourceType: Awaited<ReturnType<typeof addCorpseToInventory>>;
@@ -78,7 +79,7 @@ export function registerSocialHandlers(bot: Bot) {
       resourceType = await addCorpseToInventory(player.id, creature);
     } catch {
       await safeAnswerCallbackQuery(ctx, "Трупа вже немає поруч.");
-      return void (await editOrReply(ctx, "Трупа вже немає поруч. Можна роздивитися місцину ще раз."));
+      return void (await editOrReply(ctx, "Трупа вже немає поруч. Можна роздивитися місцину ще раз.", buildExamineLocationKeyboard()));
     }
 
     await safeAnswerCallbackQuery(ctx, "Підібрано.");
@@ -102,7 +103,7 @@ export function registerSocialHandlers(bot: Bot) {
     const target = await resolveTarget(type, targetId, player.currentLocationId);
     if (!target || target.isCorpse) {
       await safeAnswerCallbackQuery(ctx, "Цілі вже немає поруч.");
-      return void (await editOrReply(ctx, "Цілі вже немає поруч. Можна роздивитися місцину ще раз."));
+      return void (await editOrReply(ctx, "Цілі вже немає поруч. Можна роздивитися місцину ще раз.", buildExamineLocationKeyboard()));
     }
 
     await safeAnswerCallbackQuery(ctx);
@@ -125,7 +126,7 @@ export function registerSocialHandlers(bot: Bot) {
     const target = await resolveTarget(type, targetId, player.currentLocationId);
     if (!target || target.isCorpse) {
       await safeAnswerCallbackQuery(ctx, "Цілі вже немає поруч.");
-      return void (await editOrReply(ctx, "Цілі вже немає поруч. Можна роздивитися місцину ще раз."));
+      return void (await editOrReply(ctx, "Цілі вже немає поруч. Можна роздивитися місцину ще раз.", buildExamineLocationKeyboard()));
     }
 
     try {
@@ -152,7 +153,7 @@ export function registerSocialHandlers(bot: Bot) {
     const target = await resolveTarget(type, targetId, player.currentLocationId);
     if (!target) {
       await safeAnswerCallbackQuery(ctx, "Цілі вже немає поруч.");
-      return void (await editOrReply(ctx, "Цілі вже немає поруч. Можна спробувати відслідкувати слід."));
+      return void (await editOrReply(ctx, "Цілі вже немає поруч. Можна роздивитися місцину ще раз.", buildExamineLocationKeyboard()));
     }
 
     if (action === "greet" && !target.canGreet) return void (await safeAnswerCallbackQuery(ctx, "Ця ціль не відповість на привітання."));
@@ -179,7 +180,7 @@ export function registerSocialHandlers(bot: Bot) {
       return;
     }
 
-    await safeAnswerCallbackQuery(ctx, result.mode === "immediate" ? "Дію виконано." : `Дію додано в чергу (${Math.ceil(durationMs / 1000)} с).`);
+    await safeAnswerCallbackQuery(ctx, result.mode === "immediate" ? "Дію виконано." : `Дію додано в чергу${durationSecondsSuffix(player, durationMs)}.`);
     await sendActionSubmitFeedback(ctx, player.id, result);
   });
 
@@ -199,7 +200,7 @@ export function registerSocialHandlers(bot: Bot) {
       return;
     }
 
-    await safeAnswerCallbackQuery(ctx, result.mode === "immediate" ? "Ви вдивляєтесь у сліди." : `Вистежування додано в чергу (${Math.ceil(durationMs / 1000)} с).`);
+    await safeAnswerCallbackQuery(ctx, result.mode === "immediate" ? "Ви вдивляєтесь у сліди." : `Вистежування додано в чергу${durationSecondsSuffix(player, durationMs)}.`);
     await sendActionSubmitFeedback(ctx, player.id, result);
   });
 }

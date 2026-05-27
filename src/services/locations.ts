@@ -24,11 +24,10 @@ import { playerShowsTechnicalDetails } from "./technicalDetails";
 const COMPACT_EXIT_ORDER = ["NORTH", "WEST", "SOUTH", "EAST", "UP", "DOWN", "INSIDE", "OUTSIDE"];
 const GATHERABLE_RESOURCE_KEYS = ["berries", "mushrooms", "herbs"] as const;
 const TARGET_TEXT_LIMIT = 8;
-const CREATURE_AGE_LABELS: Record<string, string> = {
-  CHILD: "дитинча",
-  YOUNG: "молодняк",
-  ADULT: "доросла особина",
-  OLD: "стара особина",
+const CREATURE_AGE_ADJECTIVES: Record<string, Record<string, string>> = {
+  YOUNG: { MASCULINE: "молодий", FEMININE: "молода", NEUTER: "молоде", PLURAL: "молоді" },
+  ADULT: { MASCULINE: "дорослий", FEMININE: "доросла", NEUTER: "доросле", PLURAL: "дорослі" },
+  OLD: { MASCULINE: "старий", FEMININE: "стара", NEUTER: "старе", PLURAL: "старі" },
 };
 
 function featureData(feature: any) {
@@ -107,30 +106,52 @@ function isInteractiveFeature(feature: any) {
   return feature.isActive && ["BORDER_MARKER", "CAMPFIRE", "MAGIC_CAMPFIRE", "GATE", "LANDMARK"].includes(feature.type);
 }
 
-function featureLine(feature: any, showTechnicalDetails = false) {
-  let line = `${featureIcon(feature)} ${feature.name}`;
+function featureBriefLine(feature: any) {
+  return `${featureIcon(feature)} ${feature.name}`;
+}
+
+function featureDetailLine(feature: any, showTechnicalDetails = false) {
+  const line = `${featureIcon(feature)} ${feature.name}`;
   const details: string[] = [];
-  if (isCampfireFeature(feature) && feature.providesLight) {
-    if (isCampfireFading(feature)) {
-      line = `${line} догорає`;
-      details.push("ще освітлює місцину");
-    } else if (showTechnicalDetails) {
-      line = `${line} горить і освітлює місцину`;
+
+  if (isCampfireFeature(feature)) {
+    if (isExtinguishedCampfire(feature)) {
+      details.push("лишився попіл і чорні головешки");
+      details.push("світла й тепла вже не дає");
+    } else if (feature.type === "MAGIC_CAMPFIRE") {
+      details.push("дає світло");
+      details.push("покращує відпочинок");
+      details.push("тримається на магії й не потребує хмизу");
+    } else {
+      if (feature.providesLight) {
+        details.push(isCampfireFading(feature) ? "догорає, але ще дає світло" : "дає світло");
+      }
+      if (feature.restStaminaCapMultiplier) {
+        details.push("покращує відпочинок");
+      }
     }
-  } else if (showTechnicalDetails && feature.providesLight) {
-    if (isCampfireFeature(feature)) line = `${line} горить і освітлює місцину`;
-    else details.push("освітлює місцину");
+  } else if (isTorchSourceFeature(feature)) {
+    details.push("тут є факели, які можна взяти з собою");
+  } else if (feature.providesLight) {
+    details.push("дає світло");
+  } else if (feature.type === "BORDER_MARKER") {
+    details.push("допомагає зорієнтуватися поблизу межі");
+  } else if (feature.type === "GATE") {
+    details.push("позначає прохід, який треба роздивитися ближче");
   }
+
   const fireState = isCampfireFeature(feature) ? campfireStateLine(feature) : null;
-  if (fireState) details.push(fireState);
+  if (fireState && !isExtinguishedCampfire(feature)) details.push(fireState);
   if (showTechnicalDetails && feature.restStaminaCapMultiplier) details.push(`відпочинок до ×${feature.restStaminaCapMultiplier} снаги`);
   return details.length ? `${line}; ${details.join("; ")}` : line;
 }
 
-function featuresText(location: any, showTechnicalDetails = false) {
+function featuresText(location: any, mode: "brief" | "details", showTechnicalDetails = false) {
   const features = (location.features ?? []).filter(isInteractiveFeature);
   if (!features.length) return "";
-  return `\n\n${features.map((feature: any) => featureLine(feature, showTechnicalDetails)).join("\n")}`;
+  const title = mode === "brief" ? "Особливості:" : "Особливості місцини:";
+  const lines = features.map((feature: any) => mode === "brief" ? featureBriefLine(feature) : featureDetailLine(feature, showTechnicalDetails));
+  return `\n\n${title}\n${lines.join("\n")}`;
 }
 
 function addFeatureButtons(keyboard: InlineKeyboard, features: any[]) {
@@ -223,7 +244,8 @@ async function usesQuickPlayerActionDuration(viewerPlayerId?: number) {
   return activeActions === 0;
 }
 
-function resourceDurationText(resourceKey: string, quick: boolean) {
+function resourceDurationText(resourceKey: string, quick: boolean, showTechnicalDetails: boolean) {
+  if (!showTechnicalDetails) return "";
   const ms = quick ? QUICK_PLAYER_ACTION_DURATION_MS : slowResourceSeconds(resourceKey) * 1000;
   return ` (${formatSeconds(ms)} с)`;
 }
@@ -266,10 +288,23 @@ function normalizeCreatureActionText(action: string | null | undefined) {
     .replace(/^чекаємо$/, "чекає");
 }
 
-function animalAgeText(creature: any) {
-  const age = CREATURE_AGE_LABELS[creature.age] ?? String(creature.age ?? "невідомий вік").toLowerCase();
-  const ticks = Number.isFinite(creature.ageTicks) ? `, ${creature.ageTicks} тіків` : "";
-  return ` (${age}${ticks})`;
+function guessGenderFromForms(forms: ReturnType<typeof creatureForms>, fallback?: string | null) {
+  if (fallback === "FEMININE" || fallback === "NEUTER" || fallback === "PLURAL") return fallback;
+  const lower = forms.nominative.toLocaleLowerCase("uk-UA");
+  if (lower.endsWith("а") || lower.endsWith("я")) return "FEMININE";
+  if (lower.endsWith("о") || lower.endsWith("е") || lower.endsWith("я")) return "NEUTER";
+  return "MASCULINE";
+}
+
+function animalAgeDescription(creature: any, showTechnicalDetails = false) {
+  const forms = creatureForms(creature);
+  const ticks = showTechnicalDetails && Number.isFinite(creature.ageTicks) ? `, ${creature.ageTicks} тіків` : "";
+  if (creature.age === "CHILD") return `дитинча ${forms.genitive}${ticks}`;
+
+  const gender = guessGenderFromForms(forms, creature.species?.grammaticalGender);
+  const adjective = CREATURE_AGE_ADJECTIVES[creature.age]?.[gender] ?? "";
+  const label = adjective ? `${adjective} ${forms.nominative}` : forms.nominative;
+  return `${label}${ticks}`;
 }
 
 function visibleActionText(target: { type: "player" | "creature"; id: number }, activeActions: Map<string, any>, location: any) {
@@ -323,12 +358,13 @@ async function visibleTracksHint(locationId: number) {
 
 async function resourceButtonData(resources: any[], viewerPlayerId?: number) {
   const quick = await usesQuickPlayerActionDuration(viewerPlayerId);
+  const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
   return resources
     .filter((r) => r.amount > 0 && (GATHERABLE_RESOURCE_KEYS as readonly string[]).includes(r.resourceType.key))
     .map((resource) => ({
       key: resource.resourceType.key,
       name: resource.resourceType.name,
-      durationText: resourceDurationText(resource.resourceType.key, quick),
+      durationText: resourceDurationText(resource.resourceType.key, quick, showTechnicalDetails),
     }));
 }
 
@@ -355,7 +391,7 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
   if (revealTargets && targets.length) addInlineRows(keyboard, buildTargetListKeyboard(targets, { page: options.targetPage, pageCallbackPrefix: "targetPage:brief" }));
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location, showTechnicalDetails)}${presenceText(location, viewerPlayerId, revealTargets)}\n\n${escapeHtml(compactExitsText(location.exitsFrom))}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location, "brief", showTechnicalDetails)}${presenceText(location, viewerPlayerId, revealTargets)}\n\n${escapeHtml(compactExitsText(location.exitsFrom))}`,
     keyboard,
   };
 }
@@ -413,7 +449,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   const animalMovementText = livingAnimals.length
     ? `\n\nРух поруч:\n${livingAnimals
         .slice(0, 8)
-        .map((c) => `- ${escapeHtml(`${c.species.name}${animalAgeText(c)}: ${normalizeCreatureActionText(c.currentAction)}`)}`)
+        .map((c) => `- ${escapeHtml(`${animalAgeDescription(c, showTechnicalDetails)}: ${normalizeCreatureActionText(c.currentAction)}`)}`)
         .join("\n")}${livingAnimals.length > 8 ? `\n- ...і ще ${livingAnimals.length - 8}` : ""}`
     : "";
   const tracksHint = await visibleTracksHint(location.id);
@@ -460,7 +496,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     : "";
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location, showTechnicalDetails)}\n\n<i>Ви роздивляєтесь.</i>${technicalLocationText}\n\n${escapeHtml(detailedExitsText(location.exitsFrom))}${resourcesText}${charactersText}${tracksHint.text}${animalMovementText}${lyingText}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location, "details", showTechnicalDetails)}\n\n<i>Ви роздивляєтесь уважніше.</i>${technicalLocationText}\n\n${escapeHtml(detailedExitsText(location.exitsFrom))}${resourcesText}${charactersText}${tracksHint.text}${animalMovementText}${lyingText}`,
     keyboard,
   };
 }
@@ -487,6 +523,8 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
   } else if (isCampfireFeature(feature)) {
     if (isExtinguishedCampfire(feature)) {
       text = "Згасле вогнище лишило по собі попіл і чорні головешки. Світла й тепла воно не дає.";
+    } else if (feature.type === "MAGIC_CAMPFIRE") {
+      text = "Вогнище освітлює все навколо. Поряд із ним легше відпочити, відігрітися й набратися додаткових сил.\n\nВи відчуваєте, як чиясь давня магія підтримує полум'я. Йому не потрібен хмиз, щоб горіти.";
     } else if (isCampfireFading(feature)) {
       text = "Вогнище догорає, але ще освітлює місцину. Полум'я нижчає, жар просідає в попіл; скоро варто буде додати хмизу.";
     } else {
@@ -507,7 +545,7 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
       if (torchState.isLit) keyboard.text("🔥 Підпалити", `fire:light:${feature.id}`).row();
     } else {
       keyboard.text("🔥 Відпочити", "rest:start").row();
-      if (canAddTwigsToCampfire(feature)) keyboard.text("🪵 Додати хмиз", `fire:addTwigs:${feature.id}`).row();
+      if (feature.type !== "MAGIC_CAMPFIRE" && canAddTwigsToCampfire(feature)) keyboard.text("🪵 Додати хмиз", `fire:addTwigs:${feature.id}`).row();
       if (torchState.hasTorch) {
         keyboard.text(torchLightButtonText(torchState), `torch:light:${feature.id}`).row();
       }

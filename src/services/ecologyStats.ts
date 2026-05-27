@@ -1,6 +1,7 @@
 import { CreatureAge } from "@prisma/client";
 import { prisma } from "../db";
 import { getRuntimeTimingConfig } from "../gameConfig";
+import { creatureForms } from "./grammar";
 
 const TICK_EVENT_TAKE = 120;
 const TICK_COUNTER_KEYS = [
@@ -64,6 +65,7 @@ export async function getEcologyStats() {
     latestTickEvents,
     topHunters,
     topPlayers,
+    topNpcs,
   ] = await Promise.all([
     prisma.creatureSpecies.findMany({ where: { kind: "ANIMAL" }, orderBy: { key: "asc" } }),
     prisma.creature.groupBy({
@@ -120,6 +122,23 @@ export async function getEcologyStats() {
         { animalsKilled: "desc" },
         { successfulGathers: "desc" },
         { greetings: "desc" },
+        { says: "desc" },
+        { steps: "desc" },
+        { id: "asc" },
+      ],
+      take: 10,
+    }),
+    prisma.creature.findMany({
+      where: {
+        species: { kind: { not: "ANIMAL" } },
+        isAlive: true,
+        isGone: false,
+        isHidden: false,
+      },
+      include: { species: true, location: true },
+      orderBy: [
+        { kills: "desc" },
+        { successfulGathers: "desc" },
         { says: "desc" },
         { steps: "desc" },
         { id: "asc" },
@@ -218,6 +237,47 @@ export async function getEcologyStats() {
     TICK_COUNTER_KEYS.map((key) => [key, observedMinutes > 0 ? recentCounters[key] * 60 / observedMinutes : 0])
   ) as TickCounterSummary;
 
+  const playerCharacterRows = topPlayers.map((player) => ({
+    kind: "PLAYER" as const,
+    id: player.id,
+    ref: `P#${player.id}`,
+    name: player.nameNominative ?? player.firstName ?? player.username ?? "мандрівник",
+    pronoun: player.pronoun,
+    grammaticalGender: player.grammaticalGender,
+    locationKey: player.currentLocation?.key ?? null,
+    locationName: player.currentLocation?.name ?? null,
+    animalsKilled: player.animalsKilled,
+    successfulGathers: player.successfulGathers,
+    greetings: player.greetings,
+    says: player.says,
+    steps: player.steps,
+  }));
+  const npcCharacterRows = topNpcs.map((creature) => ({
+    kind: "NPC" as const,
+    id: creature.id,
+    ref: `NPC#${creature.id}`,
+    name: creatureForms(creature).nominative,
+    pronoun: null,
+    grammaticalGender: creature.species.grammaticalGender,
+    locationKey: creature.location.key,
+    locationName: creature.location.name,
+    animalsKilled: creature.kills,
+    successfulGathers: creature.successfulGathers,
+    greetings: 0,
+    says: creature.says,
+    steps: creature.steps,
+  }));
+  const topCharacters = [...playerCharacterRows, ...npcCharacterRows]
+    .sort((a, b) =>
+      b.animalsKilled - a.animalsKilled
+      || b.successfulGathers - a.successfulGathers
+      || b.greetings - a.greetings
+      || b.says - a.says
+      || b.steps - a.steps
+      || a.ref.localeCompare(b.ref)
+    )
+    .slice(0, 20);
+
   return {
     generatedAt: new Date(),
     timing,
@@ -246,17 +306,8 @@ export async function getEcologyStats() {
       successfulAttacks: creature.successfulAttacks,
       kills: creature.kills,
     })),
-    topPlayers: topPlayers.map((player) => ({
-      id: player.id,
-      name: player.nameNominative ?? player.firstName ?? player.username ?? "мандрівник",
-      locationKey: player.currentLocation?.key ?? null,
-      locationName: player.currentLocation?.name ?? null,
-      animalsKilled: player.animalsKilled,
-      successfulGathers: player.successfulGathers,
-      greetings: player.greetings,
-      says: player.says,
-      steps: player.steps,
-    })),
+    topPlayers: playerCharacterRows,
+    topCharacters,
     latestTick,
     recent: {
       eventCount: tickEvents.length,

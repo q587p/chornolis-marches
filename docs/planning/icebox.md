@@ -15,14 +15,17 @@ It is not a trash bin and not a promise. It is cold storage for ideas that need 
 ## Examples for Chornolis Marches
 
 - Mythic skill learning from spirits.
+- Teaching/request-to-learn command: later add a way to ask another character or NPC to teach a skill, and a matching response flow where they can agree, refuse, or demonstrate. This should not be a generic skill transfer button: decide which skills can be taught directly, which only through demonstration/observation, which require tools or location context, and how different skill levels are displayed without exposing too many raw numbers.
 - Seasonal rituals and sacred days.
 - Calendar-to-world correspondences: named weekdays or day-signs can change creature presence, omens, rumors or events, such as a frog day with more frogs and frog-linked happenings. Day names should feel Ukrainian/Slavic and local to Chornolis rather than copied from traditions such as "Thor's day".
 - Caravans and regional trade networks.
 - Player camps, shelters and construction.
 - Full PvP bounty and witness system.
 - Guard response to harmful player behavior: settlement guards or wardens should eventually react to characters who attack other characters, escalating from warning or intervention to pursuit, punishment, bounty or exile depending on witnesses, reputation and local law.
+- Deeper MUD-like moderation and justice tools after scribe/admin UX matures: mute/silence, bans, jail or holding locations, warnings, service notes, appeals/review, and in-world consequences that remain logged and reversible where possible.
 - Moon phases and deep calendar simulation.
 - Web `/map`, shared map view service, multi-messenger adapters and future MUD-client gateway. The 0.11.5 Ukrainian alias layer is an early Telegram-side step toward MUD-like text input, but real cross-client play still belongs here until account/session architecture exists. Future adapters may include Signal, WhatsApp or similar bot-capable messengers, a Discord bridge for chat/presence and event relay, and a Mudlet/GMCP-like mode for richer MUD clients.
+- Ukrainian-first MUD identity: once a real MUD server/gateway and supported clients exist, frame Chornolis as an explicitly Ukrainian and Ukrainian-language MUD, potentially the first of its kind. Keep this as a future identity/positioning goal until the server, protocol support and cross-client play are actually implemented.
 - Personal chronicle / character memory: keep a player-specific record of what the character has seen, where they have been, which regions, locations, special signs, creatures, NPCs, objects and world events they personally witnessed, and when. This could power a later `Літопис`, journal, map memory or "where did I see that?" lookup without exposing unseen world knowledge.
 - Localization / i18n: keep Ukrainian as the canonical authored language and add a real localization layer for at least English as the first secondary locale. This should cover Telegram UI, commands/help text, web/status pages, system messages, release/news text where relevant, and authored world content such as location descriptions, features and species names. Plan for grammar-sensitive strings rather than raw string replacement: Ukrainian cases, English articles/plurals, gendered creature text, quote formatting, and terminology choices should live in locale-aware helpers. Start only after the core text surfaces stabilize enough to avoid churn.
 - `seedWorld()` refactor for `prisma/seed.ts`, once the current static world seed stabilizes.

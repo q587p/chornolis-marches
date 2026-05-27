@@ -14,9 +14,12 @@ import { directionLabels } from "../ui/labels";
 import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { logEvent } from "../services/worldEvents";
 import { maybePerformPlayerAutoSignal } from "../services/socialAutonomy";
+import { buildAutoConfirmKeyboard } from "../ui/keyboards";
+import { safeAnswerCallbackQuery } from "../utils/telegram";
 
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
 const AUTO_SAY_CHANCE = Number(process.env.PLAYER_AUTO_SAY_CHANCE || 15);
+const AUTO_CONSENT_TITLE = "Player auto consent";
 
 type AutoState = { timer: NodeJS.Timeout; running: boolean };
 const autoPlayers = new Map<number, AutoState>();
@@ -91,6 +94,38 @@ async function persistPlayerAutoState(telegramId: number, isAutoEnabled: boolean
   });
 }
 
+async function playerAutoConsent(playerId: number) {
+  const event = await prisma.worldEvent.findFirst({
+    where: { type: "SYSTEM", title: AUTO_CONSENT_TITLE, playerId },
+    select: { id: true },
+  });
+  return Boolean(event);
+}
+
+async function markPlayerAutoConsent(playerId: number) {
+  if (await playerAutoConsent(playerId)) return;
+  await prisma.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: AUTO_CONSENT_TITLE,
+      description: "confirmed",
+      playerId,
+    },
+  });
+}
+
+function autoConfirmText() {
+  return [
+    "🤖 Авто-режим буде час від часу сам обирати прості дії для персонажа: роздивлятися місцину, збирати ресурси, рухатися, говорити або відпочивати, коли персонаж дуже виснажений.",
+    "",
+    "Ви певні, що хочете увімкнути авто?",
+  ].join("\n");
+}
+
+async function replyWithAutoConfirmation(ctx: any) {
+  await ctx.reply(autoConfirmText(), { reply_markup: buildAutoConfirmKeyboard() });
+}
+
 async function notifyQueuedIfNeeded(bot: Bot, telegramId: number, playerId: number, mode: "queued" | "immediate", description: string, locationId?: number) {
   if (mode !== "queued") return;
 
@@ -112,6 +147,7 @@ async function maybeAutoSay(bot: Bot, telegramId: number, player: any, locationI
     payload: { text: line },
     durationMs: actionDurationMs("SAY", player.stamina),
     chatId: telegramId,
+    note: "auto:say",
   });
 
   await notifyQueuedIfNeeded(bot, telegramId, player.id, result.mode, `say: ${line}`, locationId);
@@ -135,6 +171,7 @@ async function autoGather(bot: Bot, telegramId: number, player: any, locationId:
     payload: { resourceKey: key },
     durationMs: gatherDurationMs(key, player.stamina),
     chatId: telegramId,
+    note: `auto:gather:${key}`,
   });
 
   await notifyQueuedIfNeeded(bot, telegramId, player.id, result.mode, `gather:${key}`, locationId);
@@ -148,6 +185,7 @@ async function autoLook(bot: Bot, telegramId: number, player: any, locationId: n
     payload: {},
     durationMs: actionDurationMs("LOOK", player.stamina),
     chatId: telegramId,
+    note: "auto:look",
   });
 
   await notifyQueuedIfNeeded(bot, telegramId, player.id, result.mode, "examine", locationId);
@@ -169,6 +207,7 @@ async function autoMove(bot: Bot, telegramId: number, player: any, locationId: n
     payload: { direction: exit.direction },
     durationMs: movementDurationMs(exit.travelCost, player.stamina),
     chatId: telegramId,
+    note: `auto:move:${exit.direction}`,
   });
 
   if (result.mode === "queued") {
@@ -250,6 +289,24 @@ export async function enablePlayerAuto(bot: Bot, telegramId: number) {
   return started;
 }
 
+export async function requestOrEnablePlayerAuto(bot: Bot, ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) {
+    await ctx.reply("Ти ще не увійшов у світ. Напиши /start", { reply_markup: buildMainReplyKeyboard(false) });
+    return;
+  }
+
+  if (!(await playerAutoConsent(player.id))) {
+    await replyWithAutoConfirmation(ctx);
+    return;
+  }
+
+  const started = await enablePlayerAuto(bot, ctx.from.id);
+  await ctx.reply(started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено.", {
+    reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, true),
+  });
+}
+
 export async function disablePlayerAuto(telegramId: number) {
   const stopped = stopAutoTimer(telegramId);
   const updated = await prisma.player.updateMany({
@@ -314,14 +371,34 @@ export function registerAutoHandlers(bot: Bot) {
 
   bot.command("auto", async (ctx) => {
     if (!ctx.from) return;
-    const started = await enablePlayerAuto(bot, ctx.from.id);
-    await ctx.reply(started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено.", { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, true) });
+    await requestOrEnablePlayerAuto(bot, ctx);
   });
 
   bot.hears("🤖 Авто", async (ctx) => {
     if (!ctx.from) return;
+    await requestOrEnablePlayerAuto(bot, ctx);
+  });
+
+  bot.callbackQuery("auto:confirm", async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start", { reply_markup: buildMainReplyKeyboard(false) }));
+    }
+
+    await markPlayerAutoConsent(player.id);
     const started = await enablePlayerAuto(bot, ctx.from.id);
-    await ctx.reply(started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено.", { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, true) });
+    await safeAnswerCallbackQuery(ctx, "Авто увімкнено.");
+    await ctx.reply(started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено.", {
+      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, true),
+    });
+  });
+
+  bot.callbackQuery("auto:cancel", async (ctx) => {
+    await safeAnswerCallbackQuery(ctx, "Авто не увімкнено.");
+    await ctx.reply("Авто-режим не увімкнено. Ви лишаєте керування вручну.", {
+      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+    });
   });
 
   bot.command(["autoStop", "autostop"], async (ctx) => {

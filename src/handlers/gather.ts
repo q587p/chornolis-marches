@@ -5,6 +5,7 @@ import { getPlayerByTelegramId } from "../services/players";
 import { buildGatherMenuForLocation } from "../services/locations";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
+import { durationSecondsSuffix } from "../utils/durationText";
 
 export type GatherKey = "berries" | "mushrooms" | "herbs";
 
@@ -57,7 +58,7 @@ export async function submitGather(bot: Bot, ctx: any, resourceKey?: GatherKey, 
       messageId: ctx.callbackQuery?.message?.message_id,
     });
 
-    const text = result.mode === "immediate" ? "Ви почали пошук." : `Додано в чергу (${Math.ceil(durationMs / 1000)} с).`;
+    const text = result.mode === "immediate" ? "Ви почали пошук." : `Додано в чергу${durationSecondsSuffix(player, durationMs)}.`;
     if (answerCallback) await safeAnswerCallbackQuery(ctx, text);
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {
