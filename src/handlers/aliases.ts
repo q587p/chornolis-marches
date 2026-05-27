@@ -36,10 +36,11 @@ import { submitMove as submitCanonicalMove } from "./movement";
 import { submitGather as submitCanonicalGather } from "./gather";
 import { addCorpseToInventory, resourceTypeDisplayName } from "../services/corpses";
 import { performSocialSignal } from "../services/socialSignals";
-import { addTwigsToCampfire } from "../services/fire";
+import { addTwigsToCampfire, lightPlayerTorchFromInventory } from "../services/fire";
 import { requireScribeAdmin } from "../services/adminAccess";
 import { pickUpFirstGroundResourceByKey } from "../services/groundItems";
 import { parseSpeechTarget } from "../services/speechTargets";
+import { dropInventoryResource, inspectInventoryResource, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
 
 type TextTargetRef = {
   type: "player" | "creature";
@@ -331,6 +332,45 @@ async function submitWait(bot: Bot, ctx: any) {
   }
 }
 
+async function submitUseItem(ctx: any, item: UsableInventoryResource) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  try {
+    await ctx.reply(await useInventoryResource(player.id, item));
+  } catch (error) {
+    await ctx.reply(error instanceof Error ? error.message : "Не вдалося використати це.");
+  }
+}
+
+async function submitLightTorch(ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  await ctx.reply(await lightPlayerTorchFromInventory(player.id));
+}
+
+async function submitInventoryInspect(ctx: any, target: string) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  try {
+    await ctx.reply(await inspectInventoryResource(player.id, target));
+  } catch (error) {
+    await ctx.reply(error instanceof Error ? error.message : "Не вдалося роздивитися це.");
+  }
+}
+
+async function submitInventoryDrop(ctx: any, target: string) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  try {
+    await ctx.reply(await dropInventoryResource(player.id, target));
+  } catch (error) {
+    await ctx.reply(error instanceof Error ? error.message : "Не вдалося викинути це.");
+  }
+}
+
 async function submitSay(bot: Bot, ctx: any, text: string) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
@@ -523,6 +563,10 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "queue") return submitQueue(ctx, parsed.mode);
     if (parsed.kind === "track") return submitTrack(bot, ctx, Boolean(parsed.detail));
     if (parsed.kind === "wait") return submitWait(bot, ctx);
+    if (parsed.kind === "use-item") return submitUseItem(ctx, parsed.item);
+    if (parsed.kind === "light-torch") return submitLightTorch(ctx);
+    if (parsed.kind === "inspect-inventory-item") return submitInventoryInspect(ctx, parsed.target);
+    if (parsed.kind === "drop-inventory-item") return submitInventoryDrop(ctx, parsed.target);
     if (parsed.kind === "add-twigs-campfire") {
       const player = await getPlayerByTelegramId(ctx.from.id);
       if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));

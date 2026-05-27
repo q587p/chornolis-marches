@@ -63,6 +63,7 @@
     "Lit torches expire into twigs / хмиз, not dry torches.",
     "Inspecting another character may show visible lit torches in hand(s); use Руки порожні only when no obvious held item is visible.",
     "/chat supports time, location and character grouping modes in Telegram and web views.",
-    "хмиз now has a first fuel loop: it can extend burning ordinary campfires or prepare згаслі ordinary campfires for relighting."
+    "хмиз now has a first fuel loop: it can extend burning ordinary campfires or prepare згаслі ordinary campfires for relighting.",
+    "Inventory now has first modest item actions: berries restore a small amount of stamina, mushrooms ease hunger a little, herbs restore a small amount of HP when wounded, dry torches can be lit when fire is available, and resource stacks can be inspected or dropped."
   ]
 }

@@ -23,8 +23,8 @@ Recommended order:
 Good small follow-ups if a narrow patch is wanted:
 
 - Shape ONB-001 into a first playable newcomer helper: update `/start`, `/help`, fallback hints and a skippable guide flow for look/examine/move/time/rest/gather/inventory/basic safety.
-- Add item-level `Речі` actions: inspect/drop/use placeholder, starting with torches, berries and corpses.
-- Add edible berries as the first hunger interaction from inventory.
+- Add the next item-level inventory actions after the 0.11.12 first use/drop pass: better per-item details, corpses, safer dropped-item pickup, and future item instances for timers/quality/origin.
+- Tune the first berries/herbs use loop after playtesting: hunger relief, small healing text, edge cases and how this should grow into cooking, medicine and herbalism.
 - Add the first **animal-restoration offering** loop: small hare/mouse statues or similar forest charms where players can leave berries or herbs; after a delay, if local or regional prey population is low, a pair of young animals can appear without admin intervention.
 - Add a low-prey warning from Дід Лісовик when all rabbits, mice or other basic prey disappear from the relevant scope. If he is asleep, the message can be framed as him mumbling through sleep, still heard across the borderland.
 - Add first ground-money objects under the bridge / in dark places, using the existing ground-item pickup path.
@@ -132,7 +132,7 @@ These are still `backlog`, but recent work makes them worth reviewing before the
 - PERF-001 — budgeted and aggregated creature simulation. Queue pressure is currently visible enough that this may need promotion before larger ecology work.
 - ADM-001 — admin permissions, name approval and restricted reset hardening. A first `Писар`/admin gate exists now, so remaining near-term work is audit logging, clearer role UX, first name-review tools and closing any leftover dangerous paths.
 - Speech reply UX: `/reply`, `Відповісти` and `Відповісти як...` for addressed speech. This should probably stay behind the chat/social polish lane, not the ecology lane.
-- Inventory item actions: the dedicated `Речі` view exists, so item details, dropping, using and eating berries are now small enough to promote when the survival loop needs them.
+- Inventory item actions: the dedicated inventory view exists, and the 0.11.12 berries/mushrooms/herbs use pass proves the path. Item details, dropping, torches, corpses and richer per-item actions are now small enough to promote when the survival loop needs them.
 - Darkness creature / small coin omen: this becomes much more attractive right after WORLD-001 because it explicitly depends on darkness, light and calm observation.
 - TECH-001 — service boundary and duplication cleanup. Keep this mostly behavior-preserving, but make it visible during patch planning because `worldTick.ts`, `status.ts`, `actionCompletions.ts`, `statusServer.ts`, `locations.ts` and `aliases.ts` are now large enough to slow safe feature work.
 

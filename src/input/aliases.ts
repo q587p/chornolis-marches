@@ -1,6 +1,7 @@
 import { Direction } from "@prisma/client";
 
 export type GatherKey = "berries" | "mushrooms" | "herbs";
+export type UseItemKey = "berries" | "herbs" | "mushrooms";
 export type TargetAction = "inspect" | "greet" | "attack" | "freshen";
 export type QueueAliasMode = "status" | "cancel-current" | "clear";
 export type AutoAliasMode = "start" | "stop";
@@ -24,6 +25,10 @@ export type ParsedAliasCommand =
   | { kind: "back" }
   | { kind: "move"; direction: Direction }
   | { kind: "gather"; resourceKey?: GatherKey }
+  | { kind: "use-item"; item: UseItemKey }
+  | { kind: "light-torch" }
+  | { kind: "inspect-inventory-item"; target: string }
+  | { kind: "drop-inventory-item"; target: string }
   | { kind: "rest"; mode: RestAliasMode }
   | { kind: "auto"; mode: AutoAliasMode }
   | { kind: "queue"; mode: QueueAliasMode }
@@ -263,6 +268,35 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "додати хмиз": { kind: "add-twigs-campfire" },
   "підкинути хмиз": { kind: "add-twigs-campfire" },
   "додати хмиз у вогнище": { kind: "add-twigs-campfire" },
+
+  "eat berries": { kind: "use-item", item: "berries" },
+  "use berries": { kind: "use-item", item: "berries" },
+  "з'їсти ягоди": { kind: "use-item", item: "berries" },
+  "з’їсти ягоди": { kind: "use-item", item: "berries" },
+  "зʼїсти ягоди": { kind: "use-item", item: "berries" },
+  "зїсти ягоди": { kind: "use-item", item: "berries" },
+  "їсти ягоди": { kind: "use-item", item: "berries" },
+  "використати ягоди": { kind: "use-item", item: "berries" },
+  "eat mushrooms": { kind: "use-item", item: "mushrooms" },
+  "use mushrooms": { kind: "use-item", item: "mushrooms" },
+  "use mushroom": { kind: "use-item", item: "mushrooms" },
+  "з'їсти гриби": { kind: "use-item", item: "mushrooms" },
+  "з’їсти гриби": { kind: "use-item", item: "mushrooms" },
+  "зʼїсти гриби": { kind: "use-item", item: "mushrooms" },
+  "зїсти гриби": { kind: "use-item", item: "mushrooms" },
+  "їсти гриби": { kind: "use-item", item: "mushrooms" },
+  "використати гриби": { kind: "use-item", item: "mushrooms" },
+  "use herbs": { kind: "use-item", item: "herbs" },
+  "use herb": { kind: "use-item", item: "herbs" },
+  "використати трави": { kind: "use-item", item: "herbs" },
+  "використати лікарські трави": { kind: "use-item", item: "herbs" },
+  "вжити трави": { kind: "use-item", item: "herbs" },
+  "прикласти трави": { kind: "use-item", item: "herbs" },
+  "лікуватися травами": { kind: "use-item", item: "herbs" },
+  "light torch": { kind: "light-torch" },
+  "use torch": { kind: "light-torch" },
+  "запалити факел": { kind: "light-torch" },
+  "підпалити факел": { kind: "light-torch" },
 };
 
 const COMPACT_ALIASES: Record<string, ParsedAliasCommand> = {
@@ -432,6 +466,16 @@ function parsePickup(text: string): ParsedAliasCommand | null {
   return { kind: "pickup-target", target: match[1].trim() };
 }
 
+function parseInventoryItemAction(text: string): ParsedAliasCommand | null {
+  const drop = text.match(/^(?:drop|discard|throw away|викинути|кинути|покласти на землю)\s+(.+)$/);
+  if (drop?.[1]?.trim()) return { kind: "drop-inventory-item", target: drop[1].trim() };
+
+  const inspect = text.match(/^(?:inspect item|examine item|look at item|item|річ|речі|оглянути в речах|роздивитися в речах)\s+(.+)$/);
+  if (inspect?.[1]?.trim()) return { kind: "inspect-inventory-item", target: inspect[1].trim() };
+
+  return null;
+}
+
 function parseSocialSignal(text: string): ParsedAliasCommand | null {
   const patterns: Array<[SocialSignalAlias, RegExp]> = [
     ["smile", /^(?:smile|усміхнутися|усміхнутись|посміхнутися|посміхнутись)\s+(.+)$/],
@@ -476,6 +520,9 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
 
   const pickup = parsePickup(text);
   if (pickup) return pickup;
+
+  const inventoryItemAction = parseInventoryItemAction(text);
+  if (inventoryItemAction) return inventoryItemAction;
 
   const signal = parseSocialSignal(text);
   if (signal) return signal;

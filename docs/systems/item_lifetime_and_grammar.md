@@ -16,6 +16,8 @@ Ordinary player UI should avoid exact remaining ticks. Exact values belong behin
 
 For corpses, these states describe the current condition of the body. Later perishable items can reuse the same scale for food, harvested materials, fuel, dropped supplies and crafted objects.
 
+0.11.12 resource-stack drops are an intentionally simple bridge: `Викинути` removes one carried resource and returns it to the current location through the existing resource-node model. A dropped lit torch is extinguished and leaves `twigs`. Later item instances should preserve origin, quality, timers, freshness and richer ground-object behavior.
+
 ## Sex, animacy and cases
 
 Ukrainian display text should be chosen through grammar helpers instead of hardcoded labels in gameplay code.

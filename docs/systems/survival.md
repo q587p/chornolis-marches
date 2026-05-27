@@ -14,6 +14,17 @@ Survival should add pressure, atmosphere and decisions, not repetitive punishmen
 - Firewood gathering.
 - Light and warmth.
 
+## First Inventory Uses
+
+0.11.12 adds the first small practical use for gathered resources from inventory:
+
+- berries can be eaten to restore a small amount of stamina;
+- mushrooms can be eaten to ease hunger a little;
+- herbs can be used when wounded to restore a small amount of HP.
+- carried resource stacks can be inspected or dropped as a first simple item-action pass.
+
+These effects are intentionally modest and player-facing text should stay descriptive. Fuller food, cooking, medicine, herbalism, potions and prepared remedies remain later systems.
+
 ## Campfire Loop
 
 1. Gather firewood in forest regions.

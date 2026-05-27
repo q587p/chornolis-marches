@@ -9,9 +9,10 @@ import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { formatFatigueText, formatHungerState, formatPlayerStats, formatPostureText, formatVitalsLine } from "../utils/playerText";
 import { ownHeldTorchText } from "../utils/torchText";
 import { resourceTypeDisplayName } from "../services/corpses";
-import { getPlayerTorchState, TORCH_DURATION_MS, TORCH_FADING_MS } from "../services/fire";
+import { canLightPlayerTorchFromInventory, getPlayerTorchState, lightPlayerTorchFromInventory, TORCH_DURATION_MS, TORCH_FADING_MS } from "../services/fire";
 import { isScribeAdmin } from "../services/adminAccess";
 import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
+import { dropInventoryResource, inspectInventoryResource, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
 
 function minutes(ms: number) {
   return Math.max(1, Math.ceil(ms / 60_000));
@@ -66,8 +67,25 @@ function buildCharacterAutoKeyboard(autoEnabled: boolean, options: { canToggleTe
   return keyboard;
 }
 
-function buildInventoryKeyboard() {
-  return new InlineKeyboard().text("↩️ Назад", "character:back");
+function hasInventoryResource(resources: any[], key: UsableInventoryResource) {
+  return resources.some((resource) => resource.amount > 0 && resource.resourceType.key === key);
+}
+
+function inventoryActionLabel(resource: any) {
+  return resourceTypeDisplayName(resource.resourceType);
+}
+
+function buildInventoryKeyboard(resources: any[] = [], options: { canLightTorch?: boolean } = {}) {
+  const keyboard = new InlineKeyboard();
+  if (hasInventoryResource(resources, "berries")) keyboard.text("🫐 Використати ягоди", "inventory:use:berries").row();
+  if (hasInventoryResource(resources, "mushrooms")) keyboard.text("🍄 Використати гриби", "inventory:use:mushrooms").row();
+  if (hasInventoryResource(resources, "herbs")) keyboard.text("🌿 Використати лікарські трави", "inventory:use:herbs").row();
+  if (options.canLightTorch) keyboard.text("🔥 Запалити факел", "inventory:light:torch").row();
+  for (const resource of resources.filter((item) => item.amount > 0)) {
+    const label = inventoryActionLabel(resource);
+    keyboard.text(`🔎 ${label}`, `inventory:inspect:${resource.resourceType.key}`).text("Викинути", `inventory:drop:${resource.resourceType.key}`).row();
+  }
+  return keyboard.text("↩️ Назад", "character:back");
 }
 
 function nameCasesText(player: any) {
@@ -175,6 +193,7 @@ async function renderInventoryView(telegramId: number) {
   });
 
   if (!player) return null;
+  const canLightTorch = await canLightPlayerTorchFromInventory(player.id);
 
   const itemLines = player.resources
     .filter((i) => i.amount > 0)
@@ -182,7 +201,7 @@ async function renderInventoryView(telegramId: number) {
 
   return {
     text: `🎒 Речі\n\n${itemLines.length ? itemLines.join("\n") : "Поки порожньо."}`,
-    keyboard: buildInventoryKeyboard(),
+    keyboard: buildInventoryKeyboard(player.resources, { canLightTorch }),
   };
 }
 
@@ -239,6 +258,71 @@ export function registerPlayerHandlers(bot: Bot) {
       await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
     } catch {
       await ctx.reply(view.text, { reply_markup: view.keyboard });
+    }
+  });
+
+  bot.callbackQuery(/^inventory:use:(berries|herbs|mushrooms)$/, async (ctx) => {
+    const resourceKey = ctx.match[1] as UsableInventoryResource;
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    await safeAnswerCallbackQuery(ctx);
+    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+    try {
+      const resultText = await useInventoryResource(player.id, resourceKey);
+      const view = await renderInventoryView(ctx.from.id);
+      if (!view) return void (await ctx.reply(resultText));
+
+      try {
+        await ctx.editMessageText(`${resultText}\n\n${view.text}`, { reply_markup: view.keyboard });
+      } catch {
+        await ctx.reply(`${resultText}\n\n${view.text}`, { reply_markup: view.keyboard });
+      }
+    } catch (error) {
+      await ctx.reply(error instanceof Error ? error.message : "Не вдалося використати це.");
+    }
+  });
+
+  bot.callbackQuery("inventory:light:torch", async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    await safeAnswerCallbackQuery(ctx);
+    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+    const resultText = await lightPlayerTorchFromInventory(player.id);
+    const view = await renderInventoryView(ctx.from.id);
+    const text = view ? `${resultText}\n\n${view.text}` : resultText;
+    try {
+      await ctx.editMessageText(text, view ? { reply_markup: view.keyboard } : undefined);
+    } catch {
+      await ctx.reply(text, view ? { reply_markup: view.keyboard } : undefined);
+    }
+  });
+
+  bot.callbackQuery(/^inventory:inspect:([A-Za-z0-9_-]+)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    await safeAnswerCallbackQuery(ctx);
+    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+    try {
+      const text = await inspectInventoryResource(player.id, ctx.match[1]);
+      const keyboard = new InlineKeyboard().text("↩️ До речей", "character:inventory");
+      await ctx.editMessageText(text, { reply_markup: keyboard });
+    } catch (error) {
+      await ctx.reply(error instanceof Error ? error.message : "Не вдалося роздивитися це.");
+    }
+  });
+
+  bot.callbackQuery(/^inventory:drop:([A-Za-z0-9_-]+)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    await safeAnswerCallbackQuery(ctx);
+    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+    try {
+      const resultText = await dropInventoryResource(player.id, ctx.match[1]);
+      const view = await renderInventoryView(ctx.from.id);
+      const text = view ? `${resultText}\n\n${view.text}` : resultText;
+      await ctx.editMessageText(text, view ? { reply_markup: view.keyboard } : undefined);
+    } catch (error) {
+      await ctx.reply(error instanceof Error ? error.message : "Не вдалося викинути це.");
     }
   });
 

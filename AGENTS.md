@@ -11,6 +11,7 @@
 ## Always preserve these rules
 
 - Do **not** put internal workflow notes about `package.json` / `package-lock.json` into public news or changelog entries.
+- Public English changelog and release-note entries should describe mechanics in repository-technical terms such as `inventory`, `HP`, `stamina`, `twigs`, and `location`. Reserve player-facing Ukrainian terminology such as `Речі`, `Життя`, `Снага`, `хмиз`, and `місцина` for UI text, in-game/news copy, Ukrainian examples, aliases, and terminology/design docs.
 - Before suggesting commit/push, prefer this order: apply changes → run tests/build/checks → only then version bump if the user asks or confirms.
 - Tests matter alongside build. Run `npm test` for changes that touch world seed data, map/seed loading, Prisma data shape, planning around seed behavior, or shared systems where seed/type drift is plausible. Add or extend focused tests when a new rule can be checked cheaply and repeatably; do not rely on manual Telegram playthroughs alone for behavior that can be covered by a script.
 - When changing `docs/planning/items/*.md`, run `npm run planning:export` and include the regenerated `docs/planning/exports/issues.csv` and `docs/planning/exports/items.json`.

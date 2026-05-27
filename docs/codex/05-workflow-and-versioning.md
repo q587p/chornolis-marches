@@ -63,6 +63,7 @@ User preference:
 - Do not include internal operational reminders about package files.
 - Keep changelog useful and clear.
 - Avoid mentioning hidden implementation details unless they matter to users/admins.
+- Public English changelog and release-note entries should use repository-technical wording for mechanics: `inventory`, `HP`, `stamina`, `twigs`, `location`, `resource`, etc. Use player-facing Ukrainian terms such as `Речі`, `Життя`, `Снага`, `хмиз`, and `місцина` in Ukrainian news, UI copy, in-game text, alias examples, and terminology/design docs, not as the default English release-note vocabulary.
 - When writing dated release/update entries, use the local project date and Holocene calendar year, for example `12026-05-26` instead of `2026-05-26`.
 
 ## Repo / branch facts previously mentioned

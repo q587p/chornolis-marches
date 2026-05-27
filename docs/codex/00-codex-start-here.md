@@ -15,10 +15,11 @@ Chornolis Marches is a Ukrainian dark-fantasy Telegram RPG / living-world sandbo
 5. For map edits, start with `prisma/data/chornolis_world_seed.json` and read `docs/codex/07-world-and-map-notes.md`.
 6. For release/update tasks, read `docs/codex/05-workflow-and-versioning.md`.
 7. Release/update dates should use the local project date with Holocene calendar year, e.g. `12026-05-26`.
-8. When adding or changing player-facing gameplay, check whether onboarding, `/help`, beginner guidance and tutorial/newcomer-helper plans need updating too.
-9. When adding admin/scribe commands, update `/adminHelp`, `docs/systems/admin_commands.md` and any matching web/status documentation together.
-10. Do not make `/start` reset position for existing characters; use explicit respawn/admin movement for relocation.
-11. New or changed commands should keep aliases together: slash command where useful, English/MUD-style text forms, Ukrainian text forms, matching buttons, and matching `/help` or `/adminHelp` docs.
+8. English changelog/release notes should use repository-technical terms such as `inventory`, `HP`, `stamina`, `twigs`, and `location`; reserve player-facing Ukrainian terms for UI, news, in-game text and examples.
+9. When adding or changing player-facing gameplay, check whether onboarding, `/help`, beginner guidance and tutorial/newcomer-helper plans need updating too.
+10. When adding admin/scribe commands, update `/adminHelp`, `docs/systems/admin_commands.md` and any matching web/status documentation together.
+11. Do not make `/start` reset position for existing characters; use explicit respawn/admin movement for relocation.
+12. New or changed commands should keep aliases together: slash command where useful, English/MUD-style text forms, Ukrainian text forms, matching buttons, and matching `/help` or `/adminHelp` docs.
 
 ## Preferred workflow for code tasks
 

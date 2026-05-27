@@ -78,8 +78,9 @@ Important remembered direction from the 0.11 line:
 - Ordinary UI should hide exact technical numbers unless the current character is a scribe/admin with local technical details enabled.
 - `/chat` has time, location and character grouping modes; web chat should stay aligned with Telegram chat views.
 - Scribe/admin surfaces include fuller `/playerAdmin` cards, visible NPC detail cards from `/all`, `/teleport`, `/addCampfire`, `/addTorch`, `/addTwigs`, `/debugGet` and `/debugSet`. Keep `/adminHelp` complete when adding admin commands.
+- Inventory now has first modest item actions: berries restore a small amount of stamina, mushrooms ease hunger, herbs can restore a small amount of HP when wounded, dry torches can be lit when fire is available, and resource stacks can be inspected or dropped. Keep later item-use work diegetic and modest until cooking, medicine, herbalism and real item instances exist.
 - Carried lit torches burn out into `хмиз`, not dry torches. Inspecting another character shows visible lit torches in hand(s) or `Руки порожні.` only when no obvious held item is visible.
-- `Додати хмиз` / `/add twigs campfire` is implemented as the first хмиз fuel loop: хмиз can extend burning ordinary campfires or prepare згаслі ordinary campfires for relighting. Broader foraging, richer fuel types and player-made campfires remain future work.
+- `Додати хмиз` / `/add twigs campfire` is implemented as the first `twigs` fuel loop: `twigs` can extend burning ordinary campfires or prepare extinguished ordinary campfires for relighting. Broader foraging, richer fuel types and player-made campfires remain future work.
 - Onboarding, `/help`, fallback hints and tutorial/newcomer-helper plans should be reviewed whenever early-game actions, resources, visibility or survival mechanics change.
 
 ## Prior build issue note

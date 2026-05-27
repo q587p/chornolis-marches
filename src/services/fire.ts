@@ -360,6 +360,69 @@ export async function lightPlayerTorchAtCampfire(playerId: number, featureId: nu
     : "🔥 Ви підпалили факел. Тепер він дає світло поруч із вами.";
 }
 
+async function activeCampfireForTorch(locationId: number) {
+  await expireTimedCampfires(locationId);
+  return prisma.locationFeature.findFirst({
+    where: {
+      locationId,
+      isActive: true,
+      providesLight: true,
+      type: { in: ["CAMPFIRE", "MAGIC_CAMPFIRE"] },
+    },
+    orderBy: { id: "asc" },
+  });
+}
+
+export async function canLightPlayerTorchFromInventory(playerId: number) {
+  const player = await prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } });
+  if (!player?.currentLocationId) return false;
+
+  const torchState = await getPlayerTorchState(playerId);
+  if (torchState.plainAmount <= 0) return false;
+  if (torchState.isLit && torchState.litAmount < MAX_LIT_TORCHES_IN_HANDS) return true;
+  return Boolean(await activeCampfireForTorch(player.currentLocationId));
+}
+
+export async function lightPlayerTorchFromInventory(playerId: number) {
+  await syncPlayerTorchState(playerId);
+  const { torch, litTorch } = await ensureTorchResourceTypes();
+  const player = await prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } });
+  if (!player?.currentLocationId) return "Ти ще не увійшов у світ. Напиши /start";
+
+  const torchState = await getPlayerTorchState(playerId);
+  if (torchState.plainAmount <= 0) return "Потрібен сухий факел у речах.";
+
+  if (!torchState.isLit) {
+    const campfire = await activeCampfireForTorch(player.currentLocationId);
+    if (!campfire) return "Поруч немає вогню, від якого можна підпалити факел.";
+    return lightPlayerTorchAtCampfire(playerId, campfire.id);
+  }
+
+  if (torchState.litAmount >= MAX_LIT_TORCHES_IN_HANDS) {
+    return "🔥 У вас уже горять два факели. Куди ви візьмете ще стільки вогню?";
+  }
+
+  const plain = await prisma.playerResource.findUnique({ where: { playerId_resourceTypeId: { playerId, resourceTypeId: torch.id } } });
+  const lit = await prisma.playerResource.findUnique({ where: { playerId_resourceTypeId: { playerId, resourceTypeId: litTorch.id } } });
+  if (!plain || plain.amount <= 0) return "Потрібен сухий факел у речах.";
+
+  await prisma.$transaction([
+    plain.amount > 1
+      ? prisma.playerResource.update({
+          where: { playerId_resourceTypeId: { playerId, resourceTypeId: torch.id } },
+          data: { amount: { decrement: 1 } },
+        })
+      : prisma.playerResource.delete({ where: { playerId_resourceTypeId: { playerId, resourceTypeId: torch.id } } }),
+    prisma.playerResource.upsert({
+      where: { playerId_resourceTypeId: { playerId, resourceTypeId: litTorch.id } },
+      update: { amount: Math.min(MAX_LIT_TORCHES_IN_HANDS, (lit?.amount ?? 0) + 1), updatedAt: new Date() },
+      create: { playerId, resourceTypeId: litTorch.id, amount: 1 },
+    }),
+  ]);
+
+  return "🔥 Ви підпалили ще один факел від того, що вже горить у руках.";
+}
+
 export async function takeTorchFromFeature(playerId: number, featureId: number) {
   const { torch } = await ensureTorchResourceTypes();
   const player = await prisma.player.findUnique({

@@ -11,18 +11,34 @@ _No unreleased changes yet._
 
 ---
 
+## 0.11.12 - First inventory uses - 12026-05-27
+
+### Added
+
+- Added the first usable gathered resources from inventory: berries can restore a small amount of stamina, mushrooms can ease hunger, and herbs can be used for a small HP recovery when wounded.
+- Added inventory action buttons for carried berries, mushrooms and herbs.
+- Added an inventory `Запалити факел` action when the character carries an unlit torch and has fire nearby, either from a location campfire or another lit torch.
+- Added first inventory inspect/drop actions for carried resource stacks.
+- Added Ukrainian and English/MUD-style text aliases for the same actions, including `з'їсти ягоди`, `використати гриби`, `використати трави`, `запалити факел`, `викинути ягоди`, `item berries`, `eat berries`, `use mushrooms`, `use herbs` and `light torch`.
+
+### Changed
+
+- Updated survival, fire/light, input-alias and planning docs now that the inventory screen has first modest item actions.
+
+---
+
 ## 0.11.11 - Vegetation inspection and firewood fuel - 12026-05-27
 
 ### Added
 
 - Added inspection for the `Винищена трава` location feature: players can open it from the feature button or use `/examine grass`, `/examine depleted grass`, `роздивитися траву`, `оцінити траву` and `оцінити відновлення` to get a rough recovery read.
-- Added the first хмиз fuel loop: loose `хмиз` can be picked up, carried in `Речі`, and added to ordinary campfires.
-- Seed/reset data now places small pickable хмиз bundles in selected forest and dry-luka місцини.
+- Added the first twigs fuel loop: loose `twigs` can be picked up, carried in inventory, and added to ordinary campfires.
+- Seed/reset data now places small pickable `twigs` bundles in selected forest and dry-luka locations.
 
 ### Changed
 
-- `Додати хмиз` now consumes carried хмиз: burning ordinary campfires get a capped time extension, while згаслі campfires can receive prepared fuel before being relit.
-- Updated fire/light, input-alias and planning docs now that хмиз is a working fuel item instead of a placeholder.
+- `Додати хмиз` now consumes carried `twigs`: burning ordinary campfires get a capped time extension, while extinguished campfires can receive prepared fuel before being relit.
+- Updated fire/light, input-alias and planning docs now that `twigs` is a working fuel item instead of a placeholder.
 
 ---
 
