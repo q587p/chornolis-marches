@@ -88,8 +88,8 @@ async function enterWorld(ctx: any, isMenuRefresh = false) {
   const yearLine = renderCurrentWorldYearLine();
 
   const text = isMenuRefresh
-    ? `🌲 Меню оновлено.\n${yearLine}\n\nВітаю, ${displayName}.`
-    : `🌲 Порубіжжя Чорнолісу ожили.\n${yearLine}\n\nВітаю, ${displayName}. Твій слід збережено в Чорнолісі.`;
+    ? `🌲 Меню оновлено.\n${yearLine}\n\nВітаю, ${displayName}.\n\nТи вже в грі. Клавіатура чекає під полем вводу, але всі команди можна і просто текстом вводити 👇`
+    : `🌲 Порубіжжя Чорнолісу ожили.\n${yearLine}\n\nВітаю, ${displayName}. Твій слід збережено в Чорнолісі.\n\nТи вже в грі. Клавіатура чекає під полем вводу, але всі команди можна і просто текстом вводити 👇`;
 
   await ctx.reply(text, { reply_markup: await buildMainReplyKeyboardForTelegramId(from.id, false) });
 }

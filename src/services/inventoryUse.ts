@@ -38,6 +38,10 @@ const RESOURCE_ALIASES: Record<string, string> = {
   "lit torch": "lit_torch",
   "запалений факел": "lit_torch",
   "запалені факели": "lit_torch",
+  doused_torch: "doused_torch",
+  "doused torch": "doused_torch",
+  "притушений факел": "doused_torch",
+  "притушені факели": "doused_torch",
   twigs: "twigs",
   хмиз: "twigs",
 };
@@ -141,6 +145,8 @@ export async function inspectInventoryResource(playerId: number, resourceQuery: 
   const torchDetails =
     carried.resourceType.key === "lit_torch"
       ? `\nГорітиме ще ${approximateDuration(carried.updatedAt.getTime() + TORCH_DURATION_MS - Date.now())}${carried.updatedAt.getTime() + TORCH_DURATION_MS - Date.now() <= TORCH_FADING_MS ? "; скоро погасне" : ""}.`
+      : carried.resourceType.key === "doused_torch"
+        ? "\nПолум'я притушене. Якщо знову підпалити цей факел, він продовжить горіти з того місця, де його загасили."
       : "";
 
   return `🎒 ${name}${amount}${description}${torchDetails}`;

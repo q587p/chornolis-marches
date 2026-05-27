@@ -2232,6 +2232,18 @@
     "maxAmount": 100
   },
   {
+    "locationKey": "dream_tutorial_foraging",
+    "resourceKey": "berries",
+    "amount": 6,
+    "maxAmount": 6
+  },
+  {
+    "locationKey": "dream_tutorial_foraging",
+    "resourceKey": "herbs",
+    "amount": 3,
+    "maxAmount": 3
+  },
+  {
     "locationKey": "forest_02_02",
     "resourceKey": "torch",
     "amount": 1,

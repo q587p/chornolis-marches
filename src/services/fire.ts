@@ -13,7 +13,10 @@ export const MAX_LIT_TORCHES_IN_HANDS = 2;
 
 const TORCH_KEY = "torch";
 const LIT_TORCH_KEY = "lit_torch";
+const DOUSED_TORCH_KEY = "doused_torch";
 const TWIGS_KEY = "twigs";
+const DOUSED_TORCH_TIMER_TITLE = "Doused torch timer";
+const DOUSED_TORCH_CONSUMED_TITLE = "Doused torch timer consumed";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -251,7 +254,7 @@ export async function createDebugCampfire(locationId: number) {
 }
 
 export async function ensureTorchResourceTypes() {
-  const [torch, litTorch, twigs] = await Promise.all([
+  const [torch, litTorch, dousedTorch, twigs] = await Promise.all([
     prisma.resourceType.upsert({
       where: { key: TORCH_KEY },
       update: { name: "факел", description: "Сухий факел, який можна підпалити біля вогнища." },
@@ -263,12 +266,17 @@ export async function ensureTorchResourceTypes() {
       create: { key: LIT_TORCH_KEY, name: "запалений факел", description: "Факел, що ще тримає полум'я." },
     }),
     prisma.resourceType.upsert({
+      where: { key: DOUSED_TORCH_KEY },
+      update: { name: "притушений факел", description: "Факел без полум'я, у якому ще лишився запас горіння." },
+      create: { key: DOUSED_TORCH_KEY, name: "притушений факел", description: "Факел без полум'я, у якому ще лишився запас горіння." },
+    }),
+    prisma.resourceType.upsert({
       where: { key: TWIGS_KEY },
       update: { name: "хмиз", description: "Сухі дрібні гілки для підкидання у вогнище." },
       create: { key: TWIGS_KEY, name: "хмиз", description: "Сухі дрібні гілки для підкидання у вогнище." },
     }),
   ]);
-  return { torch, litTorch, twigs };
+  return { torch, litTorch, dousedTorch, twigs };
 }
 
 export async function syncPlayerTorchState(playerId: number) {
@@ -292,24 +300,84 @@ export async function syncPlayerTorchState(playerId: number) {
 
 export async function getPlayerTorchState(playerId: number) {
   await syncPlayerTorchState(playerId);
-  const { torch, litTorch } = await ensureTorchResourceTypes();
-  const [plain, lit] = await Promise.all([
+  const { torch, litTorch, dousedTorch } = await ensureTorchResourceTypes();
+  const [plain, lit, doused] = await Promise.all([
     prisma.playerResource.findUnique({ where: { playerId_resourceTypeId: { playerId, resourceTypeId: torch.id } } }),
     prisma.playerResource.findUnique({ where: { playerId_resourceTypeId: { playerId, resourceTypeId: litTorch.id } } }),
+    prisma.playerResource.findUnique({ where: { playerId_resourceTypeId: { playerId, resourceTypeId: dousedTorch.id } } }),
   ]);
 
   const litAt = lit && lit.amount > 0 ? lit.updatedAt : null;
   const expiresAt = litAt ? new Date(litAt.getTime() + TORCH_DURATION_MS) : null;
   const left = expiresAt ? remainingMs(expiresAt) : 0;
   return {
-    hasTorch: Boolean((plain?.amount ?? 0) > 0 || (lit?.amount ?? 0) > 0),
+    hasTorch: Boolean((plain?.amount ?? 0) > 0 || (lit?.amount ?? 0) > 0 || (doused?.amount ?? 0) > 0),
     isLit: Boolean(litAt && left > 0),
     isFading: Boolean(litAt && left > 0 && left <= TORCH_FADING_MS),
     plainAmount: plain?.amount ?? 0,
+    dousedAmount: doused?.amount ?? 0,
     litAmount: litAt && left > 0 ? lit?.amount ?? 0 : 0,
     litAt,
     expiresAt,
   };
+}
+
+function parseDousedTimer(description: string | null | undefined) {
+  if (!description) return null;
+  try {
+    const parsed = JSON.parse(description);
+    const remainingMsValue = Number(parsed.remainingMs);
+    return Number.isFinite(remainingMsValue) ? Math.max(1, Math.min(TORCH_DURATION_MS, Math.floor(remainingMsValue))) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function nextDousedTorchTimer(playerId: number) {
+  const timers = await prisma.worldEvent.findMany({
+    where: { playerId, title: DOUSED_TORCH_TIMER_TITLE },
+    orderBy: { createdAt: "desc" },
+    take: 20,
+  });
+  if (!timers.length) return { eventId: null as number | null, remainingMs: TORCH_DURATION_MS };
+
+  const consumed = await prisma.worldEvent.findMany({
+    where: { playerId, title: DOUSED_TORCH_CONSUMED_TITLE },
+    select: { description: true },
+  });
+  const consumedIds = new Set(consumed.map((event) => Number(event.description)).filter(Number.isFinite));
+  const timer = timers.find((event) => !consumedIds.has(event.id));
+  return {
+    eventId: timer?.id ?? null,
+    remainingMs: parseDousedTimer(timer?.description) ?? TORCH_DURATION_MS,
+  };
+}
+
+async function consumeDousedTorchTimer(playerId: number, eventId: number | null, locationId?: number | null) {
+  if (!eventId) return;
+  await prisma.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: DOUSED_TORCH_CONSUMED_TITLE,
+      description: String(eventId),
+      playerId,
+      locationId: locationId ?? undefined,
+    },
+  });
+}
+
+async function consumeOneCarriedResource(resourceTypeId: number, playerId: number) {
+  const carried = await prisma.playerResource.findUnique({ where: { playerId_resourceTypeId: { playerId, resourceTypeId } } });
+  if (!carried || carried.amount <= 0) return false;
+  if (carried.amount > 1) {
+    await prisma.playerResource.update({
+      where: { playerId_resourceTypeId: { playerId, resourceTypeId } },
+      data: { amount: { decrement: 1 } },
+    });
+  } else {
+    await prisma.playerResource.delete({ where: { playerId_resourceTypeId: { playerId, resourceTypeId } } });
+  }
+  return true;
 }
 
 export async function lightPlayerTorchAtCampfire(playerId: number, featureId: number) {
@@ -378,28 +446,45 @@ export async function canLightPlayerTorchFromInventory(playerId: number) {
   if (!player?.currentLocationId) return false;
 
   const torchState = await getPlayerTorchState(playerId);
-  if (torchState.plainAmount <= 0) return false;
+  if (torchState.plainAmount <= 0 && torchState.dousedAmount <= 0) return false;
   if (torchState.isLit && torchState.litAmount < MAX_LIT_TORCHES_IN_HANDS) return true;
   return Boolean(await activeCampfireForTorch(player.currentLocationId));
 }
 
 export async function lightPlayerTorchFromInventory(playerId: number) {
   await syncPlayerTorchState(playerId);
-  const { torch, litTorch } = await ensureTorchResourceTypes();
+  const { torch, litTorch, dousedTorch } = await ensureTorchResourceTypes();
   const player = await prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } });
   if (!player?.currentLocationId) return "Ти ще не увійшов у світ. Напиши /start";
 
   const torchState = await getPlayerTorchState(playerId);
-  if (torchState.plainAmount <= 0) return "Потрібен сухий факел у речах.";
+  if (torchState.plainAmount <= 0 && torchState.dousedAmount <= 0) return "Потрібен сухий або притушений факел у речах.";
 
   if (!torchState.isLit) {
     const campfire = await activeCampfireForTorch(player.currentLocationId);
     if (!campfire) return "Поруч немає вогню, від якого можна підпалити факел.";
-    return lightPlayerTorchAtCampfire(playerId, campfire.id);
+    if (torchState.plainAmount > 0) return lightPlayerTorchAtCampfire(playerId, campfire.id);
   }
 
   if (torchState.litAmount >= MAX_LIT_TORCHES_IN_HANDS) {
     return "🔥 У вас уже горять два факели. Куди ви візьмете ще стільки вогню?";
+  }
+
+  if (torchState.dousedAmount > 0) {
+    const consumed = await consumeOneCarriedResource(dousedTorch.id, playerId);
+    if (!consumed) return "У ваших речах уже немає притушеного факела.";
+    const timer = await nextDousedTorchTimer(playerId);
+    const remaining = Math.max(1, Math.min(TORCH_DURATION_MS, timer.remainingMs));
+    const resumedLitAt = new Date(Date.now() - (TORCH_DURATION_MS - remaining));
+    const existingLit = await prisma.playerResource.findUnique({ where: { playerId_resourceTypeId: { playerId, resourceTypeId: litTorch.id } } });
+    const nextLitAt = existingLit && existingLit.updatedAt.getTime() > resumedLitAt.getTime() ? existingLit.updatedAt : resumedLitAt;
+    await prisma.playerResource.upsert({
+      where: { playerId_resourceTypeId: { playerId, resourceTypeId: litTorch.id } },
+      update: { amount: Math.min(MAX_LIT_TORCHES_IN_HANDS, (existingLit?.amount ?? 0) + 1), updatedAt: nextLitAt },
+      create: { playerId, resourceTypeId: litTorch.id, amount: 1, updatedAt: nextLitAt },
+    });
+    await consumeDousedTorchTimer(playerId, timer.eventId, player.currentLocationId);
+    return "🔥 Ви знову підпалили притушений факел. Він горітиме стільки, скільки в ньому лишалося.";
   }
 
   const plain = await prisma.playerResource.findUnique({ where: { playerId_resourceTypeId: { playerId, resourceTypeId: torch.id } } });
@@ -421,6 +506,54 @@ export async function lightPlayerTorchFromInventory(playerId: number) {
   ]);
 
   return "🔥 Ви підпалили ще один факел від того, що вже горить у руках.";
+}
+
+export async function canDousePlayerTorchFromInventory(playerId: number) {
+  const torchState = await getPlayerTorchState(playerId);
+  return torchState.isLit && torchState.litAmount > 0;
+}
+
+export async function dousePlayerTorchFromInventory(playerId: number) {
+  await syncPlayerTorchState(playerId);
+  const { litTorch, dousedTorch } = await ensureTorchResourceTypes();
+  const [player, lit] = await Promise.all([
+    prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } }),
+    prisma.playerResource.findUnique({ where: { playerId_resourceTypeId: { playerId, resourceTypeId: litTorch.id } } }),
+  ]);
+  if (!player?.currentLocationId) return "Ти ще не увійшов у світ. Напиши /start";
+
+  const litAt = lit && lit.amount > 0 ? lit.updatedAt : null;
+  const remaining = litAt ? litAt.getTime() + TORCH_DURATION_MS - Date.now() : 0;
+  if (!litAt || remaining <= 0) {
+    await syncPlayerTorchState(playerId);
+    return "Факел уже не горить.";
+  }
+  const activeLit = lit!;
+
+  await prisma.$transaction([
+    activeLit.amount > 1
+      ? prisma.playerResource.update({
+          where: { playerId_resourceTypeId: { playerId, resourceTypeId: litTorch.id } },
+          data: { amount: { decrement: 1 } },
+        })
+      : prisma.playerResource.delete({ where: { playerId_resourceTypeId: { playerId, resourceTypeId: litTorch.id } } }),
+    prisma.playerResource.upsert({
+      where: { playerId_resourceTypeId: { playerId, resourceTypeId: dousedTorch.id } },
+      update: { amount: { increment: 1 } },
+      create: { playerId, resourceTypeId: dousedTorch.id, amount: 1 },
+    }),
+    prisma.worldEvent.create({
+      data: {
+        type: "SYSTEM",
+        title: DOUSED_TORCH_TIMER_TITLE,
+        description: JSON.stringify({ remainingMs: remaining, dousedAt: new Date().toISOString() }),
+        playerId,
+        locationId: player.currentLocationId,
+      },
+    }),
+  ]);
+
+  return "🔥 Ви притушили факел. Полум'я сховалося в димний жар; коли знову підпалите його, він догорятиме з цього місця.";
 }
 
 export async function takeTorchFromFeature(playerId: number, featureId: number) {
@@ -529,6 +662,23 @@ export async function addTwigsToCampfire(playerId: number, featureId?: number) {
 
   if (extinguished) return "🪵 Ви підклали хмиз у згасле вогнище. Попіл прийняв сухі гілки; тепер потрібен вогонь, щоб розпалити його.";
   return "🪵 Ви підкинули хмиз у вогнище. Полум'я знову тримається впевненіше.";
+}
+
+export async function canAddTwigsToNearbyCampfire(playerId: number) {
+  await expireTimedCampfires();
+  const { twigs } = await ensureTorchResourceTypes();
+  const player = await prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } });
+  if (!player?.currentLocationId) return false;
+
+  const carriedTwigs = await prisma.playerResource.findUnique({
+    where: { playerId_resourceTypeId: { playerId, resourceTypeId: twigs.id } },
+  });
+  if (!carriedTwigs || carriedTwigs.amount <= 0) return false;
+
+  const features = await prisma.locationFeature.findMany({
+    where: { locationId: player.currentLocationId, isActive: true, type: "CAMPFIRE" },
+  });
+  return features.some((feature) => isExtinguishedCampfire(feature) || canAddTwigsToCampfire(feature));
 }
 
 export async function hasActiveTorchLightAtLocation(locationId: number) {

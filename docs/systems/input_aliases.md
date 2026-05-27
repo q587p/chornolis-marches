@@ -28,6 +28,7 @@ Menu and status:
 - `час`, `/час` -> canonical `/time` view.
 - `новини`, `/новини` -> canonical `/news` view.
 - `допомога`, `/допомога` -> canonical `/help` view.
+- `назад`, `сховати клавіатуру`, `прибрати клавіатуру`, `прибрати кнопки` -> hide the persistent Telegram reply keyboard. `/menu` or `/start` shows buttons again.
 
 Movement:
 
@@ -44,12 +45,13 @@ Actions:
 - `з'їсти гриби`, `їсти гриби`, `використати гриби`, `eat mushrooms`, `use mushrooms` -> eat carried mushrooms from inventory to ease hunger a little.
 - `використати трави`, `використати лікарські трави`, `вжити трави`, `прикласти трави`, `лікуватися травами`, `use herbs` -> use carried herbs when wounded for a small HP recovery.
 - `запалити факел`, `підпалити факел`, `light torch`, `use torch` -> light an unlit carried torch when there is a campfire nearby or another lit torch in hand.
+- `загасити факел`, `погасити факел`, `притушити факел`, `douse torch`, `extinguish torch` -> douse one carried lit torch into a carried `притушений факел` that preserves its remaining burn time for later relighting.
 - `item berries`, `річ ягоди`, `оглянути в речах ягоди`, `inspect item berries` -> inspect a carried resource stack.
 - `викинути ягоди`, `кинути трави`, `drop berries`, `discard torch` -> drop one carried resource from inventory into the current location.
 - `відпочити`, `додати відпочинок у чергу`, `перервати відпочинок`.
-- `/sleep tutorial`, `sleep tutorial`, `навчальний сон`, `сон навчання` -> enter or return to the dream tutorial. While the tutorial is incomplete, plain `/sleep` and `сон` route there too.
+- `/sleep tutorial`, `tutorial`, `sleep tutorial`, `навчальний сон`, `сон навчання` -> enter or return to the dream tutorial. While the tutorial is incomplete, plain `/sleep` and `сон` route there too.
 - `/wake`, `wake`, `прокинутися`, `прокинутись` -> leave the dream tutorial and return to the saved real location.
-- `/open`, `open`, `відкрити` -> open the local interactive gate when the current location exposes one, currently the `Брама Сну` in the dream tutorial.
+- `/open`, `open`, `відкрити` -> open the local interactive gate when the current location exposes one, currently the `Брама Сну` in the dream tutorial. The closed settlement gate near the bridge is a visible locked exit, but it is not openable yet.
 - `черга`, `скасувати`, `очистити чергу`.
 - `/track`, `/examine tracks`, `роздивитися сліди`, `придивитися до слідів`. Future detail forms should include target-like aliases such as `роздивитися вовчий слід`, `роздивитися людський слід` and `роздивитися заячий слід`.
 - `сказати Привіт`.

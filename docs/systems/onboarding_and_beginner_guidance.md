@@ -38,7 +38,10 @@ As of `0.12.0`, the first concrete newcomer path is the dream tutorial in `Др�
 - `Прокинутися`, `/wake`, `wake`, `прокинутися` and `прокинутись` leave the dream and restore a valid real-world location. Keep direct commands available as an escape hatch, but do not offer the `Прокинутися` button in early tutorial steps; surface it only later as a suggestion after the first tutorial path has opened up.
 - The first slice teaches movement and visible locked exits through `Брама Сну`: the south exit stays visible, the reply keyboard wraps its direction label in parentheses while locked, `/open` / `Відкрити` opens it for about 30 seconds, and the gate lazily closes again.
 - The current hub exit point is the `Майбутні уроки` feature: inspecting it offers `Прокинутися`, while tutorial voice text explains that the player can later return to the same saved dream position.
-- Future tutorial branches should expand from the hub instead of overloading `/help`: social signals, observation/tracking, gathering, fire/light, rest/fatigue and basic danger.
+- As of `0.12.2`, the hub also branches into short optional rooms:
+  - `Ягідний просвіт сну` teaches that `Роздивитися` / `/examine` reveals resources, and that gathered resources appear in `Речі`.
+  - `Теплий присілок сну` teaches `Відпочити` / `/rest` as a brief sit/rest action for stamina, with sleep kept separate.
+- Future tutorial branches should expand from the hub instead of overloading `/help`: social signals, observation/tracking, fire/light and basic danger.
 
 ## Design Rule
 

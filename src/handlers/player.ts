@@ -9,11 +9,24 @@ import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { formatFatigueText, formatHungerState, formatPlayerStats, formatPostureText, formatVitalsLine } from "../utils/playerText";
 import { ownHeldTorchText } from "../utils/torchText";
 import { resourceTypeDisplayName } from "../services/corpses";
-import { canLightPlayerTorchFromInventory, getPlayerTorchState, lightPlayerTorchFromInventory, TORCH_DURATION_MS, TORCH_FADING_MS } from "../services/fire";
+import {
+  addTwigsToCampfire,
+  canAddTwigsToNearbyCampfire,
+  canDousePlayerTorchFromInventory,
+  canLightPlayerTorchFromInventory,
+  dousePlayerTorchFromInventory,
+  getPlayerTorchState,
+  lightPlayerTorchFromInventory,
+  TORCH_DURATION_MS,
+  TORCH_FADING_MS,
+} from "../services/fire";
 import { isScribeAdmin } from "../services/adminAccess";
 import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
 import { dropInventoryResourceDetailed, inspectInventoryResource, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
 import { dropObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
+import { tutorialLookPaceComments } from "../services/tutorialVoices";
+import { logEvent } from "../services/worldEvents";
+import { escapeHtml } from "../utils/text";
 
 function minutes(ms: number) {
   return Math.max(1, Math.ceil(ms / 60_000));
@@ -78,12 +91,14 @@ function inventoryActionLabel(resource: any) {
   return resourceTypeDisplayName(resource.resourceType);
 }
 
-function buildInventoryKeyboard(resources: any[] = [], options: { canLightTorch?: boolean } = {}) {
+function buildInventoryKeyboard(resources: any[] = [], options: { canAddTwigs?: boolean; canDouseTorch?: boolean; canLightTorch?: boolean } = {}) {
   const keyboard = new InlineKeyboard();
   if (hasInventoryResource(resources, "berries")) keyboard.text("🫐 Використати ягоди", "inventory:use:berries").row();
   if (hasInventoryResource(resources, "mushrooms")) keyboard.text("🍄 Використати гриби", "inventory:use:mushrooms").row();
   if (hasInventoryResource(resources, "herbs")) keyboard.text("🌿 Використати лікарські трави", "inventory:use:herbs").row();
+  if (options.canAddTwigs) keyboard.text("🪵 Підкинути хмиз", "inventory:add-twigs").row();
   if (options.canLightTorch) keyboard.text("🔥 Запалити факел", "inventory:light:torch").row();
+  if (options.canDouseTorch) keyboard.text("🫧 Притушити факел", "inventory:douse:torch").row();
   for (const resource of resources.filter((item) => item.amount > 0)) {
     const label = inventoryActionLabel(resource);
     keyboard.text(`🔎 ${label}`, `inventory:inspect:${resource.resourceType.key}`).text("Викинути", `inventory:drop:${resource.resourceType.key}`).row();
@@ -131,6 +146,10 @@ function approximateDuration(ms: number) {
 
 function amountSuffix(amount: number) {
   return amount > 1 ? ` ×${amount}` : "";
+}
+
+function quoteBlock(text: string) {
+  return `<blockquote>${escapeHtml(text)}</blockquote>`;
 }
 
 async function actionOriginStats(playerId: number) {
@@ -196,7 +215,11 @@ async function renderInventoryView(telegramId: number) {
   });
 
   if (!player) return null;
-  const canLightTorch = await canLightPlayerTorchFromInventory(player.id);
+  const [canAddTwigs, canDouseTorch, canLightTorch] = await Promise.all([
+    canAddTwigsToNearbyCampfire(player.id),
+    canDousePlayerTorchFromInventory(player.id),
+    canLightPlayerTorchFromInventory(player.id),
+  ]);
 
   const itemLines = player.resources
     .filter((i) => i.amount > 0)
@@ -204,7 +227,7 @@ async function renderInventoryView(telegramId: number) {
 
   return {
     text: `🎒 Речі\n\n${itemLines.length ? itemLines.join("\n") : "Поки порожньо."}`,
-    keyboard: buildInventoryKeyboard(player.resources, { canLightTorch }),
+    keyboard: buildInventoryKeyboard(player.resources, { canAddTwigs, canDouseTorch, canLightTorch }),
   };
 }
 
@@ -229,6 +252,11 @@ export async function showLocationForPlayer(telegramId: number, reply: (text: st
   const locationId = player.currentLocationId ?? (await getStartLocationId());
   const view = await renderLocationBrief(locationId, player.id);
   await reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+  const voiceComments = await tutorialLookPaceComments({ ...player, currentLocationId: locationId });
+  for (const comment of voiceComments) {
+    await logEvent("NPC_SAY", comment.title, comment.text, locationId);
+    await reply(`${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
+  }
 }
 
 export function registerPlayerHandlers(bot: Bot) {
@@ -291,6 +319,36 @@ export function registerPlayerHandlers(bot: Bot) {
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
     const resultText = await lightPlayerTorchFromInventory(player.id);
+    const view = await renderInventoryView(ctx.from.id);
+    const text = view ? `${resultText}\n\n${view.text}` : resultText;
+    try {
+      await ctx.editMessageText(text, view ? { reply_markup: view.keyboard } : undefined);
+    } catch {
+      await ctx.reply(text, view ? { reply_markup: view.keyboard } : undefined);
+    }
+  });
+
+  bot.callbackQuery("inventory:douse:torch", async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    await safeAnswerCallbackQuery(ctx);
+    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+    const resultText = await dousePlayerTorchFromInventory(player.id);
+    const view = await renderInventoryView(ctx.from.id);
+    const text = view ? `${resultText}\n\n${view.text}` : resultText;
+    try {
+      await ctx.editMessageText(text, view ? { reply_markup: view.keyboard } : undefined);
+    } catch {
+      await ctx.reply(text, view ? { reply_markup: view.keyboard } : undefined);
+    }
+  });
+
+  bot.callbackQuery("inventory:add-twigs", async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    await safeAnswerCallbackQuery(ctx);
+    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+    const resultText = await addTwigsToCampfire(player.id);
     const view = await renderInventoryView(ctx.from.id);
     const text = view ? `${resultText}\n\n${view.text}` : resultText;
     try {

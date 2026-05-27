@@ -11,6 +11,26 @@ _No unreleased changes yet._
 
 ---
 
+## 0.12.2 - Tutorial branches and inventory fire polish - 12026-05-27
+
+### Added
+
+- Added two optional dream tutorial rooms: one teaches `examine`, gathering and inventory; the other teaches brief stamina rest.
+- Added tutorial berries, herbs, a dream campfire and Сон voice comments for the new tutorial branches.
+- Added paired Дрімота and Сон pace comments when a tutorial player keeps looking around or finishes a wait action.
+- Added inventory actions for adding carried `twigs` to a nearby campfire and dousing carried lit torches while preserving remaining burn time for relighting.
+
+### Changed
+
+- Expanded tutorial location descriptions so the dream teaches with more atmosphere and context before relying on buttons alone.
+- Added `tutorial` as a text alias for `/sleep tutorial`.
+- Made the settlement gate near the bridge explicitly behave like a visible locked exit without any current way to open it.
+- Changed `Назад` in the Telegram menu to hide the persistent reply keyboard, with `/menu` or `/start` available to bring buttons back.
+- Updated the Telegram command-menu description for `/start` and clarified in the `/start` response that buttons live under the input field while text commands still work.
+- Updated the tutorial hub, beginner guidance and ONB-001 planning notes to reflect the new optional branch coverage.
+
+---
+
 ## 0.12.1 - Tutorial dream polish and visible actions - 12026-05-27
 
 ### Changed

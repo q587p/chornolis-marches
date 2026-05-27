@@ -29,7 +29,7 @@ import { actorWhere, enqueueCreatureAction, interruptActorActions, type ActorRef
 import { escapeHtml } from "../utils/text";
 import { playerCanShowTechnicalDetails } from "./technicalDetails";
 import { isLocationExitLocked } from "./tutorial";
-import { tutorialSpiritMoveComment, tutorialTrackComments } from "./tutorialVoices";
+import { tutorialLookPaceComments, tutorialSpiritMoveComment, tutorialTrackComments, tutorialWaitPaceComments } from "./tutorialVoices";
 import { chance, pick, shuffle } from "../utils/random";
 
 type MovePayload = { direction: Direction; reason?: string };
@@ -138,7 +138,7 @@ export async function completeAction(bot: Bot, action: WorldAction) {
   if (action.type === "FRESHEN") return completeFreshen(bot, action);
   if (action.type === "SAY") return completeSay(bot, action);
   if (action.type === "TRACK") return completeTrack(bot, action);
-  if (action.type === "REST" || action.type === "WAIT" || action.type === "SET_TRAP") return completeSimple(action);
+  if (action.type === "REST" || action.type === "WAIT" || action.type === "SET_TRAP") return completeSimple(bot, action);
   await setActionStatus(action, "FAILED");
 }
 
@@ -400,15 +400,24 @@ async function completeLook(bot: Bot, action: WorldAction) {
     await setActionStatus(action, "DONE");
     if (chatId) {
       const view = await renderLocationDetails(locationId, player.id);
+      const voiceComments = await tutorialLookPaceComments({ ...player, currentLocationId: locationId });
       if (action.messageId && typeof chatId === "number") {
         try {
           await bot.api.editMessageText(chatId, action.messageId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+          for (const comment of voiceComments) {
+            await logEvent("NPC_SAY", comment.title, comment.text, locationId);
+            await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
+          }
           return;
         } catch {
           // Fall back to a new message when Telegram cannot edit the source message.
         }
       }
       await bot.api.sendMessage(chatId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+      for (const comment of voiceComments) {
+        await logEvent("NPC_SAY", comment.title, comment.text, locationId);
+        await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
+      }
     }
     return;
   }
@@ -689,7 +698,7 @@ async function completeTrack(bot: Bot, action: WorldAction) {
   }
 }
 
-async function completeSimple(action: WorldAction) {
+async function completeSimple(bot: Bot, action: WorldAction) {
   if (action.type === "REST") {
     if (action.actorType === "PLAYER" && action.playerId) {
       const player = await prisma.player.findUnique({ where: { id: action.playerId } });
@@ -717,6 +726,16 @@ async function completeSimple(action: WorldAction) {
         const max = creature.staminaMax ?? BASE_STAMINA;
         const next = Math.min(max, creature.stamina + REST_STAMINA_REGEN_PER_INTERVAL);
         await prisma.creature.updateMany({ where: { id: creature.id }, data: { stamina: next, fatigueState: fatigueStateFor(next, max), activity: "RESTING", currentAction: "відпочиває" } });
+      }
+    }
+  } else if (action.type === "WAIT" && action.actorType === "PLAYER" && action.playerId) {
+    const player = await prisma.player.findUnique({ where: { id: action.playerId } });
+    const chatId = chatIdFromAction(action);
+    if (player?.currentLocationId && chatId) {
+      const voiceComments = await tutorialWaitPaceComments(player);
+      for (const comment of voiceComments) {
+        await logEvent("NPC_SAY", comment.title, comment.text, player.currentLocationId);
+        await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
       }
     }
   } else if (action.actorType === "CREATURE" && action.creatureId) {

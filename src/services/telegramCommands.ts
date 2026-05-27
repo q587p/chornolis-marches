@@ -4,7 +4,7 @@ import { isScribeAdmin } from "./adminAccess";
 type TelegramCommandApi = Pick<Bot["api"], "setMyCommands" | "deleteMyCommands">;
 
 const DEFAULT_BOT_COMMANDS = [
-  { command: "start", description: "🌲 Перезапустити" },
+  { command: "start", description: "🌲 Увійти / Повернути кнопки" },
   { command: "me", description: "🧍 Персонаж" },
   { command: "look", description: "👀 Озирнутися" },
   { command: "menu", description: "☰ Меню" },

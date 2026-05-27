@@ -30,13 +30,13 @@ import { showCharacter, showInventory, showLocationForPlayer } from "./player";
 import { buildAllPage, buildChatLogPage, buildStatBrief, buildWhoPage } from "./status";
 import { renderDepletedVegetationInspection, renderLocationBrief } from "../services/locations";
 import { buildNewsIndexPage } from "./news";
-import { backToMain, showMenu } from "./menu";
+import { hideReplyKeyboard, showMenu } from "./menu";
 import { showTime } from "./time";
 import { submitMove as submitCanonicalMove } from "./movement";
 import { submitGather as submitCanonicalGather } from "./gather";
 import { addCorpseToInventory, resourceTypeDisplayName } from "../services/corpses";
 import { performSocialSignal } from "../services/socialSignals";
-import { addTwigsToCampfire, lightPlayerTorchFromInventory } from "../services/fire";
+import { addTwigsToCampfire, dousePlayerTorchFromInventory, lightPlayerTorchFromInventory } from "../services/fire";
 import { requireScribeAdmin } from "../services/adminAccess";
 import { pickUpFirstGroundResourceByKey } from "../services/groundItems";
 import { parseSpeechTarget } from "../services/speechTargets";
@@ -351,6 +351,12 @@ async function submitLightTorch(ctx: any) {
   await ctx.reply(await lightPlayerTorchFromInventory(player.id));
 }
 
+async function submitDouseTorch(ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  await ctx.reply(await dousePlayerTorchFromInventory(player.id));
+}
+
 async function submitInventoryInspect(ctx: any, target: string) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
@@ -615,7 +621,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "all") return replyWithAll(ctx, parsed.showDead);
     if (parsed.kind === "time") return showTime(ctx);
     if (parsed.kind === "menu") return showMenu(ctx);
-    if (parsed.kind === "back") return backToMain(ctx);
+    if (parsed.kind === "back") return hideReplyKeyboard(ctx);
     if (parsed.kind === "inspect-vegetation") return replyWithVegetationInspection(ctx);
     if (parsed.kind === "move") return submitCanonicalMove(bot, ctx, parsed.direction, false);
     if (parsed.kind === "gather") return submitCanonicalGather(bot, ctx, parsed.resourceKey, false);
@@ -626,6 +632,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "wait") return submitWait(bot, ctx);
     if (parsed.kind === "use-item") return submitUseItem(ctx, parsed.item);
     if (parsed.kind === "light-torch") return submitLightTorch(ctx);
+    if (parsed.kind === "douse-torch") return submitDouseTorch(ctx);
     if (parsed.kind === "sleep") return submitSleep(ctx, parsed.tutorial);
     if (parsed.kind === "wake") return submitWake(ctx);
     if (parsed.kind === "open") return submitOpen(ctx);

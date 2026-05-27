@@ -11,6 +11,8 @@
       "locked": true,
       "locks_exit_direction": "EAST",
       "lock_reason": "ворота",
+      "visible_locked_exit": true,
+      "openable": false,
       "future_area": "starter_settlement"
     }
   },
@@ -208,11 +210,36 @@
     "locationKey": "dream_tutorial_hub",
     "type": "LANDMARK",
     "name": "Майбутні уроки",
-    "description": "Десь збоку ворушаться майбутні уроки, але зараз стежка дозволяє просто прокинутися.",
+    "description": "На моху лежать три короткі зарубки: схід — роздивитися й зібрати; захід — відпочити; тут — прокинутися. Сон не вимагає всього одразу.",
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
       "tutorial_wake_prompt": true
+    }
+  },
+  {
+    "key": "dream_tutorial_foraging_hint",
+    "locationKey": "dream_tutorial_foraging",
+    "type": "LANDMARK",
+    "name": "Ягідна підказка",
+    "description": "Кущі стоять низько, майже на рівні долоні. Натисніть «Роздивитися» або напишіть /examine, щоб побачити, що саме можна зібрати; після збору з’являться «Речі».",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "tutorial_hint": "foraging_inventory"
+    }
+  },
+  {
+    "key": "dream_tutorial_rest_fire",
+    "locationKey": "dream_tutorial_rest",
+    "type": "MAGIC_CAMPFIRE",
+    "name": "Тихий жар сну",
+    "description": "Жар світиться без хмизу й диму. Біля такого місця зручно натиснути «Відпочити» або написати /rest: це не сон, а короткий перепочинок, щоб повернути снагу.",
+    "providesLight": true,
+    "restStaminaCapMultiplier": 2,
+    "data": {
+      "rest_stamina_cap_multiplier": 2,
+      "tutorial_hint": "rest"
     }
   },
   {

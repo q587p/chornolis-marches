@@ -17,12 +17,19 @@ import {
 } from "../gameConfig";
 import { buildFatigueRestKeyboard } from "../ui/keyboards";
 import { getPlayerRestStaminaCap } from "./locationFeatures";
+import { tutorialIdlePaceComments } from "./tutorialVoices";
+import { logEvent } from "./worldEvents";
+import { escapeHtml } from "../utils/text";
 
 export function fatigueStateFor(stamina: number, staminaMax = BASE_STAMINA): FatigueState {
   if (stamina <= VERY_TIRED_STAMINA) return "VERY_TIRED";
   if (stamina < 0) return "TIRED";
   if (stamina >= staminaMax) return "RESTED";
   return "RESTED";
+}
+
+function quoteBlock(text: string) {
+  return `<blockquote>${escapeHtml(text)}</blockquote>`;
 }
 
 function thresholdMessages(before: number, after: number, max: number, tookHp = false) {
@@ -138,11 +145,23 @@ export async function recoverStamina(bot: Bot) {
     const baseMax = player.staminaMax ?? BASE_STAMINA;
     const max = player.isResting ? Math.max(baseMax, await getPlayerRestStaminaCap(player.id)) : baseMax;
     const hpMax = player.hpMax ?? BASE_HP;
-    if (player.stamina >= max && player.hp >= hpMax && !player.isResting) continue;
 
     const activeActions = await prisma.worldAction.count({
       where: { actorType: "PLAYER", playerId: player.id, status: { in: ["QUEUED", "RUNNING"] } },
     });
+
+    if (!player.isResting && activeActions === 0) {
+      const chatId = Number(player.telegramId);
+      if (Number.isSafeInteger(chatId)) {
+        const voiceComments = await tutorialIdlePaceComments(player, now);
+        for (const comment of voiceComments) {
+          if (player.currentLocationId) await logEvent("NPC_SAY", comment.title, comment.text, player.currentLocationId);
+          await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
+        }
+      }
+    }
+
+    if (player.stamina >= max && player.hp >= hpMax && !player.isResting) continue;
 
     if (activeActions > 0 && !player.isResting) {
       await prisma.player.updateMany({ where: { id: player.id }, data: { lastStaminaRegenAt: now, lastHpRegenAt: now } });

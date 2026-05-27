@@ -32,6 +32,8 @@ Expired timed campfires are turned into згаслі campfires lazily when locat
 - If the torch is already burning and the character carries another unlit torch, the action becomes `Підпалити ще один факел`.
 - If the character already has a burning torch and no extra unlit torch, the same action becomes `Оновити вогонь на факелі` and resets its timer.
 - From inventory, the `Light torch` / `Запалити факел` action appears when the character carries an unlit torch and can reach fire from either a lit campfire in the current location or another lit torch already in hand.
+- From inventory, `Підкинути хмиз` appears when the character carries `twigs` and a nearby ordinary campfire can accept them.
+- From inventory, `Притушити факел` appears while a carried torch is burning. It turns one `lit_torch` into a `doused_torch` and stores the remaining burn time so relighting continues from that point.
 - A character can carry at most two lit torches at once, matching the current two-hands assumption.
 - A lit torch lasts 5 in-game hours, currently 10 real minutes.
 - During the final in-game hour, currently 2 real minutes, the world tick sends the character a separate chat warning that the torch is going out.
@@ -42,6 +44,7 @@ The current implementation stores torch state as inventory resources:
 
 - `torch` is an unlit torch.
 - `lit_torch` is a burning torch; its `updatedAt` timestamp is the active timer.
+- `doused_torch` is a doused torch; the remaining burn time is preserved through an internal timer event until it is relit.
 - `twigs` / `хмиз` is the leftover fuel resource produced when a carried lit torch expires.
 
 Seed/reset data also places small pickable `twigs` bundles in a few forest and dry-luka locations. They appear under `Лежить` and can be picked up like loose torches.

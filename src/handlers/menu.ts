@@ -1,21 +1,19 @@
 import { Bot } from "grammy";
-import { isPlayerAutoEnabled } from "./auto";
-import { buildMainReplyKeyboardForTelegramId, buildMenuReplyKeyboard } from "../ui/replyKeyboard";
+import { buildMenuReplyKeyboard } from "../ui/replyKeyboard";
 
 export async function showMenu(ctx: any) {
   await ctx.reply("☰ Меню", { reply_markup: buildMenuReplyKeyboard() });
 }
 
-export async function backToMain(ctx: any) {
-  const auto = ctx.from ? isPlayerAutoEnabled(ctx.from.id) : false;
-  const keyboard = ctx.from
-    ? await buildMainReplyKeyboardForTelegramId(ctx.from.id, auto)
-    : undefined;
-  await ctx.reply("Повертаємось до основних дій.", { reply_markup: keyboard });
+export async function hideReplyKeyboard(ctx: any) {
+  await ctx.reply("Клавіатуру сховано. Щоб повернути кнопки, напишіть /menu або /start.", {
+    reply_markup: { remove_keyboard: true },
+  });
 }
 
 export function registerMenuHandlers(bot: Bot) {
   bot.command("menu", showMenu);
   bot.hears(["☰ Меню", "Меню"], showMenu);
-  bot.hears(["↩️ Назад", "Назад"], backToMain);
+  bot.hears(["↩️ Назад", "Назад"], hideReplyKeyboard);
+  bot.hears(["Сховати клавіатуру", "сховати клавіатуру", "прибрати клавіатуру", "прибрати кнопки"], hideReplyKeyboard);
 }

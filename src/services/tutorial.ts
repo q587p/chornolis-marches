@@ -8,6 +8,8 @@ export const TUTORIAL_START_LOCATION_KEY = "dream_tutorial_threshold";
 export const TUTORIAL_SECOND_STEP_LOCATION_KEY = "dream_tutorial_second_step";
 export const TUTORIAL_GATE_LOCATION_KEY = "dream_tutorial_gate";
 export const TUTORIAL_HUB_LOCATION_KEY = "dream_tutorial_hub";
+export const TUTORIAL_FORAGING_LOCATION_KEY = "dream_tutorial_foraging";
+export const TUTORIAL_REST_LOCATION_KEY = "dream_tutorial_rest";
 export const DREAM_GATE_FEATURE_KEY = "dream_tutorial_sleep_gate";
 export const DREAM_GATE_OPEN_MS = 30 * 1000;
 

@@ -27,6 +27,7 @@ export type ParsedAliasCommand =
   | { kind: "gather"; resourceKey?: GatherKey }
   | { kind: "use-item"; item: UseItemKey }
   | { kind: "light-torch" }
+  | { kind: "douse-torch" }
   | { kind: "sleep"; tutorial?: boolean }
   | { kind: "wake" }
   | { kind: "open" }
@@ -300,8 +301,16 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "use torch": { kind: "light-torch" },
   "запалити факел": { kind: "light-torch" },
   "підпалити факел": { kind: "light-torch" },
+  "douse torch": { kind: "douse-torch" },
+  "extinguish torch": { kind: "douse-torch" },
+  "put out torch": { kind: "douse-torch" },
+  "загасити факел": { kind: "douse-torch" },
+  "погасити факел": { kind: "douse-torch" },
+  "притушити факел": { kind: "douse-torch" },
+  "потушити факел": { kind: "douse-torch" },
 
   sleep: { kind: "sleep" },
+  tutorial: { kind: "sleep", tutorial: true },
   "sleep tutorial": { kind: "sleep", tutorial: true },
   "tutorial sleep": { kind: "sleep", tutorial: true },
   "сон": { kind: "sleep" },

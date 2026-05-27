@@ -43,6 +43,8 @@ function symbolForLocation(location) {
   if (location.key === world.meta?.startLocationKey) return "S";
   if (location.key === "closed_east_gate") return "G";
   if (location.key === "under_bridge_18_05") return "u";
+  if (location.regionKey === "dream_tutorial") return "D";
+  if (location.regionKey === "closed_settlement_gate") return "G";
   if (location.regionKey === "old_bridge") return "=";
   if (location.regionKey === "riverbank") return ",";
   if (location.regionKey === "dry_luka") return ".";
@@ -101,6 +103,24 @@ const specialLinks = world.exits
   .map((exit) => `- \`${exit.fromKey}\` — ${exit.direction} → \`${exit.toKey}\``)
   .join("\n");
 
+const lockedExitNotes = world.features
+  .filter((feature) => feature.data?.locked === true && feature.data?.locks_exit_direction)
+  .map((feature) => `- \`${feature.locationKey}\` — ${feature.data.locks_exit_direction} is a visible locked exit (${feature.name}).`)
+  .join("\n");
+
+const layerZs = [...new Set([
+  ...world.locations.map((location) => location.z ?? 0),
+  ...(world.blockedCells ?? []).map((cell) => cell.z ?? 0),
+])].sort((a, b) => b - a);
+
+const layerSections = layerZs
+  .map((z) => `## Layer z = ${z}
+
+\`\`\`text
+${renderLayer(z)}
+\`\`\``)
+  .join("\n\n");
+
 const content = `# World Map
 
 Generated from \`${world.sourceLabel}\`.
@@ -121,24 +141,15 @@ node scripts/world/render-map-ascii.mjs --write
 - \`█\` — impassable outer boundary.
 - \`S\` — start / \`/respawn\`, border marker and unfading campfire.
 - \`=\` — old bridge.
-- \`G\` — closed settlement gate.
+- \`G\` — closed settlement gate / future settlement placeholder.
 - \`u\` — under-bridge location at \`z = -1\`; it is not connected to the bridge deck.
+- \`D\` — dream tutorial location in \`Дрімотна Межа\` at \`z = -13\`.
 
-## Layer z = 0
-
-\`\`\`text
-${renderLayer(0)}
-\`\`\`
-
-## Layer z = -1
-
-\`\`\`text
-${renderLayer(-1)}
-\`\`\`
+${layerSections}
 
 ## Special authored links
 
-${specialLinks || "- None."}
+${[specialLinks, lockedExitNotes].filter(Boolean).join("\n") || "- None."}
 
 ## Editing
 

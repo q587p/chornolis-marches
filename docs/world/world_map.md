@@ -18,21 +18,21 @@ node scripts/world/render-map-ascii.mjs --write
 - `█` — impassable outer boundary.
 - `S` — start / `/respawn`, border marker and unfading campfire.
 - `=` — old bridge.
-- `G` — closed settlement gate.
+- `G` — closed settlement gate / future settlement placeholder.
 - `u` — under-bridge location at `z = -1`; it is not connected to the bridge deck.
 - `D` — dream tutorial location in `Дрімотна Межа` at `z = -13`.
 
 ## Layer z = 0
 
 ```text
-      -1  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20
+      -1  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21
 y
  10    █  █  █  █  █  █  █  █  █  █  █  █  █  █
   9    █  #  #  F  #  #  #  #  #  F  F  .  .  .  ,  ~  ~
   8    █  F  F  F  #  F  F  F  F  F  #  .  #  .  .  ,  ~  ~
   7    █  F  #  #  #  F  #  #  #  F  F  .  .  .  .  .  ,  ,  ~
   6    █  F  F  F  F  F  #  F  F  F  F  .  .  .  .  .  #  ,  ,  ,  ~  ~
-  5    █  #  #  F  #  #  #  F  #  F  #  .  .  .  .  .  .  .  S  =  =  G
+  5    █  #  #  F  #  #  #  F  #  F  #  .  .  .  .  .  .  .  S  =  =  G  G
   4    █  F  F  F  #  F  F  F  #  F  F  .  .  .  .  .  .  .  ,  ,  ~  ~
   3    █  F  #  #  #  F  #  F  #  #  F  .  .  .  #  .  .  ,  ~  ~
   2    █  F  F  F  F  F  #  F  F  F  F  .  .  .  .  .  ,  ~  ~
@@ -51,15 +51,13 @@ y
 
 ## Layer z = -13
 
-Tutorial dream layer:
-
 ```text
-      0
+      -1  0  1
 y
-  3    D  dream_tutorial_hub
-  2    D  dream_tutorial_gate
-  1    D  dream_tutorial_second_step
-  0    D  dream_tutorial_threshold
+  3    D  D  D
+  2       D
+  1       D
+  0       D
 ```
 
 ## Special authored links
@@ -72,7 +70,8 @@ y
 - `riverbank_18_06` — SOUTH → `under_bridge_18_05`
 - `under_bridge_18_05` — NORTH → `riverbank_18_06`
 - `under_bridge_18_05` — SOUTH → `riverbank_18_04`
-- `dream_tutorial_gate` — SOUTH → `dream_tutorial_hub` is a visible locked exit until `Брама Сну` is opened.
+- `closed_east_gate` — EAST is a visible locked exit (Зачинені ворота).
+- `dream_tutorial_gate` — SOUTH is a visible locked exit (Брама Сну).
 
 ## Editing
 

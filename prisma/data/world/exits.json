@@ -64,6 +64,38 @@
     "isHidden": false
   },
   {
+    "fromKey": "dream_tutorial_hub",
+    "toKey": "dream_tutorial_foraging",
+    "direction": "EAST",
+    "label": "схід, ягідний просвіт",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_foraging",
+    "toKey": "dream_tutorial_hub",
+    "direction": "WEST",
+    "label": "захід, тиха галявина",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_hub",
+    "toKey": "dream_tutorial_rest",
+    "direction": "WEST",
+    "label": "захід, теплий жар",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_rest",
+    "toKey": "dream_tutorial_hub",
+    "direction": "EAST",
+    "label": "схід, тиха галявина",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
     "fromKey": "forest_00_00",
     "toKey": "forest_01_00",
     "direction": "EAST",
