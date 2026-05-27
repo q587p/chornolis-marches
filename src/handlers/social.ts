@@ -184,7 +184,7 @@ export function registerSocialHandlers(bot: Bot) {
     await sendActionSubmitFeedback(ctx, player.id, result);
   });
 
-  bot.callbackQuery("track", async (ctx) => {
+  bot.callbackQuery(["track", "track:details"], async (ctx) => {
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player) {
       await safeAnswerCallbackQuery(ctx);
@@ -194,7 +194,8 @@ export function registerSocialHandlers(bot: Bot) {
     const durationMs = actionDurationMs("TRACK", player.stamina);
     let result: Awaited<ReturnType<typeof performOrQueuePlayerAction>>;
     try {
-      result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "TRACK", payload: {}, durationMs, chatId: ctx.chat?.id, interruptQueued: true });
+      const detail = ctx.callbackQuery.data === "track:details";
+      result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "TRACK", payload: { detail }, durationMs, chatId: ctx.chat?.id, interruptQueued: true });
     } catch (error) {
       await safeAnswerCallbackQuery(ctx, error instanceof Error ? error.message : "Не вдалося додати дію.");
       return;

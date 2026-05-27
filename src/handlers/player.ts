@@ -7,6 +7,7 @@ import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
 import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } from "./auto";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { formatFatigueText, formatHungerState, formatPlayerStats, formatPostureText, formatVitalsLine } from "../utils/playerText";
+import { ownHeldTorchText } from "../utils/torchText";
 import { resourceTypeDisplayName } from "../services/corpses";
 import { getPlayerTorchState, TORCH_DURATION_MS, TORCH_FADING_MS } from "../services/fire";
 import { isScribeAdmin } from "../services/adminAccess";
@@ -152,11 +153,7 @@ async function renderCharacterView(telegramId: number) {
   const hungerText = showTechnicalDetails ? `Голод: ${Math.min(PLAYER_HUNGER_MAX, Math.max(0, player.hunger))}/${PLAYER_HUNGER_MAX}` : formatHungerState(player.hunger, PLAYER_HUNGER_MAX);
   const originStats = showTechnicalDetails ? await actionOriginStats(player.id) : null;
   const statsText = showTechnicalDetails ? `\n\nСтатистика:\n${formatPlayerStats(player, { includeRestStats: true })}\nАвто-дій: ${originStats?.autoActions ?? 0}\nРучних дій: ${originStats?.manualActions ?? 0}` : "";
-  const torchText = torchState.isLit
-    ? torchState.litAmount > 1
-      ? `\nУ вас горять запалені факели (${torchState.litAmount}).`
-      : "\nУ вас горить запалений факел."
-    : "";
+  const torchText = ownHeldTorchText(torchState);
   const locationText = player.currentLocation
     ? `${player.currentLocation.region.name} / ${player.currentLocation.name}`
     : "невідомо";

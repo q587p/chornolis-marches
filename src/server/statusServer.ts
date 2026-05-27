@@ -2,7 +2,7 @@ import http from "http";
 import fs from "fs";
 import path from "path";
 import { config } from "../config";
-import { buildAllPage, buildWhoData, buildWhoText } from "../handlers/status";
+import { buildAllPage, buildWhoData, buildWhoPage } from "../handlers/status";
 import { setLastRuntimeError } from "../runtimeState";
 import {
   chatEventGroupLabel,
@@ -12,6 +12,7 @@ import {
   getChatLog,
   normalizeChatLogMode,
   normalizeChatLogWindow,
+  publicChatEventDescription,
   publicChatEventType,
   publicChatLog,
   type ChatLogMode,
@@ -123,8 +124,16 @@ async function renderAllPage(url: string | undefined) {
   </body></html>`;
 }
 
-async function renderWhoPage() {
-  const [text, data] = await Promise.all([buildWhoText(), buildWhoData()]);
+function whoUrl(page: number, format: "html" | "json" = "html") {
+  const path = format === "json" ? "/who.json" : "/who";
+  return `${path}?page=${page}`;
+}
+
+async function renderWhoPage(url: string | undefined) {
+  const parsed = parseQuery(url);
+  const page = await buildWhoPage(Number(parsed.searchParams.get("page") ?? 0) || 0);
+  const prev = page.page > 0 ? whoUrl(page.page - 1) : null;
+  const next = page.page < page.totalPages - 1 ? whoUrl(page.page + 1) : null;
   return `<!doctype html><html lang="uk"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Chornolis /who</title><style>
     body{font-family:system-ui,sans-serif;max-width:760px;margin:32px auto;padding:0 18px;background:#10170f;color:#e8e0c9}
     a{color:#d8b55d}
@@ -134,9 +143,10 @@ async function renderWhoPage() {
   </style></head><body>
     <h1>Хто активний</h1>
     <p class="muted">Публічний список персонажів, активних за останню реальну годину.</p>
-    <div class="actions"><span>Разом персонажів: ${data.totalCount}</span></div>
-    <p class="actions"><a href="/">Status</a><a href="/stat">/stat</a><a href="/chat">/chat</a><a href="/who.json">JSON</a></p>
-    <pre>${escapeHtml(text)}</pre>
+    <div class="actions"><span>Разом персонажів: ${page.data.totalCount}</span><span>Сторінка ${page.page + 1}/${page.totalPages}</span></div>
+    <p class="actions"><a href="/">Status</a><a href="/stat">/stat</a><a href="/chat">/chat</a><a href="${whoUrl(page.page, "json")}">JSON</a>${prev ? `<a href="${prev}">Назад</a>` : ""}${next ? `<a href="${next}">Далі</a>` : ""}</p>
+    <pre>${escapeHtml(page.text)}</pre>
+    <p class="actions">${prev ? `<a href="${prev}">Назад</a>` : ""}${next ? `<a href="${next}">Далі</a>` : ""}</p>
   </body></html>`;
 }
 
@@ -234,7 +244,7 @@ function renderChatRows(events: Awaited<ReturnType<typeof getChatLog>>["events"]
       <td>${escapeHtml(publicChatEventType(event))}</td>
       <td>${event.location ? escapeHtml(event.location.name) : "<span class=\"muted\">невідомо</span>"}</td>
       <td>${escapeHtml(event.title)}</td>
-      <td><blockquote>${escapeHtml(event.description ?? "")}</blockquote></td>
+      <td><blockquote>${escapeHtml(publicChatEventDescription(event))}</blockquote></td>
     </tr>`;
     })
     .join("");
@@ -375,6 +385,8 @@ async function renderEcologyStatsPage() {
       <div class="card"><div class="metric">${c.rabbitsSpread}</div><div class="label">зайців розселилося</div></div>
       <div class="card"><div class="metric">${c.miceSpread}</div><div class="label">мишей розселилося</div></div>
       <div class="card"><div class="metric">${c.oldAgeDeaths}</div><div class="label">смертей від старості</div></div>
+      <div class="card"><div class="metric">${c.starvationDeaths}</div><div class="label">смертей від голоду у вікні</div></div>
+      <div class="card"><div class="metric">${stats.totals.starvationDeaths}</div><div class="label">смертей від голоду загалом</div></div>
       <div class="card"><div class="metric">${c.predatorKills}</div><div class="label">смертей від хижаків у вікні</div></div>
       <div class="card"><div class="metric">${stats.totals.predatorKills}</div><div class="label">смертей від хижаків загалом</div></div>
     </div>
@@ -393,6 +405,7 @@ async function renderEcologyStatsPage() {
       <tr><td>Об'їдені ресурси</td><td>${c.overgrazedResources}</td><td>${formatNumber(r.overgrazedResources, 1)}</td></tr>
       <tr><td>Виснажені вузли від випасу</td><td>${c.depletedByOvergrazing}</td><td>${formatNumber(r.depletedByOvergrazing, 1)}</td></tr>
       <tr><td>Смерті від старості</td><td>${c.oldAgeDeaths}</td><td>${formatNumber(r.oldAgeDeaths, 1)}</td></tr>
+      <tr><td>Смерті від голоду</td><td>${c.starvationDeaths}</td><td>${formatNumber(r.starvationDeaths, 1)}</td></tr>
       <tr><td>Смерті від хижаків</td><td>${c.predatorKills}</td><td>${formatNumber(r.predatorKills, 1)}</td></tr>
       <tr><td>Зниклі трупи</td><td>${c.corpsesGone}</td><td>${formatNumber(r.corpsesGone, 1)}</td></tr>
       <tr><td>Відновлені ресурсні вузли</td><td>${c.regenerated}</td><td>${formatNumber(r.regenerated, 1)}</td></tr>
@@ -488,23 +501,28 @@ export function startHttpServer() {
         }
 
         if (path === "/who.json") {
-          const [text, data] = await Promise.all([buildWhoText(), buildWhoData()]);
+          const parsed = parseQuery(req.url);
+          const page = await buildWhoPage(Number(parsed.searchParams.get("page") ?? 0) || 0);
+          const data = page.data;
           res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
           res.end(JSON.stringify({
             since: data.since,
             totalCount: data.totalCount,
             scribeCount: data.scribeCount,
             mixedCount: data.mixedCount,
+            page: page.page,
+            totalPages: page.totalPages,
             scribes: data.scribes,
-            characters: data.mixedCharacters,
-            text,
+            characters: page.visibleCharacters,
+            allCharacters: data.mixedCharacters,
+            text: page.text,
           }));
           return;
         }
 
         if (path === "/who") {
           res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-          res.end(await renderWhoPage());
+          res.end(await renderWhoPage(req.url));
           return;
         }
 

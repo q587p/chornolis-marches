@@ -14,15 +14,19 @@ The 0.11.5-0.11.9 line landed Ukrainian aliases, scribe detail mode, inventory v
 
 Recommended order:
 
-1. Finish the first **firewood / хмиз / campfire fuel** loop so хмиз can extend or prepare ordinary campfires instead of only existing as a carried resource.
-2. Add the first real **world time / day-night** state and make `/time` read it.
-3. Add early **/respawn / Повернення** so dangerous exploration has a beginner safety valve.
-4. Then return to **MAP-002 biome resources** once fire/light/time rules can influence gathering and visibility.
+1. Add the first **newcomer helper / tutorial** pass, because people are already interested and the current opening should teach the actual playable slice.
+2. Finish the first **firewood / хмиз / campfire fuel** loop so хмиз can extend or prepare ordinary campfires instead of only existing as a carried resource.
+3. Add the first real **world time / day-night** state and make `/time` read it.
+4. Add early **/respawn / Повернення** so dangerous exploration has a beginner safety valve.
+5. Then return to **MAP-002 biome resources** once fire/light/time rules can influence gathering and visibility.
 
 Good small follow-ups if a narrow patch is wanted:
 
+- Shape ONB-001 into a first playable newcomer helper: update `/start`, `/help`, fallback hints and a skippable guide flow for look/examine/move/time/rest/gather/inventory/basic safety.
 - Add item-level `Речі` actions: inspect/drop/use placeholder, starting with torches, berries and corpses.
 - Add edible berries as the first hunger interaction from inventory.
+- Add the first **animal-restoration offering** loop: small hare/mouse statues or similar forest charms where players can leave berries or herbs; after a delay, if local or regional prey population is low, a pair of young animals can appear without admin intervention.
+- Add a low-prey warning from Дід Лісовик when all rabbits, mice or other basic prey disappear from the relevant scope. If he is asleep, the message can be framed as him mumbling through sleep, still heard across the borderland.
 - Add first ground-money objects under the bridge / in dark places, using the existing ground-item pickup path.
 - Add logs for who used `/reset` and other dangerous scribe tools.
 - Add the first scribe name-approval loop: `/all character` or an equivalent filtered character list, service-profile buttons to approve/reject names, and a rejection message sent to the character.
@@ -115,6 +119,7 @@ Add `/respawn` as **Повернення** for new or weak characters who get lo
 - Add starter settlement skeleton and first NPC roles beyond the closed gate.
 - Seed pickable хмиз as ground items across most forest locations and a smaller number of dry-luka locations. This should use the existing pickup path, appear under `Лежить`, and give the firewood loop a visible world source before broader `/gather` foraging grows.
 - Add first foraging/firewood iteration by broadening `/gather` without arguments into local foraging: хмиз/dry sticks near campfires and forest edges, moss where suitable, animal bones, and rare minor coin finds. Keep outcomes biome-, region- and location-feature-dependent, and wire хмиз into the existing `Додати хмиз` placeholder.
+- Add a first animal-restoration shrine/statue pass: authored small features such as a hare statue, mouse stone, carved burrow marker or similar forest charm. Players can place fitting offerings such as berries or herbs; after a queued delay and cooldown, the world may create two young prey animals when the area has fallen below a safe population threshold.
 - Seed a first small ground-money find on world start/reset: a ґривня under the bridge and a few scattered шаги elsewhere. These should behave like visible location objects: shown by `/look` when light/visibility allows, discoverable by `/examine` in darkness, inspectable like corpses/objects, and pickable into `Речі`.
 - Add a first NPC hunter/archer loop: a named hunter travels between nearby hunting grounds, looks for prey, attacks small animals, and leaves visible signs for players to observe. Later this should grow into tracking, traps and teaching hunting-related skills.
 - Add name approval admin flow after the `isNameApproved` field is available.
@@ -129,6 +134,7 @@ These are still `backlog`, but recent work makes them worth reviewing before the
 - Speech reply UX: `/reply`, `Відповісти` and `Відповісти як...` for addressed speech. This should probably stay behind the chat/social polish lane, not the ecology lane.
 - Inventory item actions: the dedicated `Речі` view exists, so item details, dropping, using and eating berries are now small enough to promote when the survival loop needs them.
 - Darkness creature / small coin omen: this becomes much more attractive right after WORLD-001 because it explicitly depends on darkness, light and calm observation.
+- TECH-001 — service boundary and duplication cleanup. Keep this mostly behavior-preserving, but make it visible during patch planning because `worldTick.ts`, `status.ts`, `actionCompletions.ts`, `statusServer.ts`, `locations.ts` and `aliases.ts` are now large enough to slow safe feature work.
 
 ## Review checklist
 

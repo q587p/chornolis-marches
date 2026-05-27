@@ -18,13 +18,13 @@ Location and character:
 - `озирнутися`, `/озирнутися`, `де я`, `місцина` -> current location view.
 - `роздивитися`, `/роздивитися`, `що видно` -> closer look action.
 - `хто я`, `хтоя`, `персонаж` -> character card.
-- `речі`, `інвентар`, `/inventory`, `що в мене` -> dedicated inventory view.
+- `речі`, `інвентар`, `inventory`, `/inventory`, `що в мене` -> dedicated inventory view.
 
 Menu and status:
 
 - `статистика`, `/статистика` -> canonical `/stat` view.
-- `репліки`, `/репліки` -> canonical `/chat` view.
-- `хто активний` -> canonical `/who` view.
+- `репліки`, `/репліки`, `chat`, `chat all`, `chat location 1`, `chat character all` -> canonical `/chat` view.
+- `хто`, `хто активний`, `хто тут`, `хто поруч` -> canonical `/who` view.
 - `час`, `/час` -> canonical `/time` view.
 - `новини`, `/новини` -> canonical `/news` view.
 - `допомога`, `/допомога` -> canonical `/help` view.
@@ -38,12 +38,16 @@ Movement:
 
 Actions:
 
+- Pending scribe/admin prompts can be cancelled with `/cancel`, `/skasuvaty`, `/vidminyty`, `cancel`, `skasuvaty`, `vidminyty`, `скасувати`, `відмінити`, `відміна`, `стоп` or `не треба`. These aliases only cancel the pending prompt when one exists; otherwise ordinary aliases such as `скасувати` keep their existing queue behavior.
 - `збирати трави`, `збирати ягоди`, `збирати гриби`.
 - `відпочити`, `додати відпочинок у чергу`, `перервати відпочинок`.
 - `черга`, `скасувати`, `очистити чергу`.
-- `/track`, `/examine tracks`, `роздивитися сліди`, `придивитися до слідів`.
+- `/track`, `/examine tracks`, `роздивитися сліди`, `придивитися до слідів`. Future detail forms should include target-like aliases such as `роздивитися вовчий слід`, `роздивитися людський слід` and `роздивитися заячий слід`.
 - `сказати Привіт`.
 - `додати хмиз`, `підкинути хмиз`, `/add twigs campfire` -> reserved campfire-firewood placeholder.
+- Future ecology inspection: `/examine grass`, `/examine depleted grass`, `роздивитися траву`, `оцінити траву`, `оцінити відновлення` -> inspect the local depleted-vegetation feature and estimate natural recovery when `Винищена трава` is present.
+- Future shrine/offering actions: `/offer`, `/offer <item>`, `пожертвувати`, `лишити дар`, `покласти дар`, `кинути шаг`, `покласти хмиз` -> offer an item to an inspectable shrine/капище or similar sacred feature.
+- Future animal-restoration offering actions: `/offer berries`, `/offer herbs`, `покласти ягоди`, `лишити трави`, `покласти дар зайцю`, `покласти дар мишам`, `пожертвувати зайцеві`, `пожертвувати мишам` -> offer fitting food or herbs to a hare/mouse statue, carved burrow marker or similar animal charm.
 - `увімкнути авто`, `зупинити авто`.
 
 Targets and signals:

@@ -10,6 +10,7 @@ import { requireScribeAdmin } from "./adminAccess";
 import { notifyFadingFireTimers } from "./fire";
 import { maybePerformHerbalistSignal } from "./socialAutonomy";
 import { filterLisovykAllowedLocations, isLisovykForbiddenLocation, isLisovykForbiddenRegion } from "./lisovykBoundaries";
+import { chance, chancePermille, pickOptional as pick, randomInt } from "../utils/random";
 
 const DEFAULT_TICK_INTERVAL_MS = TICK_MS;
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
@@ -50,6 +51,9 @@ const CROWD_DANGER_STEP_BONUS = Number(process.env.WORLD_CROWD_DANGER_STEP_BONUS
 const CROWD_HERBIVORE_MOVE_BASE_CHANCE = Number(process.env.WORLD_CROWD_HERBIVORE_MOVE_BASE_CHANCE || 12);
 const CROWD_HERBIVORE_MOVE_PER_EXTRA_CHANCE = Number(process.env.WORLD_CROWD_HERBIVORE_MOVE_PER_EXTRA_CHANCE || 4);
 const CROWD_HERBIVORE_MOVE_MAX_CHANCE = Number(process.env.WORLD_CROWD_HERBIVORE_MOVE_MAX_CHANCE || 55);
+const CREATURE_STARVATION_HUNGER_THRESHOLD = Number(process.env.WORLD_CREATURE_STARVATION_HUNGER_THRESHOLD || 20);
+const CREATURE_STARVATION_BASE_CHANCE_PERMILLE = Number(process.env.WORLD_CREATURE_STARVATION_BASE_CHANCE_PERMILLE || 80);
+const CREATURE_STARVATION_EXTRA_CHANCE_PER_HUNGER_PERMILLE = Number(process.env.WORLD_CREATURE_STARVATION_EXTRA_CHANCE_PER_HUNGER_PERMILLE || 25);
 const RECENT_ATTACK_FEATURE_PREFIX = "recent_attack_";
 const EDIBLE_RESOURCE_KEYS = ["grass", "berries", "herbs", "mushrooms"] as const;
 const DEPLETED_VEGETATION_FEATURE_PREFIX = "depleted_vegetation_";
@@ -81,25 +85,6 @@ const STAGE_HP_MULTIPLIER: Record<CreatureAge, number> = {
   OLD: 0.65,
   CORPSE: 0,
 };
-
-function chance(p: number) {
-  return Math.random() * 100 < p;
-}
-
-function chancePermille(p: number) {
-  return Math.random() * 1000 < p;
-}
-
-function pick<T>(arr: T[]): T | undefined {
-  if (arr.length === 0) return undefined;
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function randomInt(min: number, max: number) {
-  const low = Math.ceil(Math.min(min, max));
-  const high = Math.floor(Math.max(min, max));
-  return low + Math.floor(Math.random() * (high - low + 1));
-}
 
 function crowdDangerBonus(presenceCount: number) {
   if (presenceCount <= CROWD_DANGER_THRESHOLD) return 0;
@@ -679,7 +664,46 @@ async function killAnimalFromOldAge(creature: any) {
   });
 }
 
+async function killAnimalFromStarvation(creature: any) {
+  await prisma.worldAction.updateMany({
+    where: { actorType: "CREATURE", creatureId: creature.id, status: { in: ["QUEUED", "RUNNING"] } },
+    data: { status: "CANCELLED" },
+  });
+
+  const killed = await prisma.creature.updateMany({
+    where: { id: creature.id, isAlive: true, isGone: false },
+    data: {
+      isAlive: false,
+      age: "CORPSE",
+      hp: 0,
+      diedAtTick: tickNumber,
+      corpseDecayTicksLeft: creature.species.corpseDecayTicks,
+      activity: "RESTING",
+      currentAction: "загинуло від голоду",
+    },
+  });
+  if (killed.count === 0) return;
+
+  await prisma.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: "Animal starved",
+      description: `${creature.name ?? creature.species.name} загинуло від голоду. Труп лишається в місцині на ${creature.species.corpseDecayTicks} тіків.`,
+      locationId: creature.locationId,
+    },
+  });
+}
+
 async function ageLivingAnimal(creature: any) {
+  if (creature.hunger >= CREATURE_STARVATION_HUNGER_THRESHOLD) {
+    const extraHunger = creature.hunger - CREATURE_STARVATION_HUNGER_THRESHOLD;
+    const deathChance = CREATURE_STARVATION_BASE_CHANCE_PERMILLE + extraHunger * CREATURE_STARVATION_EXTRA_CHANCE_PER_HUNGER_PERMILLE;
+    if (chancePermille(deathChance)) {
+      await killAnimalFromStarvation(creature);
+      return "starved";
+    }
+  }
+
   const nextAgeTicks = creature.ageTicks + 1;
   const nextStage = stageFor(creature, nextAgeTicks);
   const nextMaxHp = stageMaxHp(creature, nextStage);
@@ -755,11 +779,12 @@ async function decayCorpse(creature: any) {
 async function processAnimalLifecycle() {
   const livingAnimals = await prisma.creature.findMany({ where: { isAlive: true, isGone: false, species: { kind: "ANIMAL" } }, include: { species: true } });
   const corpses = await prisma.creature.findMany({ where: { isAlive: false, isGone: false, species: { kind: "ANIMAL" } }, include: { species: true } });
-  let aged = 0, died = 0, decayed = 0, gone = 0;
+  let aged = 0, died = 0, starved = 0, decayed = 0, gone = 0;
 
   for (const creature of livingAnimals) {
     const result = await ageLivingAnimal(creature);
     if (result === "died") died++;
+    else if (result === "starved") starved++;
     else if (result === "aged") aged++;
   }
 
@@ -769,7 +794,7 @@ async function processAnimalLifecycle() {
     else decayed++;
   }
 
-  return { aged, died, decayed, gone };
+  return { aged, died, starved, decayed, gone };
 }
 
 async function maybeHerbalistSpeak(c: any) {
@@ -806,18 +831,22 @@ async function tickHerbivore(c: any, localPresenceCount: number) {
   const hasFood = c.location.resources.some((r: any) => r.amount > 0 && isEdibleResourceKey(r.resourceType.key));
   const exhausted = c.location.features?.some((feature: any) => feature.isActive && String(feature.key).startsWith(DEPLETED_VEGETATION_FEATURE_PREFIX));
   const pressureMoveChance = herbivorePressureMoveChance(localPresenceCount, c.location.features);
+  const hunger = Math.max(0, c.hunger ?? 0);
+  const hungry = hunger >= 3;
+  const starving = hunger >= Math.floor(CREATURE_STARVATION_HUNGER_THRESHOLD * 0.75);
+
   if (pressureMoveChance > 0 && chance(pressureMoveChance)) {
     const exit = pick(c.location.exitsFrom);
     const reason = recentAttackHerbivoreMoveBonus(c.location.features) > 0 ? "лякається недавнього нападу" : "уникає тисняви й надто людного місця";
     if (isExit(exit)) return queueMove(c, exit, reason);
   }
 
-  if (hasFood && c.hunger > 0 && chance(60)) {
+  if (hasFood && hunger > 0 && (starving || chance(hungry ? 85 : 60))) {
     await enqueueCreatureAction({ creatureId: c.id, type: "EAT", payload: {}, durationMs: actionDurationMs("EAT", c.stamina) });
     return "queuedEat";
   }
 
-  if (!hasFood || exhausted || chance(50)) {
+  if (!hasFood || exhausted || starving || chance(hungry ? 75 : 50)) {
     const exit = pick(c.location.exitsFrom);
     if (isExit(exit)) return queueMove(c, exit, "шукає їжу");
   }
@@ -827,9 +856,12 @@ async function tickHerbivore(c: any, localPresenceCount: number) {
 }
 
 async function tickCarnivore(c: any) {
+  const hunger = Math.max(0, c.hunger ?? 0);
+  const hungry = hunger >= 3;
+  const starving = hunger >= Math.floor(CREATURE_STARVATION_HUNGER_THRESHOLD * 0.75);
   const prey = await selectPredatorPrey(c);
   if (prey) {
-    if (chance(predatorAttackChance(c, prey))) {
+    if (starving || chance(predatorAttackChance(c, prey))) {
       await enqueueCreatureAction({
         creatureId: c.id,
         type: "ATTACK",
@@ -844,9 +876,9 @@ async function tickCarnivore(c: any) {
     return "queuedLook";
   }
 
-  if (chance(50)) {
+  if (starving || chance(hungry ? 80 : 50)) {
     const exit = pick(c.location.exitsFrom);
-    if (isExit(exit)) return queueMove(c, exit, "патрулює");
+    if (isExit(exit)) return queueMove(c, exit, hungry ? "шукає здобич" : "патрулює");
   }
 
   await enqueueCreatureAction({ creatureId: c.id, type: "REST", payload: {}, durationMs: actionDurationMs("REST", c.stamina) });
@@ -1025,7 +1057,7 @@ export async function worldTick() {
   if (running) return;
   running = true;
   let queuedMove = 0, queuedGather = 0, queuedEat = 0, queuedLook = 0, queuedSay = 0, queuedRest = 0, queuedAttack = 0, skippedBusy = 0, errors = 0, regenerated = 0;
-  let aged = 0, oldAgeDeaths = 0, corpsesDecaying = 0, corpsesGone = 0;
+  let aged = 0, oldAgeDeaths = 0, starvationDeaths = 0, corpsesDecaying = 0, corpsesGone = 0;
   let rabbitBirths = 0, mouseBirths = 0, rabbitsSpread = 0, miceSpread = 0, overgrazedLocations = 0, overgrazedResources = 0, depletedByOvergrazing = 0;
   let foxBirths = 0, wolfBirths = 0, foxPreyUnits = 0, wolfPreyUnits = 0;
   let lisovykAwakened = false, lisovykSlept = false;
@@ -1035,6 +1067,7 @@ export async function worldTick() {
     const lifecycle = await processAnimalLifecycle();
     aged = lifecycle.aged;
     oldAgeDeaths = lifecycle.died;
+    starvationDeaths = lifecycle.starved;
     corpsesDecaying = lifecycle.decayed;
     corpsesGone = lifecycle.gone;
 
@@ -1154,11 +1187,11 @@ export async function worldTick() {
       }
     }
 
-    if (DEBUG) console.log(`[WORLD TICK] done: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, rabbitBirths=${rabbitBirths}, mouseBirths=${mouseBirths}, rabbitsSpread=${rabbitsSpread}, miceSpread=${miceSpread}, foxBirths=${foxBirths}, wolfBirths=${wolfBirths}, foxPreyUnits=${foxPreyUnits}, wolfPreyUnits=${wolfPreyUnits}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}`);
-    await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "World Tick", description: `Tick #${tickNumber}: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, rabbitBirths=${rabbitBirths}, mouseBirths=${mouseBirths}, rabbitsSpread=${rabbitsSpread}, miceSpread=${miceSpread}, foxBirths=${foxBirths}, wolfBirths=${wolfBirths}, foxPreyUnits=${foxPreyUnits}, wolfPreyUnits=${wolfPreyUnits}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}` } });
+    if (DEBUG) console.log(`[WORLD TICK] done: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, starvationDeaths=${starvationDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, rabbitBirths=${rabbitBirths}, mouseBirths=${mouseBirths}, rabbitsSpread=${rabbitsSpread}, miceSpread=${miceSpread}, foxBirths=${foxBirths}, wolfBirths=${wolfBirths}, foxPreyUnits=${foxPreyUnits}, wolfPreyUnits=${wolfPreyUnits}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}`);
+    await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "World Tick", description: `Tick #${tickNumber}: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, starvationDeaths=${starvationDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, rabbitBirths=${rabbitBirths}, mouseBirths=${mouseBirths}, rabbitsSpread=${rabbitsSpread}, miceSpread=${miceSpread}, foxBirths=${foxBirths}, wolfBirths=${wolfBirths}, foxPreyUnits=${foxPreyUnits}, wolfPreyUnits=${wolfPreyUnits}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, errors=${errors}` } });
     if (botInstance && tickNumber % 5 === 0) {
       const region = await prisma.region.findFirst();
-      if (region) await notifyRegionTechnicalScribes(botInstance, region.id, `🌿 Світ ворухнувся.\n\nТехнічний звіт раз на 5 тіків. Поточний тік #${tickNumber}: заплановано рухів — ${queuedMove}, збору — ${queuedGather}, їжі — ${queuedEat}, оглядів — ${queuedLook}, атак — ${queuedAttack}, зайнятих істот — ${skippedBusy}, старість — ${aged}, смертей від старості — ${oldAgeDeaths}, зниклих трупів — ${corpsesGone}, народилося зайченят — ${rabbitBirths}, мишенят — ${mouseBirths}, лисенят — ${foxBirths}, вовченят — ${wolfBirths}, зайців розбіглося — ${rabbitsSpread}, мишей — ${miceSpread}, об'їдено ресурсів — ${overgrazedResources}, відновлено вузлів — ${regenerated}.`);
+      if (region) await notifyRegionTechnicalScribes(botInstance, region.id, `🌿 Світ ворухнувся.\n\nТехнічний звіт раз на 5 тіків. Поточний тік #${tickNumber}: заплановано рухів — ${queuedMove}, збору — ${queuedGather}, їжі — ${queuedEat}, оглядів — ${queuedLook}, атак — ${queuedAttack}, зайнятих істот — ${skippedBusy}, старість — ${aged}, смертей від старості — ${oldAgeDeaths}, смертей від голоду — ${starvationDeaths}, зниклих трупів — ${corpsesGone}, народилося зайченят — ${rabbitBirths}, мишенят — ${mouseBirths}, лисенят — ${foxBirths}, вовченят — ${wolfBirths}, зайців розбіглося — ${rabbitsSpread}, мишей — ${miceSpread}, об'їдено ресурсів — ${overgrazedResources}, відновлено вузлів — ${regenerated}.`);
     }
     if (botInstance) await notifyFadingFireTimers(botInstance);
   } finally {

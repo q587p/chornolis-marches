@@ -1,7 +1,7 @@
 import { Bot, InlineKeyboard } from "grammy";
 import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA } from "../gameConfig";
-import { normalizeChatLogWindow } from "../services/chatLog";
+import { normalizeChatLogMode, normalizeChatLogWindow } from "../services/chatLog";
 import { parseAlias, normalizeInput, type QueueAliasMode, type RestAliasMode, type SocialSignalAlias, type TargetAction } from "../input/aliases";
 import {
   accelerateFirstQueuedPlayerAction,
@@ -23,10 +23,11 @@ import { buildExamineLocationKeyboard, buildRestWithQueueChoiceKeyboard } from "
 import { actionQueueReplyOptions, sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { durationSecondsSuffix } from "../utils/durationText";
 import { stripUnsafeText } from "../utils/text";
+import { normalizeCreatureActionText } from "../utils/creatureActionText";
 import { sendHelp } from "./help";
 import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } from "./auto";
 import { showCharacter, showInventory, showLocationForPlayer } from "./player";
-import { buildChatLogPage, buildStatBrief } from "./status";
+import { buildAllPage, buildChatLogPage, buildStatBrief, buildWhoPage } from "./status";
 import { buildNewsIndexPage } from "./news";
 import { backToMain, showMenu } from "./menu";
 import { showTime } from "./time";
@@ -35,6 +36,7 @@ import { submitGather as submitCanonicalGather } from "./gather";
 import { addCorpseToInventory, resourceTypeDisplayName } from "../services/corpses";
 import { performSocialSignal } from "../services/socialSignals";
 import { addTwigsPlaceholderText } from "../services/fire";
+import { requireScribeAdmin } from "../services/adminAccess";
 import { pickUpFirstGroundResourceByKey } from "../services/groundItems";
 import { parseSpeechTarget } from "../services/speechTargets";
 
@@ -103,25 +105,6 @@ function targetSearchKeysForCreature(creature: any) {
     `труп: ${species.name}`,
     species.nameGenitive ? `труп ${species.nameGenitive}` : undefined,
   ]);
-}
-
-function normalizeCreatureActionText(action: string | null | undefined) {
-  if (!action) return undefined;
-  return action
-    .replace(/^йдемо на /, "йде на ")
-    .replace(/^збираємо щось поблизу$/, "збирає щось поблизу")
-    .replace(/^збираємо /, "збирає ")
-    .replace(/^їмо$/, "їсть")
-    .replace(/^озираємось$/, "озирається")
-    .replace(/^роздивляємось ціль$/, "роздивляється")
-    .replace(/^вітаємось$/, "вітається")
-    .replace(/^атакуємо$/, "атакує")
-    .replace(/^освіжуємо труп$/, "освіжує труп")
-    .replace(/^говоримо$/, "говорить")
-    .replace(/^вистежуємо$/, "вистежує")
-    .replace(/^відпочиваємо$/, "відпочиває")
-    .replace(/^ставимо пастку$/, "ставить пастку")
-    .replace(/^чекаємо$/, "чекає");
 }
 
 function targetDisplayLabel(target: TextTargetRef) {
@@ -204,8 +187,19 @@ async function replyWithStat(ctx: any) {
   await ctx.reply(stat.text, { reply_markup: stat.keyboard });
 }
 
-async function replyWithChat(ctx: any) {
-  const page = await buildChatLogPage("time", normalizeChatLogWindow(undefined), 0);
+async function replyWithWho(ctx: any) {
+  const page = await buildWhoPage(0);
+  await ctx.reply(page.text, page.keyboard ? { reply_markup: page.keyboard } : undefined);
+}
+
+async function replyWithChat(ctx: any, mode?: string, window?: string) {
+  const page = await buildChatLogPage(normalizeChatLogMode(mode), normalizeChatLogWindow(window), 0);
+  await ctx.reply(page.text, { reply_markup: page.keyboard });
+}
+
+async function replyWithAll(ctx: any, showDead?: boolean) {
+  if (!(await requireScribeAdmin(ctx))) return;
+  const page = await buildAllPage(Boolean(showDead), 0);
   await ctx.reply(page.text, { reply_markup: page.keyboard });
 }
 
@@ -299,13 +293,13 @@ async function submitQueue(ctx: any, mode: QueueAliasMode) {
   await showQueue(ctx, player.id);
 }
 
-async function submitTrack(bot: Bot, ctx: any) {
+async function submitTrack(bot: Bot, ctx: any, detail = false) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const durationMs = actionDurationMs("TRACK", player.stamina);
   try {
-    const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "TRACK", payload: {}, durationMs, chatId: ctx.chat?.id, interruptQueued: true });
+    const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "TRACK", payload: { detail }, durationMs, chatId: ctx.chat?.id, interruptQueued: true });
     await ctx.reply(result.mode === "immediate" ? "Ви вдивляєтесь у сліди." : `Вистежування додано в чергу${durationSecondsSuffix(player, durationMs)}.`);
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {
@@ -505,7 +499,9 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "help") return sendHelp(ctx);
     if (parsed.kind === "news") return replyWithNews(ctx);
     if (parsed.kind === "stat") return replyWithStat(ctx);
-    if (parsed.kind === "chat") return replyWithChat(ctx);
+    if (parsed.kind === "who") return replyWithWho(ctx);
+    if (parsed.kind === "chat") return replyWithChat(ctx, parsed.mode, parsed.window);
+    if (parsed.kind === "all") return replyWithAll(ctx, parsed.showDead);
     if (parsed.kind === "time") return showTime(ctx);
     if (parsed.kind === "menu") return showMenu(ctx);
     if (parsed.kind === "back") return backToMain(ctx);
@@ -514,7 +510,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "rest") return submitRest(ctx, parsed.mode);
     if (parsed.kind === "auto") return submitAuto(bot, ctx, parsed.mode);
     if (parsed.kind === "queue") return submitQueue(ctx, parsed.mode);
-    if (parsed.kind === "track") return submitTrack(bot, ctx);
+    if (parsed.kind === "track") return submitTrack(bot, ctx, Boolean(parsed.detail));
     if (parsed.kind === "wait") return submitWait(bot, ctx);
     if (parsed.kind === "add-twigs-campfire") return ctx.reply(addTwigsPlaceholderText());
     if (parsed.kind === "say") return submitSay(bot, ctx, parsed.text);

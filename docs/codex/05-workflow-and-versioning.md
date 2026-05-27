@@ -13,15 +13,39 @@ When asked for a patch/archive/update:
 - Preserve existing code/docs/world state.
 - Do not overwrite prior functionality without explicit request.
 
-## Build/check rule
+## Test/build/check rule
 
-Before git add/commit/push, run a build/check where applicable, especially:
+Before git add/commit/push, run the relevant tests/checks/build where applicable.
+
+Default checks for ordinary code/data changes:
+
+```bash
+npm test
+```
 
 ```bash
 npm run build
 ```
 
-If tests/checks exist and are relevant, run them too.
+`npm test` currently validates world seed references and type-checks `prisma/seed.ts` without executing the seed. Treat it as important for map/world/seed/data-shape changes and useful as a general regression check when behavior touches shared game systems.
+
+Add or extend focused tests when a new rule can be checked cheaply and repeatably, especially for:
+
+- world seed and map invariants;
+- parser/alias behavior;
+- text/grammar/terminology helpers;
+- resource, track, queue or lifecycle rules with deterministic inputs;
+- regression cases that already broke once.
+
+Manual Telegram playthroughs are still useful for UX, but they should not be the only verification when a scriptable test is practical.
+
+When changing `docs/planning/items/*.md`, also run:
+
+```bash
+npm run planning:export
+```
+
+Commit the regenerated `docs/planning/exports/issues.csv` and `docs/planning/exports/items.json` together with the planning item change. CI treats stale planning exports as a failed check.
 
 ## Versioning flow remembered
 

@@ -1,6 +1,7 @@
 import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import { formatObservedPostureText, formatObservedVitalsText, formatPlayerStats, formatVitalsLine } from "../utils/playerText";
+import { visibleHeldTorchText } from "../utils/torchText";
 import { creatureForms, playerForms, type NameForms } from "./grammar";
 import { lifetimeSummary } from "./itemLifetime";
 import { playerShowsTechnicalDetails } from "./technicalDetails";
@@ -70,13 +71,6 @@ function genderedUnarmed(player: { grammaticalGender?: string | null; pronoun?: 
   return `${looks} беззбройним.`;
 }
 
-function handsText(torchState: { isLit: boolean; litAmount?: number }) {
-  if (!torchState.isLit) return "Руки порожні.";
-  const count = torchState.litAmount ?? 1;
-  if (count > 1) return "В обох руках горять запалені факели.";
-  return "У руці горить запалений факел.";
-}
-
 export async function resolveTarget(type: string, id: number, locationId: number, options: { viewerPlayerId?: number } = {}): Promise<ResolvedTarget | null> {
   const showTechnicalDetails = await playerShowsTechnicalDetails(options.viewerPlayerId);
 
@@ -92,7 +86,7 @@ export async function resolveTarget(type: string, id: number, locationId: number
       `Стан: ${genderedPlayerState(target)}`,
       formatObservedVitalsText(target, { hpFallback: BASE_HP, staminaFallback: BASE_STAMINA }),
       genderedUnarmed(target),
-      handsText(torchState),
+      visibleHeldTorchText(torchState),
     ];
     if (showTechnicalDetails) {
       visibleLines.push("", "Технічні деталі:", ...formatVitalsLine(target, { showTechnicalDetails: true, hpFallback: BASE_HP, staminaFallback: BASE_STAMINA }), "", "Статистика:", formatPlayerStats(target));

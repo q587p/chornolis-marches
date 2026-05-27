@@ -6,6 +6,7 @@ export type QueueAliasMode = "status" | "cancel-current" | "clear";
 export type AutoAliasMode = "start" | "stop";
 export type RestAliasMode = "start" | "queue" | "interrupt";
 export type SocialSignalAlias = "smile" | "laugh" | "nod" | "bow" | "point" | "glare" | "sigh" | "wave";
+export type ChatAliasMode = "time" | "location" | "character";
 
 export type ParsedAliasCommand =
   | { kind: "location" }
@@ -15,7 +16,9 @@ export type ParsedAliasCommand =
   | { kind: "help" }
   | { kind: "news" }
   | { kind: "stat" }
-  | { kind: "chat" }
+  | { kind: "who" }
+  | { kind: "chat"; mode?: ChatAliasMode; window?: string }
+  | { kind: "all"; showDead?: boolean }
   | { kind: "time" }
   | { kind: "menu" }
   | { kind: "back" }
@@ -24,7 +27,7 @@ export type ParsedAliasCommand =
   | { kind: "rest"; mode: RestAliasMode }
   | { kind: "auto"; mode: AutoAliasMode }
   | { kind: "queue"; mode: QueueAliasMode }
-  | { kind: "track" }
+  | { kind: "track"; detail?: boolean }
   | { kind: "wait" }
   | { kind: "add-twigs-campfire" }
   | { kind: "say"; text: string }
@@ -127,6 +130,8 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "стан": { kind: "me" },
   "статус": { kind: "me" },
   "інвентар": { kind: "inventory" },
+  inventory: { kind: "inventory" },
+  inv: { kind: "inventory" },
   "речі": { kind: "inventory" },
   "що в мене": { kind: "inventory" },
   hp: { kind: "me" },
@@ -158,6 +163,12 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "статистика": { kind: "stat" },
   "екологія": { kind: "stat" },
   "стан світу": { kind: "stat" },
+
+  who: { kind: "who" },
+  "хто": { kind: "who" },
+  "хто активний": { kind: "who" },
+  "хто тут": { kind: "who" },
+  "хто поруч": { kind: "who" },
 
   chat: { kind: "chat" },
   "репліки": { kind: "chat" },
@@ -358,9 +369,29 @@ function parseSay(raw: string, text: string): ParsedAliasCommand | null {
   return said ? { kind: "say", text: said } : null;
 }
 
+function parseChat(text: string): ParsedAliasCommand | null {
+  const match = text.match(/^chat(?:\s+(.+))?$/);
+  if (!match) return null;
+
+  const args = match[1]?.trim();
+  if (!args) return { kind: "chat" };
+  const parts = args.split(/\s+/).filter(Boolean);
+  const first = parts[0];
+  if (["time", "location", "character"].includes(first)) {
+    return { kind: "chat", mode: first as ChatAliasMode, window: parts[1] };
+  }
+  return { kind: "chat", mode: "time", window: first };
+}
+
+function parseAll(text: string): ParsedAliasCommand | null {
+  const match = text.match(/^all(?:\s+(.+))?$/);
+  if (!match) return null;
+  return { kind: "all", showDead: match[1]?.trim() === "dead" };
+}
+
 function parseTrackIntent(text: string): ParsedAliasCommand | null {
   if (/^(?:examine|inspect|look|x|роздивитися|роздивитись|придивитися|придивитись|оглянути|глянути)(?:\s+(?:tracks|track|сліди|слід)|\s+до\s+(?:слідів|сліду))$/.test(text)) {
-    return { kind: "track" };
+    return { kind: "track", detail: true };
   }
   return null;
 }
@@ -413,6 +444,12 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
 
   const say = parseSay(raw, text);
   if (say) return say;
+
+  const chat = parseChat(text);
+  if (chat) return chat;
+
+  const all = parseAll(text);
+  if (all) return all;
 
   const trackIntent = parseTrackIntent(text);
   if (trackIntent) return trackIntent;

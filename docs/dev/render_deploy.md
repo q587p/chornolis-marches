@@ -66,8 +66,8 @@ Render Web Service exposes:
 - `/world` — protected service status page with world counts, action queue diagnostics and latest events; asks for `ADMIN_SET_SECRET`.
 - `/all` — protected service view of `/all`; asks for `ADMIN_SET_SECRET` before showing the list.
 - `/health` — JSON health check.
-- `/who` — public active-character list.
-- `/who.json` — JSON active-character list and shared public count.
+- `/who` — public active-character list with pagination (`?page=0`).
+- `/who.json` — JSON active-character list page and shared public count (`?page=0`).
 - `/stat` — human-readable statistics page.
 - `/stat.json` — JSON statistics.
 

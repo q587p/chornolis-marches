@@ -41,6 +41,19 @@ Potential long-term architecture:
 - `src/handlers/start.ts`: onboarding/start flow; prior context around world year line import.
 - `src/services/calendar.ts`: calendar/year formatting; prior alias suggestion.
 
+## Refactor hotspots
+
+Recent 0.11.x work made several files broad enough to deserve careful boundary cleanup:
+
+- `src/services/worldTick.ts`: ecology, reproduction, creature AI, lisovyk behavior, lifecycle, runtime tick timer and tick admin text.
+- `src/handlers/status.ts`: Telegram status/stat/chat/all/admin character and NPC pages.
+- `src/services/actionCompletions.ts`: completion logic for many unrelated actions.
+- `src/server/statusServer.ts`: HTTP routing, HTML rendering and admin-gated status pages.
+- `src/services/locations.ts`: location render data, feature text, target visibility, resources and fire/torch feature actions.
+- `src/handlers/aliases.ts`: Ukrainian/MUD-style input routing and target resolution.
+
+Prefer behavior-preserving extractions first. See `docs/planning/items/TECH-001-service-boundary-and-duplication-cleanup.md`.
+
 ## Commands / behavior context
 
 - `/start` should continue an existing character where they already are; explicit movement back to the beginning belongs to `/respawn` or admin `/teleport`, not ordinary start/menu refresh.

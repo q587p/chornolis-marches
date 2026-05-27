@@ -18,13 +18,15 @@ Chornolis Marches is a Ukrainian dark-fantasy Telegram RPG / living-world sandbo
 8. When adding or changing player-facing gameplay, check whether onboarding, `/help`, beginner guidance and tutorial/newcomer-helper plans need updating too.
 9. When adding admin/scribe commands, update `/adminHelp`, `docs/systems/admin_commands.md` and any matching web/status documentation together.
 10. Do not make `/start` reset position for existing characters; use explicit respawn/admin movement for relocation.
+11. New or changed commands should keep aliases together: slash command where useful, English/MUD-style text forms, Ukrainian text forms, matching buttons, and matching `/help` or `/adminHelp` docs.
 
 ## Preferred workflow for code tasks
 
 - Inspect current repo state before editing.
 - Identify exact files to change.
 - Make the smallest coherent change that preserves behavior.
-- Run the relevant build/check/test command if available.
+- Run the relevant test/build/check command if available. Prefer `npm test` plus `npm run build` before suggesting commit/push when the change touches code, data, seed/world structure, or behavior that could drift.
+- Add or extend focused tests when a new rule can be validated cheaply and repeatably. Manual Telegram checks are useful, but they should not replace scriptable coverage for seed validation, parser/formatter helpers, world data invariants, or other deterministic behavior.
 - Summarize changed files and any checks run.
 - Only mention version bump when explicitly relevant; the user usually handles it manually after a green build.
 - If the change introduces a new player action, menu item, command, resource use, visibility rule, survival mechanic, social flow or admin-visible beginner state, update the relevant beginner-facing docs/text or add a planning note explaining how onboarding should teach it.

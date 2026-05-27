@@ -14,14 +14,26 @@ function pick<T>(items: T[]) {
   return items.length ? items[Math.floor(Math.random() * items.length)] : undefined;
 }
 
-async function visibleSignalTargets(locationId: number, excludePlayerId?: number) {
+async function visibleSignalTargets(
+  locationId: number,
+  options: { excludePlayerId?: number; excludeCreatureId?: number } = {},
+) {
   const [players, creatures] = await Promise.all([
     prisma.player.findMany({
-      where: { currentLocationId: locationId, ...(excludePlayerId ? { id: { not: excludePlayerId } } : {}) },
+      where: {
+        currentLocationId: locationId,
+        ...(options.excludePlayerId ? { id: { not: options.excludePlayerId } } : {}),
+      },
       orderBy: { id: "asc" },
     }),
     prisma.creature.findMany({
-      where: { locationId, isAlive: true, isGone: false, isHidden: false },
+      where: {
+        locationId,
+        isAlive: true,
+        isGone: false,
+        isHidden: false,
+        ...(options.excludeCreatureId ? { id: { not: options.excludeCreatureId } } : {}),
+      },
       include: { species: true },
       orderBy: [{ species: { kind: "asc" } }, { id: "asc" }],
     }),
@@ -39,7 +51,7 @@ async function visibleSignalTargets(locationId: number, excludePlayerId?: number
 
 export async function maybePerformPlayerAutoSignal(bot: Bot, player: any, chatId: number | string) {
   if (!player.currentLocationId || !chance(PLAYER_AUTO_SIGNAL_CHANCE)) return false;
-  const targetRef = pick(await visibleSignalTargets(player.currentLocationId, player.id));
+  const targetRef = pick(await visibleSignalTargets(player.currentLocationId, { excludePlayerId: player.id }));
   if (!targetRef) return false;
 
   const target = await resolveTarget(targetRef.type, targetRef.id, player.currentLocationId, { viewerPlayerId: player.id });
@@ -52,9 +64,9 @@ export async function maybePerformPlayerAutoSignal(bot: Bot, player: any, chatId
 export async function maybePerformHerbalistSignal(bot: Bot, creature: any) {
   if (!chance(HERBALIST_SIGNAL_CHANCE)) return false;
 
-  const targetRef = pick(await visibleSignalTargets(creature.locationId));
+  const targetRef = pick(await visibleSignalTargets(creature.locationId, { excludeCreatureId: creature.id }));
   if (!targetRef || chance(30)) {
-    await performCreatureLocationSignal(bot, creature, "hush");
+    await performCreatureLocationSignal(bot, creature, pick(["nod", "hush"]) ?? "hush");
     return true;
   }
 

@@ -13,14 +13,16 @@ import {
   normalizeChatLogMode,
   normalizeChatLogWindow,
   parseChatLogRequest,
+  publicChatEventDescription,
   publicChatEventType,
   type ChatLogMode,
   type ChatLogWindow,
 } from "../services/chatLog";
 import { getEcologyStats } from "../services/ecologyStats";
 import { getStatusData } from "../services/status";
-import { getPlayerByTelegramId } from "../services/players";
+import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { isScribeAdmin, requireScribeAdmin } from "../services/adminAccess";
+import { logEvent } from "../services/worldEvents";
 import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { disablePlayerAuto, enablePlayerAuto, stopPlayerAuto } from "./auto";
 import { creatureForms, playerForms } from "../services/grammar";
@@ -31,7 +33,11 @@ const TELEGRAM_TEXT_MAX_CHARS = 3900;
 const CHAT_LOG_TEXT_MAX_CHARS = 3400;
 const CHAT_LOG_ENTRY_MAX_CHARS = 1100;
 const CHAT_LOG_PAGE_SIZE = 12;
+const WHO_PAGE_SIZE = 20;
 const WHO_ACTIVE_WINDOW_MS = 60 * 60 * 1000;
+type AllReturnContext = { showDead: boolean; page: number };
+const pendingNameRejections = new Map<number, { playerId: number; returnContext: AllReturnContext }>();
+const pendingAdminTeleports = new Map<number, { playerId: number; returnContext: AllReturnContext }>();
 
 type UniqueNpcSpec = {
   speciesKey: string;
@@ -107,6 +113,7 @@ export async function buildStatBrief() {
       `Розселення: зайці ${formatStatNumber(counters.rabbitsSpread)} (${formatRate(rates.rabbitsSpread)}/год), миші ${formatStatNumber(counters.miceSpread)} (${formatRate(rates.miceSpread)}/год).`,
       `Переїдено ресурсів: ${formatStatNumber(counters.overgrazedResources)} (${formatRate(rates.overgrazedResources)}/год).`,
       `Смерті від старості: ${formatStatNumber(counters.oldAgeDeaths)} (${formatRate(rates.oldAgeDeaths)}/год).`,
+      `Смерті від голоду: ${formatStatNumber(counters.starvationDeaths)} (${formatRate(rates.starvationDeaths)}/год), усього ${formatStatNumber(stats.totals.starvationDeaths)}.`,
       `Смерті від хижаків: ${formatStatNumber(counters.predatorKills)} (${formatRate(rates.predatorKills)}/год), усього ${formatStatNumber(stats.totals.predatorKills)}.`,
       "",
       "Найвдаліші хижаки:",
@@ -201,9 +208,9 @@ function hpForAge(species: any, age: CreatureAge) {
 function buildAllPaginationKeyboard(showDead: boolean, page: number, totalPages: number, playerIds: number[] = [], npcIds: number[] = []) {
   if (totalPages <= 1 && playerIds.length === 0 && npcIds.length === 0) return undefined;
   const keyboard = new InlineKeyboard();
-  for (const playerId of playerIds) keyboard.text(`👤 #${playerId}`, `adminPlayer:${playerId}`).row();
-  for (const npcId of npcIds) keyboard.text(`🧩 NPC #${npcId}`, `adminCreature:${npcId}`).row();
   const mode = showDead ? "dead" : "live";
+  for (const playerId of playerIds) keyboard.text(`👤 #${playerId}`, `adminPlayer:${playerId}:${mode}:${page}`).row();
+  for (const npcId of npcIds) keyboard.text(`🧩 NPC #${npcId}`, `adminCreature:${npcId}`).row();
   if (page > 0) keyboard.text("◀️ Назад", `all:${mode}:${page - 1}`);
   if (page < totalPages - 1) keyboard.text("Далі ▶️", `all:${mode}:${page + 1}`);
   return keyboard;
@@ -301,16 +308,165 @@ async function playerActionOriginStats(playerId: number) {
   return { autoActions, manualActions: Math.max(0, allActions - autoActions), allActions };
 }
 
-function buildAdminPlayerKeyboard(player: { id: number; isNameApproved: boolean; isAutoEnabled: boolean }) {
+function allReturnCallback(returnContext: AllReturnContext) {
+  return `all:${returnContext.showDead ? "dead" : "live"}:${returnContext.page}`;
+}
+
+function allReturnContextFromMatch(mode?: string, page?: string): AllReturnContext {
+  const parsedPage = Number(page);
+  return {
+    showDead: mode === "dead",
+    page: Number.isFinite(parsedPage) && parsedPage >= 0 ? parsedPage : 0,
+  };
+}
+
+function buildAdminPlayerKeyboard(player: { id: number; isNameApproved: boolean; isAutoEnabled: boolean }, returnContext: AllReturnContext = { showDead: false, page: 0 }) {
+  const mode = returnContext.showDead ? "dead" : "live";
   const keyboard = new InlineKeyboard();
   keyboard
-    .text(player.isNameApproved ? "✅ Ім’я схвалене" : "✅ Схвалити ім’я", `adminPlayerName:approve:${player.id}`)
-    .text(player.isNameApproved ? "↩️ Зняти схвалення" : "❌ Не схвалене", `adminPlayerName:reject:${player.id}`)
+    .text(player.isNameApproved ? "✅ Ім’я схвалене" : "✅ Схвалити ім’я", `adminPlayerName:approve:${player.id}:${mode}:${returnContext.page}`)
+    .text(player.isNameApproved ? "↩️ Зняти схвалення" : "❌ Не схвалене", `adminPlayerName:reject:${player.id}:${mode}:${returnContext.page}`)
     .row()
-    .text(player.isAutoEnabled ? "🤖 Вимкнути авто" : "🤖 Увімкнути авто", `adminPlayerAuto:${player.isAutoEnabled ? "off" : "on"}:${player.id}`)
+    .text(player.isAutoEnabled ? "🤖 Вимкнути авто" : "🤖 Увімкнути авто", `adminPlayerAuto:${player.isAutoEnabled ? "off" : "on"}:${player.id}:${mode}:${returnContext.page}`)
     .row()
-    .text("🔄 Оновити", `adminPlayer:${player.id}`);
+    .text("🧭 Телепорт", `adminPlayerTeleport:menu:${player.id}:${mode}:${returnContext.page}`)
+    .row()
+    .text("🔄 Оновити", `adminPlayer:${player.id}:${mode}:${returnContext.page}`)
+    .row()
+    .text("↩️ Назад до /all", allReturnCallback(returnContext));
   return keyboard;
+}
+
+function buildAdminTeleportKeyboard(playerId: number, returnContext: AllReturnContext) {
+  const mode = returnContext.showDead ? "dead" : "live";
+  return new InlineKeyboard()
+    .text("🧭 У мою місцину", `adminPlayerTeleport:here:${playerId}:${mode}:${returnContext.page}`)
+    .row()
+    .text("🏕 У стартову", `adminPlayerTeleport:start:${playerId}:${mode}:${returnContext.page}`)
+    .row()
+    .text("✍️ Вказати місцину", `adminPlayerTeleport:ask:${playerId}:${mode}:${returnContext.page}`)
+    .row()
+    .text("↩️ Назад до картки", `adminPlayer:${playerId}:${mode}:${returnContext.page}`)
+    .text("↩️ До /all", allReturnCallback(returnContext));
+}
+
+function scribeDisplayName(player: any | null, telegramId: number | string | undefined) {
+  if (player) return playerForms(player).nominative;
+  return telegramId ? `писар #${telegramId}` : "писар Порубіжжя";
+}
+
+function scribePastVerb(player: any | null, masculine: string, feminine: string, plural: string) {
+  return player ? genderedPast(player, masculine, feminine, plural) : masculine;
+}
+
+function isPendingCancelAlias(text: string) {
+  const value = text.trim().toLowerCase().replace(/^\/+/, "");
+  return [
+    "cancel",
+    "skasuvaty",
+    "vidminyty",
+    "stop",
+    "скасувати",
+    "відмінити",
+    "відміна",
+    "стоп",
+    "не треба",
+  ].includes(value);
+}
+
+async function cancelPendingAdminInput(ctx: any) {
+  if (!ctx.from) return false;
+  const hadName = pendingNameRejections.delete(ctx.from.id);
+  const hadTeleport = pendingAdminTeleports.delete(ctx.from.id);
+  if (!hadName && !hadTeleport) return false;
+  await ctx.reply(hadTeleport ? "↩️ Запит телепорту скасовано." : "↩️ Відхилення імені скасовано.");
+  return true;
+}
+
+async function notifyPlayerByTelegram(bot: Bot, player: { telegramId: string; isAutoEnabled?: boolean | null }, text: string) {
+  const telegramId = Number(player.telegramId);
+  if (!Number.isSafeInteger(telegramId)) return false;
+  await bot.api.sendMessage(telegramId, text, {
+    reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, Boolean(player.isAutoEnabled)),
+  }).catch(() => undefined);
+  return true;
+}
+
+async function logNameApprovalEvent(params: {
+  type: "approved" | "rejected";
+  player: any;
+  scribeName: string;
+  comment?: string;
+}) {
+  const playerName = playerForms(params.player).nominative;
+  const title = params.type === "approved" ? "Character name approved" : "Character name rejected";
+  const descriptionParts = [
+    `player=${params.player.id}`,
+    `name=${playerName}`,
+    `scribe=${params.scribeName}`,
+  ];
+  if (params.comment) descriptionParts.push(`comment=${params.comment}`);
+  await logEvent("SYSTEM", title, descriptionParts.join("; "), params.player.currentLocationId ?? undefined);
+}
+
+async function logAdminAutoToggle(params: { enabled: boolean; player: any; scribe: any | null; scribeName: string; scribeTelegramId: number | string }) {
+  const playerName = playerForms(params.player).nominative;
+  const title = params.enabled
+    ? `Admin enabled auto: ${params.scribeName} -> ${playerName}`
+    : `Admin disabled auto: ${params.scribeName} -> ${playerName}`;
+  await logEvent(
+    "SYSTEM",
+    title,
+    [
+      `player=${params.player.id}`,
+      `playerName=${playerName}`,
+      params.scribe?.id ? `scribePlayer=${params.scribe.id}` : null,
+      `scribeTelegram=${params.scribeTelegramId}`,
+      `scribeName=${params.scribeName}`,
+    ].filter(Boolean).join("; "),
+    params.player.currentLocationId ?? undefined,
+  );
+}
+
+async function resolveAdminTeleportLocation(rawTarget: string) {
+  const target = rawTarget.trim();
+  if (!target) return null;
+
+  const coords = target.match(/^(-?\d+)\s*,\s*(-?\d+)(?:\s*,\s*(-?\d+))?$/);
+  if (coords) {
+    return prisma.cellLocation.findFirst({
+      where: { x: Number(coords[1]), y: Number(coords[2]), z: coords[3] ? Number(coords[3]) : 0 },
+    });
+  }
+
+  return prisma.cellLocation.findFirst({
+    where: {
+      OR: [{ key: target }, { name: target }],
+    },
+  });
+}
+
+async function teleportPlayerByScribe(bot: Bot, playerId: number, locationId: number, scribeTelegramId: number) {
+  const [player, location, scribe] = await Promise.all([
+    prisma.player.findUnique({ where: { id: playerId } }),
+    prisma.cellLocation.findUnique({ where: { id: locationId } }),
+    getPlayerByTelegramId(scribeTelegramId),
+  ]);
+  if (!player || !location) return { ok: false as const, message: "Персонажа або місцину не знайдено." };
+
+  const scribeName = scribeDisplayName(scribe, scribeTelegramId);
+  await prisma.player.updateMany({
+    where: { id: player.id },
+    data: { currentLocationId: location.id, isResting: false },
+  });
+  await logEvent("SYSTEM", "Admin teleported player", `player=${player.id}; name=${playerForms(player).nominative}; location=${location.key}; scribe=${scribeName}`, location.id);
+  await notifyPlayerByTelegram(
+    bot,
+    player,
+    `${scribeName} переніс вас до місцини: ${location.name}.`,
+  );
+
+  return { ok: true as const, player, location, scribeName };
 }
 
 function buildAdminCreatureKeyboard(creatureId: number) {
@@ -354,7 +510,38 @@ async function resolveAdminPlayer(rawTarget: string) {
   return { player: null, error: "Не знайшов такого персонажа." };
 }
 
-async function buildAdminPlayerDetailsView(playerId: number) {
+async function resolveLocalAdminPlayerByNumber(ctx: any, rawTarget: string) {
+  const raw = String(rawTarget ?? "").trim();
+  if (!/^\d+$/.test(raw) || raw.startsWith("#")) return null;
+
+  const viewer = ctx.from?.id ? await getPlayerByTelegramId(ctx.from.id) : null;
+  if (!viewer?.currentLocationId) return null;
+
+  const players = await prisma.player.findMany({
+    where: { currentLocationId: viewer.currentLocationId },
+    orderBy: { id: "asc" },
+  });
+  const index = Number(raw) - 1;
+  return index >= 0 && index < players.length ? players[index] : null;
+}
+
+async function resolveAdminPlayerForContext(ctx: any, rawTarget: string) {
+  const target = normalizePlayerLookup(rawTarget);
+  if (target) {
+    const localPlayer = await resolveLocalAdminPlayerByNumber(ctx, rawTarget);
+    if (localPlayer) return { player: localPlayer, error: null };
+    return resolveAdminPlayer(rawTarget);
+  }
+
+  const telegramId = ctx.from?.id;
+  if (!telegramId) return { player: null, error: "Не бачу Telegram ID для поточного писаря." };
+
+  const player = await getPlayerByTelegramId(telegramId);
+  if (player) return { player, error: null };
+  return { player: null, error: "Спершу увійдіть у світ через /start, щоб мати поточного персонажа." };
+}
+
+async function buildAdminPlayerDetailsView(playerId: number, returnContext: AllReturnContext = { showDead: false, page: 0 }) {
   const player = await prisma.player.findUnique({
     where: { id: playerId },
     include: {
@@ -427,7 +614,7 @@ async function buildAdminPlayerDetailsView(playerId: number) {
     `Остання дія: ${formatAdminDate(player.lastActionAt)}`,
   ].join("\n");
 
-  return { text: truncateTelegramText(text), keyboard: buildAdminPlayerKeyboard(player) };
+  return { text: truncateTelegramText(text), keyboard: buildAdminPlayerKeyboard(player, returnContext) };
 }
 
 async function buildAdminCreatureDetailsView(creatureId: number) {
@@ -556,20 +743,50 @@ export async function buildWhoData(now = new Date()) {
   };
 }
 
-export async function buildWhoText(now = new Date()) {
+export async function buildWhoText(now = new Date(), requestedPage = 0) {
   const data = await buildWhoData(now);
+  const totalPages = Math.max(1, Math.ceil(data.mixedCharacters.length / WHO_PAGE_SIZE));
+  const page = Math.max(0, Math.min(Math.floor(requestedPage), totalPages - 1));
+  const start = page * WHO_PAGE_SIZE;
+  const visibleCharacters = data.mixedCharacters.slice(start, start + WHO_PAGE_SIZE);
+  const pageLine = totalPages > 1 ? `Сторінка ${page + 1}/${totalPages}.` : "";
 
   return [
     "👥 Хто активний",
     "За останню реальну годину.",
     `Разом персонажів: ${data.totalCount}.`,
+    pageLine,
     "",
     "Писарі Порубіжжя:",
     ...(data.scribes.length ? data.scribes.map((name) => `- ${name}`) : ["- нікого не видно"]),
     "",
     "Персонажі:",
-    ...(data.mixedCharacters.length ? data.mixedCharacters.map((name) => `- ${name}`) : ["- нікого не видно"]),
+    ...(visibleCharacters.length ? visibleCharacters.map((name) => `- ${name}`) : ["- нікого не видно"]),
   ].join("\n");
+}
+
+function buildWhoPaginationKeyboard(page: number, totalPages: number) {
+  if (totalPages <= 1) return undefined;
+  const keyboard = new InlineKeyboard();
+  if (page > 0) keyboard.text("◀️ Назад", `who:${page - 1}`);
+  keyboard.text(`${page + 1}/${totalPages}`, "who:noop");
+  if (page < totalPages - 1) keyboard.text("Далі ▶️", `who:${page + 1}`);
+  return keyboard;
+}
+
+export async function buildWhoPage(requestedPage = 0, now = new Date()) {
+  const data = await buildWhoData(now);
+  const totalPages = Math.max(1, Math.ceil(data.mixedCharacters.length / WHO_PAGE_SIZE));
+  const page = Math.max(0, Math.min(Math.floor(requestedPage), totalPages - 1));
+  const start = page * WHO_PAGE_SIZE;
+  return {
+    data,
+    page,
+    visibleCharacters: data.mixedCharacters.slice(start, start + WHO_PAGE_SIZE),
+    totalPages,
+    text: await buildWhoText(now, page),
+    keyboard: buildWhoPaginationKeyboard(page, totalPages),
+  };
 }
 
 function buildLocationAllPaginationKeyboard(page: number, totalPages: number) {
@@ -613,7 +830,8 @@ export async function buildChatLogPage(mode: ChatLogMode, window: ChatLogWindow,
   let lastGroup = "";
   const lines = log.events.map((event) => {
     const location = event.location ? ` @ ${event.location.name}` : "";
-    const text = event.description ? `\n«${event.description}»` : "";
+    const description = publicChatEventDescription(event);
+    const text = description ? `\n«${description}»` : "";
     const group = chatEventGroupLabel(event, mode);
     const groupLine = group && group !== lastGroup ? `\n${group}\n` : "";
     lastGroup = group;
@@ -843,11 +1061,27 @@ export function registerStatusHandlers(bot: Bot) {
   });
 
   bot.command("who", async (ctx) => {
-    await ctx.reply(await buildWhoText());
+    const page = await buildWhoPage(0);
+    await ctx.reply(page.text, page.keyboard ? { reply_markup: page.keyboard } : undefined);
   });
 
   bot.hears(["👥 Хто активний", "Хто активний"], async (ctx) => {
-    await ctx.reply(await buildWhoText());
+    const page = await buildWhoPage(0);
+    await ctx.reply(page.text, page.keyboard ? { reply_markup: page.keyboard } : undefined);
+  });
+
+  bot.callbackQuery(/^who:(\d+|noop)$/, async (ctx) => {
+    if (ctx.match[1] === "noop") {
+      await ctx.answerCallbackQuery();
+      return;
+    }
+    const page = await buildWhoPage(Number(ctx.match[1]));
+    await ctx.answerCallbackQuery();
+    if (ctx.callbackQuery.message) {
+      await ctx.editMessageText(page.text, page.keyboard ? { reply_markup: page.keyboard } : undefined);
+      return;
+    }
+    await ctx.reply(page.text, page.keyboard ? { reply_markup: page.keyboard } : undefined);
   });
 
   bot.command("chat", async (ctx) => {
@@ -932,7 +1166,7 @@ export function registerStatusHandlers(bot: Bot) {
   bot.command(["playerAdmin", "playeradmin", "player"], async (ctx) => {
     if (!(await requireScribeAdmin(ctx))) return;
 
-    const resolved = await resolveAdminPlayer(String(ctx.match ?? ""));
+    const resolved = await resolveAdminPlayerForContext(ctx, String(ctx.match ?? ""));
     if (!resolved.player) {
       await ctx.reply(resolved.error ?? "Не знайшов такого персонажа.");
       return;
@@ -942,19 +1176,20 @@ export function registerStatusHandlers(bot: Bot) {
     await ctx.reply(view.text, { reply_markup: view.keyboard });
   });
 
-  bot.callbackQuery(/^adminPlayer:(\d+)$/, async (ctx) => {
+  bot.callbackQuery(/^adminPlayer:(\d+)(?::(live|dead):(\d+))?$/, async (ctx) => {
     if (!(await isScribeAdmin(ctx.from?.id))) {
       await ctx.answerCallbackQuery({ text: "Ця дія доступна тільки писарям Порубіжжя.", show_alert: true });
       return;
     }
 
     const playerId = Number(ctx.match[1]);
+    const returnContext = allReturnContextFromMatch(ctx.match[2], ctx.match[3]);
     await ctx.answerCallbackQuery();
-    const view = await buildAdminPlayerDetailsView(playerId);
+    const view = await buildAdminPlayerDetailsView(playerId, returnContext);
     await ctx.reply(view.text, { reply_markup: view.keyboard });
   });
 
-  bot.callbackQuery(/^adminPlayerName:(approve|reject):(\d+)$/, async (ctx) => {
+  bot.callbackQuery(/^adminPlayerName:(approve|reject):(\d+)(?::(live|dead):(\d+))?$/, async (ctx) => {
     if (!(await isScribeAdmin(ctx.from?.id))) {
       await ctx.answerCallbackQuery({ text: "Ця дія доступна тільки писарям Порубіжжя.", show_alert: true });
       return;
@@ -962,15 +1197,38 @@ export function registerStatusHandlers(bot: Bot) {
 
     const action = ctx.match[1];
     const playerId = Number(ctx.match[2]);
-    const isNameApproved = action === "approve";
-    const updated = await prisma.player.update({ where: { id: playerId }, data: { isNameApproved } }).catch(() => null);
+    const returnContext = allReturnContextFromMatch(ctx.match[3], ctx.match[4]);
+    const target = await prisma.player.findUnique({ where: { id: playerId } });
+    if (!target) {
+      await ctx.answerCallbackQuery({ text: "Персонажа не знайдено.", show_alert: true });
+      return;
+    }
+
+    if (action === "reject") {
+      pendingNameRejections.set(ctx.from.id, { playerId, returnContext });
+      await ctx.answerCallbackQuery({ text: "Напишіть коментар для гравця." });
+      await ctx.reply(`Напишіть причину, чому ім’я ${playerForms(target).nominative} не схвалене. Я передам цей текст гравцю й запишу його в журнал подій.\n\nЩоб скасувати: /cancel або скасувати`);
+      return;
+    }
+
+    const updated = await prisma.player.update({ where: { id: playerId }, data: { isNameApproved: true } }).catch(() => null);
     if (!updated) {
       await ctx.answerCallbackQuery({ text: "Персонажа не знайдено.", show_alert: true });
       return;
     }
 
-    await ctx.answerCallbackQuery({ text: isNameApproved ? "Ім’я схвалено." : "Схвалення імені знято." });
-    const view = await buildAdminPlayerDetailsView(playerId);
+    pendingNameRejections.delete(ctx.from.id);
+    const scribe = await getPlayerByTelegramId(ctx.from.id);
+    const scribeName = scribeDisplayName(scribe, ctx.from.id);
+    const approvedVerb = scribePastVerb(scribe, "схвалив", "схвалила", "схвалили");
+    await logNameApprovalEvent({ type: "approved", player: updated, scribeName });
+    await notifyPlayerByTelegram(
+      bot,
+      updated,
+      `${scribeName} ${approvedVerb} ваше ім’я.\n\nТепер ви повноцінний учасник літопису Порубіжжя Чорнолісу.`,
+    );
+    await ctx.answerCallbackQuery({ text: "Ім’я схвалено." });
+    const view = await buildAdminPlayerDetailsView(playerId, returnContext);
     if (ctx.callbackQuery.message) {
       await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
       return;
@@ -978,7 +1236,88 @@ export function registerStatusHandlers(bot: Bot) {
     await ctx.reply(view.text, { reply_markup: view.keyboard });
   });
 
-  bot.callbackQuery(/^adminPlayerAuto:(on|off):(\d+)$/, async (ctx) => {
+  bot.command(["cancel", "skasuvaty", "vidminyty"], async (ctx) => {
+    await cancelPendingAdminInput(ctx);
+  });
+
+  bot.hears(/[\s\S]+/u, async (ctx, next) => {
+    const text = String(ctx.message?.text ?? "");
+    if (!isPendingCancelAlias(text)) return next();
+    if (await cancelPendingAdminInput(ctx)) return;
+    return next();
+  });
+
+  bot.hears(/[\s\S]+/u, async (ctx, next) => {
+    const scribeTelegramId = ctx.from?.id;
+    if (!scribeTelegramId || !pendingNameRejections.has(scribeTelegramId)) return next();
+    if (!(await isScribeAdmin(scribeTelegramId))) {
+      pendingNameRejections.delete(scribeTelegramId);
+      return next();
+    }
+
+    const text = String(ctx.message?.text ?? "").trim();
+    if (!text || text.startsWith("/")) return next();
+
+    const pending = pendingNameRejections.get(scribeTelegramId);
+    if (!pending) return next();
+
+    const target = await prisma.player.findUnique({ where: { id: pending.playerId } });
+    if (!target) {
+      pendingNameRejections.delete(scribeTelegramId);
+      await ctx.reply("Персонажа вже не знайдено. Відхилення імені скасовано.");
+      return;
+    }
+
+    const comment = text.slice(0, 800);
+    const updated = await prisma.player.update({ where: { id: target.id }, data: { isNameApproved: false } });
+    pendingNameRejections.delete(scribeTelegramId);
+
+    const scribe = await getPlayerByTelegramId(scribeTelegramId);
+    const scribeName = scribeDisplayName(scribe, scribeTelegramId);
+    const rejectedVerb = scribePastVerb(scribe, "не схвалив", "не схвалила", "не схвалили");
+    await logNameApprovalEvent({ type: "rejected", player: updated, scribeName, comment });
+    await notifyPlayerByTelegram(
+      bot,
+      updated,
+      `${scribeName} ${rejectedVerb} ваше ім’я.\n\nКоментар писаря:\n${comment}\n\nЗверніться до писарів Порубіжжя, щоб узгодити нове ім’я або відмінки.`,
+    );
+
+    const view = await buildAdminPlayerDetailsView(updated.id, pending.returnContext);
+    await ctx.reply(`Ім’я ${playerForms(updated).nominative} позначено як не схвалене. Коментар записано й надіслано гравцю.\n\n${view.text}`, { reply_markup: view.keyboard });
+  });
+
+  bot.hears(/[\s\S]+/u, async (ctx, next) => {
+    const scribeTelegramId = ctx.from?.id;
+    if (!scribeTelegramId || !pendingAdminTeleports.has(scribeTelegramId)) return next();
+    if (!(await isScribeAdmin(scribeTelegramId))) {
+      pendingAdminTeleports.delete(scribeTelegramId);
+      return next();
+    }
+
+    const text = String(ctx.message?.text ?? "").trim();
+    if (!text || text.startsWith("/")) return next();
+
+    const pending = pendingAdminTeleports.get(scribeTelegramId);
+    if (!pending) return next();
+
+    const location = await resolveAdminTeleportLocation(text);
+    if (!location) {
+      await ctx.reply("Не знайшов такої місцини. Напишіть locationKey, точну назву або координати типу 0,0,0. Щоб скасувати: /cancel або скасувати");
+      return;
+    }
+
+    pendingAdminTeleports.delete(scribeTelegramId);
+    const result = await teleportPlayerByScribe(bot, pending.playerId, location.id, scribeTelegramId);
+    if (!result.ok) {
+      await ctx.reply(result.message);
+      return;
+    }
+
+    const view = await buildAdminPlayerDetailsView(pending.playerId, pending.returnContext);
+    await ctx.reply(`🧭 Перенесено ${playerForms(result.player).nominative} до місцини: ${result.location.name} (${result.location.key}).\n\n${view.text}`, { reply_markup: view.keyboard });
+  });
+
+  bot.callbackQuery(/^adminPlayerAuto:(on|off):(\d+)(?::(live|dead):(\d+))?$/, async (ctx) => {
     if (!(await isScribeAdmin(ctx.from?.id))) {
       await ctx.answerCallbackQuery({ text: "Ця дія доступна тільки писарям Порубіжжя.", show_alert: true });
       return;
@@ -986,6 +1325,7 @@ export function registerStatusHandlers(bot: Bot) {
 
     const action = ctx.match[1];
     const playerId = Number(ctx.match[2]);
+    const returnContext = allReturnContextFromMatch(ctx.match[3], ctx.match[4]);
     const player = await prisma.player.findUnique({ where: { id: playerId } });
     if (!player) {
       await ctx.answerCallbackQuery({ text: "Персонажа не знайдено.", show_alert: true });
@@ -998,26 +1338,92 @@ export function registerStatusHandlers(bot: Bot) {
       return;
     }
 
+    const scribe = await getPlayerByTelegramId(ctx.from.id);
+    const scribeName = scribeDisplayName(scribe, ctx.from.id);
     if (action === "on") {
       await enablePlayerAuto(bot, telegramId);
+      await logAdminAutoToggle({ enabled: true, player, scribe, scribeName, scribeTelegramId: ctx.from.id });
+      const enabledVerb = scribePastVerb(scribe, "увімкнув", "увімкнула", "увімкнули");
       await ctx.answerCallbackQuery({ text: "Авто увімкнено." });
-      await bot.api.sendMessage(telegramId, "🤖 Писар Порубіжжя увімкнув авто-режим для вашого персонажа.", {
-        reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, true),
-      }).catch(() => undefined);
+      await notifyPlayerByTelegram(
+        bot,
+        { ...player, isAutoEnabled: true },
+        `${scribeName} ${enabledVerb} для вас самостійні дії.\n\nВаш персонаж знову може діяти за попереднім наміром без кожної окремої команди.`,
+      );
     } else {
       await disablePlayerAuto(telegramId);
+      await logAdminAutoToggle({ enabled: false, player, scribe, scribeName, scribeTelegramId: ctx.from.id });
+      const disabledVerb = scribePastVerb(scribe, "вимкнув", "вимкнула", "вимкнули");
       await ctx.answerCallbackQuery({ text: "Авто вимкнено." });
-      await bot.api.sendMessage(telegramId, "🤖 Писар Порубіжжя вимкнув авто-режим для вашого персонажа.", {
-        reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, false),
-      }).catch(() => undefined);
+      await notifyPlayerByTelegram(
+        bot,
+        { ...player, isAutoEnabled: false },
+        `${scribeName} ${disabledVerb} для вас самостійні дії.\n\nВаш персонаж більше не діятиме сам; керування знову повністю за вами.`,
+      );
     }
 
-    const view = await buildAdminPlayerDetailsView(playerId);
+    const view = await buildAdminPlayerDetailsView(playerId, returnContext);
     if (ctx.callbackQuery.message) {
       await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
       return;
     }
     await ctx.reply(view.text, { reply_markup: view.keyboard });
+  });
+
+  bot.callbackQuery(/^adminPlayerTeleport:(menu|here|start|ask):(\d+)(?::(live|dead):(\d+))?$/, async (ctx) => {
+    if (!(await isScribeAdmin(ctx.from?.id))) {
+      await ctx.answerCallbackQuery({ text: "Ця дія доступна тільки писарям Порубіжжя.", show_alert: true });
+      return;
+    }
+
+    const action = ctx.match[1];
+    const playerId = Number(ctx.match[2]);
+    const returnContext = allReturnContextFromMatch(ctx.match[3], ctx.match[4]);
+    const mode = returnContext.showDead ? "dead" : "live";
+
+    if (action === "menu") {
+      const target = await prisma.player.findUnique({ where: { id: playerId } });
+      await ctx.answerCallbackQuery();
+      await ctx.reply(
+        `🧭 Телепорт персонажа${target ? `: ${playerForms(target).nominative}` : ""}.`,
+        { reply_markup: buildAdminTeleportKeyboard(playerId, returnContext) },
+      );
+      return;
+    }
+
+    if (action === "ask") {
+      pendingAdminTeleports.set(ctx.from.id, { playerId, returnContext });
+      await ctx.answerCallbackQuery({ text: "Напишіть місцину." });
+      await ctx.reply("Напишіть locationKey, точну назву місцини або координати типу 0,0,0.\n\nЩоб скасувати: /cancel або скасувати");
+      return;
+    }
+
+    let locationId: number | undefined;
+    if (action === "start") {
+      locationId = await getStartLocationId();
+    } else {
+      const scribe = await getPlayerByTelegramId(ctx.from.id);
+      locationId = scribe?.currentLocationId ?? undefined;
+      if (!locationId) {
+        await ctx.answerCallbackQuery({ text: "У вас немає поточної місцини.", show_alert: true });
+        return;
+      }
+    }
+
+    const result = await teleportPlayerByScribe(bot, playerId, locationId, ctx.from.id);
+    if (!result.ok) {
+      await ctx.answerCallbackQuery({ text: result.message, show_alert: true });
+      return;
+    }
+
+    await ctx.answerCallbackQuery({ text: "Перенесено." });
+    const view = await buildAdminPlayerDetailsView(playerId, returnContext);
+    const text = `🧭 Перенесено ${playerForms(result.player).nominative} до місцини: ${result.location.name} (${result.location.key}).\n\n${view.text}`;
+    if (ctx.callbackQuery.message) {
+      await ctx.editMessageText(text, { reply_markup: view.keyboard });
+      return;
+    }
+    await ctx.reply(text, { reply_markup: view.keyboard });
   });
 
   bot.callbackQuery(/^adminCreature:(\d+)$/, async (ctx) => {

@@ -11,7 +11,9 @@
 ## Always preserve these rules
 
 - Do **not** put internal workflow notes about `package.json` / `package-lock.json` into public news or changelog entries.
-- Before suggesting commit/push, prefer this order: apply changes → run build/tests/checks → only then version bump if the user asks or confirms.
+- Before suggesting commit/push, prefer this order: apply changes → run tests/build/checks → only then version bump if the user asks or confirms.
+- Tests matter alongside build. Run `npm test` for changes that touch world seed data, map/seed loading, Prisma data shape, planning around seed behavior, or shared systems where seed/type drift is plausible. Add or extend focused tests when a new rule can be checked cheaply and repeatably; do not rely on manual Telegram playthroughs alone for behavior that can be covered by a script.
+- When changing `docs/planning/items/*.md`, run `npm run planning:export` and include the regenerated `docs/planning/exports/issues.csv` and `docs/planning/exports/items.json`.
 - When documenting release/update dates, use the local project date and Holocene calendar year, e.g. `12026-05-26`.
 - Preserve existing functionality unless the user explicitly asks to replace it.
 - Prefer ready changed files/archives over patch files/scripts when the user asks for “архів” or “changed files”.
@@ -21,6 +23,7 @@
 
 - Use Ukrainian UI/text where appropriate.
 - Canonical terminology source: `docs/design/terminology.md`.
+- When adding a new player-facing or scribe/admin command, or changing an existing one, keep command aliases in sync: slash command where appropriate, English/MUD-style text aliases, and Ukrainian text aliases. Buttons, `/help`, `/adminHelp`, and docs should point to the same canonical action.
 - Preferred spelling/style includes: `онбордінґ`, `ґенерація`, `мітологія`, `паґінація`, `паґінаційний`, `етер`, `Атени`; use `ґ` where it fits naturally.
 - Important fixed UI terms:
   - Look → **Озирнутися**

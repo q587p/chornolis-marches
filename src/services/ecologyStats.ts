@@ -17,6 +17,7 @@ const TICK_COUNTER_KEYS = [
   "overgrazedResources",
   "depletedByOvergrazing",
   "oldAgeDeaths",
+  "starvationDeaths",
   "predatorKills",
   "corpsesGone",
   "regenerated",
@@ -224,7 +225,19 @@ export async function getEcologyStats() {
       },
     });
   }
+  if (tickEvents.length > 0) {
+    recentCounters.starvationDeaths = await prisma.worldEvent.count({
+      where: {
+        title: "Animal starved",
+        createdAt: {
+          gte: tickEvents[tickEvents.length - 1].createdAt,
+          lte: new Date(),
+        },
+      },
+    });
+  }
   const totalPredatorKills = await prisma.worldEvent.count({ where: { title: "Creature killed prey" } });
+  const totalStarvationDeaths = await prisma.worldEvent.count({ where: { title: "Animal starved" } });
 
   const latestTickNumber = latestTick?.tickNumber ?? null;
   const oldestTickNumber = tickEvents.length ? tickEvents[tickEvents.length - 1].tickNumber : null;
@@ -288,6 +301,7 @@ export async function getEcologyStats() {
       corpseAnimals,
       goneAnimals,
       predatorKills: totalPredatorKills,
+      starvationDeaths: totalStarvationDeaths,
       locationCount,
       occupiedAnimalLocations: occupiedLocations.length,
     },

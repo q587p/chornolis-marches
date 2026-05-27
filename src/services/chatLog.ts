@@ -85,6 +85,11 @@ export function publicChatEventType(event: PublicChatEventInput) {
   return String(event.type);
 }
 
+export function publicChatEventDescription(event: PublicChatEventInput) {
+  if (event.type === "SOCIAL_SIGNAL" && event.description === "location") return "";
+  return event.description ?? "";
+}
+
 export function chatEventCharacterLabel(event: PublicChatEventInput) {
   const title = String(event.title ?? "").trim();
   if (!title) return "невідомий мовець";
@@ -120,6 +125,7 @@ export function publicChatLog<T extends { events: PublicChatEventInput[] }>(log:
     events: log.events.map((event) => ({
       ...event,
       type: publicChatEventType(event),
+      description: publicChatEventDescription(event),
     })),
   };
 }

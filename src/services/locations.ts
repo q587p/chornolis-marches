@@ -2,7 +2,7 @@ import { InlineKeyboard } from "grammy";
 import { prisma } from "../db";
 import { ACTION_BASE_TICKS, QUICK_PLAYER_ACTION_DURATION_MS, TICK_MS, gatherConfig, playerStaminaCostConfig } from "../gameConfig";
 import { directionLabels, directionShortLabels } from "../ui/labels";
-import { buildResourceMenuKeyboard, buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
+import { buildExamineTracksKeyboard, buildResourceMenuKeyboard, buildTargetListKeyboard } from "../ui/keyboards";
 import { isCampfireFeature } from "./locationFeatures";
 import {
   campfireStateLine,
@@ -17,6 +17,7 @@ import {
 } from "./fire";
 import { isPickableResourceKey } from "./groundItems";
 import { escapeHtml } from "../utils/text";
+import { normalizeCreatureActionText } from "../utils/creatureActionText";
 import { creatureForms } from "./grammar";
 import { lifetimeSummary } from "./itemLifetime";
 import { playerShowsTechnicalDetails } from "./technicalDetails";
@@ -57,7 +58,7 @@ function visibleTargets(location: any, viewerPlayerId?: number) {
       type: "creature" as const,
       id: c.id,
       label: c.name ?? c.species.name,
-      actionLabel: normalizeCreatureActionText(c.currentAction),
+      actionLabel: normalizeCreatureActionText(c.currentAction, "проходить"),
       canGreet: c.species.kind !== "ANIMAL",
       isAnimal: c.species.kind === "ANIMAL",
       isCorpse: false,
@@ -269,25 +270,6 @@ function activeActionLabel(action: any) {
   return "зайнятий";
 }
 
-function normalizeCreatureActionText(action: string | null | undefined) {
-  if (!action) return "проходить";
-  return action
-    .replace(/^йдемо на /, "йде на ")
-    .replace(/^збираємо щось поблизу$/, "збирає щось поблизу")
-    .replace(/^збираємо /, "збирає ")
-    .replace(/^їмо$/, "їсть")
-    .replace(/^озираємось$/, "озирається")
-    .replace(/^роздивляємось ціль$/, "роздивляється")
-    .replace(/^вітаємось$/, "вітається")
-    .replace(/^атакуємо$/, "атакує")
-    .replace(/^освіжуємо труп$/, "освіжує труп")
-    .replace(/^говоримо$/, "говорить")
-    .replace(/^вистежуємо$/, "вистежує")
-    .replace(/^відпочиваємо$/, "відпочиває")
-    .replace(/^ставимо пастку$/, "ставить пастку")
-    .replace(/^чекаємо$/, "чекає");
-}
-
 function guessGenderFromForms(forms: ReturnType<typeof creatureForms>, fallback?: string | null) {
   if (fallback === "FEMININE" || fallback === "NEUTER" || fallback === "PLURAL") return fallback;
   const lower = forms.nominative.toLocaleLowerCase("uk-UA");
@@ -449,7 +431,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   const animalMovementText = livingAnimals.length
     ? `\n\nРух поруч:\n${livingAnimals
         .slice(0, 8)
-        .map((c) => `- ${escapeHtml(`${animalAgeDescription(c, showTechnicalDetails)}: ${normalizeCreatureActionText(c.currentAction)}`)}`)
+        .map((c) => `- ${escapeHtml(`${animalAgeDescription(c, showTechnicalDetails)}: ${normalizeCreatureActionText(c.currentAction, "проходить")}`)}`)
         .join("\n")}${livingAnimals.length > 8 ? `\n- ...і ще ${livingAnimals.length - 8}` : ""}`
     : "";
   const tracksHint = await visibleTracksHint(location.id);
@@ -484,7 +466,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   }
 
   if (tracksHint.hasTracks) {
-    addInlineRows(keyboard, buildTrackKeyboard());
+    addInlineRows(keyboard, buildExamineTracksKeyboard());
   }
 
   if (targets.length > 0) {

@@ -17,6 +17,11 @@ Current interactive examples:
 - torch stand: shows that torches can be taken;
 - closed gate: explains that the settlement path is locked for now.
 
+Planned interactive examples:
+
+- shrine / `капище`: a sacred-place feature that can accept small offerings such as a `шаг`, хмиз, herbs or other fitting items. The first version should record the offering and change local feature text or events; later versions can connect offerings to dreams, omens, spirits, calendar days, weather or local safety.
+- animal charm / small statue: a hare statue, mouse stone, carved burrow marker or similar forest feature that can accept fitting offerings such as berries or herbs. The first version should use a queued delay, cooldown and population threshold; if rabbits or mice are depleted nearby, the feature may later bring a pair of young animals into the world.
+
 ## Passive features
 
 Some features are terrain or technical metadata and should not become buttons until they have gameplay.
@@ -42,3 +47,18 @@ Campfires should later support:
 - relighting;
 - smoke/light visibility;
 - different rest caps or safety effects.
+
+Shrines should later support:
+
+- diegetic inspection through `/examine`;
+- offering actions with item removal and local traces;
+- non-obvious consequences rather than fixed shop-like rewards;
+- calendar, dream, spirit, reputation or omen hooks after those systems exist.
+
+Animal-restoration charms should later support:
+
+- diegetic inspection through `/examine`;
+- offerings such as berries, herbs or other small living gifts;
+- delayed local or regional prey recovery when populations are critically low;
+- global or regional warning text from Дід Лісовик when prey species disappear;
+- strict caps and cooldowns so the loop repairs ecological collapse without becoming a farmable spawn shop.

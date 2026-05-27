@@ -7,6 +7,33 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+_No unreleased changes yet._
+
+---
+
+## 0.11.10 - Ecology pressure, track details and admin polish - 12026-05-27
+
+### Added
+
+- Added first creature starvation deaths: animals above the hunger threshold may die, leave corpses, cancel pending actions and write `Animal starved` world events.
+- Added starvation death counters to Telegram `/stat`, web `/stat` and `/stat.json`.
+- Added `/who` pagination in Telegram, web `/who?page=0` and `/who.json?page=0`.
+- Added Ukrainian and Latin cancellation aliases for pending scribe prompts such as name-rejection comments and requested teleport destinations.
+- Added targetless NPC social nods, so a herbalist can gesture to the location with text such as `Здравомир киває.` without targeting themselves.
+
+### Changed
+
+- Hungry herbivores now prioritize eating or moving to find food more strongly, and hungry predators search/attack more aggressively.
+- `/track` remains a quick track scan without age details. `Роздивитися` on the location shows that tracks exist, and the follow-up track inspection shows approximate track age.
+- Admin auto-toggle world events now name both the scribe and the affected character in the event title, with ids in the event description.
+- Targetless `SOCIAL_SIGNAL` events no longer expose the internal `location` marker in `/chat`, web `/chat` or `/chat.json`.
+- Extracted shared creature action text normalization so location views and text-target alias resolution reuse one helper.
+- Extracted shared torch-in-hands wording so the character card and player inspection stay aligned.
+- Extracted shared random helper utilities used by action completions and world ticks.
+- Added a technical planning item for large-file/service-boundary cleanup after reviewing current refactor hotspots.
+- Updated ecology docs and backlog notes now that the first hunger/starvation loop exists.
+- Updated Codex and project docs to emphasize tests, command aliases in English/Ukrainian, Holocene-local release dates, and current 0.11.10 planning notes.
+
 ---
 
 ## 0.11.9 - Softer player text, clearer admin tools and fire cleanup - 12026-05-27

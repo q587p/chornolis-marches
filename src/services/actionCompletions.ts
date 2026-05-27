@@ -12,10 +12,11 @@ import {
   gatherConfig,
 } from "../gameConfig";
 import { directionLabels } from "../ui/labels";
-import { buildCorpseActionKeyboard, buildExamineLocationKeyboard, buildGatherRetryKeyboard, buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
+import { buildCorpseActionKeyboard, buildExamineLocationKeyboard, buildExamineTracksKeyboard, buildGatherRetryKeyboard, buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { renderLocationBrief, renderLocationDetails } from "./locations";
 import { notifyLocation, notifyLocationExcept } from "./notifications";
+import { hasActiveLightAtLocation } from "./fire";
 import { getPlayerRestStaminaCap } from "./locationFeatures";
 import { getStartLocationId } from "./players";
 import { summonLisovykIfResourceDepleted } from "./resources";
@@ -27,6 +28,7 @@ import { fatigueStateFor, spendCreatureStamina, spendPlayerStamina } from "./act
 import { actorWhere, enqueueCreatureAction, interruptActorActions, type ActorRef } from "./actionLifecycle";
 import { escapeHtml } from "../utils/text";
 import { playerCanShowTechnicalDetails } from "./technicalDetails";
+import { chance, pick, shuffle } from "../utils/random";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
@@ -66,18 +68,6 @@ const GREETINGS = [
   "Хай Чорноліс сьогодні мовчить до тебе лагідно.",
 ];
 
-function pick<T>(items: T[]) {
-  return items[Math.floor(Math.random() * items.length)];
-}
-
-function chance(p: number) {
-  return Math.random() * 100 < p;
-}
-
-function shuffle<T>(items: T[]) {
-  return [...items].sort(() => Math.random() - 0.5);
-}
-
 function chatIdFromAction(action: WorldAction) {
   if (!action.chatId) return undefined;
   const numeric = Number(action.chatId);
@@ -116,6 +106,21 @@ function saidVerb(player: any) {
   if (gender === "FEMININE") return "сказала";
   if (gender === "PLURAL") return "сказали";
   return "сказав";
+}
+
+function trackAgeText(createdAt: Date, now = new Date()) {
+  const seconds = Math.max(0, Math.floor((now.getTime() - createdAt.getTime()) / 1000));
+  if (seconds < 20) return "щойно";
+  if (seconds < 60) return "менше хвилини тому";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 2) return "близько хвилини тому";
+  if (minutes < 5) return "кілька хвилин тому";
+  if (minutes < 15) return `${minutes} хв тому`;
+  return "давніше";
+}
+
+async function visibleMoverLabel(locationId: number, fallback: string, visibleName: string) {
+  return (await hasActiveLightAtLocation(locationId)) ? visibleName : fallback;
 }
 
 export async function completeAction(bot: Bot, action: WorldAction) {
@@ -234,11 +239,14 @@ async function completeMove(bot: Bot, action: WorldAction) {
       return;
     }
 
-    await notifyLocation(bot, currentLocationId, player.id, "Хтось пішов звідси.", buildTrackKeyboard());
+    const playerName = playerForms(player).nominative;
+    const departureLabel = await visibleMoverLabel(currentLocationId, "Хтось", playerName);
+    await notifyLocation(bot, currentLocationId, player.id, `${departureLabel} пішов звідси.`, buildTrackKeyboard());
     await createTrack({ actorType: "PLAYER", playerId: player.id }, currentLocationId, exit.toLocationId, payload.direction, "людський слід");
     await spendPlayerStamina(bot, player.id, "MOVE", chatId);
     await prisma.player.updateMany({ where: { id: player.id }, data: { currentLocationId: exit.toLocationId, steps: { increment: 1 } } });
-    await notifyLocation(bot, exit.toLocationId, player.id, `Хтось зайшов сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, buildTargetListKeyboard([{ type: "player", id: player.id, label: "Хтось", canGreet: true }]));
+    const arrivalLabel = await visibleMoverLabel(exit.toLocationId, "Хтось", playerName);
+    await notifyLocation(bot, exit.toLocationId, player.id, `${arrivalLabel} зайшов сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, buildTargetListKeyboard([{ type: "player", id: player.id, label: arrivalLabel, canGreet: true }]));
     await setActionStatus(action, "DONE");
     await logEvent("MOVE", "Player queued move completed", payload.direction, exit.toLocationId);
 
@@ -257,16 +265,17 @@ async function completeMove(bot: Bot, action: WorldAction) {
   if (!exit || exit.isHidden) return void (await setActionStatus(action, "FAILED"));
 
   const isAnimal = creature.species.kind === "ANIMAL";
-  const label = isAnimal ? "Щось" : "Хтось";
   const name = creature.name ?? creature.species.name;
   if (!isAnimal) {
-    await notifyLocation(bot, creature.locationId, -1, `${name} пішов звідси.`, buildTrackKeyboard());
+    const departureLabel = await visibleMoverLabel(creature.locationId, "Хтось", name);
+    await notifyLocation(bot, creature.locationId, -1, `${departureLabel} пішов звідси.`, buildTrackKeyboard());
   }
   await createTrack({ actorType: "CREATURE", creatureId: creature.id }, creature.locationId, exit.toLocationId, payload.direction, isAnimal ? `сліди: ${creature.species.name}` : `слід: ${name}`);
   await spendCreatureStamina(creature, actionCost("MOVE"));
   await prisma.creature.updateMany({ where: { id: creature.id }, data: { locationId: exit.toLocationId, activity: "MOVING", currentAction: payload.reason ?? actionTitle(action), steps: { increment: 1 }, hunger: { increment: 1 } } });
   if (!isAnimal) {
-    await notifyLocation(bot, exit.toLocationId, -1, `Хтось зайшов сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, buildTargetListKeyboard([{ type: "creature", id: creature.id, label, canGreet: true }]));
+    const arrivalLabel = await visibleMoverLabel(exit.toLocationId, "Хтось", name);
+    await notifyLocation(bot, exit.toLocationId, -1, `${arrivalLabel} зайшов сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, buildTargetListKeyboard([{ type: "creature", id: creature.id, label: arrivalLabel, canGreet: true }]));
   }
   await setActionStatus(action, "DONE");
   if (!isAnimal) await logEvent("NPC_MOVE", "Creature queued move completed", `${creature.id}:${payload.direction}`, exit.toLocationId);
@@ -613,6 +622,7 @@ async function completeTrack(bot: Bot, action: WorldAction) {
   const player = action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null;
   const chatId = chatIdFromAction(action);
   if (!player || !player.currentLocationId || action.actorType !== "PLAYER") return void (await setActionStatus(action, "FAILED"));
+  const detail = Boolean(payloadOf<{ detail?: boolean }>(action).detail);
 
   const now = new Date();
   await prisma.worldTrack.deleteMany({ where: { expiresAt: { lt: now } } });
@@ -653,10 +663,12 @@ async function completeTrack(bot: Bot, action: WorldAction) {
     const direction = track.fromLocationId === player.currentLocationId
       ? `${trackVerb(label, "left")} на ${directionLabels[track.direction].toLowerCase()}`
       : `${trackVerb(label, "arrived")} ${FROM_DIRECTION_LABELS[track.direction] ?? "звідкись"}`;
-    return `- ${label} ${direction}`;
+    const age = detail ? ` — ${trackAgeText(track.createdAt, now)}` : "";
+    return `- ${label} ${direction}${age}`;
   });
 
-  await bot.api.sendMessage(chatId, `👣 Ви знаходите сліди:\n${lines.join("\n")}`);
+  const header = detail ? "👣 Ви уважніше роздивляєтеся сліди:" : "👣 Ви знаходите сліди:";
+  await bot.api.sendMessage(chatId, `${header}\n${lines.join("\n")}`, detail ? undefined : { reply_markup: buildExamineTracksKeyboard() });
 }
 
 async function completeSimple(action: WorldAction) {

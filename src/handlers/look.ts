@@ -18,7 +18,7 @@ export function registerLookHandlers(bot: Bot) {
 
     const durationMs = actionDurationMs("TRACK", player.stamina);
     try {
-      const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "TRACK", payload: {}, durationMs, chatId: ctx.chat?.id, interruptQueued: true });
+      const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "TRACK", payload: { detail: true }, durationMs, chatId: ctx.chat?.id, interruptQueued: true });
       await ctx.reply(result.mode === "immediate" ? "Ви вдивляєтесь у сліди." : `Пошук слідів додано в чергу${durationSecondsSuffix(player, durationMs)}.`);
       await sendActionSubmitFeedback(ctx, player.id, result);
     } catch (error) {

@@ -65,6 +65,8 @@ export const SOCIAL_DEFINITIONS: SocialDefinition[] = [
     actorMessage: (ctx) => `Ви киваєте ${targetDative(ctx)}.`,
     targetMessage: (ctx) => `${actorName(ctx)} киває вам.`,
     roomMessage: (ctx) => `${actorName(ctx)} киває ${targetDative(ctx)}.`,
+    targetlessActorMessage: () => "Ви киваєте.",
+    targetlessRoomMessage: (ctx) => `${actorName(ctx)} киває.`,
   },
   {
     id: "bow",
@@ -184,7 +186,7 @@ async function maybeReactToSocialSignal(bot: Bot, actor: SocialContext["actor"],
 }
 
 async function writeSocialEvent(title: string, target: ResolvedTarget | null, locationId: number) {
-  const targetText = target ? `${target.kind}:${target.id}; ${target.forms.nominative}` : "location";
+  const targetText = target ? `${target.kind}:${target.id}; ${target.forms.nominative}` : null;
   await prisma.worldEvent.create({
     data: {
       type: "SOCIAL_SIGNAL",
@@ -196,6 +198,8 @@ async function writeSocialEvent(title: string, target: ResolvedTarget | null, lo
 }
 
 async function performSocialSignalForActor(bot: Bot, actor: SocialContext["actor"], target: ResolvedTarget, socialId: string, chatId?: number) {
+  if (target.kind === actor.kind && target.id === actor.id) return;
+
   const social = socialDefinitionById(socialId);
   if (!social) throw new Error("Невідомий сигнал.");
 
@@ -234,6 +238,8 @@ export async function performCreatureSocialSignal(bot: Bot, creature: any, targe
   if (!social) throw new Error("Невідомий сигнал.");
   const actorForms = creatureForms(creature);
   const actor = { kind: "creature" as const, id: creature.id, locationId: creature.locationId, forms: actorForms };
+  if (target.kind === actor.kind && target.id === actor.id) return;
+
   await performSocialSignalForActor(bot, actor, target, socialId);
   const ctx: SocialContext = { actor, target };
   await prisma.creature.updateMany({

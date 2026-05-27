@@ -34,6 +34,13 @@ Canonical terminology source: `docs/design/terminology.md`.
 
 ## Commands and UI labels mentioned
 
+When adding or changing commands, keep aliases in sync:
+
+- slash command where useful;
+- English/MUD-style text aliases for future non-Telegram clients;
+- Ukrainian text aliases for ordinary Telegram input;
+- button labels and `/help` or `/adminHelp` documentation.
+
 - `/look`
 - `/examine`
 - `/me`
