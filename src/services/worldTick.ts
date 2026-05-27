@@ -1166,29 +1166,7 @@ export async function worldTick() {
     regenerated = await regenerateResourcesIfNeeded();
     if (!lisovykAwakened) lisovykSlept = await putLisovykToSleepIfForestRecovered();
 
-    const [creatures, playerLocationCounts, activeCreatureActions] = await Promise.all([
-      prisma.creature.findMany({
-        where: { isAlive: true, isGone: false },
-        include: {
-          species: true,
-          location: {
-            include: {
-              exitsFrom: {
-                include: {
-                  toLocation: {
-                    include: {
-                      region: true,
-                      features: { where: { isActive: true, type: "MAGIC_CAMPFIRE" } },
-                    },
-                  },
-                },
-              },
-              features: { where: { isActive: true } },
-              resources: { include: { resourceType: true } },
-            },
-          },
-        },
-      }),
+    const [playerLocationCounts, activeCreatureActions, creatureLocationCountRows, sleepingCreatureCount] = await Promise.all([
       prisma.player.groupBy({
         by: ["currentLocationId"],
         where: { currentLocationId: { not: null } },
@@ -1198,14 +1176,49 @@ export async function worldTick() {
         where: { actorType: "CREATURE", status: { in: ["QUEUED", "RUNNING"] }, creatureId: { not: null } },
         select: { creatureId: true },
       }),
+      prisma.creature.groupBy({
+        by: ["locationId"],
+        where: { isAlive: true, isGone: false },
+        _count: { _all: true },
+      }),
+      prisma.creature.count({ where: { isAlive: true, isGone: false, activity: "SLEEPING" } }),
     ]);
     const activeCreatureActionIds = new Set(activeCreatureActions.map((action) => action.creatureId).filter((id): id is number => Boolean(id)));
+    const activeCreatureIds = [...activeCreatureActionIds];
+    const creatures = await prisma.creature.findMany({
+      where: {
+        isAlive: true,
+        isGone: false,
+        activity: { not: "SLEEPING" },
+        ...(activeCreatureIds.length ? { id: { notIn: activeCreatureIds } } : {}),
+      },
+      include: {
+        species: true,
+        location: {
+          include: {
+            exitsFrom: {
+              include: {
+                toLocation: {
+                  include: {
+                    region: true,
+                    features: { where: { isActive: true, type: "MAGIC_CAMPFIRE" } },
+                  },
+                },
+              },
+            },
+            features: { where: { isActive: true } },
+            resources: { include: { resourceType: true } },
+          },
+        },
+      },
+    });
     const creatureLocationCounts = new Map<number, number>();
     const playerCountsByLocationId = new Map<number, number>();
-    for (const c of creatures) creatureLocationCounts.set(c.locationId, (creatureLocationCounts.get(c.locationId) ?? 0) + 1);
+    for (const row of creatureLocationCountRows) creatureLocationCounts.set(row.locationId, row._count._all);
     for (const row of playerLocationCounts) {
       if (row.currentLocationId) playerCountsByLocationId.set(row.currentLocationId, row._count._all);
     }
+    skippedBusy += activeCreatureActionIds.size + sleepingCreatureCount;
 
     for (const c of creatures) {
       try {

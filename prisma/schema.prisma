@@ -363,6 +363,8 @@ model WorldAction {
 
   @@index([actorType, playerId, status, position])
   @@index([actorType, creatureId, status, position])
+  @@index([actorType, status, executeAt])
+  @@index([actorType, status, position, id])
   @@index([status, priority, position])
   @@index([status, executeAt])
 }

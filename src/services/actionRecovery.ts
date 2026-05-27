@@ -139,18 +139,22 @@ export async function spendCreatureStamina(creature: { id: number; hp?: number; 
 
 export async function recoverStamina(bot: Bot) {
   const now = new Date();
-  const players = await prisma.player.findMany();
+  const [players, activePlayerActions] = await Promise.all([
+    prisma.player.findMany(),
+    prisma.worldAction.findMany({
+      where: { actorType: "PLAYER", status: { in: ["QUEUED", "RUNNING"] }, playerId: { not: null } },
+      select: { playerId: true },
+    }),
+  ]);
+  const activePlayerIds = new Set(activePlayerActions.map((action) => action.playerId).filter((id): id is number => Boolean(id)));
 
   for (const player of players) {
     const baseMax = player.staminaMax ?? BASE_STAMINA;
     const max = player.isResting ? Math.max(baseMax, await getPlayerRestStaminaCap(player.id)) : baseMax;
     const hpMax = player.hpMax ?? BASE_HP;
+    const hasActiveActions = activePlayerIds.has(player.id);
 
-    const activeActions = await prisma.worldAction.count({
-      where: { actorType: "PLAYER", playerId: player.id, status: { in: ["QUEUED", "RUNNING"] } },
-    });
-
-    if (!player.isResting && activeActions === 0) {
+    if (!player.isResting && !hasActiveActions) {
       const chatId = Number(player.telegramId);
       if (Number.isSafeInteger(chatId)) {
         const voiceComments = await tutorialIdlePaceComments(player, now);
@@ -163,7 +167,7 @@ export async function recoverStamina(bot: Bot) {
 
     if (player.stamina >= max && player.hp >= hpMax && !player.isResting) continue;
 
-    if (activeActions > 0 && !player.isResting) {
+    if (hasActiveActions && !player.isResting) {
       await prisma.player.updateMany({ where: { id: player.id }, data: { lastStaminaRegenAt: now, lastHpRegenAt: now } });
       continue;
     }
@@ -213,16 +217,22 @@ export async function recoverStamina(bot: Bot) {
     }
   }
 
-  const creatures = await prisma.creature.findMany({ where: { isGone: false } });
+  const [creatures, activeCreatureActions] = await Promise.all([
+    prisma.creature.findMany({ where: { isGone: false } }),
+    prisma.worldAction.findMany({
+      where: { actorType: "CREATURE", status: { in: ["QUEUED", "RUNNING"] }, creatureId: { not: null } },
+      select: { creatureId: true },
+    }),
+  ]);
+  const activeCreatureIds = new Set(activeCreatureActions.map((action) => action.creatureId).filter((id): id is number => Boolean(id)));
+  const activeCreatureIdsToRefresh: number[] = [];
+
   for (const creature of creatures) {
     const max = creature.staminaMax ?? BASE_STAMINA;
     if (creature.stamina >= max) continue;
 
-    const activeActions = await prisma.worldAction.count({
-      where: { actorType: "CREATURE", creatureId: creature.id, status: { in: ["QUEUED", "RUNNING"] } },
-    });
-    if (activeActions > 0) {
-      await prisma.creature.updateMany({ where: { id: creature.id }, data: { lastStaminaRegenAt: now } });
+    if (activeCreatureIds.has(creature.id)) {
+      activeCreatureIdsToRefresh.push(creature.id);
       continue;
     }
 
@@ -237,6 +247,13 @@ export async function recoverStamina(bot: Bot) {
         fatigueState: fatigueStateFor(after, max),
         lastStaminaRegenAt: new Date(last.getTime() + intervals * STAMINA_REGEN_INTERVAL_MS),
       },
+    });
+  }
+
+  if (activeCreatureIdsToRefresh.length > 0) {
+    await prisma.creature.updateMany({
+      where: { id: { in: activeCreatureIdsToRefresh } },
+      data: { lastStaminaRegenAt: now },
     });
   }
 }

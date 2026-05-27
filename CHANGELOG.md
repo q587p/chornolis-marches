@@ -11,6 +11,20 @@ _No unreleased changes yet._
 
 ---
 
+## 0.12.3 - Action queue performance pass - 12026-05-27
+
+### Changed
+
+- Reduced repeated active-action checks in the recovery loop by loading active player and creature action ids once per cycle.
+- Reduced heavy `worldTick` reads by loading full creature context only for idle, non-sleeping creatures that can actually receive a new action.
+- Added actor-specific `WorldAction` indexes for due-action polling and queued-action startup.
+- Added the architecture/performance audit under `docs/dev/`.
+- Changed `/start` so it does not repaint the reply keyboard while the player is inside the tutorial dream.
+- Varied tutorial pace comments and added escalating cooldowns so repeated idle/look reminders become less frequent.
+- Changed the character card in the tutorial dream to show sleeping posture, hide the Sleep button and warn that nested sleep is not implemented.
+
+---
+
 ## 0.12.2 - Tutorial branches and inventory fire polish - 12026-05-27
 
 ### Added

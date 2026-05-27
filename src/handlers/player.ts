@@ -27,6 +27,7 @@ import { dropObserverText, recordVisibleItemAction } from "../services/visibleIt
 import { tutorialLookPaceComments } from "../services/tutorialVoices";
 import { logEvent } from "../services/worldEvents";
 import { escapeHtml } from "../utils/text";
+import { isTutorialLocation } from "../services/tutorial";
 
 function minutes(ms: number) {
   return Math.max(1, Math.ceil(ms / 60_000));
@@ -64,14 +65,20 @@ function recoveryText(player: any) {
   return `\nВідновлення без відпочинку: приблизно ${passiveMinutes} хв. Через /rest або 🧘 Відпочити: приблизно ${restMinutes} хв.`;
 }
 
-function buildCharacterAutoKeyboard(autoEnabled: boolean, options: { canToggleTechnicalDetails?: boolean; showTechnicalDetails?: boolean } = {}) {
+function buildCharacterAutoKeyboard(autoEnabled: boolean, options: { canToggleTechnicalDetails?: boolean; showTechnicalDetails?: boolean; showSleep?: boolean } = {}) {
   const keyboard = new InlineKeyboard()
     .text("🎒 Речі", "character:inventory")
     .row()
     .text("🧘 Відпочити", "rest:start")
-    .row()
-    .text("🌙 Сон", "character:sleep")
-    .row()
+    .row();
+
+  if (options.showSleep !== false) {
+    keyboard
+      .text("🌙 Сон", "character:sleep")
+      .row();
+  }
+
+  keyboard
     .text(autoEnabled ? "⏹ Зупинити авто" : "🤖 Увімкнути авто", autoEnabled ? "character:auto:stop" : "character:auto:start");
 
   if (options.canToggleTechnicalDetails) {
@@ -198,10 +205,11 @@ async function renderCharacterView(telegramId: number) {
     ? `${player.currentLocation.region.name} / ${player.currentLocation.name}`
     : "невідомо";
   const nameApprovedText = player.isNameApproved ? "Ім’я схвалене." : "Ім’я ще не схвалене. Зверніться до писарів Порубіжжя.";
+  const isTutorialDream = player.currentLocation ? isTutorialLocation(player.currentLocation) : false;
 
   return {
-    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}\n\n${formatPostureText(player)}${torchText}\n${vitals.join("\n")}\nСтан: ${formatFatigueText(player)}${recoveryText(player)}\n${hungerText}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}${technicalDetailsText}\nЗареєстровано: ${formatDateTime(player.createdAt)}${statsText}`,
-    keyboard: buildCharacterAutoKeyboard(autoEnabled, { canToggleTechnicalDetails, showTechnicalDetails }),
+    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}\n\n${formatPostureText({ ...player, isSleeping: isTutorialDream })}${torchText}\n${vitals.join("\n")}\nСтан: ${formatFatigueText(player)}${recoveryText(player)}\n${hungerText}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}${technicalDetailsText}\nЗареєстровано: ${formatDateTime(player.createdAt)}${statsText}`,
+    keyboard: buildCharacterAutoKeyboard(autoEnabled, { canToggleTechnicalDetails, showTechnicalDetails, showSleep: !isTutorialDream }),
   };
 }
 

@@ -19,9 +19,66 @@ export type TutorialVoiceComment = {
 const TUTORIAL_LOOK_EVENT_TITLE = "Tutorial look";
 const TUTORIAL_PACE_EVENT_TITLE = "Tutorial pace comment";
 const TUTORIAL_LOOK_WINDOW_MS = 60_000;
-const TUTORIAL_PACE_COOLDOWN_MS = 30_000;
-const TUTORIAL_IDLE_PACE_COOLDOWN_MS = 120_000;
 const TUTORIAL_IDLE_PACE_DELAY_MS = 30_000;
+const TUTORIAL_PACE_BACKOFF_MS = [0, 60_000, 120_000, 240_000, 480_000];
+
+type PaceCommentPair = {
+  drowsinessTitle: string;
+  drowsinessText: string;
+  dreamTitle: string;
+  dreamText: (pronoun: string) => string;
+};
+
+const PACE_COMMENT_PAIRS: PaceCommentPair[] = [
+  {
+    drowsinessTitle: "Дрімота підганяє",
+    drowsinessText: "Ну ходімо вже скоріше. Якщо довго стояти, туман почне думати, що ми тут живемо.",
+    dreamTitle: "Сон спокійно каже",
+    dreamText: (pronoun) => `У ${pronoun} є час. У кожного свій темп; сон не жене, він чекає.`,
+  },
+  {
+    drowsinessTitle: "Дрімота нетерпляче шепоче",
+    drowsinessText: "Стежка ж не просто так лежить попереду. Можна вже й перевірити, куди вона веде.",
+    dreamTitle: "Сон відповідає тихо",
+    dreamText: (pronoun) => `Нехай ${pronoun === "них" ? "вони йдуть" : "іде"}, коли буде готово. Поріг не зникає від повільного кроку.`,
+  },
+  {
+    drowsinessTitle: "Дрімота бурмоче",
+    drowsinessText: "Якщо ще трохи постояти, мох почне записувати нас до своїх родичів.",
+    dreamTitle: "Сон лагідно заперечує",
+    dreamText: (pronoun) => `Мох уміє чекати, і ${pronoun} теж можна. Тут ніхто не виграє перегони.`,
+  },
+  {
+    drowsinessTitle: "Дрімота підганяє",
+    drowsinessText: "Далі, далі. Найкращі сни не люблять, коли їх розглядають тільки з порога.",
+    dreamTitle: "Сон спокійно каже",
+    dreamText: (pronoun) => `Поріг теж частина сну. У ${pronoun} є право придивитися, перш ніж рушити.`,
+  },
+  {
+    drowsinessTitle: "Дрімота сопе",
+    drowsinessText: "Ми вже майже стали пам’ятником нерішучості. Гарним, але нерішучим.",
+    dreamTitle: "Сон усміхається",
+    dreamText: (pronoun) => `Пам’ятники не питають дороги. А ${pronoun} ще слухає місцину, і це не зайве.`,
+  },
+  {
+    drowsinessTitle: "Дрімота квапить",
+    drowsinessText: "Попереду є шлях, позаду є туман, а ми все ще в середині думки.",
+    dreamTitle: "Сон говорить рівно",
+    dreamText: (pronoun) => `Думка теж може бути кроком. Нехай ${pronoun === "них" ? "вони оберуть" : "обере"} свій момент.`,
+  },
+  {
+    drowsinessTitle: "Дрімота не вгаває",
+    drowsinessText: "Можна стояти красиво, але йти все одно корисніше.",
+    dreamTitle: "Сон м’яко відповідає",
+    dreamText: (pronoun) => `Краще один власний крок, ніж десять чужих підштовхувань. У ${pronoun} є час.`,
+  },
+  {
+    drowsinessTitle: "Дрімота озирається",
+    drowsinessText: "Туман уже навчився нашої форми. Може, здивуємо його рухом?",
+    dreamTitle: "Сон тихо каже",
+    dreamText: () => "Нехай туман вчиться терпінню. Рух прийде, коли сон стане зрозумілішим.",
+  },
+];
 
 type TutorialPlayerRef = Pick<Player, "id" | "currentLocationId" | "pronoun" | "grammaticalGender">;
 type TutorialIdlePlayerRef = TutorialPlayerRef & Pick<Player, "lastActionAt" | "updatedAt" | "createdAt">;
@@ -40,20 +97,35 @@ async function isPlayerInTutorial(locationId: number) {
   return Boolean(location && isTutorialLocation(location));
 }
 
-async function tutorialPaceComments(player: TutorialPlayerRef, reason: "look" | "wait" | "idle", cooldownMs = TUTORIAL_PACE_COOLDOWN_MS): Promise<TutorialVoiceComment[]> {
+function tutorialPaceCooldownMs(previousComments: number) {
+  return TUTORIAL_PACE_BACKOFF_MS[Math.min(previousComments, TUTORIAL_PACE_BACKOFF_MS.length - 1)];
+}
+
+function randomPaceCommentPair() {
+  return PACE_COMMENT_PAIRS[Math.floor(Math.random() * PACE_COMMENT_PAIRS.length)] ?? PACE_COMMENT_PAIRS[0];
+}
+
+async function tutorialPaceComments(player: TutorialPlayerRef, reason: "look" | "wait" | "idle"): Promise<TutorialVoiceComment[]> {
   const locationId = player.currentLocationId;
   if (!locationId || !(await isPlayerInTutorial(locationId))) return [];
 
-  const recentComment = await prisma.worldEvent.findFirst({
+  const previousComments = await prisma.worldEvent.count({
     where: {
       playerId: player.id,
       locationId,
       title: TUTORIAL_PACE_EVENT_TITLE,
-      createdAt: { gte: new Date(Date.now() - cooldownMs) },
+    },
+  });
+  const cooldownMs = tutorialPaceCooldownMs(previousComments);
+  const latestComment = cooldownMs > 0 ? await prisma.worldEvent.findFirst({
+    where: {
+      playerId: player.id,
+      locationId,
+      title: TUTORIAL_PACE_EVENT_TITLE,
     },
     orderBy: { createdAt: "desc" },
-  });
-  if (recentComment) return [];
+  }) : null;
+  if (latestComment && Date.now() - latestComment.createdAt.getTime() < cooldownMs) return [];
 
   await prisma.worldEvent.create({
     data: {
@@ -65,16 +137,18 @@ async function tutorialPaceComments(player: TutorialPlayerRef, reason: "look" | 
     },
   });
 
+  const pair = randomPaceCommentPair();
+  const pronoun = tutorialPacePronoun(player);
   return [
     {
       speaker: "Дрімота",
-      title: "Дрімота підганяє",
-      text: "Ну ходімо вже скоріше. Якщо довго стояти, туман почне думати, що ми тут живемо.",
+      title: pair.drowsinessTitle,
+      text: pair.drowsinessText,
     },
     {
       speaker: "Сон",
-      title: "Сон спокійно каже",
-      text: `У ${tutorialPacePronoun(player)} є час. У кожного свій темп; сон не жене, він чекає.`,
+      title: pair.dreamTitle,
+      text: pair.dreamText(pronoun),
     },
   ];
 }
@@ -116,7 +190,7 @@ export async function tutorialIdlePaceComments(player: TutorialIdlePlayerRef, no
     .filter((date): date is Date => Boolean(date))
     .reduce((latest, date) => (date.getTime() > latest.getTime() ? date : latest), player.createdAt);
   if (now.getTime() - lastActivity.getTime() < TUTORIAL_IDLE_PACE_DELAY_MS) return [];
-  return tutorialPaceComments(player, "idle", TUTORIAL_IDLE_PACE_COOLDOWN_MS);
+  return tutorialPaceComments(player, "idle");
 }
 
 export async function tutorialSpiritMoveComment(fromLocationId: number, toLocationId: number, direction: Direction): Promise<TutorialVoiceComment | null> {

@@ -7,7 +7,7 @@ import { guessGenderFromPronoun, guessNameForms, normalizeCharacterName, validat
 import { BASE_STAMINA } from "../gameConfig";
 import { renderCurrentWorldYearLine } from "../services/calendar";
 import { setDefaultBotCommandsWithRetry, syncChatBotCommandsForTelegramId } from "../services/telegramCommands";
-import { enterTutorialDream } from "../services/tutorial";
+import { enterTutorialDream, isTutorialLocation } from "../services/tutorial";
 
 const CASE_PROMPTS: Array<{ key: keyof NameForms; question: string; prefix?: string }> = [
   { key: "genitive", question: "Ім’я в родовому відмінку (Немає КОГО?)" },
@@ -86,10 +86,29 @@ async function enterWorld(ctx: any, isMenuRefresh = false) {
 
   const displayName = player.nameNominative ?? player.firstName ?? "мандрівнику";
   const yearLine = renderCurrentWorldYearLine();
+  const currentLocation = player.currentLocationId
+    ? await prisma.cellLocation.findUnique({
+        where: { id: player.currentLocationId },
+        select: {
+          key: true,
+          z: true,
+          region: { select: { key: true } },
+        },
+      })
+    : null;
+  const isInTutorial = currentLocation ? isTutorialLocation(currentLocation) : false;
+  const keyboardHint = isInTutorial
+    ? "Ти вже в навчальному сні. /start не змінює навчальні кнопки; вони лишаються біля місцини, а команди можна писати текстом."
+    : "Ти вже в грі. Клавіатура чекає під полем вводу, але всі команди можна і просто текстом вводити 👇";
 
   const text = isMenuRefresh
-    ? `🌲 Меню оновлено.\n${yearLine}\n\nВітаю, ${displayName}.\n\nТи вже в грі. Клавіатура чекає під полем вводу, але всі команди можна і просто текстом вводити 👇`
-    : `🌲 Порубіжжя Чорнолісу ожили.\n${yearLine}\n\nВітаю, ${displayName}. Твій слід збережено в Чорнолісі.\n\nТи вже в грі. Клавіатура чекає під полем вводу, але всі команди можна і просто текстом вводити 👇`;
+    ? `🌲 Меню оновлено.\n${yearLine}\n\nВітаю, ${displayName}.\n\n${keyboardHint}`
+    : `🌲 Порубіжжя Чорнолісу ожили.\n${yearLine}\n\nВітаю, ${displayName}. Твій слід збережено в Чорнолісі.\n\n${keyboardHint}`;
+
+  if (isInTutorial) {
+    await ctx.reply(text);
+    return;
+  }
 
   await ctx.reply(text, { reply_markup: await buildMainReplyKeyboardForTelegramId(from.id, false) });
 }

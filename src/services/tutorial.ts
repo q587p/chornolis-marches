@@ -124,7 +124,7 @@ export async function enterTutorialDream(playerId: number, options: { forceStart
     return {
       locationId: currentLocationId,
       entered: false,
-      text: "Сон уже тримає вас. Ви пам’ятаєте своє ім’я і майже нічого більше.",
+      text: "Ви і так уже спите. Сон усередині сну наразі не вплетений у правила Порубіжжя.",
     };
   }
 
