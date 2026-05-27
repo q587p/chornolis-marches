@@ -1,11 +1,11 @@
 import { Bot } from "grammy";
 import { actionDurationMs, performOrQueuePlayerAction } from "../services/actionQueue";
 import { getPlayerByTelegramId } from "../services/players";
-import { lightLocationCampfire, renderLocationBrief, renderLocationDetails, renderLocationFeatureInteraction, takeTorchFromLocationFeature } from "../services/locations";
+import { lightLocationCampfire, renderDepletedVegetationInspection, renderLocationBrief, renderLocationDetails, renderLocationFeatureInteraction, takeTorchFromLocationFeature } from "../services/locations";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { durationSecondsSuffix } from "../utils/durationText";
-import { addTwigsPlaceholderText, lightPlayerTorchAtCampfire } from "../services/fire";
+import { addTwigsToCampfire, lightPlayerTorchAtCampfire } from "../services/fire";
 import { pickUpGroundResource } from "../services/groundItems";
 
 export function registerLookHandlers(bot: Bot) {
@@ -26,12 +26,25 @@ export function registerLookHandlers(bot: Bot) {
     }
   }
 
+  async function examineVegetation(ctx: any) {
+    const from = ctx.from;
+    if (!from) return;
+
+    const player = await getPlayerByTelegramId(from.id);
+    if (!player?.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+    const view = await renderDepletedVegetationInspection(player.currentLocationId, player.id);
+    if (!view) return void (await ctx.reply("Тут не видно винищеної трави, яку можна оцінити."));
+    await ctx.reply(view.text, { reply_markup: view.keyboard });
+  }
+
   async function examineCurrentLocation(ctx: any) {
     const from = ctx.from;
     if (!from) return;
 
     const arg = String(ctx.message?.text ?? "").replace(/^\/examine(?:@\w+)?/i, "").trim().toLowerCase();
     if (["tracks", "track", "сліди", "слід"].includes(arg)) return examineTracks(ctx);
+    if (["grass", "depleted grass", "vegetation", "трава", "траву", "винищена трава", "винищену траву", "відновлення"].includes(arg)) return examineVegetation(ctx);
 
     const player = await getPlayerByTelegramId(from.id);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
@@ -134,8 +147,15 @@ export function registerLookHandlers(bot: Bot) {
   });
 
   bot.callbackQuery(/^fire:addTwigs:(\d+)$/, async (ctx) => {
-    await safeAnswerCallbackQuery(ctx, "Хмиз ще не реалізовано.");
-    await ctx.reply(addTwigsPlaceholderText());
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    const text = await addTwigsToCampfire(player.id, Number(ctx.match[1]));
+    await safeAnswerCallbackQuery(ctx);
+    await ctx.reply(text);
   });
 
   bot.callbackQuery(/^fire:light:(\d+)$/, async (ctx) => {

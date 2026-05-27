@@ -65,11 +65,12 @@ The forest should feel alive even when players do nothing.
 - When overgrazing empties all local edible resources, the location gains a visible `Винищена трава` feature and regenerates much more slowly until grass recovers to a visible baseline.
 - `meadow_16_05` starts with exhausted vegetation as a visible test case.
 - Gatherable berries, herbs and mushrooms now regenerate more slowly than before; exhausted locations regenerate much more slowly.
+- The `Винищена трава` feature can be inspected from its button or through `/examine grass`, `/examine depleted grass`, `роздивитися траву`, `оцінити траву` and `оцінити відновлення`. The player-facing text gives a rough natural-recovery read; exact grass amounts, thresholds and tick timing are shown only when technical details are enabled.
 
 ## Near Follow-Up
 
 - Tune growth rates and resource damage after observation.
-- Add an `Оцінити відновлення` inspection action for the `Винищена трава` feature. It should be reachable both from the feature button and from `/examine` aliases such as `/examine grass`, `роздивитися траву` and `оцінити відновлення`, and should describe approximate natural recovery time without exposing exact tick math unless technical details are enabled.
+- Tune the first `Винищена трава` inspection text after observation: account for active grazing/gathering pressure, rain, season, moon/world time and future restoration magic rather than only local grass amount/max and exhausted-location regeneration.
 - Tune hunger thresholds, starvation odds and species-specific hunger tolerance after observation.
 - Replace direct predator births with a persistent pregnancy/den state when the creature lifecycle model is ready.
 - Add weather and magic hooks that can shorten exhausted-vegetation recovery.

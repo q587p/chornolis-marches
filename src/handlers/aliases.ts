@@ -28,6 +28,7 @@ import { sendHelp } from "./help";
 import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } from "./auto";
 import { showCharacter, showInventory, showLocationForPlayer } from "./player";
 import { buildAllPage, buildChatLogPage, buildStatBrief, buildWhoPage } from "./status";
+import { renderDepletedVegetationInspection } from "../services/locations";
 import { buildNewsIndexPage } from "./news";
 import { backToMain, showMenu } from "./menu";
 import { showTime } from "./time";
@@ -35,7 +36,7 @@ import { submitMove as submitCanonicalMove } from "./movement";
 import { submitGather as submitCanonicalGather } from "./gather";
 import { addCorpseToInventory, resourceTypeDisplayName } from "../services/corpses";
 import { performSocialSignal } from "../services/socialSignals";
-import { addTwigsPlaceholderText } from "../services/fire";
+import { addTwigsToCampfire } from "../services/fire";
 import { requireScribeAdmin } from "../services/adminAccess";
 import { pickUpFirstGroundResourceByKey } from "../services/groundItems";
 import { parseSpeechTarget } from "../services/speechTargets";
@@ -195,6 +196,15 @@ async function replyWithWho(ctx: any) {
 async function replyWithChat(ctx: any, mode?: string, window?: string) {
   const page = await buildChatLogPage(normalizeChatLogMode(mode), normalizeChatLogWindow(window), 0);
   await ctx.reply(page.text, { reply_markup: page.keyboard });
+}
+
+async function replyWithVegetationInspection(ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player?.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const view = await renderDepletedVegetationInspection(player.currentLocationId, player.id);
+  if (!view) return void (await ctx.reply("Тут не видно винищеної трави, яку можна оцінити."));
+  await ctx.reply(view.text, { reply_markup: view.keyboard });
 }
 
 async function replyWithAll(ctx: any, showDead?: boolean) {
@@ -434,11 +444,11 @@ async function resolveVisibleTargetForAlias(ctx: any, targetQuery: string) {
 
 async function submitPickupTarget(ctx: any, targetQuery: string) {
   const normalizedTarget = normalizeTargetKey(targetQuery);
-  if (["torch", "torches", "факел", "факели", "факела", "факелів"].includes(normalizedTarget)) {
+  if (["torch", "torches", "факел", "факели", "факела", "факелів", "twigs", "хмиз"].includes(normalizedTarget)) {
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
     try {
-      const item = await pickUpFirstGroundResourceByKey(player.id, "torch");
+      const item = await pickUpFirstGroundResourceByKey(player.id, ["twigs", "хмиз"].includes(normalizedTarget) ? "twigs" : "torch");
       await ctx.reply(`Ви підняли ${item.name}.`);
     } catch (error) {
       await ctx.reply(error instanceof Error ? error.message : "Не вдалося підняти це.");
@@ -505,6 +515,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "time") return showTime(ctx);
     if (parsed.kind === "menu") return showMenu(ctx);
     if (parsed.kind === "back") return backToMain(ctx);
+    if (parsed.kind === "inspect-vegetation") return replyWithVegetationInspection(ctx);
     if (parsed.kind === "move") return submitCanonicalMove(bot, ctx, parsed.direction, false);
     if (parsed.kind === "gather") return submitCanonicalGather(bot, ctx, parsed.resourceKey, false);
     if (parsed.kind === "rest") return submitRest(ctx, parsed.mode);
@@ -512,7 +523,11 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "queue") return submitQueue(ctx, parsed.mode);
     if (parsed.kind === "track") return submitTrack(bot, ctx, Boolean(parsed.detail));
     if (parsed.kind === "wait") return submitWait(bot, ctx);
-    if (parsed.kind === "add-twigs-campfire") return ctx.reply(addTwigsPlaceholderText());
+    if (parsed.kind === "add-twigs-campfire") {
+      const player = await getPlayerByTelegramId(ctx.from.id);
+      if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+      return ctx.reply(await addTwigsToCampfire(player.id));
+    }
     if (parsed.kind === "say") return submitSay(bot, ctx, parsed.text);
     if (parsed.kind === "target-action") return submitTargetAction(bot, ctx, parsed.action, parsed.target);
     if (parsed.kind === "pickup-target") return submitPickupTarget(ctx, parsed.target);

@@ -6,6 +6,7 @@ import { canPickUpGroundItem } from "./groundItems";
 export const CAMPFIRE_DURATION_MS = 16 * 60_000;
 export const CAMPFIRE_FADING_MS = 4 * 60_000;
 export const CAMPFIRE_TWIGS_AFTER_MS = 2 * 60_000;
+export const CAMPFIRE_TWIGS_EXTENSION_MS = 4 * 60_000;
 export const TORCH_DURATION_MS = 10 * 60_000;
 export const TORCH_FADING_MS = 2 * 60_000;
 export const MAX_LIT_TORCHES_IN_HANDS = 2;
@@ -56,6 +57,29 @@ function relitFireData(data: unknown, createdBy: string) {
     ...base,
     extinguished: false,
     relitAt: base.litAt,
+  };
+}
+
+function addTwigsToFireData(data: unknown) {
+  const current = jsonRecord(data);
+  return {
+    ...current,
+    is_campfire: true,
+    fuelTwigs: Number(current.fuelTwigs ?? 0) + 1,
+    lastTwigsAddedAt: new Date().toISOString(),
+  };
+}
+
+function extendFireData(data: unknown, now = new Date()) {
+  const current = jsonRecord(data);
+  const currentExpiresAt = dateFromJson(current.expiresAt);
+  const baseFrom = currentExpiresAt && currentExpiresAt.getTime() > now.getTime() ? currentExpiresAt : now;
+  const cappedExpiresAt = new Date(Math.min(baseFrom.getTime() + CAMPFIRE_TWIGS_EXTENSION_MS, now.getTime() + CAMPFIRE_DURATION_MS));
+  return {
+    ...addTwigsToFireData(current),
+    extinguished: false,
+    expiresAt: cappedExpiresAt.toISOString(),
+    durationMs: CAMPFIRE_DURATION_MS,
   };
 }
 
@@ -391,6 +415,59 @@ export async function lightCampfireFromTorch(playerId: number, featureId: number
   return "🔥 Ви підпалили вогнище від факела. Полум'я розгоряється й дає світло навколо.";
 }
 
+export async function addTwigsToCampfire(playerId: number, featureId?: number) {
+  await expireTimedCampfires();
+  const { twigs } = await ensureTorchResourceTypes();
+  const player = await prisma.player.findUnique({
+    where: { id: playerId },
+    select: { currentLocationId: true, hp: true, stamina: true, isResting: true },
+  });
+  if (!player?.currentLocationId) return "Ти ще не увійшов у світ. Напиши /start";
+  if (!canPickUpGroundItem(player)) return "Ви надто втомлені, щоб підкидати хмиз просто зараз. Спершу перепочиньте.";
+
+  const feature = featureId
+    ? await prisma.locationFeature.findFirst({
+        where: { id: featureId, locationId: player.currentLocationId, isActive: true, type: "CAMPFIRE" },
+      })
+    : await prisma.locationFeature.findFirst({
+        where: { locationId: player.currentLocationId, isActive: true, type: "CAMPFIRE" },
+        orderBy: [{ providesLight: "asc" }, { id: "asc" }],
+      });
+
+  if (!feature) return "Поруч немає звичайного вогнища, куди можна підкинути хмиз.";
+
+  const carriedTwigs = await prisma.playerResource.findUnique({
+    where: { playerId_resourceTypeId: { playerId, resourceTypeId: twigs.id } },
+  });
+  if (!carriedTwigs || carriedTwigs.amount <= 0) return "Потрібен хмиз у речах. Його можна знайти в лісі або отримати, коли догорить факел.";
+
+  const extinguished = isExtinguishedCampfire(feature);
+  if (!extinguished && !canAddTwigsToCampfire(feature)) {
+    return "Вогнище ще тримається рівно. Хмиз краще підкидати, коли жар почне просідати.";
+  }
+
+  const consumeTwigs =
+    carriedTwigs.amount > 1
+      ? prisma.playerResource.update({
+          where: { playerId_resourceTypeId: { playerId, resourceTypeId: twigs.id } },
+          data: { amount: { decrement: 1 } },
+        })
+      : prisma.playerResource.delete({ where: { playerId_resourceTypeId: { playerId, resourceTypeId: twigs.id } } });
+
+  await prisma.$transaction([
+    consumeTwigs,
+    prisma.locationFeature.update({
+      where: { id: feature.id },
+      data: extinguished
+        ? { data: addTwigsToFireData(feature.data) }
+        : { name: "Вогнище", providesLight: true, data: extendFireData(feature.data) },
+    }),
+  ]);
+
+  if (extinguished) return "🪵 Ви підклали хмиз у згасле вогнище. Попіл прийняв сухі гілки; тепер потрібен вогонь, щоб розпалити його.";
+  return "🪵 Ви підкинули хмиз у вогнище. Полум'я знову тримається впевненіше.";
+}
+
 export async function hasActiveTorchLightAtLocation(locationId: number) {
   const litTorch = await prisma.resourceType.findUnique({ where: { key: LIT_TORCH_KEY } });
   if (!litTorch) return false;
@@ -415,6 +492,3 @@ export async function hasActiveLightAtLocation(locationId: number) {
   return featureLight > 0 || torchLight;
 }
 
-export function addTwigsPlaceholderText() {
-  return "Хмиз поки ще не працює: команда /add twigs campfire уже зарезервована, але реалізація підкидання хмизу чекає наступного кроку.";
-}

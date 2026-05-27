@@ -25,6 +25,8 @@ import { playerShowsTechnicalDetails } from "./technicalDetails";
 const COMPACT_EXIT_ORDER = ["NORTH", "WEST", "SOUTH", "EAST", "UP", "DOWN", "INSIDE", "OUTSIDE"];
 const GATHERABLE_RESOURCE_KEYS = ["berries", "mushrooms", "herbs"] as const;
 const TARGET_TEXT_LIMIT = 8;
+const EXHAUSTED_LOCATION_REGEN_EVERY_TICKS = Number(process.env.WORLD_EXHAUSTED_LOCATION_REGEN_EVERY_TICKS || 240);
+const RESOURCE_REGEN_AMOUNT = Number(process.env.WORLD_RESOURCE_REGEN_AMOUNT || 1);
 const CREATURE_AGE_ADJECTIVES: Record<string, Record<string, string>> = {
   YOUNG: { MASCULINE: "молодий", FEMININE: "молода", NEUTER: "молоде", PLURAL: "молоді" },
   ADULT: { MASCULINE: "дорослий", FEMININE: "доросла", NEUTER: "доросле", PLURAL: "дорослі" },
@@ -91,6 +93,10 @@ function isTorchSourceFeature(feature: any) {
   return featureData(feature).torch_source === true;
 }
 
+function isDepletedVegetationFeature(feature: any) {
+  return feature.isActive && String(feature.key ?? "").startsWith("depleted_vegetation_");
+}
+
 function torchLightButtonText(torchState: { isLit: boolean; plainAmount: number; litAmount: number }) {
   if (torchState.isLit && torchState.plainAmount > 0) return "🔥 Підпалити ще один факел";
   return torchState.isLit ? "🔥 Оновити вогонь на факелі" : "🔥 Підпалити факел";
@@ -98,13 +104,14 @@ function torchLightButtonText(torchState: { isLit: boolean; plainAmount: number;
 
 function featureIcon(feature: any) {
   if (isCampfireFeature(feature)) return "🔥";
+  if (isDepletedVegetationFeature(feature)) return "🌾";
   if (feature.type === "BORDER_MARKER") return "🪧";
   if (feature.type === "GATE") return "🚪";
   return "✦";
 }
 
 function isInteractiveFeature(feature: any) {
-  return feature.isActive && ["BORDER_MARKER", "CAMPFIRE", "MAGIC_CAMPFIRE", "GATE", "LANDMARK"].includes(feature.type);
+  return feature.isActive && (isDepletedVegetationFeature(feature) || ["BORDER_MARKER", "CAMPFIRE", "MAGIC_CAMPFIRE", "GATE", "LANDMARK"].includes(feature.type));
 }
 
 function featureBriefLine(feature: any) {
@@ -493,6 +500,60 @@ export async function buildGatherMenuForLocation(locationId: number, viewerPlaye
   return buildResourceMenuKeyboard(await resourceButtonData(resources, viewerPlayerId));
 }
 
+function ticksDurationText(ticks: number) {
+  const minutes = Math.max(1, Math.round((ticks * TICK_MS) / 60000));
+  if (minutes < 60) return `${minutes} хв`;
+  const hours = Math.round(minutes / 60);
+  return `${hours} год`;
+}
+
+function vegetationRecoveryPhrase(grass: { amount: number; maxAmount: number } | null) {
+  if (!grass || grass.maxAmount <= 0) return "Без трав'яного кореня місцина природно майже не відновиться.";
+  const threshold = Math.ceil(grass.maxAmount / 4);
+  const missing = Math.max(0, threshold - grass.amount);
+  if (missing <= 0) return "Трава вже починає триматися за землю. Виснаження має відступити найближчим часом.";
+  if (missing <= 2) return "Потрібно ще трохи спокою: кілька повільних циклів відновлення.";
+  if (missing <= 6) return "Відновлення буде довгим. Якщо тут і далі пастимуться чи збиратимуть усе підряд, місцина знову просяде.";
+  return "Не скоро. Без дощу, спокою або чиєїсь допомоги трава тут майже не підніметься.";
+}
+
+export async function renderDepletedVegetationInspection(locationId: number, viewerPlayerId?: number) {
+  const [feature, grass, showTechnicalDetails] = await Promise.all([
+    prisma.locationFeature.findFirst({
+      where: { locationId, isActive: true, key: { startsWith: "depleted_vegetation_" } },
+      orderBy: { id: "asc" },
+    }),
+    prisma.resourceNode.findFirst({
+      where: { locationId, resourceType: { key: "grass" } },
+      include: { resourceType: true },
+      orderBy: { id: "asc" },
+    }),
+    playerShowsTechnicalDetails(viewerPlayerId),
+  ]);
+
+  if (!feature) return null;
+
+  const data = featureData(feature);
+  const technical = showTechnicalDetails
+    ? `\n\nТехнічно: grass=${grass?.amount ?? 0}/${grass?.maxAmount ?? 0}; поріг зняття виснаження=${grass ? Math.ceil(grass.maxAmount / 4) : 0}; виснажена місцина відновлює +${RESOURCE_REGEN_AMOUNT} раз на ${EXHAUSTED_LOCATION_REGEN_EVERY_TICKS} тіків ≈ ${ticksDurationText(EXHAUSTED_LOCATION_REGEN_EVERY_TICKS)}.${typeof data.depletedAtTick === "number" ? ` depletedAtTick=${data.depletedAtTick}.` : ""}${typeof data.minRecoverTick === "number" ? ` minRecoverTick=${data.minRecoverTick}.` : ""}`
+    : "";
+
+  const keyboard = new InlineKeyboard().text("↩️ Назад", "location:details");
+  return {
+    text: [
+      "🌾 Винищена трава",
+      "",
+      feature.description ?? "Тут трава вибита й виїдена майже до землі.",
+      "",
+      vegetationRecoveryPhrase(grass),
+      "",
+      "Якщо місцину лишити в спокої, вона відновлюватиметься повільно. Дощ, магія чи чиясь турбота зможуть допомогти пізніше.",
+      technical,
+    ].join("\n"),
+    keyboard,
+  };
+}
+
 export async function renderLocationFeatureInteraction(featureId: number, viewerPlayerId: number) {
   const player = await prisma.player.findUnique({ where: { id: viewerPlayerId }, select: { currentLocationId: true } });
   const feature = await prisma.locationFeature.findUnique({ where: { id: featureId }, include: { location: true } });
@@ -500,11 +561,15 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
   if (!player || !feature || !feature.isActive || player.currentLocationId !== feature.locationId || !isInteractiveFeature(feature)) return null;
 
   let text = feature.description ?? "Тут є щось варте уваги.";
+  if (isDepletedVegetationFeature(feature)) {
+    return renderDepletedVegetationInspection(feature.locationId, viewerPlayerId);
+  }
   if (feature.type === "BORDER_MARKER") {
     text = "Ви бачите межовий знак. На темному дереві вирізано просту, майже дитячу мапу: суха лука тягнеться на захід, за нею темніє ліс; річка йде з півночі на південь; на сході за мостом позначено поселення й зачинені ворота.";
   } else if (isCampfireFeature(feature)) {
     if (isExtinguishedCampfire(feature)) {
       text = "Згасле вогнище лишило по собі попіл і чорні головешки. Світла й тепла воно не дає.";
+      if (Number(featureData(feature).fuelTwigs ?? 0) > 0) text += "\n\nУ попелі вже лежить сухий хмиз, готовий прийняти вогонь.";
     } else if (feature.type === "MAGIC_CAMPFIRE") {
       text = "Вогнище освітлює все навколо. Поряд із ним легше відпочити, відігрітися й набратися додаткових сил.\n\nВи відчуваєте, як чиясь давня магія підтримує полум'я. Йому не потрібен хмиз, щоб горіти.";
     } else if (isCampfireFading(feature)) {
@@ -524,6 +589,7 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
   if (isCampfireFeature(feature)) {
     const torchState = await getPlayerTorchState(viewerPlayerId);
     if (isExtinguishedCampfire(feature)) {
+      keyboard.text("🪵 Додати хмиз", `fire:addTwigs:${feature.id}`).row();
       if (torchState.isLit) keyboard.text("🔥 Підпалити", `fire:light:${feature.id}`).row();
     } else {
       keyboard.text("🔥 Відпочити", "rest:start").row();

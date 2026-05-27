@@ -11,6 +11,21 @@ _No unreleased changes yet._
 
 ---
 
+## 0.11.11 - Vegetation inspection and firewood fuel - 12026-05-27
+
+### Added
+
+- Added inspection for the `Винищена трава` location feature: players can open it from the feature button or use `/examine grass`, `/examine depleted grass`, `роздивитися траву`, `оцінити траву` and `оцінити відновлення` to get a rough recovery read.
+- Added the first хмиз fuel loop: loose `хмиз` can be picked up, carried in `Речі`, and added to ordinary campfires.
+- Seed/reset data now places small pickable хмиз bundles in selected forest and dry-luka місцини.
+
+### Changed
+
+- `Додати хмиз` now consumes carried хмиз: burning ordinary campfires get a capped time extension, while згаслі campfires can receive prepared fuel before being relit.
+- Updated fire/light, input-alias and planning docs now that хмиз is a working fuel item instead of a placeholder.
+
+---
+
 ## 0.11.10 - Ecology pressure, track details and admin polish - 12026-05-27
 
 ### Added

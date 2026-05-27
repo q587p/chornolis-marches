@@ -12,7 +12,10 @@ Chornolis uses fire as an early survival and visibility tool.
 - `/look` lists campfires only as visible features. `/examine` shows the gameplay meaning: whether the fire gives light, whether it improves rest, and whether it is fading or extinguished.
 - In `/look`, an extinguished campfire should be listed only by name, e.g. `Згасле вогнище`. The ash/no-light/no-warmth details belong in `/examine`.
 - After at least 1 in-game hour, currently 2 real minutes, a campfire feature can show `Додати хмиз`.
-- `Додати хмиз` and `/add twigs campfire` are reserved placeholders for the later firewood loop.
+- `Додати хмиз`, `додати хмиз` and `/add twigs campfire` consume one `хмиз` from `Речі`.
+- For a burning ordinary campfire, хмиз extends the remaining burn time by a small capped amount.
+- For a згасле ordinary campfire, хмиз is tucked into the ashes as prepared fuel; it still needs a burning torch to relight.
+- Magical campfires do not accept хмиз: their point is that old magic sustains them without fuel.
 - When a timed campfire expires, it remains in the місцина as `Згасле вогнище`: it gives no light and no rest bonus.
 - A character with a still-burning torch can use `Підпалити` on a згасле вогнище to relight it with the default ordinary campfire timer.
 - Seed data includes a few згаслі вогнища in the forest and dry luka as places that can be relit.
@@ -38,6 +41,8 @@ The current implementation stores torch state as inventory resources:
 - `torch` is an unlit torch.
 - `lit_torch` is a burning torch; its `updatedAt` timestamp is the active timer.
 - `twigs` / `хмиз` is the leftover fuel resource produced when a carried lit torch expires.
+
+Seed/reset data also places small pickable хмиз bundles in a few forest and dry-luka місцини. They appear under `Лежить` and can be picked up like loose torches.
 
 This avoids a schema migration while preserving per-character torch timing.
 

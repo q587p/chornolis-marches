@@ -268,7 +268,7 @@ export function registerAdminHandlers(bot: Bot) {
 
     const player = await resolvePlayerForAdmin(ctx, String(ctx.match ?? "").trim());
     if (!player) return;
-    const twigs = await ensureResourceType("twigs", "хмиз", "Сухі дрібні гілки для майбутнього підкидання у вогнище.");
+    const twigs = await ensureResourceType("twigs", "хмиз", "Сухі дрібні гілки для підкидання у вогнище.");
     await addInventoryResource(player.id, twigs.id);
     await logEvent("SYSTEM", "Debug twigs added to inventory", `player=${player.id}`);
     await ctx.reply(`🪵 Додано хмиз у речі: ${playerDisplayName(player)}.`);

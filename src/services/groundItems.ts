@@ -1,7 +1,7 @@
 import { prisma } from "../db";
 import { resourceTypeDisplayName } from "./corpses";
 
-const PICKABLE_RESOURCE_KEYS = ["torch"] as const;
+const PICKABLE_RESOURCE_KEYS = ["torch", "twigs"] as const;
 export type PickableResourceKey = (typeof PICKABLE_RESOURCE_KEYS)[number];
 
 export function isPickableResourceKey(key: string): key is PickableResourceKey {

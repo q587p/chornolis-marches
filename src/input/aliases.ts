@@ -28,6 +28,7 @@ export type ParsedAliasCommand =
   | { kind: "auto"; mode: AutoAliasMode }
   | { kind: "queue"; mode: QueueAliasMode }
   | { kind: "track"; detail?: boolean }
+  | { kind: "inspect-vegetation" }
   | { kind: "wait" }
   | { kind: "add-twigs-campfire" }
   | { kind: "say"; text: string }
@@ -356,7 +357,7 @@ function parseGather(text: string): ParsedAliasCommand | null {
   if (["berries", "berry", "ягоди", "ягід"].includes(resource)) return { kind: "gather", resourceKey: "berries" };
   if (["mushrooms", "mushroom", "гриби", "грибів"].includes(resource)) return { kind: "gather", resourceKey: "mushrooms" };
   if (["herbs", "herb", "трави", "трав", "лікарські трави", "зілля", "зіллячко"].includes(resource)) return { kind: "gather", resourceKey: "herbs" };
-  if (["torch", "torches", "факел", "факели", "факела", "факелів"].includes(resource)) return { kind: "pickup-target", target: resource };
+  if (["torch", "torches", "факел", "факели", "факела", "факелів", "twigs", "хмиз"].includes(resource)) return { kind: "pickup-target", target: resource };
   return null;
 }
 
@@ -392,6 +393,19 @@ function parseAll(text: string): ParsedAliasCommand | null {
 function parseTrackIntent(text: string): ParsedAliasCommand | null {
   if (/^(?:examine|inspect|look|x|роздивитися|роздивитись|придивитися|придивитись|оглянути|глянути)(?:\s+(?:tracks|track|сліди|слід)|\s+до\s+(?:слідів|сліду))$/.test(text)) {
     return { kind: "track", detail: true };
+  }
+  return null;
+}
+
+function parseVegetationInspectionIntent(text: string): ParsedAliasCommand | null {
+  if (/^(?:examine|inspect|look|x)(?:\s+(?:grass|vegetation|depleted grass|depleted vegetation))$/.test(text)) {
+    return { kind: "inspect-vegetation" };
+  }
+  if (/^(?:роздивитися|роздивитись|придивитися|придивитись|оглянути|глянути)(?:\s+(?:траву|винищену траву|винищену рослинність)|\s+до\s+(?:трави|винищеної трави))$/.test(text)) {
+    return { kind: "inspect-vegetation" };
+  }
+  if (/^(?:оцінити|перевірити)(?:\s+(?:траву|відновлення|відновлення трави|стан трави))$/.test(text)) {
+    return { kind: "inspect-vegetation" };
   }
   return null;
 }
@@ -453,6 +467,9 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
 
   const trackIntent = parseTrackIntent(text);
   if (trackIntent) return trackIntent;
+
+  const vegetationIntent = parseVegetationInspectionIntent(text);
+  if (vegetationIntent) return vegetationIntent;
 
   const target = parseTargetAction(text);
   if (target) return target;

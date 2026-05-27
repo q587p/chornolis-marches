@@ -2266,5 +2266,53 @@
     "resourceKey": "torch",
     "amount": 1,
     "maxAmount": 1
+  },
+  {
+    "locationKey": "forest_00_02",
+    "resourceKey": "twigs",
+    "amount": 2,
+    "maxAmount": 2
+  },
+  {
+    "locationKey": "forest_01_02",
+    "resourceKey": "twigs",
+    "amount": 2,
+    "maxAmount": 2
+  },
+  {
+    "locationKey": "forest_02_02",
+    "resourceKey": "twigs",
+    "amount": 2,
+    "maxAmount": 2
+  },
+  {
+    "locationKey": "forest_03_02",
+    "resourceKey": "twigs",
+    "amount": 2,
+    "maxAmount": 2
+  },
+  {
+    "locationKey": "forest_05_04",
+    "resourceKey": "twigs",
+    "amount": 2,
+    "maxAmount": 2
+  },
+  {
+    "locationKey": "forest_08_05",
+    "resourceKey": "twigs",
+    "amount": 2,
+    "maxAmount": 2
+  },
+  {
+    "locationKey": "meadow_11_04",
+    "resourceKey": "twigs",
+    "amount": 1,
+    "maxAmount": 1
+  },
+  {
+    "locationKey": "meadow_14_05",
+    "resourceKey": "twigs",
+    "amount": 1,
+    "maxAmount": 1
   }
 ]

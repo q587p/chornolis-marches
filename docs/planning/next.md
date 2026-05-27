@@ -15,7 +15,7 @@ The 0.11.5-0.11.9 line landed Ukrainian aliases, scribe detail mode, inventory v
 Recommended order:
 
 1. Add the first **newcomer helper / tutorial** pass, because people are already interested and the current opening should teach the actual playable slice.
-2. Finish the first **firewood / хмиз / campfire fuel** loop so хмиз can extend or prepare ordinary campfires instead of only existing as a carried resource.
+2. Observe and tune the first **firewood / хмиз / campfire fuel** loop now that хмиз can extend or prepare ordinary campfires.
 3. Add the first real **world time / day-night** state and make `/time` read it.
 4. Add early **/respawn / Повернення** so dangerous exploration has a beginner safety valve.
 5. Then return to **MAP-002 biome resources** once fire/light/time rules can influence gathering and visibility.
@@ -92,8 +92,8 @@ Make fire a basic survival and exploration tool.
 
 - Build on the first pass: `/addCampfire` can create multiple timed campfires, expired fires remain as `Згасле вогнище`, torches can be carried/lit/refreshed, and light can reveal nearby targets.
 - Add the first real firewood/hmyz gathering hook near forests, forest edges and old camps.
-- Implement `Додати хмиз` / `/add twigs campfire` so it extends, refreshes or prepares an existing campfire instead of returning the placeholder.
-- Keep the first fuel model intentionally small: dry twigs now, larger branches, wet fuel, smoke and weather later.
+- Tune the first implemented `Додати хмиз` / `/add twigs campfire` behavior now that it extends burning campfires and prepares згаслі campfires.
+- Keep the fuel model intentionally small for now: dry twigs exist, while larger branches, wet fuel, smoke and weather remain later.
 - Connect fuel and light to WORLD-001 once day/night lands.
 
 ## SURV-001 — Early respawn support / Повернення
@@ -117,8 +117,8 @@ Add `/respawn` as **Повернення** for new or weak characters who get lo
 ## Recommended near-term candidates
 
 - Add starter settlement skeleton and first NPC roles beyond the closed gate.
-- Seed pickable хмиз as ground items across most forest locations and a smaller number of dry-luka locations. This should use the existing pickup path, appear under `Лежить`, and give the firewood loop a visible world source before broader `/gather` foraging grows.
-- Add first foraging/firewood iteration by broadening `/gather` without arguments into local foraging: хмиз/dry sticks near campfires and forest edges, moss where suitable, animal bones, and rare minor coin finds. Keep outcomes biome-, region- and location-feature-dependent, and wire хмиз into the existing `Додати хмиз` placeholder.
+- Expand pickable хмиз coverage after testing the first seed pass. The initial implementation places small bundles in selected forest and dry-luka locations; later, most forest locations and some luka locations should receive biome-aware fuel sources.
+- Add first foraging/firewood iteration by broadening `/gather` without arguments into local foraging: хмиз/dry sticks near campfires and forest edges, moss where suitable, animal bones, and rare minor coin finds. Keep outcomes biome-, region- and location-feature-dependent, and feed the existing `Додати хмиз` fuel loop.
 - Add a first animal-restoration shrine/statue pass: authored small features such as a hare statue, mouse stone, carved burrow marker or similar forest charm. Players can place fitting offerings such as berries or herbs; after a queued delay and cooldown, the world may create two young prey animals when the area has fallen below a safe population threshold.
 - Seed a first small ground-money find on world start/reset: a ґривня under the bridge and a few scattered шаги elsewhere. These should behave like visible location objects: shown by `/look` when light/visibility allows, discoverable by `/examine` in darkness, inspectable like corpses/objects, and pickable into `Речі`.
 - Add a first NPC hunter/archer loop: a named hunter travels between nearby hunting grounds, looks for prey, attacks small animals, and leaves visible signs for players to observe. Later this should grow into tracking, traps and teaching hunting-related skills.
