@@ -576,11 +576,12 @@ export function startHttpServer() {
               return;
             }
 
+            const html = await renderAllPage(req.url);
             res.writeHead(200, {
               "Content-Type": "text/html; charset=utf-8",
               "Set-Cookie": adminCookieHeader(secret),
             });
-            res.end(await renderAllPage(req.url));
+            res.end(html);
             return;
           }
 
@@ -590,8 +591,9 @@ export function startHttpServer() {
             return;
           }
 
+          const html = await renderAllPage(req.url);
           res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-          res.end(await renderAllPage(req.url));
+          res.end(html);
           return;
         }
 
@@ -599,6 +601,10 @@ export function startHttpServer() {
         res.end(await renderHomePage(status));
       } catch (error) {
         setLastRuntimeError(error);
+        if (res.headersSent) {
+          if (!res.writableEnded) res.end();
+          return;
+        }
         res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
         res.end(JSON.stringify({ ok: false, error: String(error) }));
       }

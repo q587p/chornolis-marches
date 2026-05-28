@@ -77,6 +77,20 @@ function logStatusPerf(scope: string, startedAt: number, extra = "") {
   console.log(`[STATUS PERF] ${scope}: ${durationMs}ms${extra ? `; ${extra}` : ""}`);
 }
 
+function isTelegramMessageNotModified(error: unknown) {
+  const description = (error as any)?.description ?? (error as any)?.error?.description ?? String(error);
+  return typeof description === "string" && description.includes("message is not modified");
+}
+
+async function editMessageTextIfChanged(ctx: any, text: string, options?: any) {
+  try {
+    await ctx.editMessageText(text, options);
+  } catch (error) {
+    if (isTelegramMessageNotModified(error)) return;
+    throw error;
+  }
+}
+
 function genderedPast(player: { grammaticalGender?: string | null; pronoun?: string | null }, masculine: string, feminine: string, plural: string) {
   const gender = player.grammaticalGender ?? (player.pronoun === "SHE" ? "FEMININE" : player.pronoun === "THEY" ? "PLURAL" : "MASCULINE");
   if (gender === "FEMININE") return feminine;
@@ -911,10 +925,16 @@ export async function buildAllPage(showDead: boolean, requestedPage: number) {
           currentLocation: { select: { name: true, x: true, y: true, z: true } },
           firstName: true,
           lastName: true,
-          nickname: true,
-          grammarCaseOverrides: true,
-          pronoun: true,
+          username: true,
+          nameNominative: true,
+          nameGenitive: true,
+          nameDative: true,
+          nameAccusative: true,
+          nameInstrumental: true,
+          nameLocative: true,
+          nameVocative: true,
           grammaticalGender: true,
+          animacy: true,
         },
         orderBy: { id: "asc" },
       }),
@@ -1088,7 +1108,7 @@ export function registerStatusHandlers(bot: Bot) {
     await ctx.answerCallbackQuery();
 
     if (ctx.callbackQuery.message) {
-      await ctx.editMessageText(page.text, { reply_markup: page.keyboard });
+      await editMessageTextIfChanged(ctx, page.text, { reply_markup: page.keyboard });
       return;
     }
 
@@ -1147,7 +1167,7 @@ export function registerStatusHandlers(bot: Bot) {
     const page = await buildWhoPage(Number(ctx.match[1]));
     await ctx.answerCallbackQuery();
     if (ctx.callbackQuery.message) {
-      await ctx.editMessageText(page.text, page.keyboard ? { reply_markup: page.keyboard } : undefined);
+      await editMessageTextIfChanged(ctx, page.text, page.keyboard ? { reply_markup: page.keyboard } : undefined);
       return;
     }
     await ctx.reply(page.text, page.keyboard ? { reply_markup: page.keyboard } : undefined);
@@ -1172,7 +1192,7 @@ export function registerStatusHandlers(bot: Bot) {
     await ctx.answerCallbackQuery();
 
     if (ctx.callbackQuery.message) {
-      await ctx.editMessageText(page.text, { reply_markup: page.keyboard });
+      await editMessageTextIfChanged(ctx, page.text, { reply_markup: page.keyboard });
       return;
     }
 
@@ -1186,7 +1206,7 @@ export function registerStatusHandlers(bot: Bot) {
     await ctx.answerCallbackQuery();
 
     if (ctx.callbackQuery.message) {
-      await ctx.editMessageText(page.text, { reply_markup: page.keyboard });
+      await editMessageTextIfChanged(ctx, page.text, { reply_markup: page.keyboard });
       return;
     }
 
@@ -1299,7 +1319,7 @@ export function registerStatusHandlers(bot: Bot) {
     await ctx.answerCallbackQuery({ text: "Ім’я схвалено." });
     const view = await buildAdminPlayerDetailsView(playerId, returnContext);
     if (ctx.callbackQuery.message) {
-      await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
+      await editMessageTextIfChanged(ctx, view.text, { reply_markup: view.keyboard });
       return;
     }
     await ctx.reply(view.text, { reply_markup: view.keyboard });
@@ -1433,7 +1453,7 @@ export function registerStatusHandlers(bot: Bot) {
 
     const view = await buildAdminPlayerDetailsView(playerId, returnContext);
     if (ctx.callbackQuery.message) {
-      await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
+      await editMessageTextIfChanged(ctx, view.text, { reply_markup: view.keyboard });
       return;
     }
     await ctx.reply(view.text, { reply_markup: view.keyboard });
@@ -1489,7 +1509,7 @@ export function registerStatusHandlers(bot: Bot) {
     const view = await buildAdminPlayerDetailsView(playerId, returnContext);
     const text = `🧭 Перенесено ${playerForms(result.player).nominative} до місцини: ${result.location.name} (${result.location.key}).\n\n${view.text}`;
     if (ctx.callbackQuery.message) {
-      await ctx.editMessageText(text, { reply_markup: view.keyboard });
+      await editMessageTextIfChanged(ctx, text, { reply_markup: view.keyboard });
       return;
     }
     await ctx.reply(text, { reply_markup: view.keyboard });
@@ -1528,7 +1548,7 @@ export function registerStatusHandlers(bot: Bot) {
     await ctx.answerCallbackQuery();
 
     if (ctx.callbackQuery.message) {
-      await ctx.editMessageText(page.text, { reply_markup: page.keyboard });
+      await editMessageTextIfChanged(ctx, page.text, { reply_markup: page.keyboard });
       return;
     }
 

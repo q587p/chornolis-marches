@@ -17,6 +17,9 @@ _No unreleased changes yet._
 
 - Narrowed heavy admin/status database reads for `/all` and location listing pages so they select only the fields those views render.
 - Added optional `STATUS_PERF_DEBUG=true` timing logs around the heavy status page builders, including failure paths.
+- Status callbacks now ignore Telegram's harmless "message is not modified" response when a scribe taps the current page again.
+- Web `/all` now avoids writing response headers before its page is built, preventing a failed status render from crashing the process with duplicate headers.
+- Fixed the narrowed `/all` player query to use actual `Player` schema fields, avoiding a Prisma validation crash after the status optimization.
 - Due player actions now complete with bounded concurrency instead of a fully serial loop, matching the existing creature-action completion shape while keeping each actor's actions ordered.
 - Added `PLAYER_COMPLETION_CONCURRENCY` as a Render/runtime tuning knob for due player-action completion.
 
