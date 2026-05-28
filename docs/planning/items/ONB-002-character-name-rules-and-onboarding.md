@@ -26,21 +26,19 @@ Canonical design note: `docs/systems/character_names.md`.
 
 ## First scope
 
-First playable slice added in `0.12.11`:
+First playable slices added in `0.12.11` and `0.12.12`:
 
 - The onboarding flow now asks whether the player wants a prepared name or a custom name after pronoun selection.
 - Prepared names are shown with origin, rarity and stored Ukrainian case forms.
-- Already-used prepared names are filtered out.
+- The prepared-name pool now lives in a typed data module with an explicit reservation flag.
+- Already-used or reserved prepared names are filtered out.
 - Prepared names are saved as scribe-approved.
 - Custom names show a warning before entry and reject exact duplicates plus a first set of creature/spirit/sacred or very famous names.
-- A focused `scripts/test/character-names.cjs` regression covers prepared-name availability and forbidden custom names.
+- A focused `scripts/test/character-names.cjs` regression covers prepared-name availability, reserved names and forbidden custom names.
 
 Remaining scope:
 
-- Add a first creation choice:
-  - `Обрати ім’я зі списку`;
-  - `Ввести власне ім’я`.
-- Move the prepared-name source from a small code-level list toward data or DB-backed content with explicit reservation state.
+- Move the prepared-name source from the typed data module toward DB-backed content with richer reservation state.
 - Expand custom-name validation against:
   - confusingly similar names;
   - NPC/significant-being names;
@@ -65,7 +63,7 @@ Prepared names should fit the borderland tone. Primary sources include Slavic, O
 
 ## Acceptance notes
 
-- A new player can pick a suitable prepared name without waiting for manual review. First slice exists in `0.12.11`; broaden the pool later.
+- A new player can pick a suitable prepared name without waiting for manual review. First slice exists in `0.12.11`; `0.12.12` adds explicit reserved-name filtering; broaden the pool later.
 - A custom-name player sees clear guidance before entering a name. First warning exists in `0.12.11`.
 - Scribes still have authority over rare or uncertain custom names.
 - Creature names such as `Вовк`, `Миша`, `Ведмідь`, `Лісовик`, `Упир`, `Ворон`, `Кіт` and `Сокіл` are rejected or routed away from ordinary personal-name approval.
@@ -73,7 +71,7 @@ Prepared names should fit the borderland tone. Primary sources include Slavic, O
 
 ## Later
 
-- Reserved names for events and NPCs.
+- Database-backed reserved names for events and NPCs.
 - Regional popularity and historical layers.
 - Thematic generator and random pick from available names.
 - Separate names, nicknames and public titles.
