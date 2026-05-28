@@ -92,7 +92,7 @@ Important remembered direction from the 0.11 line:
 - Slow tutorial pace comments should draw from a varied Сон/Дрімота pool and use the same cycling reminder rhythm.
 - Inventory now has first modest item actions: berries restore a small amount of stamina and ease hunger by a tiny amount, mushrooms ease hunger, herbs can restore a small amount of HP when wounded, dry torches can be lit when fire is available, and resource stacks can be inspected or dropped. Keep later item-use work diegetic and modest until cooking, medicine, herbalism and real item instances exist.
 - Immediate pickup/drop item actions should be room-visible, recorded as world events, and visible in scribe/admin recent-action history.
-- Carried lit torches burn out into `хмиз`, not dry torches. Inspecting another character shows visible lit torches in hand(s) or `Руки порожні.` only when no obvious held item is visible.
+- Carried and dropped lit torches burn out into `хмиз`, not dry torches. Dropped lit torches remain visible under `Лежить`, can light the location and can be picked up before burn-out. Inspecting another character shows visible lit torches in hand(s) or `Руки порожні.` only when no obvious held item is visible.
 - `Додати хмиз` / `/add twigs campfire` is implemented as the first `twigs` fuel loop: `twigs` can extend burning ordinary campfires or prepare extinguished ordinary campfires for relighting. Broader foraging, richer fuel types and player-made campfires remain future work.
 - Onboarding, `/help`, fallback hints and tutorial/newcomer-helper plans should be reviewed whenever early-game actions, resources, visibility or survival mechanics change.
 

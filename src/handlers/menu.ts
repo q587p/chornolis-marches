@@ -1,8 +1,9 @@
 import { Bot } from "grammy";
 import { buildMenuReplyKeyboard } from "../ui/replyKeyboard";
+import { isScribeAdmin } from "../services/adminAccess";
 
 export async function showMenu(ctx: any) {
-  await ctx.reply("☰ Меню", { reply_markup: buildMenuReplyKeyboard() });
+  await ctx.reply("☰ Меню", { reply_markup: buildMenuReplyKeyboard({ canSeeStats: await isScribeAdmin(ctx.from?.id) }) });
 }
 
 export async function hideReplyKeyboard(ctx: any) {

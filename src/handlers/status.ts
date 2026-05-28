@@ -1127,6 +1127,7 @@ export function registerStatusHandlers(bot: Bot) {
   });
 
   bot.command(["stat", "stats"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
     const stat = await buildStatBrief();
     await ctx.reply(stat.text, { reply_markup: stat.keyboard });
   });
@@ -1208,7 +1209,7 @@ export function registerStatusHandlers(bot: Bot) {
 
     const baseMax = player.staminaMax ?? BASE_STAMINA;
     const adminMax = baseMax * REST_ADMIN_STAMINA_CAP_MULTIPLIER;
-    await prisma.player.updateMany({
+    const updated = await prisma.player.update({
       where: { id: player.id },
       data: {
         stamina: adminMax,
@@ -1216,12 +1217,16 @@ export function registerStatusHandlers(bot: Bot) {
         fatigueState: "RESTED",
         lastStaminaRegenAt: new Date(),
       },
+      select: { stamina: true, isAutoEnabled: true },
     });
 
-    await ctx.reply(`✨ Снагу відновлено до ${adminMax}/${baseMax}. Адмінський множник: ×${REST_ADMIN_STAMINA_CAP_MULTIPLIER}.`);
+    await ctx.reply(`✨ Снагу відновлено до ${updated.stamina}/${baseMax}. Адмінський множник: ×${REST_ADMIN_STAMINA_CAP_MULTIPLIER}.`, {
+      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, Boolean(updated.isAutoEnabled)),
+    });
   });
 
   bot.hears(["📊 Статистика", "Статистика"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
     const stat = await buildStatBrief();
     await ctx.reply(stat.text, { reply_markup: stat.keyboard });
   });

@@ -17,7 +17,7 @@ import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { renderLocationBrief, renderLocationDetails } from "./locations";
 import { notifyLocation, notifyLocationExcept } from "./notifications";
 import { hasActiveLightAtLocation } from "./fire";
-import { getPlayerRestStaminaCap } from "./locationFeatures";
+import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
 import { getStartLocationId } from "./players";
 import { summonLisovykIfResourceDepleted } from "./resources";
 import { logEvent } from "./worldEvents";
@@ -28,7 +28,7 @@ import { fatigueStateFor, spendCreatureStamina, spendPlayerStamina } from "./act
 import { actorWhere, enqueueCreatureAction, interruptActorActions, type ActorRef } from "./actionLifecycle";
 import { escapeHtml } from "../utils/text";
 import { playerCanShowTechnicalDetails } from "./technicalDetails";
-import { isLocationExitLocked, rememberTutorialForagingSuccess, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY } from "./tutorial";
+import { isLocationExitLocked, isTutorialFastRestLocationKey, rememberTutorialForagingSuccess, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY } from "./tutorial";
 import { tutorialLookPaceComments, tutorialSpiritMoveComment, tutorialTrackComments, tutorialWaitPaceComments } from "./tutorialVoices";
 import { chance, pick, shuffle } from "../utils/random";
 
@@ -44,10 +44,10 @@ const PANIC_HERBIVORE_FLEE_CHANCE = Number(process.env.WORLD_PANIC_HERBIVORE_FLE
 const PANIC_HERBIVORE_MAX_FLEE = Number(process.env.WORLD_PANIC_HERBIVORE_MAX_FLEE || 18);
 const PANIC_HERBIVORE_MOVE_PRIORITY = Number(process.env.WORLD_PANIC_HERBIVORE_MOVE_PRIORITY || 60);
 const TUTORIAL_REST_ENTRY_EVENT_TITLE = "Tutorial rest entry stamina lesson";
-const TUTORIAL_REST_REGEN_MULTIPLIER = 20;
 const TUTORIAL_FORAGING_RESOURCE_KEYS = new Set(["berries", "herbs"]);
 const TUTORIAL_FORAGING_SUCCESS_COMMENT = "Тут усе вдалося з першого разу, бо сон сам нахилив гілки до ваших рук. Не уві сні так буває не завжди: іноді доведеться спробувати ще раз, а з досвідом руки ставатимуть певніші й швидші.";
 const TUTORIAL_REST_FAST_COMMENT = "У навчальному сні жар повертає снагу дуже швидко, майже за один подих. Наяву відпочинок триватиме довше.";
+const TUTORIAL_REST_FULL_COMMENT = "Сон стиха каже: «Ось так виглядає короткий перепочинок у навчальному сні. Наяву до повної снаги шлях буде довший, і не кожне вогнище тримає вас так легко.»";
 const TUTORIAL_REST_EXTRA_COMMENT = "Якщо на клавіатурі бачите «екстра», це не помилка. Сон на мить дає снаги більше, ніж тіло звикло тримати наяву: надлишок допомагає навчитися, але за межами сну таке буде рідкісним і недовгим.";
 
 async function removeTutorialForagingDreamItems(playerId: number, fromLocationId: number) {
@@ -776,13 +776,11 @@ async function completeSimple(bot: Bot, action: WorldAction) {
         const location = player.currentLocationId
           ? await prisma.cellLocation.findUnique({ where: { id: player.currentLocationId }, select: { key: true } })
           : null;
-        const isTutorialRestRoom = location?.key === TUTORIAL_REST_LOCATION_KEY;
+        const isTutorialRestRoom = isTutorialFastRestLocationKey(location?.key);
         const max = await getPlayerRestStaminaCap(player.id);
         const hpMax = player.hpMax ?? BASE_HP;
         const payload = payloadOf<{ untilFull?: boolean }>(action);
-        const staminaRegen = isTutorialRestRoom
-          ? REST_STAMINA_REGEN_PER_INTERVAL * TUTORIAL_REST_REGEN_MULTIPLIER
-          : REST_STAMINA_REGEN_PER_INTERVAL;
+        const staminaRegen = REST_STAMINA_REGEN_PER_INTERVAL * await getPlayerRestStaminaRegenMultiplier(player.id);
         const next = payload.untilFull ? max : Math.min(max, player.stamina + staminaRegen);
         const nextHp = payload.untilFull ? hpMax : Math.min(hpMax, player.hp + HEALTH_REGEN_PER_INTERVAL);
         await prisma.player.updateMany({
@@ -796,9 +794,9 @@ async function completeSimple(bot: Bot, action: WorldAction) {
           },
         });
         if (isTutorialRestRoom && chatId) {
-          const comment = next > (player.staminaMax ?? BASE_STAMINA)
-            ? `${TUTORIAL_REST_FAST_COMMENT}\n\n${TUTORIAL_REST_EXTRA_COMMENT}`
-            : TUTORIAL_REST_FAST_COMMENT;
+          const commentParts = [next >= max && player.stamina < max ? TUTORIAL_REST_FULL_COMMENT : TUTORIAL_REST_FAST_COMMENT];
+          if (next > (player.staminaMax ?? BASE_STAMINA)) commentParts.push(TUTORIAL_REST_EXTRA_COMMENT);
+          const comment = commentParts.join("\n\n");
           await logEvent("NPC_SAY", "Сонний жар потріскує", comment, player.currentLocationId ?? undefined);
           await bot.api.sendMessage(chatId, `Сонний жар потріскує:\n${quoteBlock(comment)}`, {
             parse_mode: "HTML",

@@ -1,7 +1,7 @@
 import { prisma } from "../db";
 import { resourceTypeDisplayName } from "./corpses";
 
-const PICKABLE_RESOURCE_KEYS = ["torch", "twigs"] as const;
+const PICKABLE_RESOURCE_KEYS = ["torch", "lit_torch", "twigs"] as const;
 export type PickableResourceKey = (typeof PICKABLE_RESOURCE_KEYS)[number];
 
 export function isPickableResourceKey(key: string): key is PickableResourceKey {
@@ -29,7 +29,7 @@ export async function pickUpGroundResource(playerId: number, resourceNodeId: num
         amount: { gt: 0 },
         resourceType: { key: { in: [...PICKABLE_RESOURCE_KEYS] } },
       },
-      select: { id: true, resourceTypeId: true, resourceType: { select: { key: true, name: true } } },
+      select: { id: true, resourceTypeId: true, updatedAt: true, resourceType: { select: { key: true, name: true } } },
     });
     if (!node || !isPickableResourceKey(node.resourceType.key)) throw new Error("Цього вже немає поруч.");
 
@@ -39,10 +39,11 @@ export async function pickUpGroundResource(playerId: number, resourceNodeId: num
     });
     if (picked.count === 0) throw new Error("Цього вже немає поруч.");
 
+    const litTorchData = node.resourceType.key === "lit_torch" ? { updatedAt: node.updatedAt } : {};
     await tx.playerResource.upsert({
       where: { playerId_resourceTypeId: { playerId, resourceTypeId: node.resourceTypeId } },
-      update: { amount: { increment: 1 } },
-      create: { playerId, resourceTypeId: node.resourceTypeId, amount: 1 },
+      update: { amount: { increment: 1 }, ...litTorchData },
+      create: { playerId, resourceTypeId: node.resourceTypeId, amount: 1, ...litTorchData },
     });
 
     return {

@@ -181,6 +181,7 @@ async function markTimerWarning(marker: string, locationId?: number | null, play
 export async function notifyFadingFireTimers(bot: Bot) {
   const now = new Date();
   await expireTimedCampfires();
+  await expireGroundLitTorches(bot, now);
 
   const fadingCampfires = await prisma.locationFeature.findMany({
     where: {
@@ -234,6 +235,47 @@ export async function notifyFadingFireTimers(bot: Bot) {
       console.warn("Failed to notify fading torch:", error);
     }
   }
+}
+
+export async function expireGroundLitTorches(bot?: Bot, now = new Date()) {
+  const { litTorch, twigs } = await ensureTorchResourceTypes();
+  const expiredSince = new Date(now.getTime() - TORCH_DURATION_MS);
+  const expiredNodes = await prisma.resourceNode.findMany({
+    where: { resourceTypeId: litTorch.id, amount: { gt: 0 }, updatedAt: { lte: expiredSince } },
+    select: { id: true, locationId: true, amount: true },
+  });
+
+  for (const node of expiredNodes) {
+    const converted = await prisma.$transaction(async (tx) => {
+      const removed = await tx.resourceNode.updateMany({
+        where: { id: node.id, amount: { gt: 0 }, resourceTypeId: litTorch.id },
+        data: { amount: 0 },
+      });
+      if (removed.count === 0) return false;
+
+      await tx.resourceNode.upsert({
+        where: { locationId_resourceTypeId: { locationId: node.locationId, resourceTypeId: twigs.id } },
+        update: { amount: { increment: node.amount } },
+        create: { locationId: node.locationId, resourceTypeId: twigs.id, amount: node.amount, maxAmount: Math.max(1, node.amount) },
+      });
+
+      await tx.worldEvent.create({
+        data: {
+          type: "SYSTEM",
+          title: "Ground torch burned out",
+          description: `lit_torch=${node.id}; amount=${node.amount}; converted_to=twigs`,
+          locationId: node.locationId,
+        },
+      });
+      return true;
+    });
+
+    if (converted && bot) {
+      await notifyLocationAll(bot, node.locationId, "🔥 Запалений факел на землі догорів і розсипався на хмиз.");
+    }
+  }
+
+  return expiredNodes.length;
 }
 
 export async function createDebugCampfire(locationId: number) {
@@ -685,15 +727,25 @@ export async function hasActiveTorchLightAtLocation(locationId: number) {
   const litTorch = await prisma.resourceType.findUnique({ where: { key: LIT_TORCH_KEY } });
   if (!litTorch) return false;
   const activeSince = new Date(Date.now() - TORCH_DURATION_MS);
-  const count = await prisma.playerResource.count({
-    where: {
-      resourceTypeId: litTorch.id,
-      amount: { gt: 0 },
-      updatedAt: { gt: activeSince },
-      player: { currentLocationId: locationId },
-    },
-  });
-  return count > 0;
+  const [carriedCount, groundCount] = await Promise.all([
+    prisma.playerResource.count({
+      where: {
+        resourceTypeId: litTorch.id,
+        amount: { gt: 0 },
+        updatedAt: { gt: activeSince },
+        player: { currentLocationId: locationId },
+      },
+    }),
+    prisma.resourceNode.count({
+      where: {
+        locationId,
+        resourceTypeId: litTorch.id,
+        amount: { gt: 0 },
+        updatedAt: { gt: activeSince },
+      },
+    }),
+  ]);
+  return carriedCount + groundCount > 0;
 }
 
 export async function hasActiveLightAtLocation(locationId: number) {

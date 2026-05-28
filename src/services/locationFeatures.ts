@@ -27,6 +27,41 @@ export async function getPlayerRestStaminaCap(playerId: number) {
   return getLocationRestStaminaCap(player?.currentLocationId, player?.staminaMax ?? BASE_STAMINA);
 }
 
+function featureData(feature: { data?: unknown | null }) {
+  return feature.data && typeof feature.data === "object" && !Array.isArray(feature.data)
+    ? feature.data as Record<string, unknown>
+    : {};
+}
+
+function restStaminaRegenMultiplierFromData(data: Record<string, unknown>) {
+  const value = data.rest_stamina_regen_multiplier ?? data.restStaminaRegenMultiplier;
+  const multiplier = Number(value);
+  return Number.isFinite(multiplier) && multiplier > 1 ? Math.floor(multiplier) : 1;
+}
+
+export async function getLocationRestStaminaRegenMultiplier(locationId: number | null | undefined) {
+  if (!locationId) return 1;
+
+  const features = await prisma.locationFeature.findMany({
+    where: {
+      locationId,
+      isActive: true,
+    },
+    select: { data: true },
+  });
+
+  return Math.max(1, ...features.map((feature) => restStaminaRegenMultiplierFromData(featureData(feature))));
+}
+
+export async function getPlayerRestStaminaRegenMultiplier(playerId: number) {
+  const player = await prisma.player.findUnique({
+    where: { id: playerId },
+    select: { currentLocationId: true },
+  });
+
+  return getLocationRestStaminaRegenMultiplier(player?.currentLocationId);
+}
+
 type CampfireLikeFeature = {
   type: string;
   key?: string | null;

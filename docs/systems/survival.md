@@ -26,6 +26,16 @@ Player-facing and observer text should treat rest as posture:
 
 Later systems can add lying down and ordinary sleep as separate states. Tutorial sleep is a special dream/onboarding state, not the same as ordinary rest.
 
+## Stamina Recovery Tempo
+
+Current tuning favors quick recovery during early testing:
+
+- passive stamina recovery: `+13` once per 40 world ticks;
+- active rest stamina recovery: `+13` once per 4 world ticks;
+- local features such as tutorial dream campfires can multiply active rest recovery and raise the temporary rest cap.
+
+These values are balance constants, not final design. Player-facing UI should still prefer descriptive stamina states unless technical details are enabled.
+
 ## First Inventory Uses
 
 0.11.12 adds the first small practical use for gathered resources from inventory:

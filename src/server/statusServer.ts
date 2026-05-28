@@ -103,6 +103,40 @@ function hasAdminSecretCookie(req: http.IncomingMessage) {
   return Boolean(value && adminSecretMatches(value));
 }
 
+async function requireAdminWebAccess(
+  req: http.IncomingMessage,
+  res: http.ServerResponse,
+  targetPath: string,
+  title: string,
+) {
+  if (!config.adminSetSecret) {
+    res.writeHead(503, { "Content-Type": "text/html; charset=utf-8" });
+    res.end(renderAdminSecretForm(undefined, targetPath, title));
+    return false;
+  }
+
+  if (req.method === "POST") {
+    const body = new URLSearchParams(await readRequestBody(req));
+    const secret = body.get("secret") ?? "";
+    if (!adminSecretMatches(secret)) {
+      res.writeHead(403, { "Content-Type": "text/html; charset=utf-8" });
+      res.end(renderAdminSecretForm("Секрет не збігся.", targetPath, title));
+      return false;
+    }
+
+    res.setHeader("Set-Cookie", adminCookieHeader(secret));
+    return true;
+  }
+
+  if (!hasAdminSecretCookie(req)) {
+    res.writeHead(401, { "Content-Type": "text/html; charset=utf-8" });
+    res.end(renderAdminSecretForm(undefined, targetPath, title));
+    return false;
+  }
+
+  return true;
+}
+
 function renderAdminSecretForm(error?: string, targetPath = "/all", title = "Службовий доступ") {
   const errorHtml = error ? `<p class="error">${escapeHtml(error)}</p>` : "";
   const disabled = config.adminSetSecret ? "" : " disabled";
@@ -184,7 +218,7 @@ async function renderWhoPage(url: string | undefined) {
 function renderWorldPage(status: Awaited<ReturnType<typeof getStatusData>>) {
   const queue = status.actionQueue;
   const queueHtml = `<h2>Черга дій</h2><p>Гравці: очікує=${queue.playerQueued}, виконується=${queue.playerRunning}</p><p>Істоти: очікує=${queue.creatureQueued}, виконується=${queue.creatureRunning}</p><p>Разом: очікує=${queue.totalQueued}, виконується=${queue.totalRunning}, прострочено=${queue.overdueRunning}</p><p>Найстаріша дія в черзі: ${Math.round(queue.oldestQueuedAgeMs / 1000)} с; найбільше прострочення: ${Math.round(queue.maxOverdueMs / 1000)} с</p>`;
-  return `<!doctype html><html lang="uk"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Chornolis world status</title><style>body{font-family:system-ui,sans-serif;max-width:760px;margin:40px auto;padding:0 18px;background:#10170f;color:#e8e0c9}.card{border:1px solid #3b4a2f;border-radius:16px;padding:18px;background:#172114}code{color:#d8b55d}li{margin:8px 0}a{color:#d8b55d}.actions a{display:inline-block;border:1px solid #5d6f3c;border-radius:8px;padding:8px 10px;margin-right:8px;text-decoration:none;background:#1d2a18}</style></head><body><h1>Світ Порубіжжя</h1><div class="card"><p>Статус: <strong>запущено</strong></p><p>Версія: <strong>${escapeHtml(status.version)}</strong></p><p>Гравців: ${status.playersCount}</p><p>Регіонів: ${status.regionsCount}</p><p>Місцин: ${status.locationsCount}</p><p>Переходів: ${status.exitsCount}</p><p>Живих тварин: ${status.aliveAnimalsCount}</p><p>Трупів тварин: ${status.animalCorpsesCount}</p><p>Зниклих тварин: ${status.goneAnimalsCount}</p><p>NPC / не-тварин: ${status.npcCount}</p><p>Живих істот загалом: ${status.aliveCreaturesCount}</p><p>Ресурсних вузлів: ${status.resourcesCount}</p><p>Подій світу: ${status.eventsCount}</p>${queueHtml}<p>Останні події:</p><ol>${renderEvents(status.latestEvents)}</ol><p>Остання runtime-помилка: <code>${escapeHtml(status.lastRuntimeError ?? "немає")}</code></p></div><p class="actions"><a href="/">Головна</a><a href="/stat">Статистика /stat</a><a href="/chat">Репліки /chat</a><a href="/who">Хто активний /who</a><a href="/all">Службовий /all</a><a href="/health">Health JSON</a></p></body></html>`;
+  return `<!doctype html><html lang="uk"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Chornolis world status</title><style>body{font-family:system-ui,sans-serif;max-width:760px;margin:40px auto;padding:0 18px;background:#10170f;color:#e8e0c9}.card{border:1px solid #3b4a2f;border-radius:16px;padding:18px;background:#172114}code{color:#d8b55d}li{margin:8px 0}a{color:#d8b55d}.actions a{display:inline-block;border:1px solid #5d6f3c;border-radius:8px;padding:8px 10px;margin-right:8px;text-decoration:none;background:#1d2a18}</style></head><body><h1>Світ Порубіжжя</h1><div class="card"><p>Статус: <strong>запущено</strong></p><p>Версія: <strong>${escapeHtml(status.version)}</strong></p><p>Гравців: ${status.playersCount}</p><p>Регіонів: ${status.regionsCount}</p><p>Місцин: ${status.locationsCount}</p><p>Переходів: ${status.exitsCount}</p><p>Живих тварин: ${status.aliveAnimalsCount}</p><p>Трупів тварин: ${status.animalCorpsesCount}</p><p>Зниклих тварин: ${status.goneAnimalsCount}</p><p>NPC / не-тварин: ${status.npcCount}</p><p>Живих істот загалом: ${status.aliveCreaturesCount}</p><p>Ресурсних вузлів: ${status.resourcesCount}</p><p>Подій світу: ${status.eventsCount}</p>${queueHtml}<p>Останні події:</p><ol>${renderEvents(status.latestEvents)}</ol><p>Остання runtime-помилка: <code>${escapeHtml(status.lastRuntimeError ?? "немає")}</code></p></div><p class="actions"><a href="/">Головна</a><a href="/stat">Службова статистика /stat</a><a href="/chat">Репліки /chat</a><a href="/who">Хто активний /who</a><a href="/all">Службовий /all</a><a href="/health">Health JSON</a></p></body></html>`;
 }
 
 async function renderHomePage(status: Awaited<ReturnType<typeof getStatusData>>) {
@@ -216,7 +250,7 @@ async function renderHomePage(status: Awaited<ReturnType<typeof getStatusData>>)
         <div class="metric"><div class="label">У /who</div><div class="value">${who.totalCount}</div></div>
       </div>
       <p class="muted">У /who зараз: ${who.totalCount} персонажів.</p>
-      <p class="actions"><a href="/news">Новини</a><a href="/who">Хто активний /who</a><a href="/stat">Статистика /stat</a><a href="/chat">Репліки /chat</a><a href="/world">Світ /world</a><a href="/all">Службовий /all</a><a href="/health">Health JSON</a></p>
+      <p class="actions"><a href="/news">Новини</a><a href="/who">Хто активний /who</a><a href="/stat">Службова статистика /stat</a><a href="/chat">Репліки /chat</a><a href="/world">Світ /world</a><a href="/all">Службовий /all</a><a href="/health">Health JSON</a></p>
       ${latestNews ? `<div class="section"><h2>Остання новина</h2><p><a href="/news">${escapeHtml(latestNews.title)}</a></p></div>` : ""}
 
       <div class="section">
@@ -516,6 +550,12 @@ export function startHttpServer() {
         }
 
         if (path === "/stat.json") {
+          if (!config.adminSetSecret || !hasAdminSecretCookie(req)) {
+            res.writeHead(401, { "Content-Type": "application/json; charset=utf-8" });
+            res.end(JSON.stringify({ ok: false, error: "admin_access_required" }));
+            return;
+          }
+
           const stats = await getEcologyStats();
           res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
           res.end(JSON.stringify(stats));
@@ -523,6 +563,7 @@ export function startHttpServer() {
         }
 
         if (path === "/stat") {
+          if (!(await requireAdminWebAccess(req, res, "/stat", "Службова статистика /stat"))) return;
           res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
           res.end(await renderEcologyStatsPage());
           return;

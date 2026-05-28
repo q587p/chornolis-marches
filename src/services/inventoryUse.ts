@@ -159,7 +159,7 @@ export async function inspectInventoryResource(playerId: number, resourceQuery: 
 
 export async function dropInventoryResourceDetailed(playerId: number, resourceQuery: string) {
   const key = inventoryResourceKeyFromText(resourceQuery);
-  const { twigs } = await ensureTorchResourceTypes();
+  await ensureTorchResourceTypes();
   const player = await prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } });
   if (!player?.currentLocationId) throw new Error("Ти ще не увійшов у світ. Напиши /start");
 
@@ -172,18 +172,20 @@ export async function dropInventoryResourceDetailed(playerId: number, resourceQu
 
     await consumeOneResource(tx, carried.id, carried.amount);
 
-    const droppedResourceType = carried.resourceType.key === "lit_torch" ? twigs : carried.resourceType;
+    const droppedResourceType = carried.resourceType;
+    const litTorchData = carried.resourceType.key === "lit_torch" ? { updatedAt: carried.updatedAt } : {};
     await tx.resourceNode.upsert({
       where: { locationId_resourceTypeId: { locationId: player.currentLocationId!, resourceTypeId: droppedResourceType.id } },
-      update: { amount: { increment: 1 } },
-      create: { locationId: player.currentLocationId!, resourceTypeId: droppedResourceType.id, amount: 1, maxAmount: 1 },
+      update: { amount: { increment: 1 }, ...litTorchData },
+      create: { locationId: player.currentLocationId!, resourceTypeId: droppedResourceType.id, amount: 1, maxAmount: 1, ...litTorchData },
     });
 
     if (carried.resourceType.key === "lit_torch") {
+      const remainingMs = Math.max(0, carried.updatedAt.getTime() + TORCH_DURATION_MS - Date.now());
       return {
-        text: "Ви загасили й викинули залишок факела. На землі лишився хмиз.",
+        text: `Ви викинули запалений факел. Він ще горить на землі${remainingMs > 0 ? `, приблизно ${approximateDuration(remainingMs)}` : ""}.`,
         locationId: player.currentLocationId!,
-        droppedName: "хмиз",
+        droppedName: resourceTypeDisplayName(carried.resourceType),
         carriedName: resourceTypeDisplayName(carried.resourceType),
         resourceKey: droppedResourceType.key,
       };

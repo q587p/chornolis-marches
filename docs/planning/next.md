@@ -14,7 +14,7 @@ The 0.12.0 line landed the first dream tutorial slice: first-run entry, `/sleep 
 
 Recommended order:
 
-1. Expand **ONB-001** from the dream hub with the next missing branch: social signals, simple tracks/signs, observation learning, or fire/light after day-night rules exist.
+1. Expand **ONB-001** from the dream hub with the next missing branch: social signals, simple tracks/signs, more observation learning, or fire/light after day-night rules exist. The first narrow observation proof landed in `0.12.8`.
 2. Strengthen the minimal core loop before large systems: movement, `Озирнутися`, `Роздивитися`, small finds, stamina, `Відпочити`, visible traces and nearby beings.
 3. Observe and tune the first **firewood / хмиз / campfire fuel** loop now that хмиз can extend or prepare ordinary campfires.
 4. Add the first real **world time / day-night** state and make `/time` read it.
@@ -24,7 +24,7 @@ Recommended order:
 Good small follow-ups if a narrow patch is wanted:
 
 - Expand ONB-001 tutorial branches from `Дрімотна Межа`: social signals, observation/tracks, fire/light and deeper danger/respawn safety.
-- Add a first observation-learning MVP: a narrow scripted case where watching a visible NPC, animal or spirit action can reveal or slightly improve a relevant skill.
+- Extend the first observation-learning MVP after `0.12.8`: add attack/following variants, then replace the tutorial-only event flag with real skill progress once progression exists.
 - Add the next item-level inventory actions after the 0.11.12 first use/drop pass: better per-item details, corpses, safer dropped-item pickup, and future item instances for timers/quality/origin.
 - Tune the first berries/herbs use loop after playtesting: hunger relief, small healing text, edge cases and how this should grow into cooking, medicine and herbalism.
 - Add the first **animal-restoration offering** loop: small hare/mouse statues or similar forest charms where players can leave berries or herbs; after a delay, if local or regional prey population is low, a pair of young animals can appear without admin intervention.

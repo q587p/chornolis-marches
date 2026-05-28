@@ -12,15 +12,19 @@ export const TUTORIAL_FORAGING_LOCATION_KEY = "dream_tutorial_foraging";
 export const TUTORIAL_REST_LOCATION_KEY = "dream_tutorial_rest";
 export const TUTORIAL_TIME_LOCATION_KEY = "dream_tutorial_time";
 export const TUTORIAL_SAFETY_LOCATION_KEY = "dream_tutorial_safety";
+export const TUTORIAL_OBSERVATION_LOCATION_KEY = "dream_tutorial_observation";
+export const TUTORIAL_DEEP_REST_LOCATION_KEY = "dream_tutorial_deep_rest";
 export const DREAM_GATE_FEATURE_KEY = "dream_tutorial_sleep_gate";
 export const DREAM_GATE_OPEN_MS = 30 * 1000;
 const DREAM_GATE_OPEN_WINDOWS_MS = [30_000, 60_000, 120_000, 240_000, 480_000];
 export const TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE = "Tutorial foraging success";
+export const TUTORIAL_OBSERVATION_LESSON_EVENT_TITLE = "Tutorial observation lesson";
 
 const RETURN_LOCATION_EVENT_TITLE = "Tutorial return location";
 const DREAM_LOCATION_EVENT_TITLE = "Tutorial dream location";
 const COMPLETED_EVENT_TITLE = "Tutorial completed";
 const RESET_EVENT_TITLE = "Tutorial reset by admin";
+const TUTORIAL_COMMAND_HINT_EVENT_TITLE = "Tutorial command hint";
 
 function featureData(feature: { data: Prisma.JsonValue | null }) {
   return feature.data && typeof feature.data === "object" && !Array.isArray(feature.data)
@@ -63,6 +67,10 @@ function lockedReasonLabel(reason: string) {
 
 export function isTutorialLocation(location: { key: string; z: number; region?: { key: string } | null }) {
   return location.z === -13 || location.region?.key === TUTORIAL_REGION_KEY || location.key.startsWith("dream_tutorial_");
+}
+
+export function isTutorialFastRestLocationKey(key: string | null | undefined) {
+  return key === TUTORIAL_REST_LOCATION_KEY || key === TUTORIAL_DEEP_REST_LOCATION_KEY;
 }
 
 export function isDreamGateFeature(feature: { key: string; data: Prisma.JsonValue | null }) {
@@ -125,7 +133,7 @@ export async function resetTutorialProgressForPlayer(playerId: number, scribePla
       where: {
         playerId,
         type: "SYSTEM",
-        title: { in: [COMPLETED_EVENT_TITLE, TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE] },
+        title: { in: [COMPLETED_EVENT_TITLE, TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE, TUTORIAL_OBSERVATION_LESSON_EVENT_TITLE] },
       },
     });
 
@@ -180,6 +188,52 @@ export async function rememberTutorialForagingSuccess(playerId: number, location
       description: resourceKey,
       playerId,
       locationId,
+    },
+  });
+  return true;
+}
+
+export async function hasTutorialObservationLesson(playerId: number) {
+  const event = await prisma.worldEvent.findFirst({
+    where: { playerId, type: "SYSTEM", title: TUTORIAL_OBSERVATION_LESSON_EVENT_TITLE },
+    select: { id: true },
+    orderBy: { id: "desc" },
+  });
+  return Boolean(event);
+}
+
+export async function rememberTutorialObservationLesson(playerId: number, locationId: number, skillKey = "tracking") {
+  const seen = await hasTutorialObservationLesson(playerId);
+  if (seen) return false;
+
+  await prisma.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: TUTORIAL_OBSERVATION_LESSON_EVENT_TITLE,
+      description: skillKey,
+      playerId,
+      locationId,
+    },
+  });
+  return true;
+}
+
+export async function rememberTutorialCommandHint(playerId: number, commandKey: string, locationId?: number | null) {
+  const description = commandKey.trim();
+  const seen = await prisma.worldEvent.findFirst({
+    where: { playerId, type: "SYSTEM", title: TUTORIAL_COMMAND_HINT_EVENT_TITLE, description },
+    select: { id: true },
+    orderBy: { id: "desc" },
+  });
+  if (seen) return false;
+
+  await prisma.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: TUTORIAL_COMMAND_HINT_EVENT_TITLE,
+      description,
+      playerId,
+      locationId: locationId ?? undefined,
     },
   });
   return true;

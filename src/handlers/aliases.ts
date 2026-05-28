@@ -187,6 +187,7 @@ async function replyWithNews(ctx: any) {
 }
 
 async function replyWithStat(ctx: any) {
+  if (!(await requireScribeAdmin(ctx))) return;
   const stat = await buildStatBrief();
   await ctx.reply(stat.text, { reply_markup: stat.keyboard });
 }

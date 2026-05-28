@@ -140,7 +140,7 @@ export const ADMIN_HELP_TEXT = [
   "",
   "/adminHelp — список команд",
   "/world — стан світу й останні події",
-  "/stat — коротка статистика й посилання на веб-/stat",
+  "/stat — службова статистика й посилання на захищену веб-/stat",
   "/chat time [hours|all] — репліки гравців і NPC за часом; старий формат /chat 1 теж працює",
   "/chat location [hours|all] — репліки, впорядковані за місциною; веб-/chat?mode=location",
   "/chat character [hours|all] — репліки, впорядковані за мовцем/персонажем; веб-/chat?mode=character",

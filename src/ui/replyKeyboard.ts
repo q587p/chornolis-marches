@@ -65,18 +65,18 @@ function exactStatusButtonLabel(player: { hp: number; hpMax: number | null; stam
   return `❤️ ${player.hp}/${player.hpMax ?? BASE_HP} · ⚡ ${player.stamina}/${player.staminaMax ?? BASE_STAMINA}`;
 }
 
-export function buildMenuReplyKeyboard() {
-  return new Keyboard()
-    .text("📰 Новини")
-    .text("📊 Статистика")
+export function buildMenuReplyKeyboard(options: { canSeeStats?: boolean } = {}) {
+  const keyboard = new Keyboard()
+    .text("📰 Новини");
+  if (options.canSeeStats) keyboard.text("📊 Статистика");
+  keyboard
     .row()
     .text("💬 Репліки")
     .text("👥 Хто активний")
     .row()
     .text("🕯 Час")
     .text("↩️ Назад")
-    .resized()
-    .persistent();
+  return keyboard.resized().persistent();
 }
 
 export async function buildMainReplyKeyboardForTelegramId(telegramId: number, isAuto = false) {

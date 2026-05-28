@@ -96,6 +96,38 @@
     "isHidden": false
   },
   {
+    "fromKey": "dream_tutorial_rest",
+    "toKey": "dream_tutorial_deep_rest",
+    "direction": "WEST",
+    "label": "захід, легкий жар",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_deep_rest",
+    "toKey": "dream_tutorial_rest",
+    "direction": "EAST",
+    "label": "схід, теплий присілок",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_hub",
+    "toKey": "dream_tutorial_observation",
+    "direction": "INSIDE",
+    "label": "у кущі, лисячий просвіт",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_observation",
+    "toKey": "dream_tutorial_hub",
+    "direction": "OUTSIDE",
+    "label": "назовні, тиха галявина",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
     "fromKey": "dream_tutorial_hub",
     "toKey": "dream_tutorial_time",
     "direction": "SOUTH",

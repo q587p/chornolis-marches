@@ -17,9 +17,9 @@ The forest should feel alive even when players do nothing.
 - Resource regeneration.
 - Mushrooms grow from decayed corpses.
 - Predator prey choice by age, HP and species preference.
-- Predator kill counters in `/stat`.
+- Predator kill counters in scribe/admin `/stat`.
 - Animal hunger pressure and starvation deaths.
-- Starvation counters in `/stat` and web `/stat`.
+- Starvation counters in scribe/admin `/stat` and protected web `/stat`.
 - Individual predator hunting counters for attack attempts, successful attacks and kills.
 - Players can interfere with the balance.
 
@@ -44,12 +44,12 @@ The forest should feel alive even when players do nothing.
 - Herbivores react to crowded danger gradually: they do not all flee instantly, but their chance to choose movement rises noticeably while the crowd remains.
 - Recent attacks add temporary local danger for ecology decisions. Herbivores become more likely to leave the attacked location for several world ticks.
 - Foxes prefer mice, then vulnerable rabbits; wolves prefer rabbits, especially young, old or wounded prey.
-- Predator kills leave corpses, reduce predator hunger and are counted in `/stat` next to old-age deaths.
+- Predator kills leave corpses, reduce predator hunger and are counted in scribe/admin `/stat` next to old-age deaths.
 - Predator hunger recovery uses prey food value: mice are light food, rabbit children/old rabbits are partial food, healthy young/adult rabbits are worth more.
 - Hungry herbivores are more likely to eat when forage exists and more likely to move when local food is gone or vegetation is exhausted.
 - Hungry predators are more likely to search for prey and attack; very hungry predators attack immediately when suitable prey is present.
 - Animals that remain above the starvation threshold can die of hunger. Starvation leaves a corpse, cancels pending creature actions, writes an `Animal starved` world event, and appears in ecology statistics.
-- Individual animals keep hunting counters, and `/stat` can show the most successful hunters.
+- Individual animals keep hunting counters, and scribe/admin `/stat` can show the most successful hunters.
 - Fox and wolf lifecycle values are deliberately slower than rabbits and mice, so future predator reproduction does not explode as quickly as herbivore reproduction.
 - Starter predators now include a fox pair near `forest_07_02`, lone foxes near the dry luka, and a cautious wolf pair in remote `DEEP_FOREST`.
 - Predator reproduction runs after small-herbivore ecology and before ordinary carnivore ticks. It uses prey-unit thresholds and very slow wolf checks.

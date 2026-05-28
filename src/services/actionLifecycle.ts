@@ -17,7 +17,7 @@ import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { setLastRuntimeError } from "../runtimeState";
 import { actionPriority, actionTitle, effectivePlayerActionDurationMs } from "./actionRules";
 import { fatigueStateFor, recoverStamina } from "./actionRecovery";
-import { getPlayerRestStaminaCap } from "./locationFeatures";
+import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
 import { logEvent } from "./worldEvents";
 
 export type ActorRef =
@@ -279,7 +279,8 @@ export async function queuePlayerRest(playerId: number, chatId?: number | string
   const max = await getPlayerRestStaminaCap(playerId);
   const hpMax = player.hpMax ?? BASE_HP;
   const remaining = Math.max(0, max - player.stamina);
-  const staminaMs = Math.max(1, Math.ceil(remaining / REST_STAMINA_REGEN_PER_INTERVAL)) * REST_STAMINA_REGEN_INTERVAL_MS;
+  const restStaminaRate = REST_STAMINA_REGEN_PER_INTERVAL * await getPlayerRestStaminaRegenMultiplier(playerId);
+  const staminaMs = Math.max(1, Math.ceil(remaining / Math.max(1, restStaminaRate))) * REST_STAMINA_REGEN_INTERVAL_MS;
   const hpMs = Math.max(1, Math.ceil(Math.max(0, hpMax - player.hp) / HEALTH_REGEN_PER_INTERVAL)) * REST_HEALTH_REGEN_INTERVAL_MS;
   return enqueuePlayerAction({
     playerId,

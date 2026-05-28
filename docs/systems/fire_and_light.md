@@ -34,16 +34,17 @@ Expired timed campfires are turned into згаслі campfires lazily when locat
 - From inventory, the `Light torch` / `Запалити факел` action appears when the character carries an unlit torch and can reach fire from either a lit campfire in the current location or another lit torch already in hand.
 - From inventory, `Підкинути хмиз` appears when the character carries `twigs` and a nearby ordinary campfire can accept them.
 - From inventory, `Притушити факел` appears while a carried torch is burning. It turns one `lit_torch` into a `doused_torch` and stores the remaining burn time so relighting continues from that point.
+- From inventory, `Викинути` on a carried burning torch drops it as a burning ground item instead of immediately extinguishing it. It remains visible under `Лежить`, lights the місцина while it still burns, and can be picked up again.
 - A character can carry at most two lit torches at once, matching the current two-hands assumption.
 - A lit torch lasts 5 in-game hours, currently 10 real minutes.
 - During the final in-game hour, currently 2 real minutes, the world tick sends the character a separate chat warning that the torch is going out.
 - When a lit torch burns out, inventory sync consumes `lit_torch` and returns `twigs` instead of a dry `torch`.
-- A lit torch gives light in the character's current місцина and can reveal nearby targets in the same way as campfire light.
+- A lit torch gives light in the character's current місцина and can reveal nearby targets in the same way as campfire light. This applies to both carried lit torches and burning lit torches lying on the ground.
 
 The current implementation stores torch state as inventory resources:
 
 - `torch` is an unlit torch.
-- `lit_torch` is a burning torch; its `updatedAt` timestamp is the active timer.
+- `lit_torch` is a burning torch; its `updatedAt` timestamp is the active timer. The same temporary resource-stack timer is used for carried and dropped burning torches until real item instances exist.
 - `doused_torch` is a doused torch; the remaining burn time is preserved through an internal timer event until it is relit.
 - `twigs` / `хмиз` is the leftover fuel resource produced when a carried lit torch expires.
 
@@ -55,4 +56,5 @@ This avoids a schema migration while preserving per-character torch timing.
 
 - Timer warnings are chat events, not part of the місцина description.
 - When a carried lit torch reaches the fading window, the owner gets one separate chat message.
+- When a dropped lit torch burns out, the location gets a local message and a world event is recorded; the ground resource becomes `хмиз`.
 - When a timed campfire reaches the fading window, characters in that місцина get one local chat message.

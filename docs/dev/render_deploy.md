@@ -68,8 +68,8 @@ Render Web Service exposes:
 - `/health` — JSON health check.
 - `/who` — public active-character list with pagination (`?page=0`).
 - `/who.json` — JSON active-character list page and shared public count (`?page=0`).
-- `/stat` — human-readable statistics page.
-- `/stat.json` — JSON statistics.
+- `/stat` — protected human-readable statistics page; asks for `ADMIN_SET_SECRET`.
+- `/stat.json` — protected JSON statistics; requires the same admin cookie as `/stat`.
 
 Start command:
 

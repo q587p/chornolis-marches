@@ -14,14 +14,16 @@ import {
   isExtinguishedCampfire,
   lightCampfireFromTorch,
   takeTorchFromFeature,
+  TORCH_DURATION_MS,
 } from "./fire";
 import { isPickableResourceKey } from "./groundItems";
 import { escapeHtml } from "../utils/text";
 import { normalizeCreatureActionText } from "../utils/creatureActionText";
 import { creatureForms } from "./grammar";
+import { resourceTypeDisplayName } from "./corpses";
 import { lifetimeSummary } from "./itemLifetime";
 import { playerShowsTechnicalDetails } from "./technicalDetails";
-import { dreamGateStatusText, isDreamGateFeature, lockedExitDirections, lockedExitLabel } from "./tutorial";
+import { TUTORIAL_OBSERVATION_LOCATION_KEY, dreamGateStatusText, isDreamGateFeature, lockedExitDirections, lockedExitLabel, rememberTutorialObservationLesson } from "./tutorial";
 
 const COMPACT_EXIT_ORDER = ["NORTH", "WEST", "SOUTH", "EAST", "UP", "DOWN", "INSIDE", "OUTSIDE"];
 const GATHERABLE_RESOURCE_KEYS = ["berries", "mushrooms", "herbs"] as const;
@@ -98,12 +100,30 @@ function isDepletedVegetationFeature(feature: any) {
   return feature.isActive && String(feature.key ?? "").startsWith("depleted_vegetation_");
 }
 
+function isTutorialObservationFeature(feature: any) {
+  return featureData(feature).tutorial_observation_prompt === true;
+}
+
+async function tutorialObservationLessonText(viewerPlayerId: number, locationId: number, skillKey = "tracking") {
+  const firstLesson = await rememberTutorialObservationLesson(viewerPlayerId, locationId, skillKey);
+  return [
+    "Сон шепоче:",
+    "«Будьте уважні. Дорога лишає слід не тільки на землі, а й у русі того, хто йде.»",
+    "Дрімота фиркає:",
+    "«Не вдивляйтеся так довго. Усе одно все втече.»",
+    firstLesson
+      ? "Ви уважно спостерігаєте.\nСлідування трохи покращено."
+      : "Ви вже впізнаєте цей рух: низько, тихо, без зайвого шуму.",
+  ].join("\n\n");
+}
+
 function torchLightButtonText(torchState: { isLit: boolean; plainAmount: number; litAmount: number }) {
   if (torchState.isLit && torchState.plainAmount > 0) return "🔥 Підпалити ще один факел";
   return torchState.isLit ? "🔥 Оновити вогонь на факелі" : "🔥 Підпалити факел";
 }
 
 function featureIcon(feature: any) {
+  if (isTutorialObservationFeature(feature)) return "🦊";
   if (isCampfireFeature(feature)) return isExtinguishedCampfire(feature) ? "🪨" : "🔥";
   if (isDepletedVegetationFeature(feature)) return "🌾";
   if (feature.type === "BORDER_MARKER") return "🪧";
@@ -117,7 +137,7 @@ function isInteractiveFeature(feature: any) {
 
 function isTutorialPromptFeature(feature: any) {
   const data = featureData(feature);
-  return data.tutorial_wake_prompt === true || data.tutorial_time_prompt === true || data.tutorial_safety_prompt === true;
+  return data.tutorial_wake_prompt === true || data.tutorial_time_prompt === true || data.tutorial_safety_prompt === true || data.tutorial_observation_prompt === true;
 }
 
 function featureBriefLine(feature: any) {
@@ -152,11 +172,15 @@ function featureDetailLine(feature: any, showTechnicalDetails = false) {
     details.push("допомагає зорієнтуватися поблизу межі");
   } else if (feature.type === "GATE") {
     details.push("позначає прохід, який треба роздивитися ближче");
+  } else if (isTutorialObservationFeature(feature)) {
+    details.push("вчить уважно спостерігати");
   }
 
   const fireState = isCampfireFeature(feature) ? campfireStateLine(feature) : null;
   if (fireState && !isExtinguishedCampfire(feature)) details.push(fireState);
   if (showTechnicalDetails && feature.restStaminaCapMultiplier) details.push(`відпочинок до ×${feature.restStaminaCapMultiplier} снаги`);
+  const restSpeedMultiplier = Number(featureData(feature).rest_stamina_regen_multiplier ?? featureData(feature).restStaminaRegenMultiplier ?? 1);
+  if (showTechnicalDetails && Number.isFinite(restSpeedMultiplier) && restSpeedMultiplier > 1) details.push(`відновлення снаги ×${Math.floor(restSpeedMultiplier)}`);
   return details.length ? `${line}; ${details.join("; ")}` : line;
 }
 
@@ -188,6 +212,7 @@ function presenceText(location: any, viewerPlayerId?: number, revealTargets = fa
   const hasCharacters = targets.some((t) => t.canGreet);
   const hasAnimals = location.creatures.some((c: any) => isVisibleLivingCreature(c) && c.species.kind === "ANIMAL");
   const hasCorpses = location.creatures.some(isVisibleCorpse);
+  const groundItems = (location.resources ?? []).filter((r: any) => r.amount > 0 && isPickableResourceKey(r.resourceType.key));
 
   if (revealTargets && targets.length) {
     const livingLines = targets
@@ -198,6 +223,9 @@ function presenceText(location: any, viewerPlayerId?: number, revealTargets = fa
       .filter(isCorpseTarget)
       .slice(0, TARGET_TEXT_LIMIT)
       .map((target) => `- ${escapeHtml(target.label)}`);
+    const groundItemLines = groundItems
+      .slice(0, TARGET_TEXT_LIMIT)
+      .map((resource: any) => `- ${escapeHtml(groundItemLine(resource))}`);
 
     const sections: string[] = [];
     if (livingLines.length) {
@@ -206,7 +234,12 @@ function presenceText(location: any, viewerPlayerId?: number, revealTargets = fa
     }
     if (corpseLines.length) {
       if (targets.filter(isCorpseTarget).length > TARGET_TEXT_LIMIT) corpseLines.push(`- ...і ще ${targets.filter(isCorpseTarget).length - TARGET_TEXT_LIMIT}`);
-      sections.push(`Лежить:\n${corpseLines.join("\n")}`);
+    }
+    const lyingLines = [...corpseLines, ...groundItemLines];
+    if (lyingLines.length) {
+      const hiddenGroundItems = groundItems.slice(TARGET_TEXT_LIMIT).reduce((sum: number, item: any) => sum + item.amount, 0);
+      if (hiddenGroundItems > 0) lyingLines.push(`- ...і ще ${hiddenGroundItems}`);
+      sections.push(`Лежить:\n${lyingLines.join("\n")}`);
     }
 
     return sections.length ? `\n\n${sections.join("\n\n")}` : "";
@@ -215,8 +248,17 @@ function presenceText(location: any, viewerPlayerId?: number, revealTargets = fa
   if (hasCharacters && hasAnimals) return "\n\n<i>Поруч хтось або щось є.</i>";
   if (hasCharacters) return "\n\n<i>Поруч хтось є.</i>";
   if (hasAnimals) return "\n\n<i>Поруч щось ворушиться.</i>";
-  if (hasCorpses) return "\n\n<i>Поруч щось лежить нерухомо.</i>";
+  if (hasCorpses || groundItems.length) return "\n\n<i>Поруч щось лежить нерухомо.</i>";
   return "";
+}
+
+function groundItemLine(resource: any) {
+  const amount = resource.amount > 1 ? ` ×${resource.amount}` : "";
+  if (resource.resourceType.key !== "lit_torch") return `${resourceTypeDisplayName(resource.resourceType)}${amount}`;
+
+  const leftMs = resource.updatedAt.getTime() + TORCH_DURATION_MS - Date.now();
+  const minutes = Math.max(1, Math.ceil(leftMs / 60_000));
+  return `${resourceTypeDisplayName(resource.resourceType)}${amount}; горітиме ще приблизно ${minutes} хв`;
 }
 
 function sortedExits(exits: any[]) {
@@ -406,6 +448,7 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
     include: {
       players: true,
       creatures: { where: { isGone: false }, include: { species: true } },
+      resources: { include: { resourceType: true } },
       features: { where: { isActive: true }, orderBy: { id: "asc" } },
       region: true,
       exitsFrom: { where: { isHidden: false }, include: { toLocation: true }, orderBy: { direction: "asc" } },
@@ -486,13 +529,16 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   const groundItems = location.resources.filter((r) => r.amount > 0 && isPickableResourceKey(r.resourceType.key));
   const lyingLines = [
     ...corpses.map((c) => `труп ${creatureForms(c).genitive}; стан: ${lifetimeSummary(c.corpseDecayTicksLeft, c.species.corpseDecayTicks, { showTechnicalDetails })}`),
-    ...groundItems.map((r) => `${r.resourceType.name}${r.amount > 1 ? ` ×${r.amount}` : ""}`),
+    ...groundItems.map(groundItemLine),
   ];
   const lyingText = lyingLines.length
     ? `\n\nЛежить:\n${lyingLines
         .slice(0, 8)
         .map((line) => `- ${escapeHtml(line)}`)
         .join("\n")}${lyingLines.length > 8 ? `\n- ...і ще ${lyingLines.length - 8}` : ""}`
+    : "";
+  const observationLessonText = location.key === TUTORIAL_OBSERVATION_LOCATION_KEY && viewerPlayerId
+    ? `\n\n${escapeHtml(await tutorialObservationLessonText(viewerPlayerId, location.id))}`
     : "";
 
   const keyboard = new InlineKeyboard();
@@ -524,7 +570,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     : "";
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location, "details", showTechnicalDetails)}\n\n<i>Ви роздивляєтесь уважніше.</i>${technicalLocationText}\n\n${escapeHtml(detailedExitsText(location.exitsFrom, lockedExits))}${resourcesText}${charactersText}${tracksHint.text}${animalMovementText}${lyingText}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location, "details", showTechnicalDetails)}\n\n<i>Ви роздивляєтесь уважніше.</i>${observationLessonText}${technicalLocationText}\n\n${escapeHtml(detailedExitsText(location.exitsFrom, lockedExits))}${resourcesText}${charactersText}${tracksHint.text}${animalMovementText}${lyingText}`,
     keyboard,
   };
 }
@@ -585,8 +631,6 @@ export async function renderDepletedVegetationInspection(locationId: number, vie
       feature.description ?? "Тут трава вибита й виїдена майже до землі.",
       "",
       vegetationRecoveryPhrase(grass),
-      "",
-      "Якщо місцину лишити в спокої, вона відновлюватиметься повільно. Дощ, магія чи чиясь турбота зможуть допомогти пізніше.",
       technical,
     ].join("\n"),
     keyboard,
@@ -622,6 +666,12 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
     text = isDreamGateFeature(feature)
       ? `${feature.description ?? "Перед вами стоїть Брама Сну."}\n\n${dreamGateStatusText(feature)}`
       : feature.description ?? "Ви стукаєте у ворота, але вам ніхто не відповідає.";
+  } else if (isTutorialObservationFeature(feature)) {
+    const data = featureData(feature);
+    text = [
+      feature.description ?? "Лисиця вчить не поспішати очима.",
+      await tutorialObservationLessonText(viewerPlayerId, feature.locationId, String(data.tutorial_observation_skill ?? "tracking")),
+    ].join("\n\n");
   } else if (featureData(feature).tutorial_wake_prompt === true) {
     text = `${feature.description ?? "Десь збоку ворушаться майбутні уроки."}\n\nВи можете прокинутися зараз і повернутися до цього місця сну пізніше.`;
   } else if (isTorchSourceFeature(feature)) {

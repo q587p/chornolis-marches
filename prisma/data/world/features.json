@@ -210,7 +210,7 @@
     "locationKey": "dream_tutorial_hub",
     "type": "LANDMARK",
     "name": "Майбутні уроки",
-    "description": "На моху лежать чотири короткі зарубки: схід — роздивитися й зібрати; захід — відпочити; південь — спитати час і згадати безпечний відступ; тут — прокинутися. Сон не вимагає всього одразу.",
+    "description": "На моху лежать п’ять коротких зарубок: схід — роздивитися й зібрати; захід — відпочити; південь — спитати час і згадати безпечний відступ; у кущі — поспостерігати за лисячим рухом; тут — прокинутися. Сон не вимагає всього одразу.",
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
@@ -239,6 +239,21 @@
     "restStaminaCapMultiplier": 2,
     "data": {
       "rest_stamina_cap_multiplier": 2,
+      "rest_stamina_regen_multiplier": 10,
+      "tutorial_hint": "rest"
+    }
+  },
+  {
+    "key": "dream_tutorial_deep_rest_fire",
+    "locationKey": "dream_tutorial_deep_rest",
+    "type": "MAGIC_CAMPFIRE",
+    "name": "Жар легкого перепочинку",
+    "description": "Полум’я тут не кусає очі й не просить хмизу. Поруч із ним легко присісти: сон ніби підкладає під втому м’який мох і повертає снагу значно швидше, ніж звичайне місце наяву.",
+    "providesLight": true,
+    "restStaminaCapMultiplier": 2,
+    "data": {
+      "rest_stamina_cap_multiplier": 2,
+      "rest_stamina_regen_multiplier": 10,
       "tutorial_hint": "rest"
     }
   },
@@ -265,6 +280,19 @@
     "data": {
       "tutorial_safety_prompt": true,
       "tutorial_wake_prompt": true
+    }
+  },
+  {
+    "key": "dream_tutorial_fox_motion",
+    "locationKey": "dream_tutorial_observation",
+    "type": "LANDMARK",
+    "name": "Лисячий рух",
+    "description": "Руда тінь робить кілька кроків, завмирає, слухає землю й зникає не там, де ви чекали. За нею лишається не тільки слід, а й спосіб рухатися: нижче до трави, тихіше до вітру, уважніше до кожного шурхоту.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "tutorial_observation_prompt": true,
+      "tutorial_observation_skill": "tracking"
     }
   },
   {

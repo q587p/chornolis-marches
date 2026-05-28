@@ -5,6 +5,9 @@ import { accelerateFirstQueuedPlayerAction, hasPlayerActionQueueControls, player
 import { buildRestWithQueueChoiceKeyboard } from "../ui/keyboards";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { actionQueueReplyOptions } from "../utils/actionQueueUi";
+import { isTutorialFastRestLocationKey, rememberTutorialCommandHint } from "../services/tutorial";
+import { prisma } from "../db";
+import { getPlayerRestStaminaCap } from "../services/locationFeatures";
 
 async function replyOrEdit(ctx: any, text: string, options?: any) {
   if (ctx.callbackQuery?.message) {
@@ -22,7 +25,14 @@ async function beginRestNow(ctx: any, playerId: number) {
   const hadQueue = await hasPlayerActionQueueControls(playerId);
   await startPlayerRest(playerId);
   const suffix = hadQueue ? "\n\nПоточну дію та чергу скасовано." : "";
-  await replyOrEdit(ctx, `${await playerRestStatusText(playerId)}${suffix}`);
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  const location = player?.currentLocationId
+    ? await prisma.cellLocation.findUnique({ where: { id: player.currentLocationId }, select: { key: true } })
+    : null;
+  const tutorialComment = player && isTutorialFastRestLocationKey(location?.key) && await rememberTutorialCommandHint(player.id, "rest", player.currentLocationId)
+    ? "\n\nСон радить:\n«Відпочинок — це не сон, а короткий присілок. Тут жар навчить, як швидко повертається подих.»\n\nДрімота пирхає:\n«Сядеш — і ще захочеш сидіти. Але добре, хоч не падаєш.»"
+    : "";
+  await replyOrEdit(ctx, `${await playerRestStatusText(playerId)}${suffix}${tutorialComment}`);
 }
 
 async function startRest(ctx: any) {
@@ -31,7 +41,7 @@ async function startRest(ctx: any) {
   const player = await getPlayerByTelegramId(from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
-  const max = player.staminaMax ?? BASE_STAMINA;
+  const max = await getPlayerRestStaminaCap(player.id);
   const hpMax = player.hpMax ?? BASE_HP;
   if (player.stamina >= max && player.hp >= hpMax && !player.isResting) {
     await replyOrEdit(ctx, `Ви вже відпочили й готові до дій. Життя: ${player.hp}/${hpMax}. Снага: ${player.stamina}/${max}.`);

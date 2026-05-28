@@ -22,7 +22,7 @@ Location and character:
 
 Menu and status:
 
-- `статистика`, `/статистика` -> canonical `/stat` view.
+- `статистика`, `/статистика` -> canonical `/stat` view for scribes/admins only.
 - `репліки`, `/репліки`, `chat`, `chat all`, `chat location 1`, `chat character all` -> canonical `/chat` view.
 - `хто`, `хто активний`, `хто тут`, `хто поруч` -> canonical `/who` view.
 - `час`, `/час` -> canonical `/time` view.

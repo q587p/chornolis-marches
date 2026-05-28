@@ -11,7 +11,7 @@ import {
   VERY_TIRED_STAMINA,
 } from "../gameConfig";
 import { actionTitle } from "./actionRules";
-import { getPlayerRestStaminaCap } from "./locationFeatures";
+import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
 import { playerCanShowTechnicalDetails } from "./technicalDetails";
 import { actionProgressSuffix } from "../utils/durationText";
 
@@ -21,6 +21,11 @@ function msToSeconds(ms: number) {
 
 function msToMinutes(ms: number) {
   return Math.max(1, Math.ceil(ms / 60_000));
+}
+
+function recoveryMinutes(remaining: number, perInterval: number, intervalMs: number) {
+  if (remaining <= 0) return 0;
+  return msToMinutes(Math.ceil(remaining / Math.max(1, perInterval)) * intervalMs);
 }
 
 function fatigueStateFor(stamina: number, staminaMax = BASE_STAMINA): FatigueState {
@@ -50,6 +55,7 @@ export async function playerRestStatusText(playerId: number) {
   const staminaRemaining = Math.max(0, max - player.stamina);
   const hpRemaining = Math.max(0, hpMax - player.hp);
   const state = fatigueLabel(fatigueStateFor(player.stamina, max), player.isResting);
+  const restStaminaRate = REST_STAMINA_REGEN_PER_INTERVAL * await getPlayerRestStaminaRegenMultiplier(playerId);
 
   if (staminaRemaining <= 0 && hpRemaining <= 0) {
     return `Ви вже відпочивші й готові до дій. Життя: ${player.hp}/${hpMax}. Снага: ${player.stamina}/${max}.`;
@@ -67,7 +73,7 @@ export async function playerRestStatusText(playerId: number) {
   }
 
   if (staminaRemaining > 0) {
-    const staminaMinutes = Math.ceil(staminaRemaining / REST_STAMINA_REGEN_PER_INTERVAL) * msToMinutes(REST_STAMINA_REGEN_INTERVAL_MS);
+    const staminaMinutes = recoveryMinutes(staminaRemaining, restStaminaRate, REST_STAMINA_REGEN_INTERVAL_MS);
     lines.push(`До повної снаги: приблизно ${staminaMinutes} хв.`);
   }
 

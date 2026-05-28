@@ -31,19 +31,22 @@ The first version should help a new character understand what they can do withou
 - `Брама Сну` teaches visible locked exits: a locked south exit is shown, blocked movement gives a reason, and `/open` / `Відкрити` opens the route for a cycling window of about 30 seconds, 1 minute, 2 minutes, 4 minutes, 8 minutes, then back to 30 seconds.
 - `0.12.2` adds two optional hub branches: `Ягідний просвіт сну` for `Роздивитися`, gathering and `Речі`, plus `Теплий присілок сну` for `Відпочити` as a brief stamina rest.
 - `0.12.4` adds a south hub branch: `Плесо часу сну` for `/time`, followed by `Затишок останнього кроку` for beginner safety habits around `/look`, `/rest`, `/me` and waking from the tutorial.
+- `0.12.8` adds `Лисячий просвіт сну`: a side branch that teaches the first scripted observation-learning moment through `Лисячий рух` and a one-time `Слідування трохи покращено` message.
+- `0.12.8` also deepens the rest branch with `Легкий присілок сну`, a second fast-rest room, local rest speed multipliers and a first-use Сон/Дрімота comment for `/rest`.
 
 ## Remaining first scope
 
 - Review and refresh `/start`, `/help`, fallback hints and the main keyboard so a brand-new player sees the current game, not an older slice of it.
 - Expand the dream tutorial with branches that nudge the player through:
   - simple tracks and signs;
-  - a first observation-learning scene, for example watching a fox move or attack and receiving a tiny `Слідування` or `Атака` improvement message;
+  - more observation-learning scenes after the first fox movement proof, especially attack and following lessons once the skill system exists;
   - social signals and nearby characters/creatures;
   - fire/light once the first real day-night loop is in place;
   - deeper danger/respawn safety once `/respawn` exists.
 - Keep the helper skippable.
 - Prefer short contextual prompts over a long up-front explanation.
 - Keep exact numbers hidden unless the player is a scribe/admin with technical details enabled.
+- When adding a new tutorial command or button, give it a short first-use diegetic comment from Сон, Дрімота, another guide voice or a local sign, and record that as a tiny event/flag when it should not repeat forever.
 
 ## Tone options
 

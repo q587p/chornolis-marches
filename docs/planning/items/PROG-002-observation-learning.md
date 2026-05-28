@@ -37,6 +37,15 @@ Allow players to learn or improve skills by watching beings that use those skill
 
 Use the dream tutorial to prove the pattern with one narrow, scripted scene before building a full skill system.
 
+First proof added in `0.12.8`: `Лисячий просвіт сну` contains `Лисячий рух`, an inspectable tutorial feature that writes a one-time `Tutorial observation lesson` event and shows:
+
+```text
+Ви уважно спостерігаєте.
+Слідування трохи покращено.
+```
+
+This is still only a tutorial flag, not a real skill progression model.
+
 - A crow, Сон or another tutorial voice warns the player to watch carefully.
 - A fox demonstrates movement, stalking or a simple attack.
 - If the player examines the room, examines the fox, or otherwise watches at the right moment, show a small learning line such as:

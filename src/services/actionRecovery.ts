@@ -16,8 +16,9 @@ import {
   playerStaminaCostConfig,
 } from "../gameConfig";
 import { buildFatigueRestKeyboard } from "../ui/keyboards";
-import { getPlayerRestStaminaCap } from "./locationFeatures";
+import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
 import { tutorialIdlePaceComments } from "./tutorialVoices";
+import { isTutorialFastRestLocationKey } from "./tutorial";
 import { escapeHtml } from "../utils/text";
 
 export function fatigueStateFor(stamina: number, staminaMax = BASE_STAMINA): FatigueState {
@@ -26,6 +27,8 @@ export function fatigueStateFor(stamina: number, staminaMax = BASE_STAMINA): Fat
   if (stamina >= staminaMax) return "RESTED";
   return "RESTED";
 }
+
+const TUTORIAL_REST_FULL_COMMENT = "Сон стиха каже: «Ось так виглядає короткий перепочинок у навчальному сні. Наяву до повної снаги шлях буде довший, і не кожне вогнище тримає вас так легко.»";
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
@@ -139,7 +142,7 @@ export async function spendCreatureStamina(creature: { id: number; hp?: number; 
 export async function recoverStamina(bot: Bot) {
   const now = new Date();
   const [players, activePlayerActions] = await Promise.all([
-    prisma.player.findMany(),
+    prisma.player.findMany({ include: { currentLocation: { select: { key: true } } } }),
     prisma.worldAction.findMany({
       where: { actorType: "PLAYER", status: { in: ["QUEUED", "RUNNING"] }, playerId: { not: null } },
       select: { playerId: true },
@@ -175,7 +178,8 @@ export async function recoverStamina(bot: Bot) {
     const intervals = Math.floor((now.getTime() - last.getTime()) / staminaIntervalMs);
 
     const before = player.stamina;
-    const rate = player.isResting ? REST_STAMINA_REGEN_PER_INTERVAL : PASSIVE_STAMINA_REGEN_PER_INTERVAL;
+    const restRegenMultiplier = player.isResting ? await getPlayerRestStaminaRegenMultiplier(player.id) : 1;
+    const rate = player.isResting ? REST_STAMINA_REGEN_PER_INTERVAL * restRegenMultiplier : PASSIVE_STAMINA_REGEN_PER_INTERVAL;
     const after = intervals > 0 ? Math.min(max, before + intervals * rate) : before;
     const messages = thresholdMessages(before, after, max);
     const hpBefore = player.hp;
@@ -188,6 +192,9 @@ export async function recoverStamina(bot: Bot) {
     if (intervals <= 0 && hpIntervals <= 0) continue;
 
     const fullyRested = after >= max && hpAfter >= hpMax;
+    if (fullyRested && player.isResting && before < max && isTutorialFastRestLocationKey(player.currentLocation?.key)) {
+      messages.push(TUTORIAL_REST_FULL_COMMENT);
+    }
     const regainedConsciousness = hpBefore <= 0 && hpAfter > 0;
     const nextState = fatigueStateFor(after, max);
     const data: Prisma.PlayerUpdateInput = {

@@ -27,6 +27,7 @@ import { dropObserverText, recordVisibleItemAction } from "../services/visibleIt
 import { tutorialLookPaceComments } from "../services/tutorialVoices";
 import { escapeHtml } from "../utils/text";
 import { hasCompletedTutorial, isTutorialLocation } from "../services/tutorial";
+import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "../services/locationFeatures";
 
 const tutorialInventoryVoiceSeen = new Set<number>();
 
@@ -48,15 +49,16 @@ function formatDateTime(value: Date | string | null | undefined) {
   }).format(date);
 }
 
-function recoveryText(player: any) {
-  const staminaMax = player.staminaMax ?? BASE_STAMINA;
+async function recoveryText(player: any) {
+  const staminaMax = player.isResting ? await getPlayerRestStaminaCap(player.id) : player.staminaMax ?? BASE_STAMINA;
   const hpMax = player.hpMax ?? BASE_HP;
   const staminaRemaining = Math.max(0, staminaMax - player.stamina);
   const hpRemaining = Math.max(0, hpMax - player.hp);
   if (staminaRemaining <= 0 && hpRemaining <= 0) return "";
 
   const passiveStaminaMinutes = Math.ceil(staminaRemaining / PASSIVE_STAMINA_REGEN_PER_INTERVAL) * minutes(STAMINA_REGEN_INTERVAL_MS);
-  const restStaminaMinutes = Math.ceil(staminaRemaining / REST_STAMINA_REGEN_PER_INTERVAL) * minutes(REST_STAMINA_REGEN_INTERVAL_MS);
+  const restRate = REST_STAMINA_REGEN_PER_INTERVAL * await getPlayerRestStaminaRegenMultiplier(player.id);
+  const restStaminaMinutes = minutes(Math.ceil(staminaRemaining / Math.max(1, restRate)) * REST_STAMINA_REGEN_INTERVAL_MS);
   const passiveHpMinutes = Math.ceil(hpRemaining / HEALTH_REGEN_PER_INTERVAL) * minutes(PASSIVE_HEALTH_REGEN_INTERVAL_MS);
   const restHpMinutes = Math.ceil(hpRemaining / HEALTH_REGEN_PER_INTERVAL) * minutes(REST_HEALTH_REGEN_INTERVAL_MS);
   const passiveMinutes = Math.max(passiveStaminaMinutes, passiveHpMinutes);
@@ -211,7 +213,7 @@ async function renderCharacterView(telegramId: number) {
   const isTutorialDream = player.currentLocation ? isTutorialLocation(player.currentLocation) : false;
 
   return {
-    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}${tutorialStatusText}\n\n${formatPostureText({ ...player, isSleeping: isTutorialDream })}${torchText}\n${vitals.join("\n")}\nСтан: ${formatFatigueText(player)}${recoveryText(player)}\n${hungerText}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}${technicalDetailsText}\nЗареєстровано: ${formatDateTime(player.createdAt)}${statsText}`,
+    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}${tutorialStatusText}\n\n${formatPostureText({ ...player, isSleeping: isTutorialDream })}${torchText}\n${vitals.join("\n")}\nСтан: ${formatFatigueText(player)}${await recoveryText(player)}\n${hungerText}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}${technicalDetailsText}\nЗареєстровано: ${formatDateTime(player.createdAt)}${statsText}`,
     keyboard: buildCharacterAutoKeyboard(autoEnabled, { canToggleTechnicalDetails, showTechnicalDetails, showSleep: !isTutorialDream }),
   };
 }

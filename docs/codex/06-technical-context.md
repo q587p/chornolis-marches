@@ -69,7 +69,7 @@ Prefer behavior-preserving extractions first. See `docs/planning/items/TECH-001-
 
 ## Current fire/light and visible-held-item context
 
-- Carried lit torches are stored as `lit_torch` resources with `updatedAt` as the burn timer.
+- Carried and dropped lit torches are stored as `lit_torch` resources with `updatedAt` as the burn timer. Dropped lit torches can light the location until they burn out into `хмиз`; this is still a temporary resource-stack model until true item instances exist.
 - Before inventory rendering, torch state is synchronized; expired `lit_torch` becomes `twigs` / `хмиз`, not an unlit `torch`.
 - A player can visibly hold up to two lit torches. Inspecting another character should show one lit torch, two lit torches, or `Руки порожні.` only when no obvious held item is visible.
 - `Додати хмиз` / `/add twigs campfire` now consumes carried `twigs` / `хмиз`: burning ordinary campfires get a capped timer extension, while згаслі ordinary campfires can receive prepared fuel before being relit. Magical campfires do not need хмиз.

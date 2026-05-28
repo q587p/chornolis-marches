@@ -118,6 +118,8 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   room: { kind: "location" },
 
   examine: { kind: "look-action" },
+  observe: { kind: "look-action" },
+  watch: { kind: "look-action" },
   x: { kind: "look-action" },
   "озирнутися": { kind: "look-action" },
   "озирнись": { kind: "look-action" },
@@ -125,6 +127,8 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "роззирнутися": { kind: "look-action" },
   "див": { kind: "look-action" },
   "дивитися": { kind: "look-action" },
+  "спостерігати": { kind: "look-action" },
+  "поспостерігати": { kind: "look-action" },
   "придивитися": { kind: "look-action" },
   "роздивитися": { kind: "look-action" },
   "що видно": { kind: "look-action" },

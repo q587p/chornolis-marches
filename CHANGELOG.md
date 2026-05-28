@@ -11,6 +11,29 @@ _No unreleased changes yet._
 
 ---
 
+## 0.12.8 - Tutorial observation branch - 12026-05-28
+
+### Added
+
+- Added a side branch to the tutorial dream where players can inspect fox movement as the first scripted proof of observation-based learning.
+- Added a one-time tutorial observation event so the lesson can say that Tracking improved slightly without requiring the full skill system yet.
+- Added `observe`, `watch`, `спостерігати` and `поспостерігати` as text aliases for closer inspection.
+- Added a second tutorial rest room with a dream campfire that makes rest speed visibly faster and can restore stamina above the ordinary maximum.
+
+### Changed
+
+- Updated tutorial hub text and planning notes so the dream now points to foraging, rest, time/safety and observation as separate beginner lessons.
+- Tutorial rest rooms now use a data-driven rest regeneration multiplier, and rest-time estimates account for that faster recovery.
+- The first tutorial use of `/rest` now gets a short Сон/Дрімота comment, with docs reminding future tutorial commands to do the same.
+- Passive and active rest stamina recovery now restore larger chunks per interval so recovery is much less sluggish during early testing.
+- Dropped lit torches now remain burning ground items, light their location, can be picked back up and later burn out into `twigs` with a local message and world event.
+- Brief location views now include visible pickable ground items under `Лежить`, not only corpses.
+- Depleted-grass inspection text no longer repeats the same recovery warning in multiple paragraphs.
+- `/restAdmin` now reports the actual saved stamina value and refreshes the main reply keyboard after use.
+- Full `/stat`, the menu stats button and web `/stat` / `/stat.json` are now scribe/admin surfaces; public ecology reporting is planned as a separate diegetic feature.
+
+---
+
 ## 0.12.7 - Website news and tutorial polish - 12026-05-28
 
 ### Added
