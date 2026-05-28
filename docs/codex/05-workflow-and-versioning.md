@@ -4,6 +4,8 @@
 
 Do **not** add notes like “package.json and package-lock.json are intentionally unchanged...” to public news/changelog entries. That is internal workflow context only.
 
+If a task creates a release/version commit, bump `package.json` and `package-lock.json` in that same commit. Use the version from `package.json` as the release version, and tag releases as `vX.Y.Z`, for example `v0.12.12`.
+
 ## Preferred change delivery
 
 When asked for a patch/archive/update:
@@ -54,9 +56,10 @@ User preference:
 
 1. code/structure changes first;
 2. run build;
-3. after green build, user handles version bump manually;
-4. avoid separate manual GitHub Action commits just to bump version;
-5. for version bumps, prefer proper npm-based versioning over hand-editing package metadata.
+3. if the task is explicitly a release/version commit, bump `package.json` and `package-lock.json` in that same commit;
+4. use the `package.json` version as the release version and expected tag, formatted as `vX.Y.Z`;
+5. avoid separate manual GitHub Action commits just to bump version;
+6. for version bumps, prefer proper npm-based versioning over hand-editing package metadata.
 
 ## Changelog/news rule
 

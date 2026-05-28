@@ -11,6 +11,16 @@ _No unreleased changes yet._
 
 ---
 
+## 0.12.12 - Prepared-name reservations - 12026-05-28
+
+### Changed
+
+- Moved the prepared character-name pool into a typed data module with explicit reservation state.
+- Prepared names now stay hidden when reserved for future NPCs or events, not only when already used by a character.
+- Expanded focused character-name regression coverage for reserved prepared names.
+
+---
+
 ## 0.12.11 - Prepared character names - 12026-05-28
 
 ### Added

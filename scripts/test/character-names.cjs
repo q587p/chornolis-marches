@@ -18,6 +18,8 @@ assert.equal(vedana.forms.vocative, "Ведано");
 
 assert.equal(availablePreparedNames(["Ведана"]).some((name) => name.key === "vedana"), false);
 assert.equal(availablePreparedNames(["Хтось"]).some((name) => name.key === "vedana"), true);
+assert.ok(preparedNameByKey("tamila"), "Expected reserved prepared name Tamila to remain in registry");
+assert.equal(availablePreparedNames([]).some((name) => name.key === "tamila"), false);
 
 assert.equal(validateCustomCharacterName("Вовк").ok, false);
 assert.equal(validateCustomCharacterName("Лісовик").ok, false);
