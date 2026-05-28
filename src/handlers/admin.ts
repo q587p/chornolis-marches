@@ -9,6 +9,7 @@ import { adminSecretMatches } from "../services/adminSecret";
 import { syncChatBotCommandsForTelegramId } from "../services/telegramCommands";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { stopAllPlayerAuto } from "./auto";
+import { resetTutorialProgressForPlayer } from "../services/tutorial";
 
 function normalizeLookup(value: string | null | undefined) {
   return String(value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
@@ -146,11 +147,11 @@ export const ADMIN_HELP_TEXT = [
   "/all — усі живі персонажі та істоти",
   "/all dead — усі записи істот, включно з inactive/dead/corpse/gone",
   "/playerAdmin <#id|ім’я|username> — детальна службова картка гравця з будь-якої місцини",
+  "/tutorialReset [#id|ім’я|username] — скинути прогрес навчального сну собі або вказаному персонажу",
   "/teleport [#id|ім’я|username] <locationKey|x,y,z> — перенести персонажа; без персонажа переносить вас",
   "/debugGet — показати, чи ввімкнені технічні деталі для вашого персонажа",
   "/debugSet <0|1> — вимкнути або ввімкнути технічні деталі для вашого персонажа; true/false теж працюють",
   "/look або кнопка 👀 Озирнутися — показати поточну місцину",
-  "/location або /loc — старі сумісні назви для /look",
   "/examine або кнопка 🔎 Роздивитися — уважніше роздивитися поточну місцину",
   "/locationAll — список усіх місцин і ключів",
   "/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD] — додати тварин",
@@ -249,6 +250,25 @@ export function registerAdminHandlers(bot: Bot) {
       await bot.api.sendMessage(telegramId, `🧭 Вас перенесено до місцини: ${location.name}.`, {
         reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, Boolean(player.isAutoEnabled)),
       }).catch(() => undefined);
+    }
+  });
+
+  bot.command(["tutorialReset", "tutorialreset"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+
+    const player = await resolvePlayerForAdmin(ctx, String(ctx.match ?? "").trim());
+    if (!player) return;
+    const scribe = await resolvePlayerForAdmin(ctx, "");
+    const reset = await resetTutorialProgressForPlayer(player.id, scribe?.id);
+    await logEvent("SYSTEM", "Admin reset tutorial progress", `player=${player.id}; scribe=${scribe?.id ?? "unknown"}`, player.currentLocationId ?? undefined);
+
+    await ctx.reply(`🌙 Навчальний сон скинуто для ${playerDisplayName(player)}. ${reset.movedCurrent ? "Персонажа повернуто на початок сну." : "Наступний /sleep tutorial почнеться з початку."}`);
+
+    const telegramId = Number(player.telegramId);
+    if (Number.isSafeInteger(telegramId) && telegramId !== ctx.from?.id) {
+      await bot.api.sendMessage(telegramId, reset.movedCurrent
+        ? "🌙 Писар Порубіжжя повернув ваш навчальний сон до початку."
+        : "🌙 Писар Порубіжжя повернув ваш навчальний сон до початку. Ви можете знову ввійти через /sleep tutorial.").catch(() => undefined);
     }
   });
 

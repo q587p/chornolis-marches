@@ -6,11 +6,11 @@ import { resourceTypeDisplayName } from "./corpses";
 
 export type UsableInventoryResource = "berries" | "herbs" | "mushrooms";
 
-const USE_CONFIG: Record<UsableInventoryResource, { amount: number }> = {
-  berries: { amount: 4 },
+const USE_CONFIG = {
+  berries: { stamina: 4, hunger: 1 },
   herbs: { amount: 2 },
   mushrooms: { amount: 3 },
-};
+} as const;
 
 const RESOURCE_ALIASES: Record<string, string> = {
   berries: "berries",
@@ -85,12 +85,17 @@ export async function useInventoryResource(playerId: number, resourceKey: Usable
 
     if (resourceKey === "berries") {
       const staminaMax = player.staminaMax ?? BASE_STAMINA;
-      if (player.stamina >= staminaMax) throw new Error("Снаги й так досить. Ягоди краще лишити на потім.");
+      if (player.stamina >= staminaMax && player.hunger <= 0) throw new Error("Снаги й так досить, і голод не дошкуляє. Ягоди краще лишити на потім.");
 
-      const nextStamina = Math.min(staminaMax, player.stamina + USE_CONFIG.berries.amount);
+      const nextStamina = Math.min(staminaMax, player.stamina + USE_CONFIG.berries.stamina);
+      const nextHunger = Math.max(0, player.hunger - USE_CONFIG.berries.hunger);
       await consumeOneResource(tx, carried.id, carried.amount);
-      await tx.player.update({ where: { id: playerId }, data: { stamina: nextStamina } });
+      await tx.player.update({ where: { id: playerId }, data: { stamina: nextStamina, hunger: nextHunger } });
 
+      const staminaChanged = nextStamina > player.stamina;
+      const hungerChanged = nextHunger < player.hunger;
+      if (staminaChanged && hungerChanged) return "Ви з'їли жменю ягід. Снаги трохи побільшало, а голод ледь відступив.";
+      if (hungerChanged) return "Ви з'їли жменю ягід. Голод ледь відступив.";
       return nextStamina >= staminaMax
         ? "Ви з'їли жменю ягід. Снага повернулась."
         : "Ви з'їли жменю ягід. Снаги трохи побільшало.";

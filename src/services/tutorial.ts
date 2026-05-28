@@ -14,11 +14,13 @@ export const TUTORIAL_TIME_LOCATION_KEY = "dream_tutorial_time";
 export const TUTORIAL_SAFETY_LOCATION_KEY = "dream_tutorial_safety";
 export const DREAM_GATE_FEATURE_KEY = "dream_tutorial_sleep_gate";
 export const DREAM_GATE_OPEN_MS = 30 * 1000;
+const DREAM_GATE_OPEN_WINDOWS_MS = [30_000, 60_000, 120_000, 240_000, 480_000];
 export const TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE = "Tutorial foraging success";
 
 const RETURN_LOCATION_EVENT_TITLE = "Tutorial return location";
 const DREAM_LOCATION_EVENT_TITLE = "Tutorial dream location";
 const COMPLETED_EVENT_TITLE = "Tutorial completed";
+const RESET_EVENT_TITLE = "Tutorial reset by admin";
 
 function featureData(feature: { data: Prisma.JsonValue | null }) {
   return feature.data && typeof feature.data === "object" && !Array.isArray(feature.data)
@@ -108,6 +110,54 @@ export async function hasCompletedTutorial(playerId: number) {
     orderBy: { id: "desc" },
   });
   return Boolean(event);
+}
+
+export async function resetTutorialProgressForPlayer(playerId: number, scribePlayerId?: number) {
+  const startLocationId = await getTutorialStartLocationId();
+  const player = await prisma.player.findUnique({
+    where: { id: playerId },
+    select: { currentLocationId: true, currentLocation: { select: { key: true, z: true, region: { select: { key: true } } } } },
+  });
+  const currentlyInTutorial = player?.currentLocation ? isTutorialLocation(player.currentLocation) : false;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.worldEvent.deleteMany({
+      where: {
+        playerId,
+        type: "SYSTEM",
+        title: { in: [COMPLETED_EVENT_TITLE, TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE] },
+      },
+    });
+
+    await tx.worldEvent.create({
+      data: {
+        type: "SYSTEM",
+        title: DREAM_LOCATION_EVENT_TITLE,
+        description: String(startLocationId),
+        playerId,
+        locationId: startLocationId,
+      },
+    });
+
+    await tx.worldEvent.create({
+      data: {
+        type: "SYSTEM",
+        title: RESET_EVENT_TITLE,
+        description: `scribePlayer=${scribePlayerId ?? "unknown"}; dreamLocation=start; movedCurrent=${currentlyInTutorial}`,
+        playerId,
+        locationId: startLocationId,
+      },
+    });
+
+    if (currentlyInTutorial) {
+      await tx.player.update({
+        where: { id: playerId },
+        data: { currentLocationId: startLocationId },
+      });
+    }
+  });
+
+  return { locationId: startLocationId, movedCurrent: currentlyInTutorial };
 }
 
 export async function hasTutorialForagingSuccess(playerId: number) {
@@ -262,7 +312,16 @@ export async function openDreamGate(playerId: number) {
   if (!feature) return "Тут немає воріт, які можна відкрити.";
 
   const data = featureData(feature);
-  const openUntil = new Date(Date.now() + Number(data.reset_after_ms ?? data.resetAfterMs ?? DREAM_GATE_OPEN_MS)).toISOString();
+  const previousOpens = await prisma.worldEvent.count({
+    where: {
+      playerId,
+      locationId: player.currentLocationId,
+      type: "SYSTEM",
+      title: "Tutorial dream gate opened",
+    },
+  });
+  const openDurationMs = DREAM_GATE_OPEN_WINDOWS_MS[previousOpens % DREAM_GATE_OPEN_WINDOWS_MS.length] ?? DREAM_GATE_OPEN_MS;
+  const openUntil = new Date(Date.now() + openDurationMs).toISOString();
   await prisma.locationFeature.update({
     where: { id: feature.id },
     data: {
@@ -271,6 +330,7 @@ export async function openDreamGate(playerId: number) {
         locked: true,
         open_until: openUntil,
         opened_at: new Date().toISOString(),
+        open_duration_ms: openDurationMs,
       } as Prisma.InputJsonValue,
     },
   });
@@ -279,7 +339,7 @@ export async function openDreamGate(playerId: number) {
     data: {
       type: "SYSTEM",
       title: "Tutorial dream gate opened",
-      description: "south unlocked",
+      description: `south unlocked; durationMs=${openDurationMs}`,
       playerId,
       locationId: player.currentLocationId,
     },

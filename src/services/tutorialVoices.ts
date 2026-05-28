@@ -22,7 +22,7 @@ const TUTORIAL_LOOK_EVENT_TITLE = "Tutorial look";
 const TUTORIAL_PACE_EVENT_TITLE = "Tutorial pace comment";
 const TUTORIAL_LOOK_WINDOW_MS = 60_000;
 const TUTORIAL_IDLE_PACE_DELAY_MS = 30_000;
-const TUTORIAL_PACE_BACKOFF_MS = [0, 60_000, 120_000, 240_000, 480_000];
+const TUTORIAL_PACE_BACKOFF_MS = [30_000, 60_000, 120_000, 240_000, 480_000];
 
 type PaceCommentPair = {
   drowsinessTitle: string;
@@ -80,6 +80,36 @@ const PACE_COMMENT_PAIRS: PaceCommentPair[] = [
     dreamTitle: "Сон тихо каже",
     dreamText: () => "Нехай туман вчиться терпінню. Рух прийде, коли сон стане зрозумілішим.",
   },
+  {
+    drowsinessTitle: "Дрімота клацає язиком",
+    drowsinessText: "Стільки чекати можна тільки тоді, коли хтось загубив власні ноги.",
+    dreamTitle: "Сон відповідає м'яко",
+    dreamText: (pronoun) => `Ноги не загубилися. ${pronoun === "них" ? "Вони" : pronoun === "неї" ? "Вона" : "Він"} просто слухає землю під собою.`,
+  },
+  {
+    drowsinessTitle: "Дрімота тягне слово",
+    drowsinessText: "Якщо думати ще довше, думка пустить коріння й попросить окрему місцину.",
+    dreamTitle: "Сон не квапиться",
+    dreamText: () => "Коріння теж знає шлях. Не кожен рух починається з кроку.",
+  },
+  {
+    drowsinessTitle: "Дрімота шурхоче поруч",
+    drowsinessText: "Попереду все ще південь. Він не стане ближчим від того, що ми дивимося на нього здалеку.",
+    dreamTitle: "Сон озивається",
+    dreamText: (pronoun) => `Південь дочекається. Нехай у ${pronoun} буде мить скласти себе докупи.`,
+  },
+  {
+    drowsinessTitle: "Дрімота зітхає",
+    drowsinessText: "Я вже майже встигла заснути всередині цього сну.",
+    dreamTitle: "Сон говорить тихо",
+    dreamText: () => "Сон у сні теж має двері. Не всі двері треба відчиняти поспіхом.",
+  },
+  {
+    drowsinessTitle: "Дрімота підганяє",
+    drowsinessText: "Крок-крок-крок. Ось так звучить шлях, коли ним нарешті користуються.",
+    dreamTitle: "Сон усміхається",
+    dreamText: (pronoun) => `А тиша звучить так, коли ${pronoun === "них" ? "вони вчаться" : "вчиться"} не боятися паузи.`,
+  },
 ];
 
 type TutorialPlayerRef = Pick<Player, "id" | "currentLocationId" | "pronoun" | "grammaticalGender">;
@@ -100,7 +130,7 @@ async function isPlayerInTutorial(locationId: number) {
 }
 
 function tutorialPaceCooldownMs(previousComments: number) {
-  return TUTORIAL_PACE_BACKOFF_MS[Math.min(previousComments, TUTORIAL_PACE_BACKOFF_MS.length - 1)];
+  return TUTORIAL_PACE_BACKOFF_MS[previousComments % TUTORIAL_PACE_BACKOFF_MS.length] ?? TUTORIAL_IDLE_PACE_DELAY_MS;
 }
 
 function randomPaceCommentPair() {

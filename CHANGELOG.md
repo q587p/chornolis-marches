@@ -11,6 +11,30 @@ _No unreleased changes yet._
 
 ---
 
+## 0.12.7 - Website news and tutorial polish - 12026-05-28
+
+### Added
+
+- Added a public `/news` web page and linked the latest news from the status site home page.
+- Added `див` and `дивитися` as Ukrainian text aliases for the location overview action.
+- Added first tutorial inventory voice hints from Сон and Дрімота when opening inventory inside the dream.
+- Added `/tutorialReset [character]` for scribes to clear tutorial completion and return the saved dream tutorial position to the start.
+
+### Changed
+
+- Refreshed the Ukrainian status site copy to match the current README identity around a living liminal frontier sandbox.
+- Extinguished campfires now use a non-fire icon in location feature lists so they do not look lit at a glance.
+- Location detail output now groups nearby creatures and their repeated actions instead of printing duplicate `nearby` and `movement nearby` rows for every animal.
+- Detailed location inspection now shows age-category creature labels in grouped animal movement, while exact age ticks remain limited to technical details.
+- Berries now ease hunger by a tiny amount in addition to restoring a small amount of stamina, so they can still be used when stamina is full but hunger is present.
+- The character profile now shows when the tutorial dream has not yet been completed.
+- Tutorial pace reminders now draw from 13 Сон/Дрімота pairs and use a cycling 30s, 1m, 2m, 4m, 8m rhythm; repeated dream-gate openings use the same timing windows.
+- Tutorial berries and herbs in the dream foraging room no longer deplete the location resource node, and dream foraging items fade away when leaving that room.
+- Tutorial voice comments from Сон and Дрімота are treated as private player guidance and no longer write world-event log entries.
+- Expanded docs/planning for rest posture, tutorial observation-learning, first skill vocabulary and future fox/attack observation lessons.
+
+---
+
 ## 0.12.6 - Roadmap and performance planning refresh - 12026-05-28
 
 ### Changed

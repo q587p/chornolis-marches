@@ -34,9 +34,12 @@ As of `0.12.0`, the first concrete newcomer path is the dream tutorial in `Др�
 - Сон and Дрімота also react when a player studies tutorial tracks closely: one rewards attention, the other tries to hurry the player onward.
 - `/sleep tutorial` returns a character to the saved tutorial dream position.
 - Plain `/sleep` routes to the tutorial while that character has not woken from it yet; after wake, normal sleep remains reserved for a later recovery system.
+- Scribes can use `/tutorialReset [character]` to clear a character's completed tutorial marker and make the tutorial start location the saved dream location for the next `/sleep tutorial`.
+- The character's own `/me` view should mention when the tutorial dream is not yet complete, so players have a direct reminder without needing an admin check.
 - The character card includes `Сон` below `Відпочити`; if ordinary sleep is unavailable, the response should offer a direct `Навчальний сон` button.
 - `Прокинутися`, `/wake`, `wake`, `прокинутися` and `прокинутись` leave the dream and restore a valid real-world location. Keep direct commands available as an escape hatch, but do not offer the `Прокинутися` button in early tutorial steps; surface it only later as a suggestion after the first tutorial path has opened up.
-- The first slice teaches movement and visible locked exits through `Брама Сну`: the south exit stays visible, the reply keyboard wraps its direction label in parentheses while locked, `/open` / `Відкрити` opens it for about 30 seconds, and the gate lazily closes again.
+- The first slice teaches movement and visible locked exits through `Брама Сну`: the south exit stays visible, the reply keyboard wraps its direction label in parentheses while locked, `/open` / `Відкрити` opens it for a cycling window of about 30 seconds, 1 minute, 2 minutes, 4 minutes, 8 minutes, then back to 30 seconds, and the gate lazily closes again.
+- Slow tutorial pace comments should use a pool of Сон/Дрімота pairs and the same 30s, 1m, 2m, 4m, 8m cycling rhythm so repeated nudges feel varied instead of spammy.
 - The current hub exit point is the `Майбутні уроки` feature: inspecting it offers `Прокинутися`, while tutorial voice text explains that the player can later return to the same saved dream position.
 - As of `0.12.2`, the hub also branches into short optional rooms:
   - `Ягідний просвіт сну` teaches that `Роздивитися` / `/examine` reveals resources, that berries/herbs are guaranteed to gather inside the dream, and that `Речі` appears after the first successful gather there.

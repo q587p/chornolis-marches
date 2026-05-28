@@ -60,20 +60,22 @@
   ],
   "current_0_11_context": [
     "/look is Озирнутися / current місцина overview; /examine is Роздивитися / closer inspection.",
-    "/location and /loc may stay as legacy aliases, but player-facing menus should prefer /look.",
+    "Player-facing menus, help text and current docs should use /look; legacy location-overview aliases may stay in code only.",
     "Ordinary UI should hide exact technical numbers unless local scribe/admin technical details are enabled.",
     "Lit torches expire into twigs / хмиз, not dry torches.",
     "Inspecting another character may show visible lit torches in hand(s); use Руки порожні only when no obvious held item is visible.",
     "/chat supports time, location and character grouping modes in Telegram and web views.",
     "хмиз now has a first fuel loop: it can extend burning ordinary campfires or prepare згаслі ordinary campfires for relighting.",
-    "Inventory now has first modest item actions: berries restore a small amount of stamina, mushrooms ease hunger a little, herbs restore a small amount of HP when wounded, dry torches can be lit when fire is available, and resource stacks can be inspected or dropped."
+    "Inventory now has first modest item actions: berries restore a small amount of stamina and ease hunger by a tiny amount, mushrooms ease hunger a little, herbs restore a small amount of HP when wounded, dry torches can be lit when fire is available, and resource stacks can be inspected or dropped."
   ],
   "current_0_12_context": [
     "Дрімотна Межа is the first dream tutorial region on z = -13.",
     "New characters enter the dream after onboarding; existing /start must continue to preserve current location.",
     "/sleep tutorial returns to the saved tutorial dream position; plain /sleep routes there only while tutorial is incomplete.",
     "Прокинутися / /wake exits the tutorial dream and restores a valid real-world location.",
+    "/tutorialReset [character] lets scribes clear tutorial completion and reset the saved dream tutorial position to the start.",
+    "The player's own /me view should mention when the tutorial dream is not yet complete.",
     "Visible locked exits appear in exit lists and block movement with a reason; queued movement re-checks locks before completion.",
-    "Брама Сну is the first interactive gate: /open / Відкрити opens the south exit for about 30 seconds."
+    "Брама Сну is the first interactive gate: /open / Відкрити opens the south exit with a cycling 30s, 1m, 2m, 4m, 8m window; slow tutorial pace comments use the same reminder rhythm."
   ]
 }

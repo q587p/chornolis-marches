@@ -19,7 +19,7 @@ export function isLisovykForbiddenRegion(region?: RegionLike | null) {
   if (!region) return false;
   const key = String(region.key ?? "").toLowerCase();
   const name = String(region.name ?? "").toLowerCase();
-  return key === "old_bridge" || key.includes("bridge") || name.includes("міст");
+  return key === "old_bridge" || key === "dream_tutorial" || key.includes("bridge") || key.includes("tutorial") || name.includes("міст");
 }
 
 export function hasActiveMagicCampfire(features?: FeatureLike[] | null) {

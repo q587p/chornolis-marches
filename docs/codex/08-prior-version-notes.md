@@ -72,7 +72,7 @@ Remembered current-ish project state around late May 2026:
 Important remembered direction from the 0.11 line:
 
 - `docs/design/terminology.md` is the canonical Ukrainian terminology source.
-- `/look` is the player-facing **Озирнутися** / current місцина overview; `/examine` is **Роздивитися** / closer inspection. `/location` and `/loc` may remain as legacy aliases, but menus should prefer `/look`.
+- `/look` is the player-facing **Озирнутися** / current місцина overview; `/examine` is **Роздивитися** / closer inspection. Legacy location-overview aliases may remain in code, but menus should prefer `/look`.
 - `/start` should not teleport an existing character to the beginning. It should refresh greeting/menu state and continue from the current місцина.
 - Player-facing UI should avoid raw `HP`, `Stamina`, `Inventory` and `Location`; prefer `Життя` / `Стан`, `Снага`, `Речі` / `Поклажа`, and `Місцина`.
 - Ordinary UI should hide exact technical numbers unless the current character is a scribe/admin with local technical details enabled.
@@ -85,9 +85,12 @@ Important remembered direction from the 0.11 line:
 - New characters enter the dream after onboarding; existing `/start` refresh behavior still must not teleport existing characters.
 - `/sleep tutorial` returns to the saved tutorial dream position; while the tutorial is incomplete, plain `/sleep` also routes there. After wake, plain `/sleep` remains reserved for a future normal sleep/recovery system.
 - `Прокинутися` / `/wake` exits the tutorial dream, stores the dream position and restores a valid real-world location.
+- `/tutorialReset [character]` is a scribe/admin command that clears the completed tutorial marker and makes the tutorial start location the saved dream location for the next `/sleep tutorial`.
+- A player's own `/me` view should say when they have not yet completed the tutorial dream.
 - Visible locked exits are now reusable: locked directions appear in exit lists in parentheses, movement gives a blocked reason, and queued movement re-checks the lock before completion.
-- `Брама Сну` uses the locked-exit flow: `/open` / `Відкрити` opens the south exit for about 30 seconds, then the gate lazily closes again.
-- Inventory now has first modest item actions: berries restore a small amount of stamina, mushrooms ease hunger, herbs can restore a small amount of HP when wounded, dry torches can be lit when fire is available, and resource stacks can be inspected or dropped. Keep later item-use work diegetic and modest until cooking, medicine, herbalism and real item instances exist.
+- `Брама Сну` uses the locked-exit flow: `/open` / `Відкрити` opens the south exit for a cycling 30s, 1m, 2m, 4m, 8m window, then back to 30s; the gate lazily closes again.
+- Slow tutorial pace comments should draw from a varied Сон/Дрімота pool and use the same cycling reminder rhythm.
+- Inventory now has first modest item actions: berries restore a small amount of stamina and ease hunger by a tiny amount, mushrooms ease hunger, herbs can restore a small amount of HP when wounded, dry torches can be lit when fire is available, and resource stacks can be inspected or dropped. Keep later item-use work diegetic and modest until cooking, medicine, herbalism and real item instances exist.
 - Immediate pickup/drop item actions should be room-visible, recorded as world events, and visible in scribe/admin recent-action history.
 - Carried lit torches burn out into `хмиз`, not dry torches. Inspecting another character shows visible lit torches in hand(s) or `Руки порожні.` only when no obvious held item is visible.
 - `Додати хмиз` / `/add twigs campfire` is implemented as the first `twigs` fuel loop: `twigs` can extend burning ordinary campfires or prepare extinguished ordinary campfires for relighting. Broader foraging, richer fuel types and player-made campfires remain future work.

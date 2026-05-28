@@ -55,7 +55,7 @@ When adding or changing commands, keep aliases in sync:
 
 `/look` is the player-facing command for **Озирнутися** / current location overview.
 `/examine` is the player-facing command for **Роздивитися** / closer inspection.
-`/location` and `/loc` may remain as legacy aliases for `/look`, but player-facing menus should prefer `/look`.
+Player-facing menus, help text and current docs should use `/look`. Legacy aliases for the location overview may remain in code for compatibility, but should not be advertised in current player-facing text.
 
 Possible buttons/labels:
 

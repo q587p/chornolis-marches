@@ -18,7 +18,6 @@ import {
 import { buildFatigueRestKeyboard } from "../ui/keyboards";
 import { getPlayerRestStaminaCap } from "./locationFeatures";
 import { tutorialIdlePaceComments } from "./tutorialVoices";
-import { logEvent } from "./worldEvents";
 import { escapeHtml } from "../utils/text";
 
 export function fatigueStateFor(stamina: number, staminaMax = BASE_STAMINA): FatigueState {
@@ -159,7 +158,6 @@ export async function recoverStamina(bot: Bot) {
       if (Number.isSafeInteger(chatId)) {
         const voiceComments = await tutorialIdlePaceComments(player, now);
         for (const comment of voiceComments) {
-          if (player.currentLocationId) await logEvent("NPC_SAY", comment.title, comment.text, player.currentLocationId);
           await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
         }
       }

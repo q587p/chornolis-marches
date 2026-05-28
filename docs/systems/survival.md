@@ -14,11 +14,23 @@ Survival should add pressure, atmosphere and decisions, not repetitive punishmen
 - Firewood gathering.
 - Light and warmth.
 
+## Rest Posture
+
+Basic `Відпочити` / `/rest` means sitting down for a short recovery, not sleeping.
+
+Player-facing and observer text should treat rest as posture:
+
+- actor text: `Ви присіли відпочити.` / `Ви сидите.`;
+- observer/location text: `Такий-то сидить.`;
+- when the player takes another action or rest completes, they stand up implicitly before acting.
+
+Later systems can add lying down and ordinary sleep as separate states. Tutorial sleep is a special dream/onboarding state, not the same as ordinary rest.
+
 ## First Inventory Uses
 
 0.11.12 adds the first small practical use for gathered resources from inventory:
 
-- berries can be eaten to restore a small amount of stamina;
+- berries can be eaten to restore a small amount of stamina and ease hunger by a tiny amount;
 - mushrooms can be eaten to ease hunger a little;
 - herbs can be used when wounded to restore a small amount of HP.
 - carried resource stacks can be inspected or dropped as a first simple item-action pass.

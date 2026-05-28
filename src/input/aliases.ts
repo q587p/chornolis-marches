@@ -123,6 +123,8 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "озирнись": { kind: "look-action" },
   "оглянутися": { kind: "look-action" },
   "роззирнутися": { kind: "look-action" },
+  "див": { kind: "look-action" },
+  "дивитися": { kind: "look-action" },
   "придивитися": { kind: "look-action" },
   "роздивитися": { kind: "look-action" },
   "що видно": { kind: "look-action" },

@@ -25,9 +25,10 @@ import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
 import { dropInventoryResourceDetailed, inspectInventoryResource, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
 import { dropObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 import { tutorialLookPaceComments } from "../services/tutorialVoices";
-import { logEvent } from "../services/worldEvents";
 import { escapeHtml } from "../utils/text";
-import { isTutorialLocation } from "../services/tutorial";
+import { hasCompletedTutorial, isTutorialLocation } from "../services/tutorial";
+
+const tutorialInventoryVoiceSeen = new Set<number>();
 
 function minutes(ms: number) {
   return Math.max(1, Math.ceil(ms / 60_000));
@@ -200,6 +201,8 @@ async function renderCharacterView(telegramId: number) {
   const hungerText = showTechnicalDetails ? `Голод: ${Math.min(PLAYER_HUNGER_MAX, Math.max(0, player.hunger))}/${PLAYER_HUNGER_MAX}` : formatHungerState(player.hunger, PLAYER_HUNGER_MAX);
   const originStats = showTechnicalDetails ? await actionOriginStats(player.id) : null;
   const statsText = showTechnicalDetails ? `\n\nСтатистика:\n${formatPlayerStats(player, { includeRestStats: true })}\nАвто-дій: ${originStats?.autoActions ?? 0}\nРучних дій: ${originStats?.manualActions ?? 0}` : "";
+  const completedTutorial = await hasCompletedTutorial(player.id);
+  const tutorialStatusText = completedTutorial ? "" : "\nВи ще не пройшли навчальний сон.";
   const torchText = ownHeldTorchText(torchState);
   const locationText = player.currentLocation
     ? `${player.currentLocation.region.name} / ${player.currentLocation.name}`
@@ -208,7 +211,7 @@ async function renderCharacterView(telegramId: number) {
   const isTutorialDream = player.currentLocation ? isTutorialLocation(player.currentLocation) : false;
 
   return {
-    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}\n\n${formatPostureText({ ...player, isSleeping: isTutorialDream })}${torchText}\n${vitals.join("\n")}\nСтан: ${formatFatigueText(player)}${recoveryText(player)}\n${hungerText}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}${technicalDetailsText}\nЗареєстровано: ${formatDateTime(player.createdAt)}${statsText}`,
+    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}${tutorialStatusText}\n\n${formatPostureText({ ...player, isSleeping: isTutorialDream })}${torchText}\n${vitals.join("\n")}\nСтан: ${formatFatigueText(player)}${recoveryText(player)}\n${hungerText}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}${technicalDetailsText}\nЗареєстровано: ${formatDateTime(player.createdAt)}${statsText}`,
     keyboard: buildCharacterAutoKeyboard(autoEnabled, { canToggleTechnicalDetails, showTechnicalDetails, showSleep: !isTutorialDream }),
   };
 }
@@ -251,6 +254,15 @@ export async function showInventory(telegramId: number, reply: (text: string, op
   if (!view) return void (await reply("Ти ще не увійшов у світ. Напиши /start", { reply_markup: buildMainReplyKeyboard(false) }));
 
   await reply(view.text, { reply_markup: view.keyboard });
+  const player = await getPlayerByTelegramId(telegramId);
+  if (player?.currentLocationId && !tutorialInventoryVoiceSeen.has(player.id)) {
+    const location = await prisma.cellLocation.findUnique({ where: { id: player.currentLocationId }, include: { region: true } });
+    if (location && isTutorialLocation(location)) {
+      tutorialInventoryVoiceSeen.add(player.id);
+      await reply(`Сон радить:\n${quoteBlock("Речі тримають те, що ви вже взяли. Тут можна роздивитися знахідку, використати її або викинути.")}`, { parse_mode: "HTML" });
+      await reply(`Дрімота бурмоче:\n${quoteBlock("Носити зайве важко. Викинь — і стане легше йти.")}`, { parse_mode: "HTML" });
+    }
+  }
 }
 
 export async function showLocationForPlayer(telegramId: number, reply: (text: string, options?: any) => Promise<unknown>) {
@@ -262,7 +274,6 @@ export async function showLocationForPlayer(telegramId: number, reply: (text: st
   await reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
   const voiceComments = await tutorialLookPaceComments({ ...player, currentLocationId: locationId });
   for (const comment of voiceComments) {
-    await logEvent("NPC_SAY", comment.title, comment.text, locationId);
     await reply(`${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
   }
 }
@@ -297,6 +308,15 @@ export function registerPlayerHandlers(bot: Bot) {
       await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
     } catch {
       await ctx.reply(view.text, { reply_markup: view.keyboard });
+    }
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (player?.currentLocationId && !tutorialInventoryVoiceSeen.has(player.id)) {
+      const location = await prisma.cellLocation.findUnique({ where: { id: player.currentLocationId }, include: { region: true } });
+      if (location && isTutorialLocation(location)) {
+        tutorialInventoryVoiceSeen.add(player.id);
+        await ctx.reply(`Сон радить:\n${quoteBlock("Речі тримають те, що ви вже взяли. Тут можна роздивитися знахідку, використати її або викинути.")}`, { parse_mode: "HTML" });
+        await ctx.reply(`Дрімота бурмоче:\n${quoteBlock("Носити зайве важко. Викинь — і стане легше йти.")}`, { parse_mode: "HTML" });
+      }
     }
   });
 

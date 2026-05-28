@@ -104,7 +104,7 @@ function torchLightButtonText(torchState: { isLit: boolean; plainAmount: number;
 }
 
 function featureIcon(feature: any) {
-  if (isCampfireFeature(feature)) return "🔥";
+  if (isCampfireFeature(feature)) return isExtinguishedCampfire(feature) ? "🪨" : "🔥";
   if (isDepletedVegetationFeature(feature)) return "🌾";
   if (feature.type === "BORDER_MARKER") return "🪧";
   if (feature.type === "GATE") return "🚪";
@@ -334,16 +334,42 @@ function visibleActionLabel(target: { type: "player" | "creature"; id: number },
   return visibleActionText(target, activeActions, location).replace(/^ — /, "") || undefined;
 }
 
-function visibleTargetsText(targets: ReturnType<typeof visibleTargets>, activeActions: Map<string, any>, location: any) {
+function visiblePresenceLabel(target: ReturnType<typeof visibleTargets>[number]) {
+  return target.type === "creature" && target.isAnimal ? target.label : target.label;
+}
+
+function visibleTargetsText(targets: ReturnType<typeof visibleTargets>) {
   if (!targets.length) return "";
 
   const livingTargets = targets.filter(isLivingTarget);
-  const lines = livingTargets
-    .slice(0, TARGET_TEXT_LIMIT)
-    .map((x) => `- ${escapeHtml(visibleActionSentence(x, activeActions, location))}`);
-  if (livingTargets.length > TARGET_TEXT_LIMIT) lines.push(`- ...і ще ${livingTargets.length - TARGET_TEXT_LIMIT}`);
+  const grouped = new Map<string, number>();
+  for (const target of livingTargets) {
+    const label = visiblePresenceLabel(target);
+    grouped.set(label, (grouped.get(label) ?? 0) + 1);
+  }
+  const groups = [...grouped.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "uk"));
+  const shown = groups.slice(0, TARGET_TEXT_LIMIT);
+  const hiddenCount = groups.slice(TARGET_TEXT_LIMIT).reduce((sum, [, count]) => sum + count, 0);
+  const lines = shown.map(([label, count]) => `- ${escapeHtml(label)}${count > 1 ? ` ×${count}` : ""}`);
+  if (hiddenCount > 0) lines.push(`- ...і ще ${hiddenCount}`);
 
   return lines.length ? `\n\nПоруч:\n${lines.join("\n")}` : "";
+}
+
+function animalMovementSummary(creatures: any[], showTechnicalDetails = false) {
+  const grouped = new Map<string, { label: string; count: number }>();
+  for (const creature of creatures) {
+    const action = normalizeCreatureActionText(creature.currentAction, "проходить");
+    const detail = animalAgeDescription(creature, showTechnicalDetails);
+    const label = `${detail}: ${action}`;
+    grouped.set(label, { label, count: (grouped.get(label)?.count ?? 0) + 1 });
+  }
+  const rows = [...grouped.values()].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "uk"));
+  const shown = rows.slice(0, TARGET_TEXT_LIMIT);
+  const hiddenCount = rows.slice(TARGET_TEXT_LIMIT).reduce((sum, row) => sum + row.count, 0);
+  const lines = shown.map((row) => `- ${escapeHtml(row.label)}${row.count > 1 ? ` ×${row.count}` : ""}`);
+  if (hiddenCount > 0) lines.push(`- ...і ще ${hiddenCount}`);
+  return lines.length ? `\n\nРух поруч:\n${lines.join("\n")}` : "";
 }
 
 async function visibleTracksHint(locationId: number) {
@@ -442,7 +468,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     ...target,
     actionLabel: visibleActionLabel(target, activeActions, location) ?? ("actionLabel" in target ? target.actionLabel : undefined),
   }));
-  const charactersText = visibleTargetsText(targets, activeActions, location);
+  const charactersText = visibleTargetsText(targets);
 
   const resourceLines = location.resources
     .filter((r) => r.amount > 0 && (GATHERABLE_RESOURCE_KEYS as readonly string[]).includes(r.resourceType.key))
@@ -453,12 +479,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   const resourcesText = resourceLines.length ? `\n\nВи помічаєте:\n${resourceLines.join("\n")}` : "";
 
   const livingAnimals = location.creatures.filter((c) => isVisibleLivingCreature(c) && c.species.kind === "ANIMAL");
-  const animalMovementText = livingAnimals.length
-    ? `\n\nРух поруч:\n${livingAnimals
-        .slice(0, 8)
-        .map((c) => `- ${escapeHtml(`${animalAgeDescription(c, showTechnicalDetails)}: ${normalizeCreatureActionText(c.currentAction, "проходить")}`)}`)
-        .join("\n")}${livingAnimals.length > 8 ? `\n- ...і ще ${livingAnimals.length - 8}` : ""}`
-    : "";
+  const animalMovementText = livingAnimals.length ? animalMovementSummary(livingAnimals, showTechnicalDetails) : "";
   const tracksHint = await visibleTracksHint(location.id);
 
   const corpses = location.creatures.filter(isVisibleCorpse);

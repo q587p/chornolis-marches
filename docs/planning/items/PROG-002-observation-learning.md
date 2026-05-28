@@ -32,3 +32,40 @@ Allow players to learn or improve skills by watching beings that use those skill
 - Watch a herbalist gather herbs → unlock Herbalism.
 - Watch a wolf track prey → improve Tracking.
 - Watch a lisovyk cross a boundary → possible mythic insight.
+
+## Tutorial MVP Candidate
+
+Use the dream tutorial to prove the pattern with one narrow, scripted scene before building a full skill system.
+
+- A crow, Сон or another tutorial voice warns the player to watch carefully.
+- A fox demonstrates movement, stalking or a simple attack.
+- If the player examines the room, examines the fox, or otherwise watches at the right moment, show a small learning line such as:
+
+```text
+Ви уважно спостерігаєте.
+Слідування трохи покращено.
+```
+
+or, during the fox attack:
+
+```text
+Ви помічаєте, як лисиця вкладає силу в короткий ривок.
+Атака трохи покращена.
+```
+
+The first implementation can write only a tutorial flag or placeholder skill progress; it does not need the full progression model yet.
+
+## First Skill Vocabulary To Consider
+
+- Слідування / Вистежування
+- Уважність
+- Збирання
+- Травництво
+- Рибальство
+- Полювання
+- Скритність
+- Атака
+- Захист
+- Виживання
+- Вогонь
+- Мітологія / знання межі
