@@ -26,6 +26,8 @@ assertAlias("хтоя", { kind: "me" });
 assertAlias("речі", { kind: "inventory" });
 assertAlias("новини", { kind: "news" });
 assertAlias("час", { kind: "time" });
+assertAlias("назад", { kind: "back" });
+assertAlias("сховати клавіатуру", { kind: "hide-keyboard" });
 
 assertAlias("/chat", { kind: "chat" });
 assertAlias("/chat 1", { kind: "chat", mode: "time", window: "1" });
@@ -69,6 +71,8 @@ assertAlias("скасувати", { kind: "queue", mode: "cancel-current" });
 assertAlias("очистити чергу", { kind: "queue", mode: "clear" });
 
 assertAlias("сказати Хай стежка буде м'якою.", { kind: "say", text: "Хай стежка буде м'якою." });
+assertAlias("/say Відчинитися", { kind: "say", text: "Відчинитися" });
+assertAlias("Сказати «Відчинитися»", { kind: "say", text: "«Відчинитися»" });
 assertAlias("роздивитися труп", { kind: "target-action", action: "inspect", target: "труп" });
 assertAlias("атакувати мишу", { kind: "target-action", action: "attack", target: "мишу" });
 assertAlias("привітати 1", { kind: "target-action", action: "greet", target: "1" });

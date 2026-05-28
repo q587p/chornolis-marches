@@ -23,9 +23,10 @@ import { getStatusData } from "../services/status";
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { isScribeAdmin, requireScribeAdmin } from "../services/adminAccess";
 import { logEvent } from "../services/worldEvents";
-import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
+import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { disablePlayerAuto, enablePlayerAuto, stopPlayerAuto } from "./auto";
 import { creatureForms, playerForms } from "../services/grammar";
+import { clearOnboardingStateForTelegramId } from "./start";
 
 const LOCATION_PAGE_MAX_CHARS = 3300;
 const TELEGRAM_TEXT_MAX_CHARS = 3900;
@@ -39,6 +40,7 @@ const STATUS_PERF_DEBUG = process.env.STATUS_PERF_DEBUG === "true";
 type AllReturnContext = { showDead: boolean; page: number };
 const pendingNameRejections = new Map<number, { playerId: number; returnContext: AllReturnContext }>();
 const pendingAdminTeleports = new Map<number, { playerId: number; returnContext: AllReturnContext }>();
+const REMOVE_REPLY_KEYBOARD = { remove_keyboard: true } as const;
 
 type UniqueNpcSpec = {
   speciesKey: string;
@@ -1033,6 +1035,7 @@ export function registerStatusHandlers(bot: Bot) {
 
     const telegramId = String(ctx.from.id);
     stopPlayerAuto(ctx.from.id);
+    const hadOnboardingState = clearOnboardingStateForTelegramId(telegramId);
 
     const player = await prisma.player.findUnique({
       where: { telegramId },
@@ -1040,8 +1043,10 @@ export function registerStatusHandlers(bot: Bot) {
     });
 
     if (!player) {
-      await ctx.reply("Персонажа ще немає. Напиши /start, щоб почати онбординг.", {
-        reply_markup: buildMainReplyKeyboard(false),
+      await ctx.reply(hadOnboardingState
+        ? "Початок скинуто. Напиши /start, щоб знову обрати ім’я й увійти в перший сон."
+        : "Персонажа ще немає. Напиши /start, щоб почати шлях.", {
+        reply_markup: REMOVE_REPLY_KEYBOARD,
       });
       return;
     }
@@ -1052,8 +1057,8 @@ export function registerStatusHandlers(bot: Bot) {
 
     const deletedPlayer = await prisma.player.deleteMany({ where: { id: player.id } });
     if (deletedPlayer.count === 0) {
-      await ctx.reply("Персонажа вже немає. Напиши /start, щоб почати онбордінґ з нуля.", {
-        reply_markup: buildMainReplyKeyboard(false),
+      await ctx.reply("Персонажа вже немає. Напиши /start, щоб почати шлях спочатку.", {
+        reply_markup: REMOVE_REPLY_KEYBOARD,
       });
       return;
     }
@@ -1067,8 +1072,8 @@ export function registerStatusHandlers(bot: Bot) {
       },
     });
 
-    await ctx.reply("♻️ Персонажа видалено разом з інвентарем і статистикою. Напиши /start, щоб пройти онбордінґ з нуля.", {
-      reply_markup: buildMainReplyKeyboard(false),
+    await ctx.reply("♻️ Старий слід стерто: персонажа, речі й записи прибрано. Напиши /start, щоб почати шлях спочатку.", {
+      reply_markup: REMOVE_REPLY_KEYBOARD,
     });
   });  
 

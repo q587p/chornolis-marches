@@ -7,7 +7,34 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
-_No unreleased changes yet._
+---
+
+## 0.12.13 - Tutorial speech and onboarding polish - 12026-05-29
+
+### Added
+
+- The tutorial dream gate now opens when a player says `/say Відчинитися`, with a one-time tutorial voice comment about text affecting the world.
+
+### Changed
+
+- The tutorial dream gate button now says `Сказати «Відчинитися»` instead of advertising a generic open action.
+- Tutorial dream gate timing text now frames the closing pressure as Дрімота losing patience, while Сон remains the steadier guide voice.
+- Onboarding now refers to Порубіжжя before the forest proper, and splits name confirmation, dream entry and the world date into separate messages with Крук voicing the date.
+- Custom-name onboarding now restores concrete rejection examples, keeps saved names Cyrillic, and lets players without a Ukrainian keyboard enter fully Latin transliteration that is converted before case review.
+- Custom-name case prompts now offer a `+ (далі)` button, better decline simple masculine descriptive compound names such as `Великий Вова`, and review all case forms before saving.
+- Main and menu Telegram reply keyboards now explicitly avoid persistent mode, so mobile clients can dismiss them more naturally.
+- Prepared character-name choices now match the selected onboarding pronoun/grammatical gender and include a first 5/5/3 masculine, feminine and plural-form pool.
+- Prepared character-name onboarding now offers a gender-aware `Випадкове ім'я` button and rechecks name availability immediately before saving.
+- `/restart` messages now use in-world wording for erased characters, things and records instead of technical onboarding/inventory language.
+- Player speech now reports the speaker by name to others in the same location.
+
+### Fixed
+
+- `/tutorialReset` now refreshes the target character's reply keyboard after moving them back to the tutorial dream start.
+- `↩️ Назад` in the Telegram menu now returns the main reply keyboard instead of hiding buttons; explicit hide-keyboard text still hides it.
+- `/restart` now removes the stale reply keyboard after deleting the character, so old game buttons cannot be tapped during fresh onboarding.
+- `/restart` now also works while character onboarding is still in progress, clearing the pending onboarding state before the next `/start`.
+- Prepared onboarding names now exclude names already used by named NPCs, including `Ведана`.
 
 ---
 

@@ -4,6 +4,9 @@ import { enterTutorialDream, hasCompletedTutorial, openDreamGate, wakeFromTutori
 import { renderLocationBrief } from "../services/locations";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
+import { actionDurationMs, performOrQueuePlayerAction } from "../services/actionQueue";
+import { parseSpeechTarget } from "../services/speechTargets";
+import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 
 function buildTutorialSleepKeyboard() {
   return new InlineKeyboard().text("🌙 Навчальний сон", "tutorial:sleep");
@@ -47,6 +50,22 @@ async function openGate(ctx: any) {
   await ctx.reply(text, { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
 }
 
+async function sayOpenGatePhrase(bot: Bot, ctx: any) {
+  if (!ctx.from) return;
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const text = "Відчинитися";
+  const durationMs = actionDurationMs("SAY", player.stamina);
+  try {
+    const payload = await parseSpeechTarget(text, player.currentLocationId, player.id);
+    const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "SAY", payload, durationMs, chatId: ctx.chat?.id });
+    await sendActionSubmitFeedback(ctx, player.id, result);
+  } catch (error) {
+    await ctx.reply(error instanceof Error ? error.message : "Не вдалося виконати дію.");
+  }
+}
+
 export function registerTutorialHandlers(bot: Bot) {
   bot.command("sleep", async (ctx) => {
     const arg = ctx.message?.text?.split(/\s+/).slice(1).join(" ").trim().toLowerCase();
@@ -60,6 +79,7 @@ export function registerTutorialHandlers(bot: Bot) {
   });
 
   bot.hears(["🌅 Прокинутися", "Прокинутися", "прокинутися"], wakeTutorial);
+  bot.hears(["💬 Сказати «Відчинитися»", "Сказати «Відчинитися»", "сказати відчинитися"], (ctx) => sayOpenGatePhrase(bot, ctx));
   bot.hears(["🚪 Відкрити", "Відкрити", "відкрити"], openGate);
 
   bot.callbackQuery("tutorial:wake", async (ctx) => {
@@ -75,5 +95,10 @@ export function registerTutorialHandlers(bot: Bot) {
   bot.callbackQuery("tutorial:openGate", async (ctx) => {
     await safeAnswerCallbackQuery(ctx);
     await openGate(ctx);
+  });
+
+  bot.callbackQuery("tutorial:sayOpenGate", async (ctx) => {
+    await safeAnswerCallbackQuery(ctx);
+    await sayOpenGatePhrase(bot, ctx);
   });
 }

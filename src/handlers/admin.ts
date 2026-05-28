@@ -170,7 +170,7 @@ export const ADMIN_HELP_TEXT = [
   "/auto — увімкнути авто-режим гравця",
   "/autoStop — зупинити авто-режим",
   "/news — останні новини гри",
-  "/restart — видалити свого персонажа, інвентар і статистику; наступний /start почне онбордінґ з нуля",
+  "/restart — стерти свого персонажа, речі й записи; наступний /start почне шлях спочатку",
   "",
   "Повний список доступний тільки писарям Порубіжжя. Права писаря Порубіжжя можна отримати через прихований локально налаштований секрет.",
 ].join("\n");
@@ -262,13 +262,22 @@ export function registerAdminHandlers(bot: Bot) {
     const reset = await resetTutorialProgressForPlayer(player.id, scribe?.id);
     await logEvent("SYSTEM", "Admin reset tutorial progress", `player=${player.id}; scribe=${scribe?.id ?? "unknown"}`, player.currentLocationId ?? undefined);
 
-    await ctx.reply(`🌙 Навчальний сон скинуто для ${playerDisplayName(player)}. ${reset.movedCurrent ? "Персонажа повернуто на початок сну." : "Наступний /sleep tutorial почнеться з початку."}`);
-
     const telegramId = Number(player.telegramId);
+    const targetKeyboard = Number.isSafeInteger(telegramId)
+      ? await buildMainReplyKeyboardForTelegramId(telegramId, Boolean(player.isAutoEnabled))
+      : undefined;
+    const selfResetOptions = Number.isSafeInteger(telegramId) && telegramId === ctx.from?.id && targetKeyboard
+      ? { reply_markup: targetKeyboard }
+      : undefined;
+
+    await ctx.reply(`🌙 Навчальний сон скинуто для ${playerDisplayName(player)}. ${reset.movedCurrent ? "Персонажа повернуто на початок сну." : "Наступний /sleep tutorial почнеться з початку."}`, selfResetOptions);
+
     if (Number.isSafeInteger(telegramId) && telegramId !== ctx.from?.id) {
       await bot.api.sendMessage(telegramId, reset.movedCurrent
         ? "🌙 Писар Порубіжжя повернув ваш навчальний сон до початку."
-        : "🌙 Писар Порубіжжя повернув ваш навчальний сон до початку. Ви можете знову ввійти через /sleep tutorial.").catch(() => undefined);
+        : "🌙 Писар Порубіжжя повернув ваш навчальний сон до початку. Ви можете знову ввійти через /sleep tutorial.",
+        targetKeyboard ? { reply_markup: targetKeyboard } : undefined
+      ).catch(() => undefined);
     }
   });
 

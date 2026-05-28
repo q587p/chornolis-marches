@@ -25,6 +25,29 @@ const DREAM_LOCATION_EVENT_TITLE = "Tutorial dream location";
 const COMPLETED_EVENT_TITLE = "Tutorial completed";
 const RESET_EVENT_TITLE = "Tutorial reset by admin";
 const TUTORIAL_COMMAND_HINT_EVENT_TITLE = "Tutorial command hint";
+const DREAM_GATE_OPEN_PHRASE = "відчинитися";
+
+export function isDreamGateOpeningPhrase(text: string) {
+  return text
+    .trim()
+    .toLocaleLowerCase("uk-UA")
+    .replace(/[«»"“”„]/g, "")
+    .replace(/[!?.,;:]+$/g, "")
+    .replace(/\s+/g, " ") === DREAM_GATE_OPEN_PHRASE;
+}
+
+export async function canOpenDreamGateWithSpeech(playerId: number, text: string) {
+  if (!isDreamGateOpeningPhrase(text)) return false;
+
+  const player = await prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } });
+  if (!player?.currentLocationId) return false;
+
+  const feature = await prisma.locationFeature.findFirst({
+    where: { key: DREAM_GATE_FEATURE_KEY, locationId: player.currentLocationId, isActive: true },
+    select: { id: true },
+  });
+  return Boolean(feature);
+}
 
 function featureData(feature: { data: Prisma.JsonValue | null }) {
   return feature.data && typeof feature.data === "object" && !Array.isArray(feature.data)
@@ -287,7 +310,7 @@ export async function enterTutorialDream(playerId: number, options: { forceStart
   return {
     locationId,
     entered: true,
-    text: "Вам здається, що ви засинаєте стоячи. Десь поруч шумить Чорноліс, але тут, у сні, лишається тільки ім’я і кілька кроків попереду.",
+    text: "Ви стоїте посеред сну й не можете згадати, як опинилися тут. Минуле тримається за темряву: ким ви були, що вміли, чий голос кликав вас раніше. Попереду лишається ім’я і кілька кроків стежки.",
   };
 }
 
@@ -399,7 +422,7 @@ export async function openDreamGate(playerId: number) {
     },
   });
 
-  return "Брама Сну розходиться без скрипу. Південний шлях відкритий, але сон не любить чекати.";
+  return "Брама Сну розходиться без скрипу. Південний шлях відкритий, але Дрімота довго не чекатиме.";
 }
 
 export function lockedExitLabel(direction: Direction, reason: string) {

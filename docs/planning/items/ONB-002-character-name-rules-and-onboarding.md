@@ -26,19 +26,22 @@ Canonical design note: `docs/systems/character_names.md`.
 
 ## First scope
 
-First playable slices added in `0.12.11` and `0.12.12`:
+First playable slices added in `0.12.11`, `0.12.12` and `0.12.13`:
 
 - The onboarding flow now asks whether the player wants a prepared name or a custom name after pronoun selection.
 - Prepared names are shown with origin, rarity and stored Ukrainian case forms.
 - The prepared-name pool now lives in a typed data module with an explicit reservation flag.
 - Already-used or reserved prepared names are filtered out.
+- Prepared-name choices are filtered by the selected pronoun/grammatical gender, with a first pool of at least 5 masculine, 5 feminine and 3 plural-form options.
+- Onboarding includes a `Випадкове ім’я` button that picks from the same available prepared-name pool for the selected pronoun/grammatical gender.
 - Prepared names are saved as scribe-approved.
-- Custom names show a warning before entry and reject exact duplicates plus a first set of creature/spirit/sacred or very famous names.
+- Custom names show a warning with examples before entry, accept Cyrillic names with ordinary name punctuation, convert fully Latin transliteration to Cyrillic for players without a Ukrainian keyboard, review all seven case forms before saving, and reject duplicates plus a first set of creature/spirit/sacred or very famous names. Name availability is checked again immediately before saving to catch stale buttons or delayed choices.
 - A focused `scripts/test/character-names.cjs` regression covers prepared-name availability, reserved names and forbidden custom names.
 
 Remaining scope:
 
 - Move the prepared-name source from the typed data module toward DB-backed content with richer reservation state.
+- Expand the reviewed prepared-name pool toward roughly a hundred names across genders, regions, rarity bands and forms of address.
 - Expand custom-name validation against:
   - confusingly similar names;
   - NPC/significant-being names;
@@ -73,7 +76,7 @@ Prepared names should fit the borderland tone. Primary sources include Slavic, O
 
 - Database-backed reserved names for events and NPCs.
 - Regional popularity and historical layers.
-- Thematic generator and random pick from available names.
+- Thematic generator and larger random-name pools with regional weighting.
 - Separate names, nicknames and public titles.
 - Folk forms, diminutives and forms of address.
 - NPC reactions to strange, foreign or ominous names.

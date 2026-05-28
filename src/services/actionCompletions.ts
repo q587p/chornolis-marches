@@ -28,8 +28,8 @@ import { fatigueStateFor, spendCreatureStamina, spendPlayerStamina } from "./act
 import { actorWhere, enqueueCreatureAction, interruptActorActions, type ActorRef } from "./actionLifecycle";
 import { escapeHtml } from "../utils/text";
 import { playerCanShowTechnicalDetails } from "./technicalDetails";
-import { isLocationExitLocked, isTutorialFastRestLocationKey, rememberTutorialForagingSuccess, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY } from "./tutorial";
-import { tutorialLookPaceComments, tutorialSpiritMoveComment, tutorialTrackComments, tutorialWaitPaceComments } from "./tutorialVoices";
+import { canOpenDreamGateWithSpeech, isLocationExitLocked, isTutorialFastRestLocationKey, openDreamGate, rememberTutorialForagingSuccess, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY } from "./tutorial";
+import { tutorialGateSpeechComment, tutorialLookPaceComments, tutorialSpiritMoveComment, tutorialTrackComments, tutorialWaitPaceComments } from "./tutorialVoices";
 import { chance, pick, shuffle } from "../utils/random";
 
 type MovePayload = { direction: Direction; reason?: string };
@@ -681,17 +681,29 @@ async function completeSay(bot: Bot, action: WorldAction) {
     await spendPlayerStamina(bot, player.id, "SAY", chatId);
     await prisma.player.updateMany({ where: { id: player.id }, data: { says: { increment: 1 } } });
     const targetDative = payload.targetDative || payload.targetName;
+    const actorForms = playerForms(player);
+    const verb = saidVerb(player);
     await notifyLocationExcept(
       bot,
       player.currentLocationId,
       [player.id],
-      targetDative ? `Хтось каже ${escapeHtml(targetDative)}:\n${quoteBlock(text)}` : `Хтось каже:\n${quoteBlock(text)}`,
+      targetDative ? `${escapeHtml(actorForms.nominative)} ${verb} ${escapeHtml(targetDative)}:\n${quoteBlock(text)}` : `${escapeHtml(actorForms.nominative)} ${verb}:\n${quoteBlock(text)}`,
       { parseMode: "HTML" },
     );
     await setActionStatus(action, "DONE");
-    await logEvent("SAY", `${playerForms(player).nominative} каже${targetDative ? ` ${targetDative}` : ""}`, text, player.currentLocationId);
+    await logEvent("SAY", `${actorForms.nominative} ${verb}${targetDative ? ` ${targetDative}` : ""}`, text, player.currentLocationId);
+    const dreamGateText = await canOpenDreamGateWithSpeech(player.id, text)
+      ? await openDreamGate(player.id)
+      : null;
     if (chatId) {
-      await bot.api.sendMessage(chatId, targetDative ? `Ви кажете ${escapeHtml(targetDative)}:\n${quoteBlock(text)}` : `Ви кажете:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
+      await bot.api.sendMessage(chatId, targetDative ? `Ви сказали ${escapeHtml(targetDative)}:\n${quoteBlock(text)}` : `Ви сказали:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
+      if (dreamGateText) {
+        await bot.api.sendMessage(chatId, dreamGateText, {
+          reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false),
+        });
+        const comment = await tutorialGateSpeechComment(player);
+        if (comment) await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
+      }
     }
     return;
   }

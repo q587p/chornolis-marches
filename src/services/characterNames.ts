@@ -27,9 +27,13 @@ const FORBIDDEN_WORLD_NAMES = new Map<string, string>([
 
 const SACRED_OR_FAMOUS_NAMES = new Map<string, string>([
   ["сварог", "імена богів і сакральних постатей не підходять для звичайного персонажа"],
+  ["свароґ", "імена богів і сакральних постатей не підходять для звичайного персонажа"],
   ["єгова", "імена богів і сакральних постатей не підходять для звичайного персонажа"],
   ["вотан", "імена богів і сакральних постатей не підходять для звичайного персонажа"],
   ["дагда", "імена богів і сакральних постатей не підходять для звичайного персонажа"],
+  ["гандалф", "надто впізнаване ім'я чужого вигаданого персонажа"],
+  ["гандальф", "надто впізнаване ім'я чужого вигаданого персонажа"],
+  ["ґандалф", "надто впізнаване ім'я чужого вигаданого персонажа"],
   ["ґандальф", "надто впізнаване ім'я чужого вигаданого персонажа"],
   ["герміона", "надто впізнаване ім'я чужого вигаданого персонажа"],
 ]);
@@ -42,14 +46,30 @@ export function preparedNameByKey(key: string) {
   return PREPARED_CHARACTER_NAMES.find((name) => name.key === key) ?? null;
 }
 
-export function availablePreparedNames(usedNames: Iterable<string | null | undefined>) {
+export function availablePreparedNames(
+  usedNames: Iterable<string | null | undefined>,
+  options: { suggestedGender?: Gender } = {}
+) {
   const used = new Set(
     [...usedNames]
       .filter((name): name is string => Boolean(name))
       .map(normalizeNameForRegistry)
   );
 
-  return PREPARED_CHARACTER_NAMES.filter((name) => !name.reserved && !used.has(normalizeNameForRegistry(name.forms.nominative)));
+  return PREPARED_CHARACTER_NAMES.filter((name) =>
+    !name.reserved
+    && (!options.suggestedGender || name.suggestedGender === options.suggestedGender)
+    && !used.has(normalizeNameForRegistry(name.forms.nominative))
+  );
+}
+
+export function randomAvailablePreparedName(
+  usedNames: Iterable<string | null | undefined>,
+  options: { suggestedGender?: Gender } = {}
+) {
+  const names = availablePreparedNames(usedNames, options);
+  if (names.length === 0) return null;
+  return names[Math.floor(Math.random() * names.length)];
 }
 
 export function preparedNameSummary(name: PreparedCharacterName) {
@@ -62,10 +82,11 @@ export function customNameWarningText() {
     "Введіть власне ім'я персонажа.",
     "",
     "Не підійдуть імена богів, назви істот чи духів, випадкові набори літер, грубі слова, надто відомі чужі персонажі або слова, що не звучать як особове ім'я Порубіжжя.",
+    "Наприклад: Сварог (бог), Лісовик або Вовк (дух чи істота), Фффрр (набір літер), лайка й образи, Ґандальф або Герміона (чужі впізнавані персонажі), Камінь чи Стежка (слова, не особові імена).",
     "",
     "Найкраще пасують слов'янські або дотичні до прикордонного світу імена. Рідкісні імена зможуть переглянути Писарі.",
     "",
-    "Дозволені кирилиця або латинка без змішування абеток, emoji та невидимих символів.",
+    "Дозволені кирилиця, пробіл, дефіс і апостроф у межах імені. Якщо немає української клавіатури, напишіть ім’я транслітом латинкою: наприклад, Zdravko стане Здравко. Змішувати абетки, додавати цифри, emoji чи невидимі символи не можна.",
   ].join("\n");
 }
 

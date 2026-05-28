@@ -88,7 +88,7 @@ Important remembered direction from the 0.11 line:
 - `/tutorialReset [character]` is a scribe/admin command that clears the completed tutorial marker and makes the tutorial start location the saved dream location for the next `/sleep tutorial`.
 - A player's own `/me` view should say when they have not yet completed the tutorial dream.
 - Visible locked exits are now reusable: locked directions appear in exit lists in parentheses, movement gives a blocked reason, and queued movement re-checks the lock before completion.
-- `Брама Сну` uses the locked-exit flow: `/open` / `Відкрити` opens the south exit for a cycling 30s, 1m, 2m, 4m, 8m window, then back to 30s; the gate lazily closes again.
+- `Брама Сну` uses the locked-exit flow and now teaches speech: `/say Відчинитися` / `Сказати «Відчинитися»` opens the south exit for a cycling 30s, 1m, 2m, 4m, 8m window, then back to 30s; `/open` / `Відкрити` may remain as compatibility aliases, but tutorial UI should prefer the speech path.
 - Slow tutorial pace comments should draw from a varied Сон/Дрімота pool and use the same cycling reminder rhythm.
 - Inventory now has first modest item actions: berries restore a small amount of stamina and ease hunger by a tiny amount, mushrooms ease hunger, herbs can restore a small amount of HP when wounded, dry torches can be lit when fire is available, and resource stacks can be inspected or dropped. Keep later item-use work diegetic and modest until cooking, medicine, herbalism and real item instances exist.
 - Immediate pickup/drop item actions should be room-visible, recorded as world events, and visible in scribe/admin recent-action history.
