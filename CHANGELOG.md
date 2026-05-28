@@ -11,6 +11,17 @@ _No unreleased changes yet._
 
 ---
 
+## 0.12.5 - Status and player action performance - 12026-05-28
+
+### Changed
+
+- Narrowed heavy admin/status database reads for `/all` and location listing pages so they select only the fields those views render.
+- Added optional `STATUS_PERF_DEBUG=true` timing logs around the heavy status page builders, including failure paths.
+- Due player actions now complete with bounded concurrency instead of a fully serial loop, matching the existing creature-action completion shape while keeping each actor's actions ordered.
+- Added `PLAYER_COMPLETION_CONCURRENCY` as a Render/runtime tuning knob for due player-action completion.
+
+---
+
 ## 0.12.4 - Tutorial time and safety rooms - 12026-05-27
 
 ### Added

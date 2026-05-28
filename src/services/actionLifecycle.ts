@@ -61,9 +61,15 @@ type PlayerActionSubmitResult = {
   remainingToMax: number;
 };
 
+function positiveIntEnv(name: string, fallback: number) {
+  const value = Number(process.env[name]);
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : fallback;
+}
+
 const PLAYER_RUNNING_ACTION_BATCH = 100;
-const CREATURE_RUNNING_ACTION_BATCH = Number(process.env.CREATURE_RUNNING_ACTION_BATCH || 1000);
-const CREATURE_COMPLETION_CONCURRENCY = Number(process.env.CREATURE_COMPLETION_CONCURRENCY || 25);
+const PLAYER_COMPLETION_CONCURRENCY = positiveIntEnv("PLAYER_COMPLETION_CONCURRENCY", 10);
+const CREATURE_RUNNING_ACTION_BATCH = positiveIntEnv("CREATURE_RUNNING_ACTION_BATCH", 1000);
+const CREATURE_COMPLETION_CONCURRENCY = positiveIntEnv("CREATURE_COMPLETION_CONCURRENCY", 25);
 const PLAYER_QUEUED_ACTION_BATCH = 200;
 const CREATURE_QUEUED_ACTION_BATCH = 1000;
 let creatureQueueProcessing = false;
@@ -78,6 +84,17 @@ async function runWithConcurrency<T>(items: T[], concurrency: number, worker: (i
     }
   });
   await Promise.all(workers);
+}
+
+function groupActionsByActor(actions: WorldAction[]) {
+  const groups = new Map<string, WorldAction[]>();
+  for (const action of actions) {
+    const key = actorKey(action);
+    const group = groups.get(key);
+    if (group) group.push(action);
+    else groups.set(key, [action]);
+  }
+  return Array.from(groups.values());
 }
 
 export function actorWhere(ref: ActorRef) {
@@ -508,17 +525,20 @@ export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, ac
     orderBy: [{ executeAt: "asc" }, { id: "asc" }],
     take: PLAYER_RUNNING_ACTION_BATCH,
   });
-  for (const action of duePlayerRunning) {
-    try {
-      await completeAction(bot, action);
-      completedPlayerActions.push(action);
-    } catch (error) {
-      if (!isMissingRecordError(error)) throw error;
+  const duePlayerGroups = groupActionsByActor(duePlayerRunning);
+  await runWithConcurrency(duePlayerGroups, PLAYER_COMPLETION_CONCURRENCY, async (actions) => {
+    for (const action of actions) {
+      try {
+        await completeAction(bot, action);
+        completedPlayerActions.push(action);
+      } catch (error) {
+        if (!isMissingRecordError(error)) throw error;
+      }
     }
-  }
+  });
 
   await startQueuedActionsForActorType("PLAYER", PLAYER_QUEUED_ACTION_BATCH);
-  for (const action of completedPlayerActions) {
+  for (const action of completedPlayerActions.sort((a, b) => a.id - b.id)) {
     await refreshKeyboardWhenPlayerQueueEnds(bot, action);
   }
 
