@@ -2,11 +2,25 @@
 
 Character names are part of the atmosphere of Chornolis Marches, not only a technical onboarding field.
 
-Player-facing onboarding should eventually let a new player either enter their own name or choose one of the world's prepared names.
+Player-facing onboarding lets a new player either enter their own name or choose one of the world's prepared names.
+
+## Current First Slice
+
+As of `0.12.11`, the first implemented version includes:
+
+- a choice after pronoun selection: `Обрати ім’я зі списку` or `Ввести власне ім’я`;
+- a small curated prepared-name pool with stored Ukrainian case forms, origin and rarity;
+- filtering so already-used prepared names are not offered again;
+- automatic approval for prepared names, because they are treated as already reviewed by scribes;
+- a custom-name warning before free text entry;
+- exact duplicate checks against existing character names;
+- a first forbidden-name list for creature/spirit/sacred or very famous names such as `Вовк`, `Миша`, `Лісовик`, `Упир`, `Сварог`, `Ґандальф`.
+
+This is still a code-level curated list, not yet a full database-backed name registry.
 
 ## Prepared Names
 
-The world should maintain a curated pool of prepared names reviewed by scribes.
+The world should maintain a curated pool of prepared names reviewed by scribes. The current pool is intentionally small and lives in code as the first playable slice; later it should move into data or database-backed content.
 
 Each prepared name should store:
 

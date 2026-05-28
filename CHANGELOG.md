@@ -11,6 +11,18 @@ _No unreleased changes yet._
 
 ---
 
+## 0.12.11 - Prepared character names - 12026-05-28
+
+### Added
+
+- New character onboarding now offers a choice between prepared names and custom name entry after pronoun selection.
+- Added the first curated prepared-name pool with stored Ukrainian case forms, origin and rarity.
+- Prepared names are filtered out when already used and are saved as pre-approved by scribes.
+- Custom name entry now shows a setting-fit warning and rejects exact duplicates plus a first set of creature, spirit, sacred and famous-name conflicts.
+- Added focused regression coverage for prepared-name availability and forbidden custom names.
+
+---
+
 ## 0.12.10 - Beginner tutorial return prompts - 12026-05-28
 
 ### Changed
