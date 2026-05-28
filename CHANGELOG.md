@@ -11,11 +11,23 @@ _No unreleased changes yet._
 
 ---
 
+## 0.12.6 - Roadmap and performance planning refresh - 12026-05-28
+
+### Changed
+
+- Updated the public roadmap and game design docs so the post-tutorial path emphasizes the minimal core loop, living-world feel, observation learning and social signals before broad combat, crafting or economy systems.
+- Refreshed README and Codex memory docs with the current identity: a Telegram-first living liminal frontier sandbox where characters grow through use, observation and survival.
+- Expanded progression, social-signal and onboarding docs so future tutorial branches teach attention to the world rather than a mechanical checklist.
+- Promoted the runtime performance notes into the planning backlog: world tick staging, action lifecycle metrics, status DB pagination, auto scheduler refactor and creature simulation budgeting.
+
+---
+
 ## 0.12.5 - Status and player action performance - 12026-05-28
 
 ### Changed
 
 - Narrowed heavy admin/status database reads for `/all` and location listing pages so they select only the fields those views render.
+- `/all` now uses database pagination for creature rows instead of loading and formatting every creature on each page request.
 - Added optional `STATUS_PERF_DEBUG=true` timing logs around the heavy status page builders, including failure paths.
 - Status callbacks now ignore Telegram's harmless "message is not modified" response when a scribe taps the current page again.
 - Web `/all` now avoids writing response headers before its page is built, preventing a failed status render from crashing the process with duplicate headers.

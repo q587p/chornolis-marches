@@ -6,6 +6,8 @@ Chornolis Marches should not use traditional character levels.
 
 Progression should happen through use, observation and lived experience. A character becomes better at what they actually do, but can also learn by watching others.
 
+After the first dream tutorial, the next progression priority is an observation-learning MVP rather than a broad stat tree. The first implementation can be narrow, scripted and local as long as it proves that attention to the world can teach.
+
 ## Principles
 
 - No universal character level.
@@ -120,6 +122,8 @@ Observation is less likely to teach when:
 ## Design Notes
 
 Learning should feel like apprenticeship, imitation and attention to the world.
+
+Do not start by exposing a large skill sheet. Let early learning appear through concrete moments: a trace noticed, a gathering pattern understood, a gesture copied, a route remembered, or an NPC action watched carefully.
 
 A player should sometimes think:
 

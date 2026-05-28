@@ -10,7 +10,7 @@
 
 ## Product shape
 
-- Telegram-based RPG prototype with a living world.
+- Telegram-first living liminal frontier sandbox with RPG/MUD roots and a living world.
 - Ukrainian/Slavic folklore and mythology, dark fantasy, forest frontier tone.
 - MUD-inspired and sandbox-inspired, with S.T.A.L.K.E.R.-style A-Life as a reference for autonomous territory simulation rather than modern-firearm or post-apocalyptic aesthetics.
 - Telegram should be one client, not necessarily the only long-term client.
@@ -25,7 +25,8 @@ The game should emphasize:
 - settlements, factions and hostile groups that eventually compete with the forest and each other;
 - map traversal and location-based play;
 - Ukrainian language, local atmosphere, and mythic/liminal tone;
-- skill-based progression without abstract levels;
+- skill-based progression without abstract levels, especially through use, observation and apprenticeship;
+- small social signals as core interaction, not only flavor;
 - meaningful consequences and incomplete information;
 - eventual open PvP with settlement guards/bounty-like systems, while keeping MVP manageable.
 
@@ -50,7 +51,7 @@ The game should emphasize:
 
 ## Identity sentence
 
-> Chornolis Marches is a living frontier simulation: a liminal borderland between settlement, wilderness and myth, where ecosystems, factions and old powers continue to move whether players are present or not, and characters grow through what they actually do.
+> Chornolis Marches is a living liminal frontier sandbox: a borderland between settlement, wilderness and myth, where the world is alive and characters grow through what they actually do, notice and survive.
 
 Ukrainian:
 

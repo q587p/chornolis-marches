@@ -8,6 +8,8 @@ This file consolidates ideas that were repeatedly mentioned or saved for later. 
 - Skill-based progression through use, observation, and apprenticeship instead of abstract character levels.
 - Skills can be discovered by watching NPCs, animals, monsters, or mythical beings use them.
 - Living ecology, not static mobs.
+- Small social signals are core gameplay, not only flavor.
+- Diegetic UI and incomplete information should matter before broad mechanics.
 - Ukrainian language and folklore-inspired identity.
 
 ## Systems / features to consider
@@ -15,6 +17,7 @@ This file consolidates ideas that were repeatedly mentioned or saved for later. 
 ### Character and onboarding
 
 - Better onboarding and Ukrainian name validation.
+- Keep tutorial / dream onboarding as the NOW priority until the first core loop is taught.
 - Random pre-generated names with uniqueness checks and approval of Ukrainian cases.
 - Show name cases, approval, registration, in-game time, money where relevant.
 - Sleep/dream tutorial after onboarding or as onboarding space.
@@ -67,7 +70,22 @@ This file consolidates ideas that were repeatedly mentioned or saved for later. 
 - Курені.
 - Січі.
 - Social signals.
+- Observation-based learning MVP.
 - Reputation by people/factions.
+
+## Near-term priority after tutorial
+
+Do not jump straight into full combat, deep crafting, economy or PvP after the tutorial. The next lane should strengthen the playable core loop:
+
+- move;
+- `Озирнутися`;
+- `Роздивитися`;
+- notice traces, sounds, beings and small changes;
+- find, gather or take a small thing;
+- spend stamina and rest;
+- see the world act without direct player input;
+- learn by watching NPCs, animals, monsters or spirits;
+- use small social signals with nearby beings.
 
 ## World/calendar ideas
 

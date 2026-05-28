@@ -6,6 +6,8 @@ Chornolis Marches is a living frontier simulation about surviving on the border 
 
 It is a liminal sandbox where ecosystems, factions and myths continue to evolve whether players are present or not.
 
+Its first playable promise is not "a full RPG ruleset", but a world that notices, hides things, leaves traces and rewards attention.
+
 Порубіжжя Чорнолісу — це лімінальний survival sandbox на межі поселення, дикості й міту, де світ живе сам по собі, а персонажі зростають через те, що справді роблять.
 
 ## Core Pillars
@@ -13,6 +15,8 @@ It is a liminal sandbox where ecosystems, factions and myths continue to evolve 
 ### Atmosphere First
 
 The world should feel ancient, dangerous and mysterious. Convenience should not destroy the feeling of being lost near the edge of a living forest.
+
+Mechanical breadth should come after mood, attention and readable consequences. A small action that makes the world feel present is more valuable than a large subsystem that feels imported from a generic RPG.
 
 ### Liminal Frontier / Порубіжжя
 
@@ -63,6 +67,16 @@ A player may first learn the idea of a skill by watching someone use it: seeing 
 Observation should not always grant progress. Learning depends on the observer's relevant attributes, current skill, attention, context, and the difference between their skill and the observed creature's skill.
 
 Progression should feel like lived experience, apprenticeship, imitation and discovery, not like abstract level-ups.
+
+The first observation-learning MVP can be small and scripted. It is enough to prove the feeling: a player watches a herbalist, hunter, animal or spirit act, notices a pattern, and gains a first hint of skill progress.
+
+### Social Signals as Core Play
+
+Small social gestures are part of Chornolis gameplay, not only decorative emotes.
+
+Signals such as nodding, waving, pointing, smiling, bowing or frowning let players communicate intent in a compact Telegram-native way. They also let NPCs, animals and spirits react without requiring every interaction to become speech, combat or a quest.
+
+Social signals should support actor, target and observer text. They should be visible in local history where useful and should eventually feed reputation, mood, learning, fear, ritual politeness and creature reactions.
 
 ### Factions, Settlements and Hostile Groups
 

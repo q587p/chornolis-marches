@@ -1,12 +1,14 @@
 # 🌲 Chornolis Marches
 
-Text-based Telegram RPG with a living ecosystem, inspired by MUDs, Ultima Online, S.T.A.L.K.E.R. A-Life, Dwarf Fortress and Ukrainian folklore.
+Telegram-first living liminal frontier sandbox, inspired by MUDs, Ultima Online, S.T.A.L.K.E.R. A-Life, Dwarf Fortress and Ukrainian folklore.
 
 Tech: living cell-based world simulation, PostgreSQL persistence, Render deployment, world ticks, creature aging, corpse lifecycle, prioritized universal action queues, stamina/rest states, fading tracks, and a lightweight Telegram-native interface.
 
 ## 🧠 Vision
 
 A living liminal frontier simulation where wilderness, settlements, factions and myth continue to move even when the player is not watching.
+
+Characters should grow through what they actually do, notice and survive: use, observation, apprenticeship, careful attention and meaningful failures rather than abstract levels. The current near-term focus is the dream tutorial and a minimal playable loop of movement, looking, examining, small finds, stamina, rest, traces, beings nearby and small social signals.
 
 Chornolis Marches is not a heroic theme park MMO. The world is meant to feel older, stranger and less controlled than the player. Settlements survive only where people can hold back the forest, the creatures within it and the things that move through forgotten places at night.
 
@@ -21,6 +23,8 @@ Chornolis Marches is not a heroic theme park MMO. The world is meant to feel old
 * 🔥 The border between settlement and wilderness constantly shifts
 * 🌘 Myth, spirits and old places become more dangerous at night
 * ⏳ Actions take time, can be queued, interrupted, observed and remembered by the world
+* 👁 Watching NPCs, animals, monsters or spirits can eventually teach skills
+* 🗣 Small social signals are part of play, not only flavor text
 
 ## 🌫 Tone
 
@@ -105,7 +109,11 @@ The codebase is currently Telegram-first, but gameplay logic is gradually moving
 * [x] Queue-aware interruption by urgent actions and death
 * [x] Stamina costs, fatigue states and active rest
 * [x] First fading track records
+* [x] First dream tutorial lane
+* [x] First social signal system
 * [ ] Skill/stat modifiers beyond stamina
+* [ ] Observation-based learning MVP
+* [ ] Living-world ambient event MVP
 * [ ] Queue-aware skinning, trap setting and crafting
 * [ ] Reproduction and offspring
 * [ ] Predator hunting priority by age/HP/sex

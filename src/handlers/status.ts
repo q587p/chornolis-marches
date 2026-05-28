@@ -27,12 +27,12 @@ import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../
 import { disablePlayerAuto, enablePlayerAuto, stopPlayerAuto } from "./auto";
 import { creatureForms, playerForms } from "../services/grammar";
 
-const ALL_PAGE_MAX_CHARS = 3300;
 const LOCATION_PAGE_MAX_CHARS = 3300;
 const TELEGRAM_TEXT_MAX_CHARS = 3900;
 const CHAT_LOG_TEXT_MAX_CHARS = 3400;
 const CHAT_LOG_ENTRY_MAX_CHARS = 1100;
 const CHAT_LOG_PAGE_SIZE = 12;
+const ALL_CREATURE_PAGE_SIZE = 20;
 const WHO_PAGE_SIZE = 20;
 const WHO_ACTIVE_WINDOW_MS = 60 * 60 * 1000;
 const STATUS_PERF_DEBUG = process.env.STATUS_PERF_DEBUG === "true";
@@ -914,7 +914,8 @@ async function buildLocationAllPage(requestedPage: number) {
 export async function buildAllPage(showDead: boolean, requestedPage: number) {
   const startedAt = statusPerfNow();
   try {
-    const [players, creatures] = await Promise.all([
+    const creatureWhere = showDead ? undefined : { isAlive: true, isGone: false };
+    const [players, creatureCount] = await Promise.all([
       prisma.player.findMany({
         select: {
           id: true,
@@ -938,80 +939,61 @@ export async function buildAllPage(showDead: boolean, requestedPage: number) {
         },
         orderBy: { id: "asc" },
       }),
-      prisma.creature.findMany({
-        where: showDead ? undefined : { isAlive: true, isGone: false },
-        select: {
-          id: true,
-          name: true,
-          hp: true,
-          age: true,
-          ageTicks: true,
-          activity: true,
-          currentAction: true,
-          isGone: true,
-          isAlive: true,
-          corpseDecayTicksLeft: true,
-          location: { select: { name: true, x: true, y: true, z: true } },
-          species: { select: { kind: true, key: true, name: true } },
-        },
-        orderBy: { id: "asc" },
-      }),
+      prisma.creature.count({ where: creatureWhere }),
     ]);
+    const totalPages = Math.max(1, Math.ceil(creatureCount / ALL_CREATURE_PAGE_SIZE));
+    const page = Math.max(0, Math.min(requestedPage, totalPages - 1));
+    const creatures = await prisma.creature.findMany({
+      where: creatureWhere,
+      select: {
+        id: true,
+        name: true,
+        hp: true,
+        age: true,
+        ageTicks: true,
+        activity: true,
+        currentAction: true,
+        isGone: true,
+        isAlive: true,
+        corpseDecayTicksLeft: true,
+        location: { select: { name: true, x: true, y: true, z: true } },
+        species: { select: { kind: true, key: true, name: true } },
+      },
+      orderBy: { id: "asc" },
+      skip: page * ALL_CREATURE_PAGE_SIZE,
+      take: ALL_CREATURE_PAGE_SIZE,
+    });
 
-  const playerLines = players.map((p) => {
-    const loc = p.currentLocation ? `${p.currentLocation.name} (${p.currentLocation.x},${p.currentLocation.y},${p.currentLocation.z})` : "невідомо";
-    const name = playerForms(p).nominative;
-    return `#${p.id} ${name} — ${loc}; життя ${p.hp}; снага ${p.stamina}; голод ${p.hunger}; авто ${yesNo(p.isAutoEnabled)}`;
-  });
+    const playerLines = players.map((p) => {
+      const loc = p.currentLocation ? `${p.currentLocation.name} (${p.currentLocation.x},${p.currentLocation.y},${p.currentLocation.z})` : "невідомо";
+      const name = playerForms(p).nominative;
+      return `#${p.id} ${name} — ${loc}; життя ${p.hp}; снага ${p.stamina}; голод ${p.hunger}; авто ${yesNo(p.isAutoEnabled)}`;
+    });
 
-  const creatureLines = creatures.map((c) => {
-    const loc = c.location ? `${c.location.name} (${c.location.x},${c.location.y},${c.location.z})` : "невідомо";
-    const state = c.isGone ? "gone" : c.isAlive ? "alive" : "corpse/inactive";
-    const decay = !c.isAlive && !c.isGone ? `; decay ${c.corpseDecayTicksLeft ?? "?"}` : "";
-    const marker = c.species.kind === "ANIMAL" ? "істота" : "NPC";
-    return `#${c.id} ${c.name ?? c.species.name} [${marker}] [${c.species.key}] — ${loc}; ${state}; життя ${c.hp}; age ${c.age}/${c.ageTicks}; ${c.activity ?? "IDLE"}; ${c.currentAction ?? "без дії"}${decay}`;
-  });
+    const creatureLines = creatures.map((c) => {
+      const loc = c.location ? `${c.location.name} (${c.location.x},${c.location.y},${c.location.z})` : "невідомо";
+      const state = c.isGone ? "gone" : c.isAlive ? "alive" : "corpse/inactive";
+      const decay = !c.isAlive && !c.isGone ? `; decay ${c.corpseDecayTicksLeft ?? "?"}` : "";
+      const marker = c.species.kind === "ANIMAL" ? "істота" : "NPC";
+      return `#${c.id} ${c.name ?? c.species.name} [${marker}] [${c.species.key}] — ${loc}; ${state}; життя ${c.hp}; age ${c.age}/${c.ageTicks}; ${c.activity ?? "IDLE"}; ${c.currentAction ?? "без дії"}${decay}`;
+    });
 
-  const bodyLines = [
-    "Гравці:",
-    ...(playerLines.length ? playerLines : ["немає"]),
-    "",
-    "NPC / істоти:",
-    ...(creatureLines.length ? creatureLines : ["немає"]),
-  ];
-  const pages = splitLinesIntoPages(bodyLines, ALL_PAGE_MAX_CHARS);
-  const page = Math.max(0, Math.min(requestedPage, pages.length - 1));
-  const visiblePlayerIds: number[] = [];
-  const visibleNpcIds: number[] = [];
-  let inPlayers = false;
-  let inCreatures = false;
-  for (const line of pages[page]) {
-    if (line === "Гравці:") {
-      inPlayers = true;
-      inCreatures = false;
-      continue;
-    }
-    if (line.startsWith("NPC")) {
-      inPlayers = false;
-      inCreatures = true;
-      continue;
-    }
-    if (line === "") {
-      inPlayers = false;
-      inCreatures = false;
-      continue;
-    }
-    const match = line.match(/^#(\d+)/);
-    if (match && inPlayers) visiblePlayerIds.push(Number(match[1]));
-    if (match && inCreatures && line.includes("[NPC]")) visibleNpcIds.push(Number(match[1]));
-  }
+    const bodyLines = [
+      "Гравці:",
+      ...(playerLines.length ? playerLines : ["немає"]),
+      "",
+      "NPC / істоти:",
+      ...(creatureLines.length ? creatureLines : ["немає"]),
+    ];
+    const visiblePlayerIds = players.map((player) => player.id);
+    const visibleNpcIds = creatures.filter((creature) => creature.species.kind !== "ANIMAL").map((creature) => creature.id);
     const mode = showDead ? "усі записи" : "тільки живі; /all dead покаже всі записи";
-    const text = `🧾 Усі персонажі (${mode})\nСторінка ${page + 1}/${pages.length}; гравців ${players.length}, істот ${creatures.length}\n\n${pages[page].join("\n")}`;
-    logStatusPerf("buildAllPage", startedAt, `ok=1; players=${players.length}; creatures=${creatures.length}; pages=${pages.length}; showDead=${showDead}`);
+    const text = `🧾 Усі персонажі (${mode})\nСторінка ${page + 1}/${totalPages}; гравців ${players.length}, істот ${creatureCount}\n\n${bodyLines.join("\n")}`;
+    logStatusPerf("buildAllPage", startedAt, `ok=1; players=${players.length}; creatures=${creatureCount}; pageRows=${creatures.length}; pages=${totalPages}; showDead=${showDead}`);
 
     return {
       text,
-      keyboard: buildAllPaginationKeyboard(showDead, page, pages.length, visiblePlayerIds, visibleNpcIds),
+      keyboard: buildAllPaginationKeyboard(showDead, page, totalPages, visiblePlayerIds, visibleNpcIds),
     };
   } catch (error) {
     logStatusPerf("buildAllPage", startedAt, `ok=0; showDead=${showDead}`);

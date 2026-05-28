@@ -214,7 +214,7 @@
   },
   {
     "id": "PERF-001",
-    "title": "Budgeted and aggregated creature simulation",
+    "title": "Runtime performance plan and creature simulation budget",
     "status": "backlog",
     "type": "technical",
     "area": "performance",
@@ -224,7 +224,9 @@
       "ecology",
       "creatures",
       "action-queue",
-      "simulation"
+      "simulation",
+      "status",
+      "auto"
     ],
     "depends_on": [
       "ECO-001"

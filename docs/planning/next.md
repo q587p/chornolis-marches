@@ -14,15 +14,17 @@ The 0.12.0 line landed the first dream tutorial slice: first-run entry, `/sleep 
 
 Recommended order:
 
-1. Expand **ONB-001** from the dream hub with the next missing branch: social signals, simple tracks/signs, or fire/light after day-night rules exist.
-2. Observe and tune the first **firewood / хмиз / campfire fuel** loop now that хмиз can extend or prepare ordinary campfires.
-3. Add the first real **world time / day-night** state and make `/time` read it.
-4. Add early **/respawn / Повернення** so dangerous exploration has a beginner safety valve.
-5. Then return to **MAP-002 biome resources** once fire/light/time rules can influence gathering and visibility.
+1. Expand **ONB-001** from the dream hub with the next missing branch: social signals, simple tracks/signs, observation learning, or fire/light after day-night rules exist.
+2. Strengthen the minimal core loop before large systems: movement, `Озирнутися`, `Роздивитися`, small finds, stamina, `Відпочити`, visible traces and nearby beings.
+3. Observe and tune the first **firewood / хмиз / campfire fuel** loop now that хмиз can extend or prepare ordinary campfires.
+4. Add the first real **world time / day-night** state and make `/time` read it.
+5. Add early **/respawn / Повернення** so dangerous exploration has a beginner safety valve.
+6. Then return to **MAP-002 biome resources** once fire/light/time rules can influence gathering and visibility.
 
 Good small follow-ups if a narrow patch is wanted:
 
 - Expand ONB-001 tutorial branches from `Дрімотна Межа`: social signals, observation/tracks, fire/light and deeper danger/respawn safety.
+- Add a first observation-learning MVP: a narrow scripted case where watching a visible NPC, animal or spirit action can reveal or slightly improve a relevant skill.
 - Add the next item-level inventory actions after the 0.11.12 first use/drop pass: better per-item details, corpses, safer dropped-item pickup, and future item instances for timers/quality/origin.
 - Tune the first berries/herbs use loop after playtesting: hunger relief, small healing text, edge cases and how this should grow into cooking, medicine and herbalism.
 - Add the first **animal-restoration offering** loop: small hare/mouse statues or similar forest charms where players can leave berries or herbs; after a delay, if local or regional prey population is low, a pair of young animals can appear without admin intervention.
@@ -129,7 +131,7 @@ Add `/respawn` as **Повернення** for new or weak characters who get lo
 
 These are still `backlog`, but recent work makes them worth reviewing before the next patch sequence.
 
-- PERF-001 — budgeted and aggregated creature simulation. Recent delay diagnosis points at mass creature `RUNNING` actions after reproduction, not the player queue itself; treat this as the highest-priority backlog item before adding larger ecology loops.
+- PERF-001 — runtime performance plan and creature simulation budget. Recent production logs show `/all` and large creature counts are already the visible pressure points; 0.12.5 handled the first status DB-pagination slice, but next performance work should keep following the recorded plan: tick/action/status metrics, action lifecycle pass, auto scheduler refactor, and then staged world-tick decomposition.
 - ADM-001 — admin permissions, name approval and restricted reset hardening. A first `Писар`/admin gate exists now, so remaining near-term work is audit logging, clearer role UX, first name-review tools and closing any leftover dangerous paths.
 - Speech reply UX: `/reply`, `Відповісти` and `Відповісти як...` for addressed speech. This should probably stay behind the chat/social polish lane, not the ecology lane.
 - Inventory item actions: the dedicated inventory view exists, and the 0.11.12 berries/mushrooms/herbs use pass proves the path. Item details, dropping, torches, corpses and richer per-item actions are now small enough to promote when the survival loop needs them.

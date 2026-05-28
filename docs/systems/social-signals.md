@@ -6,6 +6,8 @@ They are not real gameplay actions like attacking, gathering or moving. They are
 
 Player-facing UI should call them **Сигнали**.
 
+Design priority after the tutorial: keep signals visible as part of the minimal living-world loop. They should make nearby beings feel present and responsive before larger speech, reputation, faction or combat systems arrive.
+
 Developer/design notes may call the system **соціальні сигнали / socials**.
 
 ## MVP Set

@@ -1,6 +1,6 @@
 ---
 id: PERF-001
-title: Budgeted and aggregated creature simulation
+title: Runtime performance plan and creature simulation budget
 status: backlog
 type: technical
 area: performance
@@ -11,21 +11,25 @@ tags:
   - creatures
   - action-queue
   - simulation
+  - status
+  - auto
 depends_on:
   - ECO-001
 exports:
   github_issue: true
 ---
 
-# PERF-001: Budgeted and aggregated creature simulation
+# PERF-001: Runtime performance plan and creature simulation budget
 
 ## Goal
 
-Keep the world feeling alive without making every animal think and enqueue an individual action every world tick.
+Keep the world feeling alive and responsive as entity counts grow, without making every animal think and enqueue an individual action every world tick or making admin/status pages load whole tables for each click.
 
 The current creature model is easy to reason about, but it does not scale well: each living animal can become its own action-queue actor. As animal populations grow, creature backlog can delay player-visible actions even when player quick actions are configured correctly.
 
 Recent playtesting after herbivore reproduction points to a sharper bottleneck: the visible slowdown appears to come from a mass of creature `RUNNING` actions after population growth, not from the player queue itself. Treat this as a high-priority follow-up before adding larger ecology loops that create still more animals.
+
+The broader performance audit also identifies the project as DB-bound in runtime hotspots: repeated small Prisma calls in loops, broad `findMany(...include...)` reads, and large mixed-responsibility services that make I/O boundaries hard to control.
 
 ## Why it fits
 
@@ -41,7 +45,48 @@ The system should preserve individual creatures where they matter:
 
 For ordinary background animals, aggregated movement and ecology are enough.
 
-## First scope
+## Known bottlenecks
+
+- `src/services/worldTick.ts` is still a god-service: scheduler, ecology, regeneration, creature behavior, lisovyk behavior, logging and DB orchestration live together. Every new tick feature risks adding more SQL work unless the tick gets explicit load/simulate/persist boundaries.
+- Action lifecycle has improved creature completion concurrency, but player running actions and queued-action startup still need a focused pass: avoid serial completion waves and reduce repeated passes over queued/running/resting actors.
+- `src/handlers/auto.ts` currently uses per-player timers for auto mode. This is acceptable for tiny online counts, but scales into many callbacks, uneven event-loop pressure and harder DB backpressure.
+- Status/admin paths were a first visible pain point. The 0.12.5 line added narrow selects, status timing logs and DB-level `/all` pagination, but the remaining status pages should keep moving toward select profiles and database pagination instead of broad reads.
+- Verbose `worldEvent` writes can add steady DB I/O. Keep full debug detail available on demand, but avoid writing heavy summaries every tick by default.
+
+## Priority plan
+
+### P0: measurement and narrow hot-path fixes
+
+- Add phase timing around world ticks and action lifecycle: load/simulate/persist/notify, due completions, queued starts and notification delivery.
+- Keep status timing logs for heavy status pages and expand them only where they help diagnose production latency.
+- Track p50/p95 and, when practical, query counts for tick/action/status paths.
+- Keep player action completion on bounded concurrency where actor ordering remains safe.
+- Reduce verbose worldEvent writes with summary-every-N-ticks and full-debug-on-demand modes.
+
+### P1: scale the biggest runtime surfaces
+
+- Continue moving admin/status pages to narrow `select` profiles and DB-level pagination.
+- Replace per-player auto timers with one heartbeat scheduler that batches eligible auto characters and applies backpressure.
+- Refactor queued-action startup so it does fewer broad passes and avoids one-by-one startup work where batchable.
+- Add a per-world-tick creature processing budget, so only a bounded number of individual creatures can think in one tick.
+- Prioritize individual processing for:
+  - creatures in locations with players;
+  - named or non-animal creatures;
+  - predators with local prey;
+  - creatures with overdue/running/queued actions;
+  - recently attacked or otherwise important locations.
+
+### P2: stage the simulation
+
+- Split tick pipeline into behavior-preserving stages with explicit I/O contracts:
+  - `loadTickSnapshot()`
+  - `simulateTick(snapshot)`
+  - `persistTickDiff(diff)`
+- Move ordinary background animals toward aggregate updates by location/species/diet instead of individual `WorldAction` records where possible.
+- Keep reproduction, overgrazing, aging and spread mostly aggregate-friendly.
+- Add counters to world tick summaries for skipped/deferred creature processing and aggregate updates.
+
+## First creature-simulation scope
 
 - Add a per-world-tick creature processing budget, so only a bounded number of individual creatures can think in one tick.
 - Prioritize individual processing for:
@@ -74,11 +119,18 @@ Avoid creating routine creature `WorldAction` rows for background movement, graz
 
 Investigate why large post-reproduction populations leave many creature actions in `RUNNING`, and either cap, aggregate, expire, coalesce or avoid those routine actions so they cannot build a persistent running tail.
 
+## Recently completed first passes
+
+- 0.12.3 reduced repeated stamina/action checks and added targeted `WorldAction` indexes.
+- 0.12.5 added optional status performance timing, narrowed heavy status selects, added DB-level pagination for `/all`, and made due player-action completion use bounded concurrency.
+
 ## Acceptance notes
 
 - Player quick actions should remain responsive even with large animal populations.
 - `/world`, `/stat` and service diagnostics should distinguish player queue pressure from creature `RUNNING` pressure so future delays are easier to identify.
 - `/world`, `/stat` or tick summaries should make it obvious when aggregate simulation is carrying background ecology.
+- Heavy admin/status pages should target p95 under 300 ms on the current production-like entity count and should not load thousands of rows when rendering one page.
+- World tick instrumentation should make p95 tick time and phase bottlenecks visible before deeper refactors begin.
 - The first implementation can be conservative: it is acceptable for background animal movement to become less granular if ecology counters and local player-facing behavior stay believable.
 
 ## Not in first implementation

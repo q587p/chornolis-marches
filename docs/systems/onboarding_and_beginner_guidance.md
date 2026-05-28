@@ -51,3 +51,5 @@ As of `0.12.0`, the first concrete newcomer path is the dream tutorial in `Др�
 Teach only what the player can meaningfully use now. Prefer small, diegetic nudges over a mechanical checklist.
 
 When a feature is too early for direct tutorial text, add a planning note instead, so the newcomer path can be updated when the feature becomes real.
+
+After the first tutorial lane, prefer adding short branches that teach the core loop and attention to the world: movement, `Озирнутися`, `Роздивитися`, visible signs, small finds, stamina, rest, safety, social signals and observation. Deeper combat, crafting and economy should wait until the player can already read and inhabit the frontier.

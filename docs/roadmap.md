@@ -8,22 +8,43 @@ Concrete implementation work should live in GitHub Issues / Projects or `docs/pl
 
 - Ukrainian / Slavic dark fantasy atmosphere.
 - Liminal frontier fantasy: the world exists on thresholds between settlement, forest, myth, spirit and danger.
+- Atmosphere first: uncertainty, attention and mood matter more than mechanical breadth.
 - Autonomous world simulation inspired by MUDs, Dwarf Fortress, Ultima Online and S.T.A.L.K.E.R.-style A-Life.
 - Living ecosystem instead of static mobs.
+- The world should feel alive even when the player does nothing.
 - Dangerous exploration with incomplete information.
 - Survival over power fantasy.
 - Faction tension, settlement pressure and hostile groups.
 - Skill-based progression through use, observation and apprenticeship instead of abstract character levels.
 - Skills can be discovered by watching NPCs, animals, monsters or mythical beings use them.
+- Small social interactions are core gameplay, not only flavor.
+- Diegetic UI: player-facing words should feel like part of the world, not imported MMO terminology.
 - Telegram-native UX with reusable gameplay services underneath.
 - Ukrainian grammar and cases as immersion, not decoration.
 
-## Phase 1 — Atmospheric MVP
+## NOW / 0.12 Line — Dream Onboarding
+
+Goal: finish the tutorial dream as the first playable threshold into Chornolis.
+
+- Teach movement, looking, examining and basic interaction through the dream space.
+- Keep `/sleep tutorial` as the explicit return path while the dream tutorial is active.
+- Use sleep as a diegetic transition, not just a menu state.
+- Establish the initial character condition: the player remembers their name, but almost nothing else.
+- Keep the tutorial atmospheric and compact: voices, gates, tracks, small finds, rest, time and safety hints instead of a mechanical checklist.
+- Keep terminology aligned with the canonical Ukrainian player-facing vocabulary: `Озирнутися`, `Місцина`, `Роздивитися`, `Снага`, `Речі` / `Поклажа`, `Риси`, `Навички`, `Сутичка`.
+
+## Phase 1 — Core Loop and Living-World MVP
 
 Goal: make the starting frontier feel playable, readable and dangerous without overbuilding the simulation.
 
-- Beginner onboarding and helper NPC / quest chain.
+- Beginner onboarding and dream tutorial continuation.
 - `/respawn` for lost early characters, available only before a defined progression threshold.
+- Movement, `Озирнутися`, `Роздивитися`, small item/resource discovery, stamina spend/recovery and `Відпочити` as a brief sit/rest action.
+- Basic nearby beings: players, NPCs and creatures should be visible when conditions allow.
+- Simple ambient/living-world events that can happen without direct player action.
+- Traces and tracking hooks: footprints, broken grass, sounds in the dark, animal signs and strange marks.
+- Early social signals: `Усміхнутися`, `Засміятися`, `Кивнути`, `Вклонитися`, `Вказати`, `Насупитися`, `Зітхнути`, `Помахати`.
+- Contextual quick signals under player/NPC cards, plus a fuller `Ще сигнали` view.
 - Day/night cycle.
 - Night visibility rules: location descriptions are hidden without light; only the location name is visible.
 - Night-only and day-only creatures, encounters and events.
@@ -35,7 +56,19 @@ Goal: make the starting frontier feel playable, readable and dangerous without o
 - Compact news UI: show the latest item fully and older items as headlines.
 - Keep early gameplay focused on dangerous exploration, rest, navigation and readable consequences.
 
-## Phase 2 — Survival & Crafting
+## Phase 2 — World Attention and Learning
+
+Goal: prove that the world teaches attentive characters.
+
+- Observation-based learning: players can unlock or improve skills by watching more skilled beings act.
+- Use-based progression: skills improve through relevant actions; dangerous or meaningful actions teach more than safe repetition.
+- Meaningful failures can teach when the attempt was plausible.
+- NPCs, animals, monsters and mythical beings can become sources of knowledge, not only targets, vendors or scenery.
+- Basic foraging: gather small resources such as herbs, berries, mushrooms, dry branches and other local finds.
+- Connect foraging to stamina, weather, time and location.
+- Basic weather/day-night hooks that affect mood, visibility, traces and rest before full simulation arrives.
+
+## Phase 3 — Survival & Crafting
 
 Goal: make wilderness pressure and simple player-made solutions matter.
 
@@ -49,9 +82,8 @@ Goal: make wilderness pressure and simple player-made solutions matter.
 - Barter with NPCs.
 - Basic trade between players.
 - Regional resource availability.
-- Observation-based learning: players can unlock or improve skills by watching more skilled beings act.
 
-## Phase 3 — Living World
+## Phase 4 — Living World
 
 Goal: deepen the ecosystem until locations feel like places with memory and movement, not static rooms.
 
@@ -67,7 +99,7 @@ Goal: deepen the ecosystem until locations feel like places with memory and move
 - Perun-like storm day: more storms, special encounters and quests.
 - World history expansion and event log improvements.
 
-## Phase 4 — Settlements, Economy & Society
+## Phase 5 — Settlements, Economy & Society
 
 Goal: connect survival and ecology to people, prices, routes, law and conflict.
 
@@ -83,7 +115,7 @@ Goal: connect survival and ecology to people, prices, routes, law and conflict.
 - Player-to-player barter and trade improvements.
 - Rumors as imperfect information about ecology, factions, danger and opportunities.
 
-## Phase 5 — Factions, PvP and Frontier Politics
+## Phase 6 — Factions, PvP and Frontier Politics
 
 Goal: make the frontier socially contested, not just environmentally dangerous.
 
@@ -97,7 +129,7 @@ Goal: make the frontier socially contested, not just environmentally dangerous.
 - Conflict goals: raids, revenge, bounty hunting, blockade and sabotage.
 - Systems that make violence meaningful without making griefing the dominant playstyle.
 
-## Phase 6 — Deep Simulation
+## Phase 7 — Deep Simulation
 
 Goal: let the world grow into a true living sandbox.
 
@@ -120,6 +152,11 @@ These fit the project but are not necessarily the current focus.
 - Day/night and light.
 - Campfires and firewood.
 - Early `/respawn` support.
+- Dream tutorial continuation and beginner safety.
+- Minimal playable core loop.
+- Living-world ambient MVP.
+- Observation-based learning MVP.
+- Social signals and contextual interactions.
 - Starter settlement and NPCs.
 - Fishing.
 - Basic crafting.
@@ -143,6 +180,9 @@ These are interesting but too early, too large or not yet validated.
 - Full PvP bounty and witness system.
 - Web map and MUD-style alternative clients.
 - Advanced persistent automation: auto-behavior presets, safety rules, profession-aware choices and temporary delegation to companions/NPCs.
+- Full combat system before the observation/living-world loop feels strong.
+- Deep crafting trees before simple resource use has repeated needs.
+- Full economy simulation before meaningful resources, settlement needs and travel pressure exist.
 
 ## Documentation Rules
 
