@@ -21,6 +21,7 @@ Chornolis Marches is a Ukrainian dark-fantasy Telegram RPG / living-world sandbo
 11. Do not make `/start` reset position for existing characters; use explicit respawn/admin movement for relocation.
 12. New or changed commands should keep aliases together: slash command where useful, English/MUD-style text forms, Ukrainian text forms, matching buttons, and matching `/help` or `/adminHelp` docs.
 13. When a command becomes part of the tutorial/newcomer path, add a short diegetic first-use comment or planning note for Сон/Дрімота, another guide voice, or an appropriate local sign so the tutorial teaches the command in-world instead of only exposing a button.
+14. When adding or changing text aliases, add or update `scripts/test/input-aliases.cjs` whenever the behavior can be checked with `parseAlias` without Telegram or database setup.
 
 ## Preferred workflow for code tasks
 
@@ -29,6 +30,7 @@ Chornolis Marches is a Ukrainian dark-fantasy Telegram RPG / living-world sandbo
 - Make the smallest coherent change that preserves behavior.
 - Run the relevant test/build/check command if available. Prefer `npm test` plus `npm run build` before suggesting commit/push when the change touches code, data, seed/world structure, or behavior that could drift.
 - Add or extend focused tests when a new rule can be validated cheaply and repeatably. Manual Telegram checks are useful, but they should not replace scriptable coverage for seed validation, parser/formatter helpers, world data invariants, or other deterministic behavior.
+- For player-facing aliases and MUD-style text commands, prefer a focused `parseAlias` regression in `scripts/test/input-aliases.cjs` alongside the code change.
 - Summarize changed files and any checks run.
 - Only mention version bump when explicitly relevant; the user usually handles it manually after a green build.
 - If the change introduces a new player action, menu item, command, resource use, visibility rule, survival mechanic, social flow or admin-visible beginner state, update the relevant beginner-facing docs/text or add a planning note explaining how onboarding should teach it.

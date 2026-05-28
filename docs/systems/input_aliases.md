@@ -57,6 +57,7 @@ Actions:
 - `сказати Привіт`.
 - `додати хмиз`, `підкинути хмиз`, `/add twigs campfire` -> add carried `хмиз` to a nearby ordinary campfire.
 - `підібрати хмиз`, `взяти хмиз`, `pickup twigs` -> pick up visible loose `хмиз` in the current місцина.
+- Ecology sign inspection: `/examine sign`, `/examine border marker`, `роздивитися знак`, `роздивитися межовий знак`, `придивитися до знака` -> inspect a local `Межовий знак` and read its public diegetic wildlife notes when the feature is present.
 - Ecology inspection: `/examine grass`, `/examine depleted grass`, `роздивитися траву`, `придивитися до трави`, `оцінити траву`, `оцінити відновлення` -> inspect the local depleted-vegetation feature and estimate natural recovery when `Винищена трава` is present.
 - Future shrine/offering actions: `/offer`, `/offer <item>`, `пожертвувати`, `лишити дар`, `покласти дар`, `кинути шаг`, `покласти хмиз` -> offer an item to an inspectable shrine/капище or similar sacred feature.
 - Future animal-restoration offering actions: `/offer berries`, `/offer herbs`, `покласти ягоди`, `лишити трави`, `покласти дар зайцю`, `покласти дар мишам`, `пожертвувати зайцеві`, `пожертвувати мишам` -> offer fitting food or herbs to a hare/mouse statue, carved burrow marker or similar animal charm.

@@ -38,6 +38,7 @@ export type ParsedAliasCommand =
   | { kind: "queue"; mode: QueueAliasMode }
   | { kind: "track"; detail?: boolean }
   | { kind: "inspect-vegetation" }
+  | { kind: "inspect-border-marker" }
   | { kind: "wait" }
   | { kind: "add-twigs-campfire" }
   | { kind: "say"; text: string }
@@ -340,12 +341,11 @@ const COMPACT_ALIASES: Record<string, ParsedAliasCommand> = {
 const SUGGESTABLE_ALIASES = Object.keys(EXACT_ALIASES);
 
 function normalizeSlashCommand(text: string) {
-  return text.replace(/^\/([^\s@]+)@[A-Za-z0-9_]+/, "/$1");
+  return text.replace(/^\/([^\s@]+)@[A-Za-z0-9_]+/i, "/$1");
 }
 
 export function normalizeInput(raw: string) {
-  return normalizeSlashCommand(raw)
-    .trim()
+  return normalizeSlashCommand(raw.trim())
     .toLowerCase()
     .replace(APOSTROPHES, "'")
     .replace(TRAILING_PUNCTUATION, "")
@@ -476,6 +476,16 @@ function parseVegetationInspectionIntent(text: string): ParsedAliasCommand | nul
   return null;
 }
 
+function parseBorderMarkerInspectionIntent(text: string): ParsedAliasCommand | null {
+  if (/^(?:examine|inspect|look|x)(?:\s+(?:sign|marker|border marker|boundary marker))$/.test(text)) {
+    return { kind: "inspect-border-marker" };
+  }
+  if (/^(?:роздивитися|роздивитись|придивитися|придивитись|оглянути|глянути)(?:\s+(?:знак|межовий знак)|\s+до\s+(?:знака|межового знака))$/.test(text)) {
+    return { kind: "inspect-border-marker" };
+  }
+  return null;
+}
+
 function parseTargetAction(text: string): ParsedAliasCommand | null {
   const patterns: Array<[TargetAction, RegExp]> = [
     ["inspect", /^(?:look\s+at|look|x|examine|inspect|роздивитися|оглянути|глянути\s+на|подивитися\s+на|придивитися\s+до)\s+(.+)$/],
@@ -531,41 +541,45 @@ function parseSocialSignal(text: string): ParsedAliasCommand | null {
 export function parseAlias(raw: string): ParsedAliasCommand | null {
   const text = normalizeInput(raw);
   if (!text) return null;
+  const commandText = withoutLeadingSlash(text);
 
   const say = parseSay(raw, text);
   if (say) return say;
 
-  const chat = parseChat(text);
+  const chat = parseChat(commandText);
   if (chat) return chat;
 
-  const all = parseAll(text);
+  const all = parseAll(commandText);
   if (all) return all;
 
-  const trackIntent = parseTrackIntent(text);
+  const trackIntent = parseTrackIntent(commandText);
   if (trackIntent) return trackIntent;
 
-  const vegetationIntent = parseVegetationInspectionIntent(text);
+  const vegetationIntent = parseVegetationInspectionIntent(commandText);
   if (vegetationIntent) return vegetationIntent;
 
-  const target = parseTargetAction(text);
+  const borderMarkerIntent = parseBorderMarkerInspectionIntent(commandText);
+  if (borderMarkerIntent) return borderMarkerIntent;
+
+  const target = parseTargetAction(commandText);
   if (target) return target;
 
-  const pickup = parsePickup(text);
+  const pickup = parsePickup(commandText);
   if (pickup) return pickup;
 
-  const inventoryItemAction = parseInventoryItemAction(text);
+  const inventoryItemAction = parseInventoryItemAction(commandText);
   if (inventoryItemAction) return inventoryItemAction;
 
-  const signal = parseSocialSignal(text);
+  const signal = parseSocialSignal(commandText);
   if (signal) return signal;
 
   const direction = parseDirectionPhrase(text);
   if (direction) return direction;
 
-  const gather = parseGather(text);
+  const gather = parseGather(commandText);
   if (gather) return gather;
 
-  const exactKey = withoutLeadingSlash(text);
+  const exactKey = commandText;
   if (EXACT_ALIASES[exactKey]) return EXACT_ALIASES[exactKey];
   if (EXACT_ALIASES[text]) return EXACT_ALIASES[text];
 

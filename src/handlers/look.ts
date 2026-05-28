@@ -145,14 +145,14 @@ export function registerLookHandlers(bot: Bot) {
   });
 
 
-  bot.callbackQuery(/^feature:(\d+)$/, async (ctx) => {
+  bot.callbackQuery(/^feature:(\d+)(?::(brief|details))?$/, async (ctx) => {
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player) {
       await safeAnswerCallbackQuery(ctx);
       return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
     }
 
-    const view = await renderLocationFeatureInteraction(Number(ctx.match[1]), player.id);
+    const view = await renderLocationFeatureInteraction(Number(ctx.match[1]), player.id, ctx.match[2] === "brief" ? "brief" : "details");
     await safeAnswerCallbackQuery(ctx);
     if (!view) return void (await ctx.reply("Цього вже не видно поруч."));
 

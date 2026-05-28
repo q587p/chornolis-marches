@@ -34,6 +34,7 @@ Add or extend focused tests when a new rule can be checked cheaply and repeatabl
 - world seed and map invariants;
 - parser/alias behavior;
 - text/grammar/terminology helpers;
+- input aliases and MUD-style command parsing through `scripts/test/input-aliases.cjs`;
 - resource, track, queue or lifecycle rules with deterministic inputs;
 - regression cases that already broke once.
 

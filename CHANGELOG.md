@@ -11,6 +11,21 @@ _No unreleased changes yet._
 
 ---
 
+## 0.12.9 - Border marker ecology report - 12026-05-28
+
+### Added
+
+- Added a public ecology report to the inspectable border marker feature, showing rough wildlife and recent birth/death notes without reopening the full `/stat` surface.
+- Added `/examine sign`, `/examine border marker` and Ukrainian text aliases for inspecting the local border marker.
+- Added near-term planning notes for a local console client that can later drive command smoke tests before a full MUD server exists.
+- Added parser regression tests for shared text aliases so future Telegram, console and MUD-style command input can stay aligned.
+
+### Changed
+
+- Border marker ecology text now hides exact counts by default; exact values are only appended for scribes/admins with technical details enabled.
+
+---
+
 ## 0.12.8 - Tutorial observation branch - 12026-05-28
 
 ### Added

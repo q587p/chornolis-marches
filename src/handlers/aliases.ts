@@ -28,7 +28,7 @@ import { sendHelp } from "./help";
 import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } from "./auto";
 import { showCharacter, showInventory, showLocationForPlayer } from "./player";
 import { buildAllPage, buildChatLogPage, buildStatBrief, buildWhoPage } from "./status";
-import { renderDepletedVegetationInspection, renderLocationBrief } from "../services/locations";
+import { renderDepletedVegetationInspection, renderLocationBrief, renderLocationFeatureInteraction } from "../services/locations";
 import { buildNewsIndexPage } from "./news";
 import { hideReplyKeyboard, showMenu } from "./menu";
 import { showTime } from "./time";
@@ -208,6 +208,21 @@ async function replyWithVegetationInspection(ctx: any) {
 
   const view = await renderDepletedVegetationInspection(player.currentLocationId, player.id);
   if (!view) return void (await ctx.reply("Тут не видно винищеної трави, яку можна оцінити."));
+  await ctx.reply(view.text, { reply_markup: view.keyboard });
+}
+
+async function replyWithBorderMarkerInspection(ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player?.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const feature = await prisma.locationFeature.findFirst({
+    where: { locationId: player.currentLocationId, isActive: true, type: "BORDER_MARKER" },
+    orderBy: { id: "asc" },
+  });
+  if (!feature) return void (await ctx.reply("Тут не видно межового знака, який можна роздивитися."));
+
+  const view = await renderLocationFeatureInteraction(feature.id, player.id);
+  if (!view) return void (await ctx.reply("Тут не видно межового знака, який можна роздивитися."));
   await ctx.reply(view.text, { reply_markup: view.keyboard });
 }
 
@@ -624,6 +639,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "menu") return showMenu(ctx);
     if (parsed.kind === "back") return hideReplyKeyboard(ctx);
     if (parsed.kind === "inspect-vegetation") return replyWithVegetationInspection(ctx);
+    if (parsed.kind === "inspect-border-marker") return replyWithBorderMarkerInspection(ctx);
     if (parsed.kind === "move") return submitCanonicalMove(bot, ctx, parsed.direction, false);
     if (parsed.kind === "gather") return submitCanonicalGather(bot, ctx, parsed.resourceKey, false);
     if (parsed.kind === "rest") return submitRest(ctx, parsed.mode);

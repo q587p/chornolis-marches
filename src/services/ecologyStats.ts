@@ -30,6 +30,25 @@ type TickCounterSummary = Record<TickCounterKey, number>;
 const EMPTY_COUNTERS = Object.fromEntries(TICK_COUNTER_KEYS.map((key) => [key, 0])) as TickCounterSummary;
 const CREATURE_AGES: CreatureAge[] = ["CHILD", "YOUNG", "ADULT", "OLD", "CORPSE"];
 
+export type PublicEcologySignStats = {
+  totals: {
+    aliveAnimals: number;
+    corpseAnimals: number;
+    predatorKills: number;
+    starvationDeaths: number;
+  };
+  speciesRows: Array<{
+    key: string;
+    name: string;
+    alive: number;
+  }>;
+  recent: {
+    eventCount: number;
+    observedMinutes: number;
+    counters: Pick<TickCounterSummary, "rabbitBirths" | "mouseBirths" | "foxBirths" | "wolfBirths" | "oldAgeDeaths" | "starvationDeaths" | "predatorKills">;
+  };
+};
+
 function parseTickNumber(description: string | null | undefined) {
   const match = description?.match(/Tick #(\d+)/);
   return match ? Number(match[1]) : null;
@@ -327,5 +346,90 @@ export async function getEcologyStats() {
       ratesPerHour,
     },
     refreshSeconds: Math.max(30, Math.round((40 * timing.tickMs) / 1000)),
+  };
+}
+
+export async function getPublicEcologySignStats(): Promise<PublicEcologySignStats> {
+  const timing = getRuntimeTimingConfig();
+  const [species, animalGroups, latestTickEvents, totalPredatorKills, totalStarvationDeaths] = await Promise.all([
+    prisma.creatureSpecies.findMany({ where: { kind: "ANIMAL" }, orderBy: { key: "asc" } }),
+    prisma.creature.groupBy({
+      by: ["speciesId", "age", "isAlive", "isGone"],
+      where: { species: { kind: "ANIMAL" } },
+      _count: { _all: true },
+    }),
+    prisma.worldEvent.findMany({
+      where: { title: "World Tick" },
+      orderBy: { id: "desc" },
+      take: TICK_EVENT_TAKE,
+    }),
+    prisma.worldEvent.count({ where: { title: "Creature killed prey" } }),
+    prisma.worldEvent.count({ where: { title: "Animal starved" } }),
+  ]);
+
+  const speciesRows = species.map((item) => ({ key: item.key, name: item.name, alive: 0 }));
+  const rowsBySpeciesId = new Map(species.map((item, index) => [item.id, speciesRows[index]]));
+
+  let aliveAnimals = 0;
+  let corpseAnimals = 0;
+  for (const group of animalGroups) {
+    const count = group._count._all;
+    const row = rowsBySpeciesId.get(group.speciesId);
+    if (!group.isGone && group.isAlive && group.age !== "CORPSE") {
+      if (row) row.alive += count;
+      aliveAnimals += count;
+    } else if (!group.isGone && (!group.isAlive || group.age === "CORPSE")) {
+      corpseAnimals += count;
+    }
+  }
+
+  const tickEvents = latestTickEvents
+    .map((event) => ({
+      tickNumber: parseTickNumber(event.description),
+      createdAt: event.createdAt,
+      counters: parseTickCounters(event.description),
+    }))
+    .filter((event) => event.tickNumber !== null);
+
+  const recentCounters = { ...EMPTY_COUNTERS };
+  for (const event of tickEvents) addCounters(recentCounters, event.counters);
+
+  if (tickEvents.length > 0) {
+    const since = tickEvents[tickEvents.length - 1].createdAt;
+    const [predatorKills, starvationDeaths] = await Promise.all([
+      prisma.worldEvent.count({ where: { title: "Creature killed prey", createdAt: { gte: since, lte: new Date() } } }),
+      prisma.worldEvent.count({ where: { title: "Animal starved", createdAt: { gte: since, lte: new Date() } } }),
+    ]);
+    recentCounters.predatorKills = predatorKills;
+    recentCounters.starvationDeaths = starvationDeaths;
+  }
+
+  const latestTickNumber = tickEvents[0]?.tickNumber ?? null;
+  const oldestTickNumber = tickEvents.length ? tickEvents[tickEvents.length - 1].tickNumber : null;
+  const observedTicks = latestTickNumber !== null && oldestTickNumber !== null
+    ? Math.max(1, latestTickNumber - oldestTickNumber + 1)
+    : tickEvents.length;
+
+  return {
+    totals: {
+      aliveAnimals,
+      corpseAnimals,
+      predatorKills: totalPredatorKills,
+      starvationDeaths: totalStarvationDeaths,
+    },
+    speciesRows,
+    recent: {
+      eventCount: tickEvents.length,
+      observedMinutes: observedTicks > 0 ? (observedTicks * timing.tickMs) / 60_000 : 0,
+      counters: {
+        rabbitBirths: recentCounters.rabbitBirths,
+        mouseBirths: recentCounters.mouseBirths,
+        foxBirths: recentCounters.foxBirths,
+        wolfBirths: recentCounters.wolfBirths,
+        oldAgeDeaths: recentCounters.oldAgeDeaths,
+        starvationDeaths: recentCounters.starvationDeaths,
+        predatorKills: recentCounters.predatorKills,
+      },
+    },
   };
 }
