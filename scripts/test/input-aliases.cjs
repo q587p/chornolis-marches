@@ -53,6 +53,10 @@ assertAlias("запалити факел", { kind: "light-torch" });
 assertAlias("погасити факел", { kind: "douse-torch" });
 
 assertAlias("навчальний сон", { kind: "sleep", tutorial: true });
+assertAlias("навчання", { kind: "sleep", tutorial: true });
+assertAlias("туторіал", { kind: "sleep", tutorial: true });
+assertAlias("пройти навчання", { kind: "sleep", tutorial: true });
+assertAlias("повернутися до навчання", { kind: "sleep", tutorial: true });
 assertAlias("сон", { kind: "sleep" });
 assertAlias("прокинутися", { kind: "wake" });
 assertAlias("відкрити", { kind: "open" });

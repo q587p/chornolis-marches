@@ -213,6 +213,25 @@
     "file": "docs/planning/items/ONB-001-newcomer-helper-and-tutorial.md"
   },
   {
+    "id": "ONB-002",
+    "title": "Character name rules and onboarding",
+    "status": "next",
+    "type": "feature",
+    "area": "onboarding",
+    "priority": "high",
+    "tags": [
+      "onboarding",
+      "names",
+      "scribes",
+      "generated-names",
+      "ukrainian-grammar",
+      "validation"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/ONB-002-character-name-rules-and-onboarding.md"
+  },
+  {
     "id": "PERF-001",
     "title": "Runtime performance plan and creature simulation budget",
     "status": "backlog",

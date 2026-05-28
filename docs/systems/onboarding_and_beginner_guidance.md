@@ -17,6 +17,7 @@ When a new player-facing feature is added, check whether it needs to be taught, 
 Keep these surfaces aligned:
 
 - `/start` and first-run onboarding;
+- character-name creation, including prepared names and custom-name guidance;
 - `/help` / `Допомога`;
 - main and secondary keyboards;
 - beginner-friendly fallback messages for unknown input;
@@ -36,6 +37,7 @@ As of `0.12.0`, the first concrete newcomer path is the dream tutorial in `Др�
 - Plain `/sleep` routes to the tutorial while that character has not woken from it yet; after wake, normal sleep remains reserved for a later recovery system.
 - Scribes can use `/tutorialReset [character]` to clear a character's completed tutorial marker and make the tutorial start location the saved dream location for the next `/sleep tutorial`.
 - The character's own `/me` view should mention when the tutorial dream is not yet complete, so players have a direct reminder without needing an admin check.
+- `/start`, `/help` and unknown-input fallback messages should remind unfinished characters that `/sleep tutorial` / `навчальний сон` returns them to the dream. `/help` may add a direct `Навчальний сон` button for those characters.
 - The character card includes `Сон` below `Відпочити`; if ordinary sleep is unavailable, the response should offer a direct `Навчальний сон` button.
 - `Прокинутися`, `/wake`, `wake`, `прокинутися` and `прокинутись` leave the dream and restore a valid real-world location. Keep direct commands available as an escape hatch, but do not offer the `Прокинутися` button in early tutorial steps; surface it only later as a suggestion after the first tutorial path has opened up.
 - The first slice teaches movement and visible locked exits through `Брама Сну`: the south exit stays visible, the reply keyboard wraps its direction label in parentheses while locked, `/open` / `Відкрити` opens it for a cycling window of about 30 seconds, 1 minute, 2 minutes, 4 minutes, 8 minutes, then back to 30 seconds, and the gate lazily closes again.

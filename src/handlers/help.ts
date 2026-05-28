@@ -1,6 +1,8 @@
-import { Bot } from "grammy";
+import { Bot, InlineKeyboard } from "grammy";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { isPlayerAutoEnabled } from "./auto";
+import { getPlayerByTelegramId } from "../services/players";
+import { hasCompletedTutorial } from "../services/tutorial";
 
 export const HELP_TEXT = [
   "🧭 <b>Що робити в Порубіжжі Чорнолісу</b>",
@@ -44,6 +46,15 @@ export async function sendHelp(ctx: any) {
     parse_mode: "HTML",
     reply_markup: ctx.from ? await buildMainReplyKeyboardForTelegramId(ctx.from.id, auto) : undefined,
   });
+
+  if (!ctx.from) return;
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player || await hasCompletedTutorial(player.id)) return;
+
+  await ctx.reply(
+    "Навчальний сон ще не завершено. Можна повернутися туди, пройти короткі вправи або прокинутися, коли будете готові.",
+    { reply_markup: new InlineKeyboard().text("🌙 Навчальний сон", "tutorial:sleep") }
+  );
 }
 
 export function registerHelpHandlers(bot: Bot) {

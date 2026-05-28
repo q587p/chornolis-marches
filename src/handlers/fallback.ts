@@ -2,10 +2,19 @@ import { Bot } from "grammy";
 import { buildMainReplyKeyboardForTelegramId, EMPTY_KEYBOARD_BUTTON } from "../ui/replyKeyboard";
 import { suggestAliasInputs } from "../input/aliases";
 import { stripUnsafeText } from "../utils/text";
+import { getPlayerByTelegramId } from "../services/players";
+import { hasCompletedTutorial } from "../services/tutorial";
 
 function commandName(text: string) {
   const match = text.trim().match(/^\/([^\s@]+)(?:@\w+)?(?:\s|$)/u);
   return match?.[1].toLowerCase();
+}
+
+async function unfinishedTutorialHint(telegramId?: number) {
+  if (!telegramId) return "";
+  const player = await getPlayerByTelegramId(telegramId);
+  if (!player || await hasCompletedTutorial(player.id)) return "";
+  return "\n\nЯкщо хочеш повернутися до короткого навчання, напиши /sleep tutorial або «навчальний сон».";
 }
 
 export function registerFallbackHandlers(bot: Bot) {
@@ -23,7 +32,7 @@ export function registerFallbackHandlers(bot: Bot) {
         : "";
 
       await ctx.reply(
-        `Не зовсім розумію${safeText ? `: “${safeText}”` : ""}.${suggestionText}\n\nСпробуй /help або відкрий /menu.`,
+        `Не зовсім розумію${safeText ? `: “${safeText}”` : ""}.${suggestionText}\n\nСпробуй /help або відкрий /menu.${await unfinishedTutorialHint(ctx.from?.id)}`,
         { reply_markup: replyMarkup }
       );
       return;
@@ -44,7 +53,7 @@ export function registerFallbackHandlers(bot: Bot) {
     }
 
     await ctx.reply(
-      `Не впізнаю команду ${command ? `/${command}` : "з таким записом"}.${suggestionText}\n\nСпробуй /help або відкрий /menu.`,
+      `Не впізнаю команду ${command ? `/${command}` : "з таким записом"}.${suggestionText}\n\nСпробуй /help або відкрий /menu.${await unfinishedTutorialHint(ctx.from?.id)}`,
       { reply_markup: replyMarkup }
     );
   });

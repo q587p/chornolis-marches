@@ -7,7 +7,7 @@ import { guessGenderFromPronoun, guessNameForms, normalizeCharacterName, validat
 import { BASE_STAMINA } from "../gameConfig";
 import { renderCurrentWorldYearLine } from "../services/calendar";
 import { setDefaultBotCommandsWithRetry, syncChatBotCommandsForTelegramId } from "../services/telegramCommands";
-import { enterTutorialDream, isTutorialLocation } from "../services/tutorial";
+import { enterTutorialDream, hasCompletedTutorial, isTutorialLocation } from "../services/tutorial";
 
 const CASE_PROMPTS: Array<{ key: keyof NameForms; question: string; prefix?: string }> = [
   { key: "genitive", question: "Ім’я в родовому відмінку (Немає КОГО?)" },
@@ -97,9 +97,12 @@ async function enterWorld(ctx: any, isMenuRefresh = false) {
       })
     : null;
   const isInTutorial = currentLocation ? isTutorialLocation(currentLocation) : false;
+  const tutorialCompleted = await hasCompletedTutorial(player.id);
   const keyboardHint = isInTutorial
     ? "Ти вже в навчальному сні. /start не скидає сон і не переносить тебе, а просто повертає актуальні навчальні кнопки."
-    : "Ти вже в грі. Клавіатура чекає під полем вводу, але всі команди можна і просто текстом вводити 👇";
+    : tutorialCompleted
+      ? "Ти вже в грі. Клавіатура чекає під полем вводу, але всі команди можна і просто текстом вводити 👇"
+      : "Ти вже в грі. Навчальний сон ще не завершено: можна повернутися командою /sleep tutorial або написати «навчальний сон». Клавіатура чекає під полем вводу, але всі команди можна і просто текстом вводити 👇";
 
   const text = isMenuRefresh
     ? `🌲 Меню оновлено.\n${yearLine}\n\nВітаю, ${displayName}.\n\n${keyboardHint}`

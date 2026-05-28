@@ -33,10 +33,11 @@ The first version should help a new character understand what they can do withou
 - `0.12.4` adds a south hub branch: `Плесо часу сну` for `/time`, followed by `Затишок останнього кроку` for beginner safety habits around `/look`, `/rest`, `/me` and waking from the tutorial.
 - `0.12.8` adds `Лисячий просвіт сну`: a side branch that teaches the first scripted observation-learning moment through `Лисячий рух` and a one-time `Слідування трохи покращено` message.
 - `0.12.8` also deepens the rest branch with `Легкий присілок сну`, a second fast-rest room, local rest speed multipliers and a first-use Сон/Дрімота comment for `/rest`.
+- `0.12.10` refreshes beginner return prompts: `/start`, `/help` and unknown-input fallback messages point unfinished characters back to `/sleep tutorial` / `навчальний сон`, and `/help` offers a direct `Навчальний сон` button when relevant.
 
 ## Remaining first scope
 
-- Review and refresh `/start`, `/help`, fallback hints and the main keyboard so a brand-new player sees the current game, not an older slice of it.
+- Keep reviewing `/start`, `/help`, fallback hints and the main keyboard as the tutorial grows, so a brand-new player sees the current game, not an older slice of it.
 - Expand the dream tutorial with branches that nudge the player through:
   - simple tracks and signs;
   - more observation-learning scenes after the first fox movement proof, especially attack and following lessons once the skill system exists;

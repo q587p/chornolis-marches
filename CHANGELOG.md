@@ -11,6 +11,16 @@ _No unreleased changes yet._
 
 ---
 
+## 0.12.10 - Beginner tutorial return prompts - 12026-05-28
+
+### Changed
+
+- `/start`, `/help` and unknown-input fallback messages now remind unfinished characters how to return to the tutorial dream.
+- `/help` now adds a direct tutorial button for characters who have not completed the tutorial yet.
+- Added natural Ukrainian tutorial-return aliases such as `навчання`, `пройти навчання` and `повернутися до навчання`.
+
+---
+
 ## 0.12.9 - Border marker ecology report - 12026-05-28
 
 ### Added

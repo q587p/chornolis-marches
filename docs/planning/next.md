@@ -8,6 +8,8 @@ This file should stay small. If everything is “next”, nothing is next.
 
 These items are already marked `status: next` here or in `docs/planning/items/`.
 
+- **ONB-002 — Character name rules and onboarding**: high-priority name creation flow with prepared scribe-approved names, Ukrainian case forms, custom-name validation, creature/spirit-name conflicts and scribe review for uncertain names. Canonical design note: `docs/systems/character_names.md`.
+
 ## Recommended next slice after 0.12.0
 
 The 0.12.0 line landed the first dream tutorial slice: first-run entry, `/sleep tutorial`, wake/skip, visible locked exits and `Брама Сну`. The next patches should deepen that lane without turning it into a long checklist.
@@ -31,7 +33,7 @@ Good small follow-ups if a narrow patch is wanted:
 - Add a low-prey warning from Дід Лісовик when all rabbits, mice or other basic prey disappear from the relevant scope. If he is asleep, the message can be framed as him mumbling through sleep, still heard across the borderland.
 - Add first ground-money objects under the bridge / in dark places, using the existing ground-item pickup path.
 - Add logs for who used `/reset` and other dangerous scribe tools.
-- Add the first scribe name-approval loop: `/all character` or an equivalent filtered character list, service-profile buttons to approve/reject names, and a rejection message sent to the character.
+- Add the first scribe name-approval loop as part of **ONB-002**: `/all character` or an equivalent filtered character list, service-profile buttons to approve/reject names, prepared-name support, custom-name validation and a rejection message sent to the character.
 
 ## MAP-002 — Biome-based resources and spawn rules
 
@@ -125,7 +127,7 @@ Add `/respawn` as **Повернення** for new or weak characters who get lo
 - Seed a first small ground-money find on world start/reset: a ґривня under the bridge and a few scattered шаги elsewhere. These should behave like visible location objects: shown by `/look` when light/visibility allows, discoverable by `/examine` in darkness, inspectable like corpses/objects, and pickable into `Речі`.
 - Add a first local console client before a full MUD server: run it against the local command/action layer or a tiny test harness, connect as a test character, send text commands, and later reuse scripted walks as smoke/integration tests for movement, look/examine, inventory and tutorial flows. First design note: `docs/systems/console_client.md`.
 - Add a first NPC hunter/archer loop: a named hunter travels between nearby hunting grounds, looks for prey, attacks small animals, and leaves visible signs for players to observe. Later this should grow into tracking, traps and teaching hunting-related skills.
-- Add name approval admin flow after the `isNameApproved` field is available.
+- Continue **ONB-002** name onboarding after the first admin review path: prepared names, custom-name warnings, registry checks and scribe approval should move together rather than as separate ad hoc fixes.
 - When adding new Telegram buttons, keep `docs/systems/input_aliases.md` in mind: player-facing action buttons should get a slash command or Ukrainian/MUD-style text equivalent unless they are only суто паґінаційні or archive-navigation buttons.
 
 ## Promotion candidates to review

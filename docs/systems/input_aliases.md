@@ -49,7 +49,7 @@ Actions:
 - `item berries`, `річ ягоди`, `оглянути в речах ягоди`, `inspect item berries` -> inspect a carried resource stack.
 - `викинути ягоди`, `кинути трави`, `drop berries`, `discard torch` -> drop one carried resource from inventory into the current location.
 - `відпочити`, `додати відпочинок у чергу`, `перервати відпочинок`.
-- `/sleep tutorial`, `tutorial`, `sleep tutorial`, `навчальний сон`, `сон навчання` -> enter or return to the dream tutorial. While the tutorial is incomplete, plain `/sleep` and `сон` route there too.
+- `/sleep tutorial`, `tutorial`, `sleep tutorial`, `навчальний сон`, `сон навчання`, `навчання`, `туторіал`, `пройти навчання`, `повернутися до навчання` -> enter or return to the dream tutorial. While the tutorial is incomplete, plain `/sleep` and `сон` route there too.
 - `/wake`, `wake`, `прокинутися`, `прокинутись` -> leave the dream tutorial and return to the saved real location.
 - `/open`, `open`, `відкрити` -> open the local interactive gate when the current location exposes one, currently the `Брама Сну` in the dream tutorial. The closed settlement gate near the bridge is a visible locked exit, but it is not openable yet.
 - `черга`, `скасувати`, `очистити чергу`.
