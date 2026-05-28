@@ -869,68 +869,74 @@ export async function buildChatLogPage(mode: ChatLogMode, window: ChatLogWindow,
 
 async function buildLocationAllPage(requestedPage: number) {
   const startedAt = statusPerfNow();
-  const locations = await prisma.cellLocation.findMany({
-    select: {
-      key: true,
-      name: true,
-      x: true,
-      y: true,
-      z: true,
-      dangerLevel: true,
-      region: { select: { name: true } },
-    },
-    orderBy: [{ z: "asc" }, { y: "desc" }, { x: "asc" }],
-  });
-  const lines = locations.map((l) => `${l.key} — ${l.name} (${l.x},${l.y},${l.z}); danger=${l.dangerLevel}; region=${l.region.name}`);
-  const pages = splitLinesIntoPages(lines.length ? lines : ["немає"], LOCATION_PAGE_MAX_CHARS);
-  const page = Math.max(0, Math.min(requestedPage, pages.length - 1));
-  logStatusPerf("buildLocationAllPage", startedAt, `locations=${locations.length}; pages=${pages.length}`);
+  try {
+    const locations = await prisma.cellLocation.findMany({
+      select: {
+        key: true,
+        name: true,
+        x: true,
+        y: true,
+        z: true,
+        dangerLevel: true,
+        region: { select: { name: true } },
+      },
+      orderBy: [{ z: "asc" }, { y: "desc" }, { x: "asc" }],
+    });
+    const lines = locations.map((l) => `${l.key} — ${l.name} (${l.x},${l.y},${l.z}); danger=${l.dangerLevel}; region=${l.region.name}`);
+    const pages = splitLinesIntoPages(lines.length ? lines : ["немає"], LOCATION_PAGE_MAX_CHARS);
+    const page = Math.max(0, Math.min(requestedPage, pages.length - 1));
+    logStatusPerf("buildLocationAllPage", startedAt, `ok=1; locations=${locations.length}; pages=${pages.length}`);
 
-  return {
-    text: `📍 Усі місцини\nСторінка ${page + 1}/${pages.length}; місцин ${locations.length}\n\n${pages[page].join("\n")}`,
-    keyboard: buildLocationAllPaginationKeyboard(page, pages.length),
-  };
+    return {
+      text: `📍 Усі місцини\nСторінка ${page + 1}/${pages.length}; місцин ${locations.length}\n\n${pages[page].join("\n")}`,
+      keyboard: buildLocationAllPaginationKeyboard(page, pages.length),
+    };
+  } catch (error) {
+    logStatusPerf("buildLocationAllPage", startedAt, "ok=0");
+    throw error;
+  }
 }
 
 export async function buildAllPage(showDead: boolean, requestedPage: number) {
   const startedAt = statusPerfNow();
-  const [players, creatures] = await Promise.all([
-    prisma.player.findMany({
-      select: {
-        id: true,
-        hp: true,
-        stamina: true,
-        hunger: true,
-        isAutoEnabled: true,
-        currentLocation: { select: { name: true, x: true, y: true, z: true } },
-        firstName: true,
-        lastName: true,
-        nickname: true,
-        grammarCaseOverrides: true,
-        pronoun: true,
-        grammaticalGender: true,
-      },
-      orderBy: { id: "asc" },
-    }),
-    prisma.creature.findMany({
-      where: showDead ? undefined : { isAlive: true, isGone: false },
-      select: {
-        id: true,
-        name: true,
-        hp: true,
-        age: true,
-        ageTicks: true,
-        activity: true,
-        currentAction: true,
-        isGone: true,
-        isAlive: true,
-        corpseDecayTicksLeft: true,
-        location: { select: { name: true, x: true, y: true, z: true } },
-        species: { select: { kind: true, key: true, name: true } },
-      },
-      orderBy: { id: "asc" },
-    }),
-  ]);
+  try {
+    const [players, creatures] = await Promise.all([
+      prisma.player.findMany({
+        select: {
+          id: true,
+          hp: true,
+          stamina: true,
+          hunger: true,
+          isAutoEnabled: true,
+          currentLocation: { select: { name: true, x: true, y: true, z: true } },
+          firstName: true,
+          lastName: true,
+          nickname: true,
+          grammarCaseOverrides: true,
+          pronoun: true,
+          grammaticalGender: true,
+        },
+        orderBy: { id: "asc" },
+      }),
+      prisma.creature.findMany({
+        where: showDead ? undefined : { isAlive: true, isGone: false },
+        select: {
+          id: true,
+          name: true,
+          hp: true,
+          age: true,
+          ageTicks: true,
+          activity: true,
+          currentAction: true,
+          isGone: true,
+          isAlive: true,
+          corpseDecayTicksLeft: true,
+          location: { select: { name: true, x: true, y: true, z: true } },
+          species: { select: { kind: true, key: true, name: true } },
+        },
+        orderBy: { id: "asc" },
+      }),
+    ]);
 
   const playerLines = players.map((p) => {
     const loc = p.currentLocation ? `${p.currentLocation.name} (${p.currentLocation.x},${p.currentLocation.y},${p.currentLocation.z})` : "невідомо";
@@ -979,14 +985,18 @@ export async function buildAllPage(showDead: boolean, requestedPage: number) {
     if (match && inPlayers) visiblePlayerIds.push(Number(match[1]));
     if (match && inCreatures && line.includes("[NPC]")) visibleNpcIds.push(Number(match[1]));
   }
-  const mode = showDead ? "усі записи" : "тільки живі; /all dead покаже всі записи";
-  const text = `🧾 Усі персонажі (${mode})\nСторінка ${page + 1}/${pages.length}; гравців ${players.length}, істот ${creatures.length}\n\n${pages[page].join("\n")}`;
-  logStatusPerf("buildAllPage", startedAt, `players=${players.length}; creatures=${creatures.length}; pages=${pages.length}; showDead=${showDead}`);
+    const mode = showDead ? "усі записи" : "тільки живі; /all dead покаже всі записи";
+    const text = `🧾 Усі персонажі (${mode})\nСторінка ${page + 1}/${pages.length}; гравців ${players.length}, істот ${creatures.length}\n\n${pages[page].join("\n")}`;
+    logStatusPerf("buildAllPage", startedAt, `ok=1; players=${players.length}; creatures=${creatures.length}; pages=${pages.length}; showDead=${showDead}`);
 
-  return {
-    text,
-    keyboard: buildAllPaginationKeyboard(showDead, page, pages.length, visiblePlayerIds, visibleNpcIds),
-  };
+    return {
+      text,
+      keyboard: buildAllPaginationKeyboard(showDead, page, pages.length, visiblePlayerIds, visibleNpcIds),
+    };
+  } catch (error) {
+    logStatusPerf("buildAllPage", startedAt, `ok=0; showDead=${showDead}`);
+    throw error;
+  }
 }
 
 export function registerStatusHandlers(bot: Bot) {
