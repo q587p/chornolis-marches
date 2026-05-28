@@ -20,6 +20,7 @@ export type TutorialVoiceComment = {
 
 const TUTORIAL_LOOK_EVENT_TITLE = "Tutorial look";
 const TUTORIAL_PACE_EVENT_TITLE = "Tutorial pace comment";
+const TUTORIAL_GATE_SPEECH_EVENT_TITLE = "Tutorial gate speech comment";
 const TUTORIAL_LOOK_WINDOW_MS = 60_000;
 const TUTORIAL_IDLE_PACE_DELAY_MS = 30_000;
 const TUTORIAL_PACE_BACKOFF_MS = [30_000, 60_000, 120_000, 240_000, 480_000];
@@ -215,6 +216,44 @@ export async function tutorialLookPaceComments(player: TutorialPlayerRef): Promi
 
 export async function tutorialWaitPaceComments(player: TutorialPlayerRef): Promise<TutorialVoiceComment[]> {
   return tutorialPaceComments(player, "wait");
+}
+
+export async function tutorialGateSpeechComment(player: TutorialPlayerRef): Promise<TutorialVoiceComment | null> {
+  const locationId = player.currentLocationId;
+  if (!locationId) return null;
+
+  const location = await prisma.cellLocation.findUnique({
+    where: { id: locationId },
+    select: { key: true, z: true, region: { select: { key: true } } },
+  });
+  if (!location || location.key !== TUTORIAL_GATE_LOCATION_KEY || !isTutorialLocation(location)) return null;
+
+  const seen = await prisma.worldEvent.findFirst({
+    where: {
+      playerId: player.id,
+      locationId,
+      title: TUTORIAL_GATE_SPEECH_EVENT_TITLE,
+    },
+    select: { id: true },
+    orderBy: { createdAt: "desc" },
+  });
+  if (seen) return null;
+
+  await prisma.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: TUTORIAL_GATE_SPEECH_EVENT_TITLE,
+      description: "player opened the tutorial gate by saying the written phrase",
+      playerId: player.id,
+      locationId,
+    },
+  });
+
+  return {
+    speaker: "Сон",
+    title: "Сон озивається",
+    text: "Добре. Порубіжжя не завжди слухає кнопки, але іноді слухає слово, сказане в правильному місці. Запам'ятай це: написи, сліди й чужі репліки теж можуть бути ключами.",
+  };
 }
 
 export async function tutorialIdlePaceComments(player: TutorialIdlePlayerRef, now = new Date()): Promise<TutorialVoiceComment[]> {

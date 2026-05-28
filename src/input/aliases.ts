@@ -23,6 +23,7 @@ export type ParsedAliasCommand =
   | { kind: "time" }
   | { kind: "menu" }
   | { kind: "back" }
+  | { kind: "hide-keyboard" }
   | { kind: "move"; direction: Direction }
   | { kind: "gather"; resourceKey?: GatherKey }
   | { kind: "use-item"; item: UseItemKey }
@@ -207,6 +208,10 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "повернутися": { kind: "back" },
   "до місцини": { kind: "back" },
   "до локації": { kind: "back" },
+  "сховати клавіатуру": { kind: "hide-keyboard" },
+  "прибрати клавіатуру": { kind: "hide-keyboard" },
+  "прибрати кнопки": { kind: "hide-keyboard" },
+  "hide keyboard": { kind: "hide-keyboard" },
 
   gather: { kind: "gather" },
   "збирати": { kind: "gather" },

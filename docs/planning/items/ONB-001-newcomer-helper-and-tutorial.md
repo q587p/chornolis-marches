@@ -28,7 +28,7 @@ The first version should help a new character understand what they can do withou
 - `/sleep tutorial` returns to the saved tutorial position.
 - `/sleep` without arguments routes to the tutorial while the character has not woken from it yet.
 - `Прокинутися` / `/wake` leaves the dream and restores a valid real-world location.
-- `Брама Сну` teaches visible locked exits: a locked south exit is shown, blocked movement gives a reason, and `/open` / `Відкрити` opens the route for a cycling window of about 30 seconds, 1 minute, 2 minutes, 4 minutes, 8 minutes, then back to 30 seconds.
+- `Брама Сну` teaches visible locked exits and attention to written prompts: a locked south exit is shown, blocked movement gives a reason, and `/say Відчинитися` / `Сказати «Відчинитися»` opens the route for a cycling window of about 30 seconds, 1 minute, 2 minutes, 4 minutes, 8 minutes, then back to 30 seconds.
 - `0.12.2` adds two optional hub branches: `Ягідний просвіт сну` for `Роздивитися`, gathering and `Речі`, plus `Теплий присілок сну` for `Відпочити` as a brief stamina rest.
 - `0.12.4` adds a south hub branch: `Плесо часу сну` for `/time`, followed by `Затишок останнього кроку` for beginner safety habits around `/look`, `/rest`, `/me` and waking from the tutorial.
 - `0.12.8` adds `Лисячий просвіт сну`: a side branch that teaches the first scripted observation-learning moment through `Лисячий рух` and a one-time `Слідування трохи покращено` message.

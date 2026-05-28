@@ -758,7 +758,7 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
       }
     }
   }
-  if (feature.type === "GATE" && isDreamGateFeature(feature)) keyboard.text("🚪 Відкрити", "tutorial:openGate").row();
+  if (feature.type === "GATE" && isDreamGateFeature(feature)) keyboard.text("💬 Сказати «Відчинитися»", "tutorial:sayOpenGate").row();
   if (featureData(feature).tutorial_time_prompt === true) keyboard.text("🕯 Час", "time:show").row();
   if (featureData(feature).tutorial_wake_prompt === true) keyboard.text("🌅 Прокинутися", "tutorial:wake").row();
   if (isTorchSourceFeature(feature)) keyboard.text("🕯 Взяти факел", `torch:take:${feature.id}`).row();

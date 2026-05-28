@@ -704,11 +704,11 @@ async function closeExpiredDreamGates(bot?: Bot | null) {
       data: { data: nextData as Prisma.InputJsonValue },
     });
 
-    const message = "Брама Сну стулилася без звуку. Південний шлях знову чекає правильного слова.";
+    const message = "Дрімота торкається Брами Сну, і дошки знову сходяться без звуку. Південний шлях замикається, доки його знову не покличуть.";
     await prisma.worldEvent.create({
       data: {
         type: "NPC_SAY",
-        title: "Брама Сну стулилася",
+        title: "Дрімота замикає Браму Сну",
         description: message,
         locationId: feature.locationId,
       },

@@ -76,6 +76,6 @@
     "/tutorialReset [character] lets scribes clear tutorial completion and reset the saved dream tutorial position to the start.",
     "The player's own /me view should mention when the tutorial dream is not yet complete.",
     "Visible locked exits appear in exit lists and block movement with a reason; queued movement re-checks locks before completion.",
-    "Брама Сну is the first interactive gate: /open / Відкрити opens the south exit with a cycling 30s, 1m, 2m, 4m, 8m window; slow tutorial pace comments use the same reminder rhythm."
+    "Брама Сну is the first interactive gate: /say Відчинитися / Сказати «Відчинитися» opens the south exit with a cycling 30s, 1m, 2m, 4m, 8m window; /open / Відкрити may remain as compatibility aliases; slow tutorial pace comments use the same reminder rhythm."
   ]
 }

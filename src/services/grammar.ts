@@ -12,10 +12,12 @@ export type Gender = "MASCULINE" | "FEMININE" | "NEUTER" | "PLURAL";
 export type Animacy = "ANIMATE" | "INANIMATE";
 
 const INVISIBLE_OR_BIDI = /[\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g;
-const CYRILLIC_NAME = /^[\p{Script=Cyrillic}][\p{Script=Cyrillic}'’\- ]{1,63}$/u;
-const LATIN_NAME = /^[\p{Script=Latin}][\p{Script=Latin}'’\- ]{1,63}$/u;
+const CYRILLIC_NAME = /^[\p{Script=Cyrillic}](?:[\p{Script=Cyrillic}\p{Mark}]|[ '’ʼʻʹ`´\-‐‑‒–](?=[\p{Script=Cyrillic}])){1,63}$/u;
+const LATIN_NAME = /^[A-Za-z](?:[A-Za-z]|[ '’ʼʻʹ`´\-‐‑‒–](?=[A-Za-z])){1,63}$/u;
 const HAS_CYRILLIC = /\p{Script=Cyrillic}/u;
 const HAS_LATIN = /\p{Script=Latin}/u;
+const LATIN_NAME_SEPARATOR = /([ '’ʼʻʹ`´\-‐‑‒–]+)/;
+const LATIN_VOWELS = new Set(["a", "e", "i", "o", "u", "y"]);
 
 const INDECLINABLE_PARTS = new Set([
   "де",
@@ -169,13 +171,127 @@ export function normalizeCharacterName(raw: string) {
     .trim();
 }
 
-export function validateCharacterName(raw: string): { ok: true; value: string; script: "cyrillic" | "latin" } | { ok: false; error: string } {
+function preserveLatinNameCase(original: string, transliterated: string) {
+  if (original === original.toLocaleUpperCase("en-US")) return transliterated.toLocaleUpperCase("uk-UA");
+  if (original[0] === original[0].toLocaleUpperCase("en-US")) {
+    return transliterated[0].toLocaleUpperCase("uk-UA") + transliterated.slice(1);
+  }
+  return transliterated;
+}
+
+function transliterateLatinNameWord(word: string) {
+  const lower = word.toLocaleLowerCase("en-US");
+  let result = "";
+  let index = 0;
+
+  while (index < lower.length) {
+    const rest = lower.slice(index);
+    const previous = index > 0 ? lower[index - 1] : "";
+
+    if (rest.startsWith("shch")) {
+      result += "щ";
+      index += 4;
+    } else if (rest.startsWith("sch")) {
+      result += "щ";
+      index += 3;
+    } else if (rest.startsWith("iia")) {
+      result += "ія";
+      index += 3;
+    } else if ((rest.startsWith("ii") || rest.startsWith("iy")) && index + 2 === lower.length) {
+      result += "ій";
+      index += 2;
+    } else if (rest.startsWith("zh")) {
+      result += "ж";
+      index += 2;
+    } else if (rest.startsWith("kh")) {
+      result += "х";
+      index += 2;
+    } else if (rest.startsWith("ch")) {
+      result += "ч";
+      index += 2;
+    } else if (rest.startsWith("sh")) {
+      result += "ш";
+      index += 2;
+    } else if (rest.startsWith("ts")) {
+      result += "ц";
+      index += 2;
+    } else if (rest.startsWith("ye")) {
+      result += "є";
+      index += 2;
+    } else if (rest.startsWith("yi")) {
+      result += "ї";
+      index += 2;
+    } else if (rest.startsWith("yu")) {
+      result += "ю";
+      index += 2;
+    } else if (rest.startsWith("ya")) {
+      result += "я";
+      index += 2;
+    } else if (rest.startsWith("yo")) {
+      result += "йо";
+      index += 2;
+    } else if (rest.startsWith("iu")) {
+      result += "ю";
+      index += 2;
+    } else if (rest.startsWith("ia") && index + 2 === lower.length) {
+      result += "ія";
+      index += 2;
+    } else {
+      const letter = lower[index];
+      const mapped = ({
+        a: "а",
+        b: "б",
+        c: "к",
+        d: "д",
+        e: "е",
+        f: "ф",
+        g: "ґ",
+        h: "г",
+        i: "і",
+        j: "й",
+        k: "к",
+        l: "л",
+        m: "м",
+        n: "н",
+        o: "о",
+        p: "п",
+        q: "к",
+        r: "р",
+        s: "с",
+        t: "т",
+        u: "у",
+        v: "в",
+        w: "в",
+        x: "кс",
+        y: index === 0 || LATIN_VOWELS.has(previous) ? "й" : "и",
+        z: "з",
+      } as Record<string, string>)[letter] ?? letter;
+      result += mapped;
+      index += 1;
+    }
+  }
+
+  return preserveLatinNameCase(word, result);
+}
+
+function transliterateLatinName(value: string) {
+  return value
+    .split(LATIN_NAME_SEPARATOR)
+    .map((part) => LATIN_NAME_SEPARATOR.test(part) ? part : transliterateLatinNameWord(part))
+    .join("");
+}
+
+export function validateCharacterName(raw: string): { ok: true; value: string; script: "cyrillic" | "latin-translit" } | { ok: false; error: string } {
   const value = normalizeCharacterName(raw);
   if (value.length < 2 || value.length > 64) return { ok: false, error: "Ім’я має бути від 2 до 64 символів." };
-  if (HAS_CYRILLIC.test(value) && HAS_LATIN.test(value)) return { ok: false, error: "Не змішуйте кирилицю та латинку в одному імені." };
   if (CYRILLIC_NAME.test(value)) return { ok: true, value, script: "cyrillic" };
-  if (LATIN_NAME.test(value)) return { ok: true, value, script: "latin" };
-  return { ok: false, error: "Дозволені тільки кирилиця або латинка, пробіл, апостроф і дефіс." };
+  if (HAS_CYRILLIC.test(value) && HAS_LATIN.test(value)) return { ok: false, error: "Не змішуйте кирилицю й латинку в одному імені. Напишіть кирилицею або повністю транслітом." };
+  if (HAS_LATIN.test(value)) {
+    if (!LATIN_NAME.test(value)) return { ok: false, error: "Транслітом можна писати тільки латинські літери, пробіл, дефіс і апостроф в межах імені." };
+    const transliterated = transliterateLatinName(value);
+    if (CYRILLIC_NAME.test(transliterated)) return { ok: true, value: transliterated, script: "latin-translit" };
+  }
+  return { ok: false, error: "Дозволені кирилиця, пробіл, дефіс і апостроф в межах імені. Якщо немає української клавіатури, напишіть ім’я транслітом латинкою." };
 }
 
 export function guessGenderFromPronoun(pronoun?: string | null): Gender {
@@ -205,7 +321,29 @@ function sameForms(value: string): NameForms {
   };
 }
 
-function declineCyrillicSimpleWord(word: string, gender: Gender = "MASCULINE", animacy: Animacy = "ANIMATE"): NameForms {
+function masculineAdjectiveForms(word: string, animacy: Animacy = "ANIMATE") {
+  const lower = word.toLocaleLowerCase("uk-UA");
+  if (!lower.endsWith("ий")) return null;
+
+  const stem = word.slice(0, -2);
+  const genitive = `${stem}ого`;
+  return {
+    nominative: word,
+    genitive: preserveCase(word, genitive),
+    dative: preserveCase(word, `${stem}ому`),
+    accusative: preserveCase(word, animacy === "ANIMATE" ? genitive : word),
+    instrumental: preserveCase(word, `${stem}им`),
+    locative: preserveCase(word, `${stem}ому`),
+    vocative: word,
+  } satisfies NameForms;
+}
+
+function declineCyrillicSimpleWord(
+  word: string,
+  gender: Gender = "MASCULINE",
+  animacy: Animacy = "ANIMATE",
+  options: { descriptor?: boolean } = {}
+): NameForms {
   const lower = word.toLocaleLowerCase("uk-UA");
 
   if (INDECLINABLE_PARTS.has(lower)) return sameForms(word);
@@ -221,6 +359,11 @@ function declineCyrillicSimpleWord(word: string, gender: Gender = "MASCULINE", a
       locative: preserveCase(word, known.locative ?? word),
       vocative: preserveCase(word, known.vocative ?? word),
     };
+  }
+
+  if (options.descriptor && gender === "MASCULINE") {
+    const adjective = masculineAdjectiveForms(word, animacy);
+    if (adjective) return adjective;
   }
 
   if (gender === "FEMININE" || lower.endsWith("а") || lower.endsWith("я")) {
@@ -279,12 +422,17 @@ function joinHyphenatedForms(parts: NameForms[]): NameForms {
   };
 }
 
-function declineCyrillicNamePart(part: string, gender: Gender = "MASCULINE", animacy: Animacy = "ANIMATE"): NameForms {
-  if (!part.includes("-")) return declineCyrillicSimpleWord(part, gender, animacy);
+function declineCyrillicNamePart(
+  part: string,
+  gender: Gender = "MASCULINE",
+  animacy: Animacy = "ANIMATE",
+  options: { descriptor?: boolean } = {}
+): NameForms {
+  if (!part.includes("-")) return declineCyrillicSimpleWord(part, gender, animacy, options);
 
   const forms = part
     .split("-")
-    .map((piece) => declineCyrillicSimpleWord(piece, gender, animacy));
+    .map((piece) => declineCyrillicSimpleWord(piece, gender, animacy, options));
 
   return joinHyphenatedForms(forms);
 }
@@ -307,10 +455,13 @@ export function guessNameForms(name: string, gender: Gender = "MASCULINE", anima
 
   const parts = normalized
     .split(/\s+/)
-    .filter(Boolean)
-    .map((part) => declineCyrillicNamePart(part, gender, animacy));
+    .filter(Boolean);
 
-  return joinWordForms(parts);
+  const declined = parts.map((part, index) =>
+    declineCyrillicNamePart(part, gender, animacy, { descriptor: index < parts.length - 1 })
+  );
+
+  return joinWordForms(declined);
 }
 
 export function speciesForms(species: any): NameForms {

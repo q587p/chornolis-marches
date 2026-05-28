@@ -1,4 +1,4 @@
-import { Bot, InlineKeyboard } from "grammy";
+import { Bot, InlineKeyboard, Keyboard } from "grammy";
 import { prisma } from "../db";
 import { getStartLocationId } from "../services/players";
 import { renderLocationBrief } from "../services/locations";
@@ -14,30 +14,54 @@ import {
   normalizeNameForRegistry,
   preparedNameByKey,
   preparedNameSummary,
+  randomAvailablePreparedName,
   validateCustomCharacterName,
 } from "../services/characterNames";
 
-const CASE_PROMPTS: Array<{ key: keyof NameForms; question: string; prefix?: string }> = [
+type NameFormPrompt = { key: keyof NameForms; question: string; button: string; prefix?: string };
+const CASE_BUTTON_LABELS: Partial<Record<keyof NameForms, string>> = {
+  genitive: "Родовий",
+  dative: "Давальний",
+  accusative: "Знахідний",
+  instrumental: "Орудний",
+  locative: "Місцевий",
+  vocative: "Кличний",
+};
+
+const CASE_PROMPTS = ([
   { key: "genitive", question: "Ім’я в родовому відмінку (Немає КОГО?)" },
   { key: "dative", question: "Ім’я в давальному відмінку (Даю КОМУ?)" },
   { key: "accusative", question: "Ім’я в знахідному відмінку (Бачу КОГО?)" },
   { key: "instrumental", question: "Ім’я в орудному відмінку (Пишаюся КИМ?)" },
   { key: "locative", question: "Ім’я в місцевому відмінку (Стою на КОМУ?)", prefix: "на " },
   { key: "vocative", question: "Ім’я в кличному відмінку (Звертання)" },
+] satisfies Array<Omit<NameFormPrompt, "button">>).map((prompt) => ({
+  ...prompt,
+  button: CASE_BUTTON_LABELS[prompt.key] ?? prompt.question,
+}));
+const NAME_FORM_REVIEW_PROMPTS: NameFormPrompt[] = [
+  { key: "nominative", question: "Ім’я в називному відмінку (Звати мене ЯК?)", button: "Називний" },
+  ...CASE_PROMPTS,
 ];
+const CASE_CONFIRM_BUTTON = "+ (далі)";
 
 type OnboardingState = {
-  step: "nameChoice" | "name" | "case";
+  step: "nameChoice" | "name" | "case" | "caseReview" | "caseEdit";
   telegramId: string;
   pronoun: "HE" | "SHE" | "THEY";
   name?: string;
-  script?: "cyrillic" | "latin";
+  script?: "cyrillic" | "latin-translit";
   forms?: NameForms;
   caseIndex?: number;
+  editCaseKey?: keyof NameForms;
   nameApproved?: boolean;
 };
 
 const onboarding = new Map<string, OnboardingState>();
+
+export function clearOnboardingStateForTelegramId(telegramId: number | string) {
+  return onboarding.delete(String(telegramId));
+}
 
 function pronounKeyboard() {
   return new InlineKeyboard()
@@ -50,6 +74,8 @@ function nameChoiceKeyboard() {
   return new InlineKeyboard()
     .text("Обрати ім'я зі списку", "onboarding:nameChoice:prepared")
     .row()
+    .text("Випадкове ім'я", "onboarding:nameChoice:random")
+    .row()
     .text("Ввести власне ім'я", "onboarding:nameChoice:custom");
 }
 
@@ -58,6 +84,7 @@ function preparedNamesKeyboard(names: Array<{ key: string; forms: NameForms }>) 
   for (const name of names) {
     keyboard.text(name.forms.nominative, `onboarding:name:${name.key}`).row();
   }
+  keyboard.text("Випадкове ім'я", "onboarding:nameChoice:random").row();
   keyboard.text("Ввести власне ім'я", "onboarding:nameChoice:custom");
   return keyboard;
 }
@@ -66,30 +93,130 @@ function casePrompt(forms: NameForms, index: number) {
   const prompt = CASE_PROMPTS[index];
   const suggested = forms[prompt.key];
   const prefix = prompt.prefix ?? "";
-  return `${prompt.question}\n${prefix}[${suggested}]\n\nНадішліть правильну форму або поставте +, щоб залишити запропоновану.`;
+  return `${prompt.question}\n${prefix}[${suggested}]\n\nНадішліть правильну форму або натисніть ${CASE_CONFIRM_BUTTON}, щоб залишити запропоновану.`;
+}
+
+function casePromptReplyMarkup() {
+  return new Keyboard()
+    .text(CASE_CONFIRM_BUTTON)
+    .resized()
+    .oneTime()
+    .persistent(false);
+}
+
+function renderNameFormsReview(forms: NameForms) {
+  return [
+    "Перевірте, як Писарі запишуть ім’я:",
+    "",
+    ...NAME_FORM_REVIEW_PROMPTS.map((prompt) =>
+      `${prompt.question} — ${prompt.prefix ?? ""}${forms[prompt.key]}`
+    ),
+    "",
+    "Якщо все добре, підтвердьте. Якщо ні — виправте конкретний відмінок або почніть ім’я заново.",
+  ].join("\n");
+}
+
+function nameFormsReviewKeyboard() {
+  const keyboard = new InlineKeyboard()
+    .text("✅ Підтвердити ім’я", "onboarding:cases:confirm")
+    .row();
+
+  NAME_FORM_REVIEW_PROMPTS.forEach((prompt, index) => {
+    keyboard.text(`✏️ ${prompt.button}`, `onboarding:cases:edit:${prompt.key}`);
+    if (index % 2 === 1) keyboard.row();
+  });
+
+  keyboard.row().text("🔄 Ім’я заново", "onboarding:cases:restart");
+  return keyboard;
+}
+
+function nameFormPromptByKey(key: keyof NameForms) {
+  return NAME_FORM_REVIEW_PROMPTS.find((prompt) => prompt.key === key);
+}
+
+function isNameFormKey(value: string): value is keyof NameForms {
+  return NAME_FORM_REVIEW_PROMPTS.some((prompt) => prompt.key === value);
+}
+
+function caseEditPrompt(forms: NameForms, key: keyof NameForms) {
+  const prompt = nameFormPromptByKey(key);
+  if (!prompt) return "Надішліть нову форму імені.";
+  return [
+    "Виправте форму імені:",
+    "",
+    prompt.question,
+    `Зараз: ${prompt.prefix ?? ""}${forms[key]}`,
+    "",
+    "Надішліть нову форму одним повідомленням.",
+  ].join("\n");
+}
+
+async function showNameFormsReview(ctx: any, state: OnboardingState) {
+  if (!state.forms) return;
+  state.step = "caseReview";
+  delete state.caseIndex;
+  delete state.editCaseKey;
+  onboarding.set(state.telegramId, state);
+  await ctx.reply(renderNameFormsReview(state.forms), { reply_markup: nameFormsReviewKeyboard() });
 }
 
 async function askOnboarding(ctx: any) {
   await ctx.reply("Ваші займенники:", { reply_markup: pronounKeyboard() });
 }
 
-async function usedCharacterNames() {
-  const players = await prisma.player.findMany({
-    where: { nameNominative: { not: null } },
-    select: { nameNominative: true },
-  });
-  return players.map((player) => player.nameNominative);
+async function usedCharacterNames(options: { exceptTelegramId?: string } = {}) {
+  const [players, creatures] = await Promise.all([
+    prisma.player.findMany({
+      where: {
+        nameNominative: { not: null },
+        ...(options.exceptTelegramId ? { telegramId: { not: options.exceptTelegramId } } : {}),
+      },
+      select: { nameNominative: true },
+    }),
+    prisma.creature.findMany({
+      where: { name: { not: null } },
+      select: { name: true },
+    }),
+  ]);
+  return [
+    ...players.map((player) => player.nameNominative),
+    ...creatures.map((creature) => creature.name),
+  ];
+}
+
+async function isCharacterNameAvailable(name: string, exceptTelegramId?: string) {
+  const used = new Set(
+    (await usedCharacterNames({ exceptTelegramId }))
+      .filter((usedName): usedName is string => Boolean(usedName))
+      .map(normalizeNameForRegistry)
+  );
+  return !used.has(normalizeNameForRegistry(name));
 }
 
 async function askNameChoice(ctx: any) {
   await ctx.reply(
-    "Як вас зватимуть у Чорнолісі?\n\nМожна взяти ім'я зі списку, вже перевірене Писарями, або ввести власне.",
+    "Як вас зватимуть у Порубіжжі?\n\nМожна взяти ім'я зі списку, дозволити Писарям витягти випадкове або ввести власне.",
     { reply_markup: nameChoiceKeyboard() }
   );
 }
 
-async function showPreparedNameChoices(ctx: any) {
-  const names = availablePreparedNames(await usedCharacterNames());
+function renderOnboardingNameConfirmation(player: {
+  nameNominative: string | null;
+  nameGenitive: string | null;
+  nameVocative: string | null;
+}) {
+  const name = player.nameNominative ?? "мандрівнику";
+  const genitive = player.nameGenitive ?? name;
+  const vocative = player.nameVocative ?? name;
+  return `Готово. Порубіжжя запам’ятало ім’я: ${name}.\n\nНаприклад: «Травник звертається до ${genitive}» і «${vocative}, стежка чекає».`;
+}
+
+function renderOnboardingDateHint() {
+  return `Крук озивається з темного гілля:\n«Зараз ${renderCurrentWorldYearLine()} Але тобі це, мабуть, поки нічого не каже.»`;
+}
+
+async function showPreparedNameChoices(ctx: any, pronoun: OnboardingState["pronoun"]) {
+  const names = availablePreparedNames(await usedCharacterNames(), { suggestedGender: guessGenderFromPronoun(pronoun) });
   if (names.length === 0) {
     await ctx.reply(`Усі підготовлені імена вже зайняті або зарезервовані.\n\n${customNameWarningText()}`);
     return;
@@ -166,6 +293,16 @@ async function enterWorld(ctx: any, isMenuRefresh = false) {
 
 async function finishOnboarding(ctx: any, state: OnboardingState) {
   if (!state.name || !state.forms) return;
+  const available = await isCharacterNameAvailable(state.forms.nominative, state.telegramId);
+  if (!available) {
+    onboarding.set(state.telegramId, { step: "nameChoice", telegramId: state.telegramId, pronoun: state.pronoun });
+    await ctx.reply(
+      "Це ім'я вже встигли взяти. Оберіть інше зі списку, натисніть «Випадкове ім'я» або введіть власне.",
+      { reply_markup: nameChoiceKeyboard() }
+    );
+    return;
+  }
+
   const gender = guessGenderFromPronoun(state.pronoun);
   const startLocationId = await getStartLocationId();
 
@@ -194,7 +331,7 @@ async function finishOnboarding(ctx: any, state: OnboardingState) {
   const player = updated.count > 0 ? await prisma.player.findUnique({ where: { telegramId: state.telegramId } }) : null;
   if (!player) {
     onboarding.delete(state.telegramId);
-    await ctx.reply("Персонажа вже немає. Напиши /start, щоб почати онбордінґ знову.");
+    await ctx.reply("Персонажа вже немає. Напиши /start, щоб почати шлях знову.");
     return;
   }
 
@@ -203,12 +340,11 @@ async function finishOnboarding(ctx: any, state: OnboardingState) {
   if (ctx.chat?.id) await syncChatBotCommandsForTelegramId(ctx.api, ctx.chat.id, state.telegramId);
 
   const dream = await enterTutorialDream(player.id, { forceStart: true });
-  await ctx.reply(
-    `Готово. Чорноліс запам’ятав ім’я: ${player.nameNominative}.\n\n${renderCurrentWorldYearLine()}\n\nНаприклад: «Травник звертається до ${player.nameGenitive}» і «${player.nameVocative}, стежка чекає».\n\n${dream.text}`,
-    {
-      reply_markup: await buildMainReplyKeyboardForTelegramId(Number(state.telegramId), false),
-    }
-  );
+  await ctx.reply(renderOnboardingNameConfirmation(player));
+  await ctx.reply(dream.text, {
+    reply_markup: await buildMainReplyKeyboardForTelegramId(Number(state.telegramId), false),
+  });
+  await ctx.reply(renderOnboardingDateHint());
 
   const view = await renderLocationBrief(dream.locationId, player.id);
   await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
@@ -218,6 +354,7 @@ async function handleOnboardingText(ctx: any) {
   const from = ctx.from;
   const text = ctx.message?.text;
   if (!from || !text) return false;
+  if (text.trim().startsWith("/")) return false;
 
   const key = String(from.id);
   const state = onboarding.get(key);
@@ -231,12 +368,7 @@ async function handleOnboardingText(ctx: any) {
     }
 
     const name = normalizeCharacterName(validation.value);
-    const used = new Set(
-      (await usedCharacterNames())
-        .filter((usedName): usedName is string => Boolean(usedName))
-        .map(normalizeNameForRegistry)
-    );
-    if (used.has(normalizeNameForRegistry(name))) {
+    if (!(await isCharacterNameAvailable(name, key))) {
       await ctx.reply("Таке ім'я вже є в літописі Порубіжжя. Оберіть інше або візьміть готове ім'я зі списку.");
       return true;
     }
@@ -248,22 +380,33 @@ async function handleOnboardingText(ctx: any) {
     state.forms = forms;
     state.nameApproved = false;
 
-    if (validation.script === "latin") {
-      await finishOnboarding(ctx, state);
-      return true;
-    }
-
     state.step = "case";
     state.caseIndex = 0;
     onboarding.set(key, state);
-    await ctx.reply(casePrompt(forms, 0));
+    if (validation.script === "latin-translit") {
+      await ctx.reply(`Писарі записали трансліт кирилицею: ${name}.`);
+    }
+    await ctx.reply(casePrompt(forms, 0), { reply_markup: casePromptReplyMarkup() });
     return true;
   }
 
   if (state.step === "nameChoice") {
     const normalized = text.trim().toLocaleLowerCase("uk-UA");
     if (["список", "обрати", "готове", "готові", "готове ім'я", "готові імена"].includes(normalized)) {
-      await showPreparedNameChoices(ctx);
+      await showPreparedNameChoices(ctx, state.pronoun);
+      return true;
+    }
+    if (["випадкове", "випадкове ім'я", "рандом", "навмання"].includes(normalized)) {
+      const prepared = randomAvailablePreparedName(await usedCharacterNames(), { suggestedGender: guessGenderFromPronoun(state.pronoun) });
+      if (!prepared) {
+        await ctx.reply(`Усі підготовлені імена для цього вибору вже зайняті або зарезервовані.\n\n${customNameWarningText()}`);
+        return true;
+      }
+      state.name = prepared.forms.nominative;
+      state.forms = prepared.forms;
+      state.nameApproved = true;
+      onboarding.set(key, state);
+      await finishOnboarding(ctx, state);
       return true;
     }
     if (["власне", "своє", "ввести", "власне ім'я", "своє ім'я"].includes(normalized)) {
@@ -272,7 +415,7 @@ async function handleOnboardingText(ctx: any) {
       await ctx.reply(customNameWarningText());
       return true;
     }
-    await ctx.reply("Оберіть один із варіантів нижче або напишіть «список» чи «власне ім'я».", {
+    await ctx.reply("Оберіть один із варіантів нижче або напишіть «список», «випадкове ім'я» чи «власне ім'я».", {
       reply_markup: nameChoiceKeyboard(),
     });
     return true;
@@ -281,18 +424,32 @@ async function handleOnboardingText(ctx: any) {
   if (state.step === "case" && state.forms) {
     const index = state.caseIndex ?? 0;
     const prompt = CASE_PROMPTS[index];
-    const value = text.trim() === "+" ? state.forms[prompt.key] : normalizeCharacterName(text);
+    const trimmed = text.trim();
+    const value = trimmed === "+" || trimmed === CASE_CONFIRM_BUTTON
+      ? state.forms[prompt.key]
+      : normalizeCharacterName(text);
     state.forms[prompt.key] = value;
 
     const next = index + 1;
     if (next >= CASE_PROMPTS.length) {
-      await finishOnboarding(ctx, state);
+      await showNameFormsReview(ctx, state);
       return true;
     }
 
     state.caseIndex = next;
     onboarding.set(key, state);
-    await ctx.reply(casePrompt(state.forms, next));
+    await ctx.reply(casePrompt(state.forms, next), { reply_markup: casePromptReplyMarkup() });
+    return true;
+  }
+
+  if (state.step === "caseEdit" && state.forms && state.editCaseKey) {
+    state.forms[state.editCaseKey] = normalizeCharacterName(text);
+    await showNameFormsReview(ctx, state);
+    return true;
+  }
+
+  if (state.step === "caseReview" && state.forms) {
+    await ctx.reply(renderNameFormsReview(state.forms), { reply_markup: nameFormsReviewKeyboard() });
     return true;
   }
 
@@ -314,19 +471,69 @@ export function registerStartHandlers(bot: Bot) {
     await askNameChoice(ctx);
   });
 
-  bot.callbackQuery(/^onboarding:nameChoice:(prepared|custom)$/, async (ctx) => {
+  bot.callbackQuery(/^onboarding:nameChoice:(prepared|custom|random)$/, async (ctx) => {
     const key = String(ctx.from.id);
-    const state = onboarding.get(key) ?? { step: "nameChoice" as const, telegramId: key, pronoun: "HE" as const };
+    const state: OnboardingState = onboarding.get(key) ?? { step: "nameChoice", telegramId: key, pronoun: "HE" };
+    const choice = ctx.match[1];
     await ctx.answerCallbackQuery();
 
-    if (ctx.match[1] === "prepared") {
+    if (choice === "prepared") {
       onboarding.set(key, { ...state, step: "nameChoice" });
-      await showPreparedNameChoices(ctx);
+      await showPreparedNameChoices(ctx, state.pronoun);
+      return;
+    }
+
+    if (choice === "random") {
+      const prepared = randomAvailablePreparedName(await usedCharacterNames(), { suggestedGender: guessGenderFromPronoun(state.pronoun) });
+      if (!prepared) {
+        await ctx.reply(`Усі підготовлені імена для цього вибору вже зайняті або зарезервовані.\n\n${customNameWarningText()}`);
+        return;
+      }
+
+      state.name = prepared.forms.nominative;
+      state.forms = prepared.forms;
+      state.nameApproved = true;
+      onboarding.set(key, state);
+      await finishOnboarding(ctx, state);
       return;
     }
 
     onboarding.set(key, { ...state, step: "name" });
     await ctx.reply(customNameWarningText());
+  });
+
+  bot.callbackQuery(/^onboarding:cases:(confirm|restart|edit:([a-z]+))$/, async (ctx) => {
+    const key = String(ctx.from.id);
+    const state = onboarding.get(key);
+    const action = ctx.match[1];
+    const editKey = ctx.match[2];
+    await ctx.answerCallbackQuery();
+
+    if (!state?.forms) {
+      await ctx.reply("Не бачу відмінків для перевірки. Напишіть /start, щоб почати шлях знову.");
+      return;
+    }
+
+    if (action === "confirm") {
+      await finishOnboarding(ctx, state);
+      return;
+    }
+
+    if (action === "restart") {
+      onboarding.set(key, { step: "name", telegramId: key, pronoun: state.pronoun });
+      await ctx.reply(`Добре, введіть ім’я заново.\n\n${customNameWarningText()}`);
+      return;
+    }
+
+    if (!editKey || !isNameFormKey(editKey)) {
+      await ctx.reply("Не впізнаю цей відмінок. Спробуйте вибрати кнопку ще раз.");
+      return;
+    }
+
+    state.step = "caseEdit";
+    state.editCaseKey = editKey;
+    onboarding.set(key, state);
+    await ctx.reply(caseEditPrompt(state.forms, editKey));
   });
 
   bot.callbackQuery(/^onboarding:name:([a-z0-9_-]+)$/, async (ctx) => {
@@ -340,10 +547,10 @@ export function registerStartHandlers(bot: Bot) {
       return;
     }
 
-    const available = availablePreparedNames(await usedCharacterNames()).some((name) => name.key === prepared.key);
+    const available = availablePreparedNames(await usedCharacterNames(), { suggestedGender: guessGenderFromPronoun(state.pronoun) }).some((name) => name.key === prepared.key);
     if (!available) {
       await ctx.reply("Це ім'я вже зайняте або зарезервоване. Оберіть інше зі списку.");
-      await showPreparedNameChoices(ctx);
+      await showPreparedNameChoices(ctx, state.pronoun);
       return;
     }
 

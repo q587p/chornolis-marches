@@ -30,7 +30,7 @@ import { showCharacter, showInventory, showLocationForPlayer } from "./player";
 import { buildAllPage, buildChatLogPage, buildStatBrief, buildWhoPage } from "./status";
 import { renderDepletedVegetationInspection, renderLocationBrief, renderLocationFeatureInteraction } from "../services/locations";
 import { buildNewsIndexPage } from "./news";
-import { hideReplyKeyboard, showMenu } from "./menu";
+import { hideReplyKeyboard, showMainKeyboard, showMenu } from "./menu";
 import { showTime } from "./time";
 import { submitMove as submitCanonicalMove } from "./movement";
 import { submitGather as submitCanonicalGather } from "./gather";
@@ -637,7 +637,8 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "all") return replyWithAll(ctx, parsed.showDead);
     if (parsed.kind === "time") return showTime(ctx);
     if (parsed.kind === "menu") return showMenu(ctx);
-    if (parsed.kind === "back") return hideReplyKeyboard(ctx);
+    if (parsed.kind === "back") return showMainKeyboard(ctx);
+    if (parsed.kind === "hide-keyboard") return hideReplyKeyboard(ctx);
     if (parsed.kind === "inspect-vegetation") return replyWithVegetationInspection(ctx);
     if (parsed.kind === "inspect-border-marker") return replyWithBorderMarkerInspection(ctx);
     if (parsed.kind === "move") return submitCanonicalMove(bot, ctx, parsed.direction, false);

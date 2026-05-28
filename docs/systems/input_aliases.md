@@ -28,14 +28,15 @@ Menu and status:
 - `час`, `/час` -> canonical `/time` view.
 - `новини`, `/новини` -> canonical `/news` view.
 - `допомога`, `/допомога` -> canonical `/help` view.
-- `назад`, `сховати клавіатуру`, `прибрати клавіатуру`, `прибрати кнопки` -> hide the persistent Telegram reply keyboard. `/menu` or `/start` shows buttons again.
+- `назад` / `↩️ Назад` -> leave the secondary menu and return the main reply keyboard.
+- `сховати клавіатуру`, `прибрати клавіатуру`, `прибрати кнопки` -> hide the Telegram reply keyboard. `/menu` or `/start` shows buttons again.
 
 Movement:
 
 - `північ`, `південь`, `схід`, `захід`.
 - `йти на південь`, `рушити на захід`.
 - Short aliases such as `пн`, `пд`, `сх`, `зх` are supported where unambiguous.
-- The persistent reply keyboard may also show available direction buttons directly, such as `⬆️ Північ`, `⬅️ Захід`, `Схід ➡️` and `⬇️ Південь`.
+- The reply keyboard may also show available direction buttons directly, such as `⬆️ Північ`, `⬅️ Захід`, `Схід ➡️` and `⬇️ Південь`.
 
 Actions:
 
@@ -51,7 +52,7 @@ Actions:
 - `відпочити`, `додати відпочинок у чергу`, `перервати відпочинок`.
 - `/sleep tutorial`, `tutorial`, `sleep tutorial`, `навчальний сон`, `сон навчання`, `навчання`, `туторіал`, `пройти навчання`, `повернутися до навчання` -> enter or return to the dream tutorial. While the tutorial is incomplete, plain `/sleep` and `сон` route there too.
 - `/wake`, `wake`, `прокинутися`, `прокинутись` -> leave the dream tutorial and return to the saved real location.
-- `/open`, `open`, `відкрити` -> open the local interactive gate when the current location exposes one, currently the `Брама Сну` in the dream tutorial. The closed settlement gate near the bridge is a visible locked exit, but it is not openable yet.
+- `/say Відчинитися`, `сказати Відчинитися` and the `Сказати «Відчинитися»` gate button -> say the written phrase aloud and open the local `Брама Сну` in the dream tutorial. `/open`, `open` and `відкрити` may remain as compatibility aliases for the same local interactive gate, but the tutorial-facing path should teach speech and attention to signs. The closed settlement gate near the bridge is a visible locked exit, but it is not openable yet.
 - `черга`, `скасувати`, `очистити чергу`.
 - `/track`, `/examine tracks`, `роздивитися сліди`, `придивитися до слідів`. Future detail forms should include target-like aliases such as `роздивитися вовчий слід`, `роздивитися людський слід` and `роздивитися заячий слід`.
 - `сказати Привіт`.

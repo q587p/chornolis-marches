@@ -47,12 +47,12 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
 
   if (state.statusLabel) keyboard.text(state.statusLabel).row();
   if (state.isTutorialDream) {
-    if (state.canOpenDreamGate) keyboard.text("🚪 Відкрити");
+    if (state.canOpenDreamGate) keyboard.text("💬 Сказати «Відчинитися»");
     if (state.canWakeFromTutorial) keyboard.text("🌅 Прокинутися");
     if (state.canOpenDreamGate || state.canWakeFromTutorial) keyboard.row();
   }
 
-  return keyboard.resized().persistent();
+  return keyboard.resized().persistent(false);
 }
 
 function statusButtonLabel(player: { hp: number; hpMax: number | null; stamina: number; staminaMax: number | null }) {
@@ -76,7 +76,7 @@ export function buildMenuReplyKeyboard(options: { canSeeStats?: boolean } = {}) 
     .row()
     .text("🕯 Час")
     .text("↩️ Назад")
-  return keyboard.resized().persistent();
+  return keyboard.resized().persistent(false);
 }
 
 export async function buildMainReplyKeyboardForTelegramId(telegramId: number, isAuto = false) {
