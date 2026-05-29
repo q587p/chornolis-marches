@@ -9,6 +9,26 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.6 - Whisper, reply and shout commands - 12026-05-29
+
+### Added
+
+- Added shared-alias speech commands for `whisper [player] [message]`, `reply <message>` and `shout <message>`.
+- `whisper` sends private local speech to one visible player target while bystanders only see that a whisper happened.
+- `reply` answers the most recent local speech event that addressed the character by name/forms.
+- `shout` sends a wider region-level speech message and spends extra stamina through the existing speech/action queue path.
+
+### Changed
+
+- `/commands`, input-alias docs, `CMD-001` and `docs/planning/next.md` now mark the near-term command pack as shipped through the speech slice.
+- Inventory fire actions such as lighting/dousing torches and adding twigs now send the action result as a separate message before refreshing the inventory view.
+
+### Tests
+
+- Added parser coverage for English and Ukrainian `whisper`, `reply` and `shout` forms.
+
+---
+
 ## 0.13.5 - Enter and leave text navigation - 12026-05-29
 
 ### Added

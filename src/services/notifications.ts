@@ -60,6 +60,23 @@ export async function notifyRegion(bot: Bot, regionId: number, text: string) {
   }
 }
 
+export async function notifyRegionExcept(bot: Bot, regionId: number, exceptPlayerIds: number[], text: string, options: { parseMode?: "HTML" } = {}) {
+  const players = await prisma.player.findMany({
+    where: { currentLocation: { regionId }, id: { notIn: exceptPlayerIds } },
+    select: { telegramId: true },
+  });
+  for (const player of players) {
+    try {
+      await bot.api.sendMessage(player.telegramId, text, {
+        parse_mode: options.parseMode,
+        reply_markup: await mainKeyboardForPlayer(player.telegramId),
+      });
+    } catch (error) {
+      console.warn("Failed to notify region player:", error);
+    }
+  }
+}
+
 export async function notifyRegionScribeAdmins(bot: Bot, regionId: number, text: string) {
   const players = await prisma.player.findMany({
     where: {

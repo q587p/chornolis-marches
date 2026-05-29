@@ -60,6 +60,9 @@ Actions:
 - `/sleep tutorial`, `tutorial`, `sleep tutorial`, `навчальний сон`, `сон навчання`, `навчання`, `туторіал`, `пройти навчання`, `повернутися до навчання` -> enter or return to the dream tutorial. While the tutorial is incomplete, plain `/sleep`, `сон` and `спати` route there too.
 - `/wake`, `wake`, `прокинутися`, `прокинутись` -> leave the dream tutorial and return to the saved real location.
 - `/say Відчинитися`, `сказати Відчинитися`, `говорити Відчинись будь ласка`, `ск Можеш відчинитися`, `сказ Відчинися`, `гов Відкрийся` and the `Сказати «Відчинитися»` gate button -> say the written phrase aloud and open the local `Брама Сну` in the dream tutorial. The dream gate is locked from both sides while closed, so both the gate-side `Південь` and hub-side `Північ` exits should appear parenthesized until speech opens the passage. `/open`, `open` and `відкрити` may remain as compatibility aliases for the same local interactive gate, but the tutorial-facing path should teach speech and attention to signs. The closed settlement gate near the bridge is a visible locked exit, but it is not openable yet.
+- `whisper Данило Тихіше`, `шепнути 1 Тихіше`, `/whisper Данило Тихіше` -> whisper privately to one visible player in the current location. The target receives the text; other nearby players only see that a whisper happened, without the words.
+- `reply Я почув`, `відповісти Я почув` -> answer the last local `SAY` event that addressed your character by name/forms. This keeps a lightweight conversational memory without requiring the speaker to still be visible in the current target list.
+- `shout Сюди`, `гукнути Сюди`, `крикнути Сюди` -> shout across the current region. This uses the speech queue path but spends extra stamina compared with ordinary speech.
 - `черга`, `скасувати`, `очистити чергу`.
 - `/track`, `/examine tracks`, `роздивитися сліди`, `придивитися до слідів`. Future detail forms should include target-like aliases such as `роздивитися вовчий слід`, `роздивитися людський слід` and `роздивитися заячий слід`.
 - `сказати Привіт`.
@@ -111,7 +114,7 @@ The first non-compass navigation slice shipped in 0.13.5:
 - `enter [place]` / `увійти [місце]`;
 - `leave [place]` / `вийти [місце]`.
 
-Remaining near-term command work:
+The speech slice shipped in 0.13.6:
 
 - `whisper [player] [message]` / `шепнути [персонаж] [текст]`;
 - `reply <message>` / `відповісти <текст>`;

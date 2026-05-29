@@ -46,7 +46,7 @@ import { enterTutorialDream, hasCompletedTutorial, openDreamGate, wakeFromTutori
 import { dropObserverText, pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 import { noteKnownMessage } from "../utils/messageTracker";
 import { cookRawMeat, isFreshenedCorpse } from "../services/meat";
-import { creatureForms } from "../services/grammar";
+import { creatureForms, playerForms } from "../services/grammar";
 
 type TextTargetRef = {
   type: "player" | "creature";
@@ -493,6 +493,100 @@ async function submitSay(bot: Bot, ctx: any, text: string) {
   }
 }
 
+async function submitWhisper(bot: Bot, ctx: any, text: string) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const safeText = stripUnsafeText(text);
+  if (!safeText) return void (await ctx.reply("Напиши так: whisper персонаж текст"));
+
+  const durationMs = actionDurationMs("SAY", player.stamina);
+  try {
+    const payload = await parseSpeechTarget(safeText, player.currentLocationId, player.id);
+    if (!payload.targetId) return void (await ctx.reply("Напиши так: whisper персонаж текст. Ціль має бути видимим персонажем поруч."));
+    if (payload.targetType !== "player") return void (await ctx.reply("Шепіт зараз можна спрямувати тільки персонажу поруч."));
+    const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "SAY", payload: { ...payload, mode: "whisper" }, durationMs, chatId: ctx.chat?.id });
+    await sendActionSubmitFeedback(ctx, player.id, result);
+  } catch (error) {
+    await ctx.reply(error instanceof Error ? error.message : "Не вдалося прошепотіти.");
+  }
+}
+
+const REPLY_SPEECH_SPLITTERS = [
+  /\s+сказав\b/u,
+  /\s+сказала\b/u,
+  /\s+сказали\b/u,
+  /\s+відповів\b/u,
+  /\s+відповіла\b/u,
+  /\s+відповіли\b/u,
+];
+
+function speechSpeakerFromTitle(title: string) {
+  for (const splitter of REPLY_SPEECH_SPLITTERS) {
+    const match = title.match(splitter);
+    if (match?.index && match.index > 0) return title.slice(0, match.index).trim();
+  }
+  return "";
+}
+
+async function lastAddressedSpeakerName(player: any) {
+  const forms = playerForms(player);
+  const selfKeys = [forms.nominative, forms.dative, player.firstName, player.username].filter(Boolean).map((value) => normalizeInput(String(value)));
+  const addressedForms = [forms.dative, forms.nominative, player.firstName].filter(Boolean);
+  const events = await prisma.worldEvent.findMany({
+    where: {
+      type: "SAY",
+      locationId: player.currentLocationId,
+      OR: addressedForms.map((form) => ({ title: { contains: String(form) } })),
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: 10,
+  });
+
+  for (const event of events) {
+    const speaker = speechSpeakerFromTitle(event.title);
+    if (!speaker) continue;
+    if (selfKeys.includes(normalizeInput(speaker))) continue;
+    return speaker;
+  }
+  return null;
+}
+
+async function submitReply(bot: Bot, ctx: any, text: string) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const safeText = stripUnsafeText(text);
+  if (!safeText) return void (await ctx.reply("Напиши так: reply текст"));
+
+  const targetName = await lastAddressedSpeakerName(player);
+  if (!targetName) return void (await ctx.reply("Поки немає репліки, на яку можна відповісти. Спробуйте звичайне /say або зверніться до видимого персонажа."));
+
+  const durationMs = actionDurationMs("SAY", player.stamina);
+  try {
+    const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "SAY", payload: { text: safeText, mode: "reply", targetName }, durationMs, chatId: ctx.chat?.id });
+    await sendActionSubmitFeedback(ctx, player.id, result);
+  } catch (error) {
+    await ctx.reply(error instanceof Error ? error.message : "Не вдалося відповісти.");
+  }
+}
+
+async function submitShout(bot: Bot, ctx: any, text: string) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const safeText = stripUnsafeText(text);
+  if (!safeText) return void (await ctx.reply("Напиши так: shout текст"));
+
+  const durationMs = actionDurationMs("SAY", player.stamina) * 2;
+  try {
+    const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "SAY", payload: { text: safeText, mode: "shout" }, durationMs, chatId: ctx.chat?.id });
+    await sendActionSubmitFeedback(ctx, player.id, result);
+  } catch (error) {
+    await ctx.reply(error instanceof Error ? error.message : "Не вдалося гукнути.");
+  }
+}
+
 function validateTargetAction(action: TargetAction, target: ResolvedTarget) {
   if (action === "greet" && !target.canGreet) return "Ця ціль не відповість на привітання.";
   if (action === "attack" && !target.canAttack) {
@@ -766,6 +860,9 @@ export function registerAliasHandlers(bot: Bot) {
       return ctx.reply(await addTwigsToCampfire(player.id));
     }
     if (parsed.kind === "say") return submitSay(bot, ctx, parsed.text);
+    if (parsed.kind === "whisper") return submitWhisper(bot, ctx, parsed.text);
+    if (parsed.kind === "reply") return submitReply(bot, ctx, parsed.text);
+    if (parsed.kind === "shout") return submitShout(bot, ctx, parsed.text);
     if (parsed.kind === "target-action") return submitTargetAction(bot, ctx, parsed.action, parsed.target);
     if (parsed.kind === "pickup-target") return submitPickupTarget(bot, ctx, parsed.target);
     if (parsed.kind === "social-signal") return submitSocialSignal(bot, ctx, parsed.signal, parsed.target);

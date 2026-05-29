@@ -47,6 +47,9 @@ export type ParsedAliasCommand =
   | { kind: "add-twigs-campfire" }
   | { kind: "cook-meat" }
   | { kind: "say"; text: string }
+  | { kind: "whisper"; text: string }
+  | { kind: "reply"; text: string }
+  | { kind: "shout"; text: string }
   | { kind: "target-action"; action: TargetAction; target: string }
   | { kind: "pickup-target"; target: string }
   | { kind: "social-signal"; signal: SocialSignalAlias; target: string };
@@ -508,6 +511,31 @@ function parseSay(raw: string, text: string): ParsedAliasCommand | null {
   return said ? { kind: "say", text: said } : null;
 }
 
+function parseDirectedSpeech(raw: string, text: string): ParsedAliasCommand | null {
+  const whisper = text.match(/^\/?(?:whisper|шепнути|прошепотіти|шеп)\s+(.+)$/);
+  if (whisper?.[1]?.trim()) {
+    const rawMatch = raw.match(/^\/?(?:whisper|шепнути|прошепотіти|шеп)\s+(.+)$/i);
+    const speech = (rawMatch?.[1] ?? whisper[1]).trim().slice(0, 300);
+    return speech ? { kind: "whisper", text: speech } : null;
+  }
+
+  const reply = text.match(/^\/?(?:reply|відповісти|відповідь)\s+(.+)$/);
+  if (reply?.[1]?.trim()) {
+    const rawMatch = raw.match(/^\/?(?:reply|відповісти|відповідь)\s+(.+)$/i);
+    const speech = (rawMatch?.[1] ?? reply[1]).trim().slice(0, 300);
+    return speech ? { kind: "reply", text: speech } : null;
+  }
+
+  const shout = text.match(/^\/?(?:shout|yell|крикнути|гукнути|гук)\s+(.+)$/);
+  if (shout?.[1]?.trim()) {
+    const rawMatch = raw.match(/^\/?(?:shout|yell|крикнути|гукнути|гук)\s+(.+)$/i);
+    const speech = (rawMatch?.[1] ?? shout[1]).trim().slice(0, 300);
+    return speech ? { kind: "shout", text: speech } : null;
+  }
+
+  return null;
+}
+
 function parseChat(text: string): ParsedAliasCommand | null {
   const match = text.match(/^chat(?:\s+(.+))?$/);
   if (!match) return null;
@@ -621,6 +649,9 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
   const text = normalizeInput(raw);
   if (!text) return null;
   const commandText = withoutLeadingSlash(text);
+
+  const directedSpeech = parseDirectedSpeech(raw, text);
+  if (directedSpeech) return directedSpeech;
 
   const say = parseSay(raw, text);
   if (say) return say;

@@ -3,7 +3,7 @@ ADM-001,"Admin permissions, moderation and restricted reset",backlog,feature,adm
 ADM-001-A,Dangerous scribe tool audit,next,technical,admin,medium,"admin,audit,safety",docs/planning/items/ADM-001-A.md
 ADM-001-B,Scribe action audit helper,next,technical,admin,medium,"admin,audit,world-events",docs/planning/items/ADM-001-B.md
 CAL-001,"Calendar, moon phases and named years",icebox,system,world_time,medium,"calendar,world-time,moon-phases,seasons,folklore,atmosphere",docs/planning/items/CAL-001_calendar_moon_phases_and_named_years.md
-CMD-001,Near-term text command pack,next,feature,commands,high,"commands,aliases,mud,speech,navigation",docs/planning/items/CMD-001-near-term-text-command-pack.md
+CMD-001,Near-term text command pack,testing,feature,commands,high,"commands,aliases,mud,speech,navigation",docs/planning/items/CMD-001-near-term-text-command-pack.md
 COMBAT-001,Creature aggression and defense,backlog,feature,combat,medium,"animals,combat,predators,ecology",docs/planning/items/COMBAT-001-creature-aggression-and-defense.md
 ECO-001,Reproduction and herbivore overpopulation,testing,feature,ecology,high,"ecology,reproduction,herbivores,rabbits,resources,world-reactivity",docs/planning/items/ECO-001-reproduction-and-overpopulation.md
 ECON-001,Barter and trade,backlog,feature,economy,medium,"barter,trade,npc,economy",docs/planning/items/ECON-001-barter-and-trade.md

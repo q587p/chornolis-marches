@@ -112,6 +112,13 @@ assertAlias("говорити Відчинись будь ласка", { kind: "
 assertAlias("ск Можеш відчинитися", { kind: "say", text: "Можеш відчинитися" });
 assertAlias("/сказ Відчинися", { kind: "say", text: "Відчинися" });
 assertAlias("гов Відкрийся", { kind: "say", text: "Відкрийся" });
+assertAlias("whisper Данило Тихіше, там щось є.", { kind: "whisper", text: "Данило Тихіше, там щось є." });
+assertAlias("/шепнути Велика Оля Не руш.", { kind: "whisper", text: "Велика Оля Не руш." });
+assertAlias("reply Я почув.", { kind: "reply", text: "Я почув." });
+assertAlias("/відповісти Йду за тобою.", { kind: "reply", text: "Йду за тобою." });
+assertAlias("shout Сюди!", { kind: "shout", text: "Сюди!" });
+assertAlias("гукнути Хто там?", { kind: "shout", text: "Хто там?" });
+assertAlias("крикнути Стій!", { kind: "shout", text: "Стій!" });
 assert.equal(isDreamGateOpeningPhrase("Відчинитися"), true);
 assert.equal(isDreamGateOpeningPhrase("Відчинись будь ласка"), true);
 assert.equal(isDreamGateOpeningPhrase("Можеш відчинитися?"), true);

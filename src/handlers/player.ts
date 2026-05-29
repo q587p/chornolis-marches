@@ -121,6 +121,17 @@ function buildInventoryKeyboard(resources: any[] = [], options: { canAddTwigs?: 
   return keyboard.text("↩️ Назад", "character:back");
 }
 
+async function refreshInventoryMessage(ctx: any) {
+  const view = await renderInventoryView(ctx.from.id);
+  if (!view) return;
+
+  try {
+    await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
+  } catch {
+    await ctx.reply(view.text, { reply_markup: view.keyboard });
+  }
+}
+
 function nameCasesText(player: any) {
   return [
     player.nameNominative,
@@ -346,14 +357,7 @@ export function registerPlayerHandlers(bot: Bot) {
     try {
       const resultText = await useInventoryResource(player.id, resourceKey);
       await ctx.reply(resultText);
-      const view = await renderInventoryView(ctx.from.id);
-      if (!view) return;
-
-      try {
-        await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
-      } catch {
-        await ctx.reply(view.text, { reply_markup: view.keyboard });
-      }
+      await refreshInventoryMessage(ctx);
     } catch (error) {
       await ctx.reply(error instanceof Error ? error.message : "Не вдалося використати це.");
     }
@@ -367,14 +371,7 @@ export function registerPlayerHandlers(bot: Bot) {
     try {
       const resultText = await cookRawMeat(player.id);
       await ctx.reply(resultText);
-      const view = await renderInventoryView(ctx.from.id);
-      if (!view) return;
-
-      try {
-        await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
-      } catch {
-        await ctx.reply(view.text, { reply_markup: view.keyboard });
-      }
+      await refreshInventoryMessage(ctx);
     } catch (error) {
       await ctx.reply(error instanceof Error ? error.message : "Не вдалося підсмажити м'ясо.");
     }
@@ -386,13 +383,8 @@ export function registerPlayerHandlers(bot: Bot) {
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
     const resultText = await lightPlayerTorchFromInventory(player.id);
-    const view = await renderInventoryView(ctx.from.id);
-    const text = view ? `${resultText}\n\n${view.text}` : resultText;
-    try {
-      await ctx.editMessageText(text, view ? { reply_markup: view.keyboard } : undefined);
-    } catch {
-      await ctx.reply(text, view ? { reply_markup: view.keyboard } : undefined);
-    }
+    await ctx.reply(resultText);
+    await refreshInventoryMessage(ctx);
   });
 
   bot.callbackQuery("inventory:douse:torch", async (ctx) => {
@@ -401,13 +393,8 @@ export function registerPlayerHandlers(bot: Bot) {
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
     const resultText = await dousePlayerTorchFromInventory(player.id);
-    const view = await renderInventoryView(ctx.from.id);
-    const text = view ? `${resultText}\n\n${view.text}` : resultText;
-    try {
-      await ctx.editMessageText(text, view ? { reply_markup: view.keyboard } : undefined);
-    } catch {
-      await ctx.reply(text, view ? { reply_markup: view.keyboard } : undefined);
-    }
+    await ctx.reply(resultText);
+    await refreshInventoryMessage(ctx);
   });
 
   bot.callbackQuery("inventory:add-twigs", async (ctx) => {
@@ -416,13 +403,8 @@ export function registerPlayerHandlers(bot: Bot) {
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
     const resultText = await addTwigsToCampfire(player.id);
-    const view = await renderInventoryView(ctx.from.id);
-    const text = view ? `${resultText}\n\n${view.text}` : resultText;
-    try {
-      await ctx.editMessageText(text, view ? { reply_markup: view.keyboard } : undefined);
-    } catch {
-      await ctx.reply(text, view ? { reply_markup: view.keyboard } : undefined);
-    }
+    await ctx.reply(resultText);
+    await refreshInventoryMessage(ctx);
   });
 
   bot.callbackQuery(/^inventory:inspect:([A-Za-z0-9_-]+)$/, async (ctx) => {
