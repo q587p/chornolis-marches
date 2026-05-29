@@ -116,9 +116,11 @@ export async function spendPlayerStamina(bot: Bot, playerId: number, type: World
 
   const messages = thresholdMessages(before, after, max, tookHp);
   if (chatId && messages.length) {
+    const refreshedKeyboard = Number.isSafeInteger(Number(player.telegramId))
+      ? await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), Boolean(player.isAutoEnabled))
+      : undefined;
     for (const message of messages) {
-      const shouldSuggestRest = message.includes("втом") || message.includes("Виснаження");
-      await bot.api.sendMessage(chatId, message, shouldSuggestRest ? { reply_markup: buildFatigueRestKeyboard() } : undefined);
+      await bot.api.sendMessage(chatId, message, refreshedKeyboard ? { reply_markup: refreshedKeyboard } : undefined);
     }
   }
 }
@@ -217,16 +219,12 @@ export async function recoverStamina(bot: Bot) {
 
     const chatId = Number(player.telegramId);
     if (Number.isSafeInteger(chatId)) {
+      const refreshedKeyboard = await buildMainReplyKeyboardForTelegramId(chatId, Boolean(player.isAutoEnabled));
       for (const message of messages) {
-        const shouldSuggestRest = message.includes("втом") || message.includes("Виснаження") || message.includes("слаб");
         await bot.api.sendMessage(
           chatId,
           message,
-          shouldSuggestRest
-            ? { reply_markup: buildFatigueRestKeyboard() }
-            : fullyRested && player.isResting
-              ? { reply_markup: await buildMainReplyKeyboardForTelegramId(chatId, true) }
-              : undefined
+          { reply_markup: refreshedKeyboard }
         );
       }
 
@@ -234,7 +232,7 @@ export async function recoverStamina(bot: Bot) {
         await bot.api.sendMessage(
           chatId,
           `Сон стиха каже:\n${quoteBlock(TUTORIAL_REST_FULL_COMMENT)}`,
-          { parse_mode: "HTML", reply_markup: await buildMainReplyKeyboardForTelegramId(chatId, true) }
+          { parse_mode: "HTML", reply_markup: refreshedKeyboard }
         );
       }
     }
