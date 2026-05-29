@@ -210,7 +210,7 @@ function renderOnboardingNameConfirmation(player: {
   const name = player.nameNominative ?? "мандрівнику";
   const genitive = player.nameGenitive ?? name;
   const vocative = player.nameVocative ?? name;
-  return `Готово. Порубіжжя запам’ятало ім’я: ${name}.\n\nНаприклад: «Травник звертається до ${genitive}» і «${vocative}, стежка чекає».`;
+  return `Готово. Порубіжжя запам’ятало ім’я: <b>${escapeHtml(name)}</b>.\n\nНаприклад: «Травник звертається до <b>${escapeHtml(genitive)}</b>» і «<b>${escapeHtml(vocative)}</b>, стежка чекає».`;
 }
 
 function renderOnboardingDateHint() {
@@ -357,7 +357,7 @@ async function finishOnboarding(ctx: any, state: OnboardingState) {
   if (ctx.chat?.id) await syncChatBotCommandsForTelegramId(ctx.api, ctx.chat.id, state.telegramId);
 
   const dream = await enterTutorialDream(player.id, { forceStart: true });
-  await ctx.reply(renderOnboardingNameConfirmation(player));
+  await ctx.reply(renderOnboardingNameConfirmation(player), HTML_OPTIONS);
   await ctx.reply(dream.text, {
     reply_markup: await buildMainReplyKeyboardForTelegramId(Number(state.telegramId), false),
   });
