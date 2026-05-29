@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 
 require("ts-node/register");
 
-const { postureActionLabelsForState } = require("../../src/ui/replyKeyboard");
+const { buildTutorialSecondStepReplyKeyboard, postureActionLabelsForState } = require("../../src/ui/replyKeyboard");
 const { formatObservedPostureText, formatPostureText } = require("../../src/utils/playerText");
 
 assert.equal(formatPostureText({ posture: "STANDING", isResting: false }), "Ви стоїте.");
@@ -19,5 +19,15 @@ assert.deepEqual(postureActionLabelsForState({ posture: "SITTING", isResting: tr
 
 // Rest completion and rest interruption both clear isResting but leave posture sitting.
 assert.deepEqual(postureActionLabelsForState({ posture: "SITTING", isResting: false }), ["Встати", "🧘 Відпочити"]);
+
+const tutorialSecondStepButtons = buildTutorialSecondStepReplyKeyboard().keyboard.map((row) => row.map((button) => button.text));
+assert.deepEqual(tutorialSecondStepButtons, [
+  ["👀 Озирнутися"],
+  ["⬆️ Північ", "⬇️ Південь"],
+]);
+assert.equal(tutorialSecondStepButtons.flat().includes("🎒 Речі"), false);
+assert.equal(tutorialSecondStepButtons.flat().includes("🔎 Роздивитися"), false);
+assert.equal(tutorialSecondStepButtons.flat().includes("🧭 Допомога"), false);
+assert.equal(tutorialSecondStepButtons.flat().includes("☰ Меню"), false);
 
 console.log("Posture helpers OK");
