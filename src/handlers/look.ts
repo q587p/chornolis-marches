@@ -1,7 +1,7 @@
 import { Bot } from "grammy";
 import { actionDurationMs, performOrQueuePlayerAction } from "../services/actionQueue";
 import { getPlayerByTelegramId } from "../services/players";
-import { lightLocationCampfire, renderDepletedVegetationInspection, renderLocationBrief, renderLocationDetails, renderLocationFeatureInteraction, takeTorchFromLocationFeature } from "../services/locations";
+import { lightLocationCampfire, renderDepletedVegetationInspection, renderLocationBrief, renderLocationDetails, renderLocationFeatureInteraction, renderLocationFeatureInteractionByQuery, takeTorchFromLocationFeature } from "../services/locations";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { durationSecondsSuffix } from "../utils/durationText";
@@ -9,20 +9,41 @@ import { addTwigsToCampfire, lightPlayerTorchAtCampfire } from "../services/fire
 import { pickUpGroundResource } from "../services/groundItems";
 import { pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 import { escapeHtml } from "../utils/text";
+import { canEditCallbackMessage, noteKnownMessage } from "../utils/messageTracker";
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
 }
 
+async function replyAndTrack(ctx: any, text: string, options?: any) {
+  const message = await ctx.reply(text, options);
+  noteKnownMessage(message);
+  return message;
+}
+
+async function editCallbackMessageOrReply(ctx: any, text: string, options?: any) {
+  if (canEditCallbackMessage(ctx)) {
+    try {
+      await ctx.editMessageText(text, options);
+      noteKnownMessage(ctx.callbackQuery?.message);
+      return;
+    } catch {
+      // Fall back to a new message if Telegram cannot edit the source message.
+    }
+  }
+
+  await replyAndTrack(ctx, text, options);
+}
+
 async function sendVoiceQuoteMessages(ctx: any, messages?: Array<{ title: string; text: string }>) {
   for (const message of messages ?? []) {
-    await ctx.reply(`${escapeHtml(message.title)}:\n${quoteBlock(message.text)}`, { parse_mode: "HTML" });
+    await replyAndTrack(ctx, `${escapeHtml(message.title)}:\n${quoteBlock(message.text)}`, { parse_mode: "HTML" });
   }
 }
 
 async function sendHtmlFollowupMessages(ctx: any, messages?: Array<{ text: string }>) {
   for (const message of messages ?? []) {
-    await ctx.reply(message.text, { parse_mode: "HTML" });
+    await replyAndTrack(ctx, message.text, { parse_mode: "HTML" });
   }
 }
 
@@ -66,6 +87,16 @@ export function registerLookHandlers(bot: Bot) {
 
     const player = await getPlayerByTelegramId(from.id);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+    if (arg && player.currentLocationId) {
+      const view = await renderLocationFeatureInteractionByQuery(player.currentLocationId, player.id, arg);
+      if (view) {
+        await replyAndTrack(ctx, view.text, { reply_markup: view.keyboard });
+        await sendVoiceQuoteMessages(ctx, "quoteMessages" in view ? (view as any).quoteMessages : undefined);
+        await sendHtmlFollowupMessages(ctx, "followupMessages" in view ? (view as any).followupMessages : undefined);
+        return;
+      }
+    }
 
     const durationMs = actionDurationMs("LOOK", player.stamina);
     try {
@@ -112,11 +143,7 @@ export function registerLookHandlers(bot: Bot) {
 
     const view = await renderLocationDetails(player.currentLocationId, player.id);
     await safeAnswerCallbackQuery(ctx);
-    try {
-      await ctx.editMessageText(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
-    } catch {
-      await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
-    }
+    await editCallbackMessageOrReply(ctx, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
   });
 
   bot.callbackQuery("location:brief", async (ctx) => {
@@ -128,11 +155,7 @@ export function registerLookHandlers(bot: Bot) {
 
     const view = await renderLocationBrief(player.currentLocationId, player.id);
     await safeAnswerCallbackQuery(ctx);
-    try {
-      await ctx.editMessageText(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
-    } catch {
-      await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
-    }
+    await editCallbackMessageOrReply(ctx, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
   });
 
   bot.callbackQuery("targetPage:noop", async (ctx) => {
@@ -154,11 +177,7 @@ export function registerLookHandlers(bot: Bot) {
         : await renderLocationDetails(player.currentLocationId, player.id, { targetPage: page });
 
     await safeAnswerCallbackQuery(ctx);
-    try {
-      await ctx.editMessageText(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
-    } catch {
-      await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
-    }
+    await editCallbackMessageOrReply(ctx, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
   });
 
 
@@ -173,11 +192,7 @@ export function registerLookHandlers(bot: Bot) {
     await safeAnswerCallbackQuery(ctx);
     if (!view) return void (await ctx.reply("Цього вже не видно поруч."));
 
-    try {
-      await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
-    } catch {
-      await ctx.reply(view.text, { reply_markup: view.keyboard });
-    }
+    await editCallbackMessageOrReply(ctx, view.text, { reply_markup: view.keyboard });
     await sendVoiceQuoteMessages(ctx, "quoteMessages" in view ? view.quoteMessages : undefined);
     await sendHtmlFollowupMessages(ctx, "followupMessages" in view ? view.followupMessages : undefined);
   });

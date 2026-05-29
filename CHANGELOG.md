@@ -30,6 +30,9 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Gather result text and the tutorial foraging hint now make stamina spending explicit, and the inventory hint clarifies that the inventory button appears after the first gather only if it is not already available.
 - Text commands such as `take herbs`, `get mushrooms`, `підібрати ягоди` and `взяти трави` now route to gathering instead of trying to resolve those resources as nearby targets.
 - Location feature section headings are now bolded in Telegram location views for easier scanning.
+- Interactive location features can now be inspected by text, such as `look bench`, `/examine лавка` or `оглянути лавку`, with fallback to ordinary visible targets when no feature matches.
+- Feature callbacks now avoid editing an older feature message after the same flow has sent newer follow-up voice/tutorial messages.
+- The tutorial rest-seat feature was renamed from `Лавка короткого перепочинку` to the shorter `Зручна лавка`.
 
 ### Tests
 

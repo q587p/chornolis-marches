@@ -181,6 +181,44 @@ function isInteractiveFeature(feature: any) {
   return feature.isActive && (isDepletedVegetationFeature(feature) || ["BORDER_MARKER", "CAMPFIRE", "MAGIC_CAMPFIRE", "GATE", "LANDMARK"].includes(feature.type));
 }
 
+function normalizeFeatureQuery(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s_-]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function featureSearchKeys(feature: any) {
+  const data = featureData(feature);
+  const aliases = Array.isArray(data.aliases) ? data.aliases : [];
+  return [
+    feature.name,
+    feature.key,
+    feature.type,
+    ...aliases,
+  ]
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .map(normalizeFeatureQuery)
+    .filter(Boolean);
+}
+
+async function resolveInteractiveLocationFeature(locationId: number, query: string) {
+  const normalized = normalizeFeatureQuery(query);
+  if (!normalized) return null;
+
+  const features = (await prisma.locationFeature.findMany({
+    where: { locationId, isActive: true },
+    orderBy: { id: "asc" },
+  })).filter(isInteractiveFeature);
+
+  const exact = features.filter((feature) => featureSearchKeys(feature).some((key) => key === normalized));
+  if (exact.length) return exact[0];
+
+  const fuzzy = features.filter((feature) => featureSearchKeys(feature).some((key) => key.includes(normalized) || normalized.includes(key)));
+  return fuzzy[0] ?? null;
+}
+
 function isTutorialPromptFeature(feature: any) {
   const data = featureData(feature);
   return data.tutorial_wake_prompt === true || data.tutorial_time_prompt === true || data.tutorial_safety_prompt === true || data.tutorial_observation_prompt === true;
@@ -844,6 +882,12 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
   if (isTorchSourceFeature(feature)) keyboard.text("🕯 Взяти факел", `torch:take:${feature.id}`).row();
   keyboard.text("↩️ Назад", `location:${returnMode}`);
   return { text, keyboard, quoteMessages, followupMessages };
+}
+
+export async function renderLocationFeatureInteractionByQuery(locationId: number, viewerPlayerId: number, query: string, returnMode: LocationViewMode = "details") {
+  const feature = await resolveInteractiveLocationFeature(locationId, query);
+  if (!feature) return null;
+  return renderLocationFeatureInteraction(feature.id, viewerPlayerId, returnMode);
 }
 
 export async function lightLocationCampfire(featureId: number, viewerPlayerId: number) {

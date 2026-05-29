@@ -2,7 +2,7 @@ import { Bot, InlineKeyboard } from "grammy";
 import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA, HEALTH_REGEN_PER_INTERVAL, PASSIVE_HEALTH_REGEN_INTERVAL_MS, PASSIVE_STAMINA_REGEN_PER_INTERVAL, PLAYER_HUNGER_MAX, REST_HEALTH_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_PER_INTERVAL, STAMINA_REGEN_INTERVAL_MS } from "../gameConfig";
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
-import { renderLocationBrief } from "../services/locations";
+import { renderLocationBrief, renderLocationFeatureInteractionByQuery } from "../services/locations";
 import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
 import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } from "./auto";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
@@ -26,6 +26,7 @@ import { dropInventoryResourceDetailed, inspectInventoryResource, useInventoryRe
 import { dropObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 import { tutorialLookPaceComments } from "../services/tutorialVoices";
 import { escapeHtml } from "../utils/text";
+import { noteKnownMessage } from "../utils/messageTracker";
 import { hasCompletedTutorial, isTutorialLocation } from "../services/tutorial";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "../services/locationFeatures";
 
@@ -162,6 +163,15 @@ function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
 }
 
+async function sendFeatureFollowups(reply: (text: string, options?: any) => Promise<unknown>, view: any) {
+  for (const message of view.quoteMessages ?? []) {
+    noteKnownMessage(await reply(`${escapeHtml(message.title)}:\n${quoteBlock(message.text)}`, { parse_mode: "HTML" }));
+  }
+  for (const message of view.followupMessages ?? []) {
+    noteKnownMessage(await reply(message.text, { parse_mode: "HTML" }));
+  }
+}
+
 async function actionOriginStats(playerId: number) {
   const [autoActions, allActions] = await Promise.all([
     prisma.worldAction.count({ where: { actorType: "PLAYER", playerId, note: { startsWith: "auto:" } } }),
@@ -273,10 +283,10 @@ export async function showLocationForPlayer(telegramId: number, reply: (text: st
 
   const locationId = player.currentLocationId ?? (await getStartLocationId());
   const view = await renderLocationBrief(locationId, player.id);
-  await reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+  noteKnownMessage(await reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard }));
   const voiceComments = await tutorialLookPaceComments({ ...player, currentLocationId: locationId });
   for (const comment of voiceComments) {
-    await reply(`${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
+    noteKnownMessage(await reply(`${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }));
   }
 }
 
@@ -497,6 +507,18 @@ export function registerPlayerHandlers(bot: Bot) {
 
   bot.command(["look", "location", "loc"], async (ctx) => {
     if (!ctx.from) return;
+    const arg = String(ctx.match || "").trim();
+    if (arg) {
+      const player = await getPlayerByTelegramId(ctx.from.id);
+      if (!player?.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start", { reply_markup: buildMainReplyKeyboard(false) }));
+
+      const view = await renderLocationFeatureInteractionByQuery(player.currentLocationId, player.id, arg, "brief");
+      if (view) {
+        noteKnownMessage(await ctx.reply(view.text, { reply_markup: view.keyboard }));
+        await sendFeatureFollowups((text, options) => ctx.reply(text, options), view);
+        return;
+      }
+    }
     await showLocationForPlayer(ctx.from.id, (text, options) => ctx.reply(text, options));
   });
 

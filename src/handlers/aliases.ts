@@ -28,7 +28,7 @@ import { sendHelp } from "./help";
 import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } from "./auto";
 import { showCharacter, showInventory, showLocationForPlayer } from "./player";
 import { buildAllPage, buildChatLogPage, buildStatBrief, buildWhoPage } from "./status";
-import { renderDepletedVegetationInspection, renderLocationBrief, renderLocationFeatureInteraction } from "../services/locations";
+import { renderDepletedVegetationInspection, renderLocationBrief, renderLocationFeatureInteraction, renderLocationFeatureInteractionByQuery } from "../services/locations";
 import { buildNewsIndexPage } from "./news";
 import { hideReplyKeyboard, showMainKeyboard, showMenu } from "./menu";
 import { showTime } from "./time";
@@ -43,6 +43,7 @@ import { parseSpeechTarget } from "../services/speechTargets";
 import { dropInventoryResourceDetailed, inspectInventoryResource, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
 import { enterTutorialDream, hasCompletedTutorial, openDreamGate, wakeFromTutorialDream } from "../services/tutorial";
 import { dropObserverText, pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
+import { noteKnownMessage } from "../utils/messageTracker";
 
 type TextTargetRef = {
   type: "player" | "creature";
@@ -59,10 +60,10 @@ function quoteBlock(text: string) {
 
 async function sendFeatureFollowups(ctx: any, view: any) {
   for (const message of view.quoteMessages ?? []) {
-    await ctx.reply(`${escapeHtml(message.title)}:\n${quoteBlock(message.text)}`, { parse_mode: "HTML" });
+    noteKnownMessage(await ctx.reply(`${escapeHtml(message.title)}:\n${quoteBlock(message.text)}`, { parse_mode: "HTML" }));
   }
   for (const message of view.followupMessages ?? []) {
-    await ctx.reply(message.text, { parse_mode: "HTML" });
+    noteKnownMessage(await ctx.reply(message.text, { parse_mode: "HTML" }));
   }
 }
 
@@ -236,7 +237,18 @@ async function replyWithBorderMarkerInspection(ctx: any) {
 
   const view = await renderLocationFeatureInteraction(feature.id, player.id);
   if (!view) return void (await ctx.reply("Тут не видно межового знака, який можна роздивитися."));
-  await ctx.reply(view.text, { reply_markup: view.keyboard });
+  noteKnownMessage(await ctx.reply(view.text, { reply_markup: view.keyboard }));
+  await sendFeatureFollowups(ctx, view);
+}
+
+async function submitFeatureInspection(bot: Bot, ctx: any, targetQuery: string) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player?.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const view = await renderLocationFeatureInteractionByQuery(player.currentLocationId, player.id, targetQuery);
+  if (!view) return submitTargetAction(bot, ctx, "inspect", targetQuery);
+
+  noteKnownMessage(await ctx.reply(view.text, { reply_markup: view.keyboard }));
   await sendFeatureFollowups(ctx, view);
 }
 
@@ -655,6 +667,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "hide-keyboard") return hideReplyKeyboard(ctx);
     if (parsed.kind === "inspect-vegetation") return replyWithVegetationInspection(ctx);
     if (parsed.kind === "inspect-border-marker") return replyWithBorderMarkerInspection(ctx);
+    if (parsed.kind === "inspect-feature") return submitFeatureInspection(bot, ctx, parsed.target);
     if (parsed.kind === "move") return submitCanonicalMove(bot, ctx, parsed.direction, false);
     if (parsed.kind === "gather") return submitCanonicalGather(bot, ctx, parsed.resourceKey, false);
     if (parsed.kind === "rest") return submitRest(ctx, parsed.mode);

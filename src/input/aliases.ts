@@ -40,6 +40,7 @@ export type ParsedAliasCommand =
   | { kind: "track"; detail?: boolean }
   | { kind: "inspect-vegetation" }
   | { kind: "inspect-border-marker" }
+  | { kind: "inspect-feature"; target: string }
   | { kind: "wait" }
   | { kind: "add-twigs-campfire" }
   | { kind: "say"; text: string }
@@ -509,6 +510,12 @@ function parseBorderMarkerInspectionIntent(text: string): ParsedAliasCommand | n
   return null;
 }
 
+function parseFeatureInspectionIntent(text: string): ParsedAliasCommand | null {
+  const match = text.match(/^(?:look\s+at|look|x|examine|inspect|роздивитися|роздивитись|придивитися|придивитись|оглянути|глянути\s+на|подивитися\s+на|придивитися\s+до)\s+(.+)$/);
+  if (!match?.[1]?.trim()) return null;
+  return { kind: "inspect-feature", target: match[1].trim() };
+}
+
 function parseTargetAction(text: string): ParsedAliasCommand | null {
   const patterns: Array<[TargetAction, RegExp]> = [
     ["inspect", /^(?:look\s+at|look|x|examine|inspect|роздивитися|оглянути|глянути\s+на|подивитися\s+на|придивитися\s+до)\s+(.+)$/],
@@ -585,14 +592,17 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
   const borderMarkerIntent = parseBorderMarkerInspectionIntent(commandText);
   if (borderMarkerIntent) return borderMarkerIntent;
 
+  const inventoryItemAction = parseInventoryItemAction(commandText);
+  if (inventoryItemAction) return inventoryItemAction;
+
+  const featureIntent = parseFeatureInspectionIntent(commandText);
+  if (featureIntent) return featureIntent;
+
   const target = parseTargetAction(commandText);
   if (target) return target;
 
   const pickup = parsePickup(commandText);
   if (pickup) return pickup;
-
-  const inventoryItemAction = parseInventoryItemAction(commandText);
-  if (inventoryItemAction) return inventoryItemAction;
 
   const signal = parseSocialSignal(commandText);
   if (signal) return signal;
