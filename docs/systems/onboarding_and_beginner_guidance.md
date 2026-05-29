@@ -59,4 +59,6 @@ Teach only what the player can meaningfully use now. Prefer small, diegetic nudg
 
 When a feature is too early for direct tutorial text, add a planning note instead, so the newcomer path can be updated when the feature becomes real.
 
+General survival/adventuring tips should not stay buried in the hidden `/commands` catalog. Keep `/commands` as a command reference, and move broad advice into `/help` or tutorial/newcomer surfaces when it becomes relevant: keeping a map, reading location descriptions for clues, and staying together once group/social danger supports it.
+
 After the first tutorial lane, prefer adding short branches that teach the core loop and attention to the world: movement, `Озирнутися`, `Роздивитися`, visible signs, small finds, stamina, rest, safety, social signals and observation. Deeper combat, crafting and economy should wait until the player can already read and inhabit the frontier.

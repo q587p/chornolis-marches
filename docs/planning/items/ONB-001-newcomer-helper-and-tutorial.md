@@ -48,6 +48,10 @@ The first version should help a new character understand what they can do withou
 - Prefer short contextual prompts over a long up-front explanation.
 - Keep exact numbers hidden unless the player is a scribe/admin with technical details enabled.
 - When adding a new tutorial command or button, give it a short first-use diegetic comment from Сон, Дрімота, another guide voice or a local sign, and record that as a tiny event/flag when it should not repeat forever.
+- Move broad beginner advice out of the hidden `/commands` catalog and into a better beginner surface when that surface is ready: compact `/help`, tutorial signs/voices or the safety branch. Candidate advice:
+  - draw or keep a map;
+  - read location descriptions because important clues may hide there;
+  - travel with others once group play, danger and social tools support it.
 
 ## Tone options
 
