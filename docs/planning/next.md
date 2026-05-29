@@ -16,7 +16,7 @@ The current lane is the three-month vertical slice:
 - ONB-001: dream tutorial compact completion.
 - SURV-001: beginner return / `Повернення`.
 - LOOP-001: starter location and bridge threshold polish.
-- LOOP-002 / ECO-002 / NAV-001: gate hunting loop follow-up, especially settlement response tuning, route finding and NPC hunter integration.
+- LOOP-002 / ECO-002 / NPC-002: gate hunting loop follow-up, especially settlement response tuning and NPC hunter integration on top of route finding.
 - ADM-001: minimal audit logging for dangerous scribe tools.
 
 ## 0.14 Next
@@ -49,7 +49,7 @@ These are still `backlog`, but recent work makes them worth reviewing before the
 - Hidden presence / hidden follower spirit: the planning pack is now split into `VIS-002`, `WORLD-002-hidden-spirit` and `OMEN-002`, with `docs/systems/hidden_presence.md` as the design source. Keep it as future work until the visibility and light foundations are ready; do not implement the стежник pursuit as an immediate patch.
 - Darkness creature / small coin omen: this becomes much more attractive right after WORLD-001 because it explicitly depends on darkness, light and calm observation.
 - TECH-001: service boundary and duplication cleanup. Keep this mostly behavior-preserving, but make it visible during patch planning because `worldTick.ts`, `status.ts`, `actionCompletions.ts`, `statusServer.ts`, `locations.ts` and `aliases.ts` are now large enough to slow safe feature work.
-- Gate hunting loop: 0.13.7 adds the notice, падальний рів, narrow `put` flow and player contribution accounting. The next small slice should decide whether to tune settlement reactions first, add `NAV-001` route finding, or implement `NPC-002` hunter behavior through the same drop-off service.
+- Gate hunting loop: 0.13.7 adds the notice, падальний рів, narrow `put` flow and player contribution accounting. `NAV-001` route finding is now in testing for 0.13.8, so the next small slice should decide whether to tune settlement reactions first or implement `NPC-002` hunter behavior through the same drop-off service.
 
 ## Review Checklist
 

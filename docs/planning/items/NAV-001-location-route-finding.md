@@ -1,7 +1,7 @@
 ---
 id: NAV-001
 title: Location-to-location route finding
-status: backlog
+status: testing
 type: feature
 area: world
 priority: medium
@@ -45,3 +45,9 @@ Add a small reusable route helper that can find a walkable path between two know
 - A helper returns no-route for disconnected or blocked destinations.
 - Hidden or locked exits are not used by default.
 - Focused tests cover a simple route, a no-route case and a locked/hidden-exit exclusion.
+
+## 0.13.8 Implementation Note
+
+- Added `src/services/routeFinding.ts` with a bounded breadth-first helper over existing exits.
+- Added `findLocationRoute()` for Prisma-backed world routes that exclude hidden exits and currently locked exits by default.
+- Added focused regression coverage in `scripts/test/route-finding.cjs`.

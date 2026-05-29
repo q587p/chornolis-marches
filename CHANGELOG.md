@@ -9,6 +9,23 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.8 - Location route finding foundation - 12026-05-30
+
+### Added
+
+- Added a reusable location-to-location route finder for world exits, with hidden exits and caller-blocked directions excluded by default.
+- Added a Prisma-backed route lookup that also respects currently locked exits before future NPC and auto-mode movement uses it.
+
+### Changed
+
+- Marked `NAV-001` as testing and updated the near-term gate hunting loop plan so NPC hunter integration can build on route finding instead of teleporting.
+
+### Tests
+
+- Added route-finding coverage for simple routes, no-route results, hidden-exit filtering, caller-blocked directions and depth limits.
+
+---
+
 ## 0.13.7 - Gate hunting loop foundation - 12026-05-30
 
 ### Added
