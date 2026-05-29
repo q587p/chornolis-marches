@@ -330,13 +330,14 @@ export function registerPlayerHandlers(bot: Bot) {
 
     try {
       const resultText = await useInventoryResource(player.id, resourceKey);
+      await ctx.reply(resultText);
       const view = await renderInventoryView(ctx.from.id);
-      if (!view) return void (await ctx.reply(resultText));
+      if (!view) return;
 
       try {
-        await ctx.editMessageText(`${resultText}\n\n${view.text}`, { reply_markup: view.keyboard });
+        await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
       } catch {
-        await ctx.reply(`${resultText}\n\n${view.text}`, { reply_markup: view.keyboard });
+        await ctx.reply(view.text, { reply_markup: view.keyboard });
       }
     } catch (error) {
       await ctx.reply(error instanceof Error ? error.message : "Не вдалося використати це.");
