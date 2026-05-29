@@ -28,7 +28,7 @@ import { sendHelp } from "./help";
 import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } from "./auto";
 import { showCharacter, showInventory, showLocationForPlayer } from "./player";
 import { buildAllPage, buildChatLogPage, buildStatBrief, buildWhoPage } from "./status";
-import { renderDepletedVegetationInspection, renderLocationBrief, renderLocationFeatureInteraction } from "../services/locations";
+import { renderDepletedVegetationInspection, renderLocationBrief, renderLocationDetails, renderLocationFeatureInteraction } from "../services/locations";
 import { buildNewsIndexPage } from "./news";
 import { hideReplyKeyboard, showMainKeyboard, showMenu } from "./menu";
 import { showTime } from "./time";
@@ -412,7 +412,11 @@ async function submitInventoryDrop(bot: Bot, ctx: any, target: string) {
       eventDescription: `player=${player.id}; item=${result.resourceKey}; name=${result.droppedName}`,
       actionNote: `викинуто: ${result.droppedName}`,
     });
-    await ctx.reply(result.text);
+    const locationView = await renderLocationDetails(result.locationId, player.id);
+    await ctx.reply(`${escapeHtml(result.text)}\n\n${locationView.text}`, {
+      parse_mode: "HTML",
+      reply_markup: locationView.keyboard,
+    });
   } catch (error) {
     await ctx.reply(error instanceof Error ? error.message : "Не вдалося викинути це.");
   }

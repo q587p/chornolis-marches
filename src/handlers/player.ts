@@ -2,7 +2,7 @@ import { Bot, InlineKeyboard } from "grammy";
 import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA, HEALTH_REGEN_PER_INTERVAL, PASSIVE_HEALTH_REGEN_INTERVAL_MS, PASSIVE_STAMINA_REGEN_PER_INTERVAL, PLAYER_HUNGER_MAX, REST_HEALTH_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_PER_INTERVAL, STAMINA_REGEN_INTERVAL_MS } from "../gameConfig";
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
-import { renderLocationBrief } from "../services/locations";
+import { renderLocationBrief, renderLocationDetails } from "../services/locations";
 import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
 import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } from "./auto";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
@@ -418,8 +418,18 @@ export function registerPlayerHandlers(bot: Bot) {
         actionNote: `викинуто: ${result.droppedName}`,
       });
       const view = await renderInventoryView(ctx.from.id);
-      const text = view ? `${result.text}\n\n${view.text}` : result.text;
-      await ctx.editMessageText(text, view ? { reply_markup: view.keyboard } : undefined);
+      if (view) {
+        try {
+          await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
+        } catch {
+          await ctx.reply(view.text, { reply_markup: view.keyboard });
+        }
+      }
+      const locationView = await renderLocationDetails(result.locationId, player.id);
+      await ctx.reply(`${escapeHtml(result.text)}\n\n${locationView.text}`, {
+        parse_mode: "HTML",
+        reply_markup: locationView.keyboard,
+      });
     } catch (error) {
       await ctx.reply(error instanceof Error ? error.message : "Не вдалося викинути це.");
     }

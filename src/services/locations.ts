@@ -16,7 +16,7 @@ import {
   takeTorchFromFeature,
   TORCH_DURATION_MS,
 } from "./fire";
-import { isPickableResourceKey } from "./groundItems";
+import { isVisibleGroundResource } from "./groundItems";
 import { escapeHtml } from "../utils/text";
 import { normalizeCreatureActionText } from "../utils/creatureActionText";
 import { creatureForms } from "./grammar";
@@ -305,7 +305,7 @@ function presenceText(location: any, viewerPlayerId?: number, revealTargets = fa
   const hasCharacters = targets.some((t) => t.canGreet);
   const hasAnimals = location.creatures.some((c: any) => isVisibleLivingCreature(c) && c.species.kind === "ANIMAL");
   const hasCorpses = location.creatures.some(isVisibleCorpse);
-  const groundItems = (location.resources ?? []).filter((r: any) => r.amount > 0 && isPickableResourceKey(r.resourceType.key));
+  const groundItems = (location.resources ?? []).filter((r: any) => isVisibleGroundResource(r, location));
 
   if (revealTargets && targets.length) {
     const livingLines = targets
@@ -610,7 +610,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   const tracksHint = await visibleTracksHint(location.id);
 
   const corpses = location.creatures.filter(isVisibleCorpse);
-  const groundItems = location.resources.filter((r) => r.amount > 0 && isPickableResourceKey(r.resourceType.key));
+  const groundItems = location.resources.filter((r) => isVisibleGroundResource(r, location));
   const lyingLines = [
     ...corpses.map((c) => `труп ${creatureForms(c).genitive}; стан: ${lifetimeSummary(c.corpseDecayTicksLeft, c.species.corpseDecayTicks, { showTechnicalDetails })}`),
     ...groundItems.map(groundItemLine),
