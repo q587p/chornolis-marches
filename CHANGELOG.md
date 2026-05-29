@@ -17,6 +17,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Expanded forbidden-name coverage for creature, spirit, sacred, famous-character and common-word examples.
 - Updated character-name onboarding documentation for the stricter custom-name guardrail.
 - Simplified `/adminHelp` by removing ordinary player-help commands and grouping scribe/admin tools by purpose.
+- The first tutorial dream location now uses a focused starter keyboard with only `Look` and the visible south movement button.
 
 ### Tests
 

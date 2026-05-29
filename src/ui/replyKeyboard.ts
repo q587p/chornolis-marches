@@ -4,7 +4,7 @@ import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import { formatLifeState, formatResourceState } from "../utils/playerText";
 import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
-import { DREAM_GATE_FEATURE_KEYS, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_HUB_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SAFETY_LOCATION_KEY, hasTutorialForagingSuccess, isTutorialLocation, lockedExitDirections } from "../services/tutorial";
+import { DREAM_GATE_FEATURE_KEYS, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_HUB_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SAFETY_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY, hasTutorialForagingSuccess, isTutorialLocation, lockedExitDirections } from "../services/tutorial";
 
 type MainKeyboardState = {
   isAuto?: boolean;
@@ -53,6 +53,14 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   }
 
   return keyboard.resized().persistent(false);
+}
+
+function buildTutorialStartReplyKeyboard() {
+  return new Keyboard()
+    .text("👀 Озирнутися")
+    .text("⬇️ Південь")
+    .resized()
+    .persistent(false);
 }
 
 function statusButtonLabel(player: { hp: number; hpMax: number | null; stamina: number; staminaMax: number | null }) {
@@ -122,6 +130,10 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
       ? await hasTutorialForagingSuccess(player.id)
       : true
   );
+  if (player.currentLocation?.key === TUTORIAL_START_LOCATION_KEY) {
+    return buildTutorialStartReplyKeyboard();
+  }
+
   return buildMainReplyKeyboard({
     isAuto,
     exits,
