@@ -137,6 +137,10 @@ function isTutorialInsideFeature(feature: any) {
   return featureData(feature).tutorial_inside_prompt === true;
 }
 
+function isTutorialOutsideFeature(feature: any) {
+  return featureData(feature).tutorial_outside_prompt === true;
+}
+
 async function tutorialObservationLesson(viewerPlayerId: number, locationId: number, skillKey = "tracking") {
   const firstLesson = await rememberTutorialObservationLesson(viewerPlayerId, locationId, skillKey);
   return {
@@ -163,7 +167,7 @@ function torchLightButtonText(torchState: { isLit: boolean; plainAmount: number;
 }
 
 function featureIcon(feature: any) {
-  if (isTutorialInsideFeature(feature)) return "🕳️";
+  if (isTutorialInsideFeature(feature) || isTutorialOutsideFeature(feature)) return "🕳️";
   if (isTutorialRestSeatFeature(feature)) return "🪑";
   if (isTutorialObservationFeature(feature)) return "🦊";
   if (isCampfireFeature(feature)) return isExtinguishedCampfire(feature) ? "🪨" : "🔥";
@@ -216,6 +220,8 @@ function featureDetailLine(feature: any, showTechnicalDetails = false) {
     details.push("позначає прохід, який треба роздивитися ближче");
   } else if (isTutorialInsideFeature(feature)) {
     details.push("ховає вхід, що не є стороною світу");
+  } else if (isTutorialOutsideFeature(feature)) {
+    details.push("показує вихід назовні");
   } else if (isTutorialRestSeatFeature(feature)) {
     details.push("зручне місце для короткого перепочинку");
   } else if (isTutorialObservationFeature(feature)) {
@@ -807,7 +813,7 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
     followupMessages = lesson.followupMessages;
   } else if (isTutorialRestSeatFeature(feature)) {
     text = feature.description ?? "Тут можна присісти й коротко відпочити.";
-  } else if (isTutorialInsideFeature(feature)) {
+  } else if (isTutorialInsideFeature(feature) || isTutorialOutsideFeature(feature)) {
     text = feature.description ?? "Кущі трохи розступаються. Будьте уважні: входи й виходи не завжди лежать за сторонами світу.";
   } else if (featureData(feature).tutorial_wake_prompt === true) {
     text = `${feature.description ?? "Десь збоку ворушаться майбутні уроки."}\n\nВи можете прокинутися зараз і повернутися до цього місця сну пізніше.`;
@@ -832,6 +838,7 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
   if (feature.type === "GATE" && isDreamGateFeature(feature)) keyboard.text("💬 Сказати «Відчинитися»", "tutorial:sayOpenGate").row();
   if (isTutorialRestSeatFeature(feature)) keyboard.text("🧘 Присісти і відпочити", "rest:start").row();
   if (isTutorialInsideFeature(feature)) keyboard.text("🕳️ Всередину", "move:INSIDE").row();
+  if (isTutorialOutsideFeature(feature)) keyboard.text("🕳️ Назовні", "move:OUTSIDE").row();
   if (featureData(feature).tutorial_time_prompt === true) keyboard.text("🕯 Час", "time:show").row();
   if (featureData(feature).tutorial_wake_prompt === true) keyboard.text("🌅 Прокинутися", "tutorial:wake").row();
   if (isTorchSourceFeature(feature)) keyboard.text("🕯 Взяти факел", `torch:take:${feature.id}`).row();

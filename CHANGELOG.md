@@ -21,6 +21,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added `пів` as a Ukrainian text alias for south movement and included direction aliases in unknown-command suggestions.
 - Changed the tutorial bushes and inside-movement button emoji so they no longer resemble gathering/resource actions.
 - Added `наз` as a Ukrainian text alias for outside movement to match compact exit labels.
+- Added a matching tutorial bushes feature inside the observation room with an explicit `Outside` action button.
 
 ### Tests
 

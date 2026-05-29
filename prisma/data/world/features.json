@@ -326,6 +326,18 @@
     }
   },
   {
+    "key": "dream_tutorial_observation_bushes",
+    "locationKey": "dream_tutorial_observation",
+    "type": "LANDMARK",
+    "name": "Кущі",
+    "description": "Зсередини кущі здаються вищими й густішими, ніж із галявини. Між гіллям лишається вузький вихід назовні: той самий шлях, тільки тепер його треба впізнати з іншого боку.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "tutorial_outside_prompt": true
+    }
+  },
+  {
     "key": "dream_tutorial_sleep_gate",
     "locationKey": "dream_tutorial_gate",
     "type": "GATE",
