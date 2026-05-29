@@ -1,7 +1,7 @@
 ---
 id: ITEM-001
 title: Pickup versus gather command semantics
-status: next
+status: testing
 type: bug
 area: inventory
 priority: high

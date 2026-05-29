@@ -535,7 +535,7 @@ function parsePickup(text: string): ParsedAliasCommand | null {
   const match = text.match(/^(?:pickup|take|get|підібрати|підняти|взяти|забрати)\s+(.+)$/);
   if (!match?.[1]?.trim()) return null;
   const target = match[1].trim();
-  return parseGatherResource(target) ?? { kind: "pickup-target", target };
+  return { kind: "pickup-target", target };
 }
 
 function parseInventoryItemAction(text: string): ParsedAliasCommand | null {

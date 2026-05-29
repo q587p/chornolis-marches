@@ -12,7 +12,6 @@ The current lane is the three-month vertical slice:
 
 ## 0.13 Next
 
-- ITEM-001: pickup versus gather command semantics.
 - ONB-002: character name onboarding polish.
 - ONB-001: dream tutorial compact completion.
 - SURV-001: beginner return / `Повернення`.

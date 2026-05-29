@@ -19,7 +19,7 @@ ICE-001,Mythic skill learning from spirits,icebox,feature,progression,low,"limin
 ICE-002,Rituals and sacred days,icebox,feature,mythic_systems,low,"rituals,calendar,weather,mythic",docs/planning/items/ICE-002-rituals-and-sacred-days.md
 ICE-003,Caravans and regional trade,icebox,feature,economy,low,"economy,settlements,npc,world_simulation",docs/planning/items/ICE-003-caravans.md
 ICE-004,"Camps, shelters and construction",icebox,feature,construction,low,"survival,crafting,settlement,storage",docs/planning/items/ICE-004-construction.md
-ITEM-001,Pickup versus gather command semantics,next,bug,inventory,high,"aliases,pickup,gather,inventory,ground-items",docs/planning/items/ITEM-001-pickup-vs-gather-semantics.md
+ITEM-001,Pickup versus gather command semantics,testing,bug,inventory,high,"aliases,pickup,gather,inventory,ground-items",docs/planning/items/ITEM-001-pickup-vs-gather-semantics.md
 LEARN-001-A,Minimal learning storage decision,next,design,learning,high,"learning,progression,schema",docs/planning/items/LEARN-001-A.md
 LEARN-001-B,Minimal CharacterSkill model,next,technical,learning,high,"learning,schema,skills",docs/planning/items/LEARN-001-B.md
 LEARN-001-C,grantSkillProgress helper,next,feature,learning,high,"learning,service,progression",docs/planning/items/LEARN-001-C.md
