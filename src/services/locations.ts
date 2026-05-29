@@ -163,7 +163,7 @@ function torchLightButtonText(torchState: { isLit: boolean; plainAmount: number;
 }
 
 function featureIcon(feature: any) {
-  if (isTutorialInsideFeature(feature)) return "🌿";
+  if (isTutorialInsideFeature(feature)) return "🕳️";
   if (isTutorialRestSeatFeature(feature)) return "🪑";
   if (isTutorialObservationFeature(feature)) return "🦊";
   if (isCampfireFeature(feature)) return isExtinguishedCampfire(feature) ? "🪨" : "🔥";
@@ -831,7 +831,7 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
   }
   if (feature.type === "GATE" && isDreamGateFeature(feature)) keyboard.text("💬 Сказати «Відчинитися»", "tutorial:sayOpenGate").row();
   if (isTutorialRestSeatFeature(feature)) keyboard.text("🧘 Присісти і відпочити", "rest:start").row();
-  if (isTutorialInsideFeature(feature)) keyboard.text("🌿 Всередину", "move:INSIDE").row();
+  if (isTutorialInsideFeature(feature)) keyboard.text("🕳️ Всередину", "move:INSIDE").row();
   if (featureData(feature).tutorial_time_prompt === true) keyboard.text("🕯 Час", "time:show").row();
   if (featureData(feature).tutorial_wake_prompt === true) keyboard.text("🌅 Прокинутися", "tutorial:wake").row();
   if (isTorchSourceFeature(feature)) keyboard.text("🕯 Взяти факел", `torch:take:${feature.id}`).row();
