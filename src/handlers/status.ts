@@ -1209,9 +1209,17 @@ export function registerStatusHandlers(bot: Bot) {
     if (!(await requireScribeAdmin(ctx))) return;
 
     if (!ctx.from) return;
-    const player = await getPlayerByTelegramId(ctx.from.id);
-    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    const rawTarget = String(ctx.match ?? "").trim();
+    const resolved = await resolveAdminPlayerForContext(ctx, rawTarget);
+    if (!resolved.player) {
+      await ctx.reply(resolved.error ?? "Формат: /restAdmin [#id|ім’я|username]");
+      return;
+    }
 
+    const player = resolved.player;
+    const scribe = await getPlayerByTelegramId(ctx.from.id);
+    const scribeName = scribeDisplayName(scribe, ctx.from.id);
+    const playerName = playerForms(player).nominative;
     const baseMax = player.staminaMax ?? BASE_STAMINA;
     const adminMax = baseMax * REST_ADMIN_STAMINA_CAP_MULTIPLIER;
     const updated = await prisma.player.update({
@@ -1222,11 +1230,29 @@ export function registerStatusHandlers(bot: Bot) {
         fatigueState: "RESTED",
         lastStaminaRegenAt: new Date(),
       },
-      select: { stamina: true, isAutoEnabled: true },
+      select: { stamina: true, telegramId: true, isAutoEnabled: true },
     });
 
-    await ctx.reply(`✨ Снагу відновлено до ${updated.stamina}/${baseMax}. Адмінський множник: ×${REST_ADMIN_STAMINA_CAP_MULTIPLIER}.`, {
-      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, Boolean(updated.isAutoEnabled)),
+    await logEvent(
+      "SYSTEM",
+      "Admin restored stamina",
+      `player=${player.id}; playerName=${playerName}; stamina=${updated.stamina}/${baseMax}; scribe=${scribeName}`,
+      player.currentLocationId ?? undefined,
+    );
+
+    const isSelf = updated.telegramId === String(ctx.from.id);
+    if (!isSelf) {
+      const verb = scribePastVerb(scribe, "відновив", "відновила", "відновили");
+      await notifyPlayerByTelegram(
+        bot,
+        updated,
+        `${scribeName} ${verb} вашу снагу до ${updated.stamina}/${baseMax}.`,
+      );
+    }
+
+    const targetText = isSelf ? "" : ` для ${playerName}`;
+    await ctx.reply(`✨ Снагу${targetText} відновлено до ${updated.stamina}/${baseMax}. Адмінський множник: ×${REST_ADMIN_STAMINA_CAP_MULTIPLIER}.`, {
+      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, Boolean(scribe?.isAutoEnabled)),
     });
   });
 

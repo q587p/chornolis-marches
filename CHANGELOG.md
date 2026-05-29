@@ -33,6 +33,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Interactive location features can now be inspected by text, such as `look bench`, `/examine лавка` or `оглянути лавку`, with fallback to ordinary visible targets when no feature matches.
 - Feature callbacks now avoid editing an older feature message after the same flow has sent newer follow-up voice/tutorial messages.
 - The tutorial rest-seat feature was renamed from `Лавка короткого перепочинку` to the shorter `Зручна лавка`.
+- `/restAdmin` now accepts an optional player target, matching `/playerAdmin`-style lookup by id, local number, name or username, and notifies/logs when a scribe restores another player's stamina.
 
 ### Tests
 
