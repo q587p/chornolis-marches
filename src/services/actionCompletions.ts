@@ -33,6 +33,7 @@ import { canOpenDreamGateWithSpeech, isLocationExitLocked, isTutorialFastRestLoc
 import { tutorialGateSpeechComment, tutorialLookPaceComments, tutorialSpiritMoveComment, tutorialTrackComments, tutorialWaitPaceComments } from "./tutorialVoices";
 import { chance, pick, shuffle } from "../utils/random";
 import { freshenCorpseForMeat } from "./meat";
+import { rememberPlayerReplyTarget } from "./replyTargets";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
@@ -567,6 +568,7 @@ async function completeGreet(bot: Bot, action: WorldAction) {
       `${escapeHtml(actorForms.nominative)} ${verb} вам:\n${quoteBlock(greeting)}`,
       { parse_mode: "HTML" },
     );
+    await rememberPlayerReplyTarget({ playerId: targetPlayer.id, speakerName: actorForms.nominative, speakerPlayerId: player.id, locationId: player.currentLocationId });
   }
   await notifyLocationExcept(
     bot,
@@ -758,6 +760,7 @@ async function completeSay(bot: Bot, action: WorldAction) {
         `${escapeHtml(actorForms.nominative)} шепоче вам:\n${quoteBlock(text)}`,
         { parse_mode: "HTML", reply_markup: await buildMainReplyKeyboardForTelegramId(Number(targetPlayer.telegramId), false) },
       );
+      await rememberPlayerReplyTarget({ playerId: targetPlayer.id, speakerName: actorForms.nominative, speakerPlayerId: player.id, locationId: player.currentLocationId });
       if (chatId) await bot.api.sendMessage(chatId, `Ви шепнули ${escapeHtml(targetForms.dative)}:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
       await setActionStatus(action, "DONE");
       await logEvent("SAY", `${actorForms.nominative} шепоче ${targetForms.dative}`, "приватний шепіт", player.currentLocationId);
@@ -789,16 +792,29 @@ async function completeSay(bot: Bot, action: WorldAction) {
       await spendPlayerStamina(bot, player.id, "SAY", chatId);
       await prisma.player.updateMany({ where: { id: player.id }, data: { says: { increment: 1 } } });
       const replyVerb = repliedVerb(player);
-      await notifyLocationExcept(
-        bot,
-        player.currentLocationId,
-        [player.id],
-        targetDative ? `${escapeHtml(actorForms.nominative)} ${replyVerb} ${escapeHtml(targetDative)}:\n${quoteBlock(text)}` : `${escapeHtml(actorForms.nominative)} ${replyVerb}:\n${quoteBlock(text)}`,
-        { parseMode: "HTML" },
-      );
+      const replyTargetPlayer = payload.targetType === "player" && payload.targetId
+        ? await prisma.player.findUnique({ where: { id: payload.targetId } })
+        : null;
+      const replyTargetForms = replyTargetPlayer ? playerForms(replyTargetPlayer) : null;
+      const replyTargetDative = replyTargetForms?.dative ?? targetDative;
+      if (replyTargetPlayer && replyTargetPlayer.currentLocationId !== player.currentLocationId) {
+        await bot.api.sendMessage(
+          replyTargetPlayer.telegramId,
+          `${escapeHtml(actorForms.nominative)} ${replyVerb} вам:\n${quoteBlock(text)}`,
+          { parse_mode: "HTML", reply_markup: await buildMainReplyKeyboardForTelegramId(Number(replyTargetPlayer.telegramId), false) },
+        );
+      } else {
+        await notifyLocationExcept(
+          bot,
+          player.currentLocationId,
+          [player.id],
+          replyTargetDative ? `${escapeHtml(actorForms.nominative)} ${replyVerb} ${escapeHtml(replyTargetDative)}:\n${quoteBlock(text)}` : `${escapeHtml(actorForms.nominative)} ${replyVerb}:\n${quoteBlock(text)}`,
+          { parseMode: "HTML" },
+        );
+      }
       await setActionStatus(action, "DONE");
-      await logEvent("SAY", `${actorForms.nominative} ${replyVerb}${targetDative ? ` ${targetDative}` : ""}`, text, player.currentLocationId);
-      if (chatId) await bot.api.sendMessage(chatId, targetDative ? `Ви відповіли ${escapeHtml(targetDative)}:\n${quoteBlock(text)}` : `Ви відповіли:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
+      await logEvent("SAY", `${actorForms.nominative} ${replyVerb}${replyTargetDative ? ` ${replyTargetDative}` : ""}`, text, player.currentLocationId);
+      if (chatId) await bot.api.sendMessage(chatId, replyTargetDative ? `Ви відповіли ${escapeHtml(replyTargetDative)}:\n${quoteBlock(text)}` : `Ви відповіли:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
       return;
     }
 
@@ -811,6 +827,12 @@ async function completeSay(bot: Bot, action: WorldAction) {
       targetDative ? `${escapeHtml(actorForms.nominative)} ${verb} ${escapeHtml(targetDative)}:\n${quoteBlock(text)}` : `${escapeHtml(actorForms.nominative)} ${verb}:\n${quoteBlock(text)}`,
       { parseMode: "HTML" },
     );
+    if (payload.targetType === "player" && payload.targetId) {
+      const addressedPlayer = await prisma.player.findFirst({ where: { id: payload.targetId, currentLocationId: player.currentLocationId } });
+      if (addressedPlayer) {
+        await rememberPlayerReplyTarget({ playerId: addressedPlayer.id, speakerName: actorForms.nominative, speakerPlayerId: player.id, locationId: player.currentLocationId });
+      }
+    }
     await setActionStatus(action, "DONE");
     await logEvent("SAY", `${actorForms.nominative} ${verb}${targetDative ? ` ${targetDative}` : ""}`, text, player.currentLocationId);
     const dreamGateText = await canOpenDreamGateWithSpeech(player.id, text)

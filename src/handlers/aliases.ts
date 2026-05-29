@@ -49,6 +49,7 @@ import { noteKnownMessage } from "../utils/messageTracker";
 import { cookRawMeat, isFreshenedCorpse } from "../services/meat";
 import { creatureForms, playerForms } from "../services/grammar";
 import { putInventoryIntoLocalFeature } from "../services/carcassDropoff";
+import { latestRememberedReplyTarget } from "../services/replyTargets";
 
 type TextTargetRef = {
   type: "player" | "creature";
@@ -564,6 +565,9 @@ function speechSpeakerFromTitle(title: string) {
 async function lastAddressedSpeakerName(player: any) {
   const forms = playerForms(player);
   const selfKeys = [forms.nominative, forms.dative, player.firstName, player.username].filter(Boolean).map((value) => normalizeInput(String(value)));
+  const remembered = await latestRememberedReplyTarget(player.id);
+  if (remembered && !selfKeys.includes(normalizeInput(remembered.speakerName))) return remembered;
+
   const addressedForms = [forms.dative, forms.nominative, player.firstName].filter(Boolean);
   const events = await prisma.worldEvent.findMany({
     where: {
@@ -579,7 +583,7 @@ async function lastAddressedSpeakerName(player: any) {
     const speaker = speechSpeakerFromTitle(event.title);
     if (!speaker) continue;
     if (selfKeys.includes(normalizeInput(speaker))) continue;
-    return speaker;
+    return { speakerName: speaker };
   }
   return null;
 }
@@ -591,12 +595,23 @@ async function submitReply(bot: Bot, ctx: any, text: string) {
   const safeText = stripUnsafeText(text);
   if (!safeText) return void (await ctx.reply("Напиши так: reply текст"));
 
-  const targetName = await lastAddressedSpeakerName(player);
-  if (!targetName) return void (await ctx.reply("Поки немає репліки, на яку можна відповісти. Спробуйте звичайне /say або зверніться до видимого персонажа."));
+  const target = await lastAddressedSpeakerName(player);
+  if (!target) return void (await ctx.reply("Поки немає репліки, на яку можна відповісти. Спробуйте звичайне /say або зверніться до видимого персонажа."));
 
   const durationMs = actionDurationMs("SAY", player.stamina);
   try {
-    const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "SAY", payload: { text: safeText, mode: "reply", targetName }, durationMs, chatId: ctx.chat?.id });
+    const result = await performOrQueuePlayerAction(bot, {
+      playerId: player.id,
+      type: "SAY",
+      payload: {
+        text: safeText,
+        mode: "reply",
+        targetName: target.speakerName,
+        ...(target.speakerPlayerId ? { targetType: "player", targetId: target.speakerPlayerId } : {}),
+      },
+      durationMs,
+      chatId: ctx.chat?.id,
+    });
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {
     await ctx.reply(error instanceof Error ? error.message : "Не вдалося відповісти.");
