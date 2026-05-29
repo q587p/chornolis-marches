@@ -47,6 +47,12 @@ These values are balance constants, not final design. Player-facing UI should st
 
 These effects are intentionally modest and player-facing text should stay descriptive. Fuller food, cooking, medicine, herbalism, potions and prepared remedies remain later systems.
 
+## Hunger Direction
+
+Hunger currently rises mainly from strenuous player actions and can be eased by simple food. Player-facing text should describe it atmospherically, not as a debug value.
+
+When in-world time becomes more complete, hunger should also rise naturally with the passage of game time, so eating matters even for characters who are only traveling, waiting or resting between harder actions.
+
 ## Meat Loop
 
 0.13.3 adds the first hunting/scavenging food loop:
