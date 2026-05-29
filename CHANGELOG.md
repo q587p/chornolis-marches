@@ -18,6 +18,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Updated character-name onboarding documentation for the stricter custom-name guardrail.
 - Simplified `/adminHelp` by removing ordinary player-help commands and grouping scribe/admin tools by purpose.
 - The first tutorial dream location now uses a focused starter keyboard with only `Look` and the visible south movement button.
+- Added `пів` as a Ukrainian text alias for south movement and included direction aliases in unknown-command suggestions.
 
 ### Tests
 

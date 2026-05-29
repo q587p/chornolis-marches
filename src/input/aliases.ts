@@ -61,6 +61,7 @@ const DIRECTION_ALIASES: Record<string, Direction> = {
   south: "SOUTH",
   s: "SOUTH",
   "південь": "SOUTH",
+  "пів": "SOUTH",
   "пд": "SOUTH",
   pivden: "SOUTH",
 
@@ -352,7 +353,7 @@ const COMPACT_ALIASES: Record<string, ParsedAliasCommand> = {
   whereami: { kind: "location" },
 };
 
-const SUGGESTABLE_ALIASES = Object.keys(EXACT_ALIASES);
+const SUGGESTABLE_ALIASES = [...new Set([...Object.keys(EXACT_ALIASES), ...Object.keys(DIRECTION_ALIASES)])];
 
 function normalizeSlashCommand(text: string) {
   return text.replace(/^\/([^\s@]+)@[A-Za-z0-9_]+/i, "/$1");
