@@ -1,7 +1,7 @@
 ---
 id: PLAN-001
 title: Repository docs are the planning source of truth
-status: next
+status: testing
 type: documentation
 area: planning
 priority: high
@@ -34,3 +34,7 @@ Make `docs/` the canonical source for roadmap, game design and tasks.
 ## Implementation Order
 
 Can be done independently.
+
+## Progress
+
+- 0.13.0: Verified that `docs/planning/README.md` and `docs/roadmap.md` state repository docs are the planning source of truth, with GitHub Issues/Projects treated as mirrors.

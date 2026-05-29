@@ -865,7 +865,7 @@
   {
     "id": "ONB-002-A",
     "title": "Expand prepared-name pool",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "onboarding",
     "priority": "high",
@@ -959,7 +959,7 @@
   {
     "id": "PLAN-001",
     "title": "Repository docs are the planning source of truth",
-    "status": "next",
+    "status": "testing",
     "type": "documentation",
     "area": "planning",
     "priority": "high",

@@ -96,6 +96,12 @@ Important remembered direction from the 0.11 line:
 - `Додати хмиз` / `/add twigs campfire` is implemented as the first `twigs` fuel loop: `twigs` can extend burning ordinary campfires or prepare extinguished ordinary campfires for relighting. Broader foraging, richer fuel types and player-made campfires remain future work.
 - Onboarding, `/help`, fallback hints and tutorial/newcomer-helper plans should be reviewed whenever early-game actions, resources, visibility or survival mechanics change.
 
+## 0.13.x context
+
+- The 0.13 lane starts the Core Loop & Onboarding Stability slice.
+- `0.13.0` expands the prepared character-name pool while keeping it in the typed data module. Prepared names remain scribe-approved by default and must include all Ukrainian case forms, origin, rarity and grammatical/gender compatibility.
+- Character-name tests should guard prepared-name coverage, duplicate keys and duplicate nominative forms.
+
 ## Prior build issue note
 
 A prior build error cause:

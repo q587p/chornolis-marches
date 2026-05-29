@@ -46,12 +46,12 @@ ONB-001-D,Tutorial rest lesson polish,next,ux,onboarding,medium,"tutorial,rest,s
 ONB-001-E,Wake and return fallback polish,next,ux,onboarding,medium,"tutorial,sleep,wake,aliases",docs/planning/items/ONB-001-E.md
 ONB-001-F,Tutorial hint that observation matters,next,ux,onboarding,medium,"tutorial,observe,learning",docs/planning/items/ONB-001-F.md
 ONB-002,Character name rules and onboarding,next,feature,onboarding,high,"onboarding,names,scribes,generated-names,ukrainian-grammar,validation",docs/planning/items/ONB-002-character-name-rules-and-onboarding.md
-ONB-002-A,Expand prepared-name pool,next,feature,onboarding,high,"onboarding,names,ukrainian-grammar",docs/planning/items/ONB-002-A.md
+ONB-002-A,Expand prepared-name pool,testing,feature,onboarding,high,"onboarding,names,ukrainian-grammar",docs/planning/items/ONB-002-A.md
 ONB-002-B,Expand forbidden-name normalization,next,feature,onboarding,high,"onboarding,names,validation",docs/planning/items/ONB-002-B.md
 ONB-002-C,Uncertain custom-name review status,next,feature,onboarding,high,"onboarding,scribes,names",docs/planning/items/ONB-002-C.md
 ONB-002-D,Name onboarding help copy,next,ux,onboarding,medium,"onboarding,help,copy",docs/planning/items/ONB-002-D.md
 PERF-001,Runtime performance plan and creature simulation budget,backlog,technical,performance,high,"performance,ecology,creatures,action-queue,simulation,status,auto",docs/planning/items/PERF-001-budgeted-and-aggregated-creature-simulation.md
-PLAN-001,Repository docs are the planning source of truth,next,documentation,planning,high,"planning,docs,roadmap",docs/planning/items/PLAN-001.md
+PLAN-001,Repository docs are the planning source of truth,testing,documentation,planning,high,"planning,docs,roadmap",docs/planning/items/PLAN-001.md
 PROG-002,Observation-based learning,backlog,feature,progression,medium,"skills,observation,npc,animals,mythic",docs/planning/items/PROG-002-observation-learning.md
 PROG-003,Animal experience and titles,backlog,feature,progression,medium,"animals,ecology,progression,combat",docs/planning/items/PROG-003-animal-experience-and-titles.md
 SETTLE-001,Starter settlement,backlog,feature,settlements,high,"settlement,npc,onboarding",docs/planning/items/SETTLE-001-starter-settlement.md
