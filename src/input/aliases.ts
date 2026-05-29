@@ -102,6 +102,7 @@ const DIRECTION_ALIASES: Record<string, Direction> = {
 
   outside: "OUTSIDE",
   out: "OUTSIDE",
+  "наз": "OUTSIDE",
   "назовні": "OUTSIDE",
   "надвір": "OUTSIDE",
   "вийти": "OUTSIDE",

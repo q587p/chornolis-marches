@@ -36,7 +36,7 @@ Movement:
 - `північ`, `південь`, `пів`, `схід`, `захід`.
 - `йти на південь`, `рушити на захід`.
 - Short aliases such as `пн`, `пд`, `сх`, `зх` are supported where unambiguous.
-- Non-compass exits also work: `/inside`, `/in`, `вср`, `всередину`, `увійти`, `/outside`, `/out`, `назовні`, `вийти`.
+- Non-compass exits also work: `/inside`, `/in`, `вср`, `всередину`, `увійти`, `/outside`, `/out`, `наз`, `назовні`, `вийти`.
 - The reply keyboard may also show available direction buttons directly, such as `⬆️ Північ`, `⬅️ Захід`, `Схід ➡️` and `⬇️ Південь`.
 
 Actions:

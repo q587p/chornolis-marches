@@ -24,6 +24,8 @@ assertAlias("йти на захід", { kind: "move", direction: "WEST" });
 assertAlias("/n", { kind: "move", direction: "NORTH" });
 assertAlias("вср", { kind: "move", direction: "INSIDE" });
 assertAlias("/inside", { kind: "move", direction: "INSIDE" });
+assertAlias("наз", { kind: "move", direction: "OUTSIDE" });
+assertAlias("назовні", { kind: "move", direction: "OUTSIDE" });
 
 assertAlias("хто", { kind: "who" });
 assertAlias("хтоя", { kind: "me" });
@@ -98,5 +100,6 @@ assertAlias("кивнути Здравомир", { kind: "social-signal", signal
 assert.equal(parseAlias("це точно не команда"), null);
 assert.ok(suggestAliasInputs("роздивит").includes("роздивитися"), "Expected alias suggestions to include роздивитися");
 assert.ok(suggestAliasInputs("пів").includes("південь"), "Expected alias suggestions to include південь");
+assert.ok(suggestAliasInputs("назо").includes("назовні"), "Expected alias suggestions to include назовні");
 
 console.log("Input aliases OK");

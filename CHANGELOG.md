@@ -20,6 +20,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - The first tutorial dream location now uses a focused starter keyboard with only `Look` and the visible south movement button.
 - Added `пів` as a Ukrainian text alias for south movement and included direction aliases in unknown-command suggestions.
 - Changed the tutorial bushes and inside-movement button emoji so they no longer resemble gathering/resource actions.
+- Added `наз` as a Ukrainian text alias for outside movement to match compact exit labels.
 
 ### Tests
 
