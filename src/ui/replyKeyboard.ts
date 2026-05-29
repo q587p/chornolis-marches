@@ -11,6 +11,9 @@ type MainKeyboardState = {
   exits?: Direction[];
   hasInventory?: boolean;
   statusLabel?: string;
+  posture?: string | null;
+  isResting?: boolean | null;
+  showPostureActions?: boolean;
   isTutorialDream?: boolean;
   canOpenDreamGate?: boolean;
   canWakeFromTutorial?: boolean;
@@ -22,6 +25,12 @@ export const EMPTY_KEYBOARD_BUTTON = "⠀";
 function normalizeState(input: MainKeyboardState | boolean = {}) {
   if (typeof input === "boolean") return { isAuto: input } satisfies MainKeyboardState;
   return input;
+}
+
+export function postureActionLabelsForState(state: Pick<MainKeyboardState, "posture" | "isResting">) {
+  const isSitting = state.posture === "SITTING" || Boolean(state.isResting);
+  if (state.isResting) return ["Встати"];
+  return isSitting ? ["Встати", "🧘 Відпочити"] : ["Сісти", "🧘 Відпочити"];
 }
 
 export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean = {}) {
@@ -46,6 +55,10 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   keyboard.text("☰ Меню").row();
 
   if (state.statusLabel) keyboard.text(state.statusLabel).row();
+  if (state.showPostureActions) {
+    for (const label of postureActionLabelsForState(state)) keyboard.text(label);
+    keyboard.row();
+  }
   if (state.isTutorialDream) {
     if (state.canOpenDreamGate) keyboard.text("💬 Сказати «Відчинитися»");
     if (state.canWakeFromTutorial) keyboard.text("🌅 Прокинутися");
@@ -97,6 +110,8 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
       hpMax: true,
       stamina: true,
       staminaMax: true,
+      posture: true,
+      isResting: true,
       telegramId: true,
       role: true,
       showTechnicalDetails: true,
@@ -141,6 +156,9 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
     statusLabel: player.currentLocation?.key === TUTORIAL_REST_LOCATION_KEY
       ? statusButtonLabel(player)
       : showTechnicalDetails ? exactStatusButtonLabel(player) : statusButtonLabel(player),
+    posture: player.posture,
+    isResting: player.isResting,
+    showPostureActions: true,
     isTutorialDream,
     canOpenDreamGate: isTutorialDream && Boolean(player.currentLocation?.features.length),
     canWakeFromTutorial: player.currentLocation?.key === TUTORIAL_HUB_LOCATION_KEY || player.currentLocation?.key === TUTORIAL_SAFETY_LOCATION_KEY,

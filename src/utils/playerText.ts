@@ -14,6 +14,7 @@ type PlayerStats = {
 };
 
 type PlayerFatigue = {
+  posture?: string | null;
   isResting?: boolean | null;
   fatigueState?: string | null;
 };
@@ -80,14 +81,19 @@ export function formatHungerState(value: number, max = 13) {
 
 export function formatPostureText(player: PlayerFatigue & { isSleeping?: boolean | null }) {
   if (player.isSleeping) return "Ви спите.";
-  if (player.isResting) return "Ви сидите.";
+  if (player.posture === "SITTING" || player.isResting) {
+    return player.isResting ? "Ви сидите й відпочиваєте." : "Ви сидите.";
+  }
   return "Ви стоїте.";
 }
 
 export function formatObservedPostureText(player: PlayerFatigue & { isSleeping?: boolean | null; grammaticalGender?: string | null; pronoun?: string | null }) {
   const plural = observedGender(player) === "PLURAL";
   if (player.isSleeping) return plural ? "Сплять." : "Спить.";
-  if (player.isResting) return plural ? "Сидять." : "Сидить.";
+  if (player.posture === "SITTING" || player.isResting) {
+    if (player.isResting) return plural ? "Сидять і відпочивають." : "Сидить і відпочиває.";
+    return plural ? "Сидять." : "Сидить.";
+  }
   return plural ? "Стоять." : "Стоїть.";
 }
 

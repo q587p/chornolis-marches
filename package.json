@@ -7,7 +7,7 @@
     "dev": "ts-node-dev src/bot.ts",
     "build": "prisma generate && tsc",
     "start": "node dist/bot.js",
-    "test": "node scripts/test/input-aliases.cjs && node scripts/test/character-names.cjs && node scripts/test/world-seed.mjs && tsc -p tsconfig.seed.json",
+    "test": "node scripts/test/input-aliases.cjs && node scripts/test/posture.cjs && node scripts/test/character-names.cjs && node scripts/test/world-seed.mjs && tsc -p tsconfig.seed.json",
     "test:seed": "node scripts/test/world-seed.mjs",
     "test:seed:types": "tsc -p tsconfig.seed.json",
     "test:db": "node scripts/test/db-smoke.mjs",

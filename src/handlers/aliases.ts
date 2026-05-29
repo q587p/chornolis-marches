@@ -296,7 +296,9 @@ async function beginRestNow(ctx: any, playerId: number) {
   const hadQueue = await hasPlayerActionQueueControls(playerId);
   await startPlayerRest(playerId);
   const suffix = hadQueue ? "\n\nПоточну дію та чергу скасовано." : "";
-  await ctx.reply(`${await playerRestStatusText(playerId)}${suffix}`);
+  await ctx.reply(`${await playerRestStatusText(playerId)}${suffix}`, {
+    reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+  });
 }
 
 async function submitRest(ctx: any, mode: RestAliasMode = "start") {
@@ -313,6 +315,9 @@ async function submitRest(ctx: any, mode: RestAliasMode = "start") {
     await stopPlayerRest(player.id);
     const accelerated = await accelerateFirstQueuedPlayerAction(player.id);
     await ctx.reply(`Ви перервали відпочинок.${accelerated ? "\n\nНаступна дія починається." : ""}\n\n${await renderPlayerActionQueue(player.id)}`, await actionQueueReplyOptions(player.id));
+    await ctx.reply("Ви лишаєтеся сидіти.", {
+      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, Boolean(player.isAutoEnabled)),
+    });
     return;
   }
 
