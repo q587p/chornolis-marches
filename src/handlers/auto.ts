@@ -117,6 +117,7 @@ async function markPlayerAutoConsent(playerId: number) {
 function autoConfirmText() {
   return [
     "🤖 Авто-режим буде час від часу сам обирати прості дії для персонажа: роздивлятися місцину, збирати ресурси, рухатися, говорити або відпочивати, коли персонаж дуже виснажений.",
+    `Автодії плануються ${playerAutoTimingText()}; вручну зазвичай можна діяти швидше.`,
     "",
     "Ви певні, що хочете увімкнути авто?",
   ].join("\n");
@@ -126,11 +127,12 @@ async function replyWithAutoConfirmation(ctx: any) {
   await ctx.reply(autoConfirmText(), { reply_markup: buildAutoConfirmKeyboard() });
 }
 
-async function notifyQueuedIfNeeded(bot: Bot, telegramId: number, playerId: number, mode: "queued" | "immediate", description: string, locationId?: number) {
-  if (mode !== "queued") return;
-
-  await logEvent("PLAYER_ACTION", "Auto queued player action", description, locationId).catch(() => undefined);
-  await bot.api.sendMessage(telegramId, `🤖 Авто: ви вже втомлені або зайняті, тож дія стала в чергу.\n\n${await renderPlayerActionQueue(playerId)}`, {
+async function notifyAutoChoice(bot: Bot, telegramId: number, playerId: number, mode: "queued" | "immediate", description: string, locationId?: number) {
+  await logEvent("PLAYER_ACTION", mode === "queued" ? "Auto queued player action" : "Auto selected player action", description, locationId).catch(() => undefined);
+  const queueText = mode === "queued"
+    ? `\n\nВи вже втомлені або зайняті, тож дія стала в чергу.\n\n${await renderPlayerActionQueue(playerId)}`
+    : "";
+  await bot.api.sendMessage(telegramId, `🤖 Авто: обрано дію — ${description}.${queueText}`, {
     reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, true),
   });
 }
@@ -150,7 +152,7 @@ async function maybeAutoSay(bot: Bot, telegramId: number, player: any, locationI
     note: "auto:say",
   });
 
-  await notifyQueuedIfNeeded(bot, telegramId, player.id, result.mode, `say: ${line}`, locationId);
+  await notifyAutoChoice(bot, telegramId, player.id, result.mode, `сказати: «${line}»`, locationId);
   return true;
 }
 
@@ -174,7 +176,7 @@ async function autoGather(bot: Bot, telegramId: number, player: any, locationId:
     note: `auto:gather:${key}`,
   });
 
-  await notifyQueuedIfNeeded(bot, telegramId, player.id, result.mode, `gather:${key}`, locationId);
+  await notifyAutoChoice(bot, telegramId, player.id, result.mode, `зібрати ${resource.resourceType.name}`, locationId);
   return true;
 }
 
@@ -188,7 +190,7 @@ async function autoLook(bot: Bot, telegramId: number, player: any, locationId: n
     note: "auto:look",
   });
 
-  await notifyQueuedIfNeeded(bot, telegramId, player.id, result.mode, "examine", locationId);
+  await notifyAutoChoice(bot, telegramId, player.id, result.mode, "роздивитися місцину", locationId);
   return true;
 }
 
@@ -210,11 +212,7 @@ async function autoMove(bot: Bot, telegramId: number, player: any, locationId: n
     note: `auto:move:${exit.direction}`,
   });
 
-  if (result.mode === "queued") {
-    await notifyQueuedIfNeeded(bot, telegramId, player.id, result.mode, `move:${exit.direction}`, locationId);
-  } else {
-    await bot.api.sendMessage(telegramId, `🤖 Авто: обрано рух — ${directionLabels[exit.direction]}.`, { reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, true) });
-  }
+  await notifyAutoChoice(bot, telegramId, player.id, result.mode, `піти на ${String(directionLabels[exit.direction]).toLocaleLowerCase("uk-UA")}`, locationId);
 
   return true;
 }
@@ -302,7 +300,7 @@ export async function requestOrEnablePlayerAuto(bot: Bot, ctx: any) {
   }
 
   const started = await enablePlayerAuto(bot, ctx.from.id);
-  await ctx.reply(started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено.", {
+  await ctx.reply(`${started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено."}\nАвтодії плануються ${playerAutoTimingText()}; вручну зазвичай можна діяти швидше.`, {
     reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, true),
   });
 }
@@ -389,7 +387,7 @@ export function registerAutoHandlers(bot: Bot) {
     await markPlayerAutoConsent(player.id);
     const started = await enablePlayerAuto(bot, ctx.from.id);
     await safeAnswerCallbackQuery(ctx, "Авто увімкнено.");
-    await ctx.reply(started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено.", {
+    await ctx.reply(`${started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено."}\nАвтодії плануються ${playerAutoTimingText()}; вручну зазвичай можна діяти швидше.`, {
       reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, true),
     });
   });

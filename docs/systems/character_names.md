@@ -6,7 +6,7 @@ Player-facing onboarding lets a new player either enter their own name or choose
 
 ## Current First Slice
 
-As of `0.12.13`, the implemented first slice includes:
+As of `0.12.14`, the implemented first slice includes:
 
 - a choice after pronoun selection: `Обрати ім’я зі списку`, `Випадкове ім’я` or `Ввести власне ім’я`;
 - a small curated prepared-name data module with stored Ukrainian case forms, origin, rarity and explicit reservation state;
@@ -19,6 +19,7 @@ As of `0.12.13`, the implemented first slice includes:
 - compound custom-name suggestions handle simple masculine descriptive first words such as `Великий Вова` -> `Великого Вови`;
 - custom names show a final review of all seven case forms before they are saved, with buttons to confirm, edit one case, or enter the name again;
 - duplicate checks against existing character names during entry and again immediately before saving, so stale buttons or delayed choices cannot claim a name that was already taken;
+- stale onboarding inline buttons are blocked once onboarding is complete, with `/restart` kept as the explicit way to erase the character and begin again;
 - a first forbidden-name list for creature/spirit/sacred or very famous names such as `Вовк`, `Миша`, `Лісовик`, `Упир`, `Сварог`, `Ґандальф`.
 
 This is still a code-level curated data module, not yet a full database-backed name registry.

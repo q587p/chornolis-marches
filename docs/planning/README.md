@@ -1,58 +1,39 @@
 # Planning
 
-This directory keeps project planning in the repository.
+Repository docs are the source of truth for Chornolis Marches planning.
 
-GitHub Issues and Projects are useful working interfaces, but they should not be the only source of truth. Important ideas, backlog items, Icebox concepts and design decisions should live here as text files so they have:
-
-- git history;
-- code review through pull requests;
-- easy migration away from GitHub if needed;
-- readable context for future contributors and tools;
-- export/import options.
+GitHub Issues and Projects may mirror these files, but should not be treated as canonical if they drift.
 
 ## Structure
 
-```txt
-docs/planning/
-  README.md
-  backlog.md
-  next.md
-  icebox.md
-  items/
-  decisions/
-  exports/
-```
+- `next.md` — active next lane.
+- `backlog.md` — accepted ideas that fit but are not current focus.
+- `icebox.md` — good ideas that are too early, too large or not validated.
+- `project_review_2026-05-28.md` — strategic audit.
+- `three_month_plan_2026-05.md` — current 0.13/0.14/0.15 plan.
+- `task_slices.md` — ordered list of small 1–2 hour tasks.
+- `items/` — independent task files with front matter.
 
-## Statuses
+## Status Values
 
-- `idea` — raw idea, not shaped yet.
-- `icebox` — good idea, but too early or not aligned with the next versions.
-- `backlog` — accepted work, not scheduled yet.
-- `next` — candidate for the next patch/minor version.
-- `in_progress` — actively being implemented.
-- `testing` — implemented, needs validation or balancing.
-- `done` — completed.
-- `cancelled` — deliberately not planned.
+- `next` — should be considered for the active patch line.
+- `backlog` — accepted, but not current focus.
+- `icebox` — interesting, too early or too large.
+- `done` — implemented and verified.
+- `cancelled` — intentionally not planned.
 
-## Source of truth
+## Promotion Rules
 
-Planning Markdown files are the source of truth.
+Move an item from backlog to next when:
 
-GitHub Issues/Projects may mirror them for convenience, but if there is a conflict, update the repository files first.
+- the needed foundation exists;
+- the task can be implemented and tested independently;
+- it supports the current roadmap phase;
+- it preserves atmosphere;
+- it avoids overbuilding.
 
-## Export
+## Task Size
 
-`docs/planning/exports/` contains JSON/CSV generated from the Markdown planning items.
+Most `next` tasks should fit in 1–2 hours.
 
-Regenerate exports after editing `docs/planning/items/*.md`:
-
-```bash
-npm run planning:export
-```
-
-The command writes:
-
-- `docs/planning/exports/items.json`
-- `docs/planning/exports/issues.csv`
-
-These files are intended as a portable bridge for future GitHub Issues/Projects sync or other planning dashboards.
+If a task does not fit, split it before implementation.

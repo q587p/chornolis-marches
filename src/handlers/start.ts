@@ -8,6 +8,7 @@ import { BASE_STAMINA } from "../gameConfig";
 import { renderCurrentWorldYearLine } from "../services/calendar";
 import { setDefaultBotCommandsWithRetry, syncChatBotCommandsForTelegramId } from "../services/telegramCommands";
 import { enterTutorialDream, hasCompletedTutorial, isTutorialLocation } from "../services/tutorial";
+import { escapeHtml } from "../utils/text";
 import {
   availablePreparedNames,
   customNameWarningText,
@@ -58,6 +59,7 @@ type OnboardingState = {
 };
 
 const onboarding = new Map<string, OnboardingState>();
+const HTML_OPTIONS = { parse_mode: "HTML" as const };
 
 export function clearOnboardingStateForTelegramId(telegramId: number | string) {
   return onboarding.delete(String(telegramId));
@@ -212,13 +214,28 @@ function renderOnboardingNameConfirmation(player: {
 }
 
 function renderOnboardingDateHint() {
-  return `Крук озивається з темного гілля:\n«Зараз ${renderCurrentWorldYearLine()} Але тобі це, мабуть, поки нічого не каже.»`;
+  return `Крук озивається з темного гілля:\n<blockquote>${escapeHtml(`Зараз ${renderCurrentWorldYearLine()} Але тобі це, мабуть, поки нічого не каже.`)}</blockquote>`;
+}
+
+async function isStaleOnboardingCallback(ctx: any) {
+  const player = await prisma.player.findUnique({
+    where: { telegramId: String(ctx.from.id) },
+    select: { onboardingComplete: true },
+  });
+  if (!player?.onboardingComplete) return false;
+
+  onboarding.delete(String(ctx.from.id));
+  await ctx.answerCallbackQuery({
+    text: "Ім’я вже обрано. Якщо справді треба почати заново, використайте /restart.",
+    show_alert: true,
+  });
+  return true;
 }
 
 async function showPreparedNameChoices(ctx: any, pronoun: OnboardingState["pronoun"]) {
   const names = availablePreparedNames(await usedCharacterNames(), { suggestedGender: guessGenderFromPronoun(pronoun) });
   if (names.length === 0) {
-    await ctx.reply(`Усі підготовлені імена вже зайняті або зарезервовані.\n\n${customNameWarningText()}`);
+    await ctx.reply(`Усі підготовлені імена вже зайняті або зарезервовані.\n\n${customNameWarningText()}`, HTML_OPTIONS);
     return;
   }
 
@@ -344,7 +361,7 @@ async function finishOnboarding(ctx: any, state: OnboardingState) {
   await ctx.reply(dream.text, {
     reply_markup: await buildMainReplyKeyboardForTelegramId(Number(state.telegramId), false),
   });
-  await ctx.reply(renderOnboardingDateHint());
+  await ctx.reply(renderOnboardingDateHint(), HTML_OPTIONS);
 
   const view = await renderLocationBrief(dream.locationId, player.id);
   await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
@@ -399,7 +416,7 @@ async function handleOnboardingText(ctx: any) {
     if (["випадкове", "випадкове ім'я", "рандом", "навмання"].includes(normalized)) {
       const prepared = randomAvailablePreparedName(await usedCharacterNames(), { suggestedGender: guessGenderFromPronoun(state.pronoun) });
       if (!prepared) {
-        await ctx.reply(`Усі підготовлені імена для цього вибору вже зайняті або зарезервовані.\n\n${customNameWarningText()}`);
+        await ctx.reply(`Усі підготовлені імена для цього вибору вже зайняті або зарезервовані.\n\n${customNameWarningText()}`, HTML_OPTIONS);
         return true;
       }
       state.name = prepared.forms.nominative;
@@ -412,7 +429,7 @@ async function handleOnboardingText(ctx: any) {
     if (["власне", "своє", "ввести", "власне ім'я", "своє ім'я"].includes(normalized)) {
       state.step = "name";
       onboarding.set(key, state);
-      await ctx.reply(customNameWarningText());
+      await ctx.reply(customNameWarningText(), HTML_OPTIONS);
       return true;
     }
     await ctx.reply("Оберіть один із варіантів нижче або напишіть «список», «випадкове ім'я» чи «власне ім'я».", {
@@ -464,6 +481,7 @@ export function registerStartHandlers(bot: Bot) {
   bot.command("start", async (ctx) => enterWorld(ctx, false));
 
   bot.callbackQuery(/^onboarding:pronoun:(HE|SHE|THEY)$/, async (ctx) => {
+    if (await isStaleOnboardingCallback(ctx)) return;
     const pronoun = ctx.match[1] as "HE" | "SHE" | "THEY";
     const key = String(ctx.from.id);
     onboarding.set(key, { step: "nameChoice", telegramId: key, pronoun });
@@ -472,6 +490,7 @@ export function registerStartHandlers(bot: Bot) {
   });
 
   bot.callbackQuery(/^onboarding:nameChoice:(prepared|custom|random)$/, async (ctx) => {
+    if (await isStaleOnboardingCallback(ctx)) return;
     const key = String(ctx.from.id);
     const state: OnboardingState = onboarding.get(key) ?? { step: "nameChoice", telegramId: key, pronoun: "HE" };
     const choice = ctx.match[1];
@@ -486,7 +505,7 @@ export function registerStartHandlers(bot: Bot) {
     if (choice === "random") {
       const prepared = randomAvailablePreparedName(await usedCharacterNames(), { suggestedGender: guessGenderFromPronoun(state.pronoun) });
       if (!prepared) {
-        await ctx.reply(`Усі підготовлені імена для цього вибору вже зайняті або зарезервовані.\n\n${customNameWarningText()}`);
+        await ctx.reply(`Усі підготовлені імена для цього вибору вже зайняті або зарезервовані.\n\n${customNameWarningText()}`, HTML_OPTIONS);
         return;
       }
 
@@ -499,10 +518,11 @@ export function registerStartHandlers(bot: Bot) {
     }
 
     onboarding.set(key, { ...state, step: "name" });
-    await ctx.reply(customNameWarningText());
+    await ctx.reply(customNameWarningText(), HTML_OPTIONS);
   });
 
   bot.callbackQuery(/^onboarding:cases:(confirm|restart|edit:([a-z]+))$/, async (ctx) => {
+    if (await isStaleOnboardingCallback(ctx)) return;
     const key = String(ctx.from.id);
     const state = onboarding.get(key);
     const action = ctx.match[1];
@@ -521,7 +541,7 @@ export function registerStartHandlers(bot: Bot) {
 
     if (action === "restart") {
       onboarding.set(key, { step: "name", telegramId: key, pronoun: state.pronoun });
-      await ctx.reply(`Добре, введіть ім’я заново.\n\n${customNameWarningText()}`);
+      await ctx.reply(`Добре, введіть ім’я заново.\n\n${customNameWarningText()}`, HTML_OPTIONS);
       return;
     }
 
@@ -537,6 +557,7 @@ export function registerStartHandlers(bot: Bot) {
   });
 
   bot.callbackQuery(/^onboarding:name:([a-z0-9_-]+)$/, async (ctx) => {
+    if (await isStaleOnboardingCallback(ctx)) return;
     const key = String(ctx.from.id);
     const state = onboarding.get(key);
     const prepared = preparedNameByKey(ctx.match[1]);

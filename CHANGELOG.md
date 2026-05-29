@@ -9,7 +9,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
-## 0.12.14 - Tutorial flow and quote polish - 12026-05-29
+## 0.12.14 - Tutorial flow and location readability - 12026-05-29
 
 ### Added
 
@@ -25,6 +25,13 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - The tutorial observation lesson now belongs to the fox-motion feature interaction instead of triggering from the whole location examine view.
 - The tutorial rest branch now uses a rest-seat feature for the first rest room while keeping the deeper dream fire as the faster rest room.
 - Help and input-alias documentation now describe the expanded `/say` aliases and visible locked exits from both sides of the dream gate.
+- Tutorial rest guidance now sends Сон and Дрімота as separate quoted messages instead of appending them to the rest status block.
+- Rest status messages now hide HP, stamina and state lines from ordinary players while keeping the rough time-to-full-rest estimate visible.
+- The tutorial world-date hint from Крук now uses the same quoted Telegram style as other voiced text.
+- Location feature names and nearby beings are highlighted in HTML output, and nearby players now show their current queued/running action or posture.
+- Player auto mode now announces the selected automatic action for speech, gathering, inspection and movement, and its confirmation text states the auto cadence is slower than manual play.
+- Custom-name onboarding warning examples now visually emphasize rejected example names and transliteration examples.
+- Refreshed roadmap, game design and planning documentation around the next 0.13-0.15 direction: onboarding stability, beginner return, night/light/firewood, observation and learning.
 
 ### Fixed
 
@@ -33,6 +40,8 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Inventory drops now send a clear actor confirmation with an updated location view, so dropped items are easier to notice immediately.
 - Tutorial dream berries, herbs and mushrooms can appear as visible loose ground resources when they are on the ground.
 - Parser regression tests now use a neutral target example instead of a real player name.
+- Completing rest now refreshes the main reply keyboard/status label along with the completion message.
+- Stale onboarding inline buttons no longer reopen name selection after the character has already completed onboarding; they show a restart hint instead.
 
 ---
 

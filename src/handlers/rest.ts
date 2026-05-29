@@ -8,6 +8,7 @@ import { actionQueueReplyOptions } from "../utils/actionQueueUi";
 import { isTutorialFastRestLocationKey, rememberTutorialCommandHint, TUTORIAL_DEEP_REST_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY } from "../services/tutorial";
 import { prisma } from "../db";
 import { getPlayerRestStaminaCap } from "../services/locationFeatures";
+import { escapeHtml } from "../utils/text";
 
 async function replyOrEdit(ctx: any, text: string, options?: any) {
   if (ctx.callbackQuery?.message) {
@@ -21,6 +22,10 @@ async function replyOrEdit(ctx: any, text: string, options?: any) {
   await ctx.reply(text, options);
 }
 
+function quoteBlock(text: string) {
+  return `<blockquote>${escapeHtml(text)}</blockquote>`;
+}
+
 async function beginRestNow(ctx: any, playerId: number) {
   const hadQueue = await hasPlayerActionQueueControls(playerId);
   await startPlayerRest(playerId);
@@ -29,16 +34,21 @@ async function beginRestNow(ctx: any, playerId: number) {
   const location = player?.currentLocationId
     ? await prisma.cellLocation.findUnique({ where: { id: player.currentLocationId }, select: { key: true } })
     : null;
-  let tutorialComment = "";
-  if (player && isTutorialFastRestLocationKey(location?.key) && await rememberTutorialCommandHint(player.id, "rest", player.currentLocationId)) {
+  const shouldTeachRest = player
+    && isTutorialFastRestLocationKey(location?.key)
+    && await rememberTutorialCommandHint(player.id, "rest", player.currentLocationId);
+
+  await replyOrEdit(ctx, `${await playerRestStatusText(playerId)}${suffix}`);
+
+  if (shouldTeachRest) {
     const sonLine = location?.key === TUTORIAL_REST_LOCATION_KEY
       ? "Відпочинок — це не сон, а короткий присілок. Лавка лише нагадує тілу, що можна ненадовго сісти й повернути подих."
       : location?.key === TUTORIAL_DEEP_REST_LOCATION_KEY
         ? "Відпочинок — це не сон, а короткий присілок. Тут жар навчить, як швидко повертається подих."
         : "Відпочинок — це не сон, а короткий присілок.";
-    tutorialComment = `\n\nСон радить:\n«${sonLine}»\n\nДрімота пирхає:\n«Сядеш — і ще захочеш сидіти. Але добре, хоч не падаєш.»`;
+    await ctx.reply(`Сон радить:\n${quoteBlock(sonLine)}`, { parse_mode: "HTML" });
+    await ctx.reply(`Дрімота пирхає:\n${quoteBlock("Сядеш — і ще захочеш сидіти. Але добре, хоч не падаєш.")}`, { parse_mode: "HTML" });
   }
-  await replyOrEdit(ctx, `${await playerRestStatusText(playerId)}${suffix}${tutorialComment}`);
 }
 
 async function startRest(ctx: any) {
