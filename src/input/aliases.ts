@@ -62,7 +62,6 @@ const DIRECTION_ALIASES: Record<string, Direction> = {
   south: "SOUTH",
   s: "SOUTH",
   "південь": "SOUTH",
-  "пів": "SOUTH",
   "пд": "SOUTH",
   pivden: "SOUTH",
 

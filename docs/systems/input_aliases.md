@@ -33,7 +33,8 @@ Menu and status:
 
 Movement:
 
-- `північ`, `південь`, `пів`, `схід`, `захід`.
+- `північ`, `південь`, `схід`, `захід`.
+- Ambiguous fragments such as `пів` should not move the character directly; unknown-command suggestions should offer both `північ` and `південь`.
 - `йти на південь`, `рушити на захід`.
 - Short aliases such as `пн`, `пд`, `сх`, `зх` are supported where unambiguous.
 - Non-compass exits also work: `/inside`, `/in`, `вср`, `всередину`, `увійти`, `/outside`, `/out`, `наз`, `назовні`, `вийти`.

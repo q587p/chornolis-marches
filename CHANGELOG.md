@@ -18,7 +18,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Updated character-name onboarding documentation for the stricter custom-name guardrail.
 - Simplified `/adminHelp` by removing ordinary player-help commands and grouping scribe/admin tools by purpose.
 - The first tutorial dream location now uses a focused starter keyboard with only `Look` and the visible south movement button.
-- Added `пів` as a Ukrainian text alias for south movement and included direction aliases in unknown-command suggestions.
+- Direction suggestions now treat `пів` as ambiguous instead of moving south directly, so unknown-command hints can offer both `північ` and `південь`.
 - Changed the tutorial bushes and inside-movement button emoji so they no longer resemble gathering/resource actions.
 - Added `наз` as a Ukrainian text alias for outside movement to match compact exit labels.
 - Added a matching tutorial bushes feature inside the observation room with an explicit `Outside` action button.
