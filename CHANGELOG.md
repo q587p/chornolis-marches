@@ -9,7 +9,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
-## 0.13.6 - Whisper, reply and shout commands - 12026-05-29
+## 0.13.6 - Speech commands and sitting rest posture - 12026-05-29
 
 ### Added
 
@@ -17,15 +17,20 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - `whisper` sends private local speech to one visible player target while bystanders only see that a whisper happened.
 - `reply` answers the most recent local speech event that addressed the character by name/forms.
 - `shout` sends a wider region-level speech message and spends extra stamina through the existing speech/action queue path.
+- Added a separate player posture field with `STANDING` / `SITTING` states, plus `/sit`, `/stand`, `сісти`, `присісти`, `встати` and related aliases.
 
 ### Changed
 
 - `/commands`, input-alias docs, `CMD-001` and `docs/planning/next.md` now mark the near-term command pack as shipped through the speech slice.
 - Inventory fire actions such as lighting/dousing torches and adding twigs now send the action result as a separate message before refreshing the inventory view.
+- `/rest` now starts active recovery while sitting; rest completion or interruption stops recovery but leaves the character sitting until they stand up.
+- Character and location descriptions now distinguish standing, sitting and sitting while resting.
+- Main reply keyboards and character-card actions now show `Сісти`, `Встати` and `Відпочити` according to the current posture/rest state.
 
 ### Tests
 
 - Added parser coverage for English and Ukrainian `whisper`, `reply` and `shout` forms.
+- Added parser coverage for posture aliases and focused helper coverage for posture text/button states.
 
 ---
 

@@ -102,6 +102,7 @@ Important remembered direction from the 0.11 line:
 - `0.13.0` expands the prepared character-name pool while keeping it in the typed data module. Prepared names remain scribe-approved by default and must include all Ukrainian case forms, origin, rarity and grammatical/gender compatibility.
 - Character-name tests should guard prepared-name coverage, duplicate keys and duplicate nominative forms.
 - `0.13.1` tightens forbidden custom-name normalization: obvious creature, spirit, sacred, famous or common-word names should be rejected even when players vary case, apostrophes, internal spaces or hyphens.
+- `0.13.6` separates player posture from active rest. `сісти` / `/sit` means sitting without recovery, `/stand` / `встати` stands up, and `/rest` starts recovery while sitting. Rest completion or interruption leaves the character sitting; standing during rest interrupts it.
 
 ## Prior build issue note
 
