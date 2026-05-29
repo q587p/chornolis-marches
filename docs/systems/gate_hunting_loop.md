@@ -1,0 +1,147 @@
+# Gate Hunting Loop
+
+## Purpose
+
+The gate hunting loop is the first settlement-facing ecological pressure loop. It should give players and NPCs a way to react to a living-world imbalance near the settlement gate without creating a standard quest contract.
+
+The settlement notices that the borderland is wrong: predators are scarce, herbivores are pressing too close, grass and young shoots are being eaten down, and the edge of the forest is losing resilience. People do not ask for heroic monster-slaying. They ask capable hands to help restore pressure on the herd and bring usable proof back to the gate.
+
+This is not a bounty board.
+
+Avoid:
+
+- `Quest accepted.`
+- `Kill 13 animals.`
+- `1 corpse = N coins.`
+- fixed bounty tables.
+
+Prefer:
+
+- a public notice;
+- a physical drop-off feature;
+- player and NPC contributions;
+- local memory and gradual settlement response;
+- uncertain, contextual thanks.
+
+## Player-Facing Frame
+
+The notice near the gate should say, diegetically:
+
+- predators have been scarce lately;
+- herbivores have multiplied or moved too close to the settlement edge;
+- grass, shoots and young trees are being eaten down;
+- the settlement worries about pasture, forage, firewood, erosion and hunger;
+- fresh carcasses or usable remains should be placed into the marked drop-off near the gate;
+- the scribe keeps a tally, but no one promises a fixed price per carcass.
+
+Suggested notice text:
+
+```text
+На дошці біля воріт висить дощана записка, прибита трьома кривими цвяхами.
+
+Травоїдного звіра побільшало, а хижаків коло Порубіжжя поменшало. Молоді пагони згризені, трава вибита до землі, стежки розтоптані, а біля криниць уже видно надто багато слідів.
+
+Хто здатен полювати — хай бере на себе частку роботи. Свіжі туші й придатні рештки складайте до падального рову за сторожовим кілком. Писар при воротах час від часу звіряє принесене.
+
+Плати за кожну тушу не обіцяємо. Але поселення пам’ятає тих, хто допомагає втримати край.
+```
+
+## Physical Drop-Off
+
+The gate should have a visible, inspectable local feature:
+
+- internal role: `carcass_dropoff`;
+- preferred name: `падальний рів`;
+- it accepts fresh carcasses or usable remains of hunted animals;
+- it rejects unrelated items with diegetic text;
+- it is a world object, not a detached menu.
+
+Suggested description:
+
+```text
+Під частоколом, осторонь від брами, викопано неглибокий падальний рів. Над ним стирчить сторожовий кілок із зарубками й клаптем червоної тканини. Тут складають туші та рештки здобичі, які писарі потім рахують, а різники — забирають те, що ще можна використати.
+```
+
+## Contribution Model
+
+MVP contribution records should be small and reusable:
+
+- drop-off feature key/id;
+- contributor kind: player, NPC or unknown;
+- player/creature id if known;
+- resource/carcass kind;
+- amount;
+- timestamp.
+
+The player should not see raw ecology scores or a spreadsheet. The scribe may mention meaningful thresholds in-world.
+
+## Settlement Reaction
+
+Rewards are settlement reactions, not a fixed price list.
+
+Good early reactions:
+
+- acknowledgement from a guard or scribe;
+- a small supply bundle such as food, bandage-like future item, torch or firewood;
+- a rumor or path hint;
+- a future favor/reputation hook.
+
+First MVP thresholds:
+
+- first valid contribution: acknowledgement only;
+- small threshold: a contextual supply thank-you;
+- larger threshold: a stronger public acknowledgement or future favor marker.
+
+The thresholds should live in domain configuration, not in handler text.
+
+## `put` Command Relationship
+
+This loop is the first target for a narrow local-container command:
+
+```text
+put [something] [number|all] [container]
+/put [something] [number|all] [container]
+покласти [щось] [число|все] [кудись]
+```
+
+MVP scope:
+
+- source: player inventory;
+- target: local feature/container in the current location;
+- amount: default `1`, integer amount, or `all` / `все`;
+- valid gate drop-off routes into the contribution service;
+- invalid items and invalid targets do not delete anything.
+
+Out of scope:
+
+- nested bags;
+- locked chests;
+- putting items into other characters;
+- full ownership law;
+- full economy pricing.
+
+## NPC Hunter Direction
+
+The NPC hunter loop should call the same drop-off contribution service later. The hunter should not silently add counts or teleport carcasses into the tally.
+
+Future MVP shape:
+
+1. Start near the settlement gate.
+2. Look for nearby herbivores outside tutorial/dream regions.
+3. Hunt through existing movement/combat/corpse systems.
+4. Collect or claim fresh carcasses.
+5. Return to the gate when burden, injury, low stamina, night or count threshold says so.
+6. Deposit through the same carcass drop-off service as players.
+
+Nearby players should see compact local messages when the hunter leaves, returns or deposits.
+
+## Acceptance
+
+- A player can examine the gate notice.
+- A player can examine the carcass drop-off feature.
+- `put` can place a valid carried carcass/remains stack into the drop-off.
+- Invalid items are rejected without loss.
+- Valid drop-offs are counted for the contributor.
+- First contribution gives atmospheric acknowledgement.
+- Threshold reaction is not a fixed bounty price.
+- NPC hunter behavior remains a follow-up unless implemented through the same service safely.
