@@ -394,13 +394,13 @@ async function completeGather(bot: Bot, action: WorldAction) {
       if (resource && resourceKey && cfg) {
         await bot.api.sendMessage(
           chatId,
-          `Ви витратили час на пошуки${durationText}, але нічого корисного не знайшли.\n\nМожете спробувати пошукати ще.`,
+          `Ви витратили час і снагу на пошуки${durationText}, але нічого корисного не знайшли.\n\nМожете спробувати пошукати ще.`,
           { reply_markup: buildGatherRetryKeyboard(resourceKey) },
         );
       } else {
         await bot.api.sendMessage(
           chatId,
-          `Ви витратили час на пошуки${durationText}, але нічого корисного не знайшли.\n\nБільше ви тут цього не знайдете найближчий час. Спробуйте пізніше або в іншій місцині.`,
+          `Ви витратили час і снагу на пошуки${durationText}, але нічого корисного не знайшли.\n\nБільше ви тут цього не знайдете найближчий час. Спробуйте пізніше або в іншій місцині.`,
         );
       }
     }
@@ -434,7 +434,7 @@ async function completeGather(bot: Bot, action: WorldAction) {
     if (chatId) {
       await bot.api.sendMessage(
         chatId,
-        `Ви витратили час на пошуки${durationText} і знайшли: ${resource.resourceType.name} ×${found}.`,
+        `Ви витратили час і снагу на пошуки${durationText} і знайшли: ${resource.resourceType.name} ×${found}.`,
         isTutorialForagingSuccess
           ? { reply_markup: await buildMainReplyKeyboardForTelegramId(Number((actor as any).telegramId), false) }
           : undefined,

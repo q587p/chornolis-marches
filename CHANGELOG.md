@@ -27,6 +27,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Custom-name onboarding now shows three available prepared-name examples for the chosen pronoun/gender and accepts matching prepared names directly with saved case forms.
 - Inventory use callbacks now send the action result as a separate message while keeping the inventory message as a clean inventory view.
 - Fatigue and recovery threshold messages now refresh the main reply keyboard so the status button reflects the updated stamina immediately.
+- Gather result text and the tutorial foraging hint now make stamina spending explicit, and the inventory hint clarifies that the inventory button appears after the first gather only if it is not already available.
 
 ### Tests
 
