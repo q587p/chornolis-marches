@@ -48,6 +48,7 @@ This is still only a tutorial flag, not a real skill progression model.
 
 - A crow, Сон or another tutorial voice warns the player to watch carefully.
 - A fox demonstrates movement, stalking or a simple attack.
+- The attack lesson should be a repeatable tutorial scene on a cadence, not a one-off permanent state: a fox or fox-like shadow attacks a mouse/prey, the location briefly reports something like `Щось кидається на здобич. За мить миша падає нерухомо.`, and there is a short observation window.
 - If the player examines the room, examines the fox, or otherwise watches at the right moment, show a small learning line such as:
 
 ```text
@@ -62,6 +63,8 @@ or, during the fox attack:
 Атака трохи покращена.
 ```
 
+- If the player misses the window, the scene can repeat later with varied Сон/Дрімота/crow comments rather than forcing the lesson immediately.
+- In the first implementation, `look` or `examine` during the attack moment can trigger the lesson; later this should depend on visibility, attention, and actual skill state.
 The first implementation can write only a tutorial flag or placeholder skill progress; it does not need the full progression model yet.
 
 ## First Skill Vocabulary To Consider

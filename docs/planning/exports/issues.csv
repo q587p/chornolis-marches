@@ -3,6 +3,7 @@ ADM-001,"Admin permissions, moderation and restricted reset",backlog,feature,adm
 ADM-001-A,Dangerous scribe tool audit,next,technical,admin,medium,"admin,audit,safety",docs/planning/items/ADM-001-A.md
 ADM-001-B,Scribe action audit helper,next,technical,admin,medium,"admin,audit,world-events",docs/planning/items/ADM-001-B.md
 CAL-001,"Calendar, moon phases and named years",icebox,system,world_time,medium,"calendar,world-time,moon-phases,seasons,folklore,atmosphere",docs/planning/items/CAL-001_calendar_moon_phases_and_named_years.md
+CMD-001,Near-term text command pack,next,feature,commands,high,"commands,aliases,mud,speech,navigation",docs/planning/items/CMD-001-near-term-text-command-pack.md
 COMBAT-001,Creature aggression and defense,backlog,feature,combat,medium,"animals,combat,predators,ecology",docs/planning/items/COMBAT-001-creature-aggression-and-defense.md
 ECO-001,Reproduction and herbivore overpopulation,testing,feature,ecology,high,"ecology,reproduction,herbivores,rabbits,resources,world-reactivity",docs/planning/items/ECO-001-reproduction-and-overpopulation.md
 ECON-001,Barter and trade,backlog,feature,economy,medium,"barter,trade,npc,economy",docs/planning/items/ECON-001-barter-and-trade.md
@@ -10,7 +11,7 @@ FIRE-001-A,Active light connects to visibility,next,feature,survival,high,"fire,
 FIRE-001-B,Expired campfire behavior polish,next,feature,survival,medium,"fire,campfire,copy",docs/planning/items/FIRE-001-B.md
 FIRE-001-C,Carried torch visibility,next,feature,survival,high,"torch,light,visibility",docs/planning/items/FIRE-001-C.md
 FISH-001,Riverbank fishing and fisher NPC,backlog,feature,survival,medium,"fishing,npc,skills,riverbank,observation",docs/planning/items/FISH-001-riverbank-fishing-and-fisher-npc.md
-FOOD-001,"Corpse freshening, meat and campfire cooking",next,feature,survival,high,"food,corpses,freshening,cooking,hunger,campfire",docs/planning/items/FOOD-001-corpse-freshening-meat-and-campfire-cooking.md
+FOOD-001,"Corpse freshening, meat and campfire cooking",testing,feature,survival,high,"food,corpses,freshening,cooking,hunger,campfire",docs/planning/items/FOOD-001-corpse-freshening-meat-and-campfire-cooking.md
 HMYZ-001-A,Audit hmyz model,next,technical,survival,high,"hmyz,resources,inventory",docs/planning/items/HMYZ-001-A.md
 HMYZ-001-B,Seed starter hmyz,next,feature,survival,high,"hmyz,seed,starter",docs/planning/items/HMYZ-001-B.md
 HMYZ-001-C,Pickup hmyz polish,next,feature,survival,high,"hmyz,pickup,inventory",docs/planning/items/HMYZ-001-C.md

@@ -40,7 +40,7 @@ The first version should help a new character understand what they can do withou
 - Keep reviewing `/start`, `/help`, fallback hints and the main keyboard as the tutorial grows, so a brand-new player sees the current game, not an older slice of it.
 - Expand the dream tutorial with branches that nudge the player through:
   - simple tracks and signs;
-  - more observation-learning scenes after the first fox movement proof, especially attack and following lessons once the skill system exists;
+  - more observation-learning scenes after the first fox movement proof, especially a repeatable fox/prey attack scene where `look` or `examine` at the right moment can show `Атака трохи покращена`, plus following lessons once the skill system exists;
   - social signals and nearby characters/creatures;
   - fire/light once the first real day-night loop is in place;
   - deeper danger/respawn safety once `/respawn` exists.
@@ -48,6 +48,10 @@ The first version should help a new character understand what they can do withou
 - Prefer short contextual prompts over a long up-front explanation.
 - Keep exact numbers hidden unless the player is a scribe/admin with technical details enabled.
 - When adding a new tutorial command or button, give it a short first-use diegetic comment from Сон, Дрімота, another guide voice or a local sign, and record that as a tiny event/flag when it should not repeat forever.
+- Move broad beginner advice out of the hidden `/commands` catalog and into a better beginner surface when that surface is ready: compact `/help`, tutorial signs/voices or the safety branch. Candidate advice:
+  - draw or keep a map;
+  - read location descriptions because important clues may hide there;
+  - travel with others once group play, danger and social tools support it.
 
 ## Tone options
 

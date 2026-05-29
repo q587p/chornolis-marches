@@ -1,7 +1,7 @@
 import { prisma } from "../db";
 import { resourceTypeDisplayName } from "./corpses";
 
-const PICKABLE_RESOURCE_KEYS = ["torch", "lit_torch", "twigs"] as const;
+const PICKABLE_RESOURCE_KEYS = ["torch", "lit_torch", "twigs", "raw_meat", "cooked_meat"] as const;
 const TUTORIAL_LOOSE_RESOURCE_KEYS = ["berries", "herbs", "mushrooms"] as const;
 export type PickableResourceKey = (typeof PICKABLE_RESOURCE_KEYS)[number];
 export type TutorialLooseResourceKey = (typeof TUTORIAL_LOOSE_RESOURCE_KEYS)[number];

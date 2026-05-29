@@ -1,7 +1,7 @@
 import { Direction } from "@prisma/client";
 
 export type GatherKey = "berries" | "mushrooms" | "herbs";
-export type UseItemKey = "berries" | "herbs" | "mushrooms";
+export type UseItemKey = "berries" | "herbs" | "mushrooms" | "cooked_meat";
 export type TargetAction = "inspect" | "greet" | "attack" | "freshen";
 export type QueueAliasMode = "status" | "cancel-current" | "clear";
 export type AutoAliasMode = "start" | "stop";
@@ -43,6 +43,7 @@ export type ParsedAliasCommand =
   | { kind: "inspect-feature"; target: string }
   | { kind: "wait" }
   | { kind: "add-twigs-campfire" }
+  | { kind: "cook-meat" }
   | { kind: "say"; text: string }
   | { kind: "target-action"; action: TargetAction; target: string }
   | { kind: "pickup-target"; target: string }
@@ -287,6 +288,14 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "додати хмиз": { kind: "add-twigs-campfire" },
   "підкинути хмиз": { kind: "add-twigs-campfire" },
   "додати хмиз у вогнище": { kind: "add-twigs-campfire" },
+  "cook meat": { kind: "cook-meat" },
+  "cook raw meat": { kind: "cook-meat" },
+  "підсмажити м'ясо": { kind: "cook-meat" },
+  "підсмажити м’ясо": { kind: "cook-meat" },
+  "смажити м'ясо": { kind: "cook-meat" },
+  "смажити м’ясо": { kind: "cook-meat" },
+  "приготувати м'ясо": { kind: "cook-meat" },
+  "приготувати м’ясо": { kind: "cook-meat" },
 
   "eat berries": { kind: "use-item", item: "berries" },
   "use berries": { kind: "use-item", item: "berries" },
@@ -307,11 +316,32 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "використати гриби": { kind: "use-item", item: "mushrooms" },
   "use herbs": { kind: "use-item", item: "herbs" },
   "use herb": { kind: "use-item", item: "herbs" },
+  "eat herbs": { kind: "use-item", item: "herbs" },
+  "eat herb": { kind: "use-item", item: "herbs" },
   "використати трави": { kind: "use-item", item: "herbs" },
   "використати лікарські трави": { kind: "use-item", item: "herbs" },
+  "з'їсти трави": { kind: "use-item", item: "herbs" },
+  "з’їсти трави": { kind: "use-item", item: "herbs" },
+  "зʼїсти трави": { kind: "use-item", item: "herbs" },
+  "зїсти трави": { kind: "use-item", item: "herbs" },
+  "їсти трави": { kind: "use-item", item: "herbs" },
+  "з'їсти лікарські трави": { kind: "use-item", item: "herbs" },
+  "з’їсти лікарські трави": { kind: "use-item", item: "herbs" },
+  "зʼїсти лікарські трави": { kind: "use-item", item: "herbs" },
+  "зїсти лікарські трави": { kind: "use-item", item: "herbs" },
+  "їсти лікарські трави": { kind: "use-item", item: "herbs" },
   "вжити трави": { kind: "use-item", item: "herbs" },
   "прикласти трави": { kind: "use-item", item: "herbs" },
   "лікуватися травами": { kind: "use-item", item: "herbs" },
+  "eat cooked meat": { kind: "use-item", item: "cooked_meat" },
+  "eat meat": { kind: "use-item", item: "cooked_meat" },
+  "use cooked meat": { kind: "use-item", item: "cooked_meat" },
+  "з'їсти м'ясо": { kind: "use-item", item: "cooked_meat" },
+  "з’їсти м’ясо": { kind: "use-item", item: "cooked_meat" },
+  "їсти смажене м'ясо": { kind: "use-item", item: "cooked_meat" },
+  "їсти смажене м’ясо": { kind: "use-item", item: "cooked_meat" },
+  "використати смажене м'ясо": { kind: "use-item", item: "cooked_meat" },
+  "використати смажене м’ясо": { kind: "use-item", item: "cooked_meat" },
   "light torch": { kind: "light-torch" },
   "use torch": { kind: "light-torch" },
   "запалити факел": { kind: "light-torch" },
@@ -518,9 +548,9 @@ function parseFeatureInspectionIntent(text: string): ParsedAliasCommand | null {
 function parseTargetAction(text: string): ParsedAliasCommand | null {
   const patterns: Array<[TargetAction, RegExp]> = [
     ["inspect", /^(?:look\s+at|look|x|examine|inspect|роздивитися|оглянути|глянути\s+на|подивитися\s+на|придивитися\s+до)\s+(.+)$/],
-    ["attack", /^(?:attack|hit|kill|атакувати|напасти\s+на|напасти|вдарити|ударити|бити)\s+(.+)$/],
+    ["attack", /^(?:attack|fight|hit|kill|kick|атакувати|напасти\s+на|напасти|вдарити|ударити|копнути|бити|битися\s+з)\s+(.+)$/],
     ["greet", /^(?:greet|привітати|привітатися\s+з|заговорити\s+з|говорити\s+з|звернутися\s+до)\s+(.+)$/],
-    ["freshen", /^(?:freshen|освіжувати|освіжити|зняти\s+шкуру\s+з|оббілувати|розібрати\s+труп)\s+(.+)$/],
+    ["freshen", /^(?:freshen|butcher|освіжувати|освіжити|зняти\s+шкуру\s+з|оббілувати|розібрати|обробити|підготувати\s+м'ясо\s+з|підготувати\s+м’ясо\s+з)\s+(.+)$/],
   ];
 
   for (const [action, pattern] of patterns) {

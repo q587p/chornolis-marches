@@ -4,6 +4,8 @@ import { creatureForms } from "./grammar";
 const CARRIED_CORPSE_MARKER = "carried_corpse_by_player:";
 
 const CORPSE_RESOURCE_DISPLAY_NAMES: Record<string, string> = {
+  raw_meat: "сире м'ясо",
+  cooked_meat: "смажене м'ясо",
   corpse_rabbit: "труп зайця",
   corpse_rabbit_male: "труп зайця",
   corpse_rabbit_female: "труп зайчихи",

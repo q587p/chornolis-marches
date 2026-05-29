@@ -12,12 +12,12 @@ The current lane is the three-month vertical slice:
 
 ## 0.13 Next
 
-- FOOD-001: corpse freshening, meat and campfire cooking.
 - ONB-002: character name onboarding polish.
 - ONB-001: dream tutorial compact completion.
 - SURV-001: beginner return / `Повернення`.
 - LOOP-001: starter location and bridge threshold polish.
 - ADM-001: minimal audit logging for dangerous scribe tools.
+- CMD-001: near-term text command pack for `glance`, `exits`, `enter`, `leave`, `whisper`, `reply` and `shout`.
 
 ## 0.14 Next
 
@@ -44,7 +44,7 @@ These are still `backlog`, but recent work makes them worth reviewing before the
 - Pickup/gather command semantics: `підібрати`/`take` should mean visible ground-item pickup, while `зібрати`/`gather` should mean spending time and stamina on a local resource node. This has been promoted to `ITEM-001`.
 - PERF-001: runtime performance plan and creature simulation budget. Recent production logs show `/all` and large creature counts are already visible pressure points; next performance work should keep following the recorded plan.
 - ADM-001: admin permissions, name approval and restricted reset hardening. A first `Писар`/admin gate exists now, so remaining near-term work is audit logging, clearer role UX, first name-review tools and closing any leftover dangerous paths.
-- Speech reply UX: `/reply`, `Відповісти` and `Відповісти як...` for addressed speech. This should probably stay behind the chat/social polish lane, not the ecology lane.
+- Speech and quick navigation commands: `glance`, `exits`, `enter`, `leave`, `/reply`, `whisper` and `shout` have been split into `CMD-001` so they can be implemented before the larger MUD/guild/builder command set.
 - Darkness creature / small coin omen: this becomes much more attractive right after WORLD-001 because it explicitly depends on darkness, light and calm observation.
 - TECH-001: service boundary and duplication cleanup. Keep this mostly behavior-preserving, but make it visible during patch planning because `worldTick.ts`, `status.ts`, `actionCompletions.ts`, `statusServer.ts`, `locations.ts` and `aliases.ts` are now large enough to slow safe feature work.
 

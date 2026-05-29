@@ -47,16 +47,22 @@ These values are balance constants, not final design. Player-facing UI should st
 
 These effects are intentionally modest and player-facing text should stay descriptive. Fuller food, cooking, medicine, herbalism, potions and prepared remedies remain later systems.
 
-## Planned Meat Loop
+## Hunger Direction
 
-`FOOD-001` promotes the first hunting/scavenging food loop into the near-term plan:
+Hunger currently rises mainly from strenuous player actions and can be eased by simple food. Player-facing text should describe it atmospherically, not as a debug value.
+
+When in-world time becomes more complete, hunger should also rise naturally with the passage of game time, so eating matters even for characters who are only traveling, waiting or resting between harder actions.
+
+## Meat Loop
+
+0.13.3 adds the first hunting/scavenging food loop:
 
 1. freshen a relatively fresh corpse;
-2. receive universal raw meat for now;
+2. receive universal raw meat for now, with first simple yields by species;
 3. cook raw meat at a nearby campfire;
-4. eat cooked meat to ease hunger by a modest amount.
+4. eat cooked meat to ease hunger by `5`.
 
-A torch should not be enough for cooking. Later systems can split meat by species and add bones, hide, fur, feathers, freshness, spoilage, tools and skill-based yields.
+A torch should not be enough for cooking. The first cooking pass is imperfect: roughly three attempts out of five become cooked meat, while failed attempts consume the raw meat for now. Later systems can split meat by species and add bones, hide, fur, feathers, freshness, spoilage, tools and skill-based yields.
 
 ## Campfire Loop
 
