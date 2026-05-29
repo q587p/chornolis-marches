@@ -105,6 +105,10 @@ assertAlias("/sit", { kind: "posture", mode: "sit" });
 assertAlias("сісти", { kind: "posture", mode: "sit" });
 assertAlias("/stand", { kind: "posture", mode: "stand" });
 assertAlias("встати", { kind: "posture", mode: "stand" });
+assertAlias("/put туша рів", { kind: "put-item", item: "туша", container: "рів" });
+assertAlias("/put туша 3 падальний рів", { kind: "put-item", item: "туша", amount: 3, container: "падальний рів" });
+assertAlias("/put туша all рів", { kind: "put-item", item: "туша", amount: "all", container: "рів" });
+assertAlias("покласти всі рештки до ями", { kind: "put-item", item: "рештки", amount: "all", container: "ями" });
 assertAlias("черга", { kind: "queue", mode: "status" });
 assertAlias("скасувати", { kind: "queue", mode: "cancel-current" });
 assertAlias("очистити чергу", { kind: "queue", mode: "clear" });
@@ -123,6 +127,10 @@ assertAlias("/відповісти Йду за тобою.", { kind: "reply", te
 assertAlias("shout Сюди!", { kind: "shout", text: "Сюди!" });
 assertAlias("гукнути Хто там?", { kind: "shout", text: "Хто там?" });
 assertAlias("крикнути Стій!", { kind: "shout", text: "Стій!" });
+assertAlias("кричати Допоможіть!", { kind: "shout", text: "Допоможіть!" });
+assertAlias("крик Допоможіть!", { kind: "shout", text: "Допоможіть!" });
+assertAlias("вигукнути Обережно!", { kind: "shout", text: "Обережно!" });
+assertAlias("волати Не йдіть туди!", { kind: "shout", text: "Не йдіть туди!" });
 assert.equal(isDreamGateOpeningPhrase("Відчинитися"), true);
 assert.equal(isDreamGateOpeningPhrase("Відчинись будь ласка"), true);
 assert.equal(isDreamGateOpeningPhrase("Можеш відчинитися?"), true);
@@ -149,5 +157,8 @@ assert.ok(suggestAliasInputs("роздивит").includes("роздивитис�
 assert.ok(suggestAliasInputs("пів").includes("північ"), "Expected alias suggestions to include північ");
 assert.ok(suggestAliasInputs("пів").includes("південь"), "Expected alias suggestions to include південь");
 assert.ok(suggestAliasInputs("назо").includes("назовні"), "Expected alias suggestions to include назовні");
+assert.ok(suggestAliasInputs("крик Допоможіть!").includes("крикнути"), "Expected alias suggestions to include крикнути");
+assert.ok(suggestAliasInputs("крич").includes("кричати"), "Expected alias suggestions to include кричати");
+assert.ok(suggestAliasInputs("шеп").includes("шепнути"), "Expected alias suggestions to include шепнути");
 
 console.log("Input aliases OK");

@@ -103,6 +103,7 @@ Important remembered direction from the 0.11 line:
 - Character-name tests should guard prepared-name coverage, duplicate keys and duplicate nominative forms.
 - `0.13.1` tightens forbidden custom-name normalization: obvious creature, spirit, sacred, famous or common-word names should be rejected even when players vary case, apostrophes, internal spaces or hyphens.
 - `0.13.6` separates player posture from active rest. `сісти` / `/sit` means sitting without recovery, `/stand` / `встати` stands up, and `/rest` starts recovery while sitting. Rest completion or interruption leaves the character sitting; standing during rest interrupts it.
+- `0.13.7` starts the gate hunting loop as ecological pressure, not a quest. The closed settlement gate now has a notice and `Падальний рів`; narrow `/put` can place carried carcasses/remains into the drop-off and record contribution reactions. NPC hunter behavior remains the next slice and should use the same drop-off service.
 
 ## Prior build issue note
 

@@ -31,7 +31,7 @@ As of `0.12.0`, the first concrete newcomer path is the dream tutorial in `Др�
 
 - New characters enter the tutorial dream after name/pronoun onboarding.
 - As of `0.13.1`, name onboarding offers a broader prepared scribe-approved name pool or a custom-name path with a warning and stricter forbidden-name normalization. Once onboarding is complete, old inline name-choice buttons should not reopen character creation; `/restart` remains the explicit reset path. Keep this aligned with `docs/systems/character_names.md` when the name pool or validation rules change.
-- The tutorial starts with a minimal reply keyboard that shows only `Озирнутися` and the visible south path. After the first step, the main reply keyboard fills in available exits and tutorial-only actions by location.
+- The tutorial starts with a minimal reply keyboard that shows only `Озирнутися` and the visible south path. The second step stays narrow too: it shows only `Озирнутися`, `Північ` and `Південь`, without `Речі`, `Допомога`, `Меню`, `Роздивитися`, posture actions or the status strip. After that, the main reply keyboard fills in available exits and tutorial-only actions by location.
 - Сон and Дрімота can comment on early tutorial movement: Сон encourages correct forward steps, while Дрімота provides a lightly antagonistic voice when the player turns back.
 - Сон and Дрімота also react when a player studies tutorial tracks closely: one rewards attention, the other tries to hurry the player onward.
 - `/sleep tutorial` returns a character to the saved tutorial dream position.

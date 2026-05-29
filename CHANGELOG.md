@@ -9,6 +9,39 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.7 - Gate hunting loop foundation - 12026-05-30
+
+### Added
+
+- Added `docs/systems/gate_hunting_loop.md` as the design source for a settlement-facing ecological pressure loop instead of a formal quest/bounty board.
+- Added planning items for the gate hunting loop, narrow `put` command, carcass drop-off reactions and future NPC hunter behavior.
+- Added a gate notice and physical carcass drop-off feature near the closed settlement gate.
+- Added a narrow `put` / `/put` command that can place carried carcasses/remains into matching local features.
+- Added a carcass drop-off contribution table and service so valid drop-offs record contributor, resource kind and amount.
+- Added first and threshold settlement reactions for carcass/remains contributions without fixed per-corpse pricing.
+
+### Changed
+
+- `/help`, `/commands` and input-alias docs now list the first narrow `put` forms for carcass/remains drop-off.
+- Planning exports now include the new gate hunting loop task pack.
+- The second tutorial dream location now keeps a narrow reply keyboard with only look, north and south, instead of exposing the full main keyboard too early.
+- `reply` now remembers direct addressed speech and whispers per recipient, so a player can answer the last speaker even if that speaker is no longer visible.
+- `shout` now accepts more natural Ukrainian shout forms such as `кричати`, `крик`, `вигукнути` and `волати`.
+- Unknown-text suggestions now include regex-backed speech commands such as `крикнути`, `кричати`, `шепнути` and `відповісти`.
+- Gate hunting loop docs now include thematic hunter shout/field-line guidance for the future NPC hunter and player hunter auto-mode.
+- Documented the future NPC hunter route-and-torch loop, including gate torch bundles, magic campfire ignition, delayed hunting actions and a new `NAV-001` route-finding planning item.
+
+### Tests
+
+- Added parser coverage for default, numeric and `all` / `все` `put` forms.
+- Added focused helper coverage for carcass-resource validation and drop-off threshold reactions.
+- Added reply-keyboard coverage for the second tutorial dream location.
+- Added helper coverage for the per-recipient reply target memory payload.
+- Added parser coverage for additional Ukrainian `shout` synonyms.
+- Added suggestion coverage for speech-command aliases that are parsed by regex instead of exact command entries.
+
+---
+
 ## 0.13.6 - Speech commands and sitting rest posture - 12026-05-29
 
 ### Added

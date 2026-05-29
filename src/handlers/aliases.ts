@@ -48,6 +48,8 @@ import { dropObserverText, pickupObserverText, recordVisibleItemAction } from ".
 import { noteKnownMessage } from "../utils/messageTracker";
 import { cookRawMeat, isFreshenedCorpse } from "../services/meat";
 import { creatureForms, playerForms } from "../services/grammar";
+import { putInventoryIntoLocalFeature } from "../services/carcassDropoff";
+import { latestRememberedReplyTarget } from "../services/replyTargets";
 
 type TextTargetRef = {
   type: "player" | "creature";
@@ -482,6 +484,31 @@ async function submitInventoryDrop(bot: Bot, ctx: any, target: string) {
   }
 }
 
+async function submitPutItem(bot: Bot, ctx: any, item: string, amount: number | "all" | undefined, container: string) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  try {
+    const result = await putInventoryIntoLocalFeature({
+      playerId: player.id,
+      itemQuery: item,
+      amount,
+      containerQuery: container,
+    });
+    await recordVisibleItemAction(bot, {
+      playerId: player.id,
+      locationId: result.locationId,
+      observerText: `${playerForms(player).nominative} складає здобич до падального рову біля воріт.`,
+      eventTitle: "Player contributed carcass",
+      eventDescription: `player=${player.id}; dropoff=${result.featureKey}; amount=${result.amount}; total=${result.contributionTotal}`,
+      actionNote: `покладено здобич до падального рову: ${result.amount}`,
+    });
+    await ctx.reply(result.text);
+  } catch (error) {
+    await ctx.reply(error instanceof Error ? error.message : "Не вдалося покласти це.");
+  }
+}
+
 async function submitSay(bot: Bot, ctx: any, text: string) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
@@ -538,6 +565,9 @@ function speechSpeakerFromTitle(title: string) {
 async function lastAddressedSpeakerName(player: any) {
   const forms = playerForms(player);
   const selfKeys = [forms.nominative, forms.dative, player.firstName, player.username].filter(Boolean).map((value) => normalizeInput(String(value)));
+  const remembered = await latestRememberedReplyTarget(player.id);
+  if (remembered && !selfKeys.includes(normalizeInput(remembered.speakerName))) return remembered;
+
   const addressedForms = [forms.dative, forms.nominative, player.firstName].filter(Boolean);
   const events = await prisma.worldEvent.findMany({
     where: {
@@ -553,7 +583,7 @@ async function lastAddressedSpeakerName(player: any) {
     const speaker = speechSpeakerFromTitle(event.title);
     if (!speaker) continue;
     if (selfKeys.includes(normalizeInput(speaker))) continue;
-    return speaker;
+    return { speakerName: speaker };
   }
   return null;
 }
@@ -565,12 +595,23 @@ async function submitReply(bot: Bot, ctx: any, text: string) {
   const safeText = stripUnsafeText(text);
   if (!safeText) return void (await ctx.reply("Напиши так: reply текст"));
 
-  const targetName = await lastAddressedSpeakerName(player);
-  if (!targetName) return void (await ctx.reply("Поки немає репліки, на яку можна відповісти. Спробуйте звичайне /say або зверніться до видимого персонажа."));
+  const target = await lastAddressedSpeakerName(player);
+  if (!target) return void (await ctx.reply("Поки немає репліки, на яку можна відповісти. Спробуйте звичайне /say або зверніться до видимого персонажа."));
 
   const durationMs = actionDurationMs("SAY", player.stamina);
   try {
-    const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "SAY", payload: { text: safeText, mode: "reply", targetName }, durationMs, chatId: ctx.chat?.id });
+    const result = await performOrQueuePlayerAction(bot, {
+      playerId: player.id,
+      type: "SAY",
+      payload: {
+        text: safeText,
+        mode: "reply",
+        targetName: target.speakerName,
+        ...(target.speakerPlayerId ? { targetType: "player", targetId: target.speakerPlayerId } : {}),
+      },
+      durationMs,
+      chatId: ctx.chat?.id,
+    });
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {
     await ctx.reply(error instanceof Error ? error.message : "Не вдалося відповісти.");
@@ -861,6 +902,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "open") return submitOpen(ctx);
     if (parsed.kind === "inspect-inventory-item") return submitInventoryInspect(ctx, parsed.target);
     if (parsed.kind === "drop-inventory-item") return submitInventoryDrop(bot, ctx, parsed.target);
+    if (parsed.kind === "put-item") return submitPutItem(bot, ctx, parsed.item, parsed.amount, parsed.container);
     if (parsed.kind === "add-twigs-campfire") {
       const player = await getPlayerByTelegramId(ctx.from.id);
       if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
