@@ -418,7 +418,36 @@ const COMPACT_ALIASES: Record<string, ParsedAliasCommand> = {
   whereami: { kind: "location" },
 };
 
-const SUGGESTABLE_ALIASES = [...new Set([...Object.keys(EXACT_ALIASES), ...Object.keys(DIRECTION_ALIASES)])];
+const SUGGESTABLE_PATTERN_ALIASES = [
+  "say",
+  "сказати",
+  "говорити",
+  "мовити",
+  "промовити",
+  "whisper",
+  "шепнути",
+  "прошепотіти",
+  "reply",
+  "відповісти",
+  "shout",
+  "yell",
+  "крик",
+  "крикнути",
+  "кричати",
+  "закричати",
+  "викрикнути",
+  "вигукнути",
+  "гук",
+  "гукнути",
+  "загукати",
+  "клич",
+  "кликати",
+  "покликати",
+  "волати",
+  "заволати",
+];
+
+const SUGGESTABLE_ALIASES = [...new Set([...Object.keys(EXACT_ALIASES), ...Object.keys(DIRECTION_ALIASES), ...SUGGESTABLE_PATTERN_ALIASES])];
 
 function normalizeSlashCommand(text: string) {
   return text.replace(/^\/([^\s@]+)@[A-Za-z0-9_]+/i, "/$1");
@@ -514,11 +543,11 @@ function parseGatherResource(resource: string): ParsedAliasCommand | null {
 }
 
 function parseSay(raw: string, text: string): ParsedAliasCommand | null {
-  const match = text.match(/^\/?(say|сказати|говорити|мовити|промовити|крикнути|ск|сказ|гов)\s+(.+)$/);
+  const match = text.match(/^\/?(say|сказати|говорити|мовити|промовити|ск|сказ|гов)\s+(.+)$/);
   if (!match) return null;
   if (match[1] === "говорити" && match[2].trim().startsWith("з ")) return null;
 
-  const rawMatch = raw.match(/^\/?(say|сказати|говорити|мовити|промовити|крикнути|ск|сказ|гов)\s+(.+)$/i);
+  const rawMatch = raw.match(/^\/?(say|сказати|говорити|мовити|промовити|ск|сказ|гов)\s+(.+)$/i);
   const said = (rawMatch?.[2] ?? match[2]).trim().slice(0, 300);
   return said ? { kind: "say", text: said } : null;
 }
@@ -538,9 +567,9 @@ function parseDirectedSpeech(raw: string, text: string): ParsedAliasCommand | nu
     return speech ? { kind: "reply", text: speech } : null;
   }
 
-  const shout = text.match(/^\/?(?:shout|yell|крикнути|гукнути|гук)\s+(.+)$/);
+  const shout = text.match(/^\/?(?:shout|yell|крик|крикнути|кричати|закричати|викрикнути|вигукнути|гук|гукнути|загукати|клич|кликати|покликати|волати|заволати)\s+(.+)$/);
   if (shout?.[1]?.trim()) {
-    const rawMatch = raw.match(/^\/?(?:shout|yell|крикнути|гукнути|гук)\s+(.+)$/i);
+    const rawMatch = raw.match(/^\/?(?:shout|yell|крик|крикнути|кричати|закричати|викрикнути|вигукнути|гук|гукнути|загукати|клич|кликати|покликати|волати|заволати)\s+(.+)$/i);
     const speech = (rawMatch?.[1] ?? shout[1]).trim().slice(0, 300);
     return speech ? { kind: "shout", text: speech } : null;
   }

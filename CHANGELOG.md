@@ -26,6 +26,8 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Planning exports now include the new gate hunting loop task pack.
 - The second tutorial dream location now keeps a narrow reply keyboard with only look, north and south, instead of exposing the full main keyboard too early.
 - `reply` now remembers direct addressed speech and whispers per recipient, so a player can answer the last speaker even if that speaker is no longer visible.
+- `shout` now accepts more natural Ukrainian shout forms such as `кричати`, `крик`, `вигукнути` and `волати`.
+- Unknown-text suggestions now include regex-backed speech commands such as `крикнути`, `кричати`, `шепнути` and `відповісти`.
 
 ### Tests
 
@@ -33,6 +35,8 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added focused helper coverage for carcass-resource validation and drop-off threshold reactions.
 - Added reply-keyboard coverage for the second tutorial dream location.
 - Added helper coverage for the per-recipient reply target memory payload.
+- Added parser coverage for additional Ukrainian `shout` synonyms.
+- Added suggestion coverage for speech-command aliases that are parsed by regex instead of exact command entries.
 
 ---
 

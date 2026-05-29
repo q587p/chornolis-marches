@@ -65,7 +65,7 @@ Actions:
 - `/say Відчинитися`, `сказати Відчинитися`, `говорити Відчинись будь ласка`, `ск Можеш відчинитися`, `сказ Відчинися`, `гов Відкрийся` and the `Сказати «Відчинитися»` gate button -> say the written phrase aloud and open the local `Брама Сну` in the dream tutorial. The dream gate is locked from both sides while closed, so both the gate-side `Південь` and hub-side `Північ` exits should appear parenthesized until speech opens the passage. `/open`, `open` and `відкрити` may remain as compatibility aliases for the same local interactive gate, but the tutorial-facing path should teach speech and attention to signs. The closed settlement gate near the bridge is a visible locked exit, but it is not openable yet.
 - `whisper Данило Тихіше`, `шепнути 1 Тихіше`, `/whisper Данило Тихіше` -> whisper privately to one visible player in the current location. The target receives the text; other nearby players only see that a whisper happened, without the words.
 - `reply Я почув`, `відповісти Я почув` -> answer the last speech event that addressed your character directly. Direct speech, greetings and whispers remember the speaker per recipient, so `reply` does not require the speaker to remain visible or in the same current target list.
-- `shout Сюди`, `гукнути Сюди`, `крикнути Сюди` -> shout across the current region. This uses the speech queue path but spends extra stamina compared with ordinary speech.
+- `shout Сюди`, `гукнути Сюди`, `крикнути Сюди`, `кричати Допоможіть`, `крик Допоможіть`, `вигукнути Обережно`, `волати Не йдіть туди` -> shout across the current region. This uses the speech queue path but spends extra stamina compared with ordinary speech.
 - `черга`, `скасувати`, `очистити чергу`.
 - `/track`, `/examine tracks`, `роздивитися сліди`, `придивитися до слідів`. Future detail forms should include target-like aliases such as `роздивитися вовчий слід`, `роздивитися людський слід` and `роздивитися заячий слід`.
 - `сказати Привіт`.
@@ -121,7 +121,7 @@ The speech slice shipped in 0.13.6:
 
 - `whisper [player] [message]` / `шепнути [персонаж] [текст]`;
 - `reply <message>` / `відповісти <текст>`;
-- `shout <message>` / `крикнути <текст>` / `гукнути <текст>`.
+- `shout <message>` / `крикнути <текст>` / `кричати <текст>` / `крик <текст>` / `гукнути <текст>`.
 
 Future command-registry work should move the project toward one shared source of truth for:
 
