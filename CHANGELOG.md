@@ -24,6 +24,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added a matching tutorial bushes feature inside the observation room with an explicit `Outside` action button.
 - Successful tutorial gathering now refreshes the reply keyboard immediately so the inventory button appears after the first find.
 - The onboarding name confirmation now bolds the chosen character name and example case forms.
+- Custom-name onboarding now shows three available prepared-name examples for the chosen pronoun/gender and accepts matching prepared names directly with saved case forms.
 
 ### Tests
 

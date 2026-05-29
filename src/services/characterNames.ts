@@ -1,5 +1,6 @@
 import { PREPARED_CHARACTER_NAMES } from "../data/preparedCharacterNames";
 import { validateCharacterName, normalizeCharacterName, type Gender, type NameForms } from "./grammar";
+import { escapeHtml } from "../utils/text";
 
 export { PREPARED_CHARACTER_NAMES } from "../data/preparedCharacterNames";
 
@@ -101,9 +102,18 @@ export function preparedNameSummary(name: PreparedCharacterName) {
   return `${name.forms.nominative} — ${name.origin}; ${name.rarity}; відмінки збережені${note}`;
 }
 
-export function customNameWarningText() {
+export function customNameWarningText(options: { examples?: string[] } = {}) {
+  const examples = (options.examples ?? []).filter(Boolean).slice(0, 3);
+  const exampleLines = examples.length
+    ? [
+        "",
+        `Приклади доступних імен: ${examples.map((name) => `<b>${escapeHtml(name)}</b>`).join(", ")}.`,
+      ]
+    : [];
+
   return [
     "Введіть власне ім'я персонажа.",
+    ...exampleLines,
     "",
     "Не підійдуть імена богів, назви істот чи духів, випадкові набори літер, грубі слова, надто відомі чужі персонажі або слова, що не звучать як особове ім'я Порубіжжя.",
     "Наприклад: <b>Сварог</b> (бог), <b>Лісовик</b> або <b>Вовк</b> (дух чи істота), <b>Фффрр</b> (набір літер), лайка й образи, <b>Ґандальф</b> або <b>Герміона</b> (чужі впізнавані персонажі), <b>Камінь</b> чи <b>Стежка</b> (слова, не особові імена).",

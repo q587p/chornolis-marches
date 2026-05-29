@@ -7,6 +7,7 @@ require("ts-node/register");
 const {
   PREPARED_CHARACTER_NAMES,
   availablePreparedNames,
+  customNameWarningText,
   normalizeNameForRegistry,
   preparedNameByKey,
   randomAvailablePreparedName,
@@ -56,6 +57,8 @@ assert.ok(pluralNames.length >= 6, `Expected at least 6 available plural names, 
 assert.ok(masculineNames.every((name) => name.suggestedGender === "MASCULINE"));
 assert.ok(feminineNames.every((name) => name.suggestedGender === "FEMININE"));
 assert.ok(pluralNames.every((name) => name.suggestedGender === "PLURAL"));
+assert.ok(masculineNames.some((name) => name.forms.nominative === "Северин"), "Expected Severyn to be available as a prepared masculine name");
+assert.ok(customNameWarningText({ examples: ["Северин", "Богдан", "Олесь"] }).includes("<b>Северин</b>"), "Expected custom-name prompt to bold prepared examples");
 assert.equal(randomAvailablePreparedName([], { suggestedGender: "MASCULINE" }).suggestedGender, "MASCULINE");
 assert.equal(randomAvailablePreparedName([], { suggestedGender: "FEMININE" }).suggestedGender, "FEMININE");
 assert.equal(randomAvailablePreparedName([], { suggestedGender: "PLURAL" }).suggestedGender, "PLURAL");

@@ -14,7 +14,8 @@ As of `0.13.1`, the implemented first slice includes:
 - filtering prepared-name choices by the pronoun/grammatical gender selected during onboarding, with at least 8 masculine, 8 feminine and 6 plural-form options in the current pool;
 - a random prepared-name pick that uses the same pronoun/gender and availability filters as the visible list;
 - automatic approval for prepared names, because they are treated as already reviewed by scribes;
-- a custom-name warning before free text entry;
+- a custom-name warning before free text entry, including three random currently available prepared-name examples for the selected pronoun/gender;
+- direct custom-name entry of an available prepared name, such as `Северин`, skips manual case review and uses the stored approved case forms immediately;
 - custom names accept Cyrillic names with spaces, hyphens and common apostrophe variants, and can convert fully Latin transliteration into Cyrillic for players without a Ukrainian keyboard;
 - compound custom-name suggestions handle simple masculine descriptive first words such as `Великий Вова` -> `Великого Вови`;
 - custom names show a final review of all seven case forms before they are saved, with buttons to confirm, edit one case, or enter the name again;
@@ -137,6 +138,7 @@ The `Випадкове ім’я` button should choose only from the same curre
 
 Custom-name validation should show:
 
+- examples of currently available prepared names matching the selected pronoun/gender;
 - uniqueness check;
 - similarity check;
 - setting-fit check;

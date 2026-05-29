@@ -162,6 +162,27 @@ async function showNameFormsReview(ctx: any, state: OnboardingState) {
   await ctx.reply(renderNameFormsReview(state.forms), { reply_markup: nameFormsReviewKeyboard() });
 }
 
+function samplePreparedNameExamples(names: Array<{ forms: NameForms }>, count = 3) {
+  const pool = [...names];
+  for (let index = pool.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [pool[index], pool[swapIndex]] = [pool[swapIndex], pool[index]];
+  }
+  return pool.slice(0, count).map((name) => name.forms.nominative);
+}
+
+function findPreparedNameByNominative(names: Array<{ forms: NameForms }>, name: string) {
+  const normalized = normalizeNameForRegistry(name);
+  return names.find((prepared) => normalizeNameForRegistry(prepared.forms.nominative) === normalized) ?? null;
+}
+
+async function customNamePromptText(state: Pick<OnboardingState, "telegramId" | "pronoun">) {
+  const names = availablePreparedNames(await usedCharacterNames({ exceptTelegramId: state.telegramId }), {
+    suggestedGender: guessGenderFromPronoun(state.pronoun),
+  });
+  return customNameWarningText({ examples: samplePreparedNameExamples(names) });
+}
+
 async function askOnboarding(ctx: any) {
   await ctx.reply("Ваші займенники:", { reply_markup: pronounKeyboard() });
 }
@@ -385,7 +406,19 @@ async function handleOnboardingText(ctx: any) {
     }
 
     const name = normalizeCharacterName(validation.value);
-    if (!(await isCharacterNameAvailable(name, key))) {
+    const usedNames = await usedCharacterNames({ exceptTelegramId: key });
+    const availablePrepared = availablePreparedNames(usedNames, { suggestedGender: guessGenderFromPronoun(state.pronoun) });
+    const prepared = findPreparedNameByNominative(availablePrepared, name);
+    if (prepared) {
+      state.name = prepared.forms.nominative;
+      state.forms = prepared.forms;
+      state.nameApproved = true;
+      onboarding.set(key, state);
+      await finishOnboarding(ctx, state);
+      return true;
+    }
+
+    if (usedNames.some((usedName) => usedName && normalizeNameForRegistry(usedName) === normalizeNameForRegistry(name))) {
       await ctx.reply("Таке ім'я вже є в літописі Порубіжжя. Оберіть інше або візьміть готове ім'я зі списку.");
       return true;
     }
@@ -416,7 +449,7 @@ async function handleOnboardingText(ctx: any) {
     if (["випадкове", "випадкове ім'я", "рандом", "навмання"].includes(normalized)) {
       const prepared = randomAvailablePreparedName(await usedCharacterNames(), { suggestedGender: guessGenderFromPronoun(state.pronoun) });
       if (!prepared) {
-        await ctx.reply(`Усі підготовлені імена для цього вибору вже зайняті або зарезервовані.\n\n${customNameWarningText()}`, HTML_OPTIONS);
+        await ctx.reply(`Усі підготовлені імена для цього вибору вже зайняті або зарезервовані.\n\n${await customNamePromptText(state)}`, HTML_OPTIONS);
         return true;
       }
       state.name = prepared.forms.nominative;
@@ -429,7 +462,7 @@ async function handleOnboardingText(ctx: any) {
     if (["власне", "своє", "ввести", "власне ім'я", "своє ім'я"].includes(normalized)) {
       state.step = "name";
       onboarding.set(key, state);
-      await ctx.reply(customNameWarningText(), HTML_OPTIONS);
+      await ctx.reply(await customNamePromptText(state), HTML_OPTIONS);
       return true;
     }
     await ctx.reply("Оберіть один із варіантів нижче або напишіть «список», «випадкове ім'я» чи «власне ім'я».", {
@@ -505,7 +538,7 @@ export function registerStartHandlers(bot: Bot) {
     if (choice === "random") {
       const prepared = randomAvailablePreparedName(await usedCharacterNames(), { suggestedGender: guessGenderFromPronoun(state.pronoun) });
       if (!prepared) {
-        await ctx.reply(`Усі підготовлені імена для цього вибору вже зайняті або зарезервовані.\n\n${customNameWarningText()}`, HTML_OPTIONS);
+        await ctx.reply(`Усі підготовлені імена для цього вибору вже зайняті або зарезервовані.\n\n${await customNamePromptText(state)}`, HTML_OPTIONS);
         return;
       }
 
@@ -518,7 +551,7 @@ export function registerStartHandlers(bot: Bot) {
     }
 
     onboarding.set(key, { ...state, step: "name" });
-    await ctx.reply(customNameWarningText(), HTML_OPTIONS);
+    await ctx.reply(await customNamePromptText({ ...state, telegramId: key }), HTML_OPTIONS);
   });
 
   bot.callbackQuery(/^onboarding:cases:(confirm|restart|edit:([a-z]+))$/, async (ctx) => {
@@ -541,7 +574,7 @@ export function registerStartHandlers(bot: Bot) {
 
     if (action === "restart") {
       onboarding.set(key, { step: "name", telegramId: key, pronoun: state.pronoun });
-      await ctx.reply(`Добре, введіть ім’я заново.\n\n${customNameWarningText()}`, HTML_OPTIONS);
+      await ctx.reply(`Добре, введіть ім’я заново.\n\n${await customNamePromptText({ telegramId: key, pronoun: state.pronoun })}`, HTML_OPTIONS);
       return;
     }
 
