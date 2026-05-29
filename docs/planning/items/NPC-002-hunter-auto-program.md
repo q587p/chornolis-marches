@@ -38,6 +38,8 @@ Add a simple NPC hunter behavior that interacts with the same ecological loop as
 - Do not teleport silently.
 - Do not steal clearly player-owned carcasses.
 - Nearby players should be able to observe at least some compact local messages.
+- Add a small thematic shout/field-line pool for departures, trail choice, returns and deposits, shared conceptually with the later player hunter auto-mode.
+- Rate-limit hunter lines and keep them diegetic: no quest-state announcements, no guaranteed-kill boasting and no fixed bounty framing.
 
 ## Acceptance
 
@@ -45,3 +47,4 @@ Add a simple NPC hunter behavior that interacts with the same ecological loop as
 - Hunter selects herbivore targets rather than arbitrary creatures.
 - Hunter deposits are counted as NPC contributions, not player rewards.
 - Behavior is rate-limited and safe for world ticks.
+- Hunter speech is compact, local/visible when possible and drawn from the documented hunting-pressure line pool.

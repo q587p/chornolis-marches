@@ -28,6 +28,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - `reply` now remembers direct addressed speech and whispers per recipient, so a player can answer the last speaker even if that speaker is no longer visible.
 - `shout` now accepts more natural Ukrainian shout forms such as `кричати`, `крик`, `вигукнути` and `волати`.
 - Unknown-text suggestions now include regex-backed speech commands such as `крикнути`, `кричати`, `шепнути` and `відповісти`.
+- Gate hunting loop docs now include thematic hunter shout/field-line guidance for the future NPC hunter and player hunter auto-mode.
 
 ### Tests
 

@@ -135,6 +135,31 @@ Future MVP shape:
 
 Nearby players should see compact local messages when the hunter leaves, returns or deposits.
 
+### Hunter Shouts and Field Lines
+
+The hunter should feel like a person moving through the same pressure loop, not a silent counter update. Future NPC hunter behavior and the later player hunter auto-mode may use short thematic shouts or field lines when they begin a hunt, pick up a trail, return to the gate or place remains into the drop-off.
+
+Use these lines sparingly:
+
+- never every tick;
+- only at meaningful state changes such as departure, target choice, return, deposit or giving up for the day;
+- visible/local when the speaker is nearby, not as global spam;
+- compact enough for Telegram;
+- routed through the same speech/local-message surfaces where practical.
+
+Good line directions:
+
+- `Начувайтесь, гризуни.`
+- `Відновимо рівновагу.`
+- `Ліс не має лишатися без зубів.`
+- `Допоможемо лісовику втримати край.`
+- `Поки хижаків мало, люди стануть зубами краю.`
+- `Не за срібло йду, а щоб трава знову піднялася.`
+- `Падальний рів сьогодні не пустуватиме.`
+- `Звір розійшовся занадто близько до воріт.`
+
+Avoid modern slogans, quest-like confirmations, guaranteed-kill boasting and fixed reward framing. Lines that mention the лісовик should remain occasional unless local world state has made that spirit especially relevant.
+
 ## Acceptance
 
 - A player can examine the gate notice.
