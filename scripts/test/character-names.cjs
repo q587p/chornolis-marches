@@ -13,7 +13,7 @@ const {
   randomAvailablePreparedName,
   validateCustomCharacterName,
 } = require("../../src/services/characterNames");
-const { guessNameForms } = require("../../src/services/grammar");
+const { creatureForms, guessNameForms } = require("../../src/services/grammar");
 
 assert.equal(normalizeNameForRegistry("  Ведана  "), "ведана");
 
@@ -109,5 +109,12 @@ assert.equal(greatVova.accusative, "Великого Вову");
 assert.equal(greatVova.instrumental, "Великим Вовою");
 assert.equal(greatVova.locative, "Великому Вові");
 assert.equal(greatVova.vocative, "Великий Вово");
+
+const maleMouse = creatureForms({ sex: "MALE", species: { key: "mouse", name: "миша", grammaticalGender: "FEMININE", animacy: "ANIMATE" } });
+assert.equal(maleMouse.nominative, "самець миші");
+assert.equal(maleMouse.genitive, "самця миші");
+const femaleMouse = creatureForms({ sex: "FEMALE", species: { key: "mouse", name: "миша", grammaticalGender: "FEMININE", animacy: "ANIMATE" } });
+assert.equal(femaleMouse.nominative, "самиця миші");
+assert.equal(femaleMouse.genitive, "самиці миші");
 
 console.log("Character names OK");

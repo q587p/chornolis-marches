@@ -3,7 +3,10 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const { normalizeInput, parseAlias, suggestAliasInputs } = require("../../src/input/aliases");
+const { inventoryResourceKeyFromText } = require("../../src/services/inventoryUse");
 const { isDreamGateOpeningPhrase } = require("../../src/services/tutorial");
+const { normalizeCreatureActionText } = require("../../src/utils/creatureActionText");
+const { resourceAccusativeName } = require("../../src/utils/resourceText");
 
 function assertAlias(input, expected) {
   assert.deepEqual(parseAlias(input), expected, `Unexpected alias parse for: ${input}`);
@@ -124,6 +127,10 @@ assertAlias("butcher corpse", { kind: "target-action", action: "freshen", target
 assertAlias("розібрати труп", { kind: "target-action", action: "freshen", target: "труп" });
 assertAlias("викинути факел", { kind: "drop-inventory-item", target: "факел" });
 assertAlias("річ ягоди", { kind: "inspect-inventory-item", target: "ягоди" });
+assert.equal(inventoryResourceKeyFromText("mushroom"), "mushrooms");
+assert.equal(inventoryResourceKeyFromText("raw meat"), "raw_meat");
+assert.equal(resourceAccusativeName({ key: "grass", name: "трава" }), "траву");
+assert.equal(normalizeCreatureActionText("їсть трава"), "їсть траву");
 assertAlias("кивнути Здравомир", { kind: "social-signal", signal: "nod", target: "здравомир" });
 
 assert.equal(parseAlias("це точно не команда"), null);

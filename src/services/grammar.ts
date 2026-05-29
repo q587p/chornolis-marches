@@ -101,6 +101,26 @@ const KNOWN_FORMS: Record<string, Partial<NameForms> & { gender?: Gender; animac
 };
 
 const KNOWN_SEXED_SPECIES_FORMS: Record<string, Partial<Record<"MALE" | "FEMALE", NameForms>>> = {
+  mouse: {
+    MALE: {
+      nominative: "самець миші",
+      genitive: "самця миші",
+      dative: "самцю миші",
+      accusative: "самця миші",
+      instrumental: "самцем миші",
+      locative: "самці миші",
+      vocative: "самцю миші",
+    },
+    FEMALE: {
+      nominative: "самиця миші",
+      genitive: "самиці миші",
+      dative: "самиці миші",
+      accusative: "самицю миші",
+      instrumental: "самицею миші",
+      locative: "самиці миші",
+      vocative: "самице миші",
+    },
+  },
   rabbit: {
     MALE: {
       nominative: "заєць",
