@@ -17,6 +17,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Natural resources are picked up only when they are actually visible loose ground items; otherwise pickup text gives a hint to gather them instead.
 - Gather text commands such as `gather herbs`, `збирати ягоди` and `шукати гриби` continue to use the ordinary resource-gathering flow.
 - Marked `ITEM-001` as testing and updated input-alias documentation for the pickup versus gather split.
+- Added `FOOD-001` to the near-term plan for corpse freshening, raw meat, campfire cooking and cooked meat hunger relief.
 
 ### Tests
 

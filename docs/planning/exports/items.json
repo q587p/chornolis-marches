@@ -206,6 +206,27 @@
     "file": "docs/planning/items/FISH-001-riverbank-fishing-and-fisher-npc.md"
   },
   {
+    "id": "FOOD-001",
+    "title": "Corpse freshening, meat and campfire cooking",
+    "status": "next",
+    "type": "feature",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "food",
+      "corpses",
+      "freshening",
+      "cooking",
+      "hunger",
+      "campfire"
+    ],
+    "depends_on": [
+      "ITEM-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FOOD-001-corpse-freshening-meat-and-campfire-cooking.md"
+  },
+  {
     "id": "HMYZ-001-A",
     "title": "Audit hmyz model",
     "status": "next",
