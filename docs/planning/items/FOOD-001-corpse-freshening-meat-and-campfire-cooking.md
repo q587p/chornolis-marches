@@ -48,9 +48,11 @@ This should be the first small bridge between combat/hunting, corpse lifetime, i
 
 ## Later Scope
 
+- Freshen / butcher a carried corpse from inventory, not only a visible corpse lying in the current location.
 - Different meat types by species.
 - Bones, hide, fur, feathers and other animal materials where appropriate.
-- Freshness, spoilage and scent tracking for meat and remains.
+- Freshness, spoilage and scent tracking for meat and remains, including timers that eventually make raw/cooked meat unsuitable to eat or cook.
+- Generalize item lifetime timers beyond torches/corpses so food, gathered supplies and crafted items can age or decay as needed.
 - Better cooking recipes and profession/skill hooks.
 - Butchering quality and yield affected by tools, light, skills and corpse condition.
 
@@ -66,3 +68,5 @@ This should be the first small bridge between combat/hunting, corpse lifetime, i
 ## Notes
 
 Prefer `освіжити труп` / `freshen corpse` compatibility for the existing command path, but player-facing copy may use more natural wording such as `обробити труп`, `розібрати труп` or `підготувати м'ясо` where it fits.
+
+0.13.3 first pass handles fresh visible corpses in the current location. Inventory-held corpse butchering and perishable meat timers are explicit follow-ups, not part of the first implementation.
