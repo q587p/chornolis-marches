@@ -97,6 +97,16 @@ This keeps Telegram UI convenient while preserving the long-term MUD/sandbox dir
 
 `/commands` is a hidden in-game command-reference surface for the current text command layer. Keep it aligned with this document when adding player-facing commands or major aliases.
 
+Near-term command work is split into `CMD-001` so the first practical MUD-style text pack can happen before the larger command roadmap:
+
+- `glance` / `глянути швидко`;
+- `exits` / `виходи`;
+- `enter [place]` / `увійти [місце]`;
+- `leave` / `вийти`;
+- `whisper [player] [message]` / `шепнути [персонаж] [текст]`;
+- `reply <message>` / `відповісти <текст>`;
+- `shout <message>` / `крикнути <текст>` / `гукнути <текст>`.
+
 Future command-registry work should move the project toward one shared source of truth for:
 
 - command name, short aliases and Ukrainian aliases;
@@ -104,4 +114,4 @@ Future command-registry work should move the project toward one shared source of
 - per-command help, for example `help say` / `допомога сказати`;
 - availability gates such as ordinary player, scribe/admin and future builder permissions;
 - future command chaining with semicolons, for example `get sword; equip sword`;
-- planned MUD-style commands such as `glance`, `exits`, `enter`, `leave`, `whisper`, `reply`, `shout`, `give`, `put`, `drink`, `skills`, `effects`, `consider`, `compare`, `journal`, `party`, `guild`, `spells`, `cast`, `weather`, builder commands and moderation commands.
+- later MUD-style commands such as `give`, `put`, `drink`, `skills`, `effects`, `consider`, `compare`, `journal`, `party`, `guild`, `spells`, `cast`, `weather`, builder commands and moderation commands.

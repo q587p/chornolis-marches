@@ -73,6 +73,24 @@
     "file": "docs/planning/items/CAL-001_calendar_moon_phases_and_named_years.md"
   },
   {
+    "id": "CMD-001",
+    "title": "Near-term text command pack",
+    "status": "next",
+    "type": "feature",
+    "area": "commands",
+    "priority": "high",
+    "tags": [
+      "commands",
+      "aliases",
+      "mud",
+      "speech",
+      "navigation"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/CMD-001-near-term-text-command-pack.md"
+  },
+  {
     "id": "COMBAT-001",
     "title": "Creature aggression and defense",
     "status": "backlog",
