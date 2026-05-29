@@ -1,0 +1,11 @@
+{
+  "created": "2026-05-28",
+  "purpose": "Repository docs and planning source-of-truth for Chornolis Marches",
+  "files_count": 71,
+  "task_count": 57,
+  "milestones": [
+    "0.13 Core Loop & Onboarding Stability",
+    "0.14 Night, Light and Firewood",
+    "0.15 Attention and Learning MVP"
+  ]
+}

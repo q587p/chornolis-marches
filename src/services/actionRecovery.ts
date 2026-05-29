@@ -16,6 +16,7 @@ import {
   playerStaminaCostConfig,
 } from "../gameConfig";
 import { buildFatigueRestKeyboard } from "../ui/keyboards";
+import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
 import { tutorialIdlePaceComments } from "./tutorialVoices";
 import { isTutorialFastRestLocationKey } from "./tutorial";
@@ -28,7 +29,7 @@ export function fatigueStateFor(stamina: number, staminaMax = BASE_STAMINA): Fat
   return "RESTED";
 }
 
-const TUTORIAL_REST_FULL_COMMENT = "Сон стиха каже: «Ось так виглядає короткий перепочинок у навчальному сні. Наяву до повної снаги шлях буде довший, і не кожне вогнище тримає вас так легко.»";
+const TUTORIAL_REST_FULL_COMMENT = "Ось так виглядає короткий перепочинок у навчальному сні. Наяву до повної снаги шлях буде довший, і не кожне вогнище тримає вас так легко.";
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
@@ -192,9 +193,10 @@ export async function recoverStamina(bot: Bot) {
     if (intervals <= 0 && hpIntervals <= 0) continue;
 
     const fullyRested = after >= max && hpAfter >= hpMax;
-    if (fullyRested && player.isResting && before < max && isTutorialFastRestLocationKey(player.currentLocation?.key)) {
-      messages.push(TUTORIAL_REST_FULL_COMMENT);
-    }
+    const shouldSendTutorialRestFullComment = fullyRested
+      && player.isResting
+      && before < max
+      && isTutorialFastRestLocationKey(player.currentLocation?.key);
     const regainedConsciousness = hpBefore <= 0 && hpAfter > 0;
     const nextState = fatigueStateFor(after, max);
     const data: Prisma.PlayerUpdateInput = {
@@ -217,7 +219,23 @@ export async function recoverStamina(bot: Bot) {
     if (Number.isSafeInteger(chatId)) {
       for (const message of messages) {
         const shouldSuggestRest = message.includes("втом") || message.includes("Виснаження") || message.includes("слаб");
-        await bot.api.sendMessage(chatId, message, shouldSuggestRest ? { reply_markup: buildFatigueRestKeyboard() } : undefined);
+        await bot.api.sendMessage(
+          chatId,
+          message,
+          shouldSuggestRest
+            ? { reply_markup: buildFatigueRestKeyboard() }
+            : fullyRested && player.isResting
+              ? { reply_markup: await buildMainReplyKeyboardForTelegramId(chatId, true) }
+              : undefined
+        );
+      }
+
+      if (shouldSendTutorialRestFullComment) {
+        await bot.api.sendMessage(
+          chatId,
+          `Сон стиха каже:\n${quoteBlock(TUTORIAL_REST_FULL_COMMENT)}`,
+          { parse_mode: "HTML", reply_markup: await buildMainReplyKeyboardForTelegramId(chatId, true) }
+        );
       }
     }
   }

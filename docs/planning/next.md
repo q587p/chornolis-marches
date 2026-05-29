@@ -1,151 +1,45 @@
 # Next
 
-Candidate work for the next patch or minor versions.
+This file should stay small. If everything is next, nothing is next.
 
-This file should stay small. If everything is “next”, nothing is next.
+## Current Lane
 
-## Current next lane
+The current lane is the three-month vertical slice:
 
-These items are already marked `status: next` here or in `docs/planning/items/`.
+1. 0.13 — Core Loop & Onboarding Stability.
+2. 0.14 — Night, Light and Firewood.
+3. 0.15 — Attention and Learning MVP.
 
-- **ONB-002 — Character name rules and onboarding**: high-priority name creation flow with prepared scribe-approved names, Ukrainian case forms, custom-name validation, creature/spirit-name conflicts and scribe review for uncertain names. Canonical design note: `docs/systems/character_names.md`.
+## 0.13 Next
 
-## Recommended next slice after 0.12.0
+- ONB-002: character name onboarding polish.
+- ONB-001: dream tutorial compact completion.
+- SURV-001: beginner return / `Повернення`.
+- LOOP-001: starter location and bridge threshold polish.
+- ADM-001: minimal audit logging for dangerous scribe tools.
 
-The 0.12.0 line landed the first dream tutorial slice: first-run entry, `/sleep tutorial`, wake/skip, visible locked exits and `Брама Сну`. The next patches should deepen that lane without turning it into a long checklist.
+## 0.14 Next
 
-Recommended order:
+- WORLD-001: dawn/day/dusk/night world state.
+- VIS-001: shared visibility layer.
+- FIRE-001: campfire and torch visibility integration.
+- HMYZ-001: find/pickup/add хмиз loop.
+- MAP-002: first biome-aware foraging table.
 
-1. Expand **ONB-001** from the dream hub with the next missing branch: social signals, simple tracks/signs, more observation learning, or fire/light after day-night rules exist. The first narrow observation proof landed in `0.12.8`.
-2. Strengthen the minimal core loop before large systems: movement, `Озирнутися`, `Роздивитися`, small finds, stamina, `Відпочити`, visible traces and nearby beings.
-3. Observe and tune the first **firewood / хмиз / campfire fuel** loop now that хмиз can extend or prepare ordinary campfires.
-4. Add the first real **world time / day-night** state and make `/time` read it.
-5. Add early **/respawn / Повернення** so dangerous exploration has a beginner safety valve.
-6. Then return to **MAP-002 biome resources** once fire/light/time rules can influence gathering and visibility.
+## 0.15 Next
 
-Good small follow-ups if a narrow patch is wanted:
+- LEARN-001: minimal learning storage decision.
+- OBS-001: observe action and herbalist learning moment.
+- TRACK-LEARN-001: track-reading / animal movement learning moment.
+- OMEN-001: one small living-world omen.
+- ONB-001 follow-up: tutorial hints that careful observation matters.
 
-- Expand ONB-001 tutorial branches from `Дрімотна Межа`: social signals, observation/tracks, fire/light and deeper danger/respawn safety.
-- Extend the first observation-learning MVP after `0.12.8`: add attack/following variants, then replace the tutorial-only event flag with real skill progress once progression exists.
-- Add the next item-level inventory actions after the 0.11.12 first use/drop pass: better per-item details, corpses, safer dropped-item pickup, and future item instances for timers/quality/origin.
-- Tune the first berries/herbs use loop after playtesting: hunger relief, small healing text, edge cases and how this should grow into cooking, medicine and herbalism.
-- Add the first **animal-restoration offering** loop: small hare/mouse statues or similar forest charms where players can leave berries or herbs; after a delay, if local or regional prey population is low, a pair of young animals can appear without admin intervention.
-- Add a low-prey warning from Дід Лісовик when all rabbits, mice or other basic prey disappear from the relevant scope. If he is asleep, the message can be framed as him mumbling through sleep, still heard across the borderland.
-- Add first ground-money objects under the bridge / in dark places, using the existing ground-item pickup path.
-- Add logs for who used `/reset` and other dangerous scribe tools.
-- Add the first scribe name-approval loop as part of **ONB-002**: `/all character` or an equivalent filtered character list, service-profile buttons to approve/reject names, prepared-name support, custom-name validation and a rejection message sent to the character.
-
-## MAP-002 — Biome-based resources and spawn rules
-
-Status: next  
-Area: world, ecology  
-Priority: high  
-Tags: map, biome, resources, spawn-rules, ecology
-
-### Goal
-
-Make the new forest / dry luka / riverbank layout drive resource availability and future creature spawns by biome and region.
-
-### First scope
-
-- Keep generic animals out of seed by default.
-- Define spawn rules per biome and region:
-  - forest: rabbits, mice, foxes, occasional wolves;
-  - deep forest: fewer prey, higher danger, more predator/spirit hooks;
-  - dry luka: small prey, herbs, visibility, lower cover;
-  - riverbank: herbs, fishing hooks later, bridge/gate encounters.
-- Move resource amounts and regeneration toward biome rules instead of location-key string checks.
-- Keep special locations such as `start_border_camp` hand-authored.
-
-### Design intent
-
-The expanded map should not just be larger. Different regions should feel and behave differently, even before full settlement or deep Chornolis systems arrive.
-
-## WORLD-001 — Day/night cycle
-
-Status: next  
-Area: world_time  
-Priority: high  
-Tags: world, atmosphere, visibility, liminality
-
-### Goal
-
-Add dawn/day/dusk/night phases that change visibility, danger and available encounters.
-
-### First scope
-
-- Track current daypart in world state.
-- Make `/time` read from that state instead of only static flavor text.
-- Let existing campfire/torch light decide whether full location descriptions, nearby targets, tracks and ground objects are visible at night.
-- Add a simple dawn/day/dusk/night cycle before deeper moon phases or named weekday rules.
-- Keep the first version simple enough to support the darkness creature, campfire warnings and later calendar work.
-
-## WORLD-002 — Campfires and light
-
-Status: next  
-Area: survival  
-Priority: high  
-Tags: survival, light, crafting, night  
-Depends on: WORLD-001
-
-### Goal
-
-Make fire a basic survival and exploration tool.
-
-### First scope
-
-- Build on the first pass: `/addCampfire` can create multiple timed campfires, expired fires remain as `Згасле вогнище`, torches can be carried/lit/refreshed, and light can reveal nearby targets.
-- Add the first real firewood/hmyz gathering hook near forests, forest edges and old camps.
-- Tune the first implemented `Додати хмиз` / `/add twigs campfire` behavior now that it extends burning campfires and prepares згаслі campfires.
-- Keep the fuel model intentionally small for now: dry twigs exist, while larger branches, wet fuel, smoke and weather remain later.
-- Connect fuel and light to WORLD-001 once day/night lands.
-
-## SURV-001 — Early respawn support / Повернення
-
-Status: next  
-Area: survival  
-Priority: high  
-Tags: onboarding, respawn, beginner
-
-### Goal
-
-Add `/respawn` as **Повернення** for new or weak characters who get lost or knocked out before they are established.
-
-### First scope
-
-- Return eligible early characters to `start_border_camp`.
-- Gate it behind a beginner/progression threshold.
-- Add a cooldown or small consequence so it does not become fast travel.
-- Keep the existing fallback text until the real flow is implemented.
-
-## Recommended near-term candidates
-
-- Add starter settlement skeleton and first NPC roles beyond the closed gate.
-- Expand pickable хмиз coverage after testing the first seed pass. The initial implementation places small bundles in selected forest and dry-luka locations; later, most forest locations and some luka locations should receive biome-aware fuel sources.
-- Add first foraging/firewood iteration by broadening `/gather` without arguments into local foraging: хмиз/dry sticks near campfires and forest edges, moss where suitable, animal bones, and rare minor coin finds. Keep outcomes biome-, region- and location-feature-dependent, and feed the existing `Додати хмиз` fuel loop.
-- Add a first animal-restoration shrine/statue pass: authored small features such as a hare statue, mouse stone, carved burrow marker or similar forest charm. Players can place fitting offerings such as berries or herbs; after a queued delay and cooldown, the world may create two young prey animals when the area has fallen below a safe population threshold.
-- Seed a first small ground-money find on world start/reset: a ґривня under the bridge and a few scattered шаги elsewhere. These should behave like visible location objects: shown by `/look` when light/visibility allows, discoverable by `/examine` in darkness, inspectable like corpses/objects, and pickable into `Речі`.
-- Add a first local console client before a full MUD server: run it against the local command/action layer or a tiny test harness, connect as a test character, send text commands, and later reuse scripted walks as smoke/integration tests for movement, look/examine, inventory and tutorial flows. First design note: `docs/systems/console_client.md`.
-- Add a first NPC hunter/archer loop: a named hunter travels between nearby hunting grounds, looks for prey, attacks small animals, and leaves visible signs for players to observe. Later this should grow into tracking, traps and teaching hunting-related skills.
-- Continue **ONB-002** name onboarding after the first admin review path: prepared names, custom-name warnings, registry checks and scribe approval should move together rather than as separate ad hoc fixes.
-- When adding new Telegram buttons, keep `docs/systems/input_aliases.md` in mind: player-facing action buttons should get a slash command or Ukrainian/MUD-style text equivalent unless they are only суто паґінаційні or archive-navigation buttons.
-
-## Promotion candidates to review
-
-These are still `backlog`, but recent work makes them worth reviewing before the next patch sequence.
-
-- PERF-001 — runtime performance plan and creature simulation budget. Recent production logs show `/all` and large creature counts are already the visible pressure points; 0.12.5 handled the first status DB-pagination slice, but next performance work should keep following the recorded plan: tick/action/status metrics, action lifecycle pass, auto scheduler refactor, and then staged world-tick decomposition.
-- ADM-001 — admin permissions, name approval and restricted reset hardening. A first `Писар`/admin gate exists now, so remaining near-term work is audit logging, clearer role UX, first name-review tools and closing any leftover dangerous paths.
-- Speech reply UX: `/reply`, `Відповісти` and `Відповісти як...` for addressed speech. This should probably stay behind the chat/social polish lane, not the ecology lane.
-- Inventory item actions: the dedicated inventory view exists, and the 0.11.12 berries/mushrooms/herbs use pass proves the path. Item details, dropping, torches, corpses and richer per-item actions are now small enough to promote when the survival loop needs them.
-- Darkness creature / small coin omen: this becomes much more attractive right after WORLD-001 because it explicitly depends on darkness, light and calm observation.
-- TECH-001 — service boundary and duplication cleanup. Keep this mostly behavior-preserving, but make it visible during patch planning because `worldTick.ts`, `status.ts`, `actionCompletions.ts`, `statusServer.ts`, `locations.ts` and `aliases.ts` are now large enough to slow safe feature work.
-
-## Review checklist
+## Review Checklist
 
 Before moving an item here, ask:
 
-1. Does it support the current phase?
+1. Does it support the active vertical slice?
 2. Can it be implemented and tested independently?
 3. Does it preserve atmosphere?
 4. Does it avoid overbuilding?
+5. Does it have text/alias parity if player-facing?

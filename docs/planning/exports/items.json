@@ -18,6 +18,40 @@
     "file": "docs/planning/items/ADM-001-admin-rights.md"
   },
   {
+    "id": "ADM-001-A",
+    "title": "Dangerous scribe tool audit",
+    "status": "next",
+    "type": "technical",
+    "area": "admin",
+    "priority": "medium",
+    "tags": [
+      "admin",
+      "audit",
+      "safety"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/ADM-001-A.md"
+  },
+  {
+    "id": "ADM-001-B",
+    "title": "Scribe action audit helper",
+    "status": "next",
+    "type": "technical",
+    "area": "admin",
+    "priority": "medium",
+    "tags": [
+      "admin",
+      "audit",
+      "world-events"
+    ],
+    "depends_on": [
+      "ADM-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ADM-001-B.md"
+  },
+  {
     "id": "CAL-001",
     "title": "Calendar, moon phases and named years",
     "status": "icebox",
@@ -98,6 +132,60 @@
     "file": "docs/planning/items/ECON-001-barter-and-trade.md"
   },
   {
+    "id": "FIRE-001-A",
+    "title": "Active light connects to visibility",
+    "status": "next",
+    "type": "feature",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "fire",
+      "light",
+      "visibility"
+    ],
+    "depends_on": [
+      "VIS-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FIRE-001-A.md"
+  },
+  {
+    "id": "FIRE-001-B",
+    "title": "Expired campfire behavior polish",
+    "status": "next",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "fire",
+      "campfire",
+      "copy"
+    ],
+    "depends_on": [
+      "FIRE-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FIRE-001-B.md"
+  },
+  {
+    "id": "FIRE-001-C",
+    "title": "Carried torch visibility",
+    "status": "next",
+    "type": "feature",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "torch",
+      "light",
+      "visibility"
+    ],
+    "depends_on": [
+      "FIRE-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FIRE-001-C.md"
+  },
+  {
     "id": "FISH-001",
     "title": "Riverbank fishing and fisher NPC",
     "status": "backlog",
@@ -116,6 +204,98 @@
     ],
     "exports": {},
     "file": "docs/planning/items/FISH-001-riverbank-fishing-and-fisher-npc.md"
+  },
+  {
+    "id": "HMYZ-001-A",
+    "title": "Audit hmyz model",
+    "status": "next",
+    "type": "technical",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "hmyz",
+      "resources",
+      "inventory"
+    ],
+    "depends_on": [
+      "FIRE-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/HMYZ-001-A.md"
+  },
+  {
+    "id": "HMYZ-001-B",
+    "title": "Seed starter hmyz",
+    "status": "next",
+    "type": "feature",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "hmyz",
+      "seed",
+      "starter"
+    ],
+    "depends_on": [
+      "HMYZ-001-A",
+      "VIS-001-E"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/HMYZ-001-B.md"
+  },
+  {
+    "id": "HMYZ-001-C",
+    "title": "Pickup hmyz polish",
+    "status": "next",
+    "type": "feature",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "hmyz",
+      "pickup",
+      "inventory"
+    ],
+    "depends_on": [
+      "HMYZ-001-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/HMYZ-001-C.md"
+  },
+  {
+    "id": "HMYZ-001-D",
+    "title": "Add hmyz to campfire",
+    "status": "next",
+    "type": "feature",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "hmyz",
+      "campfire",
+      "fuel"
+    ],
+    "depends_on": [
+      "HMYZ-001-C",
+      "FIRE-001-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/HMYZ-001-D.md"
+  },
+  {
+    "id": "HMYZ-001-E",
+    "title": "Hmyz observer messages",
+    "status": "next",
+    "type": "ux",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "hmyz",
+      "observer",
+      "local-events"
+    ],
+    "depends_on": [
+      "HMYZ-001-D"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/HMYZ-001-E.md"
   },
   {
     "id": "ICE-001",
@@ -195,6 +375,350 @@
     "file": "docs/planning/items/ICE-004-construction.md"
   },
   {
+    "id": "LEARN-001-A",
+    "title": "Minimal learning storage decision",
+    "status": "next",
+    "type": "design",
+    "area": "learning",
+    "priority": "high",
+    "tags": [
+      "learning",
+      "progression",
+      "schema"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/LEARN-001-A.md"
+  },
+  {
+    "id": "LEARN-001-B",
+    "title": "Minimal CharacterSkill model",
+    "status": "next",
+    "type": "technical",
+    "area": "learning",
+    "priority": "high",
+    "tags": [
+      "learning",
+      "schema",
+      "skills"
+    ],
+    "depends_on": [
+      "LEARN-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/LEARN-001-B.md"
+  },
+  {
+    "id": "LEARN-001-C",
+    "title": "grantSkillProgress helper",
+    "status": "next",
+    "type": "feature",
+    "area": "learning",
+    "priority": "high",
+    "tags": [
+      "learning",
+      "service",
+      "progression"
+    ],
+    "depends_on": [
+      "LEARN-001-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/LEARN-001-C.md"
+  },
+  {
+    "id": "LEARN-001-D",
+    "title": "Raw progress technical-only",
+    "status": "next",
+    "type": "ux",
+    "area": "learning",
+    "priority": "medium",
+    "tags": [
+      "learning",
+      "technical-details",
+      "ui"
+    ],
+    "depends_on": [
+      "LEARN-001-C"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/LEARN-001-D.md"
+  },
+  {
+    "id": "LOOP-001-A",
+    "title": "Starter look/examine output audit",
+    "status": "next",
+    "type": "design",
+    "area": "core-loop",
+    "priority": "medium",
+    "tags": [
+      "look",
+      "examine",
+      "starter"
+    ],
+    "depends_on": [
+      "ONB-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/LOOP-001-A.md"
+  },
+  {
+    "id": "LOOP-001-B",
+    "title": "Starter camp prose polish",
+    "status": "next",
+    "type": "content",
+    "area": "core-loop",
+    "priority": "medium",
+    "tags": [
+      "prose",
+      "starter",
+      "look"
+    ],
+    "depends_on": [
+      "LOOP-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/LOOP-001-B.md"
+  },
+  {
+    "id": "LOOP-001-C",
+    "title": "Bridge threshold prose polish",
+    "status": "next",
+    "type": "content",
+    "area": "core-loop",
+    "priority": "medium",
+    "tags": [
+      "prose",
+      "bridge",
+      "liminality"
+    ],
+    "depends_on": [
+      "LOOP-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/LOOP-001-C.md"
+  },
+  {
+    "id": "LOOP-001-D",
+    "title": "Track detail wording polish",
+    "status": "next",
+    "type": "ux",
+    "area": "tracking",
+    "priority": "medium",
+    "tags": [
+      "tracks",
+      "examine",
+      "copy"
+    ],
+    "depends_on": [
+      "LOOP-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/LOOP-001-D.md"
+  },
+  {
+    "id": "MAP-002-A",
+    "title": "First biome foraging table",
+    "status": "next",
+    "type": "feature",
+    "area": "world",
+    "priority": "high",
+    "tags": [
+      "map",
+      "biome",
+      "foraging"
+    ],
+    "depends_on": [
+      "HMYZ-001-D"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/MAP-002-A.md"
+  },
+  {
+    "id": "MAP-002-B",
+    "title": "Generic gather uses biome candidates",
+    "status": "next",
+    "type": "feature",
+    "area": "world",
+    "priority": "high",
+    "tags": [
+      "gather",
+      "biome",
+      "foraging"
+    ],
+    "depends_on": [
+      "MAP-002-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/MAP-002-B.md"
+  },
+  {
+    "id": "MAP-002-C",
+    "title": "Biome foraging text variants",
+    "status": "next",
+    "type": "content",
+    "area": "world",
+    "priority": "medium",
+    "tags": [
+      "gather",
+      "biome",
+      "copy"
+    ],
+    "depends_on": [
+      "MAP-002-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/MAP-002-C.md"
+  },
+  {
+    "id": "OBS-001-A",
+    "title": "Observe action and alias skeleton",
+    "status": "next",
+    "type": "feature",
+    "area": "learning",
+    "priority": "high",
+    "tags": [
+      "observe",
+      "aliases",
+      "targets"
+    ],
+    "depends_on": [
+      "LEARN-001-C",
+      "VIS-001-C"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/OBS-001-A.md"
+  },
+  {
+    "id": "OBS-001-B",
+    "title": "Visible herbalist action",
+    "status": "next",
+    "type": "feature",
+    "area": "learning",
+    "priority": "high",
+    "tags": [
+      "observe",
+      "npc",
+      "herbalism"
+    ],
+    "depends_on": [
+      "OBS-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/OBS-001-B.md"
+  },
+  {
+    "id": "OBS-001-C",
+    "title": "Herbalism/gathering progress from observation",
+    "status": "next",
+    "type": "feature",
+    "area": "learning",
+    "priority": "high",
+    "tags": [
+      "observe",
+      "herbalism",
+      "progression"
+    ],
+    "depends_on": [
+      "OBS-001-B",
+      "LEARN-001-C"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/OBS-001-C.md"
+  },
+  {
+    "id": "OBS-001-D",
+    "title": "Observation anti-farming cooldown",
+    "status": "next",
+    "type": "feature",
+    "area": "learning",
+    "priority": "medium",
+    "tags": [
+      "observe",
+      "cooldown",
+      "anti-grind"
+    ],
+    "depends_on": [
+      "OBS-001-C"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/OBS-001-D.md"
+  },
+  {
+    "id": "OMEN-001-A",
+    "title": "Choose one living-world omen",
+    "status": "next",
+    "type": "design",
+    "area": "world",
+    "priority": "medium",
+    "tags": [
+      "omen",
+      "ambient",
+      "living-world"
+    ],
+    "depends_on": [
+      "WORLD-001-D",
+      "VIS-001-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/OMEN-001-A.md"
+  },
+  {
+    "id": "OMEN-001-B",
+    "title": "Omen trigger and rate limit",
+    "status": "next",
+    "type": "feature",
+    "area": "world",
+    "priority": "medium",
+    "tags": [
+      "omen",
+      "ambient",
+      "cooldown"
+    ],
+    "depends_on": [
+      "OMEN-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/OMEN-001-B.md"
+  },
+  {
+    "id": "OMEN-001-C",
+    "title": "Omen local text",
+    "status": "next",
+    "type": "content",
+    "area": "world",
+    "priority": "medium",
+    "tags": [
+      "omen",
+      "copy",
+      "atmosphere"
+    ],
+    "depends_on": [
+      "OMEN-001-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/OMEN-001-C.md"
+  },
+  {
+    "id": "OMEN-001-D",
+    "title": "Omen trace or object result",
+    "status": "next",
+    "type": "feature",
+    "area": "world",
+    "priority": "medium",
+    "tags": [
+      "omen",
+      "objects",
+      "tracks"
+    ],
+    "depends_on": [
+      "OMEN-001-C",
+      "VIS-001-E"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/OMEN-001-D.md"
+  },
+  {
     "id": "ONB-001",
     "title": "Newcomer helper and tutorial",
     "status": "testing",
@@ -211,6 +735,113 @@
     "depends_on": [],
     "exports": {},
     "file": "docs/planning/items/ONB-001-newcomer-helper-and-tutorial.md"
+  },
+  {
+    "id": "ONB-001-A",
+    "title": "Dream tutorial flow audit",
+    "status": "next",
+    "type": "design",
+    "area": "onboarding",
+    "priority": "high",
+    "tags": [
+      "tutorial",
+      "audit",
+      "core-loop"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/ONB-001-A.md"
+  },
+  {
+    "id": "ONB-001-B",
+    "title": "Hint after first Озирнутися",
+    "status": "next",
+    "type": "ux",
+    "area": "onboarding",
+    "priority": "high",
+    "tags": [
+      "tutorial",
+      "look",
+      "copy"
+    ],
+    "depends_on": [
+      "ONB-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-001-B.md"
+  },
+  {
+    "id": "ONB-001-C",
+    "title": "Hint after first Роздивитися",
+    "status": "next",
+    "type": "ux",
+    "area": "onboarding",
+    "priority": "high",
+    "tags": [
+      "tutorial",
+      "examine",
+      "attention"
+    ],
+    "depends_on": [
+      "ONB-001-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-001-C.md"
+  },
+  {
+    "id": "ONB-001-D",
+    "title": "Tutorial rest lesson polish",
+    "status": "next",
+    "type": "ux",
+    "area": "onboarding",
+    "priority": "medium",
+    "tags": [
+      "tutorial",
+      "rest",
+      "stamina"
+    ],
+    "depends_on": [
+      "ONB-001-C"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-001-D.md"
+  },
+  {
+    "id": "ONB-001-E",
+    "title": "Wake and return fallback polish",
+    "status": "next",
+    "type": "ux",
+    "area": "onboarding",
+    "priority": "medium",
+    "tags": [
+      "tutorial",
+      "sleep",
+      "wake",
+      "aliases"
+    ],
+    "depends_on": [
+      "ONB-001-D"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-001-E.md"
+  },
+  {
+    "id": "ONB-001-F",
+    "title": "Tutorial hint that observation matters",
+    "status": "next",
+    "type": "ux",
+    "area": "onboarding",
+    "priority": "medium",
+    "tags": [
+      "tutorial",
+      "observe",
+      "learning"
+    ],
+    "depends_on": [
+      "OBS-001-C"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-001-F.md"
   },
   {
     "id": "ONB-002",
@@ -230,6 +861,76 @@
     "depends_on": [],
     "exports": {},
     "file": "docs/planning/items/ONB-002-character-name-rules-and-onboarding.md"
+  },
+  {
+    "id": "ONB-002-A",
+    "title": "Expand prepared-name pool",
+    "status": "next",
+    "type": "feature",
+    "area": "onboarding",
+    "priority": "high",
+    "tags": [
+      "onboarding",
+      "names",
+      "ukrainian-grammar"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/ONB-002-A.md"
+  },
+  {
+    "id": "ONB-002-B",
+    "title": "Expand forbidden-name normalization",
+    "status": "next",
+    "type": "feature",
+    "area": "onboarding",
+    "priority": "high",
+    "tags": [
+      "onboarding",
+      "names",
+      "validation"
+    ],
+    "depends_on": [
+      "ONB-002-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-002-B.md"
+  },
+  {
+    "id": "ONB-002-C",
+    "title": "Uncertain custom-name review status",
+    "status": "next",
+    "type": "feature",
+    "area": "onboarding",
+    "priority": "high",
+    "tags": [
+      "onboarding",
+      "scribes",
+      "names"
+    ],
+    "depends_on": [
+      "ONB-002-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-002-C.md"
+  },
+  {
+    "id": "ONB-002-D",
+    "title": "Name onboarding help copy",
+    "status": "next",
+    "type": "ux",
+    "area": "onboarding",
+    "priority": "medium",
+    "tags": [
+      "onboarding",
+      "help",
+      "copy"
+    ],
+    "depends_on": [
+      "ONB-002-C"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-002-D.md"
   },
   {
     "id": "PERF-001",
@@ -254,6 +955,22 @@
       "github_issue": true
     },
     "file": "docs/planning/items/PERF-001-budgeted-and-aggregated-creature-simulation.md"
+  },
+  {
+    "id": "PLAN-001",
+    "title": "Repository docs are the planning source of truth",
+    "status": "next",
+    "type": "documentation",
+    "area": "planning",
+    "priority": "high",
+    "tags": [
+      "planning",
+      "docs",
+      "roadmap"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/PLAN-001.md"
   },
   {
     "id": "PROG-002",
@@ -327,6 +1044,96 @@
     "file": "docs/planning/items/SURV-001-early-respawn.md"
   },
   {
+    "id": "SURV-001-A",
+    "title": "Beginner return eligibility helper",
+    "status": "next",
+    "type": "feature",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "respawn",
+      "beginner",
+      "safety"
+    ],
+    "depends_on": [
+      "ONB-001-E"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SURV-001-A.md"
+  },
+  {
+    "id": "SURV-001-B",
+    "title": "/respawn command skeleton",
+    "status": "next",
+    "type": "feature",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "respawn",
+      "telegram",
+      "command"
+    ],
+    "depends_on": [
+      "SURV-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SURV-001-B.md"
+  },
+  {
+    "id": "SURV-001-C",
+    "title": "Повернення confirmation and aliases",
+    "status": "next",
+    "type": "feature",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "respawn",
+      "aliases",
+      "button-parity"
+    ],
+    "depends_on": [
+      "SURV-001-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SURV-001-C.md"
+  },
+  {
+    "id": "SURV-001-D",
+    "title": "Actual return to start camp",
+    "status": "next",
+    "type": "feature",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "respawn",
+      "location",
+      "queue"
+    ],
+    "depends_on": [
+      "SURV-001-C"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SURV-001-D.md"
+  },
+  {
+    "id": "SURV-001-E",
+    "title": "Beginner return cooldown/consequence",
+    "status": "next",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "respawn",
+      "cooldown",
+      "balance"
+    ],
+    "depends_on": [
+      "SURV-001-D"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SURV-001-E.md"
+  },
+  {
     "id": "TECH-001",
     "title": "Service boundary and duplication cleanup",
     "status": "backlog",
@@ -346,6 +1153,153 @@
       "github_issue": true
     },
     "file": "docs/planning/items/TECH-001-service-boundary-and-duplication-cleanup.md"
+  },
+  {
+    "id": "TRACK-LEARN-001-A",
+    "title": "Track-examine progress hint",
+    "status": "next",
+    "type": "feature",
+    "area": "learning",
+    "priority": "high",
+    "tags": [
+      "tracking",
+      "tracks",
+      "progression"
+    ],
+    "depends_on": [
+      "LEARN-001-C",
+      "VIS-001-D"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/TRACK-LEARN-001-A.md"
+  },
+  {
+    "id": "TRACK-LEARN-001-B",
+    "title": "Animal movement observation",
+    "status": "next",
+    "type": "feature",
+    "area": "learning",
+    "priority": "medium",
+    "tags": [
+      "tracking",
+      "animals",
+      "observe"
+    ],
+    "depends_on": [
+      "TRACK-LEARN-001-A",
+      "OBS-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/TRACK-LEARN-001-B.md"
+  },
+  {
+    "id": "TRACK-LEARN-001-C",
+    "title": "Learning respects visibility and light",
+    "status": "next",
+    "type": "feature",
+    "area": "learning",
+    "priority": "high",
+    "tags": [
+      "learning",
+      "visibility",
+      "light"
+    ],
+    "depends_on": [
+      "TRACK-LEARN-001-B",
+      "VIS-001-D"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/TRACK-LEARN-001-C.md"
+  },
+  {
+    "id": "VIS-001-A",
+    "title": "Shared visibility service skeleton",
+    "status": "next",
+    "type": "technical",
+    "area": "visibility",
+    "priority": "high",
+    "tags": [
+      "visibility",
+      "night",
+      "light"
+    ],
+    "depends_on": [
+      "WORLD-001-C"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/VIS-001-A.md"
+  },
+  {
+    "id": "VIS-001-B",
+    "title": "Hide location details in darkness",
+    "status": "next",
+    "type": "feature",
+    "area": "visibility",
+    "priority": "high",
+    "tags": [
+      "visibility",
+      "look",
+      "night"
+    ],
+    "depends_on": [
+      "VIS-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/VIS-001-B.md"
+  },
+  {
+    "id": "VIS-001-C",
+    "title": "Nearby beings visibility in darkness",
+    "status": "next",
+    "type": "feature",
+    "area": "visibility",
+    "priority": "high",
+    "tags": [
+      "visibility",
+      "targets",
+      "night"
+    ],
+    "depends_on": [
+      "VIS-001-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/VIS-001-C.md"
+  },
+  {
+    "id": "VIS-001-D",
+    "title": "Track visibility gate",
+    "status": "next",
+    "type": "feature",
+    "area": "visibility",
+    "priority": "medium",
+    "tags": [
+      "visibility",
+      "tracks",
+      "night"
+    ],
+    "depends_on": [
+      "VIS-001-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/VIS-001-D.md"
+  },
+  {
+    "id": "VIS-001-E",
+    "title": "Ground object visibility gate",
+    "status": "next",
+    "type": "feature",
+    "area": "visibility",
+    "priority": "medium",
+    "tags": [
+      "visibility",
+      "objects",
+      "night"
+    ],
+    "depends_on": [
+      "VIS-001-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/VIS-001-E.md"
   },
   {
     "id": "WEB-001",
@@ -387,6 +1341,72 @@
     "depends_on": [],
     "exports": {},
     "file": "docs/planning/items/WORLD-001-day-night-cycle.md"
+  },
+  {
+    "id": "WORLD-001-A",
+    "title": "Tiny world-time model design",
+    "status": "next",
+    "type": "design",
+    "area": "world_time",
+    "priority": "high",
+    "tags": [
+      "world-time",
+      "day-night"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/WORLD-001-A.md"
+  },
+  {
+    "id": "WORLD-001-B",
+    "title": "Daypart storage",
+    "status": "next",
+    "type": "technical",
+    "area": "world_time",
+    "priority": "high",
+    "tags": [
+      "world-time",
+      "schema"
+    ],
+    "depends_on": [
+      "WORLD-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WORLD-001-B.md"
+  },
+  {
+    "id": "WORLD-001-C",
+    "title": "Daypart helper and tick advancement",
+    "status": "next",
+    "type": "feature",
+    "area": "world_time",
+    "priority": "high",
+    "tags": [
+      "world-time",
+      "world-tick"
+    ],
+    "depends_on": [
+      "WORLD-001-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WORLD-001-C.md"
+  },
+  {
+    "id": "WORLD-001-D",
+    "title": "/time reads world state",
+    "status": "next",
+    "type": "feature",
+    "area": "world_time",
+    "priority": "high",
+    "tags": [
+      "world-time",
+      "time-command"
+    ],
+    "depends_on": [
+      "WORLD-001-C"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WORLD-001-D.md"
   },
   {
     "id": "WORLD-002",

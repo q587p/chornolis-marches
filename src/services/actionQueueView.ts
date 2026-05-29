@@ -56,17 +56,23 @@ export async function playerRestStatusText(playerId: number) {
   const hpRemaining = Math.max(0, hpMax - player.hp);
   const state = fatigueLabel(fatigueStateFor(player.stamina, max), player.isResting);
   const restStaminaRate = REST_STAMINA_REGEN_PER_INTERVAL * await getPlayerRestStaminaRegenMultiplier(playerId);
+  const showTechnicalDetails = playerCanShowTechnicalDetails(player);
 
   if (staminaRemaining <= 0 && hpRemaining <= 0) {
-    return `Ви вже відпочивші й готові до дій. Життя: ${player.hp}/${hpMax}. Снага: ${player.stamina}/${max}.`;
+    return showTechnicalDetails
+      ? `Ви вже відпочивші й готові до дій. Життя: ${player.hp}/${hpMax}. Снага: ${player.stamina}/${max}.`
+      : "Ви вже відпочили й готові діяти далі.";
   }
 
-  const lines = [
-    "Ви відпочиваєте.",
-    `Стан: ${state}.`,
-    `Життя: ${player.hp}/${hpMax}.`,
-    `Снага: ${player.stamina}/${max}${staminaRemaining <= 0 ? " — повністю відновлена" : ""}.`,
-  ];
+  const lines = ["Ви відпочиваєте."];
+
+  if (showTechnicalDetails) {
+    lines.push(
+      `Стан: ${state}.`,
+      `Життя: ${player.hp}/${hpMax}.`,
+      `Снага: ${player.stamina}/${max}${staminaRemaining <= 0 ? " — повністю відновлена" : ""}.`
+    );
+  }
 
   if (player.hp <= 0) {
     lines.push(`До притомности: приблизно ${msToMinutes(REST_HEALTH_REGEN_INTERVAL_MS)} хв.`);

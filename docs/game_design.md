@@ -2,21 +2,31 @@
 
 ## Identity Formula
 
-Chornolis Marches is a living frontier simulation about surviving on the border between settlement, wilderness and myth.
+Chornolis Marches is a living liminal frontier simulation about surviving on the border between settlement, wilderness and myth.
 
-It is a liminal sandbox where ecosystems, factions and myths continue to evolve whether players are present or not.
+It is not a heroic theme-park RPG. It is a borderland where the forest, settlements, animals, spirits, resources, roads and rumors continue to move whether the player is looking or not.
 
-Its first playable promise is not "a full RPG ruleset", but a world that notices, hides things, leaves traces and rewards attention.
+Its first playable promise is not a full RPG ruleset. The first promise is a world that notices, hides things, leaves traces and rewards attention.
 
-Порубіжжя Чорнолісу — це лімінальний survival sandbox на межі поселення, дикості й міту, де світ живе сам по собі, а персонажі зростають через те, що справді роблять.
+**Порубіжжя Чорнолісу** — це лімінальна пісочниця на виживання на межі поселення, дикості й міту, де світ живе сам по собі, а персонажі зростають через те, що справді роблять, помічають і переживають.
+
+## Current Playable Promise
+
+The next playable version should make a new player feel this path:
+
+> I enter through a dream, wake near the border, look around, examine what matters, notice a trace, spend stamina, rest, fear the dark, use light, see that the world moves without me, and learn that careful observation can teach.
+
+Everything near-term should support this path.
 
 ## Core Pillars
 
 ### Atmosphere First
 
-The world should feel ancient, dangerous and mysterious. Convenience should not destroy the feeling of being lost near the edge of a living forest.
+The world should feel ancient, dangerous, liminal and partially unknowable.
 
-Mechanical breadth should come after mood, attention and readable consequences. A small action that makes the world feel present is more valuable than a large subsystem that feels imported from a generic RPG.
+A small action that makes the world feel present is more valuable than a large subsystem that feels imported from a generic RPG.
+
+Mechanical breadth should come after mood, attention, readable consequences and local texture.
 
 ### Liminal Frontier / Порубіжжя
 
@@ -24,7 +34,7 @@ Chornolis Marches is not just a forest adventure. It is a borderland: between se
 
 The word “Marches” / “Порубіжжя” should guide the tone of the game. The player is always near a threshold, crossing from the ordinary world into something older, stranger and less certain.
 
-Порубіжжя Чорнолісу — це не просто край лісу. Це межа між селом і дикістю, днем і ніччю, людським і нелюдським, безпекою і небезпекою, знаним і незнаним.
+«Порубіжжя Чорнолісу — це не просто край лісу. Це межа між селом і дикістю, днем і ніччю, людським і нелюдським, безпекою і небезпекою, знаним і незнаним».
 
 ### Autonomous World
 
@@ -32,31 +42,35 @@ The world should not wait for the player.
 
 Animals move, age, hunt, flee, die and leave traces. NPCs and factions should eventually travel, trade, compete, hide, raid, guard and remember. A player may enter a location after something important has already happened there.
 
-This is the main lesson taken from S.T.A.L.K.E.R.-style A-Life: not the modern weapons or post-apocalyptic surface, but the feeling of a dangerous territory that keeps moving without the player.
+This is the main lesson taken from A-Life-like design: not surface aesthetics, but the feeling of a dangerous territory that keeps moving without the player.
 
 ### Incomplete Information
 
-Players should not instantly know everything. Locations, exits, creatures, tracks, rumors and danger should often require attention, light, time or skill.
+Players should not instantly know everything.
+
+Locations, exits, creatures, tracks, rumors and danger often require attention, light, time, skill or help.
 
 Information should often be partial, local and uncertain.
 
 ### Living Ecosystem
 
-Creatures interact with each other independently of players: predators hunt prey, prey reproduce, corpses feed the forest, resources grow and get depleted.
+Creatures interact with each other independently of players. Predators hunt prey. Prey reproduce and migrate. Corpses feed the forest back. Resources grow, get depleted and recover unevenly.
 
-The ecosystem should not feel cute or decorative. It should create scarcity, danger, migration, abandoned places, sudden encounters and consequences.
+The ecosystem should not feel cute or decorative. It should create scarcity, danger, migration, sudden encounters, abandoned places and consequences.
 
 ### World Reactivity
 
-Player actions should affect regions and ecology. If players remove predators, overhunt animals, strip resources, break trade routes or empower hostile groups, the world should answer.
+Player actions should affect regions and ecology.
 
-The answer does not have to be immediate. It can appear as migration, shortage, disease, famine, rumors, rising prices, dangerous roads or creatures moving closer to settlements.
+If players remove predators, overhunt animals, strip resources, break routes or empower hostile groups, the world should answer. The answer does not have to be immediate. It can appear as migration, shortage, disease, famine, rumors, rising prices, dangerous roads or creatures moving closer to settlements.
 
 ### Survival Over Power Fantasy
 
-Travel and exploration should matter. Fire, food, shelter, wounds and fatigue should create pressure without becoming busywork.
+Travel and exploration should matter.
 
-Survival should be atmospheric and systemic, not just a set of punishment meters.
+Fire, food, shelter, wounds, fatigue and darkness should create pressure without becoming busywork.
+
+Survival should be atmospheric and systemic, not a row of punishment meters.
 
 ### Skills Grow Through Use and Observation
 
@@ -64,31 +78,41 @@ Characters should improve by doing things, but also by observing beings that are
 
 A player may first learn the idea of a skill by watching someone use it: seeing a herbalist gather herbs, a hunter set a trap, a wolf follow tracks, or a mythical creature move through the forest in an impossible way.
 
-Observation should not always grant progress. Learning depends on the observer's relevant attributes, current skill, attention, context, and the difference between their skill and the observed creature's skill.
+Observation should not always grant progress. Learning depends on the observer's relevant attributes, current skill, attention, context, visibility, danger, and the difference between their skill and the observed being's skill.
 
-Progression should feel like lived experience, apprenticeship, imitation and discovery, not like abstract level-ups.
-
-The first observation-learning MVP can be small and scripted. It is enough to prove the feeling: a player watches a herbalist, hunter, animal or spirit act, notices a pattern, and gains a first hint of skill progress.
+Progression should feel like lived experience, apprenticeship, imitation and discovery — not abstract level-ups.
 
 ### Social Signals as Core Play
 
-Small social gestures are part of Chornolis gameplay, not only decorative emotes.
+Small social gestures are gameplay, not only decorative emotes.
 
 Signals such as nodding, waving, pointing, smiling, bowing or frowning let players communicate intent in a compact Telegram-native way. They also let NPCs, animals and spirits react without requiring every interaction to become speech, combat or a quest.
 
-Social signals should support actor, target and observer text. They should be visible in local history where useful and should eventually feed reputation, mood, learning, fear, ritual politeness and creature reactions.
+Signals should support actor, target and observer text. They should be visible in local history where useful and should eventually feed reputation, mood, learning, fear, ritual politeness and creature reactions.
 
-### Factions, Settlements and Hostile Groups
+### Diegetic Ukrainian UI
 
-The frontier should not be empty. Settlements, kurins, Sich-like groups, traders, guards, bandits, cults and local powers should eventually compete for resources, safety, influence and routes.
+Player-facing words should feel like part of the world, not imported MMO terminology.
 
-This layer should connect ecology, economy, travel, PvP, reputation and world events.
+Prefer terms such as:
 
-### Telegram-Native Play
+- `Озирнутися`
+- `Місцина`
+- `Роздивитися`
+- `Снага`
+- `Речі` / `Поклажа`
+- `Риси`
+- `Навички`
+- `Сутичка`
+- `Повернення`
 
-The game should feel good inside Telegram: compact messages, useful buttons, low spam, readable logs and strong atmosphere in short text.
+Ukrainian grammar and cases are immersion, not decoration.
 
-Telegram is the first interface, not the whole game architecture.
+### Telegram-Native First, Reusable Core Later
+
+The game should feel good inside Telegram: compact messages, useful buttons, low spam, readable local history and strong atmosphere in short text.
+
+Telegram is the first interface, not the whole architecture. Gameplay logic should keep moving toward reusable services so web, map tools, local console clients or future MUD-like gateways can exist later.
 
 ## Tone
 
@@ -102,15 +126,41 @@ The world should feel:
 - alive without the player;
 - shaped by migration, scarcity, memory and old powers.
 
+## Design Guardrails
+
+### Build now
+
+- Dream onboarding.
+- Movement, looking, examining.
+- Small finds and local signs.
+- Stamina and active rest.
+- Tracks and fading traces.
+- Nearby beings.
+- Day/night and first visibility rules.
+- Campfires, torches and хмиз.
+- Beginner return / `Повернення`.
+- Narrow observation-learning MVP.
+
+### Delay until the core loop is strong
+
+- Full combat.
+- Full crafting trees.
+- Full economy and regional prices.
+- Factions and settlement politics.
+- PvP bounty/witness systems.
+- Deep calendar, moon phases and seasonal rituals.
+- Web map and MUD gateway.
+- Large socials catalog.
+- Advanced automation.
+
 ## Inspirations
 
-- Ultima Online
-- MUDs
-- Unreal World
-- Dwarf Fortress
-- CDDA
-- S.T.A.L.K.E.R. A-Life
-- Ukrainian folklore
-- Slavic мітологія
+- MUDs.
+- Ultima Online.
+- Unreal World.
+- Dwarf Fortress.
+- CDDA.
+- S.T.A.L.K.E.R.-style A-Life.
+- Ukrainian folklore and Slavic mythology.
 
-S.T.A.L.K.E.R. is an inspiration not for modern firearms or post-apocalypse aesthetics, but for autonomous world simulation, dangerous exploration, faction tension, emergent encounters and a living territory that exists independently of the player.
+The inspiration is not surface genre copying. It is autonomous world movement, dangerous exploration, incomplete information, ecology, memory and places that feel older than the player.

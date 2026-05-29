@@ -25,6 +25,7 @@ import { getPublicEcologySignStats, type PublicEcologySignStats } from "./ecolog
 import { lifetimeSummary } from "./itemLifetime";
 import { playerShowsTechnicalDetails } from "./technicalDetails";
 import { TUTORIAL_OBSERVATION_LOCATION_KEY, dreamGateStatusText, isDreamGateFeature, lockedExitDirections, lockedExitLabel, rememberTutorialObservationLesson } from "./tutorial";
+import { formatObservedPostureText } from "../utils/playerText";
 
 const COMPACT_EXIT_ORDER = ["NORTH", "WEST", "SOUTH", "EAST", "UP", "DOWN", "INSIDE", "OUTSIDE"];
 const GATHERABLE_RESOURCE_KEYS = ["berries", "mushrooms", "herbs"] as const;
@@ -57,7 +58,16 @@ function isVisibleLivingCreature(c: any) {
 function visibleTargets(location: any, viewerPlayerId?: number) {
   const players = location.players
     .filter((p: any) => p.id !== viewerPlayerId)
-    .map((p: any) => ({ type: "player" as const, id: p.id, label: p.nameNominative ?? p.firstName ?? p.username ?? "мандрівник", canGreet: true }));
+    .map((p: any) => ({
+      type: "player" as const,
+      id: p.id,
+      label: p.nameNominative ?? p.firstName ?? p.username ?? "мандрівник",
+      canGreet: true,
+      isResting: p.isResting,
+      fatigueState: p.fatigueState,
+      grammaticalGender: p.grammaticalGender,
+      pronoun: p.pronoun,
+    }));
 
   const livingCreatures = location.creatures
     .filter(isVisibleLivingCreature)
@@ -143,11 +153,11 @@ function isTutorialPromptFeature(feature: any) {
 }
 
 function featureBriefLine(feature: any) {
-  return `${featureIcon(feature)} ${feature.name}`;
+  return `${featureIcon(feature)} <i>${escapeHtml(feature.name)}</i>`;
 }
 
 function featureDetailLine(feature: any, showTechnicalDetails = false) {
-  const line = `${featureIcon(feature)} ${feature.name}`;
+  const line = `${featureIcon(feature)} <i>${escapeHtml(feature.name)}</i>`;
   const details: string[] = [];
 
   if (isCampfireFeature(feature)) {
@@ -183,7 +193,7 @@ function featureDetailLine(feature: any, showTechnicalDetails = false) {
   if (showTechnicalDetails && feature.restStaminaCapMultiplier) details.push(`відпочинок до ×${feature.restStaminaCapMultiplier} снаги`);
   const restSpeedMultiplier = Number(featureData(feature).rest_stamina_regen_multiplier ?? featureData(feature).restStaminaRegenMultiplier ?? 1);
   if (showTechnicalDetails && Number.isFinite(restSpeedMultiplier) && restSpeedMultiplier > 1) details.push(`відновлення снаги ×${Math.floor(restSpeedMultiplier)}`);
-  return details.length ? `${line}; ${details.join("; ")}` : line;
+  return details.length ? `${line}; ${details.map(escapeHtml).join("; ")}` : line;
 }
 
 function formatPublicCount(value: number) {
@@ -265,7 +275,7 @@ function addInlineRows(target: InlineKeyboard, source: InlineKeyboard) {
   }
 }
 
-function presenceText(location: any, viewerPlayerId?: number, revealTargets = false) {
+function presenceText(location: any, viewerPlayerId?: number, revealTargets = false, activeActions = new Map<string, any>()) {
   const targets = visibleTargets(location, viewerPlayerId);
   const hasCharacters = targets.some((t) => t.canGreet);
   const hasAnimals = location.creatures.some((c: any) => isVisibleLivingCreature(c) && c.species.kind === "ANIMAL");
@@ -276,7 +286,7 @@ function presenceText(location: any, viewerPlayerId?: number, revealTargets = fa
     const livingLines = targets
       .filter(isLivingTarget)
       .slice(0, TARGET_TEXT_LIMIT)
-      .map((target) => `- ${escapeHtml(visibleActionSentence(target, new Map(), location))}`);
+      .map((target) => `- <i>${escapeHtml(visibleActionSentence(target, activeActions, location))}</i>`);
     const corpseLines = targets
       .filter(isCorpseTarget)
       .slice(0, TARGET_TEXT_LIMIT)
@@ -374,14 +384,32 @@ function resourceDurationText(resourceKey: string, quick: boolean, showTechnical
   return ` (${formatSeconds(ms)} с)`;
 }
 
+function gatherResourceLabel(action: any) {
+  const key = String((action.payload as any)?.resourceKey ?? "");
+  const labels: Record<string, string> = {
+    berries: "ягоди",
+    mushrooms: "гриби",
+    herbs: "лікарські трави",
+    grass: "траву",
+    twigs: "хмиз",
+  };
+  return labels[key] ?? "ресурс";
+}
+
 function activeActionLabel(action: any) {
   if (!action) return undefined;
+  const queued = action.status === "QUEUED";
   if (action.type === "MOVE") {
     const direction = (action.payload as any)?.direction;
-    return direction ? `йде на ${String(directionLabels[direction] ?? direction).toLowerCase()}` : "йде";
+    return direction
+      ? queued
+        ? `збирається піти на ${String(directionLabels[direction] ?? direction).toLowerCase()}`
+        : `йде на ${String(directionLabels[direction] ?? direction).toLowerCase()}`
+      : queued ? "збирається рушити" : "йде";
   }
-  if (action.type === "GATHER" || action.type === "GATHER_SPECIFIC") return "збирає";
-  if (action.type === "LOOK") return "роздивляється";
+  if (action.type === "GATHER") return queued ? "планує пошукати припаси" : "шукає припаси";
+  if (action.type === "GATHER_SPECIFIC") return queued ? `планує зібрати ${gatherResourceLabel(action)}` : `збирає ${gatherResourceLabel(action)}`;
+  if (action.type === "LOOK") return queued ? "збирається озирнутися" : "озирається";
   if (action.type === "INSPECT") return "роздивляється";
   if (action.type === "GREET") return "вітається";
   if (action.type === "ATTACK") return "атакує";
@@ -391,6 +419,30 @@ function activeActionLabel(action: any) {
   if (action.type === "REST") return "відпочиває";
   if (action.type === "SET_TRAP") return "ставить пастку";
   return "зайнятий";
+}
+
+async function activeActionsForTargets(targets: ReturnType<typeof visibleTargets>) {
+  const playerTargetIds = targets.filter((t) => t.type === "player").map((t) => t.id);
+  const creatureTargetIds = targets.filter((t) => t.type === "creature").map((t) => t.id);
+  if (!playerTargetIds.length && !creatureTargetIds.length) return new Map<string, any>();
+
+  const activeActionsRaw = await prisma.worldAction.findMany({
+    where: {
+      status: { in: ["QUEUED", "RUNNING"] },
+      OR: [
+        ...(playerTargetIds.length ? [{ actorType: "PLAYER" as const, playerId: { in: playerTargetIds } }] : []),
+        ...(creatureTargetIds.length ? [{ actorType: "CREATURE" as const, creatureId: { in: creatureTargetIds } }] : []),
+      ],
+    },
+    orderBy: [{ status: "desc" }, { position: "asc" }, { id: "asc" }],
+  });
+
+  const activeActions = new Map<string, any>();
+  for (const action of activeActionsRaw) {
+    const key = action.actorType === "PLAYER" ? `player:${action.playerId}` : `creature:${action.creatureId}`;
+    if (!activeActions.has(key)) activeActions.set(key, action);
+  }
+  return activeActions;
 }
 
 function guessGenderFromForms(forms: ReturnType<typeof creatureForms>, fallback?: string | null) {
@@ -422,6 +474,14 @@ function visibleActionText(target: { type: "player" | "creature"; id: number }, 
     if (creature?.currentAction) return ` — ${normalizeCreatureActionText(creature.currentAction)}`;
   }
 
+  if (target.type === "player") {
+    const player = location.players.find((p: any) => p.id === target.id);
+    if (player) {
+      const posture = formatObservedPostureText(player).replace(/\.$/, "");
+      return ` — ${posture.charAt(0).toLocaleLowerCase("uk-UA")}${posture.slice(1)}`;
+    }
+  }
+
   return "";
 }
 
@@ -435,7 +495,8 @@ function visibleActionLabel(target: { type: "player" | "creature"; id: number },
 }
 
 function visiblePresenceLabel(target: ReturnType<typeof visibleTargets>[number]) {
-  return target.type === "creature" && target.isAnimal ? target.label : target.label;
+  const action = "actionLabel" in target && target.actionLabel ? ` ${target.actionLabel}` : "";
+  return `${target.label}${action}`;
 }
 
 function visibleTargetsText(targets: ReturnType<typeof visibleTargets>) {
@@ -450,7 +511,7 @@ function visibleTargetsText(targets: ReturnType<typeof visibleTargets>) {
   const groups = [...grouped.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "uk"));
   const shown = groups.slice(0, TARGET_TEXT_LIMIT);
   const hiddenCount = groups.slice(TARGET_TEXT_LIMIT).reduce((sum, [, count]) => sum + count, 0);
-  const lines = shown.map(([label, count]) => `- ${escapeHtml(label)}${count > 1 ? ` ×${count}` : ""}`);
+  const lines = shown.map(([label, count]) => `- <i>${escapeHtml(label)}</i>${count > 1 ? ` ×${count}` : ""}`);
   if (hiddenCount > 0) lines.push(`- ...і ще ${hiddenCount}`);
 
   return lines.length ? `\n\nПоруч:\n${lines.join("\n")}` : "";
@@ -519,12 +580,17 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
   const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
   const lockedExits = await lockedExitDirections(location.id);
   const targets = visibleTargets(location, viewerPlayerId);
+  const activeActions = revealTargets ? await activeActionsForTargets(targets) : new Map<string, any>();
+  const actionLabeledTargets = targets.map((target) => ({
+    ...target,
+    actionLabel: visibleActionLabel(target, activeActions, location) ?? ("actionLabel" in target ? target.actionLabel : undefined),
+  }));
   const keyboard = new InlineKeyboard();
   addFeatureButtons(keyboard, location.features, "brief");
-  if (revealTargets && targets.length) addInlineRows(keyboard, buildTargetListKeyboard(targets, { page: options.targetPage, pageCallbackPrefix: "targetPage:brief" }));
+  if (revealTargets && targets.length) addInlineRows(keyboard, buildTargetListKeyboard(actionLabeledTargets, { page: options.targetPage, pageCallbackPrefix: "targetPage:brief" }));
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location, "brief", showTechnicalDetails)}${presenceText(location, viewerPlayerId, revealTargets)}\n\n${escapeHtml(compactExitsText(location.exitsFrom, lockedExits))}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location, "brief", showTechnicalDetails)}${presenceText(location, viewerPlayerId, revealTargets, activeActions)}\n\n${escapeHtml(compactExitsText(location.exitsFrom, lockedExits))}`,
     keyboard,
   };
 }
@@ -548,28 +614,12 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
   const lockedExits = await lockedExitDirections(location.id);
   const targets = visibleTargets(location, viewerPlayerId);
-  const playerTargetIds = targets.filter((t) => t.type === "player").map((t) => t.id);
-  const creatureTargetIds = targets.filter((t) => t.type === "creature").map((t) => t.id);
-  const activeActionsRaw = await prisma.worldAction.findMany({
-    where: {
-      status: { in: ["QUEUED", "RUNNING"] },
-      OR: [
-        playerTargetIds.length ? { actorType: "PLAYER", playerId: { in: playerTargetIds } } : { id: -1 },
-        creatureTargetIds.length ? { actorType: "CREATURE", creatureId: { in: creatureTargetIds } } : { id: -1 },
-      ],
-    },
-    orderBy: [{ status: "desc" }, { position: "asc" }, { id: "asc" }],
-  });
-  const activeActions = new Map<string, any>();
-  for (const action of activeActionsRaw) {
-    const key = action.actorType === "PLAYER" ? `player:${action.playerId}` : `creature:${action.creatureId}`;
-    if (!activeActions.has(key)) activeActions.set(key, action);
-  }
+  const activeActions = await activeActionsForTargets(targets);
   const actionLabeledTargets = targets.map((target) => ({
     ...target,
     actionLabel: visibleActionLabel(target, activeActions, location) ?? ("actionLabel" in target ? target.actionLabel : undefined),
   }));
-  const charactersText = visibleTargetsText(targets);
+  const charactersText = visibleTargetsText(actionLabeledTargets);
 
   const resourceLines = location.resources
     .filter((r) => r.amount > 0 && (GATHERABLE_RESOURCE_KEYS as readonly string[]).includes(r.resourceType.key))
