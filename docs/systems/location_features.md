@@ -10,6 +10,8 @@ Only features with meaningful interaction should become buttons in the location 
 
 `/examine` should explain what those features mean in play: a campfire gives light and improves rest, a torch stand has torches to take, a border marker helps with orientation, and so on. For extinguished campfires, prefer diegetic detail such as ash, blackened brands, and the lack of light or warmth instead of repeated technical state labels.
 
+Interactive features should also be inspectable by text where practical: `look лавка`, `/examine лавка`, `оглянути лавку`, `look bench`, `роздивитися кущі`. If no feature matches, the same text can fall back to ordinary visible target inspection.
+
 Current interactive examples:
 
 - border marker: shows local orientation and nearby landmarks;

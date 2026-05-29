@@ -251,7 +251,7 @@
     "locationKey": "dream_tutorial_foraging",
     "type": "LANDMARK",
     "name": "Ягідна підказка",
-    "description": "Кущі стоять низько, майже на рівні долоні. Натисніть «Роздивитися» або напишіть /examine, щоб побачити, що саме можна зібрати; після першого збору з’являться «Речі».",
+    "description": "Кущі стоять низько, майже на рівні долоні. Натисніть «Роздивитися» або напишіть /examine, щоб побачити, що саме можна зібрати. Пошук витрачає трохи часу й снаги; після першого збору з’являться «Речі», якщо їх ще немає.",
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
@@ -262,7 +262,7 @@
     "key": "dream_tutorial_rest_fire",
     "locationKey": "dream_tutorial_rest",
     "type": "LANDMARK",
-    "name": "Лавка короткого перепочинку",
+    "name": "Зручна лавка",
     "description": "Низька лавка тепла на дотик, хоча поруч немає вогню. Вона ніби підказує просту річ: відпочинок — це не сон, а короткий присілок. Якщо тіло обважніло після входу в цю місцину, натисніть «Присісти і відпочити» або напишіть /rest.",
     "providesLight": false,
     "restStaminaCapMultiplier": 2,
@@ -270,7 +270,8 @@
       "rest_stamina_cap_multiplier": 2,
       "rest_stamina_regen_multiplier": 10,
       "tutorial_rest_seat": true,
-      "tutorial_hint": "rest"
+      "tutorial_hint": "rest",
+      "aliases": ["лавка", "лавку", "лавці", "лавкою", "bench", "seat", "Лавка короткого перепочинку"]
     }
   },
   {
@@ -323,6 +324,18 @@
     "data": {
       "tutorial_observation_prompt": true,
       "tutorial_observation_skill": "tracking"
+    }
+  },
+  {
+    "key": "dream_tutorial_observation_bushes",
+    "locationKey": "dream_tutorial_observation",
+    "type": "LANDMARK",
+    "name": "Кущі",
+    "description": "Зсередини кущі здаються вищими й густішими, ніж із галявини. Між гіллям лишається вузький вихід назовні: той самий шлях, тільки тепер його треба впізнати з іншого боку.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "tutorial_outside_prompt": true
     }
   },
   {

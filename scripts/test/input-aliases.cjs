@@ -19,10 +19,13 @@ assertAlias("роздивитися", { kind: "look-action" });
 assertAlias("/examine", { kind: "look-action" });
 
 assertAlias("південь", { kind: "move", direction: "SOUTH" });
+assert.equal(parseAlias("пів"), null);
 assertAlias("йти на захід", { kind: "move", direction: "WEST" });
 assertAlias("/n", { kind: "move", direction: "NORTH" });
 assertAlias("вср", { kind: "move", direction: "INSIDE" });
 assertAlias("/inside", { kind: "move", direction: "INSIDE" });
+assertAlias("наз", { kind: "move", direction: "OUTSIDE" });
+assertAlias("назовні", { kind: "move", direction: "OUTSIDE" });
 
 assertAlias("хто", { kind: "who" });
 assertAlias("хтоя", { kind: "me" });
@@ -45,10 +48,17 @@ assertAlias("оцінити відновлення", { kind: "inspect-vegetation
 assertAlias("/examine sign", { kind: "inspect-border-marker" });
 assertAlias("роздивитися межовий знак", { kind: "inspect-border-marker" });
 assertAlias("придивитися до знака", { kind: "inspect-border-marker" });
+assertAlias("look лавка", { kind: "inspect-feature", target: "лавка" });
+assertAlias("/examine лавка", { kind: "inspect-feature", target: "лавка" });
+assertAlias("look bench", { kind: "inspect-feature", target: "bench" });
 
 assertAlias("збирати ягоди", { kind: "gather", resourceKey: "berries" });
 assertAlias("збирати гриби", { kind: "gather", resourceKey: "mushrooms" });
 assertAlias("збирати лікарські трави", { kind: "gather", resourceKey: "herbs" });
+assertAlias("підібрати ягоди", { kind: "gather", resourceKey: "berries" });
+assertAlias("взяти трави", { kind: "gather", resourceKey: "herbs" });
+assertAlias("take herbs", { kind: "gather", resourceKey: "herbs" });
+assertAlias("get mushrooms", { kind: "gather", resourceKey: "mushrooms" });
 assertAlias("підібрати хмиз", { kind: "pickup-target", target: "хмиз" });
 
 assertAlias("з'їсти ягоди", { kind: "use-item", item: "berries" });
@@ -85,7 +95,7 @@ assert.equal(isDreamGateOpeningPhrase("Відчинитися"), true);
 assert.equal(isDreamGateOpeningPhrase("Відчинись будь ласка"), true);
 assert.equal(isDreamGateOpeningPhrase("Можеш відчинитися?"), true);
 assert.equal(isDreamGateOpeningPhrase("Сьогодні гарний туман"), false);
-assertAlias("роздивитися труп", { kind: "target-action", action: "inspect", target: "труп" });
+assertAlias("роздивитися труп", { kind: "inspect-feature", target: "труп" });
 assertAlias("атакувати мишу", { kind: "target-action", action: "attack", target: "мишу" });
 assertAlias("привітати 1", { kind: "target-action", action: "greet", target: "1" });
 assertAlias("говорити з мандрівником", { kind: "target-action", action: "greet", target: "мандрівником" });
@@ -96,5 +106,8 @@ assertAlias("кивнути Здравомир", { kind: "social-signal", signal
 
 assert.equal(parseAlias("це точно не команда"), null);
 assert.ok(suggestAliasInputs("роздивит").includes("роздивитися"), "Expected alias suggestions to include роздивитися");
+assert.ok(suggestAliasInputs("пів").includes("північ"), "Expected alias suggestions to include північ");
+assert.ok(suggestAliasInputs("пів").includes("південь"), "Expected alias suggestions to include південь");
+assert.ok(suggestAliasInputs("назо").includes("назовні"), "Expected alias suggestions to include назовні");
 
 console.log("Input aliases OK");

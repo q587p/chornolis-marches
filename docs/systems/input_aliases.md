@@ -34,15 +34,18 @@ Menu and status:
 Movement:
 
 - `північ`, `південь`, `схід`, `захід`.
+- Ambiguous fragments such as `пів` should not move the character directly; unknown-command suggestions should offer both `північ` and `південь`.
 - `йти на південь`, `рушити на захід`.
 - Short aliases such as `пн`, `пд`, `сх`, `зх` are supported where unambiguous.
-- Non-compass exits also work: `/inside`, `/in`, `вср`, `всередину`, `увійти`, `/outside`, `/out`, `назовні`, `вийти`.
+- Non-compass exits also work: `/inside`, `/in`, `вср`, `всередину`, `увійти`, `/outside`, `/out`, `наз`, `назовні`, `вийти`.
 - The reply keyboard may also show available direction buttons directly, such as `⬆️ Північ`, `⬅️ Захід`, `Схід ➡️` and `⬇️ Південь`.
 
 Actions:
 
 - Pending scribe/admin prompts can be cancelled with `/cancel`, `/skasuvaty`, `/vidminyty`, `cancel`, `skasuvaty`, `vidminyty`, `скасувати`, `відмінити`, `відміна`, `стоп` or `не треба`. These aliases only cancel the pending prompt when one exists; otherwise ordinary aliases such as `скасувати` keep their existing queue behavior.
 - `збирати трави`, `збирати ягоди`, `збирати гриби`.
+- Current temporary behavior: `підібрати ягоди`, `взяти трави`, `take herbs`, `get mushrooms` route to gather for local resource nodes so they do not fall through to visible-target lookup.
+- Near-term correction (`ITEM-001`): pickup verbs such as `підібрати`, `взяти`, `take` and `get` should first mean visible ground-item pickup. Gather verbs such as `збирати`, `зібрати`, `шукати` and `gather` should mean spending time and stamina on a local resource node. If a natural resource is not lying separately on the ground, pickup text should give a hint to gather it instead.
 - `з'їсти ягоди`, `їсти ягоди`, `використати ягоди`, `eat berries`, `use berries` -> eat carried berries from inventory to restore a small amount of stamina and ease hunger by a tiny amount.
 - `з'їсти гриби`, `їсти гриби`, `використати гриби`, `eat mushrooms`, `use mushrooms` -> eat carried mushrooms from inventory to ease hunger a little.
 - `використати трави`, `використати лікарські трави`, `вжити трави`, `прикласти трави`, `лікуватися травами`, `use herbs` -> use carried herbs when wounded for a small HP recovery.
@@ -61,6 +64,7 @@ Actions:
 - `підібрати хмиз`, `взяти хмиз`, `pickup twigs` -> pick up visible loose `хмиз` in the current місцина.
 - Ecology sign inspection: `/examine sign`, `/examine border marker`, `роздивитися знак`, `роздивитися межовий знак`, `придивитися до знака` -> inspect a local `Межовий знак` and read its public diegetic wildlife notes when the feature is present.
 - Ecology inspection: `/examine grass`, `/examine depleted grass`, `роздивитися траву`, `придивитися до трави`, `оцінити траву`, `оцінити відновлення` -> inspect the local depleted-vegetation feature and estimate natural recovery when `Винищена трава` is present.
+- Local feature inspection: `look лавка`, `/examine лавка`, `оглянути лавку`, `роздивитися кущі` -> first try to inspect a visible interactive location feature by name or alias; if no feature matches, target inspection can still fall back to visible creatures, corpses or characters.
 - Future shrine/offering actions: `/offer`, `/offer <item>`, `пожертвувати`, `лишити дар`, `покласти дар`, `кинути шаг`, `покласти хмиз` -> offer an item to an inspectable shrine/капище or similar sacred feature.
 - Future animal-restoration offering actions: `/offer berries`, `/offer herbs`, `покласти ягоди`, `лишити трави`, `покласти дар зайцю`, `покласти дар мишам`, `пожертвувати зайцеві`, `пожертвувати мишам` -> offer fitting food or herbs to a hare/mouse statue, carved burrow marker or similar animal charm.
 - `увімкнути авто`, `зупинити авто`.

@@ -40,6 +40,7 @@ export type ParsedAliasCommand =
   | { kind: "track"; detail?: boolean }
   | { kind: "inspect-vegetation" }
   | { kind: "inspect-border-marker" }
+  | { kind: "inspect-feature"; target: string }
   | { kind: "wait" }
   | { kind: "add-twigs-campfire" }
   | { kind: "say"; text: string }
@@ -101,6 +102,7 @@ const DIRECTION_ALIASES: Record<string, Direction> = {
 
   outside: "OUTSIDE",
   out: "OUTSIDE",
+  "наз": "OUTSIDE",
   "назовні": "OUTSIDE",
   "надвір": "OUTSIDE",
   "вийти": "OUTSIDE",
@@ -352,7 +354,7 @@ const COMPACT_ALIASES: Record<string, ParsedAliasCommand> = {
   whereami: { kind: "location" },
 };
 
-const SUGGESTABLE_ALIASES = Object.keys(EXACT_ALIASES);
+const SUGGESTABLE_ALIASES = [...new Set([...Object.keys(EXACT_ALIASES), ...Object.keys(DIRECTION_ALIASES)])];
 
 function normalizeSlashCommand(text: string) {
   return text.replace(/^\/([^\s@]+)@[A-Za-z0-9_]+/i, "/$1");
@@ -434,10 +436,16 @@ function parseGather(text: string): ParsedAliasCommand | null {
   if (!match) return null;
 
   const resource = match[1].trim();
+  const gatheredResource = parseGatherResource(resource);
+  if (gatheredResource) return gatheredResource;
+  if (["torch", "torches", "факел", "факели", "факела", "факелів", "twigs", "хмиз"].includes(resource)) return { kind: "pickup-target", target: resource };
+  return null;
+}
+
+function parseGatherResource(resource: string): ParsedAliasCommand | null {
   if (["berries", "berry", "ягоди", "ягід"].includes(resource)) return { kind: "gather", resourceKey: "berries" };
   if (["mushrooms", "mushroom", "гриби", "грибів"].includes(resource)) return { kind: "gather", resourceKey: "mushrooms" };
   if (["herbs", "herb", "трави", "трав", "лікарські трави", "зілля", "зіллячко"].includes(resource)) return { kind: "gather", resourceKey: "herbs" };
-  if (["torch", "torches", "факел", "факели", "факела", "факелів", "twigs", "хмиз"].includes(resource)) return { kind: "pickup-target", target: resource };
   return null;
 }
 
@@ -501,6 +509,12 @@ function parseBorderMarkerInspectionIntent(text: string): ParsedAliasCommand | n
   return null;
 }
 
+function parseFeatureInspectionIntent(text: string): ParsedAliasCommand | null {
+  const match = text.match(/^(?:look\s+at|look|x|examine|inspect|роздивитися|роздивитись|придивитися|придивитись|оглянути|глянути\s+на|подивитися\s+на|придивитися\s+до)\s+(.+)$/);
+  if (!match?.[1]?.trim()) return null;
+  return { kind: "inspect-feature", target: match[1].trim() };
+}
+
 function parseTargetAction(text: string): ParsedAliasCommand | null {
   const patterns: Array<[TargetAction, RegExp]> = [
     ["inspect", /^(?:look\s+at|look|x|examine|inspect|роздивитися|оглянути|глянути\s+на|подивитися\s+на|придивитися\s+до)\s+(.+)$/],
@@ -520,7 +534,8 @@ function parseTargetAction(text: string): ParsedAliasCommand | null {
 function parsePickup(text: string): ParsedAliasCommand | null {
   const match = text.match(/^(?:pickup|take|get|підібрати|підняти|взяти|забрати)\s+(.+)$/);
   if (!match?.[1]?.trim()) return null;
-  return { kind: "pickup-target", target: match[1].trim() };
+  const target = match[1].trim();
+  return parseGatherResource(target) ?? { kind: "pickup-target", target };
 }
 
 function parseInventoryItemAction(text: string): ParsedAliasCommand | null {
@@ -576,14 +591,17 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
   const borderMarkerIntent = parseBorderMarkerInspectionIntent(commandText);
   if (borderMarkerIntent) return borderMarkerIntent;
 
+  const inventoryItemAction = parseInventoryItemAction(commandText);
+  if (inventoryItemAction) return inventoryItemAction;
+
+  const featureIntent = parseFeatureInspectionIntent(commandText);
+  if (featureIntent) return featureIntent;
+
   const target = parseTargetAction(commandText);
   if (target) return target;
 
   const pickup = parsePickup(commandText);
   if (pickup) return pickup;
-
-  const inventoryItemAction = parseInventoryItemAction(commandText);
-  if (inventoryItemAction) return inventoryItemAction;
 
   const signal = parseSocialSignal(commandText);
   if (signal) return signal;

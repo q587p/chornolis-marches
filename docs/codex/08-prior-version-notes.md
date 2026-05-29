@@ -101,6 +101,7 @@ Important remembered direction from the 0.11 line:
 - The 0.13 lane starts the Core Loop & Onboarding Stability slice.
 - `0.13.0` expands the prepared character-name pool while keeping it in the typed data module. Prepared names remain scribe-approved by default and must include all Ukrainian case forms, origin, rarity and grammatical/gender compatibility.
 - Character-name tests should guard prepared-name coverage, duplicate keys and duplicate nominative forms.
+- `0.13.1` tightens forbidden custom-name normalization: obvious creature, spirit, sacred, famous or common-word names should be rejected even when players vary case, apostrophes, internal spaces or hyphens.
 
 ## Prior build issue note
 

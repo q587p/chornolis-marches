@@ -7,6 +7,7 @@ require("ts-node/register");
 const {
   PREPARED_CHARACTER_NAMES,
   availablePreparedNames,
+  customNameWarningText,
   normalizeNameForRegistry,
   preparedNameByKey,
   randomAvailablePreparedName,
@@ -56,6 +57,8 @@ assert.ok(pluralNames.length >= 6, `Expected at least 6 available plural names, 
 assert.ok(masculineNames.every((name) => name.suggestedGender === "MASCULINE"));
 assert.ok(feminineNames.every((name) => name.suggestedGender === "FEMININE"));
 assert.ok(pluralNames.every((name) => name.suggestedGender === "PLURAL"));
+assert.ok(masculineNames.some((name) => name.forms.nominative === "Северин"), "Expected Severyn to be available as a prepared masculine name");
+assert.ok(customNameWarningText({ examples: ["Северин", "Богдан", "Олесь"] }).includes("<b>Северин</b>"), "Expected custom-name prompt to bold prepared examples");
 assert.equal(randomAvailablePreparedName([], { suggestedGender: "MASCULINE" }).suggestedGender, "MASCULINE");
 assert.equal(randomAvailablePreparedName([], { suggestedGender: "FEMININE" }).suggestedGender, "FEMININE");
 assert.equal(randomAvailablePreparedName([], { suggestedGender: "PLURAL" }).suggestedGender, "PLURAL");
@@ -75,6 +78,16 @@ assert.equal(validateCustomCharacterName("Лісовик").ok, false);
 assert.equal(validateCustomCharacterName("Сварог").ok, false);
 assert.equal(validateCustomCharacterName("Svarog").ok, false);
 assert.equal(validateCustomCharacterName("Gandalf").ok, false);
+assert.equal(validateCustomCharacterName("  В О В К  ").ok, false);
+assert.equal(validateCustomCharacterName("Лі совик").ok, false);
+assert.equal(validateCustomCharacterName("Дід-Лісовик").ok, false);
+assert.equal(validateCustomCharacterName("S o k i l").ok, false);
+assert.equal(validateCustomCharacterName("Гер мес Трисмегіст").ok, false);
+assert.equal(validateCustomCharacterName("Стеж ка").ok, false);
+assert.equal(validateCustomCharacterName("Сон").ok, false);
+for (const name of PREPARED_CHARACTER_NAMES) {
+  assert.equal(validateCustomCharacterName(name.forms.nominative).ok, true, `Prepared name should stay valid: ${name.forms.nominative}`);
+}
 assert.equal(validateCustomCharacterName("Здравко").ok, true);
 assert.deepEqual(validateCustomCharacterName("Zdravko"), { ok: true, value: "Здравко", script: "latin-translit" });
 assert.deepEqual(validateCustomCharacterName("Danylo"), { ok: true, value: "Данило", script: "latin-translit" });

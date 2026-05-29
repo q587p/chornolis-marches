@@ -137,6 +137,10 @@ function isTutorialInsideFeature(feature: any) {
   return featureData(feature).tutorial_inside_prompt === true;
 }
 
+function isTutorialOutsideFeature(feature: any) {
+  return featureData(feature).tutorial_outside_prompt === true;
+}
+
 async function tutorialObservationLesson(viewerPlayerId: number, locationId: number, skillKey = "tracking") {
   const firstLesson = await rememberTutorialObservationLesson(viewerPlayerId, locationId, skillKey);
   return {
@@ -163,7 +167,7 @@ function torchLightButtonText(torchState: { isLit: boolean; plainAmount: number;
 }
 
 function featureIcon(feature: any) {
-  if (isTutorialInsideFeature(feature)) return "🌿";
+  if (isTutorialInsideFeature(feature) || isTutorialOutsideFeature(feature)) return "🕳️";
   if (isTutorialRestSeatFeature(feature)) return "🪑";
   if (isTutorialObservationFeature(feature)) return "🦊";
   if (isCampfireFeature(feature)) return isExtinguishedCampfire(feature) ? "🪨" : "🔥";
@@ -175,6 +179,44 @@ function featureIcon(feature: any) {
 
 function isInteractiveFeature(feature: any) {
   return feature.isActive && (isDepletedVegetationFeature(feature) || ["BORDER_MARKER", "CAMPFIRE", "MAGIC_CAMPFIRE", "GATE", "LANDMARK"].includes(feature.type));
+}
+
+function normalizeFeatureQuery(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s_-]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function featureSearchKeys(feature: any) {
+  const data = featureData(feature);
+  const aliases = Array.isArray(data.aliases) ? data.aliases : [];
+  return [
+    feature.name,
+    feature.key,
+    feature.type,
+    ...aliases,
+  ]
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .map(normalizeFeatureQuery)
+    .filter(Boolean);
+}
+
+async function resolveInteractiveLocationFeature(locationId: number, query: string) {
+  const normalized = normalizeFeatureQuery(query);
+  if (!normalized) return null;
+
+  const features = (await prisma.locationFeature.findMany({
+    where: { locationId, isActive: true },
+    orderBy: { id: "asc" },
+  })).filter(isInteractiveFeature);
+
+  const exact = features.filter((feature) => featureSearchKeys(feature).some((key) => key === normalized));
+  if (exact.length) return exact[0];
+
+  const fuzzy = features.filter((feature) => featureSearchKeys(feature).some((key) => key.includes(normalized) || normalized.includes(key)));
+  return fuzzy[0] ?? null;
 }
 
 function isTutorialPromptFeature(feature: any) {
@@ -216,6 +258,8 @@ function featureDetailLine(feature: any, showTechnicalDetails = false) {
     details.push("позначає прохід, який треба роздивитися ближче");
   } else if (isTutorialInsideFeature(feature)) {
     details.push("ховає вхід, що не є стороною світу");
+  } else if (isTutorialOutsideFeature(feature)) {
+    details.push("показує вихід назовні");
   } else if (isTutorialRestSeatFeature(feature)) {
     details.push("зручне місце для короткого перепочинку");
   } else if (isTutorialObservationFeature(feature)) {
@@ -289,7 +333,7 @@ function publicEcologyReport(stats: PublicEcologySignStats, showTechnicalDetails
 function featuresText(location: any, mode: "brief" | "details", showTechnicalDetails = false) {
   const features = (location.features ?? []).filter(isInteractiveFeature);
   if (!features.length) return "";
-  const title = mode === "brief" ? "Особливості:" : "Особливості місцини:";
+  const title = mode === "brief" ? "<b>Особливості:</b>" : "<b>Особливості місцини:</b>";
   const lines = features.map((feature: any) => mode === "brief" ? featureBriefLine(feature) : featureDetailLine(feature, showTechnicalDetails));
   return `\n\n${title}\n${lines.join("\n")}`;
 }
@@ -807,7 +851,7 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
     followupMessages = lesson.followupMessages;
   } else if (isTutorialRestSeatFeature(feature)) {
     text = feature.description ?? "Тут можна присісти й коротко відпочити.";
-  } else if (isTutorialInsideFeature(feature)) {
+  } else if (isTutorialInsideFeature(feature) || isTutorialOutsideFeature(feature)) {
     text = feature.description ?? "Кущі трохи розступаються. Будьте уважні: входи й виходи не завжди лежать за сторонами світу.";
   } else if (featureData(feature).tutorial_wake_prompt === true) {
     text = `${feature.description ?? "Десь збоку ворушаться майбутні уроки."}\n\nВи можете прокинутися зараз і повернутися до цього місця сну пізніше.`;
@@ -831,12 +875,19 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
   }
   if (feature.type === "GATE" && isDreamGateFeature(feature)) keyboard.text("💬 Сказати «Відчинитися»", "tutorial:sayOpenGate").row();
   if (isTutorialRestSeatFeature(feature)) keyboard.text("🧘 Присісти і відпочити", "rest:start").row();
-  if (isTutorialInsideFeature(feature)) keyboard.text("🌿 Всередину", "move:INSIDE").row();
+  if (isTutorialInsideFeature(feature)) keyboard.text("🕳️ Всередину", "move:INSIDE").row();
+  if (isTutorialOutsideFeature(feature)) keyboard.text("🕳️ Назовні", "move:OUTSIDE").row();
   if (featureData(feature).tutorial_time_prompt === true) keyboard.text("🕯 Час", "time:show").row();
   if (featureData(feature).tutorial_wake_prompt === true) keyboard.text("🌅 Прокинутися", "tutorial:wake").row();
   if (isTorchSourceFeature(feature)) keyboard.text("🕯 Взяти факел", `torch:take:${feature.id}`).row();
   keyboard.text("↩️ Назад", `location:${returnMode}`);
   return { text, keyboard, quoteMessages, followupMessages };
+}
+
+export async function renderLocationFeatureInteractionByQuery(locationId: number, viewerPlayerId: number, query: string, returnMode: LocationViewMode = "details") {
+  const feature = await resolveInteractiveLocationFeature(locationId, query);
+  if (!feature) return null;
+  return renderLocationFeatureInteraction(feature.id, viewerPlayerId, returnMode);
 }
 
 export async function lightLocationCampfire(featureId: number, viewerPlayerId: number) {

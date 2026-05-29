@@ -1,5 +1,6 @@
 import { PREPARED_CHARACTER_NAMES } from "../data/preparedCharacterNames";
 import { validateCharacterName, normalizeCharacterName, type Gender, type NameForms } from "./grammar";
+import { escapeHtml } from "../utils/text";
 
 export { PREPARED_CHARACTER_NAMES } from "../data/preparedCharacterNames";
 
@@ -16,13 +17,26 @@ export type PreparedCharacterName = {
 
 const FORBIDDEN_WORLD_NAMES = new Map<string, string>([
   ["вовк", "це радше назва істоти, ніж особове ім'я"],
+  ["вовчиця", "це радше назва істоти, ніж особове ім'я"],
   ["миша", "це радше назва істоти, ніж особове ім'я"],
+  ["заєць", "це радше назва істоти, ніж особове ім'я"],
+  ["зайчиха", "це радше назва істоти, ніж особове ім'я"],
+  ["лис", "це радше назва істоти, ніж особове ім'я"],
+  ["лисиця", "це радше назва істоти, ніж особове ім'я"],
   ["ведмідь", "це радше назва істоти, ніж особове ім'я"],
   ["лісовик", "це ім'я духа/істоти світу, а не звичайне людське ім'я"],
+  ["дідлісовик", "це ім'я духа/істоти світу, а не звичайне людське ім'я"],
+  ["дідчорноліс", "це ім'я духа/істоти світу, а не звичайне людське ім'я"],
+  ["сон", "це ім'я навчального голосу/сили світу, а не звичайне людське ім'я"],
+  ["дрімота", "це ім'я навчального голосу/сили світу, а не звичайне людське ім'я"],
+  ["мара", "це ім'я духа/сили світу, а не звичайне людське ім'я"],
   ["упир", "це назва потвори, а не звичайне людське ім'я"],
+  ["потвора", "це назва істоти, а не звичайне людське ім'я"],
   ["ворон", "це може читатися як істота або прізвисько, не як звичайне ім'я"],
   ["кіт", "це радше назва істоти, ніж особове ім'я"],
   ["сокіл", "це радше назва істоти або прізвисько, ніж особове ім'я"],
+  ["камінь", "це радше звичайне слово або прізвисько, ніж особове ім'я"],
+  ["стежка", "це радше звичайне слово або прізвисько, ніж особове ім'я"],
 ]);
 
 const SACRED_OR_FAMOUS_NAMES = new Map<string, string>([
@@ -30,13 +44,24 @@ const SACRED_OR_FAMOUS_NAMES = new Map<string, string>([
   ["свароґ", "імена богів і сакральних постатей не підходять для звичайного персонажа"],
   ["єгова", "імена богів і сакральних постатей не підходять для звичайного персонажа"],
   ["вотан", "імена богів і сакральних постатей не підходять для звичайного персонажа"],
+  ["одін", "імена богів і сакральних постатей не підходять для звичайного персонажа"],
   ["дагда", "імена богів і сакральних постатей не підходять для звичайного персонажа"],
+  ["гермес", "імена богів і сакральних постатей не підходять для звичайного персонажа"],
+  ["герместрисмегіст", "імена богів і сакральних постатей не підходять для звичайного персонажа"],
   ["гандалф", "надто впізнаване ім'я чужого вигаданого персонажа"],
   ["гандальф", "надто впізнаване ім'я чужого вигаданого персонажа"],
   ["ґандалф", "надто впізнаване ім'я чужого вигаданого персонажа"],
   ["ґандальф", "надто впізнаване ім'я чужого вигаданого персонажа"],
   ["герміона", "надто впізнаване ім'я чужого вигаданого персонажа"],
 ]);
+
+const NAME_SEPARATOR_CHARS = /[\s'ʼʻ՚`´\-‐‑‒–—]+/g;
+
+function normalizeForbiddenNameKey(value: string) {
+  return normalizeNameForRegistry(value)
+    .replace(NAME_SEPARATOR_CHARS, "")
+    .replace(/ґ/g, "г");
+}
 
 export function normalizeNameForRegistry(value: string) {
   return normalizeCharacterName(value).toLocaleLowerCase("uk-UA");
@@ -77,9 +102,18 @@ export function preparedNameSummary(name: PreparedCharacterName) {
   return `${name.forms.nominative} — ${name.origin}; ${name.rarity}; відмінки збережені${note}`;
 }
 
-export function customNameWarningText() {
+export function customNameWarningText(options: { examples?: string[] } = {}) {
+  const examples = (options.examples ?? []).filter(Boolean).slice(0, 3);
+  const exampleLines = examples.length
+    ? [
+        "",
+        `Приклади доступних імен: ${examples.map((name) => `<b>${escapeHtml(name)}</b>`).join(", ")}.`,
+      ]
+    : [];
+
   return [
     "Введіть власне ім'я персонажа.",
+    ...exampleLines,
     "",
     "Не підійдуть імена богів, назви істот чи духів, випадкові набори літер, грубі слова, надто відомі чужі персонажі або слова, що не звучать як особове ім'я Порубіжжя.",
     "Наприклад: <b>Сварог</b> (бог), <b>Лісовик</b> або <b>Вовк</b> (дух чи істота), <b>Фффрр</b> (набір літер), лайка й образи, <b>Ґандальф</b> або <b>Герміона</b> (чужі впізнавані персонажі), <b>Камінь</b> чи <b>Стежка</b> (слова, не особові імена).",
@@ -94,7 +128,7 @@ export function validateCustomCharacterName(raw: string) {
   const validation = validateCharacterName(raw);
   if (!validation.ok) return validation;
 
-  const normalized = normalizeNameForRegistry(validation.value);
+  const normalized = normalizeForbiddenNameKey(validation.value);
   const forbiddenReason = FORBIDDEN_WORLD_NAMES.get(normalized) ?? SACRED_OR_FAMOUS_NAMES.get(normalized);
   if (forbiddenReason) {
     return {

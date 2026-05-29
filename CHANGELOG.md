@@ -9,6 +9,40 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.1 - Forbidden-name normalization - 12026-05-29
+
+### Changed
+
+- Custom-name validation now normalizes casing, apostrophe/separator variants, internal whitespace and hyphen splitting before checking obvious forbidden names.
+- Expanded forbidden-name coverage for creature, spirit, sacred, famous-character and common-word examples.
+- Updated character-name onboarding documentation for the stricter custom-name guardrail.
+- Simplified `/adminHelp` by removing ordinary player-help commands and grouping scribe/admin tools by purpose.
+- The first tutorial dream location now uses a focused starter keyboard with only `Look` and the visible south movement button.
+- Direction suggestions now treat `пів` as ambiguous instead of moving south directly, so unknown-command hints can offer both `північ` and `південь`.
+- Changed the tutorial bushes and inside-movement button emoji so they no longer resemble gathering/resource actions.
+- Added `наз` as a Ukrainian text alias for outside movement to match compact exit labels.
+- Added a matching tutorial bushes feature inside the observation room with an explicit `Outside` action button.
+- Successful tutorial gathering now refreshes the reply keyboard immediately so the inventory button appears after the first find.
+- The onboarding name confirmation now bolds the chosen character name and example case forms.
+- Custom-name onboarding now shows three available prepared-name examples for the chosen pronoun/gender and accepts matching prepared names directly with saved case forms.
+- Inventory use callbacks now send the action result as a separate message while keeping the inventory message as a clean inventory view.
+- Fatigue and recovery threshold messages now refresh the main reply keyboard so the status button reflects the updated stamina immediately.
+- Gather result text and the tutorial foraging hint now make stamina spending explicit, and the inventory hint clarifies that the inventory button appears after the first gather only if it is not already available.
+- Text commands such as `take herbs`, `get mushrooms`, `підібрати ягоди` and `взяти трави` temporarily route to gathering instead of trying to resolve those resources as nearby targets; follow-up planning now tracks the cleaner split where pickup verbs mean visible ground-item pickup and gather verbs mean local resource gathering.
+- Location feature section headings are now bolded in Telegram location views for easier scanning.
+- Interactive location features can now be inspected by text, such as `look bench`, `/examine лавка` or `оглянути лавку`, with fallback to ordinary visible targets when no feature matches.
+- Feature callbacks now avoid editing an older feature message after the same flow has sent newer follow-up voice/tutorial messages.
+- The tutorial rest-seat feature was renamed from `Лавка короткого перепочинку` to the shorter `Зручна лавка`.
+- `/restAdmin` now accepts an optional player target, matching `/playerAdmin`-style lookup by id, local number, name or username, and notifies/logs when a scribe restores another player's stamina.
+- Added `ITEM-001` to the near-term plan for pickup versus gather command semantics.
+
+### Tests
+
+- Added regression cases for spaced-out or separator-split forbidden names.
+- Added coverage to ensure prepared character names are not accidentally rejected by forbidden-name checks.
+
+---
+
 ## 0.13.0 - Prepared-name pool expansion - 12026-05-29
 
 ### Added
