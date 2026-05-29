@@ -1,5 +1,5 @@
 import { Bot } from "grammy";
-import { Prisma, WorldAction, WorldActionType, WorldActorType } from "@prisma/client";
+import { PlayerPosture, Prisma, WorldAction, WorldActionType, WorldActorType } from "@prisma/client";
 import { prisma } from "../db";
 import {
   BASE_HP,
@@ -306,6 +306,7 @@ export async function startPlayerRest(playerId: number) {
   const updated = await prisma.player.updateMany({
     where: { id: playerId },
     data: {
+      posture: PlayerPosture.SITTING,
       isResting: true,
       fatigueState: fatigueStateFor(player.stamina, max),
       lastStaminaRegenAt: new Date(),
@@ -319,6 +320,10 @@ export async function startPlayerRest(playerId: number) {
 export async function stopPlayerRest(playerId: number) {
   const player = await prisma.player.findUnique({ where: { id: playerId } });
   if (!player) return null;
+  await prisma.worldAction.updateMany({
+    where: { actorType: "PLAYER", playerId, type: "REST", status: "RUNNING" },
+    data: { status: "CANCELLED", note: "перервано відпочинок" },
+  });
   const updated = await prisma.player.updateMany({
     where: { id: playerId },
     data: {
@@ -443,7 +448,7 @@ async function startNextQueuedAction(action: WorldAction) {
     const player = await prisma.player.findUnique({ where: { id: action.playerId } });
     await prisma.player.updateMany({
       where: { id: action.playerId },
-      data: { isResting: true, lastStaminaRegenAt: new Date(), lastHpRegenAt: new Date(), restStarts: player?.isResting ? undefined : { increment: 1 } },
+      data: { posture: PlayerPosture.SITTING, isResting: true, lastStaminaRegenAt: new Date(), lastHpRegenAt: new Date(), restStarts: player?.isResting ? undefined : { increment: 1 } },
     });
   }
 

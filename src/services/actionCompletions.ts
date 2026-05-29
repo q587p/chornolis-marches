@@ -15,7 +15,7 @@ import { directionLabels } from "../ui/labels";
 import { buildCorpseActionKeyboard, buildExamineLocationKeyboard, buildExamineTracksKeyboard, buildGatherRetryKeyboard, buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { renderLocationBrief, renderLocationDetails } from "./locations";
-import { notifyLocation, notifyLocationExcept } from "./notifications";
+import { notifyLocation, notifyLocationExcept, notifyRegionExcept } from "./notifications";
 import { hasActiveLightAtLocation } from "./fire";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
 import { getStartLocationId } from "./players";
@@ -36,7 +36,7 @@ import { freshenCorpseForMeat } from "./meat";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
-type SayPayload = { text: string; targetType?: "player" | "creature"; targetId?: number; targetName?: string; targetDative?: string };
+type SayPayload = { text: string; mode?: "say" | "whisper" | "reply" | "shout"; targetType?: "player" | "creature"; targetId?: number; targetName?: string; targetDative?: string };
 type SocialPayload = { targetType: "player" | "creature"; targetId: number; mode?: "known" | "mystery" };
 
 const RECENT_ATTACK_FEATURE_PREFIX = "recent_attack_";
@@ -137,6 +137,20 @@ function saidVerb(player: any) {
   if (gender === "FEMININE") return "сказала";
   if (gender === "PLURAL") return "сказали";
   return "сказав";
+}
+
+function repliedVerb(player: any) {
+  const gender = player.grammaticalGender ?? (player.pronoun === "SHE" ? "FEMININE" : player.pronoun === "THEY" ? "PLURAL" : "MASCULINE");
+  if (gender === "FEMININE") return "відповіла";
+  if (gender === "PLURAL") return "відповіли";
+  return "відповів";
+}
+
+function shoutedVerb(player: any) {
+  const gender = player.grammaticalGender ?? (player.pronoun === "SHE" ? "FEMININE" : player.pronoun === "THEY" ? "PLURAL" : "MASCULINE");
+  if (gender === "FEMININE") return "гукнула";
+  if (gender === "PLURAL") return "гукнули";
+  return "гукнув";
 }
 
 function trackAgeText(createdAt: Date, now = new Date()) {
@@ -712,11 +726,84 @@ async function completeSay(bot: Bot, action: WorldAction) {
     const player = action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null;
     const chatId = chatIdFromAction(action);
     if (!player || !player.currentLocationId) return void (await setActionStatus(action, "FAILED"));
-    await spendPlayerStamina(bot, player.id, "SAY", chatId);
-    await prisma.player.updateMany({ where: { id: player.id }, data: { says: { increment: 1 } } });
     const targetDative = payload.targetDative || payload.targetName;
     const actorForms = playerForms(player);
     const verb = saidVerb(player);
+    if (payload.mode === "whisper") {
+      if (payload.targetType !== "player" || !payload.targetId) {
+        if (chatId) await bot.api.sendMessage(chatId, "Шепіт зараз можна спрямувати тільки персонажу поруч.");
+        await setActionStatus(action, "FAILED");
+        return;
+      }
+
+      const targetPlayer = await prisma.player.findFirst({ where: { id: payload.targetId, currentLocationId: player.currentLocationId } });
+      if (!targetPlayer) {
+        if (chatId) await bot.api.sendMessage(chatId, "Того, кому ви шепотіли, вже немає поруч.");
+        await setActionStatus(action, "FAILED");
+        return;
+      }
+
+      const targetForms = playerForms(targetPlayer);
+      await spendPlayerStamina(bot, player.id, "SAY", chatId);
+      await prisma.player.updateMany({ where: { id: player.id }, data: { says: { increment: 1 } } });
+      await notifyLocationExcept(
+        bot,
+        player.currentLocationId,
+        [player.id, targetPlayer.id],
+        `${escapeHtml(actorForms.nominative)} шепоче ${escapeHtml(targetForms.dative)}.`,
+        { parseMode: "HTML" },
+      );
+      await bot.api.sendMessage(
+        targetPlayer.telegramId,
+        `${escapeHtml(actorForms.nominative)} шепоче вам:\n${quoteBlock(text)}`,
+        { parse_mode: "HTML", reply_markup: await buildMainReplyKeyboardForTelegramId(Number(targetPlayer.telegramId), false) },
+      );
+      if (chatId) await bot.api.sendMessage(chatId, `Ви шепнули ${escapeHtml(targetForms.dative)}:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
+      await setActionStatus(action, "DONE");
+      await logEvent("SAY", `${actorForms.nominative} шепоче ${targetForms.dative}`, "приватний шепіт", player.currentLocationId);
+      return;
+    }
+
+    if (payload.mode === "shout") {
+      await spendPlayerStamina(bot, player.id, "SAY", chatId);
+      await spendPlayerStamina(bot, player.id, "TRACK", chatId);
+      await prisma.player.updateMany({ where: { id: player.id }, data: { says: { increment: 1 } } });
+      const location = await prisma.cellLocation.findUnique({ where: { id: player.currentLocationId }, select: { regionId: true } });
+      const shoutVerb = shoutedVerb(player);
+      if (location?.regionId) {
+        await notifyRegionExcept(
+          bot,
+          location.regionId,
+          [player.id],
+          `${escapeHtml(actorForms.nominative)} ${shoutVerb} так, що голос котиться стежками:\n${quoteBlock(text)}`,
+          { parseMode: "HTML" },
+        );
+      }
+      await setActionStatus(action, "DONE");
+      await logEvent("SAY", `${actorForms.nominative} ${shoutVerb}`, text, player.currentLocationId);
+      if (chatId) await bot.api.sendMessage(chatId, `Ви гукнули:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
+      return;
+    }
+
+    if (payload.mode === "reply") {
+      await spendPlayerStamina(bot, player.id, "SAY", chatId);
+      await prisma.player.updateMany({ where: { id: player.id }, data: { says: { increment: 1 } } });
+      const replyVerb = repliedVerb(player);
+      await notifyLocationExcept(
+        bot,
+        player.currentLocationId,
+        [player.id],
+        targetDative ? `${escapeHtml(actorForms.nominative)} ${replyVerb} ${escapeHtml(targetDative)}:\n${quoteBlock(text)}` : `${escapeHtml(actorForms.nominative)} ${replyVerb}:\n${quoteBlock(text)}`,
+        { parseMode: "HTML" },
+      );
+      await setActionStatus(action, "DONE");
+      await logEvent("SAY", `${actorForms.nominative} ${replyVerb}${targetDative ? ` ${targetDative}` : ""}`, text, player.currentLocationId);
+      if (chatId) await bot.api.sendMessage(chatId, targetDative ? `Ви відповіли ${escapeHtml(targetDative)}:\n${quoteBlock(text)}` : `Ви відповіли:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
+      return;
+    }
+
+    await spendPlayerStamina(bot, player.id, "SAY", chatId);
+    await prisma.player.updateMany({ where: { id: player.id }, data: { says: { increment: 1 } } });
     await notifyLocationExcept(
       bot,
       player.currentLocationId,

@@ -64,7 +64,7 @@ export async function playerRestStatusText(playerId: number) {
       : "Ви вже відпочили й готові діяти далі.";
   }
 
-  const lines = ["Ви відпочиваєте."];
+  const lines = ["Ви сидите й відпочиваєте."];
 
   if (showTechnicalDetails) {
     lines.push(

@@ -3,6 +3,7 @@ import { getPlayerByTelegramId } from "../services/players";
 import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import { accelerateFirstQueuedPlayerAction, hasPlayerActionQueueControls, playerRestStatusText, queuePlayerRest, renderPlayerActionQueue, startPlayerRest, stopPlayerRest } from "../services/actionQueue";
 import { buildRestWithQueueChoiceKeyboard } from "../ui/keyboards";
+import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { actionQueueReplyOptions } from "../utils/actionQueueUi";
 import { isTutorialFastRestLocationKey, rememberTutorialCommandHint, TUTORIAL_DEEP_REST_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY } from "../services/tutorial";
@@ -38,7 +39,9 @@ async function beginRestNow(ctx: any, playerId: number) {
     && isTutorialFastRestLocationKey(location?.key)
     && await rememberTutorialCommandHint(player.id, "rest", player.currentLocationId);
 
-  await replyOrEdit(ctx, `${await playerRestStatusText(playerId)}${suffix}`);
+  await replyOrEdit(ctx, `${await playerRestStatusText(playerId)}${suffix}`, {
+    reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+  });
 
   if (shouldTeachRest) {
     const sonLine = location?.key === TUTORIAL_REST_LOCATION_KEY
@@ -117,6 +120,9 @@ export function registerRestHandlers(bot: Bot) {
     const accelerated = await accelerateFirstQueuedPlayerAction(player.id);
     await safeAnswerCallbackQuery(ctx, accelerated ? "Відпочинок перервано, дія починається." : "Відпочинок перервано.");
     await replyOrEdit(ctx, `Ви перервали відпочинок.\n\n${await renderPlayerActionQueue(player.id)}`, await actionQueueReplyOptions(player.id));
+    await ctx.reply("Ви лишаєтеся сидіти.", {
+      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, Boolean(player.isAutoEnabled)),
+    });
   });
 
   bot.callbackQuery("rest:queue", async (ctx) => {

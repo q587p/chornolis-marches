@@ -6,6 +6,7 @@ export type TargetAction = "inspect" | "greet" | "attack" | "freshen";
 export type QueueAliasMode = "status" | "cancel-current" | "clear";
 export type AutoAliasMode = "start" | "stop";
 export type RestAliasMode = "start" | "queue" | "interrupt";
+export type PostureAliasMode = "sit" | "stand";
 export type SocialSignalAlias = "smile" | "laugh" | "nod" | "bow" | "point" | "glare" | "sigh" | "wave";
 export type ChatAliasMode = "time" | "location" | "character";
 
@@ -36,6 +37,7 @@ export type ParsedAliasCommand =
   | { kind: "open" }
   | { kind: "inspect-inventory-item"; target: string }
   | { kind: "drop-inventory-item"; target: string }
+  | { kind: "posture"; mode: PostureAliasMode }
   | { kind: "rest"; mode: RestAliasMode }
   | { kind: "auto"; mode: AutoAliasMode }
   | { kind: "queue"; mode: QueueAliasMode }
@@ -47,6 +49,9 @@ export type ParsedAliasCommand =
   | { kind: "add-twigs-campfire" }
   | { kind: "cook-meat" }
   | { kind: "say"; text: string }
+  | { kind: "whisper"; text: string }
+  | { kind: "reply"; text: string }
+  | { kind: "shout"; text: string }
   | { kind: "target-action"; action: TargetAction; target: string }
   | { kind: "pickup-target"; target: string }
   | { kind: "social-signal"; signal: SocialSignalAlias; target: string };
@@ -247,14 +252,22 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   rest: { kind: "rest", mode: "start" },
   "відпочити": { kind: "rest", mode: "start" },
   "перепочити": { kind: "rest", mode: "start" },
-  "сісти": { kind: "rest", mode: "start" },
-  "присісти": { kind: "rest", mode: "start" },
   "перепочинок": { kind: "rest", mode: "start" },
   "почати відпочинок": { kind: "rest", mode: "start" },
   "додати відпочинок": { kind: "rest", mode: "queue" },
   "додати відпочинок у чергу": { kind: "rest", mode: "queue" },
   "поставити відпочинок у чергу": { kind: "rest", mode: "queue" },
   "перервати відпочинок": { kind: "rest", mode: "interrupt" },
+
+  sit: { kind: "posture", mode: "sit" },
+  "sit down": { kind: "posture", mode: "sit" },
+  "сісти": { kind: "posture", mode: "sit" },
+  "присісти": { kind: "posture", mode: "sit" },
+  stand: { kind: "posture", mode: "stand" },
+  "stand up": { kind: "posture", mode: "stand" },
+  "встати": { kind: "posture", mode: "stand" },
+  "підвестися": { kind: "posture", mode: "stand" },
+  "підвестись": { kind: "posture", mode: "stand" },
 
   auto: { kind: "auto", mode: "start" },
   "авто": { kind: "auto", mode: "start" },
@@ -508,6 +521,31 @@ function parseSay(raw: string, text: string): ParsedAliasCommand | null {
   return said ? { kind: "say", text: said } : null;
 }
 
+function parseDirectedSpeech(raw: string, text: string): ParsedAliasCommand | null {
+  const whisper = text.match(/^\/?(?:whisper|шепнути|прошепотіти|шеп)\s+(.+)$/);
+  if (whisper?.[1]?.trim()) {
+    const rawMatch = raw.match(/^\/?(?:whisper|шепнути|прошепотіти|шеп)\s+(.+)$/i);
+    const speech = (rawMatch?.[1] ?? whisper[1]).trim().slice(0, 300);
+    return speech ? { kind: "whisper", text: speech } : null;
+  }
+
+  const reply = text.match(/^\/?(?:reply|відповісти|відповідь)\s+(.+)$/);
+  if (reply?.[1]?.trim()) {
+    const rawMatch = raw.match(/^\/?(?:reply|відповісти|відповідь)\s+(.+)$/i);
+    const speech = (rawMatch?.[1] ?? reply[1]).trim().slice(0, 300);
+    return speech ? { kind: "reply", text: speech } : null;
+  }
+
+  const shout = text.match(/^\/?(?:shout|yell|крикнути|гукнути|гук)\s+(.+)$/);
+  if (shout?.[1]?.trim()) {
+    const rawMatch = raw.match(/^\/?(?:shout|yell|крикнути|гукнути|гук)\s+(.+)$/i);
+    const speech = (rawMatch?.[1] ?? shout[1]).trim().slice(0, 300);
+    return speech ? { kind: "shout", text: speech } : null;
+  }
+
+  return null;
+}
+
 function parseChat(text: string): ParsedAliasCommand | null {
   const match = text.match(/^chat(?:\s+(.+))?$/);
   if (!match) return null;
@@ -621,6 +659,9 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
   const text = normalizeInput(raw);
   if (!text) return null;
   const commandText = withoutLeadingSlash(text);
+
+  const directedSpeech = parseDirectedSpeech(raw, text);
+  if (directedSpeech) return directedSpeech;
 
   const say = parseSay(raw, text);
   if (say) return say;

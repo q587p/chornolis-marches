@@ -71,12 +71,14 @@ async function recoveryText(player: any) {
   return `\nВідновлення без відпочинку: приблизно ${passiveMinutes} хв. Через /rest або 🧘 Відпочити: приблизно ${restMinutes} хв.`;
 }
 
-function buildCharacterAutoKeyboard(autoEnabled: boolean, options: { canToggleTechnicalDetails?: boolean; showTechnicalDetails?: boolean; showSleep?: boolean } = {}) {
+function buildCharacterAutoKeyboard(autoEnabled: boolean, options: { posture?: string | null; isResting?: boolean | null; canToggleTechnicalDetails?: boolean; showTechnicalDetails?: boolean; showSleep?: boolean } = {}) {
   const keyboard = new InlineKeyboard()
     .text("🎒 Речі", "character:inventory")
-    .row()
-    .text("🧘 Відпочити", "rest:start")
     .row();
+  const isSitting = options.posture === "SITTING" || Boolean(options.isResting);
+  keyboard.text(isSitting ? "Встати" : "Сісти", isSitting ? "posture:stand" : "posture:sit");
+  if (!options.isResting) keyboard.text("🧘 Відпочити", "rest:start");
+  keyboard.row();
 
   if (options.showSleep !== false) {
     keyboard
@@ -119,6 +121,17 @@ function buildInventoryKeyboard(resources: any[] = [], options: { canAddTwigs?: 
     keyboard.text(`🔎 ${label}`, `inventory:inspect:${resource.resourceType.key}`).text("Викинути", `inventory:drop:${resource.resourceType.key}`).row();
   }
   return keyboard.text("↩️ Назад", "character:back");
+}
+
+async function refreshInventoryMessage(ctx: any) {
+  const view = await renderInventoryView(ctx.from.id);
+  if (!view) return;
+
+  try {
+    await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
+  } catch {
+    await ctx.reply(view.text, { reply_markup: view.keyboard });
+  }
 }
 
 function nameCasesText(player: any) {
@@ -228,7 +241,7 @@ async function renderCharacterView(telegramId: number) {
 
   return {
     text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}${tutorialStatusText}\n\n${formatPostureText({ ...player, isSleeping: isTutorialDream })}${torchText}\n${vitals.join("\n")}\nСтан: ${formatFatigueText(player)}${await recoveryText(player)}\n${hungerText}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}${technicalDetailsText}\nЗареєстровано: ${formatDateTime(player.createdAt)}${statsText}`,
-    keyboard: buildCharacterAutoKeyboard(autoEnabled, { canToggleTechnicalDetails, showTechnicalDetails, showSleep: !isTutorialDream }),
+    keyboard: buildCharacterAutoKeyboard(autoEnabled, { posture: player.posture, isResting: player.isResting, canToggleTechnicalDetails, showTechnicalDetails, showSleep: !isTutorialDream }),
   };
 }
 
@@ -346,14 +359,7 @@ export function registerPlayerHandlers(bot: Bot) {
     try {
       const resultText = await useInventoryResource(player.id, resourceKey);
       await ctx.reply(resultText);
-      const view = await renderInventoryView(ctx.from.id);
-      if (!view) return;
-
-      try {
-        await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
-      } catch {
-        await ctx.reply(view.text, { reply_markup: view.keyboard });
-      }
+      await refreshInventoryMessage(ctx);
     } catch (error) {
       await ctx.reply(error instanceof Error ? error.message : "Не вдалося використати це.");
     }
@@ -367,14 +373,7 @@ export function registerPlayerHandlers(bot: Bot) {
     try {
       const resultText = await cookRawMeat(player.id);
       await ctx.reply(resultText);
-      const view = await renderInventoryView(ctx.from.id);
-      if (!view) return;
-
-      try {
-        await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
-      } catch {
-        await ctx.reply(view.text, { reply_markup: view.keyboard });
-      }
+      await refreshInventoryMessage(ctx);
     } catch (error) {
       await ctx.reply(error instanceof Error ? error.message : "Не вдалося підсмажити м'ясо.");
     }
@@ -386,13 +385,8 @@ export function registerPlayerHandlers(bot: Bot) {
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
     const resultText = await lightPlayerTorchFromInventory(player.id);
-    const view = await renderInventoryView(ctx.from.id);
-    const text = view ? `${resultText}\n\n${view.text}` : resultText;
-    try {
-      await ctx.editMessageText(text, view ? { reply_markup: view.keyboard } : undefined);
-    } catch {
-      await ctx.reply(text, view ? { reply_markup: view.keyboard } : undefined);
-    }
+    await ctx.reply(resultText);
+    await refreshInventoryMessage(ctx);
   });
 
   bot.callbackQuery("inventory:douse:torch", async (ctx) => {
@@ -401,13 +395,8 @@ export function registerPlayerHandlers(bot: Bot) {
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
     const resultText = await dousePlayerTorchFromInventory(player.id);
-    const view = await renderInventoryView(ctx.from.id);
-    const text = view ? `${resultText}\n\n${view.text}` : resultText;
-    try {
-      await ctx.editMessageText(text, view ? { reply_markup: view.keyboard } : undefined);
-    } catch {
-      await ctx.reply(text, view ? { reply_markup: view.keyboard } : undefined);
-    }
+    await ctx.reply(resultText);
+    await refreshInventoryMessage(ctx);
   });
 
   bot.callbackQuery("inventory:add-twigs", async (ctx) => {
@@ -416,13 +405,8 @@ export function registerPlayerHandlers(bot: Bot) {
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
     const resultText = await addTwigsToCampfire(player.id);
-    const view = await renderInventoryView(ctx.from.id);
-    const text = view ? `${resultText}\n\n${view.text}` : resultText;
-    try {
-      await ctx.editMessageText(text, view ? { reply_markup: view.keyboard } : undefined);
-    } catch {
-      await ctx.reply(text, view ? { reply_markup: view.keyboard } : undefined);
-    }
+    await ctx.reply(resultText);
+    await refreshInventoryMessage(ctx);
   });
 
   bot.callbackQuery(/^inventory:inspect:([A-Za-z0-9_-]+)$/, async (ctx) => {

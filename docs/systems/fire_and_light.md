@@ -34,6 +34,7 @@ Expired timed campfires are turned into згаслі campfires lazily when locat
 - From inventory, the `Light torch` / `Запалити факел` action appears when the character carries an unlit torch and can reach fire from either a lit campfire in the current location or another lit torch already in hand.
 - From inventory, `Підкинути хмиз` appears when the character carries `twigs` and a nearby ordinary campfire can accept them.
 - From inventory, `Притушити факел` appears while a carried torch is burning. It turns one `lit_torch` into a `doused_torch` and stores the remaining burn time so relighting continues from that point.
+- Inventory fire action buttons should send the action result as a separate chat message, then refresh the inventory view separately instead of merging the action result into the inventory card.
 - From inventory, `Викинути` on a carried burning torch drops it as a burning ground item instead of immediately extinguishing it. It remains visible under `Лежить`, lights the місцина while it still burns, and can be picked up again.
 - A character can carry at most two lit torches at once, matching the current two-hands assumption.
 - A lit torch lasts 5 in-game hours, currently 10 real minutes.

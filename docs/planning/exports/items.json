@@ -75,7 +75,7 @@
   {
     "id": "CMD-001",
     "title": "Near-term text command pack",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "commands",
     "priority": "high",

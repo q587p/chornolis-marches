@@ -16,13 +16,20 @@ Survival should add pressure, atmosphere and decisions, not repetitive punishmen
 
 ## Rest Posture
 
-Basic `Відпочити` / `/rest` means sitting down for a short recovery, not sleeping.
+Characters have posture separate from active recovery:
 
-Player-facing and observer text should treat rest as posture:
+- `posture = STANDING | SITTING`;
+- `isResting` remains the separate active recovery flag.
 
-- actor text: `Ви присіли відпочити.` / `Ви сидите.`;
-- observer/location text: `Такий-то сидить.`;
-- when the player takes another action or rest completes, they stand up implicitly before acting.
+Basic `Відпочити` / `/rest` means sitting down and starting a short recovery, not sleeping. A character can also use `/sit` / `сісти` to sit without resting, and `/stand` / `встати` to stand up. Standing up during rest interrupts the active rest.
+
+Player-facing and observer text should keep posture and rest visible:
+
+- sitting only, actor text: `Ви сидите.`;
+- sitting and resting, actor text: `Ви сидите й відпочиваєте.`;
+- sitting only, observer/location text: `{name} сидить.`;
+- sitting and resting, observer/location text: `{name} сидить і відпочиває.`;
+- when rest completes or is interrupted, `isResting` becomes false but posture remains `SITTING`; the player should get a visible `Встати` action.
 
 Later systems can add lying down and ordinary sleep as separate states. Tutorial sleep is a special dream/onboarding state, not the same as ordinary rest.
 

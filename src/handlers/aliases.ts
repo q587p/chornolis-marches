@@ -35,6 +35,7 @@ import { hideReplyKeyboard, showMainKeyboard, showMenu } from "./menu";
 import { showTime } from "./time";
 import { submitMove as submitCanonicalMove } from "./movement";
 import { submitGather as submitCanonicalGather } from "./gather";
+import { submitPosture } from "./posture";
 import { addCorpseToInventory, resourceTypeDisplayName } from "../services/corpses";
 import { performSocialSignal } from "../services/socialSignals";
 import { addTwigsToCampfire, dousePlayerTorchFromInventory, lightPlayerTorchFromInventory } from "../services/fire";
@@ -46,7 +47,7 @@ import { enterTutorialDream, hasCompletedTutorial, openDreamGate, wakeFromTutori
 import { dropObserverText, pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 import { noteKnownMessage } from "../utils/messageTracker";
 import { cookRawMeat, isFreshenedCorpse } from "../services/meat";
-import { creatureForms } from "../services/grammar";
+import { creatureForms, playerForms } from "../services/grammar";
 
 type TextTargetRef = {
   type: "player" | "creature";
@@ -295,7 +296,9 @@ async function beginRestNow(ctx: any, playerId: number) {
   const hadQueue = await hasPlayerActionQueueControls(playerId);
   await startPlayerRest(playerId);
   const suffix = hadQueue ? "\n\nПоточну дію та чергу скасовано." : "";
-  await ctx.reply(`${await playerRestStatusText(playerId)}${suffix}`);
+  await ctx.reply(`${await playerRestStatusText(playerId)}${suffix}`, {
+    reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+  });
 }
 
 async function submitRest(ctx: any, mode: RestAliasMode = "start") {
@@ -312,6 +315,9 @@ async function submitRest(ctx: any, mode: RestAliasMode = "start") {
     await stopPlayerRest(player.id);
     const accelerated = await accelerateFirstQueuedPlayerAction(player.id);
     await ctx.reply(`Ви перервали відпочинок.${accelerated ? "\n\nНаступна дія починається." : ""}\n\n${await renderPlayerActionQueue(player.id)}`, await actionQueueReplyOptions(player.id));
+    await ctx.reply("Ви лишаєтеся сидіти.", {
+      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, Boolean(player.isAutoEnabled)),
+    });
     return;
   }
 
@@ -490,6 +496,100 @@ async function submitSay(bot: Bot, ctx: any, text: string) {
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {
     await ctx.reply(error instanceof Error ? error.message : "Не вдалося виконати дію.");
+  }
+}
+
+async function submitWhisper(bot: Bot, ctx: any, text: string) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const safeText = stripUnsafeText(text);
+  if (!safeText) return void (await ctx.reply("Напиши так: whisper персонаж текст"));
+
+  const durationMs = actionDurationMs("SAY", player.stamina);
+  try {
+    const payload = await parseSpeechTarget(safeText, player.currentLocationId, player.id);
+    if (!payload.targetId) return void (await ctx.reply("Напиши так: whisper персонаж текст. Ціль має бути видимим персонажем поруч."));
+    if (payload.targetType !== "player") return void (await ctx.reply("Шепіт зараз можна спрямувати тільки персонажу поруч."));
+    const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "SAY", payload: { ...payload, mode: "whisper" }, durationMs, chatId: ctx.chat?.id });
+    await sendActionSubmitFeedback(ctx, player.id, result);
+  } catch (error) {
+    await ctx.reply(error instanceof Error ? error.message : "Не вдалося прошепотіти.");
+  }
+}
+
+const REPLY_SPEECH_SPLITTERS = [
+  /\s+сказав\b/u,
+  /\s+сказала\b/u,
+  /\s+сказали\b/u,
+  /\s+відповів\b/u,
+  /\s+відповіла\b/u,
+  /\s+відповіли\b/u,
+];
+
+function speechSpeakerFromTitle(title: string) {
+  for (const splitter of REPLY_SPEECH_SPLITTERS) {
+    const match = title.match(splitter);
+    if (match?.index && match.index > 0) return title.slice(0, match.index).trim();
+  }
+  return "";
+}
+
+async function lastAddressedSpeakerName(player: any) {
+  const forms = playerForms(player);
+  const selfKeys = [forms.nominative, forms.dative, player.firstName, player.username].filter(Boolean).map((value) => normalizeInput(String(value)));
+  const addressedForms = [forms.dative, forms.nominative, player.firstName].filter(Boolean);
+  const events = await prisma.worldEvent.findMany({
+    where: {
+      type: "SAY",
+      locationId: player.currentLocationId,
+      OR: addressedForms.map((form) => ({ title: { contains: String(form) } })),
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: 10,
+  });
+
+  for (const event of events) {
+    const speaker = speechSpeakerFromTitle(event.title);
+    if (!speaker) continue;
+    if (selfKeys.includes(normalizeInput(speaker))) continue;
+    return speaker;
+  }
+  return null;
+}
+
+async function submitReply(bot: Bot, ctx: any, text: string) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const safeText = stripUnsafeText(text);
+  if (!safeText) return void (await ctx.reply("Напиши так: reply текст"));
+
+  const targetName = await lastAddressedSpeakerName(player);
+  if (!targetName) return void (await ctx.reply("Поки немає репліки, на яку можна відповісти. Спробуйте звичайне /say або зверніться до видимого персонажа."));
+
+  const durationMs = actionDurationMs("SAY", player.stamina);
+  try {
+    const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "SAY", payload: { text: safeText, mode: "reply", targetName }, durationMs, chatId: ctx.chat?.id });
+    await sendActionSubmitFeedback(ctx, player.id, result);
+  } catch (error) {
+    await ctx.reply(error instanceof Error ? error.message : "Не вдалося відповісти.");
+  }
+}
+
+async function submitShout(bot: Bot, ctx: any, text: string) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const safeText = stripUnsafeText(text);
+  if (!safeText) return void (await ctx.reply("Напиши так: shout текст"));
+
+  const durationMs = actionDurationMs("SAY", player.stamina) * 2;
+  try {
+    const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "SAY", payload: { text: safeText, mode: "shout" }, durationMs, chatId: ctx.chat?.id });
+    await sendActionSubmitFeedback(ctx, player.id, result);
+  } catch (error) {
+    await ctx.reply(error instanceof Error ? error.message : "Не вдалося гукнути.");
   }
 }
 
@@ -746,6 +846,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "inspect-feature") return submitFeatureInspection(bot, ctx, parsed.target);
     if (parsed.kind === "move") return submitCanonicalMove(bot, ctx, parsed.direction, false);
     if (parsed.kind === "gather") return submitCanonicalGather(bot, ctx, parsed.resourceKey, false);
+    if (parsed.kind === "posture") return submitPosture(ctx, parsed.mode);
     if (parsed.kind === "rest") return submitRest(ctx, parsed.mode);
     if (parsed.kind === "auto") return submitAuto(bot, ctx, parsed.mode);
     if (parsed.kind === "queue") return submitQueue(ctx, parsed.mode);
@@ -766,6 +867,9 @@ export function registerAliasHandlers(bot: Bot) {
       return ctx.reply(await addTwigsToCampfire(player.id));
     }
     if (parsed.kind === "say") return submitSay(bot, ctx, parsed.text);
+    if (parsed.kind === "whisper") return submitWhisper(bot, ctx, parsed.text);
+    if (parsed.kind === "reply") return submitReply(bot, ctx, parsed.text);
+    if (parsed.kind === "shout") return submitShout(bot, ctx, parsed.text);
     if (parsed.kind === "target-action") return submitTargetAction(bot, ctx, parsed.action, parsed.target);
     if (parsed.kind === "pickup-target") return submitPickupTarget(bot, ctx, parsed.target);
     if (parsed.kind === "social-signal") return submitSocialSignal(bot, ctx, parsed.signal, parsed.target);

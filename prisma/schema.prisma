@@ -25,6 +25,7 @@ model Player {
   stamina      Int @default(42)
   staminaMax   Int @default(42)
   fatigueState FatigueState @default(RESTED)
+  posture      PlayerPosture @default(STANDING)
   isResting    Boolean @default(false)
   isAutoEnabled Boolean @default(false)
   showTechnicalDetails Boolean @default(false)
@@ -516,6 +517,11 @@ enum PlayerPronoun {
   HE
   SHE
   THEY
+}
+
+enum PlayerPosture {
+  STANDING
+  SITTING
 }
 
 enum PlayerRole {
