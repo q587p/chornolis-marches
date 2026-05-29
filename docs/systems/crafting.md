@@ -8,6 +8,7 @@ Crafting should support survival, exploration, hunting and economy.
 
 - Campfire.
 - Torch.
+- Cooked meat from raw meat at a campfire.
 - Bandage.
 - Simple trap.
 - Fishing rod.
@@ -18,7 +19,8 @@ Crafting should support survival, exploration, hunting and economy.
 
 - Firewood from forest regions.
 - Herbs from resource nodes.
-- Bones, hide and meat from animals.
+- Raw meat from freshened animal corpses.
+- Bones, hide, fur, feathers and differentiated meat from animals later.
 - Fish from water regions.
 - Metal and stone later.
 

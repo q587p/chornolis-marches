@@ -38,7 +38,7 @@ import { addCorpseToInventory, resourceTypeDisplayName } from "../services/corps
 import { performSocialSignal } from "../services/socialSignals";
 import { addTwigsToCampfire, dousePlayerTorchFromInventory, lightPlayerTorchFromInventory } from "../services/fire";
 import { requireScribeAdmin } from "../services/adminAccess";
-import { pickUpFirstGroundResourceByKey } from "../services/groundItems";
+import { pickUpFirstGroundResourceByKey, pickUpFirstVisibleGroundResourceByKey, type VisibleGroundResourceKey } from "../services/groundItems";
 import { parseSpeechTarget } from "../services/speechTargets";
 import { dropInventoryResourceDetailed, inspectInventoryResource, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
 import { enterTutorialDream, hasCompletedTutorial, openDreamGate, wakeFromTutorialDream } from "../services/tutorial";
@@ -541,13 +541,33 @@ async function resolveVisibleTargetForAlias(ctx: any, targetQuery: string) {
   return { player, locationId, targetRef: match.target, target };
 }
 
+function pickupResourceKey(target: string): VisibleGroundResourceKey | null {
+  if (["torch", "torches", "факел", "факели", "факела", "факелів"].includes(target)) return "torch";
+  if (["lit torch", "lit_torch", "burning torch", "запалений факел", "палаючий факел"].includes(target)) return "lit_torch";
+  if (["twigs", "twig", "хмиз"].includes(target)) return "twigs";
+  if (["berries", "berry", "ягоди", "ягід"].includes(target)) return "berries";
+  if (["mushrooms", "mushroom", "гриби", "грибів"].includes(target)) return "mushrooms";
+  if (["herbs", "herb", "трави", "трав", "лікарські трави", "лікарських трав", "зілля", "зіллячко"].includes(target)) return "herbs";
+  return null;
+}
+
+function naturalResourcePickupHint(key: VisibleGroundResourceKey) {
+  if (key === "berries") return "Ягоди тут не лежать окремо. Якщо вони ростуть у цій місцині, їх можна зібрати: напишіть «зібрати ягоди».";
+  if (key === "mushrooms") return "Гриби тут не лежать окремо. Якщо вони ростуть у цій місцині, їх можна зібрати: напишіть «зібрати гриби».";
+  if (key === "herbs") return "Лікарські трави тут не лежать окремо. Якщо вони ростуть у цій місцині, їх можна зібрати: напишіть «зібрати трави».";
+  return null;
+}
+
 async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
   const normalizedTarget = normalizeTargetKey(targetQuery);
-  if (["torch", "torches", "факел", "факели", "факела", "факелів", "twigs", "хмиз"].includes(normalizedTarget)) {
+  const resourceKey = pickupResourceKey(normalizedTarget);
+  if (resourceKey) {
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
     try {
-      const item = await pickUpFirstGroundResourceByKey(player.id, ["twigs", "хмиз"].includes(normalizedTarget) ? "twigs" : "torch");
+      const item = resourceKey === "berries" || resourceKey === "mushrooms" || resourceKey === "herbs"
+        ? await pickUpFirstVisibleGroundResourceByKey(player.id, resourceKey)
+        : await pickUpFirstGroundResourceByKey(player.id, resourceKey);
       await recordVisibleItemAction(bot, {
         playerId: player.id,
         locationId: item.locationId,
@@ -558,7 +578,9 @@ async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
       });
       await ctx.reply(`Ви підняли ${item.name}.`);
     } catch (error) {
-      await ctx.reply(error instanceof Error ? error.message : "Не вдалося підняти це.");
+      const hint = naturalResourcePickupHint(resourceKey);
+      const message = error instanceof Error ? error.message : "Не вдалося підняти це.";
+      await ctx.reply(hint && message === "Цього вже немає поруч." ? hint : message);
     }
     return;
   }

@@ -5,6 +5,7 @@ const PICKABLE_RESOURCE_KEYS = ["torch", "lit_torch", "twigs"] as const;
 const TUTORIAL_LOOSE_RESOURCE_KEYS = ["berries", "herbs", "mushrooms"] as const;
 export type PickableResourceKey = (typeof PICKABLE_RESOURCE_KEYS)[number];
 export type TutorialLooseResourceKey = (typeof TUTORIAL_LOOSE_RESOURCE_KEYS)[number];
+export type VisibleGroundResourceKey = PickableResourceKey | TutorialLooseResourceKey;
 
 export function isPickableResourceKey(key: string): key is PickableResourceKey {
   return (PICKABLE_RESOURCE_KEYS as readonly string[]).includes(key);
@@ -77,6 +78,10 @@ export async function pickUpGroundResource(playerId: number, resourceNodeId: num
 }
 
 export async function pickUpFirstGroundResourceByKey(playerId: number, key: PickableResourceKey) {
+  return pickUpFirstVisibleGroundResourceByKey(playerId, key);
+}
+
+export async function pickUpFirstVisibleGroundResourceByKey(playerId: number, key: VisibleGroundResourceKey) {
   const player = await prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } });
   if (!player?.currentLocationId) throw new Error("Ти ще не увійшов у світ. Напиши /start");
 

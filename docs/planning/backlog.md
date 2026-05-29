@@ -13,6 +13,7 @@ These may become `next` after 0.13-0.15 foundations land.
 - Ground money and small find objects beyond the first omen.
 - Local pickup/gather observer feedback beyond хмиз, after `ITEM-001` clarifies pickup versus gather command semantics.
 - Bulk ground pickup text commands such as `підібрати все` / `take all`, with clear ordering, visibility checks and item limits.
+- Richer butchering outputs after `FOOD-001`: species-specific meat, bones, hide, fur, feathers, tools, skill-based yield and spoilage.
 - Animal-restoration charm or small offering loop.
 - NPC hunter/archer route that leaves visible signs.
 - Local console client for command/action smoke tests.
