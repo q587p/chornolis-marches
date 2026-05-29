@@ -48,7 +48,7 @@ Actions:
 - `підібрати ягоди`, `взяти трави`, `take herbs`, `get mushrooms` -> pick up matching loose ground resources only when they are actually visible as ground items; otherwise explain that these should be gathered.
 - `з'їсти ягоди`, `їсти ягоди`, `використати ягоди`, `eat berries`, `use berries` -> eat carried berries from inventory to restore a small amount of stamina and ease hunger by a tiny amount.
 - `з'їсти гриби`, `їсти гриби`, `використати гриби`, `eat mushrooms`, `use mushrooms` -> eat carried mushrooms from inventory to ease hunger a little.
-- `використати трави`, `використати лікарські трави`, `вжити трави`, `прикласти трави`, `лікуватися травами`, `use herbs` -> use carried herbs when wounded for a small HP recovery.
+- `з'їсти трави`, `з'їсти лікарські трави`, `використати трави`, `використати лікарські трави`, `вжити трави`, `прикласти трави`, `лікуватися травами`, `eat herbs`, `use herbs` -> eat/use carried herbs when wounded for a small HP recovery.
 - `запалити факел`, `підпалити факел`, `light torch`, `use torch` -> light an unlit carried torch when there is a campfire nearby or another lit torch in hand.
 - `загасити факел`, `погасити факел`, `притушити факел`, `douse torch`, `extinguish torch` -> douse one carried lit torch into a carried `притушений факел` that preserves its remaining burn time for later relighting.
 - `item berries`, `річ ягоди`, `оглянути в речах ягоди`, `inspect item berries` -> inspect a carried resource stack.
@@ -71,11 +71,11 @@ Actions:
 
 Targets and signals:
 
-- `роздивитися труп`, `атакувати мишу`, `привітати 1`, `освіжити труп`.
+- `роздивитися труп`, `атакувати мишу`, `fight wolf`, `kick rabbit`, `привітати 1`, `освіжити труп`.
 - `підібрати труп`.
 - `освіжити труп`, `розібрати труп`, `freshen corpse`, `butcher corpse` -> gain raw meat from a sufficiently fresh corpse.
 - `підсмажити м'ясо`, `смажити м'ясо`, `cook meat` -> cook raw meat at a nearby campfire; a torch alone is not enough.
-- `з'їсти м'ясо`, `їсти смажене м'ясо`, `eat cooked meat` -> eat cooked meat for hunger relief.
+- `з'їсти м'ясо`, `їсти смажене м'ясо`, `eat cooked meat`, `use cooked meat` -> eat cooked meat for hunger relief.
 - `кивнути 1`, `помахати мандрівник`, `вказати на вовка`, `насупитися вовк`.
 
 Target commands resolve visible nearby targets by number, id or visible name. If several targets match, the bot asks the player to clarify.
@@ -92,3 +92,16 @@ Before adding a new player-facing Telegram button, check:
 4. Does the button target a selected object? Add a text form that can resolve a visible target by number or name when practical.
 
 This keeps Telegram UI convenient while preserving the long-term MUD/sandbox direction.
+
+## Command catalog follow-up
+
+`/commands` is a hidden in-game command-reference surface for the current text command layer. Keep it aligned with this document when adding player-facing commands or major aliases.
+
+Future command-registry work should move the project toward one shared source of truth for:
+
+- command name, short aliases and Ukrainian aliases;
+- slash command, MUD-style text form and Telegram button parity;
+- per-command help, for example `help say` / `допомога сказати`;
+- availability gates such as ordinary player, scribe/admin and future builder permissions;
+- future command chaining with semicolons, for example `get sword; equip sword`;
+- planned MUD-style commands such as `glance`, `exits`, `enter`, `leave`, `whisper`, `reply`, `shout`, `give`, `put`, `drink`, `skills`, `effects`, `consider`, `compare`, `journal`, `party`, `guild`, `spells`, `cast`, `weather`, builder commands and moderation commands.

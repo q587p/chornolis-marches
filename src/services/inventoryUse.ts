@@ -132,8 +132,8 @@ export async function useInventoryResource(playerId: number, resourceKey: Usable
     await tx.player.update({ where: { id: playerId }, data: { hp: nextHp } });
 
     return nextHp >= hpMax
-      ? "Ви використали лікарські трави. Стан помітно кращає."
-      : "Ви використали лікарські трави. Біль трохи відступає.";
+      ? "Ви з'їли лікарські трави. Стан помітно кращає."
+      : "Ви з'їли лікарські трави. Біль трохи відступає.";
   });
 }
 

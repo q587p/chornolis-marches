@@ -17,15 +17,17 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Raw meat can be cooked into cooked meat when the player is near a campfire; a torch alone is not enough.
 - Cooked meat can be eaten from inventory to reduce hunger by a modest amount.
 - Added text aliases for cooking and eating cooked meat, plus freshening/butchering wording.
+- Added a hidden `/commands` reference that lists current text commands, aliases and planned MUD-style command directions.
 
 ### Changed
 
 - Freshened corpses are marked so they cannot be harvested for meat twice.
+- Inventory food buttons now use eat wording while `use` / `використати` remain compatibility aliases for edible items.
 - `FOOD-001` is now in testing.
 
 ### Tests
 
-- Added input-alias regression coverage for meat cooking, cooked meat eating and corpse butchering aliases.
+- Added input-alias regression coverage for meat cooking, cooked meat eating, edible herb aliases and corpse butchering aliases.
 
 ---
 

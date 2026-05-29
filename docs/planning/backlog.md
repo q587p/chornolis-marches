@@ -17,6 +17,7 @@ These may become `next` after 0.13-0.15 foundations land.
 - Animal-restoration charm or small offering loop.
 - NPC hunter/archer route that leaves visible signs.
 - Local console client for command/action smoke tests.
+- Shared command registry and per-command help: keep `/commands`, `/help`, text aliases, future MUD commands, Telegram buttons and permissions from drifting apart.
 - Item details, safer drop/pickup and item-instance groundwork.
 - Dream item origin tracking for tutorial resources, so leaving the dream removes only dream-gathered supplies and never resources brought from the waking world.
 - Reply UX for addressed speech.

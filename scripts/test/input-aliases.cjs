@@ -64,6 +64,8 @@ assertAlias("підібрати хмиз", { kind: "pickup-target", target: "х�
 assertAlias("з'їсти ягоди", { kind: "use-item", item: "berries" });
 assertAlias("зʼїсти гриби", { kind: "use-item", item: "mushrooms" });
 assertAlias("використати лікарські трави", { kind: "use-item", item: "herbs" });
+assertAlias("з'їсти лікарські трави", { kind: "use-item", item: "herbs" });
+assertAlias("eat herbs", { kind: "use-item", item: "herbs" });
 assertAlias("підсмажити м'ясо", { kind: "cook-meat" });
 assertAlias("cook meat", { kind: "cook-meat" });
 assertAlias("з'їсти м'ясо", { kind: "use-item", item: "cooked_meat" });
@@ -101,6 +103,8 @@ assert.equal(isDreamGateOpeningPhrase("Можеш відчинитися?"), tru
 assert.equal(isDreamGateOpeningPhrase("Сьогодні гарний туман"), false);
 assertAlias("роздивитися труп", { kind: "inspect-feature", target: "труп" });
 assertAlias("атакувати мишу", { kind: "target-action", action: "attack", target: "мишу" });
+assertAlias("fight wolf", { kind: "target-action", action: "attack", target: "wolf" });
+assertAlias("kick rabbit", { kind: "target-action", action: "attack", target: "rabbit" });
 assertAlias("привітати 1", { kind: "target-action", action: "greet", target: "1" });
 assertAlias("говорити з мандрівником", { kind: "target-action", action: "greet", target: "мандрівником" });
 assertAlias("освіжити труп", { kind: "target-action", action: "freshen", target: "труп" });

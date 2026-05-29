@@ -105,9 +105,9 @@ function inventoryActionLabel(resource: any) {
 
 function buildInventoryKeyboard(resources: any[] = [], options: { canAddTwigs?: boolean; canDouseTorch?: boolean; canLightTorch?: boolean; canCookMeat?: boolean } = {}) {
   const keyboard = new InlineKeyboard();
-  if (hasInventoryResource(resources, "berries")) keyboard.text("🫐 Використати ягоди", "inventory:use:berries").row();
-  if (hasInventoryResource(resources, "mushrooms")) keyboard.text("🍄 Використати гриби", "inventory:use:mushrooms").row();
-  if (hasInventoryResource(resources, "herbs")) keyboard.text("🌿 Використати лікарські трави", "inventory:use:herbs").row();
+  if (hasInventoryResource(resources, "berries")) keyboard.text("🫐 З'їсти ягоди", "inventory:use:berries").row();
+  if (hasInventoryResource(resources, "mushrooms")) keyboard.text("🍄 З'їсти гриби", "inventory:use:mushrooms").row();
+  if (hasInventoryResource(resources, "herbs")) keyboard.text("🌿 З'їсти лікарські трави", "inventory:use:herbs").row();
   if (hasInventoryResource(resources, COOKED_MEAT_KEY)) keyboard.text("🥩 З'їсти смажене м'ясо", `inventory:use:${COOKED_MEAT_KEY}`).row();
   if (options.canCookMeat && hasInventoryResource(resources, RAW_MEAT_KEY)) keyboard.text("🔥 Підсмажити м'ясо", "inventory:cook:meat").row();
   if (options.canAddTwigs) keyboard.text("🪵 Підкинути хмиз", "inventory:add-twigs").row();
