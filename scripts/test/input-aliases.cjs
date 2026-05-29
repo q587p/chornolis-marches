@@ -30,8 +30,14 @@ assertAlias("йти на захід", { kind: "move", direction: "WEST" });
 assertAlias("/n", { kind: "move", direction: "NORTH" });
 assertAlias("вср", { kind: "move", direction: "INSIDE" });
 assertAlias("/inside", { kind: "move", direction: "INSIDE" });
+assertAlias("/enter", { kind: "move", direction: "INSIDE" });
+assertAlias("enter bushes", { kind: "move", direction: "INSIDE" });
+assertAlias("увійти в кущі", { kind: "move", direction: "INSIDE" });
 assertAlias("наз", { kind: "move", direction: "OUTSIDE" });
 assertAlias("назовні", { kind: "move", direction: "OUTSIDE" });
+assertAlias("/leave", { kind: "move", direction: "OUTSIDE" });
+assertAlias("leave cave", { kind: "move", direction: "OUTSIDE" });
+assertAlias("вийти з кущів", { kind: "move", direction: "OUTSIDE" });
 
 assertAlias("хто", { kind: "who" });
 assertAlias("хтоя", { kind: "me" });

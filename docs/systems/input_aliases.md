@@ -39,7 +39,7 @@ Movement:
 - Ambiguous fragments such as `пів` should not move the character directly; unknown-command suggestions should offer both `північ` and `південь`.
 - `йти на південь`, `рушити на захід`.
 - Short aliases such as `пн`, `пд`, `сх`, `зх` are supported where unambiguous.
-- Non-compass exits also work: `/inside`, `/in`, `вср`, `всередину`, `увійти`, `/outside`, `/out`, `наз`, `назовні`, `вийти`.
+- Non-compass exits also work: `/inside`, `/in`, `/enter`, `enter bushes`, `вср`, `всередину`, `увійти`, `увійти в кущі`, `/outside`, `/out`, `/leave`, `leave cave`, `наз`, `назовні`, `вийти`, `вийти з кущів`.
 - The reply keyboard may also show available direction buttons directly, such as `⬆️ Північ`, `⬅️ Захід`, `Схід ➡️` and `⬇️ Південь`.
 
 Actions:
@@ -104,10 +104,13 @@ Near-term command work is split into `CMD-001` so practical MUD-style text can a
 - `glance` / `глянути швидко`;
 - `exits` / `виходи`.
 
-Remaining near-term command work:
+The first non-compass navigation slice shipped in 0.13.5:
 
 - `enter [place]` / `увійти [місце]`;
-- `leave` / `вийти`;
+- `leave [place]` / `вийти [місце]`.
+
+Remaining near-term command work:
+
 - `whisper [player] [message]` / `шепнути [персонаж] [текст]`;
 - `reply <message>` / `відповісти <текст>`;
 - `shout <message>` / `крикнути <текст>` / `гукнути <текст>`.
