@@ -37,7 +37,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Location and region notifications no longer replace current reply keyboards with an empty generic keyboard when no inline keyboard is provided.
 - The dream gate close message no longer describes only the south path after both sides are locked.
-- Inventory drops now send a clear actor confirmation with an updated location view, so dropped items are easier to notice immediately.
+- Inventory drops now send a clear actor confirmation instead of burying the result inside the inventory view.
 - Tutorial dream berries, herbs and mushrooms can appear as visible loose ground resources when they are on the ground.
 - Parser regression tests now use a neutral target example instead of a real player name.
 - Completing rest now refreshes the main reply keyboard/status label along with the completion message.

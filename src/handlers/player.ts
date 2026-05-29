@@ -2,7 +2,7 @@ import { Bot, InlineKeyboard } from "grammy";
 import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA, HEALTH_REGEN_PER_INTERVAL, PASSIVE_HEALTH_REGEN_INTERVAL_MS, PASSIVE_STAMINA_REGEN_PER_INTERVAL, PLAYER_HUNGER_MAX, REST_HEALTH_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_PER_INTERVAL, STAMINA_REGEN_INTERVAL_MS } from "../gameConfig";
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
-import { renderLocationBrief, renderLocationDetails } from "../services/locations";
+import { renderLocationBrief } from "../services/locations";
 import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
 import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } from "./auto";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
@@ -425,11 +425,7 @@ export function registerPlayerHandlers(bot: Bot) {
           await ctx.reply(view.text, { reply_markup: view.keyboard });
         }
       }
-      const locationView = await renderLocationDetails(result.locationId, player.id);
-      await ctx.reply(`${escapeHtml(result.text)}\n\n${locationView.text}`, {
-        parse_mode: "HTML",
-        reply_markup: locationView.keyboard,
-      });
+      await ctx.reply(result.text);
     } catch (error) {
       await ctx.reply(error instanceof Error ? error.message : "Не вдалося викинути це.");
     }
