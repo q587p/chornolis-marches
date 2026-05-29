@@ -9,6 +9,29 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.7 - Gate hunting loop foundation - 12026-05-30
+
+### Added
+
+- Added `docs/systems/gate_hunting_loop.md` as the design source for a settlement-facing ecological pressure loop instead of a formal quest/bounty board.
+- Added planning items for the gate hunting loop, narrow `put` command, carcass drop-off reactions and future NPC hunter behavior.
+- Added a gate notice and physical carcass drop-off feature near the closed settlement gate.
+- Added a narrow `put` / `/put` command that can place carried carcasses/remains into matching local features.
+- Added a carcass drop-off contribution table and service so valid drop-offs record contributor, resource kind and amount.
+- Added first and threshold settlement reactions for carcass/remains contributions without fixed per-corpse pricing.
+
+### Changed
+
+- `/help`, `/commands` and input-alias docs now list the first narrow `put` forms for carcass/remains drop-off.
+- Planning exports now include the new gate hunting loop task pack.
+
+### Tests
+
+- Added parser coverage for default, numeric and `all` / `все` `put` forms.
+- Added focused helper coverage for carcass-resource validation and drop-off threshold reactions.
+
+---
+
 ## 0.13.6 - Speech commands and sitting rest posture - 12026-05-29
 
 ### Added
