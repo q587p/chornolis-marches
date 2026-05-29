@@ -1,0 +1,4 @@
+CREATE TYPE "PlayerPosture" AS ENUM ('STANDING', 'SITTING');
+
+ALTER TABLE "Player"
+  ADD COLUMN "posture" "PlayerPosture" NOT NULL DEFAULT 'STANDING';

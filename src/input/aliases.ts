@@ -6,6 +6,7 @@ export type TargetAction = "inspect" | "greet" | "attack" | "freshen";
 export type QueueAliasMode = "status" | "cancel-current" | "clear";
 export type AutoAliasMode = "start" | "stop";
 export type RestAliasMode = "start" | "queue" | "interrupt";
+export type PostureAliasMode = "sit" | "stand";
 export type SocialSignalAlias = "smile" | "laugh" | "nod" | "bow" | "point" | "glare" | "sigh" | "wave";
 export type ChatAliasMode = "time" | "location" | "character";
 
@@ -36,6 +37,7 @@ export type ParsedAliasCommand =
   | { kind: "open" }
   | { kind: "inspect-inventory-item"; target: string }
   | { kind: "drop-inventory-item"; target: string }
+  | { kind: "posture"; mode: PostureAliasMode }
   | { kind: "rest"; mode: RestAliasMode }
   | { kind: "auto"; mode: AutoAliasMode }
   | { kind: "queue"; mode: QueueAliasMode }
@@ -250,14 +252,22 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   rest: { kind: "rest", mode: "start" },
   "відпочити": { kind: "rest", mode: "start" },
   "перепочити": { kind: "rest", mode: "start" },
-  "сісти": { kind: "rest", mode: "start" },
-  "присісти": { kind: "rest", mode: "start" },
   "перепочинок": { kind: "rest", mode: "start" },
   "почати відпочинок": { kind: "rest", mode: "start" },
   "додати відпочинок": { kind: "rest", mode: "queue" },
   "додати відпочинок у чергу": { kind: "rest", mode: "queue" },
   "поставити відпочинок у чергу": { kind: "rest", mode: "queue" },
   "перервати відпочинок": { kind: "rest", mode: "interrupt" },
+
+  sit: { kind: "posture", mode: "sit" },
+  "sit down": { kind: "posture", mode: "sit" },
+  "сісти": { kind: "posture", mode: "sit" },
+  "присісти": { kind: "posture", mode: "sit" },
+  stand: { kind: "posture", mode: "stand" },
+  "stand up": { kind: "posture", mode: "stand" },
+  "встати": { kind: "posture", mode: "stand" },
+  "підвестися": { kind: "posture", mode: "stand" },
+  "підвестись": { kind: "posture", mode: "stand" },
 
   auto: { kind: "auto", mode: "start" },
   "авто": { kind: "auto", mode: "start" },

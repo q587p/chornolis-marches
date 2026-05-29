@@ -35,6 +35,7 @@ import { hideReplyKeyboard, showMainKeyboard, showMenu } from "./menu";
 import { showTime } from "./time";
 import { submitMove as submitCanonicalMove } from "./movement";
 import { submitGather as submitCanonicalGather } from "./gather";
+import { submitPosture } from "./posture";
 import { addCorpseToInventory, resourceTypeDisplayName } from "../services/corpses";
 import { performSocialSignal } from "../services/socialSignals";
 import { addTwigsToCampfire, dousePlayerTorchFromInventory, lightPlayerTorchFromInventory } from "../services/fire";
@@ -840,6 +841,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "inspect-feature") return submitFeatureInspection(bot, ctx, parsed.target);
     if (parsed.kind === "move") return submitCanonicalMove(bot, ctx, parsed.direction, false);
     if (parsed.kind === "gather") return submitCanonicalGather(bot, ctx, parsed.resourceKey, false);
+    if (parsed.kind === "posture") return submitPosture(ctx, parsed.mode);
     if (parsed.kind === "rest") return submitRest(ctx, parsed.mode);
     if (parsed.kind === "auto") return submitAuto(bot, ctx, parsed.mode);
     if (parsed.kind === "queue") return submitQueue(ctx, parsed.mode);
