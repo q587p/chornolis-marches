@@ -11,6 +11,8 @@ export type ChatAliasMode = "time" | "location" | "character";
 
 export type ParsedAliasCommand =
   | { kind: "location" }
+  | { kind: "glance" }
+  | { kind: "exits" }
   | { kind: "look-action" }
   | { kind: "me" }
   | { kind: "inventory" }
@@ -122,6 +124,21 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "локація": { kind: "location" },
   "місце": { kind: "location" },
   room: { kind: "location" },
+
+  glance: { kind: "glance" },
+  "quick look": { kind: "glance" },
+  "quick glance": { kind: "glance" },
+  "глянути швидко": { kind: "glance" },
+  "швидко глянути": { kind: "glance" },
+  "коротко глянути": { kind: "glance" },
+  "швидкий огляд": { kind: "glance" },
+
+  exits: { kind: "exits" },
+  exit: { kind: "exits" },
+  "виходи": { kind: "exits" },
+  "шляхи": { kind: "exits" },
+  "куди можна йти": { kind: "exits" },
+  "куди можна піти": { kind: "exits" },
 
   examine: { kind: "look-action" },
   observe: { kind: "look-action" },

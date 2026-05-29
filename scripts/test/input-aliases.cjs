@@ -13,6 +13,12 @@ assert.equal(normalizeInput("  /Look@Chornolis_bot!!!  "), "/look");
 assert.equal(normalizeInput("з’їсти   ягоди."), "з'їсти ягоди");
 
 assertAlias("/look", { kind: "location" });
+assertAlias("/glance", { kind: "glance" });
+assertAlias("глянути швидко", { kind: "glance" });
+assertAlias("швидко глянути", { kind: "glance" });
+assertAlias("/exits", { kind: "exits" });
+assertAlias("виходи", { kind: "exits" });
+assertAlias("куди можна йти", { kind: "exits" });
 assertAlias("див", { kind: "look-action" });
 assertAlias("дивитися", { kind: "look-action" });
 assertAlias("роздивитися", { kind: "look-action" });

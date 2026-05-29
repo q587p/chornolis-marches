@@ -23,8 +23,6 @@ Separate the small command set that should arrive soon from the broader future M
 
 These commands are valuable before a full MUD server because they make Telegram text input, a future console client and later MUD-style input feel consistent:
 
-- `glance`
-- `exits`
 - `enter`
 - `leave`
 - `whisper`
@@ -33,10 +31,15 @@ These commands are valuable before a full MUD server because they make Telegram 
 
 ## First Scope
 
-Navigation / location:
+0.13.4 shipped the first quick-navigation slice:
 
 - `glance` / `глянути швидко` / `швидко глянути` — quick location read: exits and visible people/creatures, no full description.
-- `exits` / `виходи` — only available exits from the current location, including locked-visible exits.
+- `exits` / `виходи` — only visible exits from the current location, including locked-visible exits.
+
+Remaining scope:
+
+Navigation / location:
+
 - `enter [place]` / `увійти [місце]` / `зайти [місце]` — enter an available inside-style exit or visible feature entrance.
 - `leave` / `вийти` / `назовні` — leave the current inside-style area when an outside exit exists.
 

@@ -16,6 +16,8 @@ When a player-facing button performs an in-world action, there should usually be
 Location and character:
 
 - `озирнутися`, `/озирнутися`, `де я`, `місцина`, `див`, `дивитися` -> current location view.
+- `/glance`, `glance`, `глянути швидко`, `швидко глянути` -> quick current-location read without the full description.
+- `/exits`, `exits`, `виходи`, `куди можна йти` -> only visible exits from the current location, including visible locked exits.
 - `роздивитися`, `/роздивитися`, `що видно` -> closer look action.
 - `хто я`, `хтоя`, `персонаж` -> character card.
 - `речі`, `інвентар`, `inventory`, `/inventory`, `що в мене` -> dedicated inventory view.
@@ -97,10 +99,13 @@ This keeps Telegram UI convenient while preserving the long-term MUD/sandbox dir
 
 `/commands` is a hidden in-game command-reference surface for the current text command layer. Keep it aligned with this document when adding player-facing commands or major aliases.
 
-Near-term command work is split into `CMD-001` so the first practical MUD-style text pack can happen before the larger command roadmap:
+Near-term command work is split into `CMD-001` so practical MUD-style text can arrive before the larger command roadmap. The first quick-navigation slice shipped in 0.13.4:
 
 - `glance` / `глянути швидко`;
-- `exits` / `виходи`;
+- `exits` / `виходи`.
+
+Remaining near-term command work:
+
 - `enter [place]` / `увійти [місце]`;
 - `leave` / `вийти`;
 - `whisper [player] [message]` / `шепнути [персонаж] [текст]`;

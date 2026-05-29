@@ -28,7 +28,7 @@ import { sendHelp } from "./help";
 import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } from "./auto";
 import { showCharacter, showInventory, showLocationForPlayer } from "./player";
 import { buildAllPage, buildChatLogPage, buildStatBrief, buildWhoPage } from "./status";
-import { renderDepletedVegetationInspection, renderLocationBrief, renderLocationFeatureInteraction, renderLocationFeatureInteractionByQuery } from "../services/locations";
+import { renderDepletedVegetationInspection, renderLocationBrief, renderLocationExits, renderLocationFeatureInteraction, renderLocationFeatureInteractionByQuery, renderLocationGlance } from "../services/locations";
 import { buildNewsIndexPage } from "./news";
 import { hideReplyKeyboard, showMainKeyboard, showMenu } from "./menu";
 import { showTime } from "./time";
@@ -215,6 +215,22 @@ async function replyWithWho(ctx: any) {
 async function replyWithChat(ctx: any, mode?: string, window?: string) {
   const page = await buildChatLogPage(normalizeChatLogMode(mode), normalizeChatLogWindow(window), 0);
   await ctx.reply(page.text, { reply_markup: page.keyboard });
+}
+
+async function replyWithLocationGlance(ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player?.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const view = await renderLocationGlance(player.currentLocationId, player.id);
+  await ctx.reply(view.text, { parse_mode: "HTML" });
+}
+
+async function replyWithLocationExits(ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player?.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const view = await renderLocationExits(player.currentLocationId);
+  await ctx.reply(view.text, { parse_mode: "HTML" });
 }
 
 async function replyWithVegetationInspection(ctx: any) {
@@ -687,6 +703,8 @@ export function registerAliasHandlers(bot: Bot) {
     if (!parsed) return next();
 
     if (parsed.kind === "location") return showLocationForPlayer(ctx.from.id, (text, options) => ctx.reply(text, options));
+    if (parsed.kind === "glance") return replyWithLocationGlance(ctx);
+    if (parsed.kind === "exits") return replyWithLocationExits(ctx);
     if (parsed.kind === "look-action") return submitLookAction(bot, ctx);
     if (parsed.kind === "me") return showCharacter(ctx.from.id, (text, options) => ctx.reply(text, options));
     if (parsed.kind === "inventory") return showInventory(ctx.from.id, (text, options) => ctx.reply(text, options));
