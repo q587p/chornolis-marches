@@ -5,7 +5,7 @@ import { accelerateFirstQueuedPlayerAction, hasPlayerActionQueueControls, player
 import { buildRestWithQueueChoiceKeyboard } from "../ui/keyboards";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { actionQueueReplyOptions } from "../utils/actionQueueUi";
-import { isTutorialFastRestLocationKey, rememberTutorialCommandHint } from "../services/tutorial";
+import { isTutorialFastRestLocationKey, rememberTutorialCommandHint, TUTORIAL_DEEP_REST_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY } from "../services/tutorial";
 import { prisma } from "../db";
 import { getPlayerRestStaminaCap } from "../services/locationFeatures";
 import { escapeHtml } from "../utils/text";
@@ -41,7 +41,12 @@ async function beginRestNow(ctx: any, playerId: number) {
   await replyOrEdit(ctx, `${await playerRestStatusText(playerId)}${suffix}`);
 
   if (shouldTeachRest) {
-    await ctx.reply(`Сон радить:\n${quoteBlock("Відпочинок — це не сон, а короткий присілок. Тут жар навчить, як швидко повертається подих.")}`, { parse_mode: "HTML" });
+    const sonLine = location?.key === TUTORIAL_REST_LOCATION_KEY
+      ? "Відпочинок — це не сон, а короткий присілок. Лавка лише нагадує тілу, що можна ненадовго сісти й повернути подих."
+      : location?.key === TUTORIAL_DEEP_REST_LOCATION_KEY
+        ? "Відпочинок — це не сон, а короткий присілок. Тут жар навчить, як швидко повертається подих."
+        : "Відпочинок — це не сон, а короткий присілок.";
+    await ctx.reply(`Сон радить:\n${quoteBlock(sonLine)}`, { parse_mode: "HTML" });
     await ctx.reply(`Дрімота пирхає:\n${quoteBlock("Сядеш — і ще захочеш сидіти. Але добре, хоч не падаєш.")}`, { parse_mode: "HTML" });
   }
 }

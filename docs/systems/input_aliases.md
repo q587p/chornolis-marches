@@ -36,6 +36,7 @@ Movement:
 - `північ`, `південь`, `схід`, `захід`.
 - `йти на південь`, `рушити на захід`.
 - Short aliases such as `пн`, `пд`, `сх`, `зх` are supported where unambiguous.
+- Non-compass exits also work: `/inside`, `/in`, `вср`, `всередину`, `увійти`, `/outside`, `/out`, `назовні`, `вийти`.
 - The reply keyboard may also show available direction buttons directly, such as `⬆️ Північ`, `⬅️ Захід`, `Схід ➡️` and `⬇️ Південь`.
 
 Actions:
@@ -50,9 +51,9 @@ Actions:
 - `item berries`, `річ ягоди`, `оглянути в речах ягоди`, `inspect item berries` -> inspect a carried resource stack.
 - `викинути ягоди`, `кинути трави`, `drop berries`, `discard torch` -> drop one carried resource from inventory into the current location.
 - `відпочити`, `додати відпочинок у чергу`, `перервати відпочинок`.
-- `/sleep tutorial`, `tutorial`, `sleep tutorial`, `навчальний сон`, `сон навчання`, `навчання`, `туторіал`, `пройти навчання`, `повернутися до навчання` -> enter or return to the dream tutorial. While the tutorial is incomplete, plain `/sleep` and `сон` route there too.
+- `/sleep tutorial`, `tutorial`, `sleep tutorial`, `навчальний сон`, `сон навчання`, `навчання`, `туторіал`, `пройти навчання`, `повернутися до навчання` -> enter or return to the dream tutorial. While the tutorial is incomplete, plain `/sleep`, `сон` and `спати` route there too.
 - `/wake`, `wake`, `прокинутися`, `прокинутись` -> leave the dream tutorial and return to the saved real location.
-- `/say Відчинитися`, `сказати Відчинитися` and the `Сказати «Відчинитися»` gate button -> say the written phrase aloud and open the local `Брама Сну` in the dream tutorial. `/open`, `open` and `відкрити` may remain as compatibility aliases for the same local interactive gate, but the tutorial-facing path should teach speech and attention to signs. The closed settlement gate near the bridge is a visible locked exit, but it is not openable yet.
+- `/say Відчинитися`, `сказати Відчинитися`, `говорити Відчинись будь ласка`, `ск Можеш відчинитися`, `сказ Відчинися`, `гов Відкрийся` and the `Сказати «Відчинитися»` gate button -> say the written phrase aloud and open the local `Брама Сну` in the dream tutorial. The dream gate is locked from both sides while closed, so both the gate-side `Південь` and hub-side `Північ` exits should appear parenthesized until speech opens the passage. `/open`, `open` and `відкрити` may remain as compatibility aliases for the same local interactive gate, but the tutorial-facing path should teach speech and attention to signs. The closed settlement gate near the bridge is a visible locked exit, but it is not openable yet.
 - `черга`, `скасувати`, `очистити чергу`.
 - `/track`, `/examine tracks`, `роздивитися сліди`, `придивитися до слідів`. Future detail forms should include target-like aliases such as `роздивитися вовчий слід`, `роздивитися людський слід` and `роздивитися заячий слід`.
 - `сказати Привіт`.

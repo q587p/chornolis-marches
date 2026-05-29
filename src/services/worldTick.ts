@@ -10,7 +10,7 @@ import { requireScribeAdmin } from "./adminAccess";
 import { notifyFadingFireTimers } from "./fire";
 import { maybePerformHerbalistSignal } from "./socialAutonomy";
 import { filterLisovykAllowedLocations, isLisovykForbiddenLocation, isLisovykForbiddenRegion } from "./lisovykBoundaries";
-import { DREAM_GATE_FEATURE_KEY } from "./tutorial";
+import { DREAM_GATE_FEATURE_KEY, DREAM_GATE_FEATURE_KEYS } from "./tutorial";
 import { chance, chancePermille, pickOptional as pick, randomInt } from "../utils/random";
 
 const DEFAULT_TICK_INTERVAL_MS = TICK_MS;
@@ -679,14 +679,17 @@ function expiredOpenUntil(data: Record<string, unknown>, now = Date.now()) {
 
 async function closeExpiredDreamGates(bot?: Bot | null) {
   const features = await prisma.locationFeature.findMany({
-    where: { key: DREAM_GATE_FEATURE_KEY, isActive: true },
+    where: { key: { in: [...DREAM_GATE_FEATURE_KEYS] }, isActive: true },
     select: {
+      key: true,
       id: true,
       locationId: true,
       data: true,
     },
   });
   let closed = 0;
+  const message = "Дрімота торкається Брами Сну, і дошки знову сходяться без звуку. Прохід замикається з обох боків, доки його знову не покличуть.";
+  const notifyLocationIds = new Set<number>();
 
   for (const feature of features) {
     const data = jsonObject(feature.data);
@@ -704,8 +707,7 @@ async function closeExpiredDreamGates(bot?: Bot | null) {
       data: { data: nextData as Prisma.InputJsonValue },
     });
 
-    const message = "Дрімота торкається Брами Сну, і дошки знову сходяться без звуку. Південний шлях замикається, доки його знову не покличуть.";
-    await prisma.worldEvent.create({
+    if (feature.key === DREAM_GATE_FEATURE_KEY) await prisma.worldEvent.create({
       data: {
         type: "NPC_SAY",
         title: "Дрімота замикає Браму Сну",
@@ -714,15 +716,23 @@ async function closeExpiredDreamGates(bot?: Bot | null) {
       },
     });
 
-    if (bot) {
-      await notifyLocationAll(bot, feature.locationId, message);
-      const southExit = await prisma.locationExit.findUnique({
-        where: { fromLocationId_direction: { fromLocationId: feature.locationId, direction: "SOUTH" } },
+    if (bot && feature.key === DREAM_GATE_FEATURE_KEY) {
+      notifyLocationIds.add(feature.locationId);
+      const pairedExits = await prisma.locationExit.findMany({
+        where: { fromLocationId: feature.locationId, direction: { in: ["NORTH", "SOUTH"] } },
         select: { toLocationId: true },
       });
-      if (southExit?.toLocationId && southExit.toLocationId !== feature.locationId) await notifyLocationAll(bot, southExit.toLocationId, message);
+      for (const exit of pairedExits) {
+        if (exit.toLocationId && exit.toLocationId !== feature.locationId) notifyLocationIds.add(exit.toLocationId);
+      }
     }
     closed++;
+  }
+
+  if (bot) {
+    for (const locationId of notifyLocationIds) {
+      await notifyLocationAll(bot, locationId, message);
+    }
   }
 
   return closed;

@@ -8,6 +8,23 @@ import { durationSecondsSuffix } from "../utils/durationText";
 import { addTwigsToCampfire, lightPlayerTorchAtCampfire } from "../services/fire";
 import { pickUpGroundResource } from "../services/groundItems";
 import { pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
+import { escapeHtml } from "../utils/text";
+
+function quoteBlock(text: string) {
+  return `<blockquote>${escapeHtml(text)}</blockquote>`;
+}
+
+async function sendVoiceQuoteMessages(ctx: any, messages?: Array<{ title: string; text: string }>) {
+  for (const message of messages ?? []) {
+    await ctx.reply(`${escapeHtml(message.title)}:\n${quoteBlock(message.text)}`, { parse_mode: "HTML" });
+  }
+}
+
+async function sendHtmlFollowupMessages(ctx: any, messages?: Array<{ text: string }>) {
+  for (const message of messages ?? []) {
+    await ctx.reply(message.text, { parse_mode: "HTML" });
+  }
+}
 
 export function registerLookHandlers(bot: Bot) {
   async function examineTracks(ctx: any) {
@@ -161,6 +178,8 @@ export function registerLookHandlers(bot: Bot) {
     } catch {
       await ctx.reply(view.text, { reply_markup: view.keyboard });
     }
+    await sendVoiceQuoteMessages(ctx, "quoteMessages" in view ? view.quoteMessages : undefined);
+    await sendHtmlFollowupMessages(ctx, "followupMessages" in view ? view.followupMessages : undefined);
   });
 
   bot.callbackQuery(/^fire:addTwigs:(\d+)$/, async (ctx) => {

@@ -418,8 +418,14 @@ export function registerPlayerHandlers(bot: Bot) {
         actionNote: `викинуто: ${result.droppedName}`,
       });
       const view = await renderInventoryView(ctx.from.id);
-      const text = view ? `${result.text}\n\n${view.text}` : result.text;
-      await ctx.editMessageText(text, view ? { reply_markup: view.keyboard } : undefined);
+      if (view) {
+        try {
+          await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
+        } catch {
+          await ctx.reply(view.text, { reply_markup: view.keyboard });
+        }
+      }
+      await ctx.reply(result.text);
     } catch (error) {
       await ctx.reply(error instanceof Error ? error.message : "Не вдалося викинути це.");
     }

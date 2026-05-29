@@ -218,6 +218,35 @@
     }
   },
   {
+    "key": "dream_tutorial_bushes",
+    "locationKey": "dream_tutorial_hub",
+    "type": "LANDMARK",
+    "name": "Кущі",
+    "description": "Кущі стоять збоку від стежок і майже ховають вузький прохід. Будьте уважними: у Порубіжжі входи та виходи не завжди лежать лише за сторонами світу. Інколи треба зайти всередину, спуститися, піднятися або вийти назовні.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "tutorial_inside_prompt": true
+    }
+  },
+  {
+    "key": "dream_tutorial_sleep_gate_return",
+    "locationKey": "dream_tutorial_hub",
+    "type": "GATE",
+    "name": "Брама Сну",
+    "description": "З цього боку Брама Сну теж тримає тінь, ніби стежка пам’ятає замкнений шлях. На дошках проступають ті самі слова: «Скажи шляху відчинитися».",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "tutorial_gate": true,
+      "tutorial_gate_pair": "dream_tutorial_sleep_gate",
+      "locked": true,
+      "locks_exit_direction": "NORTH",
+      "lock_reason": "брама сну",
+      "reset_after_ms": 30000
+    }
+  },
+  {
     "key": "dream_tutorial_foraging_hint",
     "locationKey": "dream_tutorial_foraging",
     "type": "LANDMARK",
@@ -232,14 +261,15 @@
   {
     "key": "dream_tutorial_rest_fire",
     "locationKey": "dream_tutorial_rest",
-    "type": "MAGIC_CAMPFIRE",
-    "name": "Тихий жар сну",
-    "description": "Жар світиться без хмизу й диму. Якщо після входу в присілок тіло раптом обважніло, натисніть «Відпочити» або напишіть /rest: у навчальному сні перепочинок минає дуже швидко й іноді дає снаги понад звичну міру.",
-    "providesLight": true,
+    "type": "LANDMARK",
+    "name": "Лавка короткого перепочинку",
+    "description": "Низька лавка тепла на дотик, хоча поруч немає вогню. Вона ніби підказує просту річ: відпочинок — це не сон, а короткий присілок. Якщо тіло обважніло після входу в цю місцину, натисніть «Присісти і відпочити» або напишіть /rest.",
+    "providesLight": false,
     "restStaminaCapMultiplier": 2,
     "data": {
       "rest_stamina_cap_multiplier": 2,
       "rest_stamina_regen_multiplier": 10,
+      "tutorial_rest_seat": true,
       "tutorial_hint": "rest"
     }
   },

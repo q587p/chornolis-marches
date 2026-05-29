@@ -2,10 +2,27 @@ import { prisma } from "../db";
 import { resourceTypeDisplayName } from "./corpses";
 
 const PICKABLE_RESOURCE_KEYS = ["torch", "lit_torch", "twigs"] as const;
+const TUTORIAL_LOOSE_RESOURCE_KEYS = ["berries", "herbs", "mushrooms"] as const;
 export type PickableResourceKey = (typeof PICKABLE_RESOURCE_KEYS)[number];
+export type TutorialLooseResourceKey = (typeof TUTORIAL_LOOSE_RESOURCE_KEYS)[number];
 
 export function isPickableResourceKey(key: string): key is PickableResourceKey {
   return (PICKABLE_RESOURCE_KEYS as readonly string[]).includes(key);
+}
+
+export function isTutorialLooseResourceKey(key: string): key is TutorialLooseResourceKey {
+  return (TUTORIAL_LOOSE_RESOURCE_KEYS as readonly string[]).includes(key);
+}
+
+function isTutorialLocationLike(location?: { key?: string | null; z?: number | null; region?: { key?: string | null } | null } | null) {
+  return location?.z === -13 || location?.region?.key === "dream_tutorial" || String(location?.key ?? "").startsWith("dream_tutorial_");
+}
+
+export function isVisibleGroundResource(
+  resource: { amount: number; resourceType: { key: string } },
+  location?: { key?: string | null; z?: number | null; region?: { key?: string | null } | null } | null,
+) {
+  return resource.amount > 0 && (isPickableResourceKey(resource.resourceType.key) || (isTutorialLocationLike(location) && isTutorialLooseResourceKey(resource.resourceType.key)));
 }
 
 export function canPickUpGroundItem(player: { hp: number; stamina: number; isResting: boolean }) {
@@ -15,7 +32,13 @@ export function canPickUpGroundItem(player: { hp: number; stamina: number; isRes
 export async function pickUpGroundResource(playerId: number, resourceNodeId: number) {
   const player = await prisma.player.findUnique({
     where: { id: playerId },
-    select: { currentLocationId: true, hp: true, stamina: true, isResting: true },
+    select: {
+      currentLocationId: true,
+      hp: true,
+      stamina: true,
+      isResting: true,
+      currentLocation: { select: { key: true, z: true, region: { select: { key: true } } } },
+    },
   });
   if (!player?.currentLocationId) throw new Error("Ти ще не увійшов у світ. Напиши /start");
   if (!canPickUpGroundItem(player)) throw new Error("Ви надто втомлені, щоб підняти це просто зараз. Спершу перепочиньте.");
@@ -27,11 +50,10 @@ export async function pickUpGroundResource(playerId: number, resourceNodeId: num
         id: resourceNodeId,
         locationId,
         amount: { gt: 0 },
-        resourceType: { key: { in: [...PICKABLE_RESOURCE_KEYS] } },
       },
       select: { id: true, resourceTypeId: true, updatedAt: true, resourceType: { select: { key: true, name: true } } },
     });
-    if (!node || !isPickableResourceKey(node.resourceType.key)) throw new Error("Цього вже немає поруч.");
+    if (!node || !isVisibleGroundResource({ amount: 1, resourceType: node.resourceType }, player.currentLocation)) throw new Error("Цього вже немає поруч.");
 
     const picked = await tx.resourceNode.updateMany({
       where: { id: node.id, amount: { gt: 0 } },
@@ -47,7 +69,7 @@ export async function pickUpGroundResource(playerId: number, resourceNodeId: num
     });
 
     return {
-      key: node.resourceType.key as PickableResourceKey,
+      key: node.resourceType.key,
       name: resourceTypeDisplayName(node.resourceType),
       locationId,
     };

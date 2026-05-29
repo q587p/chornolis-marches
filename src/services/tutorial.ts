@@ -15,6 +15,8 @@ export const TUTORIAL_SAFETY_LOCATION_KEY = "dream_tutorial_safety";
 export const TUTORIAL_OBSERVATION_LOCATION_KEY = "dream_tutorial_observation";
 export const TUTORIAL_DEEP_REST_LOCATION_KEY = "dream_tutorial_deep_rest";
 export const DREAM_GATE_FEATURE_KEY = "dream_tutorial_sleep_gate";
+export const DREAM_GATE_RETURN_FEATURE_KEY = "dream_tutorial_sleep_gate_return";
+export const DREAM_GATE_FEATURE_KEYS = [DREAM_GATE_FEATURE_KEY, DREAM_GATE_RETURN_FEATURE_KEY] as const;
 export const DREAM_GATE_OPEN_MS = 30 * 1000;
 const DREAM_GATE_OPEN_WINDOWS_MS = [30_000, 60_000, 120_000, 240_000, 480_000];
 export const TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE = "Tutorial foraging success";
@@ -25,15 +27,29 @@ const DREAM_LOCATION_EVENT_TITLE = "Tutorial dream location";
 const COMPLETED_EVENT_TITLE = "Tutorial completed";
 const RESET_EVENT_TITLE = "Tutorial reset by admin";
 const TUTORIAL_COMMAND_HINT_EVENT_TITLE = "Tutorial command hint";
-const DREAM_GATE_OPEN_PHRASE = "відчинитися";
+const DREAM_GATE_OPEN_PHRASES = ["відчинитися", "відчинися", "відчинись", "відкритися", "відкрийся"];
 
-export function isDreamGateOpeningPhrase(text: string) {
-  return text
+function normalizeDreamGateSpeech(text: string) {
+  let normalized = text
     .trim()
     .toLocaleLowerCase("uk-UA")
     .replace(/[«»"“”„]/g, "")
-    .replace(/[!?.,;:]+$/g, "")
-    .replace(/\s+/g, " ") === DREAM_GATE_OPEN_PHRASE;
+    .replace(/[!?.,;:]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  for (const filler of ["будь ласка", "прошу", "можеш", "можете", "будь добрий", "будь добра", "будь ласкавий"]) {
+    normalized = normalized.split(filler).join(" ");
+  }
+
+  return normalized.replace(/\s+/g, " ").trim();
+}
+
+export function isDreamGateOpeningPhrase(text: string) {
+  const normalized = normalizeDreamGateSpeech(text);
+  return DREAM_GATE_OPEN_PHRASES.some((phrase) =>
+    normalized === phrase || normalized.startsWith(`${phrase} `) || normalized.endsWith(` ${phrase}`),
+  );
 }
 
 export async function canOpenDreamGateWithSpeech(playerId: number, text: string) {
@@ -43,7 +59,7 @@ export async function canOpenDreamGateWithSpeech(playerId: number, text: string)
   if (!player?.currentLocationId) return false;
 
   const feature = await prisma.locationFeature.findFirst({
-    where: { key: DREAM_GATE_FEATURE_KEY, locationId: player.currentLocationId, isActive: true },
+    where: { key: { in: [...DREAM_GATE_FEATURE_KEYS] }, locationId: player.currentLocationId, isActive: true },
     select: { id: true },
   });
   return Boolean(feature);
@@ -97,13 +113,13 @@ export function isTutorialFastRestLocationKey(key: string | null | undefined) {
 }
 
 export function isDreamGateFeature(feature: { key: string; data: Prisma.JsonValue | null }) {
-  return feature.key === DREAM_GATE_FEATURE_KEY || featureData(feature).tutorial_gate === true;
+  return DREAM_GATE_FEATURE_KEYS.includes(feature.key as typeof DREAM_GATE_FEATURE_KEYS[number]) || featureData(feature).tutorial_gate === true;
 }
 
 export function dreamGateStatusText(feature: { data: Prisma.JsonValue | null }) {
   const data = featureData(feature);
   return isLockedFeatureCurrentlyOpen(data)
-    ? "Брама прочинена. Сон за нею дихає холодом і кличе на південь."
+    ? "Брама прочинена. Сон за нею дихає холодом, і прохід тимчасово відкритий."
     : "Брама зімкнена. На дереві проступає знак: не всі шляхи є шляхами, доки їх не покличеш.";
 }
 
@@ -384,45 +400,50 @@ export async function openDreamGate(playerId: number) {
   if (!player?.currentLocationId) throw new Error("Спершу треба увійти у світ.");
 
   const feature = await prisma.locationFeature.findFirst({
-    where: { key: DREAM_GATE_FEATURE_KEY, locationId: player.currentLocationId, isActive: true },
+    where: { key: { in: [...DREAM_GATE_FEATURE_KEYS] }, locationId: player.currentLocationId, isActive: true },
   });
   if (!feature) return "Тут немає воріт, які можна відкрити.";
 
-  const data = featureData(feature);
   const previousOpens = await prisma.worldEvent.count({
     where: {
       playerId,
-      locationId: player.currentLocationId,
       type: "SYSTEM",
       title: "Tutorial dream gate opened",
     },
   });
   const openDurationMs = DREAM_GATE_OPEN_WINDOWS_MS[previousOpens % DREAM_GATE_OPEN_WINDOWS_MS.length] ?? DREAM_GATE_OPEN_MS;
   const openUntil = new Date(Date.now() + openDurationMs).toISOString();
-  await prisma.locationFeature.update({
-    where: { id: feature.id },
-    data: {
-      data: {
-        ...data,
-        locked: true,
-        open_until: openUntil,
-        opened_at: new Date().toISOString(),
-        open_duration_ms: openDurationMs,
-      } as Prisma.InputJsonValue,
-    },
+  const gateFeatures = await prisma.locationFeature.findMany({
+    where: { key: { in: [...DREAM_GATE_FEATURE_KEYS] }, isActive: true },
   });
+
+  for (const gateFeature of gateFeatures) {
+    const data = featureData(gateFeature);
+    await prisma.locationFeature.update({
+      where: { id: gateFeature.id },
+      data: {
+        data: {
+          ...data,
+          locked: true,
+          open_until: openUntil,
+          opened_at: new Date().toISOString(),
+          open_duration_ms: openDurationMs,
+        } as Prisma.InputJsonValue,
+      },
+    });
+  }
 
   await prisma.worldEvent.create({
     data: {
       type: "SYSTEM",
       title: "Tutorial dream gate opened",
-      description: `south unlocked; durationMs=${openDurationMs}`,
+      description: `dream gate unlocked; durationMs=${openDurationMs}`,
       playerId,
       locationId: player.currentLocationId,
     },
   });
 
-  return "Брама Сну розходиться без скрипу. Південний шлях відкритий, але Дрімота довго не чекатиме.";
+  return "Брама Сну розходиться без скрипу. Прохід відкритий з обох боків, але Дрімота довго не чекатиме.";
 }
 
 export function lockedExitLabel(direction: Direction, reason: string) {

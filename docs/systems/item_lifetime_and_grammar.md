@@ -18,6 +18,8 @@ For corpses, these states describe the current condition of the body. Later peri
 
 0.11.12 resource-stack drops are an intentionally simple bridge: `Викинути` removes one carried resource and returns it to the current location through the existing resource-node model. A dropped lit torch remains a burning ground item, can light the місцина and can be picked up again until its timer expires; after burn-out it turns into `twigs`. Later item instances should preserve origin, quality, timers, freshness and richer ground-object behavior without stack-level timer compromises.
 
+In the tutorial dream, berries, herbs and mushrooms may also be treated as visible loose ground resources so a beginner can see the immediate result of dropping simple dream supplies. This is a tutorial bridge, not the final item model: future item instances should track whether a stack was gathered in the dream or brought from the waking world.
+
 Immediate pickup and drop actions should be visible to the room: nearby players receive an observer line, a world event is recorded, and the actor gets a recent-action entry for scribe/admin inspection. This currently covers loose ground resources, corpse pickup, torch-stand pickup and inventory drops.
 
 ## Sex, animacy and cases

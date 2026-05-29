@@ -2,11 +2,11 @@
 
 Accepted ideas that fit Chornolis Marches but are not the current focus.
 
-Backlog differs from Icebox: backlog means “we probably want this, but not right now”; Icebox means “interesting, too early, too large or not yet validated.”
+Backlog differs from Icebox: backlog means "we probably want this, but not right now"; Icebox means "interesting, too early, too large or not yet validated."
 
 ## Near-Term Backlog
 
-These may become `next` after 0.13–0.15 foundations land.
+These may become `next` after 0.13-0.15 foundations land.
 
 - Starter settlement skeleton beyond the closed gate.
 - First useful NPC roles: guard, hunter, herbalist, fisher.
@@ -16,6 +16,7 @@ These may become `next` after 0.13–0.15 foundations land.
 - NPC hunter/archer route that leaves visible signs.
 - Local console client for command/action smoke tests.
 - Item details, safer drop/pickup and item-instance groundwork.
+- Dream item origin tracking for tutorial resources, so leaving the dream removes only dream-gathered supplies and never resources brought from the waking world.
 - Reply UX for addressed speech.
 - Wider prepared-name pool and DB-backed name registry.
 - More biome-specific resources and animals.
@@ -35,7 +36,7 @@ These may become `next` after 0.13–0.15 foundations land.
 Promote to `next` only when:
 
 - the needed foundation exists;
-- the task is 1–2 hours or split smaller;
+- the task is 1-2 hours or split smaller;
 - it supports the current roadmap phase;
 - it has a clear acceptance checklist;
 - it does not distract from atmosphere and readable consequences.

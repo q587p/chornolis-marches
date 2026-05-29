@@ -93,6 +93,7 @@ const DIRECTION_ALIASES: Record<string, Direction> = {
 
   inside: "INSIDE",
   in: "INSIDE",
+  "вср": "INSIDE",
   "всередину": "INSIDE",
   "усередину": "INSIDE",
   "увійти": "INSIDE",
@@ -335,6 +336,7 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "повернутися в навчання": { kind: "sleep", tutorial: true },
   "повернутися до сну": { kind: "sleep", tutorial: true },
   "повернутися в сон": { kind: "sleep", tutorial: true },
+  "спати": { kind: "sleep" },
   "заснути": { kind: "sleep" },
   "прокинутися": { kind: "wake" },
   "прокинутись": { kind: "wake" },
@@ -440,11 +442,12 @@ function parseGather(text: string): ParsedAliasCommand | null {
 }
 
 function parseSay(raw: string, text: string): ParsedAliasCommand | null {
-  const match = text.match(/^(?:\/say|say|\/сказати|сказати|мовити|промовити|крикнути)\s+(.+)$/);
+  const match = text.match(/^\/?(say|сказати|говорити|мовити|промовити|крикнути|ск|сказ|гов)\s+(.+)$/);
   if (!match) return null;
+  if (match[1] === "говорити" && match[2].trim().startsWith("з ")) return null;
 
-  const rawMatch = raw.match(/^(?:\/say|say|\/сказати|сказати|мовити|промовити|крикнути)\s+(.+)$/i);
-  const said = (rawMatch?.[1] ?? match[1]).trim().slice(0, 300);
+  const rawMatch = raw.match(/^\/?(say|сказати|говорити|мовити|промовити|крикнути|ск|сказ|гов)\s+(.+)$/i);
+  const said = (rawMatch?.[2] ?? match[2]).trim().slice(0, 300);
   return said ? { kind: "say", text: said } : null;
 }
 

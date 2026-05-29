@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const { normalizeInput, parseAlias, suggestAliasInputs } = require("../../src/input/aliases");
+const { isDreamGateOpeningPhrase } = require("../../src/services/tutorial");
 
 function assertAlias(input, expected) {
   assert.deepEqual(parseAlias(input), expected, `Unexpected alias parse for: ${input}`);
@@ -20,6 +21,8 @@ assertAlias("/examine", { kind: "look-action" });
 assertAlias("південь", { kind: "move", direction: "SOUTH" });
 assertAlias("йти на захід", { kind: "move", direction: "WEST" });
 assertAlias("/n", { kind: "move", direction: "NORTH" });
+assertAlias("вср", { kind: "move", direction: "INSIDE" });
+assertAlias("/inside", { kind: "move", direction: "INSIDE" });
 
 assertAlias("хто", { kind: "who" });
 assertAlias("хтоя", { kind: "me" });
@@ -60,6 +63,7 @@ assertAlias("туторіал", { kind: "sleep", tutorial: true });
 assertAlias("пройти навчання", { kind: "sleep", tutorial: true });
 assertAlias("повернутися до навчання", { kind: "sleep", tutorial: true });
 assertAlias("сон", { kind: "sleep" });
+assertAlias("спати", { kind: "sleep" });
 assertAlias("прокинутися", { kind: "wake" });
 assertAlias("відкрити", { kind: "open" });
 
@@ -73,9 +77,18 @@ assertAlias("очистити чергу", { kind: "queue", mode: "clear" });
 assertAlias("сказати Хай стежка буде м'якою.", { kind: "say", text: "Хай стежка буде м'якою." });
 assertAlias("/say Відчинитися", { kind: "say", text: "Відчинитися" });
 assertAlias("Сказати «Відчинитися»", { kind: "say", text: "«Відчинитися»" });
+assertAlias("говорити Відчинись будь ласка", { kind: "say", text: "Відчинись будь ласка" });
+assertAlias("ск Можеш відчинитися", { kind: "say", text: "Можеш відчинитися" });
+assertAlias("/сказ Відчинися", { kind: "say", text: "Відчинися" });
+assertAlias("гов Відкрийся", { kind: "say", text: "Відкрийся" });
+assert.equal(isDreamGateOpeningPhrase("Відчинитися"), true);
+assert.equal(isDreamGateOpeningPhrase("Відчинись будь ласка"), true);
+assert.equal(isDreamGateOpeningPhrase("Можеш відчинитися?"), true);
+assert.equal(isDreamGateOpeningPhrase("Сьогодні гарний туман"), false);
 assertAlias("роздивитися труп", { kind: "target-action", action: "inspect", target: "труп" });
 assertAlias("атакувати мишу", { kind: "target-action", action: "attack", target: "мишу" });
 assertAlias("привітати 1", { kind: "target-action", action: "greet", target: "1" });
+assertAlias("говорити з мандрівником", { kind: "target-action", action: "greet", target: "мандрівником" });
 assertAlias("освіжити труп", { kind: "target-action", action: "freshen", target: "труп" });
 assertAlias("викинути факел", { kind: "drop-inventory-item", target: "факел" });
 assertAlias("річ ягоди", { kind: "inspect-inventory-item", target: "ягоди" });

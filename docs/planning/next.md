@@ -6,9 +6,9 @@ This file should stay small. If everything is next, nothing is next.
 
 The current lane is the three-month vertical slice:
 
-1. 0.13 — Core Loop & Onboarding Stability.
-2. 0.14 — Night, Light and Firewood.
-3. 0.15 — Attention and Learning MVP.
+1. 0.13 - Core Loop & Onboarding Stability.
+2. 0.14 - Night, Light and Firewood.
+3. 0.15 - Attention and Learning MVP.
 
 ## 0.13 Next
 
@@ -33,6 +33,17 @@ The current lane is the three-month vertical slice:
 - TRACK-LEARN-001: track-reading / animal movement learning moment.
 - OMEN-001: one small living-world omen.
 - ONB-001 follow-up: tutorial hints that careful observation matters.
+
+## Promotion candidates to review
+
+These are still `backlog`, but recent work makes them worth reviewing before the next patch sequence.
+
+- Inventory item actions: the dedicated inventory view exists, and the 0.12.15 drop feedback pass makes the item-instance gap more visible. Item details, safer dropped-item pickup, dream-item origin and richer per-item actions are now small enough to promote when the survival loop needs them.
+- PERF-001: runtime performance plan and creature simulation budget. Recent production logs show `/all` and large creature counts are already visible pressure points; next performance work should keep following the recorded plan.
+- ADM-001: admin permissions, name approval and restricted reset hardening. A first `Писар`/admin gate exists now, so remaining near-term work is audit logging, clearer role UX, first name-review tools and closing any leftover dangerous paths.
+- Speech reply UX: `/reply`, `Відповісти` and `Відповісти як...` for addressed speech. This should probably stay behind the chat/social polish lane, not the ecology lane.
+- Darkness creature / small coin omen: this becomes much more attractive right after WORLD-001 because it explicitly depends on darkness, light and calm observation.
+- TECH-001: service boundary and duplication cleanup. Keep this mostly behavior-preserving, but make it visible during patch planning because `worldTick.ts`, `status.ts`, `actionCompletions.ts`, `statusServer.ts`, `locations.ts` and `aliases.ts` are now large enough to slow safe feature work.
 
 ## Review Checklist
 
