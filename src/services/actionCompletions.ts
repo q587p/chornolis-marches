@@ -428,9 +428,19 @@ async function completeGather(bot: Bot, action: WorldAction) {
         ...(resourceKey in statFieldMap ? { [statFieldMap[resourceKey as keyof typeof statFieldMap]]: { increment: found } } : {}),
       },
     });
-    if (chatId) await bot.api.sendMessage(chatId, `Ви витратили час на пошуки${durationText} і знайшли: ${resource.resourceType.name} ×${found}.`);
+    const firstTutorialGather = isTutorialForagingSuccess
+      ? await rememberTutorialForagingSuccess((actor as any).id, locationId, resourceKey)
+      : false;
+    if (chatId) {
+      await bot.api.sendMessage(
+        chatId,
+        `Ви витратили час на пошуки${durationText} і знайшли: ${resource.resourceType.name} ×${found}.`,
+        isTutorialForagingSuccess
+          ? { reply_markup: await buildMainReplyKeyboardForTelegramId(Number((actor as any).telegramId), false) }
+          : undefined,
+      );
+    }
     if (isTutorialForagingSuccess) {
-      const firstTutorialGather = await rememberTutorialForagingSuccess((actor as any).id, locationId, resourceKey);
       if (firstTutorialGather) {
         if (chatId) await bot.api.sendMessage(chatId, `Сон усміхається:\n${quoteBlock(TUTORIAL_FORAGING_SUCCESS_COMMENT)}`, { parse_mode: "HTML" });
       }
