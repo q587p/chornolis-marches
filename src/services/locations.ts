@@ -295,7 +295,7 @@ function publicEcologyReport(stats: PublicEcologySignStats, showTechnicalDetails
 function featuresText(location: any, mode: "brief" | "details", showTechnicalDetails = false) {
   const features = (location.features ?? []).filter(isInteractiveFeature);
   if (!features.length) return "";
-  const title = mode === "brief" ? "Особливості:" : "Особливості місцини:";
+  const title = mode === "brief" ? "<b>Особливості:</b>" : "<b>Особливості місцини:</b>";
   const lines = features.map((feature: any) => mode === "brief" ? featureBriefLine(feature) : featureDetailLine(feature, showTechnicalDetails));
   return `\n\n${title}\n${lines.join("\n")}`;
 }

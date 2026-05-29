@@ -29,6 +29,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Fatigue and recovery threshold messages now refresh the main reply keyboard so the status button reflects the updated stamina immediately.
 - Gather result text and the tutorial foraging hint now make stamina spending explicit, and the inventory hint clarifies that the inventory button appears after the first gather only if it is not already available.
 - Text commands such as `take herbs`, `get mushrooms`, `підібрати ягоди` and `взяти трави` now route to gathering instead of trying to resolve those resources as nearby targets.
+- Location feature section headings are now bolded in Telegram location views for easier scanning.
 
 ### Tests
 
