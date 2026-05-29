@@ -9,7 +9,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
-## 0.12.14 - Tutorial flow and location readability - 12026-05-29
+## 0.12.15 - Tutorial gate, inside movement and drop feedback - 12026-05-29
 
 ### Added
 
@@ -25,6 +25,21 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - The tutorial observation lesson now belongs to the fox-motion feature interaction instead of triggering from the whole location examine view.
 - The tutorial rest branch now uses a rest-seat feature for the first rest room while keeping the deeper dream fire as the faster rest room.
 - Help and input-alias documentation now describe the expanded `/say` aliases and visible locked exits from both sides of the dream gate.
+
+### Fixed
+
+- Location and region notifications no longer replace current reply keyboards with an empty generic keyboard when no inline keyboard is provided.
+- The dream gate close message no longer describes only the south path after both sides are locked.
+- Inventory drops now send a clear actor confirmation instead of burying the result inside the inventory view.
+- Tutorial dream berries, herbs and mushrooms can appear as visible loose ground resources when they are on the ground.
+- Parser regression tests now use a neutral target example instead of a real player name.
+
+---
+
+## 0.12.14 - Tutorial rest and location readability - 12026-05-29
+
+### Changed
+
 - Tutorial rest guidance now sends Сон and Дрімота as separate quoted messages instead of appending them to the rest status block.
 - Rest status messages now hide HP, stamina and state lines from ordinary players while keeping the rough time-to-full-rest estimate visible.
 - The tutorial world-date hint from Крук now uses the same quoted Telegram style as other voiced text.
@@ -35,11 +50,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ### Fixed
 
-- Location and region notifications no longer replace current reply keyboards with an empty generic keyboard when no inline keyboard is provided.
-- The dream gate close message no longer describes only the south path after both sides are locked.
-- Inventory drops now send a clear actor confirmation instead of burying the result inside the inventory view.
-- Tutorial dream berries, herbs and mushrooms can appear as visible loose ground resources when they are on the ground.
-- Parser regression tests now use a neutral target example instead of a real player name.
 - Completing rest now refreshes the main reply keyboard/status label along with the completion message.
 - Stale onboarding inline buttons no longer reopen name selection after the character has already completed onboarding; they show a restart hint instead.
 
