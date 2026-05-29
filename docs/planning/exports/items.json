@@ -881,7 +881,7 @@
   {
     "id": "ONB-002-B",
     "title": "Expand forbidden-name normalization",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "onboarding",
     "priority": "high",

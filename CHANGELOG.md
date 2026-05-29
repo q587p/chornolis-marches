@@ -9,6 +9,21 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.1 - Forbidden-name normalization - 12026-05-29
+
+### Changed
+
+- Custom-name validation now normalizes casing, apostrophe/separator variants, internal whitespace and hyphen splitting before checking obvious forbidden names.
+- Expanded forbidden-name coverage for creature, spirit, sacred, famous-character and common-word examples.
+- Updated character-name onboarding documentation for the stricter custom-name guardrail.
+
+### Tests
+
+- Added regression cases for spaced-out or separator-split forbidden names.
+- Added coverage to ensure prepared character names are not accidentally rejected by forbidden-name checks.
+
+---
+
 ## 0.13.0 - Prepared-name pool expansion - 12026-05-29
 
 ### Added
