@@ -12,6 +12,7 @@ These may become `next` after 0.13-0.15 foundations land.
 - First useful NPC roles: guard, hunter, herbalist, fisher.
 - Ground money and small find objects beyond the first omen.
 - Local pickup/gather observer feedback beyond хмиз.
+- Bulk ground pickup text commands such as `підібрати все` / `take all`, with clear ordering, visibility checks and item limits.
 - Animal-restoration charm or small offering loop.
 - NPC hunter/archer route that leaves visible signs.
 - Local console client for command/action smoke tests.

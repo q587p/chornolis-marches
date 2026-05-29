@@ -436,10 +436,16 @@ function parseGather(text: string): ParsedAliasCommand | null {
   if (!match) return null;
 
   const resource = match[1].trim();
+  const gatheredResource = parseGatherResource(resource);
+  if (gatheredResource) return gatheredResource;
+  if (["torch", "torches", "факел", "факели", "факела", "факелів", "twigs", "хмиз"].includes(resource)) return { kind: "pickup-target", target: resource };
+  return null;
+}
+
+function parseGatherResource(resource: string): ParsedAliasCommand | null {
   if (["berries", "berry", "ягоди", "ягід"].includes(resource)) return { kind: "gather", resourceKey: "berries" };
   if (["mushrooms", "mushroom", "гриби", "грибів"].includes(resource)) return { kind: "gather", resourceKey: "mushrooms" };
   if (["herbs", "herb", "трави", "трав", "лікарські трави", "зілля", "зіллячко"].includes(resource)) return { kind: "gather", resourceKey: "herbs" };
-  if (["torch", "torches", "факел", "факели", "факела", "факелів", "twigs", "хмиз"].includes(resource)) return { kind: "pickup-target", target: resource };
   return null;
 }
 
@@ -522,7 +528,8 @@ function parseTargetAction(text: string): ParsedAliasCommand | null {
 function parsePickup(text: string): ParsedAliasCommand | null {
   const match = text.match(/^(?:pickup|take|get|підібрати|підняти|взяти|забрати)\s+(.+)$/);
   if (!match?.[1]?.trim()) return null;
-  return { kind: "pickup-target", target: match[1].trim() };
+  const target = match[1].trim();
+  return parseGatherResource(target) ?? { kind: "pickup-target", target };
 }
 
 function parseInventoryItemAction(text: string): ParsedAliasCommand | null {

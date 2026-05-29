@@ -52,6 +52,10 @@ assertAlias("придивитися до знака", { kind: "inspect-border-ma
 assertAlias("збирати ягоди", { kind: "gather", resourceKey: "berries" });
 assertAlias("збирати гриби", { kind: "gather", resourceKey: "mushrooms" });
 assertAlias("збирати лікарські трави", { kind: "gather", resourceKey: "herbs" });
+assertAlias("підібрати ягоди", { kind: "gather", resourceKey: "berries" });
+assertAlias("взяти трави", { kind: "gather", resourceKey: "herbs" });
+assertAlias("take herbs", { kind: "gather", resourceKey: "herbs" });
+assertAlias("get mushrooms", { kind: "gather", resourceKey: "mushrooms" });
 assertAlias("підібрати хмиз", { kind: "pickup-target", target: "хмиз" });
 
 assertAlias("з'їсти ягоди", { kind: "use-item", item: "berries" });
