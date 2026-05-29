@@ -3,7 +3,7 @@ import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import type { Prisma } from "@prisma/client";
 import { ensureTorchResourceTypes, TORCH_DURATION_MS, TORCH_FADING_MS } from "./fire";
 import { resourceTypeDisplayName } from "./corpses";
-import { COOKED_MEAT_KEY, eatCookedMeat } from "./meat";
+import { COOKED_MEAT_KEY, RAW_MEAT_KEY, eatCookedMeat } from "./meat";
 
 export type UsableInventoryResource = "berries" | "herbs" | "mushrooms" | "cooked_meat";
 
@@ -37,6 +37,12 @@ const RESOURCE_ALIASES: Record<string, string> = {
   "смаженого м'яса": COOKED_MEAT_KEY,
   "м'ясо": COOKED_MEAT_KEY,
   "м’ясо": COOKED_MEAT_KEY,
+  raw_meat: RAW_MEAT_KEY,
+  "raw meat": RAW_MEAT_KEY,
+  "сире м'ясо": RAW_MEAT_KEY,
+  "сире м’ясо": RAW_MEAT_KEY,
+  "сирого м'яса": RAW_MEAT_KEY,
+  "сирого м’яса": RAW_MEAT_KEY,
   torch: "torch",
   torches: "torch",
   факел: "torch",

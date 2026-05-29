@@ -45,6 +45,8 @@ These values are balance constants, not final design. Player-facing UI should st
 - herbs can be used when wounded to restore a small amount of HP.
 - carried resource stacks can be inspected or dropped as a first simple item-action pass.
 
+When a carried resource stack is inspected from `Речі`, the item card should show direct relevant actions for that item instead of forcing the player back to the full inventory list. Current examples include eating edible items, cooking raw meat when a campfire is available, adding `twigs` to a nearby campfire, lighting/dousing torches and dropping the inspected item.
+
 These effects are intentionally modest and player-facing text should stay descriptive. Fuller food, cooking, medicine, herbalism, potions and prepared remedies remain later systems.
 
 ## Hunger Direction
@@ -63,6 +65,8 @@ When in-world time becomes more complete, hunger should also rise naturally with
 4. eat cooked meat to ease hunger by `5`.
 
 A torch should not be enough for cooking. The first cooking pass is imperfect: roughly three attempts out of five become cooked meat, while failed attempts consume the raw meat for now. Later systems can split meat by species and add bones, hide, fur, feathers, freshness, spoilage, tools and skill-based yields.
+
+After freshening, the original creature record may remain in the world as `рештки` until corpse decay removes it. Player-facing text should say the usable meat has already been taken rather than exposing internal `freshened_by_player` state.
 
 ## Campfire Loop
 

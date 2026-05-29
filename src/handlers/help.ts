@@ -3,6 +3,7 @@ import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { isPlayerAutoEnabled } from "./auto";
 import { getPlayerByTelegramId } from "../services/players";
 import { hasCompletedTutorial } from "../services/tutorial";
+import { safeAnswerCallbackQuery } from "../utils/telegram";
 
 export const HELP_TEXT = [
   "🧭 <b>Що робити в Порубіжжі Чорнолісу</b>",
@@ -54,8 +55,8 @@ export const COMMANDS_TEXT_PAGES = [
     "• /look, look, див, дивитися — озирнутися в місцині.",
     "• /examine, examine, x, роздивитися, придивитися — уважніший огляд місцини, предмета, істоти або особливості.",
     "• /north /south /west /east, /n /s /w /e, пн/пд/сх/зх — рух сторонами світу.",
-    "• /inside /in, вср, всередину, увійти — увійти в доступний внутрішній прохід.",
-    "• /outside /out, наз, назовні, вийти — вийти назовні.",
+    "• /inside /in /enter, enter bushes, вср, всередину, увійти в кущі — увійти в доступний внутрішній прохід.",
+    "• /outside /out /leave, leave cave, наз, назовні, вийти з кущів — вийти назовні.",
     "• go north, йти на південь, рушити на захід — природні фрази руху.",
     "",
     "Огляд і місцевість:",
@@ -122,8 +123,7 @@ export const COMMANDS_TEXT_PAGES = [
   [
     "🧾 Заплановані команди й напрямки",
     "",
-    "Найближчий окремий пакет після швидкої навіґації:",
-    "• enter [place] / leave — входи й виходи з будівель або внутрішніх місць.",
+    "Найближчий окремий пакет після швидкої навіґації та enter/leave:",
     "• reply <message> — відповідь тому, хто звернувся до вас, навіть якщо його не видно через темряву чи прихованість.",
     "• whisper [player] [message] — шепіт одній людині.",
     "• shout — крик на регіон або світ із великою витратою снаги.",
@@ -154,6 +154,29 @@ export const COMMANDS_TEXT_PAGES = [
   ].join("\n"),
 ];
 
+function commandsPageKeyboard(pageIndex: number) {
+  const keyboard = new InlineKeyboard();
+  const total = COMMANDS_TEXT_PAGES.length;
+  if (pageIndex > 0) keyboard.text("↩️ Назад", `commands:page:${pageIndex - 1}`);
+  keyboard.text(`${pageIndex + 1}/${total}`, "commands:noop");
+  if (pageIndex < total - 1) keyboard.text("Далі ↪️", `commands:page:${pageIndex + 1}`);
+  return keyboard;
+}
+
+async function replyWithCommandsPage(ctx: any, pageIndex = 0) {
+  const safePage = Math.max(0, Math.min(COMMANDS_TEXT_PAGES.length - 1, pageIndex));
+  await ctx.reply(COMMANDS_TEXT_PAGES[safePage], {
+    reply_markup: commandsPageKeyboard(safePage),
+  });
+}
+
+async function editCommandsPage(ctx: any, pageIndex: number) {
+  const safePage = Math.max(0, Math.min(COMMANDS_TEXT_PAGES.length - 1, pageIndex));
+  await ctx.editMessageText(COMMANDS_TEXT_PAGES[safePage], {
+    reply_markup: commandsPageKeyboard(safePage),
+  });
+}
+
 export async function sendHelp(ctx: any) {
   const auto = ctx.from ? isPlayerAutoEnabled(ctx.from.id) : false;
   await ctx.reply(HELP_TEXT, {
@@ -172,13 +195,18 @@ export async function sendHelp(ctx: any) {
 }
 
 export async function sendCommands(ctx: any) {
-  for (const page of COMMANDS_TEXT_PAGES) {
-    await ctx.reply(page);
-  }
+  await replyWithCommandsPage(ctx, 0);
 }
 
 export function registerHelpHandlers(bot: Bot) {
   bot.command("help", sendHelp);
   bot.command("commands", sendCommands);
+  bot.callbackQuery(/^commands:page:(\d+)$/, async (ctx) => {
+    await safeAnswerCallbackQuery(ctx);
+    await editCommandsPage(ctx, Number(ctx.match[1]));
+  });
+  bot.callbackQuery("commands:noop", async (ctx) => {
+    await safeAnswerCallbackQuery(ctx);
+  });
   bot.hears(["❔ Допомога", "🧭 Допомога", "Допомога"], sendHelp);
 }

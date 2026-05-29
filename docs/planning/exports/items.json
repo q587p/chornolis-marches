@@ -245,6 +245,26 @@
     "file": "docs/planning/items/FOOD-001-corpse-freshening-meat-and-campfire-cooking.md"
   },
   {
+    "id": "FOOD-002",
+    "title": "Spoiled meat and risky eating",
+    "status": "backlog",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "food",
+      "cooking",
+      "survival",
+      "hunger",
+      "risk"
+    ],
+    "depends_on": [
+      "FOOD-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FOOD-002-spoiled-meat-and-risky-eating.md"
+  },
+  {
     "id": "HMYZ-001-A",
     "title": "Audit hmyz model",
     "status": "next",

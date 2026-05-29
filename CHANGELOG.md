@@ -9,6 +9,23 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.5 - Enter and leave text navigation - 12026-05-29
+
+### Added
+
+- Added `/enter`, `enter [place]`, `/leave` and `leave [place]` aliases on top of the existing `INSIDE` / `OUTSIDE` movement directions.
+- Ukrainian natural forms such as `увійти в кущі` and `вийти з кущів` are now covered by input-alias regression tests.
+
+### Changed
+
+- Help, `/commands`, input-alias docs and `CMD-001` now mark the `enter` / `leave` slice as shipped.
+
+### Tests
+
+- Added parser coverage for `/enter`, `enter bushes`, `увійти в кущі`, `/leave`, `leave cave` and `вийти з кущів`.
+
+---
+
 ## 0.13.4 - Quick navigation commands - 12026-05-29
 
 ### Added

@@ -80,7 +80,7 @@ The forest should feel alive even when players do nothing.
 - Дід Лісовик should not react to artificial carried/fuel resources such as torches or twigs disappearing from seed/resource nodes; his depletion warnings are for natural/ecological resources.
 - Add species-specific fear and aggression profiles.
 - Turn hunting history into animal experience, titles and bounded stat improvements.
-- Add creature aggression and defense profiles, including wolves attacking people and herbivores defending offspring or fighting when escape fails.
+- Add creature aggression and defense profiles. Hungry wolves or foxes may attack player characters when hunger is severe enough, but fed predators should prefer avoidance unless self-defense or offspring defense applies. Parents near persistent young may attack preventively or hold ground, and herbivores may defend offspring or fight when escape fails.
 
 ## Example Consequences
 

@@ -36,12 +36,12 @@ These commands are valuable before a full MUD server because they make Telegram 
 - `glance` / `глянути швидко` / `швидко глянути` — quick location read: exits and visible people/creatures, no full description.
 - `exits` / `виходи` — only visible exits from the current location, including locked-visible exits.
 
+0.13.5 shipped the first non-compass movement slice:
+
+- `enter [place]` / `увійти [місце]` / `зайти [місце]` — enter an available inside-style exit.
+- `leave [place]` / `вийти [місце]` / `назовні` — leave the current inside-style area when an outside exit exists.
+
 Remaining scope:
-
-Navigation / location:
-
-- `enter [place]` / `увійти [місце]` / `зайти [місце]` — enter an available inside-style exit or visible feature entrance.
-- `leave` / `вийти` / `назовні` — leave the current inside-style area when an outside exit exists.
 
 Speech:
 

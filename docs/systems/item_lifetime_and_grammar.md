@@ -20,9 +20,13 @@ For corpses, these states describe the current condition of the body. Later peri
 
 0.13.3 adds the first raw meat -> cooked meat -> eat loop as a resource-stack bridge. Future item-instance work should let meat age in inventory and on the ground until it becomes unsuitable, and should allow butchering / freshening a corpse already carried in inventory rather than only a visible corpse lying nearby.
 
+After a corpse is freshened, the creature record can remain in the world as visible `рештки` until decay or cleanup removes it. Player-facing lists must not expose the internal `freshened_by_player` marker or meat-yield note; they should say that the usable meat has already been taken.
+
 In the tutorial dream, berries, herbs and mushrooms may also be treated as visible loose ground resources so a beginner can see the immediate result of dropping simple dream supplies. This is a tutorial bridge, not the final item model: future item instances should track whether a stack was gathered in the dream or brought from the waking world.
 
 Immediate pickup and drop actions should be visible to the room: nearby players receive an observer line, a world event is recorded, and the actor gets a recent-action entry for scribe/admin inspection. This currently covers loose ground resources, corpse pickup, torch-stand pickup and inventory drops.
+
+When a character inspects a carried resource stack in `Речі`, that item card should expose the relevant direct actions for the inspected item: eating edible items, cooking raw meat when a usable fire is nearby, adding `twigs` to a nearby campfire when allowed, lighting or dousing torches when possible, and dropping the inspected item. The inventory overview can still keep broad shortcut actions, but the item card should not force the player to backtrack before acting on the thing they just inspected.
 
 ## Sex, animacy and cases
 
@@ -32,6 +36,8 @@ Ukrainian display text should be chosen through grammar helpers instead of hardc
 - Player and named NPC forms should prefer stored case fields when present: nominative, genitive, dative, accusative, instrumental, locative and vocative.
 - Animacy affects accusative wording: animate beings usually use genitive-like accusative forms, while inanimate objects usually keep nominative-like accusative forms.
 - Corpse text is a mixed case: the corpse object itself is inanimate, but the creature name after `труп` still uses the creature's genitive form.
+- Target lists and location details should also use genitive after `труп` / `рештки`, for example `труп: миші` and `рештки зайця`, not nominative species names.
+- Creature eating actions should use an accusative resource form, for example `їсть траву`, not `їсть трава`.
 - UI code should ask the grammar layer for a context-specific form instead of checking resource keys such as `corpse_rabbit_female` inline.
 
 ## Visible carried things

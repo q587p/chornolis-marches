@@ -20,6 +20,7 @@ import { getPlayerByTelegramId } from "../services/players";
 import { resolveTarget, type ResolvedTarget } from "../services/targets";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { buildExamineLocationKeyboard, buildRestWithQueueChoiceKeyboard } from "../ui/keyboards";
+import { buildInventoryItemKeyboard } from "../ui/inventoryItemKeyboard";
 import { actionQueueReplyOptions, sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { durationSecondsSuffix } from "../utils/durationText";
 import { escapeHtml, stripUnsafeText } from "../utils/text";
@@ -40,11 +41,12 @@ import { addTwigsToCampfire, dousePlayerTorchFromInventory, lightPlayerTorchFrom
 import { requireScribeAdmin } from "../services/adminAccess";
 import { pickUpFirstGroundResourceByKey, pickUpFirstVisibleGroundResourceByKey, type VisibleGroundResourceKey } from "../services/groundItems";
 import { parseSpeechTarget } from "../services/speechTargets";
-import { dropInventoryResourceDetailed, inspectInventoryResource, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
+import { dropInventoryResourceDetailed, inspectInventoryResource, inventoryResourceKeyFromText, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
 import { enterTutorialDream, hasCompletedTutorial, openDreamGate, wakeFromTutorialDream } from "../services/tutorial";
 import { dropObserverText, pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 import { noteKnownMessage } from "../utils/messageTracker";
-import { cookRawMeat } from "../services/meat";
+import { cookRawMeat, isFreshenedCorpse } from "../services/meat";
+import { creatureForms } from "../services/grammar";
 
 type TextTargetRef = {
   type: "player" | "creature";
@@ -157,11 +159,12 @@ async function visibleTextTargets(locationId: number, viewerPlayerId: number): P
 
   const creatureTargets = creatures.map((creature) => {
     const isCorpse = !creature.isAlive && creature.age === "CORPSE";
+    const wasFreshened = isCorpse && isFreshenedCorpse(creature.currentAction);
     return {
       type: "creature" as const,
       id: creature.id,
-      label: isCorpse ? `труп: ${creature.species.name}` : creature.name ?? creature.species.name,
-      actionLabel: normalizeCreatureActionText(creature.currentAction),
+      label: isCorpse ? `${wasFreshened ? "рештки" : "труп"}: ${creatureForms(creature).genitive}` : creature.name ?? creature.species.name,
+      actionLabel: wasFreshened ? "м’ясо вже знято" : normalizeCreatureActionText(creature.currentAction),
       canGreet: !isCorpse && creature.species.kind !== "ANIMAL",
       searchKeys: targetSearchKeysForCreature(creature),
     };
@@ -426,12 +429,28 @@ async function submitCookMeat(ctx: any) {
   }
 }
 
+async function replyWithInventoryInspection(ctx: any, playerId: number, target: string) {
+  const text = await inspectInventoryResource(playerId, target);
+  const resourceKey = inventoryResourceKeyFromText(target);
+  const keyboard = await buildInventoryItemKeyboard(playerId, resourceKey);
+  await ctx.reply(text, { reply_markup: keyboard });
+}
+
+async function tryReplyWithInventoryInspection(ctx: any, playerId: number, target: string) {
+  try {
+    await replyWithInventoryInspection(ctx, playerId, target);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function submitInventoryInspect(ctx: any, target: string) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   try {
-    await ctx.reply(await inspectInventoryResource(player.id, target));
+    await replyWithInventoryInspection(ctx, player.id, target);
   } catch (error) {
     await ctx.reply(error instanceof Error ? error.message : "Не вдалося роздивитися це.");
   }
@@ -491,10 +510,14 @@ async function submitTargetAction(bot: Bot, ctx: any, action: TargetAction, targ
 
   const locationId = player.currentLocationId;
   const visibleTargets = await visibleTextTargets(locationId, player.id);
-  if (!visibleTargets.length) return void (await ctx.reply("Поруч немає видимих цілей."));
+  if (!visibleTargets.length) {
+    if (action === "inspect" && (await tryReplyWithInventoryInspection(ctx, player.id, targetQuery))) return;
+    return void (await ctx.reply("Поруч немає видимих цілей."));
+  }
 
   const match = bestTargetMatch(targetQuery, visibleTargets);
   if (match.kind === "none") {
+    if (action === "inspect" && (await tryReplyWithInventoryInspection(ctx, player.id, targetQuery))) return;
     await ctx.reply(`Не бачу такої цілі поруч. Видимі цілі:\n${targetListText(visibleTargets)}`);
     return;
   }

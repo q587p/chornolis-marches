@@ -26,6 +26,7 @@ import { lifetimeSummary } from "./itemLifetime";
 import { playerShowsTechnicalDetails } from "./technicalDetails";
 import { dreamGateStatusText, isDreamGateFeature, lockedExitDirections, lockedExitLabel, rememberTutorialObservationLesson } from "./tutorial";
 import { formatObservedPostureText } from "../utils/playerText";
+import { isFreshenedCorpse } from "./meat";
 
 const COMPACT_EXIT_ORDER = ["NORTH", "WEST", "SOUTH", "EAST", "UP", "DOWN", "INSIDE", "OUTSIDE"];
 const GATHERABLE_RESOURCE_KEYS = ["berries", "mushrooms", "herbs"] as const;
@@ -96,15 +97,18 @@ function visibleTargets(
 
   const corpses = location.creatures
     .filter(isVisibleCorpse)
-    .map((c: any) => ({
-      type: "creature" as const,
-      id: c.id,
-      label: `труп: ${c.species.name}`,
-      actionLabel: c.currentAction ? normalizeCreatureActionText(c.currentAction) : undefined,
-      canGreet: false,
-      isAnimal: c.species.kind === "ANIMAL",
-      isCorpse: true,
-    }));
+    .map((c: any) => {
+      const wasFreshened = isFreshenedCorpse(c.currentAction);
+      return {
+        type: "creature" as const,
+        id: c.id,
+        label: `${wasFreshened ? "рештки" : "труп"}: ${creatureForms(c).genitive}`,
+        actionLabel: wasFreshened ? "м’ясо вже знято" : c.currentAction ? normalizeCreatureActionText(c.currentAction) : undefined,
+        canGreet: false,
+        isAnimal: c.species.kind === "ANIMAL",
+        isCorpse: true,
+      };
+    });
 
   return [...players, ...livingCreatures, ...corpses];
 }
@@ -206,6 +210,7 @@ function featureSearchKeys(feature: any) {
 async function resolveInteractiveLocationFeature(locationId: number, query: string) {
   const normalized = normalizeFeatureQuery(query);
   if (!normalized) return null;
+  if (/^\d+$/.test(normalized)) return null;
 
   const features = (await prisma.locationFeature.findMany({
     where: { locationId, isActive: true },
@@ -739,7 +744,12 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   const corpses = location.creatures.filter(isVisibleCorpse);
   const groundItems = location.resources.filter((r) => isVisibleGroundResource(r, location));
   const lyingLines = [
-    ...corpses.map((c) => `труп ${creatureForms(c).genitive}; стан: ${lifetimeSummary(c.corpseDecayTicksLeft, c.species.corpseDecayTicks, { showTechnicalDetails })}`),
+    ...corpses.map((c) => {
+      const wasFreshened = isFreshenedCorpse(c.currentAction);
+      const prefix = wasFreshened ? "рештки" : "труп";
+      const suffix = wasFreshened ? "; м’ясо вже знято" : "";
+      return `${prefix} ${creatureForms(c).genitive}; стан: ${lifetimeSummary(c.corpseDecayTicksLeft, c.species.corpseDecayTicks, { showTechnicalDetails })}${suffix}`;
+    }),
     ...groundItems.map(groundItemLine),
   ];
   const lyingText = lyingLines.length

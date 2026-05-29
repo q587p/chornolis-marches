@@ -95,6 +95,7 @@ const DIRECTION_ALIASES: Record<string, Direction> = {
   "донизу": "DOWN",
   "спуститися": "DOWN",
 
+  enter: "INSIDE",
   inside: "INSIDE",
   in: "INSIDE",
   "вср": "INSIDE",
@@ -103,6 +104,7 @@ const DIRECTION_ALIASES: Record<string, Direction> = {
   "увійти": "INSIDE",
   "зайти": "INSIDE",
 
+  leave: "OUTSIDE",
   outside: "OUTSIDE",
   out: "OUTSIDE",
   "наз": "OUTSIDE",
@@ -468,7 +470,7 @@ function parseDirectionPhrase(text: string): ParsedAliasCommand | null {
     if (direction) return { kind: "move", direction };
   }
 
-  const enterExitMatch = text.match(/^(?:увійти|зайти|вийти|піднятися|спуститися)(?:\s+(.+))?$/);
+  const enterExitMatch = text.match(/^(?:enter|leave|увійти|зайти|вийти|піднятися|спуститися)(?:\s+(.+))?$/);
   if (enterExitMatch) {
     const verb = text.split(" ")[0];
     const byVerb = DIRECTION_ALIASES[verb];

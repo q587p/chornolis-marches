@@ -118,25 +118,27 @@ export async function resolveTarget(type: string, id: number, locationId: number
     const corpseLifetime = lifetimeSummary(corpseLeft, target.species.corpseDecayTicks, { showTechnicalDetails });
 
     if (isCorpse) {
+      const corpseLabel = wasFreshened ? "рештки" : "труп";
+      const corpseIntro = wasFreshened ? `Це рештки ${forms.genitive}.` : `Це труп ${forms.genitive}.`;
       return {
         kind: "creature",
         id: target.id,
-        name: `труп: ${forms.genitive}`,
+        name: `${corpseLabel}: ${forms.genitive}`,
         forms: {
-          nominative: `труп: ${forms.genitive}`,
-          genitive: `трупа ${forms.genitive}`,
-          dative: `трупу ${forms.genitive}`,
-          accusative: `труп ${forms.genitive}`,
-          instrumental: `трупом ${forms.genitive}`,
-          locative: `трупі ${forms.genitive}`,
-          vocative: `трупе ${forms.genitive}`,
+          nominative: `${corpseLabel}: ${forms.genitive}`,
+          genitive: `${corpseLabel === "рештки" ? "решток" : "трупа"} ${forms.genitive}`,
+          dative: `${corpseLabel === "рештки" ? "решткам" : "трупу"} ${forms.genitive}`,
+          accusative: `${corpseLabel} ${forms.genitive}`,
+          instrumental: `${corpseLabel === "рештки" ? "рештками" : "трупом"} ${forms.genitive}`,
+          locative: `${corpseLabel === "рештки" ? "рештках" : "трупі"} ${forms.genitive}`,
+          vocative: `${corpseLabel} ${forms.genitive}`,
         },
         canGreet: false,
         canAttack: false,
         isAnimal,
         isCorpse: true,
         canFreshen,
-        inspect: `Це труп ${forms.genitive}.\n\nВін розкладається.\nСтан: ${corpseLifetime}.\n${canFreshen ? "\nТруп ще відносно свіжий. Його можна спробувати освіжувати." : wasFreshened ? "\nЗ цього трупа вже зняли придатне м'ясо." : "\nТруп уже надто далеко розклався для освіжування."}`,
+        inspect: `${corpseIntro}\n\nВін розкладається.\nСтан: ${corpseLifetime}.\n${canFreshen ? "\nТруп ще відносно свіжий. Його можна спробувати освіжувати." : wasFreshened ? "\nЗ нього вже зняли придатне м'ясо; лишилося те, що світ ще має розкласти або забрати." : "\nТруп уже надто далеко розклався для освіжування."}`,
       };
     }
 

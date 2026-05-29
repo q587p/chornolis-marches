@@ -4,6 +4,7 @@ import { BASE_HP, BASE_STAMINA, HEALTH_REGEN_PER_INTERVAL, PASSIVE_HEALTH_REGEN_
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { renderLocationBrief, renderLocationFeatureInteractionByQuery } from "../services/locations";
 import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
+import { buildInventoryItemKeyboard } from "../ui/inventoryItemKeyboard";
 import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } from "./auto";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { formatFatigueText, formatHungerState, formatPlayerStats, formatPostureText, formatVitalsLine } from "../utils/playerText";
@@ -105,11 +106,11 @@ function inventoryActionLabel(resource: any) {
 
 function buildInventoryKeyboard(resources: any[] = [], options: { canAddTwigs?: boolean; canDouseTorch?: boolean; canLightTorch?: boolean; canCookMeat?: boolean } = {}) {
   const keyboard = new InlineKeyboard();
-  if (hasInventoryResource(resources, "berries")) keyboard.text("🫐 З'їсти ягоди", "inventory:use:berries").row();
-  if (hasInventoryResource(resources, "mushrooms")) keyboard.text("🍄 З'їсти гриби", "inventory:use:mushrooms").row();
-  if (hasInventoryResource(resources, "herbs")) keyboard.text("🌿 З'їсти лікарські трави", "inventory:use:herbs").row();
-  if (hasInventoryResource(resources, COOKED_MEAT_KEY)) keyboard.text("🥩 З'їсти смажене м'ясо", `inventory:use:${COOKED_MEAT_KEY}`).row();
-  if (options.canCookMeat && hasInventoryResource(resources, RAW_MEAT_KEY)) keyboard.text("🔥 Підсмажити м'ясо", "inventory:cook:meat").row();
+  if (hasInventoryResource(resources, "berries")) keyboard.text("🫐 З’їсти ягоди", "inventory:use:berries").row();
+  if (hasInventoryResource(resources, "mushrooms")) keyboard.text("🍄 З’їсти гриби", "inventory:use:mushrooms").row();
+  if (hasInventoryResource(resources, "herbs")) keyboard.text("🌿 З’їсти лікарські трави", "inventory:use:herbs").row();
+  if (hasInventoryResource(resources, COOKED_MEAT_KEY)) keyboard.text("🥩 З’їсти смажене м’ясо", `inventory:use:${COOKED_MEAT_KEY}`).row();
+  if (options.canCookMeat && hasInventoryResource(resources, RAW_MEAT_KEY)) keyboard.text("🔥 Підсмажити м’ясо", "inventory:cook:meat").row();
   if (options.canAddTwigs) keyboard.text("🪵 Підкинути хмиз", "inventory:add-twigs").row();
   if (options.canLightTorch) keyboard.text("🔥 Запалити факел", "inventory:light:torch").row();
   if (options.canDouseTorch) keyboard.text("🫧 Притушити факел", "inventory:douse:torch").row();
@@ -431,7 +432,7 @@ export function registerPlayerHandlers(bot: Bot) {
 
     try {
       const text = await inspectInventoryResource(player.id, ctx.match[1]);
-      const keyboard = new InlineKeyboard().text("↩️ До речей", "character:inventory");
+      const keyboard = await buildInventoryItemKeyboard(player.id, ctx.match[1]);
       await ctx.editMessageText(text, { reply_markup: keyboard });
     } catch (error) {
       await ctx.reply(error instanceof Error ? error.message : "Не вдалося роздивитися це.");

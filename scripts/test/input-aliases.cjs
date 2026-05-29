@@ -3,7 +3,10 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const { normalizeInput, parseAlias, suggestAliasInputs } = require("../../src/input/aliases");
+const { inventoryResourceKeyFromText } = require("../../src/services/inventoryUse");
 const { isDreamGateOpeningPhrase } = require("../../src/services/tutorial");
+const { normalizeCreatureActionText } = require("../../src/utils/creatureActionText");
+const { resourceAccusativeName } = require("../../src/utils/resourceText");
 
 function assertAlias(input, expected) {
   assert.deepEqual(parseAlias(input), expected, `Unexpected alias parse for: ${input}`);
@@ -30,8 +33,14 @@ assertAlias("йти на захід", { kind: "move", direction: "WEST" });
 assertAlias("/n", { kind: "move", direction: "NORTH" });
 assertAlias("вср", { kind: "move", direction: "INSIDE" });
 assertAlias("/inside", { kind: "move", direction: "INSIDE" });
+assertAlias("/enter", { kind: "move", direction: "INSIDE" });
+assertAlias("enter bushes", { kind: "move", direction: "INSIDE" });
+assertAlias("увійти в кущі", { kind: "move", direction: "INSIDE" });
 assertAlias("наз", { kind: "move", direction: "OUTSIDE" });
 assertAlias("назовні", { kind: "move", direction: "OUTSIDE" });
+assertAlias("/leave", { kind: "move", direction: "OUTSIDE" });
+assertAlias("leave cave", { kind: "move", direction: "OUTSIDE" });
+assertAlias("вийти з кущів", { kind: "move", direction: "OUTSIDE" });
 
 assertAlias("хто", { kind: "who" });
 assertAlias("хтоя", { kind: "me" });
@@ -118,6 +127,10 @@ assertAlias("butcher corpse", { kind: "target-action", action: "freshen", target
 assertAlias("розібрати труп", { kind: "target-action", action: "freshen", target: "труп" });
 assertAlias("викинути факел", { kind: "drop-inventory-item", target: "факел" });
 assertAlias("річ ягоди", { kind: "inspect-inventory-item", target: "ягоди" });
+assert.equal(inventoryResourceKeyFromText("mushroom"), "mushrooms");
+assert.equal(inventoryResourceKeyFromText("raw meat"), "raw_meat");
+assert.equal(resourceAccusativeName({ key: "grass", name: "трава" }), "траву");
+assert.equal(normalizeCreatureActionText("їсть трава"), "їсть траву");
 assertAlias("кивнути Здравомир", { kind: "social-signal", signal: "nod", target: "здравомир" });
 
 assert.equal(parseAlias("це точно не команда"), null);
