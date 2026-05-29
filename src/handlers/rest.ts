@@ -5,7 +5,7 @@ import { accelerateFirstQueuedPlayerAction, hasPlayerActionQueueControls, player
 import { buildRestWithQueueChoiceKeyboard } from "../ui/keyboards";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { actionQueueReplyOptions } from "../utils/actionQueueUi";
-import { isTutorialFastRestLocationKey, rememberTutorialCommandHint } from "../services/tutorial";
+import { isTutorialFastRestLocationKey, rememberTutorialCommandHint, TUTORIAL_DEEP_REST_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY } from "../services/tutorial";
 import { prisma } from "../db";
 import { getPlayerRestStaminaCap } from "../services/locationFeatures";
 
@@ -29,9 +29,15 @@ async function beginRestNow(ctx: any, playerId: number) {
   const location = player?.currentLocationId
     ? await prisma.cellLocation.findUnique({ where: { id: player.currentLocationId }, select: { key: true } })
     : null;
-  const tutorialComment = player && isTutorialFastRestLocationKey(location?.key) && await rememberTutorialCommandHint(player.id, "rest", player.currentLocationId)
-    ? "\n\nСон радить:\n«Відпочинок — це не сон, а короткий присілок. Тут жар навчить, як швидко повертається подих.»\n\nДрімота пирхає:\n«Сядеш — і ще захочеш сидіти. Але добре, хоч не падаєш.»"
-    : "";
+  let tutorialComment = "";
+  if (player && isTutorialFastRestLocationKey(location?.key) && await rememberTutorialCommandHint(player.id, "rest", player.currentLocationId)) {
+    const sonLine = location?.key === TUTORIAL_REST_LOCATION_KEY
+      ? "Відпочинок — це не сон, а короткий присілок. Лавка лише нагадує тілу, що можна ненадовго сісти й повернути подих."
+      : location?.key === TUTORIAL_DEEP_REST_LOCATION_KEY
+        ? "Відпочинок — це не сон, а короткий присілок. Тут жар навчить, як швидко повертається подих."
+        : "Відпочинок — це не сон, а короткий присілок.";
+    tutorialComment = `\n\nСон радить:\n«${sonLine}»\n\nДрімота пирхає:\n«Сядеш — і ще захочеш сидіти. Але добре, хоч не падаєш.»`;
+  }
   await replyOrEdit(ctx, `${await playerRestStatusText(playerId)}${suffix}${tutorialComment}`);
 }
 

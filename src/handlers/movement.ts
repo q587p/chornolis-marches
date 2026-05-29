@@ -18,6 +18,10 @@ const COMMAND_DIRECTIONS: Record<string, Direction> = {
   w: "WEST",
   east: "EAST",
   e: "EAST",
+  inside: "INSIDE",
+  in: "INSIDE",
+  outside: "OUTSIDE",
+  out: "OUTSIDE",
 };
 
 export async function submitMove(bot: Bot, ctx: any, direction: Direction, answerCallback = false) {
@@ -72,7 +76,7 @@ export function registerMovementHandlers(bot: Bot) {
     await submitMove(bot, ctx, COMMAND_DIRECTIONS[ctx.match[1]], true);
   });
 
-  bot.command(["north", "n", "south", "s", "west", "w", "east", "e"], async (ctx) => {
+  bot.command(["north", "n", "south", "s", "west", "w", "east", "e", "inside", "in", "outside", "out"], async (ctx) => {
     const command = ctx.message?.text?.split(/\s+/)[0]?.replace(/^\//, "").toLowerCase();
     const direction = command ? COMMAND_DIRECTIONS[command] : undefined;
     if (!direction) return void (await ctx.reply("Невідомий напрямок."));

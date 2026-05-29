@@ -9,6 +9,31 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.12.14 - Tutorial flow and quote polish - 12026-05-29
+
+### Added
+
+- Added a matching locked dream-gate feature on the tutorial hub side, so the gate passage is visibly locked from both directions.
+- Added natural speech variants and shorthand text aliases for the tutorial gate phrase, including Ukrainian `говорити`, `ск`, `сказ` and `гов` forms.
+- Added an inspectable tutorial hub bush feature with an `INSIDE` movement action, plus input aliases for non-compass inside/outside movement.
+- Added near-term planning notes for per-command help pages and dream item origin tracking.
+
+### Changed
+
+- The tutorial dream gate now opens and closes both sides of the passage together, and closing notifications rebuild each player's current reply keyboard.
+- Tutorial observation voices now render as separate quote messages, and the placeholder skill-progress result is sent as a separate HTML message.
+- The tutorial observation lesson now belongs to the fox-motion feature interaction instead of triggering from the whole location examine view.
+- The tutorial rest branch now uses a rest-seat feature for the first rest room while keeping the deeper dream fire as the faster rest room.
+- Help and input-alias documentation now describe the expanded `/say` aliases and visible locked exits from both sides of the dream gate.
+
+### Fixed
+
+- Location and region notifications no longer replace current reply keyboards with an empty generic keyboard when no inline keyboard is provided.
+- The dream gate close message no longer describes only the south path after both sides are locked.
+- Parser regression tests now use a neutral target example instead of a real player name.
+
+---
+
 ## 0.12.13 - Tutorial speech and onboarding polish - 12026-05-29
 
 ### Added

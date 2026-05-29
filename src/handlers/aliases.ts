@@ -22,7 +22,7 @@ import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { buildExamineLocationKeyboard, buildRestWithQueueChoiceKeyboard } from "../ui/keyboards";
 import { actionQueueReplyOptions, sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { durationSecondsSuffix } from "../utils/durationText";
-import { stripUnsafeText } from "../utils/text";
+import { escapeHtml, stripUnsafeText } from "../utils/text";
 import { normalizeCreatureActionText } from "../utils/creatureActionText";
 import { sendHelp } from "./help";
 import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } from "./auto";
@@ -52,6 +52,19 @@ type TextTargetRef = {
   canGreet: boolean;
   searchKeys: string[];
 };
+
+function quoteBlock(text: string) {
+  return `<blockquote>${escapeHtml(text)}</blockquote>`;
+}
+
+async function sendFeatureFollowups(ctx: any, view: any) {
+  for (const message of view.quoteMessages ?? []) {
+    await ctx.reply(`${escapeHtml(message.title)}:\n${quoteBlock(message.text)}`, { parse_mode: "HTML" });
+  }
+  for (const message of view.followupMessages ?? []) {
+    await ctx.reply(message.text, { parse_mode: "HTML" });
+  }
+}
 
 function normalizeTargetKey(value: string) {
   return normalizeInput(value)
@@ -224,6 +237,7 @@ async function replyWithBorderMarkerInspection(ctx: any) {
   const view = await renderLocationFeatureInteraction(feature.id, player.id);
   if (!view) return void (await ctx.reply("Тут не видно межового знака, який можна роздивитися."));
   await ctx.reply(view.text, { reply_markup: view.keyboard });
+  await sendFeatureFollowups(ctx, view);
 }
 
 async function replyWithAll(ctx: any, showDead?: boolean) {

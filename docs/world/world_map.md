@@ -74,6 +74,7 @@ y
 - `under_bridge_18_05` — SOUTH → `riverbank_18_04`
 - `closed_east_gate` — EAST is a visible locked exit (Зачинені ворота).
 - `dream_tutorial_gate` — SOUTH is a visible locked exit (Брама Сну).
+- `dream_tutorial_hub` — NORTH back to `dream_tutorial_gate` is the matching visible locked exit while Брама Сну is closed.
 
 ## Editing
 

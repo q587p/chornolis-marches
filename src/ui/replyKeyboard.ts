@@ -4,7 +4,7 @@ import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import { formatLifeState, formatResourceState } from "../utils/playerText";
 import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
-import { DREAM_GATE_FEATURE_KEY, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_HUB_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SAFETY_LOCATION_KEY, hasTutorialForagingSuccess, isTutorialLocation, lockedExitDirections } from "../services/tutorial";
+import { DREAM_GATE_FEATURE_KEYS, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_HUB_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SAFETY_LOCATION_KEY, hasTutorialForagingSuccess, isTutorialLocation, lockedExitDirections } from "../services/tutorial";
 
 type MainKeyboardState = {
   isAuto?: boolean;
@@ -98,7 +98,7 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
           z: true,
           region: { select: { key: true } },
           features: {
-            where: { key: DREAM_GATE_FEATURE_KEY, isActive: true },
+            where: { key: { in: [...DREAM_GATE_FEATURE_KEYS] }, isActive: true },
             select: { id: true },
           },
           exitsFrom: {

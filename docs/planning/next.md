@@ -28,6 +28,7 @@ Good small follow-ups if a narrow patch is wanted:
 - Expand ONB-001 tutorial branches from `Дрімотна Межа`: social signals, observation/tracks, fire/light and deeper danger/respawn safety.
 - Extend the first observation-learning MVP after `0.12.8`: add attack/following variants, then replace the tutorial-only event flag with real skill progress once progression exists.
 - Add the next item-level inventory actions after the 0.11.12 first use/drop pass: better per-item details, corpses, safer dropped-item pickup, and future item instances for timers/quality/origin.
+- Keep dream tutorial inventory cleanup honest: сонні ягоди/трави gathered in the tutorial should be tracked separately from real carried resources, so leaving the dream removes only dream-origin items.
 - Tune the first berries/herbs use loop after playtesting: hunger relief, small healing text, edge cases and how this should grow into cooking, medicine and herbalism.
 - Add the first **animal-restoration offering** loop: small hare/mouse statues or similar forest charms where players can leave berries or herbs; after a delay, if local or regional prey population is low, a pair of young animals can appear without admin intervention.
 - Add a low-prey warning from Дід Лісовик when all rabbits, mice or other basic prey disappear from the relevant scope. If he is asleep, the message can be framed as him mumbling through sleep, still heard across the borderland.
