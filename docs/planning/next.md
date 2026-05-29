@@ -12,6 +12,7 @@ The current lane is the three-month vertical slice:
 
 ## 0.13 Next
 
+- ITEM-001: pickup versus gather command semantics.
 - ONB-002: character name onboarding polish.
 - ONB-001: dream tutorial compact completion.
 - SURV-001: beginner return / `Повернення`.
@@ -39,6 +40,7 @@ The current lane is the three-month vertical slice:
 These are still `backlog`, but recent work makes them worth reviewing before the next patch sequence.
 
 - Inventory item actions: the dedicated inventory view exists, and the 0.12.15 drop feedback pass makes the item-instance gap more visible. Item details, safer dropped-item pickup, dream-item origin and richer per-item actions are now small enough to promote when the survival loop needs them.
+- Pickup/gather command semantics: `підібрати`/`take` should mean visible ground-item pickup, while `зібрати`/`gather` should mean spending time and stamina on a local resource node. This has been promoted to `ITEM-001`.
 - PERF-001: runtime performance plan and creature simulation budget. Recent production logs show `/all` and large creature counts are already visible pressure points; next performance work should keep following the recorded plan.
 - ADM-001: admin permissions, name approval and restricted reset hardening. A first `Писар`/admin gate exists now, so remaining near-term work is audit logging, clearer role UX, first name-review tools and closing any leftover dangerous paths.
 - Speech reply UX: `/reply`, `Відповісти` and `Відповісти як...` for addressed speech. This should probably stay behind the chat/social polish lane, not the ecology lane.

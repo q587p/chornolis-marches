@@ -375,6 +375,24 @@
     "file": "docs/planning/items/ICE-004-construction.md"
   },
   {
+    "id": "ITEM-001",
+    "title": "Pickup versus gather command semantics",
+    "status": "next",
+    "type": "bug",
+    "area": "inventory",
+    "priority": "high",
+    "tags": [
+      "aliases",
+      "pickup",
+      "gather",
+      "inventory",
+      "ground-items"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/ITEM-001-pickup-vs-gather-semantics.md"
+  },
+  {
     "id": "LEARN-001-A",
     "title": "Minimal learning storage decision",
     "status": "next",

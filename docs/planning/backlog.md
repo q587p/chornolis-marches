@@ -11,7 +11,7 @@ These may become `next` after 0.13-0.15 foundations land.
 - Starter settlement skeleton beyond the closed gate.
 - First useful NPC roles: guard, hunter, herbalist, fisher.
 - Ground money and small find objects beyond the first omen.
-- Local pickup/gather observer feedback beyond хмиз.
+- Local pickup/gather observer feedback beyond хмиз, after `ITEM-001` clarifies pickup versus gather command semantics.
 - Bulk ground pickup text commands such as `підібрати все` / `take all`, with clear ordering, visibility checks and item limits.
 - Animal-restoration charm or small offering loop.
 - NPC hunter/archer route that leaves visible signs.
