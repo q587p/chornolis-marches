@@ -776,6 +776,26 @@
     "file": "docs/planning/items/OMEN-001-D.md"
   },
   {
+    "id": "OMEN-002",
+    "title": "Hidden follower spirit MVP",
+    "status": "backlog",
+    "type": "feature",
+    "area": "world",
+    "priority": "medium",
+    "tags": [
+      "omen",
+      "hidden-presence",
+      "spirit",
+      "ambient"
+    ],
+    "depends_on": [
+      "VIS-002",
+      "WORLD-002-hidden-spirit"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/OMEN-002-hidden-follower-spirit-mvp.md"
+  },
+  {
     "id": "ONB-001",
     "title": "Newcomer helper and tutorial",
     "status": "testing",
@@ -1085,6 +1105,145 @@
     "file": "docs/planning/items/SETTLE-001-starter-settlement.md"
   },
   {
+    "id": "SOC-001",
+    "title": "Contacts / acquaintances MVP",
+    "status": "backlog",
+    "type": "feature",
+    "area": "social",
+    "priority": "high",
+    "tags": [
+      "social",
+      "contacts",
+      "acquaintances",
+      "actors",
+      "telegram"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/SOC-001-contacts-acquaintances.md"
+  },
+  {
+    "id": "SOC-002",
+    "title": "Follow intent MVP",
+    "status": "backlog",
+    "type": "feature",
+    "area": "social",
+    "priority": "high",
+    "tags": [
+      "social",
+      "following",
+      "actors",
+      "telegram",
+      "groups"
+    ],
+    "depends_on": [
+      "SOC-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SOC-002-follow-intent.md"
+  },
+  {
+    "id": "SOC-003",
+    "title": "Travel group core",
+    "status": "backlog",
+    "type": "feature",
+    "area": "social",
+    "priority": "high",
+    "tags": [
+      "social",
+      "groups",
+      "travel",
+      "actors",
+      "telegram"
+    ],
+    "depends_on": [
+      "SOC-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SOC-003-travel-group-core.md"
+  },
+  {
+    "id": "SOC-004",
+    "title": "Group movement MVP",
+    "status": "backlog",
+    "type": "feature",
+    "area": "social",
+    "priority": "high",
+    "tags": [
+      "social",
+      "groups",
+      "movement",
+      "action-queue",
+      "stamina"
+    ],
+    "depends_on": [
+      "SOC-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SOC-004-group-movement.md"
+  },
+  {
+    "id": "SOC-005",
+    "title": "Group combat assist conservative plan",
+    "status": "backlog",
+    "type": "feature",
+    "area": "combat",
+    "priority": "medium",
+    "tags": [
+      "social",
+      "groups",
+      "combat",
+      "balance"
+    ],
+    "depends_on": [
+      "SOC-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SOC-005-group-combat-assist.md"
+  },
+  {
+    "id": "SOC-006",
+    "title": "NPC group compatibility",
+    "status": "backlog",
+    "type": "feature",
+    "area": "social",
+    "priority": "medium",
+    "tags": [
+      "social",
+      "groups",
+      "npc",
+      "actors",
+      "creatures"
+    ],
+    "depends_on": [
+      "SOC-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SOC-006-npc-group-compatibility.md"
+  },
+  {
+    "id": "SOC-007",
+    "title": "Telegram UI and copy for contacts / follow / groups",
+    "status": "backlog",
+    "type": "feature",
+    "area": "social",
+    "priority": "medium",
+    "tags": [
+      "social",
+      "telegram",
+      "ui",
+      "copy",
+      "groups"
+    ],
+    "depends_on": [
+      "SOC-001",
+      "SOC-002",
+      "SOC-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SOC-007-telegram-ui-and-copy.md"
+  },
+  {
     "id": "SURV-001",
     "title": "Early respawn support",
     "status": "next",
@@ -1359,6 +1518,24 @@
     "file": "docs/planning/items/VIS-001-E.md"
   },
   {
+    "id": "VIS-002",
+    "title": "Hidden presence foundation",
+    "status": "backlog",
+    "type": "technical",
+    "area": "visibility",
+    "priority": "medium",
+    "tags": [
+      "visibility",
+      "hidden-presence",
+      "targets"
+    ],
+    "depends_on": [
+      "VIS-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/VIS-002-hidden-presence-foundation.md"
+  },
+  {
     "id": "WEB-001",
     "title": "Web map, multi-client game server, messenger bridges and limited MUD gateway",
     "status": "icebox",
@@ -1483,5 +1660,24 @@
     ],
     "exports": {},
     "file": "docs/planning/items/WORLD-002-campfires-and-light.md"
+  },
+  {
+    "id": "WORLD-002-hidden-spirit",
+    "title": "Hidden spirit seed and boundaries",
+    "status": "backlog",
+    "type": "feature",
+    "area": "world",
+    "priority": "medium",
+    "tags": [
+      "world",
+      "hidden-presence",
+      "spirit",
+      "campfire"
+    ],
+    "depends_on": [
+      "WORLD-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WORLD-002-hidden-spirit-seed-and-boundaries.md"
   }
 ]

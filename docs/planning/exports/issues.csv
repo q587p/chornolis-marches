@@ -41,6 +41,7 @@ OMEN-001-A,Choose one living-world omen,next,design,world,medium,"omen,ambient,l
 OMEN-001-B,Omen trigger and rate limit,next,feature,world,medium,"omen,ambient,cooldown",docs/planning/items/OMEN-001-B.md
 OMEN-001-C,Omen local text,next,content,world,medium,"omen,copy,atmosphere",docs/planning/items/OMEN-001-C.md
 OMEN-001-D,Omen trace or object result,next,feature,world,medium,"omen,objects,tracks",docs/planning/items/OMEN-001-D.md
+OMEN-002,Hidden follower spirit MVP,backlog,feature,world,medium,"omen,hidden-presence,spirit,ambient",docs/planning/items/OMEN-002-hidden-follower-spirit-mvp.md
 ONB-001,Newcomer helper and tutorial,testing,feature,onboarding,high,"onboarding,tutorial,beginner,help,ux",docs/planning/items/ONB-001-newcomer-helper-and-tutorial.md
 ONB-001-A,Dream tutorial flow audit,next,design,onboarding,high,"tutorial,audit,core-loop",docs/planning/items/ONB-001-A.md
 ONB-001-B,Hint after first Озирнутися,next,ux,onboarding,high,"tutorial,look,copy",docs/planning/items/ONB-001-B.md
@@ -58,6 +59,13 @@ PLAN-001,Repository docs are the planning source of truth,testing,documentation,
 PROG-002,Observation-based learning,backlog,feature,progression,medium,"skills,observation,npc,animals,mythic",docs/planning/items/PROG-002-observation-learning.md
 PROG-003,Animal experience and titles,backlog,feature,progression,medium,"animals,ecology,progression,combat",docs/planning/items/PROG-003-animal-experience-and-titles.md
 SETTLE-001,Starter settlement,backlog,feature,settlements,high,"settlement,npc,onboarding",docs/planning/items/SETTLE-001-starter-settlement.md
+SOC-001,Contacts / acquaintances MVP,backlog,feature,social,high,"social,contacts,acquaintances,actors,telegram",docs/planning/items/SOC-001-contacts-acquaintances.md
+SOC-002,Follow intent MVP,backlog,feature,social,high,"social,following,actors,telegram,groups",docs/planning/items/SOC-002-follow-intent.md
+SOC-003,Travel group core,backlog,feature,social,high,"social,groups,travel,actors,telegram",docs/planning/items/SOC-003-travel-group-core.md
+SOC-004,Group movement MVP,backlog,feature,social,high,"social,groups,movement,action-queue,stamina",docs/planning/items/SOC-004-group-movement.md
+SOC-005,Group combat assist conservative plan,backlog,feature,combat,medium,"social,groups,combat,balance",docs/planning/items/SOC-005-group-combat-assist.md
+SOC-006,NPC group compatibility,backlog,feature,social,medium,"social,groups,npc,actors,creatures",docs/planning/items/SOC-006-npc-group-compatibility.md
+SOC-007,Telegram UI and copy for contacts / follow / groups,backlog,feature,social,medium,"social,telegram,ui,copy,groups",docs/planning/items/SOC-007-telegram-ui-and-copy.md
 SURV-001,Early respawn support,next,feature,survival,high,"onboarding,respawn,beginner",docs/planning/items/SURV-001-early-respawn.md
 SURV-001-A,Beginner return eligibility helper,next,feature,survival,high,"respawn,beginner,safety",docs/planning/items/SURV-001-A.md
 SURV-001-B,/respawn command skeleton,next,feature,survival,high,"respawn,telegram,command",docs/planning/items/SURV-001-B.md
@@ -73,6 +81,7 @@ VIS-001-B,Hide location details in darkness,next,feature,visibility,high,"visibi
 VIS-001-C,Nearby beings visibility in darkness,next,feature,visibility,high,"visibility,targets,night",docs/planning/items/VIS-001-C.md
 VIS-001-D,Track visibility gate,next,feature,visibility,medium,"visibility,tracks,night",docs/planning/items/VIS-001-D.md
 VIS-001-E,Ground object visibility gate,next,feature,visibility,medium,"visibility,objects,night",docs/planning/items/VIS-001-E.md
+VIS-002,Hidden presence foundation,backlog,technical,visibility,medium,"visibility,hidden-presence,targets",docs/planning/items/VIS-002-hidden-presence-foundation.md
 WEB-001,"Web map, multi-client game server, messenger bridges and limited MUD gateway",icebox,feature,server,medium,"web,map,mud,server,multi-client,architecture",docs/planning/items/web-001-web-map-and-mud-gateway.md
 WORLD-001,Day/night cycle,next,feature,world_time,high,"world,atmosphere,visibility,liminality",docs/planning/items/WORLD-001-day-night-cycle.md
 WORLD-001-A,Tiny world-time model design,next,design,world_time,high,"world-time,day-night",docs/planning/items/WORLD-001-A.md
@@ -80,3 +89,4 @@ WORLD-001-B,Daypart storage,next,technical,world_time,high,"world-time,schema",d
 WORLD-001-C,Daypart helper and tick advancement,next,feature,world_time,high,"world-time,world-tick",docs/planning/items/WORLD-001-C.md
 WORLD-001-D,/time reads world state,next,feature,world_time,high,"world-time,time-command",docs/planning/items/WORLD-001-D.md
 WORLD-002,Campfires and light,next,feature,survival,high,"survival,light,crafting,night",docs/planning/items/WORLD-002-campfires-and-light.md
+WORLD-002-hidden-spirit,Hidden spirit seed and boundaries,backlog,feature,world,medium,"world,hidden-presence,spirit,campfire",docs/planning/items/WORLD-002-hidden-spirit-seed-and-boundaries.md

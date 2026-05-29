@@ -9,6 +9,25 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.4 - Quick navigation commands - 12026-05-29
+
+### Added
+
+- Added shared-alias quick navigation commands: `/glance`, `glance`, `глянути швидко` and `швидко глянути` show a compact current-location read without the full location description.
+- Added `/exits`, `exits`, `виходи` and `куди можна йти` to show only visible exits from the current location, including visible locked exits.
+- Help, `/commands` and input-alias documentation now list the quick navigation commands as current behavior.
+- Added future planning and system documentation for social contacts/groups and hidden presence / hidden follower spirits.
+
+### Changed
+
+- `CMD-001` now records the shipped quick-navigation slice and keeps `enter`, `leave`, `whisper`, `reply` and `shout` as the remaining near-term command work.
+
+### Tests
+
+- Added input-alias regression coverage for the new `glance` and `exits` forms.
+
+---
+
 ## 0.13.3 - Meat and campfire cooking loop - 12026-05-29
 
 ### Added

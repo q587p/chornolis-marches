@@ -17,6 +17,7 @@ GitHub Issues and Projects may mirror this file, but they should not replace it.
 - Skill-based progression through use, observation and apprenticeship instead of abstract character levels.
 - Skills can be discovered by watching NPCs, animals, monsters or mythical beings use them.
 - Small social interactions are core gameplay, not only flavor.
+- Social memory and small group travel: players and NPCs can remember, follow, lead, lag behind and reunite without turning the game into a generic MMO party system.
 - Diegetic Ukrainian UI and grammar-sensitive text.
 - Telegram-native UX with reusable gameplay services underneath.
 
@@ -81,6 +82,7 @@ Primary outcomes:
 - Reading fresh tracks or watching an animal can teach a first tracking hint.
 - Darkness, distance and light affect observation learning.
 - One small living-world omen exists and is rate-limited.
+- Hidden presence remains a prepared follow-up, not an automatic part of the first omen unless the visibility and light foundations are ready.
 
 See:
 
@@ -100,6 +102,9 @@ After 0.15, review:
 - First animal-restoration charm.
 - First NPC hunter/archer loop.
 - Local console client for command/action smoke tests.
+- First `Знайомства` / contacts layer for remembered people and NPCs.
+- Follow intent and player-led `Гурт` MVP.
+- Group movement where capable members follow the leader and exhausted/wounded members can fall behind.
 
 ## Phase 2 — World Attention and Learning
 
@@ -110,6 +115,7 @@ Goal: deepen attention, apprenticeship and skill discovery.
 - Meaningful failures that can teach.
 - Hidden skill discovery through concrete moments, not menu choices.
 - Skill-gated detail in tracks, creature inspection and local signs.
+- Hidden presence foundation: hidden beings may create private atmospheric messages without becoming visible targets.
 
 ## Phase 3 — Survival and Crafting
 
@@ -131,6 +137,7 @@ Goal: deepen the ecosystem until locations feel like places with memory and move
 - Resource pressure and local scarcity.
 - Richer tracks, scents, noise and blood trails.
 - Stealth and visibility.
+- Hidden follower spirits such as `стежник` that can watch, follow briefly, respect magic campfire boundaries and remain outside ordinary target/track UI until revealed by future systems.
 - World history and local memory.
 
 ## Phase 5 — Settlements, Economy and Society
@@ -144,6 +151,8 @@ Goal: connect survival and ecology to people, prices, routes, law and conflict.
 - Local prices and scarcity.
 - Caravans and trade routes.
 - Rumors as imperfect information.
+- Social graph: acquaintances, trust, local memory and NPC relationship hooks.
+- Travel groups / `Гурти` for settlement errands, escorting, guiding and local duties.
 
 ## Phase 6 — Factions, PvP and Frontier Politics
 
@@ -152,7 +161,7 @@ Goal: make the frontier socially contested, not only environmentally dangerous.
 - Kurins, Sich-like groups, local factions and cults.
 - PvP with consequences by region.
 - Guards, witnesses, crime status and bounties.
-- Group goals, raids, protection, ritual duties and route control.
+- Group goals, raids, protection, ritual duties and route control build on the `Гурт` system.
 
 ## Phase 7 — Deep Simulation
 
