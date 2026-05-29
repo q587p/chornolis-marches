@@ -16,6 +16,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Custom-name validation now normalizes casing, apostrophe/separator variants, internal whitespace and hyphen splitting before checking obvious forbidden names.
 - Expanded forbidden-name coverage for creature, spirit, sacred, famous-character and common-word examples.
 - Updated character-name onboarding documentation for the stricter custom-name guardrail.
+- Simplified `/adminHelp` by removing ordinary player-help commands and grouping scribe/admin tools by purpose.
 
 ### Tests
 
