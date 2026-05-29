@@ -44,6 +44,7 @@ Examples:
 - Watching a fisher use a line or net may unlock Fishing.
 - Watching a wolf follow tracks may unlock or improve Tracking.
 - Watching a fox vanish into undergrowth may improve Stealth.
+- Watching a fox or other hunter strike prey during a clear tutorial moment may improve Attack.
 - Watching a mythical being cross a boundary may unlock strange or rare skills.
 
 The first learned level should represent understanding the idea of the skill, not mastery.
@@ -110,6 +111,13 @@ Observation is less likely to teach when:
 
 Ви помічаєте закономірність у його русі.
 Слідування трохи покращено.
+```
+
+```text
+Щось кидається на здобич. За мить миша падає нерухомо.
+
+Ви помічаєте, як короткий ривок вирішує більше, ніж довге переслідування.
+Атака трохи покращена.
 ```
 
 ```text

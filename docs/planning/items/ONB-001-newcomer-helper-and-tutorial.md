@@ -40,7 +40,7 @@ The first version should help a new character understand what they can do withou
 - Keep reviewing `/start`, `/help`, fallback hints and the main keyboard as the tutorial grows, so a brand-new player sees the current game, not an older slice of it.
 - Expand the dream tutorial with branches that nudge the player through:
   - simple tracks and signs;
-  - more observation-learning scenes after the first fox movement proof, especially attack and following lessons once the skill system exists;
+  - more observation-learning scenes after the first fox movement proof, especially a repeatable fox/prey attack scene where `look` or `examine` at the right moment can show `Атака трохи покращена`, plus following lessons once the skill system exists;
   - social signals and nearby characters/creatures;
   - fire/light once the first real day-night loop is in place;
   - deeper danger/respawn safety once `/respawn` exists.
