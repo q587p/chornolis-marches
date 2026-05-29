@@ -5,6 +5,7 @@ const path = require("node:path");
 require("ts-node/register");
 
 const {
+  PREPARED_CHARACTER_NAMES,
   availablePreparedNames,
   normalizeNameForRegistry,
   preparedNameByKey,
@@ -25,13 +26,33 @@ assert.equal(availablePreparedNames(["Ведана"]).some((name) => name.key ==
 assert.equal(availablePreparedNames(["Хтось"]).some((name) => name.key === "vedana"), false);
 assert.ok(preparedNameByKey("tamila"), "Expected reserved prepared name Tamila to remain in registry");
 assert.equal(availablePreparedNames([]).some((name) => name.key === "tamila"), false);
+assert.ok(preparedNameByKey("radomyr"), "Expected new prepared name Radomyr");
+assert.ok(preparedNameByKey("aishe"), "Expected new prepared name Aishe");
+assert.equal(preparedNameByKey("verbovi").forms.accusative, "Вербових");
+
+const preparedKeys = new Set();
+const preparedNominatives = new Set();
+for (const name of PREPARED_CHARACTER_NAMES) {
+  assert.ok(name.forms.nominative, `Prepared name ${name.key} must have nominative`);
+  assert.ok(name.forms.genitive, `Prepared name ${name.key} must have genitive`);
+  assert.ok(name.forms.dative, `Prepared name ${name.key} must have dative`);
+  assert.ok(name.forms.accusative, `Prepared name ${name.key} must have accusative`);
+  assert.ok(name.forms.instrumental, `Prepared name ${name.key} must have instrumental`);
+  assert.ok(name.forms.locative, `Prepared name ${name.key} must have locative`);
+  assert.ok(name.forms.vocative, `Prepared name ${name.key} must have vocative`);
+  assert.equal(preparedKeys.has(name.key), false, `Duplicate prepared name key: ${name.key}`);
+  preparedKeys.add(name.key);
+  const normalized = normalizeNameForRegistry(name.forms.nominative);
+  assert.equal(preparedNominatives.has(normalized), false, `Duplicate prepared nominative: ${name.forms.nominative}`);
+  preparedNominatives.add(normalized);
+}
 
 const masculineNames = availablePreparedNames([], { suggestedGender: "MASCULINE" });
 const feminineNames = availablePreparedNames([], { suggestedGender: "FEMININE" });
 const pluralNames = availablePreparedNames([], { suggestedGender: "PLURAL" });
-assert.ok(masculineNames.length >= 5, `Expected at least 5 available masculine names, got ${masculineNames.length}`);
-assert.ok(feminineNames.length >= 5, `Expected at least 5 available feminine names, got ${feminineNames.length}`);
-assert.ok(pluralNames.length >= 3, `Expected at least 3 available plural names, got ${pluralNames.length}`);
+assert.ok(masculineNames.length >= 8, `Expected at least 8 available masculine names, got ${masculineNames.length}`);
+assert.ok(feminineNames.length >= 8, `Expected at least 8 available feminine names, got ${feminineNames.length}`);
+assert.ok(pluralNames.length >= 6, `Expected at least 6 available plural names, got ${pluralNames.length}`);
 assert.ok(masculineNames.every((name) => name.suggestedGender === "MASCULINE"));
 assert.ok(feminineNames.every((name) => name.suggestedGender === "FEMININE"));
 assert.ok(pluralNames.every((name) => name.suggestedGender === "PLURAL"));

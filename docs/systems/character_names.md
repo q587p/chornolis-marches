@@ -6,12 +6,12 @@ Player-facing onboarding lets a new player either enter their own name or choose
 
 ## Current First Slice
 
-As of `0.12.14`, the implemented first slice includes:
+As of `0.13.0`, the implemented first slice includes:
 
 - a choice after pronoun selection: `Обрати ім’я зі списку`, `Випадкове ім’я` or `Ввести власне ім’я`;
-- a small curated prepared-name data module with stored Ukrainian case forms, origin, rarity and explicit reservation state;
+- a curated prepared-name data module with stored Ukrainian case forms, origin, rarity and explicit reservation state;
 - filtering so already-used player names, named NPC/creature names or reserved prepared names are not offered again;
-- filtering prepared-name choices by the pronoun/grammatical gender selected during onboarding, with at least 5 masculine, 5 feminine and 3 plural-form options in the first pool;
+- filtering prepared-name choices by the pronoun/grammatical gender selected during onboarding, with at least 8 masculine, 8 feminine and 6 plural-form options in the current pool;
 - a random prepared-name pick that uses the same pronoun/gender and availability filters as the visible list;
 - automatic approval for prepared names, because they are treated as already reviewed by scribes;
 - a custom-name warning before free text entry;
@@ -45,7 +45,7 @@ Prepared names should also match the selected onboarding pronoun:
 - `Вона` -> feminine prepared names;
 - `Вони` -> plural-form prepared names.
 
-The first pool only needs enough coverage for playtesting, but the intended later registry should grow toward roughly a hundred reviewed prepared names across genders, regions and rarity bands.
+The current code-level pool is still intentionally modest, but it now covers more playtest variety across masculine, feminine and plural-form choices. The intended later registry should grow toward roughly a hundred reviewed prepared names across genders, regions and rarity bands.
 
 Preferred cultural layers:
 

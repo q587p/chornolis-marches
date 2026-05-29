@@ -9,6 +9,21 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.0 - Prepared-name pool expansion - 12026-05-29
+
+### Added
+
+- Added 9 new prepared character names to the onboarding name pool, covering masculine, feminine and plural-form choices.
+- Added prepared-name regression checks for duplicate keys, duplicate nominative forms and complete Ukrainian case forms.
+
+### Changed
+
+- Prepared-name onboarding now has a larger minimum available pool: at least 8 masculine names, 8 feminine names and 6 plural-form names for playtesting.
+- Updated character-name and onboarding documentation for the 0.13 Core Loop & Onboarding Stability lane.
+- Marked the repository-docs planning source-of-truth slice as ready for testing after verifying the planning index and roadmap language.
+
+---
+
 ## 0.12.15 - Tutorial gate, inside movement and drop feedback - 12026-05-29
 
 ### Added
