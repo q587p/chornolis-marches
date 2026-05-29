@@ -5,6 +5,7 @@ export const RAW_MEAT_KEY = "raw_meat";
 export const COOKED_MEAT_KEY = "cooked_meat";
 const FRESHENED_CORPSE_MARKER = "freshened_by_player:";
 const COOKED_MEAT_HUNGER_RELIEF = 5;
+const COOKING_SUCCESS_CHANCE = 0.6;
 
 export function meatYieldForSpecies(speciesKey: string) {
   if (speciesKey === "mouse") return 1;
@@ -16,6 +17,10 @@ export function meatYieldForSpecies(speciesKey: string) {
 
 export function isFreshenedCorpse(currentAction: string | null | undefined) {
   return Boolean(currentAction?.startsWith(FRESHENED_CORPSE_MARKER));
+}
+
+export function meatCookingSucceeds(roll = Math.random()) {
+  return roll < COOKING_SUCCESS_CHANCE;
 }
 
 function freshenedCorpseAction(playerId: number, amount: number) {
@@ -112,6 +117,7 @@ export async function cookRawMeat(playerId: number) {
   if (!(await canCookMeatAtLocation(player.currentLocationId))) {
     throw new Error("Потрібне вогнище поруч. Самого факела замало, щоб підсмажити м'ясо.");
   }
+  const cookedSuccessfully = meatCookingSucceeds();
 
   await prisma.$transaction(async (tx) => {
     const carried = await tx.playerResource.findUnique({
@@ -125,6 +131,8 @@ export async function cookRawMeat(playerId: number) {
       await tx.playerResource.delete({ where: { id: carried.id } });
     }
 
+    if (!cookedSuccessfully) return;
+
     await tx.playerResource.upsert({
       where: { playerId_resourceTypeId: { playerId, resourceTypeId: cookedMeat.id } },
       update: { amount: { increment: 1 } },
@@ -132,7 +140,9 @@ export async function cookRawMeat(playerId: number) {
     });
   });
 
-  return "Ви підсмажили шмат м'яса над вогнищем.";
+  return cookedSuccessfully
+    ? "Ви підсмажили шмат м'яса над вогнищем."
+    : "М'ясо підгоріло й розсипалося чорним крихким шматтям. Їсти тут уже нічого.";
 }
 
 export async function eatCookedMeat(playerId: number) {

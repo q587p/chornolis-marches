@@ -56,7 +56,7 @@ These effects are intentionally modest and player-facing text should stay descri
 3. cook raw meat at a nearby campfire;
 4. eat cooked meat to ease hunger by `5`.
 
-A torch should not be enough for cooking. Later systems can split meat by species and add bones, hide, fur, feathers, freshness, spoilage, tools and skill-based yields.
+A torch should not be enough for cooking. The first cooking pass is imperfect: roughly three attempts out of five become cooked meat, while failed attempts consume the raw meat for now. Later systems can split meat by species and add bones, hide, fur, feathers, freshness, spoilage, tools and skill-based yields.
 
 ## Campfire Loop
 

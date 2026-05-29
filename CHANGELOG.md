@@ -15,6 +15,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Freshening a sufficiently fresh animal corpse now adds universal raw meat to inventory instead of being a debug-only action.
 - Raw meat can be cooked into cooked meat when the player is near a campfire; a torch alone is not enough.
+- Cooking raw meat now has an imperfect first success rate of roughly three successes out of five attempts; failed attempts consume the raw meat without producing cooked meat.
 - Cooked meat can be eaten from inventory to reduce hunger by a modest amount.
 - Added text aliases for cooking and eating cooked meat, plus freshening/butchering wording.
 - Added a hidden `/commands` reference that lists current text commands, aliases and planned MUD-style command directions.
