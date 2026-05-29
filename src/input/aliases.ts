@@ -9,6 +9,7 @@ export type RestAliasMode = "start" | "queue" | "interrupt";
 export type PostureAliasMode = "sit" | "stand";
 export type SocialSignalAlias = "smile" | "laugh" | "nod" | "bow" | "point" | "glare" | "sigh" | "wave";
 export type ChatAliasMode = "time" | "location" | "character";
+export type PutAliasAmount = number | "all";
 
 export type ParsedAliasCommand =
   | { kind: "location" }
@@ -48,6 +49,7 @@ export type ParsedAliasCommand =
   | { kind: "wait" }
   | { kind: "add-twigs-campfire" }
   | { kind: "cook-meat" }
+  | { kind: "put-item"; item: string; amount?: PutAliasAmount; container: string }
   | { kind: "say"; text: string }
   | { kind: "whisper"; text: string }
   | { kind: "reply"; text: string }
@@ -635,6 +637,71 @@ function parseInventoryItemAction(text: string): ParsedAliasCommand | null {
   return null;
 }
 
+function amountFromPutToken(token: string): PutAliasAmount | null {
+  if (["all", "все", "усе", "всі", "усі"].includes(token)) return "all";
+  if (/^\d+$/.test(token)) {
+    const amount = Number(token);
+    return Number.isSafeInteger(amount) && amount > 0 ? amount : null;
+  }
+  return null;
+}
+
+function normalizePutItemText(value: string) {
+  return value
+    .replace(/^(?:all|все|усе|всі|усі)\s+/u, "")
+    .replace(/\s+(?:all|все|усе|всі|усі)$/u, "")
+    .trim();
+}
+
+function parsePutParts(value: string): { item: string; amount?: PutAliasAmount; container: string } | null {
+  const withPreposition = value.match(/^(.+?)\s+(?:into|in|to|в|у|до)\s+(.+)$/u);
+  if (withPreposition?.[1]?.trim() && withPreposition?.[2]?.trim()) {
+    const itemWords = withPreposition[1].trim().split(/\s+/).filter(Boolean);
+    let amount: PutAliasAmount | undefined;
+    const firstAmount = itemWords.length ? amountFromPutToken(itemWords[0]) : null;
+    const lastAmount = itemWords.length ? amountFromPutToken(itemWords[itemWords.length - 1]) : null;
+    if (firstAmount) {
+      amount = firstAmount;
+      itemWords.shift();
+    } else if (lastAmount) {
+      amount = lastAmount;
+      itemWords.pop();
+    }
+    const item = normalizePutItemText(itemWords.join(" "));
+    return item ? { item, amount, container: withPreposition[2].trim() } : null;
+  }
+
+  const words = value.split(/\s+/).filter(Boolean);
+  if (words.length < 2) return null;
+
+  const firstAmount = amountFromPutToken(words[0]);
+  if (firstAmount && words.length >= 3) {
+    return { amount: firstAmount, item: normalizePutItemText(words.slice(1, -1).join(" ")), container: words[words.length - 1] };
+  }
+
+  const amountIndex = words.findIndex((word) => amountFromPutToken(word) !== null);
+  if (amountIndex > 0 && amountIndex < words.length - 1) {
+    return {
+      item: normalizePutItemText(words.slice(0, amountIndex).join(" ")),
+      amount: amountFromPutToken(words[amountIndex]) ?? undefined,
+      container: words.slice(amountIndex + 1).join(" "),
+    };
+  }
+
+  return {
+    item: normalizePutItemText(words.slice(0, -1).join(" ")),
+    container: words[words.length - 1],
+  };
+}
+
+function parsePutIntent(text: string): ParsedAliasCommand | null {
+  const match = text.match(/^(?:put|покласти|класти)\s+(.+)$/u);
+  if (!match?.[1]?.trim()) return null;
+  const parsed = parsePutParts(match[1].trim());
+  if (!parsed?.item || !parsed.container) return null;
+  return { kind: "put-item", ...parsed };
+}
+
 function parseSocialSignal(text: string): ParsedAliasCommand | null {
   const patterns: Array<[SocialSignalAlias, RegExp]> = [
     ["smile", /^(?:smile|усміхнутися|усміхнутись|посміхнутися|посміхнутись)\s+(.+)$/],
@@ -683,6 +750,9 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
 
   const inventoryItemAction = parseInventoryItemAction(commandText);
   if (inventoryItemAction) return inventoryItemAction;
+
+  const putIntent = parsePutIntent(commandText);
+  if (putIntent) return putIntent;
 
   const featureIntent = parseFeatureInspectionIntent(commandText);
   if (featureIntent) return featureIntent;

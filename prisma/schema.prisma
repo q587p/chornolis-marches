@@ -327,6 +327,25 @@ model PlayerResource {
   @@unique([playerId, resourceTypeId])
 }
 
+model CarcassDropoffContribution {
+  id Int @id @default(autoincrement())
+
+  dropoffFeatureKey String
+  locationId         Int?
+
+  contributorKind String @default("PLAYER")
+  playerId        Int?
+  creatureId      Int?
+
+  resourceTypeKey String
+  amount          Int @default(1)
+
+  createdAt DateTime @default(now())
+
+  @@index([dropoffFeatureKey, contributorKind, playerId])
+  @@index([createdAt])
+}
+
 // =======================
 // ACTION QUEUE
 // =======================
