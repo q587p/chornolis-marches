@@ -1,7 +1,7 @@
 ---
 id: FOOD-001
 title: Corpse freshening, meat and campfire cooking
-status: next
+status: testing
 type: feature
 area: survival
 priority: high

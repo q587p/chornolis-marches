@@ -31,6 +31,7 @@ import { playerCanShowTechnicalDetails } from "./technicalDetails";
 import { canOpenDreamGateWithSpeech, isLocationExitLocked, isTutorialFastRestLocationKey, openDreamGate, rememberTutorialForagingSuccess, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY } from "./tutorial";
 import { tutorialGateSpeechComment, tutorialLookPaceComments, tutorialSpiritMoveComment, tutorialTrackComments, tutorialWaitPaceComments } from "./tutorialVoices";
 import { chance, pick, shuffle } from "../utils/random";
+import { freshenCorpseForMeat } from "./meat";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
@@ -575,10 +576,32 @@ async function completeFreshen(bot: Bot, action: WorldAction) {
     if (chatId) await bot.api.sendMessage(chatId, "Труп уже не підходить для освіжування.");
     return;
   }
+  const creature = await prisma.creature.findFirst({
+    where: { id: target.id, locationId: player.currentLocationId, isAlive: false, isGone: false, isHidden: false, age: "CORPSE" },
+    include: { species: true },
+  });
+  if (!creature) {
+    await setActionStatus(action, "FAILED");
+    if (chatId) await bot.api.sendMessage(chatId, "Труп уже не підходить для освіжування.");
+    return;
+  }
   await spendPlayerStamina(bot, player.id, "FRESHEN", chatId);
+  let meat: Awaited<ReturnType<typeof freshenCorpseForMeat>>;
+  try {
+    meat = await freshenCorpseForMeat({
+      playerId: player.id,
+      creatureId: creature.id,
+      locationId: player.currentLocationId,
+      speciesKey: creature.species.key,
+    });
+  } catch (error) {
+    await setActionStatus(action, "FAILED");
+    if (chatId) await bot.api.sendMessage(chatId, error instanceof Error ? error.message : "Труп уже не підходить для освіжування.");
+    return;
+  }
   await setActionStatus(action, "DONE");
-  await logEvent("PLAYER_ACTION", "Player freshened corpse", `${target.kind}:${target.id}`, player.currentLocationId);
-  if (chatId) await bot.api.sendMessage(chatId, `🔪 Ви освіжували ${target.forms.accusative}.\n\nПоки що це debug-дія без здобичі; пізніше тут будуть шкіра, м’ясо, кістки тощо.`);
+  await logEvent("PLAYER_ACTION", "Player freshened corpse", `${target.kind}:${target.id}; meat=${meat.amount}`, player.currentLocationId);
+  if (chatId) await bot.api.sendMessage(chatId, `🔪 Ви освіжували ${target.forms.accusative} й отримали ${meat.resourceName} ×${meat.amount}.`);
 }
 
 async function completeCreatureAttack(bot: Bot, action: WorldAction) {

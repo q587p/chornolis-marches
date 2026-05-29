@@ -3,8 +3,9 @@ import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import type { Prisma } from "@prisma/client";
 import { ensureTorchResourceTypes, TORCH_DURATION_MS, TORCH_FADING_MS } from "./fire";
 import { resourceTypeDisplayName } from "./corpses";
+import { COOKED_MEAT_KEY, eatCookedMeat } from "./meat";
 
-export type UsableInventoryResource = "berries" | "herbs" | "mushrooms";
+export type UsableInventoryResource = "berries" | "herbs" | "mushrooms" | "cooked_meat";
 
 const USE_CONFIG = {
   berries: { stamina: 4, hunger: 1 },
@@ -28,6 +29,14 @@ const RESOURCE_ALIASES: Record<string, string> = {
   mushroom: "mushrooms",
   гриби: "mushrooms",
   гриб: "mushrooms",
+  cooked_meat: COOKED_MEAT_KEY,
+  "cooked meat": COOKED_MEAT_KEY,
+  meat: COOKED_MEAT_KEY,
+  "смажене м'ясо": COOKED_MEAT_KEY,
+  "смажене м’ясо": COOKED_MEAT_KEY,
+  "смаженого м'яса": COOKED_MEAT_KEY,
+  "м'ясо": COOKED_MEAT_KEY,
+  "м’ясо": COOKED_MEAT_KEY,
   torch: "torch",
   torches: "torch",
   факел: "torch",
@@ -65,6 +74,8 @@ async function consumeOneResource(tx: Prisma.TransactionClient, playerResourceId
 }
 
 export async function useInventoryResource(playerId: number, resourceKey: UsableInventoryResource) {
+  if (resourceKey === COOKED_MEAT_KEY) return eatCookedMeat(playerId);
+
   return prisma.$transaction(async (tx) => {
     const [player, resourceType] = await Promise.all([
       tx.player.findUnique({ where: { id: playerId }, select: { id: true, hp: true, hpMax: true, hunger: true, stamina: true, staminaMax: true } }),

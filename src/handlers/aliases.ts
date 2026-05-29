@@ -44,6 +44,7 @@ import { dropInventoryResourceDetailed, inspectInventoryResource, useInventoryRe
 import { enterTutorialDream, hasCompletedTutorial, openDreamGate, wakeFromTutorialDream } from "../services/tutorial";
 import { dropObserverText, pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 import { noteKnownMessage } from "../utils/messageTracker";
+import { cookRawMeat } from "../services/meat";
 
 type TextTargetRef = {
   type: "player" | "creature";
@@ -399,6 +400,16 @@ async function submitDouseTorch(ctx: any) {
   await ctx.reply(await dousePlayerTorchFromInventory(player.id));
 }
 
+async function submitCookMeat(ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  try {
+    await ctx.reply(await cookRawMeat(player.id));
+  } catch (error) {
+    await ctx.reply(error instanceof Error ? error.message : "Не вдалося підсмажити м'ясо.");
+  }
+}
+
 async function submitInventoryInspect(ctx: any, target: string) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
@@ -545,6 +556,8 @@ function pickupResourceKey(target: string): VisibleGroundResourceKey | null {
   if (["torch", "torches", "факел", "факели", "факела", "факелів"].includes(target)) return "torch";
   if (["lit torch", "lit_torch", "burning torch", "запалений факел", "палаючий факел"].includes(target)) return "lit_torch";
   if (["twigs", "twig", "хмиз"].includes(target)) return "twigs";
+  if (["raw meat", "raw_meat", "сире м'ясо", "сире м’ясо", "м'ясо", "м’ясо"].includes(target)) return "raw_meat";
+  if (["cooked meat", "cooked_meat", "смажене м'ясо", "смажене м’ясо"].includes(target)) return "cooked_meat";
   if (["berries", "berry", "ягоди", "ягід"].includes(target)) return "berries";
   if (["mushrooms", "mushroom", "гриби", "грибів"].includes(target)) return "mushrooms";
   if (["herbs", "herb", "трави", "трав", "лікарські трави", "лікарських трав", "зілля", "зіллячко"].includes(target)) return "herbs";
@@ -700,6 +713,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "use-item") return submitUseItem(ctx, parsed.item);
     if (parsed.kind === "light-torch") return submitLightTorch(ctx);
     if (parsed.kind === "douse-torch") return submitDouseTorch(ctx);
+    if (parsed.kind === "cook-meat") return submitCookMeat(ctx);
     if (parsed.kind === "sleep") return submitSleep(ctx, parsed.tutorial);
     if (parsed.kind === "wake") return submitWake(ctx);
     if (parsed.kind === "open") return submitOpen(ctx);

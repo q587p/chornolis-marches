@@ -12,7 +12,6 @@ The current lane is the three-month vertical slice:
 
 ## 0.13 Next
 
-- FOOD-001: corpse freshening, meat and campfire cooking.
 - ONB-002: character name onboarding polish.
 - ONB-001: dream tutorial compact completion.
 - SURV-001: beginner return / `Повернення`.

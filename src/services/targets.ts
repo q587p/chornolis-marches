@@ -6,6 +6,7 @@ import { creatureForms, playerForms, type NameForms } from "./grammar";
 import { lifetimeSummary } from "./itemLifetime";
 import { playerShowsTechnicalDetails } from "./technicalDetails";
 import { getPlayerTorchState } from "./fire";
+import { isFreshenedCorpse } from "./meat";
 
 export type ResolvedTarget = {
   kind: "player" | "creature";
@@ -112,7 +113,8 @@ export async function resolveTarget(type: string, id: number, locationId: number
     const isAnimal = target.species.kind === "ANIMAL";
     const isCorpse = !target.isAlive && target.age === "CORPSE";
     const corpseLeft = target.corpseDecayTicksLeft ?? target.species.corpseDecayTicks;
-    const canFreshen = isCorpse && corpseLeft > Math.floor(target.species.corpseDecayTicks / 2);
+    const wasFreshened = isFreshenedCorpse(target.currentAction);
+    const canFreshen = isCorpse && !wasFreshened && corpseLeft > Math.floor(target.species.corpseDecayTicks / 2);
     const corpseLifetime = lifetimeSummary(corpseLeft, target.species.corpseDecayTicks, { showTechnicalDetails });
 
     if (isCorpse) {
@@ -134,7 +136,7 @@ export async function resolveTarget(type: string, id: number, locationId: number
         isAnimal,
         isCorpse: true,
         canFreshen,
-        inspect: `Це труп ${forms.genitive}.\n\nВін розкладається.\nСтан: ${corpseLifetime}.\n${canFreshen ? "\nТруп ще відносно свіжий. Його можна спробувати освіжувати." : "\nТруп уже надто далеко розклався для освіжування."}`,
+        inspect: `Це труп ${forms.genitive}.\n\nВін розкладається.\nСтан: ${corpseLifetime}.\n${canFreshen ? "\nТруп ще відносно свіжий. Його можна спробувати освіжувати." : wasFreshened ? "\nЗ цього трупа вже зняли придатне м'ясо." : "\nТруп уже надто далеко розклався для освіжування."}`,
       };
     }
 

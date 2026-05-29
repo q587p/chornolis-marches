@@ -73,7 +73,9 @@ Targets and signals:
 
 - `роздивитися труп`, `атакувати мишу`, `привітати 1`, `освіжити труп`.
 - `підібрати труп`.
-- Planned `FOOD-001` aliases: `освіжити труп`, `розібрати труп`, `freshen corpse`, `butcher corpse` -> gain raw meat from a sufficiently fresh corpse; `підсмажити м'ясо`, `смажити м'ясо`, `cook meat` -> cook raw meat at a nearby campfire; `з'їсти м'ясо`, `їсти смажене м'ясо`, `eat cooked meat` -> eat cooked meat for hunger relief.
+- `освіжити труп`, `розібрати труп`, `freshen corpse`, `butcher corpse` -> gain raw meat from a sufficiently fresh corpse.
+- `підсмажити м'ясо`, `смажити м'ясо`, `cook meat` -> cook raw meat at a nearby campfire; a torch alone is not enough.
+- `з'їсти м'ясо`, `їсти смажене м'ясо`, `eat cooked meat` -> eat cooked meat for hunger relief.
 - `кивнути 1`, `помахати мандрівник`, `вказати на вовка`, `насупитися вовк`.
 
 Target commands resolve visible nearby targets by number, id or visible name. If several targets match, the bot asks the player to clarify.

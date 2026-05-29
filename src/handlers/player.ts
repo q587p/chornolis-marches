@@ -29,6 +29,7 @@ import { escapeHtml } from "../utils/text";
 import { noteKnownMessage } from "../utils/messageTracker";
 import { hasCompletedTutorial, isTutorialLocation } from "../services/tutorial";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "../services/locationFeatures";
+import { canCookPlayerMeat, COOKED_MEAT_KEY, cookRawMeat, RAW_MEAT_KEY } from "../services/meat";
 
 const tutorialInventoryVoiceSeen = new Set<number>();
 
@@ -94,7 +95,7 @@ function buildCharacterAutoKeyboard(autoEnabled: boolean, options: { canToggleTe
   return keyboard;
 }
 
-function hasInventoryResource(resources: any[], key: UsableInventoryResource) {
+function hasInventoryResource(resources: any[], key: string) {
   return resources.some((resource) => resource.amount > 0 && resource.resourceType.key === key);
 }
 
@@ -102,11 +103,13 @@ function inventoryActionLabel(resource: any) {
   return resourceTypeDisplayName(resource.resourceType);
 }
 
-function buildInventoryKeyboard(resources: any[] = [], options: { canAddTwigs?: boolean; canDouseTorch?: boolean; canLightTorch?: boolean } = {}) {
+function buildInventoryKeyboard(resources: any[] = [], options: { canAddTwigs?: boolean; canDouseTorch?: boolean; canLightTorch?: boolean; canCookMeat?: boolean } = {}) {
   const keyboard = new InlineKeyboard();
   if (hasInventoryResource(resources, "berries")) keyboard.text("🫐 Використати ягоди", "inventory:use:berries").row();
   if (hasInventoryResource(resources, "mushrooms")) keyboard.text("🍄 Використати гриби", "inventory:use:mushrooms").row();
   if (hasInventoryResource(resources, "herbs")) keyboard.text("🌿 Використати лікарські трави", "inventory:use:herbs").row();
+  if (hasInventoryResource(resources, COOKED_MEAT_KEY)) keyboard.text("🥩 З'їсти смажене м'ясо", `inventory:use:${COOKED_MEAT_KEY}`).row();
+  if (options.canCookMeat && hasInventoryResource(resources, RAW_MEAT_KEY)) keyboard.text("🔥 Підсмажити м'ясо", "inventory:cook:meat").row();
   if (options.canAddTwigs) keyboard.text("🪵 Підкинути хмиз", "inventory:add-twigs").row();
   if (options.canLightTorch) keyboard.text("🔥 Запалити факел", "inventory:light:torch").row();
   if (options.canDouseTorch) keyboard.text("🫧 Притушити факел", "inventory:douse:torch").row();
@@ -238,10 +241,11 @@ async function renderInventoryView(telegramId: number) {
   });
 
   if (!player) return null;
-  const [canAddTwigs, canDouseTorch, canLightTorch] = await Promise.all([
+  const [canAddTwigs, canDouseTorch, canLightTorch, canCookMeat] = await Promise.all([
     canAddTwigsToNearbyCampfire(player.id),
     canDousePlayerTorchFromInventory(player.id),
     canLightPlayerTorchFromInventory(player.id),
+    canCookPlayerMeat(player.id),
   ]);
 
   const itemLines = player.resources
@@ -250,7 +254,7 @@ async function renderInventoryView(telegramId: number) {
 
   return {
     text: `🎒 Речі\n\n${itemLines.length ? itemLines.join("\n") : "Поки порожньо."}`,
-    keyboard: buildInventoryKeyboard(player.resources, { canAddTwigs, canDouseTorch, canLightTorch }),
+    keyboard: buildInventoryKeyboard(player.resources, { canAddTwigs, canDouseTorch, canLightTorch, canCookMeat }),
   };
 }
 
@@ -332,7 +336,7 @@ export function registerPlayerHandlers(bot: Bot) {
     }
   });
 
-  bot.callbackQuery(/^inventory:use:(berries|herbs|mushrooms)$/, async (ctx) => {
+  bot.callbackQuery(/^inventory:use:(berries|herbs|mushrooms|cooked_meat)$/, async (ctx) => {
     const resourceKey = ctx.match[1] as UsableInventoryResource;
     const player = await getPlayerByTelegramId(ctx.from.id);
     await safeAnswerCallbackQuery(ctx);
@@ -351,6 +355,27 @@ export function registerPlayerHandlers(bot: Bot) {
       }
     } catch (error) {
       await ctx.reply(error instanceof Error ? error.message : "Не вдалося використати це.");
+    }
+  });
+
+  bot.callbackQuery("inventory:cook:meat", async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    await safeAnswerCallbackQuery(ctx);
+    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+    try {
+      const resultText = await cookRawMeat(player.id);
+      await ctx.reply(resultText);
+      const view = await renderInventoryView(ctx.from.id);
+      if (!view) return;
+
+      try {
+        await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
+      } catch {
+        await ctx.reply(view.text, { reply_markup: view.keyboard });
+      }
+    } catch (error) {
+      await ctx.reply(error instanceof Error ? error.message : "Не вдалося підсмажити м'ясо.");
     }
   });
 

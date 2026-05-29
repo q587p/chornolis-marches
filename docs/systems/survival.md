@@ -47,14 +47,14 @@ These values are balance constants, not final design. Player-facing UI should st
 
 These effects are intentionally modest and player-facing text should stay descriptive. Fuller food, cooking, medicine, herbalism, potions and prepared remedies remain later systems.
 
-## Planned Meat Loop
+## Meat Loop
 
-`FOOD-001` promotes the first hunting/scavenging food loop into the near-term plan:
+0.13.3 adds the first hunting/scavenging food loop:
 
 1. freshen a relatively fresh corpse;
-2. receive universal raw meat for now;
+2. receive universal raw meat for now, with first simple yields by species;
 3. cook raw meat at a nearby campfire;
-4. eat cooked meat to ease hunger by a modest amount.
+4. eat cooked meat to ease hunger by `5`.
 
 A torch should not be enough for cooking. Later systems can split meat by species and add bones, hide, fur, feathers, freshness, spoilage, tools and skill-based yields.
 

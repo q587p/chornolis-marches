@@ -9,6 +9,26 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.3 - Meat and campfire cooking loop - 12026-05-29
+
+### Added
+
+- Freshening a sufficiently fresh animal corpse now adds universal raw meat to inventory instead of being a debug-only action.
+- Raw meat can be cooked into cooked meat when the player is near a campfire; a torch alone is not enough.
+- Cooked meat can be eaten from inventory to reduce hunger by a modest amount.
+- Added text aliases for cooking and eating cooked meat, plus freshening/butchering wording.
+
+### Changed
+
+- Freshened corpses are marked so they cannot be harvested for meat twice.
+- `FOOD-001` is now in testing.
+
+### Tests
+
+- Added input-alias regression coverage for meat cooking, cooked meat eating and corpse butchering aliases.
+
+---
+
 ## 0.13.2 - Pickup and gather command semantics - 12026-05-29
 
 ### Changed
