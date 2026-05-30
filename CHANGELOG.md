@@ -18,15 +18,18 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - `/who`, the public `/who` web page and `/who.json` now append ` (відійшов)` to AFK player character names.
 - `/all` now shows the same AFK suffix in player rows for scribe/admin visibility.
 - Dropped burning torches now explicitly count as local light sources until their burn timer expires, and expired ground torches are cleaned up before location render.
+- Sexed animal age adjectives now agree with the displayed creature form, so male mouse labels use masculine age adjectives instead of the species-level feminine fallback.
 - Removed a stray UTF-8 BOM from `src/services/actionCompletions.ts`.
 
 ### Tests
 
 - Extended session-presence coverage for the AFK display suffix.
 - Extended fire helper coverage for active dropped lit torches.
+- Extended target-formatting coverage for sexed mouse age and state agreement.
 - Ran `node scripts/test/session-presence.cjs`.
 - Ran `node scripts/test/campfire-memory.cjs`.
 - Ran `node scripts/test/posture.cjs`.
+- Ran `node scripts/test/target-formatting.cjs`.
 - Ran `npm test`.
 - Ran `npm run build`.
 

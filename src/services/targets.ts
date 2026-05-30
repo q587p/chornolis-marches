@@ -63,6 +63,7 @@ function formatCreatureStats(target: {
 type CreatureGender = "MASCULINE" | "FEMININE" | "NEUTER" | "PLURAL";
 
 function creatureGender(target: { sex?: string | null; species: { grammaticalGender?: string | null } }): CreatureGender {
+  if (target.sex === "MALE") return "MASCULINE";
   if (target.sex === "FEMALE") return "FEMININE";
   if (target.species.grammaticalGender === "FEMININE" || target.species.grammaticalGender === "NEUTER" || target.species.grammaticalGender === "PLURAL") return target.species.grammaticalGender;
   return "MASCULINE";

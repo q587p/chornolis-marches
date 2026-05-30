@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const { formatCreatureLifeState, formatCreatureStatusLine, inventoryResourceSummary } = require("../../src/services/targets");
+const { animalAgeDescription } = require("../../src/services/locations");
 const { buildTargetActionKeyboard, buildTargetListKeyboard } = require("../../src/ui/keyboards");
 
 const maleNpc = {
@@ -25,6 +26,22 @@ assert.equal(formatCreatureStatusLine(maleNpc, "йде на захід"), "Ст�
 assert.equal(formatCreatureStatusLine(femaleAnimal, "їсть ягоди."), "Стан: жива, їсть ягоди.");
 assert.equal(formatCreatureLifeState(maleNpc), "Життя: має рани, але тримається.");
 assert.equal(formatCreatureLifeState(femaleAnimal), "Життя: тяжко поранена.");
+
+const maleMouse = {
+  sex: "MALE",
+  species: { key: "mouse", name: "миша", grammaticalGender: "FEMININE", animacy: "ANIMATE" },
+};
+assert.equal(animalAgeDescription({ ...maleMouse, age: "YOUNG" }), "молодий миш");
+assert.equal(animalAgeDescription({ ...maleMouse, age: "ADULT" }), "дорослий миш");
+assert.equal(animalAgeDescription({ ...maleMouse, age: "OLD" }), "старий миш");
+assert.equal(formatCreatureStatusLine({ ...maleMouse, isAlive: true }), "Стан: живий.");
+assert.equal(formatCreatureLifeState({ ...maleMouse, hp: 1, maxHp: 12, species: { ...maleMouse.species, baseHp: 12 } }), "Життя: тяжко поранений.");
+
+const femaleMouse = {
+  sex: "FEMALE",
+  species: { key: "mouse", name: "миша", grammaticalGender: "FEMININE", animacy: "ANIMATE" },
+};
+assert.equal(animalAgeDescription({ ...femaleMouse, age: "YOUNG" }), "молода миша");
 
 const interactionRows = buildTargetActionKeyboard({
   type: "creature",

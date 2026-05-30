@@ -542,20 +542,23 @@ async function activeActionsForTargets(targets: ReturnType<typeof visibleTargets
   return activeActions;
 }
 
-function guessGenderFromForms(forms: ReturnType<typeof creatureForms>, fallback?: string | null) {
-  if (fallback === "FEMININE" || fallback === "NEUTER" || fallback === "PLURAL") return fallback;
+function guessGenderFromForms(forms: ReturnType<typeof creatureForms>, fallback?: string | null, sex?: string | null) {
+  if (sex === "MALE") return "MASCULINE";
+  if (sex === "FEMALE") return "FEMININE";
+  if (fallback === "PLURAL") return fallback;
   const lower = forms.nominative.toLocaleLowerCase("uk-UA");
   if (lower.endsWith("а") || lower.endsWith("я")) return "FEMININE";
   if (lower.endsWith("о") || lower.endsWith("е") || lower.endsWith("я")) return "NEUTER";
+  if (fallback === "FEMININE" || fallback === "NEUTER") return fallback;
   return "MASCULINE";
 }
 
-function animalAgeDescription(creature: any, showTechnicalDetails = false) {
+export function animalAgeDescription(creature: any, showTechnicalDetails = false) {
   const forms = creatureForms(creature);
   const ticks = showTechnicalDetails && Number.isFinite(creature.ageTicks) ? `, ${creature.ageTicks} тіків` : "";
   if (creature.age === "CHILD") return `дитинча ${forms.genitive}${ticks}`;
 
-  const gender = guessGenderFromForms(forms, creature.species?.grammaticalGender);
+  const gender = guessGenderFromForms(forms, creature.species?.grammaticalGender, creature.sex);
   const adjective = CREATURE_AGE_ADJECTIVES[creature.age]?.[gender] ?? "";
   const label = adjective ? `${adjective} ${forms.nominative}` : forms.nominative;
   return `${label}${ticks}`;
