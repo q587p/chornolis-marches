@@ -10,6 +10,9 @@ import { addCorpseToInventory, resourceTypeDisplayName } from "../services/corps
 import { performSocialSignal, socialDefinitionById } from "../services/socialSignals";
 import { durationSecondsSuffix } from "../utils/durationText";
 import { pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
+import { assertCanPerformPhysicalAction, isPlayerMustStandError } from "../services/postureRules";
+import { actionErrorMessage, replyToActionError } from "../utils/actionErrorReply";
+import { canEditCallbackMessage, noteKnownMessage } from "../utils/messageTracker";
 
 function buildActionKeyboard(target: ResolvedTarget, again = false) {
   if (target.isCorpse) return buildCorpseActionKeyboard(target);
@@ -23,11 +26,18 @@ function attackUnavailableText(target: ResolvedTarget) {
 }
 
 async function editOrReply(ctx: any, text: string, keyboard?: InlineKeyboard) {
-  try {
-    await ctx.editMessageText(text, { reply_markup: keyboard, parse_mode: "HTML" });
-  } catch {
-    await ctx.reply(text, keyboard ? { reply_markup: keyboard, parse_mode: "HTML" } : { parse_mode: "HTML" });
+  const options = keyboard ? { reply_markup: keyboard, parse_mode: "HTML" } : { parse_mode: "HTML" };
+  if (canEditCallbackMessage(ctx)) {
+    try {
+      await ctx.editMessageText(text, options);
+      noteKnownMessage(ctx.callbackQuery?.message);
+      return;
+    } catch {
+      // Fall through to a fresh message when Telegram cannot edit the source.
+    }
   }
+
+  noteKnownMessage(await ctx.reply(text, options));
 }
 
 export function registerSocialHandlers(bot: Bot) {
@@ -77,9 +87,15 @@ export function registerSocialHandlers(bot: Bot) {
 
     let resourceType: Awaited<ReturnType<typeof addCorpseToInventory>>;
     try {
+      assertCanPerformPhysicalAction(player, "PICK_UP");
       resourceType = await addCorpseToInventory(player.id, creature);
-    } catch {
-      await safeAnswerCallbackQuery(ctx, "Трупа вже немає поруч.");
+    } catch (error) {
+      const message = actionErrorMessage(error, "Трупа вже немає поруч.");
+      await safeAnswerCallbackQuery(ctx, message);
+      if (isPlayerMustStandError(error)) {
+        await replyToActionError(ctx, error, "Не вдалося підняти це.");
+        return;
+      }
       return void (await editOrReply(ctx, "Трупа вже немає поруч. Можна роздивитися місцину ще раз.", buildExamineLocationKeyboard()));
     }
 

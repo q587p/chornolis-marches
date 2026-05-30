@@ -15,7 +15,7 @@ import {
   VERY_TIRED_STAMINA,
   playerStaminaCostConfig,
 } from "../gameConfig";
-import { buildFatigueRestKeyboard } from "../ui/keyboards";
+import { buildFatigueRestKeyboard, buildStandUpKeyboard } from "../ui/keyboards";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
 import { tutorialIdlePaceComments } from "./tutorialVoices";
@@ -220,11 +220,12 @@ export async function recoverStamina(bot: Bot) {
     const chatId = Number(player.telegramId);
     if (Number.isSafeInteger(chatId)) {
       const refreshedKeyboard = await buildMainReplyKeyboardForTelegramId(chatId, Boolean(player.isAutoEnabled));
+      const replyMarkup = fullyRested && player.isResting ? buildStandUpKeyboard() : refreshedKeyboard;
       for (const message of messages) {
         await bot.api.sendMessage(
           chatId,
           message,
-          { reply_markup: refreshedKeyboard }
+          { reply_markup: replyMarkup }
         );
       }
 

@@ -16,7 +16,7 @@ import {
   takeTorchFromFeature,
   TORCH_DURATION_MS,
 } from "./fire";
-import { isVisibleGroundResource } from "./groundItems";
+import { isVisibleGroundResource, type VisibleGroundResourceKey } from "./groundItems";
 import { escapeHtml } from "../utils/text";
 import { normalizeCreatureActionText } from "../utils/creatureActionText";
 import { creatureForms } from "./grammar";
@@ -770,8 +770,17 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     keyboard.text("🌿 Зібрати", "gather:menu").row();
   }
 
+  const groundItemTotalsByKey = new Map<string, number>();
   for (const item of groundItems) {
-    keyboard.text(`🤲 Підібрати: ${item.resourceType.name}`, `item:pickup:${item.id}`).row();
+    groundItemTotalsByKey.set(item.resourceType.key, (groundItemTotalsByKey.get(item.resourceType.key) ?? 0) + item.amount);
+  }
+
+  for (const item of groundItems) {
+    keyboard.text(`🤲 Підібрати: ${item.resourceType.name}`, `item:pickup:${item.id}`);
+    if ((groundItemTotalsByKey.get(item.resourceType.key) ?? 0) > 1) {
+      keyboard.text("всі", `item:pickupAll:${item.resourceType.key as VisibleGroundResourceKey}`);
+    }
+    keyboard.row();
   }
 
   if (tracksHint.hasTracks) {

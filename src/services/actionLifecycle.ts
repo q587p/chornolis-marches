@@ -18,6 +18,7 @@ import { setLastRuntimeError } from "../runtimeState";
 import { actionPriority, actionTitle, effectivePlayerActionDurationMs } from "./actionRules";
 import { fatigueStateFor, recoverStamina } from "./actionRecovery";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
+import { isPhysicalPlayerAction, PlayerMustStandError } from "./postureRules";
 import { logEvent } from "./worldEvents";
 
 export type ActorRef =
@@ -210,6 +211,10 @@ export async function enqueuePlayerAction(input: PlayerActionRequest): Promise<P
 export async function performOrQueuePlayerAction(bot: Bot, input: PlayerActionRequest): Promise<PlayerActionSubmitResult> {
   const player = await prisma.player.findUnique({ where: { id: input.playerId } });
   if (!player) throw new Error("Персонажа не знайдено.");
+
+  if ((player.posture === PlayerPosture.SITTING || player.isResting) && isPhysicalPlayerAction(input.type)) {
+    throw new PlayerMustStandError(input.type);
+  }
 
   if (player.hp <= 0 && input.type !== "REST") {
     await startPlayerRest(input.playerId);
@@ -473,21 +478,30 @@ async function startQueuedActionsForActorType(actorType: WorldActorType, take: n
   const runningActors = new Set(runningActions.map(actorKey));
   const startedActors = new Set<string>();
   let restingPlayerIds = new Set<number>();
+  let sittingPlayerIds = new Set<number>();
 
   if (actorType === "PLAYER") {
     const playerIds = [...new Set(nextQueued.map((action) => action.playerId).filter((id): id is number => Boolean(id)))];
     if (playerIds.length > 0) {
-      const restingPlayers = await prisma.player.findMany({
-        where: { id: { in: playerIds }, isResting: true },
-        select: { id: true },
+      const players = await prisma.player.findMany({
+        where: { id: { in: playerIds } },
+        select: { id: true, isResting: true, posture: true },
       });
-      restingPlayerIds = new Set(restingPlayers.map((player) => player.id));
+      restingPlayerIds = new Set(players.filter((player) => player.isResting).map((player) => player.id));
+      sittingPlayerIds = new Set(players.filter((player) => player.posture === PlayerPosture.SITTING || player.isResting).map((player) => player.id));
     }
   }
 
   for (const action of nextQueued) {
     const key = actorKey(action);
     if (startedActors.has(key) || runningActors.has(key)) continue;
+    if (action.actorType === "PLAYER" && action.playerId && sittingPlayerIds.has(action.playerId) && isPhysicalPlayerAction(action.type)) {
+      await prisma.worldAction.updateMany({
+        where: { id: action.id, status: "QUEUED" },
+        data: { status: "CANCELLED", note: "потрібно встати" },
+      });
+      continue;
+    }
     if (action.actorType === "PLAYER" && action.playerId && restingPlayerIds.has(action.playerId)) continue;
     startedActors.add(key);
     try {

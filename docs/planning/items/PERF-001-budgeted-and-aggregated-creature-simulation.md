@@ -52,6 +52,7 @@ For ordinary background animals, aggregated movement and ecology are enough.
 - `src/handlers/auto.ts` currently uses per-player timers for auto mode. This is acceptable for tiny online counts, but scales into many callbacks, uneven event-loop pressure and harder DB backpressure.
 - Status/admin paths were a first visible pain point. The 0.12.5 line added narrow selects, status timing logs and DB-level `/all` pagination, but the remaining status pages should keep moving toward select profiles and database pagination instead of broad reads.
 - Verbose `worldEvent` writes can add steady DB I/O. Keep full debug detail available on demand, but avoid writing heavy summaries every tick by default.
+- Contribution/history tables should be audited for query-specific indexes before they become large. `CarcassDropoffContribution` currently has the compound index `@@index([dropoffFeatureKey, contributorKind, playerId])`; when player-centric contribution history, rewards or admin views become common, add a separate `@@index([playerId])` or a more specific player-query index instead of relying on the compound drop-off index.
 
 ## Priority plan
 
@@ -66,6 +67,7 @@ For ordinary background animals, aggregated movement and ecology are enough.
 ### P1: scale the biggest runtime surfaces
 
 - Continue moving admin/status pages to narrow `select` profiles and DB-level pagination.
+- Add a lightweight Prisma index audit for high-growth tables such as contributions, world events, action history and resource/inventory rows; include `CarcassDropoffContribution.playerId` once player-centric lookups matter.
 - Replace per-player auto timers with one heartbeat scheduler that batches eligible auto characters and applies backpressure.
 - Refactor queued-action startup so it does fewer broad passes and avoids one-by-one startup work where batchable.
 - Add a per-world-tick creature processing budget, so only a bounded number of individual creatures can think in one tick.

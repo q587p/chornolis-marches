@@ -7,6 +7,7 @@ import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
 import { buildInventoryItemKeyboard } from "../ui/inventoryItemKeyboard";
 import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } from "./auto";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
+import { replyToActionError } from "../utils/actionErrorReply";
 import { formatFatigueText, formatHungerState, formatPlayerStats, formatPostureText, formatVitalsLine } from "../utils/playerText";
 import { ownHeldTorchText } from "../utils/torchText";
 import { resourceTypeDisplayName } from "../services/corpses";
@@ -31,6 +32,7 @@ import { noteKnownMessage } from "../utils/messageTracker";
 import { hasCompletedTutorial, isTutorialLocation } from "../services/tutorial";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "../services/locationFeatures";
 import { canCookPlayerMeat, COOKED_MEAT_KEY, cookRawMeat, RAW_MEAT_KEY } from "../services/meat";
+import { assertCanPerformPhysicalAction } from "../services/postureRules";
 
 const tutorialInventoryVoiceSeen = new Set<number>();
 
@@ -371,11 +373,12 @@ export function registerPlayerHandlers(bot: Bot) {
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
     try {
+      assertCanPerformPhysicalAction(player, "COOK");
       const resultText = await cookRawMeat(player.id);
       await ctx.reply(resultText);
       await refreshInventoryMessage(ctx);
     } catch (error) {
-      await ctx.reply(error instanceof Error ? error.message : "Не вдалося підсмажити м'ясо.");
+      await replyToActionError(ctx, error, "Не вдалося підсмажити м'ясо.");
     }
   });
 
@@ -384,9 +387,14 @@ export function registerPlayerHandlers(bot: Bot) {
     await safeAnswerCallbackQuery(ctx);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
-    const resultText = await lightPlayerTorchFromInventory(player.id);
-    await ctx.reply(resultText);
-    await refreshInventoryMessage(ctx);
+    try {
+      assertCanPerformPhysicalAction(player, "TORCH");
+      const resultText = await lightPlayerTorchFromInventory(player.id);
+      await ctx.reply(resultText);
+      await refreshInventoryMessage(ctx);
+    } catch (error) {
+      await replyToActionError(ctx, error, "Не вдалося запалити факел.");
+    }
   });
 
   bot.callbackQuery("inventory:douse:torch", async (ctx) => {
@@ -394,9 +402,14 @@ export function registerPlayerHandlers(bot: Bot) {
     await safeAnswerCallbackQuery(ctx);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
-    const resultText = await dousePlayerTorchFromInventory(player.id);
-    await ctx.reply(resultText);
-    await refreshInventoryMessage(ctx);
+    try {
+      assertCanPerformPhysicalAction(player, "TORCH");
+      const resultText = await dousePlayerTorchFromInventory(player.id);
+      await ctx.reply(resultText);
+      await refreshInventoryMessage(ctx);
+    } catch (error) {
+      await replyToActionError(ctx, error, "Не вдалося притушити факел.");
+    }
   });
 
   bot.callbackQuery("inventory:add-twigs", async (ctx) => {
@@ -404,9 +417,14 @@ export function registerPlayerHandlers(bot: Bot) {
     await safeAnswerCallbackQuery(ctx);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
-    const resultText = await addTwigsToCampfire(player.id);
-    await ctx.reply(resultText);
-    await refreshInventoryMessage(ctx);
+    try {
+      assertCanPerformPhysicalAction(player, "FIRE");
+      const resultText = await addTwigsToCampfire(player.id);
+      await ctx.reply(resultText);
+      await refreshInventoryMessage(ctx);
+    } catch (error) {
+      await replyToActionError(ctx, error, "Не вдалося підкинути хмиз.");
+    }
   });
 
   bot.callbackQuery(/^inventory:inspect:([A-Za-z0-9_-]+)$/, async (ctx) => {
@@ -429,6 +447,7 @@ export function registerPlayerHandlers(bot: Bot) {
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
     try {
+      assertCanPerformPhysicalAction(player, "DROP");
       const result = await dropInventoryResourceDetailed(player.id, ctx.match[1]);
       await recordVisibleItemAction(bot, {
         playerId: player.id,
@@ -448,7 +467,7 @@ export function registerPlayerHandlers(bot: Bot) {
       }
       await ctx.reply(result.text);
     } catch (error) {
-      await ctx.reply(error instanceof Error ? error.message : "Не вдалося викинути це.");
+      await replyToActionError(ctx, error, "Не вдалося викинути це.");
     }
   });
 

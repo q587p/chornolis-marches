@@ -171,7 +171,7 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
       : showTechnicalDetails ? exactStatusButtonLabel(player) : statusButtonLabel(player),
     posture: player.posture,
     isResting: player.isResting,
-    showPostureActions: true,
+    showPostureActions: false,
     isTutorialDream,
     canOpenDreamGate: isTutorialDream && Boolean(player.currentLocation?.features.length),
     canWakeFromTutorial: player.currentLocation?.key === TUTORIAL_HUB_LOCATION_KEY || player.currentLocation?.key === TUTORIAL_SAFETY_LOCATION_KEY,

@@ -46,8 +46,10 @@ Actions:
 
 - Pending scribe/admin prompts can be cancelled with `/cancel`, `/skasuvaty`, `/vidminyty`, `cancel`, `skasuvaty`, `vidminyty`, `скасувати`, `відмінити`, `відміна`, `стоп` or `не треба`. These aliases only cancel the pending prompt when one exists; otherwise ordinary aliases such as `скасувати` keep their existing queue behavior.
 - `збирати трави`, `збирати ягоди`, `збирати гриби`.
-- Pickup verbs such as `підібрати`, `взяти`, `take` and `get` first mean visible ground-item pickup. Gather verbs such as `збирати`, `зібрати`, `шукати` and `gather` mean spending time and stamina on a local resource node. If a natural resource is not lying separately on the ground, pickup text should give a hint to gather it instead.
+- Pickup verbs such as `підібрати`, `підняти`, `взяти`, `pick`, `take` and `get` first mean visible ground-item pickup. Gather verbs such as `збирати`, `зібрати`, `шукати` and `gather` mean spending time and stamina on a local resource node. If a natural resource is not lying separately on the ground, pickup text should give a hint to gather it instead.
 - `підібрати ягоди`, `взяти трави`, `take herbs`, `get mushrooms` -> pick up matching loose ground resources only when they are actually visible as ground items; otherwise explain that these should be gathered.
+- `get all`, `pick all`, `взяти все`, `підняти все` -> pick up all visible loose ground resources listed under `Лежить:` in the current місцина.
+- Location-detail pickup buttons may also show a compact `всі` action beside a loose resource stack; it picks up all visible loose resources of that same type.
 - `з'їсти ягоди`, `їсти ягоди`, `використати ягоди`, `eat berries`, `use berries` -> eat carried berries from inventory to restore a small amount of stamina and ease hunger by a tiny amount.
 - `з'їсти гриби`, `їсти гриби`, `використати гриби`, `eat mushrooms`, `use mushrooms` -> eat carried mushrooms from inventory to ease hunger a little.
 - `з'їсти трави`, `з'їсти лікарські трави`, `використати трави`, `використати лікарські трави`, `вжити трави`, `прикласти трави`, `лікуватися травами`, `eat herbs`, `use herbs` -> eat/use carried herbs when wounded for a small HP recovery.
@@ -57,7 +59,7 @@ Actions:
 - `look mushroom`, `examine berries`, `оглянути ягоди`, `роздивитися факел` -> first try local features and visible nearby targets; if no visible target matches, inspect a matching carried resource stack in `Речі`.
 - `викинути ягоди`, `кинути трави`, `drop berries`, `discard torch` -> drop one carried resource from inventory into the current location.
 - `/put туша рів`, `/put туша all падальний рів`, `покласти всі рештки до ями` -> put carried carcasses/remains into a matching local feature/container. The first supported target is the gate `падальний рів`; this records a settlement contribution instead of paying a fixed bounty.
-- `/sit`, `sit`, `сісти`, `присісти` -> sit down without starting rest.
+- `/sit`, `sit`, `сісти`, `присісти` -> sit down without starting rest. While sitting, physical actions such as movement, pickup, gathering, attacking, freshening, dropping, putting items into features, cooking and fire/torch handling require standing up first; look, examine, speech, reply and other non-physical actions remain available.
 - `/stand`, `stand`, `stand up`, `встати`, `підвестися`, `підвестись` -> stand up; if active rest is running, standing interrupts it.
 - `/rest`, `відпочити`, `перепочити`, `додати відпочинок у чергу`, `перервати відпочинок` -> sit if needed and start, queue or interrupt active recovery.
 - `/sleep tutorial`, `tutorial`, `sleep tutorial`, `навчальний сон`, `сон навчання`, `навчання`, `туторіал`, `пройти навчання`, `повернутися до навчання` -> enter or return to the dream tutorial. While the tutorial is incomplete, plain `/sleep`, `сон` and `спати` route there too.
