@@ -17,7 +17,7 @@ import { requireScribeAdmin } from "../services/adminAccess";
 import { adminSecretMatches } from "../services/adminSecret";
 import { syncChatBotCommandsForTelegramId } from "../services/telegramCommands";
 import { buildAdminFireReplyKeyboard, buildAdminMenuReplyKeyboard, buildAdminResourcesReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
-import { nextResourceAmount, parseAddResourceArgs } from "../services/adminResources";
+import { nextResourceAmount, parseAddResourceArgs, parseAdminInventoryResourceArgs } from "../services/adminResources";
 import { stopAllPlayerAuto } from "./auto";
 import { resetTutorialProgressForPlayer } from "../services/tutorial";
 import { getGateHuntingSaturationState, setCarcassQuestOverride, type CarcassQuestOverride } from "../services/carcassDropoff";
@@ -201,8 +201,8 @@ export const ADMIN_HELP_TEXT = [
   "/addResource <resourceKey> [locationKey|x,y,z] [amount] — відновити ресурс у місцині; без місцини бере поточну, без кількості додає 1",
   "/addResourceHelp — список ключів ресурсів; /addResourse теж працює як запасний варіант",
   "/addCampfire [locationKey|x,y,z|персонаж] — додати звичайне вогнище",
-  "/addTorch [персонаж] — додати факел у речі собі або вказаному персонажу",
-  "/addTwigs [персонаж] — додати хмиз у речі собі або вказаному персонажу",
+  "/addTorch [персонаж] [кількість] — додати факел у речі собі або вказаному персонажу; без кількості додає 1",
+  "/addTwigs [персонаж] [кількість] — додати хмиз у речі собі або вказаному персонажу; без кількості додає 1",
   "/carcassQuest start — примусово відновити заклик біля падального рову й мисливський тиск",
   "/carcassQuest stop — примусово перевести падальний рів у стан «поки досить»",
   "",
@@ -249,7 +249,7 @@ export function registerAdminHandlers(bot: Bot) {
       "🔥 Вогонь",
       "",
       "Без параметрів /addCampfire додає вогнище в поточній місцині Писаря.",
-      "/addTorch і /addTwigs без параметрів додають факел або хмиз Писарю.",
+      "/addTorch і /addTwigs без параметрів додають 1 факел або 1 хмиз Писарю. Останнє число задає кількість: /addTorch #3 5, /addTwigs Вербові 10.",
     ].join("\n"), {
       reply_markup: buildAdminFireReplyKeyboard(),
     });
@@ -465,12 +465,13 @@ export function registerAdminHandlers(bot: Bot) {
   async function runAddTorchCommand(ctx: any, rawTarget = String(ctx.match ?? "").trim()) {
     if (!(await requireScribeAdmin(ctx))) return;
 
-    const player = await resolvePlayerForAdmin(ctx, rawTarget);
+    const parsed = parseAdminInventoryResourceArgs(rawTarget);
+    const player = await resolvePlayerForAdmin(ctx, parsed.playerArg);
     if (!player) return;
     const { torch } = await ensureTorchResourceTypes();
-    await addInventoryResource(player.id, torch.id);
-    await logEvent("SYSTEM", "Debug torch added to inventory", `player=${player.id}`);
-    await ctx.reply(`🕯 Додано факел у речі: ${playerDisplayName(player)}.`);
+    await addInventoryResource(player.id, torch.id, parsed.amount);
+    await logEvent("SYSTEM", "Debug torch added to inventory", `player=${player.id}; amount=${parsed.amount}`);
+    await ctx.reply(`🕯 Додано факел у речі: ${playerDisplayName(player)} ×${parsed.amount}.`);
   }
 
   bot.command("addTorch", (ctx) => runAddTorchCommand(ctx));
@@ -479,12 +480,13 @@ export function registerAdminHandlers(bot: Bot) {
   async function runAddTwigsCommand(ctx: any, rawTarget = String(ctx.match ?? "").trim()) {
     if (!(await requireScribeAdmin(ctx))) return;
 
-    const player = await resolvePlayerForAdmin(ctx, rawTarget);
+    const parsed = parseAdminInventoryResourceArgs(rawTarget);
+    const player = await resolvePlayerForAdmin(ctx, parsed.playerArg);
     if (!player) return;
     const twigs = await ensureResourceType("twigs", "хмиз", "Сухі дрібні гілки для підкидання у вогнище.");
-    await addInventoryResource(player.id, twigs.id);
-    await logEvent("SYSTEM", "Debug twigs added to inventory", `player=${player.id}`);
-    await ctx.reply(`🪵 Додано хмиз у речі: ${playerDisplayName(player)}.`);
+    await addInventoryResource(player.id, twigs.id, parsed.amount);
+    await logEvent("SYSTEM", "Debug twigs added to inventory", `player=${player.id}; amount=${parsed.amount}`);
+    await ctx.reply(`🪵 Додано хмиз у речі: ${playerDisplayName(player)} ×${parsed.amount}.`);
   }
 
   bot.command("addTwigs", (ctx) => runAddTwigsCommand(ctx));
