@@ -49,6 +49,8 @@ Prepared names should also match the selected onboarding pronoun:
 
 The current code-level pool is still intentionally modest, but it now covers more playtest variety across masculine, feminine and plural-form choices. The intended later registry should grow toward roughly a hundred reviewed prepared names across genders, regions and rarity bands.
 
+Named NPCs may also live in the same prepared-name corpus as reserved, scribe-approved records. That keeps their Ukrainian case forms in one place while still preventing onboarding from offering those names to new players. Current reserved NPC records include `Здравомир`, `Ведана`, `Лукан` and `Орина`.
+
 Preferred cultural layers:
 
 - Slavic and Old Rus;

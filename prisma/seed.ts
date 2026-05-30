@@ -13,6 +13,7 @@ import {
   starterAnimalHp,
   type StarterAnimalGroup,
 } from "../src/data/starterAnimals";
+import { preparedNameByNominative } from "../src/services/characterNames";
 
 dotenv.config();
 
@@ -111,6 +112,19 @@ type CreatureNameOverrides = {
   nameLocative?: string;
   nameVocative?: string;
 };
+
+function preparedCreatureNameOverrides(nominative: string): CreatureNameOverrides {
+  const prepared = preparedNameByNominative(nominative);
+  if (!prepared) return {};
+  return {
+    nameGenitive: prepared.forms.genitive,
+    nameDative: prepared.forms.dative,
+    nameAccusative: prepared.forms.accusative,
+    nameInstrumental: prepared.forms.instrumental,
+    nameLocative: prepared.forms.locative,
+    nameVocative: prepared.forms.vocative,
+  };
+}
 
 type SeedUniqueCreature = {
   speciesKey: string;
@@ -509,6 +523,7 @@ async function ensureUniqueCreature(
   });
 
   const keep = existing[0];
+  const nameOverrides = { ...preparedCreatureNameOverrides(creature.name), ...creature.nameOverrides };
 
   if (!keep) {
     await prisma.creature.create({
@@ -516,7 +531,7 @@ async function ensureUniqueCreature(
         speciesId: sp.id,
         locationId: loc.id,
         name: creature.name,
-        ...creature.nameOverrides,
+        ...nameOverrides,
         hp: sp.baseHp,
         isAlive: creature.isAlive,
         isGone: false,
@@ -538,7 +553,7 @@ async function ensureUniqueCreature(
     where: { id: keep.id },
     data: {
       name: creature.name,
-      ...creature.nameOverrides,
+      ...nameOverrides,
       isAlive: creature.isAlive,
       isGone: false,
       locationId: loc.id,

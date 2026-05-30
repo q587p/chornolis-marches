@@ -15,6 +15,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Added the first seeded gate hunter NPC, `Лукан`, near the closed settlement gate.
 - Added `Орина`, a second seeded hunter NPC near the forest edge, returning toward the gate with one visible lit torch and one spare torch represented in the lightweight hunter bundle state.
+- Added the hunter and herbalist NPC names to the scribe-approved prepared-name corpus as reserved records.
 - Added a first NPC hunter state-machine slice that routes through ordinary exits, seeks visible mice or rabbits, attacks through the delayed creature action queue and returns claimed carcasses to the gate.
 - Added hunter-claimed carcass markers and grouped corpse resource helpers so NPC deposits can use the existing carcass drop-off contribution service.
 - Added narrow hunter pickup for visible ground torches so found `torch` and `lit_torch` stacks can feed the current hunting bundle slice.
@@ -24,6 +25,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Creature attack completion now treats `hunter` profession kills differently from predator feeding: hunter kills are claimed for the `Падальний рів` instead of becoming ordinary visible prey corpses.
 - Hunters marked as returning for torches now keep moving toward the gate unless they see local prey on the way.
+- Unique creature seeding and world reset now reuse prepared-name case forms for named NPCs before falling back to local overrides.
 - Updated gate hunting loop docs and `NPC-002` planning notes to distinguish the first state-machine slice from the still-future real torch bundle/light-state work.
 - Documented future hunter torch crafting from gathered resources.
 

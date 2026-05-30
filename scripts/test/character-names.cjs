@@ -10,6 +10,7 @@ const {
   customNameWarningText,
   normalizeNameForRegistry,
   preparedNameByKey,
+  preparedNameByNominative,
   randomAvailablePreparedName,
   validateCustomCharacterName,
 } = require("../../src/services/characterNames");
@@ -22,6 +23,17 @@ assert.ok(vedana, "Expected prepared name Vedana");
 assert.equal(vedana.forms.genitive, "Ведани");
 assert.equal(vedana.forms.vocative, "Ведано");
 assert.equal(vedana.reserved, true);
+
+for (const key of ["zdravomyr", "lukan", "oryna"]) {
+  const prepared = preparedNameByKey(key);
+  assert.ok(prepared, `Expected reserved NPC prepared name: ${key}`);
+  assert.equal(prepared.reserved, true, `Expected ${key} to be reserved`);
+  assert.equal(availablePreparedNames([]).some((name) => name.key === key), false, `Expected ${key} not to be offered`);
+  assert.equal(preparedNameByNominative(prepared.forms.nominative)?.key, key);
+}
+assert.equal(preparedNameByKey("zdravomyr").forms.vocative, "Здравомире");
+assert.equal(preparedNameByKey("lukan").forms.dative, "Лукану");
+assert.equal(preparedNameByKey("oryna").forms.accusative, "Орину");
 
 assert.equal(availablePreparedNames(["Ведана"]).some((name) => name.key === "vedana"), false);
 assert.equal(availablePreparedNames(["Хтось"]).some((name) => name.key === "vedana"), false);
@@ -71,6 +83,12 @@ const uniqueCreatures = JSON.parse(fs.readFileSync(path.join(__dirname, "../../p
 const uniqueCreatureNames = uniqueCreatures.map((creature) => creature.name).filter(Boolean);
 assert.ok(uniqueCreatureNames.includes("Ведана"), "Expected Vedana to remain a named NPC in world seed data");
 assert.equal(availablePreparedNames(uniqueCreatureNames).some((name) => name.key === "vedana"), false);
+for (const npcName of ["Здравомир", "Ведана", "Лукан", "Орина"]) {
+  const creature = uniqueCreatures.find((item) => item.name === npcName);
+  assert.ok(creature, `Expected named NPC in seed: ${npcName}`);
+  assert.equal(creature.nameOverrides, undefined, `Expected ${npcName} to use prepared-name forms from registry`);
+  assert.ok(preparedNameByNominative(npcName)?.reserved, `Expected ${npcName} to be reserved in prepared-name registry`);
+}
 
 assert.equal(validateCustomCharacterName("Вовк").ok, false);
 assert.equal(validateCustomCharacterName("Vovk").ok, false);
