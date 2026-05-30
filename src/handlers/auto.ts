@@ -21,7 +21,9 @@ const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG
 const AUTO_SAY_CHANCE = Number(process.env.PLAYER_AUTO_SAY_CHANCE || 15);
 const AUTO_CONSENT_TITLE = "Player auto consent";
 
-type AutoState = { timer: NodeJS.Timeout; running: boolean };
+export type AutoActionKey = "say" | "gather" | "look" | "move";
+
+type AutoState = { timer: NodeJS.Timeout; running: boolean; lastActionKey?: AutoActionKey };
 const autoPlayers = new Map<number, AutoState>();
 let autoBot: Bot | null = null;
 
@@ -94,6 +96,24 @@ function autoRestChance(player: any) {
   const debtRatio = Math.min(1, Math.abs(player.stamina) / veryTiredDebt);
 
   return Math.min(95, 15 + Math.round(debtRatio * 75));
+}
+
+export function orderAutoActionKeys(roll: number, lastActionKey?: AutoActionKey) {
+  const order: AutoActionKey[] = ["say"];
+  if (roll < 0.45) order.push("gather");
+  if (roll < 0.7) order.push("look");
+  order.push("move", "look");
+
+  const uniqueOrder = order.filter((key, index) => order.indexOf(key) === index);
+  if (!lastActionKey || uniqueOrder.length < 2 || !uniqueOrder.includes(lastActionKey)) return uniqueOrder;
+
+  return [...uniqueOrder.filter((key) => key !== lastActionKey), lastActionKey];
+}
+
+async function runAutoChoice(state: AutoState, key: AutoActionKey, run: () => Promise<boolean>) {
+  const selected = await run();
+  if (selected) state.lastActionKey = key;
+  return selected;
 }
 
 async function maybeStartAutoRest(bot: Bot, telegramId: number, player: any, locationId: number) {
@@ -277,14 +297,17 @@ async function runAutoStep(bot: Bot, telegramId: number) {
 
     if (await maybePerformPlayerAutoSignal(bot, player, telegramId)) return;
 
-    if (await maybeAutoSay(bot, telegramId, player, locationId)) return;
-
     const roll = Math.random();
-    if (roll < 0.45 && await autoGather(bot, telegramId, player, locationId)) return;
-    if (roll < 0.7 && await autoLook(bot, telegramId, player, locationId)) return;
-    if (await autoMove(bot, telegramId, player, locationId)) return;
+    const choices: Record<AutoActionKey, () => Promise<boolean>> = {
+      say: () => maybeAutoSay(bot, telegramId, player, locationId),
+      gather: () => autoGather(bot, telegramId, player, locationId),
+      look: () => autoLook(bot, telegramId, player, locationId),
+      move: () => autoMove(bot, telegramId, player, locationId),
+    };
 
-    await autoLook(bot, telegramId, player, locationId);
+    for (const key of orderAutoActionKeys(roll, state.lastActionKey)) {
+      if (await runAutoChoice(state, key, choices[key])) return;
+    }
   } catch (error) {
     console.warn("Player auto step failed:", error);
   } finally {

@@ -67,15 +67,24 @@ or, during the fox attack:
 - In the first implementation, `look` or `examine` during the attack moment can trigger the lesson; later this should depend on visibility, attention, and actual skill state.
 The first implementation can write only a tutorial flag or placeholder skill progress; it does not need the full progression model yet.
 
-## 0.13.11 Attack Placeholder
+## 0.13.11+ Text-Only Learning Placeholders
 
 A text-only attack-learning bridge now exists before real skill progress rows:
 
-- every thirteenth player kill through `ATTACK` sends the acting player `Навичка атаки підросла.`;
-- every fifth recorded `look`/`examine` observation of a recent kill by someone else in the same location sends the observer `Навичка атаки трохи підросла.`;
+- every thirteenth player kill through `ATTACK` sends the acting player `Навичка <b>атаки</b> підросла.`;
+- every fifth recorded `look`/`examine` observation of a recent kill by someone else in the same location sends the observer `Навичка <b>атаки</b> трохи підросла.`;
 - the bookkeeping uses hidden `WorldEvent` records and does not expose raw counters or change numeric skills.
 
-Future work should move these messages onto the shared learning/progression service so attack practice and attack observation use the same rules as Herbalism, Tracking and other teachable skills.
+A matching gathering bridge now exists:
+
+- every thirteenth player gather attempt through `GATHER` or `GATHER_SPECIFIC` sends the acting player `Навичка <b>збирання</b> підросла.`;
+- failed gather attempts count for practice;
+- every completed player or NPC gather attempt records a hidden observation source;
+- inspecting another character/NPC, examining the location, or using brief `look` while the location has active light can record one observation of a recent gather source;
+- every fifth such recorded observation sends the observer `Навичка <b>збирання</b> трохи підросла.`;
+- the bookkeeping also uses hidden `WorldEvent` records and does not expose raw counters or change numeric skills.
+
+Future work should move these messages onto the shared learning/progression service so attack practice, attack observation, gathering practice and gathering observation use the same rules as Herbalism, Tracking and other teachable skills.
 
 ## First Skill Vocabulary To Consider
 

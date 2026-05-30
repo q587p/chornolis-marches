@@ -1,8 +1,8 @@
 export const ATTACK_PRACTICE_KILL_INTERVAL = 13;
 export const ATTACK_OBSERVATION_INTERVAL = 5;
 
-export const ATTACK_PRACTICE_GROWTH_MESSAGE = "Навичка атаки підросла.";
-export const ATTACK_OBSERVATION_GROWTH_MESSAGE = "Навичка атаки трохи підросла.";
+export const ATTACK_PRACTICE_GROWTH_MESSAGE = "Навичка <b>атаки</b> підросла.";
+export const ATTACK_OBSERVATION_GROWTH_MESSAGE = "Навичка <b>атаки</b> трохи підросла.";
 
 export const ATTACK_KILL_SOURCE_EVENT_TITLE = "Attack kill observable";
 export const ATTACK_OBSERVATION_EVENT_TITLE = "Attack kill observed";

@@ -174,7 +174,7 @@
   {
     "id": "ECO-003",
     "title": "Gate hunting saturation and stand-down state",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "ecology",
     "priority": "high",

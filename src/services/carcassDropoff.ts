@@ -6,6 +6,10 @@ import { inventoryResourceKeyFromText } from "./inventoryUse";
 export const GATE_CARCASS_DROPOFF_FEATURE_KEY = "closed_gate_carcass_dropoff";
 export const GATE_CARCASS_DROPOFF_SMALL_THRESHOLD = 3;
 export const GATE_CARCASS_DROPOFF_LARGE_THRESHOLD = 13;
+export const GATE_HUNTING_SATURATION_CONTRIBUTION_THRESHOLD = 21;
+export const GATE_HUNTING_SATURATION_PREY_PRESSURE_MAX = 12;
+export const GATE_HUNTING_SATURATION_RADIUS = 4;
+const DEPLETED_VEGETATION_FEATURE_PREFIX = "depleted_vegetation_";
 
 type CarriedResource = {
   id: number;
@@ -21,6 +25,16 @@ type DropoffReaction = {
   first: boolean;
   smallThreshold: boolean;
   largeThreshold: boolean;
+};
+
+export type GateHuntingSaturationState = {
+  active: boolean;
+  contributionTotal: number;
+  preyPressure: number;
+  depletedSignals: number;
+  enoughContributions: boolean;
+  pressureQuiet: boolean;
+  overgrazingQuiet: boolean;
 };
 
 type DropoffContributor = {
@@ -51,6 +65,13 @@ export const HUNTER_FIELD_LINES = {
   giveUp: [
     "Сліди розсипались. Повернуся іншим колом.",
     "Сьогодні ліс не дав легкої стежки.",
+  ],
+  standDown: [
+    "Досить на сьогодні. Хай трава трохи підведеться.",
+    "Не кожен рух у лісі треба гнати ножем.",
+    "Посидимо біля вогню. Якщо межа знову просяде, підемо.",
+    "Гризуни ще лишаться. Але тепер не вони диктують день.",
+    "Писар знак змінив. Значить, поки чекаємо.",
   ],
 } as const;
 
@@ -101,18 +122,115 @@ export function isCarcassDropoffResourceKey(resourceKey: string) {
   return resourceKey.startsWith("corpse_");
 }
 
-export function dropoffReactionForTotals(before: number, after: number): DropoffReaction {
-  return {
+export function dropoffReactionForTotals(before: number, after: number, options: { saturationActive?: boolean } = {}): DropoffReaction {
+  const reaction = {
     first: before <= 0 && after > 0,
     smallThreshold: before < GATE_CARCASS_DROPOFF_SMALL_THRESHOLD && after >= GATE_CARCASS_DROPOFF_SMALL_THRESHOLD,
     largeThreshold: before < GATE_CARCASS_DROPOFF_LARGE_THRESHOLD && after >= GATE_CARCASS_DROPOFF_LARGE_THRESHOLD,
   };
+  return options.saturationActive ? suppressDropoffRewards(reaction) : reaction;
+}
+
+export function gateHuntingSaturationForSignals(input: {
+  contributionTotal: number;
+  preyPressure: number;
+  depletedSignals?: number;
+}): GateHuntingSaturationState {
+  const contributionTotal = Math.max(0, Math.trunc(input.contributionTotal));
+  const preyPressure = Math.max(0, Math.trunc(input.preyPressure));
+  const depletedSignals = Math.max(0, Math.trunc(input.depletedSignals ?? 0));
+  const enoughContributions = contributionTotal >= GATE_HUNTING_SATURATION_CONTRIBUTION_THRESHOLD;
+  const pressureQuiet = preyPressure <= GATE_HUNTING_SATURATION_PREY_PRESSURE_MAX;
+  const overgrazingQuiet = depletedSignals <= 0;
+  return {
+    active: enoughContributions && pressureQuiet && overgrazingQuiet,
+    contributionTotal,
+    preyPressure,
+    depletedSignals,
+    enoughContributions,
+    pressureQuiet,
+    overgrazingQuiet,
+  };
+}
+
+function suppressDropoffRewards(reaction: DropoffReaction): DropoffReaction {
+  return { first: reaction.first, smallThreshold: false, largeThreshold: false };
 }
 
 export function hunterFieldLine(kind: HunterFieldLineKind, seed = 0) {
   const lines = HUNTER_FIELD_LINES[kind];
   const index = Math.abs(seed) % lines.length;
   return lines[index];
+}
+
+async function totalDropoffContributions(db: any, dropoffFeatureKey: string) {
+  const aggregate = await db.carcassDropoffContribution.aggregate({
+    where: { dropoffFeatureKey },
+    _sum: { amount: true },
+  });
+  return aggregate._sum.amount ?? 0;
+}
+
+async function saturationSignals(db: any, dropoffFeatureKey: string) {
+  const feature = await db.locationFeature.findUnique({
+    where: { key: dropoffFeatureKey },
+    include: { location: true },
+  });
+  if (!feature?.location) return gateHuntingSaturationForSignals({ contributionTotal: 0, preyPressure: Number.POSITIVE_INFINITY });
+
+  const nearbyLocations = await db.cellLocation.findMany({
+    where: {
+      regionId: feature.location.regionId,
+      z: feature.location.z,
+      x: { gte: feature.location.x - GATE_HUNTING_SATURATION_RADIUS, lte: feature.location.x + GATE_HUNTING_SATURATION_RADIUS },
+      y: { gte: feature.location.y - GATE_HUNTING_SATURATION_RADIUS, lte: feature.location.y + GATE_HUNTING_SATURATION_RADIUS },
+    },
+    select: { id: true },
+  });
+  const locationIds = nearbyLocations.map((location: { id: number }) => location.id);
+  const [contributionTotal, preyPressure, depletedSignals] = await Promise.all([
+    totalDropoffContributions(db, dropoffFeatureKey),
+    db.creature.count({
+      where: {
+        locationId: { in: locationIds },
+        isAlive: true,
+        isGone: false,
+        isHidden: false,
+        species: { key: { in: ["mouse", "rabbit"] }, diet: "HERBIVORE" },
+      },
+    }),
+    db.locationFeature.count({
+      where: {
+        locationId: { in: locationIds },
+        isActive: true,
+        key: { startsWith: DEPLETED_VEGETATION_FEATURE_PREFIX },
+      },
+    }),
+  ]);
+
+  return gateHuntingSaturationForSignals({ contributionTotal, preyPressure, depletedSignals });
+}
+
+export async function getGateHuntingSaturationState(dropoffFeatureKey = GATE_CARCASS_DROPOFF_FEATURE_KEY) {
+  return saturationSignals(prisma, dropoffFeatureKey);
+}
+
+function saturationTechnicalLine(state: GateHuntingSaturationState) {
+  return `Технічно: huntingSaturation=${state.active ? "active" : "inactive"}; contributions=${state.contributionTotal}/${GATE_HUNTING_SATURATION_CONTRIBUTION_THRESHOLD}; preyPressure=${state.preyPressure}/${GATE_HUNTING_SATURATION_PREY_PRESSURE_MAX}; depletedSignals=${state.depletedSignals}.`;
+}
+
+export function gateHuntingNoticeText(baseText: string | null | undefined, state: GateHuntingSaturationState, showTechnicalDetails = false) {
+  const text = state.active
+    ? "На дошці біля воріт висить свіжіша записка. Старі рядки про гризунів не зірвані, але поверх них прибито вузьку смугу берести.\n\nПоки досить. Тиск на стадо повернувся, трава біля межі має час підвестися, а мисливцям не велено гнати кожну тінь ножем.\n\nПадальний рів лишається на місці: придатні рештки все ще можна скласти туди, якщо вже принесли. Але сьогодні поселення більше не кличе за новою здобиччю."
+    : baseText ?? "На дошці біля воріт висить записка про звіра біля межі.";
+  return showTechnicalDetails ? `${text}\n\n${saturationTechnicalLine(state)}` : text;
+}
+
+export function gateHuntingDropoffText(baseText: string | null | undefined, state: GateHuntingSaturationState, showTechnicalDetails = false) {
+  const text = state.active
+    ? "Падальний рів під частоколом не засипаний, але сторожовий кілок біля нього перев’язано свіжою смугою берести: поки вистачить.\n\nЯкщо ви вже несете придатну тушу чи рештки, їх можна скласти сюди. Писар поставить зарубку, але нових припасів за це зараз не видаватимуть: край має перепочити від полювання."
+    : baseText ?? "Тут складають туші та рештки здобичі для писарського рахунку.";
+  return showTechnicalDetails ? `${text}\n\n${saturationTechnicalLine(state)}` : text;
 }
 
 function amountText(amount: number, resources: CarriedResource[]) {
@@ -124,10 +242,15 @@ function actorTextForDropoff(input: {
   amount: number;
   resources: CarriedResource[];
   reaction: DropoffReaction;
+  saturationActive?: boolean;
 }) {
   const lines = [
     `Ви складаєте ${amountText(input.amount, input.resources)} до падального рову.`,
   ];
+
+  if (input.saturationActive) {
+    lines.push("Сторож дивиться на свіжу бересту біля кілка й тихо каже:\n\n— Приймемо, якщо вже принесли. Але край сьогодні не просить більшої різанини, тож нових припасів за це не буде.");
+  }
 
   if (input.reaction.first) {
     lines.push("Сторож киває до писаря біля воріт.\n\n— Запишемо. Не всяка поміч одразу сріблом важиться.");
@@ -214,6 +337,7 @@ export async function recordNpcCarcassDropoffContribution(input: {
   }
 
   const dropoffFeatureKey = input.dropoffFeatureKey ?? GATE_CARCASS_DROPOFF_FEATURE_KEY;
+  const saturation = await getGateHuntingSaturationState(dropoffFeatureKey).catch(() => null);
 
   return prisma.$transaction(async (tx) => {
     const [feature, creature] = await Promise.all([
@@ -247,7 +371,7 @@ export async function recordNpcCarcassDropoffContribution(input: {
     });
 
     const after = before + amount;
-    const reaction = dropoffReactionForTotals(before, after);
+    const reaction = dropoffReactionForTotals(before, after, { saturationActive: saturation?.active });
     const creatureName = creature.name ?? creature.species.name;
 
     return {
@@ -278,6 +402,7 @@ export async function putInventoryIntoLocalFeature(input: {
   const feature = await resolveLocalFeature(locationId, input.containerQuery);
   if (!feature) throw new Error("Тут немає такого місця, куди це можна покласти.");
   if (!isCarcassDropoffFeature(feature)) throw new Error("Це не місце для туш чи решток.");
+  const saturation = await getGateHuntingSaturationState(feature.key).catch(() => null);
 
   return prisma.$transaction(async (tx) => {
     const matched = await matchingCarriedResources(tx, input.playerId, input.itemQuery);
@@ -321,15 +446,15 @@ export async function putInventoryIntoLocalFeature(input: {
     }
 
     const after = before + requested;
-    const reaction = dropoffReactionForTotals(before, after);
-    if (reaction.smallThreshold) await addPlayerResource(tx, input.playerId, "torch", 1);
-    if (reaction.largeThreshold) await addPlayerResource(tx, input.playerId, "twigs", 3);
+    const reaction = dropoffReactionForTotals(before, after, { saturationActive: saturation?.active });
+    if (!saturation?.active && reaction.smallThreshold) await addPlayerResource(tx, input.playerId, "torch", 1);
+    if (!saturation?.active && reaction.largeThreshold) await addPlayerResource(tx, input.playerId, "twigs", 3);
 
     return {
       amount: requested,
       featureKey: feature.key,
       locationId,
-      text: actorTextForDropoff({ amount: requested, resources: matched, reaction }),
+      text: actorTextForDropoff({ amount: requested, resources: matched, reaction, saturationActive: Boolean(saturation?.active) }),
       observerText: `Хтось складає здобич до падального рову біля воріт.`,
       contributionTotal: after,
       reaction,

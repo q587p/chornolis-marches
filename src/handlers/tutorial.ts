@@ -41,12 +41,16 @@ async function wakeTutorial(ctx: any) {
   if (result.woke) await replyWithLocation(ctx, result.locationId, player.id);
 }
 
-async function openGate(ctx: any) {
+function commandArgs(ctx: any) {
+  return ctx.message?.text?.split(/\s+/).slice(1).join(" ").trim() || undefined;
+}
+
+async function openGate(ctx: any, target?: string) {
   if (!ctx.from) return;
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
-  const text = await openDreamGate(player.id);
+  const text = await openDreamGate(player.id, target);
   await ctx.reply(text, { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
 }
 
@@ -74,13 +78,13 @@ export function registerTutorialHandlers(bot: Bot) {
 
   bot.command(["wake", "wakeup", "open"], async (ctx) => {
     const command = ctx.message?.text?.split(/\s+/)[0]?.replace(/^\//, "").toLowerCase();
-    if (command === "open") return openGate(ctx);
+    if (command === "open") return openGate(ctx, commandArgs(ctx));
     return wakeTutorial(ctx);
   });
 
   bot.hears(["🌅 Прокинутися", "Прокинутися", "прокинутися"], wakeTutorial);
   bot.hears(["💬 Сказати «Відчинитися»", "Сказати «Відчинитися»", "сказати відчинитися"], (ctx) => sayOpenGatePhrase(bot, ctx));
-  bot.hears(["🚪 Відкрити", "Відкрити", "відкрити"], openGate);
+  bot.hears(["🚪 Відкрити", "Відкрити", "відкрити"], (ctx) => openGate(ctx));
 
   bot.callbackQuery("tutorial:wake", async (ctx) => {
     await safeAnswerCallbackQuery(ctx);

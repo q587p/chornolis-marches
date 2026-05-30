@@ -25,6 +25,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🕯",
       "torch_source": true,
       "infinite_for_now": true,
       "future_limited_stock": true
@@ -39,6 +40,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🪧",
       "inspectable": true,
       "gate_hunting_notice": true,
       "aliases": [
@@ -55,10 +57,11 @@
     "locationKey": "closed_east_gate",
     "type": "LANDMARK",
     "name": "Падальний рів",
-    "description": "Під частоколом, осторонь від брами, викопано неглибокий падальний рів. Над ним стирчить сторожовий кілок із зарубками й клаптем червоної тканини. Тут складають туші та рештки здобичі, які писарі потім рахують, а різники — забирають те, що ще можна використати.\n\nЯкщо маєте придатну тушу в речах, можна написати: /put туша рів.",
+    "description": "Під частоколом, осторонь від брами, викопано неглибокий падальний рів. Над ним стирчить сторожовий кілок із зарубками й клаптем червоної тканини. Тут складають туші та рештки здобичі, які писарі потім рахують, а різники — забирають те, що ще можна використати.\n\nЯкщо маєте придатну тушу в речах, можна написати: /put або /put туша рів.",
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🕳️",
       "inspectable": true,
       "carcass_dropoff": true,
       "aliases": [

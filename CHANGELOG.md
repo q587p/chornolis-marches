@@ -9,6 +9,37 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.12 - Gate hunting saturation stand-down - 12026-05-30
+
+### Added
+
+- Added a conservative gate-hunting saturation helper based on drop-off contribution, nearby mouse/rabbit pressure and nearby depleted-vegetation signals.
+- Added saturation-aware inspect text for the gate hunting notice and carcass drop-off feature.
+- Added a hunter stand-down path: hunters without claimed carcasses stop seeking prey while saturation is active, route toward the magic campfire, rest and use a quieter waiting line pool.
+
+### Changed
+
+- Player carcass/remains drop-offs remain physically accepted while saturation is active, but new supply reward thresholds are suppressed.
+- Player auto mode now avoids choosing the same broad automatic action twice in a row when another candidate action is available.
+- Plain `/put`, `put` and `покласти` now temporarily default to `/put туша рів`, so the drop-off hint remains usable even without typed parameters.
+- Location features can now use per-feature icons; the torch stand, hunting notice and carcass drop-off near the gate no longer all share the generic landmark glyph, and the unlit torch supply avoids the fire icon reserved for actual flame.
+- `/open` now acknowledges visible non-openable local gates such as the closed settlement gate instead of saying no gate is present.
+- `/open`, `open`, `o`, `відкрити`, `відчинити`, `відкрий`, `відчини` and related forms now accept optional gate-like targets such as `ворота`, `брама` or `gate`.
+- Gathering now has the same text-only learning bridge as attack: every thirteenth personal gather attempt can show a growth message, and every fifth observation of another player or NPC gathering can show a smaller growth message.
+- Updated gate hunting loop docs and `ECO-003` planning notes with the first implemented saturation boundary and remaining tuning.
+
+### Tests
+
+- Extended gate hunting loop helper coverage for saturation activation/deactivation, reward suppression and hunter stand-down line selection.
+- Added auto action ordering coverage for the non-repeat preference.
+- Added parser coverage for plain `/put` defaults and the `put out torch` collision guard.
+- Added seed coverage so nearby explicit feature icons do not repeat, and so the gate torch stand does not use the fire icon.
+- Added parser/helper coverage for `/open` feedback on visible but currently non-openable gates.
+- Added parser coverage for targeted open aliases such as `відкрити ворота` and `o gate`.
+- Added helper coverage for gathering practice and observation milestones.
+
+---
+
 ## 0.13.11 - NPC hunter state-machine slice - 12026-05-30
 
 ### Added

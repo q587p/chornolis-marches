@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 
 require("ts-node/register");
 
-const { AUTO_LINES } = require("../../src/handlers/auto");
+const { AUTO_LINES, orderAutoActionKeys } = require("../../src/handlers/auto");
 const { HERBALIST_LINES } = require("../../src/services/worldTick");
 
 function assertLineBank(name, lines, minimum) {
@@ -17,5 +17,11 @@ function assertLineBank(name, lines, minimum) {
 
 assertLineBank("HERBALIST_LINES", HERBALIST_LINES, 50);
 assertLineBank("AUTO_LINES", AUTO_LINES, 50);
+
+assert.deepEqual(orderAutoActionKeys(0.2), ["say", "gather", "look", "move"]);
+assert.deepEqual(orderAutoActionKeys(0.2, "gather"), ["say", "look", "move", "gather"]);
+assert.deepEqual(orderAutoActionKeys(0.5, "look"), ["say", "move", "look"]);
+assert.deepEqual(orderAutoActionKeys(0.9, "move"), ["say", "look", "move"]);
+assert.deepEqual(orderAutoActionKeys(0.9, "say"), ["move", "look", "say"]);
 
 console.log("Ambient line banks OK");

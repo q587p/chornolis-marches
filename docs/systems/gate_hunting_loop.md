@@ -109,6 +109,14 @@ When saturation is active:
 
 The state should be reversible. If herbivores overgraze again, predator pressure drops, or enough time passes, the sign can return to asking for help.
 
+0.13.12 adds the first conservative saturation helper:
+
+- enough recorded contribution;
+- quiet nearby mouse/rabbit pressure around the gate;
+- no nearby depleted-vegetation signal.
+
+When that helper is active, inspecting the gate notice or `Падальний рів` shows "enough for now" text. Drop-offs are still accepted as physical remains, but supply thresholds are suppressed, and hunters without carried/claimed carcasses route toward the magic campfire, rest and use a quieter stand-down line pool. The thresholds are intentionally technical/admin detail; player-facing text should keep saying that the border has enough pressure for now.
+
 ## `put` Command Relationship
 
 This loop is the first target for a narrow local-container command:
@@ -123,6 +131,7 @@ MVP scope:
 
 - source: player inventory;
 - target: local feature/container in the current location;
+- plain `/put`, `put` or `покласти` temporarily defaults to `/put туша рів` so the command mentioned on the drop-off feature remains directly usable;
 - amount: default `1`, integer amount, or `all` / `все`;
 - valid gate drop-off routes into the contribution service;
 - invalid items and invalid targets do not delete anything.

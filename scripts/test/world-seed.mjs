@@ -75,6 +75,27 @@ for (const feature of features) {
   assertKnown(locationKeys, feature.locationKey, `Unknown locationKey for feature ${feature.key}`);
 }
 
+const explicitFeatureIconsByLocation = new Map();
+for (const feature of features) {
+  const icon = typeof feature.data?.icon === "string" ? feature.data.icon.trim() : "";
+  if (!icon) continue;
+  const locationIcons = explicitFeatureIconsByLocation.get(feature.locationKey) ?? new Map();
+  assert.ok(
+    !locationIcons.has(icon),
+    `Duplicate explicit feature icon in ${feature.locationKey}: ${icon} on ${locationIcons.get(icon)} and ${feature.key}`,
+  );
+  locationIcons.set(icon, feature.key);
+  explicitFeatureIconsByLocation.set(feature.locationKey, locationIcons);
+}
+
+for (const key of ["closed_gate_torch_stand", "closed_gate_hunting_notice", "closed_gate_carcass_dropoff"]) {
+  const feature = features.find((item) => item.key === key);
+  assert.ok(feature?.data?.icon, `Gate feature should have a distinct icon: ${key}`);
+}
+
+const gateTorchStand = features.find((item) => item.key === "closed_gate_torch_stand");
+assert.notEqual(gateTorchStand?.data?.icon, "🔥", "Torch stand should not use the fire icon reserved for flame/campfire actions");
+
 for (const creature of uniqueCreatures) {
   assertKnown(locationKeys, creature.locationKey, `Unknown locationKey for unique creature ${creature.name}`);
 }

@@ -4,13 +4,21 @@ require("ts-node/register");
 
 const { normalizeInput, parseAlias, suggestAliasInputs } = require("../../src/input/aliases");
 const { inventoryResourceKeyFromText } = require("../../src/services/inventoryUse");
-const { isDreamGateOpeningPhrase } = require("../../src/services/tutorial");
+const { isDreamGateOpeningPhrase, localGateOpenAttemptText } = require("../../src/services/tutorial");
 const { normalizeCreatureActionText } = require("../../src/utils/creatureActionText");
 const { resourceAccusativeName } = require("../../src/utils/resourceText");
 
 function assertAlias(input, expected) {
   assert.deepEqual(parseAlias(input), expected, `Unexpected alias parse for: ${input}`);
 }
+
+const closedSettlementGateText = localGateOpenAttemptText({
+  name: "Зачинені ворота",
+  data: { openable: false, locked: true, locks_exit_direction: "EAST" },
+});
+assert.match(closedSettlementGateText, /Ворота тут є/);
+assert.match(closedSettlementGateText, /східний прохід/);
+assert.match(closedSettlementGateText, /відкриється лише за певних умов/);
 
 assert.equal(normalizeInput("  /Look@Chornolis_bot!!!  "), "/look");
 assert.equal(normalizeInput("з’їсти   ягоди."), "з'їсти ягоди");
@@ -101,6 +109,13 @@ assertAlias("сон", { kind: "sleep" });
 assertAlias("спати", { kind: "sleep" });
 assertAlias("прокинутися", { kind: "wake" });
 assertAlias("відкрити", { kind: "open" });
+assertAlias("/open ворота", { kind: "open", target: "ворота" });
+assertAlias("відкрити ворота", { kind: "open", target: "ворота" });
+assertAlias("відчинити браму", { kind: "open", target: "браму" });
+assertAlias("відкрий ворота", { kind: "open", target: "ворота" });
+assertAlias("відч ворота", { kind: "open", target: "ворота" });
+assertAlias("привідкрити двері", { kind: "open", target: "двері" });
+assertAlias("o gate", { kind: "open", target: "gate" });
 
 assertAlias("відпочити", { kind: "rest", mode: "start" });
 assertAlias("додати відпочинок у чергу", { kind: "rest", mode: "queue" });
@@ -109,10 +124,14 @@ assertAlias("/sit", { kind: "posture", mode: "sit" });
 assertAlias("сісти", { kind: "posture", mode: "sit" });
 assertAlias("/stand", { kind: "posture", mode: "stand" });
 assertAlias("встати", { kind: "posture", mode: "stand" });
+assertAlias("/put", { kind: "put-item", item: "туша", container: "рів" });
+assertAlias("put", { kind: "put-item", item: "туша", container: "рів" });
+assertAlias("покласти", { kind: "put-item", item: "туша", container: "рів" });
 assertAlias("/put туша рів", { kind: "put-item", item: "туша", container: "рів" });
 assertAlias("/put туша 3 падальний рів", { kind: "put-item", item: "туша", amount: 3, container: "падальний рів" });
 assertAlias("/put туша all рів", { kind: "put-item", item: "туша", amount: "all", container: "рів" });
 assertAlias("покласти всі рештки до ями", { kind: "put-item", item: "рештки", amount: "all", container: "ями" });
+assertAlias("put out torch", { kind: "douse-torch" });
 assertAlias("черга", { kind: "queue", mode: "status" });
 assertAlias("скасувати", { kind: "queue", mode: "cancel-current" });
 assertAlias("очистити чергу", { kind: "queue", mode: "clear" });

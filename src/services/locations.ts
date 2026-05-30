@@ -27,6 +27,7 @@ import { playerShowsTechnicalDetails } from "./technicalDetails";
 import { dreamGateStatusText, isDreamGateFeature, lockedExitDirections, lockedExitLabel, rememberTutorialObservationLesson } from "./tutorial";
 import { formatObservedPostureText } from "../utils/playerText";
 import { isFreshenedCorpse } from "./meat";
+import { GATE_CARCASS_DROPOFF_FEATURE_KEY, gateHuntingDropoffText, gateHuntingNoticeText, getGateHuntingSaturationState } from "./carcassDropoff";
 
 const COMPACT_EXIT_ORDER = ["NORTH", "WEST", "SOUTH", "EAST", "UP", "DOWN", "INSIDE", "OUTSIDE"];
 const GATHERABLE_RESOURCE_KEYS = ["berries", "mushrooms", "herbs"] as const;
@@ -171,6 +172,8 @@ function torchLightButtonText(torchState: { isLit: boolean; plainAmount: number;
 }
 
 function featureIcon(feature: any) {
+  const data = featureData(feature);
+  if (typeof data.icon === "string" && data.icon.trim()) return data.icon.trim();
   if (isTutorialInsideFeature(feature) || isTutorialOutsideFeature(feature)) return "🕳️";
   if (isTutorialRestSeatFeature(feature)) return "🪑";
   if (isTutorialObservationFeature(feature)) return "🦊";
@@ -260,7 +263,7 @@ function featureDetailLine(feature: any, showTechnicalDetails = false) {
   } else if (feature.type === "BORDER_MARKER") {
     details.push("допомагає зорієнтуватися поблизу межі");
   } else if (feature.type === "GATE") {
-    details.push("позначає прохід, який треба роздивитися ближче");
+    details.push("позначає прохід, який відкриється за певних умов");
   } else if (isTutorialInsideFeature(feature)) {
     details.push("ховає вхід, що не є стороною світу");
   } else if (isTutorialOutsideFeature(feature)) {
@@ -875,7 +878,13 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
   if (isDepletedVegetationFeature(feature)) {
     return renderDepletedVegetationInspection(feature.locationId, viewerPlayerId, returnMode);
   }
-  if (feature.type === "BORDER_MARKER") {
+  if (featureData(feature).gate_hunting_notice === true || featureData(feature).carcass_dropoff === true) {
+    const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
+    const state = await getGateHuntingSaturationState(GATE_CARCASS_DROPOFF_FEATURE_KEY);
+    text = featureData(feature).gate_hunting_notice === true
+      ? gateHuntingNoticeText(feature.description, state, showTechnicalDetails)
+      : gateHuntingDropoffText(feature.description, state, showTechnicalDetails);
+  } else if (feature.type === "BORDER_MARKER") {
     const [stats, showTechnicalDetails] = await Promise.all([
       getPublicEcologySignStats(),
       playerShowsTechnicalDetails(viewerPlayerId),

@@ -1,7 +1,7 @@
 ---
 id: ECO-003
 title: Gate hunting saturation and stand-down state
-status: next
+status: testing
 type: feature
 area: ecology
 priority: high
@@ -65,3 +65,17 @@ When saturation is active:
 - Waiting hunters use a distinct compact line pool.
 - The loop can leave saturation later when ecological pressure rises again.
 - Focused tests cover saturation reward suppression and hunter stand-down line selection.
+
+## 0.13.12 First Slice
+
+- Added a conservative `gateHuntingSaturationForSignals()` helper.
+- The first active state requires enough recorded drop-off contribution, quiet nearby mouse/rabbit pressure and no nearby depleted-vegetation signal.
+- Inspecting the gate notice or `Падальний рів` now shows "enough for now" text while saturation is active, with raw thresholds only in technical detail mode.
+- Player drop-offs are still accepted during saturation, but threshold supply rewards are suppressed.
+- Hunter NPCs with no claimed carcasses stand down: they route toward the magic campfire, rest, and use a separate rate-limited waiting line pool.
+- Focused helper tests cover activation, deactivation when pressure rises, reward suppression and stand-down line selection.
+
+Remaining tuning:
+
+- Replace the conservative radius/threshold helper with a richer ecological model once local pressure, predator density and recovery time have better shared signals.
+- Decide how long "enough for now" should linger when pressure is low but no fresh contributions have arrived recently.

@@ -18,6 +18,7 @@ import {
   canLightPlayerTorchFromInventory,
   dousePlayerTorchFromInventory,
   getPlayerTorchState,
+  hasActiveLightAtLocation,
   lightPlayerTorchFromInventory,
   TORCH_DURATION_MS,
   TORCH_FADING_MS,
@@ -33,6 +34,7 @@ import { hasCompletedTutorial, isTutorialLocation } from "../services/tutorial";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "../services/locationFeatures";
 import { canCookPlayerMeat, COOKED_MEAT_KEY, cookRawMeat, RAW_MEAT_KEY } from "../services/meat";
 import { assertCanPerformPhysicalAction } from "../services/postureRules";
+import { GATHERING_OBSERVATION_GROWTH_MESSAGE, recordGatheringObservation } from "../services/gatheringLearning";
 
 const tutorialInventoryVoiceSeen = new Set<number>();
 
@@ -304,6 +306,12 @@ export async function showLocationForPlayer(telegramId: number, reply: (text: st
   const locationId = player.currentLocationId ?? (await getStartLocationId());
   const view = await renderLocationBrief(locationId, player.id);
   noteKnownMessage(await reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard }));
+  if (await hasActiveLightAtLocation(locationId)) {
+    const observation = await recordGatheringObservation({ playerId: player.id, locationId });
+    if (observation.milestone) {
+      noteKnownMessage(await reply(GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+    }
+  }
   const voiceComments = await tutorialLookPaceComments({ ...player, currentLocationId: locationId });
   for (const comment of voiceComments) {
     noteKnownMessage(await reply(`${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }));
