@@ -13,6 +13,8 @@ import { pickupObserverText, recordVisibleItemAction } from "../services/visible
 import { assertCanPerformPhysicalAction, isPlayerMustStandError } from "../services/postureRules";
 import { actionErrorMessage, replyToActionError } from "../utils/actionErrorReply";
 import { canEditCallbackMessage, noteKnownMessage } from "../utils/messageTracker";
+import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
+import { rememberTutorialInventoryForPlayer } from "../utils/tutorialInventory";
 
 function buildActionKeyboard(target: ResolvedTarget, again = false) {
   if (target.isCorpse) return buildCorpseActionKeyboard(target);
@@ -114,6 +116,9 @@ export function registerSocialHandlers(bot: Bot) {
       `🤲 Ви підібрали ${itemName}.\n\nВін лежить у ваших речах, але ще псується. Якщо забаритися, від нього лишиться тільки слід.`,
       new InlineKeyboard().text("↩️ Назад", "location:details").row(),
     );
+    if (await rememberTutorialInventoryForPlayer(player, `pickup:${resourceType.key}`)) {
+      await ctx.reply("Речі тепер можна відкрити з клавіатури.", { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
+    }
   });
 
   bot.callbackQuery(/^signalMenu:(player|creature):(\d+)(?::(known|mystery))?$/, async (ctx) => {

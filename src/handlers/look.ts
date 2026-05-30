@@ -12,6 +12,7 @@ import { escapeHtml } from "../utils/text";
 import { canEditCallbackMessage, noteKnownMessage } from "../utils/messageTracker";
 import { assertCanPerformPhysicalAction } from "../services/postureRules";
 import { replyToActionError, actionErrorMessage } from "../utils/actionErrorReply";
+import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
@@ -229,7 +230,7 @@ export function registerLookHandlers(bot: Bot) {
       assertCanPerformPhysicalAction(player, "FIRE");
       const text = await lightLocationCampfire(Number(ctx.match[1]), player.id);
       await safeAnswerCallbackQuery(ctx);
-      await ctx.reply(text);
+      await ctx.reply(text, await inventoryGainReplyOptions(player, "take-torch"));
     } catch (error) {
       const message = actionErrorMessage(error, "Не вдалося запалити вогонь.");
       await safeAnswerCallbackQuery(ctx, message);
@@ -304,7 +305,7 @@ export function registerLookHandlers(bot: Bot) {
         eventDescription: `player=${player.id}; item=${item.key}; name=${item.name}`,
         actionNote: `піднято: ${item.name}`,
       });
-      await ctx.reply(`Ви підняли ${item.name}.`);
+      await ctx.reply(`Ви підняли ${item.name}.`, await inventoryGainReplyOptions(player, `pickup:${item.key}`));
     } catch (error) {
       const message = error instanceof Error ? error.message : "Не вдалося підняти це.";
       await safeAnswerCallbackQuery(ctx, message);
@@ -338,7 +339,7 @@ export function registerLookHandlers(bot: Bot) {
         eventDescription: `player=${player.id}; items=${result.items.map((item) => `${item.key}:${item.amount}`).join(",")}`,
         actionNote: `піднято всі однотипні речі: ${itemText}`,
       });
-      await ctx.reply(`Ви підняли: ${itemText}.`);
+      await ctx.reply(`Ви підняли: ${itemText}.`, await inventoryGainReplyOptions(player, `pickup-all:${key}`));
     } catch (error) {
       const message = actionErrorMessage(error, "Не вдалося підняти це.");
       await safeAnswerCallbackQuery(ctx, message);

@@ -52,6 +52,7 @@ import { putInventoryIntoLocalFeature } from "../services/carcassDropoff";
 import { latestRememberedReplyTarget } from "../services/replyTargets";
 import { replyToActionError } from "../utils/actionErrorReply";
 import { assertCanPerformPhysicalAction } from "../services/postureRules";
+import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 
 type TextTargetRef = {
   type: "player" | "creature";
@@ -803,7 +804,7 @@ async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
         eventDescription: `player=${player.id}; items=${result.items.map((item) => `${item.key}:${item.amount}`).join(",")}`,
         actionNote: `піднято все: ${text}`,
       });
-      await ctx.reply(`Ви підняли: ${text}.`);
+      await ctx.reply(`Ви підняли: ${text}.`, await inventoryGainReplyOptions(player, "pickup-all"));
     } catch (error) {
       await replyToActionError(ctx, error, "Не вдалося підняти це.");
     }
@@ -827,7 +828,7 @@ async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
         eventDescription: `player=${player.id}; item=${item.key}; name=${item.name}`,
         actionNote: `піднято: ${item.name}`,
       });
-      await ctx.reply(`Ви підняли ${item.name}.`);
+      await ctx.reply(`Ви підняли ${item.name}.`, await inventoryGainReplyOptions(player, `pickup:${item.key}`));
     } catch (error) {
       const hint = naturalResourcePickupHint(resourceKey);
       const message = error instanceof Error ? error.message : "Не вдалося підняти це.";
@@ -868,7 +869,7 @@ async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
       eventDescription: `player=${resolved.player.id}; creature=${creature.id}; item=${resourceType.key}; name=${itemName}`,
       actionNote: `піднято: ${itemName}`,
     });
-    await ctx.reply(`Ви підібрали ${itemName}.`);
+    await ctx.reply(`Ви підібрали ${itemName}.`, await inventoryGainReplyOptions(resolved.player, `pickup:${resourceType.key}`));
   } catch (error) {
     await replyToActionError(ctx, error, "Трупа вже немає поруч. Можна роздивитися місцину ще раз.");
   }

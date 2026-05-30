@@ -20,6 +20,7 @@ export const DREAM_GATE_FEATURE_KEYS = [DREAM_GATE_FEATURE_KEY, DREAM_GATE_RETUR
 export const DREAM_GATE_OPEN_MS = 30 * 1000;
 const DREAM_GATE_OPEN_WINDOWS_MS = [30_000, 60_000, 120_000, 240_000, 480_000];
 export const TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE = "Tutorial foraging success";
+export const TUTORIAL_INVENTORY_AVAILABLE_EVENT_TITLE = "Tutorial inventory available";
 export const TUTORIAL_OBSERVATION_LESSON_EVENT_TITLE = "Tutorial observation lesson";
 
 const RETURN_LOCATION_EVENT_TITLE = "Tutorial return location";
@@ -173,7 +174,7 @@ export async function resetTutorialProgressForPlayer(playerId: number, scribePla
       where: {
         playerId,
         type: "SYSTEM",
-        title: { in: [COMPLETED_EVENT_TITLE, TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE, TUTORIAL_OBSERVATION_LESSON_EVENT_TITLE] },
+        title: { in: [COMPLETED_EVENT_TITLE, TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE, TUTORIAL_INVENTORY_AVAILABLE_EVENT_TITLE, TUTORIAL_OBSERVATION_LESSON_EVENT_TITLE] },
       },
     });
 
@@ -226,6 +227,38 @@ export async function rememberTutorialForagingSuccess(playerId: number, location
       type: "SYSTEM",
       title: TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE,
       description: resourceKey,
+      playerId,
+      locationId,
+    },
+  });
+  return true;
+}
+
+export async function hasTutorialInventoryAvailable(playerId: number) {
+  const event = await prisma.worldEvent.findFirst({
+    where: { playerId, type: "SYSTEM", title: TUTORIAL_INVENTORY_AVAILABLE_EVENT_TITLE },
+    select: { id: true },
+    orderBy: { id: "desc" },
+  });
+  return Boolean(event);
+}
+
+export async function rememberTutorialInventoryAvailable(playerId: number, locationId: number | null | undefined, reason = "inventory") {
+  if (!locationId) return false;
+  const location = await prisma.cellLocation.findUnique({
+    where: { id: locationId },
+    select: { key: true, z: true, region: { select: { key: true } } },
+  });
+  if (!location || !isTutorialLocation(location)) return false;
+
+  const seen = await hasTutorialInventoryAvailable(playerId);
+  if (seen) return false;
+
+  await prisma.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: TUTORIAL_INVENTORY_AVAILABLE_EVENT_TITLE,
+      description: reason,
       playerId,
       locationId,
     },

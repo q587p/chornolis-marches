@@ -32,6 +32,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Unknown-command suggestions can now show a matching slash command shortcut in parentheses, such as `оглянутися (/look)` or `швидкий огляд (/glance)`.
 - `/glance` now renders only the location name and visible exits, without an extra "quick look" label or nearby presence text.
 - The tutorial hub `Майбутні уроки` feature now has its own feather icon instead of the generic landmark marker.
+- The tutorial dream now reveals the main-keyboard inventory button after pickup, gather success or explicit inventory commands, not only after the first gather.
 - Updated gate hunting loop and `NPC-004` planning docs for the first actor-inventory slice.
 
 ### Tests
@@ -39,6 +40,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Updated NPC hunter helper coverage so new hunter torch action text no longer depends on the lightweight torch-count marker.
 - Added world-seed coverage for unique NPC carried resources and Орина's real torch inventory.
 - Extended reply-keyboard posture coverage for the focused dream gate keyboard and tutorial rest status exception.
+- Added reply-keyboard helper coverage for tutorial inventory-button visibility.
 - Added parser, suggestion and seed coverage for Dream Gate inspection aliases.
 
 ---
