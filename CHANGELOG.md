@@ -32,6 +32,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Unknown-command suggestions can now show a matching slash command shortcut in parentheses, such as `оглянутися (/look)` or `швидкий огляд (/glance)`.
 - `/glance` now renders only the location name and visible exits, without an extra "quick look" label or nearby presence text.
 - The tutorial hub `Майбутні уроки` feature now has its own feather icon instead of the generic landmark marker.
+- Remaining generic landmark, bridge and tutorial prompt features now use distinct icons, including the fisher post, old bridge planks, old stones, dry well and tutorial hints.
 - The tutorial dream now reveals the main-keyboard inventory button after pickup, gather success or explicit inventory commands, not only after the first gather.
 - Hunter stand-down no longer queues extra `SAY` / `REST` actions on world tick; hunters at the waiting fire now enter a resting state directly and use a rate-limited speech event.
 - World tick summaries now count hunter `stoodDown` state separately from queued rest actions.

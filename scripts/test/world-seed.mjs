@@ -75,6 +75,25 @@ for (const feature of features) {
   assertKnown(locationKeys, feature.locationKey, `Unknown locationKey for feature ${feature.key}`);
 }
 
+function renderedFeatureIcon(feature) {
+  const data = feature.data ?? {};
+  if (typeof data.icon === "string" && data.icon.trim()) return data.icon.trim();
+  if (data.tutorial_inside_prompt === true || data.tutorial_outside_prompt === true) return "🕯️";
+  if (data.tutorial_rest_seat === true) return "🪑";
+  if (data.tutorial_observation_prompt === true) return "🦊";
+  if (feature.type === "CAMPFIRE" || feature.type === "MAGIC_CAMPFIRE" || data.is_campfire === true) {
+    return data.extinguished === true ? "🪨" : "🔥";
+  }
+  if (feature.key.startsWith("depleted_vegetation_") || data.ecology === "depleted_vegetation") return "🌾";
+  if (feature.type === "BORDER_MARKER") return "🪧";
+  if (feature.type === "GATE") return "🚪";
+  return "✦";
+}
+
+for (const feature of features) {
+  assert.notEqual(renderedFeatureIcon(feature), "✦", `Feature should not fall back to the generic icon: ${feature.key}`);
+}
+
 const explicitFeatureIconsByLocation = new Map();
 for (const feature of features) {
   const icon = typeof feature.data?.icon === "string" ? feature.data.icon.trim() : "";
