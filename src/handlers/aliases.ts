@@ -43,7 +43,7 @@ import { requireScribeAdmin } from "../services/adminAccess";
 import { pickUpAllVisibleGroundResources, pickUpFirstGroundResourceByKey, pickUpFirstVisibleGroundResourceByKey, type VisibleGroundResourceKey } from "../services/groundItems";
 import { parseSpeechTarget } from "../services/speechTargets";
 import { dropInventoryResourceDetailed, inspectInventoryResource, inventoryResourceKeyFromText, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
-import { enterTutorialDream, hasCompletedTutorial, openDreamGate, wakeFromTutorialDream } from "../services/tutorial";
+import { enterTutorialDream, hasCompletedTutorial, openDreamGate, rememberTutorialCommandHintIfInTutorial, wakeFromTutorialDream } from "../services/tutorial";
 import { dropObserverText, pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 import { noteKnownMessage } from "../utils/messageTracker";
 import { cookRawMeat, isFreshenedCorpse } from "../services/meat";
@@ -273,6 +273,7 @@ async function submitFeatureInspection(bot: Bot, ctx: any, targetQuery: string) 
   const view = await renderLocationFeatureInteractionByQuery(player.currentLocationId, player.id, targetQuery);
   if (!view) return submitTargetAction(bot, ctx, "inspect", targetQuery);
 
+  await rememberTutorialCommandHintIfInTutorial(player.id, "examine", player.currentLocationId);
   noteKnownMessage(await ctx.reply(view.text, { reply_markup: view.keyboard }));
   await sendFeatureFollowups(ctx, view);
 }

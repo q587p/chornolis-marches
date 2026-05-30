@@ -11,6 +11,10 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Added a first old-campfire memory omen slice: seeded old ordinary campfires can reveal one short atmospheric trace when fed with `twigs` or relit from a torch, and the trace remains visible in later campfire inspection text.
 
+### Changed
+
+- Tutorial dream reply keyboards now keep ordinary `Help`, `Menu`, `Status` and `Examine` controls hidden until the matching lesson has surfaced them, while `Inventory` appears once the character actually carries something.
+
 ---
 
 ## 0.13.12 - Gate hunting saturation stand-down - 12026-05-30
