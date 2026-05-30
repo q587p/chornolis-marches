@@ -25,6 +25,7 @@ Chornolis Marches is a Ukrainian dark-fantasy Telegram RPG / living-world sandbo
 14. When adding or changing text aliases, add or update `scripts/test/input-aliases.cjs` whenever the behavior can be checked with `parseAlias` without Telegram or database setup.
 15. When adding stable world nouns, update `src/content/lexicon/worldLexicon.ts` with Ukrainian case forms. Grammar fallback remains for ordinary guesses, but seed helpers deliberately require lexicon entries when stable species/profession/spirit forms matter.
 16. Near-term session presence work matters: add AFK / End Session controls, silent Auto-AFK after player inactivity, one idle reminder per scene and send-time guards for delayed/proactive bot messages so Telegram does not keep nudging a player who stepped away.
+17. Visible location features should not be only bare names. `/look` may keep them compact, but `/examine` and direct feature inspection should provide the extra text that explains meaning, interaction, constraints or atmosphere.
 
 ## Preferred workflow for code tasks
 
@@ -39,6 +40,7 @@ Chornolis Marches is a Ukrainian dark-fantasy Telegram RPG / living-world sandbo
 - If the change introduces a new player action, menu item, command, resource use, visibility rule, survival mechanic, social flow or admin-visible beginner state, update the relevant beginner-facing docs/text or add a planning note explaining how onboarding should teach it.
 - If the change touches fire, light or carried items, check `docs/systems/fire_and_light.md` and `docs/systems/item_lifetime_and_grammar.md`; lit torches currently burn out into `хмиз`, and visible held items should be described diegetically.
 - If the change touches dynamic names for creatures, spirits, professions, resources, features, tracks, corpses or action text, check `docs/content/world-lexicon.md` and avoid adding new nominative-only text templates unless nominative is truly the intended case.
+- If the change adds or edits a visible location feature, check `docs/systems/location_features.md`: feature-list text, `/examine` location output and direct `look/examine <feature>` should not collapse into the same bare line unless there is a deliberate no-action decision.
 
 ## Context routing
 
