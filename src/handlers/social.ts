@@ -16,6 +16,7 @@ import { canEditCallbackMessage, noteKnownMessage } from "../utils/messageTracke
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { rememberTutorialInventoryForPlayer } from "../utils/tutorialInventory";
 import { stripUnsafeText } from "../utils/text";
+import { spendPlayerStaminaAmount } from "../services/actionRecovery";
 
 type TargetSpeechMode = "say" | "whisper";
 
@@ -163,6 +164,7 @@ export function registerSocialHandlers(bot: Bot) {
       eventDescription: `player=${player.id}; creature=${creature.id}; item=${resourceType.key}; name=${itemName}`,
       actionNote: `піднято: ${itemName}`,
     });
+    await spendPlayerStaminaAmount(bot, player.id, 1, ctx.chat?.id);
     await editOrReply(
       ctx,
       `🤲 Ви підібрали ${itemName}.\n\nВін лежить у ваших речах, але ще псується. Якщо забаритися, від нього лишиться тільки слід.`,

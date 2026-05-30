@@ -181,6 +181,9 @@ assertAlias("говорити з мандрівником", { kind: "target-acti
 assertAlias("освіжити труп", { kind: "target-action", action: "freshen", target: "труп" });
 assertAlias("butcher corpse", { kind: "target-action", action: "freshen", target: "corpse" });
 assertAlias("розібрати труп", { kind: "target-action", action: "freshen", target: "труп" });
+assertAlias("freshen all", { kind: "target-action", action: "freshen", target: "all" });
+assertAlias("свіжувати все", { kind: "target-action", action: "freshen", target: "все" });
+assertAlias("освіжити всі", { kind: "target-action", action: "freshen", target: "всі" });
 assertAlias("викинути факел", { kind: "drop-inventory-item", target: "факел" });
 assertAlias("річ ягоди", { kind: "inspect-inventory-item", target: "ягоди" });
 assert.equal(inventoryResourceKeyFromText("mushroom"), "mushrooms");

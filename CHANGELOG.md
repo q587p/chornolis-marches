@@ -18,6 +18,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added a scribe-audit system note listing dangerous admin/scribe tools that should keep or gain structured audit coverage.
 - Added a compact dream tutorial flow audit that confirms the next onboarding follow-up slices.
 - Added text-only learning feedback for corpse freshening and cooking: every thirteenth personal action can show a private growth line, and every fifth observation of another actor's recent action can show a smaller one.
+- Added `freshen all` / `свіжувати все` support that queues one freshening action per suitable visible corpse instead of resolving the whole location instantly.
 
 ### Changed
 
@@ -27,6 +28,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Direct hunter field lines now record `SAY` events and increment the creature speech counter used by ecology/status statistics.
 - Hunter replies and social reactions now use a slower queued creature action instead of firing as instant follow-up messages.
 - Hunter field speech now appears as quoted speech in Telegram instead of an inline quoted sentence.
+- Freshening now costs `3` stamina per corpse, and immediate pickup paths now spend `1` stamina per picked-up item/resource unit.
 - Updated hunter and actor-inventory planning notes to keep the remaining claimed-carcass `currentAction` bridge visible as future structural work.
 - Updated planning exports for the weapon task pack and completed first scribe-audit task slices.
 - Marked `ONB-001-A` complete with follow-ups for first-look, first-examine, rest and wake polish.
@@ -38,6 +40,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Extended NPC hunter helper coverage for quoted hunter field speech.
 - Added text-target visibility coverage for hidden hunter-claimed carcasses.
 - Added helper coverage for freshening and cooking practice/observation milestone cadence.
+- Added alias coverage for bulk freshening commands and action-cost coverage for the freshening stamina cost.
 - Added scribe-audit helper coverage.
 - Ran the full project test suite.
 
