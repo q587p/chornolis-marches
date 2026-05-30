@@ -109,6 +109,14 @@ When saturation is active:
 
 The state should be reversible. If herbivores overgraze again, predator pressure drops, or enough time passes, the sign can return to asking for help.
 
+0.13.12 adds the first conservative saturation helper:
+
+- enough recorded contribution;
+- quiet nearby mouse/rabbit pressure around the gate;
+- no nearby depleted-vegetation signal.
+
+When that helper is active, inspecting the gate notice or `Падальний рів` shows "enough for now" text. Drop-offs are still accepted as physical remains, but supply thresholds are suppressed, and hunters without carried/claimed carcasses route toward the magic campfire, rest and use a quieter stand-down line pool. The thresholds are intentionally technical/admin detail; player-facing text should keep saying that the border has enough pressure for now.
+
 ## `put` Command Relationship
 
 This loop is the first target for a narrow local-container command:

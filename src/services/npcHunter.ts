@@ -3,7 +3,7 @@ import { Direction } from "@prisma/client";
 import { prisma } from "../db";
 import { actionDurationMs, movementDurationMs } from "./actionRules";
 import { enqueueCreatureAction } from "./actionLifecycle";
-import { GATE_CARCASS_DROPOFF_FEATURE_KEY, hunterFieldLine, recordNpcCarcassDropoffContribution } from "./carcassDropoff";
+import { GATE_CARCASS_DROPOFF_FEATURE_KEY, getGateHuntingSaturationState, hunterFieldLine, recordNpcCarcassDropoffContribution } from "./carcassDropoff";
 import { corpseResourceKey, resourceTypeDisplayName } from "./corpses";
 import { notifyLocationAll } from "./notifications";
 import { findLocationRoute, type RouteStep } from "./routeFinding";
@@ -24,6 +24,8 @@ const HUNTER_PREY_AGE_PRIORITY: Record<string, number> = {
   OLD: 2,
   YOUNG: 1,
 };
+const HUNTER_STAND_DOWN_EVENT_TITLE = "Hunter stand-down line";
+const HUNTER_STAND_DOWN_LINE_COOLDOWN_MS = 10 * 60 * 1000;
 
 export type HunterRoutePlan = {
   gateLocationId: number;
@@ -369,6 +371,49 @@ async function resupplyHunterTorchesAtGate(bot: Bot | null, hunter: { id: number
   return true;
 }
 
+async function queueHunterStandDown(bot: Bot | null, hunter: { id: number; locationId: number; stamina: number; name?: string | null; steps?: number | null }, plan: HunterRoutePlan) {
+  if (hunter.locationId !== plan.campfireLocationId) {
+    const route = await findLocationRoute(hunter.locationId, plan.campfireLocationId, { maxDepth: HUNTER_ROUTE_MAX_DEPTH });
+    if (route?.length) return queueHunterMove(hunter, route, "йде перечекати біля межового вогню");
+  }
+
+  const since = new Date(Date.now() - HUNTER_STAND_DOWN_LINE_COOLDOWN_MS);
+  const recentLine = await prisma.worldEvent.findFirst({
+    where: {
+      title: HUNTER_STAND_DOWN_EVENT_TITLE,
+      description: String(hunter.id),
+      createdAt: { gte: since },
+    },
+    select: { id: true },
+  });
+
+  if (!recentLine) {
+    await prisma.worldEvent.create({
+      data: {
+        type: "NPC_ACTION",
+        title: HUNTER_STAND_DOWN_EVENT_TITLE,
+        description: String(hunter.id),
+        locationId: hunter.locationId,
+      },
+    });
+    await enqueueCreatureAction({
+      creatureId: hunter.id,
+      type: "SAY",
+      payload: { text: hunterFieldLine("standDown", hunter.id + (hunter.steps ?? 0)) },
+      durationMs: actionDurationMs("SAY", hunter.stamina),
+    });
+    return "queuedSay";
+  }
+
+  await enqueueCreatureAction({
+    creatureId: hunter.id,
+    type: "REST",
+    payload: {},
+    durationMs: actionDurationMs("REST", hunter.stamina),
+  });
+  return "queuedRest";
+}
+
 export async function tickNpcHunter(bot: Bot | null, hunter: any) {
   if (!isHunterCreature(hunter)) return "queuedRest";
 
@@ -406,6 +451,9 @@ export async function tickNpcHunter(bot: Bot | null, hunter: any) {
   if (returningForTorches && await resupplyHunterTorchesAtGate(bot, hunter, plan)) return "queuedGather";
 
   if (await pickUpVisibleGroundTorch(bot, hunter)) return "queuedGather";
+
+  const saturation = await getGateHuntingSaturationState(plan.dropoffFeatureKey);
+  if (saturation.active) return queueHunterStandDown(bot, hunter, plan);
 
   const prey = await selectLocalHunterPrey(hunter.locationId);
   if (prey) {

@@ -9,6 +9,25 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.12 - Gate hunting saturation stand-down - 12026-05-30
+
+### Added
+
+- Added a conservative gate-hunting saturation helper based on drop-off contribution, nearby mouse/rabbit pressure and nearby depleted-vegetation signals.
+- Added saturation-aware inspect text for the gate hunting notice and carcass drop-off feature.
+- Added a hunter stand-down path: hunters without claimed carcasses stop seeking prey while saturation is active, route toward the magic campfire, rest and use a quieter waiting line pool.
+
+### Changed
+
+- Player carcass/remains drop-offs remain physically accepted while saturation is active, but new supply reward thresholds are suppressed.
+- Updated gate hunting loop docs and `ECO-003` planning notes with the first implemented saturation boundary and remaining tuning.
+
+### Tests
+
+- Extended gate hunting loop helper coverage for saturation activation/deactivation, reward suppression and hunter stand-down line selection.
+
+---
+
 ## 0.13.11 - NPC hunter state-machine slice - 12026-05-30
 
 ### Added

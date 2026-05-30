@@ -27,6 +27,7 @@ import { playerShowsTechnicalDetails } from "./technicalDetails";
 import { dreamGateStatusText, isDreamGateFeature, lockedExitDirections, lockedExitLabel, rememberTutorialObservationLesson } from "./tutorial";
 import { formatObservedPostureText } from "../utils/playerText";
 import { isFreshenedCorpse } from "./meat";
+import { GATE_CARCASS_DROPOFF_FEATURE_KEY, gateHuntingDropoffText, gateHuntingNoticeText, getGateHuntingSaturationState } from "./carcassDropoff";
 
 const COMPACT_EXIT_ORDER = ["NORTH", "WEST", "SOUTH", "EAST", "UP", "DOWN", "INSIDE", "OUTSIDE"];
 const GATHERABLE_RESOURCE_KEYS = ["berries", "mushrooms", "herbs"] as const;
@@ -875,7 +876,13 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
   if (isDepletedVegetationFeature(feature)) {
     return renderDepletedVegetationInspection(feature.locationId, viewerPlayerId, returnMode);
   }
-  if (feature.type === "BORDER_MARKER") {
+  if (featureData(feature).gate_hunting_notice === true || featureData(feature).carcass_dropoff === true) {
+    const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
+    const state = await getGateHuntingSaturationState(GATE_CARCASS_DROPOFF_FEATURE_KEY);
+    text = featureData(feature).gate_hunting_notice === true
+      ? gateHuntingNoticeText(feature.description, state, showTechnicalDetails)
+      : gateHuntingDropoffText(feature.description, state, showTechnicalDetails);
+  } else if (feature.type === "BORDER_MARKER") {
     const [stats, showTechnicalDetails] = await Promise.all([
       getPublicEcologySignStats(),
       playerShowsTechnicalDetails(viewerPlayerId),
