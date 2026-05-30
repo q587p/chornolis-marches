@@ -1,7 +1,7 @@
 ---
 id: ONB-001-A
 title: Dream tutorial flow audit
-status: next
+status: done
 type: design
 area: onboarding
 priority: high
@@ -26,9 +26,13 @@ Audit the first dream tutorial as a new player.
 
 ## Acceptance
 
-- A short checklist exists in the issue or planning note.
-- Follow-up tasks are confirmed or updated.
+- A short checklist exists in `docs/planning/audits/dream_tutorial_flow_12026-05-30.md`.
+- Follow-up tasks are confirmed: `ONB-001-B`, `ONB-001-C`, `ONB-001-D`, `ONB-001-E`, plus later speech/social/observation slices.
 
 ## Implementation Order
 
 Can be done independently.
+
+## Result
+
+0.13.18 records the current tutorial dream flow audit after the keyboard, speech-gate, inventory, rest, wake and pacing fixes.

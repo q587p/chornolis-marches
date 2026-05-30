@@ -16,6 +16,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added weapon-system planning docs for the minimal weapon catalog/equip slice, weapon-aware action text, themed NPC weapons, later weapon condition work and cold-storage combat/lifetime work.
 - Added a reusable scribe audit helper and covered confirmed `/reset world`, `/reset stats` and `/reset full` actions with quiet `WorldEvent` audit records.
 - Added a scribe-audit system note listing dangerous admin/scribe tools that should keep or gain structured audit coverage.
+- Added a compact dream tutorial flow audit that confirms the next onboarding follow-up slices.
 
 ### Changed
 
@@ -23,6 +24,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Direct hunter field lines now record `SAY` events and increment the creature speech counter used by ecology/status statistics.
 - Updated hunter and actor-inventory planning notes to keep the remaining claimed-carcass `currentAction` bridge visible as future structural work.
 - Updated planning exports for the weapon task pack and completed first scribe-audit task slices.
+- Marked `ONB-001-A` complete with follow-ups for first-look, first-examine, rest and wake polish.
 
 ### Tests
 

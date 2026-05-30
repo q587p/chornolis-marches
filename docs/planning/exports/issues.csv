@@ -58,7 +58,7 @@ OMEN-001-C,Omen local text,next,content,world,medium,"omen,copy,atmosphere",docs
 OMEN-001-D,Omen trace or object result,next,feature,world,medium,"omen,objects,tracks",docs/planning/items/OMEN-001-D.md
 OMEN-002,Hidden follower spirit MVP,backlog,feature,world,medium,"omen,hidden-presence,spirit,ambient",docs/planning/items/OMEN-002-hidden-follower-spirit-mvp.md
 ONB-001,Newcomer helper and tutorial,testing,feature,onboarding,high,"onboarding,tutorial,beginner,help,ux",docs/planning/items/ONB-001-newcomer-helper-and-tutorial.md
-ONB-001-A,Dream tutorial flow audit,next,design,onboarding,high,"tutorial,audit,core-loop",docs/planning/items/ONB-001-A.md
+ONB-001-A,Dream tutorial flow audit,done,design,onboarding,high,"tutorial,audit,core-loop",docs/planning/items/ONB-001-A.md
 ONB-001-B,Hint after first Озирнутися,next,ux,onboarding,high,"tutorial,look,copy",docs/planning/items/ONB-001-B.md
 ONB-001-C,Hint after first Роздивитися,next,ux,onboarding,high,"tutorial,examine,attention",docs/planning/items/ONB-001-C.md
 ONB-001-D,Tutorial rest lesson polish,next,ux,onboarding,medium,"tutorial,rest,stamina",docs/planning/items/ONB-001-D.md

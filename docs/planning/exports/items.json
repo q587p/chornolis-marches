@@ -1120,7 +1120,7 @@
   {
     "id": "ONB-001-A",
     "title": "Dream tutorial flow audit",
-    "status": "next",
+    "status": "done",
     "type": "design",
     "area": "onboarding",
     "priority": "high",
