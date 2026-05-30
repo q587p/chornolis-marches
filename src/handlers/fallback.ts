@@ -3,7 +3,7 @@ import { buildMainReplyKeyboardForTelegramId, EMPTY_KEYBOARD_BUTTON } from "../u
 import { formatAliasSuggestion, suggestAliasEntries } from "../input/aliases";
 import { escapeHtml, stripUnsafeText } from "../utils/text";
 import { getPlayerByTelegramId } from "../services/players";
-import { hasCompletedTutorial } from "../services/tutorial";
+import { canOpenDreamGateWithSpeech, hasCompletedTutorial } from "../services/tutorial";
 
 function commandName(text: string) {
   const match = text.trim().match(/^\/([^\s@]+)(?:@\w+)?(?:\s|$)/u);
@@ -21,6 +21,17 @@ function fallbackNavigationHint() {
   return "Спробуй <i>❔ Допомога</i> (/help) або відкрий <i>☰ Меню</i> (/menu).";
 }
 
+async function tutorialDreamGateSpeechHint(telegramId: number | undefined, text: string) {
+  if (!telegramId) return null;
+  const player = await getPlayerByTelegramId(telegramId);
+  if (!player || !(await canOpenDreamGateWithSpeech(player.id, text))) return null;
+
+  return [
+    "Сон підказує:",
+    "<blockquote>О, правильно. Тільки додай <i>сказати</i>, щоб слова стали голосом: <code>сказати Відчинитися</code> (/say Відчинитися).</blockquote>",
+  ].join("\n");
+}
+
 export function registerFallbackHandlers(bot: Bot) {
   bot.on("message:text", async (ctx) => {
     const text = ctx.message.text;
@@ -29,6 +40,12 @@ export function registerFallbackHandlers(bot: Bot) {
     const replyMarkup = ctx.from ? await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) : undefined;
 
     if (!text.trim().startsWith("/")) {
+      const gateSpeechHint = await tutorialDreamGateSpeechHint(ctx.from?.id, text);
+      if (gateSpeechHint) {
+        await ctx.reply(gateSpeechHint, { parse_mode: "HTML", reply_markup: replyMarkup });
+        return;
+      }
+
       const safeText = escapeHtml(stripUnsafeText(text).trim().slice(0, 80));
       const suggestions = suggestAliasEntries(text);
       const suggestionText = suggestions.length

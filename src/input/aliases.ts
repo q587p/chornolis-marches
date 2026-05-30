@@ -627,6 +627,12 @@ function parseGatherResource(resource: string): ParsedAliasCommand | null {
 }
 
 function parseSay(raw: string, text: string): ParsedAliasCommand | null {
+  const echoedSay = raw.trim().match(/^ви\s+сказали(?:\s*[:：]\s*|\s+)([\s\S]+)$/iu);
+  if (echoedSay?.[1]?.trim()) {
+    const said = echoedSay[1].trim().slice(0, 300);
+    return said ? { kind: "say", text: said } : null;
+  }
+
   const match = text.match(/^\/?(say|сказати|говорити|мовити|промовити|ск|сказ|гов)\s+(.+)$/);
   if (!match) return null;
   if (match[1] === "говорити" && match[2].trim().startsWith("з ")) return null;

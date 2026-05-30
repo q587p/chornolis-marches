@@ -161,6 +161,8 @@ assertAlias("/auto_stop", { kind: "auto", mode: "stop" });
 assertAlias("сказати Хай стежка буде м'якою.", { kind: "say", text: "Хай стежка буде м'якою." });
 assertAlias("/say Відчинитися", { kind: "say", text: "Відчинитися" });
 assertAlias("Сказати «Відчинитися»", { kind: "say", text: "«Відчинитися»" });
+assertAlias("Ви сказали:\nВідчинитися", { kind: "say", text: "Відчинитися" });
+assertAlias("Ви сказали Відчинитися", { kind: "say", text: "Відчинитися" });
 assertAlias("говорити Відчинись будь ласка", { kind: "say", text: "Відчинись будь ласка" });
 assertAlias("ск Можеш відчинитися", { kind: "say", text: "Можеш відчинитися" });
 assertAlias("/сказ Відчинися", { kind: "say", text: "Відчинися" });

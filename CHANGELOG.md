@@ -17,6 +17,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Custom character names now clearly say they can be used immediately while still waiting for later scribe review.
 - Character cards reuse the same name-review wording so pending custom names no longer sound like a blocking error.
 - Unknown-input suggestions now include stable slash-command hints for more actions, and the fallback points to `❔ Help` (`/help`) and `Menu` (`/menu`) with clearer labels.
+- The tutorial gate fallback now nudges players who type the written phrase directly to say it aloud with `say` / `/say`, and copied `Ви сказали:` echoes now parse back into speech.
 - Auto stand-up notices now include the matching `/stand` command hint.
 - Sitting, standing, rest start/stop, tutorial sleep entry and tutorial wake now broadcast concise observer messages to other players in the same location.
 - The "deaths by characters" stat now includes non-animal NPC kills as well as player kills.
