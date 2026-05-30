@@ -49,8 +49,14 @@ assertAlias("enter bushes", { kind: "move", direction: "INSIDE" });
 assertAlias("увійти в кущі", { kind: "move", direction: "INSIDE" });
 assertAlias("наз", { kind: "move", direction: "OUTSIDE" });
 assertAlias("назовні", { kind: "move", direction: "OUTSIDE" });
-assertAlias("/leave", { kind: "move", direction: "OUTSIDE" });
+assertAlias("/leave", { kind: "session-presence", mode: "end" });
 assertAlias("leave cave", { kind: "move", direction: "OUTSIDE" });
+assertAlias("/afk", { kind: "session-presence", mode: "afk" });
+assertAlias("afk", { kind: "session-presence", mode: "afk" });
+assertAlias("/end_session", { kind: "session-presence", mode: "end" });
+assertAlias("/endSession", { kind: "session-presence", mode: "end" });
+assertAlias("/quit", { kind: "session-presence", mode: "end" });
+assertAlias("end session", { kind: "session-presence", mode: "end" });
 assertAlias("вийти з кущів", { kind: "move", direction: "OUTSIDE" });
 
 assertAlias("хто", { kind: "who" });

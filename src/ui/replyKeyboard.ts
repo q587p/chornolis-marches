@@ -121,6 +121,9 @@ export function buildMenuReplyKeyboard(options: { canSeeStats?: boolean } = {}) 
     .row()
     .text("🌒 Час")
     .text("↩️ Назад")
+    .row()
+    .text("🌙 AFK / відійти")
+    .text("🚪 Завершити сесію");
   return keyboard.resized().persistent(false);
 }
 

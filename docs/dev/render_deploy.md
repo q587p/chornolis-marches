@@ -8,6 +8,8 @@ npm install && npx prisma migrate deploy && npm run build && npm run seed
 
 `npm run seed` uses bounded parallel database writes. The default `SEED_CONCURRENCY` is `12`; lower it if the database is under pressure, or raise it cautiously for a nearby/local database.
 
+Session presence uses `AUTO_AFK_AFTER_MINUTES` for the silent inactivity timeout. It defaults to `15`; tests or local runs may override it. `AUTO_AFK_CHECK_INTERVAL_MS` defaults to `60000` and controls how often the worker checks for players to mark AFK.
+
 ## Pre-deploy checklist
 
 Use this before committing or pushing a release patch.
@@ -49,6 +51,12 @@ Use this before committing or pushing a release patch.
    - `CHANGELOG.md` and `news.md` should describe player-visible, admin-visible or operationally meaningful changes.
    - Do not add bookkeeping-only bullets such as "Bumped package metadata to x.y.z", "Added release notes for x.y.z", or "Updated news/changelog".
    - Version bumps, release-note files and documentation bookkeeping can stay in the commit diff; they do not need their own changelog/news bullets unless they change behavior or workflow.
+
+6. PR hygiene:
+
+   - Work from a separate branch and open a PR into `main`.
+   - Include summary, checks/validation and risks or rollback notes in the PR description.
+   - For docs-only or planning-only releases, state that runtime risk is expected to be low and that no deploy seed/migration is needed unless data files changed.
 
 Optional post-seed smoke check:
 
@@ -96,11 +104,10 @@ Optional:
 - `PLAYER_COMPLETION_CONCURRENCY` — optional concurrency for completing due player actions. Defaults to `10`.
 - `CREATURE_RUNNING_ACTION_BATCH` — optional due creature-action completion batch size. Defaults to `1000`.
 - `CREATURE_COMPLETION_CONCURRENCY` — optional concurrency for completing due creature actions. Defaults to `25`.
-
-Currently not wired in `src/config.ts`:
-
-- `WORLD_RESOURCE_REGEN_AMOUNT`;
-- `WORLD_TICK_DEBUG`;
-- `WORLD_TICK_DEBUG_EVENT`.
-
-If these are present in Render today, they are notes/placeholders until the code explicitly reads them.
+- `WORLD_RESOURCE_REGEN_EVERY_TICKS` — optional resource-node regeneration cadence. Defaults to `160`.
+- `WORLD_RESOURCE_REGEN_AMOUNT` — optional amount restored per resource regeneration tick. Defaults to `1`.
+- `WORLD_GRASS_REGEN_EVERY_TICKS` — optional grass regeneration cadence. Defaults to `120`.
+- `WORLD_EXHAUSTED_LOCATION_REGEN_EVERY_TICKS` — optional regeneration cadence for exhausted vegetation locations. Defaults to `720`.
+- `WORLD_LISOVYK_WAKE_DELAY_TICKS` — optional delay between noticing region resource depletion and waking Дід лісовик. Defaults to `12`.
+- `WORLD_TICK_DEBUG` — optional world tick debug logging flag.
+- `WORLD_TICK_DEBUG_EVENT` — optional world tick debug event flag.

@@ -10,6 +10,7 @@ export type PostureAliasMode = "sit" | "stand";
 export type SocialSignalAlias = "smile" | "laugh" | "nod" | "bow" | "point" | "glare" | "sigh" | "wave";
 export type ChatAliasMode = "time" | "location" | "character";
 export type PutAliasAmount = number | "all";
+export type SessionPresenceAliasMode = "afk" | "end";
 
 export type ParsedAliasCommand =
   | { kind: "location" }
@@ -26,6 +27,7 @@ export type ParsedAliasCommand =
   | { kind: "all"; showDead?: boolean }
   | { kind: "time" }
   | { kind: "menu" }
+  | { kind: "session-presence"; mode: SessionPresenceAliasMode }
   | { kind: "back" }
   | { kind: "hide-keyboard" }
   | { kind: "move"; direction: Direction }
@@ -528,6 +530,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "news") return "/news";
   if (parsed.kind === "time") return "/time";
   if (parsed.kind === "menu") return "/menu";
+  if (parsed.kind === "session-presence") return parsed.mode === "afk" ? "/afk" : "/end_session";
   if (parsed.kind === "chat") return "/chat";
   if (parsed.kind === "sleep") return parsed.tutorial ? "/sleep tutorial" : "/sleep";
   if (parsed.kind === "wake") return "/wake";
@@ -832,6 +835,9 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
   const text = normalizeInput(raw);
   if (!text) return null;
   const commandText = withoutLeadingSlash(text);
+
+  if (["afk", "відійти"].includes(commandText)) return { kind: "session-presence", mode: "afk" };
+  if (["end session", "end-session", "endsession", "quit", "leave", "завершити сесію", "вийти"].includes(commandText)) return { kind: "session-presence", mode: "end" };
 
   const directedSpeech = parseDirectedSpeech(raw, text);
   if (directedSpeech) return directedSpeech;

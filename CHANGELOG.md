@@ -9,6 +9,38 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.19 - Session presence, quieter forest reactions and PR discipline - 12026-05-30
+
+### Added
+
+- Added persisted session presence for players with `active`, `afk` and `ended` states, reminder pause state and player-interaction timestamps.
+- Added `AFK / away` (`/afk`) and `End Session` (`/end_session`) controls with slash/text aliases.
+- Added `/endSession` as a compatibility alias for ending the current session.
+- Added silent Auto-AFK after a configurable player inactivity timeout.
+- Added a one-idle-reminder-per-scene guard so tutorial idle nudges cannot repeat in the same unresolved prompt before Auto-AFK.
+- Added send-time proactive-message guards so delayed tutorial nudges, companion lines, action-queue notices, deploy notices, fire timer notices and location notifications skip AFK or ended players.
+- Added `/addResource`, `/addResourse`, `/addResourceHelp` and resource-specific admin shortcuts for restoring location resource nodes.
+- Added focused coverage for session presence helpers and AFK/end-session aliases.
+
+### Changed
+
+- Дід лісовик now waits through a configurable depletion delay before waking, instead of waking immediately from the last gathered resource.
+- Slowed default resource regeneration cadences so depleted locations recover less abruptly.
+- Documented the release workflow expectation that patch/minor work starts on a separate `codex/` branch and opens a PR into `main`.
+- Added PR description expectations for summary, validation/checks and explicit risks or rollback notes.
+- Updated GitHub workflow docs to point at the current 0.13-0.15 planning milestones and docs-as-source-of-truth planning model.
+- Added `REL-001` and `SES-001` planning slices for release branch discipline and session presence.
+
+### Tests
+
+- Added session presence tests to `npm test`.
+- Added admin resource helper tests to `npm test`.
+- Ran planning export after updating planning items.
+- Ran `npm run build`.
+- Ran `npm test`.
+
+---
+
 ## 0.13.18 - Hunter hardening, weapon planning and scribe audit - 12026-05-30
 
 ### Added

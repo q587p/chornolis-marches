@@ -1413,6 +1413,101 @@
     "file": "docs/planning/items/PROG-003-animal-experience-and-titles.md"
   },
   {
+    "id": "REL-001",
+    "title": "Release branch PR summary and risk discipline",
+    "status": "testing",
+    "type": "process",
+    "area": "release",
+    "priority": "high",
+    "tags": [
+      "release",
+      "github",
+      "pr",
+      "planning"
+    ],
+    "depends_on": [
+      "PLAN-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/REL-001-release-branch-pr-summary-risk.md"
+  },
+  {
+    "id": "SES-001-A",
+    "title": "AFK and End Session controls",
+    "status": "testing",
+    "type": "feature",
+    "area": "session",
+    "priority": "high",
+    "tags": [
+      "telegram",
+      "session",
+      "afk",
+      "ux"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/SES-001-A.md"
+  },
+  {
+    "id": "SES-001-B",
+    "title": "Auto-AFK and proactive message guards",
+    "status": "testing",
+    "type": "feature",
+    "area": "session",
+    "priority": "high",
+    "tags": [
+      "telegram",
+      "session",
+      "reminders",
+      "tutorial"
+    ],
+    "depends_on": [
+      "SES-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SES-001-B.md"
+  },
+  {
+    "id": "SES-001-C",
+    "title": "Session presence tests and manual checklist",
+    "status": "testing",
+    "type": "qa",
+    "area": "session",
+    "priority": "high",
+    "tags": [
+      "telegram",
+      "session",
+      "tests",
+      "qa"
+    ],
+    "depends_on": [
+      "SES-001-A",
+      "SES-001-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SES-001-C.md"
+  },
+  {
+    "id": "SES-002",
+    "title": "Atmospheric presence and notification design",
+    "status": "backlog",
+    "type": "design",
+    "area": "session",
+    "priority": "medium",
+    "tags": [
+      "telegram",
+      "session",
+      "atmosphere",
+      "notifications"
+    ],
+    "depends_on": [
+      "SES-001-A",
+      "SES-001-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SES-002-atmospheric-presence-backlog.md"
+  },
+  {
     "id": "SETTLE-001",
     "title": "Starter settlement",
     "status": "backlog",

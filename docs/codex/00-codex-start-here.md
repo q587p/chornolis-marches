@@ -20,9 +20,11 @@ Chornolis Marches is a Ukrainian dark-fantasy Telegram RPG / living-world sandbo
 10. When adding admin/scribe commands, update `/adminHelp`, `docs/systems/admin_commands.md` and any matching web/status documentation together.
 11. Do not make `/start` reset position for existing characters; use explicit respawn/admin movement for relocation.
 12. New or changed commands should keep aliases together: slash command where useful, English/MUD-style text forms, Ukrainian text forms, matching buttons, and matching `/help` or `/adminHelp` docs.
+12a. When a visible button/action appears in `/help`, `/commands`, news or release notes, write the stable slash command in parentheses after the label, e.g. `🌙 AFK / відійти` (`/afk`) or `🚪 Завершити сесію` (`/end_session`).
 13. When a command becomes part of the tutorial/newcomer path, add a short diegetic first-use comment or planning note for Сон/Дрімота, another guide voice, or an appropriate local sign so the tutorial teaches the command in-world instead of only exposing a button.
 14. When adding or changing text aliases, add or update `scripts/test/input-aliases.cjs` whenever the behavior can be checked with `parseAlias` without Telegram or database setup.
 15. When adding stable world nouns, update `src/content/lexicon/worldLexicon.ts` with Ukrainian case forms. Grammar fallback remains for ordinary guesses, but seed helpers deliberately require lexicon entries when stable species/profession/spirit forms matter.
+16. Near-term session presence work matters: add AFK / End Session controls, silent Auto-AFK after player inactivity, one idle reminder per scene and send-time guards for delayed/proactive bot messages so Telegram does not keep nudging a player who stepped away.
 
 ## Preferred workflow for code tasks
 

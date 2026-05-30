@@ -55,6 +55,7 @@ import { assertCanPerformPhysicalAction } from "../services/postureRules";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 import { bestTargetMatch, inspectMissingText, normalizeTargetKey, targetDisplayLabel, targetListText, visibleTextTargets } from "../services/textTargets";
 import { spendPlayerStaminaAmount } from "../services/actionRecovery";
+import { afkReplyOptions, endPlayerSession, SESSION_AFK_CONFIRMATION, SESSION_ENDED_CONFIRMATION, setPlayerAfk } from "../services/sessionPresence";
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
@@ -825,6 +826,21 @@ async function submitWake(ctx: any) {
   }
 }
 
+async function submitSessionPresence(ctx: any, mode: "afk" | "end") {
+  if (!ctx.from?.id) return;
+  try {
+    if (mode === "afk") {
+      await setPlayerAfk(ctx.from.id);
+      await ctx.reply(SESSION_AFK_CONFIRMATION, await afkReplyOptions(ctx.from.id));
+      return;
+    }
+    await endPlayerSession(ctx.from.id);
+    await ctx.reply(SESSION_ENDED_CONFIRMATION, { reply_markup: { remove_keyboard: true } });
+  } catch {
+    await ctx.reply("Ти ще не увійшов у світ. Напиши /start");
+  }
+}
+
 async function submitOpen(ctx: any, target?: string) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
@@ -852,6 +868,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "all") return replyWithAll(ctx, parsed.showDead);
     if (parsed.kind === "time") return showTime(ctx);
     if (parsed.kind === "menu") return showMenu(ctx);
+    if (parsed.kind === "session-presence") return submitSessionPresence(ctx, parsed.mode);
     if (parsed.kind === "back") return showMainKeyboard(ctx);
     if (parsed.kind === "hide-keyboard") return hideReplyKeyboard(ctx);
     if (parsed.kind === "inspect-vegetation") return replyWithVegetationInspection(ctx);

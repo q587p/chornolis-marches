@@ -26,11 +26,14 @@ import { registerManualTickReportHandlers } from "./handlers/tickReport";
 import { registerTimeHandlers } from "./handlers/time";
 import { registerTutorialHandlers } from "./handlers/tutorial";
 import { registerFallbackHandlers } from "./handlers/fallback";
+import { registerSessionPresenceHandlers } from "./handlers/sessionPresence";
+import { registerSessionPresenceMiddleware, startAutoAfkLoop } from "./services/sessionPresence";
 
 const TELEGRAM_POLLING_CONFLICT_RETRY_MS = Number(process.env.TELEGRAM_POLLING_CONFLICT_RETRY_MS || 15_000);
 
 const bot = new Bot(config.botToken);
 markTelegramBotStarting();
+registerSessionPresenceMiddleware(bot);
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -85,6 +88,7 @@ registerStatusHandlers(bot);
 registerManualTickReportHandlers(bot);
 registerTimeHandlers(bot);
 registerTutorialHandlers(bot);
+registerSessionPresenceHandlers(bot);
 registerLookHandlers(bot);
 registerSayHandlers(bot);
 registerMovementHandlers(bot);
@@ -108,6 +112,7 @@ announceWorldUpdatedOnce(bot).catch((error) => {
 });
 startWorldTickLoop(bot);
 startActionQueueLoop(bot);
+startAutoAfkLoop();
 registerFallbackHandlers(bot);
 
 startTelegramPolling();

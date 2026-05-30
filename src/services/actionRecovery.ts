@@ -21,6 +21,7 @@ import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./
 import { tutorialIdlePaceComments } from "./tutorialVoices";
 import { isTutorialFastRestLocationKey } from "./tutorial";
 import { escapeHtml } from "../utils/text";
+import { canSendProactiveToTelegramId, claimIdleReminderForPlayerScene, idleReminderSceneKeyForLocation } from "./sessionPresence";
 
 export function fatigueStateFor(stamina: number, staminaMax = BASE_STAMINA): FatigueState {
   if (stamina <= VERY_TIRED_STAMINA) return "VERY_TIRED";
@@ -168,8 +169,10 @@ export async function recoverStamina(bot: Bot) {
 
     if (!player.isResting && !hasActiveActions) {
       const chatId = Number(player.telegramId);
-      if (Number.isSafeInteger(chatId)) {
-        const voiceComments = await tutorialIdlePaceComments(player, now);
+      if (Number.isSafeInteger(chatId) && await canSendProactiveToTelegramId(player.telegramId)) {
+        const sceneKey = idleReminderSceneKeyForLocation(player.currentLocationId);
+        const voiceComments = sceneKey ? await tutorialIdlePaceComments(player, now) : [];
+        if (voiceComments.length && sceneKey && !(await claimIdleReminderForPlayerScene(player.id, sceneKey))) continue;
         for (const comment of voiceComments) {
           await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
         }
@@ -225,7 +228,7 @@ export async function recoverStamina(bot: Bot) {
     });
 
     const chatId = Number(player.telegramId);
-    if (Number.isSafeInteger(chatId)) {
+    if (Number.isSafeInteger(chatId) && await canSendProactiveToTelegramId(player.telegramId)) {
       const refreshedKeyboard = await buildMainReplyKeyboardForTelegramId(chatId, Boolean(player.isAutoEnabled));
       const replyMarkup = fullyRested && player.isResting ? buildStandUpKeyboard() : refreshedKeyboard;
       for (const message of messages) {
