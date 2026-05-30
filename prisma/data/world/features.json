@@ -25,7 +25,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
-      "icon": "🔥",
+      "icon": "🕯",
       "torch_source": true,
       "infinite_for_now": true,
       "future_limited_stock": true
