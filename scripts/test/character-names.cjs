@@ -7,8 +7,10 @@ require("ts-node/register");
 const {
   PREPARED_CHARACTER_NAMES,
   availablePreparedNames,
+  characterNameApprovalStatusText,
   customNameWarningText,
   normalizeNameForRegistry,
+  onboardingNameApprovalNote,
   preparedNameByKey,
   preparedNameByNominative,
   randomAvailablePreparedName,
@@ -72,6 +74,12 @@ assert.ok(feminineNames.every((name) => name.suggestedGender === "FEMININE"));
 assert.ok(pluralNames.every((name) => name.suggestedGender === "PLURAL"));
 assert.ok(masculineNames.some((name) => name.forms.nominative === "Северин"), "Expected Severyn to be available as a prepared masculine name");
 assert.ok(customNameWarningText({ examples: ["Северин", "Богдан", "Олесь"] }).includes("<b>Северин</b>"), "Expected custom-name prompt to bold prepared examples");
+assert.match(customNameWarningText(), /Підготовлені імена вже перевірені/);
+assert.match(customNameWarningText(), /Власне ім'я можна носити одразу/);
+assert.match(characterNameApprovalStatusText(true), /схвалене Писарями/);
+assert.match(characterNameApprovalStatusText(false), /чекає на перегляд/);
+assert.match(onboardingNameApprovalNote(true), /підготовлене ім’я вже перевірене/);
+assert.match(onboardingNameApprovalNote(false), /власне ім’я вже відкриває шлях/);
 assert.equal(randomAvailablePreparedName([], { suggestedGender: "MASCULINE" }).suggestedGender, "MASCULINE");
 assert.equal(randomAvailablePreparedName([], { suggestedGender: "FEMININE" }).suggestedGender, "FEMININE");
 assert.equal(randomAvailablePreparedName([], { suggestedGender: "PLURAL" }).suggestedGender, "PLURAL");

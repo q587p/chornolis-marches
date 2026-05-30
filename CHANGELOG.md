@@ -9,6 +9,22 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.20 - Name review clarity - 12026-05-30
+
+### Changed
+
+- Prepared character names now explicitly tell players that scribes have already checked the name.
+- Custom character names now clearly say they can be used immediately while still waiting for later scribe review.
+- Character cards reuse the same name-review wording so pending custom names no longer sound like a blocking error.
+
+### Tests
+
+- Extended character-name helper coverage for prepared-name and custom-name review copy.
+- Ran `npm run build`.
+- Ran `node scripts/test/character-names.cjs`.
+
+---
+
 ## 0.13.19 - Session presence, quieter forest reactions and PR discipline - 12026-05-30
 
 ### Added

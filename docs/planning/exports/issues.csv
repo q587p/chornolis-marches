@@ -68,7 +68,7 @@ ONB-001-F,Tutorial hint that observation matters,next,ux,onboarding,medium,"tuto
 ONB-002,Character name rules and onboarding,next,feature,onboarding,high,"onboarding,names,scribes,generated-names,ukrainian-grammar,validation",docs/planning/items/ONB-002-character-name-rules-and-onboarding.md
 ONB-002-A,Expand prepared-name pool,testing,feature,onboarding,high,"onboarding,names,ukrainian-grammar",docs/planning/items/ONB-002-A.md
 ONB-002-B,Expand forbidden-name normalization,testing,feature,onboarding,high,"onboarding,names,validation",docs/planning/items/ONB-002-B.md
-ONB-002-C,Uncertain custom-name review status,next,feature,onboarding,high,"onboarding,scribes,names",docs/planning/items/ONB-002-C.md
+ONB-002-C,Uncertain custom-name review status,testing,feature,onboarding,high,"onboarding,scribes,names",docs/planning/items/ONB-002-C.md
 ONB-002-D,Name onboarding help copy,next,ux,onboarding,medium,"onboarding,help,copy",docs/planning/items/ONB-002-D.md
 PERF-001,Runtime performance plan and creature simulation budget,backlog,technical,performance,high,"performance,ecology,creatures,action-queue,simulation,status,auto",docs/planning/items/PERF-001-budgeted-and-aggregated-creature-simulation.md
 PLAN-001,Repository docs are the planning source of truth,testing,documentation,planning,high,"planning,docs,roadmap",docs/planning/items/PLAN-001.md

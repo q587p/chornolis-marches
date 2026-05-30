@@ -1300,7 +1300,7 @@
   {
     "id": "ONB-002-C",
     "title": "Uncertain custom-name review status",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "onboarding",
     "priority": "high",

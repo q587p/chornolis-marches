@@ -11,6 +11,7 @@ import { enterTutorialDream, hasCompletedTutorial, isTutorialLocation } from "..
 import { escapeHtml } from "../utils/text";
 import {
   availablePreparedNames,
+  onboardingNameApprovalNote,
   customNameWarningText,
   normalizeNameForRegistry,
   preparedNameByKey,
@@ -228,11 +229,12 @@ function renderOnboardingNameConfirmation(player: {
   nameNominative: string | null;
   nameGenitive: string | null;
   nameVocative: string | null;
+  isNameApproved: boolean;
 }) {
   const name = player.nameNominative ?? "мандрівнику";
   const genitive = player.nameGenitive ?? name;
   const vocative = player.nameVocative ?? name;
-  return `Готово. Порубіжжя запам’ятало ім’я: <b>${escapeHtml(name)}</b>.\n\nНаприклад: «Травник звертається до <b>${escapeHtml(genitive)}</b>» і «<b>${escapeHtml(vocative)}</b>, стежка чекає».`;
+  return `Готово. Порубіжжя запам’ятало ім’я: <b>${escapeHtml(name)}</b>.\n${escapeHtml(onboardingNameApprovalNote(player.isNameApproved))}\n\nНаприклад: «Травник звертається до <b>${escapeHtml(genitive)}</b>» і «<b>${escapeHtml(vocative)}</b>, стежка чекає».`;
 }
 
 function renderOnboardingDateHint() {

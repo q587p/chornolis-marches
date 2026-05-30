@@ -41,6 +41,7 @@ import { rememberTutorialInventoryForPlayer } from "../utils/tutorialInventory";
 import { bestTargetMatch, inspectMissingText, targetDisplayLabel, targetListText, visibleTextTargets } from "../services/textTargets";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { durationSecondsSuffix } from "../utils/durationText";
+import { characterNameApprovalStatusText } from "../services/characterNames";
 
 const tutorialInventoryVoiceSeen = new Set<number>();
 
@@ -299,7 +300,7 @@ async function renderCharacterView(telegramId: number) {
   const locationText = player.currentLocation
     ? `${player.currentLocation.region.name} / ${player.currentLocation.name}`
     : "невідомо";
-  const nameApprovedText = player.isNameApproved ? "Ім’я схвалене." : "Ім’я ще не схвалене. Зверніться до писарів Порубіжжя.";
+  const nameApprovedText = characterNameApprovalStatusText(player.isNameApproved);
   const isTutorialDream = player.currentLocation ? isTutorialLocation(player.currentLocation) : false;
 
   return {
