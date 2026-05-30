@@ -111,6 +111,23 @@ function chatIdFromAction(action: WorldAction) {
   return Number.isSafeInteger(numeric) ? numeric : action.chatId;
 }
 
+async function hideCompletedFreshenSourceMessage(bot: Bot, action: WorldAction, chatId: number | string) {
+  if (typeof action.messageId !== "number") return;
+
+  try {
+    await bot.api.editMessageText(chatId, action.messageId, "Здобич освіжовано. Придатне м'ясо забрано.");
+    return;
+  } catch {
+    // The source message may be too old or already changed; still try to remove stale buttons.
+  }
+
+  try {
+    await bot.api.editMessageReplyMarkup(chatId, action.messageId, { reply_markup: undefined });
+  } catch {
+    // Stale target buttons are best-effort cleanup and should not fail the completed action.
+  }
+}
+
 function msToSeconds(ms: number) {
   return Math.max(1, Math.ceil(ms / 1000));
 }
@@ -712,6 +729,7 @@ async function completeFreshen(bot: Bot, action: WorldAction) {
     speciesKey: creature.species.key,
   });
   if (chatId) {
+    await hideCompletedFreshenSourceMessage(bot, action, chatId);
     await bot.api.sendMessage(chatId, `🔪 Ви освіжували ${target.forms.accusative} й отримали ${meat.resourceName} ×${meat.amount}.`);
     if (learning.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, FRESHENING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" }));
   }
