@@ -60,6 +60,46 @@ function formatCreatureStats(target: {
   ].join("\n");
 }
 
+type CreatureGender = "MASCULINE" | "FEMININE" | "NEUTER" | "PLURAL";
+
+function creatureGender(target: { sex?: string | null; species: { grammaticalGender?: string | null } }): CreatureGender {
+  if (target.sex === "FEMALE") return "FEMININE";
+  if (target.species.grammaticalGender === "FEMININE" || target.species.grammaticalGender === "NEUTER" || target.species.grammaticalGender === "PLURAL") return target.species.grammaticalGender;
+  return "MASCULINE";
+}
+
+function creatureWord(target: { sex?: string | null; species: { grammaticalGender?: string | null } }, words: Record<CreatureGender, string>) {
+  return words[creatureGender(target)];
+}
+
+function stripSentenceEnd(text: string) {
+  return text.trim().replace(/[.!?…]+$/u, "");
+}
+
+export function formatCreatureStatusLine(target: { isAlive: boolean; sex?: string | null; species: { grammaticalGender?: string | null } }, visibleAction?: string | null) {
+  const state = target.isAlive
+    ? creatureWord(target, { MASCULINE: "живий", FEMININE: "жива", NEUTER: "живе", PLURAL: "живі" })
+    : creatureWord(target, { MASCULINE: "мертвий", FEMININE: "мертва", NEUTER: "мертве", PLURAL: "мертві" });
+  const action = visibleAction ? stripSentenceEnd(visibleAction) : "";
+  return `Стан: ${state}${action ? `, ${action}` : ""}.`;
+}
+
+export function formatCreatureLifeState(target: { hp: number; maxHp?: number | null; species: { baseHp: number; grammaticalGender?: string | null }; sex?: string | null }) {
+  const maxHp = target.maxHp ?? target.species.baseHp;
+  const ratio = maxHp > 0 ? target.hp / maxHp : 0;
+  if (target.hp <= 0) return "Життя: не подає ознак життя.";
+  if (ratio >= 0.85) return "Життя: виглядає міцно.";
+  if (ratio >= 0.45) return "Життя: має рани, але тримається.";
+  return `Життя: ${creatureWord(target, { MASCULINE: "тяжко поранений", FEMININE: "тяжко поранена", NEUTER: "тяжко поранене", PLURAL: "тяжко поранені" })}.`;
+}
+
+function formatCreatureAge(age: string, target: { sex?: string | null; species: { grammaticalGender?: string | null } }) {
+  if (age === "CHILD") return creatureWord(target, { MASCULINE: "дитинча", FEMININE: "дитинча", NEUTER: "дитинча", PLURAL: "дитинчата" });
+  if (age === "YOUNG") return creatureWord(target, { MASCULINE: "молодий", FEMININE: "молода", NEUTER: "молоде", PLURAL: "молоді" });
+  if (age === "OLD") return creatureWord(target, { MASCULINE: "старий", FEMININE: "стара", NEUTER: "старе", PLURAL: "старі" });
+  return creatureWord(target, { MASCULINE: "дорослий", FEMININE: "доросла", NEUTER: "доросле", PLURAL: "дорослі" });
+}
+
 function playerGender(player: { grammaticalGender?: string | null; pronoun?: string | null }) {
   if (player.grammaticalGender === "FEMININE" || player.grammaticalGender === "NEUTER" || player.grammaticalGender === "PLURAL") return player.grammaticalGender;
   if (player.pronoun === "SHE") return "FEMININE";
@@ -250,8 +290,42 @@ export async function resolveTarget(type: string, id: number, locationId: number
         isCorpse: false,
         canFreshen: false,
         inspect: isAnimal
-          ? `Це ${forms.nominative}.\n\nСтан: ${target.isAlive ? "жива" : "мертва"}\nДія: ${visibleAction}${torchText ? `\n${torchText}` : ""}`
-          : `${forms.nominative}\n\nСтан: ${target.isAlive ? "живий/активний" : "неактивний"}\nДія: ${visibleAction}${torchText ? `\n${torchText}` : ""}`,
+          ? `Це ${forms.nominative}.\n\n${formatCreatureStatusLine(target, visibleAction)}${torchText ? `\n${torchText}` : ""}`
+          : `${forms.nominative}\n\n${formatCreatureStatusLine(target, visibleAction)}${torchText ? `\n${torchText}` : ""}`,
+      };
+    }
+
+    const publicCreatureDetails = isAnimal
+      ? [
+        `Це ${forms.nominative}.`,
+        "",
+        formatCreatureStatusLine(target, visibleAction),
+        formatCreatureLifeState(target),
+        `Стать: ${formatSex(target.sex)}.`,
+        `Вік: ${formatCreatureAge(target.age, target)}.`,
+        torchText,
+      ].filter(Boolean).join("\n")
+      : [
+        forms.nominative,
+        "",
+        formatCreatureStatusLine(target, visibleAction),
+        formatCreatureLifeState(target),
+        torchText,
+        hunterSection,
+      ].filter(Boolean).join("\n");
+
+    if (!showTechnicalDetails) {
+      return {
+        kind: "creature",
+        id: target.id,
+        name: forms.nominative,
+        forms,
+        canGreet: !isAnimal,
+        canAttack: isAnimal && target.species.diet !== "CARNIVORE",
+        isAnimal,
+        isCorpse: false,
+        canFreshen: false,
+        inspect: publicCreatureDetails,
       };
     }
 
@@ -266,8 +340,8 @@ export async function resolveTarget(type: string, id: number, locationId: number
       isCorpse: false,
       canFreshen: false,
       inspect: isAnimal
-        ? `Це ${forms.nominative}.\n\nСтан: ${target.isAlive ? "жива" : "мертва"}\nЖиття: ${target.hp}\nСтать: ${formatSex(target.sex)}\nВік: ${target.age}\nТіків віку: ${target.ageTicks}\nДія: ${visibleAction}${torchText ? `\n${torchText}` : ""}\n\nСтатистика:\n${formatCreatureStats(target)}`
-        : `${forms.nominative}\n\nСтан: ${target.isAlive ? "живий/активний" : "неактивний"}\nЖиття: ${target.hp}\nДія: ${visibleAction}${torchText ? `\n${torchText}` : ""}${hunterSection}\n\nСтатистика:\n${formatCreatureStats(target)}`,
+        ? `Це ${forms.nominative}.\n\n${formatCreatureStatusLine(target, visibleAction)}\nЖиття: ${target.hp}/${target.maxHp ?? target.species.baseHp}\nСтать: ${formatSex(target.sex)}\nВік: ${target.age}\nТіків віку: ${target.ageTicks}${torchText ? `\n${torchText}` : ""}\n\nСтатистика:\n${formatCreatureStats(target)}`
+        : `${forms.nominative}\n\n${formatCreatureStatusLine(target, visibleAction)}\nЖиття: ${target.hp}/${target.maxHp ?? target.species.baseHp}${torchText ? `\n${torchText}` : ""}${hunterSection}\n\nСтатистика:\n${formatCreatureStats(target)}`,
     };
   }
 
