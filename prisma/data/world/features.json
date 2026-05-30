@@ -258,6 +258,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🪶",
       "tutorial_wake_prompt": true
     }
   },
