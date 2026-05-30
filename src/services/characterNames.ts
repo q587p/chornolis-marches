@@ -15,6 +15,8 @@ export type PreparedCharacterName = {
   suggestedGender: Gender;
 };
 
+export type NameChoiceTextIntent = "prepared" | "random" | "customPrompt" | "customName";
+
 const FORBIDDEN_WORLD_NAMES = new Map<string, string>([
   ["вовк", "це радше назва істоти, ніж особове ім'я"],
   ["вовчиця", "це радше назва істоти, ніж особове ім'я"],
@@ -65,6 +67,15 @@ function normalizeForbiddenNameKey(value: string) {
 
 export function normalizeNameForRegistry(value: string) {
   return normalizeCharacterName(value).toLocaleLowerCase("uk-UA");
+}
+
+export function onboardingNameChoiceTextIntent(text: string): NameChoiceTextIntent | null {
+  const normalized = text.trim().toLocaleLowerCase("uk-UA");
+  if (!normalized || normalized.startsWith("/")) return null;
+  if (["список", "обрати", "обрати ім'я зі списку", "готове", "готові", "готове ім'я", "готові імена"].includes(normalized)) return "prepared";
+  if (["випадкове", "випадкове ім'я", "рандом", "навмання"].includes(normalized)) return "random";
+  if (["власне", "своє", "ввести", "ввести власне ім'я", "власне ім'я", "своє ім'я"].includes(normalized)) return "customPrompt";
+  return "customName";
 }
 
 export function preparedNameByKey(key: string) {

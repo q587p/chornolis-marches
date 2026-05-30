@@ -11,6 +11,7 @@ const {
   customNameWarningText,
   normalizeNameForRegistry,
   onboardingNameApprovalNote,
+  onboardingNameChoiceTextIntent,
   preparedNameByKey,
   preparedNameByNominative,
   randomAvailablePreparedName,
@@ -20,6 +21,12 @@ const { creatureForms, guessNameForms } = require("../../src/services/grammar");
 const { creatureSpeciesNameFields, findLexiconEntry, formsByNominative } = require("../../src/content/lexicon/worldLexicon");
 
 assert.equal(normalizeNameForRegistry("  Ведана  "), "ведана");
+assert.equal(onboardingNameChoiceTextIntent("список"), "prepared");
+assert.equal(onboardingNameChoiceTextIntent("Обрати ім'я зі списку"), "prepared");
+assert.equal(onboardingNameChoiceTextIntent("Випадкове ім'я"), "random");
+assert.equal(onboardingNameChoiceTextIntent("Ввести власне ім'я"), "customPrompt");
+assert.equal(onboardingNameChoiceTextIntent("Вербові"), "customName");
+assert.equal(onboardingNameChoiceTextIntent("/help"), null);
 
 const vedana = preparedNameByKey("vedana");
 assert.ok(vedana, "Expected prepared name Vedana");
