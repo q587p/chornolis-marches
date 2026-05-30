@@ -1174,7 +1174,7 @@ export function registerStatusHandlers(bot: Bot) {
   });  
 
   bot.command(["locationAll", "locationall"], replyLocationAllPage);
-  bot.hears(["📍 Місцини (/locationAll)", "Місцини (/locationAll)"], replyLocationAllPage);
+  bot.hears(["📍 Місцини", "Місцини", "📍 Місцини (/locationAll)", "Місцини (/locationAll)"], replyLocationAllPage);
 
   bot.callbackQuery(/^locationAll:(\d+)$/, async (ctx) => {
     if (!(await isScribeAdmin(ctx.from?.id))) {
@@ -1207,7 +1207,7 @@ export function registerStatusHandlers(bot: Bot) {
   });
 
   bot.command("world", replyWorldStatus);
-  bot.hears(["🌲 Світ (/world)", "Світ (/world)"], replyWorldStatus);
+  bot.hears(["🌲 Світ", "Світ", "🌲 Світ (/world)", "Світ (/world)"], replyWorldStatus);
 
   bot.command(["stat", "stats"], replyStatBrief);
 
@@ -1280,7 +1280,7 @@ export function registerStatusHandlers(bot: Bot) {
   });
 
   bot.command(["restAdmin", "restadmin"], (ctx) => runRestAdminCommand(bot, ctx));
-  bot.hears(["✨ Відновити снагу (/restAdmin)", "Відновити снагу (/restAdmin)"], (ctx) => runRestAdminCommand(bot, ctx, ""));
+  bot.hears(["✨ Відновити снагу", "Відновити снагу", "✨ Відновити снагу (/restAdmin)", "Відновити снагу (/restAdmin)"], (ctx) => runRestAdminCommand(bot, ctx, ""));
 
   bot.hears(["📊 Статистика", "Статистика", "📊 Статистика (/stat)", "Статистика (/stat)"], replyStatBrief);
 
@@ -1288,7 +1288,7 @@ export function registerStatusHandlers(bot: Bot) {
     const showDead = ctx.match?.trim().toLowerCase() === "dead";
     await replyAllPage(ctx, showDead);
   });
-  bot.hears(["👥 Усі (/all)", "Усі (/all)"], (ctx) => replyAllPage(ctx));
+  bot.hears(["👥 Усі", "Усі", "👥 Усі (/all)", "Усі (/all)"], (ctx) => replyAllPage(ctx));
 
   bot.command(["playerAdmin", "playeradmin", "player"], async (ctx) => {
     if (!(await requireScribeAdmin(ctx))) return;
