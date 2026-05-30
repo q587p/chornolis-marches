@@ -280,7 +280,7 @@
   {
     "id": "ECO-004",
     "title": "Population floor restoration",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "ecology",
     "priority": "high",
@@ -893,7 +893,7 @@
   {
     "id": "MAP-003",
     "title": "Playable map expansion",
-    "status": "next",
+    "status": "testing",
     "type": "content",
     "area": "world",
     "priority": "high",

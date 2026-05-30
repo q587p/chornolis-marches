@@ -9,6 +9,34 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.21 - Population recovery and northern forest pocket - 12026-05-31
+
+### Added
+
+- Added a population-floor restoration pass to `worldTick`: if a starter animal species has no living, non-gone animals left, the tick restores its starter living population at starter locations.
+- Added `src/services/populationRestoration.ts` to plan and execute starter population restoration from `src/data/starterAnimals.ts`.
+- Added `populationFloorRestored` to world tick system events, debug output and technical scribe tick summaries.
+- Added a first `MAP-003` playable expansion slice north of `forest_02_09` with three reachable forest locations, bidirectional exits and local resources.
+- Added an inspectable `Камінь малого сліду` location feature as the first seeded animal-restoration charm hook for future `ECO-005` offering actions.
+- Added focused population restoration helper coverage to `npm test`.
+
+### Changed
+
+- Marked `ECO-004` and the first `MAP-003` slice as testing, and updated `ECO-005` to point at the seeded charm while keeping the actual offering action layer as next work.
+- Refreshed the generated world map after opening the northern forest pocket.
+- Documented the quiet population-floor safeguard in the ecology system notes.
+
+### Tests
+
+- Ran `node scripts/test/population-restoration.cjs`.
+- Ran `npm run test:seed`.
+- Ran `npm test`.
+- Ran `npm run planning:export`.
+- Ran `npm run map:render`.
+- Ran `npm run build`.
+
+---
+
 ## 0.13.20 - Name review, social hints, admin menu and visibility polish - 12026-05-30
 
 ### Changed

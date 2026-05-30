@@ -44,6 +44,12 @@ The first version should use a shrine, small animal charm, carved burrow marker,
   - if the population is already healthy, keep the result atmospheric and non-farmable.
 - Add cooldowns or per-feature pending state so repeated offerings cannot become a spawn shop.
 
+## 0.13.21 Groundwork
+
+- Seeded the first shared small-prey charm feature, `Камінь малого сліду`, in the new northern forest pocket from `MAP-003`.
+- The feature is inspectable and marked with `animal_restoration_charm` / `future_offering` metadata.
+- The actual `/offer` action, item consumption, delayed effect and cooldown remain in this task.
+
 ## Acceptance
 
 - Players can inspect the feature and understand that a small living gift may matter.

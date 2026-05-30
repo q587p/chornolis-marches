@@ -1,7 +1,7 @@
 ---
 id: MAP-003
 title: Playable map expansion
-status: next
+status: testing
 type: content
 area: world
 priority: high
@@ -48,6 +48,16 @@ This is a content pressure task, not only a future worldbuilding wish. The first
 - New visible features are not bare labels only; direct `/examine <feature>` should add meaning, constraint, use or atmosphere.
 - Existing start/tutorial/dream locations are not moved or broken.
 - World seed tests pass.
+
+## 0.13.21 Slice
+
+- Added a first small northern forest pocket reachable from `forest_02_09`:
+  - `forest_02_10` / `Заяча зарість`;
+  - `forest_03_10` / `Камінь малого сліду`;
+  - `forest_04_10` / `Північний бурелом`.
+- Added bidirectional exits, local berries/herbs/mushrooms/twigs and refreshed `docs/world/world_map.md`.
+- Added an inspectable `Камінь малого сліду` feature as a future animal-restoration charm hook for `ECO-005`.
+- Removed the matching blocked-cell wall entries so the new pocket renders as playable space.
 
 ## Implementation Notes
 

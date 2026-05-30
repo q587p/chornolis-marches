@@ -27,7 +27,7 @@ node scripts/world/render-map-ascii.mjs --write
 ```text
       -1  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21
 y
- 10    █  █  █  █  █  █  █  █  █  █  █  █  █  █
+ 10    █  █  █  F  F  F  █  █  █  █  █  █  █  █
   9    █  #  #  F  #  #  #  #  #  F  F  .  .  .  ,  ~  ~
   8    █  F  F  F  #  F  F  F  F  F  #  .  #  .  .  ,  ~  ~
   7    █  F  #  #  #  F  #  #  #  F  F  .  .  .  .  .  ,  ,  ~
@@ -52,18 +52,20 @@ y
 ## Layer z = -13
 
 ```text
-      -1  0  1
+      -2 -1  0  1
 y
-  5       D
-  4       D
-  3    D  D  D
-  2       D
-  1       D
-  0       D
+  5          D
+  4          D  D
+  3    D  D  D  D
+  2          D
+  1          D
+  0          D
 ```
 
 ## Special authored links
 
+- `dream_tutorial_hub` — INSIDE → `dream_tutorial_observation`
+- `dream_tutorial_observation` — OUTSIDE → `dream_tutorial_hub`
 - `meadow_11_00` — SOUTH → `meadow_11_09`
 - `meadow_11_09` — NORTH → `meadow_11_00`
 - `riverbank_13_00` — SOUTH → `riverbank_13_09`
@@ -73,8 +75,8 @@ y
 - `under_bridge_18_05` — NORTH → `riverbank_18_06`
 - `under_bridge_18_05` — SOUTH → `riverbank_18_04`
 - `closed_east_gate` — EAST is a visible locked exit (Зачинені ворота).
+- `dream_tutorial_hub` — NORTH is a visible locked exit (Брама Сну).
 - `dream_tutorial_gate` — SOUTH is a visible locked exit (Брама Сну).
-- `dream_tutorial_hub` — NORTH back to `dream_tutorial_gate` is the matching visible locked exit while Брама Сну is closed.
 
 ## Editing
 
