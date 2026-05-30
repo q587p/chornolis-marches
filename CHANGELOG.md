@@ -9,17 +9,25 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
-## 0.13.18 - Hunter claimed-carcass and speech hardening - 12026-05-30
+## 0.13.18 - Hunter hardening, weapon planning and scribe audit - 12026-05-30
+
+### Added
+
+- Added weapon-system planning docs for the minimal weapon catalog/equip slice, weapon-aware action text, themed NPC weapons, later weapon condition work and cold-storage combat/lifetime work.
+- Added a reusable scribe audit helper and covered confirmed `/reset world`, `/reset stats` and `/reset full` actions with quiet `WorldEvent` audit records.
+- Added a scribe-audit system note listing dangerous admin/scribe tools that should keep or gain structured audit coverage.
 
 ### Changed
 
 - Hunter-claimed carcasses now preserve their hunter marker while ordinary corpse decay updates the remaining lifetime text, so returning hunters can still deposit prey through the gate drop-off service.
 - Direct hunter field lines now record `SAY` events and increment the creature speech counter used by ecology/status statistics.
 - Updated hunter and actor-inventory planning notes to keep the remaining claimed-carcass `currentAction` bridge visible as future structural work.
+- Updated planning exports for the weapon task pack and completed first scribe-audit task slices.
 
 ### Tests
 
 - Extended NPC hunter helper coverage for hunter-claimed carcass decay markers.
+- Added scribe-audit helper coverage.
 - Ran the full project test suite.
 
 ---

@@ -20,7 +20,7 @@
   {
     "id": "ADM-001-A",
     "title": "Dangerous scribe tool audit",
-    "status": "next",
+    "status": "done",
     "type": "technical",
     "area": "admin",
     "priority": "medium",
@@ -36,7 +36,7 @@
   {
     "id": "ADM-001-B",
     "title": "Scribe action audit helper",
-    "status": "next",
+    "status": "done",
     "type": "technical",
     "area": "admin",
     "priority": "medium",
