@@ -14,6 +14,10 @@ These may become `next` after 0.13-0.15 foundations land.
 - Local pickup/gather observer feedback beyond хмиз, after `ITEM-001` clarifies pickup versus gather command semantics.
 - Bulk ground pickup text commands such as `підібрати все` / `take all`, with clear ordering, visibility checks and item limits.
 - Richer butchering outputs after `FOOD-001`: species-specific meat, bones, hide, fur, feathers, tools, skill-based yield and spoilage.
+- WPN-003: themed NPC weapons and hunter spear polish after WPN-001/WPN-002 land; hunters carry spears and knives, herbalists/знахарі carry sickles, players start with a plain knife.
+- Weapon follow-up after the MVP: text aliases for `equip`, `unequip`, `wield`, `зняти`, `взяти ніж`, item inspect text, safer dropped-weapon pickup, and starter-knife backfill for older characters if not handled in WPN-001.
+- Weapon-aware butchering/freshening polish after `FOOD-001`: tool quality affects text first, then later yield; do not implement durability here.
+- First weapon-learning hooks: using a spear teaches spear handling later; using a knife for freshening may feed hunting/butchering learning after progression storage is ready.
 - Animal-restoration charm or small offering loop.
 - NPC hunter/archer route that leaves visible signs.
 - Local console client for command/action smoke tests.
@@ -40,6 +44,8 @@ These may become `next` after 0.13-0.15 foundations land.
 - Keep action aliases and Telegram buttons moving toward a shared action registry.
 - Add map/docs drift checks after map data stabilizes.
 - Keep posture, sleep state and dream instance state separate in services and persistence.
+- Keep weapon behavior behind `src/services/weapons.ts` rather than scattering key checks through handlers.
+- When item instances are promoted, migrate equipped weapons from aggregate resource keys to equipped item instance ids.
 
 ## Promotion Rules
 

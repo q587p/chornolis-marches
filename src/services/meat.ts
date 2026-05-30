@@ -1,9 +1,11 @@
 import { prisma } from "../db";
 import { isExtinguishedCampfire } from "./fire";
+import { recordCookingSource } from "./foodLearning";
 
 export const RAW_MEAT_KEY = "raw_meat";
 export const COOKED_MEAT_KEY = "cooked_meat";
 const FRESHENED_CORPSE_MARKER = "freshened_by_player:";
+const FRESHENED_CORPSE_PATTERN = /(?:^|;\s*)freshened_by_(?:player|hunter):\d+\b/;
 const COOKED_MEAT_HUNGER_RELIEF = 5;
 const COOKING_SUCCESS_CHANCE = 0.6;
 
@@ -16,7 +18,7 @@ export function meatYieldForSpecies(speciesKey: string) {
 }
 
 export function isFreshenedCorpse(currentAction: string | null | undefined) {
-  return Boolean(currentAction?.startsWith(FRESHENED_CORPSE_MARKER));
+  return FRESHENED_CORPSE_PATTERN.test(currentAction ?? "");
 }
 
 export function meatCookingSucceeds(roll = Math.random()) {
@@ -77,7 +79,7 @@ export async function freshenCorpseForMeat(input: {
         age: "CORPSE",
         NOT: { currentAction: { startsWith: FRESHENED_CORPSE_MARKER } },
       },
-      data: { currentAction: freshenedCorpseAction(input.playerId, amount) },
+      data: { isHidden: true, currentAction: freshenedCorpseAction(input.playerId, amount) },
     });
     if (freshened.count === 0) throw new Error("Труп уже не підходить для освіжування.");
 
@@ -140,9 +142,20 @@ export async function cookRawMeat(playerId: number) {
     });
   });
 
-  return cookedSuccessfully
-    ? "Ви підсмажили шмат м'яса над вогнищем."
-    : "М'ясо підгоріло й розсипалося чорним крихким шматтям. Їсти тут уже нічого.";
+  const learning = await recordCookingSource({
+    locationId: player.currentLocationId,
+    actorPlayerId: playerId,
+    success: cookedSuccessfully,
+  });
+
+  return {
+    text: cookedSuccessfully
+      ? "Ви підсмажили шмат м'яса над вогнищем."
+      : "М'ясо підгоріло й розсипалося чорним крихким шматтям. Їсти тут уже нічого.",
+    succeeded: cookedSuccessfully,
+    practiceMilestone: learning.milestone,
+    practiceCount: learning.sourceCount,
+  };
 }
 
 export async function eatCookedMeat(playerId: number) {

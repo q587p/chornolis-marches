@@ -7,7 +7,7 @@ import { creatureForms, playerForms, type NameForms } from "./grammar";
 import type { ResolvedTarget } from "./targets";
 import { enqueueCreatureAction, interruptActorActions, movementDurationMs } from "./actionQueue";
 import { logEvent } from "./worldEvents";
-import { hunterSocialReactionSignal, isHunterCreature } from "./npcHunter";
+import { hunterReactionDurationMs, hunterSocialReactionSignal, isHunterCreature } from "./npcHunter";
 
 type SocialContext = {
   actor: { kind: "player" | "creature"; id: number; locationId: number; forms: NameForms; telegramId?: string };
@@ -169,7 +169,12 @@ async function maybeReactToSocialSignal(bot: Bot, actor: SocialContext["actor"],
 
     const actorTarget = await resolveActorAsTarget(actor);
     if (!actorTarget) return;
-    await performCreatureSocialSignal(bot, hunter, actorTarget, reaction);
+    await enqueueCreatureAction({
+      creatureId: hunter.id,
+      type: "GREET",
+      payload: { targetType: actorTarget.kind, targetId: actorTarget.id, socialId: reaction },
+      durationMs: hunterReactionDurationMs("GREET", hunter.stamina),
+    });
     return;
   }
 

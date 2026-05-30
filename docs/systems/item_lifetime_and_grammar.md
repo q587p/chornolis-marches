@@ -20,7 +20,7 @@ For corpses, these states describe the current condition of the body. Later peri
 
 0.13.3 adds the first raw meat -> cooked meat -> eat loop as a resource-stack bridge. Future item-instance work should let meat age in inventory and on the ground until it becomes unsuitable, and should allow butchering / freshening a corpse already carried in inventory rather than only a visible corpse lying nearby.
 
-After a corpse is freshened, the creature record can remain in the world as visible `рештки` until decay or cleanup removes it. Player-facing lists must not expose the internal `freshened_by_player` marker or meat-yield note; they should say that the usable meat has already been taken.
+Current 0.13.x behavior hides the original corpse after freshening so player-facing lists do not show a harvested body or expose the internal `freshened_by_player` marker. A later remains slice should replace that bridge with a real visible `рештки`/usable-remains object that has its own lifetime, drop-off behavior and text.
 
 In the tutorial dream, berries, herbs and mushrooms may also be treated as visible loose ground resources so a beginner can see the immediate result of dropping simple dream supplies. This is a tutorial bridge, not the final item model: future item instances should track whether a stack was gathered in the dream or brought from the waking world.
 
@@ -36,7 +36,7 @@ Ukrainian display text should be chosen through grammar helpers instead of hardc
 - Player and named NPC forms should prefer stored case fields when present: nominative, genitive, dative, accusative, instrumental, locative and vocative.
 - Animacy affects accusative wording: animate beings usually use genitive-like accusative forms, while inanimate objects usually keep nominative-like accusative forms.
 - Corpse text is a mixed case: the corpse object itself is inanimate, but the creature name after `труп` still uses the creature's genitive form.
-- Target lists and location details should also use genitive after `труп` / `рештки`, for example `труп: миші` and `рештки зайця`, not nominative species names.
+- Target lists and location details should also use genitive after `труп` and future `рештки`, for example `труп: миші` and `рештки зайця`, not nominative species names.
 - Creature eating actions should use an accusative resource form, for example `їсть траву`, not `їсть трава`.
 - UI code should ask the grammar layer for a context-specific form instead of checking resource keys such as `corpse_rabbit_female` inline.
 

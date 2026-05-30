@@ -20,7 +20,7 @@
   {
     "id": "ADM-001-A",
     "title": "Dangerous scribe tool audit",
-    "status": "next",
+    "status": "done",
     "type": "technical",
     "area": "admin",
     "priority": "medium",
@@ -36,7 +36,7 @@
   {
     "id": "ADM-001-B",
     "title": "Scribe action audit helper",
-    "status": "next",
+    "status": "done",
     "type": "technical",
     "area": "admin",
     "priority": "medium",
@@ -408,6 +408,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/FOOD-002-spoiled-meat-and-risky-eating.md"
+  },
+  {
+    "id": "FOOD-003",
+    "title": "Freshened corpse remains",
+    "status": "backlog",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "food",
+      "corpses",
+      "remains",
+      "hunting",
+      "dropoff"
+    ],
+    "depends_on": [
+      "FOOD-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FOOD-003-freshened-corpse-remains.md"
   },
   {
     "id": "HMYZ-001-A",
@@ -1120,7 +1140,7 @@
   {
     "id": "ONB-001-A",
     "title": "Dream tutorial flow audit",
-    "status": "next",
+    "status": "done",
     "type": "design",
     "area": "onboarding",
     "priority": "high",
@@ -2098,5 +2118,100 @@
     ],
     "exports": {},
     "file": "docs/planning/items/WORLD-002-hidden-spirit-seed-and-boundaries.md"
+  },
+  {
+    "id": "WPN-001",
+    "title": "Minimal weapon catalog and equip foundation",
+    "status": "next",
+    "type": "feature",
+    "area": "items",
+    "priority": "medium",
+    "tags": [
+      "weapons",
+      "inventory",
+      "equipment",
+      "freshening"
+    ],
+    "depends_on": [
+      "FOOD-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WPN-001-minimal-weapon-catalog-and-equip.md"
+  },
+  {
+    "id": "WPN-002",
+    "title": "Weapon-aware look, examine, attack and freshen",
+    "status": "next",
+    "type": "feature",
+    "area": "items",
+    "priority": "medium",
+    "tags": [
+      "weapons",
+      "inventory",
+      "combat",
+      "freshening"
+    ],
+    "depends_on": [
+      "WPN-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WPN-002-weapon-aware-look-examine-attack-freshen.md"
+  },
+  {
+    "id": "WPN-003",
+    "title": "Themed NPC weapons and hunter spear",
+    "status": "backlog",
+    "type": "feature",
+    "area": "npc",
+    "priority": "medium",
+    "tags": [
+      "weapons",
+      "npc",
+      "hunter",
+      "seed"
+    ],
+    "depends_on": [
+      "WPN-001",
+      "WPN-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WPN-003-themed-npc-weapons-and-hunter-spear.md"
+  },
+  {
+    "id": "WPN-004",
+    "title": "Weapon condition, dulling and sharpening hooks",
+    "status": "backlog",
+    "type": "technical",
+    "area": "items",
+    "priority": "low",
+    "tags": [
+      "weapons",
+      "durability",
+      "item-instances",
+      "backlog"
+    ],
+    "depends_on": [
+      "WPN-001",
+      "WPN-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WPN-004-weapon-condition-backlog.md"
+  },
+  {
+    "id": "WPN-ICE-001",
+    "title": "Deep combat and weapon lifetime",
+    "status": "icebox",
+    "type": "feature",
+    "area": "combat",
+    "priority": "low",
+    "tags": [
+      "weapons",
+      "combat",
+      "durability",
+      "icebox"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/WPN-ICE-001-deep-combat-and-weapon-lifetime.md"
   }
 ]

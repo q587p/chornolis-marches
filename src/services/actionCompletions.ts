@@ -35,14 +35,15 @@ import { tutorialGateSpeechComment, tutorialLookPaceComments, tutorialSpiritMove
 import { chance, pick, shuffle } from "../utils/random";
 import { freshenCorpseForMeat } from "./meat";
 import { rememberPlayerReplyTarget } from "./replyTargets";
-import { hunterClaimedCorpseAction, hunterConversationReplyLine, isHunterCreature } from "./npcHunter";
+import { hunterClaimedCorpseAction, hunterConversationReplyLine, hunterReactionDurationMs, isHunterCreature } from "./npcHunter";
 import { ATTACK_OBSERVATION_GROWTH_MESSAGE, ATTACK_PRACTICE_GROWTH_MESSAGE, isAttackPracticeMilestone, recordAttackKillSource, recordAttackObservation } from "./attackLearning";
 import { GATHERING_OBSERVATION_GROWTH_MESSAGE, GATHERING_PRACTICE_GROWTH_MESSAGE, isGatheringPracticeMilestone, recordGatheringObservation, recordGatheringSource } from "./gatheringLearning";
+import { COOKING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_PRACTICE_GROWTH_MESSAGE, recordCookingObservation, recordFresheningObservation, recordFresheningSource } from "./foodLearning";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
 type SayPayload = { text: string; mode?: "say" | "whisper" | "reply" | "shout"; targetType?: "player" | "creature"; targetId?: number; targetName?: string; targetDative?: string };
-type SocialPayload = { targetType: "player" | "creature"; targetId: number; mode?: "known" | "mystery"; detail?: "brief" | "full" };
+type SocialPayload = { targetType: "player" | "creature"; targetId: number; mode?: "known" | "mystery"; detail?: "brief" | "full"; socialId?: string };
 
 const RECENT_ATTACK_FEATURE_PREFIX = "recent_attack_";
 const RECENT_ATTACK_DANGER_TICKS = Number(process.env.WORLD_RECENT_ATTACK_DANGER_TICKS || 20);
@@ -108,6 +109,23 @@ function chatIdFromAction(action: WorldAction) {
   if (!action.chatId) return undefined;
   const numeric = Number(action.chatId);
   return Number.isSafeInteger(numeric) ? numeric : action.chatId;
+}
+
+async function hideCompletedFreshenSourceMessage(bot: Bot, action: WorldAction, chatId: number | string) {
+  if (typeof action.messageId !== "number") return;
+
+  try {
+    await bot.api.editMessageText(chatId, action.messageId, "Здобич освіжовано. Придатне м'ясо забрано.");
+    return;
+  } catch {
+    // The source message may be too old or already changed; still try to remove stale buttons.
+  }
+
+  try {
+    await bot.api.editMessageReplyMarkup(chatId, action.messageId, { reply_markup: undefined });
+  } catch {
+    // Stale target buttons are best-effort cleanup and should not fail the completed action.
+  }
 }
 
 function msToSeconds(ms: number) {
@@ -546,6 +564,12 @@ async function completeLook(bot: Bot, action: WorldAction) {
         const observation = await recordGatheringObservation({ playerId: player.id, locationId });
         if (observation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
       };
+      const sendFoodObservationMessages = async () => {
+        const freshening = await recordFresheningObservation({ playerId: player.id, locationId });
+        if (freshening.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, FRESHENING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+        const cooking = await recordCookingObservation({ playerId: player.id, locationId });
+        if (cooking.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, COOKING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+      };
       if (action.messageId && typeof chatId === "number" && canEditKnownMessage(chatId, action.messageId)) {
         try {
           await bot.api.editMessageText(chatId, action.messageId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
@@ -554,6 +578,7 @@ async function completeLook(bot: Bot, action: WorldAction) {
           }
           await sendAttackObservationMessage();
           await sendGatheringObservationMessage();
+          await sendFoodObservationMessages();
           return;
         } catch {
           // Fall back to a new message when Telegram cannot edit the source message.
@@ -565,6 +590,7 @@ async function completeLook(bot: Bot, action: WorldAction) {
       }
       await sendAttackObservationMessage();
       await sendGatheringObservationMessage();
+      await sendFoodObservationMessages();
     }
     return;
   }
@@ -597,11 +623,17 @@ async function completeInspect(bot: Bot, action: WorldAction) {
       const gatheringObservation = await recordGatheringObservation({ playerId: player.id, locationId: player.currentLocationId });
       if (gatheringObservation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
     }
+    const fresheningObservation = await recordFresheningObservation({ playerId: player.id, locationId: player.currentLocationId });
+    if (fresheningObservation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, FRESHENING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+    const cookingObservation = await recordCookingObservation({ playerId: player.id, locationId: player.currentLocationId });
+    if (cookingObservation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, COOKING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
   }
 }
 
 async function completeGreet(bot: Bot, action: WorldAction) {
   const payload = payloadOf<SocialPayload>(action);
+  if (action.actorType === "CREATURE") return completeCreatureSocialReaction(bot, action, payload);
+
   const player = action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null;
   const chatId = chatIdFromAction(action);
   if (!player || !player.currentLocationId || action.actorType !== "PLAYER") return void (await setActionStatus(action, "FAILED"));
@@ -643,6 +675,17 @@ async function completeGreet(bot: Bot, action: WorldAction) {
   if (chatId) await bot.api.sendMessage(chatId, `Ви сказали ${escapeHtml(target.forms.dative)}:\n${quoteBlock(greeting)}`, { parse_mode: "HTML" });
 }
 
+async function completeCreatureSocialReaction(bot: Bot, action: WorldAction, payload: SocialPayload) {
+  const creature = action.creatureId ? await prisma.creature.findUnique({ where: { id: action.creatureId }, include: { species: true } }) : null;
+  if (!creature || !creature.isAlive || creature.isGone || !payload.socialId) return void (await setActionStatus(action, "FAILED"));
+  const target = await resolveTarget(payload.targetType, payload.targetId, creature.locationId);
+  if (!target || target.isCorpse) return void (await setActionStatus(action, "FAILED"));
+
+  const { performCreatureSocialSignal } = await import("./socialSignals");
+  await performCreatureSocialSignal(bot, creature, target, payload.socialId);
+  await setActionStatus(action, "DONE");
+}
+
 async function completeFreshen(bot: Bot, action: WorldAction) {
   const payload = payloadOf<SocialPayload>(action);
   const player = action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null;
@@ -679,7 +722,17 @@ async function completeFreshen(bot: Bot, action: WorldAction) {
   }
   await setActionStatus(action, "DONE");
   await logEvent("PLAYER_ACTION", "Player freshened corpse", `${target.kind}:${target.id}; meat=${meat.amount}`, player.currentLocationId);
-  if (chatId) await bot.api.sendMessage(chatId, `🔪 Ви освіжували ${target.forms.accusative} й отримали ${meat.resourceName} ×${meat.amount}.`);
+  const learning = await recordFresheningSource({
+    locationId: player.currentLocationId,
+    actorPlayerId: player.id,
+    creatureId: creature.id,
+    speciesKey: creature.species.key,
+  });
+  if (chatId) {
+    await hideCompletedFreshenSourceMessage(bot, action, chatId);
+    await bot.api.sendMessage(chatId, `🔪 Ви освіжували ${target.forms.accusative} й отримали ${meat.resourceName} ×${meat.amount}.`);
+    if (learning.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, FRESHENING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+  }
 }
 
 async function completeCreatureAttack(bot: Bot, action: WorldAction) {
@@ -834,7 +887,7 @@ async function queueHunterConversationReply(input: {
       targetDative: actorForms.dative,
       speakerDative: hunterForms.dative,
     },
-    durationMs: actionDurationMs("SAY", hunter.stamina),
+    durationMs: hunterReactionDurationMs("SAY", hunter.stamina),
   });
 }
 

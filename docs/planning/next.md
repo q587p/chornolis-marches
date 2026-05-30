@@ -22,7 +22,8 @@ The current lane is the three-month vertical slice:
 - ECO-003: tune gate-hunting saturation after the first 0.13.12 slice; the sign, rewards and hunter stand-down behavior exist, but thresholds, persisted linger/cooldown, per-tick saturation caching for larger hunter counts, and the temporary plain `/put` default still need follow-up.
 - LOOP-003: tune old campfire memory omens after the first small reveal slice; future work can add more authored locations and traces without turning it into a ritual/reward system.
 - NPC-003: extract herbalist behavior into its own service layer, shaped like the hunter service, before adding more visible herbalist/learning behavior.
-- ADM-001: minimal audit logging for dangerous scribe tools.
+- WPN-001: minimal weapon catalog and equip/unequip foundation; keep it tied to existing resource inventory and do not start full combat.
+- WPN-002: weapon-aware look/examine/freshen/attack text; require a sharp equipped weapon for freshening, but keep current target eligibility.
 
 ## 0.14 Next
 
@@ -49,6 +50,7 @@ These are still `backlog`, but recent work makes them worth reviewing before the
 - Sleep and dreams: after SLEEP-001/SLEEP-002 land, review SLEEP-003 and DREAM-001 so world-time auto-waking and sleeping-body/dream-presence separation do not drift away from the tutorial dream work.
 - Inventory item actions: the dedicated inventory view exists, and the 0.12.15 drop feedback pass makes the item-instance gap more visible. Item details, safer dropped-item pickup, dream-item origin and richer per-item actions are now small enough to promote when the survival loop needs them.
 - Corpse freshening and meat: the existing corpse/freshen path, hunger and campfire inventory actions are close enough to support a first raw meat -> cooked meat -> eat loop. This has been promoted to `FOOD-001`.
+- Weapons as tools: WPN-001/WPN-002 are small enough to promote because they reuse current resource inventory, target descriptions and queued `ATTACK`/`FRESHEN` actions. Keep them as a utility/display layer; do not pull WPN-004 durability or WPN-ICE-001 deep combat forward.
 - Pickup/gather command semantics: `підібрати`/`take` should mean visible ground-item pickup, while `зібрати`/`gather` should mean spending time and stamina on a local resource node. This has been promoted to `ITEM-001`.
 - PERF-001: runtime performance plan and creature simulation budget. Recent production logs show `/all` and large creature counts are already visible pressure points; next performance work should keep following the recorded plan.
 - ADM-001: admin permissions, name approval and restricted reset hardening. A first `Писар`/admin gate exists now, so remaining near-term work is audit logging, clearer role UX, first name-review tools and closing any leftover dangerous paths.

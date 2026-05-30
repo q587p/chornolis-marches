@@ -88,7 +88,11 @@ When in-world time becomes more complete, hunger should also rise naturally with
 
 A torch should not be enough for cooking. The first cooking pass is imperfect: roughly three attempts out of five become cooked meat, while failed attempts consume the raw meat for now. Later systems can split meat by species and add bones, hide, fur, feathers, freshness, spoilage, tools and skill-based yields.
 
-After freshening, the original creature record may remain in the world as `рештки` until corpse decay removes it. Player-facing text should say the usable meat has already been taken rather than exposing internal `freshened_by_player` state.
+Freshening is a queued physical action and currently costs `3` stamina per corpse. `freshen all` / `свіжувати все` only queues one freshening action per suitable visible corpse; it does not process the whole location instantly.
+
+After freshening, the current bridge hides the original corpse from player-facing location and target lists. Future work should create proper visible remains with their own lifetime and drop-off behavior instead of exposing internal `freshened_by_player` state.
+
+Freshening and cooking use the same first text-only learning bridge as attack and gathering. Repeated personal freshening/cooking actions can show private growth text every thirteenth action; observing another actor's recent freshening/cooking through location or target inspection can show a smaller private growth text every fifth observation. These messages do not yet change stored numeric skills.
 
 ## Campfire Loop
 

@@ -6,7 +6,8 @@ import { enqueueCreatureAction } from "./actionLifecycle";
 import { GATE_CARCASS_DROPOFF_FEATURE_KEY, getGateHuntingSaturationState, hunterFieldLine, recordNpcCarcassDropoffContribution } from "./carcassDropoff";
 import { corpseResourceKey, resourceTypeDisplayName } from "./corpses";
 import { creatureCarriedTorchCount, ensureTorchResourceTypes, getCreatureTorchState, lightCreatureTorchAtCampfire } from "./fire";
-import { notifyLocationAll } from "./notifications";
+import { escapeHtml } from "../utils/text";
+import { notifyLocationAll, notifyLocationExcept } from "./notifications";
 import { findLocationRoute, type RouteStep } from "./routeFinding";
 import { logEvent } from "./worldEvents";
 
@@ -91,6 +92,12 @@ export function hunterClaimedCorpseOwnerId(currentAction: string | null | undefi
   return Number.isSafeInteger(hunterId) ? hunterId : null;
 }
 
+export function hunterClaimedCorpseDecayAction(currentAction: string | null | undefined, decayLeft: number) {
+  const hunterId = hunterClaimedCorpseOwnerId(currentAction);
+  if (!hunterId) return null;
+  return `${HUNTER_CLAIMED_CORPSE_PREFIX}${hunterId}; мисливець несе здобич до падального рову; розкладається; залишилось ${decayLeft} тіків`;
+}
+
 export function isHunterGroundTorchKey(key: string): key is (typeof HUNTER_GROUND_TORCH_KEYS)[number] {
   return (HUNTER_GROUND_TORCH_KEYS as readonly string[]).includes(key);
 }
@@ -127,6 +134,18 @@ export function hunterConversationReplyLine(seed = 0) {
 
 export function hunterSocialReactionSignal(socialId: string) {
   return HUNTER_SOCIAL_REACTIONS[socialId] ?? null;
+}
+
+export function hunterReactionDurationMs(type: "GREET" | "SAY", stamina = 0) {
+  return actionDurationMs(type, stamina) * 2;
+}
+
+function quoteBlock(text: string) {
+  return `<blockquote>${escapeHtml(text)}</blockquote>`;
+}
+
+export function formatHunterFieldSpeech(name: string, line: string) {
+  return `${escapeHtml(name)} промовляє:\n${quoteBlock(line)}`;
 }
 
 type HunterPreyCandidate = {
@@ -349,10 +368,35 @@ async function depositClaimedCorpses(bot: Bot | null, hunter: { id: number; name
       },
     });
     await logEvent("NPC_ACTION", "Hunter deposited claimed carcasses", `${hunter.id}; ${group.resourceTypeKey} ×${group.amount}`, plan.gateLocationId);
-    if (bot) await notifyLocationAll(bot, plan.gateLocationId, `${result.observerText}\n\n${hunter.name ?? "Мисливець"} промовляє:\n“${result.fieldLine}”`);
+    await emitHunterFieldSpeech(bot, hunter, plan.gateLocationId, result.fieldLine, result.observerText);
   }
 
   return true;
+}
+
+async function emitHunterFieldSpeech(
+  bot: Bot | null,
+  hunter: { id: number; name?: string | null },
+  locationId: number,
+  line: string,
+  observerText?: string,
+) {
+  const name = hunter.name ?? "Мисливець";
+  await prisma.creature.updateMany({
+    where: { id: hunter.id, isAlive: true, isGone: false },
+    data: { says: { increment: 1 } },
+  });
+  await logEvent("SAY", `${name} промовляє`, line, locationId);
+  if (bot) {
+    const speech = formatHunterFieldSpeech(name, line);
+    await notifyLocationExcept(
+      bot,
+      locationId,
+      [],
+      observerText ? `${escapeHtml(observerText)}\n\n${speech}` : speech,
+      { parseMode: "HTML" },
+    );
+  }
 }
 
 async function pickUpVisibleGroundTorch(bot: Bot | null, hunter: { id: number; locationId: number; currentAction?: string | null; name?: string | null }) {
@@ -472,8 +516,7 @@ async function queueHunterStandDown(bot: Bot | null, hunter: { id: number; locat
         locationId: hunter.locationId,
       },
     });
-    await logEvent("SAY", `${hunter.name ?? "Мисливець"} промовляє`, line, hunter.locationId);
-    if (bot) await notifyLocationAll(bot, hunter.locationId, `${hunter.name ?? "Мисливець"} промовляє:\n“${line}”`);
+    await emitHunterFieldSpeech(bot, hunter, hunter.locationId, line);
   }
 
   await prisma.creature.updateMany({
@@ -551,21 +594,21 @@ export async function tickNpcHunter(bot: Bot | null, hunter: any) {
   if (shouldReachCampfireFirst) {
     const route = await findLocationRoute(hunter.locationId, plan.campfireLocationId, { maxDepth: HUNTER_ROUTE_MAX_DEPTH });
     if (route?.length) {
-      if (bot && hunter.locationId === plan.gateLocationId) await notifyLocationAll(bot, hunter.locationId, `${hunter.name ?? "Мисливець"} промовляє:\n“${hunterFieldLine("departure", hunter.id)}”`);
+      if (hunter.locationId === plan.gateLocationId) await emitHunterFieldSpeech(bot, hunter, hunter.locationId, hunterFieldLine("departure", hunter.id));
       return queueHunterMove(hunter, route, "йде від воріт до межового вогню");
     }
   }
 
   const preyRoute = await routeToNearestPreyLocation(hunter.locationId);
   if (preyRoute?.length) {
-    if (bot && hunter.locationId === plan.campfireLocationId) await notifyLocationAll(bot, hunter.locationId, `${hunter.name ?? "Мисливець"} промовляє:\n“${hunterFieldLine("trail", hunter.id + (hunter.steps ?? 0))}”`);
+    if (hunter.locationId === plan.campfireLocationId) await emitHunterFieldSpeech(bot, hunter, hunter.locationId, hunterFieldLine("trail", hunter.id + (hunter.steps ?? 0)));
     return queueHunterMove(hunter, preyRoute, "шукає гризунів і зайців");
   }
 
   if (hunter.locationId !== plan.gateLocationId) {
     const route = await findLocationRoute(hunter.locationId, plan.gateLocationId, { maxDepth: HUNTER_ROUTE_MAX_DEPTH });
     if (route?.length) {
-      if (bot) await notifyLocationAll(bot, hunter.locationId, `${hunter.name ?? "Мисливець"} промовляє:\n“${hunterFieldLine("giveUp", hunter.id + (hunter.steps ?? 0))}”`);
+      await emitHunterFieldSpeech(bot, hunter, hunter.locationId, hunterFieldLine("giveUp", hunter.id + (hunter.steps ?? 0)));
       return queueHunterMove(hunter, route, "вертається до воріт без здобичі");
     }
   }

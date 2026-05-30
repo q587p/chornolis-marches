@@ -11,6 +11,7 @@ import {
   type ResetStatsSummary,
 } from "../services/adminReset";
 import { logEvent } from "../services/worldEvents";
+import { logScribeAction } from "../services/scribeAudit";
 import { createDebugCampfire, ensureTorchResourceTypes } from "../services/fire";
 import { requireScribeAdmin } from "../services/adminAccess";
 import { adminSecretMatches } from "../services/adminSecret";
@@ -365,10 +366,21 @@ export function registerAdminHandlers(bot: Bot) {
 
   async function runReset(ctx: any, mode: AdminResetMode) {
     const lines: string[] = [];
+    const scribeTelegramId = ctx.from?.id;
+    const scribe = scribeTelegramId
+      ? await prisma.player.findUnique({ where: { telegramId: String(scribeTelegramId) } })
+      : null;
+    const scribeName = scribe
+      ? playerDisplayName(scribe)
+      : scribeTelegramId ? `писар #${scribeTelegramId}` : "писар Порубіжжя";
+    let resetWorldSummary: Awaited<ReturnType<typeof resetWorldState>> | null = null;
+    let resetStatsSummary: Awaited<ReturnType<typeof resetGameplayStatistics>> | null = null;
+    let autoStopped = 0;
 
     if (mode === "world" || mode === "full") {
-      const autoStopped = await stopAllPlayerAuto();
+      autoStopped = await stopAllPlayerAuto();
       const summary = await resetWorldState();
+      resetWorldSummary = summary;
       lines.push(
         "✅ Світ скинуто до стартового стану.",
         "",
@@ -389,10 +401,31 @@ export function registerAdminHandlers(bot: Bot) {
 
     if (mode === "stats" || mode === "full") {
       const stats = await resetGameplayStatistics();
-      await logEvent("SYSTEM", mode === "stats" ? "Статистику скинуто" : "Повний reset завершено", `mode=${mode}; players=${stats.resetPlayers}; creatures=${stats.resetCreatures}; dropoffContributions=${stats.removedDropoffContributions}; statEvents=${stats.removedWorldStatEvents}`);
+      resetStatsSummary = stats;
       if (lines.length > 0) lines.push("");
       lines.push(mode === "stats" ? "✅ Статистику скинуто." : "✅ Статистику теж скинуто.", "", ...statsSummaryLines(stats));
     }
+
+    await logScribeAction({
+      actionKey: "reset",
+      scribePlayerId: scribe?.id,
+      scribeTelegramId,
+      scribeName,
+      mode,
+      outcome: "confirmed",
+      details: [
+        resetWorldSummary ? `seed=${resetWorldSummary.version}` : null,
+        resetWorldSummary ? `resources=${resetWorldSummary.resetResources}` : null,
+        resetWorldSummary ? `uniqueCreatures=${resetWorldSummary.resetUniqueCreatures}` : null,
+        resetWorldSummary ? `predators=${resetWorldSummary.predatorsCreated}` : null,
+        resetWorldSummary ? `autoStopped=${autoStopped}` : null,
+        resetStatsSummary ? `players=${resetStatsSummary.resetPlayers}` : null,
+        resetStatsSummary ? `creatures=${resetStatsSummary.resetCreatures}` : null,
+        resetStatsSummary ? `dropoffContributions=${resetStatsSummary.removedDropoffContributions}` : null,
+        resetStatsSummary ? `statEvents=${resetStatsSummary.removedWorldStatEvents}` : null,
+      ].filter(Boolean).join("; "),
+      locationId: scribe?.currentLocationId,
+    });
 
     await ctx.reply(lines.join("\n"));
   }

@@ -1,7 +1,7 @@
 id,title,status,type,area,priority,tags,file
 ADM-001,"Admin permissions, moderation and restricted reset",backlog,feature,admin,high,"admin,permissions,reset,moderation,names",docs/planning/items/ADM-001-admin-rights.md
-ADM-001-A,Dangerous scribe tool audit,next,technical,admin,medium,"admin,audit,safety",docs/planning/items/ADM-001-A.md
-ADM-001-B,Scribe action audit helper,next,technical,admin,medium,"admin,audit,world-events",docs/planning/items/ADM-001-B.md
+ADM-001-A,Dangerous scribe tool audit,done,technical,admin,medium,"admin,audit,safety",docs/planning/items/ADM-001-A.md
+ADM-001-B,Scribe action audit helper,done,technical,admin,medium,"admin,audit,world-events",docs/planning/items/ADM-001-B.md
 CAL-001,"Calendar, moon phases and named years",icebox,system,world_time,medium,"calendar,world-time,moon-phases,seasons,folklore,atmosphere",docs/planning/items/CAL-001_calendar_moon_phases_and_named_years.md
 CMD-001,Near-term text command pack,testing,feature,commands,high,"commands,aliases,mud,speech,navigation",docs/planning/items/CMD-001-near-term-text-command-pack.md
 CMD-002,Put items into local containers and features,testing,feature,commands,high,"commands,inventory,containers,aliases",docs/planning/items/CMD-002-put-items-into-containers.md
@@ -20,6 +20,7 @@ FIRE-001-C,Carried torch visibility,next,feature,survival,high,"torch,light,visi
 FISH-001,Riverbank fishing and fisher NPC,backlog,feature,survival,medium,"fishing,npc,skills,riverbank,observation",docs/planning/items/FISH-001-riverbank-fishing-and-fisher-npc.md
 FOOD-001,"Corpse freshening, meat and campfire cooking",testing,feature,survival,high,"food,corpses,freshening,cooking,hunger,campfire",docs/planning/items/FOOD-001-corpse-freshening-meat-and-campfire-cooking.md
 FOOD-002,Spoiled meat and risky eating,backlog,feature,survival,medium,"food,cooking,survival,hunger,risk",docs/planning/items/FOOD-002-spoiled-meat-and-risky-eating.md
+FOOD-003,Freshened corpse remains,backlog,feature,survival,medium,"food,corpses,remains,hunting,dropoff",docs/planning/items/FOOD-003-freshened-corpse-remains.md
 HMYZ-001-A,Audit hmyz model,next,technical,survival,high,"hmyz,resources,inventory",docs/planning/items/HMYZ-001-A.md
 HMYZ-001-B,Seed starter hmyz,next,feature,survival,high,"hmyz,seed,starter",docs/planning/items/HMYZ-001-B.md
 HMYZ-001-C,Pickup hmyz polish,next,feature,survival,high,"hmyz,pickup,inventory",docs/planning/items/HMYZ-001-C.md
@@ -58,7 +59,7 @@ OMEN-001-C,Omen local text,next,content,world,medium,"omen,copy,atmosphere",docs
 OMEN-001-D,Omen trace or object result,next,feature,world,medium,"omen,objects,tracks",docs/planning/items/OMEN-001-D.md
 OMEN-002,Hidden follower spirit MVP,backlog,feature,world,medium,"omen,hidden-presence,spirit,ambient",docs/planning/items/OMEN-002-hidden-follower-spirit-mvp.md
 ONB-001,Newcomer helper and tutorial,testing,feature,onboarding,high,"onboarding,tutorial,beginner,help,ux",docs/planning/items/ONB-001-newcomer-helper-and-tutorial.md
-ONB-001-A,Dream tutorial flow audit,next,design,onboarding,high,"tutorial,audit,core-loop",docs/planning/items/ONB-001-A.md
+ONB-001-A,Dream tutorial flow audit,done,design,onboarding,high,"tutorial,audit,core-loop",docs/planning/items/ONB-001-A.md
 ONB-001-B,Hint after first Озирнутися,next,ux,onboarding,high,"tutorial,look,copy",docs/planning/items/ONB-001-B.md
 ONB-001-C,Hint after first Роздивитися,next,ux,onboarding,high,"tutorial,examine,attention",docs/planning/items/ONB-001-C.md
 ONB-001-D,Tutorial rest lesson polish,next,ux,onboarding,medium,"tutorial,rest,stamina",docs/planning/items/ONB-001-D.md
@@ -111,3 +112,8 @@ WORLD-001-C,Daypart helper and tick advancement,next,feature,world_time,high,"wo
 WORLD-001-D,/time reads world state,next,feature,world_time,high,"world-time,time-command",docs/planning/items/WORLD-001-D.md
 WORLD-002,Campfires and light,next,feature,survival,high,"survival,light,crafting,night",docs/planning/items/WORLD-002-campfires-and-light.md
 WORLD-002-hidden-spirit,Hidden spirit seed and boundaries,backlog,feature,world,medium,"world,hidden-presence,spirit,campfire",docs/planning/items/WORLD-002-hidden-spirit-seed-and-boundaries.md
+WPN-001,Minimal weapon catalog and equip foundation,next,feature,items,medium,"weapons,inventory,equipment,freshening",docs/planning/items/WPN-001-minimal-weapon-catalog-and-equip.md
+WPN-002,"Weapon-aware look, examine, attack and freshen",next,feature,items,medium,"weapons,inventory,combat,freshening",docs/planning/items/WPN-002-weapon-aware-look-examine-attack-freshen.md
+WPN-003,Themed NPC weapons and hunter spear,backlog,feature,npc,medium,"weapons,npc,hunter,seed",docs/planning/items/WPN-003-themed-npc-weapons-and-hunter-spear.md
+WPN-004,"Weapon condition, dulling and sharpening hooks",backlog,technical,items,low,"weapons,durability,item-instances,backlog",docs/planning/items/WPN-004-weapon-condition-backlog.md
+WPN-ICE-001,Deep combat and weapon lifetime,icebox,feature,combat,low,"weapons,combat,durability,icebox",docs/planning/items/WPN-ICE-001-deep-combat-and-weapon-lifetime.md

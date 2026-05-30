@@ -24,6 +24,10 @@ It is not a trash bin and not a promise. It is cold storage for ideas that need 
 - Large MUD-style socials catalog.
 - Full personal chronicle/journal system.
 - Item durability and deep item lifetime.
+- Deep weapon durability/sharpness: dull blades, broken hafts, whetstones, smith repairs, weapon quality, maker marks and per-instance weapon history.
+- Armor, shields, parrying, dual wielding, strict hand occupancy and torch/weapon conflicts.
+- Weapon crafting trees and rare weapon materials.
+- Looting equipped weapons from corpses and combat drops.
 - SLEEP-004: external forced sleep causes from creatures, elixirs, illness, traps or rituals.
 - DREAM-004: advanced group dreams, place-spirit influence, dream conflict/appeasement and ritual dream spaces.
 

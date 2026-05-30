@@ -14,6 +14,11 @@ import { assertCanPerformPhysicalAction } from "../services/postureRules";
 import { replyToActionError, actionErrorMessage } from "../utils/actionErrorReply";
 import { rememberTutorialCommandHintIfInTutorial } from "../services/tutorial";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
+import { spendPlayerStaminaAmount } from "../services/actionRecovery";
+
+function pickedItemsAmount(items: Array<{ amount: number }>) {
+  return items.reduce((total, item) => total + Math.max(0, item.amount), 0);
+}
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
@@ -280,6 +285,7 @@ export function registerLookHandlers(bot: Bot) {
           eventDescription: `player=${player.id}; item=torch; source=feature:${ctx.match[1]}`,
           actionNote: "піднято: факел",
         });
+        await spendPlayerStaminaAmount(bot, player.id, 1, ctx.chat?.id);
       }
       await ctx.reply(text);
     } catch (error) {
@@ -308,6 +314,7 @@ export function registerLookHandlers(bot: Bot) {
         eventDescription: `player=${player.id}; item=${item.key}; name=${item.name}`,
         actionNote: `піднято: ${item.name}`,
       });
+      await spendPlayerStaminaAmount(bot, player.id, 1, ctx.chat?.id);
       await ctx.reply(`Ви підняли ${item.name}.`, await inventoryGainReplyOptions(player, `pickup:${item.key}`));
     } catch (error) {
       const message = error instanceof Error ? error.message : "Не вдалося підняти це.";
@@ -333,6 +340,7 @@ export function registerLookHandlers(bot: Bot) {
       assertCanPerformPhysicalAction(player, "PICK_UP");
       const result = await pickUpAllVisibleGroundResourcesByKey(player.id, key as VisibleGroundResourceKey);
       const itemText = result.items.map((item) => `${item.name}${item.amount > 1 ? ` ×${item.amount}` : ""}`).join(", ");
+      const pickedAmount = pickedItemsAmount(result.items);
       await safeAnswerCallbackQuery(ctx, "Підібрано.");
       await recordVisibleItemAction(bot, {
         playerId: player.id,
@@ -342,6 +350,7 @@ export function registerLookHandlers(bot: Bot) {
         eventDescription: `player=${player.id}; items=${result.items.map((item) => `${item.key}:${item.amount}`).join(",")}`,
         actionNote: `піднято всі однотипні речі: ${itemText}`,
       });
+      await spendPlayerStaminaAmount(bot, player.id, pickedAmount, ctx.chat?.id);
       await ctx.reply(`Ви підняли: ${itemText}.`, await inventoryGainReplyOptions(player, `pickup-all:${key}`));
     } catch (error) {
       const message = actionErrorMessage(error, "Не вдалося підняти це.");

@@ -51,6 +51,7 @@ Actions:
 - `підібрати ягоди`, `взяти трави`, `take herbs`, `get mushrooms` -> pick up matching loose ground resources only when they are actually visible as ground items; otherwise explain that these should be gathered.
 - `get all`, `pick all`, `взяти все`, `підняти все` -> pick up all visible loose ground resources listed under `Лежить:` in the current місцина.
 - Location-detail pickup buttons may also show a compact `всі` action beside a loose resource stack; it picks up all visible loose resources of that same type.
+- Pickup costs `1` stamina per actual item/resource unit picked up; taking a stack of `19` loose items costs `19` stamina.
 - `з'їсти ягоди`, `їсти ягоди`, `використати ягоди`, `eat berries`, `use berries` -> eat carried berries from inventory to restore a small amount of stamina and ease hunger by a tiny amount.
 - `з'їсти гриби`, `їсти гриби`, `використати гриби`, `eat mushrooms`, `use mushrooms` -> eat carried mushrooms from inventory to ease hunger a little.
 - `з'їсти трави`, `з'їсти лікарські трави`, `використати трави`, `використати лікарські трави`, `вжити трави`, `прикласти трави`, `лікуватися травами`, `eat herbs`, `use herbs` -> eat/use carried herbs when wounded for a small HP recovery.
@@ -88,6 +89,7 @@ Targets and signals:
 - `роздивитися труп`, `атакувати мишу`, `fight wolf`, `kick rabbit`, `привітати 1`, `освіжити труп`.
 - `підібрати труп`.
 - `освіжити труп`, `розібрати труп`, `freshen corpse`, `butcher corpse` -> gain raw meat from a sufficiently fresh corpse.
+- `freshen all`, `свіжувати все`, `освіжити всі` -> queue freshening for every visible suitable corpse in the current місцина, one corpse at a time.
 - `підсмажити м'ясо`, `смажити м'ясо`, `cook meat` -> cook raw meat at a nearby campfire; a torch alone is not enough.
 - `з'їсти м'ясо`, `їсти смажене м'ясо`, `eat cooked meat`, `use cooked meat` -> eat cooked meat for hunger relief.
 - `кивнути 1`, `помахати мандрівник`, `вказати на вовка`, `насупитися вовк`.

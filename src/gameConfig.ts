@@ -130,7 +130,7 @@ export const playerStaminaCostConfig: Partial<Record<WorldActionType, number>> =
   SAY: 1,
   GATHER: 5,
   GATHER_SPECIFIC: 5,
-  FRESHEN: 5,
+  FRESHEN: 3,
   SET_TRAP: 5,
   EAT: 1,
   ATTACK: 7,

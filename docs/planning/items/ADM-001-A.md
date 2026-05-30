@@ -1,7 +1,7 @@
 ---
 id: ADM-001-A
 title: Dangerous scribe tool audit
-status: next
+status: done
 type: technical
 area: admin
 priority: medium
@@ -26,10 +26,14 @@ List dangerous commands that should leave an audit trail.
 
 ## Acceptance
 
-- List exists.
-- First command to cover is selected.
-- No behavior change yet.
+- List exists: `docs/systems/scribe_audit.md`.
+- First command to cover is selected: `/reset`.
+- Behavior change is intentionally limited to writing an internal audit event.
 
 ## Implementation Order
 
 Can be done independently.
+
+## Result
+
+0.13.18 documents the dangerous scribe/admin tool list and selects `/reset` as the first command covered by the shared audit helper.

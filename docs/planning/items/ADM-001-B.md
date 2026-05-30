@@ -1,7 +1,7 @@
 ---
 id: ADM-001-B
 title: Scribe action audit helper
-status: next
+status: done
 type: technical
 area: admin
 priority: medium
@@ -28,10 +28,14 @@ Add a small helper and cover the first dangerous command.
 
 ## Acceptance
 
-- One dangerous command writes who/what/when.
-- Helper is reusable.
+- One dangerous command writes who/what/when: confirmed `/reset` modes write a `Scribe action: reset` world event.
+- Helper is reusable: `logScribeAction()` lives in `src/services/scribeAudit.ts`.
 - No player-facing spam.
 
 ## Implementation Order
 
 Do after: `ADM-001-A`.
+
+## Result
+
+0.13.18 adds the reusable scribe-audit helper and covers `/reset world`, `/reset stats` and `/reset full` after confirmation.

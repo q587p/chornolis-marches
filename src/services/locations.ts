@@ -57,8 +57,8 @@ type HtmlFollowupMessage = {
   text: string;
 };
 
-function isVisibleCorpse(c: any) {
-  return !c.isAlive && !c.isGone && !c.isHidden && c.age === "CORPSE";
+export function isVisibleCorpse(c: any) {
+  return !c.isAlive && !c.isGone && !c.isHidden && c.age === "CORPSE" && !isFreshenedCorpse(c.currentAction);
 }
 
 function isVisibleLivingCreature(c: any) {

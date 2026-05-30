@@ -13,12 +13,15 @@ const {
   HUNTER_RETURNING_FOR_TORCHES_MARKER,
   HUNTER_SOCIAL_REACTIONS,
   HUNTER_TORCH_BUNDLE_SIZE,
+  formatHunterFieldSpeech,
   groupHunterClaimedCorpses,
   hunterCarriedTorchCount,
   hunterClaimedCorpseAction,
+  hunterClaimedCorpseDecayAction,
   hunterClaimedCorpseOwnerId,
   hunterConversationReplyLine,
   hunterIsReturningForTorches,
+  hunterReactionDurationMs,
   hunterReturningForTorchesAction,
   hunterRouteDirections,
   hunterSocialReactionSignal,
@@ -88,6 +91,10 @@ assert.equal(hunterIsReturningForTorches("поповнює мисливськи�
 
 const claimText = hunterClaimedCorpseAction(42);
 assert.equal(hunterClaimedCorpseOwnerId(claimText), 42);
+const decayingClaimText = hunterClaimedCorpseDecayAction(claimText, 17);
+assert.equal(hunterClaimedCorpseOwnerId(decayingClaimText), 42);
+assert.match(decayingClaimText, /17/);
+assert.equal(hunterClaimedCorpseDecayAction("лежить нерухомо", 17), null);
 assert.equal(hunterClaimedCorpseOwnerId("лежить нерухомо"), null);
 assert.equal(isHunterCreature({ professionKey: "hunter" }), true);
 assert.equal(isHunterCreature({ professionKey: "znakhar" }), false);
@@ -99,6 +106,16 @@ assert.equal(hunterSocialReactionSignal("nod"), "nod");
 assert.equal(hunterSocialReactionSignal("wave"), "wave");
 assert.equal(hunterSocialReactionSignal("smile"), "nod");
 assert.equal(hunterSocialReactionSignal("glare"), null);
+assert.ok(hunterReactionDurationMs("SAY", 42) > 0);
+assert.equal(hunterReactionDurationMs("SAY", 42), hunterReactionDurationMs("GREET", 42));
+assert.equal(
+  formatHunterFieldSpeech("Лукан", "Посидимо біля вогню. Якщо межа знову просяде, підемо."),
+  "Лукан промовляє:\n<blockquote>Посидимо біля вогню. Якщо межа знову просяде, підемо.</blockquote>",
+);
+assert.equal(
+  formatHunterFieldSpeech("Мисливець <нічний>", "Край > тиша."),
+  "Мисливець &lt;нічний&gt; промовляє:\n<blockquote>Край &gt; тиша.</blockquote>",
+);
 
 const claimedGroups = groupHunterClaimedCorpses([
   { id: 1, sex: "MALE", species: { key: "rabbit", name: "заєць", nameGenitive: "зайця" } },

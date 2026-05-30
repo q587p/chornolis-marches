@@ -86,8 +86,7 @@ async function knockOutPlayer(bot: Bot, player: { id: number }, chatId?: number 
   }
 }
 
-export async function spendPlayerStamina(bot: Bot, playerId: number, type: WorldActionType, chatId?: number | string) {
-  const cost = playerStaminaCostConfig[type] ?? 0;
+async function spendPlayerStaminaCost(bot: Bot, playerId: number, cost: number, chatId?: number | string) {
   if (cost <= 0) return;
   const player = await prisma.player.findUnique({ where: { id: playerId } });
   if (!player) return;
@@ -123,6 +122,14 @@ export async function spendPlayerStamina(bot: Bot, playerId: number, type: World
       await bot.api.sendMessage(chatId, message, refreshedKeyboard ? { reply_markup: refreshedKeyboard } : undefined);
     }
   }
+}
+
+export async function spendPlayerStamina(bot: Bot, playerId: number, type: WorldActionType, chatId?: number | string) {
+  return spendPlayerStaminaCost(bot, playerId, playerStaminaCostConfig[type] ?? 0, chatId);
+}
+
+export async function spendPlayerStaminaAmount(bot: Bot, playerId: number, cost: number, chatId?: number | string) {
+  return spendPlayerStaminaCost(bot, playerId, cost, chatId);
 }
 
 export async function spendCreatureStamina(creature: { id: number; hp?: number; stamina: number; staminaMax?: number | null }, cost = 1) {

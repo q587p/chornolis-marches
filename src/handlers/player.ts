@@ -36,6 +36,7 @@ import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "..
 import { canCookPlayerMeat, COOKED_MEAT_KEY, cookRawMeat, RAW_MEAT_KEY } from "../services/meat";
 import { assertCanPerformPhysicalAction } from "../services/postureRules";
 import { GATHERING_OBSERVATION_GROWTH_MESSAGE, recordGatheringObservation } from "../services/gatheringLearning";
+import { COOKING_OBSERVATION_GROWTH_MESSAGE, COOKING_PRACTICE_GROWTH_MESSAGE, FRESHENING_OBSERVATION_GROWTH_MESSAGE, recordCookingObservation, recordFresheningObservation } from "../services/foodLearning";
 import { rememberTutorialInventoryForPlayer } from "../utils/tutorialInventory";
 import { bestTargetMatch, inspectMissingText, targetDisplayLabel, targetListText, visibleTextTargets } from "../services/textTargets";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
@@ -375,6 +376,14 @@ export async function showLocationForPlayer(telegramId: number, reply: (text: st
     if (observation.milestone) {
       noteKnownMessage(await reply(GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
     }
+    const fresheningObservation = await recordFresheningObservation({ playerId: player.id, locationId });
+    if (fresheningObservation.milestone) {
+      noteKnownMessage(await reply(FRESHENING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+    }
+    const cookingObservation = await recordCookingObservation({ playerId: player.id, locationId });
+    if (cookingObservation.milestone) {
+      noteKnownMessage(await reply(COOKING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+    }
   }
   const voiceComments = await tutorialLookPaceComments({ ...player, currentLocationId: locationId });
   for (const comment of voiceComments) {
@@ -452,8 +461,9 @@ export function registerPlayerHandlers(bot: Bot) {
 
     try {
       assertCanPerformPhysicalAction(player, "COOK");
-      const resultText = await cookRawMeat(player.id);
-      await ctx.reply(resultText);
+      const result = await cookRawMeat(player.id);
+      await ctx.reply(result.text);
+      if (result.practiceMilestone) await ctx.reply(COOKING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" });
       await refreshInventoryMessage(ctx);
     } catch (error) {
       await replyToActionError(ctx, error, "Не вдалося підсмажити м'ясо.");

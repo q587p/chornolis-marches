@@ -242,6 +242,7 @@ export async function resolveTarget(type: string, id: number, locationId: number
     const isCorpse = !target.isAlive && target.age === "CORPSE";
     const corpseLeft = target.corpseDecayTicksLeft ?? target.species.corpseDecayTicks;
     const wasFreshened = isFreshenedCorpse(target.currentAction);
+    if (isCorpse && wasFreshened) return null;
     const canFreshen = isCorpse && !wasFreshened && corpseLeft > Math.floor(target.species.corpseDecayTicks / 2);
     const corpseLifetime = lifetimeSummary(corpseLeft, target.species.corpseDecayTicks, { showTechnicalDetails });
     const torchState = isCorpse ? null : await getCreatureTorchState(target.id);

@@ -92,6 +92,9 @@ Add a simple NPC hunter behavior that interacts with the same ecological loop as
 - Added helper coverage for hunter profession detection, claimed-carcass markers and grouped corpse resource keys.
 - Added a narrow ground-torch pickup step: if the hunter notices `torch` or `lit_torch` on the ground, he can take it toward the current hunting bundle before continuing.
 - Added a return-for-torches marker so a hunter with low field supply can route back to the gate while still attacking visible local prey on the way.
+- 0.13.18 hardens the current claimed-carcass bridge: ordinary corpse decay preserves the `claimed_by_hunter:<id>` marker, so returning hunters do not lose field kills before the drop-off service can see them.
+- 0.13.18 also routes direct hunter field lines through a shared speech helper so visible hunter speech records a `SAY` event and increments the creature `says` counter used by ecology/status statistics.
+- 0.13.18 formats hunter field speech as quoted speech in Telegram, but the helper still emits those field lines directly instead of routing every such line through a real queued `SAY` action.
 
 Remaining work before closing the full MVP:
 
@@ -99,9 +102,11 @@ Remaining work before closing the full MVP:
 - replace the current lightweight ground-torch pickup marker with real NPC-held item state, including lit-torch lifetime preservation and real light emission;
 - let hunters craft torches later if they have gathered the required resources;
 - add stronger route/radius tuning for hunting grounds;
+- route all hunter field speech through ordinary queued `SAY` actions once that can be done without reintroducing world-tick spam or stand-down loops;
 - respect `ECO-003` saturation so hunters can stand down and rest near the magic campfire when more rodent/herbivore pressure is not needed;
 - respect `NPC-005` hunger behavior so hunters sometimes freshen/butcher suitable corpses, cook meat at a real campfire and eat instead of continuing the loop;
 - add an inspect/check beat between attack and next decision;
+- replace hunter-claimed carcasses with real carried/claimed actor state instead of `Creature.currentAction`; the 0.13.18 decay-preservation fix is only a bridge and still needs death, interrupt, disappearance and reset semantics;
 - decide whether hunter-claimed carcasses should ever be recoverable if the hunter dies, disappears or is reset mid-route;
 - add hunter rate limits if the world grows beyond the current tiny seeded set. Two seeded hunters are acceptable without extra throttling, but high-density worlds with many hunters may need caps on hunt decisions, route retries, attacks, pickups, deposits and field lines per tick.
 - add keyword-aware hunter conversation replies: the current reply-mode pool is intentionally abstract, but future hunters should recognize simple words around hunting, gates, torches, carcass drop-off, danger and route hints, then answer with useful information or point toward nearby ecological tasks without turning into a formal quest giver.
@@ -109,5 +114,5 @@ Remaining work before closing the full MVP:
 
 Verification notes for the next hunter slices:
 
-- Claimed carcasses and the torch bundle currently use lightweight markers in `Creature.currentAction`, not real actor inventory. This is acceptable as a bridge, but explicitly test death, interrupt, disappearance and reset paths when replacing or extending the marker flow.
+- Claimed carcasses still use a lightweight marker in `Creature.currentAction`, though 0.13.18 preserves that marker through ordinary corpse decay. This is acceptable as a bridge, but explicitly test death, interrupt, disappearance and reset paths when replacing or extending the marker flow.
 - Any high-density hunter test should check that the loop does not flood the action queue, deposit service, local messages or `WorldEvent` rows once more hunters are seeded.

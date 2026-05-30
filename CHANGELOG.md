@@ -9,6 +9,43 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.18 - Hunter hardening, weapon planning and scribe audit - 12026-05-30
+
+### Added
+
+- Added weapon-system planning docs for the minimal weapon catalog/equip slice, weapon-aware action text, themed NPC weapons, later weapon condition work and cold-storage combat/lifetime work.
+- Added a reusable scribe audit helper and covered confirmed `/reset world`, `/reset stats` and `/reset full` actions with quiet `WorldEvent` audit records.
+- Added a scribe-audit system note listing dangerous admin/scribe tools that should keep or gain structured audit coverage.
+- Added a compact dream tutorial flow audit that confirms the next onboarding follow-up slices.
+- Added text-only learning feedback for corpse freshening and cooking: every thirteenth personal action can show a private growth line, and every fifth observation of another actor's recent action can show a smaller one.
+- Added `freshen all` / `свіжувати все` support that queues one freshening action per suitable visible corpse instead of resolving the whole location instantly.
+
+### Changed
+
+- Hunter-claimed carcasses now preserve their hunter marker while ordinary corpse decay updates the remaining lifetime text, so returning hunters can still deposit prey through the gate drop-off service.
+- Hidden hunter-claimed carcasses no longer appear in text target lookup, location target lists or corpse action entry points.
+- Freshened corpses are hidden from player-facing target/location surfaces for now, with visible remains split into future work.
+- Direct hunter field lines now record `SAY` events and increment the creature speech counter used by ecology/status statistics.
+- Hunter replies and social reactions now use a slower queued creature action instead of firing as instant follow-up messages.
+- Hunter field speech now appears as quoted speech in Telegram instead of an inline quoted sentence.
+- Freshening now costs `3` stamina per corpse, and immediate pickup paths now spend `1` stamina per picked-up item/resource unit.
+- Updated hunter and actor-inventory planning notes to keep the remaining claimed-carcass `currentAction` bridge visible as future structural work.
+- Updated planning exports for the weapon task pack and completed first scribe-audit task slices.
+- Marked `ONB-001-A` complete with follow-ups for first-look, first-examine, rest and wake polish.
+
+### Tests
+
+- Extended NPC hunter helper coverage for hunter-claimed carcass decay markers.
+- Extended NPC hunter helper coverage for slower queued hunter reactions.
+- Extended NPC hunter helper coverage for quoted hunter field speech.
+- Added text-target visibility coverage for hidden hunter-claimed carcasses.
+- Added helper coverage for freshening and cooking practice/observation milestone cadence.
+- Added alias coverage for bulk freshening commands and action-cost coverage for the freshening stamina cost.
+- Added scribe-audit helper coverage.
+- Ran the full project test suite.
+
+---
+
 ## 0.13.17 - Small polish, status visibility and target interactions - 12026-05-30
 
 ### Added

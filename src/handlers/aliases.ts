@@ -46,6 +46,7 @@ import { enterTutorialDream, hasCompletedTutorial, openDreamGate, rememberTutori
 import { dropObserverText, pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 import { noteKnownMessage } from "../utils/messageTracker";
 import { cookRawMeat } from "../services/meat";
+import { COOKING_PRACTICE_GROWTH_MESSAGE } from "../services/foodLearning";
 import { playerForms } from "../services/grammar";
 import { putInventoryIntoLocalFeature } from "../services/carcassDropoff";
 import { latestRememberedReplyTarget } from "../services/replyTargets";
@@ -53,6 +54,7 @@ import { replyToActionError } from "../utils/actionErrorReply";
 import { assertCanPerformPhysicalAction } from "../services/postureRules";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 import { bestTargetMatch, inspectMissingText, normalizeTargetKey, targetDisplayLabel, targetListText, visibleTextTargets } from "../services/textTargets";
+import { spendPlayerStaminaAmount } from "../services/actionRecovery";
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
@@ -308,7 +310,9 @@ async function submitCookMeat(ctx: any) {
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
   try {
     assertCanPerformPhysicalAction(player, "COOK");
-    await ctx.reply(await cookRawMeat(player.id));
+    const result = await cookRawMeat(player.id);
+    await ctx.reply(result.text);
+    if (result.practiceMilestone) await ctx.reply(COOKING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" });
   } catch (error) {
     await replyToActionError(ctx, error, "Не вдалося підсмажити м'ясо.");
   }
@@ -531,6 +535,8 @@ async function submitTargetAction(bot: Bot, ctx: any, action: TargetAction, targ
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const locationId = player.currentLocationId;
+  if (action === "freshen" && isAllTarget(targetQuery)) return submitFreshenAll(bot, ctx, player, locationId);
+
   const visibleTargets = await visibleTextTargets(locationId, player.id);
   if (!visibleTargets.length) {
     if (action === "inspect" && (await tryReplyWithInventoryInspection(ctx, player.id, targetQuery))) return;
@@ -640,8 +646,50 @@ function isPickupAllTarget(target: string) {
   return ["all", "everything", "все", "усе", "всі", "усі"].includes(target);
 }
 
+function isAllTarget(target: string) {
+  return isPickupAllTarget(normalizeTargetKey(target));
+}
+
 function pickedItemsText(items: Array<{ name: string; amount: number }>) {
   return items.map((item) => `${item.name}${item.amount > 1 ? ` ×${item.amount}` : ""}`).join(", ");
+}
+
+function pickedItemsAmount(items: Array<{ amount: number }>) {
+  return items.reduce((total, item) => total + Math.max(0, item.amount), 0);
+}
+
+async function submitFreshenAll(bot: Bot, ctx: any, player: NonNullable<Awaited<ReturnType<typeof getPlayerByTelegramId>>>, locationId: number) {
+  try {
+    assertCanPerformPhysicalAction(player, "FRESHEN");
+    const visibleTargets = await visibleTextTargets(locationId, player.id);
+    const freshenable: Array<{ type: "creature"; id: number }> = [];
+
+    for (const target of visibleTargets) {
+      if (target.type !== "creature") continue;
+      const resolved = await resolveTarget(target.type, target.id, locationId);
+      if (resolved?.isCorpse && resolved.canFreshen) freshenable.push({ type: target.type, id: target.id });
+    }
+
+    if (!freshenable.length) {
+      await ctx.reply("Поруч немає придатних туш, які можна освіжувати.");
+      return;
+    }
+
+    const durationMs = actionDurationMs("FRESHEN", player.stamina);
+    for (const target of freshenable) {
+      await performOrQueuePlayerAction(bot, {
+        playerId: player.id,
+        type: "FRESHEN",
+        payload: { targetType: target.type, targetId: target.id, mode: "known" },
+        durationMs,
+        chatId: ctx.chat?.id,
+      });
+    }
+
+    await ctx.reply(`Додано свіжування туш: ${freshenable.length}. Будете обробляти їх по черзі${durationSecondsSuffix(player, durationMs)}.`, await actionQueueReplyOptions(player.id));
+  } catch (error) {
+    await replyToActionError(ctx, error, "Не вдалося додати свіжування.");
+  }
 }
 
 async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
@@ -654,6 +702,7 @@ async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
       assertCanPerformPhysicalAction(player, "PICK_UP");
       const result = await pickUpAllVisibleGroundResources(player.id);
       const text = pickedItemsText(result.items);
+      const pickedAmount = pickedItemsAmount(result.items);
       await recordVisibleItemAction(bot, {
         playerId: player.id,
         locationId: result.locationId,
@@ -662,6 +711,7 @@ async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
         eventDescription: `player=${player.id}; items=${result.items.map((item) => `${item.key}:${item.amount}`).join(",")}`,
         actionNote: `піднято все: ${text}`,
       });
+      await spendPlayerStaminaAmount(bot, player.id, pickedAmount, ctx.chat?.id);
       await ctx.reply(`Ви підняли: ${text}.`, await inventoryGainReplyOptions(player, "pickup-all"));
     } catch (error) {
       await replyToActionError(ctx, error, "Не вдалося підняти це.");
@@ -686,6 +736,7 @@ async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
         eventDescription: `player=${player.id}; item=${item.key}; name=${item.name}`,
         actionNote: `піднято: ${item.name}`,
       });
+      await spendPlayerStaminaAmount(bot, player.id, 1, ctx.chat?.id);
       await ctx.reply(`Ви підняли ${item.name}.`, await inventoryGainReplyOptions(player, `pickup:${item.key}`));
     } catch (error) {
       const hint = naturalResourcePickupHint(resourceKey);
@@ -727,6 +778,7 @@ async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
       eventDescription: `player=${resolved.player.id}; creature=${creature.id}; item=${resourceType.key}; name=${itemName}`,
       actionNote: `піднято: ${itemName}`,
     });
+    await spendPlayerStaminaAmount(bot, resolved.player.id, 1, ctx.chat?.id);
     await ctx.reply(`Ви підібрали ${itemName}.`, await inventoryGainReplyOptions(resolved.player, `pickup:${resourceType.key}`));
   } catch (error) {
     await replyToActionError(ctx, error, "Трупа вже немає поруч. Можна роздивитися місцину ще раз.");
