@@ -324,14 +324,14 @@ function publicEcologyReport(stats: PublicEcologySignStats, showTechnicalDetails
 
   const counters = stats.recent.counters;
   const recentBirths = counters.rabbitBirths + counters.mouseBirths + counters.foxBirths + counters.wolfBirths;
-  const recentDeaths = counters.oldAgeDeaths + counters.starvationDeaths + counters.predatorKills;
+  const recentDeaths = counters.oldAgeDeaths + counters.starvationDeaths + counters.predatorKills + counters.playerKills;
   const recentWindow = stats.recent.eventCount > 0
     ? "останні свіжі зарубки"
     : "останні свіжі зарубки";
   const technical = showTechnicalDetails
     ? [
         "",
-        `Технічно: alive=${formatPublicCount(stats.totals.aliveAnimals)}, corpses=${formatPublicCount(stats.totals.corpseAnimals)}; recentWindowMinutes=${formatPublicCount(Math.max(1, Math.round(stats.recent.observedMinutes)))}; births=${formatPublicCount(recentBirths)}, deaths=${formatPublicCount(recentDeaths)}, predatorKills=${formatPublicCount(counters.predatorKills)}, starvationDeaths=${formatPublicCount(counters.starvationDeaths)}, oldAgeDeaths=${formatPublicCount(counters.oldAgeDeaths)}; totalPredatorKills=${formatPublicCount(stats.totals.predatorKills)}, totalStarvationDeaths=${formatPublicCount(stats.totals.starvationDeaths)}.`,
+        `Технічно: alive=${formatPublicCount(stats.totals.aliveAnimals)}, corpses=${formatPublicCount(stats.totals.corpseAnimals)}; recentWindowMinutes=${formatPublicCount(Math.max(1, Math.round(stats.recent.observedMinutes)))}; births=${formatPublicCount(recentBirths)}, deaths=${formatPublicCount(recentDeaths)}, predatorKills=${formatPublicCount(counters.predatorKills)}, playerKills=${formatPublicCount(counters.playerKills)}, starvationDeaths=${formatPublicCount(counters.starvationDeaths)}, oldAgeDeaths=${formatPublicCount(counters.oldAgeDeaths)}; totalPredatorKills=${formatPublicCount(stats.totals.predatorKills)}, totalPlayerKills=${formatPublicCount(stats.totals.playerKills)}, totalStarvationDeaths=${formatPublicCount(stats.totals.starvationDeaths)}.`,
       ]
     : [];
 
@@ -342,7 +342,7 @@ function publicEcologyReport(stats: PublicEcologySignStats, showTechnicalDetails
     livingLines.length ? `За видами:\n${livingLines.join("\n")}` : "Живих тварин на зарубках зараз не видно.",
     "",
     `За ${recentWindow}: народжень ${roughEventAmount(recentBirths)}, смертей ${roughEventAmount(recentDeaths)}.`,
-    `Причини на зарубках: хижаки — ${roughEventAmount(counters.predatorKills)}, голод — ${roughEventAmount(counters.starvationDeaths)}, вік — ${roughEventAmount(counters.oldAgeDeaths)}.`,
+    `Причини на зарубках: хижаки — ${roughEventAmount(counters.predatorKills)}, персонажі — ${roughEventAmount(counters.playerKills)}, голод — ${roughEventAmount(counters.starvationDeaths)}, вік — ${roughEventAmount(counters.oldAgeDeaths)}.`,
     "",
     `За давнішими записами знака: хижаки й голод уже лишали тут помітні сліди.`,
     ...technical,

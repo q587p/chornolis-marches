@@ -17,7 +17,7 @@ The forest should feel alive even when players do nothing.
 - Resource regeneration.
 - Mushrooms grow from decayed corpses.
 - Predator prey choice by age, HP and species preference.
-- Predator kill counters in scribe/admin `/stat`.
+- Predator and player-caused kill counters in scribe/admin `/stat`.
 - Animal hunger pressure and starvation deaths.
 - Starvation counters in scribe/admin `/stat` and protected web `/stat`.
 - Individual predator hunting counters for attack attempts, successful attacks and kills.
@@ -45,6 +45,7 @@ The forest should feel alive even when players do nothing.
 - Recent attacks add temporary local danger for ecology decisions. Herbivores become more likely to leave the attacked location for several world ticks.
 - Foxes prefer mice, then vulnerable rabbits; wolves prefer rabbits, especially young, old or wounded prey.
 - Predator kills leave corpses, reduce predator hunger and are counted in scribe/admin `/stat` next to old-age deaths.
+- Player-caused animal deaths are counted separately from predator kills in scribe/admin `/stat`, protected web `/stat`, `/stat.json`, and ecology sign technical summaries.
 - Predator hunger recovery uses prey food value: mice are light food, rabbit children/old rabbits are partial food, healthy young/adult rabbits are worth more.
 - Hungry herbivores are more likely to eat when forage exists and more likely to move when local food is gone or vegetation is exhausted.
 - Hungry predators are more likely to search for prey and attack; very hungry predators attack immediately when suitable prey is present.

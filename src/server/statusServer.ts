@@ -470,6 +470,8 @@ async function renderEcologyStatsPage() {
       <div class="card"><div class="metric">${stats.totals.starvationDeaths}</div><div class="label">смертей від голоду загалом</div></div>
       <div class="card"><div class="metric">${c.predatorKills}</div><div class="label">смертей від хижаків у вікні</div></div>
       <div class="card"><div class="metric">${stats.totals.predatorKills}</div><div class="label">смертей від хижаків загалом</div></div>
+      <div class="card"><div class="metric">${c.playerKills}</div><div class="label">смертей від персонажів у вікні</div></div>
+      <div class="card"><div class="metric">${stats.totals.playerKills}</div><div class="label">смертей від персонажів загалом</div></div>
     </div>
 
     <h2>Темп за останнє вікно</h2>
@@ -488,6 +490,7 @@ async function renderEcologyStatsPage() {
       <tr><td>Смерті від старості</td><td>${c.oldAgeDeaths}</td><td>${formatNumber(r.oldAgeDeaths, 1)}</td></tr>
       <tr><td>Смерті від голоду</td><td>${c.starvationDeaths}</td><td>${formatNumber(r.starvationDeaths, 1)}</td></tr>
       <tr><td>Смерті від хижаків</td><td>${c.predatorKills}</td><td>${formatNumber(r.predatorKills, 1)}</td></tr>
+      <tr><td>Смерті від персонажів</td><td>${c.playerKills}</td><td>${formatNumber(r.playerKills, 1)}</td></tr>
       <tr><td>Зниклі трупи</td><td>${c.corpsesGone}</td><td>${formatNumber(r.corpsesGone, 1)}</td></tr>
       <tr><td>Відновлені ресурсні вузли</td><td>${c.regenerated}</td><td>${formatNumber(r.regenerated, 1)}</td></tr>
     </tbody></table>
