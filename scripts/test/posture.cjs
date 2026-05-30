@@ -7,6 +7,7 @@ const { TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_
 const { formatObservedPostureText, formatPostureText } = require("../../src/utils/playerText");
 const { AUTO_DREAM_BLOCK_MESSAGE, isAutoBlockedInLocation, shouldAutoStandBeforeAction } = require("../../src/handlers/auto");
 const { playerRestStartObserverText, playerRestStopObserverText, playerSitObserverText, playerStandObserverText, playerTutorialSleepObserverText, playerTutorialWakeObserverText } = require("../../src/services/playerVisibility");
+const { activePlayerRestActionWhere } = require("../../src/services/posture");
 
 assert.equal(formatPostureText({ posture: "STANDING", isResting: false }), "Ви стоїте.");
 assert.equal(formatPostureText({ posture: "SITTING", isResting: false }), "Ви сидите.");
@@ -39,6 +40,12 @@ assert.equal(shouldAutoStandBeforeAction({ posture: "SITTING", isResting: false 
 assert.equal(shouldAutoStandBeforeAction({ posture: "SITTING", isResting: false }, "gather"), true);
 assert.equal(shouldAutoStandBeforeAction({ posture: "SITTING", isResting: false }, "look"), false);
 assert.equal(shouldAutoStandBeforeAction({ posture: "STANDING", isResting: false }, "move"), false);
+assert.deepEqual(activePlayerRestActionWhere(42), {
+  actorType: "PLAYER",
+  playerId: 42,
+  type: "REST",
+  status: { in: ["QUEUED", "RUNNING"] },
+});
 assert.equal(isAutoBlockedInLocation({ key: TUTORIAL_START_LOCATION_KEY, z: -13, region: { key: "dream_tutorial" } }), true);
 assert.equal(isAutoBlockedInLocation({ key: "shallow_cave", z: -1, region: { key: "borderland" } }), false);
 assert.equal(isAutoBlockedInLocation({ key: "deep_dream", z: -10, region: { key: "dreams" } }), true);
