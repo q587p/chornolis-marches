@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "../db";
 import { normalizeInput } from "../input/aliases";
 import { normalizeCreatureActionText } from "../utils/creatureActionText";
@@ -75,18 +76,22 @@ export function targetDisplayLabel(target: TextTargetRef) {
   return target.actionLabel ? `${target.label} — ${target.actionLabel}` : target.label;
 }
 
+export function visibleTextTargetCreatureWhere(locationId: number): Prisma.CreatureWhereInput {
+  return {
+    locationId,
+    isGone: false,
+    OR: [
+      { isAlive: true, isHidden: false },
+      { isAlive: false, age: "CORPSE", isHidden: false },
+    ],
+  };
+}
+
 export async function visibleTextTargets(locationId: number, viewerPlayerId: number): Promise<TextTargetRef[]> {
   const [players, creatures] = await Promise.all([
     prisma.player.findMany({ where: { currentLocationId: locationId, id: { not: viewerPlayerId } }, orderBy: { id: "asc" } }),
     prisma.creature.findMany({
-      where: {
-        locationId,
-        isGone: false,
-        OR: [
-          { isAlive: true, isHidden: false },
-          { isAlive: false, age: "CORPSE" },
-        ],
-      },
+      where: visibleTextTargetCreatureWhere(locationId),
       include: { species: true },
       orderBy: [{ isAlive: "desc" }, { id: "asc" }],
     }),

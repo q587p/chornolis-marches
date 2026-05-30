@@ -21,6 +21,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Changed
 
 - Hunter-claimed carcasses now preserve their hunter marker while ordinary corpse decay updates the remaining lifetime text, so returning hunters can still deposit prey through the gate drop-off service.
+- Hidden hunter-claimed carcasses no longer appear in text target lookup, location target lists or corpse action entry points.
 - Direct hunter field lines now record `SAY` events and increment the creature speech counter used by ecology/status statistics.
 - Updated hunter and actor-inventory planning notes to keep the remaining claimed-carcass `currentAction` bridge visible as future structural work.
 - Updated planning exports for the weapon task pack and completed first scribe-audit task slices.
@@ -29,6 +30,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Tests
 
 - Extended NPC hunter helper coverage for hunter-claimed carcass decay markers.
+- Added text-target visibility coverage for hidden hunter-claimed carcasses.
 - Added scribe-audit helper coverage.
 - Ran the full project test suite.
 
