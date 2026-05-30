@@ -16,10 +16,11 @@ import { chance, chancePermille, pickOptional as pick, randomInt } from "../util
 
 const DEFAULT_TICK_INTERVAL_MS = TICK_MS;
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
-const RESOURCE_REGEN_EVERY_TICKS = Number(process.env.WORLD_RESOURCE_REGEN_EVERY_TICKS || 40);
+const RESOURCE_REGEN_EVERY_TICKS = Number(process.env.WORLD_RESOURCE_REGEN_EVERY_TICKS || 160);
 const RESOURCE_REGEN_AMOUNT = Number(process.env.WORLD_RESOURCE_REGEN_AMOUNT || 1);
-const GRASS_REGEN_EVERY_TICKS = Number(process.env.WORLD_GRASS_REGEN_EVERY_TICKS || 30);
-const EXHAUSTED_LOCATION_REGEN_EVERY_TICKS = Number(process.env.WORLD_EXHAUSTED_LOCATION_REGEN_EVERY_TICKS || 240);
+const GRASS_REGEN_EVERY_TICKS = Number(process.env.WORLD_GRASS_REGEN_EVERY_TICKS || 120);
+const EXHAUSTED_LOCATION_REGEN_EVERY_TICKS = Number(process.env.WORLD_EXHAUSTED_LOCATION_REGEN_EVERY_TICKS || 720);
+const LISOVYK_WAKE_DELAY_TICKS = Number(process.env.WORLD_LISOVYK_WAKE_DELAY_TICKS || 12);
 const HERBALIST_SPEAK_CHANCE = Number(process.env.HERBALIST_SPEAK_CHANCE || 12);
 const RABBIT_REPRODUCTION_EVERY_TICKS = Number(process.env.WORLD_RABBIT_REPRODUCTION_EVERY_TICKS || 120);
 const RABBIT_MIN_LITTER_SIZE = Number(process.env.WORLD_RABBIT_MIN_LITTER_SIZE || 5);
@@ -59,6 +60,8 @@ const CREATURE_STARVATION_EXTRA_CHANCE_PER_HUNGER_PERMILLE = Number(process.env.
 const RECENT_ATTACK_FEATURE_PREFIX = "recent_attack_";
 const EDIBLE_RESOURCE_KEYS = ["grass", "berries", "herbs", "mushrooms"] as const;
 const LISOVYK_IGNORED_DEPLETION_RESOURCE_KEYS = new Set(["torch", "lit_torch", "twigs"]);
+const LISOVYK_DEPLETION_NOTICE_TITLE = "Лісовик почув виснаження";
+const LISOVYK_DEPLETION_RESOLVED_TITLE = "Лісовик виснаження минуло";
 const DEPLETED_VEGETATION_FEATURE_PREFIX = "depleted_vegetation_";
 const MOUSE_OVERGRAZING_PRESSURE_DIVISOR = 2;
 
@@ -1061,6 +1064,15 @@ function lisovykSleepText(resourceName?: string) {
   return `Дід лісовик гарчить: «${resourcePart}. Йду спати, але стережіться там».`;
 }
 
+function lisovykDepletionMarker(depleted: Pick<DepletedRegionResource, "regionId" | "resourceKey">) {
+  return `region=${depleted.regionId}; resource=${depleted.resourceKey}`;
+}
+
+function lisovykNoticeTick(description?: string | null) {
+  const match = String(description ?? "").match(/tick=(\d+)/);
+  return match ? Number(match[1]) : null;
+}
+
 async function findRegionDepletedResource(): Promise<DepletedRegionResource | null> {
   const regions = await prisma.region.findMany({
     include: {
@@ -1095,9 +1107,38 @@ async function findRegionDepletedResource(): Promise<DepletedRegionResource | nu
   return null;
 }
 
+async function lisovykWakeDelayElapsed(depleted: DepletedRegionResource) {
+  const marker = lisovykDepletionMarker(depleted);
+  const notice = await prisma.worldEvent.findFirst({
+    where: { type: "SYSTEM", title: LISOVYK_DEPLETION_NOTICE_TITLE, description: { contains: marker } },
+    orderBy: { createdAt: "desc" },
+  });
+  const resolved = await prisma.worldEvent.findFirst({
+    where: { type: "SYSTEM", title: LISOVYK_DEPLETION_RESOLVED_TITLE, description: { contains: marker } },
+    orderBy: { createdAt: "desc" },
+  });
+  const noticeIsStale = Boolean(notice && resolved && resolved.createdAt > notice.createdAt);
+  const noticedAtTick = noticeIsStale ? null : lisovykNoticeTick(notice?.description);
+
+  if (noticedAtTick == null) {
+    await prisma.worldEvent.create({
+      data: {
+        type: "SYSTEM",
+        title: LISOVYK_DEPLETION_NOTICE_TITLE,
+        description: `${marker}; tick=${tickNumber}; resourceName=${depleted.resourceName}`,
+        locationId: depleted.locationId,
+      },
+    });
+    return false;
+  }
+
+  return tickNumber - noticedAtTick >= LISOVYK_WAKE_DELAY_TICKS;
+}
+
 async function wakeLisovykIfNeeded() {
   const depleted = await findRegionDepletedResource();
   if (!depleted) return false;
+  if (!(await lisovykWakeDelayElapsed(depleted))) return false;
   const species = await prisma.creatureSpecies.findUnique({ where: { key: "lisovyk" } });
   if (!species) return false;
   const existing = await prisma.creature.findFirst({ where: { speciesId: species.id, name: { in: ["Дід лісовик", "Дід Чорноліс"] } } });
@@ -1119,6 +1160,19 @@ async function wakeLisovykIfNeeded() {
   await prisma.worldEvent.create({ data: { type: "NPC_SAY", title: "Лісовик прокинувся", description: `У регіоні «${depleted.regionName}» зник ресурс «${depleted.resourceName}». ${message}`, locationId: depleted.locationId } });
   if (botInstance) await notifyRegion(botInstance, depleted.regionId, `🌲 Дід лісовик прокинувся.\n\n${message}`);
   return true;
+}
+
+async function markLisovykDepletionResolved(node: { amount: number; locationId: number; location: { regionId: number }; resourceType: { key: string; name: string } }) {
+  if (node.amount > 0 || LISOVYK_IGNORED_DEPLETION_RESOURCE_KEYS.has(node.resourceType.key)) return;
+  const marker = lisovykDepletionMarker({ regionId: node.location.regionId, resourceKey: node.resourceType.key });
+  await prisma.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: LISOVYK_DEPLETION_RESOLVED_TITLE,
+      description: `${marker}; tick=${tickNumber}; resourceName=${node.resourceType.name}`,
+      locationId: node.locationId,
+    },
+  });
 }
 
 async function putLisovykToSleepIfForestRecovered() {
@@ -1167,6 +1221,7 @@ async function regenerateResourcesIfNeeded() {
     const updated = await prisma.resourceNode.updateMany({ where: { id: node.id }, data: { amount: Math.min(node.maxAmount, node.amount + RESOURCE_REGEN_AMOUNT) } });
     if (updated.count > 0) {
       regenerated++;
+      await markLisovykDepletionResolved(node);
       if (isExhausted && node.resourceType.key === "grass" && node.amount + RESOURCE_REGEN_AMOUNT >= Math.ceil(node.maxAmount / 4)) {
         await prisma.locationFeature.updateMany({
           where: { locationId: node.locationId, key: { startsWith: DEPLETED_VEGETATION_FEATURE_PREFIX } },

@@ -17,6 +17,7 @@ import { requireScribeAdmin } from "../services/adminAccess";
 import { adminSecretMatches } from "../services/adminSecret";
 import { syncChatBotCommandsForTelegramId } from "../services/telegramCommands";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
+import { nextResourceAmount, parseAddResourceArgs } from "../services/adminResources";
 import { stopAllPlayerAuto } from "./auto";
 import { resetTutorialProgressForPlayer } from "../services/tutorial";
 
@@ -77,6 +78,28 @@ async function addInventoryResource(playerId: number, resourceTypeId: number, am
     update: { amount: { increment: amount } },
     create: { playerId, resourceTypeId, amount },
   });
+}
+
+async function addLocationResource(locationId: number, resourceTypeId: number, amount = 1) {
+  const existing = await prisma.resourceNode.findUnique({
+    where: { locationId_resourceTypeId: { locationId, resourceTypeId } },
+  });
+  if (!existing) {
+    return {
+      before: 0,
+      after: amount,
+      node: await prisma.resourceNode.create({
+        data: { locationId, resourceTypeId, amount, maxAmount: Math.max(1, amount) },
+      }),
+    };
+  }
+
+  const after = nextResourceAmount(existing.amount, existing.maxAmount, amount);
+  return {
+    before: existing.amount,
+    after,
+    node: await prisma.resourceNode.update({ where: { id: existing.id }, data: { amount: after } }),
+  };
 }
 
 async function resolveLocationForAdmin(ctx: any, rawTarget: string) {
@@ -173,6 +196,8 @@ export const ADMIN_HELP_TEXT = [
   "Додавання у світ",
   "/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD] — додати тварин",
   "/addCreatureHelp — список speciesKey для тварин",
+  "/addResource <resourceKey> [locationKey|x,y,z] [amount] — відновити ресурс у місцині; без місцини бере поточну, без кількості додає 1",
+  "/addResourceHelp — список ключів ресурсів; /addResourse теж працює як запасний варіант",
   "/addCampfire [locationKey|x,y,z|персонаж] — додати звичайне вогнище",
   "/addTorch [персонаж] — додати факел у речі собі або вказаному персонажу",
   "/addTwigs [персонаж] — додати хмиз у речі собі або вказаному персонажу",
@@ -321,6 +346,65 @@ export function registerAdminHandlers(bot: Bot) {
     await logEvent("SYSTEM", "Debug twigs added to inventory", `player=${player.id}`);
     await ctx.reply(`🪵 Додано хмиз у речі: ${playerDisplayName(player)}.`);
   });
+
+  async function replyAddResourceHelp(ctx: any) {
+    if (!(await requireScribeAdmin(ctx))) return;
+
+    const resources = await prisma.resourceType.findMany({ orderBy: { key: "asc" } });
+    const lines = [
+      "🌿 Ключі ресурсів для /addResource",
+      "",
+      "Формат: /addResource <resourceKey> [locationKey|x,y,z] [amount]",
+      "Без місцини команда бере вашу поточну місцину. Без кількості додає 1.",
+      "",
+      ...resources.map((resource) => `- ${resource.key} — ${resource.name}`),
+    ];
+    await ctx.reply(lines.join("\n"));
+  }
+
+  async function runAddResourceCommand(ctx: any, defaultResourceKey = "") {
+    if (!(await requireScribeAdmin(ctx))) return;
+
+    const parsed = parseAddResourceArgs(String(ctx.match ?? ""), defaultResourceKey);
+    if (!parsed.resourceKey) {
+      await ctx.reply("Вкажи ключ ресурсу. Список: /addResourceHelp.");
+      return;
+    }
+
+    const resourceType = await prisma.resourceType.findUnique({ where: { key: parsed.resourceKey } });
+    if (!resourceType) {
+      await ctx.reply(`Невідомий ресурс: ${parsed.resourceKey}. Список ключів: /addResourceHelp.`);
+      return;
+    }
+
+    const location = await resolveLocationForAdmin(ctx, parsed.locationArg);
+    if (!location) return;
+
+    const result = await addLocationResource(location.id, resourceType.id, parsed.amount);
+    const scribe = ctx.from?.id
+      ? await prisma.player.findUnique({ where: { telegramId: String(ctx.from.id) } })
+      : null;
+    await logEvent("SYSTEM", "Admin resource added", `resource=${resourceType.key}; amount=${parsed.amount}; location=${location.key}; before=${result.before}; after=${result.after}`, location.id);
+    await logScribeAction({
+      actionKey: "addResource",
+      scribePlayerId: scribe?.id,
+      scribeTelegramId: ctx.from?.id,
+      scribeName: scribe ? playerDisplayName(scribe) : null,
+      target: location.key,
+      outcome: "confirmed",
+      details: `resource=${resourceType.key}; requested=${parsed.amount}; before=${result.before}; after=${result.after}`,
+      locationId: location.id,
+    });
+
+    const capped = result.after < result.before + parsed.amount ? " Ліміт вузла вже близько, тож зайве не перелито." : "";
+    await ctx.reply(`🌿 Додано ресурс «${resourceType.name}» у місцині ${location.name}: ${result.before} → ${result.after}.${capped}`);
+  }
+
+  bot.command(["addResourceHelp", "addresourcehelp", "addResourseHelp", "addresoursehelp"], replyAddResourceHelp);
+  bot.command(["addResource", "addresource", "addResourse", "addresourse"], (ctx) => runAddResourceCommand(ctx));
+  bot.command(["restoreBerries", "restoreberries"], (ctx) => runAddResourceCommand(ctx, "berries"));
+  bot.command(["restoreHerbs", "restoreherbs"], (ctx) => runAddResourceCommand(ctx, "herbs"));
+  bot.command(["restoreMushrooms", "restoremushrooms"], (ctx) => runAddResourceCommand(ctx, "mushrooms"));
 
   function resetModePromptText() {
     return [

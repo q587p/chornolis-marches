@@ -33,6 +33,9 @@
 - `/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD]` — додати тварин.
   Приклади актуальних місцин: `/addCreature rabbit forest_04_00 3`, `/addCreature mouse 0,0,0 5 YOUNG`, `/addCreature wolf forest_00_08 1 OLD`.
 - `/addCreatureHelp` — список speciesKey для тварин.
+- `/addResource <resourceKey> [locationKey|x,y,z] [amount]` — команда писарів Порубіжжя: відновити ресурс у вказаній або поточній місцині. Без місцини бере поточну місцину писаря, без кількості додає 1. Помилкова форма `/addResourse` теж підтримується.
+- `/addResourceHelp` — список ключів ресурсів для `/addResource`.
+- `/restoreBerries [locationKey|x,y,z] [amount]`, `/restoreHerbs [locationKey|x,y,z] [amount]`, `/restoreMushrooms [locationKey|x,y,z] [amount]` — короткі писарські форми для частого відновлення ягід, трав і грибів.
 - `/addCampfire [locationKey|x,y,z|персонаж]` — команда писарів Порубіжжя: додати звичайне вогнище у вказаній або поточній місцині.
 - `/addTorch [персонаж]` — команда писарів Порубіжжя: додати факел у `Речі` собі або вказаному персонажу.
 - `/addTwigs [персонаж]` — команда писарів Порубіжжя: додати хмиз у `Речі` собі або вказаному персонажу.
@@ -59,5 +62,5 @@
 - список Telegram ID адміністраторів у `.env` лишається аварійним/операторським способом доступу;
 - база-роль `SCRIBE` є основним способом зробити персонажа писарем Порубіжжя;
 - `/adminHelp` показує повний список лише тим, хто має права;
-- небезпечні команди на кшталт `/reset`, `/cleanupCreatures`, `/tickSet`, `/addCreature`, `/addCampfire`, `/addTorch`, `/addTwigs` закриті для звичайних гравців;
+- небезпечні команди на кшталт `/reset`, `/cleanupCreatures`, `/tickSet`, `/addCreature`, `/addResource`, `/addCampfire`, `/addTorch`, `/addTwigs` закриті для звичайних гравців;
 - звичайні гравці можуть зберегти доступ до безпечних команд на кшталт `/look`, `/me`, `/news`, `/help`.
