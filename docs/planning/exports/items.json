@@ -1413,6 +1413,27 @@
     "file": "docs/planning/items/PROG-003-animal-experience-and-titles.md"
   },
   {
+    "id": "PROG-004",
+    "title": "Personal chronicle milestones",
+    "status": "backlog",
+    "type": "feature",
+    "area": "progression",
+    "priority": "medium",
+    "tags": [
+      "journal",
+      "chronicle",
+      "milestones",
+      "cooking",
+      "learning",
+      "personal-history"
+    ],
+    "depends_on": [
+      "FOOD-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/PROG-004-personal-chronicle-milestones.md"
+  },
+  {
     "id": "REL-001",
     "title": "Release branch PR summary and risk discipline",
     "status": "testing",
