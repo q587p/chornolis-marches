@@ -4,6 +4,8 @@ This document describes where world-facing names and their Ukrainian case forms 
 
 Use `src/content/lexicon/worldLexicon.ts` for stable world vocabulary: creature species, NPC profession labels, spirits, resources, features and common nouns used in gameplay text.
 
+The lexicon is now one of the content sources that must be maintained when stable world nouns are added. It is not meant to replace every grammar fallback: `src/services/grammar.ts` can still guess forms for names and ad hoc text. The important distinction is that seed helpers such as `creatureSpeciesNameFields(...)` intentionally require explicit lexicon forms where persistent world data needs reliable Ukrainian cases.
+
 Use `src/content/onboarding/playerNames.ts` for suggested player names only.
 
 ## Why this exists
@@ -95,5 +97,7 @@ The lexicon currently includes the active MVP nouns and several future-ready nou
 ## Follow-up cleanup
 
 The next cleanup pass should remove remaining hardcoded nominative insertions from action, tracking and social text. Search for `species.name`, `resourceType.name`, `currentAction`, `слід:` and text fragments inside `actionQueue.ts`, `social.ts`, `locations.ts`, `worldTick.ts` and seed-related files.
+
+This is a known incomplete state, not an accident: adding the lexicon did not automatically remove every old nominative insertion. When touching nearby code, replace direct nominative-only templates with `creatureForms`, `speciesForms`, `playerForms` or lexicon-backed helpers, but keep unrelated cleanup for a focused, testable pass.
 
 When adding a new stable species, spirit, profession, resource or feature noun, add its case forms here first, then point seed data and grammar helpers at the lexicon instead of duplicating a local nominative-only string.

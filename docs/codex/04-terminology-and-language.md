@@ -71,6 +71,12 @@ Possible buttons/labels:
 
 The game has or should preserve support for Ukrainian name cases and pronouns in onboarding.
 
+Stable world nouns should live in `src/content/lexicon/worldLexicon.ts`: creature species, NPC profession labels, spirits, resources, location features and common nouns that appear in gameplay text. Add full case forms there when a noun becomes part of stable world data.
+
+The grammar layer still has fallback guessing for names or text that is not yet in the lexicon. Do not treat that fallback as a reason to skip lexicon forms for persisted species, seeded NPC/profession labels, recurring resources or other nouns used in templates.
+
+Known cleanup state: the lexicon does not yet remove every nominative insertion from older text paths. When editing nearby code, prefer `creatureForms`, `speciesForms`, `playerForms` or lexicon-backed helpers, but keep broad replacement passes focused and testable.
+
 Compound names should also be declined:
 
 - split name into words;

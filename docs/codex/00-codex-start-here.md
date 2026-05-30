@@ -22,6 +22,7 @@ Chornolis Marches is a Ukrainian dark-fantasy Telegram RPG / living-world sandbo
 12. New or changed commands should keep aliases together: slash command where useful, English/MUD-style text forms, Ukrainian text forms, matching buttons, and matching `/help` or `/adminHelp` docs.
 13. When a command becomes part of the tutorial/newcomer path, add a short diegetic first-use comment or planning note for Сон/Дрімота, another guide voice, or an appropriate local sign so the tutorial teaches the command in-world instead of only exposing a button.
 14. When adding or changing text aliases, add or update `scripts/test/input-aliases.cjs` whenever the behavior can be checked with `parseAlias` without Telegram or database setup.
+15. When adding stable world nouns, update `src/content/lexicon/worldLexicon.ts` with Ukrainian case forms. Grammar fallback remains for ordinary guesses, but seed helpers deliberately require lexicon entries when stable species/profession/spirit forms matter.
 
 ## Preferred workflow for code tasks
 
@@ -35,6 +36,7 @@ Chornolis Marches is a Ukrainian dark-fantasy Telegram RPG / living-world sandbo
 - Only mention version bump when explicitly relevant; the user usually handles it manually after a green build.
 - If the change introduces a new player action, menu item, command, resource use, visibility rule, survival mechanic, social flow or admin-visible beginner state, update the relevant beginner-facing docs/text or add a planning note explaining how onboarding should teach it.
 - If the change touches fire, light or carried items, check `docs/systems/fire_and_light.md` and `docs/systems/item_lifetime_and_grammar.md`; lit torches currently burn out into `хмиз`, and visible held items should be described diegetically.
+- If the change touches dynamic names for creatures, spirits, professions, resources, features, tracks, corpses or action text, check `docs/content/world-lexicon.md` and avoid adding new nominative-only text templates unless nominative is truly the intended case.
 
 ## Context routing
 
