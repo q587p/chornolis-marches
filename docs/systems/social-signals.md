@@ -68,6 +68,14 @@ Target text resolves against visible nearby targets by number, id or visible nam
 
 See `docs/systems/input_aliases.md` for the broader button/command parity rule.
 
+## Tutorial Hook
+
+Teach social signals after the first speech lesson, not before it. The dream tutorial should first show that words can affect the world and reach other characters, then introduce signals as smaller controlled gestures.
+
+- A Сон/Дрімота or nearby-character moment can invite the player to nod, wave, smile or bow.
+- The lesson should stay compact and diegetic: no `quest accepted`, no generic emote wall, and no implication that signals replace conversation.
+- This hook should sit near the planned speech-mode lesson for `say`, `shout`, `whisper` and `reply`, so new players learn the difference between words, loud words, private words and gestures.
+
 ## Message Model
 
 Each signal should support separate text for:

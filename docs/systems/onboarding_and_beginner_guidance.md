@@ -53,7 +53,13 @@ As of `0.12.0`, the first concrete newcomer path is the dream tutorial in `Др�
 - As of `0.12.4`, the hub has a south branch:
   - `Плесо часу сну` teaches `/time` through a small landmark prompt and direct `Час` button.
   - `Затишок останнього кроку` teaches basic safety habits: use `/look` if lost, `/rest` if exhausted, `/me` to check the character, and `Прокинутися` when ready to leave the tutorial.
-- Future tutorial branches should expand from the hub instead of overloading `/help`: social signals, observation/tracking, fire/light and basic danger beyond the first safety reminder.
+- Future tutorial branches should expand from the hub instead of overloading `/help`: social signals, speech modes, observation/tracking, fire/light and basic danger beyond the first safety reminder.
+
+## Near-Term Tutorial Notes
+
+- Add a small Сон/Дрімота reaction pool for ordinary speech in the tutorial dream. Do not count the `Брама Сну` opening phrase for this lesson, because that line already has its own gate outcome.
+- Use those reactions to teach that `say` is local speech, `shout` / `крикнути` carries farther and costs more, `whisper` / `шепнути` is private and target-focused, and `reply` answers someone who addressed you even if the speaker is no longer an ordinary visible target.
+- Add a nearby-character or dream-figure moment for social signals after basic speech is understood: a short, non-mechanical lesson that signals such as `кивнути`, `помахати`, `усміхнутися` and `вклонитися` are controlled gestures, not freeform emotes or physical attacks.
 
 ## Design Rule
 
