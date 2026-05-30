@@ -1812,6 +1812,23 @@
     "file": "docs/planning/items/TRACK-LEARN-001-C.md"
   },
   {
+    "id": "UX-001",
+    "title": "Command and feature icon collision audit",
+    "status": "backlog",
+    "type": "chore",
+    "area": "ux",
+    "priority": "low",
+    "tags": [
+      "ux",
+      "icons",
+      "keyboard",
+      "features"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/UX-001-command-feature-icon-collision.md"
+  },
+  {
     "id": "VIS-001-A",
     "title": "Shared visibility service skeleton",
     "status": "next",

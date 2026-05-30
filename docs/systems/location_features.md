@@ -14,6 +14,8 @@ Interactive features should also be inspectable by text where practical: `look Ð
 
 Features may set `data.icon` when the generic type icon would make nearby landmarks blend together. The location renderer uses this icon in feature lists and feature buttons before falling back to type-based icons. Explicit icons in the same location should stay distinct where practical; reserve the fire icon for actual flame/campfire states and fire-lighting actions, not for an unlit torch supply.
 
+Feature icons and command icons should not collide in the same UI surface when avoidable. A command button that shares the exact icon of a nearby feature can look like a feature action rather than a global command; future icon audits should check both feature buttons and ordinary command buttons together.
+
 Current interactive examples:
 
 - border marker: shows local orientation and nearby landmarks;

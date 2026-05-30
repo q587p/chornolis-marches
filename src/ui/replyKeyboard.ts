@@ -119,7 +119,7 @@ export function buildMenuReplyKeyboard(options: { canSeeStats?: boolean } = {}) 
     .text("💬 Репліки")
     .text("👥 Хто активний")
     .row()
-    .text("🕯 Час")
+    .text("🌒 Час")
     .text("↩️ Назад")
   return keyboard.resized().persistent(false);
 }
