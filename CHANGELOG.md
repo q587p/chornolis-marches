@@ -9,7 +9,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
-## 0.13.22 - Queue visibility and AFK presence labels - 12026-05-31
+## 0.13.22 - Queue visibility, AFK labels and command-menu polish - 12026-05-31
 
 ### Changed
 
@@ -19,6 +19,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - `/all` now shows the same AFK suffix in player rows for scribe/admin visibility.
 - Dropped burning torches now explicitly count as local light sources until their burn timer expires, and expired ground torches are cleaned up before location render.
 - Sexed animal age adjectives now agree with the displayed creature form, so male mouse labels use masculine age adjectives instead of the species-level feminine fallback.
+- Scribe-scoped Telegram side command menus no longer list `/adminmenu` or the operational `/carcassquest` toggle; the commands remain available through direct input, admin help and the scribe keyboard/menu surfaces.
 - Removed a stray UTF-8 BOM from `src/services/actionCompletions.ts`.
 
 ### Tests
@@ -30,6 +31,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `node scripts/test/campfire-memory.cjs`.
 - Ran `node scripts/test/posture.cjs`.
 - Ran `node scripts/test/target-formatting.cjs`.
+- Ran `node scripts/test/telegram-commands.cjs`.
 - Ran `npm test`.
 - Ran `npm run build`.
 

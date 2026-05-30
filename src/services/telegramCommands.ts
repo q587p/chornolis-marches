@@ -3,7 +3,7 @@ import { isScribeAdmin } from "./adminAccess";
 
 type TelegramCommandApi = Pick<Bot["api"], "setMyCommands" | "deleteMyCommands">;
 
-const DEFAULT_BOT_COMMANDS = [
+export const DEFAULT_BOT_COMMANDS = [
   { command: "start", description: "🌲 Увійти / Повернути кнопки" },
   { command: "me", description: "🧍 Персонаж" },
   { command: "look", description: "👀 Озирнутися" },
@@ -14,11 +14,9 @@ const DEFAULT_BOT_COMMANDS = [
   { command: "help", description: "🧭 Допомога новачку" },
 ];
 
-const SCRIBE_BOT_COMMANDS = [
+export const SCRIBE_BOT_COMMANDS = [
   ...DEFAULT_BOT_COMMANDS,
-  { command: "adminmenu", description: "🛠 Адмін меню Писарів" },
   { command: "stat", description: "📊 Службова статистика світу" },
-  { command: "carcassquest", description: "🦴 Перемкнути падальний рів" },
   { command: "adminhelp", description: "🛠 Команди писарів Порубіжжя" },
 ];
 
