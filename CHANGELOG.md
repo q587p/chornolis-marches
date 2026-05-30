@@ -9,6 +9,26 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.22 - Queue visibility and AFK presence labels - 12026-05-31
+
+### Changed
+
+- `freshen all` / `/freshen_all` replies now include the rendered player action queue after adding freshening work.
+- Character cards now show a `Queue` button when the character has a running/queued action or active rest.
+- `/who`, the public `/who` web page and `/who.json` now append ` (відійшов)` to AFK player character names.
+- `/all` now shows the same AFK suffix in player rows for scribe/admin visibility.
+- Removed a stray UTF-8 BOM from `src/services/actionCompletions.ts`.
+
+### Tests
+
+- Extended session-presence coverage for the AFK display suffix.
+- Ran `node scripts/test/session-presence.cjs`.
+- Ran `node scripts/test/posture.cjs`.
+- Ran `npm test`.
+- Ran `npm run build`.
+
+---
+
 ## 0.13.21 - Population recovery and northern forest pocket - 12026-05-31
 
 ### Added

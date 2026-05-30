@@ -53,6 +53,15 @@ Auto-AFK is part of the MVP.
 
 Auto-AFK must not send its own notification. Its purpose is to stop reminders, tutorial nudges, delayed companion lines and proactive/action-queue messages.
 
+## Presence Display
+
+Presence should stay practical and low-noise:
+
+- `/who`, the public `/who` web page and `/who.json` show AFK player characters with ` (відійшов)` after the visible name.
+- `/all` shows the same suffix for AFK player rows so scribes can tell the difference between an active character and someone who paused the session.
+- Do not add a separate proactive message when Auto-AFK sets this suffix; the visible status is only shown when someone asks for a list.
+- `ended` remains a session-control state, not a public atmospheric label in the MVP.
+
 ## Idle Reminder Limit
 
 Auto-AFK is the final silence mechanism, but the bot must also stay quiet before the inactivity timeout.

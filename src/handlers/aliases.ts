@@ -731,7 +731,8 @@ async function submitFreshenAll(bot: Bot, ctx: any, player: NonNullable<Awaited<
       });
     }
 
-    await ctx.reply(`Додано свіжування туш: ${freshenable.length}. Будете обробляти їх по черзі${durationSecondsSuffix(player, durationMs)}.`, await actionQueueReplyOptions(player.id));
+    const queueText = await renderPlayerActionQueue(player.id);
+    await ctx.reply(`Додано свіжування туш: ${freshenable.length}. Будете обробляти їх по черзі${durationSecondsSuffix(player, durationMs)}.\n\n${queueText}`, await actionQueueReplyOptions(player.id));
   } catch (error) {
     await replyToActionError(ctx, error, "Не вдалося додати свіжування.");
   }

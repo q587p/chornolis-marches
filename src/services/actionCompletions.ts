@@ -1,4 +1,4 @@
-﻿import { Bot } from "grammy";
+import { Bot } from "grammy";
 import { Direction, LocationExit, WorldAction } from "@prisma/client";
 import { prisma } from "../db";
 import {

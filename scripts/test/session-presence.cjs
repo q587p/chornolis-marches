@@ -4,7 +4,7 @@ process.env.AUTO_AFK_AFTER_MINUTES = "15";
 
 require("ts-node/register");
 
-const { canSendIdleReminder, canSendProactiveMessage, canSendScheduledIdleReminder, idleReminderSceneKeyForLocation, isAutoAfkDue } = require("../../src/services/sessionPresence");
+const { canSendIdleReminder, canSendProactiveMessage, canSendScheduledIdleReminder, idleReminderSceneKeyForLocation, isAutoAfkDue, playerPresenceDisplaySuffix } = require("../../src/services/sessionPresence");
 
 assert.equal(canSendProactiveMessage({ sessionPresence: "ACTIVE", remindersPaused: false }), true);
 assert.equal(canSendProactiveMessage({ sessionPresence: "ACTIVE", remindersPaused: false, onboardingComplete: false }), false);
@@ -13,6 +13,11 @@ assert.equal(canSendProactiveMessage({ sessionPresence: "AFK", remindersPaused: 
 assert.equal(canSendProactiveMessage({ sessionPresence: "ENDED", remindersPaused: false }), false);
 assert.equal(canSendProactiveMessage({ sessionPresence: "ACTIVE", remindersPaused: true }), false);
 assert.equal(canSendProactiveMessage(null), false);
+
+assert.equal(playerPresenceDisplaySuffix({ sessionPresence: "AFK" }), " (відійшов)");
+assert.equal(playerPresenceDisplaySuffix({ sessionPresence: "ACTIVE" }), "");
+assert.equal(playerPresenceDisplaySuffix({ sessionPresence: "ENDED" }), "");
+assert.equal(playerPresenceDisplaySuffix(null), "");
 
 const now = new Date("2026-05-30T12:15:00.000Z");
 assert.equal(isAutoAfkDue({ sessionPresence: "ACTIVE", remindersPaused: false, lastPlayerActionAt: new Date("2026-05-30T12:00:00.000Z") }, now), true);

@@ -31,6 +31,10 @@ export function canSendProactiveMessage(session: {
   return true;
 }
 
+export function playerPresenceDisplaySuffix(player: { sessionPresence?: PlayerSessionPresence | string | null } | null | undefined) {
+  return player?.sessionPresence === "AFK" ? " (відійшов)" : "";
+}
+
 export function idleReminderSceneKeyForLocation(locationId: number | null | undefined) {
   return locationId ? `location:${locationId}` : null;
 }
