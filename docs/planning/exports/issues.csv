@@ -74,6 +74,11 @@ PERF-001,Runtime performance plan and creature simulation budget,backlog,technic
 PLAN-001,Repository docs are the planning source of truth,testing,documentation,planning,high,"planning,docs,roadmap",docs/planning/items/PLAN-001.md
 PROG-002,Observation-based learning,backlog,feature,progression,medium,"skills,observation,npc,animals,mythic",docs/planning/items/PROG-002-observation-learning.md
 PROG-003,Animal experience and titles,backlog,feature,progression,medium,"animals,ecology,progression,combat",docs/planning/items/PROG-003-animal-experience-and-titles.md
+REL-001,Release branch PR summary and risk discipline,testing,process,release,high,"release,github,pr,planning",docs/planning/items/REL-001-release-branch-pr-summary-risk.md
+SES-001-A,AFK and End Session controls,testing,feature,session,high,"telegram,session,afk,ux",docs/planning/items/SES-001-A.md
+SES-001-B,Auto-AFK and proactive message guards,testing,feature,session,high,"telegram,session,reminders,tutorial",docs/planning/items/SES-001-B.md
+SES-001-C,Session presence tests and manual checklist,testing,qa,session,high,"telegram,session,tests,qa",docs/planning/items/SES-001-C.md
+SES-002,Atmospheric presence and notification design,backlog,design,session,medium,"telegram,session,atmosphere,notifications",docs/planning/items/SES-002-atmospheric-presence-backlog.md
 SETTLE-001,Starter settlement,backlog,feature,settlements,high,"settlement,npc,onboarding",docs/planning/items/SETTLE-001-starter-settlement.md
 SLEEP-001,Lying posture and lie command,next,feature,survival,high,"sleep,posture,aliases,rest",docs/planning/items/SLEEP-001-lying-posture-and-lie-command.md
 SLEEP-002,Ordinary sleep MVP,next,feature,survival,high,"sleep,wake,stamina,hp,tutorial",docs/planning/items/SLEEP-002-ordinary-sleep-mvp.md

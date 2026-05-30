@@ -2,6 +2,7 @@ import { Bot } from "grammy";
 import { prisma } from "../db";
 import { notifyLocationAll } from "./notifications";
 import { canPickUpGroundItem } from "./groundItems";
+import { canSendProactiveToTelegramId } from "./sessionPresence";
 
 export const CAMPFIRE_DURATION_MS = 16 * 60_000;
 export const CAMPFIRE_FADING_MS = 4 * 60_000;
@@ -279,6 +280,7 @@ export async function notifyFadingFireTimers(bot: Bot) {
     if (await hasTimerWarning(marker)) continue;
 
     try {
+      if (!(await canSendProactiveToTelegramId(resource.player.telegramId))) continue;
       await bot.api.sendMessage(resource.player.telegramId, "🔥 Ваш факел догорає. Варто пошукати вогнище, щоб підпалити його знову.");
       await markTimerWarning(marker, resource.player.currentLocationId, resource.playerId);
     } catch (error) {

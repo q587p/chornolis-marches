@@ -8,6 +8,7 @@ import type { ResolvedTarget } from "./targets";
 import { enqueueCreatureAction, interruptActorActions, movementDurationMs } from "./actionQueue";
 import { logEvent } from "./worldEvents";
 import { hunterReactionDurationMs, hunterSocialReactionSignal, isHunterCreature } from "./npcHunter";
+import { canSendProactiveToTelegramId } from "./sessionPresence";
 
 type SocialContext = {
   actor: { kind: "player" | "creature"; id: number; locationId: number; forms: NameForms; telegramId?: string };
@@ -263,7 +264,7 @@ async function performSocialSignalForActor(bot: Bot, actor: SocialContext["actor
 
   const ctx: SocialContext = { actor, target };
   const targetPlayer = target.kind === "player" ? await prisma.player.findUnique({ where: { id: target.id } }) : null;
-  if (targetPlayer) {
+  if (targetPlayer && await canSendProactiveToTelegramId(targetPlayer.telegramId)) {
     await bot.api.sendMessage(targetPlayer.telegramId, social.targetMessage(ctx), { parse_mode: "HTML" });
   }
 

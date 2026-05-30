@@ -15,6 +15,13 @@ When asked for a patch/archive/update:
 - Preserve existing code/docs/world state.
 - Do not overwrite prior functionality without explicit request.
 
+For release/patch work that is meant to be reviewed or merged:
+
+- Start from a separate branch, preferably with the `codex/` prefix.
+- Open a PR from that branch into `main` instead of committing directly to `main`.
+- The PR body should include a concise summary, validation/checks, and explicit risks or rollback notes.
+- If the work is still planning-only, say that in the PR summary and do not invent gameplay risk.
+
 ## Test/build/check rule
 
 Before git add/commit/push, run the relevant tests/checks/build where applicable.

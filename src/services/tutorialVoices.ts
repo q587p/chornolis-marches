@@ -269,7 +269,7 @@ export async function tutorialIdlePaceComments(player: TutorialIdlePlayerRef, no
     .filter((date): date is Date => Boolean(date))
     .reduce((latest, date) => (date.getTime() > latest.getTime() ? date : latest), player.createdAt);
   if (now.getTime() - lastActivity.getTime() < TUTORIAL_IDLE_PACE_DELAY_MS) return [];
-  return tutorialPaceComments(player, "idle");
+  return (await tutorialPaceComments(player, "idle")).slice(0, 1);
 }
 
 export async function tutorialSpiritMoveComment(fromLocationId: number, toLocationId: number, direction: Direction): Promise<TutorialVoiceComment | null> {

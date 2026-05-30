@@ -28,6 +28,10 @@ model Player {
   posture      PlayerPosture @default(STANDING)
   isResting    Boolean @default(false)
   isAutoEnabled Boolean @default(false)
+  sessionPresence PlayerSessionPresence @default(ACTIVE)
+  remindersPaused Boolean @default(false)
+  idleReminderSceneKey String?
+  idleReminderCountForCurrentScene Int @default(0)
   showTechnicalDetails Boolean @default(false)
   hunger  Int @default(0)
 
@@ -46,6 +50,7 @@ model Player {
   restFullRecoveries Int @default(0)
 
   lastActionAt DateTime?
+  lastPlayerActionAt DateTime?
   lastStaminaRegenAt DateTime @default(now())
   lastHpRegenAt      DateTime @default(now())
 
@@ -566,6 +571,12 @@ enum PlayerPosture {
 enum PlayerRole {
   PLAYER
   SCRIBE
+}
+
+enum PlayerSessionPresence {
+  ACTIVE
+  AFK
+  ENDED
 }
 
 enum WorldActorType {

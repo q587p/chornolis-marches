@@ -12,6 +12,8 @@ The current lane is the three-month vertical slice:
 
 ## 0.13 Next
 
+- REL-001: keep release/patch work on a separate branch with a PR into `main`, including summary, validation and risk notes.
+- SES-001: add AFK / End Session controls, silent Auto-AFK after player inactivity, one idle reminder per scene and send-time guards for delayed/proactive messages so the bot stays quiet while a player is away.
 - ONB-002: character name onboarding polish.
 - ONB-001: dream tutorial compact completion.
 - SURV-001: beginner return / `Повернення`.

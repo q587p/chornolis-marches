@@ -1,4 +1,4 @@
-import { Bot } from "grammy";
+﻿import { Bot } from "grammy";
 import { Direction, LocationExit, WorldAction } from "@prisma/client";
 import { prisma } from "../db";
 import {
@@ -33,6 +33,7 @@ import { playerCanShowTechnicalDetails } from "./technicalDetails";
 import { canOpenDreamGateWithSpeech, isLocationExitLocked, isTutorialFastRestLocationKey, openDreamGate, rememberTutorialCommandHintIfInTutorial, rememberTutorialForagingSuccess, rememberTutorialInventoryAvailable, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY } from "./tutorial";
 import { tutorialGateSpeechComment, tutorialLookPaceComments, tutorialSpiritMoveComment, tutorialTrackComments, tutorialWaitPaceComments } from "./tutorialVoices";
 import { chance, pick, shuffle } from "../utils/random";
+import { canSendProactiveToPlayerId } from "./sessionPresence";
 import { freshenCorpseForMeat } from "./meat";
 import { rememberPlayerReplyTarget } from "./replyTargets";
 import { hunterClaimedCorpseAction, hunterConversationReplyLine, hunterReactionDurationMs, isHunterCreature } from "./npcHunter";
@@ -109,6 +110,10 @@ function chatIdFromAction(action: WorldAction) {
   if (!action.chatId) return undefined;
   const numeric = Number(action.chatId);
   return Number.isSafeInteger(numeric) ? numeric : action.chatId;
+}
+async function chatIdFromActionIfAllowed(action: WorldAction) {
+  if (action.actorType === "PLAYER" && action.playerId && !(await canSendProactiveToPlayerId(action.playerId))) return undefined;
+  return chatIdFromAction(action);
 }
 
 async function hideCompletedFreshenSourceMessage(bot: Bot, action: WorldAction, chatId: number | string) {
@@ -332,7 +337,7 @@ async function completeMove(bot: Bot, action: WorldAction) {
 
   if (action.actorType === "PLAYER") {
     const player = action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null;
-    const chatId = chatIdFromAction(action);
+    const chatId = await chatIdFromActionIfAllowed(action);
     if (!player) return void (await setActionStatus(action, "FAILED"));
 
     const currentLocationId = player.currentLocationId ?? (await getStartLocationId());
@@ -402,7 +407,7 @@ async function completeMove(bot: Bot, action: WorldAction) {
 
 async function completeGather(bot: Bot, action: WorldAction) {
   const payload = payloadOf<GatherPayload>(action);
-  const chatId = chatIdFromAction(action);
+  const chatId = await chatIdFromActionIfAllowed(action);
   const isPlayer = action.actorType === "PLAYER";
   const actor = isPlayer
     ? action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null
@@ -546,7 +551,7 @@ async function completeEat(action: WorldAction) {
 async function completeLook(bot: Bot, action: WorldAction) {
   if (action.actorType === "PLAYER") {
     const player = action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null;
-    const chatId = chatIdFromAction(action);
+    const chatId = await chatIdFromActionIfAllowed(action);
     if (!player) return void (await setActionStatus(action, "FAILED"));
     const locationId = player.currentLocationId ?? (await getStartLocationId());
     await spendPlayerStamina(bot, player.id, "LOOK", chatId);
@@ -602,7 +607,7 @@ async function completeLook(bot: Bot, action: WorldAction) {
 async function completeInspect(bot: Bot, action: WorldAction) {
   const payload = payloadOf<SocialPayload>(action);
   const player = action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null;
-  const chatId = chatIdFromAction(action);
+  const chatId = await chatIdFromActionIfAllowed(action);
   if (!player || !player.currentLocationId || action.actorType !== "PLAYER") return void (await setActionStatus(action, "FAILED"));
   const target = await resolveTarget(payload.targetType, payload.targetId, player.currentLocationId, {
     viewerPlayerId: player.id,
@@ -635,7 +640,7 @@ async function completeGreet(bot: Bot, action: WorldAction) {
   if (action.actorType === "CREATURE") return completeCreatureSocialReaction(bot, action, payload);
 
   const player = action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null;
-  const chatId = chatIdFromAction(action);
+  const chatId = await chatIdFromActionIfAllowed(action);
   if (!player || !player.currentLocationId || action.actorType !== "PLAYER") return void (await setActionStatus(action, "FAILED"));
   const target = await resolveTarget(payload.targetType, payload.targetId, player.currentLocationId);
   if (!target || !target.canGreet) {
@@ -689,7 +694,7 @@ async function completeCreatureSocialReaction(bot: Bot, action: WorldAction, pay
 async function completeFreshen(bot: Bot, action: WorldAction) {
   const payload = payloadOf<SocialPayload>(action);
   const player = action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null;
-  const chatId = chatIdFromAction(action);
+  const chatId = await chatIdFromActionIfAllowed(action);
   if (!player || !player.currentLocationId || action.actorType !== "PLAYER") return void (await setActionStatus(action, "FAILED"));
   const target = await resolveTarget(payload.targetType, payload.targetId, player.currentLocationId);
   if (!target || !target.isCorpse || !target.canFreshen) {
@@ -810,7 +815,7 @@ async function completeAttack(bot: Bot, action: WorldAction) {
 
   const payload = payloadOf<SocialPayload>(action);
   const player = action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null;
-  const chatId = chatIdFromAction(action);
+  const chatId = await chatIdFromActionIfAllowed(action);
   if (!player || !player.currentLocationId || action.actorType !== "PLAYER") return void (await setActionStatus(action, "FAILED"));
   const target = await resolveTarget(payload.targetType, payload.targetId, player.currentLocationId);
   if (!target || !target.canAttack) {
@@ -898,7 +903,7 @@ async function completeSay(bot: Bot, action: WorldAction) {
 
   if (action.actorType === "PLAYER") {
     const player = action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null;
-    const chatId = chatIdFromAction(action);
+    const chatId = await chatIdFromActionIfAllowed(action);
     if (!player || !player.currentLocationId) return void (await setActionStatus(action, "FAILED"));
     const targetDative = payload.targetDative || payload.targetName;
     const actorForms = playerForms(player);
@@ -1080,7 +1085,7 @@ async function completeSay(bot: Bot, action: WorldAction) {
 
 async function completeTrack(bot: Bot, action: WorldAction) {
   const player = action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null;
-  const chatId = chatIdFromAction(action);
+  const chatId = await chatIdFromActionIfAllowed(action);
   if (!player || !player.currentLocationId || action.actorType !== "PLAYER") return void (await setActionStatus(action, "FAILED"));
   const detail = Boolean(payloadOf<{ detail?: boolean }>(action).detail);
 
@@ -1139,7 +1144,7 @@ async function completeSimple(bot: Bot, action: WorldAction) {
   if (action.type === "REST") {
     if (action.actorType === "PLAYER" && action.playerId) {
       const player = await prisma.player.findUnique({ where: { id: action.playerId } });
-      const chatId = chatIdFromAction(action);
+      const chatId = await chatIdFromActionIfAllowed(action);
       if (player) {
         const location = player.currentLocationId
           ? await prisma.cellLocation.findUnique({ where: { id: player.currentLocationId }, select: { key: true } })
@@ -1183,7 +1188,7 @@ async function completeSimple(bot: Bot, action: WorldAction) {
     }
   } else if (action.type === "WAIT" && action.actorType === "PLAYER" && action.playerId) {
     const player = await prisma.player.findUnique({ where: { id: action.playerId } });
-    const chatId = chatIdFromAction(action);
+    const chatId = await chatIdFromActionIfAllowed(action);
     if (player?.currentLocationId && chatId) {
       const voiceComments = await tutorialWaitPaceComments(player);
       for (const comment of voiceComments) {

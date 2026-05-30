@@ -8,6 +8,8 @@ npm install && npx prisma migrate deploy && npm run build && npm run seed
 
 `npm run seed` uses bounded parallel database writes. The default `SEED_CONCURRENCY` is `12`; lower it if the database is under pressure, or raise it cautiously for a nearby/local database.
 
+Session presence uses `AUTO_AFK_AFTER_MINUTES` for the silent inactivity timeout. It defaults to `15`; tests or local runs may override it. `AUTO_AFK_CHECK_INTERVAL_MS` defaults to `60000` and controls how often the worker checks for players to mark AFK.
+
 ## Pre-deploy checklist
 
 Use this before committing or pushing a release patch.
@@ -49,6 +51,12 @@ Use this before committing or pushing a release patch.
    - `CHANGELOG.md` and `news.md` should describe player-visible, admin-visible or operationally meaningful changes.
    - Do not add bookkeeping-only bullets such as "Bumped package metadata to x.y.z", "Added release notes for x.y.z", or "Updated news/changelog".
    - Version bumps, release-note files and documentation bookkeeping can stay in the commit diff; they do not need their own changelog/news bullets unless they change behavior or workflow.
+
+6. PR hygiene:
+
+   - Work from a separate branch and open a PR into `main`.
+   - Include summary, checks/validation and risks or rollback notes in the PR description.
+   - For docs-only or planning-only releases, state that runtime risk is expected to be low and that no deploy seed/migration is needed unless data files changed.
 
 Optional post-seed smoke check:
 
