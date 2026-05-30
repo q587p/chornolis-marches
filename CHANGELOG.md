@@ -35,7 +35,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Scribe `/addCreature` no longer silently clamps larger counts to 50; larger additions are created in batches of 50 with an explicit one-command cap.
 - Tutorial dream pacing lines now use the correct nominative pronoun in one monument/hesitation response.
 - Onboarding now keeps incomplete players out of location-level proactive messages until their name is confirmed.
-- Target lists now show a `freshen all` button when several suitable corpses can be queued for freshening.
+- Target lists now show a `freshen all` (`/freshen_all`) button when several suitable corpses can be queued for freshening.
 - Scribes can now force the gate carcass-dropoff hunting loop on or into stand-down with `/carcassQuest start` and `/carcassQuest stop`.
 - Gate-hunting saturation now counts nearby locations by coordinate radius instead of only the gate's own technical region, so bridge, riverbank and meadow prey pressure can reactivate the hunter loop.
 

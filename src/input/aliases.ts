@@ -464,6 +464,9 @@ const SUGGESTABLE_PATTERN_ALIASES = [
   "покликати",
   "волати",
   "заволати",
+  "freshen all",
+  "свіжувати все",
+  "освіжити всі",
   "smile",
   "усміхнутися",
   "усміхнутись",
@@ -601,10 +604,14 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "social-signal") return `/${parsed.signal}`;
   if (parsed.kind === "target-action") {
     if (parsed.action === "attack") return "/attack";
-    if (parsed.action === "freshen") return "/freshen";
+    if (parsed.action === "freshen") return isAllTargetToken(parsed.target) ? "/freshen_all" : "/freshen";
     if (parsed.action === "inspect") return "/examine";
   }
   return undefined;
+}
+
+function isAllTargetToken(target: string) {
+  return ["all", "все", "усе", "всі", "усі"].includes(target.trim().toLowerCase());
 }
 
 export function formatAliasSuggestion(suggestion: AliasSuggestion) {
