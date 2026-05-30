@@ -44,6 +44,7 @@ LOOP-003,Old campfire memory omen,testing,feature,core-loop,medium,"fire,light,o
 MAP-002-A,First biome foraging table,next,feature,world,high,"map,biome,foraging",docs/planning/items/MAP-002-A.md
 MAP-002-B,Generic gather uses biome candidates,next,feature,world,high,"gather,biome,foraging",docs/planning/items/MAP-002-B.md
 MAP-002-C,Biome foraging text variants,next,content,world,medium,"gather,biome,copy",docs/planning/items/MAP-002-C.md
+MAP-003,Playable map expansion,next,content,world,high,"map,world,exploration,regions",docs/planning/items/MAP-003-playable-map-expansion.md
 NAV-001,Location-to-location route finding,testing,feature,world,medium,"navigation,movement,npc,world",docs/planning/items/NAV-001-location-route-finding.md
 NPC-002,Hunter auto-program MVP,backlog,feature,npc,high,"npc,ecology,hunting,living-world",docs/planning/items/NPC-002-hunter-auto-program.md
 NPC-003,Herbalist service layer,next,technical,npc,medium,"npc,herbalist,architecture,world-tick",docs/planning/items/NPC-003-herbalist-service-layer.md

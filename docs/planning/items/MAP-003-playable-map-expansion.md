@@ -1,0 +1,63 @@
+---
+id: MAP-003
+title: Playable map expansion
+status: next
+type: content
+area: world
+priority: high
+estimate: 2-4h
+tags:
+  - map
+  - world
+  - exploration
+  - regions
+---
+
+# MAP-003: Playable map expansion
+
+## Goal
+
+Expand the playable waking-world map because active players have already explored nearly everything currently reachable.
+
+This is a content pressure task, not only a future worldbuilding wish. The first slice should add enough reachable space that returning players have new paths, landmarks and small risks to discover without requiring a new major system first.
+
+## First Scope
+
+- Add a small but meaningful expansion to the existing `z = 0` waking-world map.
+- Prefer expanding old edge regions and adding one adjacent new region over scattering isolated rooms.
+- Add exits in both directions and avoid duplicate exits from one location in the same direction.
+- Include enough authored texture that new rooms do not feel like blank filler:
+  - location names and descriptions;
+  - a few visible features with inspect text;
+  - resource nodes where the biome supports them;
+  - at least a few creature/NPC seed hooks if appropriate.
+- Keep the first expansion near the current frontier loop so it is reachable by existing characters without teleporting.
+
+## Candidate Directions
+
+- More cells beyond the bridge/gate pressure area, so the settlement edge no longer feels like the end of the world.
+- A deeper forest fringe with higher uncertainty and stronger need for light/attention.
+- More meadow/riverbank approaches that make hunting, gathering and patrol routes less repetitive.
+- A path toward a future settlement entrance, without opening the full settlement if that belongs to `SETTLE-001`.
+
+## Acceptance
+
+- Players can reach new locations through ordinary movement from the current waking-world map.
+- New locations have bidirectional exits and pass seed/map validation.
+- New regions or region expansions have coherent names and descriptions.
+- New visible features are not bare labels only; direct `/examine <feature>` should add meaning, constraint, use or atmosphere.
+- Existing start/tutorial/dream locations are not moved or broken.
+- World seed tests pass.
+
+## Implementation Notes
+
+- Active hand-edited map data lives under `prisma/data/world/`; update split files there first.
+- Update `docs/world/world_map.md` or nearby map docs if the ASCII/reference map would otherwise drift.
+- If the expansion adds stable creature, feature or resource nouns, check `src/content/lexicon/worldLexicon.ts`.
+- Keep this as a first expansion slice. Do not try to solve full cartography, fog of war, settlement interiors, factions or broad procedural generation here.
+
+## Follow-Ups
+
+- `MAP-003-A`: choose expansion direction and sketch the first 10-20 reachable cells.
+- `MAP-003-B`: implement the first expansion in split seed data with exits/resources/features.
+- `MAP-003-C`: add seed/map validation or docs updates for the new region shape if existing checks are not enough.
