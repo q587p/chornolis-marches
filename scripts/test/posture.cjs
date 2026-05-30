@@ -2,10 +2,12 @@ const assert = require("node:assert/strict");
 
 require("ts-node/register");
 
-const { EMPTY_KEYBOARD_BUTTON, buildMainReplyKeyboard, buildTutorialSecondStepReplyKeyboard, buildTutorialStartReplyKeyboard, postureActionLabelsForState, shouldShowInventoryButton, shouldUseFocusedTutorialReplyKeyboard } = require("../../src/ui/replyKeyboard");
-const { TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY } = require("../../src/services/tutorial");
+const { EMPTY_KEYBOARD_BUTTON, buildAdminFireReplyKeyboard, buildAdminMenuReplyKeyboard, buildAdminResourcesReplyKeyboard, buildMainReplyKeyboard, buildTutorialSecondStepReplyKeyboard, buildTutorialStartReplyKeyboard, mainStatusLabelForPlayer, postureActionLabelsForState, shouldShowInventoryButton, shouldUseFocusedTutorialReplyKeyboard } = require("../../src/ui/replyKeyboard");
+const { TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY } = require("../../src/services/tutorial");
 const { formatObservedPostureText, formatPostureText } = require("../../src/utils/playerText");
 const { AUTO_DREAM_BLOCK_MESSAGE, isAutoBlockedInLocation, shouldAutoStandBeforeAction } = require("../../src/handlers/auto");
+const { playerRestStartObserverText, playerRestStopObserverText, playerSitObserverText, playerStandObserverText, playerTutorialSleepObserverText, playerTutorialWakeObserverText } = require("../../src/services/playerVisibility");
+const { activePlayerRestActionWhere } = require("../../src/services/posture");
 
 assert.equal(formatPostureText({ posture: "STANDING", isResting: false }), "Ви стоїте.");
 assert.equal(formatPostureText({ posture: "SITTING", isResting: false }), "Ви сидите.");
@@ -17,6 +19,16 @@ assert.equal(formatObservedPostureText({ posture: "SITTING", isResting: false })
 assert.equal(formatObservedPostureText({ posture: "SITTING", isResting: true }), "Сидить і відпочиває.");
 assert.equal(formatObservedPostureText({ posture: "SITTING", isResting: true, grammaticalGender: "PLURAL" }), "Сидять і відпочивають.");
 assert.equal(formatObservedPostureText({ posture: "SITTING", isResting: true, isSleeping: true }), "Спить. Уві сні сидить і відпочиває.");
+assert.equal(mainStatusLabelForPlayer({ id: 1, currentLocation: { key: TUTORIAL_REST_LOCATION_KEY, z: -13, region: { key: "dream_tutorial" } }, hp: 42, hpMax: 42, stamina: 42, staminaMax: 42 }), "❤️ повно · ⚡ повно");
+assert.equal(mainStatusLabelForPlayer({ id: 1, currentLocation: { key: TUTORIAL_REST_LOCATION_KEY, z: -13, region: { key: "dream_tutorial" } }, hp: 42, hpMax: 42, stamina: 10, staminaMax: 42 }), "❤️ повно · ⚡ мало");
+assert.equal(mainStatusLabelForPlayer({ id: 1, currentLocation: { key: TUTORIAL_START_LOCATION_KEY, z: -13, region: { key: "dream_tutorial" } }, hp: 42, hpMax: 42, stamina: 42, staminaMax: 42 }), undefined);
+assert.equal(mainStatusLabelForPlayer({ id: 1, currentLocation: { key: TUTORIAL_START_LOCATION_KEY, z: -13, region: { key: "dream_tutorial" } }, hp: 42, hpMax: 42, stamina: 20, staminaMax: 42 }, { hasRestLesson: true }), "❤️ повно · ⚡ середньо");
+assert.equal(playerSitObserverText({ id: 1, nameNominative: "Орина", grammaticalGender: "FEMININE" }), "Орина сідає.");
+assert.equal(playerStandObserverText({ id: 1, nameNominative: "Вербові", grammaticalGender: "PLURAL" }), "Вербові встають.");
+assert.equal(playerRestStartObserverText({ id: 1, nameNominative: "Травник", grammaticalGender: "MASCULINE" }), "Травник сідає й починає відпочивати.");
+assert.equal(playerRestStopObserverText({ id: 1, nameNominative: "Вербові", grammaticalGender: "PLURAL" }), "Вербові закінчують відпочинок і лишаються сидіти.");
+assert.equal(playerTutorialSleepObserverText({ id: 1, nameNominative: "Орина", grammaticalGender: "FEMININE" }), "Орина заплющує очі й провалюється в навчальний сон.");
+assert.equal(playerTutorialWakeObserverText({ id: 1, nameNominative: "Вербові", grammaticalGender: "PLURAL" }), "Вербові повертаються зі сну й розплющують очі.");
 
 assert.deepEqual(postureActionLabelsForState({ posture: "STANDING", isResting: false }), ["Сісти", "🧘 Відпочити"]);
 assert.deepEqual(postureActionLabelsForState({ posture: "SITTING", isResting: false }), ["Встати", "🧘 Відпочити"]);
@@ -28,6 +40,12 @@ assert.equal(shouldAutoStandBeforeAction({ posture: "SITTING", isResting: false 
 assert.equal(shouldAutoStandBeforeAction({ posture: "SITTING", isResting: false }, "gather"), true);
 assert.equal(shouldAutoStandBeforeAction({ posture: "SITTING", isResting: false }, "look"), false);
 assert.equal(shouldAutoStandBeforeAction({ posture: "STANDING", isResting: false }, "move"), false);
+assert.deepEqual(activePlayerRestActionWhere(42), {
+  actorType: "PLAYER",
+  playerId: 42,
+  type: "REST",
+  status: { in: ["QUEUED", "RUNNING"] },
+});
 assert.equal(isAutoBlockedInLocation({ key: TUTORIAL_START_LOCATION_KEY, z: -13, region: { key: "dream_tutorial" } }), true);
 assert.equal(isAutoBlockedInLocation({ key: "shallow_cave", z: -1, region: { key: "borderland" } }), false);
 assert.equal(isAutoBlockedInLocation({ key: "deep_dream", z: -10, region: { key: "dreams" } }), true);
@@ -116,5 +134,27 @@ const tutorialRestButtons = buildMainReplyKeyboard({
   statusLabel: "❤️ добре · ⚡ повна",
 }).keyboard.map((row) => row.map((button) => button.text));
 assert.equal(tutorialRestButtons.flat().includes("❤️ добре · ⚡ повна"), true);
+
+const adminMainButtons = buildMainReplyKeyboard({ showAdminMenu: true }).keyboard.map((row) => row.map((button) => button.text));
+assert.equal(adminMainButtons.flat().includes("🛠 Адмін меню (/adminMenu)"), true);
+assert.equal(adminMainButtons.flat().includes("🧭 Допомога"), false);
+
+const adminMenuButtons = buildAdminMenuReplyKeyboard().keyboard.map((row) => row.map((button) => button.text));
+assert.equal(adminMenuButtons.flat().includes("📊 Статистика (/stat)"), true);
+assert.equal(adminMenuButtons.flat().includes("🌲 Світ (/world)"), true);
+assert.equal(adminMenuButtons.flat().includes("👥 Усі (/all)"), true);
+assert.equal(adminMenuButtons.flat().includes("🧭 Телепорт (/teleport)"), true);
+assert.equal(adminMenuButtons.flat().includes("✨ Відновити снагу (/restAdmin)"), true);
+assert.equal(adminMenuButtons.flat().includes("🌿 Ресурси"), true);
+assert.equal(adminMenuButtons.flat().includes("🔥 Вогонь"), true);
+
+const adminResourceButtons = buildAdminResourcesReplyKeyboard().keyboard.flat().map((button) => button.text);
+assert.equal(adminResourceButtons.includes("🍓 Додати ягоди (/restoreBerries)"), true);
+assert.equal(adminResourceButtons.includes("🌿 Ключі ресурсів (/addResourceHelp)"), true);
+
+const adminFireButtons = buildAdminFireReplyKeyboard().keyboard.flat().map((button) => button.text);
+assert.equal(adminFireButtons.includes("🔥 Додати вогнище (/addCampfire)"), true);
+assert.equal(adminFireButtons.includes("🕯 Додати факел (/addTorch)"), true);
+assert.equal(adminFireButtons.includes("🪵 Додати хмиз (/addTwigs)"), true);
 
 console.log("Posture helpers OK");

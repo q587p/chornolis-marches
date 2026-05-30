@@ -74,6 +74,7 @@ User preference:
 - For player-facing release work, update `news.md` together with `CHANGELOG.md` and release notes unless the user explicitly says not to publish a news entry.
 - Changelog and release-note titles should describe the final scope of the patch/minor after follow-up fixes and additions, not only the initial change that started the version.
 - Do not include internal operational reminders about package files.
+- Do not include scribe/admin-only commands, hidden service URLs, secrets, or debug-only tooling in public Ukrainian `news.md`; document those in changelog, release notes, `/adminHelp`, `/adminMenu`, and admin docs instead.
 - Keep changelog useful and clear.
 - Avoid mentioning hidden implementation details unless they matter to users/admins.
 - In public Ukrainian news, avoid exposing named characters as `NPC` or listing seeded/reserved NPC names when the player-facing point can be described diegetically, e.g. "мисливиця біля лісу" instead of a specific internal character name.

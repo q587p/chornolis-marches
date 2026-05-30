@@ -10,6 +10,7 @@ import { isTutorialFastRestLocationKey, rememberTutorialCommandHint, TUTORIAL_DE
 import { prisma } from "../db";
 import { getPlayerRestStaminaCap } from "../services/locationFeatures";
 import { escapeHtml } from "../utils/text";
+import { notifyPlayerObservers, playerRestStartObserverText, playerRestStopObserverText } from "../services/playerVisibility";
 
 async function replyOrEdit(ctx: any, text: string, options?: any) {
   if (ctx.callbackQuery?.message) {
@@ -27,8 +28,9 @@ function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
 }
 
-async function beginRestNow(ctx: any, playerId: number) {
+async function beginRestNow(bot: Bot, ctx: any, playerId: number) {
   const hadQueue = await hasPlayerActionQueueControls(playerId);
+  const beforeRest = await getPlayerByTelegramId(ctx.from.id);
   await startPlayerRest(playerId);
   const suffix = hadQueue ? "\n\nПоточну дію та чергу скасовано." : "";
   const player = await getPlayerByTelegramId(ctx.from.id);
@@ -42,6 +44,13 @@ async function beginRestNow(ctx: any, playerId: number) {
   await replyOrEdit(ctx, `${await playerRestStatusText(playerId)}${suffix}`, {
     reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
   });
+  if (beforeRest && !beforeRest.isResting) {
+    await notifyPlayerObservers(bot, {
+      playerId,
+      locationId: beforeRest.currentLocationId,
+      observerText: playerRestStartObserverText,
+    });
+  }
 
   if (shouldTeachRest) {
     const sonLine = location?.key === TUTORIAL_REST_LOCATION_KEY
@@ -54,7 +63,7 @@ async function beginRestNow(ctx: any, playerId: number) {
   }
 }
 
-async function startRest(ctx: any) {
+async function startRest(bot: Bot, ctx: any) {
   const from = ctx.from;
   if (!from) return;
   const player = await getPlayerByTelegramId(from.id);
@@ -74,16 +83,16 @@ async function startRest(ctx: any) {
     return;
   }
 
-  await beginRestNow(ctx, player.id);
+  await beginRestNow(bot, ctx, player.id);
 }
 
 export function registerRestHandlers(bot: Bot) {
-  bot.command("rest", startRest);
-  bot.hears(["🧘 Відпочити", "🔥 Відпочити"], startRest);
+  bot.command("rest", (ctx) => startRest(bot, ctx));
+  bot.hears(["🧘 Відпочити", "🔥 Відпочити"], (ctx) => startRest(bot, ctx));
 
   bot.callbackQuery("rest:start", async (ctx) => {
     await safeAnswerCallbackQuery(ctx);
-    await startRest(ctx);
+    await startRest(bot, ctx);
   });
 
   bot.callbackQuery("rest:confirm-start", async (ctx) => {
@@ -94,7 +103,7 @@ export function registerRestHandlers(bot: Bot) {
     }
 
     await safeAnswerCallbackQuery(ctx, "Починаємо відпочинок.");
-    await beginRestNow(ctx, player.id);
+    await beginRestNow(bot, ctx, player.id);
   });
 
   bot.callbackQuery("rest:queue-rest", async (ctx) => {
@@ -117,6 +126,13 @@ export function registerRestHandlers(bot: Bot) {
     }
 
     await stopPlayerRest(player.id);
+    if (player.isResting) {
+      await notifyPlayerObservers(bot, {
+        playerId: player.id,
+        locationId: player.currentLocationId,
+        observerText: playerRestStopObserverText,
+      });
+    }
     const accelerated = await accelerateFirstQueuedPlayerAction(player.id);
     await safeAnswerCallbackQuery(ctx, accelerated ? "Відпочинок перервано, дія починається." : "Відпочинок перервано.");
     await replyOrEdit(ctx, `Ви перервали відпочинок.\n\n${await renderPlayerActionQueue(player.id)}`, await actionQueueReplyOptions(player.id));

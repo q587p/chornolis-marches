@@ -7,6 +7,8 @@ require("ts-node/register");
 const { canSendIdleReminder, canSendProactiveMessage, canSendScheduledIdleReminder, idleReminderSceneKeyForLocation, isAutoAfkDue } = require("../../src/services/sessionPresence");
 
 assert.equal(canSendProactiveMessage({ sessionPresence: "ACTIVE", remindersPaused: false }), true);
+assert.equal(canSendProactiveMessage({ sessionPresence: "ACTIVE", remindersPaused: false, onboardingComplete: false }), false);
+assert.equal(canSendProactiveMessage({ sessionPresence: "ACTIVE", remindersPaused: false, onboardingComplete: true }), true);
 assert.equal(canSendProactiveMessage({ sessionPresence: "AFK", remindersPaused: false }), false);
 assert.equal(canSendProactiveMessage({ sessionPresence: "ENDED", remindersPaused: false }), false);
 assert.equal(canSendProactiveMessage({ sessionPresence: "ACTIVE", remindersPaused: true }), false);

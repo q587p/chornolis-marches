@@ -3,6 +3,7 @@ import { type Direction } from "@prisma/client";
 import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import { formatLifeState, formatResourceState } from "../utils/playerText";
+import { isConfiguredAdminTelegramId } from "../services/adminAccess";
 import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
 import { TUTORIAL_DEEP_REST_LOCATION_KEY, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY, hasTutorialCommandHint, hasTutorialInventoryAvailable, isTutorialLocation, lockedExitDirections } from "../services/tutorial";
 
@@ -18,6 +19,7 @@ type MainKeyboardState = {
   lockedExits?: Direction[];
   canExamine?: boolean;
   showUtilityActions?: boolean;
+  showAdminMenu?: boolean;
 };
 
 export const EMPTY_KEYBOARD_BUTTON = "⠀";
@@ -70,7 +72,7 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   keyboard.text(directionButton("EAST", "Схід ➡️"));
   keyboard.row();
 
-  keyboard.text(utilityButton("🧭 Допомога"));
+  keyboard.text(utilityButton(state.showAdminMenu ? "🛠 Адмін меню (/adminMenu)" : "🧭 Допомога"));
   keyboard.text(directionButton("SOUTH", "⬇️ Південь"));
   keyboard.text(utilityButton("☰ Меню")).row();
 
@@ -100,6 +102,16 @@ export function buildTutorialSecondStepReplyKeyboard() {
   });
 }
 
+type StatusLabelPlayer = {
+  id: number;
+  currentLocation?: { key: string; z: number; region?: { key: string } | null } | null;
+  hp: number;
+  hpMax: number | null;
+  stamina: number;
+  staminaMax: number | null;
+  showTechnicalDetails?: boolean | null;
+};
+
 function statusButtonLabel(player: { hp: number; hpMax: number | null; stamina: number; staminaMax: number | null }) {
   const hpMax = player.hpMax ?? BASE_HP;
   const staminaMax = player.staminaMax ?? BASE_STAMINA;
@@ -108,6 +120,41 @@ function statusButtonLabel(player: { hp: number; hpMax: number | null; stamina: 
 
 function exactStatusButtonLabel(player: { hp: number; hpMax: number | null; stamina: number; staminaMax: number | null }) {
   return `❤️ ${player.hp}/${player.hpMax ?? BASE_HP} · ⚡ ${player.stamina}/${player.staminaMax ?? BASE_STAMINA}`;
+}
+
+export function mainStatusLabelForPlayer(player: StatusLabelPlayer, options: { hasRestLesson?: boolean } = {}) {
+  const isTutorialDream = player.currentLocation ? isTutorialLocation(player.currentLocation) : false;
+  const tutorialStatusVisible = !isTutorialDream
+    || player.currentLocation?.key === TUTORIAL_REST_LOCATION_KEY
+    || player.currentLocation?.key === TUTORIAL_DEEP_REST_LOCATION_KEY
+    || Boolean(options.hasRestLesson);
+  if (!tutorialStatusVisible) return undefined;
+
+  if (player.currentLocation?.key === TUTORIAL_REST_LOCATION_KEY) return statusButtonLabel(player);
+  return playerCanShowTechnicalDetails(player) ? exactStatusButtonLabel(player) : statusButtonLabel(player);
+}
+
+export async function mainStatusLabelForPlayerId(playerId: number) {
+  const player = await prisma.player.findUnique({
+    where: { id: playerId },
+    select: {
+      id: true,
+      hp: true,
+      hpMax: true,
+      stamina: true,
+      staminaMax: true,
+      showTechnicalDetails: true,
+      currentLocation: {
+        select: {
+          key: true,
+          z: true,
+          region: { select: { key: true } },
+        },
+      },
+    },
+  });
+  if (!player) return undefined;
+  return mainStatusLabelForPlayer(player, { hasRestLesson: await hasTutorialCommandHint(player.id, "rest") });
 }
 
 export function buildMenuReplyKeyboard(options: { canSeeStats?: boolean } = {}) {
@@ -125,6 +172,57 @@ export function buildMenuReplyKeyboard(options: { canSeeStats?: boolean } = {}) 
     .text("🌙 AFK / відійти")
     .text("🚪 Завершити сесію");
   return keyboard.resized().persistent(false);
+}
+
+export function buildAdminMenuReplyKeyboard() {
+  return new Keyboard()
+    .text("📊 Статистика (/stat)")
+    .text("🌲 Світ (/world)")
+    .row()
+    .text("👥 Усі (/all)")
+    .text("📍 Місцини (/locationAll)")
+    .row()
+    .text("🧭 Телепорт (/teleport)")
+    .text("✨ Відновити снагу (/restAdmin)")
+    .text("🌿 Ресурси")
+    .row()
+    .text("🦴 Падальний рів (/carcassQuest)")
+    .row()
+    .text("🔥 Вогонь")
+    .text("🛠 Повна довідка (/adminHelp)")
+    .row()
+    .text("↩️ Назад")
+    .resized()
+    .persistent(false);
+}
+
+export function buildAdminResourcesReplyKeyboard() {
+  return new Keyboard()
+    .text("🌿 Ключі ресурсів (/addResourceHelp)")
+    .row()
+    .text("🍓 Додати ягоди (/restoreBerries)")
+    .text("🌱 Додати трави (/restoreHerbs)")
+    .row()
+    .text("🍄 Додати гриби (/restoreMushrooms)")
+    .text("➕ Додати ресурс (/addResource)")
+    .row()
+    .text("🛠 Адмін меню (/adminMenu)")
+    .text("↩️ Назад")
+    .resized()
+    .persistent(false);
+}
+
+export function buildAdminFireReplyKeyboard() {
+  return new Keyboard()
+    .text("🔥 Додати вогнище (/addCampfire)")
+    .row()
+    .text("🕯 Додати факел (/addTorch)")
+    .text("🪵 Додати хмиз (/addTwigs)")
+    .row()
+    .text("🛠 Адмін меню (/adminMenu)")
+    .text("↩️ Назад")
+    .resized()
+    .persistent(false);
 }
 
 export async function buildMainReplyKeyboardForTelegramId(telegramId: number, isAuto = false) {
@@ -162,16 +260,11 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
   const inventoryCount = await prisma.playerResource.count({ where: { playerId: player.id, amount: { gt: 0 } } });
   const exits = player.currentLocation?.exitsFrom.map((exit) => exit.direction) ?? [];
   const lockedExits = player.currentLocationId ? Array.from((await lockedExitDirections(player.currentLocationId)).keys()) : [];
-  const showTechnicalDetails = playerCanShowTechnicalDetails(player);
   const isTutorialDream = player.currentLocation ? isTutorialLocation(player.currentLocation) : false;
   const tutorialInventoryAvailable = isTutorialDream ? await hasTutorialInventoryAvailable(player.id) : false;
   const hasInventory = shouldShowInventoryButton({ inventoryCount, isTutorialDream, tutorialInventoryAvailable });
   const hasRestLesson = await hasTutorialCommandHint(player.id, "rest");
   const hasExamineLesson = await hasTutorialCommandHint(player.id, "examine");
-  const tutorialStatusVisible = !isTutorialDream
-    || player.currentLocation?.key === TUTORIAL_REST_LOCATION_KEY
-    || player.currentLocation?.key === TUTORIAL_DEEP_REST_LOCATION_KEY
-    || hasRestLesson;
   const tutorialExamineVisible = !isTutorialDream
     || player.currentLocation?.key === TUTORIAL_FORAGING_LOCATION_KEY
     || hasExamineLesson;
@@ -188,17 +281,14 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
     isAuto,
     exits,
     hasInventory,
-    statusLabel: tutorialStatusVisible
-      ? player.currentLocation?.key === TUTORIAL_REST_LOCATION_KEY
-        ? statusButtonLabel(player)
-        : showTechnicalDetails ? exactStatusButtonLabel(player) : statusButtonLabel(player)
-      : undefined,
+    statusLabel: mainStatusLabelForPlayer(player, { hasRestLesson }),
     posture: player.posture,
     isResting: player.isResting,
     showPostureActions: false,
     isTutorialDream,
     canExamine: tutorialExamineVisible,
     showUtilityActions: !isTutorialDream,
+    showAdminMenu: player.role === "SCRIBE" || isConfiguredAdminTelegramId(telegramId),
     lockedExits,
   });
 }

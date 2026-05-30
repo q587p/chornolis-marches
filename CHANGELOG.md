@@ -9,6 +9,56 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.20 - Name review, social hints, admin menu and visibility polish - 12026-05-30
+
+### Changed
+
+- Prepared character names now explicitly tell players that scribes have already checked the name.
+- Custom character names now clearly say they can be used immediately while still waiting for later scribe review.
+- Character cards reuse the same name-review wording so pending custom names no longer sound like a blocking error.
+- Unknown-input suggestions now include stable slash-command hints for more actions, and the fallback points to `❔ Help` (`/help`) and `Menu` (`/menu`) with clearer labels.
+- Targetless social inputs such as `smile`, `посміх` and `усміхнутися` now perform a visible location gesture, and typo suggestions can point toward close social-signal aliases.
+- Character cards now include a `Signals` button beside inventory, opening targetless gestures such as smile, nod, sigh or wave without needing to inspect a target first.
+- Standing up now cancels any queued or running rest action as well as the resting flag, so stale rest actions no longer block the next command after pressing `Stand`.
+- The tutorial gate fallback now nudges players who type the written phrase directly to say it aloud with `say` / `/say`, and copied `Ви сказали:` echoes now parse back into speech.
+- Auto stand-up notices now include the matching `/stand` command hint.
+- Sitting, standing, rest start/stop, tutorial sleep entry and tutorial wake now broadcast concise observer messages to other players in the same location.
+- Visible reply-keyboard status changes now get a short refresh message after quick actions or recovery, so stamina labels update without requiring a chat reopen.
+- Local movement notifications now clean up older movement inline buttons: only the latest tracks button stays active per location/chat, and a character's arrival target button is removed when that character leaves.
+- Bulk pickup now treats visible corpses as ground items too: `get all`, `get all corpse` and type filters such as `get all berries` can collect matching visible items, and `drop all [type]` can drop whole carried stacks while plain `drop all` keeps held lit torches in hand.
+- Corpse target buttons now hide decay timer details and use cleaner labels without the old colon/action suffix.
+- Mouse creature text now uses sexed Ukrainian lexicon forms: male mice are `миш`, female mice are `миша`, with matching cases in corpse and target labels.
+- Herb resource descriptions now use the clearer Ukrainian `алхімія` wording.
+- The "deaths by characters" stat now includes non-animal NPC kills as well as player kills.
+- Scribes now get an `adminMenu` button in the main keyboard instead of the ordinary help button, with submenus for statistics, world views, teleport, resources, fire tools and full admin help.
+- Scribe fire-supply commands `/addTorch [player] [amount]` and `/addTwigs [player] [amount]` now accept a final amount, defaulting to 1.
+- Scribe `/addCreature` no longer silently clamps larger counts to 50; larger additions are created in batches of 50 with an explicit one-command cap.
+- Tutorial dream pacing lines now use the correct nominative pronoun in one monument/hesitation response.
+- Onboarding now keeps incomplete players out of location-level proactive messages until their name is confirmed.
+- Target lists now show a `freshen all` (`/freshen_all`) button when several suitable corpses can be queued for freshening.
+- Scribes can now force the gate carcass-dropoff hunting loop on or into stand-down with `/carcassQuest start` and `/carcassQuest stop`.
+- Gate-hunting saturation now counts nearby locations by coordinate radius instead of only the gate's own technical region, so bridge, riverbank and meadow prey pressure can reactivate the hunter loop.
+
+### Tests
+
+- Extended character-name helper coverage for prepared-name and custom-name review copy.
+- Extended input-alias coverage for formatted suggestion slash-command hints.
+- Extended ecology-stat helper coverage for NPC character kill counting.
+- Extended reply-keyboard coverage for the scribe admin menu and its resource/fire submenus.
+- Added admin creature helper coverage for count parsing, batching and cap reporting.
+- Extended tutorial voice coverage for the corrected nominative-pronoun line.
+- Extended posture helper coverage for observer-facing state-change text.
+- Extended posture helper coverage for reply-keyboard status label visibility.
+- Extended target-formatting and text-target coverage so corpse buttons cannot leak decay timer text.
+- Extended character-name helper coverage for sexed mouse lexicon forms.
+- Extended gate-hunting helper coverage for manual start/stop overrides.
+- Extended gate-hunting helper coverage for the cross-region coordinate radius.
+- Ran `npm test`.
+- Ran `npm run build`.
+- Ran `node scripts/test/character-names.cjs`.
+
+---
+
 ## 0.13.19 - Session presence, quieter forest reactions and PR discipline - 12026-05-30
 
 ### Added

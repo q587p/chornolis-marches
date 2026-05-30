@@ -22,8 +22,11 @@ The current lane is the three-month vertical slice:
 - NPC-005: add NPC hunger and food behavior so hunters and herbalists can eat through shared survival/inventory rules.
 - NPC-002: finish the hunter auto-program MVP after the first state-machine slice: real torch bundle/light state via `NPC-004`, inspect/check beat, route/radius tuning and recovery rules for claimed carcasses.
 - ECO-003: tune gate-hunting saturation after the first 0.13.12 slice; the sign, rewards and hunter stand-down behavior exist, but thresholds, persisted linger/cooldown, per-tick saturation caching for larger hunter counts, and the temporary plain `/put` default still need follow-up.
+- ECO-004: add a quiet population-floor restoration safeguard so ordinary animal species that drop to zero return to their starter population at starter locations; richer spirit/migration recovery remains later.
+- ECO-005: add a first animal-restoration offering loop where inspectable hare/mouse charms or small капища accept fitting gifts such as herbs and berries, then later help critically low prey populations recover without becoming a spawn shop.
 - LOOP-003: tune old campfire memory omens after the first small reveal slice; future work can add more authored locations and traces without turning it into a ritual/reward system.
 - NPC-003: extract herbalist behavior into its own service layer, shaped like the hunter service, before adding more visible herbalist/learning behavior.
+- MAP-003: expand the playable waking-world map with new reachable locations, region growth and enough authored features/resources that active players have fresh ground to explore.
 - WPN-001: minimal weapon catalog and equip/unequip foundation; keep it tied to existing resource inventory and do not start full combat.
 - WPN-002: weapon-aware look/examine/freshen/attack text; require a sharp equipped weapon for freshening, but keep current target eligibility.
 

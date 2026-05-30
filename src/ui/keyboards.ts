@@ -11,6 +11,7 @@ type TargetRef = {
   canAttack?: boolean;
   isAnimal?: boolean;
   isCorpse?: boolean;
+  canFreshen?: boolean;
 };
 
 const TARGETS_PER_PAGE = 8;
@@ -138,6 +139,17 @@ export function buildSocialSignalKeyboard(target: Pick<TargetRef, "type" | "id">
   return keyboard;
 }
 
+export function buildLocationSocialSignalKeyboard() {
+  const keyboard = new InlineKeyboard();
+  const targetlessSocials = SOCIAL_DEFINITIONS.filter((social) => social.targetlessActorMessage && social.targetlessRoomMessage);
+  for (const [index, social] of targetlessSocials.entries()) {
+    keyboard.text(social.label, `character:signal:${social.id}`);
+    if (index % 2 === 1) keyboard.row();
+  }
+  if (targetlessSocials.length % 2 === 1) keyboard.row();
+  return keyboard.text("↩️ Назад", "character:back");
+}
+
 export function buildCorpseActionKeyboard(target: ResolvedTarget) {
   const keyboard = new InlineKeyboard().text("🔎 Оглянути труп", `social:inspect:${target.kind}:${target.id}:known`).row();
   keyboard.text("🤲 Підібрати", `social:pickup:${target.kind}:${target.id}`).row();
@@ -147,6 +159,7 @@ export function buildCorpseActionKeyboard(target: ResolvedTarget) {
 }
 
 function targetButtonLabel(target: TargetRef) {
+  if (target.isCorpse) return target.label;
   return target.actionLabel ? `${target.label} — ${target.actionLabel}` : target.label;
 }
 
@@ -178,6 +191,12 @@ export function buildTargetListKeyboard(targets: TargetRef[], options: TargetLis
     keyboard.text(labels[start + index] ?? target.label, `target:${target.type}:${target.id}`).row();
   }
 
+  const freshenableCorpses = targets.filter((target) => target.type === "creature" && target.isCorpse && target.canFreshen);
+  if (freshenableCorpses.length > 1) {
+    keyboard.text("🔪 Освіжувати всі", "social:freshenAll");
+    if (totalPages > 1 && options.pageCallbackPrefix) keyboard.row();
+  }
+
   if (totalPages > 1 && options.pageCallbackPrefix) {
     if (page > 0) keyboard.text("◀️ Назад", `${options.pageCallbackPrefix}:${page - 1}`);
     keyboard.text(`${page + 1}/${totalPages}`, "targetPage:noop");
@@ -185,6 +204,9 @@ export function buildTargetListKeyboard(targets: TargetRef[], options: TargetLis
     keyboard.row();
   }
 
+  while (keyboard.inline_keyboard.length > 0 && keyboard.inline_keyboard[keyboard.inline_keyboard.length - 1]?.length === 0) {
+    keyboard.inline_keyboard.pop();
+  }
   return keyboard;
 }
 

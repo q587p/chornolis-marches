@@ -16,10 +16,11 @@ import { createDebugCampfire, ensureTorchResourceTypes } from "../services/fire"
 import { requireScribeAdmin } from "../services/adminAccess";
 import { adminSecretMatches } from "../services/adminSecret";
 import { syncChatBotCommandsForTelegramId } from "../services/telegramCommands";
-import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
-import { nextResourceAmount, parseAddResourceArgs } from "../services/adminResources";
+import { buildAdminFireReplyKeyboard, buildAdminMenuReplyKeyboard, buildAdminResourcesReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
+import { nextResourceAmount, parseAddResourceArgs, parseAdminInventoryResourceArgs } from "../services/adminResources";
 import { stopAllPlayerAuto } from "./auto";
 import { resetTutorialProgressForPlayer } from "../services/tutorial";
+import { getGateHuntingSaturationState, setCarcassQuestOverride, type CarcassQuestOverride } from "../services/carcassDropoff";
 
 function normalizeLookup(value: string | null | undefined) {
   return String(value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
@@ -173,6 +174,7 @@ export const ADMIN_HELP_TEXT = [
   "Звичайні ігрові команди дивіться в /help. Тут лишено службові й небезпечні інструменти.",
   "",
   "Огляди й службові сторінки",
+  "/adminMenu — кнопкове меню писарських команд",
   "/adminHelp — ця підказка",
   "/world — стан світу й останні події",
   "/stat — службова статистика й посилання на захищену веб-/stat",
@@ -194,13 +196,15 @@ export const ADMIN_HELP_TEXT = [
   "/restAdmin [#id|ім’я|username] — одразу відновити снагу собі або вказаному персонажу до адмінського максимуму",
   "",
   "Додавання у світ",
-  "/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD] — додати тварин",
+  "/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD] — додати тварин; понад 50 створюється батчами, разова межа 500",
   "/addCreatureHelp — список speciesKey для тварин",
   "/addResource <resourceKey> [locationKey|x,y,z] [amount] — відновити ресурс у місцині; без місцини бере поточну, без кількості додає 1",
   "/addResourceHelp — список ключів ресурсів; /addResourse теж працює як запасний варіант",
   "/addCampfire [locationKey|x,y,z|персонаж] — додати звичайне вогнище",
-  "/addTorch [персонаж] — додати факел у речі собі або вказаному персонажу",
-  "/addTwigs [персонаж] — додати хмиз у речі собі або вказаному персонажу",
+  "/addTorch [персонаж] [кількість] — додати факел у речі собі або вказаному персонажу; без кількості додає 1",
+  "/addTwigs [персонаж] [кількість] — додати хмиз у речі собі або вказаному персонажу; без кількості додає 1",
+  "/carcassQuest start — примусово відновити заклик біля падального рову й мисливський тиск",
+  "/carcassQuest stop — примусово перевести падальний рів у стан «поки досить»",
   "",
   "Прибирання й тестові стани",
   "/forceOld [speciesKey] [count] — зробити кілька тварин похилими для тесту старіння",
@@ -220,7 +224,137 @@ export const ADMIN_HELP_TEXT = [
 ].join("\n");
 
 export function registerAdminHandlers(bot: Bot) {
+  async function replyAdminMenu(ctx: any) {
+    if (!(await requireScribeAdmin(ctx))) return;
+    await ctx.reply("🛠 Адмін меню Писарів. Небезпечні дії лишаються за підтвердженням або з явним форматом команди.", {
+      reply_markup: buildAdminMenuReplyKeyboard(),
+    });
+  }
+
+  async function replyAdminResourcesMenu(ctx: any) {
+    if (!(await requireScribeAdmin(ctx))) return;
+    await ctx.reply([
+      "🌿 Ресурси",
+      "",
+      "Швидкі кнопки додають 1 одиницю в поточній місцині Писаря.",
+      "Для точного додавання: /addResource <resourceKey> [locationKey|x,y,z] [amount].",
+    ].join("\n"), {
+      reply_markup: buildAdminResourcesReplyKeyboard(),
+    });
+  }
+
+  async function replyAdminFireMenu(ctx: any) {
+    if (!(await requireScribeAdmin(ctx))) return;
+    await ctx.reply([
+      "🔥 Вогонь",
+      "",
+      "Без параметрів /addCampfire додає вогнище в поточній місцині Писаря.",
+      "/addTorch і /addTwigs без параметрів додають 1 факел або 1 хмиз Писарю. Останнє число задає кількість: /addTorch #3 5, /addTwigs Вербові 10.",
+    ].join("\n"), {
+      reply_markup: buildAdminFireReplyKeyboard(),
+    });
+  }
+
+  async function replyTeleportMenu(ctx: any) {
+    if (!(await requireScribeAdmin(ctx))) return;
+    await ctx.reply([
+      "🧭 Телепорт",
+      "",
+      "Формат: /teleport [#id|ім’я|username] <locationKey|x,y,z>.",
+      "Без персонажа переносить вас. Для назв із пробілами: /teleport персонаж -> назва місцини.",
+      "",
+      "Список місцин: /locationAll.",
+    ].join("\n"), {
+      reply_markup: buildAdminMenuReplyKeyboard(),
+    });
+  }
+
+  async function replyAddResourceFormat(ctx: any) {
+    if (!(await requireScribeAdmin(ctx))) return;
+    await ctx.reply([
+      "➕ Додати ресурс",
+      "",
+      "Формат: /addResource <resourceKey> [locationKey|x,y,z] [amount].",
+      "Без місцини команда бере поточну місцину Писаря; без кількості додає 1.",
+      "Ключі ресурсів: /addResourceHelp.",
+    ].join("\n"), {
+      reply_markup: buildAdminResourcesReplyKeyboard(),
+    });
+  }
+
+  bot.command(["adminMenu", "adminmenu"], replyAdminMenu);
+  bot.hears(["🛠 Адмін меню", "Адмін меню", "🛠 Адмін меню (/adminMenu)", "Адмін меню (/adminMenu)"], replyAdminMenu);
+  bot.hears(["🌿 Ресурси"], replyAdminResourcesMenu);
+  bot.hears(["🔥 Вогонь"], replyAdminFireMenu);
+  bot.hears(["🧭 Телепорт (/teleport)", "Телепорт (/teleport)"], replyTeleportMenu);
+  bot.hears(["➕ Додати ресурс (/addResource)", "Додати ресурс (/addResource)"], replyAddResourceFormat);
+  bot.hears(["🦴 Падальний рів (/carcassQuest)", "Падальний рів (/carcassQuest)"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+    const state = await getGateHuntingSaturationState();
+    await ctx.reply([
+      "🦴 Падальний рів",
+      "",
+      "/carcassQuest start — примусово відновити заклик до полювання.",
+      "/carcassQuest stop — примусово поставити стан «поки досить».",
+      "",
+      carcassQuestStateLine(state),
+    ].join("\n"), {
+      reply_markup: buildAdminMenuReplyKeyboard(),
+    });
+  });
+
+  function carcassQuestStateLine(state: Awaited<ReturnType<typeof getGateHuntingSaturationState>>) {
+    return `Стан: ${state.active ? "припинено / поки досить" : "активно / заклик діє"}; override=${state.manualOverride ?? "auto"}; внесків=${state.contributionTotal}; здобичі поруч=${state.preyPressure}; вибитих рослинних місць=${state.depletedSignals}.`;
+  }
+
+  bot.command(["carcassQuest", "carcassquest"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+
+    const mode = String(ctx.match ?? "").trim().toLocaleLowerCase("uk-UA");
+    if (mode !== "start" && mode !== "stop") {
+      const state = await getGateHuntingSaturationState();
+      await ctx.reply([
+        "Формат: /carcassQuest start або /carcassQuest stop.",
+        "",
+        "/carcassQuest start — примусово відновлює заклик до полювання.",
+        "/carcassQuest stop — примусово ставить стан «поки досить».",
+        "",
+        carcassQuestStateLine(state),
+      ].join("\n"));
+      return;
+    }
+
+    const override = mode as CarcassQuestOverride;
+    const result = await setCarcassQuestOverride(override);
+    const scribe = ctx.from?.id
+      ? await prisma.player.findUnique({ where: { telegramId: String(ctx.from.id) } })
+      : null;
+    await logEvent("SYSTEM", "Admin changed carcass quest override", `mode=${override}; state=${result.state.active ? "stopped" : "active"}`, result.feature.locationId);
+    await logScribeAction({
+      actionKey: "carcassQuest",
+      scribePlayerId: scribe?.id,
+      scribeTelegramId: ctx.from?.id,
+      scribeName: scribe ? playerDisplayName(scribe) : null,
+      mode: override,
+      outcome: "confirmed",
+      details: `override=${override}; ${carcassQuestStateLine(result.state)}`,
+      locationId: result.feature.locationId,
+    });
+
+    await ctx.reply([
+      override === "start"
+        ? "🦴 Падальний рів знову кличе до здобичі. Заклик до полювання примусово активний."
+        : "🦴 Падальний рів переведено в стан «поки досить». Новий мисливський тиск примусово зупинено.",
+      "",
+      carcassQuestStateLine(result.state),
+    ].join("\n"));
+  });
+
   bot.command(["adminHelp", "adminhelp"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+    await ctx.reply(ADMIN_HELP_TEXT);
+  });
+  bot.hears(["🛠 Повна довідка (/adminHelp)", "Повна довідка (/adminHelp)"], async (ctx) => {
     if (!(await requireScribeAdmin(ctx))) return;
     await ctx.reply(ADMIN_HELP_TEXT);
   });
@@ -250,20 +384,23 @@ export function registerAdminHandlers(bot: Bot) {
 
     await logEvent("SYSTEM", "Scribe access granted", `player=${player.id}; telegramId=${ctx.from.id}`);
     if (ctx.chat?.id) await syncChatBotCommandsForTelegramId(bot.api, ctx.chat.id, ctx.from.id);
-    await ctx.reply("Писарський доступ Порубіжжя надано. Тепер доступна /adminHelp.");
+    await ctx.reply("Писарський доступ Порубіжжя надано. Тепер доступні /adminMenu і /adminHelp.");
   });
 
-  bot.command("addCampfire", async (ctx) => {
+  async function runAddCampfireCommand(ctx: any, rawTarget = String(ctx.match ?? "").trim()) {
     if (!(await requireScribeAdmin(ctx))) return;
 
-    const location = await resolveLocationForAdmin(ctx, String(ctx.match ?? "").trim());
+    const location = await resolveLocationForAdmin(ctx, rawTarget);
     if (!location) return;
 
     const feature = await createDebugCampfire(location.id);
 
     await logEvent("SYSTEM", "Debug campfire added", `${feature.key} at ${location.key}`, location.id);
     await ctx.reply(`🔥 Додано звичайне вогнище у місцині: ${location.name}.\nКлюч: ${feature.key}`);
-  });
+  }
+
+  bot.command("addCampfire", (ctx) => runAddCampfireCommand(ctx));
+  bot.hears(["🔥 Додати вогнище (/addCampfire)", "Додати вогнище (/addCampfire)"], (ctx) => runAddCampfireCommand(ctx, ""));
 
   bot.command("teleport", async (ctx) => {
     if (!(await requireScribeAdmin(ctx))) return;
@@ -325,27 +462,35 @@ export function registerAdminHandlers(bot: Bot) {
     }
   });
 
-  bot.command("addTorch", async (ctx) => {
+  async function runAddTorchCommand(ctx: any, rawTarget = String(ctx.match ?? "").trim()) {
     if (!(await requireScribeAdmin(ctx))) return;
 
-    const player = await resolvePlayerForAdmin(ctx, String(ctx.match ?? "").trim());
+    const parsed = parseAdminInventoryResourceArgs(rawTarget);
+    const player = await resolvePlayerForAdmin(ctx, parsed.playerArg);
     if (!player) return;
     const { torch } = await ensureTorchResourceTypes();
-    await addInventoryResource(player.id, torch.id);
-    await logEvent("SYSTEM", "Debug torch added to inventory", `player=${player.id}`);
-    await ctx.reply(`🕯 Додано факел у речі: ${playerDisplayName(player)}.`);
-  });
+    await addInventoryResource(player.id, torch.id, parsed.amount);
+    await logEvent("SYSTEM", "Debug torch added to inventory", `player=${player.id}; amount=${parsed.amount}`);
+    await ctx.reply(`🕯 Додано факел у речі: ${playerDisplayName(player)} ×${parsed.amount}.`);
+  }
 
-  bot.command("addTwigs", async (ctx) => {
+  bot.command("addTorch", (ctx) => runAddTorchCommand(ctx));
+  bot.hears(["🕯 Додати факел (/addTorch)", "Додати факел (/addTorch)"], (ctx) => runAddTorchCommand(ctx, ""));
+
+  async function runAddTwigsCommand(ctx: any, rawTarget = String(ctx.match ?? "").trim()) {
     if (!(await requireScribeAdmin(ctx))) return;
 
-    const player = await resolvePlayerForAdmin(ctx, String(ctx.match ?? "").trim());
+    const parsed = parseAdminInventoryResourceArgs(rawTarget);
+    const player = await resolvePlayerForAdmin(ctx, parsed.playerArg);
     if (!player) return;
     const twigs = await ensureResourceType("twigs", "хмиз", "Сухі дрібні гілки для підкидання у вогнище.");
-    await addInventoryResource(player.id, twigs.id);
-    await logEvent("SYSTEM", "Debug twigs added to inventory", `player=${player.id}`);
-    await ctx.reply(`🪵 Додано хмиз у речі: ${playerDisplayName(player)}.`);
-  });
+    await addInventoryResource(player.id, twigs.id, parsed.amount);
+    await logEvent("SYSTEM", "Debug twigs added to inventory", `player=${player.id}; amount=${parsed.amount}`);
+    await ctx.reply(`🪵 Додано хмиз у речі: ${playerDisplayName(player)} ×${parsed.amount}.`);
+  }
+
+  bot.command("addTwigs", (ctx) => runAddTwigsCommand(ctx));
+  bot.hears(["🪵 Додати хмиз (/addTwigs)", "Додати хмиз (/addTwigs)"], (ctx) => runAddTwigsCommand(ctx, ""));
 
   async function replyAddResourceHelp(ctx: any) {
     if (!(await requireScribeAdmin(ctx))) return;
@@ -362,10 +507,10 @@ export function registerAdminHandlers(bot: Bot) {
     await ctx.reply(lines.join("\n"));
   }
 
-  async function runAddResourceCommand(ctx: any, defaultResourceKey = "") {
+  async function runAddResourceCommand(ctx: any, defaultResourceKey = "", rawArgs = String(ctx.match ?? "")) {
     if (!(await requireScribeAdmin(ctx))) return;
 
-    const parsed = parseAddResourceArgs(String(ctx.match ?? ""), defaultResourceKey);
+    const parsed = parseAddResourceArgs(rawArgs, defaultResourceKey);
     if (!parsed.resourceKey) {
       await ctx.reply("Вкажи ключ ресурсу. Список: /addResourceHelp.");
       return;
@@ -401,10 +546,14 @@ export function registerAdminHandlers(bot: Bot) {
   }
 
   bot.command(["addResourceHelp", "addresourcehelp", "addResourseHelp", "addresoursehelp"], replyAddResourceHelp);
+  bot.hears(["🌿 Ключі ресурсів (/addResourceHelp)", "Ключі ресурсів (/addResourceHelp)"], replyAddResourceHelp);
   bot.command(["addResource", "addresource", "addResourse", "addresourse"], (ctx) => runAddResourceCommand(ctx));
   bot.command(["restoreBerries", "restoreberries"], (ctx) => runAddResourceCommand(ctx, "berries"));
   bot.command(["restoreHerbs", "restoreherbs"], (ctx) => runAddResourceCommand(ctx, "herbs"));
   bot.command(["restoreMushrooms", "restoremushrooms"], (ctx) => runAddResourceCommand(ctx, "mushrooms"));
+  bot.hears(["🍓 Додати ягоди (/restoreBerries)", "Додати ягоди (/restoreBerries)"], (ctx) => runAddResourceCommand(ctx, "berries", ""));
+  bot.hears(["🌱 Додати трави (/restoreHerbs)", "Додати трави (/restoreHerbs)"], (ctx) => runAddResourceCommand(ctx, "herbs", ""));
+  bot.hears(["🍄 Додати гриби (/restoreMushrooms)", "Додати гриби (/restoreMushrooms)"], (ctx) => runAddResourceCommand(ctx, "mushrooms", ""));
 
   function resetModePromptText() {
     return [

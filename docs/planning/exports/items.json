@@ -278,6 +278,44 @@
     "file": "docs/planning/items/ECO-003-gate-hunting-saturation.md"
   },
   {
+    "id": "ECO-004",
+    "title": "Population floor restoration",
+    "status": "next",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "high",
+    "tags": [
+      "ecology",
+      "creatures",
+      "population",
+      "world-tick"
+    ],
+    "depends_on": [
+      "ECO-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ECO-004-population-floor-restoration.md"
+  },
+  {
+    "id": "ECO-005",
+    "title": "Animal restoration offerings",
+    "status": "next",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "high",
+    "tags": [
+      "ecology",
+      "creatures",
+      "offerings",
+      "location-features"
+    ],
+    "depends_on": [
+      "ECO-004"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ECO-005-animal-restoration-offerings.md"
+  },
+  {
     "id": "ECON-001",
     "title": "Barter and trade",
     "status": "backlog",
@@ -853,6 +891,23 @@
     "file": "docs/planning/items/MAP-002-C.md"
   },
   {
+    "id": "MAP-003",
+    "title": "Playable map expansion",
+    "status": "next",
+    "type": "content",
+    "area": "world",
+    "priority": "high",
+    "tags": [
+      "map",
+      "world",
+      "exploration",
+      "regions"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/MAP-003-playable-map-expansion.md"
+  },
+  {
     "id": "NAV-001",
     "title": "Location-to-location route finding",
     "status": "testing",
@@ -950,6 +1005,29 @@
     ],
     "exports": {},
     "file": "docs/planning/items/NPC-005-npc-hunger-and-food-behavior.md"
+  },
+  {
+    "id": "NPC-006",
+    "title": "Hunter patrol and meat practice loop",
+    "status": "next",
+    "type": "feature",
+    "area": "npc",
+    "priority": "high",
+    "tags": [
+      "npc",
+      "hunting",
+      "cooking",
+      "freshening",
+      "observation-learning",
+      "living-world"
+    ],
+    "depends_on": [
+      "NPC-002",
+      "NPC-005",
+      "PROG-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/NPC-006-hunter-patrol-meat-practice-loop.md"
   },
   {
     "id": "OBS-001-A",
@@ -1300,7 +1378,7 @@
   {
     "id": "ONB-002-C",
     "title": "Uncertain custom-name review status",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "onboarding",
     "priority": "high",
@@ -1411,6 +1489,27 @@
     ],
     "exports": {},
     "file": "docs/planning/items/PROG-003-animal-experience-and-titles.md"
+  },
+  {
+    "id": "PROG-004",
+    "title": "Personal chronicle milestones",
+    "status": "backlog",
+    "type": "feature",
+    "area": "progression",
+    "priority": "medium",
+    "tags": [
+      "journal",
+      "chronicle",
+      "milestones",
+      "cooking",
+      "learning",
+      "personal-history"
+    ],
+    "depends_on": [
+      "FOOD-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/PROG-004-personal-chronicle-milestones.md"
   },
   {
     "id": "REL-001",

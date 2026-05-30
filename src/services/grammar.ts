@@ -1,4 +1,4 @@
-import { formsByNominative } from "../content/lexicon/worldLexicon";
+import { findLexiconEntry, formsByNominative } from "../content/lexicon/worldLexicon";
 
 export type GrammarCase =
   | "nominative"
@@ -41,26 +41,16 @@ const INDECLINABLE_PARTS = new Set([
 
 const KNOWN_FORMS = formsByNominative() as Record<string, Partial<NameForms> & { gender?: Gender; animacy?: Animacy }>;
 
+function lexiconForms(key: string): NameForms {
+  const entry = findLexiconEntry(key);
+  if (!entry) throw new Error(`Unknown lexicon key: ${key}`);
+  return { ...entry.forms };
+}
+
 const KNOWN_SEXED_SPECIES_FORMS: Record<string, Partial<Record<"MALE" | "FEMALE", NameForms>>> = {
   mouse: {
-    MALE: {
-      nominative: "самець миші",
-      genitive: "самця миші",
-      dative: "самцю миші",
-      accusative: "самця миші",
-      instrumental: "самцем миші",
-      locative: "самці миші",
-      vocative: "самцю миші",
-    },
-    FEMALE: {
-      nominative: "самиця миші",
-      genitive: "самиці миші",
-      dative: "самиці миші",
-      accusative: "самицю миші",
-      instrumental: "самицею миші",
-      locative: "самиці миші",
-      vocative: "самице миші",
-    },
+    MALE: lexiconForms("animal.mouse_male"),
+    FEMALE: lexiconForms("animal.mouse"),
   },
   rabbit: {
     MALE: {

@@ -58,6 +58,8 @@ assertAlias("/endSession", { kind: "session-presence", mode: "end" });
 assertAlias("/quit", { kind: "session-presence", mode: "end" });
 assertAlias("end session", { kind: "session-presence", mode: "end" });
 assertAlias("вийти з кущів", { kind: "move", direction: "OUTSIDE" });
+assertAlias("/use_mushrooms", { kind: "use-item", item: "mushrooms" });
+assertAlias("/gather_berries", { kind: "gather", resourceKey: "berries" });
 
 assertAlias("хто", { kind: "who" });
 assertAlias("хтоя", { kind: "me" });
@@ -99,9 +101,12 @@ assertAlias("взяти трави", { kind: "pickup-target", target: "трав�
 assertAlias("take herbs", { kind: "pickup-target", target: "herbs" });
 assertAlias("get mushrooms", { kind: "pickup-target", target: "mushrooms" });
 assertAlias("get all", { kind: "pickup-target", target: "all" });
+assertAlias("get all corpse", { kind: "pickup-target", target: "all corpse" });
+assertAlias("get all berries", { kind: "pickup-target", target: "all berries" });
 assertAlias("pick all", { kind: "pickup-target", target: "all" });
 assertAlias("взяти все", { kind: "pickup-target", target: "все" });
 assertAlias("підняти все", { kind: "pickup-target", target: "все" });
+assertAlias("підняти всі трупи", { kind: "pickup-target", target: "всі трупи" });
 assertAlias("підібрати хмиз", { kind: "pickup-target", target: "хмиз" });
 
 assertAlias("з'їсти ягоди", { kind: "use-item", item: "berries" });
@@ -159,6 +164,8 @@ assertAlias("/auto_stop", { kind: "auto", mode: "stop" });
 assertAlias("сказати Хай стежка буде м'якою.", { kind: "say", text: "Хай стежка буде м'якою." });
 assertAlias("/say Відчинитися", { kind: "say", text: "Відчинитися" });
 assertAlias("Сказати «Відчинитися»", { kind: "say", text: "«Відчинитися»" });
+assertAlias("Ви сказали:\nВідчинитися", { kind: "say", text: "Відчинитися" });
+assertAlias("Ви сказали Відчинитися", { kind: "say", text: "Відчинитися" });
 assertAlias("говорити Відчинись будь ласка", { kind: "say", text: "Відчинись будь ласка" });
 assertAlias("ск Можеш відчинитися", { kind: "say", text: "Можеш відчинитися" });
 assertAlias("/сказ Відчинися", { kind: "say", text: "Відчинися" });
@@ -188,9 +195,13 @@ assertAlias("освіжити труп", { kind: "target-action", action: "fresh
 assertAlias("butcher corpse", { kind: "target-action", action: "freshen", target: "corpse" });
 assertAlias("розібрати труп", { kind: "target-action", action: "freshen", target: "труп" });
 assertAlias("freshen all", { kind: "target-action", action: "freshen", target: "all" });
+assertAlias("/freshen_all", { kind: "target-action", action: "freshen", target: "all" });
 assertAlias("свіжувати все", { kind: "target-action", action: "freshen", target: "все" });
 assertAlias("освіжити всі", { kind: "target-action", action: "freshen", target: "всі" });
 assertAlias("викинути факел", { kind: "drop-inventory-item", target: "факел" });
+assertAlias("drop all", { kind: "drop-inventory-item", target: "all" });
+assertAlias("drop all corpse", { kind: "drop-inventory-item", target: "all corpse" });
+assertAlias("викинути все", { kind: "drop-inventory-item", target: "все" });
 assertAlias("річ ягоди", { kind: "inspect-inventory-item", target: "ягоди" });
 assert.equal(inventoryResourceKeyFromText("mushroom"), "mushrooms");
 assert.equal(inventoryResourceKeyFromText("raw meat"), "raw_meat");
@@ -200,6 +211,9 @@ assert.equal(normalizeCreatureActionText("підбирає факел до ми�
 assert.equal(normalizeCreatureActionText("вертається до воріт із запаленим факелом і запасним у торбі; hunter_returning_for_torches; hunter_torches:2"), "вертається до воріт із запаленим факелом і запасним у торбі");
 assert.equal(normalizeCreatureActionText("claimed_by_hunter:12; мисливець несе здобич до падального рову"), "мисливець несе здобич до падального рову");
 assertAlias("кивнути Здравомир", { kind: "social-signal", signal: "nod", target: "здравомир" });
+assertAlias("smile", { kind: "social-signal", signal: "smile" });
+assertAlias("посміх", { kind: "social-signal", signal: "smile" });
+assertAlias("усміхнутися", { kind: "social-signal", signal: "smile" });
 
 assert.equal(parseAlias("це точно не команда"), null);
 assert.ok(suggestAliasInputs("роздивит").includes("роздивитися"), "Expected alias suggestions to include роздивитися");
@@ -212,5 +226,11 @@ assert.ok(suggestAliasInputs("шеп").includes("шепнути"), "Expected ali
 assert.ok(suggestAliasInputs("огл брама").includes("оглянути"), "Expected alias suggestions to include оглянути");
 assert.ok(suggestAliasEntries("огл брама").map(formatAliasSuggestion).includes("оглянути (/examine)"), "Expected formatted suggestions to include slash command for оглянути");
 assert.ok(suggestAliasEntries("швидк").map(formatAliasSuggestion).includes("швидкий огляд (/glance)"), "Expected formatted suggestions to include slash command for quick glance");
+assert.ok(suggestAliasEntries("стат").map(formatAliasSuggestion).includes("статистика (/stat)"), "Expected formatted suggestions to include slash command for statistics");
+assert.ok(suggestAliasEntries("гриб").map(formatAliasSuggestion).some((suggestion) => suggestion.includes("(/use_mushrooms)")), "Expected formatted suggestions to include slash command for using mushrooms");
+assert.ok(suggestAliasEntries("freshen al").map(formatAliasSuggestion).includes("freshen all (/freshen_all)"), "Expected formatted suggestions to include slash command for bulk freshening");
+assert.ok(suggestAliasInputs("усхмі").includes("усміх"), "Expected social suggestions to include усміх for a mistyped smile");
+assert.ok(suggestAliasInputs("посмі").includes("посміх"), "Expected social suggestions to include посміх");
+assert.ok(suggestAliasEntries("усхмі").map(formatAliasSuggestion).includes("усміх (/smile)"), "Expected formatted social suggestions to include slash command for smile");
 
 console.log("Input aliases OK");

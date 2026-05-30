@@ -104,6 +104,7 @@ Remaining work before closing the full MVP:
 - add stronger route/radius tuning for hunting grounds;
 - route all hunter field speech through ordinary queued `SAY` actions once that can be done without reintroducing world-tick spam or stand-down loops;
 - respect `ECO-003` saturation so hunters can stand down and rest near the magic campfire when more rodent/herbivore pressure is not needed;
+- hand off to `NPC-006` after stand-down when the settlement does not need more carcasses: hunters should be able to patrol near the fire/edge, hunt lightly, freshen and cook meat as ordinary work instead of freezing in RESTING forever;
 - respect `NPC-005` hunger behavior so hunters sometimes freshen/butcher suitable corpses, cook meat at a real campfire and eat instead of continuing the loop;
 - add an inspect/check beat between attack and next decision;
 - replace hunter-claimed carcasses with real carried/claimed actor state instead of `Creature.currentAction`; the 0.13.18 decay-preservation fix is only a bridge and still needs death, interrupt, disappearance and reset semantics;

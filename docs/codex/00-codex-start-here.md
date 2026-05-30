@@ -9,6 +9,7 @@ Chornolis Marches is a Ukrainian dark-fantasy Telegram RPG / living-world sandbo
 ## Most important permanent rules
 
 1. Do not put the internal versioning/package-file workflow note into news/changelog.
+1a. Do not put scribe/admin-only commands or hidden service tooling into public `news.md`; keep them in changelog, release notes, `/adminHelp`, `/adminMenu`, and admin docs.
 2. Preserve current functionality unless the user explicitly asks to replace it.
 3. Prefer Ukrainian UI and project-specific terminology.
 4. Use `docs/codex/` files for context before editing unfamiliar systems.
@@ -17,14 +18,15 @@ Chornolis Marches is a Ukrainian dark-fantasy Telegram RPG / living-world sandbo
 7. Release/update dates should use the local project date with Holocene calendar year, e.g. `12026-05-26`.
 8. English changelog/release notes should use repository-technical terms such as `inventory`, `HP`, `stamina`, `twigs`, and `location`; reserve player-facing Ukrainian terms for UI, news, in-game text and examples.
 9. When adding or changing player-facing gameplay, check whether onboarding, `/help`, beginner guidance and tutorial/newcomer-helper plans need updating too.
-10. When adding admin/scribe commands, update `/adminHelp`, `docs/systems/admin_commands.md` and any matching web/status documentation together.
+10. When adding admin/scribe commands, update `/adminHelp`, `/adminMenu`, `docs/systems/admin_commands.md` and any matching web/status documentation together.
 11. Do not make `/start` reset position for existing characters; use explicit respawn/admin movement for relocation.
-12. New or changed commands should keep aliases together: slash command where useful, English/MUD-style text forms, Ukrainian text forms, matching buttons, and matching `/help` or `/adminHelp` docs.
+12. New or changed commands should keep aliases together: slash command where useful, English/MUD-style text forms, Ukrainian text forms, matching buttons, and matching `/help`, `/adminHelp` or `/adminMenu` surfaces.
 12a. When a visible button/action appears in `/help`, `/commands`, news or release notes, write the stable slash command in parentheses after the label, e.g. `🌙 AFK / відійти` (`/afk`) or `🚪 Завершити сесію` (`/end_session`).
 13. When a command becomes part of the tutorial/newcomer path, add a short diegetic first-use comment or planning note for Сон/Дрімота, another guide voice, or an appropriate local sign so the tutorial teaches the command in-world instead of only exposing a button.
 14. When adding or changing text aliases, add or update `scripts/test/input-aliases.cjs` whenever the behavior can be checked with `parseAlias` without Telegram or database setup.
 15. When adding stable world nouns, update `src/content/lexicon/worldLexicon.ts` with Ukrainian case forms. Grammar fallback remains for ordinary guesses, but seed helpers deliberately require lexicon entries when stable species/profession/spirit forms matter.
 16. Near-term session presence work matters: add AFK / End Session controls, silent Auto-AFK after player inactivity, one idle reminder per scene and send-time guards for delayed/proactive bot messages so Telegram does not keep nudging a player who stepped away.
+17. Visible location features should not be only bare names. `/look` may keep them compact, but `/examine` and direct feature inspection should provide the extra text that explains meaning, interaction, constraints or atmosphere.
 
 ## Preferred workflow for code tasks
 
@@ -39,6 +41,7 @@ Chornolis Marches is a Ukrainian dark-fantasy Telegram RPG / living-world sandbo
 - If the change introduces a new player action, menu item, command, resource use, visibility rule, survival mechanic, social flow or admin-visible beginner state, update the relevant beginner-facing docs/text or add a planning note explaining how onboarding should teach it.
 - If the change touches fire, light or carried items, check `docs/systems/fire_and_light.md` and `docs/systems/item_lifetime_and_grammar.md`; lit torches currently burn out into `хмиз`, and visible held items should be described diegetically.
 - If the change touches dynamic names for creatures, spirits, professions, resources, features, tracks, corpses or action text, check `docs/content/world-lexicon.md` and avoid adding new nominative-only text templates unless nominative is truly the intended case.
+- If the change adds or edits a visible location feature, check `docs/systems/location_features.md`: feature-list text, `/examine` location output and direct `look/examine <feature>` should not collapse into the same bare line unless there is a deliberate no-action decision.
 
 ## Context routing
 

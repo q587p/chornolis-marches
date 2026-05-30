@@ -111,14 +111,16 @@ function visibleTargets(
     .filter(isVisibleCorpse)
     .map((c: any) => {
       const wasFreshened = isFreshenedCorpse(c.currentAction);
+      const corpseLeft = c.corpseDecayTicksLeft ?? c.species.corpseDecayTicks;
       return {
         type: "creature" as const,
         id: c.id,
-        label: `${wasFreshened ? "рештки" : "труп"}: ${creatureForms(c).genitive}`,
-        actionLabel: wasFreshened ? "м’ясо вже знято" : c.currentAction ? normalizeCreatureActionText(c.currentAction) : undefined,
+        label: `${wasFreshened ? "рештки" : "труп"} ${creatureForms(c).genitive}`,
+        actionLabel: undefined,
         canGreet: false,
         isAnimal: c.species.kind === "ANIMAL",
         isCorpse: true,
+        canFreshen: !wasFreshened && corpseLeft > Math.floor(c.species.corpseDecayTicks / 2),
       };
     });
 

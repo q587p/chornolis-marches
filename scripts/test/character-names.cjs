@@ -7,8 +7,11 @@ require("ts-node/register");
 const {
   PREPARED_CHARACTER_NAMES,
   availablePreparedNames,
+  characterNameApprovalStatusText,
   customNameWarningText,
   normalizeNameForRegistry,
+  onboardingNameApprovalNote,
+  onboardingNameChoiceTextIntent,
   preparedNameByKey,
   preparedNameByNominative,
   randomAvailablePreparedName,
@@ -18,6 +21,12 @@ const { creatureForms, guessNameForms } = require("../../src/services/grammar");
 const { creatureSpeciesNameFields, findLexiconEntry, formsByNominative } = require("../../src/content/lexicon/worldLexicon");
 
 assert.equal(normalizeNameForRegistry("  Ведана  "), "ведана");
+assert.equal(onboardingNameChoiceTextIntent("список"), "prepared");
+assert.equal(onboardingNameChoiceTextIntent("Обрати ім'я зі списку"), "prepared");
+assert.equal(onboardingNameChoiceTextIntent("Випадкове ім'я"), "random");
+assert.equal(onboardingNameChoiceTextIntent("Ввести власне ім'я"), "customPrompt");
+assert.equal(onboardingNameChoiceTextIntent("Вербові"), "customName");
+assert.equal(onboardingNameChoiceTextIntent("/help"), null);
 
 const vedana = preparedNameByKey("vedana");
 assert.ok(vedana, "Expected prepared name Vedana");
@@ -72,6 +81,12 @@ assert.ok(feminineNames.every((name) => name.suggestedGender === "FEMININE"));
 assert.ok(pluralNames.every((name) => name.suggestedGender === "PLURAL"));
 assert.ok(masculineNames.some((name) => name.forms.nominative === "Северин"), "Expected Severyn to be available as a prepared masculine name");
 assert.ok(customNameWarningText({ examples: ["Северин", "Богдан", "Олесь"] }).includes("<b>Северин</b>"), "Expected custom-name prompt to bold prepared examples");
+assert.match(customNameWarningText(), /Підготовлені імена вже перевірені/);
+assert.match(customNameWarningText(), /Власне ім'я можна носити одразу/);
+assert.match(characterNameApprovalStatusText(true), /схвалене Писарями/);
+assert.match(characterNameApprovalStatusText(false), /чекає на перегляд/);
+assert.match(onboardingNameApprovalNote(true), /підготовлене ім’я вже перевірене/);
+assert.match(onboardingNameApprovalNote(false), /власне ім’я вже відкриває шлях/);
 assert.equal(randomAvailablePreparedName([], { suggestedGender: "MASCULINE" }).suggestedGender, "MASCULINE");
 assert.equal(randomAvailablePreparedName([], { suggestedGender: "FEMININE" }).suggestedGender, "FEMININE");
 assert.equal(randomAvailablePreparedName([], { suggestedGender: "PLURAL" }).suggestedGender, "PLURAL");
@@ -130,12 +145,15 @@ assert.equal(greatVova.locative, "Великому Вові");
 assert.equal(greatVova.vocative, "Великий Вово");
 
 const maleMouse = creatureForms({ sex: "MALE", species: { key: "mouse", name: "миша", grammaticalGender: "FEMININE", animacy: "ANIMATE" } });
-assert.equal(maleMouse.nominative, "самець миші");
-assert.equal(maleMouse.genitive, "самця миші");
+assert.equal(maleMouse.nominative, "миш");
+assert.equal(maleMouse.genitive, "миша");
+assert.equal(maleMouse.accusative, "миша");
 const femaleMouse = creatureForms({ sex: "FEMALE", species: { key: "mouse", name: "миша", grammaticalGender: "FEMININE", animacy: "ANIMATE" } });
-assert.equal(femaleMouse.nominative, "самиця миші");
-assert.equal(femaleMouse.genitive, "самиці миші");
+assert.equal(femaleMouse.nominative, "миша");
+assert.equal(femaleMouse.genitive, "миші");
+assert.equal(femaleMouse.accusative, "мишу");
 assert.equal(findLexiconEntry("animal.rabbit").forms.accusative, "зайця");
+assert.equal(findLexiconEntry("animal.mouse_male").forms.instrumental, "мишем");
 assert.equal(formsByNominative()["вогнище"].locative, "вогнищі");
 assert.equal(guessNameForms("крук", "MASCULINE", "ANIMATE").vocative, "круче");
 assert.equal(creatureSpeciesNameFields("hunter").nameGenitive, "мисливця");

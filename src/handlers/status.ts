@@ -19,6 +19,7 @@ import {
   type ChatLogWindow,
 } from "../services/chatLog";
 import { getEcologyStats } from "../services/ecologyStats";
+import { ADD_CREATURE_BATCH_SIZE, ADD_CREATURE_MAX_COUNT, parseAddCreatureArgs, planAddCreatureBatches } from "../services/adminCreatures";
 import { getStatusData } from "../services/status";
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { isScribeAdmin, requireScribeAdmin } from "../services/adminAccess";
@@ -217,10 +218,95 @@ async function findLocationByKeyOrCoords(locationArg: string) {
   });
 }
 
-function normalizeAge(rawAge?: string): CreatureAge {
-  const value = rawAge?.trim().toUpperCase();
-  if (value === "YOUNG" || value === "ADULT" || value === "OLD") return value;
-  return "ADULT";
+async function replyWorldStatus(ctx: any) {
+  if (!(await requireScribeAdmin(ctx))) return;
+
+  const s = await getStatusData();
+  const latestEventLines = s.latestEvents.map((event) => truncateTelegramText(formatEvent(event), 450));
+  const latestEvents = latestEventLines.length ? joinLinesWithinLimit(latestEventLines, 1400, "\n").join("\n") : "немає";
+  const q = s.actionQueue;
+  const serviceText = s.services.map((service) => `${service.label}: ${service.state} — ${service.detail}`).join("\n");
+  const queueText = q
+    ? [
+        `Гравці: queued=${q.playerQueued}, running=${q.playerRunning}`,
+        `Істоти: queued=${q.creatureQueued}, running=${q.creatureRunning}`,
+        `Разом: queued=${q.totalQueued}, running=${q.totalRunning}, overdue=${q.overdueRunning}`,
+        `Найстаріша queued: ${Math.round(q.oldestQueuedAgeMs / 1000)} с; max overdue: ${Math.round(q.maxOverdueMs / 1000)} с`,
+      ].join("\n")
+    : "Чергу дій не вдалося прочитати.";
+  const runtimeError = s.lastRuntimeError ? truncateTelegramText(s.lastRuntimeError, 700) : "немає";
+  await ctx.reply(truncateTelegramText(`🌲 Стан Порубіжжя Чорнолісу\n\nВерсія: ${s.version}\n\nВузли:\n${serviceText}\n\nПерсонажів гравців у базі: ${s.playersCount}\nРегіонів: ${s.regionsCount}\nМісцин-клітинок: ${s.locationsCount}\nПереходів між клітинками: ${s.exitsCount}\nЖивих тварин: ${s.aliveAnimalsCount}\nТрупів тварин: ${s.animalCorpsesCount}\nЗниклих тварин: ${s.goneAnimalsCount}\nNPC / не-тварин: ${s.npcCount}\nЖивих істот загалом: ${s.aliveCreaturesCount}\nВузлів ресурсів: ${s.resourcesCount}\nПодій у журналі: ${s.eventsCount}\n\nЧерга дій:\n${queueText}\n\nОстанні події:\n${latestEvents}\n\nОстання помилка: ${runtimeError}`));
+}
+
+async function replyStatBrief(ctx: any) {
+  if (!(await requireScribeAdmin(ctx))) return;
+
+  const stat = await buildStatBrief();
+  await ctx.reply(stat.text, { reply_markup: stat.keyboard });
+}
+
+async function replyAllPage(ctx: any, showDead = false) {
+  if (!(await requireScribeAdmin(ctx))) return;
+
+  const page = await buildAllPage(showDead, 0);
+  await ctx.reply(page.text, { reply_markup: page.keyboard });
+}
+
+async function replyLocationAllPage(ctx: any) {
+  if (!(await requireScribeAdmin(ctx))) return;
+
+  const page = await buildLocationAllPage(0);
+  await ctx.reply(page.text, { reply_markup: page.keyboard });
+}
+
+async function runRestAdminCommand(bot: Bot, ctx: any, rawTarget = String(ctx.match ?? "").trim()) {
+  if (!(await requireScribeAdmin(ctx))) return;
+
+  if (!ctx.from) return;
+  const resolved = await resolveAdminPlayerForContext(ctx, rawTarget);
+  if (!resolved.player) {
+    await ctx.reply(resolved.error ?? "Формат: /restAdmin [#id|ім’я|username]");
+    return;
+  }
+
+  const player = resolved.player;
+  const scribe = await getPlayerByTelegramId(ctx.from.id);
+  const scribeName = scribeDisplayName(scribe, ctx.from.id);
+  const playerName = playerForms(player).nominative;
+  const baseMax = player.staminaMax ?? BASE_STAMINA;
+  const adminMax = baseMax * REST_ADMIN_STAMINA_CAP_MULTIPLIER;
+  const updated = await prisma.player.update({
+    where: { id: player.id },
+    data: {
+      stamina: adminMax,
+      isResting: false,
+      fatigueState: "RESTED",
+      lastStaminaRegenAt: new Date(),
+    },
+    select: { stamina: true, telegramId: true, isAutoEnabled: true },
+  });
+
+  await logEvent(
+    "SYSTEM",
+    "Admin restored stamina",
+    `player=${player.id}; playerName=${playerName}; stamina=${updated.stamina}/${baseMax}; scribe=${scribeName}`,
+    player.currentLocationId ?? undefined,
+  );
+
+  const isSelf = updated.telegramId === String(ctx.from.id);
+  if (!isSelf) {
+    const verb = scribePastVerb(scribe, "відновив", "відновила", "відновили");
+    await notifyPlayerByTelegram(
+      bot,
+      updated,
+      `${scribeName} ${verb} вашу снагу до ${updated.stamina}/${baseMax}.`,
+    );
+  }
+
+  const targetText = isSelf ? "" : ` для ${playerName}`;
+  await ctx.reply(`✨ Снагу${targetText} відновлено до ${updated.stamina}/${baseMax}. Адмінський множник: ×${REST_ADMIN_STAMINA_CAP_MULTIPLIER}.`, {
+    reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, Boolean(scribe?.isAutoEnabled)),
+  });
 }
 
 function ageTicksFor(species: any, age: CreatureAge) {
@@ -1081,12 +1167,8 @@ export function registerStatusHandlers(bot: Bot) {
     });
   });  
 
-  bot.command(["locationAll", "locationall"], async (ctx) => {
-    if (!(await requireScribeAdmin(ctx))) return;
-
-    const page = await buildLocationAllPage(0);
-    await ctx.reply(page.text, { reply_markup: page.keyboard });
-  });
+  bot.command(["locationAll", "locationall"], replyLocationAllPage);
+  bot.hears(["📍 Місцини (/locationAll)", "Місцини (/locationAll)"], replyLocationAllPage);
 
   bot.callbackQuery(/^locationAll:(\d+)$/, async (ctx) => {
     if (!(await isScribeAdmin(ctx.from?.id))) {
@@ -1114,35 +1196,14 @@ export function registerStatusHandlers(bot: Bot) {
       (s) => `${s.key} — ${s.name}; життя=${s.baseHp}; diet=${s.diet}; lifecycle=${s.childTicks}/${s.youngTicks}/${s.adultTicks}/${s.oldTicks}; corpse=${s.corpseDecayTicks}`
     );
     await ctx.reply(
-      `🐾 Можливі тварини для /addCreature\n\n${lines.join("\n") || "немає"}\n\nФормат:\n/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD]\n\nПриклади:\n/addCreature rabbit forest_04_00 3\n/addCreature mouse 0,0,0 5 YOUNG\n/addCreature wolf forest_00_08 1 OLD`
+      `🐾 Можливі тварини для /addCreature\n\n${lines.join("\n") || "немає"}\n\nФормат:\n/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD]\n\nПонад ${ADD_CREATURE_BATCH_SIZE} створюється кількома батчами. Разова межа: ${ADD_CREATURE_MAX_COUNT}.\n\nПриклади:\n/addCreature rabbit forest_04_00 3\n/addCreature mouse meadow_16_05 100 YOUNG\n/addCreature wolf forest_00_08 1 OLD`
     );
   });
 
-  bot.command("world", async (ctx) => {
-    if (!(await requireScribeAdmin(ctx))) return;
+  bot.command("world", replyWorldStatus);
+  bot.hears(["🌲 Світ (/world)", "Світ (/world)"], replyWorldStatus);
 
-    const s = await getStatusData();
-    const latestEventLines = s.latestEvents.map((event) => truncateTelegramText(formatEvent(event), 450));
-    const latestEvents = latestEventLines.length ? joinLinesWithinLimit(latestEventLines, 1400, "\n").join("\n") : "немає";
-    const q = s.actionQueue;
-    const serviceText = s.services.map((service) => `${service.label}: ${service.state} — ${service.detail}`).join("\n");
-    const queueText = q
-      ? [
-          `Гравці: queued=${q.playerQueued}, running=${q.playerRunning}`,
-          `Істоти: queued=${q.creatureQueued}, running=${q.creatureRunning}`,
-          `Разом: queued=${q.totalQueued}, running=${q.totalRunning}, overdue=${q.overdueRunning}`,
-          `Найстаріша queued: ${Math.round(q.oldestQueuedAgeMs / 1000)} с; max overdue: ${Math.round(q.maxOverdueMs / 1000)} с`,
-        ].join("\n")
-      : "Чергу дій не вдалося прочитати.";
-    const runtimeError = s.lastRuntimeError ? truncateTelegramText(s.lastRuntimeError, 700) : "немає";
-    await ctx.reply(truncateTelegramText(`🌲 Стан Порубіжжя Чорнолісу\n\nВерсія: ${s.version}\n\nВузли:\n${serviceText}\n\nПерсонажів гравців у базі: ${s.playersCount}\nРегіонів: ${s.regionsCount}\nМісцин-клітинок: ${s.locationsCount}\nПереходів між клітинками: ${s.exitsCount}\nЖивих тварин: ${s.aliveAnimalsCount}\nТрупів тварин: ${s.animalCorpsesCount}\nЗниклих тварин: ${s.goneAnimalsCount}\nNPC / не-тварин: ${s.npcCount}\nЖивих істот загалом: ${s.aliveCreaturesCount}\nВузлів ресурсів: ${s.resourcesCount}\nПодій у журналі: ${s.eventsCount}\n\nЧерга дій:\n${queueText}\n\nОстанні події:\n${latestEvents}\n\nОстання помилка: ${runtimeError}`));
-  });
-
-  bot.command(["stat", "stats"], async (ctx) => {
-    if (!(await requireScribeAdmin(ctx))) return;
-    const stat = await buildStatBrief();
-    await ctx.reply(stat.text, { reply_markup: stat.keyboard });
-  });
+  bot.command(["stat", "stats"], replyStatBrief);
 
   bot.command("who", async (ctx) => {
     const page = await buildWhoPage(0);
@@ -1212,70 +1273,16 @@ export function registerStatusHandlers(bot: Bot) {
     await ctx.answerCallbackQuery();
   });
 
-  bot.command(["restAdmin", "restadmin"], async (ctx) => {
-    if (!(await requireScribeAdmin(ctx))) return;
+  bot.command(["restAdmin", "restadmin"], (ctx) => runRestAdminCommand(bot, ctx));
+  bot.hears(["✨ Відновити снагу (/restAdmin)", "Відновити снагу (/restAdmin)"], (ctx) => runRestAdminCommand(bot, ctx, ""));
 
-    if (!ctx.from) return;
-    const rawTarget = String(ctx.match ?? "").trim();
-    const resolved = await resolveAdminPlayerForContext(ctx, rawTarget);
-    if (!resolved.player) {
-      await ctx.reply(resolved.error ?? "Формат: /restAdmin [#id|ім’я|username]");
-      return;
-    }
-
-    const player = resolved.player;
-    const scribe = await getPlayerByTelegramId(ctx.from.id);
-    const scribeName = scribeDisplayName(scribe, ctx.from.id);
-    const playerName = playerForms(player).nominative;
-    const baseMax = player.staminaMax ?? BASE_STAMINA;
-    const adminMax = baseMax * REST_ADMIN_STAMINA_CAP_MULTIPLIER;
-    const updated = await prisma.player.update({
-      where: { id: player.id },
-      data: {
-        stamina: adminMax,
-        isResting: false,
-        fatigueState: "RESTED",
-        lastStaminaRegenAt: new Date(),
-      },
-      select: { stamina: true, telegramId: true, isAutoEnabled: true },
-    });
-
-    await logEvent(
-      "SYSTEM",
-      "Admin restored stamina",
-      `player=${player.id}; playerName=${playerName}; stamina=${updated.stamina}/${baseMax}; scribe=${scribeName}`,
-      player.currentLocationId ?? undefined,
-    );
-
-    const isSelf = updated.telegramId === String(ctx.from.id);
-    if (!isSelf) {
-      const verb = scribePastVerb(scribe, "відновив", "відновила", "відновили");
-      await notifyPlayerByTelegram(
-        bot,
-        updated,
-        `${scribeName} ${verb} вашу снагу до ${updated.stamina}/${baseMax}.`,
-      );
-    }
-
-    const targetText = isSelf ? "" : ` для ${playerName}`;
-    await ctx.reply(`✨ Снагу${targetText} відновлено до ${updated.stamina}/${baseMax}. Адмінський множник: ×${REST_ADMIN_STAMINA_CAP_MULTIPLIER}.`, {
-      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, Boolean(scribe?.isAutoEnabled)),
-    });
-  });
-
-  bot.hears(["📊 Статистика", "Статистика"], async (ctx) => {
-    if (!(await requireScribeAdmin(ctx))) return;
-    const stat = await buildStatBrief();
-    await ctx.reply(stat.text, { reply_markup: stat.keyboard });
-  });
+  bot.hears(["📊 Статистика", "Статистика", "📊 Статистика (/stat)", "Статистика (/stat)"], replyStatBrief);
 
   bot.command("all", async (ctx) => {
-    if (!(await requireScribeAdmin(ctx))) return;
-
     const showDead = ctx.match?.trim().toLowerCase() === "dead";
-    const page = await buildAllPage(showDead, 0);
-    await ctx.reply(page.text, { reply_markup: page.keyboard });
+    await replyAllPage(ctx, showDead);
   });
+  bot.hears(["👥 Усі (/all)", "Усі (/all)"], (ctx) => replyAllPage(ctx));
 
   bot.command(["playerAdmin", "playeradmin", "player"], async (ctx) => {
     if (!(await requireScribeAdmin(ctx))) return;
@@ -1632,13 +1639,11 @@ export function registerStatusHandlers(bot: Bot) {
   bot.command(["addCreature", "addcreature"], async (ctx) => {
     if (!(await requireScribeAdmin(ctx))) return;
 
-    const args = ctx.match?.trim().split(/\s+/).filter(Boolean) ?? [];
-    const [speciesKey, locationArg, rawCount, rawAge] = args;
-    const parsedCount = Number(rawCount || 1);
-    const count = Number.isFinite(parsedCount) ? Math.max(1, Math.min(Math.floor(parsedCount), 50)) : NaN;
+    const { speciesKey, locationArg, requestedCount, age } = parseAddCreatureArgs(String(ctx.match ?? ""));
+    const plan = planAddCreatureBatches(requestedCount);
 
-    if (!speciesKey || !locationArg || !Number.isFinite(count)) {
-      return void (await ctx.reply("⚠️ Формат: /addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD]\nНаприклад: /addCreature rabbit forest_04_00 3"));
+    if (!speciesKey || !locationArg || !Number.isFinite(plan.count)) {
+      return void (await ctx.reply(`⚠️ Формат: /addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD]\nПонад ${ADD_CREATURE_BATCH_SIZE} створюється кількома батчами. Разова межа: ${ADD_CREATURE_MAX_COUNT}.\nНаприклад: /addCreature rabbit forest_04_00 3`));
     }
 
     const species = await prisma.creatureSpecies.findUnique({ where: { key: speciesKey } });
@@ -1648,30 +1653,37 @@ export function registerStatusHandlers(bot: Bot) {
     if (!location) return void (await ctx.reply(`⚠️ Невідома місцина: ${locationArg}. Спробуй /locationAll, реальний ключ на кшталт forest_04_00 або координати типу 0,0,0.`));
     if (species.kind !== "ANIMAL") return void (await ctx.reply("⚠️ /addCreature зараз призначена для тварин. Унікальні NPC керуються seed/cleanup."));
 
-    const age = normalizeAge(rawAge);
     const ageTicks = ageTicksFor(species, age);
     const hp = hpForAge(species, age);
 
-    for (let i = 0; i < count; i++) {
-      const sex = Math.random() < 0.5 ? "MALE" : "FEMALE";
-      await prisma.creature.create({
-        data: {
+    for (const batchCount of plan.batches) {
+      await prisma.creature.createMany({
+        data: Array.from({ length: batchCount }, () => ({
           speciesId: species.id,
           locationId: location.id,
           hp,
-          sex,
+          sex: Math.random() < 0.5 ? "MALE" : "FEMALE",
           age,
           ageTicks,
           isAlive: true,
           isGone: false,
           activity: "IDLE",
           currentAction: age === "OLD" ? "повільно рухається" : "прислухається",
-        },
+        })),
       });
     }
 
-    await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "Creature added", description: `Added ${speciesKey} ×${count} (${age}) to ${location.key}.`, locationId: location.id } });
-    await ctx.reply(`✅ Додано: ${species.name} ×${count} (${age}) → ${location.name} (${location.x},${location.y},${location.z})`);
+    const batchNote = plan.batches.length > 1 ? `\nСтворено батчами по ${ADD_CREATURE_BATCH_SIZE}, щоб не робити один важкий запис.` : "";
+    const capNote = plan.capped ? `\nЗапитано ${plan.requestedCount}, разова межа команди: ${plan.count}.` : "";
+    await prisma.worldEvent.create({
+      data: {
+        type: "SYSTEM",
+        title: "Creature added",
+        description: `Added ${speciesKey} ×${plan.count} (${age}) to ${location.key}; requested=${plan.requestedCount}; batches=${plan.batches.join("+")}.`,
+        locationId: location.id,
+      },
+    });
+    await ctx.reply(`✅ Додано: ${species.name} ×${plan.count} (${age}) → ${location.name} (${location.x},${location.y},${location.z})${batchNote}${capNote}`);
   });
 
   bot.command(["forceOld", "forceold"], async (ctx) => {

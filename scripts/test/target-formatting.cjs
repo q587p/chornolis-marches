@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const { formatCreatureLifeState, formatCreatureStatusLine } = require("../../src/services/targets");
-const { buildTargetActionKeyboard } = require("../../src/ui/keyboards");
+const { buildTargetActionKeyboard, buildTargetListKeyboard } = require("../../src/ui/keyboards");
 
 const maleNpc = {
   isAlive: true,
@@ -40,5 +40,20 @@ assert.deepEqual(interactionRows, [
   ["✅ Кивнути", "👋 Помахати", "✨ Ще сигнали"],
   ["↩️ Назад"],
 ]);
+
+const multipleFreshCorpseRows = buildTargetListKeyboard([
+  { type: "creature", id: 1, label: "труп миша", actionLabel: "розкладається; залишилось 92 тіків", canGreet: false, isAnimal: true, isCorpse: true, canFreshen: true },
+  { type: "creature", id: 2, label: "труп миша", actionLabel: "розкладається; залишилось 116 тіків", canGreet: false, isAnimal: true, isCorpse: true, canFreshen: true },
+]).inline_keyboard.map((row) => row.map((button) => button.text));
+assert.deepEqual(multipleFreshCorpseRows, [
+  ["труп миша"],
+  ["труп миша"],
+  ["🔪 Освіжувати всі"],
+]);
+
+const singleFreshCorpseRows = buildTargetListKeyboard([
+  { type: "creature", id: 1, label: "труп миша", actionLabel: "розкладається; залишилось 92 тіків", canGreet: false, isAnimal: true, isCorpse: true, canFreshen: true },
+]).inline_keyboard.map((row) => row.map((button) => button.text));
+assert.deepEqual(singleFreshCorpseRows, [["труп миша"]]);
 
 console.log("Target formatting OK");

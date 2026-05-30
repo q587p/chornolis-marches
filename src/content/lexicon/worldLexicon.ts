@@ -24,6 +24,7 @@ export type LexiconEntry = {
 export const WORLD_LEXICON = [
   entry("animal.rabbit", "creature", "MASCULINE", "ANIMATE", ["animal", "prey", "current"], ["заєць", "зайця", "зайцю", "зайця", "зайцем", "зайці", "зайцю"]),
   entry("animal.mouse", "creature", "FEMININE", "ANIMATE", ["animal", "prey", "current"], ["миша", "миші", "миші", "мишу", "мишею", "миші", "мише"]),
+  entry("animal.mouse_male", "creature", "MASCULINE", "ANIMATE", ["animal", "prey", "current", "sexed"], ["миш", "миша", "мишу", "миша", "мишем", "миші", "мишу"]),
   entry("animal.fox", "creature", "FEMININE", "ANIMATE", ["animal", "predator", "current"], ["лисиця", "лисиці", "лисиці", "лисицю", "лисицею", "лисиці", "лисице"]),
   entry("animal.wolf", "creature", "MASCULINE", "ANIMATE", ["animal", "predator", "current"], ["вовк", "вовка", "вовку", "вовка", "вовком", "вовку", "вовче"]),
   entry("animal.boar", "creature", "MASCULINE", "ANIMATE", ["animal", "forest", "future"], ["кабан", "кабана", "кабану", "кабана", "кабаном", "кабані", "кабане"]),

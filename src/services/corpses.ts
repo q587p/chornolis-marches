@@ -1,11 +1,16 @@
 import { prisma } from "../db";
+import type { Prisma } from "@prisma/client";
 import { creatureForms } from "./grammar";
+import { isFreshenedCorpse } from "./meat";
 
 const CARRIED_CORPSE_MARKER = "carried_corpse_by_player:";
 
 const CORPSE_RESOURCE_DISPLAY_NAMES: Record<string, string> = {
   raw_meat: "сире м'ясо",
   cooked_meat: "смажене м'ясо",
+  corpse_mouse: "труп миші",
+  corpse_mouse_male: "труп миша",
+  corpse_mouse_female: "труп миші",
   corpse_rabbit: "труп зайця",
   corpse_rabbit_male: "труп зайця",
   corpse_rabbit_female: "труп зайчихи",
@@ -39,6 +44,10 @@ export function corpseResourceKey(creature: CorpseResourceCreature | { key: stri
   return `corpse_${creature.key}`;
 }
 
+export function isCorpseResourceKey(key: string | null | undefined) {
+  return Boolean(key?.startsWith("corpse_"));
+}
+
 export function corpseResourceName(creature: CorpseResourceCreature) {
   return `труп ${creatureForms(creature).genitive}`;
 }
@@ -58,6 +67,61 @@ export function carriedCorpseOwnerId(currentAction: string | null | undefined) {
   const raw = currentAction.slice(CARRIED_CORPSE_MARKER.length).split(";")[0];
   const playerId = Number(raw);
   return Number.isSafeInteger(playerId) ? playerId : null;
+}
+
+function carriedCorpseDecayLeft(currentAction: string | null | undefined, fallback: number) {
+  const match = currentAction?.match(/залишилось\s+(\d+)\s+тіків/u);
+  const parsed = Number(match?.[1]);
+  return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
+function normalizeCorpseQuery(value: string) {
+  return value
+    .trim()
+    .toLocaleLowerCase("uk-UA")
+    .replace(/^#/, "")
+    .replace(/\s+/g, " ");
+}
+
+function stripCorpseWords(value: string) {
+  return normalizeCorpseQuery(value)
+    .replace(/^(?:all|everything|все|усе|всі|усі)\s+/u, "")
+    .replace(/^(?:corpse|corpses|body|bodies|carcass|carcasses|труп|трупи|туша|туші|рештки)\s*/u, "")
+    .replace(/\s+(?:corpse|corpses|body|bodies|carcass|carcasses|труп|трупи|туша|туші|рештки)$/u, "")
+    .trim();
+}
+
+export function isCorpseQuery(query: string | null | undefined) {
+  if (!query) return false;
+  const normalized = normalizeCorpseQuery(query);
+  return ["corpse", "corpses", "body", "bodies", "carcass", "carcasses", "труп", "трупи", "туша", "туші", "рештки"].includes(normalized);
+}
+
+function corpseMatchesQuery(creature: CorpseResourceCreature, query?: string | null) {
+  if (!query || isCorpseQuery(query)) return true;
+
+  const normalized = stripCorpseWords(query);
+  if (!normalized) return true;
+
+  const forms = creatureForms(creature);
+  const resourceKey = corpseResourceKey(creature);
+  const keys = [
+    resourceKey,
+    resourceKey.replace(/^corpse_/, ""),
+    corpseResourceName(creature),
+    forms.nominative,
+    forms.genitive,
+    forms.accusative,
+    creature.species.key,
+    creature.species.name,
+    creature.species.nameGenitive,
+    creature.species.nameAccusative,
+  ]
+    .filter(Boolean)
+    .map((key) => stripCorpseWords(String(key)))
+    .filter(Boolean);
+
+  return keys.some((key) => key === normalized || key.includes(normalized) || normalized.includes(key));
 }
 
 export async function ensureCorpseResourceType(creature: CorpseResourceCreature) {
@@ -93,6 +157,80 @@ export async function addCorpseToInventory(playerId: number, creature: { id: num
   });
 
   return resourceType;
+}
+
+export async function addVisibleCorpsesToInventory(playerId: number, query?: string | null) {
+  const player = await prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } });
+  if (!player?.currentLocationId) throw new Error("Ти ще не увійшов у світ. Напиши /start");
+
+  const creatures = await prisma.creature.findMany({
+    where: {
+      locationId: player.currentLocationId,
+      isAlive: false,
+      isGone: false,
+      isHidden: false,
+      age: "CORPSE",
+    },
+    include: { species: true },
+    orderBy: { id: "asc" },
+  });
+
+  const visibleCorpses = creatures
+    .filter((creature) => !isFreshenedCorpse(creature.currentAction))
+    .filter((creature) => corpseMatchesQuery(creature, query));
+
+  if (!visibleCorpses.length) throw new Error("Поруч немає таких трупів, які можна підняти.");
+
+  const groups = new Map<string, { key: string; name: string; amount: number }>();
+  for (const creature of visibleCorpses) {
+    const resourceType = await addCorpseToInventory(playerId, { ...creature, species: creature.species });
+    const name = resourceTypeDisplayName(resourceType);
+    const group = groups.get(resourceType.key) ?? { key: resourceType.key, name, amount: 0 };
+    group.amount += 1;
+    groups.set(resourceType.key, group);
+  }
+
+  return { locationId: player.currentLocationId, items: [...groups.values()] };
+}
+
+export async function dropCarriedCorpseResource(
+  tx: Prisma.TransactionClient,
+  playerId: number,
+  locationId: number,
+  resourceType: { id: number; key: string; name: string },
+) {
+  if (!isCorpseResourceKey(resourceType.key)) return null;
+
+  const candidates = await tx.creature.findMany({
+    where: {
+      isAlive: false,
+      isGone: false,
+      isHidden: true,
+      age: "CORPSE",
+      currentAction: { startsWith: CARRIED_CORPSE_MARKER + playerId },
+    },
+    include: { species: true },
+    orderBy: { id: "asc" },
+  });
+  const creature = candidates.find((candidate) => corpseResourceKey(candidate) === resourceType.key);
+  if (!creature) return null;
+
+  const decayLeft = carriedCorpseDecayLeft(creature.currentAction, creature.corpseDecayTicksLeft ?? creature.species.corpseDecayTicks);
+  await tx.creature.update({
+    where: { id: creature.id },
+    data: {
+      locationId,
+      isHidden: false,
+      corpseDecayTicksLeft: decayLeft,
+      currentAction: `розкладається; залишилось ${decayLeft} тіків`,
+    },
+  });
+
+  return {
+    creatureId: creature.id,
+    key: resourceType.key,
+    name: resourceTypeDisplayName(resourceType),
+  };
 }
 
 export async function removeDecayedCorpseFromInventory(playerId: number, creature: CorpseResourceCreature) {

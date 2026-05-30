@@ -19,8 +19,13 @@ export function isAutoAfkDue(session: { sessionPresence?: PlayerSessionPresence 
   return session.lastPlayerActionAt.getTime() <= autoAfkCutoff(now).getTime();
 }
 
-export function canSendProactiveMessage(session: { sessionPresence?: PlayerSessionPresence | string | null; remindersPaused?: boolean | null } | null | undefined) {
+export function canSendProactiveMessage(session: {
+  sessionPresence?: PlayerSessionPresence | string | null;
+  remindersPaused?: boolean | null;
+  onboardingComplete?: boolean | null;
+} | null | undefined) {
   if (!session) return false;
+  if (session.onboardingComplete === false) return false;
   if (session.sessionPresence === "AFK" || session.sessionPresence === "ENDED") return false;
   if (session.remindersPaused) return false;
   return true;
@@ -101,7 +106,7 @@ export async function canSendProactiveToPlayerId(playerId: number) {
   await applyAutoAfkByPlayerId(playerId);
   const player = await prisma.player.findUnique({
     where: { id: playerId },
-    select: { sessionPresence: true, remindersPaused: true },
+    select: { sessionPresence: true, remindersPaused: true, onboardingComplete: true },
   });
   return canSendProactiveMessage(player);
 }
@@ -109,13 +114,13 @@ export async function canSendProactiveToPlayerId(playerId: number) {
 export async function canSendProactiveToTelegramId(telegramId: string | number) {
   const player = await prisma.player.findUnique({
     where: { telegramId: String(telegramId) },
-    select: { id: true, sessionPresence: true, remindersPaused: true, lastPlayerActionAt: true },
+    select: { id: true, sessionPresence: true, remindersPaused: true, lastPlayerActionAt: true, onboardingComplete: true },
   });
   if (!player) return false;
   await applyAutoAfkForPlayer(player);
   const refreshed = await prisma.player.findUnique({
     where: { id: player.id },
-    select: { sessionPresence: true, remindersPaused: true },
+    select: { sessionPresence: true, remindersPaused: true, onboardingComplete: true },
   });
   return canSendProactiveMessage(refreshed);
 }

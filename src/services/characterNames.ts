@@ -15,6 +15,8 @@ export type PreparedCharacterName = {
   suggestedGender: Gender;
 };
 
+export type NameChoiceTextIntent = "prepared" | "random" | "customPrompt" | "customName";
+
 const FORBIDDEN_WORLD_NAMES = new Map<string, string>([
   ["вовк", "це радше назва істоти, ніж особове ім'я"],
   ["вовчиця", "це радше назва істоти, ніж особове ім'я"],
@@ -65,6 +67,15 @@ function normalizeForbiddenNameKey(value: string) {
 
 export function normalizeNameForRegistry(value: string) {
   return normalizeCharacterName(value).toLocaleLowerCase("uk-UA");
+}
+
+export function onboardingNameChoiceTextIntent(text: string): NameChoiceTextIntent | null {
+  const normalized = text.trim().toLocaleLowerCase("uk-UA");
+  if (!normalized || normalized.startsWith("/")) return null;
+  if (["список", "обрати", "обрати ім'я зі списку", "готове", "готові", "готове ім'я", "готові імена"].includes(normalized)) return "prepared";
+  if (["випадкове", "випадкове ім'я", "рандом", "навмання"].includes(normalized)) return "random";
+  if (["власне", "своє", "ввести", "ввести власне ім'я", "власне ім'я", "своє ім'я"].includes(normalized)) return "customPrompt";
+  return "customName";
 }
 
 export function preparedNameByKey(key: string) {
@@ -124,7 +135,9 @@ export function customNameWarningText(options: { examples?: string[] } = {}) {
     "Не підійдуть імена богів, назви істот чи духів, випадкові набори літер, грубі слова, надто відомі чужі персонажі або слова, що не звучать як особове ім'я Порубіжжя.",
     "Наприклад: <b>Сварог</b> (бог), <b>Лісовик</b> або <b>Вовк</b> (дух чи істота), <b>Фффрр</b> (набір літер), лайка й образи, <b>Ґандальф</b> або <b>Герміона</b> (чужі впізнавані персонажі), <b>Камінь</b> чи <b>Стежка</b> (слова, не особові імена).",
     "",
-    "Найкраще пасують слов'янські або дотичні до прикордонного світу імена. Рідкісні імена зможуть переглянути Писарі.",
+    "Підготовлені імена вже перевірені Писарями. Власне ім'я можна носити одразу, але воно ще чекатиме їхнього тихого перегляду.",
+    "",
+    "Найкраще пасують слов'янські або дотичні до прикордонного світу імена.",
     "",
     "Дозволені кирилиця, пробіл, дефіс і апостроф у межах імені. Якщо немає української клавіатури, напишіть ім’я транслітом латинкою: наприклад, <b>Zdravko</b> стане <b>Здравко</b>. Змішувати абетки, додавати цифри, emoji чи невидимі символи не можна.",
   ].join("\n");
@@ -144,4 +157,16 @@ export function validateCustomCharacterName(raw: string) {
   }
 
   return validation;
+}
+
+export function characterNameApprovalStatusText(isApproved: boolean) {
+  return isApproved
+    ? "Ім’я вже схвалене Писарями Порубіжжя."
+    : "Ім’я можна носити вже зараз, але воно ще чекає на перегляд Писарями Порубіжжя.";
+}
+
+export function onboardingNameApprovalNote(isApproved: boolean) {
+  return isApproved
+    ? "Це підготовлене ім’я вже перевірене Писарями, тож його одразу внесено до літопису."
+    : "Це власне ім’я вже відкриває шлях у Порубіжжя, але Писарі ще можуть переглянути його пізніше.";
 }

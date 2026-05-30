@@ -16,10 +16,10 @@ import {
   playerStaminaCostConfig,
 } from "../gameConfig";
 import { buildFatigueRestKeyboard, buildStandUpKeyboard } from "../ui/keyboards";
-import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
+import { buildMainReplyKeyboardForTelegramId, mainStatusLabelForPlayer } from "../ui/replyKeyboard";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
 import { tutorialIdlePaceComments } from "./tutorialVoices";
-import { isTutorialFastRestLocationKey } from "./tutorial";
+import { hasTutorialCommandHint, isTutorialFastRestLocationKey } from "./tutorial";
 import { escapeHtml } from "../utils/text";
 import { canSendProactiveToTelegramId, claimIdleReminderForPlayerScene, idleReminderSceneKeyForLocation } from "./sessionPresence";
 
@@ -153,7 +153,7 @@ export async function spendCreatureStamina(creature: { id: number; hp?: number; 
 export async function recoverStamina(bot: Bot) {
   const now = new Date();
   const [players, activePlayerActions] = await Promise.all([
-    prisma.player.findMany({ include: { currentLocation: { select: { key: true } } } }),
+    prisma.player.findMany({ include: { currentLocation: { select: { key: true, z: true, region: { select: { key: true } } } } } }),
     prisma.worldAction.findMany({
       where: { actorType: "PLAYER", status: { in: ["QUEUED", "RUNNING"] }, playerId: { not: null } },
       select: { playerId: true },
@@ -204,6 +204,8 @@ export async function recoverStamina(bot: Bot) {
 
     if (intervals <= 0 && hpIntervals <= 0) continue;
 
+    const hasRestLesson = await hasTutorialCommandHint(player.id, "rest");
+    const beforeStatusLabel = mainStatusLabelForPlayer(player, { hasRestLesson });
     const fullyRested = after >= max && hpAfter >= hpMax;
     const shouldSendTutorialRestFullComment = fullyRested
       && player.isResting
@@ -231,12 +233,19 @@ export async function recoverStamina(bot: Bot) {
     if (Number.isSafeInteger(chatId) && await canSendProactiveToTelegramId(player.telegramId)) {
       const refreshedKeyboard = await buildMainReplyKeyboardForTelegramId(chatId, Boolean(player.isAutoEnabled));
       const replyMarkup = fullyRested && player.isResting ? buildStandUpKeyboard() : refreshedKeyboard;
+      const afterStatusLabel = mainStatusLabelForPlayer({ ...player, stamina: after, hp: hpAfter }, { hasRestLesson });
+      const shouldRefreshStatusKeyboard = Boolean(beforeStatusLabel && afterStatusLabel && beforeStatusLabel !== afterStatusLabel);
       for (const message of messages) {
         await bot.api.sendMessage(
           chatId,
           message,
           { reply_markup: replyMarkup }
         );
+      }
+      if (messages.length === 0 && shouldRefreshStatusKeyboard && afterStatusLabel) {
+        await bot.api.sendMessage(chatId, `Стан: ${afterStatusLabel}`, { reply_markup: refreshedKeyboard });
+      } else if (shouldRefreshStatusKeyboard && fullyRested && player.isResting && afterStatusLabel) {
+        await bot.api.sendMessage(chatId, `Стан: ${afterStatusLabel}`, { reply_markup: refreshedKeyboard });
       }
 
       if (shouldSendTutorialRestFullComment) {

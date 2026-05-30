@@ -5,6 +5,7 @@ require("ts-node/register");
 const {
   nextResourceAmount,
   parseAddResourceArgs,
+  parseAdminInventoryResourceArgs,
 } = require("../../src/services/adminResources");
 
 assert.deepEqual(parseAddResourceArgs("berries"), {
@@ -36,5 +37,26 @@ assert.deepEqual(parseAddResourceArgs("", "herbs"), {
 assert.equal(nextResourceAmount(0, 5, 1), 1);
 assert.equal(nextResourceAmount(4, 5, 3), 5);
 assert.equal(nextResourceAmount(-2, 0, 0), 1);
+
+assert.deepEqual(parseAdminInventoryResourceArgs(""), {
+  playerArg: "",
+  amount: 1,
+});
+assert.deepEqual(parseAdminInventoryResourceArgs("5"), {
+  playerArg: "",
+  amount: 5,
+});
+assert.deepEqual(parseAdminInventoryResourceArgs("#5"), {
+  playerArg: "#5",
+  amount: 1,
+});
+assert.deepEqual(parseAdminInventoryResourceArgs("#5 3"), {
+  playerArg: "#5",
+  amount: 3,
+});
+assert.deepEqual(parseAdminInventoryResourceArgs("Вербові 10"), {
+  playerArg: "Вербові",
+  amount: 10,
+});
 
 console.log("Admin resource helpers OK");

@@ -35,15 +35,16 @@ import { showTime } from "./time";
 import { submitMove as submitCanonicalMove } from "./movement";
 import { submitGather as submitCanonicalGather } from "./gather";
 import { submitPosture } from "./posture";
-import { addCorpseToInventory, resourceTypeDisplayName } from "../services/corpses";
-import { performSocialSignal } from "../services/socialSignals";
+import { addCorpseToInventory, addVisibleCorpsesToInventory, resourceTypeDisplayName } from "../services/corpses";
+import { performPlayerLocationSignal, performSocialSignal } from "../services/socialSignals";
 import { addTwigsToCampfire, dousePlayerTorchFromInventory, lightPlayerTorchFromInventory } from "../services/fire";
 import { requireScribeAdmin } from "../services/adminAccess";
-import { pickUpAllVisibleGroundResources, pickUpFirstGroundResourceByKey, pickUpFirstVisibleGroundResourceByKey, type VisibleGroundResourceKey } from "../services/groundItems";
+import { pickUpAllVisibleGroundResources, pickUpAllVisibleGroundResourcesByKey, pickUpFirstGroundResourceByKey, pickUpFirstVisibleGroundResourceByKey, type VisibleGroundResourceKey } from "../services/groundItems";
 import { parseSpeechTarget } from "../services/speechTargets";
-import { dropInventoryResourceDetailed, inspectInventoryResource, inventoryResourceKeyFromText, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
+import { dropInventoryResourceDetailed, dropInventoryResourcesDetailed, inspectInventoryResource, inventoryResourceKeyFromText, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
 import { enterTutorialDream, hasCompletedTutorial, openDreamGate, rememberTutorialCommandHintIfInTutorial, wakeFromTutorialDream } from "../services/tutorial";
 import { dropObserverText, pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
+import { notifyPlayerObservers, playerRestStartObserverText, playerRestStopObserverText, playerTutorialSleepObserverText, playerTutorialWakeObserverText } from "../services/playerVisibility";
 import { noteKnownMessage } from "../utils/messageTracker";
 import { cookRawMeat } from "../services/meat";
 import { COOKING_PRACTICE_GROWTH_MESSAGE } from "../services/foodLearning";
@@ -163,16 +164,24 @@ async function submitLookAction(bot: Bot, ctx: any) {
   }
 }
 
-async function beginRestNow(ctx: any, playerId: number) {
+async function beginRestNow(bot: Bot, ctx: any, playerId: number) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
   const hadQueue = await hasPlayerActionQueueControls(playerId);
   await startPlayerRest(playerId);
   const suffix = hadQueue ? "\n\nПоточну дію та чергу скасовано." : "";
   await ctx.reply(`${await playerRestStatusText(playerId)}${suffix}`, {
     reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
   });
+  if (player && !player.isResting) {
+    await notifyPlayerObservers(bot, {
+      playerId,
+      locationId: player.currentLocationId,
+      observerText: playerRestStartObserverText,
+    });
+  }
 }
 
-async function submitRest(ctx: any, mode: RestAliasMode = "start") {
+async function submitRest(bot: Bot, ctx: any, mode: RestAliasMode = "start") {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
@@ -184,6 +193,13 @@ async function submitRest(ctx: any, mode: RestAliasMode = "start") {
 
   if (mode === "interrupt") {
     await stopPlayerRest(player.id);
+    if (player.isResting) {
+      await notifyPlayerObservers(bot, {
+        playerId: player.id,
+        locationId: player.currentLocationId,
+        observerText: playerRestStopObserverText,
+      });
+    }
     const accelerated = await accelerateFirstQueuedPlayerAction(player.id);
     await ctx.reply(`Ви перервали відпочинок.${accelerated ? "\n\nНаступна дія починається." : ""}\n\n${await renderPlayerActionQueue(player.id)}`, await actionQueueReplyOptions(player.id));
     await ctx.reply("Ви лишаєтеся сидіти.", {
@@ -206,7 +222,7 @@ async function submitRest(ctx: any, mode: RestAliasMode = "start") {
     return;
   }
 
-  await beginRestNow(ctx, player.id);
+  await beginRestNow(bot, ctx, player.id);
 }
 
 async function submitAuto(bot: Bot, ctx: any, mode: "start" | "stop") {
@@ -352,6 +368,21 @@ async function submitInventoryDrop(bot: Bot, ctx: any, target: string) {
 
   try {
     assertCanPerformPhysicalAction(player, "DROP");
+    const allFilter = allTargetFilter(target);
+    if (allFilter !== null) {
+      const result = await dropInventoryResourcesDetailed(player.id, allFilter || undefined);
+      await recordVisibleItemAction(bot, {
+        playerId: player.id,
+        locationId: result.locationId,
+        observerText: dropObserverText(player, result.droppedName),
+        eventTitle: "Player dropped inventory items",
+        eventDescription: `player=${player.id}; items=${result.resourceKey}`,
+        actionNote: `викладено: ${result.droppedName}`,
+      });
+      await ctx.reply(result.text);
+      return;
+    }
+
     const result = await dropInventoryResourceDetailed(player.id, target);
     await recordVisibleItemAction(bot, {
       playerId: player.id,
@@ -647,6 +678,19 @@ function isPickupAllTarget(target: string) {
   return ["all", "everything", "все", "усе", "всі", "усі"].includes(target);
 }
 
+function allTargetFilter(target: string) {
+  const normalized = normalizeTargetKey(target);
+  if (isPickupAllTarget(normalized)) return "";
+
+  const prefix = normalized.match(/^(?:all|everything|все|усе|всі|усі)\s+(.+)$/u);
+  if (prefix?.[1]?.trim()) return prefix[1].trim();
+
+  const suffix = normalized.match(/^(.+?)\s+(?:all|everything|все|усе|всі|усі)$/u);
+  if (suffix?.[1]?.trim()) return suffix[1].trim();
+
+  return null;
+}
+
 function isAllTarget(target: string) {
   return isPickupAllTarget(normalizeTargetKey(target));
 }
@@ -695,21 +739,51 @@ async function submitFreshenAll(bot: Bot, ctx: any, player: NonNullable<Awaited<
 
 async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
   const normalizedTarget = normalizeTargetKey(targetQuery);
-  if (isPickupAllTarget(normalizedTarget)) {
+  const allFilter = allTargetFilter(normalizedTarget);
+  if (allFilter !== null) {
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
     try {
       assertCanPerformPhysicalAction(player, "PICK_UP");
-      const result = await pickUpAllVisibleGroundResources(player.id);
-      const text = pickedItemsText(result.items);
-      const pickedAmount = pickedItemsAmount(result.items);
+      const picked: Array<{ key: string; name: string; amount: number }> = [];
+      let locationId = player.currentLocationId ?? 0;
+      const filterResourceKey = allFilter ? pickupResourceKey(allFilter) : null;
+
+      if (filterResourceKey) {
+        const result = await pickUpAllVisibleGroundResourcesByKey(player.id, filterResourceKey);
+        picked.push(...result.items);
+        locationId = result.locationId;
+      } else if (allFilter) {
+        const result = await addVisibleCorpsesToInventory(player.id, allFilter);
+        picked.push(...result.items);
+        locationId = result.locationId;
+      } else {
+        try {
+          const result = await pickUpAllVisibleGroundResources(player.id);
+          picked.push(...result.items);
+          locationId = result.locationId;
+        } catch (error) {
+          if (!(error instanceof Error) || !error.message.includes("Поруч немає")) throw error;
+        }
+        try {
+          const result = await addVisibleCorpsesToInventory(player.id);
+          picked.push(...result.items);
+          locationId = result.locationId;
+        } catch (error) {
+          if (!(error instanceof Error) || !error.message.includes("Поруч немає")) throw error;
+        }
+      }
+
+      if (!picked.length) throw new Error("Поруч немає речей, які можна підняти.");
+      const text = pickedItemsText(picked);
+      const pickedAmount = pickedItemsAmount(picked);
       await recordVisibleItemAction(bot, {
         playerId: player.id,
-        locationId: result.locationId,
+        locationId,
         observerText: pickupObserverText(player, `кілька речей: ${text}`),
         eventTitle: "Player picked up all visible ground items",
-        eventDescription: `player=${player.id}; items=${result.items.map((item) => `${item.key}:${item.amount}`).join(",")}`,
+        eventDescription: `player=${player.id}; items=${picked.map((item) => `${item.key}:${item.amount}`).join(",")}`,
         actionNote: `піднято все: ${text}`,
       });
       await spendPlayerStaminaAmount(bot, player.id, pickedAmount, ctx.chat?.id);
@@ -786,7 +860,18 @@ async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
   }
 }
 
-async function submitSocialSignal(bot: Bot, ctx: any, signal: SocialSignalAlias, targetQuery: string) {
+async function submitSocialSignal(bot: Bot, ctx: any, signal: SocialSignalAlias, targetQuery?: string) {
+  if (!targetQuery) {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    try {
+      await performPlayerLocationSignal(bot, player, signal, ctx.chat?.id);
+    } catch (error) {
+      await ctx.reply(error instanceof Error ? error.message : "Не вдалося подати сигнал.");
+    }
+    return;
+  }
+
   const resolved = await resolveVisibleTargetForAlias(ctx, targetQuery);
   if (!resolved) return;
   if (resolved.target.isCorpse) return void (await ctx.reply("Ця ціль не відповість на сигнал."));
@@ -798,7 +883,7 @@ async function submitSocialSignal(bot: Bot, ctx: any, signal: SocialSignalAlias,
   }
 }
 
-async function submitSleep(ctx: any, tutorial = false) {
+async function submitSleep(bot: Bot, ctx: any, tutorial = false) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
   if (!tutorial && await hasCompletedTutorial(player.id)) {
@@ -810,17 +895,29 @@ async function submitSleep(ctx: any, tutorial = false) {
   await disablePlayerAuto(ctx.from.id);
   const result = await enterTutorialDream(player.id);
   await ctx.reply(result.text, { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
+  if (result.entered) {
+    await notifyPlayerObservers(bot, {
+      playerId: player.id,
+      locationId: result.fromLocationId,
+      observerText: playerTutorialSleepObserverText,
+    });
+  }
   const view = await renderLocationBrief(result.locationId, player.id);
   await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
 }
 
-async function submitWake(ctx: any) {
+async function submitWake(bot: Bot, ctx: any) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const result = await wakeFromTutorialDream(player.id);
   await ctx.reply(result.text, { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
   if (result.woke) {
+    await notifyPlayerObservers(bot, {
+      playerId: player.id,
+      locationId: result.locationId,
+      observerText: playerTutorialWakeObserverText,
+    });
     const view = await renderLocationBrief(result.locationId, player.id);
     await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
   }
@@ -876,8 +973,8 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "inspect-feature") return submitFeatureInspection(bot, ctx, parsed.target, parsed.detail ?? "full");
     if (parsed.kind === "move") return submitCanonicalMove(bot, ctx, parsed.direction, false);
     if (parsed.kind === "gather") return submitCanonicalGather(bot, ctx, parsed.resourceKey, false);
-    if (parsed.kind === "posture") return submitPosture(ctx, parsed.mode);
-    if (parsed.kind === "rest") return submitRest(ctx, parsed.mode);
+    if (parsed.kind === "posture") return submitPosture(bot, ctx, parsed.mode);
+    if (parsed.kind === "rest") return submitRest(bot, ctx, parsed.mode);
     if (parsed.kind === "auto") return submitAuto(bot, ctx, parsed.mode);
     if (parsed.kind === "queue") return submitQueue(ctx, parsed.mode);
     if (parsed.kind === "track") return submitTrack(bot, ctx, Boolean(parsed.detail));
@@ -886,8 +983,8 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "light-torch") return submitLightTorch(ctx);
     if (parsed.kind === "douse-torch") return submitDouseTorch(ctx);
     if (parsed.kind === "cook-meat") return submitCookMeat(ctx);
-    if (parsed.kind === "sleep") return submitSleep(ctx, parsed.tutorial);
-    if (parsed.kind === "wake") return submitWake(ctx);
+    if (parsed.kind === "sleep") return submitSleep(bot, ctx, parsed.tutorial);
+    if (parsed.kind === "wake") return submitWake(bot, ctx);
     if (parsed.kind === "open") return submitOpen(ctx, parsed.target);
     if (parsed.kind === "inspect-inventory-item") return submitInventoryInspect(ctx, parsed.target);
     if (parsed.kind === "drop-inventory-item") return submitInventoryDrop(bot, ctx, parsed.target);

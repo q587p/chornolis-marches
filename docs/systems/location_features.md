@@ -10,6 +10,13 @@ Only features with meaningful interaction should become buttons in the location 
 
 `/examine` should explain what those features mean in play: a campfire gives light and improves rest, a torch stand has torches to take, a border marker helps with orientation, and so on. For extinguished campfires, prefer diegetic detail such as ash, blackened brands, and the lack of light or warmth instead of repeated technical state labels.
 
+Every visible feature should usually have two layers of text:
+
+- `look` / location overview: a compact visible label or one-line description.
+- `examine` / direct feature inspection: a deeper explanation with at least one useful detail, interaction hint, constraint, local consequence or atmospheric clue.
+
+If `look ворота` and `examine ворота`, or similar direct feature commands, produce the same text, treat that as a bug or an explicit no-action decision to document. The default should be that direct examination adds something the overview did not say.
+
 Interactive features should also be inspectable by text where practical: `look лавка`, `/examine лавка`, `оглянути лавку`, `look bench`, `роздивитися кущі`. If no feature matches, the same text can fall back to ordinary visible target inspection.
 
 Features may set `data.icon` when the generic type icon would make nearby landmarks blend together. The location renderer uses this icon in feature lists and feature buttons before falling back to type-based icons. Explicit icons in the same location should stay distinct where practical; reserve the fire icon for actual flame/campfire states and fire-lighting actions, not for an unlit torch supply.
@@ -22,6 +29,7 @@ Current interactive examples:
 - campfire / magic campfire: explains light and rest effects;
 - torch stand: shows that torches can be taken;
 - closed gate: explains that the settlement path is locked for now.
+- gate notice / carcass drop-off: should explain what the settlement is asking for, what can be put there and why it matters, not only list the sign or pit by name.
 
 Planned interactive examples:
 

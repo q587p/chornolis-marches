@@ -11,6 +11,7 @@ export type TextTargetRef = {
   label: string;
   actionLabel?: string;
   canGreet: boolean;
+  isCorpse?: boolean;
   searchKeys: string[];
 };
 
@@ -73,6 +74,7 @@ function targetSearchKeysForCreature(creature: any) {
 }
 
 export function targetDisplayLabel(target: TextTargetRef) {
+  if (target.isCorpse) return target.label;
   return target.actionLabel ? `${target.label} — ${target.actionLabel}` : target.label;
 }
 
@@ -121,9 +123,10 @@ export async function visibleTextTargets(locationId: number, viewerPlayerId: num
     return {
       type: "creature" as const,
       id: creature.id,
-      label: isCorpse ? `${wasFreshened ? "рештки" : "труп"}: ${creatureForms(creature).genitive}` : creature.name ?? creature.species.name,
-      actionLabel: wasFreshened ? "м’ясо вже знято" : normalizeCreatureActionText(creature.currentAction),
+      label: isCorpse ? `${wasFreshened ? "рештки" : "труп"} ${creatureForms(creature).genitive}` : creature.name ?? creature.species.name,
+      actionLabel: isCorpse ? undefined : normalizeCreatureActionText(creature.currentAction),
       canGreet: !isCorpse && creature.species.kind !== "ANIMAL",
+      isCorpse,
       searchKeys: targetSearchKeysForCreature(creature),
     };
   });

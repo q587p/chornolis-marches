@@ -4,6 +4,7 @@ import { BASE_HP, BASE_STAMINA, HEALTH_REGEN_PER_INTERVAL, PASSIVE_HEALTH_REGEN_
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { renderLocationBrief, renderLocationFeatureInteractionByQuery } from "../services/locations";
 import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
+import { buildLocationSocialSignalKeyboard } from "../ui/keyboards";
 import { buildInventoryItemKeyboard } from "../ui/inventoryItemKeyboard";
 import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } from "./auto";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
@@ -41,6 +42,8 @@ import { rememberTutorialInventoryForPlayer } from "../utils/tutorialInventory";
 import { bestTargetMatch, inspectMissingText, targetDisplayLabel, targetListText, visibleTextTargets } from "../services/textTargets";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { durationSecondsSuffix } from "../utils/durationText";
+import { characterNameApprovalStatusText } from "../services/characterNames";
+import { performPlayerLocationSignal, socialDefinitionById } from "../services/socialSignals";
 
 const tutorialInventoryVoiceSeen = new Set<number>();
 
@@ -84,6 +87,7 @@ async function recoveryText(player: any) {
 function buildCharacterAutoKeyboard(autoEnabled: boolean, options: { posture?: string | null; isResting?: boolean | null; canToggleTechnicalDetails?: boolean; showTechnicalDetails?: boolean; showSleep?: boolean } = {}) {
   const keyboard = new InlineKeyboard()
     .text("🎒 Речі", "character:inventory")
+    .text("✨ Сигнали", "character:signals")
     .row();
   const isSitting = options.posture === "SITTING" || Boolean(options.isResting);
   keyboard.text(isSitting ? "Встати" : "Сісти", isSitting ? "posture:stand" : "posture:sit");
@@ -299,7 +303,7 @@ async function renderCharacterView(telegramId: number) {
   const locationText = player.currentLocation
     ? `${player.currentLocation.region.name} / ${player.currentLocation.name}`
     : "невідомо";
-  const nameApprovedText = player.isNameApproved ? "Ім’я схвалене." : "Ім’я ще не схвалене. Зверніться до писарів Порубіжжя.";
+  const nameApprovedText = characterNameApprovalStatusText(player.isNameApproved);
   const isTutorialDream = player.currentLocation ? isTutorialLocation(player.currentLocation) : false;
 
   return {
@@ -436,6 +440,42 @@ export function registerPlayerHandlers(bot: Bot) {
         await ctx.reply(`Сон радить:\n${quoteBlock("Речі тримають те, що ви вже взяли. Тут можна роздивитися знахідку, використати її або викинути.")}`, { parse_mode: "HTML" });
         await ctx.reply(`Дрімота бурмоче:\n${quoteBlock("Носити зайве важко. Викинь — і стане легше йти.")}`, { parse_mode: "HTML", reply_markup: replyMarkup });
       }
+    }
+  });
+
+  bot.callbackQuery("character:signals", async (ctx) => {
+    await safeAnswerCallbackQuery(ctx);
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+    const text = [
+      "✨ Сигнали",
+      "",
+      "Короткі жести без окремої цілі. Якщо хочеш звернутися саме до когось, роздивись ціль у місцині або напиши жест із її ім’ям.",
+    ].join("\n");
+    try {
+      await ctx.editMessageText(text, { reply_markup: buildLocationSocialSignalKeyboard() });
+    } catch {
+      await ctx.reply(text, { reply_markup: buildLocationSocialSignalKeyboard() });
+    }
+  });
+
+  bot.callbackQuery(/^character:signal:([a-z]+)$/, async (ctx) => {
+    const signalId = ctx.match[1];
+    const social = socialDefinitionById(signalId);
+    if (!social) return void (await safeAnswerCallbackQuery(ctx, "Невідомий сигнал."));
+
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    try {
+      await performPlayerLocationSignal(bot, player, signalId, ctx.chat?.id);
+      await safeAnswerCallbackQuery(ctx, "Сигнал подано.");
+    } catch (error) {
+      await safeAnswerCallbackQuery(ctx, error instanceof Error ? error.message : "Не вдалося подати сигнал.");
     }
   });
 

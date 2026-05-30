@@ -63,6 +63,7 @@ Prefer behavior-preserving extractions first. See `docs/planning/items/TECH-001-
 - `/cleanupCreatures` was discussed as a possible debug/admin cleanup for duplicate seeded unique NPCs.
 - `/restart` should delete character and character-related work and reset onboarding from zero.
 - `/adminHelp` should remain complete and visible.
+- `/adminMenu` should remain aligned with `/adminHelp` for common scribe/admin actions, especially when admin commands are added, renamed or regrouped.
 - `/tick` should summarize animals/NPCs/actions.
 - `/chat` supports `time`, `location` and `character` groupings; older `/chat 1` and `/chat all` remain compatible time-mode forms.
 - `/teleport [character] <locationKey|x,y,z>` is a scribe command. Without an explicit character, it moves the current character.

@@ -13,7 +13,7 @@ import {
   QUICK_PLAYER_ACTION_DURATION_MS,
 } from "../gameConfig";
 import { buildFatigueRestKeyboard } from "../ui/keyboards";
-import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
+import { buildMainReplyKeyboardForTelegramId, mainStatusLabelForPlayerId } from "../ui/replyKeyboard";
 import { setLastRuntimeError } from "../runtimeState";
 import { actionPriority, actionTitle, effectivePlayerActionDurationMs } from "./actionRules";
 import { fatigueStateFor, recoverStamina } from "./actionRecovery";
@@ -21,6 +21,7 @@ import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./
 import { isPhysicalPlayerAction, PlayerMustStandError } from "./postureRules";
 import { logEvent } from "./worldEvents";
 import { canSendProactiveToPlayerId } from "./sessionPresence";
+import { notifyPlayerObservers, playerRestStartObserverText } from "./playerVisibility";
 
 export type ActorRef =
   | { actorType: "PLAYER"; playerId: number; creatureId?: never }
@@ -139,6 +140,26 @@ async function refreshKeyboardWhenPlayerQueueEnds(bot: Bot, action: WorldAction)
   if (activeCount > 0 || !player || player.isResting) return;
   await bot.api.sendMessage(chatId, "Черга дій завершена.", {
     reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false),
+  });
+}
+
+async function refreshKeyboardWhenQuickStatusChanges(bot: Bot, action: WorldAction, beforeStatusLabel?: string) {
+  if (action.actorType !== "PLAYER" || !action.playerId || action.durationMs > QUICK_PLAYER_ACTION_DURATION_MS) return;
+  if (!beforeStatusLabel || !(await canSendProactiveToPlayerId(action.playerId))) return;
+  const chatId = chatIdFromAction(action);
+  if (!chatId) return;
+
+  const player = await prisma.player.findUnique({
+    where: { id: action.playerId },
+    select: { telegramId: true, isAutoEnabled: true },
+  });
+  if (!player) return;
+
+  const afterStatusLabel = await mainStatusLabelForPlayerId(action.playerId);
+  if (!afterStatusLabel || afterStatusLabel === beforeStatusLabel) return;
+
+  await bot.api.sendMessage(chatId, `Стан: ${afterStatusLabel}`, {
+    reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), Boolean(player.isAutoEnabled)),
   });
 }
 
@@ -437,12 +458,16 @@ export async function cancelCurrentPlayerAction(playerId: number) {
   return { count: result.count + (stoppedRest ? 1 : 0) };
 }
 
-async function startNextQueuedAction(action: WorldAction) {
+async function startNextQueuedAction(bot: Bot, action: WorldAction) {
   const startedAt = new Date();
   let durationMs = action.durationMs;
+  let playerBeforeRest: { isResting: boolean; currentLocationId: number | null } | null = null;
   if (action.actorType === "PLAYER" && action.playerId) {
     const player = await prisma.player.findUnique({ where: { id: action.playerId } });
     durationMs = effectivePlayerActionDurationMs(player, action.type, action.durationMs);
+    if (action.type === "REST" && player) {
+      playerBeforeRest = { isResting: player.isResting, currentLocationId: player.currentLocationId };
+    }
   }
 
   const result = await prisma.worldAction.updateMany({
@@ -457,6 +482,13 @@ async function startNextQueuedAction(action: WorldAction) {
       where: { id: action.playerId },
       data: { posture: PlayerPosture.SITTING, isResting: true, lastStaminaRegenAt: new Date(), lastHpRegenAt: new Date(), restStarts: player?.isResting ? undefined : { increment: 1 } },
     });
+    if (!playerBeforeRest?.isResting) {
+      await notifyPlayerObservers(bot, {
+        playerId: action.playerId,
+        locationId: playerBeforeRest?.currentLocationId ?? player?.currentLocationId,
+        observerText: playerRestStartObserverText,
+      });
+    }
   }
 
   if (action.actorType === "CREATURE" && action.creatureId) {
@@ -465,7 +497,7 @@ async function startNextQueuedAction(action: WorldAction) {
   }
 }
 
-async function startQueuedActionsForActorType(actorType: WorldActorType, take: number) {
+async function startQueuedActionsForActorType(bot: Bot, actorType: WorldActorType, take: number) {
   const nextQueued = await prisma.worldAction.findMany({
     where: { actorType, status: "QUEUED" },
     orderBy: [{ position: "asc" }, { id: "asc" }],
@@ -507,7 +539,7 @@ async function startQueuedActionsForActorType(actorType: WorldActorType, take: n
     if (action.actorType === "PLAYER" && action.playerId && restingPlayerIds.has(action.playerId)) continue;
     startedActors.add(key);
     try {
-      await startNextQueuedAction(action);
+      await startNextQueuedAction(bot, action);
     } catch (error) {
       if (!isMissingRecordError(error)) throw error;
     }
@@ -532,7 +564,7 @@ async function processCreatureActionQueue(bot: Bot, completeAction: (bot: Bot, a
       }
     });
 
-    await startQueuedActionsForActorType("CREATURE", CREATURE_QUEUED_ACTION_BATCH);
+    await startQueuedActionsForActorType(bot, "CREATURE", CREATURE_QUEUED_ACTION_BATCH);
   } finally {
     creatureQueueProcessing = false;
   }
@@ -551,7 +583,11 @@ export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, ac
   await runWithConcurrency(duePlayerGroups, PLAYER_COMPLETION_CONCURRENCY, async (actions) => {
     for (const action of actions) {
       try {
+        const beforeStatusLabel = action.actorType === "PLAYER" && action.playerId
+          ? await mainStatusLabelForPlayerId(action.playerId)
+          : undefined;
         await completeAction(bot, action);
+        await refreshKeyboardWhenQuickStatusChanges(bot, action, beforeStatusLabel);
         completedPlayerActions.push(action);
       } catch (error) {
         if (!isMissingRecordError(error)) throw error;
@@ -559,7 +595,7 @@ export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, ac
     }
   });
 
-  await startQueuedActionsForActorType("PLAYER", PLAYER_QUEUED_ACTION_BATCH);
+  await startQueuedActionsForActorType(bot, "PLAYER", PLAYER_QUEUED_ACTION_BATCH);
   for (const action of completedPlayerActions.sort((a, b) => a.id - b.id)) {
     await refreshKeyboardWhenPlayerQueueEnds(bot, action);
   }

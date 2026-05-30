@@ -9,6 +9,7 @@ export const GATE_CARCASS_DROPOFF_LARGE_THRESHOLD = 13;
 export const GATE_HUNTING_SATURATION_CONTRIBUTION_THRESHOLD = 21;
 export const GATE_HUNTING_SATURATION_PREY_PRESSURE_MAX = 12;
 export const GATE_HUNTING_SATURATION_RADIUS = 4;
+export const CARCASS_QUEST_OVERRIDE_DATA_KEY = "carcassQuestOverride";
 const DEPLETED_VEGETATION_FEATURE_PREFIX = "depleted_vegetation_";
 
 type CarriedResource = {
@@ -29,6 +30,7 @@ type DropoffReaction = {
 
 export type GateHuntingSaturationState = {
   active: boolean;
+  manualOverride: CarcassQuestOverride | null;
   contributionTotal: number;
   preyPressure: number;
   depletedSignals: number;
@@ -36,6 +38,8 @@ export type GateHuntingSaturationState = {
   pressureQuiet: boolean;
   overgrazingQuiet: boolean;
 };
+
+export type CarcassQuestOverride = "start" | "stop";
 
 type DropoffContributor = {
   contributorKind: "PLAYER" | "NPC" | "UNKNOWN";
@@ -79,6 +83,11 @@ export type HunterFieldLineKind = keyof typeof HUNTER_FIELD_LINES;
 
 function featureData(feature: { data?: unknown }) {
   return feature.data && typeof feature.data === "object" && !Array.isArray(feature.data) ? feature.data as Record<string, unknown> : {};
+}
+
+function carcassQuestOverrideFromData(data: unknown): CarcassQuestOverride | null {
+  const value = featureData({ data })[CARCASS_QUEST_OVERRIDE_DATA_KEY];
+  return value === "start" || value === "stop" ? value : null;
 }
 
 function normalize(value: string) {
@@ -135,6 +144,7 @@ export function gateHuntingSaturationForSignals(input: {
   contributionTotal: number;
   preyPressure: number;
   depletedSignals?: number;
+  manualOverride?: CarcassQuestOverride | null;
 }): GateHuntingSaturationState {
   const contributionTotal = Math.max(0, Math.trunc(input.contributionTotal));
   const preyPressure = Math.max(0, Math.trunc(input.preyPressure));
@@ -142,8 +152,11 @@ export function gateHuntingSaturationForSignals(input: {
   const enoughContributions = contributionTotal >= GATE_HUNTING_SATURATION_CONTRIBUTION_THRESHOLD;
   const pressureQuiet = preyPressure <= GATE_HUNTING_SATURATION_PREY_PRESSURE_MAX;
   const overgrazingQuiet = depletedSignals <= 0;
+  const manualOverride = input.manualOverride ?? null;
+  const automaticActive = enoughContributions && pressureQuiet && overgrazingQuiet;
   return {
-    active: enoughContributions && pressureQuiet && overgrazingQuiet,
+    active: manualOverride === "start" ? false : manualOverride === "stop" ? true : automaticActive,
+    manualOverride,
     contributionTotal,
     preyPressure,
     depletedSignals,
@@ -171,20 +184,24 @@ async function totalDropoffContributions(db: any, dropoffFeatureKey: string) {
   return aggregate._sum.amount ?? 0;
 }
 
+export function gateHuntingAreaLocationWhere(location: { x: number; y: number; z: number }, radius = GATE_HUNTING_SATURATION_RADIUS) {
+  return {
+    z: location.z,
+    x: { gte: location.x - radius, lte: location.x + radius },
+    y: { gte: location.y - radius, lte: location.y + radius },
+  };
+}
+
 async function saturationSignals(db: any, dropoffFeatureKey: string) {
   const feature = await db.locationFeature.findUnique({
     where: { key: dropoffFeatureKey },
     include: { location: true },
   });
   if (!feature?.location) return gateHuntingSaturationForSignals({ contributionTotal: 0, preyPressure: Number.POSITIVE_INFINITY });
+  const manualOverride = carcassQuestOverrideFromData(feature.data);
 
   const nearbyLocations = await db.cellLocation.findMany({
-    where: {
-      regionId: feature.location.regionId,
-      z: feature.location.z,
-      x: { gte: feature.location.x - GATE_HUNTING_SATURATION_RADIUS, lte: feature.location.x + GATE_HUNTING_SATURATION_RADIUS },
-      y: { gte: feature.location.y - GATE_HUNTING_SATURATION_RADIUS, lte: feature.location.y + GATE_HUNTING_SATURATION_RADIUS },
-    },
+    where: gateHuntingAreaLocationWhere(feature.location),
     select: { id: true },
   });
   const locationIds = nearbyLocations.map((location: { id: number }) => location.id);
@@ -208,15 +225,37 @@ async function saturationSignals(db: any, dropoffFeatureKey: string) {
     }),
   ]);
 
-  return gateHuntingSaturationForSignals({ contributionTotal, preyPressure, depletedSignals });
+  return gateHuntingSaturationForSignals({ contributionTotal, preyPressure, depletedSignals, manualOverride });
 }
 
 export async function getGateHuntingSaturationState(dropoffFeatureKey = GATE_CARCASS_DROPOFF_FEATURE_KEY) {
   return saturationSignals(prisma, dropoffFeatureKey);
 }
 
+export async function setCarcassQuestOverride(mode: CarcassQuestOverride, dropoffFeatureKey = GATE_CARCASS_DROPOFF_FEATURE_KEY) {
+  const feature = await prisma.locationFeature.findUnique({
+    where: { key: dropoffFeatureKey },
+    select: { id: true, key: true, name: true, locationId: true, data: true },
+  });
+  if (!feature) throw new Error(`Не знайдено падальний рів: ${dropoffFeatureKey}.`);
+
+  const current = featureData(feature);
+  await prisma.locationFeature.update({
+    where: { id: feature.id },
+    data: {
+      data: {
+        ...current,
+        [CARCASS_QUEST_OVERRIDE_DATA_KEY]: mode,
+      } as Prisma.InputJsonValue,
+    },
+  });
+
+  const state = await getGateHuntingSaturationState(dropoffFeatureKey);
+  return { feature, state };
+}
+
 function saturationTechnicalLine(state: GateHuntingSaturationState) {
-  return `Технічно: huntingSaturation=${state.active ? "active" : "inactive"}; contributions=${state.contributionTotal}/${GATE_HUNTING_SATURATION_CONTRIBUTION_THRESHOLD}; preyPressure=${state.preyPressure}/${GATE_HUNTING_SATURATION_PREY_PRESSURE_MAX}; depletedSignals=${state.depletedSignals}.`;
+  return `Технічно: huntingSaturation=${state.active ? "active" : "inactive"}; override=${state.manualOverride ?? "auto"}; contributions=${state.contributionTotal}/${GATE_HUNTING_SATURATION_CONTRIBUTION_THRESHOLD}; preyPressure=${state.preyPressure}/${GATE_HUNTING_SATURATION_PREY_PRESSURE_MAX}; depletedSignals=${state.depletedSignals}.`;
 }
 
 export function gateHuntingNoticeText(baseText: string | null | undefined, state: GateHuntingSaturationState, showTechnicalDetails = false) {

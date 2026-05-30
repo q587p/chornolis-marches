@@ -42,6 +42,8 @@ Player-facing and observer text should keep posture and rest visible:
 - ordinary sleep, observer/location text: `{name} спить.`;
 - when rest completes or is interrupted, `isResting` becomes false but posture remains `SITTING`; the player should get a visible `Встати` action.
 
+Runtime state changes should also be broadcast to other players in the same location: `/sit`, `/stand`, auto-standing before a physical auto action, rest start, rest stop/completion, tutorial sleep entry and tutorial wake.
+
 Ordinary sleep and lucid dreams live in `docs/systems/sleep_and_dreams.md`. Tutorial sleep is a special dream/onboarding state and should remain explicit as `/sleep tutorial`, not a synonym for ordinary `/sleep`.
 
 When tutorial sleep and dream posture are shown together, text should make the layering explicit: `Ви спите. Уві сні ви сидите й відпочиваєте.` Future sitting/lying extensions may allow targets such as a bench, bedroll, chair or cart; plain `/sit` and `/lie` should keep meaning sitting or lying on the ground/floor of the current location.
