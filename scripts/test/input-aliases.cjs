@@ -58,6 +58,8 @@ assertAlias("/endSession", { kind: "session-presence", mode: "end" });
 assertAlias("/quit", { kind: "session-presence", mode: "end" });
 assertAlias("end session", { kind: "session-presence", mode: "end" });
 assertAlias("вийти з кущів", { kind: "move", direction: "OUTSIDE" });
+assertAlias("/use_mushrooms", { kind: "use-item", item: "mushrooms" });
+assertAlias("/gather_berries", { kind: "gather", resourceKey: "berries" });
 
 assertAlias("хто", { kind: "who" });
 assertAlias("хтоя", { kind: "me" });
@@ -212,5 +214,7 @@ assert.ok(suggestAliasInputs("шеп").includes("шепнути"), "Expected ali
 assert.ok(suggestAliasInputs("огл брама").includes("оглянути"), "Expected alias suggestions to include оглянути");
 assert.ok(suggestAliasEntries("огл брама").map(formatAliasSuggestion).includes("оглянути (/examine)"), "Expected formatted suggestions to include slash command for оглянути");
 assert.ok(suggestAliasEntries("швидк").map(formatAliasSuggestion).includes("швидкий огляд (/glance)"), "Expected formatted suggestions to include slash command for quick glance");
+assert.ok(suggestAliasEntries("стат").map(formatAliasSuggestion).includes("статистика (/stat)"), "Expected formatted suggestions to include slash command for statistics");
+assert.ok(suggestAliasEntries("гриб").map(formatAliasSuggestion).some((suggestion) => suggestion.includes("(/use_mushrooms)")), "Expected formatted suggestions to include slash command for using mushrooms");
 
 console.log("Input aliases OK");

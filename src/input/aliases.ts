@@ -528,6 +528,9 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "me") return "/me";
   if (parsed.kind === "inventory") return "/inventory";
   if (parsed.kind === "news") return "/news";
+  if (parsed.kind === "stat") return "/stat";
+  if (parsed.kind === "who") return "/who";
+  if (parsed.kind === "all") return "/all";
   if (parsed.kind === "time") return "/time";
   if (parsed.kind === "menu") return "/menu";
   if (parsed.kind === "session-presence") return parsed.mode === "afk" ? "/afk" : "/end_session";
@@ -535,12 +538,28 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "sleep") return parsed.tutorial ? "/sleep tutorial" : "/sleep";
   if (parsed.kind === "wake") return "/wake";
   if (parsed.kind === "open") return "/open";
+  if (parsed.kind === "gather") return parsed.resourceKey ? `/gather_${parsed.resourceKey}` : "/gather";
+  if (parsed.kind === "use-item") return `/use_${parsed.item}`;
+  if (parsed.kind === "light-torch") return "/light_torch";
+  if (parsed.kind === "douse-torch") return "/douse_torch";
   if (parsed.kind === "posture") return parsed.mode === "sit" ? "/sit" : "/stand";
   if (parsed.kind === "rest") return "/rest";
   if (parsed.kind === "auto") return "/auto";
   if (parsed.kind === "queue") return "/queue";
   if (parsed.kind === "track") return "/track";
+  if (parsed.kind === "inspect-vegetation" || parsed.kind === "inspect-border-marker" || parsed.kind === "inspect-feature") return "/examine";
+  if (parsed.kind === "wait") return "/wait";
+  if (parsed.kind === "add-twigs-campfire") return "/add_twigs_campfire";
+  if (parsed.kind === "cook-meat") return "/cook_meat";
   if (parsed.kind === "put-item") return "/put";
+  if (parsed.kind === "inspect-inventory-item") return "/item";
+  if (parsed.kind === "drop-inventory-item") return "/drop";
+  if (parsed.kind === "pickup-target") return "/get";
+  if (parsed.kind === "target-action") {
+    if (parsed.action === "attack") return "/attack";
+    if (parsed.action === "freshen") return "/freshen";
+    if (parsed.action === "inspect") return "/examine";
+  }
   return undefined;
 }
 
