@@ -724,6 +724,10 @@ function parsePutParts(value: string): { item: string; amount?: PutAliasAmount; 
 }
 
 function parsePutIntent(text: string): ParsedAliasCommand | null {
+  if (text === "put out torch") return null;
+  const defaultMatch = text.match(/^(?:put|покласти|класти)$/u);
+  if (defaultMatch) return { kind: "put-item", item: "туша", container: "рів" };
+
   const match = text.match(/^(?:put|покласти|класти)\s+(.+)$/u);
   if (!match?.[1]?.trim()) return null;
   const parsed = parsePutParts(match[1].trim());

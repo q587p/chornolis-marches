@@ -131,6 +131,7 @@ MVP scope:
 
 - source: player inventory;
 - target: local feature/container in the current location;
+- plain `/put`, `put` or `покласти` temporarily defaults to `/put туша рів` so the command mentioned on the drop-off feature remains directly usable;
 - amount: default `1`, integer amount, or `all` / `все`;
 - valid gate drop-off routes into the contribution service;
 - invalid items and invalid targets do not delete anything.
