@@ -124,6 +124,13 @@ Out of scope:
 
 The NPC hunter loop should call the same drop-off contribution service later. The hunter should not silently add counts or teleport carcasses into the tally.
 
+Implementation foundation:
+
+- `recordNpcCarcassDropoffContribution()` records NPC deposits through the same contribution table as player `put` actions;
+- NPC deposits preserve contributor kind and `creatureId`;
+- NPC deposits do not grant player inventory rewards;
+- the hunter loop should still show movement and local messages instead of silently calling the helper from far away.
+
 Future MVP shape:
 
 1. Start near the settlement gate.

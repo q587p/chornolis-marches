@@ -4,6 +4,8 @@ require("ts-node/register");
 
 const {
   dropoffReactionForTotals,
+  HUNTER_FIELD_LINES,
+  hunterFieldLine,
   isCarcassDropoffResourceKey,
 } = require("../../src/services/carcassDropoff");
 
@@ -35,5 +37,11 @@ assert.deepEqual(dropoffReactionForTotals(13, 14), {
   smallThreshold: false,
   largeThreshold: false,
 });
+
+assert.equal(HUNTER_FIELD_LINES.departure.includes("Начувайтесь, гризуни."), true);
+assert.equal(hunterFieldLine("departure", 0), "Начувайтесь, гризуни.");
+assert.equal(hunterFieldLine("departure", 3), "Начувайтесь, гризуни.");
+assert.equal(hunterFieldLine("deposit", 1), "Ще трохи тиску на стадо.");
+assert.equal(hunterFieldLine("giveUp", -1), "Сьогодні ліс не дав легкої стежки.");
 
 console.log("Gate hunting loop helpers OK");

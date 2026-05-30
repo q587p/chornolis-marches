@@ -58,3 +58,9 @@ Add a simple NPC hunter behavior that interacts with the same ecological loop as
 - Hunter deposits are counted as NPC contributions, not player rewards.
 - Behavior is rate-limited and safe for world ticks.
 - Hunter speech is compact, local/visible when possible and drawn from the documented hunting-pressure line pool.
+
+## 0.13.9 Foundation Note
+
+- `NAV-001` now provides route finding for gate-to-campfire and return movement.
+- `ECO-002` now exposes an NPC-facing drop-off helper, so hunter deposits can be recorded without inventing a separate counter or player reward path.
+- The remaining MVP work is the actual delayed hunter state machine: taking torches, moving by route, choosing prey, attacking through existing action pacing, collecting/claiming remains and returning to the gate.

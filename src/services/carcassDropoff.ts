@@ -23,6 +23,39 @@ type DropoffReaction = {
   largeThreshold: boolean;
 };
 
+type DropoffContributor = {
+  contributorKind: "PLAYER" | "NPC" | "UNKNOWN";
+  playerId?: number | null;
+  creatureId?: number | null;
+};
+
+export const HUNTER_FIELD_LINES = {
+  departure: [
+    "Начувайтесь, гризуни.",
+    "Відновимо рівновагу.",
+    "Ліс не має лишатися без зубів.",
+  ],
+  trail: [
+    "Звір розійшовся занадто близько до воріт.",
+    "Поки хижаків мало, люди стануть зубами краю.",
+    "Допоможемо лісовику втримати край.",
+  ],
+  return: [
+    "Падальний рів сьогодні не пустуватиме.",
+    "Не за срібло йду, а щоб трава знову піднялася.",
+  ],
+  deposit: [
+    "Писарю, став зарубку.",
+    "Ще трохи тиску на стадо.",
+  ],
+  giveUp: [
+    "Сліди розсипались. Повернуся іншим колом.",
+    "Сьогодні ліс не дав легкої стежки.",
+  ],
+} as const;
+
+export type HunterFieldLineKind = keyof typeof HUNTER_FIELD_LINES;
+
 function featureData(feature: { data?: unknown }) {
   return feature.data && typeof feature.data === "object" && !Array.isArray(feature.data) ? feature.data as Record<string, unknown> : {};
 }
@@ -74,6 +107,12 @@ export function dropoffReactionForTotals(before: number, after: number): Dropoff
     smallThreshold: before < GATE_CARCASS_DROPOFF_SMALL_THRESHOLD && after >= GATE_CARCASS_DROPOFF_SMALL_THRESHOLD,
     largeThreshold: before < GATE_CARCASS_DROPOFF_LARGE_THRESHOLD && after >= GATE_CARCASS_DROPOFF_LARGE_THRESHOLD,
   };
+}
+
+export function hunterFieldLine(kind: HunterFieldLineKind, seed = 0) {
+  const lines = HUNTER_FIELD_LINES[kind];
+  const index = Math.abs(seed) % lines.length;
+  return lines[index];
 }
 
 function amountText(amount: number, resources: CarriedResource[]) {
@@ -129,16 +168,101 @@ async function matchingCarriedResources(tx: Prisma.TransactionClient, playerId: 
   return [];
 }
 
-async function contributionTotal(tx: Prisma.TransactionClient, input: { dropoffFeatureKey: string; playerId: number }) {
+async function contributionTotal(tx: Prisma.TransactionClient, input: { dropoffFeatureKey: string } & DropoffContributor) {
   const aggregate = await tx.carcassDropoffContribution.aggregate({
     where: {
       dropoffFeatureKey: input.dropoffFeatureKey,
-      contributorKind: "PLAYER",
-      playerId: input.playerId,
+      contributorKind: input.contributorKind,
+      playerId: input.playerId ?? null,
+      creatureId: input.creatureId ?? null,
     },
     _sum: { amount: true },
   });
   return aggregate._sum.amount ?? 0;
+}
+
+function npcDropoffText(input: { amount: number; creatureName: string; reaction: DropoffReaction }) {
+  const lines = [
+    `${input.creatureName} складає ${input.amount} туші чи решток до падального рову.`,
+  ];
+
+  if (input.reaction.first) {
+    lines.push("Писар біля воріт мовчки ставить нову зарубку: допомога прийшла не від мандрівника, але край це теж запам’ятає.");
+  }
+
+  if (input.reaction.smallThreshold) {
+    lines.push("Сторож перевіряє рів і киває до мисливця: тиск на стадо вже відчутний.");
+  }
+
+  if (input.reaction.largeThreshold) {
+    lines.push("На сторожовому кілку з’являється довша зарубка. Це не плата, а знак, що поселення тримало край не самими словами.");
+  }
+
+  return lines.join("\n\n");
+}
+
+export async function recordNpcCarcassDropoffContribution(input: {
+  creatureId: number;
+  dropoffFeatureKey?: string;
+  resourceTypeKey: string;
+  amount?: number;
+}) {
+  const amount = input.amount ?? 1;
+  if (amount <= 0) throw new Error("Скільки саме покласти?");
+  if (!isCarcassDropoffResourceKey(input.resourceTypeKey)) {
+    throw new Error("Падальний рів приймає тільки туші чи придатні рештки здобичі.");
+  }
+
+  const dropoffFeatureKey = input.dropoffFeatureKey ?? GATE_CARCASS_DROPOFF_FEATURE_KEY;
+
+  return prisma.$transaction(async (tx) => {
+    const [feature, creature] = await Promise.all([
+      tx.locationFeature.findUnique({ where: { key: dropoffFeatureKey } }),
+      tx.creature.findUnique({
+        where: { id: input.creatureId },
+        include: { species: true },
+      }),
+    ]);
+
+    if (!feature || !isCarcassDropoffFeature(feature)) {
+      throw new Error("Тут немає придатного падального рову.");
+    }
+    if (!creature) throw new Error("Такого мисливця не знайдено.");
+
+    const before = await contributionTotal(tx, {
+      dropoffFeatureKey: feature.key,
+      contributorKind: "NPC",
+      creatureId: input.creatureId,
+    });
+
+    await tx.carcassDropoffContribution.create({
+      data: {
+        dropoffFeatureKey: feature.key,
+        locationId: feature.locationId,
+        contributorKind: "NPC",
+        creatureId: input.creatureId,
+        resourceTypeKey: input.resourceTypeKey,
+        amount,
+      },
+    });
+
+    const after = before + amount;
+    const reaction = dropoffReactionForTotals(before, after);
+    const creatureName = creature.name ?? creature.species.name;
+
+    return {
+      amount,
+      featureKey: feature.key,
+      locationId: feature.locationId,
+      contributorKind: "NPC" as const,
+      creatureId: input.creatureId,
+      contributionTotal: after,
+      reaction,
+      text: npcDropoffText({ amount, creatureName, reaction }),
+      observerText: `${creatureName} складає здобич до падального рову біля воріт.`,
+      fieldLine: hunterFieldLine("deposit", after),
+    };
+  });
 }
 
 export async function putInventoryIntoLocalFeature(input: {
@@ -167,7 +291,11 @@ export async function putInventoryIntoLocalFeature(input: {
     if (requested <= 0) throw new Error("Скільки саме покласти?");
     if (requested > available) throw new Error(`У ваших речах стільки немає. Можна покласти щонайбільше ${available}.`);
 
-    const before = await contributionTotal(tx, { dropoffFeatureKey: feature.key, playerId: input.playerId });
+    const before = await contributionTotal(tx, {
+      dropoffFeatureKey: feature.key,
+      contributorKind: "PLAYER",
+      playerId: input.playerId,
+    });
     let remaining = requested;
     for (const item of matched) {
       if (remaining <= 0) break;
