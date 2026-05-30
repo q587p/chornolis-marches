@@ -24,6 +24,7 @@ FISH-001,Riverbank fishing and fisher NPC,backlog,feature,survival,medium,"fishi
 FOOD-001,"Corpse freshening, meat and campfire cooking",testing,feature,survival,high,"food,corpses,freshening,cooking,hunger,campfire",docs/planning/items/FOOD-001-corpse-freshening-meat-and-campfire-cooking.md
 FOOD-002,Spoiled meat and risky eating,backlog,feature,survival,medium,"food,cooking,survival,hunger,risk",docs/planning/items/FOOD-002-spoiled-meat-and-risky-eating.md
 FOOD-003,Freshened corpse remains,backlog,feature,survival,medium,"food,corpses,remains,hunting,dropoff",docs/planning/items/FOOD-003-freshened-corpse-remains.md
+FOOD-004,Hunger cues and eating nudges,backlog,feature,survival,medium,"food,hunger,reminders,ux",docs/planning/items/FOOD-004-hunger-cues-and-eating-nudges.md
 HMYZ-001-A,Audit hmyz model,next,technical,survival,high,"hmyz,resources,inventory",docs/planning/items/HMYZ-001-A.md
 HMYZ-001-B,Seed starter hmyz,next,feature,survival,high,"hmyz,seed,starter",docs/planning/items/HMYZ-001-B.md
 HMYZ-001-C,Pickup hmyz polish,next,feature,survival,high,"hmyz,pickup,inventory",docs/planning/items/HMYZ-001-C.md

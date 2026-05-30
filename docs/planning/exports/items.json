@@ -485,6 +485,26 @@
     "file": "docs/planning/items/FOOD-003-freshened-corpse-remains.md"
   },
   {
+    "id": "FOOD-004",
+    "title": "Hunger cues and eating nudges",
+    "status": "backlog",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "food",
+      "hunger",
+      "reminders",
+      "ux"
+    ],
+    "depends_on": [
+      "FOOD-001",
+      "SES-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FOOD-004-hunger-cues-and-eating-nudges.md"
+  },
+  {
     "id": "HMYZ-001-A",
     "title": "Audit hmyz model",
     "status": "next",
