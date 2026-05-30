@@ -78,6 +78,7 @@ User preference:
 - Avoid mentioning hidden implementation details unless they matter to users/admins.
 - In public Ukrainian news, avoid exposing named characters as `NPC` or listing seeded/reserved NPC names when the player-facing point can be described diegetically, e.g. "мисливиця біля лісу" instead of a specific internal character name.
 - Public English changelog and release-note entries should use repository-technical wording for mechanics: `inventory`, `HP`, `stamina`, `twigs`, `location`, `resource`, etc. Use player-facing Ukrainian terms such as `Речі`, `Життя`, `Снага`, `хмиз`, and `місцина` in Ukrainian news, UI copy, in-game text, alias examples, and terminology/design docs, not as the default English release-note vocabulary.
+- When mentioning a visible button/action in `/help`, `/commands`, news or release notes, include the stable slash command in parentheses after the player-facing label. Example: `🌙 AFK / відійти` (`/afk`) and `🚪 Завершити сесію` (`/end_session`).
 - When writing dated release/update entries, use the local project date and Holocene calendar year, for example `12026-05-26` instead of `2026-05-26`.
 
 ## Repo / branch facts previously mentioned

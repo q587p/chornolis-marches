@@ -21,8 +21,8 @@ Existing players should default to `active` unless a more specific stored state 
 Use clear labels first:
 
 ```text
-🌙 AFK / відійти
-🚪 Завершити сесію
+🌙 AFK / відійти (/afk)
+🚪 Завершити сесію (/end_session)
 ```
 
 Commands and aliases:
@@ -30,6 +30,7 @@ Commands and aliases:
 ```text
 /afk
 /end_session
+/endSession
 /leave
 /quit
 afk
@@ -38,7 +39,7 @@ afk
 вийти
 ```
 
-`/leave` and bare `вийти` mean ending the Telegram play session. Directional movement out of an inside passage still uses scoped phrases such as `leave cave` or `вийти з кущів`.
+`/end_session` is the canonical Telegram command-menu form. `/endSession` is accepted as a compatibility alias when typed manually. `/leave` and bare `вийти` mean ending the Telegram play session. Directional movement out of an inside passage still uses scoped phrases such as `leave cave` or `вийти з кущів`.
 
 ## Auto-AFK
 

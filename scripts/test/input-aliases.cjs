@@ -54,6 +54,7 @@ assertAlias("leave cave", { kind: "move", direction: "OUTSIDE" });
 assertAlias("/afk", { kind: "session-presence", mode: "afk" });
 assertAlias("afk", { kind: "session-presence", mode: "afk" });
 assertAlias("/end_session", { kind: "session-presence", mode: "end" });
+assertAlias("/endSession", { kind: "session-presence", mode: "end" });
 assertAlias("/quit", { kind: "session-presence", mode: "end" });
 assertAlias("end session", { kind: "session-presence", mode: "end" });
 assertAlias("вийти з кущів", { kind: "move", direction: "OUTSIDE" });

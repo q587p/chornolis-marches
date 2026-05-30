@@ -14,7 +14,8 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Added
 
 - Added persisted session presence for players with `active`, `afk` and `ended` states, reminder pause state and player-interaction timestamps.
-- Added `AFK / away` and `End Session` controls with slash/text aliases.
+- Added `AFK / away` (`/afk`) and `End Session` (`/end_session`) controls with slash/text aliases.
+- Added `/endSession` as a compatibility alias for ending the current session.
 - Added silent Auto-AFK after a configurable player inactivity timeout.
 - Added a one-idle-reminder-per-scene guard so tutorial idle nudges cannot repeat in the same unresolved prompt before Auto-AFK.
 - Added send-time proactive-message guards so delayed tutorial nudges, companion lines, action-queue notices, deploy notices, fire timer notices and location notifications skip AFK or ended players.

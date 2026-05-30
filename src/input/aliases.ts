@@ -837,7 +837,7 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
   const commandText = withoutLeadingSlash(text);
 
   if (["afk", "відійти"].includes(commandText)) return { kind: "session-presence", mode: "afk" };
-  if (["end session", "end-session", "quit", "leave", "завершити сесію", "вийти"].includes(commandText)) return { kind: "session-presence", mode: "end" };
+  if (["end session", "end-session", "endsession", "quit", "leave", "завершити сесію", "вийти"].includes(commandText)) return { kind: "session-presence", mode: "end" };
 
   const directedSpeech = parseDirectedSpeech(raw, text);
   if (directedSpeech) return directedSpeech;
