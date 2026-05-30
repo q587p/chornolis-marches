@@ -2870,5 +2870,53 @@
     "label": "південний берег",
     "travelCost": 1,
     "isHidden": false
+  },
+  {
+    "fromKey": "forest_02_09",
+    "toKey": "forest_02_10",
+    "direction": "NORTH",
+    "label": "північ",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "forest_02_10",
+    "toKey": "forest_02_09",
+    "direction": "SOUTH",
+    "label": "південь",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "forest_02_10",
+    "toKey": "forest_03_10",
+    "direction": "EAST",
+    "label": "схід",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "forest_03_10",
+    "toKey": "forest_02_10",
+    "direction": "WEST",
+    "label": "захід",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "forest_03_10",
+    "toKey": "forest_04_10",
+    "direction": "EAST",
+    "label": "схід",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "forest_04_10",
+    "toKey": "forest_03_10",
+    "direction": "WEST",
+    "label": "захід",
+    "travelCost": 1,
+    "isHidden": false
   }
 ]

@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 
 require("ts-node/register");
 
-const { formatCreatureLifeState, formatCreatureStatusLine } = require("../../src/services/targets");
+const { formatCreatureLifeState, formatCreatureStatusLine, inventoryResourceSummary } = require("../../src/services/targets");
 const { buildTargetActionKeyboard, buildTargetListKeyboard } = require("../../src/ui/keyboards");
 
 const maleNpc = {
@@ -55,5 +55,12 @@ const singleFreshCorpseRows = buildTargetListKeyboard([
   { type: "creature", id: 1, label: "труп миша", actionLabel: "розкладається; залишилось 92 тіків", canGreet: false, isAnimal: true, isCorpse: true, canFreshen: true },
 ]).inline_keyboard.map((row) => row.map((button) => button.text));
 assert.deepEqual(singleFreshCorpseRows, [["труп миша"]]);
+
+assert.equal(inventoryResourceSummary([
+  { amount: 1, resourceType: { key: "cooked_meat", name: "смажене м'ясо" } },
+]), "- смажене м'ясо: лише одне");
+assert.equal(inventoryResourceSummary([
+  { amount: 1, resourceType: { key: "torch", name: "факел" } },
+]), "- факел: лише один");
 
 console.log("Target formatting OK");

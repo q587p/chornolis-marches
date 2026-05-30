@@ -22,6 +22,14 @@ const CORPSE_RESOURCE_DISPLAY_NAMES: Record<string, string> = {
   corpse_wolf_female: "труп вовчиці",
 };
 
+export type ResourceDisplayGender = "MASCULINE" | "FEMININE" | "NEUTER" | "PLURAL";
+
+export function resourceTypeGrammaticalGender(resourceType: { key: string; name: string }): ResourceDisplayGender {
+  if (resourceType.key === "raw_meat" || resourceType.key === "cooked_meat") return "NEUTER";
+  if (resourceType.key === "berries" || resourceType.key === "mushrooms" || resourceType.key === "herbs") return "PLURAL";
+  return "MASCULINE";
+}
+
 type CorpseResourceCreature = {
   sex?: string | null;
   species: {

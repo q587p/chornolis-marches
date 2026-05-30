@@ -37,6 +37,7 @@ import { canSendProactiveToPlayerId } from "./sessionPresence";
 import { freshenCorpseForMeat } from "./meat";
 import { rememberPlayerReplyTarget } from "./replyTargets";
 import { hunterClaimedCorpseAction, hunterConversationReplyLine, hunterReactionDurationMs, isHunterCreature } from "./npcHunter";
+import { predatorClaimedCorpseAction, predatorClaimedCorpseFoodValue, predatorClaimedCorpseOwnerId } from "./predatorFeeding";
 import { ATTACK_OBSERVATION_GROWTH_MESSAGE, ATTACK_PRACTICE_GROWTH_MESSAGE, isAttackPracticeMilestone, recordAttackKillSource, recordAttackObservation } from "./attackLearning";
 import { GATHERING_OBSERVATION_GROWTH_MESSAGE, GATHERING_PRACTICE_GROWTH_MESSAGE, isGatheringPracticeMilestone, recordGatheringObservation, recordGatheringSource } from "./gatheringLearning";
 import { COOKING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_PRACTICE_GROWTH_MESSAGE, recordCookingObservation, recordFresheningObservation, recordFresheningSource } from "./foodLearning";
@@ -209,7 +210,7 @@ export async function completeAction(bot: Bot, action: WorldAction) {
   if (!latest || latest.status !== "RUNNING") return;
   if (action.type === "MOVE") return completeMove(bot, action);
   if (action.type === "GATHER" || action.type === "GATHER_SPECIFIC") return completeGather(bot, action);
-  if (action.type === "EAT") return completeEat(action);
+  if (action.type === "EAT") return completeEat(bot, action);
   if (action.type === "LOOK") return completeLook(bot, action);
   if (action.type === "INSPECT") return completeInspect(bot, action);
   if (action.type === "GREET") return completeGreet(bot, action);
@@ -547,10 +548,44 @@ async function completeGather(bot: Bot, action: WorldAction) {
   if (!isTutorialForagingSuccess && resource.amount > 0 && nextAmount <= 0) await summonLisovykIfResourceDepleted(bot, resource.resourceType.name, resource.location.regionId);
 }
 
-async function completeEat(action: WorldAction) {
+async function completeEat(bot: Bot, action: WorldAction) {
   if (action.actorType !== "CREATURE" || !action.creatureId) return void (await setActionStatus(action, "FAILED"));
   const creature = await prisma.creature.findUnique({ where: { id: action.creatureId }, include: { species: true } });
   if (!creature || !creature.isAlive || creature.isGone) return void (await setActionStatus(action, "FAILED"));
+
+  const payload = payloadOf<{ corpseId?: number; stealPredatorPrey?: boolean }>(action);
+  if (creature.species.diet === "CARNIVORE" && payload.corpseId) {
+    const corpse = await prisma.creature.findFirst({
+      where: { id: payload.corpseId, locationId: creature.locationId, isAlive: false, isGone: false, isHidden: false, age: "CORPSE" },
+      include: { species: true },
+    });
+    const ownerId = predatorClaimedCorpseOwnerId(corpse?.currentAction);
+    if (corpse && ownerId && (ownerId === creature.id || payload.stealPredatorPrey === true)) {
+      const foodValue = predatorClaimedCorpseFoodValue(corpse.currentAction) ?? preyFoodValue(corpse);
+      const nextHunger = Math.max(0, creature.hunger - foodValue);
+      await prisma.creature.updateMany({
+        where: { id: corpse.id, isAlive: false, isGone: false },
+        data: { isGone: true, corpseDecayTicksLeft: 0, currentAction: `з'їдено хижаком: ${creature.species.key}` },
+      });
+      await prisma.creature.updateMany({
+        where: { id: creature.id },
+        data: { hunger: nextHunger, activity: "RESTING", currentAction: ownerId === creature.id ? `доїдає ${corpse.species.name}` : `перехопив чужу здобич: ${corpse.species.name}` },
+      });
+      await notifyLocation(bot, creature.locationId, -1, ownerId === creature.id ? `Щось повертається до здобичі й тягне її в темнішу траву.` : `Щось перехоплює чужу здобич і тягне її в темнішу траву.`);
+      await logEvent("NPC_ACTION", ownerId === creature.id ? "Predator ate prey corpse" : "Predator stole prey corpse", `${creature.species.key} #${creature.id} ate ${corpse.species.key} #${corpse.id}; owner=${ownerId}; food=${foodValue}`, creature.locationId);
+      await setActionStatus(action, "DONE");
+      return;
+    }
+
+    await prisma.creature.updateMany({
+      where: { id: creature.id },
+      data: { activity: "LOOKING", currentAction: "нюхає прим'яту землю, де зникла здобич" },
+    });
+    await notifyLocation(bot, creature.locationId, -1, `Щось повертається до здобичі, але знаходить лише прим’ятий мох.`);
+    await logEvent("NPC_ACTION", "Predator lost prey corpse", `${creature.species.key} #${creature.id}; corpse=${payload.corpseId}`, creature.locationId);
+    await setActionStatus(action, "DONE");
+    return;
+  }
 
   const resource = await prisma.resourceNode.findFirst({ where: { locationId: creature.locationId, amount: { gt: 0 }, resourceType: { key: { in: ["grass", "berries", "herbs", "mushrooms"] } } }, include: { resourceType: true } });
   if (resource && creature.species.diet !== "CARNIVORE") {
@@ -782,16 +817,16 @@ async function completeCreatureAttack(bot: Bot, action: WorldAction) {
         corpseDecayTicksLeft: target.species.corpseDecayTicks,
         activity: "RESTING",
         isHidden: hunter ? true : undefined,
-        currentAction: hunter ? hunterClaimedCorpseAction(attacker.id) : `убито хижаком: ${attacker.species.key}`,
+        currentAction: hunter ? hunterClaimedCorpseAction(attacker.id) : predatorClaimedCorpseAction(attacker.id, attacker.species.key, foodValue),
       },
     });
     await interruptActorActions({ actorType: "CREATURE", creatureId: target.id }, "істоту вбито", true);
     await prisma.creature.updateMany({
       where: { id: attacker.id },
       data: {
-        hunger: hunter ? attacker.hunger : Math.max(0, attacker.hunger - foodValue),
+        hunger: attacker.hunger,
         activity: "FIGHTING",
-        currentAction: hunter ? `вполював ${target.species.name} і несе здобич` : `убив ${target.species.name}`,
+        currentAction: hunter ? `вполював ${target.species.name} і несе здобич` : `убив ${target.species.name} і тримається поруч зі здобиччю`,
         successfulAttacks: { increment: 1 },
         kills: { increment: 1 },
       },

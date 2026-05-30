@@ -84,6 +84,12 @@ export const WORLD_LEXICON = [
   entry("resource.mushrooms", "resource", "PLURAL", "INANIMATE", ["resource", "gathering", "current"], ["гриби", "грибів", "грибам", "гриби", "грибами", "грибах", "гриби"]),
   entry("resource.root", "resource", "MASCULINE", "INANIMATE", ["resource", "roots", "future"], ["корінь", "кореня", "кореню", "корінь", "коренем", "корені", "кореню"]),
   entry("resource.potion", "resource", "NEUTER", "INANIMATE", ["resource", "potion", "future"], ["зілля", "зілля", "зіллю", "зілля", "зіллям", "зіллі", "зілля"]),
+  entry("resource.raw_meat", "resource", "NEUTER", "INANIMATE", ["resource", "food", "current"], ["сире м'ясо", "сирого м'яса", "сирому м'ясу", "сире м'ясо", "сирим м'ясом", "сирому м'ясі", "сире м'ясо"]),
+  entry("resource.cooked_meat", "resource", "NEUTER", "INANIMATE", ["resource", "food", "current"], ["смажене м'ясо", "смаженого м'яса", "смаженому м'ясу", "смажене м'ясо", "смаженим м'ясом", "смаженому м'ясі", "смажене м'ясо"]),
+  entry("resource.torch", "resource", "MASCULINE", "INANIMATE", ["resource", "fire", "light", "current"], ["факел", "факела", "факелу", "факел", "факелом", "факелі", "факеле"]),
+  entry("resource.lit_torch", "resource", "MASCULINE", "INANIMATE", ["resource", "fire", "light", "current"], ["запалений факел", "запаленого факела", "запаленому факелу", "запалений факел", "запаленим факелом", "запаленому факелі", "запалений факеле"]),
+  entry("resource.doused_torch", "resource", "MASCULINE", "INANIMATE", ["resource", "fire", "light", "current"], ["притушений факел", "притушеного факела", "притушеному факелу", "притушений факел", "притушеним факелом", "притушеному факелі", "притушений факеле"]),
+  entry("resource.twigs", "resource", "MASCULINE", "INANIMATE", ["resource", "fire", "fuel", "current"], ["хмиз", "хмизу", "хмизу", "хмиз", "хмизом", "хмизі", "хмизе"]),
 
   entry("feature.campfire", "feature", "NEUTER", "INANIMATE", ["feature", "fire", "current"], ["вогнище", "вогнища", "вогнищу", "вогнище", "вогнищем", "вогнищі", "вогнище"]),
   entry("feature.magic_campfire", "feature", "NEUTER", "INANIMATE", ["feature", "fire", "magic", "current"], ["незгасне вогнище", "незгасного вогнища", "незгасному вогнищу", "незгасне вогнище", "незгасним вогнищем", "незгасному вогнищі", "незгасне вогнище"]),

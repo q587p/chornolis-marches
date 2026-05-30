@@ -1,7 +1,7 @@
 ---
 id: ECO-004
 title: Population floor restoration
-status: next
+status: testing
 type: feature
 area: ecology
 priority: high
@@ -35,6 +35,14 @@ The MVP should be practical and quiet: if a configured animal species has no liv
 - Spawn the starter count back into the starter location(s).
 - Do not restore named NPCs, unique creatures, spirits, monsters or intentionally extinct/disabled species.
 - Keep the player-facing output quiet unless there is already a scribe/technical tick summary. This is a safeguard, not a push notification.
+
+## 0.13.21 Slice
+
+- Added `restorePopulationFloors()` to the world tick after animal lifecycle processing and before ordinary ecology reproduction/spread.
+- Uses `src/data/starterAnimals.ts` as the source of truth for starter species, locations, age mix and counts.
+- Restores starter rabbits, mice, foxes and wolves only when that species has `0` living, non-gone animals.
+- Excludes starter corpse groups and keeps restoration quiet except for technical world events / scribe tick summaries.
+- Added focused helper coverage in `scripts/test/population-restoration.cjs`.
 
 ## Acceptance
 

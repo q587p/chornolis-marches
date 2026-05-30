@@ -44,9 +44,11 @@ The forest should feel alive even when players do nothing.
 - Herbivores react to crowded danger gradually: they do not all flee instantly, but their chance to choose movement rises noticeably while the crowd remains.
 - Recent attacks add temporary local danger for ecology decisions. Herbivores become more likely to leave the attacked location for several world ticks.
 - Foxes prefer mice, then vulnerable rabbits; wolves prefer rabbits, especially young, old or wounded prey.
-- Predator kills leave corpses, reduce predator hunger and are counted in scribe/admin `/stat` next to old-age deaths.
+- Predator kills leave claimed corpses and are counted in scribe/admin `/stat` next to old-age deaths.
+- Carnivores do not recover hunger at kill time. They queue a later `EAT` action for the claimed corpse; if a player, hunter or another flow takes the corpse first, the predator loses that meal and stays hungry.
 - Character-caused animal deaths include player kills and non-animal NPC kills, and are counted separately from predator kills in scribe/admin `/stat`, protected web `/stat`, `/stat.json`, and ecology sign technical summaries.
-- Predator hunger recovery uses prey food value: mice are light food, rabbit children/old rabbits are partial food, healthy young/adult rabbits are worth more.
+- If a starter animal species disappears entirely from the waking world, the world tick quietly restores its starter living population at starter locations. This is a population-floor safeguard, not a player-facing notification or full spirit/migration system.
+- Predator hunger recovery uses prey food value when the predator actually eats the corpse: mice are light food, rabbit children/old rabbits are partial food, healthy young/adult rabbits are worth more.
 - Hungry herbivores are more likely to eat when forage exists and more likely to move when local food is gone or vegetation is exhausted.
 - Hungry predators are more likely to search for prey and attack; very hungry predators attack immediately when suitable prey is present.
 - Animals that remain above the starvation threshold can die of hunger. Starvation leaves a corpse, cancels pending creature actions, writes an `Animal starved` world event, and appears in ecology statistics.

@@ -2,6 +2,7 @@ id,title,status,type,area,priority,tags,file
 ADM-001,"Admin permissions, moderation and restricted reset",backlog,feature,admin,high,"admin,permissions,reset,moderation,names",docs/planning/items/ADM-001-admin-rights.md
 ADM-001-A,Dangerous scribe tool audit,done,technical,admin,medium,"admin,audit,safety",docs/planning/items/ADM-001-A.md
 ADM-001-B,Scribe action audit helper,done,technical,admin,medium,"admin,audit,world-events",docs/planning/items/ADM-001-B.md
+ADM-002,Scribe creature corpse creation command,backlog,feature,admin,medium,"admin,creatures,corpses,testing",docs/planning/items/ADM-002-add-creature-corpse-command.md
 CAL-001,"Calendar, moon phases and named years",icebox,system,world_time,medium,"calendar,world-time,moon-phases,seasons,folklore,atmosphere",docs/planning/items/CAL-001_calendar_moon_phases_and_named_years.md
 CMD-001,Near-term text command pack,testing,feature,commands,high,"commands,aliases,mud,speech,navigation",docs/planning/items/CMD-001-near-term-text-command-pack.md
 CMD-002,Put items into local containers and features,testing,feature,commands,high,"commands,inventory,containers,aliases",docs/planning/items/CMD-002-put-items-into-containers.md
@@ -13,7 +14,7 @@ DREAM-004,Advanced group and place-spirit dreams,icebox,feature,dreams,low,"drea
 ECO-001,Reproduction and herbivore overpopulation,testing,feature,ecology,high,"ecology,reproduction,herbivores,rabbits,resources,world-reactivity",docs/planning/items/ECO-001-reproduction-and-overpopulation.md
 ECO-002,Carcass drop-off contribution and settlement reaction,testing,feature,ecology,high,"ecology,hunting,settlement,rewards",docs/planning/items/ECO-002-carcass-dropoff-reaction.md
 ECO-003,Gate hunting saturation and stand-down state,testing,feature,ecology,high,"ecology,hunting,settlement,npc,rewards",docs/planning/items/ECO-003-gate-hunting-saturation.md
-ECO-004,Population floor restoration,next,feature,ecology,high,"ecology,creatures,population,world-tick",docs/planning/items/ECO-004-population-floor-restoration.md
+ECO-004,Population floor restoration,testing,feature,ecology,high,"ecology,creatures,population,world-tick",docs/planning/items/ECO-004-population-floor-restoration.md
 ECO-005,Animal restoration offerings,next,feature,ecology,high,"ecology,creatures,offerings,location-features",docs/planning/items/ECO-005-animal-restoration-offerings.md
 ECON-001,Barter and trade,backlog,feature,economy,medium,"barter,trade,npc,economy",docs/planning/items/ECON-001-barter-and-trade.md
 FIRE-001-A,Active light connects to visibility,next,feature,survival,high,"fire,light,visibility",docs/planning/items/FIRE-001-A.md
@@ -23,6 +24,9 @@ FISH-001,Riverbank fishing and fisher NPC,backlog,feature,survival,medium,"fishi
 FOOD-001,"Corpse freshening, meat and campfire cooking",testing,feature,survival,high,"food,corpses,freshening,cooking,hunger,campfire",docs/planning/items/FOOD-001-corpse-freshening-meat-and-campfire-cooking.md
 FOOD-002,Spoiled meat and risky eating,backlog,feature,survival,medium,"food,cooking,survival,hunger,risk",docs/planning/items/FOOD-002-spoiled-meat-and-risky-eating.md
 FOOD-003,Freshened corpse remains,backlog,feature,survival,medium,"food,corpses,remains,hunting,dropoff",docs/planning/items/FOOD-003-freshened-corpse-remains.md
+FOOD-004,Hunger cues and eating nudges,backlog,feature,survival,medium,"food,hunger,reminders,ux",docs/planning/items/FOOD-004-hunger-cues-and-eating-nudges.md
+FOOD-005,Hunger consequences for health and stamina recovery,backlog,feature,survival,medium,"food,hunger,hp,stamina,survival",docs/planning/items/FOOD-005-hunger-consequences.md
+FOOD-006,Mushroom varieties and identification,backlog,feature,survival,medium,"food,mushrooms,foraging,alchemy,risk",docs/planning/items/FOOD-006-mushroom-varieties-and-identification.md
 HMYZ-001-A,Audit hmyz model,next,technical,survival,high,"hmyz,resources,inventory",docs/planning/items/HMYZ-001-A.md
 HMYZ-001-B,Seed starter hmyz,next,feature,survival,high,"hmyz,seed,starter",docs/planning/items/HMYZ-001-B.md
 HMYZ-001-C,Pickup hmyz polish,next,feature,survival,high,"hmyz,pickup,inventory",docs/planning/items/HMYZ-001-C.md
@@ -33,6 +37,8 @@ ICE-002,Rituals and sacred days,icebox,feature,mythic_systems,low,"rituals,calen
 ICE-003,Caravans and regional trade,icebox,feature,economy,low,"economy,settlements,npc,world_simulation",docs/planning/items/ICE-003-caravans.md
 ICE-004,"Camps, shelters and construction",icebox,feature,construction,low,"survival,crafting,settlement,storage",docs/planning/items/ICE-004-construction.md
 ITEM-001,Pickup versus gather command semantics,testing,bug,inventory,high,"aliases,pickup,gather,inventory,ground-items",docs/planning/items/ITEM-001-pickup-vs-gather-semantics.md
+ITEM-002,Queued pickup actions,backlog,feature,inventory,medium,"pickup,inventory,action-queue,stamina,ground-items",docs/planning/items/ITEM-002-queued-pickup-actions.md
+LANG-001,Lexicon and agreement audit,backlog,chore,content,medium,"ukrainian,lexicon,grammar,text",docs/planning/items/LANG-001-lexicon-and-agreement-audit.md
 LEARN-001-A,Minimal learning storage decision,next,design,learning,high,"learning,progression,schema",docs/planning/items/LEARN-001-A.md
 LEARN-001-B,Minimal CharacterSkill model,next,technical,learning,high,"learning,schema,skills",docs/planning/items/LEARN-001-B.md
 LEARN-001-C,grantSkillProgress helper,next,feature,learning,high,"learning,service,progression",docs/planning/items/LEARN-001-C.md
@@ -46,7 +52,7 @@ LOOP-003,Old campfire memory omen,testing,feature,core-loop,medium,"fire,light,o
 MAP-002-A,First biome foraging table,next,feature,world,high,"map,biome,foraging",docs/planning/items/MAP-002-A.md
 MAP-002-B,Generic gather uses biome candidates,next,feature,world,high,"gather,biome,foraging",docs/planning/items/MAP-002-B.md
 MAP-002-C,Biome foraging text variants,next,content,world,medium,"gather,biome,copy",docs/planning/items/MAP-002-C.md
-MAP-003,Playable map expansion,next,content,world,high,"map,world,exploration,regions",docs/planning/items/MAP-003-playable-map-expansion.md
+MAP-003,Playable map expansion,testing,content,world,high,"map,world,exploration,regions",docs/planning/items/MAP-003-playable-map-expansion.md
 NAV-001,Location-to-location route finding,testing,feature,world,medium,"navigation,movement,npc,world",docs/planning/items/NAV-001-location-route-finding.md
 NPC-002,Hunter auto-program MVP,backlog,feature,npc,high,"npc,ecology,hunting,living-world",docs/planning/items/NPC-002-hunter-auto-program.md
 NPC-003,Herbalist service layer,next,technical,npc,medium,"npc,herbalist,architecture,world-tick",docs/planning/items/NPC-003-herbalist-service-layer.md
@@ -74,6 +80,7 @@ ONB-002-A,Expand prepared-name pool,testing,feature,onboarding,high,"onboarding,
 ONB-002-B,Expand forbidden-name normalization,testing,feature,onboarding,high,"onboarding,names,validation",docs/planning/items/ONB-002-B.md
 ONB-002-C,Uncertain custom-name review status,testing,feature,onboarding,high,"onboarding,scribes,names",docs/planning/items/ONB-002-C.md
 ONB-002-D,Name onboarding help copy,next,ux,onboarding,medium,"onboarding,help,copy",docs/planning/items/ONB-002-D.md
+ONB-003,Tutorial player wellbeing aside,backlog,ux,onboarding,medium,"onboarding,tutorial,wellbeing,sleep",docs/planning/items/ONB-003-player-wellbeing-aside.md
 PERF-001,Runtime performance plan and creature simulation budget,backlog,technical,performance,high,"performance,ecology,creatures,action-queue,simulation,status,auto",docs/planning/items/PERF-001-budgeted-and-aggregated-creature-simulation.md
 PLAN-001,Repository docs are the planning source of truth,testing,documentation,planning,high,"planning,docs,roadmap",docs/planning/items/PLAN-001.md
 PROG-002,Observation-based learning,backlog,feature,progression,medium,"skills,observation,npc,animals,mythic",docs/planning/items/PROG-002-observation-learning.md
@@ -107,6 +114,7 @@ TRACK-LEARN-001-A,Track-examine progress hint,next,feature,learning,high,"tracki
 TRACK-LEARN-001-B,Animal movement observation,next,feature,learning,medium,"tracking,animals,observe",docs/planning/items/TRACK-LEARN-001-B.md
 TRACK-LEARN-001-C,Learning respects visibility and light,next,feature,learning,high,"learning,visibility,light",docs/planning/items/TRACK-LEARN-001-C.md
 UX-001,Command and feature icon collision audit,backlog,chore,ux,low,"ux,icons,keyboard,features",docs/planning/items/UX-001-command-feature-icon-collision.md
+UX-002,Target pagination return context,backlog,chore,ux,medium,"ux,pagination,corpses,telegram",docs/planning/items/UX-002-target-pagination-return-context.md
 VIS-001-A,Shared visibility service skeleton,next,technical,visibility,high,"visibility,night,light",docs/planning/items/VIS-001-A.md
 VIS-001-B,Hide location details in darkness,next,feature,visibility,high,"visibility,look,night",docs/planning/items/VIS-001-B.md
 VIS-001-C,Nearby beings visibility in darkness,next,feature,visibility,high,"visibility,targets,night",docs/planning/items/VIS-001-C.md

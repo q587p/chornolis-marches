@@ -2326,5 +2326,35 @@
     "resourceKey": "twigs",
     "amount": 1,
     "maxAmount": 1
+  },
+  {
+    "locationKey": "forest_02_10",
+    "resourceKey": "berries",
+    "amount": 5,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_02_10",
+    "resourceKey": "herbs",
+    "amount": 4,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_03_10",
+    "resourceKey": "herbs",
+    "amount": 3,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_10",
+    "resourceKey": "mushrooms",
+    "amount": 8,
+    "maxAmount": 100
+  },
+  {
+    "locationKey": "forest_04_10",
+    "resourceKey": "twigs",
+    "amount": 2,
+    "maxAmount": 2
   }
 ]

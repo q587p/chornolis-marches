@@ -13,6 +13,8 @@ import { filterLisovykAllowedLocations, isLisovykForbiddenLocation, isLisovykFor
 import { DREAM_GATE_FEATURE_KEY, DREAM_GATE_FEATURE_KEYS } from "./tutorial";
 import { hunterClaimedCorpseDecayAction, isHunterCreature, tickNpcHunter } from "./npcHunter";
 import { chance, chancePermille, pickOptional as pick, randomInt } from "../utils/random";
+import { restorePopulationFloors } from "./populationRestoration";
+import { PREDATOR_PREY_CLAIM_PREFIX, predatorClaimedCorpseDecayAction, predatorClaimedCorpseMarker } from "./predatorFeeding";
 
 const DEFAULT_TICK_INTERVAL_MS = TICK_MS;
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
@@ -854,6 +856,7 @@ async function decayCorpse(creature: any) {
   const decayLeft = creature.corpseDecayTicksLeft ?? creature.species.corpseDecayTicks;
   const carriedByPlayerId = carriedCorpseOwnerId(creature.currentAction);
   const hunterClaimedAction = hunterClaimedCorpseDecayAction(creature.currentAction, Math.max(0, decayLeft - 1));
+  const predatorClaimedAction = predatorClaimedCorpseDecayAction(creature.currentAction, Math.max(0, decayLeft - 1));
 
   if (decayLeft > 1) {
     const nextDecayLeft = decayLeft - 1;
@@ -863,7 +866,7 @@ async function decayCorpse(creature: any) {
         age: "CORPSE",
         isAlive: false,
         corpseDecayTicksLeft: nextDecayLeft,
-        currentAction: carriedByPlayerId ? carriedCorpseAction(carriedByPlayerId, nextDecayLeft) : hunterClaimedAction ?? `розкладається; залишилось ${nextDecayLeft} тіків`,
+        currentAction: carriedByPlayerId ? carriedCorpseAction(carriedByPlayerId, nextDecayLeft) : hunterClaimedAction ?? predatorClaimedAction ?? `розкладається; залишилось ${nextDecayLeft} тіків`,
       },
     });
     if (decayed.count === 0) return "gone";
@@ -978,6 +981,54 @@ async function tickCarnivore(c: any) {
   const hunger = Math.max(0, c.hunger ?? 0);
   const hungry = hunger >= 3;
   const starving = hunger >= Math.floor(CREATURE_STARVATION_HUNGER_THRESHOLD * 0.75);
+  const claimedCorpse = await prisma.creature.findFirst({
+    where: {
+      locationId: c.locationId,
+      isAlive: false,
+      isGone: false,
+      isHidden: false,
+      age: "CORPSE",
+      currentAction: { contains: predatorClaimedCorpseMarker(c.id) },
+    },
+    include: { species: true },
+    orderBy: { id: "asc" },
+  });
+  if (claimedCorpse) {
+    await enqueueCreatureAction({
+      creatureId: c.id,
+      type: "EAT",
+      payload: { corpseId: claimedCorpse.id },
+      durationMs: actionDurationMs("EAT", c.stamina),
+      interruptQueued: true,
+    });
+    return "queuedEat";
+  }
+
+  if (starving || (hungry && chance(70))) {
+    const stealableCorpse = await prisma.creature.findFirst({
+      where: {
+        locationId: c.locationId,
+        isAlive: false,
+        isGone: false,
+        isHidden: false,
+        age: "CORPSE",
+        currentAction: { contains: PREDATOR_PREY_CLAIM_PREFIX },
+      },
+      include: { species: true },
+      orderBy: { id: "asc" },
+    });
+    if (stealableCorpse) {
+      await enqueueCreatureAction({
+        creatureId: c.id,
+        type: "EAT",
+        payload: { corpseId: stealableCorpse.id, stealPredatorPrey: true },
+        durationMs: actionDurationMs("EAT", c.stamina),
+        interruptQueued: true,
+      });
+      return "queuedEat";
+    }
+  }
+
   const prey = await selectPredatorPrey(c);
   if (prey) {
     if (starving || chance(predatorAttackChance(c, prey))) {
@@ -1239,7 +1290,7 @@ export async function worldTick() {
   running = true;
   let queuedMove = 0, queuedGather = 0, queuedEat = 0, queuedLook = 0, queuedSay = 0, queuedRest = 0, queuedAttack = 0, stoodDown = 0, skippedBusy = 0, errors = 0, regenerated = 0;
   let aged = 0, oldAgeDeaths = 0, starvationDeaths = 0, corpsesDecaying = 0, corpsesGone = 0;
-  let rabbitBirths = 0, mouseBirths = 0, rabbitsSpread = 0, miceSpread = 0, overgrazedLocations = 0, overgrazedResources = 0, depletedByOvergrazing = 0;
+  let rabbitBirths = 0, mouseBirths = 0, rabbitsSpread = 0, miceSpread = 0, overgrazedLocations = 0, overgrazedResources = 0, depletedByOvergrazing = 0, populationFloorRestored = 0;
   let foxBirths = 0, wolfBirths = 0, foxPreyUnits = 0, wolfPreyUnits = 0;
   let lisovykAwakened = false, lisovykSlept = false;
   let dreamGatesClosed = 0;
@@ -1253,6 +1304,9 @@ export async function worldTick() {
     starvationDeaths = lifecycle.starved;
     corpsesDecaying = lifecycle.decayed;
     corpsesGone = lifecycle.gone;
+
+    const populationFloor = await restorePopulationFloors();
+    populationFloorRestored = populationFloor.restored;
 
     const ecology = await processSmallHerbivoreEcology();
     rabbitBirths = ecology.rabbitBirths;
@@ -1385,11 +1439,11 @@ export async function worldTick() {
       }
     }
 
-    if (DEBUG) console.log(`[WORLD TICK] done: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, stoodDown=${stoodDown}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, starvationDeaths=${starvationDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, rabbitBirths=${rabbitBirths}, mouseBirths=${mouseBirths}, rabbitsSpread=${rabbitsSpread}, miceSpread=${miceSpread}, foxBirths=${foxBirths}, wolfBirths=${wolfBirths}, foxPreyUnits=${foxPreyUnits}, wolfPreyUnits=${wolfPreyUnits}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, dreamGatesClosed=${dreamGatesClosed}, errors=${errors}`);
-    await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "World Tick", description: `Tick #${tickNumber}: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, stoodDown=${stoodDown}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, starvationDeaths=${starvationDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, rabbitBirths=${rabbitBirths}, mouseBirths=${mouseBirths}, rabbitsSpread=${rabbitsSpread}, miceSpread=${miceSpread}, foxBirths=${foxBirths}, wolfBirths=${wolfBirths}, foxPreyUnits=${foxPreyUnits}, wolfPreyUnits=${wolfPreyUnits}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, dreamGatesClosed=${dreamGatesClosed}, errors=${errors}` } });
+    if (DEBUG) console.log(`[WORLD TICK] done: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, stoodDown=${stoodDown}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, starvationDeaths=${starvationDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, populationFloorRestored=${populationFloorRestored}, rabbitBirths=${rabbitBirths}, mouseBirths=${mouseBirths}, rabbitsSpread=${rabbitsSpread}, miceSpread=${miceSpread}, foxBirths=${foxBirths}, wolfBirths=${wolfBirths}, foxPreyUnits=${foxPreyUnits}, wolfPreyUnits=${wolfPreyUnits}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, dreamGatesClosed=${dreamGatesClosed}, errors=${errors}`);
+    await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "World Tick", description: `Tick #${tickNumber}: queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, stoodDown=${stoodDown}, skippedBusy=${skippedBusy}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, starvationDeaths=${starvationDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, populationFloorRestored=${populationFloorRestored}, rabbitBirths=${rabbitBirths}, mouseBirths=${mouseBirths}, rabbitsSpread=${rabbitsSpread}, miceSpread=${miceSpread}, foxBirths=${foxBirths}, wolfBirths=${wolfBirths}, foxPreyUnits=${foxPreyUnits}, wolfPreyUnits=${wolfPreyUnits}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, dreamGatesClosed=${dreamGatesClosed}, errors=${errors}` } });
     if (botInstance && tickNumber % 5 === 0) {
       const region = await prisma.region.findFirst();
-      if (region) await notifyRegionTechnicalScribes(botInstance, region.id, `🌿 Світ ворухнувся.\n\nТехнічний звіт раз на 5 тіків. Поточний тік #${tickNumber}: заплановано рухів — ${queuedMove}, збору — ${queuedGather}, їжі — ${queuedEat}, оглядів — ${queuedLook}, атак — ${queuedAttack}, зайнятих істот — ${skippedBusy}, старість — ${aged}, смертей від старості — ${oldAgeDeaths}, смертей від голоду — ${starvationDeaths}, зниклих трупів — ${corpsesGone}, народилося зайченят — ${rabbitBirths}, мишенят — ${mouseBirths}, лисенят — ${foxBirths}, вовченят — ${wolfBirths}, зайців розбіглося — ${rabbitsSpread}, мишей — ${miceSpread}, об'їдено ресурсів — ${overgrazedResources}, відновлено вузлів — ${regenerated}.`);
+      if (region) await notifyRegionTechnicalScribes(botInstance, region.id, `🌿 Світ ворухнувся.\n\nТехнічний звіт раз на 5 тіків. Поточний тік #${tickNumber}: заплановано рухів — ${queuedMove}, збору — ${queuedGather}, їжі — ${queuedEat}, оглядів — ${queuedLook}, атак — ${queuedAttack}, зайнятих істот — ${skippedBusy}, старість — ${aged}, смертей від старості — ${oldAgeDeaths}, смертей від голоду — ${starvationDeaths}, зниклих трупів — ${corpsesGone}, відновлено стартових тварин — ${populationFloorRestored}, народилося зайченят — ${rabbitBirths}, мишенят — ${mouseBirths}, лисенят — ${foxBirths}, вовченят — ${wolfBirths}, зайців розбіглося — ${rabbitsSpread}, мишей — ${miceSpread}, об'їдено ресурсів — ${overgrazedResources}, відновлено вузлів — ${regenerated}.`);
     }
     if (botInstance) await notifyFadingFireTimers(botInstance);
   } finally {

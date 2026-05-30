@@ -8,7 +8,7 @@ import { lifetimeSummary } from "./itemLifetime";
 import { playerShowsTechnicalDetails } from "./technicalDetails";
 import { creatureCarriedTorchCount, getCreatureTorchState, getPlayerTorchState } from "./fire";
 import { isFreshenedCorpse } from "./meat";
-import { resourceTypeDisplayName } from "./corpses";
+import { resourceTypeDisplayName, resourceTypeGrammaticalGender, type ResourceDisplayGender } from "./corpses";
 import {
   claimedCorpsesForHunter,
   groupHunterClaimedCorpses,
@@ -123,9 +123,13 @@ function genderedUnarmed(player: { grammaticalGender?: string | null; pronoun?: 
   return `${looks} беззбройним.`;
 }
 
-function qualitativeAmount(amount: number) {
+function qualitativeAmount(amount: number, gender: ResourceDisplayGender = "MASCULINE") {
   if (amount <= 0) return "немає";
-  if (amount === 1) return "лише один";
+  if (amount === 1) {
+    if (gender === "FEMININE") return "лише одна";
+    if (gender === "NEUTER") return "лише одне";
+    return "лише один";
+  }
   if (amount <= 3) return "трохи";
   if (amount <= 8) return "чимало";
   return "багато";
@@ -136,7 +140,7 @@ function inventoryResourceLines(resources: Array<{ amount: number; resourceType:
     .filter((resource) => resource.amount > 0)
     .map((resource) => options.exact
       ? `- ${resourceTypeDisplayName(resource.resourceType)} ×${resource.amount}`
-      : `- ${resourceTypeDisplayName(resource.resourceType)}: ${qualitativeAmount(resource.amount)}`);
+      : `- ${resourceTypeDisplayName(resource.resourceType)}: ${qualitativeAmount(resource.amount, resourceTypeGrammaticalGender(resource.resourceType))}`);
 }
 
 export function inventoryResourceSummary(resources: Array<{ amount: number; resourceType: { key: string; name: string } }>, options: { exact?: boolean } = {}) {

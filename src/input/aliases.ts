@@ -581,7 +581,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "menu") return "/menu";
   if (parsed.kind === "session-presence") return parsed.mode === "afk" ? "/afk" : "/end_session";
   if (parsed.kind === "chat") return "/chat";
-  if (parsed.kind === "sleep") return parsed.tutorial ? "/sleep tutorial" : "/sleep";
+  if (parsed.kind === "sleep") return parsed.tutorial ? "/sleep_tutorial" : "/sleep";
   if (parsed.kind === "wake") return "/wake";
   if (parsed.kind === "open") return "/open";
   if (parsed.kind === "gather") return parsed.resourceKey ? `/gather_${parsed.resourceKey}` : "/gather";

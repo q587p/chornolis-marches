@@ -52,6 +52,23 @@
     "file": "docs/planning/items/ADM-001-B.md"
   },
   {
+    "id": "ADM-002",
+    "title": "Scribe creature corpse creation command",
+    "status": "backlog",
+    "type": "feature",
+    "area": "admin",
+    "priority": "medium",
+    "tags": [
+      "admin",
+      "creatures",
+      "corpses",
+      "testing"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/ADM-002-add-creature-corpse-command.md"
+  },
+  {
     "id": "CAL-001",
     "title": "Calendar, moon phases and named years",
     "status": "icebox",
@@ -280,7 +297,7 @@
   {
     "id": "ECO-004",
     "title": "Population floor restoration",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "ecology",
     "priority": "high",
@@ -468,6 +485,68 @@
     "file": "docs/planning/items/FOOD-003-freshened-corpse-remains.md"
   },
   {
+    "id": "FOOD-004",
+    "title": "Hunger cues and eating nudges",
+    "status": "backlog",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "food",
+      "hunger",
+      "reminders",
+      "ux"
+    ],
+    "depends_on": [
+      "FOOD-001",
+      "SES-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FOOD-004-hunger-cues-and-eating-nudges.md"
+  },
+  {
+    "id": "FOOD-005",
+    "title": "Hunger consequences for health and stamina recovery",
+    "status": "backlog",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "food",
+      "hunger",
+      "hp",
+      "stamina",
+      "survival"
+    ],
+    "depends_on": [
+      "FOOD-001",
+      "FOOD-004"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FOOD-005-hunger-consequences.md"
+  },
+  {
+    "id": "FOOD-006",
+    "title": "Mushroom varieties and identification",
+    "status": "backlog",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "food",
+      "mushrooms",
+      "foraging",
+      "alchemy",
+      "risk"
+    ],
+    "depends_on": [
+      "FOOD-001",
+      "MAP-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FOOD-006-mushroom-varieties-and-identification.md"
+  },
+  {
     "id": "HMYZ-001-A",
     "title": "Audit hmyz model",
     "status": "next",
@@ -653,6 +732,43 @@
     "depends_on": [],
     "exports": {},
     "file": "docs/planning/items/ITEM-001-pickup-vs-gather-semantics.md"
+  },
+  {
+    "id": "ITEM-002",
+    "title": "Queued pickup actions",
+    "status": "backlog",
+    "type": "feature",
+    "area": "inventory",
+    "priority": "medium",
+    "tags": [
+      "pickup",
+      "inventory",
+      "action-queue",
+      "stamina",
+      "ground-items"
+    ],
+    "depends_on": [
+      "ITEM-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ITEM-002-queued-pickup-actions.md"
+  },
+  {
+    "id": "LANG-001",
+    "title": "Lexicon and agreement audit",
+    "status": "backlog",
+    "type": "chore",
+    "area": "content",
+    "priority": "medium",
+    "tags": [
+      "ukrainian",
+      "lexicon",
+      "grammar",
+      "text"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/LANG-001-lexicon-and-agreement-audit.md"
   },
   {
     "id": "LEARN-001-A",
@@ -893,7 +1009,7 @@
   {
     "id": "MAP-003",
     "title": "Playable map expansion",
-    "status": "next",
+    "status": "testing",
     "type": "content",
     "area": "world",
     "priority": "high",
@@ -1410,6 +1526,25 @@
     ],
     "exports": {},
     "file": "docs/planning/items/ONB-002-D.md"
+  },
+  {
+    "id": "ONB-003",
+    "title": "Tutorial player wellbeing aside",
+    "status": "backlog",
+    "type": "ux",
+    "area": "onboarding",
+    "priority": "medium",
+    "tags": [
+      "onboarding",
+      "tutorial",
+      "wellbeing",
+      "sleep"
+    ],
+    "depends_on": [
+      "ONB-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-003-player-wellbeing-aside.md"
   },
   {
     "id": "PERF-001",
@@ -2041,6 +2176,23 @@
     "depends_on": [],
     "exports": {},
     "file": "docs/planning/items/UX-001-command-feature-icon-collision.md"
+  },
+  {
+    "id": "UX-002",
+    "title": "Target pagination return context",
+    "status": "backlog",
+    "type": "chore",
+    "area": "ux",
+    "priority": "medium",
+    "tags": [
+      "ux",
+      "pagination",
+      "corpses",
+      "telegram"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/UX-002-target-pagination-return-context.md"
   },
   {
     "id": "VIS-001-A",

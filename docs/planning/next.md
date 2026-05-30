@@ -16,19 +16,23 @@ The current lane is the three-month vertical slice:
 - SES-001: add AFK / End Session controls, silent Auto-AFK after player inactivity, one idle reminder per scene and send-time guards for delayed/proactive messages so the bot stays quiet while a player is away.
 - ONB-002: character name onboarding polish.
 - ONB-001: dream tutorial compact completion.
+- ONB-003: add a one-time fourth-wall wellbeing aside in the tutorial dream after first rest or food, framed as Сон briefly noticing the player behind the character.
 - SURV-001: beginner return / `Повернення`.
 - LOOP-001: starter location and bridge threshold polish.
 - NPC-004: continue actor inventory and held-light foundation after the 0.13.13 `CreatureResource` torch slice; next work is broader item/carry semantics and fewer remaining `currentAction` bridges.
 - NPC-005: add NPC hunger and food behavior so hunters and herbalists can eat through shared survival/inventory rules.
 - NPC-002: finish the hunter auto-program MVP after the first state-machine slice: real torch bundle/light state via `NPC-004`, inspect/check beat, route/radius tuning and recovery rules for claimed carcasses.
 - ECO-003: tune gate-hunting saturation after the first 0.13.12 slice; the sign, rewards and hunter stand-down behavior exist, but thresholds, persisted linger/cooldown, per-tick saturation caching for larger hunter counts, and the temporary plain `/put` default still need follow-up.
-- ECO-004: add a quiet population-floor restoration safeguard so ordinary animal species that drop to zero return to their starter population at starter locations; richer spirit/migration recovery remains later.
-- ECO-005: add a first animal-restoration offering loop where inspectable hare/mouse charms or small капища accept fitting gifts such as herbs and berries, then later help critically low prey populations recover without becoming a spawn shop.
+- ECO-005: add the action layer for animal-restoration offerings: fitting gifts such as herbs and berries, delayed low-population recovery, cooldowns and no spawn-shop behavior. The first shared charm feature exists at `Камінь малого сліду`.
 - LOOP-003: tune old campfire memory omens after the first small reveal slice; future work can add more authored locations and traces without turning it into a ritual/reward system.
 - NPC-003: extract herbalist behavior into its own service layer, shaped like the hunter service, before adding more visible herbalist/learning behavior.
-- MAP-003: expand the playable waking-world map with new reachable locations, region growth and enough authored features/resources that active players have fresh ground to explore.
+- MAP-003 follow-up: continue expanding the playable waking-world map beyond the first northern forest pocket, with more reachable locations, region growth and authored features/resources.
 - WPN-001: minimal weapon catalog and equip/unequip foundation; keep it tied to existing resource inventory and do not start full combat.
 - WPN-002: weapon-aware look/examine/freshen/attack text; require a sharp equipped weapon for freshening, but keep current target eligibility.
+- UX-002 / ADM-002: keep paginated corpse/target `Back` buttons returning to the source page, and add a scribe-only `/addCreatureCorpse` setup command for testing carcass flows.
+- FOOD-004: add restrained hunger cues and eating nudges now that hunger can be eased, using `SES-001` reminder guards so they never become chat spam.
+- FOOD-005: make hunger matter through slower stamina recovery and slow health loss at severe hunger, tuned gently enough to stay readable and recoverable.
+- FOOD-006: add mushroom varieties and identification so examining forage matters before eating, with poisonous, nourishing, cookable and future alchemy-useful mushrooms.
 
 ## 0.14 Next
 
@@ -57,6 +61,7 @@ These are still `backlog`, but recent work makes them worth reviewing before the
 - Corpse freshening and meat: the existing corpse/freshen path, hunger and campfire inventory actions are close enough to support a first raw meat -> cooked meat -> eat loop. This has been promoted to `FOOD-001`.
 - Weapons as tools: WPN-001/WPN-002 are small enough to promote because they reuse current resource inventory, target descriptions and queued `ATTACK`/`FRESHEN` actions. Keep them as a utility/display layer; do not pull WPN-004 durability or WPN-ICE-001 deep combat forward.
 - Pickup/gather command semantics: `підібрати`/`take` should mean visible ground-item pickup, while `зібрати`/`gather` should mean spending time and stamina on a local resource node. This has been promoted to `ITEM-001`.
+- Queued pickup actions: after `ITEM-001`, review `ITEM-002` so large `get all` / `підняти все` piles can move from immediate pickup with stamina charge into the action queue without losing typed bulk filters.
 - PERF-001: runtime performance plan and creature simulation budget. Recent production logs show `/all` and large creature counts are already visible pressure points; next performance work should keep following the recorded plan.
 - ADM-001: admin permissions, name approval and restricted reset hardening. A first `Писар`/admin gate exists now, so remaining near-term work is audit logging, clearer role UX, first name-review tools and closing any leftover dangerous paths.
 - Speech and quick navigation commands: `glance`, `exits`, `enter`, `leave`, `/reply`, `whisper` and `shout` have shipped through `CMD-001`. Later work should move toward a shared command registry and per-command help without reopening this whole pack.
@@ -65,6 +70,7 @@ These are still `backlog`, but recent work makes them worth reviewing before the
 - Darkness creature / small coin omen: this becomes much more attractive right after WORLD-001 because it explicitly depends on darkness, light and calm observation.
 - TECH-001: service boundary and duplication cleanup. Keep this mostly behavior-preserving, but make it visible during patch planning because `worldTick.ts`, `status.ts`, `actionCompletions.ts`, `statusServer.ts`, `locations.ts` and `aliases.ts` are now large enough to slow safe feature work.
 - WEB-002: independent status site and deploy visibility. The current game-hosted status pages can report runtime state once the app is up, but a separate out-of-band page should survive failed builds/deploys and explain how to contact someone when the game service itself is unavailable.
+- LANG-001: lexicon and agreement audit for recurring Ukrainian gameplay text, especially resource/corpse/inventory summaries that still use local display maps instead of grammar-aware helpers.
 - Gate hunting loop: 0.13.7 adds the notice, падальний рів, narrow `put` flow and player contribution accounting. `NAV-001`, the 0.13.9 NPC drop-off helper, the 0.13.10 hunter route plan and the 0.13.11 first hunter state-machine slice now exist, so the next small slice should focus on `NPC-004` real NPC-held torch/light state, `ECO-003` enough-for-now saturation, and better hunter route tuning rather than a second hidden counter.
 
 ## Review Checklist

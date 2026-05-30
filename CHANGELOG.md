@@ -9,6 +9,38 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.21 - Population recovery and northern forest pocket - 12026-05-31
+
+### Added
+
+- Added a population-floor restoration pass to `worldTick`: if a starter animal species has no living, non-gone animals left, the tick restores its starter living population at starter locations.
+- Added `src/services/populationRestoration.ts` to plan and execute starter population restoration from `src/data/starterAnimals.ts`.
+- Added `populationFloorRestored` to world tick system events, debug output and technical scribe tick summaries.
+- Added a first `MAP-003` playable expansion slice north of `forest_02_09` with three reachable forest locations, bidirectional exits and local resources.
+- Added an inspectable `Камінь малого сліду` location feature as the first seeded animal-restoration charm hook for future `ECO-005` offering actions.
+- Added focused population restoration helper coverage to `npm test`.
+- Added predator prey-claim and feeding markers so carnivores eat killed prey through a later `EAT` action instead of receiving hunger relief immediately at kill time.
+
+### Changed
+
+- Marked `ECO-004` and the first `MAP-003` slice as testing, and updated `ECO-005` to point at the seeded charm while keeping the actual offering action layer as next work.
+- Refreshed the generated world map after opening the northern forest pocket.
+- Documented the quiet population-floor safeguard in the ecology system notes.
+- Predator kills now leave an interceptable claimed corpse: if a player or another flow takes the corpse before the predator eats, the predator stays hungry and loses the meal.
+
+### Tests
+
+- Ran `node scripts/test/population-restoration.cjs`.
+- Ran `node scripts/test/predator-feeding.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `npm run test:seed`.
+- Ran `npm test`.
+- Ran `npm run planning:export`.
+- Ran `npm run map:render`.
+- Ran `npm run build`.
+
+---
+
 ## 0.13.20 - Name review, social hints, admin menu and visibility polish - 12026-05-30
 
 ### Changed

@@ -408,6 +408,31 @@
     }
   },
   {
+    "key": "forest_small_track_stone",
+    "locationKey": "forest_03_10",
+    "type": "LANDMARK",
+    "name": "Камінь малого сліду",
+    "description": "Плаский камінь лежить нижче за траву, наче його навмисно лишили для тих, хто дивиться не поверх дерев, а під ноги. У моху біля краю видно місце для малого дару: не для торгу й не для наказу, радше для прохання, щоб дрібне життя знову знайшло сюди дорогу.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🐾",
+      "inspectable": true,
+      "animal_restoration_charm": true,
+      "future_offering": true,
+      "species_hint": ["rabbit", "mouse"],
+      "aliases": [
+        "камінь",
+        "камінь малого сліду",
+        "малий слід",
+        "слід",
+        "капище",
+        "звірячий знак",
+        "track stone"
+      ]
+    }
+  },
+  {
     "key": "dream_tutorial_sleep_gate",
     "locationKey": "dream_tutorial_gate",
     "type": "GATE",
