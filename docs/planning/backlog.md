@@ -18,7 +18,6 @@ These may become `next` after 0.13-0.15 foundations land.
 - Weapon follow-up after the MVP: text aliases for `equip`, `unequip`, `wield`, `зняти`, `взяти ніж`, item inspect text, safer dropped-weapon pickup, and starter-knife backfill for older characters if not handled in WPN-001.
 - Weapon-aware butchering/freshening polish after `FOOD-001`: tool quality affects text first, then later yield; do not implement durability here.
 - First weapon-learning hooks: using a spear teaches spear handling later; using a knife for freshening may feed hunting/butchering learning after progression storage is ready.
-- Animal-restoration charm or small offering loop.
 - NPC hunter/archer route that leaves visible signs.
 - Local console client for command/action smoke tests.
 - Shared command registry and per-command help: keep `/commands`, `/help`, text aliases, future MUD commands, Telegram buttons and permissions from drifting apart.
