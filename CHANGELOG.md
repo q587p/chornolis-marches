@@ -30,6 +30,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Failed `inspect`/`look at` target attempts now use diegetic "I do not see this here" wording instead of generic target-list language.
 - Feature inspection now accepts the short Ukrainian form `огл брама`.
 - Unknown-command suggestions can now show a matching slash command shortcut in parentheses, such as `оглянутися (/look)` or `швидкий огляд (/glance)`.
+- `/glance` now renders only the location name and visible exits, without an extra "quick look" label or nearby presence text.
 - Updated gate hunting loop and `NPC-004` planning docs for the first actor-inventory slice.
 
 ### Tests

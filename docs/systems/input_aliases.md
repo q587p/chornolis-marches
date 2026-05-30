@@ -16,7 +16,7 @@ When a player-facing button performs an in-world action, there should usually be
 Location and character:
 
 - `озирнутися`, `/озирнутися`, `де я`, `місцина`, `див`, `дивитися` -> current location view.
-- `/glance`, `glance`, `глянути швидко`, `швидко глянути` -> quick current-location read without the full description.
+- `/glance`, `glance`, `глянути швидко`, `швидко глянути` -> only the current location name and visible exits.
 - `/exits`, `exits`, `виходи`, `куди можна йти` -> only visible exits from the current location, including visible locked exits.
 - `роздивитися`, `/роздивитися`, `оглянути`, `що видно` -> closer look action.
 - `хто я`, `хтоя`, `персонаж` -> character card.

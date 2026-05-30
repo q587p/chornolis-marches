@@ -675,29 +675,21 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
   };
 }
 
-export async function renderLocationGlance(locationId: number, viewerPlayerId?: number) {
+export async function renderLocationGlance(locationId: number) {
   await expireTimedCampfires(locationId);
   const location = await prisma.cellLocation.findUnique({
     where: { id: locationId },
     include: {
-      players: true,
-      creatures: { where: { isGone: false }, include: { species: true, resources: { include: { resourceType: true } } } },
-      resources: { include: { resourceType: true } },
-      features: { where: { isActive: true }, orderBy: { id: "asc" } },
-      region: true,
       exitsFrom: { where: { isHidden: false }, include: { toLocation: true }, orderBy: { direction: "asc" } },
     },
   });
 
   if (!location) throw new Error("Location not found");
 
-  const revealTargets = await hasActiveLightAtLocation(location.id);
   const lockedExits = await lockedExitDirections(location.id);
-  const targets = visibleTargets(location, viewerPlayerId);
-  const activeActions = revealTargets ? await activeActionsForTargets(targets) : new Map<string, any>();
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Короткий огляд.</i>${presenceText(location, viewerPlayerId, revealTargets, activeActions)}\n\n${escapeHtml(compactExitsText(location.exitsFrom, lockedExits))}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n\n${escapeHtml(compactExitsText(location.exitsFrom, lockedExits))}`,
   };
 }
 

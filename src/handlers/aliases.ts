@@ -236,7 +236,7 @@ async function replyWithLocationGlance(ctx: any) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player?.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
-  const view = await renderLocationGlance(player.currentLocationId, player.id);
+  const view = await renderLocationGlance(player.currentLocationId);
   await ctx.reply(view.text, { parse_mode: "HTML" });
 }
 
