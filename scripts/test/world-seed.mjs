@@ -75,6 +75,25 @@ for (const feature of features) {
   assertKnown(locationKeys, feature.locationKey, `Unknown locationKey for feature ${feature.key}`);
 }
 
+function renderedFeatureIcon(feature) {
+  const data = feature.data ?? {};
+  if (typeof data.icon === "string" && data.icon.trim()) return data.icon.trim();
+  if (data.tutorial_inside_prompt === true || data.tutorial_outside_prompt === true) return "🕯️";
+  if (data.tutorial_rest_seat === true) return "🪑";
+  if (data.tutorial_observation_prompt === true) return "🦊";
+  if (feature.type === "CAMPFIRE" || feature.type === "MAGIC_CAMPFIRE" || data.is_campfire === true) {
+    return data.extinguished === true ? "🪨" : "🔥";
+  }
+  if (feature.key.startsWith("depleted_vegetation_") || data.ecology === "depleted_vegetation") return "🌾";
+  if (feature.type === "BORDER_MARKER") return "🪧";
+  if (feature.type === "GATE") return "🚪";
+  return "✦";
+}
+
+for (const feature of features) {
+  assert.notEqual(renderedFeatureIcon(feature), "✦", `Feature should not fall back to the generic icon: ${feature.key}`);
+}
+
 const explicitFeatureIconsByLocation = new Map();
 for (const feature of features) {
   const icon = typeof feature.data?.icon === "string" ? feature.data.icon.trim() : "";
@@ -96,9 +115,33 @@ for (const key of ["closed_gate_torch_stand", "closed_gate_hunting_notice", "clo
 const gateTorchStand = features.find((item) => item.key === "closed_gate_torch_stand");
 assert.notEqual(gateTorchStand?.data?.icon, "🔥", "Torch stand should not use the fire icon reserved for flame/campfire actions");
 
+for (const key of ["dream_tutorial_sleep_gate", "dream_tutorial_sleep_gate_return"]) {
+  const feature = features.find((item) => item.key === key);
+  assert.ok(feature, `Dream gate feature missing: ${key}`);
+  assert.ok(feature.data?.aliases?.includes("браму"), `Dream gate should include accusative alias браму: ${key}`);
+  assert.ok(feature.data?.aliases?.includes("брами"), `Dream gate should include genitive alias брами: ${key}`);
+}
+
 for (const creature of uniqueCreatures) {
   assertKnown(locationKeys, creature.locationKey, `Unknown locationKey for unique creature ${creature.name}`);
+  for (const resource of creature.resources ?? []) {
+    assertKnown(resourceTypeKeys, resource.resourceKey, `Unknown resourceKey for unique creature ${creature.name}`);
+    assert.ok(Number.isInteger(resource.amount) && resource.amount > 0, `Invalid carried resource amount for ${creature.name}:${resource.resourceKey}`);
+  }
 }
+
+const oryna = uniqueCreatures.find((creature) => creature.name === "Орина");
+assert.ok(oryna, "Seed should include hunter Орина");
+assert.equal(
+  oryna.action.includes("hunter_torches:"),
+  false,
+  "Орина should use real carried torch resources instead of the lightweight hunter_torches marker",
+);
+assert.deepEqual(
+  (oryna.resources ?? []).map((resource) => `${resource.resourceKey}:${resource.amount}`).sort(),
+  ["lit_torch:1", "torch:1"],
+  "Орина should start with one lit torch and one spare torch",
+);
 
 for (const filePath of ["prisma/seed.ts", "src/services/worldReset.ts"]) {
   for (const locationKey of sourceLocationKeys(filePath)) {

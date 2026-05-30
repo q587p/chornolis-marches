@@ -83,6 +83,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🪦",
       "inspectable": true,
       "tone": "old_grave"
     }
@@ -96,6 +97,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🗿",
       "inspectable": true,
       "tone": "forest_spirit"
     }
@@ -139,6 +141,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🪨",
       "inspectable": true,
       "wrap_hint": "dry_luka_north_south"
     }
@@ -181,6 +184,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🕳️",
       "inspectable": true,
       "future_hook": "water_or_echo"
     }
@@ -194,6 +198,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🌉",
       "river_crossing": true
     }
   },
@@ -206,6 +211,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🎣",
       "inspectable": true,
       "future_hook": "fishing"
     }
@@ -245,6 +251,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🪵",
       "inspectable": true,
       "under_bridge": true
     }
@@ -258,6 +265,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🪶",
       "tutorial_wake_prompt": true
     }
   },
@@ -287,7 +295,21 @@
       "locked": true,
       "locks_exit_direction": "NORTH",
       "lock_reason": "брама сну",
-      "reset_after_ms": 30000
+      "reset_after_ms": 30000,
+      "aliases": [
+        "брама",
+        "браму",
+        "брами",
+        "брамі",
+        "брамою",
+        "брама сну",
+        "браму сну",
+        "брами сну",
+        "сонна брама",
+        "сонну браму",
+        "gate",
+        "sleep gate"
+      ]
     }
   },
   {
@@ -299,6 +321,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🫐",
       "tutorial_hint": "foraging_inventory"
     }
   },
@@ -341,6 +364,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🕰️",
       "tutorial_time_prompt": true
     }
   },
@@ -353,6 +377,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🪓",
       "tutorial_safety_prompt": true,
       "tutorial_wake_prompt": true
     }
@@ -395,7 +420,21 @@
       "locked": true,
       "locks_exit_direction": "SOUTH",
       "lock_reason": "брама сну",
-      "reset_after_ms": 30000
+      "reset_after_ms": 30000,
+      "aliases": [
+        "брама",
+        "браму",
+        "брами",
+        "брамі",
+        "брамою",
+        "брама сну",
+        "браму сну",
+        "брами сну",
+        "сонна брама",
+        "сонну браму",
+        "gate",
+        "sleep gate"
+      ]
     }
   }
 ]

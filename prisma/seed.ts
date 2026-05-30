@@ -113,6 +113,11 @@ type CreatureNameOverrides = {
   nameVocative?: string;
 };
 
+type SeedCreatureResource = {
+  resourceKey: string;
+  amount: number;
+};
+
 function preparedCreatureNameOverrides(nominative: string): CreatureNameOverrides {
   const prepared = preparedNameByNominative(nominative);
   if (!prepared) return {};
@@ -139,6 +144,7 @@ type SeedUniqueCreature = {
   professionKey?: string;
   professionName?: string;
   nameOverrides?: CreatureNameOverrides;
+  resources?: SeedCreatureResource[];
 };
 
 type WorldSeed = {
@@ -508,7 +514,8 @@ const species = [
 async function ensureUniqueCreature(
   creature: SeedUniqueCreature,
   speciesByKey: Map<string, { id: number; baseHp: number; childTicks?: number; youngTicks?: number }>,
-  locationsByKey: Map<string, { id: number }>
+  locationsByKey: Map<string, { id: number }>,
+  resourceTypesByKey: Map<string, { id: number }>
 ) {
   const sp = speciesByKey.get(creature.speciesKey);
   if (!sp) throw new Error(`Unknown species key for unique creature: ${creature.speciesKey}`);
@@ -525,8 +532,10 @@ async function ensureUniqueCreature(
   const keep = existing[0];
   const nameOverrides = { ...preparedCreatureNameOverrides(creature.name), ...creature.nameOverrides };
 
+  let creatureId: number;
+
   if (!keep) {
-    await prisma.creature.create({
+    const created = await prisma.creature.create({
       data: {
         speciesId: sp.id,
         locationId: loc.id,
@@ -543,29 +552,40 @@ async function ensureUniqueCreature(
         professionName: creature.professionName,
       },
     });
-    return;
+    creatureId = created.id;
+  } else {
+    const duplicateIds = existing.filter((c) => c.id !== keep.id).map((c) => c.id);
+    if (duplicateIds.length > 0) await prisma.creature.deleteMany({ where: { id: { in: duplicateIds } } });
+
+    const updated = await prisma.creature.update({
+      where: { id: keep.id },
+      data: {
+        name: creature.name,
+        ...nameOverrides,
+        isAlive: creature.isAlive,
+        isGone: false,
+        locationId: loc.id,
+        hp: creature.isAlive || keep.hp <= 0 ? sp.baseHp : keep.hp,
+        currentAction: creature.action,
+        activity: creature.activity as any,
+        sex: creature.sex,
+        isHidden: creature.isHidden ?? false,
+        professionKey: creature.professionKey,
+        professionName: creature.professionName,
+      },
+    });
+    creatureId = updated.id;
   }
 
-  const duplicateIds = existing.filter((c) => c.id !== keep.id).map((c) => c.id);
-  if (duplicateIds.length > 0) await prisma.creature.deleteMany({ where: { id: { in: duplicateIds } } });
-
-  await prisma.creature.update({
-    where: { id: keep.id },
-    data: {
-      name: creature.name,
-      ...nameOverrides,
-      isAlive: creature.isAlive,
-      isGone: false,
-      locationId: loc.id,
-      hp: creature.isAlive || keep.hp <= 0 ? sp.baseHp : keep.hp,
-      currentAction: creature.action,
-      activity: creature.activity as any,
-      sex: creature.sex,
-      isHidden: creature.isHidden ?? false,
-      professionKey: creature.professionKey,
-      professionName: creature.professionName,
-    },
-  });
+  await prisma.creatureResource.deleteMany({ where: { creatureId } });
+  for (const resource of creature.resources ?? []) {
+    const resourceType = resourceTypesByKey.get(resource.resourceKey);
+    if (!resourceType) throw new Error(`Unknown resource key for unique creature ${creature.name}: ${resource.resourceKey}`);
+    if (resource.amount <= 0) continue;
+    await prisma.creatureResource.create({
+      data: { creatureId, resourceTypeId: resourceType.id, amount: resource.amount },
+    });
+  }
 }
 
 async function ensureStarterAnimals(
@@ -807,7 +827,7 @@ async function main() {
 
   await seedStep("Unique creatures", async () => {
     for (let i = 0; i < world.uniqueCreatures.length; i += 1) {
-      await ensureUniqueCreature(world.uniqueCreatures[i], speciesByKey, locationsByKey);
+      await ensureUniqueCreature(world.uniqueCreatures[i], speciesByKey, locationsByKey, resourceTypesByKey);
       progress("unique creatures", i + 1, world.uniqueCreatures.length, 25);
     }
   });

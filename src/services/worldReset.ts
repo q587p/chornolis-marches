@@ -62,6 +62,11 @@ type SeedFeature = {
   data?: Prisma.InputJsonValue;
 };
 
+type SeedCreatureResource = {
+  resourceKey: string;
+  amount: number;
+};
+
 type SeedUniqueCreature = {
   speciesKey: string;
   locationKey: string;
@@ -75,6 +80,7 @@ type SeedUniqueCreature = {
   professionKey?: string;
   professionName?: string;
   nameOverrides?: Record<string, string>;
+  resources?: SeedCreatureResource[];
 };
 
 function preparedCreatureNameOverrides(nominative: string): Record<string, string> {
@@ -348,29 +354,40 @@ async function resetUniqueCreature(creature: SeedUniqueCreature) {
   const duplicateIds = existing.slice(1).map((item) => item.id);
   if (duplicateIds.length > 0) await prisma.creature.deleteMany({ where: { id: { in: duplicateIds } } });
 
+  let creatureId: number;
   if (keep) {
     await prisma.creature.updateMany({ where: { id: keep.id }, data });
-    return { removedDuplicates: duplicateIds.length };
+    creatureId = keep.id;
+  } else {
+    const created = await prisma.creature.create({
+      data: {
+        speciesId: species.id,
+        locationId: location.id,
+        name: creature.name,
+        ...nameOverrides,
+        hp: creature.isAlive ? species.baseHp : 0,
+        maxHp: species.baseHp,
+        isAlive: creature.isAlive,
+        isGone: false,
+        isHidden: creature.isHidden ?? false,
+        sex: creature.sex,
+        currentAction: creature.action,
+        activity: creature.activity,
+        professionKey: creature.professionKey,
+        professionName: creature.professionName,
+      },
+    });
+    creatureId = created.id;
   }
 
-  await prisma.creature.create({
-    data: {
-      speciesId: species.id,
-      locationId: location.id,
-      name: creature.name,
-      ...nameOverrides,
-      hp: creature.isAlive ? species.baseHp : 0,
-      maxHp: species.baseHp,
-      isAlive: creature.isAlive,
-      isGone: false,
-      isHidden: creature.isHidden ?? false,
-      sex: creature.sex,
-      currentAction: creature.action,
-      activity: creature.activity,
-      professionKey: creature.professionKey,
-      professionName: creature.professionName,
-    },
-  });
+  await prisma.creatureResource.deleteMany({ where: { creatureId } });
+  for (const resource of creature.resources ?? []) {
+    const resourceType = await prisma.resourceType.findUniqueOrThrow({ where: { key: resource.resourceKey } });
+    if (resource.amount <= 0) continue;
+    await prisma.creatureResource.create({
+      data: { creatureId, resourceTypeId: resourceType.id, amount: resource.amount },
+    });
+  }
 
   return { removedDuplicates: duplicateIds.length };
 }

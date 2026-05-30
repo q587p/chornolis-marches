@@ -8,7 +8,7 @@ import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { replyToActionError, actionErrorMessage } from "../utils/actionErrorReply";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
-import { isLocationExitLocked } from "../services/tutorial";
+import { locationLockedExitMessageForPlayer } from "../services/tutorial";
 
 const COMMAND_DIRECTIONS: Record<string, Direction> = {
   north: "NORTH",
@@ -39,7 +39,7 @@ export async function submitMove(bot: Bot, ctx: any, direction: Direction, answe
     return void (await ctx.reply("Туди немає видимого шляху.", { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) }));
   }
 
-  const lockedMessage = await isLocationExitLocked(currentLocationId, direction);
+  const lockedMessage = await locationLockedExitMessageForPlayer(player.id, currentLocationId, direction);
   if (lockedMessage) {
     if (answerCallback) return void (await safeAnswerCallbackQuery(ctx, lockedMessage));
     return void (await ctx.reply(lockedMessage, { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) }));

@@ -786,7 +786,7 @@
   {
     "id": "NPC-004",
     "title": "Actor inventory and held light foundation",
-    "status": "next",
+    "status": "in_progress",
     "type": "technical",
     "area": "npc",
     "priority": "high",

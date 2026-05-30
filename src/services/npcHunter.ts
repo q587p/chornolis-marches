@@ -5,6 +5,7 @@ import { actionDurationMs, movementDurationMs } from "./actionRules";
 import { enqueueCreatureAction } from "./actionLifecycle";
 import { GATE_CARCASS_DROPOFF_FEATURE_KEY, getGateHuntingSaturationState, hunterFieldLine, recordNpcCarcassDropoffContribution } from "./carcassDropoff";
 import { corpseResourceKey, resourceTypeDisplayName } from "./corpses";
+import { creatureCarriedTorchCount, ensureTorchResourceTypes, getCreatureTorchState, lightCreatureTorchAtCampfire } from "./fire";
 import { notifyLocationAll } from "./notifications";
 import { findLocationRoute, type RouteStep } from "./routeFinding";
 import { logEvent } from "./worldEvents";
@@ -26,6 +27,7 @@ const HUNTER_PREY_AGE_PRIORITY: Record<string, number> = {
 };
 const HUNTER_STAND_DOWN_EVENT_TITLE = "Hunter stand-down line";
 const HUNTER_STAND_DOWN_LINE_COOLDOWN_MS = 10 * 60 * 1000;
+const HUNTER_STAND_DOWN_ACTION = "перечікує біля межового вогню";
 
 export type HunterRoutePlan = {
   gateLocationId: number;
@@ -80,12 +82,12 @@ export function hunterCarriedTorchCount(currentAction: string | null | undefined
 export function hunterTorchCarryAction(count: number, pickedName = "факел", pickedAmount = 1) {
   const safeCount = Math.max(0, Math.min(HUNTER_TORCH_BUNDLE_SIZE, Math.trunc(count)));
   const itemText = pickedAmount > 1 ? `${pickedName} ×${pickedAmount}` : pickedName;
-  return `підбирає ${itemText} до мисливського набору; ${HUNTER_CARRIED_TORCH_PREFIX}${safeCount}`;
+  return `підбирає ${itemText} до мисливського набору; факелів у наборі: ${safeCount}`;
 }
 
 export function hunterReturningForTorchesAction(torchCount = HUNTER_RETURN_TORCH_RESERVE + 1) {
   const safeCount = Math.max(HUNTER_RETURN_TORCH_RESERVE, Math.min(HUNTER_TORCH_BUNDLE_SIZE, Math.trunc(torchCount)));
-  return `вертається до воріт із запаленим факелом і запасним у торбі; ${HUNTER_RETURNING_FOR_TORCHES_MARKER}; ${HUNTER_CARRIED_TORCH_PREFIX}${safeCount}`;
+  return `вертається до воріт із запаленим факелом і запасним у торбі; ${HUNTER_RETURNING_FOR_TORCHES_MARKER}; факелів у наборі: ${safeCount}`;
 }
 
 export function hunterIsReturningForTorches(currentAction: string | null | undefined) {
@@ -289,6 +291,11 @@ async function queueHunterMove(creature: { id: number; stamina: number }, route:
   return "queuedMove";
 }
 
+async function getHunterCarriedTorchCount(hunter: { id: number; currentAction?: string | null }) {
+  const realCount = await creatureCarriedTorchCount(hunter.id);
+  return realCount || hunterCarriedTorchCount(hunter.currentAction);
+}
+
 async function depositClaimedCorpses(bot: Bot | null, hunter: { id: number; name?: string | null }, plan: HunterRoutePlan) {
   const corpses = await claimedCorpsesForHunter(hunter.id);
   const groups = groupHunterClaimedCorpses(corpses);
@@ -318,7 +325,7 @@ async function depositClaimedCorpses(bot: Bot | null, hunter: { id: number; name
 }
 
 async function pickUpVisibleGroundTorch(bot: Bot | null, hunter: { id: number; locationId: number; currentAction?: string | null; name?: string | null }) {
-  const carried = hunterCarriedTorchCount(hunter.currentAction);
+  const carried = await getHunterCarriedTorchCount(hunter);
   const remaining = HUNTER_TORCH_BUNDLE_SIZE - carried;
   if (remaining <= 0) return false;
 
@@ -343,6 +350,17 @@ async function pickUpVisibleGroundTorch(bot: Bot | null, hunter: { id: number; l
 
     const name = resourceTypeDisplayName(node.resourceType);
     const nextCount = carried + amount;
+    const existing = await tx.creatureResource.findUnique({
+      where: { creatureId_resourceTypeId: { creatureId: hunter.id, resourceTypeId: node.resourceTypeId } },
+    });
+    const updatedAt = node.resourceType.key === "lit_torch"
+      ? (existing && existing.updatedAt.getTime() > node.updatedAt.getTime() ? existing.updatedAt : node.updatedAt)
+      : undefined;
+    await tx.creatureResource.upsert({
+      where: { creatureId_resourceTypeId: { creatureId: hunter.id, resourceTypeId: node.resourceTypeId } },
+      update: { amount: { increment: amount }, ...(updatedAt ? { updatedAt } : {}) },
+      create: { creatureId: hunter.id, resourceTypeId: node.resourceTypeId, amount, ...(updatedAt ? { updatedAt } : {}) },
+    });
     await tx.creature.updateMany({
       where: { id: hunter.id, isAlive: true, isGone: false },
       data: { currentAction: hunterTorchCarryAction(nextCount, name, amount) },
@@ -362,12 +380,38 @@ async function pickUpVisibleGroundTorch(bot: Bot | null, hunter: { id: number; l
 
 async function resupplyHunterTorchesAtGate(bot: Bot | null, hunter: { id: number; locationId: number; name?: string | null }, plan: HunterRoutePlan) {
   if (hunter.locationId !== plan.gateLocationId) return false;
+  const carried = await creatureCarriedTorchCount(hunter.id);
+  const missing = Math.max(0, HUNTER_TORCH_BUNDLE_SIZE - carried);
+  const { torch } = await ensureTorchResourceTypes();
   await prisma.creature.updateMany({
     where: { id: hunter.id, isAlive: true, isGone: false },
-    data: { currentAction: `поповнює мисливський набір біля воріт; ${HUNTER_CARRIED_TORCH_PREFIX}${HUNTER_TORCH_BUNDLE_SIZE}` },
+    data: { currentAction: `поповнює мисливський набір біля воріт; факелів у наборі: ${HUNTER_TORCH_BUNDLE_SIZE}` },
   });
+  if (missing > 0) {
+    await prisma.creatureResource.upsert({
+      where: { creatureId_resourceTypeId: { creatureId: hunter.id, resourceTypeId: torch.id } },
+      update: { amount: { increment: missing } },
+      create: { creatureId: hunter.id, resourceTypeId: torch.id, amount: missing },
+    });
+  }
   await logEvent("NPC_ACTION", "Hunter resupplied torches at gate", `${hunter.id}; carried=${HUNTER_TORCH_BUNDLE_SIZE}`, hunter.locationId);
   if (bot) await notifyLocationAll(bot, hunter.locationId, `${hunter.name ?? "Мисливець"} поповнює мисливський набір біля воріт.`);
+  return true;
+}
+
+async function lightHunterTorchAtCampfire(bot: Bot | null, hunter: { id: number; locationId: number; name?: string | null }, plan: HunterRoutePlan) {
+  if (hunter.locationId !== plan.campfireLocationId) return false;
+  const torchState = await getCreatureTorchState(hunter.id);
+  if (torchState.isLit || torchState.plainAmount <= 0) return false;
+  const lit = await lightCreatureTorchAtCampfire(hunter.id, hunter.locationId);
+  if (!lit) return false;
+
+  await prisma.creature.updateMany({
+    where: { id: hunter.id, isAlive: true, isGone: false },
+    data: { currentAction: "підпалює факел від межового вогню" },
+  });
+  await logEvent("NPC_ACTION", "Hunter lit torch at campfire", `${hunter.id}`, hunter.locationId);
+  if (bot) await notifyLocationAll(bot, hunter.locationId, `${hunter.name ?? "Мисливець"} підпалює факел від межового вогню.`);
   return true;
 }
 
@@ -388,6 +432,7 @@ async function queueHunterStandDown(bot: Bot | null, hunter: { id: number; locat
   });
 
   if (!recentLine) {
+    const line = hunterFieldLine("standDown", hunter.id + (hunter.steps ?? 0));
     await prisma.worldEvent.create({
       data: {
         type: "NPC_ACTION",
@@ -396,22 +441,18 @@ async function queueHunterStandDown(bot: Bot | null, hunter: { id: number; locat
         locationId: hunter.locationId,
       },
     });
-    await enqueueCreatureAction({
-      creatureId: hunter.id,
-      type: "SAY",
-      payload: { text: hunterFieldLine("standDown", hunter.id + (hunter.steps ?? 0)) },
-      durationMs: actionDurationMs("SAY", hunter.stamina),
-    });
-    return "queuedSay";
+    await logEvent("SAY", `${hunter.name ?? "Мисливець"} промовляє`, line, hunter.locationId);
+    if (bot) await notifyLocationAll(bot, hunter.locationId, `${hunter.name ?? "Мисливець"} промовляє:\n“${line}”`);
   }
 
-  await enqueueCreatureAction({
-    creatureId: hunter.id,
-    type: "REST",
-    payload: {},
-    durationMs: actionDurationMs("REST", hunter.stamina),
+  await prisma.creature.updateMany({
+    where: { id: hunter.id, isAlive: true, isGone: false },
+    data: {
+      activity: "RESTING",
+      currentAction: HUNTER_STAND_DOWN_ACTION,
+    },
   });
-  return "queuedRest";
+  return "stoodDown";
 }
 
 export async function tickNpcHunter(bot: Bot | null, hunter: any) {
@@ -430,7 +471,8 @@ export async function tickNpcHunter(bot: Bot | null, hunter: any) {
 
   const plan = planResult.plan;
   const claimed = await claimedCorpsesForHunter(hunter.id);
-  const returningForTorches = hunterIsReturningForTorches(hunter.currentAction);
+  const torchCount = await getHunterCarriedTorchCount(hunter);
+  const returningForTorches = hunterIsReturningForTorches(hunter.currentAction) || torchCount <= HUNTER_RETURN_TORCH_RESERVE;
 
   if (hunter.locationId === plan.gateLocationId && claimed.length > 0) {
     await depositClaimedCorpses(bot, hunter, plan);
@@ -451,6 +493,7 @@ export async function tickNpcHunter(bot: Bot | null, hunter: any) {
   if (returningForTorches && await resupplyHunterTorchesAtGate(bot, hunter, plan)) return "queuedGather";
 
   if (await pickUpVisibleGroundTorch(bot, hunter)) return "queuedGather";
+  if (await lightHunterTorchAtCampfire(bot, hunter, plan)) return "queuedGather";
 
   const saturation = await getGateHuntingSaturationState(plan.dropoffFeatureKey);
   if (saturation.active) return queueHunterStandDown(bot, hunter, plan);

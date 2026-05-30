@@ -4,7 +4,7 @@ import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import { formatLifeState, formatResourceState } from "../utils/playerText";
 import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
-import { DREAM_GATE_FEATURE_KEYS, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_HUB_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SAFETY_LOCATION_KEY, TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY, hasTutorialForagingSuccess, isTutorialLocation, lockedExitDirections } from "../services/tutorial";
+import { DREAM_GATE_FEATURE_KEYS, TUTORIAL_HUB_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SAFETY_LOCATION_KEY, TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY, hasTutorialInventoryAvailable, isTutorialLocation, lockedExitDirections } from "../services/tutorial";
 
 type MainKeyboardState = {
   isAuto?: boolean;
@@ -15,6 +15,7 @@ type MainKeyboardState = {
   isResting?: boolean | null;
   showPostureActions?: boolean;
   isTutorialDream?: boolean;
+  showTutorialStatus?: boolean;
   canOpenDreamGate?: boolean;
   canWakeFromTutorial?: boolean;
   lockedExits?: Direction[];
@@ -33,10 +34,16 @@ export function postureActionLabelsForState(state: Pick<MainKeyboardState, "post
   return isSitting ? ["Встати", "🧘 Відпочити"] : ["Сісти", "🧘 Відпочити"];
 }
 
+export function shouldShowInventoryButton(state: { inventoryCount: number; isTutorialDream?: boolean; tutorialInventoryAvailable?: boolean }) {
+  if (state.isTutorialDream) return state.inventoryCount > 0 || Boolean(state.tutorialInventoryAvailable);
+  return state.inventoryCount > 0;
+}
+
 export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean = {}) {
   const state = normalizeState(stateOrAuto);
   const exits = new Set(state.exits ?? []);
   const lockedExits = new Set(state.lockedExits ?? []);
+  const utilityButton = (label: string) => state.isTutorialDream ? EMPTY_KEYBOARD_BUTTON : label;
   const directionButton = (direction: Direction, label: string) => exits.has(direction)
     ? lockedExits.has(direction) ? `(${label})` : label
     : EMPTY_KEYBOARD_BUTTON;
@@ -50,11 +57,11 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   keyboard.text(directionButton("EAST", "Схід ➡️"));
   keyboard.row();
 
-  keyboard.text("🧭 Допомога");
+  keyboard.text(utilityButton("🧭 Допомога"));
   keyboard.text(directionButton("SOUTH", "⬇️ Південь"));
-  keyboard.text("☰ Меню").row();
+  keyboard.text(utilityButton("☰ Меню")).row();
 
-  if (state.statusLabel) keyboard.text(state.statusLabel).row();
+  if (state.statusLabel && (!state.isTutorialDream || state.showTutorialStatus)) keyboard.text(state.statusLabel).row();
   if (state.showPostureActions) {
     for (const label of postureActionLabelsForState(state)) keyboard.text(label);
     keyboard.row();
@@ -62,7 +69,6 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   if (state.isTutorialDream) {
     if (state.canOpenDreamGate) keyboard.text("💬 Сказати «Відчинитися»");
     if (state.canWakeFromTutorial) keyboard.text("🌅 Прокинутися");
-    if (state.canOpenDreamGate || state.canWakeFromTutorial) keyboard.row();
   }
 
   return keyboard.resized().persistent(false);
@@ -150,11 +156,8 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
   const lockedExits = player.currentLocationId ? Array.from((await lockedExitDirections(player.currentLocationId)).keys()) : [];
   const showTechnicalDetails = playerCanShowTechnicalDetails(player);
   const isTutorialDream = player.currentLocation ? isTutorialLocation(player.currentLocation) : false;
-  const hasInventory = inventoryCount > 0 && (
-    player.currentLocation?.key === TUTORIAL_FORAGING_LOCATION_KEY
-      ? await hasTutorialForagingSuccess(player.id)
-      : true
-  );
+  const tutorialInventoryAvailable = isTutorialDream ? await hasTutorialInventoryAvailable(player.id) : false;
+  const hasInventory = shouldShowInventoryButton({ inventoryCount, isTutorialDream, tutorialInventoryAvailable });
   if (player.currentLocation?.key === TUTORIAL_START_LOCATION_KEY) {
     return buildTutorialStartReplyKeyboard();
   }
@@ -166,13 +169,14 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
     isAuto,
     exits,
     hasInventory,
-    statusLabel: player.currentLocation?.key === TUTORIAL_REST_LOCATION_KEY
-      ? statusButtonLabel(player)
+    statusLabel: isTutorialDream
+      ? player.currentLocation?.key === TUTORIAL_REST_LOCATION_KEY ? statusButtonLabel(player) : undefined
       : showTechnicalDetails ? exactStatusButtonLabel(player) : statusButtonLabel(player),
     posture: player.posture,
     isResting: player.isResting,
     showPostureActions: false,
     isTutorialDream,
+    showTutorialStatus: player.currentLocation?.key === TUTORIAL_REST_LOCATION_KEY,
     canOpenDreamGate: isTutorialDream && Boolean(player.currentLocation?.features.length),
     canWakeFromTutorial: player.currentLocation?.key === TUTORIAL_HUB_LOCATION_KEY || player.currentLocation?.key === TUTORIAL_SAFETY_LOCATION_KEY,
     lockedExits,

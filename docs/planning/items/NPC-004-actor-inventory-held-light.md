@@ -1,7 +1,7 @@
 ---
 id: NPC-004
 title: Actor inventory and held light foundation
-status: next
+status: in_progress
 type: technical
 area: npc
 priority: high
@@ -22,7 +22,7 @@ depends_on:
 
 Move NPC state closer to player-character state: inventory, held items, lit-torch timers, light emission, action pacing, hunger and eventually skills should use shared actor-facing rules wherever practical.
 
-The immediate pressure is the hunter loop: Орина's lit torch and spare torch are currently represented by a lightweight hunter-state marker, not by real NPC-held inventory with burn timing and visibility. That is acceptable only as a temporary bridge. The next small layer should make NPC-held torches behave like player-held torches.
+The immediate pressure is the hunter loop: Орина's lit torch and spare torch used to be represented by a lightweight hunter-state marker, not by real NPC-held inventory with burn timing and visibility. The 0.13.13 slice starts replacing that bridge with real `CreatureResource` rows for NPC-held torches while leaving claimed carcasses as the remaining lightweight marker.
 
 ## Design Direction
 
@@ -40,13 +40,21 @@ The immediate pressure is the hunter loop: Орина's lit torch and spare torc
 - Keep hunter-specific state only for hunter decisions: route intent, claimed carcasses, return-for-supply intent.
 - Keep player inventory behavior unchanged.
 
+## 0.13.13 Slice
+
+- Added `CreatureResource` as the NPC/creature-side carried-resource table, parallel to `PlayerResource`.
+- Seed/reset can now assign carried resources to unique creatures; Орина starts with one `lit_torch` and one spare `torch`.
+- NPC-held lit torches use the same `TORCH_DURATION_MS` timer assumptions as player-held lit torches and count as active local light.
+- Hunter torch pickup and gate resupply now write real carried resources; the old `hunter_torches:` marker remains only as a compatibility fallback for already-running state.
+- Hunter `currentAction` may still hold route/intent markers such as `hunter_returning_for_torches`; that is decision state, not inventory.
+
 ## Acceptance
 
-- A seeded NPC can start with a real held lit torch and a real spare torch.
-- NPC-held lit torches expire or fade through the same timer assumptions as player-held lit torches.
-- NPC-held lit torches can provide light to the current location.
-- `/look` / `/examine` style visibility can describe an obvious NPC-held torch without exposing internal state.
-- Hunter code no longer needs the lightweight `hunter_torches` marker for basic carried torch count once this foundation is active.
+- A seeded NPC can start with a real held lit torch and a real spare torch. (0.13.13)
+- NPC-held lit torches expire or fade through the same timer assumptions as player-held lit torches. (0.13.13 foundation)
+- NPC-held lit torches can provide light to the current location. (0.13.13)
+- `/look` / `/examine` style visibility can describe an obvious NPC-held torch without exposing internal state. (0.13.13)
+- Hunter code no longer needs the lightweight `hunter_torches` marker for basic carried torch count once this foundation is active. (0.13.13, with compatibility fallback)
 - Migration tests cover the current lightweight `Creature.currentAction` bridge for claimed carcasses and hunter torch bundles, especially hunter death, interruption, disappearance and reset.
 - `npm test` and `npm run build` pass.
 
