@@ -54,6 +54,37 @@ Examples:
 - Стан: поранений
 - Рани: легка рана, забій
 
+## Sleep and Dream Direction
+
+Keep sleep terms plain, Ukrainian and diegetic.
+
+Preferred terms:
+
+| English / generic term | Preferred Ukrainian term | Notes |
+|---|---|---|
+| Sleep | Сон / Спати | Ordinary sleep unless explicitly marked otherwise. |
+| Ordinary sleep | Звичайний сон | The body sleeps in the current місцина. |
+| Tutorial sleep | Навчальний сон | Entered explicitly through `/sleep tutorial`. |
+| Lucid dream | Усвідомлений сон | A dream instance with meaningful action/awareness. |
+| Wake up | Прокинутися / Прокинутись | Use for `/wake` and manual waking. |
+| Lie down | Лягти | Command/action to change posture only. |
+| Lying | Лежати / лежить | Posture, not necessarily sleep. |
+| Dream presence | Сновидна присутність | The dream-acting presence; not a soul. |
+| Awareness returning | Притомність повертається | Good phrasing for waking. |
+
+Avoid Christian framing for dream travel. Do not use “soul”, “душа”, sin/salvation/afterlife language or church-coded explanations as the default model for dreams.
+
+Preferred dream-travel phrasing:
+
+- `Ваша увага провалюється глибше в сон.`
+- `Сновидна присутність ступає між туманом і корінням.`
+- `Притомність повертається до тіла.`
+
+Avoid:
+
+- `Ваша душа покидає тіло.`
+- `Душа повертається з потойбіччя.`
+
 ## Inventory Direction
 
 Avoid using “Inventory” or “Інвентар” in player-facing UI unless a very neutral technical term is needed.
@@ -101,3 +132,8 @@ Use this as the current preferred vocabulary:
 - Stats → Риси
 - Skills → Навички
 - Combat → Сутичка
+- Sleep → Сон / Спати
+- Wake → Прокинутися / Прокинутись
+- Lie down → Лягти
+- Lucid dream → Усвідомлений сон
+- Dream presence → Сновидна присутність

@@ -31,6 +31,8 @@ The current lane is the three-month vertical slice:
 - FIRE-001: campfire and torch visibility integration.
 - HMYZ-001: find/pickup/add хмиз loop.
 - MAP-002: first biome-aware foraging table.
+- SLEEP-001: lying posture and `/lie` / `лягти` / `лежати` command.
+- SLEEP-002: ordinary sleep MVP with `/sleep`, `/wake`, stronger recovery and `/sleep tutorial` separation.
 
 ## 0.15 Next
 
@@ -44,6 +46,7 @@ The current lane is the three-month vertical slice:
 
 These are still `backlog`, but recent work makes them worth reviewing before the next patch sequence.
 
+- Sleep and dreams: after SLEEP-001/SLEEP-002 land, review SLEEP-003 and DREAM-001 so world-time auto-waking and sleeping-body/dream-presence separation do not drift away from the tutorial dream work.
 - Inventory item actions: the dedicated inventory view exists, and the 0.12.15 drop feedback pass makes the item-instance gap more visible. Item details, safer dropped-item pickup, dream-item origin and richer per-item actions are now small enough to promote when the survival loop needs them.
 - Corpse freshening and meat: the existing corpse/freshen path, hunger and campfire inventory actions are close enough to support a first raw meat -> cooked meat -> eat loop. This has been promoted to `FOOD-001`.
 - Pickup/gather command semantics: `підібрати`/`take` should mean visible ground-item pickup, while `зібрати`/`gather` should mean spending time and stamina on a local resource node. This has been promoted to `ITEM-001`.

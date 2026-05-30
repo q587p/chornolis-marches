@@ -15,6 +15,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Added a first old-campfire memory omen slice: seeded old ordinary campfires can reveal one short atmospheric trace when fed with `twigs` or relit from a torch, and the trace remains visible in later campfire inspection text.
 - Added the `LOOP-003` planning item and system notes for future old-campfire memory omen tuning.
+- Added sleep and dream planning docs, including `SLEEP-001` through `SLEEP-004`, `DREAM-001` through `DREAM-004`, and a future implementation prompt pack for ordinary sleep and dream-presence foundations.
 
 ### Changed
 
@@ -22,6 +23,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Entering the tutorial dream now turns off player auto mode so automatic actions do not keep running inside the dream.
 - Targeted `look` now stays focused on visible character/NPC state, while targeted `examine` can show fuller carried inventory or hunter field-supply details with approximate public quantities instead of exact counts.
 - Updated gate hunting saturation planning with future persisted linger/cooldown, per-tick saturation caching for larger hunter counts, and the temporary plain `/put` default that should later be removed or redefined for generic containers.
+- Updated survival, terminology, roadmap, backlog and icebox docs with the distinction between sitting/resting, lying, ordinary sleep, tutorial sleep and future lucid dream instances.
 
 ### Tests
 

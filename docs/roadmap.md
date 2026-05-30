@@ -16,6 +16,8 @@ GitHub Issues and Projects may mirror this file, but they should not replace it.
 - Survival over power fantasy.
 - Skill-based progression through use, observation and apprenticeship instead of abstract character levels.
 - Skills can be discovered by watching NPCs, animals, monsters or mythical beings use them.
+- Sleep and dreams are liminal systems: ordinary sleep belongs to survival, while tutorial/lucid dreams are explicit dream states, not generic teleportation.
+- Dream language should avoid “soul” / Christian framing; prefer attention, awareness, dream presence and place-spirit language.
 - Small social interactions are core gameplay, not only flavor.
 - Social memory and small group travel: players and NPCs can remember, follow, lead, lag behind and reunite without turning the game into a generic MMO party system.
 - Diegetic Ukrainian UI and grammar-sensitive text.
@@ -37,6 +39,7 @@ Primary outcomes:
 
 - Character-name onboarding is reliable and diegetic.
 - The dream tutorial teaches movement, looking, examining, rest and attention without becoming a checklist.
+- Tutorial sleep remains explicit as `/sleep tutorial`, so it does not conflict with future ordinary `/sleep`.
 - `Повернення` / `/respawn` gives early characters a safety valve without becoming fast travel.
 - Starter camp, bridge and nearby threshold locations communicate mood and next actions.
 - Dangerous scribe/admin tools leave audit events.
@@ -61,6 +64,7 @@ Primary outcomes:
 - Campfires and carried torches reveal what darkness hides.
 - Хмиз can be found, picked up and added to a campfire.
 - The first biome-aware foraging table exists without becoming full ecology simulation.
+- Lying posture and ordinary sleep can begin as a small survival slice after rest/posture rules are stable.
 
 See:
 
@@ -69,6 +73,8 @@ See:
 - `docs/planning/items/FIRE-001-*.md`
 - `docs/planning/items/HMYZ-001-*.md`
 - `docs/planning/items/MAP-002-*.md`
+- `docs/planning/items/SLEEP-001-*.md`
+- `docs/planning/items/SLEEP-002-*.md`
 
 ## 0.15 — Attention and Learning MVP
 
@@ -105,6 +111,8 @@ After 0.15, review:
 - First `Знайомства` / contacts layer for remembered people and NPCs.
 - Follow intent and player-led `Гурт` MVP.
 - Group movement where capable members follow the leader and exhausted/wounded members can fall behind.
+- World-time automatic waking and first sleep comfort modifiers.
+- First sleeping-body / dream-presence split for tutorial and lucid dreams.
 
 ## Phase 2 — World Attention and Learning
 
@@ -116,6 +124,7 @@ Goal: deepen attention, apprenticeship and skill discovery.
 - Hidden skill discovery through concrete moments, not menu choices.
 - Skill-gated detail in tracks, creature inspection and local signs.
 - Hidden presence foundation: hidden beings may create private atmospheric messages without becoming visible targets.
+- Lucid dream instances can reveal ritual conditions, place-spirit moods, quest nuance and knowledge flags without becoming ordinary fast travel.
 
 ## Phase 3 — Survival and Crafting
 
@@ -124,6 +133,7 @@ Goal: make wilderness pressure and simple player-made solutions matter.
 - Hunger, thirst and fatigue as atmospheric pressure.
 - Fire, light and shelter as practical survival tools.
 - Basic crafting: campfire, torch, simple tools, bandages, traps.
+- Ordinary sleep as stronger recovery than rest, shaped by fire, shelter, danger and later weather.
 - Hunting and traps.
 - Queue-aware skinning, trap setting and crafting.
 - Barter with NPCs and basic player trade.
@@ -174,6 +184,7 @@ Goal: let the world grow into a true living sandbox.
 - Construction and camps.
 - Bridges, crossings and fishing links.
 - Moon phases and deeper calendar.
+- Advanced lucid and group dreams, including place-spirit influence, dream combat/appeasement and rare guarded item transfer.
 - Future web map, local console, MUD-like gateway and other clients.
 
 ## Documentation Rules

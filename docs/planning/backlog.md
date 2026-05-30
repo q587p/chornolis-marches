@@ -26,6 +26,10 @@ These may become `next` after 0.13-0.15 foundations land.
 - More biome-specific resources and animals.
 - Public diegetic ecology notes through inspectable signs.
 - Budgeted creature simulation if production load demands it.
+- SLEEP-003: world-time automatic waking and first sleep comfort modifiers.
+- DREAM-001: sleeping-body and dream-presence separation for tutorial/lucid dreams.
+- DREAM-002: lucid dream instance MVP for solo and later group dreams.
+- DREAM-003: dream outcomes, knowledge flags and guarded rare item transfer.
 
 ## Technical Backlog
 
@@ -34,6 +38,7 @@ These may become `next` after 0.13-0.15 foundations land.
 - Split broad completion logic only when feature work touches it.
 - Keep action aliases and Telegram buttons moving toward a shared action registry.
 - Add map/docs drift checks after map data stabilizes.
+- Keep posture, sleep state and dream instance state separate in services and persistence.
 
 ## Promotion Rules
 

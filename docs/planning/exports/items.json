@@ -129,6 +129,90 @@
     "file": "docs/planning/items/COMBAT-001-creature-aggression-and-defense.md"
   },
   {
+    "id": "DREAM-001",
+    "title": "Sleeping body and dream presence separation",
+    "status": "backlog",
+    "type": "technical",
+    "area": "dreams",
+    "priority": "high",
+    "tags": [
+      "dreams",
+      "tutorial",
+      "architecture",
+      "body",
+      "liminality"
+    ],
+    "depends_on": [
+      "SLEEP-002",
+      "ONB-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/DREAM-001-sleeping-body-and-dream-presence.md"
+  },
+  {
+    "id": "DREAM-002",
+    "title": "Lucid dream instance MVP",
+    "status": "backlog",
+    "type": "feature",
+    "area": "dreams",
+    "priority": "medium",
+    "tags": [
+      "dreams",
+      "lucid-dreams",
+      "instances",
+      "groups",
+      "quests"
+    ],
+    "depends_on": [
+      "DREAM-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/DREAM-002-lucid-dream-instance-mvp.md"
+  },
+  {
+    "id": "DREAM-003",
+    "title": "Dream outcomes and guarded rare transfer",
+    "status": "backlog",
+    "type": "feature",
+    "area": "dreams",
+    "priority": "medium",
+    "tags": [
+      "dreams",
+      "rewards",
+      "knowledge",
+      "item-origin",
+      "quests"
+    ],
+    "depends_on": [
+      "DREAM-002",
+      "ITEM-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/DREAM-003-dream-outcomes-and-rare-transfer.md"
+  },
+  {
+    "id": "DREAM-004",
+    "title": "Advanced group and place-spirit dreams",
+    "status": "icebox",
+    "type": "feature",
+    "area": "dreams",
+    "priority": "low",
+    "tags": [
+      "dreams",
+      "groups",
+      "spirits",
+      "rituals",
+      "mythic"
+    ],
+    "depends_on": [
+      "DREAM-002",
+      "SOC-003",
+      "OMEN-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/DREAM-004-advanced-group-and-place-spirit-dreams.md"
+  },
+  {
     "id": "ECO-001",
     "title": "Reproduction and herbivore overpopulation",
     "status": "testing",
@@ -1323,6 +1407,86 @@
     "depends_on": [],
     "exports": {},
     "file": "docs/planning/items/SETTLE-001-starter-settlement.md"
+  },
+  {
+    "id": "SLEEP-001",
+    "title": "Lying posture and lie command",
+    "status": "next",
+    "type": "feature",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "sleep",
+      "posture",
+      "aliases",
+      "rest"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/SLEEP-001-lying-posture-and-lie-command.md"
+  },
+  {
+    "id": "SLEEP-002",
+    "title": "Ordinary sleep MVP",
+    "status": "next",
+    "type": "feature",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "sleep",
+      "wake",
+      "stamina",
+      "hp",
+      "tutorial"
+    ],
+    "depends_on": [
+      "SLEEP-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SLEEP-002-ordinary-sleep-mvp.md"
+  },
+  {
+    "id": "SLEEP-003",
+    "title": "World-time auto-wake and sleep comfort",
+    "status": "backlog",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "sleep",
+      "world-time",
+      "campfire",
+      "comfort",
+      "recovery"
+    ],
+    "depends_on": [
+      "SLEEP-002",
+      "WORLD-001",
+      "FIRE-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SLEEP-003-world-time-autowake-and-comfort.md"
+  },
+  {
+    "id": "SLEEP-004",
+    "title": "External forced sleep causes",
+    "status": "icebox",
+    "type": "feature",
+    "area": "survival",
+    "priority": "low",
+    "tags": [
+      "sleep",
+      "creatures",
+      "elixirs",
+      "rituals",
+      "danger"
+    ],
+    "depends_on": [
+      "SLEEP-003",
+      "DREAM-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SLEEP-004-external-forced-sleep-causes.md"
   },
   {
     "id": "SOC-001",
