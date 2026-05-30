@@ -17,9 +17,9 @@ Chornolis Marches is a Ukrainian dark-fantasy Telegram RPG / living-world sandbo
 7. Release/update dates should use the local project date with Holocene calendar year, e.g. `12026-05-26`.
 8. English changelog/release notes should use repository-technical terms such as `inventory`, `HP`, `stamina`, `twigs`, and `location`; reserve player-facing Ukrainian terms for UI, news, in-game text and examples.
 9. When adding or changing player-facing gameplay, check whether onboarding, `/help`, beginner guidance and tutorial/newcomer-helper plans need updating too.
-10. When adding admin/scribe commands, update `/adminHelp`, `docs/systems/admin_commands.md` and any matching web/status documentation together.
+10. When adding admin/scribe commands, update `/adminHelp`, `/adminMenu`, `docs/systems/admin_commands.md` and any matching web/status documentation together.
 11. Do not make `/start` reset position for existing characters; use explicit respawn/admin movement for relocation.
-12. New or changed commands should keep aliases together: slash command where useful, English/MUD-style text forms, Ukrainian text forms, matching buttons, and matching `/help` or `/adminHelp` docs.
+12. New or changed commands should keep aliases together: slash command where useful, English/MUD-style text forms, Ukrainian text forms, matching buttons, and matching `/help`, `/adminHelp` or `/adminMenu` surfaces.
 12a. When a visible button/action appears in `/help`, `/commands`, news or release notes, write the stable slash command in parentheses after the label, e.g. `🌙 AFK / відійти` (`/afk`) or `🚪 Завершити сесію` (`/end_session`).
 13. When a command becomes part of the tutorial/newcomer path, add a short diegetic first-use comment or planning note for Сон/Дрімота, another guide voice, or an appropriate local sign so the tutorial teaches the command in-world instead of only exposing a button.
 14. When adding or changing text aliases, add or update `scripts/test/input-aliases.cjs` whenever the behavior can be checked with `parseAlias` without Telegram or database setup.

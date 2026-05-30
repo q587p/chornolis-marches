@@ -14,7 +14,7 @@
     "Preserve current functionality unless explicitly asked to replace it.",
     "For MVP Telegram bot, prefer long polling over webhook unless explicitly changed.",
     "Do not make /start teleport existing characters; use explicit respawn/admin movement for relocation.",
-    "When adding admin/scribe commands, keep /adminHelp and docs/systems/admin_commands.md complete."
+    "When adding admin/scribe commands, keep /adminHelp, /adminMenu and docs/systems/admin_commands.md complete."
   ],
   "terminology": {
     "canonical_source": "docs/design/terminology.md",
