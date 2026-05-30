@@ -18,6 +18,7 @@ These may become `next` after 0.13-0.15 foundations land.
 - NPC hunter/archer route that leaves visible signs.
 - Local console client for command/action smoke tests.
 - Shared command registry and per-command help: keep `/commands`, `/help`, text aliases, future MUD commands, Telegram buttons and permissions from drifting apart.
+- Rework `/commands` into a cleaner hidden command reference instead of a broad alias wall: group it by real player goals, keep survival advice in `/help` or tutorial surfaces, and document which commands are current, planned or scribe-only.
 - Follow-up command packs after `CMD-001`: `give`, `put`, `drink`, `skills`, `effects`, `consider`, `compare`, `journal`, `party`, `guild`, `spells`, `cast`, `weather`, builder commands and moderation commands.
 - Item details, safer drop/pickup and item-instance groundwork.
 - Dream item origin tracking for tutorial resources, so leaving the dream removes only dream-gathered supplies and never resources brought from the waking world.
