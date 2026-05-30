@@ -19,6 +19,7 @@ import {
   type ChatLogWindow,
 } from "../services/chatLog";
 import { getEcologyStats } from "../services/ecologyStats";
+import { ADD_CREATURE_BATCH_SIZE, ADD_CREATURE_MAX_COUNT, parseAddCreatureArgs, planAddCreatureBatches } from "../services/adminCreatures";
 import { getStatusData } from "../services/status";
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { isScribeAdmin, requireScribeAdmin } from "../services/adminAccess";
@@ -215,12 +216,6 @@ async function findLocationByKeyOrCoords(locationArg: string) {
       z: Number(rawZ),
     },
   });
-}
-
-function normalizeAge(rawAge?: string): CreatureAge {
-  const value = rawAge?.trim().toUpperCase();
-  if (value === "YOUNG" || value === "ADULT" || value === "OLD") return value;
-  return "ADULT";
 }
 
 async function replyWorldStatus(ctx: any) {
@@ -1201,7 +1196,7 @@ export function registerStatusHandlers(bot: Bot) {
       (s) => `${s.key} — ${s.name}; життя=${s.baseHp}; diet=${s.diet}; lifecycle=${s.childTicks}/${s.youngTicks}/${s.adultTicks}/${s.oldTicks}; corpse=${s.corpseDecayTicks}`
     );
     await ctx.reply(
-      `🐾 Можливі тварини для /addCreature\n\n${lines.join("\n") || "немає"}\n\nФормат:\n/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD]\n\nПриклади:\n/addCreature rabbit forest_04_00 3\n/addCreature mouse 0,0,0 5 YOUNG\n/addCreature wolf forest_00_08 1 OLD`
+      `🐾 Можливі тварини для /addCreature\n\n${lines.join("\n") || "немає"}\n\nФормат:\n/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD]\n\nПонад ${ADD_CREATURE_BATCH_SIZE} створюється кількома батчами. Разова межа: ${ADD_CREATURE_MAX_COUNT}.\n\nПриклади:\n/addCreature rabbit forest_04_00 3\n/addCreature mouse 0,0,0 100 YOUNG\n/addCreature wolf forest_00_08 1 OLD`
     );
   });
 
@@ -1644,13 +1639,11 @@ export function registerStatusHandlers(bot: Bot) {
   bot.command(["addCreature", "addcreature"], async (ctx) => {
     if (!(await requireScribeAdmin(ctx))) return;
 
-    const args = ctx.match?.trim().split(/\s+/).filter(Boolean) ?? [];
-    const [speciesKey, locationArg, rawCount, rawAge] = args;
-    const parsedCount = Number(rawCount || 1);
-    const count = Number.isFinite(parsedCount) ? Math.max(1, Math.min(Math.floor(parsedCount), 50)) : NaN;
+    const { speciesKey, locationArg, requestedCount, age } = parseAddCreatureArgs(String(ctx.match ?? ""));
+    const plan = planAddCreatureBatches(requestedCount);
 
-    if (!speciesKey || !locationArg || !Number.isFinite(count)) {
-      return void (await ctx.reply("⚠️ Формат: /addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD]\nНаприклад: /addCreature rabbit forest_04_00 3"));
+    if (!speciesKey || !locationArg || !Number.isFinite(plan.count)) {
+      return void (await ctx.reply(`⚠️ Формат: /addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD]\nПонад ${ADD_CREATURE_BATCH_SIZE} створюється кількома батчами. Разова межа: ${ADD_CREATURE_MAX_COUNT}.\nНаприклад: /addCreature rabbit forest_04_00 3`));
     }
 
     const species = await prisma.creatureSpecies.findUnique({ where: { key: speciesKey } });
@@ -1660,30 +1653,37 @@ export function registerStatusHandlers(bot: Bot) {
     if (!location) return void (await ctx.reply(`⚠️ Невідома місцина: ${locationArg}. Спробуй /locationAll, реальний ключ на кшталт forest_04_00 або координати типу 0,0,0.`));
     if (species.kind !== "ANIMAL") return void (await ctx.reply("⚠️ /addCreature зараз призначена для тварин. Унікальні NPC керуються seed/cleanup."));
 
-    const age = normalizeAge(rawAge);
     const ageTicks = ageTicksFor(species, age);
     const hp = hpForAge(species, age);
 
-    for (let i = 0; i < count; i++) {
-      const sex = Math.random() < 0.5 ? "MALE" : "FEMALE";
-      await prisma.creature.create({
-        data: {
+    for (const batchCount of plan.batches) {
+      await prisma.creature.createMany({
+        data: Array.from({ length: batchCount }, () => ({
           speciesId: species.id,
           locationId: location.id,
           hp,
-          sex,
+          sex: Math.random() < 0.5 ? "MALE" : "FEMALE",
           age,
           ageTicks,
           isAlive: true,
           isGone: false,
           activity: "IDLE",
           currentAction: age === "OLD" ? "повільно рухається" : "прислухається",
-        },
+        })),
       });
     }
 
-    await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "Creature added", description: `Added ${speciesKey} ×${count} (${age}) to ${location.key}.`, locationId: location.id } });
-    await ctx.reply(`✅ Додано: ${species.name} ×${count} (${age}) → ${location.name} (${location.x},${location.y},${location.z})`);
+    const batchNote = plan.batches.length > 1 ? `\nСтворено батчами по ${ADD_CREATURE_BATCH_SIZE}, щоб не робити один важкий запис.` : "";
+    const capNote = plan.capped ? `\nЗапитано ${plan.requestedCount}, разова межа команди: ${plan.count}.` : "";
+    await prisma.worldEvent.create({
+      data: {
+        type: "SYSTEM",
+        title: "Creature added",
+        description: `Added ${speciesKey} ×${plan.count} (${age}) to ${location.key}; requested=${plan.requestedCount}; batches=${plan.batches.join("+")}.`,
+        locationId: location.id,
+      },
+    });
+    await ctx.reply(`✅ Додано: ${species.name} ×${plan.count} (${age}) → ${location.name} (${location.x},${location.y},${location.z})${batchNote}${capNote}`);
   });
 
   bot.command(["forceOld", "forceold"], async (ctx) => {

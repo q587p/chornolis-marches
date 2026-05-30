@@ -196,7 +196,7 @@ export const ADMIN_HELP_TEXT = [
   "/restAdmin [#id|ім’я|username] — одразу відновити снагу собі або вказаному персонажу до адмінського максимуму",
   "",
   "Додавання у світ",
-  "/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD] — додати тварин",
+  "/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD] — додати тварин; понад 50 створюється батчами, разова межа 500",
   "/addCreatureHelp — список speciesKey для тварин",
   "/addResource <resourceKey> [locationKey|x,y,z] [amount] — відновити ресурс у місцині; без місцини бере поточну, без кількості додає 1",
   "/addResourceHelp — список ключів ресурсів; /addResourse теж працює як запасний варіант",
