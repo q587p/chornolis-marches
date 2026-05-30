@@ -7,13 +7,24 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+---
+
+## 0.13.14 - Core loop omen and tutorial keyboard polish - 12026-05-30
+
 ### Added
 
 - Added a first old-campfire memory omen slice: seeded old ordinary campfires can reveal one short atmospheric trace when fed with `twigs` or relit from a torch, and the trace remains visible in later campfire inspection text.
+- Added the `LOOP-003` planning item and system notes for future old-campfire memory omen tuning.
 
 ### Changed
 
 - Tutorial dream reply keyboards now keep ordinary `Help`, `Menu`, `Status` and `Examine` controls hidden until the matching lesson has surfaced them, while `Inventory` appears once the character actually carries something.
+- Updated gate hunting saturation planning with future persisted linger/cooldown, per-tick saturation caching for larger hunter counts, and the temporary plain `/put` default that should later be removed or redefined for generic containers.
+
+### Tests
+
+- Added `scripts/test/campfire-memory.cjs` coverage for first-reveal and later-inspection behavior.
+- Extended posture/reply-keyboard coverage for progressive tutorial dream controls.
 
 ---
 
