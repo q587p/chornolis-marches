@@ -36,6 +36,8 @@ The immediate pressure is the hunter loop: Орина's lit torch and spare torc
 - Add or choose a shared representation for NPC-carried resources/items that can support at least `torch` and `lit_torch`.
 - Preserve lit-torch burn timers for NPC-held torches instead of encoding them only in `Creature.currentAction`.
 - Make NPC-held lit torches count as local light in the same visibility layer as player-held lit torches.
+- Count NPC-held lit-torch light even when the NPC is not currently visible to a viewer; light belongs to the location, not to the viewer's target list.
+- If an NPC is explicitly hidden or stealth-like but openly carries a lit torch, the torch should reveal that presence instead of allowing a fully hidden light source with no visible bearer.
 - Let hunter torch pickup/resupply write real held state where practical.
 - Keep hunter-specific state only for hunter decisions: route intent, claimed carcasses, return-for-supply intent.
 - Keep player inventory behavior unchanged.
@@ -45,6 +47,8 @@ The immediate pressure is the hunter loop: Орина's lit torch and spare torc
 - A seeded NPC can start with a real held lit torch and a real spare torch.
 - NPC-held lit torches expire or fade through the same timer assumptions as player-held lit torches.
 - NPC-held lit torches can provide light to the current location.
+- NPC-held lit torches provide local light regardless of whether the carrier was already visible to a particular character.
+- A hidden NPC with a visible/openly carried lit torch is no longer fully hidden in ordinary location visibility; the light should expose at least an uncertain bearer rather than appearing as ownerless hidden light.
 - `/look` / `/examine` style visibility can describe an obvious NPC-held torch without exposing internal state.
 - Hunter code no longer needs the lightweight `hunter_torches` marker for basic carried torch count once this foundation is active.
 - Migration tests cover the current lightweight `Creature.currentAction` bridge for claimed carcasses and hunter torch bundles, especially hunter death, interruption, disappearance and reset.
