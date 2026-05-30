@@ -111,3 +111,8 @@ WORLD-001-C,Daypart helper and tick advancement,next,feature,world_time,high,"wo
 WORLD-001-D,/time reads world state,next,feature,world_time,high,"world-time,time-command",docs/planning/items/WORLD-001-D.md
 WORLD-002,Campfires and light,next,feature,survival,high,"survival,light,crafting,night",docs/planning/items/WORLD-002-campfires-and-light.md
 WORLD-002-hidden-spirit,Hidden spirit seed and boundaries,backlog,feature,world,medium,"world,hidden-presence,spirit,campfire",docs/planning/items/WORLD-002-hidden-spirit-seed-and-boundaries.md
+WPN-001,Minimal weapon catalog and equip foundation,next,feature,items,medium,"weapons,inventory,equipment,freshening",docs/planning/items/WPN-001-minimal-weapon-catalog-and-equip.md
+WPN-002,"Weapon-aware look, examine, attack and freshen",next,feature,items,medium,"weapons,inventory,combat,freshening",docs/planning/items/WPN-002-weapon-aware-look-examine-attack-freshen.md
+WPN-003,Themed NPC weapons and hunter spear,backlog,feature,npc,medium,"weapons,npc,hunter,seed",docs/planning/items/WPN-003-themed-npc-weapons-and-hunter-spear.md
+WPN-004,"Weapon condition, dulling and sharpening hooks",backlog,technical,items,low,"weapons,durability,item-instances,backlog",docs/planning/items/WPN-004-weapon-condition-backlog.md
+WPN-ICE-001,Deep combat and weapon lifetime,icebox,feature,combat,low,"weapons,combat,durability,icebox",docs/planning/items/WPN-ICE-001-deep-combat-and-weapon-lifetime.md
