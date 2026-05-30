@@ -38,8 +38,9 @@ MAP-002-A,First biome foraging table,next,feature,world,high,"map,biome,foraging
 MAP-002-B,Generic gather uses biome candidates,next,feature,world,high,"gather,biome,foraging",docs/planning/items/MAP-002-B.md
 MAP-002-C,Biome foraging text variants,next,content,world,medium,"gather,biome,copy",docs/planning/items/MAP-002-C.md
 NAV-001,Location-to-location route finding,testing,feature,world,medium,"navigation,movement,npc,world",docs/planning/items/NAV-001-location-route-finding.md
-NPC-002,Hunter auto-program MVP,backlog,feature,npc,medium,"npc,ecology,hunting,living-world",docs/planning/items/NPC-002-hunter-auto-program.md
+NPC-002,Hunter auto-program MVP,backlog,feature,npc,high,"npc,ecology,hunting,living-world",docs/planning/items/NPC-002-hunter-auto-program.md
 NPC-003,Herbalist service layer,next,technical,npc,medium,"npc,herbalist,architecture,world-tick",docs/planning/items/NPC-003-herbalist-service-layer.md
+NPC-004,Actor inventory and held light foundation,next,technical,npc,high,"npc,actors,inventory,torch,light",docs/planning/items/NPC-004-actor-inventory-held-light.md
 OBS-001-A,Observe action and alias skeleton,next,feature,learning,high,"observe,aliases,targets",docs/planning/items/OBS-001-A.md
 OBS-001-B,Visible herbalist action,next,feature,learning,high,"observe,npc,herbalism",docs/planning/items/OBS-001-B.md
 OBS-001-C,Herbalism/gathering progress from observation,next,feature,learning,high,"observe,herbalism,progression",docs/planning/items/OBS-001-C.md

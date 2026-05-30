@@ -4,7 +4,7 @@ title: Hunter auto-program MVP
 status: backlog
 type: feature
 area: npc
-priority: medium
+priority: high
 estimate: 4-8h
 tags:
   - npc
@@ -14,6 +14,7 @@ tags:
 depends_on:
   - NAV-001
   - ECO-002
+  - NPC-004
 ---
 
 # NPC-002: Hunter Auto-Program MVP
@@ -88,8 +89,8 @@ Add a simple NPC hunter behavior that interacts with the same ecological loop as
 
 Remaining work before closing the full MVP:
 
-- model the bounded torch bundle and lit-torch switching as real NPC-held state instead of only planning constants;
-- replace the current lightweight ground-torch pickup marker with real NPC-held item state, including lit-torch lifetime preservation;
+- model the bounded torch bundle and lit-torch switching as real NPC-held state instead of only planning constants; this is now high-priority because hunters should move toward the same inventory/light rules as players;
+- replace the current lightweight ground-torch pickup marker with real NPC-held item state, including lit-torch lifetime preservation and real light emission;
 - let hunters craft torches later if they have gathered the required resources;
 - add stronger route/radius tuning for hunting grounds;
 - add an inspect/check beat between attack and next decision;

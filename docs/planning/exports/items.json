@@ -728,7 +728,7 @@
     "status": "backlog",
     "type": "feature",
     "area": "npc",
-    "priority": "medium",
+    "priority": "high",
     "tags": [
       "npc",
       "ecology",
@@ -737,7 +737,8 @@
     ],
     "depends_on": [
       "NAV-001",
-      "ECO-002"
+      "ECO-002",
+      "NPC-004"
     ],
     "exports": {},
     "file": "docs/planning/items/NPC-002-hunter-auto-program.md"
@@ -758,6 +759,26 @@
     "depends_on": [],
     "exports": {},
     "file": "docs/planning/items/NPC-003-herbalist-service-layer.md"
+  },
+  {
+    "id": "NPC-004",
+    "title": "Actor inventory and held light foundation",
+    "status": "next",
+    "type": "technical",
+    "area": "npc",
+    "priority": "high",
+    "tags": [
+      "npc",
+      "actors",
+      "inventory",
+      "torch",
+      "light"
+    ],
+    "depends_on": [
+      "FIRE-001-C"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/NPC-004-actor-inventory-held-light.md"
   },
   {
     "id": "OBS-001-A",
