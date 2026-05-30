@@ -18,6 +18,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Character cards reuse the same name-review wording so pending custom names no longer sound like a blocking error.
 - Unknown-input suggestions now include stable slash-command hints for more actions, and the fallback points to `❔ Help` (`/help`) and `Menu` (`/menu`) with clearer labels.
 - Targetless social inputs such as `smile`, `посміх` and `усміхнутися` now perform a visible location gesture, and typo suggestions can point toward close social-signal aliases.
+- Character cards now include a `Signals` button beside inventory, opening targetless gestures such as smile, nod, sigh or wave without needing to inspect a target first.
 - The tutorial gate fallback now nudges players who type the written phrase directly to say it aloud with `say` / `/say`, and copied `Ви сказали:` echoes now parse back into speech.
 - Auto stand-up notices now include the matching `/stand` command hint.
 - Sitting, standing, rest start/stop, tutorial sleep entry and tutorial wake now broadcast concise observer messages to other players in the same location.

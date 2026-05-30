@@ -62,6 +62,8 @@ Examples:
 
 Targetless player gestures are allowed for signals that make sense without a direct target, such as smiling, nodding, bowing, sighing, laughing, waving or glaring. Signals that need an object, such as pointing, should still ask for a visible target.
 
+The character card should expose these targetless gestures through a compact `Сигнали` button near `Речі`, so players can use small social actions without first opening a target-specific interaction menu.
+
 ## Events and chat
 
 Social signals write `SOCIAL_SIGNAL` world events. `/chat` includes these events alongside speech and greetings, so social gestures become part of the local conversational history instead of being only transient Telegram messages.

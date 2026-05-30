@@ -139,6 +139,17 @@ export function buildSocialSignalKeyboard(target: Pick<TargetRef, "type" | "id">
   return keyboard;
 }
 
+export function buildLocationSocialSignalKeyboard() {
+  const keyboard = new InlineKeyboard();
+  const targetlessSocials = SOCIAL_DEFINITIONS.filter((social) => social.targetlessActorMessage && social.targetlessRoomMessage);
+  for (const [index, social] of targetlessSocials.entries()) {
+    keyboard.text(social.label, `character:signal:${social.id}`);
+    if (index % 2 === 1) keyboard.row();
+  }
+  if (targetlessSocials.length % 2 === 1) keyboard.row();
+  return keyboard.text("↩️ Назад", "character:back");
+}
+
 export function buildCorpseActionKeyboard(target: ResolvedTarget) {
   const keyboard = new InlineKeyboard().text("🔎 Оглянути труп", `social:inspect:${target.kind}:${target.id}:known`).row();
   keyboard.text("🤲 Підібрати", `social:pickup:${target.kind}:${target.id}`).row();
