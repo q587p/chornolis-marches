@@ -11,6 +11,7 @@
 ## Always preserve these rules
 
 - Do **not** put internal workflow notes about `package.json` / `package-lock.json` into public news or changelog entries.
+- Do **not** put scribe/admin-only commands or hidden service tooling into public `news.md`; keep those details in changelog, release notes, `/adminHelp`, `/adminMenu`, and admin docs.
 - If the task creates a release/version commit, bump `package.json` and `package-lock.json` in that same commit.
 - Use the version from `package.json` as the release version. The expected git tag is `vX.Y.Z`, for example `v0.12.12`.
 - Public English changelog and release-note entries should describe mechanics in repository-technical terms such as `inventory`, `HP`, `stamina`, `twigs`, and `location`. Reserve player-facing Ukrainian terminology such as `Речі`, `Життя`, `Снага`, `хмиз`, and `місцина` for UI text, in-game/news copy, Ukrainian examples, aliases, and terminology/design docs.

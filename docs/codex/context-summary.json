@@ -10,6 +10,7 @@
   },
   "hard_rules": [
     "Do not put internal package/version workflow notes into news or changelog.",
+    "Do not put scribe/admin-only commands or hidden service tooling into public news.md.",
     "Prefer ready changed files/archives over patch scripts when asked for archives.",
     "Preserve current functionality unless explicitly asked to replace it.",
     "For MVP Telegram bot, prefer long polling over webhook unless explicitly changed.",

@@ -9,6 +9,7 @@ Chornolis Marches is a Ukrainian dark-fantasy Telegram RPG / living-world sandbo
 ## Most important permanent rules
 
 1. Do not put the internal versioning/package-file workflow note into news/changelog.
+1a. Do not put scribe/admin-only commands or hidden service tooling into public `news.md`; keep them in changelog, release notes, `/adminHelp`, `/adminMenu`, and admin docs.
 2. Preserve current functionality unless the user explicitly asks to replace it.
 3. Prefer Ukrainian UI and project-specific terminology.
 4. Use `docs/codex/` files for context before editing unfamiliar systems.
