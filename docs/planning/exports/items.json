@@ -734,6 +734,26 @@
     "file": "docs/planning/items/ITEM-001-pickup-vs-gather-semantics.md"
   },
   {
+    "id": "ITEM-002",
+    "title": "Queued pickup actions",
+    "status": "backlog",
+    "type": "feature",
+    "area": "inventory",
+    "priority": "medium",
+    "tags": [
+      "pickup",
+      "inventory",
+      "action-queue",
+      "stamina",
+      "ground-items"
+    ],
+    "depends_on": [
+      "ITEM-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ITEM-002-queued-pickup-actions.md"
+  },
+  {
     "id": "LANG-001",
     "title": "Lexicon and agreement audit",
     "status": "backlog",

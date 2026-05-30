@@ -37,6 +37,7 @@ ICE-002,Rituals and sacred days,icebox,feature,mythic_systems,low,"rituals,calen
 ICE-003,Caravans and regional trade,icebox,feature,economy,low,"economy,settlements,npc,world_simulation",docs/planning/items/ICE-003-caravans.md
 ICE-004,"Camps, shelters and construction",icebox,feature,construction,low,"survival,crafting,settlement,storage",docs/planning/items/ICE-004-construction.md
 ITEM-001,Pickup versus gather command semantics,testing,bug,inventory,high,"aliases,pickup,gather,inventory,ground-items",docs/planning/items/ITEM-001-pickup-vs-gather-semantics.md
+ITEM-002,Queued pickup actions,backlog,feature,inventory,medium,"pickup,inventory,action-queue,stamina,ground-items",docs/planning/items/ITEM-002-queued-pickup-actions.md
 LANG-001,Lexicon and agreement audit,backlog,chore,content,medium,"ukrainian,lexicon,grammar,text",docs/planning/items/LANG-001-lexicon-and-agreement-audit.md
 LEARN-001-A,Minimal learning storage decision,next,design,learning,high,"learning,progression,schema",docs/planning/items/LEARN-001-A.md
 LEARN-001-B,Minimal CharacterSkill model,next,technical,learning,high,"learning,schema,skills",docs/planning/items/LEARN-001-B.md
