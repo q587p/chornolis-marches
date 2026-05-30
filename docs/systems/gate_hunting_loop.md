@@ -94,6 +94,21 @@ First MVP thresholds:
 
 The thresholds should live in domain configuration, not in handler text.
 
+## Saturation / Enough For Now
+
+The loop should be able to stand down when local pressure has eased. This is not a quest completion state; it is the settlement and borderland noticing that more rodent/herbivore killing is not needed right now.
+
+When saturation is active:
+
+- the gate notice changes from asking for carcasses to saying there is enough pressure for now;
+- the drop-off may still accept physical remains, but no new reward/supply threshold should fire;
+- player-facing text should make clear that the settlement is not urging more killing at the moment;
+- NPC hunters should stop seeking fresh rodents/herbivores for this loop;
+- hunters can sit and rest near the magic campfire or another safe waiting point;
+- hunter speech should use a quieter waiting/stand-down pool, not departure or boast-like hunting lines.
+
+The state should be reversible. If herbivores overgraze again, predator pressure drops, or enough time passes, the sign can return to asking for help.
+
 ## `put` Command Relationship
 
 This loop is the first target for a narrow local-container command:
@@ -184,6 +199,14 @@ Good line directions:
 - `Звір розійшовся занадто близько до воріт.`
 
 Avoid modern slogans, quest-like confirmations, guaranteed-kill boasting and fixed reward framing. Lines that mention the лісовик should remain occasional unless local world state has made that spirit especially relevant.
+
+Stand-down / waiting lines should be separate from hunting lines. Examples:
+
+- `Досить на сьогодні. Хай трава трохи підведеться.`
+- `Не кожен рух у лісі треба гнати ножем.`
+- `Посидимо біля вогню. Якщо межа знову просяде, підемо.`
+- `Гризуни ще лишаться. Але тепер не вони диктують день.`
+- `Писар знак змінив. Значить, поки чекаємо.`
 
 ## Acceptance
 

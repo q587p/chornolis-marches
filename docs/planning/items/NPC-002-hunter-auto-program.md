@@ -48,6 +48,7 @@ Add a simple NPC hunter behavior that interacts with the same ecological loop as
 - Nearby players should be able to observe at least some compact local messages.
 - Add a small thematic shout/field-line pool for departures, trail choice, returns and deposits, shared conceptually with the later player hunter auto-mode.
 - Rate-limit hunter lines and keep them diegetic: no quest-state announcements, no guaranteed-kill boasting and no fixed bounty framing.
+- Respect future gate-hunting saturation: if the settlement sign says enough for now, hunters should stop seeking new rodents/herbivores for this loop and switch to waiting/resting behavior.
 
 ## Acceptance
 
@@ -59,6 +60,7 @@ Add a simple NPC hunter behavior that interacts with the same ecological loop as
 - Hunter deposits are counted as NPC contributions, not player rewards.
 - Behavior is rate-limited and safe for world ticks.
 - Hunter speech is compact, local/visible when possible and drawn from the documented hunting-pressure line pool.
+- When gate-hunting saturation is active, hunter speech switches to a distinct stand-down/waiting line pool and the hunter rests instead of continuing the hunt loop.
 
 ## 0.13.9 Foundation Note
 
@@ -93,5 +95,6 @@ Remaining work before closing the full MVP:
 - replace the current lightweight ground-torch pickup marker with real NPC-held item state, including lit-torch lifetime preservation and real light emission;
 - let hunters craft torches later if they have gathered the required resources;
 - add stronger route/radius tuning for hunting grounds;
+- respect `ECO-003` saturation so hunters can stand down and rest near the magic campfire when more rodent/herbivore pressure is not needed;
 - add an inspect/check beat between attack and next decision;
 - decide whether hunter-claimed carcasses should ever be recoverable if the hunter dies, disappears or is reset mid-route.

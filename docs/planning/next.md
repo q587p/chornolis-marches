@@ -18,6 +18,7 @@ The current lane is the three-month vertical slice:
 - LOOP-001: starter location and bridge threshold polish.
 - NPC-004: add actor inventory and held-light foundation so NPCs can carry real torches/items and emit light through the same assumptions as players.
 - NPC-002: finish the hunter auto-program MVP after the first state-machine slice: real torch bundle/light state via `NPC-004`, inspect/check beat, route/radius tuning and recovery rules for claimed carcasses.
+- ECO-003: add gate-hunting saturation so the sign, rewards and hunter behavior can stand down when rodent/herbivore pressure is low enough.
 - NPC-003: extract herbalist behavior into its own service layer, shaped like the hunter service, before adding more visible herbalist/learning behavior.
 - ADM-001: minimal audit logging for dangerous scribe tools.
 
@@ -51,7 +52,7 @@ These are still `backlog`, but recent work makes them worth reviewing before the
 - Hidden presence / hidden follower spirit: the planning pack is now split into `VIS-002`, `WORLD-002-hidden-spirit` and `OMEN-002`, with `docs/systems/hidden_presence.md` as the design source. Keep it as future work until the visibility and light foundations are ready; do not implement the стежник pursuit as an immediate patch.
 - Darkness creature / small coin omen: this becomes much more attractive right after WORLD-001 because it explicitly depends on darkness, light and calm observation.
 - TECH-001: service boundary and duplication cleanup. Keep this mostly behavior-preserving, but make it visible during patch planning because `worldTick.ts`, `status.ts`, `actionCompletions.ts`, `statusServer.ts`, `locations.ts` and `aliases.ts` are now large enough to slow safe feature work.
-- Gate hunting loop: 0.13.7 adds the notice, падальний рів, narrow `put` flow and player contribution accounting. `NAV-001`, the 0.13.9 NPC drop-off helper, the 0.13.10 hunter route plan and the 0.13.11 first hunter state-machine slice now exist, so the next small slice should focus on `NPC-004` real NPC-held torch/light state and better hunter route tuning rather than a second hidden counter.
+- Gate hunting loop: 0.13.7 adds the notice, падальний рів, narrow `put` flow and player contribution accounting. `NAV-001`, the 0.13.9 NPC drop-off helper, the 0.13.10 hunter route plan and the 0.13.11 first hunter state-machine slice now exist, so the next small slice should focus on `NPC-004` real NPC-held torch/light state, `ECO-003` enough-for-now saturation, and better hunter route tuning rather than a second hidden counter.
 
 ## Review Checklist
 

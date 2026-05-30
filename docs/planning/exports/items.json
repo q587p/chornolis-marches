@@ -172,6 +172,28 @@
     "file": "docs/planning/items/ECO-002-carcass-dropoff-reaction.md"
   },
   {
+    "id": "ECO-003",
+    "title": "Gate hunting saturation and stand-down state",
+    "status": "next",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "high",
+    "tags": [
+      "ecology",
+      "hunting",
+      "settlement",
+      "npc",
+      "rewards"
+    ],
+    "depends_on": [
+      "ECO-001",
+      "ECO-002",
+      "NPC-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ECO-003-gate-hunting-saturation.md"
+  },
+  {
     "id": "ECON-001",
     "title": "Barter and trade",
     "status": "backlog",
