@@ -8,11 +8,14 @@ const {
   HUNTER_GROUND_TORCH_KEYS,
   HUNTER_PROFESSION_KEY,
   HUNTER_RETURN_TORCH_RESERVE,
+  HUNTER_RETURNING_FOR_TORCHES_MARKER,
   HUNTER_TORCH_BUNDLE_SIZE,
   groupHunterClaimedCorpses,
   hunterCarriedTorchCount,
   hunterClaimedCorpseAction,
   hunterClaimedCorpseOwnerId,
+  hunterIsReturningForTorches,
+  hunterReturningForTorchesAction,
   hunterRouteDirections,
   hunterTorchCarryAction,
   isHunterGroundTorchKey,
@@ -70,6 +73,12 @@ assert.equal(hunterCarriedTorchCount(torchAction), 3);
 assert.equal(hunterCarriedTorchCount(hunterTorchCarryAction(99, "факел", 1)), HUNTER_TORCH_BUNDLE_SIZE);
 assert.equal(hunterCarriedTorchCount("підбирає факел до мисливського набору"), 0);
 assert.equal(hunterCarriedTorchCount(null), 0);
+
+const returningForTorches = hunterReturningForTorchesAction();
+assert.ok(returningForTorches.includes(HUNTER_RETURNING_FOR_TORCHES_MARKER));
+assert.equal(hunterIsReturningForTorches(returningForTorches), true);
+assert.equal(hunterCarriedTorchCount(returningForTorches), HUNTER_RETURN_TORCH_RESERVE + 1);
+assert.equal(hunterIsReturningForTorches("поповнює мисливський набір біля воріт"), false);
 
 const claimText = hunterClaimedCorpseAction(42);
 assert.equal(hunterClaimedCorpseOwnerId(claimText), 42);

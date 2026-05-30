@@ -15,6 +15,7 @@ export const HUNTER_DEFAULT_MAGIC_CAMPFIRE_FEATURE_KEY = "start_unfading_campfir
 export const HUNTER_PROFESSION_KEY = "hunter";
 export const HUNTER_CLAIMED_CORPSE_PREFIX = "claimed_by_hunter:";
 export const HUNTER_CARRIED_TORCH_PREFIX = "hunter_torches:";
+export const HUNTER_RETURNING_FOR_TORCHES_MARKER = "hunter_returning_for_torches";
 export const HUNTER_GROUND_TORCH_KEYS = ["torch", "lit_torch"] as const;
 const HUNTER_PREY_SPECIES_KEYS = ["mouse", "rabbit"] as const;
 const HUNTER_ROUTE_MAX_DEPTH = 16;
@@ -73,6 +74,15 @@ export function hunterTorchCarryAction(count: number, pickedName = "факел",
   const safeCount = Math.max(0, Math.min(HUNTER_TORCH_BUNDLE_SIZE, Math.trunc(count)));
   const itemText = pickedAmount > 1 ? `${pickedName} ×${pickedAmount}` : pickedName;
   return `підбирає ${itemText} до мисливського набору; ${HUNTER_CARRIED_TORCH_PREFIX}${safeCount}`;
+}
+
+export function hunterReturningForTorchesAction(torchCount = HUNTER_RETURN_TORCH_RESERVE + 1) {
+  const safeCount = Math.max(HUNTER_RETURN_TORCH_RESERVE, Math.min(HUNTER_TORCH_BUNDLE_SIZE, Math.trunc(torchCount)));
+  return `вертається до воріт із запаленим факелом і запасним у торбі; ${HUNTER_RETURNING_FOR_TORCHES_MARKER}; ${HUNTER_CARRIED_TORCH_PREFIX}${safeCount}`;
+}
+
+export function hunterIsReturningForTorches(currentAction: string | null | undefined) {
+  return Boolean(currentAction?.includes(HUNTER_RETURNING_FOR_TORCHES_MARKER));
 }
 
 export function hunterRouteDirections(route: RouteStep[]) {
@@ -326,6 +336,17 @@ async function pickUpVisibleGroundTorch(bot: Bot | null, hunter: { id: number; l
   return true;
 }
 
+async function resupplyHunterTorchesAtGate(bot: Bot | null, hunter: { id: number; locationId: number; name?: string | null }, plan: HunterRoutePlan) {
+  if (hunter.locationId !== plan.gateLocationId) return false;
+  await prisma.creature.updateMany({
+    where: { id: hunter.id, isAlive: true, isGone: false },
+    data: { currentAction: `поповнює мисливський набір біля воріт; ${HUNTER_CARRIED_TORCH_PREFIX}${HUNTER_TORCH_BUNDLE_SIZE}` },
+  });
+  await logEvent("NPC_ACTION", "Hunter resupplied torches at gate", `${hunter.id}; carried=${HUNTER_TORCH_BUNDLE_SIZE}`, hunter.locationId);
+  if (bot) await notifyLocationAll(bot, hunter.locationId, `${hunter.name ?? "Мисливець"} поповнює мисливський набір біля воріт.`);
+  return true;
+}
+
 export async function tickNpcHunter(bot: Bot | null, hunter: any) {
   if (!isHunterCreature(hunter)) return "queuedRest";
 
@@ -342,6 +363,7 @@ export async function tickNpcHunter(bot: Bot | null, hunter: any) {
 
   const plan = planResult.plan;
   const claimed = await claimedCorpsesForHunter(hunter.id);
+  const returningForTorches = hunterIsReturningForTorches(hunter.currentAction);
 
   if (hunter.locationId === plan.gateLocationId && claimed.length > 0) {
     await depositClaimedCorpses(bot, hunter, plan);
@@ -359,17 +381,9 @@ export async function tickNpcHunter(bot: Bot | null, hunter: any) {
     if (route?.length) return queueHunterMove(hunter, route, "несе здобич до падального рову");
   }
 
-  if (await pickUpVisibleGroundTorch(bot, hunter)) return "queuedGather";
+  if (returningForTorches && await resupplyHunterTorchesAtGate(bot, hunter, plan)) return "queuedGather";
 
-  const shouldReachCampfireFirst = hunter.locationId !== plan.campfireLocationId
-    && (hunter.locationId === plan.gateLocationId || String(hunter.currentAction ?? "").includes("межового вогню"));
-  if (shouldReachCampfireFirst) {
-    const route = await findLocationRoute(hunter.locationId, plan.campfireLocationId, { maxDepth: HUNTER_ROUTE_MAX_DEPTH });
-    if (route?.length) {
-      if (bot && hunter.locationId === plan.gateLocationId) await notifyLocationAll(bot, hunter.locationId, `${hunter.name ?? "Мисливець"} промовляє:\n“${hunterFieldLine("departure", hunter.id)}”`);
-      return queueHunterMove(hunter, route, "йде від воріт до межового вогню");
-    }
-  }
+  if (await pickUpVisibleGroundTorch(bot, hunter)) return "queuedGather";
 
   const prey = await selectLocalHunterPrey(hunter.locationId);
   if (prey) {
@@ -381,6 +395,21 @@ export async function tickNpcHunter(bot: Bot | null, hunter: any) {
       interruptQueued: true,
     });
     return "queuedAttack";
+  }
+
+  if (returningForTorches && hunter.locationId !== plan.gateLocationId) {
+    const route = await findLocationRoute(hunter.locationId, plan.gateLocationId, { maxDepth: HUNTER_ROUTE_MAX_DEPTH });
+    if (route?.length) return queueHunterMove(hunter, route, "вертається до воріт за новими факелами");
+  }
+
+  const shouldReachCampfireFirst = hunter.locationId !== plan.campfireLocationId
+    && (hunter.locationId === plan.gateLocationId || String(hunter.currentAction ?? "").includes("межового вогню"));
+  if (shouldReachCampfireFirst) {
+    const route = await findLocationRoute(hunter.locationId, plan.campfireLocationId, { maxDepth: HUNTER_ROUTE_MAX_DEPTH });
+    if (route?.length) {
+      if (bot && hunter.locationId === plan.gateLocationId) await notifyLocationAll(bot, hunter.locationId, `${hunter.name ?? "Мисливець"} промовляє:\n“${hunterFieldLine("departure", hunter.id)}”`);
+      return queueHunterMove(hunter, route, "йде від воріт до межового вогню");
+    }
   }
 
   const preyRoute = await routeToNearestPreyLocation(hunter.locationId);

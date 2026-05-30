@@ -80,5 +80,25 @@
       "nameLocative": "Лукані",
       "nameVocative": "Лукане"
     }
+  },
+  {
+    "speciesKey": "hunter",
+    "locationKey": "forest_09_00",
+    "name": "Орина",
+    "sex": "FEMALE",
+    "isAlive": true,
+    "isHidden": false,
+    "professionKey": "hunter",
+    "professionName": "мисливиця",
+    "action": "вертається до воріт із запаленим факелом і запасним у торбі; hunter_returning_for_torches; hunter_torches:2",
+    "activity": "MOVING",
+    "nameOverrides": {
+      "nameGenitive": "Орини",
+      "nameDative": "Орині",
+      "nameAccusative": "Орину",
+      "nameInstrumental": "Ориною",
+      "nameLocative": "Орині",
+      "nameVocative": "Орино"
+    }
   }
 ]

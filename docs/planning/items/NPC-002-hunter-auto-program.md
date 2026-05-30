@@ -74,6 +74,7 @@ Add a simple NPC hunter behavior that interacts with the same ecological loop as
 ## 0.13.11 State-Machine Slice
 
 - Seeded the first gate hunter NPC, `Лукан`, near the closed settlement gate.
+- Seeded a second hunter NPC, `Орина`, near the forest edge as a returning-from-the-field case with one visible lit torch and one spare torch represented by the lightweight hunter bundle marker.
 - Added a first `tickNpcHunter()` state-machine slice that:
   - routes the hunter through ordinary exits rather than teleporting;
   - prefers reaching the known magic campfire before the first hunt route;
@@ -83,6 +84,7 @@ Add a simple NPC hunter behavior that interacts with the same ecological loop as
   - returns claimed carcasses to the gate and records them through `recordNpcCarcassDropoffContribution()`.
 - Added helper coverage for hunter profession detection, claimed-carcass markers and grouped corpse resource keys.
 - Added a narrow ground-torch pickup step: if the hunter notices `torch` or `lit_torch` on the ground, he can take it toward the current hunting bundle before continuing.
+- Added a return-for-torches marker so a hunter with low field supply can route back to the gate while still attacking visible local prey on the way.
 
 Remaining work before closing the full MVP:
 
