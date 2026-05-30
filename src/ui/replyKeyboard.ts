@@ -4,7 +4,7 @@ import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import { formatLifeState, formatResourceState } from "../utils/playerText";
 import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
-import { DREAM_GATE_FEATURE_KEYS, TUTORIAL_DEEP_REST_LOCATION_KEY, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_HUB_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SAFETY_LOCATION_KEY, TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY, hasTutorialCommandHint, hasTutorialInventoryAvailable, isTutorialLocation, lockedExitDirections } from "../services/tutorial";
+import { TUTORIAL_DEEP_REST_LOCATION_KEY, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_HUB_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SAFETY_LOCATION_KEY, TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY, hasTutorialCommandHint, hasTutorialInventoryAvailable, isTutorialLocation, lockedExitDirections } from "../services/tutorial";
 
 type MainKeyboardState = {
   isAuto?: boolean;
@@ -15,7 +15,6 @@ type MainKeyboardState = {
   isResting?: boolean | null;
   showPostureActions?: boolean;
   isTutorialDream?: boolean;
-  canOpenDreamGate?: boolean;
   canWakeFromTutorial?: boolean;
   lockedExits?: Direction[];
   canExamine?: boolean;
@@ -23,6 +22,13 @@ type MainKeyboardState = {
 };
 
 export const EMPTY_KEYBOARD_BUTTON = "⠀";
+
+function trimTrailingEmptyRows(keyboard: Keyboard) {
+  while (keyboard.keyboard.length > 0 && keyboard.keyboard[keyboard.keyboard.length - 1]?.length === 0) {
+    keyboard.keyboard.pop();
+  }
+  return keyboard;
+}
 
 function normalizeState(input: MainKeyboardState | boolean = {}) {
   if (typeof input === "boolean") return { isAuto: input } satisfies MainKeyboardState;
@@ -67,12 +73,9 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
     for (const label of postureActionLabelsForState(state)) keyboard.text(label);
     keyboard.row();
   }
-  if (state.isTutorialDream) {
-    if (state.canOpenDreamGate) keyboard.text("💬 Сказати «Відчинитися»");
-    if (state.canWakeFromTutorial) keyboard.text("🌅 Прокинутися");
-  }
+  if (state.canWakeFromTutorial) keyboard.text("🌅 Прокинутися");
 
-  return keyboard.resized().persistent(false);
+  return trimTrailingEmptyRows(keyboard).resized().persistent(false);
 }
 
 export function buildTutorialStartReplyKeyboard() {
@@ -137,10 +140,6 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
           key: true,
           z: true,
           region: { select: { key: true } },
-          features: {
-            where: { key: { in: [...DREAM_GATE_FEATURE_KEYS] }, isActive: true },
-            select: { id: true },
-          },
           exitsFrom: {
             where: { isHidden: false },
             select: { direction: true },
@@ -190,7 +189,6 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
     isTutorialDream,
     canExamine: tutorialExamineVisible,
     showUtilityActions: !isTutorialDream,
-    canOpenDreamGate: isTutorialDream && Boolean(player.currentLocation?.features.length),
     canWakeFromTutorial: player.currentLocation?.key === TUTORIAL_HUB_LOCATION_KEY || player.currentLocation?.key === TUTORIAL_SAFETY_LOCATION_KEY,
     lockedExits,
   });

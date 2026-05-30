@@ -75,15 +75,14 @@ const tutorialGateButtons = buildMainReplyKeyboard({
   exits: ["NORTH", "SOUTH"],
   lockedExits: ["SOUTH"],
   isTutorialDream: true,
-  canOpenDreamGate: true,
   showUtilityActions: false,
 }).keyboard.map((row) => row.map((button) => button.text));
 assert.deepEqual(tutorialGateButtons, [
   ["👀 Озирнутися", "⬆️ Північ", "🔎 Роздивитися"],
   [EMPTY_KEYBOARD_BUTTON, EMPTY_KEYBOARD_BUTTON, EMPTY_KEYBOARD_BUTTON],
   [EMPTY_KEYBOARD_BUTTON, "(⬇️ Південь)", EMPTY_KEYBOARD_BUTTON],
-  ["💬 Сказати «Відчинитися»"],
 ]);
+assert.equal(tutorialGateButtons.flat().includes("💬 Сказати «Відчинитися»"), false);
 assert.equal(tutorialGateButtons.flat().includes("🧭 Допомога"), false);
 assert.equal(tutorialGateButtons.flat().includes("☰ Меню"), false);
 assert.equal(tutorialGateButtons.flat().includes("❤️ добре · ⚡ повна"), false);
