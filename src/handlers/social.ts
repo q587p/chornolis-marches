@@ -3,7 +3,7 @@ import { getPlayerByTelegramId } from "../services/players";
 import { buildCorpseActionKeyboard, buildExamineLocationKeyboard, buildSocialSignalKeyboard, buildTargetActionKeyboard } from "../ui/keyboards";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { actionDurationMs, performOrQueuePlayerAction } from "../services/actionQueue";
-import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
+import { actionQueueReplyOptions, sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { resolveTarget, type ResolvedTarget } from "../services/targets";
 import { prisma } from "../db";
 import { addCorpseToInventory, resourceTypeDisplayName } from "../services/corpses";
@@ -17,6 +17,7 @@ import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { rememberTutorialInventoryForPlayer } from "../utils/tutorialInventory";
 import { stripUnsafeText } from "../utils/text";
 import { spendPlayerStaminaAmount } from "../services/actionRecovery";
+import { visibleTextTargets } from "../services/textTargets";
 
 type TargetSpeechMode = "say" | "whisper";
 
@@ -92,6 +93,53 @@ async function submitTargetSpeech(bot: Bot, ctx: any, pending: PendingTargetSpee
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {
     await ctx.reply(error instanceof Error ? error.message : "Не вдалося виконати дію.");
+  }
+}
+
+async function submitFreshenAll(bot: Bot, ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player || !player.currentLocationId) {
+    await safeAnswerCallbackQuery(ctx);
+    return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  }
+
+  try {
+    assertCanPerformPhysicalAction(player, "FRESHEN");
+    const visibleTargets = await visibleTextTargets(player.currentLocationId, player.id);
+    const freshenable: Array<{ type: "creature"; id: number }> = [];
+
+    for (const target of visibleTargets) {
+      if (target.type !== "creature") continue;
+      const resolved = await resolveTarget(target.type, target.id, player.currentLocationId);
+      if (resolved?.isCorpse && resolved.canFreshen) freshenable.push({ type: target.type, id: target.id });
+    }
+
+    if (!freshenable.length) {
+      await safeAnswerCallbackQuery(ctx, "Поруч немає придатних туш.");
+      await ctx.reply("Поруч немає придатних туш, які можна освіжувати.");
+      return;
+    }
+
+    const durationMs = actionDurationMs("FRESHEN", player.stamina);
+    for (const target of freshenable) {
+      await performOrQueuePlayerAction(bot, {
+        playerId: player.id,
+        type: "FRESHEN",
+        payload: { targetType: target.type, targetId: target.id, mode: "known" },
+        durationMs,
+        chatId: ctx.chat?.id,
+        messageId: ctx.callbackQuery.message?.message_id,
+      });
+    }
+
+    await safeAnswerCallbackQuery(ctx, `Додано: ${freshenable.length}.`);
+    await ctx.reply(
+      `Додано свіжування туш: ${freshenable.length}. Будете обробляти їх по черзі${durationSecondsSuffix(player, durationMs)}.`,
+      await actionQueueReplyOptions(player.id)
+    );
+  } catch (error) {
+    await safeAnswerCallbackQuery(ctx, actionErrorMessage(error, "Не вдалося додати свіжування."));
+    await replyToActionError(ctx, error, "Не вдалося додати свіжування.");
   }
 }
 
@@ -173,6 +221,10 @@ export function registerSocialHandlers(bot: Bot) {
     if (await rememberTutorialInventoryForPlayer(player, `pickup:${resourceType.key}`)) {
       await ctx.reply("Речі тепер можна відкрити з клавіатури.", { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
     }
+  });
+
+  bot.callbackQuery("social:freshenAll", async (ctx) => {
+    await submitFreshenAll(bot, ctx);
   });
 
   bot.callbackQuery(/^signalMenu:(player|creature):(\d+)(?::(known|mystery))?$/, async (ctx) => {

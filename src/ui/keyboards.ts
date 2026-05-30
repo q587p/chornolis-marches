@@ -11,6 +11,7 @@ type TargetRef = {
   canAttack?: boolean;
   isAnimal?: boolean;
   isCorpse?: boolean;
+  canFreshen?: boolean;
 };
 
 const TARGETS_PER_PAGE = 8;
@@ -178,6 +179,12 @@ export function buildTargetListKeyboard(targets: TargetRef[], options: TargetLis
     keyboard.text(labels[start + index] ?? target.label, `target:${target.type}:${target.id}`).row();
   }
 
+  const freshenableCorpses = targets.filter((target) => target.type === "creature" && target.isCorpse && target.canFreshen);
+  if (freshenableCorpses.length > 1) {
+    keyboard.text("🔪 Освіжувати всі", "social:freshenAll");
+    if (totalPages > 1 && options.pageCallbackPrefix) keyboard.row();
+  }
+
   if (totalPages > 1 && options.pageCallbackPrefix) {
     if (page > 0) keyboard.text("◀️ Назад", `${options.pageCallbackPrefix}:${page - 1}`);
     keyboard.text(`${page + 1}/${totalPages}`, "targetPage:noop");
@@ -185,6 +192,9 @@ export function buildTargetListKeyboard(targets: TargetRef[], options: TargetLis
     keyboard.row();
   }
 
+  while (keyboard.inline_keyboard.length > 0 && keyboard.inline_keyboard[keyboard.inline_keyboard.length - 1]?.length === 0) {
+    keyboard.inline_keyboard.pop();
+  }
   return keyboard;
 }
 

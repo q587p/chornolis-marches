@@ -111,6 +111,7 @@ function visibleTargets(
     .filter(isVisibleCorpse)
     .map((c: any) => {
       const wasFreshened = isFreshenedCorpse(c.currentAction);
+      const corpseLeft = c.corpseDecayTicksLeft ?? c.species.corpseDecayTicks;
       return {
         type: "creature" as const,
         id: c.id,
@@ -119,6 +120,7 @@ function visibleTargets(
         canGreet: false,
         isAnimal: c.species.kind === "ANIMAL",
         isCorpse: true,
+        canFreshen: !wasFreshened && corpseLeft > Math.floor(c.species.corpseDecayTicks / 2),
       };
     });
 
