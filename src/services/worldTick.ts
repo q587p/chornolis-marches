@@ -14,6 +14,7 @@ import { DREAM_GATE_FEATURE_KEY, DREAM_GATE_FEATURE_KEYS } from "./tutorial";
 import { hunterClaimedCorpseDecayAction, isHunterCreature, tickNpcHunter } from "./npcHunter";
 import { chance, chancePermille, pickOptional as pick, randomInt } from "../utils/random";
 import { restorePopulationFloors } from "./populationRestoration";
+import { PREDATOR_PREY_CLAIM_PREFIX, predatorClaimedCorpseDecayAction, predatorClaimedCorpseMarker } from "./predatorFeeding";
 
 const DEFAULT_TICK_INTERVAL_MS = TICK_MS;
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
@@ -855,6 +856,7 @@ async function decayCorpse(creature: any) {
   const decayLeft = creature.corpseDecayTicksLeft ?? creature.species.corpseDecayTicks;
   const carriedByPlayerId = carriedCorpseOwnerId(creature.currentAction);
   const hunterClaimedAction = hunterClaimedCorpseDecayAction(creature.currentAction, Math.max(0, decayLeft - 1));
+  const predatorClaimedAction = predatorClaimedCorpseDecayAction(creature.currentAction, Math.max(0, decayLeft - 1));
 
   if (decayLeft > 1) {
     const nextDecayLeft = decayLeft - 1;
@@ -864,7 +866,7 @@ async function decayCorpse(creature: any) {
         age: "CORPSE",
         isAlive: false,
         corpseDecayTicksLeft: nextDecayLeft,
-        currentAction: carriedByPlayerId ? carriedCorpseAction(carriedByPlayerId, nextDecayLeft) : hunterClaimedAction ?? `розкладається; залишилось ${nextDecayLeft} тіків`,
+        currentAction: carriedByPlayerId ? carriedCorpseAction(carriedByPlayerId, nextDecayLeft) : hunterClaimedAction ?? predatorClaimedAction ?? `розкладається; залишилось ${nextDecayLeft} тіків`,
       },
     });
     if (decayed.count === 0) return "gone";
@@ -979,6 +981,54 @@ async function tickCarnivore(c: any) {
   const hunger = Math.max(0, c.hunger ?? 0);
   const hungry = hunger >= 3;
   const starving = hunger >= Math.floor(CREATURE_STARVATION_HUNGER_THRESHOLD * 0.75);
+  const claimedCorpse = await prisma.creature.findFirst({
+    where: {
+      locationId: c.locationId,
+      isAlive: false,
+      isGone: false,
+      isHidden: false,
+      age: "CORPSE",
+      currentAction: { contains: predatorClaimedCorpseMarker(c.id) },
+    },
+    include: { species: true },
+    orderBy: { id: "asc" },
+  });
+  if (claimedCorpse) {
+    await enqueueCreatureAction({
+      creatureId: c.id,
+      type: "EAT",
+      payload: { corpseId: claimedCorpse.id },
+      durationMs: actionDurationMs("EAT", c.stamina),
+      interruptQueued: true,
+    });
+    return "queuedEat";
+  }
+
+  if (starving || (hungry && chance(70))) {
+    const stealableCorpse = await prisma.creature.findFirst({
+      where: {
+        locationId: c.locationId,
+        isAlive: false,
+        isGone: false,
+        isHidden: false,
+        age: "CORPSE",
+        currentAction: { contains: PREDATOR_PREY_CLAIM_PREFIX },
+      },
+      include: { species: true },
+      orderBy: { id: "asc" },
+    });
+    if (stealableCorpse) {
+      await enqueueCreatureAction({
+        creatureId: c.id,
+        type: "EAT",
+        payload: { corpseId: stealableCorpse.id, stealPredatorPrey: true },
+        durationMs: actionDurationMs("EAT", c.stamina),
+        interruptQueued: true,
+      });
+      return "queuedEat";
+    }
+  }
+
   const prey = await selectPredatorPrey(c);
   if (prey) {
     if (starving || chance(predatorAttackChance(c, prey))) {

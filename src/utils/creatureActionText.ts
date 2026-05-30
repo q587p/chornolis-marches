@@ -2,6 +2,8 @@ export function normalizeCreatureActionText(action: string | null | undefined, f
   if (!action) return fallback;
   return action
     .replace(/^claimed_by_hunter:\d+;\s*/, "")
+    .replace(/;\s*predator_prey_claimed_by:\d+\b/g, "")
+    .replace(/;\s*prey_food:\d+\b/g, "")
     .replace(/;\s*hunter_torches:\d+\b/g, "")
     .replace(/;\s*hunter_returning_for_torches\b/g, "")
     .replace(/^їсть трава$/, "їсть траву")
