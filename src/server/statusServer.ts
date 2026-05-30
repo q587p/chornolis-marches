@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { config } from "../config";
 import { buildAllPage, buildWhoData, buildWhoPage } from "../handlers/status";
-import { setLastRuntimeError } from "../runtimeState";
+import { markHttpServerStarted, setLastRuntimeError } from "../runtimeState";
 import {
   chatEventGroupLabel,
   chatLogModeLabel,
@@ -33,6 +33,21 @@ function renderEvents(events: any[]) {
       const description = event.description ? ` — ${event.description}` : "";
       return `<li><code>${escapeHtml(`#${event.id} ${event.title}${description}`)}</code></li>`;
     })
+    .join("");
+}
+
+function serviceBadge(state: string) {
+  if (state === "ok") return "добре";
+  if (state === "warning") return "увага";
+  return "недоступно";
+}
+
+function renderServiceStatusCards(status: Awaited<ReturnType<typeof getStatusData>>) {
+  return status.services
+    .map((service) => `<div class="service service-${escapeHtml(service.state)}">
+      <div class="service-top"><span class="service-label">${escapeHtml(service.label)}</span><span class="service-state">${escapeHtml(serviceBadge(service.state))}</span></div>
+      <p>${escapeHtml(service.detail)}</p>
+    </div>`)
     .join("");
 }
 
@@ -217,12 +232,21 @@ async function renderWhoPage(url: string | undefined) {
 
 function renderWorldPage(status: Awaited<ReturnType<typeof getStatusData>>) {
   const queue = status.actionQueue;
-  const queueHtml = `<h2>Черга дій</h2><p>Гравці: очікує=${queue.playerQueued}, виконується=${queue.playerRunning}</p><p>Істоти: очікує=${queue.creatureQueued}, виконується=${queue.creatureRunning}</p><p>Разом: очікує=${queue.totalQueued}, виконується=${queue.totalRunning}, прострочено=${queue.overdueRunning}</p><p>Найстаріша дія в черзі: ${Math.round(queue.oldestQueuedAgeMs / 1000)} с; найбільше прострочення: ${Math.round(queue.maxOverdueMs / 1000)} с</p>`;
-  return `<!doctype html><html lang="uk"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Chornolis world status</title><style>body{font-family:system-ui,sans-serif;max-width:760px;margin:40px auto;padding:0 18px;background:#10170f;color:#e8e0c9}.card{border:1px solid #3b4a2f;border-radius:16px;padding:18px;background:#172114}code{color:#d8b55d}li{margin:8px 0}a{color:#d8b55d}.actions a{display:inline-block;border:1px solid #5d6f3c;border-radius:8px;padding:8px 10px;margin-right:8px;text-decoration:none;background:#1d2a18}</style></head><body><h1>Світ Порубіжжя</h1><div class="card"><p>Статус: <strong>запущено</strong></p><p>Версія: <strong>${escapeHtml(status.version)}</strong></p><p>Гравців: ${status.playersCount}</p><p>Регіонів: ${status.regionsCount}</p><p>Місцин: ${status.locationsCount}</p><p>Переходів: ${status.exitsCount}</p><p>Живих тварин: ${status.aliveAnimalsCount}</p><p>Трупів тварин: ${status.animalCorpsesCount}</p><p>Зниклих тварин: ${status.goneAnimalsCount}</p><p>NPC / не-тварин: ${status.npcCount}</p><p>Живих істот загалом: ${status.aliveCreaturesCount}</p><p>Ресурсних вузлів: ${status.resourcesCount}</p><p>Подій світу: ${status.eventsCount}</p>${queueHtml}<p>Останні події:</p><ol>${renderEvents(status.latestEvents)}</ol><p>Остання runtime-помилка: <code>${escapeHtml(status.lastRuntimeError ?? "немає")}</code></p></div><p class="actions"><a href="/">Головна</a><a href="/stat">Службова статистика /stat</a><a href="/chat">Репліки /chat</a><a href="/who">Хто активний /who</a><a href="/all">Службовий /all</a><a href="/health">Health JSON</a></p></body></html>`;
+  const queueHtml = queue
+    ? `<h2>Черга дій</h2><p>Гравці: очікує=${queue.playerQueued}, виконується=${queue.playerRunning}</p><p>Істоти: очікує=${queue.creatureQueued}, виконується=${queue.creatureRunning}</p><p>Разом: очікує=${queue.totalQueued}, виконується=${queue.totalRunning}, прострочено=${queue.overdueRunning}</p><p>Найстаріша дія в черзі: ${Math.round(queue.oldestQueuedAgeMs / 1000)} с; найбільше прострочення: ${Math.round(queue.maxOverdueMs / 1000)} с</p>`
+    : `<h2>Черга дій</h2><p>Чергу дій не вдалося прочитати.</p>`;
+  return `<!doctype html><html lang="uk"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Chornolis world status</title><style>body{font-family:system-ui,sans-serif;max-width:880px;margin:40px auto;padding:0 18px;background:#10170f;color:#e8e0c9}.card,.service{border:1px solid #3b4a2f;border-radius:8px;padding:18px;background:#172114}code{color:#d8b55d}li{margin:8px 0}a{color:#d8b55d}.actions a{display:inline-block;border:1px solid #5d6f3c;border-radius:8px;padding:8px 10px;margin-right:8px;text-decoration:none;background:#1d2a18}.services{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:14px 0 22px}.service{padding:12px}.service-top{display:flex;justify-content:space-between;gap:12px;align-items:center}.service-label{font-weight:700;color:#f1d98a}.service-state{font-size:13px}.service-ok{border-color:#4f7f46}.service-warning{border-color:#b58b37}.service-down{border-color:#9d4a42}.service p{margin:.5em 0 0;color:#d7cfb3}</style></head><body><h1>Світ Порубіжжя</h1><div class="card"><p>Версія: <strong>${escapeHtml(status.version)}</strong></p><h2>Стан вузлів</h2><div class="services">${renderServiceStatusCards(status)}</div><p>Гравців: ${status.playersCount}</p><p>Регіонів: ${status.regionsCount}</p><p>Місцин: ${status.locationsCount}</p><p>Переходів: ${status.exitsCount}</p><p>Живих тварин: ${status.aliveAnimalsCount}</p><p>Трупів тварин: ${status.animalCorpsesCount}</p><p>Зниклих тварин: ${status.goneAnimalsCount}</p><p>NPC / не-тварин: ${status.npcCount}</p><p>Живих істот загалом: ${status.aliveCreaturesCount}</p><p>Ресурсних вузлів: ${status.resourcesCount}</p><p>Подій світу: ${status.eventsCount}</p>${queueHtml}<p>Останні події:</p><ol>${renderEvents(status.latestEvents)}</ol><p>Остання runtime-помилка: <code>${escapeHtml(status.lastRuntimeError ?? "немає")}</code></p></div><p class="actions"><a href="/">Головна</a><a href="/stat">Службова статистика /stat</a><a href="/chat">Репліки /chat</a><a href="/who">Хто активний /who</a><a href="/all">Службовий /all</a><a href="/health">Health JSON</a></p></body></html>`;
 }
 
 async function renderHomePage(status: Awaited<ReturnType<typeof getStatusData>>) {
-  const who = await buildWhoData();
+  let who = { totalCount: 0 };
+  if (!status.databaseError) {
+    try {
+      who = await buildWhoData();
+    } catch (error) {
+      setLastRuntimeError(error);
+    }
+  }
   const latestNews = (await readWebNewsEntries())[0];
   return `<!doctype html><html lang="uk"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Порубіжжя Чорнолісу</title><style>
     body{font-family:system-ui,sans-serif;margin:0;background:#10170f;color:#e8e0c9;line-height:1.55}
@@ -234,6 +258,10 @@ async function renderHomePage(status: Awaited<ReturnType<typeof getStatusData>>)
     .status{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:18px 0}
     .metric{border:1px solid #2d3a25;border-radius:8px;padding:12px;background:#1d2a18}
     .label{font-size:13px;color:#b9b08f}.value{font-size:24px;font-weight:700;color:#f1d98a}
+    .services{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:14px 0 18px}
+    .service{border:1px solid #3b4a2f;border-radius:8px;padding:12px;background:#172114}
+    .service-top{display:flex;justify-content:space-between;gap:12px;align-items:center}.service-label{font-weight:700;color:#f1d98a}.service-state{font-size:13px}.service p{margin:.5em 0 0;color:#d7cfb3}
+    .service-ok{border-color:#4f7f46}.service-warning{border-color:#b58b37}.service-down{border-color:#9d4a42}
     .emblem{width:100%;max-width:340px;justify-self:center;opacity:.96}
     a{color:#d8b55d}.actions a{display:inline-block;border:1px solid #5d6f3c;border-radius:8px;padding:8px 10px;margin:0 8px 8px 0;text-decoration:none;background:#1d2a18}
     ul{padding-left:22px;margin:10px 0 0}
@@ -245,10 +273,11 @@ async function renderHomePage(status: Awaited<ReturnType<typeof getStatusData>>)
       <h1>Порубіжжя Чорнолісу</h1>
       <p class="lead">Telegram-first living liminal frontier sandbox: Порубіжжя між поселенням, дикістю й мітом, де світ живе сам по собі, а персонажі ростуть через дії, увагу й виживання.</p>
       <div class="status">
-        <div class="metric"><div class="label">Статус</div><div class="value">запущено</div></div>
         <div class="metric"><div class="label">Версія</div><div class="value">${escapeHtml(status.version)}</div></div>
         <div class="metric"><div class="label">У /who</div><div class="value">${who.totalCount}</div></div>
       </div>
+      <h2>Стан</h2>
+      <div class="services">${renderServiceStatusCards(status)}</div>
       <p class="muted">У /who зараз: ${who.totalCount} персонажів.</p>
       <p class="actions"><a href="/news">Новини</a><a href="/who">Хто активний /who</a><a href="/stat">Службова статистика /stat</a><a href="/chat">Репліки /chat</a><a href="/world">Світ /world</a><a href="/all">Службовий /all</a><a href="/health">Health JSON</a></p>
       ${latestNews ? `<div class="section"><h2>Остання новина</h2><p><a href="/news">${escapeHtml(latestNews.title)}</a></p></div>` : ""}
@@ -530,10 +559,15 @@ export function startHttpServer() {
         }
 
         if (req.url === "/health") {
+          const serviceStates = Object.fromEntries(status.services.map((service) => [service.key, service.state]));
+          const ok = status.services.every((service) => service.state === "ok");
           res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
           res.end(JSON.stringify({
-            ok: true,
+            ok,
             version: status.version,
+            services: status.services,
+            serviceStates,
+            databaseError: status.databaseError,
             lastRuntimeError: status.lastRuntimeError,
             playersCount: status.playersCount,
             aliveAnimalsCount: status.aliveAnimalsCount,
@@ -542,6 +576,7 @@ export function startHttpServer() {
             npcCount: status.npcCount,
             actionQueue: status.actionQueue,
             latestEvent: status.latestEvent?.title ?? null,
+            latestTickAt: status.latestTickEvent?.createdAt ?? null,
             latestEvents: status.latestEvents.map((event) => ({
               id: event.id,
               title: event.title,
@@ -707,5 +742,8 @@ export function startHttpServer() {
         res.end(JSON.stringify({ ok: false, error: String(error) }));
       }
     })
-    .listen(config.port, () => console.log(`Server running on port ${config.port}`));
+    .listen(config.port, () => {
+      markHttpServerStarted();
+      console.log(`Server running on port ${config.port}`);
+    });
 }
