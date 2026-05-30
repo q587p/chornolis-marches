@@ -13,6 +13,7 @@ import {
   isCampfireFading,
   isExtinguishedCampfire,
   lightCampfireFromTorch,
+  oldCampfireMemoryInspectionText,
   takeTorchFromFeature,
   TORCH_DURATION_MS,
 } from "./fire";
@@ -907,6 +908,8 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
       const fireState = campfireStateLine(feature);
       if (fireState) text += `\n\nПолум'я нижчає. Скоро згасне; варто додати хмизу.`;
     }
+    const memoryText = oldCampfireMemoryInspectionText(feature);
+    if (memoryText) text += `\n\n${memoryText}`;
   } else if (feature.type === "GATE") {
     text = isDreamGateFeature(feature)
       ? `${feature.description ?? "Перед вами стоїть Брама Сну."}\n\n${dreamGateStatusText(feature)}`

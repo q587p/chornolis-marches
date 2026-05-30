@@ -674,6 +674,27 @@
     "file": "docs/planning/items/LOOP-002-gate-hunting-loop.md"
   },
   {
+    "id": "LOOP-003",
+    "title": "Old campfire memory omen",
+    "status": "testing",
+    "type": "feature",
+    "area": "core-loop",
+    "priority": "medium",
+    "tags": [
+      "fire",
+      "light",
+      "omen",
+      "examine",
+      "atmosphere"
+    ],
+    "depends_on": [
+      "HMYZ-001-D",
+      "FIRE-001-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/LOOP-003-old-campfire-memory-omen.md"
+  },
+  {
     "id": "MAP-002-A",
     "title": "First biome foraging table",
     "status": "next",

@@ -15,6 +15,7 @@ Chornolis uses fire as an early survival and visibility tool.
 - `Додати хмиз`, `додати хмиз` and `/add twigs campfire` consume one `twigs` resource from inventory.
 - For a burning ordinary campfire, `twigs` extends the remaining burn time by a small capped amount.
 - For an extinguished ordinary campfire, `twigs` is tucked into the ashes as prepared fuel; it still needs a burning torch to relight.
+- Seeded old ordinary campfires can reveal one short memory omen the first time they are fed or relit. This is atmospheric trace text, not a quest or reward, and the revealed trace remains readable in later `/examine` output.
 - Magical campfires do not accept `twigs`: their point is that old magic sustains them without fuel.
 - When a timed campfire expires, it remains in the місцина as `Згасле вогнище`: it gives no light and no rest bonus.
 - A character with a still-burning torch can use `Підпалити` on a згасле вогнище to relight it with the default ordinary campfire timer.

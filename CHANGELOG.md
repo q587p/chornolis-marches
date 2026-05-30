@@ -7,6 +7,10 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+### Added
+
+- Added a first old-campfire memory omen slice: seeded old ordinary campfires can reveal one short atmospheric trace when fed with `twigs` or relit from a torch, and the trace remains visible in later campfire inspection text.
+
 ---
 
 ## 0.13.12 - Gate hunting saturation stand-down - 12026-05-30

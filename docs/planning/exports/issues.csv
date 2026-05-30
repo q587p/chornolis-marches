@@ -35,6 +35,7 @@ LOOP-001-B,Starter camp prose polish,next,content,core-loop,medium,"prose,starte
 LOOP-001-C,Bridge threshold prose polish,next,content,core-loop,medium,"prose,bridge,liminality",docs/planning/items/LOOP-001-C.md
 LOOP-001-D,Track detail wording polish,next,ux,tracking,medium,"tracks,examine,copy",docs/planning/items/LOOP-001-D.md
 LOOP-002,Gate hunting loop,testing,feature,world,high,"ecology,hunting,gate,living-world",docs/planning/items/LOOP-002-gate-hunting-loop.md
+LOOP-003,Old campfire memory omen,testing,feature,core-loop,medium,"fire,light,omen,examine,atmosphere",docs/planning/items/LOOP-003-old-campfire-memory-omen.md
 MAP-002-A,First biome foraging table,next,feature,world,high,"map,biome,foraging",docs/planning/items/MAP-002-A.md
 MAP-002-B,Generic gather uses biome candidates,next,feature,world,high,"gather,biome,foraging",docs/planning/items/MAP-002-B.md
 MAP-002-C,Biome foraging text variants,next,content,world,medium,"gather,biome,copy",docs/planning/items/MAP-002-C.md
