@@ -1455,7 +1455,12 @@ export function registerStatusHandlers(bot: Bot) {
     const scribe = await getPlayerByTelegramId(ctx.from.id);
     const scribeName = scribeDisplayName(scribe, ctx.from.id);
     if (action === "on") {
-      await enablePlayerAuto(bot, telegramId);
+      const result = await enablePlayerAuto(bot, telegramId);
+      if (result.blocked) {
+        await ctx.answerCallbackQuery({ text: "Уві сні авто не вмикається.", show_alert: true });
+        await notifyPlayerByTelegram(bot, { ...player, isAutoEnabled: false }, "Сон тихо не пустив авто-режим: уві сні краще йти власним кроком.");
+        return;
+      }
       await logAdminAutoToggle({ enabled: true, player, scribe, scribeName, scribeTelegramId: ctx.from.id });
       const enabledVerb = scribePastVerb(scribe, "увімкнув", "увімкнула", "увімкнули");
       await ctx.answerCallbackQuery({ text: "Авто увімкнено." });

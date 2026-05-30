@@ -17,12 +17,16 @@ import { maybePerformPlayerAutoSignal } from "../services/socialAutonomy";
 import { standPlayer } from "../services/posture";
 import { buildAutoConfirmKeyboard } from "../ui/keyboards";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
+import { isTutorialLocation } from "../services/tutorial";
 
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
 const AUTO_SAY_CHANCE = Number(process.env.PLAYER_AUTO_SAY_CHANCE || 15);
 const AUTO_CONSENT_TITLE = "Player auto consent";
+export const AUTO_DREAM_BLOCK_MESSAGE = "Сон тихо каже: «Уві сні краще йти власним кроком. Авто лишається за порогом.»";
 
 export type AutoActionKey = "say" | "gather" | "look" | "move";
+type AutoEnableResult = { started: boolean; blocked: boolean };
+type AutoLocation = { key: string; z: number; region?: { key: string } | null };
 
 type AutoState = { timer: NodeJS.Timeout; running: boolean; lastActionKey?: AutoActionKey };
 const autoPlayers = new Map<number, AutoState>();
@@ -113,6 +117,28 @@ export function orderAutoActionKeys(roll: number, lastActionKey?: AutoActionKey)
 
 export function shouldAutoStandBeforeAction(player: { posture?: string | null; isResting?: boolean | null }, key: AutoActionKey) {
   return (key === "gather" || key === "move") && (player.posture === "SITTING" || Boolean(player.isResting));
+}
+
+export function isAutoBlockedInLocation(location: AutoLocation | null | undefined) {
+  return Boolean(location && (location.z <= -10 || isTutorialLocation(location)));
+}
+
+async function playerAutoBlockLocation(player: { currentLocationId?: number | null }) {
+  if (!player.currentLocationId) return null;
+  return prisma.cellLocation.findUnique({
+    where: { id: player.currentLocationId },
+    select: { key: true, z: true, region: { select: { key: true } } },
+  });
+}
+
+async function isPlayerAutoBlockedByDream(player: { currentLocationId?: number | null }) {
+  return isAutoBlockedInLocation(await playerAutoBlockLocation(player));
+}
+
+async function replyAutoBlockedByDream(ctx: any) {
+  await ctx.reply(AUTO_DREAM_BLOCK_MESSAGE, {
+    reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+  });
 }
 
 async function runAutoChoice(state: AutoState, key: AutoActionKey, run: () => Promise<boolean>) {
@@ -313,6 +339,13 @@ async function runAutoStep(bot: Bot, telegramId: number) {
     }
 
     const locationId = player.currentLocationId ?? (await getStartLocationId());
+    if (await isPlayerAutoBlockedByDream(player)) {
+      await disablePlayerAuto(telegramId);
+      await bot.api.sendMessage(telegramId, AUTO_DREAM_BLOCK_MESSAGE, {
+        reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, false),
+      });
+      return;
+    }
     if (DEBUG) console.log(`[PLAYER AUTO] telegramId=${telegramId} locationId=${locationId}`);
 
     if (await maybeStartAutoRest(bot, telegramId, player, locationId)) return;
@@ -366,10 +399,17 @@ function stopAutoTimer(telegramId: number) {
   return true;
 }
 
-export async function enablePlayerAuto(bot: Bot, telegramId: number) {
+export async function enablePlayerAuto(bot: Bot, telegramId: number): Promise<AutoEnableResult> {
+  const player = await getPlayerByTelegramId(telegramId);
+  if (player && await isPlayerAutoBlockedByDream(player)) {
+    stopAutoTimer(telegramId);
+    await persistPlayerAutoState(telegramId, false);
+    return { started: false, blocked: true };
+  }
+
   const started = startAutoTimer(bot, telegramId);
   await persistPlayerAutoState(telegramId, true);
-  return started;
+  return { started, blocked: false };
 }
 
 export async function requestOrEnablePlayerAuto(bot: Bot, ctx: any) {
@@ -379,13 +419,24 @@ export async function requestOrEnablePlayerAuto(bot: Bot, ctx: any) {
     return;
   }
 
+  if (await isPlayerAutoBlockedByDream(player)) {
+    await disablePlayerAuto(ctx.from.id);
+    await replyAutoBlockedByDream(ctx);
+    return;
+  }
+
   if (!(await playerAutoConsent(player.id))) {
     await replyWithAutoConfirmation(ctx);
     return;
   }
 
-  const started = await enablePlayerAuto(bot, ctx.from.id);
-  await ctx.reply(`${started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено."}\nАвтодії плануються ${playerAutoTimingText()}; вручну зазвичай можна діяти швидше.`, {
+  const result = await enablePlayerAuto(bot, ctx.from.id);
+  if (result.blocked) {
+    await replyAutoBlockedByDream(ctx);
+    return;
+  }
+
+  await ctx.reply(`${result.started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено."}\nАвтодії плануються ${playerAutoTimingText()}; вручну зазвичай можна діяти швидше.`, {
     reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, true),
   });
 }
@@ -429,17 +480,28 @@ export function restartPlayerAutoTimers(bot = autoBot) {
 async function restorePersistentAutoPlayers(bot: Bot) {
   const players = await prisma.player.findMany({
     where: { isAutoEnabled: true },
-    select: { telegramId: true },
+    select: {
+      telegramId: true,
+      currentLocationId: true,
+      currentLocation: { select: { key: true, z: true, region: { select: { key: true } } } },
+    },
   });
 
   let restored = 0;
+  let skippedDreaming = 0;
   for (const player of players) {
     const telegramId = Number(player.telegramId);
     if (!Number.isSafeInteger(telegramId)) continue;
+    if (isAutoBlockedInLocation(player.currentLocation)) {
+      await persistPlayerAutoState(telegramId, false);
+      skippedDreaming++;
+      continue;
+    }
     if (startAutoTimer(bot, telegramId)) restored++;
   }
 
   if (restored > 0) console.log(`[PLAYER AUTO] restored ${restored} persisted auto timers`);
+  if (skippedDreaming > 0) console.log(`[PLAYER AUTO] skipped ${skippedDreaming} dreaming players`);
 }
 
 export function playerAutoTimingText() {
@@ -469,10 +531,22 @@ export function registerAutoHandlers(bot: Bot) {
       return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start", { reply_markup: buildMainReplyKeyboard(false) }));
     }
 
+    if (await isPlayerAutoBlockedByDream(player)) {
+      await safeAnswerCallbackQuery(ctx, "Уві сні авто не вмикається.");
+      await disablePlayerAuto(ctx.from.id);
+      await replyAutoBlockedByDream(ctx);
+      return;
+    }
+
     await markPlayerAutoConsent(player.id);
-    const started = await enablePlayerAuto(bot, ctx.from.id);
+    const result = await enablePlayerAuto(bot, ctx.from.id);
+    if (result.blocked) {
+      await safeAnswerCallbackQuery(ctx, "Уві сні авто не вмикається.");
+      await replyAutoBlockedByDream(ctx);
+      return;
+    }
     await safeAnswerCallbackQuery(ctx, "Авто увімкнено.");
-    await ctx.reply(`${started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено."}\nАвтодії плануються ${playerAutoTimingText()}; вручну зазвичай можна діяти швидше.`, {
+    await ctx.reply(`${result.started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено."}\nАвтодії плануються ${playerAutoTimingText()}; вручну зазвичай можна діяти швидше.`, {
       reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, true),
     });
   });

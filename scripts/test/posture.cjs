@@ -5,7 +5,7 @@ require("ts-node/register");
 const { EMPTY_KEYBOARD_BUTTON, buildMainReplyKeyboard, buildTutorialSecondStepReplyKeyboard, buildTutorialStartReplyKeyboard, postureActionLabelsForState, shouldShowInventoryButton, shouldUseFocusedTutorialReplyKeyboard } = require("../../src/ui/replyKeyboard");
 const { TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY } = require("../../src/services/tutorial");
 const { formatObservedPostureText, formatPostureText } = require("../../src/utils/playerText");
-const { shouldAutoStandBeforeAction } = require("../../src/handlers/auto");
+const { AUTO_DREAM_BLOCK_MESSAGE, isAutoBlockedInLocation, shouldAutoStandBeforeAction } = require("../../src/handlers/auto");
 
 assert.equal(formatPostureText({ posture: "STANDING", isResting: false }), "Ви стоїте.");
 assert.equal(formatPostureText({ posture: "SITTING", isResting: false }), "Ви сидите.");
@@ -28,6 +28,12 @@ assert.equal(shouldAutoStandBeforeAction({ posture: "SITTING", isResting: false 
 assert.equal(shouldAutoStandBeforeAction({ posture: "SITTING", isResting: false }, "gather"), true);
 assert.equal(shouldAutoStandBeforeAction({ posture: "SITTING", isResting: false }, "look"), false);
 assert.equal(shouldAutoStandBeforeAction({ posture: "STANDING", isResting: false }, "move"), false);
+assert.equal(isAutoBlockedInLocation({ key: TUTORIAL_START_LOCATION_KEY, z: -13, region: { key: "dream_tutorial" } }), true);
+assert.equal(isAutoBlockedInLocation({ key: "shallow_cave", z: -1, region: { key: "borderland" } }), false);
+assert.equal(isAutoBlockedInLocation({ key: "deep_dream", z: -10, region: { key: "dreams" } }), true);
+assert.equal(isAutoBlockedInLocation({ key: "start_border_camp", z: 0, region: { key: "borderland" } }), false);
+assert.match(AUTO_DREAM_BLOCK_MESSAGE, /Сон/);
+assert.match(AUTO_DREAM_BLOCK_MESSAGE, /Авто/);
 
 assert.equal(shouldShowInventoryButton({ inventoryCount: 0, isTutorialDream: true, tutorialInventoryAvailable: false }), false);
 assert.equal(shouldShowInventoryButton({ inventoryCount: 1, isTutorialDream: true, tutorialInventoryAvailable: false }), true);
