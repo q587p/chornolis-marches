@@ -157,4 +157,14 @@ assert.equal(adminFireButtons.includes("🔥 Додати вогнище"), true
 assert.equal(adminFireButtons.includes("🕯 Додати факел"), true);
 assert.equal(adminFireButtons.includes("🪵 Додати хмиз"), true);
 
+const replyKeyboardLabels = [
+  ...adminMainButtons.flat(),
+  ...adminMenuButtons.flat(),
+  ...adminResourceButtons,
+  ...adminFireButtons,
+];
+for (const label of replyKeyboardLabels) {
+  assert.doesNotMatch(label, /\(\/[A-Za-z]/, `Reply keyboard labels should not include slash-command hints: ${label}`);
+}
+
 console.log("Posture helpers OK");

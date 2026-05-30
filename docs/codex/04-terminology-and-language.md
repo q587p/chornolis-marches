@@ -41,7 +41,7 @@ When adding or changing commands, keep aliases in sync:
 - Ukrainian text aliases for ordinary Telegram input;
 - button labels and `/help`, `/adminHelp` or `/adminMenu` surfaces.
 
-Actual Telegram keyboard button labels should stay short and clean. Use slash commands in parentheses in help, commands, news, release notes and docs, but do not append `(/command)` hints inside reply or inline keyboard button text.
+Actual Telegram keyboard button labels should stay short and clean: Ukrainian label plus icon where helpful. Use slash commands in parentheses in help, commands, news, release notes and docs, but do not append `(/command)` hints inside reply or inline keyboard button text.
 
 - `/look`
 - `/examine`
