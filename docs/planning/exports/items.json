@@ -505,6 +505,27 @@
     "file": "docs/planning/items/FOOD-004-hunger-cues-and-eating-nudges.md"
   },
   {
+    "id": "FOOD-005",
+    "title": "Hunger consequences for health and stamina recovery",
+    "status": "backlog",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "food",
+      "hunger",
+      "hp",
+      "stamina",
+      "survival"
+    ],
+    "depends_on": [
+      "FOOD-001",
+      "FOOD-004"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FOOD-005-hunger-consequences.md"
+  },
+  {
     "id": "HMYZ-001-A",
     "title": "Audit hmyz model",
     "status": "next",
