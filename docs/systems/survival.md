@@ -25,6 +25,8 @@ Basic `Відпочити` / `/rest` means sitting down and starting a short rec
 
 Sitting blocks physical actions until the character stands up: movement, pickup, gathering, attacking, freshening, dropping, putting items into features, cooking and fire/torch handling should warn that the character must stand, then show a `Встати` action. Non-physical actions such as look, examine, speech, reply and queue/status checks remain available while sitting.
 
+The physical-action allow/block list is a maintenance surface. Whenever a new player action is added, the implementation and docs should explicitly decide whether that action is physical while sitting, update `postureRules`, and add or adjust focused coverage when the decision can be tested cheaply. New aliases/buttons should not bypass the same stand-up guard.
+
 Player-facing and observer text should keep posture and rest visible:
 
 - sitting only, actor text: `Ви сидите.`;
@@ -59,6 +61,8 @@ These values are balance constants, not final design. Player-facing UI should st
 When a carried resource stack is inspected from `Речі`, the item card should show direct relevant actions for that item instead of forcing the player back to the full inventory list. Current examples include eating edible items, cooking raw meat when a campfire is available, adding `twigs` to a nearby campfire, lighting/dousing torches and dropping the inspected item.
 
 These effects are intentionally modest and player-facing text should stay descriptive. Fuller food, cooking, medicine, herbalism, potions and prepared remedies remain later systems.
+
+NPCs should eventually use the same ordinary food assumptions where practical. Hunters can turn suitable fresh carcasses into meat, cook it at a real campfire and eat when hungry. Herbalists can eat berries or mushrooms when hungry, while later herbalism/medicine work should distinguish food from remedies instead of making every gathered plant a meal.
 
 ## Hunger Direction
 

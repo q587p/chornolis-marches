@@ -2,6 +2,10 @@
 
 NPCs should feel close to player characters, not like obvious game objects.
 
+Long-term, NPCs should converge with players where the rule is genuinely shared: inventory, held items, active light, stamina/action pacing, hunger, wounds, skills, social state and movement should use common actor-facing services whenever practical. Profession code should decide what the NPC tries to do; shared actor code should handle ordinary mechanics such as carrying a torch, burning its timer down, making light, spending stamina, holding resources, cooking or eating.
+
+Food behavior should follow the same direction. A hunter who is hungry may process a fresh corpse, cook meat at a real campfire and eat. A herbalist who is hungry may eat carried or gathered berries and mushrooms, while later systems can distinguish food, medicine and risky forage more carefully.
+
 ## Current starter NPC
 
 - Name: Здравомир

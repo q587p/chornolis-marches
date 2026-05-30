@@ -94,6 +94,21 @@ First MVP thresholds:
 
 The thresholds should live in domain configuration, not in handler text.
 
+## Saturation / Enough For Now
+
+The loop should be able to stand down when local pressure has eased. This is not a quest completion state; it is the settlement and borderland noticing that more rodent/herbivore killing is not needed right now.
+
+When saturation is active:
+
+- the gate notice changes from asking for carcasses to saying there is enough pressure for now;
+- the drop-off may still accept physical remains, but no new reward/supply threshold should fire;
+- player-facing text should make clear that the settlement is not urging more killing at the moment;
+- NPC hunters should stop seeking fresh rodents/herbivores for this loop;
+- hunters can sit and rest near the magic campfire or another safe waiting point;
+- hunter speech should use a quieter waiting/stand-down pool, not departure or boast-like hunting lines.
+
+The state should be reversible. If herbivores overgraze again, predator pressure drops, or enough time passes, the sign can return to asking for help.
+
 ## `put` Command Relationship
 
 This loop is the first target for a narrow local-container command:
@@ -130,7 +145,17 @@ Implementation foundation:
 - NPC deposits preserve contributor kind and `creatureId`;
 - NPC deposits do not grant player inventory rewards;
 - `findHunterRoutePlan()` resolves the gate drop-off, a configured magic campfire and routes in both directions through ordinary exits;
+- `tickNpcHunter()` runs the first hunter state-machine slice for the seeded gate hunter `Лукан`;
+- the seed also includes `Орина` near the forest edge, already returning toward the gate with one visible lit torch and one spare torch represented by the lightweight hunter bundle marker;
+- hunter movement uses ordinary exits and delayed `MOVE` actions;
+- hunter attacks use the existing delayed creature `ATTACK` action;
+- hunter prey selection skips child animals and prefers adult prey first, then old prey, then young prey;
+- hunter kills are marked as claimed carcasses, then returned to the gate and deposited through the shared NPC drop-off helper;
+- the hunter can opportunistically pick up visible ground torches (`torch` or `lit_torch`) for the hunting bundle before choosing the next route;
+- a hunter marked as returning for torches routes to the gate unless visible prey is in the current location, in which case the ordinary delayed attack/claim/drop-off path can still happen first;
 - the hunter loop should still show movement and local messages instead of silently calling the helper from far away.
+
+0.13.11 deliberately does not yet model a real NPC-held torch inventory. The five-torch bundle and one-torch return reserve remain constants and design boundaries until NPC inventory/light state exists. Ground-torch pickup is therefore a lightweight behavior slice rather than the final item model.
 
 Future MVP shape:
 
@@ -145,6 +170,7 @@ Future MVP shape:
 9. Watch torch lifetime; when the burning torch is near the end, light the next torch from the current flame if a spare remains.
 10. When only the last torch remains, or when burden, injury, low stamina, night or no-target conditions say so, route back to the gate.
 11. Deposit any hunted carcasses/remains through the same carcass drop-off service as players.
+12. Later, if the hunter has gathered enough suitable resources, craft replacement torches instead of relying only on the gate stand or found torches.
 
 Nearby players should see compact local messages when the hunter leaves, returns or deposits.
 
@@ -175,6 +201,14 @@ Good line directions:
 
 Avoid modern slogans, quest-like confirmations, guaranteed-kill boasting and fixed reward framing. Lines that mention the лісовик should remain occasional unless local world state has made that spirit especially relevant.
 
+Stand-down / waiting lines should be separate from hunting lines. Examples:
+
+- `Досить на сьогодні. Хай трава трохи підведеться.`
+- `Не кожен рух у лісі треба гнати ножем.`
+- `Посидимо біля вогню. Якщо межа знову просяде, підемо.`
+- `Гризуни ще лишаться. Але тепер не вони диктують день.`
+- `Писар знак змінив. Значить, поки чекаємо.`
+
 ## Acceptance
 
 - A player can examine the gate notice.
@@ -184,4 +218,4 @@ Avoid modern slogans, quest-like confirmations, guaranteed-kill boasting and fix
 - Valid drop-offs are counted for the contributor.
 - First contribution gives atmospheric acknowledgement.
 - Threshold reaction is not a fixed bounty price.
-- NPC hunter behavior remains a follow-up unless implemented through the same service safely.
+- NPC hunter behavior uses the same drop-off contribution service safely for the first state-machine slice.

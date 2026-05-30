@@ -71,6 +71,12 @@ export function preparedNameByKey(key: string) {
   return PREPARED_CHARACTER_NAMES.find((name) => name.key === key) ?? null;
 }
 
+export function preparedNameByNominative(nominative: string | null | undefined) {
+  if (!nominative) return null;
+  const normalized = normalizeNameForRegistry(nominative);
+  return PREPARED_CHARACTER_NAMES.find((name) => normalizeNameForRegistry(name.forms.nominative) === normalized) ?? null;
+}
+
 export function availablePreparedNames(
   usedNames: Iterable<string | null | undefined>,
   options: { suggestedGender?: Gender } = {}

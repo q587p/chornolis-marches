@@ -12,6 +12,7 @@ import {
   type StarterAnimalSpeciesKey,
 } from "../data/starterAnimals";
 import { prisma } from "../db";
+import { preparedNameByNominative } from "./characterNames";
 import { ensureTorchResourceTypes } from "./fire";
 
 const START_LOCATION_KEY = "start_border_camp";
@@ -75,6 +76,19 @@ type SeedUniqueCreature = {
   professionName?: string;
   nameOverrides?: Record<string, string>;
 };
+
+function preparedCreatureNameOverrides(nominative: string): Record<string, string> {
+  const prepared = preparedNameByNominative(nominative);
+  if (!prepared) return {};
+  return {
+    nameGenitive: prepared.forms.genitive,
+    nameDative: prepared.forms.dative,
+    nameAccusative: prepared.forms.accusative,
+    nameInstrumental: prepared.forms.instrumental,
+    nameLocative: prepared.forms.locative,
+    nameVocative: prepared.forms.vocative,
+  };
+}
 
 type WorldSeed = {
   meta: SeedMeta;
@@ -304,9 +318,10 @@ async function resetUniqueCreature(creature: SeedUniqueCreature) {
     where: { speciesId: species.id, name: { in: names } },
     orderBy: [{ isAlive: "desc" }, { updatedAt: "desc" }, { id: "asc" }],
   });
+  const nameOverrides = { ...preparedCreatureNameOverrides(creature.name), ...(creature.nameOverrides ?? {}) };
 
   const data: Prisma.CreatureUncheckedUpdateInput = {
-    ...(creature.nameOverrides ?? {}),
+    ...nameOverrides,
     name: creature.name,
     locationId: location.id,
     hp: creature.isAlive ? species.baseHp : 0,
@@ -343,7 +358,7 @@ async function resetUniqueCreature(creature: SeedUniqueCreature) {
       speciesId: species.id,
       locationId: location.id,
       name: creature.name,
-      ...(creature.nameOverrides ?? {}),
+      ...nameOverrides,
       hp: creature.isAlive ? species.baseHp : 0,
       maxHp: species.baseHp,
       isAlive: creature.isAlive,

@@ -172,6 +172,28 @@
     "file": "docs/planning/items/ECO-002-carcass-dropoff-reaction.md"
   },
   {
+    "id": "ECO-003",
+    "title": "Gate hunting saturation and stand-down state",
+    "status": "next",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "high",
+    "tags": [
+      "ecology",
+      "hunting",
+      "settlement",
+      "npc",
+      "rewards"
+    ],
+    "depends_on": [
+      "ECO-001",
+      "ECO-002",
+      "NPC-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ECO-003-gate-hunting-saturation.md"
+  },
+  {
     "id": "ECON-001",
     "title": "Barter and trade",
     "status": "backlog",
@@ -728,7 +750,7 @@
     "status": "backlog",
     "type": "feature",
     "area": "npc",
-    "priority": "medium",
+    "priority": "high",
     "tags": [
       "npc",
       "ecology",
@@ -737,10 +759,72 @@
     ],
     "depends_on": [
       "NAV-001",
-      "ECO-002"
+      "ECO-002",
+      "NPC-004",
+      "NPC-005"
     ],
     "exports": {},
     "file": "docs/planning/items/NPC-002-hunter-auto-program.md"
+  },
+  {
+    "id": "NPC-003",
+    "title": "Herbalist service layer",
+    "status": "next",
+    "type": "technical",
+    "area": "npc",
+    "priority": "medium",
+    "tags": [
+      "npc",
+      "herbalist",
+      "architecture",
+      "world-tick"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/NPC-003-herbalist-service-layer.md"
+  },
+  {
+    "id": "NPC-004",
+    "title": "Actor inventory and held light foundation",
+    "status": "next",
+    "type": "technical",
+    "area": "npc",
+    "priority": "high",
+    "tags": [
+      "npc",
+      "actors",
+      "inventory",
+      "torch",
+      "light"
+    ],
+    "depends_on": [
+      "FIRE-001-C"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/NPC-004-actor-inventory-held-light.md"
+  },
+  {
+    "id": "NPC-005",
+    "title": "NPC hunger and food behavior",
+    "status": "next",
+    "type": "feature",
+    "area": "npc",
+    "priority": "high",
+    "tags": [
+      "npc",
+      "actors",
+      "hunger",
+      "food",
+      "cooking",
+      "herbalist",
+      "hunting"
+    ],
+    "depends_on": [
+      "NPC-004",
+      "FOOD-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/NPC-005-npc-hunger-and-food-behavior.md"
   },
   {
     "id": "OBS-001-A",

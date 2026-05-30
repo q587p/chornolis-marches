@@ -46,7 +46,10 @@ The current shortcut routes phrases such as `підібрати ягоди`, `в
 - `підібрати хмиз` and `take torch` still pick up visible ground items.
 - `підібрати ягоди` gives a clear hint when berries are only a gatherable local resource.
 - Tutorial dream behavior remains understandable: if dream supplies are intentionally loose ground items, pickup verbs should pick them up; if they are foraging resources, gather verbs should teach gathering.
+- Location detail UI should avoid rendering duplicate `всі` buttons beside multiple rows of the same loose resource type. If several stacks share one resource key, show one clear bulk-pickup affordance per resource type or group the rows before building buttons.
 
 ## Notes
 
 This is a bridge until true item instances exist. The implementation should avoid making every resource node feel like a pile of inventory items lying on the ground.
+
+UX polish follow-up: current compact `всі` buttons can duplicate if a location has several visible stacks of the same resource type. Keep that as pickup UI polish unless true item-instance grouping solves it first.

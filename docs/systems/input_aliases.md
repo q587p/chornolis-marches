@@ -60,6 +60,7 @@ Actions:
 - `викинути ягоди`, `кинути трави`, `drop berries`, `discard torch` -> drop one carried resource from inventory into the current location.
 - `/put туша рів`, `/put туша all падальний рів`, `покласти всі рештки до ями` -> put carried carcasses/remains into a matching local feature/container. The first supported target is the gate `падальний рів`; this records a settlement contribution instead of paying a fixed bounty.
 - `/sit`, `sit`, `сісти`, `присісти` -> sit down without starting rest. While sitting, physical actions such as movement, pickup, gathering, attacking, freshening, dropping, putting items into features, cooking and fire/torch handling require standing up first; look, examine, speech, reply and other non-physical actions remain available.
+- When adding a new action alias, button or callback, classify it against the same physical-action guard. If it is physical, it should require standing through the shared posture rule instead of adding a one-off exception.
 - `/stand`, `stand`, `stand up`, `встати`, `підвестися`, `підвестись` -> stand up; if active rest is running, standing interrupts it.
 - `/rest`, `відпочити`, `перепочити`, `додати відпочинок у чергу`, `перервати відпочинок` -> sit if needed and start, queue or interrupt active recovery.
 - `/sleep tutorial`, `tutorial`, `sleep tutorial`, `навчальний сон`, `сон навчання`, `навчання`, `туторіал`, `пройти навчання`, `повернутися до навчання` -> enter or return to the dream tutorial. While the tutorial is incomplete, plain `/sleep`, `сон` and `спати` route there too.
