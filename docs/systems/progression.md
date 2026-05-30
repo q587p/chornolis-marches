@@ -8,16 +8,25 @@ Progression should happen through use, observation and lived experience. A chara
 
 After the first dream tutorial, the next progression priority is an observation-learning MVP rather than a broad stat tree. The first implementation can be narrow, scripted and local as long as it proves that attention to the world can teach.
 
-## 0.13.11 Text-Only Attack Learning Placeholder
+## 0.13.11+ Text-Only Learning Placeholders
 
-`0.13.11` adds a deliberately small bridge before real skill rows exist:
+`0.13.11` adds a deliberately small attack-learning bridge before real skill rows exist:
 
 - every thirteenth successful player animal kill through `ATTACK` sends only that player `Навичка <b>атаки</b> підросла.`;
 - when a player uses `look` or `examine` soon after someone else kills prey in the same location, that observation is recorded once for that kill;
 - every fifth such recorded observation sends only that observer `Навичка <b>атаки</b> трохи підросла.`;
 - these messages do not change numeric skill state yet.
 
-This placeholder should be replaced by the shared learning service once `LEARN-001-C` and the observation-learning MVP are active.
+`0.13.12` extends the same text-only bridge to gathering:
+
+- every thirteenth player gather attempt through `GATHER` or `GATHER_SPECIFIC` sends only that player `Навичка <b>збирання</b> підросла.`;
+- failed gather attempts count for practice, because the character still spends time and stamina learning what does not work;
+- every completed player or NPC gather attempt records a short hidden observation source;
+- inspecting another character/NPC, using `examine` for the location, or using the brief `look` while the location has active light can record one observation of that recent gather source;
+- every fifth such recorded observation sends only that observer `Навичка <b>збирання</b> трохи підросла.`;
+- these messages also do not change numeric skill state yet.
+
+These placeholders should be replaced by the shared learning service once `LEARN-001-C` and the observation-learning MVP are active.
 
 ## Principles
 

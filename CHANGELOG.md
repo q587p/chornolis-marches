@@ -25,6 +25,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Location features can now use per-feature icons; the torch stand, hunting notice and carcass drop-off near the gate no longer all share the generic landmark glyph.
 - `/open` now acknowledges visible non-openable local gates such as the closed settlement gate instead of saying no gate is present.
 - `/open`, `open`, `o`, `відкрити`, `відчинити`, `відкрий`, `відчини` and related forms now accept optional gate-like targets such as `ворота`, `брама` or `gate`.
+- Gathering now has the same text-only learning bridge as attack: every thirteenth personal gather attempt can show a growth message, and every fifth observation of another player or NPC gathering can show a smaller growth message.
 - Updated gate hunting loop docs and `ECO-003` planning notes with the first implemented saturation boundary and remaining tuning.
 
 ### Tests
@@ -35,6 +36,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added seed coverage so the three gate hunting landmarks keep distinct feature icons.
 - Added parser/helper coverage for `/open` feedback on visible but currently non-openable gates.
 - Added parser coverage for targeted open aliases such as `відкрити ворота` and `o gate`.
+- Added helper coverage for gathering practice and observation milestones.
 
 ---
 

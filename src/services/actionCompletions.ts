@@ -37,6 +37,7 @@ import { freshenCorpseForMeat } from "./meat";
 import { rememberPlayerReplyTarget } from "./replyTargets";
 import { hunterClaimedCorpseAction, isHunterCreature } from "./npcHunter";
 import { ATTACK_OBSERVATION_GROWTH_MESSAGE, ATTACK_PRACTICE_GROWTH_MESSAGE, isAttackPracticeMilestone, recordAttackKillSource, recordAttackObservation } from "./attackLearning";
+import { GATHERING_OBSERVATION_GROWTH_MESSAGE, GATHERING_PRACTICE_GROWTH_MESSAGE, isGatheringPracticeMilestone, recordGatheringObservation, recordGatheringSource } from "./gatheringLearning";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
@@ -400,13 +401,32 @@ async function completeGather(bot: Bot, action: WorldAction) {
     && resource?.location.key === TUTORIAL_FORAGING_LOCATION_KEY
     && Boolean(resourceKey && TUTORIAL_FORAGING_RESOURCE_KEYS.has(resourceKey));
 
+  let gatherAttemptsAfterAttempt: number | null = null;
   if (isPlayer) {
     await spendPlayerStamina(bot, (actor as any).id, action.type, chatId);
-    await prisma.player.updateMany({ where: { id: (actor as any).id }, data: { gatherAttempts: { increment: 1 } } });
+    const updatedPlayer = await prisma.player.update({
+      where: { id: (actor as any).id },
+      data: { gatherAttempts: { increment: 1 } },
+      select: { gatherAttempts: true },
+    });
+    gatherAttemptsAfterAttempt = updatedPlayer.gatherAttempts;
   } else {
     await spendCreatureStamina(actor as any, actionCost(action.type));
     await prisma.creature.updateMany({ where: { id: (actor as any).id }, data: { gatherAttempts: { increment: 1 }, activity: "GATHERING", currentAction: resourceKey ? `збирає ${resourceKey}` : "шукає поживу" } });
   }
+
+  const recordGatheringAttemptSource = (success: boolean) => recordGatheringSource({
+    locationId,
+    actorPlayerId: isPlayer ? (actor as any).id : undefined,
+    actorCreatureId: isPlayer ? undefined : (actor as any).id,
+    resourceKey,
+    success,
+  });
+
+  const sendGatheringPracticeMessage = async () => {
+    if (!chatId || !gatherAttemptsAfterAttempt || !isGatheringPracticeMilestone(gatherAttemptsAfterAttempt)) return;
+    noteKnownMessage(await bot.api.sendMessage(chatId, GATHERING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+  };
 
   if (!resource || !resourceKey || !cfg || (!isTutorialForagingSuccess && Math.random() > cfg.chance)) {
     await setActionStatus(action, "DONE");
@@ -424,6 +444,8 @@ async function completeGather(bot: Bot, action: WorldAction) {
         );
       }
     }
+    await recordGatheringAttemptSource(false);
+    await sendGatheringPracticeMessage();
     if (isPlayer) await logEvent("GATHER", "Queued gather failed", resourceKey ?? "random", locationId);
     return;
   }
@@ -470,6 +492,8 @@ async function completeGather(bot: Bot, action: WorldAction) {
   }
 
   await setActionStatus(action, "DONE");
+  await recordGatheringAttemptSource(true);
+  await sendGatheringPracticeMessage();
   if (isPlayer) await logEvent("GATHER", "Queued gather succeeded", `${resource.resourceType.name} ×${found}`, locationId);
 
   if (!isTutorialForagingSuccess && resource.amount > 0 && nextAmount <= 0) await summonLisovykIfResourceDepleted(bot, resource.resourceType.name, resource.location.regionId);
@@ -507,6 +531,10 @@ async function completeLook(bot: Bot, action: WorldAction) {
         const observation = await recordAttackObservation({ playerId: player.id, locationId });
         if (observation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, ATTACK_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
       };
+      const sendGatheringObservationMessage = async () => {
+        const observation = await recordGatheringObservation({ playerId: player.id, locationId });
+        if (observation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+      };
       if (action.messageId && typeof chatId === "number" && canEditKnownMessage(chatId, action.messageId)) {
         try {
           await bot.api.editMessageText(chatId, action.messageId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
@@ -514,6 +542,7 @@ async function completeLook(bot: Bot, action: WorldAction) {
             noteKnownMessage(await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }));
           }
           await sendAttackObservationMessage();
+          await sendGatheringObservationMessage();
           return;
         } catch {
           // Fall back to a new message when Telegram cannot edit the source message.
@@ -524,6 +553,7 @@ async function completeLook(bot: Bot, action: WorldAction) {
         noteKnownMessage(await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }));
       }
       await sendAttackObservationMessage();
+      await sendGatheringObservationMessage();
     }
     return;
   }
@@ -549,6 +579,10 @@ async function completeInspect(bot: Bot, action: WorldAction) {
     await bot.api.sendMessage(chatId, `${targetIntro(target, payload.mode === "mystery")}\n\n${target.inspect}`);
     const observation = await recordAttackObservation({ playerId: player.id, locationId: player.currentLocationId });
     if (observation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, ATTACK_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+    if (target.kind === "player" || (!target.isAnimal && !target.isCorpse)) {
+      const gatheringObservation = await recordGatheringObservation({ playerId: player.id, locationId: player.currentLocationId });
+      if (gatheringObservation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+    }
   }
 }
 
