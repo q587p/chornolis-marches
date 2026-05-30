@@ -46,6 +46,7 @@ import { enterTutorialDream, hasCompletedTutorial, openDreamGate, rememberTutori
 import { dropObserverText, pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 import { noteKnownMessage } from "../utils/messageTracker";
 import { cookRawMeat } from "../services/meat";
+import { COOKING_PRACTICE_GROWTH_MESSAGE } from "../services/foodLearning";
 import { playerForms } from "../services/grammar";
 import { putInventoryIntoLocalFeature } from "../services/carcassDropoff";
 import { latestRememberedReplyTarget } from "../services/replyTargets";
@@ -308,7 +309,9 @@ async function submitCookMeat(ctx: any) {
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
   try {
     assertCanPerformPhysicalAction(player, "COOK");
-    await ctx.reply(await cookRawMeat(player.id));
+    const result = await cookRawMeat(player.id);
+    await ctx.reply(result.text);
+    if (result.practiceMilestone) await ctx.reply(COOKING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" });
   } catch (error) {
     await replyToActionError(ctx, error, "Не вдалося підсмажити м'ясо.");
   }

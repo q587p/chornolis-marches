@@ -90,6 +90,8 @@ A torch should not be enough for cooking. The first cooking pass is imperfect: r
 
 After freshening, the current bridge hides the original corpse from player-facing location and target lists. Future work should create proper visible remains with their own lifetime and drop-off behavior instead of exposing internal `freshened_by_player` state.
 
+Freshening and cooking use the same first text-only learning bridge as attack and gathering. Repeated personal freshening/cooking actions can show private growth text every thirteenth action; observing another actor's recent freshening/cooking through location or target inspection can show a smaller private growth text every fifth observation. These messages do not yet change stored numeric skills.
+
 ## Campfire Loop
 
 1. Gather firewood in forest regions.

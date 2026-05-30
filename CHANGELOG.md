@@ -17,6 +17,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added a reusable scribe audit helper and covered confirmed `/reset world`, `/reset stats` and `/reset full` actions with quiet `WorldEvent` audit records.
 - Added a scribe-audit system note listing dangerous admin/scribe tools that should keep or gain structured audit coverage.
 - Added a compact dream tutorial flow audit that confirms the next onboarding follow-up slices.
+- Added text-only learning feedback for corpse freshening and cooking: every thirteenth personal action can show a private growth line, and every fifth observation of another actor's recent action can show a smaller one.
 
 ### Changed
 
@@ -36,6 +37,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Extended NPC hunter helper coverage for slower queued hunter reactions.
 - Extended NPC hunter helper coverage for quoted hunter field speech.
 - Added text-target visibility coverage for hidden hunter-claimed carcasses.
+- Added helper coverage for freshening and cooking practice/observation milestone cadence.
 - Added scribe-audit helper coverage.
 - Ran the full project test suite.
 

@@ -1,5 +1,6 @@
 import { prisma } from "../db";
 import { isExtinguishedCampfire } from "./fire";
+import { recordCookingSource } from "./foodLearning";
 
 export const RAW_MEAT_KEY = "raw_meat";
 export const COOKED_MEAT_KEY = "cooked_meat";
@@ -141,9 +142,20 @@ export async function cookRawMeat(playerId: number) {
     });
   });
 
-  return cookedSuccessfully
-    ? "Ви підсмажили шмат м'яса над вогнищем."
-    : "М'ясо підгоріло й розсипалося чорним крихким шматтям. Їсти тут уже нічого.";
+  const learning = await recordCookingSource({
+    locationId: player.currentLocationId,
+    actorPlayerId: playerId,
+    success: cookedSuccessfully,
+  });
+
+  return {
+    text: cookedSuccessfully
+      ? "Ви підсмажили шмат м'яса над вогнищем."
+      : "М'ясо підгоріло й розсипалося чорним крихким шматтям. Їсти тут уже нічого.",
+    succeeded: cookedSuccessfully,
+    practiceMilestone: learning.milestone,
+    practiceCount: learning.sourceCount,
+  };
 }
 
 export async function eatCookedMeat(playerId: number) {

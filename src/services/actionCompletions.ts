@@ -38,6 +38,7 @@ import { rememberPlayerReplyTarget } from "./replyTargets";
 import { hunterClaimedCorpseAction, hunterConversationReplyLine, hunterReactionDurationMs, isHunterCreature } from "./npcHunter";
 import { ATTACK_OBSERVATION_GROWTH_MESSAGE, ATTACK_PRACTICE_GROWTH_MESSAGE, isAttackPracticeMilestone, recordAttackKillSource, recordAttackObservation } from "./attackLearning";
 import { GATHERING_OBSERVATION_GROWTH_MESSAGE, GATHERING_PRACTICE_GROWTH_MESSAGE, isGatheringPracticeMilestone, recordGatheringObservation, recordGatheringSource } from "./gatheringLearning";
+import { COOKING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_PRACTICE_GROWTH_MESSAGE, recordCookingObservation, recordFresheningObservation, recordFresheningSource } from "./foodLearning";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
@@ -546,6 +547,12 @@ async function completeLook(bot: Bot, action: WorldAction) {
         const observation = await recordGatheringObservation({ playerId: player.id, locationId });
         if (observation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
       };
+      const sendFoodObservationMessages = async () => {
+        const freshening = await recordFresheningObservation({ playerId: player.id, locationId });
+        if (freshening.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, FRESHENING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+        const cooking = await recordCookingObservation({ playerId: player.id, locationId });
+        if (cooking.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, COOKING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+      };
       if (action.messageId && typeof chatId === "number" && canEditKnownMessage(chatId, action.messageId)) {
         try {
           await bot.api.editMessageText(chatId, action.messageId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
@@ -554,6 +561,7 @@ async function completeLook(bot: Bot, action: WorldAction) {
           }
           await sendAttackObservationMessage();
           await sendGatheringObservationMessage();
+          await sendFoodObservationMessages();
           return;
         } catch {
           // Fall back to a new message when Telegram cannot edit the source message.
@@ -565,6 +573,7 @@ async function completeLook(bot: Bot, action: WorldAction) {
       }
       await sendAttackObservationMessage();
       await sendGatheringObservationMessage();
+      await sendFoodObservationMessages();
     }
     return;
   }
@@ -597,6 +606,10 @@ async function completeInspect(bot: Bot, action: WorldAction) {
       const gatheringObservation = await recordGatheringObservation({ playerId: player.id, locationId: player.currentLocationId });
       if (gatheringObservation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
     }
+    const fresheningObservation = await recordFresheningObservation({ playerId: player.id, locationId: player.currentLocationId });
+    if (fresheningObservation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, FRESHENING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+    const cookingObservation = await recordCookingObservation({ playerId: player.id, locationId: player.currentLocationId });
+    if (cookingObservation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, COOKING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
   }
 }
 
@@ -692,7 +705,16 @@ async function completeFreshen(bot: Bot, action: WorldAction) {
   }
   await setActionStatus(action, "DONE");
   await logEvent("PLAYER_ACTION", "Player freshened corpse", `${target.kind}:${target.id}; meat=${meat.amount}`, player.currentLocationId);
-  if (chatId) await bot.api.sendMessage(chatId, `🔪 Ви освіжували ${target.forms.accusative} й отримали ${meat.resourceName} ×${meat.amount}.`);
+  const learning = await recordFresheningSource({
+    locationId: player.currentLocationId,
+    actorPlayerId: player.id,
+    creatureId: creature.id,
+    speciesKey: creature.species.key,
+  });
+  if (chatId) {
+    await bot.api.sendMessage(chatId, `🔪 Ви освіжували ${target.forms.accusative} й отримали ${meat.resourceName} ×${meat.amount}.`);
+    if (learning.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, FRESHENING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+  }
 }
 
 async function completeCreatureAttack(bot: Bot, action: WorldAction) {
