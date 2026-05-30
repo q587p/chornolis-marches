@@ -23,6 +23,13 @@ type MainKeyboardState = {
 
 export const EMPTY_KEYBOARD_BUTTON = "⠀";
 
+export function shouldUseFocusedTutorialReplyKeyboard(locationKey: string | null | undefined, steps: number | null | undefined) {
+  const safeSteps = Math.max(0, steps ?? 0);
+  if (locationKey === TUTORIAL_START_LOCATION_KEY) return safeSteps === 0;
+  if (locationKey === TUTORIAL_SECOND_STEP_LOCATION_KEY) return safeSteps <= 1;
+  return false;
+}
+
 function trimTrailingEmptyRows(keyboard: Keyboard) {
   while (keyboard.keyboard.length > 0 && keyboard.keyboard[keyboard.keyboard.length - 1]?.length === 0) {
     keyboard.keyboard.pop();
@@ -130,6 +137,7 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
       hpMax: true,
       stamina: true,
       staminaMax: true,
+      steps: true,
       posture: true,
       isResting: true,
       telegramId: true,
@@ -167,11 +175,13 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
   const tutorialExamineVisible = !isTutorialDream
     || player.currentLocation?.key === TUTORIAL_FORAGING_LOCATION_KEY
     || hasExamineLesson;
-  if (player.currentLocation?.key === TUTORIAL_START_LOCATION_KEY) {
-    return buildTutorialStartReplyKeyboard();
-  }
-  if (player.currentLocation?.key === TUTORIAL_SECOND_STEP_LOCATION_KEY) {
-    return buildTutorialSecondStepReplyKeyboard();
+  if (shouldUseFocusedTutorialReplyKeyboard(player.currentLocation?.key, player.steps)) {
+    if (player.currentLocation?.key === TUTORIAL_START_LOCATION_KEY) {
+      return buildTutorialStartReplyKeyboard();
+    }
+    if (player.currentLocation?.key === TUTORIAL_SECOND_STEP_LOCATION_KEY) {
+      return buildTutorialSecondStepReplyKeyboard();
+    }
   }
 
   return buildMainReplyKeyboard({
