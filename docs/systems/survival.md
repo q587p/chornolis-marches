@@ -60,6 +60,8 @@ When a carried resource stack is inspected from `Речі`, the item card should
 
 These effects are intentionally modest and player-facing text should stay descriptive. Fuller food, cooking, medicine, herbalism, potions and prepared remedies remain later systems.
 
+NPCs should eventually use the same ordinary food assumptions where practical. Hunters can turn suitable fresh carcasses into meat, cook it at a real campfire and eat when hungry. Herbalists can eat berries or mushrooms when hungry, while later herbalism/medicine work should distinguish food from remedies instead of making every gathered plant a meal.
+
 ## Hunger Direction
 
 Hunger currently rises mainly from strenuous player actions and can be eased by simple food. Player-facing text should describe it atmospherically, not as a debug value.

@@ -760,7 +760,8 @@
     "depends_on": [
       "NAV-001",
       "ECO-002",
-      "NPC-004"
+      "NPC-004",
+      "NPC-005"
     ],
     "exports": {},
     "file": "docs/planning/items/NPC-002-hunter-auto-program.md"
@@ -801,6 +802,29 @@
     ],
     "exports": {},
     "file": "docs/planning/items/NPC-004-actor-inventory-held-light.md"
+  },
+  {
+    "id": "NPC-005",
+    "title": "NPC hunger and food behavior",
+    "status": "next",
+    "type": "feature",
+    "area": "npc",
+    "priority": "high",
+    "tags": [
+      "npc",
+      "actors",
+      "hunger",
+      "food",
+      "cooking",
+      "herbalist",
+      "hunting"
+    ],
+    "depends_on": [
+      "NPC-004",
+      "FOOD-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/NPC-005-npc-hunger-and-food-behavior.md"
   },
   {
     "id": "OBS-001-A",

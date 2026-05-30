@@ -20,7 +20,7 @@ depends_on: []
 
 Move herbalist behavior out of the broad world tick file into a dedicated NPC service layer, similar to the current hunter service shape.
 
-This is near-term cleanup, not a behavior expansion. The point is to make future herbalist work easier: visible actions, observation learning, social lines, gathering choices, and later profession-specific inventory can grow without adding more weight to `worldTick.ts`.
+This is near-term cleanup, not a behavior expansion. The point is to make future herbalist work easier: visible actions, observation learning, social lines, gathering choices, hunger/food decisions, and later profession-specific inventory can grow without adding more weight to `worldTick.ts`.
 
 ## Scope
 
@@ -42,4 +42,5 @@ This is near-term cleanup, not a behavior expansion. The point is to make future
 ## Related Follow-Ups
 
 - `OBS-001-B` can use this service boundary when exposing a visible herbalist action for observation.
+- `NPC-005` can use this service boundary when hungry herbalists decide to eat berries or mushrooms.
 - Later herbalist inventory/resource decisions should build on this boundary instead of placing more profession code in `worldTick.ts`.

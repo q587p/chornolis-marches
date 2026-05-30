@@ -15,6 +15,7 @@ depends_on:
   - NAV-001
   - ECO-002
   - NPC-004
+  - NPC-005
 ---
 
 # NPC-002: Hunter Auto-Program MVP
@@ -45,6 +46,7 @@ Add a simple NPC hunter behavior that interacts with the same ecological loop as
 - Do not attack instantly in a tight loop; use the same delayed action pacing expected from auto herbalist behavior.
 - Do not steal clearly player-owned carcasses.
 - Do not drain beginner-critical torch supply if the gate torch stand later becomes limited stock.
+- Do not ignore hunter hunger forever; a hungry hunter should be able to stand down from hunting work to process, cook or eat food once shared NPC food behavior exists.
 - Nearby players should be able to observe at least some compact local messages.
 - Add a small thematic shout/field-line pool for departures, trail choice, returns and deposits, shared conceptually with the later player hunter auto-mode.
 - Rate-limit hunter lines and keep them diegetic: no quest-state announcements, no guaranteed-kill boasting and no fixed bounty framing.
@@ -96,5 +98,6 @@ Remaining work before closing the full MVP:
 - let hunters craft torches later if they have gathered the required resources;
 - add stronger route/radius tuning for hunting grounds;
 - respect `ECO-003` saturation so hunters can stand down and rest near the magic campfire when more rodent/herbivore pressure is not needed;
+- respect `NPC-005` hunger behavior so hunters sometimes freshen/butcher suitable corpses, cook meat at a real campfire and eat instead of continuing the loop;
 - add an inspect/check beat between attack and next decision;
 - decide whether hunter-claimed carcasses should ever be recoverable if the hunter dies, disappears or is reset mid-route.

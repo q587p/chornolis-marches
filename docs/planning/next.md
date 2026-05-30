@@ -17,6 +17,7 @@ The current lane is the three-month vertical slice:
 - SURV-001: beginner return / `Повернення`.
 - LOOP-001: starter location and bridge threshold polish.
 - NPC-004: add actor inventory and held-light foundation so NPCs can carry real torches/items and emit light through the same assumptions as players.
+- NPC-005: add NPC hunger and food behavior so hunters and herbalists can eat through shared survival/inventory rules.
 - NPC-002: finish the hunter auto-program MVP after the first state-machine slice: real torch bundle/light state via `NPC-004`, inspect/check beat, route/radius tuning and recovery rules for claimed carcasses.
 - ECO-003: add gate-hunting saturation so the sign, rewards and hunter behavior can stand down when rodent/herbivore pressure is low enough.
 - NPC-003: extract herbalist behavior into its own service layer, shaped like the hunter service, before adding more visible herbalist/learning behavior.

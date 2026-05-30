@@ -20,7 +20,7 @@ depends_on:
 
 ## Goal
 
-Move NPC state closer to player-character state: inventory, held items, lit-torch timers, light emission, action pacing and eventually skills should use shared actor-facing rules wherever practical.
+Move NPC state closer to player-character state: inventory, held items, lit-torch timers, light emission, action pacing, hunger and eventually skills should use shared actor-facing rules wherever practical.
 
 The immediate pressure is the hunter loop: Орина's lit torch and spare torch are currently represented by a lightweight hunter-state marker, not by real NPC-held inventory with burn timing and visibility. That is acceptable only as a temporary bridge. The next small layer should make NPC-held torches behave like player-held torches.
 
@@ -28,7 +28,7 @@ The immediate pressure is the hunter loop: Орина's lit torch and spare torc
 
 - NPCs should be player-like actors, not special-case counters.
 - If a rule exists for players and can sensibly apply to NPCs, prefer sharing it before adding profession-specific shortcuts.
-- Inventory, held item visibility, active light, action queues, stamina, wounds, skills and social state should converge over time.
+- Inventory, held item visibility, active light, action queues, stamina, hunger, wounds, skills and social state should converge over time.
 - Profession services such as hunter and herbalist should describe intent and decisions; shared actor services should handle ordinary item/light/action mechanics.
 
 ## First Scope
@@ -52,5 +52,6 @@ The immediate pressure is the hunter loop: Орина's lit torch and spare torc
 ## Follow-Ups
 
 - NPC skills should eventually reuse the same skill/progression model as players where possible.
+- NPC hunger and food behavior should build on this layer so hunters and herbalists can use ordinary carried resources and food actions.
 - Herbalist inventory should later use this layer for herbs, remedies and gathered resources.
 - NPC group/follow behavior should eventually use the same actor-facing movement and action-state assumptions.
