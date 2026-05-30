@@ -526,6 +526,27 @@
     "file": "docs/planning/items/FOOD-005-hunger-consequences.md"
   },
   {
+    "id": "FOOD-006",
+    "title": "Mushroom varieties and identification",
+    "status": "backlog",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "food",
+      "mushrooms",
+      "foraging",
+      "alchemy",
+      "risk"
+    ],
+    "depends_on": [
+      "FOOD-001",
+      "MAP-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FOOD-006-mushroom-varieties-and-identification.md"
+  },
+  {
     "id": "HMYZ-001-A",
     "title": "Audit hmyz model",
     "status": "next",

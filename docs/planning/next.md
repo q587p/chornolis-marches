@@ -32,6 +32,7 @@ The current lane is the three-month vertical slice:
 - UX-002 / ADM-002: keep paginated corpse/target `Back` buttons returning to the source page, and add a scribe-only `/addCreatureCorpse` setup command for testing carcass flows.
 - FOOD-004: add restrained hunger cues and eating nudges now that hunger can be eased, using `SES-001` reminder guards so they never become chat spam.
 - FOOD-005: make hunger matter through slower stamina recovery and slow health loss at severe hunger, tuned gently enough to stay readable and recoverable.
+- FOOD-006: add mushroom varieties and identification so examining forage matters before eating, with poisonous, nourishing, cookable and future alchemy-useful mushrooms.
 
 ## 0.14 Next
 
