@@ -1961,6 +1961,24 @@
     "file": "docs/planning/items/web-001-web-map-and-mud-gateway.md"
   },
   {
+    "id": "WEB-002",
+    "title": "Independent status site and deploy visibility",
+    "status": "backlog",
+    "type": "technical",
+    "area": "server",
+    "priority": "medium",
+    "tags": [
+      "web",
+      "status",
+      "deploy",
+      "operations",
+      "reliability"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/WEB-002-independent-status-site.md"
+  },
+  {
     "id": "WORLD-001",
     "title": "Day/night cycle",
     "status": "next",

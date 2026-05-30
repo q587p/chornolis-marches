@@ -103,6 +103,7 @@ VIS-001-D,Track visibility gate,next,feature,visibility,medium,"visibility,track
 VIS-001-E,Ground object visibility gate,next,feature,visibility,medium,"visibility,objects,night",docs/planning/items/VIS-001-E.md
 VIS-002,Hidden presence foundation,backlog,technical,visibility,medium,"visibility,hidden-presence,targets",docs/planning/items/VIS-002-hidden-presence-foundation.md
 WEB-001,"Web map, multi-client game server, messenger bridges and limited MUD gateway",icebox,feature,server,medium,"web,map,mud,server,multi-client,architecture",docs/planning/items/web-001-web-map-and-mud-gateway.md
+WEB-002,Independent status site and deploy visibility,backlog,technical,server,medium,"web,status,deploy,operations,reliability",docs/planning/items/WEB-002-independent-status-site.md
 WORLD-001,Day/night cycle,next,feature,world_time,high,"world,atmosphere,visibility,liminality",docs/planning/items/WORLD-001-day-night-cycle.md
 WORLD-001-A,Tiny world-time model design,next,design,world_time,high,"world-time,day-night",docs/planning/items/WORLD-001-A.md
 WORLD-001-B,Daypart storage,next,technical,world_time,high,"world-time,schema",docs/planning/items/WORLD-001-B.md
