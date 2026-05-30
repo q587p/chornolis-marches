@@ -78,6 +78,10 @@ export function registerTutorialHandlers(bot: Bot) {
     await sleepTutorial(ctx, arg === "tutorial");
   });
 
+  bot.command("sleep_tutorial", async (ctx) => {
+    await sleepTutorial(ctx, true);
+  });
+
   bot.command(["wake", "wakeup", "open"], async (ctx) => {
     const command = ctx.message?.text?.split(/\s+/)[0]?.replace(/^\//, "").toLowerCase();
     if (command === "open") return openGate(ctx, commandArgs(ctx));

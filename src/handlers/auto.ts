@@ -484,7 +484,7 @@ export function registerAutoHandlers(bot: Bot) {
     });
   });
 
-  bot.command(["autoStop", "autostop"], async (ctx) => {
+  bot.command(["autoStop", "autostop", "auto_stop"], async (ctx) => {
     if (!ctx.from) return;
     const stopped = await disablePlayerAuto(ctx.from.id);
     await ctx.reply(stopped ? "⏹ Авто-режим зупинено." : "⏹ Авто-режим не був увімкнений.", { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });

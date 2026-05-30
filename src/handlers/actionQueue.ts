@@ -65,6 +65,29 @@ export function registerActionQueueHandlers(bot: Bot) {
 
     await showQueue(ctx, player.id);
   });
+
+  bot.command("queue_clear", async (ctx) => {
+    if (!ctx.from) return;
+
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+    const result = await clearQueuedPlayerActions(player.id);
+    await showQueue(ctx, player.id, `Прибрано з черги: ${result.count}.`);
+    await refreshMainKeyboard(ctx);
+  });
+
+  bot.command("queue_cancel", async (ctx) => {
+    if (!ctx.from) return;
+
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+    const result = await cancelCurrentPlayerAction(player.id);
+    await showQueue(ctx, player.id, `Скасовано поточних дій/відпочинку: ${result.count}.`);
+    await refreshMainKeyboard(ctx);
+  });
+
   bot.hears("📋 Черга", sendQueue);
 
   bot.callbackQuery("queue:status", async (ctx) => {
