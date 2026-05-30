@@ -25,6 +25,8 @@ Basic `Відпочити` / `/rest` means sitting down and starting a short rec
 
 Sitting blocks physical actions until the character stands up: movement, pickup, gathering, attacking, freshening, dropping, putting items into features, cooking and fire/torch handling should warn that the character must stand, then show a `Встати` action. Non-physical actions such as look, examine, speech, reply and queue/status checks remain available while sitting.
 
+The physical-action allow/block list is a maintenance surface. Whenever a new player action is added, the implementation and docs should explicitly decide whether that action is physical while sitting, update `postureRules`, and add or adjust focused coverage when the decision can be tested cheaply. New aliases/buttons should not bypass the same stand-up guard.
+
 Player-facing and observer text should keep posture and rest visible:
 
 - sitting only, actor text: `Ви сидите.`;
