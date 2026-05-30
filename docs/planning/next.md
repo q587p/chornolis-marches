@@ -17,6 +17,7 @@ The current lane is the three-month vertical slice:
 - SURV-001: beginner return / `Повернення`.
 - LOOP-001: starter location and bridge threshold polish.
 - NPC-002: finish the hunter auto-program MVP after the first state-machine slice: real torch bundle/light state, inspect/check beat, route/radius tuning and recovery rules for claimed carcasses.
+- NPC-003: extract herbalist behavior into its own service layer, shaped like the hunter service, before adding more visible herbalist/learning behavior.
 - ADM-001: minimal audit logging for dangerous scribe tools.
 
 ## 0.14 Next

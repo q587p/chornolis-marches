@@ -743,6 +743,23 @@
     "file": "docs/planning/items/NPC-002-hunter-auto-program.md"
   },
   {
+    "id": "NPC-003",
+    "title": "Herbalist service layer",
+    "status": "next",
+    "type": "technical",
+    "area": "npc",
+    "priority": "medium",
+    "tags": [
+      "npc",
+      "herbalist",
+      "architecture",
+      "world-tick"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/NPC-003-herbalist-service-layer.md"
+  },
+  {
     "id": "OBS-001-A",
     "title": "Observe action and alias skeleton",
     "status": "next",
