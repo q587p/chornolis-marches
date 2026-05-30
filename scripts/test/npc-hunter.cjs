@@ -13,6 +13,7 @@ const {
   HUNTER_RETURNING_FOR_TORCHES_MARKER,
   HUNTER_SOCIAL_REACTIONS,
   HUNTER_TORCH_BUNDLE_SIZE,
+  formatHunterFieldSpeech,
   groupHunterClaimedCorpses,
   hunterCarriedTorchCount,
   hunterClaimedCorpseAction,
@@ -107,6 +108,14 @@ assert.equal(hunterSocialReactionSignal("smile"), "nod");
 assert.equal(hunterSocialReactionSignal("glare"), null);
 assert.ok(hunterReactionDurationMs("SAY", 42) > 0);
 assert.equal(hunterReactionDurationMs("SAY", 42), hunterReactionDurationMs("GREET", 42));
+assert.equal(
+  formatHunterFieldSpeech("Лукан", "Посидимо біля вогню. Якщо межа знову просяде, підемо."),
+  "Лукан промовляє:\n<blockquote>Посидимо біля вогню. Якщо межа знову просяде, підемо.</blockquote>",
+);
+assert.equal(
+  formatHunterFieldSpeech("Мисливець <нічний>", "Край > тиша."),
+  "Мисливець &lt;нічний&gt; промовляє:\n<blockquote>Край &gt; тиша.</blockquote>",
+);
 
 const claimedGroups = groupHunterClaimedCorpses([
   { id: 1, sex: "MALE", species: { key: "rabbit", name: "заєць", nameGenitive: "зайця" } },

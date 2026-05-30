@@ -94,6 +94,7 @@ Add a simple NPC hunter behavior that interacts with the same ecological loop as
 - Added a return-for-torches marker so a hunter with low field supply can route back to the gate while still attacking visible local prey on the way.
 - 0.13.18 hardens the current claimed-carcass bridge: ordinary corpse decay preserves the `claimed_by_hunter:<id>` marker, so returning hunters do not lose field kills before the drop-off service can see them.
 - 0.13.18 also routes direct hunter field lines through a shared speech helper so visible hunter speech records a `SAY` event and increments the creature `says` counter used by ecology/status statistics.
+- 0.13.18 formats hunter field speech as quoted speech in Telegram, but the helper still emits those field lines directly instead of routing every such line through a real queued `SAY` action.
 
 Remaining work before closing the full MVP:
 
@@ -101,6 +102,7 @@ Remaining work before closing the full MVP:
 - replace the current lightweight ground-torch pickup marker with real NPC-held item state, including lit-torch lifetime preservation and real light emission;
 - let hunters craft torches later if they have gathered the required resources;
 - add stronger route/radius tuning for hunting grounds;
+- route all hunter field speech through ordinary queued `SAY` actions once that can be done without reintroducing world-tick spam or stand-down loops;
 - respect `ECO-003` saturation so hunters can stand down and rest near the magic campfire when more rodent/herbivore pressure is not needed;
 - respect `NPC-005` hunger behavior so hunters sometimes freshen/butcher suitable corpses, cook meat at a real campfire and eat instead of continuing the loop;
 - add an inspect/check beat between attack and next decision;

@@ -6,7 +6,8 @@ import { enqueueCreatureAction } from "./actionLifecycle";
 import { GATE_CARCASS_DROPOFF_FEATURE_KEY, getGateHuntingSaturationState, hunterFieldLine, recordNpcCarcassDropoffContribution } from "./carcassDropoff";
 import { corpseResourceKey, resourceTypeDisplayName } from "./corpses";
 import { creatureCarriedTorchCount, ensureTorchResourceTypes, getCreatureTorchState, lightCreatureTorchAtCampfire } from "./fire";
-import { notifyLocationAll } from "./notifications";
+import { escapeHtml } from "../utils/text";
+import { notifyLocationAll, notifyLocationExcept } from "./notifications";
 import { findLocationRoute, type RouteStep } from "./routeFinding";
 import { logEvent } from "./worldEvents";
 
@@ -137,6 +138,14 @@ export function hunterSocialReactionSignal(socialId: string) {
 
 export function hunterReactionDurationMs(type: "GREET" | "SAY", stamina = 0) {
   return actionDurationMs(type, stamina) * 2;
+}
+
+function quoteBlock(text: string) {
+  return `<blockquote>${escapeHtml(text)}</blockquote>`;
+}
+
+export function formatHunterFieldSpeech(name: string, line: string) {
+  return `${escapeHtml(name)} промовляє:\n${quoteBlock(line)}`;
 }
 
 type HunterPreyCandidate = {
@@ -379,8 +388,14 @@ async function emitHunterFieldSpeech(
   });
   await logEvent("SAY", `${name} промовляє`, line, locationId);
   if (bot) {
-    const speech = `${name} промовляє:\n“${line}”`;
-    await notifyLocationAll(bot, locationId, observerText ? `${observerText}\n\n${speech}` : speech);
+    const speech = formatHunterFieldSpeech(name, line);
+    await notifyLocationExcept(
+      bot,
+      locationId,
+      [],
+      observerText ? `${escapeHtml(observerText)}\n\n${speech}` : speech,
+      { parseMode: "HTML" },
+    );
   }
 }
 
