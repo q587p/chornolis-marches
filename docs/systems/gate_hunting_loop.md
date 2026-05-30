@@ -149,6 +149,7 @@ Implementation foundation:
 - the seed also includes `Орина` near the forest edge, already returning toward the gate with one visible lit torch and one spare torch represented by the lightweight hunter bundle marker;
 - hunter movement uses ordinary exits and delayed `MOVE` actions;
 - hunter attacks use the existing delayed creature `ATTACK` action;
+- hunter prey selection skips child animals and prefers adult prey first, then old prey, then young prey;
 - hunter kills are marked as claimed carcasses, then returned to the gate and deposited through the shared NPC drop-off helper;
 - the hunter can opportunistically pick up visible ground torches (`torch` or `lit_torch`) for the hunting bundle before choosing the next route;
 - a hunter marked as returning for torches routes to the gate unless visible prey is in the current location, in which case the ordinary delayed attack/claim/drop-off path can still happen first;

@@ -58,6 +58,7 @@ Add a simple NPC hunter behavior that interacts with the same ecological loop as
 - Hunter can route from the gate to a configured magic campfire and back without teleporting.
 - Hunter takes a bounded torch bundle, lights the first torch at the magic campfire and switches to a spare torch before the current flame expires.
 - Hunter selects herbivore targets rather than arbitrary creatures.
+- Hunter does not select child animals; if several suitable prey are visible in the same location, preferred order is adult, old, then young.
 - Hunter attacks, inspects/checks and continues only through delayed action/combat flow.
 - Hunter deposits are counted as NPC contributions, not player rewards.
 - Behavior is rate-limited and safe for world ticks.
@@ -84,6 +85,7 @@ Add a simple NPC hunter behavior that interacts with the same ecological loop as
   - routes the hunter through ordinary exits rather than teleporting;
   - prefers reaching the known magic campfire before the first hunt route;
   - selects visible mice or rabbits, not arbitrary creatures;
+  - skips child animals and prefers adult prey before old prey, then young prey;
   - attacks through the existing delayed creature action queue;
   - marks killed prey as hunter-claimed carcasses instead of leaving ordinary visible corpse spam;
   - returns claimed carcasses to the gate and records them through `recordNpcCarcassDropoffContribution()`.

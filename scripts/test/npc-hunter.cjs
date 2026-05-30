@@ -20,6 +20,7 @@ const {
   hunterTorchCarryAction,
   isHunterGroundTorchKey,
   isHunterCreature,
+  sortHunterPreyCandidates,
 } = require("../../src/services/npcHunter");
 
 const toCampfire = [
@@ -96,5 +97,15 @@ assert.deepEqual(claimedGroups, [
   { resourceTypeKey: "corpse_rabbit_female", amount: 1, corpseIds: [2] },
   { resourceTypeKey: "corpse_mouse", amount: 1, corpseIds: [3] },
 ]);
+
+const sortedPrey = sortHunterPreyCandidates([
+  { id: 1, age: "CHILD", hp: 1, species: { key: "mouse" } },
+  { id: 2, age: "YOUNG", hp: 1, species: { key: "mouse" } },
+  { id: 3, age: "OLD", hp: 1, species: { key: "mouse" } },
+  { id: 4, age: "ADULT", hp: 99, species: { key: "rabbit" } },
+  { id: 5, age: "ADULT", hp: 3, species: { key: "mouse" } },
+]);
+assert.deepEqual(sortedPrey.map((target) => target.id), [5, 4, 3, 2]);
+assert.equal(sortedPrey.some((target) => target.age === "CHILD"), false);
 
 console.log("NPC hunter helpers OK");

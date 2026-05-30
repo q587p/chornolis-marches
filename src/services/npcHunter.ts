@@ -19,6 +19,11 @@ export const HUNTER_RETURNING_FOR_TORCHES_MARKER = "hunter_returning_for_torches
 export const HUNTER_GROUND_TORCH_KEYS = ["torch", "lit_torch"] as const;
 const HUNTER_PREY_SPECIES_KEYS = ["mouse", "rabbit"] as const;
 const HUNTER_ROUTE_MAX_DEPTH = 16;
+const HUNTER_PREY_AGE_PRIORITY: Record<string, number> = {
+  ADULT: 3,
+  OLD: 2,
+  YOUNG: 1,
+};
 
 export type HunterRoutePlan = {
   gateLocationId: number;
@@ -87,6 +92,29 @@ export function hunterIsReturningForTorches(currentAction: string | null | undef
 
 export function hunterRouteDirections(route: RouteStep[]) {
   return route.map((step) => step.direction);
+}
+
+type HunterPreyCandidate = {
+  id: number;
+  hp: number;
+  age?: string | null;
+  species: { key: string };
+};
+
+function hunterPreyAgePriority(age?: string | null) {
+  return HUNTER_PREY_AGE_PRIORITY[String(age ?? "")] ?? 0;
+}
+
+export function sortHunterPreyCandidates<T extends HunterPreyCandidate>(prey: T[]) {
+  return [...prey]
+    .filter((target) => hunterPreyAgePriority(target.age) > 0)
+    .sort((a, b) => {
+      const ageDelta = hunterPreyAgePriority(b.age) - hunterPreyAgePriority(a.age);
+      if (ageDelta !== 0) return ageDelta;
+      const speciesDelta = (b.species.key === "mouse" ? 1 : 0) - (a.species.key === "mouse" ? 1 : 0);
+      if (speciesDelta !== 0) return speciesDelta;
+      return a.hp - b.hp || a.id - b.id;
+    });
 }
 
 export function buildHunterRoutePlan(input: {
@@ -202,6 +230,7 @@ async function routeToNearestPreyLocation(fromLocationId: number) {
       isAlive: true,
       isGone: false,
       isHidden: false,
+      age: { not: "CHILD" },
       species: { key: { in: [...HUNTER_PREY_SPECIES_KEYS] }, diet: "HERBIVORE" },
     },
     _count: { _all: true },
@@ -235,22 +264,15 @@ async function selectLocalHunterPrey(locationId: number) {
       isAlive: true,
       isGone: false,
       isHidden: false,
+      age: { not: "CHILD" },
       species: { key: { in: [...HUNTER_PREY_SPECIES_KEYS] }, diet: "HERBIVORE" },
     },
     include: { species: true },
     orderBy: [{ speciesId: "asc" }, { hp: "asc" }, { id: "asc" }],
-    take: 8,
+    take: 24,
   });
 
-  return prey
-    .map((target) => ({
-      target,
-      score:
-        (target.species.key === "mouse" ? 12 : 8)
-        + (target.age === "CHILD" ? -6 : target.age === "OLD" ? 4 : 0)
-        + Math.max(0, 6 - target.hp),
-    }))
-    .sort((a, b) => b.score - a.score || a.target.id - b.target.id)[0]?.target ?? null;
+  return sortHunterPreyCandidates(prey)[0] ?? null;
 }
 
 async function queueHunterMove(creature: { id: number; stamina: number }, route: RouteStep[], reason: string) {

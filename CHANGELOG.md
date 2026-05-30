@@ -25,6 +25,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Creature attack completion now treats `hunter` profession kills differently from predator feeding: hunter kills are claimed for the `Падальний рів` instead of becoming ordinary visible prey corpses.
 - Hunters marked as returning for torches now keep moving toward the gate unless they see local prey on the way.
+- Hunter prey selection now skips child animals and prefers adult prey before old prey, then young prey.
 - Unique creature seeding and world reset now reuse prepared-name case forms for named NPCs before falling back to local overrides.
 - Updated gate hunting loop docs and `NPC-002` planning notes to distinguish the first state-machine slice from the still-future real torch bundle/light-state work.
 - Documented future hunter torch crafting from gathered resources.
@@ -32,6 +33,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Tests
 
 - Extended NPC hunter helper coverage for profession detection, claimed-carcass markers and grouped corpse resource keys.
+- Added NPC hunter prey-order coverage for child-skip and adult/old/young target priority.
 - Added ambient line-bank coverage so herbalist and auto speech variety does not shrink below 50 unique lines each.
 
 ---
