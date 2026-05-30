@@ -31,6 +31,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Onboarding now keeps incomplete players out of location-level proactive messages until their name is confirmed.
 - Target lists now show a `freshen all` button when several suitable corpses can be queued for freshening.
 - Scribes can now force the gate carcass-dropoff hunting loop on or into stand-down with `/carcassQuest start` and `/carcassQuest stop`.
+- Gate-hunting saturation now counts nearby locations by coordinate radius instead of only the gate's own technical region, so bridge, riverbank and meadow prey pressure can reactivate the hunter loop.
 
 ### Tests
 
@@ -43,6 +44,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Extended posture helper coverage for observer-facing state-change text.
 - Extended posture helper coverage for reply-keyboard status label visibility.
 - Extended gate-hunting helper coverage for manual start/stop overrides.
+- Extended gate-hunting helper coverage for the cross-region coordinate radius.
 - Ran `npm test`.
 - Ran `npm run build`.
 - Ran `node scripts/test/character-names.cjs`.

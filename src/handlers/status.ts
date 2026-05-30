@@ -1196,7 +1196,7 @@ export function registerStatusHandlers(bot: Bot) {
       (s) => `${s.key} — ${s.name}; життя=${s.baseHp}; diet=${s.diet}; lifecycle=${s.childTicks}/${s.youngTicks}/${s.adultTicks}/${s.oldTicks}; corpse=${s.corpseDecayTicks}`
     );
     await ctx.reply(
-      `🐾 Можливі тварини для /addCreature\n\n${lines.join("\n") || "немає"}\n\nФормат:\n/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD]\n\nПонад ${ADD_CREATURE_BATCH_SIZE} створюється кількома батчами. Разова межа: ${ADD_CREATURE_MAX_COUNT}.\n\nПриклади:\n/addCreature rabbit forest_04_00 3\n/addCreature mouse 0,0,0 100 YOUNG\n/addCreature wolf forest_00_08 1 OLD`
+      `🐾 Можливі тварини для /addCreature\n\n${lines.join("\n") || "немає"}\n\nФормат:\n/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD]\n\nПонад ${ADD_CREATURE_BATCH_SIZE} створюється кількома батчами. Разова межа: ${ADD_CREATURE_MAX_COUNT}.\n\nПриклади:\n/addCreature rabbit forest_04_00 3\n/addCreature mouse meadow_16_05 100 YOUNG\n/addCreature wolf forest_00_08 1 OLD`
     );
   });
 

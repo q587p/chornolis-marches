@@ -184,6 +184,14 @@ async function totalDropoffContributions(db: any, dropoffFeatureKey: string) {
   return aggregate._sum.amount ?? 0;
 }
 
+export function gateHuntingAreaLocationWhere(location: { x: number; y: number; z: number }, radius = GATE_HUNTING_SATURATION_RADIUS) {
+  return {
+    z: location.z,
+    x: { gte: location.x - radius, lte: location.x + radius },
+    y: { gte: location.y - radius, lte: location.y + radius },
+  };
+}
+
 async function saturationSignals(db: any, dropoffFeatureKey: string) {
   const feature = await db.locationFeature.findUnique({
     where: { key: dropoffFeatureKey },
@@ -193,12 +201,7 @@ async function saturationSignals(db: any, dropoffFeatureKey: string) {
   const manualOverride = carcassQuestOverrideFromData(feature.data);
 
   const nearbyLocations = await db.cellLocation.findMany({
-    where: {
-      regionId: feature.location.regionId,
-      z: feature.location.z,
-      x: { gte: feature.location.x - GATE_HUNTING_SATURATION_RADIUS, lte: feature.location.x + GATE_HUNTING_SATURATION_RADIUS },
-      y: { gte: feature.location.y - GATE_HUNTING_SATURATION_RADIUS, lte: feature.location.y + GATE_HUNTING_SATURATION_RADIUS },
-    },
+    where: gateHuntingAreaLocationWhere(feature.location),
     select: { id: true },
   });
   const locationIds = nearbyLocations.map((location: { id: number }) => location.id);

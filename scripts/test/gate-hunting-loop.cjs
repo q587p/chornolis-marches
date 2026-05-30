@@ -9,6 +9,7 @@ const {
   HUNTER_FIELD_LINES,
   gateHuntingDropoffText,
   gateHuntingNoticeText,
+  gateHuntingAreaLocationWhere,
   gateHuntingSaturationForSignals,
   hunterFieldLine,
   isCarcassDropoffResourceKey,
@@ -83,5 +84,10 @@ assert.match(gateHuntingNoticeText("old notice", saturated), /Поки доси�
 assert.match(gateHuntingDropoffText("old dropoff", saturated), /нових припасів/);
 assert.equal(gateHuntingNoticeText("old notice", { ...saturated, active: false }), "old notice");
 assert.match(gateHuntingNoticeText("old notice", { ...saturated, manualOverride: "stop" }, true), /override=stop/);
+assert.deepEqual(gateHuntingAreaLocationWhere({ x: 20, y: 5, z: 0 }), {
+  z: 0,
+  x: { gte: 16, lte: 24 },
+  y: { gte: 1, lte: 9 },
+});
 
 console.log("Gate hunting loop helpers OK");

@@ -9,9 +9,9 @@ const {
   planAddCreatureBatches,
 } = require("../../src/services/adminCreatures");
 
-assert.deepEqual(parseAddCreatureArgs("mouse forest_01_08 100 Young"), {
+assert.deepEqual(parseAddCreatureArgs("mouse meadow_16_05 100 Young"), {
   speciesKey: "mouse",
-  locationArg: "forest_01_08",
+  locationArg: "meadow_16_05",
   requestedCount: 100,
   age: "YOUNG",
 });
