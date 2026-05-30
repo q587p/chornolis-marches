@@ -155,16 +155,16 @@ Implementation foundation:
 - NPC deposits do not grant player inventory rewards;
 - `findHunterRoutePlan()` resolves the gate drop-off, a configured magic campfire and routes in both directions through ordinary exits;
 - `tickNpcHunter()` runs the first hunter state-machine slice for the seeded gate hunter `Лукан`;
-- the seed also includes `Орина` near the forest edge, already returning toward the gate with one visible lit torch and one spare torch represented by the lightweight hunter bundle marker;
+- the seed also includes `Орина` near the forest edge, already returning toward the gate with one visible lit torch and one spare torch carried as real `CreatureResource` inventory;
 - hunter movement uses ordinary exits and delayed `MOVE` actions;
 - hunter attacks use the existing delayed creature `ATTACK` action;
 - hunter prey selection skips child animals and prefers adult prey first, then old prey, then young prey;
 - hunter kills are marked as claimed carcasses, then returned to the gate and deposited through the shared NPC drop-off helper;
-- the hunter can opportunistically pick up visible ground torches (`torch` or `lit_torch`) for the hunting bundle before choosing the next route;
+- the hunter can opportunistically pick up visible ground torches (`torch` or `lit_torch`) into real carried inventory before choosing the next route;
 - a hunter marked as returning for torches routes to the gate unless visible prey is in the current location, in which case the ordinary delayed attack/claim/drop-off path can still happen first;
 - the hunter loop should still show movement and local messages instead of silently calling the helper from far away.
 
-0.13.11 deliberately does not yet model a real NPC-held torch inventory. The five-torch bundle and one-torch return reserve remain constants and design boundaries until NPC inventory/light state exists. Ground-torch pickup is therefore a lightweight behavior slice rather than the final item model.
+0.13.13 adds the first real NPC-held torch inventory layer. The five-torch bundle and one-torch return reserve remain constants and design boundaries, but hunter pickup/resupply now writes `CreatureResource` rows, and NPC-held lit torches can provide local light. Claimed carcasses still use a lightweight `currentAction` marker until the later actor inventory/carrying pass.
 
 Future MVP shape:
 

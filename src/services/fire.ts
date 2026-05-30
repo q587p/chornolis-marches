@@ -215,6 +215,14 @@ export async function notifyFadingFireTimers(bot: Bot) {
     await syncPlayerTorchState(resource.playerId);
   }
 
+  const expiredCreatureTorches = await prisma.creatureResource.findMany({
+    where: { resourceTypeId: litTorch.id, amount: { gt: 0 }, updatedAt: { lte: expiredSince } },
+    select: { creatureId: true },
+  });
+  for (const resource of expiredCreatureTorches) {
+    await syncCreatureTorchState(resource.creatureId);
+  }
+
   const fadingTorches = await prisma.playerResource.findMany({
     where: {
       resourceTypeId: litTorch.id,
@@ -340,6 +348,25 @@ export async function syncPlayerTorchState(playerId: number) {
   ]);
 }
 
+export async function syncCreatureTorchState(creatureId: number) {
+  const { litTorch, twigs } = await ensureTorchResourceTypes();
+  const lit = await prisma.creatureResource.findUnique({
+    where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: litTorch.id } },
+  });
+
+  if (!lit || lit.amount <= 0) return;
+  if (Date.now() - lit.updatedAt.getTime() < TORCH_DURATION_MS) return;
+
+  await prisma.$transaction([
+    prisma.creatureResource.delete({ where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: litTorch.id } } }),
+    prisma.creatureResource.upsert({
+      where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: twigs.id } },
+      update: { amount: { increment: lit.amount } },
+      create: { creatureId, resourceTypeId: twigs.id, amount: lit.amount },
+    }),
+  ]);
+}
+
 export async function getPlayerTorchState(playerId: number) {
   await syncPlayerTorchState(playerId);
   const { torch, litTorch, dousedTorch } = await ensureTorchResourceTypes();
@@ -362,6 +389,73 @@ export async function getPlayerTorchState(playerId: number) {
     litAt,
     expiresAt,
   };
+}
+
+export async function getCreatureTorchState(creatureId: number) {
+  await syncCreatureTorchState(creatureId);
+  const { torch, litTorch, dousedTorch } = await ensureTorchResourceTypes();
+  const [plain, lit, doused] = await Promise.all([
+    prisma.creatureResource.findUnique({ where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: torch.id } } }),
+    prisma.creatureResource.findUnique({ where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: litTorch.id } } }),
+    prisma.creatureResource.findUnique({ where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: dousedTorch.id } } }),
+  ]);
+
+  const litAt = lit && lit.amount > 0 ? lit.updatedAt : null;
+  const expiresAt = litAt ? new Date(litAt.getTime() + TORCH_DURATION_MS) : null;
+  const left = expiresAt ? remainingMs(expiresAt) : 0;
+  return {
+    hasTorch: Boolean((plain?.amount ?? 0) > 0 || (lit?.amount ?? 0) > 0 || (doused?.amount ?? 0) > 0),
+    isLit: Boolean(litAt && left > 0),
+    isFading: Boolean(litAt && left > 0 && left <= TORCH_FADING_MS),
+    plainAmount: plain?.amount ?? 0,
+    dousedAmount: doused?.amount ?? 0,
+    litAmount: litAt && left > 0 ? lit?.amount ?? 0 : 0,
+    litAt,
+    expiresAt,
+  };
+}
+
+export async function creatureCarriedResourceAmount(creatureId: number, resourceKey: string) {
+  const resourceType = await prisma.resourceType.findUnique({ where: { key: resourceKey } });
+  if (!resourceType) return 0;
+  const carried = await prisma.creatureResource.findUnique({
+    where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: resourceType.id } },
+  });
+  return carried?.amount ?? 0;
+}
+
+export async function creatureCarriedTorchCount(creatureId: number) {
+  const torchState = await getCreatureTorchState(creatureId);
+  return torchState.plainAmount + torchState.litAmount + torchState.dousedAmount;
+}
+
+export async function lightCreatureTorchAtCampfire(creatureId: number, locationId: number) {
+  await syncCreatureTorchState(creatureId);
+  const { torch, litTorch } = await ensureTorchResourceTypes();
+  const campfire = await activeCampfireForTorch(locationId);
+  if (!campfire) return false;
+
+  const [plain, lit] = await Promise.all([
+    prisma.creatureResource.findUnique({ where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: torch.id } } }),
+    prisma.creatureResource.findUnique({ where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: litTorch.id } } }),
+  ]);
+  if (lit && lit.amount > 0 && Date.now() - lit.updatedAt.getTime() < TORCH_DURATION_MS) return false;
+  if (!plain || plain.amount <= 0) return false;
+
+  await prisma.$transaction([
+    plain.amount > 1
+      ? prisma.creatureResource.update({
+          where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: torch.id } },
+          data: { amount: { decrement: 1 } },
+        })
+      : prisma.creatureResource.delete({ where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: torch.id } } }),
+    prisma.creatureResource.upsert({
+      where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: litTorch.id } },
+      update: { amount: 1, updatedAt: new Date() },
+      create: { creatureId, resourceTypeId: litTorch.id, amount: 1 },
+    }),
+  ]);
+  return true;
 }
 
 function parseDousedTimer(description: string | null | undefined) {
@@ -727,13 +821,21 @@ export async function hasActiveTorchLightAtLocation(locationId: number) {
   const litTorch = await prisma.resourceType.findUnique({ where: { key: LIT_TORCH_KEY } });
   if (!litTorch) return false;
   const activeSince = new Date(Date.now() - TORCH_DURATION_MS);
-  const [carriedCount, groundCount] = await Promise.all([
+  const [playerCarriedCount, creatureCarriedCount, groundCount] = await Promise.all([
     prisma.playerResource.count({
       where: {
         resourceTypeId: litTorch.id,
         amount: { gt: 0 },
         updatedAt: { gt: activeSince },
         player: { currentLocationId: locationId },
+      },
+    }),
+    prisma.creatureResource.count({
+      where: {
+        resourceTypeId: litTorch.id,
+        amount: { gt: 0 },
+        updatedAt: { gt: activeSince },
+        creature: { locationId, isAlive: true, isGone: false, isHidden: false },
       },
     }),
     prisma.resourceNode.count({
@@ -745,7 +847,7 @@ export async function hasActiveTorchLightAtLocation(locationId: number) {
       },
     }),
   ]);
-  return carriedCount + groundCount > 0;
+  return playerCarriedCount + creatureCarriedCount + groundCount > 0;
 }
 
 export async function hasActiveLightAtLocation(locationId: number) {

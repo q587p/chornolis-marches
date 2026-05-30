@@ -9,6 +9,30 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.13 - NPC held torch inventory foundation - 12026-05-30
+
+### Added
+
+- Added `CreatureResource`, a carried-resource table for NPCs and other creatures.
+- Added seed/reset support for unique NPC carried resources.
+- Seeded `Орина` with a real held `lit_torch` and spare `torch` instead of the lightweight `hunter_torches` marker.
+- Added NPC-held torch state helpers so lit torches use the same duration assumptions as player-held torches.
+- NPC-held lit torches now count as active local torch light.
+
+### Changed
+
+- Hunter ground-torch pickup and gate resupply now write real NPC carried resources.
+- Hunter `currentAction` still carries route/intent markers such as returning for torches, but basic torch count now comes from carried resources with a legacy marker fallback.
+- `/look` and `/examine` style target text can show when a visible NPC is holding a lit torch.
+- Updated gate hunting loop and `NPC-004` planning docs for the first actor-inventory slice.
+
+### Tests
+
+- Updated NPC hunter helper coverage so new hunter torch action text no longer depends on the lightweight torch-count marker.
+- Added world-seed coverage for unique NPC carried resources and Орина's real torch inventory.
+
+---
+
 ## 0.13.12 - Gate hunting saturation stand-down - 12026-05-30
 
 ### Added

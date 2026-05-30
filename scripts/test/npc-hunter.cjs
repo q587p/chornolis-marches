@@ -5,6 +5,7 @@ require("ts-node/register");
 const {
   buildHunterRoutePlan,
   HUNTER_DEFAULT_MAGIC_CAMPFIRE_FEATURE_KEY,
+  HUNTER_CARRIED_TORCH_PREFIX,
   HUNTER_GROUND_TORCH_KEYS,
   HUNTER_PROFESSION_KEY,
   HUNTER_RETURN_TORCH_RESERVE,
@@ -70,15 +71,15 @@ assert.equal(isHunterGroundTorchKey("twigs"), false);
 
 const torchAction = hunterTorchCarryAction(3, "факел", 2);
 assert.match(torchAction, /^підбирає факел ×2 до мисливського набору/);
-assert.equal(hunterCarriedTorchCount(torchAction), 3);
-assert.equal(hunterCarriedTorchCount(hunterTorchCarryAction(99, "факел", 1)), HUNTER_TORCH_BUNDLE_SIZE);
+assert.equal(torchAction.includes(HUNTER_CARRIED_TORCH_PREFIX), false);
+assert.equal(hunterCarriedTorchCount(`${torchAction}; ${HUNTER_CARRIED_TORCH_PREFIX}3`), 3);
 assert.equal(hunterCarriedTorchCount("підбирає факел до мисливського набору"), 0);
 assert.equal(hunterCarriedTorchCount(null), 0);
 
 const returningForTorches = hunterReturningForTorchesAction();
 assert.ok(returningForTorches.includes(HUNTER_RETURNING_FOR_TORCHES_MARKER));
 assert.equal(hunterIsReturningForTorches(returningForTorches), true);
-assert.equal(hunterCarriedTorchCount(returningForTorches), HUNTER_RETURN_TORCH_RESERVE + 1);
+assert.equal(returningForTorches.includes(HUNTER_CARRIED_TORCH_PREFIX), false);
 assert.equal(hunterIsReturningForTorches("поповнює мисливський набір біля воріт"), false);
 
 const claimText = hunterClaimedCorpseAction(42);

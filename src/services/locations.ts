@@ -64,6 +64,16 @@ function isVisibleLivingCreature(c: any) {
   return c.isAlive && !c.isGone && !c.isHidden;
 }
 
+function visibleCreatureTorchText(c: any) {
+  const lit = c.resources?.find((resource: any) =>
+    resource.amount > 0
+    && resource.resourceType?.key === "lit_torch"
+    && Date.now() - new Date(resource.updatedAt).getTime() < TORCH_DURATION_MS
+  );
+  if (!lit) return null;
+  return lit.amount > 1 ? "тримає запалені факели" : "тримає запалений факел";
+}
+
 function visibleTargets(
   location: any,
   viewerPlayerId?: number,
@@ -90,7 +100,7 @@ function visibleTargets(
       label: options.showAnimalAge && c.species.kind === "ANIMAL"
         ? animalAgeDescription(c, options.showTechnicalDetails)
         : c.name ?? c.species.name,
-      actionLabel: normalizeCreatureActionText(c.currentAction, "проходить"),
+      actionLabel: [normalizeCreatureActionText(c.currentAction, "проходить"), visibleCreatureTorchText(c)].filter(Boolean).join("; "),
       canGreet: c.species.kind !== "ANIMAL",
       isAnimal: c.species.kind === "ANIMAL",
       isCorpse: false,
@@ -636,7 +646,7 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
     where: { id: locationId },
     include: {
       players: true,
-      creatures: { where: { isGone: false }, include: { species: true } },
+      creatures: { where: { isGone: false }, include: { species: true, resources: { include: { resourceType: true } } } },
       resources: { include: { resourceType: true } },
       features: { where: { isActive: true }, orderBy: { id: "asc" } },
       region: true,
@@ -671,7 +681,7 @@ export async function renderLocationGlance(locationId: number, viewerPlayerId?: 
     where: { id: locationId },
     include: {
       players: true,
-      creatures: { where: { isGone: false }, include: { species: true } },
+      creatures: { where: { isGone: false }, include: { species: true, resources: { include: { resourceType: true } } } },
       resources: { include: { resourceType: true } },
       features: { where: { isActive: true }, orderBy: { id: "asc" } },
       region: true,
@@ -714,7 +724,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     where: { id: locationId },
     include: {
       players: true,
-      creatures: { where: { isGone: false }, include: { species: true } },
+      creatures: { where: { isGone: false }, include: { species: true, resources: { include: { resourceType: true } } } },
       resources: { include: { resourceType: true } },
       features: { where: { isActive: true }, orderBy: { id: "asc" } },
       region: true,

@@ -98,7 +98,24 @@ assert.notEqual(gateTorchStand?.data?.icon, "🔥", "Torch stand should not use 
 
 for (const creature of uniqueCreatures) {
   assertKnown(locationKeys, creature.locationKey, `Unknown locationKey for unique creature ${creature.name}`);
+  for (const resource of creature.resources ?? []) {
+    assertKnown(resourceTypeKeys, resource.resourceKey, `Unknown resourceKey for unique creature ${creature.name}`);
+    assert.ok(Number.isInteger(resource.amount) && resource.amount > 0, `Invalid carried resource amount for ${creature.name}:${resource.resourceKey}`);
+  }
 }
+
+const oryna = uniqueCreatures.find((creature) => creature.name === "Орина");
+assert.ok(oryna, "Seed should include hunter Орина");
+assert.equal(
+  oryna.action.includes("hunter_torches:"),
+  false,
+  "Орина should use real carried torch resources instead of the lightweight hunter_torches marker",
+);
+assert.deepEqual(
+  (oryna.resources ?? []).map((resource) => `${resource.resourceKey}:${resource.amount}`).sort(),
+  ["lit_torch:1", "torch:1"],
+  "Орина should start with one lit torch and one spare torch",
+);
 
 for (const filePath of ["prisma/seed.ts", "src/services/worldReset.ts"]) {
   for (const locationKey of sourceLocationKeys(filePath)) {
