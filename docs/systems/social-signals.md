@@ -27,12 +27,19 @@ The first implemented set is intentionally small:
 
 ## UI Pattern
 
-When focusing on a visible target, the target action keyboard may show quick contextual signals plus **Ще сигнали**.
+When focusing on a visible target, the target action keyboard should keep the main target actions grouped and predictable:
+
+- first row: **Глянути**, **Роздивитися**, **Атакувати**;
+- second row: **Привітати**, **Сказати**, **Прошепотіти** where the target can meaningfully receive them;
+- third row: quick contextual signals such as **Кивнути**, **Помахати**, plus **Ще сигнали**;
+- final row: **Назад**.
+
+`Глянути` is the brief visible-state inspect path. `Роздивитися` is the fuller inspect path. `Сказати` and `Прошепотіти` open a short text prompt and then reuse the ordinary speech queue/action layer with the selected target.
 
 Examples:
 
 - under another player: **Кивнути**, **Помахати**, **Ще сигнали**;
-- under a neutral NPC: **Кивнути**, **Усміхнутися**, **Ще сигнали**;
+- under a neutral NPC: **Кивнути**, **Помахати**, **Ще сигнали**;
 - under an animal or suspicious target: **Вказати**, **Насупитися**, **Ще сигнали**.
 
 The full **Ще сигнали** menu shows the whole MVP set for the selected target.
@@ -100,5 +107,6 @@ Future versions may add:
 - richer NPC and creature reactions to signals;
 - mood/reputation effects;
 - targetless signals for the whole location;
+- contextual whisper observer detail: ordinary bystanders should only see that a whisper happened, while a recent close inspection of the location, author or recipient may later justify showing whom the whisper was aimed at;
 - more ritual, hostile, fearful and group-play signals;
 - moderation and clear rules for any future freeform emote command.

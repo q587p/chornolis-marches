@@ -158,6 +158,13 @@ function shoutedVerb(player: any) {
   return "гукнув";
 }
 
+function whisperedVerb(player: any) {
+  const gender = player.grammaticalGender ?? (player.pronoun === "SHE" ? "FEMININE" : player.pronoun === "THEY" ? "PLURAL" : "MASCULINE");
+  if (gender === "FEMININE") return "щось прошепотіла";
+  if (gender === "PLURAL") return "щось прошепотіли";
+  return "щось прошепотів";
+}
+
 function trackAgeText(createdAt: Date, now = new Date()) {
   const seconds = Math.max(0, Math.floor((now.getTime() - createdAt.getTime()) / 1000));
   if (seconds < 20) return "щойно";
@@ -844,38 +851,42 @@ async function completeSay(bot: Bot, action: WorldAction) {
     const actorForms = playerForms(player);
     const verb = saidVerb(player);
     if (payload.mode === "whisper") {
-      if (payload.targetType !== "player" || !payload.targetId) {
-        if (chatId) await bot.api.sendMessage(chatId, "Шепіт зараз можна спрямувати тільки персонажу поруч.");
+      if (!payload.targetType || !payload.targetId) {
+        if (chatId) await bot.api.sendMessage(chatId, "Шепіт зараз треба спрямувати комусь поруч.");
         await setActionStatus(action, "FAILED");
         return;
       }
 
-      const targetPlayer = await prisma.player.findFirst({ where: { id: payload.targetId, currentLocationId: player.currentLocationId } });
-      if (!targetPlayer) {
+      const target = await resolveTarget(payload.targetType, payload.targetId, player.currentLocationId);
+      if (!target || target.isCorpse) {
         if (chatId) await bot.api.sendMessage(chatId, "Того, кому ви шепотіли, вже немає поруч.");
         await setActionStatus(action, "FAILED");
         return;
       }
 
-      const targetForms = playerForms(targetPlayer);
+      const targetPlayer = target.kind === "player"
+        ? await prisma.player.findFirst({ where: { id: target.id, currentLocationId: player.currentLocationId } })
+        : null;
       await spendPlayerStamina(bot, player.id, "SAY", chatId);
       await prisma.player.updateMany({ where: { id: player.id }, data: { says: { increment: 1 } } });
       await notifyLocationExcept(
         bot,
         player.currentLocationId,
-        [player.id, targetPlayer.id],
-        `${escapeHtml(actorForms.nominative)} шепоче ${escapeHtml(targetForms.dative)}.`,
+        [player.id, targetPlayer?.id].filter((id): id is number => Boolean(id)),
+        `${escapeHtml(actorForms.nominative)} ${whisperedVerb(player)} комусь.`,
         { parseMode: "HTML" },
       );
-      await bot.api.sendMessage(
-        targetPlayer.telegramId,
-        `${escapeHtml(actorForms.nominative)} шепоче вам:\n${quoteBlock(text)}`,
-        { parse_mode: "HTML", reply_markup: await buildMainReplyKeyboardForTelegramId(Number(targetPlayer.telegramId), false) },
-      );
-      await rememberPlayerReplyTarget({ playerId: targetPlayer.id, speakerName: actorForms.nominative, speakerPlayerId: player.id, locationId: player.currentLocationId });
-      if (chatId) await bot.api.sendMessage(chatId, `Ви шепнули ${escapeHtml(targetForms.dative)}:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
+      if (targetPlayer) {
+        await bot.api.sendMessage(
+          targetPlayer.telegramId,
+          `${escapeHtml(actorForms.nominative)} шепоче вам:\n${quoteBlock(text)}`,
+          { parse_mode: "HTML", reply_markup: await buildMainReplyKeyboardForTelegramId(Number(targetPlayer.telegramId), false) },
+        );
+        await rememberPlayerReplyTarget({ playerId: targetPlayer.id, speakerName: actorForms.nominative, speakerPlayerId: player.id, locationId: player.currentLocationId });
+      }
+      if (chatId) await bot.api.sendMessage(chatId, `Ви шепнули ${escapeHtml(target.forms.dative)}:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
       await setActionStatus(action, "DONE");
-      await logEvent("SAY", `${actorForms.nominative} шепоче ${targetForms.dative}`, "приватний шепіт", player.currentLocationId);
+      await logEvent("SAY", `${actorForms.nominative} шепоче ${target.forms.dative}`, "приватний шепіт", player.currentLocationId);
       return;
     }
 

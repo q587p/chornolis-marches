@@ -415,8 +415,8 @@ async function submitWhisper(bot: Bot, ctx: any, text: string) {
   const durationMs = actionDurationMs("SAY", player.stamina);
   try {
     const payload = await parseSpeechTarget(safeText, player.currentLocationId, player.id);
-    if (!payload.targetId) return void (await ctx.reply("Напиши так: whisper персонаж текст. Ціль має бути видимим персонажем поруч."));
-    if (payload.targetType !== "player") return void (await ctx.reply("Шепіт зараз можна спрямувати тільки персонажу поруч."));
+    if (!payload.targetId) return void (await ctx.reply("Напиши так: whisper персонаж текст. Ціль має бути видимим персонажем або істотою поруч."));
+    if (payload.targetType !== "player" && payload.targetType !== "creature") return void (await ctx.reply("Шепіт зараз можна спрямувати тільки комусь видимому поруч."));
     const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "SAY", payload: { ...payload, mode: "whisper" }, durationMs, chatId: ctx.chat?.id });
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {

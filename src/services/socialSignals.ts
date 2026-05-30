@@ -122,7 +122,7 @@ export function socialDefinitionById(id: string) {
 export function quickSocialsForTarget(target: Pick<ResolvedTarget, "kind" | "isAnimal" | "canGreet">) {
   if (target.kind === "player") return ["nod", "wave"];
   if (target.isAnimal) return ["point", "glare"];
-  return target.canGreet ? ["nod", "smile"] : ["bow", "glare"];
+  return target.canGreet ? ["nod", "wave"] : ["bow", "glare"];
 }
 
 function chance(percent: number) {

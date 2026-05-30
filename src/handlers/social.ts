@@ -15,6 +15,17 @@ import { actionErrorMessage, replyToActionError } from "../utils/actionErrorRepl
 import { canEditCallbackMessage, noteKnownMessage } from "../utils/messageTracker";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { rememberTutorialInventoryForPlayer } from "../utils/tutorialInventory";
+import { stripUnsafeText } from "../utils/text";
+
+type TargetSpeechMode = "say" | "whisper";
+
+type PendingTargetSpeech = {
+  mode: TargetSpeechMode;
+  targetType: "player" | "creature";
+  targetId: number;
+};
+
+const pendingTargetSpeech = new Map<number, PendingTargetSpeech>();
 
 function buildActionKeyboard(target: ResolvedTarget, again = false) {
   if (target.isCorpse) return buildCorpseActionKeyboard(target);
@@ -25,6 +36,15 @@ function attackUnavailableText(target: ResolvedTarget) {
   if (target.isCorpse) return "Це вже труп.";
   if (target.kind === "player" || !target.isAnimal || !target.canAttack) return "Бій із хижаками й іншими персонажами ще не реалізований.";
   return "Цю ціль зараз не можна затоптати.";
+}
+
+function targetSpeechPrompt(mode: TargetSpeechMode, target: ResolvedTarget) {
+  if (mode === "whisper") return `Що прошепотіти ${target.forms.dative}?`;
+  return `Що сказати ${target.forms.dative}?`;
+}
+
+function targetSpeechPlaceholder(mode: TargetSpeechMode) {
+  return mode === "whisper" ? "Тихий текст..." : "Текст репліки...";
 }
 
 async function editOrReply(ctx: any, text: string, keyboard?: InlineKeyboard) {
@@ -40,6 +60,38 @@ async function editOrReply(ctx: any, text: string, keyboard?: InlineKeyboard) {
   }
 
   noteKnownMessage(await ctx.reply(text, options));
+}
+
+async function submitTargetSpeech(bot: Bot, ctx: any, pending: PendingTargetSpeech, text: string) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const safeText = stripUnsafeText(text).slice(0, 300);
+  if (!safeText) return void (await ctx.reply("Репліка порожня. Натисніть кнопку ще раз, якщо хочете сказати щось цій цілі."));
+
+  const target = await resolveTarget(pending.targetType, pending.targetId, player.currentLocationId);
+  if (!target || target.isCorpse) return void (await ctx.reply("Цілі вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() }));
+
+  const durationMs = actionDurationMs("SAY", player.stamina);
+  try {
+    const result = await performOrQueuePlayerAction(bot, {
+      playerId: player.id,
+      type: "SAY",
+      payload: {
+        text: safeText,
+        mode: pending.mode,
+        targetType: target.kind,
+        targetId: target.id,
+        targetName: target.forms.nominative,
+        targetDative: target.forms.dative,
+      },
+      durationMs,
+      chatId: ctx.chat?.id,
+    });
+    await sendActionSubmitFeedback(ctx, player.id, result);
+  } catch (error) {
+    await ctx.reply(error instanceof Error ? error.message : "Не вдалося виконати дію.");
+  }
 }
 
 export function registerSocialHandlers(bot: Bot) {
@@ -170,8 +222,35 @@ export function registerSocialHandlers(bot: Bot) {
     await safeAnswerCallbackQuery(ctx, "Сигнал подано.");
   });
 
-  bot.callbackQuery(/^social:(greet|inspect|attack|freshen):(player|creature):(\d+)(?::(known|mystery))?$/, async (ctx) => {
-    const action = ctx.match[1] as "greet" | "inspect" | "attack" | "freshen";
+  bot.callbackQuery(/^targetSpeech:(say|whisper):(player|creature):(\d+)(?::(known|mystery))?$/, async (ctx) => {
+    const mode = ctx.match[1] as TargetSpeechMode;
+    const type = ctx.match[2] as "player" | "creature";
+    const targetId = Number(ctx.match[3]);
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player || !player.currentLocationId) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    const target = await resolveTarget(type, targetId, player.currentLocationId);
+    if (!target || target.isCorpse) {
+      await safeAnswerCallbackQuery(ctx, "Цілі вже немає поруч.");
+      return void (await editOrReply(ctx, "Цілі вже немає поруч. Можна роздивитися місцину ще раз.", buildExamineLocationKeyboard()));
+    }
+
+    pendingTargetSpeech.set(ctx.from.id, { mode, targetType: type, targetId });
+    await safeAnswerCallbackQuery(ctx);
+    await ctx.reply(targetSpeechPrompt(mode, target), {
+      reply_markup: {
+        force_reply: true,
+        selective: true,
+        input_field_placeholder: targetSpeechPlaceholder(mode),
+      },
+    });
+  });
+
+  bot.callbackQuery(/^social:(look|greet|inspect|attack|freshen):(player|creature):(\d+)(?::(known|mystery))?$/, async (ctx) => {
+    const action = ctx.match[1] as "look" | "greet" | "inspect" | "attack" | "freshen";
     const type = ctx.match[2] as "player" | "creature";
     const targetId = Number(ctx.match[3]);
     const mode = (ctx.match[4] ?? "known") as "known" | "mystery";
@@ -191,7 +270,7 @@ export function registerSocialHandlers(bot: Bot) {
     if (action === "attack" && !target.canAttack) return void (await safeAnswerCallbackQuery(ctx, attackUnavailableText(target)));
     if (action === "freshen" && (!target.isCorpse || !target.canFreshen)) return void (await safeAnswerCallbackQuery(ctx, "Труп уже не підходить."));
 
-    const typeMap = { greet: "GREET", inspect: "INSPECT", attack: "ATTACK", freshen: "FRESHEN" } as const;
+    const typeMap = { look: "INSPECT", greet: "GREET", inspect: "INSPECT", attack: "ATTACK", freshen: "FRESHEN" } as const;
     const durationMs = actionDurationMs(typeMap[action], player.stamina);
 
     let result: Awaited<ReturnType<typeof performOrQueuePlayerAction>>;
@@ -199,7 +278,7 @@ export function registerSocialHandlers(bot: Bot) {
       result = await performOrQueuePlayerAction(bot, {
         playerId: player.id,
         type: typeMap[action],
-        payload: { targetType: type, targetId, mode },
+        payload: { targetType: type, targetId, mode, detail: action === "look" ? "brief" : undefined },
         durationMs,
         chatId: ctx.chat?.id,
         messageId: ctx.callbackQuery.message?.message_id,
@@ -213,6 +292,27 @@ export function registerSocialHandlers(bot: Bot) {
 
     await safeAnswerCallbackQuery(ctx, result.mode === "immediate" ? "Дію виконано." : `Дію додано в чергу${durationSecondsSuffix(player, durationMs)}.`);
     await sendActionSubmitFeedback(ctx, player.id, result);
+  });
+
+  bot.on("message:text", async (ctx, next) => {
+    const pending = pendingTargetSpeech.get(ctx.from.id);
+    if (!pending) return next();
+
+    const text = String(ctx.message.text ?? "").trim();
+    const normalized = text.toLocaleLowerCase("uk-UA");
+    if (["/cancel", "cancel", "скасувати", "відмінити", "стоп", "не треба"].includes(normalized)) {
+      pendingTargetSpeech.delete(ctx.from.id);
+      await ctx.reply("Добре, репліку скасовано.");
+      return;
+    }
+
+    if (text.startsWith("/")) {
+      pendingTargetSpeech.delete(ctx.from.id);
+      return next();
+    }
+
+    pendingTargetSpeech.delete(ctx.from.id);
+    await submitTargetSpeech(bot, ctx, pending, text);
   });
 
   bot.callbackQuery(["track", "track:details"], async (ctx) => {
