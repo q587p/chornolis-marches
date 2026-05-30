@@ -16,6 +16,7 @@ The current lane is the three-month vertical slice:
 - SES-001: add AFK / End Session controls, silent Auto-AFK after player inactivity, one idle reminder per scene and send-time guards for delayed/proactive messages so the bot stays quiet while a player is away.
 - ONB-002: character name onboarding polish.
 - ONB-001: dream tutorial compact completion.
+- ONB-003: add a one-time fourth-wall wellbeing aside in the tutorial dream after first rest or food, framed as Сон briefly noticing the player behind the character.
 - SURV-001: beginner return / `Повернення`.
 - LOOP-001: starter location and bridge threshold polish.
 - NPC-004: continue actor inventory and held-light foundation after the 0.13.13 `CreatureResource` torch slice; next work is broader item/carry semantics and fewer remaining `currentAction` bridges.

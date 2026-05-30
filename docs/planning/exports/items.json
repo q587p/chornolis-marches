@@ -1466,6 +1466,25 @@
     "file": "docs/planning/items/ONB-002-D.md"
   },
   {
+    "id": "ONB-003",
+    "title": "Tutorial player wellbeing aside",
+    "status": "backlog",
+    "type": "ux",
+    "area": "onboarding",
+    "priority": "medium",
+    "tags": [
+      "onboarding",
+      "tutorial",
+      "wellbeing",
+      "sleep"
+    ],
+    "depends_on": [
+      "ONB-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-003-player-wellbeing-aside.md"
+  },
+  {
     "id": "PERF-001",
     "title": "Runtime performance plan and creature simulation budget",
     "status": "backlog",

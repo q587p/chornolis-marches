@@ -77,6 +77,7 @@ ONB-002-A,Expand prepared-name pool,testing,feature,onboarding,high,"onboarding,
 ONB-002-B,Expand forbidden-name normalization,testing,feature,onboarding,high,"onboarding,names,validation",docs/planning/items/ONB-002-B.md
 ONB-002-C,Uncertain custom-name review status,testing,feature,onboarding,high,"onboarding,scribes,names",docs/planning/items/ONB-002-C.md
 ONB-002-D,Name onboarding help copy,next,ux,onboarding,medium,"onboarding,help,copy",docs/planning/items/ONB-002-D.md
+ONB-003,Tutorial player wellbeing aside,backlog,ux,onboarding,medium,"onboarding,tutorial,wellbeing,sleep",docs/planning/items/ONB-003-player-wellbeing-aside.md
 PERF-001,Runtime performance plan and creature simulation budget,backlog,technical,performance,high,"performance,ecology,creatures,action-queue,simulation,status,auto",docs/planning/items/PERF-001-budgeted-and-aggregated-creature-simulation.md
 PLAN-001,Repository docs are the planning source of truth,testing,documentation,planning,high,"planning,docs,roadmap",docs/planning/items/PLAN-001.md
 PROG-002,Observation-based learning,backlog,feature,progression,medium,"skills,observation,npc,animals,mythic",docs/planning/items/PROG-002-observation-learning.md
