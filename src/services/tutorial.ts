@@ -395,6 +395,46 @@ export async function isLocationExitLocked(locationId: number, direction: Direct
   return `${lockedReasonLabel(reason)} (закрито).`;
 }
 
+const DIRECTION_PATH_LABELS: Partial<Record<Direction, string>> = {
+  NORTH: "північний прохід",
+  SOUTH: "південний прохід",
+  EAST: "східний прохід",
+  WEST: "західний прохід",
+  UP: "прохід угору",
+  DOWN: "прохід униз",
+  INSIDE: "прохід усередину",
+  OUTSIDE: "прохід назовні",
+};
+
+export function localGateOpenAttemptText(feature: { name?: string | null; data: Prisma.JsonValue | null }) {
+  const data = featureData(feature);
+  const name = feature.name?.trim() || "Ворота";
+  const direction = directionFromData(data);
+  const directionText = direction ? DIRECTION_PATH_LABELS[direction] ?? "прохід" : "прохід";
+
+  if (data.openable === false) {
+    return [
+      `Ворота тут є: ${name}.`,
+      "",
+      `Ви пробуєте відчинити їх, але засув не піддається. Це не та брама, яку можна просто відкрити командою; ${directionText} відкриється лише за певних умов.`,
+    ].join("\n");
+  }
+
+  if (data.locked === true) {
+    return [
+      `Ворота тут є: ${name}.`,
+      "",
+      `Ви пробуєте відчинити їх, але вони лишаються замкненими. ${directionText} поки закритий.`,
+    ].join("\n");
+  }
+
+  return [
+    `Ворота тут є: ${name}.`,
+    "",
+    "Ви пробуєте їх відчинити, але світ поки не має для цього окремого правила.",
+  ].join("\n");
+}
+
 export async function openDreamGate(playerId: number) {
   const player = await prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } });
   if (!player?.currentLocationId) throw new Error("Спершу треба увійти у світ.");
@@ -402,7 +442,14 @@ export async function openDreamGate(playerId: number) {
   const feature = await prisma.locationFeature.findFirst({
     where: { key: { in: [...DREAM_GATE_FEATURE_KEYS] }, locationId: player.currentLocationId, isActive: true },
   });
-  if (!feature) return "Тут немає воріт, які можна відкрити.";
+  if (!feature) {
+    const localGate = await prisma.locationFeature.findFirst({
+      where: { locationId: player.currentLocationId, isActive: true, type: "GATE" },
+      orderBy: { id: "asc" },
+      select: { name: true, data: true },
+    });
+    return localGate ? localGateOpenAttemptText(localGate) : "Тут немає воріт, які можна відкрити.";
+  }
 
   const previousOpens = await prisma.worldEvent.count({
     where: {

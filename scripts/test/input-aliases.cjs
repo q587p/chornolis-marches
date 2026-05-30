@@ -4,13 +4,21 @@ require("ts-node/register");
 
 const { normalizeInput, parseAlias, suggestAliasInputs } = require("../../src/input/aliases");
 const { inventoryResourceKeyFromText } = require("../../src/services/inventoryUse");
-const { isDreamGateOpeningPhrase } = require("../../src/services/tutorial");
+const { isDreamGateOpeningPhrase, localGateOpenAttemptText } = require("../../src/services/tutorial");
 const { normalizeCreatureActionText } = require("../../src/utils/creatureActionText");
 const { resourceAccusativeName } = require("../../src/utils/resourceText");
 
 function assertAlias(input, expected) {
   assert.deepEqual(parseAlias(input), expected, `Unexpected alias parse for: ${input}`);
 }
+
+const closedSettlementGateText = localGateOpenAttemptText({
+  name: "Зачинені ворота",
+  data: { openable: false, locked: true, locks_exit_direction: "EAST" },
+});
+assert.match(closedSettlementGateText, /Ворота тут є/);
+assert.match(closedSettlementGateText, /східний прохід/);
+assert.match(closedSettlementGateText, /відкриється лише за певних умов/);
 
 assert.equal(normalizeInput("  /Look@Chornolis_bot!!!  "), "/look");
 assert.equal(normalizeInput("з’їсти   ягоди."), "з'їсти ягоди");
