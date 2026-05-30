@@ -20,6 +20,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added hunter-claimed carcass markers and grouped corpse resource helpers so NPC deposits can use the existing carcass drop-off contribution service.
 - Added narrow hunter pickup for visible ground torches so found `torch` and `lit_torch` stacks can feed the current hunting bundle slice.
 - Expanded herbalist ambient speech and player auto-mode speech banks to 50 lines each.
+- Added text-only attack learning hints: every thirteenth player animal kill through `ATTACK` and every fifth personal observation of another actor's recent kill can send a private skill-growth line without changing numeric skills yet.
 
 ### Changed
 
@@ -35,6 +36,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Extended NPC hunter helper coverage for profession detection, claimed-carcass markers and grouped corpse resource keys.
 - Added NPC hunter prey-order coverage for child-skip and adult/old/young target priority.
 - Added ambient line-bank coverage so herbalist and auto speech variety does not shrink below 50 unique lines each.
+- Added attack-learning helper coverage for practice and observation milestone cadence.
 
 ---
 

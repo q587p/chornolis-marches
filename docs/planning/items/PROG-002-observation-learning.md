@@ -67,6 +67,16 @@ or, during the fox attack:
 - In the first implementation, `look` or `examine` during the attack moment can trigger the lesson; later this should depend on visibility, attention, and actual skill state.
 The first implementation can write only a tutorial flag or placeholder skill progress; it does not need the full progression model yet.
 
+## 0.13.11 Attack Placeholder
+
+A text-only attack-learning bridge now exists before real skill progress rows:
+
+- every thirteenth player kill through `ATTACK` sends the acting player `Навичка атаки підросла.`;
+- every fifth recorded `look`/`examine` observation of a recent kill by someone else in the same location sends the observer `Навичка атаки трохи підросла.`;
+- the bookkeeping uses hidden `WorldEvent` records and does not expose raw counters or change numeric skills.
+
+Future work should move these messages onto the shared learning/progression service so attack practice and attack observation use the same rules as Herbalism, Tracking and other teachable skills.
+
 ## First Skill Vocabulary To Consider
 
 - Слідування / Вистежування

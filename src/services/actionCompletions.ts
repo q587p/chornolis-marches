@@ -36,6 +36,7 @@ import { chance, pick, shuffle } from "../utils/random";
 import { freshenCorpseForMeat } from "./meat";
 import { rememberPlayerReplyTarget } from "./replyTargets";
 import { hunterClaimedCorpseAction, isHunterCreature } from "./npcHunter";
+import { ATTACK_OBSERVATION_GROWTH_MESSAGE, ATTACK_PRACTICE_GROWTH_MESSAGE, isAttackPracticeMilestone, recordAttackKillSource, recordAttackObservation } from "./attackLearning";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
@@ -502,12 +503,17 @@ async function completeLook(bot: Bot, action: WorldAction) {
     if (chatId) {
       const view = await renderLocationDetails(locationId, player.id);
       const voiceComments = await tutorialLookPaceComments({ ...player, currentLocationId: locationId });
+      const sendAttackObservationMessage = async () => {
+        const observation = await recordAttackObservation({ playerId: player.id, locationId });
+        if (observation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, ATTACK_OBSERVATION_GROWTH_MESSAGE));
+      };
       if (action.messageId && typeof chatId === "number" && canEditKnownMessage(chatId, action.messageId)) {
         try {
           await bot.api.editMessageText(chatId, action.messageId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
           for (const comment of voiceComments) {
             noteKnownMessage(await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }));
           }
+          await sendAttackObservationMessage();
           return;
         } catch {
           // Fall back to a new message when Telegram cannot edit the source message.
@@ -517,6 +523,7 @@ async function completeLook(bot: Bot, action: WorldAction) {
       for (const comment of voiceComments) {
         noteKnownMessage(await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }));
       }
+      await sendAttackObservationMessage();
     }
     return;
   }
@@ -538,7 +545,11 @@ async function completeInspect(bot: Bot, action: WorldAction) {
   }
   await spendPlayerStamina(bot, player.id, "INSPECT", chatId);
   await logEvent("INSPECT", "Player inspected target", `${target.kind}:${target.id}`, player.currentLocationId);
-  if (chatId) await bot.api.sendMessage(chatId, `${targetIntro(target, payload.mode === "mystery")}\n\n${target.inspect}`);
+  if (chatId) {
+    await bot.api.sendMessage(chatId, `${targetIntro(target, payload.mode === "mystery")}\n\n${target.inspect}`);
+    const observation = await recordAttackObservation({ playerId: player.id, locationId: player.currentLocationId });
+    if (observation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, ATTACK_OBSERVATION_GROWTH_MESSAGE));
+  }
 }
 
 async function completeGreet(bot: Bot, action: WorldAction) {
@@ -672,6 +683,7 @@ async function completeCreatureAttack(bot: Bot, action: WorldAction) {
       await notifyLocation(bot, attacker.locationId, -1, `Щось кидається на здобич. За мить ${target.species.name} падає нерухомо.`);
       await logEvent("NPC_ACTION", "Creature killed prey", `${attacker.species.key} #${attacker.id} -> ${target.species.key} #${target.id}; food=${foodValue}`, attacker.locationId);
     }
+    await recordAttackKillSource({ locationId: attacker.locationId, attackerCreatureId: attacker.id, victimCreatureId: target.id });
   } else {
     await prisma.creature.updateMany({ where: { id: target.id }, data: { hp: nextHp, currentAction: "поранено" } });
     await prisma.creature.updateMany({ where: { id: attacker.id }, data: { activity: "FIGHTING", currentAction: `атакує ${target.species.name}`, successfulAttacks: { increment: 1 } } });
@@ -724,11 +736,12 @@ async function completeAttack(bot: Bot, action: WorldAction) {
   await markRecentAttackDanger(player.currentLocationId);
   await prisma.creature.updateMany({ where: { id: creature.id }, data: { hp: 0, isAlive: false, age: "CORPSE", diedAtTick: null, corpseDecayTicksLeft: creature.species.corpseDecayTicks, activity: "RESTING", currentAction: "лежить нерухомо" } });
   await interruptActorActions({ actorType: "CREATURE", creatureId: creature.id }, "істоту вбито", true);
-  await prisma.player.updateMany({ where: { id: player.id }, data: { animalsKilled: { increment: 1 } } });
+  const updatedPlayer = await prisma.player.update({ where: { id: player.id }, data: { animalsKilled: { increment: 1 } }, select: { animalsKilled: true } });
   await triggerHerbivorePanic(player.currentLocationId, creature.id, "лякається нападу й людського запаху");
   await notifyLocation(bot, player.currentLocationId, player.id, `Хтось затоптує ${target.forms.accusative}. Труп лишається на землі.`);
   await setActionStatus(action, "DONE");
   await logEvent("PLAYER_ACTION", "Player killed animal", `${target.kind}:${target.id}`, player.currentLocationId);
+  await recordAttackKillSource({ locationId: player.currentLocationId, attackerPlayerId: player.id, victimCreatureId: creature.id });
   if (chatId) {
     const corpseTarget = await resolveTarget("creature", creature.id, player.currentLocationId);
     await bot.api.sendMessage(
@@ -736,6 +749,7 @@ async function completeAttack(bot: Bot, action: WorldAction) {
       `⚔️ Ви затоптали ${target.forms.accusative}. Труп лишився на землі.`,
       corpseTarget?.isCorpse ? { reply_markup: buildCorpseActionKeyboard(corpseTarget) } : undefined,
     );
+    if (isAttackPracticeMilestone(updatedPlayer.animalsKilled)) noteKnownMessage(await bot.api.sendMessage(chatId, ATTACK_PRACTICE_GROWTH_MESSAGE));
   }
 }
 
