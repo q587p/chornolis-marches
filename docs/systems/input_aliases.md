@@ -9,7 +9,7 @@ When a player-facing button performs an in-world action, there should usually be
 - Keep canonical slash commands stable: `/look`, `/examine`, `/me`, `/inventory`, `/stat`, `/chat`, `/who`, `/time`, `/news`, `/help`, `/menu`, `/gather`, `/rest`, `/queue`, `/say`, movement commands and admin/debug commands.
 - Add Ukrainian aliases as a convenience layer over the same handlers where possible.
 - Preserve existing callback buttons for Telegram ergonomics.
-- Reply to unknown text with a short "не зрозуміли" message, `/help` / `/menu` hints and close alias suggestions where possible.
+- Reply to unknown text with a short "не зрозуміли" message, `/help` / `/menu` hints and close alias suggestions where possible. Suggestions should include the closest clickable slash command in parentheses when there is a stable one, for example `оглянутися (/look)` or `швидкий огляд (/glance)`.
 
 ## Examples
 
@@ -18,7 +18,7 @@ Location and character:
 - `озирнутися`, `/озирнутися`, `де я`, `місцина`, `див`, `дивитися` -> current location view.
 - `/glance`, `glance`, `глянути швидко`, `швидко глянути` -> quick current-location read without the full description.
 - `/exits`, `exits`, `виходи`, `куди можна йти` -> only visible exits from the current location, including visible locked exits.
-- `роздивитися`, `/роздивитися`, `що видно` -> closer look action.
+- `роздивитися`, `/роздивитися`, `оглянути`, `що видно` -> closer look action.
 - `хто я`, `хтоя`, `персонаж` -> character card.
 - `речі`, `інвентар`, `inventory`, `/inventory`, `що в мене` -> dedicated inventory view.
 
@@ -76,7 +76,7 @@ Actions:
 - `підібрати хмиз`, `взяти хмиз`, `pickup twigs` -> pick up visible loose `хмиз` in the current місцина.
 - Ecology sign inspection: `/examine sign`, `/examine border marker`, `роздивитися знак`, `роздивитися межовий знак`, `придивитися до знака` -> inspect a local `Межовий знак` and read its public diegetic wildlife notes when the feature is present.
 - Ecology inspection: `/examine grass`, `/examine depleted grass`, `роздивитися траву`, `придивитися до трави`, `оцінити траву`, `оцінити відновлення` -> inspect the local depleted-vegetation feature and estimate natural recovery when `Винищена трава` is present.
-- Local feature inspection: `look лавка`, `/examine лавка`, `оглянути лавку`, `роздивитися кущі` -> first try to inspect a visible interactive location feature by name or alias; if no feature matches, target inspection can still fall back to visible creatures, corpses or characters, then to carried inventory items.
+- Local feature inspection: `look лавка`, `/examine лавка`, `оглянути лавку`, `огл брама`, `роздивитися кущі` -> first try to inspect a visible interactive location feature by name or alias; if no feature matches, target inspection can still fall back to visible creatures, corpses or characters, then to carried inventory items.
 - Numeric inspection such as `look 3` or `роздивитися 3` refers to the visible nearby target list, not to fuzzy feature keys or internal feature ids.
 - Future shrine/offering actions: `/offer`, `/offer <item>`, `пожертвувати`, `лишити дар`, `покласти дар`, `кинути шаг`, `покласти хмиз` -> offer an item to an inspectable shrine/капище or similar sacred feature.
 - Future animal-restoration offering actions: `/offer berries`, `/offer herbs`, `покласти ягоди`, `лишити трави`, `покласти дар зайцю`, `покласти дар мишам`, `пожертвувати зайцеві`, `пожертвувати мишам` -> offer fitting food or herbs to a hare/mouse statue, carved burrow marker or similar animal charm.

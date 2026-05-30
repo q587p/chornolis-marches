@@ -28,6 +28,8 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - The first blocked attempt to move through the closed Dream Gate now gives a one-time Сон hint to inspect the gate.
 - Ukrainian feature inspection now recognizes Dream Gate case forms such as `оглянути браму` and `придивитися до брами`.
 - Failed `inspect`/`look at` target attempts now use diegetic "I do not see this here" wording instead of generic target-list language.
+- Feature inspection now accepts the short Ukrainian form `огл брама`.
+- Unknown-command suggestions can now show a matching slash command shortcut in parentheses, such as `оглянутися (/look)` or `швидкий огляд (/glance)`.
 - Updated gate hunting loop and `NPC-004` planning docs for the first actor-inventory slice.
 
 ### Tests
@@ -35,7 +37,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Updated NPC hunter helper coverage so new hunter torch action text no longer depends on the lightweight torch-count marker.
 - Added world-seed coverage for unique NPC carried resources and Орина's real torch inventory.
 - Extended reply-keyboard posture coverage for the focused dream gate keyboard and tutorial rest status exception.
-- Added parser and seed coverage for Dream Gate inspection aliases.
+- Added parser, suggestion and seed coverage for Dream Gate inspection aliases.
 
 ---
 

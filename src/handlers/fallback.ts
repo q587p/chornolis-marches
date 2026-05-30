@@ -1,6 +1,6 @@
 import { Bot } from "grammy";
 import { buildMainReplyKeyboardForTelegramId, EMPTY_KEYBOARD_BUTTON } from "../ui/replyKeyboard";
-import { suggestAliasInputs } from "../input/aliases";
+import { formatAliasSuggestion, suggestAliasEntries } from "../input/aliases";
 import { stripUnsafeText } from "../utils/text";
 import { getPlayerByTelegramId } from "../services/players";
 import { hasCompletedTutorial } from "../services/tutorial";
@@ -26,9 +26,9 @@ export function registerFallbackHandlers(bot: Bot) {
 
     if (!text.trim().startsWith("/")) {
       const safeText = stripUnsafeText(text).trim().slice(0, 80);
-      const suggestions = suggestAliasInputs(text);
+      const suggestions = suggestAliasEntries(text);
       const suggestionText = suggestions.length
-        ? `\n\nМожливо, ти мав на увазі:\n${suggestions.map((suggestion) => `- ${suggestion}`).join("\n")}`
+        ? `\n\nМожливо, ти мав на увазі:\n${suggestions.map((suggestion) => `- ${formatAliasSuggestion(suggestion)}`).join("\n")}`
         : "";
 
       await ctx.reply(
@@ -39,9 +39,9 @@ export function registerFallbackHandlers(bot: Bot) {
     }
 
     const command = commandName(text);
-    const suggestions = suggestAliasInputs(text);
+    const suggestions = suggestAliasEntries(text);
     const suggestionText = suggestions.length
-      ? `\n\nМожливо, ти мав на увазі:\n${suggestions.map((suggestion) => `- ${suggestion}`).join("\n")}`
+      ? `\n\nМожливо, ти мав на увазі:\n${suggestions.map((suggestion) => `- ${formatAliasSuggestion(suggestion)}`).join("\n")}`
       : "";
 
     if (command === "respawn") {
