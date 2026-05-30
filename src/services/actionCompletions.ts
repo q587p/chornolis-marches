@@ -22,8 +22,8 @@ import { getStartLocationId } from "./players";
 import { summonLisovykIfResourceDepleted } from "./resources";
 import { logEvent } from "./worldEvents";
 import { resolveTarget, type ResolvedTarget } from "./targets";
-import { playerForms } from "./grammar";
-import { actionCost, actionTitle, movementDurationMs } from "./actionRules";
+import { creatureForms, playerForms } from "./grammar";
+import { actionCost, actionDurationMs, actionTitle, movementDurationMs } from "./actionRules";
 import { fatigueStateFor, spendCreatureStamina, spendPlayerStamina } from "./actionRecovery";
 import { actorWhere, enqueueCreatureAction, interruptActorActions, type ActorRef } from "./actionLifecycle";
 import { escapeHtml } from "../utils/text";
@@ -35,7 +35,7 @@ import { tutorialGateSpeechComment, tutorialLookPaceComments, tutorialSpiritMove
 import { chance, pick, shuffle } from "../utils/random";
 import { freshenCorpseForMeat } from "./meat";
 import { rememberPlayerReplyTarget } from "./replyTargets";
-import { hunterClaimedCorpseAction, isHunterCreature } from "./npcHunter";
+import { hunterClaimedCorpseAction, hunterConversationReplyLine, isHunterCreature } from "./npcHunter";
 import { ATTACK_OBSERVATION_GROWTH_MESSAGE, ATTACK_PRACTICE_GROWTH_MESSAGE, isAttackPracticeMilestone, recordAttackKillSource, recordAttackObservation } from "./attackLearning";
 import { GATHERING_OBSERVATION_GROWTH_MESSAGE, GATHERING_PRACTICE_GROWTH_MESSAGE, isGatheringPracticeMilestone, recordGatheringObservation, recordGatheringSource } from "./gatheringLearning";
 
@@ -156,6 +156,13 @@ function shoutedVerb(player: any) {
   if (gender === "FEMININE") return "гукнула";
   if (gender === "PLURAL") return "гукнули";
   return "гукнув";
+}
+
+function whisperedVerb(player: any) {
+  const gender = player.grammaticalGender ?? (player.pronoun === "SHE" ? "FEMININE" : player.pronoun === "THEY" ? "PLURAL" : "MASCULINE");
+  if (gender === "FEMININE") return "щось прошепотіла";
+  if (gender === "PLURAL") return "щось прошепотіли";
+  return "щось прошепотів";
 }
 
 function trackAgeText(createdAt: Date, now = new Date()) {
@@ -794,6 +801,43 @@ async function completeAttack(bot: Bot, action: WorldAction) {
   }
 }
 
+async function queueHunterConversationReply(input: {
+  actionId: number;
+  player: any;
+  targetCreatureId?: number;
+}) {
+  if (!input.player.currentLocationId || !input.targetCreatureId) return;
+  const hunter = await prisma.creature.findFirst({
+    where: {
+      id: input.targetCreatureId,
+      locationId: input.player.currentLocationId,
+      isAlive: true,
+      isGone: false,
+      isHidden: false,
+    },
+    include: { species: true },
+  });
+  if (!hunter || !isHunterCreature(hunter)) return;
+
+  const actorForms = playerForms(input.player);
+  const hunterForms = creatureForms(hunter);
+  const line = hunterConversationReplyLine(input.actionId + input.player.id + hunter.id);
+  await enqueueCreatureAction({
+    creatureId: hunter.id,
+    type: "SAY",
+    payload: {
+      text: line,
+      mode: "reply",
+      targetType: "player",
+      targetId: input.player.id,
+      targetName: actorForms.nominative,
+      targetDative: actorForms.dative,
+      speakerDative: hunterForms.dative,
+    },
+    durationMs: actionDurationMs("SAY", hunter.stamina),
+  });
+}
+
 async function completeSay(bot: Bot, action: WorldAction) {
   const payload = payloadOf<SayPayload>(action);
   const text = String(payload.text ?? "").slice(0, 300);
@@ -807,38 +851,42 @@ async function completeSay(bot: Bot, action: WorldAction) {
     const actorForms = playerForms(player);
     const verb = saidVerb(player);
     if (payload.mode === "whisper") {
-      if (payload.targetType !== "player" || !payload.targetId) {
-        if (chatId) await bot.api.sendMessage(chatId, "Шепіт зараз можна спрямувати тільки персонажу поруч.");
+      if (!payload.targetType || !payload.targetId) {
+        if (chatId) await bot.api.sendMessage(chatId, "Шепіт зараз треба спрямувати комусь поруч.");
         await setActionStatus(action, "FAILED");
         return;
       }
 
-      const targetPlayer = await prisma.player.findFirst({ where: { id: payload.targetId, currentLocationId: player.currentLocationId } });
-      if (!targetPlayer) {
+      const target = await resolveTarget(payload.targetType, payload.targetId, player.currentLocationId);
+      if (!target || target.isCorpse) {
         if (chatId) await bot.api.sendMessage(chatId, "Того, кому ви шепотіли, вже немає поруч.");
         await setActionStatus(action, "FAILED");
         return;
       }
 
-      const targetForms = playerForms(targetPlayer);
+      const targetPlayer = target.kind === "player"
+        ? await prisma.player.findFirst({ where: { id: target.id, currentLocationId: player.currentLocationId } })
+        : null;
       await spendPlayerStamina(bot, player.id, "SAY", chatId);
       await prisma.player.updateMany({ where: { id: player.id }, data: { says: { increment: 1 } } });
       await notifyLocationExcept(
         bot,
         player.currentLocationId,
-        [player.id, targetPlayer.id],
-        `${escapeHtml(actorForms.nominative)} шепоче ${escapeHtml(targetForms.dative)}.`,
+        [player.id, targetPlayer?.id].filter((id): id is number => Boolean(id)),
+        `${escapeHtml(actorForms.nominative)} ${whisperedVerb(player)} комусь.`,
         { parseMode: "HTML" },
       );
-      await bot.api.sendMessage(
-        targetPlayer.telegramId,
-        `${escapeHtml(actorForms.nominative)} шепоче вам:\n${quoteBlock(text)}`,
-        { parse_mode: "HTML", reply_markup: await buildMainReplyKeyboardForTelegramId(Number(targetPlayer.telegramId), false) },
-      );
-      await rememberPlayerReplyTarget({ playerId: targetPlayer.id, speakerName: actorForms.nominative, speakerPlayerId: player.id, locationId: player.currentLocationId });
-      if (chatId) await bot.api.sendMessage(chatId, `Ви шепнули ${escapeHtml(targetForms.dative)}:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
+      if (targetPlayer) {
+        await bot.api.sendMessage(
+          targetPlayer.telegramId,
+          `${escapeHtml(actorForms.nominative)} шепоче вам:\n${quoteBlock(text)}`,
+          { parse_mode: "HTML", reply_markup: await buildMainReplyKeyboardForTelegramId(Number(targetPlayer.telegramId), false) },
+        );
+        await rememberPlayerReplyTarget({ playerId: targetPlayer.id, speakerName: actorForms.nominative, speakerPlayerId: player.id, locationId: player.currentLocationId });
+      }
+      if (chatId) await bot.api.sendMessage(chatId, `Ви шепнули ${escapeHtml(target.forms.dative)}:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
       await setActionStatus(action, "DONE");
-      await logEvent("SAY", `${actorForms.nominative} шепоче ${targetForms.dative}`, "приватний шепіт", player.currentLocationId);
+      await logEvent("SAY", `${actorForms.nominative} шепоче ${target.forms.dative}`, "приватний шепіт", player.currentLocationId);
       return;
     }
 
@@ -870,8 +918,12 @@ async function completeSay(bot: Bot, action: WorldAction) {
       const replyTargetPlayer = payload.targetType === "player" && payload.targetId
         ? await prisma.player.findUnique({ where: { id: payload.targetId } })
         : null;
+      const replyTargetCreature = payload.targetType === "creature" && payload.targetId
+        ? await prisma.creature.findFirst({ where: { id: payload.targetId, isAlive: true, isGone: false }, include: { species: true } })
+        : null;
       const replyTargetForms = replyTargetPlayer ? playerForms(replyTargetPlayer) : null;
-      const replyTargetDative = replyTargetForms?.dative ?? targetDative;
+      const replyTargetCreatureForms = replyTargetCreature ? creatureForms(replyTargetCreature) : null;
+      const replyTargetDative = replyTargetForms?.dative ?? replyTargetCreatureForms?.dative ?? targetDative;
       if (replyTargetPlayer && replyTargetPlayer.currentLocationId !== player.currentLocationId) {
         await bot.api.sendMessage(
           replyTargetPlayer.telegramId,
@@ -890,6 +942,7 @@ async function completeSay(bot: Bot, action: WorldAction) {
       await setActionStatus(action, "DONE");
       await logEvent("SAY", `${actorForms.nominative} ${replyVerb}${replyTargetDative ? ` ${replyTargetDative}` : ""}`, text, player.currentLocationId);
       if (chatId) await bot.api.sendMessage(chatId, replyTargetDative ? `Ви відповіли ${escapeHtml(replyTargetDative)}:\n${quoteBlock(text)}` : `Ви відповіли:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
+      if (replyTargetCreature) await queueHunterConversationReply({ actionId: action.id, player, targetCreatureId: replyTargetCreature.id });
       return;
     }
 
@@ -923,12 +976,44 @@ async function completeSay(bot: Bot, action: WorldAction) {
         if (comment) await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
       }
     }
+    if (payload.targetType === "creature" && payload.targetId) {
+      await queueHunterConversationReply({ actionId: action.id, player, targetCreatureId: payload.targetId });
+    }
     return;
   }
 
   const creature = action.creatureId ? await prisma.creature.findUnique({ where: { id: action.creatureId }, include: { species: true } }) : null;
   if (!creature || !creature.isAlive || creature.isGone) return void (await setActionStatus(action, "FAILED"));
   await prisma.creature.updateMany({ where: { id: creature.id }, data: { says: { increment: 1 }, activity: "SPEAKING", currentAction: "говорить" } });
+  if (payload.mode === "reply" && payload.targetType === "player" && payload.targetId) {
+    const targetPlayer = await prisma.player.findUnique({ where: { id: payload.targetId } });
+    if (targetPlayer) {
+      const targetForms = playerForms(targetPlayer);
+      const speakerForms = creatureForms(creature);
+      await notifyLocationExcept(
+        bot,
+        creature.locationId,
+        targetPlayer.currentLocationId === creature.locationId ? [targetPlayer.id] : [],
+        `${escapeHtml(speakerForms.nominative)} відповідає ${escapeHtml(targetForms.dative)}:\n${quoteBlock(text)}`,
+        { parseMode: "HTML" },
+      );
+      await bot.api.sendMessage(
+        targetPlayer.telegramId,
+        `${escapeHtml(speakerForms.nominative)} відповідає вам:\n${quoteBlock(text)}`,
+        { parse_mode: "HTML", reply_markup: await buildMainReplyKeyboardForTelegramId(Number(targetPlayer.telegramId), false) },
+      );
+      await rememberPlayerReplyTarget({
+        playerId: targetPlayer.id,
+        speakerName: speakerForms.nominative,
+        speakerCreatureId: creature.id,
+        speakerDative: speakerForms.dative,
+        locationId: targetPlayer.currentLocationId ?? creature.locationId,
+      });
+      await setActionStatus(action, "DONE");
+      await logEvent(creature.species.kind === "HUMAN" ? "SAY" : "NPC_SAY", `${speakerForms.nominative} відповідає ${targetForms.dative}`, text, creature.locationId);
+      return;
+    }
+  }
   await notifyLocationExcept(
     bot,
     creature.locationId,

@@ -28,6 +28,8 @@
 - Canonical terminology source: `docs/design/terminology.md`.
 - When adding a new player-facing or scribe/admin command, or changing an existing one, keep command aliases in sync: slash command where appropriate, English/MUD-style text aliases, and Ukrainian text aliases. Buttons, `/help`, `/adminHelp`, and docs should point to the same canonical action.
 - Preferred spelling/style includes: `онбордінґ`, `ґенерація`, `мітологія`, `паґінація`, `паґінаційний`, `етер`, `Атени`; use `ґ` where it fits naturally.
+- Stable world nouns such as creature species, NPC profession labels, spirits, resources, features, and common gameplay nouns should be added to `src/content/lexicon/worldLexicon.ts` with Ukrainian case forms. Grammar fallback remains available for non-critical/generated text, but seed helpers such as `creatureSpeciesNameFields(...)` intentionally require explicit lexicon forms where stable world data depends on them.
+- The lexicon does not yet remove every hardcoded nominative insertion in gameplay text. When touching dynamic descriptions, prefer `creatureForms`, `speciesForms`, `playerForms`, or lexicon-backed helpers and leave unrelated cleanup for a focused pass.
 - Important fixed UI terms:
   - Look → **Озирнутися**
   - Location → **Місцина**

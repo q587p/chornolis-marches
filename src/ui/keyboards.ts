@@ -95,29 +95,35 @@ export function buildExamineTracksKeyboard() {
 
 export function buildAnonymousTargetKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet" | "canAttack" | "isAnimal">) {
   const keyboard = new InlineKeyboard()
-    .text("🔎 Роздивитися", `social:inspect:${target.type}:${target.id}:mystery`);
-  keyboard.text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:mystery`);
-  keyboard.row();
+    .text("👁 Глянути", `social:look:${target.type}:${target.id}:mystery`)
+    .text("🔎 Роздивитися", `social:inspect:${target.type}:${target.id}:mystery`)
+    .text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:mystery`)
+    .row();
 
-  if (target.canGreet) keyboard.text("💬 Привітати", `social:greet:${target.type}:${target.id}:mystery`).row();
+  if (target.canGreet) keyboard.text("💬 Привітати", `social:greet:${target.type}:${target.id}:mystery`);
+  keyboard.text("🗣 Сказати", `targetSpeech:say:${target.type}:${target.id}:mystery`);
+  keyboard.text("🤫 Прошепотіти", `targetSpeech:whisper:${target.type}:${target.id}:mystery`).row();
   keyboard.text("✨ Сигнали", `signalMenu:${target.type}:${target.id}:mystery`).row();
-  keyboard.text("↩️ Назад", "location:details").row();
+  keyboard.text("↩️ Назад", "location:details");
   return keyboard;
 }
 
 export function buildTargetActionKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet" | "canAttack" | "isAnimal">, again = false) {
   const keyboard = new InlineKeyboard()
-    .text(again ? "🔎 Роздивитися ще раз" : "🔎 Роздивитися", `social:inspect:${target.type}:${target.id}:known`);
-  keyboard.text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:known`);
-  keyboard.row();
+    .text("👁 Глянути", `social:look:${target.type}:${target.id}:known`)
+    .text(again ? "🔎 Роздивитися ще раз" : "🔎 Роздивитися", `social:inspect:${target.type}:${target.id}:known`)
+    .text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:known`)
+    .row();
 
-  if (target.canGreet) keyboard.text("💬 Привітати", `social:greet:${target.type}:${target.id}:known`).row();
+  if (target.canGreet) keyboard.text("💬 Привітати", `social:greet:${target.type}:${target.id}:known`);
+  keyboard.text("🗣 Сказати", `targetSpeech:say:${target.type}:${target.id}:known`);
+  keyboard.text("🤫 Прошепотіти", `targetSpeech:whisper:${target.type}:${target.id}:known`).row();
   for (const socialId of quickSocialsForTarget({ kind: target.type, isAnimal: Boolean(target.isAnimal), canGreet: target.canGreet })) {
     const social = SOCIAL_DEFINITIONS.find((item) => item.id === socialId);
     if (social) keyboard.text(social.label, `signal:${social.id}:${target.type}:${target.id}:known`);
   }
-  keyboard.row().text("✨ Ще сигнали", `signalMenu:${target.type}:${target.id}:known`).row();
-  keyboard.text("↩️ Назад", "location:details").row();
+  keyboard.text("✨ Ще сигнали", `signalMenu:${target.type}:${target.id}:known`).row();
+  keyboard.text("↩️ Назад", "location:details");
   return keyboard;
 }
 

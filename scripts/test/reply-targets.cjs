@@ -16,6 +16,10 @@ assert.deepEqual(
   parseRememberedReplyTargetDescription(rememberedReplyTargetDescription({ speakerName: "QQQ", speakerPlayerId: 42 })),
   { speakerName: "QQQ", speakerPlayerId: 42 },
 );
+assert.deepEqual(
+  parseRememberedReplyTargetDescription(rememberedReplyTargetDescription({ speakerName: "Лукан", speakerCreatureId: 7, speakerDative: "Лукану" })),
+  { speakerName: "Лукан", speakerCreatureId: 7, speakerDative: "Лукану" },
+);
 assert.equal(parseRememberedReplyTargetDescription(JSON.stringify({ kind: "other", speakerName: "QQQ" })), null);
 assert.equal(parseRememberedReplyTargetDescription("not json"), null);
 assert.equal(parseRememberedReplyTargetDescription(null), null);

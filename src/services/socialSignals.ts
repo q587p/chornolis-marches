@@ -7,6 +7,7 @@ import { creatureForms, playerForms, type NameForms } from "./grammar";
 import type { ResolvedTarget } from "./targets";
 import { enqueueCreatureAction, interruptActorActions, movementDurationMs } from "./actionQueue";
 import { logEvent } from "./worldEvents";
+import { hunterSocialReactionSignal, isHunterCreature } from "./npcHunter";
 
 type SocialContext = {
   actor: { kind: "player" | "creature"; id: number; locationId: number; forms: NameForms; telegramId?: string };
@@ -121,7 +122,7 @@ export function socialDefinitionById(id: string) {
 export function quickSocialsForTarget(target: Pick<ResolvedTarget, "kind" | "isAnimal" | "canGreet">) {
   if (target.kind === "player") return ["nod", "wave"];
   if (target.isAnimal) return ["point", "glare"];
-  return target.canGreet ? ["nod", "smile"] : ["bow", "glare"];
+  return target.canGreet ? ["nod", "wave"] : ["bow", "glare"];
 }
 
 function chance(percent: number) {
@@ -155,7 +156,22 @@ function animalSignalFleeChance(signalId: string, creature: any) {
 }
 
 async function maybeReactToSocialSignal(bot: Bot, actor: SocialContext["actor"], target: ResolvedTarget, socialId: string) {
-  if (target.kind !== "creature" || !target.isAnimal || target.isCorpse) return;
+  if (target.kind !== "creature" || target.isCorpse) return;
+
+  if (!target.isAnimal) {
+    const reaction = hunterSocialReactionSignal(socialId);
+    if (!reaction) return;
+    const hunter = await prisma.creature.findFirst({
+      where: { id: target.id, locationId: actor.locationId, isAlive: true, isGone: false, isHidden: false },
+      include: { species: true },
+    });
+    if (!hunter || !isHunterCreature(hunter)) return;
+
+    const actorTarget = await resolveActorAsTarget(actor);
+    if (!actorTarget) return;
+    await performCreatureSocialSignal(bot, hunter, actorTarget, reaction);
+    return;
+  }
 
   const creature = await prisma.creature.findFirst({
     where: { id: target.id, locationId: actor.locationId, isAlive: true, isGone: false, isHidden: false },
@@ -183,6 +199,43 @@ async function maybeReactToSocialSignal(bot: Bot, actor: SocialContext["actor"],
   const message = `${forms.nominative} лякається жесту й кидається геть.`;
   await notifyLocationAll(bot, actor.locationId, message);
   await logEvent("NPC_ACTION", "Тварина злякалася сигналу", `${forms.nominative}; signal=${socialId}; exit=${exit.direction}`, actor.locationId);
+}
+
+async function resolveActorAsTarget(actor: SocialContext["actor"]): Promise<ResolvedTarget | null> {
+  if (actor.kind === "player") {
+    const player = await prisma.player.findFirst({ where: { id: actor.id, currentLocationId: actor.locationId } });
+    if (!player) return null;
+    return {
+      kind: "player",
+      id: player.id,
+      name: actor.forms.nominative,
+      forms: actor.forms,
+      canGreet: true,
+      canAttack: false,
+      isAnimal: false,
+      isCorpse: false,
+      canFreshen: false,
+      inspect: "",
+    };
+  }
+
+  const creature = await prisma.creature.findFirst({
+    where: { id: actor.id, locationId: actor.locationId, isAlive: true, isGone: false, isHidden: false },
+    include: { species: true },
+  });
+  if (!creature) return null;
+  return {
+    kind: "creature",
+    id: creature.id,
+    name: actor.forms.nominative,
+    forms: actor.forms,
+    canGreet: creature.species.kind !== "ANIMAL",
+    canAttack: false,
+    isAnimal: creature.species.kind === "ANIMAL",
+    isCorpse: false,
+    canFreshen: false,
+    inspect: "",
+  };
 }
 
 async function writeSocialEvent(title: string, target: ResolvedTarget | null, locationId: number) {

@@ -24,7 +24,6 @@ import { buildInventoryItemKeyboard } from "../ui/inventoryItemKeyboard";
 import { actionQueueReplyOptions, sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { durationSecondsSuffix } from "../utils/durationText";
 import { escapeHtml, stripUnsafeText } from "../utils/text";
-import { normalizeCreatureActionText } from "../utils/creatureActionText";
 import { sendHelp } from "./help";
 import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } from "./auto";
 import { showCharacter, showInventory, showLocationForPlayer } from "./player";
@@ -46,22 +45,14 @@ import { dropInventoryResourceDetailed, inspectInventoryResource, inventoryResou
 import { enterTutorialDream, hasCompletedTutorial, openDreamGate, rememberTutorialCommandHintIfInTutorial, wakeFromTutorialDream } from "../services/tutorial";
 import { dropObserverText, pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 import { noteKnownMessage } from "../utils/messageTracker";
-import { cookRawMeat, isFreshenedCorpse } from "../services/meat";
-import { creatureForms, playerForms } from "../services/grammar";
+import { cookRawMeat } from "../services/meat";
+import { playerForms } from "../services/grammar";
 import { putInventoryIntoLocalFeature } from "../services/carcassDropoff";
 import { latestRememberedReplyTarget } from "../services/replyTargets";
 import { replyToActionError } from "../utils/actionErrorReply";
 import { assertCanPerformPhysicalAction } from "../services/postureRules";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
-
-type TextTargetRef = {
-  type: "player" | "creature";
-  id: number;
-  label: string;
-  actionLabel?: string;
-  canGreet: boolean;
-  searchKeys: string[];
-};
+import { bestTargetMatch, inspectMissingText, normalizeTargetKey, targetDisplayLabel, targetListText, visibleTextTargets } from "../services/textTargets";
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
@@ -74,142 +65,6 @@ async function sendFeatureFollowups(ctx: any, view: any) {
   for (const message of view.followupMessages ?? []) {
     noteKnownMessage(await ctx.reply(message.text, { parse_mode: "HTML" }));
   }
-}
-
-function normalizeTargetKey(value: string) {
-  return normalizeInput(value)
-    .replace(/^#/, "")
-    .replace(/^ціль\s+/, "")
-    .replace(/^target\s+/, "")
-    .trim();
-}
-
-function uniqueKeys(keys: Array<string | null | undefined>) {
-  return [...new Set(keys.filter(Boolean).map((key) => normalizeTargetKey(String(key))).filter(Boolean))];
-}
-
-function targetSearchKeysForPlayer(player: any) {
-  return uniqueKeys([
-    String(player.id),
-    `#${player.id}`,
-    player.nameNominative,
-    player.firstName,
-    player.lastName,
-    player.username,
-    "гравець",
-    "персонаж",
-    "мандрівник",
-  ]);
-}
-
-function targetSearchKeysForCreature(creature: any) {
-  const isCorpse = !creature.isAlive && creature.age === "CORPSE";
-  const species = creature.species;
-  const baseKeys = uniqueKeys([
-    String(creature.id),
-    `#${creature.id}`,
-    creature.name,
-    creature.nameGenitive,
-    creature.nameDative,
-    creature.nameAccusative,
-    creature.nameInstrumental,
-    creature.nameLocative,
-    creature.nameVocative,
-    species.name,
-    species.nameGenitive,
-    species.nameDative,
-    species.nameAccusative,
-    species.nameInstrumental,
-    species.nameLocative,
-    species.nameVocative,
-  ]);
-
-  if (!isCorpse) return baseKeys;
-  return uniqueKeys([
-    ...baseKeys,
-    "труп",
-    `труп ${species.name}`,
-    `труп: ${species.name}`,
-    species.nameGenitive ? `труп ${species.nameGenitive}` : undefined,
-  ]);
-}
-
-function targetDisplayLabel(target: TextTargetRef) {
-  return target.actionLabel ? `${target.label} — ${target.actionLabel}` : target.label;
-}
-
-async function visibleTextTargets(locationId: number, viewerPlayerId: number): Promise<TextTargetRef[]> {
-  const [players, creatures] = await Promise.all([
-    prisma.player.findMany({ where: { currentLocationId: locationId, id: { not: viewerPlayerId } }, orderBy: { id: "asc" } }),
-    prisma.creature.findMany({
-      where: {
-        locationId,
-        isGone: false,
-        OR: [
-          { isAlive: true, isHidden: false },
-          { isAlive: false, age: "CORPSE" },
-        ],
-      },
-      include: { species: true },
-      orderBy: [{ isAlive: "desc" }, { id: "asc" }],
-    }),
-  ]);
-
-  const playerTargets = players.map((player) => ({
-    type: "player" as const,
-    id: player.id,
-    label: player.nameNominative ?? player.firstName ?? player.username ?? "мандрівник",
-    canGreet: true,
-    searchKeys: targetSearchKeysForPlayer(player),
-  }));
-
-  const creatureTargets = creatures.map((creature) => {
-    const isCorpse = !creature.isAlive && creature.age === "CORPSE";
-    const wasFreshened = isCorpse && isFreshenedCorpse(creature.currentAction);
-    return {
-      type: "creature" as const,
-      id: creature.id,
-      label: isCorpse ? `${wasFreshened ? "рештки" : "труп"}: ${creatureForms(creature).genitive}` : creature.name ?? creature.species.name,
-      actionLabel: wasFreshened ? "м’ясо вже знято" : normalizeCreatureActionText(creature.currentAction),
-      canGreet: !isCorpse && creature.species.kind !== "ANIMAL",
-      searchKeys: targetSearchKeysForCreature(creature),
-    };
-  });
-
-  return [...playerTargets, ...creatureTargets];
-}
-
-function targetListText(targets: TextTargetRef[]) {
-  return targets.map((target, index) => `${index + 1}. ${targetDisplayLabel(target)}`).join("\n");
-}
-
-function inspectMissingText(targetQuery: string, targets: TextTargetRef[] = []) {
-  const target = targetQuery.trim();
-  const intro = target ? `Не бачу цього тут: «${target}».` : "Не бачу цього тут.";
-  if (!targets.length) return `${intro}\n\nМожна роздивитися саму місцину або її помітні особливості.`;
-  return `${intro}\n\nПоруч можна роздивитися:\n${targetListText(targets)}`;
-}
-
-function bestTargetMatch(query: string, targets: TextTargetRef[]) {
-  const target = normalizeTargetKey(query);
-  if (!target) return { kind: "none" as const };
-
-  const asIndex = target.match(/^\d+$/) ? Number(target) : NaN;
-  if (Number.isSafeInteger(asIndex) && asIndex >= 1 && asIndex <= targets.length) {
-    return { kind: "one" as const, target: targets[asIndex - 1] };
-  }
-
-  const exact = targets.filter((candidate) => candidate.searchKeys.some((key) => key === target));
-  if (exact.length === 1) return { kind: "one" as const, target: exact[0] };
-  if (exact.length > 1) return { kind: "many" as const, targets: exact };
-
-  const fuzzy = targets.filter((candidate) =>
-    candidate.searchKeys.some((key) => key.length > 2 && (key.includes(target) || target.includes(key)))
-  );
-  if (fuzzy.length === 1) return { kind: "one" as const, target: fuzzy[0] };
-  if (fuzzy.length > 1) return { kind: "many" as const, targets: fuzzy };
-
-  return { kind: "none" as const };
 }
 
 async function replyWithNews(ctx: any) {
@@ -560,8 +415,8 @@ async function submitWhisper(bot: Bot, ctx: any, text: string) {
   const durationMs = actionDurationMs("SAY", player.stamina);
   try {
     const payload = await parseSpeechTarget(safeText, player.currentLocationId, player.id);
-    if (!payload.targetId) return void (await ctx.reply("Напиши так: whisper персонаж текст. Ціль має бути видимим персонажем поруч."));
-    if (payload.targetType !== "player") return void (await ctx.reply("Шепіт зараз можна спрямувати тільки персонажу поруч."));
+    if (!payload.targetId) return void (await ctx.reply("Напиши так: whisper персонаж текст. Ціль має бути видимим персонажем або істотою поруч."));
+    if (payload.targetType !== "player" && payload.targetType !== "creature") return void (await ctx.reply("Шепіт зараз можна спрямувати тільки комусь видимому поруч."));
     const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "SAY", payload: { ...payload, mode: "whisper" }, durationMs, chatId: ctx.chat?.id });
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {
@@ -631,7 +486,9 @@ async function submitReply(bot: Bot, ctx: any, text: string) {
         text: safeText,
         mode: "reply",
         targetName: target.speakerName,
+        targetDative: target.speakerDative,
         ...(target.speakerPlayerId ? { targetType: "player", targetId: target.speakerPlayerId } : {}),
+        ...(target.speakerCreatureId ? { targetType: "creature", targetId: target.speakerCreatureId } : {}),
       },
       durationMs,
       chatId: ctx.chat?.id,

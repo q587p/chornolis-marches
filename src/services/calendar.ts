@@ -84,7 +84,7 @@ export function renderCurrentWorldYearLine() {
 
 export function renderCurrentWorldTime() {
   return [
-    "🕯 Час Порубіжжя",
+    "🌒 Час Порубіжжя",
     "",
     renderCurrentWorldYearLine(),
     `Пора: ${CURRENT_WORLD_SEASON}.`,

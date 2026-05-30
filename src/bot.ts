@@ -1,6 +1,6 @@
 import { Bot } from "grammy";
 import { config } from "./config";
-import { setLastRuntimeError } from "./runtimeState";
+import { markTelegramBotError, markTelegramBotReady, markTelegramBotStarting, setLastRuntimeError } from "./runtimeState";
 import { startHttpServer } from "./server/statusServer";
 import { announceWorldUpdatedOnce } from "./services/deployAnnouncements";
 import { startActionQueueLoop } from "./services/actionQueue";
@@ -28,6 +28,7 @@ import { registerTutorialHandlers } from "./handlers/tutorial";
 import { registerFallbackHandlers } from "./handlers/fallback";
 
 const bot = new Bot(config.botToken);
+markTelegramBotStarting();
 
 registerStartHandlers(bot);
 registerAutoHandlers(bot);
@@ -51,6 +52,7 @@ registerActionQueueHandlers(bot);
 registerAliasHandlers(bot);
 
 bot.catch((error) => {
+  markTelegramBotError(error.error);
   setLastRuntimeError(error.error);
   console.error("Bot error:", error);
 });
@@ -64,4 +66,16 @@ startWorldTickLoop(bot);
 startActionQueueLoop(bot);
 registerFallbackHandlers(bot);
 
-bot.start();
+bot.api.getMe()
+  .then((me) => markTelegramBotReady(me.username))
+  .catch((error) => {
+    markTelegramBotError(error);
+    setLastRuntimeError(error);
+    console.error("Telegram bot status check failed:", error);
+  });
+
+bot.start().catch((error) => {
+  markTelegramBotError(error);
+  setLastRuntimeError(error);
+  console.error("Bot polling failed:", error);
+});

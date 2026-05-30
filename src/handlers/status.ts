@@ -143,6 +143,7 @@ export async function buildStatBrief() {
       `Смерті від старості: ${formatStatNumber(counters.oldAgeDeaths)} (${formatRate(rates.oldAgeDeaths)}/год).`,
       `Смерті від голоду: ${formatStatNumber(counters.starvationDeaths)} (${formatRate(rates.starvationDeaths)}/год), усього ${formatStatNumber(stats.totals.starvationDeaths)}.`,
       `Смерті від хижаків: ${formatStatNumber(counters.predatorKills)} (${formatRate(rates.predatorKills)}/год), усього ${formatStatNumber(stats.totals.predatorKills)}.`,
+      `Смерті від персонажів: ${formatStatNumber(counters.playerKills)} (${formatRate(rates.playerKills)}/год), усього ${formatStatNumber(stats.totals.playerKills)}.`,
       "",
       "Найвдаліші хижаки:",
       hunterLines.length ? hunterLines.join("\n") : "поки немає успішних мисливців",
@@ -1124,14 +1125,17 @@ export function registerStatusHandlers(bot: Bot) {
     const latestEventLines = s.latestEvents.map((event) => truncateTelegramText(formatEvent(event), 450));
     const latestEvents = latestEventLines.length ? joinLinesWithinLimit(latestEventLines, 1400, "\n").join("\n") : "немає";
     const q = s.actionQueue;
-    const queueText = [
-      `Гравці: queued=${q.playerQueued}, running=${q.playerRunning}`,
-      `Істоти: queued=${q.creatureQueued}, running=${q.creatureRunning}`,
-      `Разом: queued=${q.totalQueued}, running=${q.totalRunning}, overdue=${q.overdueRunning}`,
-      `Найстаріша queued: ${Math.round(q.oldestQueuedAgeMs / 1000)} с; max overdue: ${Math.round(q.maxOverdueMs / 1000)} с`,
-    ].join("\n");
+    const serviceText = s.services.map((service) => `${service.label}: ${service.state} — ${service.detail}`).join("\n");
+    const queueText = q
+      ? [
+          `Гравці: queued=${q.playerQueued}, running=${q.playerRunning}`,
+          `Істоти: queued=${q.creatureQueued}, running=${q.creatureRunning}`,
+          `Разом: queued=${q.totalQueued}, running=${q.totalRunning}, overdue=${q.overdueRunning}`,
+          `Найстаріша queued: ${Math.round(q.oldestQueuedAgeMs / 1000)} с; max overdue: ${Math.round(q.maxOverdueMs / 1000)} с`,
+        ].join("\n")
+      : "Чергу дій не вдалося прочитати.";
     const runtimeError = s.lastRuntimeError ? truncateTelegramText(s.lastRuntimeError, 700) : "немає";
-    await ctx.reply(truncateTelegramText(`🌲 Стан Порубіжжя Чорнолісу\n\nВерсія: ${s.version}\nПерсонажів гравців у базі: ${s.playersCount}\nРегіонів: ${s.regionsCount}\nМісцин-клітинок: ${s.locationsCount}\nПереходів між клітинками: ${s.exitsCount}\nЖивих тварин: ${s.aliveAnimalsCount}\nТрупів тварин: ${s.animalCorpsesCount}\nЗниклих тварин: ${s.goneAnimalsCount}\nNPC / не-тварин: ${s.npcCount}\nЖивих істот загалом: ${s.aliveCreaturesCount}\nВузлів ресурсів: ${s.resourcesCount}\nПодій у журналі: ${s.eventsCount}\n\nЧерга дій:\n${queueText}\n\nОстанні події:\n${latestEvents}\n\nОстання помилка: ${runtimeError}`));
+    await ctx.reply(truncateTelegramText(`🌲 Стан Порубіжжя Чорнолісу\n\nВерсія: ${s.version}\n\nВузли:\n${serviceText}\n\nПерсонажів гравців у базі: ${s.playersCount}\nРегіонів: ${s.regionsCount}\nМісцин-клітинок: ${s.locationsCount}\nПереходів між клітинками: ${s.exitsCount}\nЖивих тварин: ${s.aliveAnimalsCount}\nТрупів тварин: ${s.animalCorpsesCount}\nЗниклих тварин: ${s.goneAnimalsCount}\nNPC / не-тварин: ${s.npcCount}\nЖивих істот загалом: ${s.aliveCreaturesCount}\nВузлів ресурсів: ${s.resourcesCount}\nПодій у журналі: ${s.eventsCount}\n\nЧерга дій:\n${queueText}\n\nОстанні події:\n${latestEvents}\n\nОстання помилка: ${runtimeError}`));
   });
 
   bot.command(["stat", "stats"], async (ctx) => {

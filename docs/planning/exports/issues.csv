@@ -95,6 +95,7 @@ TECH-001,Service boundary and duplication cleanup,backlog,technical,architecture
 TRACK-LEARN-001-A,Track-examine progress hint,next,feature,learning,high,"tracking,tracks,progression",docs/planning/items/TRACK-LEARN-001-A.md
 TRACK-LEARN-001-B,Animal movement observation,next,feature,learning,medium,"tracking,animals,observe",docs/planning/items/TRACK-LEARN-001-B.md
 TRACK-LEARN-001-C,Learning respects visibility and light,next,feature,learning,high,"learning,visibility,light",docs/planning/items/TRACK-LEARN-001-C.md
+UX-001,Command and feature icon collision audit,backlog,chore,ux,low,"ux,icons,keyboard,features",docs/planning/items/UX-001-command-feature-icon-collision.md
 VIS-001-A,Shared visibility service skeleton,next,technical,visibility,high,"visibility,night,light",docs/planning/items/VIS-001-A.md
 VIS-001-B,Hide location details in darkness,next,feature,visibility,high,"visibility,look,night",docs/planning/items/VIS-001-B.md
 VIS-001-C,Nearby beings visibility in darkness,next,feature,visibility,high,"visibility,targets,night",docs/planning/items/VIS-001-C.md
@@ -102,6 +103,7 @@ VIS-001-D,Track visibility gate,next,feature,visibility,medium,"visibility,track
 VIS-001-E,Ground object visibility gate,next,feature,visibility,medium,"visibility,objects,night",docs/planning/items/VIS-001-E.md
 VIS-002,Hidden presence foundation,backlog,technical,visibility,medium,"visibility,hidden-presence,targets",docs/planning/items/VIS-002-hidden-presence-foundation.md
 WEB-001,"Web map, multi-client game server, messenger bridges and limited MUD gateway",icebox,feature,server,medium,"web,map,mud,server,multi-client,architecture",docs/planning/items/web-001-web-map-and-mud-gateway.md
+WEB-002,Independent status site and deploy visibility,backlog,technical,server,medium,"web,status,deploy,operations,reliability",docs/planning/items/WEB-002-independent-status-site.md
 WORLD-001,Day/night cycle,next,feature,world_time,high,"world,atmosphere,visibility,liminality",docs/planning/items/WORLD-001-day-night-cycle.md
 WORLD-001-A,Tiny world-time model design,next,design,world_time,high,"world-time,day-night",docs/planning/items/WORLD-001-A.md
 WORLD-001-B,Daypart storage,next,technical,world_time,high,"world-time,schema",docs/planning/items/WORLD-001-B.md

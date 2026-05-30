@@ -45,6 +45,7 @@ Fishing should feel like a quiet profession in the world, not just a button on w
 - Skill-based catch chance, fish quality and time cost.
 - Weather, time of day and season effects.
 - Barter with the fisher for fish, bait, hooks or lessons.
+- Give the fisher a small profession-aware social reaction set, separate from hunters and herbalists: for example nodding back, quieting loud gestures near the water, or pointing toward current/shore details when appropriate.
 - Fish as cooking/food input once hunger and cooking are deeper.
 
 ## NPC Notes

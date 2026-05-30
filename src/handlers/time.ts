@@ -11,5 +11,5 @@ export function registerTimeHandlers(bot: Bot) {
     await ctx.answerCallbackQuery();
     await showTime(ctx);
   });
-  bot.hears(["🕯 Час", "Час"], showTime);
+  bot.hears(["🌒 Час", "🕯 Час", "Час"], showTime);
 }

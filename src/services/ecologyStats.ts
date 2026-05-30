@@ -4,7 +4,11 @@ import { getRuntimeTimingConfig } from "../gameConfig";
 import { creatureForms } from "./grammar";
 
 const TICK_EVENT_TAKE = 120;
-const TICK_COUNTER_KEYS = [
+export const PLAYER_KILL_EVENT_TITLE = "Player killed animal";
+export const PREDATOR_KILL_EVENT_TITLE = "Creature killed prey";
+export const STARVATION_DEATH_EVENT_TITLE = "Animal starved";
+
+export const TICK_COUNTER_KEYS = [
   "rabbitBirths",
   "mouseBirths",
   "foxBirths",
@@ -19,6 +23,7 @@ const TICK_COUNTER_KEYS = [
   "oldAgeDeaths",
   "starvationDeaths",
   "predatorKills",
+  "playerKills",
   "corpsesGone",
   "regenerated",
 ] as const;
@@ -35,6 +40,7 @@ export type PublicEcologySignStats = {
     aliveAnimals: number;
     corpseAnimals: number;
     predatorKills: number;
+    playerKills: number;
     starvationDeaths: number;
   };
   speciesRows: Array<{
@@ -45,7 +51,7 @@ export type PublicEcologySignStats = {
   recent: {
     eventCount: number;
     observedMinutes: number;
-    counters: Pick<TickCounterSummary, "rabbitBirths" | "mouseBirths" | "foxBirths" | "wolfBirths" | "oldAgeDeaths" | "starvationDeaths" | "predatorKills">;
+    counters: Pick<TickCounterSummary, "rabbitBirths" | "mouseBirths" | "foxBirths" | "wolfBirths" | "oldAgeDeaths" | "starvationDeaths" | "predatorKills" | "playerKills">;
   };
 };
 
@@ -234,29 +240,21 @@ export async function getEcologyStats() {
   const recentCounters = { ...EMPTY_COUNTERS };
   for (const event of tickEvents) addCounters(recentCounters, event.counters);
   if (tickEvents.length > 0) {
-    recentCounters.predatorKills = await prisma.worldEvent.count({
-      where: {
-        title: "Creature killed prey",
-        createdAt: {
-          gte: tickEvents[tickEvents.length - 1].createdAt,
-          lte: new Date(),
-        },
-      },
-    });
+    const since = tickEvents[tickEvents.length - 1].createdAt;
+    const [predatorKills, starvationDeaths, playerKills] = await Promise.all([
+      prisma.worldEvent.count({ where: { title: PREDATOR_KILL_EVENT_TITLE, createdAt: { gte: since, lte: new Date() } } }),
+      prisma.worldEvent.count({ where: { title: STARVATION_DEATH_EVENT_TITLE, createdAt: { gte: since, lte: new Date() } } }),
+      prisma.worldEvent.count({ where: { title: PLAYER_KILL_EVENT_TITLE, createdAt: { gte: since, lte: new Date() } } }),
+    ]);
+    recentCounters.predatorKills = predatorKills;
+    recentCounters.starvationDeaths = starvationDeaths;
+    recentCounters.playerKills = playerKills;
   }
-  if (tickEvents.length > 0) {
-    recentCounters.starvationDeaths = await prisma.worldEvent.count({
-      where: {
-        title: "Animal starved",
-        createdAt: {
-          gte: tickEvents[tickEvents.length - 1].createdAt,
-          lte: new Date(),
-        },
-      },
-    });
-  }
-  const totalPredatorKills = await prisma.worldEvent.count({ where: { title: "Creature killed prey" } });
-  const totalStarvationDeaths = await prisma.worldEvent.count({ where: { title: "Animal starved" } });
+  const [totalPredatorKills, totalStarvationDeaths, totalPlayerKills] = await Promise.all([
+    prisma.worldEvent.count({ where: { title: PREDATOR_KILL_EVENT_TITLE } }),
+    prisma.worldEvent.count({ where: { title: STARVATION_DEATH_EVENT_TITLE } }),
+    prisma.worldEvent.count({ where: { title: PLAYER_KILL_EVENT_TITLE } }),
+  ]);
 
   const latestTickNumber = latestTick?.tickNumber ?? null;
   const oldestTickNumber = tickEvents.length ? tickEvents[tickEvents.length - 1].tickNumber : null;
@@ -316,6 +314,7 @@ export async function getEcologyStats() {
       corpseAnimals,
       goneAnimals,
       predatorKills: totalPredatorKills,
+      playerKills: totalPlayerKills,
       starvationDeaths: totalStarvationDeaths,
       locationCount,
       occupiedAnimalLocations: occupiedLocations.length,
@@ -351,7 +350,7 @@ export async function getEcologyStats() {
 
 export async function getPublicEcologySignStats(): Promise<PublicEcologySignStats> {
   const timing = getRuntimeTimingConfig();
-  const [species, animalGroups, latestTickEvents, totalPredatorKills, totalStarvationDeaths] = await Promise.all([
+  const [species, animalGroups, latestTickEvents, totalPredatorKills, totalStarvationDeaths, totalPlayerKills] = await Promise.all([
     prisma.creatureSpecies.findMany({ where: { kind: "ANIMAL" }, orderBy: { key: "asc" } }),
     prisma.creature.groupBy({
       by: ["speciesId", "age", "isAlive", "isGone"],
@@ -363,8 +362,9 @@ export async function getPublicEcologySignStats(): Promise<PublicEcologySignStat
       orderBy: { id: "desc" },
       take: TICK_EVENT_TAKE,
     }),
-    prisma.worldEvent.count({ where: { title: "Creature killed prey" } }),
-    prisma.worldEvent.count({ where: { title: "Animal starved" } }),
+    prisma.worldEvent.count({ where: { title: PREDATOR_KILL_EVENT_TITLE } }),
+    prisma.worldEvent.count({ where: { title: STARVATION_DEATH_EVENT_TITLE } }),
+    prisma.worldEvent.count({ where: { title: PLAYER_KILL_EVENT_TITLE } }),
   ]);
 
   const speciesRows = species.map((item) => ({ key: item.key, name: item.name, alive: 0 }));
@@ -396,12 +396,14 @@ export async function getPublicEcologySignStats(): Promise<PublicEcologySignStat
 
   if (tickEvents.length > 0) {
     const since = tickEvents[tickEvents.length - 1].createdAt;
-    const [predatorKills, starvationDeaths] = await Promise.all([
-      prisma.worldEvent.count({ where: { title: "Creature killed prey", createdAt: { gte: since, lte: new Date() } } }),
-      prisma.worldEvent.count({ where: { title: "Animal starved", createdAt: { gte: since, lte: new Date() } } }),
+    const [predatorKills, starvationDeaths, playerKills] = await Promise.all([
+      prisma.worldEvent.count({ where: { title: PREDATOR_KILL_EVENT_TITLE, createdAt: { gte: since, lte: new Date() } } }),
+      prisma.worldEvent.count({ where: { title: STARVATION_DEATH_EVENT_TITLE, createdAt: { gte: since, lte: new Date() } } }),
+      prisma.worldEvent.count({ where: { title: PLAYER_KILL_EVENT_TITLE, createdAt: { gte: since, lte: new Date() } } }),
     ]);
     recentCounters.predatorKills = predatorKills;
     recentCounters.starvationDeaths = starvationDeaths;
+    recentCounters.playerKills = playerKills;
   }
 
   const latestTickNumber = tickEvents[0]?.tickNumber ?? null;
@@ -415,6 +417,7 @@ export async function getPublicEcologySignStats(): Promise<PublicEcologySignStat
       aliveAnimals,
       corpseAnimals,
       predatorKills: totalPredatorKills,
+      playerKills: totalPlayerKills,
       starvationDeaths: totalStarvationDeaths,
     },
     speciesRows,
@@ -429,6 +432,7 @@ export async function getPublicEcologySignStats(): Promise<PublicEcologySignStat
         oldAgeDeaths: recentCounters.oldAgeDeaths,
         starvationDeaths: recentCounters.starvationDeaths,
         predatorKills: recentCounters.predatorKills,
+        playerKills: recentCounters.playerKills,
       },
     },
   };
