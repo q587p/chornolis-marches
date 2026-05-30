@@ -254,7 +254,7 @@ async function ensureAutoStandingBeforeAction(bot: Bot, telegramId: number, play
   if (!result) return player;
   if (result.changed) {
     await logEvent("PLAYER_ACTION", "Auto stood player up", `before=${key}`, locationId).catch(() => undefined);
-    await bot.api.sendMessage(telegramId, "🤖 Авто: персонаж встає, перш ніж діяти далі.", {
+    await bot.api.sendMessage(telegramId, "🤖 Авто: персонаж встає (/stand), перш ніж діяти далі.", {
       reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, true),
     });
   }
