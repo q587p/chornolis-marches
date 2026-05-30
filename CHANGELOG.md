@@ -17,7 +17,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Character cards now show a `Queue` button when the character has a running/queued action or active rest.
 - `/who`, the public `/who` web page and `/who.json` now append ` (відійшов)` to AFK player character names.
 - `/all` now shows the same AFK suffix in player rows for scribe/admin visibility.
-- Telegram side command menus now keep `/afk` as the second command, immediately after `/start`, so stepping away is easy to reach.
+- Telegram side command menus now keep `/afk` as the second command, immediately after `/start`, while `/end_session` sits at the end of the shared command block.
 - Dropped burning torches now explicitly count as local light sources until their burn timer expires, and expired ground torches are cleaned up before location render.
 - Sexed animal age adjectives now agree with the displayed creature form, so male mouse labels use masculine age adjectives instead of the species-level feminine fallback.
 - Scribe-scoped Telegram side command menus no longer list `/adminmenu` or the operational `/carcassquest` toggle; the commands remain available through direct input, admin help and the scribe keyboard/menu surfaces.

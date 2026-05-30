@@ -9,9 +9,9 @@ export const DEFAULT_BOT_COMMANDS = [
   { command: "me", description: "🧍 Персонаж" },
   { command: "look", description: "👀 Озирнутися" },
   { command: "menu", description: "☰ Меню" },
-  { command: "end_session", description: "🚪 Завершити сесію" },
   { command: "news", description: "📰 Останні новини світу" },
   { command: "help", description: "🧭 Допомога новачку" },
+  { command: "end_session", description: "🚪 Завершити сесію" },
 ];
 
 export const SCRIBE_BOT_COMMANDS = [
