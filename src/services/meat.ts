@@ -4,6 +4,7 @@ import { isExtinguishedCampfire } from "./fire";
 export const RAW_MEAT_KEY = "raw_meat";
 export const COOKED_MEAT_KEY = "cooked_meat";
 const FRESHENED_CORPSE_MARKER = "freshened_by_player:";
+const FRESHENED_CORPSE_PATTERN = /(?:^|;\s*)freshened_by_(?:player|hunter):\d+\b/;
 const COOKED_MEAT_HUNGER_RELIEF = 5;
 const COOKING_SUCCESS_CHANCE = 0.6;
 
@@ -16,7 +17,7 @@ export function meatYieldForSpecies(speciesKey: string) {
 }
 
 export function isFreshenedCorpse(currentAction: string | null | undefined) {
-  return Boolean(currentAction?.startsWith(FRESHENED_CORPSE_MARKER));
+  return FRESHENED_CORPSE_PATTERN.test(currentAction ?? "");
 }
 
 export function meatCookingSucceeds(roll = Math.random()) {
