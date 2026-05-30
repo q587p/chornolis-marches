@@ -18,6 +18,7 @@ const SCRIBE_BOT_COMMANDS = [
   ...DEFAULT_BOT_COMMANDS,
   { command: "adminmenu", description: "🛠 Адмін меню Писарів" },
   { command: "stat", description: "📊 Службова статистика світу" },
+  { command: "carcassquest", description: "🦴 Перемкнути падальний рів" },
   { command: "adminhelp", description: "🛠 Команди писарів Порубіжжя" },
 ];
 

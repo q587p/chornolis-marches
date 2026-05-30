@@ -20,6 +20,7 @@ import { buildAdminFireReplyKeyboard, buildAdminMenuReplyKeyboard, buildAdminRes
 import { nextResourceAmount, parseAddResourceArgs } from "../services/adminResources";
 import { stopAllPlayerAuto } from "./auto";
 import { resetTutorialProgressForPlayer } from "../services/tutorial";
+import { getGateHuntingSaturationState, setCarcassQuestOverride, type CarcassQuestOverride } from "../services/carcassDropoff";
 
 function normalizeLookup(value: string | null | undefined) {
   return String(value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
@@ -202,6 +203,8 @@ export const ADMIN_HELP_TEXT = [
   "/addCampfire [locationKey|x,y,z|персонаж] — додати звичайне вогнище",
   "/addTorch [персонаж] — додати факел у речі собі або вказаному персонажу",
   "/addTwigs [персонаж] — додати хмиз у речі собі або вказаному персонажу",
+  "/carcassQuest start — примусово відновити заклик біля падального рову й мисливський тиск",
+  "/carcassQuest stop — примусово перевести падальний рів у стан «поки досить»",
   "",
   "Прибирання й тестові стани",
   "/forceOld [speciesKey] [count] — зробити кілька тварин похилими для тесту старіння",
@@ -285,6 +288,67 @@ export function registerAdminHandlers(bot: Bot) {
   bot.hears(["🔥 Вогонь"], replyAdminFireMenu);
   bot.hears(["🧭 Телепорт (/teleport)", "Телепорт (/teleport)"], replyTeleportMenu);
   bot.hears(["➕ Додати ресурс (/addResource)", "Додати ресурс (/addResource)"], replyAddResourceFormat);
+  bot.hears(["🦴 Падальний рів (/carcassQuest)", "Падальний рів (/carcassQuest)"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+    const state = await getGateHuntingSaturationState();
+    await ctx.reply([
+      "🦴 Падальний рів",
+      "",
+      "/carcassQuest start — примусово відновити заклик до полювання.",
+      "/carcassQuest stop — примусово поставити стан «поки досить».",
+      "",
+      carcassQuestStateLine(state),
+    ].join("\n"), {
+      reply_markup: buildAdminMenuReplyKeyboard(),
+    });
+  });
+
+  function carcassQuestStateLine(state: Awaited<ReturnType<typeof getGateHuntingSaturationState>>) {
+    return `Стан: ${state.active ? "припинено / поки досить" : "активно / заклик діє"}; override=${state.manualOverride ?? "auto"}; внесків=${state.contributionTotal}; здобичі поруч=${state.preyPressure}; вибитих рослинних місць=${state.depletedSignals}.`;
+  }
+
+  bot.command(["carcassQuest", "carcassquest"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+
+    const mode = String(ctx.match ?? "").trim().toLocaleLowerCase("uk-UA");
+    if (mode !== "start" && mode !== "stop") {
+      const state = await getGateHuntingSaturationState();
+      await ctx.reply([
+        "Формат: /carcassQuest start або /carcassQuest stop.",
+        "",
+        "/carcassQuest start — примусово відновлює заклик до полювання.",
+        "/carcassQuest stop — примусово ставить стан «поки досить».",
+        "",
+        carcassQuestStateLine(state),
+      ].join("\n"));
+      return;
+    }
+
+    const override = mode as CarcassQuestOverride;
+    const result = await setCarcassQuestOverride(override);
+    const scribe = ctx.from?.id
+      ? await prisma.player.findUnique({ where: { telegramId: String(ctx.from.id) } })
+      : null;
+    await logEvent("SYSTEM", "Admin changed carcass quest override", `mode=${override}; state=${result.state.active ? "stopped" : "active"}`, result.feature.locationId);
+    await logScribeAction({
+      actionKey: "carcassQuest",
+      scribePlayerId: scribe?.id,
+      scribeTelegramId: ctx.from?.id,
+      scribeName: scribe ? playerDisplayName(scribe) : null,
+      mode: override,
+      outcome: "confirmed",
+      details: `override=${override}; ${carcassQuestStateLine(result.state)}`,
+      locationId: result.feature.locationId,
+    });
+
+    await ctx.reply([
+      override === "start"
+        ? "🦴 Падальний рів знову кличе до здобичі. Заклик до полювання примусово активний."
+        : "🦴 Падальний рів переведено в стан «поки досить». Новий мисливський тиск примусово зупинено.",
+      "",
+      carcassQuestStateLine(result.state),
+    ].join("\n"));
+  });
 
   bot.command(["adminHelp", "adminhelp"], async (ctx) => {
     if (!(await requireScribeAdmin(ctx))) return;

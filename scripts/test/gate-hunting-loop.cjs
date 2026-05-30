@@ -63,11 +63,25 @@ const saturated = gateHuntingSaturationForSignals({
   depletedSignals: 0,
 });
 assert.equal(saturated.active, true);
+assert.equal(saturated.manualOverride, null);
 assert.equal(gateHuntingSaturationForSignals({ contributionTotal: GATE_HUNTING_SATURATION_CONTRIBUTION_THRESHOLD - 1, preyPressure: 0 }).active, false);
 assert.equal(gateHuntingSaturationForSignals({ contributionTotal: GATE_HUNTING_SATURATION_CONTRIBUTION_THRESHOLD, preyPressure: GATE_HUNTING_SATURATION_PREY_PRESSURE_MAX + 1 }).active, false);
 assert.equal(gateHuntingSaturationForSignals({ contributionTotal: GATE_HUNTING_SATURATION_CONTRIBUTION_THRESHOLD, preyPressure: 0, depletedSignals: 1 }).active, false);
+assert.equal(gateHuntingSaturationForSignals({
+  contributionTotal: GATE_HUNTING_SATURATION_CONTRIBUTION_THRESHOLD,
+  preyPressure: 0,
+  depletedSignals: 0,
+  manualOverride: "start",
+}).active, false);
+assert.equal(gateHuntingSaturationForSignals({
+  contributionTotal: 0,
+  preyPressure: GATE_HUNTING_SATURATION_PREY_PRESSURE_MAX + 50,
+  depletedSignals: 3,
+  manualOverride: "stop",
+}).active, true);
 assert.match(gateHuntingNoticeText("old notice", saturated), /Поки досить/);
 assert.match(gateHuntingDropoffText("old dropoff", saturated), /нових припасів/);
 assert.equal(gateHuntingNoticeText("old notice", { ...saturated, active: false }), "old notice");
+assert.match(gateHuntingNoticeText("old notice", { ...saturated, manualOverride: "stop" }, true), /override=stop/);
 
 console.log("Gate hunting loop helpers OK");

@@ -141,6 +141,8 @@ export function buildAdminMenuReplyKeyboard() {
     .text("✨ Відновити снагу (/restAdmin)")
     .text("🌿 Ресурси")
     .row()
+    .text("🦴 Падальний рів (/carcassQuest)")
+    .row()
     .text("🔥 Вогонь")
     .text("🛠 Повна довідка (/adminHelp)")
     .row()
