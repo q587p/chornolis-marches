@@ -22,17 +22,17 @@ const TUTORIAL_LOOK_EVENT_TITLE = "Tutorial look";
 const TUTORIAL_PACE_EVENT_TITLE = "Tutorial pace comment";
 const TUTORIAL_GATE_SPEECH_EVENT_TITLE = "Tutorial gate speech comment";
 const TUTORIAL_LOOK_WINDOW_MS = 60_000;
-const TUTORIAL_IDLE_PACE_DELAY_MS = 30_000;
-const TUTORIAL_PACE_BACKOFF_MS = [30_000, 60_000, 120_000, 240_000, 480_000];
+const TUTORIAL_IDLE_PACE_DELAY_MS = 120_000;
+const TUTORIAL_PACE_BACKOFF_MS = [120_000, 300_000, 600_000, 1_200_000, 1_800_000];
 
 type PaceCommentPair = {
   drowsinessTitle: string;
   drowsinessText: string;
   dreamTitle: string;
-  dreamText: (pronoun: string) => string;
+  dreamText: (pronoun: string, dativePronoun: string) => string;
 };
 
-const PACE_COMMENT_PAIRS: PaceCommentPair[] = [
+export const PACE_COMMENT_PAIRS: PaceCommentPair[] = [
   {
     drowsinessTitle: "Дрімота підганяє",
     drowsinessText: "Ну ходімо вже скоріше. Якщо довго стояти, туман почне думати, що ми тут живемо.",
@@ -49,7 +49,7 @@ const PACE_COMMENT_PAIRS: PaceCommentPair[] = [
     drowsinessTitle: "Дрімота бурмоче",
     drowsinessText: "Якщо ще трохи постояти, мох почне записувати нас до своїх родичів.",
     dreamTitle: "Сон лагідно заперечує",
-    dreamText: (pronoun) => `Мох уміє чекати, і ${pronoun} теж можна. Тут ніхто не виграє перегони.`,
+    dreamText: (_pronoun, dativePronoun) => `Мох уміє чекати, і ${dativePronoun} теж можна. Тут ніхто не виграє перегони.`,
   },
   {
     drowsinessTitle: "Дрімота підганяє",
@@ -122,6 +122,12 @@ function tutorialPacePronoun(player: TutorialPlayerRef) {
   return "нього";
 }
 
+function tutorialPaceDativePronoun(player: TutorialPlayerRef) {
+  if (player.pronoun === "SHE" || player.grammaticalGender === "FEMININE") return "їй";
+  if (player.pronoun === "THEY" || player.grammaticalGender === "PLURAL") return "їм";
+  return "йому";
+}
+
 async function isPlayerInTutorial(locationId: number) {
   const location = await prisma.cellLocation.findUnique({
     where: { id: locationId },
@@ -130,11 +136,12 @@ async function isPlayerInTutorial(locationId: number) {
   return Boolean(location && isTutorialLocation(location));
 }
 
-function tutorialPaceCooldownMs(previousComments: number) {
-  return TUTORIAL_PACE_BACKOFF_MS[previousComments % TUTORIAL_PACE_BACKOFF_MS.length] ?? TUTORIAL_IDLE_PACE_DELAY_MS;
+export function tutorialPaceCooldownMs(previousComments: number) {
+  const index = Math.max(0, Math.trunc(previousComments));
+  return TUTORIAL_PACE_BACKOFF_MS[Math.min(index, TUTORIAL_PACE_BACKOFF_MS.length - 1)] ?? TUTORIAL_IDLE_PACE_DELAY_MS;
 }
 
-function randomPaceCommentPair() {
+export function randomPaceCommentPair() {
   return PACE_COMMENT_PAIRS[Math.floor(Math.random() * PACE_COMMENT_PAIRS.length)] ?? PACE_COMMENT_PAIRS[0];
 }
 
@@ -172,6 +179,7 @@ async function tutorialPaceComments(player: TutorialPlayerRef, reason: "look" | 
 
   const pair = randomPaceCommentPair();
   const pronoun = tutorialPacePronoun(player);
+  const dativePronoun = tutorialPaceDativePronoun(player);
   return [
     {
       speaker: "Дрімота",
@@ -181,7 +189,7 @@ async function tutorialPaceComments(player: TutorialPlayerRef, reason: "look" | 
     {
       speaker: "Сон",
       title: pair.dreamTitle,
-      text: pair.dreamText(pronoun),
+      text: pair.dreamText(pronoun, dativePronoun),
     },
   ];
 }
