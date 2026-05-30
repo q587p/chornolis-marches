@@ -36,7 +36,7 @@ Ukrainian display text should be chosen through grammar helpers instead of hardc
 - Player and named NPC forms should prefer stored case fields when present: nominative, genitive, dative, accusative, instrumental, locative and vocative.
 - Animacy affects accusative wording: animate beings usually use genitive-like accusative forms, while inanimate objects usually keep nominative-like accusative forms.
 - Corpse text is a mixed case: the corpse object itself is inanimate, but the creature name after `труп` still uses the creature's genitive form.
-- Target lists and location details should also use genitive after `труп` and future `рештки`, for example `труп: миші` and `рештки зайця`, not nominative species names.
+- Target lists and location details should also use genitive after `труп` and future `рештки`, for example `труп миші`, `труп миша` and `рештки зайця`, not nominative species names or a colon/action suffix.
 - Creature eating actions should use an accusative resource form, for example `їсть траву`, not `їсть трава`.
 - UI code should ask the grammar layer for a context-specific form instead of checking resource keys such as `corpse_rabbit_female` inline.
 

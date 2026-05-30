@@ -42,18 +42,18 @@ assert.deepEqual(interactionRows, [
 ]);
 
 const multipleFreshCorpseRows = buildTargetListKeyboard([
-  { type: "creature", id: 1, label: "труп самця миші", actionLabel: "розкладається; залишилось 92 тіків", canGreet: false, isAnimal: true, isCorpse: true, canFreshen: true },
-  { type: "creature", id: 2, label: "труп самця миші", actionLabel: "розкладається; залишилось 116 тіків", canGreet: false, isAnimal: true, isCorpse: true, canFreshen: true },
+  { type: "creature", id: 1, label: "труп миша", actionLabel: "розкладається; залишилось 92 тіків", canGreet: false, isAnimal: true, isCorpse: true, canFreshen: true },
+  { type: "creature", id: 2, label: "труп миша", actionLabel: "розкладається; залишилось 116 тіків", canGreet: false, isAnimal: true, isCorpse: true, canFreshen: true },
 ]).inline_keyboard.map((row) => row.map((button) => button.text));
 assert.deepEqual(multipleFreshCorpseRows, [
-  ["труп самця миші"],
-  ["труп самця миші"],
+  ["труп миша"],
+  ["труп миша"],
   ["🔪 Освіжувати всі"],
 ]);
 
 const singleFreshCorpseRows = buildTargetListKeyboard([
-  { type: "creature", id: 1, label: "труп самця миші", actionLabel: "розкладається; залишилось 92 тіків", canGreet: false, isAnimal: true, isCorpse: true, canFreshen: true },
+  { type: "creature", id: 1, label: "труп миша", actionLabel: "розкладається; залишилось 92 тіків", canGreet: false, isAnimal: true, isCorpse: true, canFreshen: true },
 ]).inline_keyboard.map((row) => row.map((button) => button.text));
-assert.deepEqual(singleFreshCorpseRows, [["труп самця миші"]]);
+assert.deepEqual(singleFreshCorpseRows, [["труп миша"]]);
 
 console.log("Target formatting OK");
