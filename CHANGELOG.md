@@ -18,6 +18,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - `/who`, the public `/who` web page and `/who.json` now append ` (відійшов)` to AFK player character names.
 - `/all` now shows the same AFK suffix in player rows for scribe/admin visibility.
 - Telegram side command menus now keep `/afk` as the second command, immediately after `/start`, while `/end_session` sits at the end of the shared command block.
+- Removed standalone `Стан: ...` keyboard-refresh messages that could appear after quick actions or quiet recovery ticks; real action/recovery messages still carry refreshed keyboards when they are already being sent.
 - Dropped burning torches now explicitly count as local light sources until their burn timer expires, and expired ground torches are cleaned up before location render.
 - Sexed animal age adjectives now agree with the displayed creature form, so male mouse labels use masculine age adjectives instead of the species-level feminine fallback.
 - Scribe-scoped Telegram side command menus no longer list `/adminmenu` or the operational `/carcassquest` toggle; the commands remain available through direct input, admin help and the scribe keyboard/menu surfaces.
@@ -33,6 +34,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `node scripts/test/posture.cjs`.
 - Ran `node scripts/test/target-formatting.cjs`.
 - Ran `node scripts/test/telegram-commands.cjs`.
+- Ran `node scripts/test/reply-keyboard-refresh.cjs`.
 - Ran `npm test`.
 - Ran `npm run build`.
 
