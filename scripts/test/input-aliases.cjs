@@ -74,6 +74,10 @@ assertAlias("придивитися до знака", { kind: "inspect-border-ma
 assertAlias("look лавка", { kind: "inspect-feature", target: "лавка", detail: "brief" });
 assertAlias("/examine лавка", { kind: "inspect-feature", target: "лавка", detail: "full" });
 assertAlias("look bench", { kind: "inspect-feature", target: "bench", detail: "brief" });
+assertAlias("/look Лукан", { kind: "inspect-feature", target: "лукан", detail: "brief" });
+assertAlias("глянути Лукан", { kind: "inspect-feature", target: "лукан", detail: "brief" });
+assertAlias("дивитися Лукан", { kind: "inspect-feature", target: "лукан", detail: "brief" });
+assertAlias("озирнутися на Лукана", { kind: "inspect-feature", target: "лукана", detail: "brief" });
 assertAlias("оглянути браму", { kind: "inspect-feature", target: "браму", detail: "brief" });
 assertAlias("огл брама", { kind: "inspect-feature", target: "брама", detail: "brief" });
 assertAlias("придивитися до брами", { kind: "inspect-feature", target: "брами", detail: "full" });

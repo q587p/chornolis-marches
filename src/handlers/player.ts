@@ -11,6 +11,7 @@ import { replyToActionError } from "../utils/actionErrorReply";
 import { formatFatigueText, formatHungerState, formatPlayerStats, formatPostureText, formatVitalsLine } from "../utils/playerText";
 import { ownHeldTorchText } from "../utils/torchText";
 import { resourceTypeDisplayName } from "../services/corpses";
+import { actionDurationMs, performOrQueuePlayerAction } from "../services/actionQueue";
 import {
   addTwigsToCampfire,
   canAddTwigsToNearbyCampfire,
@@ -25,7 +26,7 @@ import {
 } from "../services/fire";
 import { isScribeAdmin } from "../services/adminAccess";
 import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
-import { dropInventoryResourceDetailed, inspectInventoryResource, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
+import { dropInventoryResourceDetailed, inspectInventoryResource, inventoryResourceKeyFromText, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
 import { dropObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 import { tutorialLookPaceComments } from "../services/tutorialVoices";
 import { escapeHtml } from "../utils/text";
@@ -36,6 +37,9 @@ import { canCookPlayerMeat, COOKED_MEAT_KEY, cookRawMeat, RAW_MEAT_KEY } from ".
 import { assertCanPerformPhysicalAction } from "../services/postureRules";
 import { GATHERING_OBSERVATION_GROWTH_MESSAGE, recordGatheringObservation } from "../services/gatheringLearning";
 import { rememberTutorialInventoryForPlayer } from "../utils/tutorialInventory";
+import { bestTargetMatch, inspectMissingText, targetDisplayLabel, targetListText, visibleTextTargets } from "../services/textTargets";
+import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
+import { durationSecondsSuffix } from "../utils/durationText";
 
 const tutorialInventoryVoiceSeen = new Set<number>();
 
@@ -191,6 +195,59 @@ async function sendFeatureFollowups(reply: (text: string, options?: any) => Prom
   }
   for (const message of view.followupMessages ?? []) {
     noteKnownMessage(await reply(message.text, { parse_mode: "HTML" }));
+  }
+}
+
+function normalizeLookCommandTargetArg(value: string) {
+  return value.replace(/^(?:at|на)\s+/iu, "").trim();
+}
+
+async function tryReplyWithInventoryInspection(ctx: any, playerId: number, targetQuery: string) {
+  try {
+    const text = await inspectInventoryResource(playerId, targetQuery);
+    const keyboard = await buildInventoryItemKeyboard(playerId, inventoryResourceKeyFromText(targetQuery));
+    await ctx.reply(text, { reply_markup: keyboard });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function submitLookTarget(bot: Bot, ctx: any, player: any, targetQuery: string) {
+  const visibleTargets = await visibleTextTargets(player.currentLocationId, player.id);
+  if (!visibleTargets.length) {
+    if (await tryReplyWithInventoryInspection(ctx, player.id, targetQuery)) return;
+    await ctx.reply(inspectMissingText(targetQuery));
+    return;
+  }
+
+  const match = bestTargetMatch(targetQuery, visibleTargets);
+  if (match.kind === "none") {
+    if (await tryReplyWithInventoryInspection(ctx, player.id, targetQuery)) return;
+    await ctx.reply(inspectMissingText(targetQuery, visibleTargets));
+    return;
+  }
+
+  if (match.kind === "many") {
+    const keyboard = new InlineKeyboard();
+    match.targets.forEach((target, index) => keyboard.text(`${index + 1}. ${targetDisplayLabel(target)}`, `target:${target.type}:${target.id}`).row());
+    await ctx.reply(`Знайшов кілька схожих істот чи постатей. Уточни назвою або номером.\n\nПоруч можна роздивитися:\n${targetListText(visibleTargets)}`, { reply_markup: keyboard });
+    return;
+  }
+
+  const durationMs = actionDurationMs("INSPECT", player.stamina);
+  try {
+    const result = await performOrQueuePlayerAction(bot, {
+      playerId: player.id,
+      type: "INSPECT",
+      payload: { targetType: match.target.type, targetId: match.target.id, mode: "known", detail: "brief" },
+      durationMs,
+      chatId: ctx.chat?.id,
+    });
+    await ctx.reply(result.mode === "immediate" ? "Дію виконано." : `Дію додано в чергу${durationSecondsSuffix(player, durationMs)}.`);
+    await sendActionSubmitFeedback(ctx, player.id, result);
+  } catch (error) {
+    await replyToActionError(ctx, error, "Не вдалося роздивитися це.");
   }
 }
 
@@ -557,7 +614,7 @@ export function registerPlayerHandlers(bot: Bot) {
 
   bot.command(["look", "location", "loc"], async (ctx) => {
     if (!ctx.from) return;
-    const arg = String(ctx.match || "").trim();
+    const arg = normalizeLookCommandTargetArg(String(ctx.match || "").trim());
     if (arg) {
       const player = await getPlayerByTelegramId(ctx.from.id);
       if (!player?.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start", { reply_markup: buildMainReplyKeyboard(false) }));
@@ -569,6 +626,8 @@ export function registerPlayerHandlers(bot: Bot) {
         await sendFeatureFollowups((text, options) => ctx.reply(text, options), view);
         return;
       }
+      await submitLookTarget(bot, ctx, player, arg);
+      return;
     }
     await showLocationForPlayer(ctx.from.id, (text, options) => ctx.reply(text, options));
   });

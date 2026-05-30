@@ -15,7 +15,7 @@ When a player-facing button performs an in-world action, there should usually be
 
 Location and character:
 
-- `озирнутися`, `/озирнутися`, `де я`, `місцина`, `див`, `дивитися` -> current location view.
+- `озирнутися`, `/озирнутися`, `де я`, `місцина`, `див`, `дивитися` -> current location view; with a target such as `/look Лукан`, `глянути Лукан`, `дивитися на Лукана` or `озирнутися на Лукана`, show a brief visible-state inspection instead.
 - `/glance`, `glance`, `глянути швидко`, `швидко глянути` -> only the current location name and visible exits.
 - `/exits`, `exits`, `виходи`, `куди можна йти` -> only visible exits from the current location, including visible locked exits.
 - `роздивитися`, `/роздивитися`, `оглянути`, `що видно` -> closer look action.
@@ -56,7 +56,7 @@ Actions:
 - `запалити факел`, `підпалити факел`, `light torch`, `use torch` -> light an unlit carried torch when there is a campfire nearby or another lit torch in hand.
 - `загасити факел`, `погасити факел`, `притушити факел`, `douse torch`, `extinguish torch` -> douse one carried lit torch into a carried `притушений факел` that preserves its remaining burn time for later relighting.
 - `item berries`, `річ ягоди`, `оглянути в речах ягоди`, `inspect item berries` -> inspect a carried resource stack.
-- `look mushroom`, `examine berries`, `оглянути ягоди`, `роздивитися факел` -> first try local features and visible nearby targets; if no visible target matches, inspect a matching carried resource stack in `Речі`.
+- `/look Лукан`, `look mushroom`, `глянути Лукан`, `дивитися на Лукана`, `examine berries`, `оглянути ягоди`, `роздивитися факел` -> first try local features and visible nearby targets; if no visible target matches, inspect a matching carried resource stack in `Речі`.
 - `викинути ягоди`, `кинути трави`, `drop berries`, `discard torch` -> drop one carried resource from inventory into the current location.
 - `/put`, `/put туша рів`, `/put туша all падальний рів`, `покласти всі рештки до ями` -> put carried carcasses/remains into a matching local feature/container. Plain `/put`, `put` or `покласти` temporarily defaults to one carried carcass/remains item into the gate `падальний рів`; this records a settlement contribution instead of paying a fixed bounty.
 - `/sit`, `sit`, `сісти`, `присісти` -> sit down without starting rest. While sitting, physical actions such as movement, pickup, gathering, attacking, freshening, dropping, putting items into features, cooking and fire/torch handling require standing up first; look, examine, speech, reply and other non-physical actions remain available.
@@ -76,7 +76,7 @@ Actions:
 - `підібрати хмиз`, `взяти хмиз`, `pickup twigs` -> pick up visible loose `хмиз` in the current місцина.
 - Ecology sign inspection: `/examine sign`, `/examine border marker`, `роздивитися знак`, `роздивитися межовий знак`, `придивитися до знака` -> inspect a local `Межовий знак` and read its public diegetic wildlife notes when the feature is present.
 - Ecology inspection: `/examine grass`, `/examine depleted grass`, `роздивитися траву`, `придивитися до трави`, `оцінити траву`, `оцінити відновлення` -> inspect the local depleted-vegetation feature and estimate natural recovery when `Винищена трава` is present.
-- Local feature and target inspection: `look лавка`, `/examine лавка`, `оглянути лавку`, `огл брама`, `роздивитися кущі` -> first try to inspect a visible interactive location feature by name or alias; if no feature matches, target inspection can still fall back to visible creatures, corpses or characters, then to carried inventory items. `look` / `оглянути` target forms should stay brief and visible-state focused; `examine` / `роздивитися` target forms may show fuller details such as obvious carried items, inventory or current field supplies, but ordinary player-facing text should prefer qualitative amounts (`трохи`, `чимало`, `багато`) over exact counts.
+- Local feature and target inspection: `look лавка`, `/look Лукан`, `/examine лавка`, `глянути Лукан`, `дивитися на Лукана`, `оглянути лавку`, `огл брама`, `роздивитися кущі` -> first try to inspect a visible interactive location feature by name or alias; if no feature matches, target inspection can still fall back to visible creatures, corpses or characters, then to carried inventory items. `look` / `глянути` / `дивитися` / `оглянути` target forms should stay brief and visible-state focused; `examine` / `роздивитися` target forms may show fuller details such as obvious carried items, inventory or current field supplies, but ordinary player-facing text should prefer qualitative amounts (`трохи`, `чимало`, `багато`) over exact counts.
 - Numeric inspection such as `look 3` or `роздивитися 3` refers to the visible nearby target list, not to fuzzy feature keys or internal feature ids.
 - Future shrine/offering actions: `/offer`, `/offer <item>`, `пожертвувати`, `лишити дар`, `покласти дар`, `кинути шаг`, `покласти хмиз` -> offer an item to an inspectable shrine/капище or similar sacred feature.
 - Future animal-restoration offering actions: `/offer berries`, `/offer herbs`, `покласти ягоди`, `лишити трави`, `покласти дар зайцю`, `покласти дар мишам`, `пожертвувати зайцеві`, `пожертвувати мишам` -> offer fitting food or herbs to a hare/mouse statue, carved burrow marker or similar animal charm.

@@ -688,7 +688,7 @@ function parseBorderMarkerInspectionIntent(text: string): ParsedAliasCommand | n
 }
 
 function parseFeatureInspectionIntent(text: string): ParsedAliasCommand | null {
-  const brief = text.match(/^(?:look\s+at|look|оглянути|огл|глянути\s+на|подивитися\s+на)\s+(.+)$/);
+  const brief = text.match(/^(?:look\s+at|look|оглянути|огл|глянути\s+на|глянути(?!\s+(?:швидко|коротко))|подивитися\s+на|дивитися\s+на|дивитися|озирнутися\s+на|озирнутися)\s+(.+)$/);
   if (brief?.[1]?.trim()) return { kind: "inspect-feature", target: brief[1].trim(), detail: "brief" };
 
   const full = text.match(/^(?:x|examine|inspect|роздивитися|роздивитись|придивитися\s+до|придивитись\s+до|придивитися|придивитись)\s+(.+)$/);
