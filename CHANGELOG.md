@@ -9,6 +9,30 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.14 - Core loop omen and tutorial keyboard polish - 12026-05-30
+
+### Added
+
+- Added a first old-campfire memory omen slice: seeded old ordinary campfires can reveal one short atmospheric trace when fed with `twigs` or relit from a torch, and the trace remains visible in later campfire inspection text.
+- Added the `LOOP-003` planning item and system notes for future old-campfire memory omen tuning.
+- Added sleep and dream planning docs, including `SLEEP-001` through `SLEEP-004`, `DREAM-001` through `DREAM-004`, and a future implementation prompt pack for ordinary sleep and dream-presence foundations.
+
+### Changed
+
+- Tutorial dream reply keyboards now keep ordinary `Help`, `Menu`, `Status` and `Examine` controls hidden until the matching lesson has surfaced them, while `Inventory` appears once the character actually carries something.
+- Entering the tutorial dream now turns off player auto mode so automatic actions do not keep running inside the dream.
+- Targeted `look` now stays focused on visible character/NPC state, while targeted `examine` can show fuller carried inventory or hunter field-supply details with approximate public quantities instead of exact counts.
+- Updated gate hunting saturation planning with future persisted linger/cooldown, per-tick saturation caching for larger hunter counts, and the temporary plain `/put` default that should later be removed or redefined for generic containers.
+- Updated survival, terminology, roadmap, backlog and icebox docs with the distinction between sitting/resting, lying, ordinary sleep, tutorial sleep and future lucid dream instances.
+
+### Tests
+
+- Added `scripts/test/campfire-memory.cjs` coverage for first-reveal and later-inspection behavior.
+- Extended posture/reply-keyboard coverage for progressive tutorial dream controls.
+- Extended input-alias coverage for brief/full target inspection parsing and hidden hunter marker cleanup.
+
+---
+
 ## 0.13.13 - NPC held torch inventory foundation - 12026-05-30
 
 ### Added

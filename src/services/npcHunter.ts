@@ -209,7 +209,7 @@ export function groupHunterClaimedCorpses(corpses: ClaimedCorpse[]) {
   return [...groups.values()];
 }
 
-async function claimedCorpsesForHunter(hunterId: number) {
+export async function claimedCorpsesForHunter(hunterId: number) {
   return prisma.creature.findMany({
     where: {
       isAlive: false,

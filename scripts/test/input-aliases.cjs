@@ -71,12 +71,12 @@ assertAlias("оцінити відновлення", { kind: "inspect-vegetation
 assertAlias("/examine sign", { kind: "inspect-border-marker" });
 assertAlias("роздивитися межовий знак", { kind: "inspect-border-marker" });
 assertAlias("придивитися до знака", { kind: "inspect-border-marker" });
-assertAlias("look лавка", { kind: "inspect-feature", target: "лавка" });
-assertAlias("/examine лавка", { kind: "inspect-feature", target: "лавка" });
-assertAlias("look bench", { kind: "inspect-feature", target: "bench" });
-assertAlias("оглянути браму", { kind: "inspect-feature", target: "браму" });
-assertAlias("огл брама", { kind: "inspect-feature", target: "брама" });
-assertAlias("придивитися до брами", { kind: "inspect-feature", target: "брами" });
+assertAlias("look лавка", { kind: "inspect-feature", target: "лавка", detail: "brief" });
+assertAlias("/examine лавка", { kind: "inspect-feature", target: "лавка", detail: "full" });
+assertAlias("look bench", { kind: "inspect-feature", target: "bench", detail: "brief" });
+assertAlias("оглянути браму", { kind: "inspect-feature", target: "браму", detail: "brief" });
+assertAlias("огл брама", { kind: "inspect-feature", target: "брама", detail: "brief" });
+assertAlias("придивитися до брами", { kind: "inspect-feature", target: "брами", detail: "full" });
 
 assertAlias("збирати ягоди", { kind: "gather", resourceKey: "berries" });
 assertAlias("збирати гриби", { kind: "gather", resourceKey: "mushrooms" });
@@ -161,7 +161,7 @@ assert.equal(isDreamGateOpeningPhrase("Відчинитися"), true);
 assert.equal(isDreamGateOpeningPhrase("Відчинись будь ласка"), true);
 assert.equal(isDreamGateOpeningPhrase("Можеш відчинитися?"), true);
 assert.equal(isDreamGateOpeningPhrase("Сьогодні гарний туман"), false);
-assertAlias("роздивитися труп", { kind: "inspect-feature", target: "труп" });
+assertAlias("роздивитися труп", { kind: "inspect-feature", target: "труп", detail: "full" });
 assertAlias("атакувати мишу", { kind: "target-action", action: "attack", target: "мишу" });
 assertAlias("fight wolf", { kind: "target-action", action: "attack", target: "wolf" });
 assertAlias("kick rabbit", { kind: "target-action", action: "attack", target: "rabbit" });
@@ -178,6 +178,7 @@ assert.equal(resourceAccusativeName({ key: "grass", name: "трава" }), "тр
 assert.equal(normalizeCreatureActionText("їсть трава"), "їсть траву");
 assert.equal(normalizeCreatureActionText("підбирає факел до мисливського набору; hunter_torches:1"), "підбирає факел до мисливського набору");
 assert.equal(normalizeCreatureActionText("вертається до воріт із запаленим факелом і запасним у торбі; hunter_returning_for_torches; hunter_torches:2"), "вертається до воріт із запаленим факелом і запасним у торбі");
+assert.equal(normalizeCreatureActionText("claimed_by_hunter:12; мисливець несе здобич до падального рову"), "мисливець несе здобич до падального рову");
 assertAlias("кивнути Здравомир", { kind: "social-signal", signal: "nod", target: "здравомир" });
 
 assert.equal(parseAlias("це точно не команда"), null);

@@ -42,7 +42,7 @@ Ukrainian display text should be chosen through grammar helpers instead of hardc
 
 ## Visible carried things
 
-Inspecting another character should describe only obvious visible state, not their private inventory.
+Looking at another character should describe only obvious visible state: name, posture/state and what is openly carried or burning in hand. A fuller `examine` may show carried inventory or field supplies when the game has a reason to surface them, such as visible player resources, current hunter torch bundles or hunter-claimed carcasses. Ordinary player-facing text should use approximate amounts (`трохи`, `чимало`, `багато`) rather than exact counts; exact inventory counts belong to the owner, technical-details mode or scribe/admin views. Hidden inventory, future concealed equipment and private containers should remain private unless a later skill, search rule or scribe/debug view reveals them.
 
 - A burning torch is visible in inspection text.
 - One lit torch is described as `У руці горить запалений факел.`

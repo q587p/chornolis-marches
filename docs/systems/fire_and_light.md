@@ -15,6 +15,7 @@ Chornolis uses fire as an early survival and visibility tool.
 - `Додати хмиз`, `додати хмиз` and `/add twigs campfire` consume one `twigs` resource from inventory.
 - For a burning ordinary campfire, `twigs` extends the remaining burn time by a small capped amount.
 - For an extinguished ordinary campfire, `twigs` is tucked into the ashes as prepared fuel; it still needs a burning torch to relight.
+- Seeded old ordinary campfires can reveal one short memory omen the first time they are fed or relit. This is atmospheric trace text, not a quest or reward, and the revealed trace remains readable in later `/examine` output.
 - Magical campfires do not accept `twigs`: their point is that old magic sustains them without fuel.
 - When a timed campfire expires, it remains in the місцина as `Згасле вогнище`: it gives no light and no rest bonus.
 - A character with a still-burning torch can use `Підпалити` on a згасле вогнище to relight it with the default ordinary campfire timer.
@@ -26,7 +27,7 @@ Expired timed campfires are turned into згаслі campfires lazily when locat
 
 - Seed data includes a few loose `факел` ground items in forest, dry luka and riverbank locations. They appear under `Лежить` and can be picked up without a gather chance roll or action delay when the character is not exhausted.
 - The closed settlement gate has a temporary infinite torch stand. Its feature action is `Взяти факел`; later it should become a limited-stock container or bundle.
-- NPC hunter behavior may take or refresh a bounded hunting bundle from the gate torch stand, currently planned as five unlit torches, before routing to a magic campfire to light the first one. A hunter returning from the field can also be seeded with a visible lit torch and a spare torch represented by the current lightweight hunter bundle marker. This marker is temporary and should be replaced by real NPC-held inventory/light state as a high-priority follow-up, so NPC-held torches preserve burn timers and light locations like player-held torches. If the stand becomes limited stock, NPCs should use the same feature/container rules as players and avoid draining beginner-critical supply.
+- NPC hunter behavior may take or refresh a bounded hunting bundle from the gate torch stand, currently planned as five unlit torches, before routing to a magic campfire to light the first one. A hunter returning from the field can also be seeded with a visible lit torch and a spare torch represented by the current lightweight hunter bundle marker. This marker is temporary and should be replaced by real NPC-held inventory/light state as a high-priority follow-up, so NPC-held torches preserve burn timers and light locations like player-held torches. NPC-held lit torches should light the location even when the carrier is not otherwise visible to a particular viewer; if the carrier is explicitly hidden or stealth-like, an openly burning torch should reveal at least an uncertain bearer instead of producing ownerless hidden light. If the stand becomes limited stock, NPCs should use the same feature/container rules as players and avoid draining beginner-critical supply.
 - Picking up a loose torch or taking one from a torch stand is visible to other characters in the location and is recorded for world/admin history.
 - `/start`, `/reset` and ordinary bot startup do not add torches directly to player inventory. Development/scribe placement uses `/addTorch [персонаж]`, which adds a torch to the current or named player's inventory.
 - Near an active light-giving campfire, a character with a torch can use `Підпалити факел`.
@@ -41,7 +42,7 @@ Expired timed campfires are turned into згаслі campfires lazily when locat
 - A lit torch lasts 5 in-game hours, currently 10 real minutes.
 - During the final in-game hour, currently 2 real minutes, the world tick sends the character a separate chat warning that the torch is going out.
 - When a lit torch burns out, inventory sync consumes `lit_torch` and returns `twigs` instead of a dry `torch`.
-- A lit torch gives light in the character's current місцина and can reveal nearby targets in the same way as campfire light. This applies to both carried lit torches and burning lit torches lying on the ground.
+- A lit torch gives light in the character's current місцина and can reveal nearby targets in the same way as campfire light. This applies to carried lit torches, future NPC-held lit torches, and burning lit torches lying on the ground. Light is a local-world effect, not only a property of already-visible actors.
 
 The current implementation stores torch state as inventory resources:
 

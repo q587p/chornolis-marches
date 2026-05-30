@@ -38,12 +38,40 @@ assert.equal(tutorialSecondStepButtons.flat().includes("🔎 Роздивити�
 assert.equal(tutorialSecondStepButtons.flat().includes("🧭 Допомога"), false);
 assert.equal(tutorialSecondStepButtons.flat().includes("☰ Меню"), false);
 
+const earlyDreamButtons = buildMainReplyKeyboard({
+  exits: ["NORTH", "SOUTH"],
+  isTutorialDream: true,
+  canExamine: false,
+  showUtilityActions: false,
+}).keyboard.map((row) => row.map((button) => button.text));
+assert.equal(earlyDreamButtons.flat().includes("🔎 Роздивитися"), false);
+assert.equal(earlyDreamButtons.flat().includes("🧭 Допомога"), false);
+assert.equal(earlyDreamButtons.flat().includes("☰ Меню"), false);
+assert.equal(earlyDreamButtons[0][2], EMPTY_KEYBOARD_BUTTON);
+assert.equal(earlyDreamButtons[2][0], EMPTY_KEYBOARD_BUTTON);
+assert.equal(earlyDreamButtons[2][2], EMPTY_KEYBOARD_BUTTON);
+assert.equal(earlyDreamButtons.some((row) => row.some((label) => label.includes("❤"))), false);
+
+const lessonDreamButtons = buildMainReplyKeyboard({
+  exits: ["NORTH", "SOUTH"],
+  isTutorialDream: true,
+  canExamine: true,
+  showUtilityActions: false,
+  statusLabel: "❤️ добре · ⚡ рівно",
+  hasInventory: true,
+}).keyboard.map((row) => row.map((button) => button.text));
+assert.equal(lessonDreamButtons.flat().includes("🔎 Роздивитися"), true);
+assert.equal(lessonDreamButtons.flat().includes("🎒 Речі"), true);
+assert.equal(lessonDreamButtons.flat().includes("❤️ добре · ⚡ рівно"), true);
+assert.equal(lessonDreamButtons.flat().includes("🧭 Допомога"), false);
+assert.equal(lessonDreamButtons.flat().includes("☰ Меню"), false);
+
 const tutorialGateButtons = buildMainReplyKeyboard({
   exits: ["NORTH", "SOUTH"],
   lockedExits: ["SOUTH"],
   isTutorialDream: true,
   canOpenDreamGate: true,
-  statusLabel: "❤️ добре · ⚡ повна",
+  showUtilityActions: false,
 }).keyboard.map((row) => row.map((button) => button.text));
 assert.deepEqual(tutorialGateButtons, [
   ["👀 Озирнутися", "⬆️ Північ", "🔎 Роздивитися"],
@@ -58,7 +86,7 @@ assert.equal(tutorialGateButtons.flat().includes("❤️ добре · ⚡ по�
 const tutorialRestButtons = buildMainReplyKeyboard({
   exits: ["WEST", "EAST"],
   isTutorialDream: true,
-  showTutorialStatus: true,
+  showUtilityActions: false,
   statusLabel: "❤️ добре · ⚡ повна",
 }).keyboard.map((row) => row.map((button) => button.text));
 assert.equal(tutorialRestButtons.flat().includes("❤️ добре · ⚡ повна"), true);

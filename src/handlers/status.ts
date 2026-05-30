@@ -27,6 +27,7 @@ import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { disablePlayerAuto, enablePlayerAuto, stopPlayerAuto } from "./auto";
 import { creatureForms, playerForms } from "../services/grammar";
 import { clearOnboardingStateForTelegramId } from "./start";
+import { hunterFieldInventorySummary } from "../services/targets";
 
 const LOCATION_PAGE_MAX_CHARS = 3300;
 const TELEGRAM_TEXT_MAX_CHARS = 3900;
@@ -663,6 +664,7 @@ async function buildAdminCreatureDetailsView(creatureId: number) {
   const actionsText = creature.actions.length
     ? creature.actions.map((action) => `- #${action.id} ${action.type} ${action.status}; ${formatAdminDate(action.updatedAt)}; ${action.note ?? "без нотатки"}`).join("\n")
     : "- немає";
+  const hunterInventoryText = await hunterFieldInventorySummary(creature, { exact: true });
 
   const text = [
     `🧩 NPC / істота #${creature.id}`,
@@ -692,6 +694,7 @@ async function buildAdminCreatureDetailsView(creatureId: number) {
     `- дія: ${creature.currentAction ?? "немає"}`,
     `- активність: ${creature.activity ?? "немає"}`,
     `- decay: ${creature.corpseDecayTicksLeft ?? "немає"}`,
+    ...(hunterInventoryText ? ["", "Польова поклажа / мисливський стан:", hunterInventoryText] : []),
     "",
     "Характеристики виду:",
     `- сила: ${creature.species.strength}`,

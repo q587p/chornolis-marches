@@ -30,7 +30,7 @@ import { escapeHtml } from "../utils/text";
 import { resourceAccusativeName } from "../utils/resourceText";
 import { canEditKnownMessage, noteKnownMessage } from "../utils/messageTracker";
 import { playerCanShowTechnicalDetails } from "./technicalDetails";
-import { canOpenDreamGateWithSpeech, isLocationExitLocked, isTutorialFastRestLocationKey, openDreamGate, rememberTutorialForagingSuccess, rememberTutorialInventoryAvailable, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY } from "./tutorial";
+import { canOpenDreamGateWithSpeech, isLocationExitLocked, isTutorialFastRestLocationKey, openDreamGate, rememberTutorialCommandHintIfInTutorial, rememberTutorialForagingSuccess, rememberTutorialInventoryAvailable, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY } from "./tutorial";
 import { tutorialGateSpeechComment, tutorialLookPaceComments, tutorialSpiritMoveComment, tutorialTrackComments, tutorialWaitPaceComments } from "./tutorialVoices";
 import { chance, pick, shuffle } from "../utils/random";
 import { freshenCorpseForMeat } from "./meat";
@@ -42,7 +42,7 @@ import { GATHERING_OBSERVATION_GROWTH_MESSAGE, GATHERING_PRACTICE_GROWTH_MESSAGE
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
 type SayPayload = { text: string; mode?: "say" | "whisper" | "reply" | "shout"; targetType?: "player" | "creature"; targetId?: number; targetName?: string; targetDative?: string };
-type SocialPayload = { targetType: "player" | "creature"; targetId: number; mode?: "known" | "mystery" };
+type SocialPayload = { targetType: "player" | "creature"; targetId: number; mode?: "known" | "mystery"; detail?: "brief" | "full" };
 
 const RECENT_ATTACK_FEATURE_PREFIX = "recent_attack_";
 const RECENT_ATTACK_DANGER_TICKS = Number(process.env.WORLD_RECENT_ATTACK_DANGER_TICKS || 20);
@@ -526,6 +526,7 @@ async function completeLook(bot: Bot, action: WorldAction) {
     const locationId = player.currentLocationId ?? (await getStartLocationId());
     await spendPlayerStamina(bot, player.id, "LOOK", chatId);
     await prisma.player.updateMany({ where: { id: player.id }, data: { currentLocationId: locationId, looks: { increment: 1 } } });
+    await rememberTutorialCommandHintIfInTutorial(player.id, "examine", locationId);
     await setActionStatus(action, "DONE");
     if (chatId) {
       const view = await renderLocationDetails(locationId, player.id);
@@ -570,7 +571,10 @@ async function completeInspect(bot: Bot, action: WorldAction) {
   const player = action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null;
   const chatId = chatIdFromAction(action);
   if (!player || !player.currentLocationId || action.actorType !== "PLAYER") return void (await setActionStatus(action, "FAILED"));
-  const target = await resolveTarget(payload.targetType, payload.targetId, player.currentLocationId, { viewerPlayerId: player.id });
+  const target = await resolveTarget(payload.targetType, payload.targetId, player.currentLocationId, {
+    viewerPlayerId: player.id,
+    detail: payload.detail === "brief" ? "brief" : "full",
+  });
   await setActionStatus(action, target ? "DONE" : "FAILED");
   if (!target) {
     if (chatId) await bot.api.sendMessage(chatId, "Цілі вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() });

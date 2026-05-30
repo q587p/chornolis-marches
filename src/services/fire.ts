@@ -17,6 +17,14 @@ const DOUSED_TORCH_KEY = "doused_torch";
 const TWIGS_KEY = "twigs";
 const DOUSED_TORCH_TIMER_TITLE = "Doused torch timer";
 const DOUSED_TORCH_CONSUMED_TITLE = "Doused torch timer consumed";
+const OLD_CAMPFIRE_MEMORY_REVEALED_AT_KEY = "oldCampfireMemoryRevealedAt";
+const OLD_CAMPFIRE_MEMORY_TEXT_KEY = "oldCampfireMemoryText";
+
+export const OLD_CAMPFIRE_MEMORY_OMENS = [
+  "Коли світло торкається каменів, у попелі проступає стара подряпина: три короткі риски й одна довга, спрямована в бік темного лісу.",
+  "Жар піднімає з попелу запах мокрої вовни. Біля краю вогнища видно чужий слід, надто вузький для людської ноги.",
+  "Полум'я на мить лягає набік, і під головешкою блимає обвуглений вузлик із сухої трави.",
+] as const;
 
 type JsonRecord = Record<string, unknown>;
 
@@ -70,6 +78,40 @@ function addTwigsToFireData(data: unknown) {
     is_campfire: true,
     fuelTwigs: Number(current.fuelTwigs ?? 0) + 1,
     lastTwigsAddedAt: new Date().toISOString(),
+  };
+}
+
+function stableIndex(value: string, modulo: number) {
+  let hash = 0;
+  for (const char of value) hash = (hash * 31 + char.codePointAt(0)!) >>> 0;
+  return hash % modulo;
+}
+
+export function canRevealOldCampfireMemory(feature: { key?: string | null; type?: string | null; data?: unknown | null }) {
+  const data = jsonRecord(feature.data);
+  return feature.type === "CAMPFIRE"
+    && data.seeded === true
+    && data.is_campfire === true
+    && data[OLD_CAMPFIRE_MEMORY_REVEALED_AT_KEY] == null;
+}
+
+export function oldCampfireMemoryOmen(feature: { key?: string | null }) {
+  const key = feature.key ?? "";
+  return OLD_CAMPFIRE_MEMORY_OMENS[stableIndex(key, OLD_CAMPFIRE_MEMORY_OMENS.length)];
+}
+
+export function oldCampfireMemoryInspectionText(feature: { type?: string | null; data?: unknown | null }) {
+  if (feature.type !== "CAMPFIRE") return null;
+  const text = jsonRecord(feature.data)[OLD_CAMPFIRE_MEMORY_TEXT_KEY];
+  return typeof text === "string" && text.trim() ? text.trim() : null;
+}
+
+function withOldCampfireMemory(data: unknown, feature: { key?: string | null }, now = new Date()) {
+  const omen = oldCampfireMemoryOmen(feature);
+  return {
+    ...jsonRecord(data),
+    [OLD_CAMPFIRE_MEMORY_REVEALED_AT_KEY]: now.toISOString(),
+    [OLD_CAMPFIRE_MEMORY_TEXT_KEY]: omen,
   };
 }
 
@@ -722,7 +764,7 @@ export async function lightCampfireFromTorch(playerId: number, featureId: number
   await expireTimedCampfires();
   const { litTorch } = await ensureTorchResourceTypes();
   const player = await prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } });
-  const feature = await prisma.locationFeature.findUnique({ where: { id: featureId }, select: { id: true, locationId: true, isActive: true, type: true, data: true } });
+  const feature = await prisma.locationFeature.findUnique({ where: { id: featureId }, select: { id: true, key: true, locationId: true, isActive: true, type: true, data: true } });
   if (!player?.currentLocationId || !feature?.isActive || player.currentLocationId !== feature.locationId || feature.type !== "CAMPFIRE") {
     return "Це вогнище вже не вдається підпалити.";
   }
@@ -734,17 +776,20 @@ export async function lightCampfireFromTorch(playerId: number, featureId: number
     return "Потрібен запалений факел, щоб підпалити це вогнище.";
   }
 
+  const memoryText = canRevealOldCampfireMemory(feature) ? oldCampfireMemoryOmen(feature) : null;
+  const nextData = relitFireData(feature.data, "torch");
   await prisma.locationFeature.update({
     where: { id: feature.id },
     data: {
       name: "Вогнище",
       providesLight: true,
       restStaminaCapMultiplier: null,
-      data: relitFireData(feature.data, "torch"),
+      data: memoryText ? withOldCampfireMemory(nextData, feature) : nextData,
     },
   });
 
-  return "🔥 Ви підпалили вогнище від факела. Полум'я розгоряється й дає світло навколо.";
+  const base = "🔥 Ви підпалили вогнище від факела. Полум'я розгоряється й дає світло навколо.";
+  return memoryText ? `${base}\n\n${memoryText}` : base;
 }
 
 export async function addTwigsToCampfire(playerId: number, featureId?: number) {
@@ -786,18 +831,23 @@ export async function addTwigsToCampfire(playerId: number, featureId?: number) {
         })
       : prisma.playerResource.delete({ where: { playerId_resourceTypeId: { playerId, resourceTypeId: twigs.id } } });
 
+  const memoryText = canRevealOldCampfireMemory(feature) ? oldCampfireMemoryOmen(feature) : null;
+  const nextData = extinguished ? addTwigsToFireData(feature.data) : extendFireData(feature.data);
+
   await prisma.$transaction([
     consumeTwigs,
     prisma.locationFeature.update({
       where: { id: feature.id },
       data: extinguished
-        ? { data: addTwigsToFireData(feature.data) }
-        : { name: "Вогнище", providesLight: true, data: extendFireData(feature.data) },
+        ? { data: memoryText ? withOldCampfireMemory(nextData, feature) : nextData }
+        : { name: "Вогнище", providesLight: true, data: memoryText ? withOldCampfireMemory(nextData, feature) : nextData },
     }),
   ]);
 
-  if (extinguished) return "🪵 Ви підклали хмиз у згасле вогнище. Попіл прийняв сухі гілки; тепер потрібен вогонь, щоб розпалити його.";
-  return "🪵 Ви підкинули хмиз у вогнище. Полум'я знову тримається впевненіше.";
+  const base = extinguished
+    ? "🪵 Ви підклали хмиз у згасле вогнище. Попіл прийняв сухі гілки; тепер потрібен вогонь, щоб розпалити його."
+    : "🪵 Ви підкинули хмиз у вогнище. Полум'я знову тримається впевненіше.";
+  return memoryText ? `${base}\n\n${memoryText}` : base;
 }
 
 export async function canAddTwigsToNearbyCampfire(playerId: number) {

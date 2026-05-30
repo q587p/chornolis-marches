@@ -6,6 +6,10 @@ CAL-001,"Calendar, moon phases and named years",icebox,system,world_time,medium,
 CMD-001,Near-term text command pack,testing,feature,commands,high,"commands,aliases,mud,speech,navigation",docs/planning/items/CMD-001-near-term-text-command-pack.md
 CMD-002,Put items into local containers and features,testing,feature,commands,high,"commands,inventory,containers,aliases",docs/planning/items/CMD-002-put-items-into-containers.md
 COMBAT-001,Creature aggression and defense,backlog,feature,combat,medium,"animals,combat,predators,ecology",docs/planning/items/COMBAT-001-creature-aggression-and-defense.md
+DREAM-001,Sleeping body and dream presence separation,backlog,technical,dreams,high,"dreams,tutorial,architecture,body,liminality",docs/planning/items/DREAM-001-sleeping-body-and-dream-presence.md
+DREAM-002,Lucid dream instance MVP,backlog,feature,dreams,medium,"dreams,lucid-dreams,instances,groups,quests",docs/planning/items/DREAM-002-lucid-dream-instance-mvp.md
+DREAM-003,Dream outcomes and guarded rare transfer,backlog,feature,dreams,medium,"dreams,rewards,knowledge,item-origin,quests",docs/planning/items/DREAM-003-dream-outcomes-and-rare-transfer.md
+DREAM-004,Advanced group and place-spirit dreams,icebox,feature,dreams,low,"dreams,groups,spirits,rituals,mythic",docs/planning/items/DREAM-004-advanced-group-and-place-spirit-dreams.md
 ECO-001,Reproduction and herbivore overpopulation,testing,feature,ecology,high,"ecology,reproduction,herbivores,rabbits,resources,world-reactivity",docs/planning/items/ECO-001-reproduction-and-overpopulation.md
 ECO-002,Carcass drop-off contribution and settlement reaction,testing,feature,ecology,high,"ecology,hunting,settlement,rewards",docs/planning/items/ECO-002-carcass-dropoff-reaction.md
 ECO-003,Gate hunting saturation and stand-down state,testing,feature,ecology,high,"ecology,hunting,settlement,npc,rewards",docs/planning/items/ECO-003-gate-hunting-saturation.md
@@ -35,6 +39,7 @@ LOOP-001-B,Starter camp prose polish,next,content,core-loop,medium,"prose,starte
 LOOP-001-C,Bridge threshold prose polish,next,content,core-loop,medium,"prose,bridge,liminality",docs/planning/items/LOOP-001-C.md
 LOOP-001-D,Track detail wording polish,next,ux,tracking,medium,"tracks,examine,copy",docs/planning/items/LOOP-001-D.md
 LOOP-002,Gate hunting loop,testing,feature,world,high,"ecology,hunting,gate,living-world",docs/planning/items/LOOP-002-gate-hunting-loop.md
+LOOP-003,Old campfire memory omen,testing,feature,core-loop,medium,"fire,light,omen,examine,atmosphere",docs/planning/items/LOOP-003-old-campfire-memory-omen.md
 MAP-002-A,First biome foraging table,next,feature,world,high,"map,biome,foraging",docs/planning/items/MAP-002-A.md
 MAP-002-B,Generic gather uses biome candidates,next,feature,world,high,"gather,biome,foraging",docs/planning/items/MAP-002-B.md
 MAP-002-C,Biome foraging text variants,next,content,world,medium,"gather,biome,copy",docs/planning/items/MAP-002-C.md
@@ -69,6 +74,10 @@ PLAN-001,Repository docs are the planning source of truth,testing,documentation,
 PROG-002,Observation-based learning,backlog,feature,progression,medium,"skills,observation,npc,animals,mythic",docs/planning/items/PROG-002-observation-learning.md
 PROG-003,Animal experience and titles,backlog,feature,progression,medium,"animals,ecology,progression,combat",docs/planning/items/PROG-003-animal-experience-and-titles.md
 SETTLE-001,Starter settlement,backlog,feature,settlements,high,"settlement,npc,onboarding",docs/planning/items/SETTLE-001-starter-settlement.md
+SLEEP-001,Lying posture and lie command,next,feature,survival,high,"sleep,posture,aliases,rest",docs/planning/items/SLEEP-001-lying-posture-and-lie-command.md
+SLEEP-002,Ordinary sleep MVP,next,feature,survival,high,"sleep,wake,stamina,hp,tutorial",docs/planning/items/SLEEP-002-ordinary-sleep-mvp.md
+SLEEP-003,World-time auto-wake and sleep comfort,backlog,feature,survival,medium,"sleep,world-time,campfire,comfort,recovery",docs/planning/items/SLEEP-003-world-time-autowake-and-comfort.md
+SLEEP-004,External forced sleep causes,icebox,feature,survival,low,"sleep,creatures,elixirs,rituals,danger",docs/planning/items/SLEEP-004-external-forced-sleep-causes.md
 SOC-001,Contacts / acquaintances MVP,backlog,feature,social,high,"social,contacts,acquaintances,actors,telegram",docs/planning/items/SOC-001-contacts-acquaintances.md
 SOC-002,Follow intent MVP,backlog,feature,social,high,"social,following,actors,telegram,groups",docs/planning/items/SOC-002-follow-intent.md
 SOC-003,Travel group core,backlog,feature,social,high,"social,groups,travel,actors,telegram",docs/planning/items/SOC-003-travel-group-core.md

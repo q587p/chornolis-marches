@@ -236,4 +236,6 @@ Hidden spirits are not animals, so `SPIRIT` movement needs explicit hidden guard
 
 Hidden creatures may later be revealed by high perception, `Спостерігати`, torchlight or moonlight, ritual chalk/ash/salt, herbal smoke, elixirs, boundary markers, or spirit consent.
 
+Openly carried light is not a stealth-safe exception: if a hidden or stealth-like creature/NPC carries a visible lit torch, the torch should still light the location and should reveal at least an uncertain bearer. Future hidden-presence rules may still support spirit lights, foxfire or misleading omens, but those should be explicit phenomena rather than ordinary hidden actors holding ordinary torches.
+
 Future related skills include attention, tracking, instinct, mythic lore and ritual lore. Hidden traces should stay uncertain: cold air, bent grass without footprints, silence moving between trees, disturbed ash near a fire, or animals suddenly falling quiet.

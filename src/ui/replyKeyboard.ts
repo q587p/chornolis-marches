@@ -4,7 +4,7 @@ import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import { formatLifeState, formatResourceState } from "../utils/playerText";
 import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
-import { DREAM_GATE_FEATURE_KEYS, TUTORIAL_HUB_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SAFETY_LOCATION_KEY, TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY, hasTutorialInventoryAvailable, isTutorialLocation, lockedExitDirections } from "../services/tutorial";
+import { DREAM_GATE_FEATURE_KEYS, TUTORIAL_DEEP_REST_LOCATION_KEY, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_HUB_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SAFETY_LOCATION_KEY, TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY, hasTutorialCommandHint, hasTutorialInventoryAvailable, isTutorialLocation, lockedExitDirections } from "../services/tutorial";
 
 type MainKeyboardState = {
   isAuto?: boolean;
@@ -15,10 +15,11 @@ type MainKeyboardState = {
   isResting?: boolean | null;
   showPostureActions?: boolean;
   isTutorialDream?: boolean;
-  showTutorialStatus?: boolean;
   canOpenDreamGate?: boolean;
   canWakeFromTutorial?: boolean;
   lockedExits?: Direction[];
+  canExamine?: boolean;
+  showUtilityActions?: boolean;
 };
 
 export const EMPTY_KEYBOARD_BUTTON = "⠀";
@@ -43,14 +44,14 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   const state = normalizeState(stateOrAuto);
   const exits = new Set(state.exits ?? []);
   const lockedExits = new Set(state.lockedExits ?? []);
-  const utilityButton = (label: string) => state.isTutorialDream ? EMPTY_KEYBOARD_BUTTON : label;
+  const utilityButton = (label: string) => state.showUtilityActions === false ? EMPTY_KEYBOARD_BUTTON : label;
   const directionButton = (direction: Direction, label: string) => exits.has(direction)
     ? lockedExits.has(direction) ? `(${label})` : label
     : EMPTY_KEYBOARD_BUTTON;
   const keyboard = new Keyboard()
     .text("👀 Озирнутися");
   keyboard.text(directionButton("NORTH", "⬆️ Північ"));
-  keyboard.text("🔎 Роздивитися").row();
+  keyboard.text(state.canExamine === false ? EMPTY_KEYBOARD_BUTTON : "🔎 Роздивитися").row();
 
   keyboard.text(directionButton("WEST", "⬅️ Захід"));
   keyboard.text(state.hasInventory ? "🎒 Речі" : EMPTY_KEYBOARD_BUTTON);
@@ -61,7 +62,7 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   keyboard.text(directionButton("SOUTH", "⬇️ Південь"));
   keyboard.text(utilityButton("☰ Меню")).row();
 
-  if (state.statusLabel && (!state.isTutorialDream || state.showTutorialStatus)) keyboard.text(state.statusLabel).row();
+  if (state.statusLabel) keyboard.text(state.statusLabel).row();
   if (state.showPostureActions) {
     for (const label of postureActionLabelsForState(state)) keyboard.text(label);
     keyboard.row();
@@ -158,6 +159,15 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
   const isTutorialDream = player.currentLocation ? isTutorialLocation(player.currentLocation) : false;
   const tutorialInventoryAvailable = isTutorialDream ? await hasTutorialInventoryAvailable(player.id) : false;
   const hasInventory = shouldShowInventoryButton({ inventoryCount, isTutorialDream, tutorialInventoryAvailable });
+  const hasRestLesson = await hasTutorialCommandHint(player.id, "rest");
+  const hasExamineLesson = await hasTutorialCommandHint(player.id, "examine");
+  const tutorialStatusVisible = !isTutorialDream
+    || player.currentLocation?.key === TUTORIAL_REST_LOCATION_KEY
+    || player.currentLocation?.key === TUTORIAL_DEEP_REST_LOCATION_KEY
+    || hasRestLesson;
+  const tutorialExamineVisible = !isTutorialDream
+    || player.currentLocation?.key === TUTORIAL_FORAGING_LOCATION_KEY
+    || hasExamineLesson;
   if (player.currentLocation?.key === TUTORIAL_START_LOCATION_KEY) {
     return buildTutorialStartReplyKeyboard();
   }
@@ -169,14 +179,17 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
     isAuto,
     exits,
     hasInventory,
-    statusLabel: isTutorialDream
-      ? player.currentLocation?.key === TUTORIAL_REST_LOCATION_KEY ? statusButtonLabel(player) : undefined
-      : showTechnicalDetails ? exactStatusButtonLabel(player) : statusButtonLabel(player),
+    statusLabel: tutorialStatusVisible
+      ? player.currentLocation?.key === TUTORIAL_REST_LOCATION_KEY
+        ? statusButtonLabel(player)
+        : showTechnicalDetails ? exactStatusButtonLabel(player) : statusButtonLabel(player)
+      : undefined,
     posture: player.posture,
     isResting: player.isResting,
     showPostureActions: false,
     isTutorialDream,
-    showTutorialStatus: player.currentLocation?.key === TUTORIAL_REST_LOCATION_KEY,
+    canExamine: tutorialExamineVisible,
+    showUtilityActions: !isTutorialDream,
     canOpenDreamGate: isTutorialDream && Boolean(player.currentLocation?.features.length),
     canWakeFromTutorial: player.currentLocation?.key === TUTORIAL_HUB_LOCATION_KEY || player.currentLocation?.key === TUTORIAL_SAFETY_LOCATION_KEY,
     lockedExits,

@@ -44,3 +44,4 @@ This is near-term cleanup, not a behavior expansion. The point is to make future
 - `OBS-001-B` can use this service boundary when exposing a visible herbalist action for observation.
 - `NPC-005` can use this service boundary when hungry herbalists decide to eat berries or mushrooms.
 - Later herbalist inventory/resource decisions should build on this boundary instead of placing more profession code in `worldTick.ts`.
+- When herbalists carry gathered herbs, berries or mushrooms, public `examine` should summarize those supplies qualitatively (`без лікарських трав`, `трохи ягід`, `багато грибів`) rather than exposing exact private inventory counts. Scribe/admin views may show exact values.

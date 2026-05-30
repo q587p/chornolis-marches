@@ -43,7 +43,7 @@ import { requireScribeAdmin } from "../services/adminAccess";
 import { pickUpAllVisibleGroundResources, pickUpFirstGroundResourceByKey, pickUpFirstVisibleGroundResourceByKey, type VisibleGroundResourceKey } from "../services/groundItems";
 import { parseSpeechTarget } from "../services/speechTargets";
 import { dropInventoryResourceDetailed, inspectInventoryResource, inventoryResourceKeyFromText, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
-import { enterTutorialDream, hasCompletedTutorial, openDreamGate, wakeFromTutorialDream } from "../services/tutorial";
+import { enterTutorialDream, hasCompletedTutorial, openDreamGate, rememberTutorialCommandHintIfInTutorial, wakeFromTutorialDream } from "../services/tutorial";
 import { dropObserverText, pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 import { noteKnownMessage } from "../utils/messageTracker";
 import { cookRawMeat, isFreshenedCorpse } from "../services/meat";
@@ -274,13 +274,14 @@ async function replyWithBorderMarkerInspection(ctx: any) {
   await sendFeatureFollowups(ctx, view);
 }
 
-async function submitFeatureInspection(bot: Bot, ctx: any, targetQuery: string) {
+async function submitFeatureInspection(bot: Bot, ctx: any, targetQuery: string, detail: "brief" | "full" = "full") {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player?.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const view = await renderLocationFeatureInteractionByQuery(player.currentLocationId, player.id, targetQuery);
-  if (!view) return submitTargetAction(bot, ctx, "inspect", targetQuery);
+  if (!view) return submitTargetAction(bot, ctx, "inspect", targetQuery, detail);
 
+  await rememberTutorialCommandHintIfInTutorial(player.id, "examine", player.currentLocationId);
   noteKnownMessage(await ctx.reply(view.text, { reply_markup: view.keyboard }));
   await sendFeatureFollowups(ctx, view);
 }
@@ -668,7 +669,7 @@ function validateTargetAction(action: TargetAction, target: ResolvedTarget) {
   return null;
 }
 
-async function submitTargetAction(bot: Bot, ctx: any, action: TargetAction, targetQuery: string) {
+async function submitTargetAction(bot: Bot, ctx: any, action: TargetAction, targetQuery: string, detail: "brief" | "full" = "full") {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
@@ -712,7 +713,7 @@ async function submitTargetAction(bot: Bot, ctx: any, action: TargetAction, targ
     const result = await performOrQueuePlayerAction(bot, {
       playerId: player.id,
       type: typeMap[action],
-      payload: { targetType: match.target.type, targetId: match.target.id, mode: "known" },
+      payload: { targetType: match.target.type, targetId: match.target.id, mode: "known", detail },
       durationMs,
       chatId: ctx.chat?.id,
       interruptCurrent: action === "attack",
@@ -896,6 +897,7 @@ async function submitSleep(ctx: any, tutorial = false) {
     }));
   }
 
+  await disablePlayerAuto(ctx.from.id);
   const result = await enterTutorialDream(player.id);
   await ctx.reply(result.text, { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
   const view = await renderLocationBrief(result.locationId, player.id);
@@ -945,7 +947,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "hide-keyboard") return hideReplyKeyboard(ctx);
     if (parsed.kind === "inspect-vegetation") return replyWithVegetationInspection(ctx);
     if (parsed.kind === "inspect-border-marker") return replyWithBorderMarkerInspection(ctx);
-    if (parsed.kind === "inspect-feature") return submitFeatureInspection(bot, ctx, parsed.target);
+    if (parsed.kind === "inspect-feature") return submitFeatureInspection(bot, ctx, parsed.target, parsed.detail ?? "full");
     if (parsed.kind === "move") return submitCanonicalMove(bot, ctx, parsed.direction, false);
     if (parsed.kind === "gather") return submitCanonicalGather(bot, ctx, parsed.resourceKey, false);
     if (parsed.kind === "posture") return submitPosture(ctx, parsed.mode);

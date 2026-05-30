@@ -18,8 +18,9 @@ The current lane is the three-month vertical slice:
 - LOOP-001: starter location and bridge threshold polish.
 - NPC-004: continue actor inventory and held-light foundation after the 0.13.13 `CreatureResource` torch slice; next work is broader item/carry semantics and fewer remaining `currentAction` bridges.
 - NPC-005: add NPC hunger and food behavior so hunters and herbalists can eat through shared survival/inventory rules.
-- NPC-002: finish the hunter auto-program MVP after the first state-machine slice: inspect/check beat, route/radius tuning and recovery rules for claimed carcasses.
-- ECO-003: tune gate-hunting saturation after the first 0.13.12 slice; the sign, rewards and hunter stand-down behavior exist, but thresholds and linger timing still need observation.
+- NPC-002: finish the hunter auto-program MVP after the first state-machine slice: real torch bundle/light state via `NPC-004`, inspect/check beat, route/radius tuning and recovery rules for claimed carcasses.
+- ECO-003: tune gate-hunting saturation after the first 0.13.12 slice; the sign, rewards and hunter stand-down behavior exist, but thresholds, persisted linger/cooldown, per-tick saturation caching for larger hunter counts, and the temporary plain `/put` default still need follow-up.
+- LOOP-003: tune old campfire memory omens after the first small reveal slice; future work can add more authored locations and traces without turning it into a ritual/reward system.
 - NPC-003: extract herbalist behavior into its own service layer, shaped like the hunter service, before adding more visible herbalist/learning behavior.
 - ADM-001: minimal audit logging for dangerous scribe tools.
 
@@ -30,6 +31,8 @@ The current lane is the three-month vertical slice:
 - FIRE-001: campfire and torch visibility integration.
 - HMYZ-001: find/pickup/add хмиз loop.
 - MAP-002: first biome-aware foraging table.
+- SLEEP-001: lying posture and `/lie` / `лягти` / `лежати` command.
+- SLEEP-002: ordinary sleep MVP with `/sleep`, `/wake`, stronger recovery and `/sleep tutorial` separation.
 
 ## 0.15 Next
 
@@ -43,6 +46,7 @@ The current lane is the three-month vertical slice:
 
 These are still `backlog`, but recent work makes them worth reviewing before the next patch sequence.
 
+- Sleep and dreams: after SLEEP-001/SLEEP-002 land, review SLEEP-003 and DREAM-001 so world-time auto-waking and sleeping-body/dream-presence separation do not drift away from the tutorial dream work.
 - Inventory item actions: the dedicated inventory view exists, and the 0.12.15 drop feedback pass makes the item-instance gap more visible. Item details, safer dropped-item pickup, dream-item origin and richer per-item actions are now small enough to promote when the survival loop needs them.
 - Corpse freshening and meat: the existing corpse/freshen path, hunger and campfire inventory actions are close enough to support a first raw meat -> cooked meat -> eat loop. This has been promoted to `FOOD-001`.
 - Pickup/gather command semantics: `підібрати`/`take` should mean visible ground-item pickup, while `зібрати`/`gather` should mean spending time and stamina on a local resource node. This has been promoted to `ITEM-001`.

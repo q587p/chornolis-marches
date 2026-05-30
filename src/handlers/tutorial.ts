@@ -7,6 +7,7 @@ import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { actionDurationMs, performOrQueuePlayerAction } from "../services/actionQueue";
 import { parseSpeechTarget } from "../services/speechTargets";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
+import { disablePlayerAuto } from "./auto";
 
 function buildTutorialSleepKeyboard() {
   return new InlineKeyboard().text("🌙 Навчальний сон", "tutorial:sleep");
@@ -26,6 +27,7 @@ async function sleepTutorial(ctx: any, forceTutorial = false) {
     return void (await ctx.reply("Звичайний сон ще не вплетений у правила світу. Для навчального сну використайте /sleep tutorial.", { reply_markup: buildTutorialSleepKeyboard() }));
   }
 
+  await disablePlayerAuto(ctx.from.id);
   const result = await enterTutorialDream(player.id);
   await ctx.reply(result.text, { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
   await replyWithLocation(ctx, result.locationId, player.id);

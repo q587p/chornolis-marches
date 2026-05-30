@@ -24,6 +24,8 @@ It is not a trash bin and not a promise. It is cold storage for ideas that need 
 - Large MUD-style socials catalog.
 - Full personal chronicle/journal system.
 - Item durability and deep item lifetime.
+- SLEEP-004: external forced sleep causes from creatures, elixirs, illness, traps or rituals.
+- DREAM-004: advanced group dreams, place-spirit influence, dream conflict/appeasement and ritual dream spaces.
 
 ## Review Rhythm
 

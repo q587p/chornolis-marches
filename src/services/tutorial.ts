@@ -312,6 +312,26 @@ export async function rememberTutorialCommandHint(playerId: number, commandKey: 
   return true;
 }
 
+export async function hasTutorialCommandHint(playerId: number, commandKey: string) {
+  const description = commandKey.trim();
+  const event = await prisma.worldEvent.findFirst({
+    where: { playerId, type: "SYSTEM", title: TUTORIAL_COMMAND_HINT_EVENT_TITLE, description },
+    select: { id: true },
+    orderBy: { id: "desc" },
+  });
+  return Boolean(event);
+}
+
+export async function rememberTutorialCommandHintIfInTutorial(playerId: number, commandKey: string, locationId?: number | null) {
+  if (!locationId) return false;
+  const location = await prisma.cellLocation.findUnique({
+    where: { id: locationId },
+    select: { key: true, z: true, region: { select: { key: true } } },
+  });
+  if (!location || !isTutorialLocation(location)) return false;
+  return rememberTutorialCommandHint(playerId, commandKey, locationId);
+}
+
 async function validLocationId(locationId: number | null, tutorial: boolean) {
   if (!locationId) return null;
   const location = await prisma.cellLocation.findUnique({
@@ -346,7 +366,7 @@ export async function enterTutorialDream(playerId: number, options: { forceStart
     : await validLocationId(await latestPlayerEventLocation(player.id, DREAM_LOCATION_EVENT_TITLE), true);
   const locationId = savedDreamLocationId ?? await getTutorialStartLocationId();
 
-  await prisma.player.update({ where: { id: player.id }, data: { currentLocationId: locationId } });
+  await prisma.player.update({ where: { id: player.id }, data: { currentLocationId: locationId, isAutoEnabled: false } });
   await prisma.worldEvent.create({
     data: {
       type: "SYSTEM",
