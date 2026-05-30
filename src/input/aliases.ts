@@ -638,7 +638,7 @@ function parseBorderMarkerInspectionIntent(text: string): ParsedAliasCommand | n
 }
 
 function parseFeatureInspectionIntent(text: string): ParsedAliasCommand | null {
-  const match = text.match(/^(?:look\s+at|look|x|examine|inspect|роздивитися|роздивитись|придивитися|придивитись|оглянути|глянути\s+на|подивитися\s+на|придивитися\s+до)\s+(.+)$/);
+  const match = text.match(/^(?:look\s+at|look|x|examine|inspect|роздивитися|роздивитись|придивитися\s+до|придивитись\s+до|придивитися|придивитись|оглянути|глянути\s+на|подивитися\s+на)\s+(.+)$/);
   if (!match?.[1]?.trim()) return null;
   return { kind: "inspect-feature", target: match[1].trim() };
 }

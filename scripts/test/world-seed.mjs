@@ -96,6 +96,13 @@ for (const key of ["closed_gate_torch_stand", "closed_gate_hunting_notice", "clo
 const gateTorchStand = features.find((item) => item.key === "closed_gate_torch_stand");
 assert.notEqual(gateTorchStand?.data?.icon, "🔥", "Torch stand should not use the fire icon reserved for flame/campfire actions");
 
+for (const key of ["dream_tutorial_sleep_gate", "dream_tutorial_sleep_gate_return"]) {
+  const feature = features.find((item) => item.key === key);
+  assert.ok(feature, `Dream gate feature missing: ${key}`);
+  assert.ok(feature.data?.aliases?.includes("браму"), `Dream gate should include accusative alias браму: ${key}`);
+  assert.ok(feature.data?.aliases?.includes("брами"), `Dream gate should include genitive alias брами: ${key}`);
+}
+
 for (const creature of uniqueCreatures) {
   assertKnown(locationKeys, creature.locationKey, `Unknown locationKey for unique creature ${creature.name}`);
   for (const resource of creature.resources ?? []) {

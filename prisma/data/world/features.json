@@ -287,7 +287,21 @@
       "locked": true,
       "locks_exit_direction": "NORTH",
       "lock_reason": "брама сну",
-      "reset_after_ms": 30000
+      "reset_after_ms": 30000,
+      "aliases": [
+        "брама",
+        "браму",
+        "брами",
+        "брамі",
+        "брамою",
+        "брама сну",
+        "браму сну",
+        "брами сну",
+        "сонна брама",
+        "сонну браму",
+        "gate",
+        "sleep gate"
+      ]
     }
   },
   {
@@ -395,7 +409,21 @@
       "locked": true,
       "locks_exit_direction": "SOUTH",
       "lock_reason": "брама сну",
-      "reset_after_ms": 30000
+      "reset_after_ms": 30000,
+      "aliases": [
+        "брама",
+        "браму",
+        "брами",
+        "брамі",
+        "брамою",
+        "брама сну",
+        "браму сну",
+        "брами сну",
+        "сонна брама",
+        "сонну браму",
+        "gate",
+        "sleep gate"
+      ]
     }
   }
 ]

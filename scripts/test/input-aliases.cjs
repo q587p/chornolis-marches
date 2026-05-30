@@ -74,6 +74,8 @@ assertAlias("придивитися до знака", { kind: "inspect-border-ma
 assertAlias("look лавка", { kind: "inspect-feature", target: "лавка" });
 assertAlias("/examine лавка", { kind: "inspect-feature", target: "лавка" });
 assertAlias("look bench", { kind: "inspect-feature", target: "bench" });
+assertAlias("оглянути браму", { kind: "inspect-feature", target: "браму" });
+assertAlias("придивитися до брами", { kind: "inspect-feature", target: "брами" });
 
 assertAlias("збирати ягоди", { kind: "gather", resourceKey: "berries" });
 assertAlias("збирати гриби", { kind: "gather", resourceKey: "mushrooms" });

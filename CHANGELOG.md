@@ -25,6 +25,9 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Hunter `currentAction` still carries route/intent markers such as returning for torches, but basic torch count now comes from carried resources with a legacy marker fallback.
 - `/look` and `/examine` style target text can show when a visible NPC is holding a lit torch.
 - Tutorial dream reply keyboards now hide `Help`, `Menu` and ordinary status buttons outside the rest lesson, replacing hidden utility actions with empty slots like unavailable directions.
+- The first blocked attempt to move through the closed Dream Gate now gives a one-time Сон hint to inspect the gate.
+- Ukrainian feature inspection now recognizes Dream Gate case forms such as `оглянути браму` and `придивитися до брами`.
+- Failed `inspect`/`look at` target attempts now use diegetic "I do not see this here" wording instead of generic target-list language.
 - Updated gate hunting loop and `NPC-004` planning docs for the first actor-inventory slice.
 
 ### Tests
@@ -32,6 +35,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Updated NPC hunter helper coverage so new hunter torch action text no longer depends on the lightweight torch-count marker.
 - Added world-seed coverage for unique NPC carried resources and Орина's real torch inventory.
 - Extended reply-keyboard posture coverage for the focused dream gate keyboard and tutorial rest status exception.
+- Added parser and seed coverage for Dream Gate inspection aliases.
 
 ---
 

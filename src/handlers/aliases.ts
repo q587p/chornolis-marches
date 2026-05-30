@@ -182,6 +182,13 @@ function targetListText(targets: TextTargetRef[]) {
   return targets.map((target, index) => `${index + 1}. ${targetDisplayLabel(target)}`).join("\n");
 }
 
+function inspectMissingText(targetQuery: string, targets: TextTargetRef[] = []) {
+  const target = targetQuery.trim();
+  const intro = target ? `Не бачу цього тут: «${target}».` : "Не бачу цього тут.";
+  if (!targets.length) return `${intro}\n\nМожна роздивитися саму місцину або її помітні особливості.`;
+  return `${intro}\n\nПоруч можна роздивитися:\n${targetListText(targets)}`;
+}
+
 function bestTargetMatch(query: string, targets: TextTargetRef[]) {
   const target = normalizeTargetKey(query);
   if (!target) return { kind: "none" as const };
@@ -668,26 +675,30 @@ async function submitTargetAction(bot: Bot, ctx: any, action: TargetAction, targ
   const visibleTargets = await visibleTextTargets(locationId, player.id);
   if (!visibleTargets.length) {
     if (action === "inspect" && (await tryReplyWithInventoryInspection(ctx, player.id, targetQuery))) return;
-    return void (await ctx.reply("Поруч немає видимих цілей."));
+    return void (await ctx.reply(action === "inspect" ? inspectMissingText(targetQuery) : "Поруч немає видимих цілей."));
   }
 
   const match = bestTargetMatch(targetQuery, visibleTargets);
   if (match.kind === "none") {
     if (action === "inspect" && (await tryReplyWithInventoryInspection(ctx, player.id, targetQuery))) return;
-    await ctx.reply(`Не бачу такої цілі поруч. Видимі цілі:\n${targetListText(visibleTargets)}`);
+    await ctx.reply(action === "inspect"
+      ? inspectMissingText(targetQuery, visibleTargets)
+      : `Не бачу такої цілі поруч. Видимі цілі:\n${targetListText(visibleTargets)}`);
     return;
   }
 
   if (match.kind === "many") {
     const keyboard = new InlineKeyboard();
     match.targets.forEach((target, index) => keyboard.text(`${index + 1}. ${targetDisplayLabel(target)}`, `target:${target.type}:${target.id}`).row());
-    await ctx.reply(`Знайшов кілька схожих цілей. Уточни назвою або номером із повного списку поруч.\n\nВидимі цілі:\n${targetListText(visibleTargets)}`, { reply_markup: keyboard });
+    await ctx.reply(action === "inspect"
+      ? `Знайшов кілька схожих істот чи постатей. Уточни назвою або номером.\n\nПоруч можна роздивитися:\n${targetListText(visibleTargets)}`
+      : `Знайшов кілька схожих цілей. Уточни назвою або номером із повного списку поруч.\n\nВидимі цілі:\n${targetListText(visibleTargets)}`, { reply_markup: keyboard });
     return;
   }
 
   const target = await resolveTarget(match.target.type, match.target.id, locationId);
   if (!target) {
-    return void (await ctx.reply("Цілі вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() }));
+    return void (await ctx.reply(action === "inspect" ? "Цього вже немає поруч. Можна роздивитися місцину ще раз." : "Цілі вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() }));
   }
 
   const validationError = validateTargetAction(action, target);

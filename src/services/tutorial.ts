@@ -27,6 +27,7 @@ const DREAM_LOCATION_EVENT_TITLE = "Tutorial dream location";
 const COMPLETED_EVENT_TITLE = "Tutorial completed";
 const RESET_EVENT_TITLE = "Tutorial reset by admin";
 const TUTORIAL_COMMAND_HINT_EVENT_TITLE = "Tutorial command hint";
+const DREAM_GATE_LOCK_HINT_EVENT_TITLE = "Tutorial dream gate lock hint";
 const DREAM_GATE_OPEN_PHRASES = ["відчинитися", "відчинися", "відчинись", "відкритися", "відкрийся"];
 
 function normalizeDreamGateSpeech(text: string) {
@@ -393,6 +394,53 @@ export async function isLocationExitLocked(locationId: number, direction: Direct
   const reason = locked.get(direction);
   if (!reason) return null;
   return `${lockedReasonLabel(reason)} (закрито).`;
+}
+
+async function firstDreamGateLockHint(playerId: number, locationId: number, direction: Direction, reason: string) {
+  if (normalizeDreamGateSpeech(reason) !== "брама сну") return null;
+
+  const gate = await prisma.locationFeature.findFirst({
+    where: {
+      locationId,
+      isActive: true,
+      key: { in: [...DREAM_GATE_FEATURE_KEYS] },
+    },
+    select: { id: true, data: true },
+  });
+  const data = gate ? featureData(gate) : {};
+  if (!gate || data.locked !== true || directionFromData(data) !== direction || isLockedFeatureCurrentlyOpen(data)) return null;
+
+  const existing = await prisma.worldEvent.findFirst({
+    where: {
+      playerId,
+      type: "SYSTEM",
+      title: DREAM_GATE_LOCK_HINT_EVENT_TITLE,
+    },
+    select: { id: true },
+  });
+  if (existing) return null;
+
+  await prisma.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: DREAM_GATE_LOCK_HINT_EVENT_TITLE,
+      description: `${locationId}:${direction}`,
+      playerId,
+      locationId,
+    },
+  });
+
+  return "Сон шепоче: «Брама зімкнена. Спробуй оглянути браму.»";
+}
+
+export async function locationLockedExitMessageForPlayer(playerId: number, locationId: number, direction: Direction) {
+  const locked = await lockedExitDirections(locationId);
+  const reason = locked.get(direction);
+  if (!reason) return null;
+
+  const base = `${lockedReasonLabel(reason)} (закрито).`;
+  const hint = await firstDreamGateLockHint(playerId, locationId, direction, reason);
+  return hint ? `${base}\n\n${hint}` : base;
 }
 
 const DIRECTION_PATH_LABELS: Partial<Record<Direction, string>> = {
