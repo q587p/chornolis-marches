@@ -3,6 +3,7 @@ import { type Direction } from "@prisma/client";
 import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import { formatLifeState, formatResourceState } from "../utils/playerText";
+import { isConfiguredAdminTelegramId } from "../services/adminAccess";
 import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
 import { TUTORIAL_DEEP_REST_LOCATION_KEY, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY, hasTutorialCommandHint, hasTutorialInventoryAvailable, isTutorialLocation, lockedExitDirections } from "../services/tutorial";
 
@@ -18,6 +19,7 @@ type MainKeyboardState = {
   lockedExits?: Direction[];
   canExamine?: boolean;
   showUtilityActions?: boolean;
+  showAdminMenu?: boolean;
 };
 
 export const EMPTY_KEYBOARD_BUTTON = "⠀";
@@ -70,7 +72,7 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   keyboard.text(directionButton("EAST", "Схід ➡️"));
   keyboard.row();
 
-  keyboard.text(utilityButton("🧭 Допомога"));
+  keyboard.text(utilityButton(state.showAdminMenu ? "🛠 Адмін меню (/adminMenu)" : "🧭 Допомога"));
   keyboard.text(directionButton("SOUTH", "⬇️ Південь"));
   keyboard.text(utilityButton("☰ Меню")).row();
 
@@ -125,6 +127,55 @@ export function buildMenuReplyKeyboard(options: { canSeeStats?: boolean } = {}) 
     .text("🌙 AFK / відійти")
     .text("🚪 Завершити сесію");
   return keyboard.resized().persistent(false);
+}
+
+export function buildAdminMenuReplyKeyboard() {
+  return new Keyboard()
+    .text("📊 Статистика (/stat)")
+    .text("🌲 Світ (/world)")
+    .row()
+    .text("👥 Усі (/all)")
+    .text("📍 Місцини (/locationAll)")
+    .row()
+    .text("🧭 Телепорт (/teleport)")
+    .text("✨ Відновити снагу (/restAdmin)")
+    .text("🌿 Ресурси")
+    .row()
+    .text("🔥 Вогонь")
+    .text("🛠 Повна довідка (/adminHelp)")
+    .row()
+    .text("↩️ Назад")
+    .resized()
+    .persistent(false);
+}
+
+export function buildAdminResourcesReplyKeyboard() {
+  return new Keyboard()
+    .text("🌿 Ключі ресурсів (/addResourceHelp)")
+    .row()
+    .text("🍓 Додати ягоди (/restoreBerries)")
+    .text("🌱 Додати трави (/restoreHerbs)")
+    .row()
+    .text("🍄 Додати гриби (/restoreMushrooms)")
+    .text("➕ Додати ресурс (/addResource)")
+    .row()
+    .text("🛠 Адмін меню (/adminMenu)")
+    .text("↩️ Назад")
+    .resized()
+    .persistent(false);
+}
+
+export function buildAdminFireReplyKeyboard() {
+  return new Keyboard()
+    .text("🔥 Додати вогнище (/addCampfire)")
+    .row()
+    .text("🕯 Додати факел (/addTorch)")
+    .text("🪵 Додати хмиз (/addTwigs)")
+    .row()
+    .text("🛠 Адмін меню (/adminMenu)")
+    .text("↩️ Назад")
+    .resized()
+    .persistent(false);
 }
 
 export async function buildMainReplyKeyboardForTelegramId(telegramId: number, isAuto = false) {
@@ -199,6 +250,7 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
     isTutorialDream,
     canExamine: tutorialExamineVisible,
     showUtilityActions: !isTutorialDream,
+    showAdminMenu: player.role === "SCRIBE" || isConfiguredAdminTelegramId(telegramId),
     lockedExits,
   });
 }

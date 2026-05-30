@@ -9,7 +9,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
-## 0.13.20 - Name review clarity and statistic polish - 12026-05-30
+## 0.13.20 - Name review, admin menu and statistic polish - 12026-05-30
 
 ### Changed
 
@@ -19,12 +19,14 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Unknown-input suggestions now include stable slash-command hints for more actions, and the fallback points to `❔ Help` (`/help`) and `Menu` (`/menu`) with clearer labels.
 - Auto stand-up notices now include the matching `/stand` command hint.
 - The "deaths by characters" stat now includes non-animal NPC kills as well as player kills.
+- Scribes now get an `adminMenu` button in the main keyboard instead of the ordinary help button, with submenus for statistics, world views, teleport, resources, fire tools and full admin help.
 
 ### Tests
 
 - Extended character-name helper coverage for prepared-name and custom-name review copy.
 - Extended input-alias coverage for formatted suggestion slash-command hints.
 - Extended ecology-stat helper coverage for NPC character kill counting.
+- Extended reply-keyboard coverage for the scribe admin menu and its resource/fire submenus.
 - Ran `npm test`.
 - Ran `npm run build`.
 - Ran `node scripts/test/character-names.cjs`.

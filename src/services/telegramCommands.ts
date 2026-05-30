@@ -16,6 +16,7 @@ const DEFAULT_BOT_COMMANDS = [
 
 const SCRIBE_BOT_COMMANDS = [
   ...DEFAULT_BOT_COMMANDS,
+  { command: "adminmenu", description: "🛠 Адмін меню Писарів" },
   { command: "stat", description: "📊 Службова статистика світу" },
   { command: "adminhelp", description: "🛠 Команди писарів Порубіжжя" },
 ];
