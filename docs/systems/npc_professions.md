@@ -12,6 +12,8 @@ Food behavior should follow the same direction. A hunter who is hungry may proce
 
 Hunters can answer direct speech by queuing their own reply-mode `SAY` action, then become the player's remembered `/reply` target. This is an early social bridge, not real dialogue understanding yet. Later profession conversation should react to simple keywords about hunting pressure, gates, torches, carcass drop-off, danger and routes, and may offer diegetic hints or task leads without using formal quest-acceptance language.
 
+Hunters also answer a few fitting directed social signals through the same shared signal interface: nods, waves, smiles and bows can receive a small professional acknowledgement, while hostile or irrelevant gestures may be ignored. Herbalists, fishers and later professions should get their own small reaction sets rather than sharing one universal NPC reaction table.
+
 ## Current starter NPC
 
 - Name: Здравомир

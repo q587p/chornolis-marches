@@ -60,6 +60,7 @@ Social signals write `SOCIAL_SIGNAL` world events. `/chat` includes these events
 The shared social-signal layer can be used by players, auto-mode and NPCs.
 
 - Player auto-mode may occasionally use a visible social signal when another character, NPC or animal is nearby.
+- Hunters can answer a small fitting subset of direct signals through the same shared social-signal layer: a nod gets a nod back, a wave gets a wave back, and a smile or bow currently gets a brief acknowledging nod. They should not react to every signal; profession/status should decide what feels appropriate.
 - Herbalist / знахар NPCs have a small signature set: `Притишити`, `Кивнути` and `Вказати`.
 - A herbalist may use `Притишити` or `Кивнути` without a target as a location-level gesture, or aim a signal at a nearby player, NPC or animal. Targetless text should use present tense, e.g. `Здравомир киває.`, to match other local action messages.
 - Basic animal reactions exist: a signal aimed at a living animal can startle it. If that happens, the animal drops its current queued/running action and flees through a visible exit.

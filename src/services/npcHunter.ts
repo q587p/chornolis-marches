@@ -44,6 +44,13 @@ export const HUNTER_CONVERSATION_REPLY_LINES = [
   "Я відповім коротко: бережи снагу й не соромся відступити.",
 ];
 
+export const HUNTER_SOCIAL_REACTIONS: Record<string, string> = {
+  nod: "nod",
+  wave: "wave",
+  smile: "nod",
+  bow: "nod",
+};
+
 export type HunterRoutePlan = {
   gateLocationId: number;
   campfireLocationId: number;
@@ -116,6 +123,10 @@ export function hunterRouteDirections(route: RouteStep[]) {
 export function hunterConversationReplyLine(seed = 0) {
   const index = Math.abs(Math.trunc(seed)) % HUNTER_CONVERSATION_REPLY_LINES.length;
   return HUNTER_CONVERSATION_REPLY_LINES[index];
+}
+
+export function hunterSocialReactionSignal(socialId: string) {
+  return HUNTER_SOCIAL_REACTIONS[socialId] ?? null;
 }
 
 type HunterPreyCandidate = {
