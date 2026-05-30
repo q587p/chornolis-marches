@@ -2,7 +2,7 @@ import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import type { Prisma } from "@prisma/client";
 import { ensureTorchResourceTypes, TORCH_DURATION_MS, TORCH_FADING_MS } from "./fire";
-import { resourceTypeDisplayName } from "./corpses";
+import { dropCarriedCorpseResource, isCorpseQuery, isCorpseResourceKey, resourceTypeDisplayName } from "./corpses";
 import { COOKED_MEAT_KEY, RAW_MEAT_KEY, eatCookedMeat } from "./meat";
 
 export type UsableInventoryResource = "berries" | "herbs" | "mushrooms" | "cooked_meat";
@@ -68,6 +68,30 @@ function normalizeResourceQuery(query: string) {
 export function inventoryResourceKeyFromText(query: string) {
   const normalized = normalizeResourceQuery(query);
   return RESOURCE_ALIASES[normalized] ?? normalized;
+}
+
+function isHeldResourceKey(key: string) {
+  return key === "lit_torch";
+}
+
+function inventoryResourceMatchesQuery(resourceKey: string, resourceName: string, query?: string | null) {
+  if (!query) return true;
+  if (isCorpseQuery(query)) return isCorpseResourceKey(resourceKey);
+
+  const key = inventoryResourceKeyFromText(query);
+  if (resourceKey === key) return true;
+
+  const normalized = normalizeResourceQuery(query);
+  const resourceNameNormalized = normalizeResourceQuery(resourceName);
+  if (isCorpseResourceKey(resourceKey)) {
+    const corpseQuery = normalized
+      .replace(/^(?:corpse|corpses|body|bodies|carcass|carcasses|труп|трупи|туша|туші|рештки)\s*/u, "")
+      .replace(/\s+(?:corpse|corpses|body|bodies|carcass|carcasses|труп|трупи|туша|туші|рештки)$/u, "")
+      .trim();
+    if (corpseQuery && (resourceKey.includes(corpseQuery) || resourceNameNormalized.includes(corpseQuery))) return true;
+  }
+
+  return resourceKey === normalized || resourceNameNormalized === normalized;
 }
 
 async function consumeOneResource(tx: Prisma.TransactionClient, playerResourceId: number, amount: number) {
@@ -187,9 +211,23 @@ export async function dropInventoryResourceDetailed(playerId: number, resourceQu
     });
     if (!carried || carried.amount <= 0) throw new Error("У ваших речах цього немає.");
 
+    const droppedResourceType = carried.resourceType;
+    if (isCorpseResourceKey(droppedResourceType.key)) {
+      const droppedCorpse = await dropCarriedCorpseResource(tx, playerId, player.currentLocationId!, droppedResourceType);
+      if (!droppedCorpse) throw new Error("У ваших речах цього вже немає.");
+      await consumeOneResource(tx, carried.id, carried.amount);
+      const name = droppedCorpse.name;
+      return {
+        text: `Ви поклали ${name} на землю.`,
+        locationId: player.currentLocationId!,
+        droppedName: name,
+        carriedName: name,
+        resourceKey: droppedResourceType.key,
+      };
+    }
+
     await consumeOneResource(tx, carried.id, carried.amount);
 
-    const droppedResourceType = carried.resourceType;
     const litTorchData = carried.resourceType.key === "lit_torch" ? { updatedAt: carried.updatedAt } : {};
     await tx.resourceNode.upsert({
       where: { locationId_resourceTypeId: { locationId: player.currentLocationId!, resourceTypeId: droppedResourceType.id } },
@@ -215,6 +253,69 @@ export async function dropInventoryResourceDetailed(playerId: number, resourceQu
       droppedName: name,
       carriedName: name,
       resourceKey: droppedResourceType.key,
+    };
+  });
+}
+
+export async function dropInventoryResourcesDetailed(playerId: number, resourceQuery?: string | null) {
+  await ensureTorchResourceTypes();
+  const player = await prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } });
+  if (!player?.currentLocationId) throw new Error("Ти ще не увійшов у світ. Напиши /start");
+
+  return prisma.$transaction(async (tx) => {
+    const carried = await tx.playerResource.findMany({
+      where: { playerId, amount: { gt: 0 } },
+      include: { resourceType: true },
+      orderBy: { id: "asc" },
+    });
+
+    const matched = carried.filter((resource) => {
+      if (!resourceQuery && isHeldResourceKey(resource.resourceType.key)) return false;
+      return inventoryResourceMatchesQuery(resource.resourceType.key, resourceTypeDisplayName(resource.resourceType), resourceQuery);
+    });
+    if (!matched.length) {
+      throw new Error(resourceQuery
+        ? "У ваших речах немає такого, що можна викинути."
+        : "У ваших речах немає нічого зайвого для /drop all; те, що в руках, лишається при вас.");
+    }
+
+    const dropped: Array<{ key: string; name: string; amount: number }> = [];
+    for (const resource of matched) {
+      const amount = Math.max(0, resource.amount);
+      if (amount <= 0) continue;
+
+      if (isCorpseResourceKey(resource.resourceType.key)) {
+        let droppedAmount = 0;
+        for (let i = 0; i < amount; i += 1) {
+          const droppedCorpse = await dropCarriedCorpseResource(tx, playerId, player.currentLocationId!, resource.resourceType);
+          if (!droppedCorpse) break;
+          droppedAmount += 1;
+        }
+        if (droppedAmount <= 0) continue;
+        if (droppedAmount >= resource.amount) await tx.playerResource.delete({ where: { id: resource.id } });
+        else await tx.playerResource.update({ where: { id: resource.id }, data: { amount: { decrement: droppedAmount } } });
+        dropped.push({ key: resource.resourceType.key, name: resourceTypeDisplayName(resource.resourceType), amount: droppedAmount });
+        continue;
+      }
+
+      await tx.playerResource.delete({ where: { id: resource.id } });
+      const litTorchData = resource.resourceType.key === "lit_torch" ? { updatedAt: resource.updatedAt } : {};
+      await tx.resourceNode.upsert({
+        where: { locationId_resourceTypeId: { locationId: player.currentLocationId!, resourceTypeId: resource.resourceTypeId } },
+        update: { amount: { increment: amount }, ...litTorchData },
+        create: { locationId: player.currentLocationId!, resourceTypeId: resource.resourceTypeId, amount, maxAmount: amount, ...litTorchData },
+      });
+      dropped.push({ key: resource.resourceType.key, name: resourceTypeDisplayName(resource.resourceType), amount });
+    }
+
+    if (!dropped.length) throw new Error("У ваших речах цього вже немає.");
+    const names = dropped.map((item) => `${item.name}${item.amount > 1 ? ` ×${item.amount}` : ""}`).join(", ");
+    return {
+      text: `Ви виклали на землю: ${names}.`,
+      locationId: player.currentLocationId!,
+      items: dropped,
+      droppedName: names,
+      resourceKey: dropped.map((item) => `${item.key}:${item.amount}`).join(","),
     };
   });
 }

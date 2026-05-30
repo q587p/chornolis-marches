@@ -50,7 +50,8 @@ Actions:
 - `збирати трави`, `збирати ягоди`, `збирати гриби`.
 - Pickup verbs such as `підібрати`, `підняти`, `взяти`, `pick`, `take` and `get` first mean visible ground-item pickup. Gather verbs such as `збирати`, `зібрати`, `шукати` and `gather` mean spending time and stamina on a local resource node. If a natural resource is not lying separately on the ground, pickup text should give a hint to gather it instead.
 - `підібрати ягоди`, `взяти трави`, `take herbs`, `get mushrooms` -> pick up matching loose ground resources only when they are actually visible as ground items; otherwise explain that these should be gathered.
-- `get all`, `pick all`, `взяти все`, `підняти все` -> pick up all visible loose ground resources listed under `Лежить:` in the current місцина.
+- `get all`, `pick all`, `взяти все`, `підняти все` -> pick up all visible loose ground resources and visible corpses listed under `Лежить:` in the current місцина.
+- `get all corpse`, `get all mouse`, `get all berries`, `підняти всі трупи` -> pick up only matching visible things from `Лежить:` when the type can be resolved.
 - Location-detail pickup buttons may also show a compact `всі` action beside a loose resource stack; it picks up all visible loose resources of that same type.
 - Pickup costs `1` stamina per actual item/resource unit picked up; taking a stack of `19` loose items costs `19` stamina.
 - `з'їсти ягоди`, `їсти ягоди`, `використати ягоди`, `eat berries`, `use berries` -> eat carried berries from inventory to restore a small amount of stamina and ease hunger by a tiny amount.
@@ -61,6 +62,7 @@ Actions:
 - `item berries`, `річ ягоди`, `оглянути в речах ягоди`, `inspect item berries` -> inspect a carried resource stack.
 - `/look Лукан`, `look mushroom`, `глянути Лукан`, `дивитися на Лукана`, `examine berries`, `оглянути ягоди`, `роздивитися факел` -> first try local features and visible nearby targets; if no visible target matches, inspect a matching carried resource stack in `Речі`.
 - `викинути ягоди`, `кинути трави`, `drop berries`, `discard torch` -> drop one carried resource from inventory into the current location.
+- `drop all`, `drop all corpse`, `drop all berries`, `викинути все` -> drop all carried resources, or all matching carried resources. Plain `drop all` leaves currently held resources such as a lit torch in hand.
 - `/put`, `/put туша рів`, `/put туша all падальний рів`, `покласти всі рештки до ями` -> put carried carcasses/remains into a matching local feature/container. Plain `/put`, `put` or `покласти` temporarily defaults to one carried carcass/remains item into the gate `падальний рів`; this records a settlement contribution instead of paying a fixed bounty.
 - `/sit`, `sit`, `сісти`, `присісти` -> sit down without starting rest. While sitting, physical actions such as movement, pickup, gathering, attacking, freshening, dropping, putting items into features, cooking and fire/torch handling require standing up first; look, examine, speech, reply and other non-physical actions remain available.
 - When adding a new action alias, button or callback, classify it against the same physical-action guard. If it is physical, it should require standing through the shared posture rule instead of adding a one-off exception.

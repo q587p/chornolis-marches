@@ -101,9 +101,12 @@ assertAlias("взяти трави", { kind: "pickup-target", target: "трав�
 assertAlias("take herbs", { kind: "pickup-target", target: "herbs" });
 assertAlias("get mushrooms", { kind: "pickup-target", target: "mushrooms" });
 assertAlias("get all", { kind: "pickup-target", target: "all" });
+assertAlias("get all corpse", { kind: "pickup-target", target: "all corpse" });
+assertAlias("get all berries", { kind: "pickup-target", target: "all berries" });
 assertAlias("pick all", { kind: "pickup-target", target: "all" });
 assertAlias("взяти все", { kind: "pickup-target", target: "все" });
 assertAlias("підняти все", { kind: "pickup-target", target: "все" });
+assertAlias("підняти всі трупи", { kind: "pickup-target", target: "всі трупи" });
 assertAlias("підібрати хмиз", { kind: "pickup-target", target: "хмиз" });
 
 assertAlias("з'їсти ягоди", { kind: "use-item", item: "berries" });
@@ -195,6 +198,9 @@ assertAlias("freshen all", { kind: "target-action", action: "freshen", target: "
 assertAlias("свіжувати все", { kind: "target-action", action: "freshen", target: "все" });
 assertAlias("освіжити всі", { kind: "target-action", action: "freshen", target: "всі" });
 assertAlias("викинути факел", { kind: "drop-inventory-item", target: "факел" });
+assertAlias("drop all", { kind: "drop-inventory-item", target: "all" });
+assertAlias("drop all corpse", { kind: "drop-inventory-item", target: "all corpse" });
+assertAlias("викинути все", { kind: "drop-inventory-item", target: "все" });
 assertAlias("річ ягоди", { kind: "inspect-inventory-item", target: "ягоди" });
 assert.equal(inventoryResourceKeyFromText("mushroom"), "mushrooms");
 assert.equal(inventoryResourceKeyFromText("raw meat"), "raw_meat");

@@ -35,13 +35,13 @@ import { showTime } from "./time";
 import { submitMove as submitCanonicalMove } from "./movement";
 import { submitGather as submitCanonicalGather } from "./gather";
 import { submitPosture } from "./posture";
-import { addCorpseToInventory, resourceTypeDisplayName } from "../services/corpses";
+import { addCorpseToInventory, addVisibleCorpsesToInventory, resourceTypeDisplayName } from "../services/corpses";
 import { performSocialSignal } from "../services/socialSignals";
 import { addTwigsToCampfire, dousePlayerTorchFromInventory, lightPlayerTorchFromInventory } from "../services/fire";
 import { requireScribeAdmin } from "../services/adminAccess";
-import { pickUpAllVisibleGroundResources, pickUpFirstGroundResourceByKey, pickUpFirstVisibleGroundResourceByKey, type VisibleGroundResourceKey } from "../services/groundItems";
+import { pickUpAllVisibleGroundResources, pickUpAllVisibleGroundResourcesByKey, pickUpFirstGroundResourceByKey, pickUpFirstVisibleGroundResourceByKey, type VisibleGroundResourceKey } from "../services/groundItems";
 import { parseSpeechTarget } from "../services/speechTargets";
-import { dropInventoryResourceDetailed, inspectInventoryResource, inventoryResourceKeyFromText, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
+import { dropInventoryResourceDetailed, dropInventoryResourcesDetailed, inspectInventoryResource, inventoryResourceKeyFromText, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
 import { enterTutorialDream, hasCompletedTutorial, openDreamGate, rememberTutorialCommandHintIfInTutorial, wakeFromTutorialDream } from "../services/tutorial";
 import { dropObserverText, pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 import { notifyPlayerObservers, playerRestStartObserverText, playerRestStopObserverText, playerTutorialSleepObserverText, playerTutorialWakeObserverText } from "../services/playerVisibility";
@@ -368,6 +368,21 @@ async function submitInventoryDrop(bot: Bot, ctx: any, target: string) {
 
   try {
     assertCanPerformPhysicalAction(player, "DROP");
+    const allFilter = allTargetFilter(target);
+    if (allFilter !== null) {
+      const result = await dropInventoryResourcesDetailed(player.id, allFilter || undefined);
+      await recordVisibleItemAction(bot, {
+        playerId: player.id,
+        locationId: result.locationId,
+        observerText: dropObserverText(player, result.droppedName),
+        eventTitle: "Player dropped inventory items",
+        eventDescription: `player=${player.id}; items=${result.resourceKey}`,
+        actionNote: `викладено: ${result.droppedName}`,
+      });
+      await ctx.reply(result.text);
+      return;
+    }
+
     const result = await dropInventoryResourceDetailed(player.id, target);
     await recordVisibleItemAction(bot, {
       playerId: player.id,
@@ -663,6 +678,19 @@ function isPickupAllTarget(target: string) {
   return ["all", "everything", "все", "усе", "всі", "усі"].includes(target);
 }
 
+function allTargetFilter(target: string) {
+  const normalized = normalizeTargetKey(target);
+  if (isPickupAllTarget(normalized)) return "";
+
+  const prefix = normalized.match(/^(?:all|everything|все|усе|всі|усі)\s+(.+)$/u);
+  if (prefix?.[1]?.trim()) return prefix[1].trim();
+
+  const suffix = normalized.match(/^(.+?)\s+(?:all|everything|все|усе|всі|усі)$/u);
+  if (suffix?.[1]?.trim()) return suffix[1].trim();
+
+  return null;
+}
+
 function isAllTarget(target: string) {
   return isPickupAllTarget(normalizeTargetKey(target));
 }
@@ -711,21 +739,51 @@ async function submitFreshenAll(bot: Bot, ctx: any, player: NonNullable<Awaited<
 
 async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
   const normalizedTarget = normalizeTargetKey(targetQuery);
-  if (isPickupAllTarget(normalizedTarget)) {
+  const allFilter = allTargetFilter(normalizedTarget);
+  if (allFilter !== null) {
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
     try {
       assertCanPerformPhysicalAction(player, "PICK_UP");
-      const result = await pickUpAllVisibleGroundResources(player.id);
-      const text = pickedItemsText(result.items);
-      const pickedAmount = pickedItemsAmount(result.items);
+      const picked: Array<{ key: string; name: string; amount: number }> = [];
+      let locationId = player.currentLocationId ?? 0;
+      const filterResourceKey = allFilter ? pickupResourceKey(allFilter) : null;
+
+      if (filterResourceKey) {
+        const result = await pickUpAllVisibleGroundResourcesByKey(player.id, filterResourceKey);
+        picked.push(...result.items);
+        locationId = result.locationId;
+      } else if (allFilter) {
+        const result = await addVisibleCorpsesToInventory(player.id, allFilter);
+        picked.push(...result.items);
+        locationId = result.locationId;
+      } else {
+        try {
+          const result = await pickUpAllVisibleGroundResources(player.id);
+          picked.push(...result.items);
+          locationId = result.locationId;
+        } catch (error) {
+          if (!(error instanceof Error) || !error.message.includes("Поруч немає")) throw error;
+        }
+        try {
+          const result = await addVisibleCorpsesToInventory(player.id);
+          picked.push(...result.items);
+          locationId = result.locationId;
+        } catch (error) {
+          if (!(error instanceof Error) || !error.message.includes("Поруч немає")) throw error;
+        }
+      }
+
+      if (!picked.length) throw new Error("Поруч немає речей, які можна підняти.");
+      const text = pickedItemsText(picked);
+      const pickedAmount = pickedItemsAmount(picked);
       await recordVisibleItemAction(bot, {
         playerId: player.id,
-        locationId: result.locationId,
+        locationId,
         observerText: pickupObserverText(player, `кілька речей: ${text}`),
         eventTitle: "Player picked up all visible ground items",
-        eventDescription: `player=${player.id}; items=${result.items.map((item) => `${item.key}:${item.amount}`).join(",")}`,
+        eventDescription: `player=${player.id}; items=${picked.map((item) => `${item.key}:${item.amount}`).join(",")}`,
         actionNote: `піднято все: ${text}`,
       });
       await spendPlayerStaminaAmount(bot, player.id, pickedAmount, ctx.chat?.id);

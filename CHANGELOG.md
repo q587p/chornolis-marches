@@ -22,6 +22,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Sitting, standing, rest start/stop, tutorial sleep entry and tutorial wake now broadcast concise observer messages to other players in the same location.
 - Visible reply-keyboard status changes now get a short refresh message after quick actions or recovery, so stamina labels update without requiring a chat reopen.
 - Local movement notifications now clean up older movement inline buttons: only the latest tracks button stays active per location/chat, and a character's arrival target button is removed when that character leaves.
+- Bulk pickup now treats visible corpses as ground items too: `get all`, `get all corpse` and type filters such as `get all berries` can collect matching visible items, and `drop all [type]` can drop whole carried stacks while plain `drop all` keeps held lit torches in hand.
 - The "deaths by characters" stat now includes non-animal NPC kills as well as player kills.
 - Scribes now get an `adminMenu` button in the main keyboard instead of the ordinary help button, with submenus for statistics, world views, teleport, resources, fire tools and full admin help.
 - Tutorial dream pacing lines now use the correct nominative pronoun in one monument/hesitation response.
