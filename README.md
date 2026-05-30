@@ -61,6 +61,7 @@ The bot entry point is `src/bot.ts`. The TypeScript source lives under `src/`, w
 ```txt
 src/
   bot.ts                 # Telegram bot composition and startup
+  content/               # authored text/content data such as the world lexicon
   handlers/              # Telegram commands and callback handlers
   services/              # gameplay, world and domain logic
   server/                # HTTP status, health and ecology stat endpoints
@@ -75,6 +76,7 @@ prisma/
 
 docs/
   art/                   # visual direction and prompts
+  content/               # content structure notes and lexicon documentation
   design/                # canonical terminology and design vocabulary
   dev/                   # local setup and deployment notes
   planning/              # backlog, next, icebox and planning notes
@@ -88,6 +90,7 @@ The codebase is currently Telegram-first, but gameplay logic is gradually moving
 - [`docs/game_design.md`](docs/game_design.md) — core design pillars, identity and long-term gameplay philosophy
 - [`docs/roadmap.md`](docs/roadmap.md) — roadmap phases and long-term direction
 - [`docs/design/terminology.md`](docs/design/terminology.md) — canonical Ukrainian UI/gameplay terminology
+- [`docs/content/world-lexicon.md`](docs/content/world-lexicon.md) — world nouns and Ukrainian case-form source notes
 - [`docs/systems/`](docs/systems/) — gameplay system design documents
 - [`docs/planning/`](docs/planning/) — backlog, next, icebox and planning notes
 - [`docs/dev/`](docs/dev/) — local setup, deployment and developer notes

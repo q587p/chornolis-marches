@@ -1,3 +1,5 @@
+import { formsByNominative } from "../content/lexicon/worldLexicon";
+
 export type GrammarCase =
   | "nominative"
   | "genitive"
@@ -37,68 +39,7 @@ const INDECLINABLE_PARTS = new Set([
   "дю",
 ]);
 
-const KNOWN_FORMS: Record<string, Partial<NameForms> & { gender?: Gender; animacy?: Animacy }> = {
-  "заєць": {
-    genitive: "зайця",
-    dative: "зайцю",
-    accusative: "зайця",
-    instrumental: "зайцем",
-    locative: "зайці",
-    vocative: "зайцю",
-    gender: "MASCULINE",
-    animacy: "ANIMATE",
-  },
-  "миша": {
-    genitive: "миші",
-    dative: "миші",
-    accusative: "мишу",
-    instrumental: "мишею",
-    locative: "миші",
-    vocative: "мише",
-    gender: "FEMININE",
-    animacy: "ANIMATE",
-  },
-  "лисиця": {
-    genitive: "лисиці",
-    dative: "лисиці",
-    accusative: "лисицю",
-    instrumental: "лисицею",
-    locative: "лисиці",
-    vocative: "лисице",
-    gender: "FEMININE",
-    animacy: "ANIMATE",
-  },
-  "вовк": {
-    genitive: "вовка",
-    dative: "вовку",
-    accusative: "вовка",
-    instrumental: "вовком",
-    locative: "вовку",
-    vocative: "вовче",
-    gender: "MASCULINE",
-    animacy: "ANIMATE",
-  },
-  "лісовик": {
-    genitive: "лісовика",
-    dative: "лісовику",
-    accusative: "лісовика",
-    instrumental: "лісовиком",
-    locative: "лісовику",
-    vocative: "лісовику",
-    gender: "MASCULINE",
-    animacy: "ANIMATE",
-  },
-  "травник": {
-    genitive: "травника",
-    dative: "травнику",
-    accusative: "травника",
-    instrumental: "травником",
-    locative: "травнику",
-    vocative: "травнику",
-    gender: "MASCULINE",
-    animacy: "ANIMATE",
-  },
-};
+const KNOWN_FORMS = formsByNominative() as Record<string, Partial<NameForms> & { gender?: Gender; animacy?: Animacy }>;
 
 const KNOWN_SEXED_SPECIES_FORMS: Record<string, Partial<Record<"MALE" | "FEMALE", NameForms>>> = {
   mouse: {
