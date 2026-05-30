@@ -24,12 +24,14 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Hunter ground-torch pickup and gate resupply now write real NPC carried resources.
 - Hunter `currentAction` still carries route/intent markers such as returning for torches, but basic torch count now comes from carried resources with a legacy marker fallback.
 - `/look` and `/examine` style target text can show when a visible NPC is holding a lit torch.
+- Tutorial dream reply keyboards now hide `Help`, `Menu` and ordinary status buttons outside the rest lesson, replacing hidden utility actions with empty slots like unavailable directions.
 - Updated gate hunting loop and `NPC-004` planning docs for the first actor-inventory slice.
 
 ### Tests
 
 - Updated NPC hunter helper coverage so new hunter torch action text no longer depends on the lightweight torch-count marker.
 - Added world-seed coverage for unique NPC carried resources and Орина's real torch inventory.
+- Extended reply-keyboard posture coverage for the focused dream gate keyboard and tutorial rest status exception.
 
 ---
 
