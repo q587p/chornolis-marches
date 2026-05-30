@@ -16,6 +16,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added the first seeded gate hunter NPC, `Лукан`, near the closed settlement gate.
 - Added a first NPC hunter state-machine slice that routes through ordinary exits, seeks visible mice or rabbits, attacks through the delayed creature action queue and returns claimed carcasses to the gate.
 - Added hunter-claimed carcass markers and grouped corpse resource helpers so NPC deposits can use the existing carcass drop-off contribution service.
+- Expanded herbalist ambient speech and player auto-mode speech banks to 50 lines each.
 
 ### Changed
 
@@ -25,6 +26,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Tests
 
 - Extended NPC hunter helper coverage for profession detection, claimed-carcass markers and grouped corpse resource keys.
+- Added ambient line-bank coverage so herbalist and auto speech variety does not shrink below 50 unique lines each.
 
 ---
 
