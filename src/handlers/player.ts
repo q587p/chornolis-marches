@@ -30,7 +30,7 @@ import { dropObserverText, recordVisibleItemAction } from "../services/visibleIt
 import { tutorialLookPaceComments } from "../services/tutorialVoices";
 import { escapeHtml } from "../utils/text";
 import { noteKnownMessage } from "../utils/messageTracker";
-import { hasCompletedTutorial, isTutorialLocation } from "../services/tutorial";
+import { hasCompletedTutorial, isTutorialLocation, rememberTutorialCommandHintIfInTutorial } from "../services/tutorial";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "../services/locationFeatures";
 import { canCookPlayerMeat, COOKED_MEAT_KEY, cookRawMeat, RAW_MEAT_KEY } from "../services/meat";
 import { assertCanPerformPhysicalAction } from "../services/postureRules";
@@ -551,6 +551,7 @@ export function registerPlayerHandlers(bot: Bot) {
 
       const view = await renderLocationFeatureInteractionByQuery(player.currentLocationId, player.id, arg, "brief");
       if (view) {
+        await rememberTutorialCommandHintIfInTutorial(player.id, "examine", player.currentLocationId);
         noteKnownMessage(await ctx.reply(view.text, { reply_markup: view.keyboard }));
         await sendFeatureFollowups((text, options) => ctx.reply(text, options), view);
         return;

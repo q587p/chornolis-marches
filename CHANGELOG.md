@@ -7,6 +7,10 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+### Changed
+
+- Tutorial dream reply keyboards now keep ordinary `Help`, `Menu`, `Status` and `Examine` controls hidden until the matching lesson has surfaced them, while `Inventory` appears once the character actually carries something.
+
 ---
 
 ## 0.13.12 - Gate hunting saturation stand-down - 12026-05-30

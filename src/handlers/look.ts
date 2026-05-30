@@ -12,6 +12,7 @@ import { escapeHtml } from "../utils/text";
 import { canEditCallbackMessage, noteKnownMessage } from "../utils/messageTracker";
 import { assertCanPerformPhysicalAction } from "../services/postureRules";
 import { replyToActionError, actionErrorMessage } from "../utils/actionErrorReply";
+import { rememberTutorialCommandHintIfInTutorial } from "../services/tutorial";
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
@@ -93,6 +94,7 @@ export function registerLookHandlers(bot: Bot) {
     if (arg && player.currentLocationId) {
       const view = await renderLocationFeatureInteractionByQuery(player.currentLocationId, player.id, arg);
       if (view) {
+        await rememberTutorialCommandHintIfInTutorial(player.id, "examine", player.currentLocationId);
         await replyAndTrack(ctx, view.text, { reply_markup: view.keyboard });
         await sendVoiceQuoteMessages(ctx, "quoteMessages" in view ? (view as any).quoteMessages : undefined);
         await sendHtmlFollowupMessages(ctx, "followupMessages" in view ? (view as any).followupMessages : undefined);
@@ -194,6 +196,7 @@ export function registerLookHandlers(bot: Bot) {
     await safeAnswerCallbackQuery(ctx);
     if (!view) return void (await ctx.reply("Цього вже не видно поруч."));
 
+    await rememberTutorialCommandHintIfInTutorial(player.id, "examine", player.currentLocationId);
     await editCallbackMessageOrReply(ctx, view.text, { reply_markup: view.keyboard });
     await sendVoiceQuoteMessages(ctx, "quoteMessages" in view ? view.quoteMessages : undefined);
     await sendHtmlFollowupMessages(ctx, "followupMessages" in view ? view.followupMessages : undefined);
