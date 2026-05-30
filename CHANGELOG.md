@@ -33,6 +33,8 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - `/glance` now renders only the location name and visible exits, without an extra "quick look" label or nearby presence text.
 - The tutorial hub `Майбутні уроки` feature now has its own feather icon instead of the generic landmark marker.
 - The tutorial dream now reveals the main-keyboard inventory button after pickup, gather success or explicit inventory commands, not only after the first gather.
+- Hunter stand-down no longer queues extra `SAY` / `REST` actions on world tick; hunters at the waiting fire now enter a resting state directly and use a rate-limited speech event.
+- World tick summaries now count hunter `stoodDown` state separately from queued rest actions.
 - Updated gate hunting loop and `NPC-004` planning docs for the first actor-inventory slice.
 
 ### Tests

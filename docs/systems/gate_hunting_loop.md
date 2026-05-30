@@ -115,7 +115,7 @@ The state should be reversible. If herbivores overgraze again, predator pressure
 - quiet nearby mouse/rabbit pressure around the gate;
 - no nearby depleted-vegetation signal.
 
-When that helper is active, inspecting the gate notice or `Падальний рів` shows "enough for now" text. Drop-offs are still accepted as physical remains, but supply thresholds are suppressed, and hunters without carried/claimed carcasses route toward the magic campfire, rest and use a quieter stand-down line pool. The thresholds are intentionally technical/admin detail; player-facing text should keep saying that the border has enough pressure for now.
+When that helper is active, inspecting the gate notice or `Падальний рів` shows "enough for now" text. Drop-offs are still accepted as physical remains, but supply thresholds are suppressed, and hunters without carried/claimed carcasses route toward the magic campfire, enter a resting stand-down state directly and use a quieter rate-limited stand-down line pool without queuing extra `SAY` / `REST` actions. The thresholds are intentionally technical/admin detail; player-facing text should keep saying that the border has enough pressure for now.
 
 ## `put` Command Relationship
 

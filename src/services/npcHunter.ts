@@ -27,6 +27,7 @@ const HUNTER_PREY_AGE_PRIORITY: Record<string, number> = {
 };
 const HUNTER_STAND_DOWN_EVENT_TITLE = "Hunter stand-down line";
 const HUNTER_STAND_DOWN_LINE_COOLDOWN_MS = 10 * 60 * 1000;
+const HUNTER_STAND_DOWN_ACTION = "перечікує біля межового вогню";
 
 export type HunterRoutePlan = {
   gateLocationId: number;
@@ -431,6 +432,7 @@ async function queueHunterStandDown(bot: Bot | null, hunter: { id: number; locat
   });
 
   if (!recentLine) {
+    const line = hunterFieldLine("standDown", hunter.id + (hunter.steps ?? 0));
     await prisma.worldEvent.create({
       data: {
         type: "NPC_ACTION",
@@ -439,22 +441,18 @@ async function queueHunterStandDown(bot: Bot | null, hunter: { id: number; locat
         locationId: hunter.locationId,
       },
     });
-    await enqueueCreatureAction({
-      creatureId: hunter.id,
-      type: "SAY",
-      payload: { text: hunterFieldLine("standDown", hunter.id + (hunter.steps ?? 0)) },
-      durationMs: actionDurationMs("SAY", hunter.stamina),
-    });
-    return "queuedSay";
+    await logEvent("SAY", `${hunter.name ?? "Мисливець"} промовляє`, line, hunter.locationId);
+    if (bot) await notifyLocationAll(bot, hunter.locationId, `${hunter.name ?? "Мисливець"} промовляє:\n“${line}”`);
   }
 
-  await enqueueCreatureAction({
-    creatureId: hunter.id,
-    type: "REST",
-    payload: {},
-    durationMs: actionDurationMs("REST", hunter.stamina),
+  await prisma.creature.updateMany({
+    where: { id: hunter.id, isAlive: true, isGone: false },
+    data: {
+      activity: "RESTING",
+      currentAction: HUNTER_STAND_DOWN_ACTION,
+    },
   });
-  return "queuedRest";
+  return "stoodDown";
 }
 
 export async function tickNpcHunter(bot: Bot | null, hunter: any) {
