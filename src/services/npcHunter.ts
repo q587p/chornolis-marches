@@ -29,6 +29,21 @@ const HUNTER_STAND_DOWN_EVENT_TITLE = "Hunter stand-down line";
 const HUNTER_STAND_DOWN_LINE_COOLDOWN_MS = 10 * 60 * 1000;
 const HUNTER_STAND_DOWN_ACTION = "перечікує біля межового вогню";
 
+export const HUNTER_CONVERSATION_REPLY_LINES = [
+  "Чую. Тільки не стій довго на відкритому місці.",
+  "Біля воріт слова швидко стають чутками. Кажи обережно.",
+  "Якщо йдеш у траву, дивись під ноги й на край кущів.",
+  "Гризуни не страшні поодинці. Страшно, коли їх забагато.",
+  "Факел тримай сухим, а дорогу назад пам’ятай краще за дорогу вперед.",
+  "Падальний рів не для слави. Просто світ мусить дихати рівніше.",
+  "Не кожен слід вартий погоні. Деякі краще запам’ятати.",
+  "Якщо ліс мовчить, це ще не значить, що він не слухає.",
+  "Ситий вовк рідше дивиться на людей. От і вся мудрість, майже.",
+  "Межа тримається не мечами, а звичкою повертатися.",
+  "Краще один певний крок, ніж три хоробрі навмання.",
+  "Я відповім коротко: бережи снагу й не соромся відступити.",
+];
+
 export type HunterRoutePlan = {
   gateLocationId: number;
   campfireLocationId: number;
@@ -96,6 +111,11 @@ export function hunterIsReturningForTorches(currentAction: string | null | undef
 
 export function hunterRouteDirections(route: RouteStep[]) {
   return route.map((step) => step.direction);
+}
+
+export function hunterConversationReplyLine(seed = 0) {
+  const index = Math.abs(Math.trunc(seed)) % HUNTER_CONVERSATION_REPLY_LINES.length;
+  return HUNTER_CONVERSATION_REPLY_LINES[index];
 }
 
 type HunterPreyCandidate = {

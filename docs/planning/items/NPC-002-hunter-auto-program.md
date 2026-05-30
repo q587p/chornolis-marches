@@ -104,6 +104,7 @@ Remaining work before closing the full MVP:
 - add an inspect/check beat between attack and next decision;
 - decide whether hunter-claimed carcasses should ever be recoverable if the hunter dies, disappears or is reset mid-route;
 - add hunter rate limits if the world grows beyond the current tiny seeded set. Two seeded hunters are acceptable without extra throttling, but high-density worlds with many hunters may need caps on hunt decisions, route retries, attacks, pickups, deposits and field lines per tick.
+- add keyword-aware hunter conversation replies: the current reply-mode pool is intentionally abstract, but future hunters should recognize simple words around hunting, gates, torches, carcass drop-off, danger and route hints, then answer with useful information or point toward nearby ecological tasks without turning into a formal quest giver.
 
 Verification notes for the next hunter slices:
 

@@ -6,6 +6,7 @@ const {
   buildHunterRoutePlan,
   HUNTER_DEFAULT_MAGIC_CAMPFIRE_FEATURE_KEY,
   HUNTER_CARRIED_TORCH_PREFIX,
+  HUNTER_CONVERSATION_REPLY_LINES,
   HUNTER_GROUND_TORCH_KEYS,
   HUNTER_PROFESSION_KEY,
   HUNTER_RETURN_TORCH_RESERVE,
@@ -15,6 +16,7 @@ const {
   hunterCarriedTorchCount,
   hunterClaimedCorpseAction,
   hunterClaimedCorpseOwnerId,
+  hunterConversationReplyLine,
   hunterIsReturningForTorches,
   hunterReturningForTorchesAction,
   hunterRouteDirections,
@@ -87,6 +89,9 @@ assert.equal(hunterClaimedCorpseOwnerId(claimText), 42);
 assert.equal(hunterClaimedCorpseOwnerId("лежить нерухомо"), null);
 assert.equal(isHunterCreature({ professionKey: "hunter" }), true);
 assert.equal(isHunterCreature({ professionKey: "znakhar" }), false);
+assert.ok(HUNTER_CONVERSATION_REPLY_LINES.length >= 10, "Hunters should have a small conversational reply pool");
+assert.equal(hunterConversationReplyLine(0), HUNTER_CONVERSATION_REPLY_LINES[0]);
+assert.equal(hunterConversationReplyLine(HUNTER_CONVERSATION_REPLY_LINES.length + 1), HUNTER_CONVERSATION_REPLY_LINES[1]);
 
 const claimedGroups = groupHunterClaimedCorpses([
   { id: 1, sex: "MALE", species: { key: "rabbit", name: "заєць", nameGenitive: "зайця" } },

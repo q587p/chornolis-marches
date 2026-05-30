@@ -10,6 +10,8 @@ When herbalists gain real or lightweight carried resources, full `examine` shoul
 
 Food behavior should follow the same direction. A hunter who is hungry may process a fresh corpse, cook meat at a real campfire and eat. A herbalist who is hungry may eat carried or gathered berries and mushrooms, while later systems can distinguish food, medicine and risky forage more carefully.
 
+Hunters can answer direct speech by queuing their own reply-mode `SAY` action, then become the player's remembered `/reply` target. This is an early social bridge, not real dialogue understanding yet. Later profession conversation should react to simple keywords about hunting pressure, gates, torches, carcass drop-off, danger and routes, and may offer diegetic hints or task leads without using formal quest-acceptance language.
+
 ## Current starter NPC
 
 - Name: Здравомир
