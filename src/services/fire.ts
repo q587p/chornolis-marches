@@ -137,6 +137,33 @@ function remainingMs(expiresAt: Date, now = new Date()) {
   return expiresAt.getTime() - now.getTime();
 }
 
+function activeLitTorchSince(now = new Date()) {
+  return new Date(now.getTime() - TORCH_DURATION_MS);
+}
+
+export function litTorchExpiresAt(resource: { updatedAt: Date | string }) {
+  const updatedAt = resource.updatedAt instanceof Date ? resource.updatedAt : new Date(resource.updatedAt);
+  return new Date(updatedAt.getTime() + TORCH_DURATION_MS);
+}
+
+export function isActiveLitTorchResource(
+  resource: { amount: number; updatedAt: Date | string; resourceType?: { key?: string | null } | null },
+  now = new Date(),
+) {
+  const updatedAt = resource.updatedAt instanceof Date ? resource.updatedAt : new Date(resource.updatedAt);
+  return resource.amount > 0
+    && resource.resourceType?.key === LIT_TORCH_KEY
+    && !Number.isNaN(updatedAt.getTime())
+    && updatedAt.getTime() > activeLitTorchSince(now).getTime();
+}
+
+export function isActiveGroundLitTorchResource(
+  resource: { amount: number; updatedAt: Date | string; resourceType?: { key?: string | null } | null },
+  now = new Date(),
+) {
+  return isActiveLitTorchResource(resource, now);
+}
+
 export function campfireExpiresAt(feature: { data?: unknown | null }) {
   return dateFromJson(jsonRecord(feature.data).expiresAt);
 }
@@ -289,11 +316,16 @@ export async function notifyFadingFireTimers(bot: Bot) {
   }
 }
 
-export async function expireGroundLitTorches(bot?: Bot, now = new Date()) {
+export async function expireGroundLitTorches(bot?: Bot, now = new Date(), locationId?: number | null) {
   const { litTorch, twigs } = await ensureTorchResourceTypes();
-  const expiredSince = new Date(now.getTime() - TORCH_DURATION_MS);
+  const expiredSince = activeLitTorchSince(now);
   const expiredNodes = await prisma.resourceNode.findMany({
-    where: { resourceTypeId: litTorch.id, amount: { gt: 0 }, updatedAt: { lte: expiredSince } },
+    where: {
+      resourceTypeId: litTorch.id,
+      amount: { gt: 0 },
+      updatedAt: { lte: expiredSince },
+      ...(locationId ? { locationId } : {}),
+    },
     select: { id: true, locationId: true, amount: true },
   });
 
@@ -869,11 +901,25 @@ export async function canAddTwigsToNearbyCampfire(playerId: number) {
   return features.some((feature) => isExtinguishedCampfire(feature) || canAddTwigsToCampfire(feature));
 }
 
-export async function hasActiveTorchLightAtLocation(locationId: number) {
+export async function hasActiveGroundTorchLightAtLocation(locationId: number, now = new Date()) {
   const litTorch = await prisma.resourceType.findUnique({ where: { key: LIT_TORCH_KEY } });
   if (!litTorch) return false;
-  const activeSince = new Date(Date.now() - TORCH_DURATION_MS);
-  const [playerCarriedCount, creatureCarriedCount, groundCount] = await Promise.all([
+  const groundCount = await prisma.resourceNode.count({
+    where: {
+      locationId,
+      resourceTypeId: litTorch.id,
+      amount: { gt: 0 },
+      updatedAt: { gt: activeLitTorchSince(now) },
+    },
+  });
+  return groundCount > 0;
+}
+
+export async function hasActiveTorchLightAtLocation(locationId: number, now = new Date()) {
+  const litTorch = await prisma.resourceType.findUnique({ where: { key: LIT_TORCH_KEY } });
+  if (!litTorch) return false;
+  const activeSince = activeLitTorchSince(now);
+  const [playerCarriedCount, creatureCarriedCount, groundLight] = await Promise.all([
     prisma.playerResource.count({
       where: {
         resourceTypeId: litTorch.id,
@@ -890,23 +936,20 @@ export async function hasActiveTorchLightAtLocation(locationId: number) {
         creature: { locationId, isAlive: true, isGone: false, isHidden: false },
       },
     }),
-    prisma.resourceNode.count({
-      where: {
-        locationId,
-        resourceTypeId: litTorch.id,
-        amount: { gt: 0 },
-        updatedAt: { gt: activeSince },
-      },
-    }),
+    hasActiveGroundTorchLightAtLocation(locationId, now),
   ]);
-  return playerCarriedCount + creatureCarriedCount + groundCount > 0;
+  return playerCarriedCount + creatureCarriedCount > 0 || groundLight;
 }
 
 export async function hasActiveLightAtLocation(locationId: number) {
-  await expireTimedCampfires(locationId);
+  const now = new Date();
+  await Promise.all([
+    expireTimedCampfires(locationId),
+    expireGroundLitTorches(undefined, now, locationId),
+  ]);
   const [featureLight, torchLight] = await Promise.all([
     prisma.locationFeature.count({ where: { locationId, isActive: true, providesLight: true } }),
-    hasActiveTorchLightAtLocation(locationId),
+    hasActiveTorchLightAtLocation(locationId, now),
   ]);
   return featureLight > 0 || torchLight;
 }

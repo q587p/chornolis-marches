@@ -4,7 +4,10 @@ require("ts-node/register");
 
 const {
   OLD_CAMPFIRE_MEMORY_OMENS,
+  TORCH_DURATION_MS,
   canRevealOldCampfireMemory,
+  isActiveGroundLitTorchResource,
+  litTorchExpiresAt,
   oldCampfireMemoryInspectionText,
   oldCampfireMemoryOmen,
 } = require("../../src/services/fire");
@@ -46,5 +49,26 @@ assert.equal(oldCampfireMemoryInspectionText({
   type: "MAGIC_CAMPFIRE",
   data: { oldCampfireMemoryText: "Не показувати для магічного вогнища." },
 }), null);
+
+const now = new Date("2026-05-31T10:00:00.000Z");
+const freshGroundTorch = {
+  amount: 2,
+  updatedAt: new Date(now.getTime() - 60_000),
+  resourceType: { key: "lit_torch" },
+};
+assert.equal(isActiveGroundLitTorchResource(freshGroundTorch, now), true);
+assert.equal(litTorchExpiresAt(freshGroundTorch).getTime(), freshGroundTorch.updatedAt.getTime() + TORCH_DURATION_MS);
+assert.equal(isActiveGroundLitTorchResource({
+  ...freshGroundTorch,
+  updatedAt: new Date(now.getTime() - TORCH_DURATION_MS - 1),
+}, now), false);
+assert.equal(isActiveGroundLitTorchResource({
+  ...freshGroundTorch,
+  resourceType: { key: "torch" },
+}, now), false);
+assert.equal(isActiveGroundLitTorchResource({
+  ...freshGroundTorch,
+  amount: 0,
+}, now), false);
 
 console.log("Campfire memory helpers OK");

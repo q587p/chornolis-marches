@@ -7,9 +7,11 @@ import { isCampfireFeature } from "./locationFeatures";
 import {
   campfireStateLine,
   canAddTwigsToCampfire,
+  expireGroundLitTorches,
   expireTimedCampfires,
   getPlayerTorchState,
   hasActiveLightAtLocation,
+  isActiveLitTorchResource,
   isCampfireFading,
   isExtinguishedCampfire,
   lightCampfireFromTorch,
@@ -66,11 +68,7 @@ function isVisibleLivingCreature(c: any) {
 }
 
 function visibleCreatureTorchText(c: any) {
-  const lit = c.resources?.find((resource: any) =>
-    resource.amount > 0
-    && resource.resourceType?.key === "lit_torch"
-    && Date.now() - new Date(resource.updatedAt).getTime() < TORCH_DURATION_MS
-  );
+  const lit = c.resources?.find((resource: any) => isActiveLitTorchResource(resource));
   if (!lit) return null;
   return lit.amount > 1 ? "тримає запалені факели" : "тримає запалений факел";
 }
@@ -644,7 +642,7 @@ async function resourceButtonData(resources: any[], viewerPlayerId?: number) {
 }
 
 export async function renderLocationBrief(locationId: number, viewerPlayerId?: number, options: LocationRenderOptions = {}) {
-  await expireTimedCampfires(locationId);
+  await Promise.all([expireTimedCampfires(locationId), expireGroundLitTorches(undefined, new Date(), locationId)]);
   const location = await prisma.cellLocation.findUnique({
     where: { id: locationId },
     include: {
@@ -714,7 +712,7 @@ export async function renderLocationExits(locationId: number) {
 }
 
 export async function renderLocationDetails(locationId: number, viewerPlayerId?: number, options: LocationRenderOptions = {}) {
-  await expireTimedCampfires(locationId);
+  await Promise.all([expireTimedCampfires(locationId), expireGroundLitTorches(undefined, new Date(), locationId)]);
   const location = await prisma.cellLocation.findUnique({
     where: { id: locationId },
     include: {

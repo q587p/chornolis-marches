@@ -17,12 +17,15 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Character cards now show a `Queue` button when the character has a running/queued action or active rest.
 - `/who`, the public `/who` web page and `/who.json` now append ` (відійшов)` to AFK player character names.
 - `/all` now shows the same AFK suffix in player rows for scribe/admin visibility.
+- Dropped burning torches now explicitly count as local light sources until their burn timer expires, and expired ground torches are cleaned up before location render.
 - Removed a stray UTF-8 BOM from `src/services/actionCompletions.ts`.
 
 ### Tests
 
 - Extended session-presence coverage for the AFK display suffix.
+- Extended fire helper coverage for active dropped lit torches.
 - Ran `node scripts/test/session-presence.cjs`.
+- Ran `node scripts/test/campfire-memory.cjs`.
 - Ran `node scripts/test/posture.cjs`.
 - Ran `npm test`.
 - Ran `npm run build`.
