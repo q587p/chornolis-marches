@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 
 require("ts-node/register");
 
-const { EMPTY_KEYBOARD_BUTTON, buildMainReplyKeyboard, buildTutorialSecondStepReplyKeyboard, postureActionLabelsForState, shouldShowInventoryButton, shouldUseFocusedTutorialReplyKeyboard } = require("../../src/ui/replyKeyboard");
+const { EMPTY_KEYBOARD_BUTTON, buildMainReplyKeyboard, buildTutorialSecondStepReplyKeyboard, buildTutorialStartReplyKeyboard, postureActionLabelsForState, shouldShowInventoryButton, shouldUseFocusedTutorialReplyKeyboard } = require("../../src/ui/replyKeyboard");
 const { TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY } = require("../../src/services/tutorial");
 const { formatObservedPostureText, formatPostureText } = require("../../src/utils/playerText");
 const { shouldAutoStandBeforeAction } = require("../../src/handlers/auto");
@@ -34,15 +34,25 @@ assert.equal(shouldShowInventoryButton({ inventoryCount: 1, isTutorialDream: tru
 assert.equal(shouldShowInventoryButton({ inventoryCount: 0, isTutorialDream: true, tutorialInventoryAvailable: true }), true);
 assert.equal(shouldShowInventoryButton({ inventoryCount: 0, isTutorialDream: false, tutorialInventoryAvailable: true }), false);
 
+const tutorialStartButtons = buildTutorialStartReplyKeyboard().keyboard.map((row) => row.map((button) => button.text));
+assert.deepEqual(tutorialStartButtons, [
+  ["👀 Озирнутися", EMPTY_KEYBOARD_BUTTON, EMPTY_KEYBOARD_BUTTON],
+  [EMPTY_KEYBOARD_BUTTON, EMPTY_KEYBOARD_BUTTON, EMPTY_KEYBOARD_BUTTON],
+  [EMPTY_KEYBOARD_BUTTON, "⬇️ Південь", EMPTY_KEYBOARD_BUTTON],
+]);
+assert.equal(tutorialStartButtons.flat().includes("🌅 Прокинутися"), false);
+
 const tutorialSecondStepButtons = buildTutorialSecondStepReplyKeyboard().keyboard.map((row) => row.map((button) => button.text));
 assert.deepEqual(tutorialSecondStepButtons, [
-  ["👀 Озирнутися"],
-  ["⬆️ Північ", "⬇️ Південь"],
+  ["👀 Озирнутися", "⬆️ Північ", EMPTY_KEYBOARD_BUTTON],
+  [EMPTY_KEYBOARD_BUTTON, EMPTY_KEYBOARD_BUTTON, EMPTY_KEYBOARD_BUTTON],
+  [EMPTY_KEYBOARD_BUTTON, "⬇️ Південь", EMPTY_KEYBOARD_BUTTON],
 ]);
 assert.equal(tutorialSecondStepButtons.flat().includes("🎒 Речі"), false);
 assert.equal(tutorialSecondStepButtons.flat().includes("🔎 Роздивитися"), false);
 assert.equal(tutorialSecondStepButtons.flat().includes("🧭 Допомога"), false);
 assert.equal(tutorialSecondStepButtons.flat().includes("☰ Меню"), false);
+assert.equal(tutorialSecondStepButtons.flat().includes("🌅 Прокинутися"), false);
 assert.equal(shouldUseFocusedTutorialReplyKeyboard(TUTORIAL_START_LOCATION_KEY, 0), true);
 assert.equal(shouldUseFocusedTutorialReplyKeyboard(TUTORIAL_START_LOCATION_KEY, 1), false);
 assert.equal(shouldUseFocusedTutorialReplyKeyboard(TUTORIAL_SECOND_STEP_LOCATION_KEY, 1), true);
@@ -75,6 +85,7 @@ assert.equal(lessonDreamButtons.flat().includes("🎒 Речі"), true);
 assert.equal(lessonDreamButtons.flat().includes("❤️ добре · ⚡ рівно"), true);
 assert.equal(lessonDreamButtons.flat().includes("🧭 Допомога"), false);
 assert.equal(lessonDreamButtons.flat().includes("☰ Меню"), false);
+assert.equal(lessonDreamButtons.flat().includes("🌅 Прокинутися"), false);
 
 const tutorialGateButtons = buildMainReplyKeyboard({
   exits: ["NORTH", "SOUTH"],

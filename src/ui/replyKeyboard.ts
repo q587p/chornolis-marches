@@ -4,7 +4,7 @@ import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import { formatLifeState, formatResourceState } from "../utils/playerText";
 import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
-import { TUTORIAL_DEEP_REST_LOCATION_KEY, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_HUB_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SAFETY_LOCATION_KEY, TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY, hasTutorialCommandHint, hasTutorialInventoryAvailable, isTutorialLocation, lockedExitDirections } from "../services/tutorial";
+import { TUTORIAL_DEEP_REST_LOCATION_KEY, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY, hasTutorialCommandHint, hasTutorialInventoryAvailable, isTutorialLocation, lockedExitDirections } from "../services/tutorial";
 
 type MainKeyboardState = {
   isAuto?: boolean;
@@ -15,7 +15,6 @@ type MainKeyboardState = {
   isResting?: boolean | null;
   showPostureActions?: boolean;
   isTutorialDream?: boolean;
-  canWakeFromTutorial?: boolean;
   lockedExits?: Direction[];
   canExamine?: boolean;
   showUtilityActions?: boolean;
@@ -80,27 +79,25 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
     for (const label of postureActionLabelsForState(state)) keyboard.text(label);
     keyboard.row();
   }
-  if (state.canWakeFromTutorial) keyboard.text("🌅 Прокинутися");
-
   return trimTrailingEmptyRows(keyboard).resized().persistent(false);
 }
 
 export function buildTutorialStartReplyKeyboard() {
-  return new Keyboard()
-    .text("👀 Озирнутися")
-    .text("⬇️ Південь")
-    .resized()
-    .persistent(false);
+  return buildMainReplyKeyboard({
+    exits: ["SOUTH"],
+    isTutorialDream: true,
+    canExamine: false,
+    showUtilityActions: false,
+  });
 }
 
 export function buildTutorialSecondStepReplyKeyboard() {
-  return new Keyboard()
-    .text("👀 Озирнутися")
-    .row()
-    .text("⬆️ Північ")
-    .text("⬇️ Південь")
-    .resized()
-    .persistent(false);
+  return buildMainReplyKeyboard({
+    exits: ["NORTH", "SOUTH"],
+    isTutorialDream: true,
+    canExamine: false,
+    showUtilityActions: false,
+  });
 }
 
 function statusButtonLabel(player: { hp: number; hpMax: number | null; stamina: number; staminaMax: number | null }) {
@@ -199,7 +196,6 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
     isTutorialDream,
     canExamine: tutorialExamineVisible,
     showUtilityActions: !isTutorialDream,
-    canWakeFromTutorial: player.currentLocation?.key === TUTORIAL_HUB_LOCATION_KEY || player.currentLocation?.key === TUTORIAL_SAFETY_LOCATION_KEY,
     lockedExits,
   });
 }
