@@ -45,7 +45,7 @@ export type ParsedAliasCommand =
   | { kind: "track"; detail?: boolean }
   | { kind: "inspect-vegetation" }
   | { kind: "inspect-border-marker" }
-  | { kind: "inspect-feature"; target: string }
+  | { kind: "inspect-feature"; target: string; detail?: "brief" | "full" }
   | { kind: "wait" }
   | { kind: "add-twigs-campfire" }
   | { kind: "cook-meat" }
@@ -638,9 +638,13 @@ function parseBorderMarkerInspectionIntent(text: string): ParsedAliasCommand | n
 }
 
 function parseFeatureInspectionIntent(text: string): ParsedAliasCommand | null {
-  const match = text.match(/^(?:look\s+at|look|x|examine|inspect|роздивитися|роздивитись|придивитися|придивитись|оглянути|глянути\s+на|подивитися\s+на|придивитися\s+до)\s+(.+)$/);
-  if (!match?.[1]?.trim()) return null;
-  return { kind: "inspect-feature", target: match[1].trim() };
+  const brief = text.match(/^(?:look\s+at|look|оглянути|глянути\s+на|подивитися\s+на)\s+(.+)$/);
+  if (brief?.[1]?.trim()) return { kind: "inspect-feature", target: brief[1].trim(), detail: "brief" };
+
+  const full = text.match(/^(?:x|examine|inspect|роздивитися|роздивитись|придивитися|придивитись|придивитися\s+до)\s+(.+)$/);
+  if (full?.[1]?.trim()) return { kind: "inspect-feature", target: full[1].trim(), detail: "full" };
+
+  return null;
 }
 
 function parseOpenIntent(text: string): ParsedAliasCommand | null {

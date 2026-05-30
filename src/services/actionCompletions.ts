@@ -42,7 +42,7 @@ import { GATHERING_OBSERVATION_GROWTH_MESSAGE, GATHERING_PRACTICE_GROWTH_MESSAGE
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
 type SayPayload = { text: string; mode?: "say" | "whisper" | "reply" | "shout"; targetType?: "player" | "creature"; targetId?: number; targetName?: string; targetDative?: string };
-type SocialPayload = { targetType: "player" | "creature"; targetId: number; mode?: "known" | "mystery" };
+type SocialPayload = { targetType: "player" | "creature"; targetId: number; mode?: "known" | "mystery"; detail?: "brief" | "full" };
 
 const RECENT_ATTACK_FEATURE_PREFIX = "recent_attack_";
 const RECENT_ATTACK_DANGER_TICKS = Number(process.env.WORLD_RECENT_ATTACK_DANGER_TICKS || 20);
@@ -568,7 +568,10 @@ async function completeInspect(bot: Bot, action: WorldAction) {
   const player = action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null;
   const chatId = chatIdFromAction(action);
   if (!player || !player.currentLocationId || action.actorType !== "PLAYER") return void (await setActionStatus(action, "FAILED"));
-  const target = await resolveTarget(payload.targetType, payload.targetId, player.currentLocationId, { viewerPlayerId: player.id });
+  const target = await resolveTarget(payload.targetType, payload.targetId, player.currentLocationId, {
+    viewerPlayerId: player.id,
+    detail: payload.detail === "brief" ? "brief" : "full",
+  });
   await setActionStatus(action, target ? "DONE" : "FAILED");
   if (!target) {
     if (chatId) await bot.api.sendMessage(chatId, "Цілі вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() });
