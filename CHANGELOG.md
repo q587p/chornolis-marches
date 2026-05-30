@@ -9,6 +9,36 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.17 - Small polish, status visibility and target interactions - 12026-05-30
+
+### Added
+
+- Added player-caused creature death counts to ecology/stat surfaces.
+- Added split runtime status checks for HTTP, Telegram bot, database, world tick and action queue state.
+- Added `/reset world`, `/reset stats` and `/reset full` admin reset modes with clearer `/reset` guidance.
+- Added targeted `look` support for visible players, NPCs, animals and features.
+- Added a `Look` action to target interaction keyboards alongside `Examine`, `Attack`, speech and social actions.
+- Added target speech prompts for `Say` and `Whisper` buttons.
+- Added an independent status-site planning item for future deploy/outage visibility outside the game Render service.
+
+### Changed
+
+- Tutorial dream keyboards now use the ordinary grid shape with unavailable slots hidden as placeholders, and return to the normal keyboard after revisiting earlier tutorial cells.
+- The Dream Gate focused keyboard no longer exposes the speech phrase before the player inspects the gate.
+- Public target `examine` text now avoids exact HP/stat counters unless the viewer has technical/scribe access.
+- Hunter NPCs can answer direct speech through the reply path and react to a fitting subset of social signals.
+- Runtime status pages and docs now distinguish server, Telegram bot and database state more clearly.
+- The `/help` text is now rubricated, points first-time players to the tutorial dream, documents map expectations and includes `/restart`.
+- Multi-word clickable slash hints with underscores now parse as spaces, such as `/sleep_tutorial`, `/queue_cancel`, `/queue_clear` and `/auto_stop`.
+- Updated lexicon, tutorial, social-signal, NPC profession and operations docs with the new maintenance rules and future follow-ups.
+
+### Tests
+
+- Added or extended regression coverage for runtime status helpers, ecology death counters, admin reset modes, target keyboard layout, reply targets and input aliases.
+- Ran the project build and full test suite.
+
+---
+
 ## 0.13.16 - World lexicon case forms - 12026-05-30
 
 ### Added
