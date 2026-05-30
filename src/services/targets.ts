@@ -6,7 +6,7 @@ import { normalizeCreatureActionText } from "../utils/creatureActionText";
 import { creatureForms, playerForms, type NameForms } from "./grammar";
 import { lifetimeSummary } from "./itemLifetime";
 import { playerShowsTechnicalDetails } from "./technicalDetails";
-import { getPlayerTorchState } from "./fire";
+import { creatureCarriedTorchCount, getCreatureTorchState, getPlayerTorchState } from "./fire";
 import { isFreshenedCorpse } from "./meat";
 import { resourceTypeDisplayName } from "./corpses";
 import {
@@ -113,10 +113,16 @@ async function playerInventorySummary(playerId: number, options: { exact?: boole
   return inventoryResourceSummary(resources, options);
 }
 
-function hunterTorchSummary(currentAction: string | null | undefined, options: { exact?: boolean } = {}) {
-  const count = hunterCarriedTorchCount(currentAction);
+function visibleCreatureHeldTorchText(torchState: { isLit: boolean; litAmount: number }) {
+  if (!torchState.isLit) return "";
+  return torchState.litAmount > 1 ? "Тримає запалені факели." : "Тримає запалений факел.";
+}
+
+async function hunterTorchSummary(creature: { id: number; currentAction?: string | null }, options: { exact?: boolean } = {}) {
+  const realCount = await creatureCarriedTorchCount(creature.id);
+  const count = realCount || hunterCarriedTorchCount(creature.currentAction);
   if (count <= 0) return null;
-  const returning = hunterIsReturningForTorches(currentAction);
+  const returning = hunterIsReturningForTorches(creature.currentAction);
   if (options.exact) return returning
     ? `- факели ×${count}; один із них горить або щойно горів у дорозі`
     : `- факели ×${count}`;
@@ -129,7 +135,7 @@ export async function hunterFieldInventorySummary(creature: { id: number; curren
   if (!isHunterCreature(creature)) return null;
 
   const lines: string[] = [];
-  const torchLine = hunterTorchSummary(creature.currentAction, options);
+  const torchLine = await hunterTorchSummary(creature, options);
   if (torchLine) lines.push(torchLine);
 
   const claimed = await claimedCorpsesForHunter(creature.id);
@@ -198,6 +204,8 @@ export async function resolveTarget(type: string, id: number, locationId: number
     const wasFreshened = isFreshenedCorpse(target.currentAction);
     const canFreshen = isCorpse && !wasFreshened && corpseLeft > Math.floor(target.species.corpseDecayTicks / 2);
     const corpseLifetime = lifetimeSummary(corpseLeft, target.species.corpseDecayTicks, { showTechnicalDetails });
+    const torchState = isCorpse ? null : await getCreatureTorchState(target.id);
+    const torchText = torchState ? visibleCreatureHeldTorchText(torchState) : "";
 
     if (isCorpse) {
       const corpseLabel = wasFreshened ? "рештки" : "труп";
@@ -242,8 +250,8 @@ export async function resolveTarget(type: string, id: number, locationId: number
         isCorpse: false,
         canFreshen: false,
         inspect: isAnimal
-          ? `Це ${forms.nominative}.\n\nСтан: ${target.isAlive ? "жива" : "мертва"}\nДія: ${visibleAction}`
-          : `${forms.nominative}\n\nСтан: ${target.isAlive ? "живий/активний" : "неактивний"}\nДія: ${visibleAction}`,
+          ? `Це ${forms.nominative}.\n\nСтан: ${target.isAlive ? "жива" : "мертва"}\nДія: ${visibleAction}${torchText ? `\n${torchText}` : ""}`
+          : `${forms.nominative}\n\nСтан: ${target.isAlive ? "живий/активний" : "неактивний"}\nДія: ${visibleAction}${torchText ? `\n${torchText}` : ""}`,
       };
     }
 
@@ -258,8 +266,8 @@ export async function resolveTarget(type: string, id: number, locationId: number
       isCorpse: false,
       canFreshen: false,
       inspect: isAnimal
-        ? `Це ${forms.nominative}.\n\nСтан: ${target.isAlive ? "жива" : "мертва"}\nЖиття: ${target.hp}\nСтать: ${formatSex(target.sex)}\nВік: ${target.age}\nТіків віку: ${target.ageTicks}\nДія: ${visibleAction}\n\nСтатистика:\n${formatCreatureStats(target)}`
-        : `${forms.nominative}\n\nСтан: ${target.isAlive ? "живий/активний" : "неактивний"}\nЖиття: ${target.hp}\nДія: ${visibleAction}${hunterSection}\n\nСтатистика:\n${formatCreatureStats(target)}`,
+        ? `Це ${forms.nominative}.\n\nСтан: ${target.isAlive ? "жива" : "мертва"}\nЖиття: ${target.hp}\nСтать: ${formatSex(target.sex)}\nВік: ${target.age}\nТіків віку: ${target.ageTicks}\nДія: ${visibleAction}${torchText ? `\n${torchText}` : ""}\n\nСтатистика:\n${formatCreatureStats(target)}`
+        : `${forms.nominative}\n\nСтан: ${target.isAlive ? "живий/активний" : "неактивний"}\nЖиття: ${target.hp}\nДія: ${visibleAction}${torchText ? `\n${torchText}` : ""}${hunterSection}\n\nСтатистика:\n${formatCreatureStats(target)}`,
     };
   }
 

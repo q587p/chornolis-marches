@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 
 require("ts-node/register");
 
-const { normalizeInput, parseAlias, suggestAliasInputs } = require("../../src/input/aliases");
+const { formatAliasSuggestion, normalizeInput, parseAlias, suggestAliasEntries, suggestAliasInputs } = require("../../src/input/aliases");
 const { inventoryResourceKeyFromText } = require("../../src/services/inventoryUse");
 const { isDreamGateOpeningPhrase, localGateOpenAttemptText } = require("../../src/services/tutorial");
 const { normalizeCreatureActionText } = require("../../src/utils/creatureActionText");
@@ -74,6 +74,9 @@ assertAlias("придивитися до знака", { kind: "inspect-border-ma
 assertAlias("look лавка", { kind: "inspect-feature", target: "лавка", detail: "brief" });
 assertAlias("/examine лавка", { kind: "inspect-feature", target: "лавка", detail: "full" });
 assertAlias("look bench", { kind: "inspect-feature", target: "bench", detail: "brief" });
+assertAlias("оглянути браму", { kind: "inspect-feature", target: "браму", detail: "brief" });
+assertAlias("огл брама", { kind: "inspect-feature", target: "брама", detail: "brief" });
+assertAlias("придивитися до брами", { kind: "inspect-feature", target: "брами", detail: "full" });
 
 assertAlias("збирати ягоди", { kind: "gather", resourceKey: "berries" });
 assertAlias("збирати гриби", { kind: "gather", resourceKey: "mushrooms" });
@@ -186,5 +189,8 @@ assert.ok(suggestAliasInputs("назо").includes("назовні"), "Expected a
 assert.ok(suggestAliasInputs("крик Допоможіть!").includes("крикнути"), "Expected alias suggestions to include крикнути");
 assert.ok(suggestAliasInputs("крич").includes("кричати"), "Expected alias suggestions to include кричати");
 assert.ok(suggestAliasInputs("шеп").includes("шепнути"), "Expected alias suggestions to include шепнути");
+assert.ok(suggestAliasInputs("огл брама").includes("оглянути"), "Expected alias suggestions to include оглянути");
+assert.ok(suggestAliasEntries("огл брама").map(formatAliasSuggestion).includes("оглянути (/examine)"), "Expected formatted suggestions to include slash command for оглянути");
+assert.ok(suggestAliasEntries("швидк").map(formatAliasSuggestion).includes("швидкий огляд (/glance)"), "Expected formatted suggestions to include slash command for quick glance");
 
 console.log("Input aliases OK");

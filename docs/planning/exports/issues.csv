@@ -46,7 +46,7 @@ MAP-002-C,Biome foraging text variants,next,content,world,medium,"gather,biome,c
 NAV-001,Location-to-location route finding,testing,feature,world,medium,"navigation,movement,npc,world",docs/planning/items/NAV-001-location-route-finding.md
 NPC-002,Hunter auto-program MVP,backlog,feature,npc,high,"npc,ecology,hunting,living-world",docs/planning/items/NPC-002-hunter-auto-program.md
 NPC-003,Herbalist service layer,next,technical,npc,medium,"npc,herbalist,architecture,world-tick",docs/planning/items/NPC-003-herbalist-service-layer.md
-NPC-004,Actor inventory and held light foundation,next,technical,npc,high,"npc,actors,inventory,torch,light",docs/planning/items/NPC-004-actor-inventory-held-light.md
+NPC-004,Actor inventory and held light foundation,in_progress,technical,npc,high,"npc,actors,inventory,torch,light",docs/planning/items/NPC-004-actor-inventory-held-light.md
 NPC-005,NPC hunger and food behavior,next,feature,npc,high,"npc,actors,hunger,food,cooking,herbalist,hunting",docs/planning/items/NPC-005-npc-hunger-and-food-behavior.md
 OBS-001-A,Observe action and alias skeleton,next,feature,learning,high,"observe,aliases,targets",docs/planning/items/OBS-001-A.md
 OBS-001-B,Visible herbalist action,next,feature,learning,high,"observe,npc,herbalism",docs/planning/items/OBS-001-B.md

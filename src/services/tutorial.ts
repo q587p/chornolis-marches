@@ -20,6 +20,7 @@ export const DREAM_GATE_FEATURE_KEYS = [DREAM_GATE_FEATURE_KEY, DREAM_GATE_RETUR
 export const DREAM_GATE_OPEN_MS = 30 * 1000;
 const DREAM_GATE_OPEN_WINDOWS_MS = [30_000, 60_000, 120_000, 240_000, 480_000];
 export const TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE = "Tutorial foraging success";
+export const TUTORIAL_INVENTORY_AVAILABLE_EVENT_TITLE = "Tutorial inventory available";
 export const TUTORIAL_OBSERVATION_LESSON_EVENT_TITLE = "Tutorial observation lesson";
 
 const RETURN_LOCATION_EVENT_TITLE = "Tutorial return location";
@@ -27,6 +28,7 @@ const DREAM_LOCATION_EVENT_TITLE = "Tutorial dream location";
 const COMPLETED_EVENT_TITLE = "Tutorial completed";
 const RESET_EVENT_TITLE = "Tutorial reset by admin";
 const TUTORIAL_COMMAND_HINT_EVENT_TITLE = "Tutorial command hint";
+const DREAM_GATE_LOCK_HINT_EVENT_TITLE = "Tutorial dream gate lock hint";
 const DREAM_GATE_OPEN_PHRASES = ["відчинитися", "відчинися", "відчинись", "відкритися", "відкрийся"];
 
 function normalizeDreamGateSpeech(text: string) {
@@ -172,7 +174,7 @@ export async function resetTutorialProgressForPlayer(playerId: number, scribePla
       where: {
         playerId,
         type: "SYSTEM",
-        title: { in: [COMPLETED_EVENT_TITLE, TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE, TUTORIAL_OBSERVATION_LESSON_EVENT_TITLE] },
+        title: { in: [COMPLETED_EVENT_TITLE, TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE, TUTORIAL_INVENTORY_AVAILABLE_EVENT_TITLE, TUTORIAL_OBSERVATION_LESSON_EVENT_TITLE] },
       },
     });
 
@@ -225,6 +227,38 @@ export async function rememberTutorialForagingSuccess(playerId: number, location
       type: "SYSTEM",
       title: TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE,
       description: resourceKey,
+      playerId,
+      locationId,
+    },
+  });
+  return true;
+}
+
+export async function hasTutorialInventoryAvailable(playerId: number) {
+  const event = await prisma.worldEvent.findFirst({
+    where: { playerId, type: "SYSTEM", title: TUTORIAL_INVENTORY_AVAILABLE_EVENT_TITLE },
+    select: { id: true },
+    orderBy: { id: "desc" },
+  });
+  return Boolean(event);
+}
+
+export async function rememberTutorialInventoryAvailable(playerId: number, locationId: number | null | undefined, reason = "inventory") {
+  if (!locationId) return false;
+  const location = await prisma.cellLocation.findUnique({
+    where: { id: locationId },
+    select: { key: true, z: true, region: { select: { key: true } } },
+  });
+  if (!location || !isTutorialLocation(location)) return false;
+
+  const seen = await hasTutorialInventoryAvailable(playerId);
+  if (seen) return false;
+
+  await prisma.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: TUTORIAL_INVENTORY_AVAILABLE_EVENT_TITLE,
+      description: reason,
       playerId,
       locationId,
     },
@@ -413,6 +447,53 @@ export async function isLocationExitLocked(locationId: number, direction: Direct
   const reason = locked.get(direction);
   if (!reason) return null;
   return `${lockedReasonLabel(reason)} (закрито).`;
+}
+
+async function firstDreamGateLockHint(playerId: number, locationId: number, direction: Direction, reason: string) {
+  if (normalizeDreamGateSpeech(reason) !== "брама сну") return null;
+
+  const gate = await prisma.locationFeature.findFirst({
+    where: {
+      locationId,
+      isActive: true,
+      key: { in: [...DREAM_GATE_FEATURE_KEYS] },
+    },
+    select: { id: true, data: true },
+  });
+  const data = gate ? featureData(gate) : {};
+  if (!gate || data.locked !== true || directionFromData(data) !== direction || isLockedFeatureCurrentlyOpen(data)) return null;
+
+  const existing = await prisma.worldEvent.findFirst({
+    where: {
+      playerId,
+      type: "SYSTEM",
+      title: DREAM_GATE_LOCK_HINT_EVENT_TITLE,
+    },
+    select: { id: true },
+  });
+  if (existing) return null;
+
+  await prisma.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: DREAM_GATE_LOCK_HINT_EVENT_TITLE,
+      description: `${locationId}:${direction}`,
+      playerId,
+      locationId,
+    },
+  });
+
+  return "Сон шепоче: «Брама зімкнена. Спробуй оглянути браму.»";
+}
+
+export async function locationLockedExitMessageForPlayer(playerId: number, locationId: number, direction: Direction) {
+  const locked = await lockedExitDirections(locationId);
+  const reason = locked.get(direction);
+  if (!reason) return null;
+
+  const base = `${lockedReasonLabel(reason)} (закрито).`;
+  const hint = await firstDreamGateLockHint(playerId, locationId, direction, reason);
+  return hint ? `${base}\n\n${hint}` : base;
 }
 
 const DIRECTION_PATH_LABELS: Partial<Record<Direction, string>> = {

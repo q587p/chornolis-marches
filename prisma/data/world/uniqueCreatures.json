@@ -66,7 +66,17 @@
     "isHidden": false,
     "professionKey": "hunter",
     "professionName": "мисливиця",
-    "action": "вертається до воріт із запаленим факелом і запасним у торбі; hunter_returning_for_torches; hunter_torches:2",
-    "activity": "MOVING"
+    "action": "вертається до воріт із запаленим факелом і запасним у торбі; hunter_returning_for_torches",
+    "activity": "MOVING",
+    "resources": [
+      {
+        "resourceKey": "lit_torch",
+        "amount": 1
+      },
+      {
+        "resourceKey": "torch",
+        "amount": 1
+      }
+    ]
   }
 ]

@@ -4,7 +4,7 @@ import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import { formatLifeState, formatResourceState } from "../utils/playerText";
 import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
-import { DREAM_GATE_FEATURE_KEYS, TUTORIAL_DEEP_REST_LOCATION_KEY, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_HUB_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SAFETY_LOCATION_KEY, TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY, hasTutorialCommandHint, isTutorialLocation, lockedExitDirections } from "../services/tutorial";
+import { DREAM_GATE_FEATURE_KEYS, TUTORIAL_DEEP_REST_LOCATION_KEY, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_HUB_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SAFETY_LOCATION_KEY, TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY, hasTutorialCommandHint, hasTutorialInventoryAvailable, isTutorialLocation, lockedExitDirections } from "../services/tutorial";
 
 type MainKeyboardState = {
   isAuto?: boolean;
@@ -35,10 +35,16 @@ export function postureActionLabelsForState(state: Pick<MainKeyboardState, "post
   return isSitting ? ["Встати", "🧘 Відпочити"] : ["Сісти", "🧘 Відпочити"];
 }
 
+export function shouldShowInventoryButton(state: { inventoryCount: number; isTutorialDream?: boolean; tutorialInventoryAvailable?: boolean }) {
+  if (state.isTutorialDream) return state.inventoryCount > 0 || Boolean(state.tutorialInventoryAvailable);
+  return state.inventoryCount > 0;
+}
+
 export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean = {}) {
   const state = normalizeState(stateOrAuto);
   const exits = new Set(state.exits ?? []);
   const lockedExits = new Set(state.lockedExits ?? []);
+  const utilityButton = (label: string) => state.showUtilityActions === false ? EMPTY_KEYBOARD_BUTTON : label;
   const directionButton = (direction: Direction, label: string) => exits.has(direction)
     ? lockedExits.has(direction) ? `(${label})` : label
     : EMPTY_KEYBOARD_BUTTON;
@@ -52,9 +58,9 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   keyboard.text(directionButton("EAST", "Схід ➡️"));
   keyboard.row();
 
-  keyboard.text(state.showUtilityActions === false ? EMPTY_KEYBOARD_BUTTON : "🧭 Допомога");
+  keyboard.text(utilityButton("🧭 Допомога"));
   keyboard.text(directionButton("SOUTH", "⬇️ Південь"));
-  keyboard.text(state.showUtilityActions === false ? EMPTY_KEYBOARD_BUTTON : "☰ Меню").row();
+  keyboard.text(utilityButton("☰ Меню")).row();
 
   if (state.statusLabel) keyboard.text(state.statusLabel).row();
   if (state.showPostureActions) {
@@ -64,7 +70,6 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   if (state.isTutorialDream) {
     if (state.canOpenDreamGate) keyboard.text("💬 Сказати «Відчинитися»");
     if (state.canWakeFromTutorial) keyboard.text("🌅 Прокинутися");
-    if (state.canOpenDreamGate || state.canWakeFromTutorial) keyboard.row();
   }
 
   return keyboard.resized().persistent(false);
@@ -152,7 +157,8 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
   const lockedExits = player.currentLocationId ? Array.from((await lockedExitDirections(player.currentLocationId)).keys()) : [];
   const showTechnicalDetails = playerCanShowTechnicalDetails(player);
   const isTutorialDream = player.currentLocation ? isTutorialLocation(player.currentLocation) : false;
-  const hasInventory = inventoryCount > 0;
+  const tutorialInventoryAvailable = isTutorialDream ? await hasTutorialInventoryAvailable(player.id) : false;
+  const hasInventory = shouldShowInventoryButton({ inventoryCount, isTutorialDream, tutorialInventoryAvailable });
   const hasRestLesson = await hasTutorialCommandHint(player.id, "rest");
   const hasExamineLesson = await hasTutorialCommandHint(player.id, "examine");
   const tutorialStatusVisible = !isTutorialDream

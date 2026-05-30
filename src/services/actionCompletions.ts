@@ -30,7 +30,7 @@ import { escapeHtml } from "../utils/text";
 import { resourceAccusativeName } from "../utils/resourceText";
 import { canEditKnownMessage, noteKnownMessage } from "../utils/messageTracker";
 import { playerCanShowTechnicalDetails } from "./technicalDetails";
-import { canOpenDreamGateWithSpeech, isLocationExitLocked, isTutorialFastRestLocationKey, openDreamGate, rememberTutorialCommandHintIfInTutorial, rememberTutorialForagingSuccess, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY } from "./tutorial";
+import { canOpenDreamGateWithSpeech, isLocationExitLocked, isTutorialFastRestLocationKey, openDreamGate, rememberTutorialCommandHintIfInTutorial, rememberTutorialForagingSuccess, rememberTutorialInventoryAvailable, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY } from "./tutorial";
 import { tutorialGateSpeechComment, tutorialLookPaceComments, tutorialSpiritMoveComment, tutorialTrackComments, tutorialWaitPaceComments } from "./tutorialVoices";
 import { chance, pick, shuffle } from "../utils/random";
 import { freshenCorpseForMeat } from "./meat";
@@ -473,6 +473,9 @@ async function completeGather(bot: Bot, action: WorldAction) {
     const firstTutorialGather = isTutorialForagingSuccess
       ? await rememberTutorialForagingSuccess((actor as any).id, locationId, resourceKey)
       : false;
+    if (isTutorialForagingSuccess) {
+      await rememberTutorialInventoryAvailable((actor as any).id, locationId, `gather:${resourceKey}`);
+    }
     if (chatId) {
       await bot.api.sendMessage(
         chatId,

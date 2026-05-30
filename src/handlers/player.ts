@@ -3,7 +3,7 @@ import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA, HEALTH_REGEN_PER_INTERVAL, PASSIVE_HEALTH_REGEN_INTERVAL_MS, PASSIVE_STAMINA_REGEN_PER_INTERVAL, PLAYER_HUNGER_MAX, REST_HEALTH_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_PER_INTERVAL, STAMINA_REGEN_INTERVAL_MS } from "../gameConfig";
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { renderLocationBrief, renderLocationFeatureInteractionByQuery } from "../services/locations";
-import { buildMainReplyKeyboard } from "../ui/replyKeyboard";
+import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { buildInventoryItemKeyboard } from "../ui/inventoryItemKeyboard";
 import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } from "./auto";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
@@ -35,6 +35,7 @@ import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "..
 import { canCookPlayerMeat, COOKED_MEAT_KEY, cookRawMeat, RAW_MEAT_KEY } from "../services/meat";
 import { assertCanPerformPhysicalAction } from "../services/postureRules";
 import { GATHERING_OBSERVATION_GROWTH_MESSAGE, recordGatheringObservation } from "../services/gatheringLearning";
+import { rememberTutorialInventoryForPlayer } from "../utils/tutorialInventory";
 
 const tutorialInventoryVoiceSeen = new Set<number>();
 
@@ -289,12 +290,18 @@ export async function showInventory(telegramId: number, reply: (text: string, op
 
   await reply(view.text, { reply_markup: view.keyboard });
   const player = await getPlayerByTelegramId(telegramId);
-  if (player?.currentLocationId && !tutorialInventoryVoiceSeen.has(player.id)) {
+  if (player?.currentLocationId) {
     const location = await prisma.cellLocation.findUnique({ where: { id: player.currentLocationId }, include: { region: true } });
     if (location && isTutorialLocation(location)) {
+      const firstInventoryAccess = await rememberTutorialInventoryForPlayer(player, "inventory-command");
+      const replyMarkup = await buildMainReplyKeyboardForTelegramId(telegramId, false);
+      if (tutorialInventoryVoiceSeen.has(player.id)) {
+        if (firstInventoryAccess) await reply("Речі тепер можна відкрити з клавіатури.", { reply_markup: replyMarkup });
+        return;
+      }
       tutorialInventoryVoiceSeen.add(player.id);
       await reply(`Сон радить:\n${quoteBlock("Речі тримають те, що ви вже взяли. Тут можна роздивитися знахідку, використати її або викинути.")}`, { parse_mode: "HTML" });
-      await reply(`Дрімота бурмоче:\n${quoteBlock("Носити зайве важко. Викинь — і стане легше йти.")}`, { parse_mode: "HTML" });
+      await reply(`Дрімота бурмоче:\n${quoteBlock("Носити зайве важко. Викинь — і стане легше йти.")}`, { parse_mode: "HTML", reply_markup: replyMarkup });
     }
   }
 }
@@ -350,12 +357,18 @@ export function registerPlayerHandlers(bot: Bot) {
       await ctx.reply(view.text, { reply_markup: view.keyboard });
     }
     const player = await getPlayerByTelegramId(ctx.from.id);
-    if (player?.currentLocationId && !tutorialInventoryVoiceSeen.has(player.id)) {
+    if (player?.currentLocationId) {
       const location = await prisma.cellLocation.findUnique({ where: { id: player.currentLocationId }, include: { region: true } });
       if (location && isTutorialLocation(location)) {
+        const firstInventoryAccess = await rememberTutorialInventoryForPlayer(player, "inventory-callback");
+        const replyMarkup = await buildMainReplyKeyboardForTelegramId(ctx.from.id, false);
+        if (tutorialInventoryVoiceSeen.has(player.id)) {
+          if (firstInventoryAccess) await ctx.reply("Речі тепер можна відкрити з клавіатури.", { reply_markup: replyMarkup });
+          return;
+        }
         tutorialInventoryVoiceSeen.add(player.id);
         await ctx.reply(`Сон радить:\n${quoteBlock("Речі тримають те, що ви вже взяли. Тут можна роздивитися знахідку, використати її або викинути.")}`, { parse_mode: "HTML" });
-        await ctx.reply(`Дрімота бурмоче:\n${quoteBlock("Носити зайве важко. Викинь — і стане легше йти.")}`, { parse_mode: "HTML" });
+        await ctx.reply(`Дрімота бурмоче:\n${quoteBlock("Носити зайве важко. Викинь — і стане легше йти.")}`, { parse_mode: "HTML", reply_markup: replyMarkup });
       }
     }
   });

@@ -33,6 +33,45 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.13 - NPC held torch inventory foundation - 12026-05-30
+
+### Added
+
+- Added `CreatureResource`, a carried-resource table for NPCs and other creatures.
+- Added seed/reset support for unique NPC carried resources.
+- Seeded `Орина` with a real held `lit_torch` and spare `torch` instead of the lightweight `hunter_torches` marker.
+- Added NPC-held torch state helpers so lit torches use the same duration assumptions as player-held torches.
+- NPC-held lit torches now count as active local torch light.
+
+### Changed
+
+- Hunter ground-torch pickup and gate resupply now write real NPC carried resources.
+- Hunter `currentAction` still carries route/intent markers such as returning for torches, but basic torch count now comes from carried resources with a legacy marker fallback.
+- `/look` and `/examine` style target text can show when a visible NPC is holding a lit torch.
+- Tutorial dream reply keyboards now hide `Help`, `Menu` and ordinary status buttons outside the rest lesson, replacing hidden utility actions with empty slots like unavailable directions.
+- The first blocked attempt to move through the closed Dream Gate now gives a one-time Сон hint to inspect the gate.
+- Ukrainian feature inspection now recognizes Dream Gate case forms such as `оглянути браму` and `придивитися до брами`.
+- Failed `inspect`/`look at` target attempts now use diegetic "I do not see this here" wording instead of generic target-list language.
+- Feature inspection now accepts the short Ukrainian form `огл брама`.
+- Unknown-command suggestions can now show a matching slash command shortcut in parentheses, such as `оглянутися (/look)` or `швидкий огляд (/glance)`.
+- `/glance` now renders only the location name and visible exits, without an extra "quick look" label or nearby presence text.
+- The tutorial hub `Майбутні уроки` feature now has its own feather icon instead of the generic landmark marker.
+- Remaining generic landmark, bridge and tutorial prompt features now use distinct icons, including the fisher post, old bridge planks, old stones, dry well and tutorial hints.
+- The tutorial dream now reveals the main-keyboard inventory button after pickup, gather success or explicit inventory commands, not only after the first gather.
+- Hunter stand-down no longer queues extra `SAY` / `REST` actions on world tick; hunters at the waiting fire now enter a resting state directly and use a rate-limited speech event.
+- World tick summaries now count hunter `stoodDown` state separately from queued rest actions.
+- Updated gate hunting loop and `NPC-004` planning docs for the first actor-inventory slice.
+
+### Tests
+
+- Updated NPC hunter helper coverage so new hunter torch action text no longer depends on the lightweight torch-count marker.
+- Added world-seed coverage for unique NPC carried resources and Орина's real torch inventory.
+- Extended reply-keyboard posture coverage for the focused dream gate keyboard and tutorial rest status exception.
+- Added reply-keyboard helper coverage for tutorial inventory-button visibility.
+- Added parser, suggestion and seed coverage for Dream Gate inspection aliases.
+
+---
+
 ## 0.13.12 - Gate hunting saturation stand-down - 12026-05-30
 
 ### Added

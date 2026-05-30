@@ -269,6 +269,7 @@ model Creature {
 
   actions WorldAction[]
   tracks  WorldTrack[]
+  resources CreatureResource[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -286,6 +287,7 @@ model ResourceType {
 
   nodes           ResourceNode[]
   playerResources PlayerResource[]
+  creatureResources CreatureResource[]
 }
 
 model ResourceNode {
@@ -325,6 +327,24 @@ model PlayerResource {
   updatedAt DateTime @updatedAt
 
   @@unique([playerId, resourceTypeId])
+}
+
+model CreatureResource {
+  id Int @id @default(autoincrement())
+
+  creatureId Int
+  creature   Creature @relation(fields: [creatureId], references: [id], onDelete: Cascade)
+
+  resourceTypeId Int
+  resourceType   ResourceType @relation(fields: [resourceTypeId], references: [id])
+
+  amount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([creatureId, resourceTypeId])
+  @@index([resourceTypeId])
 }
 
 model CarcassDropoffContribution {
