@@ -71,8 +71,8 @@ The first implementation can write only a tutorial flag or placeholder skill pro
 
 A text-only attack-learning bridge now exists before real skill progress rows:
 
-- every thirteenth player kill through `ATTACK` sends the acting player `Навичка атаки підросла.`;
-- every fifth recorded `look`/`examine` observation of a recent kill by someone else in the same location sends the observer `Навичка атаки трохи підросла.`;
+- every thirteenth player kill through `ATTACK` sends the acting player `Навичка <b>атаки</b> підросла.`;
+- every fifth recorded `look`/`examine` observation of a recent kill by someone else in the same location sends the observer `Навичка <b>атаки</b> трохи підросла.`;
 - the bookkeeping uses hidden `WorldEvent` records and does not expose raw counters or change numeric skills.
 
 Future work should move these messages onto the shared learning/progression service so attack practice and attack observation use the same rules as Herbalism, Tracking and other teachable skills.

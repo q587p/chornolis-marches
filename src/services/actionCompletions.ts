@@ -505,7 +505,7 @@ async function completeLook(bot: Bot, action: WorldAction) {
       const voiceComments = await tutorialLookPaceComments({ ...player, currentLocationId: locationId });
       const sendAttackObservationMessage = async () => {
         const observation = await recordAttackObservation({ playerId: player.id, locationId });
-        if (observation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, ATTACK_OBSERVATION_GROWTH_MESSAGE));
+        if (observation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, ATTACK_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
       };
       if (action.messageId && typeof chatId === "number" && canEditKnownMessage(chatId, action.messageId)) {
         try {
@@ -548,7 +548,7 @@ async function completeInspect(bot: Bot, action: WorldAction) {
   if (chatId) {
     await bot.api.sendMessage(chatId, `${targetIntro(target, payload.mode === "mystery")}\n\n${target.inspect}`);
     const observation = await recordAttackObservation({ playerId: player.id, locationId: player.currentLocationId });
-    if (observation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, ATTACK_OBSERVATION_GROWTH_MESSAGE));
+    if (observation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, ATTACK_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
   }
 }
 
@@ -749,7 +749,7 @@ async function completeAttack(bot: Bot, action: WorldAction) {
       `⚔️ Ви затоптали ${target.forms.accusative}. Труп лишився на землі.`,
       corpseTarget?.isCorpse ? { reply_markup: buildCorpseActionKeyboard(corpseTarget) } : undefined,
     );
-    if (isAttackPracticeMilestone(updatedPlayer.animalsKilled)) noteKnownMessage(await bot.api.sendMessage(chatId, ATTACK_PRACTICE_GROWTH_MESSAGE));
+    if (isAttackPracticeMilestone(updatedPlayer.animalsKilled)) noteKnownMessage(await bot.api.sendMessage(chatId, ATTACK_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" }));
   }
 }
 

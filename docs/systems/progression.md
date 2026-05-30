@@ -12,9 +12,9 @@ After the first dream tutorial, the next progression priority is an observation-
 
 `0.13.11` adds a deliberately small bridge before real skill rows exist:
 
-- every thirteenth successful player animal kill through `ATTACK` sends only that player `Навичка атаки підросла.`;
+- every thirteenth successful player animal kill through `ATTACK` sends only that player `Навичка <b>атаки</b> підросла.`;
 - when a player uses `look` or `examine` soon after someone else kills prey in the same location, that observation is recorded once for that kill;
-- every fifth such recorded observation sends only that observer `Навичка атаки трохи підросла.`;
+- every fifth such recorded observation sends only that observer `Навичка <b>атаки</b> трохи підросла.`;
 - these messages do not change numeric skill state yet.
 
 This placeholder should be replaced by the shared learning service once `LEARN-001-C` and the observation-learning MVP are active.
