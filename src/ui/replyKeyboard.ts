@@ -102,6 +102,16 @@ export function buildTutorialSecondStepReplyKeyboard() {
   });
 }
 
+type StatusLabelPlayer = {
+  id: number;
+  currentLocation?: { key: string; z: number; region?: { key: string } | null } | null;
+  hp: number;
+  hpMax: number | null;
+  stamina: number;
+  staminaMax: number | null;
+  showTechnicalDetails?: boolean | null;
+};
+
 function statusButtonLabel(player: { hp: number; hpMax: number | null; stamina: number; staminaMax: number | null }) {
   const hpMax = player.hpMax ?? BASE_HP;
   const staminaMax = player.staminaMax ?? BASE_STAMINA;
@@ -110,6 +120,41 @@ function statusButtonLabel(player: { hp: number; hpMax: number | null; stamina: 
 
 function exactStatusButtonLabel(player: { hp: number; hpMax: number | null; stamina: number; staminaMax: number | null }) {
   return `❤️ ${player.hp}/${player.hpMax ?? BASE_HP} · ⚡ ${player.stamina}/${player.staminaMax ?? BASE_STAMINA}`;
+}
+
+export function mainStatusLabelForPlayer(player: StatusLabelPlayer, options: { hasRestLesson?: boolean } = {}) {
+  const isTutorialDream = player.currentLocation ? isTutorialLocation(player.currentLocation) : false;
+  const tutorialStatusVisible = !isTutorialDream
+    || player.currentLocation?.key === TUTORIAL_REST_LOCATION_KEY
+    || player.currentLocation?.key === TUTORIAL_DEEP_REST_LOCATION_KEY
+    || Boolean(options.hasRestLesson);
+  if (!tutorialStatusVisible) return undefined;
+
+  if (player.currentLocation?.key === TUTORIAL_REST_LOCATION_KEY) return statusButtonLabel(player);
+  return playerCanShowTechnicalDetails(player) ? exactStatusButtonLabel(player) : statusButtonLabel(player);
+}
+
+export async function mainStatusLabelForPlayerId(playerId: number) {
+  const player = await prisma.player.findUnique({
+    where: { id: playerId },
+    select: {
+      id: true,
+      hp: true,
+      hpMax: true,
+      stamina: true,
+      staminaMax: true,
+      showTechnicalDetails: true,
+      currentLocation: {
+        select: {
+          key: true,
+          z: true,
+          region: { select: { key: true } },
+        },
+      },
+    },
+  });
+  if (!player) return undefined;
+  return mainStatusLabelForPlayer(player, { hasRestLesson: await hasTutorialCommandHint(player.id, "rest") });
 }
 
 export function buildMenuReplyKeyboard(options: { canSeeStats?: boolean } = {}) {
@@ -215,16 +260,11 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
   const inventoryCount = await prisma.playerResource.count({ where: { playerId: player.id, amount: { gt: 0 } } });
   const exits = player.currentLocation?.exitsFrom.map((exit) => exit.direction) ?? [];
   const lockedExits = player.currentLocationId ? Array.from((await lockedExitDirections(player.currentLocationId)).keys()) : [];
-  const showTechnicalDetails = playerCanShowTechnicalDetails(player);
   const isTutorialDream = player.currentLocation ? isTutorialLocation(player.currentLocation) : false;
   const tutorialInventoryAvailable = isTutorialDream ? await hasTutorialInventoryAvailable(player.id) : false;
   const hasInventory = shouldShowInventoryButton({ inventoryCount, isTutorialDream, tutorialInventoryAvailable });
   const hasRestLesson = await hasTutorialCommandHint(player.id, "rest");
   const hasExamineLesson = await hasTutorialCommandHint(player.id, "examine");
-  const tutorialStatusVisible = !isTutorialDream
-    || player.currentLocation?.key === TUTORIAL_REST_LOCATION_KEY
-    || player.currentLocation?.key === TUTORIAL_DEEP_REST_LOCATION_KEY
-    || hasRestLesson;
   const tutorialExamineVisible = !isTutorialDream
     || player.currentLocation?.key === TUTORIAL_FORAGING_LOCATION_KEY
     || hasExamineLesson;
@@ -241,11 +281,7 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
     isAuto,
     exits,
     hasInventory,
-    statusLabel: tutorialStatusVisible
-      ? player.currentLocation?.key === TUTORIAL_REST_LOCATION_KEY
-        ? statusButtonLabel(player)
-        : showTechnicalDetails ? exactStatusButtonLabel(player) : statusButtonLabel(player)
-      : undefined,
+    statusLabel: mainStatusLabelForPlayer(player, { hasRestLesson }),
     posture: player.posture,
     isResting: player.isResting,
     showPostureActions: false,

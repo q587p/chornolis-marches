@@ -2,8 +2,8 @@ const assert = require("node:assert/strict");
 
 require("ts-node/register");
 
-const { EMPTY_KEYBOARD_BUTTON, buildAdminFireReplyKeyboard, buildAdminMenuReplyKeyboard, buildAdminResourcesReplyKeyboard, buildMainReplyKeyboard, buildTutorialSecondStepReplyKeyboard, buildTutorialStartReplyKeyboard, postureActionLabelsForState, shouldShowInventoryButton, shouldUseFocusedTutorialReplyKeyboard } = require("../../src/ui/replyKeyboard");
-const { TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY } = require("../../src/services/tutorial");
+const { EMPTY_KEYBOARD_BUTTON, buildAdminFireReplyKeyboard, buildAdminMenuReplyKeyboard, buildAdminResourcesReplyKeyboard, buildMainReplyKeyboard, buildTutorialSecondStepReplyKeyboard, buildTutorialStartReplyKeyboard, mainStatusLabelForPlayer, postureActionLabelsForState, shouldShowInventoryButton, shouldUseFocusedTutorialReplyKeyboard } = require("../../src/ui/replyKeyboard");
+const { TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY } = require("../../src/services/tutorial");
 const { formatObservedPostureText, formatPostureText } = require("../../src/utils/playerText");
 const { AUTO_DREAM_BLOCK_MESSAGE, isAutoBlockedInLocation, shouldAutoStandBeforeAction } = require("../../src/handlers/auto");
 const { playerRestStartObserverText, playerRestStopObserverText, playerSitObserverText, playerStandObserverText, playerTutorialSleepObserverText, playerTutorialWakeObserverText } = require("../../src/services/playerVisibility");
@@ -18,6 +18,10 @@ assert.equal(formatObservedPostureText({ posture: "SITTING", isResting: false })
 assert.equal(formatObservedPostureText({ posture: "SITTING", isResting: true }), "Сидить і відпочиває.");
 assert.equal(formatObservedPostureText({ posture: "SITTING", isResting: true, grammaticalGender: "PLURAL" }), "Сидять і відпочивають.");
 assert.equal(formatObservedPostureText({ posture: "SITTING", isResting: true, isSleeping: true }), "Спить. Уві сні сидить і відпочиває.");
+assert.equal(mainStatusLabelForPlayer({ id: 1, currentLocation: { key: TUTORIAL_REST_LOCATION_KEY, z: -13, region: { key: "dream_tutorial" } }, hp: 42, hpMax: 42, stamina: 42, staminaMax: 42 }), "❤️ повно · ⚡ повно");
+assert.equal(mainStatusLabelForPlayer({ id: 1, currentLocation: { key: TUTORIAL_REST_LOCATION_KEY, z: -13, region: { key: "dream_tutorial" } }, hp: 42, hpMax: 42, stamina: 10, staminaMax: 42 }), "❤️ повно · ⚡ мало");
+assert.equal(mainStatusLabelForPlayer({ id: 1, currentLocation: { key: TUTORIAL_START_LOCATION_KEY, z: -13, region: { key: "dream_tutorial" } }, hp: 42, hpMax: 42, stamina: 42, staminaMax: 42 }), undefined);
+assert.equal(mainStatusLabelForPlayer({ id: 1, currentLocation: { key: TUTORIAL_START_LOCATION_KEY, z: -13, region: { key: "dream_tutorial" } }, hp: 42, hpMax: 42, stamina: 20, staminaMax: 42 }, { hasRestLesson: true }), "❤️ повно · ⚡ середньо");
 assert.equal(playerSitObserverText({ id: 1, nameNominative: "Орина", grammaticalGender: "FEMININE" }), "Орина сідає.");
 assert.equal(playerStandObserverText({ id: 1, nameNominative: "Вербові", grammaticalGender: "PLURAL" }), "Вербові встають.");
 assert.equal(playerRestStartObserverText({ id: 1, nameNominative: "Травник", grammaticalGender: "MASCULINE" }), "Травник сідає й починає відпочивати.");
