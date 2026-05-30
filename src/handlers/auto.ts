@@ -14,6 +14,7 @@ import { directionLabels } from "../ui/labels";
 import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { logEvent } from "../services/worldEvents";
 import { maybePerformPlayerAutoSignal } from "../services/socialAutonomy";
+import { standPlayer } from "../services/posture";
 import { buildAutoConfirmKeyboard } from "../ui/keyboards";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 
@@ -108,6 +109,10 @@ export function orderAutoActionKeys(roll: number, lastActionKey?: AutoActionKey)
   if (!lastActionKey || uniqueOrder.length < 2 || !uniqueOrder.includes(lastActionKey)) return uniqueOrder;
 
   return [...uniqueOrder.filter((key) => key !== lastActionKey), lastActionKey];
+}
+
+export function shouldAutoStandBeforeAction(player: { posture?: string | null; isResting?: boolean | null }, key: AutoActionKey) {
+  return (key === "gather" || key === "move") && (player.posture === "SITTING" || Boolean(player.isResting));
 }
 
 async function runAutoChoice(state: AutoState, key: AutoActionKey, run: () => Promise<boolean>) {
@@ -216,6 +221,21 @@ async function maybeAutoSay(bot: Bot, telegramId: number, player: any, locationI
   return true;
 }
 
+async function ensureAutoStandingBeforeAction(bot: Bot, telegramId: number, player: any, key: AutoActionKey, locationId: number) {
+  if (!shouldAutoStandBeforeAction(player, key)) return player;
+
+  const result = await standPlayer(player.id);
+  if (!result) return player;
+  if (result.changed) {
+    await logEvent("PLAYER_ACTION", "Auto stood player up", `before=${key}`, locationId).catch(() => undefined);
+    await bot.api.sendMessage(telegramId, "🤖 Авто: персонаж встає, перш ніж діяти далі.", {
+      reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, true),
+    });
+  }
+
+  return (await getPlayerByTelegramId(telegramId)) ?? { ...player, posture: "STANDING", isResting: false };
+}
+
 async function autoGather(bot: Bot, telegramId: number, player: any, locationId: number) {
   const resource = await prisma.resourceNode.findFirst({
     where: { locationId, amount: { gt: 0 } },
@@ -227,16 +247,17 @@ async function autoGather(bot: Bot, telegramId: number, player: any, locationId:
   const key = resource.resourceType.key as "berries" | "mushrooms" | "herbs";
   if (!gatherConfig[key]) return false;
 
+  const activePlayer = await ensureAutoStandingBeforeAction(bot, telegramId, player, "gather", locationId);
   const result = await performOrQueuePlayerAction(bot, {
-    playerId: player.id,
+    playerId: activePlayer.id,
     type: "GATHER_SPECIFIC",
     payload: { resourceKey: key },
-    durationMs: gatherDurationMs(key, player.stamina),
+    durationMs: gatherDurationMs(key, activePlayer.stamina),
     chatId: telegramId,
     note: `auto:gather:${key}`,
   });
 
-  await notifyAutoChoice(bot, telegramId, player.id, result.mode, `зібрати ${resource.resourceType.name}`, locationId);
+  await notifyAutoChoice(bot, telegramId, activePlayer.id, result.mode, `зібрати ${resource.resourceType.name}`, locationId);
   return true;
 }
 
@@ -263,16 +284,17 @@ async function autoMove(bot: Bot, telegramId: number, player: any, locationId: n
   const exit = pick(exits);
   if (!exit) return false;
 
+  const activePlayer = await ensureAutoStandingBeforeAction(bot, telegramId, player, "move", locationId);
   const result = await performOrQueuePlayerAction(bot, {
-    playerId: player.id,
+    playerId: activePlayer.id,
     type: "MOVE",
     payload: { direction: exit.direction },
-    durationMs: movementDurationMs(exit.travelCost, player.stamina),
+    durationMs: movementDurationMs(exit.travelCost, activePlayer.stamina),
     chatId: telegramId,
     note: `auto:move:${exit.direction}`,
   });
 
-  await notifyAutoChoice(bot, telegramId, player.id, result.mode, `піти на ${String(directionLabels[exit.direction]).toLocaleLowerCase("uk-UA")}`, locationId);
+  await notifyAutoChoice(bot, telegramId, activePlayer.id, result.mode, `піти на ${String(directionLabels[exit.direction]).toLocaleLowerCase("uk-UA")}`, locationId);
 
   return true;
 }
