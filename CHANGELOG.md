@@ -9,6 +9,23 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.10 - NPC hunter route plan foundation - 12026-05-30
+
+### Added
+
+- Added an NPC hunter route-plan helper that resolves the gate drop-off location, a configured magic campfire and routes in both directions through existing location exits.
+- Added route-plan constants for the first hunter torch bundle and return reserve.
+
+### Changed
+
+- Updated `NPC-002` planning notes so the remaining hunter MVP can build on explicit route planning instead of teleporting between gate, campfire and hunting areas.
+
+### Tests
+
+- Added focused NPC hunter helper coverage for route directions, total travel cost, missing route reasons and torch bundle constants.
+
+---
+
 ## 0.13.9 - NPC drop-off contribution foundation - 12026-05-30
 
 ### Added
