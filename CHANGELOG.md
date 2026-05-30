@@ -9,6 +9,24 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.9 - NPC drop-off contribution foundation - 12026-05-30
+
+### Added
+
+- Added an NPC-facing carcass drop-off contribution helper so future hunters can record deposits through the same service as player `put` actions.
+- Added a compact hunter field-line pool for future NPC hunter state changes such as departures, trail choices, returns, deposits and giving up.
+
+### Changed
+
+- NPC drop-off records now keep source identity without granting player inventory rewards.
+- Updated gate hunting loop planning notes so `NPC-002` can build on the shared drop-off service and the 0.13.8 route finder.
+
+### Tests
+
+- Extended gate hunting loop helper coverage for deterministic hunter field lines.
+
+---
+
 ## 0.13.8 - Location route finding foundation - 12026-05-30
 
 ### Added

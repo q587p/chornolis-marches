@@ -53,3 +53,9 @@ Avoid:
 - First valid player contribution has acknowledgement.
 - Threshold reactions trigger once on crossing the threshold.
 - NPC contributions can be recorded by the same service without player rewards.
+
+## 0.13.9 Implementation Note
+
+- Added `recordNpcCarcassDropoffContribution()` so future hunters can record NPC deposits through the same drop-off contribution table as player `put` actions.
+- NPC records preserve `creatureId` and contributor kind, but do not call player reward grants.
+- Added a small hunter field-line pool for future NPC hunter state changes.
