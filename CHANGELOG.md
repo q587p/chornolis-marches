@@ -9,6 +9,25 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.11 - NPC hunter state-machine slice - 12026-05-30
+
+### Added
+
+- Added the first seeded gate hunter NPC, `Лукан`, near the closed settlement gate.
+- Added a first NPC hunter state-machine slice that routes through ordinary exits, seeks visible mice or rabbits, attacks through the delayed creature action queue and returns claimed carcasses to the gate.
+- Added hunter-claimed carcass markers and grouped corpse resource helpers so NPC deposits can use the existing carcass drop-off contribution service.
+
+### Changed
+
+- Creature attack completion now treats `hunter` profession kills differently from predator feeding: hunter kills are claimed for the `Падальний рів` instead of becoming ordinary visible prey corpses.
+- Updated gate hunting loop docs and `NPC-002` planning notes to distinguish the first state-machine slice from the still-future real torch bundle/light-state work.
+
+### Tests
+
+- Extended NPC hunter helper coverage for profession detection, claimed-carcass markers and grouped corpse resource keys.
+
+---
+
 ## 0.13.10 - Hunter route plan and posture action guards - 12026-05-30
 
 ### Added

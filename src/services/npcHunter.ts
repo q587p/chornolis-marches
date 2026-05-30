@@ -1,10 +1,21 @@
+import type { Bot } from "grammy";
+import { Direction } from "@prisma/client";
 import { prisma } from "../db";
-import { GATE_CARCASS_DROPOFF_FEATURE_KEY } from "./carcassDropoff";
+import { actionDurationMs, movementDurationMs } from "./actionRules";
+import { enqueueCreatureAction } from "./actionLifecycle";
+import { GATE_CARCASS_DROPOFF_FEATURE_KEY, hunterFieldLine, recordNpcCarcassDropoffContribution } from "./carcassDropoff";
+import { corpseResourceKey } from "./corpses";
+import { notifyLocationAll } from "./notifications";
 import { findLocationRoute, type RouteStep } from "./routeFinding";
+import { logEvent } from "./worldEvents";
 
 export const HUNTER_TORCH_BUNDLE_SIZE = 5;
 export const HUNTER_RETURN_TORCH_RESERVE = 1;
 export const HUNTER_DEFAULT_MAGIC_CAMPFIRE_FEATURE_KEY = "start_unfading_campfire";
+export const HUNTER_PROFESSION_KEY = "hunter";
+export const HUNTER_CLAIMED_CORPSE_PREFIX = "claimed_by_hunter:";
+const HUNTER_PREY_SPECIES_KEYS = ["mouse", "rabbit"] as const;
+const HUNTER_ROUTE_MAX_DEPTH = 16;
 
 export type HunterRoutePlan = {
   gateLocationId: number;
@@ -29,6 +40,21 @@ export type HunterRoutePlanResult =
 
 function routeCost(route: RouteStep[]) {
   return route.reduce((sum, step) => sum + step.travelCost, 0);
+}
+
+export function isHunterCreature(creature: { professionKey?: string | null }) {
+  return creature.professionKey === HUNTER_PROFESSION_KEY;
+}
+
+export function hunterClaimedCorpseAction(hunterId: number) {
+  return `${HUNTER_CLAIMED_CORPSE_PREFIX}${hunterId}; мисливець несе здобич до падального рову`;
+}
+
+export function hunterClaimedCorpseOwnerId(currentAction: string | null | undefined) {
+  if (!currentAction?.startsWith(HUNTER_CLAIMED_CORPSE_PREFIX)) return null;
+  const raw = currentAction.slice(HUNTER_CLAIMED_CORPSE_PREFIX.length).split(";")[0];
+  const hunterId = Number(raw);
+  return Number.isSafeInteger(hunterId) ? hunterId : null;
 }
 
 export function hunterRouteDirections(route: RouteStep[]) {
@@ -94,4 +120,225 @@ export async function findHunterRoutePlan(options: {
     toCampfire,
     toGate,
   });
+}
+
+type ClaimedCorpse = {
+  id: number;
+  sex?: string | null;
+  species: {
+    key: string;
+    name: string;
+    nameGenitive?: string | null;
+    nameDative?: string | null;
+    nameAccusative?: string | null;
+    nameInstrumental?: string | null;
+    nameLocative?: string | null;
+    nameVocative?: string | null;
+  };
+};
+
+export function groupHunterClaimedCorpses(corpses: ClaimedCorpse[]) {
+  const groups = new Map<string, { resourceTypeKey: string; amount: number; corpseIds: number[] }>();
+  for (const corpse of corpses) {
+    const resourceTypeKey = corpseResourceKey(corpse);
+    const group = groups.get(resourceTypeKey) ?? { resourceTypeKey, amount: 0, corpseIds: [] };
+    group.amount += 1;
+    group.corpseIds.push(corpse.id);
+    groups.set(resourceTypeKey, group);
+  }
+  return [...groups.values()];
+}
+
+async function claimedCorpsesForHunter(hunterId: number) {
+  return prisma.creature.findMany({
+    where: {
+      isAlive: false,
+      isGone: false,
+      isHidden: true,
+      currentAction: { startsWith: `${HUNTER_CLAIMED_CORPSE_PREFIX}${hunterId};` },
+    },
+    include: { species: true },
+    orderBy: { id: "asc" },
+  });
+}
+
+function isTutorialOrDreamRegionKey(key?: string | null) {
+  const normalized = String(key ?? "").toLocaleLowerCase("uk-UA");
+  return normalized.includes("dream") || normalized.includes("tutorial") || normalized.includes("sleep");
+}
+
+async function routeToNearestPreyLocation(fromLocationId: number) {
+  const candidates = await prisma.creature.groupBy({
+    by: ["locationId"],
+    where: {
+      isAlive: true,
+      isGone: false,
+      isHidden: false,
+      species: { key: { in: [...HUNTER_PREY_SPECIES_KEYS] }, diet: "HERBIVORE" },
+    },
+    _count: { _all: true },
+    orderBy: { _count: { locationId: "desc" } },
+    take: 12,
+  });
+
+  const locations = await prisma.cellLocation.findMany({
+    where: { id: { in: candidates.map((candidate) => candidate.locationId) } },
+    include: { region: true },
+  });
+  const allowedLocationIds = new Set(locations
+    .filter((location) => !isTutorialOrDreamRegionKey(location.region.key))
+    .map((location) => location.id));
+
+  const routes: { route: RouteStep[]; preyCount: number }[] = [];
+  for (const candidate of candidates) {
+    if (!allowedLocationIds.has(candidate.locationId) || candidate.locationId === fromLocationId) continue;
+    const route = await findLocationRoute(fromLocationId, candidate.locationId, { maxDepth: HUNTER_ROUTE_MAX_DEPTH });
+    if (route?.length) routes.push({ route, preyCount: candidate._count._all });
+  }
+
+  return routes
+    .sort((a, b) => routeCost(a.route) - routeCost(b.route) || b.preyCount - a.preyCount)[0]?.route ?? null;
+}
+
+async function selectLocalHunterPrey(locationId: number) {
+  const prey = await prisma.creature.findMany({
+    where: {
+      locationId,
+      isAlive: true,
+      isGone: false,
+      isHidden: false,
+      species: { key: { in: [...HUNTER_PREY_SPECIES_KEYS] }, diet: "HERBIVORE" },
+    },
+    include: { species: true },
+    orderBy: [{ speciesId: "asc" }, { hp: "asc" }, { id: "asc" }],
+    take: 8,
+  });
+
+  return prey
+    .map((target) => ({
+      target,
+      score:
+        (target.species.key === "mouse" ? 12 : 8)
+        + (target.age === "CHILD" ? -6 : target.age === "OLD" ? 4 : 0)
+        + Math.max(0, 6 - target.hp),
+    }))
+    .sort((a, b) => b.score - a.score || a.target.id - b.target.id)[0]?.target ?? null;
+}
+
+async function queueHunterMove(creature: { id: number; stamina: number }, route: RouteStep[], reason: string) {
+  const step = route[0];
+  if (!step) return "queuedRest";
+  await enqueueCreatureAction({
+    creatureId: creature.id,
+    type: "MOVE",
+    payload: { direction: step.direction as Direction, reason },
+    durationMs: movementDurationMs(step.travelCost, creature.stamina),
+  });
+  return "queuedMove";
+}
+
+async function depositClaimedCorpses(bot: Bot | null, hunter: { id: number; name?: string | null }, plan: HunterRoutePlan) {
+  const corpses = await claimedCorpsesForHunter(hunter.id);
+  const groups = groupHunterClaimedCorpses(corpses);
+  if (!groups.length) return false;
+
+  for (const group of groups) {
+    const result = await recordNpcCarcassDropoffContribution({
+      creatureId: hunter.id,
+      dropoffFeatureKey: plan.dropoffFeatureKey,
+      resourceTypeKey: group.resourceTypeKey,
+      amount: group.amount,
+    });
+    await prisma.creature.updateMany({
+      where: { id: { in: group.corpseIds } },
+      data: {
+        locationId: plan.gateLocationId,
+        isGone: true,
+        corpseDecayTicksLeft: 0,
+        currentAction: `залишено в падальному рові мисливцем:${hunter.id}`,
+      },
+    });
+    await logEvent("NPC_ACTION", "Hunter deposited claimed carcasses", `${hunter.id}; ${group.resourceTypeKey} ×${group.amount}`, plan.gateLocationId);
+    if (bot) await notifyLocationAll(bot, plan.gateLocationId, `${result.observerText}\n\n${hunter.name ?? "Мисливець"} промовляє:\n“${result.fieldLine}”`);
+  }
+
+  return true;
+}
+
+export async function tickNpcHunter(bot: Bot | null, hunter: any) {
+  if (!isHunterCreature(hunter)) return "queuedRest";
+
+  const planResult = await findHunterRoutePlan();
+  if (!planResult.ok) {
+    await enqueueCreatureAction({
+      creatureId: hunter.id,
+      type: "LOOK",
+      payload: { reason: "перевіряє шлях до воріт і вогнища" },
+      durationMs: actionDurationMs("LOOK", hunter.stamina),
+    });
+    return "queuedLook";
+  }
+
+  const plan = planResult.plan;
+  const claimed = await claimedCorpsesForHunter(hunter.id);
+
+  if (hunter.locationId === plan.gateLocationId && claimed.length > 0) {
+    await depositClaimedCorpses(bot, hunter, plan);
+    await enqueueCreatureAction({
+      creatureId: hunter.id,
+      type: "SAY",
+      payload: { text: hunterFieldLine("deposit", hunter.kills ?? claimed.length) },
+      durationMs: actionDurationMs("SAY", hunter.stamina),
+    });
+    return "queuedSay";
+  }
+
+  if (claimed.length > 0 && hunter.locationId !== plan.gateLocationId) {
+    const route = await findLocationRoute(hunter.locationId, plan.gateLocationId, { maxDepth: HUNTER_ROUTE_MAX_DEPTH });
+    if (route?.length) return queueHunterMove(hunter, route, "несе здобич до падального рову");
+  }
+
+  const shouldReachCampfireFirst = hunter.locationId !== plan.campfireLocationId
+    && (hunter.locationId === plan.gateLocationId || String(hunter.currentAction ?? "").includes("межового вогню"));
+  if (shouldReachCampfireFirst) {
+    const route = await findLocationRoute(hunter.locationId, plan.campfireLocationId, { maxDepth: HUNTER_ROUTE_MAX_DEPTH });
+    if (route?.length) {
+      if (bot && hunter.locationId === plan.gateLocationId) await notifyLocationAll(bot, hunter.locationId, `${hunter.name ?? "Мисливець"} промовляє:\n“${hunterFieldLine("departure", hunter.id)}”`);
+      return queueHunterMove(hunter, route, "йде від воріт до межового вогню");
+    }
+  }
+
+  const prey = await selectLocalHunterPrey(hunter.locationId);
+  if (prey) {
+    await enqueueCreatureAction({
+      creatureId: hunter.id,
+      type: "ATTACK",
+      payload: { targetType: "creature", targetId: prey.id, mode: "hunter" },
+      durationMs: actionDurationMs("ATTACK", hunter.stamina),
+      interruptQueued: true,
+    });
+    return "queuedAttack";
+  }
+
+  const preyRoute = await routeToNearestPreyLocation(hunter.locationId);
+  if (preyRoute?.length) {
+    if (bot && hunter.locationId === plan.campfireLocationId) await notifyLocationAll(bot, hunter.locationId, `${hunter.name ?? "Мисливець"} промовляє:\n“${hunterFieldLine("trail", hunter.id + (hunter.steps ?? 0))}”`);
+    return queueHunterMove(hunter, preyRoute, "шукає гризунів і зайців");
+  }
+
+  if (hunter.locationId !== plan.gateLocationId) {
+    const route = await findLocationRoute(hunter.locationId, plan.gateLocationId, { maxDepth: HUNTER_ROUTE_MAX_DEPTH });
+    if (route?.length) {
+      if (bot) await notifyLocationAll(bot, hunter.locationId, `${hunter.name ?? "Мисливець"} промовляє:\n“${hunterFieldLine("giveUp", hunter.id + (hunter.steps ?? 0))}”`);
+      return queueHunterMove(hunter, route, "вертається до воріт без здобичі");
+    }
+  }
+
+  await enqueueCreatureAction({
+    creatureId: hunter.id,
+    type: "REST",
+    payload: {},
+    durationMs: actionDurationMs("REST", hunter.stamina),
+  });
+  return "queuedRest";
 }

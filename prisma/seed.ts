@@ -468,6 +468,26 @@ const species = [
     endurance: 5,
     instinct: 6,
   },
+  {
+    key: "hunter",
+    name: "мисливець",
+    nameGenitive: "мисливця",
+    nameDative: "мисливцю",
+    nameAccusative: "мисливця",
+    nameInstrumental: "мисливцем",
+    nameLocative: "мисливці",
+    nameVocative: "мисливцю",
+    grammaticalGender: "MASCULINE",
+    animacy: "ANIMATE",
+    kind: "HUMAN",
+    diet: "OMNIVORE",
+    baseHp: 22,
+    strength: 6,
+    agility: 5,
+    perception: 7,
+    endurance: 6,
+    instinct: 7,
+  },
 ] as const;
 
 

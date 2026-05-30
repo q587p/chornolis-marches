@@ -60,5 +60,25 @@
       "nameLocative": "Ведані",
       "nameVocative": "Ведано"
     }
+  },
+  {
+    "speciesKey": "hunter",
+    "locationKey": "closed_east_gate",
+    "name": "Лукан",
+    "sex": "MALE",
+    "isAlive": true,
+    "isHidden": false,
+    "professionKey": "hunter",
+    "professionName": "мисливець",
+    "action": "перевіряє ремінь ножа біля падального рову",
+    "activity": "LOOKING",
+    "nameOverrides": {
+      "nameGenitive": "Лукана",
+      "nameDative": "Лукану",
+      "nameAccusative": "Лукана",
+      "nameInstrumental": "Луканом",
+      "nameLocative": "Лукані",
+      "nameVocative": "Лукане"
+    }
   }
 ]

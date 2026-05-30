@@ -130,7 +130,13 @@ Implementation foundation:
 - NPC deposits preserve contributor kind and `creatureId`;
 - NPC deposits do not grant player inventory rewards;
 - `findHunterRoutePlan()` resolves the gate drop-off, a configured magic campfire and routes in both directions through ordinary exits;
+- `tickNpcHunter()` runs the first hunter state-machine slice for the seeded gate hunter `Лукан`;
+- hunter movement uses ordinary exits and delayed `MOVE` actions;
+- hunter attacks use the existing delayed creature `ATTACK` action;
+- hunter kills are marked as claimed carcasses, then returned to the gate and deposited through the shared NPC drop-off helper;
 - the hunter loop should still show movement and local messages instead of silently calling the helper from far away.
+
+0.13.11 deliberately does not yet model a real NPC-held torch inventory. The five-torch bundle and one-torch return reserve remain constants and design boundaries until NPC inventory/light state exists.
 
 Future MVP shape:
 
@@ -184,4 +190,4 @@ Avoid modern slogans, quest-like confirmations, guaranteed-kill boasting and fix
 - Valid drop-offs are counted for the contributor.
 - First contribution gives atmospheric acknowledgement.
 - Threshold reaction is not a fixed bounty price.
-- NPC hunter behavior remains a follow-up unless implemented through the same service safely.
+- NPC hunter behavior uses the same drop-off contribution service safely for the first state-machine slice.

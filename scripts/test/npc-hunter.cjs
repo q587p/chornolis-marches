@@ -5,9 +5,14 @@ require("ts-node/register");
 const {
   buildHunterRoutePlan,
   HUNTER_DEFAULT_MAGIC_CAMPFIRE_FEATURE_KEY,
+  HUNTER_PROFESSION_KEY,
   HUNTER_RETURN_TORCH_RESERVE,
   HUNTER_TORCH_BUNDLE_SIZE,
+  groupHunterClaimedCorpses,
+  hunterClaimedCorpseAction,
+  hunterClaimedCorpseOwnerId,
   hunterRouteDirections,
+  isHunterCreature,
 } = require("../../src/services/npcHunter");
 
 const toCampfire = [
@@ -49,5 +54,23 @@ assert.deepEqual(buildHunterRoutePlan({
 
 assert.equal(HUNTER_TORCH_BUNDLE_SIZE, 5);
 assert.equal(HUNTER_RETURN_TORCH_RESERVE, 1);
+assert.equal(HUNTER_PROFESSION_KEY, "hunter");
+
+const claimText = hunterClaimedCorpseAction(42);
+assert.equal(hunterClaimedCorpseOwnerId(claimText), 42);
+assert.equal(hunterClaimedCorpseOwnerId("лежить нерухомо"), null);
+assert.equal(isHunterCreature({ professionKey: "hunter" }), true);
+assert.equal(isHunterCreature({ professionKey: "znakhar" }), false);
+
+const claimedGroups = groupHunterClaimedCorpses([
+  { id: 1, sex: "MALE", species: { key: "rabbit", name: "заєць", nameGenitive: "зайця" } },
+  { id: 2, sex: "FEMALE", species: { key: "rabbit", name: "заєць", nameGenitive: "зайця" } },
+  { id: 3, sex: null, species: { key: "mouse", name: "миша", nameGenitive: "миші" } },
+]);
+assert.deepEqual(claimedGroups, [
+  { resourceTypeKey: "corpse_rabbit_male", amount: 1, corpseIds: [1] },
+  { resourceTypeKey: "corpse_rabbit_female", amount: 1, corpseIds: [2] },
+  { resourceTypeKey: "corpse_mouse", amount: 1, corpseIds: [3] },
+]);
 
 console.log("NPC hunter helpers OK");

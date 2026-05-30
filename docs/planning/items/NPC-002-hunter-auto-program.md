@@ -70,3 +70,22 @@ Add a simple NPC hunter behavior that interacts with the same ecological loop as
 - Added `src/services/npcHunter.ts` with route-plan helpers for gate-to-magic-campfire and magic-campfire-to-gate movement.
 - The helper returns explicit no-route reasons instead of guessing or teleporting.
 - The remaining MVP work is now the actual delayed hunter state machine on top of this route plan.
+
+## 0.13.11 State-Machine Slice
+
+- Seeded the first gate hunter NPC, `Лукан`, near the closed settlement gate.
+- Added a first `tickNpcHunter()` state-machine slice that:
+  - routes the hunter through ordinary exits rather than teleporting;
+  - prefers reaching the known magic campfire before the first hunt route;
+  - selects visible mice or rabbits, not arbitrary creatures;
+  - attacks through the existing delayed creature action queue;
+  - marks killed prey as hunter-claimed carcasses instead of leaving ordinary visible corpse spam;
+  - returns claimed carcasses to the gate and records them through `recordNpcCarcassDropoffContribution()`.
+- Added helper coverage for hunter profession detection, claimed-carcass markers and grouped corpse resource keys.
+
+Remaining work before closing the full MVP:
+
+- model the bounded torch bundle and lit-torch switching as real NPC-held state instead of only planning constants;
+- add stronger route/radius tuning for hunting grounds;
+- add an inspect/check beat between attack and next decision;
+- decide whether hunter-claimed carcasses should ever be recoverable if the hunter dies, disappears or is reset mid-route.

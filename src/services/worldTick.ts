@@ -11,6 +11,7 @@ import { notifyFadingFireTimers } from "./fire";
 import { maybePerformHerbalistSignal } from "./socialAutonomy";
 import { filterLisovykAllowedLocations, isLisovykForbiddenLocation, isLisovykForbiddenRegion } from "./lisovykBoundaries";
 import { DREAM_GATE_FEATURE_KEY, DREAM_GATE_FEATURE_KEYS } from "./tutorial";
+import { isHunterCreature, tickNpcHunter } from "./npcHunter";
 import { chance, chancePermille, pickOptional as pick, randomInt } from "../utils/random";
 
 const DEFAULT_TICK_INTERVAL_MS = TICK_MS;
@@ -1251,7 +1252,8 @@ export async function worldTick() {
         }
 
         let result = "queuedRest";
-        if (c.species.key === "herbalist") result = await tickHerbalist(c);
+        if (isHunterCreature(c)) result = await tickNpcHunter(botInstance, c);
+        else if (c.species.key === "herbalist") result = await tickHerbalist(c);
         else if (c.species.key === "lisovyk") {
           const exit = pick(c.location.exitsFrom.filter((candidate: any) => isExit(candidate) && !isLisovykForbiddenLocation((candidate as any).toLocation)));
           if (isExit(exit) && chance(50)) {

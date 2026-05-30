@@ -35,6 +35,7 @@ import { tutorialGateSpeechComment, tutorialLookPaceComments, tutorialSpiritMove
 import { chance, pick, shuffle } from "../utils/random";
 import { freshenCorpseForMeat } from "./meat";
 import { rememberPlayerReplyTarget } from "./replyTargets";
+import { hunterClaimedCorpseAction, isHunterCreature } from "./npcHunter";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
@@ -638,21 +639,39 @@ async function completeCreatureAttack(bot: Bot, action: WorldAction) {
   await prisma.creature.updateMany({ where: { id: attacker.id }, data: { attackAttempts: { increment: 1 } } });
 
   if (nextHp <= 0) {
-    await prisma.creature.updateMany({ where: { id: target.id }, data: { hp: 0, isAlive: false, age: "CORPSE", diedAtTick: null, corpseDecayTicksLeft: target.species.corpseDecayTicks, activity: "RESTING", currentAction: `убито хижаком: ${attacker.species.key}` } });
+    const hunter = isHunterCreature(attacker);
+    await prisma.creature.updateMany({
+      where: { id: target.id },
+      data: {
+        hp: 0,
+        isAlive: false,
+        age: "CORPSE",
+        diedAtTick: null,
+        corpseDecayTicksLeft: target.species.corpseDecayTicks,
+        activity: "RESTING",
+        isHidden: hunter ? true : undefined,
+        currentAction: hunter ? hunterClaimedCorpseAction(attacker.id) : `убито хижаком: ${attacker.species.key}`,
+      },
+    });
     await interruptActorActions({ actorType: "CREATURE", creatureId: target.id }, "істоту вбито", true);
     await prisma.creature.updateMany({
       where: { id: attacker.id },
       data: {
-        hunger: Math.max(0, attacker.hunger - foodValue),
+        hunger: hunter ? attacker.hunger : Math.max(0, attacker.hunger - foodValue),
         activity: "FIGHTING",
-        currentAction: `убив ${target.species.name}`,
+        currentAction: hunter ? `вполював ${target.species.name} і несе здобич` : `убив ${target.species.name}`,
         successfulAttacks: { increment: 1 },
         kills: { increment: 1 },
       },
     });
     await triggerHerbivorePanic(attacker.locationId, target.id, "лякається хижака й крові");
-    await notifyLocation(bot, attacker.locationId, -1, `Щось кидається на здобич. За мить ${target.species.name} падає нерухомо.`);
-    await logEvent("NPC_ACTION", "Creature killed prey", `${attacker.species.key} #${attacker.id} -> ${target.species.key} #${target.id}; food=${foodValue}`, attacker.locationId);
+    if (hunter) {
+      await notifyLocation(bot, attacker.locationId, -1, `${attacker.name ?? "Мисливець"} збиває ${target.species.name} і підбирає здобич для падального рову.`);
+      await logEvent("NPC_ACTION", "Hunter claimed prey", `${attacker.id} -> ${target.species.key} #${target.id}`, attacker.locationId);
+    } else {
+      await notifyLocation(bot, attacker.locationId, -1, `Щось кидається на здобич. За мить ${target.species.name} падає нерухомо.`);
+      await logEvent("NPC_ACTION", "Creature killed prey", `${attacker.species.key} #${attacker.id} -> ${target.species.key} #${target.id}; food=${foodValue}`, attacker.locationId);
+    }
   } else {
     await prisma.creature.updateMany({ where: { id: target.id }, data: { hp: nextHp, currentAction: "поранено" } });
     await prisma.creature.updateMany({ where: { id: attacker.id }, data: { activity: "FIGHTING", currentAction: `атакує ${target.species.name}`, successfulAttacks: { increment: 1 } } });
