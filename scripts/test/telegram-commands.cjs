@@ -11,6 +11,9 @@ function commandNames(commands) {
 const defaultCommands = commandNames(DEFAULT_BOT_COMMANDS);
 const scribeCommands = commandNames(SCRIBE_BOT_COMMANDS);
 
+assert.deepEqual(defaultCommands.slice(0, 2), ["start", "afk"], "/afk stays near the top of the side command menu");
+assert.deepEqual(scribeCommands.slice(0, 2), ["start", "afk"], "scribe side command menu inherits the /afk quick-exit slot");
+
 assert.equal(defaultCommands.includes("adminmenu"), false, "public command menu must not expose /adminmenu");
 assert.equal(defaultCommands.includes("carcassquest"), false, "public command menu must not expose /carcassquest");
 
