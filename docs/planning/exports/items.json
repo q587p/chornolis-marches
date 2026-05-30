@@ -672,6 +672,23 @@
     "file": "docs/planning/items/ITEM-001-pickup-vs-gather-semantics.md"
   },
   {
+    "id": "LANG-001",
+    "title": "Lexicon and agreement audit",
+    "status": "backlog",
+    "type": "chore",
+    "area": "content",
+    "priority": "medium",
+    "tags": [
+      "ukrainian",
+      "lexicon",
+      "grammar",
+      "text"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/LANG-001-lexicon-and-agreement-audit.md"
+  },
+  {
     "id": "LEARN-001-A",
     "title": "Minimal learning storage decision",
     "status": "next",
