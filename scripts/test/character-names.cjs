@@ -15,6 +15,7 @@ const {
   validateCustomCharacterName,
 } = require("../../src/services/characterNames");
 const { creatureForms, guessNameForms } = require("../../src/services/grammar");
+const { creatureSpeciesNameFields, findLexiconEntry, formsByNominative } = require("../../src/content/lexicon/worldLexicon");
 
 assert.equal(normalizeNameForRegistry("  Ведана  "), "ведана");
 
@@ -134,5 +135,10 @@ assert.equal(maleMouse.genitive, "самця миші");
 const femaleMouse = creatureForms({ sex: "FEMALE", species: { key: "mouse", name: "миша", grammaticalGender: "FEMININE", animacy: "ANIMATE" } });
 assert.equal(femaleMouse.nominative, "самиця миші");
 assert.equal(femaleMouse.genitive, "самиці миші");
+assert.equal(findLexiconEntry("animal.rabbit").forms.accusative, "зайця");
+assert.equal(formsByNominative()["вогнище"].locative, "вогнищі");
+assert.equal(guessNameForms("крук", "MASCULINE", "ANIMATE").vocative, "круче");
+assert.equal(creatureSpeciesNameFields("hunter").nameGenitive, "мисливця");
+assert.equal(creatureSpeciesNameFields("stezhnyk").nameAccusative, "стежника");
 
 console.log("Character names OK");

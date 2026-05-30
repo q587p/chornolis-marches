@@ -9,6 +9,24 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.16 - World lexicon case forms - 12026-05-30
+
+### Added
+
+- Added a central world lexicon for stable creature, profession, spirit, resource, feature and common-noun Ukrainian case forms.
+- Added world-lexicon documentation and README pointers for content structure.
+
+### Changed
+
+- Grammar known-form lookup now reads from the world lexicon instead of a local hardcoded block.
+- Seed species name fields now use the lexicon helper for active species and current NPC profession species.
+
+### Tests
+
+- Extended character-name and grammar coverage for lexicon lookups and seed species helper forms.
+
+---
+
 ## 0.13.15 - Auto stand-up after rest - 12026-05-30
 
 ### Fixed
