@@ -21,6 +21,9 @@ assert.match(closedSettlementGateText, /східний прохід/);
 assert.match(closedSettlementGateText, /відкриється лише за певних умов/);
 
 assert.equal(normalizeInput("  /Look@Chornolis_bot!!!  "), "/look");
+assert.equal(normalizeInput("/sleep_tutorial"), "/sleep tutorial");
+assert.equal(normalizeInput("/queue_cancel"), "/queue cancel");
+assert.equal(normalizeInput("/auto_stop"), "/auto stop");
 assert.equal(normalizeInput("з’їсти   ягоди."), "з'їсти ягоди");
 
 assertAlias("/look", { kind: "location" });
@@ -112,6 +115,7 @@ assertAlias("навчання", { kind: "sleep", tutorial: true });
 assertAlias("туторіал", { kind: "sleep", tutorial: true });
 assertAlias("пройти навчання", { kind: "sleep", tutorial: true });
 assertAlias("повернутися до навчання", { kind: "sleep", tutorial: true });
+assertAlias("/sleep_tutorial", { kind: "sleep", tutorial: true });
 assertAlias("сон", { kind: "sleep" });
 assertAlias("спати", { kind: "sleep" });
 assertAlias("прокинутися", { kind: "wake" });
@@ -140,8 +144,11 @@ assertAlias("/put туша all рів", { kind: "put-item", item: "туша", am
 assertAlias("покласти всі рештки до ями", { kind: "put-item", item: "рештки", amount: "all", container: "ями" });
 assertAlias("put out torch", { kind: "douse-torch" });
 assertAlias("черга", { kind: "queue", mode: "status" });
+assertAlias("/queue_cancel", { kind: "queue", mode: "cancel-current" });
+assertAlias("/queue_clear", { kind: "queue", mode: "clear" });
 assertAlias("скасувати", { kind: "queue", mode: "cancel-current" });
 assertAlias("очистити чергу", { kind: "queue", mode: "clear" });
+assertAlias("/auto_stop", { kind: "auto", mode: "stop" });
 
 assertAlias("сказати Хай стежка буде м'якою.", { kind: "say", text: "Хай стежка буде м'якою." });
 assertAlias("/say Відчинитися", { kind: "say", text: "Відчинитися" });

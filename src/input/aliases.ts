@@ -303,6 +303,7 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "скасувати поточну": { kind: "queue", mode: "cancel-current" },
 
   "queue clear": { kind: "queue", mode: "clear" },
+  "queue cancel": { kind: "queue", mode: "cancel-current" },
   "clear queue": { kind: "queue", mode: "clear" },
   "очистити чергу": { kind: "queue", mode: "clear" },
   "скинути чергу": { kind: "queue", mode: "clear" },
@@ -473,6 +474,7 @@ export function normalizeInput(raw: string) {
   return normalizeSlashCommand(raw.trim())
     .toLowerCase()
     .replace(APOSTROPHES, "'")
+    .replace(/_/g, " ")
     .replace(TRAILING_PUNCTUATION, "")
     .replace(/\s+/g, " ");
 }
