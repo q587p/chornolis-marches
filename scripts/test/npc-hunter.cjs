@@ -20,6 +20,7 @@ const {
   hunterClaimedCorpseOwnerId,
   hunterConversationReplyLine,
   hunterIsReturningForTorches,
+  hunterReactionDurationMs,
   hunterReturningForTorchesAction,
   hunterRouteDirections,
   hunterSocialReactionSignal,
@@ -104,6 +105,8 @@ assert.equal(hunterSocialReactionSignal("nod"), "nod");
 assert.equal(hunterSocialReactionSignal("wave"), "wave");
 assert.equal(hunterSocialReactionSignal("smile"), "nod");
 assert.equal(hunterSocialReactionSignal("glare"), null);
+assert.ok(hunterReactionDurationMs("SAY", 42) > 0);
+assert.equal(hunterReactionDurationMs("SAY", 42), hunterReactionDurationMs("GREET", 42));
 
 const claimedGroups = groupHunterClaimedCorpses([
   { id: 1, sex: "MALE", species: { key: "rabbit", name: "заєць", nameGenitive: "зайця" } },

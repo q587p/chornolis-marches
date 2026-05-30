@@ -410,6 +410,26 @@
     "file": "docs/planning/items/FOOD-002-spoiled-meat-and-risky-eating.md"
   },
   {
+    "id": "FOOD-003",
+    "title": "Freshened corpse remains",
+    "status": "backlog",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "food",
+      "corpses",
+      "remains",
+      "hunting",
+      "dropoff"
+    ],
+    "depends_on": [
+      "FOOD-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FOOD-003-freshened-corpse-remains.md"
+  },
+  {
     "id": "HMYZ-001-A",
     "title": "Audit hmyz model",
     "status": "next",

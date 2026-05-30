@@ -78,7 +78,7 @@ export async function freshenCorpseForMeat(input: {
         age: "CORPSE",
         NOT: { currentAction: { startsWith: FRESHENED_CORPSE_MARKER } },
       },
-      data: { currentAction: freshenedCorpseAction(input.playerId, amount) },
+      data: { isHidden: true, currentAction: freshenedCorpseAction(input.playerId, amount) },
     });
     if (freshened.count === 0) throw new Error("Труп уже не підходить для освіжування.");
 

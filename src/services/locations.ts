@@ -58,7 +58,7 @@ type HtmlFollowupMessage = {
 };
 
 export function isVisibleCorpse(c: any) {
-  return !c.isAlive && !c.isGone && !c.isHidden && c.age === "CORPSE";
+  return !c.isAlive && !c.isGone && !c.isHidden && c.age === "CORPSE" && !isFreshenedCorpse(c.currentAction);
 }
 
 function isVisibleLivingCreature(c: any) {

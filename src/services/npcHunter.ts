@@ -135,6 +135,10 @@ export function hunterSocialReactionSignal(socialId: string) {
   return HUNTER_SOCIAL_REACTIONS[socialId] ?? null;
 }
 
+export function hunterReactionDurationMs(type: "GREET" | "SAY", stamina = 0) {
+  return actionDurationMs(type, stamina) * 2;
+}
+
 type HunterPreyCandidate = {
   id: number;
   hp: number;

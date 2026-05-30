@@ -82,7 +82,17 @@ export function visibleTextTargetCreatureWhere(locationId: number): Prisma.Creat
     isGone: false,
     OR: [
       { isAlive: true, isHidden: false },
-      { isAlive: false, age: "CORPSE", isHidden: false },
+      {
+        isAlive: false,
+        age: "CORPSE",
+        isHidden: false,
+        NOT: [
+          { currentAction: { startsWith: "freshened_by_player:" } },
+          { currentAction: { contains: "; freshened_by_player:" } },
+          { currentAction: { startsWith: "freshened_by_hunter:" } },
+          { currentAction: { contains: "; freshened_by_hunter:" } },
+        ],
+      },
     ],
   };
 }

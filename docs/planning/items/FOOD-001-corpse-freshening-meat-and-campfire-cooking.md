@@ -50,6 +50,7 @@ This should be the first small bridge between combat/hunting, corpse lifetime, i
 ## Later Scope
 
 - Freshen / butcher a carried corpse from inventory, not only a visible corpse lying in the current location.
+- Replace the current “hide after freshening” bridge with real visible remains; this is split into `FOOD-003`.
 - Different meat types by species.
 - Bones, hide, fur, feathers and other animal materials where appropriate.
 - Freshness, spoilage and scent tracking for meat and remains, including timers that eventually make raw/cooked meat unsuitable to eat or cook.

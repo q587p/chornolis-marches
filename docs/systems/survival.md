@@ -88,7 +88,7 @@ When in-world time becomes more complete, hunger should also rise naturally with
 
 A torch should not be enough for cooking. The first cooking pass is imperfect: roughly three attempts out of five become cooked meat, while failed attempts consume the raw meat for now. Later systems can split meat by species and add bones, hide, fur, feathers, freshness, spoilage, tools and skill-based yields.
 
-After freshening, the original creature record may remain in the world as `рештки` until corpse decay removes it. Player-facing text should say the usable meat has already been taken rather than exposing internal `freshened_by_player` state.
+After freshening, the current bridge hides the original corpse from player-facing location and target lists. Future work should create proper visible remains with their own lifetime and drop-off behavior instead of exposing internal `freshened_by_player` state.
 
 ## Campfire Loop
 

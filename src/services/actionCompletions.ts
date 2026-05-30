@@ -35,14 +35,14 @@ import { tutorialGateSpeechComment, tutorialLookPaceComments, tutorialSpiritMove
 import { chance, pick, shuffle } from "../utils/random";
 import { freshenCorpseForMeat } from "./meat";
 import { rememberPlayerReplyTarget } from "./replyTargets";
-import { hunterClaimedCorpseAction, hunterConversationReplyLine, isHunterCreature } from "./npcHunter";
+import { hunterClaimedCorpseAction, hunterConversationReplyLine, hunterReactionDurationMs, isHunterCreature } from "./npcHunter";
 import { ATTACK_OBSERVATION_GROWTH_MESSAGE, ATTACK_PRACTICE_GROWTH_MESSAGE, isAttackPracticeMilestone, recordAttackKillSource, recordAttackObservation } from "./attackLearning";
 import { GATHERING_OBSERVATION_GROWTH_MESSAGE, GATHERING_PRACTICE_GROWTH_MESSAGE, isGatheringPracticeMilestone, recordGatheringObservation, recordGatheringSource } from "./gatheringLearning";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
 type SayPayload = { text: string; mode?: "say" | "whisper" | "reply" | "shout"; targetType?: "player" | "creature"; targetId?: number; targetName?: string; targetDative?: string };
-type SocialPayload = { targetType: "player" | "creature"; targetId: number; mode?: "known" | "mystery"; detail?: "brief" | "full" };
+type SocialPayload = { targetType: "player" | "creature"; targetId: number; mode?: "known" | "mystery"; detail?: "brief" | "full"; socialId?: string };
 
 const RECENT_ATTACK_FEATURE_PREFIX = "recent_attack_";
 const RECENT_ATTACK_DANGER_TICKS = Number(process.env.WORLD_RECENT_ATTACK_DANGER_TICKS || 20);
@@ -602,6 +602,8 @@ async function completeInspect(bot: Bot, action: WorldAction) {
 
 async function completeGreet(bot: Bot, action: WorldAction) {
   const payload = payloadOf<SocialPayload>(action);
+  if (action.actorType === "CREATURE") return completeCreatureSocialReaction(bot, action, payload);
+
   const player = action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null;
   const chatId = chatIdFromAction(action);
   if (!player || !player.currentLocationId || action.actorType !== "PLAYER") return void (await setActionStatus(action, "FAILED"));
@@ -641,6 +643,17 @@ async function completeGreet(bot: Bot, action: WorldAction) {
   await setActionStatus(action, "DONE");
   await logEvent("GREET", `${actorForms.nominative} ${verb} ${target.forms.dative}`, greeting, player.currentLocationId);
   if (chatId) await bot.api.sendMessage(chatId, `Ви сказали ${escapeHtml(target.forms.dative)}:\n${quoteBlock(greeting)}`, { parse_mode: "HTML" });
+}
+
+async function completeCreatureSocialReaction(bot: Bot, action: WorldAction, payload: SocialPayload) {
+  const creature = action.creatureId ? await prisma.creature.findUnique({ where: { id: action.creatureId }, include: { species: true } }) : null;
+  if (!creature || !creature.isAlive || creature.isGone || !payload.socialId) return void (await setActionStatus(action, "FAILED"));
+  const target = await resolveTarget(payload.targetType, payload.targetId, creature.locationId);
+  if (!target || target.isCorpse) return void (await setActionStatus(action, "FAILED"));
+
+  const { performCreatureSocialSignal } = await import("./socialSignals");
+  await performCreatureSocialSignal(bot, creature, target, payload.socialId);
+  await setActionStatus(action, "DONE");
 }
 
 async function completeFreshen(bot: Bot, action: WorldAction) {
@@ -834,7 +847,7 @@ async function queueHunterConversationReply(input: {
       targetDative: actorForms.dative,
       speakerDative: hunterForms.dative,
     },
-    durationMs: actionDurationMs("SAY", hunter.stamina),
+    durationMs: hunterReactionDurationMs("SAY", hunter.stamina),
   });
 }
 
