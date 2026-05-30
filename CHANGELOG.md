@@ -23,6 +23,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Visible reply-keyboard status changes now get a short refresh message after quick actions or recovery, so stamina labels update without requiring a chat reopen.
 - Local movement notifications now clean up older movement inline buttons: only the latest tracks button stays active per location/chat, and a character's arrival target button is removed when that character leaves.
 - Bulk pickup now treats visible corpses as ground items too: `get all`, `get all corpse` and type filters such as `get all berries` can collect matching visible items, and `drop all [type]` can drop whole carried stacks while plain `drop all` keeps held lit torches in hand.
+- Corpse target buttons now hide decay timer details and use cleaner labels without the old colon/action suffix.
 - The "deaths by characters" stat now includes non-animal NPC kills as well as player kills.
 - Scribes now get an `adminMenu` button in the main keyboard instead of the ordinary help button, with submenus for statistics, world views, teleport, resources, fire tools and full admin help.
 - Scribe fire-supply commands `/addTorch [player] [amount]` and `/addTwigs [player] [amount]` now accept a final amount, defaulting to 1.
@@ -43,6 +44,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Extended tutorial voice coverage for the corrected nominative-pronoun line.
 - Extended posture helper coverage for observer-facing state-change text.
 - Extended posture helper coverage for reply-keyboard status label visibility.
+- Extended target-formatting and text-target coverage so corpse buttons cannot leak decay timer text.
 - Extended gate-hunting helper coverage for manual start/stop overrides.
 - Extended gate-hunting helper coverage for the cross-region coordinate radius.
 - Ran `npm test`.

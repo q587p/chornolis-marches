@@ -148,6 +148,7 @@ export function buildCorpseActionKeyboard(target: ResolvedTarget) {
 }
 
 function targetButtonLabel(target: TargetRef) {
+  if (target.isCorpse) return target.label;
   return target.actionLabel ? `${target.label} — ${target.actionLabel}` : target.label;
 }
 

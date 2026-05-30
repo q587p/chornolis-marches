@@ -115,8 +115,8 @@ function visibleTargets(
       return {
         type: "creature" as const,
         id: c.id,
-        label: `${wasFreshened ? "рештки" : "труп"}: ${creatureForms(c).genitive}`,
-        actionLabel: wasFreshened ? "м’ясо вже знято" : c.currentAction ? normalizeCreatureActionText(c.currentAction) : undefined,
+        label: `${wasFreshened ? "рештки" : "труп"} ${creatureForms(c).genitive}`,
+        actionLabel: undefined,
         canGreet: false,
         isAnimal: c.species.kind === "ANIMAL",
         isCorpse: true,

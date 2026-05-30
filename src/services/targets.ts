@@ -251,12 +251,13 @@ export async function resolveTarget(type: string, id: number, locationId: number
     if (isCorpse) {
       const corpseLabel = wasFreshened ? "рештки" : "труп";
       const corpseIntro = wasFreshened ? `Це рештки ${forms.genitive}.` : `Це труп ${forms.genitive}.`;
+      const corpseName = `${corpseLabel} ${forms.genitive}`;
       return {
         kind: "creature",
         id: target.id,
-        name: `${corpseLabel}: ${forms.genitive}`,
+        name: corpseName,
         forms: {
-          nominative: `${corpseLabel}: ${forms.genitive}`,
+          nominative: corpseName,
           genitive: `${corpseLabel === "рештки" ? "решток" : "трупа"} ${forms.genitive}`,
           dative: `${corpseLabel === "рештки" ? "решткам" : "трупу"} ${forms.genitive}`,
           accusative: `${corpseLabel} ${forms.genitive}`,
