@@ -172,6 +172,8 @@ function torchLightButtonText(torchState: { isLit: boolean; plainAmount: number;
 }
 
 function featureIcon(feature: any) {
+  const data = featureData(feature);
+  if (typeof data.icon === "string" && data.icon.trim()) return data.icon.trim();
   if (isTutorialInsideFeature(feature) || isTutorialOutsideFeature(feature)) return "🕳️";
   if (isTutorialRestSeatFeature(feature)) return "🪑";
   if (isTutorialObservationFeature(feature)) return "🦊";

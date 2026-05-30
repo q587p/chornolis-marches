@@ -25,6 +25,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🔥",
       "torch_source": true,
       "infinite_for_now": true,
       "future_limited_stock": true
@@ -39,6 +40,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🪧",
       "inspectable": true,
       "gate_hunting_notice": true,
       "aliases": [
@@ -59,6 +61,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🕳️",
       "inspectable": true,
       "carcass_dropoff": true,
       "aliases": [

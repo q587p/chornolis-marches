@@ -75,6 +75,11 @@ for (const feature of features) {
   assertKnown(locationKeys, feature.locationKey, `Unknown locationKey for feature ${feature.key}`);
 }
 
+for (const key of ["closed_gate_torch_stand", "closed_gate_hunting_notice", "closed_gate_carcass_dropoff"]) {
+  const feature = features.find((item) => item.key === key);
+  assert.ok(feature?.data?.icon, `Gate feature should have a distinct icon: ${key}`);
+}
+
 for (const creature of uniqueCreatures) {
   assertKnown(locationKeys, creature.locationKey, `Unknown locationKey for unique creature ${creature.name}`);
 }

@@ -22,6 +22,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Player carcass/remains drop-offs remain physically accepted while saturation is active, but new supply reward thresholds are suppressed.
 - Player auto mode now avoids choosing the same broad automatic action twice in a row when another candidate action is available.
 - Plain `/put`, `put` and `покласти` now temporarily default to `/put туша рів`, so the drop-off hint remains usable even without typed parameters.
+- Location features can now use per-feature icons; the torch stand, hunting notice and carcass drop-off near the gate no longer all share the generic landmark glyph.
 - Updated gate hunting loop docs and `ECO-003` planning notes with the first implemented saturation boundary and remaining tuning.
 
 ### Tests
@@ -29,6 +30,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Extended gate hunting loop helper coverage for saturation activation/deactivation, reward suppression and hunter stand-down line selection.
 - Added auto action ordering coverage for the non-repeat preference.
 - Added parser coverage for plain `/put` defaults and the `put out torch` collision guard.
+- Added seed coverage so the three gate hunting landmarks keep distinct feature icons.
 
 ---
 

@@ -12,6 +12,8 @@ Only features with meaningful interaction should become buttons in the location 
 
 Interactive features should also be inspectable by text where practical: `look лавка`, `/examine лавка`, `оглянути лавку`, `look bench`, `роздивитися кущі`. If no feature matches, the same text can fall back to ordinary visible target inspection.
 
+Features may set `data.icon` when the generic type icon would make nearby landmarks blend together. The location renderer uses this icon in feature lists and feature buttons before falling back to type-based icons.
+
 Current interactive examples:
 
 - border marker: shows local orientation and nearby landmarks;
