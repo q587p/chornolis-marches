@@ -2,6 +2,14 @@ import { Bot, InlineKeyboard } from "grammy";
 import { config } from "../config";
 import { prisma } from "../db";
 import { resetWorldState } from "../services/worldReset";
+import {
+  adminResetModeDescription,
+  adminResetModeTitle,
+  parseAdminResetMode,
+  resetGameplayStatistics,
+  type AdminResetMode,
+  type ResetStatsSummary,
+} from "../services/adminReset";
 import { logEvent } from "../services/worldEvents";
 import { createDebugCampfire, ensureTorchResourceTypes } from "../services/fire";
 import { requireScribeAdmin } from "../services/adminAccess";
@@ -174,7 +182,10 @@ export const ADMIN_HELP_TEXT = [
   "/cleanupCreatures — очистити всіх тварин і нормалізувати унікальних NPC",
   "",
   "Небезпечні світові важелі",
-  "/reset — скинути стан світу до стартового seed-стану",
+  "/reset — обрати режим скидання",
+  "/reset world — скинути стан світу до стартового seed-стану без статистики персонажів",
+  "/reset stats — скинути лічильники персонажів/NPC, внески до падального рову й службові події /stat",
+  "/reset full — скинути світ і статистику разом",
   "/tick — вручну запустити world tick і показати підсумок",
   "/tickGet — показати tick-налаштування",
   "/tickSet <ms> — змінити інтервал tick",
@@ -310,25 +321,80 @@ export function registerAdminHandlers(bot: Bot) {
     await ctx.reply(`🪵 Додано хмиз у речі: ${playerDisplayName(player)}.`);
   });
 
-  async function runReset(ctx: any) {
-    const autoStopped = await stopAllPlayerAuto();
-    const summary = await resetWorldState();
-    await ctx.reply([
-      "✅ Світ скинуто до стартового стану.",
+  function resetModePromptText() {
+    return [
+      "⚠️ /reset тепер просить обрати, що саме скинути.",
       "",
-      `Seed: ${summary.version}`,
-      `Ресурсних вузлів скинуто: ${summary.resetResources}`,
-      `Застарілих ресурсних вузлів прибрано: ${summary.removedResourceNodes}`,
-      `Унікальних NPC скинуто: ${summary.resetUniqueCreatures}`,
-      `Дублів унікальних NPC прибрано: ${summary.removedDuplicateUniqueCreatures}`,
-      `Зайців створено: ${summary.rabbitsCreated}`,
-      `Мишей створено: ${summary.miceCreated}`,
-      `Хижаків створено: ${summary.predatorsCreated}`,
-      `Авто-режимів вимкнено: ${autoStopped}`,
+      "/reset world — світ до стартового seed-стану, без очищення статистики персонажів.",
+      "/reset stats — тільки лічильники персонажів/NPC, внески до падального рову й службові події /stat.",
+      "/reset full — світ і статистику разом.",
+    ].join("\n");
+  }
+
+  function resetModeKeyboard(userId: number) {
+    return new InlineKeyboard()
+      .text("Світ", `reset:choose:world:${userId}`)
+      .text("Статистика", `reset:choose:stats:${userId}`)
+      .text("Повний reset", `reset:choose:full:${userId}`);
+  }
+
+  function resetConfirmationText(mode: AdminResetMode) {
+    return [
+      `⚠️ /reset ${mode} скине ${adminResetModeTitle(mode)}.`,
       "",
-      "Унікальні NPC:",
-      ...summary.uniqueCreatureSummaries.map((item) => `- ${item}`),
-    ].join("\n"));
+      adminResetModeDescription(mode),
+      "",
+      "Підтвердити?",
+    ].join("\n");
+  }
+
+  function resetConfirmationKeyboard(mode: AdminResetMode, userId: number) {
+    return new InlineKeyboard()
+      .text("✅ Так, скинути", `reset:confirm:${mode}:${userId}`)
+      .text("↩️ Скасувати", `reset:cancel:${mode}:${userId}`);
+  }
+
+  function statsSummaryLines(summary: ResetStatsSummary) {
+    return [
+      `Статистику персонажів очищено: ${summary.resetPlayers}`,
+      `Статистику NPC/істот очищено: ${summary.resetCreatures}`,
+      `Записів падального рову прибрано: ${summary.removedDropoffContributions}`,
+      `Службових подій /stat прибрано: ${summary.removedWorldStatEvents}`,
+    ];
+  }
+
+  async function runReset(ctx: any, mode: AdminResetMode) {
+    const lines: string[] = [];
+
+    if (mode === "world" || mode === "full") {
+      const autoStopped = await stopAllPlayerAuto();
+      const summary = await resetWorldState();
+      lines.push(
+        "✅ Світ скинуто до стартового стану.",
+        "",
+        `Seed: ${summary.version}`,
+        `Ресурсних вузлів скинуто: ${summary.resetResources}`,
+        `Застарілих ресурсних вузлів прибрано: ${summary.removedResourceNodes}`,
+        `Унікальних NPC скинуто: ${summary.resetUniqueCreatures}`,
+        `Дублів унікальних NPC прибрано: ${summary.removedDuplicateUniqueCreatures}`,
+        `Зайців створено: ${summary.rabbitsCreated}`,
+        `Мишей створено: ${summary.miceCreated}`,
+        `Хижаків створено: ${summary.predatorsCreated}`,
+        `Авто-режимів вимкнено: ${autoStopped}`,
+        "",
+        "Унікальні NPC:",
+        ...summary.uniqueCreatureSummaries.map((item) => `- ${item}`)
+      );
+    }
+
+    if (mode === "stats" || mode === "full") {
+      const stats = await resetGameplayStatistics();
+      await logEvent("SYSTEM", mode === "stats" ? "Статистику скинуто" : "Повний reset завершено", `mode=${mode}; players=${stats.resetPlayers}; creatures=${stats.resetCreatures}; dropoffContributions=${stats.removedDropoffContributions}; statEvents=${stats.removedWorldStatEvents}`);
+      if (lines.length > 0) lines.push("");
+      lines.push(mode === "stats" ? "✅ Статистику скинуто." : "✅ Статистику теж скинуто.", "", ...statsSummaryLines(stats));
+    }
+
+    await ctx.reply(lines.join("\n"));
   }
 
   bot.command("reset", async (ctx) => {
@@ -336,21 +402,45 @@ export function registerAdminHandlers(bot: Bot) {
 
     const userId = ctx.from?.id;
     if (!userId) return;
+    const mode = parseAdminResetMode(String(ctx.match ?? ""));
 
-    await ctx.reply(
-      [
-        "⚠️ /reset скине світ до стартового seed-стану.",
-        "",
-        "Буде очищено черги дій, сліди, події, тварин і runtime-стани авто-режиму. Персонажі гравців лишаться, але світ навколо повернеться до старту.",
-        "",
-        "Підтвердити?",
-      ].join("\n"),
-      {
-        reply_markup: new InlineKeyboard()
-          .text("✅ Так, скинути світ", `reset:confirm:${userId}`)
-          .text("↩️ Скасувати", `reset:cancel:${userId}`),
-      }
-    );
+    if (!mode) {
+      await ctx.reply(resetModePromptText(), { reply_markup: resetModeKeyboard(userId) });
+      return;
+    }
+
+    await ctx.reply(resetConfirmationText(mode), { reply_markup: resetConfirmationKeyboard(mode, userId) });
+  });
+
+  bot.callbackQuery(/^reset:(choose|confirm|cancel):(world|stats|full):(\d+)$/, async (ctx) => {
+    const action = ctx.match[1];
+    const mode = ctx.match[2] as AdminResetMode;
+    const requestedBy = Number(ctx.match[3]);
+
+    if (ctx.from.id !== requestedBy) {
+      await ctx.answerCallbackQuery({ text: "Це підтвердження не для тебе.", show_alert: true });
+      return;
+    }
+
+    if (!(await requireScribeAdmin(ctx))) {
+      await ctx.answerCallbackQuery({ text: "Ця дія доступна тільки писарям Порубіжжя.", show_alert: true });
+      return;
+    }
+
+    await ctx.answerCallbackQuery();
+
+    if (action === "choose") {
+      await ctx.editMessageText(resetConfirmationText(mode), { reply_markup: resetConfirmationKeyboard(mode, requestedBy) });
+      return;
+    }
+
+    if (action === "cancel") {
+      await ctx.editMessageText("↩️ Reset скасовано.");
+      return;
+    }
+
+    await ctx.editMessageText(`⏳ Reset підтверджено. Скидаю ${adminResetModeTitle(mode)}...`);
+    await runReset(ctx, mode);
   });
 
   bot.callbackQuery(/^reset:(confirm|cancel):(\d+)$/, async (ctx) => {
@@ -374,7 +464,7 @@ export function registerAdminHandlers(bot: Bot) {
       return;
     }
 
-    await ctx.editMessageText("⏳ Reset підтверджено. Скидаю світ...");
-    await runReset(ctx);
+    await ctx.editMessageText("⏳ Старе підтвердження /reset прийнято. Скидаю світ...");
+    await runReset(ctx, "world");
   });
 }
