@@ -359,14 +359,21 @@ async function completeMove(bot: Bot, action: WorldAction) {
 
     const playerName = playerForms(player).nominative;
     const departureLabel = await visibleMoverLabel(currentLocationId, "Хтось", playerName);
-    await notifyLocation(bot, currentLocationId, player.id, `${departureLabel} пішов звідси.`, buildTrackKeyboard());
+    await notifyLocation(bot, currentLocationId, player.id, `${departureLabel} пішов звідси.`, {
+      keyboard: buildTrackKeyboard(),
+      replaceKey: `tracks:${currentLocationId}`,
+      clearKeys: [`target:player:${player.id}`],
+    });
     await createTrack({ actorType: "PLAYER", playerId: player.id }, currentLocationId, exit.toLocationId, payload.direction, "людський слід");
     await spendPlayerStamina(bot, player.id, "MOVE", chatId);
     const dreamItemsStolen = await removeTutorialForagingDreamItems(player.id, currentLocationId);
     await prisma.player.updateMany({ where: { id: player.id }, data: { currentLocationId: exit.toLocationId, steps: { increment: 1 } } });
     const tutorialRestEntryText = await applyTutorialRestEntryStaminaLesson(player.id, exit.toLocationId);
     const arrivalLabel = await visibleMoverLabel(exit.toLocationId, "Хтось", playerName);
-    await notifyLocation(bot, exit.toLocationId, player.id, `${arrivalLabel} зайшов сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, buildTargetListKeyboard([{ type: "player", id: player.id, label: arrivalLabel, canGreet: true }]));
+    await notifyLocation(bot, exit.toLocationId, player.id, `${arrivalLabel} зайшов сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, {
+      keyboard: buildTargetListKeyboard([{ type: "player", id: player.id, label: arrivalLabel, canGreet: true }]),
+      replaceKey: `target:player:${player.id}`,
+    });
     await setActionStatus(action, "DONE");
     await logEvent("MOVE", "Player queued move completed", payload.direction, exit.toLocationId);
     const spiritComment = await tutorialSpiritMoveComment(currentLocationId, exit.toLocationId, payload.direction);
@@ -393,14 +400,21 @@ async function completeMove(bot: Bot, action: WorldAction) {
   const name = creature.name ?? creature.species.name;
   if (!isAnimal) {
     const departureLabel = await visibleMoverLabel(creature.locationId, "Хтось", name);
-    await notifyLocation(bot, creature.locationId, -1, `${departureLabel} пішов звідси.`, buildTrackKeyboard());
+    await notifyLocation(bot, creature.locationId, -1, `${departureLabel} пішов звідси.`, {
+      keyboard: buildTrackKeyboard(),
+      replaceKey: `tracks:${creature.locationId}`,
+      clearKeys: [`target:creature:${creature.id}`],
+    });
   }
   await createTrack({ actorType: "CREATURE", creatureId: creature.id }, creature.locationId, exit.toLocationId, payload.direction, isAnimal ? `сліди: ${creature.species.name}` : `слід: ${name}`);
   await spendCreatureStamina(creature, actionCost("MOVE"));
   await prisma.creature.updateMany({ where: { id: creature.id }, data: { locationId: exit.toLocationId, activity: "MOVING", currentAction: payload.reason ?? actionTitle(action), steps: { increment: 1 }, hunger: { increment: 1 } } });
   if (!isAnimal) {
     const arrivalLabel = await visibleMoverLabel(exit.toLocationId, "Хтось", name);
-    await notifyLocation(bot, exit.toLocationId, -1, `${arrivalLabel} зайшов сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, buildTargetListKeyboard([{ type: "creature", id: creature.id, label: arrivalLabel, canGreet: true }]));
+    await notifyLocation(bot, exit.toLocationId, -1, `${arrivalLabel} зайшов сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, {
+      keyboard: buildTargetListKeyboard([{ type: "creature", id: creature.id, label: arrivalLabel, canGreet: true }]),
+      replaceKey: `target:creature:${creature.id}`,
+    });
   }
   await setActionStatus(action, "DONE");
   if (!isAnimal) await logEvent("NPC_MOVE", "Creature queued move completed", `${creature.id}:${payload.direction}`, exit.toLocationId);

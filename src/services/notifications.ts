@@ -4,6 +4,19 @@ import { prisma } from "../db";
 import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { canSendProactiveToTelegramId } from "./sessionPresence";
 
+type LocationNotificationOptions = {
+  keyboard?: InlineKeyboard;
+  parseMode?: "HTML";
+  replaceKey?: string;
+  clearKeys?: string[];
+};
+
+const latestInlineMessageByChatAndKey = new Map<string, number>();
+
+function inlineMessageKey(chatId: string | number, key: string) {
+  return `${chatId}:${key}`;
+}
+
 async function mainKeyboardForPlayer(telegramId: string) {
   const numericTelegramId = Number(telegramId);
   return Number.isFinite(numericTelegramId)
@@ -11,15 +24,46 @@ async function mainKeyboardForPlayer(telegramId: string) {
     : buildMainReplyKeyboard(false);
 }
 
-export async function notifyLocation(bot: Bot, locationId: number, exceptPlayerId: number, text: string, keyboard?: InlineKeyboard) {
+async function clearPreviousInlineKey(bot: Bot, telegramId: string, key: string) {
+  const mapKey = inlineMessageKey(telegramId, key);
+  const messageId = latestInlineMessageByChatAndKey.get(mapKey);
+  if (!messageId) return;
+
+  try {
+    await bot.api.editMessageReplyMarkup(telegramId, messageId, { reply_markup: undefined });
+  } catch {
+    // Best-effort cleanup: Telegram may reject old, deleted or already-edited messages.
+  } finally {
+    latestInlineMessageByChatAndKey.delete(mapKey);
+  }
+}
+
+async function sendLocationNotification(bot: Bot, player: { telegramId: string }, text: string, options: LocationNotificationOptions = {}) {
+  try {
+    if (!(await canSendProactiveToTelegramId(player.telegramId))) return;
+    for (const key of options.clearKeys ?? []) {
+      await clearPreviousInlineKey(bot, player.telegramId, key);
+    }
+    if (options.replaceKey) {
+      await clearPreviousInlineKey(bot, player.telegramId, options.replaceKey);
+    }
+    const message = await bot.api.sendMessage(player.telegramId, text, {
+      parse_mode: options.parseMode,
+      reply_markup: options.keyboard ?? await mainKeyboardForPlayer(player.telegramId),
+    });
+    if (options.replaceKey && options.keyboard) {
+      latestInlineMessageByChatAndKey.set(inlineMessageKey(player.telegramId, options.replaceKey), message.message_id);
+    }
+  } catch (error) {
+    console.warn("Failed to notify location player:", error);
+  }
+}
+
+export async function notifyLocation(bot: Bot, locationId: number, exceptPlayerId: number, text: string, optionsOrKeyboard?: InlineKeyboard | LocationNotificationOptions) {
+  const options = optionsOrKeyboard instanceof InlineKeyboard ? { keyboard: optionsOrKeyboard } : optionsOrKeyboard;
   const players = await prisma.player.findMany({ where: { currentLocationId: locationId, NOT: { id: exceptPlayerId } }, select: { telegramId: true } });
   for (const player of players) {
-    try {
-      if (!(await canSendProactiveToTelegramId(player.telegramId))) continue;
-      await bot.api.sendMessage(player.telegramId, text, keyboard ? { reply_markup: keyboard } : { reply_markup: await mainKeyboardForPlayer(player.telegramId) });
-    } catch (error) {
-      console.warn("Failed to notify location player:", error);
-    }
+    await sendLocationNotification(bot, player, text, options);
   }
 }
 
@@ -41,15 +85,11 @@ export async function notifyLocationExcept(bot: Bot, locationId: number, exceptP
   }
 }
 
-export async function notifyLocationAll(bot: Bot, locationId: number, text: string, keyboard?: InlineKeyboard) {
+export async function notifyLocationAll(bot: Bot, locationId: number, text: string, optionsOrKeyboard?: InlineKeyboard | LocationNotificationOptions) {
+  const options = optionsOrKeyboard instanceof InlineKeyboard ? { keyboard: optionsOrKeyboard } : optionsOrKeyboard;
   const players = await prisma.player.findMany({ where: { currentLocationId: locationId }, select: { telegramId: true } });
   for (const player of players) {
-    try {
-      if (!(await canSendProactiveToTelegramId(player.telegramId))) continue;
-      await bot.api.sendMessage(player.telegramId, text, keyboard ? { reply_markup: keyboard } : { reply_markup: await mainKeyboardForPlayer(player.telegramId) });
-    } catch (error) {
-      console.warn("Failed to notify location player:", error);
-    }
+    await sendLocationNotification(bot, player, text, options);
   }
 }
 
