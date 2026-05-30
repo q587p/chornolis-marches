@@ -9,6 +9,18 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.15 - Auto stand-up after rest - 12026-05-30
+
+### Fixed
+
+- Player auto mode now stands a sitting character up before automatic physical actions such as movement or gathering, so an auto-rested character no longer loops into posture guard errors after rest completes.
+
+### Tests
+
+- Extended posture helper coverage for the auto stand-up decision.
+
+---
+
 ## 0.13.14 - Core loop omen and tutorial keyboard polish - 12026-05-30
 
 ### Added

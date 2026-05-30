@@ -4,6 +4,7 @@ require("ts-node/register");
 
 const { EMPTY_KEYBOARD_BUTTON, buildMainReplyKeyboard, buildTutorialSecondStepReplyKeyboard, postureActionLabelsForState, shouldShowInventoryButton } = require("../../src/ui/replyKeyboard");
 const { formatObservedPostureText, formatPostureText } = require("../../src/utils/playerText");
+const { shouldAutoStandBeforeAction } = require("../../src/handlers/auto");
 
 assert.equal(formatPostureText({ posture: "STANDING", isResting: false }), "Ви стоїте.");
 assert.equal(formatPostureText({ posture: "SITTING", isResting: false }), "Ви сидите.");
@@ -22,6 +23,10 @@ assert.deepEqual(postureActionLabelsForState({ posture: "SITTING", isResting: tr
 
 // Rest completion and rest interruption both clear isResting but leave posture sitting.
 assert.deepEqual(postureActionLabelsForState({ posture: "SITTING", isResting: false }), ["Встати", "🧘 Відпочити"]);
+assert.equal(shouldAutoStandBeforeAction({ posture: "SITTING", isResting: false }, "move"), true);
+assert.equal(shouldAutoStandBeforeAction({ posture: "SITTING", isResting: false }, "gather"), true);
+assert.equal(shouldAutoStandBeforeAction({ posture: "SITTING", isResting: false }, "look"), false);
+assert.equal(shouldAutoStandBeforeAction({ posture: "STANDING", isResting: false }, "move"), false);
 
 assert.equal(shouldShowInventoryButton({ inventoryCount: 0, isTutorialDream: true, tutorialInventoryAvailable: false }), false);
 assert.equal(shouldShowInventoryButton({ inventoryCount: 1, isTutorialDream: true, tutorialInventoryAvailable: false }), true);
