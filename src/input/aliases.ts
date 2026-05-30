@@ -58,7 +58,7 @@ export type ParsedAliasCommand =
   | { kind: "shout"; text: string }
   | { kind: "target-action"; action: TargetAction; target: string }
   | { kind: "pickup-target"; target: string }
-  | { kind: "social-signal"; signal: SocialSignalAlias; target: string };
+  | { kind: "social-signal"; signal: SocialSignalAlias; target?: string };
 
 export type AliasSuggestion = {
   alias: string;
@@ -464,6 +464,29 @@ const SUGGESTABLE_PATTERN_ALIASES = [
   "покликати",
   "волати",
   "заволати",
+  "smile",
+  "усміхнутися",
+  "усміхнутись",
+  "посміхнутися",
+  "посміхнутись",
+  "усміх",
+  "посміх",
+  "laugh",
+  "засміятися",
+  "сміятися",
+  "nod",
+  "кивнути",
+  "bow",
+  "вклонитися",
+  "point",
+  "вказати",
+  "glare",
+  "насупитися",
+  "sigh",
+  "зітхнути",
+  "wave",
+  "помахати",
+  "махнути",
 ];
 
 const SUGGESTABLE_ALIASES = [...new Set([...Object.keys(EXACT_ALIASES), ...Object.keys(DIRECTION_ALIASES), ...SUGGESTABLE_PATTERN_ALIASES])];
@@ -504,7 +527,27 @@ function aliasSuggestionScore(query: string, candidate: string) {
   const queryWords = query.split(" ").filter(Boolean);
   if (queryWords.some((word) => word.length > 1 && candidate.split(" ").some((candidateWord) => candidateWord.startsWith(word)))) return 5;
 
+  const compactCandidatePrefix = compactCandidate.slice(0, compactQuery.length);
+  const fuzzyLimit = compactQuery.length >= 5 ? 2 : compactQuery.length >= 4 ? 1 : 0;
+  if (fuzzyLimit > 0 && editDistance(compactQuery, compactCandidatePrefix) <= fuzzyLimit) return 6;
+
   return Number.POSITIVE_INFINITY;
+}
+
+function editDistance(left: string, right: string) {
+  const previous = Array.from({ length: right.length + 1 }, (_, index) => index);
+  for (let i = 1; i <= left.length; i += 1) {
+    let diagonal = previous[0];
+    previous[0] = i;
+    for (let j = 1; j <= right.length; j += 1) {
+      const above = previous[j];
+      previous[j] = left[i - 1] === right[j - 1]
+        ? diagonal
+        : Math.min(previous[j - 1] + 1, above + 1, diagonal + 1);
+      diagonal = above;
+    }
+  }
+  return previous[right.length];
 }
 
 function slashCommandForAlias(alias: string): string | undefined {
@@ -555,6 +598,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "inspect-inventory-item") return "/item";
   if (parsed.kind === "drop-inventory-item") return "/drop";
   if (parsed.kind === "pickup-target") return "/get";
+  if (parsed.kind === "social-signal") return `/${parsed.signal}`;
   if (parsed.kind === "target-action") {
     if (parsed.action === "attack") return "/attack";
     if (parsed.action === "freshen") return "/freshen";
@@ -837,20 +881,24 @@ function parsePutIntent(text: string): ParsedAliasCommand | null {
 }
 
 function parseSocialSignal(text: string): ParsedAliasCommand | null {
-  const patterns: Array<[SocialSignalAlias, RegExp]> = [
-    ["smile", /^(?:smile|усміхнутися|усміхнутись|посміхнутися|посміхнутись)\s+(.+)$/],
-    ["laugh", /^(?:laugh|засміятися|засміятись|сміятися|сміятись)\s+(.+)$/],
-    ["nod", /^(?:nod|кивнути|кивнути\s+до|кивнути\s+на)\s+(.+)$/],
-    ["bow", /^(?:bow|вклонитися|вклонитись|уклонитися|уклонитись)\s+(.+)$/],
-    ["point", /^(?:point|вказати|показати\s+на|вказати\s+на)\s+(.+)$/],
-    ["glare", /^(?:glare|насупитися|насупитись|витріщитися|витріщитись)\s+(.+)$/],
-    ["sigh", /^(?:sigh|зітхнути|зітхнути\s+до|зітхнути\s+на)\s+(.+)$/],
-    ["wave", /^(?:wave|помахати|махнути|помахати\s+до|помахати\s+на)\s+(.+)$/],
+  const patterns: Array<[SocialSignalAlias, RegExp, boolean]> = [
+    ["smile", /^(?:smile|усміхнутися|усміхнутись|посміхнутися|посміхнутись|усміх|посміх)(?:\s+(.+))?$/, true],
+    ["laugh", /^(?:laugh|засміятися|засміятись|сміятися|сміятись)(?:\s+(.+))?$/, true],
+    ["nod", /^(?:nod|кивнути|кивнути\s+до|кивнути\s+на)(?:\s+(.+))?$/, true],
+    ["bow", /^(?:bow|вклонитися|вклонитись|уклонитися|уклонитись)(?:\s+(.+))?$/, true],
+    ["point", /^(?:point|вказати|показати\s+на|вказати\s+на)\s+(.+)$/, false],
+    ["glare", /^(?:glare|насупитися|насупитись|витріщитися|витріщитись)(?:\s+(.+))?$/, true],
+    ["sigh", /^(?:sigh|зітхнути|зітхнути\s+до|зітхнути\s+на)(?:\s+(.+))?$/, true],
+    ["wave", /^(?:wave|помахати|махнути|помахати\s+до|помахати\s+на)(?:\s+(.+))?$/, true],
   ];
 
-  for (const [signal, pattern] of patterns) {
+  for (const [signal, pattern, allowTargetless] of patterns) {
     const match = text.match(pattern);
-    if (match?.[1]?.trim()) return { kind: "social-signal", signal, target: match[1].trim() };
+    if (match) {
+      const target = match[1]?.trim();
+      if (target) return { kind: "social-signal", signal, target };
+      if (allowTargetless) return { kind: "social-signal", signal };
+    }
   }
 
   return null;

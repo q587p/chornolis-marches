@@ -36,7 +36,7 @@ import { submitMove as submitCanonicalMove } from "./movement";
 import { submitGather as submitCanonicalGather } from "./gather";
 import { submitPosture } from "./posture";
 import { addCorpseToInventory, addVisibleCorpsesToInventory, resourceTypeDisplayName } from "../services/corpses";
-import { performSocialSignal } from "../services/socialSignals";
+import { performPlayerLocationSignal, performSocialSignal } from "../services/socialSignals";
 import { addTwigsToCampfire, dousePlayerTorchFromInventory, lightPlayerTorchFromInventory } from "../services/fire";
 import { requireScribeAdmin } from "../services/adminAccess";
 import { pickUpAllVisibleGroundResources, pickUpAllVisibleGroundResourcesByKey, pickUpFirstGroundResourceByKey, pickUpFirstVisibleGroundResourceByKey, type VisibleGroundResourceKey } from "../services/groundItems";
@@ -860,7 +860,18 @@ async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
   }
 }
 
-async function submitSocialSignal(bot: Bot, ctx: any, signal: SocialSignalAlias, targetQuery: string) {
+async function submitSocialSignal(bot: Bot, ctx: any, signal: SocialSignalAlias, targetQuery?: string) {
+  if (!targetQuery) {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    try {
+      await performPlayerLocationSignal(bot, player, signal, ctx.chat?.id);
+    } catch (error) {
+      await ctx.reply(error instanceof Error ? error.message : "Не вдалося подати сигнал.");
+    }
+    return;
+  }
+
   const resolved = await resolveVisibleTargetForAlias(ctx, targetQuery);
   if (!resolved) return;
   if (resolved.target.isCorpse) return void (await ctx.reply("Ця ціль не відповість на сигнал."));

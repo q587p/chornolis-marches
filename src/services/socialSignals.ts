@@ -53,6 +53,8 @@ export const SOCIAL_DEFINITIONS: SocialDefinition[] = [
     actorMessage: (ctx) => `Ви усміхаєтеся ${targetDative(ctx)}.`,
     targetMessage: (ctx) => `${actorName(ctx)} усміхається вам.`,
     roomMessage: (ctx) => `${actorName(ctx)} усміхається ${targetDative(ctx)}.`,
+    targetlessActorMessage: () => "Ви усміхаєтеся.",
+    targetlessRoomMessage: (ctx) => `${actorName(ctx)} усміхається.`,
   },
   {
     id: "laugh",
@@ -60,6 +62,8 @@ export const SOCIAL_DEFINITIONS: SocialDefinition[] = [
     actorMessage: (ctx) => `Ви тихо смієтеся, дивлячись на ${targetAccusative(ctx)}.`,
     targetMessage: (ctx) => `${actorName(ctx)} тихо сміється, дивлячись на вас.`,
     roomMessage: (ctx) => `${actorName(ctx)} тихо сміється, дивлячись на ${targetAccusative(ctx)}.`,
+    targetlessActorMessage: () => "Ви тихо смієтеся.",
+    targetlessRoomMessage: (ctx) => `${actorName(ctx)} тихо сміється.`,
   },
   {
     id: "nod",
@@ -76,6 +80,8 @@ export const SOCIAL_DEFINITIONS: SocialDefinition[] = [
     actorMessage: (ctx) => `Ви вклоняєтеся ${targetDative(ctx)}.`,
     targetMessage: (ctx) => `${actorName(ctx)} вклоняється вам.`,
     roomMessage: (ctx) => `${actorName(ctx)} вклоняється ${targetDative(ctx)}.`,
+    targetlessActorMessage: () => "Ви вклоняєтеся.",
+    targetlessRoomMessage: (ctx) => `${actorName(ctx)} вклоняється.`,
   },
   {
     id: "point",
@@ -90,6 +96,8 @@ export const SOCIAL_DEFINITIONS: SocialDefinition[] = [
     actorMessage: (ctx) => `Ви насуплено дивитеся на ${targetAccusative(ctx)}.`,
     targetMessage: (ctx) => `${actorName(ctx)} насуплено дивиться на вас.`,
     roomMessage: (ctx) => `${actorName(ctx)} насуплено дивиться на ${targetAccusative(ctx)}.`,
+    targetlessActorMessage: () => "Ви насуплюєтеся.",
+    targetlessRoomMessage: (ctx) => `${actorName(ctx)} насуплюється.`,
   },
   {
     id: "sigh",
@@ -97,6 +105,8 @@ export const SOCIAL_DEFINITIONS: SocialDefinition[] = [
     actorMessage: (ctx) => `Ви зітхаєте, дивлячись на ${targetAccusative(ctx)}.`,
     targetMessage: (ctx) => `${actorName(ctx)} зітхає, дивлячись на вас.`,
     roomMessage: (ctx) => `${actorName(ctx)} зітхає, дивлячись на ${targetAccusative(ctx)}.`,
+    targetlessActorMessage: () => "Ви зітхаєте.",
+    targetlessRoomMessage: (ctx) => `${actorName(ctx)} зітхає.`,
   },
   {
     id: "wave",
@@ -104,6 +114,8 @@ export const SOCIAL_DEFINITIONS: SocialDefinition[] = [
     actorMessage: (ctx) => `Ви махаєте ${targetDative(ctx)}.`,
     targetMessage: (ctx) => `${actorName(ctx)} махає вам.`,
     roomMessage: (ctx) => `${actorName(ctx)} махає ${targetDative(ctx)}.`,
+    targetlessActorMessage: () => "Ви махаєте рукою.",
+    targetlessRoomMessage: (ctx) => `${actorName(ctx)} махає рукою.`,
   },
   {
     id: "hush",
@@ -290,6 +302,24 @@ export async function performSocialSignal(bot: Bot, player: any, target: Resolve
   if (!player.currentLocationId) throw new Error("Ти ще не увійшов у світ. Напиши /start");
   const actorForms = playerForms(player);
   await performSocialSignalForActor(bot, { kind: "player", id: player.id, locationId: player.currentLocationId, forms: actorForms, telegramId: player.telegramId }, target, socialId, chatId);
+}
+
+export async function performPlayerLocationSignal(bot: Bot, player: any, socialId: string, chatId?: number) {
+  if (!player.currentLocationId) throw new Error("Ти ще не увійшов у світ. Напиши /start");
+  const social = socialDefinitionById(socialId);
+  if (!social) throw new Error("Невідомий сигнал.");
+  const actorForms = playerForms(player);
+  const ctx: SocialContext = { actor: { kind: "player", id: player.id, locationId: player.currentLocationId, forms: actorForms, telegramId: player.telegramId } };
+  const actorMessage = social.targetlessActorMessage?.(ctx);
+  const roomMessage = social.targetlessRoomMessage?.(ctx);
+  if (!actorMessage || !roomMessage) throw new Error("Цей сигнал просить ціль поруч.");
+
+  await notifyLocationExcept(bot, player.currentLocationId, [player.id], roomMessage, { parseMode: "HTML" });
+  await writeSocialEvent(roomMessage, null, player.currentLocationId);
+
+  if (chatId) {
+    await bot.api.sendMessage(chatId, actorMessage, { parse_mode: "HTML" });
+  }
 }
 
 export async function performCreatureSocialSignal(bot: Bot, creature: any, target: ResolvedTarget, socialId: string) {

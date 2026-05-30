@@ -9,7 +9,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
-## 0.13.20 - Name review, admin menu, visibility and statistic polish - 12026-05-30
+## 0.13.20 - Name review, social hints, admin menu and visibility polish - 12026-05-30
 
 ### Changed
 
@@ -17,6 +17,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Custom character names now clearly say they can be used immediately while still waiting for later scribe review.
 - Character cards reuse the same name-review wording so pending custom names no longer sound like a blocking error.
 - Unknown-input suggestions now include stable slash-command hints for more actions, and the fallback points to `❔ Help` (`/help`) and `Menu` (`/menu`) with clearer labels.
+- Targetless social inputs such as `smile`, `посміх` and `усміхнутися` now perform a visible location gesture, and typo suggestions can point toward close social-signal aliases.
 - The tutorial gate fallback now nudges players who type the written phrase directly to say it aloud with `say` / `/say`, and copied `Ви сказали:` echoes now parse back into speech.
 - Auto stand-up notices now include the matching `/stand` command hint.
 - Sitting, standing, rest start/stop, tutorial sleep entry and tutorial wake now broadcast concise observer messages to other players in the same location.
