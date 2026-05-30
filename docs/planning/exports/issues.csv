@@ -13,6 +13,7 @@ DREAM-004,Advanced group and place-spirit dreams,icebox,feature,dreams,low,"drea
 ECO-001,Reproduction and herbivore overpopulation,testing,feature,ecology,high,"ecology,reproduction,herbivores,rabbits,resources,world-reactivity",docs/planning/items/ECO-001-reproduction-and-overpopulation.md
 ECO-002,Carcass drop-off contribution and settlement reaction,testing,feature,ecology,high,"ecology,hunting,settlement,rewards",docs/planning/items/ECO-002-carcass-dropoff-reaction.md
 ECO-003,Gate hunting saturation and stand-down state,testing,feature,ecology,high,"ecology,hunting,settlement,npc,rewards",docs/planning/items/ECO-003-gate-hunting-saturation.md
+ECO-004,Population floor restoration,next,feature,ecology,high,"ecology,creatures,population,world-tick",docs/planning/items/ECO-004-population-floor-restoration.md
 ECON-001,Barter and trade,backlog,feature,economy,medium,"barter,trade,npc,economy",docs/planning/items/ECON-001-barter-and-trade.md
 FIRE-001-A,Active light connects to visibility,next,feature,survival,high,"fire,light,visibility",docs/planning/items/FIRE-001-A.md
 FIRE-001-B,Expired campfire behavior polish,next,feature,survival,medium,"fire,campfire,copy",docs/planning/items/FIRE-001-B.md
