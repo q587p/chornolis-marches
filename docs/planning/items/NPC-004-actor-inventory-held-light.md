@@ -47,6 +47,7 @@ The immediate pressure is the hunter loop: Орина's lit torch and spare torc
 - NPC-held lit torches can provide light to the current location.
 - `/look` / `/examine` style visibility can describe an obvious NPC-held torch without exposing internal state.
 - Hunter code no longer needs the lightweight `hunter_torches` marker for basic carried torch count once this foundation is active.
+- Migration tests cover the current lightweight `Creature.currentAction` bridge for claimed carcasses and hunter torch bundles, especially hunter death, interruption, disappearance and reset.
 - `npm test` and `npm run build` pass.
 
 ## Follow-Ups

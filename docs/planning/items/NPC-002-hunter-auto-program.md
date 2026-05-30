@@ -102,4 +102,10 @@ Remaining work before closing the full MVP:
 - respect `ECO-003` saturation so hunters can stand down and rest near the magic campfire when more rodent/herbivore pressure is not needed;
 - respect `NPC-005` hunger behavior so hunters sometimes freshen/butcher suitable corpses, cook meat at a real campfire and eat instead of continuing the loop;
 - add an inspect/check beat between attack and next decision;
-- decide whether hunter-claimed carcasses should ever be recoverable if the hunter dies, disappears or is reset mid-route.
+- decide whether hunter-claimed carcasses should ever be recoverable if the hunter dies, disappears or is reset mid-route;
+- add hunter rate limits if the world grows beyond the current tiny seeded set. Two seeded hunters are acceptable without extra throttling, but high-density worlds with many hunters may need caps on hunt decisions, route retries, attacks, pickups, deposits and field lines per tick.
+
+Verification notes for the next hunter slices:
+
+- Claimed carcasses and the torch bundle currently use lightweight markers in `Creature.currentAction`, not real actor inventory. This is acceptable as a bridge, but explicitly test death, interrupt, disappearance and reset paths when replacing or extending the marker flow.
+- Any high-density hunter test should check that the loop does not flood the action queue, deposit service, local messages or `WorldEvent` rows once more hunters are seeded.
