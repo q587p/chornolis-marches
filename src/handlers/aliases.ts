@@ -885,6 +885,7 @@ async function submitSleep(ctx: any, tutorial = false) {
     }));
   }
 
+  await disablePlayerAuto(ctx.from.id);
   const result = await enterTutorialDream(player.id);
   await ctx.reply(result.text, { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
   const view = await renderLocationBrief(result.locationId, player.id);

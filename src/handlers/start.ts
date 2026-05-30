@@ -18,6 +18,7 @@ import {
   randomAvailablePreparedName,
   validateCustomCharacterName,
 } from "../services/characterNames";
+import { disablePlayerAuto } from "./auto";
 
 type NameFormPrompt = { key: keyof NameForms; question: string; button: string; prefix?: string };
 const CASE_BUTTON_LABELS: Partial<Record<keyof NameForms, string>> = {
@@ -377,6 +378,7 @@ async function finishOnboarding(ctx: any, state: OnboardingState) {
 
   if (ctx.chat?.id) await syncChatBotCommandsForTelegramId(ctx.api, ctx.chat.id, state.telegramId);
 
+  await disablePlayerAuto(Number(state.telegramId));
   const dream = await enterTutorialDream(player.id, { forceStart: true });
   await ctx.reply(renderOnboardingNameConfirmation(player), HTML_OPTIONS);
   await ctx.reply(dream.text, {

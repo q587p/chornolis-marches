@@ -36,6 +36,7 @@ As of `0.12.0`, the first concrete newcomer path is the dream tutorial in `Др�
 - Сон and Дрімота also react when a player studies tutorial tracks closely: one rewards attention, the other tries to hurry the player onward.
 - `/sleep tutorial` returns a character to the saved tutorial dream position.
 - Plain `/sleep` routes to the tutorial while that character has not woken from it yet; after wake, normal sleep remains reserved for a later recovery system.
+- Entering the tutorial dream turns off player auto mode, both persistent state and the active runtime timer where available, so the dream remains a focused player-controlled teaching space.
 - Scribes can use `/tutorialReset [character]` to clear a character's completed tutorial marker and make the tutorial start location the saved dream location for the next `/sleep tutorial`.
 - The character's own `/me` view should mention when the tutorial dream is not yet complete, so players have a direct reminder without needing an admin check.
 - `/start`, `/help` and unknown-input fallback messages should remind unfinished characters that `/sleep tutorial` / `навчальний сон` returns them to the dream. `/help` may add a direct `Навчальний сон` button for those characters.
