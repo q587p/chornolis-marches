@@ -20,7 +20,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Tutorial dream reply keyboards now keep ordinary `Help`, `Menu`, `Status` and `Examine` controls hidden until the matching lesson has surfaced them, while `Inventory` appears once the character actually carries something.
 - Entering the tutorial dream now turns off player auto mode so automatic actions do not keep running inside the dream.
-- Targeted `look` now stays focused on visible character/NPC state, while targeted `examine` can show fuller carried inventory or hunter field-supply details.
+- Targeted `look` now stays focused on visible character/NPC state, while targeted `examine` can show fuller carried inventory or hunter field-supply details with approximate public quantities instead of exact counts.
 - Updated gate hunting saturation planning with future persisted linger/cooldown, per-tick saturation caching for larger hunter counts, and the temporary plain `/put` default that should later be removed or redefined for generic containers.
 
 ### Tests

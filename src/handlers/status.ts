@@ -664,7 +664,7 @@ async function buildAdminCreatureDetailsView(creatureId: number) {
   const actionsText = creature.actions.length
     ? creature.actions.map((action) => `- #${action.id} ${action.type} ${action.status}; ${formatAdminDate(action.updatedAt)}; ${action.note ?? "без нотатки"}`).join("\n")
     : "- немає";
-  const hunterInventoryText = await hunterFieldInventorySummary(creature);
+  const hunterInventoryText = await hunterFieldInventorySummary(creature, { exact: true });
 
   const text = [
     `🧩 NPC / істота #${creature.id}`,

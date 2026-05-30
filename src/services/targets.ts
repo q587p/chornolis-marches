@@ -83,40 +83,53 @@ function genderedUnarmed(player: { grammaticalGender?: string | null; pronoun?: 
   return `${looks} беззбройним.`;
 }
 
-function inventoryResourceLines(resources: Array<{ amount: number; resourceType: { key: string; name: string } }>) {
-  return resources
-    .filter((resource) => resource.amount > 0)
-    .map((resource) => `- ${resourceTypeDisplayName(resource.resourceType)} ×${resource.amount}`);
+function qualitativeAmount(amount: number) {
+  if (amount <= 0) return "немає";
+  if (amount === 1) return "лише один";
+  if (amount <= 3) return "трохи";
+  if (amount <= 8) return "чимало";
+  return "багато";
 }
 
-export function inventoryResourceSummary(resources: Array<{ amount: number; resourceType: { key: string; name: string } }>) {
-  const lines = inventoryResourceLines(resources);
+function inventoryResourceLines(resources: Array<{ amount: number; resourceType: { key: string; name: string } }>, options: { exact?: boolean } = {}) {
+  return resources
+    .filter((resource) => resource.amount > 0)
+    .map((resource) => options.exact
+      ? `- ${resourceTypeDisplayName(resource.resourceType)} ×${resource.amount}`
+      : `- ${resourceTypeDisplayName(resource.resourceType)}: ${qualitativeAmount(resource.amount)}`);
+}
+
+export function inventoryResourceSummary(resources: Array<{ amount: number; resourceType: { key: string; name: string } }>, options: { exact?: boolean } = {}) {
+  const lines = inventoryResourceLines(resources, options);
   return lines.length ? lines.join("\n") : "- нічого помітного";
 }
 
-async function playerInventorySummary(playerId: number) {
+async function playerInventorySummary(playerId: number, options: { exact?: boolean } = {}) {
   const resources = await prisma.playerResource.findMany({
     where: { playerId, amount: { gt: 0 } },
     include: { resourceType: true },
     orderBy: { resourceType: { key: "asc" } },
   });
-  return inventoryResourceSummary(resources);
+  return inventoryResourceSummary(resources, options);
 }
 
-function hunterTorchSummary(currentAction: string | null | undefined) {
+function hunterTorchSummary(currentAction: string | null | undefined, options: { exact?: boolean } = {}) {
   const count = hunterCarriedTorchCount(currentAction);
   if (count <= 0) return null;
   const returning = hunterIsReturningForTorches(currentAction);
-  return returning
+  if (options.exact) return returning
     ? `- факели ×${count}; один із них горить або щойно горів у дорозі`
     : `- факели ×${count}`;
+  return returning
+    ? `- факели: ${qualitativeAmount(count)}; один із них горить або щойно горів у дорозі`
+    : `- факели: ${qualitativeAmount(count)}`;
 }
 
-export async function hunterFieldInventorySummary(creature: { id: number; currentAction?: string | null; professionKey?: string | null }) {
+export async function hunterFieldInventorySummary(creature: { id: number; currentAction?: string | null; professionKey?: string | null }, options: { exact?: boolean } = {}) {
   if (!isHunterCreature(creature)) return null;
 
   const lines: string[] = [];
-  const torchLine = hunterTorchSummary(creature.currentAction);
+  const torchLine = hunterTorchSummary(creature.currentAction, options);
   if (torchLine) lines.push(torchLine);
 
   const claimed = await claimedCorpsesForHunter(creature.id);
@@ -128,7 +141,9 @@ export async function hunterFieldInventorySummary(creature: { id: number; curren
     const resourceByKey = new Map(resourceTypes.map((resource) => [resource.key, resource]));
     for (const group of groups) {
       const resource = resourceByKey.get(group.resourceTypeKey) ?? { key: group.resourceTypeKey, name: group.resourceTypeKey };
-      lines.push(`- здобич: ${resourceTypeDisplayName(resource)} ×${group.amount}`);
+      lines.push(options.exact
+        ? `- здобич: ${resourceTypeDisplayName(resource)} ×${group.amount}`
+        : `- здобич: ${resourceTypeDisplayName(resource)} — ${qualitativeAmount(group.amount)}`);
     }
   }
 
@@ -154,7 +169,7 @@ export async function resolveTarget(type: string, id: number, locationId: number
       visibleHeldTorchText(torchState),
     ];
     if (detail === "full") {
-      visibleLines.push("", "Поклажа:", await playerInventorySummary(target.id));
+      visibleLines.push("", "Поклажа:", await playerInventorySummary(target.id, { exact: showTechnicalDetails }));
     }
     if (showTechnicalDetails) {
       visibleLines.push("", "Технічні деталі:", ...formatVitalsLine(target, { showTechnicalDetails: true, hpFallback: BASE_HP, staminaFallback: BASE_STAMINA }), "", "Статистика:", formatPlayerStats(target));
@@ -210,7 +225,7 @@ export async function resolveTarget(type: string, id: number, locationId: number
     }
 
     const visibleAction = normalizeCreatureActionText(target.currentAction, "придивляється довкола");
-    const hunterInventory = await hunterFieldInventorySummary(target);
+    const hunterInventory = await hunterFieldInventorySummary(target, { exact: showTechnicalDetails });
     const hunterSection = hunterInventory
       ? `\n\nМисливський набір:\n${hunterInventory}`
       : "";
@@ -228,7 +243,7 @@ export async function resolveTarget(type: string, id: number, locationId: number
         canFreshen: false,
         inspect: isAnimal
           ? `Це ${forms.nominative}.\n\nСтан: ${target.isAlive ? "жива" : "мертва"}\nДія: ${visibleAction}`
-          : `${forms.nominative}\n\nСтан: ${target.isAlive ? "живий/активний" : "неактивний"}\nДія: ${visibleAction}${hunterSection}`,
+          : `${forms.nominative}\n\nСтан: ${target.isAlive ? "живий/активний" : "неактивний"}\nДія: ${visibleAction}`,
       };
     }
 
