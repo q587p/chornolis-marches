@@ -109,6 +109,13 @@ assertAlias("сон", { kind: "sleep" });
 assertAlias("спати", { kind: "sleep" });
 assertAlias("прокинутися", { kind: "wake" });
 assertAlias("відкрити", { kind: "open" });
+assertAlias("/open ворота", { kind: "open", target: "ворота" });
+assertAlias("відкрити ворота", { kind: "open", target: "ворота" });
+assertAlias("відчинити браму", { kind: "open", target: "браму" });
+assertAlias("відкрий ворота", { kind: "open", target: "ворота" });
+assertAlias("відч ворота", { kind: "open", target: "ворота" });
+assertAlias("привідкрити двері", { kind: "open", target: "двері" });
+assertAlias("o gate", { kind: "open", target: "gate" });
 
 assertAlias("відпочити", { kind: "rest", mode: "start" });
 assertAlias("додати відпочинок у чергу", { kind: "rest", mode: "queue" });

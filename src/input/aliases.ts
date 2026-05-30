@@ -35,7 +35,7 @@ export type ParsedAliasCommand =
   | { kind: "douse-torch" }
   | { kind: "sleep"; tutorial?: boolean }
   | { kind: "wake" }
-  | { kind: "open" }
+  | { kind: "open"; target?: string }
   | { kind: "inspect-inventory-item"; target: string }
   | { kind: "drop-inventory-item"; target: string }
   | { kind: "posture"; mode: PostureAliasMode }
@@ -409,7 +409,17 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   wake: { kind: "wake" },
   wakeup: { kind: "wake" },
   "відкрити": { kind: "open" },
+  "відчинити": { kind: "open" },
+  "відчини": { kind: "open" },
+  "відчиняй": { kind: "open" },
+  "відкрий": { kind: "open" },
+  "відкр": { kind: "open" },
+  "відч": { kind: "open" },
+  "привідкрити": { kind: "open" },
+  "прочинити": { kind: "open" },
+  "отворити": { kind: "open" },
   open: { kind: "open" },
+  o: { kind: "open" },
 };
 
 const COMPACT_ALIASES: Record<string, ParsedAliasCommand> = {
@@ -633,6 +643,13 @@ function parseFeatureInspectionIntent(text: string): ParsedAliasCommand | null {
   return { kind: "inspect-feature", target: match[1].trim() };
 }
 
+function parseOpenIntent(text: string): ParsedAliasCommand | null {
+  const match = text.match(/^(?:open|o|відкрити|відчинити|відчини|відчиняй|відкрий|відкр|відч|привідкрити|прочинити|отворити)(?:\s+(.+))?$/u);
+  if (!match) return null;
+  const target = match[1]?.trim();
+  return target ? { kind: "open", target } : { kind: "open" };
+}
+
 function parseTargetAction(text: string): ParsedAliasCommand | null {
   const patterns: Array<[TargetAction, RegExp]> = [
     ["inspect", /^(?:look\s+at|look|x|examine|inspect|роздивитися|оглянути|глянути\s+на|подивитися\s+на|придивитися\s+до)\s+(.+)$/],
@@ -786,6 +803,9 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
 
   const putIntent = parsePutIntent(commandText);
   if (putIntent) return putIntent;
+
+  const openIntent = parseOpenIntent(commandText);
+  if (openIntent) return openIntent;
 
   const featureIntent = parseFeatureInspectionIntent(commandText);
   if (featureIntent) return featureIntent;

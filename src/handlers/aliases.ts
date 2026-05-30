@@ -902,10 +902,10 @@ async function submitWake(ctx: any) {
   }
 }
 
-async function submitOpen(ctx: any) {
+async function submitOpen(ctx: any, target?: string) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
-  await ctx.reply(await openDreamGate(player.id), { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
+  await ctx.reply(await openDreamGate(player.id, target), { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
 }
 
 export function registerAliasHandlers(bot: Bot) {
@@ -948,7 +948,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "cook-meat") return submitCookMeat(ctx);
     if (parsed.kind === "sleep") return submitSleep(ctx, parsed.tutorial);
     if (parsed.kind === "wake") return submitWake(ctx);
-    if (parsed.kind === "open") return submitOpen(ctx);
+    if (parsed.kind === "open") return submitOpen(ctx, parsed.target);
     if (parsed.kind === "inspect-inventory-item") return submitInventoryInspect(ctx, parsed.target);
     if (parsed.kind === "drop-inventory-item") return submitInventoryDrop(bot, ctx, parsed.target);
     if (parsed.kind === "put-item") return submitPutItem(bot, ctx, parsed.item, parsed.amount, parsed.container);

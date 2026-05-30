@@ -406,7 +406,83 @@ const DIRECTION_PATH_LABELS: Partial<Record<Direction, string>> = {
   OUTSIDE: "прохід назовні",
 };
 
-export function localGateOpenAttemptText(feature: { name?: string | null; data: Prisma.JsonValue | null }) {
+type LocalGateFeature = {
+  key?: string | null;
+  name?: string | null;
+  type?: string | null;
+  data: Prisma.JsonValue | null;
+};
+
+const GENERIC_GATE_TARGETS = new Set([
+  "gate",
+  "gates",
+  "door",
+  "doors",
+  "ворота",
+  "воріт",
+  "ворітьми",
+  "брама",
+  "браму",
+  "брами",
+  "брамою",
+  "двері",
+]);
+
+function normalizeGateQuery(value: string) {
+  return value
+    .trim()
+    .toLocaleLowerCase("uk-UA")
+    .replace(/[^\p{L}\p{N}\s_-]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function stringListFromData(data: Record<string, unknown>, key: string) {
+  const value = data[key];
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
+
+function localGateSearchKeys(feature: LocalGateFeature) {
+  const data = featureData(feature);
+  const direction = directionFromData(data);
+  const aliases = [
+    ...stringListFromData(data, "aliases"),
+    ...stringListFromData(data, "open_aliases"),
+    ...stringListFromData(data, "openable_aliases"),
+  ];
+  return [
+    feature.name,
+    feature.key,
+    feature.type,
+    "ворота",
+    "брама",
+    "gate",
+    direction ? directionLabels[direction] : undefined,
+    direction ? DIRECTION_PATH_LABELS[direction] : undefined,
+    ...aliases,
+  ]
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .map(normalizeGateQuery)
+    .filter(Boolean);
+}
+
+function gateMatchesQuery(feature: LocalGateFeature, targetQuery: string) {
+  const normalizedTarget = normalizeGateQuery(targetQuery);
+  if (!normalizedTarget) return true;
+  if (GENERIC_GATE_TARGETS.has(normalizedTarget)) return true;
+  return localGateSearchKeys(feature).some((key) => key === normalizedTarget || key.includes(normalizedTarget) || normalizedTarget.includes(key));
+}
+
+function isDreamGateFeatureKey(key?: string | null) {
+  return DREAM_GATE_FEATURE_KEYS.includes(String(key) as typeof DREAM_GATE_FEATURE_KEYS[number]);
+}
+
+function pickLocalGateForOpenAttempt(gates: LocalGateFeature[], targetQuery: string) {
+  const matchingGates = gates.filter((gate) => gateMatchesQuery(gate, targetQuery));
+  return matchingGates.find((gate) => !isDreamGateFeatureKey(gate.key)) ?? matchingGates[0] ?? null;
+}
+
+export function localGateOpenAttemptText(feature: LocalGateFeature) {
   const data = featureData(feature);
   const name = feature.name?.trim() || "Ворота";
   const direction = directionFromData(data);
@@ -435,20 +511,24 @@ export function localGateOpenAttemptText(feature: { name?: string | null; data: 
   ].join("\n");
 }
 
-export async function openDreamGate(playerId: number) {
+export async function openDreamGate(playerId: number, targetQuery = "") {
   const player = await prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } });
   if (!player?.currentLocationId) throw new Error("Спершу треба увійти у світ.");
 
   const feature = await prisma.locationFeature.findFirst({
     where: { key: { in: [...DREAM_GATE_FEATURE_KEYS] }, locationId: player.currentLocationId, isActive: true },
   });
-  if (!feature) {
-    const localGate = await prisma.locationFeature.findFirst({
+  if (!feature || !gateMatchesQuery(feature, targetQuery)) {
+    const localGates = await prisma.locationFeature.findMany({
       where: { locationId: player.currentLocationId, isActive: true, type: "GATE" },
       orderBy: { id: "asc" },
-      select: { name: true, data: true },
+      select: { key: true, name: true, type: true, data: true },
     });
-    return localGate ? localGateOpenAttemptText(localGate) : "Тут немає воріт, які можна відкрити.";
+    const localGate = pickLocalGateForOpenAttempt(localGates, targetQuery);
+    if (localGate) return localGateOpenAttemptText(localGate);
+    return targetQuery.trim()
+      ? `Поруч немає воріт чи брами з такою назвою: «${targetQuery.trim()}».`
+      : "Тут немає воріт, які можна відкрити.";
   }
 
   const previousOpens = await prisma.worldEvent.count({
