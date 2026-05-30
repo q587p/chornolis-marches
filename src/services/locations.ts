@@ -261,7 +261,7 @@ function featureDetailLine(feature: any, showTechnicalDetails = false) {
   } else if (feature.type === "BORDER_MARKER") {
     details.push("допомагає зорієнтуватися поблизу межі");
   } else if (feature.type === "GATE") {
-    details.push("позначає прохід, який треба роздивитися ближче");
+    details.push("позначає прохід, який відкриється за певних умов");
   } else if (isTutorialInsideFeature(feature)) {
     details.push("ховає вхід, що не є стороною світу");
   } else if (isTutorialOutsideFeature(feature)) {
