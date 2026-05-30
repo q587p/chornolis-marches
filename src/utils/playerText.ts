@@ -80,7 +80,12 @@ export function formatHungerState(value: number, max = 13) {
 }
 
 export function formatPostureText(player: PlayerFatigue & { isSleeping?: boolean | null }) {
-  if (player.isSleeping) return "Ви спите.";
+  if (player.isSleeping) {
+    if (player.posture === "SITTING" || player.isResting) {
+      return player.isResting ? "Ви спите. Уві сні ви сидите й відпочиваєте." : "Ви спите. Уві сні ви сидите.";
+    }
+    return "Ви спите. Уві сні ви стоїте.";
+  }
   if (player.posture === "SITTING" || player.isResting) {
     return player.isResting ? "Ви сидите й відпочиваєте." : "Ви сидите.";
   }
@@ -89,7 +94,13 @@ export function formatPostureText(player: PlayerFatigue & { isSleeping?: boolean
 
 export function formatObservedPostureText(player: PlayerFatigue & { isSleeping?: boolean | null; grammaticalGender?: string | null; pronoun?: string | null }) {
   const plural = observedGender(player) === "PLURAL";
-  if (player.isSleeping) return plural ? "Сплять." : "Спить.";
+  if (player.isSleeping) {
+    if (player.posture === "SITTING" || player.isResting) {
+      if (player.isResting) return plural ? "Сплять. Уві сні сидять і відпочивають." : "Спить. Уві сні сидить і відпочиває.";
+      return plural ? "Сплять. Уві сні сидять." : "Спить. Уві сні сидить.";
+    }
+    return plural ? "Сплять. Уві сні стоять." : "Спить. Уві сні стоїть.";
+  }
   if (player.posture === "SITTING" || player.isResting) {
     if (player.isResting) return plural ? "Сидять і відпочивають." : "Сидить і відпочиває.";
     return plural ? "Сидять." : "Сидить.";

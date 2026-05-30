@@ -2,7 +2,7 @@ import { Bot } from "grammy";
 import { getPlayerByTelegramId } from "../services/players";
 import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import { accelerateFirstQueuedPlayerAction, hasPlayerActionQueueControls, playerRestStatusText, queuePlayerRest, renderPlayerActionQueue, startPlayerRest, stopPlayerRest } from "../services/actionQueue";
-import { buildRestWithQueueChoiceKeyboard } from "../ui/keyboards";
+import { buildRestWithQueueChoiceKeyboard, buildStandUpKeyboard } from "../ui/keyboards";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { actionQueueReplyOptions } from "../utils/actionQueueUi";
@@ -121,7 +121,7 @@ export function registerRestHandlers(bot: Bot) {
     await safeAnswerCallbackQuery(ctx, accelerated ? "Відпочинок перервано, дія починається." : "Відпочинок перервано.");
     await replyOrEdit(ctx, `Ви перервали відпочинок.\n\n${await renderPlayerActionQueue(player.id)}`, await actionQueueReplyOptions(player.id));
     await ctx.reply("Ви лишаєтеся сидіти.", {
-      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, Boolean(player.isAutoEnabled)),
+      reply_markup: buildStandUpKeyboard(),
     });
   });
 

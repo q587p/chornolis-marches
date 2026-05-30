@@ -64,3 +64,9 @@ Add a simple NPC hunter behavior that interacts with the same ecological loop as
 - `NAV-001` now provides route finding for gate-to-campfire and return movement.
 - `ECO-002` now exposes an NPC-facing drop-off helper, so hunter deposits can be recorded without inventing a separate counter or player reward path.
 - The remaining MVP work is the actual delayed hunter state machine: taking torches, moving by route, choosing prey, attacking through existing action pacing, collecting/claiming remains and returning to the gate.
+
+## 0.13.10 Foundation Note
+
+- Added `src/services/npcHunter.ts` with route-plan helpers for gate-to-magic-campfire and magic-campfire-to-gate movement.
+- The helper returns explicit no-route reasons instead of guessing or teleporting.
+- The remaining MVP work is now the actual delayed hunter state machine on top of this route plan.

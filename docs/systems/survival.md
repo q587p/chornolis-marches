@@ -23,6 +23,8 @@ Characters have posture separate from active recovery:
 
 Basic `Відпочити` / `/rest` means sitting down and starting a short recovery, not sleeping. A character can also use `/sit` / `сісти` to sit without resting, and `/stand` / `встати` to stand up. Standing up during rest interrupts the active rest.
 
+Sitting blocks physical actions until the character stands up: movement, pickup, gathering, attacking, freshening, dropping, putting items into features, cooking and fire/torch handling should warn that the character must stand, then show a `Встати` action. Non-physical actions such as look, examine, speech, reply and queue/status checks remain available while sitting.
+
 Player-facing and observer text should keep posture and rest visible:
 
 - sitting only, actor text: `Ви сидите.`;
@@ -32,6 +34,8 @@ Player-facing and observer text should keep posture and rest visible:
 - when rest completes or is interrupted, `isResting` becomes false but posture remains `SITTING`; the player should get a visible `Встати` action.
 
 Later systems can add lying down and ordinary sleep as separate states. Tutorial sleep is a special dream/onboarding state, not the same as ordinary rest.
+
+When tutorial sleep and dream posture are shown together, text should make the layering explicit: `Ви спите. Уві сні ви сидите й відпочиваєте.` Future sitting extensions may allow targets such as a bench, chair or cart; plain `/sit` should keep meaning sitting on the ground/floor of the current location.
 
 ## Stamina Recovery Tempo
 

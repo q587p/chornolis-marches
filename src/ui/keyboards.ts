@@ -64,6 +64,10 @@ export function buildFatigueRestKeyboard() {
   return new InlineKeyboard().text("🧘 Відпочити", "rest:start");
 }
 
+export function buildStandUpKeyboard() {
+  return new InlineKeyboard().text("Встати", "posture:stand");
+}
+
 export function buildRestingActionChoiceKeyboard() {
   return new InlineKeyboard()
     .text("✋ Перервати", "rest:interrupt")

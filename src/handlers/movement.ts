@@ -6,6 +6,7 @@ import { movementDurationMs, performOrQueuePlayerAction } from "../services/acti
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
+import { replyToActionError, actionErrorMessage } from "../utils/actionErrorReply";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { isLocationExitLocked } from "../services/tutorial";
 
@@ -61,9 +62,9 @@ export async function submitMove(bot: Bot, ctx: any, direction: Direction, answe
     }
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Не вдалося виконати дію.";
+    const message = actionErrorMessage(error, "Не вдалося виконати дію.");
     if (answerCallback) await safeAnswerCallbackQuery(ctx, message);
-    else await ctx.reply(message);
+    await replyToActionError(ctx, error, "Не вдалося виконати дію.", { replyFallback: !answerCallback });
   }
 }
 

@@ -6,10 +6,12 @@ import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { durationSecondsSuffix } from "../utils/durationText";
 import { addTwigsToCampfire, lightPlayerTorchAtCampfire } from "../services/fire";
-import { pickUpGroundResource } from "../services/groundItems";
+import { isPickableResourceKey, isTutorialLooseResourceKey, pickUpAllVisibleGroundResourcesByKey, pickUpGroundResource, type VisibleGroundResourceKey } from "../services/groundItems";
 import { pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 import { escapeHtml } from "../utils/text";
 import { canEditCallbackMessage, noteKnownMessage } from "../utils/messageTracker";
+import { assertCanPerformPhysicalAction } from "../services/postureRules";
+import { replyToActionError, actionErrorMessage } from "../utils/actionErrorReply";
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
@@ -204,9 +206,16 @@ export function registerLookHandlers(bot: Bot) {
       return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
     }
 
-    const text = await addTwigsToCampfire(player.id, Number(ctx.match[1]));
-    await safeAnswerCallbackQuery(ctx);
-    await ctx.reply(text);
+    try {
+      assertCanPerformPhysicalAction(player, "FIRE");
+      const text = await addTwigsToCampfire(player.id, Number(ctx.match[1]));
+      await safeAnswerCallbackQuery(ctx);
+      await ctx.reply(text);
+    } catch (error) {
+      const message = actionErrorMessage(error, "Не вдалося підкинути хмиз.");
+      await safeAnswerCallbackQuery(ctx, message);
+      await replyToActionError(ctx, error, "Не вдалося підкинути хмиз.", { replyFallback: false });
+    }
   });
 
   bot.callbackQuery(/^fire:light:(\d+)$/, async (ctx) => {
@@ -216,9 +225,16 @@ export function registerLookHandlers(bot: Bot) {
       return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
     }
 
-    const text = await lightLocationCampfire(Number(ctx.match[1]), player.id);
-    await safeAnswerCallbackQuery(ctx);
-    await ctx.reply(text);
+    try {
+      assertCanPerformPhysicalAction(player, "FIRE");
+      const text = await lightLocationCampfire(Number(ctx.match[1]), player.id);
+      await safeAnswerCallbackQuery(ctx);
+      await ctx.reply(text);
+    } catch (error) {
+      const message = actionErrorMessage(error, "Не вдалося запалити вогонь.");
+      await safeAnswerCallbackQuery(ctx, message);
+      await replyToActionError(ctx, error, "Не вдалося запалити вогонь.", { replyFallback: false });
+    }
   });
 
   bot.callbackQuery(/^torch:light:(\d+)$/, async (ctx) => {
@@ -228,9 +244,16 @@ export function registerLookHandlers(bot: Bot) {
       return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
     }
 
-    const text = await lightPlayerTorchAtCampfire(player.id, Number(ctx.match[1]));
-    await safeAnswerCallbackQuery(ctx);
-    await ctx.reply(text);
+    try {
+      assertCanPerformPhysicalAction(player, "TORCH");
+      const text = await lightPlayerTorchAtCampfire(player.id, Number(ctx.match[1]));
+      await safeAnswerCallbackQuery(ctx);
+      await ctx.reply(text);
+    } catch (error) {
+      const message = actionErrorMessage(error, "Не вдалося запалити факел.");
+      await safeAnswerCallbackQuery(ctx, message);
+      await replyToActionError(ctx, error, "Не вдалося запалити факел.", { replyFallback: false });
+    }
   });
 
   bot.callbackQuery(/^torch:take:(\d+)$/, async (ctx) => {
@@ -240,19 +263,26 @@ export function registerLookHandlers(bot: Bot) {
       return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
     }
 
-    const text = await takeTorchFromLocationFeature(Number(ctx.match[1]), player.id);
-    await safeAnswerCallbackQuery(ctx);
-    if (player.currentLocationId && text.includes("Ви взяли")) {
-      await recordVisibleItemAction(bot, {
-        playerId: player.id,
-        locationId: player.currentLocationId,
-        observerText: pickupObserverText(player, "факел"),
-        eventTitle: "Player took torch",
-        eventDescription: `player=${player.id}; item=torch; source=feature:${ctx.match[1]}`,
-        actionNote: "піднято: факел",
-      });
+    try {
+      assertCanPerformPhysicalAction(player, "PICK_UP");
+      const text = await takeTorchFromLocationFeature(Number(ctx.match[1]), player.id);
+      await safeAnswerCallbackQuery(ctx);
+      if (player.currentLocationId && text.includes("Ви взяли")) {
+        await recordVisibleItemAction(bot, {
+          playerId: player.id,
+          locationId: player.currentLocationId,
+          observerText: pickupObserverText(player, "факел"),
+          eventTitle: "Player took torch",
+          eventDescription: `player=${player.id}; item=torch; source=feature:${ctx.match[1]}`,
+          actionNote: "піднято: факел",
+        });
+      }
+      await ctx.reply(text);
+    } catch (error) {
+      const message = actionErrorMessage(error, "Не вдалося взяти факел.");
+      await safeAnswerCallbackQuery(ctx, message);
+      await replyToActionError(ctx, error, "Не вдалося взяти факел.", { replyFallback: false });
     }
-    await ctx.reply(text);
   });
 
   bot.callbackQuery(/^item:pickup:(\d+)$/, async (ctx) => {
@@ -263,6 +293,7 @@ export function registerLookHandlers(bot: Bot) {
     }
 
     try {
+      assertCanPerformPhysicalAction(player, "PICK_UP");
       const item = await pickUpGroundResource(player.id, Number(ctx.match[1]));
       await safeAnswerCallbackQuery(ctx, "Підібрано.");
       await recordVisibleItemAction(bot, {
@@ -277,6 +308,41 @@ export function registerLookHandlers(bot: Bot) {
     } catch (error) {
       const message = error instanceof Error ? error.message : "Не вдалося підняти це.";
       await safeAnswerCallbackQuery(ctx, message);
+      await replyToActionError(ctx, error, "Не вдалося підняти це.", { replyFallback: false });
+    }
+  });
+
+  bot.callbackQuery(/^item:pickupAll:([A-Za-z0-9_-]+)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    const key = ctx.match[1];
+    if (!isPickableResourceKey(key) && !isTutorialLooseResourceKey(key)) {
+      await safeAnswerCallbackQuery(ctx, "Це не можна підняти так.");
+      return;
+    }
+
+    try {
+      assertCanPerformPhysicalAction(player, "PICK_UP");
+      const result = await pickUpAllVisibleGroundResourcesByKey(player.id, key as VisibleGroundResourceKey);
+      const itemText = result.items.map((item) => `${item.name}${item.amount > 1 ? ` ×${item.amount}` : ""}`).join(", ");
+      await safeAnswerCallbackQuery(ctx, "Підібрано.");
+      await recordVisibleItemAction(bot, {
+        playerId: player.id,
+        locationId: result.locationId,
+        observerText: pickupObserverText(player, itemText),
+        eventTitle: "Player picked up visible ground item stack",
+        eventDescription: `player=${player.id}; items=${result.items.map((item) => `${item.key}:${item.amount}`).join(",")}`,
+        actionNote: `піднято всі однотипні речі: ${itemText}`,
+      });
+      await ctx.reply(`Ви підняли: ${itemText}.`);
+    } catch (error) {
+      const message = actionErrorMessage(error, "Не вдалося підняти це.");
+      await safeAnswerCallbackQuery(ctx, message);
+      await replyToActionError(ctx, error, "Не вдалося підняти це.", { replyFallback: false });
     }
   });
 

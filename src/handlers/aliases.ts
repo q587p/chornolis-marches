@@ -19,7 +19,7 @@ import {
 import { getPlayerByTelegramId } from "../services/players";
 import { resolveTarget, type ResolvedTarget } from "../services/targets";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
-import { buildExamineLocationKeyboard, buildRestWithQueueChoiceKeyboard } from "../ui/keyboards";
+import { buildExamineLocationKeyboard, buildRestWithQueueChoiceKeyboard, buildStandUpKeyboard } from "../ui/keyboards";
 import { buildInventoryItemKeyboard } from "../ui/inventoryItemKeyboard";
 import { actionQueueReplyOptions, sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { durationSecondsSuffix } from "../utils/durationText";
@@ -40,7 +40,7 @@ import { addCorpseToInventory, resourceTypeDisplayName } from "../services/corps
 import { performSocialSignal } from "../services/socialSignals";
 import { addTwigsToCampfire, dousePlayerTorchFromInventory, lightPlayerTorchFromInventory } from "../services/fire";
 import { requireScribeAdmin } from "../services/adminAccess";
-import { pickUpFirstGroundResourceByKey, pickUpFirstVisibleGroundResourceByKey, type VisibleGroundResourceKey } from "../services/groundItems";
+import { pickUpAllVisibleGroundResources, pickUpFirstGroundResourceByKey, pickUpFirstVisibleGroundResourceByKey, type VisibleGroundResourceKey } from "../services/groundItems";
 import { parseSpeechTarget } from "../services/speechTargets";
 import { dropInventoryResourceDetailed, inspectInventoryResource, inventoryResourceKeyFromText, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
 import { enterTutorialDream, hasCompletedTutorial, openDreamGate, wakeFromTutorialDream } from "../services/tutorial";
@@ -50,6 +50,8 @@ import { cookRawMeat, isFreshenedCorpse } from "../services/meat";
 import { creatureForms, playerForms } from "../services/grammar";
 import { putInventoryIntoLocalFeature } from "../services/carcassDropoff";
 import { latestRememberedReplyTarget } from "../services/replyTargets";
+import { replyToActionError } from "../utils/actionErrorReply";
+import { assertCanPerformPhysicalAction } from "../services/postureRules";
 
 type TextTargetRef = {
   type: "player" | "creature";
@@ -318,7 +320,7 @@ async function submitRest(ctx: any, mode: RestAliasMode = "start") {
     const accelerated = await accelerateFirstQueuedPlayerAction(player.id);
     await ctx.reply(`Ви перервали відпочинок.${accelerated ? "\n\nНаступна дія починається." : ""}\n\n${await renderPlayerActionQueue(player.id)}`, await actionQueueReplyOptions(player.id));
     await ctx.reply("Ви лишаєтеся сидіти.", {
-      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, Boolean(player.isAutoEnabled)),
+      reply_markup: buildStandUpKeyboard(),
     });
     return;
   }
@@ -386,7 +388,7 @@ async function submitTrack(bot: Bot, ctx: any, detail = false) {
     await ctx.reply(result.mode === "immediate" ? "Ви вдивляєтесь у сліди." : `Вистежування додано в чергу${durationSecondsSuffix(player, durationMs)}.`);
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {
-    await ctx.reply(error instanceof Error ? error.message : "Не вдалося додати дію.");
+    await replyToActionError(ctx, error, "Не вдалося додати дію.");
   }
 }
 
@@ -400,7 +402,7 @@ async function submitWait(bot: Bot, ctx: any) {
     await ctx.reply(result.mode === "immediate" ? "Ви чекаєте." : `Очікування додано в чергу${durationSecondsSuffix(player, durationMs)}.`);
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {
-    await ctx.reply(error instanceof Error ? error.message : "Не вдалося додати дію.");
+    await replyToActionError(ctx, error, "Не вдалося додати дію.");
   }
 }
 
@@ -418,22 +420,33 @@ async function submitUseItem(ctx: any, item: UsableInventoryResource) {
 async function submitLightTorch(ctx: any) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
-  await ctx.reply(await lightPlayerTorchFromInventory(player.id));
+  try {
+    assertCanPerformPhysicalAction(player, "TORCH");
+    await ctx.reply(await lightPlayerTorchFromInventory(player.id));
+  } catch (error) {
+    await replyToActionError(ctx, error, "Не вдалося запалити факел.");
+  }
 }
 
 async function submitDouseTorch(ctx: any) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
-  await ctx.reply(await dousePlayerTorchFromInventory(player.id));
+  try {
+    assertCanPerformPhysicalAction(player, "TORCH");
+    await ctx.reply(await dousePlayerTorchFromInventory(player.id));
+  } catch (error) {
+    await replyToActionError(ctx, error, "Не вдалося притушити факел.");
+  }
 }
 
 async function submitCookMeat(ctx: any) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
   try {
+    assertCanPerformPhysicalAction(player, "COOK");
     await ctx.reply(await cookRawMeat(player.id));
   } catch (error) {
-    await ctx.reply(error instanceof Error ? error.message : "Не вдалося підсмажити м'ясо.");
+    await replyToActionError(ctx, error, "Не вдалося підсмажити м'ясо.");
   }
 }
 
@@ -469,6 +482,7 @@ async function submitInventoryDrop(bot: Bot, ctx: any, target: string) {
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   try {
+    assertCanPerformPhysicalAction(player, "DROP");
     const result = await dropInventoryResourceDetailed(player.id, target);
     await recordVisibleItemAction(bot, {
       playerId: player.id,
@@ -480,7 +494,7 @@ async function submitInventoryDrop(bot: Bot, ctx: any, target: string) {
     });
     await ctx.reply(result.text);
   } catch (error) {
-    await ctx.reply(error instanceof Error ? error.message : "Не вдалося викинути це.");
+    await replyToActionError(ctx, error, "Не вдалося викинути це.");
   }
 }
 
@@ -489,6 +503,7 @@ async function submitPutItem(bot: Bot, ctx: any, item: string, amount: number | 
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   try {
+    assertCanPerformPhysicalAction(player, "PUT");
     const result = await putInventoryIntoLocalFeature({
       playerId: player.id,
       itemQuery: item,
@@ -505,7 +520,7 @@ async function submitPutItem(bot: Bot, ctx: any, item: string, amount: number | 
     });
     await ctx.reply(result.text);
   } catch (error) {
-    await ctx.reply(error instanceof Error ? error.message : "Не вдалося покласти це.");
+    await replyToActionError(ctx, error, "Не вдалося покласти це.");
   }
 }
 
@@ -694,7 +709,7 @@ async function submitTargetAction(bot: Bot, ctx: any, action: TargetAction, targ
     await ctx.reply(result.mode === "immediate" ? "Дію виконано." : `Дію додано в чергу${durationSecondsSuffix(player, durationMs)}.`);
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {
-    await ctx.reply(error instanceof Error ? error.message : "Не вдалося додати дію.");
+    await replyToActionError(ctx, error, "Не вдалося додати дію.");
   }
 }
 
@@ -751,13 +766,45 @@ function naturalResourcePickupHint(key: VisibleGroundResourceKey) {
   return null;
 }
 
+function isPickupAllTarget(target: string) {
+  return ["all", "everything", "все", "усе", "всі", "усі"].includes(target);
+}
+
+function pickedItemsText(items: Array<{ name: string; amount: number }>) {
+  return items.map((item) => `${item.name}${item.amount > 1 ? ` ×${item.amount}` : ""}`).join(", ");
+}
+
 async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
   const normalizedTarget = normalizeTargetKey(targetQuery);
+  if (isPickupAllTarget(normalizedTarget)) {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+    try {
+      assertCanPerformPhysicalAction(player, "PICK_UP");
+      const result = await pickUpAllVisibleGroundResources(player.id);
+      const text = pickedItemsText(result.items);
+      await recordVisibleItemAction(bot, {
+        playerId: player.id,
+        locationId: result.locationId,
+        observerText: pickupObserverText(player, `кілька речей: ${text}`),
+        eventTitle: "Player picked up all visible ground items",
+        eventDescription: `player=${player.id}; items=${result.items.map((item) => `${item.key}:${item.amount}`).join(",")}`,
+        actionNote: `піднято все: ${text}`,
+      });
+      await ctx.reply(`Ви підняли: ${text}.`);
+    } catch (error) {
+      await replyToActionError(ctx, error, "Не вдалося підняти це.");
+    }
+    return;
+  }
+
   const resourceKey = pickupResourceKey(normalizedTarget);
   if (resourceKey) {
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
     try {
+      assertCanPerformPhysicalAction(player, "PICK_UP");
       const item = resourceKey === "berries" || resourceKey === "mushrooms" || resourceKey === "herbs"
         ? await pickUpFirstVisibleGroundResourceByKey(player.id, resourceKey)
         : await pickUpFirstGroundResourceByKey(player.id, resourceKey);
@@ -773,7 +820,8 @@ async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
     } catch (error) {
       const hint = naturalResourcePickupHint(resourceKey);
       const message = error instanceof Error ? error.message : "Не вдалося підняти це.";
-      await ctx.reply(hint && message === "Цього вже немає поруч." ? hint : message);
+      if (hint && message === "Цього вже немає поруч.") await ctx.reply(hint);
+      else await replyToActionError(ctx, error, "Не вдалося підняти це.");
     }
     return;
   }
@@ -798,6 +846,7 @@ async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
   if (!creature) return void (await ctx.reply("Трупа вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() }));
 
   try {
+    assertCanPerformPhysicalAction(resolved.player, "PICK_UP");
     const resourceType = await addCorpseToInventory(resolved.player.id, { ...creature, species: creature.species });
     const itemName = resourceTypeDisplayName(resourceType);
     await recordVisibleItemAction(bot, {
@@ -809,8 +858,8 @@ async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
       actionNote: `піднято: ${itemName}`,
     });
     await ctx.reply(`Ви підібрали ${itemName}.`);
-  } catch {
-    await ctx.reply("Трупа вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() });
+  } catch (error) {
+    await replyToActionError(ctx, error, "Трупа вже немає поруч. Можна роздивитися місцину ще раз.");
   }
 }
 
@@ -906,7 +955,12 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "add-twigs-campfire") {
       const player = await getPlayerByTelegramId(ctx.from.id);
       if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
-      return ctx.reply(await addTwigsToCampfire(player.id));
+      try {
+        assertCanPerformPhysicalAction(player, "FIRE");
+        return ctx.reply(await addTwigsToCampfire(player.id));
+      } catch (error) {
+        return replyToActionError(ctx, error, "Не вдалося підкинути хмиз.");
+      }
     }
     if (parsed.kind === "say") return submitSay(bot, ctx, parsed.text);
     if (parsed.kind === "whisper") return submitWhisper(bot, ctx, parsed.text);

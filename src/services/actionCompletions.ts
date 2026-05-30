@@ -28,6 +28,7 @@ import { fatigueStateFor, spendCreatureStamina, spendPlayerStamina } from "./act
 import { actorWhere, enqueueCreatureAction, interruptActorActions, type ActorRef } from "./actionLifecycle";
 import { escapeHtml } from "../utils/text";
 import { resourceAccusativeName } from "../utils/resourceText";
+import { canEditKnownMessage, noteKnownMessage } from "../utils/messageTracker";
 import { playerCanShowTechnicalDetails } from "./technicalDetails";
 import { canOpenDreamGateWithSpeech, isLocationExitLocked, isTutorialFastRestLocationKey, openDreamGate, rememberTutorialForagingSuccess, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY } from "./tutorial";
 import { tutorialGateSpeechComment, tutorialLookPaceComments, tutorialSpiritMoveComment, tutorialTrackComments, tutorialWaitPaceComments } from "./tutorialVoices";
@@ -338,11 +339,11 @@ async function completeMove(bot: Bot, action: WorldAction) {
 
     if (chatId) {
       const view = await renderLocationBrief(exit.toLocationId, player.id);
-      await bot.api.sendMessage(chatId, `Ви дійшли: ${directionLabels[payload.direction]}`, { reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false) });
-      if (spiritComment) await bot.api.sendMessage(chatId, `${spiritComment.title}:\n${quoteBlock(spiritComment.text)}`, { parse_mode: "HTML" });
-      if (dreamItemsStolen) await bot.api.sendMessage(chatId, `Мара сміється десь між листям:\n${quoteBlock("Сонні ягоди й трави лишаються в просвіті. Варто винести їх за край — і вони розсипаються туманом.")}`, { parse_mode: "HTML" });
-      if (tutorialRestEntryText) await bot.api.sendMessage(chatId, tutorialRestEntryText, { reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false) });
-      await bot.api.sendMessage(chatId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+      noteKnownMessage(await bot.api.sendMessage(chatId, `Ви дійшли: ${directionLabels[payload.direction]}`, { reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false) }));
+      if (spiritComment) noteKnownMessage(await bot.api.sendMessage(chatId, `${spiritComment.title}:\n${quoteBlock(spiritComment.text)}`, { parse_mode: "HTML" }));
+      if (dreamItemsStolen) noteKnownMessage(await bot.api.sendMessage(chatId, `Мара сміється десь між листям:\n${quoteBlock("Сонні ягоди й трави лишаються в просвіті. Варто винести їх за край — і вони розсипаються туманом.")}`, { parse_mode: "HTML" }));
+      if (tutorialRestEntryText) noteKnownMessage(await bot.api.sendMessage(chatId, tutorialRestEntryText, { reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false) }));
+      noteKnownMessage(await bot.api.sendMessage(chatId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard }));
     }
     return;
   }
@@ -500,20 +501,20 @@ async function completeLook(bot: Bot, action: WorldAction) {
     if (chatId) {
       const view = await renderLocationDetails(locationId, player.id);
       const voiceComments = await tutorialLookPaceComments({ ...player, currentLocationId: locationId });
-      if (action.messageId && typeof chatId === "number") {
+      if (action.messageId && typeof chatId === "number" && canEditKnownMessage(chatId, action.messageId)) {
         try {
           await bot.api.editMessageText(chatId, action.messageId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
           for (const comment of voiceComments) {
-            await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
+            noteKnownMessage(await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }));
           }
           return;
         } catch {
           // Fall back to a new message when Telegram cannot edit the source message.
         }
       }
-      await bot.api.sendMessage(chatId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+      noteKnownMessage(await bot.api.sendMessage(chatId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard }));
       for (const comment of voiceComments) {
-        await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
+        noteKnownMessage(await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }));
       }
     }
     return;

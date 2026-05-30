@@ -9,6 +9,29 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.10 - Hunter route plan and posture action guards - 12026-05-30
+
+### Added
+
+- Added an NPC hunter route-plan helper that resolves the gate drop-off location, a configured magic campfire and routes in both directions through existing location exits.
+- Added route-plan constants for the first hunter torch bundle and return reserve.
+- Added bulk loose-ground pickup for commands such as `get all`, `pick all`, `взяти все` and `підняти все`.
+- Added compact `всі` pickup buttons beside visible loose resource stacks so players can pick up all items of one type.
+
+### Changed
+
+- Updated `NPC-002` planning notes so the remaining hunter MVP can build on explicit route planning instead of teleporting between gate, campfire and hunting areas.
+- Sitting now blocks physical actions such as movement, pickup, gathering, attacking, freshening, dropping, putting items into features, cooking and fire/torch handling; blocked actions show a stand-up prompt.
+- Tutorial sleep posture text now distinguishes outer sleep from the action happening inside the dream.
+- Location and target-detail callbacks now prefer sending a fresh message when their source message is no longer the latest tracked bot message, reducing missed edits to older descriptions.
+
+### Tests
+
+- Added focused NPC hunter helper coverage for route directions, total travel cost, missing route reasons and torch bundle constants.
+- Added parser and posture text regression coverage for bulk pickup and dream-sleep posture layering.
+
+---
+
 ## 0.13.9 - NPC drop-off contribution foundation - 12026-05-30
 
 ### Added

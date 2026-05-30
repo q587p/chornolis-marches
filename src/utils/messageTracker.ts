@@ -11,7 +11,11 @@ export function noteKnownMessage(message: any) {
 export function canEditCallbackMessage(ctx: any) {
   const chatId = ctx.callbackQuery?.message?.chat?.id ?? ctx.chat?.id;
   const messageId = ctx.callbackQuery?.message?.message_id;
+  return canEditKnownMessage(chatId, messageId);
+}
+
+export function canEditKnownMessage(chatId: number | string | undefined, messageId: number | undefined) {
   if (chatId === undefined || typeof messageId !== "number") return false;
   const latestKnown = latestKnownMessageByChat.get(String(chatId));
-  return latestKnown === undefined || messageId >= latestKnown;
+  return latestKnown !== undefined && messageId >= latestKnown;
 }

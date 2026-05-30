@@ -129,6 +129,7 @@ Implementation foundation:
 - `recordNpcCarcassDropoffContribution()` records NPC deposits through the same contribution table as player `put` actions;
 - NPC deposits preserve contributor kind and `creatureId`;
 - NPC deposits do not grant player inventory rewards;
+- `findHunterRoutePlan()` resolves the gate drop-off, a configured magic campfire and routes in both directions through ordinary exits;
 - the hunter loop should still show movement and local messages instead of silently calling the helper from far away.
 
 Future MVP shape:

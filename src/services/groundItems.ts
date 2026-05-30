@@ -1,5 +1,6 @@
 import { prisma } from "../db";
 import { resourceTypeDisplayName } from "./corpses";
+import { assertCanPerformPhysicalAction } from "./postureRules";
 
 const PICKABLE_RESOURCE_KEYS = ["torch", "lit_torch", "twigs", "raw_meat", "cooked_meat"] as const;
 const TUTORIAL_LOOSE_RESOURCE_KEYS = ["berries", "herbs", "mushrooms"] as const;
@@ -26,8 +27,9 @@ export function isVisibleGroundResource(
   return resource.amount > 0 && (isPickableResourceKey(resource.resourceType.key) || (isTutorialLocationLike(location) && isTutorialLooseResourceKey(resource.resourceType.key)));
 }
 
-export function canPickUpGroundItem(player: { hp: number; stamina: number; isResting: boolean }) {
-  return player.hp > 0 && player.stamina > 0 && !player.isResting;
+export function canPickUpGroundItem(player: { hp: number; stamina: number; isResting: boolean; posture?: string | null }) {
+  assertCanPerformPhysicalAction(player, "PICK_UP");
+  return player.hp > 0 && player.stamina > 0;
 }
 
 export async function pickUpGroundResource(playerId: number, resourceNodeId: number) {
@@ -38,6 +40,7 @@ export async function pickUpGroundResource(playerId: number, resourceNodeId: num
       hp: true,
       stamina: true,
       isResting: true,
+      posture: true,
       currentLocation: { select: { key: true, z: true, region: { select: { key: true } } } },
     },
   });
@@ -75,6 +78,81 @@ export async function pickUpGroundResource(playerId: number, resourceNodeId: num
       locationId,
     };
   });
+}
+
+export async function pickUpVisibleGroundResources(playerId: number, options: { key?: VisibleGroundResourceKey } = {}) {
+  const player = await prisma.player.findUnique({
+    where: { id: playerId },
+    select: {
+      currentLocationId: true,
+      hp: true,
+      stamina: true,
+      isResting: true,
+      posture: true,
+      currentLocation: { select: { key: true, z: true, region: { select: { key: true } } } },
+    },
+  });
+  if (!player?.currentLocationId) throw new Error("Ти ще не увійшов у світ. Напиши /start");
+  if (!canPickUpGroundItem(player)) throw new Error("Ви надто втомлені, щоб підняти це просто зараз. Спершу перепочиньте.");
+
+  const locationId = player.currentLocationId;
+
+  return prisma.$transaction(async (tx) => {
+    const nodes = await tx.resourceNode.findMany({
+      where: {
+        locationId,
+        amount: { gt: 0 },
+        ...(options.key ? { resourceType: { key: options.key } } : {}),
+      },
+      select: {
+        id: true,
+        amount: true,
+        resourceTypeId: true,
+        updatedAt: true,
+        resourceType: { select: { key: true, name: true } },
+      },
+      orderBy: { id: "asc" },
+    });
+
+    const visibleNodes = nodes.filter((node) => isVisibleGroundResource(node, player.currentLocation));
+    if (visibleNodes.length === 0) throw new Error("Поруч немає речей, які можна підняти.");
+
+    const picked: Array<{ key: string; name: string; amount: number }> = [];
+    for (const node of visibleNodes) {
+      const amount = Math.max(0, node.amount);
+      if (amount <= 0) continue;
+
+      const updated = await tx.resourceNode.updateMany({
+        where: { id: node.id, amount: { gte: amount } },
+        data: { amount: { decrement: amount } },
+      });
+      if (updated.count === 0) continue;
+
+      const litTorchData = node.resourceType.key === "lit_torch" ? { updatedAt: node.updatedAt } : {};
+      await tx.playerResource.upsert({
+        where: { playerId_resourceTypeId: { playerId, resourceTypeId: node.resourceTypeId } },
+        update: { amount: { increment: amount }, ...litTorchData },
+        create: { playerId, resourceTypeId: node.resourceTypeId, amount, ...litTorchData },
+      });
+
+      picked.push({
+        key: node.resourceType.key,
+        name: resourceTypeDisplayName(node.resourceType),
+        amount,
+      });
+    }
+
+    if (picked.length === 0) throw new Error("Поруч немає речей, які можна підняти.");
+    return { locationId, items: picked };
+  });
+}
+
+export async function pickUpAllVisibleGroundResources(playerId: number) {
+  return pickUpVisibleGroundResources(playerId);
+}
+
+export async function pickUpAllVisibleGroundResourcesByKey(playerId: number, key: VisibleGroundResourceKey) {
+  return pickUpVisibleGroundResources(playerId, { key });
 }
 
 export async function pickUpFirstGroundResourceByKey(playerId: number, key: PickableResourceKey) {
