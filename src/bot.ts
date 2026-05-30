@@ -27,8 +27,52 @@ import { registerTimeHandlers } from "./handlers/time";
 import { registerTutorialHandlers } from "./handlers/tutorial";
 import { registerFallbackHandlers } from "./handlers/fallback";
 
+const TELEGRAM_POLLING_CONFLICT_RETRY_MS = Number(process.env.TELEGRAM_POLLING_CONFLICT_RETRY_MS || 15_000);
+
 const bot = new Bot(config.botToken);
 markTelegramBotStarting();
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isTelegramPollingConflict(error: unknown) {
+  const errorLike = error as { error_code?: number; description?: string; message?: string };
+  const text = `${errorLike.description ?? ""} ${errorLike.message ?? ""}`;
+  return errorLike.error_code === 409 || /409: Conflict|getUpdates request/i.test(text);
+}
+
+async function refreshTelegramBotIdentity() {
+  try {
+    const me = await bot.api.getMe();
+    markTelegramBotReady(me.username);
+  } catch (error) {
+    markTelegramBotError(error);
+    setLastRuntimeError(error);
+    console.error("Telegram bot status check failed:", error);
+  }
+}
+
+async function startTelegramPolling() {
+  for (;;) {
+    try {
+      await refreshTelegramBotIdentity();
+      await bot.start();
+      return;
+    } catch (error) {
+      if (!isTelegramPollingConflict(error)) {
+        markTelegramBotError(error);
+        setLastRuntimeError(error);
+        console.error("Bot polling failed:", error);
+        return;
+      }
+
+      markTelegramBotStarting();
+      console.warn(`Bot polling conflict: another getUpdates request is active. Retrying in ${Math.round(TELEGRAM_POLLING_CONFLICT_RETRY_MS / 1000)}s.`);
+      await sleep(TELEGRAM_POLLING_CONFLICT_RETRY_MS);
+    }
+  }
+}
 
 registerStartHandlers(bot);
 registerAutoHandlers(bot);
@@ -66,16 +110,4 @@ startWorldTickLoop(bot);
 startActionQueueLoop(bot);
 registerFallbackHandlers(bot);
 
-bot.api.getMe()
-  .then((me) => markTelegramBotReady(me.username))
-  .catch((error) => {
-    markTelegramBotError(error);
-    setLastRuntimeError(error);
-    console.error("Telegram bot status check failed:", error);
-  });
-
-bot.start().catch((error) => {
-  markTelegramBotError(error);
-  setLastRuntimeError(error);
-  console.error("Bot polling failed:", error);
-});
+startTelegramPolling();
