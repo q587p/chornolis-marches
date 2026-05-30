@@ -20,6 +20,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Auto stand-up notices now include the matching `/stand` command hint.
 - The "deaths by characters" stat now includes non-animal NPC kills as well as player kills.
 - Scribes now get an `adminMenu` button in the main keyboard instead of the ordinary help button, with submenus for statistics, world views, teleport, resources, fire tools and full admin help.
+- Tutorial dream pacing lines now use the correct nominative pronoun in one monument/hesitation response.
 
 ### Tests
 
@@ -27,6 +28,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Extended input-alias coverage for formatted suggestion slash-command hints.
 - Extended ecology-stat helper coverage for NPC character kill counting.
 - Extended reply-keyboard coverage for the scribe admin menu and its resource/fire submenus.
+- Extended tutorial voice coverage for the corrected nominative-pronoun line.
 - Ran `npm test`.
 - Ran `npm run build`.
 - Ran `node scripts/test/character-names.cjs`.

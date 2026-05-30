@@ -29,7 +29,7 @@ type PaceCommentPair = {
   drowsinessTitle: string;
   drowsinessText: string;
   dreamTitle: string;
-  dreamText: (pronoun: string, dativePronoun: string) => string;
+  dreamText: (pronoun: string, dativePronoun: string, nominativePronoun: string) => string;
 };
 
 export const PACE_COMMENT_PAIRS: PaceCommentPair[] = [
@@ -61,7 +61,8 @@ export const PACE_COMMENT_PAIRS: PaceCommentPair[] = [
     drowsinessTitle: "Дрімота сопе",
     drowsinessText: "Ми вже майже стали пам’ятником нерішучості. Гарним, але нерішучим.",
     dreamTitle: "Сон усміхається",
-    dreamText: (pronoun) => `Пам’ятники не питають дороги. А ${pronoun} ще слухає місцину, і це не зайве.`,
+    dreamText: (_pronoun, _dativePronoun, nominativePronoun) =>
+      `Пам’ятники не питають дороги. А ${nominativePronoun} ще ${nominativePronoun === "вони" ? "слухають" : "слухає"} місцину, і це не зайве.`,
   },
   {
     drowsinessTitle: "Дрімота квапить",
@@ -128,6 +129,12 @@ function tutorialPaceDativePronoun(player: TutorialPlayerRef) {
   return "йому";
 }
 
+function tutorialPaceNominativePronoun(player: TutorialPlayerRef) {
+  if (player.pronoun === "SHE" || player.grammaticalGender === "FEMININE") return "вона";
+  if (player.pronoun === "THEY" || player.grammaticalGender === "PLURAL") return "вони";
+  return "він";
+}
+
 async function isPlayerInTutorial(locationId: number) {
   const location = await prisma.cellLocation.findUnique({
     where: { id: locationId },
@@ -180,6 +187,7 @@ async function tutorialPaceComments(player: TutorialPlayerRef, reason: "look" | 
   const pair = randomPaceCommentPair();
   const pronoun = tutorialPacePronoun(player);
   const dativePronoun = tutorialPaceDativePronoun(player);
+  const nominativePronoun = tutorialPaceNominativePronoun(player);
   return [
     {
       speaker: "Дрімота",
@@ -189,7 +197,7 @@ async function tutorialPaceComments(player: TutorialPlayerRef, reason: "look" | 
     {
       speaker: "Сон",
       title: pair.dreamTitle,
-      text: pair.dreamText(pronoun, dativePronoun),
+      text: pair.dreamText(pronoun, dativePronoun, nominativePronoun),
     },
   ];
 }
