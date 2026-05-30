@@ -16,6 +16,7 @@ const {
   groupHunterClaimedCorpses,
   hunterCarriedTorchCount,
   hunterClaimedCorpseAction,
+  hunterClaimedCorpseDecayAction,
   hunterClaimedCorpseOwnerId,
   hunterConversationReplyLine,
   hunterIsReturningForTorches,
@@ -88,6 +89,10 @@ assert.equal(hunterIsReturningForTorches("поповнює мисливськи�
 
 const claimText = hunterClaimedCorpseAction(42);
 assert.equal(hunterClaimedCorpseOwnerId(claimText), 42);
+const decayingClaimText = hunterClaimedCorpseDecayAction(claimText, 17);
+assert.equal(hunterClaimedCorpseOwnerId(decayingClaimText), 42);
+assert.match(decayingClaimText, /17/);
+assert.equal(hunterClaimedCorpseDecayAction("лежить нерухомо", 17), null);
 assert.equal(hunterClaimedCorpseOwnerId("лежить нерухомо"), null);
 assert.equal(isHunterCreature({ professionKey: "hunter" }), true);
 assert.equal(isHunterCreature({ professionKey: "znakhar" }), false);

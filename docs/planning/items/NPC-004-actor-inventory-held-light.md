@@ -49,6 +49,7 @@ The immediate pressure is the hunter loop: Орина's lit torch and spare torc
 - NPC-held lit torches use the same `TORCH_DURATION_MS` timer assumptions as player-held lit torches and count as active local light.
 - Hunter torch pickup and gate resupply now write real carried resources; the old `hunter_torches:` marker remains only as a compatibility fallback for already-running state.
 - Hunter `currentAction` may still hold route/intent markers such as `hunter_returning_for_torches`; that is decision state, not inventory.
+- 0.13.18 preserves hunter-claimed carcass markers during ordinary corpse decay so the current bridge is less lossy, but claimed prey is still not real actor inventory/carry state yet.
 
 ## Acceptance
 
@@ -60,6 +61,7 @@ The immediate pressure is the hunter loop: Орина's lit torch and spare torc
 - `/look` / `/examine` style visibility can describe an obvious NPC-held torch without exposing internal state. (0.13.13)
 - Hunter code no longer needs the lightweight `hunter_torches` marker for basic carried torch count once this foundation is active. (0.13.13, with compatibility fallback)
 - Migration tests cover the current lightweight `Creature.currentAction` bridge for claimed carcasses and hunter torch bundles, especially hunter death, interruption, disappearance and reset.
+- Claimed prey has explicit ownership/carry semantics that survive death, interruption, disappearance and reset instead of depending on `Creature.currentAction`.
 - `npm test` and `npm run build` pass.
 
 ## Follow-Ups

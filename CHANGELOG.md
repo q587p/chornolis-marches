@@ -9,6 +9,21 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.18 - Hunter claimed-carcass and speech hardening - 12026-05-30
+
+### Changed
+
+- Hunter-claimed carcasses now preserve their hunter marker while ordinary corpse decay updates the remaining lifetime text, so returning hunters can still deposit prey through the gate drop-off service.
+- Direct hunter field lines now record `SAY` events and increment the creature speech counter used by ecology/status statistics.
+- Updated hunter and actor-inventory planning notes to keep the remaining claimed-carcass `currentAction` bridge visible as future structural work.
+
+### Tests
+
+- Extended NPC hunter helper coverage for hunter-claimed carcass decay markers.
+- Ran the full project test suite.
+
+---
+
 ## 0.13.17 - Small polish, status visibility and target interactions - 12026-05-30
 
 ### Added

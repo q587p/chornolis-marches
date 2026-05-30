@@ -172,6 +172,8 @@ Implementation foundation:
 
 0.13.13 adds the first real NPC-held torch inventory layer. The five-torch bundle and one-torch return reserve remain constants and design boundaries, but hunter pickup/resupply now writes `CreatureResource` rows, and NPC-held lit torches can provide local light. Claimed carcasses still use a lightweight `currentAction` marker until the later actor inventory/carrying pass.
 
+0.13.18 makes that claimed-carcass bridge less fragile: corpse decay preserves `claimed_by_hunter:<id>` instead of overwriting it, and hunter field speech uses a shared speech helper so local spoken lines also update the hunter's speech statistics. This is not the final structure; claimed prey still needs real actor carry/ownership state before hunter death, interruption, reset and recovery semantics can be considered robust.
+
 Future MVP shape:
 
 1. Start near the settlement gate.

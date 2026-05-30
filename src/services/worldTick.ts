@@ -11,7 +11,7 @@ import { notifyFadingFireTimers } from "./fire";
 import { maybePerformHerbalistSignal } from "./socialAutonomy";
 import { filterLisovykAllowedLocations, isLisovykForbiddenLocation, isLisovykForbiddenRegion } from "./lisovykBoundaries";
 import { DREAM_GATE_FEATURE_KEY, DREAM_GATE_FEATURE_KEYS } from "./tutorial";
-import { isHunterCreature, tickNpcHunter } from "./npcHunter";
+import { hunterClaimedCorpseDecayAction, isHunterCreature, tickNpcHunter } from "./npcHunter";
 import { chance, chancePermille, pickOptional as pick, randomInt } from "../utils/random";
 
 const DEFAULT_TICK_INTERVAL_MS = TICK_MS;
@@ -850,6 +850,7 @@ async function ageLivingAnimal(creature: any) {
 async function decayCorpse(creature: any) {
   const decayLeft = creature.corpseDecayTicksLeft ?? creature.species.corpseDecayTicks;
   const carriedByPlayerId = carriedCorpseOwnerId(creature.currentAction);
+  const hunterClaimedAction = hunterClaimedCorpseDecayAction(creature.currentAction, Math.max(0, decayLeft - 1));
 
   if (decayLeft > 1) {
     const nextDecayLeft = decayLeft - 1;
@@ -859,7 +860,7 @@ async function decayCorpse(creature: any) {
         age: "CORPSE",
         isAlive: false,
         corpseDecayTicksLeft: nextDecayLeft,
-        currentAction: carriedByPlayerId ? carriedCorpseAction(carriedByPlayerId, nextDecayLeft) : `розкладається; залишилось ${nextDecayLeft} тіків`,
+        currentAction: carriedByPlayerId ? carriedCorpseAction(carriedByPlayerId, nextDecayLeft) : hunterClaimedAction ?? `розкладається; залишилось ${nextDecayLeft} тіків`,
       },
     });
     if (decayed.count === 0) return "gone";
