@@ -40,6 +40,7 @@ import { hunterClaimedCorpseAction, hunterConversationReplyLine, hunterReactionD
 import { ATTACK_OBSERVATION_GROWTH_MESSAGE, ATTACK_PRACTICE_GROWTH_MESSAGE, isAttackPracticeMilestone, recordAttackKillSource, recordAttackObservation } from "./attackLearning";
 import { GATHERING_OBSERVATION_GROWTH_MESSAGE, GATHERING_PRACTICE_GROWTH_MESSAGE, isGatheringPracticeMilestone, recordGatheringObservation, recordGatheringSource } from "./gatheringLearning";
 import { COOKING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_PRACTICE_GROWTH_MESSAGE, recordCookingObservation, recordFresheningObservation, recordFresheningSource } from "./foodLearning";
+import { notifyPlayerObservers, playerRestStopObserverText } from "./playerVisibility";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
@@ -1166,6 +1167,13 @@ async function completeSimple(bot: Bot, action: WorldAction) {
             restFullRecoveries: next >= max && nextHp >= hpMax && (player.stamina < max || player.hp < hpMax) ? { increment: 1 } : undefined,
           },
         });
+        if (player.isResting) {
+          await notifyPlayerObservers(bot, {
+            playerId: player.id,
+            locationId: player.currentLocationId,
+            observerText: playerRestStopObserverText,
+          });
+        }
         if (isTutorialRestRoom && chatId) {
           const commentParts = [next >= max && player.stamina < max ? TUTORIAL_REST_FULL_COMMENT : TUTORIAL_REST_FAST_COMMENT];
           if (next > (player.staminaMax ?? BASE_STAMINA)) commentParts.push(TUTORIAL_REST_EXTRA_COMMENT);

@@ -354,6 +354,7 @@ export async function enterTutorialDream(playerId: number, options: { forceStart
   if (alreadyDreaming) {
     return {
       locationId: currentLocationId,
+      fromLocationId: currentLocationId,
       entered: false,
       text: "Ви і так уже спите. Сон усередині сну наразі не вплетений у правила Порубіжжя.",
     };
@@ -379,6 +380,7 @@ export async function enterTutorialDream(playerId: number, options: { forceStart
 
   return {
     locationId,
+    fromLocationId: currentLocationId,
     entered: true,
     text: "Ви стоїте посеред сну й не можете згадати, як опинилися тут. Минуле тримається за темряву: ким ви були, що вміли, чий голос кликав вас раніше. Попереду лишається ім’я і кілька кроків стежки.",
   };
@@ -396,6 +398,7 @@ export async function wakeFromTutorialDream(playerId: number) {
   if (!dreaming) {
     return {
       locationId: currentLocationId,
+      fromLocationId: currentLocationId,
       woke: false,
       text: "Ви вже не в навчальному сні.",
     };
@@ -419,6 +422,7 @@ export async function wakeFromTutorialDream(playerId: number) {
 
   return {
     locationId: returnLocationId,
+    fromLocationId: currentLocationId,
     woke: true,
     text: "Ви прокидаєтеся. Сон відступає, але стежка, здається, запам’ятала ваші кроки.",
   };

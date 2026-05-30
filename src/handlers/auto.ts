@@ -18,6 +18,7 @@ import { standPlayer } from "../services/posture";
 import { buildAutoConfirmKeyboard } from "../ui/keyboards";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { isTutorialLocation } from "../services/tutorial";
+import { notifyPlayerObservers, playerRestStartObserverText, playerStandObserverText } from "../services/playerVisibility";
 
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
 const AUTO_SAY_CHANCE = Number(process.env.PLAYER_AUTO_SAY_CHANCE || 15);
@@ -154,6 +155,11 @@ async function maybeStartAutoRest(bot: Bot, telegramId: number, player: any, loc
   if (restChance <= 0 || !chance(restChance)) return false;
 
   await startPlayerRest(player.id);
+  await notifyPlayerObservers(bot, {
+    playerId: player.id,
+    locationId,
+    observerText: playerRestStartObserverText,
+  });
   await logEvent("PLAYER_ACTION", "Auto started player rest", `stamina=${player.stamina}; chance=${restChance}`, locationId).catch(() => undefined);
 
   const reason = player.stamina <= VERY_TIRED_STAMINA
@@ -254,6 +260,11 @@ async function ensureAutoStandingBeforeAction(bot: Bot, telegramId: number, play
   if (!result) return player;
   if (result.changed) {
     await logEvent("PLAYER_ACTION", "Auto stood player up", `before=${key}`, locationId).catch(() => undefined);
+    await notifyPlayerObservers(bot, {
+      playerId: player.id,
+      locationId,
+      observerText: playerStandObserverText,
+    });
     await bot.api.sendMessage(telegramId, "🤖 Авто: персонаж встає (/stand), перш ніж діяти далі.", {
       reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, true),
     });

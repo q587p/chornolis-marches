@@ -6,6 +6,7 @@ const { EMPTY_KEYBOARD_BUTTON, buildAdminFireReplyKeyboard, buildAdminMenuReplyK
 const { TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY } = require("../../src/services/tutorial");
 const { formatObservedPostureText, formatPostureText } = require("../../src/utils/playerText");
 const { AUTO_DREAM_BLOCK_MESSAGE, isAutoBlockedInLocation, shouldAutoStandBeforeAction } = require("../../src/handlers/auto");
+const { playerRestStartObserverText, playerRestStopObserverText, playerSitObserverText, playerStandObserverText, playerTutorialSleepObserverText, playerTutorialWakeObserverText } = require("../../src/services/playerVisibility");
 
 assert.equal(formatPostureText({ posture: "STANDING", isResting: false }), "Ви стоїте.");
 assert.equal(formatPostureText({ posture: "SITTING", isResting: false }), "Ви сидите.");
@@ -17,6 +18,12 @@ assert.equal(formatObservedPostureText({ posture: "SITTING", isResting: false })
 assert.equal(formatObservedPostureText({ posture: "SITTING", isResting: true }), "Сидить і відпочиває.");
 assert.equal(formatObservedPostureText({ posture: "SITTING", isResting: true, grammaticalGender: "PLURAL" }), "Сидять і відпочивають.");
 assert.equal(formatObservedPostureText({ posture: "SITTING", isResting: true, isSleeping: true }), "Спить. Уві сні сидить і відпочиває.");
+assert.equal(playerSitObserverText({ id: 1, nameNominative: "Орина", grammaticalGender: "FEMININE" }), "Орина сідає.");
+assert.equal(playerStandObserverText({ id: 1, nameNominative: "Вербові", grammaticalGender: "PLURAL" }), "Вербові встають.");
+assert.equal(playerRestStartObserverText({ id: 1, nameNominative: "Травник", grammaticalGender: "MASCULINE" }), "Травник сідає й починає відпочивати.");
+assert.equal(playerRestStopObserverText({ id: 1, nameNominative: "Вербові", grammaticalGender: "PLURAL" }), "Вербові закінчують відпочинок і лишаються сидіти.");
+assert.equal(playerTutorialSleepObserverText({ id: 1, nameNominative: "Орина", grammaticalGender: "FEMININE" }), "Орина заплющує очі й провалюється в навчальний сон.");
+assert.equal(playerTutorialWakeObserverText({ id: 1, nameNominative: "Вербові", grammaticalGender: "PLURAL" }), "Вербові повертаються зі сну й розплющують очі.");
 
 assert.deepEqual(postureActionLabelsForState({ posture: "STANDING", isResting: false }), ["Сісти", "🧘 Відпочити"]);
 assert.deepEqual(postureActionLabelsForState({ posture: "SITTING", isResting: false }), ["Встати", "🧘 Відпочити"]);

@@ -44,6 +44,7 @@ import { parseSpeechTarget } from "../services/speechTargets";
 import { dropInventoryResourceDetailed, inspectInventoryResource, inventoryResourceKeyFromText, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
 import { enterTutorialDream, hasCompletedTutorial, openDreamGate, rememberTutorialCommandHintIfInTutorial, wakeFromTutorialDream } from "../services/tutorial";
 import { dropObserverText, pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
+import { notifyPlayerObservers, playerRestStartObserverText, playerRestStopObserverText, playerTutorialSleepObserverText, playerTutorialWakeObserverText } from "../services/playerVisibility";
 import { noteKnownMessage } from "../utils/messageTracker";
 import { cookRawMeat } from "../services/meat";
 import { COOKING_PRACTICE_GROWTH_MESSAGE } from "../services/foodLearning";
@@ -163,16 +164,24 @@ async function submitLookAction(bot: Bot, ctx: any) {
   }
 }
 
-async function beginRestNow(ctx: any, playerId: number) {
+async function beginRestNow(bot: Bot, ctx: any, playerId: number) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
   const hadQueue = await hasPlayerActionQueueControls(playerId);
   await startPlayerRest(playerId);
   const suffix = hadQueue ? "\n\nПоточну дію та чергу скасовано." : "";
   await ctx.reply(`${await playerRestStatusText(playerId)}${suffix}`, {
     reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
   });
+  if (player && !player.isResting) {
+    await notifyPlayerObservers(bot, {
+      playerId,
+      locationId: player.currentLocationId,
+      observerText: playerRestStartObserverText,
+    });
+  }
 }
 
-async function submitRest(ctx: any, mode: RestAliasMode = "start") {
+async function submitRest(bot: Bot, ctx: any, mode: RestAliasMode = "start") {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
@@ -184,6 +193,13 @@ async function submitRest(ctx: any, mode: RestAliasMode = "start") {
 
   if (mode === "interrupt") {
     await stopPlayerRest(player.id);
+    if (player.isResting) {
+      await notifyPlayerObservers(bot, {
+        playerId: player.id,
+        locationId: player.currentLocationId,
+        observerText: playerRestStopObserverText,
+      });
+    }
     const accelerated = await accelerateFirstQueuedPlayerAction(player.id);
     await ctx.reply(`Ви перервали відпочинок.${accelerated ? "\n\nНаступна дія починається." : ""}\n\n${await renderPlayerActionQueue(player.id)}`, await actionQueueReplyOptions(player.id));
     await ctx.reply("Ви лишаєтеся сидіти.", {
@@ -206,7 +222,7 @@ async function submitRest(ctx: any, mode: RestAliasMode = "start") {
     return;
   }
 
-  await beginRestNow(ctx, player.id);
+  await beginRestNow(bot, ctx, player.id);
 }
 
 async function submitAuto(bot: Bot, ctx: any, mode: "start" | "stop") {
@@ -798,7 +814,7 @@ async function submitSocialSignal(bot: Bot, ctx: any, signal: SocialSignalAlias,
   }
 }
 
-async function submitSleep(ctx: any, tutorial = false) {
+async function submitSleep(bot: Bot, ctx: any, tutorial = false) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
   if (!tutorial && await hasCompletedTutorial(player.id)) {
@@ -810,17 +826,29 @@ async function submitSleep(ctx: any, tutorial = false) {
   await disablePlayerAuto(ctx.from.id);
   const result = await enterTutorialDream(player.id);
   await ctx.reply(result.text, { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
+  if (result.entered) {
+    await notifyPlayerObservers(bot, {
+      playerId: player.id,
+      locationId: result.fromLocationId,
+      observerText: playerTutorialSleepObserverText,
+    });
+  }
   const view = await renderLocationBrief(result.locationId, player.id);
   await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
 }
 
-async function submitWake(ctx: any) {
+async function submitWake(bot: Bot, ctx: any) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const result = await wakeFromTutorialDream(player.id);
   await ctx.reply(result.text, { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
   if (result.woke) {
+    await notifyPlayerObservers(bot, {
+      playerId: player.id,
+      locationId: result.locationId,
+      observerText: playerTutorialWakeObserverText,
+    });
     const view = await renderLocationBrief(result.locationId, player.id);
     await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
   }
@@ -876,8 +904,8 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "inspect-feature") return submitFeatureInspection(bot, ctx, parsed.target, parsed.detail ?? "full");
     if (parsed.kind === "move") return submitCanonicalMove(bot, ctx, parsed.direction, false);
     if (parsed.kind === "gather") return submitCanonicalGather(bot, ctx, parsed.resourceKey, false);
-    if (parsed.kind === "posture") return submitPosture(ctx, parsed.mode);
-    if (parsed.kind === "rest") return submitRest(ctx, parsed.mode);
+    if (parsed.kind === "posture") return submitPosture(bot, ctx, parsed.mode);
+    if (parsed.kind === "rest") return submitRest(bot, ctx, parsed.mode);
     if (parsed.kind === "auto") return submitAuto(bot, ctx, parsed.mode);
     if (parsed.kind === "queue") return submitQueue(ctx, parsed.mode);
     if (parsed.kind === "track") return submitTrack(bot, ctx, Boolean(parsed.detail));
@@ -886,8 +914,8 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "light-torch") return submitLightTorch(ctx);
     if (parsed.kind === "douse-torch") return submitDouseTorch(ctx);
     if (parsed.kind === "cook-meat") return submitCookMeat(ctx);
-    if (parsed.kind === "sleep") return submitSleep(ctx, parsed.tutorial);
-    if (parsed.kind === "wake") return submitWake(ctx);
+    if (parsed.kind === "sleep") return submitSleep(bot, ctx, parsed.tutorial);
+    if (parsed.kind === "wake") return submitWake(bot, ctx);
     if (parsed.kind === "open") return submitOpen(ctx, parsed.target);
     if (parsed.kind === "inspect-inventory-item") return submitInventoryInspect(ctx, parsed.target);
     if (parsed.kind === "drop-inventory-item") return submitInventoryDrop(bot, ctx, parsed.target);

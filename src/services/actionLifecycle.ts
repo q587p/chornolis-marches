@@ -21,6 +21,7 @@ import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./
 import { isPhysicalPlayerAction, PlayerMustStandError } from "./postureRules";
 import { logEvent } from "./worldEvents";
 import { canSendProactiveToPlayerId } from "./sessionPresence";
+import { notifyPlayerObservers, playerRestStartObserverText } from "./playerVisibility";
 
 export type ActorRef =
   | { actorType: "PLAYER"; playerId: number; creatureId?: never }
@@ -437,12 +438,16 @@ export async function cancelCurrentPlayerAction(playerId: number) {
   return { count: result.count + (stoppedRest ? 1 : 0) };
 }
 
-async function startNextQueuedAction(action: WorldAction) {
+async function startNextQueuedAction(bot: Bot, action: WorldAction) {
   const startedAt = new Date();
   let durationMs = action.durationMs;
+  let playerBeforeRest: { isResting: boolean; currentLocationId: number | null } | null = null;
   if (action.actorType === "PLAYER" && action.playerId) {
     const player = await prisma.player.findUnique({ where: { id: action.playerId } });
     durationMs = effectivePlayerActionDurationMs(player, action.type, action.durationMs);
+    if (action.type === "REST" && player) {
+      playerBeforeRest = { isResting: player.isResting, currentLocationId: player.currentLocationId };
+    }
   }
 
   const result = await prisma.worldAction.updateMany({
@@ -457,6 +462,13 @@ async function startNextQueuedAction(action: WorldAction) {
       where: { id: action.playerId },
       data: { posture: PlayerPosture.SITTING, isResting: true, lastStaminaRegenAt: new Date(), lastHpRegenAt: new Date(), restStarts: player?.isResting ? undefined : { increment: 1 } },
     });
+    if (!playerBeforeRest?.isResting) {
+      await notifyPlayerObservers(bot, {
+        playerId: action.playerId,
+        locationId: playerBeforeRest?.currentLocationId ?? player?.currentLocationId,
+        observerText: playerRestStartObserverText,
+      });
+    }
   }
 
   if (action.actorType === "CREATURE" && action.creatureId) {
@@ -465,7 +477,7 @@ async function startNextQueuedAction(action: WorldAction) {
   }
 }
 
-async function startQueuedActionsForActorType(actorType: WorldActorType, take: number) {
+async function startQueuedActionsForActorType(bot: Bot, actorType: WorldActorType, take: number) {
   const nextQueued = await prisma.worldAction.findMany({
     where: { actorType, status: "QUEUED" },
     orderBy: [{ position: "asc" }, { id: "asc" }],
@@ -507,7 +519,7 @@ async function startQueuedActionsForActorType(actorType: WorldActorType, take: n
     if (action.actorType === "PLAYER" && action.playerId && restingPlayerIds.has(action.playerId)) continue;
     startedActors.add(key);
     try {
-      await startNextQueuedAction(action);
+      await startNextQueuedAction(bot, action);
     } catch (error) {
       if (!isMissingRecordError(error)) throw error;
     }
@@ -532,7 +544,7 @@ async function processCreatureActionQueue(bot: Bot, completeAction: (bot: Bot, a
       }
     });
 
-    await startQueuedActionsForActorType("CREATURE", CREATURE_QUEUED_ACTION_BATCH);
+    await startQueuedActionsForActorType(bot, "CREATURE", CREATURE_QUEUED_ACTION_BATCH);
   } finally {
     creatureQueueProcessing = false;
   }
@@ -559,7 +571,7 @@ export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, ac
     }
   });
 
-  await startQueuedActionsForActorType("PLAYER", PLAYER_QUEUED_ACTION_BATCH);
+  await startQueuedActionsForActorType(bot, "PLAYER", PLAYER_QUEUED_ACTION_BATCH);
   for (const action of completedPlayerActions.sort((a, b) => a.id - b.id)) {
     await refreshKeyboardWhenPlayerQueueEnds(bot, action);
   }
