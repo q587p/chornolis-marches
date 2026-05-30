@@ -1,6 +1,7 @@
 export function normalizeCreatureActionText(action: string | null | undefined, fallback?: string) {
   if (!action) return fallback;
   return action
+    .replace(/;\s*hunter_torches:\d+\b/g, "")
     .replace(/^їсть трава$/, "їсть траву")
     .replace(/^йдемо на /, "йде на ")
     .replace(/^збираємо щось поблизу$/, "збирає щось поблизу")

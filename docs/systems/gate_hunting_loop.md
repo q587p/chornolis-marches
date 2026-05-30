@@ -134,9 +134,10 @@ Implementation foundation:
 - hunter movement uses ordinary exits and delayed `MOVE` actions;
 - hunter attacks use the existing delayed creature `ATTACK` action;
 - hunter kills are marked as claimed carcasses, then returned to the gate and deposited through the shared NPC drop-off helper;
+- the hunter can opportunistically pick up visible ground torches (`torch` or `lit_torch`) for the hunting bundle before choosing the next route;
 - the hunter loop should still show movement and local messages instead of silently calling the helper from far away.
 
-0.13.11 deliberately does not yet model a real NPC-held torch inventory. The five-torch bundle and one-torch return reserve remain constants and design boundaries until NPC inventory/light state exists.
+0.13.11 deliberately does not yet model a real NPC-held torch inventory. The five-torch bundle and one-torch return reserve remain constants and design boundaries until NPC inventory/light state exists. Ground-torch pickup is therefore a lightweight behavior slice rather than the final item model.
 
 Future MVP shape:
 
@@ -151,6 +152,7 @@ Future MVP shape:
 9. Watch torch lifetime; when the burning torch is near the end, light the next torch from the current flame if a spare remains.
 10. When only the last torch remains, or when burden, injury, low stamina, night or no-target conditions say so, route back to the gate.
 11. Deposit any hunted carcasses/remains through the same carcass drop-off service as players.
+12. Later, if the hunter has gathered enough suitable resources, craft replacement torches instead of relying only on the gate stand or found torches.
 
 Nearby players should see compact local messages when the hunter leaves, returns or deposits.
 

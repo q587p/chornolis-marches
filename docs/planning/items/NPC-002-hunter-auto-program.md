@@ -82,10 +82,13 @@ Add a simple NPC hunter behavior that interacts with the same ecological loop as
   - marks killed prey as hunter-claimed carcasses instead of leaving ordinary visible corpse spam;
   - returns claimed carcasses to the gate and records them through `recordNpcCarcassDropoffContribution()`.
 - Added helper coverage for hunter profession detection, claimed-carcass markers and grouped corpse resource keys.
+- Added a narrow ground-torch pickup step: if the hunter notices `torch` or `lit_torch` on the ground, he can take it toward the current hunting bundle before continuing.
 
 Remaining work before closing the full MVP:
 
 - model the bounded torch bundle and lit-torch switching as real NPC-held state instead of only planning constants;
+- replace the current lightweight ground-torch pickup marker with real NPC-held item state, including lit-torch lifetime preservation;
+- let hunters craft torches later if they have gathered the required resources;
 - add stronger route/radius tuning for hunting grounds;
 - add an inspect/check beat between attack and next decision;
 - decide whether hunter-claimed carcasses should ever be recoverable if the hunter dies, disappears or is reset mid-route.

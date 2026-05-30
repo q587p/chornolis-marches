@@ -4,7 +4,7 @@ import { prisma } from "../db";
 import { actionDurationMs, movementDurationMs } from "./actionRules";
 import { enqueueCreatureAction } from "./actionLifecycle";
 import { GATE_CARCASS_DROPOFF_FEATURE_KEY, hunterFieldLine, recordNpcCarcassDropoffContribution } from "./carcassDropoff";
-import { corpseResourceKey } from "./corpses";
+import { corpseResourceKey, resourceTypeDisplayName } from "./corpses";
 import { notifyLocationAll } from "./notifications";
 import { findLocationRoute, type RouteStep } from "./routeFinding";
 import { logEvent } from "./worldEvents";
@@ -14,6 +14,8 @@ export const HUNTER_RETURN_TORCH_RESERVE = 1;
 export const HUNTER_DEFAULT_MAGIC_CAMPFIRE_FEATURE_KEY = "start_unfading_campfire";
 export const HUNTER_PROFESSION_KEY = "hunter";
 export const HUNTER_CLAIMED_CORPSE_PREFIX = "claimed_by_hunter:";
+export const HUNTER_CARRIED_TORCH_PREFIX = "hunter_torches:";
+export const HUNTER_GROUND_TORCH_KEYS = ["torch", "lit_torch"] as const;
 const HUNTER_PREY_SPECIES_KEYS = ["mouse", "rabbit"] as const;
 const HUNTER_ROUTE_MAX_DEPTH = 16;
 
@@ -55,6 +57,22 @@ export function hunterClaimedCorpseOwnerId(currentAction: string | null | undefi
   const raw = currentAction.slice(HUNTER_CLAIMED_CORPSE_PREFIX.length).split(";")[0];
   const hunterId = Number(raw);
   return Number.isSafeInteger(hunterId) ? hunterId : null;
+}
+
+export function isHunterGroundTorchKey(key: string): key is (typeof HUNTER_GROUND_TORCH_KEYS)[number] {
+  return (HUNTER_GROUND_TORCH_KEYS as readonly string[]).includes(key);
+}
+
+export function hunterCarriedTorchCount(currentAction: string | null | undefined) {
+  const match = currentAction?.match(new RegExp(`(?:^|;\\s*)${HUNTER_CARRIED_TORCH_PREFIX}(\\d+)`));
+  const count = Number(match?.[1] ?? 0);
+  return Number.isSafeInteger(count) && count > 0 ? count : 0;
+}
+
+export function hunterTorchCarryAction(count: number, pickedName = "факел", pickedAmount = 1) {
+  const safeCount = Math.max(0, Math.min(HUNTER_TORCH_BUNDLE_SIZE, Math.trunc(count)));
+  const itemText = pickedAmount > 1 ? `${pickedName} ×${pickedAmount}` : pickedName;
+  return `підбирає ${itemText} до мисливського набору; ${HUNTER_CARRIED_TORCH_PREFIX}${safeCount}`;
 }
 
 export function hunterRouteDirections(route: RouteStep[]) {
@@ -265,6 +283,49 @@ async function depositClaimedCorpses(bot: Bot | null, hunter: { id: number; name
   return true;
 }
 
+async function pickUpVisibleGroundTorch(bot: Bot | null, hunter: { id: number; locationId: number; currentAction?: string | null; name?: string | null }) {
+  const carried = hunterCarriedTorchCount(hunter.currentAction);
+  const remaining = HUNTER_TORCH_BUNDLE_SIZE - carried;
+  if (remaining <= 0) return false;
+
+  const picked = await prisma.$transaction(async (tx) => {
+    const node = await tx.resourceNode.findFirst({
+      where: {
+        locationId: hunter.locationId,
+        amount: { gt: 0 },
+        resourceType: { key: { in: [...HUNTER_GROUND_TORCH_KEYS] } },
+      },
+      include: { resourceType: true },
+      orderBy: { id: "asc" },
+    });
+    if (!node || !isHunterGroundTorchKey(node.resourceType.key)) return null;
+
+    const amount = Math.min(remaining, node.amount);
+    const updated = await tx.resourceNode.updateMany({
+      where: { id: node.id, amount: { gte: amount } },
+      data: { amount: { decrement: amount } },
+    });
+    if (updated.count === 0) return null;
+
+    const name = resourceTypeDisplayName(node.resourceType);
+    const nextCount = carried + amount;
+    await tx.creature.updateMany({
+      where: { id: hunter.id, isAlive: true, isGone: false },
+      data: { currentAction: hunterTorchCarryAction(nextCount, name, amount) },
+    });
+
+    return { key: node.resourceType.key, name, amount, nextCount };
+  });
+
+  if (!picked) return false;
+  await logEvent("NPC_ACTION", "Hunter picked up ground torch", `${hunter.id}; ${picked.key} ×${picked.amount}; carried=${picked.nextCount}`, hunter.locationId);
+  if (bot) {
+    const itemText = picked.amount > 1 ? `${picked.name} ×${picked.amount}` : picked.name;
+    await notifyLocationAll(bot, hunter.locationId, `${hunter.name ?? "Мисливець"} підбирає ${itemText} із землі й чіпляє до мисливського набору.`);
+  }
+  return true;
+}
+
 export async function tickNpcHunter(bot: Bot | null, hunter: any) {
   if (!isHunterCreature(hunter)) return "queuedRest";
 
@@ -297,6 +358,8 @@ export async function tickNpcHunter(bot: Bot | null, hunter: any) {
     const route = await findLocationRoute(hunter.locationId, plan.gateLocationId, { maxDepth: HUNTER_ROUTE_MAX_DEPTH });
     if (route?.length) return queueHunterMove(hunter, route, "несе здобич до падального рову");
   }
+
+  if (await pickUpVisibleGroundTorch(bot, hunter)) return "queuedGather";
 
   const shouldReachCampfireFirst = hunter.locationId !== plan.campfireLocationId
     && (hunter.locationId === plan.gateLocationId || String(hunter.currentAction ?? "").includes("межового вогню"));

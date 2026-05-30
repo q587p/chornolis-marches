@@ -154,6 +154,7 @@ assert.equal(inventoryResourceKeyFromText("mushroom"), "mushrooms");
 assert.equal(inventoryResourceKeyFromText("raw meat"), "raw_meat");
 assert.equal(resourceAccusativeName({ key: "grass", name: "трава" }), "траву");
 assert.equal(normalizeCreatureActionText("їсть трава"), "їсть траву");
+assert.equal(normalizeCreatureActionText("підбирає факел до мисливського набору; hunter_torches:1"), "підбирає факел до мисливського набору");
 assertAlias("кивнути Здравомир", { kind: "social-signal", signal: "nod", target: "здравомир" });
 
 assert.equal(parseAlias("це точно не команда"), null);

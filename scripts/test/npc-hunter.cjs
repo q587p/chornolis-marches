@@ -5,13 +5,17 @@ require("ts-node/register");
 const {
   buildHunterRoutePlan,
   HUNTER_DEFAULT_MAGIC_CAMPFIRE_FEATURE_KEY,
+  HUNTER_GROUND_TORCH_KEYS,
   HUNTER_PROFESSION_KEY,
   HUNTER_RETURN_TORCH_RESERVE,
   HUNTER_TORCH_BUNDLE_SIZE,
   groupHunterClaimedCorpses,
+  hunterCarriedTorchCount,
   hunterClaimedCorpseAction,
   hunterClaimedCorpseOwnerId,
   hunterRouteDirections,
+  hunterTorchCarryAction,
+  isHunterGroundTorchKey,
   isHunterCreature,
 } = require("../../src/services/npcHunter");
 
@@ -55,6 +59,17 @@ assert.deepEqual(buildHunterRoutePlan({
 assert.equal(HUNTER_TORCH_BUNDLE_SIZE, 5);
 assert.equal(HUNTER_RETURN_TORCH_RESERVE, 1);
 assert.equal(HUNTER_PROFESSION_KEY, "hunter");
+assert.deepEqual(HUNTER_GROUND_TORCH_KEYS, ["torch", "lit_torch"]);
+assert.equal(isHunterGroundTorchKey("torch"), true);
+assert.equal(isHunterGroundTorchKey("lit_torch"), true);
+assert.equal(isHunterGroundTorchKey("twigs"), false);
+
+const torchAction = hunterTorchCarryAction(3, "факел", 2);
+assert.match(torchAction, /^підбирає факел ×2 до мисливського набору/);
+assert.equal(hunterCarriedTorchCount(torchAction), 3);
+assert.equal(hunterCarriedTorchCount(hunterTorchCarryAction(99, "факел", 1)), HUNTER_TORCH_BUNDLE_SIZE);
+assert.equal(hunterCarriedTorchCount("підбирає факел до мисливського набору"), 0);
+assert.equal(hunterCarriedTorchCount(null), 0);
 
 const claimText = hunterClaimedCorpseAction(42);
 assert.equal(hunterClaimedCorpseOwnerId(claimText), 42);
