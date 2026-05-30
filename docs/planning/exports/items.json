@@ -952,6 +952,29 @@
     "file": "docs/planning/items/NPC-005-npc-hunger-and-food-behavior.md"
   },
   {
+    "id": "NPC-006",
+    "title": "Hunter patrol and meat practice loop",
+    "status": "next",
+    "type": "feature",
+    "area": "npc",
+    "priority": "high",
+    "tags": [
+      "npc",
+      "hunting",
+      "cooking",
+      "freshening",
+      "observation-learning",
+      "living-world"
+    ],
+    "depends_on": [
+      "NPC-002",
+      "NPC-005",
+      "PROG-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/NPC-006-hunter-patrol-meat-practice-loop.md"
+  },
+  {
     "id": "OBS-001-A",
     "title": "Observe action and alias skeleton",
     "status": "next",

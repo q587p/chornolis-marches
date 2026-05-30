@@ -62,5 +62,6 @@ NPCs should not feel like role scripts that ignore the body. If players can get 
 ## Follow-Ups
 
 - Add spoilage/risky eating interactions once `FOOD-002` exists.
+- Let `NPC-006` use the same food/freshening/cooking path for ordinary hunter patrol and meat-practice behavior when the gate drop-off does not need urgent carcasses.
 - Let NPCs barter, request or share food through social systems later.
 - Let skills affect NPC cooking/freshening quality once the shared skill layer exists.
