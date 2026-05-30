@@ -78,4 +78,6 @@ When saturation is active:
 Remaining tuning:
 
 - Replace the conservative radius/threshold helper with a richer ecological model once local pressure, predator density and recovery time have better shared signals.
-- Decide how long "enough for now" should linger when pressure is low but no fresh contributions have arrived recently.
+- Add a persisted linger/cooldown state for "enough for now" so saturation does not flicker when prey pressure hovers around the current threshold. The 0.13.12 slice derives saturation live from current signals, which is acceptable for the first slice but can visibly blink near the boundary.
+- Cache `getGateHuntingSaturationState()` per world tick or equivalent runtime scope if hunter density grows. Today the helper runs on inspect, drop-off and hunter tick and performs several database reads; that is fine for the current two seeded hunters, but high hunter counts should not repeat the same saturation query for every actor.
+- Revisit the plain `/put`, `put` and `покласти` default. It is intentionally convenient while the only local-container target is the carcass drop-off, but it must be removed or redefined once generic containers/features exist so `/put` does not remain permanently tied to `/put туша рів`.

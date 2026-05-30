@@ -117,6 +117,12 @@ The state should be reversible. If herbivores overgraze again, predator pressure
 
 When that helper is active, inspecting the gate notice or `Падальний рів` shows "enough for now" text. Drop-offs are still accepted as physical remains, but supply thresholds are suppressed, and hunters without carried/claimed carcasses route toward the magic campfire, rest and use a quieter stand-down line pool. The thresholds are intentionally technical/admin detail; player-facing text should keep saying that the border has enough pressure for now.
 
+Near-term follow-up:
+
+- saturation is currently derived live rather than persisted, so add a linger/cooldown window before the sign and hunter behavior can flip back and forth near thresholds;
+- `getGateHuntingSaturationState()` is called from inspect, drop-off and hunter tick and does several database reads; keep this as-is at the current tiny hunter count, but cache the result per world tick if more hunters are seeded;
+- plain `/put`, `put` and `покласти` temporarily default to the carcass drop-off; remove or redefine that shortcut when generic local containers/features become real.
+
 ## `put` Command Relationship
 
 This loop is the first target for a narrow local-container command:

@@ -19,7 +19,7 @@ The current lane is the three-month vertical slice:
 - NPC-004: add actor inventory and held-light foundation so NPCs can carry real torches/items and emit light through the same assumptions as players.
 - NPC-005: add NPC hunger and food behavior so hunters and herbalists can eat through shared survival/inventory rules.
 - NPC-002: finish the hunter auto-program MVP after the first state-machine slice: real torch bundle/light state via `NPC-004`, inspect/check beat, route/radius tuning and recovery rules for claimed carcasses.
-- ECO-003: tune gate-hunting saturation after the first 0.13.12 slice; the sign, rewards and hunter stand-down behavior exist, but thresholds and linger timing still need observation.
+- ECO-003: tune gate-hunting saturation after the first 0.13.12 slice; the sign, rewards and hunter stand-down behavior exist, but thresholds, persisted linger/cooldown, per-tick saturation caching for larger hunter counts, and the temporary plain `/put` default still need follow-up.
 - NPC-003: extract herbalist behavior into its own service layer, shaped like the hunter service, before adding more visible herbalist/learning behavior.
 - ADM-001: minimal audit logging for dangerous scribe tools.
 
