@@ -86,6 +86,7 @@ Do not use `Date.getHours()`, server timezone, player timezone or real-world cal
 - `WorldState.lastAdvancedAt` stores the real timestamp used only to calculate elapsed time since the previous advancement.
 - `worldTick()` advances the stored minute count through the shared world-time service.
 - `/time` reads the stored/derived world-clock state and shows the current year, lunar circle, day, approximate clock, daypart and moon phase.
+- The heartbeat emits compact player-facing notices when the internal daypart changes: dawn, day, dusk or night. These notices describe the world getting lighter or darker, but they do not yet apply full darkness/visibility penalties.
 - Seed, `/reset world` and `/reset full` return the world clock to the canonical starter timestamp.
 
 Weather, light snapshots, visibility reduction, darkness effects and ordinary sleep remain later `0.14.x` slices.

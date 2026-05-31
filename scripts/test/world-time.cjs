@@ -11,6 +11,7 @@ const {
   worldTimeSnapshotFromAbsoluteMinute,
 } = require("../../src/data/worldClock");
 const { renderCurrentWorldTime, renderWorldYearLine } = require("../../src/services/calendar");
+const { daypartFromNoticeDescription, worldDaypartNoticeText } = require("../../src/services/worldDaypartNotices");
 
 assert.equal(REAL_MS_PER_GAME_HOUR, 120_000);
 assert.equal(REAL_MS_PER_GAME_MINUTE, 2_000);
@@ -58,5 +59,11 @@ const nextYear = worldTimeSnapshotFromAbsoluteMinute(START_WORLD_ABSOLUTE_MINUTE
 assert.equal(nextYear.year, 588);
 assert.ok(renderWorldYearLine(nextYear.year).includes("588"));
 assert.ok(!renderWorldYearLine(nextYear.year).includes("587"));
+
+assert.equal(daypartFromNoticeDescription("daypart=dusk; absoluteMinute=185400; clock=18:00"), "dusk");
+assert.equal(daypartFromNoticeDescription("clock=18:00"), null);
+assert.ok(worldDaypartNoticeText("dawn").includes("Настав світанок"));
+assert.ok(worldDaypartNoticeText("dusk").includes("темнішає"));
+assert.ok(worldDaypartNoticeText("night").includes("Настала ніч"));
 
 console.log("World time helpers OK");
