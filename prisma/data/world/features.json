@@ -332,9 +332,8 @@
     "name": "Зручна лавка",
     "description": "Низька лавка тепла на дотик, хоча поруч немає вогню. Вона ніби підказує просту річ: відпочинок — це не сон, а короткий присілок. Якщо тіло обважніло після входу в цю місцину, натисніть «Присісти і відпочити» або напишіть /rest.",
     "providesLight": false,
-    "restStaminaCapMultiplier": 2,
+    "restStaminaCapMultiplier": null,
     "data": {
-      "rest_stamina_cap_multiplier": 2,
       "rest_stamina_regen_multiplier": 10,
       "tutorial_rest_seat": true,
       "tutorial_hint": "rest",
