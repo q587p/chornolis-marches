@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 
 require("ts-node/register");
 
-const { EMPTY_KEYBOARD_BUTTON, buildAdminFireReplyKeyboard, buildAdminMenuReplyKeyboard, buildAdminResourcesReplyKeyboard, buildMainReplyKeyboard, buildTutorialSecondStepReplyKeyboard, buildTutorialStartReplyKeyboard, mainStatusLabelForPlayer, postureActionLabelsForState, shouldShowInventoryButton, shouldUseFocusedTutorialReplyKeyboard } = require("../../src/ui/replyKeyboard");
+const { EMPTY_KEYBOARD_BUTTON, buildAdminCreaturesReplyKeyboard, buildAdminFireReplyKeyboard, buildAdminMenuReplyKeyboard, buildAdminResourcesReplyKeyboard, buildMainReplyKeyboard, buildTutorialSecondStepReplyKeyboard, buildTutorialStartReplyKeyboard, mainStatusLabelForPlayer, postureActionLabelsForState, shouldShowInventoryButton, shouldUseFocusedTutorialReplyKeyboard } = require("../../src/ui/replyKeyboard");
 const { TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY } = require("../../src/services/tutorial");
 const { formatObservedPostureText, formatPostureText } = require("../../src/utils/playerText");
 const { AUTO_DREAM_BLOCK_MESSAGE, isAutoBlockedInLocation, shouldAutoStandBeforeAction } = require("../../src/handlers/auto");
@@ -146,11 +146,16 @@ assert.equal(adminMenuButtons.flat().includes("👥 Усі"), true);
 assert.equal(adminMenuButtons.flat().includes("🧭 Телепорт"), true);
 assert.equal(adminMenuButtons.flat().includes("✨ Відновити снагу"), true);
 assert.equal(adminMenuButtons.flat().includes("🌿 Ресурси"), true);
+assert.equal(adminMenuButtons.flat().includes("🐾 Істоти"), true);
 assert.equal(adminMenuButtons.flat().includes("🔥 Вогонь"), true);
 
 const adminResourceButtons = buildAdminResourcesReplyKeyboard().keyboard.flat().map((button) => button.text);
 assert.equal(adminResourceButtons.includes("🍓 Додати ягоди"), true);
 assert.equal(adminResourceButtons.includes("🌿 Ключі ресурсів"), true);
+
+const adminCreaturesButtons = buildAdminCreaturesReplyKeyboard().keyboard.flat().map((button) => button.text);
+assert.equal(adminCreaturesButtons.includes("🐾 Ключі істот"), true);
+assert.equal(adminCreaturesButtons.includes("🦴 Додати трупи"), true);
 
 const adminFireButtons = buildAdminFireReplyKeyboard().keyboard.flat().map((button) => button.text);
 assert.equal(adminFireButtons.includes("🔥 Додати вогнище"), true);
@@ -161,6 +166,7 @@ const replyKeyboardLabels = [
   ...adminMainButtons.flat(),
   ...adminMenuButtons.flat(),
   ...adminResourceButtons,
+  ...adminCreaturesButtons,
   ...adminFireButtons,
 ];
 for (const label of replyKeyboardLabels) {

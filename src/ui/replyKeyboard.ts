@@ -186,11 +186,28 @@ export function buildAdminMenuReplyKeyboard() {
     .text("✨ Відновити снагу")
     .text("🌿 Ресурси")
     .row()
+    .text("🐾 Істоти")
     .text("🦴 Падальний рів")
     .row()
     .text("🔥 Вогонь")
     .text("🛠 Повна довідка")
     .row()
+    .text("↩️ Назад")
+    .resized()
+    .persistent(false);
+}
+
+export function buildAdminCreaturesReplyKeyboard() {
+  return new Keyboard()
+    .text("🐾 Ключі істот")
+    .row()
+    .text("➕ Додати тварин")
+    .text("🦴 Додати трупи")
+    .row()
+    .text("🧪 Зістарити")
+    .text("🧹 Прибрати тварину")
+    .row()
+    .text("🛠 Адмін меню")
     .text("↩️ Назад")
     .resized()
     .persistent(false);

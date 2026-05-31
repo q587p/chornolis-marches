@@ -9,6 +9,30 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.23 - Target-list return context and scribe corpse setup - 12026-05-31
+
+### Added
+
+- Added a scribe-only `/addCreatureCorpse` command for creating animal corpse rows directly, with current-location defaults, corpse freshness presets, batching and the same one-command cap as `/addCreature`.
+- Added a `Creatures` submenu to the scribe admin keyboard so creature keys, live animal spawning, corpse setup and cleanup/test state commands are grouped together without slash hints in button labels.
+
+### Changed
+
+- Paginated target and corpse list buttons now carry their source page into target detail/action views, so `Back` returns to the same target-list page instead of resetting to the first page.
+- `/addCreatureHelp`, `/adminHelp`, admin command docs and scribe audit notes now document the corpse setup command and its species-key flow.
+- Marked `ADM-002` and `UX-002` as testing and refreshed planning exports.
+
+### Tests
+
+- Ran `node scripts/test/admin-creatures.cjs`.
+- Ran `node scripts/test/target-formatting.cjs`.
+- Ran `node scripts/test/posture.cjs`.
+- Ran `npm run planning:export`.
+- Ran `npm test`.
+- Ran `npm run build`.
+
+---
+
 ## 0.13.22 - Queue visibility, AFK labels and command-menu polish - 12026-05-31
 
 ### Changed

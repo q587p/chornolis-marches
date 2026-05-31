@@ -1,7 +1,7 @@
 ---
 id: ADM-002
 title: Scribe creature corpse creation command
-status: backlog
+status: testing
 type: feature
 area: admin
 priority: medium
@@ -49,3 +49,9 @@ Defaults:
 - The command appears in `/adminHelp`, `/adminMenu`, `docs/systems/admin_commands.md` and the relevant scribe audit notes.
 - Ordinary players cannot run it.
 - Tests cover parsing defaults, batching and access denial.
+
+## 0.13.23 Implementation Note
+
+- Added the scribe-only `/addCreatureCorpse` command with current-location defaults, corpse freshness presets and the same batching/cap behavior as `/addCreature`.
+- Added it to `/adminHelp`, the `🐾 Істоти` admin submenu, admin command docs and scribe audit notes.
+- Covered parser defaults, uppercase `OLD` age handling and corpse freshness decay helper behavior in focused tests.

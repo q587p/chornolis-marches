@@ -54,7 +54,7 @@
   {
     "id": "ADM-002",
     "title": "Scribe creature corpse creation command",
-    "status": "backlog",
+    "status": "testing",
     "type": "feature",
     "area": "admin",
     "priority": "medium",
@@ -2180,7 +2180,7 @@
   {
     "id": "UX-002",
     "title": "Target pagination return context",
-    "status": "backlog",
+    "status": "testing",
     "type": "chore",
     "area": "ux",
     "priority": "medium",

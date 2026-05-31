@@ -4,7 +4,7 @@ require("ts-node/register");
 
 const { formatCreatureLifeState, formatCreatureStatusLine, inventoryResourceSummary } = require("../../src/services/targets");
 const { animalAgeDescription } = require("../../src/services/locations");
-const { buildTargetActionKeyboard, buildTargetListKeyboard } = require("../../src/ui/keyboards");
+const { buildCorpseActionKeyboard, buildTargetActionKeyboard, buildTargetListKeyboard } = require("../../src/ui/keyboards");
 
 const maleNpc = {
   isAlive: true,
@@ -72,6 +72,33 @@ const singleFreshCorpseRows = buildTargetListKeyboard([
   { type: "creature", id: 1, label: "труп миша", actionLabel: "розкладається; залишилось 92 тіків", canGreet: false, isAnimal: true, isCorpse: true, canFreshen: true },
 ]).inline_keyboard.map((row) => row.map((button) => button.text));
 assert.deepEqual(singleFreshCorpseRows, [["труп миша"]]);
+
+const pagedTargets = Array.from({ length: 10 }, (_, index) => ({
+  type: "creature",
+  id: index + 1,
+  label: `ціль ${index + 1}`,
+  canGreet: false,
+}));
+const pagedTargetKeyboard = buildTargetListKeyboard(pagedTargets, { page: 1, pageCallbackPrefix: "targetPage:details" });
+assert.equal(pagedTargetKeyboard.inline_keyboard[0][0].callback_data, "target:creature:9:details:1");
+
+const returnAwareTargetKeyboard = buildTargetActionKeyboard({
+  type: "creature",
+  id: 13,
+  canGreet: false,
+  canAttack: true,
+  isAnimal: true,
+}, false, "targetPage:details:1");
+assert.equal(returnAwareTargetKeyboard.inline_keyboard.at(-1)[0].callback_data, "targetPage:details:1");
+assert.equal(returnAwareTargetKeyboard.inline_keyboard[0][0].callback_data, "social:look:creature:13:known:details:1");
+
+const returnAwareCorpseKeyboard = buildCorpseActionKeyboard({
+  kind: "creature",
+  id: 21,
+  canFreshen: true,
+}, "targetPage:details:1");
+assert.equal(returnAwareCorpseKeyboard.inline_keyboard[1][0].callback_data, "social:pickup:creature:21:details:1");
+assert.equal(returnAwareCorpseKeyboard.inline_keyboard.at(-1)[0].callback_data, "targetPage:details:1");
 
 assert.equal(inventoryResourceSummary([
   { amount: 1, resourceType: { key: "cooked_meat", name: "смажене м'ясо" } },
