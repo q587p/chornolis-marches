@@ -183,8 +183,10 @@ preview_latest_news - показати останню новину без пуб
 post_latest_news - опублікувати останню новину в канал
 pending_publications - показати чергу публікацій
 publish_pending - опублікувати очікувані записи
+list_publications - показати останні записи книги публікацій
 show_publication - показати збережений запис за номером
 repost_publication - повторно опублікувати збережений запис як архів
+mark_publication_deleted - позначити запис як вручну видалений із Telegram
 preview_world_digest - попередній перегляд дайджесту світу
 info - атмосферний запис про персонажа
 ```
@@ -194,8 +196,10 @@ info - атмосферний запис про персонажа
 - `/help` — список відомих команд.
 - `/whoami` — перевірити, чи впізнано службову печатку.
 - `/queue_latest_news` — поставити останню новину в outbox без негайної публікації.
+- `/list_publications` — показати останні записи книги публікацій із Telegram message id, published/deleted/repost markers, якщо вони є.
 - `/show_publication <id>` — показати збережений snapshot запису з outbox, навіть якщо його вже немає в `news.md`.
 - `/repost_publication <id>` — повторно опублікувати збережений snapshot як архівний repost. Це створює нове Telegram-повідомлення й не відновлює старий timestamp.
+- `/mark_publication_deleted <id>` — вручну позначити в БД, що Telegram-повідомлення було видалене з каналу. Команда нічого не видаляє в Telegram і не запускає автоматичний repost.
 - `/backfill_news_preview` — подивитися, які старі записи `news.md` ще не стоять у черзі й не були опубліковані.
 - `/backfill_news_queue [30m]` — поставити старі записи `news.md` у чергу архівною drip-feed послідовністю.
 - `/backfill_news_status` — звірити стан архівного backfill для `news.md`.

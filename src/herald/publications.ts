@@ -34,6 +34,13 @@ export async function getHeraldPublicationById(id: number) {
   return prisma.heraldPublication.findUnique({ where: { id } });
 }
 
+export async function listRecentHeraldPublications(limit: number) {
+  return prisma.heraldPublication.findMany({
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: Math.max(1, Math.min(50, Math.floor(limit))),
+  });
+}
+
 export async function findExistingPublicationsByHashes(hashes: readonly string[]) {
   const uniqueHashes = [...new Set(hashes.filter(Boolean))];
   if (!uniqueHashes.length) return [];
@@ -100,6 +107,27 @@ export async function markPublicationPublished(id: number, telegramMessageId?: n
       publishedAt: new Date(),
       telegramMessageId,
       error: null,
+    },
+  });
+}
+
+export async function markPublicationReposted(id: number, telegramMessageId: number) {
+  return prisma.heraldPublication.update({
+    where: { id },
+    data: {
+      repostedAt: new Date(),
+      repostTelegramMessageId: telegramMessageId,
+      repostCount: { increment: 1 },
+      error: null,
+    },
+  });
+}
+
+export async function markPublicationManuallyDeleted(id: number) {
+  return prisma.heraldPublication.update({
+    where: { id },
+    data: {
+      manuallyDeletedAt: new Date(),
     },
   });
 }

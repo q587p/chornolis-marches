@@ -402,6 +402,10 @@ model HeraldPublication {
   availableAt       DateTime  @default(now())
   publishedAt       DateTime?
   telegramMessageId Int?
+  manuallyDeletedAt DateTime?
+  repostedAt        DateTime?
+  repostTelegramMessageId Int?
+  repostCount       Int       @default(0)
   contentHash       String?   @unique
   error             String?
   attempts          Int       @default(0)

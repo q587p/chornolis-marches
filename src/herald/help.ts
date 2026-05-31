@@ -31,8 +31,10 @@ export const HERALD_COMMANDS: HeraldCommandInfo[] = [
   { command: "/post_world_digest", description: "поставити й одразу передати світовий запис", adminOnly: true },
   { command: "/pending_publications", description: "показати готові до публікації записи", adminOnly: true },
   { command: "/publish_pending", description: "передати готові записи до каналу", adminOnly: true },
+  { command: "/list_publications", description: "показати останні записи книги публікацій", adminOnly: true },
   { command: "/show_publication", description: "показати збережений snapshot запису за номером", adminOnly: true },
   { command: "/repost_publication", description: "повторно передати збережений запис як архівний repost", adminOnly: true },
+  { command: "/mark_publication_deleted", description: "позначити запис як вручну видалений із Telegram", adminOnly: true },
 ];
 
 export function formatHeraldCommandList(isAdmin: boolean) {
