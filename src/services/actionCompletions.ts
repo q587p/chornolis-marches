@@ -31,7 +31,7 @@ import { escapeHtml } from "../utils/text";
 import { resourceAccusativeName } from "../utils/resourceText";
 import { canEditKnownMessage, noteKnownMessage } from "../utils/messageTracker";
 import { playerCanShowTechnicalDetails } from "./technicalDetails";
-import { canOpenDreamGateWithSpeech, isLocationExitLocked, isTutorialFastRestLocationKey, openDreamGate, rememberTutorialCommandHintIfInTutorial, rememberTutorialForagingSuccess, rememberTutorialInventoryAvailable, rememberTutorialWellbeingAside, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, TUTORIAL_WELLBEING_ASIDE_TEXT } from "./tutorial";
+import { canOpenDreamGateWithSpeech, ensureTutorialForagingResources, isLocationExitLocked, isTutorialFastRestLocationKey, openDreamGate, rememberTutorialCommandHintIfInTutorial, rememberTutorialForagingSuccess, rememberTutorialInventoryAvailable, rememberTutorialWellbeingAside, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, TUTORIAL_WELLBEING_ASIDE_TEXT } from "./tutorial";
 import { tutorialGateSpeechComment, tutorialLookPaceComments, tutorialSpiritMoveComment, tutorialTrackComments, tutorialWaitPaceComments } from "./tutorialVoices";
 import { chance, pick, shuffle } from "../utils/random";
 import { canSendProactiveToPlayerId } from "./sessionPresence";
@@ -541,6 +541,7 @@ async function completeGather(bot: Bot, action: WorldAction) {
   }
 
   const locationId = isPlayer ? (actor as any).currentLocationId : (actor as any).locationId;
+  if (isPlayer) await ensureTutorialForagingResources(locationId);
   const durationText = actionDurationPhrase(isPlayer && playerCanShowTechnicalDetails(actor as any), action.durationMs);
   const resource = payload.resourceKey
     ? await prisma.resourceNode.findFirst({ where: { locationId, resourceType: { key: payload.resourceKey }, amount: { gt: 0 } }, include: { resourceType: true, location: true } })

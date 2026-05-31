@@ -39,6 +39,14 @@ const RESET_EVENT_TITLE = "Tutorial reset by admin";
 const TUTORIAL_COMMAND_HINT_EVENT_TITLE = "Tutorial command hint";
 const DREAM_GATE_LOCK_HINT_EVENT_TITLE = "Tutorial dream gate lock hint";
 const DREAM_GATE_OPEN_PHRASES = ["відчинитися", "відчинися", "відчинись", "відкритися", "відкрийся"];
+export const TUTORIAL_FORAGING_RESOURCE_AMOUNTS = {
+  berries: 6,
+  herbs: 3,
+} as const;
+
+export function tutorialForagingResourceAmount(resourceKey: string) {
+  return TUTORIAL_FORAGING_RESOURCE_AMOUNTS[resourceKey as keyof typeof TUTORIAL_FORAGING_RESOURCE_AMOUNTS] ?? null;
+}
 
 function normalizeDreamGateSpeech(text: string) {
   let normalized = text
@@ -142,6 +150,44 @@ export async function getTutorialStartLocationId() {
   const location = await prisma.cellLocation.findUnique({ where: { key: TUTORIAL_START_LOCATION_KEY } });
   if (!location) throw new Error(`Tutorial start location "${TUTORIAL_START_LOCATION_KEY}" not found. Run npm run seed first.`);
   return location.id;
+}
+
+export async function ensureTutorialForagingResources(locationId: number) {
+  const location = await prisma.cellLocation.findUnique({
+    where: { id: locationId },
+    select: { key: true },
+  });
+  if (location?.key !== TUTORIAL_FORAGING_LOCATION_KEY) return false;
+
+  const resourceTypes = await prisma.resourceType.findMany({
+    where: { key: { in: Object.keys(TUTORIAL_FORAGING_RESOURCE_AMOUNTS) } },
+    select: { id: true, key: true },
+  });
+  if (!resourceTypes.length) return false;
+
+  await prisma.$transaction(resourceTypes.map((resourceType) => {
+    const amount = tutorialForagingResourceAmount(resourceType.key) ?? 1;
+    return prisma.resourceNode.upsert({
+      where: {
+        locationId_resourceTypeId: {
+          locationId,
+          resourceTypeId: resourceType.id,
+        },
+      },
+      update: {
+        amount,
+        maxAmount: amount,
+      },
+      create: {
+        locationId,
+        resourceTypeId: resourceType.id,
+        amount,
+        maxAmount: amount,
+      },
+    });
+  }));
+
+  return true;
 }
 
 async function latestPlayerEventLocation(playerId: number, title: string) {

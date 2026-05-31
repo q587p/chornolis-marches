@@ -27,7 +27,7 @@ import { resourceTypeDisplayName } from "./corpses";
 import { getPublicEcologySignStats, type PublicEcologySignStats } from "./ecologyStats";
 import { lifetimeSummary } from "./itemLifetime";
 import { playerShowsTechnicalDetails } from "./technicalDetails";
-import { dreamGateStatusText, isDreamGateFeature, lockedExitDirections, lockedExitLabel, rememberTutorialObservationLesson } from "./tutorial";
+import { dreamGateStatusText, ensureTutorialForagingResources, isDreamGateFeature, lockedExitDirections, lockedExitLabel, rememberTutorialObservationLesson } from "./tutorial";
 import { formatObservedPostureText } from "../utils/playerText";
 import { isFreshenedCorpse } from "./meat";
 import { GATE_CARCASS_DROPOFF_FEATURE_KEY, gateHuntingDropoffText, gateHuntingNoticeText, getGateHuntingSaturationState } from "./carcassDropoff";
@@ -708,6 +708,7 @@ async function resourceButtonData(resources: any[], viewerPlayerId?: number) {
 
 export async function renderLocationBrief(locationId: number, viewerPlayerId?: number, options: LocationRenderOptions = {}) {
   await Promise.all([expireTimedCampfires(locationId), expireGroundLitTorches(undefined, new Date(), locationId)]);
+  await ensureTutorialForagingResources(locationId);
   const location = await prisma.cellLocation.findUnique({
     where: { id: locationId },
     include: {
@@ -780,6 +781,7 @@ export async function renderLocationExits(locationId: number) {
 
 export async function renderLocationDetails(locationId: number, viewerPlayerId?: number, options: LocationRenderOptions = {}) {
   await Promise.all([expireTimedCampfires(locationId), expireGroundLitTorches(undefined, new Date(), locationId)]);
+  await ensureTutorialForagingResources(locationId);
   const location = await prisma.cellLocation.findUnique({
     where: { id: locationId },
     include: {
@@ -864,6 +866,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
 }
 
 export async function buildGatherMenuForLocation(locationId: number, viewerPlayerId?: number) {
+  await ensureTutorialForagingResources(locationId);
   const resources = await prisma.resourceNode.findMany({
     where: { locationId, amount: { gt: 0 } },
     include: { resourceType: true },
