@@ -607,6 +607,27 @@
     "file": "docs/planning/items/FOOD-006-mushroom-varieties-and-identification.md"
   },
   {
+    "id": "HIDE-001",
+    "title": "Hidden approach MVP",
+    "status": "backlog",
+    "type": "feature",
+    "area": "visibility",
+    "priority": "medium",
+    "tags": [
+      "hiding",
+      "stealth",
+      "visibility",
+      "social-memory",
+      "0.15"
+    ],
+    "depends_on": [
+      "THEFT-001",
+      "VIS-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/HIDE-001-hidden-approach-mvp.md"
+  },
+  {
     "id": "HMYZ-001-A",
     "title": "Audit hmyz model",
     "status": "next",
@@ -2193,6 +2214,26 @@
     "file": "docs/planning/items/SOC-007-telegram-ui-and-copy.md"
   },
   {
+    "id": "SOCIAL-003",
+    "title": "Theft reaction signals",
+    "status": "backlog",
+    "type": "feature",
+    "area": "social",
+    "priority": "medium",
+    "tags": [
+      "social",
+      "theft",
+      "signals",
+      "reactions",
+      "0.15"
+    ],
+    "depends_on": [
+      "THEFT-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SOCIAL-003-theft-reaction-signals.md"
+  },
+  {
     "id": "SURV-001",
     "title": "Early respawn support",
     "status": "testing",
@@ -2337,6 +2378,92 @@
       "github_issue": true
     },
     "file": "docs/planning/items/TECH-001-service-boundary-and-duplication-cleanup.md"
+  },
+  {
+    "id": "THEFT-000",
+    "title": "Risky theft and hiding epic",
+    "status": "backlog",
+    "type": "epic",
+    "area": "social",
+    "priority": "medium",
+    "tags": [
+      "theft",
+      "hiding",
+      "stealth",
+      "social-memory",
+      "0.15"
+    ],
+    "depends_on": [
+      "VIS-001-A",
+      "OBS-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/THEFT-000-risky-theft-and-hiding-epic.md"
+  },
+  {
+    "id": "THEFT-001",
+    "title": "Risky theft MVP",
+    "status": "backlog",
+    "type": "feature",
+    "area": "social",
+    "priority": "medium",
+    "tags": [
+      "theft",
+      "social-memory",
+      "inventory",
+      "action-queue",
+      "0.15"
+    ],
+    "depends_on": [
+      "THEFT-000",
+      "VIS-001-A",
+      "OBS-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/THEFT-001-risky-theft-mvp.md"
+  },
+  {
+    "id": "THEFT-002",
+    "title": "World-controlled thief character",
+    "status": "backlog",
+    "type": "feature",
+    "area": "npc",
+    "priority": "low",
+    "tags": [
+      "theft",
+      "npc",
+      "autonomy",
+      "social-memory",
+      "future"
+    ],
+    "depends_on": [
+      "THEFT-001",
+      "SOCIAL-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/THEFT-002-world-controlled-thief-character.md"
+  },
+  {
+    "id": "THEFT-003",
+    "title": "Strange and spirit theft MVP",
+    "status": "backlog",
+    "type": "feature",
+    "area": "spirits",
+    "priority": "low",
+    "tags": [
+      "theft",
+      "spirits",
+      "omen",
+      "hidden-presence",
+      "future"
+    ],
+    "depends_on": [
+      "THEFT-001",
+      "HIDE-001",
+      "OMEN-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/THEFT-003-spirit-theft-mvp.md"
   },
   {
     "id": "TRACK-LEARN-001-A",

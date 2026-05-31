@@ -13,8 +13,10 @@ export const TUTORIAL_REST_LOCATION_KEY = "dream_tutorial_rest";
 export const TUTORIAL_TIME_LOCATION_KEY = "dream_tutorial_time";
 export const TUTORIAL_SAFETY_LOCATION_KEY = "dream_tutorial_safety";
 export const TUTORIAL_OBSERVATION_LOCATION_KEY = "dream_tutorial_observation";
-export const TUTORIAL_END_LOCATION_KEY = TUTORIAL_OBSERVATION_LOCATION_KEY;
+export const TUTORIAL_END_LOCATION_KEY = TUTORIAL_SAFETY_LOCATION_KEY;
 export const TUTORIAL_DEEP_REST_LOCATION_KEY = "dream_tutorial_deep_rest";
+export const TUTORIAL_REST_ENTRY_STAMINA_TEXT = "Тепло сну раптом робить тіло важчим, ніби дорога згадала всі попередні кроки. Снаги лишається приблизно на третину. Тут саме час натиснути «Відпочити» або написати /rest.";
+export const TUTORIAL_REST_RETURN_FROM_HEAT_TEXT = "Жар легкого перепочинку ще тримається на плечах. Він не дає сну знову обважнити тіло: повертаючись від вогню, ви зберігаєте здобуту снагу.";
 export const DREAM_GATE_FEATURE_KEY = "dream_tutorial_sleep_gate";
 export const DREAM_GATE_RETURN_FEATURE_KEY = "dream_tutorial_sleep_gate_return";
 export const DREAM_GATE_FEATURE_KEYS = [DREAM_GATE_FEATURE_KEY, DREAM_GATE_RETURN_FEATURE_KEY] as const;
@@ -29,7 +31,7 @@ export const TUTORIAL_WELLBEING_ASIDE_EVENT_TITLE = "Tutorial wellbeing aside";
 export const TUTORIAL_WELLBEING_ASIDE_TEXT = [
   "Сон на мить дивиться крізь персонажа - просто на вас.",
   "",
-  "«Тілу по той бік теж потрібні вода, їжа, перепочинок і трохи далечіні для очей. Розімніть плечі, відведіть погляд від екрана хоч на кілька подихів. Чорноліс почекає».",
+  "Тілу по той бік теж потрібні вода, їжа, перепочинок і трохи далечіні для очей. Розімніть плечі, відведіть погляд від екрана хоч на кілька подихів. Чорноліс почекає.",
 ].join("\n");
 
 const RETURN_LOCATION_EVENT_TITLE = "Tutorial return location";
@@ -39,6 +41,23 @@ const RESET_EVENT_TITLE = "Tutorial reset by admin";
 const TUTORIAL_COMMAND_HINT_EVENT_TITLE = "Tutorial command hint";
 const DREAM_GATE_LOCK_HINT_EVENT_TITLE = "Tutorial dream gate lock hint";
 const DREAM_GATE_OPEN_PHRASES = ["відчинитися", "відчинися", "відчинись", "відкритися", "відкрийся"];
+export const TUTORIAL_FORAGING_RESOURCE_AMOUNTS = {
+  berries: 6,
+  herbs: 3,
+} as const;
+
+export function tutorialForagingResourceAmount(resourceKey: string) {
+  return TUTORIAL_FORAGING_RESOURCE_AMOUNTS[resourceKey as keyof typeof TUTORIAL_FORAGING_RESOURCE_AMOUNTS] ?? null;
+}
+
+export type TutorialRestEntryStaminaMode = "drain" | "protected";
+
+export function tutorialRestEntryStaminaMode(fromLocationKey: string | null | undefined, toLocationKey: string | null | undefined, direction: Direction | string | null | undefined): TutorialRestEntryStaminaMode | null {
+  if (toLocationKey !== TUTORIAL_REST_LOCATION_KEY) return null;
+  if (fromLocationKey === TUTORIAL_HUB_LOCATION_KEY && direction === Direction.WEST) return "drain";
+  if (fromLocationKey === TUTORIAL_DEEP_REST_LOCATION_KEY && direction === Direction.EAST) return "protected";
+  return null;
+}
 
 function normalizeDreamGateSpeech(text: string) {
   let normalized = text
@@ -144,6 +163,44 @@ export async function getTutorialStartLocationId() {
   return location.id;
 }
 
+export async function ensureTutorialForagingResources(locationId: number) {
+  const location = await prisma.cellLocation.findUnique({
+    where: { id: locationId },
+    select: { key: true },
+  });
+  if (location?.key !== TUTORIAL_FORAGING_LOCATION_KEY) return false;
+
+  const resourceTypes = await prisma.resourceType.findMany({
+    where: { key: { in: Object.keys(TUTORIAL_FORAGING_RESOURCE_AMOUNTS) } },
+    select: { id: true, key: true },
+  });
+  if (!resourceTypes.length) return false;
+
+  await prisma.$transaction(resourceTypes.map((resourceType) => {
+    const amount = tutorialForagingResourceAmount(resourceType.key) ?? 1;
+    return prisma.resourceNode.upsert({
+      where: {
+        locationId_resourceTypeId: {
+          locationId,
+          resourceTypeId: resourceType.id,
+        },
+      },
+      update: {
+        amount,
+        maxAmount: amount,
+      },
+      create: {
+        locationId,
+        resourceTypeId: resourceType.id,
+        amount,
+        maxAmount: amount,
+      },
+    });
+  }));
+
+  return true;
+}
+
 async function latestPlayerEventLocation(playerId: number, title: string) {
   const event = await prisma.worldEvent.findFirst({
     where: { playerId, type: "SYSTEM", title },
@@ -177,11 +234,11 @@ export async function hasCompletedTutorial(playerId: number) {
 export const TUTORIAL_END_CONFIRMATION_TEXT = [
   "Сон на мить спиняє стежку.",
   "",
-  "«Закінчити навчання зараз? Далі буде не коротка вправа, а справжнє Порубіжжя: більше простору, темряви, голоду, чужих слідів і рішень без підказки».",
+  "<blockquote>Закінчити навчання зараз? Далі буде не коротка вправа, а справжнє Порубіжжя: більше простору, темряви, голоду, чужих слідів і рішень без підказки.</blockquote>",
   "",
   "Дрімота позіхає збоку:",
   "",
-  "«Я б ще посиділа. Але якщо вже йти, то йди з відкритими очима: реальний світ ширший, голосніший і не завжди пояснює себе двічі».",
+  "<blockquote>Я б ще посиділа. Але якщо вже йти, то йди з відкритими очима: реальний світ ширший, голосніший і не завжди пояснює себе двічі.</blockquote>",
 ].join("\n");
 
 export async function completeTutorialForPlayer(playerId: number, reason = "tutorial-end") {
@@ -234,7 +291,10 @@ export async function completeTutorialForPlayer(playerId: number, reason = "tuto
     text: [
       "Ви закінчуєте навчальний сон.",
       "",
-      "Сон відступає не різко, а як туман, що знає дорогу назад. Дрімота бурмоче: «Ну от. Тепер справжнє Порубіжжя. Там ширше, гучніше й живіше, ніж у цій короткій вправі».",
+      "Сон відступає не різко, а як туман, що знає дорогу назад.",
+      "",
+      "Дрімота бурмоче:",
+      "<blockquote>Ну от. Тепер справжнє Порубіжжя. Там ширше, гучніше й живіше, ніж у цій короткій вправі.</blockquote>",
       "",
       "Підказки про незавершене навчання більше не триматимуться за вас. Якщо колись захочеться повернутися до сну для повторення, напишіть /sleep tutorial.",
     ].join("\n"),
@@ -598,7 +658,7 @@ async function firstDreamGateLockHint(playerId: number, locationId: number, dire
     },
   });
 
-  return "Сон шепоче: «Брама зімкнена. Спробуй оглянути браму.»";
+  return "Сон шепоче:\nБрама зімкнена. Спробуй оглянути браму.";
 }
 
 export async function locationLockedExitMessageForPlayer(playerId: number, locationId: number, direction: Direction) {

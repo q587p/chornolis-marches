@@ -57,6 +57,12 @@ lastAdvancedAt += advancedMinutes * 2_000 ms
 
 Do not use `Date.getHours()`, server timezone, player timezone or real-world calendar date to decide dawn/day/dusk/night.
 
+## Boundaries And Non-Sources
+
+- Public chronicles may group real `createdAt` timestamps by `Europe/Kyiv` for the archive UI. That formatting is only a public archive convenience, not a world-time source. Do not derive Chornolis daypart, moon, weather or world events from the chronicle display date.
+- Starter weather fields are part of the stored world state; `0.14.3` adds the first weather simulation and player-facing weather display slice.
+- `/reset world` and `/reset full` reset the clock and weather state to the canonical starter values. `/reset stats` must not reset world time, weather or `lastAdvancedAt`.
+
 ## 0.14 Scope
 
 0.14 should include:
@@ -80,6 +86,7 @@ Do not use `Date.getHours()`, server timezone, player timezone or real-world cal
 - `WorldState.lastAdvancedAt` stores the real timestamp used only to calculate elapsed time since the previous advancement.
 - `worldTick()` advances the stored minute count through the shared world-time service.
 - `/time` reads the stored/derived world-clock state and shows the current year, lunar circle, day, approximate clock, daypart, moon phase, weather and a compact light label.
+- The heartbeat emits compact player-facing notices when the internal daypart changes: dawn, day, dusk or night. These notices describe the world getting lighter or darker, but they do not yet apply full darkness/visibility penalties.
 - Seed, `/reset world` and `/reset full` return the world clock to the canonical starter timestamp.
 
 `0.14.3` adds the first weather/light foundation:

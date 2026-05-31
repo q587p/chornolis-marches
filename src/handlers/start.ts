@@ -5,10 +5,11 @@ import { renderLocationBrief } from "../services/locations";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { guessGenderFromPronoun, guessNameForms, normalizeCharacterName, type NameForms } from "../services/grammar";
 import { BASE_STAMINA } from "../gameConfig";
-import { renderCurrentWorldYearLine } from "../services/calendar";
+import { renderWorldYearLine } from "../services/calendar";
 import { setDefaultBotCommandsWithRetry, syncChatBotCommandsForTelegramId } from "../services/telegramCommands";
 import { recordNewPlayerChronicle } from "../services/chronicles";
 import { enterTutorialDream, hasCompletedTutorial, isTutorialLocation } from "../services/tutorial";
+import { getCurrentWorldTimeSnapshot } from "../services/worldTime";
 import { escapeHtml } from "../utils/text";
 import {
   availablePreparedNames,
@@ -16,10 +17,12 @@ import {
   customNameWarningText,
   normalizeNameForRegistry,
   onboardingNameChoiceTextIntent,
+  paginatePreparedNames,
   preparedNameByKey,
-  preparedNameSummary,
+  preparedNameCompactSummary,
   randomAvailablePreparedName,
   validateCustomCharacterName,
+  type PreparedCharacterName,
 } from "../services/characterNames";
 import { disablePlayerAuto } from "./auto";
 
@@ -93,14 +96,36 @@ function nameChoiceKeyboard() {
     .text("Ввести власне ім'я", "onboarding:nameChoice:custom");
 }
 
-function preparedNamesKeyboard(names: Array<{ key: string; forms: NameForms }>) {
+function preparedNamesKeyboard(names: PreparedCharacterName[], page: number) {
+  const pageData = paginatePreparedNames(names, page);
   const keyboard = new InlineKeyboard();
-  for (const name of names) {
+
+  for (const name of pageData.items) {
     keyboard.text(name.forms.nominative, `onboarding:name:${name.key}`).row();
   }
+
+  if (pageData.hasPrevious || pageData.hasNext) {
+    if (pageData.hasPrevious) keyboard.text("◀ Назад", `onboarding:preparedPage:${pageData.page - 1}`);
+    keyboard.text(`${pageData.page + 1}/${pageData.pageCount}`, "onboarding:preparedPageInfo");
+    if (pageData.hasNext) keyboard.text("Далі ▶", `onboarding:preparedPage:${pageData.page + 1}`);
+    keyboard.row();
+  }
+
   keyboard.text("Випадкове ім'я", "onboarding:nameChoice:random").row();
   keyboard.text("Ввести власне ім'я", "onboarding:nameChoice:custom");
   return keyboard;
+}
+
+function preparedNamesText(names: PreparedCharacterName[], page: number) {
+  const pageData = paginatePreparedNames(names, page);
+  return [
+    "Писарі вже перевірили ці імена, їхні відмінки й відповідність Порубіжжю.",
+    "",
+    `Сторінка ${pageData.page + 1}/${pageData.pageCount}:`,
+    ...pageData.items.map(preparedNameCompactSummary),
+    "",
+    "Можна гортати список, взяти випадкове ім'я або ввести власне.",
+  ].join("\n");
 }
 
 function casePrompt(forms: NameForms, index: number) {
@@ -247,8 +272,13 @@ function renderOnboardingNameConfirmation(player: {
   return `Готово. Порубіжжя запам’ятало ім’я: <b>${escapeHtml(name)}</b>.\n${escapeHtml(onboardingNameApprovalNote(player.isNameApproved))}\n\nНаприклад: «Травник звертається до <b>${escapeHtml(genitive)}</b>» і «<b>${escapeHtml(vocative)}</b>, стежка чекає».`;
 }
 
-function renderOnboardingDateHint() {
-  return `Крук озивається з темного гілля:\n<blockquote>${escapeHtml(`Зараз ${renderCurrentWorldYearLine()} Але тобі це, мабуть, поки нічого не каже.`)}</blockquote>`;
+async function currentWorldYearLine() {
+  const snapshot = await getCurrentWorldTimeSnapshot();
+  return renderWorldYearLine(snapshot.year);
+}
+
+function renderOnboardingDateHint(yearLine: string) {
+  return `Крук озивається з темного гілля:\n<blockquote>${escapeHtml(`Зараз ${yearLine} Але тобі це, мабуть, поки нічого не каже.`)}</blockquote>`;
 }
 
 async function isStaleOnboardingCallback(ctx: any) {
@@ -266,17 +296,27 @@ async function isStaleOnboardingCallback(ctx: any) {
   return true;
 }
 
-async function showPreparedNameChoices(ctx: any, pronoun: OnboardingState["pronoun"]) {
+async function showPreparedNameChoices(ctx: any, pronoun: OnboardingState["pronoun"], page = 0, edit = false) {
   const names = availablePreparedNames(await usedCharacterNames(), { suggestedGender: guessGenderFromPronoun(pronoun) });
   if (names.length === 0) {
     await ctx.reply(`Усі підготовлені імена вже зайняті або зарезервовані.\n\n${customNameWarningText()}`, HTML_OPTIONS);
     return;
   }
 
-  await ctx.reply(
-    `Писарі вже перевірили ці імена, їхні відмінки й відповідність Порубіжжю:\n\n${names.map(preparedNameSummary).join("\n")}`,
-    { reply_markup: preparedNamesKeyboard(names) }
-  );
+  const pageData = paginatePreparedNames(names, page);
+  const message = preparedNamesText(names, pageData.page);
+  const replyMarkup = preparedNamesKeyboard(names, pageData.page);
+
+  if (edit && ctx.callbackQuery?.message) {
+    try {
+      await ctx.editMessageText(message, { reply_markup: replyMarkup });
+      return;
+    } catch {
+      // Telegram can reject edits for stale or unchanged messages; replying keeps onboarding moving.
+    }
+  }
+
+  await ctx.reply(message, { reply_markup: replyMarkup });
 }
 
 async function enterWorld(ctx: any, isMenuRefresh = false) {
@@ -316,7 +356,7 @@ async function enterWorld(ctx: any, isMenuRefresh = false) {
   if (ctx.chat?.id) await syncChatBotCommandsForTelegramId(ctx.api, ctx.chat.id, from.id);
 
   const displayName = player.nameNominative ?? player.firstName ?? "мандрівнику";
-  const yearLine = renderCurrentWorldYearLine();
+  const yearLine = await currentWorldYearLine();
   const currentLocation = player.currentLocationId
     ? await prisma.cellLocation.findUnique({
         where: { id: player.currentLocationId },
@@ -397,7 +437,7 @@ async function finishOnboarding(ctx: any, state: OnboardingState) {
   await ctx.reply(dream.text, {
     reply_markup: await buildMainReplyKeyboardForTelegramId(Number(state.telegramId), false),
   });
-  await ctx.reply(renderOnboardingDateHint(), HTML_OPTIONS);
+  await ctx.reply(renderOnboardingDateHint(await currentWorldYearLine()), HTML_OPTIONS);
 
   const view = await renderLocationBrief(dream.locationId, player.id);
   await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
@@ -594,6 +634,24 @@ export function registerStartHandlers(bot: Bot) {
 
     onboarding.set(key, { ...state, step: "name" });
     await ctx.reply(await customNamePromptText({ ...state, telegramId: key }), HTML_OPTIONS);
+  });
+
+  bot.callbackQuery(/^onboarding:preparedPage:(\d+)$/, async (ctx) => {
+    if (await isStaleOnboardingCallback(ctx)) return;
+    const key = String(ctx.from.id);
+    const state = onboarding.get(key);
+    await ctx.answerCallbackQuery();
+
+    if (!state) {
+      await ctx.reply("Не бачу, для кого гортати імена. Напишіть /start, щоб почати шлях знову.");
+      return;
+    }
+
+    await showPreparedNameChoices(ctx, state.pronoun, Number(ctx.match[1]), true);
+  });
+
+  bot.callbackQuery("onboarding:preparedPageInfo", async (ctx) => {
+    await ctx.answerCallbackQuery({ text: "Це поточна сторінка списку." });
   });
 
   bot.callbackQuery(/^onboarding:cases:(confirm|restart|edit:([a-z]+))$/, async (ctx) => {

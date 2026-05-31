@@ -10,13 +10,14 @@ const {
   worldDaypartForHour,
   worldTimeSnapshotFromAbsoluteMinute,
 } = require("../../src/data/worldClock");
-const { renderCurrentWorldTime } = require("../../src/services/calendar");
+const { renderCurrentWorldTime, renderWorldYearLine } = require("../../src/services/calendar");
 const { lightSnapshotFromWorldTime } = require("../../src/services/lightSnapshot");
 const {
   renderCurrentWeather,
   renderWeatherLine,
   weatherLightModifier,
 } = require("../../src/services/weather");
+const { daypartFromNoticeDescription, worldDaypartNoticeText } = require("../../src/services/worldDaypartNotices");
 
 assert.equal(REAL_MS_PER_GAME_HOUR, 120_000);
 assert.equal(REAL_MS_PER_GAME_MINUTE, 2_000);
@@ -81,5 +82,17 @@ const localLight = lightSnapshotFromWorldTime(moonlessStormNight, { hasLocalLigh
 assert.equal(darkLight.level, "dark");
 assert.ok(fullLight.score > darkLight.score);
 assert.ok(localLight.score >= 78);
+
+assert.ok(renderWorldYearLine(start.year).includes("587"));
+const nextYear = worldTimeSnapshotFromAbsoluteMinute(START_WORLD_ABSOLUTE_MINUTE + 364 * 24 * 60);
+assert.equal(nextYear.year, 588);
+assert.ok(renderWorldYearLine(nextYear.year).includes("588"));
+assert.ok(!renderWorldYearLine(nextYear.year).includes("587"));
+
+assert.equal(daypartFromNoticeDescription("daypart=dusk; absoluteMinute=185400; clock=18:00"), "dusk");
+assert.equal(daypartFromNoticeDescription("clock=18:00"), null);
+assert.ok(worldDaypartNoticeText("dawn").includes("Настав світанок"));
+assert.ok(worldDaypartNoticeText("dusk").includes("темнішає"));
+assert.ok(worldDaypartNoticeText("night").includes("Настала ніч"));
 
 console.log("World time helpers OK");

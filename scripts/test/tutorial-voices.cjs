@@ -2,6 +2,15 @@ const assert = require("node:assert/strict");
 
 require("ts-node/register");
 
+const {
+  TUTORIAL_DEEP_REST_LOCATION_KEY,
+  TUTORIAL_END_CONFIRMATION_TEXT,
+  TUTORIAL_HUB_LOCATION_KEY,
+  TUTORIAL_REST_ENTRY_STAMINA_TEXT,
+  TUTORIAL_REST_LOCATION_KEY,
+  TUTORIAL_REST_RETURN_FROM_HEAT_TEXT,
+  tutorialRestEntryStaminaMode,
+} = require("../../src/services/tutorial");
 const { PACE_COMMENT_PAIRS, tutorialPaceCooldownMs } = require("../../src/services/tutorialVoices");
 
 assert.equal(tutorialPaceCooldownMs(0), 120_000);
@@ -31,5 +40,15 @@ assert.equal(monumentLine.dreamText("нього", "йому", "він"), "Пам
 assert.equal(monumentLine.dreamText("неї", "їй", "вона"), "Пам’ятники не питають дороги. А вона ще слухає місцину, і це не зайве.");
 assert.equal(monumentLine.dreamText("них", "їм", "вони"), "Пам’ятники не питають дороги. А вони ще слухають місцину, і це не зайве.");
 assert.equal(monumentLine.dreamText("неї", "їй", "вона").includes("А неї"), false);
+
+assert.match(TUTORIAL_END_CONFIRMATION_TEXT, /<blockquote>Закінчити навчання зараз/);
+assert.match(TUTORIAL_END_CONFIRMATION_TEXT, /Дрімота позіхає збоку:/);
+assert.equal(TUTORIAL_END_CONFIRMATION_TEXT.includes("«"), false);
+
+assert.equal(tutorialRestEntryStaminaMode(TUTORIAL_HUB_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, "WEST"), "drain");
+assert.equal(tutorialRestEntryStaminaMode(TUTORIAL_DEEP_REST_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, "EAST"), "protected");
+assert.equal(tutorialRestEntryStaminaMode(TUTORIAL_DEEP_REST_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, "WEST"), null);
+assert.ok(TUTORIAL_REST_ENTRY_STAMINA_TEXT.includes("Снаги лишається приблизно на третину"));
+assert.ok(TUTORIAL_REST_RETURN_FROM_HEAT_TEXT.includes("зберігаєте здобуту снагу"));
 
 console.log("Tutorial voice pacing OK");

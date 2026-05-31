@@ -17,6 +17,8 @@ export type PreparedCharacterName = {
 
 export type NameChoiceTextIntent = "prepared" | "random" | "customPrompt" | "customName";
 
+export const PREPARED_NAME_PAGE_SIZE = 6;
+
 const FORBIDDEN_WORLD_NAMES = new Map<string, string>([
   ["вовк", "це радше назва істоти, ніж особове ім'я"],
   ["вовчиця", "це радше назва істоти, ніж особове ім'я"],
@@ -114,9 +116,40 @@ export function randomAvailablePreparedName(
   return names[Math.floor(Math.random() * names.length)];
 }
 
+export function paginatePreparedNames<T>(
+  names: readonly T[],
+  requestedPage: number,
+  pageSize = PREPARED_NAME_PAGE_SIZE
+) {
+  const safePageSize = Math.max(1, Math.floor(pageSize));
+  const total = names.length;
+  const pageCount = Math.max(1, Math.ceil(total / safePageSize));
+  const rawPage = Number.isFinite(requestedPage) ? Math.trunc(requestedPage) : 0;
+  const page = Math.min(Math.max(rawPage, 0), pageCount - 1);
+  const startIndex = page * safePageSize;
+  const endIndex = Math.min(startIndex + safePageSize, total);
+
+  return {
+    items: names.slice(startIndex, endIndex),
+    page,
+    pageCount,
+    pageSize: safePageSize,
+    total,
+    startIndex,
+    endIndex,
+    hasPrevious: page > 0,
+    hasNext: page < pageCount - 1,
+  };
+}
+
 export function preparedNameSummary(name: PreparedCharacterName) {
   const note = name.note ? `; ${name.note}` : "";
   return `${name.forms.nominative} — ${name.origin}; ${name.rarity}; відмінки збережені${note}`;
+}
+
+export function preparedNameCompactSummary(name: PreparedCharacterName) {
+  const note = name.note ? `; ${name.note}` : "";
+  return `${name.forms.nominative} — ${name.origin}; ${name.rarity}${note}`;
 }
 
 export function customNameWarningText(options: { examples?: string[] } = {}) {

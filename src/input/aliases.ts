@@ -71,6 +71,45 @@ export type AliasSuggestion = {
 
 const APOSTROPHES = /[ʼ’`´]/g;
 const TRAILING_PUNCTUATION = /[!?.,;:]+$/g;
+const EN_TO_UK_KEYBOARD: Record<string, string> = {
+  q: "й",
+  w: "ц",
+  e: "у",
+  r: "к",
+  t: "е",
+  y: "н",
+  u: "г",
+  i: "ш",
+  o: "щ",
+  p: "з",
+  "[": "х",
+  "]": "ї",
+  a: "ф",
+  s: "і",
+  d: "в",
+  f: "а",
+  g: "п",
+  h: "р",
+  j: "о",
+  k: "л",
+  l: "д",
+  ";": "ж",
+  "'": "є",
+  z: "я",
+  x: "ч",
+  c: "с",
+  v: "м",
+  b: "и",
+  n: "т",
+  m: "ь",
+  ",": "б",
+  ".": "ю",
+  "/": ".",
+  "`": "'",
+};
+const UK_TO_EN_KEYBOARD: Record<string, string> = Object.fromEntries(
+  Object.entries(EN_TO_UK_KEYBOARD).map(([english, ukrainian]) => [ukrainian, english])
+);
 
 const DIRECTION_ALIASES: Record<string, Direction> = {
   north: "NORTH",
@@ -538,6 +577,28 @@ function withoutLeadingSlash(text: string) {
   return text.startsWith("/") ? text.slice(1) : text;
 }
 
+function switchKeyboardLayout(raw: string, map: Record<string, string>) {
+  let changed = false;
+  const converted = [...raw].map((char) => {
+    const lower = char.toLocaleLowerCase("uk-UA");
+    const replacement = map[lower];
+    if (!replacement) return char;
+    changed = true;
+    return char === lower ? replacement : replacement.toLocaleUpperCase("uk-UA");
+  }).join("");
+
+  return changed ? converted : null;
+}
+
+export function alternateKeyboardLayoutInputs(raw: string) {
+  const variants = [
+    switchKeyboardLayout(raw, EN_TO_UK_KEYBOARD),
+    switchKeyboardLayout(raw, UK_TO_EN_KEYBOARD),
+  ].filter((value): value is string => Boolean(value));
+
+  return [...new Set(variants)].filter((value) => normalizeInput(value) !== normalizeInput(raw));
+}
+
 function compactKey(text: string) {
   return text.replace(/[\s_-]+/g, "");
 }
@@ -669,6 +730,32 @@ export function suggestAliasEntries(raw: string, limit = 4): AliasSuggestion[] {
     .sort((a, b) => a.score - b.score || a.alias.length - b.alias.length || a.alias.localeCompare(b.alias, "uk"))
     .slice(0, limit)
     .map((item) => ({ alias: item.alias, command: slashCommandForAlias(item.alias) }));
+}
+
+export function suggestKeyboardLayoutAliasEntries(raw: string, limit = 4): AliasSuggestion[] {
+  const suggestions: AliasSuggestion[] = [];
+  const seen = new Set<string>();
+
+  for (const candidate of alternateKeyboardLayoutInputs(raw)) {
+    const normalized = withoutLeadingSlash(normalizeInput(candidate));
+    if (!normalized) continue;
+    const parsed = parseAlias(candidate);
+    if (parsed && !seen.has(normalized)) {
+      seen.add(normalized);
+      suggestions.push({ alias: normalized, command: slashCommandForAlias(normalized) });
+      if (suggestions.length >= limit) return suggestions;
+    }
+
+    for (const suggestion of suggestAliasEntries(candidate, limit)) {
+      const key = `${suggestion.alias}\u0000${suggestion.command ?? ""}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      suggestions.push(suggestion);
+      if (suggestions.length >= limit) return suggestions;
+    }
+  }
+
+  return suggestions;
 }
 
 export function suggestAliasInputs(raw: string, limit = 4) {

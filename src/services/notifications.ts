@@ -105,6 +105,25 @@ export async function notifyRegion(bot: Bot, regionId: number, text: string) {
   }
 }
 
+export async function notifyAllCurrentPlayers(bot: Bot, text: string, options: { parseMode?: "HTML" } = {}) {
+  const players = await prisma.player.findMany({
+    where: { currentLocationId: { not: null } },
+    select: { telegramId: true },
+  });
+
+  for (const player of players) {
+    try {
+      if (!(await canSendProactiveToTelegramId(player.telegramId))) continue;
+      await bot.api.sendMessage(player.telegramId, text, {
+        parse_mode: options.parseMode,
+        reply_markup: await mainKeyboardForPlayer(player.telegramId),
+      });
+    } catch (error) {
+      console.warn("Failed to notify current player:", error);
+    }
+  }
+}
+
 export async function notifyRegionExcept(bot: Bot, regionId: number, exceptPlayerIds: number[], text: string, options: { parseMode?: "HTML" } = {}) {
   const players = await prisma.player.findMany({
     where: { currentLocation: { regionId }, id: { notIn: exceptPlayerIds } },

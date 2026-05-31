@@ -2,7 +2,15 @@ const assert = require("node:assert/strict");
 
 require("ts-node/register");
 
-const { formatAliasSuggestion, normalizeInput, parseAlias, suggestAliasEntries, suggestAliasInputs } = require("../../src/input/aliases");
+const {
+  alternateKeyboardLayoutInputs,
+  formatAliasSuggestion,
+  normalizeInput,
+  parseAlias,
+  suggestAliasEntries,
+  suggestAliasInputs,
+  suggestKeyboardLayoutAliasEntries,
+} = require("../../src/input/aliases");
 const { inventoryResourceKeyFromText } = require("../../src/services/inventoryUse");
 const { isDreamGateOpeningPhrase, localGateOpenAttemptText } = require("../../src/services/tutorial");
 const { normalizeCreatureActionText } = require("../../src/utils/creatureActionText");
@@ -260,5 +268,8 @@ assert.ok(suggestAliasEntries("потрус").map(formatAliasSuggestion).include
 assert.ok(suggestAliasInputs("усхмі").includes("усміх"), "Expected social suggestions to include усміх for a mistyped smile");
 assert.ok(suggestAliasInputs("посмі").includes("посміх"), "Expected social suggestions to include посміх");
 assert.ok(suggestAliasEntries("усхмі").map(formatAliasSuggestion).includes("усміх (/smile)"), "Expected formatted social suggestions to include slash command for smile");
+assert.ok(alternateKeyboardLayoutInputs("[nj").includes("хто"), "Expected English-layout typo [nj to convert to хто");
+assert.ok(suggestKeyboardLayoutAliasEntries("[nj").map(formatAliasSuggestion).includes("хто (/who)"), "Expected keyboard-layout suggestions to include /who");
+assert.ok(suggestKeyboardLayoutAliasEntries("htxb").map(formatAliasSuggestion).includes("речі (/inventory)"), "Expected keyboard-layout suggestions to include inventory");
 
 console.log("Input aliases OK");
