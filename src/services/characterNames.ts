@@ -143,13 +143,22 @@ export function paginatePreparedNames<T>(
 }
 
 export function preparedNameSummary(name: PreparedCharacterName) {
-  const note = name.note ? `; ${name.note}` : "";
-  return `${name.forms.nominative} — ${name.origin}; ${name.rarity}; відмінки збережені${note}`;
+  const note = preparedNamePublicNote(name.note);
+  const noteText = note ? `; ${note}` : "";
+  return `${name.forms.nominative} — ${name.origin}; ${name.rarity}; відмінки збережені${noteText}`;
 }
 
 export function preparedNameCompactSummary(name: PreparedCharacterName) {
-  const note = name.note ? `; ${name.note}` : "";
-  return `${name.forms.nominative} — ${name.origin}; ${name.rarity}${note}`;
+  const note = preparedNamePublicNote(name.note);
+  const noteText = note ? `; ${note}` : "";
+  return `${name.forms.nominative} — ${name.origin}; ${name.rarity}${noteText}`;
+}
+
+function preparedNamePublicNote(note?: string) {
+  if (!note) return "";
+  const normalized = note.trim().toLowerCase();
+  if (normalized === "plural form for вони") return "форма для «вони»";
+  return note.trim();
 }
 
 export function customNameWarningText(options: { examples?: string[] } = {}) {

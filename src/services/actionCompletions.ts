@@ -37,7 +37,7 @@ import { chance, pick, shuffle } from "../utils/random";
 import { canSendProactiveToPlayerId } from "./sessionPresence";
 import { cookRawMeat, freshenCorpseForMeat } from "./meat";
 import { rememberPlayerReplyTarget } from "./replyTargets";
-import { hunterClaimedCorpseAction, hunterConversationReplyLine, hunterReactionDurationMs, isHunterCreature } from "./npcHunter";
+import { hunterClaimedCorpseAction, hunterConversationReplyLine, hunterReactionDurationMs, hunterSocialReactionSignal, isHunterCreature } from "./npcHunter";
 import { predatorClaimedCorpseAction, predatorClaimedCorpseFoodValue, predatorClaimedCorpseOwnerId } from "./predatorFeeding";
 import { ATTACK_OBSERVATION_GROWTH_MESSAGE, ATTACK_PRACTICE_GROWTH_MESSAGE, isAttackPracticeMilestone, recordAttackKillSource, recordAttackObservation } from "./attackLearning";
 import { GATHERING_OBSERVATION_GROWTH_MESSAGE, GATHERING_PRACTICE_GROWTH_MESSAGE, isGatheringPracticeMilestone, recordGatheringObservation, recordGatheringSource } from "./gatheringLearning";
@@ -841,6 +841,7 @@ async function completeGreet(bot: Bot, action: WorldAction) {
   await setActionStatus(action, "DONE");
   await logEvent("GREET", `${actorForms.nominative} ${verb} ${target.forms.dative}`, greeting, player.currentLocationId);
   if (chatId) await bot.api.sendMessage(chatId, `Ви сказали ${escapeHtml(target.forms.dative)}:\n${quoteBlock(greeting)}`, { parse_mode: "HTML" });
+  await queueHunterGreetingReaction(player, target, action.id);
 }
 
 async function completeCreatureSocialReaction(bot: Bot, action: WorldAction, payload: SocialPayload) {
@@ -852,6 +853,35 @@ async function completeCreatureSocialReaction(bot: Bot, action: WorldAction, pay
   const { performCreatureSocialSignal } = await import("./socialSignals");
   await performCreatureSocialSignal(bot, creature, target, payload.socialId);
   await setActionStatus(action, "DONE");
+}
+
+async function queueHunterGreetingReaction(player: any, target: ResolvedTarget, actionId: number) {
+  if (target.kind !== "creature" || target.isAnimal || target.isCorpse || !player.currentLocationId) return;
+  const reaction = hunterSocialReactionSignal("greet");
+  if (!reaction) return;
+
+  const hunter = await prisma.creature.findFirst({
+    where: {
+      id: target.id,
+      locationId: player.currentLocationId,
+      isAlive: true,
+      isGone: false,
+      isHidden: false,
+    },
+    include: { species: true },
+  });
+  if (!hunter || !isHunterCreature(hunter)) return;
+
+  try {
+    await enqueueCreatureAction({
+      creatureId: hunter.id,
+      type: "GREET",
+      payload: { targetType: "player", targetId: player.id, socialId: reaction },
+      durationMs: hunterReactionDurationMs("GREET", hunter.stamina),
+    });
+  } catch (error) {
+    await logEvent("ERROR", "Hunter greeting reaction failed", `action=${actionId}; hunter=${hunter.id}; ${String(error)}`, player.currentLocationId);
+  }
 }
 
 async function completeFreshen(bot: Bot, action: WorldAction) {

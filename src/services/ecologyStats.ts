@@ -121,6 +121,7 @@ export async function getEcologyStats() {
     topPlayers,
     topNpcs,
     npcKillStats,
+    npcGreetingStats,
   ] = await Promise.all([
     prisma.creatureSpecies.findMany({ where: { kind: "ANIMAL" }, orderBy: { key: "asc" } }),
     prisma.creature.groupBy({
@@ -207,12 +208,27 @@ export async function getEcologyStats() {
       },
       select: { id: true, kills: true },
     }),
+    prisma.worldAction.groupBy({
+      by: ["creatureId"],
+      where: {
+        actorType: "CREATURE",
+        type: "GREET",
+        status: "DONE",
+        creatureId: { not: null },
+      },
+      _count: { _all: true },
+    }),
   ]);
 
   const resourceTypes = await prisma.resourceType.findMany({ orderBy: { key: "asc" } });
   const resourcesById = new Map(resourceTypes.map((item) => [item.id, item]));
   const npcCreatureIdsWithKills = new Set(npcKillStats.map((creature) => creature.id));
   const totalNpcCharacterKills = npcKillStats.reduce((sum, creature) => sum + creature.kills, 0);
+  const npcGreetingsByCreatureId = new Map(
+    npcGreetingStats
+      .filter((group) => group.creatureId !== null)
+      .map((group) => [group.creatureId!, group._count._all]),
+  );
 
   const speciesRows = species.map((item) => ({
     key: item.key,
@@ -328,7 +344,7 @@ export async function getEcologyStats() {
     locationName: creature.location.name,
     animalsKilled: creature.kills,
     successfulGathers: creature.successfulGathers,
-    greetings: 0,
+    greetings: npcGreetingsByCreatureId.get(creature.id) ?? 0,
     says: creature.says,
     steps: creature.steps,
   }));

@@ -37,6 +37,7 @@ const TELEGRAM_TEXT_MAX_CHARS = 3900;
 const CHAT_LOG_TEXT_MAX_CHARS = 3400;
 const CHAT_LOG_ENTRY_MAX_CHARS = 1100;
 const CHAT_LOG_PAGE_SIZE = 12;
+const LOCATION_ALL_FIRST_REGION_KEYS = ["dream_tutorial"];
 const ALL_CREATURE_PAGE_SIZE = 20;
 const WHO_PAGE_SIZE = 20;
 const ADD_CREATURE_HELP_TEXT_COMMAND = slashlessCommandPattern(["addCreatureHelp", "addcreaturehelp"]);
@@ -1004,11 +1005,24 @@ async function buildLocationAllPage(requestedPage: number) {
         y: true,
         z: true,
         dangerLevel: true,
-        region: { select: { name: true } },
+        region: { select: { key: true, name: true } },
       },
       orderBy: [{ z: "asc" }, { y: "desc" }, { x: "asc" }],
     });
-    const lines = locations.map((l) => `${l.key} — ${l.name} (${l.x},${l.y},${l.z}); danger=${l.dangerLevel}; region=${l.region.name}`);
+    const orderedLocations = [...locations].sort((a, b) => {
+      const regionRankA = LOCATION_ALL_FIRST_REGION_KEYS.indexOf(a.region.key);
+      const regionRankB = LOCATION_ALL_FIRST_REGION_KEYS.indexOf(b.region.key);
+      const normalizedRegionRankA = regionRankA === -1 ? LOCATION_ALL_FIRST_REGION_KEYS.length : regionRankA;
+      const normalizedRegionRankB = regionRankB === -1 ? LOCATION_ALL_FIRST_REGION_KEYS.length : regionRankB;
+      return normalizedRegionRankA - normalizedRegionRankB
+        || a.region.name.localeCompare(b.region.name, "uk")
+        || a.z - b.z
+        || b.y - a.y
+        || a.x - b.x
+        || a.name.localeCompare(b.name, "uk")
+        || a.key.localeCompare(b.key);
+    });
+    const lines = orderedLocations.map((l) => `${l.key} — ${l.name} (${l.x},${l.y},${l.z}); danger=${l.dangerLevel}; region=${l.region.name}`);
     const pages = splitLinesIntoPages(lines.length ? lines : ["немає"], LOCATION_PAGE_MAX_CHARS);
     const page = Math.max(0, Math.min(requestedPage, pages.length - 1));
     logStatusPerf("buildLocationAllPage", startedAt, `ok=1; locations=${locations.length}; pages=${pages.length}`);
