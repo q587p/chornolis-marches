@@ -1,23 +1,18 @@
-import type { Bot, Context } from "grammy";
+import type { Bot } from "grammy";
 import { config } from "../config";
 import { formatHeraldNewsMessage, formatHeraldNewsPreview } from "./format";
-import { isHeraldAdminId } from "./admin";
+import { requireHeraldAdmin } from "./admin";
 import { readLatestNewsEntry } from "./newsMarkdown";
 import {
   findExistingPublicationByHash,
   markPublicationFailed,
   markPublicationPublished,
+  publicationErrorMessage,
   queueHeraldPublication,
 } from "./publications";
 
 function channelIdFromConfig(value: string) {
   return /^-?\d+$/.test(value) ? Number(value) : value;
-}
-
-async function requireHeraldAdmin(ctx: Context, heraldAdminIds: ReadonlySet<string>) {
-  if (isHeraldAdminId(ctx.from?.id, heraldAdminIds)) return true;
-  await ctx.reply("Канцелярія мовчить перед незнайомими печатками.");
-  return false;
 }
 
 function publicationStatusText(publication: { id: number; publishedAt: Date | null; attempts: number; error: string | null }) {
@@ -92,8 +87,8 @@ export function registerHeraldNewsCommands(bot: Bot, heraldAdminIds: ReadonlySet
       const published = await markPublicationPublished(result.publication.id, sent.message_id);
       await ctx.reply(`Канцелярія передала останній запис до каналу. Номер у книзі: ${published.id}.`);
     } catch (error) {
-      console.warn("Herald news post failed:", error);
-      await markPublicationFailed(result.publication.id, error instanceof Error ? error.message : String(error));
+      console.warn("Herald news post failed:", publicationErrorMessage(error));
+      await markPublicationFailed(result.publication.id, error);
       await ctx.reply("Канцелярія не змогла передати запис до каналу.");
     }
   });

@@ -10,12 +10,16 @@ function truncateForTelegram(text: string, maxLength = TELEGRAM_MESSAGE_LIMIT) {
 
 export function formatHeraldNewsMessage(entry: HeraldNewsEntry) {
   const body = entry.body || entry.raw.replace(/^##\s+.*(?:\n|$)/, "").trim();
+  return formatHeraldPublicationMessage({ title: entry.title, body });
+}
+
+export function formatHeraldPublicationMessage(publication: { title: string; body: string }) {
   return truncateForTelegram([
     "📜 Канцелярія Межового Знаку",
     "",
-    entry.title,
+    publication.title,
     "",
-    body || "Запис поки порожній.",
+    publication.body || "Запис поки порожній.",
   ].join("\n"));
 }
 

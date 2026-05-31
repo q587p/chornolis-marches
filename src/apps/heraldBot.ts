@@ -2,6 +2,7 @@ import { Bot } from "grammy";
 import { config, requireConfigValue } from "../config";
 import { parseHeraldAdminIds, isHeraldAdminId } from "../herald/admin";
 import { registerHeraldNewsCommands } from "../herald/newsCommands";
+import { registerHeraldPublisherCommands, startHeraldPublisherLoop } from "../herald/publisher";
 import { startHeraldHealthServer } from "../server/heraldHealthServer";
 
 const bot = new Bot(requireConfigValue(config.heraldBotToken, "HERALD_BOT_TOKEN"));
@@ -16,12 +17,14 @@ bot.command("ping", async (ctx) => {
 });
 
 registerHeraldNewsCommands(bot, heraldAdminIds);
+registerHeraldPublisherCommands(bot, heraldAdminIds);
 
 bot.catch((error) => {
   console.error("Herald bot error:", error);
 });
 
 startHeraldHealthServer();
+startHeraldPublisherLoop(bot);
 bot.start().catch((error) => {
   console.error("Herald bot polling failed:", error);
 });

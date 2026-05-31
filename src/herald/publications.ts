@@ -15,6 +15,14 @@ function isUniqueConstraintError(error: unknown) {
   return typeof error === "object" && error !== null && "code" in error && (error as { code?: string }).code === "P2002";
 }
 
+export function publicationErrorMessage(error: unknown) {
+  const raw = error instanceof Error ? error.message : String(error);
+  return raw
+    .replace(/\b\d+:[A-Za-z0-9_-]{20,}\b/g, "[redacted-token]")
+    .replace(/(bot|token|secret|password|authorization)=([^&\s]+)/gi, "$1=[redacted]")
+    .slice(0, 1000);
+}
+
 export async function findExistingPublicationByHash(hash: string) {
   return prisma.heraldPublication.findUnique({ where: { contentHash: hash } });
 }
@@ -59,12 +67,12 @@ export async function markPublicationPublished(id: number, telegramMessageId?: n
   });
 }
 
-export async function markPublicationFailed(id: number, error: string) {
+export async function markPublicationFailed(id: number, error: unknown) {
   return prisma.heraldPublication.update({
     where: { id },
     data: {
       attempts: { increment: 1 },
-      error: error.slice(0, 1000),
+      error: publicationErrorMessage(error),
     },
   });
 }
