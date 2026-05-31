@@ -31,18 +31,16 @@ See also:
 Implement `0.14.x` in small slices:
 
 1. WORLD-001-A/B/C/D: internal world-clock model, persistent state, heartbeat advancement and `/time` reading stored/derived Chornolis world state. The `0.14.1` slice covers this foundation and keeps elapsed real milliseconds only as a rate; it must not bind Chornolis day/night to real-world time of day.
-2. After `0.14.1`, keep the next slice small: do not jump straight to full darkness/firewood/sleep behavior.
-3. WORLD-001-E: weather MVP state, `/weather` alias/display and non-spammy world event when weather changes.
-4. WORLD-001-F: shared light snapshot helper combining daypart, moon illumination, weather and active local light sources.
-5. WORLD-001-G: time/weather debug and scribe/admin safety for testing daypart, moon and weather state.
-6. VIS-001-A: shared visibility service skeleton consumes the light snapshot helper.
-7. VIS-001-B/C/D/E: darkness affects location detail, nearby beings, tracks and ground objects.
-8. VIS-001-F: darkness copy audit, so hidden/reduced details sound atmospheric rather than technical.
-9. FIRE-001-A/C and FIRE-001-D: active light connects to visibility; carried, dropped and NPC-held light sources are covered by a matrix test.
-10. HMYZ-001-A/B/C/D: audit, seed, pickup and add-to-fire polish for хмиз/firewood.
-11. MAP-002-A/B/C: first biome-aware foraging table and text variants.
-12. ONB-004: first-night guidance once darkness is visible to beginners.
-13. SLEEP-001 and SLEEP-002: lying posture and ordinary sleep only after time/light/visibility foundations are stable.
+2. WORLD-001-E/F: `0.14.3` adds the weather MVP display/state and the shared light snapshot helper. Keep this as a foundation slice, not a full darkness behavior change.
+3. WORLD-001-G: time/weather debug and scribe/admin safety for testing daypart, moon and weather state.
+4. VIS-001-A: shared visibility service skeleton consumes the light snapshot helper.
+5. VIS-001-B/C/D/E: darkness affects location detail, nearby beings, tracks and ground objects.
+6. VIS-001-F: darkness copy audit, so hidden/reduced details sound atmospheric rather than technical.
+7. FIRE-001-A/C and FIRE-001-D: active light connects to visibility; carried, dropped and NPC-held light sources are covered by a matrix test.
+8. HMYZ-001-A/B/C/D: audit, seed, pickup and add-to-fire polish for хмиз/firewood.
+9. MAP-002-A/B/C: first biome-aware foraging table and text variants.
+10. ONB-004: first-night guidance once darkness is visible to beginners.
+11. SLEEP-001 and SLEEP-002: lying posture and ordinary sleep only after time/light/visibility foundations are stable.
 
 Observation learning remains the `0.15` line. Darkness, distance and light should affect learning later, but the visibility foundation must land first.
 

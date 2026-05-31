@@ -26,6 +26,7 @@ export type ParsedAliasCommand =
   | { kind: "chat"; mode?: ChatAliasMode; window?: string }
   | { kind: "all"; showDead?: boolean }
   | { kind: "time" }
+  | { kind: "weather" }
   | { kind: "menu" }
   | { kind: "session-presence"; mode: SessionPresenceAliasMode }
   | { kind: "beginner-return" }
@@ -238,6 +239,10 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "час": { kind: "time" },
   "котра година": { kind: "time" },
   "який час": { kind: "time" },
+  weather: { kind: "weather" },
+  "погода": { kind: "weather" },
+  "яка погода": { kind: "weather" },
+  "що з погодою": { kind: "weather" },
 
   menu: { kind: "menu" },
   "меню": { kind: "menu" },
@@ -600,6 +605,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "who") return "/who";
   if (parsed.kind === "all") return "/all";
   if (parsed.kind === "time") return "/time";
+  if (parsed.kind === "weather") return "/weather";
   if (parsed.kind === "menu") return "/menu";
   if (parsed.kind === "session-presence") return parsed.mode === "afk" ? "/afk" : "/end_session";
   if (parsed.kind === "beginner-return") return "/respawn";

@@ -5,10 +5,9 @@ import {
   worldTimeSnapshotFromAbsoluteMinute,
   type WorldTimeSnapshot,
 } from "../data/worldClock";
+import { advanceWeatherState, INITIAL_WEATHER_INTENSITY, INITIAL_WEATHER_KEY } from "./weather";
 
 const WORLD_STATE_ID = 1;
-export const INITIAL_WEATHER_KEY = "cloudy";
-export const INITIAL_WEATHER_INTENSITY = 35;
 
 export async function ensureWorldState(db: PrismaDb = prisma, now = new Date()) {
   return db.worldState.upsert({
@@ -50,7 +49,7 @@ export async function advanceWorldClock(db: PrismaDb = prisma, now = new Date())
   const advanced = advanceWorldClockFields(state, now);
 
   if (advanced.advancedMinutes <= 0) {
-    return { state, advancedMinutes: 0 };
+    return { state: await advanceWeatherState(state, db), advancedMinutes: 0 };
   }
 
   const updated = await db.worldState.update({
@@ -61,7 +60,7 @@ export async function advanceWorldClock(db: PrismaDb = prisma, now = new Date())
     },
   });
 
-  return { state: updated, advancedMinutes: advanced.advancedMinutes };
+  return { state: await advanceWeatherState(updated, db), advancedMinutes: advanced.advancedMinutes };
 }
 
 export async function getCurrentWorldTimeSnapshot(db: PrismaDb = prisma, now = new Date()): Promise<WorldTimeSnapshot> {

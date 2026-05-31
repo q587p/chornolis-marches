@@ -9,6 +9,29 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.14.3 - Weather MVP and light snapshot foundation - 12026-05-31
+
+### Added
+
+- Added a small internal weather service backed by the existing `WorldState` weather fields, including weather key, intensity, next-change world minute and non-proactive `WorldEvent` logs for weather changes.
+- Added `/weather` plus `weather`/`погода` text aliases for the current Chornolis weather.
+- Added a shared light snapshot helper that combines daypart, moon illumination, weather modifiers and optional local active light.
+- Added focused world-time tests for weather text, weather light modifiers and light snapshot behavior.
+
+### Changed
+
+- `/time` now includes compact weather and light summary lines from the stored/derived internal world state.
+- `/help`, `/commands` and input-alias docs now include `/weather`.
+- Updated planning/system docs so `WORLD-001-E/F` reflect the `0.14.3` implementation slice and keep visibility reduction/darkness behavior deferred.
+
+### Validation
+
+- Ran `node scripts/test/world-time.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/slashless-command-coverage.cjs`.
+
+---
+
 ## 0.14.1 - Stored internal world clock - 12026-05-31
 
 ### Added

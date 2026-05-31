@@ -69,6 +69,7 @@ Primary outcomes:
 - `/time` reads actual internal world state: year, lunar circle, day, clock, daypart, moon phase and weather summary.
 - Moon illumination affects the first light calculations at night.
 - Weather exists as a small persistent state and can reduce/shape visibility later.
+- A shared light snapshot helper combines daypart, moon illumination, weather and active local light before darkness changes ordinary `/look` output.
 - At night, location descriptions, nearby beings, tracks and ground objects are hidden or reduced without light.
 - Campfires and carried torches reveal what darkness hides.
 - Хмиз can be found, picked up and added to a campfire.

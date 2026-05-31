@@ -2691,7 +2691,7 @@
   {
     "id": "WORLD-001-E",
     "title": "Weather MVP state and display",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "world_time",
     "priority": "high",
@@ -2709,7 +2709,7 @@
   {
     "id": "WORLD-001-F",
     "title": "Light snapshot helper",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "visibility",
     "priority": "high",

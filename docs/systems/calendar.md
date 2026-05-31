@@ -52,6 +52,7 @@ The year name should be usable in:
 
 - `/start` and onboarding text;
 - `/time`;
+- `/weather`;
 - news;
 - rumors;
 - NPC speech;

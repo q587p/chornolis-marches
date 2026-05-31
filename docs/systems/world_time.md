@@ -79,10 +79,17 @@ Do not use `Date.getHours()`, server timezone, player timezone or real-world cal
 - `WorldState.absoluteMinute` stores the current internal Chornolis minute.
 - `WorldState.lastAdvancedAt` stores the real timestamp used only to calculate elapsed time since the previous advancement.
 - `worldTick()` advances the stored minute count through the shared world-time service.
-- `/time` reads the stored/derived world-clock state and shows the current year, lunar circle, day, approximate clock, daypart and moon phase.
+- `/time` reads the stored/derived world-clock state and shows the current year, lunar circle, day, approximate clock, daypart, moon phase, weather and a compact light label.
 - Seed, `/reset world` and `/reset full` return the world clock to the canonical starter timestamp.
 
-Weather, light snapshots, visibility reduction, darkness effects and ordinary sleep remain later `0.14.x` slices.
+`0.14.3` adds the first weather/light foundation:
+
+- `WorldState.weatherKey`, `weatherIntensity` and `weatherEndsAtMinute` store a tiny internal weather state.
+- Weather advances through the shared world-time service and writes non-proactive `WorldEvent` rows when it changes.
+- `/weather` shows the current Chornolis weather as a compact atmospheric readout.
+- The shared light snapshot helper combines daypart, moon illumination, weather modifiers and optional local active light into one reusable result for future visibility consumers.
+
+Visibility reduction, darkness effects and ordinary sleep remain later `0.14.x` slices.
 
 ## Out of Scope
 

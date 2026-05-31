@@ -6,7 +6,7 @@ When a player-facing button performs an in-world action, there should usually be
 
 ## Current intent
 
-- Keep canonical slash commands stable: `/look`, `/examine`, `/me`, `/inventory`, `/stat`, `/chat`, `/who`, `/time`, `/news`, `/chronicles`, `/help`, `/menu`, `/gather`, `/rest`, `/queue`, `/say`, movement commands and admin/debug commands.
+- Keep canonical slash commands stable: `/look`, `/examine`, `/me`, `/inventory`, `/stat`, `/chat`, `/who`, `/time`, `/weather`, `/news`, `/chronicles`, `/help`, `/menu`, `/gather`, `/rest`, `/queue`, `/say`, movement commands and admin/debug commands.
 - Add Ukrainian aliases as a convenience layer over the same handlers where possible.
 - Preserve existing callback buttons for Telegram ergonomics.
 - Reply to unknown text with a short "не зрозуміли" message, `❔ Допомога` (`/help`) / `☰ Меню` (`/menu`) hints and close alias suggestions where possible. Suggestions should include the closest clickable slash command in parentheses when there is a stable one, for example `оглянутися (/look)`, `статистика (/stat)`, `використати гриби (/use_mushrooms)` or `швидкий огляд (/glance)`.
@@ -31,6 +31,7 @@ Menu and status:
 - `репліки`, `/репліки`, `chat`, `chat all`, `chat location 1`, `chat character all` -> canonical `/chat` view.
 - `хто`, `хто активний`, `хто тут`, `хто поруч` -> canonical `/who` view.
 - `час`, `/час` -> canonical `/time` view.
+- `погода`, `/погода` -> canonical `/weather` view.
 - `новини`, `/новини` -> canonical `/news` view.
 - `хроніки`, `хроніка`, `останні події`, `події` -> canonical `/chronicles` view.
 - `допомога`, `/допомога` -> canonical `/help` view.
