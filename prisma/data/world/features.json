@@ -378,6 +378,7 @@
     "data": {
       "icon": "🪓",
       "tutorial_safety_prompt": true,
+      "tutorial_end_prompt": true,
       "tutorial_wake_prompt": true
     }
   },

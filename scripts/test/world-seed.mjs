@@ -170,6 +170,14 @@ for (const key of ["dream_tutorial_sleep_gate", "dream_tutorial_sleep_gate_retur
   assert.ok(feature.data?.aliases?.includes("брами"), `Dream gate should include genitive alias брами: ${key}`);
 }
 
+const tutorialEndFeatures = features.filter((item) => item.data?.tutorial_end_prompt === true);
+assert.equal(tutorialEndFeatures.length, 1, "Tutorial should expose exactly one end-learning button surface");
+assert.equal(
+  tutorialEndFeatures[0].locationKey,
+  "dream_tutorial_safety",
+  "Tutorial end-learning button should currently live in Затишок останнього кроку",
+);
+
 for (const creature of uniqueCreatures) {
   assertKnown(locationKeys, creature.locationKey, `Unknown locationKey for unique creature ${creature.name}`);
   for (const resource of creature.resources ?? []) {

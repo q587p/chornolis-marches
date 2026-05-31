@@ -168,6 +168,10 @@ function isTutorialObservationFeature(feature: any) {
   return featureData(feature).tutorial_observation_prompt === true;
 }
 
+function isTutorialEndFeature(feature: any) {
+  return featureData(feature).tutorial_end_prompt === true;
+}
+
 function isTutorialRestSeatFeature(feature: any) {
   return featureData(feature).tutorial_rest_seat === true;
 }
@@ -263,7 +267,7 @@ async function resolveInteractiveLocationFeature(locationId: number, query: stri
 
 function isTutorialPromptFeature(feature: any) {
   const data = featureData(feature);
-  return data.tutorial_wake_prompt === true || data.tutorial_time_prompt === true || data.tutorial_safety_prompt === true || data.tutorial_observation_prompt === true;
+  return data.tutorial_wake_prompt === true || data.tutorial_time_prompt === true || data.tutorial_safety_prompt === true || data.tutorial_observation_prompt === true || data.tutorial_end_prompt === true;
 }
 
 function featureBriefLine(feature: any) {
@@ -1039,7 +1043,7 @@ export async function renderLocationFeatureInteraction(
   if (isTutorialInsideFeature(feature)) keyboard.text("🕳️ Всередину", "move:INSIDE").row();
   if (isTutorialOutsideFeature(feature)) keyboard.text("🕳️ Назовні", "move:OUTSIDE").row();
   if (featureData(feature).tutorial_time_prompt === true) keyboard.text("🌒 Час", "time:show").row();
-  if (featureData(feature).tutorial_observation_prompt === true) keyboard.text("✅ Закінчити навчання", "tutorial:end").row();
+  if (isTutorialEndFeature(feature)) keyboard.text("✅ Закінчити навчання", "tutorial:end").row();
   if (featureData(feature).tutorial_wake_prompt === true) keyboard.text("🌅 Прокинутися", "tutorial:wake").row();
   if (isTorchSourceFeature(feature)) keyboard.text("🕯 Взяти факел", `torch:take:${feature.id}`).row();
   if (isClimbTreeFeature(feature)) keyboard.text("🌳 Залізти", "move:UP").row();
