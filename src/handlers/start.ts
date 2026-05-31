@@ -25,6 +25,9 @@ import {
   type PreparedCharacterName,
 } from "../services/characterNames";
 import { disablePlayerAuto } from "./auto";
+import { parseStartActionPayload, type StartActionPayload } from "../input/startPayloads";
+import { runExamineCurrentLocation } from "./look";
+import { showLocationForPlayer } from "./player";
 
 type NameFormPrompt = { key: keyof NameForms; question: string; button: string; prefix?: string };
 const CASE_BUTTON_LABELS: Partial<Record<keyof NameForms, string>> = {
@@ -587,12 +590,67 @@ async function handleOnboardingText(ctx: any) {
   return false;
 }
 
+type StartPayloadPlayer = {
+  id: number;
+  onboardingComplete: boolean;
+  currentLocationId: number | null;
+};
+
+async function canRunStartPayloadAction(player: StartPayloadPlayer) {
+  if (!player.onboardingComplete || !player.currentLocationId) return false;
+
+  const [tutorialCompleted, currentLocation] = await Promise.all([
+    hasCompletedTutorial(player.id),
+    prisma.cellLocation.findUnique({
+      where: { id: player.currentLocationId },
+      select: {
+        key: true,
+        z: true,
+        region: { select: { key: true } },
+      },
+    }),
+  ]);
+
+  if (!tutorialCompleted) return false;
+  return currentLocation ? !isTutorialLocation(currentLocation) : false;
+}
+
+async function runStartPayloadAction(ctx: any, action: StartActionPayload) {
+  const from = ctx.from;
+  if (!from) return false;
+
+  const player = await prisma.player.findUnique({
+    where: { telegramId: String(from.id) },
+    select: { id: true, onboardingComplete: true, currentLocationId: true },
+  });
+  if (!player || !(await canRunStartPayloadAction(player))) return false;
+
+  if (action === "look") {
+    await showLocationForPlayer(from.id, (text, options) => ctx.reply(text, options));
+    return true;
+  }
+
+  if (action === "examine") {
+    await runExamineCurrentLocation(ctx, "");
+    return true;
+  }
+
+  return false;
+}
+
+async function handleStartCommand(ctx: any) {
+  const action = parseStartActionPayload(ctx.match);
+  if (action && (await runStartPayloadAction(ctx, action))) return;
+
+  await enterWorld(ctx, false);
+}
+
 export function registerStartHandlers(bot: Bot) {
   setDefaultBotCommandsWithRetry(bot).catch((error) =>
     console.warn("Failed to set bot commands permanently:", error)
   );
 
-  bot.command("start", async (ctx) => enterWorld(ctx, false));
+  bot.command("start", async (ctx) => handleStartCommand(ctx));
   bot.hears(/^start$/i, async (ctx) => enterWorld(ctx, false));
 
   bot.callbackQuery(/^onboarding:pronoun:(HE|SHE|THEY)$/, async (ctx) => {

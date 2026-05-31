@@ -82,6 +82,17 @@ async function submitFeatureQueuedAction(
   }
 }
 
+type ExamineCurrentLocationHandler = (ctx: any, targetArg?: string) => Promise<unknown>;
+
+let registeredExamineCurrentLocation: ExamineCurrentLocationHandler | null = null;
+
+export async function runExamineCurrentLocation(ctx: any, targetArg = "") {
+  if (!registeredExamineCurrentLocation) {
+    throw new Error("Examine handlers are not registered");
+  }
+  return registeredExamineCurrentLocation(ctx, targetArg);
+}
+
 export function registerLookHandlers(bot: Bot) {
   async function examineTracks(ctx: any) {
     const from = ctx.from;
@@ -112,11 +123,11 @@ export function registerLookHandlers(bot: Bot) {
     await ctx.reply(view.text, { reply_markup: view.keyboard });
   }
 
-  async function examineCurrentLocation(ctx: any) {
+  async function examineCurrentLocation(ctx: any, targetArg?: string) {
     const from = ctx.from;
     if (!from) return;
 
-    const arg = String(ctx.message?.text ?? "").replace(/^\/examine(?:@\w+)?/i, "").trim().toLowerCase();
+    const arg = (targetArg ?? String(ctx.message?.text ?? "").replace(/^\/examine(?:@\w+)?/i, "")).trim().toLowerCase();
     if (["tracks", "track", "сліди", "слід"].includes(arg)) return examineTracks(ctx);
     if (["grass", "depleted grass", "vegetation", "трава", "траву", "винищена трава", "винищену траву", "відновлення"].includes(arg)) return examineVegetation(ctx);
 
@@ -143,9 +154,11 @@ export function registerLookHandlers(bot: Bot) {
     }
   }
 
-  bot.command("examine", examineCurrentLocation);
+  registeredExamineCurrentLocation = examineCurrentLocation;
 
-  bot.hears(["🔎 Роздивитися", "👁 Роздивитися", "Роздивитися"], examineCurrentLocation);
+  bot.command("examine", (ctx) => examineCurrentLocation(ctx));
+
+  bot.hears(["🔎 Роздивитися", "👁 Роздивитися", "Роздивитися"], (ctx) => examineCurrentLocation(ctx));
 
   bot.callbackQuery(["examine", "look"], async (ctx) => {
     const player = await getPlayerByTelegramId(ctx.from.id);

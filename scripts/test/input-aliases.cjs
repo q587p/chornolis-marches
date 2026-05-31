@@ -12,6 +12,7 @@ const {
   suggestKeyboardLayoutAliasEntries,
 } = require("../../src/input/aliases");
 const { inventoryResourceKeyFromText } = require("../../src/services/inventoryUse");
+const { parseStartActionPayload } = require("../../src/input/startPayloads");
 const { isDreamGateOpeningPhrase, localGateOpenAttemptText } = require("../../src/services/tutorial");
 const { normalizeCreatureActionText } = require("../../src/utils/creatureActionText");
 const { resourceAccusativeName } = require("../../src/utils/resourceText");
@@ -33,6 +34,12 @@ assert.equal(normalizeInput("/sleep_tutorial"), "/sleep tutorial");
 assert.equal(normalizeInput("/queue_cancel"), "/queue cancel");
 assert.equal(normalizeInput("/auto_stop"), "/auto stop");
 assert.equal(normalizeInput("з’їсти   ягоди."), "з'їсти ягоди");
+
+assert.equal(parseStartActionPayload("cmd_look"), "look");
+assert.equal(parseStartActionPayload("cmd_examine"), "examine");
+assert.equal(parseStartActionPayload("cmd look"), null);
+assert.equal(parseStartActionPayload("cmd_роздивитися"), null);
+assert.equal(parseStartActionPayload("unknown"), null);
 
 assertAlias("/look", { kind: "location" });
 assertAlias("/glance", { kind: "glance" });
