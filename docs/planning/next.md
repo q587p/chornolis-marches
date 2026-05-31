@@ -59,6 +59,11 @@ Observation learning remains the `0.15` line. Darkness, distance and light shoul
 - OMEN-001: one small living-world omen.
 - ONB-001 follow-up: tutorial hints that careful observation matters.
 
+Keep theft/hiding after the first observation MVP is stable:
+
+- THEFT-000/THEFT-001: risky theft and incident logging are recorded as a later 0.15.x social-risk slice, not an immediate 0.14 follow-up.
+- HIDE-001 and SOCIAL-003: hidden approach and theft reaction signals depend on the visibility and observation foundation, so they should not leap ahead of VIS-001/OBS-001.
+
 ## Promotion candidates to review
 
 These are still `backlog`, but recent work makes them worth reviewing before the next patch sequence.
@@ -74,6 +79,7 @@ These are still `backlog`, but recent work makes them worth reviewing before the
 - Speech and quick navigation commands: `glance`, `exits`, `enter`, `leave`, `/reply`, `whisper` and `shout` have shipped through `CMD-001`. Later work should move toward a shared command registry and per-command help without reopening this whole pack.
 - Socialization / contacts / groups: the social planning pack is now split into `SOC-001` through `SOC-007`. Keep the implementation order conservative: `Знайомства`, follow intent, `Гурт` core, then group movement and UI polish; do not pull full factions, PvP law or automatic group combat forward.
 - Hidden presence / hidden follower spirit: the planning pack is now split into `VIS-002`, `WORLD-002-hidden-spirit` and `OMEN-002`, with `docs/systems/hidden_presence.md` as the design source. Keep it as future work until the visibility and light foundations are ready; do not implement the стежник pursuit as an immediate patch.
+- Theft and hiding: the planning pack is now split into `THEFT-000`, `THEFT-001`, `HIDE-001`, `SOCIAL-003`, `THEFT-002` and `THEFT-003`, with `docs/systems/theft-and-hiding.md` as the design source. Keep it behind first observation/visibility work; it should be risky social play, not a shortcut for looting.
 - Darkness creature / small coin omen: this becomes much more attractive right after WORLD-001 because it explicitly depends on darkness, light and calm observation.
 - TECH-001: service boundary and duplication cleanup. Keep this mostly behavior-preserving, but make it visible during patch planning because `worldTick.ts`, `status.ts`, `actionCompletions.ts`, `statusServer.ts`, `locations.ts` and `aliases.ts` are now large enough to slow safe feature work.
 - WEB-002: independent status site and deploy visibility. The current game-hosted status pages can report runtime state once the app is up, but a separate out-of-band page should survive failed builds/deploys and explain how to contact someone when the game service itself is unavailable.

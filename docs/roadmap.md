@@ -98,6 +98,7 @@ Primary outcomes:
 - Darkness, distance and light affect observation learning.
 - One small living-world omen exists and is rate-limited.
 - Hidden presence remains a prepared follow-up, not an automatic part of the first omen unless the visibility and light foundations are ready.
+- Follow-up 0.15.x work may add risky theft and hiding after the first observation MVP is stable: a small `Вкрасти` action, separate success/detection checks, a preparatory `Сховатися` action, a first theft warning and scribe-visible incident statistics.
 
 See:
 
@@ -105,6 +106,9 @@ See:
 - `docs/planning/items/OBS-001-*.md`
 - `docs/planning/items/TRACK-LEARN-001-*.md`
 - `docs/planning/items/OMEN-001-*.md`
+- `docs/planning/items/THEFT-*.md`
+- `docs/planning/items/HIDE-*.md`
+- `docs/systems/theft-and-hiding.md`
 
 ## Later Phase 1 / Core Loop Expansion
 
@@ -122,6 +126,8 @@ After 0.15, review:
 - Group movement where capable members follow the leader and exhausted/wounded members can fall behind.
 - World-time automatic waking and first sleep comfort modifiers.
 - First sleeping-body / dream-presence split for tutorial and lucid dreams.
+- First risky theft and hiding slice: one small item per attempt, pair cooldown, protected tutorial/dream locations and visible consequences through social memory.
+- First scribe-facing theft statistics: total attempts, successes, observed attempts, blocked attempts and commonly stolen resources.
 
 ## Phase 2 — World Attention and Learning
 
@@ -133,6 +139,8 @@ Goal: deepen attention, apprenticeship and skill discovery.
 - Hidden skill discovery through concrete moments, not menu choices.
 - Skill-gated detail in tracks, creature inspection and local signs.
 - Hidden presence foundation: hidden beings may create private atmospheric messages without becoming visible targets.
+- Stealth, theft and vigilance can grow through use, observation and meaningful failures.
+- Hidden approach and suspicious movement can become learning sources for attentive characters.
 - Lucid dream instances can reveal ritual conditions, place-spirit moods, quest nuance and knowledge flags without becoming ordinary fast travel.
 
 ## Phase 3 — Survival and Crafting
@@ -171,6 +179,7 @@ Goal: connect survival and ecology to people, prices, routes, law and conflict.
 - Caravans and trade routes.
 - Rumors as imperfect information.
 - Social graph: acquaintances, trust, local memory and NPC relationship hooks.
+- Theft consequences deepen into local memory, trust, suspicion, restitution, warnings and settlement-specific responses.
 - Travel groups / `Гурти` for settlement errands, escorting, guiding and local duties.
 
 ## Phase 6 — Factions, PvP and Frontier Politics
