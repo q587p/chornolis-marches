@@ -136,25 +136,35 @@ const tutorialRestButtons = buildMainReplyKeyboard({
 assert.equal(tutorialRestButtons.flat().includes("❤️ добре · ⚡ повна"), true);
 
 const adminMainButtons = buildMainReplyKeyboard({ showAdminMenu: true }).keyboard.map((row) => row.map((button) => button.text));
-assert.equal(adminMainButtons.flat().includes("🛠 Адмін меню (/adminMenu)"), true);
+assert.equal(adminMainButtons.flat().includes("🛠 Адмін меню"), true);
 assert.equal(adminMainButtons.flat().includes("🧭 Допомога"), false);
 
 const adminMenuButtons = buildAdminMenuReplyKeyboard().keyboard.map((row) => row.map((button) => button.text));
-assert.equal(adminMenuButtons.flat().includes("📊 Статистика (/stat)"), true);
-assert.equal(adminMenuButtons.flat().includes("🌲 Світ (/world)"), true);
-assert.equal(adminMenuButtons.flat().includes("👥 Усі (/all)"), true);
-assert.equal(adminMenuButtons.flat().includes("🧭 Телепорт (/teleport)"), true);
-assert.equal(adminMenuButtons.flat().includes("✨ Відновити снагу (/restAdmin)"), true);
+assert.equal(adminMenuButtons.flat().includes("📊 Статистика"), true);
+assert.equal(adminMenuButtons.flat().includes("🌲 Світ"), true);
+assert.equal(adminMenuButtons.flat().includes("👥 Усі"), true);
+assert.equal(adminMenuButtons.flat().includes("🧭 Телепорт"), true);
+assert.equal(adminMenuButtons.flat().includes("✨ Відновити снагу"), true);
 assert.equal(adminMenuButtons.flat().includes("🌿 Ресурси"), true);
 assert.equal(adminMenuButtons.flat().includes("🔥 Вогонь"), true);
 
 const adminResourceButtons = buildAdminResourcesReplyKeyboard().keyboard.flat().map((button) => button.text);
-assert.equal(adminResourceButtons.includes("🍓 Додати ягоди (/restoreBerries)"), true);
-assert.equal(adminResourceButtons.includes("🌿 Ключі ресурсів (/addResourceHelp)"), true);
+assert.equal(adminResourceButtons.includes("🍓 Додати ягоди"), true);
+assert.equal(adminResourceButtons.includes("🌿 Ключі ресурсів"), true);
 
 const adminFireButtons = buildAdminFireReplyKeyboard().keyboard.flat().map((button) => button.text);
-assert.equal(adminFireButtons.includes("🔥 Додати вогнище (/addCampfire)"), true);
-assert.equal(adminFireButtons.includes("🕯 Додати факел (/addTorch)"), true);
-assert.equal(adminFireButtons.includes("🪵 Додати хмиз (/addTwigs)"), true);
+assert.equal(adminFireButtons.includes("🔥 Додати вогнище"), true);
+assert.equal(adminFireButtons.includes("🕯 Додати факел"), true);
+assert.equal(adminFireButtons.includes("🪵 Додати хмиз"), true);
+
+const replyKeyboardLabels = [
+  ...adminMainButtons.flat(),
+  ...adminMenuButtons.flat(),
+  ...adminResourceButtons,
+  ...adminFireButtons,
+];
+for (const label of replyKeyboardLabels) {
+  assert.doesNotMatch(label, /\(\/[A-Za-z]/, `Reply keyboard labels should not include slash-command hints: ${label}`);
+}
 
 console.log("Posture helpers OK");

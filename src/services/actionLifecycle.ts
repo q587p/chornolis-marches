@@ -13,7 +13,7 @@ import {
   QUICK_PLAYER_ACTION_DURATION_MS,
 } from "../gameConfig";
 import { buildFatigueRestKeyboard } from "../ui/keyboards";
-import { buildMainReplyKeyboardForTelegramId, mainStatusLabelForPlayerId } from "../ui/replyKeyboard";
+import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { setLastRuntimeError } from "../runtimeState";
 import { actionPriority, actionTitle, effectivePlayerActionDurationMs } from "./actionRules";
 import { fatigueStateFor, recoverStamina } from "./actionRecovery";
@@ -140,26 +140,6 @@ async function refreshKeyboardWhenPlayerQueueEnds(bot: Bot, action: WorldAction)
   if (activeCount > 0 || !player || player.isResting) return;
   await bot.api.sendMessage(chatId, "Черга дій завершена.", {
     reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false),
-  });
-}
-
-async function refreshKeyboardWhenQuickStatusChanges(bot: Bot, action: WorldAction, beforeStatusLabel?: string) {
-  if (action.actorType !== "PLAYER" || !action.playerId || action.durationMs > QUICK_PLAYER_ACTION_DURATION_MS) return;
-  if (!beforeStatusLabel || !(await canSendProactiveToPlayerId(action.playerId))) return;
-  const chatId = chatIdFromAction(action);
-  if (!chatId) return;
-
-  const player = await prisma.player.findUnique({
-    where: { id: action.playerId },
-    select: { telegramId: true, isAutoEnabled: true },
-  });
-  if (!player) return;
-
-  const afterStatusLabel = await mainStatusLabelForPlayerId(action.playerId);
-  if (!afterStatusLabel || afterStatusLabel === beforeStatusLabel) return;
-
-  await bot.api.sendMessage(chatId, `Стан: ${afterStatusLabel}`, {
-    reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), Boolean(player.isAutoEnabled)),
   });
 }
 
@@ -583,11 +563,7 @@ export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, ac
   await runWithConcurrency(duePlayerGroups, PLAYER_COMPLETION_CONCURRENCY, async (actions) => {
     for (const action of actions) {
       try {
-        const beforeStatusLabel = action.actorType === "PLAYER" && action.playerId
-          ? await mainStatusLabelForPlayerId(action.playerId)
-          : undefined;
         await completeAction(bot, action);
-        await refreshKeyboardWhenQuickStatusChanges(bot, action, beforeStatusLabel);
         completedPlayerActions.push(action);
       } catch (error) {
         if (!isMissingRecordError(error)) throw error;

@@ -72,7 +72,7 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   keyboard.text(directionButton("EAST", "Схід ➡️"));
   keyboard.row();
 
-  keyboard.text(utilityButton(state.showAdminMenu ? "🛠 Адмін меню (/adminMenu)" : "🧭 Допомога"));
+  keyboard.text(utilityButton(state.showAdminMenu ? "🛠 Адмін меню" : "🧭 Допомога"));
   keyboard.text(directionButton("SOUTH", "⬇️ Південь"));
   keyboard.text(utilityButton("☰ Меню")).row();
 
@@ -176,20 +176,20 @@ export function buildMenuReplyKeyboard(options: { canSeeStats?: boolean } = {}) 
 
 export function buildAdminMenuReplyKeyboard() {
   return new Keyboard()
-    .text("📊 Статистика (/stat)")
-    .text("🌲 Світ (/world)")
+    .text("📊 Статистика")
+    .text("🌲 Світ")
     .row()
-    .text("👥 Усі (/all)")
-    .text("📍 Місцини (/locationAll)")
+    .text("👥 Усі")
+    .text("📍 Місцини")
     .row()
-    .text("🧭 Телепорт (/teleport)")
-    .text("✨ Відновити снагу (/restAdmin)")
+    .text("🧭 Телепорт")
+    .text("✨ Відновити снагу")
     .text("🌿 Ресурси")
     .row()
-    .text("🦴 Падальний рів (/carcassQuest)")
+    .text("🦴 Падальний рів")
     .row()
     .text("🔥 Вогонь")
-    .text("🛠 Повна довідка (/adminHelp)")
+    .text("🛠 Повна довідка")
     .row()
     .text("↩️ Назад")
     .resized()
@@ -198,15 +198,15 @@ export function buildAdminMenuReplyKeyboard() {
 
 export function buildAdminResourcesReplyKeyboard() {
   return new Keyboard()
-    .text("🌿 Ключі ресурсів (/addResourceHelp)")
+    .text("🌿 Ключі ресурсів")
     .row()
-    .text("🍓 Додати ягоди (/restoreBerries)")
-    .text("🌱 Додати трави (/restoreHerbs)")
+    .text("🍓 Додати ягоди")
+    .text("🌱 Додати трави")
     .row()
-    .text("🍄 Додати гриби (/restoreMushrooms)")
-    .text("➕ Додати ресурс (/addResource)")
+    .text("🍄 Додати гриби")
+    .text("➕ Додати ресурс")
     .row()
-    .text("🛠 Адмін меню (/adminMenu)")
+    .text("🛠 Адмін меню")
     .text("↩️ Назад")
     .resized()
     .persistent(false);
@@ -214,12 +214,12 @@ export function buildAdminResourcesReplyKeyboard() {
 
 export function buildAdminFireReplyKeyboard() {
   return new Keyboard()
-    .text("🔥 Додати вогнище (/addCampfire)")
+    .text("🔥 Додати вогнище")
     .row()
-    .text("🕯 Додати факел (/addTorch)")
-    .text("🪵 Додати хмиз (/addTwigs)")
+    .text("🕯 Додати факел")
+    .text("🪵 Додати хмиз")
     .row()
-    .text("🛠 Адмін меню (/adminMenu)")
+    .text("🛠 Адмін меню")
     .text("↩️ Назад")
     .resized()
     .persistent(false);

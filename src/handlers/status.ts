@@ -29,6 +29,7 @@ import { disablePlayerAuto, enablePlayerAuto, stopPlayerAuto } from "./auto";
 import { creatureForms, playerForms } from "../services/grammar";
 import { clearOnboardingStateForTelegramId } from "./start";
 import { hunterFieldInventorySummary } from "../services/targets";
+import { playerPresenceDisplaySuffix } from "../services/sessionPresence";
 
 const LOCATION_PAGE_MAX_CHARS = 3300;
 const TELEGRAM_TEXT_MAX_CHARS = 3900;
@@ -100,6 +101,10 @@ function genderedPast(player: { grammaticalGender?: string | null; pronoun?: str
   if (gender === "FEMININE") return feminine;
   if (gender === "PLURAL") return plural;
   return masculine;
+}
+
+function playerPresenceName(player: Parameters<typeof playerForms>[0] & { sessionPresence?: string | null }) {
+  return `${playerForms(player).nominative}${playerPresenceDisplaySuffix(player)}`;
 }
 
 export async function buildStatBrief() {
@@ -840,10 +845,10 @@ export async function buildWhoData(now = new Date()) {
 
   const scribeTelegramIds = new Set(config.adminTelegramIds.map(String));
   const scribePlayers = players.filter((player) => player.role === "SCRIBE" || scribeTelegramIds.has(player.telegramId));
-  const scribes = uniqueSortedUk(scribePlayers.map((player) => playerForms(player).nominative));
+  const scribes = uniqueSortedUk(scribePlayers.map(playerPresenceName));
   const nonScribePlayers = players
     .filter((player) => player.role !== "SCRIBE" && !scribeTelegramIds.has(player.telegramId))
-    .map((player) => playerForms(player).nominative);
+    .map(playerPresenceName);
   const npcNames = creatures.map((creature) => creatureForms(creature).nominative);
   const mixedCharacters = uniqueSortedUk([...nonScribePlayers, ...npcNames]);
 
@@ -1028,6 +1033,7 @@ export async function buildAllPage(showDead: boolean, requestedPage: number) {
           nameVocative: true,
           grammaticalGender: true,
           animacy: true,
+          sessionPresence: true,
         },
         orderBy: { id: "asc" },
       }),
@@ -1058,7 +1064,7 @@ export async function buildAllPage(showDead: boolean, requestedPage: number) {
 
     const playerLines = players.map((p) => {
       const loc = p.currentLocation ? `${p.currentLocation.name} (${p.currentLocation.x},${p.currentLocation.y},${p.currentLocation.z})` : "невідомо";
-      const name = playerForms(p).nominative;
+      const name = playerPresenceName(p);
       return `#${p.id} ${name} — ${loc}; життя ${p.hp}; снага ${p.stamina}; голод ${p.hunger}; авто ${yesNo(p.isAutoEnabled)}`;
     });
 
@@ -1168,7 +1174,7 @@ export function registerStatusHandlers(bot: Bot) {
   });  
 
   bot.command(["locationAll", "locationall"], replyLocationAllPage);
-  bot.hears(["📍 Місцини (/locationAll)", "Місцини (/locationAll)"], replyLocationAllPage);
+  bot.hears(["📍 Місцини", "Місцини", "📍 Місцини (/locationAll)", "Місцини (/locationAll)"], replyLocationAllPage);
 
   bot.callbackQuery(/^locationAll:(\d+)$/, async (ctx) => {
     if (!(await isScribeAdmin(ctx.from?.id))) {
@@ -1201,7 +1207,7 @@ export function registerStatusHandlers(bot: Bot) {
   });
 
   bot.command("world", replyWorldStatus);
-  bot.hears(["🌲 Світ (/world)", "Світ (/world)"], replyWorldStatus);
+  bot.hears(["🌲 Світ", "Світ", "🌲 Світ (/world)", "Світ (/world)"], replyWorldStatus);
 
   bot.command(["stat", "stats"], replyStatBrief);
 
@@ -1274,7 +1280,7 @@ export function registerStatusHandlers(bot: Bot) {
   });
 
   bot.command(["restAdmin", "restadmin"], (ctx) => runRestAdminCommand(bot, ctx));
-  bot.hears(["✨ Відновити снагу (/restAdmin)", "Відновити снагу (/restAdmin)"], (ctx) => runRestAdminCommand(bot, ctx, ""));
+  bot.hears(["✨ Відновити снагу", "Відновити снагу", "✨ Відновити снагу (/restAdmin)", "Відновити снагу (/restAdmin)"], (ctx) => runRestAdminCommand(bot, ctx, ""));
 
   bot.hears(["📊 Статистика", "Статистика", "📊 Статистика (/stat)", "Статистика (/stat)"], replyStatBrief);
 
@@ -1282,7 +1288,7 @@ export function registerStatusHandlers(bot: Bot) {
     const showDead = ctx.match?.trim().toLowerCase() === "dead";
     await replyAllPage(ctx, showDead);
   });
-  bot.hears(["👥 Усі (/all)", "Усі (/all)"], (ctx) => replyAllPage(ctx));
+  bot.hears(["👥 Усі", "Усі", "👥 Усі (/all)", "Усі (/all)"], (ctx) => replyAllPage(ctx));
 
   bot.command(["playerAdmin", "playeradmin", "player"], async (ctx) => {
     if (!(await requireScribeAdmin(ctx))) return;

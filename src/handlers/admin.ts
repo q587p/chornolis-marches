@@ -286,9 +286,9 @@ export function registerAdminHandlers(bot: Bot) {
   bot.hears(["🛠 Адмін меню", "Адмін меню", "🛠 Адмін меню (/adminMenu)", "Адмін меню (/adminMenu)"], replyAdminMenu);
   bot.hears(["🌿 Ресурси"], replyAdminResourcesMenu);
   bot.hears(["🔥 Вогонь"], replyAdminFireMenu);
-  bot.hears(["🧭 Телепорт (/teleport)", "Телепорт (/teleport)"], replyTeleportMenu);
-  bot.hears(["➕ Додати ресурс (/addResource)", "Додати ресурс (/addResource)"], replyAddResourceFormat);
-  bot.hears(["🦴 Падальний рів (/carcassQuest)", "Падальний рів (/carcassQuest)"], async (ctx) => {
+  bot.hears(["🧭 Телепорт", "Телепорт", "🧭 Телепорт (/teleport)", "Телепорт (/teleport)"], replyTeleportMenu);
+  bot.hears(["➕ Додати ресурс", "Додати ресурс", "➕ Додати ресурс (/addResource)", "Додати ресурс (/addResource)"], replyAddResourceFormat);
+  bot.hears(["🦴 Падальний рів", "Падальний рів", "🦴 Падальний рів (/carcassQuest)", "Падальний рів (/carcassQuest)"], async (ctx) => {
     if (!(await requireScribeAdmin(ctx))) return;
     const state = await getGateHuntingSaturationState();
     await ctx.reply([
@@ -354,7 +354,7 @@ export function registerAdminHandlers(bot: Bot) {
     if (!(await requireScribeAdmin(ctx))) return;
     await ctx.reply(ADMIN_HELP_TEXT);
   });
-  bot.hears(["🛠 Повна довідка (/adminHelp)", "Повна довідка (/adminHelp)"], async (ctx) => {
+  bot.hears(["🛠 Повна довідка", "Повна довідка", "🛠 Повна довідка (/adminHelp)", "Повна довідка (/adminHelp)"], async (ctx) => {
     if (!(await requireScribeAdmin(ctx))) return;
     await ctx.reply(ADMIN_HELP_TEXT);
   });
@@ -400,7 +400,7 @@ export function registerAdminHandlers(bot: Bot) {
   }
 
   bot.command("addCampfire", (ctx) => runAddCampfireCommand(ctx));
-  bot.hears(["🔥 Додати вогнище (/addCampfire)", "Додати вогнище (/addCampfire)"], (ctx) => runAddCampfireCommand(ctx, ""));
+  bot.hears(["🔥 Додати вогнище", "Додати вогнище", "🔥 Додати вогнище (/addCampfire)", "Додати вогнище (/addCampfire)"], (ctx) => runAddCampfireCommand(ctx, ""));
 
   bot.command("teleport", async (ctx) => {
     if (!(await requireScribeAdmin(ctx))) return;
@@ -475,7 +475,7 @@ export function registerAdminHandlers(bot: Bot) {
   }
 
   bot.command("addTorch", (ctx) => runAddTorchCommand(ctx));
-  bot.hears(["🕯 Додати факел (/addTorch)", "Додати факел (/addTorch)"], (ctx) => runAddTorchCommand(ctx, ""));
+  bot.hears(["🕯 Додати факел", "Додати факел", "🕯 Додати факел (/addTorch)", "Додати факел (/addTorch)"], (ctx) => runAddTorchCommand(ctx, ""));
 
   async function runAddTwigsCommand(ctx: any, rawTarget = String(ctx.match ?? "").trim()) {
     if (!(await requireScribeAdmin(ctx))) return;
@@ -490,7 +490,7 @@ export function registerAdminHandlers(bot: Bot) {
   }
 
   bot.command("addTwigs", (ctx) => runAddTwigsCommand(ctx));
-  bot.hears(["🪵 Додати хмиз (/addTwigs)", "Додати хмиз (/addTwigs)"], (ctx) => runAddTwigsCommand(ctx, ""));
+  bot.hears(["🪵 Додати хмиз", "Додати хмиз", "🪵 Додати хмиз (/addTwigs)", "Додати хмиз (/addTwigs)"], (ctx) => runAddTwigsCommand(ctx, ""));
 
   async function replyAddResourceHelp(ctx: any) {
     if (!(await requireScribeAdmin(ctx))) return;
@@ -546,14 +546,14 @@ export function registerAdminHandlers(bot: Bot) {
   }
 
   bot.command(["addResourceHelp", "addresourcehelp", "addResourseHelp", "addresoursehelp"], replyAddResourceHelp);
-  bot.hears(["🌿 Ключі ресурсів (/addResourceHelp)", "Ключі ресурсів (/addResourceHelp)"], replyAddResourceHelp);
+  bot.hears(["🌿 Ключі ресурсів", "Ключі ресурсів", "🌿 Ключі ресурсів (/addResourceHelp)", "Ключі ресурсів (/addResourceHelp)"], replyAddResourceHelp);
   bot.command(["addResource", "addresource", "addResourse", "addresourse"], (ctx) => runAddResourceCommand(ctx));
   bot.command(["restoreBerries", "restoreberries"], (ctx) => runAddResourceCommand(ctx, "berries"));
   bot.command(["restoreHerbs", "restoreherbs"], (ctx) => runAddResourceCommand(ctx, "herbs"));
   bot.command(["restoreMushrooms", "restoremushrooms"], (ctx) => runAddResourceCommand(ctx, "mushrooms"));
-  bot.hears(["🍓 Додати ягоди (/restoreBerries)", "Додати ягоди (/restoreBerries)"], (ctx) => runAddResourceCommand(ctx, "berries", ""));
-  bot.hears(["🌱 Додати трави (/restoreHerbs)", "Додати трави (/restoreHerbs)"], (ctx) => runAddResourceCommand(ctx, "herbs", ""));
-  bot.hears(["🍄 Додати гриби (/restoreMushrooms)", "Додати гриби (/restoreMushrooms)"], (ctx) => runAddResourceCommand(ctx, "mushrooms", ""));
+  bot.hears(["🍓 Додати ягоди", "Додати ягоди", "🍓 Додати ягоди (/restoreBerries)", "Додати ягоди (/restoreBerries)"], (ctx) => runAddResourceCommand(ctx, "berries", ""));
+  bot.hears(["🌱 Додати трави", "Додати трави", "🌱 Додати трави (/restoreHerbs)", "Додати трави (/restoreHerbs)"], (ctx) => runAddResourceCommand(ctx, "herbs", ""));
+  bot.hears(["🍄 Додати гриби", "Додати гриби", "🍄 Додати гриби (/restoreMushrooms)", "Додати гриби (/restoreMushrooms)"], (ctx) => runAddResourceCommand(ctx, "mushrooms", ""));
 
   function resetModePromptText() {
     return [

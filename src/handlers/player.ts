@@ -12,7 +12,7 @@ import { replyToActionError } from "../utils/actionErrorReply";
 import { formatFatigueText, formatHungerState, formatPlayerStats, formatPostureText, formatVitalsLine } from "../utils/playerText";
 import { ownHeldTorchText } from "../utils/torchText";
 import { resourceTypeDisplayName } from "../services/corpses";
-import { actionDurationMs, performOrQueuePlayerAction } from "../services/actionQueue";
+import { actionDurationMs, hasPlayerActionQueueControls, performOrQueuePlayerAction } from "../services/actionQueue";
 import {
   addTwigsToCampfire,
   canAddTwigsToNearbyCampfire,
@@ -84,11 +84,14 @@ async function recoveryText(player: any) {
   return `\nВідновлення без відпочинку: приблизно ${passiveMinutes} хв. Через /rest або 🧘 Відпочити: приблизно ${restMinutes} хв.`;
 }
 
-function buildCharacterAutoKeyboard(autoEnabled: boolean, options: { posture?: string | null; isResting?: boolean | null; canToggleTechnicalDetails?: boolean; showTechnicalDetails?: boolean; showSleep?: boolean } = {}) {
+function buildCharacterAutoKeyboard(autoEnabled: boolean, options: { posture?: string | null; isResting?: boolean | null; canToggleTechnicalDetails?: boolean; showTechnicalDetails?: boolean; showSleep?: boolean; hasActionQueue?: boolean } = {}) {
   const keyboard = new InlineKeyboard()
     .text("🎒 Речі", "character:inventory")
     .text("✨ Сигнали", "character:signals")
     .row();
+  if (options.hasActionQueue) {
+    keyboard.text("📋 Черга", "queue:status").row();
+  }
   const isSitting = options.posture === "SITTING" || Boolean(options.isResting);
   keyboard.text(isSitting ? "Встати" : "Сісти", isSitting ? "posture:stand" : "posture:sit");
   if (!options.isResting) keyboard.text("🧘 Відпочити", "rest:start");
@@ -305,10 +308,11 @@ async function renderCharacterView(telegramId: number) {
     : "невідомо";
   const nameApprovedText = characterNameApprovalStatusText(player.isNameApproved);
   const isTutorialDream = player.currentLocation ? isTutorialLocation(player.currentLocation) : false;
+  const hasActionQueue = await hasPlayerActionQueueControls(player.id);
 
   return {
     text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}${tutorialStatusText}\n\n${formatPostureText({ ...player, isSleeping: isTutorialDream })}${torchText}\n${vitals.join("\n")}\nСтан: ${formatFatigueText(player)}${await recoveryText(player)}\n${hungerText}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}${technicalDetailsText}\nЗареєстровано: ${formatDateTime(player.createdAt)}${statsText}`,
-    keyboard: buildCharacterAutoKeyboard(autoEnabled, { posture: player.posture, isResting: player.isResting, canToggleTechnicalDetails, showTechnicalDetails, showSleep: !isTutorialDream }),
+    keyboard: buildCharacterAutoKeyboard(autoEnabled, { posture: player.posture, isResting: player.isResting, canToggleTechnicalDetails, showTechnicalDetails, showSleep: !isTutorialDream, hasActionQueue }),
   };
 }
 
