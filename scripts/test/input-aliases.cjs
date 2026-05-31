@@ -85,6 +85,9 @@ assertAlias("хтоя", { kind: "me" });
 assertAlias("речі", { kind: "inventory" });
 assertAlias("новини", { kind: "news" });
 assertAlias("час", { kind: "time" });
+assertAlias("/weather", { kind: "weather" });
+assertAlias("weather", { kind: "weather" });
+assertAlias("погода", { kind: "weather" });
 assertAlias("назад", { kind: "back" });
 assertAlias("сховати клавіатуру", { kind: "hide-keyboard" });
 
@@ -260,6 +263,7 @@ assert.ok(suggestAliasEntries("гриб").map(formatAliasSuggestion).some((sugge
 assert.ok(suggestAliasEntries("навч").map(formatAliasSuggestion).some((suggestion) => suggestion.includes("(/sleep_tutorial)")), "Expected formatted tutorial suggestions to use clickable slash command");
 assert.ok(suggestAliasEntries("повернен").map(formatAliasSuggestion).includes("повернення (/respawn)"), "Expected formatted beginner-return suggestions to use /respawn");
 assert.ok(suggestAliasEntries("закінчити нав").map(formatAliasSuggestion).includes("закінчити навчання (/tutorialEnd)"), "Expected formatted tutorial-end suggestions to use slash command");
+assert.ok(suggestAliasEntries("погод").map(formatAliasSuggestion).includes("погода (/weather)"), "Expected formatted weather suggestions to include /weather");
 assert.ok(suggestAliasEntries("freshen al").map(formatAliasSuggestion).includes("freshen all (/freshen_all)"), "Expected formatted suggestions to include slash command for bulk freshening");
 assert.ok(suggestAliasEntries("потрус").map(formatAliasSuggestion).includes("потрусити дерево (/shake_tree)"), "Expected formatted suggestions to include slash command for tree shaking");
 assert.ok(suggestAliasInputs("усхмі").includes("усміх"), "Expected social suggestions to include усміх for a mistyped smile");

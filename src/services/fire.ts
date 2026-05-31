@@ -1,13 +1,18 @@
 import { Bot } from "grammy";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../db";
 import { notifyLocationAll } from "./notifications";
 import { canPickUpGroundItem } from "./groundItems";
 import { canSendProactiveToTelegramId } from "./sessionPresence";
+import { MINUTES_PER_WORLD_DAY } from "../data/worldClock";
+import { ensureWorldState } from "./worldTime";
 
 export const CAMPFIRE_DURATION_MS = 16 * 60_000;
 export const CAMPFIRE_FADING_MS = 4 * 60_000;
 export const CAMPFIRE_TWIGS_AFTER_MS = 2 * 60_000;
 export const CAMPFIRE_TWIGS_EXTENSION_MS = 4 * 60_000;
+export const EXTINGUISHED_CAMPFIRE_DECAY_MINUTES = 2 * MINUTES_PER_WORLD_DAY;
+export const EXTINGUISHED_CAMPFIRE_FADING_MINUTES = 2 * 60;
 export const TORCH_DURATION_MS = 10 * 60_000;
 export const TORCH_FADING_MS = 2 * 60_000;
 export const MAX_LIT_TORCHES_IN_HANDS = 2;
@@ -20,6 +25,9 @@ const DOUSED_TORCH_TIMER_TITLE = "Doused torch timer";
 const DOUSED_TORCH_CONSUMED_TITLE = "Doused torch timer consumed";
 const OLD_CAMPFIRE_MEMORY_REVEALED_AT_KEY = "oldCampfireMemoryRevealedAt";
 const OLD_CAMPFIRE_MEMORY_TEXT_KEY = "oldCampfireMemoryText";
+const ASH_EXPIRES_AT_MINUTE_KEY = "ashExpiresAtMinute";
+const ASH_FADING_AT_MINUTE_KEY = "ashFadingAtMinute";
+const ASH_FADING_NOTIFIED_AT_MINUTE_KEY = "ashFadingNotifiedAtMinute";
 
 export const OLD_CAMPFIRE_MEMORY_OMENS = [
   "Коли світло торкається каменів, у попелі проступає стара подряпина: три короткі риски й одна довга, спрямована в бік темного лісу.",
@@ -33,10 +41,46 @@ function jsonRecord(value: unknown): JsonRecord {
   return value && typeof value === "object" && !Array.isArray(value) ? value as JsonRecord : {};
 }
 
+function jsonInput(value: unknown) {
+  return value as Prisma.InputJsonValue;
+}
+
 function dateFromJson(value: unknown) {
   if (typeof value !== "string") return null;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function numberFromJson(value: unknown) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.floor(number) : null;
+}
+
+function currentWorldMinuteFromData(data: unknown) {
+  return numberFromJson(jsonRecord(data).absoluteMinute);
+}
+
+function withAshDecaySchedule(data: unknown, absoluteMinute?: number | null) {
+  const current = jsonRecord(data);
+  const baseMinute = absoluteMinute ?? currentWorldMinuteFromData(current);
+  if (baseMinute == null) return current;
+  const expiresAtMinute = baseMinute + EXTINGUISHED_CAMPFIRE_DECAY_MINUTES;
+  return {
+    ...current,
+    [ASH_EXPIRES_AT_MINUTE_KEY]: expiresAtMinute,
+    [ASH_FADING_AT_MINUTE_KEY]: expiresAtMinute - EXTINGUISHED_CAMPFIRE_FADING_MINUTES,
+    [ASH_FADING_NOTIFIED_AT_MINUTE_KEY]: null,
+  };
+}
+
+function withoutAshDecaySchedule(data: unknown) {
+  const {
+    [ASH_EXPIRES_AT_MINUTE_KEY]: _ashExpiresAtMinute,
+    [ASH_FADING_AT_MINUTE_KEY]: _ashFadingAtMinute,
+    [ASH_FADING_NOTIFIED_AT_MINUTE_KEY]: _ashFadingNotifiedAtMinute,
+    ...rest
+  } = jsonRecord(data);
+  return rest;
 }
 
 function timedFireData(createdBy: string) {
@@ -53,33 +97,35 @@ function timedFireData(createdBy: string) {
   };
 }
 
-function extinguishedFireData(data: unknown) {
-  return {
+function extinguishedFireData(data: unknown, absoluteMinute?: number | null) {
+  const next = {
     ...jsonRecord(data),
     is_campfire: true,
     extinguished: true,
     extinguishedAt: new Date().toISOString(),
   };
+  return jsonRecord(data).seeded === true ? next : withAshDecaySchedule(next, absoluteMinute);
 }
 
 function relitFireData(data: unknown, createdBy: string) {
   const base = timedFireData(createdBy);
   return {
-    ...jsonRecord(data),
+    ...withoutAshDecaySchedule(data),
     ...base,
     extinguished: false,
     relitAt: base.litAt,
   };
 }
 
-function addTwigsToFireData(data: unknown) {
+function addTwigsToFireData(data: unknown, absoluteMinute?: number | null) {
   const current = jsonRecord(data);
-  return {
+  const next = {
     ...current,
     is_campfire: true,
     fuelTwigs: Number(current.fuelTwigs ?? 0) + 1,
     lastTwigsAddedAt: new Date().toISOString(),
   };
+  return current.extinguished === true && current.seeded !== true ? withAshDecaySchedule(next, absoluteMinute) : next;
 }
 
 function stableIndex(value: string, modulo: number) {
@@ -122,7 +168,7 @@ function extendFireData(data: unknown, now = new Date()) {
   const baseFrom = currentExpiresAt && currentExpiresAt.getTime() > now.getTime() ? currentExpiresAt : now;
   const cappedExpiresAt = new Date(Math.min(baseFrom.getTime() + CAMPFIRE_TWIGS_EXTENSION_MS, now.getTime() + CAMPFIRE_DURATION_MS));
   return {
-    ...addTwigsToFireData(current),
+    ...withoutAshDecaySchedule(addTwigsToFireData(current)),
     extinguished: false,
     expiresAt: cappedExpiresAt.toISOString(),
     durationMs: CAMPFIRE_DURATION_MS,
@@ -183,6 +229,35 @@ export function isExtinguishedCampfire(feature: { data?: unknown | null; provide
   return Boolean(data.extinguished) || Boolean(campfireExpiresAt(feature) && !feature.providesLight);
 }
 
+export function isDecayableExtinguishedCampfire(feature: { type?: string | null; data?: unknown | null; providesLight?: boolean | null }) {
+  const data = jsonRecord(feature.data);
+  return feature.type === "CAMPFIRE"
+    && isExtinguishedCampfire(feature)
+    && data.seeded !== true
+    && data.magical !== true;
+}
+
+export function campfireAshExpiresAtMinute(feature: { data?: unknown | null }) {
+  return numberFromJson(jsonRecord(feature.data)[ASH_EXPIRES_AT_MINUTE_KEY]);
+}
+
+export function campfireAshFadingAtMinute(feature: { data?: unknown | null }) {
+  return numberFromJson(jsonRecord(feature.data)[ASH_FADING_AT_MINUTE_KEY]);
+}
+
+export function isExtinguishedCampfireAshFading(feature: { type?: string | null; data?: unknown | null; providesLight?: boolean | null }, absoluteMinute: number) {
+  if (!isDecayableExtinguishedCampfire(feature)) return false;
+  const fadingAtMinute = campfireAshFadingAtMinute(feature);
+  const expiresAtMinute = campfireAshExpiresAtMinute(feature);
+  return fadingAtMinute != null && expiresAtMinute != null && absoluteMinute >= fadingAtMinute && absoluteMinute < expiresAtMinute;
+}
+
+export function shouldRemoveExtinguishedCampfireAsh(feature: { type?: string | null; data?: unknown | null; providesLight?: boolean | null }, absoluteMinute: number) {
+  if (!isDecayableExtinguishedCampfire(feature)) return false;
+  const expiresAtMinute = campfireAshExpiresAtMinute(feature);
+  return expiresAtMinute != null && absoluteMinute >= expiresAtMinute;
+}
+
 export function isCampfireFading(feature: { data?: unknown | null }, now = new Date()) {
   const expiresAt = campfireExpiresAt(feature);
   const left = expiresAt ? remainingMs(expiresAt, now) : CAMPFIRE_DURATION_MS;
@@ -200,7 +275,14 @@ export function campfireStateLine(feature: { data?: unknown | null }) {
   return null;
 }
 
-export async function expireTimedCampfires(locationId?: number | null) {
+async function currentWorldMinute(absoluteMinute?: number | null) {
+  if (absoluteMinute != null) return absoluteMinute;
+  const state = await ensureWorldState();
+  return state.absoluteMinute;
+}
+
+export async function expireTimedCampfires(locationId?: number | null, absoluteMinute?: number | null) {
+  const worldMinute = await currentWorldMinute(absoluteMinute);
   const features = await prisma.locationFeature.findMany({
     where: {
       isActive: true,
@@ -221,11 +303,81 @@ export async function expireTimedCampfires(locationId?: number | null) {
         isActive: true,
         providesLight: false,
         restStaminaCapMultiplier: null,
-        data: extinguishedFireData(feature.data),
+        data: jsonInput(extinguishedFireData(feature.data, worldMinute)),
       },
     });
   }
   return expired.length;
+}
+
+function needsAshDecayBackfill(feature: { type?: string | null; data?: unknown | null; providesLight?: boolean | null }) {
+  return isDecayableExtinguishedCampfire(feature) && campfireAshExpiresAtMinute(feature) == null;
+}
+
+export async function decayExtinguishedCampfires(bot?: Bot | null, absoluteMinute?: number | null, locationId?: number | null) {
+  const worldMinute = await currentWorldMinute(absoluteMinute);
+  const features = await prisma.locationFeature.findMany({
+    where: {
+      isActive: true,
+      type: "CAMPFIRE",
+      ...(locationId ? { locationId } : {}),
+    },
+    select: { id: true, name: true, locationId: true, type: true, providesLight: true, data: true },
+  });
+
+  let backfilled = 0;
+  let fading = 0;
+  let removed = 0;
+
+  for (const feature of features) {
+    if (!isDecayableExtinguishedCampfire(feature)) continue;
+
+    const data = jsonRecord(feature.data);
+    if (needsAshDecayBackfill(feature)) {
+      await prisma.locationFeature.update({
+        where: { id: feature.id },
+        data: { data: jsonInput(withAshDecaySchedule(data, worldMinute)) },
+      });
+      backfilled++;
+      continue;
+    }
+
+    if (shouldRemoveExtinguishedCampfireAsh(feature, worldMinute)) {
+      await prisma.locationFeature.update({
+        where: { id: feature.id },
+        data: {
+          isActive: false,
+          providesLight: false,
+          restStaminaCapMultiplier: null,
+          name: "Слід від вогнища",
+          data: jsonInput({
+            ...data,
+            decayedAtMinute: worldMinute,
+          }),
+        },
+      });
+      removed++;
+      continue;
+    }
+
+    const notifiedAtMinute = numberFromJson(data[ASH_FADING_NOTIFIED_AT_MINUTE_KEY]);
+    if (isExtinguishedCampfireAshFading(feature, worldMinute) && notifiedAtMinute == null) {
+      await prisma.locationFeature.update({
+        where: { id: feature.id },
+        data: {
+          name: "Ледь помітне вогнище",
+          data: jsonInput({
+            ...data,
+            [ASH_FADING_NOTIFIED_AT_MINUTE_KEY]: worldMinute,
+          }),
+        },
+      });
+      if (bot) await notifyLocationAll(bot, feature.locationId, "🪨 Старе згасле вогнище майже розсипалося в землю. Ще трохи — і від нього лишиться тільки тьмяний слід у попелі.");
+      fading++;
+    }
+  }
+
+  return { backfilled, fading, removed };
 }
 
 async function hasTimerWarning(marker: string) {
@@ -251,6 +403,7 @@ async function markTimerWarning(marker: string, locationId?: number | null, play
 export async function notifyFadingFireTimers(bot: Bot) {
   const now = new Date();
   await expireTimedCampfires();
+  await decayExtinguishedCampfires(bot);
   await expireGroundLitTorches(bot, now);
 
   const fadingCampfires = await prisma.locationFeature.findMany({
@@ -818,7 +971,7 @@ export async function lightCampfireFromTorch(playerId: number, featureId: number
       name: "Вогнище",
       providesLight: true,
       restStaminaCapMultiplier: null,
-      data: memoryText ? withOldCampfireMemory(nextData, feature) : nextData,
+      data: jsonInput(memoryText ? withOldCampfireMemory(nextData, feature) : nextData),
     },
   });
 
@@ -866,15 +1019,16 @@ export async function addTwigsToCampfire(playerId: number, featureId?: number) {
       : prisma.playerResource.delete({ where: { playerId_resourceTypeId: { playerId, resourceTypeId: twigs.id } } });
 
   const memoryText = canRevealOldCampfireMemory(feature) ? oldCampfireMemoryOmen(feature) : null;
-  const nextData = extinguished ? addTwigsToFireData(feature.data) : extendFireData(feature.data);
+  const worldMinute = extinguished ? await currentWorldMinute() : null;
+  const nextData = extinguished ? addTwigsToFireData(feature.data, worldMinute) : extendFireData(feature.data);
 
   await prisma.$transaction([
     consumeTwigs,
     prisma.locationFeature.update({
       where: { id: feature.id },
       data: extinguished
-        ? { data: memoryText ? withOldCampfireMemory(nextData, feature) : nextData }
-        : { name: "Вогнище", providesLight: true, data: memoryText ? withOldCampfireMemory(nextData, feature) : nextData },
+        ? { name: "Згасле вогнище", data: jsonInput(memoryText ? withOldCampfireMemory(nextData, feature) : nextData) }
+        : { name: "Вогнище", providesLight: true, data: jsonInput(memoryText ? withOldCampfireMemory(nextData, feature) : nextData) },
     }),
   ]);
 

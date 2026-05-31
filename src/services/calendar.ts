@@ -1,4 +1,6 @@
 import { START_WORLD_ABSOLUTE_MINUTE, worldTimeSnapshotFromAbsoluteMinute, type WorldTimeSnapshot } from "../data/worldClock";
+import { lightSnapshotFromWorldTime } from "./lightSnapshot";
+import { renderWeatherLine } from "./weather";
 
 export type YearBeast = {
   nominative: string;
@@ -98,6 +100,7 @@ function worldDaypartMood(snapshot: WorldTimeSnapshot) {
 
 export function renderCurrentWorldTime(snapshot = worldTimeSnapshotFromAbsoluteMinute(START_WORLD_ABSOLUTE_MINUTE)) {
   const daypartLabel = snapshot.daypart === "day" && snapshot.hour >= 16 ? "передвечір'я" : snapshot.daypartLabel;
+  const light = lightSnapshotFromWorldTime(snapshot);
   return [
     "🌒 Час Порубіжжя",
     "",
@@ -108,6 +111,8 @@ export function renderCurrentWorldTime(snapshot = worldTimeSnapshotFromAbsoluteM
     `Час доби: ${daypartLabel}.`,
     `Межовий час: близько ${snapshot.clockLabel}.`,
     `Місяць: ${snapshot.moonPhaseLabel}.`,
+    `Погода: ${renderWeatherLine(snapshot)}.`,
+    `Світло: ${light.label}.`,
     "",
     worldDaypartMood(snapshot),
   ].join("\n");

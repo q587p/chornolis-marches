@@ -32,7 +32,7 @@ import { buildAllPage, buildChatLogPage, buildStatBrief, buildWhoPage } from "./
 import { renderDepletedVegetationInspection, renderLocationBrief, renderLocationExits, renderLocationFeatureInteraction, renderLocationFeatureInteractionByQuery, renderLocationGlance, shakeTreeAtCurrentLocation } from "../services/locations";
 import { buildNewsIndexPage } from "./news";
 import { hideReplyKeyboard, showMainKeyboard, showMenu } from "./menu";
-import { showTime } from "./time";
+import { showTime, showWeather } from "./time";
 import { submitMove as submitCanonicalMove } from "./movement";
 import { submitGather as submitCanonicalGather } from "./gather";
 import { submitPosture } from "./posture";
@@ -1003,6 +1003,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "chat") return replyWithChat(ctx, parsed.mode, parsed.window);
     if (parsed.kind === "all") return replyWithAll(ctx, parsed.showDead);
     if (parsed.kind === "time") return showTime(ctx);
+    if (parsed.kind === "weather") return showWeather(ctx);
     if (parsed.kind === "menu") return showMenu(ctx);
     if (parsed.kind === "session-presence") return submitSessionPresence(ctx, parsed.mode);
     if (parsed.kind === "beginner-return") return requestBeginnerReturn(ctx);

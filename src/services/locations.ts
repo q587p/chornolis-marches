@@ -280,7 +280,11 @@ function featureDetailLine(feature: any, showTechnicalDetails = false) {
 
   if (isCampfireFeature(feature)) {
     if (isExtinguishedCampfire(feature)) {
-      details.push("лишився попіл і чорні головешки");
+      if (feature.name === "Ледь помітне вогнище") {
+        details.push("майже розсипалося в землю");
+      } else {
+        details.push("лишився попіл і чорні головешки");
+      }
       details.push("світла й тепла вже не дає");
     } else if (feature.type === "MAGIC_CAMPFIRE") {
       details.push("дає світло");
@@ -981,7 +985,9 @@ export async function renderLocationFeatureInteraction(
     ].join("\n");
   } else if (isCampfireFeature(feature)) {
     if (isExtinguishedCampfire(feature)) {
-      text = "Згасле вогнище лишило по собі попіл і чорні головешки. Світла й тепла воно не дає.";
+      text = feature.name === "Ледь помітне вогнище"
+        ? "Ледь помітне вогнище майже розсипалося в землю. Попіл змішався з пилом, чорні головешки кришаться під поглядом. Світла й тепла воно вже не дає."
+        : "Згасле вогнище лишило по собі попіл і чорні головешки. Світла й тепла воно не дає.";
       if (Number(featureData(feature).fuelTwigs ?? 0) > 0) text += "\n\nУ попелі вже лежить сухий хмиз, готовий прийняти вогонь.";
     } else if (feature.type === "MAGIC_CAMPFIRE") {
       text = "Вогнище освітлює все навколо. Поряд із ним легше відпочити, відігрітися й набратися додаткових сил.\n\nВи відчуваєте, як чиясь давня магія підтримує полум'я. Йому не потрібен хмиз, щоб горіти.";

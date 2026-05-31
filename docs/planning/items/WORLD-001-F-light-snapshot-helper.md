@@ -1,7 +1,7 @@
 ---
 id: WORLD-001-F
 title: Light snapshot helper
-status: next
+status: testing
 type: feature
 area: visibility
 priority: high
@@ -42,3 +42,10 @@ Create a shared helper that estimates current light from daypart, moon illuminat
 ## Implementation Order
 
 Do after: `WORLD-001-C` and `WORLD-001-E`; before `VIS-001-B/C/D/E`.
+
+## 0.14.3 Slice
+
+- Added a shared light snapshot helper that combines daypart, moon illumination, weather modifiers and optional local active light.
+- The helper returns a compact player-facing label plus internal numeric scores for future debug/admin and visibility work.
+- Added an async location helper that can ask existing fire/torch state whether a location has active local light.
+- No `/look` darkness reduction lands in this slice; `VIS-001-*` should consume the helper next.
