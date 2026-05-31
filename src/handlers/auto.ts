@@ -26,7 +26,7 @@ import { notifyPlayerObservers, playerRestStartObserverText, playerStandObserver
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
 const AUTO_SAY_CHANCE = Number(process.env.PLAYER_AUTO_SAY_CHANCE || 15);
 const AUTO_CONSENT_TITLE = "Player auto consent";
-export const AUTO_DREAM_BLOCK_MESSAGE = "Сон тихо каже: «Уві сні краще йти власним кроком. Авто лишається за порогом.»";
+export const AUTO_DREAM_BLOCK_MESSAGE = "Сон тихо каже:\n<blockquote>Уві сні краще йти власним кроком. Авто лишається за порогом.</blockquote>";
 
 export type AutoActionKey = "say" | "gather" | "look" | "move";
 type AutoEnableResult = { started: boolean; blocked: boolean };
@@ -141,6 +141,7 @@ async function isPlayerAutoBlockedByDream(player: { currentLocationId?: number |
 
 async function replyAutoBlockedByDream(ctx: any) {
   await ctx.reply(AUTO_DREAM_BLOCK_MESSAGE, {
+    parse_mode: "HTML",
     reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
   });
 }
@@ -356,6 +357,7 @@ async function runAutoStep(bot: Bot, telegramId: number) {
     if (await isPlayerAutoBlockedByDream(player)) {
       await disablePlayerAuto(telegramId);
       await bot.api.sendMessage(telegramId, AUTO_DREAM_BLOCK_MESSAGE, {
+        parse_mode: "HTML",
         reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, false),
       });
       return;

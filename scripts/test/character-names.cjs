@@ -12,8 +12,10 @@ const {
   normalizeNameForRegistry,
   onboardingNameApprovalNote,
   onboardingNameChoiceTextIntent,
+  paginatePreparedNames,
   preparedNameByKey,
   preparedNameByNominative,
+  preparedNameCompactSummary,
   randomAvailablePreparedName,
   validateCustomCharacterName,
 } = require("../../src/services/characterNames");
@@ -83,6 +85,19 @@ assert.ok(masculineNames.every((name) => name.suggestedGender === "MASCULINE"));
 assert.ok(feminineNames.every((name) => name.suggestedGender === "FEMININE"));
 assert.ok(pluralNames.every((name) => name.suggestedGender === "PLURAL"));
 assert.ok(masculineNames.some((name) => name.forms.nominative === "Северин"), "Expected Severyn to be available as a prepared masculine name");
+const firstNamePage = paginatePreparedNames(masculineNames, 0, 6);
+const secondNamePage = paginatePreparedNames(masculineNames, 1, 6);
+const lastNamePage = paginatePreparedNames(masculineNames, 999, 6);
+assert.equal(firstNamePage.page, 0);
+assert.equal(firstNamePage.items.length, 6);
+assert.equal(firstNamePage.hasPrevious, false);
+assert.equal(firstNamePage.hasNext, true);
+assert.equal(secondNamePage.page, 1);
+assert.equal(secondNamePage.items.length, 6);
+assert.equal(secondNamePage.hasPrevious, true);
+assert.equal(lastNamePage.page, lastNamePage.pageCount - 1);
+assert.equal(lastNamePage.hasNext, false);
+assert.equal(preparedNameCompactSummary(masculineNames[0]).includes("відмінки збережені"), false);
 assert.ok(customNameWarningText({ examples: ["Северин", "Богдан", "Олесь"] }).includes("<b>Северин</b>"), "Expected custom-name prompt to bold prepared examples");
 assert.match(customNameWarningText(), /Підготовлені імена вже перевірені/);
 assert.match(customNameWarningText(), /Власне ім'я можна носити одразу/);

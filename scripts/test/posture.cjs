@@ -53,6 +53,8 @@ assert.equal(isAutoBlockedInLocation({ key: "deep_dream", z: -10, region: { key:
 assert.equal(isAutoBlockedInLocation({ key: "start_border_camp", z: 0, region: { key: "borderland" } }), false);
 assert.match(AUTO_DREAM_BLOCK_MESSAGE, /Сон/);
 assert.match(AUTO_DREAM_BLOCK_MESSAGE, /Авто/);
+assert.match(AUTO_DREAM_BLOCK_MESSAGE, /<blockquote>/);
+assert.equal(AUTO_DREAM_BLOCK_MESSAGE.includes("«"), false);
 
 assert.equal(shouldShowInventoryButton({ inventoryCount: 0, isTutorialDream: true, tutorialInventoryAvailable: false }), false);
 assert.equal(shouldShowInventoryButton({ inventoryCount: 1, isTutorialDream: true, tutorialInventoryAvailable: false }), true);

@@ -26,7 +26,7 @@ import { resourceTypeDisplayName } from "./corpses";
 import { getPublicEcologySignStats, type PublicEcologySignStats } from "./ecologyStats";
 import { lifetimeSummary } from "./itemLifetime";
 import { playerShowsTechnicalDetails } from "./technicalDetails";
-import { dreamGateStatusText, isDreamGateFeature, lockedExitDirections, lockedExitLabel, rememberTutorialObservationLesson } from "./tutorial";
+import { dreamGateStatusText, ensureTutorialForagingResources, isDreamGateFeature, lockedExitDirections, lockedExitLabel, rememberTutorialObservationLesson } from "./tutorial";
 import { formatObservedPostureText } from "../utils/playerText";
 import { isFreshenedCorpse } from "./meat";
 import { GATE_CARCASS_DROPOFF_FEATURE_KEY, gateHuntingDropoffText, gateHuntingNoticeText, getGateHuntingSaturationState } from "./carcassDropoff";
@@ -168,6 +168,10 @@ function isTutorialObservationFeature(feature: any) {
   return featureData(feature).tutorial_observation_prompt === true;
 }
 
+function isTutorialEndFeature(feature: any) {
+  return featureData(feature).tutorial_end_prompt === true;
+}
+
 function isTutorialRestSeatFeature(feature: any) {
   return featureData(feature).tutorial_rest_seat === true;
 }
@@ -263,7 +267,7 @@ async function resolveInteractiveLocationFeature(locationId: number, query: stri
 
 function isTutorialPromptFeature(feature: any) {
   const data = featureData(feature);
-  return data.tutorial_wake_prompt === true || data.tutorial_time_prompt === true || data.tutorial_safety_prompt === true || data.tutorial_observation_prompt === true;
+  return data.tutorial_wake_prompt === true || data.tutorial_time_prompt === true || data.tutorial_safety_prompt === true || data.tutorial_observation_prompt === true || data.tutorial_end_prompt === true;
 }
 
 function featureBriefLine(feature: any) {
@@ -276,7 +280,11 @@ function featureDetailLine(feature: any, showTechnicalDetails = false) {
 
   if (isCampfireFeature(feature)) {
     if (isExtinguishedCampfire(feature)) {
-      details.push("лишився попіл і чорні головешки");
+      if (feature.name === "Ледь помітне вогнище") {
+        details.push("майже розсипалося в землю");
+      } else {
+        details.push("лишився попіл і чорні головешки");
+      }
       details.push("світла й тепла вже не дає");
     } else if (feature.type === "MAGIC_CAMPFIRE") {
       details.push("дає світло");
@@ -708,6 +716,7 @@ async function resourceButtonData(resources: any[], viewerPlayerId?: number) {
 
 export async function renderLocationBrief(locationId: number, viewerPlayerId?: number, options: LocationRenderOptions = {}) {
   await Promise.all([expireTimedCampfires(locationId), expireGroundLitTorches(undefined, new Date(), locationId)]);
+  await ensureTutorialForagingResources(locationId);
   const location = await prisma.cellLocation.findUnique({
     where: { id: locationId },
     include: {
@@ -781,6 +790,7 @@ export async function renderLocationExits(locationId: number) {
 
 export async function renderLocationDetails(locationId: number, viewerPlayerId?: number, options: LocationRenderOptions = {}) {
   await Promise.all([expireTimedCampfires(locationId), expireGroundLitTorches(undefined, new Date(), locationId)]);
+  await ensureTutorialForagingResources(locationId);
   const location = await prisma.cellLocation.findUnique({
     where: { id: locationId },
     include: {
@@ -865,6 +875,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
 }
 
 export async function buildGatherMenuForLocation(locationId: number, viewerPlayerId?: number) {
+  await ensureTutorialForagingResources(locationId);
   const resources = await prisma.resourceNode.findMany({
     where: { locationId, amount: { gt: 0 } },
     include: { resourceType: true },
@@ -975,7 +986,9 @@ export async function renderLocationFeatureInteraction(
     ].join("\n");
   } else if (isCampfireFeature(feature)) {
     if (isExtinguishedCampfire(feature)) {
-      text = "Згасле вогнище лишило по собі попіл і чорні головешки. Світла й тепла воно не дає.";
+      text = feature.name === "Ледь помітне вогнище"
+        ? "Ледь помітне вогнище майже розсипалося в землю. Попіл змішався з пилом, чорні головешки кришаться під поглядом. Світла й тепла воно вже не дає."
+        : "Згасле вогнище лишило по собі попіл і чорні головешки. Світла й тепла воно не дає.";
       if (Number(featureData(feature).fuelTwigs ?? 0) > 0) text += "\n\nУ попелі вже лежить сухий хмиз, готовий прийняти вогонь.";
     } else if (feature.type === "MAGIC_CAMPFIRE") {
       text = "Вогнище освітлює все навколо. Поряд із ним легше відпочити, відігрітися й набратися додаткових сил.\n\nВи відчуваєте, як чиясь давня магія підтримує полум'я. Йому не потрібен хмиз, щоб горіти.";
@@ -1037,7 +1050,7 @@ export async function renderLocationFeatureInteraction(
   if (isTutorialInsideFeature(feature)) keyboard.text("🕳️ Всередину", "move:INSIDE").row();
   if (isTutorialOutsideFeature(feature)) keyboard.text("🕳️ Назовні", "move:OUTSIDE").row();
   if (featureData(feature).tutorial_time_prompt === true) keyboard.text("🌒 Час", "time:show").row();
-  if (featureData(feature).tutorial_observation_prompt === true) keyboard.text("✅ Закінчити навчання", "tutorial:end").row();
+  if (isTutorialEndFeature(feature)) keyboard.text("✅ Закінчити навчання", "tutorial:end").row();
   if (featureData(feature).tutorial_wake_prompt === true) keyboard.text("🌅 Прокинутися", "tutorial:wake").row();
   if (isTorchSourceFeature(feature)) keyboard.text("🕯 Взяти факел", `torch:take:${feature.id}`).row();
   if (isClimbTreeFeature(feature)) keyboard.text("🌳 Залізти", "move:UP").row();

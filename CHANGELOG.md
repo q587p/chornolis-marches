@@ -7,6 +7,64 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.14.2 - Tutorial polish and visible world-time beats - 12026-05-31
+
+### Added
+
+- Added compact heartbeat notices for internal daypart changes, so dawn, day, dusk and night announce that the world is getting lighter or darker before full visibility penalties arrive.
+- Added wrong-keyboard-layout suggestions for common mistyped commands, so inputs such as `[nj` can suggest the intended Ukrainian command.
+- Added pagination for prepared onboarding names, replacing one oversized list and button wall with compact pages.
+- Added a future theft/hiding design note and planning items while keeping implementation deferred behind visibility and observation foundations.
+
+### Changed
+
+- Kept tutorial foraging reliable by refilling dream berries and herbs on location render, gather-menu render and gather completion, so one player cannot exhaust the lesson for another.
+- Kept `Зручна лавка` as a fast-rest tutorial feature without raising max stamina; extra stamina remains reserved for `Жар легкого перепочинку`.
+- Protected the tutorial rest return path so returning from the deep-rest fire preserves stamina instead of replaying the one-third stamina lesson.
+- Moved the tutorial-completion button surface from the fox-observation lesson to the safety room, `Затишок останнього кроку`, and recorded that the surface should move forward again as new final tutorial rooms appear.
+- Cleaned up direct tutorial voice formatting so Сон/Дрімота lines use blockquote-style presentation where Telegram supports HTML instead of inline `каже: «...»` text.
+- Updated world-time docs to clarify that chronicle Kyiv grouping is display-only, weather display/simulation remains deferred, and stats reset must not reset the internal world clock.
+
+### Validation
+
+- Ran `npm run planning:export`.
+- Ran `node scripts/test/character-names.cjs`.
+- Ran `node scripts/test/world-time.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/tutorial-foraging.cjs`.
+- Ran `node scripts/test/world-seed.mjs`.
+- Ran `node scripts/test/posture.cjs`.
+- Ran `node scripts/test/tutorial-voices.cjs`.
+- Ran `node scripts/test/hunger-cues.cjs`.
+- Ran `npm test`.
+- Ran `npm run build`.
+- Ran `git diff --check`.
+
+---
+
+## 0.14.3 - Weather MVP and light snapshot foundation - 12026-05-31
+
+### Added
+
+- Added a small internal weather service backed by the existing `WorldState` weather fields, including weather key, intensity, next-change world minute and non-proactive `WorldEvent` logs for weather changes.
+- Added `/weather` plus `weather`/`погода` text aliases for the current Chornolis weather.
+- Added a shared light snapshot helper that combines daypart, moon illumination, weather modifiers and optional local active light.
+- Added focused world-time tests for weather text, weather light modifiers and light snapshot behavior.
+
+### Changed
+
+- `/time` now includes compact weather and light summary lines from the stored/derived internal world state.
+- Player/admin-created ordinary campfire ashes now decay by internal world time: after two in-game days they disappear from ordinary location lists, with a near-gone state during the final two in-game hours.
+- `/help`, `/commands` and input-alias docs now include `/weather`.
+- Updated planning/system docs so `WORLD-001-E/F` reflect the `0.14.3` implementation slice and keep visibility reduction/darkness behavior deferred.
+
+### Validation
+
+- Ran `node scripts/test/world-time.cjs`.
+- Ran `node scripts/test/campfire-decay.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/slashless-command-coverage.cjs`.
+
 ---
 
 ## 0.14.4 - Visibility debug foundation - 12026-05-31

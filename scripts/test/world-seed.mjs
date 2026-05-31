@@ -135,12 +135,48 @@ for (const key of ["closed_gate_torch_stand", "closed_gate_hunting_notice", "clo
 const gateTorchStand = features.find((item) => item.key === "closed_gate_torch_stand");
 assert.notEqual(gateTorchStand?.data?.icon, "🔥", "Torch stand should not use the fire icon reserved for flame/campfire actions");
 
+const tutorialRestBench = features.find((item) => item.key === "dream_tutorial_rest_fire");
+assert.ok(tutorialRestBench, "Tutorial rest bench feature should exist");
+assert.equal(
+  tutorialRestBench.restStaminaCapMultiplier ?? null,
+  null,
+  "Tutorial rest bench should speed up rest without raising max stamina",
+);
+assert.equal(
+  tutorialRestBench.data?.rest_stamina_cap_multiplier ?? null,
+  null,
+  "Tutorial rest bench data should not raise max stamina",
+);
+assert.ok(
+  Number(tutorialRestBench.data?.rest_stamina_regen_multiplier ?? 1) > 1,
+  "Tutorial rest bench should still speed up stamina recovery",
+);
+
+const tutorialDeepRestHeat = features.find((item) => item.key === "dream_tutorial_deep_rest_fire");
+assert.ok(tutorialDeepRestHeat, "Tutorial deep rest heat feature should exist");
+assert.ok(
+  Number(tutorialDeepRestHeat.restStaminaCapMultiplier ?? 1) > 1,
+  "Tutorial deep rest heat should be the tutorial feature that can raise max stamina",
+);
+assert.ok(
+  Number(tutorialDeepRestHeat.data?.rest_stamina_cap_multiplier ?? 1) > 1,
+  "Tutorial deep rest heat data should keep the extra stamina cap",
+);
+
 for (const key of ["dream_tutorial_sleep_gate", "dream_tutorial_sleep_gate_return"]) {
   const feature = features.find((item) => item.key === key);
   assert.ok(feature, `Dream gate feature missing: ${key}`);
   assert.ok(feature.data?.aliases?.includes("браму"), `Dream gate should include accusative alias браму: ${key}`);
   assert.ok(feature.data?.aliases?.includes("брами"), `Dream gate should include genitive alias брами: ${key}`);
 }
+
+const tutorialEndFeatures = features.filter((item) => item.data?.tutorial_end_prompt === true);
+assert.equal(tutorialEndFeatures.length, 1, "Tutorial should expose exactly one end-learning button surface");
+assert.equal(
+  tutorialEndFeatures[0].locationKey,
+  "dream_tutorial_safety",
+  "Tutorial end-learning button should currently live in Затишок останнього кроку",
+);
 
 for (const creature of uniqueCreatures) {
   assertKnown(locationKeys, creature.locationKey, `Unknown locationKey for unique creature ${creature.name}`);
