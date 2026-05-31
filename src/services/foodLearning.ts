@@ -143,6 +143,7 @@ export async function recordFresheningSource(input: {
   actorCreatureId?: number;
   creatureId?: number;
   speciesKey?: string;
+  success?: boolean;
 }) {
   return recordFoodSource({
     title: FRESHENING_SOURCE_EVENT_TITLE,

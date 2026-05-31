@@ -64,6 +64,16 @@ docs/
     world-lexicon.md
 ```
 
+## Lexicon vs grammar layer
+
+`worldLexicon.ts` is content. It stores stable world words and their facts: case forms, grammatical gender, animacy, kind and tags. Add entries here when a noun becomes recurring world vocabulary: species, corpse/resource names, professions, spirits, feature labels, common gameplay nouns.
+
+`grammar.ts` is machinery. It should know how to use lexicon-backed forms, fall back for ad hoc names, infer actor grammatical gender from persisted fields, and choose small agreement forms such as past-tense verbs. It should not become a second hand-written vocabulary list when a stable noun belongs in `worldLexicon.ts`.
+
+If a helper answers “what are the forms of this world noun?”, prefer the lexicon first and expose it through `grammar.ts`. If a helper answers “which form/verb agrees with this actor or sentence?”, it belongs in `grammar.ts`.
+
+Avoid creating parallel Ukrainian grammar utilities such as `utils/ukrainianVerb.ts` for shared agreement rules. A tiny local helper is acceptable only for one-off formatting, but once two gameplay surfaces need the same Ukrainian gender/case/verb behavior, move it into `grammar.ts` or a deliberately named grammar submodule.
+
 ## Integration rules
 
 1. Prefer stored forms from Prisma for persisted species/creatures/players.

@@ -1,10 +1,10 @@
 ---
 id: PROG-004
 title: Personal chronicle milestones
-status: backlog
+status: next
 type: feature
 area: progression
-priority: medium
+priority: high
 estimate: 2-4h
 tags:
   - journal
@@ -32,6 +32,7 @@ As a player, when my character repeatedly succeeds or fails at something, I want
 ## First Scope
 
 - Add chronicle milestone definitions with stable keys, thresholds and text templates.
+- Add the counter/stat recording layer early, even if the full private chronicle UI lands later.
 - Store private chronicle entries per player with:
   - milestone key;
   - threshold/count reached;
@@ -39,6 +40,9 @@ As a player, when my character repeatedly succeeds or fails at something, I want
   - real timestamp;
   - optional location/action context.
 - Start with a small set of food/action milestones:
+  - first lit campfire;
+  - `10` lit campfires;
+  - `100` lit campfires;
   - first successfully cooked meat;
   - first failed/burnt meat;
   - `5` burnt meat failures;
@@ -50,6 +54,7 @@ As a player, when my character repeatedly succeeds or fails at something, I want
   - first freshened corpse;
   - repeated failed attacks or narrow survival moments.
 - Show entries through a future personal `journal` / `літопис` command or a section in the character card until the full journal command exists.
+- Until the journal surface exists, make the raw milestone counters inspectable for scribes/admins so repeated actions are not lost.
 
 ## Tone Notes
 
@@ -75,6 +80,7 @@ As a player, when my character repeatedly succeeds or fails at something, I want
 
 - Chronicle entries are private to the player unless explicitly shared later.
 - The same threshold writes only one entry per player.
+- Fire-lighting statistics are recorded for first, tenth and hundredth campfire lighting.
 - Cooking failure milestones include at least `5` and `50` burnt meat failures.
 - Successful and failed actions can use the same milestone service.
 - Entries include enough date/context to answer "when did this happen?"

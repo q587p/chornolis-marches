@@ -884,6 +884,29 @@ export async function addTwigsToCampfire(playerId: number, featureId?: number) {
   return memoryText ? `${base}\n\n${memoryText}` : base;
 }
 
+export async function relightableCampfireFromTorchId(playerId: number, featureId?: number) {
+  await expireTimedCampfires();
+  const torchState = await getPlayerTorchState(playerId);
+  if (!torchState.isLit) return null;
+
+  const player = await prisma.player.findUnique({
+    where: { id: playerId },
+    select: { currentLocationId: true },
+  });
+  if (!player?.currentLocationId) return null;
+
+  const feature = featureId
+    ? await prisma.locationFeature.findFirst({
+        where: { id: featureId, locationId: player.currentLocationId, isActive: true, type: "CAMPFIRE" },
+      })
+    : await prisma.locationFeature.findFirst({
+        where: { locationId: player.currentLocationId, isActive: true, type: "CAMPFIRE" },
+        orderBy: [{ providesLight: "asc" }, { id: "asc" }],
+      });
+
+  return feature && isExtinguishedCampfire(feature) ? feature.id : null;
+}
+
 export async function canAddTwigsToNearbyCampfire(playerId: number) {
   await expireTimedCampfires();
   const { twigs } = await ensureTorchResourceTypes();

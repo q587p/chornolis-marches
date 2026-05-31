@@ -23,6 +23,37 @@ export function normalizeTargetKey(value: string) {
     .trim();
 }
 
+const SELF_TARGET_KEYS = new Set([
+  "me",
+  "myself",
+  "self",
+  "i",
+  "я",
+  "мене",
+  "себе",
+  "собі",
+  "собою",
+  "самого себе",
+  "саму себе",
+  "сам себе",
+  "сама себе",
+  "мій персонаж",
+  "мого персонажа",
+  "свій персонаж",
+  "свого персонажа",
+  "моя постать",
+  "мою постать",
+  "своя постать",
+  "свою постать",
+]);
+
+export function isSelfTargetQuery(value: string) {
+  const target = normalizeTargetKey(value)
+    .replace(/^(?:at|на|до)\s+/, "")
+    .trim();
+  return SELF_TARGET_KEYS.has(target);
+}
+
 function uniqueKeys(keys: Array<string | null | undefined>) {
   return [...new Set(keys.filter(Boolean).map((key) => normalizeTargetKey(String(key))).filter(Boolean))];
 }

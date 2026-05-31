@@ -4,7 +4,16 @@ process.env.AUTO_AFK_AFTER_MINUTES = "15";
 
 require("ts-node/register");
 
-const { canSendIdleReminder, canSendProactiveMessage, canSendScheduledIdleReminder, idleReminderSceneKeyForLocation, isAutoAfkDue, playerPresenceDisplaySuffix } = require("../../src/services/sessionPresence");
+const {
+  canSendIdleReminder,
+  canSendProactiveMessage,
+  canSendScheduledIdleReminder,
+  idleReminderSceneKeyForLocation,
+  isAutoAfkDue,
+  playerPresenceDisplaySuffix,
+  sessionPresenceLabel,
+  sessionPresenceReasonLabel,
+} = require("../../src/services/sessionPresence");
 
 assert.equal(canSendProactiveMessage({ sessionPresence: "ACTIVE", remindersPaused: false }), true);
 assert.equal(canSendProactiveMessage({ sessionPresence: "ACTIVE", remindersPaused: false, onboardingComplete: false }), false);
@@ -18,6 +27,25 @@ assert.equal(playerPresenceDisplaySuffix({ sessionPresence: "AFK" }), " (від�
 assert.equal(playerPresenceDisplaySuffix({ sessionPresence: "ACTIVE" }), "");
 assert.equal(playerPresenceDisplaySuffix({ sessionPresence: "ENDED" }), "");
 assert.equal(playerPresenceDisplaySuffix(null), "");
+
+assert.equal(sessionPresenceReasonLabel("manual_afk"), "ручний AFK (/afk або кнопка)");
+assert.equal(sessionPresenceReasonLabel("auto_afk"), "авто-AFK через неактивність");
+assert.equal(sessionPresenceReasonLabel("end_session"), "завершення сесії");
+assert.equal(sessionPresenceReasonLabel("player_interaction"), "повернення через взаємодію");
+assert.equal(sessionPresenceReasonLabel(null), "не записано");
+assert.equal(
+  sessionPresenceLabel({
+    sessionPresence: "AFK",
+    remindersPaused: true,
+    sessionPresenceReason: "auto_afk",
+    sessionPresenceChangedAt: new Date("2026-05-31T10:00:00.000Z"),
+  }),
+  "AFK / відійшов; нагадування на паузі; причина: авто-AFK через неактивність; змінено: 2026-05-31T10:00:00.000Z"
+);
+assert.equal(
+  sessionPresenceLabel({ sessionPresence: "ENDED", remindersPaused: true, sessionPresenceReason: "end_session" }),
+  "сесію завершено; нагадування на паузі; причина: завершення сесії"
+);
 
 const now = new Date("2026-05-30T12:15:00.000Z");
 assert.equal(isAutoAfkDue({ sessionPresence: "ACTIVE", remindersPaused: false, lastPlayerActionAt: new Date("2026-05-30T12:00:00.000Z") }, now), true);

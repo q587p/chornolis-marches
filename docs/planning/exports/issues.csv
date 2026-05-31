@@ -2,6 +2,7 @@ id,title,status,type,area,priority,tags,file
 ADM-001,"Admin permissions, moderation and restricted reset",backlog,feature,admin,high,"admin,permissions,reset,moderation,names",docs/planning/items/ADM-001-admin-rights.md
 ADM-001-A,Dangerous scribe tool audit,done,technical,admin,medium,"admin,audit,safety",docs/planning/items/ADM-001-A.md
 ADM-001-B,Scribe action audit helper,done,technical,admin,medium,"admin,audit,world-events",docs/planning/items/ADM-001-B.md
+ADM-001-C,Restart confirmation and HTML safety hardening,next,technical,admin,high,"admin,safety,restart,slashless,html,features",docs/planning/items/ADM-001-C.md
 ADM-002,Scribe creature corpse creation command,testing,feature,admin,medium,"admin,creatures,corpses,testing",docs/planning/items/ADM-002-add-creature-corpse-command.md
 CAL-001,"Calendar, moon phases and named years",icebox,system,world_time,medium,"calendar,world-time,moon-phases,seasons,folklore,atmosphere",docs/planning/items/CAL-001_calendar_moon_phases_and_named_years.md
 CMD-001,Near-term text command pack,testing,feature,commands,high,"commands,aliases,mud,speech,navigation",docs/planning/items/CMD-001-near-term-text-command-pack.md
@@ -20,6 +21,7 @@ ECON-001,Barter and trade,backlog,feature,economy,medium,"barter,trade,npc,econo
 FIRE-001-A,Active light connects to visibility,next,feature,survival,high,"fire,light,visibility",docs/planning/items/FIRE-001-A.md
 FIRE-001-B,Expired campfire behavior polish,next,feature,survival,medium,"fire,campfire,copy",docs/planning/items/FIRE-001-B.md
 FIRE-001-C,Carried torch visibility,next,feature,survival,high,"torch,light,visibility",docs/planning/items/FIRE-001-C.md
+FIRE-001-D,Light source matrix test,next,qa,survival,high,"fire,light,visibility,torch,campfire,npc",docs/planning/items/FIRE-001-D-light-source-matrix-test.md
 FISH-001,Riverbank fishing and fisher NPC,backlog,feature,survival,medium,"fishing,npc,skills,riverbank,observation",docs/planning/items/FISH-001-riverbank-fishing-and-fisher-npc.md
 FOOD-001,"Corpse freshening, meat and campfire cooking",testing,feature,survival,high,"food,corpses,freshening,cooking,hunger,campfire",docs/planning/items/FOOD-001-corpse-freshening-meat-and-campfire-cooking.md
 FOOD-002,Spoiled meat and risky eating,backlog,feature,survival,medium,"food,cooking,survival,hunger,risk",docs/planning/items/FOOD-002-spoiled-meat-and-risky-eating.md
@@ -32,6 +34,7 @@ HMYZ-001-B,Seed starter hmyz,next,feature,survival,high,"hmyz,seed,starter",docs
 HMYZ-001-C,Pickup hmyz polish,next,feature,survival,high,"hmyz,pickup,inventory",docs/planning/items/HMYZ-001-C.md
 HMYZ-001-D,Add hmyz to campfire,next,feature,survival,high,"hmyz,campfire,fuel",docs/planning/items/HMYZ-001-D.md
 HMYZ-001-E,Hmyz observer messages,next,ux,survival,medium,"hmyz,observer,local-events",docs/planning/items/HMYZ-001-E.md
+HMYZ-001-F,Persist and queue tree-shake hmyz,backlog,technical,survival,medium,"hmyz,trees,resources,action-queue",docs/planning/items/HMYZ-001-F.md
 ICE-001,Mythic skill learning from spirits,icebox,feature,progression,low,"liminality,skills,mythic,observation",docs/planning/items/ICE-001-mythic-skills.md
 ICE-002,Rituals and sacred days,icebox,feature,mythic_systems,low,"rituals,calendar,weather,mythic",docs/planning/items/ICE-002-rituals-and-sacred-days.md
 ICE-003,Caravans and regional trade,icebox,feature,economy,low,"economy,settlements,npc,world_simulation",docs/planning/items/ICE-003-caravans.md
@@ -75,17 +78,20 @@ ONB-001-C,Hint after first Роздивитися,next,ux,onboarding,high,"tutor
 ONB-001-D,Tutorial rest lesson polish,next,ux,onboarding,medium,"tutorial,rest,stamina",docs/planning/items/ONB-001-D.md
 ONB-001-E,Wake and return fallback polish,next,ux,onboarding,medium,"tutorial,sleep,wake,aliases",docs/planning/items/ONB-001-E.md
 ONB-001-F,Tutorial hint that observation matters,next,ux,onboarding,medium,"tutorial,observe,learning",docs/planning/items/ONB-001-F.md
+ONB-001-G,"Tutorial fire, torch and hmyz branch",next,feature,onboarding,high,"tutorial,fire,torch,hmyz,campfire",docs/planning/items/ONB-001-G.md
 ONB-002,Character name rules and onboarding,next,feature,onboarding,high,"onboarding,names,scribes,generated-names,ukrainian-grammar,validation",docs/planning/items/ONB-002-character-name-rules-and-onboarding.md
 ONB-002-A,Expand prepared-name pool,testing,feature,onboarding,high,"onboarding,names,ukrainian-grammar",docs/planning/items/ONB-002-A.md
 ONB-002-B,Expand forbidden-name normalization,testing,feature,onboarding,high,"onboarding,names,validation",docs/planning/items/ONB-002-B.md
 ONB-002-C,Uncertain custom-name review status,testing,feature,onboarding,high,"onboarding,scribes,names",docs/planning/items/ONB-002-C.md
 ONB-002-D,Name onboarding help copy,next,ux,onboarding,medium,"onboarding,help,copy",docs/planning/items/ONB-002-D.md
 ONB-003,Tutorial player wellbeing aside,testing,ux,onboarding,medium,"onboarding,tutorial,wellbeing,sleep",docs/planning/items/ONB-003-player-wellbeing-aside.md
+ONB-004,First night guidance,backlog,ux,onboarding,medium,"onboarding,night,light,tutorial,copy",docs/planning/items/ONB-004-first-night-guidance.md
 PERF-001,Runtime performance plan and creature simulation budget,backlog,technical,performance,high,"performance,ecology,creatures,action-queue,simulation,status,auto",docs/planning/items/PERF-001-budgeted-and-aggregated-creature-simulation.md
 PLAN-001,Repository docs are the planning source of truth,testing,documentation,planning,high,"planning,docs,roadmap",docs/planning/items/PLAN-001.md
 PROG-002,Observation-based learning,backlog,feature,progression,medium,"skills,observation,npc,animals,mythic",docs/planning/items/PROG-002-observation-learning.md
 PROG-003,Animal experience and titles,backlog,feature,progression,medium,"animals,ecology,progression,combat",docs/planning/items/PROG-003-animal-experience-and-titles.md
-PROG-004,Personal chronicle milestones,backlog,feature,progression,medium,"journal,chronicle,milestones,cooking,learning,personal-history",docs/planning/items/PROG-004-personal-chronicle-milestones.md
+PROG-004,Personal chronicle milestones,next,feature,progression,high,"journal,chronicle,milestones,cooking,learning,personal-history",docs/planning/items/PROG-004-personal-chronicle-milestones.md
+QA-001,0.13 first-session closure smoke,next,qa,onboarding,high,"qa,onboarding,tutorial,core-loop,release",docs/planning/items/QA-001-0.13-first-session-closure-smoke.md
 REL-001,Release branch PR summary and risk discipline,testing,process,release,high,"release,github,pr,planning",docs/planning/items/REL-001-release-branch-pr-summary-risk.md
 SES-001-A,AFK and End Session controls,testing,feature,session,high,"telegram,session,afk,ux",docs/planning/items/SES-001-A.md
 SES-001-B,Auto-AFK and proactive message guards,testing,feature,session,high,"telegram,session,reminders,tutorial",docs/planning/items/SES-001-B.md
@@ -120,6 +126,7 @@ VIS-001-B,Hide location details in darkness,next,feature,visibility,high,"visibi
 VIS-001-C,Nearby beings visibility in darkness,next,feature,visibility,high,"visibility,targets,night",docs/planning/items/VIS-001-C.md
 VIS-001-D,Track visibility gate,next,feature,visibility,medium,"visibility,tracks,night",docs/planning/items/VIS-001-D.md
 VIS-001-E,Ground object visibility gate,next,feature,visibility,medium,"visibility,objects,night",docs/planning/items/VIS-001-E.md
+VIS-001-F,Darkness copy audit,next,content,visibility,medium,"visibility,night,copy,atmosphere,ukrainian",docs/planning/items/VIS-001-F-darkness-copy-audit.md
 VIS-002,Hidden presence foundation,backlog,technical,visibility,medium,"visibility,hidden-presence,targets",docs/planning/items/VIS-002-hidden-presence-foundation.md
 WEB-001,"Web map, multi-client game server, messenger bridges and limited MUD gateway",icebox,feature,server,medium,"web,map,mud,server,multi-client,architecture",docs/planning/items/web-001-web-map-and-mud-gateway.md
 WEB-002,Independent status site and deploy visibility,backlog,technical,server,medium,"web,status,deploy,operations,reliability",docs/planning/items/WEB-002-independent-status-site.md
@@ -128,6 +135,7 @@ WORLD-001-A,Tiny world-time model design,next,design,world_time,high,"world-time
 WORLD-001-B,Daypart storage,next,technical,world_time,high,"world-time,schema",docs/planning/items/WORLD-001-B.md
 WORLD-001-C,Daypart helper and tick advancement,next,feature,world_time,high,"world-time,world-tick",docs/planning/items/WORLD-001-C.md
 WORLD-001-D,/time reads world state,next,feature,world_time,high,"world-time,time-command",docs/planning/items/WORLD-001-D.md
+WORLD-001-E,World-time debug and admin safety,next,technical,world_time,medium,"world-time,day-night,admin,debug,testing",docs/planning/items/WORLD-001-E-time-debug-admin-safety.md
 WORLD-002,Campfires and light,next,feature,survival,high,"survival,light,crafting,night",docs/planning/items/WORLD-002-campfires-and-light.md
 WORLD-002-hidden-spirit,Hidden spirit seed and boundaries,backlog,feature,world,medium,"world,hidden-presence,spirit,campfire",docs/planning/items/WORLD-002-hidden-spirit-seed-and-boundaries.md
 WPN-001,Minimal weapon catalog and equip foundation,next,feature,items,medium,"weapons,inventory,equipment,freshening",docs/planning/items/WPN-001-minimal-weapon-catalog-and-equip.md

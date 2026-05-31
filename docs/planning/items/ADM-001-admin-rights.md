@@ -26,6 +26,8 @@ Add a proper admin rights and moderation layer before public testing grows.
 - `/adminHelp`, `/reset`, `/addCampfire`, `/addTorch`, `/addTwigs`, creature debug commands, runtime tick commands and other technical views now require scribe/admin access.
 - Log who ran `/reset` and when.
 - Consider confirmation before destructive admin actions.
+- `restart` without `/` now follows the command parity rule. Treat it as a destructive command surface: it should share the `/restart` confirmation flow rather than deleting character state immediately.
+- Feature fields rendered into HTML are a safety surface too. Names, descriptions and data-derived hints should be escaped before being placed into Telegram HTML output.
 
 ## Name Approval Flow
 

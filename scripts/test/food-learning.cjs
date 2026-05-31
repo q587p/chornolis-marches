@@ -46,6 +46,7 @@ assert.equal(COOKING_PRACTICE_GROWTH_MESSAGE, "Навичка <b>приготу�
 assert.equal(COOKING_OBSERVATION_GROWTH_MESSAGE, "Навичка <b>приготування</b> трохи підросла.");
 
 assert.equal(fresheningSourceDescription({ actorPlayerId: 7, creatureId: 42, speciesKey: "mouse" }), "actorPlayer=7; creature=42; species=mouse");
+assert.equal(fresheningSourceDescription({ actorPlayerId: 7, creatureId: 42, speciesKey: "mouse", success: false }), "actorPlayer=7; creature=42; species=mouse; success=false");
 assert.equal(fresheningSourceDescription({ actorCreatureId: 9 }), "actorCreature=9");
 assert.equal(cookingSourceDescription({ actorPlayerId: 7, success: true }), "actorPlayer=7; success=true");
 assert.equal(cookingSourceDescription({ actorCreatureId: 9, success: false }), "actorCreature=9; success=false");

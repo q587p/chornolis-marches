@@ -23,6 +23,8 @@ Features may set `data.icon` when the generic type icon would make nearby landma
 
 Feature icons and command icons should not collide in the same UI surface when avoidable. A command button that shares the exact icon of a nearby feature can look like a feature action rather than a global command; future icon audits should check both feature buttons and ordinary command buttons together.
 
+Feature fields are content, not trusted markup. Anything from feature `name`, `description`, aliases or `data` that enters a Telegram HTML message must be escaped with `escapeHtml` or a shared formatter before interpolation. Keep authored emphasis/quote wrappers outside the data string so feature inspection cannot accidentally inject raw HTML.
+
 Current interactive examples:
 
 - border marker: shows local orientation and nearby landmarks;
@@ -32,6 +34,11 @@ Current interactive examples:
 - gate notice / carcass drop-off: should explain what the settlement is asking for, what can be put there and why it matters, not only list the sign or pit by name.
 - climbable tree: a surface feature that advertises an `UP` exit to a real upper location and a matching `DOWN` exit back to the base location.
 - shakeable branches: an upper-tree feature with a cooldown; `/examine` should explain whether dry twigs can be shaken down now or whether the tree needs time before it gives more.
+
+Current tree-shake MVP limits:
+
+- The tree-shake cooldown is stored in `Feature.data.last_shaken_at`, so a reset/reseed can reset it. This is acceptable for the first slice, but a later cleanup should move renewable-feature cooldowns to a persistent runtime/event model.
+- `Потрусити дерево` / `/shake_tree` is immediate after the usual permission/location checks. If shaking should cost time, stamina, noise or risk, move it to the action queue like gathering.
 
 Planned interactive examples:
 

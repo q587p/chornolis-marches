@@ -4,44 +4,38 @@ This file should stay small. If everything is next, nothing is next.
 
 ## Current Lane
 
-The current lane is the three-month vertical slice:
+The current lane is the transition from `0.13.x` first-session stability into `0.14.x` night/light foundations:
 
-1. 0.13 - Core Loop & Onboarding Stability.
-2. 0.14 - Night, Light and Firewood.
-3. 0.15 - Attention and Learning MVP.
+1. Close `0.13.x` as Core Loop & Onboarding Stability.
+2. Start `0.14.x` as Night, Light and Firewood.
+3. Protect `0.15` Attention and Learning MVP by landing visibility/light foundations first.
 
-## 0.13 Next
+See also: `docs/planning/0.13-closure-and-0.14-transition.md`.
 
+## Finish 0.13.x
+
+- QA-001: run the first-session closure smoke before starting the next minor line.
 - REL-001: keep release/patch work on a separate branch with a PR into `main`, including summary, validation and risk notes.
-- SES-001: add AFK / End Session controls, silent Auto-AFK after player inactivity, one idle reminder per scene and send-time guards for delayed/proactive messages so the bot stays quiet while a player is away.
-- ONB-002: character name onboarding polish.
-- ONB-001: dream tutorial compact completion.
-- ONB-003: add a one-time fourth-wall wellbeing aside in the tutorial dream after first rest or food, framed as Сон briefly noticing the player behind the character.
-- SURV-001: beginner return / `Повернення`.
-- LOOP-001: starter location and bridge threshold polish.
-- NPC-004: continue actor inventory and held-light foundation after the 0.13.13 `CreatureResource` torch slice; next work is broader item/carry semantics and fewer remaining `currentAction` bridges.
-- NPC-005: add NPC hunger and food behavior so hunters and herbalists can eat through shared survival/inventory rules.
-- NPC-002: finish the hunter auto-program MVP after the first state-machine slice: real torch bundle/light state via `NPC-004`, inspect/check beat, route/radius tuning and recovery rules for claimed carcasses.
-- ECO-003: tune gate-hunting saturation after the first 0.13.12 slice; the sign, rewards and hunter stand-down behavior exist, but thresholds, persisted linger/cooldown, per-tick saturation caching for larger hunter counts, and the temporary plain `/put` default still need follow-up.
-- ECO-005: add the action layer for animal-restoration offerings: fitting gifts such as herbs and berries, delayed low-population recovery, cooldowns and no spawn-shop behavior. The first shared charm feature exists at `Камінь малого сліду`.
-- LOOP-003: tune old campfire memory omens after the first small reveal slice; future work can add more authored locations and traces without turning it into a ritual/reward system.
-- NPC-003: extract herbalist behavior into its own service layer, shaped like the hunter service, before adding more visible herbalist/learning behavior.
-- MAP-003 follow-up: continue expanding the playable waking-world map beyond the first northern forest pocket, with more reachable locations, region growth and authored features/resources.
-- WPN-001: minimal weapon catalog and equip/unequip foundation; keep it tied to existing resource inventory and do not start full combat.
-- WPN-002: weapon-aware look/examine/freshen/attack text; require a sharp equipped weapon for freshening, but keep current target eligibility.
-- FOOD-004: add restrained hunger cues and eating nudges now that hunger can be eased, using `SES-001` reminder guards so they never become chat spam.
-- FOOD-005: make hunger matter through slower stamina recovery and slow health loss at severe hunger, tuned gently enough to stay readable and recoverable.
-- FOOD-006: add mushroom varieties and identification so examining forage matters before eating, with poisonous, nourishing, cookable and future alchemy-useful mushrooms.
+- Small onboarding/help/feature-inspection copy fixes discovered during the smoke pass are acceptable.
+- Planning status cleanup for already implemented and tested 0.13 items is acceptable.
+- Do not add day/night, ordinary sleep, hidden presence, weapons or NPC hunger to the closure patch unless they are needed to fix a blocker.
 
-## 0.14 Next
+## Start 0.14.x
 
-- WORLD-001: dawn/day/dusk/night world state.
-- VIS-001: shared visibility layer.
-- FIRE-001: campfire and torch visibility integration.
-- HMYZ-001: find/pickup/add хмиз loop.
-- MAP-002: first biome-aware foraging table.
-- SLEEP-001: lying posture and `/lie` / `лягти` / `лежати` command.
-- SLEEP-002: ordinary sleep MVP with `/sleep`, `/wake`, stronger recovery and `/sleep tutorial` separation.
+Implement `0.14.x` in small slices:
+
+1. WORLD-001-A/B/C/D: tiny world-time model, daypart helper, tick advancement and `/time` reading real world state.
+2. WORLD-001-E: time/debug/admin safety for testing daypart state.
+3. VIS-001-A: shared visibility service skeleton.
+4. VIS-001-B/C/D/E: darkness affects location detail, nearby beings, tracks and ground objects.
+5. VIS-001-F: darkness copy audit, so hidden/reduced details sound atmospheric rather than technical.
+6. FIRE-001-A/C and FIRE-001-D: active light connects to visibility; carried, dropped and NPC-held light sources are covered by a matrix test.
+7. HMYZ-001-A/B/C/D: audit, seed, pickup and add-to-fire polish for хмиз/firewood.
+8. MAP-002-A/B/C: first biome-aware foraging table and text variants.
+9. ONB-004: first-night guidance once darkness is visible to beginners.
+10. SLEEP-001 and SLEEP-002: lying posture and ordinary sleep only after time/light/visibility foundations are stable.
+
+Observation learning remains the `0.15` line. Darkness, distance and light should affect learning later, but the visibility foundation must land first.
 
 ## 0.15 Next
 
@@ -62,7 +56,7 @@ These are still `backlog`, but recent work makes them worth reviewing before the
 - Pickup/gather command semantics: `підібрати`/`take` should mean visible ground-item pickup, while `зібрати`/`gather` should mean spending time and stamina on a local resource node. This has been promoted to `ITEM-001`.
 - Queued pickup actions: after `ITEM-001`, review `ITEM-002` so large `get all` / `підняти все` piles can move from immediate pickup with stamina charge into the action queue without losing typed bulk filters.
 - PERF-001: runtime performance plan and creature simulation budget. Recent production logs show `/all` and large creature counts are already visible pressure points; next performance work should keep following the recorded plan.
-- ADM-001: admin permissions, name approval and restricted reset hardening. A first `Писар`/admin gate exists now, so remaining near-term work is audit logging, clearer role UX, first name-review tools and closing any leftover dangerous paths.
+- ADM-001: admin permissions, name approval and restricted reset hardening. A first `Писар`/admin gate exists now, so remaining near-term work is audit logging, clearer role UX, first name-review tools and closing any leftover dangerous paths. Next small hardening slice: `ADM-001-C` for slashless `restart` confirmation parity and HTML escaping of feature fields.
 - Speech and quick navigation commands: `glance`, `exits`, `enter`, `leave`, `/reply`, `whisper` and `shout` have shipped through `CMD-001`. Later work should move toward a shared command registry and per-command help without reopening this whole pack.
 - Socialization / contacts / groups: the social planning pack is now split into `SOC-001` through `SOC-007`. Keep the implementation order conservative: `Знайомства`, follow intent, `Гурт` core, then group movement and UI polish; do not pull full factions, PvP law or automatic group combat forward.
 - Hidden presence / hidden follower spirit: the planning pack is now split into `VIS-002`, `WORLD-002-hidden-spirit` and `OMEN-002`, with `docs/systems/hidden_presence.md` as the design source. Keep it as future work until the visibility and light foundations are ready; do not implement the стежник pursuit as an immediate patch.

@@ -1,4 +1,5 @@
 import { Bot, InlineKeyboard } from "grammy";
+import type { Prisma, WorldActionType } from "@prisma/client";
 import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA, HEALTH_REGEN_PER_INTERVAL, PASSIVE_HEALTH_REGEN_INTERVAL_MS, PASSIVE_STAMINA_REGEN_PER_INTERVAL, PLAYER_HUNGER_MAX, REST_HEALTH_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_PER_INTERVAL, STAMINA_REGEN_INTERVAL_MS } from "../gameConfig";
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
@@ -14,32 +15,27 @@ import { ownHeldTorchText } from "../utils/torchText";
 import { resourceTypeDisplayName } from "../services/corpses";
 import { actionDurationMs, hasPlayerActionQueueControls, performOrQueuePlayerAction } from "../services/actionQueue";
 import {
-  addTwigsToCampfire,
   canAddTwigsToNearbyCampfire,
   canDousePlayerTorchFromInventory,
   canLightPlayerTorchFromInventory,
-  dousePlayerTorchFromInventory,
   getPlayerTorchState,
   hasActiveLightAtLocation,
-  lightPlayerTorchFromInventory,
   TORCH_DURATION_MS,
   TORCH_FADING_MS,
 } from "../services/fire";
 import { isScribeAdmin } from "../services/adminAccess";
 import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
-import { dropInventoryResourceDetailed, inspectInventoryResource, inventoryResourceKeyFromText, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
-import { dropObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
+import { inspectInventoryResource, inventoryResourceKeyFromText, type UsableInventoryResource } from "../services/inventoryUse";
 import { tutorialLookPaceComments } from "../services/tutorialVoices";
 import { escapeHtml } from "../utils/text";
 import { noteKnownMessage } from "../utils/messageTracker";
-import { hasCompletedTutorial, isTutorialLocation, rememberTutorialCommandHintIfInTutorial, rememberTutorialWellbeingAside, TUTORIAL_WELLBEING_ASIDE_TEXT } from "../services/tutorial";
+import { hasCompletedTutorial, isTutorialLocation, rememberTutorialCommandHintIfInTutorial } from "../services/tutorial";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "../services/locationFeatures";
-import { canCookPlayerMeat, COOKED_MEAT_KEY, cookRawMeat, RAW_MEAT_KEY } from "../services/meat";
-import { assertCanPerformPhysicalAction } from "../services/postureRules";
+import { canCookPlayerMeat, COOKED_MEAT_KEY, RAW_MEAT_KEY } from "../services/meat";
 import { GATHERING_OBSERVATION_GROWTH_MESSAGE, recordGatheringObservation } from "../services/gatheringLearning";
-import { COOKING_OBSERVATION_GROWTH_MESSAGE, COOKING_PRACTICE_GROWTH_MESSAGE, FRESHENING_OBSERVATION_GROWTH_MESSAGE, recordCookingObservation, recordFresheningObservation } from "../services/foodLearning";
+import { COOKING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_OBSERVATION_GROWTH_MESSAGE, recordCookingObservation, recordFresheningObservation } from "../services/foodLearning";
 import { rememberTutorialInventoryForPlayer } from "../utils/tutorialInventory";
-import { bestTargetMatch, inspectMissingText, targetDisplayLabel, targetListText, visibleTextTargets } from "../services/textTargets";
+import { bestTargetMatch, inspectMissingText, isSelfTargetQuery, targetDisplayLabel, targetListText, visibleTextTargets } from "../services/textTargets";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { durationSecondsSuffix } from "../utils/durationText";
 import { characterNameApprovalStatusText } from "../services/characterNames";
@@ -134,17 +130,6 @@ function buildInventoryKeyboard(resources: any[] = [], options: { canAddTwigs?: 
   return keyboard.text("↩️ Назад", "character:back");
 }
 
-async function refreshInventoryMessage(ctx: any) {
-  const view = await renderInventoryView(ctx.from.id);
-  if (!view) return;
-
-  try {
-    await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
-  } catch {
-    await ctx.reply(view.text, { reply_markup: view.keyboard });
-  }
-}
-
 function nameCasesText(player: any) {
   return [
     player.nameNominative,
@@ -216,6 +201,8 @@ async function tryReplyWithInventoryInspection(ctx: any, playerId: number, targe
 }
 
 async function submitLookTarget(bot: Bot, ctx: any, player: any, targetQuery: string) {
+  if (isSelfTargetQuery(targetQuery)) return showCharacter(ctx.from.id, (text, options) => ctx.reply(text, options));
+
   const visibleTargets = await visibleTextTargets(player.currentLocationId, player.id);
   if (!visibleTargets.length) {
     if (await tryReplyWithInventoryInspection(ctx, player.id, targetQuery)) return;
@@ -393,6 +380,29 @@ export async function showLocationForPlayer(telegramId: number, reply: (text: st
   }
 }
 
+async function submitInventoryQueuedAction(
+  bot: Bot,
+  ctx: any,
+  player: any,
+  type: WorldActionType,
+  payload: Prisma.InputJsonObject,
+  fallback: string,
+) {
+  const durationMs = actionDurationMs(type, player.stamina);
+  try {
+    const result = await performOrQueuePlayerAction(bot, {
+      playerId: player.id,
+      type,
+      payload,
+      durationMs,
+      chatId: ctx.chat?.id,
+    });
+    await sendActionSubmitFeedback(ctx, player.id, result);
+  } catch (error) {
+    await replyToActionError(ctx, error, fallback);
+  }
+}
+
 export function registerPlayerHandlers(bot: Bot) {
   bot.command("me", async (ctx) => {
     if (!ctx.from) return;
@@ -483,14 +493,7 @@ export function registerPlayerHandlers(bot: Bot) {
     await safeAnswerCallbackQuery(ctx);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
-    try {
-      const resultText = await useInventoryResource(player.id, resourceKey);
-      const wellbeingAside = await rememberTutorialWellbeingAside(player.id, player.currentLocationId, resourceKey);
-      await ctx.reply(wellbeingAside ? `${resultText}\n\n${TUTORIAL_WELLBEING_ASIDE_TEXT}` : resultText);
-      await refreshInventoryMessage(ctx);
-    } catch (error) {
-      await ctx.reply(error instanceof Error ? error.message : "Не вдалося використати це.");
-    }
+    await submitInventoryQueuedAction(bot, ctx, player, "USE_ITEM", { resourceKey }, "Не вдалося використати це.");
   });
 
   bot.callbackQuery("inventory:cook:meat", async (ctx) => {
@@ -498,15 +501,7 @@ export function registerPlayerHandlers(bot: Bot) {
     await safeAnswerCallbackQuery(ctx);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
-    try {
-      assertCanPerformPhysicalAction(player, "COOK");
-      const result = await cookRawMeat(player.id);
-      await ctx.reply(result.text);
-      if (result.practiceMilestone) await ctx.reply(COOKING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" });
-      await refreshInventoryMessage(ctx);
-    } catch (error) {
-      await replyToActionError(ctx, error, "Не вдалося підсмажити м'ясо.");
-    }
+    await submitInventoryQueuedAction(bot, ctx, player, "COOK", {}, "Не вдалося підсмажити м'ясо.");
   });
 
   bot.callbackQuery("inventory:light:torch", async (ctx) => {
@@ -514,14 +509,7 @@ export function registerPlayerHandlers(bot: Bot) {
     await safeAnswerCallbackQuery(ctx);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
-    try {
-      assertCanPerformPhysicalAction(player, "TORCH");
-      const resultText = await lightPlayerTorchFromInventory(player.id);
-      await ctx.reply(resultText);
-      await refreshInventoryMessage(ctx);
-    } catch (error) {
-      await replyToActionError(ctx, error, "Не вдалося запалити факел.");
-    }
+    await submitInventoryQueuedAction(bot, ctx, player, "LIGHT_TORCH", {}, "Не вдалося запалити факел.");
   });
 
   bot.callbackQuery("inventory:douse:torch", async (ctx) => {
@@ -529,14 +517,7 @@ export function registerPlayerHandlers(bot: Bot) {
     await safeAnswerCallbackQuery(ctx);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
-    try {
-      assertCanPerformPhysicalAction(player, "TORCH");
-      const resultText = await dousePlayerTorchFromInventory(player.id);
-      await ctx.reply(resultText);
-      await refreshInventoryMessage(ctx);
-    } catch (error) {
-      await replyToActionError(ctx, error, "Не вдалося притушити факел.");
-    }
+    await submitInventoryQueuedAction(bot, ctx, player, "DOUSE_TORCH", {}, "Не вдалося притушити факел.");
   });
 
   bot.callbackQuery("inventory:add-twigs", async (ctx) => {
@@ -544,14 +525,7 @@ export function registerPlayerHandlers(bot: Bot) {
     await safeAnswerCallbackQuery(ctx);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
-    try {
-      assertCanPerformPhysicalAction(player, "FIRE");
-      const resultText = await addTwigsToCampfire(player.id);
-      await ctx.reply(resultText);
-      await refreshInventoryMessage(ctx);
-    } catch (error) {
-      await replyToActionError(ctx, error, "Не вдалося підкинути хмиз.");
-    }
+    await submitInventoryQueuedAction(bot, ctx, player, "ADD_TWIGS", {}, "Не вдалося підкинути хмиз.");
   });
 
   bot.callbackQuery(/^inventory:inspect:([A-Za-z0-9_-]+)$/, async (ctx) => {
@@ -573,29 +547,7 @@ export function registerPlayerHandlers(bot: Bot) {
     await safeAnswerCallbackQuery(ctx);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
-    try {
-      assertCanPerformPhysicalAction(player, "DROP");
-      const result = await dropInventoryResourceDetailed(player.id, ctx.match[1]);
-      await recordVisibleItemAction(bot, {
-        playerId: player.id,
-        locationId: result.locationId,
-        observerText: dropObserverText(player, result.droppedName),
-        eventTitle: "Player dropped item",
-        eventDescription: `player=${player.id}; item=${result.resourceKey}; name=${result.droppedName}`,
-        actionNote: `викинуто: ${result.droppedName}`,
-      });
-      const view = await renderInventoryView(ctx.from.id);
-      if (view) {
-        try {
-          await ctx.editMessageText(view.text, { reply_markup: view.keyboard });
-        } catch {
-          await ctx.reply(view.text, { reply_markup: view.keyboard });
-        }
-      }
-      await ctx.reply(result.text);
-    } catch (error) {
-      await replyToActionError(ctx, error, "Не вдалося викинути це.");
-    }
+    await submitInventoryQueuedAction(bot, ctx, player, "DROP_ITEM", { target: ctx.match[1] }, "Не вдалося викинути це.");
   });
 
   bot.callbackQuery("character:back", async (ctx) => {

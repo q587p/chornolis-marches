@@ -9,6 +9,44 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.26 - Queued inventory, firewood upkeep and 0.14 planning - 12026-05-31
+
+### Added
+
+- Added clickable website news archive entries on `/news`, with direct `?entry=` links and newer/older navigation for reading older `news.md` updates in full.
+- Added natural `twigs` regeneration for eligible forest locations, capped as a slow fallback so firewood can reappear without exceeding manually placed piles.
+- Added picked-up inventory actions to the action queue: using food/herbs, dropping carried items, cooking meat, lighting/dousing torches, adding twigs and lighting campfires now share queued action handling.
+- Added stamina costs and queue labels for inventory/fire actions.
+- Added session presence reason/timestamp display to scribe player detail views, so AFK/end-session state is easier to audit.
+- Added self-target aliases such as `me`, `я`, `мене` and `мій персонаж` for look/examine flows.
+- Added focused tests for web news archive rendering, natural twigs, meat/freshening rules, action costs, session presence labels, text targets and Ukrainian verb agreement.
+- Added planning docs for closing `0.13.x` as Core Loop & Onboarding Stability and starting `0.14.x` as Night, Light and Firewood.
+- Added planning items for first-session closure QA, world-time admin safety, darkness copy, light-source matrix testing and first-night guidance.
+
+### Changed
+
+- Freshening corpses now has species-based success chances: mice are easiest, rabbits are moderate, foxes and wolves are harder.
+- Failed freshening attempts now consume the corpse as processed remains without granting meat, and food-learning event descriptions record success/failure.
+- Lit ground torches now explicitly say they provide light while burning.
+- Visible ground resources can show pickup buttons in brief illuminated location views, not only detailed views.
+- Fire/light docs, survival docs, location-feature docs and render deploy docs now cover the current firewood/light behavior and related environment controls.
+- Ukrainian grammar helpers for actor past-tense agreement now live in the shared grammar layer, with docs clarifying the boundary between the world lexicon and grammar utilities.
+- The `0.14.x` planning order now starts with a small world-time foundation before visibility, light, firewood, biome foraging or ordinary sleep work.
+
+### Fixed
+
+- Inventory buttons and text aliases no longer bypass the action queue for eating, dropping, cooking, torch and campfire actions.
+- Fire feature callbacks now queue the same campfire/twig/torch actions as inventory and text commands.
+- Character self-inspection no longer falls through to nearby target ambiguity when players type natural self-targets.
+
+### Validation
+
+- Ran `npm run planning:export`.
+- Ran `npm run build`.
+- Ran `npm test`.
+
+---
+
 ## 0.13.24 - Hunger cues, tutorial completion and inventory polish - 12026-05-31
 
 ### Added

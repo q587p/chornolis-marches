@@ -37,11 +37,13 @@ export function fresheningSourceDescription(input: {
   actorCreatureId?: number;
   creatureId?: number;
   speciesKey?: string;
+  success?: boolean;
 }) {
   const actor = input.actorPlayerId ? `actorPlayer=${input.actorPlayerId}` : `actorCreature=${input.actorCreatureId ?? "unknown"}`;
   const creature = input.creatureId ? `; creature=${input.creatureId}` : "";
   const species = input.speciesKey ? `; species=${input.speciesKey}` : "";
-  return `${actor}${creature}${species}`;
+  const success = input.success == null ? "" : `; success=${input.success ? "true" : "false"}`;
+  return `${actor}${creature}${species}${success}`;
 }
 
 export function cookingSourceDescription(input: {

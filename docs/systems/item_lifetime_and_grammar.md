@@ -16,7 +16,7 @@ Ordinary player UI should avoid exact remaining ticks. Exact values belong behin
 
 For corpses, these states describe the current condition of the body. Later perishable items can reuse the same scale for food, harvested materials, fuel, dropped supplies and crafted objects.
 
-0.11.12 resource-stack drops are an intentionally simple bridge: `Викинути` removes one carried resource and returns it to the current location through the existing resource-node model. A dropped lit torch remains a burning ground item, can light the місцина and can be picked up again until its timer expires; after burn-out it turns into `twigs`. Later item instances should preserve origin, quality, timers, freshness and richer ground-object behavior without stack-level timer compromises.
+0.11.12 resource-stack drops are an intentionally simple bridge: `Викинути` removes one carried resource and returns it to the current location through the existing resource-node model. A dropped lit torch remains a burning ground item, can light the місцина and can be picked up again until its timer expires; after burn-out it turns into `twigs`. If several dropped lit torches are in one stack, the whole ground stack currently shares one timer on the resource node. Later item instances should preserve origin, quality, per-item timers, freshness and richer ground-object behavior without stack-level timer compromises.
 
 0.13.3 adds the first raw meat -> cooked meat -> eat loop as a resource-stack bridge. Future item-instance work should let meat age in inventory and on the ground until it becomes unsuitable, and should allow butchering / freshening a corpse already carried in inventory rather than only a visible corpse lying nearby.
 

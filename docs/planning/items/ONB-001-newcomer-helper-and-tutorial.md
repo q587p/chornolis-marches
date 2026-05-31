@@ -43,7 +43,7 @@ The first version should help a new character understand what they can do withou
   - more observation-learning scenes after the first fox movement proof, especially a repeatable fox/prey attack scene where `look` or `examine` at the right moment can show `Атака трохи покращена`, plus following lessons once the skill system exists;
   - speech beyond the dream-gate phrase: ordinary `say`, `shout` / `крикнути`, `whisper` / `шепнути`, and `reply` should get compact Сон/Дрімота reactions that teach the difference between local speech, loud speech, private speech and answering someone who addressed you;
   - social signals and nearby characters/creatures;
-  - fire/light once the first real day-night loop is in place;
+  - fire/light as a concrete tutorial branch: a guide voice can teach a torch, a quick dream relight of a згасле вогнище, and hmyz as fuel before the waking-world version becomes slower and harsher;
   - deeper danger/respawn safety once `/respawn` exists.
 - Keep the helper skippable.
 - Prefer short contextual prompts over a long up-front explanation.

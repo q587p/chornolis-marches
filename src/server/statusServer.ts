@@ -59,16 +59,17 @@ function formatDate(value: Date) {
   return value.toISOString().replace("T", " ").slice(0, 19);
 }
 
-type WebNewsEntry = { title: string; text: string };
+type WebNewsEntry = { index: number; title: string; text: string };
 
-async function readWebNewsEntries(): Promise<WebNewsEntry[]> {
+export async function readWebNewsEntries(): Promise<WebNewsEntry[]> {
   try {
     const raw = await fs.promises.readFile(path.join(process.cwd(), "news.md"), "utf-8");
     return raw
       .split(/\n(?=##\s+)/)
       .map((section) => section.trim())
       .filter((section) => section.startsWith("## "))
-      .map((section) => ({
+      .map((section, index) => ({
+        index,
         title: section.split("\n")[0]?.replace(/^##\s+/, "").trim() || "Новини",
         text: section,
       }));
@@ -77,7 +78,7 @@ async function readWebNewsEntries(): Promise<WebNewsEntry[]> {
   }
 }
 
-function markdownNewsToHtml(text: string) {
+export function markdownNewsToHtml(text: string) {
   return text
     .split("\n")
     .map((line) => {
@@ -88,6 +89,17 @@ function markdownNewsToHtml(text: string) {
     })
     .join("\n")
     .replace(/(?:<li>.*<\/li>\n?)+/g, (list) => `<ul>${list}</ul>`);
+}
+
+function newsEntryUrl(index: number) {
+  return index <= 0 ? "/news" : `/news?entry=${index}`;
+}
+
+function requestedNewsEntryIndex(url: string | undefined, entries: WebNewsEntry[]) {
+  const parsed = parseQuery(url);
+  const requested = Number(parsed.searchParams.get("entry") ?? 0);
+  if (!Number.isFinite(requested)) return 0;
+  return Math.max(0, Math.min(Math.floor(requested), Math.max(0, entries.length - 1)));
 }
 
 function parseQuery(url: string | undefined) {
@@ -325,16 +337,28 @@ async function renderHomePage(status: Awaited<ReturnType<typeof getStatusData>>)
   </main></body></html>`;
 }
 
-async function renderNewsPage() {
+export async function renderNewsPage(url?: string) {
   const entries = await readWebNewsEntries();
-  const latest = entries[0];
-  const archive = entries.slice(1, 16).map((entry) => `<li>${escapeHtml(entry.title)}</li>`).join("");
-  const latestHtml = latest ? markdownNewsToHtml(latest.text) : "<p>Новини поки недоступні.</p>";
+  const selectedIndex = requestedNewsEntryIndex(url, entries);
+  const selected = entries[selectedIndex];
+  const archive = entries
+    .map((entry) => {
+      const title = escapeHtml(entry.title);
+      if (entry.index === selectedIndex) return `<li><strong>${title}</strong></li>`;
+      return `<li><a href="${newsEntryUrl(entry.index)}">${title}</a></li>`;
+    })
+    .join("");
+  const selectedHtml = selected ? markdownNewsToHtml(selected.text) : "<p>Новини поки недоступні.</p>";
+  const newer = selectedIndex > 0 ? `<a href="${newsEntryUrl(selectedIndex - 1)}">Новіша</a>` : "";
+  const older = selectedIndex < entries.length - 1 ? `<a href="${newsEntryUrl(selectedIndex + 1)}">Старіша</a>` : "";
+  const entryNav = newer || older ? `<p class="actions entry-nav">${newer}${older}</p>` : "";
   return `<!doctype html><html lang="uk"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Новини Порубіжжя</title><style>
     body{font-family:system-ui,sans-serif;max-width:860px;margin:36px auto;padding:0 18px;background:#10170f;color:#e8e0c9;line-height:1.55}
     h1,h2{color:#f1d98a}a{color:#d8b55d}.card{border:1px solid #3b4a2f;border-radius:8px;padding:18px;background:#172114}
     li{margin:8px 0}.actions a{display:inline-block;border:1px solid #5d6f3c;border-radius:8px;padding:8px 10px;margin:0 8px 8px 0;text-decoration:none;background:#1d2a18}
-  </style></head><body><h1>Новини Порубіжжя</h1><p class="actions"><a href="/">Головна</a><a href="/world">Світ /world</a><a href="/chat">Репліки /chat</a></p><section class="card">${latestHtml}</section>${archive ? `<h2>Архів</h2><ul>${archive}</ul>` : ""}</body></html>`;
+    .archive{columns:2;column-gap:32px}.archive li{break-inside:avoid}.entry-nav{margin-top:16px}.muted{color:#b9b08f}
+    @media (max-width:720px){.archive{columns:1}}
+  </style></head><body><h1>Новини Порубіжжя</h1><p class="actions"><a href="/">Головна</a><a href="/world">Світ /world</a><a href="/chat">Репліки /chat</a><a href="#archive">Архів</a></p><section class="card">${selectedHtml}${entryNav}</section>${archive ? `<h2 id="archive">Архів</h2><p class="muted">Усі записи з news.md, від найновіших до давніших.</p><ul class="archive">${archive}</ul>` : ""}</body></html>`;
 }
 
 function chatUrl(mode: ChatLogMode, window: ChatLogWindow, page: number, perPage: number, format: "html" | "json" = "html") {
@@ -648,7 +672,7 @@ export function startHttpServer() {
 
         if (path === "/news") {
           res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-          res.end(await renderNewsPage());
+          res.end(await renderNewsPage(req.url));
           return;
         }
 
