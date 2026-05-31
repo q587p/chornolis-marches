@@ -464,6 +464,26 @@
     "file": "docs/planning/items/FISH-001-riverbank-fishing-and-fisher-npc.md"
   },
   {
+    "id": "FISH-002",
+    "title": "Riverbank fisher tiny slice",
+    "status": "proposed",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "fishing",
+      "npc",
+      "riverbank",
+      "observation",
+      "atmosphere"
+    ],
+    "depends_on": [
+      "FISH-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FISH-002-riverbank-fisher-tiny-slice.md"
+  },
+  {
     "id": "FOOD-001",
     "title": "Corpse freshening, meat and campfire cooking",
     "status": "testing",
@@ -1279,6 +1299,26 @@
     "file": "docs/planning/items/OBS-001-D.md"
   },
   {
+    "id": "OBS-002",
+    "title": "Visible herbalist observation moment",
+    "status": "proposed",
+    "type": "feature",
+    "area": "learning",
+    "priority": "high",
+    "tags": [
+      "observe",
+      "npc",
+      "herbalism",
+      "progression"
+    ],
+    "depends_on": [
+      "OBS-001-A",
+      "OBS-001-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/OBS-002-visible-herbalist-observation-moment.md"
+  },
+  {
     "id": "OMEN-001-A",
     "title": "Choose one living-world omen",
     "status": "next",
@@ -1371,6 +1411,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/OMEN-002-hidden-follower-spirit-mvp.md"
+  },
+  {
+    "id": "OMEN-003",
+    "title": "Strange track / stezhnyk hint omen",
+    "status": "proposed",
+    "type": "feature",
+    "area": "world",
+    "priority": "medium",
+    "tags": [
+      "omen",
+      "forest",
+      "hidden-presence",
+      "spirit",
+      "atmosphere"
+    ],
+    "depends_on": [
+      "OMEN-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/OMEN-003-strange-track-stezhnyk-hint.md"
   },
   {
     "id": "ONB-001",
