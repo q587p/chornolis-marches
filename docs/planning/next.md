@@ -27,8 +27,8 @@ See also:
 
 Implement `0.14.x` in small slices:
 
-1. WORLD-001-A/B/C: internal world-clock model, persistent state and heartbeat advancement. This uses elapsed real milliseconds only as a rate; it must not bind Chornolis day/night to real-world time of day.
-2. WORLD-001-D: `/time` reads stored/derived Chornolis world state: year, lunar circle, day, clock, daypart, moon phase and weather summary.
+1. WORLD-001-A/B/C/D: internal world-clock model, persistent state, heartbeat advancement and `/time` reading stored/derived Chornolis world state. The `0.14.1` slice covers this foundation and keeps elapsed real milliseconds only as a rate; it must not bind Chornolis day/night to real-world time of day.
+2. After `0.14.1`, keep the next slice small: do not jump straight to full darkness/firewood/sleep behavior.
 3. WORLD-001-E: weather MVP state, `/weather` alias/display and non-spammy world event when weather changes.
 4. WORLD-001-F: shared light snapshot helper combining daypart, moon illumination, weather and active local light sources.
 5. WORLD-001-G: time/weather debug and scribe/admin safety for testing daypart, moon and weather state.

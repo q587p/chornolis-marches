@@ -1,7 +1,7 @@
 ---
 id: WORLD-001-D
 title: /time reads internal world-clock state
-status: next
+status: testing
 type: feature
 area: world_time
 priority: high
@@ -37,3 +37,9 @@ Make `/time` display actual internal Chornolis world state instead of static pla
 ## Implementation Order
 
 Do after: `WORLD-001-C`.
+
+## 0.14.1 Slice
+
+- `/time` now advances and reads the stored internal world-clock state.
+- The visible text includes year, lunar circle, day of circle, approximate clock, daypart and moon phase.
+- Weather remains a stored placeholder until `WORLD-001-E`.

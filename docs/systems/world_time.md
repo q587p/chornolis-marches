@@ -72,6 +72,18 @@ Do not use `Date.getHours()`, server timezone, player timezone or real-world cal
 - shared light snapshot helper combining daypart, moon, weather and active local light;
 - visibility consumers that ask the shared helper instead of duplicating time/light math.
 
+## Current Runtime Slice
+
+`0.14.1` implements the first stored-clock foundation:
+
+- `WorldState.absoluteMinute` stores the current internal Chornolis minute.
+- `WorldState.lastAdvancedAt` stores the real timestamp used only to calculate elapsed time since the previous advancement.
+- `worldTick()` advances the stored minute count through the shared world-time service.
+- `/time` reads the stored/derived world-clock state and shows the current year, lunar circle, day, approximate clock, daypart and moon phase.
+- Seed, `/reset world` and `/reset full` return the world clock to the canonical starter timestamp.
+
+Weather, light snapshots, visibility reduction, darkness effects and ordinary sleep remain later `0.14.x` slices.
+
 ## Out of Scope
 
 - sacred days;

@@ -14,6 +14,7 @@ import {
 import { prisma } from "../db";
 import { preparedNameByNominative } from "./characterNames";
 import { ensureTorchResourceTypes } from "./fire";
+import { resetWorldClockState } from "./worldTime";
 
 const START_LOCATION_KEY = "start_border_camp";
 const LISOVYK_NAME = "Дід лісовик";
@@ -117,6 +118,7 @@ type ResetSummary = {
   miceCreated: number;
   predatorsCreated: number;
   playerAutoStatesCleared: number;
+  worldClockResetTo: string;
 };
 
 function readJsonFile<T>(filePath: string): T {
@@ -491,13 +493,14 @@ export async function resetWorldState(): Promise<ResetSummary> {
   const foxesCreated = await resetStarterAnimals("fox", STARTER_PREDATORS.filter((group) => group.speciesKey === "fox"));
   const wolvesCreated = await resetStarterAnimals("wolf", STARTER_PREDATORS.filter((group) => group.speciesKey === "wolf"));
   const predatorsCreated = foxesCreated + wolvesCreated;
+  const worldClock = await resetWorldClockState();
 
   const start = await prisma.cellLocation.findUnique({ where: { key: START_LOCATION_KEY } });
   await prisma.worldEvent.create({
     data: {
       type: "SYSTEM",
       title: "Світ скинуто",
-      description: `Reset to ${world.meta.version}: ${world.uniqueCreatures.map(uniqueCreatureSummary).join("; ")}. Зайці, миші, лисиці й вовки повернулись у стартові місцини, авто-режими вимкнено.`,
+      description: `Reset to ${world.meta.version}: ${world.uniqueCreatures.map(uniqueCreatureSummary).join("; ")}. Зайці, миші, лисиці й вовки повернулись у стартові місцини, авто-режими вимкнено, час світу повернено до стартової хвилини ${worldClock.absoluteMinute}.`,
       locationId: start?.id,
     },
   });
@@ -513,5 +516,6 @@ export async function resetWorldState(): Promise<ResetSummary> {
     miceCreated,
     predatorsCreated,
     playerAutoStatesCleared,
+    worldClockResetTo: `${worldClock.absoluteMinute}`,
   };
 }

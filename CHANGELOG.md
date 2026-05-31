@@ -9,6 +9,31 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.14.1 - Stored internal world clock - 12026-05-31
+
+### Added
+
+- Added persistent `WorldState` storage for the internal Chornolis clock, including the current absolute world minute, last advancement timestamp and starter weather fields for the next weather slice.
+- Added shared world-clock helpers for daypart, clock labels, lunar circle/day, moon phase and moon illumination.
+- Added a focused world-time regression test for the canonical `587` / fifth lunar circle / day `17` / `17:00` starter timestamp and advancement math.
+
+### Changed
+
+- `/time` now advances and reads the stored internal world-clock state instead of rendering static placeholder time.
+- World tick now advances the stored clock by elapsed real milliseconds as a rate, without binding day/night to server local hour, player timezone or real-world time of day.
+- Seed, world reset and full reset now return the internal world clock to the canonical starter timestamp; stats reset remains separate.
+- Updated planning and system docs so `WORLD-001-B/C/D` reflect the `0.14.1` implementation slice and keep visibility, weather, light and sleep deferred.
+
+### Validation
+
+- Ran `npx prisma generate`.
+- Ran `node scripts/test/world-time.cjs`.
+- Ran `npm run planning:export`.
+- Ran `npm test`.
+- Ran `npm run build`.
+
+---
+
 ## 0.14.0 - Internal world-clock planning and prepared names - 12026-05-31
 
 ### Added

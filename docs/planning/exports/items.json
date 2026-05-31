@@ -2594,7 +2594,7 @@
   {
     "id": "WORLD-001-B",
     "title": "Persistent world-clock storage",
-    "status": "next",
+    "status": "testing",
     "type": "technical",
     "area": "world_time",
     "priority": "high",
@@ -2613,7 +2613,7 @@
   {
     "id": "WORLD-001-C",
     "title": "Heartbeat clock advancement and daypart helper",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "world_time",
     "priority": "high",
@@ -2632,7 +2632,7 @@
   {
     "id": "WORLD-001-D",
     "title": "/time reads internal world-clock state",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "world_time",
     "priority": "high",

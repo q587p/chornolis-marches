@@ -14,6 +14,7 @@ import {
   type StarterAnimalGroup,
 } from "../src/data/starterAnimals";
 import { creatureSpeciesNameFields } from "../src/content/lexicon/worldLexicon";
+import { START_WORLD_ABSOLUTE_MINUTE } from "../src/data/worldClock";
 import { preparedNameByNominative } from "../src/services/characterNames";
 
 dotenv.config();
@@ -790,6 +791,27 @@ async function main() {
   await seedStep("Starter predators", async () => {
     const created = await ensureStarterAnimals(speciesByKey, locationsByKey, STARTER_PREDATORS);
     console.log(`  - starter predators created: ${created}`);
+  });
+
+  await seedStep("World state", async () => {
+    await prisma.worldState.upsert({
+      where: { id: 1 },
+      update: {
+        absoluteMinute: START_WORLD_ABSOLUTE_MINUTE,
+        lastAdvancedAt: new Date(),
+        weatherKey: "cloudy",
+        weatherIntensity: 35,
+        weatherEndsAtMinute: null,
+      },
+      create: {
+        id: 1,
+        absoluteMinute: START_WORLD_ABSOLUTE_MINUTE,
+        lastAdvancedAt: new Date(),
+        weatherKey: "cloudy",
+        weatherIntensity: 35,
+        weatherEndsAtMinute: null,
+      },
+    });
   });
 
   await seedStep("World event", async () => {

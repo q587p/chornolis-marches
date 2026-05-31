@@ -735,6 +735,7 @@ export function registerAdminHandlers(bot: Bot) {
         `Мишей створено: ${summary.miceCreated}`,
         `Хижаків створено: ${summary.predatorsCreated}`,
         `Авто-режимів вимкнено: ${autoStopped}`,
+        `Час світу скинуто: хвилина ${summary.worldClockResetTo}`,
         "",
         "Унікальні NPC:",
         ...summary.uniqueCreatureSummaries.map((item) => `- ${item}`)
@@ -761,6 +762,7 @@ export function registerAdminHandlers(bot: Bot) {
         resetWorldSummary ? `uniqueCreatures=${resetWorldSummary.resetUniqueCreatures}` : null,
         resetWorldSummary ? `predators=${resetWorldSummary.predatorsCreated}` : null,
         resetWorldSummary ? `autoStopped=${autoStopped}` : null,
+        resetWorldSummary ? `worldClockResetTo=${resetWorldSummary.worldClockResetTo}` : null,
         resetStatsSummary ? `players=${resetStatsSummary.resetPlayers}` : null,
         resetStatsSummary ? `creatures=${resetStatsSummary.resetCreatures}` : null,
         resetStatsSummary ? `dropoffContributions=${resetStatsSummary.removedDropoffContributions}` : null,

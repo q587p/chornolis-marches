@@ -136,9 +136,9 @@ WEB-001,"Web map, multi-client game server, messenger bridges and limited MUD ga
 WEB-002,Independent status site and deploy visibility,backlog,technical,server,medium,"web,status,deploy,operations,reliability",docs/planning/items/WEB-002-independent-status-site.md
 WORLD-001,Day/night cycle,next,feature,world_time,high,"world,atmosphere,visibility,liminality",docs/planning/items/WORLD-001-day-night-cycle.md
 WORLD-001-A,Internal world-clock model design,next,design,world_time,high,"world-time,day-night,moon,0.14",docs/planning/items/WORLD-001-A.md
-WORLD-001-B,Persistent world-clock storage,next,technical,world_time,high,"world-time,schema,moon,0.14",docs/planning/items/WORLD-001-B.md
-WORLD-001-C,Heartbeat clock advancement and daypart helper,next,feature,world_time,high,"world-time,world-tick,day-night,0.14",docs/planning/items/WORLD-001-C.md
-WORLD-001-D,/time reads internal world-clock state,next,feature,world_time,high,"world-time,time-command,moon,0.14",docs/planning/items/WORLD-001-D.md
+WORLD-001-B,Persistent world-clock storage,testing,technical,world_time,high,"world-time,schema,moon,0.14",docs/planning/items/WORLD-001-B.md
+WORLD-001-C,Heartbeat clock advancement and daypart helper,testing,feature,world_time,high,"world-time,world-tick,day-night,0.14",docs/planning/items/WORLD-001-C.md
+WORLD-001-D,/time reads internal world-clock state,testing,feature,world_time,high,"world-time,time-command,moon,0.14",docs/planning/items/WORLD-001-D.md
 WORLD-001-E,Weather MVP state and display,next,feature,world_time,high,"world-time,weather,0.14",docs/planning/items/WORLD-001-E-weather-mvp-state-and-display.md
 WORLD-001-F,Light snapshot helper,next,feature,visibility,high,"world-time,visibility,moon,weather,light,0.14",docs/planning/items/WORLD-001-F-light-snapshot-helper.md
 WORLD-001-G,Time and weather debug controls,next,technical,world_time,medium,"world-time,weather,admin,testing,0.14",docs/planning/items/WORLD-001-G-time-weather-debug-controls.md
