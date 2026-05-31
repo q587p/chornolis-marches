@@ -22,13 +22,16 @@ See also:
 - QA-001: the repo-backed first-session closure audit is recorded.
 - REL-001: keep release/patch work on a separate branch with a PR into `main`, including summary, validation and risk notes.
 - New 0.13 blockers can still be fixed if they are real regressions, but new day/night work belongs to `0.14.x`.
+- Public news now presents `0.14.x` as started. After the `0.14.1` merge, do not return to broad `0.13`-style backlog work unless it is a hotfix, deploy blocker or direct first-session regression.
+- Older onboarding/core-loop follow-ups should stay recorded but deferred behind the 0.14 foundations: tutorial polish (`ONB-001-B` through `ONB-001-H`), prepared-name copy/forms review (`ONB-002-*`), starter prose polish (`LOOP-001-*`), gate-hunting/NPC practice loops and weapon expansion are not immediate `0.14.2` candidates.
+- Prepared-name structural tests are useful, but manual form review remains a later content QA pass, not a reason to reopen the closed `0.13.x` lane.
 
 ## Start 0.14.x
 
 Implement `0.14.x` in small slices:
 
-1. WORLD-001-A/B/C: internal world-clock model, persistent state and heartbeat advancement. This uses elapsed real milliseconds only as a rate; it must not bind Chornolis day/night to real-world time of day.
-2. WORLD-001-D: `/time` reads stored/derived Chornolis world state: year, lunar circle, day, clock, daypart, moon phase and weather summary.
+1. WORLD-001-A/B/C/D: internal world-clock model, persistent state, heartbeat advancement and `/time` reading stored/derived Chornolis world state. The `0.14.1` slice covers this foundation and keeps elapsed real milliseconds only as a rate; it must not bind Chornolis day/night to real-world time of day.
+2. After `0.14.1`, keep the next slice small: do not jump straight to full darkness/firewood/sleep behavior.
 3. WORLD-001-E: weather MVP state, `/weather` alias/display and non-spammy world event when weather changes.
 4. WORLD-001-F: shared light snapshot helper combining daypart, moon illumination, weather and active local light sources.
 5. WORLD-001-G: time/weather debug and scribe/admin safety for testing daypart, moon and weather state.
@@ -42,6 +45,11 @@ Implement `0.14.x` in small slices:
 13. SLEEP-001 and SLEEP-002: lying posture and ordinary sleep only after time/light/visibility foundations are stable.
 
 Observation learning remains the `0.15` line. Darkness, distance and light should affect learning later, but the visibility foundation must land first.
+
+## Small 0.14.1 Companion Slice
+
+- PROG-005: global chronicles start as a small public `WorldEvent` surface. The first slice records new player arrivals and падальний рів start/stop state changes through `/chronicles`; personal літопис and skill milestones remain separate follow-up work.
+- ONB-001-H: keep a small hidden tutorial-gate follow-up near the top of the onboarding queue. It should let players discover a `Закрийся` / `/close gate` style phrase and get one-time Сон praise/reward, without advertising the secret in ordinary tutorial hints.
 
 ## 0.15 Next
 

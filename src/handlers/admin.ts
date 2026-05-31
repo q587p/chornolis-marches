@@ -21,6 +21,7 @@ import { nextResourceAmount, parseAddResourceArgs, parseAdminInventoryResourceAr
 import { stopAllPlayerAuto } from "./auto";
 import { resetTutorialProgressForPlayer } from "../services/tutorial";
 import { getGateHuntingSaturationState, setCarcassQuestOverride, type CarcassQuestOverride } from "../services/carcassDropoff";
+import { recordCarcassQuestChronicle } from "../services/chronicles";
 import { slashlessCommandPattern } from "../utils/slashlessCommands";
 
 function normalizeLookup(value: string | null | undefined) {
@@ -413,6 +414,7 @@ export function registerAdminHandlers(bot: Bot) {
 
     const override = mode as CarcassQuestOverride;
     const result = await setCarcassQuestOverride(override);
+    await recordCarcassQuestChronicle(override, result.feature.locationId).catch((error) => console.warn("Failed to record carcass quest chronicle:", error));
     const scribe = ctx.from?.id
       ? await prisma.player.findUnique({ where: { telegramId: String(ctx.from.id) } })
       : null;
@@ -735,6 +737,7 @@ export function registerAdminHandlers(bot: Bot) {
         `Мишей створено: ${summary.miceCreated}`,
         `Хижаків створено: ${summary.predatorsCreated}`,
         `Авто-режимів вимкнено: ${autoStopped}`,
+        `Час світу скинуто: хвилина ${summary.worldClockResetTo}`,
         "",
         "Унікальні NPC:",
         ...summary.uniqueCreatureSummaries.map((item) => `- ${item}`)
@@ -761,6 +764,7 @@ export function registerAdminHandlers(bot: Bot) {
         resetWorldSummary ? `uniqueCreatures=${resetWorldSummary.resetUniqueCreatures}` : null,
         resetWorldSummary ? `predators=${resetWorldSummary.predatorsCreated}` : null,
         resetWorldSummary ? `autoStopped=${autoStopped}` : null,
+        resetWorldSummary ? `worldClockResetTo=${resetWorldSummary.worldClockResetTo}` : null,
         resetStatsSummary ? `players=${resetStatsSummary.resetPlayers}` : null,
         resetStatsSummary ? `creatures=${resetStatsSummary.resetCreatures}` : null,
         resetStatsSummary ? `dropoffContributions=${resetStatsSummary.removedDropoffContributions}` : null,

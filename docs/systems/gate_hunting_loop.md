@@ -117,6 +117,8 @@ The state should be reversible. If herbivores overgraze again, predator pressure
 
 When that helper is active, inspecting the gate notice or `Падальний рів` shows "enough for now" text. Drop-offs are still accepted as physical remains, but supply thresholds are suppressed, and hunters without carried/claimed carcasses route toward the magic campfire, enter a resting stand-down state directly and use a quieter rate-limited stand-down line pool without queuing extra `SAY` / `REST` actions. The thresholds are intentionally technical/admin detail; player-facing text should keep saying that the border has enough pressure for now.
 
+0.14.1 records public global chronicle entries when the ravine state changes. Manual `/carcassQuest start` and `/carcassQuest stop` write start/stop зарубки, and the automatic transition into "enough for now" writes a stop entry when contribution saturation first becomes active. These entries are visible through `/chronicles`; they describe the world-state change, not the scribe/admin command that caused it.
+
 Near-term follow-up:
 
 - saturation is currently derived live rather than persisted, so add a linger/cooldown window before the sign and hunter behavior can flip back and forth near thresholds;

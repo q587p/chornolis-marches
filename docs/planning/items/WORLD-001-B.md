@@ -1,7 +1,7 @@
 ---
 id: WORLD-001-B
 title: Persistent world-clock storage
-status: next
+status: testing
 type: technical
 area: world_time
 priority: high
@@ -42,3 +42,9 @@ Persist the internal world clock so deploys/restarts do not reset day/night, moo
 ## Implementation Order
 
 Do after: `WORLD-001-A`.
+
+## 0.14.1 Slice
+
+- Added the persistent `WorldState` row with `absoluteMinute`, `lastAdvancedAt` and starter weather fields.
+- Seed and world/full reset return the clock to `185_340`, the canonical 587 / `Коло Зеленого Шуму` / day 17 / 17:00 start.
+- Stats reset remains separate and does not touch world time.

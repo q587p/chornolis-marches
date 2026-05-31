@@ -7,6 +7,7 @@ import { guessGenderFromPronoun, guessNameForms, normalizeCharacterName, type Na
 import { BASE_STAMINA } from "../gameConfig";
 import { renderCurrentWorldYearLine } from "../services/calendar";
 import { setDefaultBotCommandsWithRetry, syncChatBotCommandsForTelegramId } from "../services/telegramCommands";
+import { recordNewPlayerChronicle } from "../services/chronicles";
 import { enterTutorialDream, hasCompletedTutorial, isTutorialLocation } from "../services/tutorial";
 import { escapeHtml } from "../utils/text";
 import {
@@ -390,6 +391,7 @@ async function finishOnboarding(ctx: any, state: OnboardingState) {
   if (ctx.chat?.id) await syncChatBotCommandsForTelegramId(ctx.api, ctx.chat.id, state.telegramId);
 
   await disablePlayerAuto(Number(state.telegramId));
+  await recordNewPlayerChronicle(player).catch((error) => console.warn("Failed to record new-player chronicle:", error));
   const dream = await enterTutorialDream(player.id, { forceStart: true });
   await ctx.reply(renderOnboardingNameConfirmation(player), HTML_OPTIONS);
   await ctx.reply(dream.text, {

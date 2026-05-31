@@ -177,6 +177,21 @@ model LocationFeature {
   @@index([locationId])
 }
 
+model WorldState {
+  id Int @id @default(1)
+
+  absoluteMinute Int @default(185340)
+  lastAdvancedAt DateTime @default(now())
+
+  // Weather storage is seeded but not simulated until WORLD-001-E.
+  weatherKey String @default("cloudy")
+  weatherIntensity Int @default(35)
+  weatherEndsAtMinute Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 // =======================
 // CREATURES
 // =======================

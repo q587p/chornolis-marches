@@ -1579,6 +1579,26 @@
     "file": "docs/planning/items/ONB-001-G.md"
   },
   {
+    "id": "ONB-001-H",
+    "title": "Hidden dream gate closing phrase reward",
+    "status": "next",
+    "type": "feature",
+    "area": "onboarding",
+    "priority": "medium",
+    "tags": [
+      "onboarding",
+      "tutorial",
+      "dream-gate",
+      "secret",
+      "reward"
+    ],
+    "depends_on": [
+      "ONB-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-001-H.md"
+  },
+  {
     "id": "ONB-002",
     "title": "Character name rules and onboarding",
     "status": "next",
@@ -1803,6 +1823,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/PROG-004-personal-chronicle-milestones.md"
+  },
+  {
+    "id": "PROG-005",
+    "title": "Global chronicles and world milestones",
+    "status": "testing",
+    "type": "feature",
+    "area": "progression",
+    "priority": "high",
+    "tags": [
+      "chronicle",
+      "world-events",
+      "onboarding",
+      "gate-hunting",
+      "milestones"
+    ],
+    "depends_on": [
+      "WORLD-001-D"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/PROG-005-global-chronicles-and-world-milestones.md"
   },
   {
     "id": "QA-001",
@@ -2594,7 +2634,7 @@
   {
     "id": "WORLD-001-B",
     "title": "Persistent world-clock storage",
-    "status": "next",
+    "status": "testing",
     "type": "technical",
     "area": "world_time",
     "priority": "high",
@@ -2613,7 +2653,7 @@
   {
     "id": "WORLD-001-C",
     "title": "Heartbeat clock advancement and daypart helper",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "world_time",
     "priority": "high",
@@ -2632,7 +2672,7 @@
   {
     "id": "WORLD-001-D",
     "title": "/time reads internal world-clock state",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "world_time",
     "priority": "high",

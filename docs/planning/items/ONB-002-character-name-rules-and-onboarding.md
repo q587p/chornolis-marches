@@ -42,6 +42,7 @@ Remaining scope:
 
 - Move the prepared-name source from the typed data module toward DB-backed content with richer reservation state.
 - Expand the reviewed prepared-name pool toward roughly a hundred names across genders, regions, rarity bands and forms of address.
+- Manually review prepared-name case forms over time. Structural tests catch missing forms, duplicates and eligibility drift, but human reading is still needed for tone, rare forms and awkward vocatives.
 - Expand custom-name validation against:
   - confusingly similar names;
   - NPC/significant-being names;

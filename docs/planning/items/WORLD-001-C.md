@@ -1,7 +1,7 @@
 ---
 id: WORLD-001-C
 title: Heartbeat clock advancement and daypart helper
-status: next
+status: testing
 type: feature
 area: world_time
 priority: high
@@ -39,3 +39,9 @@ Advance internal world time through the world heartbeat and expose reusable help
 ## Implementation Order
 
 Do after: `WORLD-001-B`.
+
+## 0.14.1 Slice
+
+- Added shared world-clock helpers for daypart, clock labels, lunar circle/day, moon phase and moon illumination.
+- World tick now advances the stored clock by elapsed real milliseconds from `lastAdvancedAt`.
+- The helper still uses elapsed milliseconds only as a rate and does not read server/user local hour for day/night.

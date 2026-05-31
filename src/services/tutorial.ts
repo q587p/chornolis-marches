@@ -20,6 +20,8 @@ export const DREAM_GATE_RETURN_FEATURE_KEY = "dream_tutorial_sleep_gate_return";
 export const DREAM_GATE_FEATURE_KEYS = [DREAM_GATE_FEATURE_KEY, DREAM_GATE_RETURN_FEATURE_KEY] as const;
 export const DREAM_GATE_OPEN_MS = 30 * 1000;
 const DREAM_GATE_OPEN_WINDOWS_MS = [30_000, 60_000, 120_000, 240_000, 480_000];
+export const DREAM_GATE_OPENED_TEXT = "Брама Сну розходиться без скрипу. Прохід відкритий з обох боків, але Дрімота довго не чекатиме.";
+export const DREAM_GATE_ALREADY_OPEN_TEXT = "Брама Сну вже прочинена. Прохід ще тримається з обох боків; Дрімота тільки позіхає й чекає, чи підете ви далі.";
 export const TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE = "Tutorial foraging success";
 export const TUTORIAL_INVENTORY_AVAILABLE_EVENT_TITLE = "Tutorial inventory available";
 export const TUTORIAL_OBSERVATION_LESSON_EVENT_TITLE = "Tutorial observation lesson";
@@ -130,6 +132,10 @@ export function dreamGateStatusText(feature: { data: Prisma.JsonValue | null }) 
   return isLockedFeatureCurrentlyOpen(data)
     ? "Брама прочинена. Сон за нею дихає холодом, і прохід тимчасово відкритий."
     : "Брама зімкнена. На дереві проступає знак: не всі шляхи є шляхами, доки їх не покличеш.";
+}
+
+export function dreamGateAlreadyOpenText(feature: { data: Prisma.JsonValue | null }) {
+  return isLockedFeatureCurrentlyOpen(featureData(feature)) ? DREAM_GATE_ALREADY_OPEN_TEXT : null;
 }
 
 export async function getTutorialStartLocationId() {
@@ -741,6 +747,9 @@ export async function openDreamGate(playerId: number, targetQuery = "") {
       : "Тут немає воріт, які можна відкрити.";
   }
 
+  const alreadyOpenText = dreamGateAlreadyOpenText(feature);
+  if (alreadyOpenText) return alreadyOpenText;
+
   const previousOpens = await prisma.worldEvent.count({
     where: {
       playerId,
@@ -780,7 +789,7 @@ export async function openDreamGate(playerId: number, targetQuery = "") {
     },
   });
 
-  return "Брама Сну розходиться без скрипу. Прохід відкритий з обох боків, але Дрімота довго не чекатиме.";
+  return DREAM_GATE_OPENED_TEXT;
 }
 
 export function lockedExitLabel(direction: Direction, reason: string) {

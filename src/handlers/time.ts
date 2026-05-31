@@ -1,8 +1,10 @@
 import { Bot } from "grammy";
 import { renderCurrentWorldTime } from "../services/calendar";
+import { getCurrentWorldTimeSnapshot } from "../services/worldTime";
 
 export async function showTime(ctx: any) {
-  await ctx.reply(renderCurrentWorldTime());
+  const snapshot = await getCurrentWorldTimeSnapshot();
+  await ctx.reply(renderCurrentWorldTime(snapshot));
 }
 
 export function registerTimeHandlers(bot: Bot) {
