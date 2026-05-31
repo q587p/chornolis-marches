@@ -35,6 +35,7 @@ const locations = readJson("locations.json");
 const exits = readJson("exits.json");
 const resourceTypes = readJson("resourceTypes.json");
 const resourceNodes = readJson("resourceNodes.json");
+const resourceRules = readJson("resourceRules.json");
 const features = readJson("features.json");
 const uniqueCreatures = readJson("uniqueCreatures.json");
 
@@ -69,6 +70,25 @@ for (const node of resourceNodes) {
   resourceNodeKeys.add(nodeKey);
   assert.ok(Number.isInteger(node.amount) && node.amount >= 0, `Invalid resource amount for ${nodeKey}`);
   assert.ok(Number.isInteger(node.maxAmount) && node.maxAmount >= node.amount, `Invalid resource maxAmount for ${nodeKey}`);
+}
+
+for (const location of locations.filter((item) => item.regionKey === "dream_tutorial")) {
+  const biomeRules = resourceRules.defaultsByBiome?.[location.biome] ?? {};
+  const overrides = resourceRules.locationOverrides?.[location.key] ?? {};
+  const keys = new Set([...Object.keys(biomeRules), ...Object.keys(overrides)]);
+
+  for (const resourceKey of keys) {
+    if (!["grass", "berries", "mushrooms", "herbs"].includes(resourceKey)) continue;
+    const rule = Object.prototype.hasOwnProperty.call(overrides, resourceKey) ? overrides[resourceKey] : biomeRules[resourceKey];
+    const amount = Array.isArray(rule) ? rule[1] : rule;
+
+    if (location.key === "dream_tutorial_foraging" && (resourceKey === "berries" || resourceKey === "herbs")) {
+      assert.ok(amount > 0, `Dream foraging lesson should keep ${resourceKey}`);
+      continue;
+    }
+
+    assert.ok(!amount || amount <= 0, `Dream tutorial location should not inherit biome resource ${location.key}:${resourceKey}`);
+  }
 }
 
 for (const feature of features) {
