@@ -16,6 +16,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added durable Herald publication snapshots with rendered text, source date/version metadata where available and a committed Prisma migration, so queued or published news can be recovered after `news.md` changes.
 - Added admin-only `/show_publication <id>` and `/repost_publication <id>` commands for inspecting and explicitly reposting saved HeraldPublication snapshots.
 - Added admin-only `/list_publications` and `/mark_publication_deleted <id>` commands for manual channel-publication recovery when a Telegram channel post is removed outside the bot.
+- Added admin-only `/info_full` for a fuller Herald character record while keeping public `/info` safe.
 - Added planning updates for the future embedded Herald mode and the independent status/deploy-visibility backlog item.
 
 ### Changed
@@ -23,6 +24,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Updated Render deployment docs to distinguish the main game's seed-aware deploy flow from the Herald Web Service build/start flow.
 - Updated Herald ops docs to point at the post-merge two-service model and to mark `HERALD_STARTUP_NOTICE_THREAD_ID` as reserved until runtime support exists.
 - Kept latest-news and backfill deduplication based on `contentHash` while backfilling missing snapshot metadata on existing rows when possible.
+- Made Herald `/info` public and reply-aware: it now shows a safe atmospheric record for the caller, or for the Telegram user whose message it replies to, without exposing service/debug details.
 
 ### Validation
 

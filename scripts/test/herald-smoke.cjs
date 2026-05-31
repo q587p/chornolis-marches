@@ -5,6 +5,8 @@ require("ts-node/register");
 const { parseHeraldAdminIds, isHeraldAdminId } = require("../../src/herald/admin");
 const { formatHeraldPublicationMessage, formatHeraldPublicationRepostMessage } = require("../../src/herald/format");
 const { formatHeraldWhoami } = require("../../src/herald/help");
+const { renderHeraldAnonymousInfoTarget, renderHeraldPublicInfoMissing, renderHeraldPublicPlayerInfo } = require("../../src/herald/info");
+const { resolveHeraldInfoTargetUser } = require("../../src/herald/infoCommands");
 const {
   heraldGatheringLine,
   heraldPracticePhrase,
@@ -178,5 +180,34 @@ assert.match(heraldPracticePhrase(0, "Полювання"), /майже поро
 assert.match(heraldPracticePhrase(5, "Полювання"), /зрідка/);
 assert.match(heraldPracticePhrase(20, "Полювання"), /певних рухів/);
 assert.match(heraldPracticePhrase(40, "Полювання"), /польових нотатках/);
+
+const caller = { id: 101, first_name: "Caller" };
+const repliedUser = { id: 202, first_name: "Target" };
+assert.equal(resolveHeraldInfoTargetUser({ from: caller })?.id, 101);
+assert.equal(resolveHeraldInfoTargetUser({ from: caller, replyToMessage: { from: repliedUser } })?.id, 202);
+assert.equal(resolveHeraldInfoTargetUser({ from: caller, replyToMessage: {} }), null);
+
+assert.match(renderHeraldAnonymousInfoTarget(), /бачить знак/);
+assert.match(renderHeraldPublicInfoMissing(), /не знайшла певного запису/);
+
+const publicInfo = renderHeraldPublicPlayerInfo({
+  nameNominative: "Тестовий Мандрівник",
+  firstName: "Тест",
+  username: "test",
+  steps: 42,
+  gatherAttempts: 20,
+  berriesGathered: 7,
+  mushroomsGathered: 0,
+  herbsGathered: 5,
+  greetings: 3,
+  says: 4,
+  restStarts: 1,
+  animalsKilled: 2,
+});
+assert.match(publicInfo, /📜 Запис Канцелярії/);
+assert.match(publicInfo, /Тестовий Мандрівник/);
+assert.match(publicInfo, /Ліс пам’ятає:/);
+assert.match(publicInfo, /Прикмети:/);
+assert.doesNotMatch(publicInfo, /Telegram user ID|Chat ID|playerId|id=|Життя|Снага|Остання позначка/);
 
 console.log("herald smoke tests passed");

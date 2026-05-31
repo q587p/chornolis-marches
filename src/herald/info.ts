@@ -45,6 +45,33 @@ function restLine(player: HeraldInfoPlayer) {
   return "Відпочинок: зупинки були, але повне відновлення в книзі трапляється рідко.";
 }
 
+function publicSocialTrait(player: HeraldInfoPlayer) {
+  const socialWeight = player.greetings + player.says;
+  if (socialWeight <= 0) return "голос у книгах ще майже не озивався";
+  if (socialWeight < 10) return "поруч із цим ім’ям уже є кілька людських знаків";
+  if (socialWeight < 50) return "це ім’я не раз траплялося поруч із чужими словами";
+  return "це ім’я часто повторюється там, де хтось озивається до межі";
+}
+
+function publicPracticeTrait(player: HeraldInfoPlayer) {
+  if (player.animalsKilled <= 0) return "";
+  if (player.animalsKilled < 8) return "рука вже знає перші рухи полювання";
+  if (player.animalsKilled < 35) return "у польових нотатках є певні мисливські зарубки";
+  return "полювання лишило помітний слід у книгах Канцелярії";
+}
+
+function publicTags(player: HeraldInfoPlayer) {
+  const tags = [
+    player.steps > 0 ? "стежки" : "",
+    player.berriesGathered + player.mushroomsGathered + player.herbsGathered > 0 ? "знахідки" : "",
+    player.greetings + player.says > 0 ? "голос" : "",
+    player.restStarts > 0 ? "перепочинок" : "",
+    player.animalsKilled > 0 ? "полювання" : "",
+  ].filter(Boolean);
+
+  return tags.length ? tags.join(", ") : "поки без певних прикмет";
+}
+
 function conditionLine(player: HeraldInfoPlayer) {
   const life = formatLifeState(player.hp, player.hpMax ?? BASE_HP).toLocaleLowerCase("uk-UA");
   const stamina = formatResourceState(player.stamina, player.staminaMax ?? BASE_STAMINA).toLocaleLowerCase("uk-UA");
@@ -106,6 +133,39 @@ export async function findPlayerForHeraldInfo(query: string, requesterTelegramId
   return candidates.find((player) => candidateMatches(player, trimmed)) ?? null;
 }
 
+export async function findPlayerByTelegramIdForHeraldInfo(telegramId: number | string) {
+  return prisma.player.findFirst({
+    where: {
+      telegramId: String(telegramId),
+      onboardingComplete: true,
+    },
+    include: { currentLocation: { include: { region: true } } },
+  });
+}
+
+export function renderHeraldPublicPlayerInfo(player: HeraldInfoPlayer) {
+  const name = displayName(player);
+  const gathered = player.berriesGathered + player.mushroomsGathered + player.herbsGathered;
+  const traits = [
+    heraldTrailPhrase(player.steps),
+    heraldGatheringLine(player.gatherAttempts, gathered).replace(/^Збір:\s*/u, ""),
+    publicSocialTrait(player),
+    publicPracticeTrait(player),
+  ].filter(Boolean);
+
+  return [
+    "📜 Запис Канцелярії",
+    "",
+    name,
+    "",
+    "Ліс пам’ятає:",
+    ...traits.map((trait) => `— ${trait}`),
+    "",
+    "Прикмети:",
+    publicTags(player),
+  ].join("\n");
+}
+
 export function renderHeraldPlayerInfo(player: HeraldInfoPlayer) {
   const name = displayName(player);
   const resourceText = resourceLine(player);
@@ -132,4 +192,19 @@ export function renderHeraldInfoMissing(query: string) {
 
 export function renderHeraldInfoPrivateNotice() {
   return "Канцелярія береже особові записи за впізнаною печаткою. Для цього наказу потрібна службова печатка.";
+}
+
+export function renderHeraldPublicInfoMissing() {
+  return [
+    "Канцелярія переглянула книги, але не знайшла певного запису про цю людину.",
+    "Можливо, вона ще не ступала за Межовий Знак.",
+  ].join("\n");
+}
+
+export function renderHeraldAnonymousInfoTarget() {
+  return "Канцелярія бачить знак, але не бачить руки, що його поставила.";
+}
+
+export function renderHeraldInfoError() {
+  return "Канцелярія перечепилася об службову помилку й не змогла розгорнути книгу.";
 }
