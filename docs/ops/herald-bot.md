@@ -122,6 +122,34 @@ curl https://example.onrender.com/health
 
 Так само не використовуйте токен основного бота Порубіжжя для Канцелярії: це окремі runtime і окремі Telegram identities.
 
+## Future Embedded Mode
+
+Поточний рекомендований режим — окремий Herald Web Service з entrypoint:
+
+```bash
+node dist/apps/heraldBot.js
+```
+
+У майбутньому можна буде додати embedded mode, де main Chornolis Web Service навмисно стартує і основного ігрового бота, і Канцелярію як другий Telegram client. Це зменшить кількість Render services, але дасть менше runtime-незалежності: збій або redeploy main service одночасно зачепить і Канцелярію.
+
+Майбутній прапорець має бути явним, наприклад:
+
+```text
+HERALD_EMBEDDED_ENABLED=true
+```
+
+Міграція зі standalone Herald service до embedded mode має бути такою:
+
+1. Disable/suspend separate Herald Render Web Service.
+2. Copy `HERALD_*` env variables to the main Chornolis Web Service.
+3. Enable `HERALD_EMBEDDED_ENABLED=true` on the main service.
+4. Keep exactly one active polling process for `HERALD_BOT_TOKEN`.
+5. Roll back by disabling `HERALD_EMBEDDED_ENABLED` and re-enabling the separate Herald service.
+
+Не вмикайте standalone Herald service і embedded Herald mode одночасно з тим самим `HERALD_BOT_TOKEN`: це може створити Telegram polling conflict, duplicate startup notices, duplicate publisher loops і гонку за outbox publications.
+
+Tracking item: `HERALD-001`.
+
 ## BotFather Commands
 
 Suggested BotFather command list:
