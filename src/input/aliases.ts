@@ -48,6 +48,7 @@ export type ParsedAliasCommand =
   | { kind: "inspect-vegetation" }
   | { kind: "inspect-border-marker" }
   | { kind: "inspect-feature"; target: string; detail?: "brief" | "full" }
+  | { kind: "shake-tree" }
   | { kind: "wait" }
   | { kind: "add-twigs-campfire" }
   | { kind: "cook-meat" }
@@ -429,6 +430,13 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "отворити": { kind: "open" },
   open: { kind: "open" },
   o: { kind: "open" },
+  shake_tree: { kind: "shake-tree" },
+  "shake tree": { kind: "shake-tree" },
+  "потрусити дерево": { kind: "shake-tree" },
+  "струсити дерево": { kind: "shake-tree" },
+  "трусити дерево": { kind: "shake-tree" },
+  "потрусити гілки": { kind: "shake-tree" },
+  "струсити гілки": { kind: "shake-tree" },
 };
 
 const COMPACT_ALIASES: Record<string, ParsedAliasCommand> = {
@@ -584,6 +592,16 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "sleep") return parsed.tutorial ? "/sleep_tutorial" : "/sleep";
   if (parsed.kind === "wake") return "/wake";
   if (parsed.kind === "open") return "/open";
+  if (parsed.kind === "move") {
+    if (parsed.direction === "NORTH") return "/north";
+    if (parsed.direction === "SOUTH") return "/south";
+    if (parsed.direction === "WEST") return "/west";
+    if (parsed.direction === "EAST") return "/east";
+    if (parsed.direction === "UP") return "/up";
+    if (parsed.direction === "DOWN") return "/down";
+    if (parsed.direction === "INSIDE") return "/inside";
+    if (parsed.direction === "OUTSIDE") return "/outside";
+  }
   if (parsed.kind === "gather") return parsed.resourceKey ? `/gather_${parsed.resourceKey}` : "/gather";
   if (parsed.kind === "use-item") return `/use_${parsed.item}`;
   if (parsed.kind === "light-torch") return "/light_torch";
@@ -594,6 +612,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "queue") return "/queue";
   if (parsed.kind === "track") return "/track";
   if (parsed.kind === "inspect-vegetation" || parsed.kind === "inspect-border-marker" || parsed.kind === "inspect-feature") return "/examine";
+  if (parsed.kind === "shake-tree") return "/shake_tree";
   if (parsed.kind === "wait") return "/wait";
   if (parsed.kind === "add-twigs-campfire") return "/add_twigs_campfire";
   if (parsed.kind === "cook-meat") return "/cook_meat";

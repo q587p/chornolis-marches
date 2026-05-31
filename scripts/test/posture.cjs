@@ -82,6 +82,13 @@ assert.equal(shouldUseFocusedTutorialReplyKeyboard(TUTORIAL_START_LOCATION_KEY, 
 assert.equal(shouldUseFocusedTutorialReplyKeyboard(TUTORIAL_SECOND_STEP_LOCATION_KEY, 1), true);
 assert.equal(shouldUseFocusedTutorialReplyKeyboard(TUTORIAL_SECOND_STEP_LOCATION_KEY, 2), false);
 
+const verticalButtons = buildMainReplyKeyboard({
+  exits: ["UP", "DOWN"],
+  showUtilityActions: false,
+}).keyboard.map((row) => row.map((button) => button.text));
+assert.equal(verticalButtons[0][1], "⬆️ Вгору");
+assert.equal(verticalButtons[2][1], "⬇️ Вниз");
+
 const earlyDreamButtons = buildMainReplyKeyboard({
   exits: ["NORTH", "SOUTH"],
   isTutorialDream: true,

@@ -22,6 +22,14 @@ node scripts/world/render-map-ascii.mjs --write
 - `u` — under-bridge location at `z = -1`; it is not connected to the bridge deck.
 - `D` — dream tutorial location in `Дрімотна Межа` at `z = -13`.
 
+## Layer z = 1
+
+```text
+      10 11
+y
+  7    .  .
+```
+
 ## Layer z = 0
 
 ```text
@@ -66,7 +74,11 @@ y
 
 - `dream_tutorial_hub` — INSIDE → `dream_tutorial_observation`
 - `dream_tutorial_observation` — OUTSIDE → `dream_tutorial_hub`
+- `meadow_10_07` — UP → `meadow_10_07_crooked_pine_crown`
+- `meadow_10_07_crooked_pine_crown` — DOWN → `meadow_10_07`
 - `meadow_11_00` — SOUTH → `meadow_11_09`
+- `meadow_11_07` — UP → `meadow_11_07_scratched_pine_crown`
+- `meadow_11_07_scratched_pine_crown` — DOWN → `meadow_11_07`
 - `meadow_11_09` — NORTH → `meadow_11_00`
 - `riverbank_13_00` — SOUTH → `riverbank_13_09`
 - `riverbank_13_09` — NORTH → `riverbank_13_00`

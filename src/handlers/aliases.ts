@@ -28,7 +28,7 @@ import { sendHelp } from "./help";
 import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } from "./auto";
 import { showCharacter, showInventory, showLocationForPlayer } from "./player";
 import { buildAllPage, buildChatLogPage, buildStatBrief, buildWhoPage } from "./status";
-import { renderDepletedVegetationInspection, renderLocationBrief, renderLocationExits, renderLocationFeatureInteraction, renderLocationFeatureInteractionByQuery, renderLocationGlance } from "../services/locations";
+import { renderDepletedVegetationInspection, renderLocationBrief, renderLocationExits, renderLocationFeatureInteraction, renderLocationFeatureInteractionByQuery, renderLocationGlance, shakeTreeAtCurrentLocation } from "../services/locations";
 import { buildNewsIndexPage } from "./news";
 import { hideReplyKeyboard, showMainKeyboard, showMenu } from "./menu";
 import { showTime } from "./time";
@@ -272,6 +272,20 @@ async function submitTrack(bot: Bot, ctx: any, detail = false) {
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {
     await replyToActionError(ctx, error, "Не вдалося додати дію.");
+  }
+}
+
+async function submitShakeTree(ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  try {
+    assertCanPerformPhysicalAction(player, "GATHER");
+    await ctx.reply(await shakeTreeAtCurrentLocation(player.id), {
+      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+    });
+  } catch (error) {
+    await replyToActionError(ctx, error, "Не вдалося потрусити дерево.");
   }
 }
 
@@ -979,6 +993,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "auto") return submitAuto(bot, ctx, parsed.mode);
     if (parsed.kind === "queue") return submitQueue(ctx, parsed.mode);
     if (parsed.kind === "track") return submitTrack(bot, ctx, Boolean(parsed.detail));
+    if (parsed.kind === "shake-tree") return submitShakeTree(ctx);
     if (parsed.kind === "wait") return submitWait(bot, ctx);
     if (parsed.kind === "use-item") return submitUseItem(ctx, parsed.item);
     if (parsed.kind === "light-torch") return submitLightTorch(ctx);

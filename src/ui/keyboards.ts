@@ -34,10 +34,13 @@ function targetPageSuffix(returnCallback: string) {
 export function buildMovementKeyboard(exits: any[]) {
   const keyboard = new InlineKeyboard();
   const north = exits.find((e) => e.direction === "NORTH");
+  const up = exits.find((e) => e.direction === "UP");
   const east = exits.find((e) => e.direction === "EAST");
   const south = exits.find((e) => e.direction === "SOUTH");
+  const down = exits.find((e) => e.direction === "DOWN");
   const west = exits.find((e) => e.direction === "WEST");
 
+  if (up) keyboard.text("⬆️ Вгору", "cmd:up").row();
   if (north) keyboard.text("⬆️ Північ", "cmd:north").row();
 
   if (west) keyboard.text("⬅️ Захід", "cmd:west");
@@ -46,6 +49,7 @@ export function buildMovementKeyboard(exits: any[]) {
   keyboard.row();
 
   if (south) keyboard.text("⬇️ Південь", "cmd:south").row();
+  if (down) keyboard.text("⬇️ Вниз", "cmd:down").row();
   return keyboard;
 }
 

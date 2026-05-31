@@ -93,6 +93,8 @@ export const WORLD_LEXICON = [
 
   entry("feature.campfire", "feature", "NEUTER", "INANIMATE", ["feature", "fire", "current"], ["вогнище", "вогнища", "вогнищу", "вогнище", "вогнищем", "вогнищі", "вогнище"]),
   entry("feature.magic_campfire", "feature", "NEUTER", "INANIMATE", ["feature", "fire", "magic", "current"], ["незгасне вогнище", "незгасного вогнища", "незгасному вогнищу", "незгасне вогнище", "незгасним вогнищем", "незгасному вогнищі", "незгасне вогнище"]),
+  entry("feature.pine", "feature", "FEMININE", "INANIMATE", ["feature", "tree", "current"], ["сосна", "сосни", "сосні", "сосну", "сосною", "сосні", "сосно"]),
+  entry("feature.branch", "feature", "FEMININE", "INANIMATE", ["feature", "tree", "current"], ["гілка", "гілки", "гілці", "гілку", "гілкою", "гілці", "гілко"]),
 ] as const satisfies readonly LexiconEntry[];
 
 function entry(

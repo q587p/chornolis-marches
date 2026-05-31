@@ -37,6 +37,7 @@ const GATHERABLE_RESOURCE_KEYS = ["berries", "mushrooms", "herbs"] as const;
 const TARGET_TEXT_LIMIT = 8;
 const EXHAUSTED_LOCATION_REGEN_EVERY_TICKS = Number(process.env.WORLD_EXHAUSTED_LOCATION_REGEN_EVERY_TICKS || 240);
 const RESOURCE_REGEN_AMOUNT = Number(process.env.WORLD_RESOURCE_REGEN_AMOUNT || 1);
+export const TREE_SHAKE_DEFAULT_COOLDOWN_MS = Number(process.env.TREE_SHAKE_COOLDOWN_MS || 2 * 60 * 60 * 1000);
 const CREATURE_AGE_ADJECTIVES: Record<string, Record<string, string>> = {
   YOUNG: { MASCULINE: "молодий", FEMININE: "молода", NEUTER: "молоде", PLURAL: "молоді" },
   ADULT: { MASCULINE: "дорослий", FEMININE: "доросла", NEUTER: "доросле", PLURAL: "дорослі" },
@@ -135,6 +136,28 @@ function isCorpseTarget(target: ReturnType<typeof visibleTargets>[number]) {
 
 function isTorchSourceFeature(feature: any) {
   return featureData(feature).torch_source === true;
+}
+
+function isClimbTreeFeature(feature: any) {
+  return featureData(feature).climb_tree === true;
+}
+
+function isShakeTreeFeature(feature: any) {
+  return featureData(feature).shake_tree === true;
+}
+
+export function treeShakeAmount(min = 5, max = 8, random = Math.random) {
+  const safeMin = Math.max(0, Math.floor(min));
+  const safeMax = Math.max(safeMin, Math.floor(max));
+  return safeMin + Math.floor(random() * (safeMax - safeMin + 1));
+}
+
+function treeShakeReadyAt(data: Record<string, unknown>, now = Date.now()) {
+  const lastShakenAt = typeof data.lastShakenAt === "string" ? Date.parse(data.lastShakenAt) : NaN;
+  if (!Number.isFinite(lastShakenAt)) return null;
+  const cooldownMs = Number(data.shake_cooldown_ms ?? TREE_SHAKE_DEFAULT_COOLDOWN_MS);
+  const readyAt = lastShakenAt + Math.max(0, cooldownMs);
+  return readyAt > now ? new Date(readyAt) : null;
 }
 
 function isDepletedVegetationFeature(feature: any) {
@@ -269,6 +292,11 @@ function featureDetailLine(feature: any, showTechnicalDetails = false) {
     }
   } else if (isTorchSourceFeature(feature)) {
     details.push("тут є факели, які можна взяти з собою");
+  } else if (isClimbTreeFeature(feature)) {
+    details.push("по стовбуру можна піднятися вгору");
+  } else if (isShakeTreeFeature(feature)) {
+    const readyAt = treeShakeReadyAt(featureData(feature));
+    details.push(readyAt ? "сухе гілля вже струшене й ще не відновилося" : "сухе гілля можна струсити вниз");
   } else if (feature.providesLight) {
     details.push("дає світло");
   } else if (feature.type === "BORDER_MARKER") {
@@ -936,6 +964,13 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
     text = `${feature.description ?? "Десь збоку ворушаться майбутні уроки."}\n\nВи можете прокинутися зараз і повернутися до цього місця сну пізніше.`;
   } else if (isTorchSourceFeature(feature)) {
     text = feature.description ?? "Тут лежать сухі факели. Один можна взяти з собою.";
+  } else if (isClimbTreeFeature(feature)) {
+    text = `${feature.description ?? "Дерево стоїть досить близько, щоб узятися за кору."}\n\nКора шорстка, сучки міцні. Можна піднятися вгору й подивитися на луку з крони.`;
+  } else if (isShakeTreeFeature(feature)) {
+    const readyAt = treeShakeReadyAt(featureData(feature));
+    text = readyAt
+      ? `${feature.description ?? "Сухі гілки вже обсипалися вниз."}\n\nГілля порожньо потріскує. Так швидко дерево не віддає сухе вдруге.`
+      : `${feature.description ?? "У кроні тримається сухе дрібне гілля."}\n\nЯкщо розхитати стовбур і нижні гілки, хмиз посиплеться донизу, під дерево.`;
   }
 
   const keyboard = new InlineKeyboard();
@@ -959,6 +994,8 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
   if (featureData(feature).tutorial_time_prompt === true) keyboard.text("🌒 Час", "time:show").row();
   if (featureData(feature).tutorial_wake_prompt === true) keyboard.text("🌅 Прокинутися", "tutorial:wake").row();
   if (isTorchSourceFeature(feature)) keyboard.text("🕯 Взяти факел", `torch:take:${feature.id}`).row();
+  if (isClimbTreeFeature(feature)) keyboard.text("🌳 Залізти", "move:UP").row();
+  if (isShakeTreeFeature(feature)) keyboard.text("🍃 Потрусити", `tree:shake:${feature.id}`).row();
   keyboard.text("↩️ Назад", `location:${returnMode}`);
   return { text, keyboard, quoteMessages, followupMessages };
 }
@@ -967,6 +1004,83 @@ export async function renderLocationFeatureInteractionByQuery(locationId: number
   const feature = await resolveInteractiveLocationFeature(locationId, query);
   if (!feature) return null;
   return renderLocationFeatureInteraction(feature.id, viewerPlayerId, returnMode);
+}
+
+export async function shakeTreeFeature(featureId: number, viewerPlayerId: number) {
+  const player = await prisma.player.findUnique({
+    where: { id: viewerPlayerId },
+    select: { currentLocationId: true },
+  });
+  const feature = await prisma.locationFeature.findUnique({ where: { id: featureId } });
+  if (!player?.currentLocationId) throw new Error("Ти ще не увійшов у світ. Напиши /start");
+  if (!feature || !feature.isActive || feature.locationId !== player.currentLocationId || !isShakeTreeFeature(feature)) {
+    throw new Error("Тут немає дерева, яке можна потрусити.");
+  }
+
+  const data = featureData(feature);
+  if (treeShakeReadyAt(data)) throw new Error("Гілля вже обсипане. Так швидко дерево не віддає сухе вдруге.");
+
+  const dropLocationKey = typeof data.shake_drop_location_key === "string" ? data.shake_drop_location_key : null;
+  const resourceKey = typeof data.shake_resource_key === "string" ? data.shake_resource_key : "twigs";
+  const min = Number(data.shake_min ?? 5);
+  const max = Number(data.shake_max ?? 8);
+  const amount = treeShakeAmount(min, max);
+  const now = new Date();
+
+  const result = await prisma.$transaction(async (tx) => {
+    const [dropLocation, resourceType] = await Promise.all([
+      dropLocationKey
+        ? tx.cellLocation.findUnique({ where: { key: dropLocationKey }, select: { id: true, name: true } })
+        : tx.cellLocation.findUnique({ where: { id: feature.locationId }, select: { id: true, name: true } }),
+      tx.resourceType.findUnique({ where: { key: resourceKey }, select: { id: true, key: true, name: true } }),
+    ]);
+    if (!dropLocation) throw new Error("Дерево труситься, але світ не знає, куди має падати хмиз.");
+    if (!resourceType) throw new Error("Світ ще не знає такого ресурсу для дерева.");
+
+    const existing = await tx.resourceNode.findUnique({
+      where: { locationId_resourceTypeId: { locationId: dropLocation.id, resourceTypeId: resourceType.id } },
+      select: { id: true, amount: true, maxAmount: true },
+    });
+    if (existing) {
+      const nextAmount = existing.amount + amount;
+      await tx.resourceNode.update({
+        where: { id: existing.id },
+        data: { amount: nextAmount, maxAmount: Math.max(existing.maxAmount, nextAmount) },
+      });
+    } else {
+      await tx.resourceNode.create({
+        data: { locationId: dropLocation.id, resourceTypeId: resourceType.id, amount, maxAmount: amount },
+      });
+    }
+
+    await tx.locationFeature.update({
+      where: { id: feature.id },
+      data: { data: { ...data, lastShakenAt: now.toISOString() } },
+    });
+    await tx.worldEvent.create({
+      data: {
+        type: "PLAYER_ACTION",
+        title: "Tree shaken",
+        description: `player=${viewerPlayerId}; feature=${feature.key}; resource=${resourceType.key}; amount=${amount}; dropLocation=${dropLocation.id}`,
+        playerId: viewerPlayerId,
+        locationId: feature.locationId,
+      },
+    });
+    return { dropLocationName: dropLocation.name, resourceName: resourceType.name };
+  });
+
+  return `Ви розхитали дерево. Сухе гілля затріщало, і вниз посипався хмиз: ${amount}.\n\nЙого можна підібрати біля підніжжя дерева, у місцині «${result.dropLocationName}».`;
+}
+
+export async function shakeTreeAtCurrentLocation(viewerPlayerId: number) {
+  const player = await prisma.player.findUnique({ where: { id: viewerPlayerId }, select: { currentLocationId: true } });
+  if (!player?.currentLocationId) throw new Error("Ти ще не увійшов у світ. Напиши /start");
+  const feature = (await prisma.locationFeature.findMany({
+    where: { locationId: player.currentLocationId, isActive: true },
+    orderBy: { id: "asc" },
+  })).find(isShakeTreeFeature);
+  if (!feature) throw new Error("Тут немає дерева, яке можна потрусити.");
+  return shakeTreeFeature(feature.id, viewerPlayerId);
 }
 
 export async function lightLocationCampfire(featureId: number, viewerPlayerId: number) {
