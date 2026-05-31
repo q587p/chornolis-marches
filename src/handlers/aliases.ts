@@ -43,6 +43,7 @@ import { pickUpAllVisibleGroundResources, pickUpAllVisibleGroundResourcesByKey, 
 import { parseSpeechTarget } from "../services/speechTargets";
 import { dropInventoryResourceDetailed, dropInventoryResourcesDetailed, inspectInventoryResource, inventoryResourceKeyFromText, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
 import { enterTutorialDream, hasCompletedTutorial, openDreamGate, rememberTutorialCommandHintIfInTutorial, rememberTutorialWellbeingAside, TUTORIAL_WELLBEING_ASIDE_TEXT, wakeFromTutorialDream } from "../services/tutorial";
+import { requestTutorialEnd } from "./tutorial";
 import { dropObserverText, pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 import { notifyPlayerObservers, playerRestStartObserverText, playerRestStopObserverText, playerTutorialSleepObserverText, playerTutorialWakeObserverText } from "../services/playerVisibility";
 import { noteKnownMessage } from "../utils/messageTracker";
@@ -1032,6 +1033,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "menu") return showMenu(ctx);
     if (parsed.kind === "session-presence") return submitSessionPresence(ctx, parsed.mode);
     if (parsed.kind === "beginner-return") return requestBeginnerReturn(ctx);
+    if (parsed.kind === "tutorial-end") return requestTutorialEnd(ctx);
     if (parsed.kind === "back") return showMainKeyboard(ctx);
     if (parsed.kind === "hide-keyboard") return hideReplyKeyboard(ctx);
     if (parsed.kind === "inspect-vegetation") return replyWithVegetationInspection(ctx);

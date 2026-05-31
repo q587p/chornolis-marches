@@ -9,7 +9,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
-## 0.13.24 - Hunger cues, tutorial wellbeing and character-card polish - 12026-05-31
+## 0.13.24 - Hunger cues, tutorial completion and inventory polish - 12026-05-31
 
 ### Added
 
@@ -18,6 +18,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added a one-time tutorial dream wellbeing aside after the first successful tutorial food use, with a tutorial event flag so it does not repeat unless tutorial progress is reset.
 - Added focused `hunger-cues` helper coverage to `npm test`.
 - Added `/refresh` as a confirmed atmospheric return to the start location for early or weak characters who get lost, with `/respawn` kept as a compatibility alias.
+- Added `/tutorialEnd` / `Закінчити навчання` as a confirmed tutorial-completion flow that marks the tutorial completed, returns from the dream when needed, and removes unfinished-tutorial reminders from help/profile surfaces.
 
 ### Changed
 
@@ -27,10 +28,15 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Marked `FOOD-004`, `ONB-003` and `SURV-001` beginner-return slices as testing and refreshed planning exports.
 - Bumped package metadata to `0.13.24`.
 
+### Fixed
+
+- Made corpse drops resilient when an inventory corpse stack exists but its hidden carried creature row can no longer be matched, by consuming the carried item and placing a matching corpse resource on the ground instead of leaving the item stuck in inventory.
+
 ### Tests
 
 - Ran `node scripts/test/hunger-cues.cjs`.
 - Ran `node scripts/test/beginner-return.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
 - Ran `node scripts/test/tutorial-voices.cjs`.
 - Ran `node scripts/test/session-presence.cjs`.
 - Ran `node scripts/test/posture.cjs`.

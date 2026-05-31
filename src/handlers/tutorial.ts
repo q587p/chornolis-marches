@@ -1,6 +1,6 @@
 import { Bot, InlineKeyboard } from "grammy";
 import { getPlayerByTelegramId } from "../services/players";
-import { enterTutorialDream, hasCompletedTutorial, openDreamGate, wakeFromTutorialDream } from "../services/tutorial";
+import { completeTutorialForPlayer, enterTutorialDream, hasCompletedTutorial, openDreamGate, TUTORIAL_END_CONFIRMATION_TEXT, wakeFromTutorialDream } from "../services/tutorial";
 import { renderLocationBrief } from "../services/locations";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
@@ -12,6 +12,13 @@ import { notifyPlayerObservers, playerTutorialSleepObserverText, playerTutorialW
 
 function buildTutorialSleepKeyboard() {
   return new InlineKeyboard().text("🌙 Навчальний сон", "tutorial:sleep");
+}
+
+function buildTutorialEndConfirmKeyboard() {
+  return new InlineKeyboard()
+    .text("✅ Закінчити навчання", "tutorial:end:confirm")
+    .row()
+    .text("↩️ Ще лишитися у сні", "tutorial:end:cancel");
 }
 
 async function replyWithLocation(ctx: any, locationId: number, playerId: number) {
@@ -47,6 +54,37 @@ async function wakeTutorial(bot: Bot, ctx: any) {
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const result = await wakeFromTutorialDream(player.id);
+  await ctx.reply(result.text, { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
+  if (result.woke) {
+    await notifyPlayerObservers(bot, {
+      playerId: player.id,
+      locationId: result.locationId,
+      observerText: playerTutorialWakeObserverText,
+    });
+    await replyWithLocation(ctx, result.locationId, player.id);
+  }
+}
+
+export async function requestTutorialEnd(ctx: any) {
+  if (!ctx.from) return;
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  if (await hasCompletedTutorial(player.id)) {
+    return void (await ctx.reply("Навчання вже завершено. Якщо хочеться повторити короткий сон, напишіть /sleep tutorial.", {
+      reply_markup: buildTutorialSleepKeyboard(),
+    }));
+  }
+
+  await ctx.reply(TUTORIAL_END_CONFIRMATION_TEXT, { reply_markup: buildTutorialEndConfirmKeyboard() });
+}
+
+async function confirmTutorialEnd(bot: Bot, ctx: any) {
+  if (!ctx.from) return;
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const result = await completeTutorialForPlayer(player.id);
   await ctx.reply(result.text, { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
   if (result.woke) {
     await notifyPlayerObservers(bot, {
@@ -97,6 +135,10 @@ export function registerTutorialHandlers(bot: Bot) {
     await sleepTutorial(bot, ctx, true);
   });
 
+  bot.command(["tutorialEnd", "tutorialend", "tutorial_end"], async (ctx) => {
+    await requestTutorialEnd(ctx);
+  });
+
   bot.command(["wake", "wakeup", "open"], async (ctx) => {
     const command = ctx.message?.text?.split(/\s+/)[0]?.replace(/^\//, "").toLowerCase();
     if (command === "open") return openGate(ctx, commandArgs(ctx));
@@ -104,12 +146,30 @@ export function registerTutorialHandlers(bot: Bot) {
   });
 
   bot.hears(["🌅 Прокинутися", "Прокинутися", "прокинутися"], (ctx) => wakeTutorial(bot, ctx));
+  bot.hears(["✅ Закінчити навчання", "Закінчити навчання", "завершити навчання"], (ctx) => requestTutorialEnd(ctx));
   bot.hears(["💬 Сказати «Відчинитися»", "Сказати «Відчинитися»", "сказати відчинитися"], (ctx) => sayOpenGatePhrase(bot, ctx));
   bot.hears(["🚪 Відкрити", "Відкрити", "відкрити"], (ctx) => openGate(ctx));
 
   bot.callbackQuery("tutorial:wake", async (ctx) => {
     await safeAnswerCallbackQuery(ctx);
     await wakeTutorial(bot, ctx);
+  });
+
+  bot.callbackQuery("tutorial:end", async (ctx) => {
+    await safeAnswerCallbackQuery(ctx);
+    await requestTutorialEnd(ctx);
+  });
+
+  bot.callbackQuery("tutorial:end:confirm", async (ctx) => {
+    await safeAnswerCallbackQuery(ctx, "Навчання завершено.");
+    await confirmTutorialEnd(bot, ctx);
+  });
+
+  bot.callbackQuery("tutorial:end:cancel", async (ctx) => {
+    await safeAnswerCallbackQuery(ctx, "Лишаємося у сні.");
+    await ctx.reply("Ви лишаєтеся в навчальному сні. Сон не квапить: можна ще озирнутися, роздивитися місцину або пройтися стежкою.", {
+      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+    });
   });
 
   bot.callbackQuery(["tutorial:sleep", "character:sleep"], async (ctx) => {

@@ -65,6 +65,9 @@ assertAlias("/refresh", { kind: "beginner-return" });
 assertAlias("/respawn", { kind: "beginner-return" });
 assertAlias("повернення", { kind: "beginner-return" });
 assertAlias("повернутися до табору", { kind: "beginner-return" });
+assertAlias("/tutorialEnd", { kind: "tutorial-end" });
+assertAlias("/tutorial_end", { kind: "tutorial-end" });
+assertAlias("закінчити навчання", { kind: "tutorial-end" });
 assertAlias("вийти з кущів", { kind: "move", direction: "OUTSIDE" });
 assertAlias("/use_mushrooms", { kind: "use-item", item: "mushrooms" });
 assertAlias("/gather_berries", { kind: "gather", resourceKey: "berries" });
@@ -216,6 +219,9 @@ assertAlias("викинути все", { kind: "drop-inventory-item", target: "�
 assertAlias("річ ягоди", { kind: "inspect-inventory-item", target: "ягоди" });
 assert.equal(inventoryResourceKeyFromText("mushroom"), "mushrooms");
 assert.equal(inventoryResourceKeyFromText("raw meat"), "raw_meat");
+assert.equal(inventoryResourceKeyFromText("труп лиса"), "corpse_fox_male");
+assert.equal(inventoryResourceKeyFromText("труп лисиці"), "corpse_fox_female");
+assert.equal(inventoryResourceKeyFromText("труп миша"), "corpse_mouse_male");
 assert.equal(resourceAccusativeName({ key: "grass", name: "трава" }), "траву");
 assert.equal(normalizeCreatureActionText("їсть трава"), "їсть траву");
 assert.equal(normalizeCreatureActionText("підбирає факел до мисливського набору; hunter_torches:1"), "підбирає факел до мисливського набору");
@@ -240,6 +246,7 @@ assert.ok(suggestAliasEntries("швидк").map(formatAliasSuggestion).includes(
 assert.ok(suggestAliasEntries("стат").map(formatAliasSuggestion).includes("статистика (/stat)"), "Expected formatted suggestions to include slash command for statistics");
 assert.ok(suggestAliasEntries("гриб").map(formatAliasSuggestion).some((suggestion) => suggestion.includes("(/use_mushrooms)")), "Expected formatted suggestions to include slash command for using mushrooms");
 assert.ok(suggestAliasEntries("навч").map(formatAliasSuggestion).some((suggestion) => suggestion.includes("(/sleep_tutorial)")), "Expected formatted tutorial suggestions to use clickable slash command");
+assert.ok(suggestAliasEntries("закінчити нав").map(formatAliasSuggestion).includes("закінчити навчання (/tutorialEnd)"), "Expected formatted tutorial-end suggestions to use slash command");
 assert.ok(suggestAliasEntries("freshen al").map(formatAliasSuggestion).includes("freshen all (/freshen_all)"), "Expected formatted suggestions to include slash command for bulk freshening");
 assert.ok(suggestAliasEntries("потрус").map(formatAliasSuggestion).includes("потрусити дерево (/shake_tree)"), "Expected formatted suggestions to include slash command for tree shaking");
 assert.ok(suggestAliasInputs("усхмі").includes("усміх"), "Expected social suggestions to include усміх for a mistyped smile");
