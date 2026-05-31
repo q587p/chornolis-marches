@@ -51,7 +51,14 @@ The MVP should be practical and quiet: if a configured animal species has no liv
 - It does not duplicate population while at least one living member of the species remains.
 - It does not revive corpses or reset existing corpse decay.
 - It does not affect tutorial/dream-only creatures.
+- The near-term stats/admin surface records how many times each protected species had to be restored after reaching `0` living animals.
 - Tests cover at least one species going to zero and being restored to its starter location.
+
+## Near-Term Follow-Up
+
+- Add a small persistent or event-derived metric for population-floor restorations by species.
+- Surface the count in scribe/admin statistics so it is clear which animals are repeatedly collapsing to zero.
+- Keep this out of ordinary player-facing news/UI unless it becomes part of an in-world ecological clue later.
 
 ## Later Direction
 
