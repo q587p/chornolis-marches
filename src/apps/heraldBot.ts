@@ -1,6 +1,7 @@
 import { Bot } from "grammy";
 import { config, requireConfigValue } from "../config";
 import { parseHeraldAdminIds, isHeraldAdminId } from "../herald/admin";
+import { registerHeraldDigestCommands } from "../herald/digestCommands";
 import { registerHeraldNewsCommands } from "../herald/newsCommands";
 import { registerHeraldPublisherCommands, startHeraldPublisherLoop } from "../herald/publisher";
 import { startHeraldHealthServer } from "../server/heraldHealthServer";
@@ -17,6 +18,7 @@ bot.command("ping", async (ctx) => {
 });
 
 registerHeraldNewsCommands(bot, heraldAdminIds);
+registerHeraldDigestCommands(bot, heraldAdminIds);
 registerHeraldPublisherCommands(bot, heraldAdminIds);
 
 bot.catch((error) => {

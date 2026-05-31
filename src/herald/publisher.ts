@@ -81,6 +81,32 @@ export async function publishPendingHeraldPublications(bot: Bot, options: { limi
   return { published, failed, skipped: false, checked: pending.length };
 }
 
+export async function publishHeraldPublication(
+  bot: Bot,
+  publication: { id: number; title: string; body: string; publishedAt: Date | null },
+) {
+  const channelId = config.heraldChannelId;
+  if (!channelId) return { ok: false as const, skipped: true as const, reason: "HERALD_CHANNEL_ID is not set" };
+  if (publication.publishedAt) return { ok: true as const, alreadyPublished: true as const };
+
+  try {
+    const sent = await bot.api.sendMessage(
+      channelIdFromConfig(channelId),
+      formatHeraldPublicationMessage(publication),
+    );
+    const published = await markPublicationPublished(publication.id, sent.message_id);
+    return { ok: true as const, alreadyPublished: false as const, publication: published };
+  } catch (error) {
+    console.warn(`Herald publication ${publication.id} failed:`, publicationErrorMessage(error));
+    try {
+      await markPublicationFailed(publication.id, error);
+    } catch (recordError) {
+      console.warn(`Herald publication ${publication.id} failure recording failed:`, publicationErrorMessage(recordError));
+    }
+    return { ok: false as const, skipped: false as const, reason: publicationErrorMessage(error) };
+  }
+}
+
 async function replyWithPendingPublications(ctx: Context) {
   const pending = await getPendingPublications(PENDING_LIST_LIMIT);
   if (!pending.length) {
