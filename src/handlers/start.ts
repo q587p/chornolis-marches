@@ -16,10 +16,12 @@ import {
   customNameWarningText,
   normalizeNameForRegistry,
   onboardingNameChoiceTextIntent,
+  paginatePreparedNames,
   preparedNameByKey,
-  preparedNameSummary,
+  preparedNameCompactSummary,
   randomAvailablePreparedName,
   validateCustomCharacterName,
+  type PreparedCharacterName,
 } from "../services/characterNames";
 import { disablePlayerAuto } from "./auto";
 
@@ -93,14 +95,36 @@ function nameChoiceKeyboard() {
     .text("Ввести власне ім'я", "onboarding:nameChoice:custom");
 }
 
-function preparedNamesKeyboard(names: Array<{ key: string; forms: NameForms }>) {
+function preparedNamesKeyboard(names: PreparedCharacterName[], page: number) {
+  const pageData = paginatePreparedNames(names, page);
   const keyboard = new InlineKeyboard();
-  for (const name of names) {
+
+  for (const name of pageData.items) {
     keyboard.text(name.forms.nominative, `onboarding:name:${name.key}`).row();
   }
+
+  if (pageData.hasPrevious || pageData.hasNext) {
+    if (pageData.hasPrevious) keyboard.text("◀ Назад", `onboarding:preparedPage:${pageData.page - 1}`);
+    keyboard.text(`${pageData.page + 1}/${pageData.pageCount}`, "onboarding:preparedPageInfo");
+    if (pageData.hasNext) keyboard.text("Далі ▶", `onboarding:preparedPage:${pageData.page + 1}`);
+    keyboard.row();
+  }
+
   keyboard.text("Випадкове ім'я", "onboarding:nameChoice:random").row();
   keyboard.text("Ввести власне ім'я", "onboarding:nameChoice:custom");
   return keyboard;
+}
+
+function preparedNamesText(names: PreparedCharacterName[], page: number) {
+  const pageData = paginatePreparedNames(names, page);
+  return [
+    "Писарі вже перевірили ці імена, їхні відмінки й відповідність Порубіжжю.",
+    "",
+    `Сторінка ${pageData.page + 1}/${pageData.pageCount}:`,
+    ...pageData.items.map(preparedNameCompactSummary),
+    "",
+    "Можна гортати список, взяти випадкове ім'я або ввести власне.",
+  ].join("\n");
 }
 
 function casePrompt(forms: NameForms, index: number) {
@@ -266,17 +290,27 @@ async function isStaleOnboardingCallback(ctx: any) {
   return true;
 }
 
-async function showPreparedNameChoices(ctx: any, pronoun: OnboardingState["pronoun"]) {
+async function showPreparedNameChoices(ctx: any, pronoun: OnboardingState["pronoun"], page = 0, edit = false) {
   const names = availablePreparedNames(await usedCharacterNames(), { suggestedGender: guessGenderFromPronoun(pronoun) });
   if (names.length === 0) {
     await ctx.reply(`Усі підготовлені імена вже зайняті або зарезервовані.\n\n${customNameWarningText()}`, HTML_OPTIONS);
     return;
   }
 
-  await ctx.reply(
-    `Писарі вже перевірили ці імена, їхні відмінки й відповідність Порубіжжю:\n\n${names.map(preparedNameSummary).join("\n")}`,
-    { reply_markup: preparedNamesKeyboard(names) }
-  );
+  const pageData = paginatePreparedNames(names, page);
+  const message = preparedNamesText(names, pageData.page);
+  const replyMarkup = preparedNamesKeyboard(names, pageData.page);
+
+  if (edit && ctx.callbackQuery?.message) {
+    try {
+      await ctx.editMessageText(message, { reply_markup: replyMarkup });
+      return;
+    } catch {
+      // Telegram can reject edits for stale or unchanged messages; replying keeps onboarding moving.
+    }
+  }
+
+  await ctx.reply(message, { reply_markup: replyMarkup });
 }
 
 async function enterWorld(ctx: any, isMenuRefresh = false) {
@@ -594,6 +628,24 @@ export function registerStartHandlers(bot: Bot) {
 
     onboarding.set(key, { ...state, step: "name" });
     await ctx.reply(await customNamePromptText({ ...state, telegramId: key }), HTML_OPTIONS);
+  });
+
+  bot.callbackQuery(/^onboarding:preparedPage:(\d+)$/, async (ctx) => {
+    if (await isStaleOnboardingCallback(ctx)) return;
+    const key = String(ctx.from.id);
+    const state = onboarding.get(key);
+    await ctx.answerCallbackQuery();
+
+    if (!state) {
+      await ctx.reply("Не бачу, для кого гортати імена. Напишіть /start, щоб почати шлях знову.");
+      return;
+    }
+
+    await showPreparedNameChoices(ctx, state.pronoun, Number(ctx.match[1]), true);
+  });
+
+  bot.callbackQuery("onboarding:preparedPageInfo", async (ctx) => {
+    await ctx.answerCallbackQuery({ text: "Це поточна сторінка списку." });
   });
 
   bot.callbackQuery(/^onboarding:cases:(confirm|restart|edit:([a-z]+))$/, async (ctx) => {
