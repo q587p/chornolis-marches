@@ -5,6 +5,8 @@ ADM-001-B,Scribe action audit helper,done,technical,admin,medium,"admin,audit,wo
 ADM-001-C,Restart confirmation and HTML safety hardening,next,technical,admin,high,"admin,safety,restart,slashless,html,features",docs/planning/items/ADM-001-C.md
 ADM-002,Scribe creature corpse creation command,testing,feature,admin,medium,"admin,creatures,corpses,testing",docs/planning/items/ADM-002-add-creature-corpse-command.md
 CAL-001,"Deep calendar, sacred days and named years",icebox,system,world_time,medium,"calendar,world-time,moon-phases,seasons,folklore,atmosphere",docs/planning/items/CAL-001_calendar_moon_phases_and_named_years.md
+CAMP-001,Starter camp prose and feature audit,done,content,core-loop,high,"camp,onboarding,mud,look,examine",docs/planning/items/CAMP-001-starter-camp-prose-and-feature-audit.md
+CAMP-002,Starter watchtower and camp torch-source route update,next,feature,core-loop,high,"camp,map,torch,light,mud,vertical-exits",docs/planning/items/CAMP-002-starter-watchtower-and-torch-source.md
 CMD-001,Near-term text command pack,testing,feature,commands,high,"commands,aliases,mud,speech,navigation",docs/planning/items/CMD-001-near-term-text-command-pack.md
 CMD-002,Put items into local containers and features,testing,feature,commands,high,"commands,inventory,containers,aliases",docs/planning/items/CMD-002-put-items-into-containers.md
 COMBAT-001,Creature aggression and defense,backlog,feature,combat,medium,"animals,combat,predators,ecology",docs/planning/items/COMBAT-001-creature-aggression-and-defense.md
@@ -78,8 +80,8 @@ OMEN-002,Hidden follower spirit MVP,backlog,feature,world,medium,"omen,hidden-pr
 OMEN-003,Strange track / stezhnyk hint omen,proposed,feature,world,medium,"omen,forest,hidden-presence,spirit,atmosphere",docs/planning/items/OMEN-003-strange-track-stezhnyk-hint.md
 ONB-001,Newcomer helper and tutorial,testing,feature,onboarding,high,"onboarding,tutorial,beginner,help,ux",docs/planning/items/ONB-001-newcomer-helper-and-tutorial.md
 ONB-001-A,Dream tutorial flow audit,done,design,onboarding,high,"tutorial,audit,core-loop",docs/planning/items/ONB-001-A.md
-ONB-001-B,Hint after first Озирнутися,next,ux,onboarding,high,"tutorial,look,copy",docs/planning/items/ONB-001-B.md
-ONB-001-C,Hint after first Роздивитися,next,ux,onboarding,high,"tutorial,examine,attention",docs/planning/items/ONB-001-C.md
+ONB-001-B,Hint after first Озирнутися,done,ux,onboarding,high,"tutorial,look,copy",docs/planning/items/ONB-001-B.md
+ONB-001-C,Hint after first Роздивитися,done,ux,onboarding,high,"tutorial,examine,attention",docs/planning/items/ONB-001-C.md
 ONB-001-D,Tutorial rest lesson polish,next,ux,onboarding,medium,"tutorial,rest,stamina",docs/planning/items/ONB-001-D.md
 ONB-001-E,Wake and return fallback polish,next,ux,onboarding,medium,"tutorial,sleep,wake,aliases",docs/planning/items/ONB-001-E.md
 ONB-001-F,Tutorial hint that observation matters,next,ux,onboarding,medium,"tutorial,observe,learning",docs/planning/items/ONB-001-F.md
@@ -91,7 +93,8 @@ ONB-002-B,Expand forbidden-name normalization,testing,feature,onboarding,high,"o
 ONB-002-C,Uncertain custom-name review status,testing,feature,onboarding,high,"onboarding,scribes,names",docs/planning/items/ONB-002-C.md
 ONB-002-D,Name onboarding help copy,next,ux,onboarding,medium,"onboarding,help,copy",docs/planning/items/ONB-002-D.md
 ONB-003,Tutorial player wellbeing aside,testing,ux,onboarding,medium,"onboarding,tutorial,wellbeing,sleep",docs/planning/items/ONB-003-player-wellbeing-aside.md
-ONB-004,First night guidance,backlog,ux,onboarding,medium,"onboarding,night,light,tutorial,copy",docs/planning/items/ONB-004-first-night-guidance.md
+ONB-004,First night guidance,done,ux,onboarding,medium,"onboarding,night,light,tutorial,copy",docs/planning/items/ONB-004-first-night-guidance.md
+ONB-006,Look/examine semantics in the dream,next,ux,onboarding,high,"tutorial,look,examine,ux,copy",docs/planning/items/ONB-006-look-examine-semantics-in-dream.md
 PERF-001,Runtime performance plan and creature simulation budget,backlog,technical,performance,high,"performance,ecology,creatures,action-queue,simulation,status,auto",docs/planning/items/PERF-001-budgeted-and-aggregated-creature-simulation.md
 PLAN-001,Repository docs are the planning source of truth,testing,documentation,planning,high,"planning,docs,roadmap",docs/planning/items/PLAN-001.md
 PROG-002,Observation-based learning,backlog,feature,progression,medium,"skills,observation,npc,animals,mythic",docs/planning/items/PROG-002-observation-learning.md
@@ -99,6 +102,7 @@ PROG-003,Animal experience and titles,backlog,feature,progression,medium,"animal
 PROG-004,Personal chronicle milestones,next,feature,progression,high,"journal,chronicle,milestones,cooking,learning,personal-history",docs/planning/items/PROG-004-personal-chronicle-milestones.md
 PROG-005,Global chronicles and world milestones,testing,feature,progression,high,"chronicle,world-events,onboarding,gate-hunting,milestones",docs/planning/items/PROG-005-global-chronicles-and-world-milestones.md
 QA-001,0.13 first-session closure smoke,testing,qa,onboarding,high,"qa,onboarding,tutorial,core-loop,release",docs/planning/items/QA-001-0.13-first-session-closure-smoke.md
+QA-002,Camp and dream first-session smoke,next,qa,onboarding,medium,"onboarding,camp,dream,qa",docs/planning/items/QA-002-camp-dream-first-session-smoke.md
 REL-001,Release branch PR summary and risk discipline,testing,process,release,high,"release,github,pr,planning",docs/planning/items/REL-001-release-branch-pr-summary-risk.md
 SES-001-A,AFK and End Session controls,testing,feature,session,high,"telegram,session,afk,ux",docs/planning/items/SES-001-A.md
 SES-001-B,Auto-AFK and proactive message guards,testing,feature,session,high,"telegram,session,reminders,tutorial",docs/planning/items/SES-001-B.md

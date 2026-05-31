@@ -7,6 +7,38 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.14.8 - First-session clarity after darkness - 12026-06-01
+
+### Added
+
+- Added one-time waking-world first-night guidance when dim/dark visibility is actively hiding location details, nearby presence, ground objects, resources or tracks, while skipping tutorial dream locations and locally lit places.
+- Added one-time tutorial-dream hints after the first `look` and first `examine` flows, keeping `Озирнутися` as location context and `Роздивитися` as focused attention.
+- Added an inspectable newcomer board and a beginner torch source at `start_border_camp`, without removing the existing closed-gate torch source.
+- Added starter-camp planning items for the completed prose pass and the future watchtower/source route pass, plus a first-session smoke checklist.
+
+### Changed
+
+- Reworked `start_border_camp` prose so the start/respawn location reads as a shared border camp and safe return anchor near the bridge, river, gate and forest edge.
+- Daypart transition notices now skip tutorial dream and future dream-layer locations, so waking-world time does not interrupt dream scenes.
+- `/help` now uses an in-dream tutorial follow-up when the character is already in the tutorial dream, instead of saying they can return there.
+- Rest-ready and passive recovery messages now keep exact HP/stamina values behind technical-detail access and show ordinary players qualitative state text.
+- Cooking result messages now show a repeat-cooking button when the player still has raw meat left.
+- `/help` no longer advertises the hidden `/commands` catalog to ordinary players.
+- Updated onboarding, fire/light, roadmap and planning docs for the first-session guidance slice.
+
+### Validation
+
+- Ran `npm run planning:export`.
+- Ran `node scripts/test/world-seed.mjs`.
+- Ran `node scripts/test/tutorial-voices.cjs`.
+- Ran `node scripts/test/world-time.cjs`.
+- Ran `node scripts/test/help.cjs`.
+- Ran `node scripts/test/posture.cjs`.
+- Ran `node scripts/test/meat.cjs`.
+- Ran `npm test`.
+- Ran `npm run build`.
+- Ran `git diff --check`.
+
 ## 0.14.7 - Post-merge Herald Render operations docs - 12026-06-01
 
 ### Added

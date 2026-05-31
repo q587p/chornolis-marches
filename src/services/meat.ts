@@ -140,12 +140,14 @@ export async function cookRawMeat(playerId: number) {
     throw new Error("Потрібне вогнище поруч. Самого факела замало, щоб підсмажити м'ясо.");
   }
   const cookedSuccessfully = meatCookingSucceeds();
+  let rawMeatRemaining = 0;
 
   await prisma.$transaction(async (tx) => {
     const carried = await tx.playerResource.findUnique({
       where: { playerId_resourceTypeId: { playerId, resourceTypeId: rawMeat.id } },
     });
     if (!carried || carried.amount <= 0) throw new Error("У ваших речах немає сирого м'яса.");
+    rawMeatRemaining = Math.max(0, carried.amount - 1);
 
     if (carried.amount > 1) {
       await tx.playerResource.update({ where: { id: carried.id }, data: { amount: { decrement: 1 } } });
@@ -173,6 +175,7 @@ export async function cookRawMeat(playerId: number) {
       ? "Ви підсмажили шмат м'яса над вогнищем."
       : "М'ясо підгоріло й розсипалося чорним крихким шматтям. Їсти тут уже нічого.",
     succeeded: cookedSuccessfully,
+    rawMeatRemaining,
     practiceMilestone: learning.milestone,
     practiceCount: learning.sourceCount,
   };

@@ -5,7 +5,7 @@ require("ts-node/register");
 const { EMPTY_KEYBOARD_BUTTON, buildAdminCreaturesReplyKeyboard, buildAdminFireReplyKeyboard, buildAdminMenuReplyKeyboard, buildAdminResourcesReplyKeyboard, buildMainReplyKeyboard, buildTutorialSecondStepReplyKeyboard, buildTutorialStartReplyKeyboard, mainStatusLabelForPlayer, postureActionLabelsForState, shouldShowInventoryButton, shouldUseFocusedTutorialReplyKeyboard } = require("../../src/ui/replyKeyboard");
 const { buildCharacterAutoKeyboard } = require("../../src/handlers/player");
 const { TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY } = require("../../src/services/tutorial");
-const { formatObservedPostureText, formatPostureText } = require("../../src/utils/playerText");
+const { formatObservedPostureText, formatPostureText, formatVitalsSentence } = require("../../src/utils/playerText");
 const { AUTO_DREAM_BLOCK_MESSAGE, isAutoBlockedInLocation, shouldAutoStandBeforeAction } = require("../../src/handlers/auto");
 const { playerRestStartObserverText, playerRestStopObserverText, playerSitObserverText, playerStandObserverText, playerTutorialSleepObserverText, playerTutorialWakeObserverText } = require("../../src/services/playerVisibility");
 const { activePlayerRestActionWhere } = require("../../src/services/posture");
@@ -15,6 +15,8 @@ assert.equal(formatPostureText({ posture: "SITTING", isResting: false }), "Ви 
 assert.equal(formatPostureText({ posture: "SITTING", isResting: true }), "Ви сидите й відпочиваєте.");
 assert.equal(formatPostureText({ posture: "SITTING", isResting: true, isSleeping: true }), "Ви спите. Уві сні ви сидите й відпочиваєте.");
 assert.equal(formatPostureText({ posture: "STANDING", isResting: false, isSleeping: true }), "Ви спите. Уві сні ви стоїте.");
+assert.equal(formatVitalsSentence({ hp: 20, hpMax: 20, stamina: 193, staminaMax: 42 }, { hpFallback: 20, staminaFallback: 42 }), "Життя: повно. Снага: екстра.");
+assert.equal(formatVitalsSentence({ hp: 20, hpMax: 20, stamina: 193, staminaMax: 42 }, { showTechnicalDetails: true, hpFallback: 20, staminaFallback: 42 }), "Життя: 20/20. Снага: 193/42.");
 
 assert.equal(formatObservedPostureText({ posture: "SITTING", isResting: false }), "Сидить.");
 assert.equal(formatObservedPostureText({ posture: "SITTING", isResting: true }), "Сидить і відпочиває.");

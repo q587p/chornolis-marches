@@ -11,6 +11,8 @@ import { prisma } from "../db";
 import { getPlayerRestStaminaCap } from "../services/locationFeatures";
 import { escapeHtml } from "../utils/text";
 import { notifyPlayerObservers, playerRestStartObserverText, playerRestStopObserverText } from "../services/playerVisibility";
+import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
+import { formatVitalsSentence } from "../utils/playerText";
 
 async function replyOrEdit(ctx: any, text: string, options?: any) {
   if (ctx.callbackQuery?.message) {
@@ -72,7 +74,7 @@ async function startRest(bot: Bot, ctx: any) {
   const max = await getPlayerRestStaminaCap(player.id);
   const hpMax = player.hpMax ?? BASE_HP;
   if (player.stamina >= max && player.hp >= hpMax && !player.isResting) {
-    await replyOrEdit(ctx, `Ви вже відпочили й готові до дій. Життя: ${player.hp}/${hpMax}. Снага: ${player.stamina}/${max}.`);
+    await replyOrEdit(ctx, `Ви вже відпочили й готові до дій. ${formatVitalsSentence({ ...player, staminaMax: max }, { showTechnicalDetails: playerCanShowTechnicalDetails(player), hpFallback: BASE_HP, staminaFallback: BASE_STAMINA })}`);
     return;
   }
 

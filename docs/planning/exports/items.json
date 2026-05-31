@@ -111,6 +111,48 @@
     "file": "docs/planning/items/CAL-001_calendar_moon_phases_and_named_years.md"
   },
   {
+    "id": "CAMP-001",
+    "title": "Starter camp prose and feature audit",
+    "status": "done",
+    "type": "content",
+    "area": "core-loop",
+    "priority": "high",
+    "tags": [
+      "camp",
+      "onboarding",
+      "mud",
+      "look",
+      "examine"
+    ],
+    "depends_on": [
+      "LOOP-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/CAMP-001-starter-camp-prose-and-feature-audit.md"
+  },
+  {
+    "id": "CAMP-002",
+    "title": "Starter watchtower and camp torch-source route update",
+    "status": "next",
+    "type": "feature",
+    "area": "core-loop",
+    "priority": "high",
+    "tags": [
+      "camp",
+      "map",
+      "torch",
+      "light",
+      "mud",
+      "vertical-exits"
+    ],
+    "depends_on": [
+      "CAMP-001",
+      "FIRE-001-C"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/CAMP-002-starter-watchtower-and-torch-source.md"
+  },
+  {
     "id": "CMD-001",
     "title": "Near-term text command pack",
     "status": "testing",
@@ -1511,7 +1553,7 @@
   {
     "id": "ONB-001-B",
     "title": "Hint after first Озирнутися",
-    "status": "next",
+    "status": "done",
     "type": "ux",
     "area": "onboarding",
     "priority": "high",
@@ -1529,7 +1571,7 @@
   {
     "id": "ONB-001-C",
     "title": "Hint after first Роздивитися",
-    "status": "next",
+    "status": "done",
     "type": "ux",
     "area": "onboarding",
     "priority": "high",
@@ -1751,7 +1793,7 @@
   {
     "id": "ONB-004",
     "title": "First night guidance",
-    "status": "backlog",
+    "status": "done",
     "type": "ux",
     "area": "onboarding",
     "priority": "medium",
@@ -1765,6 +1807,27 @@
     "depends_on": [],
     "exports": {},
     "file": "docs/planning/items/ONB-004-first-night-guidance.md"
+  },
+  {
+    "id": "ONB-006",
+    "title": "Look/examine semantics in the dream",
+    "status": "next",
+    "type": "ux",
+    "area": "onboarding",
+    "priority": "high",
+    "tags": [
+      "tutorial",
+      "look",
+      "examine",
+      "ux",
+      "copy"
+    ],
+    "depends_on": [
+      "ONB-001-B",
+      "ONB-001-C"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-006-look-examine-semantics-in-dream.md"
   },
   {
     "id": "PERF-001",
@@ -1903,6 +1966,28 @@
     "depends_on": [],
     "exports": {},
     "file": "docs/planning/items/QA-001-0.13-first-session-closure-smoke.md"
+  },
+  {
+    "id": "QA-002",
+    "title": "Camp and dream first-session smoke",
+    "status": "next",
+    "type": "qa",
+    "area": "onboarding",
+    "priority": "medium",
+    "tags": [
+      "onboarding",
+      "camp",
+      "dream",
+      "qa"
+    ],
+    "depends_on": [
+      "CAMP-001",
+      "ONB-001-B",
+      "ONB-001-C",
+      "ONB-004"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/QA-002-camp-dream-first-session-smoke.md"
   },
   {
     "id": "REL-001",

@@ -225,8 +225,18 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🪧",
+      "inspectable": true,
       "ornament": "ukrainian_geometric",
-      "role": "respawn_marker"
+      "role": "respawn_marker",
+      "aliases": [
+        "межовий знак",
+        "знак",
+        "орнамент",
+        "межа",
+        "border marker",
+        "marker"
+      ]
     }
   },
   {
@@ -239,7 +249,63 @@
     "restStaminaCapMultiplier": 5,
     "data": {
       "rest_stamina_cap_multiplier": 5,
-      "night_light": "location"
+      "night_light": "location",
+      "aliases": [
+        "вогнище",
+        "незгасне вогнище",
+        "вогонь",
+        "багаття",
+        "campfire",
+        "fire"
+      ]
+    }
+  },
+  {
+    "key": "start_newcomer_tablet",
+    "locationKey": "start_border_camp",
+    "type": "LANDMARK",
+    "name": "Дошка для прибулих",
+    "description": "Дошка потемніла від дощу, але різьблені слова ще читаються:\n\n«Не поспішай у Чорноліс голіруч.\nОзирнися. Візьми світло. Вернешся живим — лиши щось наступному».",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "📋",
+      "inspectable": true,
+      "beginner_advice": true,
+      "aliases": [
+        "дошка",
+        "табличка",
+        "дошка для прибулих",
+        "порада",
+        "прибулі",
+        "newcomer sign",
+        "sign"
+      ]
+    }
+  },
+  {
+    "key": "start_camp_torch_stand",
+    "locationKey": "start_border_camp",
+    "type": "LANDMARK",
+    "name": "Смоляна поставка з факелами",
+    "description": "Факели сухі й густо просмолені. Їх тримають біля вогню для тих, хто виходить із табору в присмерк або вертається з темряви. Світло не робить шлях безпечним, але дозволяє помітити те, що ніч ховає першим.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🕯",
+      "inspectable": true,
+      "torch_source": true,
+      "infinite_for_now": true,
+      "future_limited_stock": true,
+      "aliases": [
+        "факели",
+        "факел",
+        "поставка",
+        "смоляна поставка",
+        "світло",
+        "torch",
+        "torches"
+      ]
     }
   },
   {

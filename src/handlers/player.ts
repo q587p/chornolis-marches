@@ -26,7 +26,7 @@ import {
 import { isScribeAdmin } from "../services/adminAccess";
 import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
 import { inspectInventoryResource, inventoryResourceKeyFromText, type UsableInventoryResource } from "../services/inventoryUse";
-import { tutorialLookPaceComments } from "../services/tutorialVoices";
+import { tutorialActionHintComment, tutorialLookPaceComments } from "../services/tutorialVoices";
 import { escapeHtml } from "../utils/text";
 import { noteKnownMessage } from "../utils/messageTracker";
 import { hasCompletedTutorial, isTutorialLocation, rememberTutorialCommandHintIfInTutorial } from "../services/tutorial";
@@ -40,6 +40,7 @@ import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { durationSecondsSuffix } from "../utils/durationText";
 import { characterNameApprovalStatusText } from "../services/characterNames";
 import { performPlayerLocationSignal, socialDefinitionById } from "../services/socialSignals";
+import { firstNightGuidanceForPlayer } from "../services/beginnerGuidance";
 
 const tutorialInventoryVoiceSeen = new Set<number>();
 
@@ -183,6 +184,11 @@ async function sendFeatureFollowups(reply: (text: string, options?: any) => Prom
   for (const message of view.followupMessages ?? []) {
     noteKnownMessage(await reply(message.text, { parse_mode: "HTML" }));
   }
+}
+
+async function sendVoiceComment(reply: (text: string, options?: any) => Promise<unknown>, comment: { title: string; text: string } | null) {
+  if (!comment) return;
+  noteKnownMessage(await reply(`${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }));
 }
 
 function normalizeLookCommandTargetArg(value: string) {
@@ -360,6 +366,9 @@ export async function showLocationForPlayer(telegramId: number, reply: (text: st
   const locationId = player.currentLocationId ?? (await getStartLocationId());
   const view = await renderLocationBrief(locationId, player.id);
   noteKnownMessage(await reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard }));
+  await sendVoiceComment(reply, await tutorialActionHintComment({ ...player, currentLocationId: locationId }, "look"));
+  const firstNightGuidance = await firstNightGuidanceForPlayer(player.id, locationId);
+  if (firstNightGuidance) noteKnownMessage(await reply(firstNightGuidance));
   if (await hasActiveLightAtLocation(locationId)) {
     const observation = await recordGatheringObservation({ playerId: player.id, locationId });
     if (observation.milestone) {
@@ -625,6 +634,7 @@ export function registerPlayerHandlers(bot: Bot) {
         await rememberTutorialCommandHintIfInTutorial(player.id, "examine", player.currentLocationId);
         noteKnownMessage(await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard }));
         await sendFeatureFollowups((text, options) => ctx.reply(text, options), view);
+        await sendVoiceComment((text, options) => ctx.reply(text, options), await tutorialActionHintComment(player, "look"));
         return;
       }
       await submitLookTarget(bot, ctx, player, arg);

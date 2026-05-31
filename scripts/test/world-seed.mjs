@@ -135,6 +135,18 @@ for (const key of ["closed_gate_torch_stand", "closed_gate_hunting_notice", "clo
 const gateTorchStand = features.find((item) => item.key === "closed_gate_torch_stand");
 assert.notEqual(gateTorchStand?.data?.icon, "🔥", "Torch stand should not use the fire icon reserved for flame/campfire actions");
 
+for (const key of ["start_border_marker", "start_newcomer_tablet", "start_camp_torch_stand"]) {
+  const feature = features.find((item) => item.key === key);
+  assert.ok(feature, `Starter camp feature should exist: ${key}`);
+  assert.equal(feature.locationKey, "start_border_camp", `Starter camp feature should stay at the camp: ${key}`);
+  assert.ok(feature.data?.icon, `Starter camp feature should have a distinct icon: ${key}`);
+  assert.ok(Array.isArray(feature.data?.aliases) && feature.data.aliases.length > 0, `Starter camp feature should have aliases: ${key}`);
+}
+
+const startCampTorchStand = features.find((item) => item.key === "start_camp_torch_stand");
+assert.equal(startCampTorchStand?.data?.torch_source, true, "Starter camp torch stand should be a torch source");
+assert.notEqual(startCampTorchStand?.data?.icon, "🔥", "Starter camp torch stand should not use the fire icon reserved for flame/campfire actions");
+
 const tutorialRestBench = features.find((item) => item.key === "dream_tutorial_rest_fire");
 assert.ok(tutorialRestBench, "Tutorial rest bench feature should exist");
 assert.equal(

@@ -93,6 +93,9 @@ export const WORLD_LEXICON = [
 
   entry("feature.campfire", "feature", "NEUTER", "INANIMATE", ["feature", "fire", "current"], ["вогнище", "вогнища", "вогнищу", "вогнище", "вогнищем", "вогнищі", "вогнище"]),
   entry("feature.magic_campfire", "feature", "NEUTER", "INANIMATE", ["feature", "fire", "magic", "current"], ["незгасне вогнище", "незгасного вогнища", "незгасному вогнищу", "незгасне вогнище", "незгасним вогнищем", "незгасному вогнищі", "незгасне вогнище"]),
+  entry("feature.border_marker", "feature", "MASCULINE", "INANIMATE", ["feature", "border", "current"], ["межовий знак", "межового знака", "межовому знаку", "межовий знак", "межовим знаком", "межовому знаку", "межовий знаку"]),
+  entry("feature.newcomer_board", "feature", "FEMININE", "INANIMATE", ["feature", "onboarding", "current"], ["дошка для прибулих", "дошки для прибулих", "дошці для прибулих", "дошку для прибулих", "дошкою для прибулих", "дошці для прибулих", "дошко для прибулих"]),
+  entry("feature.torch_stand", "feature", "FEMININE", "INANIMATE", ["feature", "fire", "light", "current"], ["смоляна поставка", "смоляної поставки", "смоляній поставці", "смоляну поставку", "смоляною поставкою", "смоляній поставці", "смоляна поставко"]),
   entry("feature.pine", "feature", "FEMININE", "INANIMATE", ["feature", "tree", "current"], ["сосна", "сосни", "сосні", "сосну", "сосною", "сосні", "сосно"]),
   entry("feature.branch", "feature", "FEMININE", "INANIMATE", ["feature", "tree", "current"], ["гілка", "гілки", "гілці", "гілку", "гілкою", "гілці", "гілко"]),
 ] as const satisfies readonly LexiconEntry[];

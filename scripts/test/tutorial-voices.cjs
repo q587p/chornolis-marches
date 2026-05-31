@@ -11,7 +11,7 @@ const {
   TUTORIAL_REST_RETURN_FROM_HEAT_TEXT,
   tutorialRestEntryStaminaMode,
 } = require("../../src/services/tutorial");
-const { PACE_COMMENT_PAIRS, tutorialPaceCooldownMs } = require("../../src/services/tutorialVoices");
+const { PACE_COMMENT_PAIRS, tutorialActionHintText, tutorialPaceCooldownMs } = require("../../src/services/tutorialVoices");
 
 assert.equal(tutorialPaceCooldownMs(0), 120_000);
 assert.equal(tutorialPaceCooldownMs(1), 300_000);
@@ -50,5 +50,15 @@ assert.equal(tutorialRestEntryStaminaMode(TUTORIAL_DEEP_REST_LOCATION_KEY, TUTOR
 assert.equal(tutorialRestEntryStaminaMode(TUTORIAL_DEEP_REST_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, "WEST"), null);
 assert.ok(TUTORIAL_REST_ENTRY_STAMINA_TEXT.includes("Снаги лишається приблизно на третину"));
 assert.ok(TUTORIAL_REST_RETURN_FROM_HEAT_TEXT.includes("зберігаєте здобуту снагу"));
+
+const lookHint = tutorialActionHintText("look");
+assert.equal(lookHint.speaker, "Дрімота");
+assert.ok(lookHint.text.includes("Озирнутися"));
+assert.ok(lookHint.text.includes("роздивися ближче"));
+
+const examineHint = tutorialActionHintText("examine");
+assert.equal(examineHint.speaker, "Сон");
+assert.ok(examineHint.text.includes("Роздивитися"));
+assert.ok(examineHint.text.includes("спитати місце"));
 
 console.log("Tutorial voice pacing OK");

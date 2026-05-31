@@ -13,8 +13,10 @@ import { canEditCallbackMessage, noteKnownMessage } from "../utils/messageTracke
 import { assertCanPerformPhysicalAction } from "../services/postureRules";
 import { replyToActionError, actionErrorMessage } from "../utils/actionErrorReply";
 import { rememberTutorialCommandHintIfInTutorial } from "../services/tutorial";
+import { tutorialActionHintComment } from "../services/tutorialVoices";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 import { spendPlayerStaminaAmount } from "../services/actionRecovery";
+import { firstNightGuidanceForPlayer } from "../services/beginnerGuidance";
 
 function pickedItemsAmount(items: Array<{ amount: number }>) {
   return items.reduce((total, item) => total + Math.max(0, item.amount), 0);
@@ -54,6 +56,16 @@ async function sendHtmlFollowupMessages(ctx: any, messages?: Array<{ text: strin
   for (const message of messages ?? []) {
     await replyAndTrack(ctx, message.text, { parse_mode: "HTML" });
   }
+}
+
+async function sendVoiceComment(ctx: any, comment: { title: string; text: string } | null) {
+  if (!comment) return;
+  await replyAndTrack(ctx, `${escapeHtml(comment.title)}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
+}
+
+async function sendFirstNightGuidance(ctx: any, playerId: number, locationId: number | null | undefined) {
+  const text = await firstNightGuidanceForPlayer(playerId, locationId);
+  if (text) await replyAndTrack(ctx, text);
 }
 
 async function submitFeatureQueuedAction(
@@ -141,6 +153,7 @@ export function registerLookHandlers(bot: Bot) {
         await replyAndTrack(ctx, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
         await sendVoiceQuoteMessages(ctx, "quoteMessages" in view ? (view as any).quoteMessages : undefined);
         await sendHtmlFollowupMessages(ctx, "followupMessages" in view ? (view as any).followupMessages : undefined);
+        await sendVoiceComment(ctx, await tutorialActionHintComment(player, "examine"));
         return;
       }
     }
@@ -193,6 +206,8 @@ export function registerLookHandlers(bot: Bot) {
     const view = await renderLocationDetails(player.currentLocationId, player.id);
     await safeAnswerCallbackQuery(ctx);
     await editCallbackMessageOrReply(ctx, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+    await sendVoiceComment(ctx, await tutorialActionHintComment(player, "examine"));
+    await sendFirstNightGuidance(ctx, player.id, player.currentLocationId);
   });
 
   bot.callbackQuery("location:brief", async (ctx) => {
@@ -205,6 +220,8 @@ export function registerLookHandlers(bot: Bot) {
     const view = await renderLocationBrief(player.currentLocationId, player.id);
     await safeAnswerCallbackQuery(ctx);
     await editCallbackMessageOrReply(ctx, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+    await sendVoiceComment(ctx, await tutorialActionHintComment(player, "look"));
+    await sendFirstNightGuidance(ctx, player.id, player.currentLocationId);
   });
 
   bot.callbackQuery("targetPage:noop", async (ctx) => {
@@ -245,6 +262,7 @@ export function registerLookHandlers(bot: Bot) {
     await editCallbackMessageOrReply(ctx, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
     await sendVoiceQuoteMessages(ctx, "quoteMessages" in view ? view.quoteMessages : undefined);
     await sendHtmlFollowupMessages(ctx, "followupMessages" in view ? view.followupMessages : undefined);
+    await sendVoiceComment(ctx, await tutorialActionHintComment(player, "examine"));
   });
 
   bot.callbackQuery(/^fire:addTwigs:(\d+)$/, async (ctx) => {

@@ -16,6 +16,16 @@ function inventoryItemDropLabel(resourceKey: string) {
   return "Викинути";
 }
 
+export function buildCookMeatAgainKeyboard() {
+  return new InlineKeyboard().text("🔥 Підсмажити м’ясо", "inventory:cook:meat");
+}
+
+export function cookingResultReplyOptions(result: { rawMeatRemaining?: number | null }) {
+  return result.rawMeatRemaining && result.rawMeatRemaining > 0
+    ? { reply_markup: buildCookMeatAgainKeyboard() }
+    : undefined;
+}
+
 export async function buildInventoryItemKeyboard(playerId: number, resourceKey: string) {
   const [canAddTwigs, canDouseTorch, canLightTorch, canCookMeat] = await Promise.all([
     canAddTwigsToNearbyCampfire(playerId),

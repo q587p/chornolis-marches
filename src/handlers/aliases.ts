@@ -39,6 +39,7 @@ import { submitPosture } from "./posture";
 import { addCorpseToInventory, addVisibleCorpsesToInventory, resourceTypeDisplayName } from "../services/corpses";
 import { performPlayerLocationSignal, performSocialSignal } from "../services/socialSignals";
 import { requireScribeAdmin } from "../services/adminAccess";
+import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
 import { pickUpAllVisibleGroundResources, pickUpAllVisibleGroundResourcesByKey, pickUpFirstGroundResourceByKey, pickUpFirstVisibleGroundResourceByKey, type VisibleGroundResourceKey } from "../services/groundItems";
 import { parseSpeechTarget } from "../services/speechTargets";
 import { inspectInventoryResource, inventoryResourceKeyFromText, type UsableInventoryResource } from "../services/inventoryUse";
@@ -58,6 +59,7 @@ import { spendPlayerStaminaAmount } from "../services/actionRecovery";
 import { afkReplyOptions, endPlayerSession, SESSION_AFK_CONFIRMATION, SESSION_ENDED_CONFIRMATION, setPlayerAfk } from "../services/sessionPresence";
 import { beginnerReturnPromptText, beginnerReturnRefusalText, checkBeginnerReturnForPlayer, performBeginnerReturn } from "../services/beginnerReturn";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
+import { formatVitalsSentence } from "../utils/playerText";
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
@@ -214,7 +216,7 @@ async function submitRest(bot: Bot, ctx: any, mode: RestAliasMode = "start") {
   const staminaMax = player.staminaMax ?? BASE_STAMINA;
   const hpMax = player.hpMax ?? BASE_HP;
   if (player.stamina >= staminaMax && player.hp >= hpMax && !player.isResting) {
-    await ctx.reply(`Ви вже відпочили й готові до дій. Життя: ${player.hp}/${hpMax}. Снага: ${player.stamina}/${staminaMax}.`);
+    await ctx.reply(`Ви вже відпочили й готові до дій. ${formatVitalsSentence(player, { showTechnicalDetails: playerCanShowTechnicalDetails(player), hpFallback: BASE_HP, staminaFallback: BASE_STAMINA })}`);
     return;
   }
 
