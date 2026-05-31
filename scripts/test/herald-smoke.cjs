@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const { parseHeraldAdminIds, isHeraldAdminId } = require("../../src/herald/admin");
-const { formatHeraldPublicationMessage } = require("../../src/herald/format");
+const { formatHeraldPublicationMessage, formatHeraldPublicationRepostMessage } = require("../../src/herald/format");
 const { formatHeraldWhoami } = require("../../src/herald/help");
 const {
   heraldGatheringLine,
@@ -16,7 +16,7 @@ const {
   formatBackfillInterval,
   parseBackfillIntervalMs,
 } = require("../../src/herald/newsBackfill");
-const { parseLatestNewsEntry, parseNewsEntries } = require("../../src/herald/newsMarkdown");
+const { extractNewsSourceMetadata, parseLatestNewsEntry, parseNewsEntries } = require("../../src/herald/newsMarkdown");
 const {
   assertNoSecrets,
   parseTelegramChannelId,
@@ -44,9 +44,14 @@ assert.equal(latest.title, "12026-06-01 — Свіжий запис");
 assert.match(latest.body, /тиху зміну/);
 assert.doesNotMatch(latest.body, /Старий запис/);
 assert.match(latest.contentHash, /^[a-f0-9]{64}$/);
+assert.equal(latest.sourceDate, "12026-06-01");
 assert.equal(parseLatestNewsEntry(markdown).contentHash, latest.contentHash);
 assert.notEqual(parseLatestNewsEntry(markdown.replace("тиху зміну", "іншу зміну")).contentHash, latest.contentHash);
 assert.equal(parseLatestNewsEntry("# Тільки заголовок\n\nБез release entry."), null);
+assert.deepEqual(extractNewsSourceMetadata("0.14.7 — Канцелярія має місце"), {
+  sourceDate: undefined,
+  sourceVersion: "0.14.7",
+});
 
 const entries = parseNewsEntries(markdown);
 assert.equal(entries.length, 2);
@@ -140,6 +145,24 @@ assert.match(archiveFormatted, /📜 З архіву Канцелярії/);
 assert.match(archiveFormatted, /Архівний запис: 12026-05-31/);
 assert.match(archiveFormatted, /Цей запис уже нижче/);
 assert.doesNotMatch(archiveFormatted, /📜 Канцелярія Межового Знаку/);
+
+const savedSnapshot = formatHeraldPublicationMessage({
+  title: "Старий заголовок",
+  body: "Старе тіло",
+  renderedText: "📜 Збережений відбиток\n\nТекст уже не залежить від news.md",
+});
+assert.match(savedSnapshot, /Збережений відбиток/);
+assert.doesNotMatch(savedSnapshot, /Старе тіло/);
+
+const repost = formatHeraldPublicationRepostMessage({
+  id: 77,
+  title: "Старий заголовок",
+  body: "Старе тіло",
+  renderedText: "📜 Збережений відбиток\n\nТекст уже не залежить від news.md",
+});
+assert.match(repost, /📜 З архіву Канцелярії/);
+assert.match(repost, /Повторна публікація з книги Канцелярії #77/);
+assert.match(repost, /Збережений відбиток/);
 
 assert.equal(heraldTrailPhrase(0), "Канцелярія ще майже не має записів про ці кроки.");
 assert.equal(heraldTrailPhrase(3), "сліди трапляються зрідка");

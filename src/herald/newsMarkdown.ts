@@ -7,6 +7,8 @@ export type HeraldNewsEntry = {
   body: string;
   raw: string;
   contentHash: string;
+  sourceDate?: string;
+  sourceVersion?: string;
 };
 
 export type HeraldNewsReadResult =
@@ -15,6 +17,12 @@ export type HeraldNewsReadResult =
 
 function contentHash(value: string) {
   return createHash("sha256").update(value, "utf8").digest("hex");
+}
+
+export function extractNewsSourceMetadata(title: string) {
+  const sourceDate = title.match(/\b\d{4,5}-\d{2}-\d{2}\b/u)?.[0];
+  const sourceVersion = title.match(/\b\d+\.\d+\.\d+\b/u)?.[0];
+  return { sourceDate, sourceVersion };
 }
 
 export function parseLatestNewsEntry(markdown: string): HeraldNewsEntry | null {
@@ -30,12 +38,14 @@ export function parseNewsEntries(markdown: string): HeraldNewsEntry[] {
       const [heading = "", ...bodyLines] = section.split("\n");
       const title = heading.replace(/^##\s+/, "").trim() || "Новини Порубіжжя";
       const body = bodyLines.join("\n").trim();
+      const metadata = extractNewsSourceMetadata(title);
 
       return {
         title,
         body,
         raw: section,
         contentHash: contentHash(section),
+        ...metadata,
       };
     });
 }

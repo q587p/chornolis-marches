@@ -392,8 +392,11 @@ model HeraldPublication {
   id                Int       @id @default(autoincrement())
   sourceType        String
   sourceId          String?
+  sourceDate        String?
+  sourceVersion     String?
   title             String
   body              String
+  renderedText      String?
   priority          Int       @default(0)
   visibility        String    @default("PUBLIC")
   availableAt       DateTime  @default(now())
