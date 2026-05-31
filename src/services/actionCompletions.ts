@@ -26,6 +26,7 @@ import { actorPastVerb, creatureForms, playerForms } from "./grammar";
 import { actionCost, actionDurationMs, actionTitle, movementDurationMs } from "./actionRules";
 import { fatigueStateFor, spendCreatureStamina, spendPlayerStamina } from "./actionRecovery";
 import { actorWhere, enqueueCreatureAction, interruptActorActions, type ActorRef } from "./actionLifecycle";
+import { attackHitsSpecies } from "./attackRules";
 import { escapeHtml } from "../utils/text";
 import { resourceAccusativeName } from "../utils/resourceText";
 import { canEditKnownMessage, noteKnownMessage } from "../utils/messageTracker";
@@ -914,6 +915,21 @@ async function completeCreatureAttack(bot: Bot, action: WorldAction) {
   await markRecentAttackDanger(attacker.locationId);
   await prisma.creature.updateMany({ where: { id: attacker.id }, data: { attackAttempts: { increment: 1 } } });
 
+  if (!attackHitsSpecies(target.species.key)) {
+    await prisma.creature.updateMany({
+      where: { id: attacker.id },
+      data: { activity: "FIGHTING", currentAction: `промахнувся, нападаючи на ${target.species.name}` },
+    });
+    await prisma.creature.updateMany({
+      where: { id: target.id },
+      data: { currentAction: "сахнулося від нападу" },
+    });
+    await notifyLocation(bot, attacker.locationId, -1, `Щось кидається на ${target.species.name}, але здобич вислизає.`);
+    await logEvent("NPC_ACTION", "Creature missed prey", `${attacker.id} -> ${target.id}; species=${target.species.key}`, attacker.locationId);
+    await setActionStatus(action, "DONE");
+    return;
+  }
+
   if (nextHp <= 0) {
     const hunter = isHunterCreature(attacker);
     await prisma.creature.updateMany({
@@ -999,6 +1015,16 @@ async function completeAttack(bot: Bot, action: WorldAction) {
 
   await spendPlayerStamina(bot, player.id, "ATTACK", chatId);
   await markRecentAttackDanger(player.currentLocationId);
+
+  if (!attackHitsSpecies(creature.species.key)) {
+    await prisma.creature.updateMany({ where: { id: creature.id }, data: { currentAction: "сахнулося від удару" } });
+    await notifyLocation(bot, player.currentLocationId, player.id, `Хтось намагається затоптати ${target.forms.accusative}, але промахується.`);
+    await setActionStatus(action, "DONE");
+    await logEvent("PLAYER_ACTION", "Player missed animal", `${target.kind}:${target.id}; species=${creature.species.key}`, player.currentLocationId);
+    if (chatId) await bot.api.sendMessage(chatId, `⚔️ Ви кинулися на ${target.forms.accusative}, але ціль вислизнула. Якщо вона не втече, можна спробувати ще раз.`);
+    return;
+  }
+
   await prisma.creature.updateMany({ where: { id: creature.id }, data: { hp: 0, isAlive: false, age: "CORPSE", diedAtTick: null, corpseDecayTicksLeft: creature.species.corpseDecayTicks, activity: "RESTING", currentAction: "лежить нерухомо" } });
   await interruptActorActions({ actorType: "CREATURE", creatureId: creature.id }, "істоту вбито", true);
   const updatedPlayer = await prisma.player.update({ where: { id: player.id }, data: { animalsKilled: { increment: 1 } }, select: { animalsKilled: true } });
