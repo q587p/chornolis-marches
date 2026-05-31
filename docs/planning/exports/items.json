@@ -1747,7 +1747,7 @@
   {
     "id": "QA-001",
     "title": "0.13 first-session closure smoke",
-    "status": "next",
+    "status": "testing",
     "type": "qa",
     "area": "onboarding",
     "priority": "high",

@@ -9,6 +9,25 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.27 - Core loop closure audit - 12026-05-31
+
+### Added
+
+- Added the `0.13` first-session closure audit report with a live-smoke script for onboarding, tutorial dream, first waking locations, `/respawn`, AFK/end-session guards and scribe support checks.
+- Added the final `QA-001` planning note update for closing the Core Loop & Onboarding Stability line before starting `0.14.x`.
+
+### Changed
+
+- Updated near-term planning to treat `0.13.x` as ready for one final live Telegram smoke after deployment instead of continuing to absorb new systems.
+
+### Validation
+
+- Ran `npm run planning:export`.
+- Ran `npm run build`.
+- Ran `npm test`.
+
+---
+
 ## 0.13.26 - Queued inventory, firewood upkeep and 0.14 planning - 12026-05-31
 
 ### Added
