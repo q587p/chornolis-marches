@@ -80,6 +80,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Brief `/look` now asks the shared visibility service whether nearby beings, ground objects and target buttons should be shown.
 - Daylight and clear light can now reveal brief nearby details without requiring a local campfire or torch, while dim/dark brief views remain more cautious until the deeper darkness slices land.
+- Production seed refresh no longer rewinds an existing `WorldState` clock during redeploy; it only creates the row when missing.
 - Updated admin docs, world-time docs and planning docs for the `WORLD-001-G` and `VIS-001-A` slices.
 
 ### Validation
@@ -87,6 +88,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `node scripts/test/world-time.cjs`.
 - Ran `node scripts/test/posture.cjs`.
 - Ran `node scripts/test/slashless-command-coverage.cjs`.
+- Ran `node scripts/test/world-seed.mjs`.
 - Ran `npm run planning:export`.
 - Ran `npm test`.
 - Ran `npm run build`.

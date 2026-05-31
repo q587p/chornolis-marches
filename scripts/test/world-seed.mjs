@@ -205,4 +205,10 @@ for (const filePath of ["prisma/seed.ts", "src/services/worldReset.ts"]) {
   }
 }
 
+const seedSource = fs.readFileSync("prisma/seed.ts", "utf8");
+assert.ok(
+  /worldState\.upsert\(\{\s*where:\s*\{\s*id:\s*1\s*\},\s*\/\/ Deploy seed refreshes authored world data but must not rewind the live world clock\.\s*update:\s*\{\}/s.test(seedSource),
+  "npm run seed must create missing WorldState but must not update/rewind an existing live world clock",
+);
+
 console.log(`World seed OK: ${locations.length} locations, ${exits.length} exits, start=${meta.startLocationKey}`);

@@ -61,6 +61,7 @@ Do not use `Date.getHours()`, server timezone, player timezone or real-world cal
 
 - Public chronicles may group real `createdAt` timestamps by `Europe/Kyiv` for the archive UI. That formatting is only a public archive convenience, not a world-time source. Do not derive Chornolis daypart, moon, weather or world events from the chronicle display date.
 - Starter weather fields are part of the stored world state; `0.14.3` adds the first weather simulation and player-facing weather display slice.
+- Production seed refresh creates the singleton `WorldState` row if it is missing, but it must not rewind an existing live world clock. Only explicit world/full reset should return time and weather to the starter state.
 - `/reset world` and `/reset full` reset the clock and weather state to the canonical starter values. `/reset stats` must not reset world time, weather or `lastAdvancedAt`.
 
 ## 0.14 Scope
@@ -87,7 +88,7 @@ Do not use `Date.getHours()`, server timezone, player timezone or real-world cal
 - `worldTick()` advances the stored minute count through the shared world-time service.
 - `/time` reads the stored/derived world-clock state and shows the current year, lunar circle, day, approximate clock, daypart, moon phase, weather and a compact light label.
 - The heartbeat emits compact player-facing notices when the internal daypart changes: dawn, day, dusk or night. These notices describe the world getting lighter or darker, but they do not yet apply full darkness/visibility penalties.
-- Seed, `/reset world` and `/reset full` return the world clock to the canonical starter timestamp.
+- Seed creates missing world-clock storage without rewinding existing time; `/reset world` and `/reset full` return the world clock to the canonical starter timestamp.
 
 `0.14.3` adds the first weather/light foundation:
 

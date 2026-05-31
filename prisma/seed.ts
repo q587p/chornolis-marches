@@ -796,13 +796,8 @@ async function main() {
   await seedStep("World state", async () => {
     await prisma.worldState.upsert({
       where: { id: 1 },
-      update: {
-        absoluteMinute: START_WORLD_ABSOLUTE_MINUTE,
-        lastAdvancedAt: new Date(),
-        weatherKey: "cloudy",
-        weatherIntensity: 35,
-        weatherEndsAtMinute: null,
-      },
+      // Deploy seed refreshes authored world data but must not rewind the live world clock.
+      update: {},
       create: {
         id: 1,
         absoluteMinute: START_WORLD_ABSOLUTE_MINUTE,
