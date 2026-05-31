@@ -331,6 +331,17 @@ export function registerAdminHandlers(bot: Bot) {
   bot.hears(["🐾 Істоти", "Істоти"], replyAdminCreaturesMenu);
   bot.hears(["🧭 Телепорт", "Телепорт", "🧭 Телепорт (/teleport)", "Телепорт (/teleport)"], replyTeleportMenu);
   bot.hears(["➕ Додати ресурс", "Додати ресурс", "➕ Додати ресурс (/addResource)", "Додати ресурс (/addResource)"], replyAddResourceFormat);
+  bot.hears(["🔧 Технічні деталі", "Технічні деталі"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+    const player = await resolvePlayerForAdmin(ctx, "");
+    if (!player) return;
+
+    const enabled = !player.showTechnicalDetails;
+    await prisma.player.update({ where: { id: player.id }, data: { showTechnicalDetails: enabled } });
+    await ctx.reply(enabled ? "Технічні деталі увімкнено для вашого персонажа." : "Технічні деталі приховано для вашого персонажа.", {
+      reply_markup: buildAdminMenuReplyKeyboard(),
+    });
+  });
   bot.hears(["🐾 Ключі істот", "Ключі істот"], async (ctx) => {
     if (!(await requireScribeAdmin(ctx))) return;
     await ctx.reply("Ключі видів тварин доступні через /addCreatureHelp.", { reply_markup: buildAdminCreaturesReplyKeyboard() });

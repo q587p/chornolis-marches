@@ -9,7 +9,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
-## 0.13.24 - Hunger cues and tutorial wellbeing aside - 12026-05-31
+## 0.13.24 - Hunger cues, tutorial wellbeing and character-card polish - 12026-05-31
 
 ### Added
 
@@ -20,6 +20,8 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ### Changed
 
+- Rearranged the character card action keyboard so `Inventory`, `Signals`, posture, `Rest`, `Sleep` and `Auto` controls are grouped into clearer rows.
+- Moved the scribe technical-details toggle out of the character card keyboard and into the scribe admin menu.
 - Marked `FOOD-004` and `ONB-003` as testing and refreshed planning exports.
 - Bumped package metadata to `0.13.24`.
 
@@ -28,6 +30,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `node scripts/test/hunger-cues.cjs`.
 - Ran `node scripts/test/tutorial-voices.cjs`.
 - Ran `node scripts/test/session-presence.cjs`.
+- Ran `node scripts/test/posture.cjs`.
 - Ran `node scripts/test/world-seed.mjs`.
 - Ran `npm run planning:export`.
 - Ran `npm test`.
