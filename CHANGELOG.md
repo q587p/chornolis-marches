@@ -47,6 +47,27 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.25 - Feature inspection layers and slashless command parity - 12026-05-31
+
+### Changed
+
+- Direct feature inspection now separates brief and full detail: `look <feature>` returns the compact feature line with a deeper-inspection button, while `examine <feature>` keeps the richer interaction text and available feature actions.
+- Extended slashless command parity beyond teleport for common typed commands such as `addResource`, `addTorch`, `addTwigs`, `addCampfire`, `carcassQuest`, `addCreature`, `addCreatureCorpse`, queue controls, status/maintenance commands and related help/restore forms.
+- Recorded the existing 0.13.21 operational notes for live seed/map refresh, predator population-floor restoration and action-queue-dependent predator feeding.
+- Updated `LOOP-001-A` planning notes with the first implemented two-layer feature-inspection behavior.
+- Bumped package metadata to `0.13.25`.
+
+### Tests
+
+- Extended slashless command helper coverage for admin resource, corpse-creation, queue, status and maintenance command forms.
+- Added slashless command coverage so new `bot.command(...)` entries must have a direct text form, shared alias, or explicit equivalent.
+- Extended tree/location-feature helper coverage for brief feature inspection.
+- Ran `npm run planning:export`.
+- Ran `npm test`.
+- Ran `npm run build`.
+
+---
+
 ## 0.13.24 - Hunger cues, tutorial completion and inventory polish - 12026-05-31
 
 ### Added

@@ -127,7 +127,7 @@ export function registerLookHandlers(bot: Bot) {
       const view = await renderLocationFeatureInteractionByQuery(player.currentLocationId, player.id, arg);
       if (view) {
         await rememberTutorialCommandHintIfInTutorial(player.id, "examine", player.currentLocationId);
-        await replyAndTrack(ctx, view.text, { reply_markup: view.keyboard });
+        await replyAndTrack(ctx, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
         await sendVoiceQuoteMessages(ctx, "quoteMessages" in view ? (view as any).quoteMessages : undefined);
         await sendHtmlFollowupMessages(ctx, "followupMessages" in view ? (view as any).followupMessages : undefined);
         return;
@@ -229,7 +229,7 @@ export function registerLookHandlers(bot: Bot) {
     if (!view) return void (await ctx.reply("Цього вже не видно поруч."));
 
     await rememberTutorialCommandHintIfInTutorial(player.id, "examine", player.currentLocationId);
-    await editCallbackMessageOrReply(ctx, view.text, { reply_markup: view.keyboard });
+    await editCallbackMessageOrReply(ctx, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
     await sendVoiceQuoteMessages(ctx, "quoteMessages" in view ? view.quoteMessages : undefined);
     await sendHtmlFollowupMessages(ctx, "followupMessages" in view ? view.followupMessages : undefined);
   });

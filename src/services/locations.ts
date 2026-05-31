@@ -321,6 +321,10 @@ function featureDetailLine(feature: any, showTechnicalDetails = false) {
   return details.length ? `${line}; ${details.map(escapeHtml).join("; ")}` : line;
 }
 
+export function featureBriefInspectionText(feature: any, showTechnicalDetails = false) {
+  return featureDetailLine(feature, showTechnicalDetails);
+}
+
 function formatPublicCount(value: number) {
   return value.toLocaleString("uk-UA");
 }
@@ -921,11 +925,30 @@ export async function renderDepletedVegetationInspection(locationId: number, vie
   };
 }
 
-export async function renderLocationFeatureInteraction(featureId: number, viewerPlayerId: number, returnMode: LocationViewMode = "details") {
+export async function renderLocationFeatureInteraction(
+  featureId: number,
+  viewerPlayerId: number,
+  returnMode: LocationViewMode = "details",
+  detailMode: "brief" | "full" = "full",
+) {
   const player = await prisma.player.findUnique({ where: { id: viewerPlayerId }, select: { currentLocationId: true } });
   const feature = await prisma.locationFeature.findUnique({ where: { id: featureId }, include: { location: true } });
   if (feature?.locationId) await expireTimedCampfires(feature.locationId);
   if (!player || !feature || !feature.isActive || player.currentLocationId !== feature.locationId || !isInteractiveFeature(feature)) return null;
+
+  if (detailMode === "brief") {
+    const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
+    const keyboard = new InlineKeyboard()
+      .text("🔎 Роздивитися", `feature:${feature.id}:${returnMode}`)
+      .row()
+      .text("↩️ Назад", `location:${returnMode}`);
+    return {
+      text: featureBriefInspectionText(feature, showTechnicalDetails),
+      keyboard,
+      quoteMessages: [] satisfies VoiceQuoteMessage[],
+      followupMessages: [] satisfies HtmlFollowupMessage[],
+    };
+  }
 
   let text = feature.description ?? "Тут є щось варте уваги.";
   let quoteMessages: VoiceQuoteMessage[] = [];
@@ -1022,10 +1045,16 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
   return { text, keyboard, quoteMessages, followupMessages };
 }
 
-export async function renderLocationFeatureInteractionByQuery(locationId: number, viewerPlayerId: number, query: string, returnMode: LocationViewMode = "details") {
+export async function renderLocationFeatureInteractionByQuery(
+  locationId: number,
+  viewerPlayerId: number,
+  query: string,
+  returnMode: LocationViewMode = "details",
+  detailMode: "brief" | "full" = "full",
+) {
   const feature = await resolveInteractiveLocationFeature(locationId, query);
   if (!feature) return null;
-  return renderLocationFeatureInteraction(feature.id, viewerPlayerId, returnMode);
+  return renderLocationFeatureInteraction(feature.id, viewerPlayerId, returnMode, detailMode);
 }
 
 export async function shakeTreeFeature(featureId: number, viewerPlayerId: number) {

@@ -551,6 +551,7 @@ export function registerStartHandlers(bot: Bot) {
   );
 
   bot.command("start", async (ctx) => enterWorld(ctx, false));
+  bot.hears(/^start$/i, async (ctx) => enterWorld(ctx, false));
 
   bot.callbackQuery(/^onboarding:pronoun:(HE|SHE|THEY)$/, async (ctx) => {
     if (await isStaleOnboardingCallback(ctx)) return;

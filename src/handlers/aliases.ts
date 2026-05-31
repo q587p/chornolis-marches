@@ -130,7 +130,7 @@ async function replyWithBorderMarkerInspection(ctx: any) {
 
   const view = await renderLocationFeatureInteraction(feature.id, player.id);
   if (!view) return void (await ctx.reply("Тут не видно межового знака, який можна роздивитися."));
-  noteKnownMessage(await ctx.reply(view.text, { reply_markup: view.keyboard }));
+  noteKnownMessage(await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard }));
   await sendFeatureFollowups(ctx, view);
 }
 
@@ -139,11 +139,12 @@ async function submitFeatureInspection(bot: Bot, ctx: any, targetQuery: string, 
   if (!player?.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
   if (isSelfTargetQuery(targetQuery)) return showCharacter(ctx.from.id, (text, options) => ctx.reply(text, options));
 
-  const view = await renderLocationFeatureInteractionByQuery(player.currentLocationId, player.id, targetQuery);
+  const returnMode = detail === "brief" ? "brief" : "details";
+  const view = await renderLocationFeatureInteractionByQuery(player.currentLocationId, player.id, targetQuery, returnMode, detail);
   if (!view) return submitTargetAction(bot, ctx, "inspect", targetQuery, detail);
 
   await rememberTutorialCommandHintIfInTutorial(player.id, "examine", player.currentLocationId);
-  noteKnownMessage(await ctx.reply(view.text, { reply_markup: view.keyboard }));
+  noteKnownMessage(await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard }));
   await sendFeatureFollowups(ctx, view);
 }
 

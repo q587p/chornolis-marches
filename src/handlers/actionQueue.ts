@@ -4,6 +4,11 @@ import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { cancelCurrentPlayerAction, clearQueuedPlayerActions, playerActionQueueControlCount, renderPlayerActionQueue } from "../services/actionQueue";
 import { getPlayerByTelegramId } from "../services/players";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
+import { slashlessCommandPattern } from "../utils/slashlessCommands";
+
+const QUEUE_TEXT_COMMAND = slashlessCommandPattern(["queue"]);
+const QUEUE_CLEAR_TEXT_COMMAND = slashlessCommandPattern(["queue_clear"]);
+const QUEUE_CANCEL_TEXT_COMMAND = slashlessCommandPattern(["queue_cancel"]);
 
 async function queueOptions(playerId: number) {
   const count = await playerActionQueueControlCount(playerId);
@@ -42,13 +47,13 @@ export function registerActionQueueHandlers(bot: Bot) {
     await showQueue(ctx, player.id);
   }
 
-  bot.command("queue", async (ctx) => {
+  async function runQueueCommand(ctx: any, rawArg = String(ctx.match || "").trim().toLowerCase()) {
     if (!ctx.from) return;
 
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
-    const arg = String(ctx.match || "").trim().toLowerCase();
+    const arg = rawArg;
     if (arg === "clear") {
       const result = await clearQueuedPlayerActions(player.id);
       await showQueue(ctx, player.id, `Прибрано з черги: ${result.count}.`);
@@ -64,9 +69,9 @@ export function registerActionQueueHandlers(bot: Bot) {
     }
 
     await showQueue(ctx, player.id);
-  });
+  }
 
-  bot.command("queue_clear", async (ctx) => {
+  async function runQueueClearCommand(ctx: any) {
     if (!ctx.from) return;
 
     const player = await getPlayerByTelegramId(ctx.from.id);
@@ -75,9 +80,9 @@ export function registerActionQueueHandlers(bot: Bot) {
     const result = await clearQueuedPlayerActions(player.id);
     await showQueue(ctx, player.id, `Прибрано з черги: ${result.count}.`);
     await refreshMainKeyboard(ctx);
-  });
+  }
 
-  bot.command("queue_cancel", async (ctx) => {
+  async function runQueueCancelCommand(ctx: any) {
     if (!ctx.from) return;
 
     const player = await getPlayerByTelegramId(ctx.from.id);
@@ -86,7 +91,16 @@ export function registerActionQueueHandlers(bot: Bot) {
     const result = await cancelCurrentPlayerAction(player.id);
     await showQueue(ctx, player.id, `Скасовано поточних дій/відпочинку: ${result.count}.`);
     await refreshMainKeyboard(ctx);
-  });
+  }
+
+  bot.command("queue", (ctx) => runQueueCommand(ctx));
+  bot.hears(QUEUE_TEXT_COMMAND, (ctx) => runQueueCommand(ctx, String(ctx.match?.[1] ?? "").trim().toLowerCase()));
+
+  bot.command("queue_clear", runQueueClearCommand);
+  bot.hears(QUEUE_CLEAR_TEXT_COMMAND, runQueueClearCommand);
+
+  bot.command("queue_cancel", runQueueCancelCommand);
+  bot.hears(QUEUE_CANCEL_TEXT_COMMAND, runQueueCancelCommand);
 
   bot.hears("📋 Черга", sendQueue);
 
