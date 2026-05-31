@@ -57,6 +57,12 @@ lastAdvancedAt += advancedMinutes * 2_000 ms
 
 Do not use `Date.getHours()`, server timezone, player timezone or real-world calendar date to decide dawn/day/dusk/night.
 
+## Boundaries And Non-Sources
+
+- Public chronicles may group real `createdAt` timestamps by `Europe/Kyiv` for the archive UI. That formatting is only a public archive convenience, not a world-time source. Do not derive Chornolis daypart, moon, weather or world events from the chronicle display date.
+- Starter weather fields are already part of the stored world state, but weather simulation and player-facing weather display remain deferred until the weather MVP slice.
+- `/reset world` and `/reset full` reset the clock and weather state to the canonical starter values. `/reset stats` must not reset world time, weather or `lastAdvancedAt`.
+
 ## 0.14 Scope
 
 0.14 should include:
