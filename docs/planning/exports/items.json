@@ -607,6 +607,27 @@
     "file": "docs/planning/items/FOOD-006-mushroom-varieties-and-identification.md"
   },
   {
+    "id": "HERALD-001",
+    "title": "Embedded main-service mode for Boundary Mark Chancery Herald",
+    "status": "icebox",
+    "type": "technical",
+    "area": "ops",
+    "priority": "low",
+    "tags": [
+      "herald",
+      "telegram",
+      "render",
+      "ops",
+      "architecture",
+      "icebox"
+    ],
+    "depends_on": [],
+    "exports": {
+      "github_issue": true
+    },
+    "file": "docs/planning/items/HERALD-001-embedded-main-service-mode.md"
+  },
+  {
     "id": "HIDE-001",
     "title": "Hidden approach MVP",
     "status": "backlog",

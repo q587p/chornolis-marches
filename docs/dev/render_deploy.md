@@ -6,6 +6,17 @@ Recommended build command:
 npm install && npx prisma migrate deploy && npm run build && npm run seed
 ```
 
+Recommended Herald Web Service build command:
+
+```bash
+npm install && npx prisma migrate deploy && npm run build
+```
+
+Render free Web Services do not support a separate Pre-Deploy Command. Keep
+the Herald migration step inside the Build Command, before `npm run build`.
+Do not use `prisma migrate dev` on Render; production deploys must use
+committed Prisma migrations through `npx prisma migrate deploy`.
+
 `npm run seed` uses bounded parallel database writes. The default `SEED_CONCURRENCY` is `12`; lower it if the database is under pressure, or raise it cautiously for a nearby/local database.
 
 Production seed refreshes authored world data and creates `WorldState` only if it is missing. It must not rewind the live Chornolis clock during ordinary redeploys; use explicit `/reset world` or `/reset full` when a real world-clock reset is intended.
@@ -28,6 +39,7 @@ Use this before committing or pushing a release patch.
 
    - Needed when `prisma/schema.prisma` changes in a way that alters tables, columns, indexes, enums or relations.
    - Needed when runtime code expects a new persisted field, such as a new counter on `Player` or `Creature`.
+   - Needed before Render deploys for any schema change: commit the generated migration under `prisma/migrations/**` and deploy it with `npx prisma migrate deploy`.
    - Not needed for TypeScript-only logic, docs, `news.md`, balancing constants, `/stat` formatting or seed data that uses existing columns.
 
 3. Check whether `npm run seed` is needed after deploy:
@@ -47,6 +59,16 @@ Use this before committing or pushing a release patch.
    ```
 
    On Render this can stay combined in the build command, but when doing it manually keep this order: schema first, compiled app second, authored data third, smoke check last.
+
+   For the Herald Web Service, omit seed from the deploy order:
+
+   ```bash
+   npx prisma migrate deploy
+   npm run build
+   ```
+
+   The Herald runtime is read-mostly/publication-focused and should not refresh
+   authored game world seed data as part of its build.
 
 5. Release-note hygiene:
 

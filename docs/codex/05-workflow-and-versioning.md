@@ -57,6 +57,23 @@ npm run planning:export
 
 Commit the regenerated `docs/planning/exports/issues.csv` and `docs/planning/exports/items.json` together with the planning item change. CI treats stale planning exports as a failed check.
 
+## Prisma / Render migration rule
+
+If `prisma/schema.prisma` changes in a way that affects persisted database
+shape, commit the matching Prisma migration under `prisma/migrations/**` in the
+same change. Render deploys must use `npx prisma migrate deploy`; do not use
+`prisma migrate dev` on Render.
+
+For the Herald Web Service (`Канцелярія Межового Знаку`), Render free tier does
+not provide a separate Pre-Deploy Command, so keep the Build Command as:
+
+```bash
+npm install && npx prisma migrate deploy && npm run build
+```
+
+The main game service still uses its seed-aware build/deploy flow described in
+`docs/dev/render_deploy.md`.
+
 ## Versioning flow remembered
 
 User preference:

@@ -2,6 +2,15 @@ import { prisma } from "../db";
 import { config } from "../config";
 import { getHttpServerStartedAt, getLastRuntimeError, getTelegramBotStatus, setLastRuntimeError } from "../runtimeState";
 import { getRuntimeTimingConfig } from "../gameConfig";
+import {
+  HERALD_SERVICE_KEY,
+  HERALD_SERVICE_LABEL,
+  SERVICE_HEARTBEAT_STALE_AFTER_MS,
+  getServiceHeartbeat,
+  isServiceHeartbeatStale,
+  serviceHeartbeatAgeMs,
+  type ServiceHeartbeatSnapshot,
+} from "./serviceHeartbeat";
 
 const ACTIVE_ACTION_STATUSES = ["QUEUED", "RUNNING"] as const;
 const WORLD_TICK_STALE_MULTIPLIER = 10;
@@ -98,6 +107,10 @@ function compactError(error: unknown) {
   return text.length > 180 ? `${text.slice(0, 177)}...` : text;
 }
 
+function optionalAgo(value: Date | null | undefined, now: Date) {
+  return value ? `${formatDurationShort(now.getTime() - value.getTime())} тому` : null;
+}
+
 export function serverRuntimeStatus(now = new Date()): RuntimeServiceStatus {
   const startedAt = getHttpServerStartedAt();
   const uptimeMs = Math.max(0, Math.round(process.uptime() * 1000));
@@ -112,16 +125,16 @@ export function telegramRuntimeStatus(): RuntimeServiceStatus {
   if (status.state === "ready") {
     return serviceStatus(
       "telegram",
-      "Telegram-бот",
+      "Основний бот",
       "ok",
       status.username ? `API відповів як @${status.username}.` : "API відповів, бот готовий.",
       status.checkedAt,
     );
   }
   if (status.state === "error") {
-    return serviceStatus("telegram", "Telegram-бот", "down", status.error ? `Помилка: ${compactError(status.error)}` : "Є помилка Telegram-бота.", status.checkedAt);
+    return serviceStatus("telegram", "Основний бот", "down", status.error ? `Помилка: ${compactError(status.error)}` : "Є помилка Telegram-бота.", status.checkedAt);
   }
-  return serviceStatus("telegram", "Telegram-бот", "warning", "Перевірка Telegram API ще триває.", status.checkedAt);
+  return serviceStatus("telegram", "Основний бот", "warning", "Перевірка Telegram API ще триває.", status.checkedAt);
 }
 
 export function databaseRuntimeStatus(error: unknown | null, checkedAt = new Date()): RuntimeServiceStatus {
@@ -130,11 +143,11 @@ export function databaseRuntimeStatus(error: unknown | null, checkedAt = new Dat
 }
 
 export function worldTickRuntimeStatus(latestTick: { createdAt: Date } | null | undefined, now = new Date(), tickMs = getRuntimeTimingConfig().tickMs): RuntimeServiceStatus {
-  if (!latestTick) return serviceStatus("worldTick", "Світові тики", "warning", "Ще немає жодного World Tick.", now);
+  if (!latestTick) return serviceStatus("worldTick", "Світовий цикл", "warning", "Ще немає жодного World Tick.", now);
   const ageMs = Math.max(0, now.getTime() - latestTick.createdAt.getTime());
   const staleAfterMs = Math.max(60_000, tickMs * WORLD_TICK_STALE_MULTIPLIER);
   const state: RuntimeServiceState = ageMs > staleAfterMs ? "warning" : "ok";
-  return serviceStatus("worldTick", "Світові тики", state, `Останній тік ${formatDurationShort(ageMs)} тому.`, latestTick.createdAt);
+  return serviceStatus("worldTick", "Світовий цикл", state, `Останній тік ${formatDurationShort(ageMs)} тому.`, latestTick.createdAt);
 }
 
 export function actionQueueRuntimeStatus(actionQueue: Awaited<ReturnType<typeof getActionQueueStats>> | null, now = new Date()): RuntimeServiceStatus {
@@ -157,6 +170,43 @@ export function actionQueueRuntimeStatus(actionQueue: Awaited<ReturnType<typeof 
   );
 }
 
+export type HeraldServiceStats = {
+  heartbeat: ServiceHeartbeatSnapshot | null;
+  queuedCount: number;
+  publishedCount: number;
+  lastPublishedNewsAt: Date | null;
+};
+
+export function heraldRuntimeStatus(stats: HeraldServiceStats | null, now = new Date()): RuntimeServiceStatus {
+  if (!stats) {
+    return serviceStatus("herald", HERALD_SERVICE_LABEL, "warning", "Канцелярію не вдалося прочитати з БД.", now);
+  }
+
+  const { heartbeat, queuedCount, publishedCount, lastPublishedNewsAt } = stats;
+  const heartbeatAgeMs = serviceHeartbeatAgeMs(heartbeat, now);
+  const state: RuntimeServiceState = !heartbeat || isServiceHeartbeatStale(heartbeat, now, SERVICE_HEARTBEAT_STALE_AFTER_MS)
+    ? "warning"
+    : "ok";
+  const mode = heartbeat?.mode ?? "невідомо";
+  const heartbeatText = heartbeatAgeMs === null
+    ? "ще не подавала знаку"
+    : state === "ok"
+      ? `на зв’язку; останній знак ${formatDurationShort(heartbeatAgeMs)} тому`
+      : `давно не подавала знаку; останній знак ${formatDurationShort(heartbeatAgeMs)} тому`;
+  const startupText = optionalAgo(heartbeat?.startedAt, now);
+  const newsText = optionalAgo(lastPublishedNewsAt, now);
+  const parts = [
+    `${heartbeatText}.`,
+    `Режим: ${mode}.`,
+    `У скрині вістей: очікує ${queuedCount}; опубліковано ${publishedCount}.`,
+  ];
+
+  if (newsText) parts.push(`Остання опублікована новина ${newsText}.`);
+  if (startupText) parts.push(`Останній старт ${startupText}.`);
+
+  return serviceStatus("herald", HERALD_SERVICE_LABEL, state, parts.join(" "), heartbeat?.lastSeenAt ?? now);
+}
+
 export async function getStatusData() {
   const checkedAt = new Date();
   let databaseError: unknown | null = null;
@@ -175,6 +225,7 @@ export async function getStatusData() {
     latestEvents: [] as Awaited<ReturnType<typeof prisma.worldEvent.findMany>>,
     latestTickEvent: null as { createdAt: Date } | null,
     actionQueue: null as Awaited<ReturnType<typeof getActionQueueStats>> | null,
+    herald: null as HeraldServiceStats | null,
   };
 
   try {
@@ -193,6 +244,10 @@ export async function getStatusData() {
       latestEvents,
       latestTickEvent,
       actionQueue,
+      heraldHeartbeat,
+      heraldQueuedCount,
+      heraldPublishedCount,
+      heraldLastPublishedNews,
     ] = await Promise.all([
       prisma.player.count(),
       prisma.region.count(),
@@ -208,6 +263,14 @@ export async function getStatusData() {
       prisma.worldEvent.findMany({ orderBy: { createdAt: "desc" }, take: 10 }),
       prisma.worldEvent.findFirst({ where: { title: "World Tick" }, orderBy: { createdAt: "desc" }, select: { createdAt: true } }),
       getActionQueueStats(),
+      getServiceHeartbeat(HERALD_SERVICE_KEY),
+      prisma.heraldPublication.count({ where: { publishedAt: null } }),
+      prisma.heraldPublication.count({ where: { publishedAt: { not: null } } }),
+      prisma.heraldPublication.findFirst({
+        where: { publishedAt: { not: null }, sourceType: { in: ["NEWS_MD", "NEWS_MD_ARCHIVE"] } },
+        orderBy: [{ publishedAt: "desc" }, { id: "desc" }],
+        select: { publishedAt: true },
+      }),
     ]);
     snapshot = {
       playersCount,
@@ -224,6 +287,12 @@ export async function getStatusData() {
       latestEvents,
       latestTickEvent,
       actionQueue,
+      herald: {
+        heartbeat: heraldHeartbeat,
+        queuedCount: heraldQueuedCount,
+        publishedCount: heraldPublishedCount,
+        lastPublishedNewsAt: heraldLastPublishedNews?.publishedAt ?? null,
+      },
     };
   } catch (error) {
     databaseError = error;
@@ -234,6 +303,7 @@ export async function getStatusData() {
     serverRuntimeStatus(checkedAt),
     telegramRuntimeStatus(),
     databaseRuntimeStatus(databaseError, checkedAt),
+    heraldRuntimeStatus(snapshot.herald, checkedAt),
     worldTickRuntimeStatus(snapshot.latestTickEvent, checkedAt),
     actionQueueRuntimeStatus(snapshot.actionQueue, checkedAt),
   ];

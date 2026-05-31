@@ -7,6 +7,32 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.14.6 - Boundary Mark Chancery Herald bot - 12026-06-01
+
+### Added
+
+- Added the Boundary Mark Chancery as a separate Telegram bot runtime with its own standalone entrypoint, token configuration, health server and Render Web Service deployment documentation.
+- Added Herald admin commands for `/ping`, `/help`, `/whoami`, latest-news preview/posting, publication queue inspection, manual pending publication, world digest preview/queue/post, atmospheric `/info`, and historical `news.md` backfill.
+- Added durable `HeraldPublication` outbox storage with content-hash deduplication, publisher-loop support, failure recording and committed Prisma migration.
+- Added a shared `ServiceHeartbeat` table and Herald heartbeat loop so the public/admin status page can show the Chancery service mode, freshness, queued/published publication counts, latest news publication time and stale-heartbeat warnings.
+- Added Telegram deep-link start payload support for safe main-bot actions such as `cmd_look` and `cmd_examine`.
+- Added focused Herald smoke coverage for news parsing, content hashes, admin/channel parsing, safety helpers, `/whoami`, archive formatting, atmospheric info thresholds and runtime status helpers.
+
+### Changed
+
+- Split the main game bot runtime into a reusable game-bot app module while keeping `src/bot.ts` as the existing production compatibility entrypoint.
+- Documented standalone Herald Render deployment, future embedded-mode migration notes and the rule that only one poller may use a Herald token at a time.
+- Updated the status page service section to name the main game bot, world tick, action queue and Boundary Mark Chancery in a clearer operational overview.
+
+### Validation
+
+- Ran `npm run planning:export`.
+- Ran `npm run build`.
+- Ran `npm test`.
+- Ran `git diff --check`.
+
+---
+
 ## 0.14.2 - Tutorial polish and visible world-time beats - 12026-05-31
 
 ### Added
