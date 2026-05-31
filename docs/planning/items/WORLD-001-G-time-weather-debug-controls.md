@@ -1,7 +1,7 @@
 ---
 id: WORLD-001-G
 title: Time and weather debug controls
-status: next
+status: testing
 type: technical
 area: world_time
 priority: medium
@@ -41,3 +41,10 @@ Allow safe testing of dawn/day/dusk/night, moon phases and weather without waiti
 ## Implementation Order
 
 Do after player-facing `/time` and weather MVP.
+
+## 0.14.4 Slice
+
+- Added scribe/admin-only `/timeDebug` readout for exact internal world minute, date, clock, daypart, moon, weather and local light snapshot.
+- Added restricted `/timeSet` and `/weatherSet` controls for QA of daypart, moon and weather cases.
+- Added no-leading-slash command forms for the new scribe controls.
+- Added scribe audit entries for time and weather setters.

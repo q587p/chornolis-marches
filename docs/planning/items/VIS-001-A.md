@@ -1,7 +1,7 @@
 ---
 id: VIS-001-A
 title: Shared visibility service skeleton
-status: next
+status: testing
 type: technical
 area: visibility
 priority: high
@@ -33,3 +33,9 @@ Add one place for light/darkness visibility decisions.
 ## Implementation Order
 
 Do after: `WORLD-001-C`.
+
+## 0.14.4 Slice
+
+- Added a shared visibility service that turns a light snapshot into visibility rules for brief and detailed location views.
+- Wired brief `/look` rendering through the helper instead of checking local fire/light directly.
+- Kept deeper darkness copy and hiding/reducing `/examine`, tracks and resources deferred to `VIS-001-B/C/D/E/F`.

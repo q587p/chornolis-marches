@@ -23,6 +23,10 @@ import { resetTutorialProgressForPlayer } from "../services/tutorial";
 import { getGateHuntingSaturationState, setCarcassQuestOverride, type CarcassQuestOverride } from "../services/carcassDropoff";
 import { recordCarcassQuestChronicle } from "../services/chronicles";
 import { slashlessCommandPattern } from "../utils/slashlessCommands";
+import { worldTimeSnapshotFromAbsoluteMinute } from "../data/worldClock";
+import { lightSnapshotForLocation } from "../services/lightSnapshot";
+import { getCurrentWorldState, setWorldClockAbsoluteMinute, setWorldWeatherState } from "../services/worldTime";
+import { parseWeatherSetTarget, parseWorldTimeSetTarget, renderWorldTimeDebug } from "../services/worldTimeDebug";
 
 function normalizeLookup(value: string | null | undefined) {
   return String(value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
@@ -185,6 +189,9 @@ const RESTORE_BERRIES_TEXT_COMMAND = slashlessCommandPattern(["restoreBerries", 
 const RESTORE_HERBS_TEXT_COMMAND = slashlessCommandPattern(["restoreHerbs", "restoreherbs"]);
 const RESTORE_MUSHROOMS_TEXT_COMMAND = slashlessCommandPattern(["restoreMushrooms", "restoremushrooms"]);
 const CARCASS_QUEST_TEXT_COMMAND = slashlessCommandPattern(["carcassQuest", "carcassquest"]);
+const TIME_DEBUG_TEXT_COMMAND = slashlessCommandPattern(["timeDebug", "timedebug"]);
+const TIME_SET_TEXT_COMMAND = slashlessCommandPattern(["timeSet", "timeset"]);
+const WEATHER_SET_TEXT_COMMAND = slashlessCommandPattern(["weatherSet", "weatherset"]);
 
 export const ADMIN_HELP_TEXT = [
   "🛠 Команди писарів Порубіжжя",
@@ -201,6 +208,9 @@ export const ADMIN_HELP_TEXT = [
   "/all dead — усі записи істот, включно з inactive/dead/corpse/gone",
   "/locationAll — список усіх місцин і ключів",
   "/playerAdmin <#id|ім’я|username> — детальна службова картка гравця",
+  "/timeDebug — точний службовий стан часу, місяця, погоди й світла в поточній місцині",
+  "/timeSet <dawn|day|dusk|night|fullmoon night|darkmoon night|HH:MM> — виставити внутрішній час Чорнолісу для тестів",
+  "/weatherSet <clear|cloudy|mist|rain|storm> [intensity] [minutes] — виставити погоду для тестів видимості",
   "",
   "Журнали й репліки",
   "/chat time [hours|all] — репліки гравців і NPC за часом",
@@ -249,6 +259,75 @@ export function registerAdminHandlers(bot: Bot) {
     await ctx.reply("🛠 Адмін меню Писарів. Небезпечні дії лишаються за підтвердженням або з явним форматом команди.", {
       reply_markup: buildAdminMenuReplyKeyboard(),
     });
+  }
+
+  async function replyTimeDebug(ctx: any) {
+    if (!(await requireScribeAdmin(ctx))) return;
+
+    const state = await getCurrentWorldState(prisma);
+    const snapshot = worldTimeSnapshotFromAbsoluteMinute(state.absoluteMinute, state.weatherKey, state.weatherIntensity);
+    const scribe = await resolvePlayerForAdmin(ctx, "");
+    const light = scribe?.currentLocationId ? await lightSnapshotForLocation(scribe.currentLocationId, snapshot) : undefined;
+    await ctx.reply(renderWorldTimeDebug(snapshot, state, light), {
+      reply_markup: buildAdminMenuReplyKeyboard(),
+    });
+  }
+
+  async function runTimeSetCommand(ctx: any, rawTarget = String(ctx.match ?? "").trim()) {
+    if (!(await requireScribeAdmin(ctx))) return;
+
+    const state = await getCurrentWorldState(prisma);
+    const target = parseWorldTimeSetTarget(rawTarget, state.absoluteMinute);
+    if (!target) {
+      await ctx.reply("Формат: /timeSet dawn|day|dusk|night|fullmoon night|darkmoon night|HH:MM або /timeSet abs <absoluteMinute>.");
+      return;
+    }
+
+    const updated = await setWorldClockAbsoluteMinute(target.absoluteMinute, prisma);
+    const scribe = await resolvePlayerForAdmin(ctx, "");
+    await logScribeAction({
+      actionKey: "timeSet",
+      scribePlayerId: scribe?.id,
+      scribeTelegramId: ctx.from?.id,
+      scribeName: scribe ? playerDisplayName(scribe) : null,
+      target: target.label,
+      outcome: "confirmed",
+      details: `before=${state.absoluteMinute}; after=${updated.absoluteMinute}`,
+      locationId: scribe?.currentLocationId,
+    });
+
+    const snapshot = worldTimeSnapshotFromAbsoluteMinute(updated.absoluteMinute, updated.weatherKey, updated.weatherIntensity);
+    await ctx.reply(`🌒 Час світу виставлено: ${target.label} → ${snapshot.clockLabel}, ${snapshot.daypartLabel}, день ${snapshot.dayOfCircle}.`);
+  }
+
+  async function runWeatherSetCommand(ctx: any, rawTarget = String(ctx.match ?? "").trim()) {
+    if (!(await requireScribeAdmin(ctx))) return;
+
+    const target = parseWeatherSetTarget(rawTarget);
+    if (!target) {
+      await ctx.reply("Формат: /weatherSet clear|cloudy|mist|rain|storm [intensity] [minutes].");
+      return;
+    }
+
+    const before = await getCurrentWorldState(prisma);
+    const updated = await setWorldWeatherState(target.key, {
+      intensity: target.intensity,
+      durationMinutes: target.durationMinutes,
+    }, prisma);
+    const scribe = await resolvePlayerForAdmin(ctx, "");
+    await logScribeAction({
+      actionKey: "weatherSet",
+      scribePlayerId: scribe?.id,
+      scribeTelegramId: ctx.from?.id,
+      scribeName: scribe ? playerDisplayName(scribe) : null,
+      target: target.key,
+      outcome: "confirmed",
+      details: `before=${before.weatherKey}/${before.weatherIntensity}; after=${updated.weatherKey}/${updated.weatherIntensity}; endsAt=${updated.weatherEndsAtMinute ?? "unset"}`,
+      locationId: scribe?.currentLocationId,
+    });
+
+    const snapshot = worldTimeSnapshotFromAbsoluteMinute(updated.absoluteMinute, updated.weatherKey, updated.weatherIntensity);
+    await ctx.reply(`🌦 Погоду виставлено: ${snapshot.weatherKey}; ${snapshot.weatherIntensity}.`);
   }
 
   async function replyAdminResourcesMenu(ctx: any) {
@@ -346,6 +425,13 @@ export function registerAdminHandlers(bot: Bot) {
   bot.command(["adminMenu", "adminmenu"], replyAdminMenu);
   bot.hears(ADMIN_MENU_TEXT_COMMAND, replyAdminMenu);
   bot.hears(["🛠 Адмін меню", "Адмін меню", "🛠 Адмін меню (/adminMenu)", "Адмін меню (/adminMenu)"], replyAdminMenu);
+  bot.command(["timeDebug", "timedebug"], replyTimeDebug);
+  bot.hears(TIME_DEBUG_TEXT_COMMAND, replyTimeDebug);
+  bot.hears(["🌒 Час світу", "Час світу"], replyTimeDebug);
+  bot.command(["timeSet", "timeset"], (ctx) => runTimeSetCommand(ctx));
+  bot.hears(TIME_SET_TEXT_COMMAND, (ctx) => runTimeSetCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
+  bot.command(["weatherSet", "weatherset"], (ctx) => runWeatherSetCommand(ctx));
+  bot.hears(WEATHER_SET_TEXT_COMMAND, (ctx) => runWeatherSetCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
   bot.hears(["🌿 Ресурси"], replyAdminResourcesMenu);
   bot.hears(["🔥 Вогонь"], replyAdminFireMenu);
   bot.hears(["🐾 Істоти", "Істоти"], replyAdminCreaturesMenu);

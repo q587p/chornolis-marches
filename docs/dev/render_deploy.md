@@ -8,6 +8,8 @@ npm install && npx prisma migrate deploy && npm run build && npm run seed
 
 `npm run seed` uses bounded parallel database writes. The default `SEED_CONCURRENCY` is `12`; lower it if the database is under pressure, or raise it cautiously for a nearby/local database.
 
+Production seed refreshes authored world data and creates `WorldState` only if it is missing. It must not rewind the live Chornolis clock during ordinary redeploys; use explicit `/reset world` or `/reset full` when a real world-clock reset is intended.
+
 Session presence uses `AUTO_AFK_AFTER_MINUTES` for the silent inactivity timeout. It defaults to `15`; tests or local runs may override it. `AUTO_AFK_CHECK_INTERVAL_MS` defaults to `60000` and controls how often the worker checks for players to mark AFK.
 
 ## Pre-deploy checklist

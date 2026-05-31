@@ -152,6 +152,7 @@ assert.equal(adminMainButtons.flat().includes("🧭 Допомога"), false);
 const adminMenuButtons = buildAdminMenuReplyKeyboard().keyboard.map((row) => row.map((button) => button.text));
 assert.equal(adminMenuButtons.flat().includes("📊 Статистика"), true);
 assert.equal(adminMenuButtons.flat().includes("🌲 Світ"), true);
+assert.equal(adminMenuButtons.flat().includes("🌒 Час світу"), true);
 assert.equal(adminMenuButtons.flat().includes("👥 Усі"), true);
 assert.equal(adminMenuButtons.flat().includes("🧭 Телепорт"), true);
 assert.equal(adminMenuButtons.flat().includes("✨ Відновити снагу"), true);

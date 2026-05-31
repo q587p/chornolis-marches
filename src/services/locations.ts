@@ -10,7 +10,6 @@ import {
   expireGroundLitTorches,
   expireTimedCampfires,
   getPlayerTorchState,
-  hasActiveLightAtLocation,
   isActiveLitTorchResource,
   isCampfireFading,
   isExtinguishedCampfire,
@@ -31,6 +30,7 @@ import { dreamGateStatusText, ensureTutorialForagingResources, isDreamGateFeatur
 import { formatObservedPostureText } from "../utils/playerText";
 import { isFreshenedCorpse } from "./meat";
 import { GATE_CARCASS_DROPOFF_FEATURE_KEY, gateHuntingDropoffText, gateHuntingNoticeText, getGateHuntingSaturationState } from "./carcassDropoff";
+import { visibilityRulesForLocation } from "./visibility";
 
 const COMPACT_EXIT_ORDER = ["NORTH", "WEST", "SOUTH", "EAST", "UP", "DOWN", "INSIDE", "OUTSIDE"];
 const GATHERABLE_RESOURCE_KEYS = ["berries", "mushrooms", "herbs"] as const;
@@ -731,7 +731,8 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
 
   if (!location) throw new Error("Location not found");
 
-  const revealTargets = await hasActiveLightAtLocation(location.id);
+  const visibility = await visibilityRulesForLocation(location.id, "brief");
+  const revealTargets = visibility.showNearbyDetails;
   const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
   const lockedExits = await lockedExitDirections(location.id);
   const targets = visibleTargets(location, viewerPlayerId);

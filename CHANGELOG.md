@@ -67,6 +67,57 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.14.4 - Visibility debug foundation - 12026-05-31
+
+### Added
+
+- Added a shared visibility service that turns light snapshots into location-view visibility rules.
+- Added scribe/admin `/timeDebug`, `/timeSet` and `/weatherSet` controls for QA of daypart, moon, weather and local light cases.
+- Added a `🌒 Час світу` admin-menu button for the new time debug readout.
+- Added focused world-time tests for visibility rules and debug parser helpers.
+
+### Changed
+
+- Brief `/look` now asks the shared visibility service whether nearby beings, ground objects and target buttons should be shown.
+- Daylight and clear light can now reveal brief nearby details without requiring a local campfire or torch, while dim/dark brief views remain more cautious until the deeper darkness slices land.
+- Production seed refresh no longer rewinds an existing `WorldState` clock during redeploy; it only creates the row when missing.
+- Updated admin docs, world-time docs and planning docs for the `WORLD-001-G` and `VIS-001-A` slices.
+
+### Validation
+
+- Ran `node scripts/test/world-time.cjs`.
+- Ran `node scripts/test/posture.cjs`.
+- Ran `node scripts/test/slashless-command-coverage.cjs`.
+- Ran `node scripts/test/world-seed.mjs`.
+- Ran `npm run planning:export`.
+- Ran `npm test`.
+- Ran `npm run build`.
+
+---
+
+## 0.14.3 - Weather MVP and light snapshot foundation - 12026-05-31
+
+### Added
+
+- Added a small internal weather service backed by the existing `WorldState` weather fields, including weather key, intensity, next-change world minute and non-proactive `WorldEvent` logs for weather changes.
+- Added `/weather` plus `weather`/`погода` text aliases for the current Chornolis weather.
+- Added a shared light snapshot helper that combines daypart, moon illumination, weather modifiers and optional local active light.
+- Added focused world-time tests for weather text, weather light modifiers and light snapshot behavior.
+
+### Changed
+
+- `/time` now includes compact weather and light summary lines from the stored/derived internal world state.
+- `/help`, `/commands` and input-alias docs now include `/weather`.
+- Updated planning/system docs so `WORLD-001-E/F` reflect the `0.14.3` implementation slice and keep visibility reduction/darkness behavior deferred.
+
+### Validation
+
+- Ran `node scripts/test/world-time.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/slashless-command-coverage.cjs`.
+
+---
+
 ## 0.14.1 - Stored internal world clock - 12026-05-31
 
 ### Added

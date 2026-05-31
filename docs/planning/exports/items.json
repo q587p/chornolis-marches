@@ -2559,7 +2559,7 @@
   {
     "id": "VIS-001-A",
     "title": "Shared visibility service skeleton",
-    "status": "next",
+    "status": "testing",
     "type": "technical",
     "area": "visibility",
     "priority": "high",
@@ -2858,7 +2858,7 @@
   {
     "id": "WORLD-001-G",
     "title": "Time and weather debug controls",
-    "status": "next",
+    "status": "testing",
     "type": "technical",
     "area": "world_time",
     "priority": "medium",
