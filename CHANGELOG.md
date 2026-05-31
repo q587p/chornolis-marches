@@ -31,6 +31,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Fixed
 
 - Made corpse drops resilient when an inventory corpse stack exists but its hidden carried creature row can no longer be matched, by consuming the carried item and placing a matching corpse resource on the ground instead of leaving the item stuck in inventory.
+- Made the scribe teleport command accept the same direct text form without a slash, so `teleport forest_07_00` routes like `/teleport forest_07_00`.
 
 ### Tests
 

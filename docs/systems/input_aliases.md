@@ -11,6 +11,7 @@ When a player-facing button performs an in-world action, there should usually be
 - Preserve existing callback buttons for Telegram ergonomics.
 - Reply to unknown text with a short "не зрозуміли" message, `❔ Допомога` (`/help`) / `☰ Меню` (`/menu`) hints and close alias suggestions where possible. Suggestions should include the closest clickable slash command in parentheses when there is a stable one, for example `оглянутися (/look)`, `статистика (/stat)`, `використати гриби (/use_mushrooms)` or `швидкий огляд (/glance)`.
 - Player-facing help text can use clickable Telegram-style slash hints with underscores for multi-word commands. The input normalizer treats `_` as a space, so `/sleep_tutorial` is parsed like `/sleep tutorial`, `/queue_cancel` like `/queue cancel`, and `/auto_stop` like `/auto stop`.
+- Direct slash commands should also accept the same direct text form without the leading slash when practical. This applies strongly to scribe/admin commands and future MUD-style clients: `/teleport forest_07_00` and `teleport forest_07_00` should route to the same command.
 - When a visible button/action is mentioned in `/help`, `/commands`, news or release notes, prefer the button label followed by its canonical slash command in parentheses, for example `🌙 AFK / відійти` (`/afk`) or `🚪 Завершити сесію` (`/end_session`). Compatibility aliases may be listed after that, but the first slash hint should be the stable command.
 
 ## Examples

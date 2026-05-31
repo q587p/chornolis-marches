@@ -41,6 +41,8 @@ When adding or changing commands, keep aliases in sync:
 - Ukrainian text aliases for ordinary Telegram input;
 - button labels and `/help`, `/adminHelp` or `/adminMenu` surfaces.
 
+Direct slash commands should also accept the same direct text form without the leading slash when practical, especially for scribe/admin commands: `/teleport forest_07_00` and `teleport forest_07_00` should behave the same.
+
 Actual Telegram keyboard button labels should stay short and clean: Ukrainian label plus icon where helpful. Use slash commands in parentheses in help, commands, news, release notes and docs, but do not append `(/command)` hints inside reply or inline keyboard button text.
 
 - `/look`
