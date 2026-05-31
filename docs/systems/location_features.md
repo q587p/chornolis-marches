@@ -25,6 +25,8 @@ Feature icons and command icons should not collide in the same UI surface when a
 
 Feature fields are content, not trusted markup. Anything from feature `name`, `description`, aliases or `data` that enters a Telegram HTML message must be escaped with `escapeHtml` or a shared formatter before interpolation. Keep authored emphasis/quote wrappers outside the data string so feature inspection cannot accidentally inject raw HTML.
 
+Do not put raw HTML tags such as `<i>...</i>` directly into `prisma/data/world/*.json` descriptions. Location overview text is escaped before Telegram sends it, so authored tags will be shown literally to players. Use plain prose in seed data, and add any intentional HTML emphasis in the renderer after escaping the content. `scripts/test/world-content-html.cjs` guards this for world JSON and the legacy seed mirror.
+
 Current interactive examples:
 
 - border marker: shows local orientation and nearby landmarks;

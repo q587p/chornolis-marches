@@ -27,6 +27,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Attack-miss feedback now includes a quick look button so players can immediately check whether the target stayed nearby.
 - Telegram side command menus now put `/help` right after `/afk`, with `/respawn` directly below help.
 - `/help`, `/commands` and input-alias docs now include the new global chronicle command.
+- Tutorial dream gate copy no longer stores raw HTML tags in world data, preventing escaped `<i>` markup from appearing in location text.
 - Updated planning and system docs so `WORLD-001-B/C/D` reflect the `0.14.1` implementation slice and keep visibility, weather, light and sleep deferred.
 
 ### Validation
@@ -34,6 +35,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `npx prisma generate`.
 - Ran `node scripts/test/world-time.cjs`.
 - Ran `node scripts/test/chronicles.cjs`.
+- Ran `node scripts/test/world-content-html.cjs`.
 - Ran `npm run planning:export`.
 - Ran `npm test`.
 - Ran `npm run build`.

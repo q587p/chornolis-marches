@@ -60,6 +60,7 @@ In `prisma/data/chornolis_world_seed.json`, edits may include:
 - `Дрімотна Межа`, the tutorial dream, intentionally uses `z = -13`; this is a separate authored layer, not a casual terrain-height edit.
 - Do not create two exits from one location in the same direction.
 - `blockedCells` are documentation-only; the game walks through `locations` and `exits`.
+- Do not put raw HTML tags such as `<i>...</i>` into `name`, `description`, aliases or `data` fields in world JSON. These fields are content, not markup; Telegram renderers may escape them, and `scripts/test/world-content-html.cjs` should catch accidental tags.
 - ASCII map is separate documentation in:
 
 ```text
