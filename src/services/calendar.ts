@@ -1,5 +1,3 @@
-import { formatWorldClock, getCurrentWorldTime } from "./worldTime";
-
 export type YearBeast = {
   nominative: string;
   genitive: string;
@@ -12,6 +10,7 @@ export const WORLD_ERA_NAME = "після Великого Відступу";
 export const CURRENT_WORLD_SEASON = "пізня весна";
 export const CURRENT_WORLD_MOON_CIRCLE = "Коло Зеленого Шуму";
 export const CURRENT_WORLD_DAY = 17;
+export const CURRENT_WORLD_DAYTIME = "передвечір’я";
 
 export const YEAR_BEASTS: YearBeast[] = [
   { nominative: "Полівка", genitive: "Полівки" },
@@ -83,8 +82,7 @@ export function renderCurrentWorldYearLine() {
   return `${formatCurrentWorldYear()}.`;
 }
 
-export function renderCurrentWorldTime(now = new Date()) {
-  const worldTime = getCurrentWorldTime(now);
+export function renderCurrentWorldTime() {
   return [
     "🌒 Час Порубіжжя",
     "",
@@ -92,9 +90,8 @@ export function renderCurrentWorldTime(now = new Date()) {
     `Пора: ${CURRENT_WORLD_SEASON}.`,
     `Місячне коло: ${CURRENT_WORLD_MOON_CIRCLE}.`,
     `День кола: ${CURRENT_WORLD_DAY}.`,
-    `Час доби: ${worldTime.daypartLabel}.`,
-    `Межовий час: близько ${formatWorldClock(worldTime)}.`,
+    `Час доби: ${CURRENT_WORLD_DAYTIME}.`,
     "",
-    worldTime.daypartMood,
+    "Поки це статична дата. Плин часу, сезони, місяці, дні та час доби винесені в todo.",
   ].join("\n");
 }

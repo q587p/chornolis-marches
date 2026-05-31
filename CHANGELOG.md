@@ -9,29 +9,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
-## 0.14.0 - World-time foundation - 12026-05-31
-
-### Added
-
-- Added a shared world-time helper that derives the current daypart from the real `Europe/Kyiv` clock.
-- Added daypart labels for dawn, day, dusk and night so later visibility/light services can reuse the same source.
-- Added focused world-time helper coverage to `npm test`.
-- Added world-time and observation-readiness system/planning documentation for the start of the `0.14.x` line.
-
-### Changed
-
-- `/time` now reads the shared current world-time helper instead of showing a static daytime placeholder.
-- Updated near-term planning so `0.14.x` starts with world time before visibility, light, firewood, biome foraging or ordinary sleep.
-
-### Validation
-
-- Ran `npm run planning:export`.
-- Ran `node scripts/test/world-time.cjs`.
-- Ran `npm test`.
-- Ran `npm run build`.
-
----
-
 ## 0.13.27 - Core loop closure audit and attack misses - 12026-05-31
 
 ### Added
