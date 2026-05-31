@@ -47,7 +47,7 @@ The forest should feel alive even when players do nothing.
 - Predator kills leave claimed corpses and are counted in scribe/admin `/stat` next to old-age deaths.
 - Carnivores do not recover hunger at kill time. They queue a later `EAT` action for the claimed corpse; if a player, hunter or another flow takes the corpse first, the predator loses that meal and stays hungry.
 - Character-caused animal deaths include player kills and non-animal NPC kills, and are counted separately from predator kills in scribe/admin `/stat`, protected web `/stat`, `/stat.json`, and ecology sign technical summaries.
-- If a starter animal species disappears entirely from the waking world, the world tick quietly restores its starter living population at starter locations. This is a population-floor safeguard, not a player-facing notification or full spirit/migration system.
+- If a starter animal species disappears entirely from the waking world, the world tick quietly restores its starter living population at starter locations. This includes starter foxes and wolves for now. It is a population-floor safeguard, not a player-facing notification or full spirit/migration system, and predator restoration may become a balance/narrative switch later.
 - Predator hunger recovery uses prey food value when the predator actually eats the corpse: mice are light food, rabbit children/old rabbits are partial food, healthy young/adult rabbits are worth more.
 - Hungry herbivores are more likely to eat when forage exists and more likely to move when local food is gone or vegetation is exhausted.
 - Hungry predators are more likely to search for prey and attack; very hungry predators attack immediately when suitable prey is present.

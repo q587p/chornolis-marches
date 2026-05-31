@@ -30,6 +30,7 @@ import { creatureForms, playerForms } from "../services/grammar";
 import { clearOnboardingStateForTelegramId } from "./start";
 import { hunterFieldInventorySummary } from "../services/targets";
 import { playerPresenceDisplaySuffix } from "../services/sessionPresence";
+import { slashlessCommandPattern } from "../utils/slashlessCommands";
 
 const LOCATION_PAGE_MAX_CHARS = 3300;
 const TELEGRAM_TEXT_MAX_CHARS = 3900;
@@ -38,6 +39,19 @@ const CHAT_LOG_ENTRY_MAX_CHARS = 1100;
 const CHAT_LOG_PAGE_SIZE = 12;
 const ALL_CREATURE_PAGE_SIZE = 20;
 const WHO_PAGE_SIZE = 20;
+const ADD_CREATURE_HELP_TEXT_COMMAND = slashlessCommandPattern(["addCreatureHelp", "addcreaturehelp"]);
+const ADD_CREATURE_TEXT_COMMAND = slashlessCommandPattern(["addCreature", "addcreature"]);
+const ADD_CREATURE_CORPSE_TEXT_COMMAND = slashlessCommandPattern(["addCreatureCorpse", "addcreaturecorpse"]);
+const DEBUG_GET_TEXT_COMMAND = slashlessCommandPattern(["debugGet", "debugget"]);
+const DEBUG_SET_TEXT_COMMAND = slashlessCommandPattern(["debugSet", "debugset"]);
+const RESTART_TEXT_COMMAND = slashlessCommandPattern(["restart"]);
+const LOCATION_ALL_TEXT_COMMAND = slashlessCommandPattern(["locationAll", "locationall"]);
+const WORLD_TEXT_COMMAND = slashlessCommandPattern(["world"]);
+const REST_ADMIN_TEXT_COMMAND = slashlessCommandPattern(["restAdmin", "restadmin"]);
+const PLAYER_ADMIN_TEXT_COMMAND = slashlessCommandPattern(["playerAdmin", "playeradmin", "player"]);
+const CLEANUP_CREATURES_TEXT_COMMAND = slashlessCommandPattern(["cleanupCreatures", "cleanupcreatures"]);
+const CLEANUP_CREATURE_TEXT_COMMAND = slashlessCommandPattern(["cleanupCreature", "cleanupcreature"]);
+const FORCE_OLD_TEXT_COMMAND = slashlessCommandPattern(["forceOld", "forceold"]);
 const WHO_ACTIVE_WINDOW_MS = 60 * 60 * 1000;
 const STATUS_PERF_DEBUG = process.env.STATUS_PERF_DEBUG === "true";
 type AllReturnContext = { showDead: boolean; page: number };
@@ -1100,21 +1114,21 @@ export async function buildAllPage(showDead: boolean, requestedPage: number) {
 }
 
 export function registerStatusHandlers(bot: Bot) {
-  bot.command(["debugGet", "debugget"], async (ctx) => {
+  async function replyDebugGet(ctx: any) {
     if (!ctx.from) return;
     if (!(await requireScribeAdmin(ctx))) return;
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
     await ctx.reply(player.showTechnicalDetails ? "Технічні деталі: 1 (увімкнено для вашого персонажа)." : "Технічні деталі: 0 (приховано для вашого персонажа).");
-  });
+  }
 
-  bot.command(["debugSet", "debugset"], async (ctx) => {
+  async function runDebugSet(ctx: any, rawValue = String(ctx.match || "").trim().toLowerCase()) {
     if (!ctx.from) return;
     if (!(await requireScribeAdmin(ctx))) return;
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
-    const value = String(ctx.match || "").trim().toLowerCase();
+    const value = rawValue;
     const enabled = ["1", "true", "on", "yes", "так", "увімкнути", "увімкнено"].includes(value);
     const disabled = ["0", "false", "off", "no", "ні", "вимкнути", "вимкнено"].includes(value);
     if (!enabled && !disabled) {
@@ -1124,9 +1138,15 @@ export function registerStatusHandlers(bot: Bot) {
 
     await prisma.player.updateMany({ where: { id: player.id }, data: { showTechnicalDetails: enabled } });
     await ctx.reply(enabled ? "Технічні деталі: 1 (увімкнено для вашого персонажа)." : "Технічні деталі: 0 (приховано для вашого персонажа).");
-  });
+  }
 
-  bot.command("restart", async (ctx) => {
+  bot.command(["debugGet", "debugget"], replyDebugGet);
+  bot.hears(DEBUG_GET_TEXT_COMMAND, replyDebugGet);
+
+  bot.command(["debugSet", "debugset"], (ctx) => runDebugSet(ctx));
+  bot.hears(DEBUG_SET_TEXT_COMMAND, (ctx) => runDebugSet(ctx, String(ctx.match?.[1] ?? "").trim().toLowerCase()));
+
+  async function runRestartCommand(ctx: any) {
     if (!ctx.from) return;
 
     const telegramId = String(ctx.from.id);
@@ -1171,9 +1191,13 @@ export function registerStatusHandlers(bot: Bot) {
     await ctx.reply("♻️ Старий слід стерто: персонажа, речі й записи прибрано. Напиши /start, щоб почати шлях спочатку.", {
       reply_markup: REMOVE_REPLY_KEYBOARD,
     });
-  });  
+  }
+
+  bot.command("restart", runRestartCommand);
+  bot.hears(RESTART_TEXT_COMMAND, runRestartCommand);
 
   bot.command(["locationAll", "locationall"], replyLocationAllPage);
+  bot.hears(LOCATION_ALL_TEXT_COMMAND, replyLocationAllPage);
   bot.hears(["📍 Місцини", "Місцини", "📍 Місцини (/locationAll)", "Місцини (/locationAll)"], replyLocationAllPage);
 
   bot.callbackQuery(/^locationAll:(\d+)$/, async (ctx) => {
@@ -1194,7 +1218,7 @@ export function registerStatusHandlers(bot: Bot) {
     await ctx.reply(page.text, { reply_markup: page.keyboard });
   });
 
-  bot.command(["addCreatureHelp", "addcreaturehelp"], async (ctx) => {
+  async function replyAddCreatureHelp(ctx: any) {
     if (!(await requireScribeAdmin(ctx))) return;
 
     const species = await prisma.creatureSpecies.findMany({ where: { kind: "ANIMAL" }, orderBy: { key: "asc" } });
@@ -1204,9 +1228,13 @@ export function registerStatusHandlers(bot: Bot) {
     await ctx.reply(
       `🐾 Можливі тварини для /addCreature\n\n${lines.join("\n") || "немає"}\n\nФормат:\n/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD]\n\nПонад ${ADD_CREATURE_BATCH_SIZE} створюється кількома батчами. Разова межа: ${ADD_CREATURE_MAX_COUNT}.\n\nПриклади:\n/addCreature rabbit forest_04_00 3\n/addCreature mouse meadow_16_05 100 YOUNG\n/addCreature wolf forest_00_08 1 OLD\n\nТрупи для тестів:\n/addCreatureCorpse <speciesKey> [locationKey|x,y,z] [count] [YOUNG|ADULT|OLD] [fresh|decaying|old]\nБез місцини бере поточну місцину Писаря.\n/addCreatureCorpse mouse\n/addCreatureCorpse rabbit forest_04_00 3 OLD`
     );
-  });
+  }
+
+  bot.command(["addCreatureHelp", "addcreaturehelp"], replyAddCreatureHelp);
+  bot.hears(ADD_CREATURE_HELP_TEXT_COMMAND, replyAddCreatureHelp);
 
   bot.command("world", replyWorldStatus);
+  bot.hears(WORLD_TEXT_COMMAND, replyWorldStatus);
   bot.hears(["🌲 Світ", "Світ", "🌲 Світ (/world)", "Світ (/world)"], replyWorldStatus);
 
   bot.command(["stat", "stats"], replyStatBrief);
@@ -1280,6 +1308,7 @@ export function registerStatusHandlers(bot: Bot) {
   });
 
   bot.command(["restAdmin", "restadmin"], (ctx) => runRestAdminCommand(bot, ctx));
+  bot.hears(REST_ADMIN_TEXT_COMMAND, (ctx) => runRestAdminCommand(bot, ctx, String(ctx.match?.[1] ?? "").trim()));
   bot.hears(["✨ Відновити снагу", "Відновити снагу", "✨ Відновити снагу (/restAdmin)", "Відновити снагу (/restAdmin)"], (ctx) => runRestAdminCommand(bot, ctx, ""));
 
   bot.hears(["📊 Статистика", "Статистика", "📊 Статистика (/stat)", "Статистика (/stat)"], replyStatBrief);
@@ -1290,10 +1319,10 @@ export function registerStatusHandlers(bot: Bot) {
   });
   bot.hears(["👥 Усі", "Усі", "👥 Усі (/all)", "Усі (/all)"], (ctx) => replyAllPage(ctx));
 
-  bot.command(["playerAdmin", "playeradmin", "player"], async (ctx) => {
+  async function runPlayerAdminCommand(ctx: any, rawTarget = String(ctx.match ?? "")) {
     if (!(await requireScribeAdmin(ctx))) return;
 
-    const resolved = await resolveAdminPlayerForContext(ctx, String(ctx.match ?? ""));
+    const resolved = await resolveAdminPlayerForContext(ctx, rawTarget);
     if (!resolved.player) {
       await ctx.reply(resolved.error ?? "Не знайшов такого персонажа.");
       return;
@@ -1301,7 +1330,10 @@ export function registerStatusHandlers(bot: Bot) {
 
     const view = await buildAdminPlayerDetailsView(resolved.player.id);
     await ctx.reply(view.text, { reply_markup: view.keyboard });
-  });
+  }
+
+  bot.command(["playerAdmin", "playeradmin", "player"], (ctx) => runPlayerAdminCommand(ctx));
+  bot.hears(PLAYER_ADMIN_TEXT_COMMAND, (ctx) => runPlayerAdminCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
 
   bot.callbackQuery(/^adminPlayer:(\d+)(?::(live|dead):(\d+))?$/, async (ctx) => {
     if (!(await isScribeAdmin(ctx.from?.id))) {
@@ -1598,7 +1630,7 @@ export function registerStatusHandlers(bot: Bot) {
     await ctx.reply(page.text, { reply_markup: page.keyboard });
   });
 
-  bot.command(["cleanupCreatures", "cleanupcreatures"], async (ctx) => {
+  async function runCleanupCreaturesCommand(ctx: any) {
     if (!(await requireScribeAdmin(ctx))) return;
 
     const uniqueResults = [];
@@ -1619,13 +1651,13 @@ export function registerStatusHandlers(bot: Bot) {
     const fresh = await getStatusData();
     const lines = uniqueResults.map((r) => r.skipped ? `${r.speciesKey}: skipped, species/location missing` : `${r.speciesKey}: kept #${r.keptId}, removed duplicates=${r.removed}${r.created ? ", created" : ""}`);
     await ctx.reply(`🧹 Creature cleanup done.\n\n${lines.join("\n")}\nAnimals removed: ${animalsRemoved.count}\nGone/decomposed removed: ${goneCleanup.count}\n\nAlive animals: ${fresh.aliveAnimalsCount}\nAnimal corpses: ${fresh.animalCorpsesCount}\nGone animals: ${fresh.goneAnimalsCount}\nNPC / non-animals: ${fresh.npcCount}\nAlive creatures total: ${fresh.aliveCreaturesCount}`);
-  });
+  }
 
-  bot.command(["cleanupCreature", "cleanupcreature"], async (ctx) => {
+  async function runCleanupCreatureCommand(ctx: any, rawSpeciesKey = String(ctx.match ?? "").trim()) {
     if (!(await requireScribeAdmin(ctx))) return;
 
     if (!ctx.from) return;
-    const speciesKey = ctx.match?.trim() || undefined;
+    const speciesKey = rawSpeciesKey || undefined;
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player?.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
@@ -1640,12 +1672,18 @@ export function registerStatusHandlers(bot: Bot) {
     if (deleted.count === 0) return void (await ctx.reply("Цю тварину вже прибрали іншим процесом."));
     await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "Creature removed", description: `Removed ${creature.species.key} #${creature.id} from current location.`, locationId: creature.locationId } });
     await ctx.reply(`🧹 Видалено: #${creature.id} ${creature.species.name} [${creature.species.key}] — ${creature.location.name}`);
-  });
+  }
 
-  bot.command(["addCreature", "addcreature"], async (ctx) => {
+  bot.command(["cleanupCreatures", "cleanupcreatures"], runCleanupCreaturesCommand);
+  bot.hears(CLEANUP_CREATURES_TEXT_COMMAND, runCleanupCreaturesCommand);
+
+  bot.command(["cleanupCreature", "cleanupcreature"], (ctx) => runCleanupCreatureCommand(ctx));
+  bot.hears(CLEANUP_CREATURE_TEXT_COMMAND, (ctx) => runCleanupCreatureCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
+
+  async function runAddCreatureCommand(ctx: any, rawArgs = String(ctx.match ?? "")) {
     if (!(await requireScribeAdmin(ctx))) return;
 
-    const { speciesKey, locationArg, requestedCount, age } = parseAddCreatureArgs(String(ctx.match ?? ""));
+    const { speciesKey, locationArg, requestedCount, age } = parseAddCreatureArgs(rawArgs);
     const plan = planAddCreatureBatches(requestedCount);
 
     if (!speciesKey || !locationArg || !Number.isFinite(plan.count)) {
@@ -1690,12 +1728,15 @@ export function registerStatusHandlers(bot: Bot) {
       },
     });
     await ctx.reply(`✅ Додано: ${species.name} ×${plan.count} (${age}) → ${location.name} (${location.x},${location.y},${location.z})${batchNote}${capNote}`);
-  });
+  }
 
-  bot.command(["addCreatureCorpse", "addcreaturecorpse"], async (ctx) => {
+  bot.command(["addCreature", "addcreature"], (ctx) => runAddCreatureCommand(ctx));
+  bot.hears(ADD_CREATURE_TEXT_COMMAND, (ctx) => runAddCreatureCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
+
+  async function runAddCreatureCorpseCommand(ctx: any, rawArgs = String(ctx.match ?? "")) {
     if (!(await requireScribeAdmin(ctx))) return;
 
-    const { speciesKey, locationArg, requestedCount, age, freshness } = parseAddCreatureCorpseArgs(String(ctx.match ?? ""));
+    const { speciesKey, locationArg, requestedCount, age, freshness } = parseAddCreatureCorpseArgs(rawArgs);
     const plan = planAddCreatureBatches(requestedCount);
     const formatText = `⚠️ Формат: /addCreatureCorpse <speciesKey> [locationKey|x,y,z] [count] [YOUNG|ADULT|OLD] [fresh|decaying|old]\nБез місцини команда бере поточну місцину Писаря.\nПонад ${ADD_CREATURE_BATCH_SIZE} створюється кількома батчами. Разова межа: ${ADD_CREATURE_MAX_COUNT}.\nНаприклад: /addCreatureCorpse mouse або /addCreatureCorpse rabbit forest_04_00 3 OLD`;
 
@@ -1757,13 +1798,16 @@ export function registerStatusHandlers(bot: Bot) {
       },
     });
     await ctx.reply(`✅ Додано трупи: ${species.name} ×${plan.count} (${age}, ${freshness}) → ${location.name} (${location.x},${location.y},${location.z})${batchNote}${capNote}`);
-  });
+  }
 
-  bot.command(["forceOld", "forceold"], async (ctx) => {
+  bot.command(["addCreatureCorpse", "addcreaturecorpse"], (ctx) => runAddCreatureCorpseCommand(ctx));
+  bot.hears(ADD_CREATURE_CORPSE_TEXT_COMMAND, (ctx) => runAddCreatureCorpseCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
+
+  async function runForceOldCommand(ctx: any, rawArgs = String(ctx.match ?? "")) {
     if (!(await requireScribeAdmin(ctx))) return;
 
     if (!ctx.from) return;
-    const args = ctx.match?.trim().split(/\s+/).filter(Boolean) ?? [];
+    const args = rawArgs.trim().split(/\s+/).filter(Boolean);
     const speciesKey = args[0];
     const parsedCount = Number(args[1] || 5);
     const count = Number.isFinite(parsedCount) ? Math.max(1, Math.min(Math.floor(parsedCount), 50)) : 5;
@@ -1789,5 +1833,8 @@ export function registerStatusHandlers(bot: Bot) {
 
     await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "Creatures forced old", description: `Forced old: ${creatures.map((c) => `#${c.id}`).join(", ")}.`, locationId: player.currentLocationId } });
     await ctx.reply(`🧪 Зістарено для тесту: ${creatures.map((c) => `#${c.id} ${c.species.name}`).join(", ")}. Запусти /tick кілька разів, щоб перевірити старість/смерть.`);
-  });
+  }
+
+  bot.command(["forceOld", "forceold"], (ctx) => runForceOldCommand(ctx));
+  bot.hears(FORCE_OLD_TEXT_COMMAND, (ctx) => runForceOldCommand(ctx, String(ctx.match?.[1] ?? "")));
 }

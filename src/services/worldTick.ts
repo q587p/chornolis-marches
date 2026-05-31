@@ -15,8 +15,12 @@ import { hunterClaimedCorpseDecayAction, isHunterCreature, tickNpcHunter } from 
 import { chance, chancePermille, pickOptional as pick, randomInt } from "../utils/random";
 import { restorePopulationFloors } from "./populationRestoration";
 import { PREDATOR_PREY_CLAIM_PREFIX, predatorClaimedCorpseDecayAction, predatorClaimedCorpseMarker } from "./predatorFeeding";
+import { slashlessCommandPattern } from "../utils/slashlessCommands";
 
 const DEFAULT_TICK_INTERVAL_MS = TICK_MS;
+const TICK_TEXT_COMMAND = slashlessCommandPattern(["tick"]);
+const TICK_GET_TEXT_COMMAND = slashlessCommandPattern(["tickGet", "tickget"]);
+const TICK_SET_TEXT_COMMAND = slashlessCommandPattern(["tickSet", "tickset"]);
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
 const RESOURCE_REGEN_EVERY_TICKS = Number(process.env.WORLD_RESOURCE_REGEN_EVERY_TICKS || 160);
 const RESOURCE_REGEN_AMOUNT = Number(process.env.WORLD_RESOURCE_REGEN_AMOUNT || 1);
@@ -1509,19 +1513,21 @@ function runtimeTickStatusText() {
 }
 
 function registerTickCommands(bot: Bot) {
-  bot.command("tick", async (ctx) => {
+  async function runTickCommand(ctx: any) {
     if (!(await requireScribeAdmin(ctx))) return;
     await worldTick();
     await ctx.reply("✅ World tick запущено вручну.");
-  });
-  bot.command(["tickGet", "tickget"], async (ctx) => {
+  }
+
+  async function runTickGetCommand(ctx: any) {
     if (!(await requireScribeAdmin(ctx))) return;
     await ctx.reply(runtimeTickStatusText());
-  });
-  bot.command(["tickSet", "tickset"], async (ctx) => {
+  }
+
+  async function runTickSetCommand(ctx: any, rawValue = String(ctx.match ?? "")) {
     if (!(await requireScribeAdmin(ctx))) return;
 
-    const value = Number(ctx.match?.trim());
+    const value = Number(rawValue.trim());
     if (!Number.isFinite(value) || value < 1000) {
       await ctx.reply("⚠️ Формат: /tickSet 5000\nМінімум: 1000 ms.");
       return;
@@ -1533,7 +1539,14 @@ function registerTickCommands(bot: Bot) {
     restartActionQueueLoop();
     restartPlayerAutoTimers(bot);
     await ctx.reply(`✅ Час світу змінено runtime: ${TICK_MS} ms. Перезапущено world tick, action/recovery loop і авто-таймери.\n\n${runtimeTickStatusText()}`);
-  });
+  }
+
+  bot.command("tick", runTickCommand);
+  bot.hears(TICK_TEXT_COMMAND, runTickCommand);
+  bot.command(["tickGet", "tickget"], runTickGetCommand);
+  bot.hears(TICK_GET_TEXT_COMMAND, runTickGetCommand);
+  bot.command(["tickSet", "tickset"], (ctx) => runTickSetCommand(ctx));
+  bot.hears(TICK_SET_TEXT_COMMAND, (ctx) => runTickSetCommand(ctx, String(ctx.match?.[1] ?? "")));
 }
 
 export function startWorldTickLoop(bot?: Bot) {
