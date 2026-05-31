@@ -388,6 +388,27 @@ model CarcassDropoffContribution {
   @@index([createdAt])
 }
 
+model HeraldPublication {
+  id                Int       @id @default(autoincrement())
+  sourceType        String
+  sourceId          String?
+  title             String
+  body              String
+  priority          Int       @default(0)
+  visibility        String    @default("PUBLIC")
+  availableAt       DateTime  @default(now())
+  publishedAt       DateTime?
+  telegramMessageId Int?
+  contentHash       String?   @unique
+  error             String?
+  attempts          Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([publishedAt, availableAt, priority])
+  @@index([sourceType, sourceId])
+}
+
 // =======================
 // ACTION QUEUE
 // =======================
