@@ -7,6 +7,28 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.14.7 - Post-merge Herald Render operations docs - 12026-06-01
+
+### Added
+
+- Added post-merge Render service documentation for running the main game bot and Boundary Mark Chancery Herald from the same `main` branch as two separate Render services.
+- Added a dedicated ops guide covering main-game and Herald Start Commands, Herald-specific env variables, shared database expectations, duplicate polling warnings, Prisma migration rules, status-page expectations and future embedded-mode tradeoffs.
+- Added planning updates for the future embedded Herald mode and the independent status/deploy-visibility backlog item.
+
+### Changed
+
+- Updated Render deployment docs to distinguish the main game's seed-aware deploy flow from the Herald Web Service build/start flow.
+- Updated Herald ops docs to point at the post-merge two-service model and to mark `HERALD_STARTUP_NOTICE_THREAD_ID` as reserved until runtime support exists.
+
+### Validation
+
+- Ran `npm run planning:export`.
+- Ran `npm run build`.
+- Ran `npm test`.
+- Ran `git diff --check`.
+
+---
+
 ## 0.14.6 - Boundary Mark Chancery Herald bot - 12026-06-01
 
 ### Added

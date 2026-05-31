@@ -25,6 +25,8 @@ node dist/apps/heraldBot.js
 
 ## Render Web Service
 
+Після merge у `main` Канцелярія деплоїться з тієї ж гілки `main`, що й основний бот, але як окремий Render Web Service зі своїм Start Command. Основний ігровий сервіс лишається окремим процесом і не потребує `HERALD_*` env variables.
+
 Render free Web Service не має окремої Pre-Deploy Command, тому для Канцелярії тримаємо міграції в Build Command.
 
 Build Command:
@@ -40,6 +42,8 @@ node dist/apps/heraldBot.js
 ```
 
 Не використовуйте `prisma migrate dev` на Render. Кожна зміна `prisma/schema.prisma`, яка міняє persisted database shape, має мати закомічену міграцію в `prisma/migrations/**`.
+
+Повна post-merge схема двох Render-сервісів описана в `docs/ops/render-services.md`.
 
 ## Environment Variables
 
@@ -58,6 +62,10 @@ Recommended:
 - `HERALD_STARTUP_NOTICE_CHAT_ID` — chat id для startup notice. Краще ставити приватний/admin chat, а не публічний канал.
 - `PORT` — порт HTTP health server. Render задає його автоматично; локально дефолт `3000`.
 - `APP_VERSION` — fallback version label, якщо `package.json` не можна прочитати.
+
+Reserved for future support:
+
+- `HERALD_STARTUP_NOTICE_THREAD_ID` — не підтримується поточним runtime; не задавайте його як обов'язковий env, доки код явно не навчиться ним користуватися.
 
 Related main game env:
 

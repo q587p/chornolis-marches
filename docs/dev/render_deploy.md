@@ -1,5 +1,23 @@
 # Render Deployment
 
+## Services After The Herald Merge
+
+After `0.14.6`, both the main game bot and the Boundary Mark Chancery /
+Канцелярія Межового Знаку deploy from the same `main` branch, but as separate
+Render services with different Start Commands.
+
+- Main game service: `node dist/bot.js` or `npm start`.
+- Herald service: `node dist/apps/heraldBot.js`.
+
+The main game service must not require `HERALD_*` env variables and must not
+start the Herald unless a future explicit embedded flag is implemented and
+enabled. The Herald service uses its own `HERALD_*` env variables and should not
+run `npm run seed`.
+
+See `docs/ops/render-services.md` for the full post-merge two-service setup,
+duplicate polling warning, status-page expectations and future embedded-mode
+icebox notes.
+
 Recommended build command:
 
 ```bash
