@@ -2199,6 +2199,25 @@
     "file": "docs/planning/items/SURV-001-E.md"
   },
   {
+    "id": "SURV-001-F",
+    "title": "Beginner return command-menu eligibility",
+    "status": "backlog",
+    "type": "polish",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "respawn",
+      "telegram",
+      "balance",
+      "beginner"
+    ],
+    "depends_on": [
+      "SURV-001-E"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SURV-001-F.md"
+  },
+  {
     "id": "TECH-001",
     "title": "Service boundary and duplication cleanup",
     "status": "backlog",

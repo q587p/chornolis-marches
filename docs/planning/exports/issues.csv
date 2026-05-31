@@ -115,6 +115,7 @@ SURV-001-B,/respawn command skeleton,testing,feature,survival,high,"respawn,tele
 SURV-001-C,Повернення confirmation and aliases,testing,feature,survival,high,"respawn,aliases,button-parity",docs/planning/items/SURV-001-C.md
 SURV-001-D,Actual return to start camp,testing,feature,survival,high,"respawn,location,queue",docs/planning/items/SURV-001-D.md
 SURV-001-E,Beginner return cooldown/consequence,testing,feature,survival,medium,"respawn,cooldown,balance",docs/planning/items/SURV-001-E.md
+SURV-001-F,Beginner return command-menu eligibility,backlog,polish,survival,medium,"respawn,telegram,balance,beginner",docs/planning/items/SURV-001-F.md
 TECH-001,Service boundary and duplication cleanup,backlog,technical,architecture,medium,"architecture,refactor,maintainability,services,dead-code,cleanup",docs/planning/items/TECH-001-service-boundary-and-duplication-cleanup.md
 TRACK-LEARN-001-A,Track-examine progress hint,next,feature,learning,high,"tracking,tracks,progression",docs/planning/items/TRACK-LEARN-001-A.md
 TRACK-LEARN-001-B,Animal movement observation,next,feature,learning,medium,"tracking,animals,observe",docs/planning/items/TRACK-LEARN-001-B.md

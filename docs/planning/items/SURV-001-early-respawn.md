@@ -22,6 +22,7 @@ Add `/respawn` as **Повернення** for new or weak characters who get lo
 - As of 0.10.6, `/respawn` had a Telegram fallback message explaining that the real respawn flow was still planned.
 - 0.13.24 implements the first live return flow as `/respawn`, with confirmation, a short cooldown, action queue interruption, stamina consequence and a world event trail.
 - 0.13.26 keeps `/respawn` available for the first 7 real days after character creation, even if the early progress score is already high; weak characters can still use it later.
+- Future follow-up: `SURV-001-F` should hide or demote `/respawn` from the Telegram side command menu once a character is clearly ineligible, and should recalibrate the progress threshold from real player stats excluding NPCs.
 
 ## Rules
 
