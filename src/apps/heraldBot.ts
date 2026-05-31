@@ -10,9 +10,12 @@ import { registerHeraldPublisherCommands, startHeraldPublisherLoop } from "../he
 import { publicationErrorMessage } from "../herald/publications";
 import { parseTelegramChannelId } from "../herald/safety";
 import { startHeraldHealthServer } from "../server/heraldHealthServer";
+import { HERALD_SERVICE_KEY, HERALD_STANDALONE_MODE, startServiceHeartbeatLoop } from "../services/serviceHeartbeat";
 
 const bot = new Bot(requireConfigValue(config.heraldBotToken, "HERALD_BOT_TOKEN"));
 const heraldAdminIds = parseHeraldAdminIds(config.heraldAdminIds);
+const heraldStartedAt = new Date();
+let heraldHeartbeatStarted = false;
 
 bot.command("ping", async (ctx) => {
   if (isHeraldAdminId(ctx.from?.id, heraldAdminIds)) {
@@ -72,10 +75,22 @@ async function sendHeraldStartupNotice() {
   }
 }
 
+function startHeraldHeartbeatOnce() {
+  if (heraldHeartbeatStarted) return;
+  heraldHeartbeatStarted = true;
+  startServiceHeartbeatLoop({
+    serviceKey: HERALD_SERVICE_KEY,
+    mode: HERALD_STANDALONE_MODE,
+    startedAt: heraldStartedAt,
+    logLabel: "Herald",
+  });
+}
+
 startHeraldHealthServer();
 startHeraldPublisherLoop(bot);
 bot.start({
   onStart: () => {
+    startHeraldHeartbeatOnce();
     void sendHeraldStartupNotice();
   },
 }).catch((error) => {

@@ -5,6 +5,7 @@ require("ts-node/register");
 const {
   actionQueueRuntimeStatus,
   databaseRuntimeStatus,
+  heraldRuntimeStatus,
   worldTickRuntimeStatus,
 } = require("../../src/services/status");
 
@@ -29,6 +30,42 @@ assert.equal(actionQueueRuntimeStatus({
   totalRunning: 1,
   overdueRunning: 1,
   maxOverdueMs: 32000,
+}, now).state, "warning");
+
+const recentHerald = heraldRuntimeStatus({
+  heartbeat: {
+    serviceKey: "herald",
+    mode: "standalone",
+    startedAt: new Date("2026-05-30T11:50:00.000Z"),
+    lastSeenAt: new Date("2026-05-30T11:59:30.000Z"),
+  },
+  queuedCount: 2,
+  publishedCount: 5,
+  lastPublishedNewsAt: new Date("2026-05-30T11:40:00.000Z"),
+}, now);
+assert.equal(recentHerald.state, "ok");
+assert.match(recentHerald.detail, /на зв’язку/);
+assert.match(recentHerald.detail, /standalone/);
+assert.match(recentHerald.detail, /очікує 2/);
+assert.match(recentHerald.detail, /опубліковано 5/);
+
+assert.equal(heraldRuntimeStatus({
+  heartbeat: null,
+  queuedCount: 0,
+  publishedCount: 0,
+  lastPublishedNewsAt: null,
+}, now).state, "warning");
+
+assert.equal(heraldRuntimeStatus({
+  heartbeat: {
+    serviceKey: "herald",
+    mode: "standalone",
+    startedAt: new Date("2026-05-30T11:00:00.000Z"),
+    lastSeenAt: new Date("2026-05-30T11:50:00.000Z"),
+  },
+  queuedCount: 0,
+  publishedCount: 1,
+  lastPublishedNewsAt: null,
 }, now).state, "warning");
 
 console.log("Runtime status helpers OK");
