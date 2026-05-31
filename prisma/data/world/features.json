@@ -433,6 +433,109 @@
     }
   },
   {
+    "key": "meadow_10_07_crooked_pine",
+    "locationKey": "meadow_10_07",
+    "type": "LANDMARK",
+    "name": "Крива сосна",
+    "description": "Сосна росте на межі піску й сухої трави, нахилена так, ніби колись слухала землю й забула випростатися. Кора в неї шорстка, сучки низькі, а тінь лягає довгою темною рискою через прогалину.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🌳",
+      "inspectable": true,
+      "climb_tree": true,
+      "aliases": [
+        "дерево",
+        "сосна",
+        "крива сосна",
+        "крона",
+        "tree",
+        "pine"
+      ]
+    }
+  },
+  {
+    "key": "meadow_10_07_crooked_pine_branches",
+    "locationKey": "meadow_10_07_crooked_pine_crown",
+    "type": "LANDMARK",
+    "name": "Сухі гілки кривої сосни",
+    "description": "У кроні застрягло дрібне сухе гілля. Воно не падає саме, тільки тихо клацає від вітру, наче чекає руки, яка знає міру.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🍃",
+      "inspectable": true,
+      "shake_tree": true,
+      "shake_drop_location_key": "meadow_10_07",
+      "shake_resource_key": "twigs",
+      "shake_min": 5,
+      "shake_max": 8,
+      "shake_cooldown_ms": 7200000,
+      "aliases": [
+        "дерево",
+        "сосна",
+        "гілки",
+        "сухі гілки",
+        "крона",
+        "хмиз",
+        "tree",
+        "branches"
+      ]
+    }
+  },
+  {
+    "key": "meadow_11_07_scratched_pine",
+    "locationKey": "meadow_11_07",
+    "type": "LANDMARK",
+    "name": "Подряпана сосна",
+    "description": "Найближча сосна має свіжу подряпину на корі: не глибоку, але вперту. Поруч видно сучки, по яких можна вчепитися й піднятися вище за траву.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🌳",
+      "inspectable": true,
+      "climb_tree": true,
+      "aliases": [
+        "дерево",
+        "сосна",
+        "подряпана сосна",
+        "подряпина",
+        "крона",
+        "tree",
+        "pine"
+      ]
+    }
+  },
+  {
+    "key": "meadow_11_07_scratched_pine_branches",
+    "locationKey": "meadow_11_07_scratched_pine_crown",
+    "type": "LANDMARK",
+    "name": "Сухе гілля над подряпиною",
+    "description": "Тонкі сухі гілки тримаються над подряпаною корою, сплетені з торішньою хвоєю. Якщо їх розхитати, хмиз має сипонути просто під дерево.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🍃",
+      "inspectable": true,
+      "shake_tree": true,
+      "shake_drop_location_key": "meadow_11_07",
+      "shake_resource_key": "twigs",
+      "shake_min": 5,
+      "shake_max": 8,
+      "shake_cooldown_ms": 7200000,
+      "aliases": [
+        "дерево",
+        "сосна",
+        "гілки",
+        "сухі гілки",
+        "крона",
+        "хмиз",
+        "tree",
+        "branches"
+      ]
+    }
+  },
+  {
     "key": "dream_tutorial_sleep_gate",
     "locationKey": "dream_tutorial_gate",
     "type": "GATE",

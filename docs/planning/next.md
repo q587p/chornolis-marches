@@ -29,7 +29,6 @@ The current lane is the three-month vertical slice:
 - MAP-003 follow-up: continue expanding the playable waking-world map beyond the first northern forest pocket, with more reachable locations, region growth and authored features/resources.
 - WPN-001: minimal weapon catalog and equip/unequip foundation; keep it tied to existing resource inventory and do not start full combat.
 - WPN-002: weapon-aware look/examine/freshen/attack text; require a sharp equipped weapon for freshening, but keep current target eligibility.
-- UX-002 / ADM-002: keep paginated corpse/target `Back` buttons returning to the source page, and add a scribe-only `/addCreatureCorpse` setup command for testing carcass flows.
 - FOOD-004: add restrained hunger cues and eating nudges now that hunger can be eased, using `SES-001` reminder guards so they never become chat spam.
 - FOOD-005: make hunger matter through slower stamina recovery and slow health loss at severe hunger, tuned gently enough to stay readable and recoverable.
 - FOOD-006: add mushroom varieties and identification so examining forage matters before eating, with poisonous, nourishing, cookable and future alchemy-useful mushrooms.

@@ -30,6 +30,8 @@ Current interactive examples:
 - torch stand: shows that torches can be taken;
 - closed gate: explains that the settlement path is locked for now.
 - gate notice / carcass drop-off: should explain what the settlement is asking for, what can be put there and why it matters, not only list the sign or pit by name.
+- climbable tree: a surface feature that advertises an `UP` exit to a real upper location and a matching `DOWN` exit back to the base location.
+- shakeable branches: an upper-tree feature with a cooldown; `/examine` should explain whether dry twigs can be shaken down now or whether the tree needs time before it gives more.
 
 Planned interactive examples:
 

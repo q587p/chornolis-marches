@@ -62,9 +62,11 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   const directionButton = (direction: Direction, label: string) => exits.has(direction)
     ? lockedExits.has(direction) ? `(${label})` : label
     : EMPTY_KEYBOARD_BUTTON;
+  const northOrUpButton = exits.has("NORTH") ? directionButton("NORTH", "⬆️ Північ") : directionButton("UP", "⬆️ Вгору");
+  const southOrDownButton = exits.has("SOUTH") ? directionButton("SOUTH", "⬇️ Південь") : directionButton("DOWN", "⬇️ Вниз");
   const keyboard = new Keyboard()
     .text("👀 Озирнутися");
-  keyboard.text(directionButton("NORTH", "⬆️ Північ"));
+  keyboard.text(northOrUpButton);
   keyboard.text(state.canExamine === false ? EMPTY_KEYBOARD_BUTTON : "🔎 Роздивитися").row();
 
   keyboard.text(directionButton("WEST", "⬅️ Захід"));
@@ -73,7 +75,7 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   keyboard.row();
 
   keyboard.text(utilityButton(state.showAdminMenu ? "🛠 Адмін меню" : "🧭 Допомога"));
-  keyboard.text(directionButton("SOUTH", "⬇️ Південь"));
+  keyboard.text(southOrDownButton);
   keyboard.text(utilityButton("☰ Меню")).row();
 
   if (state.statusLabel) keyboard.text(state.statusLabel).row();
@@ -186,11 +188,28 @@ export function buildAdminMenuReplyKeyboard() {
     .text("✨ Відновити снагу")
     .text("🌿 Ресурси")
     .row()
+    .text("🐾 Істоти")
     .text("🦴 Падальний рів")
     .row()
     .text("🔥 Вогонь")
     .text("🛠 Повна довідка")
     .row()
+    .text("↩️ Назад")
+    .resized()
+    .persistent(false);
+}
+
+export function buildAdminCreaturesReplyKeyboard() {
+  return new Keyboard()
+    .text("🐾 Ключі істот")
+    .row()
+    .text("➕ Додати тварин")
+    .text("🦴 Додати трупи")
+    .row()
+    .text("🧪 Зістарити")
+    .text("🧹 Прибрати тварину")
+    .row()
+    .text("🛠 Адмін меню")
     .text("↩️ Назад")
     .resized()
     .persistent(false);

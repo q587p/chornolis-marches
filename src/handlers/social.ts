@@ -29,9 +29,14 @@ type PendingTargetSpeech = {
 
 const pendingTargetSpeech = new Map<number, PendingTargetSpeech>();
 
-function buildActionKeyboard(target: ResolvedTarget, again = false) {
-  if (target.isCorpse) return buildCorpseActionKeyboard(target);
-  return buildTargetActionKeyboard({ type: target.kind, id: target.id, canGreet: target.canGreet, canAttack: target.canAttack, isAnimal: target.isAnimal }, again);
+function targetReturnCallback(mode?: string, page?: number) {
+  if ((mode !== "brief" && mode !== "details") || !Number.isFinite(page)) return "location:details";
+  return `targetPage:${mode}:${Math.max(0, Math.floor(page ?? 0))}`;
+}
+
+function buildActionKeyboard(target: ResolvedTarget, again = false, returnCallback = "location:details") {
+  if (target.isCorpse) return buildCorpseActionKeyboard(target, returnCallback);
+  return buildTargetActionKeyboard({ type: target.kind, id: target.id, canGreet: target.canGreet, canAttack: target.canAttack, isAnimal: target.isAnimal }, again, returnCallback);
 }
 
 function attackUnavailableText(target: ResolvedTarget) {
@@ -144,9 +149,10 @@ async function submitFreshenAll(bot: Bot, ctx: any) {
 }
 
 export function registerSocialHandlers(bot: Bot) {
-  bot.callbackQuery(/^target:(player|creature):(\d+)$/, async (ctx) => {
+  bot.callbackQuery(/^target:(player|creature):(\d+)(?::(brief|details):(\d+))?$/, async (ctx) => {
     const type = ctx.match[1];
     const targetId = Number(ctx.match[2]);
+    const returnCallback = targetReturnCallback(ctx.match[3], Number(ctx.match[4]));
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player || !player.currentLocationId) {
       await safeAnswerCallbackQuery(ctx);
@@ -160,11 +166,12 @@ export function registerSocialHandlers(bot: Bot) {
     }
 
     await safeAnswerCallbackQuery(ctx);
-    await editOrReply(ctx, `Ви зосереджуєтесь на: ${target.forms.locative}`, buildActionKeyboard(target));
+    await editOrReply(ctx, `Ви зосереджуєтесь на: ${target.forms.locative}`, buildActionKeyboard(target, false, returnCallback));
   });
 
-  bot.callbackQuery(/^social:pickup:creature:(\d+)$/, async (ctx) => {
+  bot.callbackQuery(/^social:pickup:creature:(\d+)(?::(brief|details):(\d+))?$/, async (ctx) => {
     const targetId = Number(ctx.match[1]);
+    const returnCallback = targetReturnCallback(ctx.match[2], Number(ctx.match[3]));
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player || !player.currentLocationId) {
       await safeAnswerCallbackQuery(ctx);
@@ -216,7 +223,7 @@ export function registerSocialHandlers(bot: Bot) {
     await editOrReply(
       ctx,
       `🤲 Ви підібрали ${itemName}.\n\nВін лежить у ваших речах, але ще псується. Якщо забаритися, від нього лишиться тільки слід.`,
-      new InlineKeyboard().text("↩️ Назад", "location:details").row(),
+      new InlineKeyboard().text("↩️ Назад", returnCallback).row(),
     );
     if (await rememberTutorialInventoryForPlayer(player, `pickup:${resourceType.key}`)) {
       await ctx.reply("Речі тепер можна відкрити з клавіатури.", { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
@@ -303,11 +310,12 @@ export function registerSocialHandlers(bot: Bot) {
     });
   });
 
-  bot.callbackQuery(/^social:(look|greet|inspect|attack|freshen):(player|creature):(\d+)(?::(known|mystery))?$/, async (ctx) => {
+  bot.callbackQuery(/^social:(look|greet|inspect|attack|freshen):(player|creature):(\d+)(?::(known|mystery))?(?::(brief|details):(\d+))?$/, async (ctx) => {
     const action = ctx.match[1] as "look" | "greet" | "inspect" | "attack" | "freshen";
     const type = ctx.match[2] as "player" | "creature";
     const targetId = Number(ctx.match[3]);
     const mode = (ctx.match[4] ?? "known") as "known" | "mystery";
+    const returnCallback = targetReturnCallback(ctx.match[5], Number(ctx.match[6]));
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player || !player.currentLocationId) {
       await safeAnswerCallbackQuery(ctx);
@@ -332,7 +340,7 @@ export function registerSocialHandlers(bot: Bot) {
       result = await performOrQueuePlayerAction(bot, {
         playerId: player.id,
         type: typeMap[action],
-        payload: { targetType: type, targetId, mode, detail: action === "look" ? "brief" : undefined },
+        payload: { targetType: type, targetId, mode, detail: action === "look" ? "brief" : undefined, returnCallback },
         durationMs,
         chatId: ctx.chat?.id,
         messageId: ctx.callbackQuery.message?.message_id,

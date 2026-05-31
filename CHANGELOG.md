@@ -9,6 +9,38 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.23 - Target-list return context, scribe corpse setup and climbable trees - 12026-05-31
+
+### Added
+
+- Added a scribe-only `/addCreatureCorpse` command for creating animal corpse rows directly, with current-location defaults, corpse freshness presets, batching and the same one-command cap as `/addCreature`.
+- Added a `Creatures` submenu to the scribe admin keyboard so creature keys, live animal spawning, corpse setup and cleanup/test state commands are grouped together without slash hints in button labels.
+- Added two climbable dry-meadow tree features with real `UP`/`DOWN` exits to upper locations.
+- Added `/up` and `/down` movement commands, vertical reply/inline movement labels and text aliases for `вгору` / `вниз`.
+- Added `/shake_tree` / `потрусити дерево` interaction for upper-tree branch features; a successful shake drops 5-8 `twigs` at the tree base and then enters a real-time cooldown.
+
+### Changed
+
+- Paginated target and corpse list buttons now carry their source page into target detail/action views, so `Back` returns to the same target-list page instead of resetting to the first page.
+- `/addCreatureHelp`, `/adminHelp`, admin command docs and scribe audit notes now document the corpse setup command and its species-key flow.
+- Marked `ADM-002` and `UX-002` as testing and refreshed planning exports.
+- Location-feature docs now list climbable trees and shakeable branches as current interactive feature examples.
+
+### Tests
+
+- Added focused tree-shake amount/cooldown helper coverage to `npm test`.
+- Ran `node scripts/test/admin-creatures.cjs`.
+- Ran `node scripts/test/target-formatting.cjs`.
+- Ran `node scripts/test/posture.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/tree-features.cjs`.
+- Ran `npm run planning:export`.
+- Ran `npm run map:render`.
+- Ran `npm test`.
+- Ran `npm run build`.
+
+---
+
 ## 0.13.22 - Queue visibility, AFK labels and command-menu polish - 12026-05-31
 
 ### Changed

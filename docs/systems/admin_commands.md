@@ -10,7 +10,7 @@
 
 ## Поточні команди
 
-- `/adminMenu` — кнопкове меню Писарів. У головній клавіатурі Писаря кнопка `🛠 Адмін меню` (`/adminMenu`) замінює звичайну `🧭 Допомога` і збирає швидкі переходи до `/stat`, `/world`, `/all`, `/locationAll`, `/teleport`, `/restAdmin`, ресурсів, вогню, падального рову та повної довідки.
+- `/adminMenu` — кнопкове меню Писарів. У головній клавіатурі Писаря кнопка `🛠 Адмін меню` (`/adminMenu`) замінює звичайну `🧭 Допомога` і збирає швидкі переходи до `/stat`, `/world`, `/all`, `/locationAll`, `/teleport`, `/restAdmin`, ресурсів, істот, вогню, падального рову та повної довідки.
 - `/adminHelp` — повний текстовий список команд.
 - `/world` — стан світу й останні події.
 - `/stat` — службова статистика світу й посилання на захищену веб-/stat; показує народження, смерті від старості, голоду, хижаків і персонажів, а також активність персонажів.
@@ -35,6 +35,8 @@
 - `/locationAll` — список усіх місцин і ключів.
 - `/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD]` — додати тварин. Понад 50 істот створюється батчами, щоб один адмінський запит не був надто важким; разова межа — 500.
   Приклади актуальних місцин: `/addCreature rabbit forest_04_00 3`, `/addCreature mouse meadow_16_05 100 YOUNG`, `/addCreature wolf forest_00_08 1 OLD`.
+- `/addCreatureCorpse <speciesKey> [locationKey|x,y,z] [count] [YOUNG|ADULT|OLD] [fresh|decaying|old]` — додати трупи тварин. Без місцини бере поточну місцину Писаря; без кількості додає 1; без віку бере `ADULT`; без стану бере `fresh`. Понад 50 трупів створюється батчами, разова межа — 500.
+  Приклади: `/addCreatureCorpse mouse`, `/addCreatureCorpse rabbit forest_04_00 3 OLD`, `/addCreatureCorpse wolf 0,0,0 old`.
 - `/addCreatureHelp` — список speciesKey для тварин.
 - `/addResource <resourceKey> [locationKey|x,y,z] [amount]` — команда писарів Порубіжжя: відновити ресурс у вказаній або поточній місцині. Без місцини бере поточну місцину писаря, без кількості додає 1. Помилкова форма `/addResourse` теж підтримується.
 - `/addResourceHelp` — список ключів ресурсів для `/addResource`.
@@ -67,5 +69,5 @@
 - список Telegram ID адміністраторів у `.env` лишається аварійним/операторським способом доступу;
 - база-роль `SCRIBE` є основним способом зробити персонажа писарем Порубіжжя;
 - `/adminHelp` показує повний список лише тим, хто має права;
-- небезпечні команди на кшталт `/reset`, `/cleanupCreatures`, `/tickSet`, `/addCreature`, `/addResource`, `/addCampfire`, `/addTorch`, `/addTwigs` закриті для звичайних гравців;
+- небезпечні команди на кшталт `/reset`, `/cleanupCreatures`, `/tickSet`, `/addCreature`, `/addCreatureCorpse`, `/addResource`, `/addCampfire`, `/addTorch`, `/addTwigs` закриті для звичайних гравців;
 - звичайні гравці можуть зберегти доступ до безпечних команд на кшталт `/look`, `/me`, `/news`, `/help`.

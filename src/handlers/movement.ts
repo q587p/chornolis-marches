@@ -19,6 +19,10 @@ const COMMAND_DIRECTIONS: Record<string, Direction> = {
   w: "WEST",
   east: "EAST",
   e: "EAST",
+  up: "UP",
+  u: "UP",
+  down: "DOWN",
+  d: "DOWN",
   inside: "INSIDE",
   in: "INSIDE",
   outside: "OUTSIDE",
@@ -73,11 +77,11 @@ export function registerMovementHandlers(bot: Bot) {
     await submitMove(bot, ctx, ctx.match[1] as Direction, true);
   });
 
-  bot.callbackQuery(/^cmd:(north|south|west|east)$/, async (ctx) => {
+  bot.callbackQuery(/^cmd:(north|south|west|east|up|down)$/, async (ctx) => {
     await submitMove(bot, ctx, COMMAND_DIRECTIONS[ctx.match[1]], true);
   });
 
-  bot.command(["north", "n", "south", "s", "west", "w", "east", "e", "inside", "in", "outside", "out"], async (ctx) => {
+  bot.command(["north", "n", "south", "s", "west", "w", "east", "e", "up", "u", "down", "d", "inside", "in", "outside", "out"], async (ctx) => {
     const command = ctx.message?.text?.split(/\s+/)[0]?.replace(/^\//, "").toLowerCase();
     const direction = command ? COMMAND_DIRECTIONS[command] : undefined;
     if (!direction) return void (await ctx.reply("Невідомий напрямок."));
@@ -98,5 +102,13 @@ export function registerMovementHandlers(bot: Bot) {
 
   bot.hears(["Схід ➡️", "(Схід ➡️)"], async (ctx) => {
     await submitMove(bot, ctx, "EAST", false);
+  });
+
+  bot.hears(["⬆️ Вгору", "(⬆️ Вгору)"], async (ctx) => {
+    await submitMove(bot, ctx, "UP", false);
+  });
+
+  bot.hears(["⬇️ Вниз", "(⬇️ Вниз)"], async (ctx) => {
+    await submitMove(bot, ctx, "DOWN", false);
   });
 }

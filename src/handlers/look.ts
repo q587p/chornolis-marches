@@ -1,7 +1,7 @@
 import { Bot } from "grammy";
 import { actionDurationMs, performOrQueuePlayerAction } from "../services/actionQueue";
 import { getPlayerByTelegramId } from "../services/players";
-import { lightLocationCampfire, renderDepletedVegetationInspection, renderLocationBrief, renderLocationDetails, renderLocationFeatureInteraction, renderLocationFeatureInteractionByQuery, takeTorchFromLocationFeature } from "../services/locations";
+import { lightLocationCampfire, renderDepletedVegetationInspection, renderLocationBrief, renderLocationDetails, renderLocationFeatureInteraction, renderLocationFeatureInteractionByQuery, shakeTreeFeature, takeTorchFromLocationFeature } from "../services/locations";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { durationSecondsSuffix } from "../utils/durationText";
@@ -292,6 +292,25 @@ export function registerLookHandlers(bot: Bot) {
       const message = actionErrorMessage(error, "Не вдалося взяти факел.");
       await safeAnswerCallbackQuery(ctx, message);
       await replyToActionError(ctx, error, "Не вдалося взяти факел.", { replyFallback: false });
+    }
+  });
+
+  bot.callbackQuery(/^tree:shake:(\d+)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    try {
+      assertCanPerformPhysicalAction(player, "GATHER");
+      const text = await shakeTreeFeature(Number(ctx.match[1]), player.id);
+      await safeAnswerCallbackQuery(ctx);
+      await ctx.reply(text);
+    } catch (error) {
+      const message = actionErrorMessage(error, "Не вдалося потрусити дерево.");
+      await safeAnswerCallbackQuery(ctx, message);
+      await replyToActionError(ctx, error, "Не вдалося потрусити дерево.", { replyFallback: false });
     }
   });
 

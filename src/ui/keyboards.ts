@@ -22,13 +22,25 @@ type TargetListOptions = {
   showDisambiguators?: boolean;
 };
 
+function returnCallbackForTargetPage(options: TargetListOptions, page: number) {
+  return options.pageCallbackPrefix ? `${options.pageCallbackPrefix}:${page}` : undefined;
+}
+
+function targetPageSuffix(returnCallback: string) {
+  const match = returnCallback.match(/^targetPage:(brief|details):(\d+)$/);
+  return match ? `:${match[1]}:${match[2]}` : "";
+}
+
 export function buildMovementKeyboard(exits: any[]) {
   const keyboard = new InlineKeyboard();
   const north = exits.find((e) => e.direction === "NORTH");
+  const up = exits.find((e) => e.direction === "UP");
   const east = exits.find((e) => e.direction === "EAST");
   const south = exits.find((e) => e.direction === "SOUTH");
+  const down = exits.find((e) => e.direction === "DOWN");
   const west = exits.find((e) => e.direction === "WEST");
 
+  if (up) keyboard.text("⬆️ Вгору", "cmd:up").row();
   if (north) keyboard.text("⬆️ Північ", "cmd:north").row();
 
   if (west) keyboard.text("⬅️ Захід", "cmd:west");
@@ -37,6 +49,7 @@ export function buildMovementKeyboard(exits: any[]) {
   keyboard.row();
 
   if (south) keyboard.text("⬇️ Південь", "cmd:south").row();
+  if (down) keyboard.text("⬇️ Вниз", "cmd:down").row();
   return keyboard;
 }
 
@@ -109,14 +122,15 @@ export function buildAnonymousTargetKeyboard(target: Pick<TargetRef, "type" | "i
   return keyboard;
 }
 
-export function buildTargetActionKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet" | "canAttack" | "isAnimal">, again = false) {
+export function buildTargetActionKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet" | "canAttack" | "isAnimal">, again = false, returnCallback = "location:details") {
+  const pageSuffix = targetPageSuffix(returnCallback);
   const keyboard = new InlineKeyboard()
-    .text("👁 Глянути", `social:look:${target.type}:${target.id}:known`)
-    .text(again ? "🔎 Роздивитися ще раз" : "🔎 Роздивитися", `social:inspect:${target.type}:${target.id}:known`)
-    .text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:known`)
+    .text("👁 Глянути", `social:look:${target.type}:${target.id}:known${pageSuffix}`)
+    .text(again ? "🔎 Роздивитися ще раз" : "🔎 Роздивитися", `social:inspect:${target.type}:${target.id}:known${pageSuffix}`)
+    .text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:known${pageSuffix}`)
     .row();
 
-  if (target.canGreet) keyboard.text("💬 Привітати", `social:greet:${target.type}:${target.id}:known`);
+  if (target.canGreet) keyboard.text("💬 Привітати", `social:greet:${target.type}:${target.id}:known${pageSuffix}`);
   keyboard.text("🗣 Сказати", `targetSpeech:say:${target.type}:${target.id}:known`);
   keyboard.text("🤫 Прошепотіти", `targetSpeech:whisper:${target.type}:${target.id}:known`).row();
   for (const socialId of quickSocialsForTarget({ kind: target.type, isAnimal: Boolean(target.isAnimal), canGreet: target.canGreet })) {
@@ -124,7 +138,7 @@ export function buildTargetActionKeyboard(target: Pick<TargetRef, "type" | "id" 
     if (social) keyboard.text(social.label, `signal:${social.id}:${target.type}:${target.id}:known`);
   }
   keyboard.text("✨ Ще сигнали", `signalMenu:${target.type}:${target.id}:known`).row();
-  keyboard.text("↩️ Назад", "location:details");
+  keyboard.text("↩️ Назад", returnCallback);
   return keyboard;
 }
 
@@ -150,11 +164,12 @@ export function buildLocationSocialSignalKeyboard() {
   return keyboard.text("↩️ Назад", "character:back");
 }
 
-export function buildCorpseActionKeyboard(target: ResolvedTarget) {
-  const keyboard = new InlineKeyboard().text("🔎 Оглянути труп", `social:inspect:${target.kind}:${target.id}:known`).row();
-  keyboard.text("🤲 Підібрати", `social:pickup:${target.kind}:${target.id}`).row();
-  if (target.canFreshen) keyboard.text("🔪 Освіжувати", `social:freshen:${target.kind}:${target.id}:known`).row();
-  keyboard.text("↩️ Назад", "location:details").row();
+export function buildCorpseActionKeyboard(target: ResolvedTarget, returnCallback = "location:details") {
+  const pageSuffix = targetPageSuffix(returnCallback);
+  const keyboard = new InlineKeyboard().text("🔎 Оглянути труп", `social:inspect:${target.kind}:${target.id}:known${pageSuffix}`).row();
+  keyboard.text("🤲 Підібрати", `social:pickup:${target.kind}:${target.id}${pageSuffix}`).row();
+  if (target.canFreshen) keyboard.text("🔪 Освіжувати", `social:freshen:${target.kind}:${target.id}:known${pageSuffix}`).row();
+  keyboard.text("↩️ Назад", returnCallback);
   return keyboard;
 }
 
@@ -186,9 +201,11 @@ export function buildTargetListKeyboard(targets: TargetRef[], options: TargetLis
   const start = page * TARGETS_PER_PAGE;
   const pageTargets = targets.slice(start, start + TARGETS_PER_PAGE);
   const labels = options.showDisambiguators ? targetButtonLabels(targets) : targets.map(targetButtonLabel);
+  const returnCallback = returnCallbackForTargetPage(options, page);
+  const pageContext = returnCallback ? `:${options.pageCallbackPrefix?.endsWith(":brief") ? "brief" : "details"}:${page}` : "";
 
   for (const [index, target] of pageTargets.entries()) {
-    keyboard.text(labels[start + index] ?? target.label, `target:${target.type}:${target.id}`).row();
+    keyboard.text(labels[start + index] ?? target.label, `target:${target.type}:${target.id}${pageContext}`).row();
   }
 
   const freshenableCorpses = targets.filter((target) => target.type === "creature" && target.isCorpse && target.canFreshen);

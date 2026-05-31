@@ -5,7 +5,9 @@ require("ts-node/register");
 const {
   ADD_CREATURE_BATCH_SIZE,
   ADD_CREATURE_MAX_COUNT,
+  corpseDecayTicksForFreshness,
   parseAddCreatureArgs,
+  parseAddCreatureCorpseArgs,
   planAddCreatureBatches,
 } = require("../../src/services/adminCreatures");
 
@@ -27,6 +29,39 @@ assert.deepEqual(parseAddCreatureArgs("wolf forest_00_08 OLD"), {
   requestedCount: 1,
   age: "OLD",
 });
+
+assert.deepEqual(parseAddCreatureCorpseArgs("mouse"), {
+  speciesKey: "mouse",
+  locationArg: undefined,
+  requestedCount: 1,
+  age: "ADULT",
+  freshness: "fresh",
+});
+assert.deepEqual(parseAddCreatureCorpseArgs("rabbit forest_04_00 3 OLD decaying"), {
+  speciesKey: "rabbit",
+  locationArg: "forest_04_00",
+  requestedCount: 3,
+  age: "OLD",
+  freshness: "decaying",
+});
+assert.deepEqual(parseAddCreatureCorpseArgs("rabbit forest_04_00 3 OLD"), {
+  speciesKey: "rabbit",
+  locationArg: "forest_04_00",
+  requestedCount: 3,
+  age: "OLD",
+  freshness: "fresh",
+});
+assert.deepEqual(parseAddCreatureCorpseArgs("wolf 0,0,0 old"), {
+  speciesKey: "wolf",
+  locationArg: "0,0,0",
+  requestedCount: 1,
+  age: "ADULT",
+  freshness: "old",
+});
+
+assert.equal(corpseDecayTicksForFreshness(24, "fresh"), 24);
+assert.equal(corpseDecayTicksForFreshness(24, "decaying"), 12);
+assert.equal(corpseDecayTicksForFreshness(24, "old"), 1);
 
 assert.deepEqual(planAddCreatureBatches(1), {
   requestedCount: 1,

@@ -42,6 +42,10 @@ assertAlias("південь", { kind: "move", direction: "SOUTH" });
 assert.equal(parseAlias("пів"), null);
 assertAlias("йти на захід", { kind: "move", direction: "WEST" });
 assertAlias("/n", { kind: "move", direction: "NORTH" });
+assertAlias("/up", { kind: "move", direction: "UP" });
+assertAlias("вгору", { kind: "move", direction: "UP" });
+assertAlias("/down", { kind: "move", direction: "DOWN" });
+assertAlias("вниз", { kind: "move", direction: "DOWN" });
 assertAlias("вср", { kind: "move", direction: "INSIDE" });
 assertAlias("/inside", { kind: "move", direction: "INSIDE" });
 assertAlias("/enter", { kind: "move", direction: "INSIDE" });
@@ -108,6 +112,9 @@ assertAlias("взяти все", { kind: "pickup-target", target: "все" });
 assertAlias("підняти все", { kind: "pickup-target", target: "все" });
 assertAlias("підняти всі трупи", { kind: "pickup-target", target: "всі трупи" });
 assertAlias("підібрати хмиз", { kind: "pickup-target", target: "хмиз" });
+assertAlias("/shake_tree", { kind: "shake-tree" });
+assertAlias("потрусити дерево", { kind: "shake-tree" });
+assertAlias("струсити гілки", { kind: "shake-tree" });
 
 assertAlias("з'їсти ягоди", { kind: "use-item", item: "berries" });
 assertAlias("зʼїсти гриби", { kind: "use-item", item: "mushrooms" });
@@ -230,6 +237,7 @@ assert.ok(suggestAliasEntries("стат").map(formatAliasSuggestion).includes("�
 assert.ok(suggestAliasEntries("гриб").map(formatAliasSuggestion).some((suggestion) => suggestion.includes("(/use_mushrooms)")), "Expected formatted suggestions to include slash command for using mushrooms");
 assert.ok(suggestAliasEntries("навч").map(formatAliasSuggestion).some((suggestion) => suggestion.includes("(/sleep_tutorial)")), "Expected formatted tutorial suggestions to use clickable slash command");
 assert.ok(suggestAliasEntries("freshen al").map(formatAliasSuggestion).includes("freshen all (/freshen_all)"), "Expected formatted suggestions to include slash command for bulk freshening");
+assert.ok(suggestAliasEntries("потрус").map(formatAliasSuggestion).includes("потрусити дерево (/shake_tree)"), "Expected formatted suggestions to include slash command for tree shaking");
 assert.ok(suggestAliasInputs("усхмі").includes("усміх"), "Expected social suggestions to include усміх for a mistyped smile");
 assert.ok(suggestAliasInputs("посмі").includes("посміх"), "Expected social suggestions to include посміх");
 assert.ok(suggestAliasEntries("усхмі").map(formatAliasSuggestion).includes("усміх (/smile)"), "Expected formatted social suggestions to include slash command for smile");

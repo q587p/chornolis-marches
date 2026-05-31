@@ -1472,6 +1472,22 @@
     "isHidden": false
   },
   {
+    "fromKey": "meadow_10_07",
+    "toKey": "meadow_10_07_crooked_pine_crown",
+    "direction": "UP",
+    "label": "вгору, крива сосна",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "meadow_10_07_crooked_pine_crown",
+    "toKey": "meadow_10_07",
+    "direction": "DOWN",
+    "label": "вниз, сонячна прогалина",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
     "fromKey": "meadow_10_08",
     "toKey": "meadow_10_09",
     "direction": "NORTH",
@@ -1749,6 +1765,22 @@
     "direction": "WEST",
     "label": "захід",
     "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "meadow_11_07",
+    "toKey": "meadow_11_07_scratched_pine_crown",
+    "direction": "UP",
+    "label": "вгору, подряпана сосна",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "meadow_11_07_scratched_pine_crown",
+    "toKey": "meadow_11_07",
+    "direction": "DOWN",
+    "label": "вниз, полинова смуга",
+    "travelCost": 2,
     "isHidden": false
   },
   {

@@ -16,7 +16,7 @@ import { createDebugCampfire, ensureTorchResourceTypes } from "../services/fire"
 import { requireScribeAdmin } from "../services/adminAccess";
 import { adminSecretMatches } from "../services/adminSecret";
 import { syncChatBotCommandsForTelegramId } from "../services/telegramCommands";
-import { buildAdminFireReplyKeyboard, buildAdminMenuReplyKeyboard, buildAdminResourcesReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
+import { buildAdminCreaturesReplyKeyboard, buildAdminFireReplyKeyboard, buildAdminMenuReplyKeyboard, buildAdminResourcesReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { nextResourceAmount, parseAddResourceArgs, parseAdminInventoryResourceArgs } from "../services/adminResources";
 import { stopAllPlayerAuto } from "./auto";
 import { resetTutorialProgressForPlayer } from "../services/tutorial";
@@ -197,6 +197,7 @@ export const ADMIN_HELP_TEXT = [
   "",
   "Додавання у світ",
   "/addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD] — додати тварин; понад 50 створюється батчами, разова межа 500",
+  "/addCreatureCorpse <speciesKey> [locationKey|x,y,z] [count] [YOUNG|ADULT|OLD] [fresh|decaying|old] — додати трупи тварин; без місцини бере поточну, понад 50 створюється батчами, разова межа 500",
   "/addCreatureHelp — список speciesKey для тварин",
   "/addResource <resourceKey> [locationKey|x,y,z] [amount] — відновити ресурс у місцині; без місцини бере поточну, без кількості додає 1",
   "/addResourceHelp — список ключів ресурсів; /addResourse теж працює як запасний варіант",
@@ -255,6 +256,21 @@ export function registerAdminHandlers(bot: Bot) {
     });
   }
 
+  async function replyAdminCreaturesMenu(ctx: any) {
+    if (!(await requireScribeAdmin(ctx))) return;
+    await ctx.reply([
+      "🐾 Істоти",
+      "",
+      "Ключі видів: /addCreatureHelp.",
+      "Додати живих тварин: /addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD].",
+      "Додати трупи: /addCreatureCorpse <speciesKey> [locationKey|x,y,z] [count] [YOUNG|ADULT|OLD] [fresh|decaying|old].",
+      "Без місцини /addCreatureCorpse бере поточну місцину Писаря.",
+      "Тестові стани: /forceOld [speciesKey] [count], /cleanupCreature [speciesKey], /cleanupCreatures.",
+    ].join("\n"), {
+      reply_markup: buildAdminCreaturesReplyKeyboard(),
+    });
+  }
+
   async function replyTeleportMenu(ctx: any) {
     if (!(await requireScribeAdmin(ctx))) return;
     await ctx.reply([
@@ -282,12 +298,53 @@ export function registerAdminHandlers(bot: Bot) {
     });
   }
 
+  async function replyAddCreatureFormat(ctx: any) {
+    if (!(await requireScribeAdmin(ctx))) return;
+    await ctx.reply([
+      "➕ Додати тварин",
+      "",
+      "Формат: /addCreature <speciesKey> <locationKey|x,y,z> [count] [YOUNG|ADULT|OLD].",
+      "Ключі видів: /addCreatureHelp.",
+    ].join("\n"), {
+      reply_markup: buildAdminCreaturesReplyKeyboard(),
+    });
+  }
+
+  async function replyAddCreatureCorpseFormat(ctx: any) {
+    if (!(await requireScribeAdmin(ctx))) return;
+    await ctx.reply([
+      "🦴 Додати трупи",
+      "",
+      "Формат: /addCreatureCorpse <speciesKey> [locationKey|x,y,z] [count] [YOUNG|ADULT|OLD] [fresh|decaying|old].",
+      "Без місцини команда бере поточну місцину Писаря; без кількості додає 1.",
+      "Приклади: /addCreatureCorpse mouse; /addCreatureCorpse rabbit forest_04_00 3 OLD; /addCreatureCorpse wolf 0,0,0 old.",
+      "Ключі видів: /addCreatureHelp.",
+    ].join("\n"), {
+      reply_markup: buildAdminCreaturesReplyKeyboard(),
+    });
+  }
+
   bot.command(["adminMenu", "adminmenu"], replyAdminMenu);
   bot.hears(["🛠 Адмін меню", "Адмін меню", "🛠 Адмін меню (/adminMenu)", "Адмін меню (/adminMenu)"], replyAdminMenu);
   bot.hears(["🌿 Ресурси"], replyAdminResourcesMenu);
   bot.hears(["🔥 Вогонь"], replyAdminFireMenu);
+  bot.hears(["🐾 Істоти", "Істоти"], replyAdminCreaturesMenu);
   bot.hears(["🧭 Телепорт", "Телепорт", "🧭 Телепорт (/teleport)", "Телепорт (/teleport)"], replyTeleportMenu);
   bot.hears(["➕ Додати ресурс", "Додати ресурс", "➕ Додати ресурс (/addResource)", "Додати ресурс (/addResource)"], replyAddResourceFormat);
+  bot.hears(["🐾 Ключі істот", "Ключі істот"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+    await ctx.reply("Ключі видів тварин доступні через /addCreatureHelp.", { reply_markup: buildAdminCreaturesReplyKeyboard() });
+  });
+  bot.hears(["➕ Додати тварин", "Додати тварин"], replyAddCreatureFormat);
+  bot.hears(["🦴 Додати трупи", "Додати трупи"], replyAddCreatureCorpseFormat);
+  bot.hears(["🧪 Зістарити", "Зістарити"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+    await ctx.reply("Формат: /forceOld [speciesKey] [count]. Без виду бере тварин у поточній місцині.", { reply_markup: buildAdminCreaturesReplyKeyboard() });
+  });
+  bot.hears(["🧹 Прибрати тварину", "Прибрати тварину"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+    await ctx.reply("Формат: /cleanupCreature [speciesKey]. Без виду прибирає одну живу тварину у поточній місцині.", { reply_markup: buildAdminCreaturesReplyKeyboard() });
+  });
   bot.hears(["🦴 Падальний рів", "Падальний рів", "🦴 Падальний рів (/carcassQuest)", "Падальний рів (/carcassQuest)"], async (ctx) => {
     if (!(await requireScribeAdmin(ctx))) return;
     const state = await getGateHuntingSaturationState();

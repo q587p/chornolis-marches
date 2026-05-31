@@ -1,7 +1,7 @@
 ---
 id: UX-002
 title: Target pagination return context
-status: backlog
+status: testing
 type: chore
 area: ux
 priority: medium
@@ -38,3 +38,9 @@ This was observed around corpse target lists, but the same rule should apply to 
 - Opening a corpse from the last page and pressing `Back` after the list shrinks returns to the nearest valid page.
 - Player actions do not resurrect stale buttons for taken or decayed corpses.
 - The behavior is covered by a small callback/helper regression test if the target-list helper can be tested cheaply.
+
+## 0.13.23 Implementation Note
+
+- Target-list callbacks now carry the source list mode and page into target detail/action views.
+- The `↩️ Назад` button from a target or corpse action view returns through the same paginated `targetPage:*` callback, so rendering clamps naturally if the list shrank.
+- Added a helper regression that verifies page 2 target buttons preserve their page context and that action-view Back uses it.
