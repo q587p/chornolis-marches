@@ -86,6 +86,7 @@ assertAlias("речі", { kind: "inventory" });
 assertAlias("новини", { kind: "news" });
 assertAlias("час", { kind: "time" });
 assertAlias("/weather", { kind: "weather" });
+assertAlias("weather", { kind: "weather" });
 assertAlias("погода", { kind: "weather" });
 assertAlias("назад", { kind: "back" });
 assertAlias("сховати клавіатуру", { kind: "hide-keyboard" });
