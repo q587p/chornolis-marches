@@ -61,6 +61,7 @@ const configuredAutoAfkMinutes = optionalNumberEnv("AUTO_AFK_AFTER_MINUTES") ?? 
 const heraldBotToken = optionalStringEnv("HERALD_BOT_TOKEN");
 const configuredHeraldEnabled = optionalBooleanEnv("HERALD_ENABLED");
 const configuredHeraldPublishIntervalMs = optionalNumberEnv("HERALD_PUBLISH_INTERVAL_MS") ?? 30_000;
+const configuredHeraldStartupNoticeEnabled = optionalBooleanEnv("HERALD_STARTUP_NOTICE_ENABLED") ?? false;
 const publicBaseUrl = normalizeBaseUrl(optionalStringEnv("PUBLIC_BASE_URL") ?? "https://chornolis-marches.onrender.com");
 
 export const config = {
@@ -78,4 +79,6 @@ export const config = {
   heraldChannelId: optionalStringEnv("HERALD_CHANNEL_ID"),
   heraldAdminIds: optionalStringListEnv("HERALD_ADMIN_IDS"),
   heraldPublishIntervalMs: Math.max(1000, Math.floor(configuredHeraldPublishIntervalMs)),
+  heraldStartupNoticeEnabled: configuredHeraldStartupNoticeEnabled,
+  heraldStartupNoticeChatId: optionalStringEnv("HERALD_STARTUP_NOTICE_CHAT_ID"),
 };

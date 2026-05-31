@@ -6,6 +6,8 @@ import { registerHeraldHelpCommands, registerHeraldUnknownCommandFallback } from
 import { registerHeraldInfoCommands } from "../herald/infoCommands";
 import { registerHeraldNewsCommands } from "../herald/newsCommands";
 import { registerHeraldPublisherCommands, startHeraldPublisherLoop } from "../herald/publisher";
+import { publicationErrorMessage } from "../herald/publications";
+import { parseTelegramChannelId } from "../herald/safety";
 import { startHeraldHealthServer } from "../server/heraldHealthServer";
 
 const bot = new Bot(requireConfigValue(config.heraldBotToken, "HERALD_BOT_TOKEN"));
@@ -30,8 +32,46 @@ bot.catch((error) => {
   console.error("Herald bot error:", error);
 });
 
+function formatStartupNoticeTime(now = new Date()) {
+  return new Intl.DateTimeFormat("uk-UA", {
+    timeZone: "Europe/Kyiv",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(now);
+}
+
+function heraldStartupNoticeText() {
+  return [
+    "Канцелярія Межового Знаку знову на зв’язку.",
+    "",
+    "Печатки розкладено. Скриню вістей відчинено.",
+    `Режим: Herald. Час: ${formatStartupNoticeTime()}.`,
+  ].join("\n");
+}
+
+async function sendHeraldStartupNotice() {
+  if (!config.heraldStartupNoticeEnabled || !config.heraldStartupNoticeChatId) return;
+
+  try {
+    await bot.api.sendMessage(
+      parseTelegramChannelId(config.heraldStartupNoticeChatId),
+      heraldStartupNoticeText(),
+    );
+    console.log("Herald startup notice sent.");
+  } catch (error) {
+    console.warn("Herald startup notice failed:", publicationErrorMessage(error));
+  }
+}
+
 startHeraldHealthServer();
 startHeraldPublisherLoop(bot);
-bot.start().catch((error) => {
+bot.start({
+  onStart: () => {
+    void sendHeraldStartupNotice();
+  },
+}).catch((error) => {
   console.error("Herald bot polling failed:", error);
 });

@@ -54,6 +54,8 @@ Recommended:
 - `HERALD_CHANNEL_ID` — канал, куди Канцелярія публікує записи. Може бути username на кшталт `@channel_name` або numeric id.
 - `HERALD_ENABLED` — `true`/`false`. Якщо `false`, automatic publisher loop не стартує; ручні bot commands і health server лишаються runtime-поведінкою самого entrypoint.
 - `HERALD_PUBLISH_INTERVAL_MS` — інтервал publisher loop. Мінімально ефективне значення в конфігу: `1000`, дефолт: `30000`.
+- `HERALD_STARTUP_NOTICE_ENABLED` — `true`/`false`. Якщо `true`, Канцелярія після старту polling спробує надіслати коротке службове повідомлення в configured startup chat.
+- `HERALD_STARTUP_NOTICE_CHAT_ID` — chat id для startup notice. Краще ставити приватний/admin chat, а не публічний канал.
 - `PORT` — порт HTTP health server. Render задає його автоматично; локально дефолт `3000`.
 - `APP_VERSION` — fallback version label, якщо `package.json` не можна прочитати.
 
@@ -93,7 +95,8 @@ curl https://example.onrender.com/health
 3. Надайте йому право публікувати повідомлення в каналі.
 4. Встановіть `HERALD_CHANNEL_ID`.
 5. Встановіть `HERALD_ADMIN_IDS` для людей, які можуть preview/queue/post службові записи.
-6. Запустіть Web Service і перевірте `/ping` у приватному чаті з ботом.
+6. За потреби встановіть `HERALD_STARTUP_NOTICE_ENABLED=true` і `HERALD_STARTUP_NOTICE_CHAT_ID` на приватний/admin chat, щоб бачити restart/wake-up notice.
+7. Запустіть Web Service і перевірте `/ping` у приватному чаті з ботом.
 
 Якщо `HERALD_CHANNEL_ID` не задано, Канцелярія може відповідати на приватні команди, але publication loop не знатиме, куди нести записи.
 
