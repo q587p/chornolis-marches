@@ -10,7 +10,7 @@ const {
   worldDaypartForHour,
   worldTimeSnapshotFromAbsoluteMinute,
 } = require("../../src/data/worldClock");
-const { renderCurrentWorldTime } = require("../../src/services/calendar");
+const { renderCurrentWorldTime, renderWorldYearLine } = require("../../src/services/calendar");
 
 assert.equal(REAL_MS_PER_GAME_HOUR, 120_000);
 assert.equal(REAL_MS_PER_GAME_MINUTE, 2_000);
@@ -52,5 +52,11 @@ const rendered = renderCurrentWorldTime(start);
 assert.ok(rendered.includes("Коло Зеленого Шуму"));
 assert.ok(rendered.includes("17:00"));
 assert.ok(rendered.includes("Місяць:"));
+
+assert.ok(renderWorldYearLine(start.year).includes("587"));
+const nextYear = worldTimeSnapshotFromAbsoluteMinute(START_WORLD_ABSOLUTE_MINUTE + 364 * 24 * 60);
+assert.equal(nextYear.year, 588);
+assert.ok(renderWorldYearLine(nextYear.year).includes("588"));
+assert.ok(!renderWorldYearLine(nextYear.year).includes("587"));
 
 console.log("World time helpers OK");

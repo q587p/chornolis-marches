@@ -80,8 +80,12 @@ export function formatCurrentWorldYear() {
   return formatWorldYear(CURRENT_WORLD_YEAR);
 }
 
+export function renderWorldYearLine(year = CURRENT_WORLD_YEAR) {
+  return `${formatWorldYear(year)}.`;
+}
+
 export function renderCurrentWorldYearLine() {
-  return `${formatCurrentWorldYear()}.`;
+  return renderWorldYearLine(CURRENT_WORLD_YEAR);
 }
 
 function worldDaypartMood(snapshot: WorldTimeSnapshot) {
