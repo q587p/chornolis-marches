@@ -42,3 +42,7 @@ Audit the first ordinary locations after tutorial.
 ## Implementation Order
 
 Do after: `ONB-001-A`.
+
+## Progress Notes
+
+- `0.13.25`: direct feature inspection now has a two-layer flow. `look <feature>` / brief inspection uses the compact feature detail line and offers `Роздивитися`, while `examine <feature>` keeps the richer interaction text, feature actions and guide follow-ups.

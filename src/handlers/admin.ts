@@ -169,7 +169,21 @@ function splitTeleportArgs(raw: string) {
   return { playerArg: "", locationArg: input };
 }
 
+const ADMIN_MENU_TEXT_COMMAND = slashlessCommandPattern(["adminMenu", "adminmenu"]);
+const ADMIN_HELP_TEXT_COMMAND = slashlessCommandPattern(["adminHelp", "adminhelp"]);
+const ADMIN_SET_TEXT_COMMAND = slashlessCommandPattern(["adminSet", "adminset"]);
+const ADD_CAMPFIRE_TEXT_COMMAND = slashlessCommandPattern(["addCampfire", "addcampfire"]);
 const TELEPORT_TEXT_COMMAND = slashlessCommandPattern(["teleport"]);
+const TUTORIAL_RESET_TEXT_COMMAND = slashlessCommandPattern(["tutorialReset", "tutorialreset"]);
+const RESET_TEXT_COMMAND = slashlessCommandPattern(["reset"]);
+const ADD_TORCH_TEXT_COMMAND = slashlessCommandPattern(["addTorch", "addtorch"]);
+const ADD_TWIGS_TEXT_COMMAND = slashlessCommandPattern(["addTwigs", "addtwigs"]);
+const ADD_RESOURCE_HELP_TEXT_COMMAND = slashlessCommandPattern(["addResourceHelp", "addresourcehelp", "addResourseHelp", "addresoursehelp"]);
+const ADD_RESOURCE_TEXT_COMMAND = slashlessCommandPattern(["addResource", "addresource", "addResourse", "addresourse"]);
+const RESTORE_BERRIES_TEXT_COMMAND = slashlessCommandPattern(["restoreBerries", "restoreberries"]);
+const RESTORE_HERBS_TEXT_COMMAND = slashlessCommandPattern(["restoreHerbs", "restoreherbs"]);
+const RESTORE_MUSHROOMS_TEXT_COMMAND = slashlessCommandPattern(["restoreMushrooms", "restoremushrooms"]);
+const CARCASS_QUEST_TEXT_COMMAND = slashlessCommandPattern(["carcassQuest", "carcassquest"]);
 
 export const ADMIN_HELP_TEXT = [
   "🛠 Команди писарів Порубіжжя",
@@ -329,6 +343,7 @@ export function registerAdminHandlers(bot: Bot) {
   }
 
   bot.command(["adminMenu", "adminmenu"], replyAdminMenu);
+  bot.hears(ADMIN_MENU_TEXT_COMMAND, replyAdminMenu);
   bot.hears(["🛠 Адмін меню", "Адмін меню", "🛠 Адмін меню (/adminMenu)", "Адмін меню (/adminMenu)"], replyAdminMenu);
   bot.hears(["🌿 Ресурси"], replyAdminResourcesMenu);
   bot.hears(["🔥 Вогонь"], replyAdminFireMenu);
@@ -379,10 +394,10 @@ export function registerAdminHandlers(bot: Bot) {
     return `Стан: ${state.active ? "припинено / поки досить" : "активно / заклик діє"}; override=${state.manualOverride ?? "auto"}; внесків=${state.contributionTotal}; здобичі поруч=${state.preyPressure}; вибитих рослинних місць=${state.depletedSignals}.`;
   }
 
-  bot.command(["carcassQuest", "carcassquest"], async (ctx) => {
+  async function runCarcassQuestCommand(ctx: any, rawMode = String(ctx.match ?? "")) {
     if (!(await requireScribeAdmin(ctx))) return;
 
-    const mode = String(ctx.match ?? "").trim().toLocaleLowerCase("uk-UA");
+    const mode = rawMode.trim().toLocaleLowerCase("uk-UA");
     if (mode !== "start" && mode !== "stop") {
       const state = await getGateHuntingSaturationState();
       await ctx.reply([
@@ -420,9 +435,15 @@ export function registerAdminHandlers(bot: Bot) {
       "",
       carcassQuestStateLine(result.state),
     ].join("\n"));
-  });
+  }
+  bot.command(["carcassQuest", "carcassquest"], (ctx) => runCarcassQuestCommand(ctx));
+  bot.hears(CARCASS_QUEST_TEXT_COMMAND, (ctx) => runCarcassQuestCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
 
   bot.command(["adminHelp", "adminhelp"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+    await ctx.reply(ADMIN_HELP_TEXT);
+  });
+  bot.hears(ADMIN_HELP_TEXT_COMMAND, async (ctx) => {
     if (!(await requireScribeAdmin(ctx))) return;
     await ctx.reply(ADMIN_HELP_TEXT);
   });
@@ -431,10 +452,10 @@ export function registerAdminHandlers(bot: Bot) {
     await ctx.reply(ADMIN_HELP_TEXT);
   });
 
-  bot.command(["adminSet", "adminset"], async (ctx) => {
+  async function runAdminSetCommand(ctx: any, rawPassword = String(ctx.match ?? "").trim()) {
     if (!ctx.from) return;
 
-    const password = String(ctx.match ?? "").trim();
+    const password = rawPassword;
     if (!config.adminSetSecret) {
       await ctx.reply("Писарський секрет Порубіжжя не налаштовано для цього середовища.");
       return;
@@ -457,7 +478,10 @@ export function registerAdminHandlers(bot: Bot) {
     await logEvent("SYSTEM", "Scribe access granted", `player=${player.id}; telegramId=${ctx.from.id}`);
     if (ctx.chat?.id) await syncChatBotCommandsForTelegramId(bot.api, ctx.chat.id, ctx.from.id);
     await ctx.reply("Писарський доступ Порубіжжя надано. Тепер доступні /adminMenu і /adminHelp.");
-  });
+  }
+
+  bot.command(["adminSet", "adminset"], (ctx) => runAdminSetCommand(ctx));
+  bot.hears(ADMIN_SET_TEXT_COMMAND, (ctx) => runAdminSetCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
 
   async function runAddCampfireCommand(ctx: any, rawTarget = String(ctx.match ?? "").trim()) {
     if (!(await requireScribeAdmin(ctx))) return;
@@ -472,6 +496,7 @@ export function registerAdminHandlers(bot: Bot) {
   }
 
   bot.command("addCampfire", (ctx) => runAddCampfireCommand(ctx));
+  bot.hears(ADD_CAMPFIRE_TEXT_COMMAND, (ctx) => runAddCampfireCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
   bot.hears(["🔥 Додати вогнище", "Додати вогнище", "🔥 Додати вогнище (/addCampfire)", "Додати вогнище (/addCampfire)"], (ctx) => runAddCampfireCommand(ctx, ""));
 
   async function runTeleportCommand(ctx: any, raw = String(ctx.match ?? "").trim()) {
@@ -508,10 +533,10 @@ export function registerAdminHandlers(bot: Bot) {
   bot.command("teleport", (ctx) => runTeleportCommand(ctx));
   bot.hears(TELEPORT_TEXT_COMMAND, (ctx) => runTeleportCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
 
-  bot.command(["tutorialReset", "tutorialreset"], async (ctx) => {
+  async function runTutorialResetCommand(ctx: any, rawTarget = String(ctx.match ?? "").trim()) {
     if (!(await requireScribeAdmin(ctx))) return;
 
-    const player = await resolvePlayerForAdmin(ctx, String(ctx.match ?? "").trim());
+    const player = await resolvePlayerForAdmin(ctx, rawTarget);
     if (!player) return;
     const scribe = await resolvePlayerForAdmin(ctx, "");
     const reset = await resetTutorialProgressForPlayer(player.id, scribe?.id);
@@ -534,7 +559,10 @@ export function registerAdminHandlers(bot: Bot) {
         targetKeyboard ? { reply_markup: targetKeyboard } : undefined
       ).catch(() => undefined);
     }
-  });
+  }
+
+  bot.command(["tutorialReset", "tutorialreset"], (ctx) => runTutorialResetCommand(ctx));
+  bot.hears(TUTORIAL_RESET_TEXT_COMMAND, (ctx) => runTutorialResetCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
 
   async function runAddTorchCommand(ctx: any, rawTarget = String(ctx.match ?? "").trim()) {
     if (!(await requireScribeAdmin(ctx))) return;
@@ -549,6 +577,7 @@ export function registerAdminHandlers(bot: Bot) {
   }
 
   bot.command("addTorch", (ctx) => runAddTorchCommand(ctx));
+  bot.hears(ADD_TORCH_TEXT_COMMAND, (ctx) => runAddTorchCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
   bot.hears(["🕯 Додати факел", "Додати факел", "🕯 Додати факел (/addTorch)", "Додати факел (/addTorch)"], (ctx) => runAddTorchCommand(ctx, ""));
 
   async function runAddTwigsCommand(ctx: any, rawTarget = String(ctx.match ?? "").trim()) {
@@ -564,6 +593,7 @@ export function registerAdminHandlers(bot: Bot) {
   }
 
   bot.command("addTwigs", (ctx) => runAddTwigsCommand(ctx));
+  bot.hears(ADD_TWIGS_TEXT_COMMAND, (ctx) => runAddTwigsCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
   bot.hears(["🪵 Додати хмиз", "Додати хмиз", "🪵 Додати хмиз (/addTwigs)", "Додати хмиз (/addTwigs)"], (ctx) => runAddTwigsCommand(ctx, ""));
 
   async function replyAddResourceHelp(ctx: any) {
@@ -620,11 +650,16 @@ export function registerAdminHandlers(bot: Bot) {
   }
 
   bot.command(["addResourceHelp", "addresourcehelp", "addResourseHelp", "addresoursehelp"], replyAddResourceHelp);
+  bot.hears(ADD_RESOURCE_HELP_TEXT_COMMAND, replyAddResourceHelp);
   bot.hears(["🌿 Ключі ресурсів", "Ключі ресурсів", "🌿 Ключі ресурсів (/addResourceHelp)", "Ключі ресурсів (/addResourceHelp)"], replyAddResourceHelp);
   bot.command(["addResource", "addresource", "addResourse", "addresourse"], (ctx) => runAddResourceCommand(ctx));
   bot.command(["restoreBerries", "restoreberries"], (ctx) => runAddResourceCommand(ctx, "berries"));
   bot.command(["restoreHerbs", "restoreherbs"], (ctx) => runAddResourceCommand(ctx, "herbs"));
   bot.command(["restoreMushrooms", "restoremushrooms"], (ctx) => runAddResourceCommand(ctx, "mushrooms"));
+  bot.hears(ADD_RESOURCE_TEXT_COMMAND, (ctx) => runAddResourceCommand(ctx, "", String(ctx.match?.[1] ?? "")));
+  bot.hears(RESTORE_BERRIES_TEXT_COMMAND, (ctx) => runAddResourceCommand(ctx, "berries", String(ctx.match?.[1] ?? "")));
+  bot.hears(RESTORE_HERBS_TEXT_COMMAND, (ctx) => runAddResourceCommand(ctx, "herbs", String(ctx.match?.[1] ?? "")));
+  bot.hears(RESTORE_MUSHROOMS_TEXT_COMMAND, (ctx) => runAddResourceCommand(ctx, "mushrooms", String(ctx.match?.[1] ?? "")));
   bot.hears(["🍓 Додати ягоди", "Додати ягоди", "🍓 Додати ягоди (/restoreBerries)", "Додати ягоди (/restoreBerries)"], (ctx) => runAddResourceCommand(ctx, "berries", ""));
   bot.hears(["🌱 Додати трави", "Додати трави", "🌱 Додати трави (/restoreHerbs)", "Додати трави (/restoreHerbs)"], (ctx) => runAddResourceCommand(ctx, "herbs", ""));
   bot.hears(["🍄 Додати гриби", "Додати гриби", "🍄 Додати гриби (/restoreMushrooms)", "Додати гриби (/restoreMushrooms)"], (ctx) => runAddResourceCommand(ctx, "mushrooms", ""));
@@ -737,12 +772,12 @@ export function registerAdminHandlers(bot: Bot) {
     await ctx.reply(lines.join("\n"));
   }
 
-  bot.command("reset", async (ctx) => {
+  async function requestAdminResetCommand(ctx: any, rawMode = String(ctx.match ?? "")) {
     if (!(await requireScribeAdmin(ctx))) return;
 
     const userId = ctx.from?.id;
     if (!userId) return;
-    const mode = parseAdminResetMode(String(ctx.match ?? ""));
+    const mode = parseAdminResetMode(rawMode);
 
     if (!mode) {
       await ctx.reply(resetModePromptText(), { reply_markup: resetModeKeyboard(userId) });
@@ -750,7 +785,10 @@ export function registerAdminHandlers(bot: Bot) {
     }
 
     await ctx.reply(resetConfirmationText(mode), { reply_markup: resetConfirmationKeyboard(mode, userId) });
-  });
+  }
+
+  bot.command("reset", (ctx) => requestAdminResetCommand(ctx));
+  bot.hears(RESET_TEXT_COMMAND, (ctx) => requestAdminResetCommand(ctx, String(ctx.match?.[1] ?? "")));
 
   bot.callbackQuery(/^reset:(choose|confirm|cancel):(world|stats|full):(\d+)$/, async (ctx) => {
     const action = ctx.match[1];

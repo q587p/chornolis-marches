@@ -17,6 +17,9 @@ import { maybePerformPlayerAutoSignal } from "../services/socialAutonomy";
 import { standPlayer } from "../services/posture";
 import { buildAutoConfirmKeyboard } from "../ui/keyboards";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
+import { slashlessCommandPattern } from "../utils/slashlessCommands";
+
+const AUTO_STOP_TEXT_COMMAND = slashlessCommandPattern(["autoStop", "autostop", "auto_stop"]);
 import { isTutorialLocation } from "../services/tutorial";
 import { notifyPlayerObservers, playerRestStartObserverText, playerStandObserverText } from "../services/playerVisibility";
 
@@ -569,11 +572,14 @@ export function registerAutoHandlers(bot: Bot) {
     });
   });
 
-  bot.command(["autoStop", "autostop", "auto_stop"], async (ctx) => {
+  async function stopAutoCommand(ctx: any) {
     if (!ctx.from) return;
     const stopped = await disablePlayerAuto(ctx.from.id);
     await ctx.reply(stopped ? "⏹ Авто-режим зупинено." : "⏹ Авто-режим не був увімкнений.", { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
-  });
+  }
+
+  bot.command(["autoStop", "autostop", "auto_stop"], stopAutoCommand);
+  bot.hears(AUTO_STOP_TEXT_COMMAND, stopAutoCommand);
 
   bot.hears("⏹ Стоп", async (ctx) => {
     if (!ctx.from) return;

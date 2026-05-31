@@ -668,10 +668,10 @@ export function registerPlayerHandlers(bot: Bot) {
       const player = await getPlayerByTelegramId(ctx.from.id);
       if (!player?.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start", { reply_markup: buildMainReplyKeyboard(false) }));
 
-      const view = await renderLocationFeatureInteractionByQuery(player.currentLocationId, player.id, arg, "brief");
+      const view = await renderLocationFeatureInteractionByQuery(player.currentLocationId, player.id, arg, "brief", "brief");
       if (view) {
         await rememberTutorialCommandHintIfInTutorial(player.id, "examine", player.currentLocationId);
-        noteKnownMessage(await ctx.reply(view.text, { reply_markup: view.keyboard }));
+        noteKnownMessage(await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard }));
         await sendFeatureFollowups((text, options) => ctx.reply(text, options), view);
         return;
       }

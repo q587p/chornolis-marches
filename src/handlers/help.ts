@@ -4,6 +4,9 @@ import { isPlayerAutoEnabled } from "./auto";
 import { getPlayerByTelegramId } from "../services/players";
 import { hasCompletedTutorial } from "../services/tutorial";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
+import { slashlessCommandPattern } from "../utils/slashlessCommands";
+
+const COMMANDS_TEXT_COMMAND = slashlessCommandPattern(["commands"]);
 
 export const HELP_TEXT = [
   "🧭 <b>Що робити в Порубіжжі Чорнолісу</b>",
@@ -238,6 +241,7 @@ export async function sendCommands(ctx: any) {
 export function registerHelpHandlers(bot: Bot) {
   bot.command("help", sendHelp);
   bot.command("commands", sendCommands);
+  bot.hears(COMMANDS_TEXT_COMMAND, sendCommands);
   bot.callbackQuery(/^commands:page:(\d+)$/, async (ctx) => {
     await safeAnswerCallbackQuery(ctx);
     await editCommandsPage(ctx, Number(ctx.match[1]));
