@@ -27,6 +27,7 @@ Allow safe testing of dawn/day/dusk/night, moon phases and weather without waiti
 
 - Add scribe/admin-only readout for exact world minute, date, clock, daypart, moon and weather.
 - Optional controlled setters such as `/timeSet`, `/weatherSet` only behind existing admin/scribe checks.
+- Keep `/reset world` and `/reset full` aligned with the world-clock storage task: both reset time/weather back to the starter state, while `/reset stats` leaves them untouched.
 - Leave audit events for setters.
 - Do not expose raw controls to ordinary players.
 
@@ -34,6 +35,7 @@ Allow safe testing of dawn/day/dusk/night, moon phases and weather without waiti
 
 - QA can force dusk/night/full moon/storm cases safely.
 - Dangerous commands are restricted and audited.
+- Reset behavior is explicit: world/full reset returns the clock to year 587, `Коло Зеленого Шуму`, day 17, 17:00; stats reset does not.
 - Normal `/time` remains atmospheric.
 
 ## Implementation Order

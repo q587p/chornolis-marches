@@ -38,6 +38,12 @@ START_ABSOLUTE_MINUTE = (((5 - 1) * 28 + (17 - 1)) * 24 + 17) * 60
 START_ABSOLUTE_MINUTE = 185_340
 ```
 
+Scribe/admin reset behavior should preserve this as the canonical start:
+
+- `/reset world` resets the internal world clock and weather state back to the starter timestamp/state.
+- `/reset full` does the same as part of full world reset.
+- `/reset stats` does not change world time.
+
 ## Advancement Rule
 
 World time advances by elapsed real milliseconds as a rate only:

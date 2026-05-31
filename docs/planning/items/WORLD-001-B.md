@@ -34,6 +34,8 @@ Persist the internal world clock so deploys/restarts do not reset day/night, moo
 - Build passes.
 - Default world has a valid internal clock.
 - The stored clock survives process restart.
+- Scribe/admin `/reset world` and `/reset full` reset the stored clock back to the starter timestamp.
+- `/reset stats` does not change world-clock state.
 - No unrelated schema churn.
 - No package version changes.
 
