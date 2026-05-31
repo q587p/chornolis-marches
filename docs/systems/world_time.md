@@ -104,7 +104,13 @@ Do not use `Date.getHours()`, server timezone, player timezone or real-world cal
 - `/timeSet` and `/weatherSet` let scribes force QA cases such as dusk, night, full moon and storm without waiting.
 - Brief `/look` consumes the shared visibility service instead of directly checking local light.
 
-Deeper visibility reduction, darkness copy and ordinary sleep remain later `0.14.x` slices.
+`0.14.5` makes darkness affect player-facing visibility:
+
+- Brief and detailed location views reduce descriptions, nearby beings, ground objects, resources and track hints when light is dim/dark.
+- `/track` checks visibility before revealing track lines.
+- Darkness copy remains diegetic; raw light scores stay in scribe/admin debug surfaces.
+
+Feature-specific darkness copy and ordinary sleep remain later `0.14.x` slices.
 
 ## Out of Scope
 

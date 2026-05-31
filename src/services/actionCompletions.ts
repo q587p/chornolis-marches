@@ -47,6 +47,7 @@ import { dropInventoryResourceDetailed, dropInventoryResourcesDetailed, useInven
 import { dropObserverText, recordVisibleItemAction } from "./visibleItemActions";
 import { campfireRelightReplyOptionsAfterTwigs } from "../ui/fireKeyboards";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
+import { visibilityPresenceText, visibilityRulesForLocation } from "./visibility";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
@@ -1287,6 +1288,7 @@ async function completeTrack(bot: Bot, action: WorldAction) {
   const now = new Date();
   await prisma.worldTrack.deleteMany({ where: { expiresAt: { lt: now } } });
   await spendPlayerStamina(bot, player.id, "TRACK", chatId);
+  const visibility = await visibilityRulesForLocation(player.currentLocationId, "details");
 
   const tracks = await prisma.worldTrack.findMany({
     where: {
@@ -1300,6 +1302,11 @@ async function completeTrack(bot: Bot, action: WorldAction) {
   await setActionStatus(action, "DONE");
 
   if (!chatId) return;
+  if (tracks.length && !visibility.showTracks) {
+    await bot.api.sendMessage(chatId, `👣 ${visibilityPresenceText(visibility, "tracks")}`);
+    return;
+  }
+
   if (!tracks.length) {
     await bot.api.sendMessage(chatId, "👣 Ви вдивляєтесь у землю й траву, але свіжих слідів не знаходите.");
     return;

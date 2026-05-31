@@ -67,6 +67,30 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.14.5 - Darkness visibility reduction - 12026-05-31
+
+### Added
+
+- Added shared darkness copy helpers for obscured location descriptions, nearby presence, ground objects, resources and tracks.
+- Added focused visibility tests for darkness rules and representative darkness copy.
+
+### Changed
+
+- Brief and detailed location rendering now reduce long descriptions, nearby target names/buttons, ground object pickup buttons, resource details and track hints when visibility is dim or dark without local light.
+- `/track` completion now checks the same visibility helper before revealing track details.
+- Local active light or clear enough natural light restores normal location detail.
+- Updated visibility/world-time docs and planning items for the `VIS-001-B/C/D/F` slice.
+- Bumped package metadata to `0.14.5`.
+
+### Validation
+
+- Ran `node scripts/test/world-time.cjs`.
+- Ran `npm run planning:export`.
+- Ran `npm test`.
+- Ran `npm run build`.
+
+---
+
 ## 0.14.4 - Visibility debug foundation - 12026-05-31
 
 ### Added

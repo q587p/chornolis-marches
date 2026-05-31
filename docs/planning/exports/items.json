@@ -2577,7 +2577,7 @@
   {
     "id": "VIS-001-B",
     "title": "Hide location details in darkness",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "visibility",
     "priority": "high",
@@ -2595,7 +2595,7 @@
   {
     "id": "VIS-001-C",
     "title": "Nearby beings visibility in darkness",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "visibility",
     "priority": "high",
@@ -2613,7 +2613,7 @@
   {
     "id": "VIS-001-D",
     "title": "Track visibility gate",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "visibility",
     "priority": "medium",
@@ -2649,7 +2649,7 @@
   {
     "id": "VIS-001-F",
     "title": "Darkness copy audit",
-    "status": "next",
+    "status": "testing",
     "type": "content",
     "area": "visibility",
     "priority": "medium",

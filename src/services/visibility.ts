@@ -12,27 +12,50 @@ export type VisibilityRules = {
   showResourceDetails: boolean;
 };
 
-function canSeeBriefDetails(light: LightSnapshot) {
+function canSeeDetails(light: LightSnapshot) {
   return light.hasLocalLight || light.level === "bright" || light.level === "clear";
 }
 
+export function visibilityDarknessText(rules: VisibilityRules) {
+  if (rules.light.level === "dim") {
+    return "Присмерк краде дрібні обриси. Видно достатньо, щоб не збитися зі стежки, але не все відкривається з першого погляду.";
+  }
+  return "Темрява стискає погляд. Без світла місцина лишає тільки найближчі обриси й тіні.";
+}
+
+export function visibilityPresenceText(rules: VisibilityRules, kind: "nearby" | "ground" | "tracks" | "resources" = "nearby") {
+  if (kind === "ground") return rules.light.level === "dim"
+    ? "На землі щось темніє, та присмерк не дає розібрати певно."
+    : "На землі може щось лежати, але без світла це радше тінь, ніж знахідка.";
+  if (kind === "tracks") return rules.light.level === "dim"
+    ? "Сліди тут є, але присмерк змиває найтонші риски."
+    : "У темряві ви не розрізняєте дрібних слідів.";
+  if (kind === "resources") return rules.light.level === "dim"
+    ? "Рослинність поруч є, але присмерк плутає ягоди, листя й трави."
+    : "Без світла важко відрізнити корисне від темної плями в листі.";
+  return rules.light.level === "dim"
+    ? "Щось може бути поруч, але присмерк не дає назвати це напевно."
+    : "Щось може бути поруч, але без світла важко сказати напевно.";
+}
+
 export function visibilityRulesFromLight(light: LightSnapshot, mode: VisibilityMode): VisibilityRules {
+  const showDetails = canSeeDetails(light);
+
   if (mode === "details") {
     return {
       light,
-      showLocationDescription: true,
+      showLocationDescription: showDetails,
       showFeatures: true,
-      showNearbyDetails: true,
-      showTracks: true,
-      showGroundObjects: true,
-      showResourceDetails: true,
+      showNearbyDetails: showDetails,
+      showTracks: showDetails,
+      showGroundObjects: showDetails,
+      showResourceDetails: showDetails,
     };
   }
 
-  const showDetails = canSeeBriefDetails(light);
   return {
     light,
-    showLocationDescription: true,
+    showLocationDescription: showDetails,
     showFeatures: true,
     showNearbyDetails: showDetails,
     showTracks: showDetails,
