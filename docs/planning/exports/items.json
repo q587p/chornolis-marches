@@ -1747,7 +1747,7 @@
   {
     "id": "QA-001",
     "title": "0.13 first-session closure smoke",
-    "status": "next",
+    "status": "testing",
     "type": "qa",
     "area": "onboarding",
     "priority": "high",
@@ -2197,6 +2197,25 @@
     ],
     "exports": {},
     "file": "docs/planning/items/SURV-001-E.md"
+  },
+  {
+    "id": "SURV-001-F",
+    "title": "Beginner return command-menu eligibility",
+    "status": "backlog",
+    "type": "polish",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "respawn",
+      "telegram",
+      "balance",
+      "beginner"
+    ],
+    "depends_on": [
+      "SURV-001-E"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SURV-001-F.md"
   },
   {
     "id": "TECH-001",

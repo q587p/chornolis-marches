@@ -9,6 +9,28 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.27 - Core loop closure audit and attack misses - 12026-05-31
+
+### Added
+
+- Added the `0.13` first-session closure audit report with a live-smoke script for onboarding, tutorial dream, first waking locations, `/respawn`, AFK/end-session guards and scribe support checks.
+- Added the final `QA-001` planning note update for closing the Core Loop & Onboarding Stability line before starting `0.14.x`.
+- Added shared attack-hit rules so player, NPC and creature attacks can miss through the same layer.
+
+### Changed
+
+- Updated near-term planning to treat `0.13.x` as ready for one final live Telegram smoke after deployment instead of continuing to absorb new systems.
+- Attacks against mice now miss 20% of the time, and attacks against rabbits miss 40% of the time. A miss still spends stamina, counts as an attempted creature attack where applicable and marks the location as recently dangerous, but leaves the target alive for a later attempt if it stays nearby.
+- Border marker ecology text now avoids repeating the "зарубки" image in every count and separates recent births/deaths from their causes.
+
+### Validation
+
+- Ran `npm run planning:export`.
+- Ran `npm run build`.
+- Ran `npm test`.
+
+---
+
 ## 0.13.26 - Queued inventory, firewood upkeep and 0.14 planning - 12026-05-31
 
 ### Added

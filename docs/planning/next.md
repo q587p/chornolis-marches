@@ -14,7 +14,7 @@ See also: `docs/planning/0.13-closure-and-0.14-transition.md`.
 
 ## Finish 0.13.x
 
-- QA-001: run the first-session closure smoke before starting the next minor line.
+- QA-001: the repo-backed first-session closure audit is recorded; run one live Telegram smoke after the `0.13.26` deployment, then start the next minor line if no hard blocker appears.
 - REL-001: keep release/patch work on a separate branch with a PR into `main`, including summary, validation and risk notes.
 - Small onboarding/help/feature-inspection copy fixes discovered during the smoke pass are acceptable.
 - Planning status cleanup for already implemented and tested 0.13 items is acceptable.
