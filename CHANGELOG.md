@@ -7,6 +7,39 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.14.2 - Tutorial polish and visible world-time beats - 12026-05-31
+
+### Added
+
+- Added compact heartbeat notices for internal daypart changes, so dawn, day, dusk and night announce that the world is getting lighter or darker before full visibility penalties arrive.
+- Added wrong-keyboard-layout suggestions for common mistyped commands, so inputs such as `[nj` can suggest the intended Ukrainian command.
+- Added pagination for prepared onboarding names, replacing one oversized list and button wall with compact pages.
+- Added a future theft/hiding design note and planning items while keeping implementation deferred behind visibility and observation foundations.
+
+### Changed
+
+- Kept tutorial foraging reliable by refilling dream berries and herbs on location render, gather-menu render and gather completion, so one player cannot exhaust the lesson for another.
+- Kept `Зручна лавка` as a fast-rest tutorial feature without raising max stamina; extra stamina remains reserved for `Жар легкого перепочинку`.
+- Protected the tutorial rest return path so returning from the deep-rest fire preserves stamina instead of replaying the one-third stamina lesson.
+- Moved the tutorial-completion button surface from the fox-observation lesson to the safety room, `Затишок останнього кроку`, and recorded that the surface should move forward again as new final tutorial rooms appear.
+- Cleaned up direct tutorial voice formatting so Сон/Дрімота lines use blockquote-style presentation where Telegram supports HTML instead of inline `каже: «...»` text.
+- Updated world-time docs to clarify that chronicle Kyiv grouping is display-only, weather display/simulation remains deferred, and stats reset must not reset the internal world clock.
+
+### Validation
+
+- Ran `npm run planning:export`.
+- Ran `node scripts/test/character-names.cjs`.
+- Ran `node scripts/test/world-time.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/tutorial-foraging.cjs`.
+- Ran `node scripts/test/world-seed.mjs`.
+- Ran `node scripts/test/posture.cjs`.
+- Ran `node scripts/test/tutorial-voices.cjs`.
+- Ran `node scripts/test/hunger-cues.cjs`.
+- Ran `npm test`.
+- Ran `npm run build`.
+- Ran `git diff --check`.
+
 ---
 
 ## 0.14.1 - Stored internal world clock - 12026-05-31
