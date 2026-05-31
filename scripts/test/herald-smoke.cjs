@@ -4,6 +4,7 @@ require("ts-node/register");
 
 const { parseHeraldAdminIds, isHeraldAdminId } = require("../../src/herald/admin");
 const { formatHeraldPublicationMessage } = require("../../src/herald/format");
+const { formatHeraldWhoami } = require("../../src/herald/help");
 const {
   heraldGatheringLine,
   heraldPracticePhrase,
@@ -47,6 +48,29 @@ assert.equal(isHeraldAdminId(123, admins), true);
 assert.equal(isHeraldAdminId("456", admins), true);
 assert.equal(isHeraldAdminId(789, admins), false);
 assert.equal(isHeraldAdminId(undefined, admins), false);
+
+const whoami = formatHeraldWhoami({
+  telegramUserId: 123456789,
+  username: "q587p",
+  chatId: -1001234567890,
+  chatType: "supergroup",
+  threadId: 42,
+});
+assert.match(whoami, /Канцелярія впізнала вашу печатку\./);
+assert.match(whoami, /Telegram user ID: 123456789/);
+assert.match(whoami, /Username: @q587p/);
+assert.match(whoami, /Chat ID: -1001234567890/);
+assert.match(whoami, /Chat type: supergroup/);
+assert.match(whoami, /Thread ID: 42/);
+assert.doesNotMatch(whoami, /HERALD_BOT_TOKEN|DATABASE_URL|ADMIN_SET_SECRET/);
+
+const privateWhoami = formatHeraldWhoami({
+  telegramUserId: 12,
+  chatId: 12,
+  chatType: "private",
+});
+assert.match(privateWhoami, /Username: немає/);
+assert.doesNotMatch(privateWhoami, /Thread ID:/);
 
 assert.equal(parseTelegramChannelId("-1001234567890"), -1001234567890);
 assert.equal(parseTelegramChannelId(" @mezhovyi_znak "), "@mezhovyi_znak");

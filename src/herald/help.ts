@@ -7,10 +7,18 @@ type HeraldCommandInfo = {
   adminOnly?: boolean;
 };
 
+type HeraldWhoamiIdentity = {
+  telegramUserId?: number | string;
+  username?: string;
+  chatId?: number | string;
+  chatType?: string;
+  threadId?: number;
+};
+
 export const HERALD_COMMANDS: HeraldCommandInfo[] = [
   { command: "/help", description: "показати відомі накази Канцелярії" },
   { command: "/ping", description: "перевірити, чи Канцелярія на місці" },
-  { command: "/whoami", description: "перевірити печатку відправника" },
+  { command: "/whoami", description: "показати печатку відправника й chat diagnostics" },
   { command: "/info", description: "переглянути особовий запис; службові печатки можуть уточнювати ім’я" },
   { command: "/preview_latest_news", description: "переглянути останній запис із news.md", adminOnly: true },
   { command: "/queue_latest_news", description: "поставити останній запис із news.md у чергу", adminOnly: true },
@@ -51,6 +59,24 @@ export function formatUnknownHeraldCommand(isAdmin: boolean) {
   ].join("\n");
 }
 
+export function formatHeraldWhoami(identity: HeraldWhoamiIdentity) {
+  const username = identity.username ? `@${identity.username.replace(/^@/, "")}` : "немає";
+  const lines = [
+    "Канцелярія впізнала вашу печатку.",
+    "",
+    `Telegram user ID: ${identity.telegramUserId ?? "невідомо"}`,
+    `Username: ${username}`,
+    `Chat ID: ${identity.chatId ?? "невідомо"}`,
+    `Chat type: ${identity.chatType ?? "невідомо"}`,
+  ];
+
+  if (identity.threadId !== undefined) {
+    lines.push(`Thread ID: ${identity.threadId}`);
+  }
+
+  return lines.join("\n");
+}
+
 export function registerHeraldHelpCommands(bot: Bot, heraldAdminIds: ReadonlySet<string>) {
   bot.command("help", async (ctx) => {
     const isAdmin = isHeraldAdminId(ctx.from?.id, heraldAdminIds);
@@ -58,10 +84,13 @@ export function registerHeraldHelpCommands(bot: Bot, heraldAdminIds: ReadonlySet
   });
 
   bot.command("whoami", async (ctx) => {
-    const isAdmin = isHeraldAdminId(ctx.from?.id, heraldAdminIds);
-    await ctx.reply(isAdmin
-      ? "Канцелярія впізнала вашу печатку."
-      : "Канцелярія бачить печатку, але не має її у службовій книзі.");
+    await ctx.reply(formatHeraldWhoami({
+      telegramUserId: ctx.from?.id,
+      username: ctx.from?.username,
+      chatId: ctx.chat?.id,
+      chatType: ctx.chat?.type,
+      threadId: ctx.message?.message_thread_id,
+    }));
   });
 }
 
