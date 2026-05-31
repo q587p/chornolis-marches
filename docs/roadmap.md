@@ -58,13 +58,17 @@ See:
 
 Goal: make darkness and light matter in ordinary play.
 
-The first `0.14` slice should be a tiny world-time foundation: stored/derived world time, a daypart helper and `/time` reading real world state. Full darkness hiding, light-source visibility, хмиз, biome-aware foraging and ordinary sleep should follow as separate small patches.
+The first `0.14` slice should be a tiny internal world-clock foundation. It must not bind day/night to the real-world clock, server timezone or player local time. The clock advances from elapsed real milliseconds through stored Chornolis world state: by default, `1 in-game hour = 120_000 ms`.
+
+The world-time foundation should include 13 lunar circles per year and 28 days per circle from the start, because moon phase and moonlight are part of night visibility. Deep calendar simulation remains out of scope.
 
 Primary outcomes:
 
-- The first `0.14` patch establishes world-time/daypart state before darkness changes what players can see.
-- The world has a simple dawn/day/dusk/night state.
-- `/time` reads actual world state.
+- The first `0.14` patch establishes stored/derived Chornolis world-clock state before darkness changes what players can see.
+- The world has a simple dawn/day/dusk/night state derived from internal world minutes.
+- `/time` reads actual internal world state: year, lunar circle, day, clock, daypart, moon phase and weather summary.
+- Moon illumination affects the first light calculations at night.
+- Weather exists as a small persistent state and can reduce/shape visibility later.
 - At night, location descriptions, nearby beings, tracks and ground objects are hidden or reduced without light.
 - Campfires and carried torches reveal what darkness hides.
 - Хмиз can be found, picked up and added to a campfire.

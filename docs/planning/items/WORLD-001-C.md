@@ -1,6 +1,6 @@
 ---
 id: WORLD-001-C
-title: Daypart helper and tick advancement
+title: Heartbeat clock advancement and daypart helper
 status: next
 type: feature
 area: world_time
@@ -9,27 +9,32 @@ estimate: 1-2h
 tags:
   - world-time
   - world-tick
+  - day-night
+  - 0.14
 depends_on:
   - WORLD-001-B
 ---
 
-# WORLD-001-C: Daypart helper and tick advancement
+# WORLD-001-C: Heartbeat Clock Advancement and Daypart Helper
 
 ## Goal
 
-Advance daypart through world time.
+Advance internal world time through the world heartbeat and expose reusable helpers for daypart, date, moon phase and moon illumination.
 
 ## First Scope
 
-- Add helper for current daypart.
-- Advance it in world tick or clock service.
-- Keep durations configurable/simple.
+- Add a world-time service that advances by elapsed real milliseconds from `lastAdvancedAt`.
+- Default scale: `1 in-game hour = 120_000 ms`.
+- Do not derive daypart from `Date.getHours()`, server local hour or real-world timezone.
+- Add helpers for current date, clock, daypart, lunar circle/day, moon phase and moon illumination.
+- Call advancement from `worldTick()` or an equivalent heartbeat path.
 
 ## Acceptance
 
-- Daypart changes over time.
-- Helper is reused by `/time` and visibility later.
-- No moon/seasons.
+- Daypart changes over internal world time.
+- Moon phase/illumination changes over the 28-day lunar circle.
+- Helper is reusable by `/time`, weather and visibility later.
+- No separate clock/weather timer outside the world heartbeat.
 
 ## Implementation Order
 

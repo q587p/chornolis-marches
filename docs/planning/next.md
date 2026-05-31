@@ -4,36 +4,42 @@ This file should stay small. If everything is next, nothing is next.
 
 ## Current Lane
 
-The current lane is the transition from `0.13.x` first-session stability into `0.14.x` night/light foundations:
+The current lane is `0.14.x` Night, Light and Firewood:
 
-1. Close `0.13.x` as Core Loop & Onboarding Stability.
-2. Start `0.14.x` as Night, Light and Firewood.
-3. Protect `0.15` Attention and Learning MVP by landing visibility/light foundations first.
+1. Start with a tiny world-time/daypart foundation.
+2. Add shared visibility helpers before changing what players can see.
+3. Connect active light to visibility.
+4. Protect `0.15` Attention and Learning MVP by landing time/visibility/light foundations first.
 
-See also: `docs/planning/0.13-closure-and-0.14-transition.md`.
+See also:
 
-## Finish 0.13.x
+- `docs/planning/0.13-closure-and-0.14-transition.md`
+- `docs/planning/0.14-observation-readiness.md`
+- `docs/systems/world_time.md`
 
-- QA-001: the repo-backed first-session closure audit is recorded; run one live Telegram smoke after the `0.13.26` deployment, then start the next minor line if no hard blocker appears.
+## Closed 0.13.x
+
+- QA-001: the repo-backed first-session closure audit is recorded.
 - REL-001: keep release/patch work on a separate branch with a PR into `main`, including summary, validation and risk notes.
-- Small onboarding/help/feature-inspection copy fixes discovered during the smoke pass are acceptable.
-- Planning status cleanup for already implemented and tested 0.13 items is acceptable.
-- Do not add day/night, ordinary sleep, hidden presence, weapons or NPC hunger to the closure patch unless they are needed to fix a blocker.
+- New 0.13 blockers can still be fixed if they are real regressions, but new day/night work belongs to `0.14.x`.
 
 ## Start 0.14.x
 
 Implement `0.14.x` in small slices:
 
-1. WORLD-001-A/B/C/D: tiny world-time model, daypart helper, tick advancement and `/time` reading real world state.
-2. WORLD-001-E: time/debug/admin safety for testing daypart state.
-3. VIS-001-A: shared visibility service skeleton.
-4. VIS-001-B/C/D/E: darkness affects location detail, nearby beings, tracks and ground objects.
-5. VIS-001-F: darkness copy audit, so hidden/reduced details sound atmospheric rather than technical.
-6. FIRE-001-A/C and FIRE-001-D: active light connects to visibility; carried, dropped and NPC-held light sources are covered by a matrix test.
-7. HMYZ-001-A/B/C/D: audit, seed, pickup and add-to-fire polish for хмиз/firewood.
-8. MAP-002-A/B/C: first biome-aware foraging table and text variants.
-9. ONB-004: first-night guidance once darkness is visible to beginners.
-10. SLEEP-001 and SLEEP-002: lying posture and ordinary sleep only after time/light/visibility foundations are stable.
+1. WORLD-001-A/B/C: internal world-clock model, persistent state and heartbeat advancement. This uses elapsed real milliseconds only as a rate; it must not bind Chornolis day/night to real-world time of day.
+2. WORLD-001-D: `/time` reads stored/derived Chornolis world state: year, lunar circle, day, clock, daypart, moon phase and weather summary.
+3. WORLD-001-E: weather MVP state, `/weather` alias/display and non-spammy world event when weather changes.
+4. WORLD-001-F: shared light snapshot helper combining daypart, moon illumination, weather and active local light sources.
+5. WORLD-001-G: time/weather debug and scribe/admin safety for testing daypart, moon and weather state.
+6. VIS-001-A: shared visibility service skeleton consumes the light snapshot helper.
+7. VIS-001-B/C/D/E: darkness affects location detail, nearby beings, tracks and ground objects.
+8. VIS-001-F: darkness copy audit, so hidden/reduced details sound atmospheric rather than technical.
+9. FIRE-001-A/C and FIRE-001-D: active light connects to visibility; carried, dropped and NPC-held light sources are covered by a matrix test.
+10. HMYZ-001-A/B/C/D: audit, seed, pickup and add-to-fire polish for хмиз/firewood.
+11. MAP-002-A/B/C: first biome-aware foraging table and text variants.
+12. ONB-004: first-night guidance once darkness is visible to beginners.
+13. SLEEP-001 and SLEEP-002: lying posture and ordinary sleep only after time/light/visibility foundations are stable.
 
 Observation learning remains the `0.15` line. Darkness, distance and light should affect learning later, but the visibility foundation must land first.
 

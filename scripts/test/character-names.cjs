@@ -49,9 +49,12 @@ assert.equal(availablePreparedNames(["Ведана"]).some((name) => name.key ==
 assert.equal(availablePreparedNames(["Хтось"]).some((name) => name.key === "vedana"), false);
 assert.ok(preparedNameByKey("tamila"), "Expected reserved prepared name Tamila to remain in registry");
 assert.equal(availablePreparedNames([]).some((name) => name.key === "tamila"), false);
-assert.ok(preparedNameByKey("radomyr"), "Expected new prepared name Radomyr");
-assert.ok(preparedNameByKey("aishe"), "Expected new prepared name Aishe");
+assert.ok(preparedNameByKey("radomyr"), "Expected prepared name Radomyr");
+assert.ok(preparedNameByKey("aishe"), "Expected prepared name Aishe");
 assert.equal(preparedNameByKey("verbovi").forms.accusative, "Вербових");
+assert.ok(preparedNameByKey("andrii"), "Expected expanded prepared name Andrii");
+assert.ok(preparedNameByKey("bohdana"), "Expected expanded prepared name Bohdana");
+assert.ok(preparedNameByKey("dzherelni"), "Expected expanded plural prepared name Dzherelni");
 
 const preparedKeys = new Set();
 const preparedNominatives = new Set();
@@ -73,9 +76,9 @@ for (const name of PREPARED_CHARACTER_NAMES) {
 const masculineNames = availablePreparedNames([], { suggestedGender: "MASCULINE" });
 const feminineNames = availablePreparedNames([], { suggestedGender: "FEMININE" });
 const pluralNames = availablePreparedNames([], { suggestedGender: "PLURAL" });
-assert.ok(masculineNames.length >= 8, `Expected at least 8 available masculine names, got ${masculineNames.length}`);
-assert.ok(feminineNames.length >= 8, `Expected at least 8 available feminine names, got ${feminineNames.length}`);
-assert.ok(pluralNames.length >= 6, `Expected at least 6 available plural names, got ${pluralNames.length}`);
+assert.ok(masculineNames.length >= 42, `Expected at least 42 available masculine names, got ${masculineNames.length}`);
+assert.ok(feminineNames.length >= 42, `Expected at least 42 available feminine names, got ${feminineNames.length}`);
+assert.ok(pluralNames.length >= 13, `Expected at least 13 available plural names, got ${pluralNames.length}`);
 assert.ok(masculineNames.every((name) => name.suggestedGender === "MASCULINE"));
 assert.ok(feminineNames.every((name) => name.suggestedGender === "FEMININE"));
 assert.ok(pluralNames.every((name) => name.suggestedGender === "PLURAL"));
