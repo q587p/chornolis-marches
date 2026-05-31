@@ -21,6 +21,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Updated near-term planning to treat `0.13.x` as ready for one final live Telegram smoke after deployment instead of continuing to absorb new systems.
 - Attacks against mice now miss 20% of the time, and attacks against rabbits miss 40% of the time. A miss still spends stamina, counts as an attempted creature attack where applicable and marks the location as recently dangerous, but leaves the target alive for a later attempt if it stays nearby.
+- Border marker ecology text now avoids repeating the "зарубки" image in every count and separates recent births/deaths from their causes.
 
 ### Validation
 

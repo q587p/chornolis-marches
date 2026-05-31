@@ -339,12 +339,12 @@ function roughAmount(value: number) {
   return "дуже багато";
 }
 
-function roughEventAmount(value: number) {
+function roughEventLevel(value: number) {
   if (value <= 0) return "не позначено";
-  if (value === 1) return "одна зарубка";
-  if (value <= 4) return "кілька зарубок";
-  if (value <= 12) return "помітно зарубок";
-  return "багато зарубок";
+  if (value === 1) return "один слід";
+  if (value <= 4) return "кілька";
+  if (value <= 12) return "помітно";
+  return "багато";
 }
 
 function publicEcologyReport(stats: PublicEcologySignStats, showTechnicalDetails = false) {
@@ -373,8 +373,8 @@ function publicEcologyReport(stats: PublicEcologySignStats, showTechnicalDetails
     `Живності зараз: ${roughAmount(stats.totals.aliveAnimals)}. Трупів на землі: ${roughAmount(stats.totals.corpseAnimals)}.`,
     livingLines.length ? `За видами:\n${livingLines.join("\n")}` : "Живих тварин на зарубках зараз не видно.",
     "",
-    `За ${recentWindow}: народжень ${roughEventAmount(recentBirths)}, смертей ${roughEventAmount(recentDeaths)}.`,
-    `Причини на зарубках: хижаки — ${roughEventAmount(counters.predatorKills)}, персонажі — ${roughEventAmount(counters.playerKills)}, голод — ${roughEventAmount(counters.starvationDeaths)}, вік — ${roughEventAmount(counters.oldAgeDeaths)}.`,
+    `Свіжі зарубки: народжень — ${roughEventLevel(recentBirths)}; смертей — ${roughEventLevel(recentDeaths)}.`,
+    `Серед причин: хижаки — ${roughEventLevel(counters.predatorKills)}; персонажі — ${roughEventLevel(counters.playerKills)}; голод — ${roughEventLevel(counters.starvationDeaths)}; вік — ${roughEventLevel(counters.oldAgeDeaths)}.`,
     "",
     `За давнішими записами знака: хижаки й голод уже лишали тут помітні сліди.`,
     ...technical,
