@@ -4,27 +4,30 @@ This file should stay small. If everything is next, nothing is next.
 
 ## Current Lane
 
-The current lane is the transition from `0.13.x` first-session stability into `0.14.x` night/light foundations:
+The current lane is `0.14.x` Night, Light and Firewood:
 
-1. Close `0.13.x` as Core Loop & Onboarding Stability.
-2. Start `0.14.x` as Night, Light and Firewood.
-3. Protect `0.15` Attention and Learning MVP by landing visibility/light foundations first.
+1. Start with a tiny world-time/daypart foundation.
+2. Add shared visibility helpers before changing what players can see.
+3. Connect active light to visibility.
+4. Protect `0.15` Attention and Learning MVP by landing time/visibility/light foundations first.
 
-See also: `docs/planning/0.13-closure-and-0.14-transition.md`.
+See also:
 
-## Finish 0.13.x
+- `docs/planning/0.13-closure-and-0.14-transition.md`
+- `docs/planning/0.14-observation-readiness.md`
+- `docs/systems/world_time.md`
 
-- QA-001: the repo-backed first-session closure audit is recorded; run one live Telegram smoke after the `0.13.26` deployment, then start the next minor line if no hard blocker appears.
+## Closed 0.13.x
+
+- QA-001: the repo-backed first-session closure audit is recorded.
 - REL-001: keep release/patch work on a separate branch with a PR into `main`, including summary, validation and risk notes.
-- Small onboarding/help/feature-inspection copy fixes discovered during the smoke pass are acceptable.
-- Planning status cleanup for already implemented and tested 0.13 items is acceptable.
-- Do not add day/night, ordinary sleep, hidden presence, weapons or NPC hunger to the closure patch unless they are needed to fix a blocker.
+- New 0.13 blockers can still be fixed if they are real regressions, but new day/night work belongs to `0.14.x`.
 
 ## Start 0.14.x
 
 Implement `0.14.x` in small slices:
 
-1. WORLD-001-A/B/C/D: tiny world-time model, daypart helper, tick advancement and `/time` reading real world state.
+1. WORLD-001-A/B/D: tiny real-clock world-time model, daypart helper and `/time` reading current world state.
 2. WORLD-001-E: time/debug/admin safety for testing daypart state.
 3. VIS-001-A: shared visibility service skeleton.
 4. VIS-001-B/C/D/E: darkness affects location detail, nearby beings, tracks and ground objects.

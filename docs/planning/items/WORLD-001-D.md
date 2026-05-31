@@ -1,7 +1,7 @@
 ---
 id: WORLD-001-D
 title: /time reads world state
-status: next
+status: testing
 type: feature
 area: world_time
 priority: high
@@ -10,7 +10,7 @@ tags:
   - world-time
   - time-command
 depends_on:
-  - WORLD-001-C
+  - WORLD-001-B
 ---
 
 # WORLD-001-D: /time reads world state
@@ -32,4 +32,8 @@ Make `/time` display actual world state.
 
 ## Implementation Order
 
-Do after: `WORLD-001-C`.
+Do after: `WORLD-001-B`.
+
+## 0.14.0 Notes
+
+This is satisfied through `WORLD-001-B` in the first 0.14 slice: `/time` reads the shared real-clock world-time helper. If later work adds stored or accelerated world time, keep `/time` pointed at the shared helper rather than reintroducing static calendar text.

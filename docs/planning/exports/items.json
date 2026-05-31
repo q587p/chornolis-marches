@@ -2516,9 +2516,9 @@
   },
   {
     "id": "WORLD-001-A",
-    "title": "Tiny world-time model design",
-    "status": "next",
-    "type": "design",
+    "title": "Tiny world-time foundation",
+    "status": "testing",
+    "type": "technical",
     "area": "world_time",
     "priority": "high",
     "tags": [
@@ -2531,14 +2531,14 @@
   },
   {
     "id": "WORLD-001-B",
-    "title": "Daypart storage",
-    "status": "next",
-    "type": "technical",
+    "title": "Daypart helper and /time",
+    "status": "testing",
+    "type": "feature",
     "area": "world_time",
     "priority": "high",
     "tags": [
       "world-time",
-      "schema"
+      "time-command"
     ],
     "depends_on": [
       "WORLD-001-A"
@@ -2549,7 +2549,7 @@
   {
     "id": "WORLD-001-C",
     "title": "Daypart helper and tick advancement",
-    "status": "next",
+    "status": "backlog",
     "type": "feature",
     "area": "world_time",
     "priority": "high",
@@ -2566,7 +2566,7 @@
   {
     "id": "WORLD-001-D",
     "title": "/time reads world state",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "world_time",
     "priority": "high",
@@ -2575,7 +2575,7 @@
       "time-command"
     ],
     "depends_on": [
-      "WORLD-001-C"
+      "WORLD-001-B"
     ],
     "exports": {},
     "file": "docs/planning/items/WORLD-001-D.md"

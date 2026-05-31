@@ -132,10 +132,10 @@ VIS-002,Hidden presence foundation,backlog,technical,visibility,medium,"visibili
 WEB-001,"Web map, multi-client game server, messenger bridges and limited MUD gateway",icebox,feature,server,medium,"web,map,mud,server,multi-client,architecture",docs/planning/items/web-001-web-map-and-mud-gateway.md
 WEB-002,Independent status site and deploy visibility,backlog,technical,server,medium,"web,status,deploy,operations,reliability",docs/planning/items/WEB-002-independent-status-site.md
 WORLD-001,Day/night cycle,next,feature,world_time,high,"world,atmosphere,visibility,liminality",docs/planning/items/WORLD-001-day-night-cycle.md
-WORLD-001-A,Tiny world-time model design,next,design,world_time,high,"world-time,day-night",docs/planning/items/WORLD-001-A.md
-WORLD-001-B,Daypart storage,next,technical,world_time,high,"world-time,schema",docs/planning/items/WORLD-001-B.md
-WORLD-001-C,Daypart helper and tick advancement,next,feature,world_time,high,"world-time,world-tick",docs/planning/items/WORLD-001-C.md
-WORLD-001-D,/time reads world state,next,feature,world_time,high,"world-time,time-command",docs/planning/items/WORLD-001-D.md
+WORLD-001-A,Tiny world-time foundation,testing,technical,world_time,high,"world-time,day-night",docs/planning/items/WORLD-001-A.md
+WORLD-001-B,Daypart helper and /time,testing,feature,world_time,high,"world-time,time-command",docs/planning/items/WORLD-001-B.md
+WORLD-001-C,Daypart helper and tick advancement,backlog,feature,world_time,high,"world-time,world-tick",docs/planning/items/WORLD-001-C.md
+WORLD-001-D,/time reads world state,testing,feature,world_time,high,"world-time,time-command",docs/planning/items/WORLD-001-D.md
 WORLD-001-E,World-time debug and admin safety,next,technical,world_time,medium,"world-time,day-night,admin,debug,testing",docs/planning/items/WORLD-001-E-time-debug-admin-safety.md
 WORLD-002,Campfires and light,next,feature,survival,high,"survival,light,crafting,night",docs/planning/items/WORLD-002-campfires-and-light.md
 WORLD-002-hidden-spirit,Hidden spirit seed and boundaries,backlog,feature,world,medium,"world,hidden-presence,spirit,campfire",docs/planning/items/WORLD-002-hidden-spirit-seed-and-boundaries.md

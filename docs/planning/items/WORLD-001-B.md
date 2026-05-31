@@ -1,36 +1,43 @@
 ---
 id: WORLD-001-B
-title: Daypart storage
-status: next
-type: technical
+title: Daypart helper and /time
+status: testing
+type: feature
 area: world_time
 priority: high
 estimate: 1-2h
 tags:
   - world-time
-  - schema
+  - time-command
 depends_on:
   - WORLD-001-A
 ---
 
-# WORLD-001-B: Daypart storage
+# WORLD-001-B: Daypart Helper and `/time`
 
 ## Goal
 
-Persist simple dawn/day/dusk/night state.
+Expose simple dawn/day/dusk/night state and make `/time` read current world state.
 
 ## First Scope
 
-- Add migration/model or reuse existing world state.
-- Seed default daypart if needed.
-- Generate Prisma if schema changes.
+- Add a daypart helper.
+- Add or update `/time` so it reads the shared helper.
+- Keep player-facing text Ukrainian and atmospheric.
+- Keep debug/admin output separate from ordinary player output.
 
 ## Acceptance
 
-- Build passes.
-- Default world has a valid daypart.
-- No unrelated schema churn.
+- `/time` shows meaningful current world-time/daypart text.
+- Tests cover daypart helper behavior.
+- The helper can be reused by visibility in later `VIS-001` tasks.
 
 ## Implementation Order
 
 Do after: `WORLD-001-A`.
+
+## 0.14.0 Notes
+
+- `/time` now reads `getCurrentWorldTime(...)`.
+- The old static "передвечір'я" line was replaced with the current daypart and a compact local clock hint.
+- Darkness behavior is intentionally deferred to `VIS-001`.

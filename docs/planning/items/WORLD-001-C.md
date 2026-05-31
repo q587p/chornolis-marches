@@ -1,7 +1,7 @@
 ---
 id: WORLD-001-C
 title: Daypart helper and tick advancement
-status: next
+status: backlog
 type: feature
 area: world_time
 priority: high
@@ -34,3 +34,7 @@ Advance daypart through world time.
 ## Implementation Order
 
 Do after: `WORLD-001-B`.
+
+## 0.14.0 Deferral
+
+`0.14.0` starts with a real-clock-derived world-time helper, so there is no separate tick advancement yet. Promote this item again only if the project needs accelerated in-world time or persistent clock advancement beyond the real clock.
