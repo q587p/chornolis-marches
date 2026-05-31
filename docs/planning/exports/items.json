@@ -487,7 +487,7 @@
   {
     "id": "FOOD-004",
     "title": "Hunger cues and eating nudges",
-    "status": "backlog",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "medium",
@@ -1530,7 +1530,7 @@
   {
     "id": "ONB-003",
     "title": "Tutorial player wellbeing aside",
-    "status": "backlog",
+    "status": "testing",
     "type": "ux",
     "area": "onboarding",
     "priority": "medium",
@@ -1979,7 +1979,7 @@
   {
     "id": "SURV-001",
     "title": "Early respawn support",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -1995,7 +1995,7 @@
   {
     "id": "SURV-001-A",
     "title": "Beginner return eligibility helper",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -2013,7 +2013,7 @@
   {
     "id": "SURV-001-B",
     "title": "/respawn command skeleton",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -2031,7 +2031,7 @@
   {
     "id": "SURV-001-C",
     "title": "Повернення confirmation and aliases",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -2049,7 +2049,7 @@
   {
     "id": "SURV-001-D",
     "title": "Actual return to start camp",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -2067,7 +2067,7 @@
   {
     "id": "SURV-001-E",
     "title": "Beginner return cooldown/consequence",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "medium",

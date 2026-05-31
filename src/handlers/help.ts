@@ -10,6 +10,7 @@ export const HELP_TEXT = [
   "",
   "<b>Перші кроки</b>",
   "Якщо ви тут уперше — пройдіть навчальний сон (/sleep_tutorial). Він коротко показує, як рухатися, озиратися, роздивлятися світ і слухати підказки місцини.",
+  "Коли відчуєте, що готові до більшого світу, у сні можна обрати <i>Закінчити навчання</i> (/tutorialEnd).",
   "",
   "<b>Персонаж</b>",
   "• <i>Персонаж</i> (/me) — стан персонажа, життя, снага, голод і короткий огляд речей.",
@@ -26,6 +27,7 @@ export const HELP_TEXT = [
   "• <i>Виходи</i> (/exits) — лише видимі шляхи з місцини.",
   "• <i>Роздивитися</i> (/examine) — уважніший огляд місцини, предмета, істоти або особливості.",
   "• <i>Сліди</i> (/track) — пошукати свіжі сліди поруч.",
+  "• <i>Повернення</i> (/respawn) — якщо заблукали, попросити стежку повернути вас до межового табору; перед переносом буде підтвердження.",
   "• Мапа — окремої ігрової мапи ще немає; поки найкраще звіряти виходи, читати описи й вести власні нотатки.",
   "",
   "<b>Рух і дії</b>",
@@ -77,6 +79,7 @@ export const COMMANDS_TEXT_PAGES = [
     "• /exits, exits, виходи, куди можна йти — лише видимі виходи з місцини, включно із замкненими видимими напрямками.",
     "• /track, сліди, відстежити — побачити свіжі сліди поруч.",
     "• /examine tracks, роздивитися сліди — уважніше роздивитися сліди.",
+    "• /respawn, повернення, повернутися до табору — підтверджене повернення до межового табору для заблукалих ранніх/виснажених персонажів.",
     "• /examine grass, оцінити траву — оглянути винищену траву, якщо вона є.",
     "• /examine sign, роздивитися знак — оглянути межовий знак, якщо він є.",
     "• look лавка, examine bushes, роздивитися кущі — огляд видимої особливості місцини.",
@@ -112,6 +115,7 @@ export const COMMANDS_TEXT_PAGES = [
     "• 🚪 Завершити сесію (/end_session), /endSession, /quit, /leave, завершити сесію, вийти — завершити поточну Telegram-сесію.",
     "• Повернення після AFK або завершення — /start чи будь-яка звичайна ігрова команда/кнопка.",
     "• /sleep tutorial, навчальний сон — повернутися до навчального сну.",
+    "• /tutorialEnd, закінчити навчання — підтвердити завершення навчального сну й прибрати нагадування про незавершене навчання.",
     "• /wake, wake, прокинутися — вийти з навчального сну.",
     "• /say текст, сказати текст, ск текст, гов текст — сказати щось поруч.",
     "• /say Відчинитися, Відчинись будь ласка — у навчальному сні може відчинити Браму Сну.",
@@ -175,6 +179,16 @@ export const COMMANDS_TEXT_PAGES = [
   ].join("\n"),
 ];
 
+function helpTextForTutorialStatus(tutorialCompleted: boolean) {
+  if (!tutorialCompleted) return HELP_TEXT;
+  const hiddenWhenCompleted = new Set([
+    "<b>Перші кроки</b>",
+    "Якщо ви тут уперше — пройдіть навчальний сон (/sleep_tutorial). Він коротко показує, як рухатися, озиратися, роздивлятися світ і слухати підказки місцини.",
+    "Коли відчуєте, що готові до більшого світу, у сні можна обрати <i>Закінчити навчання</i> (/tutorialEnd).",
+  ]);
+  return HELP_TEXT.split("\n").filter((line) => !hiddenWhenCompleted.has(line)).join("\n").replace(/\n{3,}/g, "\n\n");
+}
+
 function commandsPageKeyboard(pageIndex: number) {
   const keyboard = new InlineKeyboard();
   const total = COMMANDS_TEXT_PAGES.length;
@@ -200,14 +214,16 @@ async function editCommandsPage(ctx: any, pageIndex: number) {
 
 export async function sendHelp(ctx: any) {
   const auto = ctx.from ? isPlayerAutoEnabled(ctx.from.id) : false;
-  await ctx.reply(HELP_TEXT, {
+  const player = ctx.from ? await getPlayerByTelegramId(ctx.from.id) : null;
+  const tutorialCompleted = player ? await hasCompletedTutorial(player.id) : false;
+
+  await ctx.reply(helpTextForTutorialStatus(tutorialCompleted), {
     parse_mode: "HTML",
     reply_markup: ctx.from ? await buildMainReplyKeyboardForTelegramId(ctx.from.id, auto) : undefined,
   });
 
   if (!ctx.from) return;
-  const player = await getPlayerByTelegramId(ctx.from.id);
-  if (!player || await hasCompletedTutorial(player.id)) return;
+  if (!player || tutorialCompleted) return;
 
   await ctx.reply(
     "Навчальний сон ще не завершено. Можна повернутися туди, пройти короткі вправи або прокинутися, коли будете готові.",

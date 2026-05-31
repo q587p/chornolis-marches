@@ -10,7 +10,7 @@ This is not fast travel. It is early-game mercy that protects testing and onboar
 
 Canonical player-facing name: `Повернення`.
 
-Slash command compatibility: `/respawn`.
+Primary slash command: `/respawn`.
 
 Possible text aliases:
 
@@ -21,12 +21,19 @@ Possible text aliases:
 
 ## First Scope
 
-- Return eligible early characters to `start_border_camp`.
+- Return eligible early or weak characters to `start_border_camp`.
 - Gate behind a beginner/progression threshold.
 - Confirm before moving the character.
 - Cancel or safely interrupt incompatible queued actions.
 - Add a cooldown or small consequence.
 - Write a `WorldEvent` or equivalent audit trail.
+
+## 0.13.24 First Implementation
+
+- `/respawn` opens the confirmation flow.
+- Confirmation cancels queued/running actions, stops active rest/auto, returns to the configured start location, lowers stamina to at most roughly a third and writes a `Player used respawn return` world event.
+- Plain `повернутися` remains the local Back action; use explicit `повернення` or `повернутися до табору` for the return flow.
+- The first cooldown is 30 real-time minutes, tracked through the world event trail rather than a new schema field.
 
 ## Eligibility Ideas
 

@@ -59,6 +59,25 @@ const RESOURCE_ALIASES: Record<string, string> = {
   "притушені факели": "doused_torch",
   twigs: "twigs",
   хмиз: "twigs",
+  corpse: "corpse",
+  corpses: "corpse",
+  body: "corpse",
+  bodies: "corpse",
+  carcass: "corpse",
+  carcasses: "corpse",
+  "труп": "corpse",
+  "трупи": "corpse",
+  "туша": "corpse",
+  "туші": "corpse",
+  "рештки": "corpse",
+  "труп миша": "corpse_mouse_male",
+  "труп миші": "corpse_mouse_female",
+  "труп зайця": "corpse_rabbit_male",
+  "труп зайчихи": "corpse_rabbit_female",
+  "труп лиса": "corpse_fox_male",
+  "труп лисиці": "corpse_fox_female",
+  "труп вовка": "corpse_wolf_male",
+  "труп вовчиці": "corpse_wolf_female",
 };
 
 function normalizeResourceQuery(query: string) {
@@ -101,6 +120,21 @@ async function consumeOneResource(tx: Prisma.TransactionClient, playerResourceId
   }
 
   await tx.playerResource.delete({ where: { id: playerResourceId } });
+}
+
+async function addGroundResource(
+  tx: Prisma.TransactionClient,
+  locationId: number,
+  resourceType: { id: number },
+  amount: number,
+  extraData: { updatedAt?: Date } = {},
+) {
+  if (amount <= 0) return;
+  await tx.resourceNode.upsert({
+    where: { locationId_resourceTypeId: { locationId, resourceTypeId: resourceType.id } },
+    update: { amount: { increment: amount }, ...extraData },
+    create: { locationId, resourceTypeId: resourceType.id, amount, maxAmount: amount, ...extraData },
+  });
 }
 
 export async function useInventoryResource(playerId: number, resourceKey: UsableInventoryResource) {
@@ -206,17 +240,23 @@ export async function dropInventoryResourceDetailed(playerId: number, resourceQu
 
   return prisma.$transaction(async (tx) => {
     const carried = await tx.playerResource.findFirst({
-      where: { playerId, resourceType: { key } },
+      where: {
+        playerId,
+        resourceType: key === "corpse" || isCorpseQuery(resourceQuery)
+          ? { key: { startsWith: "corpse_" } }
+          : { key },
+      },
       include: { resourceType: true },
+      orderBy: { id: "asc" },
     });
     if (!carried || carried.amount <= 0) throw new Error("У ваших речах цього немає.");
 
     const droppedResourceType = carried.resourceType;
     if (isCorpseResourceKey(droppedResourceType.key)) {
       const droppedCorpse = await dropCarriedCorpseResource(tx, playerId, player.currentLocationId!, droppedResourceType);
-      if (!droppedCorpse) throw new Error("У ваших речах цього вже немає.");
+      if (!droppedCorpse) await addGroundResource(tx, player.currentLocationId!, droppedResourceType, 1);
       await consumeOneResource(tx, carried.id, carried.amount);
-      const name = droppedCorpse.name;
+      const name = droppedCorpse?.name ?? resourceTypeDisplayName(droppedResourceType);
       return {
         text: `Ви поклали ${name} на землю.`,
         locationId: player.currentLocationId!,
@@ -229,11 +269,7 @@ export async function dropInventoryResourceDetailed(playerId: number, resourceQu
     await consumeOneResource(tx, carried.id, carried.amount);
 
     const litTorchData = carried.resourceType.key === "lit_torch" ? { updatedAt: carried.updatedAt } : {};
-    await tx.resourceNode.upsert({
-      where: { locationId_resourceTypeId: { locationId: player.currentLocationId!, resourceTypeId: droppedResourceType.id } },
-      update: { amount: { increment: 1 }, ...litTorchData },
-      create: { locationId: player.currentLocationId!, resourceTypeId: droppedResourceType.id, amount: 1, maxAmount: 1, ...litTorchData },
-    });
+    await addGroundResource(tx, player.currentLocationId!, droppedResourceType, 1, litTorchData);
 
     if (carried.resourceType.key === "lit_torch") {
       const remainingMs = Math.max(0, carried.updatedAt.getTime() + TORCH_DURATION_MS - Date.now());
@@ -291,20 +327,17 @@ export async function dropInventoryResourcesDetailed(playerId: number, resourceQ
           if (!droppedCorpse) break;
           droppedAmount += 1;
         }
-        if (droppedAmount <= 0) continue;
-        if (droppedAmount >= resource.amount) await tx.playerResource.delete({ where: { id: resource.id } });
-        else await tx.playerResource.update({ where: { id: resource.id }, data: { amount: { decrement: droppedAmount } } });
-        dropped.push({ key: resource.resourceType.key, name: resourceTypeDisplayName(resource.resourceType), amount: droppedAmount });
+        const fallbackAmount = amount - droppedAmount;
+        await addGroundResource(tx, player.currentLocationId!, resource.resourceType, fallbackAmount);
+        if (amount >= resource.amount) await tx.playerResource.delete({ where: { id: resource.id } });
+        else await tx.playerResource.update({ where: { id: resource.id }, data: { amount: { decrement: amount } } });
+        dropped.push({ key: resource.resourceType.key, name: resourceTypeDisplayName(resource.resourceType), amount });
         continue;
       }
 
       await tx.playerResource.delete({ where: { id: resource.id } });
       const litTorchData = resource.resourceType.key === "lit_torch" ? { updatedAt: resource.updatedAt } : {};
-      await tx.resourceNode.upsert({
-        where: { locationId_resourceTypeId: { locationId: player.currentLocationId!, resourceTypeId: resource.resourceTypeId } },
-        update: { amount: { increment: amount }, ...litTorchData },
-        create: { locationId: player.currentLocationId!, resourceTypeId: resource.resourceTypeId, amount, maxAmount: amount, ...litTorchData },
-      });
+      await addGroundResource(tx, player.currentLocationId!, resource.resourceType, amount, litTorchData);
       dropped.push({ key: resource.resourceType.key, name: resourceTypeDisplayName(resource.resourceType), amount });
     }
 

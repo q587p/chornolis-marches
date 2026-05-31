@@ -9,6 +9,45 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.24 - Hunger cues, tutorial completion and inventory polish - 12026-05-31
+
+### Added
+
+- Added threshold-based player hunger cues after stamina-spending actions raise hunger into moderate or serious states.
+- Added contextual hunger cue copy that points toward `inventory` when edible carried food exists, cooking when raw meat and local fire are available, nearby food resources when present, or a general atmospheric warning otherwise.
+- Added a one-time tutorial dream wellbeing aside after the first successful tutorial food use, with a tutorial event flag so it does not repeat unless tutorial progress is reset.
+- Added focused `hunger-cues` helper coverage to `npm test`.
+- Added `/respawn` as a confirmed atmospheric return to the start location for early or weak characters who get lost.
+- Added `/tutorialEnd` / `Закінчити навчання` as a confirmed tutorial-completion flow that marks the tutorial completed, returns from the dream when needed, and removes unfinished-tutorial reminders from help/profile surfaces.
+
+### Changed
+
+- Rearranged the character card action keyboard so `Inventory`, `Signals`, posture, `Rest`, `Sleep` and `Auto` controls are grouped into clearer rows.
+- Moved the scribe technical-details toggle out of the character card keyboard and into the scribe admin menu.
+- Moved `/respawn` near the top of the Telegram side command menu.
+- Marked `FOOD-004`, `ONB-003` and `SURV-001` beginner-return slices as testing and refreshed planning exports.
+- Bumped package metadata to `0.13.24`.
+
+### Fixed
+
+- Made corpse drops resilient when an inventory corpse stack exists but its hidden carried creature row can no longer be matched, by consuming the carried item and placing a matching corpse resource on the ground instead of leaving the item stuck in inventory.
+- Made the scribe teleport command accept the same direct text form without a slash, so `teleport forest_07_00` routes like `/teleport forest_07_00`.
+
+### Tests
+
+- Ran `node scripts/test/hunger-cues.cjs`.
+- Ran `node scripts/test/beginner-return.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/tutorial-voices.cjs`.
+- Ran `node scripts/test/session-presence.cjs`.
+- Ran `node scripts/test/posture.cjs`.
+- Ran `node scripts/test/world-seed.mjs`.
+- Ran `npm run planning:export`.
+- Ran `npm test`.
+- Ran `npm run build`.
+
+---
+
 ## 0.13.23 - Target-list return context, scribe corpse setup and climbable trees - 12026-05-31
 
 ### Added

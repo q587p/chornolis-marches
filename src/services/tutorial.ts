@@ -13,6 +13,7 @@ export const TUTORIAL_REST_LOCATION_KEY = "dream_tutorial_rest";
 export const TUTORIAL_TIME_LOCATION_KEY = "dream_tutorial_time";
 export const TUTORIAL_SAFETY_LOCATION_KEY = "dream_tutorial_safety";
 export const TUTORIAL_OBSERVATION_LOCATION_KEY = "dream_tutorial_observation";
+export const TUTORIAL_END_LOCATION_KEY = TUTORIAL_OBSERVATION_LOCATION_KEY;
 export const TUTORIAL_DEEP_REST_LOCATION_KEY = "dream_tutorial_deep_rest";
 export const DREAM_GATE_FEATURE_KEY = "dream_tutorial_sleep_gate";
 export const DREAM_GATE_RETURN_FEATURE_KEY = "dream_tutorial_sleep_gate_return";
@@ -22,6 +23,12 @@ const DREAM_GATE_OPEN_WINDOWS_MS = [30_000, 60_000, 120_000, 240_000, 480_000];
 export const TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE = "Tutorial foraging success";
 export const TUTORIAL_INVENTORY_AVAILABLE_EVENT_TITLE = "Tutorial inventory available";
 export const TUTORIAL_OBSERVATION_LESSON_EVENT_TITLE = "Tutorial observation lesson";
+export const TUTORIAL_WELLBEING_ASIDE_EVENT_TITLE = "Tutorial wellbeing aside";
+export const TUTORIAL_WELLBEING_ASIDE_TEXT = [
+  "Сон на мить дивиться крізь персонажа - просто на вас.",
+  "",
+  "«Тілу по той бік теж потрібні вода, їжа, перепочинок і трохи далечіні для очей. Розімніть плечі, відведіть погляд від екрана хоч на кілька подихів. Чорноліс почекає».",
+].join("\n");
 
 const RETURN_LOCATION_EVENT_TITLE = "Tutorial return location";
 const DREAM_LOCATION_EVENT_TITLE = "Tutorial dream location";
@@ -161,6 +168,73 @@ export async function hasCompletedTutorial(playerId: number) {
   return Boolean(event);
 }
 
+export const TUTORIAL_END_CONFIRMATION_TEXT = [
+  "Сон на мить спиняє стежку.",
+  "",
+  "«Закінчити навчання зараз? Далі буде не коротка вправа, а справжнє Порубіжжя: більше простору, темряви, голоду, чужих слідів і рішень без підказки».",
+  "",
+  "Дрімота позіхає збоку:",
+  "",
+  "«Я б ще посиділа. Але якщо вже йти, то йди з відкритими очима: реальний світ ширший, голосніший і не завжди пояснює себе двічі».",
+].join("\n");
+
+export async function completeTutorialForPlayer(playerId: number, reason = "tutorial-end") {
+  const player = await prisma.player.findUnique({
+    where: { id: playerId },
+    include: { currentLocation: { include: { region: true } } },
+  });
+  if (!player) throw new Error("Player not found.");
+
+  const currentLocationId = player.currentLocationId ?? await getStartLocationId();
+  const dreaming = player.currentLocation ? isTutorialLocation(player.currentLocation) : false;
+  const completedBefore = await hasCompletedTutorial(player.id);
+  const returnLocationId = dreaming
+    ? await validLocationId(await latestPlayerEventLocation(player.id, RETURN_LOCATION_EVENT_TITLE), false)
+      ?? await getStartLocationId()
+    : currentLocationId;
+
+  await prisma.$transaction(async (tx) => {
+    if (dreaming) {
+      await tx.worldEvent.create({
+        data: {
+          type: "SYSTEM",
+          title: DREAM_LOCATION_EVENT_TITLE,
+          description: String(currentLocationId),
+          playerId: player.id,
+          locationId: currentLocationId,
+        },
+      });
+      await tx.player.update({ where: { id: player.id }, data: { currentLocationId: returnLocationId } });
+    }
+
+    if (!completedBefore) {
+      await tx.worldEvent.create({
+        data: {
+          type: "SYSTEM",
+          title: COMPLETED_EVENT_TITLE,
+          description: reason,
+          playerId: player.id,
+          locationId: returnLocationId,
+        },
+      });
+    }
+  });
+
+  return {
+    locationId: returnLocationId,
+    fromLocationId: currentLocationId,
+    completed: !completedBefore,
+    woke: dreaming,
+    text: [
+      "Ви закінчуєте навчальний сон.",
+      "",
+      "Сон відступає не різко, а як туман, що знає дорогу назад. Дрімота бурмоче: «Ну от. Тепер справжнє Порубіжжя. Там ширше, гучніше й живіше, ніж у цій короткій вправі».",
+      "",
+      "Підказки про незавершене навчання більше не триматимуться за вас. Якщо колись захочеться повернутися до сну для повторення, напишіть /sleep tutorial.",
+    ].join("\n"),
+  };
+}
+
 export async function resetTutorialProgressForPlayer(playerId: number, scribePlayerId?: number) {
   const startLocationId = await getTutorialStartLocationId();
   const player = await prisma.player.findUnique({
@@ -174,7 +248,7 @@ export async function resetTutorialProgressForPlayer(playerId: number, scribePla
       where: {
         playerId,
         type: "SYSTEM",
-        title: { in: [COMPLETED_EVENT_TITLE, TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE, TUTORIAL_INVENTORY_AVAILABLE_EVENT_TITLE, TUTORIAL_OBSERVATION_LESSON_EVENT_TITLE] },
+        title: { in: [COMPLETED_EVENT_TITLE, TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE, TUTORIAL_INVENTORY_AVAILABLE_EVENT_TITLE, TUTORIAL_OBSERVATION_LESSON_EVENT_TITLE, TUTORIAL_WELLBEING_ASIDE_EVENT_TITLE] },
       },
     });
 
@@ -284,6 +358,37 @@ export async function rememberTutorialObservationLesson(playerId: number, locati
       type: "SYSTEM",
       title: TUTORIAL_OBSERVATION_LESSON_EVENT_TITLE,
       description: skillKey,
+      playerId,
+      locationId,
+    },
+  });
+  return true;
+}
+
+export function isTutorialWellbeingFoodResource(resourceKey: string) {
+  return ["berries", "mushrooms", "cooked_meat"].includes(resourceKey);
+}
+
+export async function rememberTutorialWellbeingAside(playerId: number, locationId: number | null | undefined, resourceKey: string) {
+  if (!locationId || !isTutorialWellbeingFoodResource(resourceKey)) return false;
+  const location = await prisma.cellLocation.findUnique({
+    where: { id: locationId },
+    select: { key: true, z: true, region: { select: { key: true } } },
+  });
+  if (!location || !isTutorialLocation(location)) return false;
+
+  const seen = await prisma.worldEvent.findFirst({
+    where: { playerId, type: "SYSTEM", title: TUTORIAL_WELLBEING_ASIDE_EVENT_TITLE },
+    select: { id: true },
+    orderBy: { id: "desc" },
+  });
+  if (seen) return false;
+
+  await prisma.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: TUTORIAL_WELLBEING_ASIDE_EVENT_TITLE,
+      description: resourceKey,
       playerId,
       locationId,
     },

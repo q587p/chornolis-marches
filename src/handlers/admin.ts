@@ -21,6 +21,7 @@ import { nextResourceAmount, parseAddResourceArgs, parseAdminInventoryResourceAr
 import { stopAllPlayerAuto } from "./auto";
 import { resetTutorialProgressForPlayer } from "../services/tutorial";
 import { getGateHuntingSaturationState, setCarcassQuestOverride, type CarcassQuestOverride } from "../services/carcassDropoff";
+import { slashlessCommandPattern } from "../utils/slashlessCommands";
 
 function normalizeLookup(value: string | null | undefined) {
   return String(value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
@@ -168,10 +169,13 @@ function splitTeleportArgs(raw: string) {
   return { playerArg: "", locationArg: input };
 }
 
+const TELEPORT_TEXT_COMMAND = slashlessCommandPattern(["teleport"]);
+
 export const ADMIN_HELP_TEXT = [
   "🛠 Команди писарів Порубіжжя",
   "",
   "Звичайні ігрові команди дивіться в /help. Тут лишено службові й небезпечні інструменти.",
+  "Писарські slash-команди можна писати й без початкового `/`: наприклад `teleport forest_07_00` працює як `/teleport forest_07_00`.",
   "",
   "Огляди й службові сторінки",
   "/adminMenu — кнопкове меню писарських команд",
@@ -331,6 +335,17 @@ export function registerAdminHandlers(bot: Bot) {
   bot.hears(["🐾 Істоти", "Істоти"], replyAdminCreaturesMenu);
   bot.hears(["🧭 Телепорт", "Телепорт", "🧭 Телепорт (/teleport)", "Телепорт (/teleport)"], replyTeleportMenu);
   bot.hears(["➕ Додати ресурс", "Додати ресурс", "➕ Додати ресурс (/addResource)", "Додати ресурс (/addResource)"], replyAddResourceFormat);
+  bot.hears(["🔧 Технічні деталі", "Технічні деталі"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+    const player = await resolvePlayerForAdmin(ctx, "");
+    if (!player) return;
+
+    const enabled = !player.showTechnicalDetails;
+    await prisma.player.update({ where: { id: player.id }, data: { showTechnicalDetails: enabled } });
+    await ctx.reply(enabled ? "Технічні деталі увімкнено для вашого персонажа." : "Технічні деталі приховано для вашого персонажа.", {
+      reply_markup: buildAdminMenuReplyKeyboard(),
+    });
+  });
   bot.hears(["🐾 Ключі істот", "Ключі істот"], async (ctx) => {
     if (!(await requireScribeAdmin(ctx))) return;
     await ctx.reply("Ключі видів тварин доступні через /addCreatureHelp.", { reply_markup: buildAdminCreaturesReplyKeyboard() });
@@ -459,10 +474,9 @@ export function registerAdminHandlers(bot: Bot) {
   bot.command("addCampfire", (ctx) => runAddCampfireCommand(ctx));
   bot.hears(["🔥 Додати вогнище", "Додати вогнище", "🔥 Додати вогнище (/addCampfire)", "Додати вогнище (/addCampfire)"], (ctx) => runAddCampfireCommand(ctx, ""));
 
-  bot.command("teleport", async (ctx) => {
+  async function runTeleportCommand(ctx: any, raw = String(ctx.match ?? "").trim()) {
     if (!(await requireScribeAdmin(ctx))) return;
 
-    const raw = String(ctx.match ?? "").trim();
     const directLocation = raw ? await resolveLiteralLocation(raw) : null;
     const { playerArg, locationArg } = directLocation ? { playerArg: "", locationArg: raw } : splitTeleportArgs(raw);
     const player = await resolvePlayerForAdmin(ctx, playerArg);
@@ -489,7 +503,10 @@ export function registerAdminHandlers(bot: Bot) {
         reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, Boolean(player.isAutoEnabled)),
       }).catch(() => undefined);
     }
-  });
+  }
+
+  bot.command("teleport", (ctx) => runTeleportCommand(ctx));
+  bot.hears(TELEPORT_TEXT_COMMAND, (ctx) => runTeleportCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
 
   bot.command(["tutorialReset", "tutorialreset"], async (ctx) => {
     if (!(await requireScribeAdmin(ctx))) return;

@@ -1,7 +1,7 @@
 ---
 id: SURV-001-E
 title: Beginner return cooldown/consequence
-status: next
+status: testing
 type: feature
 area: survival
 priority: medium
@@ -35,3 +35,8 @@ Prevent `Повернення` from becoming fast travel.
 ## Implementation Order
 
 Do after: `SURV-001-D`.
+
+## 0.13.24 Notes
+
+- Added a first 30-minute real-time cooldown using the world event trail.
+- Added the first consequence: the return interrupts queued/running actions and lowers stamina to at most roughly a third.

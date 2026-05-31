@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const { EMPTY_KEYBOARD_BUTTON, buildAdminCreaturesReplyKeyboard, buildAdminFireReplyKeyboard, buildAdminMenuReplyKeyboard, buildAdminResourcesReplyKeyboard, buildMainReplyKeyboard, buildTutorialSecondStepReplyKeyboard, buildTutorialStartReplyKeyboard, mainStatusLabelForPlayer, postureActionLabelsForState, shouldShowInventoryButton, shouldUseFocusedTutorialReplyKeyboard } = require("../../src/ui/replyKeyboard");
+const { buildCharacterAutoKeyboard } = require("../../src/handlers/player");
 const { TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY } = require("../../src/services/tutorial");
 const { formatObservedPostureText, formatPostureText } = require("../../src/utils/playerText");
 const { AUTO_DREAM_BLOCK_MESSAGE, isAutoBlockedInLocation, shouldAutoStandBeforeAction } = require("../../src/handlers/auto");
@@ -155,6 +156,20 @@ assert.equal(adminMenuButtons.flat().includes("✨ Відновити снагу
 assert.equal(adminMenuButtons.flat().includes("🌿 Ресурси"), true);
 assert.equal(adminMenuButtons.flat().includes("🐾 Істоти"), true);
 assert.equal(adminMenuButtons.flat().includes("🔥 Вогонь"), true);
+assert.equal(adminMenuButtons.flat().includes("🔧 Технічні деталі"), true);
+
+const characterButtons = buildCharacterAutoKeyboard(false, {
+  posture: "STANDING",
+  isResting: false,
+  showSleep: true,
+}).inline_keyboard.map((row) => row.map((button) => button.text));
+assert.deepEqual(characterButtons, [
+  ["🎒 Речі"],
+  ["✨ Сигнали", "Сісти"],
+  ["🧘 Відпочити", "🌙 Сон"],
+  ["🤖 Увімкнути авто"],
+]);
+assert.equal(characterButtons.flat().includes("🔧 Технічні деталі"), false);
 
 const adminResourceButtons = buildAdminResourcesReplyKeyboard().keyboard.flat().map((button) => button.text);
 assert.equal(adminResourceButtons.includes("🍓 Додати ягоди"), true);

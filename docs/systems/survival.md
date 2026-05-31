@@ -110,7 +110,11 @@ Freshening and cooking use the same first text-only learning bridge as attack an
 A limited early-game support command:
 
 - returns the player to the starting location;
-- available only before a defined progression threshold;
-- may have cooldown;
-- may apply fatigue or resource loss;
+- `/respawn` is the player-facing command;
+- requires confirmation before moving the character;
+- available to early-progress or weak characters, but refuses established characters;
+- has a first 30-minute real-time cooldown;
+- interrupts active/queued actions and active rest;
+- lowers stamina to at most roughly a third;
+- writes a world event so the return is auditable;
 - helps new players without becoming a fast-travel system.

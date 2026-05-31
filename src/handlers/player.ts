@@ -32,7 +32,7 @@ import { dropObserverText, recordVisibleItemAction } from "../services/visibleIt
 import { tutorialLookPaceComments } from "../services/tutorialVoices";
 import { escapeHtml } from "../utils/text";
 import { noteKnownMessage } from "../utils/messageTracker";
-import { hasCompletedTutorial, isTutorialLocation, rememberTutorialCommandHintIfInTutorial } from "../services/tutorial";
+import { hasCompletedTutorial, isTutorialLocation, rememberTutorialCommandHintIfInTutorial, rememberTutorialWellbeingAside, TUTORIAL_WELLBEING_ASIDE_TEXT } from "../services/tutorial";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "../services/locationFeatures";
 import { canCookPlayerMeat, COOKED_MEAT_KEY, cookRawMeat, RAW_MEAT_KEY } from "../services/meat";
 import { assertCanPerformPhysicalAction } from "../services/postureRules";
@@ -84,33 +84,27 @@ async function recoveryText(player: any) {
   return `\nВідновлення без відпочинку: приблизно ${passiveMinutes} хв. Через /rest або 🧘 Відпочити: приблизно ${restMinutes} хв.`;
 }
 
-function buildCharacterAutoKeyboard(autoEnabled: boolean, options: { posture?: string | null; isResting?: boolean | null; canToggleTechnicalDetails?: boolean; showTechnicalDetails?: boolean; showSleep?: boolean; hasActionQueue?: boolean } = {}) {
+export function buildCharacterAutoKeyboard(autoEnabled: boolean, options: { posture?: string | null; isResting?: boolean | null; showSleep?: boolean; hasActionQueue?: boolean } = {}) {
   const keyboard = new InlineKeyboard()
     .text("🎒 Речі", "character:inventory")
-    .text("✨ Сигнали", "character:signals")
     .row();
   if (options.hasActionQueue) {
     keyboard.text("📋 Черга", "queue:status").row();
   }
   const isSitting = options.posture === "SITTING" || Boolean(options.isResting);
-  keyboard.text(isSitting ? "Встати" : "Сісти", isSitting ? "posture:stand" : "posture:sit");
-  if (!options.isResting) keyboard.text("🧘 Відпочити", "rest:start");
-  keyboard.row();
+  keyboard
+    .text("✨ Сигнали", "character:signals")
+    .text(isSitting ? "Встати" : "Сісти", isSitting ? "posture:stand" : "posture:sit")
+    .row();
 
-  if (options.showSleep !== false) {
-    keyboard
-      .text("🌙 Сон", "character:sleep")
-      .row();
+  if (!options.isResting || options.showSleep !== false) {
+    if (!options.isResting) keyboard.text("🧘 Відпочити", "rest:start");
+    if (options.showSleep !== false) keyboard.text("🌙 Сон", "character:sleep");
+    keyboard.row();
   }
 
   keyboard
     .text(autoEnabled ? "⏹ Зупинити авто" : "🤖 Увімкнути авто", autoEnabled ? "character:auto:stop" : "character:auto:start");
-
-  if (options.canToggleTechnicalDetails) {
-    keyboard
-      .row()
-      .text(options.showTechnicalDetails ? "🔧 Сховати технічні деталі" : "🔧 Технічні деталі", "character:debug:toggle");
-  }
 
   return keyboard;
 }
@@ -312,7 +306,7 @@ async function renderCharacterView(telegramId: number) {
 
   return {
     text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}${tutorialStatusText}\n\n${formatPostureText({ ...player, isSleeping: isTutorialDream })}${torchText}\n${vitals.join("\n")}\nСтан: ${formatFatigueText(player)}${await recoveryText(player)}\n${hungerText}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}${technicalDetailsText}\nЗареєстровано: ${formatDateTime(player.createdAt)}${statsText}`,
-    keyboard: buildCharacterAutoKeyboard(autoEnabled, { posture: player.posture, isResting: player.isResting, canToggleTechnicalDetails, showTechnicalDetails, showSleep: !isTutorialDream, hasActionQueue }),
+    keyboard: buildCharacterAutoKeyboard(autoEnabled, { posture: player.posture, isResting: player.isResting, showSleep: !isTutorialDream, hasActionQueue }),
   };
 }
 
@@ -491,7 +485,8 @@ export function registerPlayerHandlers(bot: Bot) {
 
     try {
       const resultText = await useInventoryResource(player.id, resourceKey);
-      await ctx.reply(resultText);
+      const wellbeingAside = await rememberTutorialWellbeingAside(player.id, player.currentLocationId, resourceKey);
+      await ctx.reply(wellbeingAside ? `${resultText}\n\n${TUTORIAL_WELLBEING_ASIDE_TEXT}` : resultText);
       await refreshInventoryMessage(ctx);
     } catch (error) {
       await ctx.reply(error instanceof Error ? error.message : "Не вдалося використати це.");

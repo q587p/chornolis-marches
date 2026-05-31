@@ -192,6 +192,8 @@ export function buildAdminMenuReplyKeyboard() {
     .text("🦴 Падальний рів")
     .row()
     .text("🔥 Вогонь")
+    .text("🔧 Технічні деталі")
+    .row()
     .text("🛠 Повна довідка")
     .row()
     .text("↩️ Назад")
