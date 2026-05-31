@@ -31,7 +31,11 @@ registerHeraldPublisherCommands(bot, heraldAdminIds);
 registerHeraldUnknownCommandFallback(bot, heraldAdminIds);
 
 bot.catch((error) => {
-  console.error("Herald bot error:", error);
+  console.error("Herald bot error:", publicationErrorMessage(error.error));
+  void error.ctx.reply("Канцелярія перечепилася об службову помилку, але не відкрила жодної таємної книги.")
+    .catch((replyError) => {
+      console.warn("Herald error reply failed:", publicationErrorMessage(replyError));
+    });
 });
 
 function formatStartupNoticeTime(now = new Date()) {
