@@ -38,5 +38,5 @@ Do after: `SURV-001-C`.
 
 ## 0.13.24 Notes
 
-- Confirmed `/refresh` cancels queued/running player actions, stops rest/auto, moves the character to the configured start location, lowers stamina to at most roughly a third and writes a `Player used refresh return` world event.
+- Confirmed `/respawn` cancels queued/running player actions, stops rest/auto, moves the character to the configured start location, lowers stamina to at most roughly a third and writes a `Player used respawn return` world event.
 - The success response explains the return diegetically before rendering the start camp again.

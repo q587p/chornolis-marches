@@ -244,7 +244,6 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "дії": { kind: "menu" },
   "кнопки": { kind: "menu" },
 
-  refresh: { kind: "beginner-return" },
   respawn: { kind: "beginner-return" },
   "повернення": { kind: "beginner-return" },
   "повернення до табору": { kind: "beginner-return" },
@@ -603,7 +602,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "time") return "/time";
   if (parsed.kind === "menu") return "/menu";
   if (parsed.kind === "session-presence") return parsed.mode === "afk" ? "/afk" : "/end_session";
-  if (parsed.kind === "beginner-return") return "/refresh";
+  if (parsed.kind === "beginner-return") return "/respawn";
   if (parsed.kind === "tutorial-end") return "/tutorialEnd";
   if (parsed.kind === "chat") return "/chat";
   if (parsed.kind === "sleep") return parsed.tutorial ? "/sleep_tutorial" : "/sleep";

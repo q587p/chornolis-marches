@@ -960,9 +960,9 @@ async function submitSessionPresence(ctx: any, mode: "afk" | "end") {
 
 function buildBeginnerReturnConfirmKeyboard() {
   return new InlineKeyboard()
-    .text("🧭 Повернутися до табору", "refresh:confirm")
+    .text("🧭 Повернутися до табору", "respawn:confirm")
     .row()
-    .text("↩️ Лишитися тут", "refresh:cancel");
+    .text("↩️ Лишитися тут", "respawn:cancel");
 }
 
 async function requestBeginnerReturn(ctx: any) {
@@ -1077,8 +1077,8 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "social-signal") return submitSocialSignal(bot, ctx, parsed.signal, parsed.target);
   });
 
-  bot.callbackQuery("refresh:confirm", async (ctx) => confirmBeginnerReturn(ctx));
-  bot.callbackQuery("refresh:cancel", async (ctx) => {
+  bot.callbackQuery("respawn:confirm", async (ctx) => confirmBeginnerReturn(ctx));
+  bot.callbackQuery("respawn:cancel", async (ctx) => {
     await safeAnswerCallbackQuery(ctx, "Лишаємося тут.");
     await ctx.reply("Ви лишаєтеся на місці. Якщо треба, можна озирнутися або перевірити виходи.", {
       reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),

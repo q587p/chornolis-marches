@@ -38,6 +38,6 @@ Do after: `SURV-001-B`.
 
 ## 0.13.24 Notes
 
-- Added confirmation buttons for `/refresh` before any movement happens.
+- Added confirmation buttons for `/respawn` before any movement happens.
 - Added text aliases `повернення`, `повернення до табору`, `повернутися до табору`, `вернутися до табору`, and `назад до табору`.
 - Kept plain `повернутися` as the local Back action to avoid surprising players who only mean to return to the previous view.

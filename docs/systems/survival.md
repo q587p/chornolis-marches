@@ -105,12 +105,12 @@ Freshening and cooking use the same first text-only learning bridge as attack an
 5. Campfire may attract or repel creatures.
 6. Rain or time can extinguish fire.
 
-## `/refresh` / `/respawn`
+## `/respawn`
 
 A limited early-game support command:
 
 - returns the player to the starting location;
-- `/refresh` is the primary command; `/respawn` remains a compatibility alias;
+- `/respawn` is the player-facing command;
 - requires confirmation before moving the character;
 - available to early-progress or weak characters, but refuses established characters;
 - has a first 30-minute real-time cooldown;

@@ -38,5 +38,5 @@ Do after: `ONB-001-E`.
 
 ## 0.13.24 Notes
 
-- Added a generous first helper for `/refresh` / `/respawn`: early-progress characters pass, weak characters pass, already-home, missing-location, cooldown and established-character cases are refused with player-facing text.
+- Added a generous first helper for `/respawn`: early-progress characters pass, weak characters pass, already-home, missing-location, cooldown and established-character cases are refused with player-facing text.
 - Added focused helper coverage in `scripts/test/beginner-return.cjs`.

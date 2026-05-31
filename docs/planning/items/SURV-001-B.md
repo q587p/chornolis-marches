@@ -38,5 +38,5 @@ Do after: `SURV-001-A`.
 
 ## 0.13.24 Notes
 
-- `/refresh` is now the primary command and `/respawn` is kept as compatibility.
+- `/respawn` is now the primary command.
 - The command opens a confirmation flow instead of moving immediately.

@@ -10,9 +10,7 @@ This is not fast travel. It is early-game mercy that protects testing and onboar
 
 Canonical player-facing name: `Повернення`.
 
-Primary slash command: `/refresh`.
-
-Slash command compatibility: `/respawn`.
+Primary slash command: `/respawn`.
 
 Possible text aliases:
 
@@ -20,7 +18,6 @@ Possible text aliases:
 - `повернутися`
 - `вернутися до табору`
 - `respawn`
-- `refresh`
 
 ## First Scope
 
@@ -33,8 +30,8 @@ Possible text aliases:
 
 ## 0.13.24 First Implementation
 
-- `/refresh` and `/respawn` open the same confirmation flow.
-- Confirmation cancels queued/running actions, stops active rest/auto, returns to the configured start location, lowers stamina to at most roughly a third and writes a `Player used refresh return` world event.
+- `/respawn` opens the confirmation flow.
+- Confirmation cancels queued/running actions, stops active rest/auto, returns to the configured start location, lowers stamina to at most roughly a third and writes a `Player used respawn return` world event.
 - Plain `повернутися` remains the local Back action; use explicit `повернення` or `повернутися до табору` for the return flow.
 - The first cooldown is 30 real-time minutes, tracked through the world event trail rather than a new schema field.
 

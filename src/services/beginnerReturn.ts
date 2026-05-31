@@ -4,11 +4,10 @@ import { BASE_STAMINA } from "../gameConfig";
 import { START_LOCATION_KEY, getStartLocationId } from "./players";
 import { fatigueStateFor } from "./actionRecovery";
 
-export const BEGINNER_RETURN_COMMAND = "/refresh";
-export const BEGINNER_RETURN_COMPAT_COMMAND = "/respawn";
+export const BEGINNER_RETURN_COMMAND = "/respawn";
 export const BEGINNER_RETURN_PROGRESS_LIMIT = 800;
 export const BEGINNER_RETURN_COOLDOWN_MS = 30 * 60 * 1000;
-export const BEGINNER_RETURN_EVENT_TITLE = "Player used refresh return";
+export const BEGINNER_RETURN_EVENT_TITLE = "Player used respawn return";
 
 type BeginnerReturnPlayer = {
   id: number;
