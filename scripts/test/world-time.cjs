@@ -12,11 +12,16 @@ const {
 } = require("../../src/data/worldClock");
 const { renderCurrentWorldTime } = require("../../src/services/calendar");
 const { lightSnapshotFromWorldTime } = require("../../src/services/lightSnapshot");
+const { visibilityRulesFromLight } = require("../../src/services/visibility");
 const {
   renderCurrentWeather,
   renderWeatherLine,
   weatherLightModifier,
 } = require("../../src/services/weather");
+const {
+  parseWeatherSetTarget,
+  parseWorldTimeSetTarget,
+} = require("../../src/services/worldTimeDebug");
 
 assert.equal(REAL_MS_PER_GAME_HOUR, 120_000);
 assert.equal(REAL_MS_PER_GAME_MINUTE, 2_000);
@@ -81,5 +86,27 @@ const localLight = lightSnapshotFromWorldTime(moonlessStormNight, { hasLocalLigh
 assert.equal(darkLight.level, "dark");
 assert.ok(fullLight.score > darkLight.score);
 assert.ok(localLight.score >= 78);
+
+assert.equal(visibilityRulesFromLight(darkLight, "brief").showNearbyDetails, false);
+assert.equal(visibilityRulesFromLight(fullLight, "brief").showNearbyDetails, false);
+assert.equal(visibilityRulesFromLight(localLight, "brief").showNearbyDetails, true);
+assert.equal(visibilityRulesFromLight(darkLight, "details").showNearbyDetails, true);
+
+const dayTarget = parseWorldTimeSetTarget("day", START_WORLD_ABSOLUTE_MINUTE);
+assert.ok(dayTarget);
+assert.equal(worldTimeSnapshotFromAbsoluteMinute(dayTarget.absoluteMinute).clockLabel, "12:00");
+
+const fullMoonNight = parseWorldTimeSetTarget("fullmoon night", START_WORLD_ABSOLUTE_MINUTE);
+assert.ok(fullMoonNight);
+const fullMoonNightSnapshot = worldTimeSnapshotFromAbsoluteMinute(fullMoonNight.absoluteMinute);
+assert.equal(fullMoonNightSnapshot.moonPhase, "full");
+assert.equal(fullMoonNightSnapshot.daypart, "night");
+
+assert.deepEqual(parseWeatherSetTarget("storm 80 30"), {
+  key: "storm",
+  intensity: 80,
+  durationMinutes: 30,
+});
+assert.equal(parseWeatherSetTarget("not_weather"), null);
 
 console.log("World time helpers OK");

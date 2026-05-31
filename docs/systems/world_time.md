@@ -89,7 +89,13 @@ Do not use `Date.getHours()`, server timezone, player timezone or real-world cal
 - `/weather` shows the current Chornolis weather as a compact atmospheric readout.
 - The shared light snapshot helper combines daypart, moon illumination, weather modifiers and optional local active light into one reusable result for future visibility consumers.
 
-Visibility reduction, darkness effects and ordinary sleep remain later `0.14.x` slices.
+`0.14.4` adds the first debug/visibility foundation:
+
+- `/timeDebug` shows scribe/admin-only exact internal world time, weather and local light state.
+- `/timeSet` and `/weatherSet` let scribes force QA cases such as dusk, night, full moon and storm without waiting.
+- Brief `/look` consumes the shared visibility service instead of directly checking local light.
+
+Deeper visibility reduction, darkness copy and ordinary sleep remain later `0.14.x` slices.
 
 ## Out of Scope
 

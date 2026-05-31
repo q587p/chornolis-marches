@@ -16,6 +16,7 @@ See also:
 - `docs/planning/0.13-closure-and-0.14-transition.md`
 - `docs/planning/0.14-observation-readiness.md`
 - `docs/systems/world_time.md`
+- `docs/systems/visibility.md`
 
 ## Closed 0.13.x
 
@@ -32,8 +33,8 @@ Implement `0.14.x` in small slices:
 
 1. WORLD-001-A/B/C/D: internal world-clock model, persistent state, heartbeat advancement and `/time` reading stored/derived Chornolis world state. The `0.14.1` slice covers this foundation and keeps elapsed real milliseconds only as a rate; it must not bind Chornolis day/night to real-world time of day.
 2. WORLD-001-E/F: `0.14.3` adds the weather MVP display/state and the shared light snapshot helper. Keep this as a foundation slice, not a full darkness behavior change.
-3. WORLD-001-G: time/weather debug and scribe/admin safety for testing daypart, moon and weather state.
-4. VIS-001-A: shared visibility service skeleton consumes the light snapshot helper.
+3. WORLD-001-G: `0.14.4` adds time/weather debug and scribe/admin safety for testing daypart, moon and weather state.
+4. VIS-001-A: `0.14.4` adds the shared visibility service skeleton and wires brief `/look` through it.
 5. VIS-001-B/C/D/E: darkness affects location detail, nearby beings, tracks and ground objects.
 6. VIS-001-F: darkness copy audit, so hidden/reduced details sound atmospheric rather than technical.
 7. FIRE-001-A/C and FIRE-001-D: active light connects to visibility; carried, dropped and NPC-held light sources are covered by a matrix test.

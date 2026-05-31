@@ -9,6 +9,32 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.14.4 - Visibility debug foundation - 12026-05-31
+
+### Added
+
+- Added a shared visibility service that turns light snapshots into location-view visibility rules.
+- Added scribe/admin `/timeDebug`, `/timeSet` and `/weatherSet` controls for QA of daypart, moon, weather and local light cases.
+- Added a `🌒 Час світу` admin-menu button for the new time debug readout.
+- Added focused world-time tests for visibility rules and debug parser helpers.
+
+### Changed
+
+- Brief `/look` now asks the shared visibility service whether nearby beings, ground objects and target buttons should be shown.
+- Daylight and clear light can now reveal brief nearby details without requiring a local campfire or torch, while dim/dark brief views remain more cautious until the deeper darkness slices land.
+- Updated admin docs, world-time docs and planning docs for the `WORLD-001-G` and `VIS-001-A` slices.
+
+### Validation
+
+- Ran `node scripts/test/world-time.cjs`.
+- Ran `node scripts/test/posture.cjs`.
+- Ran `node scripts/test/slashless-command-coverage.cjs`.
+- Ran `npm run planning:export`.
+- Ran `npm test`.
+- Ran `npm run build`.
+
+---
+
 ## 0.14.3 - Weather MVP and light snapshot foundation - 12026-05-31
 
 ### Added

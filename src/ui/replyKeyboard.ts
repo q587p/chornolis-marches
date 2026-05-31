@@ -181,6 +181,8 @@ export function buildAdminMenuReplyKeyboard() {
     .text("📊 Статистика")
     .text("🌲 Світ")
     .row()
+    .text("🌒 Час світу")
+    .row()
     .text("👥 Усі")
     .text("📍 Місцини")
     .row()

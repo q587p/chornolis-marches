@@ -88,6 +88,10 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, Math.round(value)));
 }
 
+export function clampWeatherIntensity(value: number) {
+  return clamp(Number.isFinite(value) ? value : INITIAL_WEATHER_INTENSITY, 0, 100);
+}
+
 function randomBetween(min: number, max: number) {
   return min + Math.floor(Math.random() * (max - min + 1));
 }
@@ -109,7 +113,7 @@ export function weatherIntensityLabel(intensity: number) {
 
 export function weatherLightModifier(key: string | null | undefined, intensity: number) {
   const profile = weatherProfile(key);
-  const scaled = profile.lightModifier * clamp(intensity, 0, 100) / 100;
+  const scaled = profile.lightModifier * clampWeatherIntensity(intensity) / 100;
   return Math.round(scaled);
 }
 
@@ -153,6 +157,7 @@ export async function advanceWeatherState(
   state: {
     id: number;
     absoluteMinute: number;
+    lastAdvancedAt: Date;
     weatherKey: string;
     weatherIntensity: number;
     weatherEndsAtMinute: number | null;

@@ -127,7 +127,7 @@ TRACK-LEARN-001-B,Animal movement observation,next,feature,learning,medium,"trac
 TRACK-LEARN-001-C,Learning respects visibility and light,next,feature,learning,high,"learning,visibility,light",docs/planning/items/TRACK-LEARN-001-C.md
 UX-001,Command and feature icon collision audit,backlog,chore,ux,low,"ux,icons,keyboard,features",docs/planning/items/UX-001-command-feature-icon-collision.md
 UX-002,Target pagination return context,testing,chore,ux,medium,"ux,pagination,corpses,telegram",docs/planning/items/UX-002-target-pagination-return-context.md
-VIS-001-A,Shared visibility service skeleton,next,technical,visibility,high,"visibility,night,light",docs/planning/items/VIS-001-A.md
+VIS-001-A,Shared visibility service skeleton,testing,technical,visibility,high,"visibility,night,light",docs/planning/items/VIS-001-A.md
 VIS-001-B,Hide location details in darkness,next,feature,visibility,high,"visibility,look,night",docs/planning/items/VIS-001-B.md
 VIS-001-C,Nearby beings visibility in darkness,next,feature,visibility,high,"visibility,targets,night",docs/planning/items/VIS-001-C.md
 VIS-001-D,Track visibility gate,next,feature,visibility,medium,"visibility,tracks,night",docs/planning/items/VIS-001-D.md
@@ -143,7 +143,7 @@ WORLD-001-C,Heartbeat clock advancement and daypart helper,testing,feature,world
 WORLD-001-D,/time reads internal world-clock state,testing,feature,world_time,high,"world-time,time-command,moon,0.14",docs/planning/items/WORLD-001-D.md
 WORLD-001-E,Weather MVP state and display,testing,feature,world_time,high,"world-time,weather,0.14",docs/planning/items/WORLD-001-E-weather-mvp-state-and-display.md
 WORLD-001-F,Light snapshot helper,testing,feature,visibility,high,"world-time,visibility,moon,weather,light,0.14",docs/planning/items/WORLD-001-F-light-snapshot-helper.md
-WORLD-001-G,Time and weather debug controls,next,technical,world_time,medium,"world-time,weather,admin,testing,0.14",docs/planning/items/WORLD-001-G-time-weather-debug-controls.md
+WORLD-001-G,Time and weather debug controls,testing,technical,world_time,medium,"world-time,weather,admin,testing,0.14",docs/planning/items/WORLD-001-G-time-weather-debug-controls.md
 WORLD-002,Campfires and light,next,feature,survival,high,"survival,light,crafting,night",docs/planning/items/WORLD-002-campfires-and-light.md
 WORLD-002-hidden-spirit,Hidden spirit seed and boundaries,backlog,feature,world,medium,"world,hidden-presence,spirit,campfire",docs/planning/items/WORLD-002-hidden-spirit-seed-and-boundaries.md
 WPN-001,Minimal weapon catalog and equip foundation,next,feature,items,medium,"weapons,inventory,equipment,freshening",docs/planning/items/WPN-001-minimal-weapon-catalog-and-equip.md
