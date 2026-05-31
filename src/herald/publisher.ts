@@ -8,13 +8,10 @@ import {
   markPublicationPublished,
   publicationErrorMessage,
 } from "./publications";
+import { parseTelegramChannelId } from "./safety";
 
 const PUBLISH_BATCH_LIMIT = 3;
 const PENDING_LIST_LIMIT = 10;
-
-function channelIdFromConfig(value: string) {
-  return /^-?\d+$/.test(value) ? Number(value) : value;
-}
 
 function formatDate(value: Date) {
   return new Intl.DateTimeFormat("uk-UA", {
@@ -53,7 +50,7 @@ export async function publishPendingHeraldPublications(bot: Bot, options: { limi
     let telegramMessageId: number;
     try {
       const sent = await bot.api.sendMessage(
-        channelIdFromConfig(channelId),
+        parseTelegramChannelId(channelId),
         formatHeraldPublicationMessage(publication),
       );
       telegramMessageId = sent.message_id;
@@ -78,6 +75,10 @@ export async function publishPendingHeraldPublications(bot: Bot, options: { limi
     }
   }
 
+  if (pending.length > 0 && (published > 0 || failed > 0)) {
+    console.log(`Herald publisher tick: checked=${pending.length}, published=${published}, failed=${failed}.`);
+  }
+
   return { published, failed, skipped: false, checked: pending.length };
 }
 
@@ -91,7 +92,7 @@ export async function publishHeraldPublication(
 
   try {
     const sent = await bot.api.sendMessage(
-      channelIdFromConfig(channelId),
+      parseTelegramChannelId(channelId),
       formatHeraldPublicationMessage(publication),
     );
     const published = await markPublicationPublished(publication.id, sent.message_id);

@@ -10,10 +10,7 @@ import {
   publicationErrorMessage,
   queueHeraldPublication,
 } from "./publications";
-
-function channelIdFromConfig(value: string) {
-  return /^-?\d+$/.test(value) ? Number(value) : value;
-}
+import { parseTelegramChannelId } from "./safety";
 
 function publicationStatusText(publication: { id: number; publishedAt: Date | null; attempts: number; error: string | null }) {
   if (publication.publishedAt) return `Запис уже опубліковано. Номер у книзі Канцелярії: ${publication.id}.`;
@@ -83,7 +80,7 @@ export function registerHeraldNewsCommands(bot: Bot, heraldAdminIds: ReadonlySet
 
     const message = formatHeraldNewsMessage(result.entry);
     try {
-      const sent = await ctx.api.sendMessage(channelIdFromConfig(config.heraldChannelId), message);
+      const sent = await ctx.api.sendMessage(parseTelegramChannelId(config.heraldChannelId), message);
       const published = await markPublicationPublished(result.publication.id, sent.message_id);
       await ctx.reply(`Канцелярія передала останній запис до каналу. Номер у книзі: ${published.id}.`);
     } catch (error) {

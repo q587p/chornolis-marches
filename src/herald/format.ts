@@ -1,12 +1,5 @@
 import type { HeraldNewsEntry } from "./newsMarkdown";
-
-const TELEGRAM_MESSAGE_LIMIT = 3900;
-
-function truncateForTelegram(text: string, maxLength = TELEGRAM_MESSAGE_LIMIT) {
-  if (text.length <= maxLength) return text;
-  const suffix = "\n\n[Запис скорочено для Telegram.]";
-  return `${text.slice(0, Math.max(0, maxLength - suffix.length)).trimEnd()}${suffix}`;
-}
+import { sanitizeHeraldChannelText } from "./safety";
 
 export function formatHeraldNewsMessage(entry: HeraldNewsEntry) {
   const body = entry.body || entry.raw.replace(/^##\s+.*(?:\n|$)/, "").trim();
@@ -14,7 +7,7 @@ export function formatHeraldNewsMessage(entry: HeraldNewsEntry) {
 }
 
 export function formatHeraldPublicationMessage(publication: { title: string; body: string }) {
-  return truncateForTelegram([
+  return sanitizeHeraldChannelText([
     "📜 Канцелярія Межового Знаку",
     "",
     publication.title,

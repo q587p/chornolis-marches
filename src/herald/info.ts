@@ -2,6 +2,7 @@ import type { CellLocation, Player, Region } from "@prisma/client";
 import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA, PLAYER_HUNGER_MAX } from "../gameConfig";
 import { formatHungerState, formatLifeState, formatResourceState } from "../utils/playerText";
+import { heraldGatheringLine, heraldPracticePhrase, heraldTrailPhrase } from "./infoThresholds";
 
 type HeraldInfoPlayer = Player & {
   currentLocation: (CellLocation & { region: Region }) | null;
@@ -15,27 +16,9 @@ function displayName(player: Pick<HeraldInfoPlayer, "nameNominative" | "firstNam
   return player.nameNominative ?? player.firstName ?? player.username ?? "мандрівник";
 }
 
-function trailPhrase(value: number) {
-  if (value <= 0) return "Канцелярія ще майже не має записів про ці кроки.";
-  if (value < 15) return "сліди трапляються зрідка";
-  if (value < 80) return "ліс уже пам’ятає ці кроки";
-  return "це ім’я повторюється в польових нотатках про дороги";
-}
-
-function practicePhrase(value: number, noun: string) {
-  if (value <= 0) return `${noun}: у книзі майже порожньо.`;
-  if (value < 8) return `${noun}: записи з’являються зрідка.`;
-  if (value < 35) return `${noun}: рука вже знає кілька певних рухів.`;
-  return `${noun}: це ім’я повторюється в польових нотатках.`;
-}
-
 function gatheringLine(player: HeraldInfoPlayer) {
   const gathered = player.berriesGathered + player.mushroomsGathered + player.herbsGathered;
-  if (player.gatherAttempts <= 0 && gathered <= 0) return "Збір: Канцелярія ще майже не має записів.";
-  if (gathered <= 0) return "Збір: спроби є, але кошик поки частіше лишався порожнім.";
-  if (gathered < 10) return "Збір: дрібні знахідки вже траплялися під рукою.";
-  if (gathered < 50) return "Збір: трави, ягоди й гриби вже не раз лягали до речей.";
-  return "Збір: польові нотатки часто повертаються до цієї руки й її знахідок.";
+  return heraldGatheringLine(player.gatherAttempts, gathered);
 }
 
 function resourceLine(player: HeraldInfoPlayer) {
@@ -129,12 +112,12 @@ export function renderHeraldPlayerInfo(player: HeraldInfoPlayer) {
   return [
     `📖 Особовий запис Канцелярії: ${name}`,
     "",
-    `Шлях: ${trailPhrase(player.steps)}.`,
+    `Шлях: ${heraldTrailPhrase(player.steps)}.`,
     gatheringLine(player),
     resourceText,
     socialLine(player),
     restLine(player),
-    practicePhrase(player.animalsKilled, "Полювання"),
+    heraldPracticePhrase(player.animalsKilled, "Полювання"),
     locationLine(player),
     conditionLine(player),
     "",
