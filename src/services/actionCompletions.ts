@@ -31,7 +31,7 @@ import { escapeHtml } from "../utils/text";
 import { resourceAccusativeName } from "../utils/resourceText";
 import { canEditKnownMessage, noteKnownMessage } from "../utils/messageTracker";
 import { playerCanShowTechnicalDetails } from "./technicalDetails";
-import { canOpenDreamGateWithSpeech, ensureTutorialForagingResources, isLocationExitLocked, isTutorialFastRestLocationKey, openDreamGate, rememberTutorialCommandHintIfInTutorial, rememberTutorialForagingSuccess, rememberTutorialInventoryAvailable, rememberTutorialWellbeingAside, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, TUTORIAL_WELLBEING_ASIDE_TEXT } from "./tutorial";
+import { canOpenDreamGateWithSpeech, ensureTutorialForagingResources, isLocationExitLocked, isTutorialFastRestLocationKey, openDreamGate, rememberTutorialCommandHintIfInTutorial, rememberTutorialForagingSuccess, rememberTutorialInventoryAvailable, rememberTutorialWellbeingAside, tutorialRestEntryStaminaMode, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_ENTRY_STAMINA_TEXT, TUTORIAL_REST_RETURN_FROM_HEAT_TEXT, TUTORIAL_WELLBEING_ASIDE_TEXT } from "./tutorial";
 import { tutorialGateSpeechComment, tutorialLookPaceComments, tutorialSpiritMoveComment, tutorialTrackComments, tutorialWaitPaceComments } from "./tutorialVoices";
 import { chance, pick, shuffle } from "../utils/random";
 import { canSendProactiveToPlayerId } from "./sessionPresence";
@@ -268,9 +268,14 @@ async function markRecentAttackDanger(locationId: number) {
   });
 }
 
-async function applyTutorialRestEntryStaminaLesson(playerId: number, locationId: number) {
-  const location = await prisma.cellLocation.findUnique({ where: { id: locationId }, select: { key: true } });
-  if (location?.key !== TUTORIAL_REST_LOCATION_KEY) return null;
+async function applyTutorialRestEntryStaminaLesson(playerId: number, fromLocationId: number, toLocationId: number, direction: Direction) {
+  const [fromLocation, toLocation] = await Promise.all([
+    prisma.cellLocation.findUnique({ where: { id: fromLocationId }, select: { key: true } }),
+    prisma.cellLocation.findUnique({ where: { id: toLocationId }, select: { key: true } }),
+  ]);
+  const mode = tutorialRestEntryStaminaMode(fromLocation?.key, toLocation?.key, direction);
+  if (!mode) return null;
+  if (mode === "protected") return TUTORIAL_REST_RETURN_FROM_HEAT_TEXT;
 
   const player = await prisma.player.findUnique({ where: { id: playerId }, select: { id: true, stamina: true, staminaMax: true } });
   if (!player) return null;
@@ -291,11 +296,11 @@ async function applyTutorialRestEntryStaminaLesson(playerId: number, locationId:
       title: TUTORIAL_REST_ENTRY_EVENT_TITLE,
       description: `stamina ${player.stamina}/${max} -> ${next}/${max}`,
       playerId: player.id,
-      locationId,
+      locationId: toLocationId,
     },
   });
 
-  return "Тепло сну раптом робить тіло важчим, ніби дорога згадала всі попередні кроки. Снаги лишається приблизно на третину. Тут саме час натиснути «Відпочити» або написати /rest.";
+  return TUTORIAL_REST_ENTRY_STAMINA_TEXT;
 }
 
 async function triggerHerbivorePanic(locationId: number, victimCreatureId: number, reason = "лякається крові й різкого руху") {
@@ -474,7 +479,7 @@ async function completeMove(bot: Bot, action: WorldAction) {
     await spendPlayerStamina(bot, player.id, "MOVE", chatId);
     const dreamItemsStolen = await removeTutorialForagingDreamItems(player.id, currentLocationId);
     await prisma.player.updateMany({ where: { id: player.id }, data: { currentLocationId: exit.toLocationId, steps: { increment: 1 } } });
-    const tutorialRestEntryText = await applyTutorialRestEntryStaminaLesson(player.id, exit.toLocationId);
+    const tutorialRestEntryText = await applyTutorialRestEntryStaminaLesson(player.id, currentLocationId, exit.toLocationId, payload.direction);
     const arrivalLabel = await visibleMoverLabel(exit.toLocationId, fallbackMover, playerName);
     await notifyLocation(bot, exit.toLocationId, player.id, `${arrivalLabel} ${movementPastVerb(player, arrivalLabel, fallbackMover, "зайшов", "зайшла", "зайшли")} сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, {
       keyboard: buildTargetListKeyboard([{ type: "player", id: player.id, label: arrivalLabel, canGreet: true }]),

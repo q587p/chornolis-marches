@@ -15,6 +15,8 @@ export const TUTORIAL_SAFETY_LOCATION_KEY = "dream_tutorial_safety";
 export const TUTORIAL_OBSERVATION_LOCATION_KEY = "dream_tutorial_observation";
 export const TUTORIAL_END_LOCATION_KEY = TUTORIAL_OBSERVATION_LOCATION_KEY;
 export const TUTORIAL_DEEP_REST_LOCATION_KEY = "dream_tutorial_deep_rest";
+export const TUTORIAL_REST_ENTRY_STAMINA_TEXT = "Тепло сну раптом робить тіло важчим, ніби дорога згадала всі попередні кроки. Снаги лишається приблизно на третину. Тут саме час натиснути «Відпочити» або написати /rest.";
+export const TUTORIAL_REST_RETURN_FROM_HEAT_TEXT = "Жар легкого перепочинку ще тримається на плечах. Він не дає сну знову обважнити тіло: повертаючись від вогню, ви зберігаєте здобуту снагу.";
 export const DREAM_GATE_FEATURE_KEY = "dream_tutorial_sleep_gate";
 export const DREAM_GATE_RETURN_FEATURE_KEY = "dream_tutorial_sleep_gate_return";
 export const DREAM_GATE_FEATURE_KEYS = [DREAM_GATE_FEATURE_KEY, DREAM_GATE_RETURN_FEATURE_KEY] as const;
@@ -46,6 +48,15 @@ export const TUTORIAL_FORAGING_RESOURCE_AMOUNTS = {
 
 export function tutorialForagingResourceAmount(resourceKey: string) {
   return TUTORIAL_FORAGING_RESOURCE_AMOUNTS[resourceKey as keyof typeof TUTORIAL_FORAGING_RESOURCE_AMOUNTS] ?? null;
+}
+
+export type TutorialRestEntryStaminaMode = "drain" | "protected";
+
+export function tutorialRestEntryStaminaMode(fromLocationKey: string | null | undefined, toLocationKey: string | null | undefined, direction: Direction | string | null | undefined): TutorialRestEntryStaminaMode | null {
+  if (toLocationKey !== TUTORIAL_REST_LOCATION_KEY) return null;
+  if (fromLocationKey === TUTORIAL_HUB_LOCATION_KEY && direction === Direction.WEST) return "drain";
+  if (fromLocationKey === TUTORIAL_DEEP_REST_LOCATION_KEY && direction === Direction.EAST) return "protected";
+  return null;
 }
 
 function normalizeDreamGateSpeech(text: string) {
