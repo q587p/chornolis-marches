@@ -1805,6 +1805,26 @@
     "file": "docs/planning/items/PROG-004-personal-chronicle-milestones.md"
   },
   {
+    "id": "PROG-005",
+    "title": "Global chronicles and world milestones",
+    "status": "testing",
+    "type": "feature",
+    "area": "progression",
+    "priority": "high",
+    "tags": [
+      "chronicle",
+      "world-events",
+      "onboarding",
+      "gate-hunting",
+      "milestones"
+    ],
+    "depends_on": [
+      "WORLD-001-D"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/PROG-005-global-chronicles-and-world-milestones.md"
+  },
+  {
     "id": "QA-001",
     "title": "0.13 first-session closure smoke",
     "status": "testing",

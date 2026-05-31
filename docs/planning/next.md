@@ -43,6 +43,10 @@ Implement `0.14.x` in small slices:
 
 Observation learning remains the `0.15` line. Darkness, distance and light should affect learning later, but the visibility foundation must land first.
 
+## Small 0.14.1 Companion Slice
+
+- PROG-005: global chronicles start as a small public `WorldEvent` surface. The first slice records new player arrivals and падальний рів start/stop state changes through `/chronicles`; personal літопис and skill milestones remain separate follow-up work.
+
 ## 0.15 Next
 
 - LEARN-001: minimal learning storage decision.

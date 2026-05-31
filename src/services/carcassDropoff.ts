@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "../db";
 import { resourceTypeDisplayName } from "./corpses";
 import { inventoryResourceKeyFromText } from "./inventoryUse";
+import { recordCarcassQuestChronicle } from "./chronicles";
 
 export const GATE_CARCASS_DROPOFF_FEATURE_KEY = "closed_gate_carcass_dropoff";
 export const GATE_CARCASS_DROPOFF_SMALL_THRESHOLD = 3;
@@ -378,7 +379,7 @@ export async function recordNpcCarcassDropoffContribution(input: {
   const dropoffFeatureKey = input.dropoffFeatureKey ?? GATE_CARCASS_DROPOFF_FEATURE_KEY;
   const saturation = await getGateHuntingSaturationState(dropoffFeatureKey).catch(() => null);
 
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const [feature, creature] = await Promise.all([
       tx.locationFeature.findUnique({ where: { key: dropoffFeatureKey } }),
       tx.creature.findUnique({
@@ -426,6 +427,12 @@ export async function recordNpcCarcassDropoffContribution(input: {
       fieldLine: hunterFieldLine("deposit", after),
     };
   });
+
+  const afterSaturation = await getGateHuntingSaturationState(result.featureKey).catch(() => null);
+  if (!saturation?.active && afterSaturation?.active) {
+    await recordCarcassQuestChronicle("stop", result.locationId).catch((error) => console.warn("Failed to record carcass quest chronicle:", error));
+  }
+  return result;
 }
 
 export async function putInventoryIntoLocalFeature(input: {
@@ -443,7 +450,7 @@ export async function putInventoryIntoLocalFeature(input: {
   if (!isCarcassDropoffFeature(feature)) throw new Error("Це не місце для туш чи решток.");
   const saturation = await getGateHuntingSaturationState(feature.key).catch(() => null);
 
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const matched = await matchingCarriedResources(tx, input.playerId, input.itemQuery);
     if (!matched.length) throw new Error("У ваших речах немає такої туші чи придатних решток.");
     if (matched.some((item) => !isCarcassDropoffResourceKey(item.resourceType.key))) {
@@ -499,4 +506,10 @@ export async function putInventoryIntoLocalFeature(input: {
       reaction,
     };
   });
+
+  const afterSaturation = await getGateHuntingSaturationState(result.featureKey).catch(() => null);
+  if (!saturation?.active && afterSaturation?.active) {
+    await recordCarcassQuestChronicle("stop", result.locationId).catch((error) => console.warn("Failed to record carcass quest chronicle:", error));
+  }
+  return result;
 }

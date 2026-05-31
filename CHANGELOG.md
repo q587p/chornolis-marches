@@ -16,6 +16,8 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added persistent `WorldState` storage for the internal Chornolis clock, including the current absolute world minute, last advancement timestamp and starter weather fields for the next weather slice.
 - Added shared world-clock helpers for daypart, clock labels, lunar circle/day, moon phase and moon illumination.
 - Added a focused world-time regression test for the canonical `587` / fifth lunar circle / day `17` / `17:00` starter timestamp and advancement math.
+- Added `/chronicles` as a small global chronicle surface backed by public world events.
+- Added chronicle entries for new player arrivals and carcass ravine start/stop state changes.
 
 ### Changed
 
@@ -24,12 +26,14 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Seed, world reset and full reset now return the internal world clock to the canonical starter timestamp; stats reset remains separate.
 - Attack-miss feedback now includes a quick look button so players can immediately check whether the target stayed nearby.
 - Telegram side command menus now put `/help` right after `/afk`, with `/respawn` directly below help.
+- `/help`, `/commands` and input-alias docs now include the new global chronicle command.
 - Updated planning and system docs so `WORLD-001-B/C/D` reflect the `0.14.1` implementation slice and keep visibility, weather, light and sleep deferred.
 
 ### Validation
 
 - Ran `npx prisma generate`.
 - Ran `node scripts/test/world-time.cjs`.
+- Ran `node scripts/test/chronicles.cjs`.
 - Ran `npm run planning:export`.
 - Ran `npm test`.
 - Ran `npm run build`.
