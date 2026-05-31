@@ -9,6 +9,31 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.14.0 - Internal world-clock planning and prepared names - 12026-05-31
+
+### Added
+
+- Added the `0.14.x` internal world-clock plan for Night, Light and Firewood: elapsed-real-time advancement, stored world-clock state, 28-day lunar circles, 13 circles per year, moon illumination, weather MVP, light snapshots and visibility consumers.
+- Added `docs/systems/world_time.md` as the design source for the internal Chornolis clock, including the starter timestamp and reset behavior.
+- Added `docs/planning/0.14-observation-readiness.md` so visibility/light work can prepare for later observation-learning without implementing `/observe` in this line.
+- Added new planning items for weather state, light snapshots, time/weather debug controls, riverbank fisher setup, visible herbalist observation and a strange-track omen.
+- Expanded the prepared character-name pool with many more masculine, feminine and plural options, with coverage for minimum available counts and duplicate/form validation.
+
+### Changed
+
+- Updated `docs/roadmap.md`, `docs/planning/next.md`, transition notes, calendar docs and Icebox so `0.14.x` uses an internal Chornolis clock rather than real-world time of day, server timezone or user timezone.
+- Moved minimal moon phase and moon illumination into the `0.14.x` light foundation while keeping sacred days, ritual calendars and deeper calendar lore in Icebox.
+- Documented that scribe/admin world/full reset should return the internal clock and weather state to the starter world state, while stats reset should not change world time.
+- Kept the first runtime implementation deferred: this release does not add day/night visibility effects, real-time daypart binding or external weather APIs.
+
+### Validation
+
+- Ran `npm run planning:export`.
+- Ran `npm test`.
+- Ran `npm run build`.
+
+---
+
 ## 0.13.27 - Core loop closure audit and attack misses - 12026-05-31
 
 ### Added
