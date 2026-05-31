@@ -12,7 +12,7 @@ import {
   gatherConfig,
 } from "../gameConfig";
 import { directionLabels } from "../ui/labels";
-import { buildCorpseActionKeyboard, buildExamineLocationKeyboard, buildExamineTracksKeyboard, buildGatherRetryKeyboard, buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
+import { buildCorpseActionKeyboard, buildExamineLocationKeyboard, buildExamineTracksKeyboard, buildGatherRetryKeyboard, buildLookLocationKeyboard, buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { lightLocationCampfire, renderLocationBrief, renderLocationDetails } from "./locations";
 import { notifyLocation, notifyLocationExcept, notifyRegionExcept } from "./notifications";
@@ -1021,7 +1021,11 @@ async function completeAttack(bot: Bot, action: WorldAction) {
     await notifyLocation(bot, player.currentLocationId, player.id, `Хтось намагається затоптати ${target.forms.accusative}, але промахується.`);
     await setActionStatus(action, "DONE");
     await logEvent("PLAYER_ACTION", "Player missed animal", `${target.kind}:${target.id}; species=${creature.species.key}`, player.currentLocationId);
-    if (chatId) await bot.api.sendMessage(chatId, `⚔️ Ви кинулися на ${target.forms.accusative}, але ціль вислизнула. Якщо вона не втече, можна спробувати ще раз.`);
+    if (chatId) {
+      await bot.api.sendMessage(chatId, `⚔️ Ви кинулися на ${target.forms.accusative}, але ціль вислизнула. Якщо вона не втече, можна спробувати ще раз.`, {
+        reply_markup: buildLookLocationKeyboard(),
+      });
+    }
     return;
   }
 

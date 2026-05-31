@@ -103,6 +103,10 @@ export function buildExamineLocationKeyboard() {
   return new InlineKeyboard().text("🔎 Роздивитися", "examine");
 }
 
+export function buildLookLocationKeyboard() {
+  return new InlineKeyboard().text("👀 Озирнутися", "look");
+}
+
 export function buildExamineTracksKeyboard() {
   return new InlineKeyboard().text("🐾 Сліди", "track:details");
 }
