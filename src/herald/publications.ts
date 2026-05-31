@@ -27,6 +27,15 @@ export async function findExistingPublicationByHash(hash: string) {
   return prisma.heraldPublication.findUnique({ where: { contentHash: hash } });
 }
 
+export async function findExistingPublicationsByHashes(hashes: readonly string[]) {
+  const uniqueHashes = [...new Set(hashes.filter(Boolean))];
+  if (!uniqueHashes.length) return [];
+
+  return prisma.heraldPublication.findMany({
+    where: { contentHash: { in: uniqueHashes } },
+  });
+}
+
 export async function queueHeraldPublication(input: QueueHeraldPublicationInput) {
   if (input.contentHash) {
     const existing = await findExistingPublicationByHash(input.contentHash);

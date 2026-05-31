@@ -6,7 +6,17 @@ export function formatHeraldNewsMessage(entry: HeraldNewsEntry) {
   return formatHeraldPublicationMessage({ title: entry.title, body });
 }
 
-export function formatHeraldPublicationMessage(publication: { title: string; body: string }) {
+export function formatHeraldPublicationMessage(publication: { title: string; body: string; sourceType?: string }) {
+  if (publication.sourceType === "NEWS_MD_ARCHIVE") {
+    return sanitizeHeraldChannelText([
+      "📜 З архіву Канцелярії",
+      "",
+      `Архівний запис: ${publication.title}`,
+      "",
+      publication.body || "У цьому записі лишився тільки заголовок.",
+    ].join("\n"));
+  }
+
   return sanitizeHeraldChannelText([
     "📜 Канцелярія Межового Знаку",
     "",

@@ -10,7 +10,13 @@ const {
   heraldPracticePhrase,
   heraldTrailPhrase,
 } = require("../../src/herald/infoThresholds");
-const { parseLatestNewsEntry } = require("../../src/herald/newsMarkdown");
+const {
+  chronologicalNewsEntries,
+  formatArchiveBody,
+  formatBackfillInterval,
+  parseBackfillIntervalMs,
+} = require("../../src/herald/newsBackfill");
+const { parseLatestNewsEntry, parseNewsEntries } = require("../../src/herald/newsMarkdown");
 const {
   assertNoSecrets,
   parseTelegramChannelId,
@@ -41,6 +47,22 @@ assert.match(latest.contentHash, /^[a-f0-9]{64}$/);
 assert.equal(parseLatestNewsEntry(markdown).contentHash, latest.contentHash);
 assert.notEqual(parseLatestNewsEntry(markdown.replace("тиху зміну", "іншу зміну")).contentHash, latest.contentHash);
 assert.equal(parseLatestNewsEntry("# Тільки заголовок\n\nБез release entry."), null);
+
+const entries = parseNewsEntries(markdown);
+assert.equal(entries.length, 2);
+assert.equal(entries[0].title, "12026-06-01 — Свіжий запис");
+assert.equal(entries[1].title, "12026-05-31 — Старий запис");
+assert.deepEqual(chronologicalNewsEntries(entries).map((entry) => entry.title), [
+  "12026-05-31 — Старий запис",
+  "12026-06-01 — Свіжий запис",
+]);
+assert.equal(parseBackfillIntervalMs(undefined), 30 * 60 * 1000);
+assert.equal(parseBackfillIntervalMs("30m"), 30 * 60 * 1000);
+assert.equal(parseBackfillIntervalMs("2h"), 2 * 60 * 60 * 1000);
+assert.equal(parseBackfillIntervalMs("bad interval"), null);
+assert.equal(formatBackfillInterval(30 * 60 * 1000), "30 хв");
+assert.equal(formatBackfillInterval(2 * 60 * 60 * 1000), "2 год");
+assert.match(formatArchiveBody(entries[1]), /Цей запис уже нижче/);
 
 const admins = parseHeraldAdminIds([" 123 ", "", "456"]);
 assert.equal(admins.size, 2);
@@ -108,6 +130,16 @@ const formatted = formatHeraldPublicationMessage({
 assert.doesNotMatch(formatted, /123456:abcdefghijklmnopqrstuvwxyz/);
 assert.doesNotMatch(formatted, /border_12_09/);
 assert.match(formatted, /Канцелярія Межового Знаку/);
+
+const archiveFormatted = formatHeraldPublicationMessage({
+  sourceType: "NEWS_MD_ARCHIVE",
+  title: entries[1].title,
+  body: formatArchiveBody(entries[1]),
+});
+assert.match(archiveFormatted, /📜 З архіву Канцелярії/);
+assert.match(archiveFormatted, /Архівний запис: 12026-05-31/);
+assert.match(archiveFormatted, /Цей запис уже нижче/);
+assert.doesNotMatch(archiveFormatted, /📜 Канцелярія Межового Знаку/);
 
 assert.equal(heraldTrailPhrase(0), "Канцелярія ще майже не має записів про ці кроки.");
 assert.equal(heraldTrailPhrase(3), "сліди трапляються зрідка");

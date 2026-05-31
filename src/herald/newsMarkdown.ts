@@ -18,23 +18,26 @@ function contentHash(value: string) {
 }
 
 export function parseLatestNewsEntry(markdown: string): HeraldNewsEntry | null {
-  const latest = markdown
+  return parseNewsEntries(markdown)[0] ?? null;
+}
+
+export function parseNewsEntries(markdown: string): HeraldNewsEntry[] {
+  return markdown
     .split(/\n(?=##\s+)/)
     .map((section) => section.trim())
-    .find((section) => section.startsWith("## "));
+    .filter((section) => section.startsWith("## "))
+    .map((section) => {
+      const [heading = "", ...bodyLines] = section.split("\n");
+      const title = heading.replace(/^##\s+/, "").trim() || "Новини Порубіжжя";
+      const body = bodyLines.join("\n").trim();
 
-  if (!latest) return null;
-
-  const [heading = "", ...bodyLines] = latest.split("\n");
-  const title = heading.replace(/^##\s+/, "").trim() || "Новини Порубіжжя";
-  const body = bodyLines.join("\n").trim();
-
-  return {
-    title,
-    body,
-    raw: latest,
-    contentHash: contentHash(latest),
-  };
+      return {
+        title,
+        body,
+        raw: section,
+        contentHash: contentHash(section),
+      };
+    });
 }
 
 export async function readLatestNewsEntry(filePath = path.join(process.cwd(), "news.md")): Promise<HeraldNewsReadResult> {
