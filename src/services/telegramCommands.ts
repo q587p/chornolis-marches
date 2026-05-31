@@ -5,13 +5,13 @@ type TelegramCommandApi = Pick<Bot["api"], "setMyCommands" | "deleteMyCommands">
 
 export const DEFAULT_BOT_COMMANDS = [
   { command: "start", description: "🌲 Увійти / Повернути кнопки" },
-  { command: "respawn", description: "🧭 Повернення до табору" },
   { command: "afk", description: "🌙 AFK / відійти" },
+  { command: "help", description: "🧭 Допомога новачку" },
+  { command: "respawn", description: "🧭 Повернення до табору" },
   { command: "me", description: "🧍 Персонаж" },
   { command: "look", description: "👀 Озирнутися" },
   { command: "menu", description: "☰ Меню" },
   { command: "news", description: "📰 Останні новини світу" },
-  { command: "help", description: "🧭 Допомога новачку" },
   { command: "end_session", description: "🚪 Завершити сесію" },
 ];
 
