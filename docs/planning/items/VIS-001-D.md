@@ -1,7 +1,7 @@
 ---
 id: VIS-001-D
 title: Track visibility gate
-status: next
+status: testing
 type: feature
 area: visibility
 priority: medium
@@ -33,3 +33,9 @@ Make tracks harder or impossible to read in darkness without light.
 ## Implementation Order
 
 Do after: `VIS-001-B`.
+
+## 0.14.5 Slice
+
+- Location rendering now hides/reduces track hints and track buttons when visibility is dim/dark without local light.
+- Queued `/track` completion checks the same visibility helper before showing track details.
+- The refusal path uses atmospheric Ukrainian copy instead of raw visibility/debug text.

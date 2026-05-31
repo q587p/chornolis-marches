@@ -12,7 +12,11 @@ const {
 } = require("../../src/data/worldClock");
 const { renderCurrentWorldTime, renderWorldYearLine } = require("../../src/services/calendar");
 const { lightSnapshotFromWorldTime } = require("../../src/services/lightSnapshot");
-const { visibilityRulesFromLight } = require("../../src/services/visibility");
+const {
+  visibilityDarknessText,
+  visibilityPresenceText,
+  visibilityRulesFromLight,
+} = require("../../src/services/visibility");
 const {
   renderCurrentWeather,
   renderWeatherLine,
@@ -91,7 +95,12 @@ assert.ok(localLight.score >= 78);
 assert.equal(visibilityRulesFromLight(darkLight, "brief").showNearbyDetails, false);
 assert.equal(visibilityRulesFromLight(fullLight, "brief").showNearbyDetails, false);
 assert.equal(visibilityRulesFromLight(localLight, "brief").showNearbyDetails, true);
-assert.equal(visibilityRulesFromLight(darkLight, "details").showNearbyDetails, true);
+assert.equal(visibilityRulesFromLight(darkLight, "details").showLocationDescription, false);
+assert.equal(visibilityRulesFromLight(darkLight, "details").showNearbyDetails, false);
+assert.equal(visibilityRulesFromLight(darkLight, "details").showTracks, false);
+assert.equal(visibilityRulesFromLight(localLight, "details").showLocationDescription, true);
+assert.ok(visibilityDarknessText(visibilityRulesFromLight(darkLight, "brief")).includes("Темрява"));
+assert.ok(visibilityPresenceText(visibilityRulesFromLight(darkLight, "details"), "tracks").includes("слідів"));
 
 const dayTarget = parseWorldTimeSetTarget("day", START_WORLD_ABSOLUTE_MINUTE);
 assert.ok(dayTarget);

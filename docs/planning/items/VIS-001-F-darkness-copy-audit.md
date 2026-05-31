@@ -1,7 +1,7 @@
 ---
 id: VIS-001-F
 title: Darkness copy audit
-status: next
+status: testing
 type: content
 area: visibility
 priority: medium
@@ -61,3 +61,9 @@ Avoid:
 - Scribe/debug views may show technical detail, but ordinary text remains diegetic.
 - Copy distinguishes “not present” from “not clearly visible” where practical.
 - Tests or snapshots cover at least one representative hidden/reduced detail path if cheap.
+
+## 0.14.5 Slice
+
+- Added shared darkness copy helpers for obscured location description, nearby presence, tracks, ground objects and resources.
+- Added focused helper assertions covering representative darkness copy.
+- Broader copy audit for feature-specific hints and hidden target lookup remains future work.

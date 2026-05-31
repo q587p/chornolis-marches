@@ -1,7 +1,7 @@
 ---
 id: VIS-001-C
 title: Nearby beings visibility in darkness
-status: next
+status: testing
 type: feature
 area: visibility
 priority: high
@@ -34,3 +34,9 @@ Hide or reduce nearby beings in darkness.
 ## Implementation Order
 
 Do after: `VIS-001-B`.
+
+## 0.14.5 Slice
+
+- Brief and detailed location rendering now gate nearby target names/buttons through the shared visibility helper.
+- In dim/dark views without light, players get vague nearby-presence copy rather than full names or target buttons.
+- Local light or clear enough daylight restores normal nearby details.

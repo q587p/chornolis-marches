@@ -30,7 +30,7 @@ import { dreamGateStatusText, ensureTutorialForagingResources, isDreamGateFeatur
 import { formatObservedPostureText } from "../utils/playerText";
 import { isFreshenedCorpse } from "./meat";
 import { GATE_CARCASS_DROPOFF_FEATURE_KEY, gateHuntingDropoffText, gateHuntingNoticeText, getGateHuntingSaturationState } from "./carcassDropoff";
-import { visibilityRulesForLocation } from "./visibility";
+import { visibilityDarknessText, visibilityPresenceText, visibilityRulesForLocation, type VisibilityRules } from "./visibility";
 
 const COMPACT_EXIT_ORDER = ["NORTH", "WEST", "SOUTH", "EAST", "UP", "DOWN", "INSIDE", "OUTSIDE"];
 const GATHERABLE_RESOURCE_KEYS = ["berries", "mushrooms", "herbs"] as const;
@@ -442,7 +442,7 @@ function addGroundItemPickupButtons(keyboard: InlineKeyboard, groundItems: any[]
   }
 }
 
-function presenceText(location: any, viewerPlayerId?: number, revealTargets = false, activeActions = new Map<string, any>()) {
+function presenceText(location: any, viewerPlayerId?: number, revealTargets = false, activeActions = new Map<string, any>(), visibility?: VisibilityRules) {
   const targets = visibleTargets(location, viewerPlayerId);
   const hasCharacters = targets.some((t) => t.canGreet);
   const hasAnimals = location.creatures.some((c: any) => isVisibleLivingCreature(c) && c.species.kind === "ANIMAL");
@@ -480,6 +480,10 @@ function presenceText(location: any, viewerPlayerId?: number, revealTargets = fa
     return sections.length ? `\n\n${sections.join("\n\n")}` : "";
   }
 
+  const obscuredPresence = visibility && !visibility.showNearbyDetails;
+  const obscuredGround = visibility && !visibility.showGroundObjects;
+  if (obscuredPresence && (hasCharacters || hasAnimals)) return `\n\n<i>${escapeHtml(visibilityPresenceText(visibility, "nearby"))}</i>`;
+  if (obscuredGround && (hasCorpses || groundItems.length)) return `\n\n<i>${escapeHtml(visibilityPresenceText(visibility, "ground"))}</i>`;
   if (hasCharacters && hasAnimals) return "\n\n<i>Поруч хтось або щось є.</i>";
   if (hasCharacters) return "\n\n<i>Поруч хтось є.</i>";
   if (hasAnimals) return "\n\n<i>Поруч щось ворушиться.</i>";
@@ -744,11 +748,14 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
   const keyboard = new InlineKeyboard();
   addFeatureButtons(keyboard, location.features, "brief");
   const groundItems = location.resources.filter((r) => isVisibleGroundResource(r, location));
-  if (revealTargets && groundItems.length) addGroundItemPickupButtons(keyboard, groundItems);
+  if (visibility.showGroundObjects && groundItems.length) addGroundItemPickupButtons(keyboard, groundItems);
   if (revealTargets && targets.length) addInlineRows(keyboard, buildTargetListKeyboard(actionLabeledTargets, { page: options.targetPage, pageCallbackPrefix: "targetPage:brief" }));
 
+  const descriptionText = visibility.showLocationDescription
+    ? escapeHtml(location.description ?? "")
+    : `<i>${escapeHtml(visibilityDarknessText(visibility))}</i>`;
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location, "brief", showTechnicalDetails)}${presenceText(location, viewerPlayerId, revealTargets, activeActions)}\n\n${escapeHtml(compactExitsText(location.exitsFrom, lockedExits))}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${descriptionText}${featuresText(location, "brief", showTechnicalDetails)}${presenceText(location, viewerPlayerId, revealTargets, activeActions, visibility)}\n\n${escapeHtml(compactExitsText(location.exitsFrom, lockedExits))}`,
     keyboard,
   };
 }
@@ -805,15 +812,18 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
 
   if (!location) throw new Error("Location not found");
 
+  const visibility = await visibilityRulesForLocation(location.id, "details");
   const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
   const lockedExits = await lockedExitDirections(location.id);
   const targets = visibleTargets(location, viewerPlayerId, { showAnimalAge: true, showTechnicalDetails });
-  const activeActions = await activeActionsForTargets(targets);
+  const activeActions = visibility.showNearbyDetails ? await activeActionsForTargets(targets) : new Map<string, any>();
   const actionLabeledTargets = targets.map((target) => ({
     ...target,
     actionLabel: visibleActionLabel(target, activeActions, location) ?? ("actionLabel" in target ? target.actionLabel : undefined),
   }));
-  const charactersText = visibleTargetsText(actionLabeledTargets);
+  const charactersText = visibility.showNearbyDetails
+    ? visibleTargetsText(actionLabeledTargets)
+    : targets.length ? `\n\n<i>${escapeHtml(visibilityPresenceText(visibility, "nearby"))}</i>` : "";
 
   const resourceLines = location.resources
     .filter((r) => r.amount > 0 && (GATHERABLE_RESOURCE_KEYS as readonly string[]).includes(r.resourceType.key))
@@ -821,29 +831,34 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
       const amount = r.amount >= 20 ? "багато" : r.amount >= 8 ? "трохи" : "майже немає";
       return `- <i>${escapeHtml(r.resourceType.name)}</i>: ${escapeHtml(amount)}`;
     });
-  const resourcesText = resourceLines.length ? `\n\nВи помічаєте:\n${resourceLines.join("\n")}` : "";
+  const resourcesText = visibility.showResourceDetails
+    ? resourceLines.length ? `\n\nВи помічаєте:\n${resourceLines.join("\n")}` : ""
+    : resourceLines.length ? `\n\n<i>${escapeHtml(visibilityPresenceText(visibility, "resources"))}</i>` : "";
 
   const tracksHint = await visibleTracksHint(location.id);
 
   const corpses = location.creatures.filter(isVisibleCorpse);
-  const groundItems = location.resources.filter((r) => isVisibleGroundResource(r, location));
+  const groundItems = visibility.showGroundObjects ? location.resources.filter((r) => isVisibleGroundResource(r, location)) : [];
   const lyingLines = [
-    ...corpses.map((c) => {
+    ...(visibility.showGroundObjects ? corpses.map((c) => {
       const wasFreshened = isFreshenedCorpse(c.currentAction);
       const prefix = wasFreshened ? "рештки" : "труп";
       const suffix = wasFreshened ? "; м’ясо вже знято" : "";
       return `${prefix} ${creatureForms(c).genitive}; стан: ${lifetimeSummary(c.corpseDecayTicksLeft, c.species.corpseDecayTicks, { showTechnicalDetails })}${suffix}`;
-    }),
+    }) : []),
     ...groundItems.map(groundItemLine),
   ];
+  const hiddenGroundText = !visibility.showGroundObjects && (corpses.length || location.resources.some((r) => isVisibleGroundResource(r, location)))
+    ? `\n\n<i>${escapeHtml(visibilityPresenceText(visibility, "ground"))}</i>`
+    : "";
   const lyingText = lyingLines.length
     ? `\n\nЛежить:\n${lyingLines
         .slice(0, 8)
         .map((line) => `- ${escapeHtml(line)}`)
         .join("\n")}${lyingLines.length > 8 ? `\n- ...і ще ${lyingLines.length - 8}` : ""}`
-    : "";
+    : hiddenGroundText;
   const keyboard = new InlineKeyboard();
-  const resources = await resourceButtonData(location.resources, viewerPlayerId);
+  const resources = visibility.showResourceDetails ? await resourceButtonData(location.resources, viewerPlayerId) : [];
 
   addFeatureButtons(keyboard, location.features, "details");
 
@@ -856,11 +871,11 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
 
   addGroundItemPickupButtons(keyboard, groundItems);
 
-  if (tracksHint.hasTracks) {
+  if (tracksHint.hasTracks && visibility.showTracks) {
     addInlineRows(keyboard, buildExamineTracksKeyboard());
   }
 
-  if (targets.length > 0) {
+  if (visibility.showNearbyDetails && targets.length > 0) {
     addInlineRows(keyboard, buildTargetListKeyboard(actionLabeledTargets, { page: options.targetPage, pageCallbackPrefix: "targetPage:details" }));
   }
 
@@ -868,8 +883,15 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     ? `\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}`
     : "";
 
+  const tracksText = tracksHint.hasTracks
+    ? visibility.showTracks ? tracksHint.text : `\n\n<i>${escapeHtml(visibilityPresenceText(visibility, "tracks"))}</i>`
+    : "";
+  const descriptionText = visibility.showLocationDescription
+    ? escapeHtml(location.description ?? "")
+    : `<i>${escapeHtml(visibilityDarknessText(visibility))}</i>`;
+
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location, "details", showTechnicalDetails)}\n\n<i>Ви роздивляєтесь уважніше.</i>${technicalLocationText}\n\n${escapeHtml(detailedExitsText(location.exitsFrom, lockedExits))}${resourcesText}${charactersText}${tracksHint.text}${lyingText}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${descriptionText}${featuresText(location, "details", showTechnicalDetails)}\n\n<i>Ви роздивляєтесь уважніше.</i>${technicalLocationText}\n\n${escapeHtml(detailedExitsText(location.exitsFrom, lockedExits))}${resourcesText}${charactersText}${tracksText}${lyingText}`,
     keyboard,
   };
 }

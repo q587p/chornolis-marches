@@ -176,6 +176,8 @@ Implementation foundation:
 
 0.13.18 makes that claimed-carcass bridge less fragile: corpse decay preserves `claimed_by_hunter:<id>` instead of overwriting it, and hunter field speech uses a shared speech helper so local spoken lines also update the hunter's speech statistics. This is not the final structure; claimed prey still needs real actor carry/ownership state before hunter death, interruption, reset and recovery semantics can be considered robust.
 
+0.14.5 extends the social bridge slightly: a direct player greeting to a visible hunter queues a delayed hunter `GREET` reaction instead of leaving the greeting one-sided. Scribe ecology/status statistics derive NPC greeting counts from completed creature `GREET` actions, so the `Привітань` column can show hunter responses without adding a separate creature schema field yet.
+
 Future MVP shape:
 
 1. Start near the settlement gate.

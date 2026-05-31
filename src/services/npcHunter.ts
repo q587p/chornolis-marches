@@ -46,6 +46,7 @@ export const HUNTER_CONVERSATION_REPLY_LINES = [
 ];
 
 export const HUNTER_SOCIAL_REACTIONS: Record<string, string> = {
+  greet: "nod",
   nod: "nod",
   wave: "wave",
   smile: "nod",
