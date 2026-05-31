@@ -1132,12 +1132,12 @@ function lisovykDepletionPhrase(resourceKey: string, resourceName: string) {
 }
 
 function lisovykWakeText(resourceKey: string, resourceName: string) {
-  return `Дід лісовик гарчить: «О, ${lisovykDepletionPhrase(resourceKey, resourceName)}? Хто винищив це до нуля?!»`;
+  return `Дід лісовик гарчить:\nО, ${lisovykDepletionPhrase(resourceKey, resourceName)}? Хто винищив це до нуля?!`;
 }
 
 function lisovykSleepText(resourceName?: string) {
   const resourcePart = resourceName ? `«${resourceName}» знову є в лісі` : "виснажені ресурси знову є в лісі";
-  return `Дід лісовик гарчить: «${resourcePart}. Йду спати, але стережіться там».`;
+  return `Дід лісовик гарчить:\n${resourcePart}. Йду спати, але стережіться там.`;
 }
 
 function lisovykDepletionMarker(depleted: Pick<DepletedRegionResource, "regionId" | "resourceKey">) {
