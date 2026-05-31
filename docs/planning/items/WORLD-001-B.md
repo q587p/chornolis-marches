@@ -1,43 +1,42 @@
 ---
 id: WORLD-001-B
-title: Daypart helper and /time
-status: testing
-type: feature
+title: Persistent world-clock storage
+status: next
+type: technical
 area: world_time
 priority: high
 estimate: 1-2h
 tags:
   - world-time
-  - time-command
+  - schema
+  - moon
+  - 0.14
 depends_on:
   - WORLD-001-A
 ---
 
-# WORLD-001-B: Daypart Helper and `/time`
+# WORLD-001-B: Persistent World-Clock Storage
 
 ## Goal
 
-Expose simple dawn/day/dusk/night state and make `/time` read current world state.
+Persist the internal world clock so deploys/restarts do not reset day/night, moon or weather foundations.
 
 ## First Scope
 
-- Add a daypart helper.
-- Add or update `/time` so it reads the shared helper.
-- Keep player-facing text Ukrainian and atmospheric.
-- Keep debug/admin output separate from ordinary player output.
+- Add a single persistent world-state row or equivalent storage.
+- Store at minimum `absoluteMinute` and `lastAdvancedAt`.
+- Seed/default the starting timestamp: year 587, `Коло Зеленого Шуму`, day 17, 17:00.
+- Leave room for weather state if it lands in the same or next slice.
+- Generate Prisma if schema changes.
 
 ## Acceptance
 
-- `/time` shows meaningful current world-time/daypart text.
-- Tests cover daypart helper behavior.
-- The helper can be reused by visibility in later `VIS-001` tasks.
+- Build passes.
+- Default world has a valid internal clock.
+- The stored clock survives process restart.
+- No unrelated schema churn.
+- No package version changes.
 
 ## Implementation Order
 
 Do after: `WORLD-001-A`.
-
-## 0.14.0 Notes
-
-- `/time` now reads `getCurrentWorldTime(...)`.
-- The old static "передвечір'я" line was replaced with the current daypart and a compact local clock hint.
-- Darkness behavior is intentionally deferred to `VIS-001`.

@@ -4,7 +4,7 @@ ADM-001-A,Dangerous scribe tool audit,done,technical,admin,medium,"admin,audit,s
 ADM-001-B,Scribe action audit helper,done,technical,admin,medium,"admin,audit,world-events",docs/planning/items/ADM-001-B.md
 ADM-001-C,Restart confirmation and HTML safety hardening,next,technical,admin,high,"admin,safety,restart,slashless,html,features",docs/planning/items/ADM-001-C.md
 ADM-002,Scribe creature corpse creation command,testing,feature,admin,medium,"admin,creatures,corpses,testing",docs/planning/items/ADM-002-add-creature-corpse-command.md
-CAL-001,"Calendar, moon phases and named years",icebox,system,world_time,medium,"calendar,world-time,moon-phases,seasons,folklore,atmosphere",docs/planning/items/CAL-001_calendar_moon_phases_and_named_years.md
+CAL-001,"Deep calendar, sacred days and named years",icebox,system,world_time,medium,"calendar,world-time,moon-phases,seasons,folklore,atmosphere",docs/planning/items/CAL-001_calendar_moon_phases_and_named_years.md
 CMD-001,Near-term text command pack,testing,feature,commands,high,"commands,aliases,mud,speech,navigation",docs/planning/items/CMD-001-near-term-text-command-pack.md
 CMD-002,Put items into local containers and features,testing,feature,commands,high,"commands,inventory,containers,aliases",docs/planning/items/CMD-002-put-items-into-containers.md
 COMBAT-001,Creature aggression and defense,backlog,feature,combat,medium,"animals,combat,predators,ecology",docs/planning/items/COMBAT-001-creature-aggression-and-defense.md
@@ -135,11 +135,13 @@ VIS-002,Hidden presence foundation,backlog,technical,visibility,medium,"visibili
 WEB-001,"Web map, multi-client game server, messenger bridges and limited MUD gateway",icebox,feature,server,medium,"web,map,mud,server,multi-client,architecture",docs/planning/items/web-001-web-map-and-mud-gateway.md
 WEB-002,Independent status site and deploy visibility,backlog,technical,server,medium,"web,status,deploy,operations,reliability",docs/planning/items/WEB-002-independent-status-site.md
 WORLD-001,Day/night cycle,next,feature,world_time,high,"world,atmosphere,visibility,liminality",docs/planning/items/WORLD-001-day-night-cycle.md
-WORLD-001-A,Tiny world-time foundation,testing,technical,world_time,high,"world-time,day-night",docs/planning/items/WORLD-001-A.md
-WORLD-001-B,Daypart helper and /time,testing,feature,world_time,high,"world-time,time-command",docs/planning/items/WORLD-001-B.md
-WORLD-001-C,Daypart helper and tick advancement,backlog,feature,world_time,high,"world-time,world-tick",docs/planning/items/WORLD-001-C.md
-WORLD-001-D,/time reads world state,testing,feature,world_time,high,"world-time,time-command",docs/planning/items/WORLD-001-D.md
-WORLD-001-E,World-time debug and admin safety,next,technical,world_time,medium,"world-time,day-night,admin,debug,testing",docs/planning/items/WORLD-001-E-time-debug-admin-safety.md
+WORLD-001-A,Internal world-clock model design,next,design,world_time,high,"world-time,day-night,moon,0.14",docs/planning/items/WORLD-001-A.md
+WORLD-001-B,Persistent world-clock storage,next,technical,world_time,high,"world-time,schema,moon,0.14",docs/planning/items/WORLD-001-B.md
+WORLD-001-C,Heartbeat clock advancement and daypart helper,next,feature,world_time,high,"world-time,world-tick,day-night,0.14",docs/planning/items/WORLD-001-C.md
+WORLD-001-D,/time reads internal world-clock state,next,feature,world_time,high,"world-time,time-command,moon,0.14",docs/planning/items/WORLD-001-D.md
+WORLD-001-E,Weather MVP state and display,next,feature,world_time,high,"world-time,weather,0.14",docs/planning/items/WORLD-001-E-weather-mvp-state-and-display.md
+WORLD-001-F,Light snapshot helper,next,feature,visibility,high,"world-time,visibility,moon,weather,light,0.14",docs/planning/items/WORLD-001-F-light-snapshot-helper.md
+WORLD-001-G,Time and weather debug controls,next,technical,world_time,medium,"world-time,weather,admin,testing,0.14",docs/planning/items/WORLD-001-G-time-weather-debug-controls.md
 WORLD-002,Campfires and light,next,feature,survival,high,"survival,light,crafting,night",docs/planning/items/WORLD-002-campfires-and-light.md
 WORLD-002-hidden-spirit,Hidden spirit seed and boundaries,backlog,feature,world,medium,"world,hidden-presence,spirit,campfire",docs/planning/items/WORLD-002-hidden-spirit-seed-and-boundaries.md
 WPN-001,Minimal weapon catalog and equip foundation,next,feature,items,medium,"weapons,inventory,equipment,freshening",docs/planning/items/WPN-001-minimal-weapon-catalog-and-equip.md

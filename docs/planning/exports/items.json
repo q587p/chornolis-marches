@@ -91,7 +91,7 @@
   },
   {
     "id": "CAL-001",
-    "title": "Calendar, moon phases and named years",
+    "title": "Deep calendar, sacred days and named years",
     "status": "icebox",
     "type": "system",
     "area": "world_time",
@@ -2576,14 +2576,16 @@
   },
   {
     "id": "WORLD-001-A",
-    "title": "Tiny world-time foundation",
-    "status": "testing",
-    "type": "technical",
+    "title": "Internal world-clock model design",
+    "status": "next",
+    "type": "design",
     "area": "world_time",
     "priority": "high",
     "tags": [
       "world-time",
-      "day-night"
+      "day-night",
+      "moon",
+      "0.14"
     ],
     "depends_on": [],
     "exports": {},
@@ -2591,14 +2593,16 @@
   },
   {
     "id": "WORLD-001-B",
-    "title": "Daypart helper and /time",
-    "status": "testing",
-    "type": "feature",
+    "title": "Persistent world-clock storage",
+    "status": "next",
+    "type": "technical",
     "area": "world_time",
     "priority": "high",
     "tags": [
       "world-time",
-      "time-command"
+      "schema",
+      "moon",
+      "0.14"
     ],
     "depends_on": [
       "WORLD-001-A"
@@ -2608,14 +2612,16 @@
   },
   {
     "id": "WORLD-001-C",
-    "title": "Daypart helper and tick advancement",
-    "status": "backlog",
+    "title": "Heartbeat clock advancement and daypart helper",
+    "status": "next",
     "type": "feature",
     "area": "world_time",
     "priority": "high",
     "tags": [
       "world-time",
-      "world-tick"
+      "world-tick",
+      "day-night",
+      "0.14"
     ],
     "depends_on": [
       "WORLD-001-B"
@@ -2625,38 +2631,83 @@
   },
   {
     "id": "WORLD-001-D",
-    "title": "/time reads world state",
-    "status": "testing",
+    "title": "/time reads internal world-clock state",
+    "status": "next",
     "type": "feature",
     "area": "world_time",
     "priority": "high",
     "tags": [
       "world-time",
-      "time-command"
+      "time-command",
+      "moon",
+      "0.14"
     ],
     "depends_on": [
-      "WORLD-001-B"
+      "WORLD-001-C"
     ],
     "exports": {},
     "file": "docs/planning/items/WORLD-001-D.md"
   },
   {
     "id": "WORLD-001-E",
-    "title": "World-time debug and admin safety",
+    "title": "Weather MVP state and display",
+    "status": "next",
+    "type": "feature",
+    "area": "world_time",
+    "priority": "high",
+    "tags": [
+      "world-time",
+      "weather",
+      "0.14"
+    ],
+    "depends_on": [
+      "WORLD-001-C"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WORLD-001-E-weather-mvp-state-and-display.md"
+  },
+  {
+    "id": "WORLD-001-F",
+    "title": "Light snapshot helper",
+    "status": "next",
+    "type": "feature",
+    "area": "visibility",
+    "priority": "high",
+    "tags": [
+      "world-time",
+      "visibility",
+      "moon",
+      "weather",
+      "light",
+      "0.14"
+    ],
+    "depends_on": [
+      "WORLD-001-C",
+      "WORLD-001-E"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WORLD-001-F-light-snapshot-helper.md"
+  },
+  {
+    "id": "WORLD-001-G",
+    "title": "Time and weather debug controls",
     "status": "next",
     "type": "technical",
     "area": "world_time",
     "priority": "medium",
     "tags": [
       "world-time",
-      "day-night",
+      "weather",
       "admin",
-      "debug",
-      "testing"
+      "testing",
+      "0.14"
     ],
-    "depends_on": [],
+    "depends_on": [
+      "WORLD-001-D",
+      "WORLD-001-E"
+    ],
     "exports": {},
-    "file": "docs/planning/items/WORLD-001-E-time-debug-admin-safety.md"
+    "file": "docs/planning/items/WORLD-001-G-time-weather-debug-controls.md"
   },
   {
     "id": "WORLD-002",

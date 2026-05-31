@@ -15,7 +15,7 @@ It is not a trash bin and not a promise. It is cold storage for ideas that need 
 - Dynamic settlement law.
 - Deep shrine and ritual systems.
 - Seasonal rituals and sacred days.
-- Moon phases and deep calendar simulation.
+- Deep calendar simulation beyond the 0.14 light foundation: sacred/dangerous days, ritual calendars, local calendar variants, deep moon omens and season-specific mythic events. Minimal 28-day moon phase and moon illumination belong to 0.14 because they affect night visibility.
 - Web map and multi-client/MUD gateway.
 - i18n/localization layer.
 - Advanced persistent automation.

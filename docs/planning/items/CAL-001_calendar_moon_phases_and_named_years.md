@@ -1,6 +1,6 @@
 ---
 id: CAL-001
-title: Calendar, moon phases and named years
+title: Deep calendar, sacred days and named years
 status: icebox
 type: system
 area: world_time
@@ -16,11 +16,11 @@ depends_on:
   - day-night-cycle
 ---
 
-# Calendar, Moon Phases and Named Years
+# Deep Calendar, Sacred Days and Named Years
 
 ## Summary
 
-Add a deeper calendar system for Chornolis Marches after the basic day/night loop is stable.
+Add a deeper calendar system for Chornolis Marches after the basic internal world clock, day/night, moon illumination and weather/light foundations are stable.
 
 The current starter date is:
 
@@ -28,16 +28,21 @@ The current starter date is:
 
 ## Direction
 
-The calendar should support:
+The deep calendar should support:
 
 - seasons;
-- 13 lunar circles;
-- moon phases;
 - named years;
 - sacred, dangerous or strange days;
 - named weekdays or day-signs that affect the world, such as a "frog day" when frogs are more common, frog-related omens are more likely, or a small frog-linked event can happen;
 - NPC rumors and world events tied to time;
 - future display in `/time`, `/news`, `/look`, `/examine`, `/world` or a separate calendar command.
+
+The minimal 0.14 light foundation owns:
+
+- 13 lunar circles;
+- 28 days per lunar circle;
+- moon phase labels;
+- moon illumination values used by visibility/light helpers.
 
 ## Weekday and day-sign naming
 
@@ -79,4 +84,4 @@ Draft cycle:
 
 ## Notes
 
-This item belongs in Icebox for now because it needs stable world time, day/night and probably future seasonal rules.
+This item belongs in Icebox for now because it covers deep calendar lore and ritual timing, not the minimal moonlight math needed by 0.14.
