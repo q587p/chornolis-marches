@@ -23,6 +23,8 @@ Chornolis uses fire as an early survival and visibility tool.
 
 Expired timed campfires are turned into згаслі campfires lazily when location/light state is rendered or checked.
 
+Player/admin-created ordinary campfires do not remain forever after they expire. Once they become згаслі campfires, they keep a two in-game day ash lifetime. During the final two in-game hours the feature becomes a `Ледь помітне вогнище` and the місцина gets one local notice that the ash is almost gone. If nobody adds хмиз or relights it before the end of that window, the feature is deactivated and disappears from ordinary location lists. Seeded old campfires are excluded from this cleanup because they are authored memory/omen landmarks.
+
 ## Torches
 
 - Seed data includes a few loose `факел` ground items in forest, dry luka and riverbank locations. They appear under `Лежить` and can be picked up without a gather chance roll or action delay when the character is not exhausted.

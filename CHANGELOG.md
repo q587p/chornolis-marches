@@ -54,12 +54,14 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Changed
 
 - `/time` now includes compact weather and light summary lines from the stored/derived internal world state.
+- Player/admin-created ordinary campfire ashes now decay by internal world time: after two in-game days they disappear from ordinary location lists, with a near-gone state during the final two in-game hours.
 - `/help`, `/commands` and input-alias docs now include `/weather`.
 - Updated planning/system docs so `WORLD-001-E/F` reflect the `0.14.3` implementation slice and keep visibility reduction/darkness behavior deferred.
 
 ### Validation
 
 - Ran `node scripts/test/world-time.cjs`.
+- Ran `node scripts/test/campfire-decay.cjs`.
 - Ran `node scripts/test/input-aliases.cjs`.
 - Ran `node scripts/test/slashless-command-coverage.cjs`.
 
