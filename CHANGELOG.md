@@ -27,6 +27,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Freshening corpses now has species-based success chances: mice are easiest, rabbits are moderate, foxes and wolves are harder.
 - Failed freshening attempts now consume the corpse as processed remains without granting meat, and food-learning event descriptions record success/failure.
+- `/respawn` remains available for the first 7 real days after character creation, in addition to weak-character fallback, before the progress threshold can refuse it.
 - Lit ground torches now explicitly say they provide light while burning.
 - Visible ground resources can show pickup buttons in brief illuminated location views, not only detailed views.
 - Fire/light docs, survival docs, location-feature docs and render deploy docs now cover the current firewood/light behavior and related environment controls.

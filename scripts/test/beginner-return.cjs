@@ -3,14 +3,17 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const {
+  BEGINNER_RETURN_NEW_PLAYER_GRACE_MS,
   BEGINNER_RETURN_PROGRESS_LIMIT,
   beginnerReturnEligibility,
   beginnerReturnProgressScore,
   beginnerReturnRefusalText,
   beginnerReturnStaminaAfter,
   beginnerReturnSuccessText,
+  withinBeginnerReturnNewPlayerGrace,
 } = require("../../src/services/beginnerReturn");
 
+const now = new Date("2026-05-31T10:00:00.000Z");
 const basePlayer = {
   id: 1,
   currentLocationId: 10,
@@ -24,6 +27,7 @@ const basePlayer = {
   successfulGathers: 1,
   animalsKilled: 0,
   restStarts: 0,
+  createdAt: new Date(now.getTime() - BEGINNER_RETURN_NEW_PLAYER_GRACE_MS - 60_000),
 };
 
 assert.equal(beginnerReturnProgressScore(basePlayer), 17);
@@ -40,8 +44,13 @@ const established = {
 };
 assert.deepEqual(beginnerReturnEligibility(established, { startLocationId: 1 }), { ok: false, reason: "established" });
 assert.deepEqual(beginnerReturnEligibility({ ...established, stamina: 3 }, { startLocationId: 1 }), { ok: true, reason: "weak" });
+assert.equal(withinBeginnerReturnNewPlayerGrace({ createdAt: new Date(now.getTime() - BEGINNER_RETURN_NEW_PLAYER_GRACE_MS + 60_000) }, now), true);
+assert.equal(withinBeginnerReturnNewPlayerGrace({ createdAt: new Date(now.getTime() - BEGINNER_RETURN_NEW_PLAYER_GRACE_MS - 60_000) }, now), false);
+assert.deepEqual(
+  beginnerReturnEligibility({ ...established, createdAt: new Date(now.getTime() - BEGINNER_RETURN_NEW_PLAYER_GRACE_MS + 60_000) }, { startLocationId: 1, now }),
+  { ok: true, reason: "beginner" }
+);
 
-const now = new Date("2026-05-31T10:00:00.000Z");
 const cooldown = beginnerReturnEligibility(basePlayer, {
   startLocationId: 1,
   now,

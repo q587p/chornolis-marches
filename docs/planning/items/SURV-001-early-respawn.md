@@ -21,10 +21,12 @@ Add `/respawn` as **Повернення** for new or weak characters who get lo
 
 - As of 0.10.6, `/respawn` had a Telegram fallback message explaining that the real respawn flow was still planned.
 - 0.13.24 implements the first live return flow as `/respawn`, with confirmation, a short cooldown, action queue interruption, stamina consequence and a world event trail.
+- 0.13.26 keeps `/respawn` available for the first 7 real days after character creation, even if the early progress score is already high; weak characters can still use it later.
 
 ## Rules
 
 - Available only before a defined progression threshold, such as early skill/progression totals, starter-phase flags, or another small “not yet established” character measure.
+- Always available during the first 7 real days after character creation, unless the player is already at the start location or the short cooldown is still active.
 - Returns character to starting location.
 - May have cooldown.
 - May apply fatigue, hunger or small resource loss.
