@@ -17,17 +17,20 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added contextual hunger cue copy that points toward `inventory` when edible carried food exists, cooking when raw meat and local fire are available, nearby food resources when present, or a general atmospheric warning otherwise.
 - Added a one-time tutorial dream wellbeing aside after the first successful tutorial food use, with a tutorial event flag so it does not repeat unless tutorial progress is reset.
 - Added focused `hunger-cues` helper coverage to `npm test`.
+- Added `/refresh` as a confirmed atmospheric return to the start location for early or weak characters who get lost, with `/respawn` kept as a compatibility alias.
 
 ### Changed
 
 - Rearranged the character card action keyboard so `Inventory`, `Signals`, posture, `Rest`, `Sleep` and `Auto` controls are grouped into clearer rows.
 - Moved the scribe technical-details toggle out of the character card keyboard and into the scribe admin menu.
-- Marked `FOOD-004` and `ONB-003` as testing and refreshed planning exports.
+- Moved `/refresh` near the top of the Telegram side command menu.
+- Marked `FOOD-004`, `ONB-003` and `SURV-001` beginner-return slices as testing and refreshed planning exports.
 - Bumped package metadata to `0.13.24`.
 
 ### Tests
 
 - Ran `node scripts/test/hunger-cues.cjs`.
+- Ran `node scripts/test/beginner-return.cjs`.
 - Ran `node scripts/test/tutorial-voices.cjs`.
 - Ran `node scripts/test/session-presence.cjs`.
 - Ran `node scripts/test/posture.cjs`.

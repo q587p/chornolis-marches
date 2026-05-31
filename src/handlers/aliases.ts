@@ -57,6 +57,8 @@ import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 import { bestTargetMatch, inspectMissingText, normalizeTargetKey, targetDisplayLabel, targetListText, visibleTextTargets } from "../services/textTargets";
 import { spendPlayerStaminaAmount } from "../services/actionRecovery";
 import { afkReplyOptions, endPlayerSession, SESSION_AFK_CONFIRMATION, SESSION_ENDED_CONFIRMATION, setPlayerAfk } from "../services/sessionPresence";
+import { beginnerReturnPromptText, beginnerReturnRefusalText, checkBeginnerReturnForPlayer, performBeginnerReturn } from "../services/beginnerReturn";
+import { safeAnswerCallbackQuery } from "../utils/telegram";
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
@@ -955,6 +957,52 @@ async function submitSessionPresence(ctx: any, mode: "afk" | "end") {
   }
 }
 
+function buildBeginnerReturnConfirmKeyboard() {
+  return new InlineKeyboard()
+    .text("🧭 Повернутися до табору", "refresh:confirm")
+    .row()
+    .text("↩️ Лишитися тут", "refresh:cancel");
+}
+
+async function requestBeginnerReturn(ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const checked = await checkBeginnerReturnForPlayer(player.id);
+  if (!checked) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  if (!checked.eligibility.ok) {
+    await ctx.reply(beginnerReturnRefusalText(checked.eligibility), {
+      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+    });
+    return;
+  }
+
+  await ctx.reply(beginnerReturnPromptText(), {
+    reply_markup: buildBeginnerReturnConfirmKeyboard(),
+  });
+}
+
+async function confirmBeginnerReturn(ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  await safeAnswerCallbackQuery(ctx);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const result = await performBeginnerReturn(player.id);
+  if (!result) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  if (!result.moved) {
+    await ctx.reply(beginnerReturnRefusalText(result.eligibility), {
+      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+    });
+    return;
+  }
+
+  await disablePlayerAuto(ctx.from.id);
+  await ctx.reply(result.text, {
+    reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+  });
+  await showLocationForPlayer(ctx.from.id, (text, options) => ctx.reply(text, options));
+}
+
 async function submitOpen(ctx: any, target?: string) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
@@ -983,6 +1031,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "time") return showTime(ctx);
     if (parsed.kind === "menu") return showMenu(ctx);
     if (parsed.kind === "session-presence") return submitSessionPresence(ctx, parsed.mode);
+    if (parsed.kind === "beginner-return") return requestBeginnerReturn(ctx);
     if (parsed.kind === "back") return showMainKeyboard(ctx);
     if (parsed.kind === "hide-keyboard") return hideReplyKeyboard(ctx);
     if (parsed.kind === "inspect-vegetation") return replyWithVegetationInspection(ctx);
@@ -1024,5 +1073,13 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "target-action") return submitTargetAction(bot, ctx, parsed.action, parsed.target);
     if (parsed.kind === "pickup-target") return submitPickupTarget(bot, ctx, parsed.target);
     if (parsed.kind === "social-signal") return submitSocialSignal(bot, ctx, parsed.signal, parsed.target);
+  });
+
+  bot.callbackQuery("refresh:confirm", async (ctx) => confirmBeginnerReturn(ctx));
+  bot.callbackQuery("refresh:cancel", async (ctx) => {
+    await safeAnswerCallbackQuery(ctx, "Лишаємося тут.");
+    await ctx.reply("Ви лишаєтеся на місці. Якщо треба, можна озирнутися або перевірити виходи.", {
+      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+    });
   });
 }

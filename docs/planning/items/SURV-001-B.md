@@ -1,7 +1,7 @@
 ---
 id: SURV-001-B
 title: /respawn command skeleton
-status: next
+status: testing
 type: feature
 area: survival
 priority: high
@@ -35,3 +35,8 @@ Add the command entry point before moving characters.
 ## Implementation Order
 
 Do after: `SURV-001-A`.
+
+## 0.13.24 Notes
+
+- `/refresh` is now the primary command and `/respawn` is kept as compatibility.
+- The command opens a confirmation flow instead of moving immediately.

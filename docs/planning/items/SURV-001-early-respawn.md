@@ -1,7 +1,7 @@
 ---
 id: SURV-001
 title: Early respawn support
-status: next
+status: testing
 type: feature
 area: survival
 priority: high
@@ -15,11 +15,12 @@ tags:
 
 ## Goal
 
-Add `/respawn` as **Повернення** for new or weak characters who get lost.
+Add `/refresh` as **Повернення** for new or weak characters who get lost, with `/respawn` kept as a compatibility alias.
 
 ## Current placeholder
 
-- As of 0.10.6, `/respawn` has a Telegram fallback message explaining that the real respawn flow is still planned.
+- As of 0.10.6, `/respawn` had a Telegram fallback message explaining that the real respawn flow was still planned.
+- 0.13.24 implements the first live return flow as `/refresh` / `/respawn`, with confirmation, a short cooldown, action queue interruption, stamina consequence and a world event trail.
 
 ## Rules
 

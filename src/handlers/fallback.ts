@@ -65,14 +65,6 @@ export function registerFallbackHandlers(bot: Bot) {
       ? `\n\nМожливо, ти мав на увазі:\n${suggestions.map((suggestion) => `- ${formatAliasSuggestion(suggestion)}`).join("\n")}`
       : "";
 
-    if (command === "respawn") {
-      await ctx.reply(
-        "Команди /respawn поки що немає в грі. Вона вже є в планах як раннє повернення до межового табору для нових або слабких персонажів.\n\nПоки що можна скористатися /look, /rest або /help.",
-        { reply_markup: replyMarkup }
-      );
-      return;
-    }
-
     await ctx.reply(
       `Не впізнаю команду ${command ? `/${escapeHtml(command)}` : "з таким записом"}.${suggestionText}\n\n${fallbackNavigationHint()}${await unfinishedTutorialHint(ctx.from?.id)}`,
       { parse_mode: "HTML", reply_markup: replyMarkup }

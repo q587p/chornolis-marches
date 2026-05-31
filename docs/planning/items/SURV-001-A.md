@@ -1,7 +1,7 @@
 ---
 id: SURV-001-A
 title: Beginner return eligibility helper
-status: next
+status: testing
 type: feature
 area: survival
 priority: high
@@ -35,3 +35,8 @@ Add the first helper that decides whether `Повернення` is allowed.
 ## Implementation Order
 
 Do after: `ONB-001-E`.
+
+## 0.13.24 Notes
+
+- Added a generous first helper for `/refresh` / `/respawn`: early-progress characters pass, weak characters pass, already-home, missing-location, cooldown and established-character cases are refused with player-facing text.
+- Added focused helper coverage in `scripts/test/beginner-return.cjs`.

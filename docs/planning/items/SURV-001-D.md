@@ -1,7 +1,7 @@
 ---
 id: SURV-001-D
 title: Actual return to start camp
-status: next
+status: testing
 type: feature
 area: survival
 priority: high
@@ -35,3 +35,8 @@ Move eligible characters back to `start_border_camp` safely.
 ## Implementation Order
 
 Do after: `SURV-001-C`.
+
+## 0.13.24 Notes
+
+- Confirmed `/refresh` cancels queued/running player actions, stops rest/auto, moves the character to the configured start location, lowers stamina to at most roughly a third and writes a `Player used refresh return` world event.
+- The success response explains the return diegetically before rendering the start camp again.

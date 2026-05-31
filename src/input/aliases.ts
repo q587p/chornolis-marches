@@ -28,6 +28,7 @@ export type ParsedAliasCommand =
   | { kind: "time" }
   | { kind: "menu" }
   | { kind: "session-presence"; mode: SessionPresenceAliasMode }
+  | { kind: "beginner-return" }
   | { kind: "back" }
   | { kind: "hide-keyboard" }
   | { kind: "move"; direction: Direction }
@@ -241,6 +242,14 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "меню": { kind: "menu" },
   "дії": { kind: "menu" },
   "кнопки": { kind: "menu" },
+
+  refresh: { kind: "beginner-return" },
+  respawn: { kind: "beginner-return" },
+  "повернення": { kind: "beginner-return" },
+  "повернення до табору": { kind: "beginner-return" },
+  "повернутися до табору": { kind: "beginner-return" },
+  "вернутися до табору": { kind: "beginner-return" },
+  "назад до табору": { kind: "beginner-return" },
 
   back: { kind: "back" },
   "назад": { kind: "back" },
@@ -588,6 +597,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "time") return "/time";
   if (parsed.kind === "menu") return "/menu";
   if (parsed.kind === "session-presence") return parsed.mode === "afk" ? "/afk" : "/end_session";
+  if (parsed.kind === "beginner-return") return "/refresh";
   if (parsed.kind === "chat") return "/chat";
   if (parsed.kind === "sleep") return parsed.tutorial ? "/sleep_tutorial" : "/sleep";
   if (parsed.kind === "wake") return "/wake";

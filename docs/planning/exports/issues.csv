@@ -103,12 +103,12 @@ SOC-004,Group movement MVP,backlog,feature,social,high,"social,groups,movement,a
 SOC-005,Group combat assist conservative plan,backlog,feature,combat,medium,"social,groups,combat,balance",docs/planning/items/SOC-005-group-combat-assist.md
 SOC-006,NPC group compatibility,backlog,feature,social,medium,"social,groups,npc,actors,creatures",docs/planning/items/SOC-006-npc-group-compatibility.md
 SOC-007,Telegram UI and copy for contacts / follow / groups,backlog,feature,social,medium,"social,telegram,ui,copy,groups",docs/planning/items/SOC-007-telegram-ui-and-copy.md
-SURV-001,Early respawn support,next,feature,survival,high,"onboarding,respawn,beginner",docs/planning/items/SURV-001-early-respawn.md
-SURV-001-A,Beginner return eligibility helper,next,feature,survival,high,"respawn,beginner,safety",docs/planning/items/SURV-001-A.md
-SURV-001-B,/respawn command skeleton,next,feature,survival,high,"respawn,telegram,command",docs/planning/items/SURV-001-B.md
-SURV-001-C,Повернення confirmation and aliases,next,feature,survival,high,"respawn,aliases,button-parity",docs/planning/items/SURV-001-C.md
-SURV-001-D,Actual return to start camp,next,feature,survival,high,"respawn,location,queue",docs/planning/items/SURV-001-D.md
-SURV-001-E,Beginner return cooldown/consequence,next,feature,survival,medium,"respawn,cooldown,balance",docs/planning/items/SURV-001-E.md
+SURV-001,Early respawn support,testing,feature,survival,high,"onboarding,respawn,beginner",docs/planning/items/SURV-001-early-respawn.md
+SURV-001-A,Beginner return eligibility helper,testing,feature,survival,high,"respawn,beginner,safety",docs/planning/items/SURV-001-A.md
+SURV-001-B,/respawn command skeleton,testing,feature,survival,high,"respawn,telegram,command",docs/planning/items/SURV-001-B.md
+SURV-001-C,Повернення confirmation and aliases,testing,feature,survival,high,"respawn,aliases,button-parity",docs/planning/items/SURV-001-C.md
+SURV-001-D,Actual return to start camp,testing,feature,survival,high,"respawn,location,queue",docs/planning/items/SURV-001-D.md
+SURV-001-E,Beginner return cooldown/consequence,testing,feature,survival,medium,"respawn,cooldown,balance",docs/planning/items/SURV-001-E.md
 TECH-001,Service boundary and duplication cleanup,backlog,technical,architecture,medium,"architecture,refactor,maintainability,services,dead-code,cleanup",docs/planning/items/TECH-001-service-boundary-and-duplication-cleanup.md
 TRACK-LEARN-001-A,Track-examine progress hint,next,feature,learning,high,"tracking,tracks,progression",docs/planning/items/TRACK-LEARN-001-A.md
 TRACK-LEARN-001-B,Animal movement observation,next,feature,learning,medium,"tracking,animals,observe",docs/planning/items/TRACK-LEARN-001-B.md
