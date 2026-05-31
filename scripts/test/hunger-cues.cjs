@@ -22,5 +22,6 @@ assert.equal(isTutorialWellbeingFoodResource("cooked_meat"), true);
 assert.equal(isTutorialWellbeingFoodResource("herbs"), false);
 assert.match(TUTORIAL_WELLBEING_ASIDE_TEXT, /по той бік/);
 assert.match(TUTORIAL_WELLBEING_ASIDE_TEXT, /Чорноліс почекає/);
+assert.equal(TUTORIAL_WELLBEING_ASIDE_TEXT.includes("«"), false);
 
 console.log("Hunger cues OK");

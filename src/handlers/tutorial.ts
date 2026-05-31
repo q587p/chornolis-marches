@@ -76,7 +76,7 @@ export async function requestTutorialEnd(ctx: any) {
     }));
   }
 
-  await ctx.reply(TUTORIAL_END_CONFIRMATION_TEXT, { reply_markup: buildTutorialEndConfirmKeyboard() });
+  await ctx.reply(TUTORIAL_END_CONFIRMATION_TEXT, { parse_mode: "HTML", reply_markup: buildTutorialEndConfirmKeyboard() });
 }
 
 async function confirmTutorialEnd(bot: Bot, ctx: any) {
@@ -85,7 +85,7 @@ async function confirmTutorialEnd(bot: Bot, ctx: any) {
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const result = await completeTutorialForPlayer(player.id);
-  await ctx.reply(result.text, { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
+  await ctx.reply(result.text, { parse_mode: "HTML", reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
   if (result.woke) {
     await notifyPlayerObservers(bot, {
       playerId: player.id,
