@@ -93,6 +93,7 @@ Do not use `Date.getHours()`, server timezone, player timezone or real-world cal
 
 - `WorldState.weatherKey`, `weatherIntensity` and `weatherEndsAtMinute` store a tiny internal weather state.
 - Weather advances through the shared world-time service and writes non-proactive `WorldEvent` rows when it changes.
+- `/time` and `/weather` both read through the shared world-time service, so either command may advance stored weather state and create non-proactive weather-change events when enough internal time has elapsed.
 - `/weather` shows the current Chornolis weather as a compact atmospheric readout.
 - The shared light snapshot helper combines daypart, moon illumination, weather modifiers and optional local active light into one reusable result for future visibility consumers.
 
