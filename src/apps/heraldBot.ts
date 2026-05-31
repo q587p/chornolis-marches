@@ -3,6 +3,7 @@ import { config, requireConfigValue } from "../config";
 import { parseHeraldAdminIds, isHeraldAdminId } from "../herald/admin";
 import { registerHeraldDigestCommands } from "../herald/digestCommands";
 import { registerHeraldHelpCommands, registerHeraldUnknownCommandFallback } from "../herald/help";
+import { registerHeraldInfoCommands } from "../herald/infoCommands";
 import { registerHeraldNewsCommands } from "../herald/newsCommands";
 import { registerHeraldPublisherCommands, startHeraldPublisherLoop } from "../herald/publisher";
 import { startHeraldHealthServer } from "../server/heraldHealthServer";
@@ -19,6 +20,7 @@ bot.command("ping", async (ctx) => {
 });
 
 registerHeraldHelpCommands(bot, heraldAdminIds);
+registerHeraldInfoCommands(bot, heraldAdminIds);
 registerHeraldNewsCommands(bot, heraldAdminIds);
 registerHeraldDigestCommands(bot, heraldAdminIds);
 registerHeraldPublisherCommands(bot, heraldAdminIds);
