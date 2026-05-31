@@ -2,6 +2,7 @@ import { Bot } from "grammy";
 import { config, requireConfigValue } from "../config";
 import { parseHeraldAdminIds, isHeraldAdminId } from "../herald/admin";
 import { registerHeraldDigestCommands } from "../herald/digestCommands";
+import { registerHeraldHelpCommands, registerHeraldUnknownCommandFallback } from "../herald/help";
 import { registerHeraldNewsCommands } from "../herald/newsCommands";
 import { registerHeraldPublisherCommands, startHeraldPublisherLoop } from "../herald/publisher";
 import { startHeraldHealthServer } from "../server/heraldHealthServer";
@@ -17,9 +18,11 @@ bot.command("ping", async (ctx) => {
   await ctx.reply("Канцелярія Межового Знаку на місці.");
 });
 
+registerHeraldHelpCommands(bot, heraldAdminIds);
 registerHeraldNewsCommands(bot, heraldAdminIds);
 registerHeraldDigestCommands(bot, heraldAdminIds);
 registerHeraldPublisherCommands(bot, heraldAdminIds);
+registerHeraldUnknownCommandFallback(bot, heraldAdminIds);
 
 bot.catch((error) => {
   console.error("Herald bot error:", error);
