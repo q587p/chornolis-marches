@@ -29,6 +29,8 @@ model Player {
   isResting    Boolean @default(false)
   isAutoEnabled Boolean @default(false)
   sessionPresence PlayerSessionPresence @default(ACTIVE)
+  sessionPresenceReason String?
+  sessionPresenceChangedAt DateTime?
   remindersPaused Boolean @default(false)
   idleReminderSceneKey String?
   idleReminderCountForCurrentScene Int @default(0)
@@ -594,6 +596,13 @@ enum WorldActionType {
   GREET
   ATTACK
   FRESHEN
+  USE_ITEM
+  DROP_ITEM
+  COOK
+  LIGHT_TORCH
+  DOUSE_TORCH
+  ADD_TWIGS
+  LIGHT_CAMPFIRE
   SAY
   TRACK
   REST

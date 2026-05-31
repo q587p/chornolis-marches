@@ -1,4 +1,5 @@
 import { Bot, InlineKeyboard } from "grammy";
+import type { Prisma, WorldActionType } from "@prisma/client";
 import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import { normalizeChatLogMode, normalizeChatLogWindow } from "../services/chatLog";
@@ -37,25 +38,22 @@ import { submitGather as submitCanonicalGather } from "./gather";
 import { submitPosture } from "./posture";
 import { addCorpseToInventory, addVisibleCorpsesToInventory, resourceTypeDisplayName } from "../services/corpses";
 import { performPlayerLocationSignal, performSocialSignal } from "../services/socialSignals";
-import { addTwigsToCampfire, dousePlayerTorchFromInventory, lightPlayerTorchFromInventory } from "../services/fire";
 import { requireScribeAdmin } from "../services/adminAccess";
 import { pickUpAllVisibleGroundResources, pickUpAllVisibleGroundResourcesByKey, pickUpFirstGroundResourceByKey, pickUpFirstVisibleGroundResourceByKey, type VisibleGroundResourceKey } from "../services/groundItems";
 import { parseSpeechTarget } from "../services/speechTargets";
-import { dropInventoryResourceDetailed, dropInventoryResourcesDetailed, inspectInventoryResource, inventoryResourceKeyFromText, useInventoryResource, type UsableInventoryResource } from "../services/inventoryUse";
-import { enterTutorialDream, hasCompletedTutorial, openDreamGate, rememberTutorialCommandHintIfInTutorial, rememberTutorialWellbeingAside, TUTORIAL_WELLBEING_ASIDE_TEXT, wakeFromTutorialDream } from "../services/tutorial";
+import { inspectInventoryResource, inventoryResourceKeyFromText, type UsableInventoryResource } from "../services/inventoryUse";
+import { enterTutorialDream, hasCompletedTutorial, openDreamGate, rememberTutorialCommandHintIfInTutorial, wakeFromTutorialDream } from "../services/tutorial";
 import { requestTutorialEnd } from "./tutorial";
-import { dropObserverText, pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
+import { pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 import { notifyPlayerObservers, playerRestStartObserverText, playerRestStopObserverText, playerTutorialSleepObserverText, playerTutorialWakeObserverText } from "../services/playerVisibility";
 import { noteKnownMessage } from "../utils/messageTracker";
-import { cookRawMeat } from "../services/meat";
-import { COOKING_PRACTICE_GROWTH_MESSAGE } from "../services/foodLearning";
 import { playerForms } from "../services/grammar";
 import { putInventoryIntoLocalFeature } from "../services/carcassDropoff";
 import { latestRememberedReplyTarget } from "../services/replyTargets";
 import { replyToActionError } from "../utils/actionErrorReply";
 import { assertCanPerformPhysicalAction } from "../services/postureRules";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
-import { bestTargetMatch, inspectMissingText, normalizeTargetKey, targetDisplayLabel, targetListText, visibleTextTargets } from "../services/textTargets";
+import { bestTargetMatch, inspectMissingText, isSelfTargetQuery, normalizeTargetKey, targetDisplayLabel, targetListText, visibleTextTargets } from "../services/textTargets";
 import { spendPlayerStaminaAmount } from "../services/actionRecovery";
 import { afkReplyOptions, endPlayerSession, SESSION_AFK_CONFIRMATION, SESSION_ENDED_CONFIRMATION, setPlayerAfk } from "../services/sessionPresence";
 import { beginnerReturnPromptText, beginnerReturnRefusalText, checkBeginnerReturnForPlayer, performBeginnerReturn } from "../services/beginnerReturn";
@@ -139,6 +137,7 @@ async function replyWithBorderMarkerInspection(ctx: any) {
 async function submitFeatureInspection(bot: Bot, ctx: any, targetQuery: string, detail: "brief" | "full" = "full") {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player?.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  if (isSelfTargetQuery(targetQuery)) return showCharacter(ctx.from.id, (text, options) => ctx.reply(text, options));
 
   const returnMode = detail === "brief" ? "brief" : "details";
   const view = await renderLocationFeatureInteractionByQuery(player.currentLocationId, player.id, targetQuery, returnMode, detail);
@@ -307,52 +306,52 @@ async function submitWait(bot: Bot, ctx: any) {
   }
 }
 
-async function submitUseItem(ctx: any, item: UsableInventoryResource) {
-  const player = await getPlayerByTelegramId(ctx.from.id);
-  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
-
+async function submitInventoryQueuedAction(
+  bot: Bot,
+  ctx: any,
+  player: any,
+  type: WorldActionType,
+  payload: Prisma.InputJsonObject,
+  fallback: string,
+) {
+  const durationMs = actionDurationMs(type, player.stamina);
   try {
-    const resultText = await useInventoryResource(player.id, item);
-    const wellbeingAside = await rememberTutorialWellbeingAside(player.id, player.currentLocationId, item);
-    await ctx.reply(wellbeingAside ? `${resultText}\n\n${TUTORIAL_WELLBEING_ASIDE_TEXT}` : resultText);
+    const result = await performOrQueuePlayerAction(bot, {
+      playerId: player.id,
+      type,
+      payload,
+      durationMs,
+      chatId: ctx.chat?.id,
+    });
+    await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {
-    await ctx.reply(error instanceof Error ? error.message : "Не вдалося використати це.");
+    await replyToActionError(ctx, error, fallback);
   }
 }
 
-async function submitLightTorch(ctx: any) {
+async function submitUseItem(bot: Bot, ctx: any, item: UsableInventoryResource) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
-  try {
-    assertCanPerformPhysicalAction(player, "TORCH");
-    await ctx.reply(await lightPlayerTorchFromInventory(player.id));
-  } catch (error) {
-    await replyToActionError(ctx, error, "Не вдалося запалити факел.");
-  }
+
+  await submitInventoryQueuedAction(bot, ctx, player, "USE_ITEM", { resourceKey: item }, "Не вдалося використати це.");
 }
 
-async function submitDouseTorch(ctx: any) {
+async function submitLightTorch(bot: Bot, ctx: any) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
-  try {
-    assertCanPerformPhysicalAction(player, "TORCH");
-    await ctx.reply(await dousePlayerTorchFromInventory(player.id));
-  } catch (error) {
-    await replyToActionError(ctx, error, "Не вдалося притушити факел.");
-  }
+  await submitInventoryQueuedAction(bot, ctx, player, "LIGHT_TORCH", {}, "Не вдалося запалити факел.");
 }
 
-async function submitCookMeat(ctx: any) {
+async function submitDouseTorch(bot: Bot, ctx: any) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
-  try {
-    assertCanPerformPhysicalAction(player, "COOK");
-    const result = await cookRawMeat(player.id);
-    await ctx.reply(result.text);
-    if (result.practiceMilestone) await ctx.reply(COOKING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" });
-  } catch (error) {
-    await replyToActionError(ctx, error, "Не вдалося підсмажити м'ясо.");
-  }
+  await submitInventoryQueuedAction(bot, ctx, player, "DOUSE_TORCH", {}, "Не вдалося притушити факел.");
+}
+
+async function submitCookMeat(bot: Bot, ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  await submitInventoryQueuedAction(bot, ctx, player, "COOK", {}, "Не вдалося підсмажити м'ясо.");
 }
 
 async function replyWithInventoryInspection(ctx: any, playerId: number, target: string) {
@@ -386,36 +385,9 @@ async function submitInventoryDrop(bot: Bot, ctx: any, target: string) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
-  try {
-    assertCanPerformPhysicalAction(player, "DROP");
-    const allFilter = allTargetFilter(target);
-    if (allFilter !== null) {
-      const result = await dropInventoryResourcesDetailed(player.id, allFilter || undefined);
-      await recordVisibleItemAction(bot, {
-        playerId: player.id,
-        locationId: result.locationId,
-        observerText: dropObserverText(player, result.droppedName),
-        eventTitle: "Player dropped inventory items",
-        eventDescription: `player=${player.id}; items=${result.resourceKey}`,
-        actionNote: `викладено: ${result.droppedName}`,
-      });
-      await ctx.reply(result.text);
-      return;
-    }
-
-    const result = await dropInventoryResourceDetailed(player.id, target);
-    await recordVisibleItemAction(bot, {
-      playerId: player.id,
-      locationId: result.locationId,
-      observerText: dropObserverText(player, result.droppedName),
-      eventTitle: "Player dropped item",
-      eventDescription: `player=${player.id}; item=${result.resourceKey}; name=${result.droppedName}`,
-      actionNote: `викинуто: ${result.droppedName}`,
-    });
-    await ctx.reply(result.text);
-  } catch (error) {
-    await replyToActionError(ctx, error, "Не вдалося викинути це.");
-  }
+  const allFilter = allTargetFilter(target);
+  const payload = allFilter !== null ? { allFilter } : { target };
+  await submitInventoryQueuedAction(bot, ctx, player, "DROP_ITEM", payload, "Не вдалося викинути це.");
 }
 
 async function submitPutItem(bot: Bot, ctx: any, item: string, amount: number | "all" | undefined, container: string) {
@@ -585,6 +557,7 @@ function validateTargetAction(action: TargetAction, target: ResolvedTarget) {
 async function submitTargetAction(bot: Bot, ctx: any, action: TargetAction, targetQuery: string, detail: "brief" | "full" = "full") {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  if (action === "inspect" && isSelfTargetQuery(targetQuery)) return showCharacter(ctx.from.id, (text, options) => ctx.reply(text, options));
 
   const locationId = player.currentLocationId;
   if (action === "freshen" && isAllTarget(targetQuery)) return submitFreshenAll(bot, ctx, player, locationId);
@@ -998,7 +971,6 @@ async function confirmBeginnerReturn(ctx: any) {
     return;
   }
 
-  await disablePlayerAuto(ctx.from.id);
   await ctx.reply(result.text, {
     reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
   });
@@ -1049,10 +1021,10 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "track") return submitTrack(bot, ctx, Boolean(parsed.detail));
     if (parsed.kind === "shake-tree") return submitShakeTree(ctx);
     if (parsed.kind === "wait") return submitWait(bot, ctx);
-    if (parsed.kind === "use-item") return submitUseItem(ctx, parsed.item);
-    if (parsed.kind === "light-torch") return submitLightTorch(ctx);
-    if (parsed.kind === "douse-torch") return submitDouseTorch(ctx);
-    if (parsed.kind === "cook-meat") return submitCookMeat(ctx);
+    if (parsed.kind === "use-item") return submitUseItem(bot, ctx, parsed.item);
+    if (parsed.kind === "light-torch") return submitLightTorch(bot, ctx);
+    if (parsed.kind === "douse-torch") return submitDouseTorch(bot, ctx);
+    if (parsed.kind === "cook-meat") return submitCookMeat(bot, ctx);
     if (parsed.kind === "sleep") return submitSleep(bot, ctx, parsed.tutorial);
     if (parsed.kind === "wake") return submitWake(bot, ctx);
     if (parsed.kind === "open") return submitOpen(ctx, parsed.target);
@@ -1062,12 +1034,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "add-twigs-campfire") {
       const player = await getPlayerByTelegramId(ctx.from.id);
       if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
-      try {
-        assertCanPerformPhysicalAction(player, "FIRE");
-        return ctx.reply(await addTwigsToCampfire(player.id));
-      } catch (error) {
-        return replyToActionError(ctx, error, "Не вдалося підкинути хмиз.");
-      }
+      return submitInventoryQueuedAction(bot, ctx, player, "ADD_TWIGS", {}, "Не вдалося підкинути хмиз.");
     }
     if (parsed.kind === "say") return submitSay(bot, ctx, parsed.text);
     if (parsed.kind === "whisper") return submitWhisper(bot, ctx, parsed.text);

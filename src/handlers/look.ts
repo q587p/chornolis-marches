@@ -1,11 +1,11 @@
 import { Bot } from "grammy";
+import type { Prisma, WorldActionType } from "@prisma/client";
 import { actionDurationMs, performOrQueuePlayerAction } from "../services/actionQueue";
 import { getPlayerByTelegramId } from "../services/players";
-import { lightLocationCampfire, renderDepletedVegetationInspection, renderLocationBrief, renderLocationDetails, renderLocationFeatureInteraction, renderLocationFeatureInteractionByQuery, shakeTreeFeature, takeTorchFromLocationFeature } from "../services/locations";
+import { renderDepletedVegetationInspection, renderLocationBrief, renderLocationDetails, renderLocationFeatureInteraction, renderLocationFeatureInteractionByQuery, shakeTreeFeature, takeTorchFromLocationFeature } from "../services/locations";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { durationSecondsSuffix } from "../utils/durationText";
-import { addTwigsToCampfire, lightPlayerTorchAtCampfire } from "../services/fire";
 import { isPickableResourceKey, isTutorialLooseResourceKey, pickUpAllVisibleGroundResourcesByKey, pickUpGroundResource, type VisibleGroundResourceKey } from "../services/groundItems";
 import { pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 import { escapeHtml } from "../utils/text";
@@ -53,6 +53,32 @@ async function sendVoiceQuoteMessages(ctx: any, messages?: Array<{ title: string
 async function sendHtmlFollowupMessages(ctx: any, messages?: Array<{ text: string }>) {
   for (const message of messages ?? []) {
     await replyAndTrack(ctx, message.text, { parse_mode: "HTML" });
+  }
+}
+
+async function submitFeatureQueuedAction(
+  bot: Bot,
+  ctx: any,
+  player: any,
+  type: WorldActionType,
+  payload: Prisma.InputJsonObject,
+  fallback: string,
+) {
+  const durationMs = actionDurationMs(type, player.stamina);
+  try {
+    const result = await performOrQueuePlayerAction(bot, {
+      playerId: player.id,
+      type,
+      payload,
+      durationMs,
+      chatId: ctx.chat?.id,
+    });
+    await safeAnswerCallbackQuery(ctx, result.mode === "queued" ? `Додано в чергу${durationSecondsSuffix(player, durationMs)}.` : undefined);
+    await sendActionSubmitFeedback(ctx, player.id, result);
+  } catch (error) {
+    const message = actionErrorMessage(error, fallback);
+    await safeAnswerCallbackQuery(ctx, message);
+    await replyToActionError(ctx, error, fallback, { replyFallback: false });
   }
 }
 
@@ -215,16 +241,7 @@ export function registerLookHandlers(bot: Bot) {
       return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
     }
 
-    try {
-      assertCanPerformPhysicalAction(player, "FIRE");
-      const text = await addTwigsToCampfire(player.id, Number(ctx.match[1]));
-      await safeAnswerCallbackQuery(ctx);
-      await ctx.reply(text);
-    } catch (error) {
-      const message = actionErrorMessage(error, "Не вдалося підкинути хмиз.");
-      await safeAnswerCallbackQuery(ctx, message);
-      await replyToActionError(ctx, error, "Не вдалося підкинути хмиз.", { replyFallback: false });
-    }
+    await submitFeatureQueuedAction(bot, ctx, player, "ADD_TWIGS", { featureId: Number(ctx.match[1]) }, "Не вдалося підкинути хмиз.");
   });
 
   bot.callbackQuery(/^fire:light:(\d+)$/, async (ctx) => {
@@ -234,16 +251,7 @@ export function registerLookHandlers(bot: Bot) {
       return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
     }
 
-    try {
-      assertCanPerformPhysicalAction(player, "FIRE");
-      const text = await lightLocationCampfire(Number(ctx.match[1]), player.id);
-      await safeAnswerCallbackQuery(ctx);
-      await ctx.reply(text, await inventoryGainReplyOptions(player, "take-torch"));
-    } catch (error) {
-      const message = actionErrorMessage(error, "Не вдалося запалити вогонь.");
-      await safeAnswerCallbackQuery(ctx, message);
-      await replyToActionError(ctx, error, "Не вдалося запалити вогонь.", { replyFallback: false });
-    }
+    await submitFeatureQueuedAction(bot, ctx, player, "LIGHT_CAMPFIRE", { featureId: Number(ctx.match[1]) }, "Не вдалося запалити вогонь.");
   });
 
   bot.callbackQuery(/^torch:light:(\d+)$/, async (ctx) => {
@@ -253,16 +261,7 @@ export function registerLookHandlers(bot: Bot) {
       return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
     }
 
-    try {
-      assertCanPerformPhysicalAction(player, "TORCH");
-      const text = await lightPlayerTorchAtCampfire(player.id, Number(ctx.match[1]));
-      await safeAnswerCallbackQuery(ctx);
-      await ctx.reply(text);
-    } catch (error) {
-      const message = actionErrorMessage(error, "Не вдалося запалити факел.");
-      await safeAnswerCallbackQuery(ctx, message);
-      await replyToActionError(ctx, error, "Не вдалося запалити факел.", { replyFallback: false });
-    }
+    await submitFeatureQueuedAction(bot, ctx, player, "LIGHT_TORCH", { featureId: Number(ctx.match[1]) }, "Не вдалося запалити факел.");
   });
 
   bot.callbackQuery(/^torch:take:(\d+)$/, async (ctx) => {

@@ -35,6 +35,8 @@ The active line is:
 
 Goal: make the first play session stable, understandable and atmospheric.
 
+0.13 should close once the first-session path is stable. Do not pull day/night into `0.13.x`; use the last `0.13` patch for a compact first-session closure audit, small copy fixes and planning cleanup.
+
 Primary outcomes:
 
 - Character-name onboarding is reliable and diegetic.
@@ -56,8 +58,11 @@ See:
 
 Goal: make darkness and light matter in ordinary play.
 
+The first `0.14` slice should be a tiny world-time foundation: stored/derived world time, a daypart helper and `/time` reading real world state. Full darkness hiding, light-source visibility, хмиз, biome-aware foraging and ordinary sleep should follow as separate small patches.
+
 Primary outcomes:
 
+- The first `0.14` patch establishes world-time/daypart state before darkness changes what players can see.
 - The world has a simple dawn/day/dusk/night state.
 - `/time` reads actual world state.
 - At night, location descriptions, nearby beings, tracks and ground objects are hidden or reduced without light.

@@ -404,6 +404,36 @@ function addInlineRows(target: InlineKeyboard, source: InlineKeyboard) {
   }
 }
 
+export function groundItemPickupButtonRows(groundItems: any[]) {
+  const groundItemTotalsByKey = new Map<string, number>();
+  for (const item of groundItems) {
+    groundItemTotalsByKey.set(item.resourceType.key, (groundItemTotalsByKey.get(item.resourceType.key) ?? 0) + item.amount);
+  }
+
+  return groundItems.map((item) => {
+    const row = [
+      {
+        text: `🤲 Підібрати: ${item.resourceType.name}`,
+        callbackData: `item:pickup:${item.id}`,
+      },
+    ];
+    if ((groundItemTotalsByKey.get(item.resourceType.key) ?? 0) > 1) {
+      row.push({
+        text: "всі",
+        callbackData: `item:pickupAll:${item.resourceType.key as VisibleGroundResourceKey}`,
+      });
+    }
+    return row;
+  });
+}
+
+function addGroundItemPickupButtons(keyboard: InlineKeyboard, groundItems: any[]) {
+  for (const row of groundItemPickupButtonRows(groundItems)) {
+    for (const button of row) keyboard.text(button.text, button.callbackData);
+    keyboard.row();
+  }
+}
+
 function presenceText(location: any, viewerPlayerId?: number, revealTargets = false, activeActions = new Map<string, any>()) {
   const targets = visibleTargets(location, viewerPlayerId);
   const hasCharacters = targets.some((t) => t.canGreet);
@@ -411,7 +441,7 @@ function presenceText(location: any, viewerPlayerId?: number, revealTargets = fa
   const hasCorpses = location.creatures.some(isVisibleCorpse);
   const groundItems = (location.resources ?? []).filter((r: any) => isVisibleGroundResource(r, location));
 
-  if (revealTargets && targets.length) {
+  if (revealTargets && (targets.length || groundItems.length)) {
     const livingLines = targets
       .filter(isLivingTarget)
       .slice(0, TARGET_TEXT_LIMIT)
@@ -449,13 +479,13 @@ function presenceText(location: any, viewerPlayerId?: number, revealTargets = fa
   return "";
 }
 
-function groundItemLine(resource: any) {
+export function groundItemLine(resource: any) {
   const amount = resource.amount > 1 ? ` ×${resource.amount}` : "";
   if (resource.resourceType.key !== "lit_torch") return `${resourceTypeDisplayName(resource.resourceType)}${amount}`;
 
   const leftMs = resource.updatedAt.getTime() + TORCH_DURATION_MS - Date.now();
   const minutes = Math.max(1, Math.ceil(leftMs / 60_000));
-  return `${resourceTypeDisplayName(resource.resourceType)}${amount}; горітиме ще приблизно ${minutes} хв`;
+  return `${resourceTypeDisplayName(resource.resourceType)}${amount}; дає світло; горітиме ще приблизно ${minutes} хв`;
 }
 
 function sortedExits(exits: any[]) {
@@ -703,6 +733,8 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
   }));
   const keyboard = new InlineKeyboard();
   addFeatureButtons(keyboard, location.features, "brief");
+  const groundItems = location.resources.filter((r) => isVisibleGroundResource(r, location));
+  if (revealTargets && groundItems.length) addGroundItemPickupButtons(keyboard, groundItems);
   if (revealTargets && targets.length) addInlineRows(keyboard, buildTargetListKeyboard(actionLabeledTargets, { page: options.targetPage, pageCallbackPrefix: "targetPage:brief" }));
 
   return {
@@ -811,18 +843,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     keyboard.text("🌿 Зібрати", "gather:menu").row();
   }
 
-  const groundItemTotalsByKey = new Map<string, number>();
-  for (const item of groundItems) {
-    groundItemTotalsByKey.set(item.resourceType.key, (groundItemTotalsByKey.get(item.resourceType.key) ?? 0) + item.amount);
-  }
-
-  for (const item of groundItems) {
-    keyboard.text(`🤲 Підібрати: ${item.resourceType.name}`, `item:pickup:${item.id}`);
-    if ((groundItemTotalsByKey.get(item.resourceType.key) ?? 0) > 1) {
-      keyboard.text("всі", `item:pickupAll:${item.resourceType.key as VisibleGroundResourceKey}`);
-    }
-    keyboard.row();
-  }
+  addGroundItemPickupButtons(keyboard, groundItems);
 
   if (tracksHint.hasTracks) {
     addInlineRows(keyboard, buildExamineTracksKeyboard());

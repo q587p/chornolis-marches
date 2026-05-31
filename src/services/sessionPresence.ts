@@ -35,6 +35,31 @@ export function playerPresenceDisplaySuffix(player: { sessionPresence?: PlayerSe
   return player?.sessionPresence === "AFK" ? " (відійшов)" : "";
 }
 
+export function sessionPresenceReasonLabel(reason?: string | null) {
+  if (reason === "manual_afk") return "ручний AFK (/afk або кнопка)";
+  if (reason === "auto_afk") return "авто-AFK через неактивність";
+  if (reason === "end_session") return "завершення сесії";
+  if (reason === "player_interaction") return "повернення через взаємодію";
+  return "не записано";
+}
+
+export function sessionPresenceLabel(session: {
+  sessionPresence?: PlayerSessionPresence | string | null;
+  remindersPaused?: boolean | null;
+  sessionPresenceReason?: string | null;
+  sessionPresenceChangedAt?: Date | null;
+}, formatDate: (date: Date) => string = (date) => date.toISOString()) {
+  const presence = session.sessionPresence ?? "ACTIVE";
+  const state =
+    presence === "AFK" ? "AFK / відійшов"
+      : presence === "ENDED" ? "сесію завершено"
+        : "активний";
+  const paused = session.remindersPaused ? "нагадування на паузі" : "нагадування активні";
+  const reason = sessionPresenceReasonLabel(session.sessionPresenceReason);
+  const changedAt = session.sessionPresenceChangedAt ? `; змінено: ${formatDate(session.sessionPresenceChangedAt)}` : "";
+  return `${state}; ${paused}; причина: ${reason}${changedAt}`;
+}
+
 export function idleReminderSceneKeyForLocation(locationId: number | null | undefined) {
   return locationId ? `location:${locationId}` : null;
 }
@@ -93,7 +118,7 @@ export async function applyAutoAfkForPlayer(player: { id: number; sessionPresenc
 
   await prisma.player.updateMany({
     where: { id: player.id, sessionPresence: "ACTIVE", remindersPaused: false },
-    data: { sessionPresence: "AFK", remindersPaused: true },
+    data: { sessionPresence: "AFK", sessionPresenceReason: "auto_afk", sessionPresenceChangedAt: now, remindersPaused: true },
   });
   return true;
 }
@@ -136,11 +161,14 @@ export async function markPlayerInteraction(telegramId: string | number) {
   });
   if (!player) return null;
 
+  const now = new Date();
   await prisma.player.updateMany({
     where: { id: player.id },
     data: {
-      lastPlayerActionAt: new Date(),
+      lastPlayerActionAt: now,
       sessionPresence: "ACTIVE",
+      sessionPresenceReason: "player_interaction",
+      sessionPresenceChangedAt: now,
       remindersPaused: false,
     },
   });
@@ -148,12 +176,15 @@ export async function markPlayerInteraction(telegramId: string | number) {
 }
 
 export async function setPlayerAfk(telegramId: string | number) {
+  const now = new Date();
   const player = await prisma.player.update({
     where: { telegramId: String(telegramId) },
     data: {
       sessionPresence: "AFK",
+      sessionPresenceReason: "manual_afk",
+      sessionPresenceChangedAt: now,
       remindersPaused: true,
-      lastPlayerActionAt: new Date(),
+      lastPlayerActionAt: now,
     },
     select: { telegramId: true, isAutoEnabled: true },
   });
@@ -161,12 +192,15 @@ export async function setPlayerAfk(telegramId: string | number) {
 }
 
 export async function endPlayerSession(telegramId: string | number) {
+  const now = new Date();
   const player = await prisma.player.update({
     where: { telegramId: String(telegramId) },
     data: {
       sessionPresence: "ENDED",
+      sessionPresenceReason: "end_session",
+      sessionPresenceChangedAt: now,
       remindersPaused: true,
-      lastPlayerActionAt: new Date(),
+      lastPlayerActionAt: now,
     },
     select: { telegramId: true, isAutoEnabled: true },
   });
@@ -191,7 +225,7 @@ export function startAutoAfkLoop() {
           remindersPaused: false,
           lastPlayerActionAt: { lt: autoAfkCutoff() },
         },
-        data: { sessionPresence: "AFK", remindersPaused: true },
+        data: { sessionPresence: "AFK", sessionPresenceReason: "auto_afk", sessionPresenceChangedAt: new Date(), remindersPaused: true },
       });
     } catch (error) {
       console.warn("Auto-AFK check failed:", error);

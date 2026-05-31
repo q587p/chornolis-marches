@@ -8,6 +8,14 @@ const FRESHENED_CORPSE_MARKER = "freshened_by_player:";
 const FRESHENED_CORPSE_PATTERN = /(?:^|;\s*)freshened_by_(?:player|hunter):\d+\b/;
 const COOKED_MEAT_HUNGER_RELIEF = 5;
 const COOKING_SUCCESS_CHANCE = 0.6;
+const DEFAULT_FRESHENING_SUCCESS_CHANCE = 0.5;
+
+const FRESHENING_SUCCESS_CHANCES: Record<string, number> = {
+  mouse: 0.8,
+  rabbit: 0.6,
+  fox: 0.4,
+  wolf: 0.4,
+};
 
 export function meatYieldForSpecies(speciesKey: string) {
   if (speciesKey === "mouse") return 1;
@@ -15,6 +23,10 @@ export function meatYieldForSpecies(speciesKey: string) {
   if (speciesKey === "fox") return 5;
   if (speciesKey === "wolf") return 7;
   return 2;
+}
+
+export function fresheningSuccessChanceForSpecies(speciesKey: string) {
+  return FRESHENING_SUCCESS_CHANCES[speciesKey] ?? DEFAULT_FRESHENING_SUCCESS_CHANCE;
 }
 
 export function isFreshenedCorpse(currentAction: string | null | undefined) {
@@ -25,8 +37,12 @@ export function meatCookingSucceeds(roll = Math.random()) {
   return roll < COOKING_SUCCESS_CHANCE;
 }
 
-function freshenedCorpseAction(playerId: number, amount: number) {
-  return `${FRESHENED_CORPSE_MARKER}${playerId}; м'ясо=${amount}`;
+export function fresheningSucceeds(speciesKey: string, roll = Math.random()) {
+  return roll < fresheningSuccessChanceForSpecies(speciesKey);
+}
+
+function freshenedCorpseAction(playerId: number, amount: number, succeeded: boolean) {
+  return `${FRESHENED_CORPSE_MARKER}${playerId}; м'ясо=${amount}; success=${succeeded ? "true" : "false"}`;
 }
 
 export async function ensureMeatResourceTypes() {
@@ -64,9 +80,11 @@ export async function freshenCorpseForMeat(input: {
   creatureId: number;
   locationId: number;
   speciesKey: string;
+  roll?: number;
 }) {
   const { rawMeat } = await ensureMeatResourceTypes();
-  const amount = meatYieldForSpecies(input.speciesKey);
+  const succeeded = fresheningSucceeds(input.speciesKey, input.roll);
+  const amount = succeeded ? meatYieldForSpecies(input.speciesKey) : 0;
 
   await prisma.$transaction(async (tx) => {
     const freshened = await tx.creature.updateMany({
@@ -79,9 +97,11 @@ export async function freshenCorpseForMeat(input: {
         age: "CORPSE",
         NOT: { currentAction: { startsWith: FRESHENED_CORPSE_MARKER } },
       },
-      data: { isHidden: true, currentAction: freshenedCorpseAction(input.playerId, amount) },
+      data: { isHidden: true, currentAction: freshenedCorpseAction(input.playerId, amount, succeeded) },
     });
     if (freshened.count === 0) throw new Error("Труп уже не підходить для освіжування.");
+
+    if (!succeeded) return;
 
     await tx.playerResource.upsert({
       where: { playerId_resourceTypeId: { playerId: input.playerId, resourceTypeId: rawMeat.id } },
@@ -90,7 +110,7 @@ export async function freshenCorpseForMeat(input: {
     });
   });
 
-  return { amount, resourceName: rawMeat.name };
+  return { amount, resourceName: rawMeat.name, succeeded };
 }
 
 export async function canCookMeatAtLocation(locationId: number | null | undefined) {

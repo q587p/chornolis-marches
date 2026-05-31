@@ -1,26 +1,15 @@
 import type { Bot } from "grammy";
 import { prisma } from "../db";
 import { notifyLocationExcept } from "./notifications";
-import { playerForms } from "./grammar";
+import { actorPastVerb, playerForms } from "./grammar";
 import { logEvent } from "./worldEvents";
 
-function genderOf(player: any) {
-  return player.grammaticalGender ?? (player.pronoun === "SHE" ? "FEMININE" : player.pronoun === "THEY" ? "PLURAL" : "MASCULINE");
-}
-
-function verb(player: any, masculine: string, feminine: string, plural: string) {
-  const gender = genderOf(player);
-  if (gender === "FEMININE") return feminine;
-  if (gender === "PLURAL") return plural;
-  return masculine;
-}
-
 export function pickupObserverText(player: any, itemName: string) {
-  return `${playerForms(player).nominative} ${verb(player, "підняв", "підняла", "підняли")} ${itemName}.`;
+  return `${playerForms(player).nominative} ${actorPastVerb(player, "підняв", "підняла", "підняли")} ${itemName}.`;
 }
 
 export function dropObserverText(player: any, itemName: string) {
-  return `${playerForms(player).nominative} ${verb(player, "викинув", "викинула", "викинули")} ${itemName}.`;
+  return `${playerForms(player).nominative} ${actorPastVerb(player, "викинув", "викинула", "викинули")} ${itemName}.`;
 }
 
 export async function recordVisibleItemAction(

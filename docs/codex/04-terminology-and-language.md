@@ -78,7 +78,9 @@ The game has or should preserve support for Ukrainian name cases and pronouns in
 
 Stable world nouns should live in `src/content/lexicon/worldLexicon.ts`: creature species, NPC profession labels, spirits, resources, location features and common nouns that appear in gameplay text. Add full case forms there when a noun becomes part of stable world data.
 
-The grammar layer still has fallback guessing for names or text that is not yet in the lexicon. Do not treat that fallback as a reason to skip lexicon forms for persisted species, seeded NPC/profession labels, recurring resources or other nouns used in templates.
+The grammar layer in `src/services/grammar.ts` should contain shared mechanics for using those forms: case lookup, fallback guessing for names or text that is not yet in the lexicon, actor grammatical gender, and small agreement helpers such as choosing a past-tense verb form. Do not treat that fallback as a reason to skip lexicon forms for persisted species, seeded NPC/profession labels, recurring resources or other nouns used in templates.
+
+Avoid adding parallel Ukrainian grammar helpers under `src/utils/` when the rule is shared by gameplay text. If two surfaces need the same case, gender or verb-agreement logic, put it in `grammar.ts` or a deliberate grammar submodule and document the boundary in `docs/content/world-lexicon.md`.
 
 Known cleanup state: the lexicon does not yet remove every nominative insertion from older text paths. When editing nearby code, prefer `creatureForms`, `speciesForms`, `playerForms` or lexicon-backed helpers, but keep broad replacement passes focused and testable.
 

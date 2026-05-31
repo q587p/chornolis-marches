@@ -14,6 +14,7 @@ import { directionLabels } from "../ui/labels";
 
 type MovePayload = { direction?: keyof typeof directionLabels };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
+type InventoryPayload = { resourceKey?: string; target?: string; allFilter?: string | null };
 
 export function actionPriority(type: WorldActionType) {
   return actionPriorityConfig[type] ?? 0;
@@ -47,6 +48,23 @@ export function actionTitle(action: Pick<WorldAction, "type" | "payload" | "dura
   }
 
   if (action.type === "EAT") return "їмо";
+  if (action.type === "USE_ITEM") {
+    const payload = action.payload as unknown as InventoryPayload;
+    if (payload.resourceKey === "berries") return "їмо ягоди";
+    if (payload.resourceKey === "mushrooms") return "їмо гриби";
+    if (payload.resourceKey === "herbs") return "використовуємо трави";
+    if (payload.resourceKey === "cooked_meat") return "їмо смажене м'ясо";
+    return "використовуємо річ";
+  }
+  if (action.type === "DROP_ITEM") {
+    const payload = action.payload as unknown as InventoryPayload;
+    return payload.allFilter !== undefined ? "викладаємо речі" : "викидаємо річ";
+  }
+  if (action.type === "COOK") return "підсмажуємо м'ясо";
+  if (action.type === "LIGHT_TORCH") return "запалюємо факел";
+  if (action.type === "DOUSE_TORCH") return "притушуємо факел";
+  if (action.type === "ADD_TWIGS") return "підкидаємо хмиз";
+  if (action.type === "LIGHT_CAMPFIRE") return "розпалюємо вогонь";
   if (action.type === "LOOK") return "озираємось";
   if (action.type === "INSPECT") return "роздивляємось ціль";
   if (action.type === "GREET") return "вітаємось";

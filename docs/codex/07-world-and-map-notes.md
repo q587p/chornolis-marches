@@ -95,6 +95,8 @@ There is a backlog direction to add a small, authored vertical/interior map pass
 
 When this lands, update both the world seed and `docs/world/world_map.md`, and make the surface entry features inspectable so players understand the available movement.
 
+Current climbable-tree MVP note: tree-shake cooldowns live in `Feature.data`, so reset/reseed can reset them, and `Потрусити дерево` / `/shake_tree` currently resolves immediately rather than through the action queue. See `HMYZ-001-F` for the future persistent cooldown / queued-action cleanup.
+
 ## Bridge / threshold location note
 
 A small bridge before a settlement is a good place to express the project’s liminality. It does not have to be a combat encounter. It can be a boundary marker between ordinary settlement logic and the older/stranger Chornolis logic.

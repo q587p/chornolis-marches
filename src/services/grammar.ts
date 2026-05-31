@@ -12,6 +12,11 @@ export type GrammarCase =
 export type NameForms = Record<GrammarCase, string>;
 export type Gender = "MASCULINE" | "FEMININE" | "NEUTER" | "PLURAL";
 export type Animacy = "ANIMATE" | "INANIMATE";
+type ActorGenderRef = {
+  grammaticalGender?: string | null;
+  pronoun?: string | null;
+  sex?: string | null;
+};
 
 const INVISIBLE_OR_BIDI = /[\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g;
 const CYRILLIC_NAME = /^[\p{Script=Cyrillic}](?:[\p{Script=Cyrillic}\p{Mark}]|[ '’ʼʻʹ`´\-‐‑‒–](?=[\p{Script=Cyrillic}])){1,63}$/u;
@@ -249,6 +254,22 @@ export function guessGenderFromPronoun(pronoun?: string | null): Gender {
   if (pronoun === "SHE") return "FEMININE";
   if (pronoun === "THEY") return "PLURAL";
   return "MASCULINE";
+}
+
+export function actorGrammarGender(actor: ActorGenderRef): Gender {
+  if (actor.grammaticalGender === "FEMININE" || actor.grammaticalGender === "NEUTER" || actor.grammaticalGender === "PLURAL") {
+    return actor.grammaticalGender;
+  }
+  if (actor.pronoun === "SHE" || actor.sex === "FEMALE") return "FEMININE";
+  if (actor.pronoun === "THEY") return "PLURAL";
+  return "MASCULINE";
+}
+
+export function actorPastVerb(actor: ActorGenderRef, masculine: string, feminine: string, plural: string) {
+  const gender = actorGrammarGender(actor);
+  if (gender === "FEMININE") return feminine;
+  if (gender === "PLURAL") return plural;
+  return masculine;
 }
 
 function preserveCase(original: string, declined: string) {

@@ -7,6 +7,7 @@ import { fatigueStateFor } from "./actionRecovery";
 export const BEGINNER_RETURN_COMMAND = "/respawn";
 export const BEGINNER_RETURN_PROGRESS_LIMIT = 800;
 export const BEGINNER_RETURN_COOLDOWN_MS = 30 * 60 * 1000;
+export const BEGINNER_RETURN_NEW_PLAYER_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
 export const BEGINNER_RETURN_EVENT_TITLE = "Player used respawn return";
 
 type BeginnerReturnPlayer = {
@@ -23,6 +24,7 @@ type BeginnerReturnPlayer = {
   successfulGathers?: number | null;
   animalsKilled?: number | null;
   restStarts?: number | null;
+  createdAt?: Date | null;
 };
 
 export type BeginnerReturnEligibility =
@@ -46,6 +48,11 @@ export function beginnerReturnStaminaAfter(player: Pick<BeginnerReturnPlayer, "s
   return Math.max(1, Math.min(player.stamina, lowered));
 }
 
+export function withinBeginnerReturnNewPlayerGrace(player: Pick<BeginnerReturnPlayer, "createdAt">, now = new Date()) {
+  if (!player.createdAt) return false;
+  return now.getTime() - player.createdAt.getTime() <= BEGINNER_RETURN_NEW_PLAYER_GRACE_MS;
+}
+
 export function beginnerReturnEligibility(
   player: BeginnerReturnPlayer,
   options: { startLocationId: number; lastUsedAt?: Date | null; now?: Date }
@@ -63,6 +70,7 @@ export function beginnerReturnEligibility(
   const staminaMax = player.staminaMax ?? BASE_STAMINA;
   const weak = player.hp <= Math.ceil(hpMax / 2) || player.stamina <= Math.ceil(staminaMax / 4);
   if (weak) return { ok: true, reason: "weak" };
+  if (withinBeginnerReturnNewPlayerGrace(player, now)) return { ok: true, reason: "beginner" };
 
   return beginnerReturnProgressScore(player) <= BEGINNER_RETURN_PROGRESS_LIMIT
     ? { ok: true, reason: "beginner" }

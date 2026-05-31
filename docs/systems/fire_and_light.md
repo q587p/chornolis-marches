@@ -48,10 +48,13 @@ The current implementation stores torch state as inventory resources:
 
 - `torch` is an unlit torch.
 - `lit_torch` is a burning torch; its `updatedAt` timestamp is the active timer. The same temporary resource-stack timer is used for carried and dropped burning torches until real item instances exist.
+- Dropped burning torches are still stack-based ground resources: one `ResourceNode` stack has one shared `updatedAt` timer. If several lit torches are lying together in the same location, they do not yet have separate per-torch burn timers.
 - `doused_torch` is a doused torch; the remaining burn time is preserved through an internal timer event until it is relit.
 - `twigs` / `хмиз` is the leftover fuel resource produced when a carried lit torch expires.
 
 Seed/reset data also places small pickable `twigs` bundles in a few forest and dry-luka locations. They appear under `Лежить` and can be picked up like loose torches.
+
+Natural forest fallback also lets `twigs` appear slowly on the ground. By default, once every 2 real hours the world tick checks the light-forest region and refreshes roughly one third of its locations by +1 `twigs`, but only while the local natural stack is below 5. Manual/admin placement, player drops and torch burn-out can still put more than 5 `twigs` in a location; the natural timer simply stops adding there until the amount is below the cap again.
 
 This avoids a schema migration while preserving per-character torch timing.
 

@@ -29,7 +29,7 @@ import { disablePlayerAuto, enablePlayerAuto, stopPlayerAuto } from "./auto";
 import { creatureForms, playerForms } from "../services/grammar";
 import { clearOnboardingStateForTelegramId } from "./start";
 import { hunterFieldInventorySummary } from "../services/targets";
-import { playerPresenceDisplaySuffix } from "../services/sessionPresence";
+import { playerPresenceDisplaySuffix, sessionPresenceLabel } from "../services/sessionPresence";
 import { slashlessCommandPattern } from "../utils/slashlessCommands";
 
 const LOCATION_PAGE_MAX_CHARS = 3300;
@@ -718,6 +718,7 @@ async function buildAdminPlayerDetailsView(playerId: number, returnContext: AllR
     `- голод: ${player.hunger}`,
     `- відпочиває: ${yesNo(player.isResting)}`,
     `- авто: ${yesNo(player.isAutoEnabled)}`,
+    `- сесія: ${sessionPresenceLabel(player, formatAdminDate)}`,
     `- технічні деталі: ${yesNo(player.showTechnicalDetails)}`,
     "",
     "Статистика:",

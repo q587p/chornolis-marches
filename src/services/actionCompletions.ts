@@ -14,15 +14,15 @@ import {
 import { directionLabels } from "../ui/labels";
 import { buildCorpseActionKeyboard, buildExamineLocationKeyboard, buildExamineTracksKeyboard, buildGatherRetryKeyboard, buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
-import { renderLocationBrief, renderLocationDetails } from "./locations";
+import { lightLocationCampfire, renderLocationBrief, renderLocationDetails } from "./locations";
 import { notifyLocation, notifyLocationExcept, notifyRegionExcept } from "./notifications";
-import { hasActiveLightAtLocation } from "./fire";
+import { addTwigsToCampfire, dousePlayerTorchFromInventory, lightPlayerTorchAtCampfire, lightPlayerTorchFromInventory, hasActiveLightAtLocation } from "./fire";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
 import { getStartLocationId } from "./players";
 import { summonLisovykIfResourceDepleted } from "./resources";
 import { logEvent } from "./worldEvents";
 import { resolveTarget, type ResolvedTarget } from "./targets";
-import { creatureForms, playerForms } from "./grammar";
+import { actorPastVerb, creatureForms, playerForms } from "./grammar";
 import { actionCost, actionDurationMs, actionTitle, movementDurationMs } from "./actionRules";
 import { fatigueStateFor, spendCreatureStamina, spendPlayerStamina } from "./actionRecovery";
 import { actorWhere, enqueueCreatureAction, interruptActorActions, type ActorRef } from "./actionLifecycle";
@@ -30,21 +30,26 @@ import { escapeHtml } from "../utils/text";
 import { resourceAccusativeName } from "../utils/resourceText";
 import { canEditKnownMessage, noteKnownMessage } from "../utils/messageTracker";
 import { playerCanShowTechnicalDetails } from "./technicalDetails";
-import { canOpenDreamGateWithSpeech, isLocationExitLocked, isTutorialFastRestLocationKey, openDreamGate, rememberTutorialCommandHintIfInTutorial, rememberTutorialForagingSuccess, rememberTutorialInventoryAvailable, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY } from "./tutorial";
+import { canOpenDreamGateWithSpeech, isLocationExitLocked, isTutorialFastRestLocationKey, openDreamGate, rememberTutorialCommandHintIfInTutorial, rememberTutorialForagingSuccess, rememberTutorialInventoryAvailable, rememberTutorialWellbeingAside, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_LOCATION_KEY, TUTORIAL_WELLBEING_ASIDE_TEXT } from "./tutorial";
 import { tutorialGateSpeechComment, tutorialLookPaceComments, tutorialSpiritMoveComment, tutorialTrackComments, tutorialWaitPaceComments } from "./tutorialVoices";
 import { chance, pick, shuffle } from "../utils/random";
 import { canSendProactiveToPlayerId } from "./sessionPresence";
-import { freshenCorpseForMeat } from "./meat";
+import { cookRawMeat, freshenCorpseForMeat } from "./meat";
 import { rememberPlayerReplyTarget } from "./replyTargets";
 import { hunterClaimedCorpseAction, hunterConversationReplyLine, hunterReactionDurationMs, isHunterCreature } from "./npcHunter";
 import { predatorClaimedCorpseAction, predatorClaimedCorpseFoodValue, predatorClaimedCorpseOwnerId } from "./predatorFeeding";
 import { ATTACK_OBSERVATION_GROWTH_MESSAGE, ATTACK_PRACTICE_GROWTH_MESSAGE, isAttackPracticeMilestone, recordAttackKillSource, recordAttackObservation } from "./attackLearning";
 import { GATHERING_OBSERVATION_GROWTH_MESSAGE, GATHERING_PRACTICE_GROWTH_MESSAGE, isGatheringPracticeMilestone, recordGatheringObservation, recordGatheringSource } from "./gatheringLearning";
-import { COOKING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_PRACTICE_GROWTH_MESSAGE, recordCookingObservation, recordFresheningObservation, recordFresheningSource } from "./foodLearning";
+import { COOKING_OBSERVATION_GROWTH_MESSAGE, COOKING_PRACTICE_GROWTH_MESSAGE, FRESHENING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_PRACTICE_GROWTH_MESSAGE, recordCookingObservation, recordFresheningObservation, recordFresheningSource } from "./foodLearning";
 import { notifyPlayerObservers, playerRestStopObserverText } from "./playerVisibility";
+import { dropInventoryResourceDetailed, dropInventoryResourcesDetailed, useInventoryResource, type UsableInventoryResource } from "./inventoryUse";
+import { dropObserverText, recordVisibleItemAction } from "./visibleItemActions";
+import { campfireRelightReplyOptionsAfterTwigs } from "../ui/fireKeyboards";
+import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
+type InventoryActionPayload = { resourceKey?: string; target?: string; allFilter?: string | null; featureId?: number };
 type SayPayload = { text: string; mode?: "say" | "whisper" | "reply" | "shout"; targetType?: "player" | "creature"; targetId?: number; targetName?: string; targetDative?: string };
 type SocialPayload = { targetType: "player" | "creature"; targetId: number; mode?: "known" | "mystery"; detail?: "brief" | "full"; socialId?: string };
 
@@ -205,12 +210,17 @@ async function visibleMoverLabel(locationId: number, fallback: string, visibleNa
   return (await hasActiveLightAtLocation(locationId)) ? visibleName : fallback;
 }
 
+function movementPastVerb(actor: unknown, visibleLabel: string, fallback: string, masculine: string, feminine: string, plural: string) {
+  return visibleLabel === fallback ? masculine : actorPastVerb(actor as any, masculine, feminine, plural);
+}
+
 export async function completeAction(bot: Bot, action: WorldAction) {
   const latest = await prisma.worldAction.findUnique({ where: { id: action.id } });
   if (!latest || latest.status !== "RUNNING") return;
   if (action.type === "MOVE") return completeMove(bot, action);
   if (action.type === "GATHER" || action.type === "GATHER_SPECIFIC") return completeGather(bot, action);
   if (action.type === "EAT") return completeEat(bot, action);
+  if (action.type === "USE_ITEM" || action.type === "DROP_ITEM" || action.type === "COOK" || action.type === "LIGHT_TORCH" || action.type === "DOUSE_TORCH" || action.type === "ADD_TWIGS" || action.type === "LIGHT_CAMPFIRE") return completeInventoryAction(bot, action);
   if (action.type === "LOOK") return completeLook(bot, action);
   if (action.type === "INSPECT") return completeInspect(bot, action);
   if (action.type === "GREET") return completeGreet(bot, action);
@@ -334,6 +344,99 @@ async function triggerHerbivorePanic(locationId: number, victimCreatureId: numbe
   return fleeing.length;
 }
 
+function isUsableInventoryResource(value: string | undefined): value is UsableInventoryResource {
+  return value === "berries" || value === "herbs" || value === "mushrooms" || value === "cooked_meat";
+}
+
+async function completeInventoryAction(bot: Bot, action: WorldAction) {
+  const payload = payloadOf<InventoryActionPayload>(action);
+  const player = action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null;
+  const chatId = await chatIdFromActionIfAllowed(action);
+  if (!player || action.actorType !== "PLAYER") return void (await setActionStatus(action, "FAILED"));
+
+  try {
+    if (action.type === "USE_ITEM") {
+      if (!isUsableInventoryResource(payload.resourceKey)) throw new Error("Цю річ не вдається використати з черги.");
+      const resultText = await useInventoryResource(player.id, payload.resourceKey);
+      await spendPlayerStamina(bot, player.id, "USE_ITEM", chatId);
+      const wellbeingAside = await rememberTutorialWellbeingAside(player.id, player.currentLocationId, payload.resourceKey);
+      await setActionStatus(action, "DONE");
+      if (chatId) await bot.api.sendMessage(chatId, wellbeingAside ? `${resultText}\n\n${TUTORIAL_WELLBEING_ASIDE_TEXT}` : resultText);
+      return;
+    }
+
+    if (action.type === "DROP_ITEM") {
+      const result = payload.allFilter !== undefined
+        ? await dropInventoryResourcesDetailed(player.id, payload.allFilter || undefined)
+        : await dropInventoryResourceDetailed(player.id, payload.target ?? "");
+      await spendPlayerStamina(bot, player.id, "DROP_ITEM", chatId);
+      await recordVisibleItemAction(bot, {
+        playerId: player.id,
+        locationId: result.locationId,
+        observerText: dropObserverText(player, result.droppedName),
+        eventTitle: payload.allFilter !== undefined ? "Player dropped inventory items" : "Player dropped item",
+        eventDescription: payload.allFilter !== undefined ? `player=${player.id}; items=${result.resourceKey}` : `player=${player.id}; item=${result.resourceKey}; name=${result.droppedName}`,
+        actionNote: payload.allFilter !== undefined ? `викладено: ${result.droppedName}` : `викинуто: ${result.droppedName}`,
+      });
+      await setActionStatus(action, "DONE");
+      if (chatId) await bot.api.sendMessage(chatId, result.text);
+      return;
+    }
+
+    if (action.type === "COOK") {
+      const result = await cookRawMeat(player.id);
+      await spendPlayerStamina(bot, player.id, "COOK", chatId);
+      await setActionStatus(action, "DONE");
+      if (chatId) {
+        await bot.api.sendMessage(chatId, result.text);
+        if (result.practiceMilestone) await bot.api.sendMessage(chatId, COOKING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" });
+      }
+      return;
+    }
+
+    if (action.type === "LIGHT_TORCH") {
+      const resultText = payload.featureId
+        ? await lightPlayerTorchAtCampfire(player.id, payload.featureId)
+        : await lightPlayerTorchFromInventory(player.id);
+      await spendPlayerStamina(bot, player.id, "LIGHT_TORCH", chatId);
+      await setActionStatus(action, "DONE");
+      if (chatId) await bot.api.sendMessage(chatId, resultText);
+      return;
+    }
+
+    if (action.type === "DOUSE_TORCH") {
+      const resultText = await dousePlayerTorchFromInventory(player.id);
+      await spendPlayerStamina(bot, player.id, "DOUSE_TORCH", chatId);
+      await setActionStatus(action, "DONE");
+      if (chatId) await bot.api.sendMessage(chatId, resultText);
+      return;
+    }
+
+    if (action.type === "ADD_TWIGS") {
+      const resultText = await addTwigsToCampfire(player.id, payload.featureId);
+      await spendPlayerStamina(bot, player.id, "ADD_TWIGS", chatId);
+      await setActionStatus(action, "DONE");
+      if (chatId) await bot.api.sendMessage(chatId, resultText, await campfireRelightReplyOptionsAfterTwigs(player.id, payload.featureId));
+      return;
+    }
+
+    if (action.type === "LIGHT_CAMPFIRE") {
+      if (!payload.featureId) throw new Error("Не видно вогнища, яке можна розпалити.");
+      const resultText = await lightLocationCampfire(payload.featureId, player.id);
+      await spendPlayerStamina(bot, player.id, "LIGHT_CAMPFIRE", chatId);
+      await setActionStatus(action, "DONE");
+      if (chatId) await bot.api.sendMessage(chatId, resultText, await inventoryGainReplyOptions(player, "take-torch"));
+      return;
+    }
+  } catch (error) {
+    await setActionStatus(action, "FAILED");
+    if (chatId) await bot.api.sendMessage(chatId, error instanceof Error ? error.message : "Дія з речами не вдалася.");
+    return;
+  }
+
+  await setActionStatus(action, "FAILED");
+}
+
 async function completeMove(bot: Bot, action: WorldAction) {
   const payload = payloadOf<MovePayload>(action);
 
@@ -359,8 +462,9 @@ async function completeMove(bot: Bot, action: WorldAction) {
     }
 
     const playerName = playerForms(player).nominative;
-    const departureLabel = await visibleMoverLabel(currentLocationId, "Хтось", playerName);
-    await notifyLocation(bot, currentLocationId, player.id, `${departureLabel} пішов звідси.`, {
+    const fallbackMover = "Хтось";
+    const departureLabel = await visibleMoverLabel(currentLocationId, fallbackMover, playerName);
+    await notifyLocation(bot, currentLocationId, player.id, `${departureLabel} ${movementPastVerb(player, departureLabel, fallbackMover, "пішов", "пішла", "пішли")} звідси.`, {
       keyboard: buildTrackKeyboard(),
       replaceKey: `tracks:${currentLocationId}`,
       clearKeys: [`target:player:${player.id}`],
@@ -370,8 +474,8 @@ async function completeMove(bot: Bot, action: WorldAction) {
     const dreamItemsStolen = await removeTutorialForagingDreamItems(player.id, currentLocationId);
     await prisma.player.updateMany({ where: { id: player.id }, data: { currentLocationId: exit.toLocationId, steps: { increment: 1 } } });
     const tutorialRestEntryText = await applyTutorialRestEntryStaminaLesson(player.id, exit.toLocationId);
-    const arrivalLabel = await visibleMoverLabel(exit.toLocationId, "Хтось", playerName);
-    await notifyLocation(bot, exit.toLocationId, player.id, `${arrivalLabel} зайшов сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, {
+    const arrivalLabel = await visibleMoverLabel(exit.toLocationId, fallbackMover, playerName);
+    await notifyLocation(bot, exit.toLocationId, player.id, `${arrivalLabel} ${movementPastVerb(player, arrivalLabel, fallbackMover, "зайшов", "зайшла", "зайшли")} сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, {
       keyboard: buildTargetListKeyboard([{ type: "player", id: player.id, label: arrivalLabel, canGreet: true }]),
       replaceKey: `target:player:${player.id}`,
     });
@@ -398,10 +502,11 @@ async function completeMove(bot: Bot, action: WorldAction) {
   if (await isLocationExitLocked(creature.locationId, payload.direction)) return void (await setActionStatus(action, "FAILED"));
 
   const isAnimal = creature.species.kind === "ANIMAL";
-  const name = creature.name ?? creature.species.name;
+  const name = creatureForms(creature).nominative;
+  const fallbackMover = "Хтось";
   if (!isAnimal) {
-    const departureLabel = await visibleMoverLabel(creature.locationId, "Хтось", name);
-    await notifyLocation(bot, creature.locationId, -1, `${departureLabel} пішов звідси.`, {
+    const departureLabel = await visibleMoverLabel(creature.locationId, fallbackMover, name);
+    await notifyLocation(bot, creature.locationId, -1, `${departureLabel} ${movementPastVerb(creature, departureLabel, fallbackMover, "пішов", "пішла", "пішли")} звідси.`, {
       keyboard: buildTrackKeyboard(),
       replaceKey: `tracks:${creature.locationId}`,
       clearKeys: [`target:creature:${creature.id}`],
@@ -411,8 +516,8 @@ async function completeMove(bot: Bot, action: WorldAction) {
   await spendCreatureStamina(creature, actionCost("MOVE"));
   await prisma.creature.updateMany({ where: { id: creature.id }, data: { locationId: exit.toLocationId, activity: "MOVING", currentAction: payload.reason ?? actionTitle(action), steps: { increment: 1 }, hunger: { increment: 1 } } });
   if (!isAnimal) {
-    const arrivalLabel = await visibleMoverLabel(exit.toLocationId, "Хтось", name);
-    await notifyLocation(bot, exit.toLocationId, -1, `${arrivalLabel} зайшов сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, {
+    const arrivalLabel = await visibleMoverLabel(exit.toLocationId, fallbackMover, name);
+    await notifyLocation(bot, exit.toLocationId, -1, `${arrivalLabel} ${movementPastVerb(creature, arrivalLabel, fallbackMover, "зайшов", "зайшла", "зайшли")} сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, {
       keyboard: buildTargetListKeyboard([{ type: "creature", id: creature.id, label: arrivalLabel, canGreet: true }]),
       replaceKey: `target:creature:${creature.id}`,
     });
@@ -776,16 +881,20 @@ async function completeFreshen(bot: Bot, action: WorldAction) {
     return;
   }
   await setActionStatus(action, "DONE");
-  await logEvent("PLAYER_ACTION", "Player freshened corpse", `${target.kind}:${target.id}; meat=${meat.amount}`, player.currentLocationId);
+  await logEvent("PLAYER_ACTION", meat.succeeded ? "Player freshened corpse" : "Player failed to freshen corpse", `${target.kind}:${target.id}; meat=${meat.amount}`, player.currentLocationId);
   const learning = await recordFresheningSource({
     locationId: player.currentLocationId,
     actorPlayerId: player.id,
     creatureId: creature.id,
     speciesKey: creature.species.key,
+    success: meat.succeeded,
   });
   if (chatId) {
     await hideCompletedFreshenSourceMessage(bot, action, chatId);
-    await bot.api.sendMessage(chatId, `🔪 Ви освіжували ${target.forms.accusative} й отримали ${meat.resourceName} ×${meat.amount}.`);
+    const resultText = meat.succeeded
+      ? `🔪 Ви освіжували ${target.forms.accusative} й отримали ${meat.resourceName} ×${meat.amount}.`
+      : `🔪 Ви освіжували ${target.forms.accusative}, але придатне м'ясо не вдалося зняти. Лишилися тільки рвані рештки.`;
+    await bot.api.sendMessage(chatId, resultText);
     if (learning.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, FRESHENING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" }));
   }
 }

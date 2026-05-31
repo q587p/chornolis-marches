@@ -108,6 +108,10 @@ Optional:
 - `WORLD_RESOURCE_REGEN_AMOUNT` — optional amount restored per resource regeneration tick. Defaults to `1`.
 - `WORLD_GRASS_REGEN_EVERY_TICKS` — optional grass regeneration cadence. Defaults to `120`.
 - `WORLD_EXHAUSTED_LOCATION_REGEN_EVERY_TICKS` — optional regeneration cadence for exhausted vegetation locations. Defaults to `720`.
+- `WORLD_NATURAL_TWIGS_REGEN_INTERVAL_MS` — optional real-time cadence for slow natural `twigs` fallback in forest locations. Defaults to `7200000` (2 real hours).
+- `WORLD_NATURAL_TWIGS_MAX_AMOUNT` — natural fallback cap per location. Defaults to `5`; manual/admin drops may exceed it.
+- `WORLD_NATURAL_TWIGS_LOCATION_DIVISOR` — how many location slices the fallback rotates through. Defaults to `3`, meaning roughly one third of eligible forest locations per cycle.
+- `WORLD_NATURAL_TWIGS_REGION_KEYS` — comma-separated region keys where natural `twigs` can appear. Defaults to `chornolis_border`.
 - `WORLD_LISOVYK_WAKE_DELAY_TICKS` — optional delay between noticing region resource depletion and waking Дід лісовик. Defaults to `12`.
 - `WORLD_TICK_DEBUG` — optional world tick debug logging flag.
 - `WORLD_TICK_DEBUG_EVENT` — optional world tick debug event flag.

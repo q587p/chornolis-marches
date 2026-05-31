@@ -52,6 +52,27 @@
     "file": "docs/planning/items/ADM-001-B.md"
   },
   {
+    "id": "ADM-001-C",
+    "title": "Restart confirmation and HTML safety hardening",
+    "status": "next",
+    "type": "technical",
+    "area": "admin",
+    "priority": "high",
+    "tags": [
+      "admin",
+      "safety",
+      "restart",
+      "slashless",
+      "html",
+      "features"
+    ],
+    "depends_on": [
+      "ADM-001-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ADM-001-C.md"
+  },
+  {
     "id": "ADM-002",
     "title": "Scribe creature corpse creation command",
     "status": "testing",
@@ -404,6 +425,25 @@
     "file": "docs/planning/items/FIRE-001-C.md"
   },
   {
+    "id": "FIRE-001-D",
+    "title": "Light source matrix test",
+    "status": "next",
+    "type": "qa",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "fire",
+      "light",
+      "visibility",
+      "torch",
+      "campfire",
+      "npc"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/FIRE-001-D-light-source-matrix-test.md"
+  },
+  {
     "id": "FISH-001",
     "title": "Riverbank fishing and fisher NPC",
     "status": "backlog",
@@ -637,6 +677,25 @@
     ],
     "exports": {},
     "file": "docs/planning/items/HMYZ-001-E.md"
+  },
+  {
+    "id": "HMYZ-001-F",
+    "title": "Persist and queue tree-shake hmyz",
+    "status": "backlog",
+    "type": "technical",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "hmyz",
+      "trees",
+      "resources",
+      "action-queue"
+    ],
+    "depends_on": [
+      "HMYZ-001-D"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/HMYZ-001-F.md"
   },
   {
     "id": "ICE-001",
@@ -1439,6 +1498,27 @@
     "file": "docs/planning/items/ONB-001-F.md"
   },
   {
+    "id": "ONB-001-G",
+    "title": "Tutorial fire, torch and hmyz branch",
+    "status": "next",
+    "type": "feature",
+    "area": "onboarding",
+    "priority": "high",
+    "tags": [
+      "tutorial",
+      "fire",
+      "torch",
+      "hmyz",
+      "campfire"
+    ],
+    "depends_on": [
+      "HMYZ-001-D",
+      "WORLD-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-001-G.md"
+  },
+  {
     "id": "ONB-002",
     "title": "Character name rules and onboarding",
     "status": "next",
@@ -1547,6 +1627,24 @@
     "file": "docs/planning/items/ONB-003-player-wellbeing-aside.md"
   },
   {
+    "id": "ONB-004",
+    "title": "First night guidance",
+    "status": "backlog",
+    "type": "ux",
+    "area": "onboarding",
+    "priority": "medium",
+    "tags": [
+      "onboarding",
+      "night",
+      "light",
+      "tutorial",
+      "copy"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/ONB-004-first-night-guidance.md"
+  },
+  {
     "id": "PERF-001",
     "title": "Runtime performance plan and creature simulation budget",
     "status": "backlog",
@@ -1628,10 +1726,10 @@
   {
     "id": "PROG-004",
     "title": "Personal chronicle milestones",
-    "status": "backlog",
+    "status": "next",
     "type": "feature",
     "area": "progression",
-    "priority": "medium",
+    "priority": "high",
     "tags": [
       "journal",
       "chronicle",
@@ -1645,6 +1743,24 @@
     ],
     "exports": {},
     "file": "docs/planning/items/PROG-004-personal-chronicle-milestones.md"
+  },
+  {
+    "id": "QA-001",
+    "title": "0.13 first-session closure smoke",
+    "status": "next",
+    "type": "qa",
+    "area": "onboarding",
+    "priority": "high",
+    "tags": [
+      "qa",
+      "onboarding",
+      "tutorial",
+      "core-loop",
+      "release"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/QA-001-0.13-first-session-closure-smoke.md"
   },
   {
     "id": "REL-001",
@@ -2285,6 +2401,24 @@
     "file": "docs/planning/items/VIS-001-E.md"
   },
   {
+    "id": "VIS-001-F",
+    "title": "Darkness copy audit",
+    "status": "next",
+    "type": "content",
+    "area": "visibility",
+    "priority": "medium",
+    "tags": [
+      "visibility",
+      "night",
+      "copy",
+      "atmosphere",
+      "ukrainian"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/VIS-001-F-darkness-copy-audit.md"
+  },
+  {
     "id": "VIS-002",
     "title": "Hidden presence foundation",
     "status": "backlog",
@@ -2426,6 +2560,24 @@
     ],
     "exports": {},
     "file": "docs/planning/items/WORLD-001-D.md"
+  },
+  {
+    "id": "WORLD-001-E",
+    "title": "World-time debug and admin safety",
+    "status": "next",
+    "type": "technical",
+    "area": "world_time",
+    "priority": "medium",
+    "tags": [
+      "world-time",
+      "day-night",
+      "admin",
+      "debug",
+      "testing"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/WORLD-001-E-time-debug-admin-safety.md"
   },
   {
     "id": "WORLD-002",

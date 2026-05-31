@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const { formatCreatureLifeState, formatCreatureStatusLine, inventoryResourceSummary } = require("../../src/services/targets");
-const { animalAgeDescription } = require("../../src/services/locations");
+const { animalAgeDescription, groundItemLine, groundItemPickupButtonRows } = require("../../src/services/locations");
 const { buildCorpseActionKeyboard, buildTargetActionKeyboard, buildTargetListKeyboard } = require("../../src/ui/keyboards");
 
 const maleNpc = {
@@ -106,5 +106,28 @@ assert.equal(inventoryResourceSummary([
 assert.equal(inventoryResourceSummary([
   { amount: 1, resourceType: { key: "torch", name: "факел" } },
 ]), "- факел: лише один");
+
+const litTorchLine = groundItemLine({
+  amount: 1,
+  updatedAt: new Date(),
+  resourceType: { key: "lit_torch", name: "запалений факел" },
+});
+assert.match(litTorchLine, /^запалений факел; дає світло; горітиме ще приблизно \d+ хв$/);
+assert.deepEqual(groundItemPickupButtonRows([
+  { id: 41, amount: 1, resourceType: { key: "twigs", name: "хмиз" } },
+]), [[{ text: "🤲 Підібрати: хмиз", callbackData: "item:pickup:41" }]]);
+assert.deepEqual(groundItemPickupButtonRows([
+  { id: 41, amount: 1, resourceType: { key: "twigs", name: "хмиз" } },
+  { id: 42, amount: 2, resourceType: { key: "twigs", name: "хмиз" } },
+]), [
+  [
+    { text: "🤲 Підібрати: хмиз", callbackData: "item:pickup:41" },
+    { text: "всі", callbackData: "item:pickupAll:twigs" },
+  ],
+  [
+    { text: "🤲 Підібрати: хмиз", callbackData: "item:pickup:42" },
+    { text: "всі", callbackData: "item:pickupAll:twigs" },
+  ],
+]);
 
 console.log("Target formatting OK");

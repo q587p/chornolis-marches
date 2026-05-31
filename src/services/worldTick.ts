@@ -26,6 +26,10 @@ const RESOURCE_REGEN_EVERY_TICKS = Number(process.env.WORLD_RESOURCE_REGEN_EVERY
 const RESOURCE_REGEN_AMOUNT = Number(process.env.WORLD_RESOURCE_REGEN_AMOUNT || 1);
 const GRASS_REGEN_EVERY_TICKS = Number(process.env.WORLD_GRASS_REGEN_EVERY_TICKS || 120);
 const EXHAUSTED_LOCATION_REGEN_EVERY_TICKS = Number(process.env.WORLD_EXHAUSTED_LOCATION_REGEN_EVERY_TICKS || 720);
+const NATURAL_TWIGS_REGEN_INTERVAL_MS = Number(process.env.WORLD_NATURAL_TWIGS_REGEN_INTERVAL_MS || 2 * 60 * 60 * 1000);
+const NATURAL_TWIGS_MAX_AMOUNT = Number(process.env.WORLD_NATURAL_TWIGS_MAX_AMOUNT || 5);
+const NATURAL_TWIGS_LOCATION_DIVISOR = Number(process.env.WORLD_NATURAL_TWIGS_LOCATION_DIVISOR || 3);
+const NATURAL_TWIGS_REGION_KEYS = new Set((process.env.WORLD_NATURAL_TWIGS_REGION_KEYS || "chornolis_border").split(",").map((key) => key.trim()).filter(Boolean));
 const LISOVYK_WAKE_DELAY_TICKS = Number(process.env.WORLD_LISOVYK_WAKE_DELAY_TICKS || 12);
 const HERBALIST_SPEAK_CHANCE = Number(process.env.HERBALIST_SPEAK_CHANCE || 12);
 const RABBIT_REPRODUCTION_EVERY_TICKS = Number(process.env.WORLD_RABBIT_REPRODUCTION_EVERY_TICKS || 120);
@@ -65,6 +69,7 @@ const CREATURE_STARVATION_BASE_CHANCE_PERMILLE = Number(process.env.WORLD_CREATU
 const CREATURE_STARVATION_EXTRA_CHANCE_PER_HUNGER_PERMILLE = Number(process.env.WORLD_CREATURE_STARVATION_EXTRA_CHANCE_PER_HUNGER_PERMILLE || 25);
 const RECENT_ATTACK_FEATURE_PREFIX = "recent_attack_";
 const EDIBLE_RESOURCE_KEYS = ["grass", "berries", "herbs", "mushrooms"] as const;
+const NATURAL_TWIGS_RESOURCE_KEY = "twigs";
 const LISOVYK_IGNORED_DEPLETION_RESOURCE_KEYS = new Set(["torch", "lit_torch", "twigs"]);
 const LISOVYK_DEPLETION_NOTICE_TITLE = "Лісовик почув виснаження";
 const LISOVYK_DEPLETION_RESOLVED_TITLE = "Лісовик виснаження минуло";
@@ -219,6 +224,21 @@ function stageMaxHp(creature: any, stage: CreatureAge) {
 
 function isEdibleResourceKey(key: string) {
   return (EDIBLE_RESOURCE_KEYS as readonly string[]).includes(key);
+}
+
+export function naturalTwigsRegenEveryTicks(tickMs = TICK_MS) {
+  return Math.max(1, Math.ceil(NATURAL_TWIGS_REGEN_INTERVAL_MS / Math.max(1, tickMs)));
+}
+
+export function isNaturalTwigsLocation(location: { z?: number | null; region?: { key?: string | null } | null }) {
+  return (location.z ?? 0) === 0 && NATURAL_TWIGS_REGION_KEYS.has(location.region?.key ?? "");
+}
+
+export function shouldRegenerateNaturalTwigsInLocation(locationId: number, currentTick: number, intervalTicks = naturalTwigsRegenEveryTicks()) {
+  if (currentTick <= 0 || currentTick % intervalTicks !== 0) return false;
+  const divisor = Math.max(1, NATURAL_TWIGS_LOCATION_DIVISOR);
+  const cycle = Math.floor(currentTick / intervalTicks);
+  return (locationId + cycle) % divisor === 0;
 }
 
 function canBreedSpecies(creature: any, speciesKey: string) {
@@ -1289,6 +1309,69 @@ async function regenerateResourcesIfNeeded() {
   return regenerated;
 }
 
+async function regenerateNaturalTwigsIfNeeded() {
+  const interval = naturalTwigsRegenEveryTicks();
+  if (tickNumber === 0 || tickNumber % interval !== 0) return 0;
+
+  const twigs = await prisma.resourceType.findUnique({ where: { key: NATURAL_TWIGS_RESOURCE_KEY } });
+  if (!twigs) return 0;
+
+  const locations = await prisma.cellLocation.findMany({
+    where: {
+      z: 0,
+      region: { key: { in: [...NATURAL_TWIGS_REGION_KEYS] } },
+    },
+    select: {
+      id: true,
+      region: { select: { key: true } },
+      resources: {
+        where: { resourceTypeId: twigs.id },
+        select: { id: true, amount: true },
+        take: 1,
+      },
+    },
+    orderBy: { id: "asc" },
+  });
+
+  let regenerated = 0;
+  for (const location of locations) {
+    if (!isNaturalTwigsLocation(location)) continue;
+    if (!shouldRegenerateNaturalTwigsInLocation(location.id, tickNumber, interval)) continue;
+
+    const node = location.resources[0];
+    if (node) {
+      if (node.amount >= NATURAL_TWIGS_MAX_AMOUNT) continue;
+      const updated = await prisma.resourceNode.updateMany({
+        where: { id: node.id, amount: { lt: NATURAL_TWIGS_MAX_AMOUNT } },
+        data: { amount: Math.min(NATURAL_TWIGS_MAX_AMOUNT, node.amount + 1), maxAmount: Math.max(NATURAL_TWIGS_MAX_AMOUNT, node.amount + 1) },
+      });
+      if (updated.count > 0) regenerated++;
+      continue;
+    }
+
+    await prisma.resourceNode.create({
+      data: {
+        locationId: location.id,
+        resourceTypeId: twigs.id,
+        amount: 1,
+        maxAmount: NATURAL_TWIGS_MAX_AMOUNT,
+      },
+    });
+    regenerated++;
+  }
+
+  if (regenerated > 0) {
+    await prisma.worldEvent.create({
+      data: {
+        type: "SYSTEM",
+        title: "Хмиз осипався",
+        description: `Ліс подекуди скинув сухе гілля: оновлено ${regenerated} місцин, не вище ${NATURAL_TWIGS_MAX_AMOUNT} хмизу природним поповненням.`,
+      },
+    });
+  }
+  return regenerated;
+}
+
 export async function worldTick() {
   if (running) return;
   running = true;
@@ -1329,6 +1412,7 @@ export async function worldTick() {
 
     lisovykAwakened = await wakeLisovykIfNeeded();
     regenerated = await regenerateResourcesIfNeeded();
+    regenerated += await regenerateNaturalTwigsIfNeeded();
     if (!lisovykAwakened) lisovykSlept = await putLisovykToSleepIfForestRecovered();
 
     const [playerLocationCounts, activeCreatureActions, creatureLocationCountRows, sleepingCreatureCount] = await Promise.all([
@@ -1496,6 +1580,7 @@ function runtimeTickStatusText() {
     `- життя під час відпочинку: +1 раз на ${timing.restHealthRegenTicks} тіків ≈ ${formatDuration(timing.restHealthRegenMs)}`,
     "",
     `Регенерація ресурсів: раз на ${RESOURCE_REGEN_EVERY_TICKS} world ticks, +${RESOURCE_REGEN_AMOUNT}`,
+    `Природне осипання хмизу: раз на ${naturalTwigsRegenEveryTicks()} world ticks ≈ ${formatDuration(naturalTwigsRegenEveryTicks() * TICK_MS)}; лісові місцини, приблизно 1/${Math.max(1, NATURAL_TWIGS_LOCATION_DIVISOR)}, до ${NATURAL_TWIGS_MAX_AMOUNT} хмизу`,
     `Розмноження зайців: раз на ${RABBIT_REPRODUCTION_EVERY_TICKS} world ticks; виводок ${RABBIT_MIN_LITTER_SIZE}-${RABBIT_MAX_LITTER_SIZE}; світового ліміту немає`,
     `Розмноження мишей: раз на ${MOUSE_REPRODUCTION_EVERY_TICKS} world ticks; виводок ${MOUSE_MIN_LITTER_SIZE}-${MOUSE_MAX_LITTER_SIZE}; цикл коротший за заячий`,
     `Розмноження лисиць: раз на ${FOX_REPRODUCTION_EVERY_TICKS} world ticks; виводок ${FOX_MIN_LITTER_SIZE}-${FOX_MAX_LITTER_SIZE}; поріг prey units ${FOX_PREY_UNITS_REQUIRED_BASE} + ${FOX_PREY_UNITS_REQUIRED_PER_FOX} за лисицю`,

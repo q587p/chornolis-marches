@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 
 require("ts-node/register");
 
-const { targetDisplayLabel, visibleTextTargetCreatureWhere } = require("../../src/services/textTargets");
+const { isSelfTargetQuery, targetDisplayLabel, visibleTextTargetCreatureWhere } = require("../../src/services/textTargets");
 const { isVisibleCorpse } = require("../../src/services/locations");
 const { isFreshenedCorpse } = require("../../src/services/meat");
 const { resourceTypeDisplayName } = require("../../src/services/corpses");
@@ -56,5 +56,13 @@ assert.equal(targetDisplayLabel({
 }), "миша — ворушиться в траві");
 assert.equal(resourceTypeDisplayName({ key: "corpse_mouse_male", name: "труп самця миші" }), "труп миша");
 assert.equal(resourceTypeDisplayName({ key: "corpse_mouse_female", name: "труп самиці миші" }), "труп миші");
+assert.equal(isSelfTargetQuery("me"), true);
+assert.equal(isSelfTargetQuery("at me"), true);
+assert.equal(isSelfTargetQuery("я"), true);
+assert.equal(isSelfTargetQuery("мене"), true);
+assert.equal(isSelfTargetQuery("на мене"), true);
+assert.equal(isSelfTargetQuery("себе"), true);
+assert.equal(isSelfTargetQuery("мій персонаж"), true);
+assert.equal(isSelfTargetQuery("лисиця"), false);
 
 console.log("Text target visibility OK");

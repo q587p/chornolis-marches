@@ -1,7 +1,7 @@
 import type { Bot } from "grammy";
 import { prisma } from "../db";
 import { notifyLocationExcept } from "./notifications";
-import { playerForms } from "./grammar";
+import { actorGrammarGender, playerForms } from "./grammar";
 
 type PlayerVisibilityRef = {
   id: number;
@@ -39,17 +39,8 @@ const PLAYER_VISIBILITY_SELECT = {
   animacy: true,
 } as const;
 
-function genderOf(player: PlayerVisibilityRef) {
-  if (player.grammaticalGender === "FEMININE" || player.grammaticalGender === "NEUTER" || player.grammaticalGender === "PLURAL") {
-    return player.grammaticalGender;
-  }
-  if (player.pronoun === "SHE") return "FEMININE";
-  if (player.pronoun === "THEY") return "PLURAL";
-  return "MASCULINE";
-}
-
 function word(player: PlayerVisibilityRef, singular: string, plural: string) {
-  return genderOf(player) === "PLURAL" ? plural : singular;
+  return actorGrammarGender(player) === "PLURAL" ? plural : singular;
 }
 
 function named(player: PlayerVisibilityRef, text: string) {
