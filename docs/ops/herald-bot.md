@@ -25,6 +25,8 @@ node dist/apps/heraldBot.js
 
 ## Render Web Service
 
+Після merge у `main` Канцелярія деплоїться з тієї ж гілки `main`, що й основний бот, але як окремий Render Web Service зі своїм Start Command. Основний ігровий сервіс лишається окремим процесом і не потребує `HERALD_*` env variables.
+
 Render free Web Service не має окремої Pre-Deploy Command, тому для Канцелярії тримаємо міграції в Build Command.
 
 Build Command:
@@ -40,6 +42,8 @@ node dist/apps/heraldBot.js
 ```
 
 Не використовуйте `prisma migrate dev` на Render. Кожна зміна `prisma/schema.prisma`, яка міняє persisted database shape, має мати закомічену міграцію в `prisma/migrations/**`.
+
+Повна post-merge схема двох Render-сервісів описана в `docs/ops/render-services.md`.
 
 ## Environment Variables
 
@@ -58,6 +62,10 @@ Recommended:
 - `HERALD_STARTUP_NOTICE_CHAT_ID` — chat id для startup notice. Краще ставити приватний/admin chat, а не публічний канал.
 - `PORT` — порт HTTP health server. Render задає його автоматично; локально дефолт `3000`.
 - `APP_VERSION` — fallback version label, якщо `package.json` не можна прочитати.
+
+Reserved for future support:
+
+- `HERALD_STARTUP_NOTICE_THREAD_ID` — не підтримується поточним runtime; не задавайте його як обов'язковий env, доки код явно не навчиться ним користуватися.
 
 Related main game env:
 
@@ -171,19 +179,29 @@ Suggested BotFather command list:
 
 ```text
 ping - перевірити, чи Канцелярія на місці
+info - безпечний атмосферний запис про себе або людину у відповіді
 preview_latest_news - показати останню новину без публікації
 post_latest_news - опублікувати останню новину в канал
 pending_publications - показати чергу публікацій
 publish_pending - опублікувати очікувані записи
+list_publications - показати останні записи книги публікацій
+show_publication - показати збережений запис за номером
+repost_publication - повторно опублікувати збережений запис як архів
+mark_publication_deleted - позначити запис як вручну видалений із Telegram
 preview_world_digest - попередній перегляд дайджесту світу
-info - атмосферний запис про персонажа
 ```
 
 Додаткові службові команди можуть лишатися доступними без BotFather-підказки:
 
 - `/help` — список відомих команд.
 - `/whoami` — перевірити, чи впізнано службову печатку.
+- `/info` — публічний безпечний запис: без reply показує запис відправника, у reply показує запис людини, якій відповідають, якщо Telegram передав її `from`.
+- `/info_full` — службовий докладніший запис за іменем або печаткою; потребує `HERALD_ADMIN_IDS`.
 - `/queue_latest_news` — поставити останню новину в outbox без негайної публікації.
+- `/list_publications` — показати останні записи книги публікацій із Telegram message id, published/deleted/repost markers, якщо вони є.
+- `/show_publication <id>` — показати збережений snapshot запису з outbox, навіть якщо його вже немає в `news.md`.
+- `/repost_publication <id>` — повторно опублікувати збережений snapshot як архівний repost. Це створює нове Telegram-повідомлення й не відновлює старий timestamp.
+- `/mark_publication_deleted <id>` — вручну позначити в БД, що Telegram-повідомлення було видалене з каналу. Команда нічого не видаляє в Telegram і не запускає автоматичний repost.
 - `/backfill_news_preview` — подивитися, які старі записи `news.md` ще не стоять у черзі й не були опубліковані.
 - `/backfill_news_queue [30m]` — поставити старі записи `news.md` у чергу архівною drip-feed послідовністю.
 - `/backfill_news_status` — звірити стан архівного backfill для `news.md`.

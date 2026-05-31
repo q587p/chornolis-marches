@@ -34,6 +34,21 @@ node dist/apps/heraldBot.js
 
 Embedded mode is a cost/service-count tradeoff, not the default architecture. It gives less runtime independence than a separate Herald Web Service, but may be useful if running a second always-on Render service is inconvenient.
 
+## Current Post-Merge Baseline
+
+After the Herald branch is merged, both Render services deploy from `main`:
+
+- main game service: `node dist/bot.js`;
+- standalone Herald Web Service: `node dist/apps/heraldBot.js`.
+
+This is the supported baseline. The main game service must not require
+`HERALD_*` env variables and must not start the Herald unless this future
+embedded mode is explicitly implemented and enabled.
+
+The standalone Herald service owns the current `HERALD_*` env variables,
+publisher loop, startup notice and heartbeat. It may share `DATABASE_URL` with
+the game service under the current outbox/status architecture.
+
 ## Scope
 
 - Add an explicit opt-in flag such as `HERALD_EMBEDDED_ENABLED=true`.
@@ -58,7 +73,7 @@ When moving from standalone Herald service to embedded mode:
 2. Copy required `HERALD_*` env variables to the main Chornolis Web Service.
 3. Set `HERALD_EMBEDDED_ENABLED=true` on the main Chornolis Web Service.
 4. Keep exactly one active polling process for `HERALD_BOT_TOKEN`.
-5. Watch logs for one Herald startup notice and one publisher loop.
+5. Watch logs for one Herald startup notice, one heartbeat path and one publisher loop.
 6. Roll back by setting `HERALD_EMBEDDED_ENABLED=false` or removing it, then re-enabling the separate Herald service.
 
 Do not keep both the standalone Herald service and embedded Herald mode active with the same token. Telegram long polling will conflict, and duplicate publisher loops may race on the outbox.

@@ -19,7 +19,8 @@ export const HERALD_COMMANDS: HeraldCommandInfo[] = [
   { command: "/help", description: "показати відомі накази Канцелярії" },
   { command: "/ping", description: "перевірити, чи Канцелярія на місці" },
   { command: "/whoami", description: "показати печатку відправника й chat diagnostics" },
-  { command: "/info", description: "переглянути особовий запис; службові печатки можуть уточнювати ім’я" },
+  { command: "/info", description: "показати безпечний запис про себе або людину, якій відповідаєте" },
+  { command: "/info_full", description: "службово переглянути докладніший запис за іменем або печаткою", adminOnly: true },
   { command: "/preview_latest_news", description: "переглянути останній запис із news.md", adminOnly: true },
   { command: "/queue_latest_news", description: "поставити останній запис із news.md у чергу", adminOnly: true },
   { command: "/post_latest_news", description: "поставити й одразу передати останній запис із news.md", adminOnly: true },
@@ -31,6 +32,10 @@ export const HERALD_COMMANDS: HeraldCommandInfo[] = [
   { command: "/post_world_digest", description: "поставити й одразу передати світовий запис", adminOnly: true },
   { command: "/pending_publications", description: "показати готові до публікації записи", adminOnly: true },
   { command: "/publish_pending", description: "передати готові записи до каналу", adminOnly: true },
+  { command: "/list_publications", description: "показати останні записи книги публікацій", adminOnly: true },
+  { command: "/show_publication", description: "показати збережений snapshot запису за номером", adminOnly: true },
+  { command: "/repost_publication", description: "повторно передати збережений запис як архівний repost", adminOnly: true },
+  { command: "/mark_publication_deleted", description: "позначити запис як вручну видалений із Telegram", adminOnly: true },
 ];
 
 export function formatHeraldCommandList(isAdmin: boolean) {

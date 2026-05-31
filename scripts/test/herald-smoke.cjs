@@ -3,8 +3,10 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const { parseHeraldAdminIds, isHeraldAdminId } = require("../../src/herald/admin");
-const { formatHeraldPublicationMessage } = require("../../src/herald/format");
+const { formatHeraldPublicationMessage, formatHeraldPublicationRepostMessage } = require("../../src/herald/format");
 const { formatHeraldWhoami } = require("../../src/herald/help");
+const { renderHeraldAnonymousInfoTarget, renderHeraldPublicInfoMissing, renderHeraldPublicPlayerInfo } = require("../../src/herald/info");
+const { resolveHeraldInfoTargetUser } = require("../../src/herald/infoCommands");
 const {
   heraldGatheringLine,
   heraldPracticePhrase,
@@ -16,7 +18,7 @@ const {
   formatBackfillInterval,
   parseBackfillIntervalMs,
 } = require("../../src/herald/newsBackfill");
-const { parseLatestNewsEntry, parseNewsEntries } = require("../../src/herald/newsMarkdown");
+const { extractNewsSourceMetadata, parseLatestNewsEntry, parseNewsEntries } = require("../../src/herald/newsMarkdown");
 const {
   assertNoSecrets,
   parseTelegramChannelId,
@@ -44,9 +46,14 @@ assert.equal(latest.title, "12026-06-01 — Свіжий запис");
 assert.match(latest.body, /тиху зміну/);
 assert.doesNotMatch(latest.body, /Старий запис/);
 assert.match(latest.contentHash, /^[a-f0-9]{64}$/);
+assert.equal(latest.sourceDate, "12026-06-01");
 assert.equal(parseLatestNewsEntry(markdown).contentHash, latest.contentHash);
 assert.notEqual(parseLatestNewsEntry(markdown.replace("тиху зміну", "іншу зміну")).contentHash, latest.contentHash);
 assert.equal(parseLatestNewsEntry("# Тільки заголовок\n\nБез release entry."), null);
+assert.deepEqual(extractNewsSourceMetadata("0.14.7 — Канцелярія має місце"), {
+  sourceDate: undefined,
+  sourceVersion: "0.14.7",
+});
 
 const entries = parseNewsEntries(markdown);
 assert.equal(entries.length, 2);
@@ -141,6 +148,24 @@ assert.match(archiveFormatted, /Архівний запис: 12026-05-31/);
 assert.match(archiveFormatted, /Цей запис уже нижче/);
 assert.doesNotMatch(archiveFormatted, /📜 Канцелярія Межового Знаку/);
 
+const savedSnapshot = formatHeraldPublicationMessage({
+  title: "Старий заголовок",
+  body: "Старе тіло",
+  renderedText: "📜 Збережений відбиток\n\nТекст уже не залежить від news.md",
+});
+assert.match(savedSnapshot, /Збережений відбиток/);
+assert.doesNotMatch(savedSnapshot, /Старе тіло/);
+
+const repost = formatHeraldPublicationRepostMessage({
+  id: 77,
+  title: "Старий заголовок",
+  body: "Старе тіло",
+  renderedText: "📜 Збережений відбиток\n\nТекст уже не залежить від news.md",
+});
+assert.match(repost, /📜 З архіву Канцелярії/);
+assert.match(repost, /Повторна публікація з книги Канцелярії #77/);
+assert.match(repost, /Збережений відбиток/);
+
 assert.equal(heraldTrailPhrase(0), "Канцелярія ще майже не має записів про ці кроки.");
 assert.equal(heraldTrailPhrase(3), "сліди трапляються зрідка");
 assert.equal(heraldTrailPhrase(42), "ліс уже пам’ятає ці кроки");
@@ -155,5 +180,34 @@ assert.match(heraldPracticePhrase(0, "Полювання"), /майже поро
 assert.match(heraldPracticePhrase(5, "Полювання"), /зрідка/);
 assert.match(heraldPracticePhrase(20, "Полювання"), /певних рухів/);
 assert.match(heraldPracticePhrase(40, "Полювання"), /польових нотатках/);
+
+const caller = { id: 101, first_name: "Caller" };
+const repliedUser = { id: 202, first_name: "Target" };
+assert.equal(resolveHeraldInfoTargetUser({ from: caller })?.id, 101);
+assert.equal(resolveHeraldInfoTargetUser({ from: caller, replyToMessage: { from: repliedUser } })?.id, 202);
+assert.equal(resolveHeraldInfoTargetUser({ from: caller, replyToMessage: {} }), null);
+
+assert.match(renderHeraldAnonymousInfoTarget(), /бачить знак/);
+assert.match(renderHeraldPublicInfoMissing(), /не знайшла певного запису/);
+
+const publicInfo = renderHeraldPublicPlayerInfo({
+  nameNominative: "Тестовий Мандрівник",
+  firstName: "Тест",
+  username: "test",
+  steps: 42,
+  gatherAttempts: 20,
+  berriesGathered: 7,
+  mushroomsGathered: 0,
+  herbsGathered: 5,
+  greetings: 3,
+  says: 4,
+  restStarts: 1,
+  animalsKilled: 2,
+});
+assert.match(publicInfo, /📜 Запис Канцелярії/);
+assert.match(publicInfo, /Тестовий Мандрівник/);
+assert.match(publicInfo, /Ліс пам’ятає:/);
+assert.match(publicInfo, /Прикмети:/);
+assert.doesNotMatch(publicInfo, /Telegram user ID|Chat ID|playerId|id=|Життя|Снага|Остання позначка/);
 
 console.log("herald smoke tests passed");

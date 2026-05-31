@@ -392,13 +392,20 @@ model HeraldPublication {
   id                Int       @id @default(autoincrement())
   sourceType        String
   sourceId          String?
+  sourceDate        String?
+  sourceVersion     String?
   title             String
   body              String
+  renderedText      String?
   priority          Int       @default(0)
   visibility        String    @default("PUBLIC")
   availableAt       DateTime  @default(now())
   publishedAt       DateTime?
   telegramMessageId Int?
+  manuallyDeletedAt DateTime?
+  repostedAt        DateTime?
+  repostTelegramMessageId Int?
+  repostCount       Int       @default(0)
   contentHash       String?   @unique
   error             String?
   attempts          Int       @default(0)

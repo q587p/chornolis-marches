@@ -1,17 +1,22 @@
 import type { Bot, Context } from "grammy";
 import { config } from "../config";
-import { formatHeraldPublicationMessage } from "./format";
+import { formatHeraldPublicationMessage, formatHeraldPublicationRepostMessage } from "./format";
 import { requireHeraldAdmin } from "./admin";
 import {
   getPendingPublications,
+  getHeraldPublicationById,
+  listRecentHeraldPublications,
   markPublicationFailed,
+  markPublicationManuallyDeleted,
   markPublicationPublished,
+  markPublicationReposted,
   publicationErrorMessage,
 } from "./publications";
-import { parseTelegramChannelId } from "./safety";
+import { parseTelegramChannelId, truncateTelegramMessage } from "./safety";
 
 const PUBLISH_BATCH_LIMIT = 3;
 const PENDING_LIST_LIMIT = 10;
+const RECENT_PUBLICATIONS_LIMIT = 10;
 
 function formatDate(value: Date) {
   return new Intl.DateTimeFormat("uk-UA", {
@@ -34,6 +39,105 @@ function pendingPublicationLine(publication: {
 }) {
   const errorText = publication.error ? "; є записана помилка" : "";
   return `#${publication.id} · p${publication.priority} · ${formatDate(publication.availableAt)} · спроб: ${publication.attempts}${errorText}\n${publication.title}`;
+}
+
+function markerText(publication: {
+  manuallyDeletedAt?: Date | null;
+  repostedAt?: Date | null;
+  repostCount?: number;
+  repostTelegramMessageId?: number | null;
+}) {
+  const markers = [];
+  if (publication.manuallyDeletedAt) markers.push(`позначено видаленим ${formatDate(publication.manuallyDeletedAt)}`);
+  if (publication.repostedAt) {
+    const countText = publication.repostCount ? ` ×${publication.repostCount}` : "";
+    const messageText = publication.repostTelegramMessageId ? `; нове message ID ${publication.repostTelegramMessageId}` : "";
+    markers.push(`repost${countText} ${formatDate(publication.repostedAt)}${messageText}`);
+  }
+  return markers.length ? ` · ${markers.join(" · ")}` : "";
+}
+
+function publicationTitleLine(publication: {
+  title: string;
+  sourceId: string | null;
+  sourceDate: string | null;
+  sourceVersion: string | null;
+}) {
+  const source = publication.sourceId || publication.title;
+  const metadata = [publication.sourceVersion, publication.sourceDate].filter(Boolean).join(" · ");
+  return metadata ? `${source} (${metadata})` : source;
+}
+
+function publicationListLine(publication: {
+  id: number;
+  title: string;
+  sourceId: string | null;
+  sourceDate: string | null;
+  sourceVersion: string | null;
+  publishedAt: Date | null;
+  telegramMessageId: number | null;
+  manuallyDeletedAt: Date | null;
+  repostedAt: Date | null;
+  repostCount: number;
+  repostTelegramMessageId: number | null;
+}) {
+  const published = publication.publishedAt ? formatDate(publication.publishedAt) : "не опубліковано";
+  const message = publication.telegramMessageId ? ` · message ID ${publication.telegramMessageId}` : "";
+  return `#${publication.id} · ${published}${message}${markerText(publication)}\n${publicationTitleLine(publication)}`;
+}
+
+function parsePublicationId(input: string | undefined) {
+  const match = input?.trim().match(/^#?(\d+)$/);
+  if (!match) return null;
+  const id = Number(match[1]);
+  return Number.isSafeInteger(id) && id > 0 ? id : null;
+}
+
+function publicationState(publication: { publishedAt: Date | null; error: string | null }) {
+  if (publication.publishedAt) return `опубліковано ${formatDate(publication.publishedAt)}`;
+  if (publication.error) return "очікує, є записана помилка";
+  return "очікує";
+}
+
+function formatPublicationSnapshot(publication: {
+  id: number;
+  sourceType: string;
+  sourceId: string | null;
+  sourceDate: string | null;
+  sourceVersion: string | null;
+  title: string;
+  body: string;
+  renderedText: string | null;
+  publishedAt: Date | null;
+  telegramMessageId: number | null;
+  manuallyDeletedAt: Date | null;
+  repostedAt: Date | null;
+  repostTelegramMessageId: number | null;
+  repostCount: number;
+  contentHash: string | null;
+  error: string | null;
+  attempts: number;
+}) {
+  const metadata = [
+    `#${publication.id} · ${publicationState(publication)} · спроб: ${publication.attempts}`,
+    `Джерело: ${publication.sourceType}${publication.sourceVersion ? ` · ${publication.sourceVersion}` : ""}${publication.sourceDate ? ` · ${publication.sourceDate}` : ""}`,
+    publication.sourceId ? `Назва джерела: ${publication.sourceId}` : null,
+    publication.telegramMessageId ? `Telegram message ID: ${publication.telegramMessageId}` : null,
+    publication.manuallyDeletedAt ? `Позначено видаленим із Telegram: ${formatDate(publication.manuallyDeletedAt)}` : null,
+    publication.repostedAt ? `Останній repost: ${formatDate(publication.repostedAt)}${publication.repostTelegramMessageId ? `; message ID ${publication.repostTelegramMessageId}` : ""}; усього repost: ${publication.repostCount}` : null,
+    publication.contentHash ? `Content hash: ${publication.contentHash.slice(0, 12)}…` : null,
+    publication.error ? `Помилка: ${publication.error}` : null,
+  ].filter(Boolean);
+
+  return truncateTelegramMessage([
+    "Канцелярія знайшла запис у книзі публікацій.",
+    "",
+    ...metadata,
+    "",
+    "Збережений текст:",
+    "",
+    formatHeraldPublicationMessage(publication),
+  ].join("\n"));
 }
 
 export async function publishPendingHeraldPublications(bot: Bot, options: { limit?: number } = {}) {
@@ -84,7 +188,7 @@ export async function publishPendingHeraldPublications(bot: Bot, options: { limi
 
 export async function publishHeraldPublication(
   bot: Bot,
-  publication: { id: number; title: string; body: string; publishedAt: Date | null },
+  publication: { id: number; title: string; body: string; sourceType?: string; renderedText?: string | null; publishedAt: Date | null },
 ) {
   const channelId = config.heraldChannelId;
   if (!channelId) return { ok: false as const, skipped: true as const, reason: "HERALD_CHANNEL_ID is not set" };
@@ -142,15 +246,144 @@ async function replyAfterPublish(ctx: Context, bot: Bot) {
   await ctx.reply(`Публікація завершена. Опубліковано: ${result.published}. Помилок: ${result.failed}.`);
 }
 
+async function replyWithRecentPublications(ctx: Context) {
+  const publications = await listRecentHeraldPublications(RECENT_PUBLICATIONS_LIMIT);
+  if (!publications.length) {
+    await ctx.reply("У книзі Канцелярії ще немає записів публікацій.");
+    return;
+  }
+
+  await ctx.reply([
+    `Останні записи Канцелярії (${publications.length}):`,
+    "",
+    publications.map(publicationListLine).join("\n\n"),
+  ].join("\n"));
+}
+
+async function replyWithPublicationSnapshot(ctx: Context) {
+  const id = parsePublicationId(String(ctx.match ?? ""));
+  if (!id) {
+    await ctx.reply("Канцелярія не впізнала номер запису. Спробуйте: /show_publication 12");
+    return;
+  }
+
+  const publication = await getHeraldPublicationById(id);
+  if (!publication) {
+    await ctx.reply(`Канцелярія не знайшла запис #${id}.`);
+    return;
+  }
+
+  await ctx.reply(formatPublicationSnapshot(publication));
+}
+
+async function replyAfterPublicationRepost(ctx: Context) {
+  const id = parsePublicationId(String(ctx.match ?? ""));
+  if (!id) {
+    await ctx.reply("Канцелярія не впізнала номер запису. Спробуйте: /repost_publication 12");
+    return;
+  }
+
+  if (!config.heraldChannelId) {
+    await ctx.reply("Канцелярія не знає, до якого каналу нести запис.");
+    return;
+  }
+
+  const publication = await getHeraldPublicationById(id);
+  if (!publication) {
+    await ctx.reply(`Канцелярія не знайшла запис #${id}.`);
+    return;
+  }
+
+  const sent = await ctx.api.sendMessage(
+    parseTelegramChannelId(config.heraldChannelId),
+    formatHeraldPublicationRepostMessage(publication),
+  );
+  await markPublicationReposted(publication.id, sent.message_id);
+  await ctx.reply([
+    `Канцелярія повторно передала запис #${publication.id} до каналу.`,
+    `Це нове Telegram-повідомлення: ${sent.message_id}. Старий час публікації не відновлювався.`,
+  ].join("\n"));
+}
+
+async function replyAfterPublicationMarkedDeleted(ctx: Context) {
+  const id = parsePublicationId(String(ctx.match ?? ""));
+  if (!id) {
+    await ctx.reply("Канцелярія не впізнала номер запису. Спробуйте: /mark_publication_deleted 12");
+    return;
+  }
+
+  const publication = await getHeraldPublicationById(id);
+  if (!publication) {
+    await ctx.reply(`Канцелярія не знайшла запис #${id}.`);
+    return;
+  }
+
+  const marked = await markPublicationManuallyDeleted(id);
+  await ctx.reply([
+    `Канцелярія позначила запис #${marked.id} як вручну видалений із Telegram.`,
+    "Жодне Telegram-повідомлення не видалялось. Для повторної публікації скористайтеся /repost_publication.",
+  ].join("\n"));
+}
+
 export function registerHeraldPublisherCommands(bot: Bot, heraldAdminIds: ReadonlySet<string>) {
+  bot.command("list_publications", async (ctx) => {
+    if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
+    try {
+      await replyWithRecentPublications(ctx);
+    } catch (error) {
+      console.error("Herald list publications command failed:", publicationErrorMessage(error));
+      await ctx.reply("Канцелярія не змогла прочитати книгу публікацій.");
+    }
+  });
+
   bot.command("pending_publications", async (ctx) => {
     if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
-    await replyWithPendingPublications(ctx);
+    try {
+      await replyWithPendingPublications(ctx);
+    } catch (error) {
+      console.error("Herald pending publications command failed:", publicationErrorMessage(error));
+      await ctx.reply("Канцелярія не змогла прочитати чергу публікацій.");
+    }
   });
 
   bot.command("publish_pending", async (ctx) => {
     if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
-    await replyAfterPublish(ctx, bot);
+    try {
+      await replyAfterPublish(ctx, bot);
+    } catch (error) {
+      console.error("Herald publish pending command failed:", publicationErrorMessage(error));
+      await ctx.reply("Канцелярія не змогла опублікувати очікувані записи.");
+    }
+  });
+
+  bot.command("show_publication", async (ctx) => {
+    if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
+    try {
+      await replyWithPublicationSnapshot(ctx);
+    } catch (error) {
+      console.error("Herald show publication command failed:", publicationErrorMessage(error));
+      await ctx.reply("Канцелярія не змогла показати збережений запис.");
+    }
+  });
+
+  bot.command("repost_publication", async (ctx) => {
+    if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
+    try {
+      await replyAfterPublicationRepost(ctx);
+    } catch (error) {
+      console.error("Herald repost publication command failed:", publicationErrorMessage(error));
+      await ctx.reply("Канцелярія не змогла повторно передати запис до каналу.");
+    }
+  });
+
+  bot.command("mark_publication_deleted", async (ctx) => {
+    if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
+    try {
+      await replyAfterPublicationMarkedDeleted(ctx);
+    } catch (error) {
+      console.error("Herald mark publication deleted command failed:", publicationErrorMessage(error));
+      await ctx.reply("Канцелярія не змогла позначити запис як видалений.");
+    }
   });
 }
 

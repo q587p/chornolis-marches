@@ -21,6 +21,11 @@ Move the public status/help surface out of the same Render web service that runs
 
 The current in-game web status pages can show the running app's HTTP, Telegram bot, database, world tick and queue state. They cannot reliably say "a new deploy is currently running" while the game service itself is being replaced, failing to build or temporarily unavailable.
 
+After the Boundary Mark Chancery merge, the game-hosted status page can also
+show the standalone Herald heartbeat and HeraldPublication queue/published
+counts when the game service is up. That helps normal operations, but it still
+does not solve failed-build or full-game-service outage visibility.
+
 ## Problem
 
 During a Render deploy, the old instance can keep answering until the new one replaces it. If the build fails or the runtime crashes, users may see an old version, a new version, a temporary outage, or no useful page at all. That makes the game-hosted website a poor source for answering:
@@ -38,6 +43,7 @@ During a Render deploy, the old instance can keep answering until the new one re
 - Link to contact/help channels and basic "what is broken" guidance.
 - Keep secrets, admin data and internal IDs out of the public page.
 - Keep the current game-hosted `/`, `/health`, `/world` and admin pages useful for runtime state once the game is up.
+- Keep the current game-hosted service overview useful for the main bot, Herald, action queue and world tick once the game is up.
 
 ## Non-goals
 
@@ -53,6 +59,7 @@ First slice:
 - add a static or separately hosted status page, for example GitHub Pages, Cloudflare Pages, Netlify, a separate Render static site, or another low-maintenance host;
 - publish project links, contact text, latest release/version, and last-known deploy status;
 - document that the game-hosted page is runtime status, while the independent page is outage/deploy status.
+- link back to the game-hosted status page for live runtime details when it is reachable.
 
 Later:
 

@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import type { HeraldNewsEntry } from "./newsMarkdown";
 import { parseNewsEntries } from "./newsMarkdown";
+import { formatHeraldPublicationMessage } from "./format";
 import { findExistingPublicationsByHashes, queueHeraldPublication } from "./publications";
 
 const DEFAULT_BACKFILL_INTERVAL_MS = 30 * 60 * 1000;
@@ -91,8 +92,15 @@ export async function queueNewsBackfill(entries: readonly HeraldNewsEntry[], int
     const publication = await queueHeraldPublication({
       sourceType: NEWS_ARCHIVE_SOURCE_TYPE,
       sourceId: entry.title,
+      sourceDate: entry.sourceDate,
+      sourceVersion: entry.sourceVersion,
       title: entry.title,
       body: formatArchiveBody(entry),
+      renderedText: formatHeraldPublicationMessage({
+        sourceType: NEWS_ARCHIVE_SOURCE_TYPE,
+        title: entry.title,
+        body: formatArchiveBody(entry),
+      }),
       availableAt,
       contentHash: entry.contentHash,
     });
