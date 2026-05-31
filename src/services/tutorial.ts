@@ -22,6 +22,12 @@ const DREAM_GATE_OPEN_WINDOWS_MS = [30_000, 60_000, 120_000, 240_000, 480_000];
 export const TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE = "Tutorial foraging success";
 export const TUTORIAL_INVENTORY_AVAILABLE_EVENT_TITLE = "Tutorial inventory available";
 export const TUTORIAL_OBSERVATION_LESSON_EVENT_TITLE = "Tutorial observation lesson";
+export const TUTORIAL_WELLBEING_ASIDE_EVENT_TITLE = "Tutorial wellbeing aside";
+export const TUTORIAL_WELLBEING_ASIDE_TEXT = [
+  "Сон на мить дивиться крізь персонажа - просто на вас.",
+  "",
+  "«Тілу по той бік теж потрібні вода, їжа, перепочинок і трохи далечіні для очей. Розімніть плечі, відведіть погляд від екрана хоч на кілька подихів. Чорноліс почекає».",
+].join("\n");
 
 const RETURN_LOCATION_EVENT_TITLE = "Tutorial return location";
 const DREAM_LOCATION_EVENT_TITLE = "Tutorial dream location";
@@ -174,7 +180,7 @@ export async function resetTutorialProgressForPlayer(playerId: number, scribePla
       where: {
         playerId,
         type: "SYSTEM",
-        title: { in: [COMPLETED_EVENT_TITLE, TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE, TUTORIAL_INVENTORY_AVAILABLE_EVENT_TITLE, TUTORIAL_OBSERVATION_LESSON_EVENT_TITLE] },
+        title: { in: [COMPLETED_EVENT_TITLE, TUTORIAL_FORAGING_SUCCESS_EVENT_TITLE, TUTORIAL_INVENTORY_AVAILABLE_EVENT_TITLE, TUTORIAL_OBSERVATION_LESSON_EVENT_TITLE, TUTORIAL_WELLBEING_ASIDE_EVENT_TITLE] },
       },
     });
 
@@ -284,6 +290,37 @@ export async function rememberTutorialObservationLesson(playerId: number, locati
       type: "SYSTEM",
       title: TUTORIAL_OBSERVATION_LESSON_EVENT_TITLE,
       description: skillKey,
+      playerId,
+      locationId,
+    },
+  });
+  return true;
+}
+
+export function isTutorialWellbeingFoodResource(resourceKey: string) {
+  return ["berries", "mushrooms", "cooked_meat"].includes(resourceKey);
+}
+
+export async function rememberTutorialWellbeingAside(playerId: number, locationId: number | null | undefined, resourceKey: string) {
+  if (!locationId || !isTutorialWellbeingFoodResource(resourceKey)) return false;
+  const location = await prisma.cellLocation.findUnique({
+    where: { id: locationId },
+    select: { key: true, z: true, region: { select: { key: true } } },
+  });
+  if (!location || !isTutorialLocation(location)) return false;
+
+  const seen = await prisma.worldEvent.findFirst({
+    where: { playerId, type: "SYSTEM", title: TUTORIAL_WELLBEING_ASIDE_EVENT_TITLE },
+    select: { id: true },
+    orderBy: { id: "desc" },
+  });
+  if (seen) return false;
+
+  await prisma.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: TUTORIAL_WELLBEING_ASIDE_EVENT_TITLE,
+      description: resourceKey,
       playerId,
       locationId,
     },

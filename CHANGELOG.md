@@ -9,6 +9,32 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ---
 
+## 0.13.24 - Hunger cues and tutorial wellbeing aside - 12026-05-31
+
+### Added
+
+- Added threshold-based player hunger cues after stamina-spending actions raise hunger into moderate or serious states.
+- Added contextual hunger cue copy that points toward `inventory` when edible carried food exists, cooking when raw meat and local fire are available, nearby food resources when present, or a general atmospheric warning otherwise.
+- Added a one-time tutorial dream wellbeing aside after the first successful tutorial food use, with a tutorial event flag so it does not repeat unless tutorial progress is reset.
+- Added focused `hunger-cues` helper coverage to `npm test`.
+
+### Changed
+
+- Marked `FOOD-004` and `ONB-003` as testing and refreshed planning exports.
+- Bumped package metadata to `0.13.24`.
+
+### Tests
+
+- Ran `node scripts/test/hunger-cues.cjs`.
+- Ran `node scripts/test/tutorial-voices.cjs`.
+- Ran `node scripts/test/session-presence.cjs`.
+- Ran `node scripts/test/world-seed.mjs`.
+- Ran `npm run planning:export`.
+- Ran `npm test`.
+- Ran `npm run build`.
+
+---
+
 ## 0.13.23 - Target-list return context, scribe corpse setup and climbable trees - 12026-05-31
 
 ### Added

@@ -32,7 +32,7 @@ import { dropObserverText, recordVisibleItemAction } from "../services/visibleIt
 import { tutorialLookPaceComments } from "../services/tutorialVoices";
 import { escapeHtml } from "../utils/text";
 import { noteKnownMessage } from "../utils/messageTracker";
-import { hasCompletedTutorial, isTutorialLocation, rememberTutorialCommandHintIfInTutorial } from "../services/tutorial";
+import { hasCompletedTutorial, isTutorialLocation, rememberTutorialCommandHintIfInTutorial, rememberTutorialWellbeingAside, TUTORIAL_WELLBEING_ASIDE_TEXT } from "../services/tutorial";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "../services/locationFeatures";
 import { canCookPlayerMeat, COOKED_MEAT_KEY, cookRawMeat, RAW_MEAT_KEY } from "../services/meat";
 import { assertCanPerformPhysicalAction } from "../services/postureRules";
@@ -491,7 +491,8 @@ export function registerPlayerHandlers(bot: Bot) {
 
     try {
       const resultText = await useInventoryResource(player.id, resourceKey);
-      await ctx.reply(resultText);
+      const wellbeingAside = await rememberTutorialWellbeingAside(player.id, player.currentLocationId, resourceKey);
+      await ctx.reply(wellbeingAside ? `${resultText}\n\n${TUTORIAL_WELLBEING_ASIDE_TEXT}` : resultText);
       await refreshInventoryMessage(ctx);
     } catch (error) {
       await ctx.reply(error instanceof Error ? error.message : "Не вдалося використати це.");

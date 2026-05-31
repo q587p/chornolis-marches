@@ -18,6 +18,7 @@ import {
 import { buildFatigueRestKeyboard, buildStandUpKeyboard } from "../ui/keyboards";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
+import { hungerCueContextForPlayer, hungerCueLevel, hungerCueText } from "./hungerCues";
 import { tutorialIdlePaceComments } from "./tutorialVoices";
 import { isTutorialFastRestLocationKey } from "./tutorial";
 import { escapeHtml } from "../utils/text";
@@ -97,6 +98,7 @@ async function spendPlayerStaminaCost(bot: Bot, playerId: number, cost: number, 
   const after = before - cost;
   const tookHp = before <= VERY_TIRED_STAMINA;
   const nextHp = tookHp ? Math.max(0, player.hp - 1) : player.hp;
+  const nextHunger = cost > 1 ? Math.min(PLAYER_HUNGER_MAX, player.hunger + 1) : player.hunger;
   const nextState = fatigueStateFor(after, max);
 
   const updated = await prisma.player.updateMany({
@@ -108,7 +110,7 @@ async function spendPlayerStaminaCost(bot: Bot, playerId: number, cost: number, 
       isResting: false,
       lastActionAt: new Date(),
       lastStaminaRegenAt: new Date(),
-      hunger: cost > 1 ? Math.min(PLAYER_HUNGER_MAX, player.hunger + 1) : player.hunger,
+      hunger: nextHunger,
     },
   });
   if (updated.count === 0) return;
@@ -122,6 +124,13 @@ async function spendPlayerStaminaCost(bot: Bot, playerId: number, cost: number, 
     for (const message of messages) {
       await bot.api.sendMessage(chatId, message, refreshedKeyboard ? { reply_markup: refreshedKeyboard } : undefined);
     }
+  }
+
+  const hungerCue = hungerCueLevel(player.hunger, nextHunger, PLAYER_HUNGER_MAX);
+  if (chatId && hungerCue && Number.isSafeInteger(Number(player.telegramId)) && await canSendProactiveToTelegramId(player.telegramId)) {
+    const context = await hungerCueContextForPlayer(player.id, player.currentLocationId);
+    const refreshedKeyboard = await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), Boolean(player.isAutoEnabled));
+    await bot.api.sendMessage(chatId, hungerCueText(hungerCue, context), { reply_markup: refreshedKeyboard });
   }
 }
 

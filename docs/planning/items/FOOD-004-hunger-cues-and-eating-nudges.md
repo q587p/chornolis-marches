@@ -1,7 +1,7 @@
 ---
 id: FOOD-004
 title: Hunger cues and eating nudges
-status: backlog
+status: testing
 type: feature
 area: survival
 priority: medium
@@ -62,3 +62,10 @@ This does not need to wait for full `WORLD-001` day/night time if it can be base
 - If the player has edible inventory, the cue points toward `Речі` (`/inventory`) rather than generic `/help`.
 - If the player has no visible eating option, the cue stays atmospheric and does not promise unavailable food.
 - Tests cover threshold detection, duplicate suppression and AFK/end-session send-time guard behavior.
+
+## 0.13.24 Notes
+
+- Added threshold-based player hunger cues after hunger crosses the moderate or serious boundary during stamina-spending actions.
+- Cues are attached to the action/recovery response path and use session presence guards before sending.
+- Cue copy points toward `Речі` (`/inventory`) when edible carried food exists, toward cooking when raw meat and a local fire are available, toward local food when nearby resources exist, or stays atmospheric otherwise.
+- Added focused helper coverage for threshold detection and cue copy.

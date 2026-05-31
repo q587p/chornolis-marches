@@ -1,7 +1,7 @@
 ---
 id: ONB-003
 title: Tutorial player wellbeing aside
-status: backlog
+status: testing
 type: ux
 area: onboarding
 priority: medium
@@ -59,3 +59,10 @@ Shorter variant:
 - It does not fire for AFK or ended sessions.
 - The copy keeps the Chornolis tone while clearly addressing the player.
 - Tests or a focused helper check cover the one-time flag if this becomes a helper.
+
+## 0.13.24 Notes
+
+- Added a one-time tutorial wellbeing aside after the first successful tutorial food use from berries, mushrooms or cooked meat.
+- The aside is appended to the player-triggered inventory/use response and recorded as a tutorial world event so repeated tutorial visits do not replay it.
+- `/tutorialReset` clears the aside flag together with other tutorial progress flags.
+- Added focused helper coverage for eligible food resources and the tone anchor in the aside copy.
