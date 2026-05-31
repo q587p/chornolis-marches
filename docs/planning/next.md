@@ -46,6 +46,7 @@ Observation learning remains the `0.15` line. Darkness, distance and light shoul
 ## Small 0.14.1 Companion Slice
 
 - PROG-005: global chronicles start as a small public `WorldEvent` surface. The first slice records new player arrivals and падальний рів start/stop state changes through `/chronicles`; personal літопис and skill milestones remain separate follow-up work.
+- ONB-001-H: keep a small hidden tutorial-gate follow-up near the top of the onboarding queue. It should let players discover a `Закрийся` / `/close gate` style phrase and get one-time Сон praise/reward, without advertising the secret in ordinary tutorial hints.
 
 ## 0.15 Next
 

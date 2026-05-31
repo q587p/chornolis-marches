@@ -82,6 +82,7 @@ ONB-001-D,Tutorial rest lesson polish,next,ux,onboarding,medium,"tutorial,rest,s
 ONB-001-E,Wake and return fallback polish,next,ux,onboarding,medium,"tutorial,sleep,wake,aliases",docs/planning/items/ONB-001-E.md
 ONB-001-F,Tutorial hint that observation matters,next,ux,onboarding,medium,"tutorial,observe,learning",docs/planning/items/ONB-001-F.md
 ONB-001-G,"Tutorial fire, torch and hmyz branch",next,feature,onboarding,high,"tutorial,fire,torch,hmyz,campfire",docs/planning/items/ONB-001-G.md
+ONB-001-H,Hidden dream gate closing phrase reward,next,feature,onboarding,medium,"onboarding,tutorial,dream-gate,secret,reward",docs/planning/items/ONB-001-H.md
 ONB-002,Character name rules and onboarding,next,feature,onboarding,high,"onboarding,names,scribes,generated-names,ukrainian-grammar,validation",docs/planning/items/ONB-002-character-name-rules-and-onboarding.md
 ONB-002-A,Expand prepared-name pool,testing,feature,onboarding,high,"onboarding,names,ukrainian-grammar",docs/planning/items/ONB-002-A.md
 ONB-002-B,Expand forbidden-name normalization,testing,feature,onboarding,high,"onboarding,names,validation",docs/planning/items/ONB-002-B.md

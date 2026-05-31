@@ -1579,6 +1579,26 @@
     "file": "docs/planning/items/ONB-001-G.md"
   },
   {
+    "id": "ONB-001-H",
+    "title": "Hidden dream gate closing phrase reward",
+    "status": "next",
+    "type": "feature",
+    "area": "onboarding",
+    "priority": "medium",
+    "tags": [
+      "onboarding",
+      "tutorial",
+      "dream-gate",
+      "secret",
+      "reward"
+    ],
+    "depends_on": [
+      "ONB-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-001-H.md"
+  },
+  {
     "id": "ONB-002",
     "title": "Character name rules and onboarding",
     "status": "next",

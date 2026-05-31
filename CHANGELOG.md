@@ -18,6 +18,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added a focused world-time regression test for the canonical `587` / fifth lunar circle / day `17` / `17:00` starter timestamp and advancement math.
 - Added `/chronicles` as a small global chronicle surface backed by public world events.
 - Added chronicle entries for new player arrivals and carcass ravine start/stop state changes.
+- Added a tutorial-gate helper test covering the already-open response and opening phrase parsing.
 
 ### Changed
 
@@ -25,6 +26,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - World tick now advances the stored clock by elapsed real milliseconds as a rate, without binding day/night to server local hour, player timezone or real-world time of day.
 - Seed, world reset and full reset now return the internal world clock to the canonical starter timestamp; stats reset remains separate.
 - Attack-miss feedback now includes a quick look button so players can immediately check whether the target stayed nearby.
+- Repeating the tutorial dream gate opening phrase while the gate is already open now gets a quiet already-open response instead of replaying the opening beat or refreshing the timer.
 - Telegram side command menus now put `/help` right after `/afk`, with `/respawn` directly below help.
 - `/help`, `/commands` and input-alias docs now include the new global chronicle command.
 - Tutorial dream gate copy no longer stores raw HTML tags in world data, preventing escaped `<i>` markup from appearing in location text.
@@ -35,6 +37,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `npx prisma generate`.
 - Ran `node scripts/test/world-time.cjs`.
 - Ran `node scripts/test/chronicles.cjs`.
+- Ran `node scripts/test/tutorial-gate.cjs`.
 - Ran `node scripts/test/world-content-html.cjs`.
 - Ran `npm run planning:export`.
 - Ran `npm test`.
