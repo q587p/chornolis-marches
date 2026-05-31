@@ -22,6 +22,9 @@ See also:
 - QA-001: the repo-backed first-session closure audit is recorded.
 - REL-001: keep release/patch work on a separate branch with a PR into `main`, including summary, validation and risk notes.
 - New 0.13 blockers can still be fixed if they are real regressions, but new day/night work belongs to `0.14.x`.
+- Public news now presents `0.14.x` as started. After the `0.14.1` merge, do not return to broad `0.13`-style backlog work unless it is a hotfix, deploy blocker or direct first-session regression.
+- Older onboarding/core-loop follow-ups should stay recorded but deferred behind the 0.14 foundations: tutorial polish (`ONB-001-B` through `ONB-001-H`), prepared-name copy/forms review (`ONB-002-*`), starter prose polish (`LOOP-001-*`), gate-hunting/NPC practice loops and weapon expansion are not immediate `0.14.2` candidates.
+- Prepared-name structural tests are useful, but manual form review remains a later content QA pass, not a reason to reopen the closed `0.13.x` lane.
 
 ## Start 0.14.x
 
