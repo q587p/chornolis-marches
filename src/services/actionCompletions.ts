@@ -51,6 +51,7 @@ import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 import { visibilityPresenceText, visibilityRulesForLocation } from "./visibility";
 import { firstNightGuidanceForPlayer } from "./beginnerGuidance";
 import { creatureAttackObserverText, freshenWeaponFailureText, getPlayerEquippedWeapon, grantAndEquipLegacyFresheningKnife, legacyFresheningKnifeGrantText, playerAttackKillText, playerAttackObserverText } from "./weapons";
+import { canCreatureUseExit, creatureUsableExits } from "./creatureMovement";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
@@ -344,7 +345,7 @@ async function triggerHerbivorePanic(locationId: number, victimCreatureId: numbe
     .slice(0, maxFlee);
 
   for (const creature of fleeing) {
-    const exit = pick(location.exitsFrom) as LocationExit | undefined;
+    const exit = pick(creatureUsableExits(creature, location.exitsFrom)) as LocationExit | undefined;
     if (!exit) continue;
     await interruptActorActions({ actorType: "CREATURE", creatureId: creature.id }, "злякалося нападу", true);
     await enqueueCreatureAction({
@@ -521,6 +522,7 @@ async function completeMove(bot: Bot, action: WorldAction) {
 
   const exit = await prisma.locationExit.findUnique({ where: { fromLocationId_direction: { fromLocationId: creature.locationId, direction: payload.direction } } });
   if (!exit || exit.isHidden) return void (await setActionStatus(action, "FAILED"));
+  if (!canCreatureUseExit(creature, exit)) return void (await setActionStatus(action, "FAILED"));
   if (await isLocationExitLocked(creature.locationId, payload.direction)) return void (await setActionStatus(action, "FAILED"));
 
   const isAnimal = creature.species.kind === "ANIMAL";

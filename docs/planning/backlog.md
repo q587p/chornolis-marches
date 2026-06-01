@@ -10,6 +10,7 @@ These may become `next` after 0.13-0.15 foundations land.
 
 - Starter settlement skeleton beyond the closed gate.
 - First useful NPC roles: guard, hunter, herbalist, fisher.
+- NPC-008: starter supply guards and watched beginner stores, so the watchtower/cache area feels maintained when animals or careless characters disturb beginner-critical supplies.
 - Ground money and small find objects beyond the first omen.
 - Local pickup/gather observer feedback beyond хмиз, after `ITEM-001` clarifies pickup versus gather command semantics.
 - Bulk ground pickup text commands such as `підібрати все` / `take all`, with clear ordering, visibility checks and item limits.

@@ -24,6 +24,7 @@ ECO-002,Carcass drop-off contribution and settlement reaction,testing,feature,ec
 ECO-003,Gate hunting saturation and stand-down state,testing,feature,ecology,high,"ecology,hunting,settlement,npc,rewards",docs/planning/items/ECO-003-gate-hunting-saturation.md
 ECO-004,Population floor restoration,testing,feature,ecology,high,"ecology,creatures,population,world-tick",docs/planning/items/ECO-004-population-floor-restoration.md
 ECO-005,Animal restoration offerings,next,feature,ecology,high,"ecology,creatures,offerings,location-features",docs/planning/items/ECO-005-animal-restoration-offerings.md
+ECO-006,Animal movement boundaries for authored vertical exits,testing,feature,ecology,high,"ecology,animals,movement,verticality,camp",docs/planning/items/ECO-006-animal-movement-boundaries.md
 ECON-001,Barter and trade,backlog,feature,economy,medium,"barter,trade,npc,economy",docs/planning/items/ECON-001-barter-and-trade.md
 FIRE-001-A,Active light connects to visibility,next,feature,survival,high,"fire,light,visibility",docs/planning/items/FIRE-001-A.md
 FIRE-001-B,Expired campfire behavior polish,next,feature,survival,medium,"fire,campfire,copy",docs/planning/items/FIRE-001-B.md
@@ -78,6 +79,7 @@ NPC-004,Actor inventory and held light foundation,in_progress,technical,npc,high
 NPC-005,NPC hunger and food behavior,next,feature,npc,high,"npc,actors,hunger,food,cooking,herbalist,hunting",docs/planning/items/NPC-005-npc-hunger-and-food-behavior.md
 NPC-006,Hunter patrol and meat practice loop,next,feature,npc,high,"npc,hunting,cooking,freshening,observation-learning,living-world",docs/planning/items/NPC-006-hunter-patrol-meat-practice-loop.md
 NPC-007,Larger hunter and herbalist line banks,next,content,npc,high,"npc,hunter,herbalist,ambient,speech,polish",docs/planning/items/NPC-007-profession-line-banks.md
+NPC-008,Starter supply guards and watched beginner stores,backlog,feature,npc,medium,"npc,guards,camp,supplies,onboarding",docs/planning/items/NPC-008-starter-supply-guards.md
 OBS-001-A,Observe action and alias skeleton,next,feature,learning,high,"observe,aliases,targets",docs/planning/items/OBS-001-A.md
 OBS-001-B,Visible herbalist action,next,feature,learning,high,"observe,npc,herbalism",docs/planning/items/OBS-001-B.md
 OBS-001-C,Herbalism/gathering progress from observation,next,feature,learning,high,"observe,herbalism,progression",docs/planning/items/OBS-001-C.md

@@ -9,6 +9,7 @@ import { enqueueCreatureAction, interruptActorActions, movementDurationMs } from
 import { logEvent } from "./worldEvents";
 import { hunterReactionDurationMs, hunterSocialReactionSignal, isHunterCreature } from "./npcHunter";
 import { canSendProactiveToTelegramId } from "./sessionPresence";
+import { creatureUsableExits } from "./creatureMovement";
 
 type SocialContext = {
   actor: { kind: "player" | "creature"; id: number; locationId: number; forms: NameForms; telegramId?: string };
@@ -200,7 +201,7 @@ async function maybeReactToSocialSignal(bot: Bot, actor: SocialContext["actor"],
   const fleeChance = animalSignalFleeChance(socialId, creature);
   if (!chance(fleeChance)) return;
 
-  const exit = pick(creature.location.exitsFrom);
+  const exit = pick(creatureUsableExits(creature, creature.location.exitsFrom));
   if (!exit) return;
 
   const forms = creatureForms(creature);

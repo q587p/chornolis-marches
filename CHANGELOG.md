@@ -14,7 +14,9 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added six inspectable Willow Floodplain landmarks with authored descriptions, direct-inspection aliases and concise examine summaries.
 - Added modest `SWAMP` resource defaults for grass, mushrooms and herbs.
 - Added a tiny dry-islet resource exception and vegetation opt-outs for the blind channel and dark backwater.
+- Added a creature movement boundary helper and regression coverage so ordinary animals cannot newly climb human-authored `UP` exits such as watchtower ladders or trees.
 - Added `MAP-WILLOW-003` and `QA-WILLOW-001` planning coverage for floodplain landmarks, resources, aliases and route/content smoke checks.
+- Added planning coverage for starter supply guards and animal movement boundaries.
 
 ### Changed
 
@@ -29,6 +31,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `node scripts/test/text-targets.cjs`.
 - Ran `node scripts/test/notifications.cjs`.
 - Ran `node scripts/test/player-notification-settings.cjs`.
+- Ran `node scripts/test/creature-movement.cjs`.
 - Ran `npm run map:render`.
 - Ran `npm test`.
 - Ran `npm run build`.

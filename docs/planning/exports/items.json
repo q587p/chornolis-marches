@@ -499,6 +499,26 @@
     "file": "docs/planning/items/ECO-005-animal-restoration-offerings.md"
   },
   {
+    "id": "ECO-006",
+    "title": "Animal movement boundaries for authored vertical exits",
+    "status": "testing",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "high",
+    "tags": [
+      "ecology",
+      "animals",
+      "movement",
+      "verticality",
+      "camp"
+    ],
+    "depends_on": [
+      "CAMP-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ECO-006-animal-movement-boundaries.md"
+  },
+  {
     "id": "ECON-001",
     "title": "Barter and trade",
     "status": "backlog",
@@ -1531,6 +1551,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/NPC-007-profession-line-banks.md"
+  },
+  {
+    "id": "NPC-008",
+    "title": "Starter supply guards and watched beginner stores",
+    "status": "backlog",
+    "type": "feature",
+    "area": "npc",
+    "priority": "medium",
+    "tags": [
+      "npc",
+      "guards",
+      "camp",
+      "supplies",
+      "onboarding"
+    ],
+    "depends_on": [
+      "CAMP-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/NPC-008-starter-supply-guards.md"
   },
   {
     "id": "OBS-001-A",
