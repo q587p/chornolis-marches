@@ -270,6 +270,28 @@
     "file": "docs/planning/items/CRAFT-001-craftable-placeable-chests.md"
   },
   {
+    "id": "DAYNOTICE-001",
+    "title": "Player daypart notice settings",
+    "status": "testing",
+    "type": "feature",
+    "area": "notifications",
+    "priority": "high",
+    "tags": [
+      "notifications",
+      "world-time",
+      "daypart",
+      "sleep",
+      "settings",
+      "0.14"
+    ],
+    "depends_on": [
+      "WORLD-001-D",
+      "SLEEP-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/DAYNOTICE-001-player-daypart-notice-settings.md"
+  },
+  {
     "id": "DREAM-001",
     "title": "Sleeping body and dream presence separation",
     "status": "backlog",
