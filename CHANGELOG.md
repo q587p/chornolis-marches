@@ -23,6 +23,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Added `MAP-WILLOW-002` backlog planning for a future under-bridge / watchtower integration pass around the Willow Floodplain.
 - Added `WORLD-003` near-term planning for moving hunger, torches, campfires, corpse/meat decay and related temporary lifetimes onto internal world-time hours/days.
+- Added `LOOT-001` backlog planning for local low-risk loot and small coin finds around starter-adjacent or calm locations.
 - Reconciled planning status for shipped world-time, visibility, fire/light, `twigs`, ordinary sleep and restart-safety slices after 0.14.22.
 - Clarified that `PROG-002` is now an umbrella learning-design item, with narrower LEARN/OBS/TRACK-LEARN slices carrying near-term implementation.
 
