@@ -1,7 +1,7 @@
 ---
 id: SLEEP-003
 title: World-time auto-wake and sleep comfort
-status: backlog
+status: testing
 type: feature
 area: survival
 priority: medium
@@ -41,6 +41,19 @@ Connect ordinary sleep to internal world time, campfires and location comfort.
 - Campfire and comfort modifiers are applied through a shared helper or service.
 - Unsafe/no-comfort places do not become infinite free healing.
 - Player-facing text stays atmospheric and avoids exact hidden formulas.
+
+## 0.14.13 First Slice
+
+- Ordinary sleep now stores the world-clock minute when it begins.
+- Recovery checks can auto-wake an ordinary sleeper after roughly eight in-world hours once HP and stamina reach the relevant local cap.
+- Ordinary sleep has a hard upper bound of roughly ten in-world hours for the first slice, so it cannot continue forever if recovery is still incomplete.
+- A shared sleep recovery profile now folds in local rest caps and active campfires: fire can raise the temporary stamina cap a little and improves sleep recovery.
+- Manual `/wake` still works and clears the stored sleep-start minute.
+
+## Follow-up Notes
+
+- Location shelter/comfort metadata is still future work; the first slice uses existing rest-cap and active-campfire signals.
+- Later safety work should decide how danger, attacks, loud events and lucid dreams interrupt or reshape ordinary sleep.
 
 ## Implementation Order
 

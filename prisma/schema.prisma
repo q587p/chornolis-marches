@@ -27,6 +27,7 @@ model Player {
   fatigueState FatigueState @default(RESTED)
   posture      PlayerPosture @default(STANDING)
   sleepState   PlayerSleepState @default(AWAKE)
+  ordinarySleepStartedAtMinute Int?
   isResting    Boolean @default(false)
   isAutoEnabled Boolean @default(false)
   sessionPresence PlayerSessionPresence @default(ACTIVE)
@@ -398,6 +399,7 @@ model HeraldPublication {
   title             String
   body              String
   renderedText      String?
+  archiveOrder      Int?
   priority          Int       @default(0)
   visibility        String    @default("PUBLIC")
   availableAt       DateTime  @default(now())
@@ -414,6 +416,7 @@ model HeraldPublication {
   updatedAt         DateTime  @updatedAt
 
   @@index([publishedAt, availableAt, priority])
+  @@index([sourceType, archiveOrder])
   @@index([sourceType, sourceId])
 }
 

@@ -143,6 +143,7 @@ const DIRECTION_ALIASES: Record<string, Direction> = {
 
   up: "UP",
   u: "UP",
+  "вг": "UP",
   "вгору": "UP",
   "вверх": "UP",
   "нагору": "UP",
@@ -150,6 +151,7 @@ const DIRECTION_ALIASES: Record<string, Direction> = {
 
   down: "DOWN",
   d: "DOWN",
+  "вн": "DOWN",
   "вниз": "DOWN",
   "донизу": "DOWN",
   "спуститися": "DOWN",
@@ -847,6 +849,7 @@ function parseDirectedSpeech(raw: string, text: string): ParsedAliasCommand | nu
     const speech = (rawMatch?.[1] ?? reply[1]).trim().slice(0, 300);
     return speech ? { kind: "reply", text: speech } : null;
   }
+  if (/^\/?(?:reply|відповісти|відповідь)$/u.test(text)) return { kind: "reply", text: "" };
 
   const shout = text.match(/^\/?(?:shout|yell|крик|крикнути|кричати|закричати|викрикнути|вигукнути|гук|гукнути|загукати|клич|кликати|покликати|волати|заволати)\s+(.+)$/);
   if (shout?.[1]?.trim()) {

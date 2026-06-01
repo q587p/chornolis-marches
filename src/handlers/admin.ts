@@ -606,6 +606,7 @@ export function registerAdminHandlers(bot: Bot) {
         currentLocationId: location.id,
         isResting: false,
         sleepState: "AWAKE",
+        ordinarySleepStartedAtMinute: null,
       },
     });
     await logEvent("SYSTEM", "Admin teleported player", `player=${player.id}; location=${location.key}`, location.id);

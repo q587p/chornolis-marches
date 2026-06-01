@@ -192,11 +192,25 @@ const characterButtons = buildCharacterAutoKeyboard(false, {
 }).inline_keyboard.map((row) => row.map((button) => button.text));
 assert.deepEqual(characterButtons, [
   ["🎒 Речі"],
-  ["✨ Сигнали", "Сісти"],
-  ["🧘 Відпочити", "🌙 Сон"],
+  ["✨ Сигнали"],
+  ["Сісти", "🧘 Відпочити"],
+  ["Лягти", "🌙 Сон"],
   ["🤖 Увімкнути авто"],
 ]);
 assert.equal(characterButtons.flat().includes("🔧 Технічні деталі"), false);
+
+const sittingCharacterButtons = buildCharacterAutoKeyboard(false, {
+  posture: "SITTING",
+  isResting: false,
+  showSleep: true,
+}).inline_keyboard.map((row) => row.map((button) => button.text));
+assert.deepEqual(sittingCharacterButtons, [
+  ["🎒 Речі"],
+  ["✨ Сигнали"],
+  ["Встати", "🧘 Відпочити"],
+  ["Лягти", "🌙 Сон"],
+  ["🤖 Увімкнути авто"],
+]);
 
 const lyingCharacterButtons = buildCharacterAutoKeyboard(false, {
   posture: "LYING",
@@ -205,9 +219,9 @@ const lyingCharacterButtons = buildCharacterAutoKeyboard(false, {
 }).inline_keyboard.map((row) => row.map((button) => button.text));
 assert.deepEqual(lyingCharacterButtons, [
   ["🎒 Речі"],
-  ["✨ Сигнали", "Встати"],
-  ["Сісти"],
-  ["🧘 Відпочити", "🌙 Сон"],
+  ["✨ Сигнали"],
+  ["Встати", "🧘 Відпочити"],
+  ["Сісти", "🌙 Сон"],
   ["🤖 Увімкнути авто"],
 ]);
 

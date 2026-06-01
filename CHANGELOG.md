@@ -7,6 +7,38 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.14.13 - Sleep world-time and campfire comfort - 12026-06-01
+
+### Added
+
+- Added persisted ordinary-sleep start minute tracking on `Player`.
+- Added world-time auto-wake rules for ordinary sleep after enough in-world time passes.
+- Added a shared ordinary-sleep recovery profile that uses active campfires and local rest-cap signals.
+- Added a Prisma migration for ordinary sleep timing.
+- Added `HeraldPublication.archiveOrder` and archive backfill ordering support so historical `news.md` posts keep stable chronological/source order.
+- Added safe Herald-to-game deep links for public commands such as `/look`, `/examine`, `/news`, `/auto`, `/autoStop`, `/me` and `/help`.
+- Added focused regression coverage for ordinary sleep duration, auto-wake thresholds and campfire sleep comfort.
+
+### Changed
+
+- Ordinary sleep can now wake a player proactively after recovery reaches the local cap, while keeping the body lying down after waking.
+- Active campfires now improve ordinary sleep recovery and can raise the temporary stamina cap slightly.
+- Rest, wake, admin teleport/restore and beginner-return paths now clear stale ordinary-sleep timing state whenever they force the player awake.
+- The shared beginner cache can now hold raw meat and cooked meat as take/contribute supplies.
+- Herald historical backfill now defaults to 13-minute spacing, sorts semantic-like versions numerically and can reschedule pending archive posts after Render sleep/wake-up instead of publishing a burst.
+- Herald public news/archive rendering now links only whitelisted non-admin game commands to the main bot and leaves admin/debug/backfill/unknown commands as plain text.
+- Updated sleep, survival and planning docs for the first SLEEP-003 slice.
+- Updated Herald Render docs with archive catch-up env controls and the `/backfill_news_reschedule_pending` command.
+
+### Validation
+
+- Ran `node scripts/test/sleep.cjs`.
+- Ran `node scripts/test/herald-smoke.cjs`.
+- Ran `npm run planning:export`.
+- Ran `npm test`.
+- Ran `npm run build`.
+- Ran `git diff --check`.
+
 ## 0.14.12 - Lying posture and ordinary sleep - 12026-06-01
 
 ### Added

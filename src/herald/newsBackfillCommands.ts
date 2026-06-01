@@ -1,13 +1,16 @@
 import type { Bot, Context } from "grammy";
 import { requireHeraldAdmin } from "./admin";
 import { formatHeraldPublicationMessage } from "./format";
+import { HERALD_CHANNEL_MESSAGE_OPTIONS } from "./gameLinks";
 import {
   formatBackfillInterval,
   formatArchiveBody,
   parseBackfillIntervalMs,
+  newsBackfillStatus,
   previewNewsBackfill,
   queueNewsBackfill,
   readAllNewsEntries,
+  rescheduleNewsBackfillPending,
 } from "./newsBackfill";
 import { publicationErrorMessage } from "./publications";
 
@@ -90,7 +93,7 @@ export function registerHeraldNewsBackfillCommands(bot: Bot, heraldAdminIds: Rea
         })].join("\n")
         : "";
 
-      await ctx.reply(`${formatPreviewReply(result)}${archiveSample}`);
+      await ctx.reply(`${formatPreviewReply(result)}${archiveSample}`, HERALD_CHANNEL_MESSAGE_OPTIONS);
     } catch (error) {
       console.error("Herald news backfill preview failed:", publicationErrorMessage(error));
       await ctx.reply("Канцелярія не змогла підготувати перегляд архіву новин.");
@@ -103,7 +106,7 @@ export function registerHeraldNewsBackfillCommands(bot: Bot, heraldAdminIds: Rea
     try {
       const intervalMs = parseBackfillIntervalMs(String(ctx.match ?? ""));
       if (intervalMs === null) {
-        await ctx.reply("Канцелярія не впізнала інтервал. Спробуйте, наприклад: /backfill_news_queue 30m");
+        await ctx.reply("Канцелярія не впізнала інтервал. Спробуйте, наприклад: /backfill_news_queue 13m");
         return;
       }
 
@@ -122,14 +125,51 @@ export function registerHeraldNewsBackfillCommands(bot: Bot, heraldAdminIds: Rea
     if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
 
     try {
-      const entries = await readEntriesOrReply(ctx);
-      if (!entries) return;
-
-      const result = await previewNewsBackfill(entries);
-      await ctx.reply(formatPreviewReply(result));
+      const status = await newsBackfillStatus();
+      const next = status.next;
+      await ctx.reply([
+        "Канцелярія звірила архівну чергу news.md.",
+        "",
+        `Очікує: ${status.pending}.`,
+        `Опубліковано: ${status.published}.`,
+        `Інтервал: ${formatBackfillInterval(status.intervalMs)}.`,
+        `Перепланування прострочених: ${status.rebalanceOverdue ? "увімкнено" : "вимкнено"}.`,
+        next
+          ? `Наступний запис: #${next.id} · ${next.title}\nДоступний: ${next.availableAt.toLocaleString("uk-UA", { timeZone: "Europe/Kyiv" })}.`
+          : "Наступного очікуваного запису немає.",
+      ].join("\n"));
     } catch (error) {
       console.error("Herald news backfill status failed:", publicationErrorMessage(error));
       await ctx.reply("Канцелярія не змогла звірити стан архіву новин.");
+    }
+  });
+
+  bot.command("backfill_news_reschedule_pending", async (ctx) => {
+    if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
+
+    try {
+      const intervalMs = parseBackfillIntervalMs(String(ctx.match ?? ""));
+      if (intervalMs === null) {
+        await ctx.reply("Канцелярія не впізнала інтервал. Спробуйте, наприклад: /backfill_news_reschedule_pending 13m");
+        return;
+      }
+
+      const entries = await readEntriesOrReply(ctx);
+      if (!entries) return;
+
+      const result = await rescheduleNewsBackfillPending(entries, intervalMs);
+      await ctx.reply([
+        "Канцелярія перепланувала очікувані архівні записи.",
+        "",
+        `Переписано в черзі: ${result.count}.`,
+        `Інтервал: ${formatBackfillInterval(result.intervalMs)}.`,
+        result.nextAvailableAt
+          ? `Наступний запис: ${result.nextTitle ?? "без назви"}\nДоступний: ${result.nextAvailableAt.toLocaleString("uk-UA", { timeZone: "Europe/Kyiv" })}.`
+          : "Очікуваних архівних записів не лишилося.",
+      ].join("\n"));
+    } catch (error) {
+      console.error("Herald news backfill reschedule failed:", publicationErrorMessage(error));
+      await ctx.reply("Канцелярія не змогла перепланувати архівну чергу.");
     }
   });
 }

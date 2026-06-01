@@ -72,9 +72,13 @@ Recommended Herald env:
 - `HERALD_ENABLED`;
 - `HERALD_CHANNEL_ID`;
 - `HERALD_ADMIN_IDS`;
+- `GAME_BOT_USERNAME` — default `Chornolis_bot`, used for safe public deep links from Herald news/archive posts to the main game bot;
 - `HERALD_STARTUP_NOTICE_ENABLED`;
 - `HERALD_STARTUP_NOTICE_CHAT_ID`;
 - `HERALD_PUBLISH_INTERVAL_MS`;
+- `HERALD_ARCHIVE_INTERVAL_MINUTES` — default `13` for historical `news.md` drip-feed spacing;
+- `HERALD_MAX_PUBLICATIONS_PER_TICK` — default `1` so a sleeping free Web Service does not dump several overdue archive posts at once;
+- `HERALD_REBALANCE_OVERDUE_PUBLICATIONS` — default `true` to move overdue archive posts forward after Render sleep/wake-up.
 
 Reserved for a later implementation if needed:
 
@@ -139,6 +143,26 @@ For the Herald, the status page may show:
 The status page must not expose secrets, tokens, admin ids, private chat ids,
 private channel ids, raw `DATABASE_URL`, queued private content, or hidden
 gameplay information.
+
+## Herald Archive Catch-Up
+
+Historical `news.md` backfill uses the durable `HeraldPublication` outbox. The
+archive queue should stay in source order: explicit news dates first when they
+exist, otherwise semantic-like versions such as `0.4.0`, `0.4.1`, `0.4.2` are
+sorted numerically, with source file order as the final fallback.
+
+Render free Web Services may sleep and wake up with several archive
+publications already overdue. Keep the default catch-up controls unless there is
+a deliberate reason to change them:
+
+- `HERALD_ARCHIVE_INTERVAL_MINUTES=13`;
+- `HERALD_MAX_PUBLICATIONS_PER_TICK=1`;
+- `HERALD_REBALANCE_OVERDUE_PUBLICATIONS=true`.
+
+With those defaults, the Herald publishes at most one due archive item per
+publisher tick and reschedules the remaining overdue archive entries to future
+13-minute slots. This rule is for archive/backfill posts; manual repost commands
+remain explicit admin actions.
 
 ## Icebox: Embedded Herald Mode
 

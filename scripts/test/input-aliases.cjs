@@ -37,6 +37,11 @@ assert.equal(normalizeInput("з’їсти   ягоди."), "з'їсти яго�
 
 assert.equal(parseStartActionPayload("cmd_look"), "look");
 assert.equal(parseStartActionPayload("cmd_examine"), "examine");
+assert.equal(parseStartActionPayload("cmd_news"), "news");
+assert.equal(parseStartActionPayload("cmd_auto"), "auto");
+assert.equal(parseStartActionPayload("cmd_auto_stop"), "autoStop");
+assert.equal(parseStartActionPayload("cmd_me"), "me");
+assert.equal(parseStartActionPayload("cmd_help"), "help");
 assert.equal(parseStartActionPayload("cmd look"), null);
 assert.equal(parseStartActionPayload("cmd_роздивитися"), null);
 assert.equal(parseStartActionPayload("unknown"), null);
@@ -58,9 +63,11 @@ assert.equal(parseAlias("пів"), null);
 assertAlias("йти на захід", { kind: "move", direction: "WEST" });
 assertAlias("/n", { kind: "move", direction: "NORTH" });
 assertAlias("/up", { kind: "move", direction: "UP" });
+assertAlias("Вг", { kind: "move", direction: "UP" });
 assertAlias("вгору", { kind: "move", direction: "UP" });
 assertAlias("вверх", { kind: "move", direction: "UP" });
 assertAlias("/down", { kind: "move", direction: "DOWN" });
+assertAlias("Вн", { kind: "move", direction: "DOWN" });
 assertAlias("вниз", { kind: "move", direction: "DOWN" });
 assertAlias("вср", { kind: "move", direction: "INSIDE" });
 assertAlias("/inside", { kind: "move", direction: "INSIDE" });
@@ -103,7 +110,9 @@ assertAlias("/cache", { kind: "beginner-cache", action: "inspect" });
 assertAlias("cache", { kind: "beginner-cache", action: "inspect" });
 assertAlias("/take_cache torch", { kind: "beginner-cache", action: "take", item: "torch" });
 assertAlias("take from cache berries", { kind: "beginner-cache", action: "take", item: "berries" });
+assertAlias("/take_cache raw meat", { kind: "beginner-cache", action: "take", item: "raw meat" });
 assertAlias("/contribute_cache herbs", { kind: "beginner-cache", action: "contribute", item: "herbs" });
+assertAlias("/contribute_cache смажене м'ясо", { kind: "beginner-cache", action: "contribute", item: "смажене м'ясо" });
 assertAlias("put twigs in cache", { kind: "beginner-cache", action: "contribute", item: "twigs" });
 
 assertAlias("/chat", { kind: "chat" });
@@ -220,6 +229,7 @@ assertAlias("гов Відкрийся", { kind: "say", text: "Відкрийс�
 assertAlias("whisper Данило Тихіше, там щось є.", { kind: "whisper", text: "Данило Тихіше, там щось є." });
 assertAlias("/шепнути Велика Оля Не руш.", { kind: "whisper", text: "Велика Оля Не руш." });
 assertAlias("reply Я почув.", { kind: "reply", text: "Я почув." });
+assertAlias("/reply", { kind: "reply", text: "" });
 assertAlias("/відповісти Йду за тобою.", { kind: "reply", text: "Йду за тобою." });
 assertAlias("shout Сюди!", { kind: "shout", text: "Сюди!" });
 assertAlias("гукнути Хто там?", { kind: "shout", text: "Хто там?" });

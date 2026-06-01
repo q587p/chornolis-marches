@@ -96,17 +96,19 @@ export function buildCharacterAutoKeyboard(autoEnabled: boolean, options: { post
 
   const isSitting = options.posture === "SITTING" || Boolean(options.isResting);
   const isLying = options.posture === "LYING";
-  keyboard
-    .text("✨ Сигнали", "character:signals")
-    .text(isSitting || isLying ? "Встати" : "Сісти", isSitting || isLying ? "posture:stand" : "posture:sit")
-    .row();
-  if (isLying) keyboard.text("Сісти", "posture:sit").row();
+  keyboard.text("✨ Сигнали", "character:signals").row();
 
-  if (!options.isResting || options.showSleep !== false) {
-    if (!options.isResting) keyboard.text("🧘 Відпочити", "rest:start");
-    if (options.showSleep !== false) keyboard.text("🌙 Сон", "character:sleep");
-    keyboard.row();
+  keyboard.text(isSitting || isLying ? "Встати" : "Сісти", isSitting || isLying ? "posture:stand" : "posture:sit");
+  if (!options.isResting) keyboard.text("🧘 Відпочити", "rest:start");
+  keyboard.row();
+
+  if (isLying) {
+    keyboard.text("Сісти", "posture:sit");
+  } else {
+    keyboard.text("Лягти", "posture:lie");
   }
+  if (options.showSleep !== false) keyboard.text("🌙 Сон", "character:sleep");
+  keyboard.row();
 
   keyboard
     .text(autoEnabled ? "⏹ Зупинити авто" : "🤖 Увімкнути авто", autoEnabled ? "character:auto:stop" : "character:auto:start");

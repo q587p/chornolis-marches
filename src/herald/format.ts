@@ -1,4 +1,5 @@
 import type { HeraldNewsEntry } from "./newsMarkdown";
+import { linkHeraldGameCommandMentions } from "./gameLinks";
 import { sanitizeHeraldChannelText } from "./safety";
 
 export type HeraldPublicationMessageSource = {
@@ -9,12 +10,13 @@ export type HeraldPublicationMessageSource = {
   renderedText?: string | null;
 };
 
-export function formatHeraldNewsMessage(entry: HeraldNewsEntry) {
+export function formatHeraldNewsMessage(entry: HeraldNewsEntry, options: { linkCommands?: boolean } = {}) {
   const body = entry.body || entry.raw.replace(/^##\s+.*(?:\n|$)/, "").trim();
-  return formatHeraldPublicationMessage({ title: entry.title, body });
+  const plain = formatHeraldPublicationPlainMessage({ title: entry.title, body });
+  return options.linkCommands === false ? plain : linkHeraldGameCommandMentions(plain);
 }
 
-export function formatHeraldPublicationMessage(publication: HeraldPublicationMessageSource) {
+export function formatHeraldPublicationPlainMessage(publication: HeraldPublicationMessageSource) {
   if (publication.renderedText) return sanitizeHeraldChannelText(publication.renderedText);
 
   if (publication.sourceType === "NEWS_MD_ARCHIVE") {
@@ -34,6 +36,10 @@ export function formatHeraldPublicationMessage(publication: HeraldPublicationMes
     "",
     publication.body || "Запис поки порожній.",
   ].join("\n"));
+}
+
+export function formatHeraldPublicationMessage(publication: HeraldPublicationMessageSource) {
+  return linkHeraldGameCommandMentions(formatHeraldPublicationPlainMessage(publication));
 }
 
 export function formatHeraldPublicationRepostMessage(publication: HeraldPublicationMessageSource) {

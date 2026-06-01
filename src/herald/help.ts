@@ -27,6 +27,7 @@ export const HERALD_COMMANDS: HeraldCommandInfo[] = [
   { command: "/backfill_news_preview", description: "перевірити, які записи news.md ще можна поставити архівом", adminOnly: true },
   { command: "/backfill_news_queue", description: "поставити старі записи news.md в архівну чергу", adminOnly: true },
   { command: "/backfill_news_status", description: "звірити стан архівної черги news.md", adminOnly: true },
+  { command: "/backfill_news_reschedule_pending", description: "перепланувати очікувані архівні записи news.md з новим інтервалом", adminOnly: true },
   { command: "/preview_world_digest", description: "переглянути світовий запис", adminOnly: true },
   { command: "/queue_world_digest", description: "поставити світовий запис у чергу", adminOnly: true },
   { command: "/post_world_digest", description: "поставити й одразу передати світовий запис", adminOnly: true },

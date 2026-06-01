@@ -45,6 +45,7 @@ Implement `0.14.x` in small slices:
 12. ONB-006: `0.14.10` adds the optional dream action ladder for `Озирнутися`, `Роздивитися`, signs and traces, and moves the tutorial completion surface forward to the new waking edge.
 13. CAMP-003: `0.14.11` adds a shared beginner cache at the starter watchtower, a narrow take/contribute loop for simple supplies and hidden unobserved restock as a first maintained-camp slice.
 14. SLEEP-001 and SLEEP-002: `0.14.12` adds lying posture and ordinary sleep while keeping tutorial sleep explicit.
+15. SLEEP-003: `0.14.13` connects ordinary sleep to the internal world clock for a first auto-wake slice and lets active campfires improve sleep recovery.
 
 Observation learning remains the `0.15` line. Darkness, distance and light should affect learning later, but the visibility foundation must land first.
 
@@ -72,7 +73,7 @@ Keep theft/hiding after the first observation MVP is stable:
 
 These are still `backlog`, but recent work makes them worth reviewing before the next patch sequence.
 
-- Sleep and dreams: after the `0.14.12` ordinary sleep MVP, review SLEEP-003 and DREAM-001 so world-time auto-waking, sleep comfort and sleeping-body/dream-presence separation do not drift away from the tutorial dream work.
+- Sleep and dreams: after the `0.14.13` world-time sleep slice, review DREAM-001 and the remaining SLEEP-003 follow-ups so sleeping-body/dream-presence separation, location comfort metadata and danger interruptions do not drift away from ordinary sleep.
 - Inventory item actions: the dedicated inventory view exists, and the 0.12.15 drop feedback pass makes the item-instance gap more visible. Item details, safer dropped-item pickup, dream-item origin and richer per-item actions are now small enough to promote when the survival loop needs them.
 - Corpse freshening and meat: the existing corpse/freshen path, hunger and campfire inventory actions are close enough to support a first raw meat -> cooked meat -> eat loop. This has been promoted to `FOOD-001`.
 - Weapons as tools: WPN-001/WPN-002 are small enough to promote because they reuse current resource inventory, target descriptions and queued `ATTACK`/`FRESHEN` actions. Keep them as a utility/display layer; do not pull WPN-004 durability or WPN-ICE-001 deep combat forward.

@@ -4,6 +4,7 @@ require("ts-node/register");
 
 const { parseHeraldAdminIds, isHeraldAdminId } = require("../../src/herald/admin");
 const { formatHeraldPublicationMessage, formatHeraldPublicationRepostMessage } = require("../../src/herald/format");
+const { linkHeraldGameCommandMentions } = require("../../src/herald/gameLinks");
 const { formatHeraldWhoami } = require("../../src/herald/help");
 const { renderHeraldAnonymousInfoTarget, renderHeraldPublicInfoMissing, renderHeraldPublicPlayerInfo } = require("../../src/herald/info");
 const { resolveHeraldInfoTargetUser } = require("../../src/herald/infoCommands");
@@ -13,7 +14,9 @@ const {
   heraldTrailPhrase,
 } = require("../../src/herald/infoThresholds");
 const {
+  archiveOrderedNewsEntries,
   chronologicalNewsEntries,
+  DEFAULT_BACKFILL_INTERVAL_MS,
   formatArchiveBody,
   formatBackfillInterval,
   parseBackfillIntervalMs,
@@ -63,11 +66,41 @@ assert.deepEqual(chronologicalNewsEntries(entries).map((entry) => entry.title), 
   "12026-05-31 — Старий запис",
   "12026-06-01 — Свіжий запис",
 ]);
-assert.equal(parseBackfillIntervalMs(undefined), 30 * 60 * 1000);
+const versionMarkdown = [
+  "## 0.4.0",
+  "zero",
+  "## 0.4.2",
+  "two",
+  "## 0.4.3",
+  "three",
+  "## 0.4.1",
+  "one",
+  "## 0.4.10",
+  "ten",
+].join("\n\n");
+assert.deepEqual(archiveOrderedNewsEntries(parseNewsEntries(versionMarkdown)).map((entry) => entry.sourceVersion), [
+  "0.4.0",
+  "0.4.1",
+  "0.4.2",
+  "0.4.3",
+  "0.4.10",
+]);
+const sourceOrderMarkdown = [
+  "## Без дати",
+  "first",
+  "## Ще без дати",
+  "second",
+].join("\n\n");
+assert.deepEqual(archiveOrderedNewsEntries(parseNewsEntries(sourceOrderMarkdown)).map((entry) => entry.title), [
+  "Без дати",
+  "Ще без дати",
+]);
+assert.equal(parseBackfillIntervalMs(undefined, DEFAULT_BACKFILL_INTERVAL_MS), 13 * 60 * 1000);
+assert.equal(parseBackfillIntervalMs("13m"), 13 * 60 * 1000);
 assert.equal(parseBackfillIntervalMs("30m"), 30 * 60 * 1000);
 assert.equal(parseBackfillIntervalMs("2h"), 2 * 60 * 60 * 1000);
 assert.equal(parseBackfillIntervalMs("bad interval"), null);
-assert.equal(formatBackfillInterval(30 * 60 * 1000), "30 хв");
+assert.equal(formatBackfillInterval(13 * 60 * 1000), "13 хв");
 assert.equal(formatBackfillInterval(2 * 60 * 60 * 1000), "2 год");
 assert.match(formatArchiveBody(entries[1]), /Цей запис уже нижче/);
 
@@ -137,6 +170,14 @@ const formatted = formatHeraldPublicationMessage({
 assert.doesNotMatch(formatted, /123456:abcdefghijklmnopqrstuvwxyz/);
 assert.doesNotMatch(formatted, /border_12_09/);
 assert.match(formatted, /Канцелярія Межового Знаку/);
+
+const linkedCommands = linkHeraldGameCommandMentions("`/news` /auto /cleanupCreatures /unknown", "Chornolis_bot");
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_news">\/news<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_auto">\/auto<\/a>/);
+assert.match(linkedCommands, /\/cleanupCreatures/);
+assert.match(linkedCommands, /\/unknown/);
+assert.doesNotMatch(linkHeraldGameCommandMentions("/cleanupCreatures", "Chornolis_bot"), /href=/);
+assert.doesNotMatch(linkHeraldGameCommandMentions("/unknown", "Chornolis_bot"), /href=/);
 
 const archiveFormatted = formatHeraldPublicationMessage({
   sourceType: "NEWS_MD_ARCHIVE",

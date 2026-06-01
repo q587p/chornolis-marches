@@ -56,8 +56,12 @@ Recommended:
 
 - `HERALD_ADMIN_IDS` — comma-separated список Telegram user id, яким дозволені службові команди. Приклад форми: `111111,222222`, без реальних значень у документації чи комітах.
 - `HERALD_CHANNEL_ID` — канал, куди Канцелярія публікує записи. Може бути username на кшталт `@channel_name` або numeric id.
+- `GAME_BOT_USERNAME` — username основного ігрового бота для безпечних deep links у публічних новинах Канцелярії. Дефолт: `Chornolis_bot`.
 - `HERALD_ENABLED` — `true`/`false`. Якщо `false`, automatic publisher loop не стартує; ручні bot commands і health server лишаються runtime-поведінкою самого entrypoint.
 - `HERALD_PUBLISH_INTERVAL_MS` — інтервал publisher loop. Мінімально ефективне значення в конфігу: `1000`, дефолт: `30000`.
+- `HERALD_ARCHIVE_INTERVAL_MINUTES` — інтервал між архівними записами `news.md` у backfill drip-feed. Дефолт: `13`.
+- `HERALD_MAX_PUBLICATIONS_PER_TICK` — скільки записів publisher loop може винести за один обхід. Дефолт: `1`, щоб після Render sleep Канцелярія не скидала кілька архівних вістей одразу.
+- `HERALD_REBALANCE_OVERDUE_PUBLICATIONS` — `true`/`false`. Якщо `true`, прострочені архівні записи після sleep/wake-up розкладаються вперед із configured archive interval, а не публікуються пачкою.
 - `HERALD_STARTUP_NOTICE_ENABLED` — `true`/`false`. Якщо `true`, Канцелярія після старту polling спробує надіслати коротке службове повідомлення в configured startup chat.
 - `HERALD_STARTUP_NOTICE_CHAT_ID` — chat id для startup notice. Краще ставити приватний/admin chat, а не публічний канал.
 - `PORT` — порт HTTP health server. Render задає його автоматично; локально дефолт `3000`.
@@ -203,8 +207,9 @@ preview_world_digest - попередній перегляд дайджесту 
 - `/repost_publication <id>` — повторно опублікувати збережений snapshot як архівний repost. Це створює нове Telegram-повідомлення й не відновлює старий timestamp.
 - `/mark_publication_deleted <id>` — вручну позначити в БД, що Telegram-повідомлення було видалене з каналу. Команда нічого не видаляє в Telegram і не запускає автоматичний repost.
 - `/backfill_news_preview` — подивитися, які старі записи `news.md` ще не стоять у черзі й не були опубліковані.
-- `/backfill_news_queue [30m]` — поставити старі записи `news.md` у чергу архівною drip-feed послідовністю.
-- `/backfill_news_status` — звірити стан архівного backfill для `news.md`.
+- `/backfill_news_queue [13m]` — поставити старі записи `news.md` у чергу архівною drip-feed послідовністю. Без аргументу використовує configured archive interval, зараз 13 хвилин.
+- `/backfill_news_reschedule_pending [13m]` — заново впорядкувати й розкласти ще не опубліковані архівні записи `news.md`, не торкаючись уже опублікованих Telegram-повідомлень.
+- `/backfill_news_status` — звірити стан архівного backfill для `news.md`: скільки очікує, скільки вже опубліковано, який наступний запис і чи ввімкнено overdue rebalance.
 - `/queue_world_digest` — поставити світовий запис в outbox без негайної публікації.
 - `/post_world_digest` — поставити і одразу опублікувати світовий запис.
 
