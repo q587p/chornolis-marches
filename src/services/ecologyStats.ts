@@ -28,6 +28,10 @@ export const TICK_COUNTER_KEYS = [
   "playerKills",
   "corpsesGone",
   "regenerated",
+  "creatureCandidates",
+  "creatureProcessed",
+  "creatureDeferred",
+  "creatureProtected",
   "populationFloorRestored",
 ] as const;
 

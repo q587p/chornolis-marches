@@ -561,6 +561,10 @@ async function renderEcologyStatsPage() {
       <tr><td>Смерті від персонажів</td><td>${c.playerKills}</td><td>${formatNumber(r.playerKills, 1)}</td></tr>
       <tr><td>Зниклі трупи</td><td>${c.corpsesGone}</td><td>${formatNumber(r.corpsesGone, 1)}</td></tr>
       <tr><td>Відновлені ресурсні вузли</td><td>${c.regenerated}</td><td>${formatNumber(r.regenerated, 1)}</td></tr>
+      <tr><td>Кандидати creature tick</td><td>${c.creatureCandidates}</td><td>${formatNumber(r.creatureCandidates, 1)}</td></tr>
+      <tr><td>Оброблено creature tick</td><td>${c.creatureProcessed}</td><td>${formatNumber(r.creatureProcessed, 1)}</td></tr>
+      <tr><td>Відкладено creature tick</td><td>${c.creatureDeferred}</td><td>${formatNumber(r.creatureDeferred, 1)}</td></tr>
+      <tr><td>Захищено creature tick</td><td>${c.creatureProtected}</td><td>${formatNumber(r.creatureProtected, 1)}</td></tr>
       <tr><td>Відновлення стартових тварин</td><td>${c.populationFloorRestored}</td><td>${formatNumber(r.populationFloorRestored, 1)}</td></tr>
     </tbody></table>
 

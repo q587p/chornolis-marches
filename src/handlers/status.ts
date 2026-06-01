@@ -173,6 +173,7 @@ export async function buildStatBrief() {
       `Смерті від персонажів: ${formatStatNumber(counters.playerKills)} (${formatRate(rates.playerKills)}/год), усього ${formatStatNumber(stats.totals.playerKills)}.`,
       `Відновлення стартових тварин: ${formatStatNumber(counters.populationFloorRestored)} (${formatRate(rates.populationFloorRestored)}/год), усього ${formatStatNumber(stats.totals.populationFloorRestored)}.`,
       populationRestorationLines.length ? `По видах:\n${populationRestorationLines.join("\n")}` : "Відновлень стартових тварин ще не було.",
+      `Creature tick: оброблено ${formatStatNumber(counters.creatureProcessed)}, відкладено ${formatStatNumber(counters.creatureDeferred)}, захищено ${formatStatNumber(counters.creatureProtected)}.`,
       "",
       "Найвдаліші хижаки:",
       hunterLines.length ? hunterLines.join("\n") : "поки немає успішних мисливців",

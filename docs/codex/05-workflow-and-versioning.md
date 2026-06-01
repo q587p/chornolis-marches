@@ -4,7 +4,7 @@
 
 Do **not** add notes like “package.json and package-lock.json are intentionally unchanged...” to public news/changelog entries. That is internal workflow context only.
 
-If a task creates a release/version commit, bump `package.json` and `package-lock.json` in that same commit. Use the version from `package.json` as the release version, and tag releases as `vX.Y.Z`, for example `v0.12.12`.
+If a task creates a release/version commit, bump `package.json` and `package-lock.json` in that same commit. Use the version from `package.json` as the release version, and tag releases as `vX.Y.Z`, for example `v0.12.12`. For ordinary release PRs, create/push the tag after the branch is merged to `main`, pointing at the merge/release commit on `main`; do not pre-tag an unmerged release branch unless the user explicitly asks.
 
 ## Preferred change delivery
 
@@ -82,6 +82,7 @@ User preference:
 2. run build;
 3. if the task is explicitly a release/version commit, bump `package.json` and `package-lock.json` in that same commit;
 4. use the `package.json` version as the release version and expected tag, formatted as `vX.Y.Z`;
+4a. after the release PR is merged, create/push the tag on the merge/release commit in `main`; avoid tagging an unmerged branch unless explicitly requested;
 5. avoid separate manual GitHub Action commits just to bump version;
 6. for version bumps, prefer proper npm-based versioning over hand-editing package metadata.
 
@@ -89,6 +90,7 @@ User preference:
 
 - Include user-facing changes only.
 - For player-facing release work, update `news.md` together with `CHANGELOG.md` and release notes unless the user explicitly says not to publish a news entry.
+- Every numbered release needs an explicit public-news decision before merge. Add a `news.md` entry for each player-visible, world-balance, tutorial, ecology, performance or UX release; if a release is purely internal/scribe-only, state in the PR summary or release notes that public news was intentionally skipped. Never silently omit `news.md` for a numbered release.
 - Changelog and release-note titles should describe the final scope of the patch/minor after follow-up fixes and additions, not only the initial change that started the version.
 - Do not include internal operational reminders about package files.
 - Do not include scribe/admin-only commands, hidden service URLs, secrets, or debug-only tooling in public Ukrainian `news.md`; document those in changelog, release notes, `/adminHelp`, `/adminMenu`, and admin docs instead.

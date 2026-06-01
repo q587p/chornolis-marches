@@ -53,6 +53,7 @@ The forest should feel alive even when players do nothing.
 - Hungry herbivores are more likely to eat when forage exists and more likely to move when local food is gone or vegetation is exhausted.
 - Hungry predators are more likely to search for prey and attack; very hungry predators attack immediately when suitable prey is present.
 - Hungry predators can scavenge safe unclaimed local herbivore corpses before attacking living prey. Hunter-claimed, player-carried, predator-claimed and freshened corpses remain protected from this ordinary scavenging path.
+- Ordinary background creature behavior now runs through a per-world-tick processing budget. Creatures in locations with players, non-animal NPCs and predators are protected first; excess ordinary background animals defer their individual behavior to a later tick while aggregate ecology still runs.
 - Animals that remain above the starvation threshold can die of hunger. Starvation leaves a corpse, cancels pending creature actions, writes an `Animal starved` world event, and appears in ecology statistics.
 - Individual animals keep hunting counters, and scribe/admin `/stat` can show the most successful hunters.
 - Fox and wolf lifecycle values are deliberately slower than rabbits and mice, so future predator reproduction does not explode as quickly as herbivore reproduction.
@@ -80,6 +81,7 @@ The forest should feel alive even when players do nothing.
 - Watch whether no-pair prey restoration and predator scavenging reduce early dead-ends without hiding too much danger from new players. Use the 0.14.17 `/stat` restoration counters to see which species still need repeated intervention.
 - Tune the first `Винищена трава` inspection text after observation: account for active grazing/gathering pressure, rain, season, moon/world time and future restoration magic rather than only local grass amount/max and exhausted-location regeneration.
 - Tune hunger thresholds, starvation odds and species-specific hunger tolerance after observation.
+- Tune `WORLD_CREATURE_TICK_BUDGET` after production observation. If deferred creature counts remain high for long periods, promote the next `PERF-001` slice: aggregate background animal movement/eating instead of only deferring individual actions.
 - Replace direct predator births with a persistent pregnancy/den state when the creature lifecycle model is ready.
 - Add weather and magic hooks that can shorten exhausted-vegetation recovery.
 - Add explicit recent hunting pressure from players and NPCs.

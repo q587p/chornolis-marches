@@ -19,6 +19,7 @@ assert.equal(POPULATION_FLOOR_RESTORED_EVENT_TITLE, "Population floor restored")
 assert.equal(TICK_COUNTER_KEYS.includes("playerKills"), true);
 assert.equal(TICK_COUNTER_KEYS.includes("predatorKills"), true);
 assert.equal(TICK_COUNTER_KEYS.includes("starvationDeaths"), true);
+assert.equal(TICK_COUNTER_KEYS.includes("creatureDeferred"), true);
 assert.equal(TICK_COUNTER_KEYS.includes("populationFloorRestored"), true);
 assert.deepEqual(
   parsePopulationFloorRestorationDescription("Restored animal population floors: rabbit=9, mouse=15."),
