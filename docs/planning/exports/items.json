@@ -54,7 +54,7 @@
   {
     "id": "ADM-001-C",
     "title": "Restart confirmation and HTML safety hardening",
-    "status": "next",
+    "status": "testing",
     "type": "technical",
     "area": "admin",
     "priority": "high",
@@ -559,7 +559,7 @@
   {
     "id": "FIRE-001-A",
     "title": "Active light connects to visibility",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -595,7 +595,7 @@
   {
     "id": "FIRE-001-C",
     "title": "Carried torch visibility",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -613,7 +613,7 @@
   {
     "id": "FIRE-001-D",
     "title": "Light source matrix test",
-    "status": "next",
+    "status": "testing",
     "type": "qa",
     "area": "survival",
     "priority": "high",
@@ -766,7 +766,8 @@
     ],
     "depends_on": [
       "FOOD-001",
-      "FOOD-004"
+      "FOOD-004",
+      "WORLD-003"
     ],
     "exports": {},
     "file": "docs/planning/items/FOOD-005-hunger-consequences.md"
@@ -876,7 +877,7 @@
   {
     "id": "HMYZ-001-A",
     "title": "Audit hmyz model",
-    "status": "next",
+    "status": "testing",
     "type": "technical",
     "area": "survival",
     "priority": "high",
@@ -894,7 +895,7 @@
   {
     "id": "HMYZ-001-B",
     "title": "Seed starter hmyz",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -913,7 +914,7 @@
   {
     "id": "HMYZ-001-C",
     "title": "Pickup hmyz polish",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -931,7 +932,7 @@
   {
     "id": "HMYZ-001-D",
     "title": "Add hmyz to campfire",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -950,7 +951,7 @@
   {
     "id": "HMYZ-001-E",
     "title": "Hmyz observer messages",
-    "status": "next",
+    "status": "testing",
     "type": "ux",
     "area": "survival",
     "priority": "medium",
@@ -1319,6 +1320,28 @@
     "file": "docs/planning/items/LOOP-003-old-campfire-memory-omen.md"
   },
   {
+    "id": "LOOT-001",
+    "title": "Local low-risk loot and small coin finds",
+    "status": "backlog",
+    "type": "feature",
+    "area": "core-loop",
+    "priority": "high",
+    "tags": [
+      "loot",
+      "foraging",
+      "coins",
+      "onboarding",
+      "resources",
+      "economy"
+    ],
+    "depends_on": [
+      "ITEM-001",
+      "VIS-001-E"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/LOOT-001-local-low-risk-loot-and-coins.md"
+  },
+  {
     "id": "MAP-002-A",
     "title": "First biome foraging table",
     "status": "next",
@@ -1408,6 +1431,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/MAP-WILLOW-001-first-contour.md"
+  },
+  {
+    "id": "MAP-WILLOW-002",
+    "title": "Willow under-bridge and watchtower integration",
+    "status": "backlog",
+    "type": "content",
+    "area": "world",
+    "priority": "medium",
+    "tags": [
+      "map",
+      "world",
+      "willow-floodplain",
+      "under-bridge",
+      "watchtower"
+    ],
+    "depends_on": [
+      "MAP-WILLOW-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/MAP-WILLOW-002-under-bridge-watchtower-integration.md"
   },
   {
     "id": "MAP-WILLOW-003",
@@ -2487,7 +2530,7 @@
   {
     "id": "SLEEP-002-A",
     "title": "Ordinary sleep command gate",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -3103,7 +3146,7 @@
   {
     "id": "VIS-001-E",
     "title": "Ground object visibility gate",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "visibility",
     "priority": "medium",
@@ -3216,7 +3259,7 @@
   {
     "id": "WORLD-001-A",
     "title": "Internal world-clock model design",
-    "status": "next",
+    "status": "testing",
     "type": "design",
     "area": "world_time",
     "priority": "high",
@@ -3385,6 +3428,30 @@
     ],
     "exports": {},
     "file": "docs/planning/items/WORLD-002-hidden-spirit-seed-and-boundaries.md"
+  },
+  {
+    "id": "WORLD-003",
+    "title": "World-time survival and item lifetime timers",
+    "status": "next",
+    "type": "system",
+    "area": "world_time",
+    "priority": "high",
+    "tags": [
+      "world-time",
+      "survival",
+      "hunger",
+      "torches",
+      "campfires",
+      "decay",
+      "item-lifetime"
+    ],
+    "depends_on": [
+      "WORLD-001-C",
+      "FOOD-004",
+      "WORLD-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WORLD-003-world-time-survival-and-lifetime-timers.md"
   },
   {
     "id": "WPN-001",

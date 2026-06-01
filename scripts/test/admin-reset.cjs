@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
 
 require("ts-node/register");
 
@@ -25,5 +26,11 @@ assert.match(adminResetModeDescription("world"), /статистика перс�
 assert.match(adminResetModeDescription("stats"), /падального рову/);
 assert.match(adminResetModeDescription("stats"), /\/stat/);
 assert.match(adminResetModeDescription("full"), /очищає статистику/);
+
+const statusHandlerSource = fs.readFileSync("src/handlers/status.ts", "utf8");
+assert.match(statusHandlerSource, /bot\.command\("restart", requestRestartCommand\)/);
+assert.match(statusHandlerSource, /bot\.hears\(RESTART_TEXT_COMMAND, requestRestartCommand\)/);
+assert.match(statusHandlerSource, /restart:\(confirm\|cancel\):/);
+assert.doesNotMatch(statusHandlerSource, /bot\.hears\(RESTART_TEXT_COMMAND, performRestartCommand\)/);
 
 console.log("Admin reset helpers OK");

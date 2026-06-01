@@ -76,9 +76,9 @@ NPCs should eventually use the same ordinary food assumptions where practical. H
 
 ## Hunger Direction
 
-Hunger currently rises mainly from strenuous player actions and can be eased by simple food. Player-facing text should describe it atmospherically, not as a debug value.
+Hunger currently rises only from strenuous player actions or overexertion and can be eased by simple food. Ordinary inspection, gathering or cooking should not make the character feel instantly hungry. Player-facing text should describe hunger atmospherically, not as a debug value.
 
-When in-world time becomes more complete, hunger should also rise naturally with the passage of game time, so eating matters even for characters who are only traveling, waiting or resting between harder actions.
+`WORLD-003` should move hunger to the internal world clock: a first target is roughly `+1` hunger per in-game hour, tuned after playtesting and protected where the tutorial/dream flow is teaching something else. The same pass should audit torches, campfires, corpse/meat decay and other temporary lifetimes so they use game hours/days consistently instead of scattered real-minute assumptions.
 
 ## Meat Loop
 

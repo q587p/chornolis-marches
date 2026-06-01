@@ -1,7 +1,7 @@
 ---
 id: SLEEP-002-A
 title: Ordinary sleep command gate
-status: next
+status: testing
 type: feature
 area: survival
 priority: high
@@ -65,3 +65,10 @@ Suggested blocked-command copy:
   - `/wake` still works;
   - `/time` or another chosen passive command still works;
   - tutorial dream routing is not blocked as ordinary sleep.
+
+## 0.14.23 Reconciliation Notes
+
+- Added a central ordinary-sleep command gate before ordinary handlers.
+- Allowed passive/sleep-relevant commands such as `/wake`, `/time`, `/weather`, `/help`, `/commands`, `/chronicles`, `/news`, settings and session-safety commands.
+- Blocked active text commands and active callback buttons with atmospheric wake-first copy and a wake button.
+- Kept tutorial sleep outside the ordinary-sleep allowlist so tutorial dream flow is not treated as ordinary sleep.

@@ -1079,6 +1079,8 @@ async function submitOpen(ctx: any, target?: string) {
 }
 
 export function registerAliasHandlers(bot: Bot) {
+  bot.command("shout", async (ctx) => submitShout(bot, ctx, ctx.match ?? ""));
+
   bot.on("message:text", async (ctx, next) => {
     if (!ctx.from || !ctx.message?.text) return next();
 

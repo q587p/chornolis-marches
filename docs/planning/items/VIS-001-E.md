@@ -1,7 +1,7 @@
 ---
 id: VIS-001-E
 title: Ground object visibility gate
-status: next
+status: testing
 type: feature
 area: visibility
 priority: medium
@@ -34,3 +34,8 @@ Make loose objects depend on visibility.
 ## Implementation Order
 
 Do after: `VIS-001-B`.
+
+## 0.14.23 Reconciliation Notes
+
+- Ground objects now pass through the shared visibility rules in location rendering.
+- Local light/day can reveal loose objects; dark or dim visibility can reduce the ground-object list.

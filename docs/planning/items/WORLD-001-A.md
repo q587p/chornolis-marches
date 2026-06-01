@@ -1,7 +1,7 @@
 ---
 id: WORLD-001-A
 title: Internal world-clock model design
-status: next
+status: testing
 type: design
 area: world_time
 priority: high
@@ -39,3 +39,7 @@ Choose and document the smallest internal Chornolis world-clock model that can s
 ## Implementation Order
 
 Can be done independently.
+
+## 0.14.23 Reconciliation Notes
+
+- The first internal world-clock model is implemented and subsequent WORLD-001 storage, tick, `/time`, weather, light-snapshot and debug-control slices are in testing.

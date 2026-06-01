@@ -46,6 +46,8 @@ First proof added in `0.12.8`: `Лисячий просвіт сну` contains `
 
 This is still only a tutorial flag, not a real skill progression model.
 
+`PROG-002` is now an umbrella design item, not the next standalone implementation slice. Near-term work should be tracked through narrower learning items such as `LEARN-*`, `OBS-*` and `TRACK-LEARN-*`, then folded back into the shared progression model when that foundation exists.
+
 - A crow, Сон or another tutorial voice warns the player to watch carefully.
 - A fox demonstrates movement, stalking or a simple attack.
 - The attack lesson should be a repeatable tutorial scene on a cadence, not a one-off permanent state: a fox or fox-like shadow attacks a mouse/prey, the location briefly reports something like `Щось кидається на здобич. За мить миша падає нерухомо.`, and there is a short observation window.

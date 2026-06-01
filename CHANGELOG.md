@@ -7,6 +7,36 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.14.23 - Reconciliation and safety slice - 12026-06-01
+
+### Added
+
+- Added a central ordinary sleep command gate so active player commands and active callback buttons are blocked while a character is asleep, while passive commands such as `/wake`, `/time`, `/weather`, `/help`, `/commands`, `/chronicles`, `/news`, settings and session-safety commands remain available.
+
+### Fixed
+
+- Added an explicit `/shout` bot command route so clickable command hints open a useful usage prompt instead of falling through when no shout text is supplied.
+- Made `/restart` and slashless `restart` share an explicit confirmation prompt before deleting character state.
+- Slowed player hunger spikes so ordinary stamina-spending actions no longer add hunger every time; hunger now rises from strenuous actions or overexertion until the fuller world-time hunger pass lands.
+
+### Documentation
+
+- Added `MAP-WILLOW-002` backlog planning for a future under-bridge / watchtower integration pass around the Willow Floodplain.
+- Added `WORLD-003` near-term planning for moving hunger, torches, campfires, corpse/meat decay and related temporary lifetimes onto internal world-time hours/days.
+- Added `LOOT-001` backlog planning for local low-risk loot and small coin finds around starter-adjacent or calm locations.
+- Reconciled planning status for shipped world-time, visibility, fire/light, `twigs`, ordinary sleep and restart-safety slices after 0.14.22.
+- Clarified that `PROG-002` is now an umbrella learning-design item, with narrower LEARN/OBS/TRACK-LEARN slices carrying near-term implementation.
+
+### Validation
+
+- Ran `node scripts/test/news-clickable-commands.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/sleep.cjs`.
+- Ran `node scripts/test/admin-reset.cjs`.
+- Ran `npm run planning:export`.
+- Ran `npm test`.
+- Ran `npm run build`.
+
 ## 0.14.22 - Willow Floodplain landmarks and resources - 12026-06-01
 
 ### Added

@@ -9,9 +9,11 @@ Backlog differs from Icebox: backlog means "we probably want this, but not right
 These may become `next` after 0.13-0.15 foundations land.
 
 - Starter settlement skeleton beyond the closed gate.
+- MAP-WILLOW-002: under-bridge and watchtower integration for the Willow Floodplain pocket, keeping the under-bridge place distinct and the settlement gate closed.
 - First useful NPC roles: guard, hunter, herbalist, fisher.
 - NPC-008: starter supply guards and watched beginner stores, so the watchtower/cache area feels maintained when animals or careless characters disturb beginner-critical supplies.
-- Ground money and small find objects beyond the first omen.
+- LOOT-001: local low-risk loot and small coin finds around starter-adjacent or calm locations, so early searching is not limited to defending distant forest resource spots.
+- Ground money and small find objects beyond the first omen should fold into `LOOT-001` before becoming a separate economy system.
 - Local pickup/gather observer feedback beyond хмиз, after `ITEM-001` clarifies pickup versus gather command semantics.
 - Bulk ground pickup text commands such as `підібрати все` / `take all`, with clear ordering, visibility checks and item limits.
 - ALC-001: first simple herbal stamina elixir from gathered herbs and possibly berries, before a full alchemy system.

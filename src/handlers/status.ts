@@ -61,6 +61,13 @@ const pendingNameRejections = new Map<number, { playerId: number; returnContext:
 const pendingAdminTeleports = new Map<number, { playerId: number; returnContext: AllReturnContext }>();
 const REMOVE_REPLY_KEYBOARD = { remove_keyboard: true } as const;
 
+function buildRestartConfirmKeyboard(playerId: number) {
+  return new InlineKeyboard()
+    .text("Так, стерти слід", `restart:confirm:${playerId}`)
+    .row()
+    .text("Ні, лишити", `restart:cancel:${playerId}`);
+}
+
 type UniqueNpcSpec = {
   speciesKey: string;
   name: string;
@@ -1191,7 +1198,7 @@ export function registerStatusHandlers(bot: Bot) {
   bot.command(["debugSet", "debugset"], (ctx) => runDebugSet(ctx));
   bot.hears(DEBUG_SET_TEXT_COMMAND, (ctx) => runDebugSet(ctx, String(ctx.match?.[1] ?? "").trim().toLowerCase()));
 
-  async function runRestartCommand(ctx: any) {
+  async function performRestartCommand(ctx: any, confirmedPlayerId: number) {
     if (!ctx.from) return;
 
     const telegramId = String(ctx.from.id);
@@ -1199,7 +1206,7 @@ export function registerStatusHandlers(bot: Bot) {
     const hadOnboardingState = clearOnboardingStateForTelegramId(telegramId);
 
     const player = await prisma.player.findUnique({
-      where: { telegramId },
+      where: { id: confirmedPlayerId },
       include: { currentLocation: true },
     });
 
@@ -1209,6 +1216,11 @@ export function registerStatusHandlers(bot: Bot) {
         : "Персонажа ще немає. Напиши /start, щоб почати шлях.", {
         reply_markup: REMOVE_REPLY_KEYBOARD,
       });
+      return;
+    }
+
+    if (player.telegramId !== telegramId) {
+      await ctx.reply("Це підтвердження вже не підходить до вашого поточного персонажа. Якщо справді треба почати заново, напишіть /restart ще раз.");
       return;
     }
 
@@ -1238,8 +1250,50 @@ export function registerStatusHandlers(bot: Bot) {
     });
   }
 
-  bot.command("restart", runRestartCommand);
-  bot.hears(RESTART_TEXT_COMMAND, runRestartCommand);
+  async function requestRestartCommand(ctx: any) {
+    if (!ctx.from) return;
+
+    const telegramId = String(ctx.from.id);
+    const player = await prisma.player.findUnique({
+      where: { telegramId },
+      select: { id: true },
+    });
+
+    if (!player) {
+      const hadOnboardingState = clearOnboardingStateForTelegramId(telegramId);
+      await ctx.reply(hadOnboardingState
+        ? "Початок скинуто. Напиши /start, щоб знову обрати ім’я й увійти в перший сон."
+        : "Персонажа ще немає. Напиши /start, щоб почати шлях.", {
+        reply_markup: REMOVE_REPLY_KEYBOARD,
+      });
+      return;
+    }
+
+    await ctx.reply("Почати спочатку означає стерти персонажа, речі й записи цього шляху. Підтвердити?", {
+      reply_markup: buildRestartConfirmKeyboard(player.id),
+    });
+  }
+
+  bot.command("restart", requestRestartCommand);
+  bot.hears(RESTART_TEXT_COMMAND, requestRestartCommand);
+
+  bot.callbackQuery(/^restart:(confirm|cancel):(\d+)$/, async (ctx) => {
+    const action = ctx.match[1];
+    const playerId = Number(ctx.match[2]);
+    if (!Number.isFinite(playerId)) {
+      await ctx.answerCallbackQuery({ text: "Старе підтвердження вже не спрацює.", show_alert: true });
+      return;
+    }
+
+    if (action === "cancel") {
+      await ctx.answerCallbackQuery({ text: "Лишаємо як є." });
+      await ctx.reply("Добре, старий слід лишається.");
+      return;
+    }
+
+    await ctx.answerCallbackQuery({ text: "Починаємо спочатку." });
+    await performRestartCommand(ctx, playerId);
+  });
 
   bot.command(["locationAll", "locationall"], replyLocationAllPage);
   bot.hears(LOCATION_ALL_TEXT_COMMAND, replyLocationAllPage);

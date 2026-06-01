@@ -6,6 +6,7 @@ import {
   BASE_STAMINA,
   HEALTH_REGEN_PER_INTERVAL,
   PLAYER_HUNGER_MAX,
+  PLAYER_STRENUOUS_HUNGER_COST_THRESHOLD,
   PASSIVE_HEALTH_REGEN_INTERVAL_MS,
   PASSIVE_STAMINA_REGEN_PER_INTERVAL,
   REST_HEALTH_REGEN_INTERVAL_MS,
@@ -32,6 +33,17 @@ export function fatigueStateFor(stamina: number, staminaMax = BASE_STAMINA): Fat
   if (stamina <= 0) return "TIRED";
   if (stamina >= staminaMax) return "RESTED";
   return "RESTED";
+}
+
+export function playerHungerAfterStaminaSpend(input: {
+  currentHunger: number;
+  staminaAfter: number;
+  cost: number;
+  maxHunger?: number;
+}) {
+  const maxHunger = input.maxHunger ?? PLAYER_HUNGER_MAX;
+  const shouldIncrease = input.cost >= PLAYER_STRENUOUS_HUNGER_COST_THRESHOLD || input.staminaAfter < 0;
+  return shouldIncrease ? Math.min(maxHunger, input.currentHunger + 1) : input.currentHunger;
 }
 
 const TUTORIAL_REST_FULL_COMMENT = "Ось так виглядає короткий перепочинок у навчальному сні. Наяву до повної снаги шлях буде довший, і не кожне вогнище тримає вас так легко.";
@@ -101,7 +113,11 @@ async function spendPlayerStaminaCost(bot: Bot, playerId: number, cost: number, 
   const after = before - cost;
   const tookHp = before <= VERY_TIRED_STAMINA;
   const nextHp = tookHp ? Math.max(0, player.hp - 1) : player.hp;
-  const nextHunger = cost > 1 ? Math.min(PLAYER_HUNGER_MAX, player.hunger + 1) : player.hunger;
+  const nextHunger = playerHungerAfterStaminaSpend({
+    currentHunger: player.hunger,
+    staminaAfter: after,
+    cost,
+  });
   const nextState = fatigueStateFor(after, max);
 
   const updated = await prisma.player.updateMany({

@@ -1,7 +1,7 @@
 ---
 id: FIRE-001-A
 title: Active light connects to visibility
-status: next
+status: testing
 type: feature
 area: survival
 priority: high
@@ -33,3 +33,8 @@ Let campfires and carried light reveal darkness-hidden information.
 ## Implementation Order
 
 Do after: `VIS-001-A`.
+
+## 0.14.23 Reconciliation Notes
+
+- Active local light is now part of the shared light snapshot used by visibility rules.
+- Campfires, carried lit torches and dropped lit torches can reveal darkness-reduced location detail through the same visibility path.

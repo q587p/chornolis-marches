@@ -6,9 +6,14 @@ const {
   ORDINARY_SLEEP_FORCE_AUTO_WAKE_MINUTES,
   ORDINARY_SLEEP_FULL_AUTO_WAKE_MINUTES,
   ordinarySleepDurationMinutes,
+  shouldAllowOrdinarySleepCallback,
+  shouldAllowOrdinarySleepText,
   shouldAutoWakeOrdinarySleep,
   sleepRecoveryProfileFromSignals,
-} = require("../../src/services/sleep");
+} = {
+  ...require("../../src/services/sleep"),
+  ...require("../../src/services/sleepCommandGate"),
+};
 
 assert.equal(ordinarySleepDurationMinutes(null, 1000), 0);
 assert.equal(ordinarySleepDurationMinutes(1000, 999), 0);
@@ -81,4 +86,18 @@ assert.equal(campfireProfile.staminaCap, 52);
 assert.equal(campfireProfile.comfort, "campfire");
 assert.ok(campfireProfile.staminaRate > bareProfile.staminaRate);
 assert.ok(campfireProfile.hpRate > bareProfile.hpRate);
+
+assert.equal(shouldAllowOrdinarySleepText("/wake"), true);
+assert.equal(shouldAllowOrdinarySleepText("прокинутися"), true);
+assert.equal(shouldAllowOrdinarySleepText("/time"), true);
+assert.equal(shouldAllowOrdinarySleepText("commands"), true);
+assert.equal(shouldAllowOrdinarySleepText("хроніки"), true);
+assert.equal(shouldAllowOrdinarySleepText("/south"), false);
+assert.equal(shouldAllowOrdinarySleepText("озирнутися"), false);
+assert.equal(shouldAllowOrdinarySleepText("сказати привіт"), false);
+assert.equal(shouldAllowOrdinarySleepText("/sleep tutorial"), false);
+assert.equal(shouldAllowOrdinarySleepCallback("sleep:wake"), true);
+assert.equal(shouldAllowOrdinarySleepCallback("commands:page:1"), true);
+assert.equal(shouldAllowOrdinarySleepCallback("cmd:south"), false);
+assert.equal(shouldAllowOrdinarySleepCallback("inventory:use:berries"), false);
 
