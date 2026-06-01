@@ -62,9 +62,26 @@ export type PublicEcologySignStats = {
   };
 };
 
+export type PredatorKillSpeciesRow = {
+  speciesKey: string;
+  speciesName: string;
+  kills: number;
+  attackAttempts: number;
+  successfulAttacks: number;
+};
+
 function parseTickNumber(description: string | null | undefined) {
   const match = description?.match(/Tick #(\d+)/);
   return match ? Number(match[1]) : null;
+}
+
+function sortPredatorKillRows(rows: PredatorKillSpeciesRow[]) {
+  return rows.sort((a, b) =>
+    b.kills - a.kills
+    || b.successfulAttacks - a.successfulAttacks
+    || b.attackAttempts - a.attackAttempts
+    || a.speciesKey.localeCompare(b.speciesKey)
+  );
 }
 
 function parseTickCounters(description: string | null | undefined): TickCounterSummary {
@@ -137,6 +154,7 @@ export async function getEcologyStats() {
     occupiedLocations,
     latestTickEvents,
     topHunters,
+    predatorKillGroups,
     topPlayers,
     topNpcs,
     npcKillStats,
@@ -182,6 +200,21 @@ export async function getEcologyStats() {
         { id: "asc" },
       ],
       take: 10,
+    }),
+    prisma.creature.groupBy({
+      by: ["speciesId"],
+      where: {
+        species: { kind: "ANIMAL", diet: "CARNIVORE" },
+        OR: [
+          { kills: { gt: 0 } },
+          { attackAttempts: { gt: 0 } },
+        ],
+      },
+      _sum: {
+        kills: true,
+        attackAttempts: true,
+        successfulAttacks: true,
+      },
     }),
     prisma.player.findMany({
       where: {
@@ -265,6 +298,7 @@ export async function getEcologyStats() {
     ages: ageCountsTemplate(),
   }));
   const rowsBySpeciesId = new Map(species.map((item, index) => [item.id, speciesRows[index]]));
+  const speciesById = new Map(species.map((item) => [item.id, item]));
 
   let totalAnimals = 0;
   let aliveAnimals = 0;
@@ -399,6 +433,16 @@ export async function getEcologyStats() {
       || a.name.localeCompare(b.name, "uk-UA")
     )
     .slice(0, 20);
+  const predatorKillRows = sortPredatorKillRows(predatorKillGroups.map((group) => {
+    const predatorSpecies = speciesById.get(group.speciesId);
+    return {
+      speciesKey: predatorSpecies?.key ?? String(group.speciesId),
+      speciesName: predatorSpecies?.name ?? String(group.speciesId),
+      kills: group._sum.kills ?? 0,
+      attackAttempts: group._sum.attackAttempts ?? 0,
+      successfulAttacks: group._sum.successfulAttacks ?? 0,
+    };
+  }));
 
   return {
     generatedAt: new Date(),
@@ -431,6 +475,7 @@ export async function getEcologyStats() {
       successfulAttacks: creature.successfulAttacks,
       kills: creature.kills,
     })),
+    predatorKillRows,
     topPlayers: playerCharacterRows,
     topCharacters,
     populationRestorationRows,

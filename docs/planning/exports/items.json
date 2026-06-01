@@ -2160,7 +2160,7 @@
   {
     "id": "OWL-002",
     "title": "Nocturnal owl tuning and indirect signs",
-    "status": "next",
+    "status": "testing",
     "type": "tuning",
     "area": "ecology",
     "priority": "high",

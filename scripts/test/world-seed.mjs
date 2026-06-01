@@ -193,6 +193,15 @@ assert.equal(startCampTorchStand?.locationKey, "start_border_watchtower", "Start
 assert.notEqual(startCampTorchStand?.data?.hunter_resupply, false, "Starter watchtower torch stand should remain available for hunter resupply");
 assert.notEqual(startCampTorchStand?.data?.icon, "🔥", "Starter camp torch stand should not use the fire icon reserved for flame/campfire actions");
 
+for (const key of ["forest_04_02_owl_sign", "forest_09_04_owl_sign", "meadow_14_04_owl_sign", "riverbank_13_00_owl_sign"]) {
+  const feature = features.find((item) => item.key === key);
+  assert.ok(feature, `Owl sign feature should exist: ${key}`);
+  assert.equal(feature.type, "LANDMARK", `Owl sign should be an inspectable landmark: ${key}`);
+  assert.equal(feature.data?.owl_sign, true, `Owl sign should be marked for daypart-aware text: ${key}`);
+  assert.ok(typeof feature.data?.examine_summary === "string" && feature.data.examine_summary.length > 0, `Owl sign should have an examine summary: ${key}`);
+  assert.ok(Array.isArray(feature.data?.aliases) && feature.data.aliases.includes("сова"), `Owl sign should have a simple owl alias: ${key}`);
+}
+
 const beginnerCache = features.find((item) => item.key === "start_beginner_shared_cache");
 assert.ok(beginnerCache, "Starter shared beginner cache should exist");
 assert.equal(beginnerCache.locationKey, "start_border_watchtower", "Starter shared beginner cache should live in the watchtower");

@@ -17,6 +17,10 @@ const {
   predatorWoundCurrentAction,
   predatorWoundObserverText,
 } = require("../../src/services/predatorActionText");
+const {
+  owlSignDetailLine,
+  owlSignInspectionText,
+} = require("../../src/services/owlSigns");
 
 assert.equal(isOwlActiveDaypart("dawn"), true);
 assert.equal(isOwlActiveDaypart("dusk"), true);
@@ -81,5 +85,9 @@ assert.equal(predatorMissObserverText("owl", "мишу", "миша"), "Крил�
 assert.equal(predatorKillObserverText("owl", "миша"), "Крилата тінь падає згори. За мить миша завмирає в траві.");
 assert.equal(predatorWoundObserverText("owl", "мишу", "миша"), "Крилата тінь зачіпає мишу й знову губиться вгорі.");
 assert.equal(predatorKillObserverText("fox", "миша"), "Щось кидається на здобич. За мить миша падає нерухомо.");
+assert.equal(owlSignDetailLine(), "підказує, що вночі тут полює щось крилате");
+assert.match(owlSignInspectionText("night", "Пір'їна лежить у траві."), /нічного слухача/);
+assert.match(owlSignInspectionText("day", "Пір'їна лежить у траві."), /Удень тут тихо/);
+assert.match(owlSignInspectionText("dawn", "Пір'їна лежить у траві."), /відступає в гілля/);
 
 console.log("Owl nocturnal profile OK");

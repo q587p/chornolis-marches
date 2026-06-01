@@ -70,7 +70,7 @@ Observation learning remains the main `0.15` line. Darkness, distance and light 
 ## 0.15 Next
 
 - OWL-001: first nocturnal owl ecology slice is in testing after `0.15.0`.
-- OWL-002: tune starter owl count/placement, daypart hiding/waking and mouse-pressure impact after live observation; add only small indirect owl signs if needed.
+- OWL-002: `0.15.2` tunes starter owl coverage, adds quiet local owl signs and exposes predator performance by species for post-deploy owl balance checks.
 - LEARN-001: minimal learning storage decision.
 - OBS-001: observe action and herbalist learning moment.
 - SOC-002: follow intent MVP, so a player can `Слідувати` / `/follow` a visible being before full `Гурт` movement exists.

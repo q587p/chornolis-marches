@@ -1,7 +1,7 @@
 ---
 id: OWL-002
 title: Nocturnal owl tuning and indirect signs
-status: next
+status: testing
 type: tuning
 area: ecology
 priority: high
@@ -62,3 +62,10 @@ Tune the first owl ecology slice after live observation and make owls legible as
 ## Notes
 
 This is a near-term follow-up because owls are meant to stabilize mouse pressure before the observation-learning MVP. Deeper owl work belongs later: perches, tree/height awareness, nests, eggs, flight, reproduction, feathers as items and richer bird behavior should stay out of this slice.
+
+## Implementation Notes
+
+- `0.15.2` increases starter owl coverage from three to four owls by adding a riverbank-edge owl near the riverbank mouse cluster without placing a predator directly inside the breeding cell.
+- Added four local inspectable owl-sign landmarks at owl pressure points. They are quiet local features, not proactive chat messages.
+- Owl sign inspection now varies by internal daypart: night/dusk reads as active nocturnal pressure, dawn as retreating signs, and day as quiet hidden presence.
+- Scribe/admin ecology stats now include predator performance grouped by species so owl impact can be compared against foxes and wolves after deploy.

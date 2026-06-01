@@ -53,6 +53,7 @@ export const STARTER_PREDATORS: StarterAnimalGroup[] = [
   { speciesKey: "owl", locationKey: "forest_04_02", count: 1, age: "ADULT", sex: "FEMALE" },
   { speciesKey: "owl", locationKey: "forest_09_04", count: 1, age: "ADULT", sex: "MALE" },
   { speciesKey: "owl", locationKey: "meadow_14_04", count: 1, age: "YOUNG", sex: "FEMALE" },
+  { speciesKey: "owl", locationKey: "riverbank_13_00", count: 1, age: "ADULT", sex: "MALE" },
 ];
 
 export function starterAnimalAgeTicks(
