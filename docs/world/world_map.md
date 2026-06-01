@@ -13,6 +13,7 @@ node scripts/world/render-map-ascii.mjs --write
 - `F` — forest location.
 - `.` — dry luka / open meadow location.
 - `,` — riverbank location.
+- `w` — willow floodplain location.
 - `~` — impassable river cell.
 - `#` — local impassable thicket / obstacle.
 - `█` — impassable outer boundary.
@@ -37,9 +38,10 @@ y
 ```text
       -1  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21
 y
- 10    █  █  █  F  F  F  █  █  █  █  █  █  █  █
-  9    █  #  #  F  #  #  #  #  #  F  F  .  .  .  ,  ~  ~
-  8    █  F  F  F  #  F  F  F  F  F  #  .  #  .  .  ,  ~  ~
+ 11                                                       w  w  w
+ 10    █  █  █  F  F  F  █  █  █  █  █  █  █  █     w  w  w  w  w
+  9    █  #  #  F  #  #  #  #  #  F  F  .  .  .  ,  ~  w  w  w
+  8    █  F  F  F  #  F  F  F  F  F  #  .  #  .  .  ,  ~  w
   7    █  F  #  #  #  F  #  #  #  F  F  .  .  .  .  .  ,  ,  ~
   6    █  F  F  F  F  F  #  F  F  F  F  .  .  .  .  .  #  ,  ,  ,  ~  ~
   5    █  #  #  F  #  #  #  F  #  F  #  .  .  .  .  .  .  .  S  =  =  G  G
@@ -94,6 +96,8 @@ y
 - `start_border_watchtower` — DOWN → `start_border_camp`
 - `under_bridge_18_05` — NORTH → `riverbank_18_06`
 - `under_bridge_18_05` — SOUTH → `riverbank_18_04`
+- `riverbank_13_09` — INSIDE → `willow_low_return_14_10`
+- `willow_low_return_14_10` — OUTSIDE → `riverbank_13_09`
 - `closed_east_gate` — EAST is a visible locked exit (Зачинені ворота).
 - `dream_tutorial_hub` — NORTH is a visible locked exit (Брама Сну).
 - `dream_tutorial_gate` — SOUTH is a visible locked exit (Брама Сну).

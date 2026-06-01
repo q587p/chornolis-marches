@@ -7,6 +7,26 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.14.21 - Willow Floodplain first contour - 12026-06-01
+
+### Added
+
+- Added the first Willow Floodplain seed region with twelve authored swamp, river and clearing locations near the current riverbank.
+- Added a small bidirectional route loop from existing riverbank anchors into the new pocket and back out again.
+- Added `MAP-WILLOW-001` planning coverage and refreshed the rendered world map.
+
+### Changed
+
+- Updated world seed metadata and next-planning notes for the floodplain content slice.
+
+### Validation
+
+- Ran `npm run test:seed`.
+- Ran `npm run test:seed:types`.
+- Ran `node scripts/test/route-finding.cjs`.
+- Ran `npm run map:render`.
+- Ran `npm run build`.
+
 ## 0.14.19 - Stabilization and safety rails - 12026-06-01
 
 ### Added
