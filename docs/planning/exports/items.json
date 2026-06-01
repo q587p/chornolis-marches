@@ -1320,6 +1320,28 @@
     "file": "docs/planning/items/LOOP-003-old-campfire-memory-omen.md"
   },
   {
+    "id": "LOOT-001",
+    "title": "Local low-risk loot and small coin finds",
+    "status": "backlog",
+    "type": "feature",
+    "area": "core-loop",
+    "priority": "high",
+    "tags": [
+      "loot",
+      "foraging",
+      "coins",
+      "onboarding",
+      "resources",
+      "economy"
+    ],
+    "depends_on": [
+      "ITEM-001",
+      "VIS-001-E"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/LOOT-001-local-low-risk-loot-and-coins.md"
+  },
+  {
     "id": "MAP-002-A",
     "title": "First biome foraging table",
     "status": "next",

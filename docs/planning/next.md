@@ -89,6 +89,7 @@ These are still `backlog`, but recent work makes them worth reviewing before the
 
 - Sleep and dreams: after the `0.14.13` world-time sleep slice, review DREAM-001 and the remaining SLEEP-003 follow-ups so sleeping-body/dream-presence separation, location comfort metadata and danger interruptions do not drift away from ordinary sleep.
 - Inventory item actions: the dedicated inventory view exists, and the 0.12.15 drop feedback pass makes the item-instance gap more visible. Item details, safer dropped-item pickup, dream-item origin and richer per-item actions are now small enough to promote when the survival loop needs them.
+- Local low-risk loot: `LOOT-001` should be reviewed before adding much more early survival pressure. New players need small useful things to find around calmer nearby locations, including possible `шаг` coin finds, without being pushed straight into defending distant forest resource spots.
 - Corpse freshening and meat: the existing corpse/freshen path, hunger and campfire inventory actions are close enough to support a first raw meat -> cooked meat -> eat loop. This has been promoted to `FOOD-001`.
 - Weapons as tools: WPN-001/WPN-002 have shipped as the utility/display layer. Near-term review can look at WPN-003 seed/NPC weapon loadouts, but keep WPN-004 durability and WPN-ICE-001 deep combat cold.
 - Pickup/gather command semantics: `підібрати`/`take` should mean visible ground-item pickup, while `зібрати`/`gather` should mean spending time and stamina on a local resource node. This has been promoted to `ITEM-001`.
