@@ -18,6 +18,7 @@ import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 import { spendPlayerStaminaAmount } from "../services/actionRecovery";
 import { firstNightGuidanceForPlayer } from "../services/beginnerGuidance";
 import { contributeToBeginnerCache, takeFromBeginnerCache } from "../services/beginnerCache";
+import { TORCH_SOURCE_TAKE_EVENT_TITLE } from "../services/fire";
 
 function pickedItemsAmount(items: Array<{ amount: number }>) {
   return items.reduce((total, item) => total + Math.max(0, item.amount), 0);
@@ -312,7 +313,7 @@ export function registerLookHandlers(bot: Bot) {
           playerId: player.id,
           locationId: player.currentLocationId,
           observerText: pickupObserverText(player, "факел"),
-          eventTitle: "Player took torch",
+          eventTitle: TORCH_SOURCE_TAKE_EVENT_TITLE,
           eventDescription: `player=${player.id}; item=torch; source=feature:${ctx.match[1]}`,
           actionNote: "піднято: факел",
         });

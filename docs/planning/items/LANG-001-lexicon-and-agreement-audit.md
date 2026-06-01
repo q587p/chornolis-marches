@@ -36,6 +36,7 @@ The immediate `смажене м'ясо: лише один` case is fixed in the
 - Search common player-facing surfaces for agreement issues: inventory, target inspection, location details, resource pickup/drop, cooking/freshening, fire/light and admin-visible character cards.
 - Check whether stable nouns already exist in `src/content/lexicon/worldLexicon.ts`.
 - Add missing stable nouns before adding more local hardcoded display maps.
+- Treat weapons and equipped tools as stable lexicon nouns, not as one-off `ResourceType.name` strings. New weapon keys should add full case forms and grammar metadata before they appear in inventory, equipped-item, attack, freshening, drop/pickup or NPC description text.
 - Prefer lexicon-backed helpers when a text path needs case, gender or animacy.
 - Keep shared Ukrainian agreement helpers in `src/services/grammar.ts` or a deliberately named grammar submodule; avoid adding new parallel `ukrainianVerb`-style utility files under `utils/`.
 - Keep broad cleanup behavior-preserving and split into small testable passes.
@@ -45,5 +46,6 @@ The immediate `смажене м'ясо: лише один` case is fixed in the
 - A short audit list identifies the remaining local resource/corpse display maps and the safest migration order.
 - At least the most visible inventory/location resource summaries use gender-aware qualitative amount text.
 - New stable resource, creature, profession, spirit and feature nouns have lexicon entries before being used in generated text.
+- New weapon/equipped-tool display paths use lexicon-backed forms instead of inferring cases from a nominative resource name.
 - New shared case/gender/verb agreement logic has a clear home in the grammar layer and is not duplicated in feature-local utilities.
 - Focused tests cover representative masculine, feminine, neuter and plural agreement examples.

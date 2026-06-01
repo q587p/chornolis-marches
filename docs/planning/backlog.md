@@ -13,9 +13,11 @@ These may become `next` after 0.13-0.15 foundations land.
 - Ground money and small find objects beyond the first omen.
 - Local pickup/gather observer feedback beyond хмиз, after `ITEM-001` clarifies pickup versus gather command semantics.
 - Bulk ground pickup text commands such as `підібрати все` / `take all`, with clear ordering, visibility checks and item limits.
+- ALC-001: first simple herbal stamina elixir from gathered herbs and possibly berries, before a full alchemy system.
 - Richer butchering outputs after `FOOD-001`: species-specific meat, bones, hide, fur, feathers, tools, skill-based yield and spoilage.
 - WPN-003: themed NPC weapons and hunter spear polish after WPN-001/WPN-002 land; hunters carry spears and knives, herbalists/знахарі carry sickles, players start with a plain knife.
-- Weapon follow-up after the MVP: text aliases for `equip`, `unequip`, `wield`, `зняти`, `взяти ніж`, item inspect text and safer dropped-weapon pickup. The first legacy starter-knife backfill is handled by the freshening compatibility grant in 0.14.15.
+- NPC-007: substantially larger hunter and herbalist/знахар line banks, with tests to keep profession speech from collapsing back into repetition.
+- Weapon follow-up after the MVP: item inspect text, clearer command help/examples for existing `equip` / `unequip` / `wield` / `unwield` aliases, and safer dropped-weapon pickup. The first legacy starter-knife backfill is handled by the freshening compatibility grant in 0.14.15.
 - Weapon-aware butchering/freshening polish after `FOOD-001`: tool quality affects text first, then later yield; do not implement durability here.
 - First weapon-learning hooks: using a spear teaches spear handling later; using a knife for freshening may feed hunting/butchering learning after progression storage is ready.
 - NPC hunter/archer route that leaves visible signs.
@@ -23,6 +25,11 @@ These may become `next` after 0.13-0.15 foundations land.
 - Shared command registry and per-command help: keep `/commands`, `/help`, text aliases, future MUD commands, Telegram buttons and permissions from drifting apart.
 - Rework `/commands` into a cleaner hidden command reference instead of a broad alias wall: group it by real player goals, keep survival advice in `/help` or tutorial surfaces, and document which commands are current, planned or scribe-only.
 - Follow-up command packs after `CMD-001`: `give`, `put`, `drink`, `skills`, `effects`, `consider`, `compare`, `journal`, `party`, `guild`, `spells`, `cast`, `weather`, builder commands and moderation commands.
+- CRAFT-001: craftable placeable chests as local containers, after generic `put`/container semantics are stable enough.
+- PROG-006: chronicle registration backfill, local arrival messages and a scribe/admin real-time event view.
+- Deferred private-message delivery for `whisper` / addressed speech while a player is AFK or has ended the session: store a capped queue and deliver a compact recap only when they return.
+- HERALD-002: stronger Herald outbox idempotency/locking so a Telegram-send success followed by a DB marking failure cannot blindly repost a pending publication later.
+- HERALD-003: Herald relay for public chronicle entries into a configured Telegram chat/channel, with idempotency and backfill-spam guards.
 - Item details, safer drop/pickup and item-instance groundwork.
 - Dream item origin tracking for tutorial resources, so leaving the dream removes only dream-gathered supplies and never resources brought from the waking world.
 - Reply UX for addressed speech is now part of `CMD-001`; later polish can add inline reply buttons and generated answer options.

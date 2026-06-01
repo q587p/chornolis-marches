@@ -168,6 +168,22 @@ Good candidates for sleep-permeating events:
 - direct danger near the body;
 - ritual or dream-relevant events.
 
+### Command availability while sleeping
+
+Ordinary sleep should also hide most ordinary agency.
+
+While a character is in ordinary sleep, the default should be "this cannot be done while asleep" unless a command is explicitly passive or sleep-relevant. The first allowlist should stay small: `/wake`, `/time`, `/weather`, `/help`, `/commands`, `/chronicles`, `/news` and session-safety commands such as AFK/end-session. Active commands such as movement, look/examine of the waking location, speech, socials, inventory use, gathering, pickup, drop/put, attack, freshening, cooking, fire/torch handling, auto and queue mutation should be blocked with atmospheric copy and a wake option.
+
+Suggested copy:
+
+```text
+Сон тримає тіло важким і далеким. Це не зробити уві сні.
+
+Хочете прокинутися?
+```
+
+Whether `/me` should remain as a safe self-status view is an open UX question. Until decided, prefer blocking it with the same wake prompt so ordinary sleep stays distinct from ordinary play.
+
 ## Comfort and Safety
 
 Sleep quality should depend on the place.

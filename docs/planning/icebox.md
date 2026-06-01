@@ -21,6 +21,7 @@ It is not a trash bin and not a promise. It is cold storage for ideas that need 
 - i18n/localization layer.
 - Advanced persistent automation.
 - Player camps, shelters and construction.
+- Pit traps and vertical hazard cells: entering a trap cell can drop a character to a real lower `z - 1` location, cause HP damage and require climbing or help to escape.
 - Deep bridge mechanics.
 - Large MUD-style socials catalog.
 - Full personal chronicle/journal system.

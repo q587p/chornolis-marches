@@ -1,7 +1,7 @@
 ---
 id: SOC-002
 title: Follow intent MVP
-status: backlog
+status: next
 type: feature
 area: social
 priority: high

@@ -52,8 +52,9 @@ Connect ordinary sleep to internal world time, campfires and location comfort.
 
 ## Follow-up Notes
 
-- Location shelter/comfort metadata is still future work; the first slice uses existing rest-cap and active-campfire signals.
-- Later safety work should decide how danger, attacks, loud events and lucid dreams interrupt or reshape ordinary sleep.
+- Location shelter/comfort metadata is still future work; the first slice uses existing rest-cap and active-campfire signals. Do not treat the current campfire modifier as the final shelter system.
+- Danger interruption is still future work. Later safety work should decide how attacks, predator presence, loud events, direct wake/social actions and lucid dreams interrupt or reshape ordinary sleep.
+- Scribe/admin `/timeSet` can shorten or lengthen ordinary sleep because sleep duration and auto-wake checks use internal world minutes. Treat that as an admin-only QA/live-ops risk: document it, avoid surprising live players when forcing time, and add a guard or explicit warning if time edits become common during active sessions.
 
 ## Implementation Order
 

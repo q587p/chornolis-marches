@@ -174,6 +174,23 @@ cancel the outbox instead of suspending the whole Web Service:
   `NEWS_MD` / `NEWS_MD_ARCHIVE` rows as `CANCELED`, preserving already
   published history and leaving unrelated future publication types alone.
 
+Pause applies between publisher-loop sends. If a Telegram `sendMessage` call is
+already in flight when pause is enabled, that send may still finish and be
+marked/logged normally.
+
+Existing publication rows from before the rendered-snapshot migration may have
+no `renderedText`, but they still keep `title` and `body`. Queueing the same
+`contentHash` can fill missing snapshot metadata without creating a duplicate
+publication row.
+
+Manual channel-delete and repost semantics are intentionally narrow:
+
+- `/mark_publication_deleted` is an advisory database marker only; Telegram
+  does not reliably notify the Herald about manual channel deletions, and the
+  command does not delete anything in Telegram.
+- `/repost_publication` creates a new Telegram message from the saved snapshot.
+  It does not restore the old channel timestamp or original message id.
+
 ## Icebox: Embedded Herald Mode
 
 Possible future mode: run the Herald inside the existing main Render Web Service

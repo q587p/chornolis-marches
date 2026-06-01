@@ -70,6 +70,7 @@
 - Active hand-edited map data lives in split JSON files under `prisma/data/world/` (`regions.json`, `locations.json`, `exits.json`, `features.json`, etc.).
 - `prisma/seed.ts` prefers `prisma/data/world/` when it exists; `prisma/data/chornolis_world_seed.json` is a legacy mirror/fallback and should not be the only file changed for live world edits.
 - When adding or changing a visible location feature, keep `/look` and `/examine` distinct where practical: `/look` can list the feature briefly, while `/examine` or direct feature inspection should add useful meaning, interaction hints, constraints, or atmosphere.
+- Authored location names must be unique across the playable map, and full location descriptions should not be duplicated. Repeated names/descriptions make player-made maps and exit lists confusing; vary the landmark or microfeature instead.
 - ASCII map is separate documentation: `docs/world/world_map.md`.
 - Do not change `z` casually; currently it is expected to remain `0` unless the task explicitly requires verticality.
 - Do not create two exits from one location in the same direction.

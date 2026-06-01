@@ -61,3 +61,8 @@ Do after `SLEEP-001`. Keep world-time auto-waking for `SLEEP-003`.
 - `node scripts/test/posture.cjs`
 - `npm test`
 - `npm run build`
+
+## Watchpoints
+
+- After deploy, watch unusual scribe/admin and debug flows such as `/tutorialReset`, teleports, respawn/reset variants, forced resource changes and direct state inspection. They should not leave a character `sleeping` in a place or flow where the expected result is awake/lying, awake/standing or returned to the tutorial entrypoint.
+- Keep sleep-state cleanup explicit when future admin tools move characters between waking-world and dream/tutorial contexts.

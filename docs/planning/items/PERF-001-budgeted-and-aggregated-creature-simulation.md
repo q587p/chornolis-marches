@@ -130,7 +130,11 @@ Investigate why large post-reproduction populations leave many creature actions 
 ## Remaining follow-up after 0.14.18
 
 - Tune `WORLD_CREATURE_TICK_BUDGET` against production-sized worlds.
+- At high populations, ordinary background herbivores may move/eat less often because they are deferred behind protected actors. This is expected for the first budget slice; watch `creatureDeferred` and local ecology outcomes rather than treating every deferral as a bug.
+- Protected creature count can exceed the configured budget. This is intentional for UX and important actors, but if a player-visible location contains a very large animal crowd, the budget will not fully shield tick/action latency. Use that as a signal for crowd handling, aggregate local summaries or ecology pressure, not only for raising the global budget.
 - Add aggregate background movement/eating for deferred ordinary animals so deferral is not the only scaling valve.
+- Current aggregate ecology still runs, but richer aggregate background movement/eating is future work. Until that lands, deferral mainly reduces routine individual action churn rather than replacing it with a full aggregate behavior model.
+- When testing starter food-rich pockets, watch ecology counters alongside queue pressure: high `mouseBirths` / `rabbitBirths` with low predator kills and rising overgrazing can turn into both a balance problem and a creature-action backlog problem.
 - Add richer per-phase tick timing once the world tick is split into smaller service boundaries.
 - Keep action queue and status pages under review if creature `RUNNING` pressure remains visible.
 

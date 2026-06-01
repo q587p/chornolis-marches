@@ -71,3 +71,5 @@ This should make the world feel alive while also creating safe moments for playe
 ## Notes
 
 This is deliberately a near-term follow-up, not part of the current 0.13.20 polish PR. It should probably land after the stuck-state fix around hunter stand-down and after the NPC food behavior shape is clear enough to avoid inventing a parallel meat inventory.
+
+Route-finding tests only prove that the map path exists. Before treating this as complete, watch live hunter behavior under real action-queue timing: movement, returning for torches, hunting, resting, freshening and cooking should feel natural rather than like a route solver stepping through a checklist.
