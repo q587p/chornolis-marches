@@ -5,6 +5,7 @@ ADM-001-B,Scribe action audit helper,done,technical,admin,medium,"admin,audit,wo
 ADM-001-C,Restart confirmation and HTML safety hardening,next,technical,admin,high,"admin,safety,restart,slashless,html,features",docs/planning/items/ADM-001-C.md
 ADM-002,Scribe creature corpse creation command,testing,feature,admin,medium,"admin,creatures,corpses,testing",docs/planning/items/ADM-002-add-creature-corpse-command.md
 ALC-001,First herbal stamina elixir,backlog,feature,survival,high,"alchemy,herbs,berries,stamina,crafting,inventory",docs/planning/items/ALC-001-herbal-stamina-elixir.md
+AUTH-001,Profile protection and client-neutral login,icebox,system,account,medium,"auth,account,profile,mud,recovery",docs/planning/items/AUTH-001-profile-protection-and-client-neutral-login.md
 CAL-001,"Deep calendar, sacred days and named years",icebox,system,world_time,medium,"calendar,world-time,moon-phases,seasons,folklore,atmosphere",docs/planning/items/CAL-001_calendar_moon_phases_and_named_years.md
 CAMP-001,Starter camp prose and feature audit,done,content,core-loop,high,"camp,onboarding,mud,look,examine",docs/planning/items/CAMP-001-starter-camp-prose-and-feature-audit.md
 CAMP-002,Starter watchtower and camp torch-source route update,testing,feature,core-loop,high,"camp,map,torch,light,mud,vertical-exits",docs/planning/items/CAMP-002-starter-watchtower-and-torch-source.md
@@ -23,6 +24,8 @@ ECO-002,Carcass drop-off contribution and settlement reaction,testing,feature,ec
 ECO-003,Gate hunting saturation and stand-down state,testing,feature,ecology,high,"ecology,hunting,settlement,npc,rewards",docs/planning/items/ECO-003-gate-hunting-saturation.md
 ECO-004,Population floor restoration,testing,feature,ecology,high,"ecology,creatures,population,world-tick",docs/planning/items/ECO-004-population-floor-restoration.md
 ECO-005,Animal restoration offerings,next,feature,ecology,high,"ecology,creatures,offerings,location-features",docs/planning/items/ECO-005-animal-restoration-offerings.md
+ECO-006,Animal movement boundaries for authored vertical exits,testing,feature,ecology,high,"ecology,animals,movement,verticality,camp",docs/planning/items/ECO-006-animal-movement-boundaries.md
+ECO-007,Animal taming and small companions,icebox,feature,ecology,medium,"ecology,creatures,companions,following,feeding",docs/planning/items/ECO-007-animal-taming-companions.md
 ECON-001,Barter and trade,backlog,feature,economy,medium,"barter,trade,npc,economy",docs/planning/items/ECON-001-barter-and-trade.md
 FIRE-001-A,Active light connects to visibility,next,feature,survival,high,"fire,light,visibility",docs/planning/items/FIRE-001-A.md
 FIRE-001-B,Expired campfire behavior polish,next,feature,survival,medium,"fire,campfire,copy",docs/planning/items/FIRE-001-B.md
@@ -69,6 +72,7 @@ MAP-002-B,Generic gather uses biome candidates,next,feature,world,high,"gather,b
 MAP-002-C,Biome foraging text variants,next,content,world,medium,"gather,biome,copy",docs/planning/items/MAP-002-C.md
 MAP-003,Playable map expansion,testing,content,world,high,"map,world,exploration,regions",docs/planning/items/MAP-003-playable-map-expansion.md
 MAP-WILLOW-001,Willow Floodplain first contour,testing,content,world,high,"map,world,willow-floodplain,riverbank,exploration",docs/planning/items/MAP-WILLOW-001-first-contour.md
+MAP-WILLOW-003,"Willow Floodplain landmarks, resources and aliases",testing,content,world,high,"map,world,willow-floodplain,resources,aliases",docs/planning/items/MAP-WILLOW-003-landmarks-resources-and-aliases.md
 NAV-001,Location-to-location route finding,testing,feature,world,medium,"navigation,movement,npc,world",docs/planning/items/NAV-001-location-route-finding.md
 NPC-002,Hunter auto-program MVP,backlog,feature,npc,high,"npc,ecology,hunting,living-world",docs/planning/items/NPC-002-hunter-auto-program.md
 NPC-003,Herbalist service layer,next,technical,npc,medium,"npc,herbalist,architecture,world-tick",docs/planning/items/NPC-003-herbalist-service-layer.md
@@ -76,6 +80,7 @@ NPC-004,Actor inventory and held light foundation,in_progress,technical,npc,high
 NPC-005,NPC hunger and food behavior,next,feature,npc,high,"npc,actors,hunger,food,cooking,herbalist,hunting",docs/planning/items/NPC-005-npc-hunger-and-food-behavior.md
 NPC-006,Hunter patrol and meat practice loop,next,feature,npc,high,"npc,hunting,cooking,freshening,observation-learning,living-world",docs/planning/items/NPC-006-hunter-patrol-meat-practice-loop.md
 NPC-007,Larger hunter and herbalist line banks,next,content,npc,high,"npc,hunter,herbalist,ambient,speech,polish",docs/planning/items/NPC-007-profession-line-banks.md
+NPC-008,Starter supply guards and watched beginner stores,backlog,feature,npc,medium,"npc,guards,camp,supplies,onboarding",docs/planning/items/NPC-008-starter-supply-guards.md
 OBS-001-A,Observe action and alias skeleton,next,feature,learning,high,"observe,aliases,targets",docs/planning/items/OBS-001-A.md
 OBS-001-B,Visible herbalist action,next,feature,learning,high,"observe,npc,herbalism",docs/planning/items/OBS-001-B.md
 OBS-001-C,Herbalism/gathering progress from observation,next,feature,learning,high,"observe,herbalism,progression",docs/planning/items/OBS-001-C.md
@@ -113,6 +118,7 @@ PROG-005,Global chronicles and world milestones,testing,feature,progression,high
 PROG-006,Chronicle registration backfill and admin real-time view,backlog,feature,progression,high,"chronicle,world-events,onboarding,admin,local-chat",docs/planning/items/PROG-006-chronicle-backfill-and-admin-time-view.md
 QA-001,0.13 first-session closure smoke,testing,qa,onboarding,high,"qa,onboarding,tutorial,core-loop,release",docs/planning/items/QA-001-0.13-first-session-closure-smoke.md
 QA-002,Camp and dream first-session smoke,next,qa,onboarding,medium,"onboarding,camp,dream,qa",docs/planning/items/QA-002-camp-dream-first-session-smoke.md
+QA-WILLOW-001,"Willow Floodplain seed, map and route smoke",testing,qa,world,high,"map,world,willow-floodplain,qa,routes",docs/planning/items/QA-WILLOW-001-seed-map-route-smoke.md
 REL-001,Release branch PR summary and risk discipline,testing,process,release,high,"release,github,pr,planning",docs/planning/items/REL-001-release-branch-pr-summary-risk.md
 SES-001-A,AFK and End Session controls,testing,feature,session,high,"telegram,session,afk,ux",docs/planning/items/SES-001-A.md
 SES-001-B,Auto-AFK and proactive message guards,testing,feature,session,high,"telegram,session,reminders,tutorial",docs/planning/items/SES-001-B.md

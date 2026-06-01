@@ -151,6 +151,7 @@ Do not force weapon-aware queue titles if it causes broad action queue refactors
 - predator combat;
 - item instances;
 - weapon skills.
+- full hand-slot conflict resolution between lit torches and held weapons/tools. Preserve the current MVP behavior until the follow-up can model "one torch + one tool" versus "two torches fill both hands" without surprising inventory loss.
 
 ## Acceptance checklist
 
@@ -160,6 +161,7 @@ Do not force weapon-aware queue titles if it causes broad action queue refactors
 - Location details show visible NPC/player weapons only when actors are visible.
 - Freshen fails without an equipped sharp weapon.
 - Freshen succeeds with `knife`, `sickle`, `hand_axe` or other catalog weapon marked `canFreshen`.
+- Later follow-up: if a carried sharp tool is not currently in hand, freshening can auto-ready it when hands allow; if both hands are occupied by lit torches, the player should get a clear prompt to put something away first.
 - Freshen failure does not consume stamina if validation happens before stamina spend.
 - Attack without weapon keeps current unarmed behavior.
 - Attack with knife/spear/axe/sword changes player and observer text.

@@ -18,6 +18,7 @@ import { PREDATOR_PREY_CLAIM_PREFIX, isUnclaimedHerbivoreCorpseForScavenging, pr
 import { slashlessCommandPattern } from "../utils/slashlessCommands";
 import { advanceWorldClock } from "./worldTime";
 import { notifyWorldDaypartChangeIfNeeded } from "./worldDaypartNotices";
+import { creatureUsableExits } from "./creatureMovement";
 
 const DEFAULT_TICK_INTERVAL_MS = TICK_MS;
 const TICK_TEXT_COMMAND = slashlessCommandPattern(["tick"]);
@@ -441,7 +442,7 @@ async function spreadOvercrowdedAnimals(location: any, animals: any[], countsByL
   if (tickNumber === 0 || tickNumber % config.everyTicks !== 0) return 0;
   if (animals.length <= config.localSoftCap) return 0;
 
-  const exits = location.exitsFrom.filter((exit: any) => !exit.isHidden);
+  const exits = creatureUsableExits(animals[0] ?? { species: { kind: "ANIMAL" } }, location.exitsFrom.filter((exit: any) => !exit.isHidden)) as LocationExit[];
   if (!exits.length) return 0;
 
   const movable = animals
@@ -1025,7 +1026,7 @@ async function tickHerbalist(c: any) {
     return "queuedGather";
   }
 
-  const exit = pick(c.location.exitsFrom);
+  const exit = pick(creatureUsableExits(c, c.location.exitsFrom));
   if (isExit(exit)) return queueMove(c, exit, "шукає лікарські трави");
   await enqueueCreatureAction({ creatureId: c.id, type: "REST", payload: {}, durationMs: actionDurationMs("REST", c.stamina) });
   return "queuedRest";
@@ -1040,7 +1041,7 @@ async function tickHerbivore(c: any, localPresenceCount: number) {
   const starving = hunger >= Math.floor(CREATURE_STARVATION_HUNGER_THRESHOLD * 0.75);
 
   if (pressureMoveChance > 0 && chance(pressureMoveChance)) {
-    const exit = pick(c.location.exitsFrom);
+    const exit = pick(creatureUsableExits(c, c.location.exitsFrom));
     const reason = recentAttackHerbivoreMoveBonus(c.location.features) > 0 ? "лякається недавнього нападу" : "уникає тисняви й надто людного місця";
     if (isExit(exit)) return queueMove(c, exit, reason);
   }
@@ -1051,7 +1052,7 @@ async function tickHerbivore(c: any, localPresenceCount: number) {
   }
 
   if (!hasFood || exhausted || starving || chance(hungry ? 75 : 50)) {
-    const exit = pick(c.location.exitsFrom);
+    const exit = pick(creatureUsableExits(c, c.location.exitsFrom));
     if (isExit(exit)) return queueMove(c, exit, "шукає їжу");
   }
 
@@ -1154,7 +1155,7 @@ async function tickCarnivore(c: any) {
   }
 
   if (starving || chance(hungry ? 80 : 50)) {
-    const exit = pick(c.location.exitsFrom);
+    const exit = pick(creatureUsableExits(c, c.location.exitsFrom));
     if (isExit(exit)) return queueMove(c, exit, hungry ? "шукає здобич" : "патрулює");
   }
 

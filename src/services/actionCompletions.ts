@@ -16,7 +16,7 @@ import { buildCorpseActionKeyboard, buildExamineLocationKeyboard, buildExamineTr
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { lightLocationCampfire, renderLocationBrief, renderLocationDetails } from "./locations";
 import { notifyLocation, notifyLocationExcept, notifyRegionExcept } from "./notifications";
-import { addTwigsToCampfire, dousePlayerTorchFromInventory, lightPlayerTorchAtCampfire, lightPlayerTorchFromInventory, hasActiveLightAtLocation } from "./fire";
+import { addTwigsToCampfire, dousePlayerTorchFromInventory, lightPlayerTorchAtCampfire, lightPlayerTorchFromInventory } from "./fire";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
 import { getStartLocationId } from "./players";
 import { summonLisovykIfResourceDepleted } from "./resources";
@@ -44,6 +44,7 @@ import { GATHERING_OBSERVATION_GROWTH_MESSAGE, GATHERING_PRACTICE_GROWTH_MESSAGE
 import { COOKING_OBSERVATION_GROWTH_MESSAGE, COOKING_PRACTICE_GROWTH_MESSAGE, FRESHENING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_PRACTICE_GROWTH_MESSAGE, recordCookingObservation, recordFresheningObservation, recordFresheningSource } from "./foodLearning";
 import { notifyPlayerObservers, playerRestStopObserverText } from "./playerVisibility";
 import { dropInventoryResourceDetailed, dropInventoryResourcesDetailed, useInventoryResource, type UsableInventoryResource } from "./inventoryUse";
+import { trimSatisfiedQueuedUseItems } from "./eatingQueue";
 import { dropObserverText, recordVisibleItemAction } from "./visibleItemActions";
 import { campfireRelightReplyOptionsAfterTwigs } from "../ui/fireKeyboards";
 import { cookingResultReplyOptions } from "../ui/inventoryItemKeyboard";
@@ -51,6 +52,7 @@ import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 import { visibilityPresenceText, visibilityRulesForLocation } from "./visibility";
 import { firstNightGuidanceForPlayer } from "./beginnerGuidance";
 import { creatureAttackObserverText, freshenWeaponFailureText, getPlayerEquippedWeapon, grantAndEquipLegacyFresheningKnife, legacyFresheningKnifeGrantText, playerAttackKillText, playerAttackObserverText } from "./weapons";
+import { canCreatureUseExit, creatureUsableExits } from "./creatureMovement";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
@@ -222,7 +224,8 @@ function trackAgeText(createdAt: Date, now = new Date()) {
 }
 
 async function visibleMoverLabel(locationId: number, fallback: string, visibleName: string) {
-  return (await hasActiveLightAtLocation(locationId)) ? visibleName : fallback;
+  const visibility = await visibilityRulesForLocation(locationId, "brief");
+  return visibility.showNearbyDetails ? visibleName : fallback;
 }
 
 function movementPastVerb(actor: unknown, visibleLabel: string, fallback: string, masculine: string, feminine: string, plural: string) {
@@ -344,7 +347,7 @@ async function triggerHerbivorePanic(locationId: number, victimCreatureId: numbe
     .slice(0, maxFlee);
 
   for (const creature of fleeing) {
-    const exit = pick(location.exitsFrom) as LocationExit | undefined;
+    const exit = pick(creatureUsableExits(creature, location.exitsFrom)) as LocationExit | undefined;
     if (!exit) continue;
     await interruptActorActions({ actorType: "CREATURE", creatureId: creature.id }, "злякалося нападу", true);
     await enqueueCreatureAction({
@@ -381,6 +384,7 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
       await spendPlayerStamina(bot, player.id, "USE_ITEM", chatId);
       const wellbeingAside = await rememberTutorialWellbeingAside(player.id, player.currentLocationId, payload.resourceKey);
       await setActionStatus(action, "DONE");
+      await trimSatisfiedQueuedUseItems(player.id, payload.resourceKey);
       if (chatId) await bot.api.sendMessage(chatId, wellbeingAside ? `${resultText}\n\n${TUTORIAL_WELLBEING_ASIDE_TEXT}` : resultText);
       return;
     }
@@ -449,6 +453,9 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
       return;
     }
   } catch (error) {
+    if (action.type === "USE_ITEM" && isUsableInventoryResource(payload.resourceKey)) {
+      await trimSatisfiedQueuedUseItems(player.id, payload.resourceKey).catch(() => undefined);
+    }
     await setActionStatus(action, "FAILED");
     if (chatId) await bot.api.sendMessage(chatId, error instanceof Error ? error.message : "Дія з речами не вдалася.");
     return;
@@ -521,6 +528,7 @@ async function completeMove(bot: Bot, action: WorldAction) {
 
   const exit = await prisma.locationExit.findUnique({ where: { fromLocationId_direction: { fromLocationId: creature.locationId, direction: payload.direction } } });
   if (!exit || exit.isHidden) return void (await setActionStatus(action, "FAILED"));
+  if (!canCreatureUseExit(creature, exit)) return void (await setActionStatus(action, "FAILED"));
   if (await isLocationExitLocked(creature.locationId, payload.direction)) return void (await setActionStatus(action, "FAILED"));
 
   const isAnimal = creature.species.kind === "ANIMAL";
@@ -1089,10 +1097,11 @@ async function completeAttack(bot: Bot, action: WorldAction) {
 
   await spendPlayerStamina(bot, player.id, "ATTACK", chatId);
   await markRecentAttackDanger(player.currentLocationId);
+  const actorLabel = await visibleMoverLabel(player.currentLocationId, "Хтось", playerForms(player).nominative);
 
   if (!attackHitsSpecies(creature.species.key)) {
     await prisma.creature.updateMany({ where: { id: creature.id }, data: { currentAction: "сахнулося від удару" } });
-    await notifyLocation(bot, player.currentLocationId, player.id, `Хтось намагається затоптати ${target.forms.accusative}, але промахується.`);
+    await notifyLocation(bot, player.currentLocationId, player.id, `${actorLabel} намагається затоптати ${target.forms.accusative}, але промахується.`);
     await setActionStatus(action, "DONE");
     await logEvent("PLAYER_ACTION", "Player missed animal", `${target.kind}:${target.id}; species=${creature.species.key}`, player.currentLocationId);
     if (chatId) {
@@ -1108,7 +1117,7 @@ async function completeAttack(bot: Bot, action: WorldAction) {
   const updatedPlayer = await prisma.player.update({ where: { id: player.id }, data: { animalsKilled: { increment: 1 } }, select: { animalsKilled: true } });
   const weapon = await getPlayerEquippedWeapon(player.id);
   await triggerHerbivorePanic(player.currentLocationId, creature.id, "лякається нападу й людського запаху");
-  await notifyLocation(bot, player.currentLocationId, player.id, playerAttackObserverText(weapon?.key, target.forms.accusative));
+  await notifyLocation(bot, player.currentLocationId, player.id, playerAttackObserverText(weapon?.key, target.forms.accusative, actorLabel));
   await setActionStatus(action, "DONE");
   await logEvent("PLAYER_ACTION", "Player killed animal", `${target.kind}:${target.id}; weapon=${weapon?.key ?? "unarmed"}`, player.currentLocationId);
   await recordAttackKillSource({ locationId: player.currentLocationId, attackerPlayerId: player.id, victimCreatureId: creature.id });

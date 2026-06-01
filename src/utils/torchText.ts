@@ -4,6 +4,11 @@ type TorchStateText = {
 };
 
 export function visibleHeldTorchText(torchState: TorchStateText) {
+  return visibleHeldTorchTextWithContext(torchState);
+}
+
+export function visibleHeldTorchTextWithContext(torchState: TorchStateText, options: { hasOtherHeldItem?: boolean } = {}) {
+  if (!torchState.isLit && options.hasOtherHeldItem) return "";
   if (!torchState.isLit) return "Руки порожні.";
   const count = torchState.litAmount ?? 1;
   if (count > 1) return "В обох руках горять запалені факели.";

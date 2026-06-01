@@ -18,6 +18,8 @@ It is not a trash bin and not a promise. It is cold storage for ideas that need 
 - Seasonal rituals and sacred days.
 - Deep calendar simulation beyond the 0.14 light foundation: sacred/dangerous days, ritual calendars, local calendar variants, deep moon omens and season-specific mythic events. Minimal 28-day moon phase and moon illumination belong to 0.14 because they affect night visibility.
 - Web map and multi-client/MUD gateway.
+- Profile protection and client-neutral login: email/password or another recovery credential so a player can recover a character after losing Telegram access, and future MUD/web/console clients do not depend on `telegramId`.
+- Animal taming and small companions: earn the trust of mice, hares or similar fragile animals so they may follow the player, requiring feeding, care and future follow/ecology foundations.
 - i18n/localization layer.
 - Advanced persistent automation.
 - Player camps, shelters and construction.

@@ -135,7 +135,7 @@ export async function notifyLocationAll(bot: Bot, locationId: number, text: stri
 }
 
 export async function notifyRegion(bot: Bot, regionId: number, text: string) {
-  const players = await prisma.player.findMany({ where: { currentLocation: { regionId } }, select: { telegramId: true } });
+  const players = await prisma.player.findMany({ where: { currentLocation: { is: { regionId } } }, select: { telegramId: true } });
   for (const player of players) {
     try {
       if (!(await canSendProactiveToTelegramId(player.telegramId))) continue;
@@ -234,7 +234,7 @@ export async function notifyAllDaypartNoticePlayers(bot: Bot, text: string, opti
 
 export async function notifyRegionExcept(bot: Bot, regionId: number, exceptPlayerIds: number[], text: string, options: { parseMode?: "HTML" } = {}) {
   const players = await prisma.player.findMany({
-    where: { currentLocation: { regionId }, id: { notIn: exceptPlayerIds } },
+    where: { currentLocation: { is: { regionId } }, id: { notIn: exceptPlayerIds } },
     select: { telegramId: true },
   });
   for (const player of players) {
@@ -253,7 +253,7 @@ export async function notifyRegionExcept(bot: Bot, regionId: number, exceptPlaye
 export async function notifyRegionScribeAdmins(bot: Bot, regionId: number, text: string) {
   const players = await prisma.player.findMany({
     where: {
-      currentLocation: { regionId },
+      currentLocation: { is: { regionId } },
       OR: [
         { role: "SCRIBE" },
         ...(config.adminTelegramIds.length ? [{ telegramId: { in: config.adminTelegramIds } }] : []),
@@ -275,7 +275,7 @@ export async function notifyRegionScribeAdmins(bot: Bot, regionId: number, text:
 export async function notifyRegionTechnicalScribes(bot: Bot, regionId: number, text: string) {
   const players = await prisma.player.findMany({
     where: {
-      currentLocation: { regionId },
+      currentLocation: { is: { regionId } },
       showTechnicalDetails: true,
       OR: [
         { role: "SCRIBE" },

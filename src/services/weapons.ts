@@ -189,12 +189,12 @@ export function playerAttackKillText(key: string | null | undefined, targetAccus
   return `⚔️ Ви рвучко б’єте ножем. ${capitalizeFirst(targetAccusative)} падає, і труп лишається на землі.`;
 }
 
-export function playerAttackObserverText(key: string | null | undefined, targetAccusative: string) {
+export function playerAttackObserverText(key: string | null | undefined, targetAccusative: string, actorName = "Хтось") {
   const weapon = weaponDefinitionByKey(key);
-  if (!weapon) return `Хтось збиває ${targetAccusative} ногою. Труп лишається на землі.`;
+  if (!weapon) return `${actorName} збиває ${targetAccusative} ногою. Труп лишається на землі.`;
   const forms = weaponForms(weapon.key);
-  if (weapon.attackProfile === "spear") return `Хтось виставляє ${forms?.accusative ?? weapon.name} і збиває ${targetAccusative}. Здобич падає.`;
-  return `Хтось збиває ${targetAccusative} ${forms?.instrumental ?? weapon.name}. Труп лишається на землі.`;
+  if (weapon.attackProfile === "spear") return `${actorName} виставляє ${forms?.accusative ?? weapon.name} і збиває ${targetAccusative}. Здобич падає.`;
+  return `${actorName} збиває ${targetAccusative} ${forms?.instrumental ?? weapon.name}. Труп лишається на землі.`;
 }
 
 export function creatureAttackObserverText(actorName: string, key: string | null | undefined, targetAccusative: string) {

@@ -39,6 +39,7 @@ export type ParsedAliasCommand =
   | { kind: "move"; direction: Direction }
   | { kind: "gather"; resourceKey?: GatherKey }
   | { kind: "use-item"; item: UseItemKey }
+  | { kind: "use-item-all"; item: UseItemKey }
   | { kind: "light-torch" }
   | { kind: "douse-torch" }
   | { kind: "sleep"; tutorial?: boolean }
@@ -60,6 +61,7 @@ export type ParsedAliasCommand =
   | { kind: "wait" }
   | { kind: "add-twigs-campfire" }
   | { kind: "cook-meat" }
+  | { kind: "cook-meat-all" }
   | { kind: "beginner-cache"; action: "inspect" | "take" | "contribute"; item?: string }
   | { kind: "put-item"; item: string; amount?: PutAliasAmount; container: string }
   | { kind: "say"; text: string }
@@ -408,58 +410,124 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "додати хмиз у вогнище": { kind: "add-twigs-campfire" },
   "cook meat": { kind: "cook-meat" },
   "cook raw meat": { kind: "cook-meat" },
+  "cook all": { kind: "cook-meat-all" },
+  "cook all meat": { kind: "cook-meat-all" },
+  "cook all raw meat": { kind: "cook-meat-all" },
+  "cook meat all": { kind: "cook-meat-all" },
+  "cook_all": { kind: "cook-meat-all" },
+  "cook_all_meat": { kind: "cook-meat-all" },
   "підсмажити м'ясо": { kind: "cook-meat" },
   "підсмажити м’ясо": { kind: "cook-meat" },
+  "підсмажити все": { kind: "cook-meat-all" },
+  "підсмажити все м'ясо": { kind: "cook-meat-all" },
+  "підсмажити все м’ясо": { kind: "cook-meat-all" },
+  "посмажити все": { kind: "cook-meat-all" },
+  "посмажити все м'ясо": { kind: "cook-meat-all" },
+  "посмажити все м’ясо": { kind: "cook-meat-all" },
   "смажити м'ясо": { kind: "cook-meat" },
   "смажити м’ясо": { kind: "cook-meat" },
+  "смажити все": { kind: "cook-meat-all" },
+  "смажити все м'ясо": { kind: "cook-meat-all" },
+  "смажити все м’ясо": { kind: "cook-meat-all" },
   "приготувати м'ясо": { kind: "cook-meat" },
   "приготувати м’ясо": { kind: "cook-meat" },
+  "приготувати все м'ясо": { kind: "cook-meat-all" },
+  "приготувати все м’ясо": { kind: "cook-meat-all" },
 
   "eat berries": { kind: "use-item", item: "berries" },
+  "eat all berries": { kind: "use-item-all", item: "berries" },
+  "use all berries": { kind: "use-item-all", item: "berries" },
+  "eat berries all": { kind: "use-item-all", item: "berries" },
+  "eat_all_berries": { kind: "use-item-all", item: "berries" },
   "use berries": { kind: "use-item", item: "berries" },
   "з'їсти ягоди": { kind: "use-item", item: "berries" },
+  "з'їсти всі ягоди": { kind: "use-item-all", item: "berries" },
   "з’їсти ягоди": { kind: "use-item", item: "berries" },
+  "з’їсти всі ягоди": { kind: "use-item-all", item: "berries" },
   "зʼїсти ягоди": { kind: "use-item", item: "berries" },
+  "зʼїсти всі ягоди": { kind: "use-item-all", item: "berries" },
   "зїсти ягоди": { kind: "use-item", item: "berries" },
+  "зїсти всі ягоди": { kind: "use-item-all", item: "berries" },
   "їсти ягоди": { kind: "use-item", item: "berries" },
+  "їсти всі ягоди": { kind: "use-item-all", item: "berries" },
   "використати ягоди": { kind: "use-item", item: "berries" },
+  "використати всі ягоди": { kind: "use-item-all", item: "berries" },
   "eat mushrooms": { kind: "use-item", item: "mushrooms" },
+  "eat all mushrooms": { kind: "use-item-all", item: "mushrooms" },
+  "use all mushrooms": { kind: "use-item-all", item: "mushrooms" },
+  "eat_all_mushrooms": { kind: "use-item-all", item: "mushrooms" },
   "use mushrooms": { kind: "use-item", item: "mushrooms" },
   "use mushroom": { kind: "use-item", item: "mushrooms" },
   "з'їсти гриби": { kind: "use-item", item: "mushrooms" },
+  "з'їсти всі гриби": { kind: "use-item-all", item: "mushrooms" },
   "з’їсти гриби": { kind: "use-item", item: "mushrooms" },
+  "з’їсти всі гриби": { kind: "use-item-all", item: "mushrooms" },
   "зʼїсти гриби": { kind: "use-item", item: "mushrooms" },
+  "зʼїсти всі гриби": { kind: "use-item-all", item: "mushrooms" },
   "зїсти гриби": { kind: "use-item", item: "mushrooms" },
+  "зїсти всі гриби": { kind: "use-item-all", item: "mushrooms" },
   "їсти гриби": { kind: "use-item", item: "mushrooms" },
+  "їсти всі гриби": { kind: "use-item-all", item: "mushrooms" },
   "використати гриби": { kind: "use-item", item: "mushrooms" },
+  "використати всі гриби": { kind: "use-item-all", item: "mushrooms" },
   "use herbs": { kind: "use-item", item: "herbs" },
+  "use all herbs": { kind: "use-item-all", item: "herbs" },
   "use herb": { kind: "use-item", item: "herbs" },
   "eat herbs": { kind: "use-item", item: "herbs" },
+  "eat all herbs": { kind: "use-item-all", item: "herbs" },
+  "eat_all_herbs": { kind: "use-item-all", item: "herbs" },
   "eat herb": { kind: "use-item", item: "herbs" },
   "використати трави": { kind: "use-item", item: "herbs" },
+  "використати всі трави": { kind: "use-item-all", item: "herbs" },
   "використати лікарські трави": { kind: "use-item", item: "herbs" },
+  "використати всі лікарські трави": { kind: "use-item-all", item: "herbs" },
   "з'їсти трави": { kind: "use-item", item: "herbs" },
+  "з'їсти всі трави": { kind: "use-item-all", item: "herbs" },
   "з’їсти трави": { kind: "use-item", item: "herbs" },
+  "з’їсти всі трави": { kind: "use-item-all", item: "herbs" },
   "зʼїсти трави": { kind: "use-item", item: "herbs" },
+  "зʼїсти всі трави": { kind: "use-item-all", item: "herbs" },
   "зїсти трави": { kind: "use-item", item: "herbs" },
+  "зїсти всі трави": { kind: "use-item-all", item: "herbs" },
   "їсти трави": { kind: "use-item", item: "herbs" },
+  "їсти всі трави": { kind: "use-item-all", item: "herbs" },
   "з'їсти лікарські трави": { kind: "use-item", item: "herbs" },
+  "з'їсти всі лікарські трави": { kind: "use-item-all", item: "herbs" },
   "з’їсти лікарські трави": { kind: "use-item", item: "herbs" },
+  "з’їсти всі лікарські трави": { kind: "use-item-all", item: "herbs" },
   "зʼїсти лікарські трави": { kind: "use-item", item: "herbs" },
+  "зʼїсти всі лікарські трави": { kind: "use-item-all", item: "herbs" },
   "зїсти лікарські трави": { kind: "use-item", item: "herbs" },
+  "зїсти всі лікарські трави": { kind: "use-item-all", item: "herbs" },
   "їсти лікарські трави": { kind: "use-item", item: "herbs" },
+  "їсти всі лікарські трави": { kind: "use-item-all", item: "herbs" },
   "вжити трави": { kind: "use-item", item: "herbs" },
+  "вжити всі трави": { kind: "use-item-all", item: "herbs" },
   "прикласти трави": { kind: "use-item", item: "herbs" },
   "лікуватися травами": { kind: "use-item", item: "herbs" },
   "eat cooked meat": { kind: "use-item", item: "cooked_meat" },
+  "eat all cooked meat": { kind: "use-item-all", item: "cooked_meat" },
   "eat meat": { kind: "use-item", item: "cooked_meat" },
+  "eat all meat": { kind: "use-item-all", item: "cooked_meat" },
+  "eat_all_cooked_meat": { kind: "use-item-all", item: "cooked_meat" },
+  "eat_all_meat": { kind: "use-item-all", item: "cooked_meat" },
   "use cooked meat": { kind: "use-item", item: "cooked_meat" },
+  "use all cooked meat": { kind: "use-item-all", item: "cooked_meat" },
+  "use all meat": { kind: "use-item-all", item: "cooked_meat" },
   "з'їсти м'ясо": { kind: "use-item", item: "cooked_meat" },
+  "з'їсти все м'ясо": { kind: "use-item-all", item: "cooked_meat" },
+  "з'їсти все смажене м'ясо": { kind: "use-item-all", item: "cooked_meat" },
   "з’їсти м’ясо": { kind: "use-item", item: "cooked_meat" },
+  "з’їсти все м’ясо": { kind: "use-item-all", item: "cooked_meat" },
+  "з’їсти все смажене м’ясо": { kind: "use-item-all", item: "cooked_meat" },
   "їсти смажене м'ясо": { kind: "use-item", item: "cooked_meat" },
+  "їсти все смажене м'ясо": { kind: "use-item-all", item: "cooked_meat" },
   "їсти смажене м’ясо": { kind: "use-item", item: "cooked_meat" },
+  "їсти все смажене м’ясо": { kind: "use-item-all", item: "cooked_meat" },
   "використати смажене м'ясо": { kind: "use-item", item: "cooked_meat" },
+  "використати все смажене м'ясо": { kind: "use-item-all", item: "cooked_meat" },
   "використати смажене м’ясо": { kind: "use-item", item: "cooked_meat" },
+  "використати все смажене м’ясо": { kind: "use-item-all", item: "cooked_meat" },
   "light torch": { kind: "light-torch" },
   "use torch": { kind: "light-torch" },
   "запалити факел": { kind: "light-torch" },
@@ -710,6 +778,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   }
   if (parsed.kind === "gather") return parsed.resourceKey ? `/gather_${parsed.resourceKey}` : "/gather";
   if (parsed.kind === "use-item") return `/use_${parsed.item}`;
+  if (parsed.kind === "use-item-all") return `/eat_all_${parsed.item}`;
   if (parsed.kind === "light-torch") return "/light_torch";
   if (parsed.kind === "douse-torch") return "/douse_torch";
   if (parsed.kind === "posture") return parsed.mode === "sit" ? "/sit" : parsed.mode === "lie" ? "/lie" : "/stand";
@@ -722,6 +791,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "wait") return "/wait";
   if (parsed.kind === "add-twigs-campfire") return "/add_twigs_campfire";
   if (parsed.kind === "cook-meat") return "/cook_meat";
+  if (parsed.kind === "cook-meat-all") return "/cook_all";
   if (parsed.kind === "beginner-cache") {
     if (parsed.action === "take") return "/take_cache";
     if (parsed.action === "contribute") return "/contribute_cache";

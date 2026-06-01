@@ -28,7 +28,7 @@ import { lifetimeSummary } from "./itemLifetime";
 import { playerShowsTechnicalDetails } from "./technicalDetails";
 import { dreamGateStatusText, ensureTutorialForagingResources, isDreamGateFeature, lockedExitDirections, lockedExitLabel, rememberTutorialObservationLesson } from "./tutorial";
 import { formatObservedPostureText } from "../utils/playerText";
-import { isFreshenedCorpse } from "./meat";
+import { isFreshenedCorpse, playerRawMeatAmount } from "./meat";
 import { heldWeaponLine } from "./weapons";
 import { GATE_CARCASS_DROPOFF_FEATURE_KEY, gateHuntingDropoffText, gateHuntingNoticeText, getGateHuntingSaturationState } from "./carcassDropoff";
 import { visibilityDarknessText, visibilityPresenceText, visibilityRulesForLocation, type VisibilityRules } from "./visibility";
@@ -83,6 +83,23 @@ function visibleCreatureTorchText(c: any) {
   return lit.amount > 1 ? "тримає запалені факели" : "тримає запалений факел";
 }
 
+export function joinVisibleActionLabels(...labels: Array<string | null | undefined>) {
+  const parts: string[] = [];
+  const seen = new Set<string>();
+  for (const label of labels) {
+    if (!label) continue;
+    for (const rawPart of label.split(";")) {
+      const part = rawPart.trim();
+      if (!part) continue;
+      const key = part.replace(/\s+/gu, " ").toLocaleLowerCase("uk-UA");
+      if (seen.has(key)) continue;
+      seen.add(key);
+      parts.push(part);
+    }
+  }
+  return parts.join("; ") || undefined;
+}
+
 function visibleTargets(
   location: any,
   viewerPlayerId?: number,
@@ -112,7 +129,11 @@ function visibleTargets(
       label: options.showAnimalAge && c.species.kind === "ANIMAL"
         ? animalAgeDescription(c, options.showTechnicalDetails)
         : c.name ?? c.species.name,
-      actionLabel: [heldWeaponLine(c.equippedWeaponKey)?.replace(/\.$/u, "").toLocaleLowerCase("uk-UA"), normalizeCreatureActionText(c.currentAction, "проходить"), visibleCreatureTorchText(c)].filter(Boolean).join("; "),
+      actionLabel: joinVisibleActionLabels(
+        heldWeaponLine(c.equippedWeaponKey)?.replace(/\.$/u, "").toLocaleLowerCase("uk-UA"),
+        normalizeCreatureActionText(c.currentAction, "проходить"),
+        visibleCreatureTorchText(c)
+      ),
       canGreet: c.species.kind !== "ANIMAL",
       isAnimal: c.species.kind === "ANIMAL",
       isCorpse: false,
@@ -785,7 +806,7 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
   const activeActions = revealTargets ? await activeActionsForTargets(targets) : new Map<string, any>();
   const actionLabeledTargets = targets.map((target) => ({
     ...target,
-    actionLabel: ["actionLabel" in target ? target.actionLabel : undefined, visibleActionLabel(target, activeActions, location)].filter(Boolean).join("; ") || undefined,
+    actionLabel: joinVisibleActionLabels("actionLabel" in target ? target.actionLabel : undefined, visibleActionLabel(target, activeActions, location)),
   }));
   const keyboard = new InlineKeyboard();
   addFeatureButtons(keyboard, location.features, "brief");
@@ -861,7 +882,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   const activeActions = visibility.showNearbyDetails ? await activeActionsForTargets(targets) : new Map<string, any>();
   const actionLabeledTargets = targets.map((target) => ({
     ...target,
-    actionLabel: ["actionLabel" in target ? target.actionLabel : undefined, visibleActionLabel(target, activeActions, location)].filter(Boolean).join("; ") || undefined,
+    actionLabel: joinVisibleActionLabels("actionLabel" in target ? target.actionLabel : undefined, visibleActionLabel(target, activeActions, location)),
   }));
   const charactersText = visibility.showNearbyDetails
     ? visibleTargetsText(actionLabeledTargets)
@@ -1106,6 +1127,12 @@ export async function renderLocationFeatureInteraction(
       if (torchState.isLit) keyboard.text("🔥 Підпалити", `fire:light:${feature.id}`).row();
     } else {
       keyboard.text("🔥 Відпочити", "rest:start").row();
+      const rawMeatAmount = await playerRawMeatAmount(viewerPlayerId);
+      if (rawMeatAmount > 0) {
+        keyboard.text("🔥 Посмажити м’ясо", "inventory:cook:meat");
+        if (rawMeatAmount > 1) keyboard.text("🔥 Посмажити все", "inventory:cook:all");
+        keyboard.row();
+      }
       if (feature.type !== "MAGIC_CAMPFIRE" && canAddTwigsToCampfire(feature)) keyboard.text("🪵 Додати хмиз", `fire:addTwigs:${feature.id}`).row();
       if (torchState.hasTorch) {
         keyboard.text(torchLightButtonText(torchState), `torch:light:${feature.id}`).row();

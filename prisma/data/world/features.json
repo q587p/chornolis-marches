@@ -736,6 +736,144 @@
     }
   },
   {
+    "key": "willow_reed_wall_dense_reeds",
+    "locationKey": "willow_reed_wall_17_09",
+    "type": "LANDMARK",
+    "name": "Густа очеретяна стіна",
+    "description": "Очерет стоїть густо, вище плечей, і стискає мокрий прохід у вузьку темну щілину. Якщо дивитися довше, між стеблами видно не одну стежку, а кілька майже однакових тіней. Тут легко пройти повз справжній хід і вирішити, що заплава просто закінчилася.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🌾",
+      "inspectable": true,
+      "examine_summary": "стоїть вище плечей і ховає вузькі ходи між стеблами",
+      "future_hidden_route_hook": true,
+      "aliases": [
+        "очерет",
+        "очеретяна стіна",
+        "густа очеретяна стіна",
+        "стіна",
+        "зарості",
+        "очерети",
+        "reeds"
+      ]
+    }
+  },
+  {
+    "key": "willow_mudflat_silt_tracks",
+    "locationKey": "willow_mudflat_16_09",
+    "type": "LANDMARK",
+    "name": "Мулові сліди",
+    "description": "У вологому мулі лишилися різні відбитки: дрібні пташині риски, глибші звірячі ямки й кілька розмитих людських кроків. Край течії вже під'їдає найтонші сліди, тож тут важливо дивитися не тільки під ноги, а й туди, де вода намагається стерти пам'ять берега.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🐾",
+      "inspectable": true,
+      "examine_summary": "у мулі видно відбитки, які вода повільно стирає",
+      "future_observation": "track_reading",
+      "future_learning_hint": "tracking",
+      "aliases": [
+        "сліди",
+        "мул",
+        "мулові сліди",
+        "відбитки",
+        "відбитки в мулі",
+        "tracks"
+      ]
+    }
+  },
+  {
+    "key": "willow_root_tangle_flooded_root",
+    "locationKey": "willow_root_tangle_16_10",
+    "type": "LANDMARK",
+    "name": "Підтоплений корінь",
+    "description": "Старий вербовий корінь пірнає у воду й виринає знову, мов темна спина під мулом. На ньому можна помітити потерті місця, де щось часто чіплялося або переходило з берега на берег. Під коренем холодніше, ніж навколо, але жодного голосу звідти не чути.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🪵",
+      "inspectable": true,
+      "examine_summary": "виходить із води темною спиною й тримає потерті сліди переходу",
+      "future_hidden_route_hook": true,
+      "aliases": [
+        "корінь",
+        "підтоплений корінь",
+        "вербовий корінь",
+        "коріння",
+        "root"
+      ]
+    }
+  },
+  {
+    "key": "willow_frog_pool_omen_water",
+    "locationKey": "willow_frog_pool_17_10",
+    "type": "LANDMARK",
+    "name": "Жаб’яче плесо",
+    "description": "Плесо дрібне, але звук у ньому поводиться дивно: одна жаба квакає поруч, друга ніби відповідає з очерету, а третя лунає майже з-під води. Якщо затримати подих, кола на поверхні сходяться не туди, де щойно був сплеск.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🐸",
+      "inspectable": true,
+      "examine_summary": "відповідає жаб'ячими голосами з води й очерету",
+      "future_omen_hook": true,
+      "aliases": [
+        "плесо",
+        "жаб'яче плесо",
+        "жаб’яче плесо",
+        "жаби",
+        "жаб'ячі голоси",
+        "frog pool"
+      ]
+    }
+  },
+  {
+    "key": "willow_old_net_cut_rotten_net",
+    "locationKey": "willow_old_net_cut_17_11",
+    "type": "LANDMARK",
+    "name": "Стара сіть",
+    "description": "Потемніла сіть висить між нижніми гілками й майже зливається з тінню. Вузли на ній розбухли від води, кілька мотузок давно порвалися, але форма все ще нагадує руку, яка колись витягала з плеса щось важче за рибу.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🪢",
+      "inspectable": true,
+      "examine_summary": "почорніла від води й чіпляється за нижні вербові гілки",
+      "future_hook": "fishing",
+      "aliases": [
+        "сіть",
+        "сітка",
+        "стара сіть",
+        "мотузка",
+        "вузли",
+        "net"
+      ]
+    }
+  },
+  {
+    "key": "willow_dark_backwater_shadowed_water",
+    "locationKey": "willow_dark_backwater_18_11",
+    "type": "LANDMARK",
+    "name": "Темна заводь",
+    "description": "Заводь здається глибшою за берег навколо. Світло ковзає по поверхні й не хоче провалюватися нижче, а очерет над водою росте нижчим, ніби його щось регулярно пригинає. Тут краще не робити різких рухів і не вірити першій тиші.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🌑",
+      "inspectable": true,
+      "examine_summary": "тримає світло на поверхні й темніє глибше, ніж мала б",
+      "future_visibility_hook": true,
+      "aliases": [
+        "заводь",
+        "темна заводь",
+        "темна вода",
+        "затока",
+        "backwater"
+      ]
+    }
+  },
+  {
     "key": "dream_tutorial_sleep_gate",
     "locationKey": "dream_tutorial_gate",
     "type": "GATE",

@@ -38,12 +38,19 @@ function loadWorld() {
 }
 
 const world = loadWorld();
+const treeLocationKeys = new Set(
+  (world.features ?? [])
+    .filter((feature) => feature.data?.climb_tree === true || feature.data?.shake_tree === true)
+    .map((feature) => feature.locationKey)
+    .filter(Boolean)
+);
 
 function symbolForLocation(location) {
   if (location.key === world.meta?.startLocationKey) return "S";
   if (location.key === "closed_east_gate") return "G";
   if (location.key === "under_bridge_18_05") return "u";
   if (location.regionKey === "dream_tutorial") return "D";
+  if (treeLocationKeys.has(location.key)) return "T";
   if (location.regionKey === "closed_settlement_gate") return "G";
   if (location.regionKey === "old_bridge") return "=";
   if (location.regionKey === "riverbank") return ",";
@@ -136,6 +143,7 @@ node scripts/world/render-map-ascii.mjs --write
 
 - \`F\` — forest location.
 - \`.\` — dry luka / open meadow location.
+- \`T\` — location with an authored climbable or shakeable tree feature.
 - \`,\` — riverbank location.
 - \`w\` — willow floodplain location.
 - \`~\` — impassable river cell.

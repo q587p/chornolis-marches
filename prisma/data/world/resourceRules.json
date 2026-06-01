@@ -61,6 +61,20 @@
         12
       ]
     },
+    "SWAMP": {
+      "grass": [
+        10,
+        22
+      ],
+      "mushrooms": [
+        4,
+        10
+      ],
+      "herbs": [
+        3,
+        9
+      ]
+    },
     "VILLAGE": {}
   },
   "locationOverrides": {
@@ -194,6 +208,24 @@
       "berries": 0,
       "mushrooms": 0,
       "herbs": 0
+    },
+    "willow_dry_islet_16_11": {
+      "grass": 18,
+      "berries": 2,
+      "mushrooms": 0,
+      "herbs": 5
+    },
+    "willow_blind_channel_18_10": {
+      "grass": 0,
+      "berries": 0,
+      "mushrooms": 0,
+      "herbs": 0
+    },
+    "willow_dark_backwater_18_11": {
+      "grass": 0,
+      "berries": 0,
+      "mushrooms": 0,
+      "herbs": 0
     }
   },
   "notes": [
@@ -202,7 +234,9 @@
     "Forest and deep forest: grass, berries, mushrooms, herbs.",
     "Dry luka / CLEARING: grass, berries and herbs; no mushrooms.",
     "Riverbank / RIVER: grass and herbs only.",
+    "Willow floodplain / SWAMP: grass, mushrooms and herbs; no berries by default.",
     "Bridge spans, start camp and closed gate intentionally have no vegetation resources.",
+    "Willow dry islet keeps a tiny herbs/berries exception; blind channel and dark backwater opt out of gatherable vegetation.",
     "meadow_16_05 starts exhausted for visible ecology testing.",
     "Dream tutorial locations opt out of biome-generated ecology resources except the explicit foraging lesson.",
     "Set a resource to 0 in locationOverrides to remove it from that location."

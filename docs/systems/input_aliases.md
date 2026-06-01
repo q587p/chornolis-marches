@@ -58,8 +58,11 @@ Actions:
 - Location-detail pickup buttons may also show a compact `всі` action beside a loose resource stack; it picks up all visible loose resources of that same type.
 - Pickup costs `1` stamina per actual item/resource unit picked up; taking a stack of `19` loose items costs `19` stamina.
 - `з'їсти ягоди`, `їсти ягоди`, `використати ягоди`, `eat berries`, `use berries` -> eat carried berries from inventory to restore a small amount of stamina and ease hunger by a tiny amount.
+- `з'їсти всі ягоди`, `/eat_all_berries`, `eat all berries`, `use all berries` -> queue berry use until stamina and hunger no longer benefit, without removing unrelated queued actions.
 - `з'їсти гриби`, `їсти гриби`, `використати гриби`, `eat mushrooms`, `use mushrooms` -> eat carried mushrooms from inventory to ease hunger a little.
+- `з'їсти всі гриби`, `/eat_all_mushrooms`, `eat all mushrooms`, `use all mushrooms` -> queue mushroom use until hunger no longer benefits.
 - `з'їсти трави`, `з'їсти лікарські трави`, `використати трави`, `використати лікарські трави`, `вжити трави`, `прикласти трави`, `лікуватися травами`, `eat herbs`, `use herbs` -> eat/use carried herbs when wounded for a small HP recovery.
+- `з'їсти всі лікарські трави`, `/eat_all_herbs`, `eat all herbs`, `use all herbs` -> queue herb use until HP no longer benefits.
 - `запалити факел`, `підпалити факел`, `light torch`, `use torch` -> light an unlit carried torch when there is a campfire nearby or another lit torch in hand.
 - `загасити факел`, `погасити факел`, `притушити факел`, `douse torch`, `extinguish torch` -> douse one carried lit torch into a carried `притушений факел` that preserves its remaining burn time for later relighting.
 - `item berries`, `річ ягоди`, `оглянути в речах ягоди`, `inspect item berries` -> inspect a carried resource stack.
@@ -100,8 +103,10 @@ Targets and signals:
 - `підібрати труп`.
 - `освіжити труп`, `розібрати труп`, `freshen corpse`, `butcher corpse` -> gain raw meat from a sufficiently fresh corpse.
 - `/freshen_all`, `freshen all`, `свіжувати все`, `освіжити всі` -> queue freshening for every visible suitable corpse in the current місцина, one corpse at a time.
-- `підсмажити м'ясо`, `смажити м'ясо`, `cook meat` -> cook raw meat at a nearby campfire; a torch alone is not enough.
+- `підсмажити м'ясо`, `смажити м'ясо`, `cook meat` -> cook one raw meat at a nearby campfire; a torch alone is not enough.
+- `/cook_all`, `посмажити все`, `підсмажити все м'ясо`, `cook all meat` -> queue all carried raw meat for cooking, one piece at a time.
 - `з'їсти м'ясо`, `їсти смажене м'ясо`, `eat cooked meat`, `use cooked meat` -> eat cooked meat for hunger relief.
+- `з'їсти все смажене м'ясо`, `/eat_all_cooked_meat`, `eat all cooked meat`, `eat all meat` -> queue cooked meat use until hunger no longer benefits.
 - `кивнути 1`, `помахати мандрівник`, `вказати на вовка`, `насупитися вовк`.
 
 Target commands resolve visible nearby targets by number, id or visible name. If several targets match, the bot asks the player to clarify.

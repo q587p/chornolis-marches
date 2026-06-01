@@ -111,6 +111,26 @@
     "file": "docs/planning/items/ALC-001-herbal-stamina-elixir.md"
   },
   {
+    "id": "AUTH-001",
+    "title": "Profile protection and client-neutral login",
+    "status": "icebox",
+    "type": "system",
+    "area": "account",
+    "priority": "medium",
+    "tags": [
+      "auth",
+      "account",
+      "profile",
+      "mud",
+      "recovery"
+    ],
+    "depends_on": [
+      "WEB-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/AUTH-001-profile-protection-and-client-neutral-login.md"
+  },
+  {
     "id": "CAL-001",
     "title": "Deep calendar, sacred days and named years",
     "status": "icebox",
@@ -477,6 +497,47 @@
     ],
     "exports": {},
     "file": "docs/planning/items/ECO-005-animal-restoration-offerings.md"
+  },
+  {
+    "id": "ECO-006",
+    "title": "Animal movement boundaries for authored vertical exits",
+    "status": "testing",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "high",
+    "tags": [
+      "ecology",
+      "animals",
+      "movement",
+      "verticality",
+      "camp"
+    ],
+    "depends_on": [
+      "CAMP-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ECO-006-animal-movement-boundaries.md"
+  },
+  {
+    "id": "ECO-007",
+    "title": "Animal taming and small companions",
+    "status": "icebox",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "medium",
+    "tags": [
+      "ecology",
+      "creatures",
+      "companions",
+      "following",
+      "feeding"
+    ],
+    "depends_on": [
+      "SOC-002",
+      "SOC-004"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ECO-007-animal-taming-companions.md"
   },
   {
     "id": "ECON-001",
@@ -1349,6 +1410,26 @@
     "file": "docs/planning/items/MAP-WILLOW-001-first-contour.md"
   },
   {
+    "id": "MAP-WILLOW-003",
+    "title": "Willow Floodplain landmarks, resources and aliases",
+    "status": "testing",
+    "type": "content",
+    "area": "world",
+    "priority": "high",
+    "tags": [
+      "map",
+      "world",
+      "willow-floodplain",
+      "resources",
+      "aliases"
+    ],
+    "depends_on": [
+      "MAP-WILLOW-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/MAP-WILLOW-003-landmarks-resources-and-aliases.md"
+  },
+  {
     "id": "NAV-001",
     "title": "Location-to-location route finding",
     "status": "testing",
@@ -1491,6 +1572,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/NPC-007-profession-line-banks.md"
+  },
+  {
+    "id": "NPC-008",
+    "title": "Starter supply guards and watched beginner stores",
+    "status": "backlog",
+    "type": "feature",
+    "area": "npc",
+    "priority": "medium",
+    "tags": [
+      "npc",
+      "guards",
+      "camp",
+      "supplies",
+      "onboarding"
+    ],
+    "depends_on": [
+      "CAMP-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/NPC-008-starter-supply-guards.md"
   },
   {
     "id": "OBS-001-A",
@@ -2192,6 +2293,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/QA-002-camp-dream-first-session-smoke.md"
+  },
+  {
+    "id": "QA-WILLOW-001",
+    "title": "Willow Floodplain seed, map and route smoke",
+    "status": "testing",
+    "type": "qa",
+    "area": "world",
+    "priority": "high",
+    "tags": [
+      "map",
+      "world",
+      "willow-floodplain",
+      "qa",
+      "routes"
+    ],
+    "depends_on": [
+      "MAP-WILLOW-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/QA-WILLOW-001-seed-map-route-smoke.md"
   },
   {
     "id": "REL-001",
