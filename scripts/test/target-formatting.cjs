@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const { formatCreatureLifeState, formatCreatureStatusLine, inventoryResourceSummary } = require("../../src/services/targets");
-const { animalAgeDescription, groundItemLine, groundItemPickupButtonRows } = require("../../src/services/locations");
+const { animalAgeDescription, groundItemLine, groundItemPickupButtonRows, joinVisibleActionLabels } = require("../../src/services/locations");
 const { buildCorpseActionKeyboard, buildTargetActionKeyboard, buildTargetListKeyboard } = require("../../src/ui/keyboards");
 const { visibleHeldTorchTextWithContext } = require("../../src/utils/torchText");
 
@@ -37,6 +37,10 @@ assert.equal(animalAgeDescription({ ...maleMouse, age: "ADULT" }), "доросл
 assert.equal(animalAgeDescription({ ...maleMouse, age: "OLD" }), "старий миш");
 assert.equal(formatCreatureStatusLine({ ...maleMouse, isAlive: true }), "Стан: живий.");
 assert.equal(formatCreatureLifeState({ ...maleMouse, hp: 1, maxHp: 12, species: { ...maleMouse.species, baseHp: 12 } }), "Життя: тяжко поранений.");
+
+assert.equal(joinVisibleActionLabels("йде на південь", "йде на південь"), "йде на південь");
+assert.equal(joinVisibleActionLabels("йде на південь; йде на південь", "тримає запалений факел"), "йде на південь; тримає запалений факел");
+assert.equal(joinVisibleActionLabels("простий ніж", undefined, "йде на південь"), "простий ніж; йде на південь");
 
 assert.equal(visibleHeldTorchTextWithContext({ isLit: false }), "Руки порожні.");
 assert.equal(visibleHeldTorchTextWithContext({ isLit: false }, { hasOtherHeldItem: true }), "");
