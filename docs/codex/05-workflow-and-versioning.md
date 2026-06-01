@@ -89,6 +89,7 @@ User preference:
 
 - Include user-facing changes only.
 - For player-facing release work, update `news.md` together with `CHANGELOG.md` and release notes unless the user explicitly says not to publish a news entry.
+- Every numbered release needs an explicit public-news decision before merge. Add a `news.md` entry for each player-visible, world-balance, tutorial, ecology, performance or UX release; if a release is purely internal/scribe-only, state in the PR summary or release notes that public news was intentionally skipped. Never silently omit `news.md` for a numbered release.
 - Changelog and release-note titles should describe the final scope of the patch/minor after follow-up fixes and additions, not only the initial change that started the version.
 - Do not include internal operational reminders about package files.
 - Do not include scribe/admin-only commands, hidden service URLs, secrets, or debug-only tooling in public Ukrainian `news.md`; document those in changelog, release notes, `/adminHelp`, `/adminMenu`, and admin docs instead.
