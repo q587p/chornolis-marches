@@ -1,0 +1,3 @@
+ALTER TABLE "Player" ADD COLUMN "daypartNoticesEnabled" BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE "Player" ADD COLUMN "daypartNoticeHintShown" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "Player" ADD COLUMN "ordinaryWakeCount" INTEGER NOT NULL DEFAULT 0;

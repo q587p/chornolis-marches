@@ -50,7 +50,8 @@ Implement `0.14.x` in small slices:
 17. ECO-001/ECO-004: `0.14.15` and `0.14.16` stabilize the starter ecology opening: prey breeding clusters get room and food, no-pair prey restoration prevents quiet dead-ends, and hungry predators can scavenge safe unclaimed herbivore corpses before attacking live prey. `0.14.17` adds scribe/admin restoration counters so repeated population-floor intervention can be tuned from `/stat`.
 18. PERF-001: `0.14.18` adds the first creature simulation budget so large background animal populations cannot all enqueue individual behavior on every world tick; scribe/admin stats now expose processed/deferred creature counts for tuning.
 19. CAMP-002/CAMP-003 follow-up: `0.14.19` caps repeated starter torch-source taking, keeps the first-night light safety rail, and records the remaining shared-supply, Herald, sleep and ecology watchpoints before the next feature slice.
-20. MAP-WILLOW-001: `0.14.21` adds the first reachable Willow Floodplain contour as seed-only map content while leaving notification settings, settlement gates and observation systems untouched.
+20. DAYNOTICE-001: `0.14.20` adds player-level daypart notice settings so routine dawn/day/dusk/night nudges can be disabled without muting urgent gameplay messages.
+21. MAP-WILLOW-001: `0.14.21` adds the first reachable Willow Floodplain contour as seed-only map content while leaving notification settings, settlement gates and observation systems untouched.
 
 Observation learning remains the `0.15` line. Darkness, distance and light should affect learning later, but the visibility foundation must land first.
 

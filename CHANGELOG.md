@@ -27,6 +27,29 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `npm run map:render`.
 - Ran `npm run build`.
 
+## 0.14.20 - Daypart notification settings - 12026-06-01
+
+### Added
+
+- Added player-level daypart notice settings for routine dawn/day/dusk/night proactive messages.
+- Added `/settings`, `/notifications`, `/daynotices`, `/daynotices on` and `/daynotices off` with Ukrainian and English text aliases.
+- Added `Player.daypartNoticesEnabled`, `Player.daypartNoticeHintShown` and `Player.ordinaryWakeCount` with a Prisma migration.
+- Added a one-time hint after the second ordinary wake-up explaining how to disable routine daypart notices.
+- Added focused notification-settings tests for daypart eligibility, second-wake hint behavior, settings copy and alias parsing.
+
+### Changed
+
+- Daypart proactive broadcasts now use a dedicated recipient filter that respects the new player setting while preserving world-event creation.
+- The menu reply keyboard now includes `Settings` under the utility menu rather than on the main gameplay keyboard.
+- `/help`, `/commands`, input-alias docs and planning docs now describe the settings surface.
+
+### Validation
+
+- Added `node scripts/test/player-notification-settings.cjs`.
+- Ran `npm run planning:export`.
+- Ran `npm run build`.
+- Ran `npm test`.
+
 ## 0.14.19 - Stabilization and safety rails - 12026-06-01
 
 ### Added

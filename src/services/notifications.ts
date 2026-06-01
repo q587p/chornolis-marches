@@ -4,6 +4,7 @@ import { prisma } from "../db";
 import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { canSendProactiveToTelegramId } from "./sessionPresence";
 import { isTutorialLocation } from "./tutorial";
+import { canReceiveDaypartNotice } from "./playerNotificationSettings";
 
 type LocationNotificationOptions = {
   keyboard?: InlineKeyboard;
@@ -189,6 +190,44 @@ export async function notifyAllWakingCurrentPlayers(bot: Bot, text: string, opti
       });
     } catch (error) {
       console.warn("Failed to notify waking current player:", error);
+    }
+  }
+}
+
+export async function notifyAllDaypartNoticePlayers(bot: Bot, text: string, options: { parseMode?: "HTML" } = {}) {
+  const players = await prisma.player.findMany({
+    where: { currentLocationId: { not: null } },
+    select: {
+      telegramId: true,
+      currentLocationId: true,
+      sleepState: true,
+      daypartNoticesEnabled: true,
+      currentLocation: {
+        select: {
+          key: true,
+          z: true,
+          region: { select: { key: true } },
+        },
+      },
+    },
+  });
+
+  for (const player of players) {
+    if (!canReceiveDaypartNotice({
+      currentLocationId: player.currentLocationId,
+      sleepState: player.sleepState,
+      daypartNoticesEnabled: player.daypartNoticesEnabled,
+      isDreamLocation: isDreamLocationForWorldNotice(player.currentLocation),
+    })) continue;
+
+    try {
+      if (!(await canSendProactiveToTelegramId(player.telegramId))) continue;
+      await bot.api.sendMessage(player.telegramId, text, {
+        parse_mode: options.parseMode,
+        reply_markup: await mainKeyboardForPlayer(player.telegramId),
+      });
+    } catch (error) {
+      console.warn("Failed to notify daypart player:", error);
     }
   }
 }
