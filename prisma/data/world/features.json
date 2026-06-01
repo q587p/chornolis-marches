@@ -284,11 +284,34 @@
     }
   },
   {
-    "key": "start_camp_torch_stand",
+    "key": "start_border_watchtower_ladder",
     "locationKey": "start_border_camp",
     "type": "LANDMARK",
+    "name": "Сторожова вежа",
+    "description": "Невисока дерев’яна вежа стоїть над краєм табору. Драбина скрипить, але тримає; згори легше побачити міст, ворота, річку й темний край лісу. Якщо треба взяти світло перед дорогою, варто піднятися вгору.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🪜",
+      "inspectable": true,
+      "vertical_hint": "UP",
+      "aliases": [
+        "сторожова вежа",
+        "вежа",
+        "драбина",
+        "на вежу",
+        "watchtower",
+        "tower",
+        "ladder"
+      ]
+    }
+  },
+  {
+    "key": "start_camp_torch_stand",
+    "locationKey": "start_border_watchtower",
+    "type": "LANDMARK",
     "name": "Смоляна поставка з факелами",
-    "description": "Факели сухі й густо просмолені. Їх тримають біля вогню для тих, хто виходить із табору в присмерк або вертається з темряви. Світло не робить шлях безпечним, але дозволяє помітити те, що ніч ховає першим.",
+    "description": "Факели сухі й густо просмолені. Їх тримають під навісом сторожової вежі для тих, хто виходить із табору в присмерк або вертається з темряви. Світло не робить шлях безпечним, але дозволяє помітити те, що ніч ховає першим.",
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
@@ -297,11 +320,13 @@
       "torch_source": true,
       "infinite_for_now": true,
       "future_limited_stock": true,
+      "moved_to_watchtower": true,
       "aliases": [
         "факели",
         "факел",
         "поставка",
         "смоляна поставка",
+        "поставка з факелами",
         "світло",
         "torch",
         "torches"

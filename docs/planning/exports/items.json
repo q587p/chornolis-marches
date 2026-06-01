@@ -133,7 +133,7 @@
   {
     "id": "CAMP-002",
     "title": "Starter watchtower and camp torch-source route update",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "core-loop",
     "priority": "high",

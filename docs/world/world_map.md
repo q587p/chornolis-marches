@@ -25,9 +25,11 @@ node scripts/world/render-map-ascii.mjs --write
 ## Layer z = 1
 
 ```text
-      10 11
+      10 11 12 13 14 15 16 17
 y
   7    .  .
+  6
+  5                         ,
 ```
 
 ## Layer z = 0
@@ -84,6 +86,8 @@ y
 - `riverbank_13_09` — NORTH → `riverbank_13_00`
 - `riverbank_18_04` — NORTH → `under_bridge_18_05`
 - `riverbank_18_06` — SOUTH → `under_bridge_18_05`
+- `start_border_camp` — UP → `start_border_watchtower`
+- `start_border_watchtower` — DOWN → `start_border_camp`
 - `under_bridge_18_05` — NORTH → `riverbank_18_06`
 - `under_bridge_18_05` — SOUTH → `riverbank_18_04`
 - `closed_east_gate` — EAST is a visible locked exit (Зачинені ворота).

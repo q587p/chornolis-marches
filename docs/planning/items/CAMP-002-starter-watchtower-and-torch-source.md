@@ -1,7 +1,7 @@
 ---
 id: CAMP-002
 title: Starter watchtower and camp torch-source route update
-status: next
+status: testing
 type: feature
 area: core-loop
 priority: high
@@ -48,6 +48,14 @@ Add a real watchtower room above the starter camp and make beginner light sourci
 - `examine torch stand` explains torch-taking and light.
 - Hunter route assumptions are updated or explicitly kept compatible.
 - Seed tests pass.
+
+## 0.14.9 Slice
+
+- Added `start_border_watchtower` as a real `z = 1` location above `start_border_camp`.
+- Added visible `UP` / `DOWN` exits between the camp and the watchtower.
+- Added an inspectable `Сторожова вежа` feature in the camp to point toward vertical movement.
+- Moved the beginner `Смоляна поставка з факелами` from the camp floor to the watchtower, keeping it as a torch source.
+- Kept `closed_gate_torch_stand` unchanged until hunter routes and gate-side assumptions are audited together.
 
 ## Validation
 

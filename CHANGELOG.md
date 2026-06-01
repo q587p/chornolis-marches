@@ -7,6 +7,33 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.14.9 - Starter camp verticality - 12026-06-01
+
+### Added
+
+- Added `start_border_watchtower`, a real `z = 1` location above `start_border_camp`.
+- Added explicit `UP` / `DOWN` exits between the starter border camp and the watchtower.
+- Added an inspectable `Сторожова вежа` camp feature and a lexicon entry for watchtower targeting.
+- Added world-seed coverage for the watchtower location, vertical exits and starter torch placement.
+
+### Changed
+
+- Reworked `start_border_camp` prose to mention the watchtower and ladder as part of the shared border camp.
+- Moved the beginner `start_camp_torch_stand` from the camp floor to the watchtower awning, preserving its first-session safety role.
+- Kept the old `closed_gate_torch_stand` in place until hunter routes and gate-side supply are audited.
+- Updated world-map, fire/light, onboarding and z-level documentation for the new starter-camp verticality.
+- Updated `CAMP-002` planning notes to mark the watchtower slice as implemented/testing.
+
+### Validation
+
+- Ran `npm run planning:export`.
+- Ran `node scripts/test/world-seed.mjs`.
+- Ran `node scripts/test/route-finding.cjs`.
+- Ran `node scripts/world/render-map-ascii.mjs --write`.
+- Ran `npm test`.
+- Ran `npm run build`.
+- Ran `git diff --check`.
+
 ## 0.14.8 - First-session clarity after darkness - 12026-06-01
 
 ### Added

@@ -135,7 +135,7 @@ for (const key of ["closed_gate_torch_stand", "closed_gate_hunting_notice", "clo
 const gateTorchStand = features.find((item) => item.key === "closed_gate_torch_stand");
 assert.notEqual(gateTorchStand?.data?.icon, "🔥", "Torch stand should not use the fire icon reserved for flame/campfire actions");
 
-for (const key of ["start_border_marker", "start_newcomer_tablet", "start_camp_torch_stand"]) {
+for (const key of ["start_border_marker", "start_newcomer_tablet", "start_border_watchtower_ladder"]) {
   const feature = features.find((item) => item.key === key);
   assert.ok(feature, `Starter camp feature should exist: ${key}`);
   assert.equal(feature.locationKey, "start_border_camp", `Starter camp feature should stay at the camp: ${key}`);
@@ -143,8 +143,23 @@ for (const key of ["start_border_marker", "start_newcomer_tablet", "start_camp_t
   assert.ok(Array.isArray(feature.data?.aliases) && feature.data.aliases.length > 0, `Starter camp feature should have aliases: ${key}`);
 }
 
+const startWatchtower = locations.find((item) => item.key === "start_border_watchtower");
+assert.ok(startWatchtower, "Starter camp watchtower should exist as a real location");
+assert.equal(startWatchtower.x, 17, "Starter camp watchtower should sit above the camp x coordinate");
+assert.equal(startWatchtower.y, 5, "Starter camp watchtower should sit above the camp y coordinate");
+assert.equal(startWatchtower.z, 1, "Starter camp watchtower should use z = 1");
+assert.ok(
+  exits.some((exit) => exit.fromKey === "start_border_camp" && exit.toKey === "start_border_watchtower" && exit.direction === "UP"),
+  "Starter camp should have an UP exit to the watchtower",
+);
+assert.ok(
+  exits.some((exit) => exit.fromKey === "start_border_watchtower" && exit.toKey === "start_border_camp" && exit.direction === "DOWN"),
+  "Starter watchtower should have a DOWN exit to the camp",
+);
+
 const startCampTorchStand = features.find((item) => item.key === "start_camp_torch_stand");
 assert.equal(startCampTorchStand?.data?.torch_source, true, "Starter camp torch stand should be a torch source");
+assert.equal(startCampTorchStand?.locationKey, "start_border_watchtower", "Starter torch stand should live in the watchtower");
 assert.notEqual(startCampTorchStand?.data?.icon, "🔥", "Starter camp torch stand should not use the fire icon reserved for flame/campfire actions");
 
 const tutorialRestBench = features.find((item) => item.key === "dream_tutorial_rest_fire");

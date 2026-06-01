@@ -2888,6 +2888,22 @@
     "isHidden": false
   },
   {
+    "fromKey": "start_border_camp",
+    "toKey": "start_border_watchtower",
+    "direction": "UP",
+    "label": "вгору на сторожову вежу",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "start_border_watchtower",
+    "toKey": "start_border_camp",
+    "direction": "DOWN",
+    "label": "вниз до табору",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
     "fromKey": "under_bridge_18_05",
     "toKey": "riverbank_18_06",
     "direction": "NORTH",
