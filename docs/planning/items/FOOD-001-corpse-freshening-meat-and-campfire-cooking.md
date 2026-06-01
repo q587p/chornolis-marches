@@ -76,3 +76,7 @@ This should be the first small bridge between combat/hunting, corpse lifetime, i
 Prefer `освіжити труп` / `freshen corpse` compatibility for the existing command path, but player-facing copy may use more natural wording such as `обробити труп`, `розібрати труп` or `підготувати м'ясо` where it fits.
 
 0.13.3 first pass handles fresh visible corpses in the current location. Inventory-held corpse butchering and perishable meat timers are explicit follow-ups, not part of the first implementation.
+
+## Watchpoint
+
+- Repeat-cooking buttons can be pressed faster than queued/action-side effects finish. Current inventory checks should fail cleanly if raw meat is already gone; keep watching for racey duplicate success/failure text before moving cooking deeper into the action queue.

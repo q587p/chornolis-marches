@@ -65,3 +65,7 @@ Shorter variant:
 - First-night guidance now appears only in the waking world when dim/dark visibility is actually reducing what the player can see.
 - The hint is stored as a per-character world event and respects the session-presence proactive-message guard.
 - Tutorial dream locations and locally lit places do not trigger the first-night hint.
+
+## Watchpoint
+
+- First-night guidance is an extra proactive/follow-up message. The guard shape is intentional, but after deploy we should watch the first dark hour of a new character: it should teach light once, not feel like chatter layered on top of ordinary location output.

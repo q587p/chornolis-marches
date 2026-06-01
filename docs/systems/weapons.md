@@ -57,6 +57,8 @@ model Creature {
 
 This is intentionally simple. It tracks the equipped weapon by resource key, such as `knife` or `hunting_spear`.
 
+Consequence: several identical carried weapons are not distinguishable in the MVP. If a player has three `knife` resources and equips `knife`, the system does not know which exact blade is in hand. Item quality, condition, ownership, history and "this specific knife" behavior belong to the future item-instance migration.
+
 Validation rule:
 
 - `equippedWeaponKey` must be either `null` or a key from the weapon catalog.
@@ -84,6 +86,8 @@ Suggested MVP entries:
 | `short_sword` | короткий меч | rare weapon | cut/slash | yes, awkward | guards / later drops |
 
 Keep names and grammatical forms in the catalog instead of trying to infer all cases from `ResourceType.name`.
+
+Implementation note: the current MVP weapon nouns are also stable world nouns and should be maintained through `src/content/lexicon/worldLexicon.ts`. Future weapon/resource additions should add full Ukrainian case forms there first, then expose them through `src/services/weapons.ts` or shared grammar helpers. Do not add new equipped-item, attack or freshening text by hardcoding a nominative weapon name locally.
 
 Minimum suggested weapon definition shape:
 
@@ -116,6 +120,8 @@ The grant should be idempotent:
 - grant after onboarding completion or during first inventory/backfill if the player predates the slice;
 - do not make the knife feel heroic or special.
 
+Existing-player note: if old live characters must all receive a starter knife, use an explicit safe backfill/admin path. Do not assume every existing player will naturally pass through new-player onboarding again.
+
 Suggested text:
 
 > У речах лежить простий ніж. Не прикраса, а річ для роботи.
@@ -127,6 +133,13 @@ Inventory item view should show:
 - `Взяти в руку` for weapons not equipped;
 - `Зняти з руки` for the currently equipped weapon;
 - regular inspect/drop actions remain.
+
+Text aliases should stay aligned with those buttons:
+
+- `equip <item>`, `wield <item>`, `hold <item>`;
+- `unequip [item]`, `unwield [item]`, `free hand`;
+- `взяти в руку <річ>`, `тримати <річ>`, `озброїтися <річ>`;
+- `зняти з руки [річ]`, `прибрати з руки [річ]`, `звільнити руку`.
 
 Character view should show:
 

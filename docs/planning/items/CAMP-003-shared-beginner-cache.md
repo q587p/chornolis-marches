@@ -35,6 +35,7 @@ Make the starter camp feel maintained by other people without turning first-sess
 
 - No player-to-player ownership, theft, locks or permissions yet.
 - No hidden settlement economy or rewards for contributing.
+- No anti-hoarding, etiquette score or contribution reward system yet; this is intentionally future etiquette/economy work.
 - No exact stock table in public-facing copy; player text should stay qualitative.
 - No hunter route rewrite.
 
@@ -55,3 +56,10 @@ Make the starter camp feel maintained by other people without turning first-sess
 - `npm run planning:export`
 - `npm test`
 - `npm run build`
+
+## Watchpoints
+
+- `take cache` without an item currently defaults toward the starter-safety light path. If there is no torch available, it can fail instead of falling back to berries, twigs or other supplies. A future polish pass should prefer showing what is available before choosing for the player.
+- Stock and hidden restock live in `LocationFeature.data`, so reset/reseed flows restore authored JSON state. This is acceptable for the MVP, but persistent camp stewardship may need a separate durable stock or item-instance layer later.
+- The shared cache is a mutual-care surface, not a reward loop. Future ownership, anti-hoarding, etiquette, contribution records or economy hooks should be designed deliberately instead of inferred from the current simple stock counters.
+- Raw/cooked meat in the beginner cache can make the survival start a little easier. Keep the initial quantities small, and revisit balance once hunger penalties, cooking failures and first-night danger become more consequential.

@@ -16,6 +16,9 @@ export const EXTINGUISHED_CAMPFIRE_FADING_MINUTES = 2 * 60;
 export const TORCH_DURATION_MS = 10 * 60_000;
 export const TORCH_FADING_MS = 2 * 60_000;
 export const MAX_LIT_TORCHES_IN_HANDS = 2;
+export const TORCH_SOURCE_PLAYER_CARRY_LIMIT = 13;
+export const TORCH_SOURCE_TAKE_WINDOW_MS = 13 * 60_000;
+export const TORCH_SOURCE_TAKE_EVENT_TITLE = "Player took torch";
 
 const TORCH_KEY = "torch";
 const LIT_TORCH_KEY = "lit_torch";
@@ -620,6 +623,34 @@ export async function getPlayerTorchState(playerId: number) {
   };
 }
 
+export function carriedTorchCount(torchState: Pick<Awaited<ReturnType<typeof getPlayerTorchState>>, "plainAmount" | "litAmount" | "dousedAmount">) {
+  return torchState.plainAmount + torchState.litAmount + torchState.dousedAmount;
+}
+
+export type TorchSourceTakeDecision =
+  | { ok: true }
+  | { ok: false; reason: "carry-limit" | "recent-window" };
+
+export function decideTorchSourceTake(input: {
+  carriedCount: number;
+  recentTakenCount: number;
+  carryLimit?: number;
+  windowLimit?: number;
+}): TorchSourceTakeDecision {
+  const carryLimit = input.carryLimit ?? TORCH_SOURCE_PLAYER_CARRY_LIMIT;
+  const windowLimit = input.windowLimit ?? TORCH_SOURCE_PLAYER_CARRY_LIMIT;
+  if (input.carriedCount >= carryLimit) return { ok: false, reason: "carry-limit" };
+  if (input.recentTakenCount >= windowLimit) return { ok: false, reason: "recent-window" };
+  return { ok: true };
+}
+
+export function torchSourceTakeBlockedText(reason: Exclude<TorchSourceTakeDecision, { ok: true }>["reason"]) {
+  if (reason === "carry-limit") {
+    return "Факелів у вас уже досить. Лишіть трохи іншим: біля темряви кожен сухий факел може стати чиїмось шляхом.";
+  }
+  return "Ви вже набрали факелів нещодавно. Поставка лишається для інших; поверніться трохи пізніше, якщо справді треба.";
+}
+
 export async function getCreatureTorchState(creatureId: number) {
   await syncCreatureTorchState(creatureId);
   const { torch, litTorch, dousedTorch } = await ensureTorchResourceTypes();
@@ -937,6 +968,22 @@ export async function takeTorchFromFeature(playerId: number, featureId: number) 
   if (!feature?.isActive || feature.locationId !== player.currentLocationId || featureData(feature.data).torch_source !== true) {
     return "Тут уже не видно, звідки взяти факел.";
   }
+
+  const [torchState, recentTakenCount] = await Promise.all([
+    getPlayerTorchState(playerId),
+    prisma.worldEvent.count({
+      where: {
+        title: TORCH_SOURCE_TAKE_EVENT_TITLE,
+        description: { contains: `player=${playerId};` },
+        createdAt: { gte: new Date(Date.now() - TORCH_SOURCE_TAKE_WINDOW_MS) },
+      },
+    }),
+  ]);
+  const decision = decideTorchSourceTake({
+    carriedCount: carriedTorchCount(torchState),
+    recentTakenCount,
+  });
+  if (!decision.ok) return torchSourceTakeBlockedText(decision.reason);
 
   await prisma.playerResource.upsert({
     where: { playerId_resourceTypeId: { playerId, resourceTypeId: torch.id } },

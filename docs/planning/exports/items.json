@@ -90,6 +90,27 @@
     "file": "docs/planning/items/ADM-002-add-creature-corpse-command.md"
   },
   {
+    "id": "ALC-001",
+    "title": "First herbal stamina elixir",
+    "status": "backlog",
+    "type": "feature",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "alchemy",
+      "herbs",
+      "berries",
+      "stamina",
+      "crafting",
+      "inventory"
+    ],
+    "depends_on": [
+      "FOOD-004"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ALC-001-herbal-stamina-elixir.md"
+  },
+  {
     "id": "CAL-001",
     "title": "Deep calendar, sacred days and named years",
     "status": "icebox",
@@ -227,6 +248,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/COMBAT-001-creature-aggression-and-defense.md"
+  },
+  {
+    "id": "CRAFT-001",
+    "title": "Craftable placeable chests",
+    "status": "backlog",
+    "type": "feature",
+    "area": "crafting",
+    "priority": "medium",
+    "tags": [
+      "crafting",
+      "containers",
+      "storage",
+      "item-instances",
+      "camp"
+    ],
+    "depends_on": [
+      "CMD-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/CRAFT-001-craftable-placeable-chests.md"
   },
   {
     "id": "DREAM-001",
@@ -690,6 +731,45 @@
     "file": "docs/planning/items/HERALD-001-embedded-main-service-mode.md"
   },
   {
+    "id": "HERALD-002",
+    "title": "Herald outbox idempotency and locking",
+    "status": "backlog",
+    "type": "reliability",
+    "area": "herald",
+    "priority": "medium",
+    "tags": [
+      "herald",
+      "outbox",
+      "idempotency",
+      "locking",
+      "telegram"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/HERALD-002-outbox-idempotency-and-locking.md"
+  },
+  {
+    "id": "HERALD-003",
+    "title": "Herald chronicle chat relay",
+    "status": "backlog",
+    "type": "feature",
+    "area": "herald",
+    "priority": "medium",
+    "tags": [
+      "herald",
+      "chronicle",
+      "telegram",
+      "chat",
+      "world-events"
+    ],
+    "depends_on": [
+      "PROG-005",
+      "PROG-006"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/HERALD-003-chronicle-chat-relay.md"
+  },
+  {
     "id": "HIDE-001",
     "title": "Hidden approach MVP",
     "status": "backlog",
@@ -897,6 +977,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/ICE-004-construction.md"
+  },
+  {
+    "id": "ICE-005",
+    "title": "Pit traps and vertical hazard cells",
+    "status": "icebox",
+    "type": "feature",
+    "area": "world",
+    "priority": "low",
+    "tags": [
+      "traps",
+      "verticality",
+      "movement",
+      "damage",
+      "map"
+    ],
+    "depends_on": [
+      "WORLD-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ICE-005-pit-trap-vertical-hazards.md"
   },
   {
     "id": "ITEM-001",
@@ -1327,6 +1427,28 @@
     ],
     "exports": {},
     "file": "docs/planning/items/NPC-006-hunter-patrol-meat-practice-loop.md"
+  },
+  {
+    "id": "NPC-007",
+    "title": "Larger hunter and herbalist line banks",
+    "status": "next",
+    "type": "content",
+    "area": "npc",
+    "priority": "high",
+    "tags": [
+      "npc",
+      "hunter",
+      "herbalist",
+      "ambient",
+      "speech",
+      "polish"
+    ],
+    "depends_on": [
+      "NPC-002",
+      "NPC-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/NPC-007-profession-line-banks.md"
   },
   {
     "id": "OBS-001-A",
@@ -1970,6 +2092,26 @@
     "file": "docs/planning/items/PROG-005-global-chronicles-and-world-milestones.md"
   },
   {
+    "id": "PROG-006",
+    "title": "Chronicle registration backfill and admin real-time view",
+    "status": "backlog",
+    "type": "feature",
+    "area": "progression",
+    "priority": "high",
+    "tags": [
+      "chronicle",
+      "world-events",
+      "onboarding",
+      "admin",
+      "local-chat"
+    ],
+    "depends_on": [
+      "PROG-005"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/PROG-006-chronicle-backfill-and-admin-time-view.md"
+  },
+  {
     "id": "QA-001",
     "title": "0.13 first-session closure smoke",
     "status": "testing",
@@ -2105,6 +2247,28 @@
     "file": "docs/planning/items/SES-002-atmospheric-presence-backlog.md"
   },
   {
+    "id": "SES-003",
+    "title": "Deferred private message delivery for AFK and ended sessions",
+    "status": "backlog",
+    "type": "feature",
+    "area": "session",
+    "priority": "medium",
+    "tags": [
+      "telegram",
+      "session",
+      "speech",
+      "whisper",
+      "anti-spam"
+    ],
+    "depends_on": [
+      "SES-001-A",
+      "SES-001-B",
+      "CMD-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SES-003-deferred-private-message-delivery.md"
+  },
+  {
     "id": "SETTLE-001",
     "title": "Starter settlement",
     "status": "backlog",
@@ -2156,6 +2320,25 @@
     ],
     "exports": {},
     "file": "docs/planning/items/SLEEP-002-ordinary-sleep-mvp.md"
+  },
+  {
+    "id": "SLEEP-002-A",
+    "title": "Ordinary sleep command gate",
+    "status": "next",
+    "type": "feature",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "sleep",
+      "commands",
+      "wake",
+      "survival"
+    ],
+    "depends_on": [
+      "SLEEP-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SLEEP-002-A-ordinary-sleep-command-gate.md"
   },
   {
     "id": "SLEEP-003",
@@ -2221,7 +2404,7 @@
   {
     "id": "SOC-002",
     "title": "Follow intent MVP",
-    "status": "backlog",
+    "status": "next",
     "type": "feature",
     "area": "social",
     "priority": "high",

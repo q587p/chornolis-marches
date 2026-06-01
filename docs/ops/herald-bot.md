@@ -220,6 +220,13 @@ preview_world_digest - попередній перегляд дайджесту 
 - `/queue_world_digest` — поставити світовий запис в outbox без негайної публікації.
 - `/post_world_digest` — поставити і одразу опублікувати світовий запис.
 
+## Publication Semantics
+
+- Existing `HeraldPublication` rows from before the snapshot migration may have no `renderedText`, but they still retain `title` and `body`. Queueing the same `contentHash` again can safely fill missing snapshot metadata instead of creating another publication row.
+- `/mark_publication_deleted` is advisory DB state. Telegram does not reliably send the Herald a webhook/update when a channel message is manually deleted, and this command does not delete anything in Telegram.
+- `/repost_publication` intentionally creates a new Telegram message from the saved snapshot. It is an explicit admin repost, not a restoration of the old channel timestamp or original message id.
+- `/pause_publications` stops future automatic publisher-loop sends between publication attempts. It does not cancel a Telegram `sendMessage` call that has already started; that in-flight send may still complete and then be marked/logged normally.
+
 ## Smoke Checks
 
 Після деплою:

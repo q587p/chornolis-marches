@@ -1,3 +1,5 @@
+import { VERY_TIRED_STAMINA } from "../gameConfig";
+
 type PlayerStats = {
   steps: number;
   looks: number;
@@ -18,6 +20,8 @@ type PlayerFatigue = {
   sleepState?: string | null;
   isResting?: boolean | null;
   fatigueState?: string | null;
+  stamina?: number | null;
+  staminaMax?: number | null;
 };
 
 type PlayerVitals = {
@@ -51,9 +55,17 @@ export function formatPercent(success: number, attempts: number) {
 export function formatFatigueText(player: PlayerFatigue) {
   if (player.sleepState === "ORDINARY_SLEEP") return "Спить";
   if (player.isResting) return "Відпочиває";
-  if (player.fatigueState === "VERY_TIRED") return "Дуже втомлений";
-  if (player.fatigueState === "TIRED") return "Втомлений";
+  const fatigueState = fatigueStateFromVitals(player);
+  if (fatigueState === "VERY_TIRED") return "Дуже втомлений";
+  if (fatigueState === "TIRED") return "Втомлений";
   return "Відпочивший";
+}
+
+function fatigueStateFromVitals(player: PlayerFatigue) {
+  if (typeof player.stamina !== "number") return player.fatigueState;
+  if (player.stamina <= VERY_TIRED_STAMINA) return "VERY_TIRED";
+  if (player.stamina <= 0) return "TIRED";
+  return player.fatigueState;
 }
 
 export function formatResourceState(value: number, max: number, zeroLabel = "нема") {

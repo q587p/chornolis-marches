@@ -61,6 +61,8 @@ In `prisma/data/chornolis_world_seed.json`, edits may include:
 - `start_border_watchtower` intentionally uses `z = 1` as the starter-camp watchtower above `start_border_camp`; it is connected by `UP` / `DOWN` exits and is part of the first waking-world verticality slice.
 - `under_bridge_18_05` uses `z = -1` as an ordinary lower waking-world place under the bridge; it is not a dream layer.
 - Do not create two exits from one location in the same direction.
+- Keep authored location names unique across the playable map; repeated names make player-made maps and exit lists hard to read.
+- Keep full authored location descriptions unique too. Similar terrain can share motifs, but not the exact same paragraph.
 - `blockedCells` are documentation-only; the game walks through `locations` and `exits`.
 - Do not put raw HTML tags such as `<i>...</i>` into `name`, `description`, aliases or `data` fields in world JSON. These fields are content, not markup; Telegram renderers may escape them, and `scripts/test/world-content-html.cjs` should catch accidental tags.
 - ASCII map is separate documentation in:

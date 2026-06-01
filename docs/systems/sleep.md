@@ -21,8 +21,11 @@ While lying awake, a character can still look, examine, speak, reply and check s
 
 While sleeping, physical actions require waking first. Ordinary sleep also disables player auto-mode so autonomous movement does not continue during sleep.
 
+Near-term command policy: ordinary sleep should gate most commands, not only physical actions. While in ordinary sleep, allow only sleep-relevant or passive commands such as `Прокинутися` (`/wake`), `/time`, `/weather`, `/help`, `/commands`, `/chronicles`, `/news` and session-safety commands. Active commands such as movement, look/examine of the waking location, speech, socials, inventory use, gathering, pickup, dropping, cooking, fire handling, auto and queue mutation should answer atmospherically that this cannot be done while asleep and offer waking.
+
 ## Later Work
 
+- `SLEEP-002-A`: ordinary sleep command gate and allowlist.
 - `SLEEP-003`: remaining comfort metadata, safety and interruption modifiers.
 - `DREAM-001`: sleeping-body and dream-presence separation for tutorial and lucid dreams.
 - Weather, shelter, active fire and nearby danger can later affect sleep quality without changing the current posture/state split.

@@ -7,6 +7,30 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.14.19 - Stabilization and safety rails - 12026-06-01
+
+### Added
+
+- Added capped starter torch-source behavior so players cannot keep taking torches indefinitely after already carrying enough.
+- Added focused torch-source helper coverage to the `npm test` chain.
+- Added notification replacement-lock coverage for repeated Telegram update paths.
+- Added planning items for Herald outbox reliability, chronicle chat relay, deferred private messages, profession line banks, herbal stamina elixirs, craftable chests, pit traps and the ordinary sleep command gate.
+
+### Changed
+
+- Starter torch-source pickup now checks carried torch totals and recent take history before granting another torch.
+- World seed validation now checks route/location authoring around starter safety rooms more strictly.
+- Updated sleep, ecology, Herald, weapons, beginner-cache, world-time and performance docs with post-0.14.18 watchpoints and near-term priorities.
+- Promoted follow intent and ordinary sleep command gating in planning so they stay near the next implementation lane.
+
+### Validation
+
+- Added `node scripts/test/torch-source.cjs`.
+- Added `node scripts/test/notifications.cjs`.
+- Ran `npm test`.
+- Ran `npm run build`.
+- Ran `npm run planning:export`.
+
 ## 0.14.18 - Creature simulation budget - 12026-06-01
 
 ### Added
