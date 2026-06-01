@@ -27,7 +27,7 @@ export function isVisibleGroundResource(
   return resource.amount > 0 && (isPickableResourceKey(resource.resourceType.key) || (isTutorialLocationLike(location) && isTutorialLooseResourceKey(resource.resourceType.key)));
 }
 
-export function canPickUpGroundItem(player: { hp: number; stamina: number; isResting: boolean; posture?: string | null }) {
+export function canPickUpGroundItem(player: { hp: number; stamina: number; isResting: boolean; posture?: string | null; sleepState?: string | null }) {
   assertCanPerformPhysicalAction(player, "PICK_UP");
   return player.hp > 0 && player.stamina > 0;
 }
@@ -41,6 +41,7 @@ export async function pickUpGroundResource(playerId: number, resourceNodeId: num
       stamina: true,
       isResting: true,
       posture: true,
+      sleepState: true,
       currentLocation: { select: { key: true, z: true, region: { select: { key: true } } } },
     },
   });
@@ -89,6 +90,7 @@ export async function pickUpVisibleGroundResources(playerId: number, options: { 
       stamina: true,
       isResting: true,
       posture: true,
+      sleepState: true,
       currentLocation: { select: { key: true, z: true, region: { select: { key: true } } } },
     },
   });

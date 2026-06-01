@@ -13,6 +13,7 @@ type MainKeyboardState = {
   hasInventory?: boolean;
   statusLabel?: string;
   posture?: string | null;
+  sleepState?: string | null;
   isResting?: boolean | null;
   showPostureActions?: boolean;
   isTutorialDream?: boolean;
@@ -43,7 +44,9 @@ function normalizeState(input: MainKeyboardState | boolean = {}) {
   return input;
 }
 
-export function postureActionLabelsForState(state: Pick<MainKeyboardState, "posture" | "isResting">) {
+export function postureActionLabelsForState(state: Pick<MainKeyboardState, "posture" | "sleepState" | "isResting">) {
+  if (state.sleepState === "ORDINARY_SLEEP") return ["Прокинутися"];
+  if (state.posture === "LYING") return ["Сісти", "Встати"];
   const isSitting = state.posture === "SITTING" || Boolean(state.isResting);
   if (state.isResting) return ["Встати"];
   return isSitting ? ["Встати", "🧘 Відпочити"] : ["Сісти", "🧘 Відпочити"];
@@ -260,6 +263,7 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
       staminaMax: true,
       steps: true,
       posture: true,
+      sleepState: true,
       isResting: true,
       telegramId: true,
       role: true,
@@ -306,6 +310,7 @@ export async function buildMainReplyKeyboardForTelegramId(telegramId: number, is
     hasInventory,
     statusLabel: mainStatusLabelForPlayer(player, { hasRestLesson }),
     posture: player.posture,
+    sleepState: player.sleepState,
     isResting: player.isResting,
     showPostureActions: false,
     isTutorialDream,

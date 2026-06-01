@@ -55,6 +55,18 @@ export function playerStandObserverText(player: PlayerVisibilityRef) {
   return named(player, word(player, "встає.", "встають."));
 }
 
+export function playerLieObserverText(player: PlayerVisibilityRef) {
+  return named(player, word(player, "лягає.", "лягають."));
+}
+
+export function playerSleepObserverText(player: PlayerVisibilityRef) {
+  return named(player, word(player, "лягає й засинає.", "лягають і засинають."));
+}
+
+export function playerWakeObserverText(player: PlayerVisibilityRef) {
+  return named(player, word(player, "прокидається, але ще лежить.", "прокидаються, але ще лежать."));
+}
+
 export function playerRestStartObserverText(player: PlayerVisibilityRef) {
   return named(player, word(player, "сідає й починає відпочивати.", "сідають і починають відпочивати."));
 }

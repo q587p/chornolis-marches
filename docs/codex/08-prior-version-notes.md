@@ -83,7 +83,7 @@ Important remembered direction from the 0.11 line:
 
 - `Дрімотна Межа` is the first dream tutorial region and intentionally lives on `z = -13`.
 - New characters enter the dream after onboarding; existing `/start` refresh behavior still must not teleport existing characters.
-- `/sleep tutorial` returns to the saved tutorial dream position; while the tutorial is incomplete, plain `/sleep` also routes there. After wake, plain `/sleep` remains reserved for a future normal sleep/recovery system.
+- `/sleep tutorial` returns to the saved tutorial dream position. Since `0.14.12`, plain `/sleep` is ordinary sleep in the current waking location; do not route it to the tutorial unless the player explicitly asks for the tutorial dream.
 - `Прокинутися` / `/wake` exits the tutorial dream, stores the dream position and restores a valid real-world location.
 - `/tutorialReset [character]` is a scribe/admin command that clears the completed tutorial marker and makes the tutorial start location the saved dream location for the next `/sleep tutorial`.
 - A player's own `/me` view should say when they have not yet completed the tutorial dream.

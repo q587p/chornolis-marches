@@ -7,6 +7,33 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.14.12 - Lying posture and ordinary sleep - 12026-06-01
+
+### Added
+
+- Added persisted `LYING` player posture and a separate ordinary `sleepState`.
+- Added `/lie` plus English and Ukrainian lie-down aliases.
+- Added ordinary `/sleep` behavior that lies the player down, starts sleep recovery and disables auto-mode.
+- Added `/wake` support for ordinary sleep while preserving `/sleep tutorial` and tutorial wake behavior.
+- Added posture, sleep and physical-action guard regression coverage.
+- Added `docs/systems/sleep.md` for the posture/rest/sleep boundary.
+
+### Changed
+
+- Physical actions now block while lying with lying-specific copy, and while sleeping with a wake-up prompt.
+- Ordinary sleep restores stamina more strongly than active rest without sending recovery chatter while the player remains asleep.
+- Character/profile and location posture text now distinguish standing, sitting, lying, resting and ordinary sleep.
+- Updated `/help`, planning docs and terminology notes so plain sleep is no longer described as reserved or tutorial-routed.
+
+### Validation
+
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/posture.cjs`.
+- Ran `npm run planning:export`.
+- Ran `npm test`.
+- Ran `npm run build`.
+- Ran `git diff --check`.
+
 ## 0.14.11 - Shared beginner cache - 12026-06-01
 
 ### Added

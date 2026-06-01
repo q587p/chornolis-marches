@@ -1,7 +1,7 @@
 ---
 id: SLEEP-002
 title: Ordinary sleep MVP
-status: next
+status: testing
 type: feature
 area: survival
 priority: high
@@ -32,6 +32,15 @@ Make plain `/sleep` mean ordinary sleep: lie down, enter sleep state, recover mo
 - Ordinary sleep restores Снага more strongly than active rest and can restore Життя slowly.
 - Manual waking clears ordinary sleep but leaves posture as `LYING`, with actions to sit or stand.
 
+## 0.14.12 Implementation Notes
+
+- Added persisted `sleepState` separate from posture and `isResting`.
+- Plain `/sleep`, `сон`, `спати` and `заснути` now start ordinary sleep.
+- `/sleep tutorial` and `/sleep_tutorial` remain the tutorial dream entrypoints.
+- `/wake` wakes ordinary sleep first and then falls back to tutorial wake behavior.
+- Ordinary sleep disables auto-mode, cancels incompatible physical queued/running actions and restores stamina faster than active rest without proactive recovery spam.
+- Waking leaves the character lying and offers sit/stand actions.
+
 ## Acceptance
 
 - `/sleep` no longer routes to the tutorial unless explicitly called as `/sleep tutorial`.
@@ -45,3 +54,10 @@ Make plain `/sleep` mean ordinary sleep: lie down, enter sleep state, recover mo
 ## Implementation Order
 
 Do after `SLEEP-001`. Keep world-time auto-waking for `SLEEP-003`.
+
+## Validation
+
+- `node scripts/test/input-aliases.cjs`
+- `node scripts/test/posture.cjs`
+- `npm test`
+- `npm run build`

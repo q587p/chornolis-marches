@@ -81,7 +81,7 @@ async function knockOutPlayer(bot: Bot, player: { id: number }, chatId?: number 
   });
   await prisma.player.updateMany({
     where: { id: player.id },
-    data: { hp: 0, isResting: true, fatigueState: "VERY_TIRED", lastHpRegenAt: new Date(), lastStaminaRegenAt: new Date() },
+    data: { hp: 0, sleepState: "AWAKE", isResting: true, fatigueState: "VERY_TIRED", lastHpRegenAt: new Date(), lastStaminaRegenAt: new Date() },
   });
   if (chatId) {
     await bot.api.sendMessage(chatId, "Життя впало до 0. Ви втрачаєте свідомість. Черга очищена, починається відпочинок. Поки життя не підніметься хоча б до 1, доступний лише відпочинок.", { reply_markup: buildFatigueRestKeyboard() });
@@ -172,11 +172,12 @@ export async function recoverStamina(bot: Bot) {
 
   for (const player of players) {
     const baseMax = player.staminaMax ?? BASE_STAMINA;
+    const isSleeping = player.sleepState === "ORDINARY_SLEEP";
     const max = player.isResting ? Math.max(baseMax, await getPlayerRestStaminaCap(player.id)) : baseMax;
     const hpMax = player.hpMax ?? BASE_HP;
     const hasActiveActions = activePlayerIds.has(player.id);
 
-    if (!player.isResting && !hasActiveActions) {
+    if (!player.isResting && !isSleeping && !hasActiveActions) {
       const chatId = Number(player.telegramId);
       if (Number.isSafeInteger(chatId) && await canSendProactiveToTelegramId(player.telegramId)) {
         const sceneKey = idleReminderSceneKeyForLocation(player.currentLocationId);
@@ -190,26 +191,30 @@ export async function recoverStamina(bot: Bot) {
 
     if (player.stamina >= max && player.hp >= hpMax && !player.isResting) continue;
 
-    if (hasActiveActions && !player.isResting) {
+    if (hasActiveActions && !player.isResting && !isSleeping) {
       await prisma.player.updateMany({ where: { id: player.id }, data: { lastStaminaRegenAt: now, lastHpRegenAt: now } });
       continue;
     }
 
     const last = player.lastStaminaRegenAt ?? player.updatedAt ?? now;
-    const staminaIntervalMs = player.isResting ? REST_STAMINA_REGEN_INTERVAL_MS : STAMINA_REGEN_INTERVAL_MS;
+    const staminaIntervalMs = player.isResting || isSleeping ? REST_STAMINA_REGEN_INTERVAL_MS : STAMINA_REGEN_INTERVAL_MS;
     const intervals = Math.floor((now.getTime() - last.getTime()) / staminaIntervalMs);
 
     const before = player.stamina;
     const restRegenMultiplier = player.isResting ? await getPlayerRestStaminaRegenMultiplier(player.id) : 1;
-    const rate = player.isResting ? REST_STAMINA_REGEN_PER_INTERVAL * restRegenMultiplier : PASSIVE_STAMINA_REGEN_PER_INTERVAL;
+    const rate = isSleeping
+      ? REST_STAMINA_REGEN_PER_INTERVAL * 2
+      : player.isResting
+        ? REST_STAMINA_REGEN_PER_INTERVAL * restRegenMultiplier
+        : PASSIVE_STAMINA_REGEN_PER_INTERVAL;
     const after = intervals > 0 ? Math.min(max, before + intervals * rate) : before;
-    const messages = thresholdMessages(before, after, max);
+    const messages = isSleeping ? [] : thresholdMessages(before, after, max);
     const hpBefore = player.hp;
-    const hpIntervalMs = player.isResting ? REST_HEALTH_REGEN_INTERVAL_MS : PASSIVE_HEALTH_REGEN_INTERVAL_MS;
+    const hpIntervalMs = player.isResting || isSleeping ? REST_HEALTH_REGEN_INTERVAL_MS : PASSIVE_HEALTH_REGEN_INTERVAL_MS;
     const hpLast = player.lastHpRegenAt ?? player.updatedAt ?? now;
     const hpIntervals = Math.floor((now.getTime() - hpLast.getTime()) / hpIntervalMs);
     const hpAfter = hpIntervals > 0 ? Math.min(hpMax, hpBefore + hpIntervals * HEALTH_REGEN_PER_INTERVAL) : hpBefore;
-    messages.push(...hpRecoveryMessages(hpBefore, hpAfter, hpMax));
+    if (!isSleeping) messages.push(...hpRecoveryMessages(hpBefore, hpAfter, hpMax));
 
     if (intervals <= 0 && hpIntervals <= 0) continue;
 

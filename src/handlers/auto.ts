@@ -119,8 +119,8 @@ export function orderAutoActionKeys(roll: number, lastActionKey?: AutoActionKey)
   return [...uniqueOrder.filter((key) => key !== lastActionKey), lastActionKey];
 }
 
-export function shouldAutoStandBeforeAction(player: { posture?: string | null; isResting?: boolean | null }, key: AutoActionKey) {
-  return (key === "gather" || key === "move") && (player.posture === "SITTING" || Boolean(player.isResting));
+export function shouldAutoStandBeforeAction(player: { posture?: string | null; sleepState?: string | null; isResting?: boolean | null }, key: AutoActionKey) {
+  return (key === "gather" || key === "move") && player.sleepState !== "ORDINARY_SLEEP" && (player.posture === "SITTING" || player.posture === "LYING" || Boolean(player.isResting));
 }
 
 export function isAutoBlockedInLocation(location: AutoLocation | null | undefined) {
@@ -362,6 +362,13 @@ async function runAutoStep(bot: Bot, telegramId: number) {
       });
       return;
     }
+    if (player.sleepState === "ORDINARY_SLEEP") {
+      await disablePlayerAuto(telegramId);
+      await bot.api.sendMessage(telegramId, "🤖 Авто зупинено: ви спите. Спершу прокиньтеся, якщо хочете знову діяти автоматично.", {
+        reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, false),
+      });
+      return;
+    }
     if (DEBUG) console.log(`[PLAYER AUTO] telegramId=${telegramId} locationId=${locationId}`);
 
     if (await maybeStartAutoRest(bot, telegramId, player, locationId)) return;
@@ -417,6 +424,11 @@ function stopAutoTimer(telegramId: number) {
 
 export async function enablePlayerAuto(bot: Bot, telegramId: number): Promise<AutoEnableResult> {
   const player = await getPlayerByTelegramId(telegramId);
+  if (player?.sleepState === "ORDINARY_SLEEP") {
+    stopAutoTimer(telegramId);
+    await persistPlayerAutoState(telegramId, false);
+    return { started: false, blocked: true };
+  }
   if (player && await isPlayerAutoBlockedByDream(player)) {
     stopAutoTimer(telegramId);
     await persistPlayerAutoState(telegramId, false);
@@ -432,6 +444,14 @@ export async function requestOrEnablePlayerAuto(bot: Bot, ctx: any) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) {
     await ctx.reply("Ти ще не увійшов у світ. Напиши /start", { reply_markup: buildMainReplyKeyboard(false) });
+    return;
+  }
+
+  if (player.sleepState === "ORDINARY_SLEEP") {
+    await disablePlayerAuto(ctx.from.id);
+    await ctx.reply("Сон м’яко відсуває автоматичні звички. Спершу прокиньтеся, а тоді вже можна знову вмикати авто.", {
+      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+    });
     return;
   }
 

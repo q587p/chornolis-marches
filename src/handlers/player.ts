@@ -63,6 +63,7 @@ function formatDateTime(value: Date | string | null | undefined) {
 }
 
 async function recoveryText(player: any) {
+  if (player.sleepState === "ORDINARY_SLEEP") return "\nВідновлення: тіло відпочиває глибше, поки ви спите.";
   const staminaMax = player.isResting ? await getPlayerRestStaminaCap(player.id) : player.staminaMax ?? BASE_STAMINA;
   const hpMax = player.hpMax ?? BASE_HP;
   const staminaRemaining = Math.max(0, staminaMax - player.stamina);
@@ -81,18 +82,25 @@ async function recoveryText(player: any) {
   return `\nВідновлення без відпочинку: приблизно ${passiveMinutes} хв. Через /rest або 🧘 Відпочити: приблизно ${restMinutes} хв.`;
 }
 
-export function buildCharacterAutoKeyboard(autoEnabled: boolean, options: { posture?: string | null; isResting?: boolean | null; showSleep?: boolean; hasActionQueue?: boolean } = {}) {
+export function buildCharacterAutoKeyboard(autoEnabled: boolean, options: { posture?: string | null; sleepState?: string | null; isResting?: boolean | null; showSleep?: boolean; hasActionQueue?: boolean } = {}) {
   const keyboard = new InlineKeyboard()
     .text("🎒 Речі", "character:inventory")
     .row();
   if (options.hasActionQueue) {
     keyboard.text("📋 Черга", "queue:status").row();
   }
+  if (options.sleepState === "ORDINARY_SLEEP") {
+    keyboard.text("Прокинутися", "sleep:wake");
+    return keyboard;
+  }
+
   const isSitting = options.posture === "SITTING" || Boolean(options.isResting);
+  const isLying = options.posture === "LYING";
   keyboard
     .text("✨ Сигнали", "character:signals")
-    .text(isSitting ? "Встати" : "Сісти", isSitting ? "posture:stand" : "posture:sit")
+    .text(isSitting || isLying ? "Встати" : "Сісти", isSitting || isLying ? "posture:stand" : "posture:sit")
     .row();
+  if (isLying) keyboard.text("Сісти", "posture:sit").row();
 
   if (!options.isResting || options.showSleep !== false) {
     if (!options.isResting) keyboard.text("🧘 Відпочити", "rest:start");
@@ -299,7 +307,7 @@ async function renderCharacterView(telegramId: number) {
 
   return {
     text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}${tutorialStatusText}\n\n${formatPostureText({ ...player, isSleeping: isTutorialDream })}${torchText}\n${vitals.join("\n")}\nСтан: ${formatFatigueText(player)}${await recoveryText(player)}\n${hungerText}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}${technicalDetailsText}\nЗареєстровано: ${formatDateTime(player.createdAt)}${statsText}`,
-    keyboard: buildCharacterAutoKeyboard(autoEnabled, { posture: player.posture, isResting: player.isResting, showSleep: !isTutorialDream, hasActionQueue }),
+    keyboard: buildCharacterAutoKeyboard(autoEnabled, { posture: player.posture, sleepState: player.sleepState, isResting: player.isResting, showSleep: !isTutorialDream, hasActionQueue }),
   };
 }
 

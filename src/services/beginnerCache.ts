@@ -199,7 +199,7 @@ export async function takeFromBeginnerCache(playerId: number, featureId: number,
   return prisma.$transaction(async (tx) => {
     const player = await tx.player.findUnique({
       where: { id: playerId },
-      select: { currentLocationId: true, hp: true, stamina: true, isResting: true, posture: true },
+      select: { currentLocationId: true, hp: true, stamina: true, isResting: true, posture: true, sleepState: true },
     });
     if (!player?.currentLocationId) throw new Error("Ти ще не увійшов у світ. Напиши /start");
     if (!canPickUpGroundItem(player)) throw new Error("Ви надто втомлені, щоб брати це просто зараз. Спершу перепочиньте.");
@@ -243,7 +243,7 @@ export async function contributeToBeginnerCache(playerId: number, featureId?: nu
   return prisma.$transaction(async (tx) => {
     const player = await tx.player.findUnique({
       where: { id: playerId },
-      select: { currentLocationId: true, hp: true, stamina: true, isResting: true, posture: true },
+      select: { currentLocationId: true, hp: true, stamina: true, isResting: true, posture: true, sleepState: true },
     });
     if (!player?.currentLocationId) throw new Error("Ти ще не увійшов у світ. Напиши /start");
     if (!canPickUpGroundItem(player)) throw new Error("Ви надто втомлені, щоб перекладати речі просто зараз. Спершу перепочиньте.");

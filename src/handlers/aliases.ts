@@ -43,10 +43,10 @@ import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
 import { pickUpAllVisibleGroundResources, pickUpAllVisibleGroundResourcesByKey, pickUpFirstGroundResourceByKey, pickUpFirstVisibleGroundResourceByKey, type VisibleGroundResourceKey } from "../services/groundItems";
 import { parseSpeechTarget } from "../services/speechTargets";
 import { inspectInventoryResource, inventoryResourceKeyFromText, type UsableInventoryResource } from "../services/inventoryUse";
-import { enterTutorialDream, hasCompletedTutorial, openDreamGate, rememberTutorialCommandHintIfInTutorial, wakeFromTutorialDream } from "../services/tutorial";
-import { requestTutorialEnd } from "./tutorial";
+import { openDreamGate, rememberTutorialCommandHintIfInTutorial } from "../services/tutorial";
+import { requestTutorialEnd, submitSleepCommand, submitWakeCommand } from "./tutorial";
 import { pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
-import { notifyPlayerObservers, playerRestStartObserverText, playerRestStopObserverText, playerTutorialSleepObserverText, playerTutorialWakeObserverText } from "../services/playerVisibility";
+import { notifyPlayerObservers, playerRestStartObserverText, playerRestStopObserverText } from "../services/playerVisibility";
 import { noteKnownMessage } from "../utils/messageTracker";
 import { playerForms } from "../services/grammar";
 import { putInventoryIntoLocalFeature } from "../services/carcassDropoff";
@@ -942,43 +942,11 @@ async function submitSocialSignal(bot: Bot, ctx: any, signal: SocialSignalAlias,
 }
 
 async function submitSleep(bot: Bot, ctx: any, tutorial = false) {
-  const player = await getPlayerByTelegramId(ctx.from.id);
-  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
-  if (!tutorial && await hasCompletedTutorial(player.id)) {
-    return void (await ctx.reply("Звичайний сон ще не вплетений у правила світу. Для навчального сну використайте /sleep tutorial.", {
-      reply_markup: new InlineKeyboard().text("🌙 Навчальний сон", "tutorial:sleep"),
-    }));
-  }
-
-  await disablePlayerAuto(ctx.from.id);
-  const result = await enterTutorialDream(player.id);
-  await ctx.reply(result.text, { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
-  if (result.entered) {
-    await notifyPlayerObservers(bot, {
-      playerId: player.id,
-      locationId: result.fromLocationId,
-      observerText: playerTutorialSleepObserverText,
-    });
-  }
-  const view = await renderLocationBrief(result.locationId, player.id);
-  await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+  return submitSleepCommand(bot, ctx, tutorial);
 }
 
 async function submitWake(bot: Bot, ctx: any) {
-  const player = await getPlayerByTelegramId(ctx.from.id);
-  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
-
-  const result = await wakeFromTutorialDream(player.id);
-  await ctx.reply(result.text, { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
-  if (result.woke) {
-    await notifyPlayerObservers(bot, {
-      playerId: player.id,
-      locationId: result.locationId,
-      observerText: playerTutorialWakeObserverText,
-    });
-    const view = await renderLocationBrief(result.locationId, player.id);
-    await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
-  }
+  return submitWakeCommand(bot, ctx);
 }
 
 async function submitSessionPresence(ctx: any, mode: "afk" | "end") {

@@ -188,6 +188,9 @@ assertAlias("додати відпочинок у чергу", { kind: "rest", m
 assertAlias("перервати відпочинок", { kind: "rest", mode: "interrupt" });
 assertAlias("/sit", { kind: "posture", mode: "sit" });
 assertAlias("сісти", { kind: "posture", mode: "sit" });
+assertAlias("/lie", { kind: "posture", mode: "lie" });
+assertAlias("лягти", { kind: "posture", mode: "lie" });
+assertAlias("лежати", { kind: "posture", mode: "lie" });
 assertAlias("/stand", { kind: "posture", mode: "stand" });
 assertAlias("встати", { kind: "posture", mode: "stand" });
 assertAlias("/put", { kind: "put-item", item: "туша", container: "рів" });

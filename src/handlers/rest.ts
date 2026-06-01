@@ -2,7 +2,7 @@ import { Bot } from "grammy";
 import { getPlayerByTelegramId } from "../services/players";
 import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import { accelerateFirstQueuedPlayerAction, hasPlayerActionQueueControls, playerRestStatusText, queuePlayerRest, renderPlayerActionQueue, startPlayerRest, stopPlayerRest } from "../services/actionQueue";
-import { buildRestWithQueueChoiceKeyboard, buildStandUpKeyboard } from "../ui/keyboards";
+import { buildRestWithQueueChoiceKeyboard, buildStandUpKeyboard, buildWakeUpKeyboard } from "../ui/keyboards";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { actionQueueReplyOptions } from "../utils/actionQueueUi";
@@ -70,6 +70,10 @@ async function startRest(bot: Bot, ctx: any) {
   if (!from) return;
   const player = await getPlayerByTelegramId(from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  if (player.sleepState === "ORDINARY_SLEEP") {
+    await replyOrEdit(ctx, "Ви спите. Спершу треба прокинутися.", { reply_markup: buildWakeUpKeyboard() });
+    return;
+  }
 
   const max = await getPlayerRestStaminaCap(player.id);
   const hpMax = player.hpMax ?? BASE_HP;

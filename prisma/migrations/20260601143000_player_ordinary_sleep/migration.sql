@@ -1,0 +1,5 @@
+ALTER TYPE "PlayerPosture" ADD VALUE IF NOT EXISTS 'LYING';
+
+CREATE TYPE "PlayerSleepState" AS ENUM ('AWAKE', 'ORDINARY_SLEEP');
+
+ALTER TABLE "Player" ADD COLUMN "sleepState" "PlayerSleepState" NOT NULL DEFAULT 'AWAKE';

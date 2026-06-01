@@ -94,6 +94,8 @@ function visibleTargets(
       id: p.id,
       label: p.nameNominative ?? p.firstName ?? p.username ?? "мандрівник",
       canGreet: true,
+      posture: p.posture,
+      sleepState: p.sleepState,
       isResting: p.isResting,
       fatigueState: p.fatigueState,
       grammaticalGender: p.grammaticalGender,
@@ -577,8 +579,8 @@ function formatSeconds(ms: number) {
 async function usesQuickPlayerActionDuration(viewerPlayerId?: number) {
   if (!viewerPlayerId) return false;
 
-  const player = await prisma.player.findUnique({ where: { id: viewerPlayerId }, select: { hp: true, isResting: true, stamina: true } });
-  if (!player || player.hp <= 0 || player.isResting || player.stamina <= 0) return false;
+  const player = await prisma.player.findUnique({ where: { id: viewerPlayerId }, select: { hp: true, isResting: true, posture: true, sleepState: true, stamina: true } });
+  if (!player || player.hp <= 0 || player.isResting || player.posture !== "STANDING" || player.sleepState === "ORDINARY_SLEEP" || player.stamina <= 0) return false;
 
   const activeActions = await prisma.worldAction.count({
     where: { actorType: "PLAYER", playerId: viewerPlayerId, status: { in: ["QUEUED", "RUNNING"] } },

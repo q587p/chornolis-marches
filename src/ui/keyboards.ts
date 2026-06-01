@@ -82,6 +82,16 @@ export function buildStandUpKeyboard() {
   return new InlineKeyboard().text("Встати", "posture:stand");
 }
 
+export function buildWakeUpKeyboard() {
+  return new InlineKeyboard().text("Прокинутися", "sleep:wake");
+}
+
+export function buildLyingPostureKeyboard() {
+  return new InlineKeyboard()
+    .text("Сісти", "posture:sit")
+    .text("Встати", "posture:stand");
+}
+
 export function buildRestingActionChoiceKeyboard() {
   return new InlineKeyboard()
     .text("✋ Перервати", "rest:interrupt")

@@ -1,7 +1,11 @@
 import type { WorldActionType } from "@prisma/client";
 
 export class PlayerMustStandError extends Error {
-  constructor(public readonly actionType: WorldActionType | string, message = sittingActionBlockMessage(actionType)) {
+  constructor(
+    public readonly actionType: WorldActionType | string,
+    message = sittingActionBlockMessage(actionType),
+    public readonly recoveryAction: "stand" | "wake" = "stand",
+  ) {
     super(message);
     this.name = "PlayerMustStandError";
   }
@@ -34,7 +38,13 @@ export function isSittingOrResting(player: { posture?: string | null; isResting?
   return player.posture === "SITTING" || Boolean(player.isResting);
 }
 
-export function assertCanPerformPhysicalAction(player: { posture?: string | null; isResting?: boolean | null }, actionType: WorldActionType | string) {
+export function isLyingOrSleeping(player: { posture?: string | null; sleepState?: string | null }) {
+  return player.posture === "LYING" || player.sleepState === "ORDINARY_SLEEP";
+}
+
+export function assertCanPerformPhysicalAction(player: { posture?: string | null; sleepState?: string | null; isResting?: boolean | null }, actionType: WorldActionType | string) {
+  if (player.sleepState === "ORDINARY_SLEEP") throw new PlayerMustStandError(actionType, sleepingActionBlockMessage(actionType), "wake");
+  if (player.posture === "LYING") throw new PlayerMustStandError(actionType, lyingActionBlockMessage(actionType));
   if (isSittingOrResting(player)) throw new PlayerMustStandError(actionType);
 }
 
@@ -55,4 +65,12 @@ export function sittingActionBlockMessage(type: WorldActionType | string) {
   if (type === "FIRE") return "Ви не можете поратися з вогнем, поки сидите. Вам треба встати.";
   if (type === "TORCH") return "Ви не можете поратися з факелом, поки сидите. Вам треба встати.";
   return "Ви не можете виконати цю дію, поки сидите. Вам треба встати.";
+}
+
+export function lyingActionBlockMessage(type: WorldActionType | string) {
+  return sittingActionBlockMessage(type).split("сидите").join("лежите");
+}
+
+export function sleepingActionBlockMessage(_type: WorldActionType | string) {
+  return "Ви спите. Спершу треба прокинутися.";
 }

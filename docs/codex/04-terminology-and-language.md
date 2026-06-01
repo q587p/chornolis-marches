@@ -28,7 +28,8 @@ Canonical terminology source: `docs/design/terminology.md`.
 | Examine / inspect | **Роздивитися** / **Придивитися** | Choose by tone/context. |
 | Stamina | **Снага** | Player-facing stamina/resource term; base stamina should be 42. |
 | Rest | **Відпочити** | Means sit/rest briefly, not sleep. |
-| Sleep | future sleep mode | Reserve bed iconography for this later feature. |
+| Sleep | **Сон** / **Спати** | Plain `/sleep` is ordinary sleep; use `/sleep tutorial` for the tutorial dream. |
+| Lie down | **Лягти** | Changes posture only; it does not start sleep or rest. |
 | HP | **Життя** / **Стан** | Avoid raw abbreviation in player-facing text. |
 | Inventory | **Речі** / **Поклажа** | Prefer over direct “Інвентар” in player-facing UI. |
 

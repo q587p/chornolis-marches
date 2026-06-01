@@ -1,7 +1,7 @@
 ---
 id: SLEEP-001
 title: Lying posture and lie command
-status: next
+status: testing
 type: feature
 area: survival
 priority: high
@@ -29,6 +29,14 @@ Add `LYING` as a real posture, separate from sitting, active rest and sleep.
 - Reuse the existing physical-action posture guard so lying blocks movement, pickup, gathering, attacking, cooking, fire/torch handling and similar physical actions.
 - Keep non-physical actions available while lying: look, examine, speech, reply and status/queue checks.
 
+## 0.14.12 Implementation Notes
+
+- Added `LYING` to the persisted player posture enum.
+- Added `/lie`, `lie down`, `лягти`, `лягти на землю` and `лежати` aliases.
+- Lying awake can transition to sitting or standing without starting rest.
+- Physical-action guard copy now distinguishes sitting from lying.
+- Auto-mode can stand up from sitting or lying before simple physical auto actions.
+
 ## Acceptance
 
 - `/lie` changes only posture; it does not start sleep or rest.
@@ -42,3 +50,10 @@ Add `LYING` as a real posture, separate from sitting, active rest and sleep.
 ## Implementation Order
 
 Do before `SLEEP-002`.
+
+## Validation
+
+- `node scripts/test/input-aliases.cjs`
+- `node scripts/test/posture.cjs`
+- `npm test`
+- `npm run build`
