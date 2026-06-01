@@ -3,6 +3,7 @@ import { config } from "../config";
 import { prisma } from "../db";
 import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { canSendProactiveToTelegramId } from "./sessionPresence";
+import { isTutorialLocation } from "./tutorial";
 
 type LocationNotificationOptions = {
   keyboard?: InlineKeyboard;
@@ -22,6 +23,16 @@ async function mainKeyboardForPlayer(telegramId: string) {
   return Number.isFinite(numericTelegramId)
     ? await buildMainReplyKeyboardForTelegramId(numericTelegramId, false)
     : buildMainReplyKeyboard(false);
+}
+
+export function isDreamLocationForWorldNotice(location?: { key?: string | null; z?: number | null; region?: { key?: string | null } | null } | null) {
+  if (!location) return false;
+  if (typeof location.z === "number" && location.z <= -10) return true;
+  return isTutorialLocation({
+    key: location.key ?? "",
+    z: location.z ?? 0,
+    region: location.region?.key ? { key: location.region.key } : null,
+  });
 }
 
 async function clearPreviousInlineKey(bot: Bot, telegramId: string, key: string) {
@@ -120,6 +131,35 @@ export async function notifyAllCurrentPlayers(bot: Bot, text: string, options: {
       });
     } catch (error) {
       console.warn("Failed to notify current player:", error);
+    }
+  }
+}
+
+export async function notifyAllWakingCurrentPlayers(bot: Bot, text: string, options: { parseMode?: "HTML" } = {}) {
+  const players = await prisma.player.findMany({
+    where: { currentLocationId: { not: null } },
+    select: {
+      telegramId: true,
+      currentLocation: {
+        select: {
+          key: true,
+          z: true,
+          region: { select: { key: true } },
+        },
+      },
+    },
+  });
+
+  for (const player of players) {
+    if (isDreamLocationForWorldNotice(player.currentLocation)) continue;
+    try {
+      if (!(await canSendProactiveToTelegramId(player.telegramId))) continue;
+      await bot.api.sendMessage(player.telegramId, text, {
+        parse_mode: options.parseMode,
+        reply_markup: await mainKeyboardForPlayer(player.telegramId),
+      });
+    } catch (error) {
+      console.warn("Failed to notify waking current player:", error);
     }
   }
 }

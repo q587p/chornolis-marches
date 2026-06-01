@@ -115,6 +115,10 @@ export function formatVitalsLine(player: PlayerVitals, options: { showTechnicalD
   return [`Життя: ${formatLifeState(player.hp, hpMax)}`, `Снага: ${formatResourceState(player.stamina, staminaMax)}`];
 }
 
+export function formatVitalsSentence(player: PlayerVitals, options: { showTechnicalDetails?: boolean; hpFallback: number; staminaFallback: number }) {
+  return formatVitalsLine(player, options).join(". ") + ".";
+}
+
 export function formatObservedVitalsText(player: PlayerVitals, options: { hpFallback: number; staminaFallback: number }) {
   const hpMax = player.hpMax ?? options.hpFallback;
   const staminaMax = player.staminaMax ?? options.staminaFallback;

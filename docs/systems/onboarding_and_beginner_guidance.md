@@ -35,6 +35,7 @@ As of `0.12.0`, the first concrete newcomer path is the dream tutorial in `Др�
 - The minimal start/second-step keyboards are only for the first pass through those cells. If the player returns to earlier dream cells after moving onward, use the ordinary progressive dream keyboard for that location instead of redrawing the simplified first-lesson layout.
 - Сон and Дрімота can comment on early tutorial movement: Сон encourages correct forward steps, while Дрімота provides a lightly antagonistic voice when the player turns back.
 - Сон and Дрімота also react when a player studies tutorial tracks closely: one rewards attention, the other tries to hurry the player onward.
+- Сон and Дрімота give one-time action-semantics hints after a character first uses `Озирнутися` and `Роздивитися` inside the tutorial dream. The hints keep the distinction diegetic: `Озирнутися` is for remembering where you are, while `Роздивитися` asks the place what it is hiding.
 - `/sleep tutorial` returns a character to the saved tutorial dream position.
 - Plain `/sleep` routes to the tutorial while that character has not woken from it yet; after wake, normal sleep remains reserved for a later recovery system.
 - Entering the tutorial dream turns off player auto mode, both persistent state and the active runtime timer where available, so the dream remains a focused player-controlled teaching space.
@@ -63,6 +64,14 @@ As of `0.12.0`, the first concrete newcomer path is the dream tutorial in `Др�
 - Add a small Сон/Дрімота reaction pool for ordinary speech in the tutorial dream. Do not count the `Брама Сну` opening phrase for this lesson, because that line already has its own gate outcome.
 - Use those reactions to teach that `say` is local speech, `shout` / `крикнути` carries farther and costs more, `whisper` / `шепнути` is private and target-focused, and `reply` answers someone who addressed you even if the speaker is no longer an ordinary visible target.
 - Add a nearby-character or dream-figure moment for social signals after basic speech is understood: a short, non-mechanical lesson that signals such as `кивнути`, `помахати`, `усміхнутися` and `вклонитися` are controlled gestures, not freeform emotes or physical attacks.
+
+## Starter Camp and First Night
+
+`Межовий табір біля мосту` is the waking-world return anchor for early characters, not just a starting coordinate. Keep it readable as a shared border camp: a stable fire, the boundary marker, signs of other people, the bridge/gate direction and the forest edge should all be legible when the player first arrives or returns through `/respawn`.
+
+The camp now has an inspectable `Дошка для прибулих` with compact diegetic advice: look around, take light, and leave something for the next person later. This is advice, not a quest checklist. A beginner torch source exists at the camp as a first-session safety tool; the older closed-gate torch source remains for the gate/hunter area and should not be removed until a later route/supply pass decides the final distribution.
+
+After darkness starts hiding descriptions, beings, ground objects, resources or tracks, a waking-world character can receive one first-night guidance note when they are in dim/dark reduced visibility without local light. It must not trigger inside the tutorial dream, and it should remain behind the same presence/AFK guards used for other proactive guidance. The message should mention that fire or a torch can return part of what the dark hides, without listing raw visibility mechanics.
 
 ## Design Rule
 

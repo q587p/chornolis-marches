@@ -1,7 +1,7 @@
 ---
 id: ONB-001-B
 title: Hint after first Озирнутися
-status: next
+status: done
 type: ux
 area: onboarding
 priority: high
@@ -31,6 +31,11 @@ Guide the player from first look toward closer examination.
 - Player understands the next action.
 - No spam in ordinary locations.
 
+## 0.14.8 Result
+
+- First tutorial `Озирнутися` now gets a one-time Дрімота hint that look gives orientation and closer attention can follow.
+- The hint is stored separately from the keyboard-progress marker, so it does not spam or change ordinary waking locations.
+
 ## Implementation Order
 
-Do after: `ONB-001-A`.
+Done after: `ONB-001-A`.

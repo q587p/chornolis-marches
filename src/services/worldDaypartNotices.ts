@@ -5,7 +5,7 @@ import {
   worldTimeSnapshotFromAbsoluteMinute,
   type WorldDaypart,
 } from "../data/worldClock";
-import { notifyAllCurrentPlayers } from "./notifications";
+import { notifyAllWakingCurrentPlayers } from "./notifications";
 import { ensureWorldState } from "./worldTime";
 
 export const WORLD_DAYPART_NOTICE_EVENT_TITLE = "World Daypart Notice";
@@ -56,7 +56,7 @@ export async function notifyWorldDaypartChangeIfNeeded(bot: Bot, db: PrismaDb = 
 
   const shouldNotify = Boolean(previousDaypart) || snapshot.daypart !== START_DAYPART;
   if (shouldNotify) {
-    await notifyAllCurrentPlayers(bot, worldDaypartNoticeText(snapshot.daypart));
+    await notifyAllWakingCurrentPlayers(bot, worldDaypartNoticeText(snapshot.daypart));
   }
 
   return shouldNotify;

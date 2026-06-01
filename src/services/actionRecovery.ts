@@ -69,7 +69,7 @@ function hpRecoveryMessages(before: number, after: number, max: number) {
   } else if (before < max && after >= max) {
     messages.push("Рани більше не заважають рухатися: здоров’я повністю відновилося.");
   } else if (after > before) {
-    messages.push(`Тіло потроху відновлюється. Життя: ${after}/${max}.`);
+    messages.push("Тіло потроху відновлюється.");
   }
   return messages;
 }

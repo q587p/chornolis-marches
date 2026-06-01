@@ -32,7 +32,7 @@ import { resourceAccusativeName } from "../utils/resourceText";
 import { canEditKnownMessage, noteKnownMessage } from "../utils/messageTracker";
 import { playerCanShowTechnicalDetails } from "./technicalDetails";
 import { canOpenDreamGateWithSpeech, ensureTutorialForagingResources, isLocationExitLocked, isTutorialFastRestLocationKey, openDreamGate, rememberTutorialCommandHintIfInTutorial, rememberTutorialForagingSuccess, rememberTutorialInventoryAvailable, rememberTutorialWellbeingAside, tutorialRestEntryStaminaMode, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_ENTRY_STAMINA_TEXT, TUTORIAL_REST_RETURN_FROM_HEAT_TEXT, TUTORIAL_WELLBEING_ASIDE_TEXT } from "./tutorial";
-import { tutorialGateSpeechComment, tutorialLookPaceComments, tutorialSpiritMoveComment, tutorialTrackComments, tutorialWaitPaceComments } from "./tutorialVoices";
+import { tutorialActionHintComment, tutorialGateSpeechComment, tutorialLookPaceComments, tutorialSpiritMoveComment, tutorialTrackComments, tutorialWaitPaceComments } from "./tutorialVoices";
 import { chance, pick, shuffle } from "../utils/random";
 import { canSendProactiveToPlayerId } from "./sessionPresence";
 import { cookRawMeat, freshenCorpseForMeat } from "./meat";
@@ -46,8 +46,10 @@ import { notifyPlayerObservers, playerRestStopObserverText } from "./playerVisib
 import { dropInventoryResourceDetailed, dropInventoryResourcesDetailed, useInventoryResource, type UsableInventoryResource } from "./inventoryUse";
 import { dropObserverText, recordVisibleItemAction } from "./visibleItemActions";
 import { campfireRelightReplyOptionsAfterTwigs } from "../ui/fireKeyboards";
+import { cookingResultReplyOptions } from "../ui/inventoryItemKeyboard";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 import { visibilityPresenceText, visibilityRulesForLocation } from "./visibility";
+import { firstNightGuidanceForPlayer } from "./beginnerGuidance";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
@@ -167,6 +169,16 @@ function targetIntro(target: ResolvedTarget, isMystery: boolean) {
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
+}
+
+async function sendTutorialActionHint(bot: Bot, chatId: number | string, player: { id: number; currentLocationId: number | null }, commandKey: "look" | "examine") {
+  const comment = await tutorialActionHintComment(player, commandKey);
+  if (comment) noteKnownMessage(await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }));
+}
+
+async function sendFirstNightGuidance(bot: Bot, chatId: number | string, playerId: number, locationId: number | null | undefined) {
+  const text = await firstNightGuidanceForPlayer(playerId, locationId);
+  if (text) noteKnownMessage(await bot.api.sendMessage(chatId, text));
 }
 
 function saidVerb(player: any) {
@@ -395,7 +407,7 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
       await spendPlayerStamina(bot, player.id, "COOK", chatId);
       await setActionStatus(action, "DONE");
       if (chatId) {
-        await bot.api.sendMessage(chatId, result.text);
+        await bot.api.sendMessage(chatId, result.text, cookingResultReplyOptions(result));
         if (result.practiceMilestone) await bot.api.sendMessage(chatId, COOKING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" });
       }
       return;
@@ -497,6 +509,8 @@ async function completeMove(bot: Bot, action: WorldAction) {
       if (dreamItemsStolen) noteKnownMessage(await bot.api.sendMessage(chatId, `Мара сміється десь між листям:\n${quoteBlock("Сонні ягоди й трави лишаються в просвіті. Варто винести їх за край — і вони розсипаються туманом.")}`, { parse_mode: "HTML" }));
       if (tutorialRestEntryText) noteKnownMessage(await bot.api.sendMessage(chatId, tutorialRestEntryText, { reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false) }));
       noteKnownMessage(await bot.api.sendMessage(chatId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard }));
+      await sendTutorialActionHint(bot, chatId, { ...player, currentLocationId: exit.toLocationId }, "look");
+      await sendFirstNightGuidance(bot, chatId, player.id, exit.toLocationId);
     }
     return;
   }
@@ -744,6 +758,8 @@ async function completeLook(bot: Bot, action: WorldAction) {
           for (const comment of voiceComments) {
             noteKnownMessage(await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }));
           }
+          await sendTutorialActionHint(bot, chatId, { ...player, currentLocationId: locationId }, "examine");
+          await sendFirstNightGuidance(bot, chatId, player.id, locationId);
           await sendAttackObservationMessage();
           await sendGatheringObservationMessage();
           await sendFoodObservationMessages();
@@ -756,6 +772,8 @@ async function completeLook(bot: Bot, action: WorldAction) {
       for (const comment of voiceComments) {
         noteKnownMessage(await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }));
       }
+      await sendTutorialActionHint(bot, chatId, { ...player, currentLocationId: locationId }, "examine");
+      await sendFirstNightGuidance(bot, chatId, player.id, locationId);
       await sendAttackObservationMessage();
       await sendGatheringObservationMessage();
       await sendFoodObservationMessages();

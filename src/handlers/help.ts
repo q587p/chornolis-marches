@@ -2,9 +2,10 @@ import { Bot, InlineKeyboard } from "grammy";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { isPlayerAutoEnabled } from "./auto";
 import { getPlayerByTelegramId } from "../services/players";
-import { hasCompletedTutorial } from "../services/tutorial";
+import { hasCompletedTutorial, isTutorialLocation } from "../services/tutorial";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { slashlessCommandPattern } from "../utils/slashlessCommands";
+import { prisma } from "../db";
 
 const COMMANDS_TEXT_COMMAND = slashlessCommandPattern(["commands"]);
 
@@ -59,7 +60,6 @@ export const HELP_TEXT = [
   "• <i>Час</i> (/time) — календарний відгук світу.",
   "• <i>Погода</i> (/weather) — короткий стан неба, туману чи дощу за внутрішнім часом Чорнолісу.",
   "• <i>Почати спочатку</i> (/restart) — стерти персонажа і пройти шлях з початку через /start.",
-  "• <i>Повний каталог команд</i> (/commands) — прихований довідник усіх реалізованих текстових команд і аліасів.",
 ].join("\n");
 
 export const COMMANDS_TEXT_PAGES = [
@@ -205,6 +205,32 @@ function commandsPageKeyboard(pageIndex: number) {
   return keyboard;
 }
 
+export const TUTORIAL_HELP_RETURN_TEXT =
+  "Навчальний сон ще не завершено. Можна повернутися туди, пройти короткі вправи або прокинутися, коли будете готові.";
+
+export const TUTORIAL_HELP_IN_DREAM_TEXT =
+  "Навчальний сон ще триває. Можна пройти короткі вправи або прокинутися, коли будете готові.";
+
+export function tutorialHelpFollowupText(isInTutorialDream: boolean) {
+  return isInTutorialDream ? TUTORIAL_HELP_IN_DREAM_TEXT : TUTORIAL_HELP_RETURN_TEXT;
+}
+
+async function playerIsInTutorialDream(playerId: number) {
+  const player = await prisma.player.findUnique({
+    where: { id: playerId },
+    select: {
+      currentLocation: {
+        select: {
+          key: true,
+          z: true,
+          region: { select: { key: true } },
+        },
+      },
+    },
+  });
+  return Boolean(player?.currentLocation && isTutorialLocation(player.currentLocation));
+}
+
 async function replyWithCommandsPage(ctx: any, pageIndex = 0) {
   const safePage = Math.max(0, Math.min(COMMANDS_TEXT_PAGES.length - 1, pageIndex));
   await ctx.reply(COMMANDS_TEXT_PAGES[safePage], {
@@ -232,10 +258,12 @@ export async function sendHelp(ctx: any) {
   if (!ctx.from) return;
   if (!player || tutorialCompleted) return;
 
-  await ctx.reply(
-    "Навчальний сон ще не завершено. Можна повернутися туди, пройти короткі вправи або прокинутися, коли будете готові.",
-    { reply_markup: new InlineKeyboard().text("🌙 Навчальний сон", "tutorial:sleep") }
-  );
+  const isInTutorialDream = await playerIsInTutorialDream(player.id);
+  await ctx.reply(tutorialHelpFollowupText(isInTutorialDream), {
+    reply_markup: isInTutorialDream
+      ? new InlineKeyboard().text("✅ Закінчити навчання", "tutorial:end").row().text("🌤 Прокинутися", "tutorial:wake")
+      : new InlineKeyboard().text("🌙 Навчальний сон", "tutorial:sleep"),
+  });
 }
 
 export async function sendCommands(ctx: any) {

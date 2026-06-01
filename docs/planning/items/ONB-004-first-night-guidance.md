@@ -1,7 +1,7 @@
 ---
 id: ONB-004
 title: First night guidance
-status: backlog
+status: done
 type: ux
 area: onboarding
 priority: medium
@@ -59,3 +59,9 @@ Shorter variant:
 - It respects AFK/end-session proactive-message guards.
 - It is short and atmospheric.
 - It does not reveal raw visibility mechanics.
+
+## 0.14.8 Result
+
+- First-night guidance now appears only in the waking world when dim/dark visibility is actually reducing what the player can see.
+- The hint is stored as a per-character world event and respects the session-presence proactive-message guard.
+- Tutorial dream locations and locally lit places do not trigger the first-night hint.

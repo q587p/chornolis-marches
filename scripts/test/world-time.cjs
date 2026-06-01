@@ -17,6 +17,11 @@ const {
   visibilityPresenceText,
   visibilityRulesFromLight,
 } = require("../../src/services/visibility");
+const { isDreamLocationForWorldNotice } = require("../../src/services/notifications");
+const {
+  shouldShowFirstNightGuidanceForVisibility,
+  visibilityReductionActive,
+} = require("../../src/services/beginnerGuidance");
 const {
   renderCurrentWeather,
   renderWeatherLine,
@@ -101,6 +106,11 @@ assert.equal(visibilityRulesFromLight(darkLight, "details").showTracks, false);
 assert.equal(visibilityRulesFromLight(localLight, "details").showLocationDescription, true);
 assert.ok(visibilityDarknessText(visibilityRulesFromLight(darkLight, "brief")).includes("Темрява"));
 assert.ok(visibilityPresenceText(visibilityRulesFromLight(darkLight, "details"), "tracks").includes("слідів"));
+const darkDetailRules = visibilityRulesFromLight(darkLight, "details");
+const locallyLitDetailRules = visibilityRulesFromLight(localLight, "details");
+assert.equal(visibilityReductionActive(darkDetailRules), true);
+assert.equal(shouldShowFirstNightGuidanceForVisibility(darkDetailRules), true);
+assert.equal(shouldShowFirstNightGuidanceForVisibility(locallyLitDetailRules), false);
 
 const dayTarget = parseWorldTimeSetTarget("day", START_WORLD_ABSOLUTE_MINUTE);
 assert.ok(dayTarget);
@@ -130,5 +140,9 @@ assert.equal(daypartFromNoticeDescription("clock=18:00"), null);
 assert.ok(worldDaypartNoticeText("dawn").includes("Настав світанок"));
 assert.ok(worldDaypartNoticeText("dusk").includes("темнішає"));
 assert.ok(worldDaypartNoticeText("night").includes("Настала ніч"));
+assert.equal(isDreamLocationForWorldNotice({ key: "dream_tutorial_threshold", z: -13, region: { key: "dream_tutorial" } }), true);
+assert.equal(isDreamLocationForWorldNotice({ key: "future_lucid_dream", z: -10, region: { key: "dreams" } }), true);
+assert.equal(isDreamLocationForWorldNotice({ key: "underground_cave", z: -1, region: { key: "caves" } }), false);
+assert.equal(isDreamLocationForWorldNotice({ key: "start_border_camp", z: 0, region: { key: "riverbank" } }), false);
 
 console.log("World time helpers OK");

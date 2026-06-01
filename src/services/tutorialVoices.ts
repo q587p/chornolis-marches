@@ -21,6 +21,7 @@ export type TutorialVoiceComment = {
 const TUTORIAL_LOOK_EVENT_TITLE = "Tutorial look";
 const TUTORIAL_PACE_EVENT_TITLE = "Tutorial pace comment";
 const TUTORIAL_GATE_SPEECH_EVENT_TITLE = "Tutorial gate speech comment";
+const TUTORIAL_ACTION_HINT_EVENT_TITLE = "Tutorial action semantics hint";
 const TUTORIAL_LOOK_WINDOW_MS = 60_000;
 const TUTORIAL_IDLE_PACE_DELAY_MS = 120_000;
 const TUTORIAL_PACE_BACKOFF_MS = [120_000, 300_000, 600_000, 1_200_000, 1_800_000];
@@ -115,6 +116,7 @@ export const PACE_COMMENT_PAIRS: PaceCommentPair[] = [
 ];
 
 type TutorialPlayerRef = Pick<Player, "id" | "currentLocationId" | "pronoun" | "grammaticalGender">;
+type TutorialActionHintPlayerRef = Pick<Player, "id" | "currentLocationId">;
 type TutorialIdlePlayerRef = TutorialPlayerRef & Pick<Player, "lastActionAt" | "updatedAt" | "createdAt">;
 
 function tutorialPacePronoun(player: TutorialPlayerRef) {
@@ -228,6 +230,51 @@ export async function tutorialLookPaceComments(player: TutorialPlayerRef): Promi
 
   if (recentLooks < 2) return [];
   return tutorialPaceComments(player, "look");
+}
+
+export function tutorialActionHintText(commandKey: "look" | "examine") {
+  if (commandKey === "look") {
+    return {
+      speaker: "Дрімота",
+      title: "Дрімота шепоче збоку",
+      text: "Озирнутися — це згадати, де ти. А коли щось чіпляє погляд, роздивися ближче.",
+    } satisfies TutorialVoiceComment;
+  }
+
+  return {
+    speaker: "Сон",
+    title: "Сон відповідає тихо",
+    text: "Роздивитися — це спитати місце, що воно ховає. Написи, сліди й речі часто говорять тихіше за дорогу.",
+  } satisfies TutorialVoiceComment;
+}
+
+export async function tutorialActionHintComment(player: TutorialActionHintPlayerRef, commandKey: "look" | "examine"): Promise<TutorialVoiceComment | null> {
+  const locationId = player.currentLocationId;
+  if (!locationId || !(await isPlayerInTutorial(locationId))) return null;
+
+  const seen = await prisma.worldEvent.findFirst({
+    where: {
+      playerId: player.id,
+      type: "SYSTEM",
+      title: TUTORIAL_ACTION_HINT_EVENT_TITLE,
+      description: commandKey,
+    },
+    select: { id: true },
+    orderBy: { createdAt: "desc" },
+  });
+  if (seen) return null;
+
+  await prisma.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: TUTORIAL_ACTION_HINT_EVENT_TITLE,
+      description: commandKey,
+      playerId: player.id,
+      locationId,
+    },
+  });
+
+  return tutorialActionHintText(commandKey);
 }
 
 export async function tutorialWaitPaceComments(player: TutorialPlayerRef): Promise<TutorialVoiceComment[]> {

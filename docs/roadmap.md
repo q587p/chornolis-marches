@@ -73,6 +73,7 @@ Primary outcomes:
 - At night, location descriptions, nearby beings, tracks and ground objects are hidden or reduced without light.
 - Campfires and carried torches reveal what darkness hides.
 - Хмиз can be found, picked up and added to a campfire.
+- First-session guidance reacts to the new darkness rules: beginners get short diegetic help after their first reduced-visibility night, and the starter camp reads as a shared border-camp return anchor rather than a random coordinate.
 - The first biome-aware foraging table exists without becoming full ecology simulation.
 - Lying posture and ordinary sleep can begin as a small survival slice after rest/posture rules are stable.
 
@@ -95,6 +96,7 @@ Primary outcomes:
 - A minimal persistent learning/progress storage exists only if needed by the MVP.
 - `Спостерігати` / observation is a narrow usable action, not a broad skill sheet.
 - Watching a herbalist or relevant action can teach a first herbalism/gathering hint.
+- The tutorial dream can add optional action-semantics rooms where `Озирнутися` gives orientation and `Роздивитися` reveals a concrete detail or next action.
 - Reading fresh tracks or watching an animal can teach a first tracking hint.
 - Darkness, distance and light affect observation learning.
 - One small living-world omen exists and is rate-limited.
