@@ -180,6 +180,8 @@ assertAlias("з'їсти лікарські трави", { kind: "use-item", ite
 assertAlias("eat herbs", { kind: "use-item", item: "herbs" });
 assertAlias("підсмажити м'ясо", { kind: "cook-meat" });
 assertAlias("cook meat", { kind: "cook-meat" });
+assertAlias("посмажити все", { kind: "cook-meat-all" });
+assertAlias("/cook_all", { kind: "cook-meat-all" });
 assertAlias("з'їсти м'ясо", { kind: "use-item", item: "cooked_meat" });
 assertAlias("eat cooked meat", { kind: "use-item", item: "cooked_meat" });
 assertAlias("запалити факел", { kind: "light-torch" });

@@ -35,5 +35,9 @@ assert.equal(cookingResultReplyOptions({ rawMeatRemaining: null }), undefined);
 const retryOptions = cookingResultReplyOptions({ rawMeatRemaining: 2 });
 assert.equal(retryOptions.reply_markup.inline_keyboard[0][0].callback_data, "inventory:cook:meat");
 assert.equal(retryOptions.reply_markup.inline_keyboard[0][0].text, "🔥 Підсмажити м’ясо");
+assert.equal(retryOptions.reply_markup.inline_keyboard[0][1].callback_data, "inventory:cook:all");
+assert.equal(retryOptions.reply_markup.inline_keyboard[0][1].text, "🔥 Посмажити все");
+const singleRetryOptions = cookingResultReplyOptions({ rawMeatRemaining: 1 });
+assert.equal(singleRetryOptions.reply_markup.inline_keyboard[0].length, 1);
 
 console.log("Meat helpers OK");

@@ -16,6 +16,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added a tiny dry-islet resource exception and vegetation opt-outs for the blind channel and dark backwater.
 - Added a creature movement boundary helper and regression coverage so ordinary animals cannot newly climb human-authored `UP` exits such as watchtower ladders or trees.
 - Added a direct cook-meat action to active campfire feature inspections when the player carries raw meat.
+- Added cook-all controls and aliases so carried raw meat can be queued for campfire cooking one piece at a time.
 - Added `MAP-WILLOW-003` and `QA-WILLOW-001` planning coverage for floodplain landmarks, resources, aliases and route/content smoke checks.
 - Added planning coverage for starter supply guards and animal movement boundaries.
 
@@ -33,6 +34,8 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `node scripts/test/notifications.cjs`.
 - Ran `node scripts/test/player-notification-settings.cjs`.
 - Ran `node scripts/test/creature-movement.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/meat.cjs`.
 - Ran `npm run map:render`.
 - Ran `npm test`.
 - Ran `npm run build`.

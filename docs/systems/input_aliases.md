@@ -100,7 +100,8 @@ Targets and signals:
 - `підібрати труп`.
 - `освіжити труп`, `розібрати труп`, `freshen corpse`, `butcher corpse` -> gain raw meat from a sufficiently fresh corpse.
 - `/freshen_all`, `freshen all`, `свіжувати все`, `освіжити всі` -> queue freshening for every visible suitable corpse in the current місцина, one corpse at a time.
-- `підсмажити м'ясо`, `смажити м'ясо`, `cook meat` -> cook raw meat at a nearby campfire; a torch alone is not enough.
+- `підсмажити м'ясо`, `смажити м'ясо`, `cook meat` -> cook one raw meat at a nearby campfire; a torch alone is not enough.
+- `/cook_all`, `посмажити все`, `підсмажити все м'ясо`, `cook all meat` -> queue all carried raw meat for cooking, one piece at a time.
 - `з'їсти м'ясо`, `їсти смажене м'ясо`, `eat cooked meat`, `use cooked meat` -> eat cooked meat for hunger relief.
 - `кивнути 1`, `помахати мандрівник`, `вказати на вовка`, `насупитися вовк`.
 

@@ -60,6 +60,7 @@ export type ParsedAliasCommand =
   | { kind: "wait" }
   | { kind: "add-twigs-campfire" }
   | { kind: "cook-meat" }
+  | { kind: "cook-meat-all" }
   | { kind: "beginner-cache"; action: "inspect" | "take" | "contribute"; item?: string }
   | { kind: "put-item"; item: string; amount?: PutAliasAmount; container: string }
   | { kind: "say"; text: string }
@@ -408,12 +409,29 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "додати хмиз у вогнище": { kind: "add-twigs-campfire" },
   "cook meat": { kind: "cook-meat" },
   "cook raw meat": { kind: "cook-meat" },
+  "cook all": { kind: "cook-meat-all" },
+  "cook all meat": { kind: "cook-meat-all" },
+  "cook all raw meat": { kind: "cook-meat-all" },
+  "cook meat all": { kind: "cook-meat-all" },
+  "cook_all": { kind: "cook-meat-all" },
+  "cook_all_meat": { kind: "cook-meat-all" },
   "підсмажити м'ясо": { kind: "cook-meat" },
   "підсмажити м’ясо": { kind: "cook-meat" },
+  "підсмажити все": { kind: "cook-meat-all" },
+  "підсмажити все м'ясо": { kind: "cook-meat-all" },
+  "підсмажити все м’ясо": { kind: "cook-meat-all" },
+  "посмажити все": { kind: "cook-meat-all" },
+  "посмажити все м'ясо": { kind: "cook-meat-all" },
+  "посмажити все м’ясо": { kind: "cook-meat-all" },
   "смажити м'ясо": { kind: "cook-meat" },
   "смажити м’ясо": { kind: "cook-meat" },
+  "смажити все": { kind: "cook-meat-all" },
+  "смажити все м'ясо": { kind: "cook-meat-all" },
+  "смажити все м’ясо": { kind: "cook-meat-all" },
   "приготувати м'ясо": { kind: "cook-meat" },
   "приготувати м’ясо": { kind: "cook-meat" },
+  "приготувати все м'ясо": { kind: "cook-meat-all" },
+  "приготувати все м’ясо": { kind: "cook-meat-all" },
 
   "eat berries": { kind: "use-item", item: "berries" },
   "use berries": { kind: "use-item", item: "berries" },
@@ -722,6 +740,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "wait") return "/wait";
   if (parsed.kind === "add-twigs-campfire") return "/add_twigs_campfire";
   if (parsed.kind === "cook-meat") return "/cook_meat";
+  if (parsed.kind === "cook-meat-all") return "/cook_all";
   if (parsed.kind === "beginner-cache") {
     if (parsed.action === "take") return "/take_cache";
     if (parsed.action === "contribute") return "/contribute_cache";

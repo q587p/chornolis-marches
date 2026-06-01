@@ -132,16 +132,20 @@ export async function canCookPlayerMeat(playerId: number) {
   return canCookMeatAtLocation(player?.currentLocationId);
 }
 
-export async function playerHasRawMeat(playerId: number) {
+export async function playerRawMeatAmount(playerId: number) {
   const carried = await prisma.playerResource.findFirst({
     where: {
       playerId,
       amount: { gt: 0 },
       resourceType: { key: RAW_MEAT_KEY },
     },
-    select: { id: true },
+    select: { amount: true },
   });
-  return Boolean(carried);
+  return Math.max(0, carried?.amount ?? 0);
+}
+
+export async function playerHasRawMeat(playerId: number) {
+  return (await playerRawMeatAmount(playerId)) > 0;
 }
 
 export async function canCookPlayerRawMeat(playerId: number) {

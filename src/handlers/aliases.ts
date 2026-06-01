@@ -67,6 +67,7 @@ import {
   takeFromBeginnerCache,
 } from "../services/beginnerCache";
 import { equipPlayerWeapon, unequipPlayerWeapon } from "../services/weapons";
+import { queueAllRawMeatCooking } from "../services/cookingQueue";
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
@@ -418,6 +419,22 @@ async function submitCookMeat(bot: Bot, ctx: any) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
   await submitInventoryQueuedAction(bot, ctx, player, "COOK", {}, "Не вдалося підсмажити м'ясо.");
+}
+
+async function submitCookAllMeat(bot: Bot, ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  try {
+    const result = await queueAllRawMeatCooking(bot, player, ctx.chat?.id);
+    const queueText = await renderPlayerActionQueue(player.id);
+    await ctx.reply(
+      `Додано підсмажування м’яса: ${result.count}. Будете смажити по черзі${durationSecondsSuffix(player, result.durationMs)}.\n\n${queueText}`,
+      await actionQueueReplyOptions(player.id),
+    );
+  } catch (error) {
+    await replyToActionError(ctx, error, "Не вдалося посмажити все м'ясо.");
+  }
 }
 
 async function replyWithInventoryInspection(ctx: any, playerId: number, target: string) {
@@ -1098,6 +1115,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "light-torch") return submitLightTorch(bot, ctx);
     if (parsed.kind === "douse-torch") return submitDouseTorch(bot, ctx);
     if (parsed.kind === "cook-meat") return submitCookMeat(bot, ctx);
+    if (parsed.kind === "cook-meat-all") return submitCookAllMeat(bot, ctx);
     if (parsed.kind === "sleep") return submitSleep(bot, ctx, parsed.tutorial);
     if (parsed.kind === "wake") return submitWake(bot, ctx);
     if (parsed.kind === "open") return submitOpen(ctx, parsed.target);
