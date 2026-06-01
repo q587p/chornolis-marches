@@ -188,6 +188,9 @@ preview_latest_news - показати останню новину без пуб
 post_latest_news - опублікувати останню новину в канал
 pending_publications - показати чергу публікацій
 publish_pending - опублікувати очікувані записи
+pause_publications - призупинити автоматичну публікацію черги
+resume_publications - відновити автоматичну публікацію черги
+cancel_pending_publications - скасувати неопубліковані записи новин/архіву
 list_publications - показати останні записи книги публікацій
 show_publication - показати збережений запис за номером
 repost_publication - повторно опублікувати збережений запис як архів
@@ -202,12 +205,16 @@ preview_world_digest - попередній перегляд дайджесту 
 - `/info` — публічний безпечний запис: без reply показує запис відправника, у reply показує запис людини, якій відповідають, якщо Telegram передав її `from`.
 - `/info_full` — службовий докладніший запис за іменем або печаткою; потребує `HERALD_ADMIN_IDS`.
 - `/queue_latest_news` — поставити останню новину в outbox без негайної публікації.
+- `/pause_publications` — призупинити автоматичний publisher loop, не зупиняючи бота, health server чи інші службові команди. Стан паузи зберігається в БД.
+- `/resume_publications` — відновити автоматичну публікацію очікуваних записів.
+- `/cancel_pending_publications` — позначити неопубліковані записи `NEWS_MD` і `NEWS_MD_ARCHIVE` як `CANCELED`, не видаляючи вже опубліковану історію й не торкаючись інших майбутніх типів публікацій.
 - `/list_publications` — показати останні записи книги публікацій із Telegram message id, published/deleted/repost markers, якщо вони є.
 - `/show_publication <id>` — показати збережений snapshot запису з outbox, навіть якщо його вже немає в `news.md`.
 - `/repost_publication <id>` — повторно опублікувати збережений snapshot як архівний repost. Це створює нове Telegram-повідомлення й не відновлює старий timestamp.
 - `/mark_publication_deleted <id>` — вручну позначити в БД, що Telegram-повідомлення було видалене з каналу. Команда нічого не видаляє в Telegram і не запускає автоматичний repost.
 - `/backfill_news_preview` — подивитися, які старі записи `news.md` ще не стоять у черзі й не були опубліковані.
 - `/backfill_news_queue [13m]` — поставити старі записи `news.md` у чергу архівною drip-feed послідовністю. Без аргументу використовує configured archive interval, зараз 13 хвилин.
+- `/backfill_news_cancel` — alias для безпечного скасування неопублікованих записів новин/архіву, коли backfill поставив забагато старих вістей.
 - `/backfill_news_reschedule_pending [13m]` — заново впорядкувати й розкласти ще не опубліковані архівні записи `news.md`, не торкаючись уже опублікованих Telegram-повідомлень.
 - `/backfill_news_status` — звірити стан архівного backfill для `news.md`: скільки очікує, скільки вже опубліковано, який наступний запис і чи ввімкнено overdue rebalance.
 - `/queue_world_digest` — поставити світовий запис в outbox без негайної публікації.

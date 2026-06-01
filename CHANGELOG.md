@@ -15,6 +15,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added a minimal weapon catalog and resource types for `knife`, `hunting_spear`, `sickle`, `hand_axe` and `short_sword`.
 - Added inventory equip/unequip controls and text aliases for taking a weapon in hand or putting it away.
 - Added starter knife grant after onboarding completion.
+- Added durable Herald publication queue pause/resume state and admin cancel controls for pending news/archive rows.
 - Added focused weapon helper and alias regression coverage.
 
 ### Changed
@@ -23,6 +24,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Player attack completion text and observer text now react to the equipped weapon while keeping existing target eligibility.
 - Corpse freshening now requires an equipped sharp weapon before stamina is spent.
 - Dropping an equipped weapon clears the equipped weapon field.
+- Herald publisher loop now skips automatic publication while paused, and pending news/archive rows can be marked canceled without deleting published history.
 - Updated weapon system and planning docs for the WPN-001/WPN-002 slice.
 
 ### Validation

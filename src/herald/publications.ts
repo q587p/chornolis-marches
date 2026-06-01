@@ -1,5 +1,7 @@
 import { prisma } from "../db";
 
+export const HERALD_NEWS_SOURCE_TYPES = ["NEWS_MD", "NEWS_MD_ARCHIVE"] as const;
+
 type QueueHeraldPublicationInput = {
   sourceType: string;
   sourceId?: string;
@@ -84,6 +86,26 @@ export async function listRecentHeraldPublications(limit: number) {
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: Math.max(1, Math.min(50, Math.floor(limit))),
   });
+}
+
+export async function getPublicationQueueControl() {
+  return prisma.heraldPublicationQueueControl.upsert({
+    where: { id: 1 },
+    create: { id: 1 },
+    update: {},
+  });
+}
+
+export async function setPublicationQueuePaused(isPaused: boolean) {
+  return prisma.heraldPublicationQueueControl.upsert({
+    where: { id: 1 },
+    create: { id: 1, isPaused },
+    update: { isPaused },
+  });
+}
+
+export async function isPublicationQueuePaused() {
+  return (await getPublicationQueueControl()).isPaused;
 }
 
 export async function findExistingPublicationsByHashes(hashes: readonly string[]) {
@@ -203,6 +225,30 @@ export async function getPendingPublications(limit: number) {
       { id: "asc" },
     ],
     take: Math.max(1, Math.min(100, Math.floor(limit))),
+  });
+}
+
+export async function countPendingPublications(sourceTypes?: readonly string[]) {
+  return prisma.heraldPublication.count({
+    where: {
+      publishedAt: null,
+      visibility: "PUBLIC",
+      ...(sourceTypes?.length ? { sourceType: { in: [...sourceTypes] } } : {}),
+    },
+  });
+}
+
+export async function cancelPendingPublications(sourceTypes: readonly string[] = HERALD_NEWS_SOURCE_TYPES) {
+  return prisma.heraldPublication.updateMany({
+    where: {
+      publishedAt: null,
+      visibility: "PUBLIC",
+      sourceType: { in: [...sourceTypes] },
+    },
+    data: {
+      visibility: "CANCELED",
+      error: null,
+    },
   });
 }
 

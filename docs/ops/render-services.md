@@ -164,6 +164,16 @@ publisher tick and reschedules the remaining overdue archive entries to future
 13-minute slots. This rule is for archive/backfill posts; manual repost commands
 remain explicit admin actions.
 
+If a backfill queued too many old posts, keep the service running and pause or
+cancel the outbox instead of suspending the whole Web Service:
+
+- `/pause_publications` stops automatic outbox publication while the Herald bot,
+  health endpoint and admin commands remain alive;
+- `/resume_publications` resumes automatic publication;
+- `/cancel_pending_publications` and `/backfill_news_cancel` mark unpublished
+  `NEWS_MD` / `NEWS_MD_ARCHIVE` rows as `CANCELED`, preserving already
+  published history and leaving unrelated future publication types alone.
+
 ## Icebox: Embedded Herald Mode
 
 Possible future mode: run the Herald inside the existing main Render Web Service
