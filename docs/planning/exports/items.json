@@ -766,7 +766,8 @@
     ],
     "depends_on": [
       "FOOD-001",
-      "FOOD-004"
+      "FOOD-004",
+      "WORLD-003"
     ],
     "exports": {},
     "file": "docs/planning/items/FOOD-005-hunger-consequences.md"
@@ -3405,6 +3406,30 @@
     ],
     "exports": {},
     "file": "docs/planning/items/WORLD-002-hidden-spirit-seed-and-boundaries.md"
+  },
+  {
+    "id": "WORLD-003",
+    "title": "World-time survival and item lifetime timers",
+    "status": "next",
+    "type": "system",
+    "area": "world_time",
+    "priority": "high",
+    "tags": [
+      "world-time",
+      "survival",
+      "hunger",
+      "torches",
+      "campfires",
+      "decay",
+      "item-lifetime"
+    ],
+    "depends_on": [
+      "WORLD-001-C",
+      "FOOD-004",
+      "WORLD-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WORLD-003-world-time-survival-and-lifetime-timers.md"
   },
   {
     "id": "WPN-001",

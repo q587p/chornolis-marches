@@ -17,10 +17,12 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Added an explicit `/shout` bot command route so clickable command hints open a useful usage prompt instead of falling through when no shout text is supplied.
 - Made `/restart` and slashless `restart` share an explicit confirmation prompt before deleting character state.
+- Slowed player hunger spikes so ordinary stamina-spending actions no longer add hunger every time; hunger now rises from strenuous actions or overexertion until the fuller world-time hunger pass lands.
 
 ### Documentation
 
 - Added `MAP-WILLOW-002` backlog planning for a future under-bridge / watchtower integration pass around the Willow Floodplain.
+- Added `WORLD-003` near-term planning for moving hunger, torches, campfires, corpse/meat decay and related temporary lifetimes onto internal world-time hours/days.
 - Reconciled planning status for shipped world-time, visibility, fire/light, `twigs`, ordinary sleep and restart-safety slices after 0.14.22.
 - Clarified that `PROG-002` is now an umbrella learning-design item, with narrower LEARN/OBS/TRACK-LEARN slices carrying near-term implementation.
 

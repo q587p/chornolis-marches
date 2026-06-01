@@ -54,6 +54,7 @@ Implement `0.14.x` in small slices:
 21. MAP-WILLOW-001: `0.14.21` adds the first reachable Willow Floodplain contour as seed-only map content while leaving notification settings, settlement gates and observation systems untouched.
 22. MAP-WILLOW-003 / QA-WILLOW-001: `0.14.22` adds inspectable Willow Floodplain landmarks, modest swamp resource defaults, feature aliases and route/content smoke validation without adding fishing, observation progression or settlement access.
 23. SLEEP-002-A / ADM-001-C / planning reconciliation: `0.14.23` is the reconciliation and safety slice after `0.14.22`, adding the ordinary sleep command gate, restart confirmation parity and refreshed status for shipped world-time, visibility, fire/light and хмиз slices.
+24. WORLD-003: make the next survival/time pass move player hunger, torch lifetimes, campfire burn/ash cleanup, corpse/meat decay and similar temporary states toward internal world-time hours/days instead of scattered real-minute or per-action timers.
 
 Observation learning remains the `0.15` line. Darkness, distance and light should affect learning later, but the visibility foundation must land first.
 
@@ -75,6 +76,7 @@ Observation learning remains the `0.15` line. Darkness, distance and light shoul
 - ONB-001 follow-up: tutorial hints that careful observation matters.
 - Starter camp and dream onboarding follow-up: after the `0.14.11` shared cache slice, review whether the cache needs stronger newcomer-helper text, contribution etiquette, or anti-hoarding limits. Keep hunter route rewrites separate unless they become direct regressions.
 - SLEEP-002-A: ordinary sleep command gate is in testing after the 0.14.23 reconciliation pass. Next sleep work should focus on comfort, danger interruption and sleeping-body/dream-presence separation rather than reopening the first command gate.
+- WORLD-003: hunger pacing and temporary object lifetimes should become world-time driven. The immediate 0.14.23 bridge slows action-based hunger spikes, but the durable pass needs persisted world-minute state and explicit rules for torches, campfires, corpses/remains, raw/cooked meat and other decaying ground objects.
 
 Keep theft/hiding after the first observation MVP is stable:
 

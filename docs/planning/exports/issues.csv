@@ -176,6 +176,7 @@ WORLD-001-F,Light snapshot helper,testing,feature,visibility,high,"world-time,vi
 WORLD-001-G,Time and weather debug controls,testing,technical,world_time,medium,"world-time,weather,admin,testing,0.14",docs/planning/items/WORLD-001-G-time-weather-debug-controls.md
 WORLD-002,Campfires and light,next,feature,survival,high,"survival,light,crafting,night",docs/planning/items/WORLD-002-campfires-and-light.md
 WORLD-002-hidden-spirit,Hidden spirit seed and boundaries,backlog,feature,world,medium,"world,hidden-presence,spirit,campfire",docs/planning/items/WORLD-002-hidden-spirit-seed-and-boundaries.md
+WORLD-003,World-time survival and item lifetime timers,next,system,world_time,high,"world-time,survival,hunger,torches,campfires,decay,item-lifetime",docs/planning/items/WORLD-003-world-time-survival-and-lifetime-timers.md
 WPN-001,Minimal weapon catalog and equip foundation,done,feature,items,medium,"weapons,inventory,equipment,freshening",docs/planning/items/WPN-001-minimal-weapon-catalog-and-equip.md
 WPN-002,"Weapon-aware look, examine, attack and freshen",done,feature,items,medium,"weapons,inventory,combat,freshening",docs/planning/items/WPN-002-weapon-aware-look-examine-attack-freshen.md
 WPN-003,Themed NPC weapons and hunter spear,backlog,feature,npc,medium,"weapons,npc,hunter,seed",docs/planning/items/WPN-003-themed-npc-weapons-and-hunter-spear.md

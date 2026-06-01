@@ -14,6 +14,7 @@ tags:
 depends_on:
   - FOOD-001
   - FOOD-004
+  - WORLD-003
 ---
 
 # FOOD-005: Hunger consequences for health and stamina recovery
@@ -25,6 +26,8 @@ Make hunger matter mechanically without turning it into a sudden punishment: sev
 ## Problem
 
 Hunger can already be eased through food, and `FOOD-004` tracks gentle cues that tell the player when it is time to eat. The next layer should give those cues real weight. If hunger changes only a status label, players can safely ignore it.
+
+This should wait for `WORLD-003` or land alongside it, so penalties are based on deliberate world-time hunger pacing rather than rapid action-count spikes.
 
 The effect should be slow, legible and recoverable:
 
