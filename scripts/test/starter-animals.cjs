@@ -43,6 +43,9 @@ const predatorStartLocations = new Set(
     .filter((group) => group.age !== "CORPSE" && group.count > 0)
     .map((group) => group.locationKey),
 );
+const starterOwlCount = STARTER_PREDATORS
+  .filter((group) => group.speciesKey === "owl" && group.age !== "CORPSE")
+  .reduce((sum, group) => sum + group.count, 0);
 
 assert.deepEqual(
   mouseBreedingLocations.sort(),
@@ -67,6 +70,7 @@ assert.equal(
   1,
   "Starter predators should include only one wolf in this balance slice",
 );
+assert.equal(starterOwlCount, 3, "Starter predators should include exactly three owls");
 
 const expectedFoodOverrides = {
   forest_03_02: { grass: 80, berries: 15, mushrooms: 15, herbs: 10 },

@@ -1,5 +1,5 @@
 export type StarterAnimalAge = "CHILD" | "YOUNG" | "ADULT" | "OLD" | "CORPSE";
-export type StarterAnimalSpeciesKey = "rabbit" | "mouse" | "fox" | "wolf";
+export type StarterAnimalSpeciesKey = "rabbit" | "mouse" | "fox" | "wolf" | "owl";
 
 export type StarterAnimalGroup = {
   speciesKey: StarterAnimalSpeciesKey;
@@ -50,6 +50,9 @@ export const STARTER_PREDATORS: StarterAnimalGroup[] = [
   { speciesKey: "fox", locationKey: "forest_07_02", count: 1, age: "ADULT", sex: "MALE" },
   { speciesKey: "fox", locationKey: "meadow_13_04", count: 1, age: "YOUNG", sex: "MALE" },
   { speciesKey: "wolf", locationKey: "forest_00_08", count: 1, age: "ADULT", sex: "FEMALE" },
+  { speciesKey: "owl", locationKey: "forest_04_02", count: 1, age: "ADULT", sex: "FEMALE" },
+  { speciesKey: "owl", locationKey: "forest_09_04", count: 1, age: "ADULT", sex: "MALE" },
+  { speciesKey: "owl", locationKey: "meadow_14_04", count: 1, age: "YOUNG", sex: "FEMALE" },
 ];
 
 export function starterAnimalAgeTicks(
@@ -86,6 +89,12 @@ export function starterAnimalAction(speciesKey: string, age: StarterAnimalAge) {
     if (age === "YOUNG") return "тримається краю зграї";
     if (age === "OLD") return "стереже старий слід";
     return "патрулює глибоку стежку";
+  }
+  if (speciesKey === "owl") {
+    if (age === "YOUNG") return "вчиться слухати траву згори";
+    if (age === "OLD") return "сидить у дуплі й повільно кліпає";
+    if (age === "CORPSE") return "лежить нерухомо серед сірого пір'я";
+    return "беззвучно дослухається до мишачого шарудіння";
   }
   if (speciesKey === "mouse") {
     if (age === "CHILD") return "пищить у сухій траві";

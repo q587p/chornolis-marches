@@ -7,6 +7,36 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.0 - Nocturnal owl ecology - 12026-06-01
+
+### Added
+
+- Added `owl` as an `ANIMAL` / `CARNIVORE` creature species seeded with three starter animals.
+- Added a nocturnal activity sync for owls: they hide and sleep during the day, canceling queued or running owl actions, then wake and unhide at dawn, dusk and night.
+- Added owl predator targeting rules that strongly prefer mice, only lightly target child or young rabbits, and avoid other prey in this minimal patch.
+- Added owl-specific starter action text and a focused owl nocturnal regression script.
+
+### Changed
+
+- Included owls in starter predator population-floor restoration while keeping breeding-pair restoration limited to rabbits and mice.
+- Set owl attack base chance to `42` to make them a meaningful mouse predator without adding flight, nests, eggs, ranged hunting or reproduction.
+
+### Fixed
+
+- Added an extra creature attack completion guard so hidden or sleeping attackers cannot finish a queued attack if daypart sync has already put them out of action.
+
+### Documentation
+
+- Updated ecology and next-planning notes for the first early `0.15.x` ecology stabilization slice before the observation-learning line.
+
+### Validation
+
+- Ran `node scripts/test/starter-animals.cjs`.
+- Ran `node scripts/test/population-restoration.cjs`.
+- Ran `node scripts/test/owl-nocturnal.cjs`.
+- Ran `npm test`.
+- Ran `npm run build`.
+
 ## 0.14.23 - Reconciliation and safety slice - 12026-06-01
 
 ### Added
