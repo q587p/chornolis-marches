@@ -39,6 +39,7 @@ import { cookRawMeat, freshenCorpseForMeat } from "./meat";
 import { rememberPlayerReplyTarget } from "./replyTargets";
 import { hunterClaimedCorpseAction, hunterConversationReplyLine, hunterReactionDurationMs, hunterSocialReactionSignal, isHunterCreature } from "./npcHunter";
 import { isUnclaimedHerbivoreCorpseForScavenging, predatorClaimedCorpseAction, predatorClaimedCorpseFoodValue, predatorClaimedCorpseOwnerId, predatorPreyFoodValue } from "./predatorFeeding";
+import { predatorKillCurrentAction, predatorKillObserverText, predatorMissCurrentAction, predatorMissObserverText, predatorWoundCurrentAction, predatorWoundObserverText } from "./predatorActionText";
 import { ATTACK_OBSERVATION_GROWTH_MESSAGE, ATTACK_PRACTICE_GROWTH_MESSAGE, isAttackPracticeMilestone, recordAttackKillSource, recordAttackObservation } from "./attackLearning";
 import { GATHERING_OBSERVATION_GROWTH_MESSAGE, GATHERING_PRACTICE_GROWTH_MESSAGE, isGatheringPracticeMilestone, recordGatheringObservation, recordGatheringSource } from "./gatheringLearning";
 import { COOKING_OBSERVATION_GROWTH_MESSAGE, COOKING_PRACTICE_GROWTH_MESSAGE, FRESHENING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_PRACTICE_GROWTH_MESSAGE, recordCookingObservation, recordFresheningObservation, recordFresheningSource } from "./foodLearning";
@@ -1011,6 +1012,7 @@ async function completeCreatureAttack(bot: Bot, action: WorldAction) {
   const damage = Math.max(1, attacker.species.strength + Math.floor(Math.random() * 3));
   const nextHp = target.hp - damage;
   const foodValue = predatorPreyFoodValue(target);
+  const targetForms = creatureForms(target);
   await spendCreatureStamina(attacker, actionCost("ATTACK"));
   await markRecentAttackDanger(attacker.locationId);
   await prisma.creature.updateMany({ where: { id: attacker.id }, data: { attackAttempts: { increment: 1 } } });
@@ -1018,13 +1020,13 @@ async function completeCreatureAttack(bot: Bot, action: WorldAction) {
   if (!attackHitsSpecies(target.species.key)) {
     await prisma.creature.updateMany({
       where: { id: attacker.id },
-      data: { activity: "FIGHTING", currentAction: `промахнувся, нападаючи на ${target.species.name}` },
+      data: { activity: "FIGHTING", currentAction: predatorMissCurrentAction(attacker.species.key, targetForms.accusative, target.species.name) },
     });
     await prisma.creature.updateMany({
       where: { id: target.id },
       data: { currentAction: "сахнулося від нападу" },
     });
-    await notifyLocation(bot, attacker.locationId, -1, `Щось кидається на ${target.species.name}, але здобич вислизає.`);
+    await notifyLocation(bot, attacker.locationId, -1, predatorMissObserverText(attacker.species.key, targetForms.accusative, target.species.name));
     await logEvent("NPC_ACTION", "Creature missed prey", `${attacker.id} -> ${target.id}; species=${target.species.key}`, attacker.locationId);
     await setActionStatus(action, "DONE");
     return;
@@ -1051,7 +1053,7 @@ async function completeCreatureAttack(bot: Bot, action: WorldAction) {
       data: {
         hunger: attacker.hunger,
         activity: "FIGHTING",
-        currentAction: hunter ? `вполював ${target.species.name} і несе здобич` : `убив ${target.species.name} і тримається поруч зі здобиччю`,
+        currentAction: hunter ? `вполював ${target.species.name} і несе здобич` : predatorKillCurrentAction(attacker.species.key, targetForms.accusative, target.species.name),
         successfulAttacks: { increment: 1 },
         kills: { increment: 1 },
       },
@@ -1062,14 +1064,14 @@ async function completeCreatureAttack(bot: Bot, action: WorldAction) {
       await notifyLocation(bot, attacker.locationId, -1, weaponText ?? `${attacker.name ?? "Мисливець"} збиває ${target.species.name} і підбирає здобич для падального рову.`);
       await logEvent("NPC_ACTION", "Hunter claimed prey", `${attacker.id} -> ${target.species.key} #${target.id}`, attacker.locationId);
     } else {
-      await notifyLocation(bot, attacker.locationId, -1, `Щось кидається на здобич. За мить ${target.species.name} падає нерухомо.`);
+      await notifyLocation(bot, attacker.locationId, -1, predatorKillObserverText(attacker.species.key, target.species.name));
       await logEvent("NPC_ACTION", "Creature killed prey", `${attacker.species.key} #${attacker.id} -> ${target.species.key} #${target.id}; food=${foodValue}`, attacker.locationId);
     }
     await recordAttackKillSource({ locationId: attacker.locationId, attackerCreatureId: attacker.id, victimCreatureId: target.id });
   } else {
     await prisma.creature.updateMany({ where: { id: target.id }, data: { hp: nextHp, currentAction: "поранено" } });
-    await prisma.creature.updateMany({ where: { id: attacker.id }, data: { activity: "FIGHTING", currentAction: `атакує ${target.species.name}`, successfulAttacks: { increment: 1 } } });
-    await notifyLocation(bot, attacker.locationId, -1, `Щось нападає на ${target.species.name}.`);
+    await prisma.creature.updateMany({ where: { id: attacker.id }, data: { activity: "FIGHTING", currentAction: predatorWoundCurrentAction(attacker.species.key, targetForms.accusative, target.species.name), successfulAttacks: { increment: 1 } } });
+    await notifyLocation(bot, attacker.locationId, -1, predatorWoundObserverText(attacker.species.key, targetForms.accusative, target.species.name));
     await logEvent("NPC_ACTION", "Creature attacked prey", `${attacker.id} -> ${target.id}; damage=${damage}`, attacker.locationId);
   }
 

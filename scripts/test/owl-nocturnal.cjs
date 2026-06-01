@@ -9,6 +9,14 @@ const {
   predatorPreyPreference,
 } = require("../../src/services/worldTick");
 const { canCreatureAttackComplete } = require("../../src/services/actionCompletions");
+const {
+  predatorKillCurrentAction,
+  predatorKillObserverText,
+  predatorMissCurrentAction,
+  predatorMissObserverText,
+  predatorWoundCurrentAction,
+  predatorWoundObserverText,
+} = require("../../src/services/predatorActionText");
 
 assert.equal(isOwlActiveDaypart("dawn"), true);
 assert.equal(isOwlActiveDaypart("dusk"), true);
@@ -66,5 +74,12 @@ assert.equal(canCreatureAttackComplete({ isAlive: true, isGone: false, isHidden:
 assert.equal(canCreatureAttackComplete({ isAlive: true, isGone: false, isHidden: true, activity: "FIGHTING" }), false);
 assert.equal(canCreatureAttackComplete({ isAlive: true, isGone: false, isHidden: false, activity: "SLEEPING" }), false);
 assert.equal(canCreatureAttackComplete({ isAlive: true, isGone: true, isHidden: false, activity: "FIGHTING" }), false);
+assert.equal(predatorMissCurrentAction("owl", "мишу", "миша"), "промахнулася, падаючи на мишу");
+assert.equal(predatorKillCurrentAction("owl", "мишу", "миша"), "безшумно вполювала мишу й тримається поруч зі здобиччю");
+assert.equal(predatorWoundCurrentAction("owl", "мишу", "миша"), "зачепила мишу кігтями");
+assert.equal(predatorMissObserverText("owl", "мишу", "миша"), "Крилата тінь беззвучно падає на мишу, але здобич вислизає.");
+assert.equal(predatorKillObserverText("owl", "миша"), "Крилата тінь падає згори. За мить миша завмирає в траві.");
+assert.equal(predatorWoundObserverText("owl", "мишу", "миша"), "Крилата тінь зачіпає мишу й знову губиться вгорі.");
+assert.equal(predatorKillObserverText("fox", "миша"), "Щось кидається на здобич. За мить миша падає нерухомо.");
 
 console.log("Owl nocturnal profile OK");
