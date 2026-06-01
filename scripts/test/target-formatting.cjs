@@ -5,6 +5,7 @@ require("ts-node/register");
 const { formatCreatureLifeState, formatCreatureStatusLine, inventoryResourceSummary } = require("../../src/services/targets");
 const { animalAgeDescription, groundItemLine, groundItemPickupButtonRows } = require("../../src/services/locations");
 const { buildCorpseActionKeyboard, buildTargetActionKeyboard, buildTargetListKeyboard } = require("../../src/ui/keyboards");
+const { visibleHeldTorchTextWithContext } = require("../../src/utils/torchText");
 
 const maleNpc = {
   isAlive: true,
@@ -36,6 +37,11 @@ assert.equal(animalAgeDescription({ ...maleMouse, age: "ADULT" }), "доросл
 assert.equal(animalAgeDescription({ ...maleMouse, age: "OLD" }), "старий миш");
 assert.equal(formatCreatureStatusLine({ ...maleMouse, isAlive: true }), "Стан: живий.");
 assert.equal(formatCreatureLifeState({ ...maleMouse, hp: 1, maxHp: 12, species: { ...maleMouse.species, baseHp: 12 } }), "Життя: тяжко поранений.");
+
+assert.equal(visibleHeldTorchTextWithContext({ isLit: false }), "Руки порожні.");
+assert.equal(visibleHeldTorchTextWithContext({ isLit: false }, { hasOtherHeldItem: true }), "");
+assert.equal(visibleHeldTorchTextWithContext({ isLit: true, litAmount: 1 }, { hasOtherHeldItem: true }), "У руці горить запалений факел.");
+assert.equal(visibleHeldTorchTextWithContext({ isLit: true, litAmount: 2 }, { hasOtherHeldItem: true }), "В обох руках горять запалені факели.");
 
 const femaleMouse = {
   sex: "FEMALE",

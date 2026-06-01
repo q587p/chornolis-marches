@@ -1,7 +1,7 @@
 import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import { formatObservedPostureText, formatObservedVitalsText, formatPlayerStats, formatVitalsLine } from "../utils/playerText";
-import { visibleHeldTorchText } from "../utils/torchText";
+import { visibleHeldTorchTextWithContext } from "../utils/torchText";
 import { normalizeCreatureActionText } from "../utils/creatureActionText";
 import { creatureForms, playerForms, type NameForms } from "./grammar";
 import { lifetimeSummary } from "./itemLifetime";
@@ -211,7 +211,9 @@ export async function resolveTarget(type: string, id: number, locationId: number
     if (!target) return null;
     const forms = playerForms(target);
     const torchState = await getPlayerTorchState(target.id);
-    const weaponText = heldWeaponLine(target.equippedWeaponKey) ?? genderedUnarmed(target);
+    const heldWeaponText = heldWeaponLine(target.equippedWeaponKey);
+    const weaponText = heldWeaponText ?? genderedUnarmed(target);
+    const torchText = visibleHeldTorchTextWithContext(torchState, { hasOtherHeldItem: Boolean(heldWeaponText) });
     const visibleLines = [
       `Ви бачите ${forms.accusative}.`,
       "",
@@ -219,7 +221,7 @@ export async function resolveTarget(type: string, id: number, locationId: number
       `Стан: ${genderedPlayerState(target)}`,
       formatObservedVitalsText(target, { hpFallback: BASE_HP, staminaFallback: BASE_STAMINA }),
       weaponText,
-      visibleHeldTorchText(torchState),
+      ...(torchText ? [torchText] : []),
     ];
     if (detail === "full") {
       visibleLines.push("", "Поклажа:", await playerInventorySummary(target.id, { exact: showTechnicalDetails }));
