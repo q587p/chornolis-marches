@@ -10,6 +10,7 @@ import {
   starterAnimalAgeTicks,
   starterAnimalHp,
 } from "../data/starterAnimals";
+import { POPULATION_FLOOR_RESTORED_EVENT_TITLE } from "./ecologyStats";
 
 type PopulationFloorSpecies = {
   id: number;
@@ -191,7 +192,7 @@ export async function restorePopulationFloors(): Promise<PopulationFloorResult> 
   await prisma.worldEvent.create({
     data: {
       type: "SYSTEM",
-      title: "Population floor restored",
+      title: POPULATION_FLOOR_RESTORED_EVENT_TITLE,
       description: `Restored animal population floors: ${Object.entries(plan.bySpecies).map(([key, count]) => `${key}=${count}`).join(", ")}.`,
     },
   });

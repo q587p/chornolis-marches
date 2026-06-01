@@ -8,6 +8,7 @@ const TICK_EVENT_TAKE = 120;
 export const PLAYER_KILL_EVENT_TITLE = "Player killed animal";
 export const PREDATOR_KILL_EVENT_TITLE = "Creature killed prey";
 export const STARVATION_DEATH_EVENT_TITLE = "Animal starved";
+export const POPULATION_FLOOR_RESTORED_EVENT_TITLE = "Population floor restored";
 
 export const TICK_COUNTER_KEYS = [
   "rabbitBirths",
@@ -27,6 +28,7 @@ export const TICK_COUNTER_KEYS = [
   "playerKills",
   "corpsesGone",
   "regenerated",
+  "populationFloorRestored",
 ] as const;
 
 type TickCounterKey = typeof TICK_COUNTER_KEYS[number];
@@ -77,6 +79,19 @@ function addCounters(target: TickCounterSummary, source: TickCounterSummary) {
   for (const key of TICK_COUNTER_KEYS) target[key] += source[key];
 }
 
+export function parsePopulationFloorRestorationDescription(description: string | null | undefined) {
+  const counts: Record<string, number> = {};
+  if (!description) return counts;
+
+  for (const match of description.matchAll(/\b([a-z][a-z0-9_-]*)=(-?\d+)\b/g)) {
+    const value = Number(match[2]);
+    if (!Number.isFinite(value) || value <= 0) continue;
+    counts[match[1]] = (counts[match[1]] ?? 0) + value;
+  }
+
+  return counts;
+}
+
 function attackerCreatureIdFromKillSource(description: string | null | undefined) {
   const match = description?.match(/attackerCreature=(\d+)/);
   return match ? Number(match[1]) : null;
@@ -122,6 +137,7 @@ export async function getEcologyStats() {
     topNpcs,
     npcKillStats,
     npcGreetingStats,
+    populationRestorationEvents,
   ] = await Promise.all([
     prisma.creatureSpecies.findMany({ where: { kind: "ANIMAL" }, orderBy: { key: "asc" } }),
     prisma.creature.groupBy({
@@ -218,6 +234,11 @@ export async function getEcologyStats() {
       },
       _count: { _all: true },
     }),
+    prisma.worldEvent.findMany({
+      where: { title: POPULATION_FLOOR_RESTORED_EVENT_TITLE },
+      orderBy: { id: "desc" },
+      select: { id: true, createdAt: true, description: true },
+    }),
   ]);
 
   const resourceTypes = await prisma.resourceType.findMany({ orderBy: { key: "asc" } });
@@ -279,6 +300,22 @@ export async function getEcologyStats() {
       percent: maxAmount > 0 ? Math.round((amount / maxAmount) * 100) : 0,
     };
   }).sort((a, b) => a.key.localeCompare(b.key));
+
+  const populationRestorationBySpecies = new Map<string, { speciesKey: string; speciesName: string; restored: number; events: number; latestAt: Date | null }>();
+  for (const event of populationRestorationEvents) {
+    const counts = parsePopulationFloorRestorationDescription(event.description);
+    for (const [speciesKey, restored] of Object.entries(counts)) {
+      const speciesName = species.find((item) => item.key === speciesKey)?.name ?? speciesKey;
+      const row = populationRestorationBySpecies.get(speciesKey) ?? { speciesKey, speciesName, restored: 0, events: 0, latestAt: null };
+      row.restored += restored;
+      row.events += 1;
+      if (!row.latestAt || event.createdAt > row.latestAt) row.latestAt = event.createdAt;
+      populationRestorationBySpecies.set(speciesKey, row);
+    }
+  }
+  const populationRestorationRows = [...populationRestorationBySpecies.values()]
+    .sort((a, b) => b.restored - a.restored || a.speciesKey.localeCompare(b.speciesKey));
+  const totalPopulationFloorRestored = populationRestorationRows.reduce((sum, row) => sum + row.restored, 0);
 
   const tickEvents = latestTickEvents
     .map((event) => ({
@@ -371,6 +408,7 @@ export async function getEcologyStats() {
       predatorKills: totalPredatorKills,
       playerKills: totalPlayerKills + totalNpcCharacterKills,
       starvationDeaths: totalStarvationDeaths,
+      populationFloorRestored: totalPopulationFloorRestored,
       locationCount,
       occupiedAnimalLocations: occupiedLocations.length,
     },
@@ -391,6 +429,7 @@ export async function getEcologyStats() {
     })),
     topPlayers: playerCharacterRows,
     topCharacters,
+    populationRestorationRows,
     latestTick,
     recent: {
       eventCount: tickEvents.length,

@@ -47,7 +47,7 @@ Implement `0.14.x` in small slices:
 14. SLEEP-001 and SLEEP-002: `0.14.12` adds lying posture and ordinary sleep while keeping tutorial sleep explicit.
 15. SLEEP-003: `0.14.13` connects ordinary sleep to the internal world clock for a first auto-wake slice and lets active campfires improve sleep recovery.
 16. WPN-001 and WPN-002: `0.14.14` adds the minimal weapon/equipped-tool foundation, starter knife grant, inventory equip controls, weapon-aware target text, attack copy and sharp-tool requirement for freshening.
-17. ECO-001/ECO-004: `0.14.15` and `0.14.16` stabilize the starter ecology opening: prey breeding clusters get room and food, no-pair prey restoration prevents quiet dead-ends, and hungry predators can scavenge safe unclaimed herbivore corpses before attacking live prey.
+17. ECO-001/ECO-004: `0.14.15` and `0.14.16` stabilize the starter ecology opening: prey breeding clusters get room and food, no-pair prey restoration prevents quiet dead-ends, and hungry predators can scavenge safe unclaimed herbivore corpses before attacking live prey. `0.14.17` adds scribe/admin restoration counters so repeated population-floor intervention can be tuned from `/stat`.
 
 Observation learning remains the `0.15` line. Darkness, distance and light should affect learning later, but the visibility foundation must land first.
 
