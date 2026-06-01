@@ -7,6 +7,32 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.14.22 - Willow Floodplain landmarks and resources - 12026-06-01
+
+### Added
+
+- Added six inspectable Willow Floodplain landmarks with authored descriptions, direct-inspection aliases and concise examine summaries.
+- Added modest `SWAMP` resource defaults for grass, mushrooms and herbs.
+- Added a tiny dry-islet resource exception and vegetation opt-outs for the blind channel and dark backwater.
+- Added `MAP-WILLOW-003` and `QA-WILLOW-001` planning coverage for floodplain landmarks, resources, aliases and route/content smoke checks.
+
+### Changed
+
+- Updated `next` planning notes for the 0.14.22 Willow follow-up slice.
+
+### Validation
+
+- Ran `npm run test:seed`.
+- Ran `npm run test:seed:types`.
+- Ran `node scripts/test/route-finding.cjs`.
+- Ran `node scripts/test/world-content-html.cjs`.
+- Ran `node scripts/test/text-targets.cjs`.
+- Ran `node scripts/test/notifications.cjs`.
+- Ran `node scripts/test/player-notification-settings.cjs`.
+- Ran `npm run map:render`.
+- Ran `npm test`.
+- Ran `npm run build`.
+
 ## 0.14.21 - Willow Floodplain first contour - 12026-06-01
 
 ### Added

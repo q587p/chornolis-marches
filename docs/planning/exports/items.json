@@ -1349,6 +1349,26 @@
     "file": "docs/planning/items/MAP-WILLOW-001-first-contour.md"
   },
   {
+    "id": "MAP-WILLOW-003",
+    "title": "Willow Floodplain landmarks, resources and aliases",
+    "status": "testing",
+    "type": "content",
+    "area": "world",
+    "priority": "high",
+    "tags": [
+      "map",
+      "world",
+      "willow-floodplain",
+      "resources",
+      "aliases"
+    ],
+    "depends_on": [
+      "MAP-WILLOW-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/MAP-WILLOW-003-landmarks-resources-and-aliases.md"
+  },
+  {
     "id": "NAV-001",
     "title": "Location-to-location route finding",
     "status": "testing",
@@ -2192,6 +2212,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/QA-002-camp-dream-first-session-smoke.md"
+  },
+  {
+    "id": "QA-WILLOW-001",
+    "title": "Willow Floodplain seed, map and route smoke",
+    "status": "testing",
+    "type": "qa",
+    "area": "world",
+    "priority": "high",
+    "tags": [
+      "map",
+      "world",
+      "willow-floodplain",
+      "qa",
+      "routes"
+    ],
+    "depends_on": [
+      "MAP-WILLOW-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/QA-WILLOW-001-seed-map-route-smoke.md"
   },
   {
     "id": "REL-001",

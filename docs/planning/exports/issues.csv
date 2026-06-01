@@ -69,6 +69,7 @@ MAP-002-B,Generic gather uses biome candidates,next,feature,world,high,"gather,b
 MAP-002-C,Biome foraging text variants,next,content,world,medium,"gather,biome,copy",docs/planning/items/MAP-002-C.md
 MAP-003,Playable map expansion,testing,content,world,high,"map,world,exploration,regions",docs/planning/items/MAP-003-playable-map-expansion.md
 MAP-WILLOW-001,Willow Floodplain first contour,testing,content,world,high,"map,world,willow-floodplain,riverbank,exploration",docs/planning/items/MAP-WILLOW-001-first-contour.md
+MAP-WILLOW-003,"Willow Floodplain landmarks, resources and aliases",testing,content,world,high,"map,world,willow-floodplain,resources,aliases",docs/planning/items/MAP-WILLOW-003-landmarks-resources-and-aliases.md
 NAV-001,Location-to-location route finding,testing,feature,world,medium,"navigation,movement,npc,world",docs/planning/items/NAV-001-location-route-finding.md
 NPC-002,Hunter auto-program MVP,backlog,feature,npc,high,"npc,ecology,hunting,living-world",docs/planning/items/NPC-002-hunter-auto-program.md
 NPC-003,Herbalist service layer,next,technical,npc,medium,"npc,herbalist,architecture,world-tick",docs/planning/items/NPC-003-herbalist-service-layer.md
@@ -113,6 +114,7 @@ PROG-005,Global chronicles and world milestones,testing,feature,progression,high
 PROG-006,Chronicle registration backfill and admin real-time view,backlog,feature,progression,high,"chronicle,world-events,onboarding,admin,local-chat",docs/planning/items/PROG-006-chronicle-backfill-and-admin-time-view.md
 QA-001,0.13 first-session closure smoke,testing,qa,onboarding,high,"qa,onboarding,tutorial,core-loop,release",docs/planning/items/QA-001-0.13-first-session-closure-smoke.md
 QA-002,Camp and dream first-session smoke,next,qa,onboarding,medium,"onboarding,camp,dream,qa",docs/planning/items/QA-002-camp-dream-first-session-smoke.md
+QA-WILLOW-001,"Willow Floodplain seed, map and route smoke",testing,qa,world,high,"map,world,willow-floodplain,qa,routes",docs/planning/items/QA-WILLOW-001-seed-map-route-smoke.md
 REL-001,Release branch PR summary and risk discipline,testing,process,release,high,"release,github,pr,planning",docs/planning/items/REL-001-release-branch-pr-summary-risk.md
 SES-001-A,AFK and End Session controls,testing,feature,session,high,"telegram,session,afk,ux",docs/planning/items/SES-001-A.md
 SES-001-B,Auto-AFK and proactive message guards,testing,feature,session,high,"telegram,session,reminders,tutorial",docs/planning/items/SES-001-B.md
