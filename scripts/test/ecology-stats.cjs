@@ -16,6 +16,7 @@ assert.equal(STARVATION_DEATH_EVENT_TITLE, "Animal starved");
 assert.equal(TICK_COUNTER_KEYS.includes("playerKills"), true);
 assert.equal(TICK_COUNTER_KEYS.includes("predatorKills"), true);
 assert.equal(TICK_COUNTER_KEYS.includes("starvationDeaths"), true);
+assert.equal(TICK_COUNTER_KEYS.includes("creatureDeferred"), true);
 assert.equal(
   countNpcCharacterKillEvents(
     [

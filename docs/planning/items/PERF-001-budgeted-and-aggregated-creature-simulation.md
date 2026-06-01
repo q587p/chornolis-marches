@@ -1,7 +1,7 @@
 ---
 id: PERF-001
 title: Runtime performance plan and creature simulation budget
-status: backlog
+status: next
 type: technical
 area: performance
 priority: high
@@ -125,6 +125,14 @@ Investigate why large post-reproduction populations leave many creature actions 
 
 - 0.12.3 reduced repeated stamina/action checks and added targeted `WorldAction` indexes.
 - 0.12.5 added optional status performance timing, narrowed heavy status selects, added DB-level pagination for `/all`, and made due player-action completion use bounded concurrency.
+- 0.14.18 adds the first per-world-tick creature processing budget. The tick now loads lightweight creature candidates, protects player-visible locations, non-animal NPCs and predators first, then fetches heavy location/resource data only for selected creatures. Tick system events and scribe/admin stats expose candidate, processed, deferred and protected counts.
+
+## Remaining follow-up after 0.14.18
+
+- Tune `WORLD_CREATURE_TICK_BUDGET` against production-sized worlds.
+- Add aggregate background movement/eating for deferred ordinary animals so deferral is not the only scaling valve.
+- Add richer per-phase tick timing once the world tick is split into smaller service boundaries.
+- Keep action queue and status pages under review if creature `RUNNING` pressure remains visible.
 
 ## Acceptance notes
 

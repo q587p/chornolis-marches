@@ -7,6 +7,23 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.14.18 - Creature simulation budget - 12026-06-01
+
+### Added
+
+- Added a per-world-tick creature processing budget for ordinary background creatures.
+- Added focused regression coverage for creature tick selection priorities.
+- Added creature candidate, processed, deferred and protected counters to tick events and scribe/admin ecology stats.
+
+### Changed
+
+- World ticks now load lightweight creature candidates first, protect player-visible locations, non-animal NPCs and predators, then fetch heavier location/resource data only for creatures selected for individual behavior.
+- Updated ecology and performance planning docs for the first `PERF-001` scaling slice.
+
+### Validation
+
+- Added `node scripts/test/creature-tick-budget.cjs` to the `npm test` chain.
+
 ## 0.14.16 - Ecology recovery follow-ups - 12026-06-01
 
 ### Changed

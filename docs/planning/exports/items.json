@@ -1852,7 +1852,7 @@
   {
     "id": "PERF-001",
     "title": "Runtime performance plan and creature simulation budget",
-    "status": "backlog",
+    "status": "next",
     "type": "technical",
     "area": "performance",
     "priority": "high",

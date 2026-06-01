@@ -27,6 +27,10 @@ export const TICK_COUNTER_KEYS = [
   "playerKills",
   "corpsesGone",
   "regenerated",
+  "creatureCandidates",
+  "creatureProcessed",
+  "creatureDeferred",
+  "creatureProtected",
 ] as const;
 
 type TickCounterKey = typeof TICK_COUNTER_KEYS[number];

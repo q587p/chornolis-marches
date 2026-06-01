@@ -165,6 +165,7 @@ export async function buildStatBrief() {
       `Смерті від голоду: ${formatStatNumber(counters.starvationDeaths)} (${formatRate(rates.starvationDeaths)}/год), усього ${formatStatNumber(stats.totals.starvationDeaths)}.`,
       `Смерті від хижаків: ${formatStatNumber(counters.predatorKills)} (${formatRate(rates.predatorKills)}/год), усього ${formatStatNumber(stats.totals.predatorKills)}.`,
       `Смерті від персонажів: ${formatStatNumber(counters.playerKills)} (${formatRate(rates.playerKills)}/год), усього ${formatStatNumber(stats.totals.playerKills)}.`,
+      `Creature tick: оброблено ${formatStatNumber(counters.creatureProcessed)}, відкладено ${formatStatNumber(counters.creatureDeferred)}, захищено ${formatStatNumber(counters.creatureProtected)}.`,
       "",
       "Найвдаліші хижаки:",
       hunterLines.length ? hunterLines.join("\n") : "поки немає успішних мисливців",
