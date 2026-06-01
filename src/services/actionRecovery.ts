@@ -25,6 +25,7 @@ import { tutorialIdlePaceComments } from "./tutorialVoices";
 import { isTutorialFastRestLocationKey } from "./tutorial";
 import { escapeHtml } from "../utils/text";
 import { canSendProactiveToTelegramId, claimIdleReminderForPlayerScene, idleReminderSceneKeyForLocation } from "./sessionPresence";
+import { buildDaypartNoticeHintKeyboard, recordOrdinaryWakeAndClaimDaypartHint } from "./playerNotificationSettings";
 
 export function fatigueStateFor(stamina: number, staminaMax = BASE_STAMINA): FatigueState {
   if (stamina <= VERY_TIRED_STAMINA) return "VERY_TIRED";
@@ -205,6 +206,8 @@ export async function recoverStamina(bot: Bot) {
       const chatId = Number(player.telegramId);
       if (result?.changed && Number.isSafeInteger(chatId) && await canSendProactiveToTelegramId(player.telegramId)) {
         await bot.api.sendMessage(chatId, result.message, { reply_markup: buildLyingPostureKeyboard() });
+        const hint = await recordOrdinaryWakeAndClaimDaypartHint(player.id);
+        if (hint) await bot.api.sendMessage(chatId, hint, { reply_markup: buildDaypartNoticeHintKeyboard() });
       }
       continue;
     }
@@ -274,6 +277,8 @@ export async function recoverStamina(bot: Bot) {
       const chatId = Number(player.telegramId);
       if (result?.changed && Number.isSafeInteger(chatId) && await canSendProactiveToTelegramId(player.telegramId)) {
         await bot.api.sendMessage(chatId, result.message, { reply_markup: buildLyingPostureKeyboard() });
+        const hint = await recordOrdinaryWakeAndClaimDaypartHint(player.id);
+        if (hint) await bot.api.sendMessage(chatId, hint, { reply_markup: buildDaypartNoticeHintKeyboard() });
       }
       continue;
     }

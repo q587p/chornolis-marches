@@ -28,6 +28,7 @@ import { registerTimeHandlers } from "../handlers/time";
 import { registerTutorialHandlers } from "../handlers/tutorial";
 import { registerFallbackHandlers } from "../handlers/fallback";
 import { registerSessionPresenceHandlers } from "../handlers/sessionPresence";
+import { registerSettingsHandlers } from "../handlers/settings";
 import { registerSessionPresenceMiddleware, startAutoAfkLoop } from "../services/sessionPresence";
 
 const TELEGRAM_POLLING_CONFLICT_RETRY_MS = Number(process.env.TELEGRAM_POLLING_CONFLICT_RETRY_MS || 15_000);
@@ -91,6 +92,7 @@ registerManualTickReportHandlers(bot);
 registerTimeHandlers(bot);
 registerTutorialHandlers(bot);
 registerSessionPresenceHandlers(bot);
+registerSettingsHandlers(bot);
 registerLookHandlers(bot);
 registerSayHandlers(bot);
 registerMovementHandlers(bot);

@@ -11,6 +11,7 @@ import { disablePlayerAuto } from "./auto";
 import { notifyPlayerObservers, playerSleepObserverText, playerTutorialSleepObserverText, playerTutorialWakeObserverText, playerWakeObserverText } from "../services/playerVisibility";
 import { startOrdinarySleep, wakeOrdinarySleep } from "../services/sleep";
 import { buildLyingPostureKeyboard, buildWakeUpKeyboard } from "../ui/keyboards";
+import { buildDaypartNoticeHintKeyboard, recordOrdinaryWakeAndClaimDaypartHint } from "../services/playerNotificationSettings";
 
 function buildTutorialSleepKeyboard() {
   return new InlineKeyboard().text("🌙 Навчальний сон", "tutorial:sleep");
@@ -105,6 +106,8 @@ export async function submitWakeCommand(bot: Bot, ctx: any) {
       locationId: ordinary.locationId ?? player.currentLocationId,
       observerText: playerWakeObserverText,
     });
+    const hint = await recordOrdinaryWakeAndClaimDaypartHint(player.id);
+    if (hint) await ctx.reply(hint, { reply_markup: buildDaypartNoticeHintKeyboard() });
     return;
   }
 

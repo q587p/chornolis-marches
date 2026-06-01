@@ -107,6 +107,13 @@ assertAlias("час", { kind: "time" });
 assertAlias("/weather", { kind: "weather" });
 assertAlias("weather", { kind: "weather" });
 assertAlias("погода", { kind: "weather" });
+assertAlias("/settings", { kind: "settings" });
+assertAlias("налаштування", { kind: "settings" });
+assertAlias("сповіщення", { kind: "settings" });
+assertAlias("повідомлення", { kind: "settings" });
+assertAlias("daynotices", { kind: "daypart-notices", mode: "show" });
+assertAlias("/daynotices on", { kind: "daypart-notices", mode: "on" });
+assertAlias("/daynotices off", { kind: "daypart-notices", mode: "off" });
 assertAlias("назад", { kind: "back" });
 assertAlias("сховати клавіатуру", { kind: "hide-keyboard" });
 

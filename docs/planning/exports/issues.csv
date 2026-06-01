@@ -11,6 +11,7 @@ CAMP-003,Shared beginner cache and hidden restock,testing,feature,core-loop,high
 CMD-001,Near-term text command pack,testing,feature,commands,high,"commands,aliases,mud,speech,navigation",docs/planning/items/CMD-001-near-term-text-command-pack.md
 CMD-002,Put items into local containers and features,testing,feature,commands,high,"commands,inventory,containers,aliases",docs/planning/items/CMD-002-put-items-into-containers.md
 COMBAT-001,Creature aggression and defense,backlog,feature,combat,medium,"animals,combat,predators,ecology",docs/planning/items/COMBAT-001-creature-aggression-and-defense.md
+DAYNOTICE-001,Player daypart notice settings,testing,feature,notifications,high,"notifications,world-time,daypart,sleep,settings,0.14",docs/planning/items/DAYNOTICE-001-player-daypart-notice-settings.md
 DREAM-001,Sleeping body and dream presence separation,backlog,technical,dreams,high,"dreams,tutorial,architecture,body,liminality",docs/planning/items/DREAM-001-sleeping-body-and-dream-presence.md
 DREAM-002,Lucid dream instance MVP,backlog,feature,dreams,medium,"dreams,lucid-dreams,instances,groups,quests",docs/planning/items/DREAM-002-lucid-dream-instance-mvp.md
 DREAM-003,Dream outcomes and guarded rare transfer,backlog,feature,dreams,medium,"dreams,rewards,knowledge,item-origin,quests",docs/planning/items/DREAM-003-dream-outcomes-and-rare-transfer.md

@@ -36,6 +36,9 @@ model Player {
   remindersPaused Boolean @default(false)
   idleReminderSceneKey String?
   idleReminderCountForCurrentScene Int @default(0)
+  daypartNoticesEnabled Boolean @default(true)
+  daypartNoticeHintShown Boolean @default(false)
+  ordinaryWakeCount Int @default(0)
   showTechnicalDetails Boolean @default(false)
   hunger  Int @default(0)
   equippedWeaponKey String?

@@ -11,6 +11,7 @@ export type SocialSignalAlias = "smile" | "laugh" | "nod" | "bow" | "point" | "g
 export type ChatAliasMode = "time" | "location" | "character";
 export type PutAliasAmount = number | "all";
 export type SessionPresenceAliasMode = "afk" | "end";
+export type DaypartNoticeAliasMode = "show" | "on" | "off";
 
 export type ParsedAliasCommand =
   | { kind: "location" }
@@ -28,6 +29,8 @@ export type ParsedAliasCommand =
   | { kind: "time" }
   | { kind: "weather" }
   | { kind: "menu" }
+  | { kind: "settings" }
+  | { kind: "daypart-notices"; mode: DaypartNoticeAliasMode }
   | { kind: "session-presence"; mode: SessionPresenceAliasMode }
   | { kind: "beginner-return" }
   | { kind: "tutorial-end" }
@@ -293,6 +296,13 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "меню": { kind: "menu" },
   "дії": { kind: "menu" },
   "кнопки": { kind: "menu" },
+  settings: { kind: "settings" },
+  notifications: { kind: "settings" },
+  notification: { kind: "settings" },
+  daynotices: { kind: "daypart-notices", mode: "show" },
+  "налаштування": { kind: "settings" },
+  "сповіщення": { kind: "settings" },
+  "повідомлення": { kind: "settings" },
 
   respawn: { kind: "beginner-return" },
   "повернення": { kind: "beginner-return" },
@@ -679,6 +689,8 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "time") return "/time";
   if (parsed.kind === "weather") return "/weather";
   if (parsed.kind === "menu") return "/menu";
+  if (parsed.kind === "settings") return "/settings";
+  if (parsed.kind === "daypart-notices") return parsed.mode === "show" ? "/daynotices" : `/daynotices ${parsed.mode}`;
   if (parsed.kind === "session-presence") return parsed.mode === "afk" ? "/afk" : "/end_session";
   if (parsed.kind === "beginner-return") return "/respawn";
   if (parsed.kind === "tutorial-end") return "/tutorialEnd";
@@ -877,6 +889,16 @@ function parseChat(text: string): ParsedAliasCommand | null {
     return { kind: "chat", mode: first as ChatAliasMode, window: parts[1] };
   }
   return { kind: "chat", mode: "time", window: first };
+}
+
+function parseDaypartNotices(text: string): ParsedAliasCommand | null {
+  const match = text.match(/^daynotices(?:\s+(.+))?$/);
+  if (!match) return null;
+  const arg = match[1]?.trim();
+  if (!arg) return { kind: "daypart-notices", mode: "show" };
+  if (["on", "увімкнути", "ввімкнути", "так"].includes(arg)) return { kind: "daypart-notices", mode: "on" };
+  if (["off", "вимкнути", "ні"].includes(arg)) return { kind: "daypart-notices", mode: "off" };
+  return { kind: "daypart-notices", mode: "show" };
 }
 
 function parseAll(text: string): ParsedAliasCommand | null {
@@ -1109,6 +1131,9 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
 
   const chat = parseChat(commandText);
   if (chat) return chat;
+
+  const daypartNotices = parseDaypartNotices(commandText);
+  if (daypartNotices) return daypartNotices;
 
   const all = parseAll(commandText);
   if (all) return all;

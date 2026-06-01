@@ -172,8 +172,9 @@ export function buildMenuReplyKeyboard(options: { canSeeStats?: boolean } = {}) 
     .text("👥 Хто активний")
     .row()
     .text("🌒 Час")
-    .text("↩️ Назад")
+    .text("⚙️ Налаштування")
     .row()
+    .text("↩️ Назад")
     .text("🌙 AFK / відійти")
     .text("🚪 Завершити сесію");
   return keyboard.resized().persistent(false);
