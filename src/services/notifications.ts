@@ -14,9 +14,30 @@ type LocationNotificationOptions = {
 };
 
 const latestInlineMessageByChatAndKey = new Map<string, number>();
+const inlineReplacementLocks = new Map<string, Promise<void>>();
 
 function inlineMessageKey(chatId: string | number, key: string) {
   return `${chatId}:${key}`;
+}
+
+export async function runInlineReplacementForKey<T>(mapKey: string, task: () => Promise<T>) {
+  const previous = inlineReplacementLocks.get(mapKey) ?? Promise.resolve();
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const next = previous.catch(() => undefined).then(() => gate);
+  inlineReplacementLocks.set(mapKey, next);
+
+  await previous.catch(() => undefined);
+  try {
+    return await task();
+  } finally {
+    release();
+    if (inlineReplacementLocks.get(mapKey) === next) {
+      inlineReplacementLocks.delete(mapKey);
+    }
+  }
 }
 
 async function mainKeyboardForPlayer(telegramId: string) {
@@ -42,7 +63,7 @@ async function clearPreviousInlineKey(bot: Bot, telegramId: string, key: string)
   if (!messageId) return;
 
   try {
-    await bot.api.editMessageReplyMarkup(telegramId, messageId, { reply_markup: undefined });
+    await bot.api.editMessageReplyMarkup(telegramId, messageId, { reply_markup: { inline_keyboard: [] } });
   } catch {
     // Best-effort cleanup: Telegram may reject old, deleted or already-edited messages.
   } finally {
@@ -53,18 +74,26 @@ async function clearPreviousInlineKey(bot: Bot, telegramId: string, key: string)
 async function sendLocationNotification(bot: Bot, player: { telegramId: string }, text: string, options: LocationNotificationOptions = {}) {
   try {
     if (!(await canSendProactiveToTelegramId(player.telegramId))) return;
-    for (const key of options.clearKeys ?? []) {
-      await clearPreviousInlineKey(bot, player.telegramId, key);
-    }
+    const send = async () => {
+      for (const key of options.clearKeys ?? []) {
+        await clearPreviousInlineKey(bot, player.telegramId, key);
+      }
+      if (options.replaceKey) {
+        await clearPreviousInlineKey(bot, player.telegramId, options.replaceKey);
+      }
+      const message = await bot.api.sendMessage(player.telegramId, text, {
+        parse_mode: options.parseMode,
+        reply_markup: options.keyboard ?? await mainKeyboardForPlayer(player.telegramId),
+      });
+      if (options.replaceKey && options.keyboard) {
+        latestInlineMessageByChatAndKey.set(inlineMessageKey(player.telegramId, options.replaceKey), message.message_id);
+      }
+    };
+
     if (options.replaceKey) {
-      await clearPreviousInlineKey(bot, player.telegramId, options.replaceKey);
-    }
-    const message = await bot.api.sendMessage(player.telegramId, text, {
-      parse_mode: options.parseMode,
-      reply_markup: options.keyboard ?? await mainKeyboardForPlayer(player.telegramId),
-    });
-    if (options.replaceKey && options.keyboard) {
-      latestInlineMessageByChatAndKey.set(inlineMessageKey(player.telegramId, options.replaceKey), message.message_id);
+      await runInlineReplacementForKey(inlineMessageKey(player.telegramId, options.replaceKey), send);
+    } else {
+      await send();
     }
   } catch (error) {
     console.warn("Failed to notify location player:", error);

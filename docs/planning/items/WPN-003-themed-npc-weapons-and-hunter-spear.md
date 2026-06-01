@@ -28,6 +28,8 @@ Give existing seeded NPC roles thematic weapons/tools and make hunters visibly u
 
 This should strengthen atmosphere and readability without making NPC professions into full equipment loadouts.
 
+Current note: WPN-001/WPN-002 only added the player/creature field and weapon-aware helpers. NPC weapons will not appear in hunter/creature text until this or another seed slice actually sets `equippedWeaponKey` and matching resources for those NPCs.
+
 ## Scope
 
 ### Seed support

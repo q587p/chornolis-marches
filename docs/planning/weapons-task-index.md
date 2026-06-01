@@ -51,6 +51,6 @@ src/handlers/start.ts
 - The current torch system is already a held-item signal; do not break torch visibility.
 - The MVP may allow weapon + torch at once. Model hand conflicts later.
 - Freshen should validate weapon at completion time, because queue state can change before the action resolves.
-- Resource names do not have all grammatical cases; weapon catalog should provide forms for text.
+- Weapon and equipped-tool nouns should be lexicon-backed. The MVP weapon keys already have forms in `src/content/lexicon/worldLexicon.ts`; future weapons should add full case forms there and route display/action text through shared weapon/grammar helpers instead of inferring from `ResourceType.name` or local maps.
 - Event logs should include weapon key where useful.
 - Creature seed should not equip a weapon key unless the creature resource list contains it.

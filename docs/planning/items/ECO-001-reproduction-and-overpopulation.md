@@ -77,6 +77,7 @@ The player should be able to create problems by “solving” other problems:
 - Tune reproduction, overgrazing and regeneration numbers after live or simulated observation.
 - Add hunger and starvation deaths when herbivores cannot find food.
 - Watch whether the 0.14.16 no-pair restoration and scavenging valves reduce early prey dead-ends without making prey pressure explode.
+- Watch the 0.14.15 starter food-rich pockets specifically: they give rabbits and mice a fair opening, but can still create a prey boom if predators are delayed, starved elsewhere or removed by players. Track `mouseBirths`, `rabbitBirths`, predator kills, overgrazed locations and resource-damage counters together before raising food or reproduction rates further.
 - Restore visible animal movement in a cheaper form: local signs, fresh tracks, aggregated migration notices, `/stat` deltas or opt-in/debug client views, not raw Telegram departure/arrival spam for every animal step.
 - Add weather and magic hooks that reduce exhausted-vegetation recovery time.
 - Track recent player hunting as an explicit local pressure term instead of relying only on current surviving population.

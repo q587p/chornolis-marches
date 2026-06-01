@@ -12,6 +12,8 @@ prisma/data/world/
 
 - Change a location description: edit `prisma/data/world/locations.json`, field `description`.
 - Change a location name: edit `locations.json`, field `name`.
+- Keep location names unique across the playable map. Repeated names make hand-drawn maps and exit lists confusing.
+- Keep full location descriptions unique too; neighboring places may share a motif, but the exact text should not be duplicated.
 - Move a location: edit `x`, `y`, `z`, then update nearby `exits.json` records.
 - Change a region: edit `locations[].regionKey` and make sure that key exists in `regions.json`.
 - Make a dead end: remove one or more exits from that location in `exits.json`.
@@ -57,6 +59,10 @@ A normal location looks like this:
 ```
 
 `key` should be stable. It is used by exits, resources, features, NPC placement and sometimes game logic.
+
+`name` should be player-facing and unique. If two nearby places share the same terrain idea, vary the landmark or microfeature instead of repeating the same title, for example `Жовта трава`, `Жовтий перелиск`, `Пожовклий клапоть`.
+
+`description` should also be unique. Reuse a region tone, not a whole paragraph.
 
 For the current MVP, the map is mostly flat. Keep `z: 0` unless the location is intentionally special, such as the under-bridge location at `z: -1`.
 

@@ -50,6 +50,24 @@ const locationKeys = keySet(locations, "location");
 const resourceTypeKeys = keySet(resourceTypes, "resource type");
 keySet(features, "feature");
 
+function assertUniqueLocationText(field, label) {
+  const seen = new Map();
+  for (const location of locations) {
+    const value = String(location[field] ?? "").trim();
+    assert.ok(value.length > 0, `Location ${location.key} is missing ${label}`);
+    const duplicate = seen.get(value);
+    assert.equal(
+      duplicate,
+      undefined,
+      `Duplicate location ${label}: "${value}" on ${duplicate} and ${location.key}`,
+    );
+    seen.set(value, location.key);
+  }
+}
+
+assertUniqueLocationText("name", "name");
+assertUniqueLocationText("description", "description");
+
 assertKnown(locationKeys, meta.startLocationKey, "Start location from meta.json is not present in locations.json");
 
 const coordinatesByRegion = new Map();

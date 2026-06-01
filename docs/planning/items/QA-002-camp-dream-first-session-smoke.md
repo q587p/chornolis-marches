@@ -33,6 +33,10 @@ Keep a small manual smoke pass for the first session after darkness, starter-cam
 - Taking a torch from the camp source.
 - Seeing the first-night guidance once in waking reduced visibility without local light.
 - Confirming the same guidance does not appear in the tutorial dream or while local light is present.
+- Watching whether first-night guidance feels noisy during the first dark hour, especially if the player repeats `look`/`examine` while learning light.
+- Confirming the watchtower torch source is understandable as a temporary safety rail, while future limited-stock/container work remains separate.
+- Testing the starter-camp path in actual darkness: a new player should be able to notice the watchtower, use `Вгору` / `up`, find the torch source and take a torch before leaving the camp.
+- Trying the repeat-cooking button after raw meat is consumed; it should fail cleanly, not duplicate successful cooking output.
 
 ## Acceptance
 

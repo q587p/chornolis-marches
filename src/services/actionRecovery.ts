@@ -29,7 +29,7 @@ import { buildDaypartNoticeHintKeyboard, recordOrdinaryWakeAndClaimDaypartHint }
 
 export function fatigueStateFor(stamina: number, staminaMax = BASE_STAMINA): FatigueState {
   if (stamina <= VERY_TIRED_STAMINA) return "VERY_TIRED";
-  if (stamina < 0) return "TIRED";
+  if (stamina <= 0) return "TIRED";
   if (stamina >= staminaMax) return "RESTED";
   return "RESTED";
 }

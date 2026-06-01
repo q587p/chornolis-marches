@@ -49,7 +49,8 @@ Implement `0.14.x` in small slices:
 16. WPN-001 and WPN-002: `0.14.14` adds the minimal weapon/equipped-tool foundation, starter knife grant, inventory equip controls, weapon-aware target text, attack copy and sharp-tool requirement for freshening.
 17. ECO-001/ECO-004: `0.14.15` and `0.14.16` stabilize the starter ecology opening: prey breeding clusters get room and food, no-pair prey restoration prevents quiet dead-ends, and hungry predators can scavenge safe unclaimed herbivore corpses before attacking live prey. `0.14.17` adds scribe/admin restoration counters so repeated population-floor intervention can be tuned from `/stat`.
 18. PERF-001: `0.14.18` adds the first creature simulation budget so large background animal populations cannot all enqueue individual behavior on every world tick; scribe/admin stats now expose processed/deferred creature counts for tuning.
-19. DAYNOTICE-001: `0.14.20` adds player-level daypart notice settings so routine dawn/day/dusk/night nudges can be disabled without muting urgent gameplay messages.
+19. CAMP-002/CAMP-003 follow-up: `0.14.19` caps repeated starter torch-source taking, keeps the first-night light safety rail, and records the remaining shared-supply, Herald, sleep and ecology watchpoints before the next feature slice.
+20. DAYNOTICE-001: `0.14.20` adds player-level daypart notice settings so routine dawn/day/dusk/night nudges can be disabled without muting urgent gameplay messages.
 
 Observation learning remains the `0.15` line. Darkness, distance and light should affect learning later, but the visibility foundation must land first.
 
@@ -63,10 +64,14 @@ Observation learning remains the `0.15` line. Darkness, distance and light shoul
 
 - LEARN-001: minimal learning storage decision.
 - OBS-001: observe action and herbalist learning moment.
+- SOC-002: follow intent MVP, so a player can `Слідувати` / `/follow` a visible being before full `Гурт` movement exists.
 - TRACK-LEARN-001: track-reading / animal movement learning moment.
+- NPC-007: substantially larger hunter and herbalist/знахар line banks, with focused tests so the first profession NPCs stop repeating themselves during mapping and observation.
+- PROG-006: backfill older registration chronicles from `Player.createdAt`, add local arrival visibility and a scribe/admin real-time audit view for registration-like events.
 - OMEN-001: one small living-world omen.
 - ONB-001 follow-up: tutorial hints that careful observation matters.
 - Starter camp and dream onboarding follow-up: after the `0.14.11` shared cache slice, review whether the cache needs stronger newcomer-helper text, contribution etiquette, or anti-hoarding limits. Keep hunter route rewrites separate unless they become direct regressions.
+- SLEEP-002-A: ordinary sleep command gate. After ordinary sleep and auto-wake landed, most active commands should be blocked while asleep with atmospheric "wake first" copy; keep only passive/sleep-relevant commands such as `/wake`, `/time`, `/help`, `/chronicles` and session safety.
 
 Keep theft/hiding after the first observation MVP is stable:
 
@@ -83,6 +88,7 @@ These are still `backlog`, but recent work makes them worth reviewing before the
 - Weapons as tools: WPN-001/WPN-002 have shipped as the utility/display layer. Near-term review can look at WPN-003 seed/NPC weapon loadouts, but keep WPN-004 durability and WPN-ICE-001 deep combat cold.
 - Pickup/gather command semantics: `підібрати`/`take` should mean visible ground-item pickup, while `зібрати`/`gather` should mean spending time and stamina on a local resource node. This has been promoted to `ITEM-001`.
 - Queued pickup actions: after `ITEM-001`, review `ITEM-002` so large `get all` / `підняти все` piles can move from immediate pickup with stamina charge into the action queue without losing typed bulk filters.
+- Herbal stamina elixir: `ALC-001` is a good small survival/crafting candidate once gathered herbs/berries need a stronger practical use than direct eating or tiny HP/stamina nudges.
 - PERF-001: runtime performance plan and creature simulation budget. Recent production logs show `/all` and large creature counts are already visible pressure points; next performance work should keep following the recorded plan.
 - ADM-001: admin permissions, name approval and restricted reset hardening. A first `Писар`/admin gate exists now, so remaining near-term work is audit logging, clearer role UX, first name-review tools and closing any leftover dangerous paths. Next small hardening slice: `ADM-001-C` for slashless `restart` confirmation parity and HTML escaping of feature fields.
 - Speech and quick navigation commands: `glance`, `exits`, `enter`, `leave`, `/reply`, `whisper` and `shout` have shipped through `CMD-001`. Later work should move toward a shared command registry and per-command help without reopening this whole pack.

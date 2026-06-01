@@ -102,6 +102,7 @@ Do not use `Date.getHours()`, server timezone, player timezone or real-world cal
 
 - `/timeDebug` shows scribe/admin-only exact internal world time, weather and local light state.
 - `/timeSet` and `/weatherSet` let scribes force QA cases such as dusk, night, full moon and storm without waiting.
+- `/timeSet` can affect ordinary sleep duration and auto-wake because those checks use internal world minutes; use it carefully during live sessions.
 - Brief `/look` consumes the shared visibility service instead of directly checking local light.
 
 `0.14.5` makes darkness affect player-facing visibility:

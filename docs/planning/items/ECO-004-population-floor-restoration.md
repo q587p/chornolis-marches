@@ -50,11 +50,13 @@ The MVP should be practical and quiet: if a configured animal species has no liv
 - Keeps fox and wolf restoration tied to total disappearance, so the intentionally single starter wolf does not trigger repeated pair restoration.
 - Extends rabbit and mouse restoration to cover living populations that have lost their adult breeding pair.
 - Adds helper coverage for healthy adult pairs, same-sex adult remnants and young-only remnants.
+- Treat no-pair restoration as a mechanical safeguard, not natural migration. If rabbit or mouse rebound becomes too strong in live stats, add stricter thresholds, per-species cooldowns or partial restoration before presenting it as an in-world migration/refuge system.
 
 ## 0.14.17 Slice
 
 - Adds `populationFloorRestored` to parsed world-tick ecology counters so scribe/admin statistics can show recent rates.
 - Parses `Population floor restored` events by species and surfaces total restored counts, event counts and latest restoration time in Telegram `/stat`, protected web `/stat` and `/stat.json`.
+- Per-species totals are derived from `WorldEvent` descriptions. Older periods without matching restoration events or species metadata are not backfilled by this counter; gaps are expected and should be treated as telemetry coverage limits, not proof that no restoration happened.
 - Keeps the surface scribe/admin-only; ordinary player-facing news should not present the safeguard as a visible spawn mechanic.
 
 ## Acceptance
@@ -67,12 +69,14 @@ The MVP should be practical and quiet: if a configured animal species has no liv
 - It does not affect tutorial/dream-only creatures.
 - The near-term stats/admin surface records how many times each protected species had to be restored after reaching `0` living animals.
 - Scribe/admin statistics show recent and per-species restoration counts without exposing this as ordinary player-facing feedback.
+- Historical totals are explicitly event-derived and do not pretend to reconstruct older periods before restoration events were recorded with species detail.
 - Tests cover at least one species going to zero and being restored to its starter location.
 
 ## Near-Term Follow-Up
 
 - Add a small persistent or event-derived metric for population-floor restorations by species.
 - Surface the count in scribe/admin statistics so it is clear which animals are repeatedly collapsing to zero.
+- Add thresholds/cooldowns for no-pair prey restoration if `/stat` shows repeated fast rebound after predator pressure is removed.
 - Keep this out of ordinary player-facing news/UI unless it becomes part of an in-world ecological clue later.
 
 ## Later Direction
