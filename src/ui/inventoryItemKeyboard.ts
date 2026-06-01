@@ -5,6 +5,7 @@ import {
   canLightPlayerTorchFromInventory,
 } from "../services/fire";
 import { canCookPlayerMeat, COOKED_MEAT_KEY, RAW_MEAT_KEY } from "../services/meat";
+import { getPlayerEquippedWeapon, isWeaponResourceKey } from "../services/weapons";
 
 function inventoryItemDropLabel(resourceKey: string) {
   if (resourceKey === "berries") return "Викинути ягоди";
@@ -27,11 +28,12 @@ export function cookingResultReplyOptions(result: { rawMeatRemaining?: number | 
 }
 
 export async function buildInventoryItemKeyboard(playerId: number, resourceKey: string) {
-  const [canAddTwigs, canDouseTorch, canLightTorch, canCookMeat] = await Promise.all([
+  const [canAddTwigs, canDouseTorch, canLightTorch, canCookMeat, equippedWeapon] = await Promise.all([
     canAddTwigsToNearbyCampfire(playerId),
     canDousePlayerTorchFromInventory(playerId),
     canLightPlayerTorchFromInventory(playerId),
     canCookPlayerMeat(playerId),
+    getPlayerEquippedWeapon(playerId),
   ]);
 
   const keyboard = new InlineKeyboard();
@@ -44,6 +46,10 @@ export async function buildInventoryItemKeyboard(playerId: number, resourceKey: 
   if (resourceKey === "torch" && canLightTorch) keyboard.text("🔥 Запалити факел", "inventory:light:torch").row();
   if (resourceKey === "doused_torch" && canLightTorch) keyboard.text("🔥 Запалити факел", "inventory:light:torch").row();
   if (resourceKey === "lit_torch" && canDouseTorch) keyboard.text("🫧 Притушити факел", "inventory:douse:torch").row();
+  if (isWeaponResourceKey(resourceKey)) {
+    if (equippedWeapon?.key === resourceKey) keyboard.text("✋ Зняти з руки", `inventory:unequip:${resourceKey}`).row();
+    else keyboard.text("✋ Взяти в руку", `inventory:equip:${resourceKey}`).row();
+  }
   keyboard.text(inventoryItemDropLabel(resourceKey), `inventory:drop:${resourceKey}`).row();
   return keyboard.text("↩️ До речей", "character:inventory");
 }

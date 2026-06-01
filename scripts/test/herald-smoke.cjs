@@ -5,7 +5,7 @@ require("ts-node/register");
 const { parseHeraldAdminIds, isHeraldAdminId } = require("../../src/herald/admin");
 const { formatHeraldPublicationMessage, formatHeraldPublicationRepostMessage } = require("../../src/herald/format");
 const { linkHeraldGameCommandMentions } = require("../../src/herald/gameLinks");
-const { formatHeraldWhoami } = require("../../src/herald/help");
+const { formatHeraldCommandList, formatHeraldWhoami } = require("../../src/herald/help");
 const { renderHeraldAnonymousInfoTarget, renderHeraldPublicInfoMissing, renderHeraldPublicPlayerInfo } = require("../../src/herald/info");
 const { resolveHeraldInfoTargetUser } = require("../../src/herald/infoCommands");
 const {
@@ -22,6 +22,7 @@ const {
   parseBackfillIntervalMs,
 } = require("../../src/herald/newsBackfill");
 const { extractNewsSourceMetadata, parseLatestNewsEntry, parseNewsEntries } = require("../../src/herald/newsMarkdown");
+const { HERALD_NEWS_SOURCE_TYPES } = require("../../src/herald/publications");
 const {
   assertNoSecrets,
   parseTelegramChannelId,
@@ -110,6 +111,14 @@ assert.equal(isHeraldAdminId(123, admins), true);
 assert.equal(isHeraldAdminId("456", admins), true);
 assert.equal(isHeraldAdminId(789, admins), false);
 assert.equal(isHeraldAdminId(undefined, admins), false);
+
+assert.deepEqual(HERALD_NEWS_SOURCE_TYPES, ["NEWS_MD", "NEWS_MD_ARCHIVE"]);
+const heraldAdminCommands = formatHeraldCommandList(true);
+assert.match(heraldAdminCommands, /\/pause_publications/);
+assert.match(heraldAdminCommands, /\/resume_publications/);
+assert.match(heraldAdminCommands, /\/cancel_pending_publications/);
+assert.match(heraldAdminCommands, /\/backfill_news_cancel/);
+assert.doesNotMatch(formatHeraldCommandList(false), /\/pause_publications/);
 
 const whoami = formatHeraldWhoami({
   telegramUserId: 123456789,

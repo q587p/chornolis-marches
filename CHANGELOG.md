@@ -7,6 +7,35 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.14.14 - Minimal weapon equipment foundation - 12026-06-01
+
+### Added
+
+- Added nullable equipped weapon fields for players and creatures, with a committed Prisma migration.
+- Added a minimal weapon catalog and resource types for `knife`, `hunting_spear`, `sickle`, `hand_axe` and `short_sword`.
+- Added inventory equip/unequip controls and text aliases for taking a weapon in hand or putting it away.
+- Added starter knife grant after onboarding completion.
+- Added durable Herald publication queue pause/resume state and admin cancel controls for pending news/archive rows.
+- Added focused weapon helper and alias regression coverage.
+
+### Changed
+
+- Character, target and location descriptions can now show visible held weapons.
+- Player attack completion text and observer text now react to the equipped weapon while keeping existing target eligibility.
+- Corpse freshening now requires an equipped sharp weapon before stamina is spent.
+- Dropping an equipped weapon clears the equipped weapon field.
+- Starter shared cache stock no longer duplicates the nearby torch stand and now carries more beginner food/supplies, especially raw meat.
+- Herald publisher loop now skips automatic publication while paused, and pending news/archive rows can be marked canceled without deleting published history.
+- Updated weapon system and planning docs for the WPN-001/WPN-002 slice.
+
+### Validation
+
+- Ran `node scripts/test/weapons.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/beginner-cache.cjs`.
+- Ran `node scripts/test/world-seed.mjs`.
+- Ran `npm run build`.
+
 ## 0.14.13 - Sleep world-time and campfire comfort - 12026-06-01
 
 ### Added

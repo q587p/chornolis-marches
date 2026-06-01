@@ -1,7 +1,7 @@
 ---
 id: WPN-002
 title: Weapon-aware look, examine, attack and freshen
-status: next
+status: done
 type: feature
 area: items
 priority: medium
@@ -17,7 +17,7 @@ depends_on:
 
 # WPN-002 — Weapon-aware look, examine, attack and freshen
 
-Status: next
+Status: done in 0.14.14.
 
 Depends on: WPN-001
 

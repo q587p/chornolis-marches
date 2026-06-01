@@ -5,7 +5,11 @@ import { HERALD_CHANNEL_MESSAGE_OPTIONS } from "./gameLinks";
 import { requireHeraldAdmin } from "./admin";
 import {
   getPendingPublications,
+  cancelPendingPublications,
+  countPendingPublications,
+  HERALD_NEWS_SOURCE_TYPES,
   getHeraldPublicationById,
+  isPublicationQueuePaused,
   listRecentHeraldPublications,
   markPublicationFailed,
   markPublicationManuallyDeleted,
@@ -13,6 +17,7 @@ import {
   markPublicationReposted,
   publicationErrorMessage,
   rebalanceOverdueArchivePublications,
+  setPublicationQueuePaused,
 } from "./publications";
 import { parseTelegramChannelId, truncateTelegramMessage } from "./safety";
 
@@ -147,6 +152,10 @@ export async function publishPendingHeraldPublications(bot: Bot, options: { limi
     return { published: 0, failed: 0, skipped: true, reason: "HERALD_CHANNEL_ID is not set" };
   }
 
+  if (await isPublicationQueuePaused()) {
+    return { published: 0, failed: 0, skipped: true, reason: "publication queue is paused", paused: true };
+  }
+
   if (config.heraldRebalanceOverduePublications) {
     const rebalance = await rebalanceOverdueArchivePublications(config.heraldArchiveIntervalMs);
     if (rebalance.moved > 0) {
@@ -244,7 +253,9 @@ async function replyAfterPublish(ctx: Context, bot: Bot) {
 
   const result = await publishPendingHeraldPublications(bot);
   if (result.skipped) {
-    await ctx.reply("Публікацію вимкнено: Канцелярія не має каналу.");
+    await ctx.reply(result.paused
+      ? "Публікацію призупинено. Канцелярія тримає записи у скрині, але не несе їх до каналу."
+      : "Публікацію вимкнено: Канцелярія не має каналу.");
     return;
   }
 
@@ -254,6 +265,60 @@ async function replyAfterPublish(ctx: Context, bot: Bot) {
   }
 
   await ctx.reply(`Публікація завершена. Опубліковано: ${result.published}. Помилок: ${result.failed}.`);
+}
+
+async function publicationQueueStateCounts(sourceTypes = HERALD_NEWS_SOURCE_TYPES) {
+  const [paused, waiting, allWaiting] = await Promise.all([
+    isPublicationQueuePaused(),
+    countPendingPublications(sourceTypes),
+    countPendingPublications(),
+  ]);
+  return { paused, waiting, allWaiting };
+}
+
+function queueStateReply(input: { paused: boolean; canceled?: number; waiting: number; allWaiting: number; action: string }) {
+  return [
+    input.action,
+    "",
+    `Стан публікації: ${input.paused ? "призупинено" : "увімкнено"}.`,
+    `Скасовано очікуваних записів: ${input.canceled ?? 0}.`,
+    `Ще чекає новин/архіву: ${input.waiting}.`,
+    input.allWaiting !== input.waiting ? `Інших майбутніх записів не торкалися; усього у скрині: ${input.allWaiting}.` : `Усього у скрині: ${input.allWaiting}.`,
+  ].join("\n");
+}
+
+async function replyAfterPausePublications(ctx: Context) {
+  await setPublicationQueuePaused(true);
+  const counts = await publicationQueueStateCounts();
+  await ctx.reply(queueStateReply({
+    paused: counts.paused,
+    waiting: counts.waiting,
+    allWaiting: counts.allWaiting,
+    action: "Канцелярія закрила скриню вістей на паузу.",
+  }));
+}
+
+async function replyAfterResumePublications(ctx: Context) {
+  await setPublicationQueuePaused(false);
+  const counts = await publicationQueueStateCounts();
+  await ctx.reply(queueStateReply({
+    paused: counts.paused,
+    waiting: counts.waiting,
+    allWaiting: counts.allWaiting,
+    action: "Канцелярія знову відчинила скриню вістей.",
+  }));
+}
+
+async function replyAfterCancelPendingPublications(ctx: Context, sourceTypes = HERALD_NEWS_SOURCE_TYPES) {
+  const canceled = await cancelPendingPublications(sourceTypes);
+  const counts = await publicationQueueStateCounts(sourceTypes);
+  await ctx.reply(queueStateReply({
+    paused: counts.paused,
+    canceled: canceled.count,
+    waiting: counts.waiting,
+    allWaiting: counts.allWaiting,
+    action: "Канцелярія скасувала неопубліковані записи новин та архіву.",
+  }));
 }
 
 async function replyWithRecentPublications(ctx: Context) {
@@ -364,6 +429,36 @@ export function registerHeraldPublisherCommands(bot: Bot, heraldAdminIds: Readon
     } catch (error) {
       console.error("Herald publish pending command failed:", publicationErrorMessage(error));
       await ctx.reply("Канцелярія не змогла опублікувати очікувані записи.");
+    }
+  });
+
+  bot.command("pause_publications", async (ctx) => {
+    if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
+    try {
+      await replyAfterPausePublications(ctx);
+    } catch (error) {
+      console.error("Herald pause publications command failed:", publicationErrorMessage(error));
+      await ctx.reply("Канцелярія не змогла поставити публікації на паузу.");
+    }
+  });
+
+  bot.command("resume_publications", async (ctx) => {
+    if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
+    try {
+      await replyAfterResumePublications(ctx);
+    } catch (error) {
+      console.error("Herald resume publications command failed:", publicationErrorMessage(error));
+      await ctx.reply("Канцелярія не змогла відновити публікації.");
+    }
+  });
+
+  bot.command(["cancel_pending_publications", "backfill_news_cancel"], async (ctx) => {
+    if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
+    try {
+      await replyAfterCancelPendingPublications(ctx);
+    } catch (error) {
+      console.error("Herald cancel pending publications command failed:", publicationErrorMessage(error));
+      await ctx.reply("Канцелярія не змогла скасувати очікувані записи.");
     }
   });
 

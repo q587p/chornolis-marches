@@ -30,6 +30,7 @@ import { sendNews } from "./news";
 import { parseStartActionPayload, type StartActionPayload } from "../input/startPayloads";
 import { runExamineCurrentLocation } from "./look";
 import { showCharacter, showLocationForPlayer } from "./player";
+import { grantStarterKnifeIfMissing } from "../services/weapons";
 
 type NameFormPrompt = { key: keyof NameForms; question: string; button: string; prefix?: string };
 const CASE_BUTTON_LABELS: Partial<Record<keyof NameForms, string>> = {
@@ -436,6 +437,7 @@ async function finishOnboarding(ctx: any, state: OnboardingState) {
   if (ctx.chat?.id) await syncChatBotCommandsForTelegramId(ctx.api, ctx.chat.id, state.telegramId);
 
   await disablePlayerAuto(Number(state.telegramId));
+  await grantStarterKnifeIfMissing(player.id);
   await recordNewPlayerChronicle(player).catch((error) => console.warn("Failed to record new-player chronicle:", error));
   const dream = await enterTutorialDream(player.id, { forceStart: true });
   await ctx.reply(renderOnboardingNameConfirmation(player), HTML_OPTIONS);

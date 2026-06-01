@@ -14,15 +14,15 @@ const {
 
 const base = {
   beginner_cache: true,
-  cache_stock: { torch: 0, berries: 1, herbs: 0, mushrooms: 0, raw_meat: 1, cooked_meat: 0, twigs: 1 },
-  cache_max_stock: { torch: 3, berries: 6, herbs: 4, mushrooms: 4, raw_meat: 3, cooked_meat: 3, twigs: 10 },
-  cache_restock_target: { torch: 2, berries: 3, herbs: 1, mushrooms: 1, raw_meat: 1, cooked_meat: 1, twigs: 5 },
+  cache_stock: { berries: 1, herbs: 0, mushrooms: 0, raw_meat: 1, cooked_meat: 0, twigs: 1 },
+  cache_max_stock: { berries: 10, herbs: 6, mushrooms: 6, raw_meat: 8, cooked_meat: 5, twigs: 14 },
+  cache_restock_target: { berries: 4, herbs: 2, mushrooms: 2, raw_meat: 4, cooked_meat: 2, twigs: 8 },
   cache_restock_after_ms: 1000,
 };
 
 assert.equal(isBeginnerCacheData(base), true);
 assert.equal(isBeginnerCacheData({}), false);
-assert.equal(beginnerCacheResourceKeyFromText("torch"), "torch");
+assert.equal(beginnerCacheResourceKeyFromText("torch"), null);
 assert.equal(beginnerCacheResourceKeyFromText("berries"), "berries");
 assert.equal(beginnerCacheResourceKeyFromText("raw meat"), "raw_meat");
 assert.equal(beginnerCacheResourceKeyFromText("смажене м'ясо"), "cooked_meat");
@@ -42,7 +42,7 @@ const restocked = beginnerCacheDataAfterHiddenRestock(
   { ...base, cache_last_observed_at: "2026-06-01T11:00:00.000Z", cache_last_restocked_at: "2026-06-01T11:00:00.000Z" },
   now,
 );
-assert.deepEqual(beginnerCacheStock(restocked), { torch: 2, berries: 3, herbs: 1, mushrooms: 1, raw_meat: 1, cooked_meat: 1, twigs: 5 });
+assert.deepEqual(beginnerCacheStock(restocked), { berries: 4, herbs: 2, mushrooms: 2, raw_meat: 4, cooked_meat: 2, twigs: 8 });
 assert.equal(restocked.cache_last_restocked_at, now.toISOString());
 
 const observed = beginnerCacheDataAfterObservation(base, now);

@@ -4,6 +4,7 @@ import { normalizeInput } from "../input/aliases";
 import { normalizeCreatureActionText } from "../utils/creatureActionText";
 import { creatureForms } from "./grammar";
 import { isFreshenedCorpse } from "./meat";
+import { heldWeaponLine } from "./weapons";
 
 export type TextTargetRef = {
   type: "player" | "creature";
@@ -144,6 +145,7 @@ export async function visibleTextTargets(locationId: number, viewerPlayerId: num
     type: "player" as const,
     id: player.id,
     label: player.nameNominative ?? player.firstName ?? player.username ?? "мандрівник",
+    actionLabel: heldWeaponLine(player.equippedWeaponKey)?.replace(/\.$/u, "").toLocaleLowerCase("uk-UA"),
     canGreet: true,
     searchKeys: targetSearchKeysForPlayer(player),
   }));
@@ -155,7 +157,9 @@ export async function visibleTextTargets(locationId: number, viewerPlayerId: num
       type: "creature" as const,
       id: creature.id,
       label: isCorpse ? `${wasFreshened ? "рештки" : "труп"} ${creatureForms(creature).genitive}` : creature.name ?? creature.species.name,
-      actionLabel: isCorpse ? undefined : normalizeCreatureActionText(creature.currentAction),
+      actionLabel: isCorpse
+        ? undefined
+        : [heldWeaponLine(creature.equippedWeaponKey)?.replace(/\.$/u, "").toLocaleLowerCase("uk-UA"), normalizeCreatureActionText(creature.currentAction)].filter(Boolean).join("; ") || undefined,
       canGreet: !isCorpse && creature.species.kind !== "ANIMAL",
       isCorpse,
       searchKeys: targetSearchKeysForCreature(creature),

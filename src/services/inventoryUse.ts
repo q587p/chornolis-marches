@@ -4,6 +4,7 @@ import type { Prisma } from "@prisma/client";
 import { ensureTorchResourceTypes, TORCH_DURATION_MS, TORCH_FADING_MS } from "./fire";
 import { dropCarriedCorpseResource, isCorpseQuery, isCorpseResourceKey, resourceTypeDisplayName } from "./corpses";
 import { COOKED_MEAT_KEY, RAW_MEAT_KEY, eatCookedMeat } from "./meat";
+import { getPlayerEquippedWeapon, isWeaponResourceKey } from "./weapons";
 
 export type UsableInventoryResource = "berries" | "herbs" | "mushrooms" | "cooked_meat";
 
@@ -59,6 +60,33 @@ const RESOURCE_ALIASES: Record<string, string> = {
   "притушені факели": "doused_torch",
   twigs: "twigs",
   хмиз: "twigs",
+  knife: "knife",
+  knives: "knife",
+  "простий ніж": "knife",
+  "простого ножа": "knife",
+  ніж: "knife",
+  ножа: "knife",
+  hunting_spear: "hunting_spear",
+  "hunting spear": "hunting_spear",
+  spear: "hunting_spear",
+  "мисливський спис": "hunting_spear",
+  "мисливського списа": "hunting_spear",
+  спис: "hunting_spear",
+  sickle: "sickle",
+  серп: "sickle",
+  серпа: "sickle",
+  hand_axe: "hand_axe",
+  "hand axe": "hand_axe",
+  axe: "hand_axe",
+  "мала сокира": "hand_axe",
+  "малу сокиру": "hand_axe",
+  сокира: "hand_axe",
+  short_sword: "short_sword",
+  "short sword": "short_sword",
+  sword: "short_sword",
+  "короткий меч": "short_sword",
+  "короткого меча": "short_sword",
+  меч: "short_sword",
   corpse: "corpse",
   corpses: "corpse",
   body: "corpse",
@@ -222,6 +250,12 @@ export async function inspectInventoryResource(playerId: number, resourceQuery: 
   const name = resourceTypeDisplayName(carried.resourceType);
   const amount = carried.amount > 1 ? `\nКількість: ${carried.amount}` : "";
   const description = carried.resourceType.description ? `\n\n${carried.resourceType.description}` : "";
+  const equippedWeapon = isWeaponResourceKey(carried.resourceType.key) ? await getPlayerEquippedWeapon(playerId) : null;
+  const weaponDetails = isWeaponResourceKey(carried.resourceType.key)
+    ? equippedWeapon?.key === carried.resourceType.key
+      ? "\n\nВи тримаєте це в руці."
+      : "\n\nЦе можна взяти в руку."
+    : "";
   const torchDetails =
     carried.resourceType.key === "lit_torch"
       ? `\nГорітиме ще ${approximateDuration(carried.updatedAt.getTime() + TORCH_DURATION_MS - Date.now())}${carried.updatedAt.getTime() + TORCH_DURATION_MS - Date.now() <= TORCH_FADING_MS ? "; скоро погасне" : ""}.`
@@ -229,7 +263,7 @@ export async function inspectInventoryResource(playerId: number, resourceQuery: 
         ? "\nПолум'я притушене. Якщо знову підпалити цей факел, він продовжить горіти з того місця, де його загасили."
       : "";
 
-  return `🎒 ${name}${amount}${description}${torchDetails}`;
+  return `🎒 ${name}${amount}${description}${weaponDetails}${torchDetails}`;
 }
 
 export async function dropInventoryResourceDetailed(playerId: number, resourceQuery: string) {
@@ -267,6 +301,9 @@ export async function dropInventoryResourceDetailed(playerId: number, resourceQu
     }
 
     await consumeOneResource(tx, carried.id, carried.amount);
+    if (isWeaponResourceKey(droppedResourceType.key)) {
+      await tx.player.updateMany({ where: { id: playerId, equippedWeaponKey: droppedResourceType.key }, data: { equippedWeaponKey: null } });
+    }
 
     const litTorchData = carried.resourceType.key === "lit_torch" ? { updatedAt: carried.updatedAt } : {};
     await addGroundResource(tx, player.currentLocationId!, droppedResourceType, 1, litTorchData);
@@ -336,6 +373,9 @@ export async function dropInventoryResourcesDetailed(playerId: number, resourceQ
       }
 
       await tx.playerResource.delete({ where: { id: resource.id } });
+      if (isWeaponResourceKey(resource.resourceType.key)) {
+        await tx.player.updateMany({ where: { id: playerId, equippedWeaponKey: resource.resourceType.key }, data: { equippedWeaponKey: null } });
+      }
       const litTorchData = resource.resourceType.key === "lit_torch" ? { updatedAt: resource.updatedAt } : {};
       await addGroundResource(tx, player.currentLocationId!, resource.resourceType, amount, litTorchData);
       dropped.push({ key: resource.resourceType.key, name: resourceTypeDisplayName(resource.resourceType), amount });

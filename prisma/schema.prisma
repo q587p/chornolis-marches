@@ -38,6 +38,7 @@ model Player {
   idleReminderCountForCurrentScene Int @default(0)
   showTechnicalDetails Boolean @default(false)
   hunger  Int @default(0)
+  equippedWeaponKey String?
 
   // статистика
   steps             Int @default(0)
@@ -268,6 +269,7 @@ model Creature {
   currentAction String?
   professionKey String?
   professionName String?
+  equippedWeaponKey String?
 
   // Lifecycle. Time is stopped for players and named/NPC creatures; animals keep aging.
   age                  CreatureAge @default(ADULT)
@@ -418,6 +420,13 @@ model HeraldPublication {
   @@index([publishedAt, availableAt, priority])
   @@index([sourceType, archiveOrder])
   @@index([sourceType, sourceId])
+}
+
+model HeraldPublicationQueueControl {
+  id        Int      @id @default(1)
+  isPaused  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ServiceHeartbeat {

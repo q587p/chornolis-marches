@@ -57,6 +57,10 @@ assertAlias("див", { kind: "look-action" });
 assertAlias("дивитися", { kind: "look-action" });
 assertAlias("роздивитися", { kind: "look-action" });
 assertAlias("/examine", { kind: "look-action" });
+assertAlias("взяти в руку ніж", { kind: "equip-inventory-item", target: "ніж" });
+assertAlias("equip knife", { kind: "equip-inventory-item", target: "knife" });
+assertAlias("зняти з руки ніж", { kind: "unequip-inventory-item", target: "ніж" });
+assertAlias("звільнити руку", { kind: "unequip-inventory-item", target: "" });
 
 assertAlias("південь", { kind: "move", direction: "SOUTH" });
 assert.equal(parseAlias("пів"), null);
@@ -108,7 +112,7 @@ assertAlias("сховати клавіатуру", { kind: "hide-keyboard" });
 
 assertAlias("/cache", { kind: "beginner-cache", action: "inspect" });
 assertAlias("cache", { kind: "beginner-cache", action: "inspect" });
-assertAlias("/take_cache torch", { kind: "beginner-cache", action: "take", item: "torch" });
+assertAlias("/take_cache berries", { kind: "beginner-cache", action: "take", item: "berries" });
 assertAlias("take from cache berries", { kind: "beginner-cache", action: "take", item: "berries" });
 assertAlias("/take_cache raw meat", { kind: "beginner-cache", action: "take", item: "raw meat" });
 assertAlias("/contribute_cache herbs", { kind: "beginner-cache", action: "contribute", item: "herbs" });
