@@ -40,6 +40,10 @@ const features = readJson("features.json");
 const uniqueCreatures = readJson("uniqueCreatures.json");
 
 assert.equal(typeof meta.startLocationKey, "string", "meta.startLocationKey must be set");
+assert.ok(
+  meta.notes?.some((note) => /\+1 upper rooms and -1 lower rooms/.test(note)),
+  "meta.json should document that authored +1 and -1 rooms are allowed",
+);
 
 const regionKeys = keySet(regions, "region");
 const locationKeys = keySet(locations, "location");
@@ -134,6 +138,7 @@ for (const key of ["closed_gate_torch_stand", "closed_gate_hunting_notice", "clo
 
 const gateTorchStand = features.find((item) => item.key === "closed_gate_torch_stand");
 assert.notEqual(gateTorchStand?.data?.icon, "🔥", "Torch stand should not use the fire icon reserved for flame/campfire actions");
+assert.equal(gateTorchStand?.data?.hunter_resupply, false, "Gate torch stand should no longer be the hunter resupply source");
 
 for (const key of ["start_border_marker", "start_newcomer_tablet", "start_border_watchtower_ladder"]) {
   const feature = features.find((item) => item.key === key);
@@ -142,6 +147,9 @@ for (const key of ["start_border_marker", "start_newcomer_tablet", "start_border
   assert.ok(feature.data?.icon, `Starter camp feature should have a distinct icon: ${key}`);
   assert.ok(Array.isArray(feature.data?.aliases) && feature.data.aliases.length > 0, `Starter camp feature should have aliases: ${key}`);
 }
+
+const startWatchtowerLadder = features.find((item) => item.key === "start_border_watchtower_ladder");
+assert.equal(startWatchtowerLadder?.data?.vertical_hint, "UP", "Starter watchtower feature should expose an UP action hint");
 
 const startWatchtower = locations.find((item) => item.key === "start_border_watchtower");
 assert.ok(startWatchtower, "Starter camp watchtower should exist as a real location");
@@ -160,6 +168,7 @@ assert.ok(
 const startCampTorchStand = features.find((item) => item.key === "start_camp_torch_stand");
 assert.equal(startCampTorchStand?.data?.torch_source, true, "Starter camp torch stand should be a torch source");
 assert.equal(startCampTorchStand?.locationKey, "start_border_watchtower", "Starter torch stand should live in the watchtower");
+assert.notEqual(startCampTorchStand?.data?.hunter_resupply, false, "Starter watchtower torch stand should remain available for hunter resupply");
 assert.notEqual(startCampTorchStand?.data?.icon, "🔥", "Starter camp torch stand should not use the fire icon reserved for flame/campfire actions");
 
 const tutorialRestBench = features.find((item) => item.key === "dream_tutorial_rest_fire");
@@ -201,9 +210,30 @@ const tutorialEndFeatures = features.filter((item) => item.data?.tutorial_end_pr
 assert.equal(tutorialEndFeatures.length, 1, "Tutorial should expose exactly one end-learning button surface");
 assert.equal(
   tutorialEndFeatures[0].locationKey,
-  "dream_tutorial_safety",
-  "Tutorial end-learning button should currently live in Затишок останнього кроку",
+  "dream_tutorial_waking_edge",
+  "Tutorial end-learning button should live at the forward waking edge",
 );
+
+for (const key of [
+  "dream_tutorial_attention_path",
+  "dream_tutorial_signs",
+  "dream_tutorial_traces",
+  "dream_tutorial_waking_edge",
+]) {
+  assertKnown(locationKeys, key, `Tutorial action ladder location should exist: ${key}`);
+}
+
+for (const [fromKey, toKey, direction] of [
+  ["dream_tutorial_safety", "dream_tutorial_attention_path", "SOUTH"],
+  ["dream_tutorial_attention_path", "dream_tutorial_signs", "SOUTH"],
+  ["dream_tutorial_signs", "dream_tutorial_traces", "SOUTH"],
+  ["dream_tutorial_traces", "dream_tutorial_waking_edge", "SOUTH"],
+]) {
+  assert.ok(
+    exits.some((exit) => exit.fromKey === fromKey && exit.toKey === toKey && exit.direction === direction),
+    `Tutorial action ladder should connect ${fromKey} ${direction} -> ${toKey}`,
+  );
+}
 
 for (const creature of uniqueCreatures) {
   assertKnown(locationKeys, creature.locationKey, `Unknown locationKey for unique creature ${creature.name}`);

@@ -59,6 +59,7 @@ assertAlias("йти на захід", { kind: "move", direction: "WEST" });
 assertAlias("/n", { kind: "move", direction: "NORTH" });
 assertAlias("/up", { kind: "move", direction: "UP" });
 assertAlias("вгору", { kind: "move", direction: "UP" });
+assertAlias("вверх", { kind: "move", direction: "UP" });
 assertAlias("/down", { kind: "move", direction: "DOWN" });
 assertAlias("вниз", { kind: "move", direction: "DOWN" });
 assertAlias("вср", { kind: "move", direction: "INSIDE" });

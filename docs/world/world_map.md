@@ -64,6 +64,10 @@ y
 ```text
       -2 -1  0  1
 y
+  9          D
+  8          D
+  7          D
+  6          D
   5          D
   4          D  D
   3    D  D  D  D

@@ -27,7 +27,7 @@ Add a simple NPC hunter behavior that interacts with the same ecological loop as
 ## MVP Loop
 
 1. Hunter starts near the settlement gate.
-2. Hunter takes a small hunting bundle from the gate torch stand, currently five unlit torches while the stand is still an infinite feature.
+2. Hunter takes a small hunting bundle from the watchtower torch stand above the starter camp, currently five unlit torches while the stand is still an infinite feature.
 3. Hunter routes to a known magic campfire through ordinary exits and lights the first torch there.
 4. Hunter moves from location to location through likely rodent/herbivore pressure areas using existing movement/action systems and ordinary action delays.
 5. Hunter looks for a suitable rodent/herbivore target in a configured nearby region/radius.
@@ -95,6 +95,13 @@ Add a simple NPC hunter behavior that interacts with the same ecological loop as
 - 0.13.18 hardens the current claimed-carcass bridge: ordinary corpse decay preserves the `claimed_by_hunter:<id>` marker, so returning hunters do not lose field kills before the drop-off service can see them.
 - 0.13.18 also routes direct hunter field lines through a shared speech helper so visible hunter speech records a `SAY` event and increments the creature `says` counter used by ecology/status statistics.
 - 0.13.18 formats hunter field speech as quoted speech in Telegram, but the helper still emits those field lines directly instead of routing every such line through a real queued `SAY` action.
+
+## 0.14.10 Torch Route Cleanup
+
+- Hunter route planning now separates the gate/drop-off location from the torch resupply source.
+- `start_camp_torch_stand` on the starter-camp watchtower is the hunter resupply feature.
+- The old `closed_gate_torch_stand` remains as an emergency/gate-area torch source, but it is marked as not being the hunter resupply assumption.
+- Hunters returning for torches route toward the watchtower source, then route onward toward the known magic campfire before seeking prey.
 
 Remaining work before closing the full MVP:
 

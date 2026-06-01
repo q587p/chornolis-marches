@@ -2,14 +2,18 @@ import { Direction, type Player } from "@prisma/client";
 import { prisma } from "../db";
 import {
   isTutorialLocation,
+  TUTORIAL_ATTENTION_LOCATION_KEY,
+  TUTORIAL_END_LOCATION_KEY,
   TUTORIAL_FORAGING_LOCATION_KEY,
   TUTORIAL_GATE_LOCATION_KEY,
   TUTORIAL_HUB_LOCATION_KEY,
   TUTORIAL_REST_LOCATION_KEY,
   TUTORIAL_SAFETY_LOCATION_KEY,
   TUTORIAL_SECOND_STEP_LOCATION_KEY,
+  TUTORIAL_SIGNS_LOCATION_KEY,
   TUTORIAL_START_LOCATION_KEY,
   TUTORIAL_TIME_LOCATION_KEY,
+  TUTORIAL_TRACES_LOCATION_KEY,
 } from "./tutorial";
 
 export type TutorialVoiceComment = {
@@ -387,6 +391,38 @@ export async function tutorialSpiritMoveComment(fromLocationId: number, toLocati
       speaker: "Сон",
       title: "Сон говорить тихіше",
       text: "Добрий шлях знає не тільки рух уперед. Він знає, коли озирнутися, коли відпочити й коли перевірити власний стан.",
+    };
+  }
+
+  if (from.key === TUTORIAL_SAFETY_LOCATION_KEY && to.key === TUTORIAL_ATTENTION_LOCATION_KEY && direction === "SOUTH") {
+    return {
+      speaker: "Сон",
+      title: "Сон показує мох",
+      text: "Озирнутися — це не втекти поглядом. Це згадати місце, перш ніж просити його про подробиці.",
+    };
+  }
+
+  if (from.key === TUTORIAL_ATTENTION_LOCATION_KEY && to.key === TUTORIAL_SIGNS_LOCATION_KEY && direction === "SOUTH") {
+    return {
+      speaker: "Дрімота",
+      title: "Дрімота позіхає біля знаків",
+      text: "Знак, який доводиться роздивлятися, принаймні чесний: він одразу каже, що не збирається все робити за тебе.",
+    };
+  }
+
+  if (from.key === TUTORIAL_SIGNS_LOCATION_KEY && to.key === TUTORIAL_TRACES_LOCATION_KEY && direction === "SOUTH") {
+    return {
+      speaker: "Сон",
+      title: "Сон нахиляється до піску",
+      text: "Слід — теж знак. Тільки його пишуть не руки, а рух.",
+    };
+  }
+
+  if (from.key === TUTORIAL_TRACES_LOCATION_KEY && to.key === TUTORIAL_END_LOCATION_KEY && direction === "SOUTH") {
+    return {
+      speaker: "Сон",
+      title: "Сон стишується",
+      text: "Досить для першого пробудження. Далі Порубіжжя навчатиме не кімнатами, а власним шумом.",
     };
   }
 

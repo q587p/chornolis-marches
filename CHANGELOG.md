@@ -7,6 +7,36 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.14.10 - Hunter torch route cleanup and dream action ladder - 12026-06-01
+
+### Added
+
+- Added a `HUNTER_TORCH_SOURCE_FEATURE_KEY` route assumption so hunter torch resupply can target the starter-camp watchtower source instead of the gate/drop-off location.
+- Added an inline `Вгору` button for inspectable features that point to an authored upward route, starting with the starter-camp watchtower.
+- Added `вверх` as a text alias for the existing `UP` movement command.
+- Added four optional tutorial dream rooms after the existing safety room: `dream_tutorial_attention_path`, `dream_tutorial_signs`, `dream_tutorial_traces` and `dream_tutorial_waking_edge`.
+- Added inspectable dream features for look/examine, signs, traces and the new final tutorial marker.
+- Added tutorial movement voice lines for the new dream action ladder.
+- Added seed coverage for the new tutorial rooms, ladder exits, moved tutorial completion surface and hunter torch-source markers.
+
+### Changed
+
+- Hunters returning for torches now route toward the watchtower torch source and then toward the known magic campfire before seeking prey.
+- The old closed-gate torch source remains available, but is marked as downgraded and no longer the hunter resupply source.
+- Moved the `Закінчити навчання` tutorial completion surface from `Затишок останнього кроку` to `Край пробудження`, while keeping direct wake/end commands available.
+- Updated hunter, fire/light, gate hunting, onboarding and planning docs for the new route assumptions and dream ladder.
+
+### Validation
+
+- Ran `npm run planning:export`.
+- Ran `node scripts/world/render-map-ascii.mjs --write`.
+- Ran `node scripts/test/world-seed.mjs`.
+- Ran `node scripts/test/npc-hunter.cjs`.
+- Ran `node scripts/test/tutorial-voices.cjs`.
+- Ran `npm test`.
+- Ran `npm run build`.
+- Ran `git diff --check`.
+
 ## 0.14.9 - Starter camp verticality - 12026-06-01
 
 ### Added

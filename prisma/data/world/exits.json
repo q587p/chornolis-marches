@@ -160,6 +160,70 @@
     "isHidden": false
   },
   {
+    "fromKey": "dream_tutorial_safety",
+    "toKey": "dream_tutorial_attention_path",
+    "direction": "SOUTH",
+    "label": "південь, стежка уважного погляду",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_attention_path",
+    "toKey": "dream_tutorial_safety",
+    "direction": "NORTH",
+    "label": "північ, затишок",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_attention_path",
+    "toKey": "dream_tutorial_signs",
+    "direction": "SOUTH",
+    "label": "південь, схилені знаки",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_signs",
+    "toKey": "dream_tutorial_attention_path",
+    "direction": "NORTH",
+    "label": "північ, стежка уважного погляду",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_signs",
+    "toKey": "dream_tutorial_traces",
+    "direction": "SOUTH",
+    "label": "південь, піщаний слід",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_traces",
+    "toKey": "dream_tutorial_signs",
+    "direction": "NORTH",
+    "label": "північ, схилені знаки",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_traces",
+    "toKey": "dream_tutorial_waking_edge",
+    "direction": "SOUTH",
+    "label": "південь, край пробудження",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_waking_edge",
+    "toKey": "dream_tutorial_traces",
+    "direction": "NORTH",
+    "label": "північ, піщаний слід",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
     "fromKey": "forest_00_00",
     "toKey": "forest_01_00",
     "direction": "EAST",
