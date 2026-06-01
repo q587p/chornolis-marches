@@ -25,7 +25,7 @@ Make the starter camp feel maintained by other people without turning first-sess
 ## 0.14.11 Scope
 
 - Add `Спільна скриня прибулих` near the starter watchtower as an inspectable shared cache.
-- Seed a small stock of simple beginner supplies: a few torches, berries, herbs, mushrooms, raw meat, cooked meat and twigs.
+- Seed a small stock of simple beginner supplies: berries, herbs, mushrooms, raw meat, cooked meat and twigs. Keep torches on the nearby torch stand so the two features do not duplicate each other.
 - Let players take one useful item at a time from the cache through focused buttons or narrow text aliases.
 - Let players contribute one matching carried item at a time.
 - Restock quietly only when the cache has been unobserved for long enough, using `LocationFeature.data` as the first MVP storage.

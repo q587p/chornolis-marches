@@ -112,7 +112,7 @@ assertAlias("сховати клавіатуру", { kind: "hide-keyboard" });
 
 assertAlias("/cache", { kind: "beginner-cache", action: "inspect" });
 assertAlias("cache", { kind: "beginner-cache", action: "inspect" });
-assertAlias("/take_cache torch", { kind: "beginner-cache", action: "take", item: "torch" });
+assertAlias("/take_cache berries", { kind: "beginner-cache", action: "take", item: "berries" });
 assertAlias("take from cache berries", { kind: "beginner-cache", action: "take", item: "berries" });
 assertAlias("/take_cache raw meat", { kind: "beginner-cache", action: "take", item: "raw meat" });
 assertAlias("/contribute_cache herbs", { kind: "beginner-cache", action: "contribute", item: "herbs" });

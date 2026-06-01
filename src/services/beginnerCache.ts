@@ -7,11 +7,10 @@ import { resourceTypeDisplayName } from "./corpses";
 export const BEGINNER_CACHE_FEATURE_KEY = "start_beginner_shared_cache";
 export const BEGINNER_CACHE_RESTOCK_AFTER_MS = 45 * 60 * 1000;
 
-const CACHE_ITEM_ORDER = ["torch", "berries", "herbs", "mushrooms", "raw_meat", "cooked_meat", "twigs"] as const;
+const CACHE_ITEM_ORDER = ["berries", "herbs", "mushrooms", "raw_meat", "cooked_meat", "twigs"] as const;
 export type BeginnerCacheResourceKey = (typeof CACHE_ITEM_ORDER)[number];
 
 const CACHE_ITEM_LABELS: Record<BeginnerCacheResourceKey, string> = {
-  torch: "факел",
   berries: "ягоди",
   herbs: "лікарські трави",
   mushrooms: "гриби",
@@ -21,7 +20,6 @@ const CACHE_ITEM_LABELS: Record<BeginnerCacheResourceKey, string> = {
 };
 
 const CACHE_ITEM_ACCUSATIVE: Record<BeginnerCacheResourceKey, string> = {
-  torch: "факел",
   berries: "ягоди",
   herbs: "лікарські трави",
   mushrooms: "гриби",
@@ -31,33 +29,30 @@ const CACHE_ITEM_ACCUSATIVE: Record<BeginnerCacheResourceKey, string> = {
 };
 
 const DEFAULT_STOCK: Record<BeginnerCacheResourceKey, number> = {
-  torch: 1,
-  berries: 2,
-  herbs: 1,
-  mushrooms: 0,
-  raw_meat: 1,
-  cooked_meat: 1,
-  twigs: 3,
+  berries: 4,
+  herbs: 2,
+  mushrooms: 2,
+  raw_meat: 4,
+  cooked_meat: 2,
+  twigs: 8,
 };
 
 const DEFAULT_MAX_STOCK: Record<BeginnerCacheResourceKey, number> = {
-  torch: 3,
-  berries: 6,
-  herbs: 4,
-  mushrooms: 4,
-  raw_meat: 3,
-  cooked_meat: 3,
-  twigs: 10,
+  berries: 10,
+  herbs: 6,
+  mushrooms: 6,
+  raw_meat: 8,
+  cooked_meat: 5,
+  twigs: 14,
 };
 
 const RESTOCK_TARGET: Record<BeginnerCacheResourceKey, number> = {
-  torch: 2,
-  berries: 3,
-  herbs: 1,
-  mushrooms: 1,
-  raw_meat: 1,
-  cooked_meat: 1,
-  twigs: 5,
+  berries: 4,
+  herbs: 2,
+  mushrooms: 2,
+  raw_meat: 4,
+  cooked_meat: 2,
+  twigs: 8,
 };
 
 type JsonRecord = Record<string, unknown>;
@@ -203,7 +198,8 @@ async function localBeginnerCacheForPlayer(tx: Prisma.TransactionClient, player:
 }
 
 export async function takeFromBeginnerCache(playerId: number, featureId: number, requestedKey?: string | null) {
-  const key = beginnerCacheResourceKeyFromText(requestedKey) ?? "torch";
+  const key = beginnerCacheResourceKeyFromText(requestedKey);
+  if (!key) throw new Error("Що саме взяти зі спільної скрині? Тут лишають їжу, м'ясо, трави, гриби або хмиз; факели стоять окремо на поставці поруч.");
   const now = new Date();
 
   return prisma.$transaction(async (tx) => {
@@ -247,7 +243,7 @@ export async function takeFromBeginnerCache(playerId: number, featureId: number,
 
 export async function contributeToBeginnerCache(playerId: number, featureId?: number | null, requestedKey?: string | null) {
   const key = beginnerCacheResourceKeyFromText(requestedKey);
-  if (!key) throw new Error("Що саме залишити у спільній скрині? Підійдуть факел, ягоди, лікарські трави, гриби, сире чи смажене м'ясо або хмиз.");
+  if (!key) throw new Error("Що саме залишити у спільній скрині? Підійдуть ягоди, лікарські трави, гриби, сире чи смажене м'ясо або хмиз. Факели стоять окремо на поставці поруч.");
   const now = new Date();
 
   return prisma.$transaction(async (tx) => {

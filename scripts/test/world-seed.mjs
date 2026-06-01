@@ -180,10 +180,10 @@ assert.ok(beginnerCache, "Starter shared beginner cache should exist");
 assert.equal(beginnerCache.locationKey, "start_border_watchtower", "Starter shared beginner cache should live in the watchtower");
 assert.equal(beginnerCache.data?.beginner_cache, true, "Starter shared beginner cache should be marked as beginner cache data");
 assert.equal(beginnerCache.data?.hidden_unobserved_restock, true, "Starter shared beginner cache should restock only while unobserved");
-assert.equal(beginnerCache.data?.cache_stock?.torch, 2, "Starter shared beginner cache should seed a small torch stock");
-assert.equal(beginnerCache.data?.cache_max_stock?.torch, 3, "Starter shared beginner cache should cap torch stock");
-assert.equal(beginnerCache.data?.cache_stock?.raw_meat, 1, "Starter shared beginner cache should demonstrate raw meat");
-assert.equal(beginnerCache.data?.cache_stock?.cooked_meat, 1, "Starter shared beginner cache should demonstrate cooked meat");
+assert.equal(beginnerCache.data?.cache_stock?.torch, undefined, "Starter shared beginner cache should not duplicate the nearby torch stand");
+assert.equal(beginnerCache.data?.cache_max_stock?.torch, undefined, "Starter shared beginner cache should not accept torch contributions");
+assert.equal(beginnerCache.data?.cache_stock?.raw_meat, 4, "Starter shared beginner cache should provide extra raw meat");
+assert.equal(beginnerCache.data?.cache_stock?.cooked_meat, 2, "Starter shared beginner cache should demonstrate cooked meat");
 assert.ok(Array.isArray(beginnerCache.data?.aliases) && beginnerCache.data.aliases.includes("скриня"), "Starter shared beginner cache should have Ukrainian aliases");
 
 const tutorialRestBench = features.find((item) => item.key === "dream_tutorial_rest_fire");
