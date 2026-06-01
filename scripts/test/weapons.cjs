@@ -33,5 +33,7 @@ assert.equal(heldWeaponLine("knife"), "Тримає простий ніж.");
 assert.equal(playerAttackKillText(null, "мишу"), "⚔️ Ви збиваєте мишу ногою. Труп лишився на землі.");
 assert.match(playerAttackKillText("hunting_spear", "зайця"), /виставляєте спис/);
 assert.match(playerAttackObserverText("knife", "мишу"), /простим ножем/);
+assert.equal(playerAttackObserverText("knife", "мишу", "Аїд"), "Аїд збиває мишу простим ножем. Труп лишається на землі.");
+assert.equal(playerAttackObserverText(null, "мишеня", "Радана"), "Радана збиває мишеня ногою. Труп лишається на землі.");
 
 console.log("Weapon helpers OK");
