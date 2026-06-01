@@ -461,8 +461,11 @@ async function submitCookAllMeat(bot: Bot, ctx: any, player: any) {
   try {
     const result = await queueAllRawMeatCooking(bot, player, ctx.chat?.id);
     const queueText = await renderPlayerActionQueue(player.id);
+    const queueLimitText = result.limitedByQueue
+      ? "\n\nЧерга майже повна, тож решту м’яса можна буде додати пізніше."
+      : "";
     await ctx.reply(
-      `Додано підсмажування м’яса: ${result.count}. Будете смажити по черзі${durationSecondsSuffix(player, result.durationMs)}.\n\n${queueText}`,
+      `Додано підсмажування м’яса: ${result.count}. Будете смажити по черзі${durationSecondsSuffix(player, result.durationMs)}.${queueLimitText}\n\n${queueText}`,
       await actionQueueReplyOptions(player.id),
     );
   } catch (error) {

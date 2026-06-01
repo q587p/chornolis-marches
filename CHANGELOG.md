@@ -22,6 +22,10 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added `OWL-002` planning for the next owl tuning pass after live ecology observation.
 - Added focused owl text coverage for the new predator attack helper.
 
+### Fixed
+
+- Made `cook all` account for already queued cooking actions and the remaining player action slots, so it no longer tries to overfill the queue when raw meat is already planned for cooking.
+
 ### Validation
 
 - Ran `npm run planning:export`.
