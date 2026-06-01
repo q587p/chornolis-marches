@@ -7,6 +7,30 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.2 - Owl pressure signs and tuning - 12026-06-01
+
+### Added
+
+- Added a fourth starter owl at the riverbank edge so night mouse pressure covers the riverbank cluster without placing a predator directly inside the breeding cell.
+- Added four inspectable local owl-sign landmarks with daypart-aware text for night, dawn and day.
+- Added predator performance grouped by species to scribe/admin ecology stats so owl impact can be compared against fox and wolf pressure.
+- Added focused tests for owl-sign copy and seed authoring.
+
+### Changed
+
+- Moved `OWL-002` into testing with implementation notes for the starter owl placement, indirect signs and post-deploy tuning watchpoints.
+- Updated ecology docs and next-planning notes for the owl tuning slice.
+
+### Validation
+
+- Ran `cmd /c npm exec -- prisma generate`.
+- Ran `node scripts/test/starter-animals.cjs`.
+- Ran `node scripts/test/owl-nocturnal.cjs`.
+- Ran `node scripts/test/world-seed.mjs`.
+- Ran `node scripts/test/ecology-stats.cjs`.
+- Ran `node scripts/test/news-clickable-commands.cjs`.
+- Ran `npm run planning:export`.
+
 ## 0.15.1 - Profession line-bank polish - 12026-06-01
 
 ### Added

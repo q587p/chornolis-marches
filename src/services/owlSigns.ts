@@ -1,0 +1,31 @@
+import type { WorldDaypart } from "../data/worldClock";
+
+export function owlSignDetailLine() {
+  return "підказує, що вночі тут полює щось крилате";
+}
+
+export function owlSignInspectionText(daypart: WorldDaypart, description?: string | null) {
+  const intro = description?.trim() || "У траві й під корою лишилися дрібні совині прикмети.";
+  if (daypart === "dusk" || daypart === "night") {
+    return [
+      intro,
+      "",
+      "Тепер це не просто пір'я й подряпини. Десь угорі коротко стихає крило, і трава під ним наче згадує мишачий рух.",
+      "Сова не показується просто так, але місцина вже має нічного слухача.",
+    ].join("\n");
+  }
+
+  if (daypart === "dawn") {
+    return [
+      intro,
+      "",
+      "Світлішає, і совина присутність відступає в гілля. Лишаються тільки сірі пір'їни та прим'ята трава там, де вночі щось падало згори.",
+    ].join("\n");
+  }
+
+  return [
+    intro,
+    "",
+    "Удень тут тихо. Якщо сова й поруч, вона тримається високо й нерухомо, злившись із корою.",
+  ].join("\n");
+}

@@ -32,6 +32,8 @@ import { isFreshenedCorpse, playerRawMeatAmount } from "./meat";
 import { heldWeaponLine } from "./weapons";
 import { GATE_CARCASS_DROPOFF_FEATURE_KEY, gateHuntingDropoffText, gateHuntingNoticeText, getGateHuntingSaturationState } from "./carcassDropoff";
 import { visibilityDarknessText, visibilityPresenceText, visibilityRulesForLocation, type VisibilityRules } from "./visibility";
+import { getCurrentWorldTimeSnapshot } from "./worldTime";
+import { owlSignDetailLine, owlSignInspectionText } from "./owlSigns";
 import {
   beginnerCacheActionLabel,
   beginnerCacheInspectionText,
@@ -181,6 +183,10 @@ function isClimbTreeFeature(feature: any) {
 
 function isShakeTreeFeature(feature: any) {
   return featureData(feature).shake_tree === true;
+}
+
+function isOwlSignFeature(feature: any) {
+  return featureData(feature).owl_sign === true;
 }
 
 export function treeShakeAmount(min = 5, max = 8, random = Math.random) {
@@ -368,6 +374,8 @@ function featureDetailLine(feature: any, showTechnicalDetails = false) {
   } else if (isShakeTreeFeature(feature)) {
     const readyAt = treeShakeReadyAt(data);
     details.push(readyAt ? "сухе гілля вже струшене й ще не відновилося" : "сухе гілля можна струсити вниз");
+  } else if (isOwlSignFeature(feature)) {
+    details.push(owlSignDetailLine());
   } else if (feature.providesLight) {
     details.push("дає світло");
   } else if (feature.type === "BORDER_MARKER") {
@@ -1117,6 +1125,9 @@ export async function renderLocationFeatureInteraction(
     text = readyAt
       ? `${feature.description ?? "Сухі гілки вже обсипалися вниз."}\n\nГілля порожньо потріскує. Так швидко дерево не віддає сухе вдруге.`
       : `${feature.description ?? "У кроні тримається сухе дрібне гілля."}\n\nЯкщо розхитати стовбур і нижні гілки, хмиз посиплеться донизу, під дерево.`;
+  } else if (isOwlSignFeature(feature)) {
+    const worldTime = await getCurrentWorldTimeSnapshot();
+    text = owlSignInspectionText(worldTime.daypart, feature.description);
   }
 
   const keyboard = new InlineKeyboard();

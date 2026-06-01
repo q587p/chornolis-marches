@@ -153,6 +153,9 @@ export async function buildStatBrief() {
   const hunterLines = stats.topHunters
     .slice(0, 5)
     .map((hunter) => `#${hunter.id} ${hunter.name} [${hunter.speciesKey}]: убивств ${formatStatNumber(hunter.kills)}, атак ${formatStatNumber(hunter.attackAttempts)}, влучних ${formatStatNumber(hunter.successfulAttacks)}`);
+  const predatorSpeciesLines = stats.predatorKillRows
+    .slice(0, 6)
+    .map((row) => `${row.speciesName} [${row.speciesKey}]: убивств ${formatStatNumber(row.kills)}, атак ${formatStatNumber(row.attackAttempts)}, влучних ${formatStatNumber(row.successfulAttacks)}`);
   const characterLines = stats.topCharacters
     .slice(0, 8)
     .map((character) => {
@@ -190,9 +193,12 @@ export async function buildStatBrief() {
       `Смерті від персонажів: ${formatStatNumber(counters.playerKills)} (${formatRate(rates.playerKills)}/год), усього ${formatStatNumber(stats.totals.playerKills)}.`,
       `Відновлення стартових тварин: ${formatStatNumber(counters.populationFloorRestored)} (${formatRate(rates.populationFloorRestored)}/год), усього ${formatStatNumber(stats.totals.populationFloorRestored)}.`,
       populationRestorationLines.length ? `По видах:\n${populationRestorationLines.join("\n")}` : "Відновлень стартових тварин ще не було.",
-      `Creature tick: оброблено ${formatStatNumber(counters.creatureProcessed)}, відкладено ${formatStatNumber(counters.creatureDeferred)}, захищено ${formatStatNumber(counters.creatureProtected)}.`,
-      "",
-      "Найвдаліші хижаки:",
+        `Creature tick: оброблено ${formatStatNumber(counters.creatureProcessed)}, відкладено ${formatStatNumber(counters.creatureDeferred)}, захищено ${formatStatNumber(counters.creatureProtected)}.`,
+        "",
+        "Хижаки за видами:",
+        predatorSpeciesLines.length ? predatorSpeciesLines.join("\n") : "поки немає помітної хижацької статистики",
+        "",
+        "Найвдаліші хижаки:",
       hunterLines.length ? hunterLines.join("\n") : "поки немає успішних мисливців",
       "",
       "Персонажі Порубіжжя:",

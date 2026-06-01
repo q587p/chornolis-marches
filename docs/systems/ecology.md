@@ -46,6 +46,7 @@ The forest should feel alive even when players do nothing.
 - Recent attacks add temporary local danger for ecology decisions. Herbivores become more likely to leave the attacked location for several world ticks.
 - Foxes prefer mice, then vulnerable rabbits; wolves prefer rabbits, especially young, old or wounded prey.
 - Owls are nocturnal mouse predators. They sleep and hide during the day, canceling pending owl actions, then wake and unhide at dawn, dusk and night. Their current prey preference is deliberately narrow: mice are the primary target, child and young rabbits are weak fallback targets, and adult rabbits or other herbivores are not meaningful owl prey in this first slice.
+- Owl pressure is lightly signposted through local inspectable landmarks: feathers, scratched bark, wing-shadow traces and cut-off mouse trails. These signs use the internal daypart to read differently by day, dawn and night, but they do not send proactive global messages.
 - Predator kills leave claimed corpses and are counted in scribe/admin `/stat` next to old-age deaths.
 - Carnivores do not recover hunger at kill time. They queue a later `EAT` action for the claimed corpse; if a player, hunter or another flow takes the corpse first, the predator loses that meal and stays hungry.
 - Character-caused animal deaths include player kills and non-animal NPC kills, and are counted separately from predator kills in scribe/admin `/stat`, protected web `/stat`, `/stat.json`, and ecology sign technical summaries.
@@ -63,7 +64,7 @@ The forest should feel alive even when players do nothing.
 - Individual animals keep hunting counters, and scribe/admin `/stat` can show the most successful hunters.
 - Fox and wolf lifecycle values are deliberately slower than rabbits and mice, so future predator reproduction does not explode as quickly as herbivore reproduction.
 - Starter prey now begins in separated breeding clusters instead of directly on top of predator cells: mice at `forest_03_02`, `meadow_11_04` and `riverbank_14_01`; rabbits at `forest_04_00`, `meadow_12_04` and `riverbank_15_02`.
-- Starter predator pressure remains present but lighter at world start: a fox pair near `forest_07_02`, a young fox at `meadow_13_04`, one remote wolf at `forest_00_08`, and three first-pass owls placed as nighttime mouse pressure.
+- Starter predator pressure remains present but lighter at world start: a fox pair near `forest_07_02`, a young fox at `meadow_13_04`, one remote wolf at `forest_00_08`, and four first-pass owls placed as nighttime mouse pressure, including a riverbank-edge owl near the riverbank mouse cluster.
 - Starter breeding clusters have local food-rich resource overrides so rabbits and mice have a real chance to reproduce before predators find them. These are local authoring pockets, not a global biome-resource increase.
 - These food-rich pockets are a balance watchpoint: if predators are delayed, starve elsewhere or are removed by players, the same pockets can produce a rabbit/mouse boom. Use `mouseBirths`, `rabbitBirths`, predator kills, overgrazing and resource-damage counters together when tuning them.
 - Predator reproduction runs after small-herbivore ecology and before ordinary carnivore ticks. It uses prey-unit thresholds and very slow wolf checks.

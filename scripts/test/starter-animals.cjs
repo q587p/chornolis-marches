@@ -70,7 +70,11 @@ assert.equal(
   1,
   "Starter predators should include only one wolf in this balance slice",
 );
-assert.equal(starterOwlCount, 3, "Starter predators should include exactly three owls");
+assert.equal(starterOwlCount, 4, "Starter predators should include exactly four owls after the riverbank tuning pass");
+assert.ok(
+  STARTER_PREDATORS.some((group) => group.speciesKey === "owl" && group.locationKey === "riverbank_13_00"),
+  "Starter owls should include a riverbank edge owl near the riverbank mouse cluster",
+);
 
 const expectedFoodOverrides = {
   forest_03_02: { grass: 80, berries: 15, mushrooms: 15, herbs: 10 },

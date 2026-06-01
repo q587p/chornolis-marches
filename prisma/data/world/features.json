@@ -874,6 +874,103 @@
     }
   },
   {
+    "key": "forest_04_02_owl_sign",
+    "locationKey": "forest_04_02",
+    "type": "LANDMARK",
+    "name": "Сіре пір'я під корінням",
+    "description": "Під виступом кореня лежать кілька сірих пір'їн, а мох поруч прим'ятий так, ніби щось падало згори й одразу зникало назад у гіллі.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🪶",
+      "inspectable": true,
+      "owl_sign": true,
+      "examine_summary": "у мосі видно сірі пір'їни й слід тихого нічного падіння",
+      "aliases": [
+        "пір'я",
+        "пір'їни",
+        "сіре пір'я",
+        "совине пір'я",
+        "сова",
+        "owl sign",
+        "feathers"
+      ]
+    }
+  },
+  {
+    "key": "forest_09_04_owl_sign",
+    "locationKey": "forest_09_04",
+    "type": "LANDMARK",
+    "name": "Подряпана кора над мохом",
+    "description": "На темній корі лишилися короткі подряпини, а під деревом трава лежить колом. Тут хтось сидить високо й терпляче, коли стежка темнішає.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🪶",
+      "inspectable": true,
+      "owl_sign": true,
+      "examine_summary": "кора подряпана кігтями, а трава під нею прим'ята колом",
+      "aliases": [
+        "кора",
+        "подряпини",
+        "подряпана кора",
+        "совині подряпини",
+        "сова",
+        "owl sign",
+        "scratches"
+      ]
+    }
+  },
+  {
+    "key": "meadow_14_04_owl_sign",
+    "locationKey": "meadow_14_04",
+    "type": "LANDMARK",
+    "name": "Тиха тінь над травою",
+    "description": "Суха трава тут розходиться тонкою смугою, наче її торкнулося не тіло, а тінь від крила. Біля краю лежить дрібна сіра пір'їна.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🪶",
+      "inspectable": true,
+      "owl_sign": true,
+      "examine_summary": "суха трава розсунута смугою, ніби від крилатої тіні",
+      "aliases": [
+        "тінь",
+        "крило",
+        "пір'їна",
+        "сова",
+        "совина прикмета",
+        "owl sign",
+        "wing shadow"
+      ]
+    }
+  },
+  {
+    "key": "riverbank_13_00_owl_sign",
+    "locationKey": "riverbank_13_00",
+    "type": "LANDMARK",
+    "name": "Пір'їна біля води",
+    "description": "На вологому березі прилипла сіра пір'їна. Поряд із нею дрібні сліди обриваються так різко, ніби миша зникла не в норі, а в повітрі.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🪶",
+      "inspectable": true,
+      "owl_sign": true,
+      "examine_summary": "пір'їна лежить там, де мишачий слід раптово обривається",
+      "aliases": [
+        "пір'їна",
+        "пір'я",
+        "слід",
+        "мишачий слід",
+        "сова",
+        "совина прикмета",
+        "owl sign",
+        "feather"
+      ]
+    }
+  },
+  {
     "key": "dream_tutorial_sleep_gate",
     "locationKey": "dream_tutorial_gate",
     "type": "GATE",
