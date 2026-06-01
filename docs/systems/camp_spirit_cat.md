@@ -200,6 +200,8 @@ Rules:
 
 ## Camp boundary and verticality
 
+`0.15.4` implementation note: the first runtime boundary is intentionally narrow. The cat may move only between `start_border_camp` and `start_border_watchtower` through the existing `UP`/`DOWN` exits, and a world tick corrects it back to `start_border_camp` if an admin/debug action or seed drift places it outside those keys. Wider camp tags, flee-down scenes and mouse-priority hunting remain future slices.
+
 ### Boundary
 
 - Кіт має `campBound: true` або еквівалент у species/behavior config.

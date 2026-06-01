@@ -1,7 +1,7 @@
 ---
 id: STAT-001
 title: Web /stat predator species comparison table
-status: next
+status: testing
 type: feature
 area: web
 priority: medium
@@ -47,3 +47,9 @@ The Telegram `/stat` surface now shows predator performance grouped by species, 
 - `node scripts/test/ecology-stats.cjs`
 - Focused web `/stat` rendering test, if present; otherwise add one near the status server tests.
 - `npm test`
+
+## 0.15.4 implementation notes
+
+- Added the dedicated web `/stat` section `Хижаки за видами`.
+- Reused existing `getEcologyStats().predatorKillRows`; no new ecology query or counter was added.
+- Added `scripts/test/web-stat-render.cjs` to cover owl/fox/wolf row rendering and the empty table fallback.

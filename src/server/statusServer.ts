@@ -462,6 +462,18 @@ function renderPopulationRestorationRows(rows: EcologyStats["populationRestorati
     .join("");
 }
 
+export function renderPredatorSpeciesRows(rows: EcologyStats["predatorKillRows"]) {
+  if (rows.length === 0) return `<tr><td colspan="4"><code>none</code></td></tr>`;
+  return rows
+    .map((row) => `<tr>
+      <td><code>${escapeHtml(row.speciesKey)}</code></td>
+      <td>${escapeHtml(row.speciesName)}</td>
+      <td>${formatNumber(row.kills)}</td>
+      <td>${formatNumber(row.attackAttempts)} / ${formatNumber(row.successfulAttacks)}</td>
+    </tr>`)
+    .join("");
+}
+
 function renderTopHunterRows(rows: EcologyStats["topHunters"]) {
   if (rows.length === 0) return `<tr><td colspan="7"><code>none</code></td></tr>`;
   return rows
@@ -573,6 +585,9 @@ async function renderEcologyStatsPage() {
 
     <h2>Тварини за віком</h2>
     <table><thead><tr><th>Ключ</th><th>Вид</th><th>Усього</th><th>Живі</th><th>Діти</th><th>Молоді</th><th>Дорослі</th><th>Старі</th><th>Трупи</th><th>Зниклі</th></tr></thead><tbody>${renderStatTableRows(stats.speciesRows)}</tbody></table>
+
+    <h2>Хижаки за видами</h2>
+    <table><thead><tr><th>Ключ</th><th>Вид</th><th>Убивств</th><th>Атак / влучних</th></tr></thead><tbody>${renderPredatorSpeciesRows(stats.predatorKillRows)}</tbody></table>
 
     <h2>Найвдаліші хижаки</h2>
     <table><thead><tr><th>ID</th><th>Ім'я</th><th>Вид</th><th>Стан</th><th>Атак</th><th>Влучних атак</th><th>Убивств</th></tr></thead><tbody>${renderTopHunterRows(stats.topHunters)}</tbody></table>

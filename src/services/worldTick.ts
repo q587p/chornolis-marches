@@ -20,6 +20,7 @@ import { advanceWorldClock } from "./worldTime";
 import { notifyWorldDaypartChangeIfNeeded } from "./worldDaypartNotices";
 import { creatureUsableExits } from "./creatureMovement";
 import { worldTimeSnapshotFromAbsoluteMinute, type WorldDaypart } from "../data/worldClock";
+import { CAMP_SPIRIT_CAT_START_LOCATION_KEY, isCampSpiritCatAllowedExit, isCampSpiritCatCreature, isCampSpiritCatLocationKey } from "./campSpiritCat";
 
 const DEFAULT_TICK_INTERVAL_MS = TICK_MS;
 const TICK_TEXT_COMMAND = slashlessCommandPattern(["tick"]);
@@ -1118,6 +1119,51 @@ async function tickHerbalist(c: any) {
   return "queuedRest";
 }
 
+async function tickCampSpiritCat(c: any) {
+  if (!isCampSpiritCatLocationKey(c.location?.key)) {
+    const fallback = await prisma.cellLocation.findUnique({
+      where: { key: CAMP_SPIRIT_CAT_START_LOCATION_KEY },
+      select: { id: true },
+    });
+    if (fallback) {
+      await prisma.creature.updateMany({
+        where: { id: c.id },
+        data: {
+          locationId: fallback.id,
+          activity: "LOOKING",
+          currentAction: "повертається до межового вогню",
+        },
+      });
+      await prisma.worldEvent.create({
+        data: {
+          type: "SYSTEM",
+          title: "Camp spirit cat returned to camp",
+          description: `creature=${c.id}; from=${c.location?.key ?? c.locationId}; to=${CAMP_SPIRIT_CAT_START_LOCATION_KEY}`,
+          locationId: fallback.id,
+        },
+      });
+    }
+    return "stoodDown";
+  }
+
+  const campExits = c.location.exitsFrom.filter((exit: any) => isExit(exit) && isCampSpiritCatAllowedExit(exit));
+  const exit = pick(campExits);
+  if (isExit(exit) && chance(45)) {
+    const reason = exit.direction === "UP"
+      ? "безшумно підіймається над табором"
+      : "спускається ближче до межового вогню";
+    return queueMove(c, exit, reason);
+  }
+
+  await enqueueCreatureAction({
+    creatureId: c.id,
+    type: "LOOK",
+    payload: { reason: "тихо стереже межі табору" },
+    durationMs: actionDurationMs("LOOK", c.stamina),
+  });
+  return "queuedLook";
+}
+
 async function tickHerbivore(c: any, localPresenceCount: number) {
   const hasFood = c.location.resources.some((r: any) => r.amount > 0 && isEdibleResourceKey(r.resourceType.key));
   const exhausted = c.location.features?.some((feature: any) => feature.isActive && String(feature.key).startsWith(DEPLETED_VEGETATION_FEATURE_PREFIX));
@@ -1692,13 +1738,13 @@ export async function worldTick() {
           continue;
         }
 
-        if (await maybeQueueCreatureRest(c)) {
+        let result = "queuedRest";
+        if (isCampSpiritCatCreature(c)) result = await tickCampSpiritCat(c);
+        else if (await maybeQueueCreatureRest(c)) {
           queuedRest++;
           continue;
         }
-
-        let result = "queuedRest";
-        if (isHunterCreature(c)) result = await tickNpcHunter(botInstance, c);
+        else if (isHunterCreature(c)) result = await tickNpcHunter(botInstance, c);
         else if (c.species.key === "herbalist") result = await tickHerbalist(c);
         else if (c.species.key === "lisovyk") {
           const exit = pick(c.location.exitsFrom.filter((candidate: any) => isExit(candidate) && !isLisovykForbiddenLocation((candidate as any).toLocation)));

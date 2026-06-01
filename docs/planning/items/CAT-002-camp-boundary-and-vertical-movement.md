@@ -1,7 +1,7 @@
 ---
 id: CAT-002
 title: Camp boundary and vertical movement for the spirit cat
-status: next
+status: testing
 type: feature
 area: movement
 priority: medium
@@ -47,3 +47,10 @@ Keep the spirit cat inside camp while allowing it to move up/down within camp-li
 - New `node scripts/test/camp-cat.cjs` with boundary and flee-down cases.
 - `node scripts/test/route-finding.cjs` if movement helpers are touched.
 - `npm test`.
+
+## 0.15.4 implementation notes
+
+- Added an explicit allowed-location guard for the camp spirit cat: `start_border_camp` and `start_border_watchtower`.
+- Normal world ticks only choose the vertical camp exit pair for the cat, so ordinary wilderness exits are ignored.
+- If the cat is found outside the allowed camp keys, the tick corrects it back to `start_border_camp` and records a system event.
+- Flee-down/social response behavior remains deferred until `SHOO` / `WAVE_OFF` exists as a player-facing scene.

@@ -255,7 +255,7 @@
   {
     "id": "CAT-002",
     "title": "Camp boundary and vertical movement for the spirit cat",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "movement",
     "priority": "medium",
@@ -2984,7 +2984,7 @@
   {
     "id": "STAT-001",
     "title": "Web /stat predator species comparison table",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "web",
     "priority": "medium",
