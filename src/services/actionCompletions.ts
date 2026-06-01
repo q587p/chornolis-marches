@@ -10,12 +10,13 @@ import {
   STAMINA_REGEN_INTERVAL_MS,
   TRACK_TTL_MS,
   gatherConfig,
+  playerStaminaCostConfig,
 } from "../gameConfig";
 import { directionLabels } from "../ui/labels";
 import { buildCorpseActionKeyboard, buildExamineLocationKeyboard, buildExamineTracksKeyboard, buildGatherRetryKeyboard, buildLookLocationKeyboard, buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { lightLocationCampfire, renderLocationBrief, renderLocationDetails } from "./locations";
-import { notifyLocation, notifyLocationExcept, notifyRegionExcept } from "./notifications";
+import { notifyLocation, notifyLocationAll, notifyLocationExcept, notifyRegionExcept } from "./notifications";
 import { addTwigsToCampfire, dousePlayerTorchFromInventory, lightPlayerTorchAtCampfire, lightPlayerTorchFromInventory } from "./fire";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
 import { getStartLocationId } from "./players";
@@ -24,7 +25,7 @@ import { logEvent } from "./worldEvents";
 import { resolveTarget, type ResolvedTarget } from "./targets";
 import { actorPastVerb, creatureForms, playerForms } from "./grammar";
 import { actionCost, actionDurationMs, actionTitle, movementDurationMs } from "./actionRules";
-import { fatigueStateFor, spendCreatureStamina, spendPlayerStamina } from "./actionRecovery";
+import { fatigueStateFor, spendCreatureStamina, spendPlayerStamina, spendPlayerStaminaAmount } from "./actionRecovery";
 import { actorWhere, enqueueCreatureAction, interruptActorActions, type ActorRef } from "./actionLifecycle";
 import { attackHitsSpecies } from "./attackRules";
 import { escapeHtml } from "../utils/text";
@@ -37,6 +38,7 @@ import { chance, pick, shuffle } from "../utils/random";
 import { canSendProactiveToPlayerId } from "./sessionPresence";
 import { cookRawMeat, freshenCorpseForMeat } from "./meat";
 import { rememberPlayerReplyTarget } from "./replyTargets";
+import { nearbySpeechDirectionIntro, nearbySpeechRecipients } from "./speechRanges";
 import { hunterClaimedCorpseAction, hunterConversationReplyLine, hunterReactionDurationMs, hunterSocialReactionSignal, isHunterCreature } from "./npcHunter";
 import { isUnclaimedHerbivoreCorpseForScavenging, predatorClaimedCorpseAction, predatorClaimedCorpseFoodValue, predatorClaimedCorpseOwnerId, predatorPreyFoodValue } from "./predatorFeeding";
 import { predatorKillCurrentAction, predatorKillObserverText, predatorMissCurrentAction, predatorMissObserverText, predatorWoundCurrentAction, predatorWoundObserverText } from "./predatorActionText";
@@ -58,7 +60,7 @@ import { canCreatureUseExit, creatureUsableExits } from "./creatureMovement";
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
 type InventoryActionPayload = { resourceKey?: string; target?: string; allFilter?: string | null; featureId?: number };
-type SayPayload = { text: string; mode?: "say" | "whisper" | "reply" | "shout"; targetType?: "player" | "creature"; targetId?: number; targetName?: string; targetDative?: string };
+type SayPayload = { text: string; mode?: "say" | "whisper" | "reply" | "yell" | "shout"; targetType?: "player" | "creature"; targetId?: number; targetName?: string; targetDative?: string };
 type SocialPayload = { targetType: "player" | "creature"; targetId: number; mode?: "known" | "mystery"; detail?: "brief" | "full"; socialId?: string };
 
 const RECENT_ATTACK_FEATURE_PREFIX = "recent_attack_";
@@ -1229,6 +1231,36 @@ async function completeSay(bot: Bot, action: WorldAction) {
       if (chatId) await bot.api.sendMessage(chatId, `Ви шепнули ${escapeHtml(target.forms.dative)}:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
       await setActionStatus(action, "DONE");
       await logEvent("SAY", `${actorForms.nominative} шепоче ${target.forms.dative}`, "приватний шепіт", player.currentLocationId);
+      return;
+    }
+
+    if (payload.mode === "yell") {
+      await spendPlayerStaminaAmount(bot, player.id, Math.max(1, (playerStaminaCostConfig.SAY ?? 1) * 2), chatId);
+      await prisma.player.updateMany({ where: { id: player.id }, data: { says: { increment: 1 } } });
+      const exits = await prisma.locationExit.findMany({
+        where: { fromLocationId: player.currentLocationId, isHidden: false },
+        select: { toLocationId: true, direction: true, isHidden: true },
+        orderBy: { direction: "asc" },
+      });
+      const recipients = nearbySpeechRecipients(player.currentLocationId, exits);
+      await notifyLocationExcept(
+        bot,
+        player.currentLocationId,
+        [player.id],
+        `${escapeHtml(actorForms.nominative)} гукає поруч:\n${quoteBlock(text)}`,
+        { parseMode: "HTML" },
+      );
+      for (const recipient of recipients.filter((item) => item.locationId !== player.currentLocationId)) {
+        await notifyLocationAll(
+          bot,
+          recipient.locationId,
+          `${nearbySpeechDirectionIntro(recipient.fromDirection)} ${escapeHtml(actorForms.nominative)}:\n${quoteBlock(text)}`,
+          { parseMode: "HTML" },
+        );
+      }
+      await setActionStatus(action, "DONE");
+      await logEvent("SAY", `${actorForms.nominative} гукає поруч`, text, player.currentLocationId);
+      if (chatId) await bot.api.sendMessage(chatId, `Ви гукнули поруч:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
       return;
     }
 

@@ -474,6 +474,12 @@ function addFeatureButtons(keyboard: InlineKeyboard, features: any[], sourceMode
   }
 }
 
+function addVerticalYellButtons(keyboard: InlineKeyboard, exits: any[]) {
+  const visibleDirections = new Set(exits.filter((exit) => !exit.isHidden).map((exit) => exit.direction));
+  if (visibleDirections.has("UP")) keyboard.text("🗣 Гукнути вгору", "yell:prompt:UP").row();
+  if (visibleDirections.has("DOWN")) keyboard.text("🗣 Гукнути вниз", "yell:prompt:DOWN").row();
+}
+
 function addInlineRows(target: InlineKeyboard, source: InlineKeyboard) {
   for (const row of source.inline_keyboard) {
     for (const button of row) {
@@ -818,6 +824,7 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
   }));
   const keyboard = new InlineKeyboard();
   addFeatureButtons(keyboard, location.features, "brief");
+  addVerticalYellButtons(keyboard, location.exitsFrom);
   const groundItems = location.resources.filter((r) => isVisibleGroundResource(r, location));
   if (visibility.showGroundObjects && groundItems.length) addGroundItemPickupButtons(keyboard, groundItems);
   if (revealTargets && targets.length) addInlineRows(keyboard, buildTargetListKeyboard(actionLabeledTargets, { page: options.targetPage, pageCallbackPrefix: "targetPage:brief" }));
@@ -932,6 +939,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   const resources = visibility.showResourceDetails ? await resourceButtonData(location.resources, viewerPlayerId) : [];
 
   addFeatureButtons(keyboard, location.features, "details");
+  addVerticalYellButtons(keyboard, location.exitsFrom);
 
   if (resources.length === 1) {
     const resource = resources[0];
