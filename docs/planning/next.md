@@ -69,12 +69,13 @@ Observation learning remains the main `0.15` line. Darkness, distance and light 
 
 ## 0.15 Next
 
-- OWL-001: first nocturnal owl ecology slice is in testing after `0.15.0`; tune starter count, daypart hiding and mouse pressure after live observation.
+- OWL-001: first nocturnal owl ecology slice is in testing after `0.15.0`.
+- OWL-002: tune starter owl count/placement, daypart hiding/waking and mouse-pressure impact after live observation; add only small indirect owl signs if needed.
 - LEARN-001: minimal learning storage decision.
 - OBS-001: observe action and herbalist learning moment.
 - SOC-002: follow intent MVP, so a player can `Слідувати` / `/follow` a visible being before full `Гурт` movement exists.
 - TRACK-LEARN-001: track-reading / animal movement learning moment.
-- NPC-007: substantially larger hunter and herbalist/знахар line banks, with focused tests so the first profession NPCs stop repeating themselves during mapping and observation.
+- NPC-007: substantially larger hunter and herbalist/знахар line banks are in testing after `0.15.1`; tune tone and variety after live observation before moving to deeper profession behavior.
 - PROG-006: backfill older registration chronicles from `Player.createdAt`, add local arrival visibility and a scribe/admin real-time audit view for registration-like events.
 - OMEN-001: one small living-world omen.
 - ONB-001 follow-up: tutorial hints that careful observation matters.

@@ -7,6 +7,7 @@ const {
   fresheningSucceeds,
   meatYieldForSpecies,
 } = require("../../src/services/meat");
+const { planCookAllRawMeat } = require("../../src/services/cookingQueue");
 const { cookingResultReplyOptions } = require("../../src/ui/inventoryItemKeyboard");
 
 assert.equal(meatYieldForSpecies("mouse"), 1);
@@ -39,5 +40,53 @@ assert.equal(retryOptions.reply_markup.inline_keyboard[0][1].callback_data, "inv
 assert.equal(retryOptions.reply_markup.inline_keyboard[0][1].text, "🔥 Посмажити все");
 const singleRetryOptions = cookingResultReplyOptions({ rawMeatRemaining: 1 });
 assert.equal(singleRetryOptions.reply_markup.inline_keyboard[0].length, 1);
+
+assert.deepEqual(
+  planCookAllRawMeat({
+    rawMeatAmount: 5,
+    activeActionCount: 2,
+    activeCookActionCount: 1,
+    maxQueuedActions: 12,
+  }),
+  {
+    count: 4,
+    rawMeatAmount: 5,
+    activeActionCount: 2,
+    activeCookActionCount: 1,
+    availableSlots: 10,
+    alreadyPlanned: 1,
+    unplannedRawMeat: 4,
+    limitedByQueue: false,
+  },
+);
+
+assert.deepEqual(
+  planCookAllRawMeat({
+    rawMeatAmount: 20,
+    activeActionCount: 10,
+    activeCookActionCount: 3,
+    maxQueuedActions: 12,
+  }),
+  {
+    count: 2,
+    rawMeatAmount: 20,
+    activeActionCount: 10,
+    activeCookActionCount: 3,
+    availableSlots: 2,
+    alreadyPlanned: 3,
+    unplannedRawMeat: 17,
+    limitedByQueue: true,
+  },
+);
+
+assert.equal(
+  planCookAllRawMeat({
+    rawMeatAmount: 12,
+    activeActionCount: 12,
+    activeCookActionCount: 12,
+    maxQueuedActions: 12,
+  }).unplannedRawMeat,
+  0,
+);
 
 console.log("Meat helpers OK");

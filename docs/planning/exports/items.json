@@ -1597,7 +1597,7 @@
   {
     "id": "NPC-007",
     "title": "Larger hunter and herbalist line banks",
-    "status": "next",
+    "status": "testing",
     "type": "content",
     "area": "npc",
     "priority": "high",
@@ -2156,6 +2156,27 @@
     ],
     "exports": {},
     "file": "docs/planning/items/ONB-006-look-examine-semantics-in-dream.md"
+  },
+  {
+    "id": "OWL-002",
+    "title": "Nocturnal owl tuning and indirect signs",
+    "status": "next",
+    "type": "tuning",
+    "area": "ecology",
+    "priority": "high",
+    "tags": [
+      "owl",
+      "ecology",
+      "night",
+      "predator",
+      "observation",
+      "tuning"
+    ],
+    "depends_on": [
+      "OWL-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/OWL-002-nocturnal-owl-tuning-and-signs.md"
   },
   {
     "id": "PERF-001",

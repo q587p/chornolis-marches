@@ -7,6 +7,37 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.1 - Profession line-bank polish - 12026-06-01
+
+### Added
+
+- Expanded hunter field line banks across departure, trail, return, deposit, give-up and stand-down moments.
+- Expanded hunter conversation replies and herbalist ambient lines so early profession NPCs repeat less during mapping and observation-heavy play.
+- Added owl-specific predator action text so owl attacks read as nocturnal, winged signs instead of generic predator messages.
+- Added focused ambient-line coverage for hunter field lines, hunter replies and the larger herbalist line bank.
+
+### Changed
+
+- Moved `NPC-007` into testing after this line-bank slice without changing NPC message cadence or profession behavior.
+- Added `OWL-002` planning for the next owl tuning pass after live ecology observation.
+- Added focused owl text coverage for the new predator attack helper.
+
+### Fixed
+
+- Made `cook all` account for already queued cooking actions and the remaining player action slots, so it no longer tries to overfill the queue when raw meat is already planned for cooking.
+
+### Validation
+
+- Ran `npm run planning:export`.
+- Ran `node scripts/test/ambient-lines.cjs`.
+- Ran `node scripts/test/npc-hunter.cjs`.
+- Ran `node scripts/test/owl-nocturnal.cjs`.
+- Ran `node scripts/test/attack-rules.cjs`.
+- Ran `node scripts/test/news-clickable-commands.cjs`.
+- Ran `npm test`.
+- Ran `npm run build`.
+- Ran `git diff --check`.
+
 ## 0.15.0 - Nocturnal owl ecology - 12026-06-01
 
 ### Added

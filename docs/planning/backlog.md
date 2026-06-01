@@ -19,7 +19,6 @@ These may become `next` after 0.13-0.15 foundations land.
 - ALC-001: first simple herbal stamina elixir from gathered herbs and possibly berries, before a full alchemy system.
 - Richer butchering outputs after `FOOD-001`: species-specific meat, bones, hide, fur, feathers, tools, skill-based yield and spoilage.
 - WPN-003: themed NPC weapons and hunter spear polish after WPN-001/WPN-002 land; hunters carry spears and knives, herbalists/знахарі carry sickles, players start with a plain knife.
-- NPC-007: substantially larger hunter and herbalist/знахар line banks, with tests to keep profession speech from collapsing back into repetition.
 - Weapon follow-up after the MVP: item inspect text, clearer command help/examples for existing `equip` / `unequip` / `wield` / `unwield` aliases, and safer dropped-weapon pickup. The first legacy starter-knife backfill is handled by the freshening compatibility grant in 0.14.15.
 - Weapon/torch hand-slot follow-up: make visible hands coherent when a player has lit torches and an equipped weapon. One torch plus a knife/spear/tool is acceptable for now; two lit torches should occupy both hands and force a held weapon/tool back to inventory or require an explicit put-away choice. Freshening should be able to auto-ready a carried sharp tool when hands allow it, while manual `equip` / `unequip` / `wield` / `unwield` remains available.
 - Weapon-aware butchering/freshening polish after `FOOD-001`: tool quality affects text first, then later yield; do not implement durability here.
