@@ -54,7 +54,9 @@ The forest should feel alive even when players do nothing.
 - Animals that remain above the starvation threshold can die of hunger. Starvation leaves a corpse, cancels pending creature actions, writes an `Animal starved` world event, and appears in ecology statistics.
 - Individual animals keep hunting counters, and scribe/admin `/stat` can show the most successful hunters.
 - Fox and wolf lifecycle values are deliberately slower than rabbits and mice, so future predator reproduction does not explode as quickly as herbivore reproduction.
-- Starter predators now include a fox pair near `forest_07_02`, lone foxes near the dry luka, and a cautious wolf pair in remote `DEEP_FOREST`.
+- Starter prey now begins in separated breeding clusters instead of directly on top of predator cells: mice at `forest_03_02`, `meadow_11_04` and `riverbank_14_01`; rabbits at `forest_04_00`, `meadow_12_04` and `riverbank_15_02`.
+- Starter predator pressure remains present but lighter at world start: a fox pair near `forest_07_02`, a young fox at `meadow_13_04`, and one remote wolf at `forest_00_08`.
+- Starter breeding clusters have local food-rich resource overrides so rabbits and mice have a real chance to reproduce before predators find them. These are local authoring pockets, not a global biome-resource increase.
 - Predator reproduction runs after small-herbivore ecology and before ordinary carnivore ticks. It uses prey-unit thresholds and very slow wolf checks.
 - Fox prey units count mice and rabbits; wolf prey units currently count rabbits while mice are mostly ignored.
 - If a location has too many rabbits or mice, they consume `grass`, `berries`, `herbs` and `mushrooms` as background overgrazing.

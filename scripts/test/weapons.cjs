@@ -7,6 +7,7 @@ const {
   freshenWeaponFailureText,
   heldWeaponLine,
   isWeaponResourceKey,
+  legacyFresheningKnifeGrantText,
   playerAttackKillText,
   playerAttackObserverText,
   weaponForms,
@@ -25,6 +26,8 @@ assert.equal(canWeaponFreshen("short_sword"), true);
 assert.equal(canWeaponFreshen("hunting_spear"), false);
 assert.match(freshenWeaponFailureText(null), /потрібен ніж/);
 assert.match(freshenWeaponFailureText("hunting_spear"), /Мисливський спис не підходить/);
+assert.match(legacyFresheningKnifeGrantText(), /простий ніж/);
+assert.match(legacyFresheningKnifeGrantText(), /Вимогу про гостре знаряддя/);
 
 assert.equal(heldWeaponLine("knife"), "Тримає простий ніж.");
 assert.equal(playerAttackKillText(null, "мишу"), "⚔️ Ви збиваєте мишу ногою. Труп лишився на землі.");

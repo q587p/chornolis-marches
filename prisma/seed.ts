@@ -547,15 +547,22 @@ async function ensureStarterAnimals(
     const location = locationsByKey.get(group.locationKey);
     if (!location) throw new Error(`Unknown starter ${group.speciesKey} location: ${group.locationKey}`);
 
+    const isCorpse = group.age === "CORPSE";
     const existing = await prisma.creature.count({
-      where: { speciesId: species.id, locationId: location.id, isAlive: true, isGone: false },
+      where: {
+        speciesId: species.id,
+        locationId: location.id,
+        isAlive: !isCorpse,
+        isGone: false,
+        age: group.age,
+        ...(group.sex ? { sex: group.sex } : {}),
+      },
     });
     const missing = Math.max(0, group.count - existing);
     const data: Prisma.CreatureCreateManyInput[] = [];
 
     for (let i = 0; i < missing; i++) {
       const ageTicks = starterAnimalAgeTicks(species, group.age, i);
-      const isCorpse = group.age === "CORPSE";
       const hp = starterAnimalHp(species.baseHp, group.age);
       data.push({
         speciesId: species.id,

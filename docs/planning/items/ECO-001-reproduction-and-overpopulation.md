@@ -67,11 +67,15 @@ The player should be able to create problems by “solving” other problems:
 - Rabbit corpses remain for 180 world ticks by default, long enough to observe the aftermath and support future freshening/scavenger loops.
 - World tick summaries expose rabbit/mouse births, rabbit/mouse spread, overgrazed locations and resource damage counters.
 - The regular seed flow and `/reset` both provide small mixed starter rabbit and mouse populations.
+- 0.14.15 stabilizes starter authoring so adult female and adult male groups in the same location remain distinct during repeated seed runs.
+- 0.14.15 moves starter rabbit and mouse breeding clusters away from predator start cells and gives those clusters local food-rich resource overrides.
 
 ## Remaining follow-up
 
 - Tune reproduction, overgrazing and regeneration numbers after live or simulated observation.
 - Add hunger and starvation deaths when herbivores cannot find food.
+- If prey still dead-ends after the starter-balance pass, extend population restoration conservatively so it can restore when no adult breeding pair remains, not only when living count reaches zero.
+- If early predators still overkill live prey, let hungry predators consume unclaimed local herbivore corpses before attacking live prey, while preserving hunter-claimed and carried corpse protections.
 - Restore visible animal movement in a cheaper form: local signs, fresh tracks, aggregated migration notices, `/stat` deltas or opt-in/debug client views, not raw Telegram departure/arrival spam for every animal step.
 - Add weather and magic hooks that reduce exhausted-vegetation recovery time.
 - Track recent player hunting as an explicit local pressure term instead of relying only on current surviving population.

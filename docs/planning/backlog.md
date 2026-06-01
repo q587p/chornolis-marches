@@ -15,7 +15,7 @@ These may become `next` after 0.13-0.15 foundations land.
 - Bulk ground pickup text commands such as `підібрати все` / `take all`, with clear ordering, visibility checks and item limits.
 - Richer butchering outputs after `FOOD-001`: species-specific meat, bones, hide, fur, feathers, tools, skill-based yield and spoilage.
 - WPN-003: themed NPC weapons and hunter spear polish after WPN-001/WPN-002 land; hunters carry spears and knives, herbalists/знахарі carry sickles, players start with a plain knife.
-- Weapon follow-up after the MVP: text aliases for `equip`, `unequip`, `wield`, `зняти`, `взяти ніж`, item inspect text, safer dropped-weapon pickup, and starter-knife backfill for older characters if not handled in WPN-001.
+- Weapon follow-up after the MVP: text aliases for `equip`, `unequip`, `wield`, `зняти`, `взяти ніж`, item inspect text and safer dropped-weapon pickup. The first legacy starter-knife backfill is handled by the freshening compatibility grant in 0.14.15.
 - Weapon-aware butchering/freshening polish after `FOOD-001`: tool quality affects text first, then later yield; do not implement durability here.
 - First weapon-learning hooks: using a spear teaches spear handling later; using a knife for freshening may feed hunting/butchering learning after progression storage is ready.
 - NPC hunter/archer route that leaves visible signs.
