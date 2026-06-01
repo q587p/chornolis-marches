@@ -7,6 +7,19 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.14.23 - Clickable shout command polish - 12026-06-01
+
+### Fixed
+
+- Added an explicit `/shout` bot command route so clickable command hints open a useful usage prompt instead of falling through when no shout text is supplied.
+
+### Validation
+
+- Ran `node scripts/test/news-clickable-commands.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `npm test`.
+- Ran `npm run build`.
+
 ## 0.14.22 - Willow Floodplain landmarks and resources - 12026-06-01
 
 ### Added
