@@ -90,6 +90,11 @@ export const WORLD_LEXICON = [
   entry("resource.lit_torch", "resource", "MASCULINE", "INANIMATE", ["resource", "fire", "light", "current"], ["запалений факел", "запаленого факела", "запаленому факелу", "запалений факел", "запаленим факелом", "запаленому факелі", "запалений факеле"]),
   entry("resource.doused_torch", "resource", "MASCULINE", "INANIMATE", ["resource", "fire", "light", "current"], ["притушений факел", "притушеного факела", "притушеному факелу", "притушений факел", "притушеним факелом", "притушеному факелі", "притушений факеле"]),
   entry("resource.twigs", "resource", "MASCULINE", "INANIMATE", ["resource", "fire", "fuel", "current"], ["хмиз", "хмизу", "хмизу", "хмиз", "хмизом", "хмизі", "хмизе"]),
+  entry("resource.knife", "resource", "MASCULINE", "INANIMATE", ["resource", "weapon", "tool", "current"], ["простий ніж", "простого ножа", "простому ножу", "простий ніж", "простим ножем", "простому ножі", "простий ножу"]),
+  entry("resource.hunting_spear", "resource", "MASCULINE", "INANIMATE", ["resource", "weapon", "hunter", "current"], ["мисливський спис", "мисливського списа", "мисливському спису", "мисливський спис", "мисливським списом", "мисливському списі", "мисливський списе"]),
+  entry("resource.sickle", "resource", "MASCULINE", "INANIMATE", ["resource", "weapon", "tool", "current"], ["серп", "серпа", "серпу", "серп", "серпом", "серпі", "серпе"]),
+  entry("resource.hand_axe", "resource", "FEMININE", "INANIMATE", ["resource", "weapon", "tool", "current"], ["мала сокира", "малої сокири", "малій сокирі", "малу сокиру", "малою сокирою", "малій сокирі", "мала сокиро"]),
+  entry("resource.short_sword", "resource", "MASCULINE", "INANIMATE", ["resource", "weapon", "current"], ["короткий меч", "короткого меча", "короткому мечу", "короткий меч", "коротким мечем", "короткому мечі", "короткий мече"]),
 
   entry("feature.campfire", "feature", "NEUTER", "INANIMATE", ["feature", "fire", "current"], ["вогнище", "вогнища", "вогнищу", "вогнище", "вогнищем", "вогнищі", "вогнище"]),
   entry("feature.magic_campfire", "feature", "NEUTER", "INANIMATE", ["feature", "fire", "magic", "current"], ["незгасне вогнище", "незгасного вогнища", "незгасному вогнищу", "незгасне вогнище", "незгасним вогнищем", "незгасному вогнищі", "незгасне вогнище"]),

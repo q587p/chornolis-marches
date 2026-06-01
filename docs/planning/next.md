@@ -46,6 +46,7 @@ Implement `0.14.x` in small slices:
 13. CAMP-003: `0.14.11` adds a shared beginner cache at the starter watchtower, a narrow take/contribute loop for simple supplies and hidden unobserved restock as a first maintained-camp slice.
 14. SLEEP-001 and SLEEP-002: `0.14.12` adds lying posture and ordinary sleep while keeping tutorial sleep explicit.
 15. SLEEP-003: `0.14.13` connects ordinary sleep to the internal world clock for a first auto-wake slice and lets active campfires improve sleep recovery.
+16. WPN-001 and WPN-002: `0.14.14` adds the minimal weapon/equipped-tool foundation, starter knife grant, inventory equip controls, weapon-aware target text, attack copy and sharp-tool requirement for freshening.
 
 Observation learning remains the `0.15` line. Darkness, distance and light should affect learning later, but the visibility foundation must land first.
 
@@ -76,7 +77,7 @@ These are still `backlog`, but recent work makes them worth reviewing before the
 - Sleep and dreams: after the `0.14.13` world-time sleep slice, review DREAM-001 and the remaining SLEEP-003 follow-ups so sleeping-body/dream-presence separation, location comfort metadata and danger interruptions do not drift away from ordinary sleep.
 - Inventory item actions: the dedicated inventory view exists, and the 0.12.15 drop feedback pass makes the item-instance gap more visible. Item details, safer dropped-item pickup, dream-item origin and richer per-item actions are now small enough to promote when the survival loop needs them.
 - Corpse freshening and meat: the existing corpse/freshen path, hunger and campfire inventory actions are close enough to support a first raw meat -> cooked meat -> eat loop. This has been promoted to `FOOD-001`.
-- Weapons as tools: WPN-001/WPN-002 are small enough to promote because they reuse current resource inventory, target descriptions and queued `ATTACK`/`FRESHEN` actions. Keep them as a utility/display layer; do not pull WPN-004 durability or WPN-ICE-001 deep combat forward.
+- Weapons as tools: WPN-001/WPN-002 have shipped as the utility/display layer. Near-term review can look at WPN-003 seed/NPC weapon loadouts, but keep WPN-004 durability and WPN-ICE-001 deep combat cold.
 - Pickup/gather command semantics: `підібрати`/`take` should mean visible ground-item pickup, while `зібрати`/`gather` should mean spending time and stamina on a local resource node. This has been promoted to `ITEM-001`.
 - Queued pickup actions: after `ITEM-001`, review `ITEM-002` so large `get all` / `підняти все` piles can move from immediate pickup with stamina charge into the action queue without losing typed bulk filters.
 - PERF-001: runtime performance plan and creature simulation budget. Recent production logs show `/all` and large creature counts are already visible pressure points; next performance work should keep following the recorded plan.

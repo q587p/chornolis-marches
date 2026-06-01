@@ -3043,7 +3043,7 @@
   {
     "id": "WPN-001",
     "title": "Minimal weapon catalog and equip foundation",
-    "status": "next",
+    "status": "done",
     "type": "feature",
     "area": "items",
     "priority": "medium",
@@ -3062,7 +3062,7 @@
   {
     "id": "WPN-002",
     "title": "Weapon-aware look, examine, attack and freshen",
-    "status": "next",
+    "status": "done",
     "type": "feature",
     "area": "items",
     "priority": "medium",

@@ -57,6 +57,10 @@ assertAlias("див", { kind: "look-action" });
 assertAlias("дивитися", { kind: "look-action" });
 assertAlias("роздивитися", { kind: "look-action" });
 assertAlias("/examine", { kind: "look-action" });
+assertAlias("взяти в руку ніж", { kind: "equip-inventory-item", target: "ніж" });
+assertAlias("equip knife", { kind: "equip-inventory-item", target: "knife" });
+assertAlias("зняти з руки ніж", { kind: "unequip-inventory-item", target: "ніж" });
+assertAlias("звільнити руку", { kind: "unequip-inventory-item", target: "" });
 
 assertAlias("південь", { kind: "move", direction: "SOUTH" });
 assert.equal(parseAlias("пів"), null);

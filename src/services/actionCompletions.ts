@@ -50,6 +50,7 @@ import { cookingResultReplyOptions } from "../ui/inventoryItemKeyboard";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 import { visibilityPresenceText, visibilityRulesForLocation } from "./visibility";
 import { firstNightGuidanceForPlayer } from "./beginnerGuidance";
+import { creatureAttackObserverText, freshenWeaponFailureText, getPlayerEquippedWeapon, playerAttackKillText, playerAttackObserverText } from "./weapons";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
@@ -922,6 +923,12 @@ async function completeFreshen(bot: Bot, action: WorldAction) {
     if (chatId) await bot.api.sendMessage(chatId, "Труп уже не підходить для освіжування.");
     return;
   }
+  const weapon = await getPlayerEquippedWeapon(player.id);
+  if (!weapon?.canFreshen) {
+    await setActionStatus(action, "FAILED");
+    if (chatId) await bot.api.sendMessage(chatId, freshenWeaponFailureText(weapon?.key));
+    return;
+  }
   await spendPlayerStamina(bot, player.id, "FRESHEN", chatId);
   let meat: Awaited<ReturnType<typeof freshenCorpseForMeat>>;
   try {
@@ -937,7 +944,7 @@ async function completeFreshen(bot: Bot, action: WorldAction) {
     return;
   }
   await setActionStatus(action, "DONE");
-  await logEvent("PLAYER_ACTION", meat.succeeded ? "Player freshened corpse" : "Player failed to freshen corpse", `${target.kind}:${target.id}; meat=${meat.amount}`, player.currentLocationId);
+  await logEvent("PLAYER_ACTION", meat.succeeded ? "Player freshened corpse" : "Player failed to freshen corpse", `${target.kind}:${target.id}; weapon=${weapon.key}; meat=${meat.amount}`, player.currentLocationId);
   const learning = await recordFresheningSource({
     locationId: player.currentLocationId,
     actorPlayerId: player.id,
@@ -948,8 +955,8 @@ async function completeFreshen(bot: Bot, action: WorldAction) {
   if (chatId) {
     await hideCompletedFreshenSourceMessage(bot, action, chatId);
     const resultText = meat.succeeded
-      ? `🔪 Ви освіжували ${target.forms.accusative} й отримали ${meat.resourceName} ×${meat.amount}.`
-      : `🔪 Ви освіжували ${target.forms.accusative}, але придатне м'ясо не вдалося зняти. Лишилися тільки рвані рештки.`;
+      ? `🔪 Ви освіжували ${target.forms.accusative} ${weapon.forms.instrumental} й отримали ${meat.resourceName} ×${meat.amount}.`
+      : `🔪 Ви освіжували ${target.forms.accusative} ${weapon.forms.instrumental}, але придатне м'ясо не вдалося зняти. Лишилися тільки рвані рештки.`;
     await bot.api.sendMessage(chatId, resultText);
     if (learning.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, FRESHENING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" }));
   }
@@ -1013,7 +1020,8 @@ async function completeCreatureAttack(bot: Bot, action: WorldAction) {
     });
     await triggerHerbivorePanic(attacker.locationId, target.id, "лякається хижака й крові");
     if (hunter) {
-      await notifyLocation(bot, attacker.locationId, -1, `${attacker.name ?? "Мисливець"} збиває ${target.species.name} і підбирає здобич для падального рову.`);
+      const weaponText = creatureAttackObserverText(attacker.name ?? "Мисливець", attacker.equippedWeaponKey, creatureForms(target).accusative);
+      await notifyLocation(bot, attacker.locationId, -1, weaponText ?? `${attacker.name ?? "Мисливець"} збиває ${target.species.name} і підбирає здобич для падального рову.`);
       await logEvent("NPC_ACTION", "Hunter claimed prey", `${attacker.id} -> ${target.species.key} #${target.id}`, attacker.locationId);
     } else {
       await notifyLocation(bot, attacker.locationId, -1, `Щось кидається на здобич. За мить ${target.species.name} падає нерухомо.`);
@@ -1087,16 +1095,17 @@ async function completeAttack(bot: Bot, action: WorldAction) {
   await prisma.creature.updateMany({ where: { id: creature.id }, data: { hp: 0, isAlive: false, age: "CORPSE", diedAtTick: null, corpseDecayTicksLeft: creature.species.corpseDecayTicks, activity: "RESTING", currentAction: "лежить нерухомо" } });
   await interruptActorActions({ actorType: "CREATURE", creatureId: creature.id }, "істоту вбито", true);
   const updatedPlayer = await prisma.player.update({ where: { id: player.id }, data: { animalsKilled: { increment: 1 } }, select: { animalsKilled: true } });
+  const weapon = await getPlayerEquippedWeapon(player.id);
   await triggerHerbivorePanic(player.currentLocationId, creature.id, "лякається нападу й людського запаху");
-  await notifyLocation(bot, player.currentLocationId, player.id, `Хтось затоптує ${target.forms.accusative}. Труп лишається на землі.`);
+  await notifyLocation(bot, player.currentLocationId, player.id, playerAttackObserverText(weapon?.key, target.forms.accusative));
   await setActionStatus(action, "DONE");
-  await logEvent("PLAYER_ACTION", "Player killed animal", `${target.kind}:${target.id}`, player.currentLocationId);
+  await logEvent("PLAYER_ACTION", "Player killed animal", `${target.kind}:${target.id}; weapon=${weapon?.key ?? "unarmed"}`, player.currentLocationId);
   await recordAttackKillSource({ locationId: player.currentLocationId, attackerPlayerId: player.id, victimCreatureId: creature.id });
   if (chatId) {
     const corpseTarget = await resolveTarget("creature", creature.id, player.currentLocationId);
     await bot.api.sendMessage(
       chatId,
-      `⚔️ Ви затоптали ${target.forms.accusative}. Труп лишився на землі.`,
+      playerAttackKillText(weapon?.key, target.forms.accusative),
       corpseTarget?.isCorpse ? { reply_markup: buildCorpseActionKeyboard(corpseTarget) } : undefined,
     );
     if (isAttackPracticeMilestone(updatedPlayer.animalsKilled)) noteKnownMessage(await bot.api.sendMessage(chatId, ATTACK_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" }));

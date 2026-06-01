@@ -65,6 +65,7 @@ import {
   contributeToBeginnerCache,
   takeFromBeginnerCache,
 } from "../services/beginnerCache";
+import { equipPlayerWeapon, unequipPlayerWeapon } from "../services/weapons";
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
@@ -452,6 +453,33 @@ async function submitInventoryDrop(bot: Bot, ctx: any, target: string) {
   const allFilter = allTargetFilter(target);
   const payload = allFilter !== null ? { allFilter } : { target };
   await submitInventoryQueuedAction(bot, ctx, player, "DROP_ITEM", payload, "Не вдалося викинути це.");
+}
+
+async function submitInventoryEquip(ctx: any, target: string) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  try {
+    const resourceKey = inventoryResourceKeyFromText(target);
+    const weapon = await equipPlayerWeapon(player.id, resourceKey);
+    const keyboard = await buildInventoryItemKeyboard(player.id, resourceKey);
+    await ctx.reply(`Ви взяли в руку ${weapon.name}.`, { reply_markup: keyboard });
+  } catch (error) {
+    await ctx.reply(error instanceof Error ? error.message : "Не вдалося взяти це в руку.");
+  }
+}
+
+async function submitInventoryUnequip(ctx: any, target?: string) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  try {
+    const resourceKey = target ? inventoryResourceKeyFromText(target) : undefined;
+    const weapon = await unequipPlayerWeapon(player.id, resourceKey);
+    await ctx.reply(weapon ? `Ви забрали з руки ${weapon.name}.` : "У руці вже немає зброї.");
+  } catch (error) {
+    await ctx.reply(error instanceof Error ? error.message : "Не вдалося звільнити руку.");
+  }
 }
 
 async function submitPutItem(bot: Bot, ctx: any, item: string, amount: number | "all" | undefined, container: string) {
@@ -1068,6 +1096,8 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "open") return submitOpen(ctx, parsed.target);
     if (parsed.kind === "inspect-inventory-item") return submitInventoryInspect(ctx, parsed.target);
     if (parsed.kind === "drop-inventory-item") return submitInventoryDrop(bot, ctx, parsed.target);
+    if (parsed.kind === "equip-inventory-item") return submitInventoryEquip(ctx, parsed.target);
+    if (parsed.kind === "unequip-inventory-item") return submitInventoryUnequip(ctx, parsed.target);
     if (parsed.kind === "put-item") return submitPutItem(bot, ctx, parsed.item, parsed.amount, parsed.container);
     if (parsed.kind === "add-twigs-campfire") {
       const player = await getPlayerByTelegramId(ctx.from.id);

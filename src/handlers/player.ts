@@ -41,6 +41,7 @@ import { durationSecondsSuffix } from "../utils/durationText";
 import { characterNameApprovalStatusText } from "../services/characterNames";
 import { performPlayerLocationSignal, socialDefinitionById } from "../services/socialSignals";
 import { firstNightGuidanceForPlayer } from "../services/beginnerGuidance";
+import { equipPlayerWeapon, ownHeldWeaponLine, unequipPlayerWeapon } from "../services/weapons";
 
 const tutorialInventoryVoiceSeen = new Set<number>();
 
@@ -300,6 +301,7 @@ async function renderCharacterView(telegramId: number) {
   const completedTutorial = await hasCompletedTutorial(player.id);
   const tutorialStatusText = completedTutorial ? "" : "\nВи ще не пройшли навчальний сон.";
   const torchText = ownHeldTorchText(torchState);
+  const weaponText = ownHeldWeaponLine(player.equippedWeaponKey);
   const locationText = player.currentLocation
     ? `${player.currentLocation.region.name} / ${player.currentLocation.name}`
     : "невідомо";
@@ -308,7 +310,7 @@ async function renderCharacterView(telegramId: number) {
   const hasActionQueue = await hasPlayerActionQueueControls(player.id);
 
   return {
-    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}${tutorialStatusText}\n\n${formatPostureText({ ...player, isSleeping: isTutorialDream })}${torchText}\n${vitals.join("\n")}\nСтан: ${formatFatigueText(player)}${await recoveryText(player)}\n${hungerText}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}${technicalDetailsText}\nЗареєстровано: ${formatDateTime(player.createdAt)}${statsText}`,
+    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}${tutorialStatusText}\n\n${formatPostureText({ ...player, isSleeping: isTutorialDream })}${torchText}\n${weaponText}\n${vitals.join("\n")}\nСтан: ${formatFatigueText(player)}${await recoveryText(player)}\n${hungerText}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}${technicalDetailsText}\nЗареєстровано: ${formatDateTime(player.createdAt)}${statsText}`,
     keyboard: buildCharacterAutoKeyboard(autoEnabled, { posture: player.posture, sleepState: player.sleepState, isResting: player.isResting, showSleep: !isTutorialDream, hasActionQueue }),
   };
 }
@@ -558,6 +560,34 @@ export function registerPlayerHandlers(bot: Bot) {
       await ctx.editMessageText(text, { reply_markup: keyboard });
     } catch (error) {
       await ctx.reply(error instanceof Error ? error.message : "Не вдалося роздивитися це.");
+    }
+  });
+
+  bot.callbackQuery(/^inventory:equip:([A-Za-z0-9_-]+)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    await safeAnswerCallbackQuery(ctx);
+    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+    try {
+      const weapon = await equipPlayerWeapon(player.id, ctx.match[1]);
+      const keyboard = await buildInventoryItemKeyboard(player.id, ctx.match[1]);
+      await ctx.editMessageText(`Ви взяли в руку ${weapon.name}.`, { reply_markup: keyboard });
+    } catch (error) {
+      await ctx.reply(error instanceof Error ? error.message : "Не вдалося взяти це в руку.");
+    }
+  });
+
+  bot.callbackQuery(/^inventory:unequip:([A-Za-z0-9_-]+)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    await safeAnswerCallbackQuery(ctx);
+    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+    try {
+      const weapon = await unequipPlayerWeapon(player.id, ctx.match[1]);
+      const keyboard = await buildInventoryItemKeyboard(player.id, ctx.match[1]);
+      await ctx.editMessageText(weapon ? `Ви забрали з руки ${weapon.name}.` : "У руці вже немає зброї.", { reply_markup: keyboard });
+    } catch (error) {
+      await ctx.reply(error instanceof Error ? error.message : "Не вдалося звільнити руку.");
     }
   });
 

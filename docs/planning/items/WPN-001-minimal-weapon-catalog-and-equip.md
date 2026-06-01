@@ -1,7 +1,7 @@
 ---
 id: WPN-001
 title: Minimal weapon catalog and equip foundation
-status: next
+status: done
 type: feature
 area: items
 priority: medium
@@ -17,7 +17,7 @@ depends_on:
 
 # WPN-001 — Minimal weapon catalog and equip / unequip
 
-Status: next
+Status: done in 0.14.14.
 
 ## Goal
 
@@ -133,8 +133,8 @@ Avoid duplicate knives on repeated `/start`.
 
 ## Out of scope
 
-- attack text;
-- freshen requirement;
+- deep combat changes;
+- NPC seed weapon loadout changes;
 - NPC seed weapons;
 - durability and sharpness;
 - hand conflicts with torches;

@@ -29,6 +29,7 @@ import { playerShowsTechnicalDetails } from "./technicalDetails";
 import { dreamGateStatusText, ensureTutorialForagingResources, isDreamGateFeature, lockedExitDirections, lockedExitLabel, rememberTutorialObservationLesson } from "./tutorial";
 import { formatObservedPostureText } from "../utils/playerText";
 import { isFreshenedCorpse } from "./meat";
+import { heldWeaponLine } from "./weapons";
 import { GATE_CARCASS_DROPOFF_FEATURE_KEY, gateHuntingDropoffText, gateHuntingNoticeText, getGateHuntingSaturationState } from "./carcassDropoff";
 import { visibilityDarknessText, visibilityPresenceText, visibilityRulesForLocation, type VisibilityRules } from "./visibility";
 import {
@@ -100,6 +101,7 @@ function visibleTargets(
       fatigueState: p.fatigueState,
       grammaticalGender: p.grammaticalGender,
       pronoun: p.pronoun,
+      actionLabel: heldWeaponLine(p.equippedWeaponKey)?.replace(/\.$/u, "").toLocaleLowerCase("uk-UA"),
     }));
 
   const livingCreatures = location.creatures
@@ -110,7 +112,7 @@ function visibleTargets(
       label: options.showAnimalAge && c.species.kind === "ANIMAL"
         ? animalAgeDescription(c, options.showTechnicalDetails)
         : c.name ?? c.species.name,
-      actionLabel: [normalizeCreatureActionText(c.currentAction, "проходить"), visibleCreatureTorchText(c)].filter(Boolean).join("; "),
+      actionLabel: [heldWeaponLine(c.equippedWeaponKey)?.replace(/\.$/u, "").toLocaleLowerCase("uk-UA"), normalizeCreatureActionText(c.currentAction, "проходить"), visibleCreatureTorchText(c)].filter(Boolean).join("; "),
       canGreet: c.species.kind !== "ANIMAL",
       isAnimal: c.species.kind === "ANIMAL",
       isCorpse: false,
@@ -783,7 +785,7 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
   const activeActions = revealTargets ? await activeActionsForTargets(targets) : new Map<string, any>();
   const actionLabeledTargets = targets.map((target) => ({
     ...target,
-    actionLabel: visibleActionLabel(target, activeActions, location) ?? ("actionLabel" in target ? target.actionLabel : undefined),
+    actionLabel: ["actionLabel" in target ? target.actionLabel : undefined, visibleActionLabel(target, activeActions, location)].filter(Boolean).join("; ") || undefined,
   }));
   const keyboard = new InlineKeyboard();
   addFeatureButtons(keyboard, location.features, "brief");
@@ -859,7 +861,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   const activeActions = visibility.showNearbyDetails ? await activeActionsForTargets(targets) : new Map<string, any>();
   const actionLabeledTargets = targets.map((target) => ({
     ...target,
-    actionLabel: visibleActionLabel(target, activeActions, location) ?? ("actionLabel" in target ? target.actionLabel : undefined),
+    actionLabel: ["actionLabel" in target ? target.actionLabel : undefined, visibleActionLabel(target, activeActions, location)].filter(Boolean).join("; ") || undefined,
   }));
   const charactersText = visibility.showNearbyDetails
     ? visibleTargetsText(actionLabeledTargets)

@@ -27,6 +27,7 @@ export type ResourceDisplayGender = "MASCULINE" | "FEMININE" | "NEUTER" | "PLURA
 export function resourceTypeGrammaticalGender(resourceType: { key: string; name: string }): ResourceDisplayGender {
   if (resourceType.key === "raw_meat" || resourceType.key === "cooked_meat") return "NEUTER";
   if (resourceType.key === "berries" || resourceType.key === "mushrooms" || resourceType.key === "herbs") return "PLURAL";
+  if (resourceType.key === "hand_axe") return "FEMININE";
   return "MASCULINE";
 }
 

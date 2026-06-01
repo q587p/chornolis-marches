@@ -43,6 +43,8 @@ export type ParsedAliasCommand =
   | { kind: "open"; target?: string }
   | { kind: "inspect-inventory-item"; target: string }
   | { kind: "drop-inventory-item"; target: string }
+  | { kind: "equip-inventory-item"; target: string }
+  | { kind: "unequip-inventory-item"; target: string }
   | { kind: "posture"; mode: PostureAliasMode }
   | { kind: "rest"; mode: RestAliasMode }
   | { kind: "auto"; mode: AutoAliasMode }
@@ -716,6 +718,8 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "put-item") return "/put";
   if (parsed.kind === "inspect-inventory-item") return "/item";
   if (parsed.kind === "drop-inventory-item") return "/drop";
+  if (parsed.kind === "equip-inventory-item") return "/item";
+  if (parsed.kind === "unequip-inventory-item") return "/item";
   if (parsed.kind === "pickup-target") return "/get";
   if (parsed.kind === "social-signal") return `/${parsed.signal}`;
   if (parsed.kind === "target-action") {
@@ -986,6 +990,12 @@ function parseInventoryItemAction(text: string): ParsedAliasCommand | null {
 
   const inspect = text.match(/^(?:inspect item|examine item|look at item|item|річ|речі|оглянути в речах|роздивитися в речах)\s+(.+)$/);
   if (inspect?.[1]?.trim()) return { kind: "inspect-inventory-item", target: inspect[1].trim() };
+
+  const equip = text.match(/^(?:equip|wield|hold|взяти в руку|тримати|озброїтися)\s+(.+)$/);
+  if (equip?.[1]?.trim()) return { kind: "equip-inventory-item", target: equip[1].trim() };
+
+  const unequip = text.match(/^(?:unequip|unwield|free hand|прибрати з руки|зняти з руки|звільнити руку)\s*(.*)$/);
+  if (unequip) return { kind: "unequip-inventory-item", target: unequip[1]?.trim() ?? "" };
 
   return null;
 }

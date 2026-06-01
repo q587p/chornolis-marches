@@ -13,6 +13,21 @@ The first version should answer four player-facing questions:
 
 The weapon MVP should preserve the current playable promise: movement, looking, examining, traces, stamina, light, nearby beings and first learning moments. Weapons should make those moments more readable, not replace them with a generic RPG combat loop.
 
+## Current implementation
+
+The 0.14.14 slice implements the first two weapon tasks:
+
+- `Player.equippedWeaponKey` and `Creature.equippedWeaponKey`;
+- a code-level weapon catalog in `src/services/weapons.ts`;
+- MVP weapon resource types: `knife`, `hunting_spear`, `sickle`, `hand_axe`, `short_sword`;
+- starter `knife` grant after onboarding completion;
+- inventory item controls to take a weapon in hand or put it away;
+- character and target descriptions that mention visible held weapons;
+- weapon-aware attack copy without changing target eligibility or damage rules;
+- `freshen` validation requiring an equipped sharp weapon before stamina is spent.
+
+Still out of scope: NPC seed weapon loadouts, durability/sharpness, item instances, PvP, full hostile combat and balance math.
+
 ## MVP principles
 
 - One equipped weapon/tool slot per actor.
