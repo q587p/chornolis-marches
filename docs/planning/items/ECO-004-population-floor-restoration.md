@@ -19,9 +19,9 @@ depends_on:
 
 ## Goal
 
-Prevent ordinary animal species from disappearing forever when players, NPCs or ecology reduce their living population to zero.
+Prevent ordinary animal species from disappearing forever when players, NPCs or ecology reduce their living population to zero or, for key prey species, leave the world without an adult breeding pair.
 
-The MVP should be practical and quiet: if a configured animal species has no living members left in the waking world, the world restores its starter amount at its starter location or authored starter locations. A richer in-world explanation can come later.
+The MVP should be practical and quiet: if a configured animal species has no living members left in the waking world, the world restores its starter amount at its starter location or authored starter locations. For starter rabbits and mice, the same safeguard can also recover the species when living animals remain but no adult male/female pair is left. A richer in-world explanation can come later.
 
 ## First Scope
 
@@ -32,6 +32,7 @@ The MVP should be practical and quiet: if a configured animal species has no liv
   - starter count;
   - starter age mix if already authored.
 - During a world tick or a small ecology maintenance pass, detect when the living count for a floor-protected species is `0`.
+- For starter rabbits and mice, also detect when no adult breeding pair remains.
 - Spawn the starter count back into the starter location(s).
 - Do not restore named NPCs, unique creatures, spirits, monsters or intentionally extinct/disabled species.
 - Keep the player-facing output quiet unless there is already a scribe/technical tick summary. This is a safeguard, not a push notification.
@@ -44,11 +45,18 @@ The MVP should be practical and quiet: if a configured animal species has no liv
 - Excludes starter corpse groups and keeps restoration quiet except for technical world events / scribe tick summaries.
 - Added focused helper coverage in `scripts/test/population-restoration.cjs`.
 
+## 0.14.16 Slice
+
+- Keeps fox and wolf restoration tied to total disappearance, so the intentionally single starter wolf does not trigger repeated pair restoration.
+- Extends rabbit and mouse restoration to cover living populations that have lost their adult breeding pair.
+- Adds helper coverage for healthy adult pairs, same-sex adult remnants and young-only remnants.
+
 ## Acceptance
 
 - If all living animals of a protected species are gone, a later ecology/world tick restores the starter population.
+- If starter rabbits or mice remain alive but lack an adult male/female pair, a later ecology/world tick restores the starter prey population.
 - Restoration uses normal creature rows and valid species/location references.
-- It does not duplicate population while at least one living member of the species remains.
+- It does not duplicate population while a floor-protected species is healthy enough for its configured safeguard.
 - It does not revive corpses or reset existing corpse decay.
 - It does not affect tutorial/dream-only creatures.
 - The near-term stats/admin surface records how many times each protected species had to be restored after reaching `0` living animals.

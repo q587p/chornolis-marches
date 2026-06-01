@@ -48,6 +48,11 @@ const restoredOnlyMice = planPopulationFloorRestoration({
   species,
   locations,
   livingCountsBySpeciesKey: { rabbit: 1, mouse: 0, fox: 1, wolf: 1 },
+  livingBreedingBySpeciesKey: {
+    rabbit: { adultFemales: 1, adultMales: 1 },
+    fox: { adultFemales: 1, adultMales: 0 },
+    wolf: { adultFemales: 1, adultMales: 0 },
+  },
 });
 
 assert.equal(restoredOnlyMice.rows.length, starterCounts.mouse);
@@ -56,11 +61,45 @@ assert.deepEqual(Object.keys(restoredOnlyMice.bySpecies), ["mouse"]);
 const noDuplicates = planPopulationFloorRestoration({
   species,
   locations,
-  livingCountsBySpeciesKey: { rabbit: 1, mouse: 1, fox: 1, wolf: 1 },
+  livingCountsBySpeciesKey: { rabbit: 3, mouse: 3, fox: 1, wolf: 1 },
+  livingBreedingBySpeciesKey: {
+    rabbit: { adultFemales: 1, adultMales: 1 },
+    mouse: { adultFemales: 1, adultMales: 1 },
+    fox: { adultFemales: 0, adultMales: 0 },
+    wolf: { adultFemales: 1, adultMales: 0 },
+  },
 });
 
 assert.equal(noDuplicates.rows.length, 0);
 assert.deepEqual(noDuplicates.bySpecies, {});
+
+const restoredNoRabbitPair = planPopulationFloorRestoration({
+  species,
+  locations,
+  livingCountsBySpeciesKey: { rabbit: 2, mouse: 3, fox: 1, wolf: 1 },
+  livingBreedingBySpeciesKey: {
+    rabbit: { adultFemales: 2, adultMales: 0 },
+    mouse: { adultFemales: 1, adultMales: 1 },
+    fox: { adultFemales: 1, adultMales: 0 },
+    wolf: { adultFemales: 1, adultMales: 0 },
+  },
+});
+
+assert.equal(restoredNoRabbitPair.rows.length, starterCounts.rabbit);
+assert.deepEqual(Object.keys(restoredNoRabbitPair.bySpecies), ["rabbit"]);
+
+const restoredNoMousePair = planPopulationFloorRestoration({
+  species,
+  locations,
+  livingCountsBySpeciesKey: { rabbit: 3, mouse: 5, fox: 1, wolf: 1 },
+  livingBreedingBySpeciesKey: {
+    rabbit: { adultFemales: 1, adultMales: 1 },
+    mouse: { adultFemales: 0, adultMales: 0 },
+  },
+});
+
+assert.equal(restoredNoMousePair.rows.length, starterCounts.mouse);
+assert.deepEqual(Object.keys(restoredNoMousePair.bySpecies), ["mouse"]);
 
 const missingLocation = planPopulationFloorRestoration({
   groups: [{ speciesKey: "rabbit", locationKey: "missing", count: 2, age: "ADULT" }],

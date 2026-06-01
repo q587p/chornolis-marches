@@ -69,13 +69,14 @@ The player should be able to create problems by “solving” other problems:
 - The regular seed flow and `/reset` both provide small mixed starter rabbit and mouse populations.
 - 0.14.15 stabilizes starter authoring so adult female and adult male groups in the same location remain distinct during repeated seed runs.
 - 0.14.15 moves starter rabbit and mouse breeding clusters away from predator start cells and gives those clusters local food-rich resource overrides.
+- 0.14.16 extends the population floor for starter mice and rabbits so it can recover when living animals remain but no adult breeding pair is left.
+- 0.14.16 lets hungry predators consume safe unclaimed local herbivore corpses before selecting live prey, while still protecting hunter-claimed, player-carried and freshened corpses.
 
 ## Remaining follow-up
 
 - Tune reproduction, overgrazing and regeneration numbers after live or simulated observation.
 - Add hunger and starvation deaths when herbivores cannot find food.
-- If prey still dead-ends after the starter-balance pass, extend population restoration conservatively so it can restore when no adult breeding pair remains, not only when living count reaches zero.
-- If early predators still overkill live prey, let hungry predators consume unclaimed local herbivore corpses before attacking live prey, while preserving hunter-claimed and carried corpse protections.
+- Watch whether the 0.14.16 no-pair restoration and scavenging valves reduce early prey dead-ends without making prey pressure explode.
 - Restore visible animal movement in a cheaper form: local signs, fresh tracks, aggregated migration notices, `/stat` deltas or opt-in/debug client views, not raw Telegram departure/arrival spam for every animal step.
 - Add weather and magic hooks that reduce exhausted-vegetation recovery time.
 - Track recent player hunting as an explicit local pressure term instead of relying only on current surviving population.

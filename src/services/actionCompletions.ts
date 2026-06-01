@@ -38,7 +38,7 @@ import { canSendProactiveToPlayerId } from "./sessionPresence";
 import { cookRawMeat, freshenCorpseForMeat } from "./meat";
 import { rememberPlayerReplyTarget } from "./replyTargets";
 import { hunterClaimedCorpseAction, hunterConversationReplyLine, hunterReactionDurationMs, hunterSocialReactionSignal, isHunterCreature } from "./npcHunter";
-import { predatorClaimedCorpseAction, predatorClaimedCorpseFoodValue, predatorClaimedCorpseOwnerId } from "./predatorFeeding";
+import { isUnclaimedHerbivoreCorpseForScavenging, predatorClaimedCorpseAction, predatorClaimedCorpseFoodValue, predatorClaimedCorpseOwnerId, predatorPreyFoodValue } from "./predatorFeeding";
 import { ATTACK_OBSERVATION_GROWTH_MESSAGE, ATTACK_PRACTICE_GROWTH_MESSAGE, isAttackPracticeMilestone, recordAttackKillSource, recordAttackObservation } from "./attackLearning";
 import { GATHERING_OBSERVATION_GROWTH_MESSAGE, GATHERING_PRACTICE_GROWTH_MESSAGE, isGatheringPracticeMilestone, recordGatheringObservation, recordGatheringSource } from "./gatheringLearning";
 import { COOKING_OBSERVATION_GROWTH_MESSAGE, COOKING_PRACTICE_GROWTH_MESSAGE, FRESHENING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_PRACTICE_GROWTH_MESSAGE, recordCookingObservation, recordFresheningObservation, recordFresheningSource } from "./foodLearning";
@@ -681,7 +681,7 @@ async function completeEat(bot: Bot, action: WorldAction) {
   const creature = await prisma.creature.findUnique({ where: { id: action.creatureId }, include: { species: true } });
   if (!creature || !creature.isAlive || creature.isGone) return void (await setActionStatus(action, "FAILED"));
 
-  const payload = payloadOf<{ corpseId?: number; stealPredatorPrey?: boolean }>(action);
+  const payload = payloadOf<{ corpseId?: number; scavengeCorpse?: boolean; stealPredatorPrey?: boolean }>(action);
   if (creature.species.diet === "CARNIVORE" && payload.corpseId) {
     const corpse = await prisma.creature.findFirst({
       where: { id: payload.corpseId, locationId: creature.locationId, isAlive: false, isGone: false, isHidden: false, age: "CORPSE" },
@@ -689,7 +689,7 @@ async function completeEat(bot: Bot, action: WorldAction) {
     });
     const ownerId = predatorClaimedCorpseOwnerId(corpse?.currentAction);
     if (corpse && ownerId && (ownerId === creature.id || payload.stealPredatorPrey === true)) {
-      const foodValue = predatorClaimedCorpseFoodValue(corpse.currentAction) ?? preyFoodValue(corpse);
+      const foodValue = predatorClaimedCorpseFoodValue(corpse.currentAction) ?? predatorPreyFoodValue(corpse);
       const nextHunger = Math.max(0, creature.hunger - foodValue);
       await prisma.creature.updateMany({
         where: { id: corpse.id, isAlive: false, isGone: false },
@@ -701,6 +701,23 @@ async function completeEat(bot: Bot, action: WorldAction) {
       });
       await notifyLocation(bot, creature.locationId, -1, ownerId === creature.id ? `Щось повертається до здобичі й тягне її в темнішу траву.` : `Щось перехоплює чужу здобич і тягне її в темнішу траву.`);
       await logEvent("NPC_ACTION", ownerId === creature.id ? "Predator ate prey corpse" : "Predator stole prey corpse", `${creature.species.key} #${creature.id} ate ${corpse.species.key} #${corpse.id}; owner=${ownerId}; food=${foodValue}`, creature.locationId);
+      await setActionStatus(action, "DONE");
+      return;
+    }
+
+    if (corpse && payload.scavengeCorpse === true && isUnclaimedHerbivoreCorpseForScavenging(corpse)) {
+      const foodValue = predatorPreyFoodValue(corpse);
+      const nextHunger = Math.max(0, creature.hunger - foodValue);
+      await prisma.creature.updateMany({
+        where: { id: corpse.id, isAlive: false, isGone: false },
+        data: { isGone: true, corpseDecayTicksLeft: 0, currentAction: `з'їдено хижаком: ${creature.species.key}` },
+      });
+      await prisma.creature.updateMany({
+        where: { id: creature.id },
+        data: { hunger: nextHunger, activity: "RESTING", currentAction: `доїдає покинуту здобич: ${corpse.species.name}` },
+      });
+      await notifyLocation(bot, creature.locationId, -1, "Щось знаходить покинуту здобич і тягне її в темнішу траву.");
+      await logEvent("NPC_ACTION", "Predator scavenged corpse", `${creature.species.key} #${creature.id} ate unclaimed ${corpse.species.key} #${corpse.id}; food=${foodValue}`, creature.locationId);
       await setActionStatus(action, "DONE");
       return;
     }
@@ -976,7 +993,7 @@ async function completeCreatureAttack(bot: Bot, action: WorldAction) {
 
   const damage = Math.max(1, attacker.species.strength + Math.floor(Math.random() * 3));
   const nextHp = target.hp - damage;
-  const foodValue = preyFoodValue(target);
+  const foodValue = predatorPreyFoodValue(target);
   await spendCreatureStamina(attacker, actionCost("ATTACK"));
   await markRecentAttackDanger(attacker.locationId);
   await prisma.creature.updateMany({ where: { id: attacker.id }, data: { attackAttempts: { increment: 1 } } });
@@ -1040,16 +1057,6 @@ async function completeCreatureAttack(bot: Bot, action: WorldAction) {
   }
 
   await setActionStatus(action, "DONE");
-}
-
-function preyFoodValue(target: any) {
-  if (target.species.key === "mouse") return 1;
-  if (target.species.key === "rabbit") {
-    if (target.age === "CHILD") return 2;
-    if (target.age === "OLD") return 3;
-    return 4;
-  }
-  return Math.max(1, Math.round((target.species.baseHp ?? target.maxHp ?? 1) / 3));
 }
 
 async function completeAttack(bot: Bot, action: WorldAction) {
