@@ -42,14 +42,14 @@ Trees, towers, walls, bridge banks and similar vertical places should expose nea
 
 Recommended labels:
 
-- lower/base side with a visible `UP` exit or climbable vertical feature: `Гукнути вгору` (or exact feedback wording `Гукнути вверх` if that copy is preferred);
-- upper/branch/tower-top side with a visible `DOWN` exit or descent feature: `Гукнути вниз`.
+- lower/base side with an inspected climbable vertical feature: `Гукнути вгору` (or exact feedback wording `Гукнути вверх` if that copy is preferred). Prefer showing this inside the feature interaction, for example under `Сторожова вежа`, rather than as a general location-level button;
+- upper/branch/tower-top side with an inspected descent feature: `Гукнути вниз`. Prefer showing this inside the feature interaction, for example under `Сходи вниз` on the starter watchtower, rather than as a general location-level button.
 
 These buttons are shortcuts for the same nearby voice mechanic as `/yell`, not separate commands and not region-wide shouting. Under the hood they should submit or prepare a `SAY` action with `mode: "yell"`.
 
 Because `/yell` needs player-written text, a button should not send an empty shout. Use the smallest clean Telegram UX available:
 
-- prompt for the next message: `Що гукнути вниз? Напишіть текст — голос піде як /yell.`;
+- prompt for the next message: `Що гукнути вниз? Напишіть текст.`; the next ordinary text message should be submitted through the same path as `/yell <text>`;
 - prefill `/yell ` where the Telegram button/UI pattern supports it cleanly;
 - in a scripted tutorial-only moment, optionally use a fixed line if the scene deliberately demonstrates the first call.
 

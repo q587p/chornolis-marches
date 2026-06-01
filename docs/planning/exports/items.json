@@ -385,7 +385,7 @@
   {
     "id": "CAT-009",
     "title": "Camp cat watch posture and soft warnings",
-    "status": "backlog",
+    "status": "testing",
     "type": "feature",
     "area": "atmosphere",
     "priority": "medium",
@@ -1985,6 +1985,25 @@
     "file": "docs/planning/items/OBS-002-visible-herbalist-observation-moment.md"
   },
   {
+    "id": "OBS-PREP-001",
+    "title": "Look/examine content audit before observation MVP",
+    "status": "next",
+    "type": "design",
+    "area": "learning",
+    "priority": "high",
+    "tags": [
+      "look",
+      "examine",
+      "observation",
+      "content-audit"
+    ],
+    "depends_on": [
+      "LOOP-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/OBS-PREP-001-look-examine-content-audit.md"
+  },
+  {
     "id": "OMEN-001-A",
     "title": "Choose one living-world omen",
     "status": "next",
@@ -2456,7 +2475,7 @@
   {
     "id": "OWL-003",
     "title": "Starter camp owl boundary and night signs",
-    "status": "backlog",
+    "status": "testing",
     "type": "tuning",
     "area": "ecology",
     "priority": "medium",

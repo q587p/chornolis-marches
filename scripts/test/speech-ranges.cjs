@@ -5,7 +5,10 @@ require("ts-node/register");
 const {
   nearbySpeechDirectionIntro,
   nearbySpeechRecipients,
+  verticalYellPromptPlaceholder,
+  verticalYellPromptText,
 } = require("../../src/services/speechRanges");
+const { missingSpeechTargetText } = require("../../src/services/speechTargets");
 
 const recipients = nearbySpeechRecipients(10, [
   { toLocationId: 11, direction: "UP", isHidden: false },
@@ -25,5 +28,13 @@ assert.equal(nearbySpeechDirectionIntro("DOWN"), "Згори долинає го
 assert.equal(nearbySpeechDirectionIntro("NORTH"), "З півдня долинає голос");
 assert.equal(nearbySpeechDirectionIntro("WEST"), "Зі сходу долинає голос");
 assert.equal(nearbySpeechDirectionIntro(undefined), "Зовсім поруч долинає голос");
+assert.equal(verticalYellPromptText("UP"), "Що гукнути вгору? Напишіть текст.");
+assert.equal(verticalYellPromptText("DOWN"), "Що гукнути вниз? Напишіть текст.");
+assert.doesNotMatch(verticalYellPromptText("UP"), /\/yell|<текст>/u);
+assert.equal(verticalYellPromptPlaceholder("UP"), "Гукнути вгору...");
+assert.equal(verticalYellPromptPlaceholder("DOWN"), "Гукнути вниз...");
+assert.match(missingSpeechTargetText({ dative: "Левкові" }), /Левкові зараз не видно поруч/u);
+assert.match(missingSpeechTargetText({ dative: "Левкові" }), /\/yell/u);
+assert.match(missingSpeechTargetText({ dative: "Левкові" }), /\/shout/u);
 
 console.log("Speech range helpers OK");

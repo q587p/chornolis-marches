@@ -41,6 +41,7 @@ model Player {
   ordinaryWakeCount Int @default(0)
   showTechnicalDetails Boolean @default(false)
   hunger  Int @default(0)
+  lastPassiveHungerAtMinute Int?
   equippedWeaponKey String?
 
   // статистика

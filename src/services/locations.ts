@@ -36,6 +36,7 @@ import { getCurrentWorldTimeSnapshot } from "./worldTime";
 import { owlSignDetailLine, owlSignInspectionText } from "./owlSigns";
 import {
   beginnerCacheActionLabel,
+  beginnerCacheContributeAllButtonLabel,
   beginnerCacheInspectionText,
   beginnerCacheTakeKeys,
   isBeginnerCacheData,
@@ -273,6 +274,24 @@ export function featureMoveButtonLabel(direction: FeatureMoveDirection) {
   return `${icon} ${label}`;
 }
 
+export function featureMoveButtonLabelForFeature(feature: any, direction: FeatureMoveDirection) {
+  const customLabel = featureData(feature).move_label;
+  if (typeof customLabel === "string" && customLabel.trim()) {
+    const icon = FEATURE_MOVE_ICONS[direction] ?? "➡️";
+    return `${icon} ${customLabel.trim()}`;
+  }
+  return featureMoveButtonLabel(direction);
+}
+
+export function featureYellPromptDirection(feature: any): "UP" | "DOWN" | null {
+  const direction = featureMoveDirection(feature);
+  return direction === "UP" || direction === "DOWN" ? direction : null;
+}
+
+export function featureYellPromptButtonLabel(direction: "UP" | "DOWN") {
+  return direction === "DOWN" ? "🗣 Гукнути вниз" : "🗣 Гукнути вгору";
+}
+
 function featureIcon(feature: any) {
   const data = featureData(feature);
   if (typeof data.icon === "string" && data.icon.trim()) return data.icon.trim();
@@ -472,12 +491,6 @@ function addFeatureButtons(keyboard: InlineKeyboard, features: any[], sourceMode
   for (const feature of features.filter(isInteractiveFeature)) {
     keyboard.text(`${featureIcon(feature)} ${feature.name}`, `feature:${feature.id}:${sourceMode}`).row();
   }
-}
-
-function addVerticalYellButtons(keyboard: InlineKeyboard, exits: any[]) {
-  const visibleDirections = new Set(exits.filter((exit) => !exit.isHidden).map((exit) => exit.direction));
-  if (visibleDirections.has("UP")) keyboard.text("🗣 Гукнути вгору", "yell:prompt:UP").row();
-  if (visibleDirections.has("DOWN")) keyboard.text("🗣 Гукнути вниз", "yell:prompt:DOWN").row();
 }
 
 function addInlineRows(target: InlineKeyboard, source: InlineKeyboard) {
@@ -824,7 +837,6 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
   }));
   const keyboard = new InlineKeyboard();
   addFeatureButtons(keyboard, location.features, "brief");
-  addVerticalYellButtons(keyboard, location.exitsFrom);
   const groundItems = location.resources.filter((r) => isVisibleGroundResource(r, location));
   if (visibility.showGroundObjects && groundItems.length) addGroundItemPickupButtons(keyboard, groundItems);
   if (revealTargets && targets.length) addInlineRows(keyboard, buildTargetListKeyboard(actionLabeledTargets, { page: options.targetPage, pageCallbackPrefix: "targetPage:brief" }));
@@ -939,7 +951,6 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   const resources = visibility.showResourceDetails ? await resourceButtonData(location.resources, viewerPlayerId) : [];
 
   addFeatureButtons(keyboard, location.features, "details");
-  addVerticalYellButtons(keyboard, location.exitsFrom);
 
   if (resources.length === 1) {
     const resource = resources[0];
@@ -1173,11 +1184,14 @@ export async function renderLocationFeatureInteraction(
     const contributionKeys = await playerBeginnerCacheContributionKeys(viewerPlayerId);
     for (const key of contributionKeys) {
       keyboard.text(`🤲 Лишити ${beginnerCacheActionLabel(key)}`, `cache:contribute:${feature.id}:${key}`).row();
+      keyboard.text(beginnerCacheContributeAllButtonLabel(key), `cache:contribute_all:${feature.id}:${key}`).row();
     }
   }
   if (isClimbTreeFeature(feature)) keyboard.text("🌳 Залізти", "move:UP").row();
   const moveDirection = featureMoveDirection(feature);
-  if (moveDirection) keyboard.text(featureMoveButtonLabel(moveDirection), `move:${moveDirection}`).row();
+  if (moveDirection) keyboard.text(featureMoveButtonLabelForFeature(feature, moveDirection), `move:${moveDirection}`).row();
+  const yellDirection = featureYellPromptDirection(feature);
+  if (yellDirection) keyboard.text(featureYellPromptButtonLabel(yellDirection), `yell:prompt:${yellDirection}`).row();
   if (isShakeTreeFeature(feature)) keyboard.text("🍃 Потрусити", `tree:shake:${feature.id}`).row();
   keyboard.text("↩️ Назад", `location:${returnMode}`);
   return { text, keyboard, quoteMessages, followupMessages };

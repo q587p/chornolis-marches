@@ -69,6 +69,10 @@ import {
 import { equipPlayerWeapon, unequipPlayerWeapon } from "../services/weapons";
 import { queueAllRawMeatCooking } from "../services/cookingQueue";
 import { queueAllUsableInventoryResource } from "../services/eatingQueue";
+import { queueAllBeginnerCacheContributions } from "../services/beginnerCacheQueue";
+import { verticalYellPromptPlaceholder, verticalYellPromptText, type VerticalYellPromptDirection } from "../services/speechRanges";
+
+const pendingVerticalYell = new Map<number, { direction: VerticalYellPromptDirection }>();
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
@@ -200,6 +204,35 @@ async function submitBeginnerCacheContribute(bot: Bot, ctx: any, item?: string) 
   } catch (error) {
     await replyToActionError(ctx, error, "Не вдалося лишити річ у скрині.");
   }
+}
+
+async function submitBeginnerCacheContributeAll(bot: Bot, ctx: any, item?: string) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  try {
+    const feature = await localBeginnerCacheFeature(player);
+    if (!feature) throw new Error("Поруч немає спільної скрині.");
+    const result = await queueAllBeginnerCacheContributions(bot, player, feature.id, item, "all", ctx.chat?.id);
+    const queueText = await renderPlayerActionQueue(player.id);
+    const queueLimitText = result.limitedByQueue ? "\n\nЧерга взяла не все: у плані дій уже тісно." : "";
+    const capacityText = result.limitedByCapacity ? "\n\nСкриня візьме не все: для цього запасу там лишилося не так багато місця." : "";
+    await ctx.reply(
+      `Додано до спільної скрині: ${result.count}. Будете лишати ${result.label} по одній речі${durationSecondsSuffix(player, result.durationMs)}.${queueLimitText}${capacityText}\n\n${queueText}`,
+      await actionQueueReplyOptions(player.id),
+    );
+  } catch (error) {
+    await replyToActionError(ctx, error, "Не вдалося лишити все у скрині.");
+  }
+}
+
+function isBeginnerCacheContainerQuery(container: string) {
+  const normalized = container
+    .toLocaleLowerCase("uk-UA")
+    .replace(/[^\p{L}\p{N}\s_-]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return /^(?:cache|supply cache|beginner cache|скриня|скриню|скрині|спільна скриня|спільну скриню|скриня прибулих|скриню прибулих|запаси|припаси)$/u.test(normalized);
 }
 
 async function submitFeatureInspection(bot: Bot, ctx: any, targetQuery: string, detail: "brief" | "full" = "full") {
@@ -526,6 +559,27 @@ async function submitPutItem(bot: Bot, ctx: any, item: string, amount: number | 
 
   try {
     assertCanPerformPhysicalAction(player, "PUT");
+    if (isBeginnerCacheContainerQuery(container)) {
+      const feature = await localBeginnerCacheFeature(player);
+      if (!feature) throw new Error("Поруч немає спільної скрині.");
+      if (amount === undefined) {
+        const result = await contributeToBeginnerCache(player.id, feature.id, item);
+        await spendPlayerStaminaAmount(bot, player.id, 1, ctx.chat?.id);
+        await ctx.reply(result.text);
+        return;
+      }
+
+      const result = await queueAllBeginnerCacheContributions(bot, player, feature.id, item, amount, ctx.chat?.id);
+      const queueText = await renderPlayerActionQueue(player.id);
+      const queueLimitText = result.limitedByQueue ? "\n\nЧерга взяла не все: у плані дій уже тісно." : "";
+      const capacityText = result.limitedByCapacity ? "\n\nСкриня візьме не все: для цього запасу там лишилося не так багато місця." : "";
+      await ctx.reply(
+        `Додано до спільної скрині: ${result.count}. Будете лишати ${result.label} по одній речі${durationSecondsSuffix(player, result.durationMs)}.${queueLimitText}${capacityText}\n\n${queueText}`,
+        await actionQueueReplyOptions(player.id),
+      );
+      return;
+    }
+
     const result = await putInventoryIntoLocalFeature({
       playerId: player.id,
       itemQuery: item,
@@ -1104,6 +1158,24 @@ export function registerAliasHandlers(bot: Bot) {
   bot.on("message:text", async (ctx, next) => {
     if (!ctx.from || !ctx.message?.text) return next();
 
+    const pendingYell = pendingVerticalYell.get(ctx.from.id);
+    if (pendingYell) {
+      const text = String(ctx.message.text ?? "").trim();
+      const normalized = normalizeInput(text);
+      if (["/cancel", "cancel", "скасувати", "відмінити", "відміна", "стоп", "не треба"].includes(normalized)) {
+        pendingVerticalYell.delete(ctx.from.id);
+        await ctx.reply("Добре, не гукаємо.");
+        return;
+      }
+      if (text.startsWith("/")) {
+        pendingVerticalYell.delete(ctx.from.id);
+        return next();
+      }
+
+      pendingVerticalYell.delete(ctx.from.id);
+      return submitYell(bot, ctx, text);
+    }
+
     const parsed = parseAlias(ctx.message.text);
     if (!parsed) return next();
 
@@ -1139,6 +1211,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "beginner-cache") {
       if (parsed.action === "take") return submitBeginnerCacheTake(bot, ctx, parsed.item);
       if (parsed.action === "contribute") return submitBeginnerCacheContribute(bot, ctx, parsed.item);
+      if (parsed.action === "contribute-all") return submitBeginnerCacheContributeAll(bot, ctx, parsed.item);
       return replyWithBeginnerCache(ctx);
     }
     if (parsed.kind === "move") return submitCanonicalMove(bot, ctx, parsed.direction, false);
@@ -1187,8 +1260,15 @@ export function registerAliasHandlers(bot: Bot) {
     });
   });
   bot.callbackQuery(/^yell:prompt:(UP|DOWN)$/, async (ctx) => {
-    const direction = ctx.match[1] === "UP" ? "вгору" : "вниз";
+    const direction = ctx.match[1] as VerticalYellPromptDirection;
+    pendingVerticalYell.set(ctx.from.id, { direction });
     await safeAnswerCallbackQuery(ctx, "Напишіть текст у чат.");
-    await ctx.reply(`Що гукнути ${direction}? Напишіть: /yell <текст>`);
+    await ctx.reply(verticalYellPromptText(direction), {
+      reply_markup: {
+        force_reply: true,
+        selective: true,
+        input_field_placeholder: verticalYellPromptPlaceholder(direction),
+      },
+    });
   });
 }

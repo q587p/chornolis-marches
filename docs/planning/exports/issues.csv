@@ -19,7 +19,7 @@ CAT-005,"Cat social gestures: shoo, wave off, rub against, circle around",next,f
 CAT-006,"Body-language reactions to weather, daypart, fire and darkness",next,content,atmosphere,low,"cat,weather,daypart,fire,visibility,copy,ukrainian",docs/planning/items/CAT-006-body-language-weather-and-fire.md
 CAT-007,Camp cat tests and tuning pass,next,chore,testing,medium,"cat,tests,tuning,ecology,social",docs/planning/items/CAT-007-camp-cat-tests-and-tuning.md
 CAT-008,"Camp spirit cat docs, news and release notes",next,content,docs,low,"cat,docs,news,release,planning",docs/planning/items/CAT-008-docs-news-release.md
-CAT-009,Camp cat watch posture and soft warnings,backlog,feature,atmosphere,medium,"cat,camp,atmosphere,safety,onboarding",docs/planning/items/CAT-009-camp-cat-watch-and-soft-warnings.md
+CAT-009,Camp cat watch posture and soft warnings,testing,feature,atmosphere,medium,"cat,camp,atmosphere,safety,onboarding",docs/planning/items/CAT-009-camp-cat-watch-and-soft-warnings.md
 CAT-010,Camp cat cache and newcomer presence,backlog,feature,onboarding,low,"cat,camp,beginner-cache,onboarding,atmosphere",docs/planning/items/CAT-010-camp-cat-cache-and-newcomer-presence.md
 CMD-001,Near-term text command pack,testing,feature,commands,high,"commands,aliases,mud,speech,navigation",docs/planning/items/CMD-001-near-term-text-command-pack.md
 CMD-002,Put items into local containers and features,testing,feature,commands,high,"commands,inventory,containers,aliases",docs/planning/items/CMD-002-put-items-into-containers.md
@@ -101,6 +101,7 @@ OBS-001-B,Visible herbalist action,next,feature,learning,high,"observe,npc,herba
 OBS-001-C,Herbalism/gathering progress from observation,next,feature,learning,high,"observe,herbalism,progression",docs/planning/items/OBS-001-C.md
 OBS-001-D,Observation anti-farming cooldown,next,feature,learning,medium,"observe,cooldown,anti-grind",docs/planning/items/OBS-001-D.md
 OBS-002,Visible herbalist observation moment,proposed,feature,learning,high,"observe,npc,herbalism,progression",docs/planning/items/OBS-002-visible-herbalist-observation-moment.md
+OBS-PREP-001,Look/examine content audit before observation MVP,next,design,learning,high,"look,examine,observation,content-audit",docs/planning/items/OBS-PREP-001-look-examine-content-audit.md
 OMEN-001-A,Choose one living-world omen,next,design,world,medium,"omen,ambient,living-world",docs/planning/items/OMEN-001-A.md
 OMEN-001-B,Omen trigger and rate limit,next,feature,world,medium,"omen,ambient,cooldown",docs/planning/items/OMEN-001-B.md
 OMEN-001-C,Omen local text,next,content,world,medium,"omen,copy,atmosphere",docs/planning/items/OMEN-001-C.md
@@ -126,7 +127,7 @@ ONB-004,First night guidance,done,ux,onboarding,medium,"onboarding,night,light,t
 ONB-006,Look/examine semantics in the dream,testing,ux,onboarding,high,"tutorial,look,examine,ux,copy",docs/planning/items/ONB-006-look-examine-semantics-in-dream.md
 ONB-007,Dream tree and vertical tutorial,proposed,feature,onboarding,high,"sleep,dream,tutorial,verticality,speech,onboarding",docs/planning/items/ONB-007-dream-tree-and-vertical-tutorial.md
 OWL-002,Nocturnal owl tuning and indirect signs,testing,tuning,ecology,high,"owl,ecology,night,predator,observation,tuning",docs/planning/items/OWL-002-nocturnal-owl-tuning-and-signs.md
-OWL-003,Starter camp owl boundary and night signs,backlog,tuning,ecology,medium,"owl,camp,ecology,night,onboarding",docs/planning/items/OWL-003-starter-camp-boundary-and-night-signs.md
+OWL-003,Starter camp owl boundary and night signs,testing,tuning,ecology,medium,"owl,camp,ecology,night,onboarding",docs/planning/items/OWL-003-starter-camp-boundary-and-night-signs.md
 PERF-001,Runtime performance plan and creature simulation budget,next,technical,performance,high,"performance,ecology,creatures,action-queue,simulation,status,auto",docs/planning/items/PERF-001-budgeted-and-aggregated-creature-simulation.md
 PLAN-001,Repository docs are the planning source of truth,testing,documentation,planning,high,"planning,docs,roadmap",docs/planning/items/PLAN-001.md
 PROG-002,Observation-based learning,backlog,feature,progression,medium,"skills,observation,npc,animals,mythic",docs/planning/items/PROG-002-observation-learning.md

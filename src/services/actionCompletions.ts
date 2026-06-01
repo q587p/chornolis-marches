@@ -56,10 +56,13 @@ import { visibilityPresenceText, visibilityRulesForLocation } from "./visibility
 import { firstNightGuidanceForPlayer } from "./beginnerGuidance";
 import { creatureAttackObserverText, freshenWeaponFailureText, getPlayerEquippedWeapon, grantAndEquipLegacyFresheningKnife, legacyFresheningKnifeGrantText, playerAttackKillText, playerAttackObserverText } from "./weapons";
 import { canCreatureUseExit, creatureUsableExits } from "./creatureMovement";
+import { contributeToBeginnerCache } from "./beginnerCache";
+import { isBeginnerCacheContributionPayload } from "./beginnerCacheQueue";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
-type InventoryActionPayload = { resourceKey?: string; target?: string; allFilter?: string | null; featureId?: number };
+type InventoryActionPayload = { resourceKey?: string; target?: string; allFilter?: string | null; featureId?: number; cacheContribution?: boolean };
+type LookPayload = { reason?: string };
 type SayPayload = { text: string; mode?: "say" | "whisper" | "reply" | "yell" | "shout"; targetType?: "player" | "creature"; targetId?: number; targetName?: string; targetDative?: string };
 type SocialPayload = { targetType: "player" | "creature"; targetId: number; mode?: "known" | "mystery"; detail?: "brief" | "full"; socialId?: string };
 
@@ -402,6 +405,14 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
     }
 
     if (action.type === "DROP_ITEM") {
+      if (isBeginnerCacheContributionPayload(payload)) {
+        const result = await contributeToBeginnerCache(player.id, payload.featureId, payload.resourceKey);
+        await spendPlayerStamina(bot, player.id, "DROP_ITEM", chatId);
+        await setActionStatus(action, "DONE");
+        if (chatId) await bot.api.sendMessage(chatId, result.text);
+        return;
+      }
+
       const result = payload.allFilter !== undefined
         ? await dropInventoryResourcesDetailed(player.id, payload.allFilter || undefined)
         : await dropInventoryResourceDetailed(player.id, payload.target ?? "");
@@ -819,7 +830,13 @@ async function completeLook(bot: Bot, action: WorldAction) {
     return;
   }
 
-  if (action.creatureId) await prisma.creature.updateMany({ where: { id: action.creatureId }, data: { looks: { increment: 1 }, activity: "LOOKING", currentAction: "озирається" } });
+  if (action.creatureId) {
+    const payload = payloadOf<LookPayload>(action);
+    await prisma.creature.updateMany({
+      where: { id: action.creatureId },
+      data: { looks: { increment: 1 }, activity: "LOOKING", currentAction: payload.reason?.trim() || "озирається" },
+    });
+  }
   await setActionStatus(action, "DONE");
 }
 

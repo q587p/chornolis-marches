@@ -76,9 +76,11 @@ NPCs should eventually use the same ordinary food assumptions where practical. H
 
 ## Hunger Direction
 
-Hunger currently rises only from strenuous player actions or overexertion and can be eased by simple food. Ordinary inspection, gathering or cooking should not make the character feel instantly hungry. Player-facing text should describe hunger atmospherically, not as a debug value.
+Hunger can rise from strenuous player actions or overexertion and can be eased by simple food. Ordinary inspection, gathering or cooking should not make the character feel instantly hungry. Player-facing text should describe hunger atmospherically, not as a debug value.
 
-`WORLD-003` should move hunger to the internal world clock: a first target is roughly `+1` hunger per in-game hour, tuned after playtesting and protected where the tutorial/dream flow is teaching something else. The same pass should audit torches, campfires, corpse/meat decay and other temporary lifetimes so they use game hours/days consistently instead of scattered real-minute assumptions.
+`0.15.6` adds the first internal-world-time hunger bridge: after onboarding and outside tutorial dream locations, living player characters gain `+1` hunger for each full 4 in-game hours since their last passive hunger mark, capped by `PLAYER_HUNGER_MAX`. Eating berries, mushrooms or cooked meat when they actually reduce hunger refreshes that mark. The first tick for an older character only initializes the mark so deploys do not instantly backfill a large hunger debt. If `/timeSet` or a reset moves the world clock backwards, the mark resets without adding hunger. This passive change is silent; threshold cue messages remain tied to explicit state changes that already go through the hunger cue layer.
+
+`WORLD-003` remains open for the broader pass: tune the passive hunger rate after playtesting, decide whether AFK/offline/session-ended characters need different protection, and audit torches, campfires, corpse/meat decay and other temporary lifetimes so they use game hours/days consistently instead of scattered real-minute assumptions.
 
 ## Meat Loop
 

@@ -9,6 +9,7 @@ const {
   CAMP_SPIRIT_CAT_START_LOCATION_KEY,
   CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY,
   campSpiritCatSafeLocationKey,
+  campSpiritCatWatchPosture,
   campSpiritCatInspectionText,
   isCampSpiritCatAllowedExit,
   isCampSpiritCatCreature,
@@ -57,6 +58,22 @@ assert.equal(isCampSpiritCatLocationKey(CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY)
 assert.equal(isCampSpiritCatLocationKey("meadow_16_05"), false);
 assert.equal(campSpiritCatSafeLocationKey("meadow_16_05"), CAMP_SPIRIT_CAT_START_LOCATION_KEY);
 assert.equal(campSpiritCatSafeLocationKey(CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY), CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY);
+assert.match(
+  campSpiritCatWatchPosture({ hasLocalMice: true, daypart: "night", hasActiveCampfire: true }),
+  /мишаче шарудіння/u,
+);
+assert.match(
+  campSpiritCatWatchPosture({ daypart: "night", hasActiveCampfire: true }),
+  /межі світла й темряви/u,
+);
+assert.match(
+  campSpiritCatWatchPosture({ locationKey: CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY, daypart: "day" }),
+  /вище над табором/u,
+);
+assert.doesNotMatch(
+  campSpiritCatWatchPosture({ daypart: "dusk" }),
+  /NPC|debug|companion|pet|сова|вовк|лисиц/u,
+);
 assert.equal(
   isCampSpiritCatAllowedExit({
     direction: "UP",
@@ -79,9 +96,15 @@ assert.equal(
   true,
 );
 
-const inspection = campSpiritCatInspectionText("лежить біля межового вогню");
-assert.match(inspection, /Кіт-бережник/u);
-assert.match(inspection, /не відповідає словами/u);
-assert.doesNotMatch(inspection, /HP|NPC|debug|companion|pet/u);
+const briefInspection = campSpiritCatInspectionText("лежить біля межового вогню", "brief");
+const fullInspection = campSpiritCatInspectionText("лежить біля межового вогню", "full");
+assert.match(briefInspection, /Кіт-бережник/u);
+assert.match(briefInspection, /межовий вогонь має власного сторожа/u);
+assert.doesNotMatch(briefInspection, /Якщо роздивитися уважніше/u);
+assert.match(fullInspection, /Кіт-бережник/u);
+assert.match(fullInspection, /не відповідає словами/u);
+assert.match(fullInspection, /Якщо роздивитися уважніше/u);
+assert.ok(fullInspection.length > briefInspection.length + 100, "Full cat inspection should be substantially richer than brief look text");
+assert.doesNotMatch(`${briefInspection}\n${fullInspection}`, /HP|NPC|debug|companion|pet/u);
 
 console.log("Camp spirit cat foundation OK");

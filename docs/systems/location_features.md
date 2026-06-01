@@ -1,6 +1,6 @@
 # Location Features
 
-Location features are persistent objects attached to a location: signs, campfires, gates, bridges and future player-created markers.
+Location features are persistent objects attached to a location: signs, campfires, gates, bridges and future player-created markers. The same `look` / `examine` distinction should also guide visible creatures, objects, spirits and location content, even when they are not modeled as `LocationFeature` rows.
 
 ## Interactive features
 
@@ -16,6 +16,13 @@ Every visible feature should usually have two layers of text:
 - `examine` / direct feature inspection: a deeper explanation with at least one useful detail, interaction hint, constraint, local consequence or atmospheric clue.
 
 If `look ворота` and `examine ворота`, or similar direct feature commands, produce the same text, treat that as a bug or an explicit no-action decision to document. The default should be that direct examination adds something the overview did not say.
+
+For any new visible target, keep the two inspection layers distinct:
+
+- `look <thing>` should answer "what is visibly here right now?" with compact state, posture or orientation.
+- `examine <thing>` should answer "what do I understand by spending more attention/stamina?" with substantially richer detail.
+
+When possible, `examine` text should also vary by relevant world context such as daypart, moonlight, weather, active light, fire state, local danger, recent actions or the viewer's future observation skill. If contextual variants do not fit the current slice, record a follow-up task instead of letting the target permanently ship with identical brief/full text.
 
 Interactive features should also be inspectable by text where practical: `look лавка`, `/examine лавка`, `оглянути лавку`, `look bench`, `роздивитися кущі`. If no feature matches, the same text can fall back to ordinary visible target inspection.
 

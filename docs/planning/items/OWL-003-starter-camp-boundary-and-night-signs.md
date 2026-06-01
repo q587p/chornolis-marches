@@ -1,7 +1,7 @@
 ---
 id: OWL-003
 title: Starter camp owl boundary and night signs
-status: backlog
+status: testing
 type: tuning
 area: ecology
 priority: medium
@@ -60,3 +60,10 @@ Owls may be heard or hinted at near the camp edge, but the camp and watchtower s
 - `node scripts/test/starter-animals.cjs` if seed placement changes.
 - `node scripts/test/camp-cat.cjs` if cat sign helpers are touched.
 - `npm test`
+
+## Implementation Notes
+
+- `0.15.6` adds a narrow starter-camp owl-safe boundary for `start_border_camp` and `start_border_watchtower`.
+- Routine owl movement will not choose exits into those locations.
+- If an owl somehow reaches the protected pair through admin/debug drift or old state, its carnivore tick leaves if possible or only watches instead of selecting prey there.
+- This does not make surrounding camp-edge locations safe and does not add flight, nests, ranged hunting or owl-vs-cat scenes.

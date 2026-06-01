@@ -33,8 +33,8 @@ Now that the internal world clock exists, the next durable pass should make slow
 
 ## Scope
 
-- Add a player hunger timestamp or equivalent persisted state so hunger can rise gradually with world time.
-- First target: roughly `+1` hunger per in-game hour, tuned after playtesting and protected in tutorial/dream cases where food is not the lesson.
+- Keep the first player hunger world-time marker working and tune it after playtesting.
+- `0.15.6` bridge target: `+1` hunger per full 4 in-game hours after onboarding and outside tutorial/dream cases where food is not the lesson; eating food that actually reduces hunger refreshes the passive marker.
 - Keep strenuous actions as an extra pressure source, but do not make ordinary inspection/gathering feel like instant starvation.
 - Migrate or audit temporary object timers against world time:
   - lit torches and dropped lit torches;
@@ -55,4 +55,4 @@ Now that the internal world clock exists, the next durable pass should make slow
 
 ## Notes
 
-0.14.23 slows the immediate action-based hunger spike as a balance bridge. This task is the fuller persistence/time-model pass.
+0.14.23 slowed the immediate action-based hunger spike as a balance bridge. 0.15.6 adds the first persisted player hunger marker, a slow `+1` per 4 in-game hours passive increase, and marker refresh when food actually reduces hunger. This task remains open for tuning, AFK/offline/session policy and the broader item-lifetime audit.

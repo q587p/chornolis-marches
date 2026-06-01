@@ -44,6 +44,8 @@ When adding or changing commands, keep aliases in sync:
 
 Direct slash commands should also accept the same direct text form without the leading slash when practical, especially for scribe/admin commands: `/teleport forest_07_00` and `teleport forest_07_00` should behave the same.
 
+If a slash command has a no-argument usage hint, its English/MUD-style and Ukrainian aliases should route to that same hint too. For example `/yell`, `yell`, `call` and `гукнути` without text should all explain how to add the message text, not fall into the generic unknown-command response.
+
 Actual Telegram keyboard button labels should stay short and clean: Ukrainian label plus icon where helpful. Use slash commands in parentheses in help, commands, news, release notes and docs, but do not append `(/command)` hints inside reply or inline keyboard button text.
 
 - `/look`

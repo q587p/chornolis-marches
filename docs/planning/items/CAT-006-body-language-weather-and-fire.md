@@ -26,6 +26,7 @@ Add nonverbal cat ambient behavior for weather, daypart, fire/light and darkness
 - Add ambient lines for dawn/day/dusk/night.
 - Add weather reactions for rain, storm, snow/cold, fog and clear night when helpers exist.
 - Add fire comfort behavior near active campfire/light/embers.
+- Add contextual `look` / `examine` variants for the cat so full examination can notice more than brief posture: moonlight, daypart, weather, active fire/light, recent mouse pressure and watchtower/camp position.
 - Add vague darkness/danger body-language lines without revealing exact hidden targets.
 - Add cooldowns so ambient lines do not spam.
 
@@ -41,6 +42,7 @@ Add nonverbal cat ambient behavior for weather, daypart, fire/light and darkness
 - The cat has at least one ambient behavior for each supported daypart group.
 - The cat reacts to rain/storm/cold/fog if those weather states exist.
 - The cat prefers warmth during cold/night/rain when a fire exists.
+- Brief `look` and full `examine` remain distinct; full examination gives richer context and can vary with daypart/moon/fire/weather when those helpers are available.
 - Darkness/danger copy is vague and does not reveal hidden entity names.
 - Tests or lightweight assertions cover representative copy helpers where practical.
 

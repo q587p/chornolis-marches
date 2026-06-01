@@ -5,12 +5,14 @@ require("ts-node/register");
 const {
   beginnerCacheDataAfterHiddenRestock,
   beginnerCacheDataAfterObservation,
+  beginnerCacheContributeAllButtonLabel,
   beginnerCacheResourceKeyFromText,
   beginnerCacheStock,
   beginnerCacheStockLines,
   beginnerCacheTakeKeys,
   isBeginnerCacheData,
 } = require("../../src/services/beginnerCache");
+const { planBeginnerCacheContributeAll } = require("../../src/services/beginnerCacheQueue");
 
 const base = {
   beginner_cache: true,
@@ -28,8 +30,58 @@ assert.equal(beginnerCacheResourceKeyFromText("raw meat"), "raw_meat");
 assert.equal(beginnerCacheResourceKeyFromText("смажене м'ясо"), "cooked_meat");
 
 assert.deepEqual(beginnerCacheTakeKeys(base), ["berries", "raw_meat", "twigs"]);
+assert.equal(beginnerCacheContributeAllButtonLabel("herbs"), "🤲 Лишити всі лікарські трави");
+assert.equal(beginnerCacheContributeAllButtonLabel("twigs"), "🤲 Лишити весь хмиз");
+assert.equal(beginnerCacheContributeAllButtonLabel("raw_meat"), "🤲 Лишити все сире м'ясо");
 assert.ok(beginnerCacheStockLines(base).some((line) => line.includes("berries") || line.includes("ягоди")));
 assert.ok(beginnerCacheStockLines(base).some((line) => line.includes("сире м'ясо")));
+
+assert.deepEqual(
+  planBeginnerCacheContributeAll({
+    carriedAmount: 8,
+    requestedAmount: 2,
+    stock: 0,
+    maxStock: 10,
+    activeActionCount: 0,
+    activeContributionCount: 0,
+    maxQueuedActions: 6,
+  }),
+  {
+    count: 2,
+    carriedAmount: 8,
+    activeActionCount: 0,
+    activeContributionCount: 0,
+    availableSlots: 6,
+    alreadyPlanned: 0,
+    unplannedCarried: 2,
+    freeCapacity: 10,
+    limitedByQueue: false,
+    limitedByCapacity: false,
+  },
+);
+
+assert.deepEqual(
+  planBeginnerCacheContributeAll({
+    carriedAmount: 8,
+    stock: 2,
+    maxStock: 6,
+    activeActionCount: 1,
+    activeContributionCount: 1,
+    maxQueuedActions: 6,
+  }),
+  {
+    count: 3,
+    carriedAmount: 8,
+    activeActionCount: 1,
+    activeContributionCount: 1,
+    availableSlots: 5,
+    alreadyPlanned: 1,
+    unplannedCarried: 7,
+    freeCapacity: 3,
+    limitedByQueue: false,
+    limitedByCapacity: true,
+  },
+);
 
 const now = new Date("2026-06-01T12:00:00.000Z");
 const recentlyObserved = beginnerCacheDataAfterHiddenRestock(

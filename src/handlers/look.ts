@@ -1,10 +1,10 @@
 import { Bot } from "grammy";
 import type { Prisma, WorldActionType } from "@prisma/client";
-import { actionDurationMs, performOrQueuePlayerAction } from "../services/actionQueue";
+import { actionDurationMs, performOrQueuePlayerAction, renderPlayerActionQueue } from "../services/actionQueue";
 import { getPlayerByTelegramId } from "../services/players";
 import { renderDepletedVegetationInspection, renderLocationBrief, renderLocationDetails, renderLocationFeatureInteraction, renderLocationFeatureInteractionByQuery, shakeTreeFeature, takeTorchFromLocationFeature } from "../services/locations";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
-import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
+import { actionQueueReplyOptions, sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { durationSecondsSuffix } from "../utils/durationText";
 import { isPickableResourceKey, isTutorialLooseResourceKey, pickUpAllVisibleGroundResourcesByKey, pickUpGroundResource, type VisibleGroundResourceKey } from "../services/groundItems";
 import { pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
@@ -18,6 +18,7 @@ import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 import { spendPlayerStaminaAmount } from "../services/actionRecovery";
 import { firstNightGuidanceForPlayer } from "../services/beginnerGuidance";
 import { contributeToBeginnerCache, takeFromBeginnerCache } from "../services/beginnerCache";
+import { queueAllBeginnerCacheContributions } from "../services/beginnerCacheQueue";
 import { TORCH_SOURCE_TAKE_EVENT_TITLE } from "../services/fire";
 
 function pickedItemsAmount(items: Array<{ amount: number }>) {
@@ -383,6 +384,30 @@ export function registerLookHandlers(bot: Bot) {
       const message = actionErrorMessage(error, "Не вдалося лишити річ у скрині.");
       await safeAnswerCallbackQuery(ctx, message);
       await replyToActionError(ctx, error, "Не вдалося лишити річ у скрині.", { replyFallback: false });
+    }
+  });
+
+  bot.callbackQuery(/^cache:contribute_all:(\d+):([A-Za-z0-9_-]+)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    try {
+      const result = await queueAllBeginnerCacheContributions(bot, player, Number(ctx.match[1]), ctx.match[2], "all", ctx.chat?.id);
+      await safeAnswerCallbackQuery(ctx, `Додано в чергу: ${result.count}.`);
+      const queueText = await renderPlayerActionQueue(player.id);
+      const queueLimitText = result.limitedByQueue ? "\n\nЧерга взяла не все: у плані дій уже тісно." : "";
+      const capacityText = result.limitedByCapacity ? "\n\nСкриня візьме не все: для цього запасу там лишилося не так багато місця." : "";
+      await ctx.reply(
+        `Додано до спільної скрині: ${result.count}. Будете лишати ${result.label} по одній речі${durationSecondsSuffix(player, result.durationMs)}.${queueLimitText}${capacityText}\n\n${queueText}`,
+        await actionQueueReplyOptions(player.id),
+      );
+    } catch (error) {
+      const message = actionErrorMessage(error, "Не вдалося лишити все у скрині.");
+      await safeAnswerCallbackQuery(ctx, message);
+      await replyToActionError(ctx, error, "Не вдалося лишити все у скрині.", { replyFallback: false });
     }
   });
 

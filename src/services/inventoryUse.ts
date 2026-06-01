@@ -5,6 +5,7 @@ import { ensureTorchResourceTypes, TORCH_DURATION_MS, TORCH_FADING_MS } from "./
 import { dropCarriedCorpseResource, isCorpseQuery, isCorpseResourceKey, resourceTypeDisplayName } from "./corpses";
 import { COOKED_MEAT_KEY, RAW_MEAT_KEY, eatCookedMeat } from "./meat";
 import { getPlayerEquippedWeapon, isWeaponResourceKey } from "./weapons";
+import { getCurrentWorldState } from "./worldTime";
 
 export type UsableInventoryResource = "berries" | "herbs" | "mushrooms" | "cooked_meat";
 
@@ -168,6 +169,7 @@ async function addGroundResource(
 export async function useInventoryResource(playerId: number, resourceKey: UsableInventoryResource) {
   if (resourceKey === COOKED_MEAT_KEY) return eatCookedMeat(playerId);
 
+  const worldState = await getCurrentWorldState();
   return prisma.$transaction(async (tx) => {
     const [player, resourceType] = await Promise.all([
       tx.player.findUnique({ where: { id: playerId }, select: { id: true, hp: true, hpMax: true, hunger: true, stamina: true, staminaMax: true } }),
@@ -193,10 +195,18 @@ export async function useInventoryResource(playerId: number, resourceKey: Usable
       const nextStamina = Math.min(staminaMax, player.stamina + USE_CONFIG.berries.stamina);
       const nextHunger = Math.max(0, player.hunger - USE_CONFIG.berries.hunger);
       await consumeOneResource(tx, carried.id, carried.amount);
-      await tx.player.update({ where: { id: playerId }, data: { stamina: nextStamina, hunger: nextHunger } });
 
       const staminaChanged = nextStamina > player.stamina;
       const hungerChanged = nextHunger < player.hunger;
+      await tx.player.update({
+        where: { id: playerId },
+        data: {
+          stamina: nextStamina,
+          hunger: nextHunger,
+          lastPassiveHungerAtMinute: hungerChanged ? worldState.absoluteMinute : undefined,
+        },
+      });
+
       if (staminaChanged && hungerChanged) return "Ви з'їли жменю ягід. Снаги трохи побільшало, а голод ледь відступив.";
       if (hungerChanged) return "Ви з'їли жменю ягід. Голод ледь відступив.";
       return nextStamina >= staminaMax
@@ -209,7 +219,7 @@ export async function useInventoryResource(playerId: number, resourceKey: Usable
 
       const nextHunger = Math.max(0, player.hunger - USE_CONFIG.mushrooms.amount);
       await consumeOneResource(tx, carried.id, carried.amount);
-      await tx.player.update({ where: { id: playerId }, data: { hunger: nextHunger } });
+      await tx.player.update({ where: { id: playerId }, data: { hunger: nextHunger, lastPassiveHungerAtMinute: worldState.absoluteMinute } });
 
       return nextHunger <= 0
         ? "Ви з'їли кілька грибів. Голод відступив."
