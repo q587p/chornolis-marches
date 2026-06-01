@@ -519,6 +519,27 @@
     "file": "docs/planning/items/ECO-006-animal-movement-boundaries.md"
   },
   {
+    "id": "ECO-007",
+    "title": "Animal taming and small companions",
+    "status": "icebox",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "medium",
+    "tags": [
+      "ecology",
+      "creatures",
+      "companions",
+      "following",
+      "feeding"
+    ],
+    "depends_on": [
+      "SOC-002",
+      "SOC-004"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ECO-007-animal-taming-companions.md"
+  },
+  {
     "id": "ECON-001",
     "title": "Barter and trade",
     "status": "backlog",
