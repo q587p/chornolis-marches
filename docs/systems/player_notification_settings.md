@@ -18,6 +18,8 @@ Daypart notices can be changed through:
 - `/daynotices off`;
 - text aliases such as `налаштування`, `сповіщення`, `повідомлення`, `settings`, `notifications` and `daynotices`.
 
+This is the first player-facing settings surface. The current menu placement is acceptable for the narrow MVP, but future settings should be grouped deliberately instead of adding one more flat button for every preference.
+
 Disabling the setting only suppresses proactive daypart messages. It does not suppress:
 
 - explicit `/time` or `/weather` command replies;
@@ -55,6 +57,12 @@ After the second ordinary wake-up, the game may show a one-time hint:
 ```
 
 The hint is not shown after tutorial wake-up and is not shown if daypart notices are already disabled.
+
+The hint is based on `ordinaryWakeCount`, not on whether the player actually saw, read or felt bothered by daypart notices. That is acceptable for the MVP because it teaches the setting after ordinary sleep starts mattering, but later notification education may need more precise triggers.
+
+## Callback Behavior
+
+Inline daypart setting callbacks reply with a separate confirmation message instead of editing the existing settings message in place. This may add one extra Telegram message during toggling, but it keeps the MVP simple and avoids overfitting the first settings surface before more preferences exist.
 
 ## Data Model
 
