@@ -159,6 +159,7 @@ export async function performBeginnerReturn(playerId: number) {
         stamina,
         fatigueState: fatigueStateFor(stamina, checked.player.staminaMax ?? BASE_STAMINA),
         posture: PlayerPosture.STANDING,
+        sleepState: "AWAKE",
         isResting: false,
         isAutoEnabled: false,
         sessionPresence: "ACTIVE",

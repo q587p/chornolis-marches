@@ -7,18 +7,24 @@ const { buildCharacterAutoKeyboard } = require("../../src/handlers/player");
 const { TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY } = require("../../src/services/tutorial");
 const { formatObservedPostureText, formatPostureText, formatVitalsSentence } = require("../../src/utils/playerText");
 const { AUTO_DREAM_BLOCK_MESSAGE, isAutoBlockedInLocation, shouldAutoStandBeforeAction } = require("../../src/handlers/auto");
-const { playerRestStartObserverText, playerRestStopObserverText, playerSitObserverText, playerStandObserverText, playerTutorialSleepObserverText, playerTutorialWakeObserverText } = require("../../src/services/playerVisibility");
+const { playerLieObserverText, playerRestStartObserverText, playerRestStopObserverText, playerSitObserverText, playerSleepObserverText, playerStandObserverText, playerTutorialSleepObserverText, playerTutorialWakeObserverText, playerWakeObserverText } = require("../../src/services/playerVisibility");
 const { activePlayerRestActionWhere } = require("../../src/services/posture");
+const { assertCanPerformPhysicalAction, isPlayerMustStandError } = require("../../src/services/postureRules");
 
 assert.equal(formatPostureText({ posture: "STANDING", isResting: false }), "Ви стоїте.");
 assert.equal(formatPostureText({ posture: "SITTING", isResting: false }), "Ви сидите.");
+assert.equal(formatPostureText({ posture: "LYING", isResting: false }), "Ви лежите.");
 assert.equal(formatPostureText({ posture: "SITTING", isResting: true }), "Ви сидите й відпочиваєте.");
+assert.equal(formatPostureText({ posture: "LYING", sleepState: "ORDINARY_SLEEP", isResting: false }), "Ви спите.");
 assert.equal(formatPostureText({ posture: "SITTING", isResting: true, isSleeping: true }), "Ви спите. Уві сні ви сидите й відпочиваєте.");
+assert.equal(formatPostureText({ posture: "LYING", isResting: false, isSleeping: true }), "Ви спите. Уві сні ви лежите.");
 assert.equal(formatPostureText({ posture: "STANDING", isResting: false, isSleeping: true }), "Ви спите. Уві сні ви стоїте.");
 assert.equal(formatVitalsSentence({ hp: 20, hpMax: 20, stamina: 193, staminaMax: 42 }, { hpFallback: 20, staminaFallback: 42 }), "Життя: повно. Снага: екстра.");
 assert.equal(formatVitalsSentence({ hp: 20, hpMax: 20, stamina: 193, staminaMax: 42 }, { showTechnicalDetails: true, hpFallback: 20, staminaFallback: 42 }), "Життя: 20/20. Снага: 193/42.");
 
 assert.equal(formatObservedPostureText({ posture: "SITTING", isResting: false }), "Сидить.");
+assert.equal(formatObservedPostureText({ posture: "LYING", isResting: false }), "Лежить.");
+assert.equal(formatObservedPostureText({ posture: "LYING", sleepState: "ORDINARY_SLEEP", isResting: false }), "Спить.");
 assert.equal(formatObservedPostureText({ posture: "SITTING", isResting: true }), "Сидить і відпочиває.");
 assert.equal(formatObservedPostureText({ posture: "SITTING", isResting: true, grammaticalGender: "PLURAL" }), "Сидять і відпочивають.");
 assert.equal(formatObservedPostureText({ posture: "SITTING", isResting: true, isSleeping: true }), "Спить. Уві сні сидить і відпочиває.");
@@ -27,7 +33,10 @@ assert.equal(mainStatusLabelForPlayer({ id: 1, currentLocation: { key: TUTORIAL_
 assert.equal(mainStatusLabelForPlayer({ id: 1, currentLocation: { key: TUTORIAL_START_LOCATION_KEY, z: -13, region: { key: "dream_tutorial" } }, hp: 42, hpMax: 42, stamina: 42, staminaMax: 42 }), undefined);
 assert.equal(mainStatusLabelForPlayer({ id: 1, currentLocation: { key: TUTORIAL_START_LOCATION_KEY, z: -13, region: { key: "dream_tutorial" } }, hp: 42, hpMax: 42, stamina: 20, staminaMax: 42 }, { hasRestLesson: true }), "❤️ повно · ⚡ середньо");
 assert.equal(playerSitObserverText({ id: 1, nameNominative: "Орина", grammaticalGender: "FEMININE" }), "Орина сідає.");
+assert.equal(playerLieObserverText({ id: 1, nameNominative: "Орина", grammaticalGender: "FEMININE" }), "Орина лягає.");
 assert.equal(playerStandObserverText({ id: 1, nameNominative: "Вербові", grammaticalGender: "PLURAL" }), "Вербові встають.");
+assert.equal(playerSleepObserverText({ id: 1, nameNominative: "Травник", grammaticalGender: "MASCULINE" }), "Травник лягає й засинає.");
+assert.equal(playerWakeObserverText({ id: 1, nameNominative: "Вербові", grammaticalGender: "PLURAL" }), "Вербові прокидаються, але ще лежать.");
 assert.equal(playerRestStartObserverText({ id: 1, nameNominative: "Травник", grammaticalGender: "MASCULINE" }), "Травник сідає й починає відпочивати.");
 assert.equal(playerRestStopObserverText({ id: 1, nameNominative: "Вербові", grammaticalGender: "PLURAL" }), "Вербові закінчують відпочинок і лишаються сидіти.");
 assert.equal(playerTutorialSleepObserverText({ id: 1, nameNominative: "Орина", grammaticalGender: "FEMININE" }), "Орина заплющує очі й провалюється в навчальний сон.");
@@ -35,14 +44,27 @@ assert.equal(playerTutorialWakeObserverText({ id: 1, nameNominative: "Вербо
 
 assert.deepEqual(postureActionLabelsForState({ posture: "STANDING", isResting: false }), ["Сісти", "🧘 Відпочити"]);
 assert.deepEqual(postureActionLabelsForState({ posture: "SITTING", isResting: false }), ["Встати", "🧘 Відпочити"]);
+assert.deepEqual(postureActionLabelsForState({ posture: "LYING", isResting: false }), ["Сісти", "Встати"]);
+assert.deepEqual(postureActionLabelsForState({ posture: "LYING", sleepState: "ORDINARY_SLEEP", isResting: false }), ["Прокинутися"]);
 assert.deepEqual(postureActionLabelsForState({ posture: "SITTING", isResting: true }), ["Встати"]);
 
 // Rest completion and rest interruption both clear isResting but leave posture sitting.
 assert.deepEqual(postureActionLabelsForState({ posture: "SITTING", isResting: false }), ["Встати", "🧘 Відпочити"]);
 assert.equal(shouldAutoStandBeforeAction({ posture: "SITTING", isResting: false }, "move"), true);
+assert.equal(shouldAutoStandBeforeAction({ posture: "LYING", isResting: false }, "move"), true);
+assert.equal(shouldAutoStandBeforeAction({ posture: "LYING", sleepState: "ORDINARY_SLEEP", isResting: false }, "move"), false);
 assert.equal(shouldAutoStandBeforeAction({ posture: "SITTING", isResting: false }, "gather"), true);
 assert.equal(shouldAutoStandBeforeAction({ posture: "SITTING", isResting: false }, "look"), false);
 assert.equal(shouldAutoStandBeforeAction({ posture: "STANDING", isResting: false }, "move"), false);
+assert.doesNotThrow(() => assertCanPerformPhysicalAction({ posture: "STANDING", isResting: false }, "MOVE"));
+assert.throws(
+  () => assertCanPerformPhysicalAction({ posture: "LYING", isResting: false }, "MOVE"),
+  (error) => isPlayerMustStandError(error) && error.recoveryAction === "stand" && /лежите/.test(error.message),
+);
+assert.throws(
+  () => assertCanPerformPhysicalAction({ posture: "LYING", sleepState: "ORDINARY_SLEEP", isResting: false }, "MOVE"),
+  (error) => isPlayerMustStandError(error) && error.recoveryAction === "wake" && /прокинутися/.test(error.message),
+);
 assert.deepEqual(activePlayerRestActionWhere(42), {
   actorType: "PLAYER",
   playerId: 42,
@@ -175,6 +197,30 @@ assert.deepEqual(characterButtons, [
   ["🤖 Увімкнути авто"],
 ]);
 assert.equal(characterButtons.flat().includes("🔧 Технічні деталі"), false);
+
+const lyingCharacterButtons = buildCharacterAutoKeyboard(false, {
+  posture: "LYING",
+  isResting: false,
+  showSleep: true,
+}).inline_keyboard.map((row) => row.map((button) => button.text));
+assert.deepEqual(lyingCharacterButtons, [
+  ["🎒 Речі"],
+  ["✨ Сигнали", "Встати"],
+  ["Сісти"],
+  ["🧘 Відпочити", "🌙 Сон"],
+  ["🤖 Увімкнути авто"],
+]);
+
+const sleepingCharacterButtons = buildCharacterAutoKeyboard(false, {
+  posture: "LYING",
+  sleepState: "ORDINARY_SLEEP",
+  isResting: false,
+  showSleep: true,
+}).inline_keyboard.map((row) => row.map((button) => button.text));
+assert.deepEqual(sleepingCharacterButtons, [
+  ["🎒 Речі"],
+  ["Прокинутися"],
+]);
 
 const adminResourceButtons = buildAdminResourcesReplyKeyboard().keyboard.flat().map((button) => button.text);
 assert.equal(adminResourceButtons.includes("🍓 Додати ягоди"), true);

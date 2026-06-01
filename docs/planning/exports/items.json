@@ -2123,7 +2123,7 @@
   {
     "id": "SLEEP-001",
     "title": "Lying posture and lie command",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -2140,7 +2140,7 @@
   {
     "id": "SLEEP-002",
     "title": "Ordinary sleep MVP",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",

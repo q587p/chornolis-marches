@@ -1,4 +1,4 @@
-import { buildStandUpKeyboard } from "../ui/keyboards";
+import { buildStandUpKeyboard, buildWakeUpKeyboard } from "../ui/keyboards";
 import { isPlayerMustStandError } from "../services/postureRules";
 
 export function actionErrorMessage(error: unknown, fallback: string) {
@@ -8,7 +8,7 @@ export function actionErrorMessage(error: unknown, fallback: string) {
 export async function replyToActionError(ctx: any, error: unknown, fallback: string, options: { replyFallback?: boolean } = {}) {
   const message = actionErrorMessage(error, fallback);
   if (isPlayerMustStandError(error)) {
-    await ctx.reply(message, { reply_markup: buildStandUpKeyboard() });
+    await ctx.reply(message, { reply_markup: error.recoveryAction === "wake" ? buildWakeUpKeyboard() : buildStandUpKeyboard() });
     return message;
   }
 

@@ -8,7 +8,9 @@ import { actionDurationMs, performOrQueuePlayerAction } from "../services/action
 import { parseSpeechTarget } from "../services/speechTargets";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { disablePlayerAuto } from "./auto";
-import { notifyPlayerObservers, playerTutorialSleepObserverText, playerTutorialWakeObserverText } from "../services/playerVisibility";
+import { notifyPlayerObservers, playerSleepObserverText, playerTutorialSleepObserverText, playerTutorialWakeObserverText, playerWakeObserverText } from "../services/playerVisibility";
+import { startOrdinarySleep, wakeOrdinarySleep } from "../services/sleep";
+import { buildLyingPostureKeyboard, buildWakeUpKeyboard } from "../ui/keyboards";
 
 function buildTutorialSleepKeyboard() {
   return new InlineKeyboard().text("🌙 Навчальний сон", "tutorial:sleep");
@@ -48,6 +50,27 @@ async function sleepTutorial(bot: Bot, ctx: any, forceTutorial = false) {
   await replyWithLocation(ctx, result.locationId, player.id);
 }
 
+async function ordinarySleep(bot: Bot, ctx: any) {
+  if (!ctx.from) return;
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  await disablePlayerAuto(ctx.from.id);
+  const result = await startOrdinarySleep(player.id);
+  if (!result) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  await ctx.reply(result.message, {
+    reply_markup: result.changed ? buildWakeUpKeyboard() : await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+  });
+  if (result.changed) {
+    await notifyPlayerObservers(bot, {
+      playerId: player.id,
+      locationId: result.locationId ?? player.currentLocationId,
+      observerText: playerSleepObserverText,
+    });
+  }
+}
+
 async function wakeTutorial(bot: Bot, ctx: any) {
   if (!ctx.from) return;
   const player = await getPlayerByTelegramId(ctx.from.id);
@@ -63,6 +86,29 @@ async function wakeTutorial(bot: Bot, ctx: any) {
     });
     await replyWithLocation(ctx, result.locationId, player.id);
   }
+}
+
+export async function submitSleepCommand(bot: Bot, ctx: any, tutorial = false) {
+  return tutorial ? sleepTutorial(bot, ctx, true) : ordinarySleep(bot, ctx);
+}
+
+export async function submitWakeCommand(bot: Bot, ctx: any) {
+  if (!ctx.from) return;
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const ordinary = await wakeOrdinarySleep(player.id);
+  if (ordinary?.changed) {
+    await ctx.reply(ordinary.message, { reply_markup: buildLyingPostureKeyboard() });
+    await notifyPlayerObservers(bot, {
+      playerId: player.id,
+      locationId: ordinary.locationId ?? player.currentLocationId,
+      observerText: playerWakeObserverText,
+    });
+    return;
+  }
+
+  return wakeTutorial(bot, ctx);
 }
 
 export async function requestTutorialEnd(ctx: any) {
@@ -128,11 +174,11 @@ async function sayOpenGatePhrase(bot: Bot, ctx: any) {
 export function registerTutorialHandlers(bot: Bot) {
   bot.command("sleep", async (ctx) => {
     const arg = ctx.message?.text?.split(/\s+/).slice(1).join(" ").trim().toLowerCase();
-    await sleepTutorial(bot, ctx, arg === "tutorial");
+    await submitSleepCommand(bot, ctx, arg === "tutorial");
   });
 
   bot.command("sleep_tutorial", async (ctx) => {
-    await sleepTutorial(bot, ctx, true);
+    await submitSleepCommand(bot, ctx, true);
   });
 
   bot.command(["tutorialEnd", "tutorialend", "tutorial_end"], async (ctx) => {
@@ -142,10 +188,10 @@ export function registerTutorialHandlers(bot: Bot) {
   bot.command(["wake", "wakeup", "open"], async (ctx) => {
     const command = ctx.message?.text?.split(/\s+/)[0]?.replace(/^\//, "").toLowerCase();
     if (command === "open") return openGate(ctx, commandArgs(ctx));
-    return wakeTutorial(bot, ctx);
+    return submitWakeCommand(bot, ctx);
   });
 
-  bot.hears(["🌅 Прокинутися", "Прокинутися", "прокинутися"], (ctx) => wakeTutorial(bot, ctx));
+  bot.hears(["🌅 Прокинутися", "Прокинутися", "прокинутися"], (ctx) => submitWakeCommand(bot, ctx));
   bot.hears(["✅ Закінчити навчання", "Закінчити навчання", "завершити навчання"], (ctx) => requestTutorialEnd(ctx));
   bot.hears(["💬 Сказати «Відчинитися»", "Сказати «Відчинитися»", "сказати відчинитися"], (ctx) => sayOpenGatePhrase(bot, ctx));
   bot.hears(["🚪 Відкрити", "Відкрити", "відкрити"], (ctx) => openGate(ctx));
@@ -153,6 +199,11 @@ export function registerTutorialHandlers(bot: Bot) {
   bot.callbackQuery("tutorial:wake", async (ctx) => {
     await safeAnswerCallbackQuery(ctx);
     await wakeTutorial(bot, ctx);
+  });
+
+  bot.callbackQuery("sleep:wake", async (ctx) => {
+    await safeAnswerCallbackQuery(ctx);
+    await submitWakeCommand(bot, ctx);
   });
 
   bot.callbackQuery("tutorial:end", async (ctx) => {
@@ -174,7 +225,7 @@ export function registerTutorialHandlers(bot: Bot) {
 
   bot.callbackQuery(["tutorial:sleep", "character:sleep"], async (ctx) => {
     await safeAnswerCallbackQuery(ctx);
-    await sleepTutorial(bot, ctx, ctx.callbackQuery.data === "tutorial:sleep");
+    await submitSleepCommand(bot, ctx, ctx.callbackQuery.data === "tutorial:sleep");
   });
 
   bot.callbackQuery("tutorial:openGate", async (ctx) => {

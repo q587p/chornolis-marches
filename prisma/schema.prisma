@@ -26,6 +26,7 @@ model Player {
   staminaMax   Int @default(42)
   fatigueState FatigueState @default(RESTED)
   posture      PlayerPosture @default(STANDING)
+  sleepState   PlayerSleepState @default(AWAKE)
   isResting    Boolean @default(false)
   isAutoEnabled Boolean @default(false)
   sessionPresence PlayerSessionPresence @default(ACTIVE)
@@ -620,6 +621,12 @@ enum PlayerPronoun {
 enum PlayerPosture {
   STANDING
   SITTING
+  LYING
+}
+
+enum PlayerSleepState {
+  AWAKE
+  ORDINARY_SLEEP
 }
 
 enum PlayerRole {

@@ -299,6 +299,7 @@ async function runRestAdminCommand(bot: Bot, ctx: any, rawTarget = String(ctx.ma
     where: { id: player.id },
     data: {
       stamina: adminMax,
+      sleepState: "AWAKE",
       isResting: false,
       fatigueState: "RESTED",
       lastStaminaRegenAt: new Date(),
@@ -592,7 +593,7 @@ async function teleportPlayerByScribe(bot: Bot, playerId: number, locationId: nu
   const scribeName = scribeDisplayName(scribe, scribeTelegramId);
   await prisma.player.updateMany({
     where: { id: player.id },
-    data: { currentLocationId: location.id, isResting: false },
+    data: { currentLocationId: location.id, sleepState: "AWAKE", isResting: false },
   });
   await logEvent("SYSTEM", "Admin teleported player", `player=${player.id}; name=${playerForms(player).nominative}; location=${location.key}; scribe=${scribeName}`, location.id);
   await notifyPlayerByTelegram(

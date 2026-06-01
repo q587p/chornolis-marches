@@ -925,7 +925,7 @@ export async function takeTorchFromFeature(playerId: number, featureId: number) 
   const { torch } = await ensureTorchResourceTypes();
   const player = await prisma.player.findUnique({
     where: { id: playerId },
-    select: { currentLocationId: true, hp: true, stamina: true, isResting: true },
+    select: { currentLocationId: true, hp: true, stamina: true, isResting: true, posture: true, sleepState: true },
   });
   if (!player?.currentLocationId) return "Ти ще не увійшов у світ. Напиши /start";
   if (!canPickUpGroundItem(player)) return "Ви надто втомлені, щоб брати це просто зараз. Спершу перепочиньте.";
@@ -984,7 +984,7 @@ export async function addTwigsToCampfire(playerId: number, featureId?: number) {
   const { twigs } = await ensureTorchResourceTypes();
   const player = await prisma.player.findUnique({
     where: { id: playerId },
-    select: { currentLocationId: true, hp: true, stamina: true, isResting: true },
+    select: { currentLocationId: true, hp: true, stamina: true, isResting: true, posture: true, sleepState: true },
   });
   if (!player?.currentLocationId) return "Ти ще не увійшов у світ. Напиши /start";
   if (!canPickUpGroundItem(player)) return "Ви надто втомлені, щоб підкидати хмиз просто зараз. Спершу перепочиньте.";

@@ -6,7 +6,7 @@ export type TargetAction = "inspect" | "greet" | "attack" | "freshen";
 export type QueueAliasMode = "status" | "cancel-current" | "clear";
 export type AutoAliasMode = "start" | "stop";
 export type RestAliasMode = "start" | "queue" | "interrupt";
-export type PostureAliasMode = "sit" | "stand";
+export type PostureAliasMode = "sit" | "lie" | "stand";
 export type SocialSignalAlias = "smile" | "laugh" | "nod" | "bow" | "point" | "glare" | "sigh" | "wave";
 export type ChatAliasMode = "time" | "location" | "character";
 export type PutAliasAmount = number | "all";
@@ -329,6 +329,11 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "sit down": { kind: "posture", mode: "sit" },
   "сісти": { kind: "posture", mode: "sit" },
   "присісти": { kind: "posture", mode: "sit" },
+  lie: { kind: "posture", mode: "lie" },
+  "lie down": { kind: "posture", mode: "lie" },
+  "лягти": { kind: "posture", mode: "lie" },
+  "лягти на землю": { kind: "posture", mode: "lie" },
+  "лежати": { kind: "posture", mode: "lie" },
   stand: { kind: "posture", mode: "stand" },
   "stand up": { kind: "posture", mode: "stand" },
   "встати": { kind: "posture", mode: "stand" },
@@ -691,7 +696,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "use-item") return `/use_${parsed.item}`;
   if (parsed.kind === "light-torch") return "/light_torch";
   if (parsed.kind === "douse-torch") return "/douse_torch";
-  if (parsed.kind === "posture") return parsed.mode === "sit" ? "/sit" : "/stand";
+  if (parsed.kind === "posture") return parsed.mode === "sit" ? "/sit" : parsed.mode === "lie" ? "/lie" : "/stand";
   if (parsed.kind === "rest") return "/rest";
   if (parsed.kind === "auto") return "/auto";
   if (parsed.kind === "queue") return "/queue";

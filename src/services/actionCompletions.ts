@@ -1412,6 +1412,7 @@ async function completeSimple(bot: Bot, action: WorldAction) {
             stamina: next,
             hp: nextHp,
             fatigueState: fatigueStateFor(next, max),
+            sleepState: "AWAKE",
             isResting: false,
             restFullRecoveries: next >= max && nextHp >= hpMax && (player.stamina < max || player.hp < hpMax) ? { increment: 1 } : undefined,
           },
