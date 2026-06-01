@@ -19,6 +19,7 @@ import { slashlessCommandPattern } from "../utils/slashlessCommands";
 import { advanceWorldClock } from "./worldTime";
 import { notifyWorldDaypartChangeIfNeeded } from "./worldDaypartNotices";
 import { creatureUsableExits } from "./creatureMovement";
+import { worldTimeSnapshotFromAbsoluteMinute, type WorldDaypart } from "../data/worldClock";
 
 const DEFAULT_TICK_INTERVAL_MS = TICK_MS;
 const TICK_TEXT_COMMAND = slashlessCommandPattern(["tick"]);
@@ -85,6 +86,60 @@ let tickTimer: NodeJS.Timeout | null = null;
 let running = false;
 let botInstance: Bot | null = null;
 let tickNumber = 0;
+
+export function isOwlActiveDaypart(daypart: WorldDaypart) {
+  return daypart === "dawn" || daypart === "dusk" || daypart === "night";
+}
+
+async function syncOwlNocturnalActivity(daypart: WorldDaypart) {
+  if (isOwlActiveDaypart(daypart)) {
+    const woke = await prisma.creature.updateMany({
+      where: {
+        isAlive: true,
+        isGone: false,
+        species: { key: "owl", kind: "ANIMAL" },
+        OR: [{ activity: "SLEEPING" }, { isHidden: true }],
+      },
+      data: {
+        activity: "IDLE",
+        isHidden: false,
+        currentAction: "прокидається в присмерку й дослухається до трави",
+      },
+    });
+    return { slept: 0, woke: woke.count };
+  }
+
+  const livingOwls = await prisma.creature.findMany({
+    where: {
+      isAlive: true,
+      isGone: false,
+      species: { key: "owl", kind: "ANIMAL" },
+    },
+    select: { id: true },
+  });
+  const ids = livingOwls.map((owl) => owl.id);
+  if (ids.length === 0) return { slept: 0, woke: 0 };
+
+  await prisma.worldAction.updateMany({
+    where: {
+      actorType: "CREATURE",
+      creatureId: { in: ids },
+      status: { in: ["QUEUED", "RUNNING"] },
+    },
+    data: { status: "CANCELLED", note: "сова ховається на день" },
+  });
+
+  const slept = await prisma.creature.updateMany({
+    where: { id: { in: ids } },
+    data: {
+      activity: "SLEEPING",
+      isHidden: true,
+      currentAction: "спить у дуплі, злившись із корою",
+    },
+  });
+
+  return { slept: slept.count, woke: 0 };
+}
 
 export const HERBALIST_LINES = [
   "Трави самі говорять, якщо слухати тихо.",
@@ -1176,7 +1231,13 @@ function preyVulnerabilityScore(prey: any) {
   return (ageScore[prey.age as CreatureAge] ?? 0) + woundedScore - Math.max(0, prey.species.agility - 5) * 2;
 }
 
-function predatorPreyPreference(predator: any, prey: any) {
+export function predatorPreyPreference(predator: any, prey: any) {
+  if (predator.species.key === "owl") {
+    if (prey.species.key === "mouse") return 100;
+    if (prey.species.key === "rabbit" && prey.age === "CHILD") return 18;
+    if (prey.species.key === "rabbit" && prey.age === "YOUNG") return 8;
+    return 0;
+  }
   if (predator.species.key === "fox") {
     if (prey.species.key === "mouse") return 80;
     if (prey.species.key === "rabbit") return 35;
@@ -1194,15 +1255,17 @@ async function selectPredatorPrey(c: any) {
     include: { species: true },
   });
   return prey
-    .map((target) => ({ target, score: predatorPreyPreference(c, target) + preyVulnerabilityScore(target) + Math.floor(Math.random() * 12) }))
+    .map((target) => ({ target, preference: predatorPreyPreference(c, target) }))
+    .filter(({ preference }) => c.species.key !== "owl" || preference > 0)
+    .map(({ target, preference }) => ({ target, score: preference + preyVulnerabilityScore(target) + Math.floor(Math.random() * 12) }))
     .sort((a, b) => b.score - a.score)[0]?.target;
 }
 
-function predatorAttackChance(predator: any, prey: any) {
+export function predatorAttackChance(predator: any, prey: any) {
   const hungerBonus = Math.min(25, Math.max(0, predator.hunger ?? 0) * 3);
   const strengthGap = Math.max(-20, Math.min(25, (predator.species.strength - prey.species.endurance) * 4));
   const vulnerabilityBonus = Math.max(0, Math.min(20, Math.round(preyVulnerabilityScore(prey) / 3)));
-  const speciesBase = predator.species.key === "wolf" ? 45 : predator.species.key === "fox" ? 38 : 35;
+  const speciesBase = predator.species.key === "wolf" ? 45 : predator.species.key === "owl" ? 42 : predator.species.key === "fox" ? 38 : 35;
   return Math.max(12, Math.min(85, speciesBase + hungerBonus + strengthGap + vulnerabilityBonus));
 }
 
@@ -1473,6 +1536,12 @@ export async function worldTick() {
     tickNumber++;
     const worldClock = await advanceWorldClock();
     worldMinutesAdvanced = worldClock.advancedMinutes;
+    const worldTime = worldTimeSnapshotFromAbsoluteMinute(
+      worldClock.state.absoluteMinute,
+      worldClock.state.weatherKey,
+      worldClock.state.weatherIntensity,
+    );
+    await syncOwlNocturnalActivity(worldTime.daypart);
     if (botInstance) daypartNoticeSent = await notifyWorldDaypartChangeIfNeeded(botInstance);
     dreamGatesClosed = await closeExpiredDreamGates(botInstance);
     const lifecycle = await processAnimalLifecycle();

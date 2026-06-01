@@ -4,7 +4,9 @@ This file should stay small. If everything is next, nothing is next.
 
 ## Current Lane
 
-The current lane is `0.14.x` Night, Light and Firewood:
+The current lane is early `0.15.x` Attention, Learning and living-world stabilization. The `0.14.x` Night, Light and Firewood foundation is in testing; small ecology/safety patches may land when they protect the observation-learning line.
+
+The completed `0.14.x` foundation sequence was:
 
 1. Start with a tiny world-time/daypart foundation.
 2. Add shared visibility helpers before changing what players can see.
@@ -55,8 +57,9 @@ Implement `0.14.x` in small slices:
 22. MAP-WILLOW-003 / QA-WILLOW-001: `0.14.22` adds inspectable Willow Floodplain landmarks, modest swamp resource defaults, feature aliases and route/content smoke validation without adding fishing, observation progression or settlement access.
 23. SLEEP-002-A / ADM-001-C / planning reconciliation: `0.14.23` is the reconciliation and safety slice after `0.14.22`, adding the ordinary sleep command gate, restart confirmation parity and refreshed status for shipped world-time, visibility, fire/light and хмиз slices.
 24. WORLD-003: make the next survival/time pass move player hunger, torch lifetimes, campfire burn/ash cleanup, corpse/meat decay and similar temporary states toward internal world-time hours/days instead of scattered real-minute or per-action timers.
+25. OWL-001: `0.15.0` adds the first nocturnal owl ecology slice as a mouse-pressure stabilizer before the observation-learning MVP. Keep it minimal: no flight, nests, eggs, ranged hunting or owl reproduction until later.
 
-Observation learning remains the `0.15` line. Darkness, distance and light should affect learning later, but the visibility foundation must land first.
+Observation learning remains the main `0.15` line. Darkness, distance and light should affect learning later, but small ecology stabilizers can land first when they reduce immediate world-pressure problems.
 
 ## Small 0.14.1 Companion Slice
 
@@ -66,6 +69,7 @@ Observation learning remains the `0.15` line. Darkness, distance and light shoul
 
 ## 0.15 Next
 
+- OWL-001: first nocturnal owl ecology slice is in testing after `0.15.0`; tune starter count, daypart hiding and mouse pressure after live observation.
 - LEARN-001: minimal learning storage decision.
 - OBS-001: observe action and herbalist learning moment.
 - SOC-002: follow intent MVP, so a player can `Слідувати` / `/follow` a visible being before full `Гурт` movement exists.
