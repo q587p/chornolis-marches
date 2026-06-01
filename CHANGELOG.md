@@ -7,6 +7,27 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.1 - Profession line-bank polish - 12026-06-01
+
+### Added
+
+- Expanded hunter field line banks across departure, trail, return, deposit, give-up and stand-down moments.
+- Expanded hunter conversation replies and herbalist ambient lines so early profession NPCs repeat less during mapping and observation-heavy play.
+- Added focused ambient-line coverage for hunter field lines, hunter replies and the larger herbalist line bank.
+
+### Changed
+
+- Moved `NPC-007` into testing after this line-bank slice without changing NPC message cadence or profession behavior.
+
+### Validation
+
+- Ran `npm run planning:export`.
+- Ran `node scripts/test/ambient-lines.cjs`.
+- Ran `node scripts/test/npc-hunter.cjs`.
+- Ran `npm test`.
+- Ran `npm run build`.
+- Ran `git diff --check`.
+
 ## 0.15.0 - Nocturnal owl ecology - 12026-06-01
 
 ### Added

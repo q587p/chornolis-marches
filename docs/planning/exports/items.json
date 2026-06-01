@@ -1597,7 +1597,7 @@
   {
     "id": "NPC-007",
     "title": "Larger hunter and herbalist line banks",
-    "status": "next",
+    "status": "testing",
     "type": "content",
     "area": "npc",
     "priority": "high",

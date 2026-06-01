@@ -81,7 +81,7 @@ NPC-003,Herbalist service layer,next,technical,npc,medium,"npc,herbalist,archite
 NPC-004,Actor inventory and held light foundation,in_progress,technical,npc,high,"npc,actors,inventory,torch,light",docs/planning/items/NPC-004-actor-inventory-held-light.md
 NPC-005,NPC hunger and food behavior,next,feature,npc,high,"npc,actors,hunger,food,cooking,herbalist,hunting",docs/planning/items/NPC-005-npc-hunger-and-food-behavior.md
 NPC-006,Hunter patrol and meat practice loop,next,feature,npc,high,"npc,hunting,cooking,freshening,observation-learning,living-world",docs/planning/items/NPC-006-hunter-patrol-meat-practice-loop.md
-NPC-007,Larger hunter and herbalist line banks,next,content,npc,high,"npc,hunter,herbalist,ambient,speech,polish",docs/planning/items/NPC-007-profession-line-banks.md
+NPC-007,Larger hunter and herbalist line banks,testing,content,npc,high,"npc,hunter,herbalist,ambient,speech,polish",docs/planning/items/NPC-007-profession-line-banks.md
 NPC-008,Starter supply guards and watched beginner stores,backlog,feature,npc,medium,"npc,guards,camp,supplies,onboarding",docs/planning/items/NPC-008-starter-supply-guards.md
 OBS-001-A,Observe action and alias skeleton,next,feature,learning,high,"observe,aliases,targets",docs/planning/items/OBS-001-A.md
 OBS-001-B,Visible herbalist action,next,feature,learning,high,"observe,npc,herbalism",docs/planning/items/OBS-001-B.md

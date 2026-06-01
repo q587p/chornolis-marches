@@ -3,6 +3,11 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const { readWebNewsEntries, renderNewsPage } = require("../../src/server/statusServer");
+const { escapeHtml } = require("../../src/utils/text");
+
+function literalPattern(value) {
+  return new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+}
 
 (async () => {
   const entries = await readWebNewsEntries();
@@ -16,10 +21,10 @@ const { readWebNewsEntries, renderNewsPage } = require("../../src/server/statusS
   const olderHtml = await renderNewsPage("/news?entry=1");
   assert.match(olderHtml, /href="\/news"/);
   assert.match(olderHtml, /href="\/news\?entry=2"/);
-  assert.match(olderHtml, new RegExp(entries[1].title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.match(olderHtml, literalPattern(escapeHtml(entries[1].title)));
 
   const clampedHtml = await renderNewsPage("/news?entry=999999");
-  assert.match(clampedHtml, new RegExp(entries.at(-1).title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.match(clampedHtml, literalPattern(escapeHtml(entries.at(-1).title)));
 
   console.log("Web news archive OK");
 })();

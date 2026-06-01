@@ -1,7 +1,7 @@
 ---
 id: NPC-007
 title: Larger hunter and herbalist line banks
-status: next
+status: testing
 type: content
 area: npc
 priority: high
@@ -64,3 +64,7 @@ Players are now spending more time mapping, watching the world and noticing repe
 ## Notes
 
 This is intentionally small and near-term. It can land before deeper hunter patrol or herbalist-service behavior if it only expands existing exported line banks and tests. If the current herbalist lines are still buried in `worldTick.ts`, keep the edit modest and leave the deeper move to `NPC-003`.
+
+## 0.15.1 Testing Note
+
+0.15.1 expands hunter field lines, hunter conversation replies and herbalist ambient lines without changing message cadence or NPC behavior. `scripts/test/ambient-lines.cjs` now guards minimum line-bank sizes and duplicate-free banks so future edits do not collapse the pools back into repetition.

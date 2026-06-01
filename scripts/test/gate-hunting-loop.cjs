@@ -53,7 +53,7 @@ assert.deepEqual(dropoffReactionForTotals(13, 14), {
 assert.equal(HUNTER_FIELD_LINES.departure.includes("Начувайтесь, гризуни."), true);
 assert.equal(HUNTER_FIELD_LINES.standDown.length >= 5, true);
 assert.equal(hunterFieldLine("departure", 0), "Начувайтесь, гризуни.");
-assert.equal(hunterFieldLine("departure", 3), "Начувайтесь, гризуни.");
+assert.equal(hunterFieldLine("departure", 3), "Перевірю край, доки слід ще теплий.");
 assert.equal(hunterFieldLine("deposit", 1), "Ще трохи тиску на стадо.");
 assert.equal(hunterFieldLine("giveUp", -1), "Сьогодні ліс не дав легкої стежки.");
 assert.equal(hunterFieldLine("standDown", 0), "Досить на сьогодні. Хай трава трохи підведеться.");
