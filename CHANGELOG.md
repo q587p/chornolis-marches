@@ -13,10 +13,15 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Added an explicit `/shout` bot command route so clickable command hints open a useful usage prompt instead of falling through when no shout text is supplied.
 
+### Documentation
+
+- Added `MAP-WILLOW-002` backlog planning for a future under-bridge / watchtower integration pass around the Willow Floodplain.
+
 ### Validation
 
 - Ran `node scripts/test/news-clickable-commands.cjs`.
 - Ran `node scripts/test/input-aliases.cjs`.
+- Ran `npm run planning:export`.
 - Ran `npm test`.
 - Ran `npm run build`.
 

@@ -9,6 +9,7 @@ Backlog differs from Icebox: backlog means "we probably want this, but not right
 These may become `next` after 0.13-0.15 foundations land.
 
 - Starter settlement skeleton beyond the closed gate.
+- MAP-WILLOW-002: under-bridge and watchtower integration for the Willow Floodplain pocket, keeping the under-bridge place distinct and the settlement gate closed.
 - First useful NPC roles: guard, hunter, herbalist, fisher.
 - NPC-008: starter supply guards and watched beginner stores, so the watchtower/cache area feels maintained when animals or careless characters disturb beginner-critical supplies.
 - Ground money and small find objects beyond the first omen.

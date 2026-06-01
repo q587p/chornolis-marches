@@ -1410,6 +1410,26 @@
     "file": "docs/planning/items/MAP-WILLOW-001-first-contour.md"
   },
   {
+    "id": "MAP-WILLOW-002",
+    "title": "Willow under-bridge and watchtower integration",
+    "status": "backlog",
+    "type": "content",
+    "area": "world",
+    "priority": "medium",
+    "tags": [
+      "map",
+      "world",
+      "willow-floodplain",
+      "under-bridge",
+      "watchtower"
+    ],
+    "depends_on": [
+      "MAP-WILLOW-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/MAP-WILLOW-002-under-bridge-watchtower-integration.md"
+  },
+  {
     "id": "MAP-WILLOW-003",
     "title": "Willow Floodplain landmarks, resources and aliases",
     "status": "testing",
