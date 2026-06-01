@@ -50,7 +50,7 @@ import { cookingResultReplyOptions } from "../ui/inventoryItemKeyboard";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 import { visibilityPresenceText, visibilityRulesForLocation } from "./visibility";
 import { firstNightGuidanceForPlayer } from "./beginnerGuidance";
-import { creatureAttackObserverText, freshenWeaponFailureText, getPlayerEquippedWeapon, playerAttackKillText, playerAttackObserverText } from "./weapons";
+import { creatureAttackObserverText, freshenWeaponFailureText, getPlayerEquippedWeapon, grantAndEquipLegacyFresheningKnife, legacyFresheningKnifeGrantText, playerAttackKillText, playerAttackObserverText } from "./weapons";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
@@ -923,7 +923,11 @@ async function completeFreshen(bot: Bot, action: WorldAction) {
     if (chatId) await bot.api.sendMessage(chatId, "Труп уже не підходить для освіжування.");
     return;
   }
-  const weapon = await getPlayerEquippedWeapon(player.id);
+  let weapon = await getPlayerEquippedWeapon(player.id);
+  if (!weapon) {
+    weapon = await grantAndEquipLegacyFresheningKnife(player.id);
+    if (chatId) await bot.api.sendMessage(chatId, legacyFresheningKnifeGrantText());
+  }
   if (!weapon?.canFreshen) {
     await setActionStatus(action, "FAILED");
     if (chatId) await bot.api.sendMessage(chatId, freshenWeaponFailureText(weapon?.key));

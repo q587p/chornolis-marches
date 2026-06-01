@@ -12,17 +12,20 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Added
 
 - Added focused starter animal authoring coverage for prey breeding clusters, predator overlap and local food-rich resource overrides.
+- Added a compatibility starter-knife grant for older characters who first hit the new freshening weapon requirement without any weapon in hand.
 
 ### Changed
 
 - Starter animal seeding now counts existing starter groups by species, location, alive/corpse state, age and explicit sex, so adult female and adult male groups in the same location remain idempotent but distinct.
 - Starter mice and rabbits now begin in separated breeding clusters with local food-rich resource overrides, giving prey a better chance to reproduce before predators reach them.
 - Starter predators remain present but lighter: foxes stay near the forest/meadow pressure points, while the initial wolf count is reduced to one.
+- The freshening completion path now gives and equips a plain knife for legacy characters with empty hands, then continues the queued freshening action instead of failing.
 - Updated ecology docs and planning notes for the 0.14.15 start-balance slice.
 
 ### Validation
 
 - Ran `node scripts/test/starter-animals.cjs`.
+- Ran `node scripts/test/weapons.cjs`.
 - Ran `npm run test:seed`.
 - Ran `npm run test:seed:types`.
 

@@ -139,6 +139,29 @@ export async function grantStarterKnifeIfMissing(playerId: number) {
   });
 }
 
+export async function grantAndEquipLegacyFresheningKnife(playerId: number) {
+  const knife = await ensureWeaponResourceType("knife");
+  await prisma.$transaction(async (tx) => {
+    await tx.playerResource.upsert({
+      where: { playerId_resourceTypeId: { playerId, resourceTypeId: knife.id } },
+      update: {},
+      create: { playerId, resourceTypeId: knife.id, amount: 1 },
+    });
+    await tx.player.update({ where: { id: playerId }, data: { equippedWeaponKey: "knife" } });
+  });
+  return { ...WEAPON_DEFINITIONS.knife, forms: weaponForms("knife")! };
+}
+
+export function legacyFresheningKnifeGrantText() {
+  return [
+    "Писарі ніяково кашляють із-за краю запису.",
+    "",
+    "— Вибачте. Вимогу про гостре знаряддя ми вже вписали, а простий ніж у дорогу видати забули.",
+    "",
+    "У ваших речах з'явився простий ніж. Ви берете його в руку й продовжуєте роботу.",
+  ].join("\n");
+}
+
 export function heldWeaponLine(key: string | null | undefined) {
   const forms = weaponForms(key);
   return forms ? `Тримає ${forms.accusative}.` : null;
