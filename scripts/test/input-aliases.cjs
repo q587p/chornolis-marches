@@ -174,9 +174,12 @@ assertAlias("потрусити дерево", { kind: "shake-tree" });
 assertAlias("струсити гілки", { kind: "shake-tree" });
 
 assertAlias("з'їсти ягоди", { kind: "use-item", item: "berries" });
+assertAlias("з'їсти всі ягоди", { kind: "use-item-all", item: "berries" });
 assertAlias("зʼїсти гриби", { kind: "use-item", item: "mushrooms" });
+assertAlias("їсти всі гриби", { kind: "use-item-all", item: "mushrooms" });
 assertAlias("використати лікарські трави", { kind: "use-item", item: "herbs" });
 assertAlias("з'їсти лікарські трави", { kind: "use-item", item: "herbs" });
+assertAlias("/eat_all_herbs", { kind: "use-item-all", item: "herbs" });
 assertAlias("eat herbs", { kind: "use-item", item: "herbs" });
 assertAlias("підсмажити м'ясо", { kind: "cook-meat" });
 assertAlias("cook meat", { kind: "cook-meat" });
@@ -184,6 +187,8 @@ assertAlias("посмажити все", { kind: "cook-meat-all" });
 assertAlias("/cook_all", { kind: "cook-meat-all" });
 assertAlias("з'їсти м'ясо", { kind: "use-item", item: "cooked_meat" });
 assertAlias("eat cooked meat", { kind: "use-item", item: "cooked_meat" });
+assertAlias("eat all cooked meat", { kind: "use-item-all", item: "cooked_meat" });
+assertAlias("з'їсти все смажене м'ясо", { kind: "use-item-all", item: "cooked_meat" });
 assertAlias("запалити факел", { kind: "light-torch" });
 assertAlias("погасити факел", { kind: "douse-torch" });
 

@@ -17,12 +17,14 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added a creature movement boundary helper and regression coverage so ordinary animals cannot newly climb human-authored `UP` exits such as watchtower ladders or trees.
 - Added a direct cook-meat action to active campfire feature inspections when the player carries raw meat.
 - Added cook-all controls and aliases so carried raw meat can be queued for campfire cooking one piece at a time.
+- Added eat-all controls and aliases for edible inventory resources, with queue trimming once HP, stamina or hunger no longer benefits.
 - Added `MAP-WILLOW-003` and `QA-WILLOW-001` planning coverage for floodplain landmarks, resources, aliases and route/content smoke checks.
 - Added planning coverage for starter supply guards and animal movement boundaries.
 
 ### Changed
 
 - Updated `next` planning notes for the 0.14.22 Willow follow-up slice.
+- Split the admin `/all` view into player pages and creature pages so the Telegram message stays below API limits as player counts grow.
 
 ### Validation
 

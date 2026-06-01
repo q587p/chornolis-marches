@@ -44,6 +44,7 @@ import { GATHERING_OBSERVATION_GROWTH_MESSAGE, GATHERING_PRACTICE_GROWTH_MESSAGE
 import { COOKING_OBSERVATION_GROWTH_MESSAGE, COOKING_PRACTICE_GROWTH_MESSAGE, FRESHENING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_PRACTICE_GROWTH_MESSAGE, recordCookingObservation, recordFresheningObservation, recordFresheningSource } from "./foodLearning";
 import { notifyPlayerObservers, playerRestStopObserverText } from "./playerVisibility";
 import { dropInventoryResourceDetailed, dropInventoryResourcesDetailed, useInventoryResource, type UsableInventoryResource } from "./inventoryUse";
+import { trimSatisfiedQueuedUseItems } from "./eatingQueue";
 import { dropObserverText, recordVisibleItemAction } from "./visibleItemActions";
 import { campfireRelightReplyOptionsAfterTwigs } from "../ui/fireKeyboards";
 import { cookingResultReplyOptions } from "../ui/inventoryItemKeyboard";
@@ -382,6 +383,7 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
       await spendPlayerStamina(bot, player.id, "USE_ITEM", chatId);
       const wellbeingAside = await rememberTutorialWellbeingAside(player.id, player.currentLocationId, payload.resourceKey);
       await setActionStatus(action, "DONE");
+      await trimSatisfiedQueuedUseItems(player.id, payload.resourceKey);
       if (chatId) await bot.api.sendMessage(chatId, wellbeingAside ? `${resultText}\n\n${TUTORIAL_WELLBEING_ASIDE_TEXT}` : resultText);
       return;
     }
@@ -450,6 +452,9 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
       return;
     }
   } catch (error) {
+    if (action.type === "USE_ITEM" && isUsableInventoryResource(payload.resourceKey)) {
+      await trimSatisfiedQueuedUseItems(player.id, payload.resourceKey).catch(() => undefined);
+    }
     await setActionStatus(action, "FAILED");
     if (chatId) await bot.api.sendMessage(chatId, error instanceof Error ? error.message : "Дія з речами не вдалася.");
     return;

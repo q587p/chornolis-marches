@@ -33,6 +33,7 @@ import { hasCompletedTutorial, isTutorialLocation, rememberTutorialCommandHintIf
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "../services/locationFeatures";
 import { canCookPlayerMeat, COOKED_MEAT_KEY, RAW_MEAT_KEY } from "../services/meat";
 import { queueAllRawMeatCooking } from "../services/cookingQueue";
+import { eatAllButtonLabel, queueAllUsableInventoryResource } from "../services/eatingQueue";
 import { GATHERING_OBSERVATION_GROWTH_MESSAGE, recordGatheringObservation } from "../services/gatheringLearning";
 import { COOKING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_OBSERVATION_GROWTH_MESSAGE, recordCookingObservation, recordFresheningObservation } from "../services/foodLearning";
 import { rememberTutorialInventoryForPlayer } from "../utils/tutorialInventory";
@@ -134,10 +135,30 @@ function inventoryActionLabel(resource: any) {
 
 function buildInventoryKeyboard(resources: any[] = [], options: { canAddTwigs?: boolean; canDouseTorch?: boolean; canLightTorch?: boolean; canCookMeat?: boolean } = {}) {
   const keyboard = new InlineKeyboard();
-  if (hasInventoryResource(resources, "berries")) keyboard.text("🫐 З’їсти ягоди", "inventory:use:berries").row();
-  if (hasInventoryResource(resources, "mushrooms")) keyboard.text("🍄 З’їсти гриби", "inventory:use:mushrooms").row();
-  if (hasInventoryResource(resources, "herbs")) keyboard.text("🌿 З’їсти лікарські трави", "inventory:use:herbs").row();
-  if (hasInventoryResource(resources, COOKED_MEAT_KEY)) keyboard.text("🥩 З’їсти смажене м’ясо", `inventory:use:${COOKED_MEAT_KEY}`).row();
+  const berriesAmount = inventoryResourceAmount(resources, "berries");
+  if (berriesAmount > 0) {
+    keyboard.text("🫐 З’їсти ягоди", "inventory:use:berries");
+    if (berriesAmount > 1) keyboard.text(eatAllButtonLabel("berries"), "inventory:use-all:berries");
+    keyboard.row();
+  }
+  const mushroomsAmount = inventoryResourceAmount(resources, "mushrooms");
+  if (mushroomsAmount > 0) {
+    keyboard.text("🍄 З’їсти гриби", "inventory:use:mushrooms");
+    if (mushroomsAmount > 1) keyboard.text(eatAllButtonLabel("mushrooms"), "inventory:use-all:mushrooms");
+    keyboard.row();
+  }
+  const herbsAmount = inventoryResourceAmount(resources, "herbs");
+  if (herbsAmount > 0) {
+    keyboard.text("🌿 З’їсти лікарські трави", "inventory:use:herbs");
+    if (herbsAmount > 1) keyboard.text(eatAllButtonLabel("herbs"), "inventory:use-all:herbs");
+    keyboard.row();
+  }
+  const cookedMeatAmount = inventoryResourceAmount(resources, COOKED_MEAT_KEY);
+  if (cookedMeatAmount > 0) {
+    keyboard.text("🥩 З’їсти смажене м’ясо", `inventory:use:${COOKED_MEAT_KEY}`);
+    if (cookedMeatAmount > 1) keyboard.text(eatAllButtonLabel(COOKED_MEAT_KEY), `inventory:use-all:${COOKED_MEAT_KEY}`);
+    keyboard.row();
+  }
   const rawMeatAmount = inventoryResourceAmount(resources, RAW_MEAT_KEY);
   if (options.canCookMeat && rawMeatAmount > 0) {
     keyboard.text("🔥 Підсмажити м’ясо", "inventory:cook:meat");
@@ -449,6 +470,19 @@ async function submitCookAllMeat(bot: Bot, ctx: any, player: any) {
   }
 }
 
+async function submitUseAllItems(bot: Bot, ctx: any, player: any, resourceKey: UsableInventoryResource) {
+  try {
+    const result = await queueAllUsableInventoryResource(bot, player, resourceKey, ctx.chat?.id);
+    const queueText = await renderPlayerActionQueue(player.id);
+    await ctx.reply(
+      `Додано вживання запасу: ${result.count}. Будете їсти по черзі${durationSecondsSuffix(player, result.durationMs)}.\n\n${queueText}`,
+      await actionQueueReplyOptions(player.id),
+    );
+  } catch (error) {
+    await replyToActionError(ctx, error, "Не вдалося додати все в чергу.");
+  }
+}
+
 export function registerPlayerHandlers(bot: Bot) {
   bot.command("me", async (ctx) => {
     if (!ctx.from) return;
@@ -540,6 +574,15 @@ export function registerPlayerHandlers(bot: Bot) {
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
     await submitInventoryQueuedAction(bot, ctx, player, "USE_ITEM", { resourceKey }, "Не вдалося використати це.");
+  });
+
+  bot.callbackQuery(/^inventory:use-all:(berries|herbs|mushrooms|cooked_meat)$/, async (ctx) => {
+    const resourceKey = ctx.match[1] as UsableInventoryResource;
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    await safeAnswerCallbackQuery(ctx);
+    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+    await submitUseAllItems(bot, ctx, player, resourceKey);
   });
 
   bot.callbackQuery("inventory:cook:meat", async (ctx) => {

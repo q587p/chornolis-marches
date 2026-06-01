@@ -38,6 +38,7 @@ const CHAT_LOG_TEXT_MAX_CHARS = 3400;
 const CHAT_LOG_ENTRY_MAX_CHARS = 1100;
 const CHAT_LOG_PAGE_SIZE = 12;
 const LOCATION_ALL_FIRST_REGION_KEYS = ["dream_tutorial"];
+const ALL_PLAYER_PAGE_SIZE = 12;
 const ALL_CREATURE_PAGE_SIZE = 20;
 const WHO_PAGE_SIZE = 20;
 const ADD_CREATURE_HELP_TEXT_COMMAND = slashlessCommandPattern(["addCreatureHelp", "addcreaturehelp"]);
@@ -102,11 +103,20 @@ function isTelegramMessageNotModified(error: unknown) {
   return typeof description === "string" && description.includes("message is not modified");
 }
 
+function isTelegramMessageTooLong(error: unknown) {
+  const description = (error as any)?.description ?? (error as any)?.error?.description ?? String(error);
+  return typeof description === "string" && (description.includes("MESSAGE_TOO_LONG") || description.toLowerCase().includes("message is too long"));
+}
+
 async function editMessageTextIfChanged(ctx: any, text: string, options?: any) {
   try {
     await ctx.editMessageText(text, options);
   } catch (error) {
     if (isTelegramMessageNotModified(error)) return;
+    if (isTelegramMessageTooLong(error)) {
+      await ctx.editMessageText(truncateTelegramText(text), options);
+      return;
+    }
     throw error;
   }
 }
@@ -1079,30 +1089,37 @@ export async function buildAllPage(showDead: boolean, requestedPage: number) {
       }),
       prisma.creature.count({ where: creatureWhere }),
     ]);
-    const totalPages = Math.max(1, Math.ceil(creatureCount / ALL_CREATURE_PAGE_SIZE));
+    const playerPages = Math.ceil(players.length / ALL_PLAYER_PAGE_SIZE);
+    const creaturePages = Math.ceil(creatureCount / ALL_CREATURE_PAGE_SIZE);
+    const totalPages = Math.max(1, playerPages + creaturePages);
     const page = Math.max(0, Math.min(requestedPage, totalPages - 1));
-    const creatures = await prisma.creature.findMany({
-      where: creatureWhere,
-      select: {
-        id: true,
-        name: true,
-        hp: true,
-        age: true,
-        ageTicks: true,
-        activity: true,
-        currentAction: true,
-        isGone: true,
-        isAlive: true,
-        corpseDecayTicksLeft: true,
-        location: { select: { name: true, x: true, y: true, z: true } },
-        species: { select: { kind: true, key: true, name: true } },
-      },
-      orderBy: { id: "asc" },
-      skip: page * ALL_CREATURE_PAGE_SIZE,
-      take: ALL_CREATURE_PAGE_SIZE,
-    });
+    const isPlayerPage = page < playerPages || creaturePages === 0;
+    const creaturePage = Math.max(0, page - playerPages);
+    const playerSlice = isPlayerPage
+      ? players.slice(page * ALL_PLAYER_PAGE_SIZE, page * ALL_PLAYER_PAGE_SIZE + ALL_PLAYER_PAGE_SIZE)
+      : [];
+    const creatures = isPlayerPage ? [] : await prisma.creature.findMany({
+        where: creatureWhere,
+        select: {
+          id: true,
+          name: true,
+          hp: true,
+          age: true,
+          ageTicks: true,
+          activity: true,
+          currentAction: true,
+          isGone: true,
+          isAlive: true,
+          corpseDecayTicksLeft: true,
+          location: { select: { name: true, x: true, y: true, z: true } },
+          species: { select: { kind: true, key: true, name: true } },
+        },
+        orderBy: { id: "asc" },
+        skip: creaturePage * ALL_CREATURE_PAGE_SIZE,
+        take: ALL_CREATURE_PAGE_SIZE,
+      });
 
-    const playerLines = players.map((p) => {
+    const playerLines = playerSlice.map((p) => {
       const loc = p.currentLocation ? `${p.currentLocation.name} (${p.currentLocation.x},${p.currentLocation.y},${p.currentLocation.z})` : "невідомо";
       const name = playerPresenceName(p);
       return `#${p.id} ${name} — ${loc}; життя ${p.hp}; снага ${p.stamina}; голод ${p.hunger}; авто ${yesNo(p.isAutoEnabled)}`;
@@ -1116,18 +1133,20 @@ export async function buildAllPage(showDead: boolean, requestedPage: number) {
       return `#${c.id} ${c.name ?? c.species.name} [${marker}] [${c.species.key}] — ${loc}; ${state}; життя ${c.hp}; age ${c.age}/${c.ageTicks}; ${c.activity ?? "IDLE"}; ${c.currentAction ?? "без дії"}${decay}`;
     });
 
-    const bodyLines = [
-      "Гравці:",
-      ...(playerLines.length ? playerLines : ["немає"]),
-      "",
-      "NPC / істоти:",
-      ...(creatureLines.length ? creatureLines : ["немає"]),
-    ];
-    const visiblePlayerIds = players.map((player) => player.id);
+    const bodyLines = isPlayerPage
+      ? [
+          "Гравці:",
+          ...(playerLines.length ? playerLines : ["немає"]),
+        ]
+      : [
+          "NPC / істоти:",
+          ...(creatureLines.length ? creatureLines : ["немає"]),
+        ];
+    const visiblePlayerIds = playerSlice.map((player) => player.id);
     const visibleNpcIds = creatures.filter((creature) => creature.species.kind !== "ANIMAL").map((creature) => creature.id);
     const mode = showDead ? "усі записи" : "тільки живі; /all dead покаже всі записи";
-    const text = `🧾 Усі персонажі (${mode})\nСторінка ${page + 1}/${totalPages}; гравців ${players.length}, істот ${creatureCount}\n\n${bodyLines.join("\n")}`;
-    logStatusPerf("buildAllPage", startedAt, `ok=1; players=${players.length}; creatures=${creatureCount}; pageRows=${creatures.length}; pages=${totalPages}; showDead=${showDead}`);
+    const text = truncateTelegramText(`🧾 Усі персонажі (${mode})\nСторінка ${page + 1}/${totalPages}; гравців ${players.length}, істот ${creatureCount}\n\n${bodyLines.join("\n")}`);
+    logStatusPerf("buildAllPage", startedAt, `ok=1; players=${players.length}; creatures=${creatureCount}; playerRows=${playerSlice.length}; creatureRows=${creatures.length}; pages=${totalPages}; showDead=${showDead}`);
 
     return {
       text,

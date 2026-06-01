@@ -5,6 +5,7 @@ import {
   canLightPlayerTorchFromInventory,
 } from "../services/fire";
 import { canCookPlayerMeat, COOKED_MEAT_KEY, playerRawMeatAmount, RAW_MEAT_KEY } from "../services/meat";
+import { eatAllButtonLabel, playerInventoryResourceAmount } from "../services/eatingQueue";
 import { getPlayerEquippedWeapon, isWeaponResourceKey } from "../services/weapons";
 
 function inventoryItemDropLabel(resourceKey: string) {
@@ -30,20 +31,39 @@ export function cookingResultReplyOptions(result: { rawMeatRemaining?: number | 
 }
 
 export async function buildInventoryItemKeyboard(playerId: number, resourceKey: string) {
-  const [canAddTwigs, canDouseTorch, canLightTorch, canCookMeat, equippedWeapon, rawMeatAmount] = await Promise.all([
+  const [canAddTwigs, canDouseTorch, canLightTorch, canCookMeat, equippedWeapon, rawMeatAmount, itemAmount] = await Promise.all([
     canAddTwigsToNearbyCampfire(playerId),
     canDousePlayerTorchFromInventory(playerId),
     canLightPlayerTorchFromInventory(playerId),
     canCookPlayerMeat(playerId),
     getPlayerEquippedWeapon(playerId),
     resourceKey === RAW_MEAT_KEY ? playerRawMeatAmount(playerId) : Promise.resolve(0),
+    resourceKey === "berries" || resourceKey === "mushrooms" || resourceKey === "herbs" || resourceKey === COOKED_MEAT_KEY
+      ? playerInventoryResourceAmount(playerId, resourceKey)
+      : Promise.resolve(0),
   ]);
 
   const keyboard = new InlineKeyboard();
-  if (resourceKey === "berries") keyboard.text("🫐 З’їсти ягоди", "inventory:use:berries").row();
-  if (resourceKey === "mushrooms") keyboard.text("🍄 З’їсти гриби", "inventory:use:mushrooms").row();
-  if (resourceKey === "herbs") keyboard.text("🌿 З’їсти лікарські трави", "inventory:use:herbs").row();
-  if (resourceKey === COOKED_MEAT_KEY) keyboard.text("🥩 З’їсти м’ясо", `inventory:use:${COOKED_MEAT_KEY}`).row();
+  if (resourceKey === "berries") {
+    keyboard.text("🫐 З’їсти ягоди", "inventory:use:berries");
+    if (itemAmount > 1) keyboard.text(eatAllButtonLabel("berries"), "inventory:use-all:berries");
+    keyboard.row();
+  }
+  if (resourceKey === "mushrooms") {
+    keyboard.text("🍄 З’їсти гриби", "inventory:use:mushrooms");
+    if (itemAmount > 1) keyboard.text(eatAllButtonLabel("mushrooms"), "inventory:use-all:mushrooms");
+    keyboard.row();
+  }
+  if (resourceKey === "herbs") {
+    keyboard.text("🌿 З’їсти лікарські трави", "inventory:use:herbs");
+    if (itemAmount > 1) keyboard.text(eatAllButtonLabel("herbs"), "inventory:use-all:herbs");
+    keyboard.row();
+  }
+  if (resourceKey === COOKED_MEAT_KEY) {
+    keyboard.text("🥩 З’їсти м’ясо", `inventory:use:${COOKED_MEAT_KEY}`);
+    if (itemAmount > 1) keyboard.text(eatAllButtonLabel(COOKED_MEAT_KEY), `inventory:use-all:${COOKED_MEAT_KEY}`);
+    keyboard.row();
+  }
   if (resourceKey === RAW_MEAT_KEY && canCookMeat) {
     keyboard.text("🔥 Підсмажити м’ясо", "inventory:cook:meat");
     if (rawMeatAmount > 1) keyboard.text("🔥 Посмажити все", "inventory:cook:all");
