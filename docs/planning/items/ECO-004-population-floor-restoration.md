@@ -51,6 +51,12 @@ The MVP should be practical and quiet: if a configured animal species has no liv
 - Extends rabbit and mouse restoration to cover living populations that have lost their adult breeding pair.
 - Adds helper coverage for healthy adult pairs, same-sex adult remnants and young-only remnants.
 
+## 0.14.17 Slice
+
+- Adds `populationFloorRestored` to parsed world-tick ecology counters so scribe/admin statistics can show recent rates.
+- Parses `Population floor restored` events by species and surfaces total restored counts, event counts and latest restoration time in Telegram `/stat`, protected web `/stat` and `/stat.json`.
+- Keeps the surface scribe/admin-only; ordinary player-facing news should not present the safeguard as a visible spawn mechanic.
+
 ## Acceptance
 
 - If all living animals of a protected species are gone, a later ecology/world tick restores the starter population.
@@ -60,6 +66,7 @@ The MVP should be practical and quiet: if a configured animal species has no liv
 - It does not revive corpses or reset existing corpse decay.
 - It does not affect tutorial/dream-only creatures.
 - The near-term stats/admin surface records how many times each protected species had to be restored after reaching `0` living animals.
+- Scribe/admin statistics show recent and per-species restoration counts without exposing this as ordinary player-facing feedback.
 - Tests cover at least one species going to zero and being restored to its starter location.
 
 ## Near-Term Follow-Up
