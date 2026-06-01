@@ -150,6 +150,10 @@ for (const key of ["start_border_marker", "start_newcomer_tablet", "start_border
 
 const startWatchtowerLadder = features.find((item) => item.key === "start_border_watchtower_ladder");
 assert.equal(startWatchtowerLadder?.data?.vertical_hint, "UP", "Starter watchtower feature should expose an UP action hint");
+for (const key of ["start_newcomer_tablet", "start_border_watchtower_ladder"]) {
+  const feature = features.find((item) => item.key === key);
+  assert.ok(typeof feature?.data?.examine_summary === "string" && feature.data.examine_summary.length > 0, `Starter authored landmark should have examine summary: ${key}`);
+}
 
 const startWatchtower = locations.find((item) => item.key === "start_border_watchtower");
 assert.ok(startWatchtower, "Starter camp watchtower should exist as a real location");
@@ -170,6 +174,15 @@ assert.equal(startCampTorchStand?.data?.torch_source, true, "Starter camp torch 
 assert.equal(startCampTorchStand?.locationKey, "start_border_watchtower", "Starter torch stand should live in the watchtower");
 assert.notEqual(startCampTorchStand?.data?.hunter_resupply, false, "Starter watchtower torch stand should remain available for hunter resupply");
 assert.notEqual(startCampTorchStand?.data?.icon, "🔥", "Starter camp torch stand should not use the fire icon reserved for flame/campfire actions");
+
+const beginnerCache = features.find((item) => item.key === "start_beginner_shared_cache");
+assert.ok(beginnerCache, "Starter shared beginner cache should exist");
+assert.equal(beginnerCache.locationKey, "start_border_watchtower", "Starter shared beginner cache should live in the watchtower");
+assert.equal(beginnerCache.data?.beginner_cache, true, "Starter shared beginner cache should be marked as beginner cache data");
+assert.equal(beginnerCache.data?.hidden_unobserved_restock, true, "Starter shared beginner cache should restock only while unobserved");
+assert.equal(beginnerCache.data?.cache_stock?.torch, 2, "Starter shared beginner cache should seed a small torch stock");
+assert.equal(beginnerCache.data?.cache_max_stock?.torch, 3, "Starter shared beginner cache should cap torch stock");
+assert.ok(Array.isArray(beginnerCache.data?.aliases) && beginnerCache.data.aliases.includes("скриня"), "Starter shared beginner cache should have Ukrainian aliases");
 
 const tutorialRestBench = features.find((item) => item.key === "dream_tutorial_rest_fire");
 assert.ok(tutorialRestBench, "Tutorial rest bench feature should exist");

@@ -60,6 +60,11 @@ import { afkReplyOptions, endPlayerSession, SESSION_AFK_CONFIRMATION, SESSION_EN
 import { beginnerReturnPromptText, beginnerReturnRefusalText, checkBeginnerReturnForPlayer, performBeginnerReturn } from "../services/beginnerReturn";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { formatVitalsSentence } from "../utils/playerText";
+import {
+  BEGINNER_CACHE_FEATURE_KEY,
+  contributeToBeginnerCache,
+  takeFromBeginnerCache,
+} from "../services/beginnerCache";
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
@@ -134,6 +139,63 @@ async function replyWithBorderMarkerInspection(ctx: any) {
   if (!view) return void (await ctx.reply("Тут не видно межового знака, який можна роздивитися."));
   noteKnownMessage(await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard }));
   await sendFeatureFollowups(ctx, view);
+}
+
+async function localBeginnerCacheFeature(player: { currentLocationId: number | null }) {
+  if (!player.currentLocationId) return null;
+  return prisma.locationFeature.findFirst({
+    where: {
+      locationId: player.currentLocationId,
+      isActive: true,
+      key: BEGINNER_CACHE_FEATURE_KEY,
+    },
+    orderBy: { id: "asc" },
+  });
+}
+
+async function replyWithBeginnerCache(ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player?.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const feature = await localBeginnerCacheFeature(player);
+  if (!feature) return void (await ctx.reply("Поруч немає спільної скрині, яку можна роздивитися."));
+
+  const view = await renderLocationFeatureInteraction(feature.id, player.id);
+  if (!view) return void (await ctx.reply("Поруч немає спільної скрині, яку можна роздивитися."));
+  noteKnownMessage(await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard }));
+  await sendFeatureFollowups(ctx, view);
+}
+
+async function submitBeginnerCacheTake(bot: Bot, ctx: any, item?: string) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  try {
+    assertCanPerformPhysicalAction(player, "PICK_UP");
+    const feature = await localBeginnerCacheFeature(player);
+    if (!feature) throw new Error("Поруч немає спільної скрині.");
+    const result = await takeFromBeginnerCache(player.id, feature.id, item);
+    await spendPlayerStaminaAmount(bot, player.id, 1, ctx.chat?.id);
+    await ctx.reply(result.text, await inventoryGainReplyOptions(player, `cache:${result.key}`));
+  } catch (error) {
+    await replyToActionError(ctx, error, "Не вдалося взяти річ зі скрині.");
+  }
+}
+
+async function submitBeginnerCacheContribute(bot: Bot, ctx: any, item?: string) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  try {
+    assertCanPerformPhysicalAction(player, "PICK_UP");
+    const feature = await localBeginnerCacheFeature(player);
+    if (!feature) throw new Error("Поруч немає спільної скрині.");
+    const result = await contributeToBeginnerCache(player.id, feature.id, item);
+    await spendPlayerStaminaAmount(bot, player.id, 1, ctx.chat?.id);
+    await ctx.reply(result.text);
+  } catch (error) {
+    await replyToActionError(ctx, error, "Не вдалося лишити річ у скрині.");
+  }
 }
 
 async function submitFeatureInspection(bot: Bot, ctx: any, targetQuery: string, detail: "brief" | "full" = "full") {
@@ -1015,6 +1077,11 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "inspect-vegetation") return replyWithVegetationInspection(ctx);
     if (parsed.kind === "inspect-border-marker") return replyWithBorderMarkerInspection(ctx);
     if (parsed.kind === "inspect-feature") return submitFeatureInspection(bot, ctx, parsed.target, parsed.detail ?? "full");
+    if (parsed.kind === "beginner-cache") {
+      if (parsed.action === "take") return submitBeginnerCacheTake(bot, ctx, parsed.item);
+      if (parsed.action === "contribute") return submitBeginnerCacheContribute(bot, ctx, parsed.item);
+      return replyWithBeginnerCache(ctx);
+    }
     if (parsed.kind === "move") return submitCanonicalMove(bot, ctx, parsed.direction, false);
     if (parsed.kind === "gather") return submitCanonicalGather(bot, ctx, parsed.resourceKey, false);
     if (parsed.kind === "posture") return submitPosture(bot, ctx, parsed.mode);

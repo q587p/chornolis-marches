@@ -7,6 +7,7 @@ ADM-002,Scribe creature corpse creation command,testing,feature,admin,medium,"ad
 CAL-001,"Deep calendar, sacred days and named years",icebox,system,world_time,medium,"calendar,world-time,moon-phases,seasons,folklore,atmosphere",docs/planning/items/CAL-001_calendar_moon_phases_and_named_years.md
 CAMP-001,Starter camp prose and feature audit,done,content,core-loop,high,"camp,onboarding,mud,look,examine",docs/planning/items/CAMP-001-starter-camp-prose-and-feature-audit.md
 CAMP-002,Starter watchtower and camp torch-source route update,testing,feature,core-loop,high,"camp,map,torch,light,mud,vertical-exits",docs/planning/items/CAMP-002-starter-watchtower-and-torch-source.md
+CAMP-003,Shared beginner cache and hidden restock,testing,feature,core-loop,high,"camp,onboarding,inventory,light,restock",docs/planning/items/CAMP-003-shared-beginner-cache.md
 CMD-001,Near-term text command pack,testing,feature,commands,high,"commands,aliases,mud,speech,navigation",docs/planning/items/CMD-001-near-term-text-command-pack.md
 CMD-002,Put items into local containers and features,testing,feature,commands,high,"commands,inventory,containers,aliases",docs/planning/items/CMD-002-put-items-into-containers.md
 COMBAT-001,Creature aggression and defense,backlog,feature,combat,medium,"animals,combat,predators,ecology",docs/planning/items/COMBAT-001-creature-aggression-and-defense.md

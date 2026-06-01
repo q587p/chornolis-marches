@@ -17,6 +17,7 @@ import { tutorialActionHintComment } from "../services/tutorialVoices";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 import { spendPlayerStaminaAmount } from "../services/actionRecovery";
 import { firstNightGuidanceForPlayer } from "../services/beginnerGuidance";
+import { contributeToBeginnerCache, takeFromBeginnerCache } from "../services/beginnerCache";
 
 function pickedItemsAmount(items: Array<{ amount: number }>) {
   return items.reduce((total, item) => total + Math.max(0, item.amount), 0);
@@ -341,6 +342,46 @@ export function registerLookHandlers(bot: Bot) {
       const message = actionErrorMessage(error, "Не вдалося потрусити дерево.");
       await safeAnswerCallbackQuery(ctx, message);
       await replyToActionError(ctx, error, "Не вдалося потрусити дерево.", { replyFallback: false });
+    }
+  });
+
+  bot.callbackQuery(/^cache:take:(\d+):([A-Za-z0-9_-]+)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    try {
+      assertCanPerformPhysicalAction(player, "PICK_UP");
+      const result = await takeFromBeginnerCache(player.id, Number(ctx.match[1]), ctx.match[2]);
+      await safeAnswerCallbackQuery(ctx, "Взято.");
+      await spendPlayerStaminaAmount(bot, player.id, 1, ctx.chat?.id);
+      await ctx.reply(result.text, await inventoryGainReplyOptions(player, `cache:${result.key}`));
+    } catch (error) {
+      const message = actionErrorMessage(error, "Не вдалося взяти річ зі скрині.");
+      await safeAnswerCallbackQuery(ctx, message);
+      await replyToActionError(ctx, error, "Не вдалося взяти річ зі скрині.", { replyFallback: false });
+    }
+  });
+
+  bot.callbackQuery(/^cache:contribute:(\d+):([A-Za-z0-9_-]+)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    try {
+      assertCanPerformPhysicalAction(player, "PICK_UP");
+      const result = await contributeToBeginnerCache(player.id, Number(ctx.match[1]), ctx.match[2]);
+      await safeAnswerCallbackQuery(ctx, "Лишено.");
+      await spendPlayerStaminaAmount(bot, player.id, 1, ctx.chat?.id);
+      await ctx.reply(result.text);
+    } catch (error) {
+      const message = actionErrorMessage(error, "Не вдалося лишити річ у скрині.");
+      await safeAnswerCallbackQuery(ctx, message);
+      await replyToActionError(ctx, error, "Не вдалося лишити річ у скрині.", { replyFallback: false });
     }
   });
 

@@ -43,7 +43,8 @@ Implement `0.14.x` in small slices:
 10. ONB-004 / ONB-001-B / ONB-001-C / CAMP-001: `0.14.8` adds first-night guidance, first look/examine tutorial hints and starter-camp clarity after darkness starts hiding details.
 11. CAMP-002: `0.14.9` adds the real starter-camp watchtower, vertical `UP`/`DOWN` movement and moves the beginner torch source above the camp; `0.14.10` makes that watchtower stand the hunter resupply source and downgrades the old gate source as a non-primary/emergency stand.
 12. ONB-006: `0.14.10` adds the optional dream action ladder for `Озирнутися`, `Роздивитися`, signs and traces, and moves the tutorial completion surface forward to the new waking edge.
-13. SLEEP-001 and SLEEP-002: lying posture and ordinary sleep only after time/light/visibility foundations are stable.
+13. CAMP-003: `0.14.11` adds a shared beginner cache at the starter watchtower, a narrow take/contribute loop for simple supplies and hidden unobserved restock as a first maintained-camp slice.
+14. SLEEP-001 and SLEEP-002: lying posture and ordinary sleep only after time/light/visibility foundations are stable.
 
 Observation learning remains the `0.15` line. Darkness, distance and light should affect learning later, but the visibility foundation must land first.
 
@@ -60,7 +61,7 @@ Observation learning remains the `0.15` line. Darkness, distance and light shoul
 - TRACK-LEARN-001: track-reading / animal movement learning moment.
 - OMEN-001: one small living-world omen.
 - ONB-001 follow-up: tutorial hints that careful observation matters.
-- Starter camp and dream onboarding follow-up: after the `0.14.8` first-session clarity slice, review `CAMP-002`, `ONB-006` and the future newcomer helper/social-dream items together. Keep the shared supply cache, hidden restock and hunter route rewrite out of the next small patch unless they become direct regressions.
+- Starter camp and dream onboarding follow-up: after the `0.14.11` shared cache slice, review whether the cache needs stronger newcomer-helper text, contribution etiquette, or anti-hoarding limits. Keep hunter route rewrites separate unless they become direct regressions.
 
 Keep theft/hiding after the first observation MVP is stable:
 

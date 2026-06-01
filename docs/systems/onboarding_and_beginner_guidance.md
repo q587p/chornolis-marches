@@ -72,6 +72,8 @@ As of `0.12.0`, the first concrete newcomer path is the dream tutorial in `Др�
 
 The camp now has an inspectable `Дошка для прибулих` with compact diegetic advice: look around, take light, and leave something for the next person later. This is advice, not a quest checklist. A beginner torch source exists above the camp on the watchtower as a first-session safety tool; the older closed-gate torch source remains for the gate/hunter area and should not be removed until a later route/supply pass decides the final distribution.
 
+As of `0.14.11`, the watchtower also has a `Спільна скриня прибулих`: a small shared cache for simple first-road supplies such as torches, berries, herbs, mushrooms and twigs. It supports narrow take/contribute actions and hidden unobserved restock so the camp feels maintained without becoming a shop or reward table. Beginner copy should frame it as mutual care and practical preparation, not as free loot.
+
 After darkness starts hiding descriptions, beings, ground objects, resources or tracks, a waking-world character can receive one first-night guidance note when they are in dim/dark reduced visibility without local light. It must not trigger inside the tutorial dream, and it should remain behind the same presence/AFK guards used for other proactive guidance. The message should mention that fire or a torch can return part of what the dark hides, without listing raw visibility mechanics.
 
 ## Design Rule

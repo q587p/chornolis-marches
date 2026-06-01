@@ -31,6 +31,14 @@ import { formatObservedPostureText } from "../utils/playerText";
 import { isFreshenedCorpse } from "./meat";
 import { GATE_CARCASS_DROPOFF_FEATURE_KEY, gateHuntingDropoffText, gateHuntingNoticeText, getGateHuntingSaturationState } from "./carcassDropoff";
 import { visibilityDarknessText, visibilityPresenceText, visibilityRulesForLocation, type VisibilityRules } from "./visibility";
+import {
+  beginnerCacheActionLabel,
+  beginnerCacheInspectionText,
+  beginnerCacheTakeKeys,
+  isBeginnerCacheData,
+  playerBeginnerCacheContributionKeys,
+  prepareBeginnerCacheForInspection,
+} from "./beginnerCache";
 
 const COMPACT_EXIT_ORDER = ["NORTH", "WEST", "SOUTH", "EAST", "UP", "DOWN", "INSIDE", "OUTSIDE"];
 const GATHERABLE_RESOURCE_KEYS = ["berries", "mushrooms", "herbs"] as const;
@@ -136,6 +144,10 @@ function isCorpseTarget(target: ReturnType<typeof visibleTargets>[number]) {
 
 function isTorchSourceFeature(feature: any) {
   return featureData(feature).torch_source === true;
+}
+
+function isBeginnerCacheFeature(feature: any) {
+  return isBeginnerCacheData(featureData(feature));
 }
 
 function isClimbTreeFeature(feature: any) {
@@ -298,6 +310,9 @@ function featureBriefLine(feature: any) {
 function featureDetailLine(feature: any, showTechnicalDetails = false) {
   const line = `${featureIcon(feature)} <i>${escapeHtml(feature.name)}</i>`;
   const details: string[] = [];
+  const data = featureData(feature);
+  const authoredSummary = typeof data.examine_summary === "string" ? data.examine_summary.trim() : "";
+  if (authoredSummary) details.push(authoredSummary);
 
   if (isCampfireFeature(feature)) {
     if (isExtinguishedCampfire(feature)) {
@@ -321,10 +336,12 @@ function featureDetailLine(feature: any, showTechnicalDetails = false) {
     }
   } else if (isTorchSourceFeature(feature)) {
     details.push("тут є факели, які можна взяти з собою");
+  } else if (isBeginnerCacheFeature(feature)) {
+    details.push("спільні прості припаси для першої дороги");
   } else if (isClimbTreeFeature(feature)) {
     details.push("по стовбуру можна піднятися вгору");
   } else if (isShakeTreeFeature(feature)) {
-    const readyAt = treeShakeReadyAt(featureData(feature));
+    const readyAt = treeShakeReadyAt(data);
     details.push(readyAt ? "сухе гілля вже струшене й ще не відновилося" : "сухе гілля можна струсити вниз");
   } else if (feature.providesLight) {
     details.push("дає світло");
@@ -345,7 +362,7 @@ function featureDetailLine(feature: any, showTechnicalDetails = false) {
   const fireState = isCampfireFeature(feature) ? campfireStateLine(feature) : null;
   if (fireState && !isExtinguishedCampfire(feature)) details.push(fireState);
   if (showTechnicalDetails && feature.restStaminaCapMultiplier) details.push(`відпочинок до ×${feature.restStaminaCapMultiplier} снаги`);
-  const restSpeedMultiplier = Number(featureData(feature).rest_stamina_regen_multiplier ?? featureData(feature).restStaminaRegenMultiplier ?? 1);
+  const restSpeedMultiplier = Number(data.rest_stamina_regen_multiplier ?? data.restStaminaRegenMultiplier ?? 1);
   if (showTechnicalDetails && Number.isFinite(restSpeedMultiplier) && restSpeedMultiplier > 1) details.push(`відновлення снаги ×${Math.floor(restSpeedMultiplier)}`);
   return details.length ? `${line}; ${details.map(escapeHtml).join("; ")}` : line;
 }
@@ -987,7 +1004,7 @@ export async function renderLocationFeatureInteraction(
   detailMode: "brief" | "full" = "full",
 ) {
   const player = await prisma.player.findUnique({ where: { id: viewerPlayerId }, select: { currentLocationId: true } });
-  const feature = await prisma.locationFeature.findUnique({ where: { id: featureId }, include: { location: true } });
+  let feature = await prisma.locationFeature.findUnique({ where: { id: featureId }, include: { location: true } });
   if (feature?.locationId) await expireTimedCampfires(feature.locationId);
   if (!player || !feature || !feature.isActive || player.currentLocationId !== feature.locationId || !isInteractiveFeature(feature)) return null;
 
@@ -1011,7 +1028,10 @@ export async function renderLocationFeatureInteraction(
   if (isDepletedVegetationFeature(feature)) {
     return renderDepletedVegetationInspection(feature.locationId, viewerPlayerId, returnMode);
   }
-  if (featureData(feature).gate_hunting_notice === true || featureData(feature).carcass_dropoff === true) {
+  if (isBeginnerCacheFeature(feature)) {
+    feature = await prepareBeginnerCacheForInspection(feature.id) ?? feature;
+    text = beginnerCacheInspectionText(feature);
+  } else if (featureData(feature).gate_hunting_notice === true || featureData(feature).carcass_dropoff === true) {
     const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
     const state = await getGateHuntingSaturationState(GATE_CARCASS_DROPOFF_FEATURE_KEY);
     text = featureData(feature).gate_hunting_notice === true
@@ -1096,6 +1116,15 @@ export async function renderLocationFeatureInteraction(
   if (isTutorialEndFeature(feature)) keyboard.text("✅ Закінчити навчання", "tutorial:end").row();
   if (featureData(feature).tutorial_wake_prompt === true) keyboard.text("🌅 Прокинутися", "tutorial:wake").row();
   if (isTorchSourceFeature(feature)) keyboard.text("🕯 Взяти факел", `torch:take:${feature.id}`).row();
+  if (isBeginnerCacheFeature(feature)) {
+    for (const key of beginnerCacheTakeKeys(feature.data)) {
+      keyboard.text(`📦 Взяти ${beginnerCacheActionLabel(key)}`, `cache:take:${feature.id}:${key}`).row();
+    }
+    const contributionKeys = await playerBeginnerCacheContributionKeys(viewerPlayerId);
+    for (const key of contributionKeys) {
+      keyboard.text(`🤲 Лишити ${beginnerCacheActionLabel(key)}`, `cache:contribute:${feature.id}:${key}`).row();
+    }
+  }
   if (isClimbTreeFeature(feature)) keyboard.text("🌳 Залізти", "move:UP").row();
   const moveDirection = featureMoveDirection(feature);
   if (moveDirection) keyboard.text(featureMoveButtonLabel(moveDirection), `move:${moveDirection}`).row();

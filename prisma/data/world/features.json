@@ -272,6 +272,7 @@
     "restStaminaCapMultiplier": null,
     "data": {
       "icon": "📋",
+      "examine_summary": "коротко пояснює, як не вийти в темряву зовсім непідготовленим",
       "inspectable": true,
       "beginner_advice": true,
       "aliases": [
@@ -295,6 +296,7 @@
     "restStaminaCapMultiplier": null,
     "data": {
       "icon": "🪜",
+      "examine_summary": "драбина веде вгору, до справжньої сторожової вежі над табором",
       "inspectable": true,
       "vertical_hint": "UP",
       "aliases": [
@@ -332,6 +334,52 @@
         "світло",
         "torch",
         "torches"
+      ]
+    }
+  },
+  {
+    "key": "start_beginner_shared_cache",
+    "locationKey": "start_border_watchtower",
+    "type": "LANDMARK",
+    "name": "Спільна скриня прибулих",
+    "description": "Під навісом сторожової вежі стоїть стара дерев'яна скриня. На кришці вирізано: «Бери потрібне, лишай зайве, не замикай дорогу тому, хто прийде після тебе».",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "📦",
+      "inspectable": true,
+      "beginner_cache": true,
+      "hidden_unobserved_restock": true,
+      "cache_restock_after_ms": 2700000,
+      "cache_stock": {
+        "torch": 2,
+        "berries": 3,
+        "herbs": 1,
+        "mushrooms": 0,
+        "twigs": 4
+      },
+      "cache_max_stock": {
+        "torch": 3,
+        "berries": 6,
+        "herbs": 4,
+        "mushrooms": 4,
+        "twigs": 10
+      },
+      "cache_restock_target": {
+        "torch": 2,
+        "berries": 3,
+        "herbs": 1,
+        "mushrooms": 1,
+        "twigs": 5
+      },
+      "aliases": [
+        "спільна скриня",
+        "скриня",
+        "скриня прибулих",
+        "запаси",
+        "припаси",
+        "cache",
+        "supply cache"
       ]
     }
   },
