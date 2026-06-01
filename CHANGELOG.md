@@ -15,6 +15,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added modest `SWAMP` resource defaults for grass, mushrooms and herbs.
 - Added a tiny dry-islet resource exception and vegetation opt-outs for the blind channel and dark backwater.
 - Added a creature movement boundary helper and regression coverage so ordinary animals cannot newly climb human-authored `UP` exits such as watchtower ladders or trees.
+- Added a direct cook-meat action to active campfire feature inspections when the player carries raw meat.
 - Added `MAP-WILLOW-003` and `QA-WILLOW-001` planning coverage for floodplain landmarks, resources, aliases and route/content smoke checks.
 - Added planning coverage for starter supply guards and animal movement boundaries.
 

@@ -28,7 +28,7 @@ import { lifetimeSummary } from "./itemLifetime";
 import { playerShowsTechnicalDetails } from "./technicalDetails";
 import { dreamGateStatusText, ensureTutorialForagingResources, isDreamGateFeature, lockedExitDirections, lockedExitLabel, rememberTutorialObservationLesson } from "./tutorial";
 import { formatObservedPostureText } from "../utils/playerText";
-import { isFreshenedCorpse } from "./meat";
+import { canCookPlayerRawMeat, isFreshenedCorpse } from "./meat";
 import { heldWeaponLine } from "./weapons";
 import { GATE_CARCASS_DROPOFF_FEATURE_KEY, gateHuntingDropoffText, gateHuntingNoticeText, getGateHuntingSaturationState } from "./carcassDropoff";
 import { visibilityDarknessText, visibilityPresenceText, visibilityRulesForLocation, type VisibilityRules } from "./visibility";
@@ -1106,6 +1106,7 @@ export async function renderLocationFeatureInteraction(
       if (torchState.isLit) keyboard.text("🔥 Підпалити", `fire:light:${feature.id}`).row();
     } else {
       keyboard.text("🔥 Відпочити", "rest:start").row();
+      if (await canCookPlayerRawMeat(viewerPlayerId)) keyboard.text("🔥 Посмажити м’ясо", "inventory:cook:meat").row();
       if (feature.type !== "MAGIC_CAMPFIRE" && canAddTwigsToCampfire(feature)) keyboard.text("🪵 Додати хмиз", `fire:addTwigs:${feature.id}`).row();
       if (torchState.hasTorch) {
         keyboard.text(torchLightButtonText(torchState), `torch:light:${feature.id}`).row();
