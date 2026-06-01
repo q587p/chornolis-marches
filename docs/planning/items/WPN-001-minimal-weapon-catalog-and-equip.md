@@ -152,6 +152,11 @@ Avoid duplicate knives on repeated `/start`.
 
 - The MVP equipment state is resource-key based (`equippedWeaponKey`), not item-instance based. This is acceptable for the first slice, but it means several identical knives are not distinguishable: equipping "knife" means "one carried knife", not a specific blade with quality, history, condition or ownership.
 - Existing completed players do not automatically receive the starter knife unless they pass through the implemented grant/backfill path. If live balance requires every existing player to have one, add an explicit admin/backfill script or a safe inventory-open backfill instead of relying on `/start`.
+- Current equipment and lit-torch display still model hands loosely: `equippedWeaponKey` can coexist with carried lit torches. A near-term follow-up should make this coherent before more weapons arrive:
+  - one lit torch plus one held knife/spear/tool is allowed;
+  - two lit torches occupy both hands, so the held weapon/tool should be put away automatically or require a clear player choice;
+  - manual `equip` / `unequip` / `wield` / `unwield` aliases should remain the explicit way to ready or put away a weapon/tool;
+  - freshening may auto-ready a carried sharp tool when hands allow it, but should explain when both hands are already full.
 
 ## Acceptance checklist
 

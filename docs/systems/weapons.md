@@ -59,6 +59,13 @@ This is intentionally simple. It tracks the equipped weapon by resource key, suc
 
 Consequence: several identical carried weapons are not distinguishable in the MVP. If a player has three `knife` resources and equips `knife`, the system does not know which exact blade is in hand. Item quality, condition, ownership, history and "this specific knife" behavior belong to the future item-instance migration.
 
+Hand-slot consequence: the MVP still treats lit torches and equipped weapons as adjacent systems. The intended follow-up model is:
+
+- one lit torch plus one held knife, spear or tool is fine;
+- two lit torches occupy both hands, so a held weapon/tool should go back to inventory or the player should explicitly choose what to put away;
+- if a sharp tool is carried but not in hand, freshening may auto-ready it when hands allow;
+- if both hands are already full, freshening should explain that the player needs to put something away first.
+
 Validation rule:
 
 - `equippedWeaponKey` must be either `null` or a key from the weapon catalog.
