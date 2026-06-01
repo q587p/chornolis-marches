@@ -48,6 +48,7 @@ The forest should feel alive even when players do nothing.
 - Carnivores do not recover hunger at kill time. They queue a later `EAT` action for the claimed corpse; if a player, hunter or another flow takes the corpse first, the predator loses that meal and stays hungry.
 - Character-caused animal deaths include player kills and non-animal NPC kills, and are counted separately from predator kills in scribe/admin `/stat`, protected web `/stat`, `/stat.json`, and ecology sign technical summaries.
 - If a starter animal species disappears entirely from the waking world, the world tick quietly restores its starter living population at starter locations. This includes starter foxes and wolves for now. Starter rabbits and mice can also recover when living animals remain but no adult breeding pair is left. This is a population-floor safeguard, not a player-facing notification or full spirit/migration system, and predator restoration may become a balance/narrative switch later.
+- Scribe/admin `/stat`, protected web `/stat` and `/stat.json` show recent and per-species population-floor restoration counts so collapse/recovery tuning can be observed without making the safeguard player-facing.
 - Predator hunger recovery uses prey food value when the predator actually eats the corpse: mice are light food, rabbit children/old rabbits are partial food, healthy young/adult rabbits are worth more.
 - Hungry herbivores are more likely to eat when forage exists and more likely to move when local food is gone or vegetation is exhausted.
 - Hungry predators are more likely to search for prey and attack; very hungry predators attack immediately when suitable prey is present.
@@ -77,7 +78,7 @@ The forest should feel alive even when players do nothing.
 ## Near Follow-Up
 
 - Tune growth rates and resource damage after observation.
-- Watch whether no-pair prey restoration and predator scavenging reduce early dead-ends without hiding too much danger from new players.
+- Watch whether no-pair prey restoration and predator scavenging reduce early dead-ends without hiding too much danger from new players. Use the 0.14.17 `/stat` restoration counters to see which species still need repeated intervention.
 - Tune the first `Винищена трава` inspection text after observation: account for active grazing/gathering pressure, rain, season, moon/world time and future restoration magic rather than only local grass amount/max and exhausted-location regeneration.
 - Tune hunger thresholds, starvation odds and species-specific hunger tolerance after observation.
 - Tune `WORLD_CREATURE_TICK_BUDGET` after production observation. If deferred creature counts remain high for long periods, promote the next `PERF-001` slice: aggregate background animal movement/eating instead of only deferring individual actions.

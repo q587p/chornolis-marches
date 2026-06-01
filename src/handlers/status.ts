@@ -144,6 +144,12 @@ export async function buildStatBrief() {
       const gathered = genderedPast(character, "зібрав", "зібрала", "зібрали");
       return `${character.name}: ${hunted} ${formatStatNumber(character.animalsKilled)}, ${gathered} ${formatStatNumber(character.successfulGathers)}, привітань ${formatStatNumber(character.greetings)}, реплік ${formatStatNumber(character.says)}, кроків ${formatStatNumber(character.steps)}${location}`;
     });
+  const populationRestorationLines = stats.populationRestorationRows
+    .slice(0, 6)
+    .map((row) => {
+      const latest = row.latestAt ? `; останнє ${row.latestAt.toLocaleString("uk-UA")}` : "";
+      return `${row.speciesName} [${row.speciesKey}]: відновлено ${formatStatNumber(row.restored)}, подій ${formatStatNumber(row.events)}${latest}`;
+    });
 
   return {
     text: [
@@ -165,6 +171,8 @@ export async function buildStatBrief() {
       `Смерті від голоду: ${formatStatNumber(counters.starvationDeaths)} (${formatRate(rates.starvationDeaths)}/год), усього ${formatStatNumber(stats.totals.starvationDeaths)}.`,
       `Смерті від хижаків: ${formatStatNumber(counters.predatorKills)} (${formatRate(rates.predatorKills)}/год), усього ${formatStatNumber(stats.totals.predatorKills)}.`,
       `Смерті від персонажів: ${formatStatNumber(counters.playerKills)} (${formatRate(rates.playerKills)}/год), усього ${formatStatNumber(stats.totals.playerKills)}.`,
+      `Відновлення стартових тварин: ${formatStatNumber(counters.populationFloorRestored)} (${formatRate(rates.populationFloorRestored)}/год), усього ${formatStatNumber(stats.totals.populationFloorRestored)}.`,
+      populationRestorationLines.length ? `По видах:\n${populationRestorationLines.join("\n")}` : "Відновлень стартових тварин ще не було.",
       `Creature tick: оброблено ${formatStatNumber(counters.creatureProcessed)}, відкладено ${formatStatNumber(counters.creatureDeferred)}, захищено ${formatStatNumber(counters.creatureProtected)}.`,
       "",
       "Найвдаліші хижаки:",

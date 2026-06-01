@@ -24,6 +24,18 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Added `node scripts/test/creature-tick-budget.cjs` to the `npm test` chain.
 
+## 0.14.17 - Ecology restoration observability - 12026-06-01
+
+### Changed
+
+- Scribe/admin `/stat`, protected web `/stat` and `/stat.json` now include recent and total population-floor restoration counts.
+- Ecology statistics now parse `Population floor restored` events by species, including restored counts, event counts and latest restoration time.
+- Updated ecology/admin docs and planning notes for the restoration-observability slice.
+
+### Validation
+
+- Ran `node scripts/test/ecology-stats.cjs`.
+
 ## 0.14.16 - Ecology recovery follow-ups - 12026-06-01
 
 ### Changed

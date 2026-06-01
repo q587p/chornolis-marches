@@ -449,6 +449,19 @@ function renderResourceRows(rows: EcologyStats["resourceRows"]) {
     .join("");
 }
 
+function renderPopulationRestorationRows(rows: EcologyStats["populationRestorationRows"]) {
+  if (rows.length === 0) return `<tr><td colspan="5"><code>none</code></td></tr>`;
+  return rows
+    .map((row) => `<tr>
+      <td><code>${escapeHtml(row.speciesKey)}</code></td>
+      <td>${escapeHtml(row.speciesName)}</td>
+      <td>${formatNumber(row.restored)}</td>
+      <td>${formatNumber(row.events)}</td>
+      <td>${row.latestAt ? escapeHtml(formatDate(row.latestAt)) : "<span class=\"muted\">немає</span>"}</td>
+    </tr>`)
+    .join("");
+}
+
 function renderTopHunterRows(rows: EcologyStats["topHunters"]) {
   if (rows.length === 0) return `<tr><td colspan="7"><code>none</code></td></tr>`;
   return rows
@@ -525,6 +538,8 @@ async function renderEcologyStatsPage() {
       <div class="card"><div class="metric">${stats.totals.predatorKills}</div><div class="label">смертей від хижаків загалом</div></div>
       <div class="card"><div class="metric">${c.playerKills}</div><div class="label">смертей від персонажів у вікні</div></div>
       <div class="card"><div class="metric">${stats.totals.playerKills}</div><div class="label">смертей від персонажів загалом</div></div>
+      <div class="card"><div class="metric">${c.populationFloorRestored}</div><div class="label">відновлено стартових тварин у вікні</div></div>
+      <div class="card"><div class="metric">${stats.totals.populationFloorRestored}</div><div class="label">відновлено стартових тварин загалом</div></div>
     </div>
 
     <h2>Темп за останнє вікно</h2>
@@ -550,7 +565,11 @@ async function renderEcologyStatsPage() {
       <tr><td>Оброблено creature tick</td><td>${c.creatureProcessed}</td><td>${formatNumber(r.creatureProcessed, 1)}</td></tr>
       <tr><td>Відкладено creature tick</td><td>${c.creatureDeferred}</td><td>${formatNumber(r.creatureDeferred, 1)}</td></tr>
       <tr><td>Захищено creature tick</td><td>${c.creatureProtected}</td><td>${formatNumber(r.creatureProtected, 1)}</td></tr>
+      <tr><td>Відновлення стартових тварин</td><td>${c.populationFloorRestored}</td><td>${formatNumber(r.populationFloorRestored, 1)}</td></tr>
     </tbody></table>
+
+    <h2>Відновлення стартових популяцій</h2>
+    <table><thead><tr><th>Ключ</th><th>Вид</th><th>Відновлено</th><th>Подій</th><th>Останнє</th></tr></thead><tbody>${renderPopulationRestorationRows(stats.populationRestorationRows)}</tbody></table>
 
     <h2>Тварини за віком</h2>
     <table><thead><tr><th>Ключ</th><th>Вид</th><th>Усього</th><th>Живі</th><th>Діти</th><th>Молоді</th><th>Дорослі</th><th>Старі</th><th>Трупи</th><th>Зниклі</th></tr></thead><tbody>${renderStatTableRows(stats.speciesRows)}</tbody></table>
