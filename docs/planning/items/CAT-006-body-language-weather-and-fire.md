@@ -1,0 +1,52 @@
+---
+id: CAT-006
+title: Body-language reactions to weather, daypart, fire and darkness
+status: next
+type: content
+area: atmosphere
+priority: low
+tags:
+  - cat
+  - weather
+  - daypart
+  - fire
+  - visibility
+  - copy
+  - ukrainian
+---
+
+# CAT-006 — Body-language weather and fire reactions
+
+## Summary
+
+Add nonverbal cat ambient behavior for weather, daypart, fire/light and darkness, keeping signals atmospheric rather than exact debug hints.
+
+## Scope
+
+- Add ambient lines for dawn/day/dusk/night.
+- Add weather reactions for rain, storm, snow/cold, fog and clear night when helpers exist.
+- Add fire comfort behavior near active campfire/light/embers.
+- Add vague darkness/danger body-language lines without revealing exact hidden targets.
+- Add cooldowns so ambient lines do not spam.
+
+## Out of scope
+
+- Exact warning system.
+- Hidden-presence reveal mechanics.
+- Magical detection.
+- Speech/dialogue.
+
+## Acceptance criteria
+
+- The cat has at least one ambient behavior for each supported daypart group.
+- The cat reacts to rain/storm/cold/fog if those weather states exist.
+- The cat prefers warmth during cold/night/rain when a fire exists.
+- Darkness/danger copy is vague and does not reveal hidden entity names.
+- Tests or lightweight assertions cover representative copy helpers where practical.
+
+## Suggested validation
+
+- `node scripts/test/world-time.cjs` if daypart helpers are touched.
+- `node scripts/test/ambient-lines.cjs` if ambient line helpers exist.
+- New `node scripts/test/camp-cat.cjs` for representative cat lines.
+- `npm test`.

@@ -71,6 +71,10 @@ Observation learning remains the main `0.15` line. Darkness, distance and light 
 
 - OWL-001: first nocturnal owl ecology slice is in testing after `0.15.0`.
 - OWL-002: `0.15.2` tunes starter owl coverage, adds quiet local owl signs and exposes predator performance by species for post-deploy owl balance checks.
+- STAT-001: add the same owl/fox/wolf predator-by-species comparison to the full web `/stat` HTML page that Telegram `/stat` and `/stat.json` already expose.
+- CAT-001: `0.15.3` adds the camp spirit cat foundation as a visible, inspectable, non-speaking camp-bound spirit. It is intentionally not a pet/companion system and does not yet hunt, steal meat or accept gifts.
+- GIVE-001: generic `give` should land before CAT-004/CAT-005 feeding UI, so `Дати сире м'ясо` becomes a reusable item-transfer path instead of a cat-only social action.
+- CAT-002/CAT-003: next cat behavior slices should add camp-bound correction/vertical movement and camp-local mouse priority without letting the cat leave the starter camp or replace wilderness predators.
 - LEARN-001: minimal learning storage decision.
 - OBS-001: observe action and herbalist learning moment.
 - SOC-002: follow intent MVP, so a player can `Слідувати` / `/follow` a visible being before full `Гурт` movement exists.

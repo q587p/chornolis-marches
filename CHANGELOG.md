@@ -7,6 +7,29 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.3 - Camp spirit cat foundation - 12026-06-01
+
+### Added
+
+- Added the `camp_spirit_cat` spirit species and seeded one visible `Кіт-бережник` in the starter camp.
+- Added camp-spirit-cat inspection copy that presents the cat as non-speaking body language rather than a normal NPC dialogue target.
+- Added the camp spirit cat system note, implementation plan and small `CAT-*` / `GIVE-*` / `BARTER-*` planning items from the feature handoff.
+- Added `STAT-001` to track the missing web `/stat` predator-by-species table for owl/fox/wolf comparison.
+- Added focused camp-cat seed/lexicon/inspection coverage.
+
+### Changed
+
+- Marked `CAT-001` as testing and recorded `GIVE-001` as the prerequisite before later raw-meat feeding UI.
+- Kept the camp cat out of ordinary animal lifecycle pressure by modeling it as `SPIRIT` / `SPIRITUAL`, not as a normal animal.
+
+### Validation
+
+- Ran `cmd /c npm run planning:export`.
+- Ran `node scripts/test/camp-cat.cjs`.
+- Ran `node scripts/test/world-seed.mjs`.
+- Ran `cmd /c npm test`.
+- Ran `cmd /c npm run build`.
+
 ## 0.15.2 - Owl pressure signs and tuning - 12026-06-01
 
 ### Added

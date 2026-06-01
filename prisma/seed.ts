@@ -451,6 +451,18 @@ const species = [
     instinct: 10,
   },
   {
+    key: "camp_spirit_cat",
+    ...creatureSpeciesNameFields("camp_spirit_cat"),
+    kind: "SPIRIT",
+    diet: "SPIRITUAL",
+    baseHp: 42,
+    strength: 3,
+    agility: 8,
+    perception: 8,
+    endurance: 7,
+    instinct: 9,
+  },
+  {
     key: "herbalist",
     ...creatureSpeciesNameFields("herbalist"),
     kind: "HUMAN",

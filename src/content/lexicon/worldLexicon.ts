@@ -65,6 +65,7 @@ export const WORLD_LEXICON = [
   entry("profession.brewer.f", "profession", "FEMININE", "ANIMATE", ["human", "healer", "craft"], ["зіллєварка", "зіллєварки", "зіллєварці", "зіллєварку", "зіллєваркою", "зіллєварці", "зіллєварко"]),
 
   entry("spirit.lisovyk", "spirit", "MASCULINE", "ANIMATE", ["spirit", "forest", "current"], ["лісовик", "лісовика", "лісовику", "лісовика", "лісовиком", "лісовику", "лісовику"]),
+  entry("spirit.camp_spirit_cat", "spirit", "MASCULINE", "ANIMATE", ["spirit", "camp", "cat", "current"], ["кіт-бережник", "кота-бережника", "коту-бережнику", "кота-бережника", "котом-бережником", "коті-бережнику", "коте-бережнику"]),
   entry("spirit.stezhnyk", "spirit", "MASCULINE", "ANIMATE", ["spirit", "hidden-presence", "future"], ["стежник", "стежника", "стежнику", "стежника", "стежником", "стежнику", "стежнику"]),
   entry("spirit.lisovytsia", "spirit", "FEMININE", "ANIMATE", ["spirit", "forest", "future"], ["лісовиця", "лісовиці", "лісовиці", "лісовицю", "лісовицею", "лісовиці", "лісовице"]),
   entry("spirit.mavka", "spirit", "FEMININE", "ANIMATE", ["spirit", "forest", "future"], ["мавка", "мавки", "мавці", "мавку", "мавкою", "мавці", "мавко"]),
