@@ -17,7 +17,7 @@ import { buildCorpseActionKeyboard, buildExamineLocationKeyboard, buildExamineTr
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { lightLocationCampfire, renderLocationBrief, renderLocationDetails } from "./locations";
 import { notifyLocation, notifyLocationAll, notifyLocationExcept, notifyRegionExcept } from "./notifications";
-import { addTwigsToCampfire, dousePlayerTorchFromInventory, lightPlayerTorchAtCampfire, lightPlayerTorchFromInventory } from "./fire";
+import { addTwigsToCampfire, buildCampfireFromInventory, dismantleCampfire, douseCampfire, dousePlayerTorchFromInventory, lightPlayerTorchAtCampfire, lightPlayerTorchFromInventory } from "./fire";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
 import { getStartLocationId } from "./players";
 import { summonLisovykIfResourceDepleted } from "./resources";
@@ -49,7 +49,7 @@ import { notifyPlayerObservers, playerRestStopObserverText } from "./playerVisib
 import { dropInventoryResourceDetailed, dropInventoryResourcesDetailed, useInventoryResource, type UsableInventoryResource } from "./inventoryUse";
 import { trimSatisfiedQueuedUseItems } from "./eatingQueue";
 import { dropObserverText, recordVisibleItemAction } from "./visibleItemActions";
-import { campfireRelightReplyOptionsAfterTwigs } from "../ui/fireKeyboards";
+import { campfireDismantleReplyOptions, campfireRelightReplyOptionsAfterBuild, campfireRelightReplyOptionsAfterTwigs } from "../ui/fireKeyboards";
 import { cookingResultReplyOptions } from "../ui/inventoryItemKeyboard";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 import { visibilityPresenceText, visibilityRulesForLocation } from "./visibility";
@@ -61,7 +61,7 @@ import { isBeginnerCacheContributionPayload } from "./beginnerCacheQueue";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
-type InventoryActionPayload = { resourceKey?: string; target?: string; allFilter?: string | null; featureId?: number; cacheContribution?: boolean };
+type InventoryActionPayload = { resourceKey?: string; target?: string; allFilter?: string | null; featureId?: number; cacheContribution?: boolean; confirmWet?: boolean };
 type LookPayload = { reason?: string };
 type SayPayload = { text: string; mode?: "say" | "whisper" | "reply" | "yell" | "shout"; targetType?: "player" | "creature"; targetId?: number; targetName?: string; targetDative?: string };
 type SocialPayload = { targetType: "player" | "creature"; targetId: number; mode?: "known" | "mystery"; detail?: "brief" | "full"; socialId?: string };
@@ -253,7 +253,7 @@ export async function completeAction(bot: Bot, action: WorldAction) {
   if (action.type === "MOVE") return completeMove(bot, action);
   if (action.type === "GATHER" || action.type === "GATHER_SPECIFIC") return completeGather(bot, action);
   if (action.type === "EAT") return completeEat(bot, action);
-  if (action.type === "USE_ITEM" || action.type === "DROP_ITEM" || action.type === "COOK" || action.type === "LIGHT_TORCH" || action.type === "DOUSE_TORCH" || action.type === "ADD_TWIGS" || action.type === "LIGHT_CAMPFIRE") return completeInventoryAction(bot, action);
+  if (action.type === "USE_ITEM" || action.type === "DROP_ITEM" || action.type === "COOK" || action.type === "LIGHT_TORCH" || action.type === "DOUSE_TORCH" || action.type === "ADD_TWIGS" || action.type === "LIGHT_CAMPFIRE" || action.type === "BUILD_CAMPFIRE" || action.type === "DOUSE_CAMPFIRE" || action.type === "DISMANTLE_CAMPFIRE") return completeInventoryAction(bot, action);
   if (action.type === "LOOK") return completeLook(bot, action);
   if (action.type === "INSPECT") return completeInspect(bot, action);
   if (action.type === "GREET") return completeGreet(bot, action);
@@ -459,17 +459,43 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
       return;
     }
 
-    if (action.type === "ADD_TWIGS") {
-      const resultText = await addTwigsToCampfire(player.id, payload.featureId);
-      await spendPlayerStamina(bot, player.id, "ADD_TWIGS", chatId);
-      await setActionStatus(action, "DONE");
-      if (chatId) await bot.api.sendMessage(chatId, resultText, await campfireRelightReplyOptionsAfterTwigs(player.id, payload.featureId));
-      return;
-    }
+      if (action.type === "ADD_TWIGS") {
+        const resultText = await addTwigsToCampfire(player.id, payload.featureId);
+        await spendPlayerStamina(bot, player.id, "ADD_TWIGS", chatId);
+        await setActionStatus(action, "DONE");
+        if (chatId) await bot.api.sendMessage(chatId, resultText, await campfireRelightReplyOptionsAfterTwigs(player.id, payload.featureId));
+        return;
+      }
 
-    if (action.type === "LIGHT_CAMPFIRE") {
-      if (!payload.featureId) throw new Error("Не видно вогнища, яке можна розпалити.");
-      const resultText = await lightLocationCampfire(payload.featureId, player.id);
+      if (action.type === "BUILD_CAMPFIRE") {
+        const result = await buildCampfireFromInventory(player.id, { confirmWet: payload.confirmWet });
+        await spendPlayerStamina(bot, player.id, "BUILD_CAMPFIRE", chatId);
+        await setActionStatus(action, "DONE");
+        if (chatId) await bot.api.sendMessage(chatId, result.text, await campfireRelightReplyOptionsAfterBuild(player.id, result.featureId));
+        return;
+      }
+
+      if (action.type === "DOUSE_CAMPFIRE") {
+        if (!payload.featureId) throw new Error("Не видно вогнища, яке можна погасити.");
+        const result = await douseCampfire(player.id, payload.featureId);
+        await spendPlayerStamina(bot, player.id, "DOUSE_CAMPFIRE", chatId);
+        await setActionStatus(action, "DONE");
+        if (chatId) await bot.api.sendMessage(chatId, result.text, campfireDismantleReplyOptions(result.featureId));
+        return;
+      }
+
+      if (action.type === "DISMANTLE_CAMPFIRE") {
+        if (!payload.featureId) throw new Error("Не видно вогнища, яке можна розібрати.");
+        const result = await dismantleCampfire(player.id, payload.featureId);
+        await spendPlayerStamina(bot, player.id, "DISMANTLE_CAMPFIRE", chatId);
+        await setActionStatus(action, "DONE");
+        if (chatId) await bot.api.sendMessage(chatId, result.text);
+        return;
+      }
+
+      if (action.type === "LIGHT_CAMPFIRE") {
+        if (!payload.featureId) throw new Error("Не видно вогнища, яке можна розпалити.");
+        const resultText = await lightLocationCampfire(payload.featureId, player.id);
       await spendPlayerStamina(bot, player.id, "LIGHT_CAMPFIRE", chatId);
       await setActionStatus(action, "DONE");
       if (chatId) await bot.api.sendMessage(chatId, resultText, await inventoryGainReplyOptions(player, "take-torch"));

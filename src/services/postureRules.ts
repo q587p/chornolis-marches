@@ -23,6 +23,9 @@ const PHYSICAL_ACTION_TYPES = new Set<WorldActionType>([
   "DOUSE_TORCH",
   "ADD_TWIGS",
   "LIGHT_CAMPFIRE",
+  "BUILD_CAMPFIRE",
+  "DOUSE_CAMPFIRE",
+  "DISMANTLE_CAMPFIRE",
   "SET_TRAP",
 ]);
 
@@ -56,7 +59,7 @@ export function sittingActionBlockMessage(type: WorldActionType | string) {
   if (type === "DROP_ITEM") return "Ви не можете викинути це, поки сидите. Вам треба встати.";
   if (type === "COOK") return "Ви не можете підсмажувати, поки сидите. Вам треба встати.";
   if (type === "LIGHT_TORCH" || type === "DOUSE_TORCH") return "Ви не можете поратися з факелом, поки сидите. Вам треба встати.";
-  if (type === "ADD_TWIGS" || type === "LIGHT_CAMPFIRE") return "Ви не можете поратися з вогнем, поки сидите. Вам треба встати.";
+  if (type === "ADD_TWIGS" || type === "LIGHT_CAMPFIRE" || type === "BUILD_CAMPFIRE" || type === "DOUSE_CAMPFIRE" || type === "DISMANTLE_CAMPFIRE") return "Ви не можете поратися з вогнем, поки сидите. Вам треба встати.";
   if (type === "SET_TRAP") return "Ви не можете ставити пастку, поки сидите. Вам треба встати.";
   if (type === "PICK_UP") return "Ви не можете підняти це, поки сидите. Вам треба встати.";
   if (type === "DROP") return "Ви не можете викинути це, поки сидите. Вам треба встати.";

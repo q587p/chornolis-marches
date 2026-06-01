@@ -1,7 +1,7 @@
 import { prisma } from "../db";
 import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import type { Prisma } from "@prisma/client";
-import { ensureTorchResourceTypes, TORCH_DURATION_MS, TORCH_FADING_MS } from "./fire";
+import { CAMPFIRE_BUILD_TWIG_COST, ensureTorchResourceTypes, TORCH_DURATION_MS, TORCH_FADING_MS } from "./fire";
 import { dropCarriedCorpseResource, isCorpseQuery, isCorpseResourceKey, resourceTypeDisplayName } from "./corpses";
 import { COOKED_MEAT_KEY, RAW_MEAT_KEY, eatCookedMeat } from "./meat";
 import { getPlayerEquippedWeapon, isWeaponResourceKey } from "./weapons";
@@ -272,8 +272,12 @@ export async function inspectInventoryResource(playerId: number, resourceQuery: 
       : carried.resourceType.key === "doused_torch"
         ? "\nПолум'я притушене. Якщо знову підпалити цей факел, він продовжить горіти з того місця, де його загасили."
       : "";
+  const twigsDetails =
+    carried.resourceType.key === "twigs" && carried.amount < CAMPFIRE_BUILD_TWIG_COST
+      ? `\nПотрібно хмизу ×${CAMPFIRE_BUILD_TWIG_COST}, щоб скласти вогнище. Зараз у вас замало сухих гілок.`
+      : "";
 
-  return `🎒 ${name}${amount}${description}${weaponDetails}${torchDetails}`;
+  return `🎒 ${name}${amount}${description}${weaponDetails}${torchDetails}${twigsDetails}`;
 }
 
 export async function dropInventoryResourceDetailed(playerId: number, resourceQuery: string) {
