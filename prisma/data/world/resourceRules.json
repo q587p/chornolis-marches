@@ -135,6 +135,30 @@
       "mushrooms": 0,
       "herbs": 0
     },
+    "dream_tutorial_attention_path": {
+      "grass": 0,
+      "berries": 0,
+      "mushrooms": 0,
+      "herbs": 0
+    },
+    "dream_tutorial_signs": {
+      "grass": 0,
+      "berries": 0,
+      "mushrooms": 0,
+      "herbs": 0
+    },
+    "dream_tutorial_traces": {
+      "grass": 0,
+      "berries": 0,
+      "mushrooms": 0,
+      "herbs": 0
+    },
+    "dream_tutorial_waking_edge": {
+      "grass": 0,
+      "berries": 0,
+      "mushrooms": 0,
+      "herbs": 0
+    },
     "dream_tutorial_observation": {
       "grass": 0,
       "berries": 0,

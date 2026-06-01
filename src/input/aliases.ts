@@ -143,6 +143,7 @@ const DIRECTION_ALIASES: Record<string, Direction> = {
   up: "UP",
   u: "UP",
   "вгору": "UP",
+  "вверх": "UP",
   "нагору": "UP",
   "піднятися": "UP",
 

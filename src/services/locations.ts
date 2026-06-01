@@ -209,6 +209,27 @@ function torchLightButtonText(torchState: { isLit: boolean; plainAmount: number;
   return torchState.isLit ? "🔥 Оновити вогонь на факелі" : "🔥 Підпалити факел";
 }
 
+const FEATURE_MOVE_DIRECTIONS = ["UP", "DOWN", "INSIDE", "OUTSIDE"] as const;
+type FeatureMoveDirection = (typeof FEATURE_MOVE_DIRECTIONS)[number];
+const FEATURE_MOVE_DIRECTION_SET = new Set<string>(FEATURE_MOVE_DIRECTIONS);
+const FEATURE_MOVE_ICONS: Record<FeatureMoveDirection, string> = {
+  UP: "⬆️",
+  DOWN: "⬇️",
+  INSIDE: "🕳️",
+  OUTSIDE: "🕳️",
+};
+
+export function featureMoveDirection(feature: any): FeatureMoveDirection | null {
+  const direction = String(featureData(feature).vertical_hint ?? "").toUpperCase();
+  return FEATURE_MOVE_DIRECTION_SET.has(direction) ? direction as FeatureMoveDirection : null;
+}
+
+export function featureMoveButtonLabel(direction: FeatureMoveDirection) {
+  const label = directionLabels[direction] ?? direction;
+  const icon = FEATURE_MOVE_ICONS[direction] ?? "➡️";
+  return `${icon} ${label}`;
+}
+
 function featureIcon(feature: any) {
   const data = featureData(feature);
   if (typeof data.icon === "string" && data.icon.trim()) return data.icon.trim();
@@ -1076,6 +1097,8 @@ export async function renderLocationFeatureInteraction(
   if (featureData(feature).tutorial_wake_prompt === true) keyboard.text("🌅 Прокинутися", "tutorial:wake").row();
   if (isTorchSourceFeature(feature)) keyboard.text("🕯 Взяти факел", `torch:take:${feature.id}`).row();
   if (isClimbTreeFeature(feature)) keyboard.text("🌳 Залізти", "move:UP").row();
+  const moveDirection = featureMoveDirection(feature);
+  if (moveDirection) keyboard.text(featureMoveButtonLabel(moveDirection), `move:${moveDirection}`).row();
   if (isShakeTreeFeature(feature)) keyboard.text("🍃 Потрусити", `tree:shake:${feature.id}`).row();
   keyboard.text("↩️ Назад", `location:${returnMode}`);
   return { text, keyboard, quoteMessages, followupMessages };

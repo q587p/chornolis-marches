@@ -181,7 +181,7 @@ Implementation foundation:
 Future MVP shape:
 
 1. Start near the settlement gate.
-2. Take a small hunting bundle from the gate torch stand, currently five unlit torches while the stand remains a temporary infinite source.
+2. Take a small hunting bundle from the watchtower torch stand above the starter camp, currently five unlit torches while the stand remains a temporary infinite source.
 3. Route to a known magic campfire through ordinary exits, using a location-to-location route helper rather than teleportation.
 4. Light the first torch at the magic campfire.
 5. Move from location to location through likely rodent/herbivore pressure areas, using the same delayed action pacing as other auto behavior.
@@ -191,11 +191,11 @@ Future MVP shape:
 9. Watch torch lifetime; when the burning torch is near the end, light the next torch from the current flame if a spare remains.
 10. When only the last torch remains, or when burden, injury, low stamina, night or no-target conditions say so, route back to the gate.
 11. Deposit any hunted carcasses/remains through the same carcass drop-off service as players.
-12. Later, if the hunter has gathered enough suitable resources, craft replacement torches instead of relying only on the gate stand or found torches.
+12. Later, if the hunter has gathered enough suitable resources, craft replacement torches instead of relying only on the watchtower stand, the old gate emergency stand or found torches.
 
 Nearby players should see compact local messages when the hunter leaves, returns or deposits.
 
-The torch count is a planning target, not a reward table. If the future torch stand becomes limited stock, the hunter should reserve/take supplies through the same feature/container rules as players and avoid draining beginner-critical torches.
+The torch count is a planning target, not a reward table. If the future torch stand becomes limited stock, the hunter should reserve/take supplies through the same feature/container rules as players and avoid draining beginner-critical torches. As of `0.14.10`, the watchtower stand is the hunter resupply source; the old gate stand is downgraded as an emergency/local source and should not be used as the main route assumption.
 
 ### Hunter Shouts and Field Lines
 

@@ -1811,7 +1811,7 @@
   {
     "id": "ONB-006",
     "title": "Look/examine semantics in the dream",
-    "status": "next",
+    "status": "testing",
     "type": "ux",
     "area": "onboarding",
     "priority": "high",

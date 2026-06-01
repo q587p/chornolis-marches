@@ -1,7 +1,7 @@
 ---
 id: ONB-006
 title: Look/examine semantics in the dream
-status: next
+status: testing
 type: ux
 area: onboarding
 priority: high
@@ -34,6 +34,16 @@ Make the difference between `Озирнутися` / `/look` and `Роздиви
 - Add `/examine` result that reveals a concrete next action or hidden detail.
 - Keep copy very short.
 - Do not make the lesson required to complete the tutorial.
+
+## 0.14.10 Slice
+
+- Added a short southward dream action ladder after `Затишок останнього кроку`:
+  - `Стежка уважного погляду`;
+  - `Схилені знаки сну`;
+  - `Піщаний слід сну`;
+  - `Край пробудження`.
+- Added inspectable feature text for look/examine/sign/trace semantics without turning it into a checklist.
+- Moved the `Закінчити навчання` surface to `Край пробудження`, while direct `/wake` and `/tutorialEnd` remain available as skip/escape paths.
 
 ## Acceptance
 

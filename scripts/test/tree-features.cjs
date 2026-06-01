@@ -2,7 +2,13 @@ const assert = require("node:assert/strict");
 
 require("ts-node/register");
 
-const { TREE_SHAKE_DEFAULT_COOLDOWN_MS, featureBriefInspectionText, treeShakeAmount } = require("../../src/services/locations");
+const {
+  TREE_SHAKE_DEFAULT_COOLDOWN_MS,
+  featureBriefInspectionText,
+  featureMoveButtonLabel,
+  featureMoveDirection,
+  treeShakeAmount,
+} = require("../../src/services/locations");
 
 assert.equal(treeShakeAmount(5, 8, () => 0), 5);
 assert.equal(treeShakeAmount(5, 8, () => 0.24), 5);
@@ -23,5 +29,8 @@ assert.doesNotMatch(featureBriefInspectionText({
   data: {},
   isActive: true,
 }), /Довгий докладний текст/);
+assert.equal(featureMoveDirection({ data: { vertical_hint: "UP" } }), "UP");
+assert.equal(featureMoveButtonLabel("UP"), "⬆️ Вгору");
+assert.equal(featureMoveDirection({ data: { vertical_hint: "EAST" } }), null);
 
 console.log("Tree features OK");

@@ -21,14 +21,16 @@
     "locationKey": "closed_east_gate",
     "type": "LANDMARK",
     "name": "Смоляна поставка з факелами",
-    "description": "Біля воріт стоїть важка смоляна поставка: у темних пазах лежать сухі факели для тих, кому треба вертатися назад у ніч.",
+    "description": "Біля воріт стоїть важка смоляна поставка: у темних пазах лишається кілька сухих факелів для тих, кому треба вертатися назад у ніч. Мисливці тепер частіше поповнюють свої набори на сторожовій вежі над табором.",
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
       "icon": "🕯",
       "torch_source": true,
       "infinite_for_now": true,
-      "future_limited_stock": true
+      "future_limited_stock": true,
+      "hunter_resupply": false,
+      "downgraded_after_watchtower_source": true
     }
   },
   {
@@ -469,8 +471,64 @@
     "data": {
       "icon": "🪓",
       "tutorial_safety_prompt": true,
-      "tutorial_end_prompt": true,
       "tutorial_wake_prompt": true
+    }
+  },
+  {
+    "key": "dream_tutorial_attention_moss",
+    "locationKey": "dream_tutorial_attention_path",
+    "type": "LANDMARK",
+    "name": "Мох уважного погляду",
+    "description": "Мох лежить рівно, але не однаково: біля північного краю він прим’ятий вашими кроками, біля південного трохи світлішає. Озирнутися означає зібрати місце в одне ціле, а вже потім роздивлятися окремі подробиці.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "👁",
+      "tutorial_action_ladder": "look",
+      "aliases": ["мох", "моху", "мохом", "уважний мох", "погляд", "look moss"]
+    }
+  },
+  {
+    "key": "dream_tutorial_sign_post",
+    "locationKey": "dream_tutorial_signs",
+    "type": "LANDMARK",
+    "name": "Схилений знак",
+    "description": "На схиленому знаку проступають не накази, а натяки: стрілка, зарубка, порожнє місце для слова. Знак не рухає вас сам. Він тільки нагадує, що деякі речі відкриваються не через силу, а через увагу до тексту, форми й місця.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🪧",
+      "tutorial_action_ladder": "signs",
+      "aliases": ["знак", "знака", "знаку", "знаком", "схилений знак", "табличка", "sign"]
+    }
+  },
+  {
+    "key": "dream_tutorial_trace_marks",
+    "locationKey": "dream_tutorial_traces",
+    "type": "LANDMARK",
+    "name": "Різні сліди",
+    "description": "Сліди не однакові. Ваш власний крок глибший, лапа легша, гілка лишає тоншу риску. Якщо просто пройти повз, усе зіллється в пісок. Якщо роздивитися, стає видно: світ говорить не тільки словами.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🐾",
+      "tutorial_action_ladder": "traces",
+      "aliases": ["сліди", "слід", "слідів", "слідам", "різні сліди", "піщаний слід", "traces", "tracks"]
+    }
+  },
+  {
+    "key": "dream_tutorial_waking_marker",
+    "locationKey": "dream_tutorial_waking_edge",
+    "type": "LANDMARK",
+    "name": "Останній межовий знак",
+    "description": "Знак стоїть на самому краї сну. На ньому немає списку справ; тільки короткий нагад: озирнутися, роздивитися, читати знаки, помічати сліди, берегти снагу й не соромитися відступити. Якщо цього досить, можна завершити навчання. Якщо ні — стежка назад лишається відкритою.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🪧",
+      "tutorial_end_prompt": true,
+      "tutorial_wake_prompt": true,
+      "aliases": ["межовий знак", "останній знак", "знак", "знака", "знаку", "знаком", "finish marker"]
     }
   },
   {

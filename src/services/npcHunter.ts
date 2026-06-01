@@ -14,6 +14,7 @@ import { logEvent } from "./worldEvents";
 export const HUNTER_TORCH_BUNDLE_SIZE = 5;
 export const HUNTER_RETURN_TORCH_RESERVE = 1;
 export const HUNTER_DEFAULT_MAGIC_CAMPFIRE_FEATURE_KEY = "start_unfading_campfire";
+export const HUNTER_TORCH_SOURCE_FEATURE_KEY = "start_camp_torch_stand";
 export const HUNTER_PROFESSION_KEY = "hunter";
 export const HUNTER_CLAIMED_CORPSE_PREFIX = "claimed_by_hunter:";
 export const HUNTER_CARRIED_TORCH_PREFIX = "hunter_torches:";
@@ -55,8 +56,10 @@ export const HUNTER_SOCIAL_REACTIONS: Record<string, string> = {
 
 export type HunterRoutePlan = {
   gateLocationId: number;
+  torchSourceLocationId: number;
   campfireLocationId: number;
   dropoffFeatureKey: string;
+  torchSourceFeatureKey: string;
   campfireFeatureKey: string;
   toCampfire: RouteStep[];
   toGate: RouteStep[];
@@ -69,6 +72,7 @@ export type HunterRoutePlanResult =
       ok: false;
       reason:
         | "missing-dropoff"
+        | "missing-torch-source"
         | "missing-campfire"
         | "no-route-to-campfire"
         | "no-route-to-gate";
@@ -76,6 +80,12 @@ export type HunterRoutePlanResult =
 
 function routeCost(route: RouteStep[]) {
   return route.reduce((sum, step) => sum + step.travelCost, 0);
+}
+
+function featureData(feature: { data: unknown | null }) {
+  return feature.data && typeof feature.data === "object" && !Array.isArray(feature.data)
+    ? feature.data as Record<string, unknown>
+    : {};
 }
 
 export function isHunterCreature(creature: { professionKey?: string | null }) {
@@ -117,7 +127,7 @@ export function hunterTorchCarryAction(count: number, pickedName = "факел",
 
 export function hunterReturningForTorchesAction(torchCount = HUNTER_RETURN_TORCH_RESERVE + 1) {
   const safeCount = Math.max(HUNTER_RETURN_TORCH_RESERVE, Math.min(HUNTER_TORCH_BUNDLE_SIZE, Math.trunc(torchCount)));
-  return `вертається до воріт із запаленим факелом і запасним у торбі; ${HUNTER_RETURNING_FOR_TORCHES_MARKER}; факелів у наборі: ${safeCount}`;
+  return `вертається по факели до сторожової вежі; ${HUNTER_RETURNING_FOR_TORCHES_MARKER}; факелів у наборі: ${safeCount}`;
 }
 
 export function hunterIsReturningForTorches(currentAction: string | null | undefined) {
@@ -174,8 +184,10 @@ export function sortHunterPreyCandidates<T extends HunterPreyCandidate>(prey: T[
 
 export function buildHunterRoutePlan(input: {
   gateLocationId: number;
+  torchSourceLocationId?: number;
   campfireLocationId: number;
   dropoffFeatureKey?: string;
+  torchSourceFeatureKey?: string;
   campfireFeatureKey?: string;
   toCampfire: RouteStep[] | null;
   toGate: RouteStep[] | null;
@@ -187,8 +199,10 @@ export function buildHunterRoutePlan(input: {
     ok: true,
     plan: {
       gateLocationId: input.gateLocationId,
+      torchSourceLocationId: input.torchSourceLocationId ?? input.gateLocationId,
       campfireLocationId: input.campfireLocationId,
       dropoffFeatureKey: input.dropoffFeatureKey ?? GATE_CARCASS_DROPOFF_FEATURE_KEY,
+      torchSourceFeatureKey: input.torchSourceFeatureKey ?? HUNTER_TORCH_SOURCE_FEATURE_KEY,
       campfireFeatureKey: input.campfireFeatureKey ?? HUNTER_DEFAULT_MAGIC_CAMPFIRE_FEATURE_KEY,
       toCampfire: input.toCampfire,
       toGate: input.toGate,
@@ -199,15 +213,21 @@ export function buildHunterRoutePlan(input: {
 
 export async function findHunterRoutePlan(options: {
   dropoffFeatureKey?: string;
+  torchSourceFeatureKey?: string;
   campfireFeatureKey?: string;
 } = {}): Promise<HunterRoutePlanResult> {
   const dropoffFeatureKey = options.dropoffFeatureKey ?? GATE_CARCASS_DROPOFF_FEATURE_KEY;
+  const torchSourceFeatureKey = options.torchSourceFeatureKey ?? HUNTER_TORCH_SOURCE_FEATURE_KEY;
   const campfireFeatureKey = options.campfireFeatureKey ?? HUNTER_DEFAULT_MAGIC_CAMPFIRE_FEATURE_KEY;
 
-  const [dropoff, campfire] = await Promise.all([
+  const [dropoff, torchSource, campfire] = await Promise.all([
     prisma.locationFeature.findUnique({
       where: { key: dropoffFeatureKey },
       select: { key: true, locationId: true, isActive: true },
+    }),
+    prisma.locationFeature.findUnique({
+      where: { key: torchSourceFeatureKey },
+      select: { key: true, locationId: true, isActive: true, data: true },
     }),
     prisma.locationFeature.findUnique({
       where: { key: campfireFeatureKey },
@@ -216,6 +236,7 @@ export async function findHunterRoutePlan(options: {
   ]);
 
   if (!dropoff?.isActive) return { ok: false, reason: "missing-dropoff" };
+  if (!torchSource?.isActive || featureData(torchSource).torch_source !== true) return { ok: false, reason: "missing-torch-source" };
   if (!campfire?.isActive || campfire.type !== "MAGIC_CAMPFIRE") return { ok: false, reason: "missing-campfire" };
 
   const [toCampfire, toGate] = await Promise.all([
@@ -225,8 +246,10 @@ export async function findHunterRoutePlan(options: {
 
   return buildHunterRoutePlan({
     gateLocationId: dropoff.locationId,
+    torchSourceLocationId: torchSource.locationId,
     campfireLocationId: campfire.locationId,
     dropoffFeatureKey,
+    torchSourceFeatureKey,
     campfireFeatureKey,
     toCampfire,
     toGate,
@@ -454,14 +477,14 @@ async function pickUpVisibleGroundTorch(bot: Bot | null, hunter: { id: number; l
   return true;
 }
 
-async function resupplyHunterTorchesAtGate(bot: Bot | null, hunter: { id: number; locationId: number; name?: string | null }, plan: HunterRoutePlan) {
-  if (hunter.locationId !== plan.gateLocationId) return false;
+async function resupplyHunterTorchesAtSource(bot: Bot | null, hunter: { id: number; locationId: number; name?: string | null }, plan: HunterRoutePlan) {
+  if (hunter.locationId !== plan.torchSourceLocationId) return false;
   const carried = await creatureCarriedTorchCount(hunter.id);
   const missing = Math.max(0, HUNTER_TORCH_BUNDLE_SIZE - carried);
   const { torch } = await ensureTorchResourceTypes();
   await prisma.creature.updateMany({
     where: { id: hunter.id, isAlive: true, isGone: false },
-    data: { currentAction: `поповнює мисливський набір біля воріт; факелів у наборі: ${HUNTER_TORCH_BUNDLE_SIZE}` },
+    data: { currentAction: `поповнює мисливський набір на сторожовій вежі; факелів у наборі: ${HUNTER_TORCH_BUNDLE_SIZE}` },
   });
   if (missing > 0) {
     await prisma.creatureResource.upsert({
@@ -470,8 +493,8 @@ async function resupplyHunterTorchesAtGate(bot: Bot | null, hunter: { id: number
       create: { creatureId: hunter.id, resourceTypeId: torch.id, amount: missing },
     });
   }
-  await logEvent("NPC_ACTION", "Hunter resupplied torches at gate", `${hunter.id}; carried=${HUNTER_TORCH_BUNDLE_SIZE}`, hunter.locationId);
-  if (bot) await notifyLocationAll(bot, hunter.locationId, `${hunter.name ?? "Мисливець"} поповнює мисливський набір біля воріт.`);
+  await logEvent("NPC_ACTION", "Hunter resupplied torches at watchtower", `${hunter.id}; carried=${HUNTER_TORCH_BUNDLE_SIZE}; source=${plan.torchSourceFeatureKey}`, hunter.locationId);
+  if (bot) await notifyLocationAll(bot, hunter.locationId, `${hunter.name ?? "Мисливець"} поповнює мисливський набір на сторожовій вежі.`);
   return true;
 }
 
@@ -565,7 +588,7 @@ export async function tickNpcHunter(bot: Bot | null, hunter: any) {
     if (route?.length) return queueHunterMove(hunter, route, "несе здобич до падального рову");
   }
 
-  if (returningForTorches && await resupplyHunterTorchesAtGate(bot, hunter, plan)) return "queuedGather";
+  if (returningForTorches && await resupplyHunterTorchesAtSource(bot, hunter, plan)) return "queuedGather";
 
   if (await pickUpVisibleGroundTorch(bot, hunter)) return "queuedGather";
   if (await lightHunterTorchAtCampfire(bot, hunter, plan)) return "queuedGather";
@@ -585,18 +608,18 @@ export async function tickNpcHunter(bot: Bot | null, hunter: any) {
     return "queuedAttack";
   }
 
-  if (returningForTorches && hunter.locationId !== plan.gateLocationId) {
-    const route = await findLocationRoute(hunter.locationId, plan.gateLocationId, { maxDepth: HUNTER_ROUTE_MAX_DEPTH });
-    if (route?.length) return queueHunterMove(hunter, route, "вертається до воріт за новими факелами");
+  if (returningForTorches && hunter.locationId !== plan.torchSourceLocationId) {
+    const route = await findLocationRoute(hunter.locationId, plan.torchSourceLocationId, { maxDepth: HUNTER_ROUTE_MAX_DEPTH });
+    if (route?.length) return queueHunterMove(hunter, route, "вертається до сторожової вежі за новими факелями");
   }
 
   const shouldReachCampfireFirst = hunter.locationId !== plan.campfireLocationId
-    && (hunter.locationId === plan.gateLocationId || String(hunter.currentAction ?? "").includes("межового вогню"));
+    && (hunter.locationId === plan.gateLocationId || hunter.locationId === plan.torchSourceLocationId || String(hunter.currentAction ?? "").includes("межового вогню"));
   if (shouldReachCampfireFirst) {
     const route = await findLocationRoute(hunter.locationId, plan.campfireLocationId, { maxDepth: HUNTER_ROUTE_MAX_DEPTH });
     if (route?.length) {
       if (hunter.locationId === plan.gateLocationId) await emitHunterFieldSpeech(bot, hunter, hunter.locationId, hunterFieldLine("departure", hunter.id));
-      return queueHunterMove(hunter, route, "йде від воріт до межового вогню");
+      return queueHunterMove(hunter, route, hunter.locationId === plan.torchSourceLocationId ? "йде від сторожової вежі до межового вогню" : "йде від воріт до межового вогню");
     }
   }
 

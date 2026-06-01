@@ -57,6 +57,14 @@ Add a real watchtower room above the starter camp and make beginner light sourci
 - Moved the beginner `Смоляна поставка з факелами` from the camp floor to the watchtower, keeping it as a torch source.
 - Kept `closed_gate_torch_stand` unchanged until hunter routes and gate-side assumptions are audited together.
 
+## 0.14.10 Slice
+
+- Hunter resupply no longer assumes the old gate torch stand.
+- The watchtower `start_camp_torch_stand` is now the hunter torch source as well as the beginner-light source.
+- The old gate stand remains available but is marked as downgraded/not the hunter resupply source, so hunter routes can be audited separately from player emergency light.
+- Inspecting the camp `Сторожова вежа` feature now offers a direct `Вгору` button through its authored `vertical_hint`.
+- `вверх` is accepted as an additional text alias for upward movement.
+
 ## Validation
 
 - `node scripts/test/world-seed.mjs`

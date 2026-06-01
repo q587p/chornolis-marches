@@ -13,6 +13,7 @@ const {
   HUNTER_RETURNING_FOR_TORCHES_MARKER,
   HUNTER_SOCIAL_REACTIONS,
   HUNTER_TORCH_BUNDLE_SIZE,
+  HUNTER_TORCH_SOURCE_FEATURE_KEY,
   formatHunterFieldSpeech,
   groupHunterClaimedCorpses,
   hunterCarriedTorchCount,
@@ -42,6 +43,7 @@ const toGate = [
 
 const plan = buildHunterRoutePlan({
   gateLocationId: 10,
+  torchSourceLocationId: 13,
   campfireLocationId: 12,
   toCampfire,
   toGate,
@@ -49,6 +51,8 @@ const plan = buildHunterRoutePlan({
 
 assert.equal(plan.ok, true);
 assert.equal(plan.plan.dropoffFeatureKey, "closed_gate_carcass_dropoff");
+assert.equal(plan.plan.torchSourceFeatureKey, HUNTER_TORCH_SOURCE_FEATURE_KEY);
+assert.equal(plan.plan.torchSourceLocationId, 13);
 assert.equal(plan.plan.campfireFeatureKey, HUNTER_DEFAULT_MAGIC_CAMPFIRE_FEATURE_KEY);
 assert.deepEqual(hunterRouteDirections(plan.plan.toCampfire), ["WEST", "SOUTH"]);
 assert.deepEqual(hunterRouteDirections(plan.plan.toGate), ["NORTH", "EAST"]);
@@ -87,7 +91,7 @@ const returningForTorches = hunterReturningForTorchesAction();
 assert.ok(returningForTorches.includes(HUNTER_RETURNING_FOR_TORCHES_MARKER));
 assert.equal(hunterIsReturningForTorches(returningForTorches), true);
 assert.equal(returningForTorches.includes(HUNTER_CARRIED_TORCH_PREFIX), false);
-assert.equal(hunterIsReturningForTorches("поповнює мисливський набір біля воріт"), false);
+assert.equal(hunterIsReturningForTorches("поповнює мисливський набір на сторожовій вежі"), false);
 
 const claimText = hunterClaimedCorpseAction(42);
 assert.equal(hunterClaimedCorpseOwnerId(claimText), 42);

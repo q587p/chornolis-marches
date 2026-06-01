@@ -41,8 +41,8 @@ Implement `0.14.x` in small slices:
 8. HMYZ-001-A/B/C/D: audit, seed, pickup and add-to-fire polish for хмиз/firewood.
 9. MAP-002-A/B/C: first biome-aware foraging table and text variants.
 10. ONB-004 / ONB-001-B / ONB-001-C / CAMP-001: `0.14.8` adds first-night guidance, first look/examine tutorial hints and starter-camp clarity after darkness starts hiding details.
-11. CAMP-002: `0.14.9` adds the real starter-camp watchtower, vertical `UP`/`DOWN` movement and moves the beginner torch source above the camp while keeping the gate torch source untouched for hunter-route compatibility.
-12. ONB-006: next starter-camp/dream work should add a concrete optional dream moment where `Озирнутися` and `Роздивитися` reveal different layers of the same thing.
+11. CAMP-002: `0.14.9` adds the real starter-camp watchtower, vertical `UP`/`DOWN` movement and moves the beginner torch source above the camp; `0.14.10` makes that watchtower stand the hunter resupply source and downgrades the old gate source as a non-primary/emergency stand.
+12. ONB-006: `0.14.10` adds the optional dream action ladder for `Озирнутися`, `Роздивитися`, signs and traces, and moves the tutorial completion surface forward to the new waking edge.
 13. SLEEP-001 and SLEEP-002: lying posture and ordinary sleep only after time/light/visibility foundations are stable.
 
 Observation learning remains the `0.15` line. Darkness, distance and light should affect learning later, but the visibility foundation must land first.
@@ -51,7 +51,7 @@ Observation learning remains the `0.15` line. Darkness, distance and light shoul
 
 - PROG-005: global chronicles start as a small public `WorldEvent` surface. The first slice records new player arrivals and падальний рів start/stop state changes through `/chronicles`; personal літопис and skill milestones remain separate follow-up work.
 - ONB-001-H: keep a small hidden tutorial-gate follow-up near the top of the onboarding queue. It should let players discover a `Закрийся` / `/close gate` style phrase and get one-time Сон praise/reward, without advertising the secret in ordinary tutorial hints.
-- ONB-001 follow-up: when new tutorial rooms are added, move the `Закінчити навчання` (`/tutorialEnd`) button surface forward to the new final room and keep news/release notes/risks updated with that UX shift.
+- ONB-001 follow-up: after `0.14.10`, keep checking whether the new dream action ladder makes the completion surface clearer; future tutorial rooms should move the `Закінчити навчання` (`/tutorialEnd`) surface forward again instead of duplicating it.
 
 ## 0.15 Next
 
