@@ -7,6 +7,25 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.14.15 - Ecology start-balance stabilization - 12026-06-01
+
+### Added
+
+- Added focused starter animal authoring coverage for prey breeding clusters, predator overlap and local food-rich resource overrides.
+
+### Changed
+
+- Starter animal seeding now counts existing starter groups by species, location, alive/corpse state, age and explicit sex, so adult female and adult male groups in the same location remain idempotent but distinct.
+- Starter mice and rabbits now begin in separated breeding clusters with local food-rich resource overrides, giving prey a better chance to reproduce before predators reach them.
+- Starter predators remain present but lighter: foxes stay near the forest/meadow pressure points, while the initial wolf count is reduced to one.
+- Updated ecology docs and planning notes for the 0.14.15 start-balance slice.
+
+### Validation
+
+- Ran `node scripts/test/starter-animals.cjs`.
+- Ran `npm run test:seed`.
+- Ran `npm run test:seed:types`.
+
 ## 0.14.14 - Minimal weapon equipment foundation - 12026-06-01
 
 ### Added

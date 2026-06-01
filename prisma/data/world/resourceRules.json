@@ -99,6 +99,36 @@
       "berries": 0,
       "herbs": 0
     },
+    "forest_03_02": {
+      "grass": 80,
+      "berries": 15,
+      "mushrooms": 15,
+      "herbs": 10
+    },
+    "forest_04_00": {
+      "grass": 80,
+      "berries": 15,
+      "mushrooms": 15,
+      "herbs": 10
+    },
+    "meadow_11_04": {
+      "grass": 95,
+      "berries": 8,
+      "herbs": 20
+    },
+    "meadow_12_04": {
+      "grass": 90,
+      "berries": 8,
+      "herbs": 20
+    },
+    "riverbank_14_01": {
+      "grass": 90,
+      "herbs": 20
+    },
+    "riverbank_15_02": {
+      "grass": 90,
+      "herbs": 20
+    },
     "dream_tutorial_hub": {
       "grass": 0,
       "berries": 0,

@@ -10,39 +10,46 @@ export type StarterAnimalGroup = {
 };
 
 export const STARTER_RABBITS: StarterAnimalGroup[] = [
-  { speciesKey: "rabbit", locationKey: "forest_04_00", count: 1, age: "ADULT", sex: "FEMALE" },
+  { speciesKey: "rabbit", locationKey: "forest_04_00", count: 2, age: "ADULT", sex: "FEMALE" },
   { speciesKey: "rabbit", locationKey: "forest_04_00", count: 1, age: "ADULT", sex: "MALE" },
-  { speciesKey: "rabbit", locationKey: "forest_07_02", count: 3, age: "CHILD" },
-  { speciesKey: "rabbit", locationKey: "forest_07_02", count: 2, age: "YOUNG" },
-  { speciesKey: "rabbit", locationKey: "forest_02_06", count: 2, age: "OLD" },
-  { speciesKey: "rabbit", locationKey: "meadow_10_03", count: 1, age: "ADULT", sex: "FEMALE" },
-  { speciesKey: "rabbit", locationKey: "meadow_10_03", count: 1, age: "ADULT", sex: "MALE" },
-  { speciesKey: "rabbit", locationKey: "meadow_10_03", count: 2, age: "CHILD" },
-  { speciesKey: "rabbit", locationKey: "meadow_12_07", count: 2, age: "YOUNG" },
-  { speciesKey: "rabbit", locationKey: "meadow_12_07", count: 1, age: "OLD" },
+  { speciesKey: "rabbit", locationKey: "forest_04_00", count: 3, age: "YOUNG" },
+  { speciesKey: "rabbit", locationKey: "forest_04_00", count: 3, age: "CHILD" },
+
+  { speciesKey: "rabbit", locationKey: "meadow_12_04", count: 2, age: "ADULT", sex: "FEMALE" },
+  { speciesKey: "rabbit", locationKey: "meadow_12_04", count: 1, age: "ADULT", sex: "MALE" },
+  { speciesKey: "rabbit", locationKey: "meadow_12_04", count: 3, age: "YOUNG" },
+  { speciesKey: "rabbit", locationKey: "meadow_12_04", count: 3, age: "CHILD" },
+
+  { speciesKey: "rabbit", locationKey: "riverbank_15_02", count: 1, age: "ADULT", sex: "FEMALE" },
+  { speciesKey: "rabbit", locationKey: "riverbank_15_02", count: 1, age: "ADULT", sex: "MALE" },
+  { speciesKey: "rabbit", locationKey: "riverbank_15_02", count: 2, age: "YOUNG" },
+
   { speciesKey: "rabbit", locationKey: "meadow_14_05", count: 2, age: "CORPSE" },
 ];
 
 export const STARTER_MICE: StarterAnimalGroup[] = [
   { speciesKey: "mouse", locationKey: "forest_03_02", count: 2, age: "ADULT", sex: "FEMALE" },
   { speciesKey: "mouse", locationKey: "forest_03_02", count: 1, age: "ADULT", sex: "MALE" },
-  { speciesKey: "mouse", locationKey: "forest_04_03", count: 4, age: "CHILD" },
-  { speciesKey: "mouse", locationKey: "forest_04_03", count: 3, age: "YOUNG" },
-  { speciesKey: "mouse", locationKey: "forest_02_05", count: 2, age: "OLD" },
+  { speciesKey: "mouse", locationKey: "forest_03_02", count: 4, age: "YOUNG" },
+  { speciesKey: "mouse", locationKey: "forest_03_02", count: 4, age: "CHILD" },
+
   { speciesKey: "mouse", locationKey: "meadow_11_04", count: 2, age: "ADULT", sex: "FEMALE" },
   { speciesKey: "mouse", locationKey: "meadow_11_04", count: 1, age: "ADULT", sex: "MALE" },
-  { speciesKey: "mouse", locationKey: "meadow_13_06", count: 3, age: "YOUNG" },
-  { speciesKey: "mouse", locationKey: "meadow_13_06", count: 2, age: "CHILD" },
+  { speciesKey: "mouse", locationKey: "meadow_11_04", count: 4, age: "YOUNG" },
+  { speciesKey: "mouse", locationKey: "meadow_11_04", count: 4, age: "CHILD" },
+
+  { speciesKey: "mouse", locationKey: "riverbank_14_01", count: 2, age: "ADULT", sex: "FEMALE" },
+  { speciesKey: "mouse", locationKey: "riverbank_14_01", count: 1, age: "ADULT", sex: "MALE" },
+  { speciesKey: "mouse", locationKey: "riverbank_14_01", count: 4, age: "YOUNG" },
+
   { speciesKey: "mouse", locationKey: "meadow_14_05", count: 2, age: "CORPSE" },
 ];
 
 export const STARTER_PREDATORS: StarterAnimalGroup[] = [
   { speciesKey: "fox", locationKey: "forest_07_02", count: 1, age: "ADULT", sex: "FEMALE" },
   { speciesKey: "fox", locationKey: "forest_07_02", count: 1, age: "ADULT", sex: "MALE" },
-  { speciesKey: "fox", locationKey: "meadow_10_03", count: 1, age: "ADULT", sex: "FEMALE" },
   { speciesKey: "fox", locationKey: "meadow_13_04", count: 1, age: "YOUNG", sex: "MALE" },
   { speciesKey: "wolf", locationKey: "forest_00_08", count: 1, age: "ADULT", sex: "FEMALE" },
-  { speciesKey: "wolf", locationKey: "forest_02_09", count: 1, age: "ADULT", sex: "MALE" },
 ];
 
 export function starterAnimalAgeTicks(
