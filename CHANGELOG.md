@@ -7,6 +7,45 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.6 - Camp cat watch and owl boundary - 12026-06-01
+
+### Added
+
+- Added a camp spirit cat watch-posture helper so cat `LOOK` actions can surface nonverbal camp-watch body language for mice, night, dusk, dawn, active campfire light and the watchtower.
+- Added a passive player hunger bridge tied to the internal world clock: after onboarding and outside tutorial dream locations, hunger rises by `+1` for each full four in-game hours, with a persisted marker so deploys and time resets do not backfill surprising hunger debt; eating food that reduces hunger refreshes that marker.
+- Added focused camp-cat and owl-boundary assertions for the new helper behavior.
+- Added focused passive hunger progression assertions.
+
+### Changed
+
+- Creature `LOOK` completions now preserve a queued `payload.reason` as the visible current action, instead of flattening every creature look into `озирається`.
+- Direct `look` and `examine` text for the camp spirit cat are now distinct: brief look stays compact, while full examination gives richer attentive detail.
+- Starter camp and watchtower are now routine owl-safe locations: owls do not choose exits into those locations, and an owl that somehow reaches them tries to leave or only watches instead of hunting there.
+- No-argument speech aliases such as `yell`, `call`, `гукнути`, `whisper`, `say` and `shout` now route to the same usage prompts as their slash commands instead of falling through to unknown-input fallback.
+- Local speech now notices when `say` / `сказати` starts with the exact name of a known player or non-animal creature who is not visible nearby, and suggests yelling, shouting or checking tracks instead of treating the name as ordinary spoken text.
+- Vertical `Гукнути вгору` / `Гукнути вниз` buttons now ask for the next chat message and submit it through the `/yell` path, instead of only telling the player to type `/yell <text>` manually.
+- `Гукнути вгору` now appears inside inspected upward vertical features such as the starter camp `Сторожова вежа`, instead of as a general location-level button.
+- The starter watchtower now has an inspectable `Сходи вниз` feature with `Спуститися вниз` and `Гукнути вниз` actions, so downward calling is also tied to a visible vertical feature instead of the whole location view.
+- The starter camp newcomer board now points more atmospherically toward the watchtower as the place to seek light before leaving camp.
+- The starter shared cache now offers per-supply `Лишити всі/весь/все` contribution buttons that queue one item at a time into the cache, while taking from the cache remains one item at a time.
+- `/put` can now route supplies into the starter shared cache as well as carcasses into the dropoff pit; `put twigs 3 cache` and `put all twigs in cache` use the same one-at-a-time queue as the new cache buttons.
+- Documented the broader rule that new visible features, creatures, objects and locations should keep brief `look` text meaningfully distinct from full `examine` text.
+- Marked `CAT-009` and `OWL-003` as testing after this narrow implementation slice.
+
+### Validation
+
+- Ran `node scripts/test/camp-cat.cjs`.
+- Ran `node scripts/test/owl-nocturnal.cjs`.
+- Ran `node scripts/test/creature-movement.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/speech-ranges.cjs`.
+- Ran `node scripts/test/tree-features.cjs`.
+- Ran `node scripts/test/news-clickable-commands.cjs`.
+- Ran `cmd /c npm run planning:export`.
+- Ran `cmd /c npm test`.
+- Ran `cmd /c npm run build`.
+- Ran `git diff --check`.
+
 ## 0.15.5 - Nearby speech ranges - 12026-06-01
 
 ### Added

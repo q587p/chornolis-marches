@@ -1,5 +1,14 @@
 import type { WorldDaypart } from "../data/worldClock";
 
+const STARTER_CAMP_OWL_SAFE_LOCATION_KEYS = new Set([
+  "start_border_camp",
+  "start_border_watchtower",
+]);
+
+export function isStarterCampOwlSafeLocationKey(locationKey: string | null | undefined) {
+  return Boolean(locationKey && STARTER_CAMP_OWL_SAFE_LOCATION_KEYS.has(locationKey));
+}
+
 export function owlSignDetailLine() {
   return "підказує, що вночі тут полює щось крилате";
 }

@@ -6,7 +6,10 @@ const {
   TREE_SHAKE_DEFAULT_COOLDOWN_MS,
   featureBriefInspectionText,
   featureMoveButtonLabel,
+  featureMoveButtonLabelForFeature,
   featureMoveDirection,
+  featureYellPromptButtonLabel,
+  featureYellPromptDirection,
   treeShakeAmount,
 } = require("../../src/services/locations");
 
@@ -31,6 +34,11 @@ assert.doesNotMatch(featureBriefInspectionText({
 }), /Довгий докладний текст/);
 assert.equal(featureMoveDirection({ data: { vertical_hint: "UP" } }), "UP");
 assert.equal(featureMoveButtonLabel("UP"), "⬆️ Вгору");
+assert.equal(featureYellPromptDirection({ data: { vertical_hint: "UP" } }), "UP");
+assert.equal(featureYellPromptDirection({ data: { vertical_hint: "DOWN" } }), "DOWN");
+assert.equal(featureYellPromptButtonLabel("UP"), "🗣 Гукнути вгору");
+assert.equal(featureYellPromptButtonLabel("DOWN"), "🗣 Гукнути вниз");
+assert.equal(featureMoveButtonLabelForFeature({ data: { vertical_hint: "DOWN", move_label: "Спуститися вниз" } }, "DOWN"), "⬇️ Спуститися вниз");
 assert.equal(featureMoveDirection({ data: { vertical_hint: "EAST" } }), null);
 
 console.log("Tree features OK");

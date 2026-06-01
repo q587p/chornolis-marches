@@ -12,6 +12,7 @@ When a player-facing button performs an in-world action, there should usually be
 - Reply to unknown text with a short "не зрозуміли" message, `❔ Допомога` (`/help`) / `☰ Меню` (`/menu`) hints and close alias suggestions where possible. Suggestions should include the closest clickable slash command in parentheses when there is a stable one, for example `оглянутися (/look)`, `статистика (/stat)`, `використати гриби (/use_mushrooms)` or `швидкий огляд (/glance)`.
 - Player-facing help text can use clickable Telegram-style slash hints with underscores for multi-word commands. The input normalizer treats `_` as a space, so `/sleep_tutorial` is parsed like `/sleep tutorial`, `/queue_cancel` like `/queue cancel`, and `/auto_stop` like `/auto stop`.
 - Direct slash commands should also accept the same direct text form without the leading slash when practical. This applies strongly to scribe/admin commands and future MUD-style clients: `/teleport forest_07_00` and `teleport forest_07_00` should route to the same command.
+- If a slash command has a no-argument usage response, its direct text aliases should route to that same response instead of falling through to unknown-input fallback. For example `/yell`, `yell`, `call` and `гукнути` without text should all explain how to add the message text.
 - When a visible button/action is mentioned in `/help`, `/commands`, news or release notes, prefer the button label followed by its canonical slash command in parentheses, for example `🌙 AFK / відійти` (`/afk`) or `🚪 Завершити сесію` (`/end_session`). Compatibility aliases may be listed after that, but the first slash hint should be the stable command.
 
 ## Examples
@@ -82,8 +83,10 @@ Actions:
 - `Закінчити навчання`, `/tutorialEnd`, `/tutorial_end`, `закінчити навчання`, `завершити навчання` -> ask for confirmation, mark the tutorial completed and stop unfinished-tutorial reminders in `/help` and the character card.
 - `/say Відчинитися`, `сказати Відчинитися`, `Ви сказали: Відчинитися`, `говорити Відчинись будь ласка`, `ск Можеш відчинитися`, `сказ Відчинися`, `гов Відкрийся` and the `Сказати «Відчинитися»` button under the focused gate feature view -> say the written phrase aloud and open the local `Брама Сну` in the dream tutorial. Plain `Відчинитися` near the gate should not open it directly; it should get a short Сон hint to add `сказати` / `/say` so the phrase becomes speech. The dream gate is locked from both sides while closed, so both the gate-side `Південь` and hub-side `Північ` exits should appear parenthesized until speech opens the passage. `/open`, `open`, `o`, `відкрити`, `відчинити`, `відкрий`, `відчини`, `привідкрити`, `прочинити` and short `відкр` / `відч` forms may remain as compatibility aliases for the same local interactive gate, and they can take an optional gate-like target such as `/open ворота`, `відкрити ворота`, `відчинити браму`, `відкрий ворота` or `o gate`. The tutorial-facing path should still teach speech and attention to signs. The closed settlement gate near the bridge is a visible locked exit, but it is not openable yet; `/open` or `відкрити ворота` should acknowledge that the gate exists and say it opens only under future conditions, not claim there are no gates.
 - `whisper Данило Тихіше`, `шепнути 1 Тихіше`, `/whisper Данило Тихіше` -> whisper privately to one visible player or non-animal NPC in the current location. Target interaction buttons can also prompt a whisper toward the selected visible target. The target player receives the text; other nearby players only see that a whisper happened, without the words.
+- If `say` / `сказати` starts with an exact known player or non-animal creature name but that target is not currently visible nearby, do not silently send the whole line as ordinary local speech. Reply that the intended співрозмовник is not visible nearby and suggest `/yell`, `/shout` or checking tracks. Unknown first words should still remain normal local speech.
 - `reply Я почув`, `відповісти Я почув` -> answer the last speech event that addressed your character directly. Direct speech, greetings and whispers remember the speaker per recipient, so `reply` does not require the speaker to remain visible or in the same current target list.
-- `shout Сюди`, `гукнути Сюди`, `крикнути Сюди`, `кричати Допоможіть`, `крик Допоможіть`, `вигукнути Обережно`, `волати Не йдіть туди` -> shout across the current region. This uses the speech queue path but spends extra stamina compared with ordinary speech.
+- `yell Сюди`, `call Сюди`, `гукнути Сюди`, `покликати Сюди`, `крикнути поруч Стій`, `гучно сказати Обережно` -> call out to the current location and immediately adjacent locations.
+- `shout Сюди`, `крикнути Сюди`, `кричати Допоможіть`, `крик Допоможіть`, `вигукнути Обережно`, `волати Не йдіть туди` -> shout across the current region. This uses the speech queue path but spends extra stamina compared with ordinary speech.
 - `черга`, `скасувати`, `очистити чергу`.
 - `/track`, `/examine tracks`, `роздивитися сліди`, `придивитися до слідів`. Future detail forms should include target-like aliases such as `роздивитися вовчий слід`, `роздивитися людський слід` and `роздивитися заячий слід`.
 - `сказати Привіт`.
@@ -144,7 +147,11 @@ The speech slice shipped in 0.13.6:
 
 - `whisper [player] [message]` / `шепнути [персонаж] [текст]`;
 - `reply <message>` / `відповісти <текст>`;
-- `shout <message>` / `крикнути <текст>` / `кричати <текст>` / `крик <текст>` / `гукнути <текст>`.
+- `shout <message>` / `крикнути <текст>` / `кричати <текст>` / `крик <текст>`.
+
+The speech-range slice shipped in 0.15.5:
+
+- `yell <message>` / `call <message>` / `гукнути <текст>` / `покликати <текст>` / `крикнути поруч <текст>` for current and adjacent locations.
 
 Future command-registry work should move the project toward one shared source of truth for:
 

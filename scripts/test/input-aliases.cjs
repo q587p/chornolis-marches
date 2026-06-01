@@ -124,7 +124,13 @@ assertAlias("take from cache berries", { kind: "beginner-cache", action: "take",
 assertAlias("/take_cache raw meat", { kind: "beginner-cache", action: "take", item: "raw meat" });
 assertAlias("/contribute_cache herbs", { kind: "beginner-cache", action: "contribute", item: "herbs" });
 assertAlias("/contribute_cache смажене м'ясо", { kind: "beginner-cache", action: "contribute", item: "смажене м'ясо" });
-assertAlias("put twigs in cache", { kind: "beginner-cache", action: "contribute", item: "twigs" });
+assertAlias("/contribute_cache_all herbs", { kind: "beginner-cache", action: "contribute-all", item: "herbs" });
+assertAlias("cache contribute all raw meat", { kind: "beginner-cache", action: "contribute-all", item: "raw meat" });
+assertAlias("лишити весь хмиз у скрині", { kind: "beginner-cache", action: "contribute-all", item: "хмиз" });
+assertAlias("залишити все смажене м'ясо в скрині", { kind: "beginner-cache", action: "contribute-all", item: "смажене м'ясо" });
+assertAlias("put twigs in cache", { kind: "put-item", item: "twigs", container: "cache" });
+assertAlias("put all twigs in cache", { kind: "put-item", item: "twigs", amount: "all", container: "cache" });
+assertAlias("покласти весь хмиз у скриню", { kind: "put-item", item: "хмиз", amount: "all", container: "скриню" });
 
 assertAlias("/chat", { kind: "chat" });
 assertAlias("/chat 1", { kind: "chat", mode: "time", window: "1" });
@@ -227,6 +233,7 @@ assertAlias("/put туша рів", { kind: "put-item", item: "туша", contai
 assertAlias("/put туша 3 падальний рів", { kind: "put-item", item: "туша", amount: 3, container: "падальний рів" });
 assertAlias("/put туша all рів", { kind: "put-item", item: "туша", amount: "all", container: "рів" });
 assertAlias("покласти всі рештки до ями", { kind: "put-item", item: "рештки", amount: "all", container: "ями" });
+assertAlias("/put хмиз 3 скриня", { kind: "put-item", item: "хмиз", amount: 3, container: "скриня" });
 assertAlias("put out torch", { kind: "douse-torch" });
 assertAlias("черга", { kind: "queue", mode: "status" });
 assertAlias("/queue_cancel", { kind: "queue", mode: "cancel-current" });
@@ -249,6 +256,16 @@ assertAlias("/шепнути Велика Оля Не руш.", { kind: "whisper
 assertAlias("reply Я почув.", { kind: "reply", text: "Я почув." });
 assertAlias("/reply", { kind: "reply", text: "" });
 assertAlias("/відповісти Йду за тобою.", { kind: "reply", text: "Йду за тобою." });
+assertAlias("say", { kind: "say", text: "" });
+assertAlias("сказати", { kind: "say", text: "" });
+assertAlias("whisper", { kind: "whisper", text: "" });
+assertAlias("шепнути", { kind: "whisper", text: "" });
+assertAlias("/yell", { kind: "yell", text: "" });
+assertAlias("yell", { kind: "yell", text: "" });
+assertAlias("call", { kind: "yell", text: "" });
+assertAlias("гукнути", { kind: "yell", text: "" });
+assertAlias("покликати", { kind: "yell", text: "" });
+assertAlias("крикнути поруч", { kind: "yell", text: "" });
 assertAlias("/yell Сюди!", { kind: "yell", text: "Сюди!" });
 assertAlias("yell Сюди!", { kind: "yell", text: "Сюди!" });
 assertAlias("call Сюди!", { kind: "yell", text: "Сюди!" });
@@ -256,6 +273,8 @@ assertAlias("гукнути Хто там?", { kind: "yell", text: "Хто та�
 assertAlias("покликати Хто там?", { kind: "yell", text: "Хто там?" });
 assertAlias("крикнути поруч Стій!", { kind: "yell", text: "Стій!" });
 assertAlias("гучно сказати Обережно!", { kind: "yell", text: "Обережно!" });
+assertAlias("shout", { kind: "shout", text: "" });
+assertAlias("вигукнути", { kind: "shout", text: "" });
 assertAlias("shout Сюди!", { kind: "shout", text: "Сюди!" });
 assertAlias("крикнути Стій!", { kind: "shout", text: "Стій!" });
 assertAlias("кричати Допоможіть!", { kind: "shout", text: "Допоможіть!" });
@@ -319,6 +338,7 @@ assert.ok(suggestAliasEntries("погод").map(formatAliasSuggestion).includes(
 assert.ok(suggestAliasEntries("freshen al").map(formatAliasSuggestion).includes("freshen all (/freshen_all)"), "Expected formatted suggestions to include slash command for bulk freshening");
 assert.ok(suggestAliasEntries("потрус").map(formatAliasSuggestion).includes("потрусити дерево (/shake_tree)"), "Expected formatted suggestions to include slash command for tree shaking");
 assert.ok(suggestAliasEntries("гук").map(formatAliasSuggestion).includes("гукнути (/yell)"), "Expected formatted suggestions to include slash command for nearby yell");
+assert.ok(suggestAliasEntries("гукнти").map(formatAliasSuggestion).includes("гукнути (/yell)"), "Expected formatted suggestions to include slash command for mistyped nearby yell");
 assert.ok(suggestAliasEntries("вола").map(formatAliasSuggestion).includes("волати (/shout)"), "Expected formatted suggestions to keep волати as region shout");
 assert.ok(suggestAliasInputs("усхмі").includes("усміх"), "Expected social suggestions to include усміх for a mistyped smile");
 assert.ok(suggestAliasInputs("посмі").includes("посміх"), "Expected social suggestions to include посміх");

@@ -32,12 +32,62 @@ export function isCampSpiritCatAllowedExit(exit: {
   );
 }
 
-export function campSpiritCatInspectionText(visibleAction: string) {
-  return [
+export type CampSpiritCatWatchContext = {
+  locationKey?: string | null;
+  daypart?: string | null;
+  hasLocalMice?: boolean;
+  hasActiveCampfire?: boolean;
+};
+
+export function campSpiritCatWatchPosture(context: CampSpiritCatWatchContext = {}) {
+  if (context.hasLocalMice) {
+    return "завмер біля нижнього кута табору й слухає мишаче шарудіння";
+  }
+
+  if (context.daypart === "night") {
+    return context.hasActiveCampfire
+      ? "сидить на межі світла й темряви, дивлячись повз вогонь"
+      : "сидить дуже прямо й дивиться туди, де табір переходить у темряву";
+  }
+
+  if (context.daypart === "dusk") {
+    return "підняв вуха до вечірнього повітря й довго не кліпає";
+  }
+
+  if (context.daypart === "dawn") {
+    return "обходить край табору, ніби звіряє нічні сліди";
+  }
+
+  if (context.locationKey === CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY) {
+    return "лежить вище над табором і стежить за рухом унизу";
+  }
+
+  if (context.hasActiveCampfire) {
+    return "лежить біля межового вогню, але не спускає погляду з краю табору";
+  }
+
+  return "тихо стереже межі табору";
+}
+
+export function campSpiritCatInspectionText(visibleAction: string, detail: "brief" | "full" = "full") {
+  const lines = [
     CAMP_SPIRIT_CAT_NAME,
     "",
     `Стан: ${visibleAction}.`,
+  ];
+
+  if (detail === "brief") {
+    return [
+      ...lines,
+      "Він мовчить і тримається так, ніби межовий вогонь має власного сторожа.",
+    ].join("\n");
+  }
+
+  return [
+    ...lines,
     "Це табірний дух у котячій подобі: безмовний, уважний і прив'язаний до меж вогню та людей.",
+    "Шерсть здається темнішою там, де світло не дістає землі, а очі довго не відпускають край табору.",
     "Він не відповідає словами. Вуха, хвіст і довгий погляд кажуть тут більше, ніж розмова.",
+    "Якщо просто глянути, видно тільки позу. Якщо роздивитися уважніше, стає ясніше, що він стереже не стежку, а саму межу.",
   ].join("\n");
 }

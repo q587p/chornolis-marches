@@ -474,6 +474,12 @@ async function clearPlayerAutoState() {
   return result.count;
 }
 
+async function resetPlayerWorldTimeState() {
+  await prisma.player.updateMany({
+    data: { lastPassiveHungerAtMinute: null },
+  });
+}
+
 export async function resetWorldState(): Promise<ResetSummary> {
   const world = loadWorldSeed();
 
@@ -494,6 +500,7 @@ export async function resetWorldState(): Promise<ResetSummary> {
   const wolvesCreated = await resetStarterAnimals("wolf", STARTER_PREDATORS.filter((group) => group.speciesKey === "wolf"));
   const predatorsCreated = foxesCreated + wolvesCreated;
   const worldClock = await resetWorldClockState();
+  await resetPlayerWorldTimeState();
 
   const start = await prisma.cellLocation.findUnique({ where: { key: START_LOCATION_KEY } });
   await prisma.worldEvent.create({

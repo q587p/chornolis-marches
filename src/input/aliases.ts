@@ -62,7 +62,7 @@ export type ParsedAliasCommand =
   | { kind: "add-twigs-campfire" }
   | { kind: "cook-meat" }
   | { kind: "cook-meat-all" }
-  | { kind: "beginner-cache"; action: "inspect" | "take" | "contribute"; item?: string }
+  | { kind: "beginner-cache"; action: "inspect" | "take" | "contribute" | "contribute-all"; item?: string }
   | { kind: "put-item"; item: string; amount?: PutAliasAmount; container: string }
   | { kind: "say"; text: string }
   | { kind: "whisper"; text: string }
@@ -797,9 +797,15 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "cook-meat-all") return "/cook_all";
   if (parsed.kind === "beginner-cache") {
     if (parsed.action === "take") return "/take_cache";
+    if (parsed.action === "contribute-all") return "/contribute_cache_all";
     if (parsed.action === "contribute") return "/contribute_cache";
     return "/cache";
   }
+  if (parsed.kind === "say") return "/say";
+  if (parsed.kind === "whisper") return "/whisper";
+  if (parsed.kind === "reply") return "/reply";
+  if (parsed.kind === "yell") return "/yell";
+  if (parsed.kind === "shout") return "/shout";
   if (parsed.kind === "put-item") return "/put";
   if (parsed.kind === "inspect-inventory-item") return "/item";
   if (parsed.kind === "drop-inventory-item") return "/drop";
@@ -909,6 +915,10 @@ function parseGatherResource(resource: string): ParsedAliasCommand | null {
 }
 
 function parseSay(raw: string, text: string): ParsedAliasCommand | null {
+  if (/^\/?(?:say|сказати|говорити|мовити|промовити|ск|сказ|гов)$/u.test(text)) {
+    return { kind: "say", text: "" };
+  }
+
   const echoedSay = raw.trim().match(/^ви\s+сказали(?:\s*[:：]\s*|\s+)([\s\S]+)$/iu);
   if (echoedSay?.[1]?.trim()) {
     const said = echoedSay[1].trim().slice(0, 300);
@@ -924,10 +934,16 @@ function parseSay(raw: string, text: string): ParsedAliasCommand | null {
   return said ? { kind: "say", text: said } : null;
 }
 
+const WHISPER_ALIAS_SOURCE = "whisper|шепнути|прошепотіти|шеп";
+const YELL_ALIAS_SOURCE = "yell|call|гук|гукнути|покликати|крикнути поруч|гучно сказати";
+const SHOUT_ALIAS_SOURCE = "shout|крик|крикнути|кричати|закричати|викрикнути|вигукнути|загукати|волати|заволати";
+
 function parseDirectedSpeech(raw: string, text: string): ParsedAliasCommand | null {
-  const whisper = text.match(/^\/?(?:whisper|шепнути|прошепотіти|шеп)\s+(.+)$/);
+  if (new RegExp(`^/?(?:${WHISPER_ALIAS_SOURCE})$`, "u").test(text)) return { kind: "whisper", text: "" };
+
+  const whisper = text.match(new RegExp(`^/?(?:${WHISPER_ALIAS_SOURCE})\\s+(.+)$`, "u"));
   if (whisper?.[1]?.trim()) {
-    const rawMatch = raw.match(/^\/?(?:whisper|шепнути|прошепотіти|шеп)\s+(.+)$/i);
+    const rawMatch = raw.match(new RegExp(`^/?(?:${WHISPER_ALIAS_SOURCE})\\s+(.+)$`, "iu"));
     const speech = (rawMatch?.[1] ?? whisper[1]).trim().slice(0, 300);
     return speech ? { kind: "whisper", text: speech } : null;
   }
@@ -940,16 +956,20 @@ function parseDirectedSpeech(raw: string, text: string): ParsedAliasCommand | nu
   }
   if (/^\/?(?:reply|відповісти|відповідь)$/u.test(text)) return { kind: "reply", text: "" };
 
-  const yell = text.match(/^\/?(?:yell|call|гук|гукнути|покликати|крикнути поруч|гучно сказати)\s+(.+)$/);
+  if (new RegExp(`^/?(?:${YELL_ALIAS_SOURCE})$`, "u").test(text)) return { kind: "yell", text: "" };
+
+  const yell = text.match(new RegExp(`^/?(?:${YELL_ALIAS_SOURCE})\\s+(.+)$`, "u"));
   if (yell?.[1]?.trim()) {
-    const rawMatch = raw.match(/^\/?(?:yell|call|гук|гукнути|покликати|крикнути поруч|гучно сказати)\s+(.+)$/i);
+    const rawMatch = raw.match(new RegExp(`^/?(?:${YELL_ALIAS_SOURCE})\\s+(.+)$`, "iu"));
     const speech = (rawMatch?.[1] ?? yell[1]).trim().slice(0, 300);
     return speech ? { kind: "yell", text: speech } : null;
   }
 
-  const shout = text.match(/^\/?(?:shout|крик|крикнути|кричати|закричати|викрикнути|вигукнути|загукати|волати|заволати)\s+(.+)$/);
+  if (new RegExp(`^/?(?:${SHOUT_ALIAS_SOURCE})$`, "u").test(text)) return { kind: "shout", text: "" };
+
+  const shout = text.match(new RegExp(`^/?(?:${SHOUT_ALIAS_SOURCE})\\s+(.+)$`, "u"));
   if (shout?.[1]?.trim()) {
-    const rawMatch = raw.match(/^\/?(?:shout|крик|крикнути|кричати|закричати|викрикнути|вигукнути|загукати|волати|заволати)\s+(.+)$/i);
+    const rawMatch = raw.match(new RegExp(`^/?(?:${SHOUT_ALIAS_SOURCE})\\s+(.+)$`, "iu"));
     const speech = (rawMatch?.[1] ?? shout[1]).trim().slice(0, 300);
     return speech ? { kind: "shout", text: speech } : null;
   }
@@ -1074,14 +1094,20 @@ function parseBeginnerCacheIntent(text: string): ParsedAliasCommand | null {
     return item ? { kind: "beginner-cache", action: "take", item } : { kind: "beginner-cache", action: "take" };
   }
 
+  const directContributeAll = text.match(/^(?:contribute all cache|contribute cache all|cache contribute all|лишити всі в скрині|лишити усе в скрині|лишити все в скрині|залишити всі в скрині|залишити усе в скрині|залишити все в скрині|лишити всі у скрині|лишити усе у скрині|лишити все у скрині|залишити всі у скрині|залишити усе у скрині|залишити все у скрині)\s+(.+)$/u);
+  if (directContributeAll?.[1]?.trim()) return { kind: "beginner-cache", action: "contribute-all", item: directContributeAll[1].trim() };
+
+  const directContributeAllItemFirst = text.match(/^(?:лишити|залишити)\s+(?:all|всі|усі|весь|увесь|все|усе)\s+(.+?)\s+(?:у|в|до|into|in|to)\s+(?:скриню|скрині|cache|supply cache)$/u);
+  if (directContributeAllItemFirst?.[1]?.trim()) return { kind: "beginner-cache", action: "contribute-all", item: directContributeAllItemFirst[1].trim() };
+
+  const slashContributeAll = text.match(/^(?:contribute_cache_all|cache_contribute_all)\s+(.+)$/u);
+  if (slashContributeAll?.[1]?.trim()) return { kind: "beginner-cache", action: "contribute-all", item: slashContributeAll[1].trim() };
+
   const directContribute = text.match(/^(?:contribute cache|cache contribute|лишити в скрині|залишити в скрині|лишити у скрині|залишити у скрині|додати до скрині)\s+(.+)$/u);
   if (directContribute?.[1]?.trim()) return { kind: "beginner-cache", action: "contribute", item: directContribute[1].trim() };
 
   const slashContribute = text.match(/^(?:contribute_cache|cache_contribute)\s+(.+)$/u);
   if (slashContribute?.[1]?.trim()) return { kind: "beginner-cache", action: "contribute", item: slashContribute[1].trim() };
-
-  const putInCache = text.match(/^(?:покласти|класти|put)\s+(.+?)\s+(?:у|в|до|into|in|to)\s+(?:скриню|скрині|cache|supply cache)$/u);
-  if (putInCache?.[1]?.trim()) return { kind: "beginner-cache", action: "contribute", item: putInCache[1].trim() };
 
   return null;
 }
@@ -1103,7 +1129,7 @@ function parseInventoryItemAction(text: string): ParsedAliasCommand | null {
 }
 
 function amountFromPutToken(token: string): PutAliasAmount | null {
-  if (["all", "все", "усе", "всі", "усі"].includes(token)) return "all";
+  if (["all", "все", "усе", "всі", "усі", "весь", "увесь"].includes(token)) return "all";
   if (/^\d+$/.test(token)) {
     const amount = Number(token);
     return Number.isSafeInteger(amount) && amount > 0 ? amount : null;
@@ -1114,7 +1140,8 @@ function amountFromPutToken(token: string): PutAliasAmount | null {
 function normalizePutItemText(value: string) {
   return value
     .replace(/^(?:all|все|усе|всі|усі)\s+/u, "")
-    .replace(/\s+(?:all|все|усе|всі|усі)$/u, "")
+    .replace(/^(?:весь|увесь)\s+/u, "")
+    .replace(/\s+(?:all|все|усе|всі|усі|весь|увесь)$/u, "")
     .trim();
 }
 
@@ -1133,7 +1160,7 @@ function parsePutParts(value: string): { item: string; amount?: PutAliasAmount; 
       itemWords.pop();
     }
     const item = normalizePutItemText(itemWords.join(" "));
-    return item ? { item, amount, container: withPreposition[2].trim() } : null;
+    return item ? { item, ...(amount !== undefined ? { amount } : {}), container: withPreposition[2].trim() } : null;
   }
 
   const words = value.split(/\s+/).filter(Boolean);

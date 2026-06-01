@@ -418,6 +418,7 @@ async function finishOnboarding(ctx: any, state: OnboardingState) {
     isNameApproved: state.nameApproved ?? false,
     stamina: BASE_STAMINA * 3,
     staminaMax: BASE_STAMINA,
+    lastPassiveHungerAtMinute: null,
     currentLocationId: startLocationId,
   };
 

@@ -1,7 +1,7 @@
 ---
 id: CAT-009
 title: Camp cat watch posture and soft warnings
-status: backlog
+status: testing
 type: feature
 area: atmosphere
 priority: medium
@@ -58,3 +58,9 @@ The cat should sometimes notice camp-local pressure through body language: ears 
 - `node scripts/test/camp-cat.cjs`
 - `node scripts/test/ambient-lines.cjs` if ambient helpers are touched.
 - `npm test`
+
+## Implementation Notes
+
+- `0.15.6` adds the first small watch-posture helper, `campSpiritCatWatchPosture(...)`, and routes camp-cat `LOOK` actions through it.
+- The first slice is deliberately local and quiet: no proactive chat, no exact danger detector, no combat assistance and no cat hunting yet.
+- The visible text can react to camp-local mice, night/dusk/dawn, active campfire light and the starter watchtower.

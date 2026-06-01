@@ -1,6 +1,7 @@
 import { prisma } from "../db";
 import { isExtinguishedCampfire } from "./fire";
 import { recordCookingSource } from "./foodLearning";
+import { getCurrentWorldState } from "./worldTime";
 
 export const RAW_MEAT_KEY = "raw_meat";
 export const COOKED_MEAT_KEY = "cooked_meat";
@@ -207,6 +208,7 @@ export async function cookRawMeat(playerId: number) {
 
 export async function eatCookedMeat(playerId: number) {
   const { cookedMeat } = await ensureMeatResourceTypes();
+  const worldState = await getCurrentWorldState();
   return prisma.$transaction(async (tx) => {
     const player = await tx.player.findUnique({ where: { id: playerId }, select: { hunger: true } });
     if (!player) throw new Error("Ти ще не увійшов у світ. Напиши /start");
@@ -224,7 +226,7 @@ export async function eatCookedMeat(playerId: number) {
     }
 
     const nextHunger = Math.max(0, player.hunger - COOKED_MEAT_HUNGER_RELIEF);
-    await tx.player.update({ where: { id: playerId }, data: { hunger: nextHunger } });
+    await tx.player.update({ where: { id: playerId }, data: { hunger: nextHunger, lastPassiveHungerAtMinute: worldState.absoluteMinute } });
     return nextHunger <= 0
       ? "Ви з'їли смажене м'ясо. Голод відступив."
       : "Ви з'їли смажене м'ясо. Голод помітно відступає.";

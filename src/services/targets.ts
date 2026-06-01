@@ -287,7 +287,7 @@ export async function resolveTarget(type: string, id: number, locationId: number
     }
 
     const visibleAction = normalizeCreatureActionText(target.currentAction, "придивляється довкола") ?? "придивляється довкола";
-    const campSpiritCatDetails = isCampSpiritCat ? campSpiritCatInspectionText(visibleAction) : null;
+    const campSpiritCatDetails = isCampSpiritCat ? campSpiritCatInspectionText(visibleAction, detail) : null;
     const hunterInventory = await hunterFieldInventorySummary(target, { exact: showTechnicalDetails });
     const hunterSection = hunterInventory
       ? `\n\nМисливський набір:\n${hunterInventory}`

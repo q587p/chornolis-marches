@@ -103,6 +103,7 @@ export const WORLD_LEXICON = [
   entry("feature.newcomer_board", "feature", "FEMININE", "INANIMATE", ["feature", "onboarding", "current"], ["дошка для прибулих", "дошки для прибулих", "дошці для прибулих", "дошку для прибулих", "дошкою для прибулих", "дошці для прибулих", "дошко для прибулих"]),
   entry("feature.torch_stand", "feature", "FEMININE", "INANIMATE", ["feature", "fire", "light", "current"], ["смоляна поставка", "смоляної поставки", "смоляній поставці", "смоляну поставку", "смоляною поставкою", "смоляній поставці", "смоляна поставко"]),
   entry("feature.watchtower", "feature", "FEMININE", "INANIMATE", ["feature", "vertical", "camp", "current"], ["сторожова вежа", "сторожової вежі", "сторожовій вежі", "сторожову вежу", "сторожовою вежею", "сторожовій вежі", "сторожова веже"]),
+  entry("feature.watchtower_stairs", "feature", "PLURAL", "INANIMATE", ["feature", "vertical", "camp", "current"], ["сходи вниз", "сходів униз", "сходам униз", "сходи вниз", "сходами вниз", "сходах униз", "сходи вниз"]),
   entry("feature.pine", "feature", "FEMININE", "INANIMATE", ["feature", "tree", "current"], ["сосна", "сосни", "сосні", "сосну", "сосною", "сосні", "сосно"]),
   entry("feature.branch", "feature", "FEMININE", "INANIMATE", ["feature", "tree", "current"], ["гілка", "гілки", "гілці", "гілку", "гілкою", "гілці", "гілко"]),
 ] as const satisfies readonly LexiconEntry[];

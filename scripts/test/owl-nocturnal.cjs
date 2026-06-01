@@ -20,12 +20,17 @@ const {
 const {
   owlSignDetailLine,
   owlSignInspectionText,
+  isStarterCampOwlSafeLocationKey,
 } = require("../../src/services/owlSigns");
+const { canCreatureUseExit, creatureUsableExits } = require("../../src/services/creatureMovement");
 
 assert.equal(isOwlActiveDaypart("dawn"), true);
 assert.equal(isOwlActiveDaypart("dusk"), true);
 assert.equal(isOwlActiveDaypart("night"), true);
 assert.equal(isOwlActiveDaypart("day"), false);
+assert.equal(isStarterCampOwlSafeLocationKey("start_border_camp"), true);
+assert.equal(isStarterCampOwlSafeLocationKey("start_border_watchtower"), true);
+assert.equal(isStarterCampOwlSafeLocationKey("meadow_14_04"), false);
 
 const daytimePlan = owlNocturnalSyncPlan("day");
 assert.equal(daytimePlan.cancelActiveActions, true);
@@ -89,5 +94,13 @@ assert.equal(owlSignDetailLine(), "підказує, що вночі тут по
 assert.match(owlSignInspectionText("night", "Пір'їна лежить у траві."), /нічного слухача/);
 assert.match(owlSignInspectionText("day", "Пір'їна лежить у траві."), /Удень тут тихо/);
 assert.match(owlSignInspectionText("dawn", "Пір'їна лежить у траві."), /відступає в гілля/);
+
+const owlCreature = { species: { key: "owl", kind: "ANIMAL" } };
+const foxCreature = { species: { key: "fox", kind: "ANIMAL" } };
+const campExit = { direction: "WEST", toLocation: { key: "start_border_camp" } };
+const forestExit = { direction: "EAST", toLocation: { key: "forest_04_02" } };
+assert.equal(canCreatureUseExit(owlCreature, campExit), false);
+assert.equal(canCreatureUseExit(foxCreature, campExit), true);
+assert.deepEqual(creatureUsableExits(owlCreature, [campExit, forestExit]), [forestExit]);
 
 console.log("Owl nocturnal profile OK");

@@ -28,6 +28,15 @@ const CACHE_ITEM_ACCUSATIVE: Record<BeginnerCacheResourceKey, string> = {
   twigs: "хмиз",
 };
 
+const CACHE_ITEM_ALL_QUANTIFIERS: Record<BeginnerCacheResourceKey, string> = {
+  berries: "всі",
+  herbs: "всі",
+  mushrooms: "всі",
+  raw_meat: "все",
+  cooked_meat: "все",
+  twigs: "весь",
+};
+
 const DEFAULT_STOCK: Record<BeginnerCacheResourceKey, number> = {
   berries: 4,
   herbs: 2,
@@ -302,6 +311,10 @@ export async function playerBeginnerCacheContributionKeys(playerId: number) {
 
 export function beginnerCacheActionLabel(key: BeginnerCacheResourceKey) {
   return CACHE_ITEM_LABELS[key];
+}
+
+export function beginnerCacheContributeAllButtonLabel(key: BeginnerCacheResourceKey) {
+  return `🤲 Лишити ${CACHE_ITEM_ALL_QUANTIFIERS[key]} ${CACHE_ITEM_LABELS[key]}`;
 }
 
 export function beginnerCacheTakeKeys(data: unknown) {

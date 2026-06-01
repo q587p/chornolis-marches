@@ -11,6 +11,8 @@ export type NearbySpeechRecipient = {
   fromDirection?: Direction | string;
 };
 
+export type VerticalYellPromptDirection = "UP" | "DOWN";
+
 export function nearbySpeechRecipients(currentLocationId: number, exits: NearbySpeechExit[]): NearbySpeechRecipient[] {
   const seen = new Set<number>([currentLocationId]);
   const recipients: NearbySpeechRecipient[] = [{ locationId: currentLocationId }];
@@ -46,4 +48,16 @@ export function nearbySpeechDirectionIntro(direction: Direction | string | null 
     default:
       return "Зовсім поруч долинає голос";
   }
+}
+
+export function verticalYellPromptDirectionText(direction: VerticalYellPromptDirection) {
+  return direction === "UP" ? "вгору" : "вниз";
+}
+
+export function verticalYellPromptText(direction: VerticalYellPromptDirection) {
+  return `Що гукнути ${verticalYellPromptDirectionText(direction)}? Напишіть текст.`;
+}
+
+export function verticalYellPromptPlaceholder(direction: VerticalYellPromptDirection) {
+  return direction === "UP" ? "Гукнути вгору..." : "Гукнути вниз...";
 }
