@@ -37,6 +37,7 @@ Make the starter camp feel maintained by other people without turning first-sess
 - No hidden settlement economy or rewards for contributing.
 - No exact stock table in public-facing copy; player text should stay qualitative.
 - No hunter route rewrite.
+- No herbalist route/service rewrite in this slice. A later NPC-003 follow-up should let herbalists periodically return to the starter camp, climb to the watchtower and place gathered medicinal herbs into the beginner cache.
 
 ## Acceptance
 

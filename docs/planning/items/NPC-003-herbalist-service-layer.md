@@ -44,5 +44,6 @@ This is near-term cleanup, not a behavior expansion. The point is to make future
 - `OBS-001-B` can use this service boundary when exposing a visible herbalist action for observation.
 - `NPC-005` can use this service boundary when hungry herbalists decide to eat berries or mushrooms.
 - Later herbalist inventory/resource decisions should build on this boundary instead of placing more profession code in `worldTick.ts`.
+- After the herbalist service layer exists, add a periodic starter-camp support loop: herbalists can return to the starter camp, climb up to the watchtower area and contribute gathered medicinal herbs to `Спільна скриня прибулих` / the beginner cache. This should reuse the same kind of route/action/service structure as hunter behavior instead of adding more ad hoc world-tick code.
 - When herbalists carry gathered herbs, berries or mushrooms, public `examine` should summarize those supplies qualitatively (`без лікарських трав`, `трохи ягід`, `багато грибів`) rather than exposing exact private inventory counts. Scribe/admin views may show exact values.
 - Give herbalists their own profession-aware reactions to fitting social signals after the service layer exists. They can acknowledge nods, quiet people with `Притишити`, point toward herbs or danger, and ignore signals that do not fit their current work.
