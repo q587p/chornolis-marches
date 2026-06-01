@@ -35,10 +35,15 @@ const locations = readJson("locations.json");
 const exits = readJson("exits.json");
 const resourceTypes = readJson("resourceTypes.json");
 const resourceNodes = readJson("resourceNodes.json");
+const resourceRules = readJson("resourceRules.json");
 const features = readJson("features.json");
 const uniqueCreatures = readJson("uniqueCreatures.json");
 
 assert.equal(typeof meta.startLocationKey, "string", "meta.startLocationKey must be set");
+assert.ok(
+  meta.notes?.some((note) => /\+1 upper rooms and -1 lower rooms/.test(note)),
+  "meta.json should document that authored +1 and -1 rooms are allowed",
+);
 
 const regionKeys = keySet(regions, "region");
 const locationKeys = keySet(locations, "location");
@@ -71,18 +76,211 @@ for (const node of resourceNodes) {
   assert.ok(Number.isInteger(node.maxAmount) && node.maxAmount >= node.amount, `Invalid resource maxAmount for ${nodeKey}`);
 }
 
+for (const location of locations.filter((item) => item.regionKey === "dream_tutorial")) {
+  const biomeRules = resourceRules.defaultsByBiome?.[location.biome] ?? {};
+  const overrides = resourceRules.locationOverrides?.[location.key] ?? {};
+  const keys = new Set([...Object.keys(biomeRules), ...Object.keys(overrides)]);
+
+  for (const resourceKey of keys) {
+    if (!["grass", "berries", "mushrooms", "herbs"].includes(resourceKey)) continue;
+    const rule = Object.prototype.hasOwnProperty.call(overrides, resourceKey) ? overrides[resourceKey] : biomeRules[resourceKey];
+    const amount = Array.isArray(rule) ? rule[1] : rule;
+
+    if (location.key === "dream_tutorial_foraging" && (resourceKey === "berries" || resourceKey === "herbs")) {
+      assert.ok(amount > 0, `Dream foraging lesson should keep ${resourceKey}`);
+      continue;
+    }
+
+    assert.ok(!amount || amount <= 0, `Dream tutorial location should not inherit biome resource ${location.key}:${resourceKey}`);
+  }
+}
+
 for (const feature of features) {
   assertKnown(locationKeys, feature.locationKey, `Unknown locationKey for feature ${feature.key}`);
 }
 
+function renderedFeatureIcon(feature) {
+  const data = feature.data ?? {};
+  if (typeof data.icon === "string" && data.icon.trim()) return data.icon.trim();
+  if (data.tutorial_inside_prompt === true || data.tutorial_outside_prompt === true) return "🕯️";
+  if (data.tutorial_rest_seat === true) return "🪑";
+  if (data.tutorial_observation_prompt === true) return "🦊";
+  if (feature.type === "CAMPFIRE" || feature.type === "MAGIC_CAMPFIRE" || data.is_campfire === true) {
+    return data.extinguished === true ? "🪨" : "🔥";
+  }
+  if (feature.key.startsWith("depleted_vegetation_") || data.ecology === "depleted_vegetation") return "🌾";
+  if (feature.type === "BORDER_MARKER") return "🪧";
+  if (feature.type === "GATE") return "🚪";
+  return "✦";
+}
+
+for (const feature of features) {
+  assert.notEqual(renderedFeatureIcon(feature), "✦", `Feature should not fall back to the generic icon: ${feature.key}`);
+}
+
+const explicitFeatureIconsByLocation = new Map();
+for (const feature of features) {
+  const icon = typeof feature.data?.icon === "string" ? feature.data.icon.trim() : "";
+  if (!icon) continue;
+  const locationIcons = explicitFeatureIconsByLocation.get(feature.locationKey) ?? new Map();
+  assert.ok(
+    !locationIcons.has(icon),
+    `Duplicate explicit feature icon in ${feature.locationKey}: ${icon} on ${locationIcons.get(icon)} and ${feature.key}`,
+  );
+  locationIcons.set(icon, feature.key);
+  explicitFeatureIconsByLocation.set(feature.locationKey, locationIcons);
+}
+
+for (const key of ["closed_gate_torch_stand", "closed_gate_hunting_notice", "closed_gate_carcass_dropoff"]) {
+  const feature = features.find((item) => item.key === key);
+  assert.ok(feature?.data?.icon, `Gate feature should have a distinct icon: ${key}`);
+}
+
+const gateTorchStand = features.find((item) => item.key === "closed_gate_torch_stand");
+assert.notEqual(gateTorchStand?.data?.icon, "🔥", "Torch stand should not use the fire icon reserved for flame/campfire actions");
+assert.equal(gateTorchStand?.data?.hunter_resupply, false, "Gate torch stand should no longer be the hunter resupply source");
+
+for (const key of ["start_border_marker", "start_newcomer_tablet", "start_border_watchtower_ladder"]) {
+  const feature = features.find((item) => item.key === key);
+  assert.ok(feature, `Starter camp feature should exist: ${key}`);
+  assert.equal(feature.locationKey, "start_border_camp", `Starter camp feature should stay at the camp: ${key}`);
+  assert.ok(feature.data?.icon, `Starter camp feature should have a distinct icon: ${key}`);
+  assert.ok(Array.isArray(feature.data?.aliases) && feature.data.aliases.length > 0, `Starter camp feature should have aliases: ${key}`);
+}
+
+const startWatchtowerLadder = features.find((item) => item.key === "start_border_watchtower_ladder");
+assert.equal(startWatchtowerLadder?.data?.vertical_hint, "UP", "Starter watchtower feature should expose an UP action hint");
+for (const key of ["start_newcomer_tablet", "start_border_watchtower_ladder"]) {
+  const feature = features.find((item) => item.key === key);
+  assert.ok(typeof feature?.data?.examine_summary === "string" && feature.data.examine_summary.length > 0, `Starter authored landmark should have examine summary: ${key}`);
+}
+
+const startWatchtower = locations.find((item) => item.key === "start_border_watchtower");
+assert.ok(startWatchtower, "Starter camp watchtower should exist as a real location");
+assert.equal(startWatchtower.x, 17, "Starter camp watchtower should sit above the camp x coordinate");
+assert.equal(startWatchtower.y, 5, "Starter camp watchtower should sit above the camp y coordinate");
+assert.equal(startWatchtower.z, 1, "Starter camp watchtower should use z = 1");
+assert.ok(
+  exits.some((exit) => exit.fromKey === "start_border_camp" && exit.toKey === "start_border_watchtower" && exit.direction === "UP"),
+  "Starter camp should have an UP exit to the watchtower",
+);
+assert.ok(
+  exits.some((exit) => exit.fromKey === "start_border_watchtower" && exit.toKey === "start_border_camp" && exit.direction === "DOWN"),
+  "Starter watchtower should have a DOWN exit to the camp",
+);
+
+const startCampTorchStand = features.find((item) => item.key === "start_camp_torch_stand");
+assert.equal(startCampTorchStand?.data?.torch_source, true, "Starter camp torch stand should be a torch source");
+assert.equal(startCampTorchStand?.locationKey, "start_border_watchtower", "Starter torch stand should live in the watchtower");
+assert.notEqual(startCampTorchStand?.data?.hunter_resupply, false, "Starter watchtower torch stand should remain available for hunter resupply");
+assert.notEqual(startCampTorchStand?.data?.icon, "🔥", "Starter camp torch stand should not use the fire icon reserved for flame/campfire actions");
+
+const beginnerCache = features.find((item) => item.key === "start_beginner_shared_cache");
+assert.ok(beginnerCache, "Starter shared beginner cache should exist");
+assert.equal(beginnerCache.locationKey, "start_border_watchtower", "Starter shared beginner cache should live in the watchtower");
+assert.equal(beginnerCache.data?.beginner_cache, true, "Starter shared beginner cache should be marked as beginner cache data");
+assert.equal(beginnerCache.data?.hidden_unobserved_restock, true, "Starter shared beginner cache should restock only while unobserved");
+assert.equal(beginnerCache.data?.cache_stock?.torch, undefined, "Starter shared beginner cache should not duplicate the nearby torch stand");
+assert.equal(beginnerCache.data?.cache_max_stock?.torch, undefined, "Starter shared beginner cache should not accept torch contributions");
+assert.equal(beginnerCache.data?.cache_stock?.raw_meat, 4, "Starter shared beginner cache should provide extra raw meat");
+assert.equal(beginnerCache.data?.cache_stock?.cooked_meat, 2, "Starter shared beginner cache should demonstrate cooked meat");
+assert.ok(Array.isArray(beginnerCache.data?.aliases) && beginnerCache.data.aliases.includes("скриня"), "Starter shared beginner cache should have Ukrainian aliases");
+
+const tutorialRestBench = features.find((item) => item.key === "dream_tutorial_rest_fire");
+assert.ok(tutorialRestBench, "Tutorial rest bench feature should exist");
+assert.equal(
+  tutorialRestBench.restStaminaCapMultiplier ?? null,
+  null,
+  "Tutorial rest bench should speed up rest without raising max stamina",
+);
+assert.equal(
+  tutorialRestBench.data?.rest_stamina_cap_multiplier ?? null,
+  null,
+  "Tutorial rest bench data should not raise max stamina",
+);
+assert.ok(
+  Number(tutorialRestBench.data?.rest_stamina_regen_multiplier ?? 1) > 1,
+  "Tutorial rest bench should still speed up stamina recovery",
+);
+
+const tutorialDeepRestHeat = features.find((item) => item.key === "dream_tutorial_deep_rest_fire");
+assert.ok(tutorialDeepRestHeat, "Tutorial deep rest heat feature should exist");
+assert.ok(
+  Number(tutorialDeepRestHeat.restStaminaCapMultiplier ?? 1) > 1,
+  "Tutorial deep rest heat should be the tutorial feature that can raise max stamina",
+);
+assert.ok(
+  Number(tutorialDeepRestHeat.data?.rest_stamina_cap_multiplier ?? 1) > 1,
+  "Tutorial deep rest heat data should keep the extra stamina cap",
+);
+
+for (const key of ["dream_tutorial_sleep_gate", "dream_tutorial_sleep_gate_return"]) {
+  const feature = features.find((item) => item.key === key);
+  assert.ok(feature, `Dream gate feature missing: ${key}`);
+  assert.ok(feature.data?.aliases?.includes("браму"), `Dream gate should include accusative alias браму: ${key}`);
+  assert.ok(feature.data?.aliases?.includes("брами"), `Dream gate should include genitive alias брами: ${key}`);
+}
+
+const tutorialEndFeatures = features.filter((item) => item.data?.tutorial_end_prompt === true);
+assert.equal(tutorialEndFeatures.length, 1, "Tutorial should expose exactly one end-learning button surface");
+assert.equal(
+  tutorialEndFeatures[0].locationKey,
+  "dream_tutorial_waking_edge",
+  "Tutorial end-learning button should live at the forward waking edge",
+);
+
+for (const key of [
+  "dream_tutorial_attention_path",
+  "dream_tutorial_signs",
+  "dream_tutorial_traces",
+  "dream_tutorial_waking_edge",
+]) {
+  assertKnown(locationKeys, key, `Tutorial action ladder location should exist: ${key}`);
+}
+
+for (const [fromKey, toKey, direction] of [
+  ["dream_tutorial_safety", "dream_tutorial_attention_path", "SOUTH"],
+  ["dream_tutorial_attention_path", "dream_tutorial_signs", "SOUTH"],
+  ["dream_tutorial_signs", "dream_tutorial_traces", "SOUTH"],
+  ["dream_tutorial_traces", "dream_tutorial_waking_edge", "SOUTH"],
+]) {
+  assert.ok(
+    exits.some((exit) => exit.fromKey === fromKey && exit.toKey === toKey && exit.direction === direction),
+    `Tutorial action ladder should connect ${fromKey} ${direction} -> ${toKey}`,
+  );
+}
+
 for (const creature of uniqueCreatures) {
   assertKnown(locationKeys, creature.locationKey, `Unknown locationKey for unique creature ${creature.name}`);
+  for (const resource of creature.resources ?? []) {
+    assertKnown(resourceTypeKeys, resource.resourceKey, `Unknown resourceKey for unique creature ${creature.name}`);
+    assert.ok(Number.isInteger(resource.amount) && resource.amount > 0, `Invalid carried resource amount for ${creature.name}:${resource.resourceKey}`);
+  }
 }
+
+const oryna = uniqueCreatures.find((creature) => creature.name === "Орина");
+assert.ok(oryna, "Seed should include hunter Орина");
+assert.equal(
+  oryna.action.includes("hunter_torches:"),
+  false,
+  "Орина should use real carried torch resources instead of the lightweight hunter_torches marker",
+);
+assert.deepEqual(
+  (oryna.resources ?? []).map((resource) => `${resource.resourceKey}:${resource.amount}`).sort(),
+  ["lit_torch:1", "torch:1"],
+  "Орина should start with one lit torch and one spare torch",
+);
 
 for (const filePath of ["prisma/seed.ts", "src/services/worldReset.ts"]) {
   for (const locationKey of sourceLocationKeys(filePath)) {
     assertKnown(locationKeys, locationKey, `Unknown hardcoded starter location in ${filePath}`);
   }
 }
+
+const seedSource = fs.readFileSync("prisma/seed.ts", "utf8");
+assert.ok(
+  /worldState\.upsert\(\{\s*where:\s*\{\s*id:\s*1\s*\},\s*\/\/ Deploy seed refreshes authored world data but must not rewind the live world clock\.\s*update:\s*\{\}/s.test(seedSource),
+  "npm run seed must create missing WorldState but must not update/rewind an existing live world clock",
+);
 
 console.log(`World seed OK: ${locations.length} locations, ${exits.length} exits, start=${meta.startLocationKey}`);

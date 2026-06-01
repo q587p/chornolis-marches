@@ -7,16 +7,18 @@ import { isCampfireFeature } from "./locationFeatures";
 import {
   campfireStateLine,
   canAddTwigsToCampfire,
+  expireGroundLitTorches,
   expireTimedCampfires,
   getPlayerTorchState,
-  hasActiveLightAtLocation,
+  isActiveLitTorchResource,
   isCampfireFading,
   isExtinguishedCampfire,
   lightCampfireFromTorch,
+  oldCampfireMemoryInspectionText,
   takeTorchFromFeature,
   TORCH_DURATION_MS,
 } from "./fire";
-import { isVisibleGroundResource } from "./groundItems";
+import { isVisibleGroundResource, type VisibleGroundResourceKey } from "./groundItems";
 import { escapeHtml } from "../utils/text";
 import { normalizeCreatureActionText } from "../utils/creatureActionText";
 import { creatureForms } from "./grammar";
@@ -24,14 +26,27 @@ import { resourceTypeDisplayName } from "./corpses";
 import { getPublicEcologySignStats, type PublicEcologySignStats } from "./ecologyStats";
 import { lifetimeSummary } from "./itemLifetime";
 import { playerShowsTechnicalDetails } from "./technicalDetails";
-import { dreamGateStatusText, isDreamGateFeature, lockedExitDirections, lockedExitLabel, rememberTutorialObservationLesson } from "./tutorial";
+import { dreamGateStatusText, ensureTutorialForagingResources, isDreamGateFeature, lockedExitDirections, lockedExitLabel, rememberTutorialObservationLesson } from "./tutorial";
 import { formatObservedPostureText } from "../utils/playerText";
+import { isFreshenedCorpse } from "./meat";
+import { heldWeaponLine } from "./weapons";
+import { GATE_CARCASS_DROPOFF_FEATURE_KEY, gateHuntingDropoffText, gateHuntingNoticeText, getGateHuntingSaturationState } from "./carcassDropoff";
+import { visibilityDarknessText, visibilityPresenceText, visibilityRulesForLocation, type VisibilityRules } from "./visibility";
+import {
+  beginnerCacheActionLabel,
+  beginnerCacheInspectionText,
+  beginnerCacheTakeKeys,
+  isBeginnerCacheData,
+  playerBeginnerCacheContributionKeys,
+  prepareBeginnerCacheForInspection,
+} from "./beginnerCache";
 
 const COMPACT_EXIT_ORDER = ["NORTH", "WEST", "SOUTH", "EAST", "UP", "DOWN", "INSIDE", "OUTSIDE"];
 const GATHERABLE_RESOURCE_KEYS = ["berries", "mushrooms", "herbs"] as const;
 const TARGET_TEXT_LIMIT = 8;
 const EXHAUSTED_LOCATION_REGEN_EVERY_TICKS = Number(process.env.WORLD_EXHAUSTED_LOCATION_REGEN_EVERY_TICKS || 240);
 const RESOURCE_REGEN_AMOUNT = Number(process.env.WORLD_RESOURCE_REGEN_AMOUNT || 1);
+export const TREE_SHAKE_DEFAULT_COOLDOWN_MS = Number(process.env.TREE_SHAKE_COOLDOWN_MS || 2 * 60 * 60 * 1000);
 const CREATURE_AGE_ADJECTIVES: Record<string, Record<string, string>> = {
   YOUNG: { MASCULINE: "молодий", FEMININE: "молода", NEUTER: "молоде", PLURAL: "молоді" },
   ADULT: { MASCULINE: "дорослий", FEMININE: "доросла", NEUTER: "доросле", PLURAL: "дорослі" },
@@ -54,12 +69,18 @@ type HtmlFollowupMessage = {
   text: string;
 };
 
-function isVisibleCorpse(c: any) {
-  return !c.isAlive && !c.isGone && !c.isHidden && c.age === "CORPSE";
+export function isVisibleCorpse(c: any) {
+  return !c.isAlive && !c.isGone && !c.isHidden && c.age === "CORPSE" && !isFreshenedCorpse(c.currentAction);
 }
 
 function isVisibleLivingCreature(c: any) {
   return c.isAlive && !c.isGone && !c.isHidden;
+}
+
+function visibleCreatureTorchText(c: any) {
+  const lit = c.resources?.find((resource: any) => isActiveLitTorchResource(resource));
+  if (!lit) return null;
+  return lit.amount > 1 ? "тримає запалені факели" : "тримає запалений факел";
 }
 
 function visibleTargets(
@@ -74,10 +95,13 @@ function visibleTargets(
       id: p.id,
       label: p.nameNominative ?? p.firstName ?? p.username ?? "мандрівник",
       canGreet: true,
+      posture: p.posture,
+      sleepState: p.sleepState,
       isResting: p.isResting,
       fatigueState: p.fatigueState,
       grammaticalGender: p.grammaticalGender,
       pronoun: p.pronoun,
+      actionLabel: heldWeaponLine(p.equippedWeaponKey)?.replace(/\.$/u, "").toLocaleLowerCase("uk-UA"),
     }));
 
   const livingCreatures = location.creatures
@@ -88,7 +112,7 @@ function visibleTargets(
       label: options.showAnimalAge && c.species.kind === "ANIMAL"
         ? animalAgeDescription(c, options.showTechnicalDetails)
         : c.name ?? c.species.name,
-      actionLabel: normalizeCreatureActionText(c.currentAction, "проходить"),
+      actionLabel: [heldWeaponLine(c.equippedWeaponKey)?.replace(/\.$/u, "").toLocaleLowerCase("uk-UA"), normalizeCreatureActionText(c.currentAction, "проходить"), visibleCreatureTorchText(c)].filter(Boolean).join("; "),
       canGreet: c.species.kind !== "ANIMAL",
       isAnimal: c.species.kind === "ANIMAL",
       isCorpse: false,
@@ -96,15 +120,20 @@ function visibleTargets(
 
   const corpses = location.creatures
     .filter(isVisibleCorpse)
-    .map((c: any) => ({
-      type: "creature" as const,
-      id: c.id,
-      label: `труп: ${c.species.name}`,
-      actionLabel: c.currentAction ? normalizeCreatureActionText(c.currentAction) : undefined,
-      canGreet: false,
-      isAnimal: c.species.kind === "ANIMAL",
-      isCorpse: true,
-    }));
+    .map((c: any) => {
+      const wasFreshened = isFreshenedCorpse(c.currentAction);
+      const corpseLeft = c.corpseDecayTicksLeft ?? c.species.corpseDecayTicks;
+      return {
+        type: "creature" as const,
+        id: c.id,
+        label: `${wasFreshened ? "рештки" : "труп"} ${creatureForms(c).genitive}`,
+        actionLabel: undefined,
+        canGreet: false,
+        isAnimal: c.species.kind === "ANIMAL",
+        isCorpse: true,
+        canFreshen: !wasFreshened && corpseLeft > Math.floor(c.species.corpseDecayTicks / 2),
+      };
+    });
 
   return [...players, ...livingCreatures, ...corpses];
 }
@@ -121,12 +150,42 @@ function isTorchSourceFeature(feature: any) {
   return featureData(feature).torch_source === true;
 }
 
+function isBeginnerCacheFeature(feature: any) {
+  return isBeginnerCacheData(featureData(feature));
+}
+
+function isClimbTreeFeature(feature: any) {
+  return featureData(feature).climb_tree === true;
+}
+
+function isShakeTreeFeature(feature: any) {
+  return featureData(feature).shake_tree === true;
+}
+
+export function treeShakeAmount(min = 5, max = 8, random = Math.random) {
+  const safeMin = Math.max(0, Math.floor(min));
+  const safeMax = Math.max(safeMin, Math.floor(max));
+  return safeMin + Math.floor(random() * (safeMax - safeMin + 1));
+}
+
+function treeShakeReadyAt(data: Record<string, unknown>, now = Date.now()) {
+  const lastShakenAt = typeof data.lastShakenAt === "string" ? Date.parse(data.lastShakenAt) : NaN;
+  if (!Number.isFinite(lastShakenAt)) return null;
+  const cooldownMs = Number(data.shake_cooldown_ms ?? TREE_SHAKE_DEFAULT_COOLDOWN_MS);
+  const readyAt = lastShakenAt + Math.max(0, cooldownMs);
+  return readyAt > now ? new Date(readyAt) : null;
+}
+
 function isDepletedVegetationFeature(feature: any) {
   return feature.isActive && String(feature.key ?? "").startsWith("depleted_vegetation_");
 }
 
 function isTutorialObservationFeature(feature: any) {
   return featureData(feature).tutorial_observation_prompt === true;
+}
+
+function isTutorialEndFeature(feature: any) {
+  return featureData(feature).tutorial_end_prompt === true;
 }
 
 function isTutorialRestSeatFeature(feature: any) {
@@ -166,7 +225,30 @@ function torchLightButtonText(torchState: { isLit: boolean; plainAmount: number;
   return torchState.isLit ? "🔥 Оновити вогонь на факелі" : "🔥 Підпалити факел";
 }
 
+const FEATURE_MOVE_DIRECTIONS = ["UP", "DOWN", "INSIDE", "OUTSIDE"] as const;
+type FeatureMoveDirection = (typeof FEATURE_MOVE_DIRECTIONS)[number];
+const FEATURE_MOVE_DIRECTION_SET = new Set<string>(FEATURE_MOVE_DIRECTIONS);
+const FEATURE_MOVE_ICONS: Record<FeatureMoveDirection, string> = {
+  UP: "⬆️",
+  DOWN: "⬇️",
+  INSIDE: "🕳️",
+  OUTSIDE: "🕳️",
+};
+
+export function featureMoveDirection(feature: any): FeatureMoveDirection | null {
+  const direction = String(featureData(feature).vertical_hint ?? "").toUpperCase();
+  return FEATURE_MOVE_DIRECTION_SET.has(direction) ? direction as FeatureMoveDirection : null;
+}
+
+export function featureMoveButtonLabel(direction: FeatureMoveDirection) {
+  const label = directionLabels[direction] ?? direction;
+  const icon = FEATURE_MOVE_ICONS[direction] ?? "➡️";
+  return `${icon} ${label}`;
+}
+
 function featureIcon(feature: any) {
+  const data = featureData(feature);
+  if (typeof data.icon === "string" && data.icon.trim()) return data.icon.trim();
   if (isTutorialInsideFeature(feature) || isTutorialOutsideFeature(feature)) return "🕳️";
   if (isTutorialRestSeatFeature(feature)) return "🪑";
   if (isTutorialObservationFeature(feature)) return "🦊";
@@ -206,6 +288,7 @@ function featureSearchKeys(feature: any) {
 async function resolveInteractiveLocationFeature(locationId: number, query: string) {
   const normalized = normalizeFeatureQuery(query);
   if (!normalized) return null;
+  if (/^\d+$/.test(normalized)) return null;
 
   const features = (await prisma.locationFeature.findMany({
     where: { locationId, isActive: true },
@@ -221,7 +304,7 @@ async function resolveInteractiveLocationFeature(locationId: number, query: stri
 
 function isTutorialPromptFeature(feature: any) {
   const data = featureData(feature);
-  return data.tutorial_wake_prompt === true || data.tutorial_time_prompt === true || data.tutorial_safety_prompt === true || data.tutorial_observation_prompt === true;
+  return data.tutorial_wake_prompt === true || data.tutorial_time_prompt === true || data.tutorial_safety_prompt === true || data.tutorial_observation_prompt === true || data.tutorial_end_prompt === true;
 }
 
 function featureBriefLine(feature: any) {
@@ -231,10 +314,17 @@ function featureBriefLine(feature: any) {
 function featureDetailLine(feature: any, showTechnicalDetails = false) {
   const line = `${featureIcon(feature)} <i>${escapeHtml(feature.name)}</i>`;
   const details: string[] = [];
+  const data = featureData(feature);
+  const authoredSummary = typeof data.examine_summary === "string" ? data.examine_summary.trim() : "";
+  if (authoredSummary) details.push(authoredSummary);
 
   if (isCampfireFeature(feature)) {
     if (isExtinguishedCampfire(feature)) {
-      details.push("лишився попіл і чорні головешки");
+      if (feature.name === "Ледь помітне вогнище") {
+        details.push("майже розсипалося в землю");
+      } else {
+        details.push("лишився попіл і чорні головешки");
+      }
       details.push("світла й тепла вже не дає");
     } else if (feature.type === "MAGIC_CAMPFIRE") {
       details.push("дає світло");
@@ -250,12 +340,19 @@ function featureDetailLine(feature: any, showTechnicalDetails = false) {
     }
   } else if (isTorchSourceFeature(feature)) {
     details.push("тут є факели, які можна взяти з собою");
+  } else if (isBeginnerCacheFeature(feature)) {
+    details.push("спільні прості припаси для першої дороги");
+  } else if (isClimbTreeFeature(feature)) {
+    details.push("по стовбуру можна піднятися вгору");
+  } else if (isShakeTreeFeature(feature)) {
+    const readyAt = treeShakeReadyAt(data);
+    details.push(readyAt ? "сухе гілля вже струшене й ще не відновилося" : "сухе гілля можна струсити вниз");
   } else if (feature.providesLight) {
     details.push("дає світло");
   } else if (feature.type === "BORDER_MARKER") {
     details.push("допомагає зорієнтуватися поблизу межі");
   } else if (feature.type === "GATE") {
-    details.push("позначає прохід, який треба роздивитися ближче");
+    details.push("позначає прохід, який відкриється за певних умов");
   } else if (isTutorialInsideFeature(feature)) {
     details.push("ховає вхід, що не є стороною світу");
   } else if (isTutorialOutsideFeature(feature)) {
@@ -269,9 +366,13 @@ function featureDetailLine(feature: any, showTechnicalDetails = false) {
   const fireState = isCampfireFeature(feature) ? campfireStateLine(feature) : null;
   if (fireState && !isExtinguishedCampfire(feature)) details.push(fireState);
   if (showTechnicalDetails && feature.restStaminaCapMultiplier) details.push(`відпочинок до ×${feature.restStaminaCapMultiplier} снаги`);
-  const restSpeedMultiplier = Number(featureData(feature).rest_stamina_regen_multiplier ?? featureData(feature).restStaminaRegenMultiplier ?? 1);
+  const restSpeedMultiplier = Number(data.rest_stamina_regen_multiplier ?? data.restStaminaRegenMultiplier ?? 1);
   if (showTechnicalDetails && Number.isFinite(restSpeedMultiplier) && restSpeedMultiplier > 1) details.push(`відновлення снаги ×${Math.floor(restSpeedMultiplier)}`);
   return details.length ? `${line}; ${details.map(escapeHtml).join("; ")}` : line;
+}
+
+export function featureBriefInspectionText(feature: any, showTechnicalDetails = false) {
+  return featureDetailLine(feature, showTechnicalDetails);
 }
 
 function formatPublicCount(value: number) {
@@ -288,12 +389,12 @@ function roughAmount(value: number) {
   return "дуже багато";
 }
 
-function roughEventAmount(value: number) {
+function roughEventLevel(value: number) {
   if (value <= 0) return "не позначено";
-  if (value === 1) return "одна зарубка";
-  if (value <= 4) return "кілька зарубок";
-  if (value <= 12) return "помітно зарубок";
-  return "багато зарубок";
+  if (value === 1) return "один слід";
+  if (value <= 4) return "кілька";
+  if (value <= 12) return "помітно";
+  return "багато";
 }
 
 function publicEcologyReport(stats: PublicEcologySignStats, showTechnicalDetails = false) {
@@ -305,14 +406,14 @@ function publicEcologyReport(stats: PublicEcologySignStats, showTechnicalDetails
 
   const counters = stats.recent.counters;
   const recentBirths = counters.rabbitBirths + counters.mouseBirths + counters.foxBirths + counters.wolfBirths;
-  const recentDeaths = counters.oldAgeDeaths + counters.starvationDeaths + counters.predatorKills;
+  const recentDeaths = counters.oldAgeDeaths + counters.starvationDeaths + counters.predatorKills + counters.playerKills;
   const recentWindow = stats.recent.eventCount > 0
     ? "останні свіжі зарубки"
     : "останні свіжі зарубки";
   const technical = showTechnicalDetails
     ? [
         "",
-        `Технічно: alive=${formatPublicCount(stats.totals.aliveAnimals)}, corpses=${formatPublicCount(stats.totals.corpseAnimals)}; recentWindowMinutes=${formatPublicCount(Math.max(1, Math.round(stats.recent.observedMinutes)))}; births=${formatPublicCount(recentBirths)}, deaths=${formatPublicCount(recentDeaths)}, predatorKills=${formatPublicCount(counters.predatorKills)}, starvationDeaths=${formatPublicCount(counters.starvationDeaths)}, oldAgeDeaths=${formatPublicCount(counters.oldAgeDeaths)}; totalPredatorKills=${formatPublicCount(stats.totals.predatorKills)}, totalStarvationDeaths=${formatPublicCount(stats.totals.starvationDeaths)}.`,
+        `Технічно: alive=${formatPublicCount(stats.totals.aliveAnimals)}, corpses=${formatPublicCount(stats.totals.corpseAnimals)}; recentWindowMinutes=${formatPublicCount(Math.max(1, Math.round(stats.recent.observedMinutes)))}; births=${formatPublicCount(recentBirths)}, deaths=${formatPublicCount(recentDeaths)}, predatorKills=${formatPublicCount(counters.predatorKills)}, playerKills=${formatPublicCount(counters.playerKills)}, starvationDeaths=${formatPublicCount(counters.starvationDeaths)}, oldAgeDeaths=${formatPublicCount(counters.oldAgeDeaths)}; totalPredatorKills=${formatPublicCount(stats.totals.predatorKills)}, totalPlayerKills=${formatPublicCount(stats.totals.playerKills)}, totalStarvationDeaths=${formatPublicCount(stats.totals.starvationDeaths)}.`,
       ]
     : [];
 
@@ -322,8 +423,8 @@ function publicEcologyReport(stats: PublicEcologySignStats, showTechnicalDetails
     `Живності зараз: ${roughAmount(stats.totals.aliveAnimals)}. Трупів на землі: ${roughAmount(stats.totals.corpseAnimals)}.`,
     livingLines.length ? `За видами:\n${livingLines.join("\n")}` : "Живих тварин на зарубках зараз не видно.",
     "",
-    `За ${recentWindow}: народжень ${roughEventAmount(recentBirths)}, смертей ${roughEventAmount(recentDeaths)}.`,
-    `Причини на зарубках: хижаки — ${roughEventAmount(counters.predatorKills)}, голод — ${roughEventAmount(counters.starvationDeaths)}, вік — ${roughEventAmount(counters.oldAgeDeaths)}.`,
+    `Свіжі зарубки: народжень — ${roughEventLevel(recentBirths)}; смертей — ${roughEventLevel(recentDeaths)}.`,
+    `Серед причин: хижаки — ${roughEventLevel(counters.predatorKills)}; персонажі — ${roughEventLevel(counters.playerKills)}; голод — ${roughEventLevel(counters.starvationDeaths)}; вік — ${roughEventLevel(counters.oldAgeDeaths)}.`,
     "",
     `За давнішими записами знака: хижаки й голод уже лишали тут помітні сліди.`,
     ...technical,
@@ -353,14 +454,44 @@ function addInlineRows(target: InlineKeyboard, source: InlineKeyboard) {
   }
 }
 
-function presenceText(location: any, viewerPlayerId?: number, revealTargets = false, activeActions = new Map<string, any>()) {
+export function groundItemPickupButtonRows(groundItems: any[]) {
+  const groundItemTotalsByKey = new Map<string, number>();
+  for (const item of groundItems) {
+    groundItemTotalsByKey.set(item.resourceType.key, (groundItemTotalsByKey.get(item.resourceType.key) ?? 0) + item.amount);
+  }
+
+  return groundItems.map((item) => {
+    const row = [
+      {
+        text: `🤲 Підібрати: ${item.resourceType.name}`,
+        callbackData: `item:pickup:${item.id}`,
+      },
+    ];
+    if ((groundItemTotalsByKey.get(item.resourceType.key) ?? 0) > 1) {
+      row.push({
+        text: "всі",
+        callbackData: `item:pickupAll:${item.resourceType.key as VisibleGroundResourceKey}`,
+      });
+    }
+    return row;
+  });
+}
+
+function addGroundItemPickupButtons(keyboard: InlineKeyboard, groundItems: any[]) {
+  for (const row of groundItemPickupButtonRows(groundItems)) {
+    for (const button of row) keyboard.text(button.text, button.callbackData);
+    keyboard.row();
+  }
+}
+
+function presenceText(location: any, viewerPlayerId?: number, revealTargets = false, activeActions = new Map<string, any>(), visibility?: VisibilityRules) {
   const targets = visibleTargets(location, viewerPlayerId);
   const hasCharacters = targets.some((t) => t.canGreet);
   const hasAnimals = location.creatures.some((c: any) => isVisibleLivingCreature(c) && c.species.kind === "ANIMAL");
   const hasCorpses = location.creatures.some(isVisibleCorpse);
   const groundItems = (location.resources ?? []).filter((r: any) => isVisibleGroundResource(r, location));
 
-  if (revealTargets && targets.length) {
+  if (revealTargets && (targets.length || groundItems.length)) {
     const livingLines = targets
       .filter(isLivingTarget)
       .slice(0, TARGET_TEXT_LIMIT)
@@ -391,6 +522,10 @@ function presenceText(location: any, viewerPlayerId?: number, revealTargets = fa
     return sections.length ? `\n\n${sections.join("\n\n")}` : "";
   }
 
+  const obscuredPresence = visibility && !visibility.showNearbyDetails;
+  const obscuredGround = visibility && !visibility.showGroundObjects;
+  if (obscuredPresence && (hasCharacters || hasAnimals)) return `\n\n<i>${escapeHtml(visibilityPresenceText(visibility, "nearby"))}</i>`;
+  if (obscuredGround && (hasCorpses || groundItems.length)) return `\n\n<i>${escapeHtml(visibilityPresenceText(visibility, "ground"))}</i>`;
   if (hasCharacters && hasAnimals) return "\n\n<i>Поруч хтось або щось є.</i>";
   if (hasCharacters) return "\n\n<i>Поруч хтось є.</i>";
   if (hasAnimals) return "\n\n<i>Поруч щось ворушиться.</i>";
@@ -398,13 +533,13 @@ function presenceText(location: any, viewerPlayerId?: number, revealTargets = fa
   return "";
 }
 
-function groundItemLine(resource: any) {
+export function groundItemLine(resource: any) {
   const amount = resource.amount > 1 ? ` ×${resource.amount}` : "";
   if (resource.resourceType.key !== "lit_torch") return `${resourceTypeDisplayName(resource.resourceType)}${amount}`;
 
   const leftMs = resource.updatedAt.getTime() + TORCH_DURATION_MS - Date.now();
   const minutes = Math.max(1, Math.ceil(leftMs / 60_000));
-  return `${resourceTypeDisplayName(resource.resourceType)}${amount}; горітиме ще приблизно ${minutes} хв`;
+  return `${resourceTypeDisplayName(resource.resourceType)}${amount}; дає світло; горітиме ще приблизно ${minutes} хв`;
 }
 
 function sortedExits(exits: any[]) {
@@ -446,8 +581,8 @@ function formatSeconds(ms: number) {
 async function usesQuickPlayerActionDuration(viewerPlayerId?: number) {
   if (!viewerPlayerId) return false;
 
-  const player = await prisma.player.findUnique({ where: { id: viewerPlayerId }, select: { hp: true, isResting: true, stamina: true } });
-  if (!player || player.hp <= 0 || player.isResting || player.stamina <= 0) return false;
+  const player = await prisma.player.findUnique({ where: { id: viewerPlayerId }, select: { hp: true, isResting: true, posture: true, sleepState: true, stamina: true } });
+  if (!player || player.hp <= 0 || player.isResting || player.posture !== "STANDING" || player.sleepState === "ORDINARY_SLEEP" || player.stamina <= 0) return false;
 
   const activeActions = await prisma.worldAction.count({
     where: { actorType: "PLAYER", playerId: viewerPlayerId, status: { in: ["QUEUED", "RUNNING"] } },
@@ -523,20 +658,23 @@ async function activeActionsForTargets(targets: ReturnType<typeof visibleTargets
   return activeActions;
 }
 
-function guessGenderFromForms(forms: ReturnType<typeof creatureForms>, fallback?: string | null) {
-  if (fallback === "FEMININE" || fallback === "NEUTER" || fallback === "PLURAL") return fallback;
+function guessGenderFromForms(forms: ReturnType<typeof creatureForms>, fallback?: string | null, sex?: string | null) {
+  if (sex === "MALE") return "MASCULINE";
+  if (sex === "FEMALE") return "FEMININE";
+  if (fallback === "PLURAL") return fallback;
   const lower = forms.nominative.toLocaleLowerCase("uk-UA");
   if (lower.endsWith("а") || lower.endsWith("я")) return "FEMININE";
   if (lower.endsWith("о") || lower.endsWith("е") || lower.endsWith("я")) return "NEUTER";
+  if (fallback === "FEMININE" || fallback === "NEUTER") return fallback;
   return "MASCULINE";
 }
 
-function animalAgeDescription(creature: any, showTechnicalDetails = false) {
+export function animalAgeDescription(creature: any, showTechnicalDetails = false) {
   const forms = creatureForms(creature);
   const ticks = showTechnicalDetails && Number.isFinite(creature.ageTicks) ? `, ${creature.ageTicks} тіків` : "";
   if (creature.age === "CHILD") return `дитинча ${forms.genitive}${ticks}`;
 
-  const gender = guessGenderFromForms(forms, creature.species?.grammaticalGender);
+  const gender = guessGenderFromForms(forms, creature.species?.grammaticalGender, creature.sex);
   const adjective = CREATURE_AGE_ADJECTIVES[creature.age]?.[gender] ?? "";
   const label = adjective ? `${adjective} ${forms.nominative}` : forms.nominative;
   return `${label}${ticks}`;
@@ -623,12 +761,13 @@ async function resourceButtonData(resources: any[], viewerPlayerId?: number) {
 }
 
 export async function renderLocationBrief(locationId: number, viewerPlayerId?: number, options: LocationRenderOptions = {}) {
-  await expireTimedCampfires(locationId);
+  await Promise.all([expireTimedCampfires(locationId), expireGroundLitTorches(undefined, new Date(), locationId)]);
+  await ensureTutorialForagingResources(locationId);
   const location = await prisma.cellLocation.findUnique({
     where: { id: locationId },
     include: {
       players: true,
-      creatures: { where: { isGone: false }, include: { species: true } },
+      creatures: { where: { isGone: false }, include: { species: true, resources: { include: { resourceType: true } } } },
       resources: { include: { resourceType: true } },
       features: { where: { isActive: true }, orderBy: { id: "asc" } },
       region: true,
@@ -638,32 +777,74 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
 
   if (!location) throw new Error("Location not found");
 
-  const revealTargets = await hasActiveLightAtLocation(location.id);
+  const visibility = await visibilityRulesForLocation(location.id, "brief");
+  const revealTargets = visibility.showNearbyDetails;
   const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
   const lockedExits = await lockedExitDirections(location.id);
   const targets = visibleTargets(location, viewerPlayerId);
   const activeActions = revealTargets ? await activeActionsForTargets(targets) : new Map<string, any>();
   const actionLabeledTargets = targets.map((target) => ({
     ...target,
-    actionLabel: visibleActionLabel(target, activeActions, location) ?? ("actionLabel" in target ? target.actionLabel : undefined),
+    actionLabel: ["actionLabel" in target ? target.actionLabel : undefined, visibleActionLabel(target, activeActions, location)].filter(Boolean).join("; ") || undefined,
   }));
   const keyboard = new InlineKeyboard();
   addFeatureButtons(keyboard, location.features, "brief");
+  const groundItems = location.resources.filter((r) => isVisibleGroundResource(r, location));
+  if (visibility.showGroundObjects && groundItems.length) addGroundItemPickupButtons(keyboard, groundItems);
   if (revealTargets && targets.length) addInlineRows(keyboard, buildTargetListKeyboard(actionLabeledTargets, { page: options.targetPage, pageCallbackPrefix: "targetPage:brief" }));
 
+  const descriptionText = visibility.showLocationDescription
+    ? escapeHtml(location.description ?? "")
+    : `<i>${escapeHtml(visibilityDarknessText(visibility))}</i>`;
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location, "brief", showTechnicalDetails)}${presenceText(location, viewerPlayerId, revealTargets, activeActions)}\n\n${escapeHtml(compactExitsText(location.exitsFrom, lockedExits))}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${descriptionText}${featuresText(location, "brief", showTechnicalDetails)}${presenceText(location, viewerPlayerId, revealTargets, activeActions, visibility)}\n\n${escapeHtml(compactExitsText(location.exitsFrom, lockedExits))}`,
     keyboard,
   };
 }
 
-export async function renderLocationDetails(locationId: number, viewerPlayerId?: number, options: LocationRenderOptions = {}) {
+export async function renderLocationGlance(locationId: number) {
   await expireTimedCampfires(locationId);
   const location = await prisma.cellLocation.findUnique({
     where: { id: locationId },
     include: {
+      exitsFrom: { where: { isHidden: false }, include: { toLocation: true }, orderBy: { direction: "asc" } },
+    },
+  });
+
+  if (!location) throw new Error("Location not found");
+
+  const lockedExits = await lockedExitDirections(location.id);
+
+  return {
+    text: `<b>${escapeHtml(location.name)}</b>\n\n${escapeHtml(compactExitsText(location.exitsFrom, lockedExits))}`,
+  };
+}
+
+export async function renderLocationExits(locationId: number) {
+  await expireTimedCampfires(locationId);
+  const location = await prisma.cellLocation.findUnique({
+    where: { id: locationId },
+    include: {
+      exitsFrom: { where: { isHidden: false }, include: { toLocation: true }, orderBy: { direction: "asc" } },
+    },
+  });
+
+  if (!location) throw new Error("Location not found");
+
+  const lockedExits = await lockedExitDirections(location.id);
+  return {
+    text: `<b>Видимі виходи</b>\n\n${escapeHtml(detailedExitsText(location.exitsFrom, lockedExits))}`,
+  };
+}
+
+export async function renderLocationDetails(locationId: number, viewerPlayerId?: number, options: LocationRenderOptions = {}) {
+  await Promise.all([expireTimedCampfires(locationId), expireGroundLitTorches(undefined, new Date(), locationId)]);
+  await ensureTutorialForagingResources(locationId);
+  const location = await prisma.cellLocation.findUnique({
+    where: { id: locationId },
+    include: {
       players: true,
-      creatures: { where: { isGone: false }, include: { species: true } },
+      creatures: { where: { isGone: false }, include: { species: true, resources: { include: { resourceType: true } } } },
       resources: { include: { resourceType: true } },
       features: { where: { isActive: true }, orderBy: { id: "asc" } },
       region: true,
@@ -673,15 +854,18 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
 
   if (!location) throw new Error("Location not found");
 
+  const visibility = await visibilityRulesForLocation(location.id, "details");
   const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
   const lockedExits = await lockedExitDirections(location.id);
   const targets = visibleTargets(location, viewerPlayerId, { showAnimalAge: true, showTechnicalDetails });
-  const activeActions = await activeActionsForTargets(targets);
+  const activeActions = visibility.showNearbyDetails ? await activeActionsForTargets(targets) : new Map<string, any>();
   const actionLabeledTargets = targets.map((target) => ({
     ...target,
-    actionLabel: visibleActionLabel(target, activeActions, location) ?? ("actionLabel" in target ? target.actionLabel : undefined),
+    actionLabel: ["actionLabel" in target ? target.actionLabel : undefined, visibleActionLabel(target, activeActions, location)].filter(Boolean).join("; ") || undefined,
   }));
-  const charactersText = visibleTargetsText(actionLabeledTargets);
+  const charactersText = visibility.showNearbyDetails
+    ? visibleTargetsText(actionLabeledTargets)
+    : targets.length ? `\n\n<i>${escapeHtml(visibilityPresenceText(visibility, "nearby"))}</i>` : "";
 
   const resourceLines = location.resources
     .filter((r) => r.amount > 0 && (GATHERABLE_RESOURCE_KEYS as readonly string[]).includes(r.resourceType.key))
@@ -689,24 +873,34 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
       const amount = r.amount >= 20 ? "багато" : r.amount >= 8 ? "трохи" : "майже немає";
       return `- <i>${escapeHtml(r.resourceType.name)}</i>: ${escapeHtml(amount)}`;
     });
-  const resourcesText = resourceLines.length ? `\n\nВи помічаєте:\n${resourceLines.join("\n")}` : "";
+  const resourcesText = visibility.showResourceDetails
+    ? resourceLines.length ? `\n\nВи помічаєте:\n${resourceLines.join("\n")}` : ""
+    : resourceLines.length ? `\n\n<i>${escapeHtml(visibilityPresenceText(visibility, "resources"))}</i>` : "";
 
   const tracksHint = await visibleTracksHint(location.id);
 
   const corpses = location.creatures.filter(isVisibleCorpse);
-  const groundItems = location.resources.filter((r) => isVisibleGroundResource(r, location));
+  const groundItems = visibility.showGroundObjects ? location.resources.filter((r) => isVisibleGroundResource(r, location)) : [];
   const lyingLines = [
-    ...corpses.map((c) => `труп ${creatureForms(c).genitive}; стан: ${lifetimeSummary(c.corpseDecayTicksLeft, c.species.corpseDecayTicks, { showTechnicalDetails })}`),
+    ...(visibility.showGroundObjects ? corpses.map((c) => {
+      const wasFreshened = isFreshenedCorpse(c.currentAction);
+      const prefix = wasFreshened ? "рештки" : "труп";
+      const suffix = wasFreshened ? "; м’ясо вже знято" : "";
+      return `${prefix} ${creatureForms(c).genitive}; стан: ${lifetimeSummary(c.corpseDecayTicksLeft, c.species.corpseDecayTicks, { showTechnicalDetails })}${suffix}`;
+    }) : []),
     ...groundItems.map(groundItemLine),
   ];
+  const hiddenGroundText = !visibility.showGroundObjects && (corpses.length || location.resources.some((r) => isVisibleGroundResource(r, location)))
+    ? `\n\n<i>${escapeHtml(visibilityPresenceText(visibility, "ground"))}</i>`
+    : "";
   const lyingText = lyingLines.length
     ? `\n\nЛежить:\n${lyingLines
         .slice(0, 8)
         .map((line) => `- ${escapeHtml(line)}`)
         .join("\n")}${lyingLines.length > 8 ? `\n- ...і ще ${lyingLines.length - 8}` : ""}`
-    : "";
+    : hiddenGroundText;
   const keyboard = new InlineKeyboard();
-  const resources = await resourceButtonData(location.resources, viewerPlayerId);
+  const resources = visibility.showResourceDetails ? await resourceButtonData(location.resources, viewerPlayerId) : [];
 
   addFeatureButtons(keyboard, location.features, "details");
 
@@ -717,15 +911,13 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     keyboard.text("🌿 Зібрати", "gather:menu").row();
   }
 
-  for (const item of groundItems) {
-    keyboard.text(`🤲 Підібрати: ${item.resourceType.name}`, `item:pickup:${item.id}`).row();
-  }
+  addGroundItemPickupButtons(keyboard, groundItems);
 
-  if (tracksHint.hasTracks) {
+  if (tracksHint.hasTracks && visibility.showTracks) {
     addInlineRows(keyboard, buildExamineTracksKeyboard());
   }
 
-  if (targets.length > 0) {
+  if (visibility.showNearbyDetails && targets.length > 0) {
     addInlineRows(keyboard, buildTargetListKeyboard(actionLabeledTargets, { page: options.targetPage, pageCallbackPrefix: "targetPage:details" }));
   }
 
@@ -733,13 +925,21 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     ? `\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}`
     : "";
 
+  const tracksText = tracksHint.hasTracks
+    ? visibility.showTracks ? tracksHint.text : `\n\n<i>${escapeHtml(visibilityPresenceText(visibility, "tracks"))}</i>`
+    : "";
+  const descriptionText = visibility.showLocationDescription
+    ? escapeHtml(location.description ?? "")
+    : `<i>${escapeHtml(visibilityDarknessText(visibility))}</i>`;
+
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${escapeHtml(location.description ?? "")}${featuresText(location, "details", showTechnicalDetails)}\n\n<i>Ви роздивляєтесь уважніше.</i>${technicalLocationText}\n\n${escapeHtml(detailedExitsText(location.exitsFrom, lockedExits))}${resourcesText}${charactersText}${tracksHint.text}${lyingText}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${descriptionText}${featuresText(location, "details", showTechnicalDetails)}\n\n<i>Ви роздивляєтесь уважніше.</i>${technicalLocationText}\n\n${escapeHtml(detailedExitsText(location.exitsFrom, lockedExits))}${resourcesText}${charactersText}${tracksText}${lyingText}`,
     keyboard,
   };
 }
 
 export async function buildGatherMenuForLocation(locationId: number, viewerPlayerId?: number) {
+  await ensureTutorialForagingResources(locationId);
   const resources = await prisma.resourceNode.findMany({
     where: { locationId, amount: { gt: 0 } },
     include: { resourceType: true },
@@ -801,11 +1001,30 @@ export async function renderDepletedVegetationInspection(locationId: number, vie
   };
 }
 
-export async function renderLocationFeatureInteraction(featureId: number, viewerPlayerId: number, returnMode: LocationViewMode = "details") {
+export async function renderLocationFeatureInteraction(
+  featureId: number,
+  viewerPlayerId: number,
+  returnMode: LocationViewMode = "details",
+  detailMode: "brief" | "full" = "full",
+) {
   const player = await prisma.player.findUnique({ where: { id: viewerPlayerId }, select: { currentLocationId: true } });
-  const feature = await prisma.locationFeature.findUnique({ where: { id: featureId }, include: { location: true } });
+  let feature = await prisma.locationFeature.findUnique({ where: { id: featureId }, include: { location: true } });
   if (feature?.locationId) await expireTimedCampfires(feature.locationId);
   if (!player || !feature || !feature.isActive || player.currentLocationId !== feature.locationId || !isInteractiveFeature(feature)) return null;
+
+  if (detailMode === "brief") {
+    const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
+    const keyboard = new InlineKeyboard()
+      .text("🔎 Роздивитися", `feature:${feature.id}:${returnMode}`)
+      .row()
+      .text("↩️ Назад", `location:${returnMode}`);
+    return {
+      text: featureBriefInspectionText(feature, showTechnicalDetails),
+      keyboard,
+      quoteMessages: [] satisfies VoiceQuoteMessage[],
+      followupMessages: [] satisfies HtmlFollowupMessage[],
+    };
+  }
 
   let text = feature.description ?? "Тут є щось варте уваги.";
   let quoteMessages: VoiceQuoteMessage[] = [];
@@ -813,7 +1032,16 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
   if (isDepletedVegetationFeature(feature)) {
     return renderDepletedVegetationInspection(feature.locationId, viewerPlayerId, returnMode);
   }
-  if (feature.type === "BORDER_MARKER") {
+  if (isBeginnerCacheFeature(feature)) {
+    feature = await prepareBeginnerCacheForInspection(feature.id) ?? feature;
+    text = beginnerCacheInspectionText(feature);
+  } else if (featureData(feature).gate_hunting_notice === true || featureData(feature).carcass_dropoff === true) {
+    const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
+    const state = await getGateHuntingSaturationState(GATE_CARCASS_DROPOFF_FEATURE_KEY);
+    text = featureData(feature).gate_hunting_notice === true
+      ? gateHuntingNoticeText(feature.description, state, showTechnicalDetails)
+      : gateHuntingDropoffText(feature.description, state, showTechnicalDetails);
+  } else if (feature.type === "BORDER_MARKER") {
     const [stats, showTechnicalDetails] = await Promise.all([
       getPublicEcologySignStats(),
       playerShowsTechnicalDetails(viewerPlayerId),
@@ -825,7 +1053,9 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
     ].join("\n");
   } else if (isCampfireFeature(feature)) {
     if (isExtinguishedCampfire(feature)) {
-      text = "Згасле вогнище лишило по собі попіл і чорні головешки. Світла й тепла воно не дає.";
+      text = feature.name === "Ледь помітне вогнище"
+        ? "Ледь помітне вогнище майже розсипалося в землю. Попіл змішався з пилом, чорні головешки кришаться під поглядом. Світла й тепла воно вже не дає."
+        : "Згасле вогнище лишило по собі попіл і чорні головешки. Світла й тепла воно не дає.";
       if (Number(featureData(feature).fuelTwigs ?? 0) > 0) text += "\n\nУ попелі вже лежить сухий хмиз, готовий прийняти вогонь.";
     } else if (feature.type === "MAGIC_CAMPFIRE") {
       text = "Вогнище освітлює все навколо. Поряд із ним легше відпочити, відігрітися й набратися додаткових сил.\n\nВи відчуваєте, як чиясь давня магія підтримує полум'я. Йому не потрібен хмиз, щоб горіти.";
@@ -836,6 +1066,8 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
       const fireState = campfireStateLine(feature);
       if (fireState) text += `\n\nПолум'я нижчає. Скоро згасне; варто додати хмизу.`;
     }
+    const memoryText = oldCampfireMemoryInspectionText(feature);
+    if (memoryText) text += `\n\n${memoryText}`;
   } else if (feature.type === "GATE") {
     text = isDreamGateFeature(feature)
       ? `${feature.description ?? "Перед вами стоїть Брама Сну."}\n\n${dreamGateStatusText(feature)}`
@@ -857,6 +1089,13 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
     text = `${feature.description ?? "Десь збоку ворушаться майбутні уроки."}\n\nВи можете прокинутися зараз і повернутися до цього місця сну пізніше.`;
   } else if (isTorchSourceFeature(feature)) {
     text = feature.description ?? "Тут лежать сухі факели. Один можна взяти з собою.";
+  } else if (isClimbTreeFeature(feature)) {
+    text = `${feature.description ?? "Дерево стоїть досить близько, щоб узятися за кору."}\n\nКора шорстка, сучки міцні. Можна піднятися вгору й подивитися на луку з крони.`;
+  } else if (isShakeTreeFeature(feature)) {
+    const readyAt = treeShakeReadyAt(featureData(feature));
+    text = readyAt
+      ? `${feature.description ?? "Сухі гілки вже обсипалися вниз."}\n\nГілля порожньо потріскує. Так швидко дерево не віддає сухе вдруге.`
+      : `${feature.description ?? "У кроні тримається сухе дрібне гілля."}\n\nЯкщо розхитати стовбур і нижні гілки, хмиз посиплеться донизу, під дерево.`;
   }
 
   const keyboard = new InlineKeyboard();
@@ -877,17 +1116,114 @@ export async function renderLocationFeatureInteraction(featureId: number, viewer
   if (isTutorialRestSeatFeature(feature)) keyboard.text("🧘 Присісти і відпочити", "rest:start").row();
   if (isTutorialInsideFeature(feature)) keyboard.text("🕳️ Всередину", "move:INSIDE").row();
   if (isTutorialOutsideFeature(feature)) keyboard.text("🕳️ Назовні", "move:OUTSIDE").row();
-  if (featureData(feature).tutorial_time_prompt === true) keyboard.text("🕯 Час", "time:show").row();
+  if (featureData(feature).tutorial_time_prompt === true) keyboard.text("🌒 Час", "time:show").row();
+  if (isTutorialEndFeature(feature)) keyboard.text("✅ Закінчити навчання", "tutorial:end").row();
   if (featureData(feature).tutorial_wake_prompt === true) keyboard.text("🌅 Прокинутися", "tutorial:wake").row();
   if (isTorchSourceFeature(feature)) keyboard.text("🕯 Взяти факел", `torch:take:${feature.id}`).row();
+  if (isBeginnerCacheFeature(feature)) {
+    for (const key of beginnerCacheTakeKeys(feature.data)) {
+      keyboard.text(`📦 Взяти ${beginnerCacheActionLabel(key)}`, `cache:take:${feature.id}:${key}`).row();
+    }
+    const contributionKeys = await playerBeginnerCacheContributionKeys(viewerPlayerId);
+    for (const key of contributionKeys) {
+      keyboard.text(`🤲 Лишити ${beginnerCacheActionLabel(key)}`, `cache:contribute:${feature.id}:${key}`).row();
+    }
+  }
+  if (isClimbTreeFeature(feature)) keyboard.text("🌳 Залізти", "move:UP").row();
+  const moveDirection = featureMoveDirection(feature);
+  if (moveDirection) keyboard.text(featureMoveButtonLabel(moveDirection), `move:${moveDirection}`).row();
+  if (isShakeTreeFeature(feature)) keyboard.text("🍃 Потрусити", `tree:shake:${feature.id}`).row();
   keyboard.text("↩️ Назад", `location:${returnMode}`);
   return { text, keyboard, quoteMessages, followupMessages };
 }
 
-export async function renderLocationFeatureInteractionByQuery(locationId: number, viewerPlayerId: number, query: string, returnMode: LocationViewMode = "details") {
+export async function renderLocationFeatureInteractionByQuery(
+  locationId: number,
+  viewerPlayerId: number,
+  query: string,
+  returnMode: LocationViewMode = "details",
+  detailMode: "brief" | "full" = "full",
+) {
   const feature = await resolveInteractiveLocationFeature(locationId, query);
   if (!feature) return null;
-  return renderLocationFeatureInteraction(feature.id, viewerPlayerId, returnMode);
+  return renderLocationFeatureInteraction(feature.id, viewerPlayerId, returnMode, detailMode);
+}
+
+export async function shakeTreeFeature(featureId: number, viewerPlayerId: number) {
+  const player = await prisma.player.findUnique({
+    where: { id: viewerPlayerId },
+    select: { currentLocationId: true },
+  });
+  const feature = await prisma.locationFeature.findUnique({ where: { id: featureId } });
+  if (!player?.currentLocationId) throw new Error("Ти ще не увійшов у світ. Напиши /start");
+  if (!feature || !feature.isActive || feature.locationId !== player.currentLocationId || !isShakeTreeFeature(feature)) {
+    throw new Error("Тут немає дерева, яке можна потрусити.");
+  }
+
+  const data = featureData(feature);
+  if (treeShakeReadyAt(data)) throw new Error("Гілля вже обсипане. Так швидко дерево не віддає сухе вдруге.");
+
+  const dropLocationKey = typeof data.shake_drop_location_key === "string" ? data.shake_drop_location_key : null;
+  const resourceKey = typeof data.shake_resource_key === "string" ? data.shake_resource_key : "twigs";
+  const min = Number(data.shake_min ?? 5);
+  const max = Number(data.shake_max ?? 8);
+  const amount = treeShakeAmount(min, max);
+  const now = new Date();
+
+  const result = await prisma.$transaction(async (tx) => {
+    const [dropLocation, resourceType] = await Promise.all([
+      dropLocationKey
+        ? tx.cellLocation.findUnique({ where: { key: dropLocationKey }, select: { id: true, name: true } })
+        : tx.cellLocation.findUnique({ where: { id: feature.locationId }, select: { id: true, name: true } }),
+      tx.resourceType.findUnique({ where: { key: resourceKey }, select: { id: true, key: true, name: true } }),
+    ]);
+    if (!dropLocation) throw new Error("Дерево труситься, але світ не знає, куди має падати хмиз.");
+    if (!resourceType) throw new Error("Світ ще не знає такого ресурсу для дерева.");
+
+    const existing = await tx.resourceNode.findUnique({
+      where: { locationId_resourceTypeId: { locationId: dropLocation.id, resourceTypeId: resourceType.id } },
+      select: { id: true, amount: true, maxAmount: true },
+    });
+    if (existing) {
+      const nextAmount = existing.amount + amount;
+      await tx.resourceNode.update({
+        where: { id: existing.id },
+        data: { amount: nextAmount, maxAmount: Math.max(existing.maxAmount, nextAmount) },
+      });
+    } else {
+      await tx.resourceNode.create({
+        data: { locationId: dropLocation.id, resourceTypeId: resourceType.id, amount, maxAmount: amount },
+      });
+    }
+
+    await tx.locationFeature.update({
+      where: { id: feature.id },
+      data: { data: { ...data, lastShakenAt: now.toISOString() } },
+    });
+    await tx.worldEvent.create({
+      data: {
+        type: "PLAYER_ACTION",
+        title: "Tree shaken",
+        description: `player=${viewerPlayerId}; feature=${feature.key}; resource=${resourceType.key}; amount=${amount}; dropLocation=${dropLocation.id}`,
+        playerId: viewerPlayerId,
+        locationId: feature.locationId,
+      },
+    });
+    return { dropLocationName: dropLocation.name, resourceName: resourceType.name };
+  });
+
+  return `Ви розхитали дерево. Сухе гілля затріщало, і вниз посипався хмиз: ${amount}.\n\nЙого можна підібрати біля підніжжя дерева, у місцині «${result.dropLocationName}».`;
+}
+
+export async function shakeTreeAtCurrentLocation(viewerPlayerId: number) {
+  const player = await prisma.player.findUnique({ where: { id: viewerPlayerId }, select: { currentLocationId: true } });
+  if (!player?.currentLocationId) throw new Error("Ти ще не увійшов у світ. Напиши /start");
+  const feature = (await prisma.locationFeature.findMany({
+    where: { locationId: player.currentLocationId, isActive: true },
+    orderBy: { id: "asc" },
+  })).find(isShakeTreeFeature);
+  if (!feature) throw new Error("Тут немає дерева, яке можна потрусити.");
+  return shakeTreeFeature(feature.id, viewerPlayerId);
 }
 
 export async function lightLocationCampfire(featureId: number, viewerPlayerId: number) {

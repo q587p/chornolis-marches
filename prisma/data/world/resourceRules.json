@@ -70,6 +70,12 @@
       "mushrooms": 0,
       "herbs": 0
     },
+    "start_border_watchtower": {
+      "grass": 0,
+      "berries": 0,
+      "mushrooms": 0,
+      "herbs": 0
+    },
     "old_bridge_west_span": {
       "grass": 0,
       "berries": 0,
@@ -92,6 +98,102 @@
       "grass": 0,
       "berries": 0,
       "herbs": 0
+    },
+    "forest_03_02": {
+      "grass": 80,
+      "berries": 15,
+      "mushrooms": 15,
+      "herbs": 10
+    },
+    "forest_04_00": {
+      "grass": 80,
+      "berries": 15,
+      "mushrooms": 15,
+      "herbs": 10
+    },
+    "meadow_11_04": {
+      "grass": 95,
+      "berries": 8,
+      "herbs": 20
+    },
+    "meadow_12_04": {
+      "grass": 90,
+      "berries": 8,
+      "herbs": 20
+    },
+    "riverbank_14_01": {
+      "grass": 90,
+      "herbs": 20
+    },
+    "riverbank_15_02": {
+      "grass": 90,
+      "herbs": 20
+    },
+    "dream_tutorial_hub": {
+      "grass": 0,
+      "berries": 0,
+      "mushrooms": 0,
+      "herbs": 0
+    },
+    "dream_tutorial_foraging": {
+      "grass": 0,
+      "berries": 6,
+      "mushrooms": 0,
+      "herbs": 3
+    },
+    "dream_tutorial_rest": {
+      "grass": 0,
+      "berries": 0,
+      "mushrooms": 0,
+      "herbs": 0
+    },
+    "dream_tutorial_deep_rest": {
+      "grass": 0,
+      "berries": 0,
+      "mushrooms": 0,
+      "herbs": 0
+    },
+    "dream_tutorial_time": {
+      "grass": 0,
+      "berries": 0,
+      "mushrooms": 0,
+      "herbs": 0
+    },
+    "dream_tutorial_safety": {
+      "grass": 0,
+      "berries": 0,
+      "mushrooms": 0,
+      "herbs": 0
+    },
+    "dream_tutorial_attention_path": {
+      "grass": 0,
+      "berries": 0,
+      "mushrooms": 0,
+      "herbs": 0
+    },
+    "dream_tutorial_signs": {
+      "grass": 0,
+      "berries": 0,
+      "mushrooms": 0,
+      "herbs": 0
+    },
+    "dream_tutorial_traces": {
+      "grass": 0,
+      "berries": 0,
+      "mushrooms": 0,
+      "herbs": 0
+    },
+    "dream_tutorial_waking_edge": {
+      "grass": 0,
+      "berries": 0,
+      "mushrooms": 0,
+      "herbs": 0
+    },
+    "dream_tutorial_observation": {
+      "grass": 0,
+      "berries": 0,
+      "mushrooms": 0,
+      "herbs": 0
     }
   },
   "notes": [
@@ -102,6 +204,7 @@
     "Riverbank / RIVER: grass and herbs only.",
     "Bridge spans, start camp and closed gate intentionally have no vegetation resources.",
     "meadow_16_05 starts exhausted for visible ecology testing.",
+    "Dream tutorial locations opt out of biome-generated ecology resources except the explicit foraging lesson.",
     "Set a resource to 0 in locationOverrides to remove it from that location."
   ]
 }

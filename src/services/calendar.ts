@@ -1,3 +1,7 @@
+import { START_WORLD_ABSOLUTE_MINUTE, worldTimeSnapshotFromAbsoluteMinute, type WorldTimeSnapshot } from "../data/worldClock";
+import { lightSnapshotFromWorldTime } from "./lightSnapshot";
+import { renderWeatherLine } from "./weather";
+
 export type YearBeast = {
   nominative: string;
   genitive: string;
@@ -6,7 +10,7 @@ export type YearBeast = {
 export const CURRENT_WORLD_YEAR = 587;
 export const WORLD_ERA_NAME = "після Великого Відступу";
 
-// Temporary public date until world time starts advancing through ticks.
+// Public season stays simple until the weather/season slice lands.
 export const CURRENT_WORLD_SEASON = "пізня весна";
 export const CURRENT_WORLD_MOON_CIRCLE = "Коло Зеленого Шуму";
 export const CURRENT_WORLD_DAY = 17;
@@ -78,20 +82,38 @@ export function formatCurrentWorldYear() {
   return formatWorldYear(CURRENT_WORLD_YEAR);
 }
 
-export function renderCurrentWorldYearLine() {
-  return `${formatCurrentWorldYear()}.`;
+export function renderWorldYearLine(year = CURRENT_WORLD_YEAR) {
+  return `${formatWorldYear(year)}.`;
 }
 
-export function renderCurrentWorldTime() {
+export function renderCurrentWorldYearLine() {
+  return renderWorldYearLine(CURRENT_WORLD_YEAR);
+}
+
+function worldDaypartMood(snapshot: WorldTimeSnapshot) {
+  if (snapshot.daypart === "dawn") return "Світ ще тільки набирає обрисів; тіні тримаються низько, але дорога вже згадує світло.";
+  if (snapshot.daypart === "day" && snapshot.hour >= 16) return "День хилиться до вечора. Світло ще тримається, але тіні вже уважніші.";
+  if (snapshot.daypart === "day") return "Світло тримає місцини відкритішими, ніж уночі.";
+  if (snapshot.daypart === "dusk") return "Світ стишується на межі вечора; дрібні речі вже легше загубити поглядом.";
+  return "Темрява збирається між деревами й робить світ менш певним.";
+}
+
+export function renderCurrentWorldTime(snapshot = worldTimeSnapshotFromAbsoluteMinute(START_WORLD_ABSOLUTE_MINUTE)) {
+  const daypartLabel = snapshot.daypart === "day" && snapshot.hour >= 16 ? "передвечір'я" : snapshot.daypartLabel;
+  const light = lightSnapshotFromWorldTime(snapshot);
   return [
-    "🕯 Час Порубіжжя",
+    "🌒 Час Порубіжжя",
     "",
-    renderCurrentWorldYearLine(),
+    `${formatWorldYear(snapshot.year)}.`,
     `Пора: ${CURRENT_WORLD_SEASON}.`,
-    `Місячне коло: ${CURRENT_WORLD_MOON_CIRCLE}.`,
-    `День кола: ${CURRENT_WORLD_DAY}.`,
-    `Час доби: ${CURRENT_WORLD_DAYTIME}.`,
+    `Місячне коло: ${snapshot.lunarCircleName}.`,
+    `День кола: ${snapshot.dayOfCircle}.`,
+    `Час доби: ${daypartLabel}.`,
+    `Межовий час: близько ${snapshot.clockLabel}.`,
+    `Місяць: ${snapshot.moonPhaseLabel}.`,
+    `Погода: ${renderWeatherLine(snapshot)}.`,
+    `Світло: ${light.label}.`,
     "",
-    "Поки це статична дата. Плин часу, сезони, місяці, дні та час доби винесені в todo.",
+    worldDaypartMood(snapshot),
   ].join("\n");
 }

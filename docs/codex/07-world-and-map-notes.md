@@ -56,10 +56,13 @@ In `prisma/data/chornolis_world_seed.json`, edits may include:
 
 ## Important constraints
 
-- Do not casually change `z`; currently it is expected to remain `0` unless a task explicitly introduces verticality.
+- Do not casually change `z`; most waking-world surface locations are still `z = 0`, and new non-zero layers should be deliberate authored vertical/interior spaces.
 - `Дрімотна Межа`, the tutorial dream, intentionally uses `z = -13`; this is a separate authored layer, not a casual terrain-height edit.
+- `start_border_watchtower` intentionally uses `z = 1` as the starter-camp watchtower above `start_border_camp`; it is connected by `UP` / `DOWN` exits and is part of the first waking-world verticality slice.
+- `under_bridge_18_05` uses `z = -1` as an ordinary lower waking-world place under the bridge; it is not a dream layer.
 - Do not create two exits from one location in the same direction.
 - `blockedCells` are documentation-only; the game walks through `locations` and `exits`.
+- Do not put raw HTML tags such as `<i>...</i>` into `name`, `description`, aliases or `data` fields in world JSON. These fields are content, not markup; Telegram renderers may escape them, and `scripts/test/world-content-html.cjs` should catch accidental tags.
 - ASCII map is separate documentation in:
 
 ```text
@@ -90,10 +93,13 @@ Location coordinates appear as three numbers, e.g. `(1,0,0)`:
 There is a backlog direction to add a small, authored vertical/interior map pass. This should be explicit and diegetic, not a casual `z` change:
 
 - a climbable tree can use an `UP` exit to a high branch/lookout;
+- the starter-camp watchtower uses an `UP` exit to a real upper room and a `DOWN` exit back to the camp;
 - a bear den or similar lair can use an `INSIDE` exit into a real interior location;
 - a pit, ravine or hole can use a `DOWN` exit to a lower place.
 
 When this lands, update both the world seed and `docs/world/world_map.md`, and make the surface entry features inspectable so players understand the available movement.
+
+Current climbable-tree MVP note: tree-shake cooldowns live in `Feature.data`, so reset/reseed can reset them, and `Потрусити дерево` / `/shake_tree` currently resolves immediately rather than through the action queue. See `HMYZ-001-F` for the future persistent cooldown / queued-action cleanup.
 
 ## Bridge / threshold location note
 

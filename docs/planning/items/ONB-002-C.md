@@ -1,7 +1,7 @@
 ---
 id: ONB-002-C
 title: Uncertain custom-name review status
-status: next
+status: testing
 type: feature
 area: onboarding
 priority: high
@@ -31,6 +31,12 @@ Make custom names clearly different from prepared scribe-approved names.
 - Prepared-name flow remains fast.
 - Custom-name flow does not falsely claim full approval.
 - Scribe review authority is preserved.
+
+## Progress
+
+- 0.13.20: Prepared-name onboarding now says the name has already been checked by scribes, while custom names say they can be used immediately and still wait for later scribe review.
+- Character cards reuse the same pending-review wording, so an unapproved custom name is presented as a review state rather than a hard block.
+- Character-name tests cover the new prepared/custom review copy.
 
 ## Implementation Order
 

@@ -28,7 +28,8 @@ Canonical terminology source: `docs/design/terminology.md`.
 | Examine / inspect | **Роздивитися** / **Придивитися** | Choose by tone/context. |
 | Stamina | **Снага** | Player-facing stamina/resource term; base stamina should be 42. |
 | Rest | **Відпочити** | Means sit/rest briefly, not sleep. |
-| Sleep | future sleep mode | Reserve bed iconography for this later feature. |
+| Sleep | **Сон** / **Спати** | Plain `/sleep` is ordinary sleep; use `/sleep tutorial` for the tutorial dream. |
+| Lie down | **Лягти** | Changes posture only; it does not start sleep or rest. |
 | HP | **Життя** / **Стан** | Avoid raw abbreviation in player-facing text. |
 | Inventory | **Речі** / **Поклажа** | Prefer over direct “Інвентар” in player-facing UI. |
 
@@ -39,7 +40,11 @@ When adding or changing commands, keep aliases in sync:
 - slash command where useful;
 - English/MUD-style text aliases for future non-Telegram clients;
 - Ukrainian text aliases for ordinary Telegram input;
-- button labels and `/help` or `/adminHelp` documentation.
+- button labels and `/help`, `/adminHelp` or `/adminMenu` surfaces.
+
+Direct slash commands should also accept the same direct text form without the leading slash when practical, especially for scribe/admin commands: `/teleport forest_07_00` and `teleport forest_07_00` should behave the same.
+
+Actual Telegram keyboard button labels should stay short and clean: Ukrainian label plus icon where helpful. Use slash commands in parentheses in help, commands, news, release notes and docs, but do not append `(/command)` hints inside reply or inline keyboard button text.
 
 - `/look`
 - `/examine`
@@ -48,6 +53,7 @@ When adding or changing commands, keep aliases in sync:
 - `/all`
 - `/time`
 - `/adminHelp`
+- `/adminMenu`
 - `/tick`
 - `/restart`
 - `/north`, `/south`, `/west`, `/east`
@@ -70,6 +76,14 @@ Possible buttons/labels:
 ## Name cases / grammar
 
 The game has or should preserve support for Ukrainian name cases and pronouns in onboarding.
+
+Stable world nouns should live in `src/content/lexicon/worldLexicon.ts`: creature species, NPC profession labels, spirits, resources, location features and common nouns that appear in gameplay text. Add full case forms there when a noun becomes part of stable world data.
+
+The grammar layer in `src/services/grammar.ts` should contain shared mechanics for using those forms: case lookup, fallback guessing for names or text that is not yet in the lexicon, actor grammatical gender, and small agreement helpers such as choosing a past-tense verb form. Do not treat that fallback as a reason to skip lexicon forms for persisted species, seeded NPC/profession labels, recurring resources or other nouns used in templates.
+
+Avoid adding parallel Ukrainian grammar helpers under `src/utils/` when the rule is shared by gameplay text. If two surfaces need the same case, gender or verb-agreement logic, put it in `grammar.ts` or a deliberate grammar submodule and document the boundary in `docs/content/world-lexicon.md`.
+
+Known cleanup state: the lexicon does not yet remove every nominative insertion from older text paths. When editing nearby code, prefer `creatureForms`, `speciesForms`, `playerForms` or lexicon-backed helpers, but keep broad replacement passes focused and testable.
 
 Compound names should also be declined:
 

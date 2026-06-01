@@ -1,15 +1,27 @@
 import { Bot } from "grammy";
+import type { Prisma, WorldActionType } from "@prisma/client";
 import { actionDurationMs, performOrQueuePlayerAction } from "../services/actionQueue";
 import { getPlayerByTelegramId } from "../services/players";
-import { lightLocationCampfire, renderDepletedVegetationInspection, renderLocationBrief, renderLocationDetails, renderLocationFeatureInteraction, renderLocationFeatureInteractionByQuery, takeTorchFromLocationFeature } from "../services/locations";
+import { renderDepletedVegetationInspection, renderLocationBrief, renderLocationDetails, renderLocationFeatureInteraction, renderLocationFeatureInteractionByQuery, shakeTreeFeature, takeTorchFromLocationFeature } from "../services/locations";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { durationSecondsSuffix } from "../utils/durationText";
-import { addTwigsToCampfire, lightPlayerTorchAtCampfire } from "../services/fire";
-import { pickUpGroundResource } from "../services/groundItems";
+import { isPickableResourceKey, isTutorialLooseResourceKey, pickUpAllVisibleGroundResourcesByKey, pickUpGroundResource, type VisibleGroundResourceKey } from "../services/groundItems";
 import { pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 import { escapeHtml } from "../utils/text";
 import { canEditCallbackMessage, noteKnownMessage } from "../utils/messageTracker";
+import { assertCanPerformPhysicalAction } from "../services/postureRules";
+import { replyToActionError, actionErrorMessage } from "../utils/actionErrorReply";
+import { rememberTutorialCommandHintIfInTutorial } from "../services/tutorial";
+import { tutorialActionHintComment } from "../services/tutorialVoices";
+import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
+import { spendPlayerStaminaAmount } from "../services/actionRecovery";
+import { firstNightGuidanceForPlayer } from "../services/beginnerGuidance";
+import { contributeToBeginnerCache, takeFromBeginnerCache } from "../services/beginnerCache";
+
+function pickedItemsAmount(items: Array<{ amount: number }>) {
+  return items.reduce((total, item) => total + Math.max(0, item.amount), 0);
+}
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
@@ -47,6 +59,53 @@ async function sendHtmlFollowupMessages(ctx: any, messages?: Array<{ text: strin
   }
 }
 
+async function sendVoiceComment(ctx: any, comment: { title: string; text: string } | null) {
+  if (!comment) return;
+  await replyAndTrack(ctx, `${escapeHtml(comment.title)}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
+}
+
+async function sendFirstNightGuidance(ctx: any, playerId: number, locationId: number | null | undefined) {
+  const text = await firstNightGuidanceForPlayer(playerId, locationId);
+  if (text) await replyAndTrack(ctx, text);
+}
+
+async function submitFeatureQueuedAction(
+  bot: Bot,
+  ctx: any,
+  player: any,
+  type: WorldActionType,
+  payload: Prisma.InputJsonObject,
+  fallback: string,
+) {
+  const durationMs = actionDurationMs(type, player.stamina);
+  try {
+    const result = await performOrQueuePlayerAction(bot, {
+      playerId: player.id,
+      type,
+      payload,
+      durationMs,
+      chatId: ctx.chat?.id,
+    });
+    await safeAnswerCallbackQuery(ctx, result.mode === "queued" ? `Додано в чергу${durationSecondsSuffix(player, durationMs)}.` : undefined);
+    await sendActionSubmitFeedback(ctx, player.id, result);
+  } catch (error) {
+    const message = actionErrorMessage(error, fallback);
+    await safeAnswerCallbackQuery(ctx, message);
+    await replyToActionError(ctx, error, fallback, { replyFallback: false });
+  }
+}
+
+type ExamineCurrentLocationHandler = (ctx: any, targetArg?: string) => Promise<unknown>;
+
+let registeredExamineCurrentLocation: ExamineCurrentLocationHandler | null = null;
+
+export async function runExamineCurrentLocation(ctx: any, targetArg = "") {
+  if (!registeredExamineCurrentLocation) {
+    throw new Error("Examine handlers are not registered");
+  }
+  return registeredExamineCurrentLocation(ctx, targetArg);
+}
+
 export function registerLookHandlers(bot: Bot) {
   async function examineTracks(ctx: any) {
     const from = ctx.from;
@@ -77,11 +136,11 @@ export function registerLookHandlers(bot: Bot) {
     await ctx.reply(view.text, { reply_markup: view.keyboard });
   }
 
-  async function examineCurrentLocation(ctx: any) {
+  async function examineCurrentLocation(ctx: any, targetArg?: string) {
     const from = ctx.from;
     if (!from) return;
 
-    const arg = String(ctx.message?.text ?? "").replace(/^\/examine(?:@\w+)?/i, "").trim().toLowerCase();
+    const arg = (targetArg ?? String(ctx.message?.text ?? "").replace(/^\/examine(?:@\w+)?/i, "")).trim().toLowerCase();
     if (["tracks", "track", "сліди", "слід"].includes(arg)) return examineTracks(ctx);
     if (["grass", "depleted grass", "vegetation", "трава", "траву", "винищена трава", "винищену траву", "відновлення"].includes(arg)) return examineVegetation(ctx);
 
@@ -91,9 +150,11 @@ export function registerLookHandlers(bot: Bot) {
     if (arg && player.currentLocationId) {
       const view = await renderLocationFeatureInteractionByQuery(player.currentLocationId, player.id, arg);
       if (view) {
-        await replyAndTrack(ctx, view.text, { reply_markup: view.keyboard });
+        await rememberTutorialCommandHintIfInTutorial(player.id, "examine", player.currentLocationId);
+        await replyAndTrack(ctx, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
         await sendVoiceQuoteMessages(ctx, "quoteMessages" in view ? (view as any).quoteMessages : undefined);
         await sendHtmlFollowupMessages(ctx, "followupMessages" in view ? (view as any).followupMessages : undefined);
+        await sendVoiceComment(ctx, await tutorialActionHintComment(player, "examine"));
         return;
       }
     }
@@ -107,9 +168,11 @@ export function registerLookHandlers(bot: Bot) {
     }
   }
 
-  bot.command("examine", examineCurrentLocation);
+  registeredExamineCurrentLocation = examineCurrentLocation;
 
-  bot.hears(["🔎 Роздивитися", "👁 Роздивитися", "Роздивитися"], examineCurrentLocation);
+  bot.command("examine", (ctx) => examineCurrentLocation(ctx));
+
+  bot.hears(["🔎 Роздивитися", "👁 Роздивитися", "Роздивитися"], (ctx) => examineCurrentLocation(ctx));
 
   bot.callbackQuery(["examine", "look"], async (ctx) => {
     const player = await getPlayerByTelegramId(ctx.from.id);
@@ -144,6 +207,8 @@ export function registerLookHandlers(bot: Bot) {
     const view = await renderLocationDetails(player.currentLocationId, player.id);
     await safeAnswerCallbackQuery(ctx);
     await editCallbackMessageOrReply(ctx, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+    await sendVoiceComment(ctx, await tutorialActionHintComment(player, "examine"));
+    await sendFirstNightGuidance(ctx, player.id, player.currentLocationId);
   });
 
   bot.callbackQuery("location:brief", async (ctx) => {
@@ -156,6 +221,8 @@ export function registerLookHandlers(bot: Bot) {
     const view = await renderLocationBrief(player.currentLocationId, player.id);
     await safeAnswerCallbackQuery(ctx);
     await editCallbackMessageOrReply(ctx, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+    await sendVoiceComment(ctx, await tutorialActionHintComment(player, "look"));
+    await sendFirstNightGuidance(ctx, player.id, player.currentLocationId);
   });
 
   bot.callbackQuery("targetPage:noop", async (ctx) => {
@@ -192,9 +259,11 @@ export function registerLookHandlers(bot: Bot) {
     await safeAnswerCallbackQuery(ctx);
     if (!view) return void (await ctx.reply("Цього вже не видно поруч."));
 
-    await editCallbackMessageOrReply(ctx, view.text, { reply_markup: view.keyboard });
+    await rememberTutorialCommandHintIfInTutorial(player.id, "examine", player.currentLocationId);
+    await editCallbackMessageOrReply(ctx, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
     await sendVoiceQuoteMessages(ctx, "quoteMessages" in view ? view.quoteMessages : undefined);
     await sendHtmlFollowupMessages(ctx, "followupMessages" in view ? view.followupMessages : undefined);
+    await sendVoiceComment(ctx, await tutorialActionHintComment(player, "examine"));
   });
 
   bot.callbackQuery(/^fire:addTwigs:(\d+)$/, async (ctx) => {
@@ -204,9 +273,7 @@ export function registerLookHandlers(bot: Bot) {
       return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
     }
 
-    const text = await addTwigsToCampfire(player.id, Number(ctx.match[1]));
-    await safeAnswerCallbackQuery(ctx);
-    await ctx.reply(text);
+    await submitFeatureQueuedAction(bot, ctx, player, "ADD_TWIGS", { featureId: Number(ctx.match[1]) }, "Не вдалося підкинути хмиз.");
   });
 
   bot.callbackQuery(/^fire:light:(\d+)$/, async (ctx) => {
@@ -216,9 +283,7 @@ export function registerLookHandlers(bot: Bot) {
       return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
     }
 
-    const text = await lightLocationCampfire(Number(ctx.match[1]), player.id);
-    await safeAnswerCallbackQuery(ctx);
-    await ctx.reply(text);
+    await submitFeatureQueuedAction(bot, ctx, player, "LIGHT_CAMPFIRE", { featureId: Number(ctx.match[1]) }, "Не вдалося запалити вогонь.");
   });
 
   bot.callbackQuery(/^torch:light:(\d+)$/, async (ctx) => {
@@ -228,9 +293,7 @@ export function registerLookHandlers(bot: Bot) {
       return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
     }
 
-    const text = await lightPlayerTorchAtCampfire(player.id, Number(ctx.match[1]));
-    await safeAnswerCallbackQuery(ctx);
-    await ctx.reply(text);
+    await submitFeatureQueuedAction(bot, ctx, player, "LIGHT_TORCH", { featureId: Number(ctx.match[1]) }, "Не вдалося запалити факел.");
   });
 
   bot.callbackQuery(/^torch:take:(\d+)$/, async (ctx) => {
@@ -240,19 +303,86 @@ export function registerLookHandlers(bot: Bot) {
       return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
     }
 
-    const text = await takeTorchFromLocationFeature(Number(ctx.match[1]), player.id);
-    await safeAnswerCallbackQuery(ctx);
-    if (player.currentLocationId && text.includes("Ви взяли")) {
-      await recordVisibleItemAction(bot, {
-        playerId: player.id,
-        locationId: player.currentLocationId,
-        observerText: pickupObserverText(player, "факел"),
-        eventTitle: "Player took torch",
-        eventDescription: `player=${player.id}; item=torch; source=feature:${ctx.match[1]}`,
-        actionNote: "піднято: факел",
-      });
+    try {
+      assertCanPerformPhysicalAction(player, "PICK_UP");
+      const text = await takeTorchFromLocationFeature(Number(ctx.match[1]), player.id);
+      await safeAnswerCallbackQuery(ctx);
+      if (player.currentLocationId && text.includes("Ви взяли")) {
+        await recordVisibleItemAction(bot, {
+          playerId: player.id,
+          locationId: player.currentLocationId,
+          observerText: pickupObserverText(player, "факел"),
+          eventTitle: "Player took torch",
+          eventDescription: `player=${player.id}; item=torch; source=feature:${ctx.match[1]}`,
+          actionNote: "піднято: факел",
+        });
+        await spendPlayerStaminaAmount(bot, player.id, 1, ctx.chat?.id);
+      }
+      await ctx.reply(text);
+    } catch (error) {
+      const message = actionErrorMessage(error, "Не вдалося взяти факел.");
+      await safeAnswerCallbackQuery(ctx, message);
+      await replyToActionError(ctx, error, "Не вдалося взяти факел.", { replyFallback: false });
     }
-    await ctx.reply(text);
+  });
+
+  bot.callbackQuery(/^tree:shake:(\d+)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    try {
+      assertCanPerformPhysicalAction(player, "GATHER");
+      const text = await shakeTreeFeature(Number(ctx.match[1]), player.id);
+      await safeAnswerCallbackQuery(ctx);
+      await ctx.reply(text);
+    } catch (error) {
+      const message = actionErrorMessage(error, "Не вдалося потрусити дерево.");
+      await safeAnswerCallbackQuery(ctx, message);
+      await replyToActionError(ctx, error, "Не вдалося потрусити дерево.", { replyFallback: false });
+    }
+  });
+
+  bot.callbackQuery(/^cache:take:(\d+):([A-Za-z0-9_-]+)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    try {
+      assertCanPerformPhysicalAction(player, "PICK_UP");
+      const result = await takeFromBeginnerCache(player.id, Number(ctx.match[1]), ctx.match[2]);
+      await safeAnswerCallbackQuery(ctx, "Взято.");
+      await spendPlayerStaminaAmount(bot, player.id, 1, ctx.chat?.id);
+      await ctx.reply(result.text, await inventoryGainReplyOptions(player, `cache:${result.key}`));
+    } catch (error) {
+      const message = actionErrorMessage(error, "Не вдалося взяти річ зі скрині.");
+      await safeAnswerCallbackQuery(ctx, message);
+      await replyToActionError(ctx, error, "Не вдалося взяти річ зі скрині.", { replyFallback: false });
+    }
+  });
+
+  bot.callbackQuery(/^cache:contribute:(\d+):([A-Za-z0-9_-]+)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    try {
+      assertCanPerformPhysicalAction(player, "PICK_UP");
+      const result = await contributeToBeginnerCache(player.id, Number(ctx.match[1]), ctx.match[2]);
+      await safeAnswerCallbackQuery(ctx, "Лишено.");
+      await spendPlayerStaminaAmount(bot, player.id, 1, ctx.chat?.id);
+      await ctx.reply(result.text);
+    } catch (error) {
+      const message = actionErrorMessage(error, "Не вдалося лишити річ у скрині.");
+      await safeAnswerCallbackQuery(ctx, message);
+      await replyToActionError(ctx, error, "Не вдалося лишити річ у скрині.", { replyFallback: false });
+    }
   });
 
   bot.callbackQuery(/^item:pickup:(\d+)$/, async (ctx) => {
@@ -263,6 +393,7 @@ export function registerLookHandlers(bot: Bot) {
     }
 
     try {
+      assertCanPerformPhysicalAction(player, "PICK_UP");
       const item = await pickUpGroundResource(player.id, Number(ctx.match[1]));
       await safeAnswerCallbackQuery(ctx, "Підібрано.");
       await recordVisibleItemAction(bot, {
@@ -273,10 +404,48 @@ export function registerLookHandlers(bot: Bot) {
         eventDescription: `player=${player.id}; item=${item.key}; name=${item.name}`,
         actionNote: `піднято: ${item.name}`,
       });
-      await ctx.reply(`Ви підняли ${item.name}.`);
+      await spendPlayerStaminaAmount(bot, player.id, 1, ctx.chat?.id);
+      await ctx.reply(`Ви підняли ${item.name}.`, await inventoryGainReplyOptions(player, `pickup:${item.key}`));
     } catch (error) {
       const message = error instanceof Error ? error.message : "Не вдалося підняти це.";
       await safeAnswerCallbackQuery(ctx, message);
+      await replyToActionError(ctx, error, "Не вдалося підняти це.", { replyFallback: false });
+    }
+  });
+
+  bot.callbackQuery(/^item:pickupAll:([A-Za-z0-9_-]+)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    const key = ctx.match[1];
+    if (!isPickableResourceKey(key) && !isTutorialLooseResourceKey(key)) {
+      await safeAnswerCallbackQuery(ctx, "Це не можна підняти так.");
+      return;
+    }
+
+    try {
+      assertCanPerformPhysicalAction(player, "PICK_UP");
+      const result = await pickUpAllVisibleGroundResourcesByKey(player.id, key as VisibleGroundResourceKey);
+      const itemText = result.items.map((item) => `${item.name}${item.amount > 1 ? ` ×${item.amount}` : ""}`).join(", ");
+      const pickedAmount = pickedItemsAmount(result.items);
+      await safeAnswerCallbackQuery(ctx, "Підібрано.");
+      await recordVisibleItemAction(bot, {
+        playerId: player.id,
+        locationId: result.locationId,
+        observerText: pickupObserverText(player, itemText),
+        eventTitle: "Player picked up visible ground item stack",
+        eventDescription: `player=${player.id}; items=${result.items.map((item) => `${item.key}:${item.amount}`).join(",")}`,
+        actionNote: `піднято всі однотипні речі: ${itemText}`,
+      });
+      await spendPlayerStaminaAmount(bot, player.id, pickedAmount, ctx.chat?.id);
+      await ctx.reply(`Ви підняли: ${itemText}.`, await inventoryGainReplyOptions(player, `pickup-all:${key}`));
+    } catch (error) {
+      const message = actionErrorMessage(error, "Не вдалося підняти це.");
+      await safeAnswerCallbackQuery(ctx, message);
+      await replyToActionError(ctx, error, "Не вдалося підняти це.", { replyFallback: false });
     }
   });
 

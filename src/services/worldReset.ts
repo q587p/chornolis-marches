@@ -12,7 +12,9 @@ import {
   type StarterAnimalSpeciesKey,
 } from "../data/starterAnimals";
 import { prisma } from "../db";
+import { preparedNameByNominative } from "./characterNames";
 import { ensureTorchResourceTypes } from "./fire";
+import { resetWorldClockState } from "./worldTime";
 
 const START_LOCATION_KEY = "start_border_camp";
 const LISOVYK_NAME = "Дід лісовик";
@@ -61,6 +63,11 @@ type SeedFeature = {
   data?: Prisma.InputJsonValue;
 };
 
+type SeedCreatureResource = {
+  resourceKey: string;
+  amount: number;
+};
+
 type SeedUniqueCreature = {
   speciesKey: string;
   locationKey: string;
@@ -74,7 +81,21 @@ type SeedUniqueCreature = {
   professionKey?: string;
   professionName?: string;
   nameOverrides?: Record<string, string>;
+  resources?: SeedCreatureResource[];
 };
+
+function preparedCreatureNameOverrides(nominative: string): Record<string, string> {
+  const prepared = preparedNameByNominative(nominative);
+  if (!prepared) return {};
+  return {
+    nameGenitive: prepared.forms.genitive,
+    nameDative: prepared.forms.dative,
+    nameAccusative: prepared.forms.accusative,
+    nameInstrumental: prepared.forms.instrumental,
+    nameLocative: prepared.forms.locative,
+    nameVocative: prepared.forms.vocative,
+  };
+}
 
 type WorldSeed = {
   meta: SeedMeta;
@@ -97,6 +118,7 @@ type ResetSummary = {
   miceCreated: number;
   predatorsCreated: number;
   playerAutoStatesCleared: number;
+  worldClockResetTo: string;
 };
 
 function readJsonFile<T>(filePath: string): T {
@@ -304,9 +326,10 @@ async function resetUniqueCreature(creature: SeedUniqueCreature) {
     where: { speciesId: species.id, name: { in: names } },
     orderBy: [{ isAlive: "desc" }, { updatedAt: "desc" }, { id: "asc" }],
   });
+  const nameOverrides = { ...preparedCreatureNameOverrides(creature.name), ...(creature.nameOverrides ?? {}) };
 
   const data: Prisma.CreatureUncheckedUpdateInput = {
-    ...(creature.nameOverrides ?? {}),
+    ...nameOverrides,
     name: creature.name,
     locationId: location.id,
     hp: creature.isAlive ? species.baseHp : 0,
@@ -333,29 +356,40 @@ async function resetUniqueCreature(creature: SeedUniqueCreature) {
   const duplicateIds = existing.slice(1).map((item) => item.id);
   if (duplicateIds.length > 0) await prisma.creature.deleteMany({ where: { id: { in: duplicateIds } } });
 
+  let creatureId: number;
   if (keep) {
     await prisma.creature.updateMany({ where: { id: keep.id }, data });
-    return { removedDuplicates: duplicateIds.length };
+    creatureId = keep.id;
+  } else {
+    const created = await prisma.creature.create({
+      data: {
+        speciesId: species.id,
+        locationId: location.id,
+        name: creature.name,
+        ...nameOverrides,
+        hp: creature.isAlive ? species.baseHp : 0,
+        maxHp: species.baseHp,
+        isAlive: creature.isAlive,
+        isGone: false,
+        isHidden: creature.isHidden ?? false,
+        sex: creature.sex,
+        currentAction: creature.action,
+        activity: creature.activity,
+        professionKey: creature.professionKey,
+        professionName: creature.professionName,
+      },
+    });
+    creatureId = created.id;
   }
 
-  await prisma.creature.create({
-    data: {
-      speciesId: species.id,
-      locationId: location.id,
-      name: creature.name,
-      ...(creature.nameOverrides ?? {}),
-      hp: creature.isAlive ? species.baseHp : 0,
-      maxHp: species.baseHp,
-      isAlive: creature.isAlive,
-      isGone: false,
-      isHidden: creature.isHidden ?? false,
-      sex: creature.sex,
-      currentAction: creature.action,
-      activity: creature.activity,
-      professionKey: creature.professionKey,
-      professionName: creature.professionName,
-    },
-  });
+  await prisma.creatureResource.deleteMany({ where: { creatureId } });
+  for (const resource of creature.resources ?? []) {
+    const resourceType = await prisma.resourceType.findUniqueOrThrow({ where: { key: resource.resourceKey } });
+    if (resource.amount <= 0) continue;
+    await prisma.creatureResource.create({
+      data: { creatureId, resourceTypeId: resourceType.id, amount: resource.amount },
+    });
+  }
 
   return { removedDuplicates: duplicateIds.length };
 }
@@ -459,13 +493,14 @@ export async function resetWorldState(): Promise<ResetSummary> {
   const foxesCreated = await resetStarterAnimals("fox", STARTER_PREDATORS.filter((group) => group.speciesKey === "fox"));
   const wolvesCreated = await resetStarterAnimals("wolf", STARTER_PREDATORS.filter((group) => group.speciesKey === "wolf"));
   const predatorsCreated = foxesCreated + wolvesCreated;
+  const worldClock = await resetWorldClockState();
 
   const start = await prisma.cellLocation.findUnique({ where: { key: START_LOCATION_KEY } });
   await prisma.worldEvent.create({
     data: {
       type: "SYSTEM",
       title: "Світ скинуто",
-      description: `Reset to ${world.meta.version}: ${world.uniqueCreatures.map(uniqueCreatureSummary).join("; ")}. Зайці, миші, лисиці й вовки повернулись у стартові місцини, авто-режими вимкнено.`,
+      description: `Reset to ${world.meta.version}: ${world.uniqueCreatures.map(uniqueCreatureSummary).join("; ")}. Зайці, миші, лисиці й вовки повернулись у стартові місцини, авто-режими вимкнено, час світу повернено до стартової хвилини ${worldClock.absoluteMinute}.`,
       locationId: start?.id,
     },
   });
@@ -481,5 +516,6 @@ export async function resetWorldState(): Promise<ResetSummary> {
     miceCreated,
     predatorsCreated,
     playerAutoStatesCleared,
+    worldClockResetTo: `${worldClock.absoluteMinute}`,
   };
 }

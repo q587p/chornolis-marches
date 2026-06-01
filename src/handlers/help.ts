@@ -2,42 +2,64 @@ import { Bot, InlineKeyboard } from "grammy";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { isPlayerAutoEnabled } from "./auto";
 import { getPlayerByTelegramId } from "../services/players";
-import { hasCompletedTutorial } from "../services/tutorial";
+import { hasCompletedTutorial, isTutorialLocation } from "../services/tutorial";
+import { safeAnswerCallbackQuery } from "../utils/telegram";
+import { slashlessCommandPattern } from "../utils/slashlessCommands";
+import { prisma } from "../db";
+
+const COMMANDS_TEXT_COMMAND = slashlessCommandPattern(["commands"]);
 
 export const HELP_TEXT = [
   "🧭 <b>Що робити в Порубіжжі Чорнолісу</b>",
   "",
   "<b>Перші кроки</b>",
-  "1. Натисніть 👀 Озирнутися, щоб згадати, де ви стоїте.",
-  "2. Натисніть 🔎 Роздивитися в картці місцини, щоб побачити ресурси, істот, трупи й сліди руху.",
-  "3. Оберіть напрямок або команду /north, /south, /west, /east. Коротко: /n, /s, /w, /e.",
-  "4. Якщо бачите ягоди, гриби чи лікарські трави — спробуйте /gather або кнопку 🌿 Зібрати.",
-  "5. У Речах ягоди трохи повертають снагу й ледь вгамовують голод, гриби вгамовують голод, лікарські трави можна прикласти при пораненні, а факел — запалити, якщо поруч є вогонь.",
-  "6. Коли втомилися або поранені — /rest чи кнопку 🧘 Відпочити.",
+  "Якщо ви тут уперше — пройдіть навчальний сон (/sleep_tutorial). Він коротко показує, як рухатися, озиратися, роздивлятися світ і слухати підказки місцини.",
+  "Коли відчуєте, що готові до більшого світу, у сні можна обрати <i>Закінчити навчання</i> (/tutorialEnd).",
   "",
-  "<b>Корисні команди</b>",
-  "• /me — стан персонажа, життя, снагу, голод, речі і статистика.",
-  "• /inventory — відкрити Речі; там можна з'їсти, використати, роздивитися або викинути наявні речі.",
-  "• /look — озирнутися в поточній місцині. Також працюють текстові «див» і «дивитися».",
-  "• /examine — роздивитися уважніше. Також працюють текстові «спостерігати» й «поспостерігати».",
-  "• /examine grass — оцінити виснажену траву, якщо така особливість є в місцині.",
-  "• /queue — поточний план дій.",
-  "• /queue cancel — скасувати поточну дію.",
-  "• /queue clear — очистити чергу.",
-  "• /track — пошукати свіжі сліди поруч.",
-  "• /say текст — сказати щось у місцині. Також працюють «сказати», «говорити», «ск», «сказ» і «гов».",
-  "• Сигнали — після Роздивитися оберіть персонажа чи істоту, щоб кивнути, помахати, вклонитися або подати інший короткий жест.",
-  "• /news — остання новина й заголовки попередніх.",
-  "• /who — хто був активний за останню реальну годину.",
-  "• /time — поточний календарний відгук світу.",
-  "• /sleep tutorial — повернутися до навчального сну. Поки навчання не завершене, /sleep також веде туди; у /me видно, якщо навчальний сон ще не пройдено.",
-  "• /wake або Прокинутися — вийти з навчального сну.",
-  "• /help — показати цю підказку знову.",
+  "<b>Персонаж</b>",
+  "• <i>Персонаж</i> (/me) — стан персонажа, життя, снага, голод і короткий огляд речей.",
+  "• <i>Речі</i> (/inventory) — тут можна з'їсти, використати, роздивитися або викинути наявні речі.",
+  "• <i>Відпочити</i> (/rest) — сісти й почати короткий відпочинок.",
+  "• <i>Сісти</i> (/sit) і <i>Встати</i> (/stand) — змінити поставу без окремої дії з речами.",
+  "• <i>🌙 AFK / відійти</i> (/afk) — поставити сесію на паузу й зупинити нагадування.",
+  "• <i>🚪 Завершити сесію</i> (/end_session) — завершити поточну Telegram-сесію без втрати персонажа.",
+  "• Повернення після паузи чи завершення — /start або будь-яка ігрова команда чи кнопка.",
   "",
-  "<b>Важливе</b>",
-  "• Якщо життя падає до 0, персонаж непритомніє: черга очищається, починається відпочинок, а інші дії тимчасово недоступні.",
-  "• Коли життя підніметься хоча б до 1, дії знову доступні, але персонаж лишається дуже слабким.",
-  "• Голод уже нагадує про себе після виснажливих дій, але поки не карає окремими штрафами. Їжа допомагає триматися бадьоріше.",
+  "<b>Місцина і мапа</b>",
+  "• <i>Озирнутися</i> (/look) — побачити поточну місцину.",
+  "• <i>Глянути швидко</i> (/glance) — назва місцини та виходи без довгого опису.",
+  "• <i>Виходи</i> (/exits) — лише видимі шляхи з місцини.",
+  "• <i>Роздивитися</i> (/examine) — уважніший огляд місцини, предмета, істоти або особливості.",
+  "• <i>Сліди</i> (/track) — пошукати свіжі сліди поруч.",
+  "• <i>Повернення</i> (/respawn) — якщо заблукали, попросити стежку повернути вас до межового табору; перед переносом буде підтвердження.",
+  "• Мапа — окремої ігрової мапи ще немає; поки найкраще звіряти виходи, читати описи й вести власні нотатки.",
+  "",
+  "<b>Рух і дії</b>",
+  "• <i>Північ</i> (/north), <i>Південь</i> (/south), <i>Захід</i> (/west), <i>Схід</i> (/east) — рух сторонами світу. Коротко: /n, /s, /w, /e.",
+  "• <i>Вгору</i> (/up) і <i>Вниз</i> (/down) — рух по видимих вертикальних проходах, наприклад на дерево й назад.",
+  "• <i>Зібрати</i> (/gather) — збирати ягоди, гриби чи лікарські трави, якщо вони є поруч.",
+  "• <i>Черга</i> (/queue) — поточний план дій; /queue_cancel скасовує поточну дію, /queue_clear очищає чергу.",
+  "• <i>Авто</i> (/auto) — увімкнути самостійні дії; /auto_stop вимикає їх.",
+  "",
+  "<b>Мова і присутність</b>",
+  "• <i>Сказати</i> (/say) — сказати щось у місцині.",
+  "• <i>Прошепотіти</i> (/whisper) — тихо звернутися до видимого персонажа чи істоти.",
+  "• <i>Відповісти</i> (/reply) — відповісти тому, хто останнім звернувся саме до вас.",
+  "• <i>Гукнути</i> (/shout) — гукнути ширше, в межах регіону.",
+  "• <i>Сигнали</i> — після <i>Роздивитися</i> оберіть персонажа чи істоту, щоб кивнути, помахати або подати інший короткий жест.",
+  "",
+  "<b>Поради</b>",
+  "• Малюйте мапу. Папір часто пам'ятає краще за стежку.",
+  "• Тримайтеся разом, коли світ стане небезпечнішим: гурт легше помічає загрозу.",
+  "• Читайте описи. Важливі підказки часто ховаються не в кнопках, а в самій місцині.",
+  "",
+  "<b>Світ і довідка</b>",
+  "• <i>Новини</i> (/news) — остання новина й заголовки попередніх.",
+  "• <i>Хроніки</i> (/chronicles) — останні зарубки світу: нові персонажі й важливі зміни на кшталт стану падального рову.",
+  "• <i>Хто поруч у часі</i> (/who) — хто був активний за останню реальну годину.",
+  "• <i>Час</i> (/time) — календарний відгук світу.",
+  "• <i>Погода</i> (/weather) — короткий стан неба, туману чи дощу за внутрішнім часом Чорнолісу.",
+  "• <i>Почати спочатку</i> (/restart) — стерти персонажа і пройти шлях з початку через /start.",
 ].join("\n");
 
 export const COMMANDS_TEXT_PAGES = [
@@ -52,13 +74,17 @@ export const COMMANDS_TEXT_PAGES = [
     "• /look, look, див, дивитися — озирнутися в місцині.",
     "• /examine, examine, x, роздивитися, придивитися — уважніший огляд місцини, предмета, істоти або особливості.",
     "• /north /south /west /east, /n /s /w /e, пн/пд/сх/зх — рух сторонами світу.",
-    "• /inside /in, вср, всередину, увійти — увійти в доступний внутрішній прохід.",
-    "• /outside /out, наз, назовні, вийти — вийти назовні.",
+    "• /up /down, /u /d, вгору/вниз — рух видимими вертикальними проходами.",
+    "• /inside /in /enter, enter bushes, вср, всередину, увійти в кущі — увійти в доступний внутрішній прохід.",
+    "• /outside /out /leave, leave cave, наз, назовні, вийти з кущів — вийти назовні.",
     "• go north, йти на південь, рушити на захід — природні фрази руху.",
     "",
     "Огляд і місцевість:",
+    "• /glance, glance, глянути швидко, швидко глянути — назва місцини та виходи.",
+    "• /exits, exits, виходи, куди можна йти — лише видимі виходи з місцини, включно із замкненими видимими напрямками.",
     "• /track, сліди, відстежити — побачити свіжі сліди поруч.",
     "• /examine tracks, роздивитися сліди — уважніше роздивитися сліди.",
+    "• /respawn, повернення, повернутися до табору — підтверджене повернення до межового табору для заблукалих ранніх/виснажених персонажів.",
     "• /examine grass, оцінити траву — оглянути винищену траву, якщо вона є.",
     "• /examine sign, роздивитися знак — оглянути межовий знак, якщо він є.",
     "• look лавка, examine bushes, роздивитися кущі — огляд видимої особливості місцини.",
@@ -67,8 +93,9 @@ export const COMMANDS_TEXT_PAGES = [
     "• /me, персонаж, стан, хто я — картка персонажа.",
     "• /inventory, inv, речі — речі персонажа.",
     "• item ягоди, річ факел, inspect item herbs — оглянути річ у речах.",
-    "• drop berries, викинути факел, кинути трави — викинути одну річ на землю.",
-    "• get corpse, take twigs, підібрати хмиз, взяти факел — підібрати видиму річ із землі.",
+    "• drop berries, викинути факел, кинути трави — викинути одну річ на землю; drop all, drop all corpse, викинути все — викласти всі або всі однотипні речі, крім того, що в руках.",
+    "• /put, /put туша рів, покласти всі рештки до ями — покласти тушу чи рештки з Речей у місцеву позначену особливість, зараз передусім у падальний рів біля воріт.",
+    "• get corpse, take twigs, get all, get all corpse, get all berries, взяти все, підняти всі трупи — підібрати видиму річ або всі/однотипні видимі речі із землі.",
     "• eat berries, з'їсти гриби, з'їсти лікарські трави, use herbs — з'їсти або використати їстівний/лікувальний запас.",
     "• light torch, запалити факел — запалити факел від вогнища або іншого запаленого факела.",
     "• douse torch, погасити факел, притушити факел — притушити запалений факел.",
@@ -80,18 +107,31 @@ export const COMMANDS_TEXT_PAGES = [
     "",
     "Дії:",
     "• /gather, gather herbs, збирати ягоди, шукати гриби — збір ресурсу місцини з витратою часу й снаги.",
-    "• /rest, відпочити, сісти, присісти — коротко сісти й відпочити.",
+    "• /shake_tree, shake tree, потрусити дерево — струсити доступне дерево, якщо ви вже нагорі; хмиз посиплеться вниз, але дерево не відновлюється одразу.",
+    "• /sit, сісти, присісти — сісти без початку відпочинку.",
+    "• /lie, лягти, лежати — лягти без початку сну чи відпочинку.",
+    "• /stand, встати, підвестися — встати; якщо ви відпочиваєте, це перерве відпочинок.",
+    "• /rest, відпочити — сісти, якщо треба, і почати короткий відпочинок.",
     "• /queue, черга, план — переглянути план дій.",
     "• /queue cancel, stop, скасувати дію — скасувати поточну дію.",
     "• /queue clear, очистити чергу — очистити чергу.",
     "• /auto, авто, увімкнути авто — увімкнути самостійні дії.",
     "• /autoStop, зупинити авто — вимкнути самостійні дії.",
+    "• 🌙 AFK / відійти (/afk), afk, відійти — поставити сесію на паузу й зупинити нагадування.",
+    "• 🚪 Завершити сесію (/end_session), /endSession, /quit, /leave, завершити сесію, вийти — завершити поточну Telegram-сесію.",
+    "• Повернення після AFK або завершення — /start чи будь-яка звичайна ігрова команда/кнопка.",
+    "• /sleep, спати, заснути — лягти й заснути звичайним сном.",
     "• /sleep tutorial, навчальний сон — повернутися до навчального сну.",
-    "• /wake, wake, прокинутися — вийти з навчального сну.",
+    "• /tutorialEnd, закінчити навчання — підтвердити завершення навчального сну й прибрати нагадування про незавершене навчання.",
+    "• /wake, wake, прокинутися — прокинутися зі звичайного або навчального сну.",
     "• /say текст, сказати текст, ск текст, гов текст — сказати щось поруч.",
     "• /say Відчинитися, Відчинись будь ласка — у навчальному сні може відчинити Браму Сну.",
+    "• /open ворота, відкрити ворота, відчинити браму — спробувати відчинити місцеву браму чи ворота.",
+    "• whisper Данило текст, шепнути 1 текст — прошепотіти видимому персонажу поруч.",
+    "• reply текст, відповісти текст — відповісти тому, хто останнім звернувся саме до вас.",
+    "• shout текст, гукнути текст, крикнути текст, кричати текст, крик текст — гукнути ширше, в межах регіону.",
     "• attack rabbit, fight wolf, kill wolf, kick rabbit, бити мишу — атакувати видиму ціль.",
-    "• freshen corpse, butcher corpse, освіжити труп, розібрати труп — обробити свіжий труп і здобути м'ясо.",
+    "• /freshen corpse, butcher corpse, освіжити труп, розібрати труп — обробити свіжий труп і здобути м'ясо; /freshen_all, freshen all, свіжувати все — поставити всі придатні туші в чергу по одній.",
     "",
     "Соціальні сигнали:",
     "• smile, усміхнутися; nod, кивнути; bow, вклонитися; wave, помахати.",
@@ -100,12 +140,16 @@ export const COMMANDS_TEXT_PAGES = [
     "",
     "Інформація:",
     "• /help, допомога — коротка допомога.",
-    "• /commands — цей повніший прихований список.",
+    "• /commands — повний прихований каталог реалізованих команд і аліасів.",
     "• /menu, меню — меню дій.",
     "• /news, новини — новини світу.",
+    "• /chronicles, chronicles, хроніки, останні події — глобальні зарубки світу: нові персонажі й важливі зміни.",
     "• /who, хто — активні персонажі.",
     "• /time, час — поточний календарний відгук світу.",
+    "• /weather, погода — поточна погода внутрішнього світу.",
     "• /chat, /chat time 1, /chat location, /chat character — журнал реплік.",
+    "• /adminMenu — кнопкове меню Писарів: статистика, світ, all, телепорт, ресурси, вогонь та повна довідка.",
+    "• /adminHelp — повний службовий список команд Писарів.",
     "• /stat, статистика — службова статистика для Писарів.",
     "• /all — службовий список для Писарів.",
     "",
@@ -118,21 +162,18 @@ export const COMMANDS_TEXT_PAGES = [
   [
     "🧾 Заплановані команди й напрямки",
     "",
-    "Найближчий окремий пакет:",
-    "• glance / глянути швидко — короткий огляд без описів.",
-    "• exits / виходи — лише виходи з місцини.",
-    "• enter [place] / leave — входи й виходи з будівель або внутрішніх місць.",
-    "• reply <message> — відповідь тому, хто звернувся до вас, навіть якщо його не видно через темряву чи прихованість.",
-    "• whisper [player] [message] — шепіт одній людині.",
-    "• shout — крик на регіон або світ із великою витратою снаги.",
+    "Near-term text command pack уже покрив швидкий огляд, виходи, enter/leave, whisper, reply і shout.",
+    "",
+    "Найближчі окремі пакети:",
     "",
     "Після цього:",
     "• equip/remove — спорядити або зняти предмет; зараз це частково замінюють дії з факелом.",
-    "• give [object] [target], put [object] [container] — передавання й контейнери.",
+    "• give [object] [target] — передавання речей іншим персонажам.",
+    "• ширший put [object] [container] — контейнери за межами падального рову.",
     "• drink <beverage> — випити щось.",
     "• consider/con <target> — оцінити небезпеку цілі.",
     "• compare <a> to <b> — порівняти речі.",
-    "• skills, effects, journal, weather — навички, стани, особистий літопис і погода.",
+    "• skills, effects, journal — навички, стани й особистий літопис.",
     "• wimpy [hp/стан] — автоматична втеча при небезпечному стані.",
     "",
     "Соціальне й організації:",
@@ -144,39 +185,103 @@ export const COMMANDS_TEXT_PAGES = [
     "• spells, cast, memorize — майбутня магічна система.",
     "• buildroom, editdesc, addexit, removeexit, adddetail, builderrooms — майбутні builder-команди з дозволами.",
     "• makebuilder, removebuilder, reviewrooms, approveroom, rejectroom, debug, mute, unmute, kick — майбутні адмінські/модераційні інструменти.",
-    "",
-    "Поради:",
-    "• Малюйте мапу. Папір часто пам'ятає краще за стежку.",
-    "• Тримайтеся разом, коли світ стане небезпечнішим: гурт легше помічає загрозу.",
-    "• Читайте описи. Важливі підказки часто ховаються не в кнопках, а в самій місцині.",
   ].join("\n"),
 ];
 
+function helpTextForTutorialStatus(tutorialCompleted: boolean) {
+  if (!tutorialCompleted) return HELP_TEXT;
+  const hiddenWhenCompleted = new Set([
+    "<b>Перші кроки</b>",
+    "Якщо ви тут уперше — пройдіть навчальний сон (/sleep_tutorial). Він коротко показує, як рухатися, озиратися, роздивлятися світ і слухати підказки місцини.",
+    "Коли відчуєте, що готові до більшого світу, у сні можна обрати <i>Закінчити навчання</i> (/tutorialEnd).",
+  ]);
+  return HELP_TEXT.split("\n").filter((line) => !hiddenWhenCompleted.has(line)).join("\n").replace(/\n{3,}/g, "\n\n");
+}
+
+function commandsPageKeyboard(pageIndex: number) {
+  const keyboard = new InlineKeyboard();
+  const total = COMMANDS_TEXT_PAGES.length;
+  if (pageIndex > 0) keyboard.text("↩️ Назад", `commands:page:${pageIndex - 1}`);
+  keyboard.text(`${pageIndex + 1}/${total}`, "commands:noop");
+  if (pageIndex < total - 1) keyboard.text("Далі ↪️", `commands:page:${pageIndex + 1}`);
+  return keyboard;
+}
+
+export const TUTORIAL_HELP_RETURN_TEXT =
+  "Навчальний сон ще не завершено. Можна повернутися туди, пройти короткі вправи або прокинутися, коли будете готові.";
+
+export const TUTORIAL_HELP_IN_DREAM_TEXT =
+  "Навчальний сон ще триває. Можна пройти короткі вправи або прокинутися, коли будете готові.";
+
+export function tutorialHelpFollowupText(isInTutorialDream: boolean) {
+  return isInTutorialDream ? TUTORIAL_HELP_IN_DREAM_TEXT : TUTORIAL_HELP_RETURN_TEXT;
+}
+
+async function playerIsInTutorialDream(playerId: number) {
+  const player = await prisma.player.findUnique({
+    where: { id: playerId },
+    select: {
+      currentLocation: {
+        select: {
+          key: true,
+          z: true,
+          region: { select: { key: true } },
+        },
+      },
+    },
+  });
+  return Boolean(player?.currentLocation && isTutorialLocation(player.currentLocation));
+}
+
+async function replyWithCommandsPage(ctx: any, pageIndex = 0) {
+  const safePage = Math.max(0, Math.min(COMMANDS_TEXT_PAGES.length - 1, pageIndex));
+  await ctx.reply(COMMANDS_TEXT_PAGES[safePage], {
+    reply_markup: commandsPageKeyboard(safePage),
+  });
+}
+
+async function editCommandsPage(ctx: any, pageIndex: number) {
+  const safePage = Math.max(0, Math.min(COMMANDS_TEXT_PAGES.length - 1, pageIndex));
+  await ctx.editMessageText(COMMANDS_TEXT_PAGES[safePage], {
+    reply_markup: commandsPageKeyboard(safePage),
+  });
+}
+
 export async function sendHelp(ctx: any) {
   const auto = ctx.from ? isPlayerAutoEnabled(ctx.from.id) : false;
-  await ctx.reply(HELP_TEXT, {
+  const player = ctx.from ? await getPlayerByTelegramId(ctx.from.id) : null;
+  const tutorialCompleted = player ? await hasCompletedTutorial(player.id) : false;
+
+  await ctx.reply(helpTextForTutorialStatus(tutorialCompleted), {
     parse_mode: "HTML",
     reply_markup: ctx.from ? await buildMainReplyKeyboardForTelegramId(ctx.from.id, auto) : undefined,
   });
 
   if (!ctx.from) return;
-  const player = await getPlayerByTelegramId(ctx.from.id);
-  if (!player || await hasCompletedTutorial(player.id)) return;
+  if (!player || tutorialCompleted) return;
 
-  await ctx.reply(
-    "Навчальний сон ще не завершено. Можна повернутися туди, пройти короткі вправи або прокинутися, коли будете готові.",
-    { reply_markup: new InlineKeyboard().text("🌙 Навчальний сон", "tutorial:sleep") }
-  );
+  const isInTutorialDream = await playerIsInTutorialDream(player.id);
+  await ctx.reply(tutorialHelpFollowupText(isInTutorialDream), {
+    reply_markup: isInTutorialDream
+      ? new InlineKeyboard().text("✅ Закінчити навчання", "tutorial:end").row().text("🌤 Прокинутися", "tutorial:wake")
+      : new InlineKeyboard().text("🌙 Навчальний сон", "tutorial:sleep"),
+  });
 }
 
 export async function sendCommands(ctx: any) {
-  for (const page of COMMANDS_TEXT_PAGES) {
-    await ctx.reply(page);
-  }
+  await replyWithCommandsPage(ctx, 0);
 }
 
 export function registerHelpHandlers(bot: Bot) {
   bot.command("help", sendHelp);
   bot.command("commands", sendCommands);
+  bot.hears(COMMANDS_TEXT_COMMAND, sendCommands);
+  bot.callbackQuery(/^commands:page:(\d+)$/, async (ctx) => {
+    await safeAnswerCallbackQuery(ctx);
+    await editCommandsPage(ctx, Number(ctx.match[1]));
+  });
+  bot.callbackQuery("commands:noop", async (ctx) => {
+    await safeAnswerCallbackQuery(ctx);
+  });
   bot.hears(["❔ Допомога", "🧭 Допомога", "Допомога"], sendHelp);
 }

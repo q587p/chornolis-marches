@@ -1,5 +1,5 @@
 import { Bot } from "grammy";
-import { Prisma, WorldAction, WorldActionType, WorldActorType } from "@prisma/client";
+import { PlayerPosture, Prisma, WorldAction, WorldActionType, WorldActorType } from "@prisma/client";
 import { prisma } from "../db";
 import {
   BASE_HP,
@@ -18,7 +18,10 @@ import { setLastRuntimeError } from "../runtimeState";
 import { actionPriority, actionTitle, effectivePlayerActionDurationMs } from "./actionRules";
 import { fatigueStateFor, recoverStamina } from "./actionRecovery";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
+import { assertCanPerformPhysicalAction, isPhysicalPlayerAction } from "./postureRules";
 import { logEvent } from "./worldEvents";
+import { canSendProactiveToPlayerId } from "./sessionPresence";
+import { notifyPlayerObservers, playerRestStartObserverText } from "./playerVisibility";
 
 export type ActorRef =
   | { actorType: "PLAYER"; playerId: number; creatureId?: never }
@@ -125,6 +128,7 @@ function chatIdFromAction(action: WorldAction) {
 
 async function refreshKeyboardWhenPlayerQueueEnds(bot: Bot, action: WorldAction) {
   if (action.actorType !== "PLAYER" || !action.playerId || action.durationMs <= QUICK_PLAYER_ACTION_DURATION_MS) return;
+  if (!(await canSendProactiveToPlayerId(action.playerId))) return;
   const chatId = chatIdFromAction(action);
   if (!chatId) return;
 
@@ -210,6 +214,8 @@ export async function enqueuePlayerAction(input: PlayerActionRequest): Promise<P
 export async function performOrQueuePlayerAction(bot: Bot, input: PlayerActionRequest): Promise<PlayerActionSubmitResult> {
   const player = await prisma.player.findUnique({ where: { id: input.playerId } });
   if (!player) throw new Error("Персонажа не знайдено.");
+
+  if (isPhysicalPlayerAction(input.type)) assertCanPerformPhysicalAction(player, input.type);
 
   if (player.hp <= 0 && input.type !== "REST") {
     await startPlayerRest(input.playerId);
@@ -306,6 +312,9 @@ export async function startPlayerRest(playerId: number) {
   const updated = await prisma.player.updateMany({
     where: { id: playerId },
     data: {
+      posture: PlayerPosture.SITTING,
+      sleepState: "AWAKE",
+      ordinarySleepStartedAtMinute: null,
       isResting: true,
       fatigueState: fatigueStateFor(player.stamina, max),
       lastStaminaRegenAt: new Date(),
@@ -319,9 +328,15 @@ export async function startPlayerRest(playerId: number) {
 export async function stopPlayerRest(playerId: number) {
   const player = await prisma.player.findUnique({ where: { id: playerId } });
   if (!player) return null;
+  await prisma.worldAction.updateMany({
+    where: { actorType: "PLAYER", playerId, type: "REST", status: "RUNNING" },
+    data: { status: "CANCELLED", note: "перервано відпочинок" },
+  });
   const updated = await prisma.player.updateMany({
     where: { id: playerId },
     data: {
+      sleepState: "AWAKE",
+      ordinarySleepStartedAtMinute: null,
       isResting: false,
       fatigueState: fatigueStateFor(player.stamina, player.staminaMax ?? BASE_STAMINA),
       lastStaminaRegenAt: new Date(),
@@ -400,7 +415,7 @@ export async function clearQueuedPlayerActions(playerId: number) {
   if (stoppedRest) {
     await prisma.player.updateMany({
       where: { id: playerId },
-      data: { isResting: false, fatigueState: fatigueStateFor(player!.stamina, player!.staminaMax ?? BASE_STAMINA), lastStaminaRegenAt: new Date() },
+      data: { sleepState: "AWAKE", ordinarySleepStartedAtMinute: null, isResting: false, fatigueState: fatigueStateFor(player!.stamina, player!.staminaMax ?? BASE_STAMINA), lastStaminaRegenAt: new Date() },
     });
   }
 
@@ -418,19 +433,23 @@ export async function cancelCurrentPlayerAction(playerId: number) {
   if (stoppedRest) {
     await prisma.player.updateMany({
       where: { id: playerId },
-      data: { isResting: false, fatigueState: fatigueStateFor(player!.stamina, player!.staminaMax ?? BASE_STAMINA), lastStaminaRegenAt: new Date() },
+      data: { sleepState: "AWAKE", ordinarySleepStartedAtMinute: null, isResting: false, fatigueState: fatigueStateFor(player!.stamina, player!.staminaMax ?? BASE_STAMINA), lastStaminaRegenAt: new Date() },
     });
   }
 
   return { count: result.count + (stoppedRest ? 1 : 0) };
 }
 
-async function startNextQueuedAction(action: WorldAction) {
+async function startNextQueuedAction(bot: Bot, action: WorldAction) {
   const startedAt = new Date();
   let durationMs = action.durationMs;
+  let playerBeforeRest: { isResting: boolean; currentLocationId: number | null } | null = null;
   if (action.actorType === "PLAYER" && action.playerId) {
     const player = await prisma.player.findUnique({ where: { id: action.playerId } });
     durationMs = effectivePlayerActionDurationMs(player, action.type, action.durationMs);
+    if (action.type === "REST" && player) {
+      playerBeforeRest = { isResting: player.isResting, currentLocationId: player.currentLocationId };
+    }
   }
 
   const result = await prisma.worldAction.updateMany({
@@ -443,8 +462,15 @@ async function startNextQueuedAction(action: WorldAction) {
     const player = await prisma.player.findUnique({ where: { id: action.playerId } });
     await prisma.player.updateMany({
       where: { id: action.playerId },
-      data: { isResting: true, lastStaminaRegenAt: new Date(), lastHpRegenAt: new Date(), restStarts: player?.isResting ? undefined : { increment: 1 } },
+      data: { posture: PlayerPosture.SITTING, sleepState: "AWAKE", ordinarySleepStartedAtMinute: null, isResting: true, lastStaminaRegenAt: new Date(), lastHpRegenAt: new Date(), restStarts: player?.isResting ? undefined : { increment: 1 } },
     });
+    if (!playerBeforeRest?.isResting) {
+      await notifyPlayerObservers(bot, {
+        playerId: action.playerId,
+        locationId: playerBeforeRest?.currentLocationId ?? player?.currentLocationId,
+        observerText: playerRestStartObserverText,
+      });
+    }
   }
 
   if (action.actorType === "CREATURE" && action.creatureId) {
@@ -453,7 +479,7 @@ async function startNextQueuedAction(action: WorldAction) {
   }
 }
 
-async function startQueuedActionsForActorType(actorType: WorldActorType, take: number) {
+async function startQueuedActionsForActorType(bot: Bot, actorType: WorldActorType, take: number) {
   const nextQueued = await prisma.worldAction.findMany({
     where: { actorType, status: "QUEUED" },
     orderBy: [{ position: "asc" }, { id: "asc" }],
@@ -468,25 +494,34 @@ async function startQueuedActionsForActorType(actorType: WorldActorType, take: n
   const runningActors = new Set(runningActions.map(actorKey));
   const startedActors = new Set<string>();
   let restingPlayerIds = new Set<number>();
+  let nonStandingPlayerIds = new Set<number>();
 
   if (actorType === "PLAYER") {
     const playerIds = [...new Set(nextQueued.map((action) => action.playerId).filter((id): id is number => Boolean(id)))];
     if (playerIds.length > 0) {
-      const restingPlayers = await prisma.player.findMany({
-        where: { id: { in: playerIds }, isResting: true },
-        select: { id: true },
+      const players = await prisma.player.findMany({
+        where: { id: { in: playerIds } },
+        select: { id: true, isResting: true, posture: true, sleepState: true },
       });
-      restingPlayerIds = new Set(restingPlayers.map((player) => player.id));
+      restingPlayerIds = new Set(players.filter((player) => player.isResting).map((player) => player.id));
+      nonStandingPlayerIds = new Set(players.filter((player) => player.posture !== PlayerPosture.STANDING || player.isResting || player.sleepState === "ORDINARY_SLEEP").map((player) => player.id));
     }
   }
 
   for (const action of nextQueued) {
     const key = actorKey(action);
     if (startedActors.has(key) || runningActors.has(key)) continue;
+    if (action.actorType === "PLAYER" && action.playerId && nonStandingPlayerIds.has(action.playerId) && isPhysicalPlayerAction(action.type)) {
+      await prisma.worldAction.updateMany({
+        where: { id: action.id, status: "QUEUED" },
+        data: { status: "CANCELLED", note: "потрібно встати" },
+      });
+      continue;
+    }
     if (action.actorType === "PLAYER" && action.playerId && restingPlayerIds.has(action.playerId)) continue;
     startedActors.add(key);
     try {
-      await startNextQueuedAction(action);
+      await startNextQueuedAction(bot, action);
     } catch (error) {
       if (!isMissingRecordError(error)) throw error;
     }
@@ -511,7 +546,7 @@ async function processCreatureActionQueue(bot: Bot, completeAction: (bot: Bot, a
       }
     });
 
-    await startQueuedActionsForActorType("CREATURE", CREATURE_QUEUED_ACTION_BATCH);
+    await startQueuedActionsForActorType(bot, "CREATURE", CREATURE_QUEUED_ACTION_BATCH);
   } finally {
     creatureQueueProcessing = false;
   }
@@ -538,7 +573,7 @@ export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, ac
     }
   });
 
-  await startQueuedActionsForActorType("PLAYER", PLAYER_QUEUED_ACTION_BATCH);
+  await startQueuedActionsForActorType(bot, "PLAYER", PLAYER_QUEUED_ACTION_BATCH);
   for (const action of completedPlayerActions.sort((a, b) => a.id - b.id)) {
     await refreshKeyboardWhenPlayerQueueEnds(bot, action);
   }

@@ -4,6 +4,7 @@ import path from "path";
 import { prisma } from "../db";
 import { config } from "../config";
 import { logEvent } from "./worldEvents";
+import { canSendProactiveToTelegramId } from "./sessionPresence";
 
 async function readLatestNewsSummary() {
   const filePath = path.join(process.cwd(), "news.md");
@@ -88,6 +89,7 @@ export async function announceWorldUpdatedOnce(bot: Bot) {
 
   for (const player of players) {
     try {
+      if (!(await canSendProactiveToTelegramId(player.telegramId))) continue;
       await bot.api.sendMessage(player.telegramId, text, { reply_markup: keyboard });
       success++;
     } catch (error) {

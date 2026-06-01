@@ -1,12 +1,18 @@
 import { Bot } from "grammy";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../db";
 import { notifyLocationAll } from "./notifications";
 import { canPickUpGroundItem } from "./groundItems";
+import { canSendProactiveToTelegramId } from "./sessionPresence";
+import { MINUTES_PER_WORLD_DAY } from "../data/worldClock";
+import { ensureWorldState } from "./worldTime";
 
 export const CAMPFIRE_DURATION_MS = 16 * 60_000;
 export const CAMPFIRE_FADING_MS = 4 * 60_000;
 export const CAMPFIRE_TWIGS_AFTER_MS = 2 * 60_000;
 export const CAMPFIRE_TWIGS_EXTENSION_MS = 4 * 60_000;
+export const EXTINGUISHED_CAMPFIRE_DECAY_MINUTES = 2 * MINUTES_PER_WORLD_DAY;
+export const EXTINGUISHED_CAMPFIRE_FADING_MINUTES = 2 * 60;
 export const TORCH_DURATION_MS = 10 * 60_000;
 export const TORCH_FADING_MS = 2 * 60_000;
 export const MAX_LIT_TORCHES_IN_HANDS = 2;
@@ -17,6 +23,17 @@ const DOUSED_TORCH_KEY = "doused_torch";
 const TWIGS_KEY = "twigs";
 const DOUSED_TORCH_TIMER_TITLE = "Doused torch timer";
 const DOUSED_TORCH_CONSUMED_TITLE = "Doused torch timer consumed";
+const OLD_CAMPFIRE_MEMORY_REVEALED_AT_KEY = "oldCampfireMemoryRevealedAt";
+const OLD_CAMPFIRE_MEMORY_TEXT_KEY = "oldCampfireMemoryText";
+const ASH_EXPIRES_AT_MINUTE_KEY = "ashExpiresAtMinute";
+const ASH_FADING_AT_MINUTE_KEY = "ashFadingAtMinute";
+const ASH_FADING_NOTIFIED_AT_MINUTE_KEY = "ashFadingNotifiedAtMinute";
+
+export const OLD_CAMPFIRE_MEMORY_OMENS = [
+  "Коли світло торкається каменів, у попелі проступає стара подряпина: три короткі риски й одна довга, спрямована в бік темного лісу.",
+  "Жар піднімає з попелу запах мокрої вовни. Біля краю вогнища видно чужий слід, надто вузький для людської ноги.",
+  "Полум'я на мить лягає набік, і під головешкою блимає обвуглений вузлик із сухої трави.",
+] as const;
 
 type JsonRecord = Record<string, unknown>;
 
@@ -24,10 +41,46 @@ function jsonRecord(value: unknown): JsonRecord {
   return value && typeof value === "object" && !Array.isArray(value) ? value as JsonRecord : {};
 }
 
+function jsonInput(value: unknown) {
+  return value as Prisma.InputJsonValue;
+}
+
 function dateFromJson(value: unknown) {
   if (typeof value !== "string") return null;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function numberFromJson(value: unknown) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.floor(number) : null;
+}
+
+function currentWorldMinuteFromData(data: unknown) {
+  return numberFromJson(jsonRecord(data).absoluteMinute);
+}
+
+function withAshDecaySchedule(data: unknown, absoluteMinute?: number | null) {
+  const current = jsonRecord(data);
+  const baseMinute = absoluteMinute ?? currentWorldMinuteFromData(current);
+  if (baseMinute == null) return current;
+  const expiresAtMinute = baseMinute + EXTINGUISHED_CAMPFIRE_DECAY_MINUTES;
+  return {
+    ...current,
+    [ASH_EXPIRES_AT_MINUTE_KEY]: expiresAtMinute,
+    [ASH_FADING_AT_MINUTE_KEY]: expiresAtMinute - EXTINGUISHED_CAMPFIRE_FADING_MINUTES,
+    [ASH_FADING_NOTIFIED_AT_MINUTE_KEY]: null,
+  };
+}
+
+function withoutAshDecaySchedule(data: unknown) {
+  const {
+    [ASH_EXPIRES_AT_MINUTE_KEY]: _ashExpiresAtMinute,
+    [ASH_FADING_AT_MINUTE_KEY]: _ashFadingAtMinute,
+    [ASH_FADING_NOTIFIED_AT_MINUTE_KEY]: _ashFadingNotifiedAtMinute,
+    ...rest
+  } = jsonRecord(data);
+  return rest;
 }
 
 function timedFireData(createdBy: string) {
@@ -44,32 +97,68 @@ function timedFireData(createdBy: string) {
   };
 }
 
-function extinguishedFireData(data: unknown) {
-  return {
+function extinguishedFireData(data: unknown, absoluteMinute?: number | null) {
+  const next = {
     ...jsonRecord(data),
     is_campfire: true,
     extinguished: true,
     extinguishedAt: new Date().toISOString(),
   };
+  return jsonRecord(data).seeded === true ? next : withAshDecaySchedule(next, absoluteMinute);
 }
 
 function relitFireData(data: unknown, createdBy: string) {
   const base = timedFireData(createdBy);
   return {
-    ...jsonRecord(data),
+    ...withoutAshDecaySchedule(data),
     ...base,
     extinguished: false,
     relitAt: base.litAt,
   };
 }
 
-function addTwigsToFireData(data: unknown) {
+function addTwigsToFireData(data: unknown, absoluteMinute?: number | null) {
   const current = jsonRecord(data);
-  return {
+  const next = {
     ...current,
     is_campfire: true,
     fuelTwigs: Number(current.fuelTwigs ?? 0) + 1,
     lastTwigsAddedAt: new Date().toISOString(),
+  };
+  return current.extinguished === true && current.seeded !== true ? withAshDecaySchedule(next, absoluteMinute) : next;
+}
+
+function stableIndex(value: string, modulo: number) {
+  let hash = 0;
+  for (const char of value) hash = (hash * 31 + char.codePointAt(0)!) >>> 0;
+  return hash % modulo;
+}
+
+export function canRevealOldCampfireMemory(feature: { key?: string | null; type?: string | null; data?: unknown | null }) {
+  const data = jsonRecord(feature.data);
+  return feature.type === "CAMPFIRE"
+    && data.seeded === true
+    && data.is_campfire === true
+    && data[OLD_CAMPFIRE_MEMORY_REVEALED_AT_KEY] == null;
+}
+
+export function oldCampfireMemoryOmen(feature: { key?: string | null }) {
+  const key = feature.key ?? "";
+  return OLD_CAMPFIRE_MEMORY_OMENS[stableIndex(key, OLD_CAMPFIRE_MEMORY_OMENS.length)];
+}
+
+export function oldCampfireMemoryInspectionText(feature: { type?: string | null; data?: unknown | null }) {
+  if (feature.type !== "CAMPFIRE") return null;
+  const text = jsonRecord(feature.data)[OLD_CAMPFIRE_MEMORY_TEXT_KEY];
+  return typeof text === "string" && text.trim() ? text.trim() : null;
+}
+
+function withOldCampfireMemory(data: unknown, feature: { key?: string | null }, now = new Date()) {
+  const omen = oldCampfireMemoryOmen(feature);
+  return {
+    ...jsonRecord(data),
+    [OLD_CAMPFIRE_MEMORY_REVEALED_AT_KEY]: now.toISOString(),
+    [OLD_CAMPFIRE_MEMORY_TEXT_KEY]: omen,
   };
 }
 
@@ -79,7 +168,7 @@ function extendFireData(data: unknown, now = new Date()) {
   const baseFrom = currentExpiresAt && currentExpiresAt.getTime() > now.getTime() ? currentExpiresAt : now;
   const cappedExpiresAt = new Date(Math.min(baseFrom.getTime() + CAMPFIRE_TWIGS_EXTENSION_MS, now.getTime() + CAMPFIRE_DURATION_MS));
   return {
-    ...addTwigsToFireData(current),
+    ...withoutAshDecaySchedule(addTwigsToFireData(current)),
     extinguished: false,
     expiresAt: cappedExpiresAt.toISOString(),
     durationMs: CAMPFIRE_DURATION_MS,
@@ -92,6 +181,33 @@ function featureData(value: unknown): JsonRecord {
 
 function remainingMs(expiresAt: Date, now = new Date()) {
   return expiresAt.getTime() - now.getTime();
+}
+
+function activeLitTorchSince(now = new Date()) {
+  return new Date(now.getTime() - TORCH_DURATION_MS);
+}
+
+export function litTorchExpiresAt(resource: { updatedAt: Date | string }) {
+  const updatedAt = resource.updatedAt instanceof Date ? resource.updatedAt : new Date(resource.updatedAt);
+  return new Date(updatedAt.getTime() + TORCH_DURATION_MS);
+}
+
+export function isActiveLitTorchResource(
+  resource: { amount: number; updatedAt: Date | string; resourceType?: { key?: string | null } | null },
+  now = new Date(),
+) {
+  const updatedAt = resource.updatedAt instanceof Date ? resource.updatedAt : new Date(resource.updatedAt);
+  return resource.amount > 0
+    && resource.resourceType?.key === LIT_TORCH_KEY
+    && !Number.isNaN(updatedAt.getTime())
+    && updatedAt.getTime() > activeLitTorchSince(now).getTime();
+}
+
+export function isActiveGroundLitTorchResource(
+  resource: { amount: number; updatedAt: Date | string; resourceType?: { key?: string | null } | null },
+  now = new Date(),
+) {
+  return isActiveLitTorchResource(resource, now);
 }
 
 export function campfireExpiresAt(feature: { data?: unknown | null }) {
@@ -113,6 +229,35 @@ export function isExtinguishedCampfire(feature: { data?: unknown | null; provide
   return Boolean(data.extinguished) || Boolean(campfireExpiresAt(feature) && !feature.providesLight);
 }
 
+export function isDecayableExtinguishedCampfire(feature: { type?: string | null; data?: unknown | null; providesLight?: boolean | null }) {
+  const data = jsonRecord(feature.data);
+  return feature.type === "CAMPFIRE"
+    && isExtinguishedCampfire(feature)
+    && data.seeded !== true
+    && data.magical !== true;
+}
+
+export function campfireAshExpiresAtMinute(feature: { data?: unknown | null }) {
+  return numberFromJson(jsonRecord(feature.data)[ASH_EXPIRES_AT_MINUTE_KEY]);
+}
+
+export function campfireAshFadingAtMinute(feature: { data?: unknown | null }) {
+  return numberFromJson(jsonRecord(feature.data)[ASH_FADING_AT_MINUTE_KEY]);
+}
+
+export function isExtinguishedCampfireAshFading(feature: { type?: string | null; data?: unknown | null; providesLight?: boolean | null }, absoluteMinute: number) {
+  if (!isDecayableExtinguishedCampfire(feature)) return false;
+  const fadingAtMinute = campfireAshFadingAtMinute(feature);
+  const expiresAtMinute = campfireAshExpiresAtMinute(feature);
+  return fadingAtMinute != null && expiresAtMinute != null && absoluteMinute >= fadingAtMinute && absoluteMinute < expiresAtMinute;
+}
+
+export function shouldRemoveExtinguishedCampfireAsh(feature: { type?: string | null; data?: unknown | null; providesLight?: boolean | null }, absoluteMinute: number) {
+  if (!isDecayableExtinguishedCampfire(feature)) return false;
+  const expiresAtMinute = campfireAshExpiresAtMinute(feature);
+  return expiresAtMinute != null && absoluteMinute >= expiresAtMinute;
+}
+
 export function isCampfireFading(feature: { data?: unknown | null }, now = new Date()) {
   const expiresAt = campfireExpiresAt(feature);
   const left = expiresAt ? remainingMs(expiresAt, now) : CAMPFIRE_DURATION_MS;
@@ -130,7 +275,14 @@ export function campfireStateLine(feature: { data?: unknown | null }) {
   return null;
 }
 
-export async function expireTimedCampfires(locationId?: number | null) {
+async function currentWorldMinute(absoluteMinute?: number | null) {
+  if (absoluteMinute != null) return absoluteMinute;
+  const state = await ensureWorldState();
+  return state.absoluteMinute;
+}
+
+export async function expireTimedCampfires(locationId?: number | null, absoluteMinute?: number | null) {
+  const worldMinute = await currentWorldMinute(absoluteMinute);
   const features = await prisma.locationFeature.findMany({
     where: {
       isActive: true,
@@ -151,11 +303,81 @@ export async function expireTimedCampfires(locationId?: number | null) {
         isActive: true,
         providesLight: false,
         restStaminaCapMultiplier: null,
-        data: extinguishedFireData(feature.data),
+        data: jsonInput(extinguishedFireData(feature.data, worldMinute)),
       },
     });
   }
   return expired.length;
+}
+
+function needsAshDecayBackfill(feature: { type?: string | null; data?: unknown | null; providesLight?: boolean | null }) {
+  return isDecayableExtinguishedCampfire(feature) && campfireAshExpiresAtMinute(feature) == null;
+}
+
+export async function decayExtinguishedCampfires(bot?: Bot | null, absoluteMinute?: number | null, locationId?: number | null) {
+  const worldMinute = await currentWorldMinute(absoluteMinute);
+  const features = await prisma.locationFeature.findMany({
+    where: {
+      isActive: true,
+      type: "CAMPFIRE",
+      ...(locationId ? { locationId } : {}),
+    },
+    select: { id: true, name: true, locationId: true, type: true, providesLight: true, data: true },
+  });
+
+  let backfilled = 0;
+  let fading = 0;
+  let removed = 0;
+
+  for (const feature of features) {
+    if (!isDecayableExtinguishedCampfire(feature)) continue;
+
+    const data = jsonRecord(feature.data);
+    if (needsAshDecayBackfill(feature)) {
+      await prisma.locationFeature.update({
+        where: { id: feature.id },
+        data: { data: jsonInput(withAshDecaySchedule(data, worldMinute)) },
+      });
+      backfilled++;
+      continue;
+    }
+
+    if (shouldRemoveExtinguishedCampfireAsh(feature, worldMinute)) {
+      await prisma.locationFeature.update({
+        where: { id: feature.id },
+        data: {
+          isActive: false,
+          providesLight: false,
+          restStaminaCapMultiplier: null,
+          name: "Слід від вогнища",
+          data: jsonInput({
+            ...data,
+            decayedAtMinute: worldMinute,
+          }),
+        },
+      });
+      removed++;
+      continue;
+    }
+
+    const notifiedAtMinute = numberFromJson(data[ASH_FADING_NOTIFIED_AT_MINUTE_KEY]);
+    if (isExtinguishedCampfireAshFading(feature, worldMinute) && notifiedAtMinute == null) {
+      await prisma.locationFeature.update({
+        where: { id: feature.id },
+        data: {
+          name: "Ледь помітне вогнище",
+          data: jsonInput({
+            ...data,
+            [ASH_FADING_NOTIFIED_AT_MINUTE_KEY]: worldMinute,
+          }),
+        },
+      });
+      if (bot) await notifyLocationAll(bot, feature.locationId, "🪨 Старе згасле вогнище майже розсипалося в землю. Ще трохи — і від нього лишиться тільки тьмяний слід у попелі.");
+      fading++;
+    }
+  }
+
+  return { backfilled, fading, removed };
 }
 
 async function hasTimerWarning(marker: string) {
@@ -181,6 +403,7 @@ async function markTimerWarning(marker: string, locationId?: number | null, play
 export async function notifyFadingFireTimers(bot: Bot) {
   const now = new Date();
   await expireTimedCampfires();
+  await decayExtinguishedCampfires(bot);
   await expireGroundLitTorches(bot, now);
 
   const fadingCampfires = await prisma.locationFeature.findMany({
@@ -215,6 +438,14 @@ export async function notifyFadingFireTimers(bot: Bot) {
     await syncPlayerTorchState(resource.playerId);
   }
 
+  const expiredCreatureTorches = await prisma.creatureResource.findMany({
+    where: { resourceTypeId: litTorch.id, amount: { gt: 0 }, updatedAt: { lte: expiredSince } },
+    select: { creatureId: true },
+  });
+  for (const resource of expiredCreatureTorches) {
+    await syncCreatureTorchState(resource.creatureId);
+  }
+
   const fadingTorches = await prisma.playerResource.findMany({
     where: {
       resourceTypeId: litTorch.id,
@@ -229,6 +460,7 @@ export async function notifyFadingFireTimers(bot: Bot) {
     if (await hasTimerWarning(marker)) continue;
 
     try {
+      if (!(await canSendProactiveToTelegramId(resource.player.telegramId))) continue;
       await bot.api.sendMessage(resource.player.telegramId, "🔥 Ваш факел догорає. Варто пошукати вогнище, щоб підпалити його знову.");
       await markTimerWarning(marker, resource.player.currentLocationId, resource.playerId);
     } catch (error) {
@@ -237,11 +469,16 @@ export async function notifyFadingFireTimers(bot: Bot) {
   }
 }
 
-export async function expireGroundLitTorches(bot?: Bot, now = new Date()) {
+export async function expireGroundLitTorches(bot?: Bot, now = new Date(), locationId?: number | null) {
   const { litTorch, twigs } = await ensureTorchResourceTypes();
-  const expiredSince = new Date(now.getTime() - TORCH_DURATION_MS);
+  const expiredSince = activeLitTorchSince(now);
   const expiredNodes = await prisma.resourceNode.findMany({
-    where: { resourceTypeId: litTorch.id, amount: { gt: 0 }, updatedAt: { lte: expiredSince } },
+    where: {
+      resourceTypeId: litTorch.id,
+      amount: { gt: 0 },
+      updatedAt: { lte: expiredSince },
+      ...(locationId ? { locationId } : {}),
+    },
     select: { id: true, locationId: true, amount: true },
   });
 
@@ -340,6 +577,25 @@ export async function syncPlayerTorchState(playerId: number) {
   ]);
 }
 
+export async function syncCreatureTorchState(creatureId: number) {
+  const { litTorch, twigs } = await ensureTorchResourceTypes();
+  const lit = await prisma.creatureResource.findUnique({
+    where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: litTorch.id } },
+  });
+
+  if (!lit || lit.amount <= 0) return;
+  if (Date.now() - lit.updatedAt.getTime() < TORCH_DURATION_MS) return;
+
+  await prisma.$transaction([
+    prisma.creatureResource.delete({ where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: litTorch.id } } }),
+    prisma.creatureResource.upsert({
+      where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: twigs.id } },
+      update: { amount: { increment: lit.amount } },
+      create: { creatureId, resourceTypeId: twigs.id, amount: lit.amount },
+    }),
+  ]);
+}
+
 export async function getPlayerTorchState(playerId: number) {
   await syncPlayerTorchState(playerId);
   const { torch, litTorch, dousedTorch } = await ensureTorchResourceTypes();
@@ -362,6 +618,73 @@ export async function getPlayerTorchState(playerId: number) {
     litAt,
     expiresAt,
   };
+}
+
+export async function getCreatureTorchState(creatureId: number) {
+  await syncCreatureTorchState(creatureId);
+  const { torch, litTorch, dousedTorch } = await ensureTorchResourceTypes();
+  const [plain, lit, doused] = await Promise.all([
+    prisma.creatureResource.findUnique({ where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: torch.id } } }),
+    prisma.creatureResource.findUnique({ where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: litTorch.id } } }),
+    prisma.creatureResource.findUnique({ where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: dousedTorch.id } } }),
+  ]);
+
+  const litAt = lit && lit.amount > 0 ? lit.updatedAt : null;
+  const expiresAt = litAt ? new Date(litAt.getTime() + TORCH_DURATION_MS) : null;
+  const left = expiresAt ? remainingMs(expiresAt) : 0;
+  return {
+    hasTorch: Boolean((plain?.amount ?? 0) > 0 || (lit?.amount ?? 0) > 0 || (doused?.amount ?? 0) > 0),
+    isLit: Boolean(litAt && left > 0),
+    isFading: Boolean(litAt && left > 0 && left <= TORCH_FADING_MS),
+    plainAmount: plain?.amount ?? 0,
+    dousedAmount: doused?.amount ?? 0,
+    litAmount: litAt && left > 0 ? lit?.amount ?? 0 : 0,
+    litAt,
+    expiresAt,
+  };
+}
+
+export async function creatureCarriedResourceAmount(creatureId: number, resourceKey: string) {
+  const resourceType = await prisma.resourceType.findUnique({ where: { key: resourceKey } });
+  if (!resourceType) return 0;
+  const carried = await prisma.creatureResource.findUnique({
+    where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: resourceType.id } },
+  });
+  return carried?.amount ?? 0;
+}
+
+export async function creatureCarriedTorchCount(creatureId: number) {
+  const torchState = await getCreatureTorchState(creatureId);
+  return torchState.plainAmount + torchState.litAmount + torchState.dousedAmount;
+}
+
+export async function lightCreatureTorchAtCampfire(creatureId: number, locationId: number) {
+  await syncCreatureTorchState(creatureId);
+  const { torch, litTorch } = await ensureTorchResourceTypes();
+  const campfire = await activeCampfireForTorch(locationId);
+  if (!campfire) return false;
+
+  const [plain, lit] = await Promise.all([
+    prisma.creatureResource.findUnique({ where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: torch.id } } }),
+    prisma.creatureResource.findUnique({ where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: litTorch.id } } }),
+  ]);
+  if (lit && lit.amount > 0 && Date.now() - lit.updatedAt.getTime() < TORCH_DURATION_MS) return false;
+  if (!plain || plain.amount <= 0) return false;
+
+  await prisma.$transaction([
+    plain.amount > 1
+      ? prisma.creatureResource.update({
+          where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: torch.id } },
+          data: { amount: { decrement: 1 } },
+        })
+      : prisma.creatureResource.delete({ where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: torch.id } } }),
+    prisma.creatureResource.upsert({
+      where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: litTorch.id } },
+      update: { amount: 1, updatedAt: new Date() },
+      create: { creatureId, resourceTypeId: litTorch.id, amount: 1 },
+    }),
+  ]);
+  return true;
 }
 
 function parseDousedTimer(description: string | null | undefined) {
@@ -602,7 +925,7 @@ export async function takeTorchFromFeature(playerId: number, featureId: number) 
   const { torch } = await ensureTorchResourceTypes();
   const player = await prisma.player.findUnique({
     where: { id: playerId },
-    select: { currentLocationId: true, hp: true, stamina: true, isResting: true },
+    select: { currentLocationId: true, hp: true, stamina: true, isResting: true, posture: true, sleepState: true },
   });
   if (!player?.currentLocationId) return "Ти ще не увійшов у світ. Напиши /start";
   if (!canPickUpGroundItem(player)) return "Ви надто втомлені, щоб брати це просто зараз. Спершу перепочиньте.";
@@ -628,7 +951,7 @@ export async function lightCampfireFromTorch(playerId: number, featureId: number
   await expireTimedCampfires();
   const { litTorch } = await ensureTorchResourceTypes();
   const player = await prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } });
-  const feature = await prisma.locationFeature.findUnique({ where: { id: featureId }, select: { id: true, locationId: true, isActive: true, type: true, data: true } });
+  const feature = await prisma.locationFeature.findUnique({ where: { id: featureId }, select: { id: true, key: true, locationId: true, isActive: true, type: true, data: true } });
   if (!player?.currentLocationId || !feature?.isActive || player.currentLocationId !== feature.locationId || feature.type !== "CAMPFIRE") {
     return "Це вогнище вже не вдається підпалити.";
   }
@@ -640,17 +963,20 @@ export async function lightCampfireFromTorch(playerId: number, featureId: number
     return "Потрібен запалений факел, щоб підпалити це вогнище.";
   }
 
+  const memoryText = canRevealOldCampfireMemory(feature) ? oldCampfireMemoryOmen(feature) : null;
+  const nextData = relitFireData(feature.data, "torch");
   await prisma.locationFeature.update({
     where: { id: feature.id },
     data: {
       name: "Вогнище",
       providesLight: true,
       restStaminaCapMultiplier: null,
-      data: relitFireData(feature.data, "torch"),
+      data: jsonInput(memoryText ? withOldCampfireMemory(nextData, feature) : nextData),
     },
   });
 
-  return "🔥 Ви підпалили вогнище від факела. Полум'я розгоряється й дає світло навколо.";
+  const base = "🔥 Ви підпалили вогнище від факела. Полум'я розгоряється й дає світло навколо.";
+  return memoryText ? `${base}\n\n${memoryText}` : base;
 }
 
 export async function addTwigsToCampfire(playerId: number, featureId?: number) {
@@ -658,7 +984,7 @@ export async function addTwigsToCampfire(playerId: number, featureId?: number) {
   const { twigs } = await ensureTorchResourceTypes();
   const player = await prisma.player.findUnique({
     where: { id: playerId },
-    select: { currentLocationId: true, hp: true, stamina: true, isResting: true },
+    select: { currentLocationId: true, hp: true, stamina: true, isResting: true, posture: true, sleepState: true },
   });
   if (!player?.currentLocationId) return "Ти ще не увійшов у світ. Напиши /start";
   if (!canPickUpGroundItem(player)) return "Ви надто втомлені, щоб підкидати хмиз просто зараз. Спершу перепочиньте.";
@@ -692,18 +1018,47 @@ export async function addTwigsToCampfire(playerId: number, featureId?: number) {
         })
       : prisma.playerResource.delete({ where: { playerId_resourceTypeId: { playerId, resourceTypeId: twigs.id } } });
 
+  const memoryText = canRevealOldCampfireMemory(feature) ? oldCampfireMemoryOmen(feature) : null;
+  const worldMinute = extinguished ? await currentWorldMinute() : null;
+  const nextData = extinguished ? addTwigsToFireData(feature.data, worldMinute) : extendFireData(feature.data);
+
   await prisma.$transaction([
     consumeTwigs,
     prisma.locationFeature.update({
       where: { id: feature.id },
       data: extinguished
-        ? { data: addTwigsToFireData(feature.data) }
-        : { name: "Вогнище", providesLight: true, data: extendFireData(feature.data) },
+        ? { name: "Згасле вогнище", data: jsonInput(memoryText ? withOldCampfireMemory(nextData, feature) : nextData) }
+        : { name: "Вогнище", providesLight: true, data: jsonInput(memoryText ? withOldCampfireMemory(nextData, feature) : nextData) },
     }),
   ]);
 
-  if (extinguished) return "🪵 Ви підклали хмиз у згасле вогнище. Попіл прийняв сухі гілки; тепер потрібен вогонь, щоб розпалити його.";
-  return "🪵 Ви підкинули хмиз у вогнище. Полум'я знову тримається впевненіше.";
+  const base = extinguished
+    ? "🪵 Ви підклали хмиз у згасле вогнище. Попіл прийняв сухі гілки; тепер потрібен вогонь, щоб розпалити його."
+    : "🪵 Ви підкинули хмиз у вогнище. Полум'я знову тримається впевненіше.";
+  return memoryText ? `${base}\n\n${memoryText}` : base;
+}
+
+export async function relightableCampfireFromTorchId(playerId: number, featureId?: number) {
+  await expireTimedCampfires();
+  const torchState = await getPlayerTorchState(playerId);
+  if (!torchState.isLit) return null;
+
+  const player = await prisma.player.findUnique({
+    where: { id: playerId },
+    select: { currentLocationId: true },
+  });
+  if (!player?.currentLocationId) return null;
+
+  const feature = featureId
+    ? await prisma.locationFeature.findFirst({
+        where: { id: featureId, locationId: player.currentLocationId, isActive: true, type: "CAMPFIRE" },
+      })
+    : await prisma.locationFeature.findFirst({
+        where: { locationId: player.currentLocationId, isActive: true, type: "CAMPFIRE" },
+        orderBy: [{ providesLight: "asc" }, { id: "asc" }],
+      });
+
+  return feature && isExtinguishedCampfire(feature) ? feature.id : null;
 }
 
 export async function canAddTwigsToNearbyCampfire(playerId: number) {
@@ -723,11 +1078,25 @@ export async function canAddTwigsToNearbyCampfire(playerId: number) {
   return features.some((feature) => isExtinguishedCampfire(feature) || canAddTwigsToCampfire(feature));
 }
 
-export async function hasActiveTorchLightAtLocation(locationId: number) {
+export async function hasActiveGroundTorchLightAtLocation(locationId: number, now = new Date()) {
   const litTorch = await prisma.resourceType.findUnique({ where: { key: LIT_TORCH_KEY } });
   if (!litTorch) return false;
-  const activeSince = new Date(Date.now() - TORCH_DURATION_MS);
-  const [carriedCount, groundCount] = await Promise.all([
+  const groundCount = await prisma.resourceNode.count({
+    where: {
+      locationId,
+      resourceTypeId: litTorch.id,
+      amount: { gt: 0 },
+      updatedAt: { gt: activeLitTorchSince(now) },
+    },
+  });
+  return groundCount > 0;
+}
+
+export async function hasActiveTorchLightAtLocation(locationId: number, now = new Date()) {
+  const litTorch = await prisma.resourceType.findUnique({ where: { key: LIT_TORCH_KEY } });
+  if (!litTorch) return false;
+  const activeSince = activeLitTorchSince(now);
+  const [playerCarriedCount, creatureCarriedCount, groundLight] = await Promise.all([
     prisma.playerResource.count({
       where: {
         resourceTypeId: litTorch.id,
@@ -736,23 +1105,28 @@ export async function hasActiveTorchLightAtLocation(locationId: number) {
         player: { currentLocationId: locationId },
       },
     }),
-    prisma.resourceNode.count({
+    prisma.creatureResource.count({
       where: {
-        locationId,
         resourceTypeId: litTorch.id,
         amount: { gt: 0 },
         updatedAt: { gt: activeSince },
+        creature: { locationId, isAlive: true, isGone: false, isHidden: false },
       },
     }),
+    hasActiveGroundTorchLightAtLocation(locationId, now),
   ]);
-  return carriedCount + groundCount > 0;
+  return playerCarriedCount + creatureCarriedCount > 0 || groundLight;
 }
 
 export async function hasActiveLightAtLocation(locationId: number) {
-  await expireTimedCampfires(locationId);
+  const now = new Date();
+  await Promise.all([
+    expireTimedCampfires(locationId),
+    expireGroundLitTorches(undefined, now, locationId),
+  ]);
   const [featureLight, torchLight] = await Promise.all([
     prisma.locationFeature.count({ where: { locationId, isActive: true, providesLight: true } }),
-    hasActiveTorchLightAtLocation(locationId),
+    hasActiveTorchLightAtLocation(locationId, now),
   ]);
   return featureLight > 0 || torchLight;
 }

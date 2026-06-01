@@ -7,6 +7,1181 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.14.17 - Ecology restoration observability - 12026-06-01
+
+### Changed
+
+- Scribe/admin `/stat`, protected web `/stat` and `/stat.json` now include recent and total population-floor restoration counts.
+- Ecology statistics now parse `Population floor restored` events by species, including restored counts, event counts and latest restoration time.
+- Updated ecology/admin docs and planning notes for the restoration-observability slice.
+
+### Validation
+
+- Ran `node scripts/test/ecology-stats.cjs`.
+
+## 0.14.16 - Ecology recovery follow-ups - 12026-06-01
+
+### Changed
+
+- Population-floor restoration now also protects starter mice and rabbits when living animals remain but no adult breeding pair is left, while keeping predator restoration tied to total disappearance.
+- Hungry predators now prefer safe unclaimed local herbivore corpses before attacking living prey, without exposing or consuming hunter-claimed, player-carried or already freshened corpses.
+- Updated ecology docs and planning notes for the 0.14.16 recovery slice.
+
+### Validation
+
+- Ran `node scripts/test/population-restoration.cjs`.
+- Ran `node scripts/test/predator-feeding.cjs`.
+
+## 0.14.15 - Ecology start-balance stabilization - 12026-06-01
+
+### Added
+
+- Added focused starter animal authoring coverage for prey breeding clusters, predator overlap and local food-rich resource overrides.
+- Added a compatibility starter-knife grant for older characters who first hit the new freshening weapon requirement without any weapon in hand.
+
+### Changed
+
+- Starter animal seeding now counts existing starter groups by species, location, alive/corpse state, age and explicit sex, so adult female and adult male groups in the same location remain idempotent but distinct.
+- Starter mice and rabbits now begin in separated breeding clusters with local food-rich resource overrides, giving prey a better chance to reproduce before predators reach them.
+- Starter predators remain present but lighter: foxes stay near the forest/meadow pressure points, while the initial wolf count is reduced to one.
+- The freshening completion path now gives and equips a plain knife for legacy characters with empty hands, then continues the queued freshening action instead of failing.
+- Updated ecology docs and planning notes for the 0.14.15 start-balance slice.
+
+### Validation
+
+- Ran `node scripts/test/starter-animals.cjs`.
+- Ran `node scripts/test/weapons.cjs`.
+- Ran `npm run test:seed`.
+- Ran `npm run test:seed:types`.
+
+## 0.14.14 - Minimal weapon equipment foundation - 12026-06-01
+
+### Added
+
+- Added nullable equipped weapon fields for players and creatures, with a committed Prisma migration.
+- Added a minimal weapon catalog and resource types for `knife`, `hunting_spear`, `sickle`, `hand_axe` and `short_sword`.
+- Added inventory equip/unequip controls and text aliases for taking a weapon in hand or putting it away.
+- Added starter knife grant after onboarding completion.
+- Added durable Herald publication queue pause/resume state and admin cancel controls for pending news/archive rows.
+- Added focused weapon helper and alias regression coverage.
+
+### Changed
+
+- Character, target and location descriptions can now show visible held weapons.
+- Player attack completion text and observer text now react to the equipped weapon while keeping existing target eligibility.
+- Corpse freshening now requires an equipped sharp weapon before stamina is spent.
+- Dropping an equipped weapon clears the equipped weapon field.
+- Starter shared cache stock no longer duplicates the nearby torch stand and now carries more beginner food/supplies, especially raw meat.
+- Herald publisher loop now skips automatic publication while paused, and pending news/archive rows can be marked canceled without deleting published history.
+- Updated weapon system and planning docs for the WPN-001/WPN-002 slice.
+
+### Validation
+
+- Ran `node scripts/test/weapons.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/beginner-cache.cjs`.
+- Ran `node scripts/test/world-seed.mjs`.
+- Ran `npm run build`.
+
+## 0.14.13 - Sleep world-time and campfire comfort - 12026-06-01
+
+### Added
+
+- Added persisted ordinary-sleep start minute tracking on `Player`.
+- Added world-time auto-wake rules for ordinary sleep after enough in-world time passes.
+- Added a shared ordinary-sleep recovery profile that uses active campfires and local rest-cap signals.
+- Added a Prisma migration for ordinary sleep timing.
+- Added `HeraldPublication.archiveOrder` and archive backfill ordering support so historical `news.md` posts keep stable chronological/source order.
+- Added safe Herald-to-game deep links for public commands such as `/look`, `/examine`, `/news`, `/auto`, `/autoStop`, `/me` and `/help`.
+- Added focused regression coverage for ordinary sleep duration, auto-wake thresholds and campfire sleep comfort.
+
+### Changed
+
+- Ordinary sleep can now wake a player proactively after recovery reaches the local cap, while keeping the body lying down after waking.
+- Active campfires now improve ordinary sleep recovery and can raise the temporary stamina cap slightly.
+- Rest, wake, admin teleport/restore and beginner-return paths now clear stale ordinary-sleep timing state whenever they force the player awake.
+- The shared beginner cache can now hold raw meat and cooked meat as take/contribute supplies.
+- Herald historical backfill now defaults to 13-minute spacing, sorts semantic-like versions numerically and can reschedule pending archive posts after Render sleep/wake-up instead of publishing a burst.
+- Herald public news/archive rendering now links only whitelisted non-admin game commands to the main bot and leaves admin/debug/backfill/unknown commands as plain text.
+- Updated sleep, survival and planning docs for the first SLEEP-003 slice.
+- Updated Herald Render docs with archive catch-up env controls and the `/backfill_news_reschedule_pending` command.
+
+### Validation
+
+- Ran `node scripts/test/sleep.cjs`.
+- Ran `node scripts/test/herald-smoke.cjs`.
+- Ran `npm run planning:export`.
+- Ran `npm test`.
+- Ran `npm run build`.
+- Ran `git diff --check`.
+
+## 0.14.12 - Lying posture and ordinary sleep - 12026-06-01
+
+### Added
+
+- Added persisted `LYING` player posture and a separate ordinary `sleepState`.
+- Added `/lie` plus English and Ukrainian lie-down aliases.
+- Added ordinary `/sleep` behavior that lies the player down, starts sleep recovery and disables auto-mode.
+- Added `/wake` support for ordinary sleep while preserving `/sleep tutorial` and tutorial wake behavior.
+- Added posture, sleep and physical-action guard regression coverage.
+- Added `docs/systems/sleep.md` for the posture/rest/sleep boundary.
+
+### Changed
+
+- Physical actions now block while lying with lying-specific copy, and while sleeping with a wake-up prompt.
+- Ordinary sleep restores stamina more strongly than active rest without sending recovery chatter while the player remains asleep.
+- Character/profile and location posture text now distinguish standing, sitting, lying, resting and ordinary sleep.
+- Updated `/help`, planning docs and terminology notes so plain sleep is no longer described as reserved or tutorial-routed.
+
+### Validation
+
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/posture.cjs`.
+- Ran `npm run planning:export`.
+- Ran `npm test`.
+- Ran `npm run build`.
+- Ran `git diff --check`.
+
+## 0.14.11 - Shared beginner cache - 12026-06-01
+
+### Added
+
+- Added `start_beginner_shared_cache`, an inspectable shared supply cache at the starter-camp watchtower.
+- Added focused cache actions for taking one simple supply item and contributing one carried item.
+- Added `/cache`, `/take_cache` and `/contribute_cache` alias parsing, with English/MUD-style and Ukrainian cache phrases.
+- Added hidden unobserved cache restock through `LocationFeature.data`, without adding a new persistent table.
+- Added parser, cache-helper and world-seed regression coverage for the beginner cache.
+
+### Changed
+
+- Updated starter-camp, onboarding and location-feature docs so the watchtower cache is framed as shared first-road support rather than a shop or quest reward.
+
+### Validation
+
+- Ran `node scripts/test/beginner-cache.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/world-seed.mjs`.
+- Ran `npm run planning:export`.
+- Ran `npm test`.
+- Ran `npm run build`.
+- Ran `git diff --check`.
+
+## 0.14.10 - Hunter torch route cleanup and dream action ladder - 12026-06-01
+
+### Added
+
+- Added a `HUNTER_TORCH_SOURCE_FEATURE_KEY` route assumption so hunter torch resupply can target the starter-camp watchtower source instead of the gate/drop-off location.
+- Added an inline `Вгору` button for inspectable features that point to an authored upward route, starting with the starter-camp watchtower.
+- Added `вверх` as a text alias for the existing `UP` movement command.
+- Added four optional tutorial dream rooms after the existing safety room: `dream_tutorial_attention_path`, `dream_tutorial_signs`, `dream_tutorial_traces` and `dream_tutorial_waking_edge`.
+- Added inspectable dream features for look/examine, signs, traces and the new final tutorial marker.
+- Added tutorial movement voice lines for the new dream action ladder.
+- Added seed coverage for the new tutorial rooms, ladder exits, moved tutorial completion surface and hunter torch-source markers.
+
+### Changed
+
+- Hunters returning for torches now route toward the watchtower torch source and then toward the known magic campfire before seeking prey.
+- The old closed-gate torch source remains available, but is marked as downgraded and no longer the hunter resupply source.
+- Moved the `Закінчити навчання` tutorial completion surface from `Затишок останнього кроку` to `Край пробудження`, while keeping direct wake/end commands available.
+- Updated hunter, fire/light, gate hunting, onboarding and planning docs for the new route assumptions and dream ladder.
+
+### Validation
+
+- Ran `npm run planning:export`.
+- Ran `node scripts/world/render-map-ascii.mjs --write`.
+- Ran `node scripts/test/world-seed.mjs`.
+- Ran `node scripts/test/npc-hunter.cjs`.
+- Ran `node scripts/test/tutorial-voices.cjs`.
+- Ran `npm test`.
+- Ran `npm run build`.
+- Ran `git diff --check`.
+
+## 0.14.9 - Starter camp verticality - 12026-06-01
+
+### Added
+
+- Added `start_border_watchtower`, a real `z = 1` location above `start_border_camp`.
+- Added explicit `UP` / `DOWN` exits between the starter border camp and the watchtower.
+- Added an inspectable `Сторожова вежа` camp feature and a lexicon entry for watchtower targeting.
+- Added world-seed coverage for the watchtower location, vertical exits and starter torch placement.
+
+### Changed
+
+- Reworked `start_border_camp` prose to mention the watchtower and ladder as part of the shared border camp.
+- Moved the beginner `start_camp_torch_stand` from the camp floor to the watchtower awning, preserving its first-session safety role.
+- Kept the old `closed_gate_torch_stand` in place until hunter routes and gate-side supply are audited.
+- Updated world-map, fire/light, onboarding and z-level documentation for the new starter-camp verticality.
+- Updated `CAMP-002` planning notes to mark the watchtower slice as implemented/testing.
+
+### Validation
+
+- Ran `npm run planning:export`.
+- Ran `node scripts/test/world-seed.mjs`.
+- Ran `node scripts/test/route-finding.cjs`.
+- Ran `node scripts/world/render-map-ascii.mjs --write`.
+- Ran `npm test`.
+- Ran `npm run build`.
+- Ran `git diff --check`.
+
+## 0.14.8 - First-session clarity after darkness - 12026-06-01
+
+### Added
+
+- Added one-time waking-world first-night guidance when dim/dark visibility is actively hiding location details, nearby presence, ground objects, resources or tracks, while skipping tutorial dream locations and locally lit places.
+- Added one-time tutorial-dream hints after the first `look` and first `examine` flows, keeping `Озирнутися` as location context and `Роздивитися` as focused attention.
+- Added an inspectable newcomer board and a beginner torch source at `start_border_camp`, without removing the existing closed-gate torch source.
+- Added starter-camp planning items for the completed prose pass and the future watchtower/source route pass, plus a first-session smoke checklist.
+
+### Changed
+
+- Reworked `start_border_camp` prose so the start/respawn location reads as a shared border camp and safe return anchor near the bridge, river, gate and forest edge.
+- Daypart transition notices now skip tutorial dream and future dream-layer locations, so waking-world time does not interrupt dream scenes.
+- `/help` now uses an in-dream tutorial follow-up when the character is already in the tutorial dream, instead of saying they can return there.
+- Rest-ready and passive recovery messages now keep exact HP/stamina values behind technical-detail access and show ordinary players qualitative state text.
+- Cooking result messages now show a repeat-cooking button when the player still has raw meat left.
+- `/help` no longer advertises the hidden `/commands` catalog to ordinary players.
+- Updated onboarding, fire/light, roadmap and planning docs for the first-session guidance slice.
+
+### Validation
+
+- Ran `npm run planning:export`.
+- Ran `node scripts/test/world-seed.mjs`.
+- Ran `node scripts/test/tutorial-voices.cjs`.
+- Ran `node scripts/test/world-time.cjs`.
+- Ran `node scripts/test/help.cjs`.
+- Ran `node scripts/test/posture.cjs`.
+- Ran `node scripts/test/meat.cjs`.
+- Ran `npm test`.
+- Ran `npm run build`.
+- Ran `git diff --check`.
+
+## 0.14.7 - Post-merge Herald Render operations docs - 12026-06-01
+
+### Added
+
+- Added post-merge Render service documentation for running the main game bot and Boundary Mark Chancery Herald from the same `main` branch as two separate Render services.
+- Added a dedicated ops guide covering main-game and Herald Start Commands, Herald-specific env variables, shared database expectations, duplicate polling warnings, Prisma migration rules, status-page expectations and future embedded-mode tradeoffs.
+- Added durable Herald publication snapshots with rendered text, source date/version metadata where available and a committed Prisma migration, so queued or published news can be recovered after `news.md` changes.
+- Added admin-only `/show_publication <id>` and `/repost_publication <id>` commands for inspecting and explicitly reposting saved HeraldPublication snapshots.
+- Added admin-only `/list_publications` and `/mark_publication_deleted <id>` commands for manual channel-publication recovery when a Telegram channel post is removed outside the bot.
+- Added admin-only `/info_full` for a fuller Herald character record while keeping public `/info` safe.
+- Added planning updates for the future embedded Herald mode and the independent status/deploy-visibility backlog item.
+
+### Changed
+
+- Updated Render deployment docs to distinguish the main game's seed-aware deploy flow from the Herald Web Service build/start flow.
+- Updated Herald ops docs to point at the post-merge two-service model and to mark `HERALD_STARTUP_NOTICE_THREAD_ID` as reserved until runtime support exists.
+- Kept latest-news and backfill deduplication based on `contentHash` while backfilling missing snapshot metadata on existing rows when possible.
+- Made Herald `/info` public and reply-aware: it now shows a safe atmospheric record for the caller, or for the Telegram user whose message it replies to, without exposing service/debug details.
+
+### Validation
+
+- Ran `npm run planning:export`.
+- Ran `npm run build`.
+- Ran `npm test`.
+- Ran `git diff --check`.
+
+---
+
+## 0.14.6 - Boundary Mark Chancery Herald bot - 12026-06-01
+
+### Added
+
+- Added the Boundary Mark Chancery as a separate Telegram bot runtime with its own standalone entrypoint, token configuration, health server and Render Web Service deployment documentation.
+- Added Herald admin commands for `/ping`, `/help`, `/whoami`, latest-news preview/posting, publication queue inspection, manual pending publication, world digest preview/queue/post, atmospheric `/info`, and historical `news.md` backfill.
+- Added durable `HeraldPublication` outbox storage with content-hash deduplication, publisher-loop support, failure recording and committed Prisma migration.
+- Added a shared `ServiceHeartbeat` table and Herald heartbeat loop so the public/admin status page can show the Chancery service mode, freshness, queued/published publication counts, latest news publication time and stale-heartbeat warnings.
+- Added Telegram deep-link start payload support for safe main-bot actions such as `cmd_look` and `cmd_examine`.
+- Added focused Herald smoke coverage for news parsing, content hashes, admin/channel parsing, safety helpers, `/whoami`, archive formatting, atmospheric info thresholds and runtime status helpers.
+
+### Changed
+
+- Split the main game bot runtime into a reusable game-bot app module while keeping `src/bot.ts` as the existing production compatibility entrypoint.
+- Documented standalone Herald Render deployment, future embedded-mode migration notes and the rule that only one poller may use a Herald token at a time.
+- Updated the status page service section to name the main game bot, world tick, action queue and Boundary Mark Chancery in a clearer operational overview.
+
+### Validation
+
+- Ran `npm run planning:export`.
+- Ran `npm run build`.
+- Ran `npm test`.
+- Ran `git diff --check`.
+
+---
+
+## 0.14.2 - Tutorial polish and visible world-time beats - 12026-05-31
+
+### Added
+
+- Added compact heartbeat notices for internal daypart changes, so dawn, day, dusk and night announce that the world is getting lighter or darker before full visibility penalties arrive.
+- Added wrong-keyboard-layout suggestions for common mistyped commands, so inputs such as `[nj` can suggest the intended Ukrainian command.
+- Added pagination for prepared onboarding names, replacing one oversized list and button wall with compact pages.
+- Added a future theft/hiding design note and planning items while keeping implementation deferred behind visibility and observation foundations.
+
+### Changed
+
+- Kept tutorial foraging reliable by refilling dream berries and herbs on location render, gather-menu render and gather completion, so one player cannot exhaust the lesson for another.
+- Kept `Зручна лавка` as a fast-rest tutorial feature without raising max stamina; extra stamina remains reserved for `Жар легкого перепочинку`.
+- Protected the tutorial rest return path so returning from the deep-rest fire preserves stamina instead of replaying the one-third stamina lesson.
+- Moved the tutorial-completion button surface from the fox-observation lesson to the safety room, `Затишок останнього кроку`, and recorded that the surface should move forward again as new final tutorial rooms appear.
+- Cleaned up direct tutorial voice formatting so Сон/Дрімота lines use blockquote-style presentation where Telegram supports HTML instead of inline `каже: «...»` text.
+- Updated world-time docs to clarify that chronicle Kyiv grouping is display-only, weather display/simulation remains deferred, and stats reset must not reset the internal world clock.
+
+### Validation
+
+- Ran `npm run planning:export`.
+- Ran `node scripts/test/character-names.cjs`.
+- Ran `node scripts/test/world-time.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/tutorial-foraging.cjs`.
+- Ran `node scripts/test/world-seed.mjs`.
+- Ran `node scripts/test/posture.cjs`.
+- Ran `node scripts/test/tutorial-voices.cjs`.
+- Ran `node scripts/test/hunger-cues.cjs`.
+- Ran `npm test`.
+- Ran `npm run build`.
+- Ran `git diff --check`.
+
+---
+
+## 0.14.3 - Weather MVP and light snapshot foundation - 12026-05-31
+
+### Added
+
+- Added a small internal weather service backed by the existing `WorldState` weather fields, including weather key, intensity, next-change world minute and non-proactive `WorldEvent` logs for weather changes.
+- Added `/weather` plus `weather`/`погода` text aliases for the current Chornolis weather.
+- Added a shared light snapshot helper that combines daypart, moon illumination, weather modifiers and optional local active light.
+- Added focused world-time tests for weather text, weather light modifiers and light snapshot behavior.
+
+### Changed
+
+- `/time` now includes compact weather and light summary lines from the stored/derived internal world state.
+- Player/admin-created ordinary campfire ashes now decay by internal world time: after two in-game days they disappear from ordinary location lists, with a near-gone state during the final two in-game hours.
+- `/help`, `/commands` and input-alias docs now include `/weather`.
+- Updated planning/system docs so `WORLD-001-E/F` reflect the `0.14.3` implementation slice and keep visibility reduction/darkness behavior deferred.
+
+### Validation
+
+- Ran `node scripts/test/world-time.cjs`.
+- Ran `node scripts/test/campfire-decay.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/slashless-command-coverage.cjs`.
+
+---
+
+## 0.14.5 - Darkness visibility reduction - 12026-05-31
+
+### Added
+
+- Added shared darkness copy helpers for obscured location descriptions, nearby presence, ground objects, resources and tracks.
+- Added focused visibility tests for darkness rules and representative darkness copy.
+
+### Changed
+
+- Brief and detailed location rendering now reduce long descriptions, nearby target names/buttons, ground object pickup buttons, resource details and track hints when visibility is dim or dark without local light.
+- `/track` completion now checks the same visibility helper before revealing track details.
+- Local active light or clear enough natural light restores normal location detail.
+- Prepared onboarding-name summaries now keep plural-form notes player-facing and Ukrainian instead of leaking internal English notes.
+- Hunter NPCs now queue a delayed social response to direct greetings, and NPC greeting counts in ecology/status statistics now reflect completed creature `GREET` actions.
+- Scribe `/locationAll` output now sorts locations by region first, with the dream tutorial region shown before the rest of the world.
+- Updated visibility/world-time docs and planning items for the `VIS-001-B/C/D/F` slice.
+- Bumped package metadata to `0.14.5`.
+
+### Validation
+
+- Ran `node scripts/test/world-time.cjs`.
+- Ran `node scripts/test/character-names.cjs`.
+- Ran `node scripts/test/npc-hunter.cjs`.
+- Ran `node scripts/test/ecology-stats.cjs`.
+- Ran `npm run planning:export`.
+- Ran `npm test`.
+- Ran `npm run build`.
+- Ran `git diff --check`.
+
+---
+
+## 0.14.4 - Visibility debug foundation - 12026-05-31
+
+### Added
+
+- Added a shared visibility service that turns light snapshots into location-view visibility rules.
+- Added scribe/admin `/timeDebug`, `/timeSet` and `/weatherSet` controls for QA of daypart, moon, weather and local light cases.
+- Added a `🌒 Час світу` admin-menu button for the new time debug readout.
+- Added focused world-time tests for visibility rules and debug parser helpers.
+
+### Changed
+
+- Brief `/look` now asks the shared visibility service whether nearby beings, ground objects and target buttons should be shown.
+- Daylight and clear light can now reveal brief nearby details without requiring a local campfire or torch, while dim/dark brief views remain more cautious until the deeper darkness slices land.
+- Production seed refresh no longer rewinds an existing `WorldState` clock during redeploy; it only creates the row when missing.
+- Updated admin docs, world-time docs and planning docs for the `WORLD-001-G` and `VIS-001-A` slices.
+
+### Validation
+
+- Ran `node scripts/test/world-time.cjs`.
+- Ran `node scripts/test/posture.cjs`.
+- Ran `node scripts/test/slashless-command-coverage.cjs`.
+- Ran `node scripts/test/world-seed.mjs`.
+- Ran `npm run planning:export`.
+- Ran `npm test`.
+- Ran `npm run build`.
+
+---
+
+## 0.14.3 - Weather MVP and light snapshot foundation - 12026-05-31
+
+### Added
+
+- Added a small internal weather service backed by the existing `WorldState` weather fields, including weather key, intensity, next-change world minute and non-proactive `WorldEvent` logs for weather changes.
+- Added `/weather` plus `weather`/`погода` text aliases for the current Chornolis weather.
+- Added a shared light snapshot helper that combines daypart, moon illumination, weather modifiers and optional local active light.
+- Added focused world-time tests for weather text, weather light modifiers and light snapshot behavior.
+
+### Changed
+
+- `/time` now includes compact weather and light summary lines from the stored/derived internal world state.
+- `/help`, `/commands` and input-alias docs now include `/weather`.
+- Updated planning/system docs so `WORLD-001-E/F` reflect the `0.14.3` implementation slice and keep visibility reduction/darkness behavior deferred.
+
+### Validation
+
+- Ran `node scripts/test/world-time.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/slashless-command-coverage.cjs`.
+
+---
+
+## 0.14.1 - Stored internal world clock - 12026-05-31
+
+### Added
+
+- Added persistent `WorldState` storage for the internal Chornolis clock, including the current absolute world minute, last advancement timestamp and starter weather fields for the next weather slice.
+- Added shared world-clock helpers for daypart, clock labels, lunar circle/day, moon phase and moon illumination.
+- Added a focused world-time regression test for the canonical `587` / fifth lunar circle / day `17` / `17:00` starter timestamp and advancement math.
+- Added `/chronicles` as a small global chronicle surface backed by public world events.
+- Added chronicle entries for new player arrivals and carcass ravine start/stop state changes.
+- Added a tutorial-gate helper test covering the already-open response and opening phrase parsing.
+
+### Changed
+
+- `/time` now advances and reads the stored internal world-clock state instead of rendering static placeholder time.
+- World tick now advances the stored clock by elapsed real milliseconds as a rate, without binding day/night to server local hour, player timezone or real-world time of day.
+- Seed, world reset and full reset now return the internal world clock to the canonical starter timestamp; stats reset remains separate.
+- Attack-miss feedback now includes a quick look button so players can immediately check whether the target stayed nearby.
+- Repeating the tutorial dream gate opening phrase while the gate is already open now gets a quiet already-open response instead of replaying the opening beat or refreshing the timer.
+- Telegram side command menus now put `/help` right after `/afk`, with `/respawn` directly below help.
+- `/help`, `/commands` and input-alias docs now include the new global chronicle command.
+- Tutorial dream gate copy no longer stores raw HTML tags in world data, preventing escaped `<i>` markup from appearing in location text.
+- Updated planning and system docs so `WORLD-001-B/C/D` reflect the `0.14.1` implementation slice and keep visibility, weather, light and sleep deferred.
+
+### Validation
+
+- Ran `npx prisma generate`.
+- Ran `node scripts/test/world-time.cjs`.
+- Ran `node scripts/test/chronicles.cjs`.
+- Ran `node scripts/test/tutorial-gate.cjs`.
+- Ran `node scripts/test/world-content-html.cjs`.
+- Ran `npm run planning:export`.
+- Ran `npm test`.
+- Ran `npm run build`.
+
+---
+
+## 0.14.0 - Internal world-clock planning and prepared names - 12026-05-31
+
+### Added
+
+- Added the `0.14.x` internal world-clock plan for Night, Light and Firewood: elapsed-real-time advancement, stored world-clock state, 28-day lunar circles, 13 circles per year, moon illumination, weather MVP, light snapshots and visibility consumers.
+- Added `docs/systems/world_time.md` as the design source for the internal Chornolis clock, including the starter timestamp and reset behavior.
+- Added `docs/planning/0.14-observation-readiness.md` so visibility/light work can prepare for later observation-learning without implementing `/observe` in this line.
+- Added new planning items for weather state, light snapshots, time/weather debug controls, riverbank fisher setup, visible herbalist observation and a strange-track omen.
+- Expanded the prepared character-name pool with many more masculine, feminine and plural options, with coverage for minimum available counts and duplicate/form validation.
+
+### Changed
+
+- Updated `docs/roadmap.md`, `docs/planning/next.md`, transition notes, calendar docs and Icebox so `0.14.x` uses an internal Chornolis clock rather than real-world time of day, server timezone or user timezone.
+- Moved minimal moon phase and moon illumination into the `0.14.x` light foundation while keeping sacred days, ritual calendars and deeper calendar lore in Icebox.
+- Documented that scribe/admin world/full reset should return the internal clock and weather state to the starter world state, while stats reset should not change world time.
+- Kept the first runtime implementation deferred: this release does not add day/night visibility effects, real-time daypart binding or external weather APIs.
+
+### Validation
+
+- Ran `npm run planning:export`.
+- Ran `npm test`.
+- Ran `npm run build`.
+
+---
+
+## 0.13.27 - Core loop closure audit and attack misses - 12026-05-31
+
+### Added
+
+- Added the `0.13` first-session closure audit report with a live-smoke script for onboarding, tutorial dream, first waking locations, `/respawn`, AFK/end-session guards and scribe support checks.
+- Added the final `QA-001` planning note update for closing the Core Loop & Onboarding Stability line before starting `0.14.x`.
+- Added shared attack-hit rules so player, NPC and creature attacks can miss through the same layer.
+
+### Changed
+
+- Updated near-term planning to treat `0.13.x` as ready for one final live Telegram smoke after deployment instead of continuing to absorb new systems.
+- Attacks against mice now miss 20% of the time, and attacks against rabbits miss 40% of the time. A miss still spends stamina, counts as an attempted creature attack where applicable and marks the location as recently dangerous, but leaves the target alive for a later attempt if it stays nearby.
+- Border marker ecology text now avoids repeating the "зарубки" image in every count and separates recent births/deaths from their causes.
+
+### Validation
+
+- Ran `npm run planning:export`.
+- Ran `npm run build`.
+- Ran `npm test`.
+
+---
+
+## 0.13.26 - Queued inventory, firewood upkeep and 0.14 planning - 12026-05-31
+
+### Added
+
+- Added clickable website news archive entries on `/news`, with direct `?entry=` links and newer/older navigation for reading older `news.md` updates in full.
+- Added natural `twigs` regeneration for eligible forest locations, capped as a slow fallback so firewood can reappear without exceeding manually placed piles.
+- Added picked-up inventory actions to the action queue: using food/herbs, dropping carried items, cooking meat, lighting/dousing torches, adding twigs and lighting campfires now share queued action handling.
+- Added stamina costs and queue labels for inventory/fire actions.
+- Added session presence reason/timestamp display to scribe player detail views, so AFK/end-session state is easier to audit.
+- Added self-target aliases such as `me`, `я`, `мене` and `мій персонаж` for look/examine flows.
+- Added focused tests for web news archive rendering, natural twigs, meat/freshening rules, action costs, session presence labels, text targets and Ukrainian verb agreement.
+- Added planning docs for closing `0.13.x` as Core Loop & Onboarding Stability and starting `0.14.x` as Night, Light and Firewood.
+- Added planning items for first-session closure QA, world-time admin safety, darkness copy, light-source matrix testing and first-night guidance.
+
+### Changed
+
+- Freshening corpses now has species-based success chances: mice are easiest, rabbits are moderate, foxes and wolves are harder.
+- Failed freshening attempts now consume the corpse as processed remains without granting meat, and food-learning event descriptions record success/failure.
+- `/respawn` remains available for the first 7 real days after character creation, in addition to weak-character fallback, before the progress threshold can refuse it.
+- Lit ground torches now explicitly say they provide light while burning.
+- Visible ground resources can show pickup buttons in brief illuminated location views, not only detailed views.
+- Fire/light docs, survival docs, location-feature docs and render deploy docs now cover the current firewood/light behavior and related environment controls.
+- Ukrainian grammar helpers for actor past-tense agreement now live in the shared grammar layer, with docs clarifying the boundary between the world lexicon and grammar utilities.
+- The `0.14.x` planning order now starts with a small world-time foundation before visibility, light, firewood, biome foraging or ordinary sleep work.
+
+### Fixed
+
+- Inventory buttons and text aliases no longer bypass the action queue for eating, dropping, cooking, torch and campfire actions.
+- Fire feature callbacks now queue the same campfire/twig/torch actions as inventory and text commands.
+- Character self-inspection no longer falls through to nearby target ambiguity when players type natural self-targets.
+
+### Validation
+
+- Ran `npm run planning:export`.
+- Ran `npm run build`.
+- Ran `npm test`.
+
+---
+
+## 0.13.25 - Feature inspection layers and slashless command parity - 12026-05-31
+
+### Changed
+
+- Direct feature inspection now separates brief and full detail: `look <feature>` returns the compact feature line with a deeper-inspection button, while `examine <feature>` keeps the richer interaction text and available feature actions.
+- Extended slashless command parity beyond teleport for common typed commands such as `addResource`, `addTorch`, `addTwigs`, `addCampfire`, `carcassQuest`, `addCreature`, `addCreatureCorpse`, queue controls, status/maintenance commands and related help/restore forms.
+- Recorded the existing 0.13.21 operational notes for live seed/map refresh, predator population-floor restoration and action-queue-dependent predator feeding.
+- Updated `LOOP-001-A` planning notes with the first implemented two-layer feature-inspection behavior.
+- Bumped package metadata to `0.13.25`.
+
+### Tests
+
+- Extended slashless command helper coverage for admin resource, corpse-creation, queue, status and maintenance command forms.
+- Added slashless command coverage so new `bot.command(...)` entries must have a direct text form, shared alias, or explicit equivalent.
+- Extended tree/location-feature helper coverage for brief feature inspection.
+- Ran `npm run planning:export`.
+- Ran `npm test`.
+- Ran `npm run build`.
+
+---
+
+## 0.13.24 - Hunger cues, tutorial completion and inventory polish - 12026-05-31
+
+### Added
+
+- Added threshold-based player hunger cues after stamina-spending actions raise hunger into moderate or serious states.
+- Added contextual hunger cue copy that points toward `inventory` when edible carried food exists, cooking when raw meat and local fire are available, nearby food resources when present, or a general atmospheric warning otherwise.
+- Added a one-time tutorial dream wellbeing aside after the first successful tutorial food use, with a tutorial event flag so it does not repeat unless tutorial progress is reset.
+- Added focused `hunger-cues` helper coverage to `npm test`.
+- Added `/respawn` as a confirmed atmospheric return to the start location for early or weak characters who get lost.
+- Added `/tutorialEnd` / `Закінчити навчання` as a confirmed tutorial-completion flow that marks the tutorial completed, returns from the dream when needed, and removes unfinished-tutorial reminders from help/profile surfaces.
+
+### Changed
+
+- Rearranged the character card action keyboard so `Inventory`, `Signals`, posture, `Rest`, `Sleep` and `Auto` controls are grouped into clearer rows.
+- Moved the scribe technical-details toggle out of the character card keyboard and into the scribe admin menu.
+- Moved `/respawn` near the top of the Telegram side command menu.
+- Marked `FOOD-004`, `ONB-003` and `SURV-001` beginner-return slices as testing and refreshed planning exports.
+- Bumped package metadata to `0.13.24`.
+
+### Fixed
+
+- Made corpse drops resilient when an inventory corpse stack exists but its hidden carried creature row can no longer be matched, by consuming the carried item and placing a matching corpse resource on the ground instead of leaving the item stuck in inventory.
+- Made the scribe teleport command accept the same direct text form without a slash, so `teleport forest_07_00` routes like `/teleport forest_07_00`.
+
+### Tests
+
+- Ran `node scripts/test/hunger-cues.cjs`.
+- Ran `node scripts/test/beginner-return.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/tutorial-voices.cjs`.
+- Ran `node scripts/test/session-presence.cjs`.
+- Ran `node scripts/test/posture.cjs`.
+- Ran `node scripts/test/world-seed.mjs`.
+- Ran `npm run planning:export`.
+- Ran `npm test`.
+- Ran `npm run build`.
+
+---
+
+## 0.13.23 - Target-list return context, scribe corpse setup and climbable trees - 12026-05-31
+
+### Added
+
+- Added a scribe-only `/addCreatureCorpse` command for creating animal corpse rows directly, with current-location defaults, corpse freshness presets, batching and the same one-command cap as `/addCreature`.
+- Added a `Creatures` submenu to the scribe admin keyboard so creature keys, live animal spawning, corpse setup and cleanup/test state commands are grouped together without slash hints in button labels.
+- Added two climbable dry-meadow tree features with real `UP`/`DOWN` exits to upper locations.
+- Added `/up` and `/down` movement commands, vertical reply/inline movement labels and text aliases for `вгору` / `вниз`.
+- Added `/shake_tree` / `потрусити дерево` interaction for upper-tree branch features; a successful shake drops 5-8 `twigs` at the tree base and then enters a real-time cooldown.
+
+### Changed
+
+- Paginated target and corpse list buttons now carry their source page into target detail/action views, so `Back` returns to the same target-list page instead of resetting to the first page.
+- `/addCreatureHelp`, `/adminHelp`, admin command docs and scribe audit notes now document the corpse setup command and its species-key flow.
+- Marked `ADM-002` and `UX-002` as testing and refreshed planning exports.
+- Location-feature docs now list climbable trees and shakeable branches as current interactive feature examples.
+
+### Tests
+
+- Added focused tree-shake amount/cooldown helper coverage to `npm test`.
+- Ran `node scripts/test/admin-creatures.cjs`.
+- Ran `node scripts/test/target-formatting.cjs`.
+- Ran `node scripts/test/posture.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/tree-features.cjs`.
+- Ran `npm run planning:export`.
+- Ran `npm run map:render`.
+- Ran `npm test`.
+- Ran `npm run build`.
+
+---
+
+## 0.13.22 - Queue visibility, AFK labels and command-menu polish - 12026-05-31
+
+### Changed
+
+- `freshen all` / `/freshen_all` replies now include the rendered player action queue after adding freshening work.
+- Character cards now show a `Queue` button when the character has a running/queued action or active rest.
+- `/who`, the public `/who` web page and `/who.json` now append ` (відійшов)` to AFK player character names.
+- `/all` now shows the same AFK suffix in player rows for scribe/admin visibility.
+- Telegram side command menus now keep `/afk` as the second command, immediately after `/start`, while `/end_session` sits at the end of the shared command block.
+- Removed standalone `Стан: ...` keyboard-refresh messages that could appear after quick actions or quiet recovery ticks; real action/recovery messages still carry refreshed keyboards when they are already being sent.
+- Dropped burning torches now explicitly count as local light sources until their burn timer expires, and expired ground torches are cleaned up before location render.
+- Sexed animal age adjectives now agree with the displayed creature form, so male mouse labels use masculine age adjectives instead of the species-level feminine fallback.
+- Scribe-scoped Telegram side command menus no longer list `/adminmenu` or the operational `/carcassquest` toggle; the commands remain available through direct input, admin help and the scribe keyboard/menu surfaces.
+- Removed a stray UTF-8 BOM from `src/services/actionCompletions.ts`.
+
+### Tests
+
+- Extended session-presence coverage for the AFK display suffix.
+- Extended fire helper coverage for active dropped lit torches.
+- Extended target-formatting coverage for sexed mouse age and state agreement.
+- Ran `node scripts/test/session-presence.cjs`.
+- Ran `node scripts/test/campfire-memory.cjs`.
+- Ran `node scripts/test/posture.cjs`.
+- Ran `node scripts/test/target-formatting.cjs`.
+- Ran `node scripts/test/telegram-commands.cjs`.
+- Ran `node scripts/test/reply-keyboard-refresh.cjs`.
+- Ran `npm test`.
+- Ran `npm run build`.
+
+---
+
+## 0.13.21 - Population recovery and northern forest pocket - 12026-05-31
+
+### Added
+
+- Added a population-floor restoration pass to `worldTick`: if a starter animal species has no living, non-gone animals left, the tick restores its starter living population at starter locations.
+- Added `src/services/populationRestoration.ts` to plan and execute starter population restoration from `src/data/starterAnimals.ts`.
+- Added `populationFloorRestored` to world tick system events, debug output and technical scribe tick summaries.
+- Added a first `MAP-003` playable expansion slice north of `forest_02_09` with three reachable forest locations, bidirectional exits and local resources.
+- Added an inspectable `Камінь малого сліду` location feature as the first seeded animal-restoration charm hook for future `ECO-005` offering actions.
+- Added focused population restoration helper coverage to `npm test`.
+- Added predator prey-claim and feeding markers so carnivores eat killed prey through a later `EAT` action instead of receiving hunger relief immediately at kill time.
+
+### Changed
+
+- Marked `ECO-004` and the first `MAP-003` slice as testing, and updated `ECO-005` to point at the seeded charm while keeping the actual offering action layer as next work.
+- Refreshed the generated world map after opening the northern forest pocket.
+- Documented the quiet population-floor safeguard in the ecology system notes.
+- Predator kills now leave an interceptable claimed corpse: if a player or another flow takes the corpse before the predator eats, the predator stays hungry and loses the meal.
+
+### Tests
+
+- Ran `node scripts/test/population-restoration.cjs`.
+- Ran `node scripts/test/predator-feeding.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `npm run test:seed`.
+- Ran `npm test`.
+- Ran `npm run planning:export`.
+- Ran `npm run map:render`.
+- Ran `npm run build`.
+
+---
+
+## 0.13.20 - Name review, social hints, admin menu and visibility polish - 12026-05-30
+
+### Changed
+
+- Prepared character names now explicitly tell players that scribes have already checked the name.
+- Custom character names now clearly say they can be used immediately while still waiting for later scribe review.
+- Character cards reuse the same name-review wording so pending custom names no longer sound like a blocking error.
+- Unknown-input suggestions now include stable slash-command hints for more actions, and the fallback points to `❔ Help` (`/help`) and `Menu` (`/menu`) with clearer labels.
+- Targetless social inputs such as `smile`, `посміх` and `усміхнутися` now perform a visible location gesture, and typo suggestions can point toward close social-signal aliases.
+- Character cards now include a `Signals` button beside inventory, opening targetless gestures such as smile, nod, sigh or wave without needing to inspect a target first.
+- Standing up now cancels any queued or running rest action as well as the resting flag, so stale rest actions no longer block the next command after pressing `Stand`.
+- The tutorial gate fallback now nudges players who type the written phrase directly to say it aloud with `say` / `/say`, and copied `Ви сказали:` echoes now parse back into speech.
+- Auto stand-up notices now include the matching `/stand` command hint.
+- Sitting, standing, rest start/stop, tutorial sleep entry and tutorial wake now broadcast concise observer messages to other players in the same location.
+- Visible reply-keyboard status changes now get a short refresh message after quick actions or recovery, so stamina labels update without requiring a chat reopen.
+- Local movement notifications now clean up older movement inline buttons: only the latest tracks button stays active per location/chat, and a character's arrival target button is removed when that character leaves.
+- Bulk pickup now treats visible corpses as ground items too: `get all`, `get all corpse` and type filters such as `get all berries` can collect matching visible items, and `drop all [type]` can drop whole carried stacks while plain `drop all` keeps held lit torches in hand.
+- Corpse target buttons now hide decay timer details and use cleaner labels without the old colon/action suffix.
+- Mouse creature text now uses sexed Ukrainian lexicon forms: male mice are `миш`, female mice are `миша`, with matching cases in corpse and target labels.
+- Herb resource descriptions now use the clearer Ukrainian `алхімія` wording.
+- The "deaths by characters" stat now includes non-animal NPC kills as well as player kills.
+- Scribes now get an `adminMenu` button in the main keyboard instead of the ordinary help button, with submenus for statistics, world views, teleport, resources, fire tools and full admin help.
+- Scribe fire-supply commands `/addTorch [player] [amount]` and `/addTwigs [player] [amount]` now accept a final amount, defaulting to 1.
+- Scribe `/addCreature` no longer silently clamps larger counts to 50; larger additions are created in batches of 50 with an explicit one-command cap.
+- Tutorial dream pacing lines now use the correct nominative pronoun in one monument/hesitation response.
+- Onboarding now keeps incomplete players out of location-level proactive messages until their name is confirmed.
+- Target lists now show a `freshen all` (`/freshen_all`) button when several suitable corpses can be queued for freshening.
+- Scribes can now force the gate carcass-dropoff hunting loop on or into stand-down with `/carcassQuest start` and `/carcassQuest stop`.
+- Gate-hunting saturation now counts nearby locations by coordinate radius instead of only the gate's own technical region, so bridge, riverbank and meadow prey pressure can reactivate the hunter loop.
+
+### Tests
+
+- Extended character-name helper coverage for prepared-name and custom-name review copy.
+- Extended input-alias coverage for formatted suggestion slash-command hints.
+- Extended ecology-stat helper coverage for NPC character kill counting.
+- Extended reply-keyboard coverage for the scribe admin menu and its resource/fire submenus.
+- Added admin creature helper coverage for count parsing, batching and cap reporting.
+- Extended tutorial voice coverage for the corrected nominative-pronoun line.
+- Extended posture helper coverage for observer-facing state-change text.
+- Extended posture helper coverage for reply-keyboard status label visibility.
+- Extended target-formatting and text-target coverage so corpse buttons cannot leak decay timer text.
+- Extended character-name helper coverage for sexed mouse lexicon forms.
+- Extended gate-hunting helper coverage for manual start/stop overrides.
+- Extended gate-hunting helper coverage for the cross-region coordinate radius.
+- Ran `npm test`.
+- Ran `npm run build`.
+- Ran `node scripts/test/character-names.cjs`.
+
+---
+
+## 0.13.19 - Session presence, quieter forest reactions and PR discipline - 12026-05-30
+
+### Added
+
+- Added persisted session presence for players with `active`, `afk` and `ended` states, reminder pause state and player-interaction timestamps.
+- Added `AFK / away` (`/afk`) and `End Session` (`/end_session`) controls with slash/text aliases.
+- Added `/endSession` as a compatibility alias for ending the current session.
+- Added silent Auto-AFK after a configurable player inactivity timeout.
+- Added a one-idle-reminder-per-scene guard so tutorial idle nudges cannot repeat in the same unresolved prompt before Auto-AFK.
+- Added send-time proactive-message guards so delayed tutorial nudges, companion lines, action-queue notices, deploy notices, fire timer notices and location notifications skip AFK or ended players.
+- Added `/addResource`, `/addResourse`, `/addResourceHelp` and resource-specific admin shortcuts for restoring location resource nodes.
+- Added focused coverage for session presence helpers and AFK/end-session aliases.
+
+### Changed
+
+- Дід лісовик now waits through a configurable depletion delay before waking, instead of waking immediately from the last gathered resource.
+- Slowed default resource regeneration cadences so depleted locations recover less abruptly.
+- Documented the release workflow expectation that patch/minor work starts on a separate `codex/` branch and opens a PR into `main`.
+- Added PR description expectations for summary, validation/checks and explicit risks or rollback notes.
+- Updated GitHub workflow docs to point at the current 0.13-0.15 planning milestones and docs-as-source-of-truth planning model.
+- Added `REL-001` and `SES-001` planning slices for release branch discipline and session presence.
+
+### Tests
+
+- Added session presence tests to `npm test`.
+- Added admin resource helper tests to `npm test`.
+- Ran planning export after updating planning items.
+- Ran `npm run build`.
+- Ran `npm test`.
+
+---
+
+## 0.13.18 - Hunter hardening, weapon planning and scribe audit - 12026-05-30
+
+### Added
+
+- Added weapon-system planning docs for the minimal weapon catalog/equip slice, weapon-aware action text, themed NPC weapons, later weapon condition work and cold-storage combat/lifetime work.
+- Added a reusable scribe audit helper and covered confirmed `/reset world`, `/reset stats` and `/reset full` actions with quiet `WorldEvent` audit records.
+- Added a scribe-audit system note listing dangerous admin/scribe tools that should keep or gain structured audit coverage.
+- Added a compact dream tutorial flow audit that confirms the next onboarding follow-up slices.
+- Added text-only learning feedback for corpse freshening and cooking: every thirteenth personal action can show a private growth line, and every fifth observation of another actor's recent action can show a smaller one.
+- Added `freshen all` / `свіжувати все` support that queues one freshening action per suitable visible corpse instead of resolving the whole location instantly.
+
+### Changed
+
+- Hunter-claimed carcasses now preserve their hunter marker while ordinary corpse decay updates the remaining lifetime text, so returning hunters can still deposit prey through the gate drop-off service.
+- Hidden hunter-claimed carcasses no longer appear in text target lookup, location target lists or corpse action entry points.
+- Freshened corpses are hidden from player-facing target/location surfaces for now, with visible remains split into future work.
+- Direct hunter field lines now record `SAY` events and increment the creature speech counter used by ecology/status statistics.
+- Hunter replies and social reactions now use a slower queued creature action instead of firing as instant follow-up messages.
+- Hunter field speech now appears as quoted speech in Telegram instead of an inline quoted sentence.
+- Freshening now costs `3` stamina per corpse, and immediate pickup paths now spend `1` stamina per picked-up item/resource unit.
+- Updated hunter and actor-inventory planning notes to keep the remaining claimed-carcass `currentAction` bridge visible as future structural work.
+- Updated planning exports for the weapon task pack and completed first scribe-audit task slices.
+- Marked `ONB-001-A` complete with follow-ups for first-look, first-examine, rest and wake polish.
+
+### Tests
+
+- Extended NPC hunter helper coverage for hunter-claimed carcass decay markers.
+- Extended NPC hunter helper coverage for slower queued hunter reactions.
+- Extended NPC hunter helper coverage for quoted hunter field speech.
+- Added text-target visibility coverage for hidden hunter-claimed carcasses.
+- Added helper coverage for freshening and cooking practice/observation milestone cadence.
+- Added alias coverage for bulk freshening commands and action-cost coverage for the freshening stamina cost.
+- Added scribe-audit helper coverage.
+- Ran the full project test suite.
+
+---
+
+## 0.13.17 - Small polish, status visibility and target interactions - 12026-05-30
+
+### Added
+
+- Added player-caused creature death counts to ecology/stat surfaces.
+- Added split runtime status checks for HTTP, Telegram bot, database, world tick and action queue state.
+- Added `/reset world`, `/reset stats` and `/reset full` admin reset modes with clearer `/reset` guidance.
+- Added targeted `look` support for visible players, NPCs, animals and features.
+- Added a `Look` action to target interaction keyboards alongside `Examine`, `Attack`, speech and social actions.
+- Added target speech prompts for `Say` and `Whisper` buttons.
+- Added an independent status-site planning item for future deploy/outage visibility outside the game Render service.
+
+### Changed
+
+- Tutorial dream keyboards now use the ordinary grid shape with unavailable slots hidden as placeholders, and return to the normal keyboard after revisiting earlier tutorial cells.
+- The Dream Gate focused keyboard no longer exposes the speech phrase before the player inspects the gate.
+- Public target `examine` text now avoids exact HP/stat counters unless the viewer has technical/scribe access.
+- Hunter NPCs can answer direct speech through the reply path and react to a fitting subset of social signals.
+- Runtime status pages and docs now distinguish server, Telegram bot and database state more clearly.
+- The `/help` text is now rubricated, points first-time players to the tutorial dream, documents map expectations and includes `/restart`.
+- Multi-word clickable slash hints with underscores now parse as spaces, such as `/sleep_tutorial`, `/queue_cancel`, `/queue_clear` and `/auto_stop`.
+- Updated lexicon, tutorial, social-signal, NPC profession and operations docs with the new maintenance rules and future follow-ups.
+
+### Tests
+
+- Added or extended regression coverage for runtime status helpers, ecology death counters, admin reset modes, target keyboard layout, reply targets and input aliases.
+- Ran the project build and full test suite.
+
+---
+
+## 0.13.16 - World lexicon case forms - 12026-05-30
+
+### Added
+
+- Added a central world lexicon for stable creature, profession, spirit, resource, feature and common-noun Ukrainian case forms.
+- Added world-lexicon documentation and README pointers for content structure.
+
+### Changed
+
+- Grammar known-form lookup now reads from the world lexicon instead of a local hardcoded block.
+- Seed species name fields now use the lexicon helper for active species and current NPC profession species.
+
+### Tests
+
+- Extended character-name and grammar coverage for lexicon lookups and seed species helper forms.
+
+---
+
+## 0.13.15 - Auto stand-up after rest - 12026-05-30
+
+### Fixed
+
+- Player auto mode now stands a sitting character up before automatic physical actions such as movement or gathering, so an auto-rested character no longer loops into posture guard errors after rest completes.
+
+### Tests
+
+- Extended posture helper coverage for the auto stand-up decision.
+
+---
+
+## 0.13.14 - Core loop omen and tutorial keyboard polish - 12026-05-30
+
+### Added
+
+- Added a first old-campfire memory omen slice: seeded old ordinary campfires can reveal one short atmospheric trace when fed with `twigs` or relit from a torch, and the trace remains visible in later campfire inspection text.
+- Added the `LOOP-003` planning item and system notes for future old-campfire memory omen tuning.
+- Added sleep and dream planning docs, including `SLEEP-001` through `SLEEP-004`, `DREAM-001` through `DREAM-004`, and a future implementation prompt pack for ordinary sleep and dream-presence foundations.
+
+### Changed
+
+- Tutorial dream reply keyboards now keep ordinary `Help`, `Menu`, `Status` and `Examine` controls hidden until the matching lesson has surfaced them, while `Inventory` appears once the character actually carries something.
+- Entering the tutorial dream now turns off player auto mode so automatic actions do not keep running inside the dream.
+- Targeted `look` now stays focused on visible character/NPC state, while targeted `examine` can show fuller carried inventory or hunter field-supply details with approximate public quantities instead of exact counts.
+- Updated gate hunting saturation planning with future persisted linger/cooldown, per-tick saturation caching for larger hunter counts, and the temporary plain `/put` default that should later be removed or redefined for generic containers.
+- Updated survival, terminology, roadmap, backlog and icebox docs with the distinction between sitting/resting, lying, ordinary sleep, tutorial sleep and future lucid dream instances.
+
+### Tests
+
+- Added `scripts/test/campfire-memory.cjs` coverage for first-reveal and later-inspection behavior.
+- Extended posture/reply-keyboard coverage for progressive tutorial dream controls.
+- Extended input-alias coverage for brief/full target inspection parsing and hidden hunter marker cleanup.
+
+---
+
+## 0.13.13 - NPC held torch inventory foundation - 12026-05-30
+
+### Added
+
+- Added `CreatureResource`, a carried-resource table for NPCs and other creatures.
+- Added seed/reset support for unique NPC carried resources.
+- Seeded `Орина` with a real held `lit_torch` and spare `torch` instead of the lightweight `hunter_torches` marker.
+- Added NPC-held torch state helpers so lit torches use the same duration assumptions as player-held torches.
+- NPC-held lit torches now count as active local torch light.
+
+### Changed
+
+- Hunter ground-torch pickup and gate resupply now write real NPC carried resources.
+- Hunter `currentAction` still carries route/intent markers such as returning for torches, but basic torch count now comes from carried resources with a legacy marker fallback.
+- `/look` and `/examine` style target text can show when a visible NPC is holding a lit torch.
+- Tutorial dream reply keyboards now hide `Help`, `Menu` and ordinary status buttons outside the rest lesson, replacing hidden utility actions with empty slots like unavailable directions.
+- The first blocked attempt to move through the closed Dream Gate now gives a one-time Сон hint to inspect the gate.
+- Ukrainian feature inspection now recognizes Dream Gate case forms such as `оглянути браму` and `придивитися до брами`.
+- Failed `inspect`/`look at` target attempts now use diegetic "I do not see this here" wording instead of generic target-list language.
+- Feature inspection now accepts the short Ukrainian form `огл брама`.
+- Unknown-command suggestions can now show a matching slash command shortcut in parentheses, such as `оглянутися (/look)` or `швидкий огляд (/glance)`.
+- `/glance` now renders only the location name and visible exits, without an extra "quick look" label or nearby presence text.
+- The tutorial hub `Майбутні уроки` feature now has its own feather icon instead of the generic landmark marker.
+- Remaining generic landmark, bridge and tutorial prompt features now use distinct icons, including the fisher post, old bridge planks, old stones, dry well and tutorial hints.
+- The tutorial dream now reveals the main-keyboard inventory button after pickup, gather success or explicit inventory commands, not only after the first gather.
+- Hunter stand-down no longer queues extra `SAY` / `REST` actions on world tick; hunters at the waiting fire now enter a resting state directly and use a rate-limited speech event.
+- World tick summaries now count hunter `stoodDown` state separately from queued rest actions.
+- Updated gate hunting loop and `NPC-004` planning docs for the first actor-inventory slice.
+
+### Tests
+
+- Updated NPC hunter helper coverage so new hunter torch action text no longer depends on the lightweight torch-count marker.
+- Added world-seed coverage for unique NPC carried resources and Орина's real torch inventory.
+- Extended reply-keyboard posture coverage for the focused dream gate keyboard and tutorial rest status exception.
+- Added reply-keyboard helper coverage for tutorial inventory-button visibility.
+- Added parser, suggestion and seed coverage for Dream Gate inspection aliases.
+
+---
+
+## 0.13.12 - Gate hunting saturation stand-down - 12026-05-30
+
+### Added
+
+- Added a conservative gate-hunting saturation helper based on drop-off contribution, nearby mouse/rabbit pressure and nearby depleted-vegetation signals.
+- Added saturation-aware inspect text for the gate hunting notice and carcass drop-off feature.
+- Added a hunter stand-down path: hunters without claimed carcasses stop seeking prey while saturation is active, route toward the magic campfire, rest and use a quieter waiting line pool.
+
+### Changed
+
+- Player carcass/remains drop-offs remain physically accepted while saturation is active, but new supply reward thresholds are suppressed.
+- Player auto mode now avoids choosing the same broad automatic action twice in a row when another candidate action is available.
+- Plain `/put`, `put` and `покласти` now temporarily default to `/put туша рів`, so the drop-off hint remains usable even without typed parameters.
+- Location features can now use per-feature icons; the torch stand, hunting notice and carcass drop-off near the gate no longer all share the generic landmark glyph, and the unlit torch supply avoids the fire icon reserved for actual flame.
+- `/open` now acknowledges visible non-openable local gates such as the closed settlement gate instead of saying no gate is present.
+- `/open`, `open`, `o`, `відкрити`, `відчинити`, `відкрий`, `відчини` and related forms now accept optional gate-like targets such as `ворота`, `брама` or `gate`.
+- Gathering now has the same text-only learning bridge as attack: every thirteenth personal gather attempt can show a growth message, and every fifth observation of another player or NPC gathering can show a smaller growth message.
+- Updated gate hunting loop docs and `ECO-003` planning notes with the first implemented saturation boundary and remaining tuning.
+
+### Tests
+
+- Extended gate hunting loop helper coverage for saturation activation/deactivation, reward suppression and hunter stand-down line selection.
+- Added auto action ordering coverage for the non-repeat preference.
+- Added parser coverage for plain `/put` defaults and the `put out torch` collision guard.
+- Added seed coverage so nearby explicit feature icons do not repeat, and so the gate torch stand does not use the fire icon.
+- Added parser/helper coverage for `/open` feedback on visible but currently non-openable gates.
+- Added parser coverage for targeted open aliases such as `відкрити ворота` and `o gate`.
+- Added helper coverage for gathering practice and observation milestones.
+
+---
+
+## 0.13.11 - NPC hunter state-machine slice - 12026-05-30
+
+### Added
+
+- Added the first seeded gate hunter NPC, `Лукан`, near the closed settlement gate.
+- Added `Орина`, a second seeded hunter NPC near the forest edge, returning toward the gate with one visible lit torch and one spare torch represented in the lightweight hunter bundle state.
+- Added the hunter and herbalist NPC names to the scribe-approved prepared-name corpus as reserved records.
+- Added a first NPC hunter state-machine slice that routes through ordinary exits, seeks visible mice or rabbits, attacks through the delayed creature action queue and returns claimed carcasses to the gate.
+- Added hunter-claimed carcass markers and grouped corpse resource helpers so NPC deposits can use the existing carcass drop-off contribution service.
+- Added narrow hunter pickup for visible ground torches so found `torch` and `lit_torch` stacks can feed the current hunting bundle slice.
+- Expanded herbalist ambient speech and player auto-mode speech banks to 50 lines each.
+- Added text-only attack learning hints: every thirteenth player animal kill through `ATTACK` and every fifth personal observation of another actor's recent kill can send a private skill-growth line without changing numeric skills yet.
+
+### Changed
+
+- Creature attack completion now treats `hunter` profession kills differently from predator feeding: hunter kills are claimed for the `Падальний рів` instead of becoming ordinary visible prey corpses.
+- Hunters marked as returning for torches now keep moving toward the gate unless they see local prey on the way.
+- Hunter prey selection now skips child animals and prefers adult prey before old prey, then young prey.
+- Unique creature seeding and world reset now reuse prepared-name case forms for named NPCs before falling back to local overrides.
+- Updated gate hunting loop docs and `NPC-002` planning notes to distinguish the first state-machine slice from the still-future real torch bundle/light-state work.
+- Documented future hunter torch crafting from gathered resources.
+
+### Tests
+
+- Extended NPC hunter helper coverage for profession detection, claimed-carcass markers and grouped corpse resource keys.
+- Added NPC hunter prey-order coverage for child-skip and adult/old/young target priority.
+- Added ambient line-bank coverage so herbalist and auto speech variety does not shrink below 50 unique lines each.
+- Added attack-learning helper coverage for practice and observation milestone cadence.
+
+---
+
+## 0.13.10 - Hunter route plan and posture action guards - 12026-05-30
+
+### Added
+
+- Added an NPC hunter route-plan helper that resolves the gate drop-off location, a configured magic campfire and routes in both directions through existing location exits.
+- Added route-plan constants for the first hunter torch bundle and return reserve.
+- Added bulk loose-ground pickup for commands such as `get all`, `pick all`, `взяти все` and `підняти все`.
+- Added compact `всі` pickup buttons beside visible loose resource stacks so players can pick up all items of one type.
+
+### Changed
+
+- Updated `NPC-002` planning notes so the remaining hunter MVP can build on explicit route planning instead of teleporting between gate, campfire and hunting areas.
+- Sitting now blocks physical actions such as movement, pickup, gathering, attacking, freshening, dropping, putting items into features, cooking and fire/torch handling; blocked actions show a stand-up prompt.
+- Tutorial sleep posture text now distinguishes outer sleep from the action happening inside the dream.
+- Location and target-detail callbacks now prefer sending a fresh message when their source message is no longer the latest tracked bot message, reducing missed edits to older descriptions.
+
+### Tests
+
+- Added focused NPC hunter helper coverage for route directions, total travel cost, missing route reasons and torch bundle constants.
+- Added parser and posture text regression coverage for bulk pickup and dream-sleep posture layering.
+
+---
+
+## 0.13.9 - NPC drop-off contribution foundation - 12026-05-30
+
+### Added
+
+- Added an NPC-facing carcass drop-off contribution helper so future hunters can record deposits through the same service as player `put` actions.
+- Added a compact hunter field-line pool for future NPC hunter state changes such as departures, trail choices, returns, deposits and giving up.
+
+### Changed
+
+- NPC drop-off records now keep source identity without granting player inventory rewards.
+- Updated gate hunting loop planning notes so `NPC-002` can build on the shared drop-off service and the 0.13.8 route finder.
+
+### Tests
+
+- Extended gate hunting loop helper coverage for deterministic hunter field lines.
+
+---
+
+## 0.13.8 - Location route finding foundation - 12026-05-30
+
+### Added
+
+- Added a reusable location-to-location route finder for world exits, with hidden exits and caller-blocked directions excluded by default.
+- Added a Prisma-backed route lookup that also respects currently locked exits before future NPC and auto-mode movement uses it.
+
+### Changed
+
+- Marked `NAV-001` as testing and updated the near-term gate hunting loop plan so NPC hunter integration can build on route finding instead of teleporting.
+
+### Tests
+
+- Added route-finding coverage for simple routes, no-route results, hidden-exit filtering, caller-blocked directions and depth limits.
+
+---
+
+## 0.13.7 - Gate hunting loop foundation - 12026-05-30
+
+### Added
+
+- Added `docs/systems/gate_hunting_loop.md` as the design source for a settlement-facing ecological pressure loop instead of a formal quest/bounty board.
+- Added planning items for the gate hunting loop, narrow `put` command, carcass drop-off reactions and future NPC hunter behavior.
+- Added a gate notice and physical carcass drop-off feature near the closed settlement gate.
+- Added a narrow `put` / `/put` command that can place carried carcasses/remains into matching local features.
+- Added a carcass drop-off contribution table and service so valid drop-offs record contributor, resource kind and amount.
+- Added first and threshold settlement reactions for carcass/remains contributions without fixed per-corpse pricing.
+
+### Changed
+
+- `/help`, `/commands` and input-alias docs now list the first narrow `put` forms for carcass/remains drop-off.
+- Planning exports now include the new gate hunting loop task pack.
+- The second tutorial dream location now keeps a narrow reply keyboard with only look, north and south, instead of exposing the full main keyboard too early.
+- `reply` now remembers direct addressed speech and whispers per recipient, so a player can answer the last speaker even if that speaker is no longer visible.
+- `shout` now accepts more natural Ukrainian shout forms such as `кричати`, `крик`, `вигукнути` and `волати`.
+- Unknown-text suggestions now include regex-backed speech commands such as `крикнути`, `кричати`, `шепнути` and `відповісти`.
+- Gate hunting loop docs now include thematic hunter shout/field-line guidance for the future NPC hunter and player hunter auto-mode.
+- Documented the future NPC hunter route-and-torch loop, including gate torch bundles, magic campfire ignition, delayed hunting actions and a new `NAV-001` route-finding planning item.
+
+### Tests
+
+- Added parser coverage for default, numeric and `all` / `все` `put` forms.
+- Added focused helper coverage for carcass-resource validation and drop-off threshold reactions.
+- Added reply-keyboard coverage for the second tutorial dream location.
+- Added helper coverage for the per-recipient reply target memory payload.
+- Added parser coverage for additional Ukrainian `shout` synonyms.
+- Added suggestion coverage for speech-command aliases that are parsed by regex instead of exact command entries.
+
+---
+
+## 0.13.6 - Speech commands and sitting rest posture - 12026-05-29
+
+### Added
+
+- Added shared-alias speech commands for `whisper [player] [message]`, `reply <message>` and `shout <message>`.
+- `whisper` sends private local speech to one visible player target while bystanders only see that a whisper happened.
+- `reply` answers the most recent local speech event that addressed the character by name/forms.
+- `shout` sends a wider region-level speech message and spends extra stamina through the existing speech/action queue path.
+- Added a separate player posture field with `STANDING` / `SITTING` states, plus `/sit`, `/stand`, `сісти`, `присісти`, `встати` and related aliases.
+
+### Changed
+
+- `/commands`, input-alias docs, `CMD-001` and `docs/planning/next.md` now mark the near-term command pack as shipped through the speech slice.
+- Inventory fire actions such as lighting/dousing torches and adding twigs now send the action result as a separate message before refreshing the inventory view.
+- `/rest` now starts active recovery while sitting; rest completion or interruption stops recovery but leaves the character sitting until they stand up.
+- Character and location descriptions now distinguish standing, sitting and sitting while resting.
+- Main reply keyboards and character-card actions now show `Сісти`, `Встати` and `Відпочити` according to the current posture/rest state.
+
+### Tests
+
+- Added parser coverage for English and Ukrainian `whisper`, `reply` and `shout` forms.
+- Added parser coverage for posture aliases and focused helper coverage for posture text/button states.
+
+---
+
+## 0.13.5 - Enter and leave text navigation - 12026-05-29
+
+### Added
+
+- Added `/enter`, `enter [place]`, `/leave` and `leave [place]` aliases on top of the existing `INSIDE` / `OUTSIDE` movement directions.
+- Ukrainian natural forms such as `увійти в кущі` and `вийти з кущів` are now covered by input-alias regression tests.
+
+### Changed
+
+- Help, `/commands`, input-alias docs and `CMD-001` now mark the `enter` / `leave` slice as shipped.
+
+### Tests
+
+- Added parser coverage for `/enter`, `enter bushes`, `увійти в кущі`, `/leave`, `leave cave` and `вийти з кущів`.
+
+---
+
+## 0.13.4 - Quick navigation commands - 12026-05-29
+
+### Added
+
+- Added shared-alias quick navigation commands: `/glance`, `glance`, `глянути швидко` and `швидко глянути` show a compact current-location read without the full location description.
+- Added `/exits`, `exits`, `виходи` and `куди можна йти` to show only visible exits from the current location, including visible locked exits.
+- Help, `/commands` and input-alias documentation now list the quick navigation commands as current behavior.
+- Added future planning and system documentation for social contacts/groups and hidden presence / hidden follower spirits.
+
+### Changed
+
+- `CMD-001` now records the shipped quick-navigation slice and keeps `enter`, `leave`, `whisper`, `reply` and `shout` as the remaining near-term command work.
+
+### Tests
+
+- Added input-alias regression coverage for the new `glance` and `exits` forms.
+
 ---
 
 ## 0.13.3 - Meat and campfire cooking loop - 12026-05-29

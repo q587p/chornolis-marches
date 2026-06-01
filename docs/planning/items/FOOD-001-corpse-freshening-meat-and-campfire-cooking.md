@@ -50,12 +50,14 @@ This should be the first small bridge between combat/hunting, corpse lifetime, i
 ## Later Scope
 
 - Freshen / butcher a carried corpse from inventory, not only a visible corpse lying in the current location.
+- Replace the current “hide after freshening” bridge with real visible remains; this is split into `FOOD-003`.
 - Different meat types by species.
 - Bones, hide, fur, feathers and other animal materials where appropriate.
 - Freshness, spoilage and scent tracking for meat and remains, including timers that eventually make raw/cooked meat unsuitable to eat or cook.
 - Generalize item lifetime timers beyond torches/corpses so food, gathered supplies and crafted items can age or decay as needed.
 - Once in-world time is more complete, hunger should increase gradually with game time as well as from strenuous actions, with player-facing text kept atmospheric rather than debug-like.
 - Cooking success chance should later depend on skill, tools, light, weather and campfire quality.
+- Failed cooking should later create spoiled/burnt meat that can be discarded or eaten with risk instead of always deleting raw meat; this is split into `FOOD-002`.
 - Better cooking recipes and profession/skill hooks.
 - Butchering quality and yield affected by tools, light, skills and corpse condition.
 

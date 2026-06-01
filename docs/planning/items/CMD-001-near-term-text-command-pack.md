@@ -1,7 +1,7 @@
 ---
 id: CMD-001
 title: Near-term text command pack
-status: next
+status: testing
 type: feature
 area: commands
 priority: high
@@ -23,8 +23,6 @@ Separate the small command set that should arrive soon from the broader future M
 
 These commands are valuable before a full MUD server because they make Telegram text input, a future console client and later MUD-style input feel consistent:
 
-- `glance`
-- `exits`
 - `enter`
 - `leave`
 - `whisper`
@@ -33,18 +31,29 @@ These commands are valuable before a full MUD server because they make Telegram 
 
 ## First Scope
 
-Navigation / location:
+0.13.4 shipped the first quick-navigation slice:
 
 - `glance` / `глянути швидко` / `швидко глянути` — quick location read: exits and visible people/creatures, no full description.
-- `exits` / `виходи` — only available exits from the current location, including locked-visible exits.
-- `enter [place]` / `увійти [місце]` / `зайти [місце]` — enter an available inside-style exit or visible feature entrance.
-- `leave` / `вийти` / `назовні` — leave the current inside-style area when an outside exit exists.
+- `exits` / `виходи` — only visible exits from the current location, including locked-visible exits.
+
+0.13.5 shipped the first non-compass movement slice:
+
+- `enter [place]` / `увійти [місце]` / `зайти [місце]` — enter an available inside-style exit.
+- `leave [place]` / `вийти [місце]` / `назовні` — leave the current inside-style area when an outside exit exists.
+
+0.13.6 shipped the speech slice:
 
 Speech:
 
 - `whisper [player] [message]` / `шепнути [персонаж] [текст]` — private local speech to one visible target; others nearby should only see that someone whispers without details.
 - `reply <message>` / `відповісти <текст>` — reply to the last character who addressed you; should work even if darkness/hidden state means you cannot currently identify them clearly.
 - `shout <message>` / `крикнути <текст>` / `гукнути <текст>` — wider-range speech, likely region-wide first; should cost significant stamina and have clear anti-spam limits.
+
+The first implementation keeps this conservative:
+
+- `whisper` targets visible player characters in the current location and hides the spoken text from bystanders.
+- `reply` uses recent local `SAY` events that addressed the character's name/forms.
+- `shout` reaches the current region and spends extra stamina through the shared speech/action queue path.
 
 ## Acceptance
 

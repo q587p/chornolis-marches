@@ -22,12 +22,22 @@ node scripts/world/render-map-ascii.mjs --write
 - `u` — under-bridge location at `z = -1`; it is not connected to the bridge deck.
 - `D` — dream tutorial location in `Дрімотна Межа` at `z = -13`.
 
+## Layer z = 1
+
+```text
+      10 11 12 13 14 15 16 17
+y
+  7    .  .
+  6
+  5                         ,
+```
+
 ## Layer z = 0
 
 ```text
       -1  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21
 y
- 10    █  █  █  █  █  █  █  █  █  █  █  █  █  █
+ 10    █  █  █  F  F  F  █  █  █  █  █  █  █  █
   9    █  #  #  F  #  #  #  #  #  F  F  .  .  .  ,  ~  ~
   8    █  F  F  F  #  F  F  F  F  F  #  .  #  .  .  ,  ~  ~
   7    █  F  #  #  #  F  #  #  #  F  F  .  .  .  .  .  ,  ,  ~
@@ -52,29 +62,41 @@ y
 ## Layer z = -13
 
 ```text
-      -1  0  1
+      -2 -1  0  1
 y
-  5       D
-  4       D
-  3    D  D  D
-  2       D
-  1       D
-  0       D
+  9          D
+  8          D
+  7          D
+  6          D
+  5          D
+  4          D  D
+  3    D  D  D  D
+  2          D
+  1          D
+  0          D
 ```
 
 ## Special authored links
 
+- `dream_tutorial_hub` — INSIDE → `dream_tutorial_observation`
+- `dream_tutorial_observation` — OUTSIDE → `dream_tutorial_hub`
+- `meadow_10_07` — UP → `meadow_10_07_crooked_pine_crown`
+- `meadow_10_07_crooked_pine_crown` — DOWN → `meadow_10_07`
 - `meadow_11_00` — SOUTH → `meadow_11_09`
+- `meadow_11_07` — UP → `meadow_11_07_scratched_pine_crown`
+- `meadow_11_07_scratched_pine_crown` — DOWN → `meadow_11_07`
 - `meadow_11_09` — NORTH → `meadow_11_00`
 - `riverbank_13_00` — SOUTH → `riverbank_13_09`
 - `riverbank_13_09` — NORTH → `riverbank_13_00`
 - `riverbank_18_04` — NORTH → `under_bridge_18_05`
 - `riverbank_18_06` — SOUTH → `under_bridge_18_05`
+- `start_border_camp` — UP → `start_border_watchtower`
+- `start_border_watchtower` — DOWN → `start_border_camp`
 - `under_bridge_18_05` — NORTH → `riverbank_18_06`
 - `under_bridge_18_05` — SOUTH → `riverbank_18_04`
 - `closed_east_gate` — EAST is a visible locked exit (Зачинені ворота).
+- `dream_tutorial_hub` — NORTH is a visible locked exit (Брама Сну).
 - `dream_tutorial_gate` — SOUTH is a visible locked exit (Брама Сну).
-- `dream_tutorial_hub` — NORTH back to `dream_tutorial_gate` is the matching visible locked exit while Брама Сну is closed.
 
 ## Editing
 

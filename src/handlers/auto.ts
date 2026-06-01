@@ -14,18 +14,29 @@ import { directionLabels } from "../ui/labels";
 import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { logEvent } from "../services/worldEvents";
 import { maybePerformPlayerAutoSignal } from "../services/socialAutonomy";
+import { standPlayer } from "../services/posture";
 import { buildAutoConfirmKeyboard } from "../ui/keyboards";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
+import { slashlessCommandPattern } from "../utils/slashlessCommands";
+
+const AUTO_STOP_TEXT_COMMAND = slashlessCommandPattern(["autoStop", "autostop", "auto_stop"]);
+import { isTutorialLocation } from "../services/tutorial";
+import { notifyPlayerObservers, playerRestStartObserverText, playerStandObserverText } from "../services/playerVisibility";
 
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
 const AUTO_SAY_CHANCE = Number(process.env.PLAYER_AUTO_SAY_CHANCE || 15);
 const AUTO_CONSENT_TITLE = "Player auto consent";
+export const AUTO_DREAM_BLOCK_MESSAGE = "Сон тихо каже:\n<blockquote>Уві сні краще йти власним кроком. Авто лишається за порогом.</blockquote>";
 
-type AutoState = { timer: NodeJS.Timeout; running: boolean };
+export type AutoActionKey = "say" | "gather" | "look" | "move";
+type AutoEnableResult = { started: boolean; blocked: boolean };
+type AutoLocation = { key: string; z: number; region?: { key: string } | null };
+
+type AutoState = { timer: NodeJS.Timeout; running: boolean; lastActionKey?: AutoActionKey };
 const autoPlayers = new Map<number, AutoState>();
 let autoBot: Bot | null = null;
 
-const AUTO_LINES = [
+export const AUTO_LINES = [
   "Треба триматися стежки... якщо вона справді стежка.",
   "Чорноліс сьогодні надто уважний.",
   "Я тут лише на мить. Напевно.",
@@ -36,6 +47,46 @@ const AUTO_LINES = [
   "Трави тут добрі. Або хитрі.",
   "Сліди свіжі. Не мої.",
   "Ліс ворухнувся. Я бачив.",
+  "Якщо я йду не туди, хай стежка першою це помітить.",
+  "Не люблю, коли дерева стоять занадто рівно.",
+  "Тут кожен кущ має вигляд свідка.",
+  "Зроблю ще коло, поки думки не наздогнали.",
+  "Десь поруч вода. Або щось дуже схоже на воду.",
+  "Поки ноги йдуть, страх відстає.",
+  "Можна було б повернутися. Але ще не зараз.",
+  "Якщо це була тінь, вона надто впевнено рухалась.",
+  "Земля м’яка. Хтось ходив тут нещодавно.",
+  "Я не загубився. Я уточнюю світ.",
+  "Пахне димом, хоча вогню не видно.",
+  "Добре б знайти місце, де тиша не дивиться у відповідь.",
+  "Ще крок. Потім ще один. Так і тримається мужність.",
+  "Мені здається, цей мох уже бачив мене раніше.",
+  "Якщо хтось іде слідом, нехай хоча б не наступає на п’яти.",
+  "Тут не варто говорити голосно. Отже, я скажу тихо.",
+  "Ягоди, трава, сліди. Світ лишає підказки, коли хоче.",
+  "Не кожна стежка веде вперед. Деякі перевіряють, чи ти уважний.",
+  "Небо крізь гілля виглядає як стара сітка.",
+  "Я ще тримаюсь. Снага сперечається, але тримаюсь.",
+  "Якщо це пастка, вона принаймні гарно замаскована.",
+  "Чорноліс не мовчить. Він просто говорить не для всіх.",
+  "Треба не забути подивитися під ноги. І над головою. І за спину.",
+  "Піду туди, де трава прим’ята. Або де вона прикидається прим’ятою.",
+  "У мене є план. Він дуже схожий на обережну імпровізацію.",
+  "Якщо зустріну вовка, спершу спробую домовитись із відстанню.",
+  "Старі гілки тріщать так, ніби мають власну думку.",
+  "Не знаю, хто тут господар, але я точно гість.",
+  "Чим тихіше йду, тим голосніше думаю.",
+  "Світ пам’ятає рух. Сподіваюся, не всі мої помилки.",
+  "Можливо, це добрий знак. А можливо, знак просто голодний.",
+  "Слід є. Питання, чи варто знати, чий.",
+  "Якщо ліс мене бачить, я теж спробую дивитися уважніше.",
+  "Руки тягнуться до трав, але очі сьогодні розумніші.",
+  "Краще маленька знахідка, ніж велика дурниця.",
+  "Не все, що лежить, хоче бути піднятим.",
+  "Зроблю вигляд, що це я вибрав напрям.",
+  "Тут повітря густіше. Наче його вже хтось вдихав до мене.",
+  "Коли повернуся, скажу, що все було під контролем.",
+  "Порубіжжя не питає, чи ти готовий. Воно просто шелестить.",
 ];
 
 function chance(p: number) {
@@ -56,6 +107,51 @@ function autoRestChance(player: any) {
   return Math.min(95, 15 + Math.round(debtRatio * 75));
 }
 
+export function orderAutoActionKeys(roll: number, lastActionKey?: AutoActionKey) {
+  const order: AutoActionKey[] = ["say"];
+  if (roll < 0.45) order.push("gather");
+  if (roll < 0.7) order.push("look");
+  order.push("move", "look");
+
+  const uniqueOrder = order.filter((key, index) => order.indexOf(key) === index);
+  if (!lastActionKey || uniqueOrder.length < 2 || !uniqueOrder.includes(lastActionKey)) return uniqueOrder;
+
+  return [...uniqueOrder.filter((key) => key !== lastActionKey), lastActionKey];
+}
+
+export function shouldAutoStandBeforeAction(player: { posture?: string | null; sleepState?: string | null; isResting?: boolean | null }, key: AutoActionKey) {
+  return (key === "gather" || key === "move") && player.sleepState !== "ORDINARY_SLEEP" && (player.posture === "SITTING" || player.posture === "LYING" || Boolean(player.isResting));
+}
+
+export function isAutoBlockedInLocation(location: AutoLocation | null | undefined) {
+  return Boolean(location && (location.z <= -10 || isTutorialLocation(location)));
+}
+
+async function playerAutoBlockLocation(player: { currentLocationId?: number | null }) {
+  if (!player.currentLocationId) return null;
+  return prisma.cellLocation.findUnique({
+    where: { id: player.currentLocationId },
+    select: { key: true, z: true, region: { select: { key: true } } },
+  });
+}
+
+async function isPlayerAutoBlockedByDream(player: { currentLocationId?: number | null }) {
+  return isAutoBlockedInLocation(await playerAutoBlockLocation(player));
+}
+
+async function replyAutoBlockedByDream(ctx: any) {
+  await ctx.reply(AUTO_DREAM_BLOCK_MESSAGE, {
+    parse_mode: "HTML",
+    reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+  });
+}
+
+async function runAutoChoice(state: AutoState, key: AutoActionKey, run: () => Promise<boolean>) {
+  const selected = await run();
+  if (selected) state.lastActionKey = key;
+  return selected;
+}
+
 async function maybeStartAutoRest(bot: Bot, telegramId: number, player: any, locationId: number) {
   if (player.isResting) return true;
 
@@ -63,6 +159,11 @@ async function maybeStartAutoRest(bot: Bot, telegramId: number, player: any, loc
   if (restChance <= 0 || !chance(restChance)) return false;
 
   await startPlayerRest(player.id);
+  await notifyPlayerObservers(bot, {
+    playerId: player.id,
+    locationId,
+    observerText: playerRestStartObserverText,
+  });
   await logEvent("PLAYER_ACTION", "Auto started player rest", `stamina=${player.stamina}; chance=${restChance}`, locationId).catch(() => undefined);
 
   const reason = player.stamina <= VERY_TIRED_STAMINA
@@ -156,6 +257,26 @@ async function maybeAutoSay(bot: Bot, telegramId: number, player: any, locationI
   return true;
 }
 
+async function ensureAutoStandingBeforeAction(bot: Bot, telegramId: number, player: any, key: AutoActionKey, locationId: number) {
+  if (!shouldAutoStandBeforeAction(player, key)) return player;
+
+  const result = await standPlayer(player.id);
+  if (!result) return player;
+  if (result.changed) {
+    await logEvent("PLAYER_ACTION", "Auto stood player up", `before=${key}`, locationId).catch(() => undefined);
+    await notifyPlayerObservers(bot, {
+      playerId: player.id,
+      locationId,
+      observerText: playerStandObserverText,
+    });
+    await bot.api.sendMessage(telegramId, "🤖 Авто: персонаж встає (/stand), перш ніж діяти далі.", {
+      reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, true),
+    });
+  }
+
+  return (await getPlayerByTelegramId(telegramId)) ?? { ...player, posture: "STANDING", isResting: false };
+}
+
 async function autoGather(bot: Bot, telegramId: number, player: any, locationId: number) {
   const resource = await prisma.resourceNode.findFirst({
     where: { locationId, amount: { gt: 0 } },
@@ -167,16 +288,17 @@ async function autoGather(bot: Bot, telegramId: number, player: any, locationId:
   const key = resource.resourceType.key as "berries" | "mushrooms" | "herbs";
   if (!gatherConfig[key]) return false;
 
+  const activePlayer = await ensureAutoStandingBeforeAction(bot, telegramId, player, "gather", locationId);
   const result = await performOrQueuePlayerAction(bot, {
-    playerId: player.id,
+    playerId: activePlayer.id,
     type: "GATHER_SPECIFIC",
     payload: { resourceKey: key },
-    durationMs: gatherDurationMs(key, player.stamina),
+    durationMs: gatherDurationMs(key, activePlayer.stamina),
     chatId: telegramId,
     note: `auto:gather:${key}`,
   });
 
-  await notifyAutoChoice(bot, telegramId, player.id, result.mode, `зібрати ${resource.resourceType.name}`, locationId);
+  await notifyAutoChoice(bot, telegramId, activePlayer.id, result.mode, `зібрати ${resource.resourceType.name}`, locationId);
   return true;
 }
 
@@ -203,16 +325,17 @@ async function autoMove(bot: Bot, telegramId: number, player: any, locationId: n
   const exit = pick(exits);
   if (!exit) return false;
 
+  const activePlayer = await ensureAutoStandingBeforeAction(bot, telegramId, player, "move", locationId);
   const result = await performOrQueuePlayerAction(bot, {
-    playerId: player.id,
+    playerId: activePlayer.id,
     type: "MOVE",
     payload: { direction: exit.direction },
-    durationMs: movementDurationMs(exit.travelCost, player.stamina),
+    durationMs: movementDurationMs(exit.travelCost, activePlayer.stamina),
     chatId: telegramId,
     note: `auto:move:${exit.direction}`,
   });
 
-  await notifyAutoChoice(bot, telegramId, player.id, result.mode, `піти на ${String(directionLabels[exit.direction]).toLocaleLowerCase("uk-UA")}`, locationId);
+  await notifyAutoChoice(bot, telegramId, activePlayer.id, result.mode, `піти на ${String(directionLabels[exit.direction]).toLocaleLowerCase("uk-UA")}`, locationId);
 
   return true;
 }
@@ -231,20 +354,38 @@ async function runAutoStep(bot: Bot, telegramId: number) {
     }
 
     const locationId = player.currentLocationId ?? (await getStartLocationId());
+    if (await isPlayerAutoBlockedByDream(player)) {
+      await disablePlayerAuto(telegramId);
+      await bot.api.sendMessage(telegramId, AUTO_DREAM_BLOCK_MESSAGE, {
+        parse_mode: "HTML",
+        reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, false),
+      });
+      return;
+    }
+    if (player.sleepState === "ORDINARY_SLEEP") {
+      await disablePlayerAuto(telegramId);
+      await bot.api.sendMessage(telegramId, "🤖 Авто зупинено: ви спите. Спершу прокиньтеся, якщо хочете знову діяти автоматично.", {
+        reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, false),
+      });
+      return;
+    }
     if (DEBUG) console.log(`[PLAYER AUTO] telegramId=${telegramId} locationId=${locationId}`);
 
     if (await maybeStartAutoRest(bot, telegramId, player, locationId)) return;
 
     if (await maybePerformPlayerAutoSignal(bot, player, telegramId)) return;
 
-    if (await maybeAutoSay(bot, telegramId, player, locationId)) return;
-
     const roll = Math.random();
-    if (roll < 0.45 && await autoGather(bot, telegramId, player, locationId)) return;
-    if (roll < 0.7 && await autoLook(bot, telegramId, player, locationId)) return;
-    if (await autoMove(bot, telegramId, player, locationId)) return;
+    const choices: Record<AutoActionKey, () => Promise<boolean>> = {
+      say: () => maybeAutoSay(bot, telegramId, player, locationId),
+      gather: () => autoGather(bot, telegramId, player, locationId),
+      look: () => autoLook(bot, telegramId, player, locationId),
+      move: () => autoMove(bot, telegramId, player, locationId),
+    };
 
-    await autoLook(bot, telegramId, player, locationId);
+    for (const key of orderAutoActionKeys(roll, state.lastActionKey)) {
+      if (await runAutoChoice(state, key, choices[key])) return;
+    }
   } catch (error) {
     console.warn("Player auto step failed:", error);
   } finally {
@@ -281,10 +422,22 @@ function stopAutoTimer(telegramId: number) {
   return true;
 }
 
-export async function enablePlayerAuto(bot: Bot, telegramId: number) {
+export async function enablePlayerAuto(bot: Bot, telegramId: number): Promise<AutoEnableResult> {
+  const player = await getPlayerByTelegramId(telegramId);
+  if (player?.sleepState === "ORDINARY_SLEEP") {
+    stopAutoTimer(telegramId);
+    await persistPlayerAutoState(telegramId, false);
+    return { started: false, blocked: true };
+  }
+  if (player && await isPlayerAutoBlockedByDream(player)) {
+    stopAutoTimer(telegramId);
+    await persistPlayerAutoState(telegramId, false);
+    return { started: false, blocked: true };
+  }
+
   const started = startAutoTimer(bot, telegramId);
   await persistPlayerAutoState(telegramId, true);
-  return started;
+  return { started, blocked: false };
 }
 
 export async function requestOrEnablePlayerAuto(bot: Bot, ctx: any) {
@@ -294,13 +447,32 @@ export async function requestOrEnablePlayerAuto(bot: Bot, ctx: any) {
     return;
   }
 
+  if (player.sleepState === "ORDINARY_SLEEP") {
+    await disablePlayerAuto(ctx.from.id);
+    await ctx.reply("Сон м’яко відсуває автоматичні звички. Спершу прокиньтеся, а тоді вже можна знову вмикати авто.", {
+      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+    });
+    return;
+  }
+
+  if (await isPlayerAutoBlockedByDream(player)) {
+    await disablePlayerAuto(ctx.from.id);
+    await replyAutoBlockedByDream(ctx);
+    return;
+  }
+
   if (!(await playerAutoConsent(player.id))) {
     await replyWithAutoConfirmation(ctx);
     return;
   }
 
-  const started = await enablePlayerAuto(bot, ctx.from.id);
-  await ctx.reply(`${started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено."}\nАвтодії плануються ${playerAutoTimingText()}; вручну зазвичай можна діяти швидше.`, {
+  const result = await enablePlayerAuto(bot, ctx.from.id);
+  if (result.blocked) {
+    await replyAutoBlockedByDream(ctx);
+    return;
+  }
+
+  await ctx.reply(`${result.started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено."}\nАвтодії плануються ${playerAutoTimingText()}; вручну зазвичай можна діяти швидше.`, {
     reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, true),
   });
 }
@@ -312,6 +484,14 @@ export async function disablePlayerAuto(telegramId: number) {
     data: { isAutoEnabled: false },
   });
   return stopped || updated.count > 0;
+}
+
+export async function replyStopPlayerAuto(ctx: any) {
+  if (!ctx.from) return;
+  const stopped = await disablePlayerAuto(ctx.from.id);
+  await ctx.reply(stopped ? "⏹ Авто-режим зупинено." : "⏹ Авто-режим не був увімкнений.", {
+    reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+  });
 }
 
 export function stopPlayerAuto(telegramId: number) {
@@ -344,17 +524,28 @@ export function restartPlayerAutoTimers(bot = autoBot) {
 async function restorePersistentAutoPlayers(bot: Bot) {
   const players = await prisma.player.findMany({
     where: { isAutoEnabled: true },
-    select: { telegramId: true },
+    select: {
+      telegramId: true,
+      currentLocationId: true,
+      currentLocation: { select: { key: true, z: true, region: { select: { key: true } } } },
+    },
   });
 
   let restored = 0;
+  let skippedDreaming = 0;
   for (const player of players) {
     const telegramId = Number(player.telegramId);
     if (!Number.isSafeInteger(telegramId)) continue;
+    if (isAutoBlockedInLocation(player.currentLocation)) {
+      await persistPlayerAutoState(telegramId, false);
+      skippedDreaming++;
+      continue;
+    }
     if (startAutoTimer(bot, telegramId)) restored++;
   }
 
   if (restored > 0) console.log(`[PLAYER AUTO] restored ${restored} persisted auto timers`);
+  if (skippedDreaming > 0) console.log(`[PLAYER AUTO] skipped ${skippedDreaming} dreaming players`);
 }
 
 export function playerAutoTimingText() {
@@ -384,10 +575,22 @@ export function registerAutoHandlers(bot: Bot) {
       return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start", { reply_markup: buildMainReplyKeyboard(false) }));
     }
 
+    if (await isPlayerAutoBlockedByDream(player)) {
+      await safeAnswerCallbackQuery(ctx, "Уві сні авто не вмикається.");
+      await disablePlayerAuto(ctx.from.id);
+      await replyAutoBlockedByDream(ctx);
+      return;
+    }
+
     await markPlayerAutoConsent(player.id);
-    const started = await enablePlayerAuto(bot, ctx.from.id);
+    const result = await enablePlayerAuto(bot, ctx.from.id);
+    if (result.blocked) {
+      await safeAnswerCallbackQuery(ctx, "Уві сні авто не вмикається.");
+      await replyAutoBlockedByDream(ctx);
+      return;
+    }
     await safeAnswerCallbackQuery(ctx, "Авто увімкнено.");
-    await ctx.reply(`${started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено."}\nАвтодії плануються ${playerAutoTimingText()}; вручну зазвичай можна діяти швидше.`, {
+    await ctx.reply(`${result.started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено."}\nАвтодії плануються ${playerAutoTimingText()}; вручну зазвичай можна діяти швидше.`, {
       reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, true),
     });
   });
@@ -399,15 +602,14 @@ export function registerAutoHandlers(bot: Bot) {
     });
   });
 
-  bot.command(["autoStop", "autostop"], async (ctx) => {
-    if (!ctx.from) return;
-    const stopped = await disablePlayerAuto(ctx.from.id);
-    await ctx.reply(stopped ? "⏹ Авто-режим зупинено." : "⏹ Авто-режим не був увімкнений.", { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
-  });
+  async function stopAutoCommand(ctx: any) {
+    await replyStopPlayerAuto(ctx);
+  }
+
+  bot.command(["autoStop", "autostop", "auto_stop"], stopAutoCommand);
+  bot.hears(AUTO_STOP_TEXT_COMMAND, stopAutoCommand);
 
   bot.hears("⏹ Стоп", async (ctx) => {
-    if (!ctx.from) return;
-    const stopped = await disablePlayerAuto(ctx.from.id);
-    await ctx.reply(stopped ? "⏹ Авто-режим зупинено." : "⏹ Авто-режим не був увімкнений.", { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
+    await replyStopPlayerAuto(ctx);
   });
 }

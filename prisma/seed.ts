@@ -13,6 +13,9 @@ import {
   starterAnimalHp,
   type StarterAnimalGroup,
 } from "../src/data/starterAnimals";
+import { creatureSpeciesNameFields } from "../src/content/lexicon/worldLexicon";
+import { START_WORLD_ABSOLUTE_MINUTE } from "../src/data/worldClock";
+import { preparedNameByNominative } from "../src/services/characterNames";
 
 dotenv.config();
 
@@ -112,6 +115,24 @@ type CreatureNameOverrides = {
   nameVocative?: string;
 };
 
+type SeedCreatureResource = {
+  resourceKey: string;
+  amount: number;
+};
+
+function preparedCreatureNameOverrides(nominative: string): CreatureNameOverrides {
+  const prepared = preparedNameByNominative(nominative);
+  if (!prepared) return {};
+  return {
+    nameGenitive: prepared.forms.genitive,
+    nameDative: prepared.forms.dative,
+    nameAccusative: prepared.forms.accusative,
+    nameInstrumental: prepared.forms.instrumental,
+    nameLocative: prepared.forms.locative,
+    nameVocative: prepared.forms.vocative,
+  };
+}
+
 type SeedUniqueCreature = {
   speciesKey: string;
   locationKey: string;
@@ -125,6 +146,7 @@ type SeedUniqueCreature = {
   professionKey?: string;
   professionName?: string;
   nameOverrides?: CreatureNameOverrides;
+  resources?: SeedCreatureResource[];
 };
 
 type WorldSeed = {
@@ -318,15 +340,7 @@ async function deleteDeprecatedSeedFeatures() {
 const species = [
   {
     key: "rabbit",
-    name: "заєць",
-    nameGenitive: "зайця",
-    nameDative: "зайцю",
-    nameAccusative: "зайця",
-    nameInstrumental: "зайцем",
-    nameLocative: "зайці",
-    nameVocative: "зайцю",
-    grammaticalGender: "MASCULINE",
-    animacy: "ANIMATE",
+    ...creatureSpeciesNameFields("rabbit"),
     kind: "ANIMAL",
     diet: "HERBIVORE",
     baseHp: 3,
@@ -346,15 +360,7 @@ const species = [
   },
   {
     key: "mouse",
-    name: "миша",
-    nameGenitive: "миші",
-    nameDative: "миші",
-    nameAccusative: "мишу",
-    nameInstrumental: "мишею",
-    nameLocative: "миші",
-    nameVocative: "мише",
-    grammaticalGender: "FEMININE",
-    animacy: "ANIMATE",
+    ...creatureSpeciesNameFields("mouse"),
     kind: "ANIMAL",
     diet: "HERBIVORE",
     baseHp: 1,
@@ -374,15 +380,7 @@ const species = [
   },
   {
     key: "fox",
-    name: "лисиця",
-    nameGenitive: "лисиці",
-    nameDative: "лисиці",
-    nameAccusative: "лисицю",
-    nameInstrumental: "лисицею",
-    nameLocative: "лисиці",
-    nameVocative: "лисице",
-    grammaticalGender: "FEMININE",
-    animacy: "ANIMATE",
+    ...creatureSpeciesNameFields("fox"),
     kind: "ANIMAL",
     diet: "CARNIVORE",
     baseHp: 8,
@@ -402,15 +400,7 @@ const species = [
   },
   {
     key: "wolf",
-    name: "вовк",
-    nameGenitive: "вовка",
-    nameDative: "вовку",
-    nameAccusative: "вовка",
-    nameInstrumental: "вовком",
-    nameLocative: "вовку",
-    nameVocative: "вовче",
-    grammaticalGender: "MASCULINE",
-    animacy: "ANIMATE",
+    ...creatureSpeciesNameFields("wolf"),
     kind: "ANIMAL",
     diet: "CARNIVORE",
     baseHp: 14,
@@ -430,15 +420,7 @@ const species = [
   },
   {
     key: "lisovyk",
-    name: "лісовик",
-    nameGenitive: "лісовика",
-    nameDative: "лісовику",
-    nameAccusative: "лісовика",
-    nameInstrumental: "лісовиком",
-    nameLocative: "лісовику",
-    nameVocative: "лісовику",
-    grammaticalGender: "MASCULINE",
-    animacy: "ANIMATE",
+    ...creatureSpeciesNameFields("lisovyk"),
     kind: "SPIRIT",
     diet: "SPIRITUAL",
     baseHp: 80,
@@ -450,15 +432,7 @@ const species = [
   },
   {
     key: "herbalist",
-    name: "травник",
-    nameGenitive: "травника",
-    nameDative: "травнику",
-    nameAccusative: "травника",
-    nameInstrumental: "травником",
-    nameLocative: "травнику",
-    nameVocative: "травнику",
-    grammaticalGender: "MASCULINE",
-    animacy: "ANIMATE",
+    ...creatureSpeciesNameFields("herbalist"),
     kind: "HUMAN",
     diet: "OMNIVORE",
     baseHp: 18,
@@ -468,13 +442,26 @@ const species = [
     endurance: 5,
     instinct: 6,
   },
+  {
+    key: "hunter",
+    ...creatureSpeciesNameFields("hunter"),
+    kind: "HUMAN",
+    diet: "OMNIVORE",
+    baseHp: 22,
+    strength: 6,
+    agility: 5,
+    perception: 7,
+    endurance: 6,
+    instinct: 7,
+  },
 ] as const;
 
 
 async function ensureUniqueCreature(
   creature: SeedUniqueCreature,
   speciesByKey: Map<string, { id: number; baseHp: number; childTicks?: number; youngTicks?: number }>,
-  locationsByKey: Map<string, { id: number }>
+  locationsByKey: Map<string, { id: number }>,
+  resourceTypesByKey: Map<string, { id: number }>
 ) {
   const sp = speciesByKey.get(creature.speciesKey);
   if (!sp) throw new Error(`Unknown species key for unique creature: ${creature.speciesKey}`);
@@ -489,14 +476,17 @@ async function ensureUniqueCreature(
   });
 
   const keep = existing[0];
+  const nameOverrides = { ...preparedCreatureNameOverrides(creature.name), ...creature.nameOverrides };
+
+  let creatureId: number;
 
   if (!keep) {
-    await prisma.creature.create({
+    const created = await prisma.creature.create({
       data: {
         speciesId: sp.id,
         locationId: loc.id,
         name: creature.name,
-        ...creature.nameOverrides,
+        ...nameOverrides,
         hp: sp.baseHp,
         isAlive: creature.isAlive,
         isGone: false,
@@ -508,29 +498,40 @@ async function ensureUniqueCreature(
         professionName: creature.professionName,
       },
     });
-    return;
+    creatureId = created.id;
+  } else {
+    const duplicateIds = existing.filter((c) => c.id !== keep.id).map((c) => c.id);
+    if (duplicateIds.length > 0) await prisma.creature.deleteMany({ where: { id: { in: duplicateIds } } });
+
+    const updated = await prisma.creature.update({
+      where: { id: keep.id },
+      data: {
+        name: creature.name,
+        ...nameOverrides,
+        isAlive: creature.isAlive,
+        isGone: false,
+        locationId: loc.id,
+        hp: creature.isAlive || keep.hp <= 0 ? sp.baseHp : keep.hp,
+        currentAction: creature.action,
+        activity: creature.activity as any,
+        sex: creature.sex,
+        isHidden: creature.isHidden ?? false,
+        professionKey: creature.professionKey,
+        professionName: creature.professionName,
+      },
+    });
+    creatureId = updated.id;
   }
 
-  const duplicateIds = existing.filter((c) => c.id !== keep.id).map((c) => c.id);
-  if (duplicateIds.length > 0) await prisma.creature.deleteMany({ where: { id: { in: duplicateIds } } });
-
-  await prisma.creature.update({
-    where: { id: keep.id },
-    data: {
-      name: creature.name,
-      ...creature.nameOverrides,
-      isAlive: creature.isAlive,
-      isGone: false,
-      locationId: loc.id,
-      hp: creature.isAlive || keep.hp <= 0 ? sp.baseHp : keep.hp,
-      currentAction: creature.action,
-      activity: creature.activity as any,
-      sex: creature.sex,
-      isHidden: creature.isHidden ?? false,
-      professionKey: creature.professionKey,
-      professionName: creature.professionName,
-    },
-  });
+  await prisma.creatureResource.deleteMany({ where: { creatureId } });
+  for (const resource of creature.resources ?? []) {
+    const resourceType = resourceTypesByKey.get(resource.resourceKey);
+    if (!resourceType) throw new Error(`Unknown resource key for unique creature ${creature.name}: ${resource.resourceKey}`);
+    if (resource.amount <= 0) continue;
+    await prisma.creatureResource.create({
+      data: { creatureId, resourceTypeId: resourceType.id, amount: resource.amount },
+    });
+  }
 }
 
 async function ensureStarterAnimals(
@@ -546,15 +547,22 @@ async function ensureStarterAnimals(
     const location = locationsByKey.get(group.locationKey);
     if (!location) throw new Error(`Unknown starter ${group.speciesKey} location: ${group.locationKey}`);
 
+    const isCorpse = group.age === "CORPSE";
     const existing = await prisma.creature.count({
-      where: { speciesId: species.id, locationId: location.id, isAlive: true, isGone: false },
+      where: {
+        speciesId: species.id,
+        locationId: location.id,
+        isAlive: !isCorpse,
+        isGone: false,
+        age: group.age,
+        ...(group.sex ? { sex: group.sex } : {}),
+      },
     });
     const missing = Math.max(0, group.count - existing);
     const data: Prisma.CreatureCreateManyInput[] = [];
 
     for (let i = 0; i < missing; i++) {
       const ageTicks = starterAnimalAgeTicks(species, group.age, i);
-      const isCorpse = group.age === "CORPSE";
       const hp = starterAnimalHp(species.baseHp, group.age);
       data.push({
         speciesId: species.id,
@@ -772,7 +780,7 @@ async function main() {
 
   await seedStep("Unique creatures", async () => {
     for (let i = 0; i < world.uniqueCreatures.length; i += 1) {
-      await ensureUniqueCreature(world.uniqueCreatures[i], speciesByKey, locationsByKey);
+      await ensureUniqueCreature(world.uniqueCreatures[i], speciesByKey, locationsByKey, resourceTypesByKey);
       progress("unique creatures", i + 1, world.uniqueCreatures.length, 25);
     }
   });
@@ -790,6 +798,22 @@ async function main() {
   await seedStep("Starter predators", async () => {
     const created = await ensureStarterAnimals(speciesByKey, locationsByKey, STARTER_PREDATORS);
     console.log(`  - starter predators created: ${created}`);
+  });
+
+  await seedStep("World state", async () => {
+    await prisma.worldState.upsert({
+      where: { id: 1 },
+      // Deploy seed refreshes authored world data but must not rewind the live world clock.
+      update: {},
+      create: {
+        id: 1,
+        absoluteMinute: START_WORLD_ABSOLUTE_MINUTE,
+        lastAdvancedAt: new Date(),
+        weatherKey: "cloudy",
+        weatherIntensity: 35,
+        weatherEndsAtMinute: null,
+      },
+    });
   });
 
   await seedStep("World event", async () => {

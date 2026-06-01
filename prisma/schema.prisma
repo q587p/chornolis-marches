@@ -25,10 +25,20 @@ model Player {
   stamina      Int @default(42)
   staminaMax   Int @default(42)
   fatigueState FatigueState @default(RESTED)
+  posture      PlayerPosture @default(STANDING)
+  sleepState   PlayerSleepState @default(AWAKE)
+  ordinarySleepStartedAtMinute Int?
   isResting    Boolean @default(false)
   isAutoEnabled Boolean @default(false)
+  sessionPresence PlayerSessionPresence @default(ACTIVE)
+  sessionPresenceReason String?
+  sessionPresenceChangedAt DateTime?
+  remindersPaused Boolean @default(false)
+  idleReminderSceneKey String?
+  idleReminderCountForCurrentScene Int @default(0)
   showTechnicalDetails Boolean @default(false)
   hunger  Int @default(0)
+  equippedWeaponKey String?
 
   // статистика
   steps             Int @default(0)
@@ -45,6 +55,7 @@ model Player {
   restFullRecoveries Int @default(0)
 
   lastActionAt DateTime?
+  lastPlayerActionAt DateTime?
   lastStaminaRegenAt DateTime @default(now())
   lastHpRegenAt      DateTime @default(now())
 
@@ -169,6 +180,21 @@ model LocationFeature {
   @@index([locationId])
 }
 
+model WorldState {
+  id Int @id @default(1)
+
+  absoluteMinute Int @default(185340)
+  lastAdvancedAt DateTime @default(now())
+
+  // Weather storage is seeded but not simulated until WORLD-001-E.
+  weatherKey String @default("cloudy")
+  weatherIntensity Int @default(35)
+  weatherEndsAtMinute Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 // =======================
 // CREATURES
 // =======================
@@ -243,6 +269,7 @@ model Creature {
   currentAction String?
   professionKey String?
   professionName String?
+  equippedWeaponKey String?
 
   // Lifecycle. Time is stopped for players and named/NPC creatures; animals keep aging.
   age                  CreatureAge @default(ADULT)
@@ -268,6 +295,7 @@ model Creature {
 
   actions WorldAction[]
   tracks  WorldTrack[]
+  resources CreatureResource[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -285,6 +313,7 @@ model ResourceType {
 
   nodes           ResourceNode[]
   playerResources PlayerResource[]
+  creatureResources CreatureResource[]
 }
 
 model ResourceNode {
@@ -324,6 +353,89 @@ model PlayerResource {
   updatedAt DateTime @updatedAt
 
   @@unique([playerId, resourceTypeId])
+}
+
+model CreatureResource {
+  id Int @id @default(autoincrement())
+
+  creatureId Int
+  creature   Creature @relation(fields: [creatureId], references: [id], onDelete: Cascade)
+
+  resourceTypeId Int
+  resourceType   ResourceType @relation(fields: [resourceTypeId], references: [id])
+
+  amount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([creatureId, resourceTypeId])
+  @@index([resourceTypeId])
+}
+
+model CarcassDropoffContribution {
+  id Int @id @default(autoincrement())
+
+  dropoffFeatureKey String
+  locationId         Int?
+
+  contributorKind String @default("PLAYER")
+  playerId        Int?
+  creatureId      Int?
+
+  resourceTypeKey String
+  amount          Int @default(1)
+
+  createdAt DateTime @default(now())
+
+  @@index([dropoffFeatureKey, contributorKind, playerId])
+  @@index([createdAt])
+}
+
+model HeraldPublication {
+  id                Int       @id @default(autoincrement())
+  sourceType        String
+  sourceId          String?
+  sourceDate        String?
+  sourceVersion     String?
+  title             String
+  body              String
+  renderedText      String?
+  archiveOrder      Int?
+  priority          Int       @default(0)
+  visibility        String    @default("PUBLIC")
+  availableAt       DateTime  @default(now())
+  publishedAt       DateTime?
+  telegramMessageId Int?
+  manuallyDeletedAt DateTime?
+  repostedAt        DateTime?
+  repostTelegramMessageId Int?
+  repostCount       Int       @default(0)
+  contentHash       String?   @unique
+  error             String?
+  attempts          Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([publishedAt, availableAt, priority])
+  @@index([sourceType, archiveOrder])
+  @@index([sourceType, sourceId])
+}
+
+model HeraldPublicationQueueControl {
+  id        Int      @id @default(1)
+  isPaused  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ServiceHeartbeat {
+  serviceKey String    @id
+  mode       String?
+  startedAt  DateTime?
+  lastSeenAt DateTime  @default(now())
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }
 
 // =======================
@@ -518,9 +630,26 @@ enum PlayerPronoun {
   THEY
 }
 
+enum PlayerPosture {
+  STANDING
+  SITTING
+  LYING
+}
+
+enum PlayerSleepState {
+  AWAKE
+  ORDINARY_SLEEP
+}
+
 enum PlayerRole {
   PLAYER
   SCRIBE
+}
+
+enum PlayerSessionPresence {
+  ACTIVE
+  AFK
+  ENDED
 }
 
 enum WorldActorType {
@@ -538,6 +667,13 @@ enum WorldActionType {
   GREET
   ATTACK
   FRESHEN
+  USE_ITEM
+  DROP_ITEM
+  COOK
+  LIGHT_TORCH
+  DOUSE_TORCH
+  ADD_TWIGS
+  LIGHT_CAMPFIRE
   SAY
   TRACK
   REST

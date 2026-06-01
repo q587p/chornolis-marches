@@ -160,6 +160,70 @@
     "isHidden": false
   },
   {
+    "fromKey": "dream_tutorial_safety",
+    "toKey": "dream_tutorial_attention_path",
+    "direction": "SOUTH",
+    "label": "південь, стежка уважного погляду",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_attention_path",
+    "toKey": "dream_tutorial_safety",
+    "direction": "NORTH",
+    "label": "північ, затишок",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_attention_path",
+    "toKey": "dream_tutorial_signs",
+    "direction": "SOUTH",
+    "label": "південь, схилені знаки",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_signs",
+    "toKey": "dream_tutorial_attention_path",
+    "direction": "NORTH",
+    "label": "північ, стежка уважного погляду",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_signs",
+    "toKey": "dream_tutorial_traces",
+    "direction": "SOUTH",
+    "label": "південь, піщаний слід",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_traces",
+    "toKey": "dream_tutorial_signs",
+    "direction": "NORTH",
+    "label": "північ, схилені знаки",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_traces",
+    "toKey": "dream_tutorial_waking_edge",
+    "direction": "SOUTH",
+    "label": "південь, край пробудження",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "dream_tutorial_waking_edge",
+    "toKey": "dream_tutorial_traces",
+    "direction": "NORTH",
+    "label": "північ, піщаний слід",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
     "fromKey": "forest_00_00",
     "toKey": "forest_01_00",
     "direction": "EAST",
@@ -1472,6 +1536,22 @@
     "isHidden": false
   },
   {
+    "fromKey": "meadow_10_07",
+    "toKey": "meadow_10_07_crooked_pine_crown",
+    "direction": "UP",
+    "label": "вгору, крива сосна",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "meadow_10_07_crooked_pine_crown",
+    "toKey": "meadow_10_07",
+    "direction": "DOWN",
+    "label": "вниз, сонячна прогалина",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
     "fromKey": "meadow_10_08",
     "toKey": "meadow_10_09",
     "direction": "NORTH",
@@ -1749,6 +1829,22 @@
     "direction": "WEST",
     "label": "захід",
     "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "meadow_11_07",
+    "toKey": "meadow_11_07_scratched_pine_crown",
+    "direction": "UP",
+    "label": "вгору, подряпана сосна",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "meadow_11_07_scratched_pine_crown",
+    "toKey": "meadow_11_07",
+    "direction": "DOWN",
+    "label": "вниз, полинова смуга",
+    "travelCost": 2,
     "isHidden": false
   },
   {
@@ -2856,6 +2952,22 @@
     "isHidden": false
   },
   {
+    "fromKey": "start_border_camp",
+    "toKey": "start_border_watchtower",
+    "direction": "UP",
+    "label": "вгору на сторожову вежу",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "start_border_watchtower",
+    "toKey": "start_border_camp",
+    "direction": "DOWN",
+    "label": "вниз до табору",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
     "fromKey": "under_bridge_18_05",
     "toKey": "riverbank_18_06",
     "direction": "NORTH",
@@ -2868,6 +2980,54 @@
     "toKey": "riverbank_18_04",
     "direction": "SOUTH",
     "label": "південний берег",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "forest_02_09",
+    "toKey": "forest_02_10",
+    "direction": "NORTH",
+    "label": "північ",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "forest_02_10",
+    "toKey": "forest_02_09",
+    "direction": "SOUTH",
+    "label": "південь",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "forest_02_10",
+    "toKey": "forest_03_10",
+    "direction": "EAST",
+    "label": "схід",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "forest_03_10",
+    "toKey": "forest_02_10",
+    "direction": "WEST",
+    "label": "захід",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "forest_03_10",
+    "toKey": "forest_04_10",
+    "direction": "EAST",
+    "label": "схід",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "forest_04_10",
+    "toKey": "forest_03_10",
+    "direction": "WEST",
+    "label": "захід",
     "travelCost": 1,
     "isHidden": false
   }

@@ -47,7 +47,11 @@ Prepared names should also match the selected onboarding pronoun:
 - `Вона` -> feminine prepared names;
 - `Вони` -> plural-form prepared names.
 
+Player-facing prepared-name summaries should not expose internal data notes. If the typed data module needs a helper note such as a plural-form marker, the onboarding formatter must render it as Ukrainian UI copy, for example `форма для «вони»`, or omit it when it adds no player-facing value.
+
 The current code-level pool is still intentionally modest, but it now covers more playtest variety across masculine, feminine and plural-form choices. The intended later registry should grow toward roughly a hundred reviewed prepared names across genders, regions and rarity bands.
+
+Named NPCs may also live in the same prepared-name corpus as reserved, scribe-approved records. That keeps their Ukrainian case forms in one place while still preventing onboarding from offering those names to new players. Current reserved NPC records include `Здравомир`, `Ведана`, `Лукан` and `Орина`.
 
 Preferred cultural layers:
 

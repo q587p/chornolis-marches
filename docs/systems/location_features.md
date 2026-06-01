@@ -10,7 +10,22 @@ Only features with meaningful interaction should become buttons in the location 
 
 `/examine` should explain what those features mean in play: a campfire gives light and improves rest, a torch stand has torches to take, a border marker helps with orientation, and so on. For extinguished campfires, prefer diegetic detail such as ash, blackened brands, and the lack of light or warmth instead of repeated technical state labels.
 
+Every visible feature should usually have two layers of text:
+
+- `look` / location overview: a compact visible label or one-line description.
+- `examine` / direct feature inspection: a deeper explanation with at least one useful detail, interaction hint, constraint, local consequence or atmospheric clue.
+
+If `look ворота` and `examine ворота`, or similar direct feature commands, produce the same text, treat that as a bug or an explicit no-action decision to document. The default should be that direct examination adds something the overview did not say.
+
 Interactive features should also be inspectable by text where practical: `look лавка`, `/examine лавка`, `оглянути лавку`, `look bench`, `роздивитися кущі`. If no feature matches, the same text can fall back to ordinary visible target inspection.
+
+Features may set `data.icon` when the generic type icon would make nearby landmarks blend together. The location renderer uses this icon in feature lists and feature buttons before falling back to type-based icons. Explicit icons in the same location should stay distinct where practical; reserve the fire icon for actual flame/campfire states and fire-lighting actions, not for an unlit torch supply.
+
+Feature icons and command icons should not collide in the same UI surface when avoidable. A command button that shares the exact icon of a nearby feature can look like a feature action rather than a global command; future icon audits should check both feature buttons and ordinary command buttons together.
+
+Feature fields are content, not trusted markup. Anything from feature `name`, `description`, aliases or `data` that enters a Telegram HTML message must be escaped with `escapeHtml` or a shared formatter before interpolation. Keep authored emphasis/quote wrappers outside the data string so feature inspection cannot accidentally inject raw HTML.
+
+Do not put raw HTML tags such as `<i>...</i>` directly into `prisma/data/world/*.json` descriptions. Location overview text is escaped before Telegram sends it, so authored tags will be shown literally to players. Use plain prose in seed data, and add any intentional HTML emphasis in the renderer after escaping the content. `scripts/test/world-content-html.cjs` guards this for world JSON and the legacy seed mirror.
 
 Current interactive examples:
 
@@ -18,6 +33,16 @@ Current interactive examples:
 - campfire / magic campfire: explains light and rest effects;
 - torch stand: shows that torches can be taken;
 - closed gate: explains that the settlement path is locked for now.
+- gate notice / carcass drop-off: should explain what the settlement is asking for, what can be put there and why it matters, not only list the sign or pit by name.
+- climbable tree: a surface feature that advertises an `UP` exit to a real upper location and a matching `DOWN` exit back to the base location.
+- authored vertical landmark: a feature can expose `data.vertical_hint = "UP"` to add a direct movement button such as `Вгору` when inspected, while the real movement still uses the ordinary exit graph.
+- shakeable branches: an upper-tree feature with a cooldown; `/examine` should explain whether dry twigs can be shaken down now or whether the tree needs time before it gives more.
+- shared beginner cache: a starter-camp/watchtower supply feature with small qualitative stock, focused take/contribute buttons and hidden unobserved restock stored in feature data. It is early mutual support, not a shop or fixed reward loop.
+
+Current tree-shake MVP limits:
+
+- The tree-shake cooldown is stored in `Feature.data.last_shaken_at`, so a reset/reseed can reset it. This is acceptable for the first slice, but a later cleanup should move renewable-feature cooldowns to a persistent runtime/event model.
+- `Потрусити дерево` / `/shake_tree` is immediate after the usual permission/location checks. If shaking should cost time, stamina, noise or risk, move it to the action queue like gathering.
 
 Planned interactive examples:
 

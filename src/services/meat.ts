@@ -1,11 +1,21 @@
 import { prisma } from "../db";
 import { isExtinguishedCampfire } from "./fire";
+import { recordCookingSource } from "./foodLearning";
 
 export const RAW_MEAT_KEY = "raw_meat";
 export const COOKED_MEAT_KEY = "cooked_meat";
 const FRESHENED_CORPSE_MARKER = "freshened_by_player:";
+const FRESHENED_CORPSE_PATTERN = /(?:^|;\s*)freshened_by_(?:player|hunter):\d+\b/;
 const COOKED_MEAT_HUNGER_RELIEF = 5;
 const COOKING_SUCCESS_CHANCE = 0.6;
+const DEFAULT_FRESHENING_SUCCESS_CHANCE = 0.5;
+
+const FRESHENING_SUCCESS_CHANCES: Record<string, number> = {
+  mouse: 0.8,
+  rabbit: 0.6,
+  fox: 0.4,
+  wolf: 0.4,
+};
 
 export function meatYieldForSpecies(speciesKey: string) {
   if (speciesKey === "mouse") return 1;
@@ -15,16 +25,24 @@ export function meatYieldForSpecies(speciesKey: string) {
   return 2;
 }
 
+export function fresheningSuccessChanceForSpecies(speciesKey: string) {
+  return FRESHENING_SUCCESS_CHANCES[speciesKey] ?? DEFAULT_FRESHENING_SUCCESS_CHANCE;
+}
+
 export function isFreshenedCorpse(currentAction: string | null | undefined) {
-  return Boolean(currentAction?.startsWith(FRESHENED_CORPSE_MARKER));
+  return FRESHENED_CORPSE_PATTERN.test(currentAction ?? "");
 }
 
 export function meatCookingSucceeds(roll = Math.random()) {
   return roll < COOKING_SUCCESS_CHANCE;
 }
 
-function freshenedCorpseAction(playerId: number, amount: number) {
-  return `${FRESHENED_CORPSE_MARKER}${playerId}; м'ясо=${amount}`;
+export function fresheningSucceeds(speciesKey: string, roll = Math.random()) {
+  return roll < fresheningSuccessChanceForSpecies(speciesKey);
+}
+
+function freshenedCorpseAction(playerId: number, amount: number, succeeded: boolean) {
+  return `${FRESHENED_CORPSE_MARKER}${playerId}; м'ясо=${amount}; success=${succeeded ? "true" : "false"}`;
 }
 
 export async function ensureMeatResourceTypes() {
@@ -62,9 +80,11 @@ export async function freshenCorpseForMeat(input: {
   creatureId: number;
   locationId: number;
   speciesKey: string;
+  roll?: number;
 }) {
   const { rawMeat } = await ensureMeatResourceTypes();
-  const amount = meatYieldForSpecies(input.speciesKey);
+  const succeeded = fresheningSucceeds(input.speciesKey, input.roll);
+  const amount = succeeded ? meatYieldForSpecies(input.speciesKey) : 0;
 
   await prisma.$transaction(async (tx) => {
     const freshened = await tx.creature.updateMany({
@@ -77,9 +97,11 @@ export async function freshenCorpseForMeat(input: {
         age: "CORPSE",
         NOT: { currentAction: { startsWith: FRESHENED_CORPSE_MARKER } },
       },
-      data: { currentAction: freshenedCorpseAction(input.playerId, amount) },
+      data: { isHidden: true, currentAction: freshenedCorpseAction(input.playerId, amount, succeeded) },
     });
     if (freshened.count === 0) throw new Error("Труп уже не підходить для освіжування.");
+
+    if (!succeeded) return;
 
     await tx.playerResource.upsert({
       where: { playerId_resourceTypeId: { playerId: input.playerId, resourceTypeId: rawMeat.id } },
@@ -88,7 +110,7 @@ export async function freshenCorpseForMeat(input: {
     });
   });
 
-  return { amount, resourceName: rawMeat.name };
+  return { amount, resourceName: rawMeat.name, succeeded };
 }
 
 export async function canCookMeatAtLocation(locationId: number | null | undefined) {
@@ -118,12 +140,14 @@ export async function cookRawMeat(playerId: number) {
     throw new Error("Потрібне вогнище поруч. Самого факела замало, щоб підсмажити м'ясо.");
   }
   const cookedSuccessfully = meatCookingSucceeds();
+  let rawMeatRemaining = 0;
 
   await prisma.$transaction(async (tx) => {
     const carried = await tx.playerResource.findUnique({
       where: { playerId_resourceTypeId: { playerId, resourceTypeId: rawMeat.id } },
     });
     if (!carried || carried.amount <= 0) throw new Error("У ваших речах немає сирого м'яса.");
+    rawMeatRemaining = Math.max(0, carried.amount - 1);
 
     if (carried.amount > 1) {
       await tx.playerResource.update({ where: { id: carried.id }, data: { amount: { decrement: 1 } } });
@@ -140,9 +164,21 @@ export async function cookRawMeat(playerId: number) {
     });
   });
 
-  return cookedSuccessfully
-    ? "Ви підсмажили шмат м'яса над вогнищем."
-    : "М'ясо підгоріло й розсипалося чорним крихким шматтям. Їсти тут уже нічого.";
+  const learning = await recordCookingSource({
+    locationId: player.currentLocationId,
+    actorPlayerId: playerId,
+    success: cookedSuccessfully,
+  });
+
+  return {
+    text: cookedSuccessfully
+      ? "Ви підсмажили шмат м'яса над вогнищем."
+      : "М'ясо підгоріло й розсипалося чорним крихким шматтям. Їсти тут уже нічого.",
+    succeeded: cookedSuccessfully,
+    rawMeatRemaining,
+    practiceMilestone: learning.milestone,
+    practiceCount: learning.sourceCount,
+  };
 }
 
 export async function eatCookedMeat(playerId: number) {

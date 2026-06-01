@@ -118,6 +118,13 @@ The under-bridge location is intentionally **not** connected to the bridge deck.
 
 Features are visible location details: signs, graves, campfires, bridge parts, gates and other landmarks.
 
+When adding a visible feature, write both layers deliberately:
+
+- a compact label/summary suitable for the location feature list in `/look`;
+- a longer `description` suitable for `/examine` and direct feature inspection, with meaning, available action, limitation or atmosphere.
+
+Do not leave important features as bare names only. If a feature is intentionally passive and has no extra inspection text yet, document that as a no-action decision or add it to the starter look/examine audit.
+
 ```json
 {
   "key": "forest_moss_gravestone",

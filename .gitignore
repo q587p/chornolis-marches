@@ -1,6 +1,8 @@
 node_modules
 dist
 .env
+.env.*
+!.env.herald.example
 .DS_Store
 
 # Local/exported Codex context bundles

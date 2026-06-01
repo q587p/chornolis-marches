@@ -2,14 +2,18 @@ import { Direction, type Player } from "@prisma/client";
 import { prisma } from "../db";
 import {
   isTutorialLocation,
+  TUTORIAL_ATTENTION_LOCATION_KEY,
+  TUTORIAL_END_LOCATION_KEY,
   TUTORIAL_FORAGING_LOCATION_KEY,
   TUTORIAL_GATE_LOCATION_KEY,
   TUTORIAL_HUB_LOCATION_KEY,
   TUTORIAL_REST_LOCATION_KEY,
   TUTORIAL_SAFETY_LOCATION_KEY,
   TUTORIAL_SECOND_STEP_LOCATION_KEY,
+  TUTORIAL_SIGNS_LOCATION_KEY,
   TUTORIAL_START_LOCATION_KEY,
   TUTORIAL_TIME_LOCATION_KEY,
+  TUTORIAL_TRACES_LOCATION_KEY,
 } from "./tutorial";
 
 export type TutorialVoiceComment = {
@@ -21,18 +25,19 @@ export type TutorialVoiceComment = {
 const TUTORIAL_LOOK_EVENT_TITLE = "Tutorial look";
 const TUTORIAL_PACE_EVENT_TITLE = "Tutorial pace comment";
 const TUTORIAL_GATE_SPEECH_EVENT_TITLE = "Tutorial gate speech comment";
+const TUTORIAL_ACTION_HINT_EVENT_TITLE = "Tutorial action semantics hint";
 const TUTORIAL_LOOK_WINDOW_MS = 60_000;
-const TUTORIAL_IDLE_PACE_DELAY_MS = 30_000;
-const TUTORIAL_PACE_BACKOFF_MS = [30_000, 60_000, 120_000, 240_000, 480_000];
+const TUTORIAL_IDLE_PACE_DELAY_MS = 120_000;
+const TUTORIAL_PACE_BACKOFF_MS = [120_000, 300_000, 600_000, 1_200_000, 1_800_000];
 
 type PaceCommentPair = {
   drowsinessTitle: string;
   drowsinessText: string;
   dreamTitle: string;
-  dreamText: (pronoun: string) => string;
+  dreamText: (pronoun: string, dativePronoun: string, nominativePronoun: string) => string;
 };
 
-const PACE_COMMENT_PAIRS: PaceCommentPair[] = [
+export const PACE_COMMENT_PAIRS: PaceCommentPair[] = [
   {
     drowsinessTitle: "Дрімота підганяє",
     drowsinessText: "Ну ходімо вже скоріше. Якщо довго стояти, туман почне думати, що ми тут живемо.",
@@ -49,7 +54,7 @@ const PACE_COMMENT_PAIRS: PaceCommentPair[] = [
     drowsinessTitle: "Дрімота бурмоче",
     drowsinessText: "Якщо ще трохи постояти, мох почне записувати нас до своїх родичів.",
     dreamTitle: "Сон лагідно заперечує",
-    dreamText: (pronoun) => `Мох уміє чекати, і ${pronoun} теж можна. Тут ніхто не виграє перегони.`,
+    dreamText: (_pronoun, dativePronoun) => `Мох уміє чекати, і ${dativePronoun} теж можна. Тут ніхто не виграє перегони.`,
   },
   {
     drowsinessTitle: "Дрімота підганяє",
@@ -61,7 +66,8 @@ const PACE_COMMENT_PAIRS: PaceCommentPair[] = [
     drowsinessTitle: "Дрімота сопе",
     drowsinessText: "Ми вже майже стали пам’ятником нерішучості. Гарним, але нерішучим.",
     dreamTitle: "Сон усміхається",
-    dreamText: (pronoun) => `Пам’ятники не питають дороги. А ${pronoun} ще слухає місцину, і це не зайве.`,
+    dreamText: (_pronoun, _dativePronoun, nominativePronoun) =>
+      `Пам’ятники не питають дороги. А ${nominativePronoun} ще ${nominativePronoun === "вони" ? "слухають" : "слухає"} місцину, і це не зайве.`,
   },
   {
     drowsinessTitle: "Дрімота квапить",
@@ -114,12 +120,25 @@ const PACE_COMMENT_PAIRS: PaceCommentPair[] = [
 ];
 
 type TutorialPlayerRef = Pick<Player, "id" | "currentLocationId" | "pronoun" | "grammaticalGender">;
+type TutorialActionHintPlayerRef = Pick<Player, "id" | "currentLocationId">;
 type TutorialIdlePlayerRef = TutorialPlayerRef & Pick<Player, "lastActionAt" | "updatedAt" | "createdAt">;
 
 function tutorialPacePronoun(player: TutorialPlayerRef) {
   if (player.pronoun === "SHE" || player.grammaticalGender === "FEMININE") return "неї";
   if (player.pronoun === "THEY" || player.grammaticalGender === "PLURAL") return "них";
   return "нього";
+}
+
+function tutorialPaceDativePronoun(player: TutorialPlayerRef) {
+  if (player.pronoun === "SHE" || player.grammaticalGender === "FEMININE") return "їй";
+  if (player.pronoun === "THEY" || player.grammaticalGender === "PLURAL") return "їм";
+  return "йому";
+}
+
+function tutorialPaceNominativePronoun(player: TutorialPlayerRef) {
+  if (player.pronoun === "SHE" || player.grammaticalGender === "FEMININE") return "вона";
+  if (player.pronoun === "THEY" || player.grammaticalGender === "PLURAL") return "вони";
+  return "він";
 }
 
 async function isPlayerInTutorial(locationId: number) {
@@ -130,11 +149,12 @@ async function isPlayerInTutorial(locationId: number) {
   return Boolean(location && isTutorialLocation(location));
 }
 
-function tutorialPaceCooldownMs(previousComments: number) {
-  return TUTORIAL_PACE_BACKOFF_MS[previousComments % TUTORIAL_PACE_BACKOFF_MS.length] ?? TUTORIAL_IDLE_PACE_DELAY_MS;
+export function tutorialPaceCooldownMs(previousComments: number) {
+  const index = Math.max(0, Math.trunc(previousComments));
+  return TUTORIAL_PACE_BACKOFF_MS[Math.min(index, TUTORIAL_PACE_BACKOFF_MS.length - 1)] ?? TUTORIAL_IDLE_PACE_DELAY_MS;
 }
 
-function randomPaceCommentPair() {
+export function randomPaceCommentPair() {
   return PACE_COMMENT_PAIRS[Math.floor(Math.random() * PACE_COMMENT_PAIRS.length)] ?? PACE_COMMENT_PAIRS[0];
 }
 
@@ -172,6 +192,8 @@ async function tutorialPaceComments(player: TutorialPlayerRef, reason: "look" | 
 
   const pair = randomPaceCommentPair();
   const pronoun = tutorialPacePronoun(player);
+  const dativePronoun = tutorialPaceDativePronoun(player);
+  const nominativePronoun = tutorialPaceNominativePronoun(player);
   return [
     {
       speaker: "Дрімота",
@@ -181,7 +203,7 @@ async function tutorialPaceComments(player: TutorialPlayerRef, reason: "look" | 
     {
       speaker: "Сон",
       title: pair.dreamTitle,
-      text: pair.dreamText(pronoun),
+      text: pair.dreamText(pronoun, dativePronoun, nominativePronoun),
     },
   ];
 }
@@ -212,6 +234,51 @@ export async function tutorialLookPaceComments(player: TutorialPlayerRef): Promi
 
   if (recentLooks < 2) return [];
   return tutorialPaceComments(player, "look");
+}
+
+export function tutorialActionHintText(commandKey: "look" | "examine") {
+  if (commandKey === "look") {
+    return {
+      speaker: "Дрімота",
+      title: "Дрімота шепоче збоку",
+      text: "Озирнутися — це згадати, де ти. А коли щось чіпляє погляд, роздивися ближче.",
+    } satisfies TutorialVoiceComment;
+  }
+
+  return {
+    speaker: "Сон",
+    title: "Сон відповідає тихо",
+    text: "Роздивитися — це спитати місце, що воно ховає. Написи, сліди й речі часто говорять тихіше за дорогу.",
+  } satisfies TutorialVoiceComment;
+}
+
+export async function tutorialActionHintComment(player: TutorialActionHintPlayerRef, commandKey: "look" | "examine"): Promise<TutorialVoiceComment | null> {
+  const locationId = player.currentLocationId;
+  if (!locationId || !(await isPlayerInTutorial(locationId))) return null;
+
+  const seen = await prisma.worldEvent.findFirst({
+    where: {
+      playerId: player.id,
+      type: "SYSTEM",
+      title: TUTORIAL_ACTION_HINT_EVENT_TITLE,
+      description: commandKey,
+    },
+    select: { id: true },
+    orderBy: { createdAt: "desc" },
+  });
+  if (seen) return null;
+
+  await prisma.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: TUTORIAL_ACTION_HINT_EVENT_TITLE,
+      description: commandKey,
+      playerId: player.id,
+      locationId,
+    },
+  });
+
+  return tutorialActionHintText(commandKey);
 }
 
 export async function tutorialWaitPaceComments(player: TutorialPlayerRef): Promise<TutorialVoiceComment[]> {
@@ -261,7 +328,7 @@ export async function tutorialIdlePaceComments(player: TutorialIdlePlayerRef, no
     .filter((date): date is Date => Boolean(date))
     .reduce((latest, date) => (date.getTime() > latest.getTime() ? date : latest), player.createdAt);
   if (now.getTime() - lastActivity.getTime() < TUTORIAL_IDLE_PACE_DELAY_MS) return [];
-  return tutorialPaceComments(player, "idle");
+  return (await tutorialPaceComments(player, "idle")).slice(0, 1);
 }
 
 export async function tutorialSpiritMoveComment(fromLocationId: number, toLocationId: number, direction: Direction): Promise<TutorialVoiceComment | null> {
@@ -324,6 +391,38 @@ export async function tutorialSpiritMoveComment(fromLocationId: number, toLocati
       speaker: "Сон",
       title: "Сон говорить тихіше",
       text: "Добрий шлях знає не тільки рух уперед. Він знає, коли озирнутися, коли відпочити й коли перевірити власний стан.",
+    };
+  }
+
+  if (from.key === TUTORIAL_SAFETY_LOCATION_KEY && to.key === TUTORIAL_ATTENTION_LOCATION_KEY && direction === "SOUTH") {
+    return {
+      speaker: "Сон",
+      title: "Сон показує мох",
+      text: "Озирнутися — це не втекти поглядом. Це згадати місце, перш ніж просити його про подробиці.",
+    };
+  }
+
+  if (from.key === TUTORIAL_ATTENTION_LOCATION_KEY && to.key === TUTORIAL_SIGNS_LOCATION_KEY && direction === "SOUTH") {
+    return {
+      speaker: "Дрімота",
+      title: "Дрімота позіхає біля знаків",
+      text: "Знак, який доводиться роздивлятися, принаймні чесний: він одразу каже, що не збирається все робити за тебе.",
+    };
+  }
+
+  if (from.key === TUTORIAL_SIGNS_LOCATION_KEY && to.key === TUTORIAL_TRACES_LOCATION_KEY && direction === "SOUTH") {
+    return {
+      speaker: "Сон",
+      title: "Сон нахиляється до піску",
+      text: "Слід — теж знак. Тільки його пишуть не руки, а рух.",
+    };
+  }
+
+  if (from.key === TUTORIAL_TRACES_LOCATION_KEY && to.key === TUTORIAL_END_LOCATION_KEY && direction === "SOUTH") {
+    return {
+      speaker: "Сон",
+      title: "Сон стишується",
+      text: "Досить для першого пробудження. Далі Порубіжжя навчатиме не кімнатами, а власним шумом.",
     };
   }
 

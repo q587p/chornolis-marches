@@ -21,13 +21,59 @@
     "locationKey": "closed_east_gate",
     "type": "LANDMARK",
     "name": "Смоляна поставка з факелами",
-    "description": "Біля воріт стоїть важка смоляна поставка: у темних пазах лежать сухі факели для тих, кому треба вертатися назад у ніч.",
+    "description": "Біля воріт стоїть важка смоляна поставка: у темних пазах лишається кілька сухих факелів для тих, кому треба вертатися назад у ніч. Мисливці тепер частіше поповнюють свої набори на сторожовій вежі над табором.",
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🕯",
       "torch_source": true,
       "infinite_for_now": true,
-      "future_limited_stock": true
+      "future_limited_stock": true,
+      "hunter_resupply": false,
+      "downgraded_after_watchtower_source": true
+    }
+  },
+  {
+    "key": "closed_gate_hunting_notice",
+    "locationKey": "closed_east_gate",
+    "type": "LANDMARK",
+    "name": "Дощана записка про звіра",
+    "description": "На дошці біля воріт висить записка, прибита трьома кривими цвяхами.\n\nТравоїдного звіра побільшало, а хижаків коло Порубіжжя поменшало. Молоді пагони згризені, трава вибита до землі, стежки розтоптані, а біля криниць уже видно надто багато слідів.\n\nХто здатен полювати — хай бере на себе частку роботи. Свіжі туші й придатні рештки складайте до падального рову за сторожовим кілком. Писар при воротах час від часу звіряє принесене.\n\nПлати за кожну тушу не обіцяємо. Але поселення пам’ятає тих, хто допомагає втримати край.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🪧",
+      "inspectable": true,
+      "gate_hunting_notice": true,
+      "aliases": [
+        "записка",
+        "дощана записка",
+        "оголошення",
+        "дошка",
+        "звір"
+      ]
+    }
+  },
+  {
+    "key": "closed_gate_carcass_dropoff",
+    "locationKey": "closed_east_gate",
+    "type": "LANDMARK",
+    "name": "Падальний рів",
+    "description": "Під частоколом, осторонь від брами, викопано неглибокий падальний рів. Над ним стирчить сторожовий кілок із зарубками й клаптем червоної тканини. Тут складають туші та рештки здобичі, які писарі потім рахують, а різники — забирають те, що ще можна використати.\n\nЯкщо маєте придатну тушу в речах, можна написати: /put або /put туша рів.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🕳️",
+      "inspectable": true,
+      "carcass_dropoff": true,
+      "aliases": [
+        "падальний рів",
+        "рів",
+        "яма",
+        "яма для здобичі",
+        "рів для туш",
+        "сторожовий кілок"
+      ]
     }
   },
   {
@@ -39,6 +85,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🪦",
       "inspectable": true,
       "tone": "old_grave"
     }
@@ -52,6 +99,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🗿",
       "inspectable": true,
       "tone": "forest_spirit"
     }
@@ -95,6 +143,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🪨",
       "inspectable": true,
       "wrap_hint": "dry_luka_north_south"
     }
@@ -137,6 +186,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🕳️",
       "inspectable": true,
       "future_hook": "water_or_echo"
     }
@@ -150,6 +200,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🌉",
       "river_crossing": true
     }
   },
@@ -162,6 +213,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🎣",
       "inspectable": true,
       "future_hook": "fishing"
     }
@@ -175,8 +227,18 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🪧",
+      "inspectable": true,
       "ornament": "ukrainian_geometric",
-      "role": "respawn_marker"
+      "role": "respawn_marker",
+      "aliases": [
+        "межовий знак",
+        "знак",
+        "орнамент",
+        "межа",
+        "border marker",
+        "marker"
+      ]
     }
   },
   {
@@ -189,7 +251,139 @@
     "restStaminaCapMultiplier": 5,
     "data": {
       "rest_stamina_cap_multiplier": 5,
-      "night_light": "location"
+      "night_light": "location",
+      "aliases": [
+        "вогнище",
+        "незгасне вогнище",
+        "вогонь",
+        "багаття",
+        "campfire",
+        "fire"
+      ]
+    }
+  },
+  {
+    "key": "start_newcomer_tablet",
+    "locationKey": "start_border_camp",
+    "type": "LANDMARK",
+    "name": "Дошка для прибулих",
+    "description": "Дошка потемніла від дощу, але різьблені слова ще читаються:\n\n«Не поспішай у Чорноліс голіруч.\nОзирнися. Візьми світло. Вернешся живим — лиши щось наступному».",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "📋",
+      "examine_summary": "коротко пояснює, як не вийти в темряву зовсім непідготовленим",
+      "inspectable": true,
+      "beginner_advice": true,
+      "aliases": [
+        "дошка",
+        "табличка",
+        "дошка для прибулих",
+        "порада",
+        "прибулі",
+        "newcomer sign",
+        "sign"
+      ]
+    }
+  },
+  {
+    "key": "start_border_watchtower_ladder",
+    "locationKey": "start_border_camp",
+    "type": "LANDMARK",
+    "name": "Сторожова вежа",
+    "description": "Невисока дерев’яна вежа стоїть над краєм табору. Драбина скрипить, але тримає; згори легше побачити міст, ворота, річку й темний край лісу. Якщо треба взяти світло перед дорогою, варто піднятися вгору.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🪜",
+      "examine_summary": "драбина веде вгору, до справжньої сторожової вежі над табором",
+      "inspectable": true,
+      "vertical_hint": "UP",
+      "aliases": [
+        "сторожова вежа",
+        "вежа",
+        "драбина",
+        "на вежу",
+        "watchtower",
+        "tower",
+        "ladder"
+      ]
+    }
+  },
+  {
+    "key": "start_camp_torch_stand",
+    "locationKey": "start_border_watchtower",
+    "type": "LANDMARK",
+    "name": "Смоляна поставка з факелами",
+    "description": "Факели сухі й густо просмолені. Їх тримають під навісом сторожової вежі для тих, хто виходить із табору в присмерк або вертається з темряви. Світло не робить шлях безпечним, але дозволяє помітити те, що ніч ховає першим.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🕯",
+      "inspectable": true,
+      "torch_source": true,
+      "infinite_for_now": true,
+      "future_limited_stock": true,
+      "moved_to_watchtower": true,
+      "aliases": [
+        "факели",
+        "факел",
+        "поставка",
+        "смоляна поставка",
+        "поставка з факелами",
+        "світло",
+        "torch",
+        "torches"
+      ]
+    }
+  },
+  {
+    "key": "start_beginner_shared_cache",
+    "locationKey": "start_border_watchtower",
+    "type": "LANDMARK",
+    "name": "Спільна скриня прибулих",
+    "description": "Під навісом сторожової вежі стоїть стара дерев'яна скриня. На кришці вирізано: «Бери потрібне, лишай зайве, не замикай дорогу тому, хто прийде після тебе».",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "📦",
+      "inspectable": true,
+      "beginner_cache": true,
+      "hidden_unobserved_restock": true,
+      "cache_restock_after_ms": 2700000,
+      "cache_stock": {
+        "berries": 4,
+        "herbs": 2,
+        "mushrooms": 2,
+        "raw_meat": 4,
+        "cooked_meat": 2,
+        "twigs": 8
+      },
+      "cache_max_stock": {
+        "berries": 10,
+        "herbs": 6,
+        "mushrooms": 6,
+        "raw_meat": 8,
+        "cooked_meat": 5,
+        "twigs": 14
+      },
+      "cache_restock_target": {
+        "berries": 4,
+        "herbs": 2,
+        "mushrooms": 2,
+        "raw_meat": 4,
+        "cooked_meat": 2,
+        "twigs": 8
+      },
+      "aliases": [
+        "спільна скриня",
+        "скриня",
+        "скриня прибулих",
+        "запаси",
+        "припаси",
+        "cache",
+        "supply cache"
+      ]
     }
   },
   {
@@ -201,6 +395,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🪵",
       "inspectable": true,
       "under_bridge": true
     }
@@ -214,6 +409,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🪶",
       "tutorial_wake_prompt": true
     }
   },
@@ -234,7 +430,7 @@
     "locationKey": "dream_tutorial_hub",
     "type": "GATE",
     "name": "Брама Сну",
-    "description": "З цього боку Брама Сну теж тримає тінь, ніби стежка пам’ятає замкнений шлях. На дошках проступають ті самі слова: «Скажи шляху відчинитися».",
+    "description": "З цього боку Брама Сну теж тримає тінь, ніби стежка пам’ятає замкнений шлях. На дошках проступають ті самі слова: «Скажи шляху відчинитися». Сон ніби підкреслює перше слово: сказати вголос (/say).",
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
@@ -243,7 +439,21 @@
       "locked": true,
       "locks_exit_direction": "NORTH",
       "lock_reason": "брама сну",
-      "reset_after_ms": 30000
+      "reset_after_ms": 30000,
+      "aliases": [
+        "брама",
+        "браму",
+        "брами",
+        "брамі",
+        "брамою",
+        "брама сну",
+        "браму сну",
+        "брами сну",
+        "сонна брама",
+        "сонну браму",
+        "gate",
+        "sleep gate"
+      ]
     }
   },
   {
@@ -255,6 +465,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🫐",
       "tutorial_hint": "foraging_inventory"
     }
   },
@@ -265,9 +476,8 @@
     "name": "Зручна лавка",
     "description": "Низька лавка тепла на дотик, хоча поруч немає вогню. Вона ніби підказує просту річ: відпочинок — це не сон, а короткий присілок. Якщо тіло обважніло після входу в цю місцину, натисніть «Присісти і відпочити» або напишіть /rest.",
     "providesLight": false,
-    "restStaminaCapMultiplier": 2,
+    "restStaminaCapMultiplier": null,
     "data": {
-      "rest_stamina_cap_multiplier": 2,
       "rest_stamina_regen_multiplier": 10,
       "tutorial_rest_seat": true,
       "tutorial_hint": "rest",
@@ -297,6 +507,7 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🕰️",
       "tutorial_time_prompt": true
     }
   },
@@ -309,8 +520,66 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
+      "icon": "🪓",
       "tutorial_safety_prompt": true,
       "tutorial_wake_prompt": true
+    }
+  },
+  {
+    "key": "dream_tutorial_attention_moss",
+    "locationKey": "dream_tutorial_attention_path",
+    "type": "LANDMARK",
+    "name": "Мох уважного погляду",
+    "description": "Мох лежить рівно, але не однаково: біля північного краю він прим’ятий вашими кроками, біля південного трохи світлішає. Озирнутися означає зібрати місце в одне ціле, а вже потім роздивлятися окремі подробиці.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "👁",
+      "tutorial_action_ladder": "look",
+      "aliases": ["мох", "моху", "мохом", "уважний мох", "погляд", "look moss"]
+    }
+  },
+  {
+    "key": "dream_tutorial_sign_post",
+    "locationKey": "dream_tutorial_signs",
+    "type": "LANDMARK",
+    "name": "Схилений знак",
+    "description": "На схиленому знаку проступають не накази, а натяки: стрілка, зарубка, порожнє місце для слова. Знак не рухає вас сам. Він тільки нагадує, що деякі речі відкриваються не через силу, а через увагу до тексту, форми й місця.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🪧",
+      "tutorial_action_ladder": "signs",
+      "aliases": ["знак", "знака", "знаку", "знаком", "схилений знак", "табличка", "sign"]
+    }
+  },
+  {
+    "key": "dream_tutorial_trace_marks",
+    "locationKey": "dream_tutorial_traces",
+    "type": "LANDMARK",
+    "name": "Різні сліди",
+    "description": "Сліди не однакові. Ваш власний крок глибший, лапа легша, гілка лишає тоншу риску. Якщо просто пройти повз, усе зіллється в пісок. Якщо роздивитися, стає видно: світ говорить не тільки словами.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🐾",
+      "tutorial_action_ladder": "traces",
+      "aliases": ["сліди", "слід", "слідів", "слідам", "різні сліди", "піщаний слід", "traces", "tracks"]
+    }
+  },
+  {
+    "key": "dream_tutorial_waking_marker",
+    "locationKey": "dream_tutorial_waking_edge",
+    "type": "LANDMARK",
+    "name": "Останній межовий знак",
+    "description": "Знак стоїть на самому краї сну. На ньому немає списку справ; тільки короткий нагад: озирнутися, роздивитися, читати знаки, помічати сліди, берегти снагу й не соромитися відступити. Якщо цього досить, можна завершити навчання. Якщо ні — стежка назад лишається відкритою.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🪧",
+      "tutorial_end_prompt": true,
+      "tutorial_wake_prompt": true,
+      "aliases": ["межовий знак", "останній знак", "знак", "знака", "знаку", "знаком", "finish marker"]
     }
   },
   {
@@ -339,11 +608,139 @@
     }
   },
   {
+    "key": "forest_small_track_stone",
+    "locationKey": "forest_03_10",
+    "type": "LANDMARK",
+    "name": "Камінь малого сліду",
+    "description": "Плаский камінь лежить нижче за траву, наче його навмисно лишили для тих, хто дивиться не поверх дерев, а під ноги. У моху біля краю видно місце для малого дару: не для торгу й не для наказу, радше для прохання, щоб дрібне життя знову знайшло сюди дорогу.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🐾",
+      "inspectable": true,
+      "animal_restoration_charm": true,
+      "future_offering": true,
+      "species_hint": ["rabbit", "mouse"],
+      "aliases": [
+        "камінь",
+        "камінь малого сліду",
+        "малий слід",
+        "слід",
+        "капище",
+        "звірячий знак",
+        "track stone"
+      ]
+    }
+  },
+  {
+    "key": "meadow_10_07_crooked_pine",
+    "locationKey": "meadow_10_07",
+    "type": "LANDMARK",
+    "name": "Крива сосна",
+    "description": "Сосна росте на межі піску й сухої трави, нахилена так, ніби колись слухала землю й забула випростатися. Кора в неї шорстка, сучки низькі, а тінь лягає довгою темною рискою через прогалину.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🌳",
+      "inspectable": true,
+      "climb_tree": true,
+      "aliases": [
+        "дерево",
+        "сосна",
+        "крива сосна",
+        "крона",
+        "tree",
+        "pine"
+      ]
+    }
+  },
+  {
+    "key": "meadow_10_07_crooked_pine_branches",
+    "locationKey": "meadow_10_07_crooked_pine_crown",
+    "type": "LANDMARK",
+    "name": "Сухі гілки кривої сосни",
+    "description": "У кроні застрягло дрібне сухе гілля. Воно не падає саме, тільки тихо клацає від вітру, наче чекає руки, яка знає міру.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🍃",
+      "inspectable": true,
+      "shake_tree": true,
+      "shake_drop_location_key": "meadow_10_07",
+      "shake_resource_key": "twigs",
+      "shake_min": 5,
+      "shake_max": 8,
+      "shake_cooldown_ms": 7200000,
+      "aliases": [
+        "дерево",
+        "сосна",
+        "гілки",
+        "сухі гілки",
+        "крона",
+        "хмиз",
+        "tree",
+        "branches"
+      ]
+    }
+  },
+  {
+    "key": "meadow_11_07_scratched_pine",
+    "locationKey": "meadow_11_07",
+    "type": "LANDMARK",
+    "name": "Подряпана сосна",
+    "description": "Найближча сосна має свіжу подряпину на корі: не глибоку, але вперту. Поруч видно сучки, по яких можна вчепитися й піднятися вище за траву.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🌳",
+      "inspectable": true,
+      "climb_tree": true,
+      "aliases": [
+        "дерево",
+        "сосна",
+        "подряпана сосна",
+        "подряпина",
+        "крона",
+        "tree",
+        "pine"
+      ]
+    }
+  },
+  {
+    "key": "meadow_11_07_scratched_pine_branches",
+    "locationKey": "meadow_11_07_scratched_pine_crown",
+    "type": "LANDMARK",
+    "name": "Сухе гілля над подряпиною",
+    "description": "Тонкі сухі гілки тримаються над подряпаною корою, сплетені з торішньою хвоєю. Якщо їх розхитати, хмиз має сипонути просто під дерево.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🍃",
+      "inspectable": true,
+      "shake_tree": true,
+      "shake_drop_location_key": "meadow_11_07",
+      "shake_resource_key": "twigs",
+      "shake_min": 5,
+      "shake_max": 8,
+      "shake_cooldown_ms": 7200000,
+      "aliases": [
+        "дерево",
+        "сосна",
+        "гілки",
+        "сухі гілки",
+        "крона",
+        "хмиз",
+        "tree",
+        "branches"
+      ]
+    }
+  },
+  {
     "key": "dream_tutorial_sleep_gate",
     "locationKey": "dream_tutorial_gate",
     "type": "GATE",
     "name": "Брама Сну",
-    "description": "Брама стоїть просто на стежці, але тінь від неї падає так, наче за нею є цілий мур. На дошках проступають слова: «Скажи шляху відчинитися».",
+    "description": "Брама стоїть просто на стежці, але тінь від неї падає так, наче за нею є цілий мур. На дошках проступають слова: «Скажи шляху відчинитися». Сон ніби підкреслює перше слово: сказати вголос (/say).",
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
@@ -351,7 +748,21 @@
       "locked": true,
       "locks_exit_direction": "SOUTH",
       "lock_reason": "брама сну",
-      "reset_after_ms": 30000
+      "reset_after_ms": 30000,
+      "aliases": [
+        "брама",
+        "браму",
+        "брами",
+        "брамі",
+        "брамою",
+        "брама сну",
+        "браму сну",
+        "брами сну",
+        "сонна брама",
+        "сонну браму",
+        "gate",
+        "sleep gate"
+      ]
     }
   }
 ]

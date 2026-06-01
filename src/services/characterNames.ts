@@ -15,6 +15,10 @@ export type PreparedCharacterName = {
   suggestedGender: Gender;
 };
 
+export type NameChoiceTextIntent = "prepared" | "random" | "customPrompt" | "customName";
+
+export const PREPARED_NAME_PAGE_SIZE = 6;
+
 const FORBIDDEN_WORLD_NAMES = new Map<string, string>([
   ["вовк", "це радше назва істоти, ніж особове ім'я"],
   ["вовчиця", "це радше назва істоти, ніж особове ім'я"],
@@ -67,8 +71,23 @@ export function normalizeNameForRegistry(value: string) {
   return normalizeCharacterName(value).toLocaleLowerCase("uk-UA");
 }
 
+export function onboardingNameChoiceTextIntent(text: string): NameChoiceTextIntent | null {
+  const normalized = text.trim().toLocaleLowerCase("uk-UA");
+  if (!normalized || normalized.startsWith("/")) return null;
+  if (["список", "обрати", "обрати ім'я зі списку", "готове", "готові", "готове ім'я", "готові імена"].includes(normalized)) return "prepared";
+  if (["випадкове", "випадкове ім'я", "рандом", "навмання"].includes(normalized)) return "random";
+  if (["власне", "своє", "ввести", "ввести власне ім'я", "власне ім'я", "своє ім'я"].includes(normalized)) return "customPrompt";
+  return "customName";
+}
+
 export function preparedNameByKey(key: string) {
   return PREPARED_CHARACTER_NAMES.find((name) => name.key === key) ?? null;
+}
+
+export function preparedNameByNominative(nominative: string | null | undefined) {
+  if (!nominative) return null;
+  const normalized = normalizeNameForRegistry(nominative);
+  return PREPARED_CHARACTER_NAMES.find((name) => normalizeNameForRegistry(name.forms.nominative) === normalized) ?? null;
 }
 
 export function availablePreparedNames(
@@ -97,9 +116,49 @@ export function randomAvailablePreparedName(
   return names[Math.floor(Math.random() * names.length)];
 }
 
+export function paginatePreparedNames<T>(
+  names: readonly T[],
+  requestedPage: number,
+  pageSize = PREPARED_NAME_PAGE_SIZE
+) {
+  const safePageSize = Math.max(1, Math.floor(pageSize));
+  const total = names.length;
+  const pageCount = Math.max(1, Math.ceil(total / safePageSize));
+  const rawPage = Number.isFinite(requestedPage) ? Math.trunc(requestedPage) : 0;
+  const page = Math.min(Math.max(rawPage, 0), pageCount - 1);
+  const startIndex = page * safePageSize;
+  const endIndex = Math.min(startIndex + safePageSize, total);
+
+  return {
+    items: names.slice(startIndex, endIndex),
+    page,
+    pageCount,
+    pageSize: safePageSize,
+    total,
+    startIndex,
+    endIndex,
+    hasPrevious: page > 0,
+    hasNext: page < pageCount - 1,
+  };
+}
+
 export function preparedNameSummary(name: PreparedCharacterName) {
-  const note = name.note ? `; ${name.note}` : "";
-  return `${name.forms.nominative} — ${name.origin}; ${name.rarity}; відмінки збережені${note}`;
+  const note = preparedNamePublicNote(name.note);
+  const noteText = note ? `; ${note}` : "";
+  return `${name.forms.nominative} — ${name.origin}; ${name.rarity}; відмінки збережені${noteText}`;
+}
+
+export function preparedNameCompactSummary(name: PreparedCharacterName) {
+  const note = preparedNamePublicNote(name.note);
+  const noteText = note ? `; ${note}` : "";
+  return `${name.forms.nominative} — ${name.origin}; ${name.rarity}${noteText}`;
+}
+
+function preparedNamePublicNote(note?: string) {
+  if (!note) return "";
+  const normalized = note.trim().toLowerCase();
+  if (normalized === "plural form for вони") return "форма для «вони»";
+  return note.trim();
 }
 
 export function customNameWarningText(options: { examples?: string[] } = {}) {
@@ -118,7 +177,9 @@ export function customNameWarningText(options: { examples?: string[] } = {}) {
     "Не підійдуть імена богів, назви істот чи духів, випадкові набори літер, грубі слова, надто відомі чужі персонажі або слова, що не звучать як особове ім'я Порубіжжя.",
     "Наприклад: <b>Сварог</b> (бог), <b>Лісовик</b> або <b>Вовк</b> (дух чи істота), <b>Фффрр</b> (набір літер), лайка й образи, <b>Ґандальф</b> або <b>Герміона</b> (чужі впізнавані персонажі), <b>Камінь</b> чи <b>Стежка</b> (слова, не особові імена).",
     "",
-    "Найкраще пасують слов'янські або дотичні до прикордонного світу імена. Рідкісні імена зможуть переглянути Писарі.",
+    "Підготовлені імена вже перевірені Писарями. Власне ім'я можна носити одразу, але воно ще чекатиме їхнього тихого перегляду.",
+    "",
+    "Найкраще пасують слов'янські або дотичні до прикордонного світу імена.",
     "",
     "Дозволені кирилиця, пробіл, дефіс і апостроф у межах імені. Якщо немає української клавіатури, напишіть ім’я транслітом латинкою: наприклад, <b>Zdravko</b> стане <b>Здравко</b>. Змішувати абетки, додавати цифри, emoji чи невидимі символи не можна.",
   ].join("\n");
@@ -138,4 +199,16 @@ export function validateCustomCharacterName(raw: string) {
   }
 
   return validation;
+}
+
+export function characterNameApprovalStatusText(isApproved: boolean) {
+  return isApproved
+    ? "Ім’я вже схвалене Писарями Порубіжжя."
+    : "Ім’я можна носити вже зараз, але воно ще чекає на перегляд Писарями Порубіжжя.";
+}
+
+export function onboardingNameApprovalNote(isApproved: boolean) {
+  return isApproved
+    ? "Це підготовлене ім’я вже перевірене Писарями, тож його одразу внесено до літопису."
+    : "Це власне ім’я вже відкриває шлях у Порубіжжя, але Писарі ще можуть переглянути його пізніше.";
 }

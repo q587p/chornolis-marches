@@ -6,6 +6,7 @@ import { buildGatherMenuForLocation } from "../services/locations";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { durationSecondsSuffix } from "../utils/durationText";
+import { replyToActionError, actionErrorMessage } from "../utils/actionErrorReply";
 
 export type GatherKey = "berries" | "mushrooms" | "herbs";
 
@@ -62,9 +63,9 @@ export async function submitGather(bot: Bot, ctx: any, resourceKey?: GatherKey, 
     if (answerCallback) await safeAnswerCallbackQuery(ctx, text);
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Не вдалося виконати дію.";
+    const message = actionErrorMessage(error, "Не вдалося виконати дію.");
     if (answerCallback) await safeAnswerCallbackQuery(ctx, message);
-    else await ctx.reply(message);
+    await replyToActionError(ctx, error, "Не вдалося виконати дію.", { replyFallback: !answerCallback });
   }
 }
 

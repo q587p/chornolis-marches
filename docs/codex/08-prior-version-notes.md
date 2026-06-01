@@ -83,7 +83,7 @@ Important remembered direction from the 0.11 line:
 
 - `Дрімотна Межа` is the first dream tutorial region and intentionally lives on `z = -13`.
 - New characters enter the dream after onboarding; existing `/start` refresh behavior still must not teleport existing characters.
-- `/sleep tutorial` returns to the saved tutorial dream position; while the tutorial is incomplete, plain `/sleep` also routes there. After wake, plain `/sleep` remains reserved for a future normal sleep/recovery system.
+- `/sleep tutorial` returns to the saved tutorial dream position. Since `0.14.12`, plain `/sleep` is ordinary sleep in the current waking location; do not route it to the tutorial unless the player explicitly asks for the tutorial dream.
 - `Прокинутися` / `/wake` exits the tutorial dream, stores the dream position and restores a valid real-world location.
 - `/tutorialReset [character]` is a scribe/admin command that clears the completed tutorial marker and makes the tutorial start location the saved dream location for the next `/sleep tutorial`.
 - A player's own `/me` view should say when they have not yet completed the tutorial dream.
@@ -102,6 +102,10 @@ Important remembered direction from the 0.11 line:
 - `0.13.0` expands the prepared character-name pool while keeping it in the typed data module. Prepared names remain scribe-approved by default and must include all Ukrainian case forms, origin, rarity and grammatical/gender compatibility.
 - Character-name tests should guard prepared-name coverage, duplicate keys and duplicate nominative forms.
 - `0.13.1` tightens forbidden custom-name normalization: obvious creature, spirit, sacred, famous or common-word names should be rejected even when players vary case, apostrophes, internal spaces or hyphens.
+- `0.13.6` separates player posture from active rest. `сісти` / `/sit` means sitting without recovery, `/stand` / `встати` stands up, and `/rest` starts recovery while sitting. Rest completion or interruption leaves the character sitting; standing during rest interrupts it.
+- `0.13.7` starts the gate hunting loop as ecological pressure, not a quest. The closed settlement gate now has a notice and `Падальний рів`; narrow `/put` can place carried carcasses/remains into the drop-off and record contribution reactions. NPC hunter behavior remains the next slice and should use the same drop-off service.
+- `0.13.19` starts with release process discipline: use a separate `codex/` branch, open a PR into `main`, and include concise summary, validation and risk/rollback notes in the PR description.
+- `0.13.19` also promotes session presence into the MVP: `SES-001-A/B/C` should add AFK / End Session controls, silent Auto-AFK after player inactivity, a one-idle-reminder-per-scene cap, send-time guards for delayed/proactive messages while a player is away, and focused tests/manual QA notes. Atmospheric labels, social visibility, notification preferences and richer return recaps remain `SES-002` backlog.
 
 ## Prior build issue note
 

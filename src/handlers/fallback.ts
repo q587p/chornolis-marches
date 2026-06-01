@@ -1,9 +1,9 @@
 import { Bot } from "grammy";
 import { buildMainReplyKeyboardForTelegramId, EMPTY_KEYBOARD_BUTTON } from "../ui/replyKeyboard";
-import { suggestAliasInputs } from "../input/aliases";
-import { stripUnsafeText } from "../utils/text";
+import { formatAliasSuggestion, suggestAliasEntries, suggestKeyboardLayoutAliasEntries } from "../input/aliases";
+import { escapeHtml, stripUnsafeText } from "../utils/text";
 import { getPlayerByTelegramId } from "../services/players";
-import { hasCompletedTutorial } from "../services/tutorial";
+import { canOpenDreamGateWithSpeech, hasCompletedTutorial } from "../services/tutorial";
 
 function commandName(text: string) {
   const match = text.trim().match(/^\/([^\s@]+)(?:@\w+)?(?:\s|$)/u);
@@ -14,7 +14,38 @@ async function unfinishedTutorialHint(telegramId?: number) {
   if (!telegramId) return "";
   const player = await getPlayerByTelegramId(telegramId);
   if (!player || await hasCompletedTutorial(player.id)) return "";
-  return "\n\nЯкщо хочеш повернутися до короткого навчання, напиши /sleep tutorial або «навчальний сон».";
+  return "\n\nЯкщо хочеш повернутися до короткого навчання, напиши /sleep_tutorial або «навчальний сон».";
+}
+
+function fallbackNavigationHint() {
+  return "Спробуй <i>❔ Допомога</i> (/help) або відкрий <i>☰ Меню</i> (/menu).";
+}
+
+function formatSuggestionLines(suggestions: ReturnType<typeof suggestAliasEntries>) {
+  return suggestions.map((suggestion) => `- ${escapeHtml(formatAliasSuggestion(suggestion))}`).join("\n");
+}
+
+function unknownInputSuggestionText(text: string) {
+  const layoutSuggestions = suggestKeyboardLayoutAliasEntries(text);
+  if (layoutSuggestions.length) {
+    return `\n\nСхоже, це могла бути інша розкладка. Можливо, ти мав на увазі:\n${formatSuggestionLines(layoutSuggestions)}`;
+  }
+
+  const suggestions = suggestAliasEntries(text);
+  return suggestions.length
+    ? `\n\nМожливо, ти мав на увазі:\n${formatSuggestionLines(suggestions)}`
+    : "";
+}
+
+async function tutorialDreamGateSpeechHint(telegramId: number | undefined, text: string) {
+  if (!telegramId) return null;
+  const player = await getPlayerByTelegramId(telegramId);
+  if (!player || !(await canOpenDreamGateWithSpeech(player.id, text))) return null;
+
+  return [
+    "Сон підказує:",
+    "<blockquote>О, правильно. Тільки додай <i>сказати</i>, щоб слова стали голосом: <code>сказати Відчинитися</code> (/say Відчинитися).</blockquote>",
+  ].join("\n");
 }
 
 export function registerFallbackHandlers(bot: Bot) {
@@ -25,36 +56,28 @@ export function registerFallbackHandlers(bot: Bot) {
     const replyMarkup = ctx.from ? await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) : undefined;
 
     if (!text.trim().startsWith("/")) {
-      const safeText = stripUnsafeText(text).trim().slice(0, 80);
-      const suggestions = suggestAliasInputs(text);
-      const suggestionText = suggestions.length
-        ? `\n\nМожливо, ти мав на увазі:\n${suggestions.map((suggestion) => `- ${suggestion}`).join("\n")}`
-        : "";
+      const gateSpeechHint = await tutorialDreamGateSpeechHint(ctx.from?.id, text);
+      if (gateSpeechHint) {
+        await ctx.reply(gateSpeechHint, { parse_mode: "HTML", reply_markup: replyMarkup });
+        return;
+      }
+
+      const safeText = escapeHtml(stripUnsafeText(text).trim().slice(0, 80));
+      const suggestionText = unknownInputSuggestionText(text);
 
       await ctx.reply(
-        `Не зовсім розумію${safeText ? `: “${safeText}”` : ""}.${suggestionText}\n\nСпробуй /help або відкрий /menu.${await unfinishedTutorialHint(ctx.from?.id)}`,
-        { reply_markup: replyMarkup }
+        `Не зовсім розумію${safeText ? `: “${safeText}”` : ""}.${suggestionText}\n\n${fallbackNavigationHint()}${await unfinishedTutorialHint(ctx.from?.id)}`,
+        { parse_mode: "HTML", reply_markup: replyMarkup }
       );
       return;
     }
 
     const command = commandName(text);
-    const suggestions = suggestAliasInputs(text);
-    const suggestionText = suggestions.length
-      ? `\n\nМожливо, ти мав на увазі:\n${suggestions.map((suggestion) => `- ${suggestion}`).join("\n")}`
-      : "";
-
-    if (command === "respawn") {
-      await ctx.reply(
-        "Команди /respawn поки що немає в грі. Вона вже є в планах як раннє повернення до межового табору для нових або слабких персонажів.\n\nПоки що можна скористатися /look, /rest або /help.",
-        { reply_markup: replyMarkup }
-      );
-      return;
-    }
+    const suggestionText = unknownInputSuggestionText(text);
 
     await ctx.reply(
-      `Не впізнаю команду ${command ? `/${command}` : "з таким записом"}.${suggestionText}\n\nСпробуй /help або відкрий /menu.${await unfinishedTutorialHint(ctx.from?.id)}`,
-      { reply_markup: replyMarkup }
+      `Не впізнаю команду ${command ? `/${escapeHtml(command)}` : "з таким записом"}.${suggestionText}\n\n${fallbackNavigationHint()}${await unfinishedTutorialHint(ctx.from?.id)}`,
+      { parse_mode: "HTML", reply_markup: replyMarkup }
     );
   });
 }

@@ -7,26 +7,30 @@ Detailed task files live in `docs/planning/items/`.
 ## 0.13 — Core Loop & Onboarding Stability
 
 1. `PLAN-001` — make repository docs the planning source of truth.
-2. `ONB-002-A` — expand prepared-name pool.
-3. `ONB-002-B` — expand forbidden-name normalization.
-4. `ONB-002-C` — add uncertain custom-name review status.
-5. `ONB-002-D` — add onboarding name help copy.
-6. `ONB-001-A` — audit dream tutorial flow.
-7. `ONB-001-B` — add hint after first `Озирнутися`.
-8. `ONB-001-C` — add hint after first `Роздивитися`.
-9. `ONB-001-D` — polish tutorial rest lesson.
-10. `ONB-001-E` — polish wake/return fallbacks.
-11. `SURV-001-A` — add beginner return eligibility helper.
-12. `SURV-001-B` — add `/respawn` command skeleton.
-13. `SURV-001-C` — add confirmation and Ukrainian aliases.
-14. `SURV-001-D` — implement actual return to camp.
-15. `SURV-001-E` — add cooldown/consequence.
-16. `LOOP-001-A` — audit starter look/examine output.
-17. `LOOP-001-B` — polish starter camp prose.
-18. `LOOP-001-C` — polish bridge threshold prose.
-19. `LOOP-001-D` — polish track detail wording.
-20. `ADM-001-A` — audit dangerous scribe tools.
-21. `ADM-001-B` — add audit log helper and first command coverage.
+2. `REL-001` — require branch-to-main PRs with summary, validation and risks.
+3. `SES-001-A` — add AFK and End Session controls.
+4. `SES-001-B` — add silent Auto-AFK, one idle reminder per scene and proactive-message guards.
+5. `SES-001-C` — add session presence tests and manual checklist.
+6. `ONB-002-A` — expand prepared-name pool.
+7. `ONB-002-B` — expand forbidden-name normalization.
+8. `ONB-002-C` — add uncertain custom-name review status.
+9. `ONB-002-D` — add onboarding name help copy.
+10. `ONB-001-A` — audit dream tutorial flow.
+11. `ONB-001-B` — add hint after first `Озирнутися`.
+12. `ONB-001-C` — add hint after first `Роздивитися`.
+13. `ONB-001-D` — polish tutorial rest lesson.
+14. `ONB-001-E` — polish wake/return fallbacks.
+15. `SURV-001-A` — add beginner return eligibility helper.
+16. `SURV-001-B` — add `/respawn` command skeleton.
+17. `SURV-001-C` — add confirmation and Ukrainian aliases.
+18. `SURV-001-D` — implement actual return to camp.
+19. `SURV-001-E` — add cooldown/consequence.
+20. `LOOP-001-A` — audit starter look/examine output.
+21. `LOOP-001-B` — polish starter camp prose.
+22. `LOOP-001-C` — polish bridge threshold prose.
+23. `LOOP-001-D` — polish track detail wording.
+24. `ADM-001-A` — audit dangerous scribe tools.
+25. `ADM-001-B` — add audit log helper and first command coverage.
 
 ## 0.14 — Night, Light and Firewood
 

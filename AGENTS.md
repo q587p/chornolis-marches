@@ -11,6 +11,8 @@
 ## Always preserve these rules
 
 - Do **not** put internal workflow notes about `package.json` / `package-lock.json` into public news or changelog entries.
+- Do **not** put scribe/admin-only commands or hidden service tooling into public `news.md`; keep those details in changelog, release notes, `/adminHelp`, `/adminMenu`, and admin docs.
+- When a PR changes player-facing tutorial flow, beginner safety, visible buttons, world-time/light feedback, or other UX that players will notice, update public `news.md`, `CHANGELOG.md`, release notes and the relevant planning/backlog docs together, and keep the PR summary/risks aligned.
 - If the task creates a release/version commit, bump `package.json` and `package-lock.json` in that same commit.
 - Use the version from `package.json` as the release version. The expected git tag is `vX.Y.Z`, for example `v0.12.12`.
 - Public English changelog and release-note entries should describe mechanics in repository-technical terms such as `inventory`, `HP`, `stamina`, `twigs`, and `location`. Reserve player-facing Ukrainian terminology such as `Речі`, `Життя`, `Снага`, `хмиз`, and `місцина` for UI text, in-game/news copy, Ukrainian examples, aliases, and terminology/design docs.
@@ -26,8 +28,11 @@
 
 - Use Ukrainian UI/text where appropriate.
 - Canonical terminology source: `docs/design/terminology.md`.
-- When adding a new player-facing or scribe/admin command, or changing an existing one, keep command aliases in sync: slash command where appropriate, English/MUD-style text aliases, and Ukrainian text aliases. Buttons, `/help`, `/adminHelp`, and docs should point to the same canonical action.
+- When adding a new player-facing or scribe/admin command, or changing an existing one, keep command aliases in sync: slash command where appropriate, English/MUD-style text aliases, and Ukrainian text aliases. Buttons, `/help`, `/adminHelp`, `/adminMenu`, and docs should point to the same canonical action.
+- Any direct slash command should also accept the same direct text form without the leading slash when practical, especially scribe/admin commands. For example, `/teleport forest_07_00` and `teleport forest_07_00` should route to the same handler.
 - Preferred spelling/style includes: `онбордінґ`, `ґенерація`, `мітологія`, `паґінація`, `паґінаційний`, `етер`, `Атени`; use `ґ` where it fits naturally.
+- Stable world nouns such as creature species, NPC profession labels, spirits, resources, features, and common gameplay nouns should be added to `src/content/lexicon/worldLexicon.ts` with Ukrainian case forms. Grammar fallback remains available for non-critical/generated text, but seed helpers such as `creatureSpeciesNameFields(...)` intentionally require explicit lexicon forms where stable world data depends on them.
+- The lexicon does not yet remove every hardcoded nominative insertion in gameplay text. When touching dynamic descriptions, prefer `creatureForms`, `speciesForms`, `playerForms`, or lexicon-backed helpers and leave unrelated cleanup for a focused pass.
 - Important fixed UI terms:
   - Look → **Озирнутися**
   - Location → **Місцина**
@@ -53,6 +58,7 @@
 - `/location` and `/loc` may remain as legacy aliases for `/look`, but player-facing menus should prefer `/look`.
 - Direction commands may include `/north /south /west /east` and `/n /s /w /e`.
 - `/adminHelp` should keep the full admin command list visible.
+- `/adminMenu` should keep the current scribe/admin quick-action menu aligned with `/adminHelp` and `docs/systems/admin_commands.md`.
 - `/tick` should report animals/NPC/actions summary.
 - Location buttons/features such as `🪧 Межовий знак` should be visible immediately in the Location view where appropriate.
 - `Авто` belongs in character/game flow rather than as a detached menu; auto-state should persist across updates but reset on `/reset`.
@@ -61,6 +67,7 @@
 
 - Active hand-edited map data lives in split JSON files under `prisma/data/world/` (`regions.json`, `locations.json`, `exits.json`, `features.json`, etc.).
 - `prisma/seed.ts` prefers `prisma/data/world/` when it exists; `prisma/data/chornolis_world_seed.json` is a legacy mirror/fallback and should not be the only file changed for live world edits.
+- When adding or changing a visible location feature, keep `/look` and `/examine` distinct where practical: `/look` can list the feature briefly, while `/examine` or direct feature inspection should add useful meaning, interaction hints, constraints, or atmosphere.
 - ASCII map is separate documentation: `docs/world/world_map.md`.
 - Do not change `z` casually; currently it is expected to remain `0` unless the task explicitly requires verticality.
 - Do not create two exits from one location in the same direction.

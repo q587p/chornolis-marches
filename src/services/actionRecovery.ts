@@ -15,12 +15,16 @@ import {
   VERY_TIRED_STAMINA,
   playerStaminaCostConfig,
 } from "../gameConfig";
-import { buildFatigueRestKeyboard } from "../ui/keyboards";
+import { buildFatigueRestKeyboard, buildLyingPostureKeyboard, buildStandUpKeyboard } from "../ui/keyboards";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
+import { autoWakeOrdinarySleep, getPlayerSleepRecoveryProfile, shouldAutoWakeOrdinarySleep } from "./sleep";
+import { getCurrentWorldState } from "./worldTime";
+import { hungerCueContextForPlayer, hungerCueLevel, hungerCueText } from "./hungerCues";
 import { tutorialIdlePaceComments } from "./tutorialVoices";
 import { isTutorialFastRestLocationKey } from "./tutorial";
 import { escapeHtml } from "../utils/text";
+import { canSendProactiveToTelegramId, claimIdleReminderForPlayerScene, idleReminderSceneKeyForLocation } from "./sessionPresence";
 
 export function fatigueStateFor(stamina: number, staminaMax = BASE_STAMINA): FatigueState {
   if (stamina <= VERY_TIRED_STAMINA) return "VERY_TIRED";
@@ -67,7 +71,7 @@ function hpRecoveryMessages(before: number, after: number, max: number) {
   } else if (before < max && after >= max) {
     messages.push("Рани більше не заважають рухатися: здоров’я повністю відновилося.");
   } else if (after > before) {
-    messages.push(`Тіло потроху відновлюється. Життя: ${after}/${max}.`);
+    messages.push("Тіло потроху відновлюється.");
   }
   return messages;
 }
@@ -79,15 +83,14 @@ async function knockOutPlayer(bot: Bot, player: { id: number }, chatId?: number 
   });
   await prisma.player.updateMany({
     where: { id: player.id },
-    data: { hp: 0, isResting: true, fatigueState: "VERY_TIRED", lastHpRegenAt: new Date(), lastStaminaRegenAt: new Date() },
+    data: { hp: 0, sleepState: "AWAKE", ordinarySleepStartedAtMinute: null, isResting: true, fatigueState: "VERY_TIRED", lastHpRegenAt: new Date(), lastStaminaRegenAt: new Date() },
   });
   if (chatId) {
     await bot.api.sendMessage(chatId, "Життя впало до 0. Ви втрачаєте свідомість. Черга очищена, починається відпочинок. Поки життя не підніметься хоча б до 1, доступний лише відпочинок.", { reply_markup: buildFatigueRestKeyboard() });
   }
 }
 
-export async function spendPlayerStamina(bot: Bot, playerId: number, type: WorldActionType, chatId?: number | string) {
-  const cost = playerStaminaCostConfig[type] ?? 0;
+async function spendPlayerStaminaCost(bot: Bot, playerId: number, cost: number, chatId?: number | string) {
   if (cost <= 0) return;
   const player = await prisma.player.findUnique({ where: { id: playerId } });
   if (!player) return;
@@ -97,6 +100,7 @@ export async function spendPlayerStamina(bot: Bot, playerId: number, type: World
   const after = before - cost;
   const tookHp = before <= VERY_TIRED_STAMINA;
   const nextHp = tookHp ? Math.max(0, player.hp - 1) : player.hp;
+  const nextHunger = cost > 1 ? Math.min(PLAYER_HUNGER_MAX, player.hunger + 1) : player.hunger;
   const nextState = fatigueStateFor(after, max);
 
   const updated = await prisma.player.updateMany({
@@ -108,7 +112,7 @@ export async function spendPlayerStamina(bot: Bot, playerId: number, type: World
       isResting: false,
       lastActionAt: new Date(),
       lastStaminaRegenAt: new Date(),
-      hunger: cost > 1 ? Math.min(PLAYER_HUNGER_MAX, player.hunger + 1) : player.hunger,
+      hunger: nextHunger,
     },
   });
   if (updated.count === 0) return;
@@ -123,6 +127,21 @@ export async function spendPlayerStamina(bot: Bot, playerId: number, type: World
       await bot.api.sendMessage(chatId, message, refreshedKeyboard ? { reply_markup: refreshedKeyboard } : undefined);
     }
   }
+
+  const hungerCue = hungerCueLevel(player.hunger, nextHunger, PLAYER_HUNGER_MAX);
+  if (chatId && hungerCue && Number.isSafeInteger(Number(player.telegramId)) && await canSendProactiveToTelegramId(player.telegramId)) {
+    const context = await hungerCueContextForPlayer(player.id, player.currentLocationId);
+    const refreshedKeyboard = await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), Boolean(player.isAutoEnabled));
+    await bot.api.sendMessage(chatId, hungerCueText(hungerCue, context), { reply_markup: refreshedKeyboard });
+  }
+}
+
+export async function spendPlayerStamina(bot: Bot, playerId: number, type: WorldActionType, chatId?: number | string) {
+  return spendPlayerStaminaCost(bot, playerId, playerStaminaCostConfig[type] ?? 0, chatId);
+}
+
+export async function spendPlayerStaminaAmount(bot: Bot, playerId: number, cost: number, chatId?: number | string) {
+  return spendPlayerStaminaCost(bot, playerId, cost, chatId);
 }
 
 export async function spendCreatureStamina(creature: { id: number; hp?: number; stamina: number; staminaMax?: number | null }, cost = 1) {
@@ -144,53 +163,79 @@ export async function spendCreatureStamina(creature: { id: number; hp?: number; 
 
 export async function recoverStamina(bot: Bot) {
   const now = new Date();
-  const [players, activePlayerActions] = await Promise.all([
-    prisma.player.findMany({ include: { currentLocation: { select: { key: true } } } }),
+  const [players, activePlayerActions, worldState] = await Promise.all([
+    prisma.player.findMany({ include: { currentLocation: { select: { key: true, z: true, region: { select: { key: true } } } } } }),
     prisma.worldAction.findMany({
       where: { actorType: "PLAYER", status: { in: ["QUEUED", "RUNNING"] }, playerId: { not: null } },
       select: { playerId: true },
     }),
+    getCurrentWorldState(),
   ]);
   const activePlayerIds = new Set(activePlayerActions.map((action) => action.playerId).filter((id): id is number => Boolean(id)));
 
   for (const player of players) {
     const baseMax = player.staminaMax ?? BASE_STAMINA;
-    const max = player.isResting ? Math.max(baseMax, await getPlayerRestStaminaCap(player.id)) : baseMax;
+    const isSleeping = player.sleepState === "ORDINARY_SLEEP";
+    const sleepProfile = isSleeping ? await getPlayerSleepRecoveryProfile(player) : null;
+    const max = isSleeping ? sleepProfile!.staminaCap : player.isResting ? Math.max(baseMax, await getPlayerRestStaminaCap(player.id)) : baseMax;
     const hpMax = player.hpMax ?? BASE_HP;
     const hasActiveActions = activePlayerIds.has(player.id);
 
-    if (!player.isResting && !hasActiveActions) {
+    if (!player.isResting && !isSleeping && !hasActiveActions) {
       const chatId = Number(player.telegramId);
-      if (Number.isSafeInteger(chatId)) {
-        const voiceComments = await tutorialIdlePaceComments(player, now);
+      if (Number.isSafeInteger(chatId) && await canSendProactiveToTelegramId(player.telegramId)) {
+        const sceneKey = idleReminderSceneKeyForLocation(player.currentLocationId);
+        const voiceComments = sceneKey ? await tutorialIdlePaceComments(player, now) : [];
+        if (voiceComments.length && sceneKey && !(await claimIdleReminderForPlayerScene(player.id, sceneKey))) continue;
         for (const comment of voiceComments) {
           await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
         }
       }
     }
 
-    if (player.stamina >= max && player.hp >= hpMax && !player.isResting) continue;
+    if (isSleeping && shouldAutoWakeOrdinarySleep({
+      startedAtMinute: player.ordinarySleepStartedAtMinute,
+      currentMinute: worldState.absoluteMinute,
+      stamina: player.stamina,
+      staminaCap: max,
+      hp: player.hp,
+      hpMax,
+    })) {
+      const result = await autoWakeOrdinarySleep(player.id);
+      const chatId = Number(player.telegramId);
+      if (result?.changed && Number.isSafeInteger(chatId) && await canSendProactiveToTelegramId(player.telegramId)) {
+        await bot.api.sendMessage(chatId, result.message, { reply_markup: buildLyingPostureKeyboard() });
+      }
+      continue;
+    }
 
-    if (hasActiveActions && !player.isResting) {
+    if (player.stamina >= max && player.hp >= hpMax && !player.isResting && !isSleeping) continue;
+
+    if (hasActiveActions && !player.isResting && !isSleeping) {
       await prisma.player.updateMany({ where: { id: player.id }, data: { lastStaminaRegenAt: now, lastHpRegenAt: now } });
       continue;
     }
 
     const last = player.lastStaminaRegenAt ?? player.updatedAt ?? now;
-    const staminaIntervalMs = player.isResting ? REST_STAMINA_REGEN_INTERVAL_MS : STAMINA_REGEN_INTERVAL_MS;
+    const staminaIntervalMs = player.isResting || isSleeping ? REST_STAMINA_REGEN_INTERVAL_MS : STAMINA_REGEN_INTERVAL_MS;
     const intervals = Math.floor((now.getTime() - last.getTime()) / staminaIntervalMs);
 
     const before = player.stamina;
     const restRegenMultiplier = player.isResting ? await getPlayerRestStaminaRegenMultiplier(player.id) : 1;
-    const rate = player.isResting ? REST_STAMINA_REGEN_PER_INTERVAL * restRegenMultiplier : PASSIVE_STAMINA_REGEN_PER_INTERVAL;
+    const rate = isSleeping
+      ? sleepProfile!.staminaRate
+      : player.isResting
+        ? REST_STAMINA_REGEN_PER_INTERVAL * restRegenMultiplier
+        : PASSIVE_STAMINA_REGEN_PER_INTERVAL;
     const after = intervals > 0 ? Math.min(max, before + intervals * rate) : before;
-    const messages = thresholdMessages(before, after, max);
+    const messages = isSleeping ? [] : thresholdMessages(before, after, max);
     const hpBefore = player.hp;
-    const hpIntervalMs = player.isResting ? REST_HEALTH_REGEN_INTERVAL_MS : PASSIVE_HEALTH_REGEN_INTERVAL_MS;
+    const hpIntervalMs = player.isResting || isSleeping ? REST_HEALTH_REGEN_INTERVAL_MS : PASSIVE_HEALTH_REGEN_INTERVAL_MS;
     const hpLast = player.lastHpRegenAt ?? player.updatedAt ?? now;
     const hpIntervals = Math.floor((now.getTime() - hpLast.getTime()) / hpIntervalMs);
-    const hpAfter = hpIntervals > 0 ? Math.min(hpMax, hpBefore + hpIntervals * HEALTH_REGEN_PER_INTERVAL) : hpBefore;
-    messages.push(...hpRecoveryMessages(hpBefore, hpAfter, hpMax));
+    const hpRate = isSleeping ? sleepProfile!.hpRate : HEALTH_REGEN_PER_INTERVAL;
+    const hpAfter = hpIntervals > 0 ? Math.min(hpMax, hpBefore + hpIntervals * hpRate) : hpBefore;
+    if (!isSleeping) messages.push(...hpRecoveryMessages(hpBefore, hpAfter, hpMax));
 
     if (intervals <= 0 && hpIntervals <= 0) continue;
 
@@ -217,14 +262,31 @@ export async function recoverStamina(bot: Bot) {
       data,
     });
 
+    if (isSleeping && shouldAutoWakeOrdinarySleep({
+      startedAtMinute: player.ordinarySleepStartedAtMinute,
+      currentMinute: worldState.absoluteMinute,
+      stamina: after,
+      staminaCap: max,
+      hp: hpAfter,
+      hpMax,
+    })) {
+      const result = await autoWakeOrdinarySleep(player.id);
+      const chatId = Number(player.telegramId);
+      if (result?.changed && Number.isSafeInteger(chatId) && await canSendProactiveToTelegramId(player.telegramId)) {
+        await bot.api.sendMessage(chatId, result.message, { reply_markup: buildLyingPostureKeyboard() });
+      }
+      continue;
+    }
+
     const chatId = Number(player.telegramId);
-    if (Number.isSafeInteger(chatId)) {
+    if (Number.isSafeInteger(chatId) && await canSendProactiveToTelegramId(player.telegramId)) {
       const refreshedKeyboard = await buildMainReplyKeyboardForTelegramId(chatId, Boolean(player.isAutoEnabled));
+      const replyMarkup = fullyRested && player.isResting ? buildStandUpKeyboard() : refreshedKeyboard;
       for (const message of messages) {
         await bot.api.sendMessage(
           chatId,
           message,
-          { reply_markup: refreshedKeyboard }
+          { reply_markup: replyMarkup }
         );
       }
 

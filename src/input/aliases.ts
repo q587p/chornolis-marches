@@ -6,11 +6,16 @@ export type TargetAction = "inspect" | "greet" | "attack" | "freshen";
 export type QueueAliasMode = "status" | "cancel-current" | "clear";
 export type AutoAliasMode = "start" | "stop";
 export type RestAliasMode = "start" | "queue" | "interrupt";
+export type PostureAliasMode = "sit" | "lie" | "stand";
 export type SocialSignalAlias = "smile" | "laugh" | "nod" | "bow" | "point" | "glare" | "sigh" | "wave";
 export type ChatAliasMode = "time" | "location" | "character";
+export type PutAliasAmount = number | "all";
+export type SessionPresenceAliasMode = "afk" | "end";
 
 export type ParsedAliasCommand =
   | { kind: "location" }
+  | { kind: "glance" }
+  | { kind: "exits" }
   | { kind: "look-action" }
   | { kind: "me" }
   | { kind: "inventory" }
@@ -21,7 +26,11 @@ export type ParsedAliasCommand =
   | { kind: "chat"; mode?: ChatAliasMode; window?: string }
   | { kind: "all"; showDead?: boolean }
   | { kind: "time" }
+  | { kind: "weather" }
   | { kind: "menu" }
+  | { kind: "session-presence"; mode: SessionPresenceAliasMode }
+  | { kind: "beginner-return" }
+  | { kind: "tutorial-end" }
   | { kind: "back" }
   | { kind: "hide-keyboard" }
   | { kind: "move"; direction: Direction }
@@ -31,26 +40,79 @@ export type ParsedAliasCommand =
   | { kind: "douse-torch" }
   | { kind: "sleep"; tutorial?: boolean }
   | { kind: "wake" }
-  | { kind: "open" }
+  | { kind: "open"; target?: string }
   | { kind: "inspect-inventory-item"; target: string }
   | { kind: "drop-inventory-item"; target: string }
+  | { kind: "equip-inventory-item"; target: string }
+  | { kind: "unequip-inventory-item"; target: string }
+  | { kind: "posture"; mode: PostureAliasMode }
   | { kind: "rest"; mode: RestAliasMode }
   | { kind: "auto"; mode: AutoAliasMode }
   | { kind: "queue"; mode: QueueAliasMode }
   | { kind: "track"; detail?: boolean }
   | { kind: "inspect-vegetation" }
   | { kind: "inspect-border-marker" }
-  | { kind: "inspect-feature"; target: string }
+  | { kind: "inspect-feature"; target: string; detail?: "brief" | "full" }
+  | { kind: "shake-tree" }
   | { kind: "wait" }
   | { kind: "add-twigs-campfire" }
   | { kind: "cook-meat" }
+  | { kind: "beginner-cache"; action: "inspect" | "take" | "contribute"; item?: string }
+  | { kind: "put-item"; item: string; amount?: PutAliasAmount; container: string }
   | { kind: "say"; text: string }
+  | { kind: "whisper"; text: string }
+  | { kind: "reply"; text: string }
+  | { kind: "shout"; text: string }
   | { kind: "target-action"; action: TargetAction; target: string }
   | { kind: "pickup-target"; target: string }
-  | { kind: "social-signal"; signal: SocialSignalAlias; target: string };
+  | { kind: "social-signal"; signal: SocialSignalAlias; target?: string };
+
+export type AliasSuggestion = {
+  alias: string;
+  command?: string;
+};
 
 const APOSTROPHES = /[ʼ’`´]/g;
 const TRAILING_PUNCTUATION = /[!?.,;:]+$/g;
+const EN_TO_UK_KEYBOARD: Record<string, string> = {
+  q: "й",
+  w: "ц",
+  e: "у",
+  r: "к",
+  t: "е",
+  y: "н",
+  u: "г",
+  i: "ш",
+  o: "щ",
+  p: "з",
+  "[": "х",
+  "]": "ї",
+  a: "ф",
+  s: "і",
+  d: "в",
+  f: "а",
+  g: "п",
+  h: "р",
+  j: "о",
+  k: "л",
+  l: "д",
+  ";": "ж",
+  "'": "є",
+  z: "я",
+  x: "ч",
+  c: "с",
+  v: "м",
+  b: "и",
+  n: "т",
+  m: "ь",
+  ",": "б",
+  ".": "ю",
+  "/": ".",
+  "`": "'",
+};
+const UK_TO_EN_KEYBOARD: Record<string, string> = Object.fromEntries(
+  Object.entries(EN_TO_UK_KEYBOARD).map(([english, ukrainian]) => [ukrainian, english])
+);
 
 const DIRECTION_ALIASES: Record<string, Direction> = {
   north: "NORTH",
@@ -83,16 +145,20 @@ const DIRECTION_ALIASES: Record<string, Direction> = {
 
   up: "UP",
   u: "UP",
+  "вг": "UP",
   "вгору": "UP",
+  "вверх": "UP",
   "нагору": "UP",
   "піднятися": "UP",
 
   down: "DOWN",
   d: "DOWN",
+  "вн": "DOWN",
   "вниз": "DOWN",
   "донизу": "DOWN",
   "спуститися": "DOWN",
 
+  enter: "INSIDE",
   inside: "INSIDE",
   in: "INSIDE",
   "вср": "INSIDE",
@@ -101,6 +167,7 @@ const DIRECTION_ALIASES: Record<string, Direction> = {
   "увійти": "INSIDE",
   "зайти": "INSIDE",
 
+  leave: "OUTSIDE",
   outside: "OUTSIDE",
   out: "OUTSIDE",
   "наз": "OUTSIDE",
@@ -123,6 +190,21 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "місце": { kind: "location" },
   room: { kind: "location" },
 
+  glance: { kind: "glance" },
+  "quick look": { kind: "glance" },
+  "quick glance": { kind: "glance" },
+  "глянути швидко": { kind: "glance" },
+  "швидко глянути": { kind: "glance" },
+  "коротко глянути": { kind: "glance" },
+  "швидкий огляд": { kind: "glance" },
+
+  exits: { kind: "exits" },
+  exit: { kind: "exits" },
+  "виходи": { kind: "exits" },
+  "шляхи": { kind: "exits" },
+  "куди можна йти": { kind: "exits" },
+  "куди можна піти": { kind: "exits" },
+
   examine: { kind: "look-action" },
   observe: { kind: "look-action" },
   watch: { kind: "look-action" },
@@ -130,6 +212,7 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "озирнутися": { kind: "look-action" },
   "озирнись": { kind: "look-action" },
   "оглянутися": { kind: "look-action" },
+  "оглянути": { kind: "look-action" },
   "роззирнутися": { kind: "look-action" },
   "див": { kind: "look-action" },
   "дивитися": { kind: "look-action" },
@@ -201,11 +284,22 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "час": { kind: "time" },
   "котра година": { kind: "time" },
   "який час": { kind: "time" },
+  weather: { kind: "weather" },
+  "погода": { kind: "weather" },
+  "яка погода": { kind: "weather" },
+  "що з погодою": { kind: "weather" },
 
   menu: { kind: "menu" },
   "меню": { kind: "menu" },
   "дії": { kind: "menu" },
   "кнопки": { kind: "menu" },
+
+  respawn: { kind: "beginner-return" },
+  "повернення": { kind: "beginner-return" },
+  "повернення до табору": { kind: "beginner-return" },
+  "повернутися до табору": { kind: "beginner-return" },
+  "вернутися до табору": { kind: "beginner-return" },
+  "назад до табору": { kind: "beginner-return" },
 
   back: { kind: "back" },
   "назад": { kind: "back" },
@@ -228,14 +322,27 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   rest: { kind: "rest", mode: "start" },
   "відпочити": { kind: "rest", mode: "start" },
   "перепочити": { kind: "rest", mode: "start" },
-  "сісти": { kind: "rest", mode: "start" },
-  "присісти": { kind: "rest", mode: "start" },
   "перепочинок": { kind: "rest", mode: "start" },
   "почати відпочинок": { kind: "rest", mode: "start" },
   "додати відпочинок": { kind: "rest", mode: "queue" },
   "додати відпочинок у чергу": { kind: "rest", mode: "queue" },
   "поставити відпочинок у чергу": { kind: "rest", mode: "queue" },
   "перервати відпочинок": { kind: "rest", mode: "interrupt" },
+
+  sit: { kind: "posture", mode: "sit" },
+  "sit down": { kind: "posture", mode: "sit" },
+  "сісти": { kind: "posture", mode: "sit" },
+  "присісти": { kind: "posture", mode: "sit" },
+  lie: { kind: "posture", mode: "lie" },
+  "lie down": { kind: "posture", mode: "lie" },
+  "лягти": { kind: "posture", mode: "lie" },
+  "лягти на землю": { kind: "posture", mode: "lie" },
+  "лежати": { kind: "posture", mode: "lie" },
+  stand: { kind: "posture", mode: "stand" },
+  "stand up": { kind: "posture", mode: "stand" },
+  "встати": { kind: "posture", mode: "stand" },
+  "підвестися": { kind: "posture", mode: "stand" },
+  "підвестись": { kind: "posture", mode: "stand" },
 
   auto: { kind: "auto", mode: "start" },
   "авто": { kind: "auto", mode: "start" },
@@ -263,6 +370,7 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "скасувати поточну": { kind: "queue", mode: "cancel-current" },
 
   "queue clear": { kind: "queue", mode: "clear" },
+  "queue cancel": { kind: "queue", mode: "cancel-current" },
   "clear queue": { kind: "queue", mode: "clear" },
   "очистити чергу": { kind: "queue", mode: "clear" },
   "скинути чергу": { kind: "queue", mode: "clear" },
@@ -368,6 +476,11 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "повернутися в навчання": { kind: "sleep", tutorial: true },
   "повернутися до сну": { kind: "sleep", tutorial: true },
   "повернутися в сон": { kind: "sleep", tutorial: true },
+  tutorialend: { kind: "tutorial-end" },
+  "tutorial end": { kind: "tutorial-end" },
+  "закінчити навчання": { kind: "tutorial-end" },
+  "завершити навчання": { kind: "tutorial-end" },
+  "кінець навчання": { kind: "tutorial-end" },
   "спати": { kind: "sleep" },
   "заснути": { kind: "sleep" },
   "прокинутися": { kind: "wake" },
@@ -375,7 +488,24 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   wake: { kind: "wake" },
   wakeup: { kind: "wake" },
   "відкрити": { kind: "open" },
+  "відчинити": { kind: "open" },
+  "відчини": { kind: "open" },
+  "відчиняй": { kind: "open" },
+  "відкрий": { kind: "open" },
+  "відкр": { kind: "open" },
+  "відч": { kind: "open" },
+  "привідкрити": { kind: "open" },
+  "прочинити": { kind: "open" },
+  "отворити": { kind: "open" },
   open: { kind: "open" },
+  o: { kind: "open" },
+  shake_tree: { kind: "shake-tree" },
+  "shake tree": { kind: "shake-tree" },
+  "потрусити дерево": { kind: "shake-tree" },
+  "струсити дерево": { kind: "shake-tree" },
+  "трусити дерево": { kind: "shake-tree" },
+  "потрусити гілки": { kind: "shake-tree" },
+  "струсити гілки": { kind: "shake-tree" },
 };
 
 const COMPACT_ALIASES: Record<string, ParsedAliasCommand> = {
@@ -384,7 +514,62 @@ const COMPACT_ALIASES: Record<string, ParsedAliasCommand> = {
   whereami: { kind: "location" },
 };
 
-const SUGGESTABLE_ALIASES = [...new Set([...Object.keys(EXACT_ALIASES), ...Object.keys(DIRECTION_ALIASES)])];
+const SUGGESTABLE_PATTERN_ALIASES = [
+  "say",
+  "сказати",
+  "говорити",
+  "мовити",
+  "промовити",
+  "whisper",
+  "шепнути",
+  "прошепотіти",
+  "reply",
+  "відповісти",
+  "shout",
+  "yell",
+  "крик",
+  "крикнути",
+  "кричати",
+  "закричати",
+  "викрикнути",
+  "вигукнути",
+  "гук",
+  "гукнути",
+  "загукати",
+  "клич",
+  "кликати",
+  "покликати",
+  "волати",
+  "заволати",
+  "freshen all",
+  "свіжувати все",
+  "освіжити всі",
+  "smile",
+  "усміхнутися",
+  "усміхнутись",
+  "посміхнутися",
+  "посміхнутись",
+  "усміх",
+  "посміх",
+  "laugh",
+  "засміятися",
+  "сміятися",
+  "nod",
+  "кивнути",
+  "bow",
+  "вклонитися",
+  "point",
+  "вказати",
+  "glare",
+  "насупитися",
+  "sigh",
+  "зітхнути",
+  "wave",
+  "помахати",
+  "махнути",
+];
+
+const SUGGESTABLE_ALIASES = [...new Set([...Object.keys(EXACT_ALIASES), ...Object.keys(DIRECTION_ALIASES), ...SUGGESTABLE_PATTERN_ALIASES])];
 
 function normalizeSlashCommand(text: string) {
   return text.replace(/^\/([^\s@]+)@[A-Za-z0-9_]+/i, "/$1");
@@ -394,12 +579,35 @@ export function normalizeInput(raw: string) {
   return normalizeSlashCommand(raw.trim())
     .toLowerCase()
     .replace(APOSTROPHES, "'")
+    .replace(/_/g, " ")
     .replace(TRAILING_PUNCTUATION, "")
     .replace(/\s+/g, " ");
 }
 
 function withoutLeadingSlash(text: string) {
   return text.startsWith("/") ? text.slice(1) : text;
+}
+
+function switchKeyboardLayout(raw: string, map: Record<string, string>) {
+  let changed = false;
+  const converted = [...raw].map((char) => {
+    const lower = char.toLocaleLowerCase("uk-UA");
+    const replacement = map[lower];
+    if (!replacement) return char;
+    changed = true;
+    return char === lower ? replacement : replacement.toLocaleUpperCase("uk-UA");
+  }).join("");
+
+  return changed ? converted : null;
+}
+
+export function alternateKeyboardLayoutInputs(raw: string) {
+  const variants = [
+    switchKeyboardLayout(raw, EN_TO_UK_KEYBOARD),
+    switchKeyboardLayout(raw, UK_TO_EN_KEYBOARD),
+  ].filter((value): value is string => Boolean(value));
+
+  return [...new Set(variants)].filter((value) => normalizeInput(value) !== normalizeInput(raw));
 }
 
 function compactKey(text: string) {
@@ -421,10 +629,116 @@ function aliasSuggestionScore(query: string, candidate: string) {
   const queryWords = query.split(" ").filter(Boolean);
   if (queryWords.some((word) => word.length > 1 && candidate.split(" ").some((candidateWord) => candidateWord.startsWith(word)))) return 5;
 
+  const compactCandidatePrefix = compactCandidate.slice(0, compactQuery.length);
+  const fuzzyLimit = compactQuery.length >= 5 ? 2 : compactQuery.length >= 4 ? 1 : 0;
+  if (fuzzyLimit > 0 && editDistance(compactQuery, compactCandidatePrefix) <= fuzzyLimit) return 6;
+
   return Number.POSITIVE_INFINITY;
 }
 
-export function suggestAliasInputs(raw: string, limit = 4) {
+function editDistance(left: string, right: string) {
+  const previous = Array.from({ length: right.length + 1 }, (_, index) => index);
+  for (let i = 1; i <= left.length; i += 1) {
+    let diagonal = previous[0];
+    previous[0] = i;
+    for (let j = 1; j <= right.length; j += 1) {
+      const above = previous[j];
+      previous[j] = left[i - 1] === right[j - 1]
+        ? diagonal
+        : Math.min(previous[j - 1] + 1, above + 1, diagonal + 1);
+      diagonal = above;
+    }
+  }
+  return previous[right.length];
+}
+
+function slashCommandForAlias(alias: string): string | undefined {
+  const parsed = parseAlias(alias);
+  if (!parsed) {
+    if (["say", "сказати", "говорити", "мовити", "промовити"].includes(alias)) return "/say";
+    if (["whisper", "шепнути", "прошепотіти"].includes(alias)) return "/whisper";
+    if (["reply", "відповісти"].includes(alias)) return "/reply";
+    if (["shout", "yell", "крик", "крикнути", "кричати", "закричати", "викрикнути", "вигукнути", "гук", "гукнути", "загукати", "клич", "кликати", "покликати", "волати", "заволати"].includes(alias)) return "/shout";
+    return undefined;
+  }
+
+  if (parsed.kind === "location") return "/look";
+  if (parsed.kind === "glance") return "/glance";
+  if (parsed.kind === "exits") return "/exits";
+  if (parsed.kind === "look-action") {
+    if (["озирнутися", "озирнись", "оглянутися", "роззирнутися", "див", "дивитися", "що видно", "довкола"].includes(alias)) return "/look";
+    return "/examine";
+  }
+  if (parsed.kind === "help") return "/help";
+  if (parsed.kind === "me") return "/me";
+  if (parsed.kind === "inventory") return "/inventory";
+  if (parsed.kind === "news") return "/news";
+  if (parsed.kind === "stat") return "/stat";
+  if (parsed.kind === "who") return "/who";
+  if (parsed.kind === "all") return "/all";
+  if (parsed.kind === "time") return "/time";
+  if (parsed.kind === "weather") return "/weather";
+  if (parsed.kind === "menu") return "/menu";
+  if (parsed.kind === "session-presence") return parsed.mode === "afk" ? "/afk" : "/end_session";
+  if (parsed.kind === "beginner-return") return "/respawn";
+  if (parsed.kind === "tutorial-end") return "/tutorialEnd";
+  if (parsed.kind === "chat") return "/chat";
+  if (parsed.kind === "sleep") return parsed.tutorial ? "/sleep_tutorial" : "/sleep";
+  if (parsed.kind === "wake") return "/wake";
+  if (parsed.kind === "open") return "/open";
+  if (parsed.kind === "move") {
+    if (parsed.direction === "NORTH") return "/north";
+    if (parsed.direction === "SOUTH") return "/south";
+    if (parsed.direction === "WEST") return "/west";
+    if (parsed.direction === "EAST") return "/east";
+    if (parsed.direction === "UP") return "/up";
+    if (parsed.direction === "DOWN") return "/down";
+    if (parsed.direction === "INSIDE") return "/inside";
+    if (parsed.direction === "OUTSIDE") return "/outside";
+  }
+  if (parsed.kind === "gather") return parsed.resourceKey ? `/gather_${parsed.resourceKey}` : "/gather";
+  if (parsed.kind === "use-item") return `/use_${parsed.item}`;
+  if (parsed.kind === "light-torch") return "/light_torch";
+  if (parsed.kind === "douse-torch") return "/douse_torch";
+  if (parsed.kind === "posture") return parsed.mode === "sit" ? "/sit" : parsed.mode === "lie" ? "/lie" : "/stand";
+  if (parsed.kind === "rest") return "/rest";
+  if (parsed.kind === "auto") return "/auto";
+  if (parsed.kind === "queue") return "/queue";
+  if (parsed.kind === "track") return "/track";
+  if (parsed.kind === "inspect-vegetation" || parsed.kind === "inspect-border-marker" || parsed.kind === "inspect-feature") return "/examine";
+  if (parsed.kind === "shake-tree") return "/shake_tree";
+  if (parsed.kind === "wait") return "/wait";
+  if (parsed.kind === "add-twigs-campfire") return "/add_twigs_campfire";
+  if (parsed.kind === "cook-meat") return "/cook_meat";
+  if (parsed.kind === "beginner-cache") {
+    if (parsed.action === "take") return "/take_cache";
+    if (parsed.action === "contribute") return "/contribute_cache";
+    return "/cache";
+  }
+  if (parsed.kind === "put-item") return "/put";
+  if (parsed.kind === "inspect-inventory-item") return "/item";
+  if (parsed.kind === "drop-inventory-item") return "/drop";
+  if (parsed.kind === "equip-inventory-item") return "/item";
+  if (parsed.kind === "unequip-inventory-item") return "/item";
+  if (parsed.kind === "pickup-target") return "/get";
+  if (parsed.kind === "social-signal") return `/${parsed.signal}`;
+  if (parsed.kind === "target-action") {
+    if (parsed.action === "attack") return "/attack";
+    if (parsed.action === "freshen") return isAllTargetToken(parsed.target) ? "/freshen_all" : "/freshen";
+    if (parsed.action === "inspect") return "/examine";
+  }
+  return undefined;
+}
+
+function isAllTargetToken(target: string) {
+  return ["all", "все", "усе", "всі", "усі"].includes(target.trim().toLowerCase());
+}
+
+export function formatAliasSuggestion(suggestion: AliasSuggestion) {
+  return suggestion.command ? `${suggestion.alias} (${suggestion.command})` : suggestion.alias;
+}
+
+export function suggestAliasEntries(raw: string, limit = 4): AliasSuggestion[] {
   const query = withoutLeadingSlash(normalizeInput(raw));
   if (!query) return [];
 
@@ -433,7 +747,37 @@ export function suggestAliasInputs(raw: string, limit = 4) {
     .filter((item) => Number.isFinite(item.score) && item.alias !== query)
     .sort((a, b) => a.score - b.score || a.alias.length - b.alias.length || a.alias.localeCompare(b.alias, "uk"))
     .slice(0, limit)
-    .map((item) => item.alias);
+    .map((item) => ({ alias: item.alias, command: slashCommandForAlias(item.alias) }));
+}
+
+export function suggestKeyboardLayoutAliasEntries(raw: string, limit = 4): AliasSuggestion[] {
+  const suggestions: AliasSuggestion[] = [];
+  const seen = new Set<string>();
+
+  for (const candidate of alternateKeyboardLayoutInputs(raw)) {
+    const normalized = withoutLeadingSlash(normalizeInput(candidate));
+    if (!normalized) continue;
+    const parsed = parseAlias(candidate);
+    if (parsed && !seen.has(normalized)) {
+      seen.add(normalized);
+      suggestions.push({ alias: normalized, command: slashCommandForAlias(normalized) });
+      if (suggestions.length >= limit) return suggestions;
+    }
+
+    for (const suggestion of suggestAliasEntries(candidate, limit)) {
+      const key = `${suggestion.alias}\u0000${suggestion.command ?? ""}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      suggestions.push(suggestion);
+      if (suggestions.length >= limit) return suggestions;
+    }
+  }
+
+  return suggestions;
+}
+
+export function suggestAliasInputs(raw: string, limit = 4) {
+  return suggestAliasEntries(raw, limit).map((item) => item.alias);
 }
 
 function directionFrom(raw: string) {
@@ -451,7 +795,7 @@ function parseDirectionPhrase(text: string): ParsedAliasCommand | null {
     if (direction) return { kind: "move", direction };
   }
 
-  const enterExitMatch = text.match(/^(?:увійти|зайти|вийти|піднятися|спуститися)(?:\s+(.+))?$/);
+  const enterExitMatch = text.match(/^(?:enter|leave|увійти|зайти|вийти|піднятися|спуститися)(?:\s+(.+))?$/);
   if (enterExitMatch) {
     const verb = text.split(" ")[0];
     const byVerb = DIRECTION_ALIASES[verb];
@@ -480,13 +824,45 @@ function parseGatherResource(resource: string): ParsedAliasCommand | null {
 }
 
 function parseSay(raw: string, text: string): ParsedAliasCommand | null {
-  const match = text.match(/^\/?(say|сказати|говорити|мовити|промовити|крикнути|ск|сказ|гов)\s+(.+)$/);
+  const echoedSay = raw.trim().match(/^ви\s+сказали(?:\s*[:：]\s*|\s+)([\s\S]+)$/iu);
+  if (echoedSay?.[1]?.trim()) {
+    const said = echoedSay[1].trim().slice(0, 300);
+    return said ? { kind: "say", text: said } : null;
+  }
+
+  const match = text.match(/^\/?(say|сказати|говорити|мовити|промовити|ск|сказ|гов)\s+(.+)$/);
   if (!match) return null;
   if (match[1] === "говорити" && match[2].trim().startsWith("з ")) return null;
 
-  const rawMatch = raw.match(/^\/?(say|сказати|говорити|мовити|промовити|крикнути|ск|сказ|гов)\s+(.+)$/i);
+  const rawMatch = raw.match(/^\/?(say|сказати|говорити|мовити|промовити|ск|сказ|гов)\s+(.+)$/i);
   const said = (rawMatch?.[2] ?? match[2]).trim().slice(0, 300);
   return said ? { kind: "say", text: said } : null;
+}
+
+function parseDirectedSpeech(raw: string, text: string): ParsedAliasCommand | null {
+  const whisper = text.match(/^\/?(?:whisper|шепнути|прошепотіти|шеп)\s+(.+)$/);
+  if (whisper?.[1]?.trim()) {
+    const rawMatch = raw.match(/^\/?(?:whisper|шепнути|прошепотіти|шеп)\s+(.+)$/i);
+    const speech = (rawMatch?.[1] ?? whisper[1]).trim().slice(0, 300);
+    return speech ? { kind: "whisper", text: speech } : null;
+  }
+
+  const reply = text.match(/^\/?(?:reply|відповісти|відповідь)\s+(.+)$/);
+  if (reply?.[1]?.trim()) {
+    const rawMatch = raw.match(/^\/?(?:reply|відповісти|відповідь)\s+(.+)$/i);
+    const speech = (rawMatch?.[1] ?? reply[1]).trim().slice(0, 300);
+    return speech ? { kind: "reply", text: speech } : null;
+  }
+  if (/^\/?(?:reply|відповісти|відповідь)$/u.test(text)) return { kind: "reply", text: "" };
+
+  const shout = text.match(/^\/?(?:shout|yell|крик|крикнути|кричати|закричати|викрикнути|вигукнути|гук|гукнути|загукати|клич|кликати|покликати|волати|заволати)\s+(.+)$/);
+  if (shout?.[1]?.trim()) {
+    const rawMatch = raw.match(/^\/?(?:shout|yell|крик|крикнути|кричати|закричати|викрикнути|вигукнути|гук|гукнути|загукати|клич|кликати|покликати|волати|заволати)\s+(.+)$/i);
+    const speech = (rawMatch?.[1] ?? shout[1]).trim().slice(0, 300);
+    return speech ? { kind: "shout", text: speech } : null;
+  }
+
+  return null;
 }
 
 function parseChat(text: string): ParsedAliasCommand | null {
@@ -540,17 +916,28 @@ function parseBorderMarkerInspectionIntent(text: string): ParsedAliasCommand | n
 }
 
 function parseFeatureInspectionIntent(text: string): ParsedAliasCommand | null {
-  const match = text.match(/^(?:look\s+at|look|x|examine|inspect|роздивитися|роздивитись|придивитися|придивитись|оглянути|глянути\s+на|подивитися\s+на|придивитися\s+до)\s+(.+)$/);
-  if (!match?.[1]?.trim()) return null;
-  return { kind: "inspect-feature", target: match[1].trim() };
+  const brief = text.match(/^(?:look\s+at|look|оглянути|огл|глянути\s+на|глянути(?!\s+(?:швидко|коротко))|подивитися\s+на|дивитися\s+на|дивитися|озирнутися\s+на|озирнутися)\s+(.+)$/);
+  if (brief?.[1]?.trim()) return { kind: "inspect-feature", target: brief[1].trim(), detail: "brief" };
+
+  const full = text.match(/^(?:x|examine|inspect|роздивитися|роздивитись|придивитися\s+до|придивитись\s+до|придивитися|придивитись)\s+(.+)$/);
+  if (full?.[1]?.trim()) return { kind: "inspect-feature", target: full[1].trim(), detail: "full" };
+
+  return null;
+}
+
+function parseOpenIntent(text: string): ParsedAliasCommand | null {
+  const match = text.match(/^(?:open|o|відкрити|відчинити|відчини|відчиняй|відкрий|відкр|відч|привідкрити|прочинити|отворити)(?:\s+(.+))?$/u);
+  if (!match) return null;
+  const target = match[1]?.trim();
+  return target ? { kind: "open", target } : { kind: "open" };
 }
 
 function parseTargetAction(text: string): ParsedAliasCommand | null {
   const patterns: Array<[TargetAction, RegExp]> = [
-    ["inspect", /^(?:look\s+at|look|x|examine|inspect|роздивитися|оглянути|глянути\s+на|подивитися\s+на|придивитися\s+до)\s+(.+)$/],
+    ["inspect", /^(?:look\s+at|look|x|examine|inspect|роздивитися|оглянути|огл|глянути\s+на|подивитися\s+на|придивитися\s+до)\s+(.+)$/],
     ["attack", /^(?:attack|fight|hit|kill|kick|атакувати|напасти\s+на|напасти|вдарити|ударити|копнути|бити|битися\s+з)\s+(.+)$/],
     ["greet", /^(?:greet|привітати|привітатися\s+з|заговорити\s+з|говорити\s+з|звернутися\s+до)\s+(.+)$/],
-    ["freshen", /^(?:freshen|butcher|освіжувати|освіжити|зняти\s+шкуру\s+з|оббілувати|розібрати|обробити|підготувати\s+м'ясо\s+з|підготувати\s+м’ясо\s+з)\s+(.+)$/],
+    ["freshen", /^(?:freshen|butcher|освіжувати|освіжити|свіжувати|свіжити|зняти\s+шкуру\s+з|оббілувати|розібрати|обробити|підготувати\s+м'ясо\s+з|підготувати\s+м’ясо\s+з)\s+(.+)$/],
   ];
 
   for (const [action, pattern] of patterns) {
@@ -562,10 +949,39 @@ function parseTargetAction(text: string): ParsedAliasCommand | null {
 }
 
 function parsePickup(text: string): ParsedAliasCommand | null {
-  const match = text.match(/^(?:pickup|take|get|підібрати|підняти|взяти|забрати)\s+(.+)$/);
+  const match = text.match(/^(?:pickup|pick|take|get|підібрати|підняти|взяти|забрати)\s+(.+)$/);
   if (!match?.[1]?.trim()) return null;
   const target = match[1].trim();
   return { kind: "pickup-target", target };
+}
+
+function parseBeginnerCacheIntent(text: string): ParsedAliasCommand | null {
+  if (/^(?:cache|supply cache|beginner cache|скриня|спільна скриня|скриня прибулих|запаси|припаси)$/u.test(text)) {
+    return { kind: "beginner-cache", action: "inspect" };
+  }
+
+  const directTake = text.match(/^(?:take cache|cache take|take from cache|взяти зі скрині|взяти з скрині|узяти зі скрині|забрати зі скрині)(?:\s+(.+))?$/u);
+  if (directTake) {
+    const item = directTake[1]?.trim();
+    return item ? { kind: "beginner-cache", action: "take", item } : { kind: "beginner-cache", action: "take" };
+  }
+
+  const slashTake = text.match(/^(?:take_cache|cache_take)(?:\s+(.+))?$/u);
+  if (slashTake) {
+    const item = slashTake[1]?.trim();
+    return item ? { kind: "beginner-cache", action: "take", item } : { kind: "beginner-cache", action: "take" };
+  }
+
+  const directContribute = text.match(/^(?:contribute cache|cache contribute|лишити в скрині|залишити в скрині|лишити у скрині|залишити у скрині|додати до скрині)\s+(.+)$/u);
+  if (directContribute?.[1]?.trim()) return { kind: "beginner-cache", action: "contribute", item: directContribute[1].trim() };
+
+  const slashContribute = text.match(/^(?:contribute_cache|cache_contribute)\s+(.+)$/u);
+  if (slashContribute?.[1]?.trim()) return { kind: "beginner-cache", action: "contribute", item: slashContribute[1].trim() };
+
+  const putInCache = text.match(/^(?:покласти|класти|put)\s+(.+?)\s+(?:у|в|до|into|in|to)\s+(?:скриню|скрині|cache|supply cache)$/u);
+  if (putInCache?.[1]?.trim()) return { kind: "beginner-cache", action: "contribute", item: putInCache[1].trim() };
+
+  return null;
 }
 
 function parseInventoryItemAction(text: string): ParsedAliasCommand | null {
@@ -575,24 +991,103 @@ function parseInventoryItemAction(text: string): ParsedAliasCommand | null {
   const inspect = text.match(/^(?:inspect item|examine item|look at item|item|річ|речі|оглянути в речах|роздивитися в речах)\s+(.+)$/);
   if (inspect?.[1]?.trim()) return { kind: "inspect-inventory-item", target: inspect[1].trim() };
 
+  const equip = text.match(/^(?:equip|wield|hold|взяти в руку|тримати|озброїтися)\s+(.+)$/);
+  if (equip?.[1]?.trim()) return { kind: "equip-inventory-item", target: equip[1].trim() };
+
+  const unequip = text.match(/^(?:unequip|unwield|free hand|прибрати з руки|зняти з руки|звільнити руку)\s*(.*)$/);
+  if (unequip) return { kind: "unequip-inventory-item", target: unequip[1]?.trim() ?? "" };
+
   return null;
 }
 
+function amountFromPutToken(token: string): PutAliasAmount | null {
+  if (["all", "все", "усе", "всі", "усі"].includes(token)) return "all";
+  if (/^\d+$/.test(token)) {
+    const amount = Number(token);
+    return Number.isSafeInteger(amount) && amount > 0 ? amount : null;
+  }
+  return null;
+}
+
+function normalizePutItemText(value: string) {
+  return value
+    .replace(/^(?:all|все|усе|всі|усі)\s+/u, "")
+    .replace(/\s+(?:all|все|усе|всі|усі)$/u, "")
+    .trim();
+}
+
+function parsePutParts(value: string): { item: string; amount?: PutAliasAmount; container: string } | null {
+  const withPreposition = value.match(/^(.+?)\s+(?:into|in|to|в|у|до)\s+(.+)$/u);
+  if (withPreposition?.[1]?.trim() && withPreposition?.[2]?.trim()) {
+    const itemWords = withPreposition[1].trim().split(/\s+/).filter(Boolean);
+    let amount: PutAliasAmount | undefined;
+    const firstAmount = itemWords.length ? amountFromPutToken(itemWords[0]) : null;
+    const lastAmount = itemWords.length ? amountFromPutToken(itemWords[itemWords.length - 1]) : null;
+    if (firstAmount) {
+      amount = firstAmount;
+      itemWords.shift();
+    } else if (lastAmount) {
+      amount = lastAmount;
+      itemWords.pop();
+    }
+    const item = normalizePutItemText(itemWords.join(" "));
+    return item ? { item, amount, container: withPreposition[2].trim() } : null;
+  }
+
+  const words = value.split(/\s+/).filter(Boolean);
+  if (words.length < 2) return null;
+
+  const firstAmount = amountFromPutToken(words[0]);
+  if (firstAmount && words.length >= 3) {
+    return { amount: firstAmount, item: normalizePutItemText(words.slice(1, -1).join(" ")), container: words[words.length - 1] };
+  }
+
+  const amountIndex = words.findIndex((word) => amountFromPutToken(word) !== null);
+  if (amountIndex > 0 && amountIndex < words.length - 1) {
+    return {
+      item: normalizePutItemText(words.slice(0, amountIndex).join(" ")),
+      amount: amountFromPutToken(words[amountIndex]) ?? undefined,
+      container: words.slice(amountIndex + 1).join(" "),
+    };
+  }
+
+  return {
+    item: normalizePutItemText(words.slice(0, -1).join(" ")),
+    container: words[words.length - 1],
+  };
+}
+
+function parsePutIntent(text: string): ParsedAliasCommand | null {
+  if (text === "put out torch") return null;
+  const defaultMatch = text.match(/^(?:put|покласти|класти)$/u);
+  if (defaultMatch) return { kind: "put-item", item: "туша", container: "рів" };
+
+  const match = text.match(/^(?:put|покласти|класти)\s+(.+)$/u);
+  if (!match?.[1]?.trim()) return null;
+  const parsed = parsePutParts(match[1].trim());
+  if (!parsed?.item || !parsed.container) return null;
+  return { kind: "put-item", ...parsed };
+}
+
 function parseSocialSignal(text: string): ParsedAliasCommand | null {
-  const patterns: Array<[SocialSignalAlias, RegExp]> = [
-    ["smile", /^(?:smile|усміхнутися|усміхнутись|посміхнутися|посміхнутись)\s+(.+)$/],
-    ["laugh", /^(?:laugh|засміятися|засміятись|сміятися|сміятись)\s+(.+)$/],
-    ["nod", /^(?:nod|кивнути|кивнути\s+до|кивнути\s+на)\s+(.+)$/],
-    ["bow", /^(?:bow|вклонитися|вклонитись|уклонитися|уклонитись)\s+(.+)$/],
-    ["point", /^(?:point|вказати|показати\s+на|вказати\s+на)\s+(.+)$/],
-    ["glare", /^(?:glare|насупитися|насупитись|витріщитися|витріщитись)\s+(.+)$/],
-    ["sigh", /^(?:sigh|зітхнути|зітхнути\s+до|зітхнути\s+на)\s+(.+)$/],
-    ["wave", /^(?:wave|помахати|махнути|помахати\s+до|помахати\s+на)\s+(.+)$/],
+  const patterns: Array<[SocialSignalAlias, RegExp, boolean]> = [
+    ["smile", /^(?:smile|усміхнутися|усміхнутись|посміхнутися|посміхнутись|усміх|посміх)(?:\s+(.+))?$/, true],
+    ["laugh", /^(?:laugh|засміятися|засміятись|сміятися|сміятись)(?:\s+(.+))?$/, true],
+    ["nod", /^(?:nod|кивнути|кивнути\s+до|кивнути\s+на)(?:\s+(.+))?$/, true],
+    ["bow", /^(?:bow|вклонитися|вклонитись|уклонитися|уклонитись)(?:\s+(.+))?$/, true],
+    ["point", /^(?:point|вказати|показати\s+на|вказати\s+на)\s+(.+)$/, false],
+    ["glare", /^(?:glare|насупитися|насупитись|витріщитися|витріщитись)(?:\s+(.+))?$/, true],
+    ["sigh", /^(?:sigh|зітхнути|зітхнути\s+до|зітхнути\s+на)(?:\s+(.+))?$/, true],
+    ["wave", /^(?:wave|помахати|махнути|помахати\s+до|помахати\s+на)(?:\s+(.+))?$/, true],
   ];
 
-  for (const [signal, pattern] of patterns) {
+  for (const [signal, pattern, allowTargetless] of patterns) {
     const match = text.match(pattern);
-    if (match?.[1]?.trim()) return { kind: "social-signal", signal, target: match[1].trim() };
+    if (match) {
+      const target = match[1]?.trim();
+      if (target) return { kind: "social-signal", signal, target };
+      if (allowTargetless) return { kind: "social-signal", signal };
+    }
   }
 
   return null;
@@ -602,6 +1097,12 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
   const text = normalizeInput(raw);
   if (!text) return null;
   const commandText = withoutLeadingSlash(text);
+
+  if (["afk", "відійти"].includes(commandText)) return { kind: "session-presence", mode: "afk" };
+  if (["end session", "end-session", "endsession", "quit", "leave", "завершити сесію", "вийти"].includes(commandText)) return { kind: "session-presence", mode: "end" };
+
+  const directedSpeech = parseDirectedSpeech(raw, text);
+  if (directedSpeech) return directedSpeech;
 
   const say = parseSay(raw, text);
   if (say) return say;
@@ -621,8 +1122,17 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
   const borderMarkerIntent = parseBorderMarkerInspectionIntent(commandText);
   if (borderMarkerIntent) return borderMarkerIntent;
 
+  const beginnerCacheIntent = parseBeginnerCacheIntent(commandText);
+  if (beginnerCacheIntent) return beginnerCacheIntent;
+
   const inventoryItemAction = parseInventoryItemAction(commandText);
   if (inventoryItemAction) return inventoryItemAction;
+
+  const putIntent = parsePutIntent(commandText);
+  if (putIntent) return putIntent;
+
+  const openIntent = parseOpenIntent(commandText);
+  if (openIntent) return openIntent;
 
   const featureIntent = parseFeatureInspectionIntent(commandText);
   if (featureIntent) return featureIntent;

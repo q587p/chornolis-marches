@@ -151,12 +151,12 @@ async function editOrReply(ctx: any, text: string, keyboard?: InlineKeyboard) {
   await ctx.reply(text, options);
 }
 
-export function registerNewsHandlers(bot: Bot) {
-  async function sendNews(ctx: any) {
-    const page = await buildNewsIndexPage(0);
-    await ctx.reply(page.text, page.keyboard ? { reply_markup: page.keyboard } : undefined);
-  }
+export async function sendNews(ctx: any) {
+  const page = await buildNewsIndexPage(0);
+  await ctx.reply(page.text, page.keyboard ? { reply_markup: page.keyboard } : undefined);
+}
 
+export function registerNewsHandlers(bot: Bot) {
   bot.command("news", sendNews);
   bot.hears("📰 Новини", sendNews);
 

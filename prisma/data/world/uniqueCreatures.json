@@ -31,15 +31,7 @@
     "professionKey": "znakhar",
     "professionName": "знахар",
     "action": "придивляється до межового вогню й сушить трави біля торби",
-    "activity": "LOOKING",
-    "nameOverrides": {
-      "nameGenitive": "Здравомира",
-      "nameDative": "Здравомиру",
-      "nameAccusative": "Здравомира",
-      "nameInstrumental": "Здравомиром",
-      "nameLocative": "Здравомирі",
-      "nameVocative": "Здравомире"
-    }
+    "activity": "LOOKING"
   },
   {
     "speciesKey": "herbalist",
@@ -51,14 +43,40 @@
     "professionKey": "travnytsia",
     "professionName": "травниця",
     "action": "збирає кору й шепоче над травами",
-    "activity": "GATHERING",
-    "nameOverrides": {
-      "nameGenitive": "Ведани",
-      "nameDative": "Ведані",
-      "nameAccusative": "Ведану",
-      "nameInstrumental": "Веданою",
-      "nameLocative": "Ведані",
-      "nameVocative": "Ведано"
-    }
+    "activity": "GATHERING"
+  },
+  {
+    "speciesKey": "hunter",
+    "locationKey": "closed_east_gate",
+    "name": "Лукан",
+    "sex": "MALE",
+    "isAlive": true,
+    "isHidden": false,
+    "professionKey": "hunter",
+    "professionName": "мисливець",
+    "action": "перевіряє ремінь ножа біля падального рову",
+    "activity": "LOOKING"
+  },
+  {
+    "speciesKey": "hunter",
+    "locationKey": "forest_09_00",
+    "name": "Орина",
+    "sex": "FEMALE",
+    "isAlive": true,
+    "isHidden": false,
+    "professionKey": "hunter",
+    "professionName": "мисливиця",
+    "action": "вертається до воріт із запаленим факелом і запасним у торбі; hunter_returning_for_torches",
+    "activity": "MOVING",
+    "resources": [
+      {
+        "resourceKey": "lit_torch",
+        "amount": 1
+      },
+      {
+        "resourceKey": "torch",
+        "amount": 1
+      }
+    ]
   }
 ]

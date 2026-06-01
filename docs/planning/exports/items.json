@@ -20,7 +20,7 @@
   {
     "id": "ADM-001-A",
     "title": "Dangerous scribe tool audit",
-    "status": "next",
+    "status": "done",
     "type": "technical",
     "area": "admin",
     "priority": "medium",
@@ -36,7 +36,7 @@
   {
     "id": "ADM-001-B",
     "title": "Scribe action audit helper",
-    "status": "next",
+    "status": "done",
     "type": "technical",
     "area": "admin",
     "priority": "medium",
@@ -52,8 +52,46 @@
     "file": "docs/planning/items/ADM-001-B.md"
   },
   {
+    "id": "ADM-001-C",
+    "title": "Restart confirmation and HTML safety hardening",
+    "status": "next",
+    "type": "technical",
+    "area": "admin",
+    "priority": "high",
+    "tags": [
+      "admin",
+      "safety",
+      "restart",
+      "slashless",
+      "html",
+      "features"
+    ],
+    "depends_on": [
+      "ADM-001-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ADM-001-C.md"
+  },
+  {
+    "id": "ADM-002",
+    "title": "Scribe creature corpse creation command",
+    "status": "testing",
+    "type": "feature",
+    "area": "admin",
+    "priority": "medium",
+    "tags": [
+      "admin",
+      "creatures",
+      "corpses",
+      "testing"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/ADM-002-add-creature-corpse-command.md"
+  },
+  {
     "id": "CAL-001",
-    "title": "Calendar, moon phases and named years",
+    "title": "Deep calendar, sacred days and named years",
     "status": "icebox",
     "type": "system",
     "area": "world_time",
@@ -73,9 +111,71 @@
     "file": "docs/planning/items/CAL-001_calendar_moon_phases_and_named_years.md"
   },
   {
+    "id": "CAMP-001",
+    "title": "Starter camp prose and feature audit",
+    "status": "done",
+    "type": "content",
+    "area": "core-loop",
+    "priority": "high",
+    "tags": [
+      "camp",
+      "onboarding",
+      "mud",
+      "look",
+      "examine"
+    ],
+    "depends_on": [
+      "LOOP-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/CAMP-001-starter-camp-prose-and-feature-audit.md"
+  },
+  {
+    "id": "CAMP-002",
+    "title": "Starter watchtower and camp torch-source route update",
+    "status": "testing",
+    "type": "feature",
+    "area": "core-loop",
+    "priority": "high",
+    "tags": [
+      "camp",
+      "map",
+      "torch",
+      "light",
+      "mud",
+      "vertical-exits"
+    ],
+    "depends_on": [
+      "CAMP-001",
+      "FIRE-001-C"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/CAMP-002-starter-watchtower-and-torch-source.md"
+  },
+  {
+    "id": "CAMP-003",
+    "title": "Shared beginner cache and hidden restock",
+    "status": "testing",
+    "type": "feature",
+    "area": "core-loop",
+    "priority": "high",
+    "tags": [
+      "camp",
+      "onboarding",
+      "inventory",
+      "light",
+      "restock"
+    ],
+    "depends_on": [
+      "CAMP-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/CAMP-003-shared-beginner-cache.md"
+  },
+  {
     "id": "CMD-001",
     "title": "Near-term text command pack",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "commands",
     "priority": "high",
@@ -89,6 +189,25 @@
     "depends_on": [],
     "exports": {},
     "file": "docs/planning/items/CMD-001-near-term-text-command-pack.md"
+  },
+  {
+    "id": "CMD-002",
+    "title": "Put items into local containers and features",
+    "status": "testing",
+    "type": "feature",
+    "area": "commands",
+    "priority": "high",
+    "tags": [
+      "commands",
+      "inventory",
+      "containers",
+      "aliases"
+    ],
+    "depends_on": [
+      "LOOP-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/CMD-002-put-items-into-containers.md"
   },
   {
     "id": "COMBAT-001",
@@ -108,6 +227,90 @@
     ],
     "exports": {},
     "file": "docs/planning/items/COMBAT-001-creature-aggression-and-defense.md"
+  },
+  {
+    "id": "DREAM-001",
+    "title": "Sleeping body and dream presence separation",
+    "status": "backlog",
+    "type": "technical",
+    "area": "dreams",
+    "priority": "high",
+    "tags": [
+      "dreams",
+      "tutorial",
+      "architecture",
+      "body",
+      "liminality"
+    ],
+    "depends_on": [
+      "SLEEP-002",
+      "ONB-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/DREAM-001-sleeping-body-and-dream-presence.md"
+  },
+  {
+    "id": "DREAM-002",
+    "title": "Lucid dream instance MVP",
+    "status": "backlog",
+    "type": "feature",
+    "area": "dreams",
+    "priority": "medium",
+    "tags": [
+      "dreams",
+      "lucid-dreams",
+      "instances",
+      "groups",
+      "quests"
+    ],
+    "depends_on": [
+      "DREAM-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/DREAM-002-lucid-dream-instance-mvp.md"
+  },
+  {
+    "id": "DREAM-003",
+    "title": "Dream outcomes and guarded rare transfer",
+    "status": "backlog",
+    "type": "feature",
+    "area": "dreams",
+    "priority": "medium",
+    "tags": [
+      "dreams",
+      "rewards",
+      "knowledge",
+      "item-origin",
+      "quests"
+    ],
+    "depends_on": [
+      "DREAM-002",
+      "ITEM-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/DREAM-003-dream-outcomes-and-rare-transfer.md"
+  },
+  {
+    "id": "DREAM-004",
+    "title": "Advanced group and place-spirit dreams",
+    "status": "icebox",
+    "type": "feature",
+    "area": "dreams",
+    "priority": "low",
+    "tags": [
+      "dreams",
+      "groups",
+      "spirits",
+      "rituals",
+      "mythic"
+    ],
+    "depends_on": [
+      "DREAM-002",
+      "SOC-003",
+      "OMEN-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/DREAM-004-advanced-group-and-place-spirit-dreams.md"
   },
   {
     "id": "ECO-001",
@@ -131,6 +334,86 @@
       "github_issue": true
     },
     "file": "docs/planning/items/ECO-001-reproduction-and-overpopulation.md"
+  },
+  {
+    "id": "ECO-002",
+    "title": "Carcass drop-off contribution and settlement reaction",
+    "status": "testing",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "high",
+    "tags": [
+      "ecology",
+      "hunting",
+      "settlement",
+      "rewards"
+    ],
+    "depends_on": [
+      "LOOP-002",
+      "CMD-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ECO-002-carcass-dropoff-reaction.md"
+  },
+  {
+    "id": "ECO-003",
+    "title": "Gate hunting saturation and stand-down state",
+    "status": "testing",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "high",
+    "tags": [
+      "ecology",
+      "hunting",
+      "settlement",
+      "npc",
+      "rewards"
+    ],
+    "depends_on": [
+      "ECO-001",
+      "ECO-002",
+      "NPC-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ECO-003-gate-hunting-saturation.md"
+  },
+  {
+    "id": "ECO-004",
+    "title": "Population floor restoration",
+    "status": "testing",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "high",
+    "tags": [
+      "ecology",
+      "creatures",
+      "population",
+      "world-tick"
+    ],
+    "depends_on": [
+      "ECO-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ECO-004-population-floor-restoration.md"
+  },
+  {
+    "id": "ECO-005",
+    "title": "Animal restoration offerings",
+    "status": "next",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "high",
+    "tags": [
+      "ecology",
+      "creatures",
+      "offerings",
+      "location-features"
+    ],
+    "depends_on": [
+      "ECO-004"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ECO-005-animal-restoration-offerings.md"
   },
   {
     "id": "ECON-001",
@@ -204,6 +487,25 @@
     "file": "docs/planning/items/FIRE-001-C.md"
   },
   {
+    "id": "FIRE-001-D",
+    "title": "Light source matrix test",
+    "status": "next",
+    "type": "qa",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "fire",
+      "light",
+      "visibility",
+      "torch",
+      "campfire",
+      "npc"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/FIRE-001-D-light-source-matrix-test.md"
+  },
+  {
     "id": "FISH-001",
     "title": "Riverbank fishing and fisher NPC",
     "status": "backlog",
@@ -222,6 +524,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/FISH-001-riverbank-fishing-and-fisher-npc.md"
+  },
+  {
+    "id": "FISH-002",
+    "title": "Riverbank fisher tiny slice",
+    "status": "proposed",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "fishing",
+      "npc",
+      "riverbank",
+      "observation",
+      "atmosphere"
+    ],
+    "depends_on": [
+      "FISH-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FISH-002-riverbank-fisher-tiny-slice.md"
   },
   {
     "id": "FOOD-001",
@@ -243,6 +565,150 @@
     ],
     "exports": {},
     "file": "docs/planning/items/FOOD-001-corpse-freshening-meat-and-campfire-cooking.md"
+  },
+  {
+    "id": "FOOD-002",
+    "title": "Spoiled meat and risky eating",
+    "status": "backlog",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "food",
+      "cooking",
+      "survival",
+      "hunger",
+      "risk"
+    ],
+    "depends_on": [
+      "FOOD-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FOOD-002-spoiled-meat-and-risky-eating.md"
+  },
+  {
+    "id": "FOOD-003",
+    "title": "Freshened corpse remains",
+    "status": "backlog",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "food",
+      "corpses",
+      "remains",
+      "hunting",
+      "dropoff"
+    ],
+    "depends_on": [
+      "FOOD-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FOOD-003-freshened-corpse-remains.md"
+  },
+  {
+    "id": "FOOD-004",
+    "title": "Hunger cues and eating nudges",
+    "status": "testing",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "food",
+      "hunger",
+      "reminders",
+      "ux"
+    ],
+    "depends_on": [
+      "FOOD-001",
+      "SES-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FOOD-004-hunger-cues-and-eating-nudges.md"
+  },
+  {
+    "id": "FOOD-005",
+    "title": "Hunger consequences for health and stamina recovery",
+    "status": "backlog",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "food",
+      "hunger",
+      "hp",
+      "stamina",
+      "survival"
+    ],
+    "depends_on": [
+      "FOOD-001",
+      "FOOD-004"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FOOD-005-hunger-consequences.md"
+  },
+  {
+    "id": "FOOD-006",
+    "title": "Mushroom varieties and identification",
+    "status": "backlog",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "food",
+      "mushrooms",
+      "foraging",
+      "alchemy",
+      "risk"
+    ],
+    "depends_on": [
+      "FOOD-001",
+      "MAP-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FOOD-006-mushroom-varieties-and-identification.md"
+  },
+  {
+    "id": "HERALD-001",
+    "title": "Embedded main-service mode for Boundary Mark Chancery Herald",
+    "status": "icebox",
+    "type": "technical",
+    "area": "ops",
+    "priority": "low",
+    "tags": [
+      "herald",
+      "telegram",
+      "render",
+      "ops",
+      "architecture",
+      "icebox"
+    ],
+    "depends_on": [],
+    "exports": {
+      "github_issue": true
+    },
+    "file": "docs/planning/items/HERALD-001-embedded-main-service-mode.md"
+  },
+  {
+    "id": "HIDE-001",
+    "title": "Hidden approach MVP",
+    "status": "backlog",
+    "type": "feature",
+    "area": "visibility",
+    "priority": "medium",
+    "tags": [
+      "hiding",
+      "stealth",
+      "visibility",
+      "social-memory",
+      "0.15"
+    ],
+    "depends_on": [
+      "THEFT-001",
+      "VIS-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/HIDE-001-hidden-approach-mvp.md"
   },
   {
     "id": "HMYZ-001-A",
@@ -335,6 +801,25 @@
     ],
     "exports": {},
     "file": "docs/planning/items/HMYZ-001-E.md"
+  },
+  {
+    "id": "HMYZ-001-F",
+    "title": "Persist and queue tree-shake hmyz",
+    "status": "backlog",
+    "type": "technical",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "hmyz",
+      "trees",
+      "resources",
+      "action-queue"
+    ],
+    "depends_on": [
+      "HMYZ-001-D"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/HMYZ-001-F.md"
   },
   {
     "id": "ICE-001",
@@ -430,6 +915,43 @@
     "depends_on": [],
     "exports": {},
     "file": "docs/planning/items/ITEM-001-pickup-vs-gather-semantics.md"
+  },
+  {
+    "id": "ITEM-002",
+    "title": "Queued pickup actions",
+    "status": "backlog",
+    "type": "feature",
+    "area": "inventory",
+    "priority": "medium",
+    "tags": [
+      "pickup",
+      "inventory",
+      "action-queue",
+      "stamina",
+      "ground-items"
+    ],
+    "depends_on": [
+      "ITEM-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ITEM-002-queued-pickup-actions.md"
+  },
+  {
+    "id": "LANG-001",
+    "title": "Lexicon and agreement audit",
+    "status": "backlog",
+    "type": "chore",
+    "area": "content",
+    "priority": "medium",
+    "tags": [
+      "ukrainian",
+      "lexicon",
+      "grammar",
+      "text"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/LANG-001-lexicon-and-agreement-audit.md"
   },
   {
     "id": "LEARN-001-A",
@@ -574,6 +1096,46 @@
     "file": "docs/planning/items/LOOP-001-D.md"
   },
   {
+    "id": "LOOP-002",
+    "title": "Gate hunting loop",
+    "status": "testing",
+    "type": "feature",
+    "area": "world",
+    "priority": "high",
+    "tags": [
+      "ecology",
+      "hunting",
+      "gate",
+      "living-world"
+    ],
+    "depends_on": [
+      "ITEM-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/LOOP-002-gate-hunting-loop.md"
+  },
+  {
+    "id": "LOOP-003",
+    "title": "Old campfire memory omen",
+    "status": "testing",
+    "type": "feature",
+    "area": "core-loop",
+    "priority": "medium",
+    "tags": [
+      "fire",
+      "light",
+      "omen",
+      "examine",
+      "atmosphere"
+    ],
+    "depends_on": [
+      "HMYZ-001-D",
+      "FIRE-001-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/LOOP-003-old-campfire-memory-omen.md"
+  },
+  {
     "id": "MAP-002-A",
     "title": "First biome foraging table",
     "status": "next",
@@ -626,6 +1188,145 @@
     ],
     "exports": {},
     "file": "docs/planning/items/MAP-002-C.md"
+  },
+  {
+    "id": "MAP-003",
+    "title": "Playable map expansion",
+    "status": "testing",
+    "type": "content",
+    "area": "world",
+    "priority": "high",
+    "tags": [
+      "map",
+      "world",
+      "exploration",
+      "regions"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/MAP-003-playable-map-expansion.md"
+  },
+  {
+    "id": "NAV-001",
+    "title": "Location-to-location route finding",
+    "status": "testing",
+    "type": "feature",
+    "area": "world",
+    "priority": "medium",
+    "tags": [
+      "navigation",
+      "movement",
+      "npc",
+      "world"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/NAV-001-location-route-finding.md"
+  },
+  {
+    "id": "NPC-002",
+    "title": "Hunter auto-program MVP",
+    "status": "backlog",
+    "type": "feature",
+    "area": "npc",
+    "priority": "high",
+    "tags": [
+      "npc",
+      "ecology",
+      "hunting",
+      "living-world"
+    ],
+    "depends_on": [
+      "NAV-001",
+      "ECO-002",
+      "NPC-004",
+      "NPC-005"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/NPC-002-hunter-auto-program.md"
+  },
+  {
+    "id": "NPC-003",
+    "title": "Herbalist service layer",
+    "status": "next",
+    "type": "technical",
+    "area": "npc",
+    "priority": "medium",
+    "tags": [
+      "npc",
+      "herbalist",
+      "architecture",
+      "world-tick"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/NPC-003-herbalist-service-layer.md"
+  },
+  {
+    "id": "NPC-004",
+    "title": "Actor inventory and held light foundation",
+    "status": "in_progress",
+    "type": "technical",
+    "area": "npc",
+    "priority": "high",
+    "tags": [
+      "npc",
+      "actors",
+      "inventory",
+      "torch",
+      "light"
+    ],
+    "depends_on": [
+      "FIRE-001-C"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/NPC-004-actor-inventory-held-light.md"
+  },
+  {
+    "id": "NPC-005",
+    "title": "NPC hunger and food behavior",
+    "status": "next",
+    "type": "feature",
+    "area": "npc",
+    "priority": "high",
+    "tags": [
+      "npc",
+      "actors",
+      "hunger",
+      "food",
+      "cooking",
+      "herbalist",
+      "hunting"
+    ],
+    "depends_on": [
+      "NPC-004",
+      "FOOD-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/NPC-005-npc-hunger-and-food-behavior.md"
+  },
+  {
+    "id": "NPC-006",
+    "title": "Hunter patrol and meat practice loop",
+    "status": "next",
+    "type": "feature",
+    "area": "npc",
+    "priority": "high",
+    "tags": [
+      "npc",
+      "hunting",
+      "cooking",
+      "freshening",
+      "observation-learning",
+      "living-world"
+    ],
+    "depends_on": [
+      "NPC-002",
+      "NPC-005",
+      "PROG-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/NPC-006-hunter-patrol-meat-practice-loop.md"
   },
   {
     "id": "OBS-001-A",
@@ -702,6 +1403,26 @@
     "file": "docs/planning/items/OBS-001-D.md"
   },
   {
+    "id": "OBS-002",
+    "title": "Visible herbalist observation moment",
+    "status": "proposed",
+    "type": "feature",
+    "area": "learning",
+    "priority": "high",
+    "tags": [
+      "observe",
+      "npc",
+      "herbalism",
+      "progression"
+    ],
+    "depends_on": [
+      "OBS-001-A",
+      "OBS-001-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/OBS-002-visible-herbalist-observation-moment.md"
+  },
+  {
     "id": "OMEN-001-A",
     "title": "Choose one living-world omen",
     "status": "next",
@@ -776,6 +1497,46 @@
     "file": "docs/planning/items/OMEN-001-D.md"
   },
   {
+    "id": "OMEN-002",
+    "title": "Hidden follower spirit MVP",
+    "status": "backlog",
+    "type": "feature",
+    "area": "world",
+    "priority": "medium",
+    "tags": [
+      "omen",
+      "hidden-presence",
+      "spirit",
+      "ambient"
+    ],
+    "depends_on": [
+      "VIS-002",
+      "WORLD-002-hidden-spirit"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/OMEN-002-hidden-follower-spirit-mvp.md"
+  },
+  {
+    "id": "OMEN-003",
+    "title": "Strange track / stezhnyk hint omen",
+    "status": "proposed",
+    "type": "feature",
+    "area": "world",
+    "priority": "medium",
+    "tags": [
+      "omen",
+      "forest",
+      "hidden-presence",
+      "spirit",
+      "atmosphere"
+    ],
+    "depends_on": [
+      "OMEN-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/OMEN-003-strange-track-stezhnyk-hint.md"
+  },
+  {
     "id": "ONB-001",
     "title": "Newcomer helper and tutorial",
     "status": "testing",
@@ -796,7 +1557,7 @@
   {
     "id": "ONB-001-A",
     "title": "Dream tutorial flow audit",
-    "status": "next",
+    "status": "done",
     "type": "design",
     "area": "onboarding",
     "priority": "high",
@@ -812,7 +1573,7 @@
   {
     "id": "ONB-001-B",
     "title": "Hint after first Озирнутися",
-    "status": "next",
+    "status": "done",
     "type": "ux",
     "area": "onboarding",
     "priority": "high",
@@ -830,7 +1591,7 @@
   {
     "id": "ONB-001-C",
     "title": "Hint after first Роздивитися",
-    "status": "next",
+    "status": "done",
     "type": "ux",
     "area": "onboarding",
     "priority": "high",
@@ -901,6 +1662,47 @@
     "file": "docs/planning/items/ONB-001-F.md"
   },
   {
+    "id": "ONB-001-G",
+    "title": "Tutorial fire, torch and hmyz branch",
+    "status": "next",
+    "type": "feature",
+    "area": "onboarding",
+    "priority": "high",
+    "tags": [
+      "tutorial",
+      "fire",
+      "torch",
+      "hmyz",
+      "campfire"
+    ],
+    "depends_on": [
+      "HMYZ-001-D",
+      "WORLD-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-001-G.md"
+  },
+  {
+    "id": "ONB-001-H",
+    "title": "Hidden dream gate closing phrase reward",
+    "status": "next",
+    "type": "feature",
+    "area": "onboarding",
+    "priority": "medium",
+    "tags": [
+      "onboarding",
+      "tutorial",
+      "dream-gate",
+      "secret",
+      "reward"
+    ],
+    "depends_on": [
+      "ONB-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-001-H.md"
+  },
+  {
     "id": "ONB-002",
     "title": "Character name rules and onboarding",
     "status": "next",
@@ -956,7 +1758,7 @@
   {
     "id": "ONB-002-C",
     "title": "Uncertain custom-name review status",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "onboarding",
     "priority": "high",
@@ -988,6 +1790,64 @@
     ],
     "exports": {},
     "file": "docs/planning/items/ONB-002-D.md"
+  },
+  {
+    "id": "ONB-003",
+    "title": "Tutorial player wellbeing aside",
+    "status": "testing",
+    "type": "ux",
+    "area": "onboarding",
+    "priority": "medium",
+    "tags": [
+      "onboarding",
+      "tutorial",
+      "wellbeing",
+      "sleep"
+    ],
+    "depends_on": [
+      "ONB-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-003-player-wellbeing-aside.md"
+  },
+  {
+    "id": "ONB-004",
+    "title": "First night guidance",
+    "status": "done",
+    "type": "ux",
+    "area": "onboarding",
+    "priority": "medium",
+    "tags": [
+      "onboarding",
+      "night",
+      "light",
+      "tutorial",
+      "copy"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/ONB-004-first-night-guidance.md"
+  },
+  {
+    "id": "ONB-006",
+    "title": "Look/examine semantics in the dream",
+    "status": "testing",
+    "type": "ux",
+    "area": "onboarding",
+    "priority": "high",
+    "tags": [
+      "tutorial",
+      "look",
+      "examine",
+      "ux",
+      "copy"
+    ],
+    "depends_on": [
+      "ONB-001-B",
+      "ONB-001-C"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-006-look-examine-semantics-in-dream.md"
   },
   {
     "id": "PERF-001",
@@ -1069,6 +1929,182 @@
     "file": "docs/planning/items/PROG-003-animal-experience-and-titles.md"
   },
   {
+    "id": "PROG-004",
+    "title": "Personal chronicle milestones",
+    "status": "next",
+    "type": "feature",
+    "area": "progression",
+    "priority": "high",
+    "tags": [
+      "journal",
+      "chronicle",
+      "milestones",
+      "cooking",
+      "learning",
+      "personal-history"
+    ],
+    "depends_on": [
+      "FOOD-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/PROG-004-personal-chronicle-milestones.md"
+  },
+  {
+    "id": "PROG-005",
+    "title": "Global chronicles and world milestones",
+    "status": "testing",
+    "type": "feature",
+    "area": "progression",
+    "priority": "high",
+    "tags": [
+      "chronicle",
+      "world-events",
+      "onboarding",
+      "gate-hunting",
+      "milestones"
+    ],
+    "depends_on": [
+      "WORLD-001-D"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/PROG-005-global-chronicles-and-world-milestones.md"
+  },
+  {
+    "id": "QA-001",
+    "title": "0.13 first-session closure smoke",
+    "status": "testing",
+    "type": "qa",
+    "area": "onboarding",
+    "priority": "high",
+    "tags": [
+      "qa",
+      "onboarding",
+      "tutorial",
+      "core-loop",
+      "release"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/QA-001-0.13-first-session-closure-smoke.md"
+  },
+  {
+    "id": "QA-002",
+    "title": "Camp and dream first-session smoke",
+    "status": "next",
+    "type": "qa",
+    "area": "onboarding",
+    "priority": "medium",
+    "tags": [
+      "onboarding",
+      "camp",
+      "dream",
+      "qa"
+    ],
+    "depends_on": [
+      "CAMP-001",
+      "ONB-001-B",
+      "ONB-001-C",
+      "ONB-004"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/QA-002-camp-dream-first-session-smoke.md"
+  },
+  {
+    "id": "REL-001",
+    "title": "Release branch PR summary and risk discipline",
+    "status": "testing",
+    "type": "process",
+    "area": "release",
+    "priority": "high",
+    "tags": [
+      "release",
+      "github",
+      "pr",
+      "planning"
+    ],
+    "depends_on": [
+      "PLAN-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/REL-001-release-branch-pr-summary-risk.md"
+  },
+  {
+    "id": "SES-001-A",
+    "title": "AFK and End Session controls",
+    "status": "testing",
+    "type": "feature",
+    "area": "session",
+    "priority": "high",
+    "tags": [
+      "telegram",
+      "session",
+      "afk",
+      "ux"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/SES-001-A.md"
+  },
+  {
+    "id": "SES-001-B",
+    "title": "Auto-AFK and proactive message guards",
+    "status": "testing",
+    "type": "feature",
+    "area": "session",
+    "priority": "high",
+    "tags": [
+      "telegram",
+      "session",
+      "reminders",
+      "tutorial"
+    ],
+    "depends_on": [
+      "SES-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SES-001-B.md"
+  },
+  {
+    "id": "SES-001-C",
+    "title": "Session presence tests and manual checklist",
+    "status": "testing",
+    "type": "qa",
+    "area": "session",
+    "priority": "high",
+    "tags": [
+      "telegram",
+      "session",
+      "tests",
+      "qa"
+    ],
+    "depends_on": [
+      "SES-001-A",
+      "SES-001-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SES-001-C.md"
+  },
+  {
+    "id": "SES-002",
+    "title": "Atmospheric presence and notification design",
+    "status": "backlog",
+    "type": "design",
+    "area": "session",
+    "priority": "medium",
+    "tags": [
+      "telegram",
+      "session",
+      "atmosphere",
+      "notifications"
+    ],
+    "depends_on": [
+      "SES-001-A",
+      "SES-001-B"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SES-002-atmospheric-presence-backlog.md"
+  },
+  {
     "id": "SETTLE-001",
     "title": "Starter settlement",
     "status": "backlog",
@@ -1085,9 +2121,248 @@
     "file": "docs/planning/items/SETTLE-001-starter-settlement.md"
   },
   {
+    "id": "SLEEP-001",
+    "title": "Lying posture and lie command",
+    "status": "testing",
+    "type": "feature",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "sleep",
+      "posture",
+      "aliases",
+      "rest"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/SLEEP-001-lying-posture-and-lie-command.md"
+  },
+  {
+    "id": "SLEEP-002",
+    "title": "Ordinary sleep MVP",
+    "status": "testing",
+    "type": "feature",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "sleep",
+      "wake",
+      "stamina",
+      "hp",
+      "tutorial"
+    ],
+    "depends_on": [
+      "SLEEP-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SLEEP-002-ordinary-sleep-mvp.md"
+  },
+  {
+    "id": "SLEEP-003",
+    "title": "World-time auto-wake and sleep comfort",
+    "status": "testing",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "sleep",
+      "world-time",
+      "campfire",
+      "comfort",
+      "recovery"
+    ],
+    "depends_on": [
+      "SLEEP-002",
+      "WORLD-001",
+      "FIRE-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SLEEP-003-world-time-autowake-and-comfort.md"
+  },
+  {
+    "id": "SLEEP-004",
+    "title": "External forced sleep causes",
+    "status": "icebox",
+    "type": "feature",
+    "area": "survival",
+    "priority": "low",
+    "tags": [
+      "sleep",
+      "creatures",
+      "elixirs",
+      "rituals",
+      "danger"
+    ],
+    "depends_on": [
+      "SLEEP-003",
+      "DREAM-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SLEEP-004-external-forced-sleep-causes.md"
+  },
+  {
+    "id": "SOC-001",
+    "title": "Contacts / acquaintances MVP",
+    "status": "backlog",
+    "type": "feature",
+    "area": "social",
+    "priority": "high",
+    "tags": [
+      "social",
+      "contacts",
+      "acquaintances",
+      "actors",
+      "telegram"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/SOC-001-contacts-acquaintances.md"
+  },
+  {
+    "id": "SOC-002",
+    "title": "Follow intent MVP",
+    "status": "backlog",
+    "type": "feature",
+    "area": "social",
+    "priority": "high",
+    "tags": [
+      "social",
+      "following",
+      "actors",
+      "telegram",
+      "groups"
+    ],
+    "depends_on": [
+      "SOC-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SOC-002-follow-intent.md"
+  },
+  {
+    "id": "SOC-003",
+    "title": "Travel group core",
+    "status": "backlog",
+    "type": "feature",
+    "area": "social",
+    "priority": "high",
+    "tags": [
+      "social",
+      "groups",
+      "travel",
+      "actors",
+      "telegram"
+    ],
+    "depends_on": [
+      "SOC-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SOC-003-travel-group-core.md"
+  },
+  {
+    "id": "SOC-004",
+    "title": "Group movement MVP",
+    "status": "backlog",
+    "type": "feature",
+    "area": "social",
+    "priority": "high",
+    "tags": [
+      "social",
+      "groups",
+      "movement",
+      "action-queue",
+      "stamina"
+    ],
+    "depends_on": [
+      "SOC-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SOC-004-group-movement.md"
+  },
+  {
+    "id": "SOC-005",
+    "title": "Group combat assist conservative plan",
+    "status": "backlog",
+    "type": "feature",
+    "area": "combat",
+    "priority": "medium",
+    "tags": [
+      "social",
+      "groups",
+      "combat",
+      "balance"
+    ],
+    "depends_on": [
+      "SOC-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SOC-005-group-combat-assist.md"
+  },
+  {
+    "id": "SOC-006",
+    "title": "NPC group compatibility",
+    "status": "backlog",
+    "type": "feature",
+    "area": "social",
+    "priority": "medium",
+    "tags": [
+      "social",
+      "groups",
+      "npc",
+      "actors",
+      "creatures"
+    ],
+    "depends_on": [
+      "SOC-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SOC-006-npc-group-compatibility.md"
+  },
+  {
+    "id": "SOC-007",
+    "title": "Telegram UI and copy for contacts / follow / groups",
+    "status": "backlog",
+    "type": "feature",
+    "area": "social",
+    "priority": "medium",
+    "tags": [
+      "social",
+      "telegram",
+      "ui",
+      "copy",
+      "groups"
+    ],
+    "depends_on": [
+      "SOC-001",
+      "SOC-002",
+      "SOC-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SOC-007-telegram-ui-and-copy.md"
+  },
+  {
+    "id": "SOCIAL-003",
+    "title": "Theft reaction signals",
+    "status": "backlog",
+    "type": "feature",
+    "area": "social",
+    "priority": "medium",
+    "tags": [
+      "social",
+      "theft",
+      "signals",
+      "reactions",
+      "0.15"
+    ],
+    "depends_on": [
+      "THEFT-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SOCIAL-003-theft-reaction-signals.md"
+  },
+  {
     "id": "SURV-001",
     "title": "Early respawn support",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -1103,7 +2378,7 @@
   {
     "id": "SURV-001-A",
     "title": "Beginner return eligibility helper",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -1121,7 +2396,7 @@
   {
     "id": "SURV-001-B",
     "title": "/respawn command skeleton",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -1139,7 +2414,7 @@
   {
     "id": "SURV-001-C",
     "title": "Повернення confirmation and aliases",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -1157,7 +2432,7 @@
   {
     "id": "SURV-001-D",
     "title": "Actual return to start camp",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -1175,7 +2450,7 @@
   {
     "id": "SURV-001-E",
     "title": "Beginner return cooldown/consequence",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "medium",
@@ -1189,6 +2464,25 @@
     ],
     "exports": {},
     "file": "docs/planning/items/SURV-001-E.md"
+  },
+  {
+    "id": "SURV-001-F",
+    "title": "Beginner return command-menu eligibility",
+    "status": "backlog",
+    "type": "polish",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "respawn",
+      "telegram",
+      "balance",
+      "beginner"
+    ],
+    "depends_on": [
+      "SURV-001-E"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SURV-001-F.md"
   },
   {
     "id": "TECH-001",
@@ -1210,6 +2504,92 @@
       "github_issue": true
     },
     "file": "docs/planning/items/TECH-001-service-boundary-and-duplication-cleanup.md"
+  },
+  {
+    "id": "THEFT-000",
+    "title": "Risky theft and hiding epic",
+    "status": "backlog",
+    "type": "epic",
+    "area": "social",
+    "priority": "medium",
+    "tags": [
+      "theft",
+      "hiding",
+      "stealth",
+      "social-memory",
+      "0.15"
+    ],
+    "depends_on": [
+      "VIS-001-A",
+      "OBS-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/THEFT-000-risky-theft-and-hiding-epic.md"
+  },
+  {
+    "id": "THEFT-001",
+    "title": "Risky theft MVP",
+    "status": "backlog",
+    "type": "feature",
+    "area": "social",
+    "priority": "medium",
+    "tags": [
+      "theft",
+      "social-memory",
+      "inventory",
+      "action-queue",
+      "0.15"
+    ],
+    "depends_on": [
+      "THEFT-000",
+      "VIS-001-A",
+      "OBS-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/THEFT-001-risky-theft-mvp.md"
+  },
+  {
+    "id": "THEFT-002",
+    "title": "World-controlled thief character",
+    "status": "backlog",
+    "type": "feature",
+    "area": "npc",
+    "priority": "low",
+    "tags": [
+      "theft",
+      "npc",
+      "autonomy",
+      "social-memory",
+      "future"
+    ],
+    "depends_on": [
+      "THEFT-001",
+      "SOCIAL-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/THEFT-002-world-controlled-thief-character.md"
+  },
+  {
+    "id": "THEFT-003",
+    "title": "Strange and spirit theft MVP",
+    "status": "backlog",
+    "type": "feature",
+    "area": "spirits",
+    "priority": "low",
+    "tags": [
+      "theft",
+      "spirits",
+      "omen",
+      "hidden-presence",
+      "future"
+    ],
+    "depends_on": [
+      "THEFT-001",
+      "HIDE-001",
+      "OMEN-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/THEFT-003-spirit-theft-mvp.md"
   },
   {
     "id": "TRACK-LEARN-001-A",
@@ -1269,9 +2649,43 @@
     "file": "docs/planning/items/TRACK-LEARN-001-C.md"
   },
   {
+    "id": "UX-001",
+    "title": "Command and feature icon collision audit",
+    "status": "backlog",
+    "type": "chore",
+    "area": "ux",
+    "priority": "low",
+    "tags": [
+      "ux",
+      "icons",
+      "keyboard",
+      "features"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/UX-001-command-feature-icon-collision.md"
+  },
+  {
+    "id": "UX-002",
+    "title": "Target pagination return context",
+    "status": "testing",
+    "type": "chore",
+    "area": "ux",
+    "priority": "medium",
+    "tags": [
+      "ux",
+      "pagination",
+      "corpses",
+      "telegram"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/UX-002-target-pagination-return-context.md"
+  },
+  {
     "id": "VIS-001-A",
     "title": "Shared visibility service skeleton",
-    "status": "next",
+    "status": "testing",
     "type": "technical",
     "area": "visibility",
     "priority": "high",
@@ -1289,7 +2703,7 @@
   {
     "id": "VIS-001-B",
     "title": "Hide location details in darkness",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "visibility",
     "priority": "high",
@@ -1307,7 +2721,7 @@
   {
     "id": "VIS-001-C",
     "title": "Nearby beings visibility in darkness",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "visibility",
     "priority": "high",
@@ -1325,7 +2739,7 @@
   {
     "id": "VIS-001-D",
     "title": "Track visibility gate",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "visibility",
     "priority": "medium",
@@ -1359,6 +2773,42 @@
     "file": "docs/planning/items/VIS-001-E.md"
   },
   {
+    "id": "VIS-001-F",
+    "title": "Darkness copy audit",
+    "status": "testing",
+    "type": "content",
+    "area": "visibility",
+    "priority": "medium",
+    "tags": [
+      "visibility",
+      "night",
+      "copy",
+      "atmosphere",
+      "ukrainian"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/VIS-001-F-darkness-copy-audit.md"
+  },
+  {
+    "id": "VIS-002",
+    "title": "Hidden presence foundation",
+    "status": "backlog",
+    "type": "technical",
+    "area": "visibility",
+    "priority": "medium",
+    "tags": [
+      "visibility",
+      "hidden-presence",
+      "targets"
+    ],
+    "depends_on": [
+      "VIS-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/VIS-002-hidden-presence-foundation.md"
+  },
+  {
     "id": "WEB-001",
     "title": "Web map, multi-client game server, messenger bridges and limited MUD gateway",
     "status": "icebox",
@@ -1383,6 +2833,24 @@
     "file": "docs/planning/items/web-001-web-map-and-mud-gateway.md"
   },
   {
+    "id": "WEB-002",
+    "title": "Independent status site and deploy visibility",
+    "status": "backlog",
+    "type": "technical",
+    "area": "server",
+    "priority": "medium",
+    "tags": [
+      "web",
+      "status",
+      "deploy",
+      "operations",
+      "reliability"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/WEB-002-independent-status-site.md"
+  },
+  {
     "id": "WORLD-001",
     "title": "Day/night cycle",
     "status": "next",
@@ -1401,14 +2869,16 @@
   },
   {
     "id": "WORLD-001-A",
-    "title": "Tiny world-time model design",
+    "title": "Internal world-clock model design",
     "status": "next",
     "type": "design",
     "area": "world_time",
     "priority": "high",
     "tags": [
       "world-time",
-      "day-night"
+      "day-night",
+      "moon",
+      "0.14"
     ],
     "depends_on": [],
     "exports": {},
@@ -1416,14 +2886,16 @@
   },
   {
     "id": "WORLD-001-B",
-    "title": "Daypart storage",
-    "status": "next",
+    "title": "Persistent world-clock storage",
+    "status": "testing",
     "type": "technical",
     "area": "world_time",
     "priority": "high",
     "tags": [
       "world-time",
-      "schema"
+      "schema",
+      "moon",
+      "0.14"
     ],
     "depends_on": [
       "WORLD-001-A"
@@ -1433,14 +2905,16 @@
   },
   {
     "id": "WORLD-001-C",
-    "title": "Daypart helper and tick advancement",
-    "status": "next",
+    "title": "Heartbeat clock advancement and daypart helper",
+    "status": "testing",
     "type": "feature",
     "area": "world_time",
     "priority": "high",
     "tags": [
       "world-time",
-      "world-tick"
+      "world-tick",
+      "day-night",
+      "0.14"
     ],
     "depends_on": [
       "WORLD-001-B"
@@ -1450,20 +2924,83 @@
   },
   {
     "id": "WORLD-001-D",
-    "title": "/time reads world state",
-    "status": "next",
+    "title": "/time reads internal world-clock state",
+    "status": "testing",
     "type": "feature",
     "area": "world_time",
     "priority": "high",
     "tags": [
       "world-time",
-      "time-command"
+      "time-command",
+      "moon",
+      "0.14"
     ],
     "depends_on": [
       "WORLD-001-C"
     ],
     "exports": {},
     "file": "docs/planning/items/WORLD-001-D.md"
+  },
+  {
+    "id": "WORLD-001-E",
+    "title": "Weather MVP state and display",
+    "status": "testing",
+    "type": "feature",
+    "area": "world_time",
+    "priority": "high",
+    "tags": [
+      "world-time",
+      "weather",
+      "0.14"
+    ],
+    "depends_on": [
+      "WORLD-001-C"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WORLD-001-E-weather-mvp-state-and-display.md"
+  },
+  {
+    "id": "WORLD-001-F",
+    "title": "Light snapshot helper",
+    "status": "testing",
+    "type": "feature",
+    "area": "visibility",
+    "priority": "high",
+    "tags": [
+      "world-time",
+      "visibility",
+      "moon",
+      "weather",
+      "light",
+      "0.14"
+    ],
+    "depends_on": [
+      "WORLD-001-C",
+      "WORLD-001-E"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WORLD-001-F-light-snapshot-helper.md"
+  },
+  {
+    "id": "WORLD-001-G",
+    "title": "Time and weather debug controls",
+    "status": "testing",
+    "type": "technical",
+    "area": "world_time",
+    "priority": "medium",
+    "tags": [
+      "world-time",
+      "weather",
+      "admin",
+      "testing",
+      "0.14"
+    ],
+    "depends_on": [
+      "WORLD-001-D",
+      "WORLD-001-E"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WORLD-001-G-time-weather-debug-controls.md"
   },
   {
     "id": "WORLD-002",
@@ -1483,5 +3020,119 @@
     ],
     "exports": {},
     "file": "docs/planning/items/WORLD-002-campfires-and-light.md"
+  },
+  {
+    "id": "WORLD-002-hidden-spirit",
+    "title": "Hidden spirit seed and boundaries",
+    "status": "backlog",
+    "type": "feature",
+    "area": "world",
+    "priority": "medium",
+    "tags": [
+      "world",
+      "hidden-presence",
+      "spirit",
+      "campfire"
+    ],
+    "depends_on": [
+      "WORLD-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WORLD-002-hidden-spirit-seed-and-boundaries.md"
+  },
+  {
+    "id": "WPN-001",
+    "title": "Minimal weapon catalog and equip foundation",
+    "status": "done",
+    "type": "feature",
+    "area": "items",
+    "priority": "medium",
+    "tags": [
+      "weapons",
+      "inventory",
+      "equipment",
+      "freshening"
+    ],
+    "depends_on": [
+      "FOOD-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WPN-001-minimal-weapon-catalog-and-equip.md"
+  },
+  {
+    "id": "WPN-002",
+    "title": "Weapon-aware look, examine, attack and freshen",
+    "status": "done",
+    "type": "feature",
+    "area": "items",
+    "priority": "medium",
+    "tags": [
+      "weapons",
+      "inventory",
+      "combat",
+      "freshening"
+    ],
+    "depends_on": [
+      "WPN-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WPN-002-weapon-aware-look-examine-attack-freshen.md"
+  },
+  {
+    "id": "WPN-003",
+    "title": "Themed NPC weapons and hunter spear",
+    "status": "backlog",
+    "type": "feature",
+    "area": "npc",
+    "priority": "medium",
+    "tags": [
+      "weapons",
+      "npc",
+      "hunter",
+      "seed"
+    ],
+    "depends_on": [
+      "WPN-001",
+      "WPN-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WPN-003-themed-npc-weapons-and-hunter-spear.md"
+  },
+  {
+    "id": "WPN-004",
+    "title": "Weapon condition, dulling and sharpening hooks",
+    "status": "backlog",
+    "type": "technical",
+    "area": "items",
+    "priority": "low",
+    "tags": [
+      "weapons",
+      "durability",
+      "item-instances",
+      "backlog"
+    ],
+    "depends_on": [
+      "WPN-001",
+      "WPN-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WPN-004-weapon-condition-backlog.md"
+  },
+  {
+    "id": "WPN-ICE-001",
+    "title": "Deep combat and weapon lifetime",
+    "status": "icebox",
+    "type": "feature",
+    "area": "combat",
+    "priority": "low",
+    "tags": [
+      "weapons",
+      "combat",
+      "durability",
+      "icebox"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/WPN-ICE-001-deep-combat-and-weapon-lifetime.md"
   }
 ]

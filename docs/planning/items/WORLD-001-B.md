@@ -1,7 +1,7 @@
 ---
 id: WORLD-001-B
-title: Daypart storage
-status: next
+title: Persistent world-clock storage
+status: testing
 type: technical
 area: world_time
 priority: high
@@ -9,28 +9,42 @@ estimate: 1-2h
 tags:
   - world-time
   - schema
+  - moon
+  - 0.14
 depends_on:
   - WORLD-001-A
 ---
 
-# WORLD-001-B: Daypart storage
+# WORLD-001-B: Persistent World-Clock Storage
 
 ## Goal
 
-Persist simple dawn/day/dusk/night state.
+Persist the internal world clock so deploys/restarts do not reset day/night, moon or weather foundations.
 
 ## First Scope
 
-- Add migration/model or reuse existing world state.
-- Seed default daypart if needed.
+- Add a single persistent world-state row or equivalent storage.
+- Store at minimum `absoluteMinute` and `lastAdvancedAt`.
+- Seed/default the starting timestamp: year 587, `Коло Зеленого Шуму`, day 17, 17:00.
+- Leave room for weather state if it lands in the same or next slice.
 - Generate Prisma if schema changes.
 
 ## Acceptance
 
 - Build passes.
-- Default world has a valid daypart.
+- Default world has a valid internal clock.
+- The stored clock survives process restart.
+- Scribe/admin `/reset world` and `/reset full` reset the stored clock back to the starter timestamp.
+- `/reset stats` does not change world-clock state.
 - No unrelated schema churn.
+- No package version changes.
 
 ## Implementation Order
 
 Do after: `WORLD-001-A`.
+
+## 0.14.1 Slice
+
+- Added the persistent `WorldState` row with `absoluteMinute`, `lastAdvancedAt` and starter weather fields.
+- Seed and world/full reset return the clock to `185_340`, the canonical 587 / `Коло Зеленого Шуму` / day 17 / 17:00 start.
+- Stats reset remains separate and does not touch world time.

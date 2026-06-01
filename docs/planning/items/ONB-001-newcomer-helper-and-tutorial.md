@@ -41,13 +41,15 @@ The first version should help a new character understand what they can do withou
 - Expand the dream tutorial with branches that nudge the player through:
   - simple tracks and signs;
   - more observation-learning scenes after the first fox movement proof, especially a repeatable fox/prey attack scene where `look` or `examine` at the right moment can show `Атака трохи покращена`, plus following lessons once the skill system exists;
+  - speech beyond the dream-gate phrase: ordinary `say`, `shout` / `крикнути`, `whisper` / `шепнути`, and `reply` should get compact Сон/Дрімота reactions that teach the difference between local speech, loud speech, private speech and answering someone who addressed you;
   - social signals and nearby characters/creatures;
-  - fire/light once the first real day-night loop is in place;
+  - fire/light as a concrete tutorial branch: a guide voice can teach a torch, a quick dream relight of a згасле вогнище, and hmyz as fuel before the waking-world version becomes slower and harsher;
   - deeper danger/respawn safety once `/respawn` exists.
 - Keep the helper skippable.
 - Prefer short contextual prompts over a long up-front explanation.
 - Keep exact numbers hidden unless the player is a scribe/admin with technical details enabled.
 - When adding a new tutorial command or button, give it a short first-use diegetic comment from Сон, Дрімота, another guide voice or a local sign, and record that as a tiny event/flag when it should not repeat forever.
+- Keep the tutorial-completion button on the current final safety room. After adding later tutorial rooms, move `Закінчити навчання` / `/tutorialEnd` forward again instead of leaving it on an earlier lesson.
 - Move broad beginner advice out of the hidden `/commands` catalog and into a better beginner surface when that surface is ready: compact `/help`, tutorial signs/voices or the safety branch. Candidate advice:
   - draw or keep a map;
   - read location descriptions because important clues may hide there;

@@ -17,7 +17,7 @@ The forest should feel alive even when players do nothing.
 - Resource regeneration.
 - Mushrooms grow from decayed corpses.
 - Predator prey choice by age, HP and species preference.
-- Predator kill counters in scribe/admin `/stat`.
+- Predator and character-caused kill counters in scribe/admin `/stat`.
 - Animal hunger pressure and starvation deaths.
 - Starvation counters in scribe/admin `/stat` and protected web `/stat`.
 - Individual predator hunting counters for attack attempts, successful attacks and kills.
@@ -44,14 +44,21 @@ The forest should feel alive even when players do nothing.
 - Herbivores react to crowded danger gradually: they do not all flee instantly, but their chance to choose movement rises noticeably while the crowd remains.
 - Recent attacks add temporary local danger for ecology decisions. Herbivores become more likely to leave the attacked location for several world ticks.
 - Foxes prefer mice, then vulnerable rabbits; wolves prefer rabbits, especially young, old or wounded prey.
-- Predator kills leave corpses, reduce predator hunger and are counted in scribe/admin `/stat` next to old-age deaths.
-- Predator hunger recovery uses prey food value: mice are light food, rabbit children/old rabbits are partial food, healthy young/adult rabbits are worth more.
+- Predator kills leave claimed corpses and are counted in scribe/admin `/stat` next to old-age deaths.
+- Carnivores do not recover hunger at kill time. They queue a later `EAT` action for the claimed corpse; if a player, hunter or another flow takes the corpse first, the predator loses that meal and stays hungry.
+- Character-caused animal deaths include player kills and non-animal NPC kills, and are counted separately from predator kills in scribe/admin `/stat`, protected web `/stat`, `/stat.json`, and ecology sign technical summaries.
+- If a starter animal species disappears entirely from the waking world, the world tick quietly restores its starter living population at starter locations. This includes starter foxes and wolves for now. Starter rabbits and mice can also recover when living animals remain but no adult breeding pair is left. This is a population-floor safeguard, not a player-facing notification or full spirit/migration system, and predator restoration may become a balance/narrative switch later.
+- Scribe/admin `/stat`, protected web `/stat` and `/stat.json` show recent and per-species population-floor restoration counts so collapse/recovery tuning can be observed without making the safeguard player-facing.
+- Predator hunger recovery uses prey food value when the predator actually eats the corpse: mice are light food, rabbit children/old rabbits are partial food, healthy young/adult rabbits are worth more.
 - Hungry herbivores are more likely to eat when forage exists and more likely to move when local food is gone or vegetation is exhausted.
 - Hungry predators are more likely to search for prey and attack; very hungry predators attack immediately when suitable prey is present.
+- Hungry predators can scavenge safe unclaimed local herbivore corpses before attacking living prey. Hunter-claimed, player-carried, predator-claimed and freshened corpses remain protected from this ordinary scavenging path.
 - Animals that remain above the starvation threshold can die of hunger. Starvation leaves a corpse, cancels pending creature actions, writes an `Animal starved` world event, and appears in ecology statistics.
 - Individual animals keep hunting counters, and scribe/admin `/stat` can show the most successful hunters.
 - Fox and wolf lifecycle values are deliberately slower than rabbits and mice, so future predator reproduction does not explode as quickly as herbivore reproduction.
-- Starter predators now include a fox pair near `forest_07_02`, lone foxes near the dry luka, and a cautious wolf pair in remote `DEEP_FOREST`.
+- Starter prey now begins in separated breeding clusters instead of directly on top of predator cells: mice at `forest_03_02`, `meadow_11_04` and `riverbank_14_01`; rabbits at `forest_04_00`, `meadow_12_04` and `riverbank_15_02`.
+- Starter predator pressure remains present but lighter at world start: a fox pair near `forest_07_02`, a young fox at `meadow_13_04`, and one remote wolf at `forest_00_08`.
+- Starter breeding clusters have local food-rich resource overrides so rabbits and mice have a real chance to reproduce before predators find them. These are local authoring pockets, not a global biome-resource increase.
 - Predator reproduction runs after small-herbivore ecology and before ordinary carnivore ticks. It uses prey-unit thresholds and very slow wolf checks.
 - Fox prey units count mice and rabbits; wolf prey units currently count rabbits while mice are mostly ignored.
 - If a location has too many rabbits or mice, they consume `grass`, `berries`, `herbs` and `mushrooms` as background overgrazing.
@@ -70,6 +77,7 @@ The forest should feel alive even when players do nothing.
 ## Near Follow-Up
 
 - Tune growth rates and resource damage after observation.
+- Watch whether no-pair prey restoration and predator scavenging reduce early dead-ends without hiding too much danger from new players. Use the 0.14.17 `/stat` restoration counters to see which species still need repeated intervention.
 - Tune the first `Винищена трава` inspection text after observation: account for active grazing/gathering pressure, rain, season, moon/world time and future restoration magic rather than only local grass amount/max and exhausted-location regeneration.
 - Tune hunger thresholds, starvation odds and species-specific hunger tolerance after observation.
 - Replace direct predator births with a persistent pregnancy/den state when the creature lifecycle model is ready.
@@ -80,7 +88,7 @@ The forest should feel alive even when players do nothing.
 - Дід Лісовик should not react to artificial carried/fuel resources such as torches or twigs disappearing from seed/resource nodes; his depletion warnings are for natural/ecological resources.
 - Add species-specific fear and aggression profiles.
 - Turn hunting history into animal experience, titles and bounded stat improvements.
-- Add creature aggression and defense profiles, including wolves attacking people and herbivores defending offspring or fighting when escape fails.
+- Add creature aggression and defense profiles. Hungry wolves or foxes may attack player characters when hunger is severe enough, but fed predators should prefer avoidance unless self-defense or offspring defense applies. Parents near persistent young may attack preventively or hold ground, and herbivores may defend offspring or fight when escape fails.
 
 ## Example Consequences
 

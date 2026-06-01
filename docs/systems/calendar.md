@@ -6,13 +6,23 @@ The current starter date is:
 
 > 587 літо після Великого Відступу — Рік Сича під Тихим Вітром.
 
-The current static in-world time shown by `/time` is:
+The current starter timestamp for the internal world clock is:
 
 ```text
 Пізня весна, Коло Зеленого Шуму, 17 день, передвечір’я.
 ```
 
-This is a fixed MVP value for now. A later world-time service should advance season, moon circle/month, day and time of day from the actual world tick/time model.
+For the 0.14 world-time MVP, this becomes the initial stored world-clock state, not a real-world date.
+
+Suggested concrete start:
+
+- year: `587`;
+- lunar circle: `5` / `Коло Зеленого Шуму`;
+- day of circle: `17`;
+- clock: `17:00`;
+- daypart: late day / `передвечір'я`.
+
+The clock advances by elapsed real milliseconds according to the world-time scale. It must not sync to server time of day, player timezone or real calendar date.
 
 This is intentionally not tied to Christianity, the Holocene calendar, Trypillia or real historical chronology. Chornolis Marches is a separate, loosely related mythic space.
 
@@ -42,6 +52,7 @@ The year name should be usable in:
 
 - `/start` and onboarding text;
 - `/time`;
+- `/weather`;
 - news;
 - rumors;
 - NPC speech;
@@ -97,6 +108,26 @@ In prose, use the instrumental form:
 ## Future lunar calendar
 
 The deeper calendar is intentionally Icebox-level for now.
+
+## 0.14 Minimal Lunar Clock
+
+The full lunar calendar remains a deeper future system, but 0.14 needs a minimal lunar clock because moonlight affects night visibility.
+
+0.14 should include:
+
+- 13 lunar circles per year;
+- 28 days per lunar circle;
+- moon phase label derived from day of circle;
+- moon illumination value used by the light/visibility helper;
+- simple season label derived from circle if needed for weather weighting.
+
+0.14 should not include:
+
+- sacred days;
+- ritual calendars;
+- local calendar disputes;
+- deep omen tables;
+- complex season-specific ecology.
 
 Preferred future direction:
 

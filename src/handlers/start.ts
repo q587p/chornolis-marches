@@ -5,19 +5,32 @@ import { renderLocationBrief } from "../services/locations";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { guessGenderFromPronoun, guessNameForms, normalizeCharacterName, type NameForms } from "../services/grammar";
 import { BASE_STAMINA } from "../gameConfig";
-import { renderCurrentWorldYearLine } from "../services/calendar";
+import { renderWorldYearLine } from "../services/calendar";
 import { setDefaultBotCommandsWithRetry, syncChatBotCommandsForTelegramId } from "../services/telegramCommands";
+import { recordNewPlayerChronicle } from "../services/chronicles";
 import { enterTutorialDream, hasCompletedTutorial, isTutorialLocation } from "../services/tutorial";
+import { getCurrentWorldTimeSnapshot } from "../services/worldTime";
 import { escapeHtml } from "../utils/text";
 import {
   availablePreparedNames,
+  onboardingNameApprovalNote,
   customNameWarningText,
   normalizeNameForRegistry,
+  onboardingNameChoiceTextIntent,
+  paginatePreparedNames,
   preparedNameByKey,
-  preparedNameSummary,
+  preparedNameCompactSummary,
   randomAvailablePreparedName,
   validateCustomCharacterName,
+  type PreparedCharacterName,
 } from "../services/characterNames";
+import { disablePlayerAuto, requestOrEnablePlayerAuto, replyStopPlayerAuto } from "./auto";
+import { sendHelp } from "./help";
+import { sendNews } from "./news";
+import { parseStartActionPayload, type StartActionPayload } from "../input/startPayloads";
+import { runExamineCurrentLocation } from "./look";
+import { showCharacter, showLocationForPlayer } from "./player";
+import { grantStarterKnifeIfMissing } from "../services/weapons";
 
 type NameFormPrompt = { key: keyof NameForms; question: string; button: string; prefix?: string };
 const CASE_BUTTON_LABELS: Partial<Record<keyof NameForms, string>> = {
@@ -47,7 +60,7 @@ const NAME_FORM_REVIEW_PROMPTS: NameFormPrompt[] = [
 const CASE_CONFIRM_BUTTON = "+ (далі)";
 
 type OnboardingState = {
-  step: "nameChoice" | "name" | "case" | "caseReview" | "caseEdit";
+  step: "pronoun" | "nameChoice" | "name" | "case" | "caseReview" | "caseEdit";
   telegramId: string;
   pronoun: "HE" | "SHE" | "THEY";
   name?: string;
@@ -72,6 +85,14 @@ function pronounKeyboard() {
     .text("Вони", "onboarding:pronoun:THEY");
 }
 
+function pronounFromText(text: string): OnboardingState["pronoun"] | null {
+  const normalized = text.trim().toLocaleLowerCase("uk-UA");
+  if (["він", "he"].includes(normalized)) return "HE";
+  if (["вона", "she"].includes(normalized)) return "SHE";
+  if (["вони", "they"].includes(normalized)) return "THEY";
+  return null;
+}
+
 function nameChoiceKeyboard() {
   return new InlineKeyboard()
     .text("Обрати ім'я зі списку", "onboarding:nameChoice:prepared")
@@ -81,14 +102,36 @@ function nameChoiceKeyboard() {
     .text("Ввести власне ім'я", "onboarding:nameChoice:custom");
 }
 
-function preparedNamesKeyboard(names: Array<{ key: string; forms: NameForms }>) {
+function preparedNamesKeyboard(names: PreparedCharacterName[], page: number) {
+  const pageData = paginatePreparedNames(names, page);
   const keyboard = new InlineKeyboard();
-  for (const name of names) {
+
+  for (const name of pageData.items) {
     keyboard.text(name.forms.nominative, `onboarding:name:${name.key}`).row();
   }
+
+  if (pageData.hasPrevious || pageData.hasNext) {
+    if (pageData.hasPrevious) keyboard.text("◀ Назад", `onboarding:preparedPage:${pageData.page - 1}`);
+    keyboard.text(`${pageData.page + 1}/${pageData.pageCount}`, "onboarding:preparedPageInfo");
+    if (pageData.hasNext) keyboard.text("Далі ▶", `onboarding:preparedPage:${pageData.page + 1}`);
+    keyboard.row();
+  }
+
   keyboard.text("Випадкове ім'я", "onboarding:nameChoice:random").row();
   keyboard.text("Ввести власне ім'я", "onboarding:nameChoice:custom");
   return keyboard;
+}
+
+function preparedNamesText(names: PreparedCharacterName[], page: number) {
+  const pageData = paginatePreparedNames(names, page);
+  return [
+    "Писарі вже перевірили ці імена, їхні відмінки й відповідність Порубіжжю.",
+    "",
+    `Сторінка ${pageData.page + 1}/${pageData.pageCount}:`,
+    ...pageData.items.map(preparedNameCompactSummary),
+    "",
+    "Можна гортати список, взяти випадкове ім'я або ввести власне.",
+  ].join("\n");
 }
 
 function casePrompt(forms: NameForms, index: number) {
@@ -227,15 +270,21 @@ function renderOnboardingNameConfirmation(player: {
   nameNominative: string | null;
   nameGenitive: string | null;
   nameVocative: string | null;
+  isNameApproved: boolean;
 }) {
   const name = player.nameNominative ?? "мандрівнику";
   const genitive = player.nameGenitive ?? name;
   const vocative = player.nameVocative ?? name;
-  return `Готово. Порубіжжя запам’ятало ім’я: <b>${escapeHtml(name)}</b>.\n\nНаприклад: «Травник звертається до <b>${escapeHtml(genitive)}</b>» і «<b>${escapeHtml(vocative)}</b>, стежка чекає».`;
+  return `Готово. Порубіжжя запам’ятало ім’я: <b>${escapeHtml(name)}</b>.\n${escapeHtml(onboardingNameApprovalNote(player.isNameApproved))}\n\nНаприклад: «Травник звертається до <b>${escapeHtml(genitive)}</b>» і «<b>${escapeHtml(vocative)}</b>, стежка чекає».`;
 }
 
-function renderOnboardingDateHint() {
-  return `Крук озивається з темного гілля:\n<blockquote>${escapeHtml(`Зараз ${renderCurrentWorldYearLine()} Але тобі це, мабуть, поки нічого не каже.`)}</blockquote>`;
+async function currentWorldYearLine() {
+  const snapshot = await getCurrentWorldTimeSnapshot();
+  return renderWorldYearLine(snapshot.year);
+}
+
+function renderOnboardingDateHint(yearLine: string) {
+  return `Крук озивається з темного гілля:\n<blockquote>${escapeHtml(`Зараз ${yearLine} Але тобі це, мабуть, поки нічого не каже.`)}</blockquote>`;
 }
 
 async function isStaleOnboardingCallback(ctx: any) {
@@ -253,25 +302,35 @@ async function isStaleOnboardingCallback(ctx: any) {
   return true;
 }
 
-async function showPreparedNameChoices(ctx: any, pronoun: OnboardingState["pronoun"]) {
+async function showPreparedNameChoices(ctx: any, pronoun: OnboardingState["pronoun"], page = 0, edit = false) {
   const names = availablePreparedNames(await usedCharacterNames(), { suggestedGender: guessGenderFromPronoun(pronoun) });
   if (names.length === 0) {
     await ctx.reply(`Усі підготовлені імена вже зайняті або зарезервовані.\n\n${customNameWarningText()}`, HTML_OPTIONS);
     return;
   }
 
-  await ctx.reply(
-    `Писарі вже перевірили ці імена, їхні відмінки й відповідність Порубіжжю:\n\n${names.map(preparedNameSummary).join("\n")}`,
-    { reply_markup: preparedNamesKeyboard(names) }
-  );
+  const pageData = paginatePreparedNames(names, page);
+  const message = preparedNamesText(names, pageData.page);
+  const replyMarkup = preparedNamesKeyboard(names, pageData.page);
+
+  if (edit && ctx.callbackQuery?.message) {
+    try {
+      await ctx.editMessageText(message, { reply_markup: replyMarkup });
+      return;
+    } catch {
+      // Telegram can reject edits for stale or unchanged messages; replying keeps onboarding moving.
+    }
+  }
+
+  await ctx.reply(message, { reply_markup: replyMarkup });
 }
 
 async function enterWorld(ctx: any, isMenuRefresh = false) {
   const from = ctx.from;
   if (!from) return;
 
-  const startLocationId = await getStartLocationId();
   const existing = await prisma.player.findUnique({ where: { telegramId: String(from.id) } });
+  const startLocationId = existing?.onboardingComplete ? await getStartLocationId() : null;
   const player = existing
     ? await prisma.player.update({
         where: { id: existing.id },
@@ -279,7 +338,7 @@ async function enterWorld(ctx: any, isMenuRefresh = false) {
           username: from.username ?? null,
           firstName: from.first_name ?? null,
           lastName: from.last_name ?? null,
-          currentLocationId: existing.currentLocationId ?? startLocationId,
+          currentLocationId: existing.onboardingComplete ? existing.currentLocationId ?? startLocationId : null,
         },
       })
     : await prisma.player.create({
@@ -288,14 +347,14 @@ async function enterWorld(ctx: any, isMenuRefresh = false) {
           username: from.username ?? null,
           firstName: from.first_name ?? null,
           lastName: from.last_name ?? null,
-          currentLocationId: startLocationId,
+          currentLocationId: null,
           stamina: BASE_STAMINA * 3,
           staminaMax: BASE_STAMINA,
         },
       });
 
   if (!player.onboardingComplete) {
-    onboarding.set(String(from.id), { step: "nameChoice", telegramId: String(from.id), pronoun: "HE" });
+    onboarding.set(String(from.id), { step: "pronoun", telegramId: String(from.id), pronoun: "HE" });
     await askOnboarding(ctx);
     return;
   }
@@ -303,7 +362,7 @@ async function enterWorld(ctx: any, isMenuRefresh = false) {
   if (ctx.chat?.id) await syncChatBotCommandsForTelegramId(ctx.api, ctx.chat.id, from.id);
 
   const displayName = player.nameNominative ?? player.firstName ?? "мандрівнику";
-  const yearLine = renderCurrentWorldYearLine();
+  const yearLine = await currentWorldYearLine();
   const currentLocation = player.currentLocationId
     ? await prisma.cellLocation.findUnique({
         where: { id: player.currentLocationId },
@@ -377,12 +436,15 @@ async function finishOnboarding(ctx: any, state: OnboardingState) {
 
   if (ctx.chat?.id) await syncChatBotCommandsForTelegramId(ctx.api, ctx.chat.id, state.telegramId);
 
+  await disablePlayerAuto(Number(state.telegramId));
+  await grantStarterKnifeIfMissing(player.id);
+  await recordNewPlayerChronicle(player).catch((error) => console.warn("Failed to record new-player chronicle:", error));
   const dream = await enterTutorialDream(player.id, { forceStart: true });
   await ctx.reply(renderOnboardingNameConfirmation(player), HTML_OPTIONS);
   await ctx.reply(dream.text, {
     reply_markup: await buildMainReplyKeyboardForTelegramId(Number(state.telegramId), false),
   });
-  await ctx.reply(renderOnboardingDateHint(), HTML_OPTIONS);
+  await ctx.reply(renderOnboardingDateHint(await currentWorldYearLine()), HTML_OPTIONS);
 
   const view = await renderLocationBrief(dream.locationId, player.id);
   await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
@@ -392,11 +454,31 @@ async function handleOnboardingText(ctx: any) {
   const from = ctx.from;
   const text = ctx.message?.text;
   if (!from || !text) return false;
-  if (text.trim().startsWith("/")) return false;
 
   const key = String(from.id);
   const state = onboarding.get(key);
   if (!state) return false;
+
+  if (/^\/(?:start|restart)\b/i.test(text.trim())) return false;
+
+  if (text.trim().startsWith("/")) {
+    await ctx.reply("Спершу завершимо знайомство: оберіть займенники або ім'я в повідомленні вище.");
+    return true;
+  }
+
+  if (state.step === "pronoun") {
+    const pronoun = pronounFromText(text);
+    if (!pronoun) {
+      await ctx.reply("Оберіть займенники кнопкою або напишіть: він, вона чи вони.", { reply_markup: pronounKeyboard() });
+      return true;
+    }
+
+    state.pronoun = pronoun;
+    state.step = "nameChoice";
+    onboarding.set(key, state);
+    await askNameChoice(ctx);
+    return true;
+  }
 
   if (state.step === "name") {
     const validation = validateCustomCharacterName(text);
@@ -441,12 +523,18 @@ async function handleOnboardingText(ctx: any) {
   }
 
   if (state.step === "nameChoice") {
-    const normalized = text.trim().toLocaleLowerCase("uk-UA");
-    if (["список", "обрати", "готове", "готові", "готове ім'я", "готові імена"].includes(normalized)) {
+    const intent = onboardingNameChoiceTextIntent(text);
+    if (!intent) {
+      await ctx.reply("Оберіть один із варіантів нижче або напишіть ім'я, яке хочете носити.", {
+        reply_markup: nameChoiceKeyboard(),
+      });
+      return true;
+    }
+    if (intent === "prepared") {
       await showPreparedNameChoices(ctx, state.pronoun);
       return true;
     }
-    if (["випадкове", "випадкове ім'я", "рандом", "навмання"].includes(normalized)) {
+    if (intent === "random") {
       const prepared = randomAvailablePreparedName(await usedCharacterNames(), { suggestedGender: guessGenderFromPronoun(state.pronoun) });
       if (!prepared) {
         await ctx.reply(`Усі підготовлені імена для цього вибору вже зайняті або зарезервовані.\n\n${await customNamePromptText(state)}`, HTML_OPTIONS);
@@ -459,16 +547,16 @@ async function handleOnboardingText(ctx: any) {
       await finishOnboarding(ctx, state);
       return true;
     }
-    if (["власне", "своє", "ввести", "власне ім'я", "своє ім'я"].includes(normalized)) {
+    if (intent === "customPrompt") {
       state.step = "name";
       onboarding.set(key, state);
       await ctx.reply(await customNamePromptText(state), HTML_OPTIONS);
       return true;
     }
-    await ctx.reply("Оберіть один із варіантів нижче або напишіть «список», «випадкове ім'я» чи «власне ім'я».", {
-      reply_markup: nameChoiceKeyboard(),
-    });
-    return true;
+
+    state.step = "name";
+    onboarding.set(key, state);
+    return handleOnboardingText(ctx);
   }
 
   if (state.step === "case" && state.forms) {
@@ -506,12 +594,93 @@ async function handleOnboardingText(ctx: any) {
   return false;
 }
 
+type StartPayloadPlayer = {
+  id: number;
+  onboardingComplete: boolean;
+  currentLocationId: number | null;
+};
+
+async function canRunStartPayloadAction(player: StartPayloadPlayer) {
+  if (!player.onboardingComplete || !player.currentLocationId) return false;
+
+  const [tutorialCompleted, currentLocation] = await Promise.all([
+    hasCompletedTutorial(player.id),
+    prisma.cellLocation.findUnique({
+      where: { id: player.currentLocationId },
+      select: {
+        key: true,
+        z: true,
+        region: { select: { key: true } },
+      },
+    }),
+  ]);
+
+  if (!tutorialCompleted) return false;
+  return currentLocation ? !isTutorialLocation(currentLocation) : false;
+}
+
+async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayload) {
+  const from = ctx.from;
+  if (!from) return false;
+
+  const player = await prisma.player.findUnique({
+    where: { telegramId: String(from.id) },
+    select: { id: true, onboardingComplete: true, currentLocationId: true },
+  });
+  if (!player || !(await canRunStartPayloadAction(player))) return false;
+
+  if (action === "look") {
+    await showLocationForPlayer(from.id, (text, options) => ctx.reply(text, options));
+    return true;
+  }
+
+  if (action === "examine") {
+    await runExamineCurrentLocation(ctx, "");
+    return true;
+  }
+
+  if (action === "news") {
+    await sendNews(ctx);
+    return true;
+  }
+
+  if (action === "auto") {
+    await requestOrEnablePlayerAuto(bot, ctx);
+    return true;
+  }
+
+  if (action === "autoStop") {
+    await replyStopPlayerAuto(ctx);
+    return true;
+  }
+
+  if (action === "me") {
+    await showCharacter(from.id, (text, options) => ctx.reply(text, options));
+    return true;
+  }
+
+  if (action === "help") {
+    await sendHelp(ctx);
+    return true;
+  }
+
+  return false;
+}
+
+async function handleStartCommand(bot: Bot, ctx: any) {
+  const action = parseStartActionPayload(ctx.match);
+  if (action && (await runStartPayloadAction(bot, ctx, action))) return;
+
+  await enterWorld(ctx, false);
+}
+
 export function registerStartHandlers(bot: Bot) {
   setDefaultBotCommandsWithRetry(bot).catch((error) =>
     console.warn("Failed to set bot commands permanently:", error)
   );
 
-  bot.command("start", async (ctx) => enterWorld(ctx, false));
+  bot.command("start", async (ctx) => handleStartCommand(bot, ctx));
+  bot.hears(/^start$/i, async (ctx) => enterWorld(ctx, false));
 
   bot.callbackQuery(/^onboarding:pronoun:(HE|SHE|THEY)$/, async (ctx) => {
     if (await isStaleOnboardingCallback(ctx)) return;
@@ -552,6 +721,24 @@ export function registerStartHandlers(bot: Bot) {
 
     onboarding.set(key, { ...state, step: "name" });
     await ctx.reply(await customNamePromptText({ ...state, telegramId: key }), HTML_OPTIONS);
+  });
+
+  bot.callbackQuery(/^onboarding:preparedPage:(\d+)$/, async (ctx) => {
+    if (await isStaleOnboardingCallback(ctx)) return;
+    const key = String(ctx.from.id);
+    const state = onboarding.get(key);
+    await ctx.answerCallbackQuery();
+
+    if (!state) {
+      await ctx.reply("Не бачу, для кого гортати імена. Напишіть /start, щоб почати шлях знову.");
+      return;
+    }
+
+    await showPreparedNameChoices(ctx, state.pronoun, Number(ctx.match[1]), true);
+  });
+
+  bot.callbackQuery("onboarding:preparedPageInfo", async (ctx) => {
+    await ctx.answerCallbackQuery({ text: "Це поточна сторінка списку." });
   });
 
   bot.callbackQuery(/^onboarding:cases:(confirm|restart|edit:([a-z]+))$/, async (ctx) => {

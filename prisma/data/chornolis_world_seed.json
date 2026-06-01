@@ -4779,7 +4779,7 @@
     {
       "key": "herbs",
       "name": "трави",
-      "description": "Корисні трави для збору, лікування й майбутньої алхемії."
+      "description": "Корисні трави для збору, лікування й майбутньої алхімії."
     }
   ],
   "resourceNodes": [
@@ -6522,6 +6522,7 @@
       "providesLight": false,
       "restStaminaCapMultiplier": null,
       "data": {
+        "icon": "🪶",
         "tutorial_wake_prompt": true
       }
     },

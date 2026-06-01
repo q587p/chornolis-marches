@@ -6,8 +6,9 @@ import { movementDurationMs, performOrQueuePlayerAction } from "../services/acti
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { sendActionSubmitFeedback } from "../utils/actionQueueUi";
+import { replyToActionError, actionErrorMessage } from "../utils/actionErrorReply";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
-import { isLocationExitLocked } from "../services/tutorial";
+import { locationLockedExitMessageForPlayer } from "../services/tutorial";
 
 const COMMAND_DIRECTIONS: Record<string, Direction> = {
   north: "NORTH",
@@ -18,6 +19,10 @@ const COMMAND_DIRECTIONS: Record<string, Direction> = {
   w: "WEST",
   east: "EAST",
   e: "EAST",
+  up: "UP",
+  u: "UP",
+  down: "DOWN",
+  d: "DOWN",
   inside: "INSIDE",
   in: "INSIDE",
   outside: "OUTSIDE",
@@ -38,7 +43,7 @@ export async function submitMove(bot: Bot, ctx: any, direction: Direction, answe
     return void (await ctx.reply("Туди немає видимого шляху.", { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) }));
   }
 
-  const lockedMessage = await isLocationExitLocked(currentLocationId, direction);
+  const lockedMessage = await locationLockedExitMessageForPlayer(player.id, currentLocationId, direction);
   if (lockedMessage) {
     if (answerCallback) return void (await safeAnswerCallbackQuery(ctx, lockedMessage));
     return void (await ctx.reply(lockedMessage, { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) }));
@@ -61,9 +66,9 @@ export async function submitMove(bot: Bot, ctx: any, direction: Direction, answe
     }
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Не вдалося виконати дію.";
+    const message = actionErrorMessage(error, "Не вдалося виконати дію.");
     if (answerCallback) await safeAnswerCallbackQuery(ctx, message);
-    else await ctx.reply(message);
+    await replyToActionError(ctx, error, "Не вдалося виконати дію.", { replyFallback: !answerCallback });
   }
 }
 
@@ -72,11 +77,11 @@ export function registerMovementHandlers(bot: Bot) {
     await submitMove(bot, ctx, ctx.match[1] as Direction, true);
   });
 
-  bot.callbackQuery(/^cmd:(north|south|west|east)$/, async (ctx) => {
+  bot.callbackQuery(/^cmd:(north|south|west|east|up|down)$/, async (ctx) => {
     await submitMove(bot, ctx, COMMAND_DIRECTIONS[ctx.match[1]], true);
   });
 
-  bot.command(["north", "n", "south", "s", "west", "w", "east", "e", "inside", "in", "outside", "out"], async (ctx) => {
+  bot.command(["north", "n", "south", "s", "west", "w", "east", "e", "up", "u", "down", "d", "inside", "in", "outside", "out"], async (ctx) => {
     const command = ctx.message?.text?.split(/\s+/)[0]?.replace(/^\//, "").toLowerCase();
     const direction = command ? COMMAND_DIRECTIONS[command] : undefined;
     if (!direction) return void (await ctx.reply("Невідомий напрямок."));
@@ -97,5 +102,13 @@ export function registerMovementHandlers(bot: Bot) {
 
   bot.hears(["Схід ➡️", "(Схід ➡️)"], async (ctx) => {
     await submitMove(bot, ctx, "EAST", false);
+  });
+
+  bot.hears(["⬆️ Вгору", "(⬆️ Вгору)"], async (ctx) => {
+    await submitMove(bot, ctx, "UP", false);
+  });
+
+  bot.hears(["⬇️ Вниз", "(⬇️ Вниз)"], async (ctx) => {
+    await submitMove(bot, ctx, "DOWN", false);
   });
 }

@@ -1,7 +1,7 @@
 ---
 id: SURV-001-C
 title: Повернення confirmation and aliases
-status: next
+status: testing
 type: feature
 area: survival
 priority: high
@@ -35,3 +35,9 @@ Add a confirmation step and Ukrainian text aliases.
 ## Implementation Order
 
 Do after: `SURV-001-B`.
+
+## 0.13.24 Notes
+
+- Added confirmation buttons for `/respawn` before any movement happens.
+- Added text aliases `повернення`, `повернення до табору`, `повернутися до табору`, `вернутися до табору`, and `назад до табору`.
+- Kept plain `повернутися` as the local Back action to avoid surprising players who only mean to return to the previous view.

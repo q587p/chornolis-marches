@@ -11,6 +11,7 @@ type TargetRef = {
   canAttack?: boolean;
   isAnimal?: boolean;
   isCorpse?: boolean;
+  canFreshen?: boolean;
 };
 
 const TARGETS_PER_PAGE = 8;
@@ -21,13 +22,25 @@ type TargetListOptions = {
   showDisambiguators?: boolean;
 };
 
+function returnCallbackForTargetPage(options: TargetListOptions, page: number) {
+  return options.pageCallbackPrefix ? `${options.pageCallbackPrefix}:${page}` : undefined;
+}
+
+function targetPageSuffix(returnCallback: string) {
+  const match = returnCallback.match(/^targetPage:(brief|details):(\d+)$/);
+  return match ? `:${match[1]}:${match[2]}` : "";
+}
+
 export function buildMovementKeyboard(exits: any[]) {
   const keyboard = new InlineKeyboard();
   const north = exits.find((e) => e.direction === "NORTH");
+  const up = exits.find((e) => e.direction === "UP");
   const east = exits.find((e) => e.direction === "EAST");
   const south = exits.find((e) => e.direction === "SOUTH");
+  const down = exits.find((e) => e.direction === "DOWN");
   const west = exits.find((e) => e.direction === "WEST");
 
+  if (up) keyboard.text("⬆️ Вгору", "cmd:up").row();
   if (north) keyboard.text("⬆️ Північ", "cmd:north").row();
 
   if (west) keyboard.text("⬅️ Захід", "cmd:west");
@@ -36,6 +49,7 @@ export function buildMovementKeyboard(exits: any[]) {
   keyboard.row();
 
   if (south) keyboard.text("⬇️ Південь", "cmd:south").row();
+  if (down) keyboard.text("⬇️ Вниз", "cmd:down").row();
   return keyboard;
 }
 
@@ -64,6 +78,20 @@ export function buildFatigueRestKeyboard() {
   return new InlineKeyboard().text("🧘 Відпочити", "rest:start");
 }
 
+export function buildStandUpKeyboard() {
+  return new InlineKeyboard().text("Встати", "posture:stand");
+}
+
+export function buildWakeUpKeyboard() {
+  return new InlineKeyboard().text("Прокинутися", "sleep:wake");
+}
+
+export function buildLyingPostureKeyboard() {
+  return new InlineKeyboard()
+    .text("Сісти", "posture:sit")
+    .text("Встати", "posture:stand");
+}
+
 export function buildRestingActionChoiceKeyboard() {
   return new InlineKeyboard()
     .text("✋ Перервати", "rest:interrupt")
@@ -85,35 +113,46 @@ export function buildExamineLocationKeyboard() {
   return new InlineKeyboard().text("🔎 Роздивитися", "examine");
 }
 
+export function buildLookLocationKeyboard() {
+  return new InlineKeyboard().text("👀 Озирнутися", "look");
+}
+
 export function buildExamineTracksKeyboard() {
   return new InlineKeyboard().text("🐾 Сліди", "track:details");
 }
 
 export function buildAnonymousTargetKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet" | "canAttack" | "isAnimal">) {
   const keyboard = new InlineKeyboard()
-    .text("🔎 Роздивитися", `social:inspect:${target.type}:${target.id}:mystery`);
-  keyboard.text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:mystery`);
-  keyboard.row();
+    .text("👁 Глянути", `social:look:${target.type}:${target.id}:mystery`)
+    .text("🔎 Роздивитися", `social:inspect:${target.type}:${target.id}:mystery`)
+    .text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:mystery`)
+    .row();
 
-  if (target.canGreet) keyboard.text("💬 Привітати", `social:greet:${target.type}:${target.id}:mystery`).row();
+  if (target.canGreet) keyboard.text("💬 Привітати", `social:greet:${target.type}:${target.id}:mystery`);
+  keyboard.text("🗣 Сказати", `targetSpeech:say:${target.type}:${target.id}:mystery`);
+  keyboard.text("🤫 Прошепотіти", `targetSpeech:whisper:${target.type}:${target.id}:mystery`).row();
   keyboard.text("✨ Сигнали", `signalMenu:${target.type}:${target.id}:mystery`).row();
-  keyboard.text("↩️ Назад", "location:details").row();
+  keyboard.text("↩️ Назад", "location:details");
   return keyboard;
 }
 
-export function buildTargetActionKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet" | "canAttack" | "isAnimal">, again = false) {
+export function buildTargetActionKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet" | "canAttack" | "isAnimal">, again = false, returnCallback = "location:details") {
+  const pageSuffix = targetPageSuffix(returnCallback);
   const keyboard = new InlineKeyboard()
-    .text(again ? "🔎 Роздивитися ще раз" : "🔎 Роздивитися", `social:inspect:${target.type}:${target.id}:known`);
-  keyboard.text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:known`);
-  keyboard.row();
+    .text("👁 Глянути", `social:look:${target.type}:${target.id}:known${pageSuffix}`)
+    .text(again ? "🔎 Роздивитися ще раз" : "🔎 Роздивитися", `social:inspect:${target.type}:${target.id}:known${pageSuffix}`)
+    .text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:known${pageSuffix}`)
+    .row();
 
-  if (target.canGreet) keyboard.text("💬 Привітати", `social:greet:${target.type}:${target.id}:known`).row();
+  if (target.canGreet) keyboard.text("💬 Привітати", `social:greet:${target.type}:${target.id}:known${pageSuffix}`);
+  keyboard.text("🗣 Сказати", `targetSpeech:say:${target.type}:${target.id}:known`);
+  keyboard.text("🤫 Прошепотіти", `targetSpeech:whisper:${target.type}:${target.id}:known`).row();
   for (const socialId of quickSocialsForTarget({ kind: target.type, isAnimal: Boolean(target.isAnimal), canGreet: target.canGreet })) {
     const social = SOCIAL_DEFINITIONS.find((item) => item.id === socialId);
     if (social) keyboard.text(social.label, `signal:${social.id}:${target.type}:${target.id}:known`);
   }
-  keyboard.row().text("✨ Ще сигнали", `signalMenu:${target.type}:${target.id}:known`).row();
-  keyboard.text("↩️ Назад", "location:details").row();
+  keyboard.text("✨ Ще сигнали", `signalMenu:${target.type}:${target.id}:known`).row();
+  keyboard.text("↩️ Назад", returnCallback);
   return keyboard;
 }
 
@@ -128,15 +167,28 @@ export function buildSocialSignalKeyboard(target: Pick<TargetRef, "type" | "id">
   return keyboard;
 }
 
-export function buildCorpseActionKeyboard(target: ResolvedTarget) {
-  const keyboard = new InlineKeyboard().text("🔎 Оглянути труп", `social:inspect:${target.kind}:${target.id}:known`).row();
-  keyboard.text("🤲 Підібрати", `social:pickup:${target.kind}:${target.id}`).row();
-  if (target.canFreshen) keyboard.text("🔪 Освіжувати", `social:freshen:${target.kind}:${target.id}:known`).row();
-  keyboard.text("↩️ Назад", "location:details").row();
+export function buildLocationSocialSignalKeyboard() {
+  const keyboard = new InlineKeyboard();
+  const targetlessSocials = SOCIAL_DEFINITIONS.filter((social) => social.targetlessActorMessage && social.targetlessRoomMessage);
+  for (const [index, social] of targetlessSocials.entries()) {
+    keyboard.text(social.label, `character:signal:${social.id}`);
+    if (index % 2 === 1) keyboard.row();
+  }
+  if (targetlessSocials.length % 2 === 1) keyboard.row();
+  return keyboard.text("↩️ Назад", "character:back");
+}
+
+export function buildCorpseActionKeyboard(target: ResolvedTarget, returnCallback = "location:details") {
+  const pageSuffix = targetPageSuffix(returnCallback);
+  const keyboard = new InlineKeyboard().text("🔎 Оглянути труп", `social:inspect:${target.kind}:${target.id}:known${pageSuffix}`).row();
+  keyboard.text("🤲 Підібрати", `social:pickup:${target.kind}:${target.id}${pageSuffix}`).row();
+  if (target.canFreshen) keyboard.text("🔪 Освіжувати", `social:freshen:${target.kind}:${target.id}:known${pageSuffix}`).row();
+  keyboard.text("↩️ Назад", returnCallback);
   return keyboard;
 }
 
 function targetButtonLabel(target: TargetRef) {
+  if (target.isCorpse) return target.label;
   return target.actionLabel ? `${target.label} — ${target.actionLabel}` : target.label;
 }
 
@@ -163,9 +215,17 @@ export function buildTargetListKeyboard(targets: TargetRef[], options: TargetLis
   const start = page * TARGETS_PER_PAGE;
   const pageTargets = targets.slice(start, start + TARGETS_PER_PAGE);
   const labels = options.showDisambiguators ? targetButtonLabels(targets) : targets.map(targetButtonLabel);
+  const returnCallback = returnCallbackForTargetPage(options, page);
+  const pageContext = returnCallback ? `:${options.pageCallbackPrefix?.endsWith(":brief") ? "brief" : "details"}:${page}` : "";
 
   for (const [index, target] of pageTargets.entries()) {
-    keyboard.text(labels[start + index] ?? target.label, `target:${target.type}:${target.id}`).row();
+    keyboard.text(labels[start + index] ?? target.label, `target:${target.type}:${target.id}${pageContext}`).row();
+  }
+
+  const freshenableCorpses = targets.filter((target) => target.type === "creature" && target.isCorpse && target.canFreshen);
+  if (freshenableCorpses.length > 1) {
+    keyboard.text("🔪 Освіжувати всі", "social:freshenAll");
+    if (totalPages > 1 && options.pageCallbackPrefix) keyboard.row();
   }
 
   if (totalPages > 1 && options.pageCallbackPrefix) {
@@ -175,6 +235,9 @@ export function buildTargetListKeyboard(targets: TargetRef[], options: TargetLis
     keyboard.row();
   }
 
+  while (keyboard.inline_keyboard.length > 0 && keyboard.inline_keyboard[keyboard.inline_keyboard.length - 1]?.length === 0) {
+    keyboard.inline_keyboard.pop();
+  }
   return keyboard;
 }
 

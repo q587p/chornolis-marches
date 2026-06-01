@@ -1,27 +1,53 @@
 id,title,status,type,area,priority,tags,file
 ADM-001,"Admin permissions, moderation and restricted reset",backlog,feature,admin,high,"admin,permissions,reset,moderation,names",docs/planning/items/ADM-001-admin-rights.md
-ADM-001-A,Dangerous scribe tool audit,next,technical,admin,medium,"admin,audit,safety",docs/planning/items/ADM-001-A.md
-ADM-001-B,Scribe action audit helper,next,technical,admin,medium,"admin,audit,world-events",docs/planning/items/ADM-001-B.md
-CAL-001,"Calendar, moon phases and named years",icebox,system,world_time,medium,"calendar,world-time,moon-phases,seasons,folklore,atmosphere",docs/planning/items/CAL-001_calendar_moon_phases_and_named_years.md
-CMD-001,Near-term text command pack,next,feature,commands,high,"commands,aliases,mud,speech,navigation",docs/planning/items/CMD-001-near-term-text-command-pack.md
+ADM-001-A,Dangerous scribe tool audit,done,technical,admin,medium,"admin,audit,safety",docs/planning/items/ADM-001-A.md
+ADM-001-B,Scribe action audit helper,done,technical,admin,medium,"admin,audit,world-events",docs/planning/items/ADM-001-B.md
+ADM-001-C,Restart confirmation and HTML safety hardening,next,technical,admin,high,"admin,safety,restart,slashless,html,features",docs/planning/items/ADM-001-C.md
+ADM-002,Scribe creature corpse creation command,testing,feature,admin,medium,"admin,creatures,corpses,testing",docs/planning/items/ADM-002-add-creature-corpse-command.md
+CAL-001,"Deep calendar, sacred days and named years",icebox,system,world_time,medium,"calendar,world-time,moon-phases,seasons,folklore,atmosphere",docs/planning/items/CAL-001_calendar_moon_phases_and_named_years.md
+CAMP-001,Starter camp prose and feature audit,done,content,core-loop,high,"camp,onboarding,mud,look,examine",docs/planning/items/CAMP-001-starter-camp-prose-and-feature-audit.md
+CAMP-002,Starter watchtower and camp torch-source route update,testing,feature,core-loop,high,"camp,map,torch,light,mud,vertical-exits",docs/planning/items/CAMP-002-starter-watchtower-and-torch-source.md
+CAMP-003,Shared beginner cache and hidden restock,testing,feature,core-loop,high,"camp,onboarding,inventory,light,restock",docs/planning/items/CAMP-003-shared-beginner-cache.md
+CMD-001,Near-term text command pack,testing,feature,commands,high,"commands,aliases,mud,speech,navigation",docs/planning/items/CMD-001-near-term-text-command-pack.md
+CMD-002,Put items into local containers and features,testing,feature,commands,high,"commands,inventory,containers,aliases",docs/planning/items/CMD-002-put-items-into-containers.md
 COMBAT-001,Creature aggression and defense,backlog,feature,combat,medium,"animals,combat,predators,ecology",docs/planning/items/COMBAT-001-creature-aggression-and-defense.md
+DREAM-001,Sleeping body and dream presence separation,backlog,technical,dreams,high,"dreams,tutorial,architecture,body,liminality",docs/planning/items/DREAM-001-sleeping-body-and-dream-presence.md
+DREAM-002,Lucid dream instance MVP,backlog,feature,dreams,medium,"dreams,lucid-dreams,instances,groups,quests",docs/planning/items/DREAM-002-lucid-dream-instance-mvp.md
+DREAM-003,Dream outcomes and guarded rare transfer,backlog,feature,dreams,medium,"dreams,rewards,knowledge,item-origin,quests",docs/planning/items/DREAM-003-dream-outcomes-and-rare-transfer.md
+DREAM-004,Advanced group and place-spirit dreams,icebox,feature,dreams,low,"dreams,groups,spirits,rituals,mythic",docs/planning/items/DREAM-004-advanced-group-and-place-spirit-dreams.md
 ECO-001,Reproduction and herbivore overpopulation,testing,feature,ecology,high,"ecology,reproduction,herbivores,rabbits,resources,world-reactivity",docs/planning/items/ECO-001-reproduction-and-overpopulation.md
+ECO-002,Carcass drop-off contribution and settlement reaction,testing,feature,ecology,high,"ecology,hunting,settlement,rewards",docs/planning/items/ECO-002-carcass-dropoff-reaction.md
+ECO-003,Gate hunting saturation and stand-down state,testing,feature,ecology,high,"ecology,hunting,settlement,npc,rewards",docs/planning/items/ECO-003-gate-hunting-saturation.md
+ECO-004,Population floor restoration,testing,feature,ecology,high,"ecology,creatures,population,world-tick",docs/planning/items/ECO-004-population-floor-restoration.md
+ECO-005,Animal restoration offerings,next,feature,ecology,high,"ecology,creatures,offerings,location-features",docs/planning/items/ECO-005-animal-restoration-offerings.md
 ECON-001,Barter and trade,backlog,feature,economy,medium,"barter,trade,npc,economy",docs/planning/items/ECON-001-barter-and-trade.md
 FIRE-001-A,Active light connects to visibility,next,feature,survival,high,"fire,light,visibility",docs/planning/items/FIRE-001-A.md
 FIRE-001-B,Expired campfire behavior polish,next,feature,survival,medium,"fire,campfire,copy",docs/planning/items/FIRE-001-B.md
 FIRE-001-C,Carried torch visibility,next,feature,survival,high,"torch,light,visibility",docs/planning/items/FIRE-001-C.md
+FIRE-001-D,Light source matrix test,next,qa,survival,high,"fire,light,visibility,torch,campfire,npc",docs/planning/items/FIRE-001-D-light-source-matrix-test.md
 FISH-001,Riverbank fishing and fisher NPC,backlog,feature,survival,medium,"fishing,npc,skills,riverbank,observation",docs/planning/items/FISH-001-riverbank-fishing-and-fisher-npc.md
+FISH-002,Riverbank fisher tiny slice,proposed,feature,survival,medium,"fishing,npc,riverbank,observation,atmosphere",docs/planning/items/FISH-002-riverbank-fisher-tiny-slice.md
 FOOD-001,"Corpse freshening, meat and campfire cooking",testing,feature,survival,high,"food,corpses,freshening,cooking,hunger,campfire",docs/planning/items/FOOD-001-corpse-freshening-meat-and-campfire-cooking.md
+FOOD-002,Spoiled meat and risky eating,backlog,feature,survival,medium,"food,cooking,survival,hunger,risk",docs/planning/items/FOOD-002-spoiled-meat-and-risky-eating.md
+FOOD-003,Freshened corpse remains,backlog,feature,survival,medium,"food,corpses,remains,hunting,dropoff",docs/planning/items/FOOD-003-freshened-corpse-remains.md
+FOOD-004,Hunger cues and eating nudges,testing,feature,survival,medium,"food,hunger,reminders,ux",docs/planning/items/FOOD-004-hunger-cues-and-eating-nudges.md
+FOOD-005,Hunger consequences for health and stamina recovery,backlog,feature,survival,medium,"food,hunger,hp,stamina,survival",docs/planning/items/FOOD-005-hunger-consequences.md
+FOOD-006,Mushroom varieties and identification,backlog,feature,survival,medium,"food,mushrooms,foraging,alchemy,risk",docs/planning/items/FOOD-006-mushroom-varieties-and-identification.md
+HERALD-001,Embedded main-service mode for Boundary Mark Chancery Herald,icebox,technical,ops,low,"herald,telegram,render,ops,architecture,icebox",docs/planning/items/HERALD-001-embedded-main-service-mode.md
+HIDE-001,Hidden approach MVP,backlog,feature,visibility,medium,"hiding,stealth,visibility,social-memory,0.15",docs/planning/items/HIDE-001-hidden-approach-mvp.md
 HMYZ-001-A,Audit hmyz model,next,technical,survival,high,"hmyz,resources,inventory",docs/planning/items/HMYZ-001-A.md
 HMYZ-001-B,Seed starter hmyz,next,feature,survival,high,"hmyz,seed,starter",docs/planning/items/HMYZ-001-B.md
 HMYZ-001-C,Pickup hmyz polish,next,feature,survival,high,"hmyz,pickup,inventory",docs/planning/items/HMYZ-001-C.md
 HMYZ-001-D,Add hmyz to campfire,next,feature,survival,high,"hmyz,campfire,fuel",docs/planning/items/HMYZ-001-D.md
 HMYZ-001-E,Hmyz observer messages,next,ux,survival,medium,"hmyz,observer,local-events",docs/planning/items/HMYZ-001-E.md
+HMYZ-001-F,Persist and queue tree-shake hmyz,backlog,technical,survival,medium,"hmyz,trees,resources,action-queue",docs/planning/items/HMYZ-001-F.md
 ICE-001,Mythic skill learning from spirits,icebox,feature,progression,low,"liminality,skills,mythic,observation",docs/planning/items/ICE-001-mythic-skills.md
 ICE-002,Rituals and sacred days,icebox,feature,mythic_systems,low,"rituals,calendar,weather,mythic",docs/planning/items/ICE-002-rituals-and-sacred-days.md
 ICE-003,Caravans and regional trade,icebox,feature,economy,low,"economy,settlements,npc,world_simulation",docs/planning/items/ICE-003-caravans.md
 ICE-004,"Camps, shelters and construction",icebox,feature,construction,low,"survival,crafting,settlement,storage",docs/planning/items/ICE-004-construction.md
 ITEM-001,Pickup versus gather command semantics,testing,bug,inventory,high,"aliases,pickup,gather,inventory,ground-items",docs/planning/items/ITEM-001-pickup-vs-gather-semantics.md
+ITEM-002,Queued pickup actions,backlog,feature,inventory,medium,"pickup,inventory,action-queue,stamina,ground-items",docs/planning/items/ITEM-002-queued-pickup-actions.md
+LANG-001,Lexicon and agreement audit,backlog,chore,content,medium,"ukrainian,lexicon,grammar,text",docs/planning/items/LANG-001-lexicon-and-agreement-audit.md
 LEARN-001-A,Minimal learning storage decision,next,design,learning,high,"learning,progression,schema",docs/planning/items/LEARN-001-A.md
 LEARN-001-B,Minimal CharacterSkill model,next,technical,learning,high,"learning,schema,skills",docs/planning/items/LEARN-001-B.md
 LEARN-001-C,grantSkillProgress helper,next,feature,learning,high,"learning,service,progression",docs/planning/items/LEARN-001-C.md
@@ -30,53 +56,110 @@ LOOP-001-A,Starter look/examine output audit,next,design,core-loop,medium,"look,
 LOOP-001-B,Starter camp prose polish,next,content,core-loop,medium,"prose,starter,look",docs/planning/items/LOOP-001-B.md
 LOOP-001-C,Bridge threshold prose polish,next,content,core-loop,medium,"prose,bridge,liminality",docs/planning/items/LOOP-001-C.md
 LOOP-001-D,Track detail wording polish,next,ux,tracking,medium,"tracks,examine,copy",docs/planning/items/LOOP-001-D.md
+LOOP-002,Gate hunting loop,testing,feature,world,high,"ecology,hunting,gate,living-world",docs/planning/items/LOOP-002-gate-hunting-loop.md
+LOOP-003,Old campfire memory omen,testing,feature,core-loop,medium,"fire,light,omen,examine,atmosphere",docs/planning/items/LOOP-003-old-campfire-memory-omen.md
 MAP-002-A,First biome foraging table,next,feature,world,high,"map,biome,foraging",docs/planning/items/MAP-002-A.md
 MAP-002-B,Generic gather uses biome candidates,next,feature,world,high,"gather,biome,foraging",docs/planning/items/MAP-002-B.md
 MAP-002-C,Biome foraging text variants,next,content,world,medium,"gather,biome,copy",docs/planning/items/MAP-002-C.md
+MAP-003,Playable map expansion,testing,content,world,high,"map,world,exploration,regions",docs/planning/items/MAP-003-playable-map-expansion.md
+NAV-001,Location-to-location route finding,testing,feature,world,medium,"navigation,movement,npc,world",docs/planning/items/NAV-001-location-route-finding.md
+NPC-002,Hunter auto-program MVP,backlog,feature,npc,high,"npc,ecology,hunting,living-world",docs/planning/items/NPC-002-hunter-auto-program.md
+NPC-003,Herbalist service layer,next,technical,npc,medium,"npc,herbalist,architecture,world-tick",docs/planning/items/NPC-003-herbalist-service-layer.md
+NPC-004,Actor inventory and held light foundation,in_progress,technical,npc,high,"npc,actors,inventory,torch,light",docs/planning/items/NPC-004-actor-inventory-held-light.md
+NPC-005,NPC hunger and food behavior,next,feature,npc,high,"npc,actors,hunger,food,cooking,herbalist,hunting",docs/planning/items/NPC-005-npc-hunger-and-food-behavior.md
+NPC-006,Hunter patrol and meat practice loop,next,feature,npc,high,"npc,hunting,cooking,freshening,observation-learning,living-world",docs/planning/items/NPC-006-hunter-patrol-meat-practice-loop.md
 OBS-001-A,Observe action and alias skeleton,next,feature,learning,high,"observe,aliases,targets",docs/planning/items/OBS-001-A.md
 OBS-001-B,Visible herbalist action,next,feature,learning,high,"observe,npc,herbalism",docs/planning/items/OBS-001-B.md
 OBS-001-C,Herbalism/gathering progress from observation,next,feature,learning,high,"observe,herbalism,progression",docs/planning/items/OBS-001-C.md
 OBS-001-D,Observation anti-farming cooldown,next,feature,learning,medium,"observe,cooldown,anti-grind",docs/planning/items/OBS-001-D.md
+OBS-002,Visible herbalist observation moment,proposed,feature,learning,high,"observe,npc,herbalism,progression",docs/planning/items/OBS-002-visible-herbalist-observation-moment.md
 OMEN-001-A,Choose one living-world omen,next,design,world,medium,"omen,ambient,living-world",docs/planning/items/OMEN-001-A.md
 OMEN-001-B,Omen trigger and rate limit,next,feature,world,medium,"omen,ambient,cooldown",docs/planning/items/OMEN-001-B.md
 OMEN-001-C,Omen local text,next,content,world,medium,"omen,copy,atmosphere",docs/planning/items/OMEN-001-C.md
 OMEN-001-D,Omen trace or object result,next,feature,world,medium,"omen,objects,tracks",docs/planning/items/OMEN-001-D.md
+OMEN-002,Hidden follower spirit MVP,backlog,feature,world,medium,"omen,hidden-presence,spirit,ambient",docs/planning/items/OMEN-002-hidden-follower-spirit-mvp.md
+OMEN-003,Strange track / stezhnyk hint omen,proposed,feature,world,medium,"omen,forest,hidden-presence,spirit,atmosphere",docs/planning/items/OMEN-003-strange-track-stezhnyk-hint.md
 ONB-001,Newcomer helper and tutorial,testing,feature,onboarding,high,"onboarding,tutorial,beginner,help,ux",docs/planning/items/ONB-001-newcomer-helper-and-tutorial.md
-ONB-001-A,Dream tutorial flow audit,next,design,onboarding,high,"tutorial,audit,core-loop",docs/planning/items/ONB-001-A.md
-ONB-001-B,Hint after first Озирнутися,next,ux,onboarding,high,"tutorial,look,copy",docs/planning/items/ONB-001-B.md
-ONB-001-C,Hint after first Роздивитися,next,ux,onboarding,high,"tutorial,examine,attention",docs/planning/items/ONB-001-C.md
+ONB-001-A,Dream tutorial flow audit,done,design,onboarding,high,"tutorial,audit,core-loop",docs/planning/items/ONB-001-A.md
+ONB-001-B,Hint after first Озирнутися,done,ux,onboarding,high,"tutorial,look,copy",docs/planning/items/ONB-001-B.md
+ONB-001-C,Hint after first Роздивитися,done,ux,onboarding,high,"tutorial,examine,attention",docs/planning/items/ONB-001-C.md
 ONB-001-D,Tutorial rest lesson polish,next,ux,onboarding,medium,"tutorial,rest,stamina",docs/planning/items/ONB-001-D.md
 ONB-001-E,Wake and return fallback polish,next,ux,onboarding,medium,"tutorial,sleep,wake,aliases",docs/planning/items/ONB-001-E.md
 ONB-001-F,Tutorial hint that observation matters,next,ux,onboarding,medium,"tutorial,observe,learning",docs/planning/items/ONB-001-F.md
+ONB-001-G,"Tutorial fire, torch and hmyz branch",next,feature,onboarding,high,"tutorial,fire,torch,hmyz,campfire",docs/planning/items/ONB-001-G.md
+ONB-001-H,Hidden dream gate closing phrase reward,next,feature,onboarding,medium,"onboarding,tutorial,dream-gate,secret,reward",docs/planning/items/ONB-001-H.md
 ONB-002,Character name rules and onboarding,next,feature,onboarding,high,"onboarding,names,scribes,generated-names,ukrainian-grammar,validation",docs/planning/items/ONB-002-character-name-rules-and-onboarding.md
 ONB-002-A,Expand prepared-name pool,testing,feature,onboarding,high,"onboarding,names,ukrainian-grammar",docs/planning/items/ONB-002-A.md
 ONB-002-B,Expand forbidden-name normalization,testing,feature,onboarding,high,"onboarding,names,validation",docs/planning/items/ONB-002-B.md
-ONB-002-C,Uncertain custom-name review status,next,feature,onboarding,high,"onboarding,scribes,names",docs/planning/items/ONB-002-C.md
+ONB-002-C,Uncertain custom-name review status,testing,feature,onboarding,high,"onboarding,scribes,names",docs/planning/items/ONB-002-C.md
 ONB-002-D,Name onboarding help copy,next,ux,onboarding,medium,"onboarding,help,copy",docs/planning/items/ONB-002-D.md
+ONB-003,Tutorial player wellbeing aside,testing,ux,onboarding,medium,"onboarding,tutorial,wellbeing,sleep",docs/planning/items/ONB-003-player-wellbeing-aside.md
+ONB-004,First night guidance,done,ux,onboarding,medium,"onboarding,night,light,tutorial,copy",docs/planning/items/ONB-004-first-night-guidance.md
+ONB-006,Look/examine semantics in the dream,testing,ux,onboarding,high,"tutorial,look,examine,ux,copy",docs/planning/items/ONB-006-look-examine-semantics-in-dream.md
 PERF-001,Runtime performance plan and creature simulation budget,backlog,technical,performance,high,"performance,ecology,creatures,action-queue,simulation,status,auto",docs/planning/items/PERF-001-budgeted-and-aggregated-creature-simulation.md
 PLAN-001,Repository docs are the planning source of truth,testing,documentation,planning,high,"planning,docs,roadmap",docs/planning/items/PLAN-001.md
 PROG-002,Observation-based learning,backlog,feature,progression,medium,"skills,observation,npc,animals,mythic",docs/planning/items/PROG-002-observation-learning.md
 PROG-003,Animal experience and titles,backlog,feature,progression,medium,"animals,ecology,progression,combat",docs/planning/items/PROG-003-animal-experience-and-titles.md
+PROG-004,Personal chronicle milestones,next,feature,progression,high,"journal,chronicle,milestones,cooking,learning,personal-history",docs/planning/items/PROG-004-personal-chronicle-milestones.md
+PROG-005,Global chronicles and world milestones,testing,feature,progression,high,"chronicle,world-events,onboarding,gate-hunting,milestones",docs/planning/items/PROG-005-global-chronicles-and-world-milestones.md
+QA-001,0.13 first-session closure smoke,testing,qa,onboarding,high,"qa,onboarding,tutorial,core-loop,release",docs/planning/items/QA-001-0.13-first-session-closure-smoke.md
+QA-002,Camp and dream first-session smoke,next,qa,onboarding,medium,"onboarding,camp,dream,qa",docs/planning/items/QA-002-camp-dream-first-session-smoke.md
+REL-001,Release branch PR summary and risk discipline,testing,process,release,high,"release,github,pr,planning",docs/planning/items/REL-001-release-branch-pr-summary-risk.md
+SES-001-A,AFK and End Session controls,testing,feature,session,high,"telegram,session,afk,ux",docs/planning/items/SES-001-A.md
+SES-001-B,Auto-AFK and proactive message guards,testing,feature,session,high,"telegram,session,reminders,tutorial",docs/planning/items/SES-001-B.md
+SES-001-C,Session presence tests and manual checklist,testing,qa,session,high,"telegram,session,tests,qa",docs/planning/items/SES-001-C.md
+SES-002,Atmospheric presence and notification design,backlog,design,session,medium,"telegram,session,atmosphere,notifications",docs/planning/items/SES-002-atmospheric-presence-backlog.md
 SETTLE-001,Starter settlement,backlog,feature,settlements,high,"settlement,npc,onboarding",docs/planning/items/SETTLE-001-starter-settlement.md
-SURV-001,Early respawn support,next,feature,survival,high,"onboarding,respawn,beginner",docs/planning/items/SURV-001-early-respawn.md
-SURV-001-A,Beginner return eligibility helper,next,feature,survival,high,"respawn,beginner,safety",docs/planning/items/SURV-001-A.md
-SURV-001-B,/respawn command skeleton,next,feature,survival,high,"respawn,telegram,command",docs/planning/items/SURV-001-B.md
-SURV-001-C,Повернення confirmation and aliases,next,feature,survival,high,"respawn,aliases,button-parity",docs/planning/items/SURV-001-C.md
-SURV-001-D,Actual return to start camp,next,feature,survival,high,"respawn,location,queue",docs/planning/items/SURV-001-D.md
-SURV-001-E,Beginner return cooldown/consequence,next,feature,survival,medium,"respawn,cooldown,balance",docs/planning/items/SURV-001-E.md
+SLEEP-001,Lying posture and lie command,testing,feature,survival,high,"sleep,posture,aliases,rest",docs/planning/items/SLEEP-001-lying-posture-and-lie-command.md
+SLEEP-002,Ordinary sleep MVP,testing,feature,survival,high,"sleep,wake,stamina,hp,tutorial",docs/planning/items/SLEEP-002-ordinary-sleep-mvp.md
+SLEEP-003,World-time auto-wake and sleep comfort,testing,feature,survival,medium,"sleep,world-time,campfire,comfort,recovery",docs/planning/items/SLEEP-003-world-time-autowake-and-comfort.md
+SLEEP-004,External forced sleep causes,icebox,feature,survival,low,"sleep,creatures,elixirs,rituals,danger",docs/planning/items/SLEEP-004-external-forced-sleep-causes.md
+SOC-001,Contacts / acquaintances MVP,backlog,feature,social,high,"social,contacts,acquaintances,actors,telegram",docs/planning/items/SOC-001-contacts-acquaintances.md
+SOC-002,Follow intent MVP,backlog,feature,social,high,"social,following,actors,telegram,groups",docs/planning/items/SOC-002-follow-intent.md
+SOC-003,Travel group core,backlog,feature,social,high,"social,groups,travel,actors,telegram",docs/planning/items/SOC-003-travel-group-core.md
+SOC-004,Group movement MVP,backlog,feature,social,high,"social,groups,movement,action-queue,stamina",docs/planning/items/SOC-004-group-movement.md
+SOC-005,Group combat assist conservative plan,backlog,feature,combat,medium,"social,groups,combat,balance",docs/planning/items/SOC-005-group-combat-assist.md
+SOC-006,NPC group compatibility,backlog,feature,social,medium,"social,groups,npc,actors,creatures",docs/planning/items/SOC-006-npc-group-compatibility.md
+SOC-007,Telegram UI and copy for contacts / follow / groups,backlog,feature,social,medium,"social,telegram,ui,copy,groups",docs/planning/items/SOC-007-telegram-ui-and-copy.md
+SOCIAL-003,Theft reaction signals,backlog,feature,social,medium,"social,theft,signals,reactions,0.15",docs/planning/items/SOCIAL-003-theft-reaction-signals.md
+SURV-001,Early respawn support,testing,feature,survival,high,"onboarding,respawn,beginner",docs/planning/items/SURV-001-early-respawn.md
+SURV-001-A,Beginner return eligibility helper,testing,feature,survival,high,"respawn,beginner,safety",docs/planning/items/SURV-001-A.md
+SURV-001-B,/respawn command skeleton,testing,feature,survival,high,"respawn,telegram,command",docs/planning/items/SURV-001-B.md
+SURV-001-C,Повернення confirmation and aliases,testing,feature,survival,high,"respawn,aliases,button-parity",docs/planning/items/SURV-001-C.md
+SURV-001-D,Actual return to start camp,testing,feature,survival,high,"respawn,location,queue",docs/planning/items/SURV-001-D.md
+SURV-001-E,Beginner return cooldown/consequence,testing,feature,survival,medium,"respawn,cooldown,balance",docs/planning/items/SURV-001-E.md
+SURV-001-F,Beginner return command-menu eligibility,backlog,polish,survival,medium,"respawn,telegram,balance,beginner",docs/planning/items/SURV-001-F.md
 TECH-001,Service boundary and duplication cleanup,backlog,technical,architecture,medium,"architecture,refactor,maintainability,services,dead-code,cleanup",docs/planning/items/TECH-001-service-boundary-and-duplication-cleanup.md
+THEFT-000,Risky theft and hiding epic,backlog,epic,social,medium,"theft,hiding,stealth,social-memory,0.15",docs/planning/items/THEFT-000-risky-theft-and-hiding-epic.md
+THEFT-001,Risky theft MVP,backlog,feature,social,medium,"theft,social-memory,inventory,action-queue,0.15",docs/planning/items/THEFT-001-risky-theft-mvp.md
+THEFT-002,World-controlled thief character,backlog,feature,npc,low,"theft,npc,autonomy,social-memory,future",docs/planning/items/THEFT-002-world-controlled-thief-character.md
+THEFT-003,Strange and spirit theft MVP,backlog,feature,spirits,low,"theft,spirits,omen,hidden-presence,future",docs/planning/items/THEFT-003-spirit-theft-mvp.md
 TRACK-LEARN-001-A,Track-examine progress hint,next,feature,learning,high,"tracking,tracks,progression",docs/planning/items/TRACK-LEARN-001-A.md
 TRACK-LEARN-001-B,Animal movement observation,next,feature,learning,medium,"tracking,animals,observe",docs/planning/items/TRACK-LEARN-001-B.md
 TRACK-LEARN-001-C,Learning respects visibility and light,next,feature,learning,high,"learning,visibility,light",docs/planning/items/TRACK-LEARN-001-C.md
-VIS-001-A,Shared visibility service skeleton,next,technical,visibility,high,"visibility,night,light",docs/planning/items/VIS-001-A.md
-VIS-001-B,Hide location details in darkness,next,feature,visibility,high,"visibility,look,night",docs/planning/items/VIS-001-B.md
-VIS-001-C,Nearby beings visibility in darkness,next,feature,visibility,high,"visibility,targets,night",docs/planning/items/VIS-001-C.md
-VIS-001-D,Track visibility gate,next,feature,visibility,medium,"visibility,tracks,night",docs/planning/items/VIS-001-D.md
+UX-001,Command and feature icon collision audit,backlog,chore,ux,low,"ux,icons,keyboard,features",docs/planning/items/UX-001-command-feature-icon-collision.md
+UX-002,Target pagination return context,testing,chore,ux,medium,"ux,pagination,corpses,telegram",docs/planning/items/UX-002-target-pagination-return-context.md
+VIS-001-A,Shared visibility service skeleton,testing,technical,visibility,high,"visibility,night,light",docs/planning/items/VIS-001-A.md
+VIS-001-B,Hide location details in darkness,testing,feature,visibility,high,"visibility,look,night",docs/planning/items/VIS-001-B.md
+VIS-001-C,Nearby beings visibility in darkness,testing,feature,visibility,high,"visibility,targets,night",docs/planning/items/VIS-001-C.md
+VIS-001-D,Track visibility gate,testing,feature,visibility,medium,"visibility,tracks,night",docs/planning/items/VIS-001-D.md
 VIS-001-E,Ground object visibility gate,next,feature,visibility,medium,"visibility,objects,night",docs/planning/items/VIS-001-E.md
+VIS-001-F,Darkness copy audit,testing,content,visibility,medium,"visibility,night,copy,atmosphere,ukrainian",docs/planning/items/VIS-001-F-darkness-copy-audit.md
+VIS-002,Hidden presence foundation,backlog,technical,visibility,medium,"visibility,hidden-presence,targets",docs/planning/items/VIS-002-hidden-presence-foundation.md
 WEB-001,"Web map, multi-client game server, messenger bridges and limited MUD gateway",icebox,feature,server,medium,"web,map,mud,server,multi-client,architecture",docs/planning/items/web-001-web-map-and-mud-gateway.md
+WEB-002,Independent status site and deploy visibility,backlog,technical,server,medium,"web,status,deploy,operations,reliability",docs/planning/items/WEB-002-independent-status-site.md
 WORLD-001,Day/night cycle,next,feature,world_time,high,"world,atmosphere,visibility,liminality",docs/planning/items/WORLD-001-day-night-cycle.md
-WORLD-001-A,Tiny world-time model design,next,design,world_time,high,"world-time,day-night",docs/planning/items/WORLD-001-A.md
-WORLD-001-B,Daypart storage,next,technical,world_time,high,"world-time,schema",docs/planning/items/WORLD-001-B.md
-WORLD-001-C,Daypart helper and tick advancement,next,feature,world_time,high,"world-time,world-tick",docs/planning/items/WORLD-001-C.md
-WORLD-001-D,/time reads world state,next,feature,world_time,high,"world-time,time-command",docs/planning/items/WORLD-001-D.md
+WORLD-001-A,Internal world-clock model design,next,design,world_time,high,"world-time,day-night,moon,0.14",docs/planning/items/WORLD-001-A.md
+WORLD-001-B,Persistent world-clock storage,testing,technical,world_time,high,"world-time,schema,moon,0.14",docs/planning/items/WORLD-001-B.md
+WORLD-001-C,Heartbeat clock advancement and daypart helper,testing,feature,world_time,high,"world-time,world-tick,day-night,0.14",docs/planning/items/WORLD-001-C.md
+WORLD-001-D,/time reads internal world-clock state,testing,feature,world_time,high,"world-time,time-command,moon,0.14",docs/planning/items/WORLD-001-D.md
+WORLD-001-E,Weather MVP state and display,testing,feature,world_time,high,"world-time,weather,0.14",docs/planning/items/WORLD-001-E-weather-mvp-state-and-display.md
+WORLD-001-F,Light snapshot helper,testing,feature,visibility,high,"world-time,visibility,moon,weather,light,0.14",docs/planning/items/WORLD-001-F-light-snapshot-helper.md
+WORLD-001-G,Time and weather debug controls,testing,technical,world_time,medium,"world-time,weather,admin,testing,0.14",docs/planning/items/WORLD-001-G-time-weather-debug-controls.md
 WORLD-002,Campfires and light,next,feature,survival,high,"survival,light,crafting,night",docs/planning/items/WORLD-002-campfires-and-light.md
+WORLD-002-hidden-spirit,Hidden spirit seed and boundaries,backlog,feature,world,medium,"world,hidden-presence,spirit,campfire",docs/planning/items/WORLD-002-hidden-spirit-seed-and-boundaries.md
+WPN-001,Minimal weapon catalog and equip foundation,done,feature,items,medium,"weapons,inventory,equipment,freshening",docs/planning/items/WPN-001-minimal-weapon-catalog-and-equip.md
+WPN-002,"Weapon-aware look, examine, attack and freshen",done,feature,items,medium,"weapons,inventory,combat,freshening",docs/planning/items/WPN-002-weapon-aware-look-examine-attack-freshen.md
+WPN-003,Themed NPC weapons and hunter spear,backlog,feature,npc,medium,"weapons,npc,hunter,seed",docs/planning/items/WPN-003-themed-npc-weapons-and-hunter-spear.md
+WPN-004,"Weapon condition, dulling and sharpening hooks",backlog,technical,items,low,"weapons,durability,item-instances,backlog",docs/planning/items/WPN-004-weapon-condition-backlog.md
+WPN-ICE-001,Deep combat and weapon lifetime,icebox,feature,combat,low,"weapons,combat,durability,icebox",docs/planning/items/WPN-ICE-001-deep-combat-and-weapon-lifetime.md
