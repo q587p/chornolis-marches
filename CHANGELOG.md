@@ -21,6 +21,10 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Included owls in starter predator population-floor restoration while keeping breeding-pair restoration limited to rabbits and mice.
 - Set owl attack base chance to `42` to make them a meaningful mouse predator without adding flight, nests, eggs, ranged hunting or reproduction.
 
+### Fixed
+
+- Added an extra creature attack completion guard so hidden or sleeping attackers cannot finish a queued attack if daypart sync has already put them out of action.
+
 ### Documentation
 
 - Updated ecology and next-planning notes for the first early `0.15.x` ecology stabilization slice before the observation-learning line.

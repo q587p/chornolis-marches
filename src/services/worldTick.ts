@@ -91,8 +91,32 @@ export function isOwlActiveDaypart(daypart: WorldDaypart) {
   return daypart === "dawn" || daypart === "dusk" || daypart === "night";
 }
 
-async function syncOwlNocturnalActivity(daypart: WorldDaypart) {
+export function owlNocturnalSyncPlan(daypart: WorldDaypart) {
   if (isOwlActiveDaypart(daypart)) {
+    return {
+      cancelActiveActions: false,
+      creatureData: {
+        activity: "IDLE",
+        isHidden: false,
+        currentAction: "прокидається в присмерку й дослухається до трави",
+      },
+    } as const;
+  }
+
+  return {
+    cancelActiveActions: true,
+    creatureData: {
+      activity: "SLEEPING",
+      isHidden: true,
+      currentAction: "спить у дуплі, злившись із корою",
+    },
+  } as const;
+}
+
+async function syncOwlNocturnalActivity(daypart: WorldDaypart) {
+  const plan = owlNocturnalSyncPlan(daypart);
+
+  if (!plan.cancelActiveActions) {
     const woke = await prisma.creature.updateMany({
       where: {
         isAlive: true,
@@ -100,11 +124,7 @@ async function syncOwlNocturnalActivity(daypart: WorldDaypart) {
         species: { key: "owl", kind: "ANIMAL" },
         OR: [{ activity: "SLEEPING" }, { isHidden: true }],
       },
-      data: {
-        activity: "IDLE",
-        isHidden: false,
-        currentAction: "прокидається в присмерку й дослухається до трави",
-      },
+      data: plan.creatureData,
     });
     return { slept: 0, woke: woke.count };
   }
@@ -131,11 +151,7 @@ async function syncOwlNocturnalActivity(daypart: WorldDaypart) {
 
   const slept = await prisma.creature.updateMany({
     where: { id: { in: ids } },
-    data: {
-      activity: "SLEEPING",
-      isHidden: true,
-      currentAction: "спить у дуплі, злившись із корою",
-    },
+    data: plan.creatureData,
   });
 
   return { slept: slept.count, woke: 0 };

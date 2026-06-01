@@ -163,6 +163,15 @@ async function setActionStatus(action: WorldAction, status: "DONE" | "FAILED") {
   await prisma.worldAction.updateMany({ where: { id: action.id }, data: { status } });
 }
 
+export function canCreatureAttackComplete<T extends {
+  isAlive?: boolean | null;
+  isGone?: boolean | null;
+  isHidden?: boolean | null;
+  activity?: string | null;
+}>(attacker: T | null | undefined): attacker is T & { isAlive: true; isGone: false; isHidden: false } {
+  return Boolean(attacker?.isAlive && !attacker.isGone && !attacker.isHidden && attacker.activity !== "SLEEPING");
+}
+
 function targetIntro(target: ResolvedTarget, isMystery: boolean) {
   if (!isMystery) return `👁 Ви роздивляєтесь ${target.forms.accusative}.`;
   if (target.kind === "creature" && target.isCorpse) return "👁 Ви роздивляєтесь те, що лежить нерухомо.";
@@ -994,7 +1003,7 @@ async function completeFreshen(bot: Bot, action: WorldAction) {
 async function completeCreatureAttack(bot: Bot, action: WorldAction) {
   const payload = payloadOf<SocialPayload>(action);
   const attacker = action.creatureId ? await prisma.creature.findUnique({ where: { id: action.creatureId }, include: { species: true } }) : null;
-  if (!attacker || !attacker.isAlive || attacker.isGone || payload.targetType !== "creature") return void (await setActionStatus(action, "FAILED"));
+  if (!canCreatureAttackComplete(attacker) || payload.targetType !== "creature") return void (await setActionStatus(action, "FAILED"));
 
   const target = await prisma.creature.findFirst({ where: { id: payload.targetId, locationId: attacker.locationId, isAlive: true, isGone: false }, include: { species: true } });
   if (!target || target.id === attacker.id) return void (await setActionStatus(action, "FAILED"));
