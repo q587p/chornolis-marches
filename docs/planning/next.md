@@ -41,8 +41,9 @@ Implement `0.14.x` in small slices:
 8. HMYZ-001-A/B/C/D: audit, seed, pickup and add-to-fire polish for хмиз/firewood.
 9. MAP-002-A/B/C: first biome-aware foraging table and text variants.
 10. ONB-004 / ONB-001-B / ONB-001-C / CAMP-001: `0.14.8` adds first-night guidance, first look/examine tutorial hints and starter-camp clarity after darkness starts hiding details.
-11. CAMP-002 / ONB-006: next starter-camp/dream work should add the real watchtower and a concrete optional dream moment where `Озирнутися` and `Роздивитися` reveal different layers of the same thing.
-12. SLEEP-001 and SLEEP-002: lying posture and ordinary sleep only after time/light/visibility foundations are stable.
+11. CAMP-002: `0.14.9` adds the real starter-camp watchtower, vertical `UP`/`DOWN` movement and moves the beginner torch source above the camp while keeping the gate torch source untouched for hunter-route compatibility.
+12. ONB-006: next starter-camp/dream work should add a concrete optional dream moment where `Озирнутися` and `Роздивитися` reveal different layers of the same thing.
+13. SLEEP-001 and SLEEP-002: lying posture and ordinary sleep only after time/light/visibility foundations are stable.
 
 Observation learning remains the `0.15` line. Darkness, distance and light should affect learning later, but the visibility foundation must land first.
 
