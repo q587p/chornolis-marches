@@ -34,6 +34,24 @@
     "activity": "LOOKING"
   },
   {
+    "speciesKey": "camp_spirit_cat",
+    "locationKey": "start_border_camp",
+    "name": "Кіт-бережник",
+    "isAlive": true,
+    "isHidden": false,
+    "sex": "MALE",
+    "action": "лежить біля межового вогню й удає, що не стереже табір",
+    "activity": "RESTING",
+    "nameOverrides": {
+      "nameGenitive": "Кота-бережника",
+      "nameDative": "Коту-бережнику",
+      "nameAccusative": "Кота-бережника",
+      "nameInstrumental": "Котом-бережником",
+      "nameLocative": "Коті-бережнику",
+      "nameVocative": "Коте-бережнику"
+    }
+  },
+  {
     "speciesKey": "herbalist",
     "locationKey": "forest_04_04",
     "name": "Ведана",

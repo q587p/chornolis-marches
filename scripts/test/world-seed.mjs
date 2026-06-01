@@ -298,6 +298,13 @@ assert.deepEqual(
   "Орина should start with one lit torch and one spare torch",
 );
 
+const campSpiritCat = uniqueCreatures.find((creature) => creature.speciesKey === "camp_spirit_cat");
+assert.ok(campSpiritCat, "Seed should include the camp spirit cat");
+assert.equal(campSpiritCat.name, "Кіт-бережник");
+assert.equal(campSpiritCat.locationKey, "start_border_camp");
+assert.equal(campSpiritCat.isAlive, true);
+assert.equal(campSpiritCat.isHidden, false);
+
 for (const filePath of ["prisma/seed.ts", "src/services/worldReset.ts"]) {
   for (const locationKey of sourceLocationKeys(filePath)) {
     assertKnown(locationKeys, locationKey, `Unknown hardcoded starter location in ${filePath}`);

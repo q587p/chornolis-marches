@@ -131,6 +131,26 @@
     "file": "docs/planning/items/AUTH-001-profile-protection-and-client-neutral-login.md"
   },
   {
+    "id": "BARTER-001",
+    "title": "Early exchange and barter foundation after give",
+    "status": "next",
+    "type": "feature",
+    "area": "economy",
+    "priority": "high",
+    "tags": [
+      "barter",
+      "exchange",
+      "give",
+      "inventory",
+      "economy",
+      "npc",
+      "trade"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/BARTER-001-early-exchange-and-barter-foundation.md"
+  },
+  {
     "id": "CAL-001",
     "title": "Deep calendar, sacred days and named years",
     "status": "icebox",
@@ -212,6 +232,155 @@
     ],
     "exports": {},
     "file": "docs/planning/items/CAMP-003-shared-beginner-cache.md"
+  },
+  {
+    "id": "CAT-001",
+    "title": "Camp spirit cat foundation",
+    "status": "testing",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "medium",
+    "tags": [
+      "cat",
+      "camp",
+      "creature",
+      "ecology",
+      "spirit",
+      "immortal"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/CAT-001-camp-spirit-cat-foundation.md"
+  },
+  {
+    "id": "CAT-002",
+    "title": "Camp boundary and vertical movement for the spirit cat",
+    "status": "next",
+    "type": "feature",
+    "area": "movement",
+    "priority": "medium",
+    "tags": [
+      "cat",
+      "camp",
+      "movement",
+      "vertical",
+      "boundary"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/CAT-002-camp-boundary-and-vertical-movement.md"
+  },
+  {
+    "id": "CAT-003",
+    "title": "Spirit cat mouse hunting priority inside camp",
+    "status": "next",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "medium",
+    "tags": [
+      "cat",
+      "mouse",
+      "predator",
+      "camp",
+      "ecology"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/CAT-003-mouse-hunting-priority.md"
+  },
+  {
+    "id": "CAT-004",
+    "title": "Raw meat interest and camp-box theft scene",
+    "status": "next",
+    "type": "feature",
+    "area": "inventory",
+    "priority": "medium",
+    "tags": [
+      "cat",
+      "meat",
+      "camp",
+      "inventory",
+      "give",
+      "affordance"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/CAT-004-raw-meat-interest-and-theft-scene.md"
+  },
+  {
+    "id": "CAT-005",
+    "title": "Cat social gestures: shoo, wave off, rub against, circle around",
+    "status": "next",
+    "type": "feature",
+    "area": "social",
+    "priority": "medium",
+    "tags": [
+      "cat",
+      "social",
+      "signals",
+      "telegram",
+      "actions",
+      "give"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/CAT-005-cat-social-actions.md"
+  },
+  {
+    "id": "CAT-006",
+    "title": "Body-language reactions to weather, daypart, fire and darkness",
+    "status": "next",
+    "type": "content",
+    "area": "atmosphere",
+    "priority": "low",
+    "tags": [
+      "cat",
+      "weather",
+      "daypart",
+      "fire",
+      "visibility",
+      "copy",
+      "ukrainian"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/CAT-006-body-language-weather-and-fire.md"
+  },
+  {
+    "id": "CAT-007",
+    "title": "Camp cat tests and tuning pass",
+    "status": "next",
+    "type": "chore",
+    "area": "testing",
+    "priority": "medium",
+    "tags": [
+      "cat",
+      "tests",
+      "tuning",
+      "ecology",
+      "social"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/CAT-007-camp-cat-tests-and-tuning.md"
+  },
+  {
+    "id": "CAT-008",
+    "title": "Camp spirit cat docs, news and release notes",
+    "status": "next",
+    "type": "content",
+    "area": "docs",
+    "priority": "low",
+    "tags": [
+      "cat",
+      "docs",
+      "news",
+      "release",
+      "planning"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/CAT-008-docs-news-release.md"
   },
   {
     "id": "CMD-001",
@@ -792,6 +961,49 @@
     ],
     "exports": {},
     "file": "docs/planning/items/FOOD-006-mushroom-varieties-and-identification.md"
+  },
+  {
+    "id": "GIVE-001",
+    "title": "Generic give command MVP and exchange bridge",
+    "status": "next",
+    "type": "feature",
+    "area": "inventory",
+    "priority": "high",
+    "tags": [
+      "give",
+      "inventory",
+      "items",
+      "targets",
+      "exchange",
+      "barter",
+      "cat",
+      "telegram"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/GIVE-001-give-command-and-exchange-bridge.md"
+  },
+  {
+    "id": "GIVE-002",
+    "title": "Ukrainian inflection-tolerant give parser and grammar bridge",
+    "status": "backlog",
+    "type": "technical",
+    "area": "input",
+    "priority": "high",
+    "tags": [
+      "give",
+      "input",
+      "parser",
+      "ukrainian",
+      "grammar",
+      "lexicon",
+      "inventory",
+      "targets",
+      "barter"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/GIVE-002-ukrainian-give-parser-grammar.md"
   },
   {
     "id": "HERALD-001",
@@ -2768,6 +2980,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/SOCIAL-003-theft-reaction-signals.md"
+  },
+  {
+    "id": "STAT-001",
+    "title": "Web /stat predator species comparison table",
+    "status": "next",
+    "type": "feature",
+    "area": "web",
+    "priority": "medium",
+    "tags": [
+      "web",
+      "stats",
+      "ecology",
+      "predators",
+      "owl",
+      "fox",
+      "wolf"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/STAT-001-web-predator-species-table.md"
   },
   {
     "id": "SURV-001",

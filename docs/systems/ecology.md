@@ -18,6 +18,7 @@ The forest should feel alive even when players do nothing.
 - Mushrooms grow from decayed corpses.
 - Predator prey choice by age, HP and species preference.
 - Nocturnal owl predator behavior for early mouse-pressure control.
+- A first camp spirit cat foundation: a visible, inspectable, non-speaking spirit in the starter camp, reserved for later camp-local mouse pressure and meat/give scenes.
 - Predator and character-caused kill counters in scribe/admin `/stat`.
 - Animal hunger pressure and starvation deaths.
 - Starvation counters in scribe/admin `/stat` and protected web `/stat`.
@@ -65,6 +66,7 @@ The forest should feel alive even when players do nothing.
 - Fox and wolf lifecycle values are deliberately slower than rabbits and mice, so future predator reproduction does not explode as quickly as herbivore reproduction.
 - Starter prey now begins in separated breeding clusters instead of directly on top of predator cells: mice at `forest_03_02`, `meadow_11_04` and `riverbank_14_01`; rabbits at `forest_04_00`, `meadow_12_04` and `riverbank_15_02`.
 - Starter predator pressure remains present but lighter at world start: a fox pair near `forest_07_02`, a young fox at `meadow_13_04`, one remote wolf at `forest_00_08`, and four first-pass owls placed as nighttime mouse pressure, including a riverbank-edge owl near the riverbank mouse cluster.
+- The starter camp now has one seeded `camp_spirit_cat` unique creature, `Кіт-бережник`. It is modeled as a `SPIRIT`/`SPIRITUAL` being, not an ordinary animal, so ordinary animal age, hunger, starvation and corpse lifecycle do not apply. The first slice only makes it visible and inspectable; camp-bound movement, mouse hunting and raw-meat `give` interactions are follow-up `CAT-*`/`GIVE-*` work.
 - Starter breeding clusters have local food-rich resource overrides so rabbits and mice have a real chance to reproduce before predators find them. These are local authoring pockets, not a global biome-resource increase.
 - These food-rich pockets are a balance watchpoint: if predators are delayed, starve elsewhere or are removed by players, the same pockets can produce a rabbit/mouse boom. Use `mouseBirths`, `rabbitBirths`, predator kills, overgrazing and resource-damage counters together when tuning them.
 - Predator reproduction runs after small-herbivore ecology and before ordinary carnivore ticks. It uses prey-unit thresholds and very slow wolf checks.

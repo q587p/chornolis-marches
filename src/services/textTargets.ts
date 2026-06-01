@@ -5,6 +5,7 @@ import { normalizeCreatureActionText } from "../utils/creatureActionText";
 import { creatureForms } from "./grammar";
 import { isFreshenedCorpse } from "./meat";
 import { heldWeaponLine } from "./weapons";
+import { isCampSpiritCatCreature } from "./campSpiritCat";
 
 export type TextTargetRef = {
   type: "player" | "creature";
@@ -160,7 +161,7 @@ export async function visibleTextTargets(locationId: number, viewerPlayerId: num
       actionLabel: isCorpse
         ? undefined
         : [heldWeaponLine(creature.equippedWeaponKey)?.replace(/\.$/u, "").toLocaleLowerCase("uk-UA"), normalizeCreatureActionText(creature.currentAction)].filter(Boolean).join("; ") || undefined,
-      canGreet: !isCorpse && creature.species.kind !== "ANIMAL",
+      canGreet: !isCorpse && creature.species.kind !== "ANIMAL" && !isCampSpiritCatCreature(creature),
       isCorpse,
       searchKeys: targetSearchKeysForCreature(creature),
     };

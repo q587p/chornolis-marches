@@ -6,10 +6,19 @@ ADM-001-C,Restart confirmation and HTML safety hardening,testing,technical,admin
 ADM-002,Scribe creature corpse creation command,testing,feature,admin,medium,"admin,creatures,corpses,testing",docs/planning/items/ADM-002-add-creature-corpse-command.md
 ALC-001,First herbal stamina elixir,backlog,feature,survival,high,"alchemy,herbs,berries,stamina,crafting,inventory",docs/planning/items/ALC-001-herbal-stamina-elixir.md
 AUTH-001,Profile protection and client-neutral login,icebox,system,account,medium,"auth,account,profile,mud,recovery",docs/planning/items/AUTH-001-profile-protection-and-client-neutral-login.md
+BARTER-001,Early exchange and barter foundation after give,next,feature,economy,high,"barter,exchange,give,inventory,economy,npc,trade",docs/planning/items/BARTER-001-early-exchange-and-barter-foundation.md
 CAL-001,"Deep calendar, sacred days and named years",icebox,system,world_time,medium,"calendar,world-time,moon-phases,seasons,folklore,atmosphere",docs/planning/items/CAL-001_calendar_moon_phases_and_named_years.md
 CAMP-001,Starter camp prose and feature audit,done,content,core-loop,high,"camp,onboarding,mud,look,examine",docs/planning/items/CAMP-001-starter-camp-prose-and-feature-audit.md
 CAMP-002,Starter watchtower and camp torch-source route update,testing,feature,core-loop,high,"camp,map,torch,light,mud,vertical-exits",docs/planning/items/CAMP-002-starter-watchtower-and-torch-source.md
 CAMP-003,Shared beginner cache and hidden restock,testing,feature,core-loop,high,"camp,onboarding,inventory,light,restock",docs/planning/items/CAMP-003-shared-beginner-cache.md
+CAT-001,Camp spirit cat foundation,testing,feature,ecology,medium,"cat,camp,creature,ecology,spirit,immortal",docs/planning/items/CAT-001-camp-spirit-cat-foundation.md
+CAT-002,Camp boundary and vertical movement for the spirit cat,next,feature,movement,medium,"cat,camp,movement,vertical,boundary",docs/planning/items/CAT-002-camp-boundary-and-vertical-movement.md
+CAT-003,Spirit cat mouse hunting priority inside camp,next,feature,ecology,medium,"cat,mouse,predator,camp,ecology",docs/planning/items/CAT-003-mouse-hunting-priority.md
+CAT-004,Raw meat interest and camp-box theft scene,next,feature,inventory,medium,"cat,meat,camp,inventory,give,affordance",docs/planning/items/CAT-004-raw-meat-interest-and-theft-scene.md
+CAT-005,"Cat social gestures: shoo, wave off, rub against, circle around",next,feature,social,medium,"cat,social,signals,telegram,actions,give",docs/planning/items/CAT-005-cat-social-actions.md
+CAT-006,"Body-language reactions to weather, daypart, fire and darkness",next,content,atmosphere,low,"cat,weather,daypart,fire,visibility,copy,ukrainian",docs/planning/items/CAT-006-body-language-weather-and-fire.md
+CAT-007,Camp cat tests and tuning pass,next,chore,testing,medium,"cat,tests,tuning,ecology,social",docs/planning/items/CAT-007-camp-cat-tests-and-tuning.md
+CAT-008,"Camp spirit cat docs, news and release notes",next,content,docs,low,"cat,docs,news,release,planning",docs/planning/items/CAT-008-docs-news-release.md
 CMD-001,Near-term text command pack,testing,feature,commands,high,"commands,aliases,mud,speech,navigation",docs/planning/items/CMD-001-near-term-text-command-pack.md
 CMD-002,Put items into local containers and features,testing,feature,commands,high,"commands,inventory,containers,aliases",docs/planning/items/CMD-002-put-items-into-containers.md
 COMBAT-001,Creature aggression and defense,backlog,feature,combat,medium,"animals,combat,predators,ecology",docs/planning/items/COMBAT-001-creature-aggression-and-defense.md
@@ -39,6 +48,8 @@ FOOD-003,Freshened corpse remains,backlog,feature,survival,medium,"food,corpses,
 FOOD-004,Hunger cues and eating nudges,testing,feature,survival,medium,"food,hunger,reminders,ux",docs/planning/items/FOOD-004-hunger-cues-and-eating-nudges.md
 FOOD-005,Hunger consequences for health and stamina recovery,backlog,feature,survival,medium,"food,hunger,hp,stamina,survival",docs/planning/items/FOOD-005-hunger-consequences.md
 FOOD-006,Mushroom varieties and identification,backlog,feature,survival,medium,"food,mushrooms,foraging,alchemy,risk",docs/planning/items/FOOD-006-mushroom-varieties-and-identification.md
+GIVE-001,Generic give command MVP and exchange bridge,next,feature,inventory,high,"give,inventory,items,targets,exchange,barter,cat,telegram",docs/planning/items/GIVE-001-give-command-and-exchange-bridge.md
+GIVE-002,Ukrainian inflection-tolerant give parser and grammar bridge,backlog,technical,input,high,"give,input,parser,ukrainian,grammar,lexicon,inventory,targets,barter",docs/planning/items/GIVE-002-ukrainian-give-parser-grammar.md
 HERALD-001,Embedded main-service mode for Boundary Mark Chancery Herald,icebox,technical,ops,low,"herald,telegram,render,ops,architecture,icebox",docs/planning/items/HERALD-001-embedded-main-service-mode.md
 HERALD-002,Herald outbox idempotency and locking,backlog,reliability,herald,medium,"herald,outbox,idempotency,locking,telegram",docs/planning/items/HERALD-002-outbox-idempotency-and-locking.md
 HERALD-003,Herald chronicle chat relay,backlog,feature,herald,medium,"herald,chronicle,telegram,chat,world-events",docs/planning/items/HERALD-003-chronicle-chat-relay.md
@@ -142,6 +153,7 @@ SOC-005,Group combat assist conservative plan,backlog,feature,combat,medium,"soc
 SOC-006,NPC group compatibility,backlog,feature,social,medium,"social,groups,npc,actors,creatures",docs/planning/items/SOC-006-npc-group-compatibility.md
 SOC-007,Telegram UI and copy for contacts / follow / groups,backlog,feature,social,medium,"social,telegram,ui,copy,groups",docs/planning/items/SOC-007-telegram-ui-and-copy.md
 SOCIAL-003,Theft reaction signals,backlog,feature,social,medium,"social,theft,signals,reactions,0.15",docs/planning/items/SOCIAL-003-theft-reaction-signals.md
+STAT-001,Web /stat predator species comparison table,next,feature,web,medium,"web,stats,ecology,predators,owl,fox,wolf",docs/planning/items/STAT-001-web-predator-species-table.md
 SURV-001,Early respawn support,testing,feature,survival,high,"onboarding,respawn,beginner",docs/planning/items/SURV-001-early-respawn.md
 SURV-001-A,Beginner return eligibility helper,testing,feature,survival,high,"respawn,beginner,safety",docs/planning/items/SURV-001-A.md
 SURV-001-B,/respawn command skeleton,testing,feature,survival,high,"respawn,telegram,command",docs/planning/items/SURV-001-B.md

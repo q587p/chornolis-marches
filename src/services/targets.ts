@@ -17,6 +17,7 @@ import {
   isHunterCreature,
 } from "./npcHunter";
 import { heldWeaponLine } from "./weapons";
+import { campSpiritCatInspectionText, isCampSpiritCatCreature } from "./campSpiritCat";
 
 export type ResolvedTarget = {
   kind: "player" | "creature";
@@ -248,6 +249,7 @@ export async function resolveTarget(type: string, id: number, locationId: number
     if (!target) return null;
     const forms = creatureForms(target);
     const isAnimal = target.species.kind === "ANIMAL";
+    const isCampSpiritCat = isCampSpiritCatCreature(target);
     const isCorpse = !target.isAlive && target.age === "CORPSE";
     const corpseLeft = target.corpseDecayTicksLeft ?? target.species.corpseDecayTicks;
     const wasFreshened = isFreshenedCorpse(target.currentAction);
@@ -284,7 +286,8 @@ export async function resolveTarget(type: string, id: number, locationId: number
       };
     }
 
-    const visibleAction = normalizeCreatureActionText(target.currentAction, "придивляється довкола");
+    const visibleAction = normalizeCreatureActionText(target.currentAction, "придивляється довкола") ?? "придивляється довкола";
+    const campSpiritCatDetails = isCampSpiritCat ? campSpiritCatInspectionText(visibleAction) : null;
     const hunterInventory = await hunterFieldInventorySummary(target, { exact: showTechnicalDetails });
     const hunterSection = hunterInventory
       ? `\n\nМисливський набір:\n${hunterInventory}`
@@ -296,14 +299,14 @@ export async function resolveTarget(type: string, id: number, locationId: number
         id: target.id,
         name: forms.nominative,
         forms,
-        canGreet: !isAnimal,
+        canGreet: !isAnimal && !isCampSpiritCat,
         canAttack: isAnimal && target.species.diet !== "CARNIVORE",
         isAnimal,
         isCorpse: false,
         canFreshen: false,
-        inspect: isAnimal
+        inspect: campSpiritCatDetails ?? (isAnimal
           ? `Це ${forms.nominative}.\n\n${formatCreatureStatusLine(target, visibleAction)}${weaponText ? `\n${weaponText}` : ""}${torchText ? `\n${torchText}` : ""}`
-          : `${forms.nominative}\n\n${formatCreatureStatusLine(target, visibleAction)}${weaponText ? `\n${weaponText}` : ""}${torchText ? `\n${torchText}` : ""}`,
+          : `${forms.nominative}\n\n${formatCreatureStatusLine(target, visibleAction)}${weaponText ? `\n${weaponText}` : ""}${torchText ? `\n${torchText}` : ""}`),
       };
     }
 
@@ -327,19 +330,18 @@ export async function resolveTarget(type: string, id: number, locationId: number
         torchText,
         hunterSection,
       ].filter(Boolean).join("\n");
-
     if (!showTechnicalDetails) {
       return {
         kind: "creature",
         id: target.id,
         name: forms.nominative,
         forms,
-        canGreet: !isAnimal,
+        canGreet: !isAnimal && !isCampSpiritCat,
         canAttack: isAnimal && target.species.diet !== "CARNIVORE",
         isAnimal,
         isCorpse: false,
         canFreshen: false,
-        inspect: publicCreatureDetails,
+        inspect: campSpiritCatDetails ?? publicCreatureDetails,
       };
     }
 
@@ -348,14 +350,14 @@ export async function resolveTarget(type: string, id: number, locationId: number
       id: target.id,
       name: forms.nominative,
       forms,
-      canGreet: !isAnimal,
+      canGreet: !isAnimal && !isCampSpiritCat,
       canAttack: isAnimal && target.species.diet !== "CARNIVORE",
       isAnimal,
       isCorpse: false,
       canFreshen: false,
       inspect: isAnimal
         ? `Це ${forms.nominative}.\n\n${formatCreatureStatusLine(target, visibleAction)}\nЖиття: ${target.hp}/${target.maxHp ?? target.species.baseHp}\nСтать: ${formatSex(target.sex)}\nВік: ${target.age}\nТіків віку: ${target.ageTicks}${weaponText ? `\n${weaponText}` : ""}${torchText ? `\n${torchText}` : ""}\n\nСтатистика:\n${formatCreatureStats(target)}`
-        : `${forms.nominative}\n\n${formatCreatureStatusLine(target, visibleAction)}\nЖиття: ${target.hp}/${target.maxHp ?? target.species.baseHp}${weaponText ? `\n${weaponText}` : ""}${torchText ? `\n${torchText}` : ""}${hunterSection}\n\nСтатистика:\n${formatCreatureStats(target)}`,
+        : `${campSpiritCatDetails ?? `${forms.nominative}\n\n${formatCreatureStatusLine(target, visibleAction)}`}\n\nЖиття: ${target.hp}/${target.maxHp ?? target.species.baseHp}${weaponText ? `\n${weaponText}` : ""}${torchText ? `\n${torchText}` : ""}${isCampSpiritCat ? "" : hunterSection}\n\nСтатистика:\n${formatCreatureStats(target)}`,
     };
   }
 
