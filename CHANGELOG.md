@@ -18,6 +18,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Changed
 
 - Moved `NPC-007` into testing after this line-bank slice without changing NPC message cadence or profession behavior.
+- Added `OWL-002` planning for the next owl tuning pass after live ecology observation.
 
 ### Validation
 

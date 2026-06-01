@@ -111,6 +111,7 @@ ONB-002-D,Name onboarding help copy,next,ux,onboarding,medium,"onboarding,help,c
 ONB-003,Tutorial player wellbeing aside,testing,ux,onboarding,medium,"onboarding,tutorial,wellbeing,sleep",docs/planning/items/ONB-003-player-wellbeing-aside.md
 ONB-004,First night guidance,done,ux,onboarding,medium,"onboarding,night,light,tutorial,copy",docs/planning/items/ONB-004-first-night-guidance.md
 ONB-006,Look/examine semantics in the dream,testing,ux,onboarding,high,"tutorial,look,examine,ux,copy",docs/planning/items/ONB-006-look-examine-semantics-in-dream.md
+OWL-002,Nocturnal owl tuning and indirect signs,next,tuning,ecology,high,"owl,ecology,night,predator,observation,tuning",docs/planning/items/OWL-002-nocturnal-owl-tuning-and-signs.md
 PERF-001,Runtime performance plan and creature simulation budget,next,technical,performance,high,"performance,ecology,creatures,action-queue,simulation,status,auto",docs/planning/items/PERF-001-budgeted-and-aggregated-creature-simulation.md
 PLAN-001,Repository docs are the planning source of truth,testing,documentation,planning,high,"planning,docs,roadmap",docs/planning/items/PLAN-001.md
 PROG-002,Observation-based learning,backlog,feature,progression,medium,"skills,observation,npc,animals,mythic",docs/planning/items/PROG-002-observation-learning.md
