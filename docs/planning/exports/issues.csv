@@ -12,7 +12,7 @@ CAMP-001,Starter camp prose and feature audit,done,content,core-loop,high,"camp,
 CAMP-002,Starter watchtower and camp torch-source route update,testing,feature,core-loop,high,"camp,map,torch,light,mud,vertical-exits",docs/planning/items/CAMP-002-starter-watchtower-and-torch-source.md
 CAMP-003,Shared beginner cache and hidden restock,testing,feature,core-loop,high,"camp,onboarding,inventory,light,restock",docs/planning/items/CAMP-003-shared-beginner-cache.md
 CAT-001,Camp spirit cat foundation,testing,feature,ecology,medium,"cat,camp,creature,ecology,spirit,immortal",docs/planning/items/CAT-001-camp-spirit-cat-foundation.md
-CAT-002,Camp boundary and vertical movement for the spirit cat,next,feature,movement,medium,"cat,camp,movement,vertical,boundary",docs/planning/items/CAT-002-camp-boundary-and-vertical-movement.md
+CAT-002,Camp boundary and vertical movement for the spirit cat,testing,feature,movement,medium,"cat,camp,movement,vertical,boundary",docs/planning/items/CAT-002-camp-boundary-and-vertical-movement.md
 CAT-003,Spirit cat mouse hunting priority inside camp,next,feature,ecology,medium,"cat,mouse,predator,camp,ecology",docs/planning/items/CAT-003-mouse-hunting-priority.md
 CAT-004,Raw meat interest and camp-box theft scene,next,feature,inventory,medium,"cat,meat,camp,inventory,give,affordance",docs/planning/items/CAT-004-raw-meat-interest-and-theft-scene.md
 CAT-005,"Cat social gestures: shoo, wave off, rub against, circle around",next,feature,social,medium,"cat,social,signals,telegram,actions,give",docs/planning/items/CAT-005-cat-social-actions.md
@@ -153,7 +153,7 @@ SOC-005,Group combat assist conservative plan,backlog,feature,combat,medium,"soc
 SOC-006,NPC group compatibility,backlog,feature,social,medium,"social,groups,npc,actors,creatures",docs/planning/items/SOC-006-npc-group-compatibility.md
 SOC-007,Telegram UI and copy for contacts / follow / groups,backlog,feature,social,medium,"social,telegram,ui,copy,groups",docs/planning/items/SOC-007-telegram-ui-and-copy.md
 SOCIAL-003,Theft reaction signals,backlog,feature,social,medium,"social,theft,signals,reactions,0.15",docs/planning/items/SOCIAL-003-theft-reaction-signals.md
-STAT-001,Web /stat predator species comparison table,next,feature,web,medium,"web,stats,ecology,predators,owl,fox,wolf",docs/planning/items/STAT-001-web-predator-species-table.md
+STAT-001,Web /stat predator species comparison table,testing,feature,web,medium,"web,stats,ecology,predators,owl,fox,wolf",docs/planning/items/STAT-001-web-predator-species-table.md
 SURV-001,Early respawn support,testing,feature,survival,high,"onboarding,respawn,beginner",docs/planning/items/SURV-001-early-respawn.md
 SURV-001-A,Beginner return eligibility helper,testing,feature,survival,high,"respawn,beginner,safety",docs/planning/items/SURV-001-A.md
 SURV-001-B,/respawn command skeleton,testing,feature,survival,high,"respawn,telegram,command",docs/planning/items/SURV-001-B.md

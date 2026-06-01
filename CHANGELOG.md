@@ -7,6 +7,28 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.4 - Camp cat boundary and web predator stats - 12026-06-01
+
+### Added
+
+- Added web `/stat` predator-by-species rows so owl, fox and wolf pressure can be compared in the browser, reusing existing ecology stats data.
+- Added a first camp-bound behavior layer for the `camp_spirit_cat`: normal world ticks now keep it between the starter camp and the watchtower instead of letting ordinary movement pick wilderness exits.
+- Added focused web-stat rendering and camp-cat boundary coverage.
+
+### Changed
+
+- Marked `STAT-001` and `CAT-002` as testing after this narrow implementation slice.
+- Kept cat mouse hunting, raw-meat `give` scenes and pet/companion behavior deferred to later `CAT-*` / `GIVE-*` work.
+
+### Validation
+
+- Ran `cmd /c npm run planning:export`.
+- Ran `node scripts/test/web-stat-render.cjs`.
+- Ran `node scripts/test/camp-cat.cjs`.
+- Ran `node scripts/test/ecology-stats.cjs`.
+- Ran `cmd /c npm test`.
+- Ran `cmd /c npm run build`.
+
 ## 0.15.3 - Camp spirit cat foundation - 12026-06-01
 
 ### Added
