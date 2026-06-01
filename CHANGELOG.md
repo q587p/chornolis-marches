@@ -20,11 +20,23 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added eat-all controls and aliases for edible inventory resources, with queue trimming once HP, stamina or hunger no longer benefits.
 - Added `MAP-WILLOW-003` and `QA-WILLOW-001` planning coverage for floodplain landmarks, resources, aliases and route/content smoke checks.
 - Added planning coverage for starter supply guards and animal movement boundaries.
+- Added `AUTH-001` icebox planning for future profile protection, account recovery and client-neutral login beyond Telegram ids.
+- Added documentation notes for the daypart notification settings MVP and future settings-menu grouping.
+- Added `ECO-007` icebox planning for future animal taming and small companions.
+- Added weapon/torch hand-slot follow-up documentation for future carried-item behavior.
+- Added a `T` marker to the generated ASCII world map for authored climbable or shakeable tree locations.
 
 ### Changed
 
 - Updated `next` planning notes for the 0.14.22 Willow follow-up slice.
 - Split the admin `/all` view into player pages and creature pages so the Telegram message stays below API limits as player counts grow.
+
+### Fixed
+
+- Fixed held-item inspection so characters holding a weapon or tool no longer also appear to have empty hands.
+- Fixed regional shout notification queries so `/shout` delivery targets active players in the whole current region.
+- Fixed attack observer text so bystanders see the attacker's name in daylight or clear local visibility while darkness can still hide details.
+- Fixed duplicate nearby target action labels such as `goes south; goes south` when a creature has the same stored and queued action.
 
 ### Validation
 
@@ -38,6 +50,8 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `node scripts/test/creature-movement.cjs`.
 - Ran `node scripts/test/input-aliases.cjs`.
 - Ran `node scripts/test/meat.cjs`.
+- Ran `node scripts/test/target-formatting.cjs`.
+- Ran `node scripts/test/weapons.cjs`.
 - Ran `npm run map:render`.
 - Ran `npm test`.
 - Ran `npm run build`.
