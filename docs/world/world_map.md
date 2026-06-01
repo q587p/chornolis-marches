@@ -12,6 +12,7 @@ node scripts/world/render-map-ascii.mjs --write
 
 - `F` — forest location.
 - `.` — dry luka / open meadow location.
+- `T` — location with an authored climbable or shakeable tree feature.
 - `,` — riverbank location.
 - `w` — willow floodplain location.
 - `~` — impassable river cell.
@@ -28,7 +29,7 @@ node scripts/world/render-map-ascii.mjs --write
 ```text
       10 11 12 13 14 15 16 17
 y
-  7    .  .
+  7    T  T
   6
   5                         ,
 ```
@@ -42,7 +43,7 @@ y
  10    █  █  █  F  F  F  █  █  █  █  █  █  █  █     w  w  w  w  w
   9    █  #  #  F  #  #  #  #  #  F  F  .  .  .  ,  ~  w  w  w
   8    █  F  F  F  #  F  F  F  F  F  #  .  #  .  .  ,  ~  w
-  7    █  F  #  #  #  F  #  #  #  F  F  .  .  .  .  .  ,  ,  ~
+  7    █  F  #  #  #  F  #  #  #  F  F  T  T  .  .  .  ,  ,  ~
   6    █  F  F  F  F  F  #  F  F  F  F  .  .  .  .  .  #  ,  ,  ,  ~  ~
   5    █  #  #  F  #  #  #  F  #  F  #  .  .  .  .  .  .  .  S  =  =  G  G
   4    █  F  F  F  #  F  F  F  #  F  F  .  .  .  .  .  .  .  ,  ,  ~  ~
