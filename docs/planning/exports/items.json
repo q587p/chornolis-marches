@@ -111,6 +111,26 @@
     "file": "docs/planning/items/ALC-001-herbal-stamina-elixir.md"
   },
   {
+    "id": "AUTH-001",
+    "title": "Profile protection and client-neutral login",
+    "status": "icebox",
+    "type": "system",
+    "area": "account",
+    "priority": "medium",
+    "tags": [
+      "auth",
+      "account",
+      "profile",
+      "mud",
+      "recovery"
+    ],
+    "depends_on": [
+      "WEB-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/AUTH-001-profile-protection-and-client-neutral-login.md"
+  },
+  {
     "id": "CAL-001",
     "title": "Deep calendar, sacred days and named years",
     "status": "icebox",
