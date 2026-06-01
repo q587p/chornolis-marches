@@ -4,7 +4,7 @@
 
 Do **not** add notes like “package.json and package-lock.json are intentionally unchanged...” to public news/changelog entries. That is internal workflow context only.
 
-If a task creates a release/version commit, bump `package.json` and `package-lock.json` in that same commit. Use the version from `package.json` as the release version, and tag releases as `vX.Y.Z`, for example `v0.12.12`.
+If a task creates a release/version commit, bump `package.json` and `package-lock.json` in that same commit. Use the version from `package.json` as the release version, and tag releases as `vX.Y.Z`, for example `v0.12.12`. For ordinary release PRs, create/push the tag after the branch is merged to `main`, pointing at the merge/release commit on `main`; do not pre-tag an unmerged release branch unless the user explicitly asks.
 
 ## Preferred change delivery
 
@@ -82,6 +82,7 @@ User preference:
 2. run build;
 3. if the task is explicitly a release/version commit, bump `package.json` and `package-lock.json` in that same commit;
 4. use the `package.json` version as the release version and expected tag, formatted as `vX.Y.Z`;
+4a. after the release PR is merged, create/push the tag on the merge/release commit in `main`; avoid tagging an unmerged branch unless explicitly requested;
 5. avoid separate manual GitHub Action commits just to bump version;
 6. for version bumps, prefer proper npm-based versioning over hand-editing package metadata.
 
