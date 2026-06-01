@@ -19,7 +19,8 @@ import { spendPlayerStaminaAmount } from "../services/actionRecovery";
 import { firstNightGuidanceForPlayer } from "../services/beginnerGuidance";
 import { contributeToBeginnerCache, takeFromBeginnerCache } from "../services/beginnerCache";
 import { queueAllBeginnerCacheContributions } from "../services/beginnerCacheQueue";
-import { TORCH_SOURCE_TAKE_EVENT_TITLE } from "../services/fire";
+import { campfireBuildConfirmationText, TORCH_SOURCE_TAKE_EVENT_TITLE } from "../services/fire";
+import { buildWetCampfireConfirmKeyboard } from "../ui/fireKeyboards";
 
 function pickedItemsAmount(items: Array<{ amount: number }>) {
   return items.reduce((total, item) => total + Math.max(0, item.amount), 0);
@@ -268,6 +269,38 @@ export function registerLookHandlers(bot: Bot) {
     await sendVoiceComment(ctx, await tutorialActionHintComment(player, "examine"));
   });
 
+  bot.callbackQuery("fire:build", async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    try {
+      const confirmationText = await campfireBuildConfirmationText(player.id);
+      if (confirmationText) {
+        await safeAnswerCallbackQuery(ctx);
+        return void (await editCallbackMessageOrReply(ctx, confirmationText, { reply_markup: buildWetCampfireConfirmKeyboard() }));
+      }
+
+      await submitFeatureQueuedAction(bot, ctx, player, "BUILD_CAMPFIRE", {}, "Не вдалося скласти вогнище.");
+    } catch (error) {
+      const message = actionErrorMessage(error, "Не вдалося скласти вогнище.");
+      await safeAnswerCallbackQuery(ctx, message);
+      await replyToActionError(ctx, error, "Не вдалося скласти вогнище.", { replyFallback: false });
+    }
+  });
+
+  bot.callbackQuery("fire:build:confirmWet", async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    await submitFeatureQueuedAction(bot, ctx, player, "BUILD_CAMPFIRE", { confirmWet: true }, "Не вдалося скласти вогнище.");
+  });
+
   bot.callbackQuery(/^fire:addTwigs:(\d+)$/, async (ctx) => {
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player) {
@@ -276,6 +309,26 @@ export function registerLookHandlers(bot: Bot) {
     }
 
     await submitFeatureQueuedAction(bot, ctx, player, "ADD_TWIGS", { featureId: Number(ctx.match[1]) }, "Не вдалося підкинути хмиз.");
+  });
+
+  bot.callbackQuery(/^fire:douse:(\d+)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    await submitFeatureQueuedAction(bot, ctx, player, "DOUSE_CAMPFIRE", { featureId: Number(ctx.match[1]) }, "Не вдалося погасити вогнище.");
+  });
+
+  bot.callbackQuery(/^fire:dismantle:(\d+)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    await submitFeatureQueuedAction(bot, ctx, player, "DISMANTLE_CAMPFIRE", { featureId: Number(ctx.match[1]) }, "Не вдалося розібрати вогнище.");
   });
 
   bot.callbackQuery(/^fire:light:(\d+)$/, async (ctx) => {

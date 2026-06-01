@@ -15,6 +15,7 @@ import { ownHeldTorchText } from "../utils/torchText";
 import { resourceTypeDisplayName } from "../services/corpses";
 import { actionDurationMs, hasPlayerActionQueueControls, performOrQueuePlayerAction, renderPlayerActionQueue } from "../services/actionQueue";
 import {
+  canBuildCampfireFromInventory,
   canAddTwigsToNearbyCampfire,
   canDousePlayerTorchFromInventory,
   canLightPlayerTorchFromInventory,
@@ -133,7 +134,7 @@ function inventoryActionLabel(resource: any) {
   return resourceTypeDisplayName(resource.resourceType);
 }
 
-function buildInventoryKeyboard(resources: any[] = [], options: { canAddTwigs?: boolean; canDouseTorch?: boolean; canLightTorch?: boolean; canCookMeat?: boolean } = {}) {
+function buildInventoryKeyboard(resources: any[] = [], options: { canAddTwigs?: boolean; canBuildCampfire?: boolean; canDouseTorch?: boolean; canLightTorch?: boolean; canCookMeat?: boolean } = {}) {
   const keyboard = new InlineKeyboard();
   const berriesAmount = inventoryResourceAmount(resources, "berries");
   if (berriesAmount > 0) {
@@ -165,6 +166,7 @@ function buildInventoryKeyboard(resources: any[] = [], options: { canAddTwigs?: 
     if (rawMeatAmount > 1) keyboard.text("🔥 Посмажити все", "inventory:cook:all");
     keyboard.row();
   }
+  if (options.canBuildCampfire) keyboard.text("🪵 Скласти вогнище", "fire:build").row();
   if (options.canAddTwigs) keyboard.text("🪵 Підкинути хмиз", "inventory:add-twigs").row();
   if (options.canLightTorch) keyboard.text("🔥 Запалити факел", "inventory:light:torch").row();
   if (options.canDouseTorch) keyboard.text("🫧 Притушити факел", "inventory:douse:torch").row();
@@ -358,8 +360,9 @@ async function renderInventoryView(telegramId: number) {
   });
 
   if (!player) return null;
-  const [canAddTwigs, canDouseTorch, canLightTorch, canCookMeat] = await Promise.all([
+  const [canAddTwigs, canBuildCampfire, canDouseTorch, canLightTorch, canCookMeat] = await Promise.all([
     canAddTwigsToNearbyCampfire(player.id),
+    canBuildCampfireFromInventory(player.id),
     canDousePlayerTorchFromInventory(player.id),
     canLightPlayerTorchFromInventory(player.id),
     canCookPlayerMeat(player.id),
@@ -371,7 +374,7 @@ async function renderInventoryView(telegramId: number) {
 
   return {
     text: `🎒 Речі\n\n${itemLines.length ? itemLines.join("\n") : "Поки порожньо."}`,
-    keyboard: buildInventoryKeyboard(player.resources, { canAddTwigs, canDouseTorch, canLightTorch, canCookMeat }),
+    keyboard: buildInventoryKeyboard(player.resources, { canAddTwigs, canBuildCampfire, canDouseTorch, canLightTorch, canCookMeat }),
   };
 }
 
