@@ -1329,6 +1329,26 @@
     "file": "docs/planning/items/MAP-003-playable-map-expansion.md"
   },
   {
+    "id": "MAP-WILLOW-001",
+    "title": "Willow Floodplain first contour",
+    "status": "testing",
+    "type": "content",
+    "area": "world",
+    "priority": "high",
+    "tags": [
+      "map",
+      "world",
+      "willow-floodplain",
+      "riverbank",
+      "exploration"
+    ],
+    "depends_on": [
+      "MAP-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/MAP-WILLOW-001-first-contour.md"
+  },
+  {
     "id": "NAV-001",
     "title": "Location-to-location route finding",
     "status": "testing",

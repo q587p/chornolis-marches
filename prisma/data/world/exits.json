@@ -3030,5 +3030,261 @@
     "label": "захід",
     "travelCost": 1,
     "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_16_07",
+    "toKey": "willow_turn_16_08",
+    "direction": "NORTH",
+    "label": "північ, у вербові низи",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_turn_16_08",
+    "toKey": "riverbank_16_07",
+    "direction": "SOUTH",
+    "label": "південь, до берега",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_13_09",
+    "toKey": "willow_low_return_14_10",
+    "direction": "INSIDE",
+    "label": "в очерет, до низького відступу",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_low_return_14_10",
+    "toKey": "riverbank_13_09",
+    "direction": "OUTSIDE",
+    "label": "назовні, до тихої берегової низини",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_turn_16_08",
+    "toKey": "willow_mudflat_16_09",
+    "direction": "INSIDE",
+    "label": "в очерет, на мулову косу",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_mudflat_16_09",
+    "toKey": "willow_turn_16_08",
+    "direction": "OUTSIDE",
+    "label": "назовні, до вербового входу",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_mudflat_16_09",
+    "toKey": "willow_sedge_edge_15_09",
+    "direction": "WEST",
+    "label": "захід, до осоки",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_sedge_edge_15_09",
+    "toKey": "willow_mudflat_16_09",
+    "direction": "EAST",
+    "label": "схід, на мулову косу",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_mudflat_16_09",
+    "toKey": "willow_reed_wall_17_09",
+    "direction": "EAST",
+    "label": "схід, до очеретяної стіни",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_reed_wall_17_09",
+    "toKey": "willow_mudflat_16_09",
+    "direction": "WEST",
+    "label": "захід, на мулову косу",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_sedge_edge_15_09",
+    "toKey": "willow_still_pool_15_10",
+    "direction": "SOUTH",
+    "label": "південь, до тихої заводі",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_still_pool_15_10",
+    "toKey": "willow_sedge_edge_15_09",
+    "direction": "NORTH",
+    "label": "північ, до осокової крайки",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_still_pool_15_10",
+    "toKey": "willow_low_return_14_10",
+    "direction": "WEST",
+    "label": "захід, до низького берега",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_low_return_14_10",
+    "toKey": "willow_still_pool_15_10",
+    "direction": "EAST",
+    "label": "схід, до тихої заводі",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_mudflat_16_09",
+    "toKey": "willow_root_tangle_16_10",
+    "direction": "SOUTH",
+    "label": "південь, до плетива коріння",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_root_tangle_16_10",
+    "toKey": "willow_mudflat_16_09",
+    "direction": "NORTH",
+    "label": "північ, на мулову косу",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_root_tangle_16_10",
+    "toKey": "willow_still_pool_15_10",
+    "direction": "WEST",
+    "label": "захід, до тихої заводі",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_still_pool_15_10",
+    "toKey": "willow_root_tangle_16_10",
+    "direction": "EAST",
+    "label": "схід, до плетива коріння",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_root_tangle_16_10",
+    "toKey": "willow_frog_pool_17_10",
+    "direction": "EAST",
+    "label": "схід, до жаб’ячого плеса",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_frog_pool_17_10",
+    "toKey": "willow_root_tangle_16_10",
+    "direction": "WEST",
+    "label": "захід, до плетива коріння",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_reed_wall_17_09",
+    "toKey": "willow_frog_pool_17_10",
+    "direction": "SOUTH",
+    "label": "південь, до жаб’ячого плеса",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_frog_pool_17_10",
+    "toKey": "willow_reed_wall_17_09",
+    "direction": "NORTH",
+    "label": "північ, до очеретяної стіни",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_frog_pool_17_10",
+    "toKey": "willow_blind_channel_18_10",
+    "direction": "EAST",
+    "label": "схід, у сліпий рукав",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_blind_channel_18_10",
+    "toKey": "willow_frog_pool_17_10",
+    "direction": "WEST",
+    "label": "захід, до жаб’ячого плеса",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_root_tangle_16_10",
+    "toKey": "willow_dry_islet_16_11",
+    "direction": "SOUTH",
+    "label": "південь, на сухий острівець",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_dry_islet_16_11",
+    "toKey": "willow_root_tangle_16_10",
+    "direction": "NORTH",
+    "label": "північ, до плетива коріння",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_dry_islet_16_11",
+    "toKey": "willow_old_net_cut_17_11",
+    "direction": "EAST",
+    "label": "схід, до старого сітяного просіку",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_old_net_cut_17_11",
+    "toKey": "willow_dry_islet_16_11",
+    "direction": "WEST",
+    "label": "захід, на сухий острівець",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_old_net_cut_17_11",
+    "toKey": "willow_dark_backwater_18_11",
+    "direction": "EAST",
+    "label": "схід, до темної затоки",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_dark_backwater_18_11",
+    "toKey": "willow_old_net_cut_17_11",
+    "direction": "WEST",
+    "label": "захід, до старого сітяного просіку",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_dark_backwater_18_11",
+    "toKey": "willow_blind_channel_18_10",
+    "direction": "NORTH",
+    "label": "північ, у сліпий рукав",
+    "travelCost": 2,
+    "isHidden": false
+  },
+  {
+    "fromKey": "willow_blind_channel_18_10",
+    "toKey": "willow_dark_backwater_18_11",
+    "direction": "SOUTH",
+    "label": "південь, до темної затоки",
+    "travelCost": 2,
+    "isHidden": false
   }
 ]

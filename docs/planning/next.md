@@ -51,6 +51,7 @@ Implement `0.14.x` in small slices:
 18. PERF-001: `0.14.18` adds the first creature simulation budget so large background animal populations cannot all enqueue individual behavior on every world tick; scribe/admin stats now expose processed/deferred creature counts for tuning.
 19. CAMP-002/CAMP-003 follow-up: `0.14.19` caps repeated starter torch-source taking, keeps the first-night light safety rail, and records the remaining shared-supply, Herald, sleep and ecology watchpoints before the next feature slice.
 20. DAYNOTICE-001: `0.14.20` adds player-level daypart notice settings so routine dawn/day/dusk/night nudges can be disabled without muting urgent gameplay messages.
+21. MAP-WILLOW-001: `0.14.21` adds the first reachable Willow Floodplain contour as seed-only map content while leaving notification settings, settlement gates and observation systems untouched.
 
 Observation learning remains the `0.15` line. Darkness, distance and light should affect learning later, but the visibility foundation must land first.
 

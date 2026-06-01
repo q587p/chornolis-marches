@@ -47,6 +47,7 @@ function symbolForLocation(location) {
   if (location.regionKey === "closed_settlement_gate") return "G";
   if (location.regionKey === "old_bridge") return "=";
   if (location.regionKey === "riverbank") return ",";
+  if (location.regionKey === "willow_floodplain") return "w";
   if (location.regionKey === "dry_luka") return ".";
   if (location.regionKey === "chornolis_border") return "F";
   return "?";
@@ -136,6 +137,7 @@ node scripts/world/render-map-ascii.mjs --write
 - \`F\` — forest location.
 - \`.\` — dry luka / open meadow location.
 - \`,\` — riverbank location.
+- \`w\` — willow floodplain location.
 - \`~\` — impassable river cell.
 - \`#\` — local impassable thicket / obstacle.
 - \`█\` — impassable outer boundary.
