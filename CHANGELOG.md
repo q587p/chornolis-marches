@@ -7,6 +7,19 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.14.16 - Ecology recovery follow-ups - 12026-06-01
+
+### Changed
+
+- Population-floor restoration now also protects starter mice and rabbits when living animals remain but no adult breeding pair is left, while keeping predator restoration tied to total disappearance.
+- Hungry predators now prefer safe unclaimed local herbivore corpses before attacking living prey, without exposing or consuming hunter-claimed, player-carried or already freshened corpses.
+- Updated ecology docs and planning notes for the 0.14.16 recovery slice.
+
+### Validation
+
+- Ran `node scripts/test/population-restoration.cjs`.
+- Ran `node scripts/test/predator-feeding.cjs`.
+
 ## 0.14.15 - Ecology start-balance stabilization - 12026-06-01
 
 ### Added

@@ -14,7 +14,7 @@ import { DREAM_GATE_FEATURE_KEY, DREAM_GATE_FEATURE_KEYS } from "./tutorial";
 import { hunterClaimedCorpseDecayAction, isHunterCreature, tickNpcHunter } from "./npcHunter";
 import { chance, chancePermille, pickOptional as pick, randomInt } from "../utils/random";
 import { restorePopulationFloors } from "./populationRestoration";
-import { PREDATOR_PREY_CLAIM_PREFIX, predatorClaimedCorpseDecayAction, predatorClaimedCorpseMarker } from "./predatorFeeding";
+import { PREDATOR_PREY_CLAIM_PREFIX, isUnclaimedHerbivoreCorpseForScavenging, predatorClaimedCorpseDecayAction, predatorClaimedCorpseMarker } from "./predatorFeeding";
 import { slashlessCommandPattern } from "../utils/slashlessCommands";
 import { advanceWorldClock } from "./worldTime";
 import { notifyWorldDaypartChangeIfNeeded } from "./worldDaypartNotices";
@@ -1031,6 +1031,31 @@ async function tickCarnivore(c: any) {
   }
 
   if (starving || (hungry && chance(70))) {
+    const localCorpses = await prisma.creature.findMany({
+      where: {
+        locationId: c.locationId,
+        isAlive: false,
+        isGone: false,
+        isHidden: false,
+        age: "CORPSE",
+        species: { kind: "ANIMAL", diet: "HERBIVORE" },
+      },
+      include: { species: true },
+      orderBy: { id: "asc" },
+      take: 8,
+    });
+    const scavengableCorpse = localCorpses.find((corpse) => isUnclaimedHerbivoreCorpseForScavenging(corpse));
+    if (scavengableCorpse) {
+      await enqueueCreatureAction({
+        creatureId: c.id,
+        type: "EAT",
+        payload: { corpseId: scavengableCorpse.id, scavengeCorpse: true },
+        durationMs: actionDurationMs("EAT", c.stamina),
+        interruptQueued: true,
+      });
+      return "queuedEat";
+    }
+
     const stealableCorpse = await prisma.creature.findFirst({
       where: {
         locationId: c.locationId,

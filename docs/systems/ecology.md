@@ -47,10 +47,11 @@ The forest should feel alive even when players do nothing.
 - Predator kills leave claimed corpses and are counted in scribe/admin `/stat` next to old-age deaths.
 - Carnivores do not recover hunger at kill time. They queue a later `EAT` action for the claimed corpse; if a player, hunter or another flow takes the corpse first, the predator loses that meal and stays hungry.
 - Character-caused animal deaths include player kills and non-animal NPC kills, and are counted separately from predator kills in scribe/admin `/stat`, protected web `/stat`, `/stat.json`, and ecology sign technical summaries.
-- If a starter animal species disappears entirely from the waking world, the world tick quietly restores its starter living population at starter locations. This includes starter foxes and wolves for now. It is a population-floor safeguard, not a player-facing notification or full spirit/migration system, and predator restoration may become a balance/narrative switch later.
+- If a starter animal species disappears entirely from the waking world, the world tick quietly restores its starter living population at starter locations. This includes starter foxes and wolves for now. Starter rabbits and mice can also recover when living animals remain but no adult breeding pair is left. This is a population-floor safeguard, not a player-facing notification or full spirit/migration system, and predator restoration may become a balance/narrative switch later.
 - Predator hunger recovery uses prey food value when the predator actually eats the corpse: mice are light food, rabbit children/old rabbits are partial food, healthy young/adult rabbits are worth more.
 - Hungry herbivores are more likely to eat when forage exists and more likely to move when local food is gone or vegetation is exhausted.
 - Hungry predators are more likely to search for prey and attack; very hungry predators attack immediately when suitable prey is present.
+- Hungry predators can scavenge safe unclaimed local herbivore corpses before attacking living prey. Hunter-claimed, player-carried, predator-claimed and freshened corpses remain protected from this ordinary scavenging path.
 - Animals that remain above the starvation threshold can die of hunger. Starvation leaves a corpse, cancels pending creature actions, writes an `Animal starved` world event, and appears in ecology statistics.
 - Individual animals keep hunting counters, and scribe/admin `/stat` can show the most successful hunters.
 - Fox and wolf lifecycle values are deliberately slower than rabbits and mice, so future predator reproduction does not explode as quickly as herbivore reproduction.
@@ -75,6 +76,7 @@ The forest should feel alive even when players do nothing.
 ## Near Follow-Up
 
 - Tune growth rates and resource damage after observation.
+- Watch whether no-pair prey restoration and predator scavenging reduce early dead-ends without hiding too much danger from new players.
 - Tune the first `Винищена трава` inspection text after observation: account for active grazing/gathering pressure, rain, season, moon/world time and future restoration magic rather than only local grass amount/max and exhausted-location regeneration.
 - Tune hunger thresholds, starvation odds and species-specific hunger tolerance after observation.
 - Replace direct predator births with a persistent pregnancy/den state when the creature lifecycle model is ready.

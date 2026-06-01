@@ -26,6 +26,11 @@ type PopulationFloorLocation = {
   key: string;
 };
 
+type BreedingCounts = {
+  adultFemales: number;
+  adultMales: number;
+};
+
 export type PopulationFloorCreateRow = {
   speciesId: number;
   locationId: number;
@@ -62,10 +67,34 @@ export const POPULATION_FLOOR_GROUPS: StarterAnimalGroup[] = [
 ].filter((group) => group.age !== "CORPSE");
 
 export const POPULATION_FLOOR_SPECIES_KEYS = [...new Set(POPULATION_FLOOR_GROUPS.map((group) => group.speciesKey))];
+const BREEDING_PAIR_RESTORATION_SPECIES_KEYS = new Set(["rabbit", "mouse"]);
 
 function livingCountForSpecies(livingCountsBySpeciesKey: Record<string, number> | Map<string, number>, speciesKey: string) {
   if (livingCountsBySpeciesKey instanceof Map) return livingCountsBySpeciesKey.get(speciesKey) ?? 0;
   return livingCountsBySpeciesKey[speciesKey] ?? 0;
+}
+
+function breedingCountsForSpecies(
+  livingBreedingBySpeciesKey: Record<string, BreedingCounts> | Map<string, BreedingCounts> | undefined,
+  speciesKey: string
+) {
+  if (!livingBreedingBySpeciesKey) return { adultFemales: 0, adultMales: 0 };
+  if (livingBreedingBySpeciesKey instanceof Map) return livingBreedingBySpeciesKey.get(speciesKey) ?? { adultFemales: 0, adultMales: 0 };
+  return livingBreedingBySpeciesKey[speciesKey] ?? { adultFemales: 0, adultMales: 0 };
+}
+
+function shouldRestoreSpecies(input: {
+  speciesKey: string;
+  livingCountsBySpeciesKey: Record<string, number> | Map<string, number>;
+  livingBreedingBySpeciesKey?: Record<string, BreedingCounts> | Map<string, BreedingCounts>;
+}) {
+  const livingCount = livingCountForSpecies(input.livingCountsBySpeciesKey, input.speciesKey);
+  if (livingCount <= 0) return true;
+  if (!BREEDING_PAIR_RESTORATION_SPECIES_KEYS.has(input.speciesKey)) return false;
+  if (!input.livingBreedingBySpeciesKey) return false;
+
+  const breeding = breedingCountsForSpecies(input.livingBreedingBySpeciesKey, input.speciesKey);
+  return breeding.adultFemales <= 0 || breeding.adultMales <= 0;
 }
 
 export function planPopulationFloorRestoration(input: {
@@ -73,11 +102,12 @@ export function planPopulationFloorRestoration(input: {
   species: PopulationFloorSpecies[];
   locations: PopulationFloorLocation[];
   livingCountsBySpeciesKey: Record<string, number> | Map<string, number>;
+  livingBreedingBySpeciesKey?: Record<string, BreedingCounts> | Map<string, BreedingCounts>;
 }): PopulationFloorPlan {
   const groups = input.groups ?? POPULATION_FLOOR_GROUPS;
   const speciesByKey = new Map(input.species.filter((species) => species.kind === undefined || species.kind === "ANIMAL").map((species) => [species.key, species]));
   const locationsByKey = new Map(input.locations.map((location) => [location.key, location]));
-  const restoreSpeciesKeys = new Set(groups.map((group) => group.speciesKey).filter((speciesKey) => livingCountForSpecies(input.livingCountsBySpeciesKey, speciesKey) <= 0));
+  const restoreSpeciesKeys = new Set(groups.map((group) => group.speciesKey).filter((speciesKey) => shouldRestoreSpecies({ ...input, speciesKey })));
   const spawnIndexBySpeciesKey = new Map<string, number>();
   const rows: PopulationFloorCreateRow[] = [];
   const bySpecies: Record<string, number> = {};
@@ -139,16 +169,22 @@ export async function restorePopulationFloors(): Promise<PopulationFloorResult> 
     }),
     prisma.creature.findMany({
       where: { isAlive: true, isGone: false, species: { key: { in: POPULATION_FLOOR_SPECIES_KEYS }, kind: "ANIMAL" } },
-      select: { species: { select: { key: true } } },
+      select: { age: true, sex: true, species: { select: { key: true } } },
     }),
   ]);
 
   const livingCountsBySpeciesKey = new Map<string, number>();
+  const livingBreedingBySpeciesKey = new Map<string, BreedingCounts>();
   for (const creature of livingCreatures) {
     livingCountsBySpeciesKey.set(creature.species.key, (livingCountsBySpeciesKey.get(creature.species.key) ?? 0) + 1);
+    if (creature.age !== "ADULT") continue;
+    const breeding = livingBreedingBySpeciesKey.get(creature.species.key) ?? { adultFemales: 0, adultMales: 0 };
+    if (creature.sex === "FEMALE") breeding.adultFemales++;
+    if (creature.sex === "MALE") breeding.adultMales++;
+    livingBreedingBySpeciesKey.set(creature.species.key, breeding);
   }
 
-  const plan = planPopulationFloorRestoration({ species, locations, livingCountsBySpeciesKey });
+  const plan = planPopulationFloorRestoration({ species, locations, livingCountsBySpeciesKey, livingBreedingBySpeciesKey });
   if (plan.rows.length === 0) return { ...plan, restored: 0 };
 
   await prisma.creature.createMany({ data: plan.rows });
