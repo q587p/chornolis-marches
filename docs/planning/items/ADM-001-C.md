@@ -1,7 +1,7 @@
 ---
 id: ADM-001-C
 title: Restart confirmation and HTML safety hardening
-status: next
+status: testing
 type: technical
 area: admin
 priority: high
@@ -43,6 +43,12 @@ Tighten two near-term safety edges that became more visible after slashless comm
 - Brief and detailed feature inspection still render correctly.
 - Feature-controlled text cannot inject raw HTML into Telegram output.
 - Tests cover the restart alias/confirmation expectation or the lower-level routing helper that enforces it.
+
+## 0.14.23 Reconciliation Notes
+
+- `/restart` and slashless `restart` now route to the same explicit confirmation prompt before deleting the character.
+- Stale restart confirmations are checked against the current Telegram id before destructive work runs.
+- Existing feature renderers already escape feature names/descriptions before Telegram HTML output; `world-content-html` remains the guard against raw authored HTML in world JSON.
 
 ## Risks
 

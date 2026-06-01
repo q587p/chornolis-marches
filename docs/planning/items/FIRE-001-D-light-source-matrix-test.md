@@ -1,7 +1,7 @@
 ---
 id: FIRE-001-D
 title: Light source matrix test
-status: next
+status: testing
 type: qa
 area: survival
 priority: high
@@ -55,3 +55,8 @@ Add focused helper tests or manual checks proving visibility uses active light c
 - Player-held, dropped and NPC-held lit torches behave consistently.
 - Expired/doused/unlit torches do not reveal darkness-hidden details.
 - Tests cover at least the main positive and negative cases.
+
+## 0.14.23 Reconciliation Notes
+
+- `world-time`, `campfire-decay`, `torch-source`, `npc-hunter` and target-formatting tests cover the current first-pass light behavior.
+- Deeper per-item torch timers and richer NPC-held inventory remain separate future work.

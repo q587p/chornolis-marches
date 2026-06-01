@@ -1,7 +1,7 @@
 ---
 id: HMYZ-001-E
 title: Hmyz observer messages
-status: next
+status: testing
 type: ux
 area: survival
 priority: medium
@@ -33,3 +33,7 @@ Make visible хмиз actions readable to nearby characters.
 ## Implementation Order
 
 Do after: `HMYZ-001-D`.
+
+## 0.14.23 Reconciliation Notes
+
+- Pickup and fire/fuel actions now use the same observer-message pattern as other visible local item actions where practical.

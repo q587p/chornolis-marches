@@ -7,20 +7,29 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
-## 0.14.23 - Clickable shout command polish - 12026-06-01
+## 0.14.23 - Reconciliation and safety slice - 12026-06-01
+
+### Added
+
+- Added a central ordinary sleep command gate so active player commands and active callback buttons are blocked while a character is asleep, while passive commands such as `/wake`, `/time`, `/weather`, `/help`, `/commands`, `/chronicles`, `/news`, settings and session-safety commands remain available.
 
 ### Fixed
 
 - Added an explicit `/shout` bot command route so clickable command hints open a useful usage prompt instead of falling through when no shout text is supplied.
+- Made `/restart` and slashless `restart` share an explicit confirmation prompt before deleting character state.
 
 ### Documentation
 
 - Added `MAP-WILLOW-002` backlog planning for a future under-bridge / watchtower integration pass around the Willow Floodplain.
+- Reconciled planning status for shipped world-time, visibility, fire/light, `twigs`, ordinary sleep and restart-safety slices after 0.14.22.
+- Clarified that `PROG-002` is now an umbrella learning-design item, with narrower LEARN/OBS/TRACK-LEARN slices carrying near-term implementation.
 
 ### Validation
 
 - Ran `node scripts/test/news-clickable-commands.cjs`.
 - Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/sleep.cjs`.
+- Ran `node scripts/test/admin-reset.cjs`.
 - Ran `npm run planning:export`.
 - Ran `npm test`.
 - Ran `npm run build`.

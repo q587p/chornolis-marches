@@ -54,7 +54,7 @@
   {
     "id": "ADM-001-C",
     "title": "Restart confirmation and HTML safety hardening",
-    "status": "next",
+    "status": "testing",
     "type": "technical",
     "area": "admin",
     "priority": "high",
@@ -559,7 +559,7 @@
   {
     "id": "FIRE-001-A",
     "title": "Active light connects to visibility",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -595,7 +595,7 @@
   {
     "id": "FIRE-001-C",
     "title": "Carried torch visibility",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -613,7 +613,7 @@
   {
     "id": "FIRE-001-D",
     "title": "Light source matrix test",
-    "status": "next",
+    "status": "testing",
     "type": "qa",
     "area": "survival",
     "priority": "high",
@@ -876,7 +876,7 @@
   {
     "id": "HMYZ-001-A",
     "title": "Audit hmyz model",
-    "status": "next",
+    "status": "testing",
     "type": "technical",
     "area": "survival",
     "priority": "high",
@@ -894,7 +894,7 @@
   {
     "id": "HMYZ-001-B",
     "title": "Seed starter hmyz",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -913,7 +913,7 @@
   {
     "id": "HMYZ-001-C",
     "title": "Pickup hmyz polish",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -931,7 +931,7 @@
   {
     "id": "HMYZ-001-D",
     "title": "Add hmyz to campfire",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -950,7 +950,7 @@
   {
     "id": "HMYZ-001-E",
     "title": "Hmyz observer messages",
-    "status": "next",
+    "status": "testing",
     "type": "ux",
     "area": "survival",
     "priority": "medium",
@@ -2507,7 +2507,7 @@
   {
     "id": "SLEEP-002-A",
     "title": "Ordinary sleep command gate",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",
@@ -3123,7 +3123,7 @@
   {
     "id": "VIS-001-E",
     "title": "Ground object visibility gate",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "visibility",
     "priority": "medium",
@@ -3236,7 +3236,7 @@
   {
     "id": "WORLD-001-A",
     "title": "Internal world-clock model design",
-    "status": "next",
+    "status": "testing",
     "type": "design",
     "area": "world_time",
     "priority": "high",

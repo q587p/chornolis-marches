@@ -1,7 +1,7 @@
 ---
 id: HMYZ-001-B
 title: Seed starter hmyz
-status: next
+status: testing
 type: feature
 area: survival
 priority: high
@@ -34,3 +34,7 @@ Place a small amount of хмиз near safe early locations.
 ## Implementation Order
 
 Do after: `HMYZ-001-A`, `VIS-001-E`.
+
+## 0.14.23 Reconciliation Notes
+
+- Seed/reset data includes pickable `twigs` bundles in early forest and dry-luka locations, plus slow natural forest fallback.

@@ -1,7 +1,7 @@
 ---
 id: FIRE-001-C
 title: Carried torch visibility
-status: next
+status: testing
 type: feature
 area: survival
 priority: high
@@ -33,3 +33,8 @@ Make carried lit torches use the same visibility layer.
 ## Implementation Order
 
 Do after: `FIRE-001-A`.
+
+## 0.14.23 Reconciliation Notes
+
+- Carried lit torches are treated as local light in the shared fire/light and visibility path.
+- The remaining open work belongs to deeper item-instance and hand-slot modeling, not the first visibility connection.

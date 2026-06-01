@@ -36,9 +36,9 @@ Implement `0.14.x` in small slices:
 3. WORLD-001-G: `0.14.4` adds time/weather debug and scribe/admin safety for testing daypart, moon and weather state.
 4. VIS-001-A: `0.14.4` adds the shared visibility service skeleton and wires brief `/look` through it.
 5. VIS-001-B/C/D/F: `0.14.5` makes darkness reduce location descriptions, nearby beings/buttons, ground objects/resources and track details with atmospheric copy.
-6. VIS-001-E and VIS-001-F follow-ups: continue the copy audit for feature-specific hints and hidden target lookup.
-7. FIRE-001-A/C and FIRE-001-D: active light connects to visibility; carried, dropped and NPC-held light sources are covered by a matrix test.
-8. HMYZ-001-A/B/C/D: audit, seed, pickup and add-to-fire polish for хмиз/firewood.
+6. VIS-001-F follow-up: continue the copy audit for feature-specific hints and hidden target lookup. VIS-001-E ground-object visibility is in testing after the 0.14.23 reconciliation pass.
+7. FIRE-001 follow-up: active light, carried torch visibility and the light-source matrix are in testing after the 0.14.23 reconciliation pass; deeper fire/light work should now be item-instance or NPC-held inventory focused.
+8. HMYZ-001-F: keep deeper persisted/queued хмиз work in backlog. HMYZ-001-A/B/C/D/E are in testing after the 0.14.23 reconciliation pass.
 9. MAP-002-A/B/C: first biome-aware foraging table and text variants.
 10. ONB-004 / ONB-001-B / ONB-001-C / CAMP-001: `0.14.8` adds first-night guidance, first look/examine tutorial hints and starter-camp clarity after darkness starts hiding details.
 11. CAMP-002: `0.14.9` adds the real starter-camp watchtower, vertical `UP`/`DOWN` movement and moves the beginner torch source above the camp; `0.14.10` makes that watchtower stand the hunter resupply source and downgrades the old gate source as a non-primary/emergency stand.
@@ -53,6 +53,7 @@ Implement `0.14.x` in small slices:
 20. DAYNOTICE-001: `0.14.20` adds player-level daypart notice settings so routine dawn/day/dusk/night nudges can be disabled without muting urgent gameplay messages.
 21. MAP-WILLOW-001: `0.14.21` adds the first reachable Willow Floodplain contour as seed-only map content while leaving notification settings, settlement gates and observation systems untouched.
 22. MAP-WILLOW-003 / QA-WILLOW-001: `0.14.22` adds inspectable Willow Floodplain landmarks, modest swamp resource defaults, feature aliases and route/content smoke validation without adding fishing, observation progression or settlement access.
+23. SLEEP-002-A / ADM-001-C / planning reconciliation: `0.14.23` is the reconciliation and safety slice after `0.14.22`, adding the ordinary sleep command gate, restart confirmation parity and refreshed status for shipped world-time, visibility, fire/light and хмиз slices.
 
 Observation learning remains the `0.15` line. Darkness, distance and light should affect learning later, but the visibility foundation must land first.
 
@@ -73,7 +74,7 @@ Observation learning remains the `0.15` line. Darkness, distance and light shoul
 - OMEN-001: one small living-world omen.
 - ONB-001 follow-up: tutorial hints that careful observation matters.
 - Starter camp and dream onboarding follow-up: after the `0.14.11` shared cache slice, review whether the cache needs stronger newcomer-helper text, contribution etiquette, or anti-hoarding limits. Keep hunter route rewrites separate unless they become direct regressions.
-- SLEEP-002-A: ordinary sleep command gate. After ordinary sleep and auto-wake landed, most active commands should be blocked while asleep with atmospheric "wake first" copy; keep only passive/sleep-relevant commands such as `/wake`, `/time`, `/help`, `/chronicles` and session safety.
+- SLEEP-002-A: ordinary sleep command gate is in testing after the 0.14.23 reconciliation pass. Next sleep work should focus on comfort, danger interruption and sleeping-body/dream-presence separation rather than reopening the first command gate.
 
 Keep theft/hiding after the first observation MVP is stable:
 
@@ -92,7 +93,7 @@ These are still `backlog`, but recent work makes them worth reviewing before the
 - Queued pickup actions: after `ITEM-001`, review `ITEM-002` so large `get all` / `підняти все` piles can move from immediate pickup with stamina charge into the action queue without losing typed bulk filters.
 - Herbal stamina elixir: `ALC-001` is a good small survival/crafting candidate once gathered herbs/berries need a stronger practical use than direct eating or tiny HP/stamina nudges.
 - PERF-001: runtime performance plan and creature simulation budget. Recent production logs show `/all` and large creature counts are already visible pressure points; next performance work should keep following the recorded plan.
-- ADM-001: admin permissions, name approval and restricted reset hardening. A first `Писар`/admin gate exists now, so remaining near-term work is audit logging, clearer role UX, first name-review tools and closing any leftover dangerous paths. Next small hardening slice: `ADM-001-C` for slashless `restart` confirmation parity and HTML escaping of feature fields.
+- ADM-001: admin permissions, name approval and restricted reset hardening. A first `Писар`/admin gate exists now, and `ADM-001-C` restart confirmation parity / feature HTML safety is in testing after 0.14.23. Remaining near-term work is audit logging, clearer role UX and first name-review tools.
 - Speech and quick navigation commands: `glance`, `exits`, `enter`, `leave`, `/reply`, `whisper` and `shout` have shipped through `CMD-001`. Later work should move toward a shared command registry and per-command help without reopening this whole pack.
 - Socialization / contacts / groups: the social planning pack is now split into `SOC-001` through `SOC-007`. Keep the implementation order conservative: `Знайомства`, follow intent, `Гурт` core, then group movement and UI polish; do not pull full factions, PvP law or automatic group combat forward.
 - Hidden presence / hidden follower spirit: the planning pack is now split into `VIS-002`, `WORLD-002-hidden-spirit` and `OMEN-002`, with `docs/systems/hidden_presence.md` as the design source. Keep it as future work until the visibility and light foundations are ready; do not implement the стежник pursuit as an immediate patch.

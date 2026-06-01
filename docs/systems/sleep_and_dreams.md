@@ -172,7 +172,9 @@ Good candidates for sleep-permeating events:
 
 Ordinary sleep should also hide most ordinary agency.
 
-While a character is in ordinary sleep, the default should be "this cannot be done while asleep" unless a command is explicitly passive or sleep-relevant. The first allowlist should stay small: `/wake`, `/time`, `/weather`, `/help`, `/commands`, `/chronicles`, `/news` and session-safety commands such as AFK/end-session. Active commands such as movement, look/examine of the waking location, speech, socials, inventory use, gathering, pickup, drop/put, attack, freshening, cooking, fire/torch handling, auto and queue mutation should be blocked with atmospheric copy and a wake option.
+While a character is in ordinary sleep, the default is "this cannot be done while asleep" unless a command is explicitly passive or sleep-relevant. The first allowlist stays small: `/wake`, `/time`, `/weather`, `/help`, `/commands`, `/chronicles`, `/news`, settings/daypart notice controls and session-safety commands such as AFK/end-session. Active commands such as movement, look/examine of the waking location, speech, socials, inventory use, gathering, pickup, drop/put, attack, freshening, cooking, fire/torch handling, auto and queue mutation are blocked with atmospheric copy and a wake option.
+
+The `0.14.23` reconciliation slice adds this as a central ordinary-sleep command gate before ordinary handlers. Tutorial sleep is still separate and should not be treated as ordinary sleep.
 
 Suggested copy:
 

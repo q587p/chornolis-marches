@@ -1,7 +1,7 @@
 ---
 id: HMYZ-001-A
 title: Audit hmyz model
-status: next
+status: testing
 type: technical
 area: survival
 priority: high
@@ -33,3 +33,8 @@ Identify current хмиз representation before expanding it.
 ## Implementation Order
 
 Do after: `FIRE-001-A`.
+
+## 0.14.23 Reconciliation Notes
+
+- `twigs` remains the internal resource key and `хмиз` remains the player-facing noun.
+- The current model is intentionally resource-stack based until deeper item-instance work arrives.
