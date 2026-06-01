@@ -12,6 +12,7 @@
 
 - Do **not** put internal workflow notes about `package.json` / `package-lock.json` into public news or changelog entries.
 - Do **not** put scribe/admin-only commands or hidden service tooling into public `news.md`; keep those details in changelog, release notes, `/adminHelp`, `/adminMenu`, and admin docs.
+- Do **not** expose `NPC` as a public-news category. In Ukrainian `news.md`, describe visible people as `персонажі`, `місцеві`, professions, or diegetic roles as if they belong to the world; keep `NPC` for technical docs, admin/scribe surfaces and English release notes where useful.
 - When a PR changes player-facing tutorial flow, beginner safety, visible buttons, world-time/light feedback, or other UX that players will notice, update public `news.md`, `CHANGELOG.md`, release notes and the relevant planning/backlog docs together, and keep the PR summary/risks aligned.
 - Every numbered release needs an explicit public-news decision before merge: add a `news.md` entry for player-visible, world-balance, tutorial, ecology, performance or UX releases, or state in release notes/PR summary why public news was intentionally skipped for a purely internal/scribe-only release.
 - If the task creates a release/version commit, bump `package.json` and `package-lock.json` in that same commit.

@@ -657,6 +657,22 @@ async function submitReply(bot: Bot, ctx: any, text: string) {
   }
 }
 
+async function submitYell(bot: Bot, ctx: any, text: string) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const safeText = stripUnsafeText(text);
+  if (!safeText) return void (await ctx.reply("Напиши так: yell текст або гукнути текст"));
+
+  const durationMs = actionDurationMs("SAY", player.stamina) * 2;
+  try {
+    const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "SAY", payload: { text: safeText, mode: "yell" }, durationMs, chatId: ctx.chat?.id });
+    await sendActionSubmitFeedback(ctx, player.id, result);
+  } catch (error) {
+    await ctx.reply(error instanceof Error ? error.message : "Не вдалося гукнути поруч.");
+  }
+}
+
 async function submitShout(bot: Bot, ctx: any, text: string) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
@@ -1082,6 +1098,7 @@ async function submitOpen(ctx: any, target?: string) {
 }
 
 export function registerAliasHandlers(bot: Bot) {
+  bot.command("yell", async (ctx) => submitYell(bot, ctx, ctx.match ?? ""));
   bot.command("shout", async (ctx) => submitShout(bot, ctx, ctx.match ?? ""));
 
   bot.on("message:text", async (ctx, next) => {
@@ -1155,6 +1172,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "say") return submitSay(bot, ctx, parsed.text);
     if (parsed.kind === "whisper") return submitWhisper(bot, ctx, parsed.text);
     if (parsed.kind === "reply") return submitReply(bot, ctx, parsed.text);
+    if (parsed.kind === "yell") return submitYell(bot, ctx, parsed.text);
     if (parsed.kind === "shout") return submitShout(bot, ctx, parsed.text);
     if (parsed.kind === "target-action") return submitTargetAction(bot, ctx, parsed.action, parsed.target);
     if (parsed.kind === "pickup-target") return submitPickupTarget(bot, ctx, parsed.target);
@@ -1167,5 +1185,10 @@ export function registerAliasHandlers(bot: Bot) {
     await ctx.reply("Ви лишаєтеся на місці. Якщо треба, можна озирнутися або перевірити виходи.", {
       reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
     });
+  });
+  bot.callbackQuery(/^yell:prompt:(UP|DOWN)$/, async (ctx) => {
+    const direction = ctx.match[1] === "UP" ? "вгору" : "вниз";
+    await safeAnswerCallbackQuery(ctx, "Напишіть текст у чат.");
+    await ctx.reply(`Що гукнути ${direction}? Напишіть: /yell <текст>`);
   });
 }

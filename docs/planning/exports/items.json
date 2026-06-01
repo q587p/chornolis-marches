@@ -383,6 +383,48 @@
     "file": "docs/planning/items/CAT-008-docs-news-release.md"
   },
   {
+    "id": "CAT-009",
+    "title": "Camp cat watch posture and soft warnings",
+    "status": "backlog",
+    "type": "feature",
+    "area": "atmosphere",
+    "priority": "medium",
+    "tags": [
+      "cat",
+      "camp",
+      "atmosphere",
+      "safety",
+      "onboarding"
+    ],
+    "depends_on": [
+      "CAT-002",
+      "CAT-006"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/CAT-009-camp-cat-watch-and-soft-warnings.md"
+  },
+  {
+    "id": "CAT-010",
+    "title": "Camp cat cache and newcomer presence",
+    "status": "backlog",
+    "type": "feature",
+    "area": "onboarding",
+    "priority": "low",
+    "tags": [
+      "cat",
+      "camp",
+      "beginner-cache",
+      "onboarding",
+      "atmosphere"
+    ],
+    "depends_on": [
+      "CAT-001",
+      "CAMP-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/CAT-010-camp-cat-cache-and-newcomer-presence.md"
+  },
+  {
     "id": "CMD-001",
     "title": "Near-term text command pack",
     "status": "testing",
@@ -2370,6 +2412,27 @@
     "file": "docs/planning/items/ONB-006-look-examine-semantics-in-dream.md"
   },
   {
+    "id": "ONB-007",
+    "title": "Dream tree and vertical tutorial",
+    "status": "proposed",
+    "type": "feature",
+    "area": "onboarding",
+    "priority": "high",
+    "tags": [
+      "sleep",
+      "dream",
+      "tutorial",
+      "verticality",
+      "speech",
+      "onboarding"
+    ],
+    "depends_on": [
+      "SOC-008"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-007-dream-tree-and-vertical-tutorial.md"
+  },
+  {
     "id": "OWL-002",
     "title": "Nocturnal owl tuning and indirect signs",
     "status": "testing",
@@ -2389,6 +2452,27 @@
     ],
     "exports": {},
     "file": "docs/planning/items/OWL-002-nocturnal-owl-tuning-and-signs.md"
+  },
+  {
+    "id": "OWL-003",
+    "title": "Starter camp owl boundary and night signs",
+    "status": "backlog",
+    "type": "tuning",
+    "area": "ecology",
+    "priority": "medium",
+    "tags": [
+      "owl",
+      "camp",
+      "ecology",
+      "night",
+      "onboarding"
+    ],
+    "depends_on": [
+      "OWL-002",
+      "CAT-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/OWL-003-starter-camp-boundary-and-night-signs.md"
   },
   {
     "id": "PERF-001",
@@ -2960,6 +3044,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/SOC-007-telegram-ui-and-copy.md"
+  },
+  {
+    "id": "SOC-008",
+    "title": "Speech ranges and vertical voice",
+    "status": "testing",
+    "type": "feature",
+    "area": "social",
+    "priority": "high",
+    "tags": [
+      "speech",
+      "social",
+      "mud-compatibility",
+      "stamina",
+      "verticality"
+    ],
+    "depends_on": [
+      "SOC-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SOC-008-speech-ranges-and-vertical-voice.md"
   },
   {
     "id": "SOCIAL-003",

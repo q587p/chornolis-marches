@@ -249,8 +249,14 @@ assertAlias("/шепнути Велика Оля Не руш.", { kind: "whisper
 assertAlias("reply Я почув.", { kind: "reply", text: "Я почув." });
 assertAlias("/reply", { kind: "reply", text: "" });
 assertAlias("/відповісти Йду за тобою.", { kind: "reply", text: "Йду за тобою." });
+assertAlias("/yell Сюди!", { kind: "yell", text: "Сюди!" });
+assertAlias("yell Сюди!", { kind: "yell", text: "Сюди!" });
+assertAlias("call Сюди!", { kind: "yell", text: "Сюди!" });
+assertAlias("гукнути Хто там?", { kind: "yell", text: "Хто там?" });
+assertAlias("покликати Хто там?", { kind: "yell", text: "Хто там?" });
+assertAlias("крикнути поруч Стій!", { kind: "yell", text: "Стій!" });
+assertAlias("гучно сказати Обережно!", { kind: "yell", text: "Обережно!" });
 assertAlias("shout Сюди!", { kind: "shout", text: "Сюди!" });
-assertAlias("гукнути Хто там?", { kind: "shout", text: "Хто там?" });
 assertAlias("крикнути Стій!", { kind: "shout", text: "Стій!" });
 assertAlias("кричати Допоможіть!", { kind: "shout", text: "Допоможіть!" });
 assertAlias("крик Допоможіть!", { kind: "shout", text: "Допоможіть!" });
@@ -312,6 +318,8 @@ assert.ok(suggestAliasEntries("закінчити нав").map(formatAliasSugges
 assert.ok(suggestAliasEntries("погод").map(formatAliasSuggestion).includes("погода (/weather)"), "Expected formatted weather suggestions to include /weather");
 assert.ok(suggestAliasEntries("freshen al").map(formatAliasSuggestion).includes("freshen all (/freshen_all)"), "Expected formatted suggestions to include slash command for bulk freshening");
 assert.ok(suggestAliasEntries("потрус").map(formatAliasSuggestion).includes("потрусити дерево (/shake_tree)"), "Expected formatted suggestions to include slash command for tree shaking");
+assert.ok(suggestAliasEntries("гук").map(formatAliasSuggestion).includes("гукнути (/yell)"), "Expected formatted suggestions to include slash command for nearby yell");
+assert.ok(suggestAliasEntries("вола").map(formatAliasSuggestion).includes("волати (/shout)"), "Expected formatted suggestions to keep волати as region shout");
 assert.ok(suggestAliasInputs("усхмі").includes("усміх"), "Expected social suggestions to include усміх for a mistyped smile");
 assert.ok(suggestAliasInputs("посмі").includes("посміх"), "Expected social suggestions to include посміх");
 assert.ok(suggestAliasEntries("усхмі").map(formatAliasSuggestion).includes("усміх (/smile)"), "Expected formatted social suggestions to include slash command for smile");

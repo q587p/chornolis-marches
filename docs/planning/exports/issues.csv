@@ -19,6 +19,8 @@ CAT-005,"Cat social gestures: shoo, wave off, rub against, circle around",next,f
 CAT-006,"Body-language reactions to weather, daypart, fire and darkness",next,content,atmosphere,low,"cat,weather,daypart,fire,visibility,copy,ukrainian",docs/planning/items/CAT-006-body-language-weather-and-fire.md
 CAT-007,Camp cat tests and tuning pass,next,chore,testing,medium,"cat,tests,tuning,ecology,social",docs/planning/items/CAT-007-camp-cat-tests-and-tuning.md
 CAT-008,"Camp spirit cat docs, news and release notes",next,content,docs,low,"cat,docs,news,release,planning",docs/planning/items/CAT-008-docs-news-release.md
+CAT-009,Camp cat watch posture and soft warnings,backlog,feature,atmosphere,medium,"cat,camp,atmosphere,safety,onboarding",docs/planning/items/CAT-009-camp-cat-watch-and-soft-warnings.md
+CAT-010,Camp cat cache and newcomer presence,backlog,feature,onboarding,low,"cat,camp,beginner-cache,onboarding,atmosphere",docs/planning/items/CAT-010-camp-cat-cache-and-newcomer-presence.md
 CMD-001,Near-term text command pack,testing,feature,commands,high,"commands,aliases,mud,speech,navigation",docs/planning/items/CMD-001-near-term-text-command-pack.md
 CMD-002,Put items into local containers and features,testing,feature,commands,high,"commands,inventory,containers,aliases",docs/planning/items/CMD-002-put-items-into-containers.md
 COMBAT-001,Creature aggression and defense,backlog,feature,combat,medium,"animals,combat,predators,ecology",docs/planning/items/COMBAT-001-creature-aggression-and-defense.md
@@ -122,7 +124,9 @@ ONB-002-D,Name onboarding help copy,next,ux,onboarding,medium,"onboarding,help,c
 ONB-003,Tutorial player wellbeing aside,testing,ux,onboarding,medium,"onboarding,tutorial,wellbeing,sleep",docs/planning/items/ONB-003-player-wellbeing-aside.md
 ONB-004,First night guidance,done,ux,onboarding,medium,"onboarding,night,light,tutorial,copy",docs/planning/items/ONB-004-first-night-guidance.md
 ONB-006,Look/examine semantics in the dream,testing,ux,onboarding,high,"tutorial,look,examine,ux,copy",docs/planning/items/ONB-006-look-examine-semantics-in-dream.md
+ONB-007,Dream tree and vertical tutorial,proposed,feature,onboarding,high,"sleep,dream,tutorial,verticality,speech,onboarding",docs/planning/items/ONB-007-dream-tree-and-vertical-tutorial.md
 OWL-002,Nocturnal owl tuning and indirect signs,testing,tuning,ecology,high,"owl,ecology,night,predator,observation,tuning",docs/planning/items/OWL-002-nocturnal-owl-tuning-and-signs.md
+OWL-003,Starter camp owl boundary and night signs,backlog,tuning,ecology,medium,"owl,camp,ecology,night,onboarding",docs/planning/items/OWL-003-starter-camp-boundary-and-night-signs.md
 PERF-001,Runtime performance plan and creature simulation budget,next,technical,performance,high,"performance,ecology,creatures,action-queue,simulation,status,auto",docs/planning/items/PERF-001-budgeted-and-aggregated-creature-simulation.md
 PLAN-001,Repository docs are the planning source of truth,testing,documentation,planning,high,"planning,docs,roadmap",docs/planning/items/PLAN-001.md
 PROG-002,Observation-based learning,backlog,feature,progression,medium,"skills,observation,npc,animals,mythic",docs/planning/items/PROG-002-observation-learning.md
@@ -152,6 +156,7 @@ SOC-004,Group movement MVP,backlog,feature,social,high,"social,groups,movement,a
 SOC-005,Group combat assist conservative plan,backlog,feature,combat,medium,"social,groups,combat,balance",docs/planning/items/SOC-005-group-combat-assist.md
 SOC-006,NPC group compatibility,backlog,feature,social,medium,"social,groups,npc,actors,creatures",docs/planning/items/SOC-006-npc-group-compatibility.md
 SOC-007,Telegram UI and copy for contacts / follow / groups,backlog,feature,social,medium,"social,telegram,ui,copy,groups",docs/planning/items/SOC-007-telegram-ui-and-copy.md
+SOC-008,Speech ranges and vertical voice,testing,feature,social,high,"speech,social,mud-compatibility,stamina,verticality",docs/planning/items/SOC-008-speech-ranges-and-vertical-voice.md
 SOCIAL-003,Theft reaction signals,backlog,feature,social,medium,"social,theft,signals,reactions,0.15",docs/planning/items/SOCIAL-003-theft-reaction-signals.md
 STAT-001,Web /stat predator species comparison table,testing,feature,web,medium,"web,stats,ecology,predators,owl,fox,wolf",docs/planning/items/STAT-001-web-predator-species-table.md
 SURV-001,Early respawn support,testing,feature,survival,high,"onboarding,respawn,beginner",docs/planning/items/SURV-001-early-respawn.md

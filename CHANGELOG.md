@@ -7,6 +7,34 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.5 - Nearby speech ranges - 12026-06-01
+
+### Added
+
+- Added nearby speech through `/yell`, `yell`, `call`, `гукнути`, `покликати` and related aliases. Nearby speech reaches the current location plus visible adjacent exits, including vertical `UP`/`DOWN` links.
+- Added contextual vertical prompt buttons for visible `UP`/`DOWN` exits so tree and tower views can offer a nearby call without using region-wide `/shout`.
+- Added speech-range system docs, command-compatibility notes and focused helper/parser tests.
+- Added follow-up planning items for camp-cat watch posture, camp-cat beginner-cache presence and starter-camp owl boundary tuning.
+
+### Changed
+
+- Kept `/shout` and aliases such as `крикнути` / `волати` region-wide while moving `гукнути` / `покликати` to the smaller nearby speech range.
+- Kept `SPIRIT` / `SPIRITUAL` beings out of public `/who`, web `/who` and `/who.json`, so guardian presences such as the camp spirit cat and Дід лісовик are not listed as active characters.
+- Marked `SOC-008` as testing and recorded `ONB-007` as the follow-up dream-tree tutorial scene for teaching vertical voice.
+- Recorded `CAT-009`, `CAT-010` and `OWL-003` as small future camp ecology/atmosphere slices.
+
+### Validation
+
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/speech-ranges.cjs`.
+- Ran `node scripts/test/who-public-creatures.cjs`.
+- Ran `node scripts/test/help.cjs`.
+- Ran `node scripts/test/news-clickable-commands.cjs`.
+- Ran `cmd /c npm run planning:export`.
+- Ran `cmd /c npm test`.
+- Ran `cmd /c npm run build`.
+- Ran `git diff --check`.
+
 ## 0.15.4 - Camp cat boundary and web predator stats - 12026-06-01
 
 ### Added

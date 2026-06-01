@@ -76,6 +76,10 @@ Observation learning remains the main `0.15` line. Darkness, distance and light 
 - CAT-002: `0.15.4` keeps the camp spirit cat inside the starter camp/watchtower pair during ordinary world ticks and corrects it back to camp if it somehow leaves.
 - GIVE-001: generic `give` should land before CAT-004/CAT-005 feeding UI, so `Дати сире м'ясо` becomes a reusable item-transfer path instead of a cat-only social action.
 - CAT-003: the next cat behavior slice should add camp-local mouse priority without letting the cat leave the starter camp or replace wilderness predators.
+- CAT-009 / CAT-010: keep camp-cat follow-ups near the front as small atmospheric camp tasks: watch-posture/soft warnings and beginner-cache presence without turning the cat into a pet, loot source or exact danger detector.
+- OWL-003: record a starter-camp owl boundary check so nocturnal mouse pressure stays useful near camp edges without making the camp/watchtower pair feel like an immediate predator trap.
+- SOC-008: `0.15.5` adds nearby speech ranges with `/yell` / `гукнути`, reaching the current location plus visible adjacent exits while keeping `/shout` region-wide.
+- ONB-007: after the nearby speech slice, add the dream-tree tutorial scene that teaches vertical movement and calling up/down without turning it into region shouting.
 - LEARN-001: minimal learning storage decision.
 - OBS-001: observe action and herbalist learning moment.
 - SOC-002: follow intent MVP, so a player can `Слідувати` / `/follow` a visible being before full `Гурт` movement exists.

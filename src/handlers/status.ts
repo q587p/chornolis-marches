@@ -58,6 +58,12 @@ const WHO_ACTIVE_WINDOW_MS = 60 * 60 * 1000;
 const STATUS_PERF_DEBUG = process.env.STATUS_PERF_DEBUG === "true";
 type AllReturnContext = { showDead: boolean; page: number };
 const pendingNameRejections = new Map<number, { playerId: number; returnContext: AllReturnContext }>();
+
+export function isPublicWhoCreature(creature: { species?: { kind?: string | null; diet?: string | null } | null }) {
+  const kind = creature.species?.kind;
+  if (kind === "SPIRIT" || creature.species?.diet === "SPIRITUAL") return false;
+  return kind === "HUMAN" || kind === "MONSTER";
+}
 const pendingAdminTeleports = new Map<number, { playerId: number; returnContext: AllReturnContext }>();
 const REMOVE_REPLY_KEYBOARD = { remove_keyboard: true } as const;
 
@@ -886,7 +892,7 @@ export async function buildWhoData(now = new Date()) {
         isAlive: true,
         isGone: false,
         isHidden: false,
-        species: { kind: { not: "ANIMAL" } },
+        species: { kind: { in: ["HUMAN", "MONSTER"] }, diet: { not: "SPIRITUAL" } },
       },
       include: { species: true },
       orderBy: { id: "asc" },

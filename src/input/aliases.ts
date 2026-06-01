@@ -67,6 +67,7 @@ export type ParsedAliasCommand =
   | { kind: "say"; text: string }
   | { kind: "whisper"; text: string }
   | { kind: "reply"; text: string }
+  | { kind: "yell"; text: string }
   | { kind: "shout"; text: string }
   | { kind: "target-action"; action: TargetAction; target: string }
   | { kind: "pickup-target"; target: string }
@@ -603,20 +604,21 @@ const SUGGESTABLE_PATTERN_ALIASES = [
   "прошепотіти",
   "reply",
   "відповісти",
-  "shout",
   "yell",
+  "call",
+  "гук",
+  "гукнути",
+  "покликати",
+  "крикнути поруч",
+  "гучно сказати",
+  "shout",
   "крик",
   "крикнути",
   "кричати",
   "закричати",
   "викрикнути",
   "вигукнути",
-  "гук",
-  "гукнути",
   "загукати",
-  "клич",
-  "кликати",
-  "покликати",
   "волати",
   "заволати",
   "freshen all",
@@ -736,7 +738,8 @@ function slashCommandForAlias(alias: string): string | undefined {
     if (["say", "сказати", "говорити", "мовити", "промовити"].includes(alias)) return "/say";
     if (["whisper", "шепнути", "прошепотіти"].includes(alias)) return "/whisper";
     if (["reply", "відповісти"].includes(alias)) return "/reply";
-    if (["shout", "yell", "крик", "крикнути", "кричати", "закричати", "викрикнути", "вигукнути", "гук", "гукнути", "загукати", "клич", "кликати", "покликати", "волати", "заволати"].includes(alias)) return "/shout";
+    if (["yell", "call", "гук", "гукнути", "покликати", "крикнути поруч", "гучно сказати"].includes(alias)) return "/yell";
+    if (["shout", "крик", "крикнути", "кричати", "закричати", "викрикнути", "вигукнути", "загукати", "волати", "заволати"].includes(alias)) return "/shout";
     return undefined;
   }
 
@@ -937,9 +940,16 @@ function parseDirectedSpeech(raw: string, text: string): ParsedAliasCommand | nu
   }
   if (/^\/?(?:reply|відповісти|відповідь)$/u.test(text)) return { kind: "reply", text: "" };
 
-  const shout = text.match(/^\/?(?:shout|yell|крик|крикнути|кричати|закричати|викрикнути|вигукнути|гук|гукнути|загукати|клич|кликати|покликати|волати|заволати)\s+(.+)$/);
+  const yell = text.match(/^\/?(?:yell|call|гук|гукнути|покликати|крикнути поруч|гучно сказати)\s+(.+)$/);
+  if (yell?.[1]?.trim()) {
+    const rawMatch = raw.match(/^\/?(?:yell|call|гук|гукнути|покликати|крикнути поруч|гучно сказати)\s+(.+)$/i);
+    const speech = (rawMatch?.[1] ?? yell[1]).trim().slice(0, 300);
+    return speech ? { kind: "yell", text: speech } : null;
+  }
+
+  const shout = text.match(/^\/?(?:shout|крик|крикнути|кричати|закричати|викрикнути|вигукнути|загукати|волати|заволати)\s+(.+)$/);
   if (shout?.[1]?.trim()) {
-    const rawMatch = raw.match(/^\/?(?:shout|yell|крик|крикнути|кричати|закричати|викрикнути|вигукнути|гук|гукнути|загукати|клич|кликати|покликати|волати|заволати)\s+(.+)$/i);
+    const rawMatch = raw.match(/^\/?(?:shout|крик|крикнути|кричати|закричати|викрикнути|вигукнути|загукати|волати|заволати)\s+(.+)$/i);
     const speech = (rawMatch?.[1] ?? shout[1]).trim().slice(0, 300);
     return speech ? { kind: "shout", text: speech } : null;
   }

@@ -58,6 +58,7 @@ Auto-AFK must not send its own notification. Its purpose is to stop reminders, t
 Presence should stay practical and low-noise:
 
 - `/who`, the public `/who` web page and `/who.json` show AFK player characters with ` (відійшов)` after the visible name.
+- Those public `/who` surfaces are for player characters and ordinary NPC/monster characters only. `SPIRIT` / `SPIRITUAL` beings such as the camp spirit cat or Дід лісовик stay out of the active-character list even if they are awake or recently updated.
 - `/all` shows the same suffix for AFK player rows so scribes can tell the difference between an active character and someone who paused the session.
 - Do not add a separate proactive message when Auto-AFK sets this suffix; the visible status is only shown when someone asks for a list.
 - `ended` remains a session-control state, not a public atmospheric label in the MVP.
