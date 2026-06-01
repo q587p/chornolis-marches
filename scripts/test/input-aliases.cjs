@@ -99,6 +99,13 @@ assertAlias("погода", { kind: "weather" });
 assertAlias("назад", { kind: "back" });
 assertAlias("сховати клавіатуру", { kind: "hide-keyboard" });
 
+assertAlias("/cache", { kind: "beginner-cache", action: "inspect" });
+assertAlias("cache", { kind: "beginner-cache", action: "inspect" });
+assertAlias("/take_cache torch", { kind: "beginner-cache", action: "take", item: "torch" });
+assertAlias("take from cache berries", { kind: "beginner-cache", action: "take", item: "berries" });
+assertAlias("/contribute_cache herbs", { kind: "beginner-cache", action: "contribute", item: "herbs" });
+assertAlias("put twigs in cache", { kind: "beginner-cache", action: "contribute", item: "twigs" });
+
 assertAlias("/chat", { kind: "chat" });
 assertAlias("/chat 1", { kind: "chat", mode: "time", window: "1" });
 assertAlias("chat all", { kind: "chat", mode: "time", window: "all" });

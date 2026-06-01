@@ -7,6 +7,30 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.14.11 - Shared beginner cache - 12026-06-01
+
+### Added
+
+- Added `start_beginner_shared_cache`, an inspectable shared supply cache at the starter-camp watchtower.
+- Added focused cache actions for taking one simple supply item and contributing one carried item.
+- Added `/cache`, `/take_cache` and `/contribute_cache` alias parsing, with English/MUD-style and Ukrainian cache phrases.
+- Added hidden unobserved cache restock through `LocationFeature.data`, without adding a new persistent table.
+- Added parser, cache-helper and world-seed regression coverage for the beginner cache.
+
+### Changed
+
+- Updated starter-camp, onboarding and location-feature docs so the watchtower cache is framed as shared first-road support rather than a shop or quest reward.
+
+### Validation
+
+- Ran `node scripts/test/beginner-cache.cjs`.
+- Ran `node scripts/test/input-aliases.cjs`.
+- Ran `node scripts/test/world-seed.mjs`.
+- Ran `npm run planning:export`.
+- Ran `npm test`.
+- Ran `npm run build`.
+- Ran `git diff --check`.
+
 ## 0.14.10 - Hunter torch route cleanup and dream action ladder - 12026-06-01
 
 ### Added

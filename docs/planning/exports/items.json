@@ -153,6 +153,26 @@
     "file": "docs/planning/items/CAMP-002-starter-watchtower-and-torch-source.md"
   },
   {
+    "id": "CAMP-003",
+    "title": "Shared beginner cache and hidden restock",
+    "status": "testing",
+    "type": "feature",
+    "area": "core-loop",
+    "priority": "high",
+    "tags": [
+      "camp",
+      "onboarding",
+      "inventory",
+      "light",
+      "restock"
+    ],
+    "depends_on": [
+      "CAMP-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/CAMP-003-shared-beginner-cache.md"
+  },
+  {
     "id": "CMD-001",
     "title": "Near-term text command pack",
     "status": "testing",

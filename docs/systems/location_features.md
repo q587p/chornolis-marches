@@ -37,6 +37,7 @@ Current interactive examples:
 - climbable tree: a surface feature that advertises an `UP` exit to a real upper location and a matching `DOWN` exit back to the base location.
 - authored vertical landmark: a feature can expose `data.vertical_hint = "UP"` to add a direct movement button such as `Вгору` when inspected, while the real movement still uses the ordinary exit graph.
 - shakeable branches: an upper-tree feature with a cooldown; `/examine` should explain whether dry twigs can be shaken down now or whether the tree needs time before it gives more.
+- shared beginner cache: a starter-camp/watchtower supply feature with small qualitative stock, focused take/contribute buttons and hidden unobserved restock stored in feature data. It is early mutual support, not a shop or fixed reward loop.
 
 Current tree-shake MVP limits:
 

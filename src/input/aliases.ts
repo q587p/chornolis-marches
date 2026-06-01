@@ -55,6 +55,7 @@ export type ParsedAliasCommand =
   | { kind: "wait" }
   | { kind: "add-twigs-campfire" }
   | { kind: "cook-meat" }
+  | { kind: "beginner-cache"; action: "inspect" | "take" | "contribute"; item?: string }
   | { kind: "put-item"; item: string; amount?: PutAliasAmount; container: string }
   | { kind: "say"; text: string }
   | { kind: "whisper"; text: string }
@@ -700,6 +701,11 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "wait") return "/wait";
   if (parsed.kind === "add-twigs-campfire") return "/add_twigs_campfire";
   if (parsed.kind === "cook-meat") return "/cook_meat";
+  if (parsed.kind === "beginner-cache") {
+    if (parsed.action === "take") return "/take_cache";
+    if (parsed.action === "contribute") return "/contribute_cache";
+    return "/cache";
+  }
   if (parsed.kind === "put-item") return "/put";
   if (parsed.kind === "inspect-inventory-item") return "/item";
   if (parsed.kind === "drop-inventory-item") return "/drop";
@@ -937,6 +943,35 @@ function parsePickup(text: string): ParsedAliasCommand | null {
   return { kind: "pickup-target", target };
 }
 
+function parseBeginnerCacheIntent(text: string): ParsedAliasCommand | null {
+  if (/^(?:cache|supply cache|beginner cache|скриня|спільна скриня|скриня прибулих|запаси|припаси)$/u.test(text)) {
+    return { kind: "beginner-cache", action: "inspect" };
+  }
+
+  const directTake = text.match(/^(?:take cache|cache take|take from cache|взяти зі скрині|взяти з скрині|узяти зі скрині|забрати зі скрині)(?:\s+(.+))?$/u);
+  if (directTake) {
+    const item = directTake[1]?.trim();
+    return item ? { kind: "beginner-cache", action: "take", item } : { kind: "beginner-cache", action: "take" };
+  }
+
+  const slashTake = text.match(/^(?:take_cache|cache_take)(?:\s+(.+))?$/u);
+  if (slashTake) {
+    const item = slashTake[1]?.trim();
+    return item ? { kind: "beginner-cache", action: "take", item } : { kind: "beginner-cache", action: "take" };
+  }
+
+  const directContribute = text.match(/^(?:contribute cache|cache contribute|лишити в скрині|залишити в скрині|лишити у скрині|залишити у скрині|додати до скрині)\s+(.+)$/u);
+  if (directContribute?.[1]?.trim()) return { kind: "beginner-cache", action: "contribute", item: directContribute[1].trim() };
+
+  const slashContribute = text.match(/^(?:contribute_cache|cache_contribute)\s+(.+)$/u);
+  if (slashContribute?.[1]?.trim()) return { kind: "beginner-cache", action: "contribute", item: slashContribute[1].trim() };
+
+  const putInCache = text.match(/^(?:покласти|класти|put)\s+(.+?)\s+(?:у|в|до|into|in|to)\s+(?:скриню|скрині|cache|supply cache)$/u);
+  if (putInCache?.[1]?.trim()) return { kind: "beginner-cache", action: "contribute", item: putInCache[1].trim() };
+
+  return null;
+}
+
 function parseInventoryItemAction(text: string): ParsedAliasCommand | null {
   const drop = text.match(/^(?:drop|discard|throw away|викинути|кинути|покласти на землю)\s+(.+)$/);
   if (drop?.[1]?.trim()) return { kind: "drop-inventory-item", target: drop[1].trim() };
@@ -1068,6 +1103,9 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
 
   const borderMarkerIntent = parseBorderMarkerInspectionIntent(commandText);
   if (borderMarkerIntent) return borderMarkerIntent;
+
+  const beginnerCacheIntent = parseBeginnerCacheIntent(commandText);
+  if (beginnerCacheIntent) return beginnerCacheIntent;
 
   const inventoryItemAction = parseInventoryItemAction(commandText);
   if (inventoryItemAction) return inventoryItemAction;
