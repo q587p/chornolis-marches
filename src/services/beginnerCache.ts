@@ -7,7 +7,7 @@ import { resourceTypeDisplayName } from "./corpses";
 export const BEGINNER_CACHE_FEATURE_KEY = "start_beginner_shared_cache";
 export const BEGINNER_CACHE_RESTOCK_AFTER_MS = 45 * 60 * 1000;
 
-const CACHE_ITEM_ORDER = ["torch", "berries", "herbs", "mushrooms", "twigs"] as const;
+const CACHE_ITEM_ORDER = ["torch", "berries", "herbs", "mushrooms", "raw_meat", "cooked_meat", "twigs"] as const;
 export type BeginnerCacheResourceKey = (typeof CACHE_ITEM_ORDER)[number];
 
 const CACHE_ITEM_LABELS: Record<BeginnerCacheResourceKey, string> = {
@@ -15,6 +15,8 @@ const CACHE_ITEM_LABELS: Record<BeginnerCacheResourceKey, string> = {
   berries: "ягоди",
   herbs: "лікарські трави",
   mushrooms: "гриби",
+  raw_meat: "сире м'ясо",
+  cooked_meat: "смажене м'ясо",
   twigs: "хмиз",
 };
 
@@ -23,6 +25,8 @@ const CACHE_ITEM_ACCUSATIVE: Record<BeginnerCacheResourceKey, string> = {
   berries: "ягоди",
   herbs: "лікарські трави",
   mushrooms: "гриби",
+  raw_meat: "сире м'ясо",
+  cooked_meat: "смажене м'ясо",
   twigs: "хмиз",
 };
 
@@ -31,6 +35,8 @@ const DEFAULT_STOCK: Record<BeginnerCacheResourceKey, number> = {
   berries: 2,
   herbs: 1,
   mushrooms: 0,
+  raw_meat: 1,
+  cooked_meat: 1,
   twigs: 3,
 };
 
@@ -39,6 +45,8 @@ const DEFAULT_MAX_STOCK: Record<BeginnerCacheResourceKey, number> = {
   berries: 6,
   herbs: 4,
   mushrooms: 4,
+  raw_meat: 3,
+  cooked_meat: 3,
   twigs: 10,
 };
 
@@ -47,6 +55,8 @@ const RESTOCK_TARGET: Record<BeginnerCacheResourceKey, number> = {
   berries: 3,
   herbs: 1,
   mushrooms: 1,
+  raw_meat: 1,
+  cooked_meat: 1,
   twigs: 5,
 };
 
@@ -237,7 +247,7 @@ export async function takeFromBeginnerCache(playerId: number, featureId: number,
 
 export async function contributeToBeginnerCache(playerId: number, featureId?: number | null, requestedKey?: string | null) {
   const key = beginnerCacheResourceKeyFromText(requestedKey);
-  if (!key) throw new Error("Що саме залишити у спільній скрині? Підійдуть факел, ягоди, лікарські трави, гриби або хмиз.");
+  if (!key) throw new Error("Що саме залишити у спільній скрині? Підійдуть факел, ягоди, лікарські трави, гриби, сире чи смажене м'ясо або хмиз.");
   const now = new Date();
 
   return prisma.$transaction(async (tx) => {

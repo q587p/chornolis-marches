@@ -61,8 +61,12 @@ const configuredAutoAfkMinutes = optionalNumberEnv("AUTO_AFK_AFTER_MINUTES") ?? 
 const heraldBotToken = optionalStringEnv("HERALD_BOT_TOKEN");
 const configuredHeraldEnabled = optionalBooleanEnv("HERALD_ENABLED");
 const configuredHeraldPublishIntervalMs = optionalNumberEnv("HERALD_PUBLISH_INTERVAL_MS") ?? 30_000;
+const configuredHeraldArchiveIntervalMinutes = optionalNumberEnv("HERALD_ARCHIVE_INTERVAL_MINUTES") ?? 13;
+const configuredHeraldMaxPublicationsPerTick = optionalNumberEnv("HERALD_MAX_PUBLICATIONS_PER_TICK") ?? 1;
+const configuredHeraldRebalanceOverduePublications = optionalBooleanEnv("HERALD_REBALANCE_OVERDUE_PUBLICATIONS") ?? true;
 const configuredHeraldStartupNoticeEnabled = optionalBooleanEnv("HERALD_STARTUP_NOTICE_ENABLED") ?? false;
 const publicBaseUrl = normalizeBaseUrl(optionalStringEnv("PUBLIC_BASE_URL") ?? "https://chornolis-marches.onrender.com");
+const configuredGameBotUsername = optionalStringEnv("GAME_BOT_USERNAME") ?? "Chornolis_bot";
 
 export const config = {
   botToken: optionalStringEnv("BOT_TOKEN"),
@@ -70,6 +74,7 @@ export const config = {
   appVersion: getAppVersion(),
   port: Number(process.env.PORT || 3000),
   publicBaseUrl,
+  gameBotUsername: configuredGameBotUsername.replace(/^@/, ""),
   tickMs: Math.max(1000, Math.floor(configuredTickMs)),
   autoAfkAfterMinutes: Math.max(1, Math.floor(configuredAutoAfkMinutes)),
   adminTelegramIds: optionalStringListEnv("ADMIN_TELEGRAM_IDS"),
@@ -79,6 +84,9 @@ export const config = {
   heraldChannelId: optionalStringEnv("HERALD_CHANNEL_ID"),
   heraldAdminIds: optionalStringListEnv("HERALD_ADMIN_IDS"),
   heraldPublishIntervalMs: Math.max(1000, Math.floor(configuredHeraldPublishIntervalMs)),
+  heraldArchiveIntervalMs: Math.max(60_000, Math.floor(configuredHeraldArchiveIntervalMinutes * 60_000)),
+  heraldMaxPublicationsPerTick: Math.max(1, Math.min(20, Math.floor(configuredHeraldMaxPublicationsPerTick))),
+  heraldRebalanceOverduePublications: configuredHeraldRebalanceOverduePublications,
   heraldStartupNoticeEnabled: configuredHeraldStartupNoticeEnabled,
   heraldStartupNoticeChatId: optionalStringEnv("HERALD_STARTUP_NOTICE_CHAT_ID"),
 };

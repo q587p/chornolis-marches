@@ -1,6 +1,7 @@
 import type { Bot } from "grammy";
 import { config } from "../config";
 import { formatHeraldNewsMessage, formatHeraldNewsPreview, formatHeraldPublicationMessage } from "./format";
+import { HERALD_CHANNEL_MESSAGE_OPTIONS } from "./gameLinks";
 import { requireHeraldAdmin } from "./admin";
 import { readLatestNewsEntry } from "./newsMarkdown";
 import {
@@ -29,7 +30,7 @@ async function queueLatestNewsPublication() {
     sourceVersion: result.entry.sourceVersion,
     title: result.entry.title,
     body: result.entry.body,
-    renderedText: formatHeraldNewsMessage(result.entry),
+    renderedText: formatHeraldNewsMessage(result.entry, { linkCommands: false }),
     contentHash: result.entry.contentHash,
   });
 
@@ -47,7 +48,7 @@ export function registerHeraldNewsCommands(bot: Bot, heraldAdminIds: ReadonlySet
         return;
       }
 
-      await ctx.reply(formatHeraldNewsPreview(result.entry));
+      await ctx.reply(formatHeraldNewsPreview(result.entry), HERALD_CHANNEL_MESSAGE_OPTIONS);
     } catch (error) {
       console.error("Herald latest news preview failed:", publicationErrorMessage(error));
       await ctx.reply("Канцелярія не змогла підготувати перегляд останньої новини.");
@@ -95,7 +96,7 @@ export function registerHeraldNewsCommands(bot: Bot, heraldAdminIds: ReadonlySet
       }
 
       const message = formatHeraldPublicationMessage(result.publication);
-      const sent = await ctx.api.sendMessage(parseTelegramChannelId(config.heraldChannelId), message);
+      const sent = await ctx.api.sendMessage(parseTelegramChannelId(config.heraldChannelId), message, HERALD_CHANNEL_MESSAGE_OPTIONS);
       const published = await markPublicationPublished(result.publication.id, sent.message_id);
       await ctx.reply(`Канцелярія передала останній запис до каналу. Номер у книзі: ${published.id}.`);
     } catch (error) {

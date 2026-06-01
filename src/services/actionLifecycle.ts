@@ -314,6 +314,7 @@ export async function startPlayerRest(playerId: number) {
     data: {
       posture: PlayerPosture.SITTING,
       sleepState: "AWAKE",
+      ordinarySleepStartedAtMinute: null,
       isResting: true,
       fatigueState: fatigueStateFor(player.stamina, max),
       lastStaminaRegenAt: new Date(),
@@ -335,6 +336,7 @@ export async function stopPlayerRest(playerId: number) {
     where: { id: playerId },
     data: {
       sleepState: "AWAKE",
+      ordinarySleepStartedAtMinute: null,
       isResting: false,
       fatigueState: fatigueStateFor(player.stamina, player.staminaMax ?? BASE_STAMINA),
       lastStaminaRegenAt: new Date(),
@@ -413,7 +415,7 @@ export async function clearQueuedPlayerActions(playerId: number) {
   if (stoppedRest) {
     await prisma.player.updateMany({
       where: { id: playerId },
-      data: { sleepState: "AWAKE", isResting: false, fatigueState: fatigueStateFor(player!.stamina, player!.staminaMax ?? BASE_STAMINA), lastStaminaRegenAt: new Date() },
+      data: { sleepState: "AWAKE", ordinarySleepStartedAtMinute: null, isResting: false, fatigueState: fatigueStateFor(player!.stamina, player!.staminaMax ?? BASE_STAMINA), lastStaminaRegenAt: new Date() },
     });
   }
 
@@ -431,7 +433,7 @@ export async function cancelCurrentPlayerAction(playerId: number) {
   if (stoppedRest) {
     await prisma.player.updateMany({
       where: { id: playerId },
-      data: { sleepState: "AWAKE", isResting: false, fatigueState: fatigueStateFor(player!.stamina, player!.staminaMax ?? BASE_STAMINA), lastStaminaRegenAt: new Date() },
+      data: { sleepState: "AWAKE", ordinarySleepStartedAtMinute: null, isResting: false, fatigueState: fatigueStateFor(player!.stamina, player!.staminaMax ?? BASE_STAMINA), lastStaminaRegenAt: new Date() },
     });
   }
 
@@ -460,7 +462,7 @@ async function startNextQueuedAction(bot: Bot, action: WorldAction) {
     const player = await prisma.player.findUnique({ where: { id: action.playerId } });
     await prisma.player.updateMany({
       where: { id: action.playerId },
-      data: { posture: PlayerPosture.SITTING, sleepState: "AWAKE", isResting: true, lastStaminaRegenAt: new Date(), lastHpRegenAt: new Date(), restStarts: player?.isResting ? undefined : { increment: 1 } },
+      data: { posture: PlayerPosture.SITTING, sleepState: "AWAKE", ordinarySleepStartedAtMinute: null, isResting: true, lastStaminaRegenAt: new Date(), lastHpRegenAt: new Date(), restStarts: player?.isResting ? undefined : { increment: 1 } },
     });
     if (!playerBeforeRest?.isResting) {
       await notifyPlayerObservers(bot, {

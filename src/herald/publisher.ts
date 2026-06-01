@@ -1,6 +1,7 @@
 import type { Bot, Context } from "grammy";
 import { config } from "../config";
 import { formatHeraldPublicationMessage, formatHeraldPublicationRepostMessage } from "./format";
+import { HERALD_CHANNEL_MESSAGE_OPTIONS } from "./gameLinks";
 import { requireHeraldAdmin } from "./admin";
 import {
   getPendingPublications,
@@ -11,10 +12,10 @@ import {
   markPublicationPublished,
   markPublicationReposted,
   publicationErrorMessage,
+  rebalanceOverdueArchivePublications,
 } from "./publications";
 import { parseTelegramChannelId, truncateTelegramMessage } from "./safety";
 
-const PUBLISH_BATCH_LIMIT = 3;
 const PENDING_LIST_LIMIT = 10;
 const RECENT_PUBLICATIONS_LIMIT = 10;
 
@@ -146,7 +147,14 @@ export async function publishPendingHeraldPublications(bot: Bot, options: { limi
     return { published: 0, failed: 0, skipped: true, reason: "HERALD_CHANNEL_ID is not set" };
   }
 
-  const pending = await getPendingPublications(options.limit ?? PUBLISH_BATCH_LIMIT);
+  if (config.heraldRebalanceOverduePublications) {
+    const rebalance = await rebalanceOverdueArchivePublications(config.heraldArchiveIntervalMs);
+    if (rebalance.moved > 0) {
+      console.log(`Herald archive backlog rebalanced: kept=${rebalance.keptDue?.id ?? "none"}, moved=${rebalance.moved}.`);
+    }
+  }
+
+  const pending = await getPendingPublications(options.limit ?? config.heraldMaxPublicationsPerTick);
   let published = 0;
   let failed = 0;
 
@@ -156,6 +164,7 @@ export async function publishPendingHeraldPublications(bot: Bot, options: { limi
       const sent = await bot.api.sendMessage(
         parseTelegramChannelId(channelId),
         formatHeraldPublicationMessage(publication),
+        HERALD_CHANNEL_MESSAGE_OPTIONS,
       );
       telegramMessageId = sent.message_id;
     } catch (error) {
@@ -198,6 +207,7 @@ export async function publishHeraldPublication(
     const sent = await bot.api.sendMessage(
       parseTelegramChannelId(channelId),
       formatHeraldPublicationMessage(publication),
+      HERALD_CHANNEL_MESSAGE_OPTIONS,
     );
     const published = await markPublicationPublished(publication.id, sent.message_id);
     return { ok: true as const, alreadyPublished: false as const, publication: published };
@@ -297,6 +307,7 @@ async function replyAfterPublicationRepost(ctx: Context) {
   const sent = await ctx.api.sendMessage(
     parseTelegramChannelId(config.heraldChannelId),
     formatHeraldPublicationRepostMessage(publication),
+    HERALD_CHANNEL_MESSAGE_OPTIONS,
   );
   await markPublicationReposted(publication.id, sent.message_id);
   await ctx.reply([

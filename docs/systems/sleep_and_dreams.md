@@ -2,7 +2,7 @@
 
 ## Status
 
-Ordinary sleep is not yet fully woven into the world rules.
+Ordinary sleep now has a first world-time recovery slice, but it is not yet fully woven into danger, shelter and dream-presence rules.
 
 The existing tutorial dream should remain explicit and separate:
 
@@ -21,7 +21,7 @@ The system should support:
 - lying down as a posture;
 - ordinary sleep as a stronger recovery state than active rest;
 - manual waking through `Прокинутися` / `/wake`;
-- future automatic waking after enough in-world sleep time;
+- automatic waking after enough in-world sleep time;
 - fire, shelter and location comfort as meaningful sleep modifiers;
 - tutorial and lucid dreams as explicit dream instances;
 - a sleeping body that remains in the waking location while the dream presence acts elsewhere;
@@ -136,17 +136,20 @@ Ordinary sleep should restore more than active rest:
 - very comfortable sleep may eventually raise temporary Снага above the normal maximum;
 - exact numbers should remain balance constants, not player-facing explanations.
 
-While there is no full internal time system, sleep may use existing tick/action-queue mechanics and manual waking. After world time exists, sleep should use in-world hours.
+Sleep records the in-world minute when ordinary sleep begins. Recovery checks may wake the character automatically after roughly eight game hours when HP and stamina have reached the relevant local cap, or after roughly ten game hours as a first hard upper bound.
 
-### Future automatic waking
+Active campfires use the shared sleep recovery profile to improve stamina and HP recovery and can raise the temporary stamina cap a little. Shelter/comfort metadata remains future work; for now the profile reuses active campfire and local rest-cap signals.
 
-When internal time is ready:
+### Automatic waking
 
-- check sleep progress in game-time hours;
+The first implementation:
+
+- checks sleep progress in game-time minutes;
 - wake automatically after about 8 game hours if Життя and Снага are full or have reached the local temporary cap;
 - allow up to about 9–10 game hours if recovery is still incomplete;
-- do not let sleep become infinite free healing in unsafe places;
-- always allow manual `/wake` unless a special forced-sleep rule says otherwise.
+- keeps manual `/wake` available unless a later special forced-sleep rule says otherwise.
+
+Future work should still connect auto-wake to danger, shelter quality and dream-state exits instead of treating every location as equally safe.
 
 ### Message visibility while sleeping
 

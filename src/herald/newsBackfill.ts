@@ -1,23 +1,33 @@
 import fs from "fs/promises";
 import path from "path";
+import { config } from "../config";
 import type { HeraldNewsEntry } from "./newsMarkdown";
 import { parseNewsEntries } from "./newsMarkdown";
-import { formatHeraldPublicationMessage } from "./format";
-import { findExistingPublicationsByHashes, queueHeraldPublication } from "./publications";
+import { formatHeraldPublicationPlainMessage } from "./format";
+import {
+  countArchivePublications,
+  findExistingPublicationsByHashes,
+  listPendingArchivePublications,
+  queueHeraldPublication,
+  reschedulePendingArchivePublications,
+} from "./publications";
 
-const DEFAULT_BACKFILL_INTERVAL_MS = 30 * 60 * 1000;
+export const NEWS_ARCHIVE_SOURCE_TYPE = "NEWS_MD_ARCHIVE";
+export const DEFAULT_BACKFILL_INTERVAL_MS = 13 * 60 * 1000;
 const MIN_BACKFILL_INTERVAL_MS = 60 * 1000;
 const MAX_BACKFILL_INTERVAL_MS = 24 * 60 * 60 * 1000;
-const NEWS_ARCHIVE_SOURCE_TYPE = "NEWS_MD_ARCHIVE";
 
 function clampInterval(value: number) {
   if (!Number.isFinite(value)) return DEFAULT_BACKFILL_INTERVAL_MS;
   return Math.max(MIN_BACKFILL_INTERVAL_MS, Math.min(MAX_BACKFILL_INTERVAL_MS, Math.floor(value)));
 }
 
-export function parseBackfillIntervalMs(input: string | undefined) {
+export function parseBackfillIntervalMs(
+  input: string | undefined,
+  defaultIntervalMs = config.heraldArchiveIntervalMs ?? DEFAULT_BACKFILL_INTERVAL_MS,
+) {
   const raw = input?.trim().toLowerCase();
-  if (!raw) return DEFAULT_BACKFILL_INTERVAL_MS;
+  if (!raw) return defaultIntervalMs;
 
   const match = raw.match(/^(\d+)\s*(m|min|хв|h|hr|год|s|sec|с)?$/u);
   if (!match) return null;
@@ -41,7 +51,40 @@ export function formatBackfillInterval(ms: number) {
 }
 
 export function chronologicalNewsEntries(entries: readonly HeraldNewsEntry[]) {
-  return [...entries].reverse();
+  return archiveOrderedNewsEntries(entries);
+}
+
+function semanticVersionParts(value?: string) {
+  if (!value) return null;
+  const parts = value.split(".").map((part) => Number(part));
+  if (parts.length < 2 || parts.some((part) => !Number.isInteger(part) || part < 0)) return null;
+  return parts;
+}
+
+function compareSemanticVersions(left?: string, right?: string) {
+  const leftParts = semanticVersionParts(left);
+  const rightParts = semanticVersionParts(right);
+  if (!leftParts || !rightParts) return null;
+
+  const length = Math.max(leftParts.length, rightParts.length);
+  for (let index = 0; index < length; index += 1) {
+    const diff = (leftParts[index] ?? 0) - (rightParts[index] ?? 0);
+    if (diff !== 0) return diff;
+  }
+  return 0;
+}
+
+export function archiveOrderedNewsEntries(entries: readonly HeraldNewsEntry[]) {
+  return [...entries].sort((left, right) => {
+    if (left.sourceDate && right.sourceDate && left.sourceDate !== right.sourceDate) {
+      return left.sourceDate.localeCompare(right.sourceDate);
+    }
+
+    const versionCompare = compareSemanticVersions(left.sourceVersion, right.sourceVersion);
+    if (versionCompare !== null && versionCompare !== 0) return versionCompare;
+
+    return left.sourceIndex - right.sourceIndex;
+  });
 }
 
 export function formatArchiveBody(entry: HeraldNewsEntry) {
@@ -89,6 +132,7 @@ export async function queueNewsBackfill(entries: readonly HeraldNewsEntry[], int
 
   for (const [index, entry] of plan.missing.entries()) {
     const availableAt = new Date(now.getTime() + index * intervalMs);
+    const archiveOrder = plan.chronological.findIndex((ordered) => ordered.contentHash === entry.contentHash);
     const publication = await queueHeraldPublication({
       sourceType: NEWS_ARCHIVE_SOURCE_TYPE,
       sourceId: entry.title,
@@ -96,11 +140,12 @@ export async function queueNewsBackfill(entries: readonly HeraldNewsEntry[], int
       sourceVersion: entry.sourceVersion,
       title: entry.title,
       body: formatArchiveBody(entry),
-      renderedText: formatHeraldPublicationMessage({
+      renderedText: formatHeraldPublicationPlainMessage({
         sourceType: NEWS_ARCHIVE_SOURCE_TYPE,
         title: entry.title,
         body: formatArchiveBody(entry),
       }),
+      archiveOrder,
       availableAt,
       contentHash: entry.contentHash,
     });
@@ -112,5 +157,57 @@ export async function queueNewsBackfill(entries: readonly HeraldNewsEntry[], int
     queued,
     skipped: plan.skipped,
     intervalMs,
+  };
+}
+
+export async function rescheduleNewsBackfillPending(entries: readonly HeraldNewsEntry[], intervalMs: number, now = new Date()) {
+  const ordered = chronologicalNewsEntries(entries);
+  const orderByHash = new Map(ordered.map((entry, index) => [entry.contentHash, index] as const));
+  const existing = await findExistingPublicationsByHashes(ordered.map((entry) => entry.contentHash));
+  const pendingArchive = existing
+    .filter((publication) => publication.sourceType === NEWS_ARCHIVE_SOURCE_TYPE && !publication.publishedAt && publication.visibility === "PUBLIC")
+    .sort((left, right) => {
+      const leftOrder = left.contentHash ? orderByHash.get(left.contentHash) : undefined;
+      const rightOrder = right.contentHash ? orderByHash.get(right.contentHash) : undefined;
+      return (leftOrder ?? Number.MAX_SAFE_INTEGER) - (rightOrder ?? Number.MAX_SAFE_INTEGER) || left.id - right.id;
+    });
+
+  for (const [index, publication] of pendingArchive.entries()) {
+    await queueHeraldPublication({
+      sourceType: NEWS_ARCHIVE_SOURCE_TYPE,
+      sourceId: publication.sourceId ?? publication.title,
+      sourceDate: publication.sourceDate ?? undefined,
+      sourceVersion: publication.sourceVersion ?? undefined,
+      title: publication.title,
+      body: publication.body,
+      renderedText: publication.renderedText ?? undefined,
+      archiveOrder: publication.contentHash ? orderByHash.get(publication.contentHash) : undefined,
+      availableAt: new Date(now.getTime() + index * intervalMs),
+      contentHash: publication.contentHash ?? undefined,
+    });
+  }
+
+  await reschedulePendingArchivePublications(intervalMs, now, NEWS_ARCHIVE_SOURCE_TYPE);
+  const pending = await listPendingArchivePublications(NEWS_ARCHIVE_SOURCE_TYPE);
+
+  return {
+    count: pending.length,
+    intervalMs,
+    nextAvailableAt: pending[0]?.availableAt ?? null,
+    nextTitle: pending[0]?.title ?? null,
+  };
+}
+
+export async function newsBackfillStatus() {
+  const [counts, pending] = await Promise.all([
+    countArchivePublications(NEWS_ARCHIVE_SOURCE_TYPE),
+    listPendingArchivePublications(NEWS_ARCHIVE_SOURCE_TYPE),
+  ]);
+  return {
+    pending: counts.pending,
+    published: counts.published,
+    next: pending[0] ?? null,
+    intervalMs: config.heraldArchiveIntervalMs,
+    rebalanceOverdue: config.heraldRebalanceOverduePublications,
   };
 }

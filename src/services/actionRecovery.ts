@@ -15,9 +15,11 @@ import {
   VERY_TIRED_STAMINA,
   playerStaminaCostConfig,
 } from "../gameConfig";
-import { buildFatigueRestKeyboard, buildStandUpKeyboard } from "../ui/keyboards";
+import { buildFatigueRestKeyboard, buildLyingPostureKeyboard, buildStandUpKeyboard } from "../ui/keyboards";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
+import { autoWakeOrdinarySleep, getPlayerSleepRecoveryProfile, shouldAutoWakeOrdinarySleep } from "./sleep";
+import { getCurrentWorldState } from "./worldTime";
 import { hungerCueContextForPlayer, hungerCueLevel, hungerCueText } from "./hungerCues";
 import { tutorialIdlePaceComments } from "./tutorialVoices";
 import { isTutorialFastRestLocationKey } from "./tutorial";
@@ -81,7 +83,7 @@ async function knockOutPlayer(bot: Bot, player: { id: number }, chatId?: number 
   });
   await prisma.player.updateMany({
     where: { id: player.id },
-    data: { hp: 0, sleepState: "AWAKE", isResting: true, fatigueState: "VERY_TIRED", lastHpRegenAt: new Date(), lastStaminaRegenAt: new Date() },
+    data: { hp: 0, sleepState: "AWAKE", ordinarySleepStartedAtMinute: null, isResting: true, fatigueState: "VERY_TIRED", lastHpRegenAt: new Date(), lastStaminaRegenAt: new Date() },
   });
   if (chatId) {
     await bot.api.sendMessage(chatId, "Життя впало до 0. Ви втрачаєте свідомість. Черга очищена, починається відпочинок. Поки життя не підніметься хоча б до 1, доступний лише відпочинок.", { reply_markup: buildFatigueRestKeyboard() });
@@ -161,19 +163,21 @@ export async function spendCreatureStamina(creature: { id: number; hp?: number; 
 
 export async function recoverStamina(bot: Bot) {
   const now = new Date();
-  const [players, activePlayerActions] = await Promise.all([
+  const [players, activePlayerActions, worldState] = await Promise.all([
     prisma.player.findMany({ include: { currentLocation: { select: { key: true, z: true, region: { select: { key: true } } } } } }),
     prisma.worldAction.findMany({
       where: { actorType: "PLAYER", status: { in: ["QUEUED", "RUNNING"] }, playerId: { not: null } },
       select: { playerId: true },
     }),
+    getCurrentWorldState(),
   ]);
   const activePlayerIds = new Set(activePlayerActions.map((action) => action.playerId).filter((id): id is number => Boolean(id)));
 
   for (const player of players) {
     const baseMax = player.staminaMax ?? BASE_STAMINA;
     const isSleeping = player.sleepState === "ORDINARY_SLEEP";
-    const max = player.isResting ? Math.max(baseMax, await getPlayerRestStaminaCap(player.id)) : baseMax;
+    const sleepProfile = isSleeping ? await getPlayerSleepRecoveryProfile(player) : null;
+    const max = isSleeping ? sleepProfile!.staminaCap : player.isResting ? Math.max(baseMax, await getPlayerRestStaminaCap(player.id)) : baseMax;
     const hpMax = player.hpMax ?? BASE_HP;
     const hasActiveActions = activePlayerIds.has(player.id);
 
@@ -189,7 +193,23 @@ export async function recoverStamina(bot: Bot) {
       }
     }
 
-    if (player.stamina >= max && player.hp >= hpMax && !player.isResting) continue;
+    if (isSleeping && shouldAutoWakeOrdinarySleep({
+      startedAtMinute: player.ordinarySleepStartedAtMinute,
+      currentMinute: worldState.absoluteMinute,
+      stamina: player.stamina,
+      staminaCap: max,
+      hp: player.hp,
+      hpMax,
+    })) {
+      const result = await autoWakeOrdinarySleep(player.id);
+      const chatId = Number(player.telegramId);
+      if (result?.changed && Number.isSafeInteger(chatId) && await canSendProactiveToTelegramId(player.telegramId)) {
+        await bot.api.sendMessage(chatId, result.message, { reply_markup: buildLyingPostureKeyboard() });
+      }
+      continue;
+    }
+
+    if (player.stamina >= max && player.hp >= hpMax && !player.isResting && !isSleeping) continue;
 
     if (hasActiveActions && !player.isResting && !isSleeping) {
       await prisma.player.updateMany({ where: { id: player.id }, data: { lastStaminaRegenAt: now, lastHpRegenAt: now } });
@@ -203,7 +223,7 @@ export async function recoverStamina(bot: Bot) {
     const before = player.stamina;
     const restRegenMultiplier = player.isResting ? await getPlayerRestStaminaRegenMultiplier(player.id) : 1;
     const rate = isSleeping
-      ? REST_STAMINA_REGEN_PER_INTERVAL * 2
+      ? sleepProfile!.staminaRate
       : player.isResting
         ? REST_STAMINA_REGEN_PER_INTERVAL * restRegenMultiplier
         : PASSIVE_STAMINA_REGEN_PER_INTERVAL;
@@ -213,7 +233,8 @@ export async function recoverStamina(bot: Bot) {
     const hpIntervalMs = player.isResting || isSleeping ? REST_HEALTH_REGEN_INTERVAL_MS : PASSIVE_HEALTH_REGEN_INTERVAL_MS;
     const hpLast = player.lastHpRegenAt ?? player.updatedAt ?? now;
     const hpIntervals = Math.floor((now.getTime() - hpLast.getTime()) / hpIntervalMs);
-    const hpAfter = hpIntervals > 0 ? Math.min(hpMax, hpBefore + hpIntervals * HEALTH_REGEN_PER_INTERVAL) : hpBefore;
+    const hpRate = isSleeping ? sleepProfile!.hpRate : HEALTH_REGEN_PER_INTERVAL;
+    const hpAfter = hpIntervals > 0 ? Math.min(hpMax, hpBefore + hpIntervals * hpRate) : hpBefore;
     if (!isSleeping) messages.push(...hpRecoveryMessages(hpBefore, hpAfter, hpMax));
 
     if (intervals <= 0 && hpIntervals <= 0) continue;
@@ -240,6 +261,22 @@ export async function recoverStamina(bot: Bot) {
       where: { id: player.id },
       data,
     });
+
+    if (isSleeping && shouldAutoWakeOrdinarySleep({
+      startedAtMinute: player.ordinarySleepStartedAtMinute,
+      currentMinute: worldState.absoluteMinute,
+      stamina: after,
+      staminaCap: max,
+      hp: hpAfter,
+      hpMax,
+    })) {
+      const result = await autoWakeOrdinarySleep(player.id);
+      const chatId = Number(player.telegramId);
+      if (result?.changed && Number.isSafeInteger(chatId) && await canSendProactiveToTelegramId(player.telegramId)) {
+        await bot.api.sendMessage(chatId, result.message, { reply_markup: buildLyingPostureKeyboard() });
+      }
+      continue;
+    }
 
     const chatId = Number(player.telegramId);
     if (Number.isSafeInteger(chatId) && await canSendProactiveToTelegramId(player.telegramId)) {

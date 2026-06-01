@@ -1,4 +1,4 @@
-export type StartActionPayload = "look" | "examine";
+export type StartActionPayload = "look" | "examine" | "news" | "auto" | "autoStop" | "me" | "help";
 
 const SAFE_START_PAYLOAD = /^[A-Za-z0-9_-]+$/;
 
@@ -8,6 +8,11 @@ export function parseStartActionPayload(value: unknown): StartActionPayload | nu
 
   if (payload === "cmd_look") return "look";
   if (payload === "cmd_examine") return "examine";
+  if (payload === "cmd_news") return "news";
+  if (payload === "cmd_auto") return "auto";
+  if (payload === "cmd_auto_stop") return "autoStop";
+  if (payload === "cmd_me") return "me";
+  if (payload === "cmd_help") return "help";
 
   return null;
 }

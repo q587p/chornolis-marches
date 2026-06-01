@@ -24,10 +24,12 @@ import {
   validateCustomCharacterName,
   type PreparedCharacterName,
 } from "../services/characterNames";
-import { disablePlayerAuto } from "./auto";
+import { disablePlayerAuto, requestOrEnablePlayerAuto, replyStopPlayerAuto } from "./auto";
+import { sendHelp } from "./help";
+import { sendNews } from "./news";
 import { parseStartActionPayload, type StartActionPayload } from "../input/startPayloads";
 import { runExamineCurrentLocation } from "./look";
-import { showLocationForPlayer } from "./player";
+import { showCharacter, showLocationForPlayer } from "./player";
 
 type NameFormPrompt = { key: keyof NameForms; question: string; button: string; prefix?: string };
 const CASE_BUTTON_LABELS: Partial<Record<keyof NameForms, string>> = {
@@ -615,7 +617,7 @@ async function canRunStartPayloadAction(player: StartPayloadPlayer) {
   return currentLocation ? !isTutorialLocation(currentLocation) : false;
 }
 
-async function runStartPayloadAction(ctx: any, action: StartActionPayload) {
+async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayload) {
   const from = ctx.from;
   if (!from) return false;
 
@@ -635,12 +637,37 @@ async function runStartPayloadAction(ctx: any, action: StartActionPayload) {
     return true;
   }
 
+  if (action === "news") {
+    await sendNews(ctx);
+    return true;
+  }
+
+  if (action === "auto") {
+    await requestOrEnablePlayerAuto(bot, ctx);
+    return true;
+  }
+
+  if (action === "autoStop") {
+    await replyStopPlayerAuto(ctx);
+    return true;
+  }
+
+  if (action === "me") {
+    await showCharacter(from.id, (text, options) => ctx.reply(text, options));
+    return true;
+  }
+
+  if (action === "help") {
+    await sendHelp(ctx);
+    return true;
+  }
+
   return false;
 }
 
-async function handleStartCommand(ctx: any) {
+async function handleStartCommand(bot: Bot, ctx: any) {
   const action = parseStartActionPayload(ctx.match);
-  if (action && (await runStartPayloadAction(ctx, action))) return;
+  if (action && (await runStartPayloadAction(bot, ctx, action))) return;
 
   await enterWorld(ctx, false);
 }
@@ -650,7 +677,7 @@ export function registerStartHandlers(bot: Bot) {
     console.warn("Failed to set bot commands permanently:", error)
   );
 
-  bot.command("start", async (ctx) => handleStartCommand(ctx));
+  bot.command("start", async (ctx) => handleStartCommand(bot, ctx));
   bot.hears(/^start$/i, async (ctx) => enterWorld(ctx, false));
 
   bot.callbackQuery(/^onboarding:pronoun:(HE|SHE|THEY)$/, async (ctx) => {

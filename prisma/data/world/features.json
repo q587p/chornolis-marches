@@ -356,6 +356,8 @@
         "berries": 3,
         "herbs": 1,
         "mushrooms": 0,
+        "raw_meat": 1,
+        "cooked_meat": 1,
         "twigs": 4
       },
       "cache_max_stock": {
@@ -363,6 +365,8 @@
         "berries": 6,
         "herbs": 4,
         "mushrooms": 4,
+        "raw_meat": 3,
+        "cooked_meat": 3,
         "twigs": 10
       },
       "cache_restock_target": {
@@ -370,6 +374,8 @@
         "berries": 3,
         "herbs": 1,
         "mushrooms": 1,
+        "raw_meat": 1,
+        "cooked_meat": 1,
         "twigs": 5
       },
       "aliases": [

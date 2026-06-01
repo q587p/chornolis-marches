@@ -2160,7 +2160,7 @@
   {
     "id": "SLEEP-003",
     "title": "World-time auto-wake and sleep comfort",
-    "status": "backlog",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "medium",

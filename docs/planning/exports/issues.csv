@@ -112,7 +112,7 @@ SES-002,Atmospheric presence and notification design,backlog,design,session,medi
 SETTLE-001,Starter settlement,backlog,feature,settlements,high,"settlement,npc,onboarding",docs/planning/items/SETTLE-001-starter-settlement.md
 SLEEP-001,Lying posture and lie command,testing,feature,survival,high,"sleep,posture,aliases,rest",docs/planning/items/SLEEP-001-lying-posture-and-lie-command.md
 SLEEP-002,Ordinary sleep MVP,testing,feature,survival,high,"sleep,wake,stamina,hp,tutorial",docs/planning/items/SLEEP-002-ordinary-sleep-mvp.md
-SLEEP-003,World-time auto-wake and sleep comfort,backlog,feature,survival,medium,"sleep,world-time,campfire,comfort,recovery",docs/planning/items/SLEEP-003-world-time-autowake-and-comfort.md
+SLEEP-003,World-time auto-wake and sleep comfort,testing,feature,survival,medium,"sleep,world-time,campfire,comfort,recovery",docs/planning/items/SLEEP-003-world-time-autowake-and-comfort.md
 SLEEP-004,External forced sleep causes,icebox,feature,survival,low,"sleep,creatures,elixirs,rituals,danger",docs/planning/items/SLEEP-004-external-forced-sleep-causes.md
 SOC-001,Contacts / acquaintances MVP,backlog,feature,social,high,"social,contacts,acquaintances,actors,telegram",docs/planning/items/SOC-001-contacts-acquaintances.md
 SOC-002,Follow intent MVP,backlog,feature,social,high,"social,following,actors,telegram,groups",docs/planning/items/SOC-002-follow-intent.md

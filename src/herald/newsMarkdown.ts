@@ -6,6 +6,7 @@ export type HeraldNewsEntry = {
   title: string;
   body: string;
   raw: string;
+  sourceIndex: number;
   contentHash: string;
   sourceDate?: string;
   sourceVersion?: string;
@@ -34,7 +35,7 @@ export function parseNewsEntries(markdown: string): HeraldNewsEntry[] {
     .split(/\n(?=##\s+)/)
     .map((section) => section.trim())
     .filter((section) => section.startsWith("## "))
-    .map((section) => {
+    .map((section, sourceIndex) => {
       const [heading = "", ...bodyLines] = section.split("\n");
       const title = heading.replace(/^##\s+/, "").trim() || "Новини Порубіжжя";
       const body = bodyLines.join("\n").trim();
@@ -44,6 +45,7 @@ export function parseNewsEntries(markdown: string): HeraldNewsEntry[] {
         title,
         body,
         raw: section,
+        sourceIndex,
         contentHash: contentHash(section),
         ...metadata,
       };
