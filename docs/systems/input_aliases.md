@@ -55,9 +55,9 @@ Actions:
 - `збирати трави`, `збирати ягоди`, `збирати гриби`.
 - Pickup verbs such as `підібрати`, `підняти`, `взяти`, `pick`, `take` and `get` first mean visible ground-item pickup. Gather verbs such as `збирати`, `зібрати`, `шукати` and `gather` mean spending time and stamina on a local resource node. If a natural resource is not lying separately on the ground, pickup text should give a hint to gather it instead.
 - `підібрати ягоди`, `взяти трави`, `take herbs`, `get mushrooms` -> pick up matching loose ground resources only when they are actually visible as ground items; otherwise explain that these should be gathered.
-- `get all`, `pick all`, `взяти все`, `підняти все` -> pick up all visible loose ground resources and visible corpses listed under `Лежить:` in the current місцина.
+- `get all`, `pick all`, `взяти все`, `підібрати все`, `підняти все` -> pick up all visible loose ground resources and visible corpses listed under `Лежить:` in the current місцина.
 - `get all corpse`, `get all mouse`, `get all berries`, `підняти всі трупи` -> pick up only matching visible things from `Лежить:` when the type can be resolved.
-- Location-detail pickup buttons may also show a compact `всі` action beside a loose resource stack; it picks up all visible loose resources of that same type.
+- Location pickup buttons may also show a compact `всі` action beside a loose resource stack; it picks up all visible loose resources of that same type. When any pickable ground objects are visible under `Лежить:`, `Підібрати все` uses the same all-visible pickup path as `get all`.
 - Pickup costs `1` stamina per actual item/resource unit picked up; taking a stack of `19` loose items costs `19` stamina.
 - `з'їсти ягоди`, `їсти ягоди`, `використати ягоди`, `eat berries`, `use berries` -> eat carried berries from inventory to restore a small amount of stamina and ease hunger by a tiny amount.
 - `з'їсти всі ягоди`, `/eat_all_berries`, `eat all berries`, `use all berries` -> queue berry use until stamina and hunger no longer benefit, without removing unrelated queued actions.

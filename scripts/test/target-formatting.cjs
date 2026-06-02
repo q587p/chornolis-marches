@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const { formatCreatureLifeState, formatCreatureStatusLine, inventoryResourceSummary } = require("../../src/services/targets");
-const { animalAgeDescription, groundItemLine, groundItemPickupButtonRows, joinVisibleActionLabels } = require("../../src/services/locations");
+const { animalAgeDescription, groundItemLine, groundItemPickupButtonRows, hasPickableLyingObjects, joinVisibleActionLabels } = require("../../src/services/locations");
 const { buildAnonymousTargetKeyboard, buildCorpseActionKeyboard, buildTargetActionKeyboard, buildTargetListKeyboard } = require("../../src/ui/keyboards");
 const { visibleHeldTorchTextWithContext } = require("../../src/utils/torchText");
 
@@ -157,5 +157,10 @@ assert.deepEqual(groundItemPickupButtonRows([
     { text: "всі", callbackData: "item:pickupAll:twigs" },
   ],
 ]);
+
+assert.equal(hasPickableLyingObjects([], []), false);
+assert.equal(hasPickableLyingObjects([{ id: 41, amount: 1 }], []), true);
+assert.equal(hasPickableLyingObjects([], [{ id: 1, currentAction: null }]), true);
+assert.equal(hasPickableLyingObjects([], [{ id: 2, currentAction: "freshened_by_player:1; meat=1" }]), false);
 
 console.log("Target formatting OK");

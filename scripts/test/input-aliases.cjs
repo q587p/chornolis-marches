@@ -200,6 +200,7 @@ assertAlias("get all corpse", { kind: "pickup-target", target: "all corpse" });
 assertAlias("get all berries", { kind: "pickup-target", target: "all berries" });
 assertAlias("pick all", { kind: "pickup-target", target: "all" });
 assertAlias("взяти все", { kind: "pickup-target", target: "все" });
+assertAlias("підібрати все", { kind: "pickup-target", target: "все" });
 assertAlias("підняти все", { kind: "pickup-target", target: "все" });
 assertAlias("підняти всі трупи", { kind: "pickup-target", target: "всі трупи" });
 assertAlias("підібрати хмиз", { kind: "pickup-target", target: "хмиз" });

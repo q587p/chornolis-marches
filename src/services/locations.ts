@@ -570,6 +570,14 @@ function addGroundItemPickupButtons(keyboard: InlineKeyboard, groundItems: any[]
   }
 }
 
+export function hasPickableLyingObjects(groundItems: any[], corpses: any[]) {
+  return groundItems.length > 0 || corpses.some((corpse) => !isFreshenedCorpse(corpse.currentAction));
+}
+
+function addPickUpEverythingButton(keyboard: InlineKeyboard, groundItems: any[], corpses: any[]) {
+  if (hasPickableLyingObjects(groundItems, corpses)) keyboard.text("🤲 Підібрати все", "item:pickupEverything").row();
+}
+
 function presenceText(location: any, viewerPlayerId?: number, revealTargets = false, activeActions = new Map<string, any>(), visibility?: VisibilityRules) {
   const targets = visibleTargets(location, viewerPlayerId, { showCorpses: visibility?.showGroundObjects ?? true });
   const hasCharacters = targets.some((t) => t.canGreet);
@@ -877,6 +885,7 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
   addFeatureButtons(keyboard, location.features, "brief");
   const groundItems = location.resources.filter((r) => isVisibleGroundResource(r, location));
   if (visibility.showGroundObjects && groundItems.length) addGroundItemPickupButtons(keyboard, groundItems);
+  addPickUpEverythingButton(keyboard, visibility.showGroundObjects ? groundItems : [], visibility.showGroundObjects ? location.creatures.filter(isVisibleCorpse) : []);
   if (revealTargets && targets.length) addInlineRows(keyboard, buildTargetListKeyboard(actionLabeledTargets, { page: options.targetPage, pageCallbackPrefix: "targetPage:brief" }));
 
   const descriptionText = visibility.showLocationDescription
@@ -998,6 +1007,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   }
 
   addGroundItemPickupButtons(keyboard, groundItems);
+  addPickUpEverythingButton(keyboard, groundItems, corpses);
 
   if (tracksHint.hasTracks && visibility.showTracks) {
     addInlineRows(keyboard, buildExamineTracksKeyboard());
