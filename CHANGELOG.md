@@ -14,6 +14,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added a public `/calendar` command, text aliases (`calendar`, `календар`, `дата`, `місячне коло`) and safe deep-link payload support for `cmd_calendar`.
 - Added tutorial-time prompt buttons for `Час`, `Погода` and `Календар`, so the dream lesson teaches the three world-state surfaces separately.
 - Added `scripts/test/tutorial-ground-items.cjs` to ensure unrelated waking-world ground items stay hidden in tutorial dream locations.
+- Added the admin-only Herald `/news_archive_force_post` command for explicit archive reposting by deployed `news.md` index, without changing the safer `/news_archive_post` dedupe behavior.
 
 ### Changed
 

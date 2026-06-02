@@ -33,6 +33,7 @@ export const HERALD_COMMANDS: HeraldCommandInfo[] = [
   { command: "/news_archive_reload", description: "заново перечитати deployed news.md для ручного архіву", adminOnly: true },
   { command: "/news_archive_preview", description: "показати один архівний запис news.md без публікації", adminOnly: true },
   { command: "/news_archive_post", description: "вручну опублікувати один архівний запис news.md", adminOnly: true },
+  { command: "/news_archive_force_post", description: "явно повторно передати архівний запис news.md за deployed індексом", adminOnly: true },
   { command: "/preview_world_digest", description: "переглянути світовий запис", adminOnly: true },
   { command: "/queue_world_digest", description: "поставити світовий запис у чергу", adminOnly: true },
   { command: "/post_world_digest", description: "поставити й одразу передати світовий запис", adminOnly: true },

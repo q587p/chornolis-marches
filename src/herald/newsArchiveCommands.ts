@@ -1,17 +1,19 @@
 import type { Bot, Context } from "grammy";
 import { config } from "../config";
 import { requireHeraldAdmin } from "./admin";
-import { formatHeraldPublicationMessage, formatHeraldPublicationPlainMessage } from "./format";
+import { formatHeraldPublicationMessage, formatHeraldPublicationPlainMessage, formatHeraldPublicationRepostMessage } from "./format";
 import { HERALD_CHANNEL_MESSAGE_OPTIONS } from "./gameLinks";
 import { archiveOrderedNewsEntries, formatArchiveBody, NEWS_ARCHIVE_SOURCE_TYPE } from "./newsBackfill";
 import type { HeraldNewsEntry } from "./newsMarkdown";
 import { heraldNewsErrorLogDetails, readAllNewsEntries } from "./newsMarkdown";
-import { truncateTelegramMessage } from "./safety";
+import { parseTelegramChannelId, truncateTelegramMessage } from "./safety";
 import { escapeHtml } from "../utils/text";
 import {
   countPendingPublications,
   findExistingPublicationsByHashes,
   findExistingPublicationByHash,
+  markPublicationPublished,
+  markPublicationReposted,
   prepareManualHeraldPublication,
   publicationErrorMessage,
 } from "./publications";
@@ -86,6 +88,27 @@ function archivePublicationMessage(entry: HeraldNewsEntry) {
   });
 }
 
+function archivePublicationInput(row: { index: number; entry: HeraldNewsEntry }) {
+  const body = formatArchiveBody(row.entry);
+  return {
+    sourceType: NEWS_ARCHIVE_SOURCE_TYPE,
+    sourceId: row.entry.title,
+    sourceDate: row.entry.sourceDate,
+    sourceVersion: row.entry.sourceVersion,
+    title: row.entry.title,
+    body,
+    renderedText: formatHeraldPublicationPlainMessage({
+      sourceType: NEWS_ARCHIVE_SOURCE_TYPE,
+      title: row.entry.title,
+      body,
+    }),
+    archiveOrder: row.index - 1,
+    availableAt: new Date(),
+    visibility: "PUBLIC",
+    contentHash: row.entry.contentHash,
+  };
+}
+
 function archiveStatus(publication: {
   publishedAt: Date | null;
   visibility: string;
@@ -153,6 +176,7 @@ export function formatArchiveList(input: Awaited<ReturnType<typeof loadArchiveEn
     "",
     "Перегляд: /news_archive_preview [номер]",
     "Опублікувати один запис: /news_archive_post [номер]",
+    "Повторно передати явно: /news_archive_force_post [номер]",
     "На Render зміна news.md потребує commit/push/redeploy.",
   ].join("\n");
 }
@@ -246,23 +270,7 @@ async function replyAfterArchivePost(ctx: Context, bot: Bot) {
     return;
   }
 
-  const publication = await prepareManualHeraldPublication({
-    sourceType: NEWS_ARCHIVE_SOURCE_TYPE,
-    sourceId: row.entry.title,
-    sourceDate: row.entry.sourceDate,
-    sourceVersion: row.entry.sourceVersion,
-    title: row.entry.title,
-    body: formatArchiveBody(row.entry),
-    renderedText: formatHeraldPublicationPlainMessage({
-      sourceType: NEWS_ARCHIVE_SOURCE_TYPE,
-      title: row.entry.title,
-      body: formatArchiveBody(row.entry),
-    }),
-    archiveOrder: row.index - 1,
-    availableAt: new Date(),
-    visibility: "PUBLIC",
-    contentHash: row.entry.contentHash,
-  });
+  const publication = await prepareManualHeraldPublication(archivePublicationInput(row));
 
   const result = await publishHeraldPublication(bot, publication);
   if (!result.ok) {
@@ -282,6 +290,44 @@ async function replyAfterArchivePost(ctx: Context, bot: Bot) {
     updated.ok
       ? `Тепер опубліковано: ${updated.counts.published}. У черзі: ${updated.counts.pending}. Скасовано: ${updated.counts.canceled}. Ще не внесено: ${updated.counts.missing}.`
       : `Стан після публікації не вдалося перечитати: ${updated.error}`,
+  ].join("\n"));
+}
+
+async function replyAfterArchiveForcePost(ctx: Context) {
+  if (!config.heraldChannelId) {
+    await ctx.reply("Канцелярія не знає, до якого каналу нести архівний запис: HERALD_CHANNEL_ID не задано.");
+    return;
+  }
+
+  const archive = await loadArchiveEntriesWithStatus();
+  if (!archive.ok) {
+    logArchiveReadFailure("news_archive_force_post", archive);
+    await ctx.reply(archiveReadFailureReply(archive));
+    return;
+  }
+
+  const index = parseArchiveIndex(String(ctx.match ?? ""), archive.rows.length);
+  if (!index) {
+    await ctx.reply(`Канцелярія не впізнала номер архівного запису. Спробуйте: /news_archive_force_post 1\nУ deployed news.md зараз записів: ${archive.rows.length}.`);
+    return;
+  }
+
+  const row = archive.rows[index - 1];
+  const publication = await prepareManualHeraldPublication(archivePublicationInput(row));
+  const sent = await ctx.api.sendMessage(
+    parseTelegramChannelId(config.heraldChannelId),
+    formatHeraldPublicationRepostMessage(publication),
+    HERALD_CHANNEL_MESSAGE_OPTIONS,
+  );
+
+  if (!publication.publishedAt) {
+    await markPublicationPublished(publication.id, sent.message_id);
+  }
+  const reposted = await markPublicationReposted(publication.id, sent.message_id);
+
+  await ctx.reply([
+    `Канцелярія повторно передала архівний запис #${row.index} до каналу.`,
+    `Запис у книзі: #${reposted.id}. Це нове Telegram-повідомлення: ${sent.message_id}; старий час публікації не відновлювався.`,
   ].join("\n"));
 }
 
@@ -323,6 +369,16 @@ export function registerHeraldNewsArchiveCommands(bot: Bot, heraldAdminIds: Read
     } catch (error) {
       console.error("Herald news archive post failed:", publicationErrorMessage(error));
       await ctx.reply("Канцелярія не змогла передати архівний запис до каналу.");
+    }
+  });
+
+  bot.command("news_archive_force_post", async (ctx) => {
+    if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
+    try {
+      await replyAfterArchiveForcePost(ctx);
+    } catch (error) {
+      console.error("Herald news archive force post failed:", publicationErrorMessage(error));
+      await ctx.reply("Канцелярія не змогла повторно передати архівний запис до каналу.");
     }
   });
 }

@@ -144,6 +144,7 @@ assert.match(archiveList, /0\.1\.0 &lt;raw&gt;/);
 assert.doesNotMatch(archiveList, /<raw>|<index>/);
 assert.match(archiveList, /\/news_archive_preview \[/);
 assert.match(archiveList, /\/news_archive_post \[/);
+assert.match(archiveList, /\/news_archive_force_post \[/);
 assert.ok(splitArchiveListMessage(["header", ...Array.from({ length: 80 }, (_, index) => `${index + 1}. ${"entry ".repeat(20)}`)].join("\n"), 600).length > 1);
 
 const admins = parseHeraldAdminIds([" 123 ", "", "456"]);
@@ -162,9 +163,11 @@ assert.match(heraldAdminCommands, /\/backfill_news_cancel/);
 assert.match(heraldAdminCommands, /\/news_archive_list/);
 assert.match(heraldAdminCommands, /\/news_archive_preview/);
 assert.match(heraldAdminCommands, /\/news_archive_post/);
+assert.match(heraldAdminCommands, /\/news_archive_force_post/);
 assert.match(heraldAdminCommands, /\/news_archive_reload/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/pause_publications/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_post/);
+assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_force_post/);
 
 const whoami = formatHeraldWhoami({
   telegramUserId: 123456789,
