@@ -212,13 +212,13 @@ export function isDismantlableCampfire(feature: { type?: string | null; data?: u
 }
 
 export function adminHandmadeCampfireData(worldMinute: number | null | undefined) {
-  const lit = timedFireData("addCampfire", CAMPFIRE_DURATION_MS, false);
   return {
-    ...lit,
+    is_campfire: true,
+    magical: false,
     handmade: true,
     created_by: "addCampfire",
-    prepared: false,
-    unlit: false,
+    prepared: true,
+    unlit: true,
     fuelTwigs: CAMPFIRE_BUILD_TWIG_COST,
     builtAtMinute: worldMinute ?? null,
     adminCreated: true,
@@ -694,21 +694,20 @@ export async function createDebugCampfire(locationId: number) {
 export async function createAdminHandmadeCampfire(locationId: number) {
   const key = `handmade_admin_campfire_${locationId}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const worldMinute = await currentWorldMinute();
-  const atmosphereState = await campfireIgnitionAtmosphereState(locationId);
   const feature = await prisma.locationFeature.create({
     data: {
       key,
       locationId,
       type: "CAMPFIRE",
-      name: "Вогнище",
-      description: "Рукотворне вогнище вже горить: дає світло, тепло і може підпалити факел.",
+      name: "Складене вогнище",
+      description: "Хмиз складено в сухе гніздо. Лишилося дати йому вогонь.",
       isActive: true,
-      providesLight: true,
+      providesLight: false,
       restStaminaCapMultiplier: null,
       data: jsonInput(adminHandmadeCampfireData(worldMinute)),
     },
   });
-  return { feature, atmosphereText: campfireIgnitionAtmosphereText(atmosphereState) };
+  return { feature, atmosphereText: null };
 }
 
 export async function playerTwigsAmount(playerId: number) {

@@ -637,8 +637,8 @@ export function registerAdminHandlers(bot: Bot) {
     await logEvent("SYSTEM", debug ? "Debug campfire added" : "Handmade admin campfire added", `${feature.key} at ${location.key}`, location.id);
     const text = debug
       ? `🔥 Додано debug-вогнище у місцині: ${location.name}.\nКлюч: ${feature.key}`
-      : `🔥 Додано й підпалено рукотворне вогнище у місцині: ${location.name}.\nКлюч: ${feature.key}\nЙого можна тестово погасити й розібрати як вогнище, складене персонажем.`;
-    return ctx.reply([text, atmosphereText].filter(Boolean).join("\n\n"));
+      : `🪵 Додано складене рукотворне вогнище у місцині: ${location.name}.\nКлюч: ${feature.key}\nЙого можна тестово підпалити, погасити й розібрати як вогнище, складене персонажем.`;
+    return ctx.reply(debug ? [text, atmosphereText].filter(Boolean).join("\n\n") : text);
   }
 
   bot.command("addCampfire", (ctx) => runAddCampfireCommand(ctx));
