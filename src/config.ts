@@ -66,6 +66,7 @@ const configuredHeraldArchiveIntervalMinutes = optionalNumberEnv("HERALD_ARCHIVE
 const configuredHeraldMaxPublicationsPerTick = optionalNumberEnv("HERALD_MAX_PUBLICATIONS_PER_TICK") ?? 1;
 const configuredHeraldRebalanceOverduePublications = optionalBooleanEnv("HERALD_REBALANCE_OVERDUE_PUBLICATIONS") ?? true;
 const configuredHeraldStartupNoticeEnabled = optionalBooleanEnv("HERALD_STARTUP_NOTICE_ENABLED") ?? false;
+const configuredNonPlayerMovementNotificationWindowMs = optionalNumberEnv("NON_PLAYER_MOVEMENT_NOTIFICATION_WINDOW_MS") ?? 60_000;
 const publicBaseUrl = normalizeBaseUrl(optionalStringEnv("PUBLIC_BASE_URL") ?? "https://chornolis-marches.onrender.com");
 const configuredGameBotUsername = optionalStringEnv("GAME_BOT_USERNAME") ?? "Chornolis_bot";
 
@@ -91,4 +92,5 @@ export const config = {
   heraldRebalanceOverduePublications: configuredHeraldRebalanceOverduePublications,
   heraldStartupNoticeEnabled: configuredHeraldStartupNoticeEnabled,
   heraldStartupNoticeChatId: optionalStringEnv("HERALD_STARTUP_NOTICE_CHAT_ID"),
+  nonPlayerMovementNotificationWindowMs: Math.max(0, Math.floor(configuredNonPlayerMovementNotificationWindowMs)),
 };

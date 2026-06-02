@@ -1,7 +1,7 @@
 ---
 id: NOTIF-001
 title: Non-player movement notification coalescing
-status: backlog
+status: testing
 type: feature
 area: notifications
 priority: high
@@ -73,5 +73,14 @@ Attach at most one `🐾 Сліди` button at the end.
   - player movement bypassing the coalescer.
 
 ## Notes
+
+0.15.9 adds the first conservative implementation:
+
+- `NON_PLAYER_MOVEMENT_NOTIFICATION_WINDOW_MS` controls the window and defaults to 60 seconds;
+- player movement remains immediate;
+- ordinary animal movement remains quiet;
+- visible non-animal creature movement is buffered per location;
+- flushes send one compact message with one `Сліди` button;
+- the first slice deliberately omits arrival target buttons from coalesced movement messages, which avoids stale target buttons when a spirit/NPC already left before the flush.
 
 An in-memory debounce is acceptable for a first slice if the risk is documented: a process restart may drop pending movement flavor lines. If this becomes important, move the pending buffer to a persisted notification queue.

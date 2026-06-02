@@ -63,6 +63,20 @@ Disabling daypart notices only suppresses proactive daypart messages. It does no
 
 The world still changes. The player simply stops receiving separate proactive messages when a daypart boundary is crossed.
 
+## Non-Player Movement Coalescing
+
+Visible movement from non-player, non-animal creatures can be noisy when a spirit or named local presence moves through the same location several times in a short span.
+
+The first movement coalescing slice buffers those local arrival/departure lines per location for a short runtime window:
+
+- default: `NON_PLAYER_MOVEMENT_NOTIFICATION_WINDOW_MS=60000`;
+- player movement stays immediate;
+- ordinary animal movement stays quiet;
+- coalesced movement sends one compact message with one `Сліди` button;
+- the first slice does not add arrival target buttons to coalesced movement, so a spirit/NPC that already left before the flush cannot leave a misleading target button behind.
+
+This is a runtime notification buffer, not persisted world state. A process restart may drop pending movement flavor lines, which is acceptable for the first anti-spam slice.
+
 ## Delivery Rule
 
 A proactive daypart notice can be sent only when all of these are true:

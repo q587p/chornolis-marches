@@ -113,7 +113,7 @@
   {
     "id": "ANIMAL-001",
     "title": "Animal speech reactions",
-    "status": "backlog",
+    "status": "in_progress",
     "type": "feature",
     "area": "ecology",
     "priority": "medium",
@@ -1766,7 +1766,7 @@
   {
     "id": "NOTIF-001",
     "title": "Non-player movement notification coalescing",
-    "status": "backlog",
+    "status": "testing",
     "type": "feature",
     "area": "notifications",
     "priority": "high",

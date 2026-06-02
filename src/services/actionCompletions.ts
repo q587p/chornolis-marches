@@ -16,7 +16,7 @@ import { directionLabels } from "../ui/labels";
 import { buildCorpseActionKeyboard, buildExamineLocationKeyboard, buildExamineTracksKeyboard, buildGatherRetryKeyboard, buildLookLocationKeyboard, buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { lightLocationCampfire, renderLocationBrief, renderLocationDetails } from "./locations";
-import { notifyLocation, notifyLocationAll, notifyLocationExcept, notifyRegionExcept } from "./notifications";
+import { notifyLocation, notifyLocationAll, notifyLocationExcept, notifyRegionExcept, queueNonPlayerMovementNotification } from "./notifications";
 import { addTwigsToCampfire, buildCampfireFromInventory, dismantleCampfire, douseCampfire, dousePlayerTorchFromInventory, lightPlayerTorchAtCampfire, lightPlayerTorchFromInventory } from "./fire";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
 import { getStartLocationId } from "./players";
@@ -26,7 +26,7 @@ import { resolveTarget, type ResolvedTarget } from "./targets";
 import { actorPastVerb, creatureForms, playerForms } from "./grammar";
 import { actionCost, actionDurationMs, actionTitle, movementDurationMs } from "./actionRules";
 import { fatigueStateFor, spendCreatureStamina, spendPlayerStamina, spendPlayerStaminaAmount } from "./actionRecovery";
-import { actorWhere, enqueueCreatureAction, interruptActorActions, type ActorRef } from "./actionLifecycle";
+import { actorWhere, enqueueCreatureAction, hasActiveCreatureActions, interruptActorActions, type ActorRef } from "./actionLifecycle";
 import { attackHitsSpecies } from "./attackRules";
 import { escapeHtml } from "../utils/text";
 import { resourceAccusativeName } from "../utils/resourceText";
@@ -66,6 +66,11 @@ type LookPayload = { reason?: string };
 type SayPayload = { text: string; mode?: "say" | "whisper" | "reply" | "yell" | "shout"; targetType?: "player" | "creature"; targetId?: number; targetName?: string; targetDative?: string };
 type SocialPayload = { targetType: "player" | "creature"; targetId: number; mode?: "known" | "mystery"; detail?: "brief" | "full"; socialId?: string };
 
+type AnimalSpeechReactionPlan = {
+  kind: "flee" | "freeze" | "watch" | "warn";
+  currentAction: string;
+};
+
 const RECENT_ATTACK_FEATURE_PREFIX = "recent_attack_";
 const RECENT_ATTACK_DANGER_TICKS = Number(process.env.WORLD_RECENT_ATTACK_DANGER_TICKS || 20);
 const RECENT_ATTACK_DANGER_MS = RECENT_ATTACK_DANGER_TICKS * Number(process.env.WORLD_TICK_INTERVAL_MS || 1500);
@@ -78,6 +83,30 @@ const TUTORIAL_FORAGING_SUCCESS_COMMENT = "Тут усе вдалося з пе�
 const TUTORIAL_REST_FAST_COMMENT = "У навчальному сні жар повертає снагу дуже швидко, майже за один подих. Наяву відпочинок триватиме довше.";
 const TUTORIAL_REST_FULL_COMMENT = "Ось так виглядає короткий перепочинок у навчальному сні. Наяву до повної снаги шлях буде довший, і не кожне вогнище тримає вас так легко.";
 const TUTORIAL_REST_EXTRA_COMMENT = "Якщо на клавіатурі бачите «екстра», це не помилка. Сон на мить дає снаги більше, ніж тіло звикло тримати наяву: надлишок допомагає навчитися, але за межами сну таке буде рідкісним і недовгим.";
+
+export function animalSpeechReactionPlan(speciesKey: string, roll = Math.random()): AnimalSpeechReactionPlan | null {
+  const normalized = speciesKey.trim().toLowerCase();
+  if (normalized === "mouse") {
+    return roll < 0.85
+      ? { kind: "flee", currentAction: "лякається голосу" }
+      : { kind: "freeze", currentAction: "завмирає від голосу" };
+  }
+  if (normalized === "rabbit") {
+    return roll < 0.7
+      ? { kind: "flee", currentAction: "сахкається від голосу" }
+      : { kind: "freeze", currentAction: "насторожено завмирає" };
+  }
+  if (normalized === "fox") return { kind: "watch", currentAction: "насторожено слухає" };
+  if (normalized === "wolf") return { kind: "warn", currentAction: "низько гарчить" };
+  return null;
+}
+
+function animalSpeechReactionLine(plan: AnimalSpeechReactionPlan, forms: { nominative: string }) {
+  if (plan.kind === "flee") return `${forms.nominative} сіпається від голосу й кидається геть.`;
+  if (plan.kind === "freeze") return `${forms.nominative} завмирає, ніби сам звук на мить став тінню.`;
+  if (plan.kind === "watch") return `${forms.nominative} озирається й дивиться у відповідь насторожено, без людської згоди чи незгоди.`;
+  return `${forms.nominative} низько гарчить у відповідь. Словам тут краще знати міру.`;
+}
 
 async function removeTutorialForagingDreamItems(playerId: number, fromLocationId: number) {
   const from = await prisma.cellLocation.findUnique({ where: { id: fromLocationId }, select: { key: true } });
@@ -585,10 +614,8 @@ async function completeMove(bot: Bot, action: WorldAction) {
   const fallbackMover = "Хтось";
   if (!isAnimal) {
     const departureLabel = await visibleMoverLabel(creature.locationId, fallbackMover, name);
-    await notifyLocation(bot, creature.locationId, -1, `${departureLabel} ${movementPastVerb(creature, departureLabel, fallbackMover, "пішов", "пішла", "пішли")} звідси.`, {
-      keyboard: buildTrackKeyboard(),
-      replaceKey: `tracks:${creature.locationId}`,
-      clearKeys: [`target:creature:${creature.id}`],
+    queueNonPlayerMovementNotification(bot, creature.locationId, `${departureLabel} ${movementPastVerb(creature, departureLabel, fallbackMover, "пішов", "пішла", "пішли")} звідси.`, {
+      creatureId: creature.id,
     });
   }
   await createTrack({ actorType: "CREATURE", creatureId: creature.id }, creature.locationId, exit.toLocationId, payload.direction, isAnimal ? `сліди: ${creature.species.name}` : `слід: ${name}`);
@@ -596,9 +623,8 @@ async function completeMove(bot: Bot, action: WorldAction) {
   await prisma.creature.updateMany({ where: { id: creature.id }, data: { locationId: exit.toLocationId, activity: "MOVING", currentAction: payload.reason ?? actionTitle(action), steps: { increment: 1 }, hunger: { increment: 1 } } });
   if (!isAnimal) {
     const arrivalLabel = await visibleMoverLabel(exit.toLocationId, fallbackMover, name);
-    await notifyLocation(bot, exit.toLocationId, -1, `${arrivalLabel} ${movementPastVerb(creature, arrivalLabel, fallbackMover, "зайшов", "зайшла", "зайшли")} сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, {
-      keyboard: buildTargetListKeyboard([{ type: "creature", id: creature.id, label: arrivalLabel, canGreet: true }]),
-      replaceKey: `target:creature:${creature.id}`,
+    queueNonPlayerMovementNotification(bot, exit.toLocationId, `${arrivalLabel} ${movementPastVerb(creature, arrivalLabel, fallbackMover, "зайшов", "зайшла", "зайшли")} сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, {
+      creatureId: creature.id,
     });
   }
   await setActionStatus(action, "DONE");
@@ -1231,6 +1257,56 @@ async function queueHunterConversationReply(input: {
   });
 }
 
+async function queueAnimalSpeechFlee(creature: any) {
+  if (await hasActiveCreatureActions(creature.id)) return;
+  const exits = await prisma.locationExit.findMany({
+    where: { fromLocationId: creature.locationId, isHidden: false },
+    orderBy: { direction: "asc" },
+  });
+  const usableExits = shuffle(creatureUsableExits(creature, exits) as LocationExit[]);
+  const exit = usableExits[0];
+  if (!exit) return;
+
+  await enqueueCreatureAction({
+    creatureId: creature.id,
+    type: "MOVE",
+    payload: { direction: exit.direction, reason: "лякається голосу" },
+    durationMs: movementDurationMs(exit.travelCost, creature.stamina),
+    priority: PANIC_HERBIVORE_MOVE_PRIORITY,
+  });
+}
+
+async function queueAnimalDirectedSpeechReaction(bot: Bot, input: {
+  player: any;
+  targetCreatureId?: number;
+}) {
+  if (!input.player.currentLocationId || !input.targetCreatureId) return;
+  const creature = await prisma.creature.findFirst({
+    where: {
+      id: input.targetCreatureId,
+      locationId: input.player.currentLocationId,
+      isAlive: true,
+      isGone: false,
+      isHidden: false,
+      species: { kind: "ANIMAL" },
+    },
+    include: { species: true },
+  });
+  if (!creature) return;
+
+  const plan = animalSpeechReactionPlan(creature.species.key);
+  if (!plan) return;
+
+  const forms = creatureForms(creature);
+  await prisma.creature.updateMany({
+    where: { id: creature.id, isAlive: true, isGone: false },
+    data: { activity: plan.kind === "flee" ? "MOVING" : "LOOKING", currentAction: plan.currentAction },
+  });
+  await notifyLocationAll(bot, creature.locationId, animalSpeechReactionLine(plan, forms));
+
+  if (plan.kind === "flee") await queueAnimalSpeechFlee(creature);
+}
+
 async function completeSay(bot: Bot, action: WorldAction) {
   const payload = payloadOf<SayPayload>(action);
   const text = String(payload.text ?? "").slice(0, 300);
@@ -1280,6 +1356,7 @@ async function completeSay(bot: Bot, action: WorldAction) {
       if (chatId) await bot.api.sendMessage(chatId, `Ви шепнули ${escapeHtml(target.forms.dative)}:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
       await setActionStatus(action, "DONE");
       await logEvent("SAY", `${actorForms.nominative} шепоче ${target.forms.dative}`, "приватний шепіт", player.currentLocationId);
+      if (payload.targetType === "creature") await queueAnimalDirectedSpeechReaction(bot, { player, targetCreatureId: payload.targetId });
       return;
     }
 
@@ -1401,6 +1478,7 @@ async function completeSay(bot: Bot, action: WorldAction) {
     }
     if (payload.targetType === "creature" && payload.targetId) {
       await queueHunterConversationReply({ actionId: action.id, player, targetCreatureId: payload.targetId });
+      await queueAnimalDirectedSpeechReaction(bot, { player, targetCreatureId: payload.targetId });
     }
     return;
   }

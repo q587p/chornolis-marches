@@ -7,6 +7,16 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.9 - Quieter movement and animal speech reactions - 12026-06-02
+
+### Changed
+
+- Coalesced visible non-player/non-animal creature movement notifications per location so quick arrival/departure sequences send one compact message with one tracks button instead of several short Telegram messages.
+- Added `NON_PLAYER_MOVEMENT_NOTIFICATION_WINDOW_MS` for tuning the non-player movement notification coalescing window.
+- Added the first animal-directed speech reaction slice: targeted `SAY` / `WHISPER` to visible animals can produce species-shaped local reactions, and startled mice/rabbits can queue ordinary movement through existing animal movement boundaries.
+
+## 0.15.8 - Polish and survival edges - 12026-06-02
+
 ### Changed
 
 - Added a temporary raw mushroom poison bridge: eating carried `mushrooms` now has a 1-in-10 chance to consume the mushroom, reduce HP by roughly one third without dropping below 1 HP in this first slice, and increase hunger by `+1`.
