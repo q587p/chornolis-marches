@@ -61,6 +61,11 @@ Strange Totems are the first small ambient wilderness trace for dry luka and riv
 - Ambient spawns avoid locations with active players, avoid places that already have an active Strange Totem, and avoid visible non-animal NPC/monster/spirit presence.
 - Ambient spawns leave one suspicious track toward a visible exit. The current implementation uses a hidden technical `strange_totem_trace` actor for the `WorldTrack` relation; player-facing text should describe only the suspicious trace, not the technical actor.
 
+Future authored-data cleanup:
+
+- Repeated Strange Totem defaults should move toward `TECH-002` feature archetypes/templates instead of duplicating the same icon, aliases, twig yields and static top-level fields in every world JSON row.
+- Individual feature rows should keep only location-specific overrides once that authoring layer exists.
+
 Current tree-shake MVP limits:
 
 - The tree-shake cooldown is stored in `Feature.data.last_shaken_at`, so a reset/reseed can reset it. This is acceptable for the first slice, but a later cleanup should move renewable-feature cooldowns to a persistent runtime/event model.

@@ -51,6 +51,7 @@ These may become `next` after 0.13-0.15 foundations land.
 ## Technical Backlog
 
 - Continue behavior-preserving service boundary cleanup.
+- TECH-002: add location feature archetypes / world-data deduplication so repeated authored defaults such as Strange Totem icons, aliases, twig yield data and static top-level fields can live in one reusable template with per-instance overrides.
 - Extract visibility and world-time helpers away from handlers.
 - Split broad completion logic only when feature work touches it.
 - Keep action aliases and Telegram buttons moving toward a shared action registry.
