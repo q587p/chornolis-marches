@@ -65,7 +65,7 @@ async function beginRestNow(bot: Bot, ctx: any, playerId: number) {
   }
 }
 
-async function startRest(bot: Bot, ctx: any) {
+export async function startRest(bot: Bot, ctx: any) {
   const from = ctx.from;
   if (!from) return;
   const player = await getPlayerByTelegramId(from.id);

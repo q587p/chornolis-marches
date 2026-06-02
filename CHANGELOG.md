@@ -18,6 +18,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added a separate beginner-cache money box for `shah` and `hryvnia` with explicit player take/contribute controls.
 - Added a rare waking-world successful-gather bonus that can grant one `shah` directly to the player.
 - Added Scribe/admin `/call_scribes_audit` and `/call_scribes_approve <eventId>` / `/call_scribes_approve_<eventId>` commands for reviewing and applying recorded return-help requests.
+- Added safe Herald/web news deep links and `/start cmd_*` routing for `/start`, `/rest` and `/sleep`, so public news command hints open the main bot instead of staying plain text.
 - Added focused money/loot tests for pluralization, starter seed authoring, cache money behavior and gather bonus boundaries.
 - Added `docs/systems/money_and_low_risk_loot.md` and `MONEY-001` planning documentation.
 

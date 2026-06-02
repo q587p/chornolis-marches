@@ -1,6 +1,7 @@
 import { config } from "../config";
 
 export const SAFE_GAME_COMMAND_PAYLOADS = {
+  "/start": "cmd_start",
   "/look": "cmd_look",
   "/examine": "cmd_examine",
   "/news": "cmd_news",
@@ -8,6 +9,8 @@ export const SAFE_GAME_COMMAND_PAYLOADS = {
   "/autoStop": "cmd_auto_stop",
   "/me": "cmd_me",
   "/help": "cmd_help",
+  "/rest": "cmd_rest",
+  "/sleep": "cmd_sleep",
   "/track": "cmd_track",
   "/time": "cmd_time",
   "/weather": "cmd_weather",
