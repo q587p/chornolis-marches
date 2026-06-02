@@ -1167,6 +1167,21 @@ async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
   }
 }
 
+async function submitPickupCommand(bot: Bot, ctx: any, targetQuery?: string) {
+  const target = targetQuery?.trim();
+  if (!target) {
+    await ctx.reply("Напишіть так: /<i>pick</i> twigs, /<i>pick_all</i> або <i>підібрати все</i>.", { parse_mode: "HTML" });
+    return;
+  }
+
+  await submitPickupTarget(bot, ctx, target);
+}
+
+function pickupAllCommandTarget(rest?: string) {
+  const target = rest?.trim();
+  return target ? `all ${target}` : "all";
+}
+
 async function submitSocialSignal(bot: Bot, ctx: any, signal: SocialSignalAlias, targetQuery?: string) {
   if (!targetQuery) {
     const player = await getPlayerByTelegramId(ctx.from.id);
@@ -1286,6 +1301,8 @@ export function registerAliasHandlers(bot: Bot) {
     "reply",
   ], async (_ctx, next) => next());
   bot.command(["attack", "fight", "kill", "kick"], async (ctx) => submitAttackCommand(bot, ctx, ctx.match ?? ""));
+  bot.command(["get", "pick", "pickup", "take"], async (ctx) => submitPickupCommand(bot, ctx, ctx.match ?? ""));
+  bot.command(["get_all", "pick_all", "pickup_all", "take_all"], async (ctx) => submitPickupCommand(bot, ctx, pickupAllCommandTarget(ctx.match ?? "")));
   bot.command("yell", async (ctx) => submitYell(bot, ctx, ctx.match ?? ""));
   bot.command("shout", async (ctx) => submitShout(bot, ctx, ctx.match ?? ""));
 

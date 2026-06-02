@@ -1162,6 +1162,12 @@ function parseTargetAction(text: string): ParsedAliasCommand | null {
 }
 
 function parsePickup(text: string): ParsedAliasCommand | null {
+  const allMatch = text.match(/^(?:get_all|pick_all|pickup_all|take_all)(?:\s+(.+))?$/);
+  if (allMatch) {
+    const filter = allMatch[1]?.trim();
+    return { kind: "pickup-target", target: filter ? `all ${filter}` : "all" };
+  }
+
   const match = text.match(/^(?:pickup|pick|take|get|підібрати|підняти|взяти|забрати)\s+(.+)$/);
   if (!match?.[1]?.trim()) return null;
   const target = match[1].trim();
