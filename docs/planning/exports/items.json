@@ -1107,7 +1107,7 @@
   {
     "id": "GIVE-002",
     "title": "Ukrainian inflection-tolerant give parser and grammar bridge",
-    "status": "backlog",
+    "status": "testing",
     "type": "technical",
     "area": "input",
     "priority": "high",

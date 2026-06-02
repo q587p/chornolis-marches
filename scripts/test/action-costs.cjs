@@ -2,9 +2,10 @@ const assert = require("node:assert/strict");
 
 require("ts-node/register");
 
-const { playerStaminaCostConfig } = require("../../src/gameConfig");
+const { playerStaminaCostConfig, REST_STAMINA_REGEN_PER_INTERVAL } = require("../../src/gameConfig");
 const { playerHungerAfterStaminaSpend } = require("../../src/services/actionRecovery");
 const { actionTitle } = require("../../src/services/actionRules");
+const { CAMPFIRE_REST_STAMINA_REGEN_MULTIPLIER, isLitRestCampfireFeature, restStaminaRegenMultiplierForFeatures } = require("../../src/services/locationFeatures");
 
 assert.equal(playerStaminaCostConfig.FRESHEN, 3);
 assert.equal(playerStaminaCostConfig.USE_ITEM, 1);
@@ -16,6 +17,8 @@ assert.equal(playerStaminaCostConfig.BUILD_CAMPFIRE, 3);
 assert.equal(playerStaminaCostConfig.DOUSE_CAMPFIRE, 1);
 assert.equal(playerStaminaCostConfig.DISMANTLE_CAMPFIRE, 2);
 assert.equal(playerStaminaCostConfig.COOK, 4);
+assert.equal(REST_STAMINA_REGEN_PER_INTERVAL, 26);
+assert.equal(CAMPFIRE_REST_STAMINA_REGEN_MULTIPLIER, 3);
 
 assert.equal(actionTitle({ type: "USE_ITEM", payload: { resourceKey: "berries" } }), "їмо ягоди");
 assert.equal(actionTitle({ type: "DROP_ITEM", payload: { allFilter: "corpse" } }), "викладаємо речі");
@@ -31,5 +34,20 @@ assert.equal(playerHungerAfterStaminaSpend({ currentHunger: 0, staminaAfter: 37,
 assert.equal(playerHungerAfterStaminaSpend({ currentHunger: 0, staminaAfter: 35, cost: 7 }), 1);
 assert.equal(playerHungerAfterStaminaSpend({ currentHunger: 4, staminaAfter: -1, cost: 3 }), 5);
 assert.equal(playerHungerAfterStaminaSpend({ currentHunger: 13, staminaAfter: 20, cost: 7 }), 13);
+
+const litCampfire = { type: "CAMPFIRE", providesLight: true, data: { is_campfire: true, handmade: true } };
+const litMagicCampfire = { type: "MAGIC_CAMPFIRE", providesLight: true, data: { magical: true } };
+const preparedCampfire = { type: "CAMPFIRE", providesLight: false, data: { is_campfire: true, handmade: true, prepared: true, unlit: true } };
+const extinguishedCampfire = { type: "CAMPFIRE", providesLight: false, data: { is_campfire: true, handmade: true, extinguished: true } };
+const strongerRestFeature = { type: "LANDMARK", providesLight: false, data: { rest_stamina_regen_multiplier: 10 } };
+
+assert.equal(isLitRestCampfireFeature(litCampfire), true);
+assert.equal(isLitRestCampfireFeature(litMagicCampfire), true);
+assert.equal(isLitRestCampfireFeature(preparedCampfire), false);
+assert.equal(isLitRestCampfireFeature(extinguishedCampfire), false);
+assert.equal(restStaminaRegenMultiplierForFeatures([litCampfire]), 3);
+assert.equal(restStaminaRegenMultiplierForFeatures([litMagicCampfire]), 3);
+assert.equal(restStaminaRegenMultiplierForFeatures([preparedCampfire, extinguishedCampfire]), 1);
+assert.equal(restStaminaRegenMultiplierForFeatures([litCampfire, strongerRestFeature]), 10);
 
 console.log("Action costs OK");

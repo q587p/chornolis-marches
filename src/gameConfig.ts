@@ -17,7 +17,7 @@ export const MAX_QUEUED_ACTIONS_PER_ACTOR = 17;
 export const STAMINA_REGEN_INTERVAL_TICKS = 40;
 export const PASSIVE_STAMINA_REGEN_PER_INTERVAL = 13;
 export const REST_STAMINA_REGEN_INTERVAL_TICKS = 4;
-export const REST_STAMINA_REGEN_PER_INTERVAL = 13;
+export const REST_STAMINA_REGEN_PER_INTERVAL = 26;
 
 // With WORLD_TICK_INTERVAL_MS=5000 this means:
 // passive HP: +1 per 13 minutes; rest HP: +1 per 6.5 minutes.

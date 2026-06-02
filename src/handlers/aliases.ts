@@ -81,7 +81,6 @@ import { buildWetCampfireConfirmKeyboard } from "../ui/fireKeyboards";
 import { submitGiveItem } from "./give";
 
 const pendingVerticalYell = new Map<number, { direction: VerticalYellPromptDirection }>();
-
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
 }
@@ -1212,6 +1211,25 @@ async function submitOpen(ctx: any, target?: string) {
 }
 
 export function registerAliasHandlers(bot: Bot) {
+  bot.command([
+    "feed_raw_meat",
+    "feed_raw_meet",
+    "track",
+    "build_campfire",
+    "light_campfire",
+    "douse_campfire",
+    "dismantle_campfire",
+    "inv",
+    "put",
+    "respawn",
+    "shake_tree",
+    "freshen_all",
+    "smile",
+    "glance",
+    "enter",
+    "exits",
+    "reply",
+  ], async (_ctx, next) => next());
   bot.command("yell", async (ctx) => submitYell(bot, ctx, ctx.match ?? ""));
   bot.command("shout", async (ctx) => submitShout(bot, ctx, ctx.match ?? ""));
 

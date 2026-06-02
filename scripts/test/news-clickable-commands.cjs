@@ -70,6 +70,10 @@ function commandNameFromHint(hint) {
   return hint.slice(1).split(/\s+/, 1)[0];
 }
 
+function hasArguments(hint) {
+  return /\s+/.test(hint.trim());
+}
+
 const mainCommands = collectMainBotCommands();
 const publicHeraldCommands = new Set(
   HERALD_COMMANDS
@@ -79,10 +83,14 @@ const publicHeraldCommands = new Set(
 const news = fs.readFileSync(NEWS_PATH, "utf8");
 const unroutedHints = extractInlineSlashHints(news).filter((hint) => {
   if (NON_BOT_SLASH_REFERENCES.has(hint)) return false;
-  if (parseAlias(hint)) return false;
 
   const command = commandNameFromHint(hint);
-  return !mainCommands.has(command) && !mainCommands.has(command.toLowerCase()) && !publicHeraldCommands.has(command);
+  const isRegisteredCommand = mainCommands.has(command) || mainCommands.has(command.toLowerCase()) || publicHeraldCommands.has(command);
+  if (isRegisteredCommand) return false;
+
+  // Telegram clicks a bare /command as a bot command, so parseAlias-only routes are
+  // acceptable only for slash hints that include arguments.
+  return !(hasArguments(hint) && parseAlias(hint));
 });
 
 assert.deepEqual(

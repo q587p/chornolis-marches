@@ -56,6 +56,14 @@ Possible first pass:
 
 Current bridge as of `0.15.8`: generic raw mushrooms have a simple 1-in-10 poison risk when eaten. That bridge is intentionally blunt and temporary; this item should replace it with inspectable mushroom varieties, safer/cooked paths, clearer identification and a real poison/effect model.
 
+`0.15.12` adds a lightweight runtime first-use warning when a player first eats mushrooms after that deploy/restart. It deliberately does not backfill older mushroom eating because the current game does not persist food-use history yet. Future work should add food-use statistics for players and scribe/admin analysis:
+
+- resource eaten;
+- whether the use helped hunger, stamina or HP;
+- whether mushrooms poisoned the character;
+- first/last eaten timestamps;
+- aggregate counts by resource and outcome.
+
 Player-facing text should sound like observation, not a spreadsheet:
 
 ```text

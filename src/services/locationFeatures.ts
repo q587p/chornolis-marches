@@ -1,6 +1,8 @@
 import { prisma } from "../db";
 import { BASE_STAMINA } from "../gameConfig";
-import { expireTimedCampfires } from "./fire";
+import { expireTimedCampfires, isExtinguishedCampfire } from "./fire";
+
+export const CAMPFIRE_REST_STAMINA_REGEN_MULTIPLIER = 3;
 
 export async function getLocationRestStaminaCap(locationId: number | null | undefined, baseMax = BASE_STAMINA) {
   if (!locationId) return baseMax;
@@ -41,16 +43,22 @@ function restStaminaRegenMultiplierFromData(data: Record<string, unknown>) {
 
 export async function getLocationRestStaminaRegenMultiplier(locationId: number | null | undefined) {
   if (!locationId) return 1;
+  await expireTimedCampfires(locationId);
 
   const features = await prisma.locationFeature.findMany({
     where: {
       locationId,
       isActive: true,
     },
-    select: { data: true },
+    select: { type: true, key: true, name: true, providesLight: true, data: true },
   });
 
-  return Math.max(1, ...features.map((feature) => restStaminaRegenMultiplierFromData(featureData(feature))));
+  return restStaminaRegenMultiplierForFeatures(features);
+}
+
+export function restStaminaRegenMultiplierForFeatures(features: Array<CampfireLikeFeature>) {
+  const campfireMultiplier = features.some(isLitRestCampfireFeature) ? CAMPFIRE_REST_STAMINA_REGEN_MULTIPLIER : 1;
+  return Math.max(campfireMultiplier, ...features.map((feature) => restStaminaRegenMultiplierFromData(featureData(feature))));
 }
 
 export async function getPlayerRestStaminaRegenMultiplier(playerId: number) {
@@ -67,6 +75,7 @@ type CampfireLikeFeature = {
   key?: string | null;
   name?: string | null;
   providesLight?: boolean | null;
+  data?: unknown | null;
 };
 
 export function isCampfireFeature(feature: CampfireLikeFeature) {
@@ -76,13 +85,17 @@ export function isCampfireFeature(feature: CampfireLikeFeature) {
   return (key.includes("campfire") || key.includes("fire") || name.includes("вогнище")) && Boolean(feature.providesLight);
 }
 
+export function isLitRestCampfireFeature(feature: CampfireLikeFeature) {
+  return isCampfireFeature(feature) && feature.providesLight === true && !isExtinguishedCampfire(feature);
+}
+
 export async function hasActiveCampfire(locationId: number | null | undefined) {
   if (!locationId) return false;
   await expireTimedCampfires(locationId);
   const features = await prisma.locationFeature.findMany({
     where: { locationId, isActive: true },
-    select: { type: true, key: true, name: true, providesLight: true },
+    select: { type: true, key: true, name: true, providesLight: true, data: true },
   });
-  return features.some(isCampfireFeature);
+  return features.some(isLitRestCampfireFeature);
 }
 

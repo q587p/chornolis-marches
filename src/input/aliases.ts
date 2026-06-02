@@ -1184,17 +1184,78 @@ const GIVE_TARGET_ALIASES = [
   "spirit cat",
   "camp cat",
   "cat",
+  "бережникові",
+  "бережнику",
+  "бережника",
+  "бережник",
+  "котові-бережникові",
+  "котові-бережнику",
+  "котові-бережника",
+  "коту-бережникові",
   "коту-бережнику",
+  "коту-бережника",
   "кота-бережника",
   "кіт-бережник",
+  "котові бережникові",
+  "котові бережнику",
+  "котові бережника",
+  "коту бережникові",
   "коту бережнику",
+  "коту бережника",
   "кота бережника",
   "кіт бережник",
-  "коту",
   "котові",
+  "коту",
   "кота",
   "кіт",
 ].sort((a, b) => b.length - a.length);
+
+const GIVE_RAW_MEAT_ITEM_ALIASES = new Set([
+  "raw meat",
+  "rawmeat",
+  "raw_meat",
+  "сире м'ясо",
+  "сире мясо",
+  "сирого м'яса",
+  "сирого мяса",
+  "м'ясо",
+  "мясо",
+  "м'яса",
+  "мяса",
+]);
+
+function normalizeGivePhrase(value: string) {
+  return normalizeInput(value)
+    .replace(/-/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function canonicalGiveItem(value: string) {
+  const normalized = normalizeInput(value);
+  const compact = normalized.replace(/[\s_-]+/g, "");
+  const noApostrophe = normalized.replace(/'/g, "");
+  if (GIVE_RAW_MEAT_ITEM_ALIASES.has(normalized) || GIVE_RAW_MEAT_ITEM_ALIASES.has(compact) || GIVE_RAW_MEAT_ITEM_ALIASES.has(noApostrophe)) {
+    return "raw meat";
+  }
+  return value;
+}
+
+function canonicalGiveTarget(value: string) {
+  const normalized = normalizeInput(value);
+  const normalizedHyphenless = normalizeGivePhrase(value);
+  if (GIVE_TARGET_ALIASES.includes(normalized) || GIVE_TARGET_ALIASES.includes(normalizedHyphenless)) {
+    return "cat";
+  }
+  return value;
+}
+
+function canonicalGiveItemTarget(parsed: { item: string; target: string }) {
+  return {
+    item: canonicalGiveItem(parsed.item),
+    target: canonicalGiveTarget(parsed.target),
+  };
+}
 
 function amountFromGiveToken(token: string): GiveAliasAmount | null {
   if (!/^\d+$/.test(token)) return null;
@@ -1213,14 +1274,14 @@ function parseGiveAmount(value: string) {
 function parseGiveItemTarget(value: string): { item: string; target: string } | null {
   const withPreposition = value.match(/^(.+?)\s+(?:to|для|до)\s+(.+)$/u);
   if (withPreposition?.[1]?.trim() && withPreposition?.[2]?.trim()) {
-    return { item: withPreposition[1].trim(), target: withPreposition[2].trim() };
+    return canonicalGiveItemTarget({ item: withPreposition[1].trim(), target: withPreposition[2].trim() });
   }
 
   for (const target of GIVE_TARGET_ALIASES) {
-    if (value === target) return { item: "", target };
+    if (value === target) return canonicalGiveItemTarget({ item: "", target });
     if (value.endsWith(` ${target}`)) {
       const item = value.slice(0, -target.length).trim();
-      if (item) return { item, target };
+      if (item) return canonicalGiveItemTarget({ item, target });
     }
   }
 

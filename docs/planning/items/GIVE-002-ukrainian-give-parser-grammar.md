@@ -1,7 +1,7 @@
 ---
 id: GIVE-002
 title: Ukrainian inflection-tolerant give parser and grammar bridge
-status: backlog
+status: testing
 type: technical
 area: input
 priority: high
@@ -21,7 +21,7 @@ tags:
 
 ## Summary
 
-After the minimal `GIVE-001` path exists, improve `give` so Ukrainian item and target phrases do not require one rigid canonical form. This is a backlog/near-backlog task for the fuller `give` implementation, not a blocker for the first camp-cat MVP.
+After the minimal `GIVE-001` path exists, improve `give` so Ukrainian item and target phrases do not require one rigid canonical form. This remains a staged parser/grammar task for fuller `give`, barter and quest hand-ins, but `0.15.12` lands the first narrow supported slice for raw meat and the camp spirit cat.
 
 The goal is that commands like `give сире м’ясо коту`, `дати м’яса коту`, `дати мясо кіт`, and `дати сирого м’яса бережнику` can resolve to the same transfer intent when the item and target are otherwise unambiguous.
 
@@ -68,6 +68,19 @@ The parser may accept incomplete or grammatically rough input only when it is sa
 - Add a small normalization helper only if no existing helper already covers apostrophes and Ukrainian forms.
 - Route `/feed_raw_meat` and `/feed_raw_meet` through the same canonical `give` intent, but do not depend on those aliases for normal Ukrainian input.
 - Document the supported examples in command/input docs when the implementation lands.
+
+## 0.15.12 implementation note
+
+The first implemented slice canonicalizes common raw-meat phrases and camp-cat target forms into the same `give raw meat cat` intent:
+
+- `/give сире м’ясо коту`;
+- `дати сире м’ясо коту`;
+- `дати м’яса коту`;
+- `дати мясо кіт`;
+- `дати сирого м’яса бережнику`;
+- `дати сирого мяса котові-бережнику`.
+
+This intentionally stays narrow: only the already-supported raw-meat-to-camp-cat transfer is canonicalized. Broader inventory transfer, barter, multiple target ambiguity UI, item instance selection and richer Ukrainian grammar remain future parts of `GIVE-002`, `GIVE-003` and `BARTER-001`.
 
 ## Out of scope
 
