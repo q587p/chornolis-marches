@@ -57,7 +57,8 @@ function getAppVersion() {
 }
 
 const configuredTickMs = optionalNumberEnv("WORLD_TICK_INTERVAL_MS") ?? optionalNumberEnv("TICK_MS") ?? 1500;
-const configuredAutoAfkMinutes = optionalNumberEnv("AUTO_AFK_AFTER_MINUTES") ?? 15;
+const configuredAutoAfkMinutes = optionalNumberEnv("AUTO_AFK_AFTER_MINUTES") ?? 13;
+const configuredAutoEndSessionMinutes = optionalNumberEnv("AUTO_END_SESSION_AFTER_MINUTES") ?? 60;
 const heraldBotToken = optionalStringEnv("HERALD_BOT_TOKEN");
 const configuredHeraldEnabled = optionalBooleanEnv("HERALD_ENABLED");
 const configuredHeraldPublishIntervalMs = optionalNumberEnv("HERALD_PUBLISH_INTERVAL_MS") ?? 30_000;
@@ -77,6 +78,7 @@ export const config = {
   gameBotUsername: configuredGameBotUsername.replace(/^@/, ""),
   tickMs: Math.max(1000, Math.floor(configuredTickMs)),
   autoAfkAfterMinutes: Math.max(1, Math.floor(configuredAutoAfkMinutes)),
+  autoEndSessionAfterMinutes: Math.max(1, Math.floor(configuredAutoEndSessionMinutes)),
   adminTelegramIds: optionalStringListEnv("ADMIN_TELEGRAM_IDS"),
   adminSetSecret: optionalStringEnv("ADMIN_SET_SECRET"),
   heraldEnabled: configuredHeraldEnabled ?? Boolean(heraldBotToken),

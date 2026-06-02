@@ -57,7 +57,7 @@ import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 import { bestTargetMatch, inspectMissingText, isSelfTargetQuery, normalizeTargetKey, targetDisplayLabel, targetListText, visibleTextTargets } from "../services/textTargets";
 import { spendPlayerStaminaAmount } from "../services/actionRecovery";
 import { afkReplyOptions, endPlayerSession, SESSION_AFK_CONFIRMATION, SESSION_ENDED_CONFIRMATION, setPlayerAfk } from "../services/sessionPresence";
-import { setDaypartNoticeSetting, showSettings } from "./settings";
+import { setAutoActionMessageSetting, setDaypartNoticeSetting, showSettings } from "./settings";
 import { beginnerReturnPromptText, beginnerReturnRefusalText, checkBeginnerReturnForPlayer, performBeginnerReturn } from "../services/beginnerReturn";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { formatVitalsSentence } from "../utils/playerText";
@@ -1198,6 +1198,11 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "daypart-notices") {
       if (parsed.mode === "on") return setDaypartNoticeSetting(ctx, true);
       if (parsed.mode === "off") return setDaypartNoticeSetting(ctx, false);
+      return showSettings(ctx);
+    }
+    if (parsed.kind === "auto-messages") {
+      if (parsed.mode === "on") return setAutoActionMessageSetting(ctx, true);
+      if (parsed.mode === "off") return setAutoActionMessageSetting(ctx, false);
       return showSettings(ctx);
     }
     if (parsed.kind === "session-presence") return submitSessionPresence(ctx, parsed.mode);

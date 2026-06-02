@@ -40,6 +40,7 @@ Add a first theft-and-hiding foundation that treats theft as a risky social acti
 - No exact item picker in the first slice.
 - No theft of tutorial-critical last items.
 - No permanent invisibility.
+- No consequence-free theft from sleeping characters; sleep should lower the target's resistance and awareness, but nearby witnesses, light, noise, spirits and protected-location rules can still matter.
 
 ## Included planning items
 
@@ -58,6 +59,7 @@ A good theft result is not only “item moved from A to B”. It should answer:
 - Did the thief get anything?
 - Did the target notice?
 - Did someone else notice?
+- Was the target awake, sleeping or otherwise vulnerable?
 - Did this change trust or suspicion?
 - Did the world record the attempt?
 - Did the thief or observer learn anything?
@@ -72,6 +74,7 @@ The epic can be considered initially satisfied when:
 - success and detection are separate;
 - cooldown exists;
 - protected locations are respected;
+- ordinary sleep makes the target substantially easier to steal from without disabling witness/local-condition detection;
 - observed attempts notify player targets;
 - every started attempt writes an incident;
 - scribes can see aggregate attempt statistics.

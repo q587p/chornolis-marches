@@ -1,7 +1,7 @@
 ---
 id: SOC-004
 title: Group movement MVP
-status: backlog
+status: next
 type: feature
 area: social
 priority: high

@@ -12,6 +12,7 @@ export type ChatAliasMode = "time" | "location" | "character";
 export type PutAliasAmount = number | "all";
 export type SessionPresenceAliasMode = "afk" | "end";
 export type DaypartNoticeAliasMode = "show" | "on" | "off";
+export type AutoMessageAliasMode = "show" | "on" | "off";
 
 export type ParsedAliasCommand =
   | { kind: "location" }
@@ -31,6 +32,7 @@ export type ParsedAliasCommand =
   | { kind: "menu" }
   | { kind: "settings" }
   | { kind: "daypart-notices"; mode: DaypartNoticeAliasMode }
+  | { kind: "auto-messages"; mode: AutoMessageAliasMode }
   | { kind: "session-presence"; mode: SessionPresenceAliasMode }
   | { kind: "beginner-return" }
   | { kind: "tutorial-end" }
@@ -303,9 +305,13 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   notifications: { kind: "settings" },
   notification: { kind: "settings" },
   daynotices: { kind: "daypart-notices", mode: "show" },
+  automessages: { kind: "auto-messages", mode: "show" },
+  "auto messages": { kind: "auto-messages", mode: "show" },
   "налаштування": { kind: "settings" },
   "сповіщення": { kind: "settings" },
   "повідомлення": { kind: "settings" },
+  "автоповідомлення": { kind: "auto-messages", mode: "show" },
+  "авто повідомлення": { kind: "auto-messages", mode: "show" },
 
   respawn: { kind: "beginner-return" },
   "повернення": { kind: "beginner-return" },
@@ -762,6 +768,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "menu") return "/menu";
   if (parsed.kind === "settings") return "/settings";
   if (parsed.kind === "daypart-notices") return parsed.mode === "show" ? "/daynotices" : `/daynotices ${parsed.mode}`;
+  if (parsed.kind === "auto-messages") return parsed.mode === "show" ? "/automessages" : `/automessages ${parsed.mode}`;
   if (parsed.kind === "session-presence") return parsed.mode === "afk" ? "/afk" : "/end_session";
   if (parsed.kind === "beginner-return") return "/respawn";
   if (parsed.kind === "tutorial-end") return "/tutorialEnd";
@@ -999,6 +1006,16 @@ function parseDaypartNotices(text: string): ParsedAliasCommand | null {
   if (["on", "увімкнути", "ввімкнути", "так"].includes(arg)) return { kind: "daypart-notices", mode: "on" };
   if (["off", "вимкнути", "ні"].includes(arg)) return { kind: "daypart-notices", mode: "off" };
   return { kind: "daypart-notices", mode: "show" };
+}
+
+function parseAutoMessages(text: string): ParsedAliasCommand | null {
+  const match = text.match(/^(?:automessages|auto messages|автоповідомлення|авто повідомлення)(?:\s+(.+))?$/);
+  if (!match) return null;
+  const arg = match[1]?.trim();
+  if (!arg) return { kind: "auto-messages", mode: "show" };
+  if (["on", "увімкнути", "ввімкнути", "так"].includes(arg)) return { kind: "auto-messages", mode: "on" };
+  if (["off", "вимкнути", "ні"].includes(arg)) return { kind: "auto-messages", mode: "off" };
+  return { kind: "auto-messages", mode: "show" };
 }
 
 function parseAll(text: string): ParsedAliasCommand | null {
@@ -1241,6 +1258,9 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
 
   const daypartNotices = parseDaypartNotices(commandText);
   if (daypartNotices) return daypartNotices;
+
+  const autoMessages = parseAutoMessages(commandText);
+  if (autoMessages) return autoMessages;
 
   const all = parseAll(commandText);
   if (all) return all;

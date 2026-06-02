@@ -14,6 +14,7 @@ const ALLOWED_SLEEP_ALIAS_KINDS = new Set<ParsedAliasCommand["kind"]>([
   "chat",
   "settings",
   "daypart-notices",
+  "auto-messages",
   "session-presence",
 ]);
 
@@ -30,6 +31,7 @@ const ALLOWED_SLEEP_TEXT_COMMANDS = new Set([
   "news",
   "settings",
   "daynotices",
+  "automessages",
   "afk",
   "end",
   "end session",

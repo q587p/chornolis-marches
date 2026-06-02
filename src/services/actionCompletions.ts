@@ -35,7 +35,7 @@ import { playerCanShowTechnicalDetails } from "./technicalDetails";
 import { canOpenDreamGateWithSpeech, ensureTutorialForagingResources, isLocationExitLocked, isTutorialFastRestLocationKey, openDreamGate, rememberTutorialCommandHintIfInTutorial, rememberTutorialForagingSuccess, rememberTutorialInventoryAvailable, rememberTutorialWellbeingAside, tutorialRestEntryStaminaMode, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_ENTRY_STAMINA_TEXT, TUTORIAL_REST_RETURN_FROM_HEAT_TEXT, TUTORIAL_WELLBEING_ASIDE_TEXT } from "./tutorial";
 import { tutorialActionHintComment, tutorialGateSpeechComment, tutorialLookPaceComments, tutorialSpiritMoveComment, tutorialTrackComments, tutorialWaitPaceComments } from "./tutorialVoices";
 import { chance, pick, shuffle } from "../utils/random";
-import { canSendProactiveToPlayerId } from "./sessionPresence";
+import { canSendPlayerActionMessageToPlayerId } from "./sessionPresence";
 import { cookRawMeat, freshenCorpseForMeat } from "./meat";
 import { rememberPlayerReplyTarget } from "./replyTargets";
 import { nearbySpeechDirectionIntro, nearbySpeechRecipients } from "./speechRanges";
@@ -132,7 +132,7 @@ function chatIdFromAction(action: WorldAction) {
   return Number.isSafeInteger(numeric) ? numeric : action.chatId;
 }
 async function chatIdFromActionIfAllowed(action: WorldAction) {
-  if (action.actorType === "PLAYER" && action.playerId && !(await canSendProactiveToPlayerId(action.playerId))) return undefined;
+  if (action.actorType === "PLAYER" && action.playerId && !(await canSendPlayerActionMessageToPlayerId(action.playerId, action.note))) return undefined;
   return chatIdFromAction(action);
 }
 
@@ -988,6 +988,12 @@ async function completeFreshen(bot: Bot, action: WorldAction) {
   const player = action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null;
   const chatId = await chatIdFromActionIfAllowed(action);
   if (!player || !player.currentLocationId || action.actorType !== "PLAYER") return void (await setActionStatus(action, "FAILED"));
+  const visibility = await visibilityRulesForLocation(player.currentLocationId, "details");
+  if (!visibility.showGroundObjects) {
+    await setActionStatus(action, "FAILED");
+    if (chatId) await bot.api.sendMessage(chatId, "Без світла трупів поруч не розібрати. Спершу озирніться при світлі або запаліть факел.", { reply_markup: buildExamineLocationKeyboard() });
+    return;
+  }
   const target = await resolveTarget(payload.targetType, payload.targetId, player.currentLocationId);
   if (!target || !target.isCorpse || !target.canFreshen) {
     await setActionStatus(action, "FAILED");

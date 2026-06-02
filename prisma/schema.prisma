@@ -39,6 +39,7 @@ model Player {
   daypartNoticesEnabled Boolean @default(true)
   daypartNoticeHintShown Boolean @default(false)
   ordinaryWakeCount Int @default(0)
+  autoActionMessagesEnabled Boolean @default(false)
   showTechnicalDetails Boolean @default(false)
   hunger  Int @default(0)
   lastPassiveHungerAtMinute Int?

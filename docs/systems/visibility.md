@@ -13,6 +13,7 @@ The `0.14.5` slice makes darkness player-visible:
 
 - dim or dark visibility without local light hides the long location description behind atmospheric darkness copy;
 - nearby beings, target buttons, loose ground objects, resources and track details are reduced or hidden without light;
+- corpses count as ground objects for this rule: if light changes after an attack, corpse inspection, pickup and freshening buttons/actions must check visibility again at use/completion time and disappear or fail safely without light;
 - `/track` uses the same visibility helper at completion time before revealing track lines;
 - carried, dropped or feature-provided light can restore normal detail through the shared light snapshot.
 

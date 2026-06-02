@@ -10,6 +10,8 @@ These may become `next` after 0.13-0.15 foundations land.
 
 - Starter settlement skeleton beyond the closed gate.
 - MAP-WILLOW-002: under-bridge and watchtower integration for the Willow Floodplain pocket, keeping the under-bridge place distinct and the settlement gate closed.
+- QA-WILLOW-002: post-merge smoke for Willow feature inspect aliases, `/cook_all`, eat-all, `/all`, `/shout` and animal movement near vertical exits; include an admin cleanup plan for stranded upper-level creatures if needed.
+- RIVER-001: risky bridge/river jump action, where the current can carry a wounded or unconscious character downstream instead of acting like safe travel.
 - First useful NPC roles: guard, hunter, herbalist, fisher.
 - NPC-008: starter supply guards and watched beginner stores, so the watchtower/cache area feels maintained when animals or careless characters disturb beginner-critical supplies.
 - LOOT-001: local low-risk loot and small coin finds around starter-adjacent or calm locations, so early searching is not limited to defending distant forest resource spots.
@@ -24,6 +26,7 @@ These may become `next` after 0.13-0.15 foundations land.
 - Weapon-aware butchering/freshening polish after `FOOD-001`: tool quality affects text first, then later yield; do not implement durability here.
 - First weapon-learning hooks: using a spear teaches spear handling later; using a knife for freshening may feed hunting/butchering learning after progression storage is ready.
 - NPC hunter/archer route that leaves visible signs.
+- ANIMAL-001: directed speech reactions for animals: mice may flee, foxes may react warily, wolves may growl and eventually escalate if provoked.
 - Local console client for command/action smoke tests.
 - Shared command registry and per-command help: keep `/commands`, `/help`, text aliases, future MUD commands, Telegram buttons and permissions from drifting apart.
 - Rework `/commands` into a cleaner hidden command reference instead of a broad alias wall: group it by real player goals, keep survival advice in `/help` or tutorial surfaces, and document which commands are current, planned or scribe-only.
@@ -41,6 +44,7 @@ These may become `next` after 0.13-0.15 foundations land.
 - Public diegetic ecology notes through inspectable signs.
 - Budgeted creature simulation if production load demands it.
 - SLEEP-003: world-time automatic waking and first sleep comfort modifiers.
+- SLEEP-005: ordinary sleep passive UX review for `/me`, inventory / `Речі`, and queue view. The current strict block is an intentional first safety policy; later decide whether any read-only views should work while asleep.
 - DREAM-001: sleeping-body and dream-presence separation for tutorial/lucid dreams.
 - DREAM-002: lucid dream instance MVP for solo and later group dreams.
 - DREAM-003: dream outcomes, knowledge flags and guarded rare item transfer.

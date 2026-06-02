@@ -49,6 +49,7 @@ const DEBUG_SET_TEXT_COMMAND = slashlessCommandPattern(["debugSet", "debugset"])
 const RESTART_TEXT_COMMAND = slashlessCommandPattern(["restart"]);
 const LOCATION_ALL_TEXT_COMMAND = slashlessCommandPattern(["locationAll", "locationall"]);
 const WORLD_TEXT_COMMAND = slashlessCommandPattern(["world"]);
+const ALL_TEXT_COMMAND = slashlessCommandPattern(["all"]);
 const REST_ADMIN_TEXT_COMMAND = slashlessCommandPattern(["restAdmin", "restadmin"]);
 const PLAYER_ADMIN_TEXT_COMMAND = slashlessCommandPattern(["playerAdmin", "playeradmin", "player"]);
 const CLEANUP_CREATURES_TEXT_COMMAND = slashlessCommandPattern(["cleanupCreatures", "cleanupcreatures"]);
@@ -56,7 +57,12 @@ const CLEANUP_CREATURE_TEXT_COMMAND = slashlessCommandPattern(["cleanupCreature"
 const FORCE_OLD_TEXT_COMMAND = slashlessCommandPattern(["forceOld", "forceold"]);
 const WHO_ACTIVE_WINDOW_MS = 60 * 60 * 1000;
 const STATUS_PERF_DEBUG = process.env.STATUS_PERF_DEBUG === "true";
-type AllReturnContext = { showDead: boolean; page: number };
+type AllFilter =
+  | { kind: "all" }
+  | { kind: "player" }
+  | { kind: "npc" }
+  | { kind: "animal"; speciesKey?: string };
+type AllReturnContext = { showDead: boolean; page: number; filter: AllFilter };
 const pendingNameRejections = new Map<number, { playerId: number; returnContext: AllReturnContext }>();
 
 export function isPublicWhoCreature(creature: { species?: { kind?: string | null; diet?: string | null } | null }) {
@@ -303,10 +309,10 @@ async function replyStatBrief(ctx: any) {
   await ctx.reply(stat.text, { reply_markup: stat.keyboard });
 }
 
-async function replyAllPage(ctx: any, showDead = false) {
+async function replyAllPage(ctx: any, request: AllReturnContext = parseAllRequest()) {
   if (!(await requireScribeAdmin(ctx))) return;
 
-  const page = await buildAllPage(showDead, 0);
+  const page = await buildAllPage(request);
   await ctx.reply(page.text, { reply_markup: page.keyboard });
 }
 
@@ -380,14 +386,102 @@ function hpForAge(species: any, age: CreatureAge) {
   return Math.max(1, Math.round(species.baseHp * multiplier));
 }
 
-function buildAllPaginationKeyboard(showDead: boolean, page: number, totalPages: number, playerIds: number[] = [], npcIds: number[] = []) {
-  if (totalPages <= 1 && playerIds.length === 0 && npcIds.length === 0) return undefined;
+function allFilterToken(filter: AllFilter) {
+  if (filter.kind === "animal" && filter.speciesKey) return `animal-${filter.speciesKey}`;
+  return filter.kind;
+}
+
+function allFilterFromToken(token?: string): AllFilter {
+  const normalized = String(token ?? "all").trim().toLowerCase();
+  if (normalized === "player" || normalized === "players") return { kind: "player" };
+  if (normalized === "npc" || normalized === "npcs") return { kind: "npc" };
+  if (normalized === "animal" || normalized === "animals") return { kind: "animal" };
+  const species = normalized.match(/^animal-([a-z0-9_-]+)$/);
+  if (species) return { kind: "animal", speciesKey: species[1] };
+  return { kind: "all" };
+}
+
+export function parseAllRequest(raw = ""): AllReturnContext {
+  const tokens = raw
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map((token) => token.replace(/^\/+/, ""))
+    .filter(Boolean);
+  let showDead = false;
+  let filter: AllFilter = { kind: "all" };
+
+  for (const token of tokens) {
+    if (token === "dead") {
+      showDead = true;
+      continue;
+    }
+    if (token === "all") continue;
+    if (["live", "alive"].includes(token)) continue;
+    if (["player", "players", "гравці", "гравець"].includes(token)) {
+      filter = { kind: "player" };
+      continue;
+    }
+    if (["npc", "npcs", "нпс"].includes(token)) {
+      filter = { kind: "npc" };
+      continue;
+    }
+    if (["animal", "animals", "тварини", "тварина"].includes(token)) {
+      filter = { kind: "animal" };
+      continue;
+    }
+    if (/^[a-z0-9_-]+$/.test(token)) {
+      filter = { kind: "animal", speciesKey: token };
+    }
+  }
+
+  return { showDead, page: 0, filter };
+}
+
+function allFilterLabel(filter: AllFilter) {
+  if (filter.kind === "player") return "гравці";
+  if (filter.kind === "npc") return "NPC";
+  if (filter.kind === "animal" && filter.speciesKey) return `тварини виду ${filter.speciesKey}`;
+  if (filter.kind === "animal") return "тварини";
+  return "усі";
+}
+
+function creatureWhereForAll(showDead: boolean, filter: AllFilter) {
+  if (filter.kind === "player") return null;
+  return {
+    ...(showDead ? {} : { isAlive: true, isGone: false }),
+    ...(filter.kind === "npc" ? { species: { kind: { not: "ANIMAL" as const } } } : {}),
+    ...(filter.kind === "animal" ? { species: { kind: "ANIMAL" as const, ...(filter.speciesKey ? { key: filter.speciesKey } : {}) } } : {}),
+  };
+}
+
+function allIncludesPlayers(filter: AllFilter) {
+  return filter.kind === "all" || filter.kind === "player";
+}
+
+function allIncludesCreatures(filter: AllFilter) {
+  return filter.kind === "all" || filter.kind === "npc" || filter.kind === "animal";
+}
+
+function allCallback(returnContext: AllReturnContext, page = returnContext.page) {
+  return `all:${returnContext.showDead ? "dead" : "live"}:${allFilterToken(returnContext.filter)}:${page}`;
+}
+
+function adminPlayerCallback(playerId: number, returnContext: AllReturnContext) {
+  return `adminPlayer:${playerId}:${returnContext.showDead ? "dead" : "live"}:${allFilterToken(returnContext.filter)}:${returnContext.page}`;
+}
+
+function adminCreatureCallback(creatureId: number, returnContext: AllReturnContext) {
+  return `adminCreature:${creatureId}:${returnContext.showDead ? "dead" : "live"}:${allFilterToken(returnContext.filter)}:${returnContext.page}`;
+}
+
+function buildAllPaginationKeyboard(returnContext: AllReturnContext, totalPages: number, playerIds: number[] = [], creatureIds: number[] = []) {
+  if (totalPages <= 1 && playerIds.length === 0 && creatureIds.length === 0) return undefined;
   const keyboard = new InlineKeyboard();
-  const mode = showDead ? "dead" : "live";
-  for (const playerId of playerIds) keyboard.text(`👤 #${playerId}`, `adminPlayer:${playerId}:${mode}:${page}`).row();
-  for (const npcId of npcIds) keyboard.text(`🧩 NPC #${npcId}`, `adminCreature:${npcId}`).row();
-  if (page > 0) keyboard.text("◀️ Назад", `all:${mode}:${page - 1}`);
-  if (page < totalPages - 1) keyboard.text("Далі ▶️", `all:${mode}:${page + 1}`);
+  for (const playerId of playerIds) keyboard.text(`👤 #${playerId}`, adminPlayerCallback(playerId, returnContext)).row();
+  for (const creatureId of creatureIds) keyboard.text(`🧩 #${creatureId}`, adminCreatureCallback(creatureId, returnContext)).row();
+  if (returnContext.page > 0) keyboard.text("◀️ Назад", allCallback(returnContext, returnContext.page - 1));
+  if (returnContext.page < totalPages - 1) keyboard.text("Далі ▶️", allCallback(returnContext, returnContext.page + 1));
   return keyboard;
 }
 
@@ -484,29 +578,37 @@ async function playerActionOriginStats(playerId: number) {
 }
 
 function allReturnCallback(returnContext: AllReturnContext) {
-  return `all:${returnContext.showDead ? "dead" : "live"}:${returnContext.page}`;
+  return allCallback(returnContext);
 }
 
-function allReturnContextFromMatch(mode?: string, page?: string): AllReturnContext {
-  const parsedPage = Number(page);
+function allReturnContextFromMatch(mode?: string, filterOrPage?: string, page?: string): AllReturnContext {
+  const isOldCallback = page === undefined && filterOrPage !== undefined && /^\d+$/.test(filterOrPage);
+  const filter = isOldCallback ? { kind: "all" as const } : allFilterFromToken(filterOrPage);
+  const rawPage = isOldCallback ? filterOrPage : page;
+  const parsedPage = Number(rawPage);
   return {
     showDead: mode === "dead",
     page: Number.isFinite(parsedPage) && parsedPage >= 0 ? parsedPage : 0,
+    filter,
   };
 }
 
-function buildAdminPlayerKeyboard(player: { id: number; isNameApproved: boolean; isAutoEnabled: boolean }, returnContext: AllReturnContext = { showDead: false, page: 0 }) {
+function buildAdminPlayerKeyboard(player: { id: number; isNameApproved: boolean; isAutoEnabled: boolean }, returnContext: AllReturnContext = parseAllRequest()) {
   const mode = returnContext.showDead ? "dead" : "live";
+  const filter = allFilterToken(returnContext.filter);
   const keyboard = new InlineKeyboard();
   keyboard
-    .text(player.isNameApproved ? "✅ Ім’я схвалене" : "✅ Схвалити ім’я", `adminPlayerName:approve:${player.id}:${mode}:${returnContext.page}`)
-    .text(player.isNameApproved ? "↩️ Зняти схвалення" : "❌ Не схвалене", `adminPlayerName:reject:${player.id}:${mode}:${returnContext.page}`)
+    .text(player.isNameApproved ? "✅ Ім’я схвалене" : "✅ Схвалити ім’я", `adminPlayerName:approve:${player.id}:${mode}:${filter}:${returnContext.page}`)
+    .text(player.isNameApproved ? "↩️ Зняти схвалення" : "❌ Не схвалене", `adminPlayerName:reject:${player.id}:${mode}:${filter}:${returnContext.page}`)
     .row()
-    .text(player.isAutoEnabled ? "🤖 Вимкнути авто" : "🤖 Увімкнути авто", `adminPlayerAuto:${player.isAutoEnabled ? "off" : "on"}:${player.id}:${mode}:${returnContext.page}`)
+    .text(player.isAutoEnabled ? "🤖 Вимкнути авто" : "🤖 Увімкнути авто", `adminPlayerAuto:${player.isAutoEnabled ? "off" : "on"}:${player.id}:${mode}:${filter}:${returnContext.page}`)
     .row()
-    .text("🧭 Телепорт", `adminPlayerTeleport:menu:${player.id}:${mode}:${returnContext.page}`)
+    .text("🧭 Телепорт", `adminPlayerTeleport:menu:${player.id}:${mode}:${filter}:${returnContext.page}`)
     .row()
-    .text("🔄 Оновити", `adminPlayer:${player.id}:${mode}:${returnContext.page}`)
+    .text("⬅️ Попередній", `adminBrowse:player:prev:${player.id}:${mode}:${filter}:${returnContext.page}`)
+    .text("Наступний ➡️", `adminBrowse:player:next:${player.id}:${mode}:${filter}:${returnContext.page}`)
+    .row()
+    .text("🔄 Оновити", adminPlayerCallback(player.id, returnContext))
     .row()
     .text("↩️ Назад до /all", allReturnCallback(returnContext));
   return keyboard;
@@ -514,15 +616,37 @@ function buildAdminPlayerKeyboard(player: { id: number; isNameApproved: boolean;
 
 function buildAdminTeleportKeyboard(playerId: number, returnContext: AllReturnContext) {
   const mode = returnContext.showDead ? "dead" : "live";
+  const filter = allFilterToken(returnContext.filter);
   return new InlineKeyboard()
-    .text("🧭 У мою місцину", `adminPlayerTeleport:here:${playerId}:${mode}:${returnContext.page}`)
+    .text("🧭 У мою місцину", `adminPlayerTeleport:here:${playerId}:${mode}:${filter}:${returnContext.page}`)
     .row()
-    .text("🏕 У стартову", `adminPlayerTeleport:start:${playerId}:${mode}:${returnContext.page}`)
+    .text("🏕 У стартову", `adminPlayerTeleport:start:${playerId}:${mode}:${filter}:${returnContext.page}`)
     .row()
-    .text("✍️ Вказати місцину", `adminPlayerTeleport:ask:${playerId}:${mode}:${returnContext.page}`)
+    .text("✍️ Вказати місцину", `adminPlayerTeleport:ask:${playerId}:${mode}:${filter}:${returnContext.page}`)
     .row()
-    .text("↩️ Назад до картки", `adminPlayer:${playerId}:${mode}:${returnContext.page}`)
+    .text("↩️ Назад до картки", adminPlayerCallback(playerId, returnContext))
     .text("↩️ До /all", allReturnCallback(returnContext));
+}
+
+async function findAdjacentAdminPlayerId(currentId: number, direction: "prev" | "next", returnContext: AllReturnContext) {
+  if (!allIncludesPlayers(returnContext.filter)) return null;
+  const player = await prisma.player.findFirst({
+    where: { id: direction === "prev" ? { lt: currentId } : { gt: currentId } },
+    select: { id: true },
+    orderBy: { id: direction === "prev" ? "desc" : "asc" },
+  });
+  return player?.id ?? null;
+}
+
+async function findAdjacentAdminCreatureId(currentId: number, direction: "prev" | "next", returnContext: AllReturnContext) {
+  const where = creatureWhereForAll(returnContext.showDead, returnContext.filter);
+  if (!where) return null;
+  const creature = await prisma.creature.findFirst({
+    where: { ...where, id: direction === "prev" ? { lt: currentId } : { gt: currentId } },
+    select: { id: true },
+    orderBy: { id: direction === "prev" ? "desc" : "asc" },
+  });
+  return creature?.id ?? null;
 }
 
 function scribeDisplayName(player: any | null, telegramId: number | string | undefined) {
@@ -644,11 +768,16 @@ async function teleportPlayerByScribe(bot: Bot, playerId: number, locationId: nu
   return { ok: true as const, player, location, scribeName };
 }
 
-function buildAdminCreatureKeyboard(creatureId: number) {
+function buildAdminCreatureKeyboard(creatureId: number, returnContext: AllReturnContext = parseAllRequest()) {
   return new InlineKeyboard()
     .text("⚙️ Налаштування NPC пізніше", `adminCreatureConfig:${creatureId}`)
     .row()
-    .text("🔄 Оновити", `adminCreature:${creatureId}`);
+    .text("⬅️ Попередній", `adminBrowse:creature:prev:${creatureId}:${returnContext.showDead ? "dead" : "live"}:${allFilterToken(returnContext.filter)}:${returnContext.page}`)
+    .text("Наступний ➡️", `adminBrowse:creature:next:${creatureId}:${returnContext.showDead ? "dead" : "live"}:${allFilterToken(returnContext.filter)}:${returnContext.page}`)
+    .row()
+    .text("🔄 Оновити", adminCreatureCallback(creatureId, returnContext))
+    .row()
+    .text("↩️ Назад до /all", allReturnCallback(returnContext));
 }
 
 async function resolveAdminPlayer(rawTarget: string) {
@@ -716,7 +845,7 @@ async function resolveAdminPlayerForContext(ctx: any, rawTarget: string) {
   return { player: null, error: "Спершу увійдіть у світ через /start, щоб мати поточного персонажа." };
 }
 
-async function buildAdminPlayerDetailsView(playerId: number, returnContext: AllReturnContext = { showDead: false, page: 0 }) {
+async function buildAdminPlayerDetailsView(playerId: number, returnContext: AllReturnContext = parseAllRequest()) {
   const player = await prisma.player.findUnique({
     where: { id: playerId },
     include: {
@@ -793,7 +922,7 @@ async function buildAdminPlayerDetailsView(playerId: number, returnContext: AllR
   return { text: truncateTelegramText(text), keyboard: buildAdminPlayerKeyboard(player, returnContext) };
 }
 
-async function buildAdminCreatureDetailsView(creatureId: number) {
+async function buildAdminCreatureDetailsView(creatureId: number, returnContext: AllReturnContext = parseAllRequest()) {
   const creature = await prisma.creature.findUnique({
     where: { id: creatureId },
     include: {
@@ -871,7 +1000,7 @@ async function buildAdminCreatureDetailsView(creatureId: number) {
     `Оновлено: ${formatAdminDate(creature.updatedAt)}`,
   ].join("\n");
 
-  return { text: truncateTelegramText(text), keyboard: buildAdminCreatureKeyboard(creature.id) };
+  return { text: truncateTelegramText(text), keyboard: buildAdminCreatureKeyboard(creature.id, returnContext) };
 }
 
 export async function buildWhoData(now = new Date()) {
@@ -1077,12 +1206,20 @@ async function buildLocationAllPage(requestedPage: number) {
   }
 }
 
-export async function buildAllPage(showDead: boolean, requestedPage: number) {
+export async function buildAllPage(requestOrShowDead: AllReturnContext | boolean, legacyRequestedPage = 0) {
   const startedAt = statusPerfNow();
+  const request: AllReturnContext = typeof requestOrShowDead === "boolean"
+    ? { showDead: requestOrShowDead, page: legacyRequestedPage, filter: { kind: "all" } }
+    : requestOrShowDead;
+  const showDead = request.showDead;
   try {
-    const creatureWhere = showDead ? undefined : { isAlive: true, isGone: false };
+    const requestedPage = request.page;
+    const filter = request.filter;
+    const creatureWhere = creatureWhereForAll(showDead, filter);
+    const includePlayers = allIncludesPlayers(filter);
+    const includeCreatures = allIncludesCreatures(filter);
     const [players, creatureCount] = await Promise.all([
-      prisma.player.findMany({
+      includePlayers ? prisma.player.findMany({
         select: {
           id: true,
           hp: true,
@@ -1105,19 +1242,20 @@ export async function buildAllPage(showDead: boolean, requestedPage: number) {
           sessionPresence: true,
         },
         orderBy: { id: "asc" },
-      }),
-      prisma.creature.count({ where: creatureWhere }),
+      }) : Promise.resolve([]),
+      includeCreatures && creatureWhere ? prisma.creature.count({ where: creatureWhere }) : Promise.resolve(0),
     ]);
-    const playerPages = Math.ceil(players.length / ALL_PLAYER_PAGE_SIZE);
-    const creaturePages = Math.ceil(creatureCount / ALL_CREATURE_PAGE_SIZE);
+    const playerPages = includePlayers ? Math.ceil(players.length / ALL_PLAYER_PAGE_SIZE) : 0;
+    const creaturePages = includeCreatures ? Math.ceil(creatureCount / ALL_CREATURE_PAGE_SIZE) : 0;
     const totalPages = Math.max(1, playerPages + creaturePages);
     const page = Math.max(0, Math.min(requestedPage, totalPages - 1));
+    const pageContext = { ...request, page };
     const isPlayerPage = page < playerPages || creaturePages === 0;
     const creaturePage = Math.max(0, page - playerPages);
     const playerSlice = isPlayerPage
       ? players.slice(page * ALL_PLAYER_PAGE_SIZE, page * ALL_PLAYER_PAGE_SIZE + ALL_PLAYER_PAGE_SIZE)
       : [];
-    const creatures = isPlayerPage ? [] : await prisma.creature.findMany({
+    const creatures = isPlayerPage || !creatureWhere ? [] : await prisma.creature.findMany({
         where: creatureWhere,
         select: {
           id: true,
@@ -1162,14 +1300,14 @@ export async function buildAllPage(showDead: boolean, requestedPage: number) {
           ...(creatureLines.length ? creatureLines : ["немає"]),
         ];
     const visiblePlayerIds = playerSlice.map((player) => player.id);
-    const visibleNpcIds = creatures.filter((creature) => creature.species.kind !== "ANIMAL").map((creature) => creature.id);
+    const visibleCreatureIds = creatures.map((creature) => creature.id);
     const mode = showDead ? "усі записи" : "тільки живі; /all dead покаже всі записи";
-    const text = truncateTelegramText(`🧾 Усі персонажі (${mode})\nСторінка ${page + 1}/${totalPages}; гравців ${players.length}, істот ${creatureCount}\n\n${bodyLines.join("\n")}`);
-    logStatusPerf("buildAllPage", startedAt, `ok=1; players=${players.length}; creatures=${creatureCount}; playerRows=${playerSlice.length}; creatureRows=${creatures.length}; pages=${totalPages}; showDead=${showDead}`);
+    const text = truncateTelegramText(`🧾 Усі персонажі (${mode}; фільтр: ${allFilterLabel(filter)})\nСторінка ${page + 1}/${totalPages}; гравців ${players.length}, істот ${creatureCount}\n\n${bodyLines.join("\n")}`);
+    logStatusPerf("buildAllPage", startedAt, `ok=1; players=${players.length}; creatures=${creatureCount}; playerRows=${playerSlice.length}; creatureRows=${creatures.length}; pages=${totalPages}; showDead=${showDead}; filter=${allFilterToken(filter)}`);
 
     return {
       text,
-      keyboard: buildAllPaginationKeyboard(showDead, page, totalPages, visiblePlayerIds, visibleNpcIds),
+      keyboard: buildAllPaginationKeyboard(pageContext, totalPages, visiblePlayerIds, visibleCreatureIds),
     };
   } catch (error) {
     logStatusPerf("buildAllPage", startedAt, `ok=0; showDead=${showDead}`);
@@ -1425,9 +1563,9 @@ export function registerStatusHandlers(bot: Bot) {
   bot.hears(["📊 Статистика", "Статистика", "📊 Статистика (/stat)", "Статистика (/stat)"], replyStatBrief);
 
   bot.command("all", async (ctx) => {
-    const showDead = ctx.match?.trim().toLowerCase() === "dead";
-    await replyAllPage(ctx, showDead);
+    await replyAllPage(ctx, parseAllRequest(ctx.match ?? ""));
   });
+  bot.hears(ALL_TEXT_COMMAND, (ctx) => replyAllPage(ctx, parseAllRequest(String(ctx.match?.[1] ?? ""))));
   bot.hears(["👥 Усі", "Усі", "👥 Усі (/all)", "Усі (/all)"], (ctx) => replyAllPage(ctx));
 
   async function runPlayerAdminCommand(ctx: any, rawTarget = String(ctx.match ?? "")) {
@@ -1446,20 +1584,20 @@ export function registerStatusHandlers(bot: Bot) {
   bot.command(["playerAdmin", "playeradmin", "player"], (ctx) => runPlayerAdminCommand(ctx));
   bot.hears(PLAYER_ADMIN_TEXT_COMMAND, (ctx) => runPlayerAdminCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
 
-  bot.callbackQuery(/^adminPlayer:(\d+)(?::(live|dead):(\d+))?$/, async (ctx) => {
+  bot.callbackQuery(/^adminPlayer:(\d+)(?::(live|dead):(?:(all|player|npc|animal|animal-[a-z0-9_-]+):)?(\d+))?$/, async (ctx) => {
     if (!(await isScribeAdmin(ctx.from?.id))) {
       await ctx.answerCallbackQuery({ text: "Ця дія доступна тільки писарям Порубіжжя.", show_alert: true });
       return;
     }
 
     const playerId = Number(ctx.match[1]);
-    const returnContext = allReturnContextFromMatch(ctx.match[2], ctx.match[3]);
+    const returnContext = allReturnContextFromMatch(ctx.match[2], ctx.match[3], ctx.match[4]);
     await ctx.answerCallbackQuery();
     const view = await buildAdminPlayerDetailsView(playerId, returnContext);
     await ctx.reply(view.text, { reply_markup: view.keyboard });
   });
 
-  bot.callbackQuery(/^adminPlayerName:(approve|reject):(\d+)(?::(live|dead):(\d+))?$/, async (ctx) => {
+  bot.callbackQuery(/^adminPlayerName:(approve|reject):(\d+)(?::(live|dead):(?:(all|player|npc|animal|animal-[a-z0-9_-]+):)?(\d+))?$/, async (ctx) => {
     if (!(await isScribeAdmin(ctx.from?.id))) {
       await ctx.answerCallbackQuery({ text: "Ця дія доступна тільки писарям Порубіжжя.", show_alert: true });
       return;
@@ -1467,7 +1605,7 @@ export function registerStatusHandlers(bot: Bot) {
 
     const action = ctx.match[1];
     const playerId = Number(ctx.match[2]);
-    const returnContext = allReturnContextFromMatch(ctx.match[3], ctx.match[4]);
+    const returnContext = allReturnContextFromMatch(ctx.match[3], ctx.match[4], ctx.match[5]);
     const target = await prisma.player.findUnique({ where: { id: playerId } });
     if (!target) {
       await ctx.answerCallbackQuery({ text: "Персонажа не знайдено.", show_alert: true });
@@ -1587,7 +1725,7 @@ export function registerStatusHandlers(bot: Bot) {
     await ctx.reply(`🧭 Перенесено ${playerForms(result.player).nominative} до місцини: ${result.location.name} (${result.location.key}).\n\n${view.text}`, { reply_markup: view.keyboard });
   });
 
-  bot.callbackQuery(/^adminPlayerAuto:(on|off):(\d+)(?::(live|dead):(\d+))?$/, async (ctx) => {
+  bot.callbackQuery(/^adminPlayerAuto:(on|off):(\d+)(?::(live|dead):(?:(all|player|npc|animal|animal-[a-z0-9_-]+):)?(\d+))?$/, async (ctx) => {
     if (!(await isScribeAdmin(ctx.from?.id))) {
       await ctx.answerCallbackQuery({ text: "Ця дія доступна тільки писарям Порубіжжя.", show_alert: true });
       return;
@@ -1595,7 +1733,7 @@ export function registerStatusHandlers(bot: Bot) {
 
     const action = ctx.match[1];
     const playerId = Number(ctx.match[2]);
-    const returnContext = allReturnContextFromMatch(ctx.match[3], ctx.match[4]);
+    const returnContext = allReturnContextFromMatch(ctx.match[3], ctx.match[4], ctx.match[5]);
     const player = await prisma.player.findUnique({ where: { id: playerId } });
     if (!player) {
       await ctx.answerCallbackQuery({ text: "Персонажа не знайдено.", show_alert: true });
@@ -1645,7 +1783,7 @@ export function registerStatusHandlers(bot: Bot) {
     await ctx.reply(view.text, { reply_markup: view.keyboard });
   });
 
-  bot.callbackQuery(/^adminPlayerTeleport:(menu|here|start|ask):(\d+)(?::(live|dead):(\d+))?$/, async (ctx) => {
+  bot.callbackQuery(/^adminPlayerTeleport:(menu|here|start|ask):(\d+)(?::(live|dead):(?:(all|player|npc|animal|animal-[a-z0-9_-]+):)?(\d+))?$/, async (ctx) => {
     if (!(await isScribeAdmin(ctx.from?.id))) {
       await ctx.answerCallbackQuery({ text: "Ця дія доступна тільки писарям Порубіжжя.", show_alert: true });
       return;
@@ -1653,7 +1791,7 @@ export function registerStatusHandlers(bot: Bot) {
 
     const action = ctx.match[1];
     const playerId = Number(ctx.match[2]);
-    const returnContext = allReturnContextFromMatch(ctx.match[3], ctx.match[4]);
+    const returnContext = allReturnContextFromMatch(ctx.match[3], ctx.match[4], ctx.match[5]);
     const mode = returnContext.showDead ? "dead" : "live";
 
     if (action === "menu") {
@@ -1701,15 +1839,16 @@ export function registerStatusHandlers(bot: Bot) {
     await ctx.reply(text, { reply_markup: view.keyboard });
   });
 
-  bot.callbackQuery(/^adminCreature:(\d+)$/, async (ctx) => {
+  bot.callbackQuery(/^adminCreature:(\d+)(?::(live|dead):(?:(all|player|npc|animal|animal-[a-z0-9_-]+):)?(\d+))?$/, async (ctx) => {
     if (!(await isScribeAdmin(ctx.from?.id))) {
       await ctx.answerCallbackQuery({ text: "Ця дія доступна тільки писарям Порубіжжя.", show_alert: true });
       return;
     }
 
     const creatureId = Number(ctx.match[1]);
+    const returnContext = allReturnContextFromMatch(ctx.match[2], ctx.match[3], ctx.match[4]);
     await ctx.answerCallbackQuery();
-    const view = await buildAdminCreatureDetailsView(creatureId);
+    const view = await buildAdminCreatureDetailsView(creatureId, returnContext);
     await ctx.reply(view.text, { reply_markup: view.keyboard });
   });
 
@@ -1722,15 +1861,48 @@ export function registerStatusHandlers(bot: Bot) {
     await ctx.answerCallbackQuery({ text: "Налаштування NPC ще в планах.", show_alert: true });
   });
 
-  bot.callbackQuery(/^all:(live|dead):(\d+)$/, async (ctx) => {
+  bot.callbackQuery(/^adminBrowse:(player|creature):(prev|next):(\d+):(live|dead):(?:(all|player|npc|animal|animal-[a-z0-9_-]+):)?(\d+)$/, async (ctx) => {
     if (!(await isScribeAdmin(ctx.from?.id))) {
       await ctx.answerCallbackQuery({ text: "Ця дія доступна тільки писарям Порубіжжя.", show_alert: true });
       return;
     }
 
-    const showDead = ctx.match[1] === "dead";
-    const requestedPage = Number(ctx.match[2]);
-    const page = await buildAllPage(showDead, Number.isFinite(requestedPage) ? requestedPage : 0);
+    const targetKind = ctx.match[1] as "player" | "creature";
+    const direction = ctx.match[2] as "prev" | "next";
+    const currentId = Number(ctx.match[3]);
+    const returnContext = allReturnContextFromMatch(ctx.match[4], ctx.match[5], ctx.match[6]);
+    const nextId = targetKind === "player"
+      ? await findAdjacentAdminPlayerId(currentId, direction, returnContext)
+      : await findAdjacentAdminCreatureId(currentId, direction, returnContext);
+
+    if (!nextId) {
+      await ctx.answerCallbackQuery({ text: direction === "prev" ? "Попереднього запису немає." : "Наступного запису немає.", show_alert: true });
+      return;
+    }
+
+    await ctx.answerCallbackQuery();
+    const view = targetKind === "player"
+      ? await buildAdminPlayerDetailsView(nextId, returnContext)
+      : await buildAdminCreatureDetailsView(nextId, returnContext);
+    if (ctx.callbackQuery.message) {
+      await editMessageTextIfChanged(ctx, view.text, { reply_markup: view.keyboard });
+      return;
+    }
+    await ctx.reply(view.text, { reply_markup: view.keyboard });
+  });
+
+  bot.callbackQuery(/^all:(live|dead):(?:(all|player|npc|animal|animal-[a-z0-9_-]+):)?(\d+)$/, async (ctx) => {
+    if (!(await isScribeAdmin(ctx.from?.id))) {
+      await ctx.answerCallbackQuery({ text: "Ця дія доступна тільки писарям Порубіжжя.", show_alert: true });
+      return;
+    }
+
+    const requestedPage = Number(ctx.match[3]);
+    const page = await buildAllPage({
+      showDead: ctx.match[1] === "dead",
+      filter: allFilterFromToken(ctx.match[2]),
+      page: Number.isFinite(requestedPage) ? requestedPage : 0,
+    });
     await ctx.answerCallbackQuery();
 
     if (ctx.callbackQuery.message) {

@@ -3,7 +3,10 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const {
+  AUTO_ACTION_MESSAGES_DISABLED_TEXT,
+  AUTO_ACTION_MESSAGES_ENABLED_TEXT,
   DAYPART_NOTICE_HINT_TEXT,
+  buildSettingsKeyboard,
   canReceiveDaypartNotice,
   recordOrdinaryWakeAndClaimDaypartHint,
   renderNotificationSettings,
@@ -113,13 +116,25 @@ function fakeDb(initial) {
     assert.equal(state.player.daypartNoticeHintShown, false);
   }
 
-  const enabledText = renderNotificationSettings({ daypartNoticesEnabled: true });
+  const enabledText = renderNotificationSettings({ daypartNoticesEnabled: true, autoActionMessagesEnabled: false });
   assert.ok(enabledText.includes("Повідомлення про зміну часу дня: увімкнено"));
   assert.ok(enabledText.includes("доведеться частіше звіряти /time, /weather"));
+  assert.ok(enabledText.includes("Авто-повідомлення: вимкнено"));
 
-  const disabledText = renderNotificationSettings({ daypartNoticesEnabled: false });
+  const disabledText = renderNotificationSettings({ daypartNoticesEnabled: false, autoActionMessagesEnabled: true });
   assert.ok(disabledText.includes("Повідомлення про зміну часу дня: вимкнено"));
   assert.ok(disabledText.includes("Світ усе одно світлішає"));
+  assert.ok(disabledText.includes("Авто-повідомлення: увімкнено"));
+  assert.match(AUTO_ACTION_MESSAGES_ENABLED_TEXT, /Авто-повідомлення увімкнено/);
+  assert.match(AUTO_ACTION_MESSAGES_DISABLED_TEXT, /Авто-повідомлення вимкнено/);
+
+  const keyboardWithAutoOff = buildSettingsKeyboard({ daypartNoticesEnabled: true, autoActionMessagesEnabled: false });
+  const keyboardWithAutoOffText = keyboardWithAutoOff.inline_keyboard.flat().map((button) => button.text);
+  assert.ok(keyboardWithAutoOffText.includes("Увімкнути авто-повідомлення"));
+
+  const keyboardWithAutoOn = buildSettingsKeyboard({ daypartNoticesEnabled: true, autoActionMessagesEnabled: true });
+  const keyboardWithAutoOnText = keyboardWithAutoOn.inline_keyboard.flat().map((button) => button.text);
+  assert.ok(keyboardWithAutoOnText.includes("Вимкнути авто-повідомлення"));
 
   console.log("Player notification settings helpers OK");
 })();

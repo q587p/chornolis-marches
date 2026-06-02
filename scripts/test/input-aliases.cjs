@@ -114,6 +114,11 @@ assertAlias("повідомлення", { kind: "settings" });
 assertAlias("daynotices", { kind: "daypart-notices", mode: "show" });
 assertAlias("/daynotices on", { kind: "daypart-notices", mode: "on" });
 assertAlias("/daynotices off", { kind: "daypart-notices", mode: "off" });
+assertAlias("automessages", { kind: "auto-messages", mode: "show" });
+assertAlias("/automessages on", { kind: "auto-messages", mode: "on" });
+assertAlias("/automessages off", { kind: "auto-messages", mode: "off" });
+assertAlias("автоповідомлення увімкнути", { kind: "auto-messages", mode: "on" });
+assertAlias("авто повідомлення вимкнути", { kind: "auto-messages", mode: "off" });
 assertAlias("назад", { kind: "back" });
 assertAlias("сховати клавіатуру", { kind: "hide-keyboard" });
 

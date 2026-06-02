@@ -4,7 +4,7 @@ require("ts-node/register");
 
 const { formatCreatureLifeState, formatCreatureStatusLine, inventoryResourceSummary } = require("../../src/services/targets");
 const { animalAgeDescription, groundItemLine, groundItemPickupButtonRows, joinVisibleActionLabels } = require("../../src/services/locations");
-const { buildCorpseActionKeyboard, buildTargetActionKeyboard, buildTargetListKeyboard } = require("../../src/ui/keyboards");
+const { buildAnonymousTargetKeyboard, buildCorpseActionKeyboard, buildTargetActionKeyboard, buildTargetListKeyboard } = require("../../src/ui/keyboards");
 const { visibleHeldTorchTextWithContext } = require("../../src/utils/torchText");
 
 const maleNpc = {
@@ -101,6 +101,24 @@ const returnAwareTargetKeyboard = buildTargetActionKeyboard({
 }, false, "targetPage:details:1");
 assert.equal(returnAwareTargetKeyboard.inline_keyboard.at(-1)[0].callback_data, "targetPage:details:1");
 assert.equal(returnAwareTargetKeyboard.inline_keyboard[0][0].callback_data, "social:look:creature:13:known:details:1");
+
+const animalWithAccidentalGreetingRows = buildTargetActionKeyboard({
+  type: "creature",
+  id: 14,
+  canGreet: true,
+  canAttack: true,
+  isAnimal: true,
+}).inline_keyboard.map((row) => row.map((button) => button.callback_data));
+assert.ok(!animalWithAccidentalGreetingRows.flat().some((callbackData) => String(callbackData).startsWith("social:greet:")), "Animal target keyboards should not expose greeting buttons.");
+
+const anonymousAnimalWithAccidentalGreetingRows = buildAnonymousTargetKeyboard({
+  type: "creature",
+  id: 15,
+  canGreet: true,
+  canAttack: true,
+  isAnimal: true,
+}).inline_keyboard.map((row) => row.map((button) => button.text));
+assert.ok(!anonymousAnimalWithAccidentalGreetingRows.flat().includes("💬 Привітати"), "Animal target keyboards should keep greeting off button text.");
 
 const returnAwareCorpseKeyboard = buildCorpseActionKeyboard({
   kind: "creature",

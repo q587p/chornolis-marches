@@ -7,8 +7,11 @@ const {
   fresheningSucceeds,
   meatYieldForSpecies,
 } = require("../../src/services/meat");
+const { MAX_QUEUED_ACTIONS_PER_ACTOR } = require("../../src/gameConfig");
 const { planCookAllRawMeat } = require("../../src/services/cookingQueue");
 const { cookingResultReplyOptions } = require("../../src/ui/inventoryItemKeyboard");
+
+assert.equal(MAX_QUEUED_ACTIONS_PER_ACTOR, 17);
 
 assert.equal(meatYieldForSpecies("mouse"), 1);
 assert.equal(meatYieldForSpecies("rabbit"), 3);
@@ -65,14 +68,14 @@ assert.deepEqual(
     rawMeatAmount: 20,
     activeActionCount: 10,
     activeCookActionCount: 3,
-    maxQueuedActions: 12,
+    maxQueuedActions: MAX_QUEUED_ACTIONS_PER_ACTOR,
   }),
   {
-    count: 2,
+    count: 7,
     rawMeatAmount: 20,
     activeActionCount: 10,
     activeCookActionCount: 3,
-    availableSlots: 2,
+    availableSlots: 7,
     alreadyPlanned: 3,
     unplannedRawMeat: 17,
     limitedByQueue: true,

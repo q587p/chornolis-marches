@@ -26,8 +26,10 @@ Prevent reminders, delayed tutorial nudges and companion chatter from reaching p
 - Add a shared helper such as `canSendProactiveMessage`.
 - Track player inactivity with `lastPlayerActionAt` / `lastPlayerMessageAt` style state.
 - Update inactivity only from player commands, buttons or other player interaction; bot messages must not reset it.
-- Add `AUTO_AFK_AFTER_MINUTES = 15`, with tests able to override the value.
+- Add `AUTO_AFK_AFTER_MINUTES = 13`, with tests able to override the value.
 - After inactivity crosses the threshold, silently set presence to `afk` and pause reminders.
+- Add `AUTO_END_SESSION_AFTER_MINUTES = 60`, with tests able to override the value.
+- After longer inactivity crosses the threshold, silently set non-auto players to `ended` so passive hunger pauses; do not auto-end players with `isAutoEnabled = true`.
 - Do not send a push message just to announce Auto-AFK.
 - Add a strict idle-reminder cap: no more than one idle reminder per current scene/tutorial step/awaited choice.
 - Track the current idle-reminder scene key and count on the player/session.
@@ -52,6 +54,8 @@ If delayed messages already store enough context, also skip stale messages when 
 - A delayed tutorial/companion line scheduled before End Session does not send after End Session.
 - If the player does nothing for the configured inactivity window, the session silently becomes AFK.
 - Auto-AFK does not send its own notification.
+- If a non-auto player stays inactive for the configured longer window, the session silently becomes ended and passive hunger pauses.
+- Auto-enabled players are not auto-ended by inactivity.
 - First idle reminder in a scene can send.
 - Second idle reminder in the same unresolved scene is blocked.
 - Moving to a new scene/tutorial step resets the idle reminder count.
