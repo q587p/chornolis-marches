@@ -10,7 +10,12 @@ const {
   worldDaypartForHour,
   worldTimeSnapshotFromAbsoluteMinute,
 } = require("../../src/data/worldClock");
-const { renderCurrentWorldTime, renderWorldDreamDateLine, renderWorldYearLine } = require("../../src/services/calendar");
+const {
+  renderApproximateWorldClock,
+  renderCurrentWorldTime,
+  renderWorldDreamDateLine,
+  renderWorldYearLine,
+} = require("../../src/services/calendar");
 const { lightSnapshotFromWorldTime } = require("../../src/services/lightSnapshot");
 const {
   visibilityDarknessText,
@@ -72,10 +77,14 @@ assert.equal(advanced.lastAdvancedAt.toISOString(), "2026-05-31T12:00:06.000Z");
 
 const rendered = renderCurrentWorldTime(start);
 assert.ok(rendered.includes("Коло Зеленого Шуму"));
-assert.ok(rendered.includes("17:00"));
+assert.ok(rendered.includes("Межовий час: близько п'ятої після полудня."));
+assert.ok(!rendered.includes("17:00"));
 assert.ok(rendered.includes("Місяць:"));
 assert.ok(rendered.includes("Погода:"));
 assert.ok(rendered.includes("Світло:"));
+assert.equal(renderApproximateWorldClock({ hour: 17, minute: 22 }), "трохи по п'ятій після полудня");
+assert.equal(renderApproximateWorldClock({ hour: 17, minute: 45 }), "ближче до шостої вечора");
+assert.equal(renderApproximateWorldClock({ hour: 17, minute: 55 }), "майже шоста вечора");
 
 const dreamDate = renderWorldDreamDateLine(start);
 assert.ok(dreamDate.includes("587"));

@@ -20,8 +20,8 @@ function inventoryItemDropLabel(resourceKey: string) {
 }
 
 export function buildCookMeatAgainKeyboard(rawMeatRemaining = 0) {
-  const keyboard = new InlineKeyboard().text("🔥 Підсмажити м’ясо", "inventory:cook:meat");
-  if (rawMeatRemaining > 1) keyboard.text("🔥 Посмажити все", "inventory:cook:all");
+  const keyboard = new InlineKeyboard().text("🔥🥩 Підсмажити м’ясо", "inventory:cook:meat");
+  if (rawMeatRemaining > 1) keyboard.text("🔥🥩 Посмажити все", "inventory:cook:all");
   return keyboard;
 }
 
@@ -67,14 +67,14 @@ export async function buildInventoryItemKeyboard(playerId: number, resourceKey: 
     keyboard.row();
   }
   if (resourceKey === RAW_MEAT_KEY && canCookMeat) {
-    keyboard.text("🔥 Підсмажити м’ясо", "inventory:cook:meat");
-    if (rawMeatAmount > 1) keyboard.text("🔥 Посмажити все", "inventory:cook:all");
+    keyboard.text("🔥🥩 Підсмажити м’ясо", "inventory:cook:meat");
+    if (rawMeatAmount > 1) keyboard.text("🔥🥩 Посмажити все", "inventory:cook:all");
     keyboard.row();
   }
   if (resourceKey === "twigs" && canBuildCampfire) keyboard.text("🪵 Скласти вогнище", "fire:build").row();
   if (resourceKey === "twigs" && canAddTwigs) keyboard.text("🪵 Підкинути хмиз", "inventory:add-twigs").row();
-  if (resourceKey === "torch" && canLightTorch) keyboard.text("🔥 Запалити факел", "inventory:light:torch").row();
-  if (resourceKey === "doused_torch" && canLightTorch) keyboard.text("🔥 Запалити факел", "inventory:light:torch").row();
+  if (resourceKey === "torch" && canLightTorch) keyboard.text("🔥🕯 Запалити факел", "inventory:light:torch").row();
+  if (resourceKey === "doused_torch" && canLightTorch) keyboard.text("🔥🕯 Запалити факел", "inventory:light:torch").row();
   if (resourceKey === "lit_torch" && canDouseTorch) keyboard.text("🫧 Притушити факел", "inventory:douse:torch").row();
   if (isWeaponResourceKey(resourceKey)) {
     if (equippedWeapon?.key === resourceKey) keyboard.text("✋ Зняти з руки", `inventory:unequip:${resourceKey}`).row();

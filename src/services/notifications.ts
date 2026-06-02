@@ -5,6 +5,7 @@ import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../
 import { canSendProactiveToTelegramId } from "./sessionPresence";
 import { isTutorialLocation } from "./tutorial";
 import { canReceiveDaypartNotice } from "./playerNotificationSettings";
+import { creatureForms } from "./grammar";
 
 type LocationNotificationOptions = {
   keyboard?: InlineKeyboard;
@@ -45,6 +46,21 @@ type NonPlayerMovementNotificationBufferOptions = {
   clearTimer?: typeof clearTimeout;
 };
 
+type MovementNotificationCreatureCandidate = {
+  id: number;
+  locationId: number;
+  isAlive: boolean;
+  isGone: boolean;
+  isHidden: boolean;
+  label: string;
+  species?: { kind?: string | null } | null;
+};
+
+type MovementNotificationTarget = {
+  id: number;
+  label: string;
+};
+
 function inlineMessageKey(chatId: string | number, key: string) {
   return `${chatId}:${key}`;
 }
@@ -53,14 +69,54 @@ export function combineMovementNotificationLines(lines: string[]) {
   return lines.map((line) => line.trim()).filter(Boolean).join("\n");
 }
 
-export function nonPlayerMovementNotificationOptions(locationId: number, creatureIds: number[] = []) {
+export function movementNotificationTargetsStillPresent(locationId: number, creatureIds: number[] = [], candidates: MovementNotificationCreatureCandidate[] = []): MovementNotificationTarget[] {
   const uniqueCreatureIds = Array.from(new Set(creatureIds.filter((id) => Number.isFinite(id))));
-  const keyboard = new InlineKeyboard().text("🐾 Сліди", "track");
+  const candidatesById = new Map(candidates.map((creature) => [creature.id, creature]));
+  const targets: MovementNotificationTarget[] = [];
+
+  for (const id of uniqueCreatureIds) {
+    const creature = candidatesById.get(id);
+    if (!creature) continue;
+    if (creature.locationId !== locationId) continue;
+    if (!creature.isAlive || creature.isGone || creature.isHidden) continue;
+    if (creature.species?.kind === "ANIMAL") continue;
+    targets.push({ id: creature.id, label: creature.label });
+  }
+
+  return targets;
+}
+
+export function nonPlayerMovementNotificationOptions(locationId: number, creatureIds: number[] = [], targets: MovementNotificationTarget[] = []) {
+  const uniqueCreatureIds = Array.from(new Set(creatureIds.filter((id) => Number.isFinite(id))));
+  const keyboard = new InlineKeyboard();
+  for (const target of targets) {
+    keyboard.text(target.label, `target:creature:${target.id}`).row();
+  }
+  keyboard.text("🐾 Сліди", "track");
   return {
     keyboard,
     replaceKey: `tracks:${locationId}`,
     clearKeys: uniqueCreatureIds.map((id) => `target:creature:${id}`),
   };
+}
+
+async function movementNotificationTargetsAtFlush(locationId: number, creatureIds: number[] = []) {
+  const uniqueCreatureIds = Array.from(new Set(creatureIds.filter((id) => Number.isFinite(id))));
+  if (!uniqueCreatureIds.length) return [];
+
+  const creatures = await prisma.creature.findMany({
+    where: { id: { in: uniqueCreatureIds } },
+    include: { species: true },
+  });
+  return movementNotificationTargetsStillPresent(locationId, uniqueCreatureIds, creatures.map((creature) => ({
+    id: creature.id,
+    locationId: creature.locationId,
+    isAlive: creature.isAlive,
+    isGone: creature.isGone,
+    isHidden: creature.isHidden,
+    label: creatureForms(creature).nominative,
+    species: creature.species,
+  })));
 }
 
 export function createNonPlayerMovementNotificationBuffer(options: NonPlayerMovementNotificationBufferOptions) {
@@ -121,7 +177,8 @@ const nonPlayerMovementNotificationBuffer = createNonPlayerMovementNotificationB
     if (!event.bot) return;
     const text = combineMovementNotificationLines(event.lines);
     if (!text) return;
-    await notifyLocationAll(event.bot, event.locationId, text, nonPlayerMovementNotificationOptions(event.locationId, event.creatureIds));
+    const targets = await movementNotificationTargetsAtFlush(event.locationId, event.creatureIds);
+    await notifyLocationAll(event.bot, event.locationId, text, nonPlayerMovementNotificationOptions(event.locationId, event.creatureIds, targets));
   },
 });
 

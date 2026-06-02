@@ -49,6 +49,7 @@ They pick the first suitable nearby handmade campfire. That is acceptable for a 
 - Reuse the visible feature/target ordering that the player sees in location detail buttons where practical.
 - Keep no-target commands as convenience fallback when exactly one suitable nearby campfire exists.
 - If several suitable campfires exist and no target is provided, ask for clarification instead of silently choosing the first one.
+- While touching campfire command/UI targeting, consider making the inventory `Скласти вогнище` button location-aware. The current MVP only checks carried `twigs`, so it may appear in a місцина that is already at the handmade-campfire cap; the callback then rejects correctly.
 
 ## Guardrails
 
@@ -70,3 +71,5 @@ They pick the first suitable nearby handmade campfire. That is acceptable for a 
 ## Notes
 
 This is a near-future follow-up to the 0.15.8 campfire command-parity slice. It should land before player-made campfires become common enough that multiple handmade fires in one location are ordinary.
+
+Also keep the 0.15.7 rollback caveat in mind: PostgreSQL enum values added for campfire actions should usually be left unused during rollback rather than removed casually, unless a deliberate enum-rebuild migration is prepared.

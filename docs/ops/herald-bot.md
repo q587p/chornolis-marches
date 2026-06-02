@@ -56,7 +56,7 @@ Recommended:
 
 - `HERALD_ADMIN_IDS` — comma-separated список Telegram user id, яким дозволені службові команди. Приклад форми: `111111,222222`, без реальних значень у документації чи комітах.
 - `HERALD_CHANNEL_ID` — канал, куди Канцелярія публікує записи. Може бути username на кшталт `@channel_name` або numeric id.
-- `GAME_BOT_USERNAME` — username основного ігрового бота для безпечних deep links у публічних новинах Канцелярії. Дефолт: `Chornolis_bot`.
+- `GAME_BOT_USERNAME` — username основного ігрового бота для безпечних deep links у публічних новинах Канцелярії та web-архіві `/news`. Дефолт: `Chornolis_bot`.
 - `HERALD_ENABLED` — `true`/`false`. Якщо `false`, automatic publisher loop не стартує; ручні bot commands і health server лишаються runtime-поведінкою самого entrypoint.
 - `HERALD_PUBLISH_INTERVAL_MS` — інтервал publisher loop. Мінімально ефективне значення в конфігу: `1000`, дефолт: `30000`.
 - `HERALD_ARCHIVE_INTERVAL_MINUTES` — інтервал між архівними записами `news.md` у backfill drip-feed. Дефолт: `13`.

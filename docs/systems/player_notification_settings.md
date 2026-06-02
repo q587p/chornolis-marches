@@ -73,7 +73,8 @@ The first movement coalescing slice buffers those local arrival/departure lines 
 - player movement stays immediate;
 - ordinary animal movement stays quiet;
 - coalesced movement sends one compact message with one `Сліди` button;
-- the first slice does not add arrival target buttons to coalesced movement, so a spirit/NPC that already left before the flush cannot leave a misleading target button behind.
+- the first target-button follow-up checks creature state at flush time and adds target buttons only for living, visible, non-animal creatures that are still in the location;
+- a spirit/NPC that already left before the flush keeps only the movement text and cannot leave a misleading target button behind.
 
 This is a runtime notification buffer, not persisted world state. A process restart may drop pending movement flavor lines, which is acceptable for the first anti-spam slice.
 

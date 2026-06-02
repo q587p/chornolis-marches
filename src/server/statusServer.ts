@@ -21,6 +21,7 @@ import {
 import { getEcologyStats } from "../services/ecologyStats";
 import { adminSecretMatches } from "../services/adminSecret";
 import { getStatusData } from "../services/status";
+import { gameCommandDeepLink, isSafeGameCommand } from "../services/gameCommandLinks";
 import { escapeHtml } from "../utils/text";
 
 const ADMIN_COOKIE_NAME = "chornolis_admin";
@@ -83,12 +84,39 @@ export function markdownNewsToHtml(text: string) {
     .split("\n")
     .map((line) => {
       if (line.startsWith("## ")) return `<h2>${escapeHtml(line.replace(/^##\s+/, ""))}</h2>`;
-      if (line.startsWith("- ")) return `<li>${escapeHtml(line.slice(2))}</li>`;
+      if (line.startsWith("- ")) return `<li>${renderNewsInlineMarkdown(line.slice(2))}</li>`;
       if (!line.trim()) return "";
-      return `<p>${escapeHtml(line)}</p>`;
+      return `<p>${renderNewsInlineMarkdown(line)}</p>`;
     })
     .join("\n")
     .replace(/(?:<li>.*<\/li>\n?)+/g, (list) => `<ul>${list}</ul>`);
+}
+
+const NEWS_INLINE_TOKEN_PATTERN = /`([^`\n]+)`|(\/[A-Za-z][A-Za-z0-9_]*)/g;
+
+export function renderNewsInlineMarkdown(text: string) {
+  let output = "";
+  let lastIndex = 0;
+
+  for (const match of text.matchAll(NEWS_INLINE_TOKEN_PATTERN)) {
+    const index = match.index ?? 0;
+    output += escapeHtml(text.slice(lastIndex, index));
+    const backticked = match[1];
+    const command = match[2] ?? (backticked?.match(/^\/[A-Za-z][A-Za-z0-9_]*$/) ? backticked : undefined);
+
+    if (command && isSafeGameCommand(command)) {
+      output += `<a class="game-command" href="${gameCommandDeepLink(command)}"><em>${escapeHtml(command)}</em></a>`;
+    } else if (backticked !== undefined) {
+      output += `<em>${escapeHtml(backticked)}</em>`;
+    } else {
+      output += escapeHtml(match[0] ?? "");
+    }
+
+    lastIndex = index + match[0].length;
+  }
+
+  output += escapeHtml(text.slice(lastIndex));
+  return output;
 }
 
 function newsEntryUrl(index: number) {
@@ -356,6 +384,7 @@ export async function renderNewsPage(url?: string) {
     body{font-family:system-ui,sans-serif;max-width:860px;margin:36px auto;padding:0 18px;background:#10170f;color:#e8e0c9;line-height:1.55}
     h1,h2{color:#f1d98a}a{color:#d8b55d}.card{border:1px solid #3b4a2f;border-radius:8px;padding:18px;background:#172114}
     li{margin:8px 0}.actions a{display:inline-block;border:1px solid #5d6f3c;border-radius:8px;padding:8px 10px;margin:0 8px 8px 0;text-decoration:none;background:#1d2a18}
+    em{color:#f0dfad}.game-command{font-weight:600;text-decoration-thickness:1px;text-underline-offset:3px}
     .archive{columns:2;column-gap:32px}.archive li{break-inside:avoid}.entry-nav{margin-top:16px}.muted{color:#b9b08f}
     @media (max-width:720px){.archive{columns:1}}
   </style></head><body><h1>Новини Порубіжжя</h1><p class="actions"><a href="/">Головна</a><a href="/world">Світ /world</a><a href="/chat">Репліки /chat</a><a href="#archive">Архів</a></p><section class="card">${selectedHtml}${entryNav}</section>${archive ? `<h2 id="archive">Архів</h2><p class="muted">Усі записи з news.md, від найновіших до давніших.</p><ul class="archive">${archive}</ul>` : ""}</body></html>`;

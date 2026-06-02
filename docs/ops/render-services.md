@@ -72,7 +72,7 @@ Recommended Herald env:
 - `HERALD_ENABLED`;
 - `HERALD_CHANNEL_ID`;
 - `HERALD_ADMIN_IDS`;
-- `GAME_BOT_USERNAME` — default `Chornolis_bot`, used for safe public deep links from Herald news/archive posts to the main game bot;
+- `GAME_BOT_USERNAME` — default `Chornolis_bot`, used for safe public deep links from Herald news/archive posts and the web `/news` archive to the main game bot;
 - `HERALD_STARTUP_NOTICE_ENABLED`;
 - `HERALD_STARTUP_NOTICE_CHAT_ID`;
 - `HERALD_PUBLISH_INTERVAL_MS`;

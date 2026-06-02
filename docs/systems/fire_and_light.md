@@ -7,6 +7,8 @@ Chornolis uses fire as an early survival and visibility tool.
 - `0.15.7` adds the first player-made campfire loop; see `docs/systems/campfires.md` for the detailed rules.
 - A player-made campfire costs `twigs ×5`, starts as `Складене вогнище`, gives no light until lit from a carried burning torch, and uses queued `BUILD_CAMPFIRE`, `DOUSE_CAMPFIRE` and `DISMANTLE_CAMPFIRE` actions.
 - Player-made ordinary campfires are capped at three active handmade features per location. Wet `RIVER` and `SWAMP` locations ask for confirmation and shorten burn duration after lighting.
+- The current inventory build button is intentionally optimistic: it checks carried `twigs`, while the callback/service still performs the location cap and wet-location checks. If this becomes confusing in live play, make the inventory button location-aware instead of weakening the service guard.
+- Wet burn duration is derived from the current location biome when an ordinary campfire is lit. This matches the current "wet places shorten campfires" rule, but it also affects ordinary campfires lit in `RIVER`/`SWAMP`, not only newly built handmade ones.
 - `/addCampfire` creates a new ordinary debug campfire in the player's current місцина.
 - Multiple campfires can exist in the same місцина; every debug campfire receives its own key.
 - A debug campfire burns for 8 in-game hours, currently mapped to 16 real minutes.

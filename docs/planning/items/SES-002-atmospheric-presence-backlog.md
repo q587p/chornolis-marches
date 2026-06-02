@@ -58,6 +58,15 @@ After the practical AFK / End Session / Auto-AFK MVP is stable, make presence fe
   - active;
   - quiet/AFK;
   - absent.
+- Auto-AFK presence should look different from deliberate AFK without exposing a technical state. Possible near-term surfaces:
+  - a softer public suffix or description such as "затих біля стежки" instead of only the current AFK wording;
+  - a character/profile line that says the person has gone quiet after long silence;
+  - observer text that makes it clear this is not an active conversational target.
+- End Session should become a stronger atmospheric absence:
+  - the character is hidden from ordinary interaction targets while the session is ended;
+  - incoming direct interaction should fail softly, e.g. spirits/Порубіжжя have folded the path around them for now;
+  - on return through `/start` or a normal game action, show a short reappearance line before or with the usual location context.
+- Keep this split clear: Auto-AFK is "quiet but still in the world"; End Session is "not currently reachable for ordinary interaction".
 
 ## Not Now
 

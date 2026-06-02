@@ -372,7 +372,7 @@ async function submitQueue(ctx: any, mode: QueueAliasMode) {
   await showQueue(ctx, player.id);
 }
 
-async function submitTrack(bot: Bot, ctx: any, detail = false) {
+export async function submitTrack(bot: Bot, ctx: any, detail = false) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
@@ -770,7 +770,7 @@ async function submitReply(bot: Bot, ctx: any, text: string) {
   }
 }
 
-async function submitYell(bot: Bot, ctx: any, text: string) {
+export async function submitYell(bot: Bot, ctx: any, text: string) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 

@@ -162,13 +162,13 @@ function buildInventoryKeyboard(resources: any[] = [], options: { canAddTwigs?: 
   }
   const rawMeatAmount = inventoryResourceAmount(resources, RAW_MEAT_KEY);
   if (options.canCookMeat && rawMeatAmount > 0) {
-    keyboard.text("🔥 Підсмажити м’ясо", "inventory:cook:meat");
-    if (rawMeatAmount > 1) keyboard.text("🔥 Посмажити все", "inventory:cook:all");
+    keyboard.text("🔥🥩 Підсмажити м’ясо", "inventory:cook:meat");
+    if (rawMeatAmount > 1) keyboard.text("🔥🥩 Посмажити все", "inventory:cook:all");
     keyboard.row();
   }
   if (options.canBuildCampfire) keyboard.text("🪵 Скласти вогнище", "fire:build").row();
   if (options.canAddTwigs) keyboard.text("🪵 Підкинути хмиз", "inventory:add-twigs").row();
-  if (options.canLightTorch) keyboard.text("🔥 Запалити факел", "inventory:light:torch").row();
+  if (options.canLightTorch) keyboard.text("🔥🕯 Запалити факел", "inventory:light:torch").row();
   if (options.canDouseTorch) keyboard.text("🫧 Притушити факел", "inventory:douse:torch").row();
   for (const resource of resources.filter((item) => item.amount > 0)) {
     const label = inventoryActionLabel(resource);

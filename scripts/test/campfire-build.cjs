@@ -5,6 +5,7 @@ require("ts-node/register");
 const {
   CAMPFIRE_BUILD_TWIG_COST,
   MAX_HANDMADE_CAMPFIRES_PER_LOCATION,
+  adminHandmadeCampfireData,
   canBuildAnotherHandmadeCampfire,
   handmadeCampfireCount,
   isHandmadeCampfire,
@@ -31,6 +32,13 @@ assert.equal(isHandmadeCampfire(prepared), true);
 assert.equal(isPreparedCampfire(prepared), true);
 assert.equal(isHandmadeCampfire({ ...prepared, data: { ...prepared.data, seeded: true } }), false);
 assert.equal(isHandmadeCampfire({ ...prepared, type: "MAGIC_CAMPFIRE" }), false);
+
+const adminPrepared = { ...prepared, data: adminHandmadeCampfireData(1234) };
+assert.equal(adminPrepared.data.created_by, "addCampfire");
+assert.equal(adminPrepared.data.adminCreated, true);
+assert.equal(isHandmadeCampfire(adminPrepared), true);
+assert.equal(isPreparedCampfire(adminPrepared), true);
+assert.equal(isHandmadeCampfire({ ...prepared, data: { ...adminPrepared.data, debug: true, handmade: false } }), false);
 
 assert.equal(handmadeCampfireCount([prepared, prepared]), 2);
 assert.equal(canBuildAnotherHandmadeCampfire([prepared, prepared]), true);

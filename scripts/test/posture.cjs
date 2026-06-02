@@ -9,7 +9,12 @@ const { formatFatigueText, formatObservedPostureText, formatPostureText, formatV
 const { AUTO_DREAM_BLOCK_MESSAGE, isAutoBlockedInLocation, shouldAutoStandBeforeAction } = require("../../src/handlers/auto");
 const { playerLieObserverText, playerRestStartObserverText, playerRestStopObserverText, playerSitObserverText, playerSleepObserverText, playerStandObserverText, playerTutorialSleepObserverText, playerTutorialWakeObserverText, playerWakeObserverText } = require("../../src/services/playerVisibility");
 const { activePlayerRestActionWhere } = require("../../src/services/posture");
-const { assertCanPerformPhysicalAction, isPlayerMustStandError } = require("../../src/services/postureRules");
+const {
+  assertCanPerformPhysicalAction,
+  isPlayerMustStandError,
+  lyingActionBlockMessage,
+  sittingActionBlockMessage,
+} = require("../../src/services/postureRules");
 
 assert.equal(formatPostureText({ posture: "STANDING", isResting: false }), "Ви стоїте.");
 assert.equal(formatPostureText({ posture: "SITTING", isResting: false }), "Ви сидите.");
@@ -69,6 +74,10 @@ assert.throws(
   () => assertCanPerformPhysicalAction({ posture: "LYING", sleepState: "ORDINARY_SLEEP", isResting: false }, "MOVE"),
   (error) => isPlayerMustStandError(error) && error.recoveryAction === "wake" && /прокинутися/.test(error.message),
 );
+assert.equal(sittingActionBlockMessage("BUILD_CAMPFIRE"), "Ви не можете поратися з вогнем, поки сидите. Вам треба встати.");
+assert.equal(lyingActionBlockMessage("BUILD_CAMPFIRE"), "Ви не можете поратися з вогнем, поки лежите. Вам треба встати.");
+assert.equal(sittingActionBlockMessage("PICK_UP"), "Ви не можете взяти це, поки сидите. Вам треба встати.");
+assert.equal(lyingActionBlockMessage("PICK_UP"), "Ви не можете взяти це, поки лежите. Вам треба встати.");
 assert.deepEqual(activePlayerRestActionWhere(42), {
   actorType: "PLAYER",
   playerId: 42,

@@ -19,6 +19,7 @@ Rules:
 - Prepared or extinguished handmade ordinary campfires can be dismantled.
 - Dismantling returns fewer `twigs` than the build cost; older ash returns less.
 - A location can have at most three active handmade ordinary campfires.
+- The inventory `Скласти вогнище` button currently appears when the player carries enough `twigs`. The build callback still checks location limits and can reject the action if the current місцина is already at the handmade-campfire cap. This is acceptable for the MVP, but future UI polish should make the inventory button location-aware enough to avoid offering a known-dead action.
 
 Magic campfires, seeded lore campfires and old authored campfire memories are not dismantlable unless future data explicitly marks them as player-made.
 
@@ -36,12 +37,12 @@ Wet locations do not block building. Instead, the build button asks for confirma
 - `wetPenalty: true`
 - `wetBiome: "RIVER" | "SWAMP"`
 
-When lit, wet handmade campfires burn for a shorter duration:
+When lit, wet ordinary campfires burn for a shorter duration based on the current location biome:
 
 - `RIVER`: about 30% of ordinary campfire duration.
 - `SWAMP`: about 20% of ordinary campfire duration.
 
-This is intentionally simple. Later weather, shelter, fuel quality and terrain-specific dryness can refine the same helper instead of scattering wetness checks through handlers.
+This is intentionally simple and currently applies to ordinary campfires lit in wet biomes, not only to newly built handmade ones. Later weather, shelter, fuel quality and terrain-specific dryness can refine the same helper instead of scattering wetness checks through handlers.
 
 ## UI surface
 
@@ -54,7 +55,7 @@ Inventory:
 Feature inspection:
 
 - Prepared/unlit campfire: `🔥 Підпалити` when the player has a lit torch, plus `🧹 Розібрати`.
-- Active handmade campfire: existing rest/cook/torch/add-twigs buttons, plus `🫗 Погасити`.
+- Active handmade campfire: existing rest/cook/torch/add-twigs buttons with action-specific secondary icons (`🔥🧘`, `🔥🥩`, `🔥🕯`), plus `🫗 Погасити`.
 - Extinguished handmade campfire: existing add-twigs/light buttons, plus `🧹 Розібрати`.
 - Magic/special campfires: no douse/dismantle buttons.
 

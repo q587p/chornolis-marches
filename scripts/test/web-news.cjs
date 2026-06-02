@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const { buildNewsIndexPage, parseNewsListPageRequest } = require("../../src/handlers/news");
-const { readWebNewsEntries, renderNewsPage } = require("../../src/server/statusServer");
+const { readWebNewsEntries, renderNewsInlineMarkdown, renderNewsPage } = require("../../src/server/statusServer");
 const { escapeHtml } = require("../../src/utils/text");
 
 function literalPattern(value) {
@@ -18,6 +18,8 @@ function literalPattern(value) {
   assert.match(latestHtml, /id="archive"/);
   assert.match(latestHtml, /href="\/news\?entry=1"/);
   assert.match(latestHtml, /<strong>[^<]+<\/strong>/);
+  assert.doesNotMatch(latestHtml, /`\/track`/);
+  assert.match(latestHtml, /<a class="game-command" href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_track"><em>\/track<\/em><\/a>/);
 
   const olderHtml = await renderNewsPage("/news?entry=1");
   assert.match(olderHtml, /href="\/news"/);
@@ -44,6 +46,11 @@ function literalPattern(value) {
   assert.ok(buttons.some((button) => button.text.match(/^\d+\/\d+$/) && button.callback === "news:list:noop"), "deep news archive page should show a noop page indicator");
   assert.ok(buttons.some((button) => button.text === "Далі ▶️" && button.callback === "news:list:6"), "deep news archive page should link to the next page");
   assert.ok(buttons.some((button) => button.text === "Кінець ⏭️" && button.callback), "deep news archive page should link to the last page");
+
+  assert.equal(
+    renderNewsInlineMarkdown("`Гукнути поруч` (`/yell`) /cleanupCreatures /unknown"),
+    '<em>Гукнути поруч</em> (<a class="game-command" href="https://t.me/Chornolis_bot?start=cmd_yell"><em>/yell</em></a>) /cleanupCreatures /unknown',
+  );
 
   console.log("Web news archive OK");
 })();

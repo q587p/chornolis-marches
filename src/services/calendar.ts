@@ -102,6 +102,77 @@ function worldDaypartMood(snapshot: WorldTimeSnapshot) {
   return "Темрява збирається між деревами й робить світ менш певним.";
 }
 
+const HOUR_GENITIVE = [
+  "дванадцятої",
+  "першої",
+  "другої",
+  "третьої",
+  "четвертої",
+  "п'ятої",
+  "шостої",
+  "сьомої",
+  "восьмої",
+  "дев'ятої",
+  "десятої",
+  "одинадцятої",
+];
+
+const HOUR_LOCATIVE = [
+  "дванадцятій",
+  "першій",
+  "другій",
+  "третій",
+  "четвертій",
+  "п'ятій",
+  "шостій",
+  "сьомій",
+  "восьмій",
+  "дев'ятій",
+  "десятій",
+  "одинадцятій",
+];
+
+const HOUR_NOMINATIVE = [
+  "дванадцята",
+  "перша",
+  "друга",
+  "третя",
+  "четверта",
+  "п'ята",
+  "шоста",
+  "сьома",
+  "восьма",
+  "дев'ята",
+  "десята",
+  "одинадцята",
+];
+
+function hourWordIndex(hour: number) {
+  return ((hour % 12) + 12) % 12;
+}
+
+function hourPeriodLabel(hour: number) {
+  if (hour >= 0 && hour <= 4) return "ночі";
+  if (hour >= 5 && hour <= 11) return "ранку";
+  if (hour === 12) return "дня";
+  if (hour >= 13 && hour <= 17) return "після полудня";
+  if (hour >= 18 && hour <= 20) return "вечора";
+  return "ночі";
+}
+
+export function renderApproximateWorldClock(snapshot: Pick<WorldTimeSnapshot, "hour" | "minute">) {
+  const current = hourWordIndex(snapshot.hour);
+  const nextHour = (snapshot.hour + 1) % 24;
+  const next = hourWordIndex(nextHour);
+  const currentPeriod = hourPeriodLabel(snapshot.hour);
+  const nextPeriod = hourPeriodLabel(nextHour);
+
+  if (snapshot.minute < 10) return `близько ${HOUR_GENITIVE[current]} ${currentPeriod}`;
+  if (snapshot.minute < 35) return `трохи по ${HOUR_LOCATIVE[current]} ${currentPeriod}`;
+  if (snapshot.minute < 50) return `ближче до ${HOUR_GENITIVE[next]} ${nextPeriod}`;
+  return `майже ${HOUR_NOMINATIVE[next]} ${nextPeriod}`;
+}
+
 export function renderCurrentWorldTime(snapshot = worldTimeSnapshotFromAbsoluteMinute(START_WORLD_ABSOLUTE_MINUTE)) {
   const daypartLabel = snapshot.daypart === "day" && snapshot.hour >= 16 ? "передвечір'я" : snapshot.daypartLabel;
   const light = lightSnapshotFromWorldTime(snapshot);
@@ -113,7 +184,7 @@ export function renderCurrentWorldTime(snapshot = worldTimeSnapshotFromAbsoluteM
     `Місячне коло: ${snapshot.lunarCircleName}.`,
     `День кола: ${snapshot.dayOfCircle}.`,
     `Час доби: ${daypartLabel}.`,
-    `Межовий час: близько ${snapshot.clockLabel}.`,
+    `Межовий час: ${renderApproximateWorldClock(snapshot)}.`,
     `Місяць: ${snapshot.moonPhaseLabel}.`,
     `Погода: ${renderWeatherLine(snapshot)}.`,
     `Світло: ${light.label}.`,
