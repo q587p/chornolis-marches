@@ -17,6 +17,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added `shah` and `hryvnia` to visible ground-resource pickup handling, including aliases and existing pickup-all paths.
 - Added a separate beginner-cache money box for `shah` and `hryvnia` with explicit player take/contribute controls.
 - Added a rare waking-world successful-gather bonus that can grant one `shah` directly to the player.
+- Added Scribe/admin `/call_scribes_audit` and `/call_scribes_approve <eventId>` / `/call_scribes_approve_<eventId>` commands for reviewing and applying recorded return-help requests.
 - Added focused money/loot tests for pluralization, starter seed authoring, cache money behavior and gather bonus boundaries.
 - Added `docs/systems/money_and_low_risk_loot.md` and `MONEY-001` planning documentation.
 
@@ -24,6 +25,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Updated starter-cache documentation to clarify that hidden unobserved restock must never create money.
 - Updated `LOOT-001` planning status and next/backlog notes so the first money/loot MVP is recorded without promoting shops, vendors, conversion, theft or a broad economy.
+- Return-help requests now notify the requesting player too when that player is themselves a Scribe/admin recipient, instead of leaving self-requests visible only as world-event records.
 - Regenerated planning exports for the new money/loot planning item and LOOT-001 status update.
 
 ## 0.15.15 - Liminal signs and quotation guardrails - 12026-06-02

@@ -94,7 +94,7 @@ function scribeDisplayName(scribe: ScribeRef | null | undefined, telegramId?: nu
   return telegramId ? `Писар #${telegramId}` : "Писар Порубіжжя";
 }
 
-async function scribeTelegramRecipients(exceptTelegramId?: string | number | null) {
+async function scribeTelegramRecipients() {
   const configured = config.adminTelegramIds;
   const scribes = await prisma.player.findMany({
     where: {
@@ -106,9 +106,108 @@ async function scribeTelegramRecipients(exceptTelegramId?: string | number | nul
     select: { telegramId: true },
   });
 
-  const except = exceptTelegramId ? String(exceptTelegramId) : null;
   return [...new Set([...configured, ...scribes.map((player) => player.telegramId)])]
-    .filter((telegramId) => telegramId && telegramId !== except);
+    .filter((telegramId) => telegramId);
+}
+
+function formatAuditDate(value: Date) {
+  return value.toISOString().replace("T", " ").slice(0, 16);
+}
+
+export async function buildScribeReturnAuditEntries(limit = 10) {
+  const requests = await prisma.worldEvent.findMany({
+    where: { title: SCRIBE_HELP_EVENT_TITLE },
+    include: { location: { select: { name: true, key: true, x: true, y: true, z: true } } },
+    orderBy: { createdAt: "desc" },
+    take: Math.max(1, Math.min(25, Math.floor(limit))),
+  });
+  const playerIds = [...new Set(requests.map((event) => event.playerId).filter((id): id is number => Number.isSafeInteger(id)))];
+  const [players, returns] = await Promise.all([
+    playerIds.length
+      ? prisma.player.findMany({
+          where: { id: { in: playerIds } },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            nameNominative: true,
+            nameGenitive: true,
+            nameDative: true,
+            nameAccusative: true,
+            nameInstrumental: true,
+            nameLocative: true,
+            nameVocative: true,
+            grammaticalGender: true,
+            pronoun: true,
+            username: true,
+            currentLocation: { select: { name: true, key: true, x: true, y: true, z: true } },
+          },
+        })
+      : Promise.resolve([]),
+    playerIds.length
+      ? prisma.worldEvent.findMany({
+          where: { title: SCRIBE_HELP_RETURN_EVENT_TITLE, playerId: { in: playerIds } },
+          orderBy: { createdAt: "desc" },
+        })
+      : Promise.resolve([]),
+  ]);
+  const playerById = new Map(players.map((player) => [player.id, player]));
+
+  return requests.map((event) => {
+    const player = event.playerId ? playerById.get(event.playerId) : null;
+    const handled = returns.find((returnEvent) => returnEvent.playerId === event.playerId && returnEvent.createdAt >= event.createdAt);
+    const currentLocation = player?.currentLocation;
+    const requestLocation = event.location;
+    const location = currentLocation ?? requestLocation ?? null;
+    return {
+      event,
+      player,
+      handled,
+      playerName: player ? playerForms(player as any).nominative : event.playerId ? `#${event.playerId}` : "невідомий персонаж",
+      locationText: location ? `${location.name} (${location.x},${location.y},${location.z})` : "місцина невідома",
+    };
+  });
+}
+
+export async function buildScribeReturnAuditText(limit = 10) {
+  const entries = await buildScribeReturnAuditEntries(limit);
+  if (!entries.length) {
+    return "✒️ У книзі Писарів поки немає звернень про повернення.";
+  }
+
+  return [
+    "✒️ Звернення до Писарів",
+    "",
+    ...entries.map(({ event, handled, playerName, locationText }) => {
+      const status = handled ? `опрацьовано ${formatAuditDate(handled.createdAt)}` : "очікує знака";
+      return `#${event.id} — ${playerName}; ${locationText}; ${status}; ${formatAuditDate(event.createdAt)}\n/call_scribes_approve_${event.id}`;
+    }),
+  ].join("\n");
+}
+
+export async function approveScribeReturnRequest(bot: Bot, eventId: number, scribeTelegramId: number | string) {
+  if (!Number.isSafeInteger(eventId) || eventId <= 0) {
+    return { ok: false as const, message: "Не вдалося прочитати номер звернення." };
+  }
+
+  const event = await prisma.worldEvent.findUnique({ where: { id: eventId } });
+  if (!event || event.title !== SCRIBE_HELP_EVENT_TITLE || !event.playerId) {
+    return { ok: false as const, message: "Не знайшов такого звернення до Писарів." };
+  }
+
+  const handled = await prisma.worldEvent.findFirst({
+    where: {
+      title: SCRIBE_HELP_RETURN_EVENT_TITLE,
+      playerId: event.playerId,
+      createdAt: { gte: event.createdAt },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+  if (handled) {
+    return { ok: false as const, message: `Це звернення вже опрацьовано: ${formatAuditDate(handled.createdAt)}.` };
+  }
+
+  return performScribeReturn(bot, event.playerId, scribeTelegramId);
 }
 
 export async function requestScribeReturnHelp(bot: Bot, telegramId: number | string) {
@@ -155,7 +254,7 @@ export async function requestScribeReturnHelp(bot: Bot, telegramId: number | str
     },
   });
 
-  const recipients = await scribeTelegramRecipients(telegramId);
+  const recipients = await scribeTelegramRecipients();
   const text = scribeReturnRequestMessage(player);
   let sent = 0;
   for (const recipient of recipients) {
