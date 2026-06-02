@@ -65,11 +65,12 @@ Detailed task files live in `docs/planning/items/`.
 6. `OBS-001-B` — add visible herbalist action.
 7. `OBS-001-C` — grant first herbalism/gathering progress.
 8. `OBS-001-D` — add observation anti-farming cooldown.
-9. `TRACK-LEARN-001-A` — add first track-examine progress hint.
-10. `TRACK-LEARN-001-B` — add one animal movement observation.
-11. `TRACK-LEARN-001-C` — make learning respect visibility/light.
-12. `OMEN-001-A` — choose one omen.
-13. `OMEN-001-B` — add omen trigger and rate limit.
-14. `OMEN-001-C` — add omen local text.
-15. `OMEN-001-D` — add trace/object result if supported.
-16. `ONB-001-F` — add tutorial hint that careful observation matters.
+9. `OBS-003` — add danger-aware `/examine` atmosphere without raw danger numbers.
+10. `TRACK-LEARN-001-A` — add first track-examine progress hint.
+11. `TRACK-LEARN-001-B` — add one animal movement observation.
+12. `TRACK-LEARN-001-C` — make learning respect visibility/light.
+13. `OMEN-001-A` — choose one omen.
+14. `OMEN-001-B` — add omen trigger and rate limit.
+15. `OMEN-001-C` — add omen local text.
+16. `OMEN-001-D` — add trace/object result if supported.
+17. `ONB-001-F` — add tutorial hint that careful observation matters.

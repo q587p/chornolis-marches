@@ -2169,6 +2169,26 @@
     "file": "docs/planning/items/OBS-002-visible-herbalist-observation-moment.md"
   },
   {
+    "id": "OBS-003",
+    "title": "Danger-aware examine cues",
+    "status": "next",
+    "type": "feature",
+    "area": "learning",
+    "priority": "high",
+    "tags": [
+      "observe",
+      "examine",
+      "danger",
+      "ecology",
+      "atmosphere"
+    ],
+    "depends_on": [
+      "OBS-PREP-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/OBS-003-danger-aware-examine-cues.md"
+  },
+  {
     "id": "OBS-PREP-001",
     "title": "Look/examine content audit before observation MVP",
     "status": "next",
