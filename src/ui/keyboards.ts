@@ -126,9 +126,9 @@ export function buildAnonymousTargetKeyboard(target: Pick<TargetRef, "type" | "i
   const canGreetVerbally = target.canGreet && !target.isAnimal;
   const keyboard = new InlineKeyboard()
     .text("👁 Глянути", `social:look:${target.type}:${target.id}:mystery`)
-    .text("🔎 Роздивитися", `social:inspect:${target.type}:${target.id}:mystery`)
-    .text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:mystery`)
-    .row();
+    .text("🔎 Роздивитися", `social:inspect:${target.type}:${target.id}:mystery`);
+  if (target.canAttack) keyboard.text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:mystery`);
+  keyboard.row();
 
   if (canGreetVerbally) keyboard.text("💬 Привітати", `social:greet:${target.type}:${target.id}:mystery`);
   keyboard.text("🗣 Сказати", `targetSpeech:say:${target.type}:${target.id}:mystery`);
@@ -143,9 +143,9 @@ export function buildTargetActionKeyboard(target: Pick<TargetRef, "type" | "id" 
   const canGreetVerbally = target.canGreet && !target.isAnimal;
   const keyboard = new InlineKeyboard()
     .text("👁 Глянути", `social:look:${target.type}:${target.id}:known${pageSuffix}`)
-    .text(again ? "🔎 Роздивитися ще раз" : "🔎 Роздивитися", `social:inspect:${target.type}:${target.id}:known${pageSuffix}`)
-    .text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:known${pageSuffix}`)
-    .row();
+    .text(again ? "🔎 Роздивитися ще раз" : "🔎 Роздивитися", `social:inspect:${target.type}:${target.id}:known${pageSuffix}`);
+  if (target.canAttack) keyboard.text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:known${pageSuffix}`);
+  keyboard.row();
 
   if (canGreetVerbally) keyboard.text("💬 Привітати", `social:greet:${target.type}:${target.id}:known${pageSuffix}`);
   keyboard.text("🗣 Сказати", `targetSpeech:say:${target.type}:${target.id}:known`);

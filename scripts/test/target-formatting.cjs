@@ -120,6 +120,25 @@ const anonymousAnimalWithAccidentalGreetingRows = buildAnonymousTargetKeyboard({
 }).inline_keyboard.map((row) => row.map((button) => button.text));
 assert.ok(!anonymousAnimalWithAccidentalGreetingRows.flat().includes("💬 Привітати"), "Animal target keyboards should keep greeting off button text.");
 
+const spiritRows = buildTargetActionKeyboard({
+  type: "creature",
+  id: 16,
+  canGreet: false,
+  canAttack: false,
+  isAnimal: false,
+  canReceiveRawMeat: true,
+}).inline_keyboard.map((row) => row.map((button) => button.text));
+assert.ok(!spiritRows.flat().includes("⚔️ Атакувати"), "Spirit-like target keyboards should not expose attack buttons.");
+
+const anonymousSpiritRows = buildAnonymousTargetKeyboard({
+  type: "creature",
+  id: 17,
+  canGreet: false,
+  canAttack: false,
+  isAnimal: false,
+}).inline_keyboard.map((row) => row.map((button) => button.text));
+assert.ok(!anonymousSpiritRows.flat().includes("⚔️ Атакувати"), "Anonymous spirit-like target keyboards should not expose attack buttons.");
+
 const returnAwareCorpseKeyboard = buildCorpseActionKeyboard({
   kind: "creature",
   id: 21,
