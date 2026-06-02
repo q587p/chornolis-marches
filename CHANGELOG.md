@@ -7,6 +7,19 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.8 - Polish, quieter movement and survival edges - 12026-06-02
+
+### Changed
+
+- Added a temporary raw mushroom poison bridge: eating carried `mushrooms` now has a 1-in-10 chance to consume the mushroom, reduce HP by roughly one third without dropping below 1 HP in this first slice, and increase hunger by `+1`.
+- Documented the temporary mushroom risk as a bridge toward the future mushroom-variety and poison/effect system.
+- Corpse target resolution now treats corpses as ground objects: darkness hides corpse inspection, pickup and freshening targets, including stale inline buttons and queued freshening completion.
+- Stopped completed freshening source messages from being rewritten to the old generic “prey freshened” summary after the newer weapon-aware result message is sent.
+- Coalesced visible non-player/non-animal creature movement notifications per location so quick arrival/departure sequences send one compact message with one tracks button instead of several short Telegram messages.
+- Added `NON_PLAYER_MOVEMENT_NOTIFICATION_WINDOW_MS` for tuning the non-player movement notification coalescing window.
+- Added the first animal-directed speech reaction slice: targeted `SAY` / `WHISPER` to visible animals can produce species-shaped local reactions, and startled mice/rabbits can queue ordinary movement through existing animal movement boundaries.
+- Added text and slash aliases for handmade campfire work: `/build_campfire`, `/light_campfire`, `/douse_campfire`, `/dismantle_campfire`, plus Ukrainian and MUD-style forms such as `скласти вогнище`, `make fire`, `підпалити вогнище`, `put out campfire` and `розібрати вогнище`.
+
 ## 0.15.7 - Player-made campfires - 12026-06-02
 
 ### Added

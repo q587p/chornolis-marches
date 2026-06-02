@@ -72,3 +72,7 @@ Suggested blocked-command copy:
 - Allowed passive/sleep-relevant commands such as `/wake`, `/time`, `/weather`, `/help`, `/commands`, `/chronicles`, `/news`, settings and session-safety commands.
 - Blocked active text commands and active callback buttons with atmospheric wake-first copy and a wake button.
 - Kept tutorial sleep outside the ordinary-sleep allowlist so tutorial dream flow is not treated as ordinary sleep.
+
+## Follow-Up Notes
+
+- The strict first-pass gate intentionally blocks `/me`, inventory / `Речі`, and queue view while ordinary asleep. Track the later UX review in `SLEEP-005` instead of treating that strictness as a regression by itself.

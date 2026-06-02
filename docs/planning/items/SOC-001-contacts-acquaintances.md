@@ -1,7 +1,7 @@
 ---
 id: SOC-001
 title: Contacts / acquaintances MVP
-status: backlog
+status: next
 type: feature
 area: social
 priority: high

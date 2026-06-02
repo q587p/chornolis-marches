@@ -5,7 +5,7 @@ import { renderLocationBrief } from "../services/locations";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { guessGenderFromPronoun, guessNameForms, normalizeCharacterName, type NameForms } from "../services/grammar";
 import { BASE_STAMINA } from "../gameConfig";
-import { renderWorldYearLine } from "../services/calendar";
+import { renderWorldDreamDateLine } from "../services/calendar";
 import { setDefaultBotCommandsWithRetry, syncChatBotCommandsForTelegramId } from "../services/telegramCommands";
 import { recordNewPlayerChronicle } from "../services/chronicles";
 import { enterTutorialDream, hasCompletedTutorial, isTutorialLocation } from "../services/tutorial";
@@ -278,13 +278,13 @@ function renderOnboardingNameConfirmation(player: {
   return `Готово. Порубіжжя запам’ятало ім’я: <b>${escapeHtml(name)}</b>.\n${escapeHtml(onboardingNameApprovalNote(player.isNameApproved))}\n\nНаприклад: «Травник звертається до <b>${escapeHtml(genitive)}</b>» і «<b>${escapeHtml(vocative)}</b>, стежка чекає».`;
 }
 
-async function currentWorldYearLine() {
+async function currentWorldDreamDateLine() {
   const snapshot = await getCurrentWorldTimeSnapshot();
-  return renderWorldYearLine(snapshot.year);
+  return renderWorldDreamDateLine(snapshot);
 }
 
-function renderOnboardingDateHint(yearLine: string) {
-  return `Крук озивається з темного гілля:\n<blockquote>${escapeHtml(`Зараз ${yearLine} Але тобі це, мабуть, поки нічого не каже.`)}</blockquote>`;
+function renderOnboardingDateHint(dateLine: string) {
+  return `Крук озивається з темного гілля:\n<blockquote>${escapeHtml(`Зараз ${dateLine} Але тобі це, мабуть, поки нічого не каже.`)}</blockquote>`;
 }
 
 async function isStaleOnboardingCallback(ctx: any) {
@@ -362,7 +362,7 @@ async function enterWorld(ctx: any, isMenuRefresh = false) {
   if (ctx.chat?.id) await syncChatBotCommandsForTelegramId(ctx.api, ctx.chat.id, from.id);
 
   const displayName = player.nameNominative ?? player.firstName ?? "мандрівнику";
-  const yearLine = await currentWorldYearLine();
+  const dateLine = await currentWorldDreamDateLine();
   const currentLocation = player.currentLocationId
     ? await prisma.cellLocation.findUnique({
         where: { id: player.currentLocationId },
@@ -382,8 +382,8 @@ async function enterWorld(ctx: any, isMenuRefresh = false) {
       : "Ти вже в грі. Навчальний сон ще не завершено: можна повернутися командою /sleep tutorial або написати «навчальний сон». Клавіатура чекає під полем вводу, але всі команди можна і просто текстом вводити 👇";
 
   const text = isMenuRefresh
-    ? `🌲 Меню оновлено.\n${yearLine}\n\nВітаю, ${displayName}.\n\n${keyboardHint}`
-    : `🌲 Порубіжжя Чорнолісу ожили.\n${yearLine}\n\nВітаю, ${displayName}. Твій слід збережено в Чорнолісі.\n\n${keyboardHint}`;
+    ? `🌲 Меню оновлено.\n${dateLine}\n\nВітаю, ${displayName}.\n\n${keyboardHint}`
+    : `🌲 Порубіжжя Чорнолісу ожили.\n${dateLine}\n\nВітаю, ${displayName}. Твій слід збережено в Чорнолісі.\n\n${keyboardHint}`;
 
   await ctx.reply(text, { reply_markup: await buildMainReplyKeyboardForTelegramId(from.id, false) });
 }
@@ -445,7 +445,7 @@ async function finishOnboarding(ctx: any, state: OnboardingState) {
   await ctx.reply(dream.text, {
     reply_markup: await buildMainReplyKeyboardForTelegramId(Number(state.telegramId), false),
   });
-  await ctx.reply(renderOnboardingDateHint(await currentWorldYearLine()), HTML_OPTIONS);
+  await ctx.reply(renderOnboardingDateHint(await currentWorldDreamDateLine()), HTML_OPTIONS);
 
   const view = await renderLocationBrief(dream.locationId, player.id);
   await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard });

@@ -22,6 +22,7 @@ import { slashlessCommandPattern } from "../utils/slashlessCommands";
 const AUTO_STOP_TEXT_COMMAND = slashlessCommandPattern(["autoStop", "autostop", "auto_stop"]);
 import { isTutorialLocation } from "../services/tutorial";
 import { notifyPlayerObservers, playerRestStartObserverText, playerStandObserverText } from "../services/playerVisibility";
+import { canSendPlayerActionMessageToPlayerId } from "../services/sessionPresence";
 
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
 const AUTO_SAY_CHANCE = Number(process.env.PLAYER_AUTO_SAY_CHANCE || 15);
@@ -170,16 +171,18 @@ async function maybeStartAutoRest(bot: Bot, telegramId: number, player: any, loc
     ? "ви дуже втомлені"
     : "втома вже бере своє";
 
-  await bot.api.sendMessage(
-    telegramId,
-    [
-      `🤖 Авто: ${reason}, тому персонаж сам починає відпочинок.`,
-      "",
-      "Поточну дію та чергу очищено. Нові дії під час відпочинку ставатимуть у чергу.",
-      await renderPlayerActionQueue(player.id),
-    ].join("\n"),
-    { reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, true) }
-  );
+  if (await canSendPlayerActionMessageToPlayerId(player.id, "auto:rest")) {
+    await bot.api.sendMessage(
+      telegramId,
+      [
+        `🤖 Авто: ${reason}, тому персонаж сам починає відпочинок.`,
+        "",
+        "Поточну дію та чергу очищено. Нові дії під час відпочинку ставатимуть у чергу.",
+        await renderPlayerActionQueue(player.id),
+      ].join("\n"),
+      { reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, true) }
+    );
+  }
 
   return true;
 }
@@ -230,6 +233,7 @@ async function replyWithAutoConfirmation(ctx: any) {
 
 async function notifyAutoChoice(bot: Bot, telegramId: number, playerId: number, mode: "queued" | "immediate", description: string, locationId?: number) {
   await logEvent("PLAYER_ACTION", mode === "queued" ? "Auto queued player action" : "Auto selected player action", description, locationId).catch(() => undefined);
+  if (!(await canSendPlayerActionMessageToPlayerId(playerId, "auto:choice"))) return;
   const queueText = mode === "queued"
     ? `\n\nВи вже втомлені або зайняті, тож дія стала в чергу.\n\n${await renderPlayerActionQueue(playerId)}`
     : "";
@@ -269,9 +273,11 @@ async function ensureAutoStandingBeforeAction(bot: Bot, telegramId: number, play
       locationId,
       observerText: playerStandObserverText,
     });
-    await bot.api.sendMessage(telegramId, "🤖 Авто: персонаж встає (/stand), перш ніж діяти далі.", {
-      reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, true),
-    });
+    if (await canSendPlayerActionMessageToPlayerId(player.id, "auto:stand")) {
+      await bot.api.sendMessage(telegramId, "🤖 Авто: персонаж встає (/stand), перш ніж діяти далі.", {
+        reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, true),
+      });
+    }
   }
 
   return (await getPlayerByTelegramId(telegramId)) ?? { ...player, posture: "STANDING", isResting: false };
@@ -373,7 +379,7 @@ async function runAutoStep(bot: Bot, telegramId: number) {
 
     if (await maybeStartAutoRest(bot, telegramId, player, locationId)) return;
 
-    if (await maybePerformPlayerAutoSignal(bot, player, telegramId)) return;
+    if (await canSendPlayerActionMessageToPlayerId(player.id, "auto:signal") && await maybePerformPlayerAutoSignal(bot, player, telegramId)) return;
 
     const roll = Math.random();
     const choices: Record<AutoActionKey, () => Promise<boolean>> = {

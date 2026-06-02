@@ -2,18 +2,18 @@
 
 Chornolis is Telegram-first, but player actions should not depend only on Telegram buttons.
 
-When a player-facing button performs an in-world action, there should usually be an equivalent slash command, Ukrainian text command or MUD-style text phrase. Суто паґінаційні and purely navigational archive buttons are allowed to remain callback-only.
+When a player-facing button performs an in-world action, there should be an equivalent slash command, Ukrainian text command or MUD-style text phrase. Суто паґінаційні and purely navigational archive buttons are allowed to remain callback-only for now, but typed command support is still desirable future polish where practical.
 
 ## Current intent
 
-- Keep canonical slash commands stable: `/look`, `/examine`, `/me`, `/inventory`, `/stat`, `/chat`, `/who`, `/time`, `/weather`, `/news`, `/chronicles`, `/help`, `/menu`, `/settings`, `/daynotices`, `/gather`, `/rest`, `/queue`, `/say`, movement commands and admin/debug commands.
+- Keep canonical slash commands stable: `/look`, `/examine`, `/me`, `/inventory`, `/stat`, `/chat`, `/who`, `/time`, `/weather`, `/news`, `/chronicles`, `/help`, `/menu`, `/settings`, `/daynotices`, `/automessages`, `/gather`, `/rest`, `/queue`, `/say`, movement commands and admin/debug commands.
 - Add Ukrainian aliases as a convenience layer over the same handlers where possible.
 - Preserve existing callback buttons for Telegram ergonomics.
 - Reply to unknown text with a short "не зрозуміли" message, `❔ Допомога` (`/help`) / `☰ Меню` (`/menu`) hints and close alias suggestions where possible. Suggestions should include the closest clickable slash command in parentheses when there is a stable one, for example `оглянутися (/look)`, `статистика (/stat)`, `використати гриби (/use_mushrooms)` or `швидкий огляд (/glance)`.
 - Player-facing help text can use clickable Telegram-style slash hints with underscores for multi-word commands. The input normalizer treats `_` as a space, so `/sleep_tutorial` is parsed like `/sleep tutorial`, `/queue_cancel` like `/queue cancel`, and `/auto_stop` like `/auto stop`.
 - Direct slash commands should also accept the same direct text form without the leading slash when practical. This applies strongly to scribe/admin commands and future MUD-style clients: `/teleport forest_07_00` and `teleport forest_07_00` should route to the same command.
 - If a slash command has a no-argument usage response, its direct text aliases should route to that same response instead of falling through to unknown-input fallback. For example `/yell`, `yell`, `call` and `гукнути` without text should all explain how to add the message text.
-- When a visible button/action is mentioned in `/help`, `/commands`, news or release notes, prefer the button label followed by its canonical slash command in parentheses, for example `🌙 AFK / відійти` (`/afk`) or `🚪 Завершити сесію` (`/end_session`). Compatibility aliases may be listed after that, but the first slash hint should be the stable command.
+- When a visible button/action or stable command surface is mentioned in `/help`, `/commands`, news or release notes, prefer the player-facing label followed by its canonical slash command in parentheses, for example `Речі` (`/inv`), `🌙 AFK / відійти` (`/afk`) or `🚪 Завершити сесію` (`/end_session`). Compatibility aliases may be listed after that, but the first slash hint should be the stable command. In `news.md`, this doubles as a smoke-check: if the line cannot name a working slash command beside a player-facing action, verify the command/alias implementation first.
 
 ## Examples
 
@@ -34,6 +34,7 @@ Menu and status:
 - `час`, `/час` -> canonical `/time` view.
 - `погода`, `/погода` -> canonical `/weather` view.
 - `новини`, `/новини` -> canonical `/news` view.
+- `/news N` -> open the Nth Telegram archive page directly, for example `/news 6`. Archive pagination buttons may remain callback-only.
 - `хроніки`, `хроніка`, `останні події`, `події` -> canonical `/chronicles` view.
 - `допомога`, `/допомога` -> canonical `/help` view.
 - `назад` / `↩️ Назад` -> leave the secondary menu and return the main reply keyboard.
@@ -60,12 +61,16 @@ Actions:
 - Pickup costs `1` stamina per actual item/resource unit picked up; taking a stack of `19` loose items costs `19` stamina.
 - `з'їсти ягоди`, `їсти ягоди`, `використати ягоди`, `eat berries`, `use berries` -> eat carried berries from inventory to restore a small amount of stamina and ease hunger by a tiny amount.
 - `з'їсти всі ягоди`, `/eat_all_berries`, `eat all berries`, `use all berries` -> queue berry use until stamina and hunger no longer benefit, without removing unrelated queued actions.
-- `з'їсти гриби`, `їсти гриби`, `використати гриби`, `eat mushrooms`, `use mushrooms` -> eat carried mushrooms from inventory to ease hunger a little.
+- `з'їсти гриби`, `їсти гриби`, `використати гриби`, `eat mushrooms`, `use mushrooms` -> eat carried mushrooms from inventory; they usually ease hunger a little, but a rare bad bite can hurt HP and sharpen hunger.
 - `з'їсти всі гриби`, `/eat_all_mushrooms`, `eat all mushrooms`, `use all mushrooms` -> queue mushroom use until hunger no longer benefits.
 - `з'їсти трави`, `з'їсти лікарські трави`, `використати трави`, `використати лікарські трави`, `вжити трави`, `прикласти трави`, `лікуватися травами`, `eat herbs`, `use herbs` -> eat/use carried herbs when wounded for a small HP recovery.
 - `з'їсти всі лікарські трави`, `/eat_all_herbs`, `eat all herbs`, `use all herbs` -> queue herb use until HP no longer benefits.
 - `запалити факел`, `підпалити факел`, `light torch`, `use torch` -> light an unlit carried torch when there is a campfire nearby or another lit torch in hand.
 - `загасити факел`, `погасити факел`, `притушити факел`, `douse torch`, `extinguish torch` -> douse one carried lit torch into a carried `притушений факел` that preserves its remaining burn time for later relighting.
+- `скласти вогнище`, `розкласти вогнище`, `build campfire`, `make fire`, `/build_campfire` -> build a new handmade campfire from carried `хмиз` when enough is available.
+- `підпалити вогнище`, `розпалити вогнище`, `light campfire`, `/light_campfire` -> light a nearby prepared or extinguished ordinary campfire from a carried lit torch.
+- `погасити вогнище`, `загасити вогнище`, `douse campfire`, `put out campfire`, `/douse_campfire` -> douse a nearby burning handmade campfire.
+- `розібрати вогнище`, `прибрати вогнище`, `dismantle campfire`, `/dismantle_campfire` -> dismantle a nearby prepared or extinguished handmade campfire and recover part of the `хмиз` where possible.
 - `item berries`, `річ ягоди`, `оглянути в речах ягоди`, `inspect item berries` -> inspect a carried resource stack.
 - `/look Лукан`, `look mushroom`, `глянути Лукан`, `дивитися на Лукана`, `examine berries`, `оглянути ягоди`, `роздивитися факел` -> first try local features and visible nearby targets; if no visible target matches, inspect a matching carried resource stack in `Речі`.
 - `викинути ягоди`, `кинути трави`, `drop berries`, `discard torch` -> drop one carried resource from inventory into the current location.
@@ -88,6 +93,7 @@ Actions:
 - `yell Сюди`, `call Сюди`, `гукнути Сюди`, `покликати Сюди`, `крикнути поруч Стій`, `гучно сказати Обережно` -> call out to the current location and immediately adjacent locations.
 - `shout Сюди`, `крикнути Сюди`, `кричати Допоможіть`, `крик Допоможіть`, `вигукнути Обережно`, `волати Не йдіть туди` -> shout across the current region. This uses the speech queue path but spends extra stamina compared with ordinary speech.
 - `черга`, `скасувати`, `очистити чергу`.
+- `/automessages`, `/automessages on`, `/automessages off`, `automessages`, `автоповідомлення`, `авто повідомлення` -> show or change whether own auto-mode action messages keep being delivered after Auto-AFK. Manual AFK and ended sessions remain stronger than this setting.
 - `/track`, `/examine tracks`, `роздивитися сліди`, `придивитися до слідів`. Future detail forms should include target-like aliases such as `роздивитися вовчий слід`, `роздивитися людський слід` and `роздивитися заячий слід`.
 - `сказати Привіт`.
 - `додати хмиз`, `підкинути хмиз`, `/add twigs campfire` -> add carried `хмиз` to a nearby ordinary campfire.
@@ -122,12 +128,14 @@ Target focus buttons mirror the text commands: **Глянути** is a brief `/l
 
 Before adding a new player-facing Telegram button, check:
 
-1. Is this only паґінаційна or archive navigation? If yes, callback-only is fine. Examples: `Далі`, `Назад`, `1/3`, `До архіву`.
-2. Is this an in-world action? Add a slash command or Ukrainian/MUD-style alias.
+1. Is this only паґінаційна or archive navigation? If yes, callback-only is fine for the current change, but consider a future typed command when practical. Examples: `Далі`, `Назад`, `1/3`, `До архіву`.
+2. Is this an in-world action? Add a stable slash command, an English/MUD-style text form and Ukrainian aliases with common cases/forms where practical.
 3. Does an existing canonical handler already exist? Reuse it instead of creating a parallel response.
 4. Does the button target a selected object? Add a text form that can resolve a visible target by number or name when practical.
 
 This keeps Telegram UI convenient while preserving the long-term MUD/sandbox direction.
+
+Rare callback-only exceptions are confirmation/cancel controls, pagination, archive navigation and other UI-only navigation. Ordinary player-facing world actions such as building, lighting, taking, putting, resting, speaking, attacking, inspecting or using items should not be button-only. The exceptions are not meant as a permanent ceiling: where a natural text command exists for navigation, pagination or confirmation, add it in a future polish pass.
 
 ## Command catalog follow-up
 
@@ -157,6 +165,7 @@ Future command-registry work should move the project toward one shared source of
 
 - command name, short aliases and Ukrainian aliases;
 - slash command, MUD-style text form and Telegram button parity;
+- future text-command parity for navigation/pagination/confirmation surfaces where it feels natural, even though those may remain callback-only in the current UI;
 - per-command help, for example `help say` / `допомога сказати`;
 - availability gates such as ordinary player, scribe/admin and future builder permissions;
 - future command chaining with semicolons, for example `get sword; equip sword`;

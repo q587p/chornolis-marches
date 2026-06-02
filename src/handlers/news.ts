@@ -60,6 +60,14 @@ function splitTextIntoPages(text: string, maxChars: number) {
   return pages.length ? pages : ["Новин поки немає."];
 }
 
+export function parseNewsListPageRequest(text?: string | null) {
+  const match = String(text ?? "").trim().match(/^\/news(?:@\w+)?(?:\s+(\d+))?$/i);
+  if (!match?.[1]) return 0;
+  const requestedPage = Number(match[1]);
+  if (!Number.isFinite(requestedPage) || requestedPage < 1) return 0;
+  return Math.floor(requestedPage) - 1;
+}
+
 function buildNewsIndexKeyboard(entries: NewsEntry[], listPage: number, totalListPages: number) {
   const keyboard = new InlineKeyboard();
   const start = listPage * NEWS_ENTRY_PAGE_SIZE;
@@ -70,8 +78,16 @@ function buildNewsIndexKeyboard(entries: NewsEntry[], listPage: number, totalLis
   }
 
   if (totalListPages > 1) {
-    if (listPage > 0) keyboard.text("◀️ Назад", `news:list:${listPage - 1}`);
-    if (listPage < totalListPages - 1) keyboard.text("Далі ▶️", `news:list:${listPage + 1}`);
+    if (listPage > 0) {
+      keyboard.text("⏮️ Початок", "news:list:0");
+      keyboard.text("◀️ Назад", `news:list:${listPage - 1}`);
+      keyboard.row();
+    }
+    keyboard.text(`${listPage + 1}/${totalListPages}`, "news:list:noop").row();
+    if (listPage < totalListPages - 1) {
+      keyboard.text("Далі ▶️", `news:list:${listPage + 1}`);
+      keyboard.text("Кінець ⏭️", `news:list:${totalListPages - 1}`);
+    }
   }
 
   return keyboard.inline_keyboard.length ? keyboard : undefined;
@@ -98,6 +114,7 @@ export async function buildNewsIndexPage(requestedListPage: number) {
     "",
     `Архів новин: ${rangeStart}-${rangeEnd} з ${entries.length}`,
     "Оберіть версію, щоб відкрити повний запис.",
+    ...(totalListPages > 2 ? [`Можна перейти одразу: /news ${listPage + 1}.`] : []),
   ].join("\n");
 
   return {
@@ -152,7 +169,7 @@ async function editOrReply(ctx: any, text: string, keyboard?: InlineKeyboard) {
 }
 
 export async function sendNews(ctx: any) {
-  const page = await buildNewsIndexPage(0);
+  const page = await buildNewsIndexPage(parseNewsListPageRequest(ctx.message?.text));
   await ctx.reply(page.text, page.keyboard ? { reply_markup: page.keyboard } : undefined);
 }
 
@@ -160,7 +177,11 @@ export function registerNewsHandlers(bot: Bot) {
   bot.command("news", sendNews);
   bot.hears("📰 Новини", sendNews);
 
-  bot.callbackQuery(/^news:list:(\d+)$/, async (ctx) => {
+  bot.callbackQuery(/^news:list:(\d+|noop)$/, async (ctx) => {
+    if (ctx.match[1] === "noop") {
+      await ctx.answerCallbackQuery();
+      return;
+    }
     const requestedListPage = Number(ctx.match[1]);
     const page = await buildNewsIndexPage(Number.isFinite(requestedListPage) ? requestedListPage : 0);
     await ctx.answerCallbackQuery();

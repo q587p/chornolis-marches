@@ -2,6 +2,7 @@ import { prisma } from "../db";
 import type { Prisma } from "@prisma/client";
 import { creatureForms } from "./grammar";
 import { isFreshenedCorpse } from "./meat";
+import { visibilityRulesForLocation } from "./visibility";
 
 const CARRIED_CORPSE_MARKER = "carried_corpse_by_player:";
 
@@ -171,6 +172,8 @@ export async function addCorpseToInventory(playerId: number, creature: { id: num
 export async function addVisibleCorpsesToInventory(playerId: number, query?: string | null) {
   const player = await prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } });
   if (!player?.currentLocationId) throw new Error("Ти ще не увійшов у світ. Напиши /start");
+  const visibility = await visibilityRulesForLocation(player.currentLocationId, "details");
+  if (!visibility.showGroundObjects) throw new Error("Без світла трупів поруч не розібрати. Спершу озирніться при світлі або запаліть факел.");
 
   const creatures = await prisma.creature.findMany({
     where: {

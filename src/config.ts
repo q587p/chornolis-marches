@@ -57,7 +57,8 @@ function getAppVersion() {
 }
 
 const configuredTickMs = optionalNumberEnv("WORLD_TICK_INTERVAL_MS") ?? optionalNumberEnv("TICK_MS") ?? 1500;
-const configuredAutoAfkMinutes = optionalNumberEnv("AUTO_AFK_AFTER_MINUTES") ?? 15;
+const configuredAutoAfkMinutes = optionalNumberEnv("AUTO_AFK_AFTER_MINUTES") ?? 13;
+const configuredAutoEndSessionMinutes = optionalNumberEnv("AUTO_END_SESSION_AFTER_MINUTES") ?? 60;
 const heraldBotToken = optionalStringEnv("HERALD_BOT_TOKEN");
 const configuredHeraldEnabled = optionalBooleanEnv("HERALD_ENABLED");
 const configuredHeraldPublishIntervalMs = optionalNumberEnv("HERALD_PUBLISH_INTERVAL_MS") ?? 30_000;
@@ -65,6 +66,7 @@ const configuredHeraldArchiveIntervalMinutes = optionalNumberEnv("HERALD_ARCHIVE
 const configuredHeraldMaxPublicationsPerTick = optionalNumberEnv("HERALD_MAX_PUBLICATIONS_PER_TICK") ?? 1;
 const configuredHeraldRebalanceOverduePublications = optionalBooleanEnv("HERALD_REBALANCE_OVERDUE_PUBLICATIONS") ?? true;
 const configuredHeraldStartupNoticeEnabled = optionalBooleanEnv("HERALD_STARTUP_NOTICE_ENABLED") ?? false;
+const configuredNonPlayerMovementNotificationWindowMs = optionalNumberEnv("NON_PLAYER_MOVEMENT_NOTIFICATION_WINDOW_MS") ?? 60_000;
 const publicBaseUrl = normalizeBaseUrl(optionalStringEnv("PUBLIC_BASE_URL") ?? "https://chornolis-marches.onrender.com");
 const configuredGameBotUsername = optionalStringEnv("GAME_BOT_USERNAME") ?? "Chornolis_bot";
 
@@ -77,6 +79,7 @@ export const config = {
   gameBotUsername: configuredGameBotUsername.replace(/^@/, ""),
   tickMs: Math.max(1000, Math.floor(configuredTickMs)),
   autoAfkAfterMinutes: Math.max(1, Math.floor(configuredAutoAfkMinutes)),
+  autoEndSessionAfterMinutes: Math.max(1, Math.floor(configuredAutoEndSessionMinutes)),
   adminTelegramIds: optionalStringListEnv("ADMIN_TELEGRAM_IDS"),
   adminSetSecret: optionalStringEnv("ADMIN_SET_SECRET"),
   heraldEnabled: configuredHeraldEnabled ?? Boolean(heraldBotToken),
@@ -89,4 +92,5 @@ export const config = {
   heraldRebalanceOverduePublications: configuredHeraldRebalanceOverduePublications,
   heraldStartupNoticeEnabled: configuredHeraldStartupNoticeEnabled,
   heraldStartupNoticeChatId: optionalStringEnv("HERALD_STARTUP_NOTICE_CHAT_ID"),
+  nonPlayerMovementNotificationWindowMs: Math.max(0, Math.floor(configuredNonPlayerMovementNotificationWindowMs)),
 };

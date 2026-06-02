@@ -1,7 +1,7 @@
 ---
 id: SOC-003
 title: Travel group core
-status: backlog
+status: next
 type: feature
 area: social
 priority: high

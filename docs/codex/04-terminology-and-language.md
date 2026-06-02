@@ -42,11 +42,13 @@ When adding or changing commands, keep aliases in sync:
 - Ukrainian text aliases for ordinary Telegram input;
 - button labels and `/help`, `/adminHelp` or `/adminMenu` surfaces.
 
+With rare exceptions, new player-facing in-world action buttons should not be callback-only. Add a stable slash command, an English/MUD-style form, and Ukrainian aliases with common cases/forms where practical. Callback-only behavior is acceptable for now for pagination, archive navigation, confirmation/cancel controls, and other purely navigational UI. Where practical, those UI/navigation surfaces should also gain typed commands later, but that is follow-up polish rather than a blocker for ordinary action parity.
+
 Direct slash commands should also accept the same direct text form without the leading slash when practical, especially for scribe/admin commands: `/teleport forest_07_00` and `teleport forest_07_00` should behave the same.
 
 If a slash command has a no-argument usage hint, its English/MUD-style and Ukrainian aliases should route to that same hint too. For example `/yell`, `yell`, `call` and `гукнути` without text should all explain how to add the message text, not fall into the generic unknown-command response.
 
-Actual Telegram keyboard button labels should stay short and clean: Ukrainian label plus icon where helpful. Use slash commands in parentheses in help, commands, news, release notes and docs, but do not append `(/command)` hints inside reply or inline keyboard button text.
+Actual Telegram keyboard button labels should stay short and clean: Ukrainian label plus icon where helpful. Use slash commands in parentheses in help, commands, news, release notes and docs, but do not append `(/command)` hints inside reply or inline keyboard button text. In `news.md`, prefer naming the working command beside each player-facing action, for example `Речі` (`/inv`) or `Підпалити вогнище` (`/light_campfire`), so missing aliases are caught before publication.
 
 - `/look`
 - `/examine`

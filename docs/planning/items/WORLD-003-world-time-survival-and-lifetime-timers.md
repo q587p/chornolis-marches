@@ -55,4 +55,4 @@ Now that the internal world clock exists, the next durable pass should make slow
 
 ## Notes
 
-0.14.23 slowed the immediate action-based hunger spike as a balance bridge. 0.15.6 adds the first persisted player hunger marker, a slow `+1` per 4 in-game hours passive increase, and marker refresh when food actually reduces hunger. This task remains open for tuning, AFK/offline/session policy and the broader item-lifetime audit.
+0.14.23 slowed the immediate action-based hunger spike as a balance bridge. 0.15.6 adds the first persisted player hunger marker, a slow `+1` per 4 in-game hours passive increase, and marker refresh when food actually reduces hunger. 0.15.8 clarifies the first session policy: `/end_session` pauses passive hunger by advancing the marker without increasing hunger, while AFK stays as notification silence only. This task remains open for tuning, offline edge cases and the broader item-lifetime audit.

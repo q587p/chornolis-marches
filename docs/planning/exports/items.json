@@ -111,6 +111,26 @@
     "file": "docs/planning/items/ALC-001-herbal-stamina-elixir.md"
   },
   {
+    "id": "ANIMAL-001",
+    "title": "Animal speech reactions",
+    "status": "in_progress",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "medium",
+    "tags": [
+      "animals",
+      "speech",
+      "social",
+      "ecology",
+      "reactions"
+    ],
+    "depends_on": [
+      "SOC-008"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ANIMAL-001-speech-reactions.md"
+  },
+  {
     "id": "AUTH-001",
     "title": "Profile protection and client-neutral login",
     "status": "icebox",
@@ -149,6 +169,26 @@
     "depends_on": [],
     "exports": {},
     "file": "docs/planning/items/BARTER-001-early-exchange-and-barter-foundation.md"
+  },
+  {
+    "id": "BUILD-001",
+    "title": "Generic build command foundation",
+    "status": "backlog",
+    "type": "feature",
+    "area": "commands",
+    "priority": "medium",
+    "tags": [
+      "commands",
+      "aliases",
+      "building",
+      "crafting",
+      "mud"
+    ],
+    "depends_on": [
+      "CMD-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/BUILD-001-generic-build-command.md"
   },
   {
     "id": "CAL-001",
@@ -839,6 +879,27 @@
     "depends_on": [],
     "exports": {},
     "file": "docs/planning/items/FIRE-001-D-light-source-matrix-test.md"
+  },
+  {
+    "id": "FIRE-002",
+    "title": "Target-aware campfire commands",
+    "status": "backlog",
+    "type": "feature",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "fire",
+      "campfire",
+      "commands",
+      "aliases",
+      "targets"
+    ],
+    "depends_on": [
+      "WORLD-002",
+      "BUILD-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FIRE-002-targeted-campfire-commands.md"
   },
   {
     "id": "FISH-001",
@@ -1742,6 +1803,25 @@
     "depends_on": [],
     "exports": {},
     "file": "docs/planning/items/NAV-001-location-route-finding.md"
+  },
+  {
+    "id": "NOTIF-001",
+    "title": "Non-player movement notification coalescing",
+    "status": "testing",
+    "type": "feature",
+    "area": "notifications",
+    "priority": "high",
+    "tags": [
+      "telegram",
+      "notifications",
+      "movement",
+      "npc",
+      "spirit",
+      "camp"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/NOTIF-001-non-player-movement-coalescing.md"
   },
   {
     "id": "NPC-002",
@@ -2694,6 +2774,27 @@
     "file": "docs/planning/items/QA-WILLOW-001-seed-map-route-smoke.md"
   },
   {
+    "id": "QA-WILLOW-002",
+    "title": "Willow live command and vertical edge smoke",
+    "status": "backlog",
+    "type": "qa",
+    "area": "world",
+    "priority": "medium",
+    "tags": [
+      "willow-floodplain",
+      "qa",
+      "aliases",
+      "verticality",
+      "admin"
+    ],
+    "depends_on": [
+      "MAP-WILLOW-001",
+      "SOC-008"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/QA-WILLOW-002-live-command-and-vertical-smoke.md"
+  },
+  {
     "id": "REL-001",
     "title": "Release branch PR summary and risk discipline",
     "status": "testing",
@@ -2711,6 +2812,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/REL-001-release-branch-pr-summary-risk.md"
+  },
+  {
+    "id": "RIVER-001",
+    "title": "Bridge jump and river-current hazard",
+    "status": "backlog",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "river",
+      "bridge",
+      "movement",
+      "hazard",
+      "survival"
+    ],
+    "depends_on": [
+      "MAP-WILLOW-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/RIVER-001-bridge-jump-current-hazard.md"
   },
   {
     "id": "SES-001-A",
@@ -2926,9 +3047,28 @@
     "file": "docs/planning/items/SLEEP-004-external-forced-sleep-causes.md"
   },
   {
+    "id": "SLEEP-005",
+    "title": "Ordinary sleep passive UX review",
+    "status": "backlog",
+    "type": "ux",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "sleep",
+      "commands",
+      "inventory",
+      "queue"
+    ],
+    "depends_on": [
+      "SLEEP-002-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SLEEP-005-ordinary-sleep-passive-ux-review.md"
+  },
+  {
     "id": "SOC-001",
     "title": "Contacts / acquaintances MVP",
-    "status": "backlog",
+    "status": "next",
     "type": "feature",
     "area": "social",
     "priority": "high",
@@ -2966,7 +3106,7 @@
   {
     "id": "SOC-003",
     "title": "Travel group core",
-    "status": "backlog",
+    "status": "next",
     "type": "feature",
     "area": "social",
     "priority": "high",
@@ -2986,7 +3126,7 @@
   {
     "id": "SOC-004",
     "title": "Group movement MVP",
-    "status": "backlog",
+    "status": "next",
     "type": "feature",
     "area": "social",
     "priority": "high",
@@ -3045,10 +3185,10 @@
   {
     "id": "SOC-007",
     "title": "Telegram UI and copy for contacts / follow / groups",
-    "status": "backlog",
+    "status": "next",
     "type": "feature",
     "area": "social",
-    "priority": "medium",
+    "priority": "high",
     "tags": [
       "social",
       "telegram",

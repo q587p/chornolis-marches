@@ -114,6 +114,11 @@ assertAlias("повідомлення", { kind: "settings" });
 assertAlias("daynotices", { kind: "daypart-notices", mode: "show" });
 assertAlias("/daynotices on", { kind: "daypart-notices", mode: "on" });
 assertAlias("/daynotices off", { kind: "daypart-notices", mode: "off" });
+assertAlias("automessages", { kind: "auto-messages", mode: "show" });
+assertAlias("/automessages on", { kind: "auto-messages", mode: "on" });
+assertAlias("/automessages off", { kind: "auto-messages", mode: "off" });
+assertAlias("автоповідомлення увімкнути", { kind: "auto-messages", mode: "on" });
+assertAlias("авто повідомлення вимкнути", { kind: "auto-messages", mode: "off" });
 assertAlias("назад", { kind: "back" });
 assertAlias("сховати клавіатуру", { kind: "hide-keyboard" });
 
@@ -197,6 +202,20 @@ assertAlias("eat all cooked meat", { kind: "use-item-all", item: "cooked_meat" }
 assertAlias("з'їсти все смажене м'ясо", { kind: "use-item-all", item: "cooked_meat" });
 assertAlias("запалити факел", { kind: "light-torch" });
 assertAlias("погасити факел", { kind: "douse-torch" });
+assertAlias("/build_campfire", { kind: "build-campfire" });
+assertAlias("build campfire", { kind: "build-campfire" });
+assertAlias("make fire", { kind: "build-campfire" });
+assertAlias("скласти вогнище", { kind: "build-campfire" });
+assertAlias("розкласти багаття", { kind: "build-campfire" });
+assertAlias("/light_campfire", { kind: "light-campfire" });
+assertAlias("light campfire", { kind: "light-campfire" });
+assertAlias("підпалити вогнище", { kind: "light-campfire" });
+assertAlias("/douse_campfire", { kind: "douse-campfire" });
+assertAlias("put out campfire", { kind: "douse-campfire" });
+assertAlias("погасити вогнище", { kind: "douse-campfire" });
+assertAlias("/dismantle_campfire", { kind: "dismantle-campfire" });
+assertAlias("dismantle campfire", { kind: "dismantle-campfire" });
+assertAlias("розібрати вогнище", { kind: "dismantle-campfire" });
 
 assertAlias("навчальний сон", { kind: "sleep", tutorial: true });
 assertAlias("навчання", { kind: "sleep", tutorial: true });

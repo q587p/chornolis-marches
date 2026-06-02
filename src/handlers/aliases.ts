@@ -57,7 +57,7 @@ import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 import { bestTargetMatch, inspectMissingText, isSelfTargetQuery, normalizeTargetKey, targetDisplayLabel, targetListText, visibleTextTargets } from "../services/textTargets";
 import { spendPlayerStaminaAmount } from "../services/actionRecovery";
 import { afkReplyOptions, endPlayerSession, SESSION_AFK_CONFIRMATION, SESSION_ENDED_CONFIRMATION, setPlayerAfk } from "../services/sessionPresence";
-import { setDaypartNoticeSetting, showSettings } from "./settings";
+import { setAutoActionMessageSetting, setDaypartNoticeSetting, showSettings } from "./settings";
 import { beginnerReturnPromptText, beginnerReturnRefusalText, checkBeginnerReturnForPlayer, performBeginnerReturn } from "../services/beginnerReturn";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { formatVitalsSentence } from "../utils/playerText";
@@ -71,6 +71,13 @@ import { queueAllRawMeatCooking } from "../services/cookingQueue";
 import { queueAllUsableInventoryResource } from "../services/eatingQueue";
 import { queueAllBeginnerCacheContributions } from "../services/beginnerCacheQueue";
 import { verticalYellPromptPlaceholder, verticalYellPromptText, type VerticalYellPromptDirection } from "../services/speechRanges";
+import {
+  campfireBuildConfirmationText,
+  dismantlableHandmadeCampfireId,
+  douseableHandmadeCampfireId,
+  relightableCampfireFromTorchId,
+} from "../services/fire";
+import { buildWetCampfireConfirmKeyboard } from "../ui/fireKeyboards";
 
 const pendingVerticalYell = new Map<number, { direction: VerticalYellPromptDirection }>();
 
@@ -469,6 +476,58 @@ async function submitCookMeat(bot: Bot, ctx: any) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
   await submitInventoryQueuedAction(bot, ctx, player, "COOK", {}, "Не вдалося підсмажити м'ясо.");
+}
+
+async function submitBuildCampfire(bot: Bot, ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  try {
+    const confirmationText = await campfireBuildConfirmationText(player.id);
+    if (confirmationText) {
+      await ctx.reply(confirmationText, { reply_markup: buildWetCampfireConfirmKeyboard() });
+      return;
+    }
+    await submitInventoryQueuedAction(bot, ctx, player, "BUILD_CAMPFIRE", {}, "Не вдалося скласти вогнище.");
+  } catch (error) {
+    await replyToActionError(ctx, error, "Не вдалося скласти вогнище.");
+  }
+}
+
+async function submitLightCampfire(bot: Bot, ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const featureId = await relightableCampfireFromTorchId(player.id);
+  if (!featureId) {
+    await ctx.reply("Поруч немає складеного чи згаслого вогнища, яке можна підпалити запаленим факелом.");
+    return;
+  }
+  await submitInventoryQueuedAction(bot, ctx, player, "LIGHT_CAMPFIRE", { featureId }, "Не вдалося запалити вогонь.");
+}
+
+async function submitDouseCampfire(bot: Bot, ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const featureId = await douseableHandmadeCampfireId(player.id);
+  if (!featureId) {
+    await ctx.reply("Поруч немає рукотворного палаючого вогнища, яке можна погасити.");
+    return;
+  }
+  await submitInventoryQueuedAction(bot, ctx, player, "DOUSE_CAMPFIRE", { featureId }, "Не вдалося погасити вогнище.");
+}
+
+async function submitDismantleCampfire(bot: Bot, ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const featureId = await dismantlableHandmadeCampfireId(player.id);
+  if (!featureId) {
+    await ctx.reply("Поруч немає складеного або згаслого рукотворного вогнища, яке можна розібрати.");
+    return;
+  }
+  await submitInventoryQueuedAction(bot, ctx, player, "DISMANTLE_CAMPFIRE", { featureId }, "Не вдалося розібрати вогнище.");
 }
 
 async function submitCookAllMeat(bot: Bot, ctx: any) {
@@ -1200,6 +1259,11 @@ export function registerAliasHandlers(bot: Bot) {
       if (parsed.mode === "off") return setDaypartNoticeSetting(ctx, false);
       return showSettings(ctx);
     }
+    if (parsed.kind === "auto-messages") {
+      if (parsed.mode === "on") return setAutoActionMessageSetting(ctx, true);
+      if (parsed.mode === "off") return setAutoActionMessageSetting(ctx, false);
+      return showSettings(ctx);
+    }
     if (parsed.kind === "session-presence") return submitSessionPresence(ctx, parsed.mode);
     if (parsed.kind === "beginner-return") return requestBeginnerReturn(ctx);
     if (parsed.kind === "tutorial-end") return requestTutorialEnd(ctx);
@@ -1227,6 +1291,10 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "use-item-all") return submitUseAllItems(bot, ctx, parsed.item);
     if (parsed.kind === "light-torch") return submitLightTorch(bot, ctx);
     if (parsed.kind === "douse-torch") return submitDouseTorch(bot, ctx);
+    if (parsed.kind === "build-campfire") return submitBuildCampfire(bot, ctx);
+    if (parsed.kind === "light-campfire") return submitLightCampfire(bot, ctx);
+    if (parsed.kind === "douse-campfire") return submitDouseCampfire(bot, ctx);
+    if (parsed.kind === "dismantle-campfire") return submitDismantleCampfire(bot, ctx);
     if (parsed.kind === "cook-meat") return submitCookMeat(bot, ctx);
     if (parsed.kind === "cook-meat-all") return submitCookAllMeat(bot, ctx);
     if (parsed.kind === "sleep") return submitSleep(bot, ctx, parsed.tutorial);

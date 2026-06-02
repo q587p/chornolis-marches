@@ -18,6 +18,7 @@ import { rememberTutorialInventoryForPlayer } from "../utils/tutorialInventory";
 import { stripUnsafeText } from "../utils/text";
 import { spendPlayerStaminaAmount } from "../services/actionRecovery";
 import { visibleTextTargets } from "../services/textTargets";
+import { visibilityRulesForLocation } from "../services/visibility";
 
 type TargetSpeechMode = "say" | "whisper";
 
@@ -176,6 +177,12 @@ export function registerSocialHandlers(bot: Bot) {
     if (!player || !player.currentLocationId) {
       await safeAnswerCallbackQuery(ctx);
       return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    const visibility = await visibilityRulesForLocation(player.currentLocationId, "details");
+    if (!visibility.showGroundObjects) {
+      await safeAnswerCallbackQuery(ctx, "Без світла трупів не розібрати.");
+      return void (await editOrReply(ctx, "Без світла трупів поруч не розібрати. Спершу озирніться при світлі або запаліть факел.", buildExamineLocationKeyboard()));
     }
 
     const creature = await prisma.creature.findFirst({

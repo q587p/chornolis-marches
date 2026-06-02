@@ -16,8 +16,122 @@ type LocationNotificationOptions = {
 const latestInlineMessageByChatAndKey = new Map<string, number>();
 const inlineReplacementLocks = new Map<string, Promise<void>>();
 
+type NonPlayerMovementNotificationEvent = {
+  bot?: Bot;
+  locationId: number;
+  line: string;
+  creatureId?: number;
+};
+
+type NonPlayerMovementNotificationFlush = {
+  bot?: Bot;
+  locationId: number;
+  lines: string[];
+  creatureIds: number[];
+};
+
+type PendingNonPlayerMovementNotification = {
+  bot?: Bot;
+  locationId: number;
+  lines: string[];
+  creatureIds: Set<number>;
+  timer?: ReturnType<typeof setTimeout>;
+};
+
+type NonPlayerMovementNotificationBufferOptions = {
+  delayMs: number;
+  flush: (event: NonPlayerMovementNotificationFlush) => Promise<void> | void;
+  setTimer?: typeof setTimeout;
+  clearTimer?: typeof clearTimeout;
+};
+
 function inlineMessageKey(chatId: string | number, key: string) {
   return `${chatId}:${key}`;
+}
+
+export function combineMovementNotificationLines(lines: string[]) {
+  return lines.map((line) => line.trim()).filter(Boolean).join("\n");
+}
+
+export function nonPlayerMovementNotificationOptions(locationId: number, creatureIds: number[] = []) {
+  const uniqueCreatureIds = Array.from(new Set(creatureIds.filter((id) => Number.isFinite(id))));
+  const keyboard = new InlineKeyboard().text("🐾 Сліди", "track");
+  return {
+    keyboard,
+    replaceKey: `tracks:${locationId}`,
+    clearKeys: uniqueCreatureIds.map((id) => `target:creature:${id}`),
+  };
+}
+
+export function createNonPlayerMovementNotificationBuffer(options: NonPlayerMovementNotificationBufferOptions) {
+  const pending = new Map<number, PendingNonPlayerMovementNotification>();
+  const setTimer = options.setTimer ?? setTimeout;
+  const clearTimer = options.clearTimer ?? clearTimeout;
+
+  async function flushLocation(locationId: number) {
+    const bucket = pending.get(locationId);
+    if (!bucket) return;
+    if (bucket.timer) clearTimer(bucket.timer);
+    pending.delete(locationId);
+    await options.flush({
+      bot: bucket.bot,
+      locationId: bucket.locationId,
+      lines: [...bucket.lines],
+      creatureIds: Array.from(bucket.creatureIds),
+    });
+  }
+
+  function queue(event: NonPlayerMovementNotificationEvent) {
+    if (!event.line.trim()) return;
+    const existing = pending.get(event.locationId);
+    const bucket = existing ?? {
+      bot: event.bot,
+      locationId: event.locationId,
+      lines: [],
+      creatureIds: new Set<number>(),
+    };
+
+    bucket.bot = event.bot ?? bucket.bot;
+    bucket.lines.push(event.line.trim());
+    if (typeof event.creatureId === "number") bucket.creatureIds.add(event.creatureId);
+    if (bucket.timer) clearTimer(bucket.timer);
+
+    if (options.delayMs <= 0) {
+      pending.set(event.locationId, bucket);
+      void flushLocation(event.locationId);
+      return;
+    }
+
+    bucket.timer = setTimer(() => {
+      void flushLocation(event.locationId);
+    }, options.delayMs);
+    pending.set(event.locationId, bucket);
+  }
+
+  return {
+    queue,
+    flushLocation,
+    pendingCount: () => pending.size,
+  };
+}
+
+const nonPlayerMovementNotificationBuffer = createNonPlayerMovementNotificationBuffer({
+  delayMs: config.nonPlayerMovementNotificationWindowMs,
+  flush: async (event) => {
+    if (!event.bot) return;
+    const text = combineMovementNotificationLines(event.lines);
+    if (!text) return;
+    await notifyLocationAll(event.bot, event.locationId, text, nonPlayerMovementNotificationOptions(event.locationId, event.creatureIds));
+  },
+});
+
+export function queueNonPlayerMovementNotification(bot: Bot, locationId: number, line: string, options: { creatureId?: number } = {}) {
+  nonPlayerMovementNotificationBuffer.queue({
+    bot,
+    locationId,
+    line,
+    creatureId: options.creatureId,
+  });
 }
 
 export async function runInlineReplacementForKey<T>(mapKey: string, task: () => Promise<T>) {

@@ -86,6 +86,10 @@ export function renderWorldYearLine(year = CURRENT_WORLD_YEAR) {
   return `${formatWorldYear(year)}.`;
 }
 
+export function renderWorldDreamDateLine(snapshot = worldTimeSnapshotFromAbsoluteMinute(START_WORLD_ABSOLUTE_MINUTE)) {
+  return `${formatWorldYear(snapshot.year)} ${snapshot.lunarCircleName}, ${snapshot.dayOfCircle} день.`;
+}
+
 export function renderCurrentWorldYearLine() {
   return renderWorldYearLine(CURRENT_WORLD_YEAR);
 }

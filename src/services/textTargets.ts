@@ -6,6 +6,7 @@ import { creatureForms } from "./grammar";
 import { isFreshenedCorpse } from "./meat";
 import { heldWeaponLine } from "./weapons";
 import { isCampSpiritCatCreature } from "./campSpiritCat";
+import { visibilityRulesForLocation, type VisibilityRules } from "./visibility";
 
 export type TextTargetRef = {
   type: "player" | "creature";
@@ -132,8 +133,16 @@ export function visibleTextTargetCreatureWhere(locationId: number): Prisma.Creat
   };
 }
 
+export function textTargetVisibleUnderRules(
+  target: { type?: unknown; isCorpse?: boolean },
+  rules: Pick<VisibilityRules, "showGroundObjects" | "showNearbyDetails">,
+) {
+  return target.isCorpse ? rules.showGroundObjects : rules.showNearbyDetails;
+}
+
 export async function visibleTextTargets(locationId: number, viewerPlayerId: number): Promise<TextTargetRef[]> {
-  const [players, creatures] = await Promise.all([
+  const [visibility, players, creatures] = await Promise.all([
+    visibilityRulesForLocation(locationId, "details"),
     prisma.player.findMany({ where: { currentLocationId: locationId, id: { not: viewerPlayerId } }, orderBy: { id: "asc" } }),
     prisma.creature.findMany({
       where: visibleTextTargetCreatureWhere(locationId),
@@ -167,7 +176,7 @@ export async function visibleTextTargets(locationId: number, viewerPlayerId: num
     };
   });
 
-  return [...playerTargets, ...creatureTargets];
+  return [...playerTargets, ...creatureTargets].filter((target) => textTargetVisibleUnderRules(target, visibility));
 }
 
 export function targetListText(targets: TextTargetRef[]) {

@@ -26,6 +26,7 @@ It is not a trash bin and not a promise. It is cold storage for ideas that need 
 - Pit traps and vertical hazard cells: entering a trap cell can drop a character to a real lower `z - 1` location, cause HP damage and require climbing or help to escape.
 - Deep bridge mechanics.
 - Large MUD-style socials catalog.
+- Local LLM-assisted NPC/spirit context layer: a small local model could later help NPCs and spiritual presences answer or gesture more consciously from nearby context, what was said or shown to them, their role, memory and the current місцина. Keep this cold until authored dialogue, safety boundaries, privacy rules, tone constraints, hallucination guards, cost/performance limits and fallback behavior are designed; it should enrich authored behavior, not replace it.
 - Full personal chronicle/journal system.
 - Item durability and deep item lifetime.
 - Deep weapon durability/sharpness: dull blades, broken hafts, whetstones, smith repairs, weapon quality, maker marks and per-instance weapon history.

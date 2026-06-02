@@ -64,13 +64,13 @@ These values are balance constants, not final design. Player-facing UI should st
 0.11.12 adds the first small practical use for gathered resources from inventory:
 
 - berries can be eaten to restore a small amount of stamina and ease hunger by a tiny amount;
-- mushrooms can be eaten to ease hunger a little;
+- mushrooms can be eaten to ease hunger a little, but the current bridge has a blunt 1-in-10 raw-poison risk: a bad bite consumes the mushroom, lowers HP by roughly a third without dropping the character below 1 HP in this first slice, and raises hunger by `+1` up to the cap;
 - herbs can be used when wounded to restore a small amount of HP.
 - carried resource stacks can be inspected or dropped as a first simple item-action pass.
 
 When a carried resource stack is inspected from `Речі`, the item card should show direct relevant actions for that item instead of forcing the player back to the full inventory list. Current examples include eating edible items, cooking raw meat when a campfire is available, adding `twigs` to a nearby campfire, lighting/dousing torches and dropping the inspected item.
 
-These effects are intentionally modest and player-facing text should stay descriptive. Fuller food, cooking, medicine, herbalism, potions and prepared remedies remain later systems.
+These effects are intentionally modest and player-facing text should stay descriptive. The mushroom poison risk is a temporary bridge for caution and atmosphere, not the final identification system. Fuller food, cooking, medicine, herbalism, mushroom varieties, poison effects, potions and prepared remedies remain later systems.
 
 NPCs should eventually use the same ordinary food assumptions where practical. Hunters can turn suitable fresh carcasses into meat, cook it at a real campfire and eat when hungry. Herbalists can eat berries or mushrooms when hungry, while later herbalism/medicine work should distinguish food from remedies instead of making every gathered plant a meal.
 
@@ -78,9 +78,9 @@ NPCs should eventually use the same ordinary food assumptions where practical. H
 
 Hunger can rise from strenuous player actions or overexertion and can be eased by simple food. Ordinary inspection, gathering or cooking should not make the character feel instantly hungry. Player-facing text should describe hunger atmospherically, not as a debug value.
 
-`0.15.6` adds the first internal-world-time hunger bridge: after onboarding and outside tutorial dream locations, living player characters gain `+1` hunger for each full 4 in-game hours since their last passive hunger mark, capped by `PLAYER_HUNGER_MAX`. Eating berries, mushrooms or cooked meat when they actually reduce hunger refreshes that mark. The first tick for an older character only initializes the mark so deploys do not instantly backfill a large hunger debt. If `/timeSet` or a reset moves the world clock backwards, the mark resets without adding hunger. This passive change is silent; threshold cue messages remain tied to explicit state changes that already go through the hunger cue layer.
+`0.15.6` adds the first internal-world-time hunger bridge: after onboarding and outside tutorial dream locations, living player characters gain `+1` hunger for each full 4 in-game hours since their last passive hunger mark, capped by `PLAYER_HUNGER_MAX`. Eating berries, mushrooms or cooked meat when they actually reduce hunger refreshes that mark. The first tick for an older character only initializes the mark so deploys do not instantly backfill a large hunger debt. If `/timeSet` or a reset moves the world clock backwards, the mark resets without adding hunger. Ended sessions (`/end_session`) advance the passive hunger marker without increasing hunger, so explicit session end is a real pause for passive hunger; AFK does not pause hunger, it only silences reminders/proactive output. This passive change is silent; threshold cue messages remain tied to explicit state changes that already go through the hunger cue layer.
 
-`WORLD-003` remains open for the broader pass: tune the passive hunger rate after playtesting, decide whether AFK/offline/session-ended characters need different protection, and audit torches, campfires, corpse/meat decay and other temporary lifetimes so they use game hours/days consistently instead of scattered real-minute assumptions.
+`WORLD-003` remains open for the broader pass: tune the passive hunger rate after playtesting, review offline edge cases beyond explicit session presence, and audit torches, campfires, corpse/meat decay and other temporary lifetimes so they use game hours/days consistently instead of scattered real-minute assumptions.
 
 ## Meat Loop
 

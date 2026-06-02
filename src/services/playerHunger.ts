@@ -1,4 +1,5 @@
 import { PLAYER_HUNGER_MAX } from "../gameConfig";
+import { config } from "../config";
 import { prisma, type PrismaDb } from "../db";
 import { isTutorialLocation } from "./tutorial";
 
@@ -12,6 +13,19 @@ export type PassivePlayerHungerPlan = {
   initialized: boolean;
   resetBackwards: boolean;
 };
+
+export function shouldPausePassivePlayerHunger(sessionPresence?: string | null) {
+  return sessionPresence === "ENDED";
+}
+
+export function shouldPausePassivePlayerHungerForInactivity(input: {
+  isAutoEnabled?: boolean | null;
+  lastPlayerActionAt?: Date | null;
+}, now = new Date()) {
+  if (input.isAutoEnabled || !input.lastPlayerActionAt) return false;
+  const cutoff = now.getTime() - config.autoEndSessionAfterMinutes * 60_000;
+  return input.lastPlayerActionAt.getTime() <= cutoff;
+}
 
 export function passivePlayerHungerPlan(input: {
   hunger: number;
@@ -74,6 +88,7 @@ export function passivePlayerHungerPlan(input: {
 export async function advancePassivePlayerHunger(
   currentWorldMinute: number,
   db: PrismaDb = prisma,
+  now = new Date(),
 ) {
   const players = await db.player.findMany({
     where: {
@@ -85,6 +100,9 @@ export async function advancePassivePlayerHunger(
       id: true,
       hunger: true,
       lastPassiveHungerAtMinute: true,
+      sessionPresence: true,
+      isAutoEnabled: true,
+      lastPlayerActionAt: true,
       currentLocation: {
         select: {
           key: true,
@@ -99,9 +117,32 @@ export async function advancePassivePlayerHunger(
   let resetBackwards = 0;
   let increasedPlayers = 0;
   let totalIncrease = 0;
+  let pausedBySessionPause = 0;
 
   for (const player of players) {
     if (!player.currentLocation || isTutorialLocation(player.currentLocation)) continue;
+    const pauseBecauseEnded = shouldPausePassivePlayerHunger(player.sessionPresence);
+    const pauseBecauseInactive = shouldPausePassivePlayerHungerForInactivity(player, now);
+    if (pauseBecauseEnded || pauseBecauseInactive) {
+      const currentMark = Math.max(0, Math.floor(currentWorldMinute));
+      if (player.lastPassiveHungerAtMinute !== currentMark) {
+        const where = pauseBecauseEnded
+          ? { id: player.id, sessionPresence: "ENDED" as const }
+          : {
+            id: player.id,
+            isAutoEnabled: false,
+            lastPlayerActionAt: {
+              lte: new Date(now.getTime() - config.autoEndSessionAfterMinutes * 60_000),
+            },
+          };
+        const updated = await db.player.updateMany({
+          where,
+          data: { lastPassiveHungerAtMinute: currentMark },
+        });
+        if (updated.count > 0) pausedBySessionPause++;
+      }
+      continue;
+    }
 
     const plan = passivePlayerHungerPlan({
       hunger: player.hunger,
@@ -140,5 +181,6 @@ export async function advancePassivePlayerHunger(
     resetBackwards,
     increasedPlayers,
     totalIncrease,
+    pausedBySessionPause,
   };
 }

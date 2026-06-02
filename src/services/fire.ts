@@ -211,6 +211,45 @@ export function isDismantlableCampfire(feature: { type?: string | null; data?: u
   return isPreparedCampfire(feature) || isExtinguishedCampfire(feature);
 }
 
+export async function douseableHandmadeCampfireId(playerId: number) {
+  await expireTimedCampfires();
+  const player = await prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } });
+  if (!player?.currentLocationId) return null;
+
+  const features = await prisma.locationFeature.findMany({
+    where: {
+      locationId: player.currentLocationId,
+      isActive: true,
+      type: "CAMPFIRE",
+      providesLight: true,
+    },
+    select: { id: true, type: true, data: true, providesLight: true },
+    orderBy: { id: "asc" },
+  });
+
+  const feature = features.find((item) => isHandmadeCampfire(item) && !isPreparedCampfire(item) && !isExtinguishedCampfire(item));
+  return feature?.id ?? null;
+}
+
+export async function dismantlableHandmadeCampfireId(playerId: number) {
+  await expireTimedCampfires();
+  const player = await prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } });
+  if (!player?.currentLocationId) return null;
+
+  const features = await prisma.locationFeature.findMany({
+    where: {
+      locationId: player.currentLocationId,
+      isActive: true,
+      type: "CAMPFIRE",
+    },
+    select: { id: true, type: true, data: true, providesLight: true },
+    orderBy: { id: "asc" },
+  });
+
+  const feature = features.find((item) => isDismantlableCampfire(item));
+  return feature?.id ?? null;
+}
+
 export function isWetCampfireLocation(location: { biome?: string | null } | null | undefined) {
   return location?.biome === "RIVER" || location?.biome === "SWAMP";
 }

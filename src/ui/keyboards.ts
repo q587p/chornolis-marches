@@ -122,13 +122,14 @@ export function buildExamineTracksKeyboard() {
 }
 
 export function buildAnonymousTargetKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet" | "canAttack" | "isAnimal">) {
+  const canGreetVerbally = target.canGreet && !target.isAnimal;
   const keyboard = new InlineKeyboard()
     .text("👁 Глянути", `social:look:${target.type}:${target.id}:mystery`)
     .text("🔎 Роздивитися", `social:inspect:${target.type}:${target.id}:mystery`)
     .text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:mystery`)
     .row();
 
-  if (target.canGreet) keyboard.text("💬 Привітати", `social:greet:${target.type}:${target.id}:mystery`);
+  if (canGreetVerbally) keyboard.text("💬 Привітати", `social:greet:${target.type}:${target.id}:mystery`);
   keyboard.text("🗣 Сказати", `targetSpeech:say:${target.type}:${target.id}:mystery`);
   keyboard.text("🤫 Прошепотіти", `targetSpeech:whisper:${target.type}:${target.id}:mystery`).row();
   keyboard.text("✨ Сигнали", `signalMenu:${target.type}:${target.id}:mystery`).row();
@@ -138,13 +139,14 @@ export function buildAnonymousTargetKeyboard(target: Pick<TargetRef, "type" | "i
 
 export function buildTargetActionKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet" | "canAttack" | "isAnimal">, again = false, returnCallback = "location:details") {
   const pageSuffix = targetPageSuffix(returnCallback);
+  const canGreetVerbally = target.canGreet && !target.isAnimal;
   const keyboard = new InlineKeyboard()
     .text("👁 Глянути", `social:look:${target.type}:${target.id}:known${pageSuffix}`)
     .text(again ? "🔎 Роздивитися ще раз" : "🔎 Роздивитися", `social:inspect:${target.type}:${target.id}:known${pageSuffix}`)
     .text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:known${pageSuffix}`)
     .row();
 
-  if (target.canGreet) keyboard.text("💬 Привітати", `social:greet:${target.type}:${target.id}:known${pageSuffix}`);
+  if (canGreetVerbally) keyboard.text("💬 Привітати", `social:greet:${target.type}:${target.id}:known${pageSuffix}`);
   keyboard.text("🗣 Сказати", `targetSpeech:say:${target.type}:${target.id}:known`);
   keyboard.text("🤫 Прошепотіти", `targetSpeech:whisper:${target.type}:${target.id}:known`).row();
   for (const socialId of quickSocialsForTarget({ kind: target.type, isAnimal: Boolean(target.isAnimal), canGreet: target.canGreet })) {

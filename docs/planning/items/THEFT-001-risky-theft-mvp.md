@@ -137,6 +137,20 @@ Default: 10 minutes between the same thief and target.
 
 This should apply to both player and creature actors.
 
+## Sleeping targets
+
+If the target is in ordinary sleep, theft should be much easier than stealing from an awake target.
+
+Suggested first-slice rule:
+
+- increase success chance strongly against a sleeping target;
+- reduce target self-detection chance strongly;
+- keep witness detection possible for nearby awake actors;
+- keep lit locations, noisy actions, carried light, spirits or future protective effects able to raise detection risk;
+- do not let sleep bypass protected dream/tutorial locations, pair cooldowns or tutorial-critical item protection.
+
+This should make sleep feel physically vulnerable without turning it into permission for consequence-free griefing.
+
 ## Scribe statistics
 
 Add aggregate stats for scribes:
@@ -162,6 +176,7 @@ Add aggregate stats for scribes:
 - A witness-only detection can keep the thief anonymous in target text.
 - A started attempt always writes a `TheftIncident`.
 - Protected dream/tutorial locations block theft.
+- Sleeping targets are easier to steal from, while awake witnesses and local conditions can still detect the attempt.
 - Cooldown blocks repeated theft against the same target.
 - Scribe stats include all attempts.
 - Player-facing copy uses `персонаж`, `істота`, `дух`, names or neutral “хтось”.

@@ -31,6 +31,7 @@ Prefer small tests around helpers and alias parsing:
 - `canSendProactiveMessage(ended)` returns false.
 - `canSendProactiveMessage(remindersPaused)` returns false.
 - Auto-AFK helper returns true only after the configured inactivity threshold.
+- Auto-End helper returns true only after the longer inactivity threshold, and only for non-auto players.
 - First idle reminder is allowed for a current active scene.
 - Second idle reminder in the same scene is blocked.
 - New scene key resets the idle reminder counter.
@@ -66,6 +67,7 @@ Regression:
 
 - Normal tutorial still works if the player never enters AFK/ended.
 - Bot messages do not reset player inactivity.
+- Long inactivity silently ends non-auto sessions, while auto-enabled characters stay in the world.
 - Delayed messages scheduled before AFK/end are skipped at send time.
 - Delayed idle reminders scheduled before scene change are skipped at send time.
 - Сон and Дрімота do not keep nudging repeatedly in the same scene.
