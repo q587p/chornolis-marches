@@ -22,6 +22,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Polished short Telegram usage prompts so command verbs such as `give`, `дати`, `say`, `whisper`, `reply` and `shout` are visually emphasized in examples.
 - Refreshed the main reply-keyboard vitals after stamina-spending action results such as freshening, speech and item actions when exact or visible status labels change.
 - Added a `Підібрати все` button for visible ground objects so players can pick up all loose location items and visible corpses listed under `Лежить`.
+- Kept buffered non-player movement notifications and their target buttons aligned with visibility: uncertain `Хтось` movement no longer exposes a concrete target button, while lit/visible movement keeps the actor name.
 
 - Polished the world-date line used by `/start`, `/time` and tutorial date hints: named years now use lowercase `рік`, lunar circles are separated with a comma, and `/start` keeps the formal `Ви` tone.
 - Added a short return-from-AFK/end-session hint to `/start` when the player resumes after a quiet session pause.

@@ -58,6 +58,15 @@ async function sleep(ms) {
     { id: 12, locationId: 42, isAlive: true, isGone: false, isHidden: true, label: "схована тінь", species: { kind: "SPIRIT" } },
   ]);
   assert.deepEqual(targets, [{ id: 7, label: "Кіт-бережник" }]);
+  assert.deepEqual(movementNotificationTargetsStillPresent(42, [7], [
+    { id: 7, locationId: 42, isAlive: true, isGone: false, isHidden: false, label: "Кіт-бережник", species: { kind: "SPIRIT" } },
+  ], { showNearbyDetails: false }), []);
+  assert.deepEqual(movementNotificationTargetsStillPresent(42, [7], [
+    { id: 7, locationId: 42, isAlive: true, isGone: false, isHidden: false, label: "Кіт-бережник", species: { kind: "SPIRIT" } },
+  ], { showNearbyDetails: true, lines: ["Хтось зайшов сюди знизу."] }), []);
+  assert.deepEqual(movementNotificationTargetsStillPresent(42, [7], [
+    { id: 7, locationId: 42, isAlive: true, isGone: false, isHidden: false, label: "Кіт-бережник", species: { kind: "SPIRIT" } },
+  ], { showNearbyDetails: true, lines: ["Кіт-бережник зайшов сюди знизу."] }), [{ id: 7, label: "Кіт-бережник" }]);
 
   const options = nonPlayerMovementNotificationOptions(42, [7, 7, 8], targets);
   assert.equal(options.replaceKey, "tracks:42");
