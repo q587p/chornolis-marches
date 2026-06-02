@@ -4,7 +4,7 @@ title: Observation-based learning
 status: backlog
 type: feature
 area: progression
-priority: medium
+priority: high
 tags:
   - skills
   - observation
@@ -26,6 +26,7 @@ Allow players to learn or improve skills by watching beings that use those skill
 - A player can discover a basic skill by observing someone use it.
 - A player can improve a known skill if the observed being has a higher skill.
 - Learning chance depends on relevant attribute, current skill, observed skill, visibility, attention, danger and skill gap.
+- Once real skill storage exists, skill growth should have visible mechanical consequences. Prefer bounded improvements to success chance, stamina efficiency, result quality/yield or failure softness, not decorative progress messages only.
 
 ## Examples
 
@@ -87,6 +88,19 @@ A matching gathering bridge now exists:
 - the bookkeeping also uses hidden `WorldEvent` records and does not expose raw counters or change numeric skills.
 
 Future work should move these messages onto the shared learning/progression service so attack practice, attack observation, gathering practice and gathering observation use the same rules as Herbalism, Tracking and other teachable skills.
+
+## Skill Effects Priority
+
+Player feedback after the text-only bridge is clear: "skill improved" should eventually mean something in play. The near-term `LEARN-002` slice should define and implement the first bounded skill effects so practiced actions do not feel identical to unpracticed ones.
+
+Preferred early effects:
+
+- higher chance to hit or succeed for practiced attack/gather/freshen/cook actions;
+- slightly lower stamina cost for familiar repeated work, with a hard floor so actions never become free;
+- better yield or less waste when a skill fits the action;
+- more reliable contextual understanding for attentive inspection and observation.
+
+Do not expose raw formulas in ordinary UI. Use qualitative wording and keep exact values for technical/scribe surfaces.
 
 ## First Skill Vocabulary To Consider
 

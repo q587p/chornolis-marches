@@ -37,6 +37,7 @@ const {
 const {
   parseWeatherSetTarget,
   parseWorldTimeSetTarget,
+  renderWorldTimeDebug,
 } = require("../../src/services/worldTimeDebug");
 const { daypartFromNoticeDescription, worldDaypartNoticeText } = require("../../src/services/worldDaypartNotices");
 
@@ -83,6 +84,11 @@ assert.ok(!rendered.includes("17:00"));
 assert.ok(rendered.includes("Місяць:"));
 assert.ok(rendered.includes("Погода:"));
 assert.ok(rendered.includes("Світло:"));
+const renderedDebugTime = renderWorldTimeDebug(start, {
+  weatherEndsAtMinute: null,
+  lastAdvancedAt: new Date("2026-06-02T12:00:00.000Z"),
+});
+assert.ok(renderedDebugTime.includes("місячне коло 5/13 — Коло Зеленого Шуму"));
 assert.equal(renderApproximateWorldClock({ hour: 17, minute: 22 }), "трохи по п'ятій після полудня");
 assert.equal(renderApproximateWorldClock({ hour: 17, minute: 45 }), "ближче до шостої вечора");
 assert.equal(renderApproximateWorldClock({ hour: 17, minute: 55 }), "майже шоста вечора");

@@ -70,6 +70,22 @@ export type PredatorKillSpeciesRow = {
   successfulAttacks: number;
 };
 
+type PredatorSpeciesInput = {
+  id: number;
+  key: string;
+  name: string;
+  diet: string | null;
+};
+
+type PredatorKillGroupInput = {
+  speciesId: number;
+  _sum: {
+    kills: number | null;
+    attackAttempts: number | null;
+    successfulAttacks: number | null;
+  };
+};
+
 function parseTickNumber(description: string | null | undefined) {
   const match = description?.match(/Tick #(\d+)/);
   return match ? Number(match[1]) : null;
@@ -82,6 +98,44 @@ function sortPredatorKillRows(rows: PredatorKillSpeciesRow[]) {
     || b.attackAttempts - a.attackAttempts
     || a.speciesKey.localeCompare(b.speciesKey)
   );
+}
+
+export function buildPredatorKillRowsForSpecies(
+  species: PredatorSpeciesInput[],
+  predatorKillGroups: PredatorKillGroupInput[],
+): PredatorKillSpeciesRow[] {
+  const speciesById = new Map(species.map((item) => [item.id, item]));
+  const rowsBySpeciesId = new Map(
+    species
+      .filter((item) => item.diet === "CARNIVORE")
+      .map((item) => [
+        item.id,
+        {
+          speciesKey: item.key,
+          speciesName: item.name,
+          kills: 0,
+          attackAttempts: 0,
+          successfulAttacks: 0,
+        },
+      ]),
+  );
+
+  for (const group of predatorKillGroups) {
+    const predatorSpecies = speciesById.get(group.speciesId);
+    const row = rowsBySpeciesId.get(group.speciesId) ?? {
+      speciesKey: predatorSpecies?.key ?? String(group.speciesId),
+      speciesName: predatorSpecies?.name ?? String(group.speciesId),
+      kills: 0,
+      attackAttempts: 0,
+      successfulAttacks: 0,
+    };
+    row.kills = group._sum.kills ?? 0;
+    row.attackAttempts = group._sum.attackAttempts ?? 0;
+    row.successfulAttacks = group._sum.successfulAttacks ?? 0;
+    rowsBySpeciesId.set(group.speciesId, row);
+  }
+
+  return sortPredatorKillRows([...rowsBySpeciesId.values()]);
 }
 
 function parseTickCounters(description: string | null | undefined): TickCounterSummary {
@@ -148,7 +202,9 @@ export async function getEcologyStats() {
   const timing = getRuntimeTimingConfig();
   const [
     species,
+    specialSpecies,
     animalGroups,
+    specialCreatureGroups,
     resourceGroups,
     locationCount,
     occupiedLocations,
@@ -162,9 +218,15 @@ export async function getEcologyStats() {
     populationRestorationEvents,
   ] = await Promise.all([
     prisma.creatureSpecies.findMany({ where: { kind: "ANIMAL" }, orderBy: { key: "asc" } }),
+    prisma.creatureSpecies.findMany({ where: { kind: { not: "ANIMAL" } }, orderBy: { key: "asc" } }),
     prisma.creature.groupBy({
       by: ["speciesId", "age", "isAlive", "isGone"],
       where: { species: { kind: "ANIMAL" } },
+      _count: { _all: true },
+    }),
+    prisma.creature.groupBy({
+      by: ["speciesId", "isAlive", "isGone", "isHidden"],
+      where: { species: { kind: { not: "ANIMAL" } } },
       _count: { _all: true },
     }),
     prisma.resourceNode.groupBy({
@@ -298,7 +360,18 @@ export async function getEcologyStats() {
     ages: ageCountsTemplate(),
   }));
   const rowsBySpeciesId = new Map(species.map((item, index) => [item.id, speciesRows[index]]));
-  const speciesById = new Map(species.map((item) => [item.id, item]));
+  const specialCreatureRows = specialSpecies.map((item) => ({
+    key: item.key,
+    name: item.name,
+    kind: item.kind,
+    diet: item.diet,
+    total: 0,
+    alive: 0,
+    hidden: 0,
+    inactive: 0,
+    gone: 0,
+  }));
+  const specialRowsBySpeciesId = new Map(specialSpecies.map((item, index) => [item.id, specialCreatureRows[index]]));
 
   let totalAnimals = 0;
   let aliveAnimals = 0;
@@ -322,6 +395,22 @@ export async function getEcologyStats() {
     } else {
       row.alive += count;
       aliveAnimals += count;
+    }
+  }
+
+  for (const group of specialCreatureGroups) {
+    const row = specialRowsBySpeciesId.get(group.speciesId);
+    if (!row) continue;
+    const count = group._count._all;
+    row.total += count;
+    if (group.isGone) {
+      row.gone += count;
+    } else if (group.isHidden) {
+      row.hidden += count;
+    } else if (group.isAlive) {
+      row.alive += count;
+    } else {
+      row.inactive += count;
     }
   }
 
@@ -433,16 +522,7 @@ export async function getEcologyStats() {
       || a.name.localeCompare(b.name, "uk-UA")
     )
     .slice(0, 20);
-  const predatorKillRows = sortPredatorKillRows(predatorKillGroups.map((group) => {
-    const predatorSpecies = speciesById.get(group.speciesId);
-    return {
-      speciesKey: predatorSpecies?.key ?? String(group.speciesId),
-      speciesName: predatorSpecies?.name ?? String(group.speciesId),
-      kills: group._sum.kills ?? 0,
-      attackAttempts: group._sum.attackAttempts ?? 0,
-      successfulAttacks: group._sum.successfulAttacks ?? 0,
-    };
-  }));
+  const predatorKillRows = buildPredatorKillRowsForSpecies(species, predatorKillGroups);
 
   return {
     generatedAt: new Date(),
@@ -461,6 +541,7 @@ export async function getEcologyStats() {
       occupiedAnimalLocations: occupiedLocations.length,
     },
     speciesRows,
+    specialCreatureRows,
     resourceRows,
     topHunters: topHunters.map((creature) => ({
       id: creature.id,

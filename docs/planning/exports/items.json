@@ -809,6 +809,29 @@
     "file": "docs/planning/items/ECO-007-animal-taming-companions.md"
   },
   {
+    "id": "ECO-008",
+    "title": "Herbivore carrion and mouse cannibalism pressure",
+    "status": "backlog",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "medium",
+    "tags": [
+      "ecology",
+      "creatures",
+      "hunger",
+      "carrion",
+      "mice",
+      "rabbits"
+    ],
+    "depends_on": [
+      "ECO-001",
+      "FOOD-003",
+      "PERF-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ECO-008-herbivore-carrion-and-mouse-cannibalism.md"
+  },
+  {
     "id": "ECON-001",
     "title": "Barter and trade",
     "status": "backlog",
@@ -900,6 +923,26 @@
   },
   {
     "id": "FIRE-002",
+    "title": "Magical campfire examine layer",
+    "status": "proposed",
+    "type": "content",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "fire",
+      "campfire",
+      "examine",
+      "light",
+      "atmosphere"
+    ],
+    "depends_on": [
+      "QUOTE-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FIRE-002-magic-campfire-examine-layer.md"
+  },
+  {
+    "id": "FIRE-002",
     "title": "Target-aware campfire commands",
     "status": "backlog",
     "type": "feature",
@@ -925,7 +968,7 @@
     "status": "backlog",
     "type": "feature",
     "area": "survival",
-    "priority": "medium",
+    "priority": "high",
     "tags": [
       "fishing",
       "npc",
@@ -942,10 +985,10 @@
   {
     "id": "FISH-002",
     "title": "Riverbank fisher tiny slice",
-    "status": "proposed",
+    "status": "backlog",
     "type": "feature",
     "area": "survival",
-    "priority": "medium",
+    "priority": "high",
     "tags": [
       "fishing",
       "npc",
@@ -958,6 +1001,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/FISH-002-riverbank-fisher-tiny-slice.md"
+  },
+  {
+    "id": "FISH-003",
+    "title": "Deep-water fishing line seeds",
+    "status": "proposed",
+    "type": "content",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "fishing",
+      "water",
+      "atmosphere",
+      "examine",
+      "future"
+    ],
+    "depends_on": [
+      "QUOTE-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FISH-003-deep-water-fishing-lines.md"
   },
   {
     "id": "FOOD-001",
@@ -1082,6 +1145,29 @@
     ],
     "exports": {},
     "file": "docs/planning/items/FOOD-006-mushroom-varieties-and-identification.md"
+  },
+  {
+    "id": "FOOD-007",
+    "title": "Mushroom visions and dream effects",
+    "status": "icebox",
+    "type": "feature",
+    "area": "survival",
+    "priority": "low",
+    "tags": [
+      "food",
+      "mushrooms",
+      "dreams",
+      "visions",
+      "effects",
+      "alchemy"
+    ],
+    "depends_on": [
+      "FOOD-006",
+      "DREAM-001",
+      "SLEEP-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FOOD-007-mushroom-visions-and-dream-effects.md"
   },
   {
     "id": "GIVE-001",
@@ -1528,7 +1614,7 @@
     "status": "next",
     "type": "ux",
     "area": "learning",
-    "priority": "medium",
+    "priority": "high",
     "tags": [
       "learning",
       "technical-details",
@@ -1539,6 +1625,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/LEARN-001-D.md"
+  },
+  {
+    "id": "LEARN-002",
+    "title": "Skill effects on stamina, success and quality",
+    "status": "next",
+    "type": "feature",
+    "area": "learning",
+    "priority": "high",
+    "tags": [
+      "learning",
+      "skills",
+      "stamina",
+      "success",
+      "balance"
+    ],
+    "depends_on": [
+      "LEARN-001-C"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/LEARN-002-skill-effects-cost-success-and-quality.md"
   },
   {
     "id": "LOOP-001-A",
@@ -2083,6 +2189,26 @@
     "file": "docs/planning/items/OBS-002-visible-herbalist-observation-moment.md"
   },
   {
+    "id": "OBS-003",
+    "title": "Danger-aware examine cues",
+    "status": "next",
+    "type": "feature",
+    "area": "learning",
+    "priority": "high",
+    "tags": [
+      "observe",
+      "examine",
+      "danger",
+      "ecology",
+      "atmosphere"
+    ],
+    "depends_on": [
+      "OBS-PREP-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/OBS-003-danger-aware-examine-cues.md"
+  },
+  {
     "id": "OBS-PREP-001",
     "title": "Look/examine content audit before observation MVP",
     "status": "next",
@@ -2550,6 +2676,27 @@
     "file": "docs/planning/items/ONB-007-dream-tree-and-vertical-tutorial.md"
   },
   {
+    "id": "ONB-008",
+    "title": "Owl threshold refrain in the dream",
+    "status": "proposed",
+    "type": "content",
+    "area": "onboarding",
+    "priority": "medium",
+    "tags": [
+      "onboarding",
+      "dream",
+      "owl",
+      "examine",
+      "atmosphere"
+    ],
+    "depends_on": [
+      "ONB-006",
+      "QUOTE-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-008-owl-threshold-refrain-in-dream.md"
+  },
+  {
     "id": "OWL-002",
     "title": "Nocturnal owl tuning and indirect signs",
     "status": "testing",
@@ -2590,6 +2737,29 @@
     ],
     "exports": {},
     "file": "docs/planning/items/OWL-003-starter-camp-boundary-and-night-signs.md"
+  },
+  {
+    "id": "OWL-004",
+    "title": "Conditional owl examine copy and refrain echoes",
+    "status": "proposed",
+    "type": "content",
+    "area": "ecology",
+    "priority": "medium",
+    "tags": [
+      "owl",
+      "examine",
+      "night",
+      "observation",
+      "atmosphere"
+    ],
+    "depends_on": [
+      "OWL-002",
+      "OWL-003",
+      "OBS-PREP-001",
+      "QUOTE-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/OWL-004-conditional-owl-examine-copy.md"
   },
   {
     "id": "PERF-001",
@@ -2637,7 +2807,7 @@
     "status": "backlog",
     "type": "feature",
     "area": "progression",
-    "priority": "medium",
+    "priority": "high",
     "tags": [
       "skills",
       "observation",
@@ -2811,6 +2981,27 @@
     ],
     "exports": {},
     "file": "docs/planning/items/QA-WILLOW-002-live-command-and-vertical-smoke.md"
+  },
+  {
+    "id": "QUOTE-001",
+    "title": "Liminal signs and quotation layer",
+    "status": "proposed",
+    "type": "content",
+    "area": "content",
+    "priority": "medium",
+    "tags": [
+      "quotes",
+      "signs",
+      "atmosphere",
+      "lore",
+      "dream",
+      "owl"
+    ],
+    "depends_on": [
+      "OBS-PREP-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/QUOTE-001-liminal-signs-and-quotation-layer.md"
   },
   {
     "id": "RAVEN-001",

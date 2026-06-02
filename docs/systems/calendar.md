@@ -26,6 +26,12 @@ The clock advances by elapsed real milliseconds according to the world-time scal
 
 This is intentionally not tied to Christianity, the Holocene calendar, Trypillia or real historical chronology. Chornolis Marches is a separate, loosely related mythic space.
 
+## Player-facing calendar surface
+
+The starter camp has an inspectable `Береста кіл року` feature. It lists the lunar circles in order without numbers, as a local memory aid rather than a technical table, and adds short seasonal work notes: warmth and repairs in cold circles, paths and herbs in thawing circles, hay/fishing/honey in green and hot circles, supplies and caution before the dark half of the year.
+
+Scribe/admin debug surfaces may show the exact ordinal circle number, e.g. `місячне коло 5/13 — Коло Зеленого Шуму`, but ordinary player-facing calendar copy should usually prefer names, order and atmosphere over raw numbering.
+
 ## Era
 
 The current era counts years **after the Great Retreat**.
@@ -134,11 +140,13 @@ Preferred future direction:
 - 13 lunar circles in a year;
 - moon phases inside each circle;
 - 4 seasons layered over the year;
+- a later 365-day year model, plus rare 366-day years according to an in-world leap reckoning;
+- an extra day outside ordinary lunar-circle counting that feels mysterious, mythic and worth preparing for, not merely technical calendar padding;
 - sacred, dangerous or unlucky days;
 - season- and moon-dependent creatures, resources, rituals and events;
 - local names for circles may differ between settlements, volkhvy, hunters and spirits.
 
-Possible working names for the 13 lunar circles:
+Current working names for the 13 lunar circles:
 
 1. Коло Паморозі
 2. Коло Вовчого Сліду

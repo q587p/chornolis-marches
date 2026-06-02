@@ -14,11 +14,16 @@ const {
   hunterFieldLine,
   isCarcassDropoffResourceKey,
 } = require("../../src/services/carcassDropoff");
+const { carcassDropoffButtonRows } = require("../../src/services/locations");
 
 assert.equal(isCarcassDropoffResourceKey("corpse_rabbit"), true);
 assert.equal(isCarcassDropoffResourceKey("corpse_fox_female"), true);
 assert.equal(isCarcassDropoffResourceKey("raw_meat"), false);
 assert.equal(isCarcassDropoffResourceKey("torch"), false);
+assert.deepEqual(carcassDropoffButtonRows(42), [[
+  { text: "🦴 Покласти тушу", callbackData: "dropoff:put:42:one" },
+  { text: "🦴 Покласти всі", callbackData: "dropoff:put:42:all" },
+]]);
 
 assert.deepEqual(dropoffReactionForTotals(0, 1), {
   first: true,

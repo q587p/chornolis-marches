@@ -12,6 +12,7 @@ export type StartActionPayload =
   | "inventory"
   | "say"
   | "yell"
+  | "callScribes"
   | "buildCampfire"
   | "lightCampfire"
   | "douseCampfire"
@@ -37,6 +38,7 @@ export function parseStartActionPayload(value: unknown): StartActionPayload | nu
   if (payload === "cmd_inventory") return "inventory";
   if (payload === "cmd_say") return "say";
   if (payload === "cmd_yell") return "yell";
+  if (payload === "cmd_call_scribes") return "callScribes";
   if (payload === "cmd_build_campfire") return "buildCampfire";
   if (payload === "cmd_light_campfire") return "lightCampfire";
   if (payload === "cmd_douse_campfire") return "douseCampfire";

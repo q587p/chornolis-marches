@@ -12,6 +12,8 @@ Characters should grow through what they actually do, notice and survive: use, o
 
 Chornolis Marches is not a heroic theme park MMO. The world is meant to feel older, stranger and less controlled than the player. Settlements survive only where people can hold back the forest, the creatures within it and the things that move through forgotten places at night.
 
+Recurring signs — owls, dreams, fire, maps, tracks, fishing water and quiet NPC rumors — should behave like in-world folklore rather than explained references. A direct quotation can appear once at a threshold; later echoes should be local, altered and uncertain.
+
 * 🌲 The wilderness exists independently of the player
 * 🧭 Exploration is dangerous, incomplete and uncertain
 * 🐺 Predators hunt prey, compete, age, die and migrate
@@ -91,6 +93,7 @@ The codebase is currently Telegram-first, but gameplay logic is gradually moving
 - [`docs/roadmap.md`](docs/roadmap.md) — roadmap phases and long-term direction
 - [`docs/design/terminology.md`](docs/design/terminology.md) — canonical Ukrainian UI/gameplay terminology
 - [`docs/content/world-lexicon.md`](docs/content/world-lexicon.md) — world nouns and Ukrainian case-form source notes
+- [`docs/content/signs-dreams-and-quotations.md`](docs/content/signs-dreams-and-quotations.md) — liminal signs, quotation guardrails, owl/fire/fishing motifs and NPC rumor seeds
 - [`docs/systems/`](docs/systems/) — gameplay system design documents
 - [`docs/planning/`](docs/planning/) — backlog, next, icebox and planning notes
 - [`docs/dev/`](docs/dev/) — local setup, deployment and developer notes
@@ -117,6 +120,7 @@ The codebase is currently Telegram-first, but gameplay logic is gradually moving
 * [ ] Skill/stat modifiers beyond stamina
 * [ ] Observation-based learning MVP
 * [ ] Living-world ambient event MVP
+* [ ] First liminal sign/refrain content pack for dream threshold, owl signs, magical campfires and fishing water
 * [ ] Queue-aware skinning, trap setting and crafting
 * [ ] Reproduction and offspring
 * [ ] Predator hunting priority by age/HP/sex
@@ -142,8 +146,11 @@ For local development and deployment setup, see:
 * Dwarf Fortress
 * S.T.A.L.K.E.R. A-Life
 * Ukrainian mythology
+* Lynchian dream logic and signs, filtered into Chornolis as local folklore rather than direct pastiche
 
 S.T.A.L.K.E.R. is an inspiration not for modern firearms or post-apocalypse aesthetics, but for autonomous world simulation, dangerous exploration, faction tension, emergent encounters and a living territory that exists independently of the player.
+
+The Lynch/Twin Peaks layer is an inspiration for liminal atmosphere, observation, owls, dreams and fire as unstable signs. It should not override the Ukrainian / Slavic world voice or turn every location into a visible reference.
 
 ---
 

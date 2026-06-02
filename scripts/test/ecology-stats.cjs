@@ -8,6 +8,7 @@ const {
   PREDATOR_KILL_EVENT_TITLE,
   STARVATION_DEATH_EVENT_TITLE,
   TICK_COUNTER_KEYS,
+  buildPredatorKillRowsForSpecies,
   countNpcCharacterKillEvents,
   parsePopulationFloorRestorationDescription,
 } = require("../../src/services/ecologyStats");
@@ -37,6 +38,29 @@ assert.equal(
     new Set([9, 42])
   ),
   1
+);
+
+const predatorRows = buildPredatorKillRowsForSpecies(
+  [
+    { id: 1, key: "fox", name: "лисиця", diet: "CARNIVORE" },
+    { id: 2, key: "owl", name: "сова", diet: "CARNIVORE" },
+    { id: 3, key: "hawk", name: "яструб", diet: "CARNIVORE" },
+    { id: 4, key: "rabbit", name: "заєць", diet: "HERBIVORE" },
+  ],
+  [
+    {
+      speciesId: 2,
+      _sum: { kills: 7, attackAttempts: 9, successfulAttacks: 8 },
+    },
+  ],
+);
+assert.deepEqual(
+  predatorRows.map((row) => [row.speciesKey, row.kills, row.attackAttempts, row.successfulAttacks]),
+  [
+    ["owl", 7, 9, 8],
+    ["fox", 0, 0, 0],
+    ["hawk", 0, 0, 0],
+  ],
 );
 
 console.log("Ecology stat counters OK");

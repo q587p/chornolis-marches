@@ -6,6 +6,7 @@ const {
   CAMPFIRE_BUILD_TWIG_COST,
   MAX_HANDMADE_CAMPFIRES_PER_LOCATION,
   adminHandmadeCampfireData,
+  campfireIgnitionAtmosphereText,
   canBuildAnotherHandmadeCampfire,
   handmadeCampfireCount,
   isHandmadeCampfire,
@@ -37,15 +38,27 @@ const adminPrepared = { ...prepared, data: adminHandmadeCampfireData(1234) };
 assert.equal(adminPrepared.data.created_by, "addCampfire");
 assert.equal(adminPrepared.data.adminCreated, true);
 assert.equal(isHandmadeCampfire(adminPrepared), true);
+assert.equal(isPreparedCampfire(adminPrepared), true);
 assert.equal(isPreparedCampfire({ ...adminPrepared, providesLight: true }), false);
-assert.equal(adminPrepared.data.prepared, false);
-assert.equal(adminPrepared.data.unlit, false);
-assert.equal(typeof adminPrepared.data.litAt, "string");
-assert.equal(typeof adminPrepared.data.expiresAt, "string");
+assert.equal(adminPrepared.data.prepared, true);
+assert.equal(adminPrepared.data.unlit, true);
+assert.equal(adminPrepared.data.litAt, undefined);
+assert.equal(adminPrepared.data.expiresAt, undefined);
 assert.equal(isHandmadeCampfire({ ...prepared, data: { ...adminPrepared.data, debug: true, handmade: false } }), false);
 
 assert.equal(handmadeCampfireCount([prepared, prepared]), 2);
 assert.equal(canBuildAnotherHandmadeCampfire([prepared, prepared]), true);
 assert.equal(canBuildAnotherHandmadeCampfire([prepared, prepared, prepared]), false);
+
+const firstDarkFireText = campfireIgnitionAtmosphereText({ wasFirstActiveCampfire: true, hadLocalLightBefore: false });
+assert.match(firstDarkFireText, /затишніше/u);
+assert.match(firstDarkFireText, /відновлювати швидше/u);
+assert.match(firstDarkFireText, /легше помітити/u);
+
+const firstLitFireText = campfireIgnitionAtmosphereText({ wasFirstActiveCampfire: true, hadLocalLightBefore: true });
+assert.match(firstLitFireText, /затишніше/u);
+assert.doesNotMatch(firstLitFireText, /легше помітити/u);
+
+assert.equal(campfireIgnitionAtmosphereText({ wasFirstActiveCampfire: false, hadLocalLightBefore: false }), "");
 
 console.log("Campfire build helpers OK");

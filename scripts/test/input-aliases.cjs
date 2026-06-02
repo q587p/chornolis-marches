@@ -13,9 +13,14 @@ const {
 } = require("../../src/input/aliases");
 const { inventoryResourceKeyFromText } = require("../../src/services/inventoryUse");
 const { parseStartActionPayload } = require("../../src/input/startPayloads");
+const { autoCommandModeFromText } = require("../../src/handlers/auto");
 const { isDreamGateOpeningPhrase, localGateOpenAttemptText } = require("../../src/services/tutorial");
 const { normalizeCreatureActionText } = require("../../src/utils/creatureActionText");
 const { resourceAccusativeName } = require("../../src/utils/resourceText");
+const {
+  formatTeleportCoordinateCommand,
+  parseTeleportCoordinateCommand,
+} = require("../../src/services/adminTeleportLinks");
 
 function assertAlias(input, expected) {
   assert.deepEqual(parseAlias(input), expected, `Unexpected alias parse for: ${input}`);
@@ -37,6 +42,11 @@ assert.equal(normalizeInput("з’їсти   ягоди."), "з'їсти яго�
 
 assert.equal(parseStartActionPayload("cmd_look"), "look");
 assert.equal(parseStartActionPayload("cmd_examine"), "examine");
+
+assert.equal(formatTeleportCoordinateCommand({ x: 0, y: 9, z: -13 }), "/tp_0_9__13");
+assert.equal(parseTeleportCoordinateCommand("/tp_0_9__13"), "0,9,-13");
+assert.equal(parseTeleportCoordinateCommand("tp__2_10_0"), "-2,10,0");
+assert.equal(parseTeleportCoordinateCommand("/tp_0_9__13@Chornolis_bot"), "0,9,-13");
 assert.equal(parseStartActionPayload("cmd_news"), "news");
 assert.equal(parseStartActionPayload("cmd_auto"), "auto");
 assert.equal(parseStartActionPayload("cmd_auto_stop"), "autoStop");
@@ -48,6 +58,7 @@ assert.equal(parseStartActionPayload("cmd_weather"), "weather");
 assert.equal(parseStartActionPayload("cmd_inventory"), "inventory");
 assert.equal(parseStartActionPayload("cmd_say"), "say");
 assert.equal(parseStartActionPayload("cmd_yell"), "yell");
+assert.equal(parseStartActionPayload("cmd_call_scribes"), "callScribes");
 assert.equal(parseStartActionPayload("cmd_build_campfire"), "buildCampfire");
 assert.equal(parseStartActionPayload("cmd_light_campfire"), "lightCampfire");
 assert.equal(parseStartActionPayload("cmd_douse_campfire"), "douseCampfire");
@@ -102,6 +113,10 @@ assertAlias("end session", { kind: "session-presence", mode: "end" });
 assertAlias("/respawn", { kind: "beginner-return" });
 assertAlias("повернення", { kind: "beginner-return" });
 assertAlias("повернутися до табору", { kind: "beginner-return" });
+assertAlias("/call_scribes", { kind: "call-scribes" });
+assertAlias("call scribes", { kind: "call-scribes" });
+assertAlias("покликати писарів", { kind: "call-scribes" });
+assertAlias("звернутися до писарів", { kind: "call-scribes" });
 assert.equal(parseAlias("/refresh"), null);
 assertAlias("/tutorialEnd", { kind: "tutorial-end" });
 assertAlias("/tutorial_end", { kind: "tutorial-end" });
@@ -299,6 +314,17 @@ assertAlias("/queue_clear", { kind: "queue", mode: "clear" });
 assertAlias("скасувати", { kind: "queue", mode: "cancel-current" });
 assertAlias("очистити чергу", { kind: "queue", mode: "clear" });
 assertAlias("/auto_stop", { kind: "auto", mode: "stop" });
+assertAlias("авто стоп", { kind: "auto", mode: "stop" });
+assertAlias("стоп авто", { kind: "auto", mode: "stop" });
+assertAlias("авто вимкнути", { kind: "auto", mode: "stop" });
+assert.equal(formatAliasSuggestion(suggestAliasEntries("стоп ав")[0]), "стоп авто (/auto_stop)");
+assert.equal(formatAliasSuggestion(suggestAliasEntries("авто ст")[0]), "авто стоп (/auto_stop)");
+assert.equal(formatAliasSuggestion(suggestAliasEntries("вимкнути авт")[0]), "вимкнути авто (/auto_stop)");
+assert.equal(autoCommandModeFromText("stop"), "stop");
+assert.equal(autoCommandModeFromText("off"), "stop");
+assert.equal(autoCommandModeFromText("стоп"), "stop");
+assert.equal(autoCommandModeFromText("вимкнути"), "stop");
+assert.equal(autoCommandModeFromText(""), "start");
 
 assertAlias("сказати Хай стежка буде м'якою.", { kind: "say", text: "Хай стежка буде м'якою." });
 assertAlias("/say Відчинитися", { kind: "say", text: "Відчинитися" });
@@ -394,6 +420,7 @@ assert.ok(suggestAliasEntries("стат").map(formatAliasSuggestion).includes("�
 assert.ok(suggestAliasEntries("гриб").map(formatAliasSuggestion).some((suggestion) => suggestion.includes("(/use_mushrooms)")), "Expected formatted suggestions to include slash command for using mushrooms");
 assert.ok(suggestAliasEntries("навч").map(formatAliasSuggestion).some((suggestion) => suggestion.includes("(/sleep_tutorial)")), "Expected formatted tutorial suggestions to use clickable slash command");
 assert.ok(suggestAliasEntries("повернен").map(formatAliasSuggestion).includes("повернення (/respawn)"), "Expected formatted beginner-return suggestions to use /respawn");
+assert.ok(suggestAliasEntries("писар").map(formatAliasSuggestion).includes("покликати писарів (/call_scribes)"), "Expected formatted scribe-help suggestions to use /call_scribes");
 assert.ok(suggestAliasEntries("закінчити нав").map(formatAliasSuggestion).includes("закінчити навчання (/tutorialEnd)"), "Expected formatted tutorial-end suggestions to use slash command");
 assert.ok(suggestAliasEntries("погод").map(formatAliasSuggestion).includes("погода (/weather)"), "Expected formatted weather suggestions to include /weather");
 assert.ok(suggestAliasEntries("freshen al").map(formatAliasSuggestion).includes("freshen all (/freshen_all)"), "Expected formatted suggestions to include slash command for bulk freshening");

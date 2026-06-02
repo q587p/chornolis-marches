@@ -20,10 +20,12 @@ function literalPattern(value) {
   assert.match(latestHtml, /<strong>[^<]+<\/strong>/);
   assert.doesNotMatch(latestHtml, /`\/examine`/);
 
-  const olderHtml = await renderNewsPage("/news?entry=1");
+  const commandEntryIndex = entries.findIndex((entry) => entry.text.includes("/examine"));
+  assert.ok(commandEntryIndex > 0, "news.md should keep at least one archived /examine command-link example");
+
+  const olderHtml = await renderNewsPage(`/news?entry=${commandEntryIndex}`);
   assert.match(olderHtml, /href="\/news"/);
-  assert.match(olderHtml, /href="\/news\?entry=2"/);
-  assert.match(olderHtml, literalPattern(escapeHtml(entries[1].title)));
+  assert.match(olderHtml, literalPattern(escapeHtml(entries[commandEntryIndex].title)));
   assert.match(olderHtml, /<a class="game-command" href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_examine"><em>\/examine<\/em><\/a>/);
 
   const clampedHtml = await renderNewsPage("/news?entry=999999");

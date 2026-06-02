@@ -22,6 +22,8 @@ import { contributeToBeginnerCache, takeFromBeginnerCache } from "../services/be
 import { queueAllBeginnerCacheContributions } from "../services/beginnerCacheQueue";
 import { campfireBuildConfirmationText, TORCH_SOURCE_TAKE_EVENT_TITLE } from "../services/fire";
 import { buildWetCampfireConfirmKeyboard } from "../ui/fireKeyboards";
+import { putInventoryIntoLocalFeature } from "../services/carcassDropoff";
+import { playerForms } from "../services/grammar";
 
 function pickedItemsAmount(items: Array<{ amount: number }>) {
   return items.reduce((total, item) => total + Math.max(0, item.amount), 0);
@@ -480,6 +482,39 @@ export function registerLookHandlers(bot: Bot) {
       const message = actionErrorMessage(error, "Не вдалося лишити все у скрині.");
       await safeAnswerCallbackQuery(ctx, message);
       await replyToActionError(ctx, error, "Не вдалося лишити все у скрині.", { replyFallback: false });
+    }
+  });
+
+  bot.callbackQuery(/^dropoff:put:(\d+):(one|all)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    try {
+      assertCanPerformPhysicalAction(player, "PUT");
+      const result = await putInventoryIntoLocalFeature({
+        playerId: player.id,
+        itemQuery: "туша",
+        amount: ctx.match[2] === "all" ? "all" : undefined,
+        containerQuery: "рів",
+        featureId: Number(ctx.match[1]),
+      });
+      await safeAnswerCallbackQuery(ctx, "Покладено.");
+      await recordVisibleItemAction(bot, {
+        playerId: player.id,
+        locationId: result.locationId,
+        observerText: `${playerForms(player).nominative} складає здобич до падального рову біля воріт.`,
+        eventTitle: "Player contributed carcass",
+        eventDescription: `player=${player.id}; dropoff=${result.featureKey}; amount=${result.amount}; total=${result.contributionTotal}`,
+        actionNote: `покладено здобич до падального рову: ${result.amount}`,
+      });
+      await ctx.reply(result.text);
+    } catch (error) {
+      const message = actionErrorMessage(error, "Не вдалося покласти це до рову.");
+      await safeAnswerCallbackQuery(ctx, message);
+      await replyToActionError(ctx, error, "Не вдалося покласти це до рову.", { replyFallback: false });
     }
   });
 

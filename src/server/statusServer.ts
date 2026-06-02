@@ -447,7 +447,7 @@ async function renderChatPage(url: string | undefined) {
 
 type EcologyStats = Awaited<ReturnType<typeof getEcologyStats>>;
 
-function renderStatTableRows(rows: EcologyStats["speciesRows"]) {
+export function renderStatTableRows(rows: EcologyStats["speciesRows"]) {
   if (rows.length === 0) return `<tr><td colspan="10"><code>none</code></td></tr>`;
   return rows
     .map((row) => `<tr>
@@ -461,6 +461,22 @@ function renderStatTableRows(rows: EcologyStats["speciesRows"]) {
       <td>${row.ages.OLD}</td>
       <td>${row.corpses}</td>
       <td>${row.gone}</td>
+    </tr>`)
+    .join("");
+}
+
+export function renderSpecialCreatureRows(rows: EcologyStats["specialCreatureRows"]) {
+  const visibleRows = rows.filter((row) => row.total > 0);
+  if (visibleRows.length === 0) return `<tr><td colspan="7"><code>none</code></td></tr>`;
+  return visibleRows
+    .map((row) => `<tr>
+      <td><code>${escapeHtml(row.key)}</code></td>
+      <td>${escapeHtml(row.name)}</td>
+      <td><code>${escapeHtml(row.kind)}</code></td>
+      <td><code>${escapeHtml(row.diet)}</code></td>
+      <td>${row.alive}</td>
+      <td>${row.hidden}</td>
+      <td>${row.gone + row.inactive}</td>
     </tr>`)
     .join("");
 }
@@ -614,6 +630,9 @@ async function renderEcologyStatsPage() {
 
     <h2>Тварини за віком</h2>
     <table><thead><tr><th>Ключ</th><th>Вид</th><th>Усього</th><th>Живі</th><th>Діти</th><th>Молоді</th><th>Дорослі</th><th>Старі</th><th>Трупи</th><th>Зниклі</th></tr></thead><tbody>${renderStatTableRows(stats.speciesRows)}</tbody></table>
+
+    <h2>Особливі присутності</h2>
+    <table><thead><tr><th>Ключ</th><th>Назва</th><th>Kind</th><th>Diet</th><th>Видимі</th><th>Приховані</th><th>Неактивні/зниклі</th></tr></thead><tbody>${renderSpecialCreatureRows(stats.specialCreatureRows)}</tbody></table>
 
     <h2>Хижаки за видами</h2>
     <table><thead><tr><th>Ключ</th><th>Вид</th><th>Убивств</th><th>Атак / влучних</th></tr></thead><tbody>${renderPredatorSpeciesRows(stats.predatorKillRows)}</tbody></table>

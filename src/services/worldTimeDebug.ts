@@ -1,5 +1,6 @@
 import {
   DAYS_PER_LUNAR_CIRCLE,
+  LUNAR_CIRCLES_PER_YEAR,
   MINUTES_PER_WORLD_DAY,
   worldTimeSnapshotFromAbsoluteMinute,
   type WorldTimeSnapshot,
@@ -117,7 +118,7 @@ export function renderWorldTimeDebug(
     "",
     `absoluteMinute: ${snapshot.absoluteMinute}`,
     `lastAdvancedAt: ${state.lastAdvancedAt.toISOString()}`,
-    `Дата: ${snapshot.year} рік, ${snapshot.lunarCircleName}, день ${snapshot.dayOfCircle}`,
+    `Дата: ${snapshot.year} рік, місячне коло ${snapshot.lunarCircle}/${LUNAR_CIRCLES_PER_YEAR} — ${snapshot.lunarCircleName}, день ${snapshot.dayOfCircle}`,
     `Година: ${snapshot.clockLabel}; частина доби: ${snapshot.daypart} (${snapshot.daypartLabel})`,
     `Місяць: ${snapshot.moonPhase} (${snapshot.moonPhaseLabel}); світність ${snapshot.moonIllumination}%`,
     `Погода: ${renderWeatherLine(snapshot)}; key=${snapshot.weatherKey}; intensity=${snapshot.weatherIntensity}; endsAt=${state.weatherEndsAtMinute ?? "unset"}`,

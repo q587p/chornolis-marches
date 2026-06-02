@@ -31,6 +31,7 @@ import { clearOnboardingStateForTelegramId } from "./start";
 import { hunterFieldInventorySummary } from "../services/targets";
 import { playerPresenceDisplaySuffix, sessionPresenceLabel } from "../services/sessionPresence";
 import { slashlessCommandPattern } from "../utils/slashlessCommands";
+import { formatTeleportCoordinateCommand } from "../services/adminTeleportLinks";
 
 const LOCATION_PAGE_MAX_CHARS = 3300;
 const TELEGRAM_TEXT_MAX_CHARS = 3900;
@@ -69,6 +70,16 @@ export function isPublicWhoCreature(creature: { species?: { kind?: string | null
   const kind = creature.species?.kind;
   if (kind === "SPIRIT" || creature.species?.diet === "SPIRITUAL") return false;
   return kind === "HUMAN" || kind === "MONSTER";
+}
+
+export function isPublicWhoPlayer(player: {
+  sessionPresence?: string | null;
+  lastPlayerActionAt?: Date | null;
+  lastActionAt?: Date | null;
+}, since: Date) {
+  if (player.sessionPresence === "ENDED") return false;
+  if (player.lastPlayerActionAt) return player.lastPlayerActionAt.getTime() >= since.getTime();
+  return Boolean(player.lastActionAt && player.lastActionAt.getTime() >= since.getTime());
 }
 const pendingAdminTeleports = new Map<number, { playerId: number; returnContext: AllReturnContext }>();
 const REMOVE_REPLY_KEYBOARD = { remove_keyboard: true } as const;
@@ -167,6 +178,9 @@ export async function buildStatBrief() {
   const speciesLines = stats.speciesRows
     .filter((row) => row.total > 0)
     .map((row) => `${row.name} [${row.key}]: живі ${formatStatNumber(row.alive)}; вік ${row.ages.CHILD}/${row.ages.YOUNG}/${row.ages.ADULT}/${row.ages.OLD}; трупи ${formatStatNumber(row.corpses)}`);
+  const specialCreatureLines = stats.specialCreatureRows
+    .filter((row) => row.total > 0)
+    .map((row) => `${row.name} [${row.key}; ${row.kind}/${row.diet}]: видимі ${formatStatNumber(row.alive)}, приховані ${formatStatNumber(row.hidden)}, неактивні ${formatStatNumber(row.inactive)}, зниклі ${formatStatNumber(row.gone)}`);
   const counters = stats.recent.counters;
   const rates = stats.recent.ratesPerHour;
   const observed = stats.recent.eventCount
@@ -202,6 +216,9 @@ export async function buildStatBrief() {
       "",
       "Види:",
       speciesLines.length ? speciesLines.join("\n") : "поки немає тварин",
+      "",
+      "Особливі присутності:",
+      specialCreatureLines.length ? specialCreatureLines.join("\n") : "поки немає окремих персонажів чи духів",
       "",
       `Останнє вікно: ${observed}.`,
       `Народження: зайці ${formatStatNumber(counters.rabbitBirths)} (${formatRate(rates.rabbitBirths)}/год), миші ${formatStatNumber(counters.mouseBirths)} (${formatRate(rates.mouseBirths)}/год).`,
@@ -1018,9 +1035,10 @@ export async function buildWhoData(now = new Date()) {
   const [players, creatures] = await Promise.all([
     prisma.player.findMany({
       where: {
+        sessionPresence: { not: "ENDED" },
         OR: [
-          { lastActionAt: { gte: since } },
-          { updatedAt: { gte: since } },
+          { lastPlayerActionAt: { gte: since } },
+          { lastPlayerActionAt: null, lastActionAt: { gte: since } },
         ],
       },
       orderBy: { id: "asc" },
@@ -1128,20 +1146,15 @@ function splitLocationsIntoPages(locations: LocationAllEntry[], maxChars: number
 }
 
 function formatLocationAllLine(location: LocationAllEntry) {
-  return `${location.key} — ${location.name} (${location.x},${location.y},${location.z}); danger=${location.dangerLevel}; region=${location.region.name}`;
+  return `${location.key} (${formatTeleportCoordinateCommand(location)}) — ${location.name} (${location.x},${location.y},${location.z}); danger=${location.dangerLevel}; region=${location.region.name}`;
 }
 
-function buildLocationAllPaginationKeyboard(page: number, totalPages: number, locations: LocationAllEntry[] = []) {
+function buildLocationAllPaginationKeyboard(page: number, totalPages: number) {
+  if (totalPages <= 1) return undefined;
   const keyboard = new InlineKeyboard();
-  for (const location of locations) {
-    keyboard.text(`🧭 ${location.x},${location.y},${location.z}`, `locationTeleport:${location.id}`).row();
-  }
-
-  if (totalPages > 1) {
-    if (page > 0) keyboard.text("◀️ Назад", `locationAll:${page - 1}`);
-    if (page < totalPages - 1) keyboard.text("Далі ▶️", `locationAll:${page + 1}`);
-  }
-  return locations.length || totalPages > 1 ? keyboard : undefined;
+  if (page > 0) keyboard.text("◀️ Назад", `locationAll:${page - 1}`);
+  if (page < totalPages - 1) keyboard.text("Далі ▶️", `locationAll:${page + 1}`);
+  return keyboard;
 }
 
 function formatChatEventTime(value: Date) {
@@ -1240,7 +1253,7 @@ async function buildLocationAllPage(requestedPage: number) {
 
     return {
       text: `📍 Усі місцини\nСторінка ${page + 1}/${pages.length}; місцин ${locations.length}\n\n${pageLines.length ? pageLines.join("\n") : "немає"}`,
-      keyboard: buildLocationAllPaginationKeyboard(page, pages.length, pageLocations),
+      keyboard: buildLocationAllPaginationKeyboard(page, pages.length),
     };
   } catch (error) {
     logStatusPerf("buildLocationAllPage", startedAt, "ok=0");

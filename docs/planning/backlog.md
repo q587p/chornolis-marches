@@ -26,6 +26,7 @@ These may become `next` after 0.13-0.15 foundations land.
 - First weapon-learning hooks: using a spear teaches spear handling later; using a knife for freshening may feed hunting/butchering learning after progression storage is ready.
 - NPC hunter/archer route that leaves visible signs.
 - ANIMAL-001: directed speech reactions for animals: mice may flee, foxes may react warily, wolves may growl and eventually escalate if provoked.
+- ECO-008: rare, guarded carrion and mouse-cannibalism pressure for starving or stressed prey animals, after performance safeguards and corpse ownership rules are ready.
 - Local console client for command/action smoke tests.
 - Shared command registry and per-command help: keep `/commands`, `/help`, text aliases, future MUD commands, Telegram buttons and permissions from drifting apart.
 - Rework `/commands` into a cleaner hidden command reference instead of a broad alias wall: group it by real player goals, keep survival advice in `/help` or tutorial surfaces, and document which commands are current, planned or scribe-only.

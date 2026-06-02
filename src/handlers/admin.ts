@@ -29,6 +29,7 @@ import { getCurrentWorldState, setWorldClockAbsoluteMinute, setWorldWeatherState
 import { parseWeatherSetTarget, parseWorldTimeSetTarget, renderWorldTimeDebug } from "../services/worldTimeDebug";
 import { COOKED_MEAT_KEY, ensureMeatResourceTypes, RAW_MEAT_KEY } from "../services/meat";
 import { WEAPON_DEFINITIONS, isWeaponResourceKey } from "../services/weapons";
+import { parseTeleportCoordinateCommand } from "../services/adminTeleportLinks";
 
 function normalizeLookup(value: string | null | undefined) {
   return String(value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
@@ -200,7 +201,8 @@ const ADMIN_MENU_TEXT_COMMAND = slashlessCommandPattern(["adminMenu", "adminmenu
 const ADMIN_HELP_TEXT_COMMAND = slashlessCommandPattern(["adminHelp", "adminhelp"]);
 const ADMIN_SET_TEXT_COMMAND = slashlessCommandPattern(["adminSet", "adminset"]);
 const ADD_CAMPFIRE_TEXT_COMMAND = slashlessCommandPattern(["addCampfire", "addcampfire"]);
-const TELEPORT_TEXT_COMMAND = slashlessCommandPattern(["teleport"]);
+const TELEPORT_TEXT_COMMAND = slashlessCommandPattern(["teleport", "tp"]);
+const TELEPORT_COORDINATE_TEXT_COMMAND = /^\/?tp_(_?\d+)_(_?\d+)_(_?\d+)(?:@\w+)?$/i;
 const TUTORIAL_RESET_TEXT_COMMAND = slashlessCommandPattern(["tutorialReset", "tutorialreset"]);
 const RESET_TEXT_COMMAND = slashlessCommandPattern(["reset"]);
 const ADD_TORCH_TEXT_COMMAND = slashlessCommandPattern(["addTorch", "addtorch"]);
@@ -221,7 +223,7 @@ export const ADMIN_HELP_TEXT = [
   "🛠 Команди писарів Порубіжжя",
   "",
   "Звичайні ігрові команди дивіться в /help. Тут лишено службові й небезпечні інструменти.",
-  "Писарські slash-команди можна писати й без початкового `/`: наприклад `teleport forest_07_00` працює як `/teleport forest_07_00`.",
+  "Писарські slash-команди можна писати й без початкового `/`: наприклад `teleport forest_07_00` працює як `/teleport forest_07_00`, а `tp 0,9,-13` як `/tp 0,9,-13`.",
   "",
   "Огляди й службові сторінки",
   "/adminMenu — кнопкове меню писарських команд",
@@ -247,6 +249,7 @@ export const ADMIN_HELP_TEXT = [
   "Персонажі й доступ",
   "/tutorialReset [#id|ім’я|username] — скинути прогрес навчального сну",
   "/teleport [#id|ім’я|username] <locationKey|x,y,z> — перенести персонажа; без персонажа переносить вас",
+  "/tp <locationKey|x,y,z> або /tp_0_9__13 — короткий телепорт поточного Писаря; подвійне підкреслення у списку місцин означає від’ємну координату",
   "/debugGet — показати, чи ввімкнені технічні деталі для вашого персонажа",
   "/debugSet <0|1> — вимкнути або ввімкнути технічні деталі; true/false теж працюють",
   "/restAdmin [#id|ім’я|username] — одразу відновити снагу собі або вказаному персонажу до адмінського максимуму",
@@ -418,8 +421,9 @@ export function registerAdminHandlers(bot: Bot) {
     await ctx.reply([
       "🧭 Телепорт",
       "",
-      "Формат: /teleport [#id|ім’я|username] <locationKey|x,y,z>.",
+      "Формат: /teleport [#id|ім’я|username] <locationKey|x,y,z> або коротко /tp <locationKey|x,y,z>.",
       "Без персонажа переносить вас. Для назв із пробілами: /teleport персонаж -> назва місцини.",
+      "У /locationAll координати показуються як клікабельні /tp-команди, наприклад /tp_0_9__13 означає /teleport 0,9,-13.",
       "",
       "Список місцин: /locationAll.",
     ].join("\n"), {
@@ -625,14 +629,16 @@ export function registerAdminHandlers(bot: Bot) {
     const location = await resolveLocationForAdmin(ctx, target);
     if (!location) return;
 
-    const feature = debug
+    const result = debug
       ? await createDebugCampfire(location.id)
       : await createAdminHandmadeCampfire(location.id);
+    const { feature, atmosphereText } = result;
 
     await logEvent("SYSTEM", debug ? "Debug campfire added" : "Handmade admin campfire added", `${feature.key} at ${location.key}`, location.id);
-    return ctx.reply(debug
+    const text = debug
       ? `🔥 Додано debug-вогнище у місцині: ${location.name}.\nКлюч: ${feature.key}`
-      : `🔥 Додано й підпалено рукотворне вогнище у місцині: ${location.name}.\nКлюч: ${feature.key}\nЙого можна тестово погасити й розібрати як вогнище, складене персонажем.`);
+      : `🪵 Додано складене рукотворне вогнище у місцині: ${location.name}.\nКлюч: ${feature.key}\nЙого можна тестово підпалити, погасити й розібрати як вогнище, складене персонажем.`;
+    return ctx.reply(debug ? [text, atmosphereText].filter(Boolean).join("\n\n") : text);
   }
 
   bot.command("addCampfire", (ctx) => runAddCampfireCommand(ctx));
@@ -673,8 +679,12 @@ export function registerAdminHandlers(bot: Bot) {
     }
   }
 
-  bot.command("teleport", (ctx) => runTeleportCommand(ctx));
+  bot.command(["teleport", "tp"], (ctx) => runTeleportCommand(ctx));
   bot.hears(TELEPORT_TEXT_COMMAND, (ctx) => runTeleportCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
+  bot.hears(TELEPORT_COORDINATE_TEXT_COMMAND, (ctx) => {
+    const coords = parseTeleportCoordinateCommand(String(ctx.match?.[0] ?? ""));
+    return runTeleportCommand(ctx, coords ?? "");
+  });
 
   async function runTutorialResetCommand(ctx: any, rawTarget = String(ctx.match ?? "").trim()) {
     if (!(await requireScribeAdmin(ctx))) return;

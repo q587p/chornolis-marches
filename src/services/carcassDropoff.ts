@@ -479,13 +479,17 @@ export async function putInventoryIntoLocalFeature(input: {
   itemQuery: string;
   amount?: number | "all";
   containerQuery: string;
+  featureId?: number;
 }) {
   const player = await prisma.player.findUnique({ where: { id: input.playerId }, select: { currentLocationId: true } });
   if (!player?.currentLocationId) throw new Error("Ти ще не увійшов у світ. Напиши /start");
   const locationId = player.currentLocationId;
 
-  const feature = await resolveLocalFeature(locationId, input.containerQuery);
+  const feature = input.featureId
+    ? await prisma.locationFeature.findUnique({ where: { id: input.featureId } })
+    : await resolveLocalFeature(locationId, input.containerQuery);
   if (!feature) throw new Error("Тут немає такого місця, куди це можна покласти.");
+  if (feature.locationId !== locationId) throw new Error("Цей рів уже не поруч.");
   if (!isCarcassDropoffFeature(feature)) throw new Error("Це не місце для туш чи решток.");
   const saturation = await getGateHuntingSaturationState(feature.key).catch(() => null);
 

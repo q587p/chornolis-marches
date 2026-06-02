@@ -36,6 +36,7 @@ export type ParsedAliasCommand =
   | { kind: "auto-messages"; mode: AutoMessageAliasMode }
   | { kind: "session-presence"; mode: SessionPresenceAliasMode }
   | { kind: "beginner-return" }
+  | { kind: "call-scribes" }
   | { kind: "tutorial-end" }
   | { kind: "back" }
   | { kind: "hide-keyboard" }
@@ -326,6 +327,15 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "повернутися до табору": { kind: "beginner-return" },
   "вернутися до табору": { kind: "beginner-return" },
   "назад до табору": { kind: "beginner-return" },
+  "call scribes": { kind: "call-scribes" },
+  "scribe help": { kind: "call-scribes" },
+  "ask scribes": { kind: "call-scribes" },
+  "покликати писарів": { kind: "call-scribes" },
+  "покликати писаря": { kind: "call-scribes" },
+  "звернутися до писарів": { kind: "call-scribes" },
+  "звернутися до писаря": { kind: "call-scribes" },
+  "попросити писарів": { kind: "call-scribes" },
+  "допомога писарів": { kind: "call-scribes" },
 
   back: { kind: "back" },
   "назад": { kind: "back" },
@@ -374,11 +384,20 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "авто": { kind: "auto", mode: "start" },
   autostop: { kind: "auto", mode: "stop" },
   "auto stop": { kind: "auto", mode: "stop" },
+  "auto off": { kind: "auto", mode: "stop" },
+  "stop auto": { kind: "auto", mode: "stop" },
   "увімкнути авто": { kind: "auto", mode: "start" },
   "ввімкнути авто": { kind: "auto", mode: "start" },
   "запустити авто": { kind: "auto", mode: "start" },
+  "авто старт": { kind: "auto", mode: "start" },
+  "авто увімкнути": { kind: "auto", mode: "start" },
+  "авто ввімкнути": { kind: "auto", mode: "start" },
   "зупинити авто": { kind: "auto", mode: "stop" },
   "вимкнути авто": { kind: "auto", mode: "stop" },
+  "авто стоп": { kind: "auto", mode: "stop" },
+  "стоп авто": { kind: "auto", mode: "stop" },
+  "авто зупинити": { kind: "auto", mode: "stop" },
+  "авто вимкнути": { kind: "auto", mode: "stop" },
 
   queue: { kind: "queue", mode: "status" },
   q: { kind: "queue", mode: "status" },
@@ -839,6 +858,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "auto-messages") return parsed.mode === "show" ? "/automessages" : `/automessages ${parsed.mode}`;
   if (parsed.kind === "session-presence") return parsed.mode === "afk" ? "/afk" : "/end_session";
   if (parsed.kind === "beginner-return") return "/respawn";
+  if (parsed.kind === "call-scribes") return "/call_scribes";
   if (parsed.kind === "tutorial-end") return "/tutorialEnd";
   if (parsed.kind === "chat") return "/chat";
   if (parsed.kind === "sleep") return parsed.tutorial ? "/sleep_tutorial" : "/sleep";
@@ -861,7 +881,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "douse-torch") return "/douse_torch";
   if (parsed.kind === "posture") return parsed.mode === "sit" ? "/sit" : parsed.mode === "lie" ? "/lie" : "/stand";
   if (parsed.kind === "rest") return "/rest";
-  if (parsed.kind === "auto") return "/auto";
+  if (parsed.kind === "auto") return parsed.mode === "stop" ? "/auto_stop" : "/auto";
   if (parsed.kind === "queue") return "/queue";
   if (parsed.kind === "track") return "/track";
   if (parsed.kind === "inspect-vegetation" || parsed.kind === "inspect-border-marker" || parsed.kind === "inspect-feature") return "/examine";
@@ -1523,6 +1543,17 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
 
   if (["afk", "відійти"].includes(commandText)) return { kind: "session-presence", mode: "afk" };
   if (["end session", "end-session", "endsession", "quit", "leave", "завершити сесію", "вийти"].includes(commandText)) return { kind: "session-presence", mode: "end" };
+  if ([
+    "call scribes",
+    "scribe help",
+    "ask scribes",
+    "покликати писарів",
+    "покликати писаря",
+    "звернутися до писарів",
+    "звернутися до писаря",
+    "попросити писарів",
+    "допомога писарів",
+  ].includes(commandText)) return { kind: "call-scribes" };
 
   const directedSpeech = parseDirectedSpeech(raw, text);
   if (directedSpeech) return directedSpeech;

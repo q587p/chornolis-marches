@@ -7,6 +7,34 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.15 - Liminal signs and quotation guardrails - 12026-06-02
+
+### Added
+
+- Added `docs/content/signs-dreams-and-quotations.md` as a content/design bible for recurring signs, quotation guardrails, owl/dream/fire/fishing/map motifs and local rumor seeds.
+- Added Codex-ready planning items for the liminal signs layer, dream-threshold owl refrain, conditional owl examine copy, magical campfire examine copy and future deep-water fishing lines.
+- Added `OBS-003` as a near-term 0.15.x planning slice for danger-aware `/examine` atmosphere when local danger rises, while exact danger numbers stay technical/scribe-only.
+- Added `LEARN-002` and raised the skill-learning priorities so the next real skill layer defines bounded effects on success chance, stamina efficiency, result quality/yield or failure softness instead of leaving skill-growth messages decorative.
+- Promoted the riverbank fisher NPC/tiny-slice planning path to high priority so a first visible fisher profession moment can follow the observation-learning line sooner.
+- Added `/call_scribes` / `call scribes` / Ukrainian aliases as an auditable manual rescue request for players whose ordinary `/respawn` return is no longer available.
+- Added Scribe/admin notifications for return-help requests, with an inline return-sign action that cancels the player's active queue/rest/auto state and returns them to the start location when a Scribe applies it.
+- Added `Покласти тушу` and `Покласти всі` buttons to the carrion-ravine feature view, mirroring the existing `/put` carcass/remains contribution path.
+- Added an inspectable starter-camp lunar-circle birchbark feature that lists the 13 lunar circles in order and frames common seasonal work around them.
+
+### Changed
+
+- Updated README, game design and roadmap docs to frame recurring signs as diegetic folklore: direct quotation should stay rare and threshold-bound, while later echoes should be local, altered and uncertain.
+- Established-character `/respawn` refusal now teaches the player to use nearby `/yell` or request Scribe return help instead of only saying the beginner return path is closed.
+- Carrion-ravine button contributions now use the same feature-specific validation as text `/put`, so stale buttons fail cleanly if the ravine is no longer nearby.
+- Scribe/admin world-time debug now shows the lunar circle ordinal alongside the lunar circle name.
+- Lighting the first active campfire in a location now adds a short warmth/rest cue, and adds a visibility cue when the location had no active local light before the fire.
+- Player attack, freshening and cooking actions now spend less stamina, and the first fatigue cue now suggests recovery options with contextual inline buttons.
+- Scribe/admin `/stat`, protected web `/stat` and `/stat.json` now keep ordinary animal predator species rows dynamic, so owls and future animal carnivores appear even before they have kills, while spirit presences such as the camp spirit cat are shown in a separate non-animal stats block.
+- Auto-mode stop aliases now route explicitly through the stop path: `/auto_stop`, `/auto stop`, `вимкнути авто`, `стоп авто` and `авто стоп` stop auto mode, and unknown-input suggestions point stop phrases at `/auto_stop` instead of `/auto`.
+- Public `/who`, web `/who` and `/who.json` now use player interaction timestamps instead of broad `updatedAt` changes, exclude ended sessions and let AFK players fall out after the one-hour activity window.
+- Scribe/admin `/locationAll` now embeds compact `/tp_...` coordinate hints in each location row instead of rendering one inline teleport button per location, and `/tp` routes as a short alias for teleporting the current Scribe.
+- Regenerated planning exports for the new liminal-sign planning items and the fisher-priority update.
+
 ## 0.15.14 - Herald manual archive controls - 12026-06-02
 
 ### Added

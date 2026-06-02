@@ -52,6 +52,21 @@ Locations, exits, creatures, tracks, rumors and danger often require attention, 
 
 Information should often be partial, local and uncertain.
 
+### Signs, Refrains and Dangerous Attention
+
+The world may repeat images, sayings and signs, but repetition should feel like folklore and omen rather than citation trivia.
+
+A direct borrowed line should be rare and threshold-bound. For the owl refrain, the strongest placement is the tutorial dream or the edge between dream and waking, not ordinary starter-camp description. The camp may echo it indirectly through rumors, animal signs or local speech.
+
+`Озирнутися` gives orientation. `Роздивитися` rewards attention with a deeper layer. That deeper layer may clarify a practical action, suggest danger, or make the player less certain. Observation is useful, but not innocent: sometimes the thing being examined is also watching back.
+
+Canonical internal rule:
+
+```text
+У Chornolis знання приходить через спостереження, але жодне спостереження не є невинним.
+Світ дає знаки, але не гарантує, що знак означає те саме двічі.
+```
+
 ### Living Ecosystem
 
 Creatures interact with each other independently of players. Predators hunt prey. Prey reproduce and migrate. Corpses feed the forest back. Resources grow, get depleted and recover unevenly.
@@ -140,6 +155,7 @@ The world should feel:
 - Campfires, torches and хмиз.
 - Beginner return / `Повернення`.
 - Narrow observation-learning MVP.
+- First liminal sign/refrain content pack: dream-threshold owl quote, conditional owl examine text, magical-campfire examine layer and fishing-water seeds.
 
 ### Delay until the core loop is strong
 
@@ -152,6 +168,18 @@ The world should feel:
 - Web map and MUD gateway.
 - Large socials catalog.
 - Advanced automation.
+- Explaining every owl, dream, fire or sign as fixed lore.
+- Turning every location into an obvious external reference.
+
+## Content Voice Guardrails
+
+The quotation/sign layer should follow these rules:
+
+- Direct quotation is a spice, not a content strategy.
+- The direct owl line belongs in a liminal one-time or rare threshold moment.
+- Later echoes should be altered: village sayings, NPC rumors, feature text, dream fragments, or conditional `examine` results.
+- Ukrainian / Slavic myth remains the in-world body of the setting; Lynch, Heraclitus, Dante, Shakespeare and map/territory ideas are structural references, not visible lore labels.
+- Ordinary survival surfaces should stay practical. Not every campfire, fish, path, map or owl needs to be strange.
 
 ## Inspirations
 
@@ -162,5 +190,7 @@ The world should feel:
 - CDDA.
 - S.T.A.L.K.E.R.-style A-Life.
 - Ukrainian folklore and Slavic mythology.
+- David Lynch / Twin Peaks for dream logic, owls, fire, observation and signs as unstable atmosphere.
+- Heraclitus, Dante, Shakespeare and map/territory thought as deep structural references for hidden nature, lost paths, reversed signs and unreliable models.
 
 The inspiration is not surface genre copying. It is autonomous world movement, dangerous exploration, incomplete information, ecology, memory and places that feel older than the player.

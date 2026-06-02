@@ -121,3 +121,5 @@ A limited early-game support command:
 - lowers stamina to at most roughly a third;
 - writes a world event so the return is auditable;
 - helps new players without becoming a fast-travel system.
+
+If `/respawn` refuses because the character is already established, the response should still offer understandable next steps instead of leaving the player stuck. Current fallback guidance points to `Гукнути поруч` (`/yell`) so nearby characters may hear the call, and `Звернутися до Писарів` (`/call_scribes`) for a manual Scribe return sign. That sign is an auditable rescue action, not an ordinary travel command: it notifies Scribes/admins, cancels the player's active/queued actions when applied, and returns the character to the start camp only when a Scribe chooses to use it.

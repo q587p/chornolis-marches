@@ -3,11 +3,11 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const { playerStaminaCostConfig, REST_STAMINA_REGEN_PER_INTERVAL } = require("../../src/gameConfig");
-const { playerHungerAfterStaminaSpend, shouldRefreshMainKeyboardAfterVitalsChange } = require("../../src/services/actionRecovery");
+const { buildFatigueGuidanceKeyboard, fatigueGuidanceText, playerHungerAfterStaminaSpend, shouldRefreshMainKeyboardAfterVitalsChange } = require("../../src/services/actionRecovery");
 const { actionTitle } = require("../../src/services/actionRules");
 const { CAMPFIRE_REST_STAMINA_REGEN_MULTIPLIER, isLitRestCampfireFeature, restStaminaRegenMultiplierForFeatures } = require("../../src/services/locationFeatures");
 
-assert.equal(playerStaminaCostConfig.FRESHEN, 3);
+assert.equal(playerStaminaCostConfig.FRESHEN, 2);
 assert.equal(playerStaminaCostConfig.USE_ITEM, 1);
 assert.equal(playerStaminaCostConfig.DROP_ITEM, 1);
 assert.equal(playerStaminaCostConfig.LIGHT_TORCH, 2);
@@ -17,7 +17,8 @@ assert.equal(playerStaminaCostConfig.BUILD_CAMPFIRE, 3);
 assert.equal(playerStaminaCostConfig.DOUSE_CAMPFIRE, 1);
 assert.equal(playerStaminaCostConfig.DISMANTLE_CAMPFIRE, 2);
 assert.equal(playerStaminaCostConfig.DISMANTLE_TOTEM, 2);
-assert.equal(playerStaminaCostConfig.COOK, 4);
+assert.equal(playerStaminaCostConfig.COOK, 3);
+assert.equal(playerStaminaCostConfig.ATTACK, 5);
 assert.equal(REST_STAMINA_REGEN_PER_INTERVAL, 26);
 assert.equal(CAMPFIRE_REST_STAMINA_REGEN_MULTIPLIER, 3);
 
@@ -34,8 +35,17 @@ assert.equal(actionTitle({ type: "COOK", payload: {} }), "підсмажуємо
 assert.equal(playerHungerAfterStaminaSpend({ currentHunger: 0, staminaAfter: 39, cost: 3 }), 0);
 assert.equal(playerHungerAfterStaminaSpend({ currentHunger: 0, staminaAfter: 37, cost: 5 }), 0);
 assert.equal(playerHungerAfterStaminaSpend({ currentHunger: 0, staminaAfter: 35, cost: 7 }), 1);
+assert.equal(playerHungerAfterStaminaSpend({ currentHunger: 0, staminaAfter: 37, cost: playerStaminaCostConfig.ATTACK }), 0);
 assert.equal(playerHungerAfterStaminaSpend({ currentHunger: 4, staminaAfter: -1, cost: 3 }), 5);
 assert.equal(playerHungerAfterStaminaSpend({ currentHunger: 13, staminaAfter: 20, cost: 7 }), 13);
+
+assert.match(fatigueGuidanceText({ hasBerries: true, canBuildCampfire: true }), /ягоди/);
+assert.match(fatigueGuidanceText({ hasBerries: true, canBuildCampfire: true }), /вогнище/);
+const fatigueKeyboard = buildFatigueGuidanceKeyboard({ hasBerries: true, hasEdibleInventory: true, canBuildCampfire: true });
+assert.deepEqual(
+  fatigueKeyboard.inline_keyboard.flat().map((button) => button.callback_data),
+  ["rest:start", "character:sleep", "inventory:use:berries", "character:inventory", "fire:build"],
+);
 
 assert.equal(shouldRefreshMainKeyboardAfterVitalsChange({
   beforeHp: 20,

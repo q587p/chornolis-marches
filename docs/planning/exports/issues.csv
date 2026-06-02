@@ -40,20 +40,24 @@ ECO-004,Population floor restoration,testing,feature,ecology,high,"ecology,creat
 ECO-005,Animal restoration offerings,next,feature,ecology,high,"ecology,creatures,offerings,location-features",docs/planning/items/ECO-005-animal-restoration-offerings.md
 ECO-006,Animal movement boundaries for authored vertical exits,testing,feature,ecology,high,"ecology,animals,movement,verticality,camp",docs/planning/items/ECO-006-animal-movement-boundaries.md
 ECO-007,Animal taming and small companions,icebox,feature,ecology,medium,"ecology,creatures,companions,following,feeding",docs/planning/items/ECO-007-animal-taming-companions.md
+ECO-008,Herbivore carrion and mouse cannibalism pressure,backlog,feature,ecology,medium,"ecology,creatures,hunger,carrion,mice,rabbits",docs/planning/items/ECO-008-herbivore-carrion-and-mouse-cannibalism.md
 ECON-001,Barter and trade,backlog,feature,economy,medium,"barter,trade,npc,economy",docs/planning/items/ECON-001-barter-and-trade.md
 FIRE-001-A,Active light connects to visibility,testing,feature,survival,high,"fire,light,visibility",docs/planning/items/FIRE-001-A.md
 FIRE-001-B,Expired campfire behavior polish,next,feature,survival,medium,"fire,campfire,copy",docs/planning/items/FIRE-001-B.md
 FIRE-001-C,Carried torch visibility,testing,feature,survival,high,"torch,light,visibility",docs/planning/items/FIRE-001-C.md
 FIRE-001-D,Light source matrix test,testing,qa,survival,high,"fire,light,visibility,torch,campfire,npc",docs/planning/items/FIRE-001-D-light-source-matrix-test.md
+FIRE-002,Magical campfire examine layer,proposed,content,survival,medium,"fire,campfire,examine,light,atmosphere",docs/planning/items/FIRE-002-magic-campfire-examine-layer.md
 FIRE-002,Target-aware campfire commands,backlog,feature,survival,high,"fire,campfire,commands,aliases,targets",docs/planning/items/FIRE-002-targeted-campfire-commands.md
-FISH-001,Riverbank fishing and fisher NPC,backlog,feature,survival,medium,"fishing,npc,skills,riverbank,observation",docs/planning/items/FISH-001-riverbank-fishing-and-fisher-npc.md
-FISH-002,Riverbank fisher tiny slice,proposed,feature,survival,medium,"fishing,npc,riverbank,observation,atmosphere",docs/planning/items/FISH-002-riverbank-fisher-tiny-slice.md
+FISH-001,Riverbank fishing and fisher NPC,backlog,feature,survival,high,"fishing,npc,skills,riverbank,observation",docs/planning/items/FISH-001-riverbank-fishing-and-fisher-npc.md
+FISH-002,Riverbank fisher tiny slice,backlog,feature,survival,high,"fishing,npc,riverbank,observation,atmosphere",docs/planning/items/FISH-002-riverbank-fisher-tiny-slice.md
+FISH-003,Deep-water fishing line seeds,proposed,content,survival,medium,"fishing,water,atmosphere,examine,future",docs/planning/items/FISH-003-deep-water-fishing-lines.md
 FOOD-001,"Corpse freshening, meat and campfire cooking",testing,feature,survival,high,"food,corpses,freshening,cooking,hunger,campfire",docs/planning/items/FOOD-001-corpse-freshening-meat-and-campfire-cooking.md
 FOOD-002,Spoiled meat and risky eating,backlog,feature,survival,medium,"food,cooking,survival,hunger,risk",docs/planning/items/FOOD-002-spoiled-meat-and-risky-eating.md
 FOOD-003,Freshened corpse remains,backlog,feature,survival,medium,"food,corpses,remains,hunting,dropoff",docs/planning/items/FOOD-003-freshened-corpse-remains.md
 FOOD-004,Hunger cues and eating nudges,testing,feature,survival,medium,"food,hunger,reminders,ux",docs/planning/items/FOOD-004-hunger-cues-and-eating-nudges.md
 FOOD-005,Hunger consequences for health and stamina recovery,backlog,feature,survival,medium,"food,hunger,hp,stamina,survival",docs/planning/items/FOOD-005-hunger-consequences.md
 FOOD-006,Mushroom varieties and identification,backlog,feature,survival,medium,"food,mushrooms,foraging,alchemy,risk",docs/planning/items/FOOD-006-mushroom-varieties-and-identification.md
+FOOD-007,Mushroom visions and dream effects,icebox,feature,survival,low,"food,mushrooms,dreams,visions,effects,alchemy",docs/planning/items/FOOD-007-mushroom-visions-and-dream-effects.md
 GIVE-001,Generic give command MVP and exchange bridge,next,feature,inventory,high,"give,inventory,items,targets,exchange,barter,cat,telegram",docs/planning/items/GIVE-001-give-command-and-exchange-bridge.md
 GIVE-002,Ukrainian inflection-tolerant give parser and grammar bridge,testing,technical,input,high,"give,input,parser,ukrainian,grammar,lexicon,inventory,targets,barter",docs/planning/items/GIVE-002-ukrainian-give-parser-grammar.md
 HERALD-001,Embedded main-service mode for Boundary Mark Chancery Herald,icebox,technical,ops,low,"herald,telegram,render,ops,architecture,icebox",docs/planning/items/HERALD-001-embedded-main-service-mode.md
@@ -77,7 +81,8 @@ LANG-001,Lexicon and agreement audit,backlog,chore,content,medium,"ukrainian,lex
 LEARN-001-A,Minimal learning storage decision,next,design,learning,high,"learning,progression,schema",docs/planning/items/LEARN-001-A.md
 LEARN-001-B,Minimal CharacterSkill model,next,technical,learning,high,"learning,schema,skills",docs/planning/items/LEARN-001-B.md
 LEARN-001-C,grantSkillProgress helper,next,feature,learning,high,"learning,service,progression",docs/planning/items/LEARN-001-C.md
-LEARN-001-D,Raw progress technical-only,next,ux,learning,medium,"learning,technical-details,ui",docs/planning/items/LEARN-001-D.md
+LEARN-001-D,Raw progress technical-only,next,ux,learning,high,"learning,technical-details,ui",docs/planning/items/LEARN-001-D.md
+LEARN-002,"Skill effects on stamina, success and quality",next,feature,learning,high,"learning,skills,stamina,success,balance",docs/planning/items/LEARN-002-skill-effects-cost-success-and-quality.md
 LOOP-001-A,Starter look/examine output audit,next,design,core-loop,medium,"look,examine,starter",docs/planning/items/LOOP-001-A.md
 LOOP-001-B,Starter camp prose polish,next,content,core-loop,medium,"prose,starter,look",docs/planning/items/LOOP-001-B.md
 LOOP-001-C,Bridge threshold prose polish,next,content,core-loop,medium,"prose,bridge,liminality",docs/planning/items/LOOP-001-C.md
@@ -106,6 +111,7 @@ OBS-001-B,Visible herbalist action,next,feature,learning,high,"observe,npc,herba
 OBS-001-C,Herbalism/gathering progress from observation,next,feature,learning,high,"observe,herbalism,progression",docs/planning/items/OBS-001-C.md
 OBS-001-D,Observation anti-farming cooldown,next,feature,learning,medium,"observe,cooldown,anti-grind",docs/planning/items/OBS-001-D.md
 OBS-002,Visible herbalist observation moment,proposed,feature,learning,high,"observe,npc,herbalism,progression",docs/planning/items/OBS-002-visible-herbalist-observation-moment.md
+OBS-003,Danger-aware examine cues,next,feature,learning,high,"observe,examine,danger,ecology,atmosphere",docs/planning/items/OBS-003-danger-aware-examine-cues.md
 OBS-PREP-001,Look/examine content audit before observation MVP,next,design,learning,high,"look,examine,observation,content-audit",docs/planning/items/OBS-PREP-001-look-examine-content-audit.md
 OMEN-001-A,Choose one living-world omen,next,design,world,medium,"omen,ambient,living-world",docs/planning/items/OMEN-001-A.md
 OMEN-001-B,Omen trigger and rate limit,next,feature,world,medium,"omen,ambient,cooldown",docs/planning/items/OMEN-001-B.md
@@ -131,11 +137,13 @@ ONB-003,Tutorial player wellbeing aside,testing,ux,onboarding,medium,"onboarding
 ONB-004,First night guidance,done,ux,onboarding,medium,"onboarding,night,light,tutorial,copy",docs/planning/items/ONB-004-first-night-guidance.md
 ONB-006,Look/examine semantics in the dream,testing,ux,onboarding,high,"tutorial,look,examine,ux,copy",docs/planning/items/ONB-006-look-examine-semantics-in-dream.md
 ONB-007,Dream tree and vertical tutorial,proposed,feature,onboarding,high,"sleep,dream,tutorial,verticality,speech,onboarding",docs/planning/items/ONB-007-dream-tree-and-vertical-tutorial.md
+ONB-008,Owl threshold refrain in the dream,proposed,content,onboarding,medium,"onboarding,dream,owl,examine,atmosphere",docs/planning/items/ONB-008-owl-threshold-refrain-in-dream.md
 OWL-002,Nocturnal owl tuning and indirect signs,testing,tuning,ecology,high,"owl,ecology,night,predator,observation,tuning",docs/planning/items/OWL-002-nocturnal-owl-tuning-and-signs.md
 OWL-003,Starter camp owl boundary and night signs,testing,tuning,ecology,medium,"owl,camp,ecology,night,onboarding",docs/planning/items/OWL-003-starter-camp-boundary-and-night-signs.md
+OWL-004,Conditional owl examine copy and refrain echoes,proposed,content,ecology,medium,"owl,examine,night,observation,atmosphere",docs/planning/items/OWL-004-conditional-owl-examine-copy.md
 PERF-001,Runtime performance plan and creature simulation budget,next,technical,performance,high,"performance,ecology,creatures,action-queue,simulation,status,auto",docs/planning/items/PERF-001-budgeted-and-aggregated-creature-simulation.md
 PLAN-001,Repository docs are the planning source of truth,testing,documentation,planning,high,"planning,docs,roadmap",docs/planning/items/PLAN-001.md
-PROG-002,Observation-based learning,backlog,feature,progression,medium,"skills,observation,npc,animals,mythic",docs/planning/items/PROG-002-observation-learning.md
+PROG-002,Observation-based learning,backlog,feature,progression,high,"skills,observation,npc,animals,mythic",docs/planning/items/PROG-002-observation-learning.md
 PROG-003,Animal experience and titles,backlog,feature,progression,medium,"animals,ecology,progression,combat",docs/planning/items/PROG-003-animal-experience-and-titles.md
 PROG-004,Personal chronicle milestones,next,feature,progression,high,"journal,chronicle,milestones,cooking,learning,personal-history",docs/planning/items/PROG-004-personal-chronicle-milestones.md
 PROG-005,Global chronicles and world milestones,testing,feature,progression,high,"chronicle,world-events,onboarding,gate-hunting,milestones",docs/planning/items/PROG-005-global-chronicles-and-world-milestones.md
@@ -144,6 +152,7 @@ QA-001,0.13 first-session closure smoke,testing,qa,onboarding,high,"qa,onboardin
 QA-002,Camp and dream first-session smoke,next,qa,onboarding,medium,"onboarding,camp,dream,qa",docs/planning/items/QA-002-camp-dream-first-session-smoke.md
 QA-WILLOW-001,"Willow Floodplain seed, map and route smoke",testing,qa,world,high,"map,world,willow-floodplain,qa,routes",docs/planning/items/QA-WILLOW-001-seed-map-route-smoke.md
 QA-WILLOW-002,Willow live command and vertical edge smoke,backlog,qa,world,medium,"willow-floodplain,qa,aliases,verticality,admin",docs/planning/items/QA-WILLOW-002-live-command-and-vertical-smoke.md
+QUOTE-001,Liminal signs and quotation layer,proposed,content,content,medium,"quotes,signs,atmosphere,lore,dream,owl",docs/planning/items/QUOTE-001-liminal-signs-and-quotation-layer.md
 RAVEN-001,Dream raven presence near the carrion ravine,backlog,feature,world,high,"raven,dream,carrion-ravine,onboarding,world-time,atmosphere",docs/planning/items/RAVEN-001-dream-raven-carrion-ravine-presence.md
 REL-001,Release branch PR summary and risk discipline,testing,process,release,high,"release,github,pr,planning",docs/planning/items/REL-001-release-branch-pr-summary-risk.md
 RIVER-001,Bridge jump and river-current hazard,backlog,feature,survival,medium,"river,bridge,movement,hazard,survival",docs/planning/items/RIVER-001-bridge-jump-current-hazard.md

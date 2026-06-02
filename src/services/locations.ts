@@ -578,6 +578,20 @@ function addPickUpEverythingButton(keyboard: InlineKeyboard, groundItems: any[],
   if (hasPickableLyingObjects(groundItems, corpses)) keyboard.text("🤲 Підібрати все", "item:pickupEverything").row();
 }
 
+export function carcassDropoffButtonRows(featureId: number) {
+  return [[
+    { text: "🦴 Покласти тушу", callbackData: `dropoff:put:${featureId}:one` },
+    { text: "🦴 Покласти всі", callbackData: `dropoff:put:${featureId}:all` },
+  ]];
+}
+
+function addCarcassDropoffButtons(keyboard: InlineKeyboard, featureId: number) {
+  for (const row of carcassDropoffButtonRows(featureId)) {
+    for (const button of row) keyboard.text(button.text, button.callbackData);
+    keyboard.row();
+  }
+}
+
 function presenceText(location: any, viewerPlayerId?: number, revealTargets = false, activeActions = new Map<string, any>(), visibility?: VisibilityRules) {
   const targets = visibleTargets(location, viewerPlayerId, { showCorpses: visibility?.showGroundObjects ?? true });
   const hasCharacters = targets.some((t) => t.canGreet);
@@ -1247,6 +1261,7 @@ export async function renderLocationFeatureInteraction(
       addBeginnerCacheContributionButtons(keyboard, feature.id, key);
     }
   }
+  if (featureData(feature).carcass_dropoff === true) addCarcassDropoffButtons(keyboard, feature.id);
   if (isClimbTreeFeature(feature)) keyboard.text("🌳 Залізти", "move:UP").row();
   const moveDirection = featureMoveDirection(feature);
   if (moveDirection) keyboard.text(featureMoveButtonLabelForFeature(feature, moveDirection), `move:${moveDirection}`).row();

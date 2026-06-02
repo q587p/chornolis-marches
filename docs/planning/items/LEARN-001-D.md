@@ -4,7 +4,7 @@ title: Raw progress technical-only
 status: next
 type: ux
 area: learning
-priority: medium
+priority: high
 estimate: 1-2h
 tags:
   - learning

@@ -1,4 +1,4 @@
-import { Bot } from "grammy";
+import { Bot, InlineKeyboard } from "grammy";
 import { FatigueState, Prisma, WorldActionType } from "@prisma/client";
 import { prisma } from "../db";
 import {
@@ -29,6 +29,7 @@ import { isTutorialFastRestLocationKey } from "./tutorial";
 import { escapeHtml } from "../utils/text";
 import { canSendProactiveToTelegramId, claimIdleReminderForPlayerScene, idleReminderSceneKeyForLocation } from "./sessionPresence";
 import { buildDaypartNoticeHintKeyboard, recordOrdinaryWakeAndClaimDaypartHint } from "./playerNotificationSettings";
+import { CAMPFIRE_BUILD_TWIG_COST } from "./fire";
 
 export function fatigueStateFor(stamina: number, staminaMax = BASE_STAMINA): FatigueState {
   if (stamina <= VERY_TIRED_STAMINA) return "VERY_TIRED";
@@ -66,16 +67,68 @@ export function shouldRefreshMainKeyboardAfterVitalsChange(input: {
 }
 
 const TUTORIAL_REST_FULL_COMMENT = "Ось так виглядає короткий перепочинок у навчальному сні. Наяву до повної снаги шлях буде довший, і не кожне вогнище тримає вас так легко.";
+const FATIGUE_NOTICE_TEXT = "Ви відчуваєте втому. Наступні дії все ще можна планувати, але відновлення вже буде важливим.";
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
+}
+
+type FatigueGuidanceContext = {
+  hasBerries?: boolean;
+  hasEdibleInventory?: boolean;
+  canBuildCampfire?: boolean;
+};
+
+export function fatigueGuidanceText(context: FatigueGuidanceContext = {}) {
+  const lines = [
+    FATIGUE_NOTICE_TEXT,
+    "",
+    "Можна сісти й відпочити або лягти спати, якщо шлях уже тисне на плечі.",
+  ];
+  if (context.hasBerries) lines.push("У Речах є ягоди: вони трохи повертають снагу й ледь вгамовують голод.");
+  else if (context.hasEdibleInventory) lines.push("У Речах є щось їстівне; іноді тілу треба не крок, а коротка пожива.");
+  if (context.canBuildCampfire) lines.push("Є хмиз і факел: можна скласти вогнище, а біля вогню відпочинок легший.");
+  return lines.join("\n");
+}
+
+export function buildFatigueGuidanceKeyboard(context: FatigueGuidanceContext = {}) {
+  const keyboard = new InlineKeyboard()
+    .text("🧘 Відпочити", "rest:start")
+    .text("🌙 Сон", "character:sleep")
+    .row();
+  if (context.hasBerries) keyboard.text("🫐 З’їсти ягоди", "inventory:use:berries").row();
+  if (context.hasEdibleInventory) keyboard.text("🎒 Речі", "character:inventory").row();
+  if (context.canBuildCampfire) keyboard.text("🪵 Скласти вогнище", "fire:build").row();
+  return keyboard;
+}
+
+async function fatigueGuidanceContextForPlayer(playerId: number): Promise<FatigueGuidanceContext> {
+  const resources = await prisma.playerResource.findMany({
+    where: {
+      playerId,
+      amount: { gt: 0 },
+      resourceType: { key: { in: ["berries", "mushrooms", "cooked_meat", "raw_meat", "twigs", "torch", "lit_torch", "doused_torch"] } },
+    },
+    select: { amount: true, resourceType: { select: { key: true } } },
+  });
+  const amountByKey = new Map(resources.map((resource) => [resource.resourceType.key, Math.max(0, resource.amount ?? 0)]));
+  const hasBerries = (amountByKey.get("berries") ?? 0) > 0;
+  const hasEdibleInventory = hasBerries
+    || (amountByKey.get("mushrooms") ?? 0) > 0
+    || (amountByKey.get("cooked_meat") ?? 0) > 0
+    || (amountByKey.get("raw_meat") ?? 0) > 0;
+  const hasTorch = (amountByKey.get("torch") ?? 0) > 0
+    || (amountByKey.get("lit_torch") ?? 0) > 0
+    || (amountByKey.get("doused_torch") ?? 0) > 0;
+  const canBuildCampfire = (amountByKey.get("twigs") ?? 0) >= CAMPFIRE_BUILD_TWIG_COST && hasTorch;
+  return { hasBerries, hasEdibleInventory, canBuildCampfire };
 }
 
 function thresholdMessages(before: number, after: number, max: number, tookHp = false) {
   const messages: string[] = [];
 
   if (before >= 0 && after < 0) {
-    messages.push("Ви відчуваєте втому. Наступні дії все ще можна планувати, але відновлення вже буде важливим.");
+    messages.push(FATIGUE_NOTICE_TEXT);
   }
   if (before > VERY_TIRED_STAMINA && after <= VERY_TIRED_STAMINA) {
     messages.push("Ви дуже втомлені. Вам дуже варто відпочити, інакше подальші дії забиратимуть здоров’я.");
@@ -176,7 +229,14 @@ async function spendPlayerStaminaCost(bot: Bot, playerId: number, cost: number, 
 
   const messages = thresholdMessages(before, after, max, tookHp);
   if (chatId && messages.length) {
+    const fatigueGuidanceContext = messages.includes(FATIGUE_NOTICE_TEXT)
+      ? await fatigueGuidanceContextForPlayer(player.id)
+      : null;
     for (const message of messages) {
+      if (message === FATIGUE_NOTICE_TEXT) {
+        await bot.api.sendMessage(chatId, fatigueGuidanceText(fatigueGuidanceContext ?? {}), { reply_markup: buildFatigueGuidanceKeyboard(fatigueGuidanceContext ?? {}) });
+        continue;
+      }
       await bot.api.sendMessage(chatId, message, refreshedKeyboard ? { reply_markup: refreshedKeyboard } : undefined);
     }
   }
