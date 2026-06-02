@@ -1,7 +1,7 @@
 ---
 id: ANIMAL-001
 title: Animal speech reactions
-status: backlog
+status: in_progress
 type: feature
 area: ecology
 priority: medium
@@ -52,6 +52,17 @@ Players can and will try to talk to animals. That should feel like Chornolis not
 - Directed speech to a wolf can escalate after repeated provocation.
 - Reactions use species key / diet / current danger context rather than a single generic animal response.
 - Tests cover at least mouse flee, fox non-human reaction and wolf escalation guard.
+
+## 0.15.9 First Slice
+
+0.15.9 adds the first small reaction layer:
+
+- directed `say` / `whisper` to visible animals can produce a short local species-shaped response;
+- mice and rabbits can be startled into an ordinary queued `MOVE` through existing animal movement boundaries;
+- foxes can answer with wary attention rather than human conversation;
+- wolves can warn with a growl, but repeated-provocation escalation remains future work.
+
+The broader item stays in progress until wolf escalation, richer context and deeper tests land.
 
 ## Out of Scope
 

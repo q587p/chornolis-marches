@@ -80,7 +80,8 @@ Observation learning remains the main `0.15` line. Darkness, distance and light 
 - OWL-003: `0.15.6` adds a narrow starter-camp/watchtower owl boundary so nocturnal mouse pressure stays useful near camp edges without making the camp/watchtower pair feel like an immediate predator trap.
 - CAT-010: keep camp-cat beginner-cache presence near the front as a small atmospheric camp task without turning the cat into a pet, loot source or exact danger detector.
 - SOC-008: `0.15.5` adds nearby speech ranges with `/yell` / `гукнути`, reaching the current location plus visible adjacent exits while keeping `/shout` region-wide.
-- NOTIF-001: add short coalescing for visible non-player movement notifications so camp spirits/NPCs do not produce repeated arrival/departure messages and stale target buttons during quick vertical moves.
+- NOTIF-001: `0.15.9` adds short coalescing for visible non-player movement notifications so camp spirits/NPCs do not produce repeated arrival/departure messages and stale target buttons during quick vertical moves.
+- ANIMAL-001: `0.15.9` adds the first directed-speech reaction slice for animals; keep richer wolf escalation and context-sensitive behavior in the follow-up.
 - ONB-007: after the nearby speech slice, add the dream-tree tutorial scene that teaches vertical movement and calling up/down without turning it into region shouting.
 - OBS-PREP-001: before the first observation MVP, audit older beings, objects, features and locations where `look` and `examine` still produce the same text; full examination should reward greater attention with distinct detail or a documented no-action exception.
 - LEARN-001: minimal learning storage decision.
