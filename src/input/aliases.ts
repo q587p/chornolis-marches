@@ -10,6 +10,7 @@ export type PostureAliasMode = "sit" | "lie" | "stand";
 export type SocialSignalAlias = "smile" | "laugh" | "nod" | "bow" | "point" | "glare" | "sigh" | "wave";
 export type ChatAliasMode = "time" | "location" | "character";
 export type PutAliasAmount = number | "all";
+export type GiveAliasAmount = number;
 export type SessionPresenceAliasMode = "afk" | "end";
 export type DaypartNoticeAliasMode = "show" | "on" | "off";
 export type AutoMessageAliasMode = "show" | "on" | "off";
@@ -70,6 +71,7 @@ export type ParsedAliasCommand =
   | { kind: "cook-meat-all" }
   | { kind: "beginner-cache"; action: "inspect" | "take" | "contribute" | "contribute-all"; item?: string }
   | { kind: "put-item"; item: string; amount?: PutAliasAmount; container: string }
+  | { kind: "give-item"; item: string; target: string; amount?: GiveAliasAmount }
   | { kind: "say"; text: string }
   | { kind: "whisper"; text: string }
   | { kind: "reply"; text: string }
@@ -861,6 +863,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "yell") return "/yell";
   if (parsed.kind === "shout") return "/shout";
   if (parsed.kind === "put-item") return "/put";
+  if (parsed.kind === "give-item") return "/give";
   if (parsed.kind === "inspect-inventory-item") return "/item";
   if (parsed.kind === "drop-inventory-item") return "/drop";
   if (parsed.kind === "equip-inventory-item") return "/item";
@@ -1176,6 +1179,71 @@ function parseBeginnerCacheIntent(text: string): ParsedAliasCommand | null {
   return null;
 }
 
+const GIVE_TARGET_ALIASES = [
+  "camp spirit cat",
+  "spirit cat",
+  "camp cat",
+  "cat",
+  "коту-бережнику",
+  "кота-бережника",
+  "кіт-бережник",
+  "коту бережнику",
+  "кота бережника",
+  "кіт бережник",
+  "коту",
+  "котові",
+  "кота",
+  "кіт",
+].sort((a, b) => b.length - a.length);
+
+function amountFromGiveToken(token: string): GiveAliasAmount | null {
+  if (!/^\d+$/.test(token)) return null;
+  const amount = Number(token);
+  return Number.isSafeInteger(amount) && amount > 0 ? amount : null;
+}
+
+function parseGiveAmount(value: string) {
+  const words = value.split(/\s+/).filter(Boolean);
+  if (!words.length) return { value, amount: undefined as GiveAliasAmount | undefined };
+  const amount = amountFromGiveToken(words[0]);
+  if (!amount) return { value, amount: undefined as GiveAliasAmount | undefined };
+  return { value: words.slice(1).join(" "), amount };
+}
+
+function parseGiveItemTarget(value: string): { item: string; target: string } | null {
+  const withPreposition = value.match(/^(.+?)\s+(?:to|для|до)\s+(.+)$/u);
+  if (withPreposition?.[1]?.trim() && withPreposition?.[2]?.trim()) {
+    return { item: withPreposition[1].trim(), target: withPreposition[2].trim() };
+  }
+
+  for (const target of GIVE_TARGET_ALIASES) {
+    if (value === target) return { item: "", target };
+    if (value.endsWith(` ${target}`)) {
+      const item = value.slice(0, -target.length).trim();
+      if (item) return { item, target };
+    }
+  }
+
+  return null;
+}
+
+function parseGiveIntent(text: string): ParsedAliasCommand | null {
+  if (/^(?:feed_raw_meat|feed raw meat|feed_raw_meet|feed raw meet|feed_cat|feed cat)$/u.test(text)) {
+    return { kind: "give-item", item: "raw meat", target: "cat", amount: 1 };
+  }
+
+  if (/^(?:give|дати)$/u.test(text)) return { kind: "give-item", item: "", target: "" };
+
+  const match = text.match(/^(?:give|дати)\s+(.+)$/u);
+  if (!match?.[1]?.trim()) return null;
+
+  const parsedAmount = parseGiveAmount(match[1].trim());
+  const parsed = parseGiveItemTarget(parsedAmount.value.trim());
+  if (parsed) return { kind: "give-item", ...parsed, ...(parsedAmount.amount !== undefined ? { amount: parsedAmount.amount } : {}) };
+
+  return { kind: "give-item", item: parsedAmount.value.trim(), target: "", ...(parsedAmount.amount !== undefined ? { amount: parsedAmount.amount } : {}) };
+}
+
 function parseInventoryItemAction(text: string): ParsedAliasCommand | null {
   const drop = text.match(/^(?:drop|discard|throw away|викинути|кинути|покласти на землю)\s+(.+)$/);
   if (drop?.[1]?.trim()) return { kind: "drop-inventory-item", target: drop[1].trim() };
@@ -1379,6 +1447,9 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
 
   const beginnerCacheIntent = parseBeginnerCacheIntent(commandText);
   if (beginnerCacheIntent) return beginnerCacheIntent;
+
+  const giveIntent = parseGiveIntent(commandText);
+  if (giveIntent) return giveIntent;
 
   const inventoryItemAction = parseInventoryItemAction(commandText);
   if (inventoryItemAction) return inventoryItemAction;

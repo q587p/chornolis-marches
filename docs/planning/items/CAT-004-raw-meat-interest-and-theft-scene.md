@@ -24,6 +24,7 @@ Feeding the cat must not be implemented as a standalone social action. The butto
 
 ## Scope
 
+- `0.15.11` partial slice: the player-initiated feed affordance now exists through generic `give`, while autonomous meat-interest/theft scenes and cooldowns remain future work.
 - Detect raw meat in supported camp containers/ground resources/player inventory.
 - Prefer mice over meat.
 - Start a short scene instead of instantly removing meat.
@@ -48,6 +49,7 @@ Prefer doing `GIVE-001` before this task. If CAT-004 lands first, it should incl
 
 ## Acceptance criteria
 
+- `0.15.11` covers the player-carried raw-meat feed option and `/feed_raw_meat`/`/feed_raw_meet` alias-to-`give` routing. The remaining acceptance criteria below still describe the fuller theft/interest scene.
 - The cat can start a meat-interest scene when raw meat exists and no mice are present.
 - Nearby players get at least one interrupt option.
 - Players with raw meat get a `give`-backed feed option.

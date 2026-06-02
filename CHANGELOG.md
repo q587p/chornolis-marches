@@ -7,6 +7,19 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.11 - Camp cat raw-meat give bridge - 12026-06-02
+
+### Changed
+
+- Added a first generic `give` bridge for giving one raw-meat unit to a visible valid target, currently the camp spirit cat.
+- Added `Дати сире м'ясо` target UI for the camp spirit cat when the player has raw meat, plus `/give`, slashless `give`, Ukrainian `дати`, `/feed_raw_meat` and typo-tolerant `/feed_raw_meet` parser coverage.
+- Compacted starter shared-cache contribution buttons so each resource shows one-row `leave one` / `leave all` controls instead of doubling the button stack.
+- Polished the no-argument `yell` usage prompt so command examples are visually emphasized.
+- Stopped completed freshening source messages from being rewritten to the old generic “prey freshened” summary after the newer weapon-aware result message is sent.
+- Hardened direct player-target Telegram deliveries for greetings, whispers, creature replies and social signals so blocked-user private sends no longer fail the action queue.
+- Polished the no-argument `/yell` usage prompt and kept the command examples visually emphasized.
+- Updated help, camp cat ecology docs and planning notes for the small exchange/feeding slice.
+
 ## 0.15.10 - Camp cat cache presence, mouse priority and pounce - 12026-06-02
 
 ### Changed

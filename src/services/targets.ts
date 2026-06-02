@@ -30,6 +30,7 @@ export type ResolvedTarget = {
   isAnimal: boolean;
   isCorpse: boolean;
   canFreshen: boolean;
+  canReceiveRawMeat?: boolean;
   inspect: string;
   forms: NameForms;
 };
@@ -331,6 +332,7 @@ export async function resolveTarget(type: string, id: number, locationId: number
         isAnimal,
         isCorpse: false,
         canFreshen: false,
+        canReceiveRawMeat: isCampSpiritCat,
         inspect: campSpiritCatDetails ?? (isAnimal
           ? `Це ${forms.nominative}.\n\n${formatCreatureStatusLine(target, visibleAction)}${weaponText ? `\n${weaponText}` : ""}${torchText ? `\n${torchText}` : ""}`
           : `${forms.nominative}\n\n${formatCreatureStatusLine(target, visibleAction)}${weaponText ? `\n${weaponText}` : ""}${torchText ? `\n${torchText}` : ""}`),
@@ -368,6 +370,7 @@ export async function resolveTarget(type: string, id: number, locationId: number
         isAnimal,
         isCorpse: false,
         canFreshen: false,
+        canReceiveRawMeat: isCampSpiritCat,
         inspect: campSpiritCatDetails ?? publicCreatureDetails,
       };
     }
@@ -382,6 +385,7 @@ export async function resolveTarget(type: string, id: number, locationId: number
       isAnimal,
       isCorpse: false,
       canFreshen: false,
+      canReceiveRawMeat: isCampSpiritCat,
       inspect: isAnimal
         ? `Це ${forms.nominative}.\n\n${formatCreatureStatusLine(target, visibleAction)}\nЖиття: ${target.hp}/${target.maxHp ?? target.species.baseHp}\nСтать: ${formatSex(target.sex)}\nВік: ${target.age}\nТіків віку: ${target.ageTicks}${weaponText ? `\n${weaponText}` : ""}${torchText ? `\n${torchText}` : ""}\n\nСтатистика:\n${formatCreatureStats(target)}`
         : `${campSpiritCatDetails ?? `${forms.nominative}\n\n${formatCreatureStatusLine(target, visibleAction)}`}\n\nЖиття: ${target.hp}/${target.maxHp ?? target.species.baseHp}${weaponText ? `\n${weaponText}` : ""}${torchText ? `\n${torchText}` : ""}${isCampSpiritCat ? "" : hunterSection}\n\nСтатистика:\n${formatCreatureStats(target)}`,

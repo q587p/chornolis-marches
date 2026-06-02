@@ -2,6 +2,7 @@ import type { Bot } from "grammy";
 import { Direction } from "@prisma/client";
 import { prisma } from "../db";
 import { escapeHtml } from "../utils/text";
+import { safeSendMessage } from "../utils/telegram";
 import { notifyLocationAll, notifyLocationExcept } from "./notifications";
 import { creatureForms, playerForms, type NameForms } from "./grammar";
 import type { ResolvedTarget } from "./targets";
@@ -278,7 +279,7 @@ async function performSocialSignalForActor(bot: Bot, actor: SocialContext["actor
   const ctx: SocialContext = { actor, target };
   const targetPlayer = target.kind === "player" ? await prisma.player.findUnique({ where: { id: target.id } }) : null;
   if (targetPlayer && await canSendProactiveToTelegramId(targetPlayer.telegramId)) {
-    await bot.api.sendMessage(targetPlayer.telegramId, social.targetMessage(ctx), { parse_mode: "HTML" });
+    await safeSendMessage(bot, targetPlayer.telegramId, social.targetMessage(ctx), { parse_mode: "HTML" }, "social signal target sendMessage");
   }
 
   await notifyLocationExcept(
