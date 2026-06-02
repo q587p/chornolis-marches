@@ -337,6 +337,7 @@ assert.equal(isDreamGateOpeningPhrase("Сьогодні гарний туман"
 assertAlias("роздивитися труп", { kind: "inspect-feature", target: "труп", detail: "full" });
 assertAlias("атакувати мишу", { kind: "target-action", action: "attack", target: "мишу" });
 assertAlias("атака миша", { kind: "target-action", action: "attack", target: "миша" });
+assertAlias("/attack mouse", { kind: "target-action", action: "attack", target: "mouse" });
 assertAlias("fight wolf", { kind: "target-action", action: "attack", target: "wolf" });
 assertAlias("kick rabbit", { kind: "target-action", action: "attack", target: "rabbit" });
 assertAlias("привітати 1", { kind: "target-action", action: "greet", target: "1" });

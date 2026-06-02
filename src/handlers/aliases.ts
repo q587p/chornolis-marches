@@ -917,6 +917,16 @@ async function submitTargetAction(bot: Bot, ctx: any, action: TargetAction, targ
   await submitResolvedTargetAction(bot, ctx, player, locationId, action, match.target, detail);
 }
 
+async function submitAttackCommand(bot: Bot, ctx: any, targetQuery?: string) {
+  const target = targetQuery?.trim();
+  if (!target) {
+    await ctx.reply("Напишіть так: <i>attack</i> mouse або <i>атакувати</i> мишу.", { parse_mode: "HTML" });
+    return;
+  }
+
+  await submitTargetAction(bot, ctx, "attack", target);
+}
+
 async function resolveVisibleTargetForAlias(ctx: any, targetQuery: string) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player || !player.currentLocationId) {
@@ -1275,6 +1285,7 @@ export function registerAliasHandlers(bot: Bot) {
     "exits",
     "reply",
   ], async (_ctx, next) => next());
+  bot.command(["attack", "fight", "kill", "kick"], async (ctx) => submitAttackCommand(bot, ctx, ctx.match ?? ""));
   bot.command("yell", async (ctx) => submitYell(bot, ctx, ctx.match ?? ""));
   bot.command("shout", async (ctx) => submitShout(bot, ctx, ctx.match ?? ""));
 
