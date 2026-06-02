@@ -3,13 +3,13 @@ import { prisma } from "../db";
 import { canPickUpGroundItem } from "./groundItems";
 import { inventoryResourceKeyFromText } from "./inventoryUse";
 import { resourceTypeDisplayName } from "./corpses";
-import { HRYVNIA_RESOURCE_KEY, isMoneyResourceKey, moneyAmountText, SHAH_RESOURCE_KEY, type MoneyResourceKey } from "../utils/moneyText";
+import { GRIVNA_RESOURCE_KEY, isMoneyResourceKey, moneyAmountText, SHAH_RESOURCE_KEY, type MoneyResourceKey } from "../utils/moneyText";
 
 export const BEGINNER_CACHE_FEATURE_KEY = "start_beginner_shared_cache";
 export const BEGINNER_CACHE_RESTOCK_AFTER_MS = 45 * 60 * 1000;
 
 const CACHE_ITEM_ORDER = ["berries", "herbs", "mushrooms", "raw_meat", "cooked_meat", "twigs"] as const;
-const CACHE_MONEY_ORDER = [SHAH_RESOURCE_KEY, HRYVNIA_RESOURCE_KEY] as const;
+const CACHE_MONEY_ORDER = [SHAH_RESOURCE_KEY, GRIVNA_RESOURCE_KEY] as const;
 export type BeginnerCacheSupplyKey = (typeof CACHE_ITEM_ORDER)[number];
 export type BeginnerCacheResourceKey = BeginnerCacheSupplyKey | MoneyResourceKey;
 
@@ -21,7 +21,7 @@ const CACHE_ITEM_LABELS: Record<BeginnerCacheResourceKey, string> = {
   cooked_meat: "смажене м'ясо",
   twigs: "хмиз",
   shah: "шаг",
-  hryvnia: "ґривня",
+  grivna: "ґривня",
 };
 
 const CACHE_ITEM_ACCUSATIVE: Record<BeginnerCacheResourceKey, string> = {
@@ -32,7 +32,7 @@ const CACHE_ITEM_ACCUSATIVE: Record<BeginnerCacheResourceKey, string> = {
   cooked_meat: "смажене м'ясо",
   twigs: "хмиз",
   shah: "шаг",
-  hryvnia: "ґривню",
+  grivna: "ґривню",
 };
 
 const CACHE_ITEM_ALL_QUANTIFIERS: Record<BeginnerCacheResourceKey, string> = {
@@ -43,7 +43,7 @@ const CACHE_ITEM_ALL_QUANTIFIERS: Record<BeginnerCacheResourceKey, string> = {
   cooked_meat: "все",
   twigs: "весь",
   shah: "всі",
-  hryvnia: "всі",
+  grivna: "всі",
 };
 
 const DEFAULT_STOCK: Record<BeginnerCacheResourceKey, number> = {
@@ -54,7 +54,7 @@ const DEFAULT_STOCK: Record<BeginnerCacheResourceKey, number> = {
   cooked_meat: 2,
   twigs: 8,
   shah: 0,
-  hryvnia: 0,
+  grivna: 0,
 };
 
 const DEFAULT_MAX_STOCK: Record<BeginnerCacheResourceKey, number> = {
@@ -65,7 +65,7 @@ const DEFAULT_MAX_STOCK: Record<BeginnerCacheResourceKey, number> = {
   cooked_meat: 5,
   twigs: 14,
   shah: 200,
-  hryvnia: 20,
+  grivna: 20,
 };
 
 const RESTOCK_TARGET: Record<BeginnerCacheResourceKey, number> = {
@@ -76,7 +76,7 @@ const RESTOCK_TARGET: Record<BeginnerCacheResourceKey, number> = {
   cooked_meat: 2,
   twigs: 8,
   shah: 0,
-  hryvnia: 0,
+  grivna: 0,
 };
 
 type JsonRecord = Record<string, unknown>;

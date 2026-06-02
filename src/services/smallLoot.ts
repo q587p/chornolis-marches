@@ -1,5 +1,5 @@
 import { prisma } from "../db";
-import { HRYVNIA_RESOURCE_KEY, SHAH_RESOURCE_KEY } from "../utils/moneyText";
+import { GRIVNA_RESOURCE_KEY, SHAH_RESOURCE_KEY } from "../utils/moneyText";
 
 export const DEFAULT_GATHER_SHAH_CHANCE_PERMILLE = 30;
 
@@ -48,7 +48,7 @@ export function gatherShahBonusMessage(random = Math.random) {
 }
 
 export async function ensureMoneyResourceTypes() {
-  const [shah, hryvnia] = await Promise.all([
+  const [shah, grivna] = await Promise.all([
     prisma.resourceType.upsert({
       where: { key: SHAH_RESOURCE_KEY },
       update: {
@@ -62,19 +62,19 @@ export async function ensureMoneyResourceTypes() {
       },
     }),
     prisma.resourceType.upsert({
-      where: { key: HRYVNIA_RESOURCE_KEY },
+      where: { key: GRIVNA_RESOURCE_KEY },
       update: {
         name: "ґривня",
         description: "Більша грошова одиниця, важча й рідкісніша за шаг. У Порубіжжі її радше бережуть, ніж витрачають похапцем.",
       },
       create: {
-        key: HRYVNIA_RESOURCE_KEY,
+        key: GRIVNA_RESOURCE_KEY,
         name: "ґривня",
         description: "Більша грошова одиниця, важча й рідкісніша за шаг. У Порубіжжі її радше бережуть, ніж витрачають похапцем.",
       },
     }),
   ]);
-  return { shah, hryvnia };
+  return { shah, grivna };
 }
 
 export async function maybeGrantGatherShahBonus(input: {

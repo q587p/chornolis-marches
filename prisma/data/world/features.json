@@ -416,7 +416,7 @@
       },
       "cache_money_stock": {
         "shah": 0,
-        "hryvnia": 0
+        "grivna": 0
       },
       "cache_max_stock": {
         "berries": 10,
@@ -428,7 +428,7 @@
       },
       "cache_money_max_stock": {
         "shah": 200,
-        "hryvnia": 20
+        "grivna": 20
       },
       "cache_restock_target": {
         "berries": 4,
@@ -440,7 +440,7 @@
       },
       "cache_money_restock_target": {
         "shah": 0,
-        "hryvnia": 0
+        "grivna": 0
       },
       "aliases": [
         "спільна скриня",

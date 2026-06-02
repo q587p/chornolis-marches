@@ -103,7 +103,7 @@ Use these player-facing money forms for the first money MVP:
 - `шаг`, `шаги`, `шагів`;
 - `ґривня`, `ґривні`, `ґривень`.
 
-The persisted resource key remains `hryvnia`, but Chornolis UI, news and diegetic docs should not print modern `гривня` / `гривень` forms for this resource.
+The persisted resource key is `grivna`, and Chornolis UI, news and diegetic docs should keep the `ґ` spelling for this resource.
 
 ## Additional Preferred Replacements
 

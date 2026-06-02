@@ -1,6 +1,6 @@
 export const SHAH_RESOURCE_KEY = "shah";
-export const HRYVNIA_RESOURCE_KEY = "hryvnia";
-export const MONEY_RESOURCE_KEYS = [SHAH_RESOURCE_KEY, HRYVNIA_RESOURCE_KEY] as const;
+export const GRIVNA_RESOURCE_KEY = "grivna";
+export const MONEY_RESOURCE_KEYS = [SHAH_RESOURCE_KEY, GRIVNA_RESOURCE_KEY] as const;
 export type MoneyResourceKey = (typeof MONEY_RESOURCE_KEYS)[number];
 
 type MoneyResource = {
@@ -27,20 +27,20 @@ export function shahText(amount: number) {
   return `${safeAmount} ${pluralForm(safeAmount, ["шаг", "шаги", "шагів"])}`;
 }
 
-export function hryvniaText(amount: number) {
+export function grivnaText(amount: number) {
   const safeAmount = Math.max(0, Math.floor(amount));
   return `${safeAmount} ${pluralForm(safeAmount, ["ґривня", "ґривні", "ґривень"])}`;
 }
 
 export function moneyAmountText(key: MoneyResourceKey, amount: number) {
-  return key === HRYVNIA_RESOURCE_KEY ? hryvniaText(amount) : shahText(amount);
+  return key === GRIVNA_RESOURCE_KEY ? grivnaText(amount) : shahText(amount);
 }
 
 export function playerMoneyText(resources: MoneyResource[]) {
   const amounts = moneyAmounts(resources);
-  if (amounts.hryvnia <= 0 && amounts.shah <= 0) return "немає";
+  if (amounts.grivna <= 0 && amounts.shah <= 0) return "немає";
   return [
-    amounts.hryvnia > 0 ? hryvniaText(amounts.hryvnia) : "",
+    amounts.grivna > 0 ? grivnaText(amounts.grivna) : "",
     amounts.shah > 0 ? shahText(amounts.shah) : "",
   ].filter(Boolean).join(", ");
 }
@@ -50,9 +50,9 @@ export function moneyAmounts(resources: MoneyResource[]) {
     (total, resource) => {
       const key = resource.resourceType.key;
       if (key === SHAH_RESOURCE_KEY) total.shah += Math.max(0, Number(resource.amount ?? 0));
-      if (key === HRYVNIA_RESOURCE_KEY) total.hryvnia += Math.max(0, Number(resource.amount ?? 0));
+      if (key === GRIVNA_RESOURCE_KEY) total.grivna += Math.max(0, Number(resource.amount ?? 0));
       return total;
     },
-    { shah: 0, hryvnia: 0 },
+    { shah: 0, grivna: 0 },
   );
 }

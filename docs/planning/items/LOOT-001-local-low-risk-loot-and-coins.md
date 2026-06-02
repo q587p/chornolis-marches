@@ -67,9 +67,9 @@ Coordinate with `MAP-002` biome foraging and `WORLD-003` item lifetime work so l
 
 The first money/loot slice landed as `MONEY-001`:
 
-- `shah` and `hryvnia` are now named resource types with Ukrainian display/plural helpers.
+- `shah` and `grivna` are now named resource types with Ukrainian display/plural helpers.
 - A few authored `shah` finds exist near starter-adjacent or calm locations.
-- `shah` and `hryvnia` can move through the visible ground-pickup path.
+- `shah` and `grivna` can move through the visible ground-pickup path.
 - The beginner shared cache has a separate small money box with explicit player take/contribute controls.
 - Successful waking-world gathering can very rarely turn up one `shah`.
 

@@ -2,7 +2,7 @@ import { prisma } from "../db";
 import { resourceTypeDisplayName } from "./corpses";
 import { assertCanPerformPhysicalAction } from "./postureRules";
 
-const PICKABLE_RESOURCE_KEYS = ["torch", "lit_torch", "twigs", "raw_meat", "cooked_meat", "shah", "hryvnia"] as const;
+const PICKABLE_RESOURCE_KEYS = ["torch", "lit_torch", "twigs", "raw_meat", "cooked_meat", "shah", "grivna"] as const;
 const TUTORIAL_LOOSE_RESOURCE_KEYS = ["berries", "herbs", "mushrooms"] as const;
 export type PickableResourceKey = (typeof PICKABLE_RESOURCE_KEYS)[number];
 export type TutorialLooseResourceKey = (typeof TUTORIAL_LOOSE_RESOURCE_KEYS)[number];

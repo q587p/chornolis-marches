@@ -977,7 +977,7 @@ function pickupResourceKey(target: string): VisibleGroundResourceKey | null {
   if (["raw meat", "raw_meat", "сире м'ясо", "сире м’ясо", "м'ясо", "м’ясо"].includes(target)) return "raw_meat";
   if (["cooked meat", "cooked_meat", "смажене м'ясо", "смажене м’ясо"].includes(target)) return "cooked_meat";
   if (["shah", "shahs", "small coin", "coin", "шаг", "шага", "шаги", "шагів", "монета", "монету", "монети"].includes(target)) return "shah";
-  if (["hryvnia", "hryvnias", "grivna", "grivnas", "ґривня", "ґривню", "ґривні", "ґривень"].includes(target)) return "hryvnia";
+  if (["grivna", "grivnas", "ґривня", "ґривню", "ґривні", "ґривень"].includes(target)) return "grivna";
   if (["berries", "berry", "ягоди", "ягід"].includes(target)) return "berries";
   if (["mushrooms", "mushroom", "гриби", "грибів"].includes(target)) return "mushrooms";
   if (["herbs", "herb", "трави", "трав", "лікарські трави", "лікарських трав", "зілля", "зіллячко"].includes(target)) return "herbs";

@@ -19,14 +19,14 @@ depends_on:
 
 ## Goal
 
-Introduce the first tiny money surface without turning the game into a shop economy: `shah` as a small find and `hryvnia` as a named larger unit reserved for future authored use.
+Introduce the first tiny money surface without turning the game into a shop economy: `shah` as a small find and `grivna` as a named larger unit reserved for future authored use.
 
 ## Shipped in 0.15.16
 
-- Added `shah` and `hryvnia` resource types with lexicon-backed Ukrainian forms.
+- Added `shah` and `grivna` resource types with lexicon-backed Ukrainian forms.
 - Added shared money text helpers for correct plural display and `/me` money summary.
-- Made `shah` and `hryvnia` legal visible ground-pickup resources.
-- Seeded a handful of starter-adjacent `shah` finds, with no tutorial-dream money and no broad starter `hryvnia`.
+- Made `shah` and `grivna` legal visible ground-pickup resources.
+- Seeded a handful of starter-adjacent `shah` finds, with no tutorial-dream money and no broad starter `grivna`.
 - Added a separate money box to the beginner shared cache with explicit player take/contribute controls and no hidden money restock.
 - Added a rare waking-world gathering bonus that can grant one `shah` on successful gather.
 - Added focused tests for pluralization, seed authoring, cache money behavior and gather bonus boundaries.
@@ -36,7 +36,7 @@ Introduce the first tiny money surface without turning the game into a shop econ
 - Shops, vendors, barter, prices and conversion.
 - Factions, law, theft, fines or taxes.
 - Broad creature/NPC coin drops.
-- Common `hryvnia` finds.
+- Common `grivna` finds.
 - Shrine/offering behavior.
 
 ## Follow-Up

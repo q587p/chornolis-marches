@@ -7,7 +7,7 @@ This system records the first small money and low-risk loot slice. It is not a s
 Money uses ordinary resource keys so it can move through existing resource pickup and inventory paths:
 
 - `shah` — Ukrainian display name `шаг`, a small darkened coin.
-- `hryvnia` — Ukrainian display name `ґривня`, a larger money unit kept rare in MVP.
+- `grivna` — Ukrainian display name `ґривня`, a larger money unit kept rare in MVP.
 
 Do not use Ukrainian resource keys in seed data or code. Player-facing text should use the localized names and correct plurals:
 
@@ -33,7 +33,7 @@ The beginner cache keeps money separate from ordinary supplies. Hidden unobserve
 Starter money finds should remain modest and authored:
 
 - use `ResourceNode` entries for a few `shah` finds;
-- do not place starter `hryvnia` nodes broadly;
+- do not place starter `grivna` nodes broadly;
 - do not seed tutorial-dream money;
 - keep amounts small enough that careful looking feels rewarded without turning nearby camp into a money route.
 
@@ -55,7 +55,7 @@ Keep these out of the first money/loot slice unless a later task explicitly prom
 
 - shops, vendors, price lists or currency conversion;
 - factions, taxes, law, theft or fines;
-- common `hryvnia` drops;
+- common `grivna` drops;
 - combat loot tables;
 - automatic NPC money handling;
 - shrine/offering mechanics beyond planning notes.

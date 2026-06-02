@@ -11,11 +11,11 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ### Added
 
-- Added `shah` and `hryvnia` resource types with lexicon-backed Ukrainian names and shared pluralized money text helpers.
+- Added `shah` and `grivna` resource types with lexicon-backed Ukrainian names and shared pluralized money text helpers.
 - Added a money summary to `/me`, showing `Гроші: немає` when the character carries no money.
-- Added a few authored starter-adjacent `shah` ground finds without adding tutorial-dream money or broad starter `hryvnia` nodes.
-- Added `shah` and `hryvnia` to visible ground-resource pickup handling, including aliases and existing pickup-all paths.
-- Added a separate beginner-cache money box for `shah` and `hryvnia` with explicit player take/contribute controls.
+- Added a few authored starter-adjacent `shah` ground finds without adding tutorial-dream money or broad starter `grivna` nodes.
+- Added `shah` and `grivna` to visible ground-resource pickup handling, including aliases and existing pickup-all paths.
+- Added a separate beginner-cache money box for `shah` and `grivna` with explicit player take/contribute controls.
 - Added a rare waking-world successful-gather bonus that can grant one `shah` directly to the player.
 - Added Scribe/admin `/call_scribes_audit` and `/call_scribes_approve <eventId>` / `/call_scribes_approve_<eventId>` commands for reviewing and applying recorded return-help requests.
 - Added safe Herald/web news deep links and `/start cmd_*` routing for `/start`, `/rest` and `/sleep`, so public news command hints open the main bot instead of staying plain text.
