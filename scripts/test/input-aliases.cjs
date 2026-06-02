@@ -13,6 +13,7 @@ const {
 } = require("../../src/input/aliases");
 const { inventoryResourceKeyFromText } = require("../../src/services/inventoryUse");
 const { parseStartActionPayload } = require("../../src/input/startPayloads");
+const { autoCommandModeFromText } = require("../../src/handlers/auto");
 const { isDreamGateOpeningPhrase, localGateOpenAttemptText } = require("../../src/services/tutorial");
 const { normalizeCreatureActionText } = require("../../src/utils/creatureActionText");
 const { resourceAccusativeName } = require("../../src/utils/resourceText");
@@ -304,6 +305,17 @@ assertAlias("/queue_clear", { kind: "queue", mode: "clear" });
 assertAlias("скасувати", { kind: "queue", mode: "cancel-current" });
 assertAlias("очистити чергу", { kind: "queue", mode: "clear" });
 assertAlias("/auto_stop", { kind: "auto", mode: "stop" });
+assertAlias("авто стоп", { kind: "auto", mode: "stop" });
+assertAlias("стоп авто", { kind: "auto", mode: "stop" });
+assertAlias("авто вимкнути", { kind: "auto", mode: "stop" });
+assert.equal(formatAliasSuggestion(suggestAliasEntries("стоп ав")[0]), "стоп авто (/auto_stop)");
+assert.equal(formatAliasSuggestion(suggestAliasEntries("авто ст")[0]), "авто стоп (/auto_stop)");
+assert.equal(formatAliasSuggestion(suggestAliasEntries("вимкнути авт")[0]), "вимкнути авто (/auto_stop)");
+assert.equal(autoCommandModeFromText("stop"), "stop");
+assert.equal(autoCommandModeFromText("off"), "stop");
+assert.equal(autoCommandModeFromText("стоп"), "stop");
+assert.equal(autoCommandModeFromText("вимкнути"), "stop");
+assert.equal(autoCommandModeFromText(""), "start");
 
 assertAlias("сказати Хай стежка буде м'якою.", { kind: "say", text: "Хай стежка буде м'якою." });
 assertAlias("/say Відчинитися", { kind: "say", text: "Відчинитися" });

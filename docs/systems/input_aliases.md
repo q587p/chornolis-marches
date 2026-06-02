@@ -106,7 +106,7 @@ Actions:
 - Numeric inspection such as `look 3` or `роздивитися 3` refers to the visible nearby target list, not to fuzzy feature keys or internal feature ids.
 - Future shrine/offering actions: `/offer`, `/offer <item>`, `пожертвувати`, `лишити дар`, `покласти дар`, `кинути шаг`, `покласти хмиз` -> offer an item to an inspectable shrine/капище or similar sacred feature.
 - Future animal-restoration offering actions: `/offer berries`, `/offer herbs`, `покласти ягоди`, `лишити трави`, `покласти дар зайцю`, `покласти дар мишам`, `пожертвувати зайцеві`, `пожертвувати мишам` -> offer fitting food or herbs to a hare/mouse statue, carved burrow marker or similar animal charm.
-- `увімкнути авто`, `зупинити авто`.
+- `увімкнути авто`, `авто старт`, `зупинити авто`, `вимкнути авто`, `стоп авто`, `авто стоп` -> керувати авто-режимом; стоп-форми мають показувати `/auto_stop`, а не `/auto`, щоб підказка не заводила назад у ввімкнення.
 
 Targets and signals:
 

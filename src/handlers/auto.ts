@@ -227,6 +227,19 @@ function autoConfirmText() {
   ].join("\n");
 }
 
+export function autoCommandModeFromText(raw: unknown): "start" | "stop" {
+  const arg = String(raw ?? "")
+    .trim()
+    .toLocaleLowerCase("uk-UA")
+    .replace(/[_-]+/g, " ");
+  if (["stop", "off", "стоп", "зупинити", "вимкнути", "ні"].includes(arg)) return "stop";
+  return "start";
+}
+
+function autoCommandMode(ctx: any): "start" | "stop" {
+  return autoCommandModeFromText(ctx.match);
+}
+
 async function replyWithAutoConfirmation(ctx: any) {
   await ctx.reply(autoConfirmText(), { reply_markup: buildAutoConfirmKeyboard() });
 }
@@ -478,7 +491,8 @@ export async function requestOrEnablePlayerAuto(bot: Bot, ctx: any) {
     return;
   }
 
-  await ctx.reply(`${result.started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено."}\nАвтодії плануються ${playerAutoTimingText()}; вручну зазвичай можна діяти швидше.`, {
+  const stopHint = result.started ? "" : "\nЩоб вимкнути, напишіть /auto_stop або «вимкнути авто».";
+  await ctx.reply(`${result.started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено."}\nАвтодії плануються ${playerAutoTimingText()}; вручну зазвичай можна діяти швидше.${stopHint}`, {
     reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, true),
   });
 }
@@ -566,6 +580,10 @@ export function registerAutoHandlers(bot: Bot) {
 
   bot.command("auto", async (ctx) => {
     if (!ctx.from) return;
+    if (autoCommandMode(ctx) === "stop") {
+      await replyStopPlayerAuto(ctx);
+      return;
+    }
     await requestOrEnablePlayerAuto(bot, ctx);
   });
 
@@ -596,7 +614,8 @@ export function registerAutoHandlers(bot: Bot) {
       return;
     }
     await safeAnswerCallbackQuery(ctx, "Авто увімкнено.");
-    await ctx.reply(`${result.started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено."}\nАвтодії плануються ${playerAutoTimingText()}; вручну зазвичай можна діяти швидше.`, {
+    const stopHint = result.started ? "" : "\nЩоб вимкнути, напишіть /auto_stop або «вимкнути авто».";
+    await ctx.reply(`${result.started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено."}\nАвтодії плануються ${playerAutoTimingText()}; вручну зазвичай можна діяти швидше.${stopHint}`, {
       reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, true),
     });
   });

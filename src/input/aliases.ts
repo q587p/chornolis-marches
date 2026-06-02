@@ -384,11 +384,20 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "авто": { kind: "auto", mode: "start" },
   autostop: { kind: "auto", mode: "stop" },
   "auto stop": { kind: "auto", mode: "stop" },
+  "auto off": { kind: "auto", mode: "stop" },
+  "stop auto": { kind: "auto", mode: "stop" },
   "увімкнути авто": { kind: "auto", mode: "start" },
   "ввімкнути авто": { kind: "auto", mode: "start" },
   "запустити авто": { kind: "auto", mode: "start" },
+  "авто старт": { kind: "auto", mode: "start" },
+  "авто увімкнути": { kind: "auto", mode: "start" },
+  "авто ввімкнути": { kind: "auto", mode: "start" },
   "зупинити авто": { kind: "auto", mode: "stop" },
   "вимкнути авто": { kind: "auto", mode: "stop" },
+  "авто стоп": { kind: "auto", mode: "stop" },
+  "стоп авто": { kind: "auto", mode: "stop" },
+  "авто зупинити": { kind: "auto", mode: "stop" },
+  "авто вимкнути": { kind: "auto", mode: "stop" },
 
   queue: { kind: "queue", mode: "status" },
   q: { kind: "queue", mode: "status" },
@@ -872,7 +881,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "douse-torch") return "/douse_torch";
   if (parsed.kind === "posture") return parsed.mode === "sit" ? "/sit" : parsed.mode === "lie" ? "/lie" : "/stand";
   if (parsed.kind === "rest") return "/rest";
-  if (parsed.kind === "auto") return "/auto";
+  if (parsed.kind === "auto") return parsed.mode === "stop" ? "/auto_stop" : "/auto";
   if (parsed.kind === "queue") return "/queue";
   if (parsed.kind === "track") return "/track";
   if (parsed.kind === "inspect-vegetation" || parsed.kind === "inspect-border-marker" || parsed.kind === "inspect-feature") return "/examine";
