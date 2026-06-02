@@ -20,7 +20,7 @@ import { fatigueStateFor, recoverStamina } from "./actionRecovery";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
 import { assertCanPerformPhysicalAction, isPhysicalPlayerAction } from "./postureRules";
 import { logEvent } from "./worldEvents";
-import { canSendProactiveToPlayerId } from "./sessionPresence";
+import { canSendPlayerActionMessageToPlayerId } from "./sessionPresence";
 import { notifyPlayerObservers, playerRestStartObserverText } from "./playerVisibility";
 
 export type ActorRef =
@@ -128,7 +128,7 @@ function chatIdFromAction(action: WorldAction) {
 
 async function refreshKeyboardWhenPlayerQueueEnds(bot: Bot, action: WorldAction) {
   if (action.actorType !== "PLAYER" || !action.playerId || action.durationMs <= QUICK_PLAYER_ACTION_DURATION_MS) return;
-  if (!(await canSendProactiveToPlayerId(action.playerId))) return;
+  if (!(await canSendPlayerActionMessageToPlayerId(action.playerId, action.note))) return;
   const chatId = chatIdFromAction(action);
   if (!chatId) return;
 

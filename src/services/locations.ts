@@ -109,7 +109,7 @@ export function joinVisibleActionLabels(...labels: Array<string | null | undefin
 function visibleTargets(
   location: any,
   viewerPlayerId?: number,
-  options: { showAnimalAge?: boolean; showTechnicalDetails?: boolean } = {}
+  options: { showAnimalAge?: boolean; showTechnicalDetails?: boolean; showCorpses?: boolean } = {}
 ) {
   const players = location.players
     .filter((p: any) => p.id !== viewerPlayerId)
@@ -147,6 +147,7 @@ function visibleTargets(
 
   const corpses = location.creatures
     .filter(isVisibleCorpse)
+    .filter(() => options.showCorpses !== false)
     .map((c: any) => {
       const wasFreshened = isFreshenedCorpse(c.currentAction);
       const corpseLeft = c.corpseDecayTicksLeft ?? c.species.corpseDecayTicks;
@@ -539,7 +540,7 @@ function addGroundItemPickupButtons(keyboard: InlineKeyboard, groundItems: any[]
 }
 
 function presenceText(location: any, viewerPlayerId?: number, revealTargets = false, activeActions = new Map<string, any>(), visibility?: VisibilityRules) {
-  const targets = visibleTargets(location, viewerPlayerId);
+  const targets = visibleTargets(location, viewerPlayerId, { showCorpses: visibility?.showGroundObjects ?? true });
   const hasCharacters = targets.some((t) => t.canGreet);
   const hasAnimals = location.creatures.some((c: any) => isVisibleLivingCreature(c) && c.species.kind === "ANIMAL");
   const hasCorpses = location.creatures.some(isVisibleCorpse);
@@ -835,7 +836,7 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
   const revealTargets = visibility.showNearbyDetails;
   const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
   const lockedExits = await lockedExitDirections(location.id);
-  const targets = visibleTargets(location, viewerPlayerId);
+  const targets = visibleTargets(location, viewerPlayerId, { showCorpses: visibility.showGroundObjects });
   const activeActions = revealTargets ? await activeActionsForTargets(targets) : new Map<string, any>();
   const actionLabeledTargets = targets.map((target) => ({
     ...target,
@@ -911,7 +912,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   const visibility = await visibilityRulesForLocation(location.id, "details");
   const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
   const lockedExits = await lockedExitDirections(location.id);
-  const targets = visibleTargets(location, viewerPlayerId, { showAnimalAge: true, showTechnicalDetails });
+  const targets = visibleTargets(location, viewerPlayerId, { showAnimalAge: true, showTechnicalDetails, showCorpses: visibility.showGroundObjects });
   const activeActions = visibility.showNearbyDetails ? await activeActionsForTargets(targets) : new Map<string, any>();
   const actionLabeledTargets = targets.map((target) => ({
     ...target,

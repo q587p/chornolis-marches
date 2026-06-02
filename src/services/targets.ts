@@ -18,6 +18,7 @@ import {
 } from "./npcHunter";
 import { heldWeaponLine } from "./weapons";
 import { campSpiritCatInspectionText, isCampSpiritCatCreature } from "./campSpiritCat";
+import { visibilityRulesForLocation } from "./visibility";
 
 export type ResolvedTarget = {
   kind: "player" | "creature";
@@ -206,8 +207,10 @@ export async function hunterFieldInventorySummary(creature: { id: number; curren
 export async function resolveTarget(type: string, id: number, locationId: number, options: { viewerPlayerId?: number; detail?: TargetInspectDetail } = {}): Promise<ResolvedTarget | null> {
   const showTechnicalDetails = await playerShowsTechnicalDetails(options.viewerPlayerId);
   const detail = options.detail ?? "full";
+  const visibility = await visibilityRulesForLocation(locationId, "details");
 
   if (type === "player") {
+    if (!visibility.showNearbyDetails) return null;
     const target = await prisma.player.findFirst({ where: { id, currentLocationId: locationId } });
     if (!target) return null;
     const forms = playerForms(target);
@@ -251,6 +254,7 @@ export async function resolveTarget(type: string, id: number, locationId: number
     const isAnimal = target.species.kind === "ANIMAL";
     const isCampSpiritCat = isCampSpiritCatCreature(target);
     const isCorpse = !target.isAlive && target.age === "CORPSE";
+    if (isCorpse ? !visibility.showGroundObjects : !visibility.showNearbyDetails) return null;
     const corpseLeft = target.corpseDecayTicksLeft ?? target.species.corpseDecayTicks;
     const wasFreshened = isFreshenedCorpse(target.currentAction);
     if (isCorpse && wasFreshened) return null;

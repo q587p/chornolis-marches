@@ -1,10 +1,10 @@
 ---
 id: SOC-007
 title: Telegram UI and copy for contacts / follow / groups
-status: backlog
+status: next
 type: feature
 area: social
-priority: medium
+priority: high
 tags:
   - social
   - telegram

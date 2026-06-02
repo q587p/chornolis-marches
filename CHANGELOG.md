@@ -7,6 +7,12 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+### Changed
+
+- Added a temporary raw mushroom poison bridge: eating carried `mushrooms` now has a 1-in-10 chance to consume the mushroom, reduce HP by roughly one third without dropping below 1 HP in this first slice, and increase hunger by `+1`.
+- Documented the temporary mushroom risk as a bridge toward the future mushroom-variety and poison/effect system.
+- Corpse target resolution now treats corpses as ground objects: darkness hides corpse inspection, pickup and freshening targets, including stale inline buttons and queued freshening completion.
+
 ## 0.15.7 - Player-made campfires - 12026-06-02
 
 ### Added

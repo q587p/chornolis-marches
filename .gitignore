@@ -3,6 +3,7 @@ dist
 .env
 .env.*
 !.env.herald.example
+!.env.gameBot.example
 .DS_Store
 
 # Local/exported Codex context bundles

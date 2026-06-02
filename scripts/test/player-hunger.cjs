@@ -5,6 +5,8 @@ require("ts-node/register");
 const {
   PASSIVE_PLAYER_HUNGER_INTERVAL_WORLD_MINUTES,
   passivePlayerHungerPlan,
+  shouldPausePassivePlayerHunger,
+  shouldPausePassivePlayerHungerForInactivity,
 } = require("../../src/services/playerHunger");
 
 const interval = PASSIVE_PLAYER_HUNGER_INTERVAL_WORLD_MINUTES;
@@ -76,5 +78,16 @@ assert.deepEqual(
     resetBackwards: true,
   },
 );
+
+assert.equal(shouldPausePassivePlayerHunger("ENDED"), true, "Ended sessions should pause passive hunger accrual.");
+assert.equal(shouldPausePassivePlayerHunger("AFK"), false, "AFK should silence proactive output, not pause passive hunger.");
+assert.equal(shouldPausePassivePlayerHunger("ACTIVE"), false, "Active sessions keep passive hunger accrual.");
+assert.equal(shouldPausePassivePlayerHunger(null), false, "Missing session state should not pause passive hunger.");
+
+const idleNow = new Date("2026-05-30T13:00:00.000Z");
+assert.equal(shouldPausePassivePlayerHungerForInactivity({ isAutoEnabled: false, lastPlayerActionAt: new Date("2026-05-30T12:00:00.000Z") }, idleNow), true, "Non-auto characters should pause passive hunger after long inactivity.");
+assert.equal(shouldPausePassivePlayerHungerForInactivity({ isAutoEnabled: true, lastPlayerActionAt: new Date("2026-05-30T12:00:00.000Z") }, idleNow), false, "Auto-enabled characters should keep passive hunger active.");
+assert.equal(shouldPausePassivePlayerHungerForInactivity({ isAutoEnabled: false, lastPlayerActionAt: new Date("2026-05-30T12:01:00.000Z") }, idleNow), false, "Recent non-auto inactivity should not pause passive hunger yet.");
+assert.equal(shouldPausePassivePlayerHungerForInactivity({ isAutoEnabled: false, lastPlayerActionAt: null }, idleNow), false, "Missing action time should not pause passive hunger.");
 
 console.log("Player hunger progression OK");

@@ -10,13 +10,14 @@ const {
   worldDaypartForHour,
   worldTimeSnapshotFromAbsoluteMinute,
 } = require("../../src/data/worldClock");
-const { renderCurrentWorldTime, renderWorldYearLine } = require("../../src/services/calendar");
+const { renderCurrentWorldTime, renderWorldDreamDateLine, renderWorldYearLine } = require("../../src/services/calendar");
 const { lightSnapshotFromWorldTime } = require("../../src/services/lightSnapshot");
 const {
   visibilityDarknessText,
   visibilityPresenceText,
   visibilityRulesFromLight,
 } = require("../../src/services/visibility");
+const { textTargetVisibleUnderRules } = require("../../src/services/textTargets");
 const { isDreamLocationForWorldNotice } = require("../../src/services/notifications");
 const {
   shouldShowFirstNightGuidanceForVisibility,
@@ -76,6 +77,14 @@ assert.ok(rendered.includes("Місяць:"));
 assert.ok(rendered.includes("Погода:"));
 assert.ok(rendered.includes("Світло:"));
 
+const dreamDate = renderWorldDreamDateLine(start);
+assert.ok(dreamDate.includes("587"));
+assert.ok(dreamDate.includes("Коло Зеленого Шуму"));
+assert.ok(dreamDate.includes("17 день"));
+assert.ok(!dreamDate.includes("17:00"));
+assert.ok(!dreamDate.includes("Погода"));
+assert.ok(!dreamDate.includes("передвечір"));
+
 assert.equal(renderWeatherLine(worldTimeSnapshotFromAbsoluteMinute(START_WORLD_ABSOLUTE_MINUTE, "rain", 70)), "дощ; густа");
 assert.ok(renderCurrentWeather(worldTimeSnapshotFromAbsoluteMinute(START_WORLD_ABSOLUTE_MINUTE, "mist", 55)).includes("Погода Порубіжжя"));
 assert.ok(weatherLightModifier("storm", 100) < weatherLightModifier("clear", 100));
@@ -106,6 +115,10 @@ assert.equal(visibilityRulesFromLight(darkLight, "details").showTracks, false);
 assert.equal(visibilityRulesFromLight(localLight, "details").showLocationDescription, true);
 assert.ok(visibilityDarknessText(visibilityRulesFromLight(darkLight, "brief")).includes("Темрява"));
 assert.ok(visibilityPresenceText(visibilityRulesFromLight(darkLight, "details"), "tracks").includes("слідів"));
+assert.equal(textTargetVisibleUnderRules({ isCorpse: true }, visibilityRulesFromLight(darkLight, "details")), false);
+assert.equal(textTargetVisibleUnderRules({ isCorpse: true }, visibilityRulesFromLight(localLight, "details")), true);
+assert.equal(textTargetVisibleUnderRules({ isCorpse: false }, visibilityRulesFromLight(darkLight, "details")), false);
+assert.equal(textTargetVisibleUnderRules({ isCorpse: false }, visibilityRulesFromLight(localLight, "details")), true);
 const darkDetailRules = visibilityRulesFromLight(darkLight, "details");
 const locallyLitDetailRules = visibilityRulesFromLight(localLight, "details");
 assert.equal(visibilityReductionActive(darkDetailRules), true);

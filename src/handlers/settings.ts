@@ -4,9 +4,12 @@ import { getPlayerByTelegramId } from "../services/players";
 import {
   DAYPART_NOTICES_DISABLED_TEXT,
   DAYPART_NOTICES_ENABLED_TEXT,
+  AUTO_ACTION_MESSAGES_DISABLED_TEXT,
+  AUTO_ACTION_MESSAGES_ENABLED_TEXT,
   buildSettingsKeyboard,
   notificationSettingsForTelegramId,
   renderNotificationSettings,
+  setAutoActionMessagesEnabled,
   setDaypartNoticesEnabled,
 } from "../services/playerNotificationSettings";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
@@ -44,6 +47,16 @@ export async function setDaypartNoticeSetting(ctx: any, enabled: boolean) {
   });
 }
 
+export async function setAutoActionMessageSetting(ctx: any, enabled: boolean) {
+  const player = await playerForContext(ctx);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const settings = await setAutoActionMessagesEnabled(player.id, enabled);
+  await ctx.reply(enabled ? AUTO_ACTION_MESSAGES_ENABLED_TEXT : AUTO_ACTION_MESSAGES_DISABLED_TEXT, {
+    reply_markup: buildSettingsKeyboard(settings),
+  });
+}
+
 async function showMenuFromSettings(ctx: any) {
   await ctx.reply("☰ Меню", { reply_markup: buildMenuReplyKeyboard({ canSeeStats: await isScribeAdmin(ctx.from?.id) }) });
 }
@@ -60,6 +73,12 @@ export function registerSettingsHandlers(bot: Bot) {
     if (["off", "вимкнути", "ні"].includes(arg)) return setDaypartNoticeSetting(ctx, false);
     return showSettings(ctx);
   });
+  bot.command("automessages", async (ctx) => {
+    const arg = daynoticesArg(ctx);
+    if (["on", "увімкнути", "ввімкнути", "так"].includes(arg)) return setAutoActionMessageSetting(ctx, true);
+    if (["off", "вимкнути", "ні"].includes(arg)) return setAutoActionMessageSetting(ctx, false);
+    return showSettings(ctx);
+  });
 
   bot.hears(["⚙️ Налаштування"], (ctx) => showSettings(ctx));
 
@@ -74,6 +93,14 @@ export function registerSettingsHandlers(bot: Bot) {
   bot.callbackQuery("settings:daypart:off", async (ctx) => {
     await safeAnswerCallbackQuery(ctx);
     await setDaypartNoticeSetting(ctx, false);
+  });
+  bot.callbackQuery("settings:autoMessages:on", async (ctx) => {
+    await safeAnswerCallbackQuery(ctx);
+    await setAutoActionMessageSetting(ctx, true);
+  });
+  bot.callbackQuery("settings:autoMessages:off", async (ctx) => {
+    await safeAnswerCallbackQuery(ctx);
+    await setAutoActionMessageSetting(ctx, false);
   });
   bot.callbackQuery("settings:back", async (ctx) => {
     await safeAnswerCallbackQuery(ctx);

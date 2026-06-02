@@ -6,7 +6,7 @@ When a player-facing button performs an in-world action, there should usually be
 
 ## Current intent
 
-- Keep canonical slash commands stable: `/look`, `/examine`, `/me`, `/inventory`, `/stat`, `/chat`, `/who`, `/time`, `/weather`, `/news`, `/chronicles`, `/help`, `/menu`, `/settings`, `/daynotices`, `/gather`, `/rest`, `/queue`, `/say`, movement commands and admin/debug commands.
+- Keep canonical slash commands stable: `/look`, `/examine`, `/me`, `/inventory`, `/stat`, `/chat`, `/who`, `/time`, `/weather`, `/news`, `/chronicles`, `/help`, `/menu`, `/settings`, `/daynotices`, `/automessages`, `/gather`, `/rest`, `/queue`, `/say`, movement commands and admin/debug commands.
 - Add Ukrainian aliases as a convenience layer over the same handlers where possible.
 - Preserve existing callback buttons for Telegram ergonomics.
 - Reply to unknown text with a short "не зрозуміли" message, `❔ Допомога` (`/help`) / `☰ Меню` (`/menu`) hints and close alias suggestions where possible. Suggestions should include the closest clickable slash command in parentheses when there is a stable one, for example `оглянутися (/look)`, `статистика (/stat)`, `використати гриби (/use_mushrooms)` or `швидкий огляд (/glance)`.
@@ -34,6 +34,7 @@ Menu and status:
 - `час`, `/час` -> canonical `/time` view.
 - `погода`, `/погода` -> canonical `/weather` view.
 - `новини`, `/новини` -> canonical `/news` view.
+- `/news N` -> open the Nth Telegram archive page directly, for example `/news 6`. Archive pagination buttons may remain callback-only.
 - `хроніки`, `хроніка`, `останні події`, `події` -> canonical `/chronicles` view.
 - `допомога`, `/допомога` -> canonical `/help` view.
 - `назад` / `↩️ Назад` -> leave the secondary menu and return the main reply keyboard.
@@ -60,7 +61,7 @@ Actions:
 - Pickup costs `1` stamina per actual item/resource unit picked up; taking a stack of `19` loose items costs `19` stamina.
 - `з'їсти ягоди`, `їсти ягоди`, `використати ягоди`, `eat berries`, `use berries` -> eat carried berries from inventory to restore a small amount of stamina and ease hunger by a tiny amount.
 - `з'їсти всі ягоди`, `/eat_all_berries`, `eat all berries`, `use all berries` -> queue berry use until stamina and hunger no longer benefit, without removing unrelated queued actions.
-- `з'їсти гриби`, `їсти гриби`, `використати гриби`, `eat mushrooms`, `use mushrooms` -> eat carried mushrooms from inventory to ease hunger a little.
+- `з'їсти гриби`, `їсти гриби`, `використати гриби`, `eat mushrooms`, `use mushrooms` -> eat carried mushrooms from inventory; they usually ease hunger a little, but a rare bad bite can hurt HP and sharpen hunger.
 - `з'їсти всі гриби`, `/eat_all_mushrooms`, `eat all mushrooms`, `use all mushrooms` -> queue mushroom use until hunger no longer benefits.
 - `з'їсти трави`, `з'їсти лікарські трави`, `використати трави`, `використати лікарські трави`, `вжити трави`, `прикласти трави`, `лікуватися травами`, `eat herbs`, `use herbs` -> eat/use carried herbs when wounded for a small HP recovery.
 - `з'їсти всі лікарські трави`, `/eat_all_herbs`, `eat all herbs`, `use all herbs` -> queue herb use until HP no longer benefits.
@@ -88,6 +89,7 @@ Actions:
 - `yell Сюди`, `call Сюди`, `гукнути Сюди`, `покликати Сюди`, `крикнути поруч Стій`, `гучно сказати Обережно` -> call out to the current location and immediately adjacent locations.
 - `shout Сюди`, `крикнути Сюди`, `кричати Допоможіть`, `крик Допоможіть`, `вигукнути Обережно`, `волати Не йдіть туди` -> shout across the current region. This uses the speech queue path but spends extra stamina compared with ordinary speech.
 - `черга`, `скасувати`, `очистити чергу`.
+- `/automessages`, `/automessages on`, `/automessages off`, `automessages`, `автоповідомлення`, `авто повідомлення` -> show or change whether own auto-mode action messages keep being delivered after Auto-AFK. Manual AFK and ended sessions remain stronger than this setting.
 - `/track`, `/examine tracks`, `роздивитися сліди`, `придивитися до слідів`. Future detail forms should include target-like aliases such as `роздивитися вовчий слід`, `роздивитися людський слід` and `роздивитися заячий слід`.
 - `сказати Привіт`.
 - `додати хмиз`, `підкинути хмиз`, `/add twigs campfire` -> add carried `хмиз` to a nearby ordinary campfire.

@@ -1,5 +1,5 @@
 import { prisma } from "../db";
-import { BASE_HP, BASE_STAMINA } from "../gameConfig";
+import { BASE_HP, BASE_STAMINA, PLAYER_HUNGER_MAX } from "../gameConfig";
 import type { Prisma } from "@prisma/client";
 import { CAMPFIRE_BUILD_TWIG_COST, ensureTorchResourceTypes, TORCH_DURATION_MS, TORCH_FADING_MS } from "./fire";
 import { dropCarriedCorpseResource, isCorpseQuery, isCorpseResourceKey, resourceTypeDisplayName } from "./corpses";
@@ -14,6 +14,44 @@ const USE_CONFIG = {
   herbs: { amount: 2 },
   mushrooms: { amount: 3 },
 } as const;
+export const MUSHROOM_POISON_CHANCE = 0.1;
+
+export function mushroomPoisoningHits(roll = Math.random()) {
+  return roll < MUSHROOM_POISON_CHANCE;
+}
+
+export function mushroomPoisonDamage(hpMax = BASE_HP) {
+  return Math.max(1, Math.ceil(Math.max(1, hpMax) / 3));
+}
+
+export function mushroomUsePlan(input: {
+  hp: number;
+  hpMax?: number | null;
+  hunger: number;
+  poisoned: boolean;
+  maxHunger?: number;
+}) {
+  const maxHunger = input.maxHunger ?? PLAYER_HUNGER_MAX;
+  if (input.poisoned) {
+    const damage = input.hp > 1 ? Math.min(input.hp - 1, mushroomPoisonDamage(input.hpMax ?? BASE_HP)) : 0;
+    return {
+      poisoned: true,
+      damage,
+      nextHp: Math.max(1, input.hp - damage),
+      nextHunger: Math.min(maxHunger, Math.max(0, input.hunger) + 1),
+      hungerChanged: false,
+    };
+  }
+
+  const nextHunger = Math.max(0, input.hunger - USE_CONFIG.mushrooms.amount);
+  return {
+    poisoned: false,
+    damage: 0,
+    nextHp: input.hp,
+    nextHunger,
+    hungerChanged: nextHunger < input.hunger,
+  };
+}
 
 const RESOURCE_ALIASES: Record<string, string> = {
   berries: "berries",
@@ -215,13 +253,29 @@ export async function useInventoryResource(playerId: number, resourceKey: Usable
     }
 
     if (resourceKey === "mushrooms") {
-      if (player.hunger <= 0) throw new Error("Ви не голодні. Гриби краще лишити на потім.");
-
-      const nextHunger = Math.max(0, player.hunger - USE_CONFIG.mushrooms.amount);
+      const outcome = mushroomUsePlan({
+        hp: player.hp,
+        hpMax: player.hpMax,
+        hunger: player.hunger,
+        poisoned: mushroomPoisoningHits(),
+      });
       await consumeOneResource(tx, carried.id, carried.amount);
-      await tx.player.update({ where: { id: playerId }, data: { hunger: nextHunger, lastPassiveHungerAtMinute: worldState.absoluteMinute } });
+      await tx.player.update({
+        where: { id: playerId },
+        data: {
+          hp: outcome.nextHp,
+          hunger: outcome.nextHunger,
+          lastPassiveHungerAtMinute: outcome.hungerChanged ? worldState.absoluteMinute : undefined,
+        },
+      });
 
-      return nextHunger <= 0
+      if (outcome.poisoned) {
+        return "Ви з'їли кілька грибів. Спершу смак здається землистим і теплим, а тоді під язиком проступає гіркота. Шлунок стискається; сили відступають, і голод тільки гострішає.";
+      }
+
+      if (player.hunger <= 0) return "Ви з'їли кілька грибів. Голод не дошкуляв, тож це радше цікавість, ніж потреба; смак лісу ще трохи тримається на язиці.";
+
+      return outcome.nextHunger <= 0
         ? "Ви з'їли кілька грибів. Голод відступив."
         : "Ви з'їли кілька грибів. Голод трохи відступає.";
     }

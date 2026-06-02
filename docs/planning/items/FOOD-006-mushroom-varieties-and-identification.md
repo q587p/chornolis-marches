@@ -54,6 +54,8 @@ Possible first pass:
 - new item-instance work can later store actual subtype per stack;
 - before item instances, use a small "known mushroom sample" or inspection state to avoid exploding the resource model too early.
 
+Current bridge as of `0.15.8`: generic raw mushrooms have a simple 1-in-10 poison risk when eaten. That bridge is intentionally blunt and temporary; this item should replace it with inspectable mushroom varieties, safer/cooked paths, clearer identification and a real poison/effect model.
+
 Player-facing text should sound like observation, not a spreadsheet:
 
 ```text
