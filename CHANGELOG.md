@@ -7,6 +7,30 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.16 - Money and low-risk loot MVP - 12026-06-02
+
+### Added
+
+- Added `shah` and `grivna` resource types with lexicon-backed Ukrainian names and shared pluralized money text helpers.
+- Added a money summary to `/me`, showing `Гроші: немає` when the character carries no money.
+- Added a few authored starter-adjacent `shah` ground finds without adding tutorial-dream money or broad starter `grivna` nodes.
+- Added `shah` and `grivna` to visible ground-resource pickup handling, including aliases and existing pickup-all paths.
+- Added a separate beginner-cache money box for `shah` and `grivna` with explicit player take/contribute controls.
+- Added a rare waking-world successful-gather bonus that can grant one `shah` directly to the player.
+- Added Scribe/admin `/call_scribes_audit` and `/call_scribes_approve <eventId>` / `/call_scribes_approve_<eventId>` commands for reviewing and applying recorded return-help requests.
+- Added safe Herald/web news deep links and `/start cmd_*` routing for `/start`, `/rest` and `/sleep`, so public news command hints open the main bot instead of staying plain text.
+- Fixed Herald archive ordering for early prototype news versions such as `0.0.x`, so archive backfill can publish the prototype entry before `0.1.0`.
+- Added focused money/loot tests for pluralization, starter seed authoring, cache money behavior and gather bonus boundaries.
+- Added `docs/systems/money_and_low_risk_loot.md` and `MONEY-001` planning documentation.
+
+### Changed
+
+- Updated starter-cache documentation to clarify that hidden unobserved restock must never create money.
+- Updated `LOOT-001` planning status and next/backlog notes so the first money/loot MVP is recorded without promoting shops, vendors, conversion, theft or a broad economy.
+- Return-help requests now notify the requesting player too when that player is themselves a Scribe/admin recipient, instead of leaving self-requests visible only as world-event records.
+- Regenerated planning exports for the new money/loot planning item and LOOT-001 status update.
+- Herald archive listing now uses the same deployed `news.md` reader as latest-news preview and logs resolved path, file existence and parsed-entry diagnostics when archive parsing/status checks fail.
+
 ## 0.15.15 - Liminal signs and quotation guardrails - 12026-06-02
 
 ### Added

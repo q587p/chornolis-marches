@@ -20,7 +20,7 @@ function literalPattern(value) {
   assert.match(latestHtml, /<strong>[^<]+<\/strong>/);
   assert.doesNotMatch(latestHtml, /`\/examine`/);
 
-  const commandEntryIndex = entries.findIndex((entry) => entry.text.includes("/examine"));
+  const commandEntryIndex = entries.findIndex((entry, index) => index > 0 && entry.text.includes("/examine"));
   assert.ok(commandEntryIndex > 0, "news.md should keep at least one archived /examine command-link example");
 
   const olderHtml = await renderNewsPage(`/news?entry=${commandEntryIndex}`);

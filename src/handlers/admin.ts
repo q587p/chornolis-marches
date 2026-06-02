@@ -30,6 +30,7 @@ import { parseWeatherSetTarget, parseWorldTimeSetTarget, renderWorldTimeDebug } 
 import { COOKED_MEAT_KEY, ensureMeatResourceTypes, RAW_MEAT_KEY } from "../services/meat";
 import { WEAPON_DEFINITIONS, isWeaponResourceKey } from "../services/weapons";
 import { parseTeleportCoordinateCommand } from "../services/adminTeleportLinks";
+import { approveScribeReturnRequest, buildScribeReturnAuditText } from "../services/scribeReturnHelp";
 
 function normalizeLookup(value: string | null | undefined) {
   return String(value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
@@ -218,6 +219,9 @@ const CARCASS_QUEST_TEXT_COMMAND = slashlessCommandPattern(["carcassQuest", "car
 const TIME_DEBUG_TEXT_COMMAND = slashlessCommandPattern(["timeDebug", "timedebug"]);
 const TIME_SET_TEXT_COMMAND = slashlessCommandPattern(["timeSet", "timeset"]);
 const WEATHER_SET_TEXT_COMMAND = slashlessCommandPattern(["weatherSet", "weatherset"]);
+const CALL_SCRIBES_AUDIT_TEXT_COMMAND = slashlessCommandPattern(["call_scribes_audit", "callScribesAudit", "callscribesaudit"]);
+const CALL_SCRIBES_APPROVE_TEXT_COMMAND = slashlessCommandPattern(["call_scribes_approve", "callScribesApprove", "callscribesapprove"]);
+const CALL_SCRIBES_APPROVE_SHORT_COMMAND = /^\/?call_scribes_approve_(\d+)(?:@\w+)?$/i;
 
 export const ADMIN_HELP_TEXT = [
   "🛠 Команди писарів Порубіжжя",
@@ -237,6 +241,8 @@ export const ADMIN_HELP_TEXT = [
   "/all animal [speciesKey] — тільки тварини, за потреби одного виду: /all animal mouse або /all mouse",
   "/locationAll — список усіх місцин і ключів",
   "/playerAdmin <#id|ім’я|username> — детальна службова картка гравця",
+  "/call_scribes_audit — останні звернення до Писарів про ручне повернення",
+  "/call_scribes_approve <eventId> або /call_scribes_approve_123 — застосувати знак Писаря до конкретного звернення",
   "/timeDebug — точний службовий стан часу, місяця, погоди й світла в поточній місцині",
   "/timeSet <dawn|day|dusk|night|fullmoon night|darkmoon night|HH:MM> — виставити внутрішній час Чорнолісу для тестів",
   "/weatherSet <clear|cloudy|mist|rain|storm> [intensity] [minutes] — виставити погоду для тестів видимості",
@@ -575,6 +581,28 @@ export function registerAdminHandlers(bot: Bot) {
   }
   bot.command(["carcassQuest", "carcassquest"], (ctx) => runCarcassQuestCommand(ctx));
   bot.hears(CARCASS_QUEST_TEXT_COMMAND, (ctx) => runCarcassQuestCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
+
+  async function runCallScribesAuditCommand(ctx: any) {
+    if (!(await requireScribeAdmin(ctx))) return;
+    await ctx.reply(await buildScribeReturnAuditText());
+  }
+
+  async function runCallScribesApproveCommand(ctx: any, rawTarget = String(ctx.match ?? "").trim()) {
+    if (!(await requireScribeAdmin(ctx))) return;
+    const eventId = Number(rawTarget.trim());
+    const result = await approveScribeReturnRequest(bot, eventId, ctx.from.id);
+    if (!result.ok) {
+      await ctx.reply(result.message);
+      return;
+    }
+    await ctx.reply(`✒️ Знак Писаря застосовано. ${playerDisplayName(result.player)} повертається до межового табору: ${result.startLocation.name}.`);
+  }
+
+  bot.command(["call_scribes_audit", "callscribesaudit"], runCallScribesAuditCommand);
+  bot.hears(CALL_SCRIBES_AUDIT_TEXT_COMMAND, runCallScribesAuditCommand);
+  bot.command(["call_scribes_approve", "callscribesapprove"], (ctx) => runCallScribesApproveCommand(ctx, String(ctx.match ?? "").trim()));
+  bot.hears(CALL_SCRIBES_APPROVE_TEXT_COMMAND, (ctx) => runCallScribesApproveCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
+  bot.hears(CALL_SCRIBES_APPROVE_SHORT_COMMAND, (ctx) => runCallScribesApproveCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
 
   bot.command(["adminHelp", "adminhelp"], async (ctx) => {
     if (!(await requireScribeAdmin(ctx))) return;

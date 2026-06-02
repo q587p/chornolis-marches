@@ -1,4 +1,5 @@
 export type StartActionPayload =
+  | "start"
   | "look"
   | "examine"
   | "news"
@@ -6,6 +7,8 @@ export type StartActionPayload =
   | "autoStop"
   | "me"
   | "help"
+  | "rest"
+  | "sleep"
   | "track"
   | "time"
   | "weather"
@@ -25,6 +28,7 @@ export function parseStartActionPayload(value: unknown): StartActionPayload | nu
   const payload = typeof value === "string" ? value.trim() : "";
   if (!payload || !SAFE_START_PAYLOAD.test(payload)) return null;
 
+  if (payload === "cmd_start") return "start";
   if (payload === "cmd_look") return "look";
   if (payload === "cmd_examine") return "examine";
   if (payload === "cmd_news") return "news";
@@ -32,6 +36,8 @@ export function parseStartActionPayload(value: unknown): StartActionPayload | nu
   if (payload === "cmd_auto_stop") return "autoStop";
   if (payload === "cmd_me") return "me";
   if (payload === "cmd_help") return "help";
+  if (payload === "cmd_rest") return "rest";
+  if (payload === "cmd_sleep") return "sleep";
   if (payload === "cmd_track") return "track";
   if (payload === "cmd_time") return "time";
   if (payload === "cmd_weather") return "weather";

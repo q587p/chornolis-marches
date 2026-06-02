@@ -89,7 +89,7 @@ LOOP-001-C,Bridge threshold prose polish,next,content,core-loop,medium,"prose,br
 LOOP-001-D,Track detail wording polish,next,ux,tracking,medium,"tracks,examine,copy",docs/planning/items/LOOP-001-D.md
 LOOP-002,Gate hunting loop,testing,feature,world,high,"ecology,hunting,gate,living-world",docs/planning/items/LOOP-002-gate-hunting-loop.md
 LOOP-003,Old campfire memory omen,testing,feature,core-loop,medium,"fire,light,omen,examine,atmosphere",docs/planning/items/LOOP-003-old-campfire-memory-omen.md
-LOOT-001,Local low-risk loot and small coin finds,backlog,feature,core-loop,high,"loot,foraging,coins,onboarding,resources,economy",docs/planning/items/LOOT-001-local-low-risk-loot-and-coins.md
+LOOT-001,Local low-risk loot and small coin finds,in_progress,feature,core-loop,high,"loot,foraging,coins,onboarding,resources,economy",docs/planning/items/LOOT-001-local-low-risk-loot-and-coins.md
 MAP-002-A,First biome foraging table,next,feature,world,high,"map,biome,foraging",docs/planning/items/MAP-002-A.md
 MAP-002-B,Generic gather uses biome candidates,next,feature,world,high,"gather,biome,foraging",docs/planning/items/MAP-002-B.md
 MAP-002-C,Biome foraging text variants,next,content,world,medium,"gather,biome,copy",docs/planning/items/MAP-002-C.md
@@ -97,6 +97,7 @@ MAP-003,Playable map expansion,testing,content,world,high,"map,world,exploration
 MAP-WILLOW-001,Willow Floodplain first contour,testing,content,world,high,"map,world,willow-floodplain,riverbank,exploration",docs/planning/items/MAP-WILLOW-001-first-contour.md
 MAP-WILLOW-002,Willow under-bridge and watchtower integration,backlog,content,world,medium,"map,world,willow-floodplain,under-bridge,watchtower",docs/planning/items/MAP-WILLOW-002-under-bridge-watchtower-integration.md
 MAP-WILLOW-003,"Willow Floodplain landmarks, resources and aliases",testing,content,world,high,"map,world,willow-floodplain,resources,aliases",docs/planning/items/MAP-WILLOW-003-landmarks-resources-and-aliases.md
+MONEY-001,Money resource and small loot MVP,done,feature,core-loop,high,"money,loot,resources,onboarding,economy",docs/planning/items/MONEY-001-money-resource-and-small-loot-mvp.md
 NAV-001,Location-to-location route finding,testing,feature,world,medium,"navigation,movement,npc,world",docs/planning/items/NAV-001-location-route-finding.md
 NOTIF-001,Non-player movement notification coalescing,testing,feature,notifications,high,"telegram,notifications,movement,npc,spirit,camp",docs/planning/items/NOTIF-001-non-player-movement-coalescing.md
 NPC-002,Hunter auto-program MVP,backlog,feature,npc,high,"npc,ecology,hunting,living-world",docs/planning/items/NPC-002-hunter-auto-program.md

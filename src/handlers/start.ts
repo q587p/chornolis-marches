@@ -31,7 +31,9 @@ import { sendNews } from "./news";
 import { parseStartActionPayload, type StartActionPayload } from "../input/startPayloads";
 import { runExamineCurrentLocation } from "./look";
 import { showCharacter, showInventory, showLocationForPlayer } from "./player";
+import { startRest } from "./rest";
 import { showTime, showWeather } from "./time";
+import { submitSleepCommand } from "./tutorial";
 import { grantStarterKnifeIfMissing } from "../services/weapons";
 import { renderSessionReturnHint } from "../services/sessionPresence";
 
@@ -629,6 +631,11 @@ async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayl
   const from = ctx.from;
   if (!from) return false;
 
+  if (action === "start") {
+    await enterWorld(ctx, false);
+    return true;
+  }
+
   const player = await prisma.player.findUnique({
     where: { telegramId: String(from.id) },
     select: { id: true, onboardingComplete: true, currentLocationId: true },
@@ -667,6 +674,16 @@ async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayl
 
   if (action === "help") {
     await sendHelp(ctx);
+    return true;
+  }
+
+  if (action === "rest") {
+    await startRest(bot, ctx);
+    return true;
+  }
+
+  if (action === "sleep") {
+    await submitSleepCommand(bot, ctx);
     return true;
   }
 

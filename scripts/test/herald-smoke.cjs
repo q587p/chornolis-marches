@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const path = require("node:path");
 
 require("ts-node/register");
 
@@ -21,7 +22,14 @@ const {
   formatBackfillInterval,
   parseBackfillIntervalMs,
 } = require("../../src/herald/newsBackfill");
-const { extractNewsSourceMetadata, parseLatestNewsEntry, parseNewsEntries } = require("../../src/herald/newsMarkdown");
+const {
+  extractNewsSourceMetadata,
+  parseLatestNewsEntry,
+  parseNewsEntries,
+  readAllNewsEntries,
+  readLatestNewsEntry,
+  resolveHeraldNewsPath,
+} = require("../../src/herald/newsMarkdown");
 const { HERALD_NEWS_SOURCE_TYPES } = require("../../src/herald/publications");
 const {
   assertNoSecrets,
@@ -58,6 +66,10 @@ assert.deepEqual(extractNewsSourceMetadata("0.14.7 — Канцелярія ма
   sourceDate: undefined,
   sourceVersion: "0.14.7",
 });
+assert.deepEqual(extractNewsSourceMetadata("0.0.x — Ранній прототип"), {
+  sourceDate: undefined,
+  sourceVersion: "0.0.x",
+});
 
 const entries = parseNewsEntries(markdown);
 assert.equal(entries.length, 2);
@@ -85,6 +97,16 @@ assert.deepEqual(archiveOrderedNewsEntries(parseNewsEntries(versionMarkdown)).ma
   "0.4.2",
   "0.4.3",
   "0.4.10",
+]);
+const earlyPrototypeMarkdown = [
+  "## 0.1.0 — Перший бот Порубіжжя — 12026-05-04",
+  "first bot",
+  "## 0.0.x — Ранній прототип",
+  "early prototype",
+].join("\n\n");
+assert.deepEqual(archiveOrderedNewsEntries(parseNewsEntries(earlyPrototypeMarkdown)).map((entry) => entry.sourceVersion), [
+  "0.0.x",
+  "0.1.0",
 ]);
 const sourceOrderMarkdown = [
   "## Без дати",
@@ -185,9 +207,12 @@ assert.doesNotMatch(formatted, /123456:abcdefghijklmnopqrstuvwxyz/);
 assert.doesNotMatch(formatted, /border_12_09/);
 assert.match(formatted, /Канцелярія Межового Знаку/);
 
-const linkedCommands = linkHeraldGameCommandMentions("`/news` /auto `/track` /inventory /cleanupCreatures /unknown", "Chornolis_bot");
+const linkedCommands = linkHeraldGameCommandMentions("`/start` `/news` /auto `/rest` /sleep `/track` /inventory /cleanupCreatures /unknown", "Chornolis_bot");
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_start">\/start<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_news">\/news<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_auto">\/auto<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_rest">\/rest<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_sleep">\/sleep<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_track">\/track<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_inventory">\/inventory<\/a>/);
 assert.match(linkedCommands, /\/cleanupCreatures/);
@@ -267,4 +292,27 @@ assert.match(publicInfo, /Ліс пам’ятає:/);
 assert.match(publicInfo, /Прикмети:/);
 assert.doesNotMatch(publicInfo, /Telegram user ID|Chat ID|playerId|id=|Життя|Снага|Остання позначка/);
 
-console.log("herald smoke tests passed");
+async function runAsyncChecks() {
+  const expectedNewsPath = path.resolve(process.cwd(), "news.md");
+  const [archiveRead, latestRead] = await Promise.all([
+    readAllNewsEntries(),
+    readLatestNewsEntry(),
+  ]);
+
+  assert.equal(resolveHeraldNewsPath(), expectedNewsPath);
+  assert.equal(archiveRead.ok, true, archiveRead.error);
+  assert.equal(latestRead.ok, true, latestRead.error);
+  assert.equal(archiveRead.filePath, expectedNewsPath);
+  assert.equal(latestRead.filePath, expectedNewsPath);
+  assert.equal(latestRead.parsedEntries, archiveRead.parsedEntries);
+  assert.equal(latestRead.entry.contentHash, archiveRead.entries[0].contentHash);
+}
+
+runAsyncChecks()
+  .then(() => {
+    console.log("herald smoke tests passed");
+  })
+  .catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });

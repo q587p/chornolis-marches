@@ -45,6 +45,7 @@ import { characterNameApprovalStatusText } from "../services/characterNames";
 import { performPlayerLocationSignal, socialDefinitionById } from "../services/socialSignals";
 import { firstNightGuidanceForPlayer } from "../services/beginnerGuidance";
 import { equipPlayerWeapon, ownHeldWeaponLine, unequipPlayerWeapon } from "../services/weapons";
+import { playerMoneyText } from "../utils/moneyText";
 
 const tutorialInventoryVoiceSeen = new Set<number>();
 
@@ -214,23 +215,6 @@ function nameCasesText(player: any) {
   ].map((value) => value ?? "—").join(" / ");
 }
 
-function amountForResourceKeys(resources: any[], keys: string[]) {
-  const normalized = new Set(keys.map((key) => key.toLowerCase()));
-  return resources
-    .filter((item) => normalized.has(String(item.resourceType.key).toLowerCase()))
-    .reduce((sum, item) => sum + item.amount, 0);
-}
-
-function moneyText(resources: any[]) {
-  const hryvnias = amountForResourceKeys(resources, ["hryvnia", "hryvnias", "gryvnia", "gryvnias", "grivna", "grivnas", "гривня", "ґривня"]);
-  const shahs = amountForResourceKeys(resources, ["shah", "shahy", "shahs", "шаг", "шаги"]);
-  if (hryvnias <= 0 && shahs <= 0) return "немає";
-  return [
-    hryvnias > 0 ? `${hryvnias} ґривень` : "",
-    shahs > 0 ? `${shahs} шагів` : "",
-  ].filter(Boolean).join(", ");
-}
-
 function approximateDuration(ms: number) {
   const safeMs = Math.max(0, ms);
   const minutesLeft = Math.ceil(safeMs / 60_000);
@@ -370,7 +354,7 @@ async function renderCharacterView(telegramId: number) {
   const hasActionQueue = await hasPlayerActionQueueControls(player.id);
 
   return {
-    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}${tutorialStatusText}\n\n${formatPostureText({ ...player, isSleeping: isTutorialDream })}${torchText}\n${weaponText}\n${vitals.join("\n")}\nСтан: ${formatFatigueText(player)}${await recoveryText(player)}\n${hungerText}\nМісцина: ${locationText}\nГроші: ${moneyText(player.resources)}\nАвто-режим: ${autoText}${technicalDetailsText}\nЗареєстровано: ${formatDateTime(player.createdAt)}${statsText}`,
+    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}${tutorialStatusText}\n\n${formatPostureText({ ...player, isSleeping: isTutorialDream })}${torchText}\n${weaponText}\n${vitals.join("\n")}\nСтан: ${formatFatigueText(player)}${await recoveryText(player)}\n${hungerText}\nМісцина: ${locationText}\nГроші: ${playerMoneyText(player.resources)}\nАвто-режим: ${autoText}${technicalDetailsText}\nЗареєстровано: ${formatDateTime(player.createdAt)}${statsText}`,
     keyboard: buildCharacterAutoKeyboard(autoEnabled, { posture: player.posture, sleepState: player.sleepState, isResting: player.isResting, showSleep: !isTutorialDream, hasActionQueue }),
   };
 }

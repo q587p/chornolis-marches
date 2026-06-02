@@ -40,6 +40,7 @@ assert.equal(normalizeInput("/queue_cancel"), "/queue cancel");
 assert.equal(normalizeInput("/auto_stop"), "/auto stop");
 assert.equal(normalizeInput("з’їсти   ягоди."), "з'їсти ягоди");
 
+assert.equal(parseStartActionPayload("cmd_start"), "start");
 assert.equal(parseStartActionPayload("cmd_look"), "look");
 assert.equal(parseStartActionPayload("cmd_examine"), "examine");
 
@@ -52,6 +53,8 @@ assert.equal(parseStartActionPayload("cmd_auto"), "auto");
 assert.equal(parseStartActionPayload("cmd_auto_stop"), "autoStop");
 assert.equal(parseStartActionPayload("cmd_me"), "me");
 assert.equal(parseStartActionPayload("cmd_help"), "help");
+assert.equal(parseStartActionPayload("cmd_rest"), "rest");
+assert.equal(parseStartActionPayload("cmd_sleep"), "sleep");
 assert.equal(parseStartActionPayload("cmd_track"), "track");
 assert.equal(parseStartActionPayload("cmd_time"), "time");
 assert.equal(parseStartActionPayload("cmd_weather"), "weather");

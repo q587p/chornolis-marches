@@ -1761,7 +1761,7 @@
   {
     "id": "LOOT-001",
     "title": "Local low-risk loot and small coin finds",
-    "status": "backlog",
+    "status": "in_progress",
     "type": "feature",
     "area": "core-loop",
     "priority": "high",
@@ -1910,6 +1910,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/MAP-WILLOW-003-landmarks-resources-and-aliases.md"
+  },
+  {
+    "id": "MONEY-001",
+    "title": "Money resource and small loot MVP",
+    "status": "done",
+    "type": "feature",
+    "area": "core-loop",
+    "priority": "high",
+    "tags": [
+      "money",
+      "loot",
+      "resources",
+      "onboarding",
+      "economy"
+    ],
+    "depends_on": [
+      "LOOT-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/MONEY-001-money-resource-and-small-loot-mvp.md"
   },
   {
     "id": "NAV-001",

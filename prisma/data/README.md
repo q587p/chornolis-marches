@@ -14,12 +14,12 @@ Files:
 - `locations.json` — authored map cells.
 - `blockedCells.json` — passive blocked-map data kept for map logic/docs; current seed does not write it to DB.
 - `exits.json` — authored exits between locations.
-- `resourceTypes.json` — gatherable resource types.
+- `resourceTypes.json` — resource types used by gathering, visible ground resources and simple carried resources.
 - `resourceRules.json` — deterministic resource generation rules.
 - `features.json` — clickable/visible location features.
 - `uniqueCreatures.json` — named NPC/spirit starting state.
 
 Resource rules are intentionally biome-based, so map edits do not require hundreds of manual resource-node rows.
-Bridge spans, the start camp and the closed gate have no resources. Riverbank locations seed herbs only.
+Bridge spans, the start camp and the closed gate should not seed ordinary vegetation/gatherable resources. Authored low-risk loose finds, such as a few starter-adjacent `shah` coin nodes, may still appear as explicit `ResourceNode` entries. Riverbank locations seed herbs through rules unless explicitly overridden.
 
 0.10.7 note: `grass` is ecology-only forage for herbivores, hidden from player gather menus. Bridge spans should not have grass; under-bridge riverbank locations can.
