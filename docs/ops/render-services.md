@@ -220,6 +220,11 @@ Service health endpoint every 10 minutes. Set `HERALD_HEALTH_URL` in GitHub
 repository Actions secrets or variables to the Herald `/health` URL, for example
 `https://example.onrender.com/health`.
 
+If `HERALD_HEALTH_URL` is absent after this workflow is on `main`, the scheduled
+job will fail as a configuration reminder. That is not a game or Herald runtime
+failure; either add the secret/variable, disable the schedule or ignore the
+scheduled check until keepalive is wanted.
+
 GitHub scheduled workflows run only from the default branch, so the schedule
 starts only after the workflow is merged to `main`. The workflow also has
 `workflow_dispatch` for manual checks.

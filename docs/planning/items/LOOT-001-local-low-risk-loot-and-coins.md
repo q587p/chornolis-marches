@@ -84,3 +84,5 @@ The observation-cue slice added the first empty-search atmosphere:
 - the line frames "nothing found" as a local moment, not a permanent barren state.
 
 Remaining `LOOT-001` work: richer authored small find objects, item lifetime, offering hooks and future search/observe integration.
+
+Watchpoint: the empty-search cue can become too frequent in sparse regions when players use full `/examine` repeatedly. Future UX polish should tune cadence, per-location/per-character cooldowns or richer local variation before the line starts feeling like generic filler.

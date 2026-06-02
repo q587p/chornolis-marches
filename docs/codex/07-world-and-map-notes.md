@@ -58,6 +58,7 @@ In `prisma/data/chornolis_world_seed.json`, edits may include:
 
 - Do not casually change `z`; most waking-world surface locations are still `z = 0`, and new non-zero layers should be deliberate authored vertical/interior spaces.
 - `Дрімотна Межа`, the tutorial dream, intentionally uses `z = -13`; this is a separate authored layer, not a casual terrain-height edit.
+- The current dream-light heuristic treats very low `z <= -10` as a reserved dream layer. Future non-dream underground/deep places should avoid that reserved layer or carry an explicit non-dream marker before they rely on ordinary darkness/weather visibility.
 - `start_border_watchtower` intentionally uses `z = 1` as the starter-camp watchtower above `start_border_camp`; it is connected by `UP` / `DOWN` exits and is part of the first waking-world verticality slice.
 - `under_bridge_18_05` uses `z = -1` as an ordinary lower waking-world place under the bridge; it is not a dream layer.
 - Do not create two exits from one location in the same direction.

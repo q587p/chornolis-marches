@@ -194,6 +194,12 @@ Configure the URL in GitHub before relying on the workflow:
 4. Set it to the public health endpoint of the standalone Herald Web Service,
    for example `https://example.onrender.com/health`.
 
+If `HERALD_HEALTH_URL` is not configured after the workflow lands on `main`, the
+scheduled keepalive job will fail visibly in GitHub Actions. This does not block
+the game runtime or the Herald runtime; either add the secret/variable, disable
+the schedule, or treat the failed scheduled job as a reminder that keepalive is
+not configured yet.
+
 Do not commit the real Render URL if it should stay private. Do not store bot
 tokens, channel ids, admin ids or database URLs in the workflow file.
 
