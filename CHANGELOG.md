@@ -7,6 +7,19 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.15 - Liminal signs and quotation guardrails - 12026-06-02
+
+### Added
+
+- Added `docs/content/signs-dreams-and-quotations.md` as a content/design bible for recurring signs, quotation guardrails, owl/dream/fire/fishing/map motifs and local rumor seeds.
+- Added Codex-ready planning items for the liminal signs layer, dream-threshold owl refrain, conditional owl examine copy, magical campfire examine copy and future deep-water fishing lines.
+- Promoted the riverbank fisher NPC/tiny-slice planning path to high priority so a first visible fisher profession moment can follow the observation-learning line sooner.
+
+### Changed
+
+- Updated README, game design and roadmap docs to frame recurring signs as diegetic folklore: direct quotation should stay rare and threshold-bound, while later echoes should be local, altered and uncertain.
+- Regenerated planning exports for the new liminal-sign planning items and the fisher-priority update.
+
 ## 0.15.14 - Herald manual archive controls - 12026-06-02
 
 ### Added

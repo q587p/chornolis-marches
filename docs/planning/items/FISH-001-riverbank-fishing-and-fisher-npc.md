@@ -4,7 +4,7 @@ title: Riverbank fishing and fisher NPC
 status: backlog
 type: feature
 area: survival
-priority: medium
+priority: high
 tags:
   - fishing
   - npc

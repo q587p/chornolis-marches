@@ -18,6 +18,8 @@ GitHub Issues and Projects may mirror this file, but they should not replace it.
 - Skills can be discovered by watching NPCs, animals, monsters or mythical beings use them.
 - Sleep and dreams are liminal systems: ordinary sleep belongs to survival, while tutorial/lucid dreams are explicit dream states, not generic teleportation.
 - Dream language should avoid “soul” / Christian framing; prefer attention, awareness, dream presence and place-spirit language.
+- Recurring signs and refrains are allowed, but they must feel like local folklore, not obvious reference decoration.
+- Direct external quotations should be rare, threshold-bound and followed by altered in-world echoes rather than repeated literal quotation.
 - Small social interactions are core gameplay, not only flavor.
 - Social memory and small group travel: players and NPCs can remember, follow, lead, lag behind and reunite without turning the game into a generic MMO party system.
 - Diegetic Ukrainian UI and grammar-sensitive text.
@@ -29,7 +31,7 @@ The active line is not “add every cool system.”
 
 The active line is:
 
-> dream → waking → location → look/examine → signs/traces/small finds → stamina/rest → day/night/light → first safe return → first learning by observation.
+> dream → waking edge → location → look/examine → signs/traces/small finds → stamina/rest → day/night/light → first safe return → first learning by observation.
 
 ## 0.13 — Core Loop & Onboarding Stability
 
@@ -97,9 +99,12 @@ Primary outcomes:
 - `Спостерігати` / observation is a narrow usable action, not a broad skill sheet.
 - Watching a herbalist or relevant action can teach a first herbalism/gathering hint.
 - The tutorial dream can add optional action-semantics rooms where `Озирнутися` gives orientation and `Роздивитися` reveals a concrete detail or next action.
+- The direct owl refrain belongs at the dream/waking threshold, not as ordinary starter-camp description.
 - Reading fresh tracks or watching an animal can teach a first tracking hint.
 - Darkness, distance and light affect observation learning.
 - One small living-world omen exists and is rate-limited.
+- Conditional owl examine/sign copy can echo the owl refrain at dusk/night/moonlit edges without making owls constant lore explainers.
+- Magical campfires can gain a rare `Роздивитися` layer that treats fire as a liminal boundary, not just a light source.
 - Hidden presence remains a prepared follow-up, not an automatic part of the first omen unless the visibility and light foundations are ready.
 - Follow-up 0.15.x work may add risky theft and hiding after the first observation MVP is stable: a small `Вкрасти` action, separate success/detection checks, a preparatory `Сховатися` action, a first theft warning and scribe-visible incident statistics.
 
@@ -109,6 +114,10 @@ See:
 - `docs/planning/items/OBS-001-*.md`
 - `docs/planning/items/TRACK-LEARN-001-*.md`
 - `docs/planning/items/OMEN-001-*.md`
+- `docs/planning/items/QUOTE-001-liminal-signs-and-quotation-layer.md`
+- `docs/planning/items/ONB-008-owl-threshold-refrain-in-dream.md`
+- `docs/planning/items/OWL-004-conditional-owl-examine-copy.md`
+- `docs/planning/items/FIRE-002-magic-campfire-examine-layer.md`
 - `docs/planning/items/THEFT-*.md`
 - `docs/planning/items/HIDE-*.md`
 - `docs/systems/theft-and-hiding.md`
@@ -145,6 +154,7 @@ Goal: deepen attention, apprenticeship and skill discovery.
 - Stealth, theft and vigilance can grow through use, observation and meaningful failures.
 - Hidden approach and suspicious movement can become learning sources for attentive characters.
 - Lucid dream instances can reveal ritual conditions, place-spirit moods, quest nuance and knowledge flags without becoming ordinary fast travel.
+- Repeated signs can become content memory: owls, maps, fire, water and paths may return as altered refrains that point to attention, not fixed quest answers.
 
 ## Phase 3 — Survival and Crafting
 
@@ -204,6 +214,7 @@ Goal: let the world grow into a true living sandbox.
 - Mythic learning from spirits.
 - Construction and camps.
 - Bridges, crossings and fishing links.
+- Deeper fishing-water omen lines where depth, silence and catches hint at hidden knowledge without turning fishing into a lore dispenser.
 - Moon phases and deeper calendar.
 - Advanced lucid and group dreams, including place-spirit influence, dream combat/appeasement and rare guarded item transfer.
 - Future web map, local console, MUD-like gateway and other clients.

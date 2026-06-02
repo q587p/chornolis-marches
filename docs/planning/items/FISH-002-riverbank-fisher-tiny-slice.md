@@ -1,10 +1,10 @@
 ---
 id: FISH-002
 title: Riverbank fisher tiny slice
-status: proposed
+status: backlog
 type: feature
 area: survival
-priority: medium
+priority: high
 tags:
   - fishing
   - npc

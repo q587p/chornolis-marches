@@ -86,6 +86,7 @@ Observation learning remains the main `0.15` line. Darkness, distance and light 
 - ANIMAL-001: `0.15.8` adds the first directed-speech reaction slice for animals; `0.15.9` adds the first repeated-wolf-speech local danger escalation. Keep richer context-sensitive behavior and direct predator-vs-player damage for later combat work.
 - ONB-007: after the nearby speech slice, add the dream-tree tutorial scene that teaches vertical movement and calling up/down without turning it into region shouting.
 - OBS-PREP-001: before the first observation MVP, audit older beings, objects, features and locations where `look` and `examine` still produce the same text; full examination should reward greater attention with distinct detail or a documented no-action exception.
+- FISH-002: promote the riverbank fisher tiny slice as a near-term living-profession step: one named fisher or visible fisher action near authored riverbank/bridge locations, quiet professional behavior, and first observation/conversation hints without a full fishing economy.
 - RAVEN-001: add a near-term dream-raven presence near the carrion ravine: rare night/dusk/dawn appearance, one-time per-character recognition using local arrival date wording, and varied local `/examine` activity lines without a full NPC/dialogue system.
 - LEARN-001: minimal learning storage decision.
 - OBS-001: observe action and herbalist learning moment.
