@@ -58,6 +58,7 @@ Implement `0.14.x` in small slices:
 23. SLEEP-002-A / ADM-001-C / planning reconciliation: `0.14.23` is the reconciliation and safety slice after `0.14.22`, adding the ordinary sleep command gate, restart confirmation parity and refreshed status for shipped world-time, visibility, fire/light and хмиз slices.
 24. WORLD-003: make the next survival/time pass move player hunger, torch lifetimes, campfire burn/ash cleanup, corpse/meat decay and similar temporary states toward internal world-time hours/days instead of scattered real-minute or per-action timers.
 25. OWL-001: `0.15.0` adds the first nocturnal owl ecology slice as a mouse-pressure stabilizer before the observation-learning MVP. Keep it minimal: no flight, nests, eggs, ranged hunting or owl reproduction until later.
+26. HAWK-001: add the first daytime hawk ecology slice as a practical `hawk` -> `яструб` mirror to owls. Hawks should pressure mice in dawn/day/dusk, especially in open/edge locations, while `сокіл` stays reserved for a later symbolic or legendary bird layer.
 
 Observation learning remains the main `0.15` line. Darkness, distance and light should affect learning later, but small ecology stabilizers can land first when they reduce immediate world-pressure problems.
 
@@ -80,6 +81,7 @@ Observation learning remains the main `0.15` line. Darkness, distance and light 
 - CAT-006/CAT-007: `0.15.10` also adds representative full-examination body-language details for local mice, daypart/fire and the watchtower, plus focused camp-cat assertions. Weather-specific reactions, feed/shoo tests and longer simulation tuning remain future work.
 - CAT-009: `0.15.6` adds the first quiet camp-cat watch-posture helper without proactive spam, exact danger detection, hunting or pet behavior.
 - OWL-003: `0.15.6` adds a narrow starter-camp/watchtower owl boundary so nocturnal mouse pressure stays useful near camp edges without making the camp/watchtower pair feel like an immediate predator trap.
+- HAWK-001: next daytime predator candidate. Use `hawk` / `яструб`, active at dawn/day/dusk and inactive at night, with strong mouse preference and limited young-rabbit collateral pressure. Keep flight, nests, eggs and symbolic `сокіл` work out of this slice.
 - CAT-010: `0.15.10` adds quiet Кіт-бережник presence copy to the starter shared-cache inspection when the cat is nearby, without turning the cat into a pet, loot source or exact danger detector.
 - SOC-008: `0.15.5` adds nearby speech ranges with `/yell` / `гукнути`, reaching the current location plus visible adjacent exits while keeping `/shout` region-wide.
 - NOTIF-001: `0.15.8` adds short coalescing for visible non-player movement notifications so camp spirits/NPCs do not produce repeated arrival/departure messages during quick vertical moves; `0.15.9` adds safe target buttons only for still-present living, visible, non-animal creatures at flush time.

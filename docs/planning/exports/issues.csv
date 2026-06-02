@@ -56,6 +56,7 @@ FOOD-005,Hunger consequences for health and stamina recovery,backlog,feature,sur
 FOOD-006,Mushroom varieties and identification,backlog,feature,survival,medium,"food,mushrooms,foraging,alchemy,risk",docs/planning/items/FOOD-006-mushroom-varieties-and-identification.md
 GIVE-001,Generic give command MVP and exchange bridge,next,feature,inventory,high,"give,inventory,items,targets,exchange,barter,cat,telegram",docs/planning/items/GIVE-001-give-command-and-exchange-bridge.md
 GIVE-002,Ukrainian inflection-tolerant give parser and grammar bridge,testing,technical,input,high,"give,input,parser,ukrainian,grammar,lexicon,inventory,targets,barter",docs/planning/items/GIVE-002-ukrainian-give-parser-grammar.md
+HAWK-001,Daytime hawk mouse-pressure slice,next,feature,ecology,high,"hawk,ecology,predator,daypart,mice",docs/planning/items/HAWK-001-daytime-hawk-mouse-pressure.md
 HERALD-001,Embedded main-service mode for Boundary Mark Chancery Herald,icebox,technical,ops,low,"herald,telegram,render,ops,architecture,icebox",docs/planning/items/HERALD-001-embedded-main-service-mode.md
 HERALD-002,Herald outbox idempotency and locking,backlog,reliability,herald,medium,"herald,outbox,idempotency,locking,telegram",docs/planning/items/HERALD-002-outbox-idempotency-and-locking.md
 HERALD-003,Herald chronicle chat relay,backlog,feature,herald,medium,"herald,chronicle,telegram,chat,world-events",docs/planning/items/HERALD-003-chronicle-chat-relay.md
@@ -135,6 +136,8 @@ OWL-002,Nocturnal owl tuning and indirect signs,testing,tuning,ecology,high,"owl
 OWL-003,Starter camp owl boundary and night signs,testing,tuning,ecology,medium,"owl,camp,ecology,night,onboarding",docs/planning/items/OWL-003-starter-camp-boundary-and-night-signs.md
 PERF-001,Runtime performance plan and creature simulation budget,next,technical,performance,high,"performance,ecology,creatures,action-queue,simulation,status,auto",docs/planning/items/PERF-001-budgeted-and-aggregated-creature-simulation.md
 PLAN-001,Repository docs are the planning source of truth,testing,documentation,planning,high,"planning,docs,roadmap",docs/planning/items/PLAN-001.md
+PRED-002,Weasel or stoat mouse predator,icebox,feature,ecology,medium,"ecology,predator,mouse,burrows,stealth",docs/planning/items/PRED-002-weasel-stoat-mouse-predator.md
+PRED-003,Seasonal snake or viper predator,icebox,feature,ecology,low,"ecology,predator,snake,season,poison",docs/planning/items/PRED-003-seasonal-snake-viper-predator.md
 PROG-002,Observation-based learning,backlog,feature,progression,medium,"skills,observation,npc,animals,mythic",docs/planning/items/PROG-002-observation-learning.md
 PROG-003,Animal experience and titles,backlog,feature,progression,medium,"animals,ecology,progression,combat",docs/planning/items/PROG-003-animal-experience-and-titles.md
 PROG-004,Personal chronicle milestones,next,feature,progression,high,"journal,chronicle,milestones,cooking,learning,personal-history",docs/planning/items/PROG-004-personal-chronicle-milestones.md

@@ -1127,6 +1127,26 @@
     "file": "docs/planning/items/GIVE-002-ukrainian-give-parser-grammar.md"
   },
   {
+    "id": "HAWK-001",
+    "title": "Daytime hawk mouse-pressure slice",
+    "status": "next",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "high",
+    "tags": [
+      "hawk",
+      "ecology",
+      "predator",
+      "daypart",
+      "mice"
+    ],
+    "depends_on": [
+      "OWL-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/HAWK-001-daytime-hawk-mouse-pressure.md"
+  },
+  {
     "id": "HERALD-001",
     "title": "Embedded main-service mode for Boundary Mark Chancery Herald",
     "status": "icebox",
@@ -2630,6 +2650,46 @@
     "depends_on": [],
     "exports": {},
     "file": "docs/planning/items/PLAN-001.md"
+  },
+  {
+    "id": "PRED-002",
+    "title": "Weasel or stoat mouse predator",
+    "status": "icebox",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "medium",
+    "tags": [
+      "ecology",
+      "predator",
+      "mouse",
+      "burrows",
+      "stealth"
+    ],
+    "depends_on": [
+      "HAWK-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/PRED-002-weasel-stoat-mouse-predator.md"
+  },
+  {
+    "id": "PRED-003",
+    "title": "Seasonal snake or viper predator",
+    "status": "icebox",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "low",
+    "tags": [
+      "ecology",
+      "predator",
+      "snake",
+      "season",
+      "poison"
+    ],
+    "depends_on": [
+      "WORLD-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/PRED-003-seasonal-snake-viper-predator.md"
   },
   {
     "id": "PROG-002",

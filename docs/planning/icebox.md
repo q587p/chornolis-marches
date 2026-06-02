@@ -26,6 +26,8 @@ It is not a trash bin and not a promise. It is cold storage for ideas that need 
 - Pit traps and vertical hazard cells: entering a trap cell can drop a character to a real lower `z - 1` location, cause HP damage and require climbing or help to escape.
 - Deep bridge mechanics.
 - Large MUD-style socials catalog.
+- Weasel/stoat mouse predator: good future mouse pressure, but it should wait for burrows, roots/tunnels, stealth and small-passage behavior instead of being rushed as a simple carnivore copy.
+- Snake/viper predator: interesting later mouse pressure, but it should wait for season/weather warmth, poison/condition rules and clearer player danger readability.
 - Local LLM-assisted NPC/spirit context layer: a small local model could later help NPCs and spiritual presences answer or gesture more consciously from nearby context, what was said or shown to them, their role, memory and the current місцина. Keep this cold until authored dialogue, safety boundaries, privacy rules, tone constraints, hallucination guards, cost/performance limits and fallback behavior are designed; it should enrich authored behavior, not replace it.
 - Full personal chronicle/journal system.
 - Item durability and deep item lifetime.
