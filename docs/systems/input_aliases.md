@@ -117,6 +117,7 @@ Targets and signals:
 - `/cook_all`, `посмажити все`, `підсмажити все м'ясо`, `cook all meat` -> queue all carried raw meat for cooking, one piece at a time.
 - `з'їсти м'ясо`, `їсти смажене м'ясо`, `eat cooked meat`, `use cooked meat` -> eat cooked meat for hunger relief.
 - `з'їсти все смажене м'ясо`, `/eat_all_cooked_meat`, `eat all cooked meat`, `eat all meat` -> queue cooked meat use until hunger no longer benefits.
+- `/give сире м'ясо коту`, `give raw meat to cat`, `дати сире м'ясо коту`, `дати м'яса коту`, `дати мясо кіт`, `дати сирого м'яса бережнику`, `дати сирого мяса котові-бережнику`, `/feed_raw_meat`, `/feed_raw_meet` -> give one raw-meat unit to the visible camp spirit cat through the same narrow `give` path.
 - `кивнути 1`, `помахати мандрівник`, `вказати на вовка`, `насупитися вовк`.
 
 Target commands resolve visible nearby targets by number, id or visible name. If several targets match, the bot asks the player to clarify.

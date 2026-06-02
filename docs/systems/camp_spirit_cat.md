@@ -158,7 +158,7 @@ Canonical intent for the first MVP:
 - `дати сире м’ясо коту`;
 - button `Дати сире м’ясо`, shown only when the player has valid raw meat and the cat is a valid nearby target.
 
-Backlog parser goal for fuller `give` (`GIVE-002`), using the existing Ukrainian lexicon/grammar where possible rather than cat-only string matching:
+`0.15.12` parser slice for fuller `give` (`GIVE-002`), using the existing Ukrainian lexicon/grammar shape and target aliases where possible rather than a separate cat-only command:
 
 - `дати м’яса коту`;
 - `дати мясо кіт`;
@@ -166,10 +166,12 @@ Backlog parser goal for fuller `give` (`GIVE-002`), using the existing Ukrainian
 - apostrophe variants such as `м’ясо`, `мʼясо`, `м'ясо`, and missing-apostrophe `мясо`;
 - target case variants and hyphenated aliases such as `коту-бережнику`, if the cat uses a hyphenated epithet/name.
 
+Future `GIVE-002` slices should broaden the same approach beyond the raw-meat/camp-cat case: player/NPC gifts, quest hand-ins, item-instance ambiguity and barter should reuse this parser shape instead of adding one-off verbs.
+
 Compatibility aliases:
 
-- `/feed_raw_meat` → parse as `give сире м’ясо коту`;
-- `/feed_raw_meet` → forgiving typo alias, also parse as `give сире м’ясо коту`;
+- `/feed_raw_meat` → parse as `give raw meat cat`;
+- `/feed_raw_meet` → forgiving typo alias, also parse as `give raw meat cat`;
 - any older `/feed_cat` alias, if already present, should also route to `give` rather than introduce a separate action type.
 
 Rules:
@@ -274,6 +276,6 @@ MVP має включати:
 - Якщо мишей немає, а сире м’ясо є у доступній табірній коробці, кіт може почати meat-interest scene.
 - Гравець поруч бачить щонайменше `Шуганути` або `Замахати руками`; якщо має сире м’ясо — також `Дати сире м’ясо`, яка викликає generic `give`.
 - `Шуганути`/`Замахати руками` скасовує сцену і кіт тікає вниз/у безпечну camp node.
-- `Дати сире м’ясо` / `/feed_raw_meat` / `/feed_raw_meet` парсяться у `give сире м’ясо коту`; успішний `GIVE` знімає 1 raw meat і ставить коту eating action/cooldown. Багатші українські форми на кшталт `дати м’яса коту`, `дати мясо кіт`, `дати сирого м’яса бережнику` зафіксовані як `GIVE-002`, не як обов’язкова частина першого cat MVP.
+- `Дати сире м’ясо` / `/feed_raw_meat` / `/feed_raw_meet` парсяться у `give raw meat cat`; успішний `GIVE` знімає 1 raw meat і ставить коту eating action/cooldown. З `0.15.12` перший `GIVE-002` parser slice також приймає природніші форми на кшталт `дати м’яса коту`, `дати мясо кіт`, `дати сирого м’яса бережнику`, але ширші gifts/barter лишаються майбутньою роботою.
 - У дощ/бурю/холод/ніч кіт має безмовні body-language lines, але не дає точних debug-підказок.
 - Тести покривають no-boundary-leak, mouse priority, meat response і immortal/lifecycle guard.

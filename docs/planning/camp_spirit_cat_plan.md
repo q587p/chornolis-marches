@@ -28,6 +28,8 @@ After the first `give` path exists, add robust Ukrainian parsing for common infl
 
 Outcome: full `give` and later barter can understand natural Ukrainian variants without becoming a brittle one-off parser.
 
+`0.15.12` note: the first narrow parser slice now canonicalizes these raw-meat/camp-cat examples to `give raw meat cat`. Broader item transfer, multiple target ambiguity, player/NPC gifts and barter still belong to the follow-up `GIVE-002`/`BARTER-001` work.
+
 ### Slice 1 — CAT-001 / foundation
 
 Add the system note, species/behavior config, seed or starter placement, and lifecycle guard.

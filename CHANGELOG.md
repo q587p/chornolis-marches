@@ -7,6 +7,16 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.12 - Ukrainian give parser polish - 12026-06-02
+
+### Changed
+
+- Added the first Ukrainian inflection-tolerant `give` parser slice for the existing raw-meat-to-camp-spirit-cat transfer.
+- Canonicalized common raw-meat item phrases such as `сире м'ясо`, `сирого м'яса`, `м'яса` and apostrophe-less `мясо` to the supported `raw_meat` give item in this narrow transfer path.
+- Canonicalized camp cat target forms such as `коту`, `котові`, `кіт`, `бережнику` and hyphenated `котові-бережнику` to the same visible target search.
+- Extended input-alias and target-alias coverage so `/give`, slashless `give`, Ukrainian `дати`, `/feed_raw_meat` and `/feed_raw_meet` remain on one canonical action path.
+- Updated camp spirit cat, input-alias and planning docs for the first `GIVE-002` parser slice while keeping broader gifts, item-instance transfer and barter as follow-up work.
+
 ## 0.15.11 - Camp cat raw-meat give bridge - 12026-06-02
 
 ### Changed
