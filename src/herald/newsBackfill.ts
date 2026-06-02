@@ -56,8 +56,11 @@ export function chronologicalNewsEntries(entries: readonly HeraldNewsEntry[]) {
 
 function semanticVersionParts(value?: string) {
   if (!value) return null;
-  const parts = value.split(".").map((part) => Number(part));
-  if (parts.length < 2 || parts.some((part) => !Number.isInteger(part) || part < 0)) return null;
+  const parts = value.split(".").map((part) => {
+    if (part.toLowerCase() === "x") return -1;
+    return Number(part);
+  });
+  if (parts.length < 2 || parts.some((part) => !Number.isInteger(part) || part < -1)) return null;
   return parts;
 }
 

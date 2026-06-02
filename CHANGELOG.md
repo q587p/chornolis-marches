@@ -19,6 +19,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added a rare waking-world successful-gather bonus that can grant one `shah` directly to the player.
 - Added Scribe/admin `/call_scribes_audit` and `/call_scribes_approve <eventId>` / `/call_scribes_approve_<eventId>` commands for reviewing and applying recorded return-help requests.
 - Added safe Herald/web news deep links and `/start cmd_*` routing for `/start`, `/rest` and `/sleep`, so public news command hints open the main bot instead of staying plain text.
+- Fixed Herald archive ordering for early prototype news versions such as `0.0.x`, so archive backfill can publish the prototype entry before `0.1.0`.
 - Added focused money/loot tests for pluralization, starter seed authoring, cache money behavior and gather bonus boundaries.
 - Added `docs/systems/money_and_low_risk_loot.md` and `MONEY-001` planning documentation.
 

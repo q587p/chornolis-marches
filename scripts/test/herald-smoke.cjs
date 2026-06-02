@@ -58,6 +58,10 @@ assert.deepEqual(extractNewsSourceMetadata("0.14.7 — Канцелярія ма
   sourceDate: undefined,
   sourceVersion: "0.14.7",
 });
+assert.deepEqual(extractNewsSourceMetadata("0.0.x — Ранній прототип"), {
+  sourceDate: undefined,
+  sourceVersion: "0.0.x",
+});
 
 const entries = parseNewsEntries(markdown);
 assert.equal(entries.length, 2);
@@ -85,6 +89,16 @@ assert.deepEqual(archiveOrderedNewsEntries(parseNewsEntries(versionMarkdown)).ma
   "0.4.2",
   "0.4.3",
   "0.4.10",
+]);
+const earlyPrototypeMarkdown = [
+  "## 0.1.0 — Перший бот Порубіжжя — 12026-05-04",
+  "first bot",
+  "## 0.0.x — Ранній прототип",
+  "early prototype",
+].join("\n\n");
+assert.deepEqual(archiveOrderedNewsEntries(parseNewsEntries(earlyPrototypeMarkdown)).map((entry) => entry.sourceVersion), [
+  "0.0.x",
+  "0.1.0",
 ]);
 const sourceOrderMarkdown = [
   "## Без дати",

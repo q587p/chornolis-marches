@@ -22,7 +22,7 @@ function contentHash(value: string) {
 
 export function extractNewsSourceMetadata(title: string) {
   const sourceDate = title.match(/\b\d{4,5}-\d{2}-\d{2}\b/u)?.[0];
-  const sourceVersion = title.match(/\b\d+\.\d+\.\d+\b/u)?.[0];
+  const sourceVersion = title.match(/\b\d+\.\d+\.(?:\d+|x)\b/iu)?.[0];
   return { sourceDate, sourceVersion };
 }
 
