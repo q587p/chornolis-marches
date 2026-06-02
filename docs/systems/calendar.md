@@ -140,6 +140,8 @@ Preferred future direction:
 - 13 lunar circles in a year;
 - moon phases inside each circle;
 - 4 seasons layered over the year;
+- a later 365-day year model, plus rare 366-day years according to an in-world leap reckoning;
+- an extra day outside ordinary lunar-circle counting that feels mysterious, mythic and worth preparing for, not merely technical calendar padding;
 - sacred, dangerous or unlucky days;
 - season- and moon-dependent creatures, resources, rituals and events;
 - local names for circles may differ between settlements, volkhvy, hunters and spirits.
