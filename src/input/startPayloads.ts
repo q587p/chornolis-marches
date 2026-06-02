@@ -10,7 +10,12 @@ export type StartActionPayload =
   | "time"
   | "weather"
   | "inventory"
-  | "yell";
+  | "say"
+  | "yell"
+  | "buildCampfire"
+  | "lightCampfire"
+  | "douseCampfire"
+  | "dismantleCampfire";
 
 const SAFE_START_PAYLOAD = /^[A-Za-z0-9_-]+$/;
 
@@ -29,7 +34,12 @@ export function parseStartActionPayload(value: unknown): StartActionPayload | nu
   if (payload === "cmd_time") return "time";
   if (payload === "cmd_weather") return "weather";
   if (payload === "cmd_inventory") return "inventory";
+  if (payload === "cmd_say") return "say";
   if (payload === "cmd_yell") return "yell";
+  if (payload === "cmd_build_campfire") return "buildCampfire";
+  if (payload === "cmd_light_campfire") return "lightCampfire";
+  if (payload === "cmd_douse_campfire") return "douseCampfire";
+  if (payload === "cmd_dismantle_campfire") return "dismantleCampfire";
 
   return null;
 }

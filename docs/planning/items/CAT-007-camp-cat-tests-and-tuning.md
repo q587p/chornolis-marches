@@ -27,6 +27,16 @@ Add focused regression coverage and first-pass tuning for the camp spirit cat be
 - Keep the behavior budget safe under creature tick processing.
 - Tune cooldowns and priorities from basic deterministic tests.
 
+## 0.15.10 Test Notes
+
+The focused `scripts/test/camp-cat.cjs` coverage now includes:
+
+- deterministic pounce/watch planning for local mouse pressure;
+- representative contextual full-examination lines for mice, night/fire and the watchtower;
+- cat-specific predator observer copy for miss, wound and kill outcomes.
+
+Longer simulation tuning, feed/shoo behavior and raw-meat give tests remain future work.
+
 ## Out of scope
 
 - Long-running simulation balancing.

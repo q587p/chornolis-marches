@@ -19,6 +19,7 @@ import {
 import { heldWeaponLine } from "./weapons";
 import { campSpiritCatInspectionText, isCampSpiritCatCreature } from "./campSpiritCat";
 import { visibilityRulesForLocation } from "./visibility";
+import { getCurrentWorldTimeSnapshot } from "./worldTime";
 
 export type ResolvedTarget = {
   kind: "player" | "creature";
@@ -204,6 +205,28 @@ export async function hunterFieldInventorySummary(creature: { id: number; curren
   return lines.length ? lines.join("\n") : "- мисливський набір не видно або він порожній";
 }
 
+async function campSpiritCatInspectionContext(locationId: number) {
+  const [worldTime, location, localMice] = await Promise.all([
+    getCurrentWorldTimeSnapshot(),
+    prisma.cellLocation.findUnique({ where: { id: locationId }, include: { features: true } }),
+    prisma.creature.count({
+      where: {
+        locationId,
+        isAlive: true,
+        isGone: false,
+        isHidden: false,
+        species: { key: "mouse" },
+      },
+    }),
+  ]);
+  return {
+    locationKey: location?.key ?? null,
+    daypart: worldTime.daypart,
+    hasLocalMice: localMice > 0,
+    hasActiveCampfire: Boolean(location?.features?.some((feature: any) => feature.type === "MAGIC_CAMPFIRE" && feature.providesLight)),
+  };
+}
+
 export async function resolveTarget(type: string, id: number, locationId: number, options: { viewerPlayerId?: number; detail?: TargetInspectDetail } = {}): Promise<ResolvedTarget | null> {
   const showTechnicalDetails = await playerShowsTechnicalDetails(options.viewerPlayerId);
   const detail = options.detail ?? "full";
@@ -291,7 +314,7 @@ export async function resolveTarget(type: string, id: number, locationId: number
     }
 
     const visibleAction = normalizeCreatureActionText(target.currentAction, "придивляється довкола") ?? "придивляється довкола";
-    const campSpiritCatDetails = isCampSpiritCat ? campSpiritCatInspectionText(visibleAction, detail) : null;
+    const campSpiritCatDetails = isCampSpiritCat ? campSpiritCatInspectionText(visibleAction, detail, await campSpiritCatInspectionContext(locationId)) : null;
     const hunterInventory = await hunterFieldInventorySummary(target, { exact: showTechnicalDetails });
     const hunterSection = hunterInventory
       ? `\n\nМисливський набір:\n${hunterInventory}`

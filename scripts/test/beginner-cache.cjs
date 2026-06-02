@@ -6,6 +6,7 @@ const {
   beginnerCacheDataAfterHiddenRestock,
   beginnerCacheDataAfterObservation,
   beginnerCacheContributeAllButtonLabel,
+  beginnerCacheInspectionText,
   beginnerCacheResourceKeyFromText,
   beginnerCacheStock,
   beginnerCacheStockLines,
@@ -35,6 +36,14 @@ assert.equal(beginnerCacheContributeAllButtonLabel("twigs"), "🤲 Лишити 
 assert.equal(beginnerCacheContributeAllButtonLabel("raw_meat"), "🤲 Лишити все сире м'ясо");
 assert.ok(beginnerCacheStockLines(base).some((line) => line.includes("berries") || line.includes("ягоди")));
 assert.ok(beginnerCacheStockLines(base).some((line) => line.includes("сире м'ясо")));
+assert.match(
+  beginnerCacheInspectionText({ description: "Скриня під навісом.", data: base }, { catPresenceLine: "Кіт-бережник сидить неподалік." }),
+  /Кіт-бережник сидить неподалік/u,
+);
+assert.doesNotMatch(
+  beginnerCacheInspectionText({ description: "Скриня під навісом.", data: base }),
+  /Кіт-бережник/u,
+);
 
 assert.deepEqual(
   planBeginnerCacheContributeAll({

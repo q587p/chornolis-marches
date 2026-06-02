@@ -7,6 +7,18 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.10 - Camp cat cache presence, mouse priority and pounce - 12026-06-02
+
+### Changed
+
+- Added quiet camp spirit cat presence copy to starter shared-cache inspection when the cat is visibly in the same location.
+- Added a first camp-local mouse-priority behavior for the spirit cat: local live mice now make the cat choose its mouse-listening watch posture before ordinary up/down movement.
+- Added a first same-location mouse pounce for the camp spirit cat in the starter camp/watchtower pair, queued through the existing attack action flow.
+- Added cat-specific miss, wound and kill copy for that local pounce so it no longer falls back to generic predator text.
+- Added contextual full-examination detail for the camp spirit cat based on local mice, daypart, active campfire light and watchtower position.
+- Added safe main-bot deep links and `/start cmd_*` routing for public news references to `/say`, `/build_campfire`, `/light_campfire`, `/douse_campfire` and `/dismantle_campfire`.
+- Updated camp cat, beginner cache, ecology, onboarding and planning docs for the combined behavior slice.
+
 ## 0.15.9 - Movement target buttons and animal escalation - 12026-06-02
 
 ### Changed
