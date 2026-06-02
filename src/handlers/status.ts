@@ -70,6 +70,16 @@ export function isPublicWhoCreature(creature: { species?: { kind?: string | null
   if (kind === "SPIRIT" || creature.species?.diet === "SPIRITUAL") return false;
   return kind === "HUMAN" || kind === "MONSTER";
 }
+
+export function isPublicWhoPlayer(player: {
+  sessionPresence?: string | null;
+  lastPlayerActionAt?: Date | null;
+  lastActionAt?: Date | null;
+}, since: Date) {
+  if (player.sessionPresence === "ENDED") return false;
+  if (player.lastPlayerActionAt) return player.lastPlayerActionAt.getTime() >= since.getTime();
+  return Boolean(player.lastActionAt && player.lastActionAt.getTime() >= since.getTime());
+}
 const pendingAdminTeleports = new Map<number, { playerId: number; returnContext: AllReturnContext }>();
 const REMOVE_REPLY_KEYBOARD = { remove_keyboard: true } as const;
 type LocationAllEntry = {
@@ -1024,9 +1034,10 @@ export async function buildWhoData(now = new Date()) {
   const [players, creatures] = await Promise.all([
     prisma.player.findMany({
       where: {
+        sessionPresence: { not: "ENDED" },
         OR: [
-          { lastActionAt: { gte: since } },
-          { updatedAt: { gte: since } },
+          { lastPlayerActionAt: { gte: since } },
+          { lastPlayerActionAt: null, lastActionAt: { gte: since } },
         ],
       },
       orderBy: { id: "asc" },

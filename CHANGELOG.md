@@ -31,6 +31,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Player attack, freshening and cooking actions now spend less stamina, and the first fatigue cue now suggests recovery options with contextual inline buttons.
 - Scribe/admin `/stat`, protected web `/stat` and `/stat.json` now keep ordinary animal predator species rows dynamic, so owls and future animal carnivores appear even before they have kills, while spirit presences such as the camp spirit cat are shown in a separate non-animal stats block.
 - Auto-mode stop aliases now route explicitly through the stop path: `/auto_stop`, `/auto stop`, `вимкнути авто`, `стоп авто` and `авто стоп` stop auto mode, and unknown-input suggestions point stop phrases at `/auto_stop` instead of `/auto`.
+- Public `/who`, web `/who` and `/who.json` now use player interaction timestamps instead of broad `updatedAt` changes, exclude ended sessions and let AFK players fall out after the one-hour activity window.
 - Regenerated planning exports for the new liminal-sign planning items and the fisher-priority update.
 
 ## 0.15.14 - Herald manual archive controls - 12026-06-02
