@@ -998,6 +998,127 @@
     }
   },
   {
+    "key": "strange_totem_meadow_10_00_seed",
+    "locationKey": "meadow_10_00",
+    "type": "LANDMARK",
+    "name": "Підозрілий тотем",
+    "description": "Кілька сухих стебел, тонка лозина й клаптик темної кори зв’язані в малу криву постать. Вона не схожа ні на межовий знак, ні на дитячу забавку.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🪵",
+      "inspectable": true,
+      "strange_totem": true,
+      "seeded": true,
+      "future_hook": "totem_makers",
+      "twigsFreshMin": 2,
+      "twigsFreshMax": 3,
+      "twigsOld": 1,
+      "aliases": [
+        "тотем",
+        "підозрілий тотем",
+        "дивний тотем",
+        "знак",
+        "дивний знак",
+        "вузлик",
+        "сухий вузлик",
+        "хмизовий знак",
+        "strange totem",
+        "totem"
+      ]
+    }
+  },
+  {
+    "key": "strange_totem_meadow_11_01_seed",
+    "locationKey": "meadow_11_01",
+    "type": "LANDMARK",
+    "name": "Кривий знак із лози",
+    "description": "Сухі стебла стоять у траві надто рівно, ніби їх хтось обережно втиснув у землю і стягнув тонкою лозиною.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🪵",
+      "inspectable": true,
+      "strange_totem": true,
+      "seeded": true,
+      "future_hook": "totem_makers",
+      "twigsFreshMin": 2,
+      "twigsFreshMax": 3,
+      "twigsOld": 1,
+      "aliases": [
+        "тотем",
+        "підозрілий тотем",
+        "дивний тотем",
+        "знак",
+        "кривий знак",
+        "лоза",
+        "вузлик",
+        "strange totem",
+        "totem"
+      ]
+    }
+  },
+  {
+    "key": "strange_totem_meadow_13_01_seed",
+    "locationKey": "meadow_13_01",
+    "type": "LANDMARK",
+    "name": "Мала трав’яна постать",
+    "description": "Малий вузол із трави й кори повернутий до стежки. Його легко було б сплутати з хмизом, якби не надто навмисна форма.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🪵",
+      "inspectable": true,
+      "strange_totem": true,
+      "seeded": true,
+      "future_hook": "totem_makers",
+      "twigsFreshMin": 2,
+      "twigsFreshMax": 3,
+      "twigsOld": 1,
+      "aliases": [
+        "тотем",
+        "підозрілий тотем",
+        "дивний тотем",
+        "трав’яна постать",
+        "травяна постать",
+        "вузлик",
+        "хмиз",
+        "strange totem",
+        "totem"
+      ]
+    }
+  },
+  {
+    "key": "strange_totem_riverbank_14_01_seed",
+    "locationKey": "riverbank_14_01",
+    "type": "LANDMARK",
+    "name": "Очеретяний знак",
+    "description": "Очеретини скручені в маленьку постать і стягнуті мокрою лозою. Внизу налип мул, хоча навколо трава сухіша.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🪵",
+      "inspectable": true,
+      "strange_totem": true,
+      "seeded": true,
+      "future_hook": "totem_makers",
+      "twigsFreshMin": 2,
+      "twigsFreshMax": 3,
+      "twigsOld": 1,
+      "aliases": [
+        "тотем",
+        "підозрілий тотем",
+        "дивний тотем",
+        "знак",
+        "очеретяний знак",
+        "очерет",
+        "вузлик",
+        "strange totem",
+        "totem"
+      ]
+    }
+  },
+  {
     "key": "dream_tutorial_sleep_gate",
     "locationKey": "dream_tutorial_gate",
     "type": "GATE",

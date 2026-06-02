@@ -18,6 +18,7 @@ import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { lightLocationCampfire, renderLocationBrief, renderLocationDetails } from "./locations";
 import { notifyLocation, notifyLocationAll, notifyLocationExcept, notifyRegionExcept, queueNonPlayerMovementNotification } from "./notifications";
 import { addTwigsToCampfire, buildCampfireFromInventory, dismantleCampfire, douseCampfire, dousePlayerTorchFromInventory, lightPlayerTorchAtCampfire, lightPlayerTorchFromInventory } from "./fire";
+import { dismantleStrangeTotem } from "./strangeTotems";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
 import { getStartLocationId } from "./players";
 import { summonLisovykIfResourceDepleted } from "./resources";
@@ -297,7 +298,7 @@ export async function completeAction(bot: Bot, action: WorldAction) {
   if (action.type === "MOVE") return completeMove(bot, action);
   if (action.type === "GATHER" || action.type === "GATHER_SPECIFIC") return completeGather(bot, action);
   if (action.type === "EAT") return completeEat(bot, action);
-  if (action.type === "USE_ITEM" || action.type === "DROP_ITEM" || action.type === "COOK" || action.type === "LIGHT_TORCH" || action.type === "DOUSE_TORCH" || action.type === "ADD_TWIGS" || action.type === "LIGHT_CAMPFIRE" || action.type === "BUILD_CAMPFIRE" || action.type === "DOUSE_CAMPFIRE" || action.type === "DISMANTLE_CAMPFIRE") return completeInventoryAction(bot, action);
+  if (action.type === "USE_ITEM" || action.type === "DROP_ITEM" || action.type === "COOK" || action.type === "LIGHT_TORCH" || action.type === "DOUSE_TORCH" || action.type === "ADD_TWIGS" || action.type === "LIGHT_CAMPFIRE" || action.type === "BUILD_CAMPFIRE" || action.type === "DOUSE_CAMPFIRE" || action.type === "DISMANTLE_CAMPFIRE" || action.type === "DISMANTLE_TOTEM") return completeInventoryAction(bot, action);
   if (action.type === "LOOK") return completeLook(bot, action);
   if (action.type === "INSPECT") return completeInspect(bot, action);
   if (action.type === "GREET") return completeGreet(bot, action);
@@ -532,6 +533,15 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
         if (!payload.featureId) throw new Error("Не видно вогнища, яке можна розібрати.");
         const result = await dismantleCampfire(player.id, payload.featureId);
         await spendPlayerStamina(bot, player.id, "DISMANTLE_CAMPFIRE", chatId);
+        await setActionStatus(action, "DONE");
+        if (chatId) await bot.api.sendMessage(chatId, result.text);
+        return;
+      }
+
+      if (action.type === "DISMANTLE_TOTEM") {
+        if (!payload.featureId) throw new Error("Не видно тотема, який можна розібрати.");
+        const result = await dismantleStrangeTotem(player.id, payload.featureId);
+        await spendPlayerStamina(bot, player.id, "DISMANTLE_TOTEM", chatId);
         await setActionStatus(action, "DONE");
         if (chatId) await bot.api.sendMessage(chatId, result.text);
         return;

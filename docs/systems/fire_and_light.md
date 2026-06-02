@@ -66,6 +66,8 @@ Seed/reset data also places small pickable `twigs` bundles in a few forest and d
 
 Natural forest fallback also lets `twigs` appear slowly on the ground. By default, once every 2 real hours the world tick checks the light-forest region and refreshes roughly one third of its locations by +1 `twigs`, but only while the local natural stack is below 5. Manual/admin placement, player drops and torch burn-out can still put more than 5 `twigs` in a location; the natural timer simply stops adding there until the amount is below the cap again.
 
+Strange Totems can also become a small `twigs` source. Fresh or old active totems can be dismantled through `Розібрати` / `/dismantle_totem`, and old totems can shed a small one-time bundle before they disappear.
+
 This avoids a schema migration while preserving per-character torch timing.
 
 ## Timer notifications

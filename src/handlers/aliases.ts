@@ -79,6 +79,7 @@ import {
 } from "../services/fire";
 import { buildWetCampfireConfirmKeyboard } from "../ui/fireKeyboards";
 import { submitGiveItem } from "./give";
+import { firstStrangeTotemFeatureIdAtPlayerLocation } from "../services/strangeTotems";
 
 const pendingVerticalYell = new Map<number, { direction: VerticalYellPromptDirection }>();
 function quoteBlock(text: string) {
@@ -528,6 +529,18 @@ export async function submitDismantleCampfire(bot: Bot, ctx: any) {
     return;
   }
   await submitInventoryQueuedAction(bot, ctx, player, "DISMANTLE_CAMPFIRE", { featureId }, "Не вдалося розібрати вогнище.");
+}
+
+export async function submitDismantleTotem(bot: Bot, ctx: any, target = "") {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const featureId = await firstStrangeTotemFeatureIdAtPlayerLocation(player.id, target);
+  if (!featureId) {
+    await ctx.reply("Поруч немає підозрілого тотема, який можна розібрати.");
+    return;
+  }
+  await submitInventoryQueuedAction(bot, ctx, player, "DISMANTLE_TOTEM", { featureId }, "Не вдалося розібрати тотем.");
 }
 
 async function submitCookAllMeat(bot: Bot, ctx: any) {
@@ -1219,6 +1232,7 @@ export function registerAliasHandlers(bot: Bot) {
     "light_campfire",
     "douse_campfire",
     "dismantle_campfire",
+    "dismantle_totem",
     "inv",
     "put",
     "respawn",
@@ -1314,6 +1328,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "light-campfire") return submitLightCampfire(bot, ctx);
     if (parsed.kind === "douse-campfire") return submitDouseCampfire(bot, ctx);
     if (parsed.kind === "dismantle-campfire") return submitDismantleCampfire(bot, ctx);
+    if (parsed.kind === "dismantle-totem") return submitDismantleTotem(bot, ctx, parsed.target);
     if (parsed.kind === "cook-meat") return submitCookMeat(bot, ctx);
     if (parsed.kind === "cook-meat-all") return submitCookAllMeat(bot, ctx);
     if (parsed.kind === "sleep") return submitSleep(bot, ctx, parsed.tutorial);

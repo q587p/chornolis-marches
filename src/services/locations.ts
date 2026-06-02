@@ -37,6 +37,7 @@ import { GATE_CARCASS_DROPOFF_FEATURE_KEY, gateHuntingDropoffText, gateHuntingNo
 import { visibilityDarknessText, visibilityPresenceText, visibilityRulesForLocation, type VisibilityRules } from "./visibility";
 import { getCurrentWorldTimeSnapshot } from "./worldTime";
 import { owlSignDetailLine, owlSignInspectionText } from "./owlSigns";
+import { isStrangeTotemFeature, strangeTotemDetailLine, strangeTotemInspectionText } from "./strangeTotems";
 import {
   beginnerCacheActionLabel,
   beginnerCacheContributeAllButtonLabel,
@@ -330,6 +331,7 @@ function featureIcon(feature: any) {
   if (isTutorialRestSeatFeature(feature)) return "🪑";
   if (isTutorialObservationFeature(feature)) return "🦊";
   if (isCampfireFeature(feature)) return isPreparedCampfire(feature) ? "🪵" : isExtinguishedCampfire(feature) ? "🪨" : "🔥";
+  if (isStrangeTotemFeature(feature)) return "🪵";
   if (isDepletedVegetationFeature(feature)) return "🌾";
   if (feature.type === "BORDER_MARKER") return "🪧";
   if (feature.type === "GATE") return "🚪";
@@ -429,6 +431,8 @@ function featureDetailLine(feature: any, showTechnicalDetails = false) {
     details.push(readyAt ? "сухе гілля вже струшене й ще не відновилося" : "сухе гілля можна струсити вниз");
   } else if (isOwlSignFeature(feature)) {
     details.push(owlSignDetailLine());
+  } else if (isStrangeTotemFeature(feature)) {
+    details.push(strangeTotemDetailLine(feature));
   } else if (feature.providesLight) {
     details.push("дає світло");
   } else if (feature.type === "BORDER_MARKER") {
@@ -1186,6 +1190,9 @@ export async function renderLocationFeatureInteraction(
   } else if (isOwlSignFeature(feature)) {
     const worldTime = await getCurrentWorldTimeSnapshot();
     text = owlSignInspectionText(worldTime.daypart, feature.description);
+  } else if (isStrangeTotemFeature(feature)) {
+    const worldTime = await getCurrentWorldTimeSnapshot();
+    text = await strangeTotemInspectionText(feature, worldTime.absoluteMinute);
   }
 
   const keyboard = new InlineKeyboard();
@@ -1236,6 +1243,7 @@ export async function renderLocationFeatureInteraction(
   const yellDirection = featureYellPromptDirection(feature);
   if (yellDirection) keyboard.text(featureYellPromptButtonLabel(yellDirection), `yell:prompt:${yellDirection}`).row();
   if (isShakeTreeFeature(feature)) keyboard.text("🍃 Потрусити", `tree:shake:${feature.id}`).row();
+  if (isStrangeTotemFeature(feature)) keyboard.text("🧹 Розібрати", `totem:dismantle:${feature.id}`).row();
   keyboard.text("↩️ Назад", `location:${returnMode}`);
   return { text, keyboard, quoteMessages, followupMessages };
 }

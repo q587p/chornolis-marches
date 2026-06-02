@@ -7,6 +7,17 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.13 - Strange totems and dismantle action - 12026-06-02
+
+### Changed
+
+- Added Strange Totem `LANDMARK` features to the dry luka and riverbank seed data as a first small wilderness trace.
+- Added a queued `DISMANTLE_TOTEM` action with a feature button, `/dismantle_totem`, English MUD-style aliases and Ukrainian aliases.
+- Dismantling an active Strange Totem now rewards `twigs`: fresh totems yield a small variable amount, while old last-day totems yield a smaller amount.
+- Strange Totems now age on world time: old totems can shed a small `twigs` bundle once, and active totems expire after seven in-game days.
+- Added a guarded daily ambient spawn pass for Strange Totems in dry luka and riverbank locations, with region caps, player/presence safety checks and suspicious tracks toward a visible exit.
+- Updated location feature inspection, `/help`, `/commands`, deep-link handling and regression coverage for the new dismantle path.
+
 ## 0.15.12 - Ukrainian give parser and rest recovery polish - 12026-06-02
 
 ### Changed
