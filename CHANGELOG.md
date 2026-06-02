@@ -18,7 +18,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Manual archive posting now uses the existing Herald publication dedupe by `contentHash` and refuses to repost an already published archive entry without a future explicit force mode.
 - Documented the Render archive recovery flow for pausing/canceling a large backfill queue and manually posting old news from the deployed `news.md`.
-- Public news was intentionally skipped for this release because the changes are scribe/operator-only Herald controls, not player-facing game changes.
+- Added a short atmospheric public news entry about the Boundary Mark Chancery organizing old news scrolls, without exposing admin command names or internal operator details.
 
 ## 0.15.13 - Strange totems and dismantle action - 12026-06-02
 
