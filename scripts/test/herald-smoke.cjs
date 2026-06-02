@@ -118,7 +118,12 @@ assert.match(heraldAdminCommands, /\/pause_publications/);
 assert.match(heraldAdminCommands, /\/resume_publications/);
 assert.match(heraldAdminCommands, /\/cancel_pending_publications/);
 assert.match(heraldAdminCommands, /\/backfill_news_cancel/);
+assert.match(heraldAdminCommands, /\/news_archive_list/);
+assert.match(heraldAdminCommands, /\/news_archive_preview/);
+assert.match(heraldAdminCommands, /\/news_archive_post/);
+assert.match(heraldAdminCommands, /\/news_archive_reload/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/pause_publications/);
+assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_post/);
 
 const whoami = formatHeraldWhoami({
   telegramUserId: 123456789,

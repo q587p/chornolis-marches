@@ -505,11 +505,17 @@ export function startHeraldPublisherLoop(bot: Bot) {
   }
 
   let running = false;
+  const startupPausePromise = config.heraldPublicationsPaused
+    ? setPublicationQueuePaused(true)
+      .then(() => console.log("Herald publisher starts paused by HERALD_PUBLICATIONS_PAUSED."))
+      .catch((error) => console.warn("Herald startup pause failed:", publicationErrorMessage(error)))
+    : Promise.resolve();
 
   const runTick = async () => {
     if (running) return;
     running = true;
     try {
+      await startupPausePromise;
       await publishPendingHeraldPublications(bot);
     } catch (error) {
       console.warn("Herald publisher loop tick failed:", publicationErrorMessage(error));

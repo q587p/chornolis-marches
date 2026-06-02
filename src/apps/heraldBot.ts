@@ -4,6 +4,7 @@ import { parseHeraldAdminIds, isHeraldAdminId } from "../herald/admin";
 import { registerHeraldDigestCommands } from "../herald/digestCommands";
 import { registerHeraldHelpCommands, registerHeraldUnknownCommandFallback } from "../herald/help";
 import { registerHeraldInfoCommands } from "../herald/infoCommands";
+import { registerHeraldNewsArchiveCommands } from "../herald/newsArchiveCommands";
 import { registerHeraldNewsBackfillCommands } from "../herald/newsBackfillCommands";
 import { registerHeraldNewsCommands } from "../herald/newsCommands";
 import { registerHeraldPublisherCommands, startHeraldPublisherLoop } from "../herald/publisher";
@@ -28,6 +29,7 @@ bot.command("ping", async (ctx) => {
 registerHeraldHelpCommands(bot, heraldAdminIds);
 registerHeraldInfoCommands(bot, heraldAdminIds);
 registerHeraldNewsCommands(bot, heraldAdminIds);
+registerHeraldNewsArchiveCommands(bot, heraldAdminIds);
 registerHeraldNewsBackfillCommands(bot, heraldAdminIds);
 registerHeraldDigestCommands(bot, heraldAdminIds);
 registerHeraldPublisherCommands(bot, heraldAdminIds);

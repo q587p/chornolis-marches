@@ -7,6 +7,19 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.14 - Herald manual archive controls - 12026-06-02
+
+### Added
+
+- Added Herald admin `/news_archive_list`, `/news_archive_preview <index>`, `/news_archive_post <index>` and `/news_archive_reload` controls for manually rereading deployed `news.md` and publishing one old archive entry at a time.
+- Added `HERALD_PUBLICATIONS_PAUSED` startup safety so the standalone Herald publisher can wake on Render with automatic outbox publication paused until `/resume_publications`.
+
+### Changed
+
+- Manual archive posting now uses the existing Herald publication dedupe by `contentHash` and refuses to repost an already published archive entry without a future explicit force mode.
+- Documented the Render archive recovery flow for pausing/canceling a large backfill queue and manually posting old news from the deployed `news.md`.
+- Public news was intentionally skipped for this release because the changes are scribe/operator-only Herald controls, not player-facing game changes.
+
 ## 0.15.13 - Strange totems and dismantle action - 12026-06-02
 
 ### Changed
