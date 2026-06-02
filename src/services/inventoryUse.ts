@@ -15,6 +15,24 @@ const USE_CONFIG = {
   mushrooms: { amount: 3 },
 } as const;
 export const MUSHROOM_POISON_CHANCE = 0.1;
+export const MUSHROOM_FIRST_USE_WARNING_TEXT = "Обережно з грибами: ліс не завжди кладе до рук саму поживу. Вони можуть трохи вгамувати голод, але серед них трапляються отруйні; іноді мудріше лишити гриби для майбутніх настоянок чи зілля.";
+
+const mushroomFirstUseWarningSeen = new Set<number>();
+
+export function resetMushroomFirstUseWarningsForTest() {
+  mushroomFirstUseWarningSeen.clear();
+}
+
+export function mushroomFirstUseWarningForPlayer(playerId: number) {
+  if (mushroomFirstUseWarningSeen.has(playerId)) return "";
+  mushroomFirstUseWarningSeen.add(playerId);
+  return MUSHROOM_FIRST_USE_WARNING_TEXT;
+}
+
+function withMushroomFirstUseWarning(playerId: number, text: string) {
+  const warning = mushroomFirstUseWarningForPlayer(playerId);
+  return warning ? `${warning}\n\n${text}` : text;
+}
 
 export function mushroomPoisoningHits(roll = Math.random()) {
   return roll < MUSHROOM_POISON_CHANCE;
@@ -270,14 +288,15 @@ export async function useInventoryResource(playerId: number, resourceKey: Usable
       });
 
       if (outcome.poisoned) {
-        return "Ви з'їли кілька грибів. Спершу смак здається землистим і теплим, а тоді під язиком проступає гіркота. Шлунок стискається; сили відступають, і голод тільки гострішає.";
+        return withMushroomFirstUseWarning(playerId, "Ви з'їли кілька грибів. Спершу смак здається землистим і теплим, а тоді під язиком проступає гіркота. Шлунок стискається; сили відступають, і голод тільки гострішає.");
       }
 
-      if (player.hunger <= 0) return "Ви з'їли кілька грибів. Голод не дошкуляв, тож це радше цікавість, ніж потреба; смак лісу ще трохи тримається на язиці.";
+      if (player.hunger <= 0) return withMushroomFirstUseWarning(playerId, "Ви з'їли кілька грибів. Голод не дошкуляв, тож це радше цікавість, ніж потреба; смак лісу ще трохи тримається на язиці.");
 
-      return outcome.nextHunger <= 0
+      const text = outcome.nextHunger <= 0
         ? "Ви з'їли кілька грибів. Голод відступив."
         : "Ви з'їли кілька грибів. Голод трохи відступає.";
+      return withMushroomFirstUseWarning(playerId, text);
     }
 
     const hpMax = player.hpMax ?? BASE_HP;

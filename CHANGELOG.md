@@ -19,6 +19,8 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Increased active-rest stamina recovery from `13` to `26` stamina per rest interval.
 - Active campfires now provide a minimum `x3` stamina-rest speed multiplier, while authored stronger rest multipliers still win when present.
 - Split character-card recovery hints so stamina timing no longer gets hidden behind HP recovery, and the player sees separate `without rest`, `with rest` and `near campfire` estimates.
+- Added a runtime first-use mushroom warning so the first mushroom eaten after this release cautions that mushrooms can be poisonous and may be worth saving for future elixirs or tinctures.
+- Recorded follow-up planning for food-use statistics, including eaten resources and mushroom poisoning outcomes.
 
 ## 0.15.11 - Camp cat raw-meat give bridge - 12026-06-02
 

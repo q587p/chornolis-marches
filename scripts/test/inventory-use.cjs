@@ -3,10 +3,13 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const {
+  MUSHROOM_FIRST_USE_WARNING_TEXT,
   MUSHROOM_POISON_CHANCE,
+  mushroomFirstUseWarningForPlayer,
   mushroomPoisonDamage,
   mushroomPoisoningHits,
   mushroomUsePlan,
+  resetMushroomFirstUseWarningsForTest,
 } = require("../../src/services/inventoryUse");
 
 assert.equal(MUSHROOM_POISON_CHANCE, 0.1);
@@ -18,6 +21,11 @@ assert.equal(mushroomPoisoningHits(0.99), false);
 assert.equal(mushroomPoisonDamage(20), 7);
 assert.equal(mushroomPoisonDamage(21), 7);
 assert.equal(mushroomPoisonDamage(22), 8);
+
+resetMushroomFirstUseWarningsForTest();
+assert.equal(mushroomFirstUseWarningForPlayer(42), MUSHROOM_FIRST_USE_WARNING_TEXT);
+assert.equal(mushroomFirstUseWarningForPlayer(42), "");
+assert.equal(mushroomFirstUseWarningForPlayer(43), MUSHROOM_FIRST_USE_WARNING_TEXT);
 
 assert.deepEqual(
   mushroomUsePlan({ hp: 20, hpMax: 20, hunger: 4, poisoned: true, maxHunger: 13 }),
