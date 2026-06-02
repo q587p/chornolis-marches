@@ -19,6 +19,8 @@ import { stripUnsafeText } from "../utils/text";
 import { spendPlayerStaminaAmount } from "../services/actionRecovery";
 import { visibleTextTargets } from "../services/textTargets";
 import { visibilityRulesForLocation } from "../services/visibility";
+import { playerHasRawMeat } from "../services/meat";
+import { submitGiveRawMeatToCreature } from "./give";
 
 type TargetSpeechMode = "say" | "whisper";
 
@@ -35,9 +37,10 @@ function targetReturnCallback(mode?: string, page?: number) {
   return `targetPage:${mode}:${Math.max(0, Math.floor(page ?? 0))}`;
 }
 
-function buildActionKeyboard(target: ResolvedTarget, again = false, returnCallback = "location:details") {
+async function buildActionKeyboard(playerId: number, target: ResolvedTarget, again = false, returnCallback = "location:details") {
   if (target.isCorpse) return buildCorpseActionKeyboard(target, returnCallback);
-  return buildTargetActionKeyboard({ type: target.kind, id: target.id, canGreet: target.canGreet, canAttack: target.canAttack, isAnimal: target.isAnimal }, again, returnCallback);
+  const canReceiveRawMeat = Boolean(target.canReceiveRawMeat && await playerHasRawMeat(playerId));
+  return buildTargetActionKeyboard({ type: target.kind, id: target.id, canGreet: target.canGreet, canAttack: target.canAttack, isAnimal: target.isAnimal, canReceiveRawMeat }, again, returnCallback);
 }
 
 function attackUnavailableText(target: ResolvedTarget) {
@@ -167,7 +170,12 @@ export function registerSocialHandlers(bot: Bot) {
     }
 
     await safeAnswerCallbackQuery(ctx);
-    await editOrReply(ctx, `Ви зосереджуєтесь на: ${target.forms.locative}`, buildActionKeyboard(target, false, returnCallback));
+    await editOrReply(ctx, `Ви зосереджуєтесь на: ${target.forms.locative}`, await buildActionKeyboard(player.id, target, false, returnCallback));
+  });
+
+  bot.callbackQuery(/^give:raw_meat:creature:(\d+)$/, async (ctx) => {
+    await safeAnswerCallbackQuery(ctx, "Передаємо.");
+    await submitGiveRawMeatToCreature(bot, ctx, Number(ctx.match[1]));
   });
 
   bot.callbackQuery(/^social:pickup:creature:(\d+)(?::(brief|details):(\d+))?$/, async (ctx) => {

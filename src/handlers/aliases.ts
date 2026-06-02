@@ -78,6 +78,7 @@ import {
   relightableCampfireFromTorchId,
 } from "../services/fire";
 import { buildWetCampfireConfirmKeyboard } from "../ui/fireKeyboards";
+import { submitGiveItem } from "./give";
 
 const pendingVerticalYell = new Map<number, { direction: VerticalYellPromptDirection }>();
 
@@ -1305,6 +1306,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "equip-inventory-item") return submitInventoryEquip(ctx, parsed.target);
     if (parsed.kind === "unequip-inventory-item") return submitInventoryUnequip(ctx, parsed.target);
     if (parsed.kind === "put-item") return submitPutItem(bot, ctx, parsed.item, parsed.amount, parsed.container);
+    if (parsed.kind === "give-item") return submitGiveItem(bot, ctx, parsed.item, parsed.target, parsed.amount);
     if (parsed.kind === "add-twigs-campfire") {
       const player = await getPlayerByTelegramId(ctx.from.id);
       if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
