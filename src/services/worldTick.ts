@@ -20,7 +20,7 @@ import { advanceWorldClock } from "./worldTime";
 import { notifyWorldDaypartChangeIfNeeded } from "./worldDaypartNotices";
 import { creatureUsableExits } from "./creatureMovement";
 import { worldTimeSnapshotFromAbsoluteMinute, type WorldDaypart } from "../data/worldClock";
-import { CAMP_SPIRIT_CAT_START_LOCATION_KEY, campSpiritCatShouldPrioritizeLocalMice, campSpiritCatWatchPosture, isCampSpiritCatAllowedExit, isCampSpiritCatCreature, isCampSpiritCatLocationKey } from "./campSpiritCat";
+import { CAMP_SPIRIT_CAT_START_LOCATION_KEY, campSpiritCatMouseBehaviorPlan, campSpiritCatShouldPrioritizeLocalMice, campSpiritCatWatchPosture, isCampSpiritCatAllowedExit, isCampSpiritCatCreature, isCampSpiritCatLocationKey } from "./campSpiritCat";
 import { isStarterCampOwlSafeLocationKey } from "./owlSigns";
 import { advancePassivePlayerHunger } from "./playerHunger";
 
@@ -1148,18 +1148,34 @@ async function tickCampSpiritCat(c: any, daypart: WorldDaypart) {
     return "stoodDown";
   }
 
-  const [localMice, hasActiveCampfire] = await Promise.all([
-    prisma.creature.count({
+  const [localMouse, hasActiveCampfire] = await Promise.all([
+    prisma.creature.findFirst({
       where: {
         locationId: c.locationId,
         isAlive: true,
         isGone: false,
+        isHidden: false,
         species: { key: "mouse" },
       },
+      orderBy: [
+        { hp: "asc" },
+        { id: "asc" },
+      ],
+      select: { id: true },
     }),
     Promise.resolve(Boolean(c.location.features?.some((feature: any) => feature.type === "MAGIC_CAMPFIRE" && feature.providesLight))),
   ]);
-  const hasLocalMice = localMice > 0;
+  const hasLocalMice = Boolean(localMouse);
+
+  if (localMouse && campSpiritCatMouseBehaviorPlan({ hasLocalMice }) === "pounce") {
+    await enqueueCreatureAction({
+      creatureId: c.id,
+      type: "ATTACK",
+      payload: { targetType: "creature", targetId: localMouse.id, mode: "mystery" },
+      durationMs: actionDurationMs("ATTACK", c.stamina),
+    });
+    return "queuedAttack";
+  }
 
   const campExits = c.location.exitsFrom.filter((exit: any) => isExit(exit) && isCampSpiritCatAllowedExit(exit));
   const exit = pick(campExits);

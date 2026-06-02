@@ -9,6 +9,8 @@ const {
   CAMP_SPIRIT_CAT_START_LOCATION_KEY,
   CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY,
   campSpiritCatCachePresenceLine,
+  campSpiritCatFullInspectionDetail,
+  campSpiritCatMouseBehaviorPlan,
   campSpiritCatSafeLocationKey,
   campSpiritCatShouldPrioritizeLocalMice,
   campSpiritCatWatchPosture,
@@ -18,6 +20,11 @@ const {
   isCampSpiritCatLocationKey,
 } = require("../../src/services/campSpiritCat");
 const { creatureSpeciesNameFields } = require("../../src/content/lexicon/worldLexicon");
+const {
+  predatorKillObserverText,
+  predatorMissObserverText,
+  predatorWoundObserverText,
+} = require("../../src/services/predatorActionText");
 
 const uniqueCreatures = JSON.parse(fs.readFileSync("prisma/data/world/uniqueCreatures.json", "utf8"));
 const seedSource = fs.readFileSync("prisma/seed.ts", "utf8");
@@ -66,6 +73,9 @@ assert.match(
 );
 assert.equal(campSpiritCatShouldPrioritizeLocalMice({ hasLocalMice: true }), true);
 assert.equal(campSpiritCatShouldPrioritizeLocalMice({ hasLocalMice: false }), false);
+assert.equal(campSpiritCatMouseBehaviorPlan({ hasLocalMice: true, roll: 0.1 }), "pounce");
+assert.equal(campSpiritCatMouseBehaviorPlan({ hasLocalMice: true, roll: 0.9 }), "watch");
+assert.equal(campSpiritCatMouseBehaviorPlan({ hasLocalMice: false, roll: 0.1 }), "watch");
 assert.match(
   campSpiritCatWatchPosture({ daypart: "night", hasActiveCampfire: true }),
   /межі світла й темряви/u,
@@ -83,6 +93,9 @@ assert.match(
   campSpiritCatWatchPosture({ locationKey: CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY, daypart: "day" }),
   /вище над табором/u,
 );
+assert.match(campSpiritCatFullInspectionDetail({ hasLocalMice: true }), /пружну лінію/u);
+assert.match(campSpiritCatFullInspectionDetail({ daypart: "night", hasActiveCampfire: true }), /Полум'я/u);
+assert.match(campSpiritCatFullInspectionDetail({ locationKey: CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY }), /щілини між дошками/u);
 assert.doesNotMatch(
   campSpiritCatWatchPosture({ daypart: "dusk" }),
   /NPC|debug|companion|pet|сова|вовк|лисиц/u,
@@ -110,14 +123,20 @@ assert.equal(
 );
 
 const briefInspection = campSpiritCatInspectionText("лежить біля межового вогню", "brief");
-const fullInspection = campSpiritCatInspectionText("лежить біля межового вогню", "full");
+const fullInspection = campSpiritCatInspectionText("лежить біля межового вогню", "full", { hasLocalMice: true });
 assert.match(briefInspection, /Кіт-бережник/u);
 assert.match(briefInspection, /межовий вогонь має власного сторожа/u);
 assert.doesNotMatch(briefInspection, /Якщо роздивитися уважніше/u);
 assert.match(fullInspection, /Кіт-бережник/u);
 assert.match(fullInspection, /не відповідає словами/u);
+assert.match(fullInspection, /пружну лінію/u);
 assert.match(fullInspection, /Якщо роздивитися уважніше/u);
 assert.ok(fullInspection.length > briefInspection.length + 100, "Full cat inspection should be substantially richer than brief look text");
 assert.doesNotMatch(`${briefInspection}\n${fullInspection}`, /HP|NPC|debug|companion|pet/u);
+
+assert.match(predatorMissObserverText(CAMP_SPIRIT_CAT_SPECIES_KEY, "миша", "миш"), /Кіт-бережник/u);
+assert.doesNotMatch(predatorMissObserverText(CAMP_SPIRIT_CAT_SPECIES_KEY, "миша", "миш"), /Щось/u);
+assert.match(predatorWoundObserverText(CAMP_SPIRIT_CAT_SPECIES_KEY, "миша", "миш"), /тиша біля скрині/u);
+assert.match(predatorKillObserverText(CAMP_SPIRIT_CAT_SPECIES_KEY, "миш"), /біля його лап/u);
 
 console.log("Camp spirit cat foundation OK");

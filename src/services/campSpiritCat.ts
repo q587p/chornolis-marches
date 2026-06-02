@@ -2,6 +2,7 @@ export const CAMP_SPIRIT_CAT_SPECIES_KEY = "camp_spirit_cat";
 export const CAMP_SPIRIT_CAT_NAME = "Кіт-бережник";
 export const CAMP_SPIRIT_CAT_START_LOCATION_KEY = "start_border_camp";
 export const CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY = "start_border_watchtower";
+export const CAMP_SPIRIT_CAT_MOUSE_POUNCE_CHANCE = 0.55;
 
 const CAMP_SPIRIT_CAT_LOCATION_KEYS = new Set([
   CAMP_SPIRIT_CAT_START_LOCATION_KEY,
@@ -43,6 +44,12 @@ export function campSpiritCatShouldPrioritizeLocalMice(context: { hasLocalMice?:
   return context.hasLocalMice === true;
 }
 
+export function campSpiritCatMouseBehaviorPlan(context: { hasLocalMice?: boolean; roll?: number } = {}) {
+  if (!context.hasLocalMice) return "watch";
+  const roll = Number.isFinite(context.roll) ? context.roll! : Math.random();
+  return roll < CAMP_SPIRIT_CAT_MOUSE_POUNCE_CHANCE ? "pounce" : "watch";
+}
+
 export function campSpiritCatCachePresenceLine(context: { isPresent?: boolean; hasLocalMice?: boolean } = {}) {
   if (!context.isPresent) return null;
   if (context.hasLocalMice) {
@@ -81,7 +88,18 @@ export function campSpiritCatWatchPosture(context: CampSpiritCatWatchContext = {
   return "тихо стереже межі табору";
 }
 
-export function campSpiritCatInspectionText(visibleAction: string, detail: "brief" | "full" = "full") {
+export function campSpiritCatFullInspectionDetail(context: CampSpiritCatWatchContext = {}) {
+  if (context.hasLocalMice) return "Найменше мишаче шарудіння збирає його в одну темну пружну лінію.";
+  if (context.daypart === "night" && context.hasActiveCampfire) return "Полум'я не робить його сонним: у світлі він здається ще уважнішим до темного краю.";
+  if (context.daypart === "night") return "У темряві його очі не світяться, але довше тримають те, що людський погляд губить.";
+  if (context.daypart === "dusk") return "У передвечір'ї він слухає не людей, а паузи між кроками.";
+  if (context.daypart === "dawn") return "На світанку він ніби звіряє, чи ніч не лишила в таборі чужого сліду.";
+  if (context.locationKey === CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY) return "Звідси він дивиться не ширше за людину, а нижче: під лавки, під сходи, в щілини між дошками.";
+  if (context.hasActiveCampfire) return "Тепло вогню його не розм'якшує; він просто знає, де табір має серце.";
+  return "Його спокій не схожий на дрімоту. Це радше сторожа, яка не потребує кроків.";
+}
+
+export function campSpiritCatInspectionText(visibleAction: string, detail: "brief" | "full" = "full", context: CampSpiritCatWatchContext = {}) {
   const lines = [
     CAMP_SPIRIT_CAT_NAME,
     "",
@@ -100,6 +118,7 @@ export function campSpiritCatInspectionText(visibleAction: string, detail: "brie
     "Це табірний дух у котячій подобі: безмовний, уважний і прив'язаний до меж вогню та людей.",
     "Шерсть здається темнішою там, де світло не дістає землі, а очі довго не відпускають край табору.",
     "Він не відповідає словами. Вуха, хвіст і довгий погляд кажуть тут більше, ніж розмова.",
+    campSpiritCatFullInspectionDetail(context),
     "Якщо просто глянути, видно тільки позу. Якщо роздивитися уважніше, стає ясніше, що він стереже не стежку, а саму межу.",
   ].join("\n");
 }

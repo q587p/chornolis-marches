@@ -7,6 +7,15 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.12 - Camp cat mouse pounce and attentive examination - 12026-06-02
+
+### Changed
+
+- Added a first same-location mouse pounce for the camp spirit cat in the starter camp/watchtower pair, queued through the existing attack action flow.
+- Added cat-specific miss, wound and kill copy for that local pounce so it no longer falls back to generic predator text.
+- Added contextual full-examination detail for the camp spirit cat based on local mice, daypart, active campfire light and watchtower position.
+- Updated camp cat ecology, onboarding and planning docs for the small behavior slice.
+
 ## 0.15.11 - Camp cat cache presence and mouse priority - 12026-06-02
 
 ### Changed
