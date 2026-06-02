@@ -125,7 +125,7 @@ export function beginnerCacheStockLines(data: unknown) {
     .map((key) => `- ${CACHE_ITEM_LABELS[key]}: ${amountPhrase(stock[key])}`);
 }
 
-export function beginnerCacheInspectionText(feature: { description?: string | null; data?: unknown }) {
+export function beginnerCacheInspectionText(feature: { description?: string | null; data?: unknown }, options: { catPresenceLine?: string | null } = {}) {
   const lines = beginnerCacheStockLines(feature.data);
   return [
     feature.description ?? "Під навісом стоїть спільна скриня для тих, хто щойно вийшов до Межі.",
@@ -133,6 +133,7 @@ export function beginnerCacheInspectionText(feature: { description?: string | nu
     lines.length
       ? ["Усередині зараз видно:", ...lines].join("\n")
       : "Скриня майже порожня. Можна лишити щось просте для наступного прибулого.",
+    ...(options.catPresenceLine ? ["", options.catPresenceLine] : []),
     "",
     "Можна взяти одну потрібну річ або залишити зайве. Це не крамниця й не нагорода: просто табір пам’ятає, що перша ніч буває темною.",
   ].join("\n");

@@ -18,8 +18,8 @@ function literalPattern(value) {
   assert.match(latestHtml, /id="archive"/);
   assert.match(latestHtml, /href="\/news\?entry=1"/);
   assert.match(latestHtml, /<strong>[^<]+<\/strong>/);
-  assert.doesNotMatch(latestHtml, /`\/track`/);
-  assert.match(latestHtml, /<a class="game-command" href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_track"><em>\/track<\/em><\/a>/);
+  assert.doesNotMatch(latestHtml, /`\/examine`/);
+  assert.match(latestHtml, /<a class="game-command" href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_examine"><em>\/examine<\/em><\/a>/);
 
   const olderHtml = await renderNewsPage("/news?entry=1");
   assert.match(olderHtml, /href="\/news"/);
@@ -48,8 +48,8 @@ function literalPattern(value) {
   assert.ok(buttons.some((button) => button.text === "Кінець ⏭️" && button.callback), "deep news archive page should link to the last page");
 
   assert.equal(
-    renderNewsInlineMarkdown("`Гукнути поруч` (`/yell`) /cleanupCreatures /unknown"),
-    '<em>Гукнути поруч</em> (<a class="game-command" href="https://t.me/Chornolis_bot?start=cmd_yell"><em>/yell</em></a>) /cleanupCreatures /unknown',
+    renderNewsInlineMarkdown("`Гукнути поруч` (`/yell`) `/say` `/build_campfire` `/light_campfire` `/douse_campfire` `/dismantle_campfire` /cleanupCreatures /unknown"),
+    '<em>Гукнути поруч</em> (<a class="game-command" href="https://t.me/Chornolis_bot?start=cmd_yell"><em>/yell</em></a>) <a class="game-command" href="https://t.me/Chornolis_bot?start=cmd_say"><em>/say</em></a> <a class="game-command" href="https://t.me/Chornolis_bot?start=cmd_build_campfire"><em>/build_campfire</em></a> <a class="game-command" href="https://t.me/Chornolis_bot?start=cmd_light_campfire"><em>/light_campfire</em></a> <a class="game-command" href="https://t.me/Chornolis_bot?start=cmd_douse_campfire"><em>/douse_campfire</em></a> <a class="game-command" href="https://t.me/Chornolis_bot?start=cmd_dismantle_campfire"><em>/dismantle_campfire</em></a> /cleanupCreatures /unknown',
   );
 
   console.log("Web news archive OK");

@@ -30,6 +30,16 @@ Add nonverbal cat ambient behavior for weather, daypart, fire/light and darkness
 - Add vague darkness/danger body-language lines without revealing exact hidden targets.
 - Add cooldowns so ambient lines do not spam.
 
+## 0.15.10 Partial Slice
+
+0.15.10 adds a small contextual full-examination layer for `Кіт-бережник`:
+
+- full `examine` can now add a different body-language detail when local mice are present;
+- night, dusk, dawn, active campfire light and watchtower position can also shape the extra full-examination line;
+- brief `look` stays compact and does not expose the richer context detail.
+
+Weather-specific reactions and cooldowned ambient proactive lines remain deferred until the weather/ambient line surfaces need them.
+
 ## Out of scope
 
 - Exact warning system.

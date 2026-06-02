@@ -478,7 +478,7 @@ async function submitCookMeat(bot: Bot, ctx: any) {
   await submitInventoryQueuedAction(bot, ctx, player, "COOK", {}, "Не вдалося підсмажити м'ясо.");
 }
 
-async function submitBuildCampfire(bot: Bot, ctx: any) {
+export async function submitBuildCampfire(bot: Bot, ctx: any) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
@@ -494,7 +494,7 @@ async function submitBuildCampfire(bot: Bot, ctx: any) {
   }
 }
 
-async function submitLightCampfire(bot: Bot, ctx: any) {
+export async function submitLightCampfire(bot: Bot, ctx: any) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
@@ -506,7 +506,7 @@ async function submitLightCampfire(bot: Bot, ctx: any) {
   await submitInventoryQueuedAction(bot, ctx, player, "LIGHT_CAMPFIRE", { featureId }, "Не вдалося запалити вогонь.");
 }
 
-async function submitDouseCampfire(bot: Bot, ctx: any) {
+export async function submitDouseCampfire(bot: Bot, ctx: any) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
@@ -518,7 +518,7 @@ async function submitDouseCampfire(bot: Bot, ctx: any) {
   await submitInventoryQueuedAction(bot, ctx, player, "DOUSE_CAMPFIRE", { featureId }, "Не вдалося погасити вогнище.");
 }
 
-async function submitDismantleCampfire(bot: Bot, ctx: any) {
+export async function submitDismantleCampfire(bot: Bot, ctx: any) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
@@ -659,7 +659,7 @@ async function submitPutItem(bot: Bot, ctx: any, item: string, amount: number | 
   }
 }
 
-async function submitSay(bot: Bot, ctx: any, text: string) {
+export async function submitSay(bot: Bot, ctx: any, text: string) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
@@ -775,7 +775,7 @@ export async function submitYell(bot: Bot, ctx: any, text: string) {
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const safeText = stripUnsafeText(text);
-  if (!safeText) return void (await ctx.reply("Напиши так: yell текст або гукнути текст"));
+  if (!safeText) return void (await ctx.reply("Напиши так: <i>yell</i> текст або <i>гукнути</i> текст", { parse_mode: "HTML" }));
 
   const durationMs = actionDurationMs("SAY", player.stamina) * 2;
   try {

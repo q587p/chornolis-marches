@@ -75,10 +75,11 @@ Observation learning remains the main `0.15` line. Darkness, distance and light 
 - CAT-001: `0.15.3` adds the camp spirit cat foundation as a visible, inspectable, non-speaking camp-bound spirit. It is intentionally not a pet/companion system and does not yet hunt, steal meat or accept gifts.
 - CAT-002: `0.15.4` keeps the camp spirit cat inside the starter camp/watchtower pair during ordinary world ticks and corrects it back to camp if it somehow leaves.
 - GIVE-001: generic `give` should land before CAT-004/CAT-005 feeding UI, so `Дати сире м'ясо` becomes a reusable item-transfer path instead of a cat-only social action.
-- CAT-003: the next cat behavior slice should add camp-local mouse priority without letting the cat leave the starter camp or replace wilderness predators.
+- CAT-003: `0.15.10` adds the first pre-hunt camp-local mouse priority and same-location camp/watchtower mouse pounce through the existing attack queue with cat-specific copy, while still keeping pursuit outside camp, non-mouse prey and ordinary predator status out of scope.
+- CAT-006/CAT-007: `0.15.10` also adds representative full-examination body-language details for local mice, daypart/fire and the watchtower, plus focused camp-cat assertions. Weather-specific reactions, feed/shoo tests and longer simulation tuning remain future work.
 - CAT-009: `0.15.6` adds the first quiet camp-cat watch-posture helper without proactive spam, exact danger detection, hunting or pet behavior.
 - OWL-003: `0.15.6` adds a narrow starter-camp/watchtower owl boundary so nocturnal mouse pressure stays useful near camp edges without making the camp/watchtower pair feel like an immediate predator trap.
-- CAT-010: keep camp-cat beginner-cache presence near the front as a small atmospheric camp task without turning the cat into a pet, loot source or exact danger detector.
+- CAT-010: `0.15.10` adds quiet Кіт-бережник presence copy to the starter shared-cache inspection when the cat is nearby, without turning the cat into a pet, loot source or exact danger detector.
 - SOC-008: `0.15.5` adds nearby speech ranges with `/yell` / `гукнути`, reaching the current location plus visible adjacent exits while keeping `/shout` region-wide.
 - NOTIF-001: `0.15.8` adds short coalescing for visible non-player movement notifications so camp spirits/NPCs do not produce repeated arrival/departure messages during quick vertical moves; `0.15.9` adds safe target buttons only for still-present living, visible, non-animal creatures at flush time.
 - ANIMAL-001: `0.15.8` adds the first directed-speech reaction slice for animals; `0.15.9` adds the first repeated-wolf-speech local danger escalation. Keep richer context-sensitive behavior and direct predator-vs-player damage for later combat work.

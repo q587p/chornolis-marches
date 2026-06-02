@@ -13,7 +13,12 @@ export const SAFE_GAME_COMMAND_PAYLOADS = {
   "/weather": "cmd_weather",
   "/inventory": "cmd_inventory",
   "/inv": "cmd_inventory",
+  "/say": "cmd_say",
   "/yell": "cmd_yell",
+  "/build_campfire": "cmd_build_campfire",
+  "/light_campfire": "cmd_light_campfire",
+  "/douse_campfire": "cmd_douse_campfire",
+  "/dismantle_campfire": "cmd_dismantle_campfire",
 } as const;
 
 export type SafeGameCommand = keyof typeof SAFE_GAME_COMMAND_PAYLOADS;

@@ -25,7 +25,7 @@ import {
   type PreparedCharacterName,
 } from "../services/characterNames";
 import { disablePlayerAuto, requestOrEnablePlayerAuto, replyStopPlayerAuto } from "./auto";
-import { submitTrack, submitYell } from "./aliases";
+import { submitBuildCampfire, submitDismantleCampfire, submitDouseCampfire, submitLightCampfire, submitSay, submitTrack, submitYell } from "./aliases";
 import { sendHelp } from "./help";
 import { sendNews } from "./news";
 import { parseStartActionPayload, type StartActionPayload } from "../input/startPayloads";
@@ -687,8 +687,33 @@ async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayl
     return true;
   }
 
+  if (action === "say") {
+    await submitSay(bot, ctx, "");
+    return true;
+  }
+
   if (action === "yell") {
     await submitYell(bot, ctx, "");
+    return true;
+  }
+
+  if (action === "buildCampfire") {
+    await submitBuildCampfire(bot, ctx);
+    return true;
+  }
+
+  if (action === "lightCampfire") {
+    await submitLightCampfire(bot, ctx);
+    return true;
+  }
+
+  if (action === "douseCampfire") {
+    await submitDouseCampfire(bot, ctx);
+    return true;
+  }
+
+  if (action === "dismantleCampfire") {
+    await submitDismantleCampfire(bot, ctx);
     return true;
   }
 

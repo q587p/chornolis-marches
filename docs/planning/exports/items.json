@@ -313,7 +313,7 @@
   {
     "id": "CAT-003",
     "title": "Spirit cat mouse hunting priority inside camp",
-    "status": "next",
+    "status": "in_progress",
     "type": "feature",
     "area": "ecology",
     "priority": "medium",
@@ -446,7 +446,7 @@
   {
     "id": "CAT-010",
     "title": "Camp cat cache and newcomer presence",
-    "status": "backlog",
+    "status": "testing",
     "type": "feature",
     "area": "onboarding",
     "priority": "low",
@@ -500,6 +500,24 @@
     ],
     "exports": {},
     "file": "docs/planning/items/CMD-002-put-items-into-containers.md"
+  },
+  {
+    "id": "CMD-003",
+    "title": "Public news command deep-link audit",
+    "status": "backlog",
+    "type": "technical",
+    "area": "commands",
+    "priority": "high",
+    "tags": [
+      "commands",
+      "news",
+      "telegram",
+      "deep-links",
+      "web"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/CMD-003-news-command-deep-link-audit.md"
   },
   {
     "id": "COMBAT-001",
