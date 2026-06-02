@@ -19,6 +19,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Updated location feature inspection, `/help`, `/commands`, deep-link handling and regression coverage for the new dismantle path.
 - Scribe/admin `/addCampfire` now creates a lit handmade campfire by default, while `/addCampfire debug` keeps the old service-fire path.
 - Added `/addLitTorch`, `/addItem`, a scribe/admin inventory-items submenu, and coordinate teleport buttons on `/locationAll`.
+- Polished short Telegram usage prompts so command verbs such as `give`, `дати`, `say`, `whisper`, `reply` and `shout` are visually emphasized in examples.
 
 ## 0.15.12 - Ukrainian give parser and rest recovery polish - 12026-06-02
 

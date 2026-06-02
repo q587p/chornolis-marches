@@ -677,7 +677,7 @@ export async function submitSay(bot: Bot, ctx: any, text: string) {
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const safeText = stripUnsafeText(text).slice(0, 300);
-  if (!safeText) return void (await ctx.reply("Напиши так: сказати текст"));
+  if (!safeText) return void (await ctx.reply("Напиши так: <i>сказати</i> текст", { parse_mode: "HTML" }));
 
   const durationMs = actionDurationMs("SAY", player.stamina);
   try {
@@ -694,12 +694,12 @@ async function submitWhisper(bot: Bot, ctx: any, text: string) {
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const safeText = stripUnsafeText(text);
-  if (!safeText) return void (await ctx.reply("Напиши так: whisper персонаж текст"));
+  if (!safeText) return void (await ctx.reply("Напиши так: <i>whisper</i> персонаж текст", { parse_mode: "HTML" }));
 
   const durationMs = actionDurationMs("SAY", player.stamina);
   try {
     const payload = await parseSpeechTarget(safeText, player.currentLocationId, player.id);
-    if (!payload.targetId) return void (await ctx.reply("Напиши так: whisper персонаж текст. Ціль має бути видимим персонажем або істотою поруч."));
+    if (!payload.targetId) return void (await ctx.reply("Напиши так: <i>whisper</i> персонаж текст. Ціль має бути видимим персонажем або істотою поруч.", { parse_mode: "HTML" }));
     if (payload.targetType !== "player" && payload.targetType !== "creature") return void (await ctx.reply("Шепіт зараз можна спрямувати тільки комусь видимому поруч."));
     const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "SAY", payload: { ...payload, mode: "whisper" }, durationMs, chatId: ctx.chat?.id });
     await sendActionSubmitFeedback(ctx, player.id, result);
@@ -756,7 +756,7 @@ async function submitReply(bot: Bot, ctx: any, text: string) {
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const safeText = stripUnsafeText(text);
-  if (!safeText) return void (await ctx.reply("Напиши так: reply текст"));
+  if (!safeText) return void (await ctx.reply("Напиши так: <i>reply</i> текст", { parse_mode: "HTML" }));
 
   const target = await lastAddressedSpeakerName(player);
   if (!target) return void (await ctx.reply("Поки немає репліки, на яку можна відповісти. Спробуйте звичайне /say або зверніться до видимого персонажа."));
@@ -804,7 +804,7 @@ async function submitShout(bot: Bot, ctx: any, text: string) {
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const safeText = stripUnsafeText(text);
-  if (!safeText) return void (await ctx.reply("Напиши так: shout текст"));
+  if (!safeText) return void (await ctx.reply("Напиши так: <i>shout</i> текст", { parse_mode: "HTML" }));
 
   const durationMs = actionDurationMs("SAY", player.stamina) * 2;
   try {

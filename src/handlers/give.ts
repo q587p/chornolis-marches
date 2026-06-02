@@ -10,7 +10,8 @@ import { recordVisibleItemAction } from "../services/visibleItemActions";
 import { spendPlayerStaminaAmount } from "../services/actionRecovery";
 import { replyToActionError } from "../utils/actionErrorReply";
 
-const GIVE_USAGE_TEXT = "Напишіть так: give сире м'ясо коту або дати сире м'ясо коту.";
+const GIVE_USAGE_TEXT = "Напишіть так: <i>give</i> сире м'ясо коту або <i>дати</i> сире м'ясо коту.";
+const GIVE_USAGE_OPTIONS = { parse_mode: "HTML" as const };
 
 export function registerGiveHandlers(bot: Bot) {
   bot.command("give", async (ctx) => {
@@ -21,12 +22,11 @@ export function registerGiveHandlers(bot: Bot) {
       return;
     }
 
-    await ctx.reply(GIVE_USAGE_TEXT);
+    await ctx.reply(GIVE_USAGE_TEXT, GIVE_USAGE_OPTIONS);
   });
 }
 
-function unsupportedGiveItemText(item: string) {
-  if (!item.trim()) return GIVE_USAGE_TEXT;
+function unsupportedGiveItemText() {
   return "Поки можна передати тільки сире м'ясо Коту-бережнику. Інші обміни лишаються на майбутнє.";
 }
 
@@ -59,16 +59,16 @@ export async function submitGiveRawMeatToCreature(bot: Bot, ctx: any, targetCrea
 export async function submitGiveItem(bot: Bot, ctx: any, item: string, target: string, amount?: number) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
-  if (!item.trim() || !target.trim()) return void (await ctx.reply(GIVE_USAGE_TEXT));
+  if (!item.trim() || !target.trim()) return void (await ctx.reply(GIVE_USAGE_TEXT, GIVE_USAGE_OPTIONS));
   if (amount !== undefined && amount !== 1) return void (await ctx.reply("Поки можна передати тільки одну річ за раз."));
 
   const resourceKey = inventoryResourceKeyFromText(item);
-  if (!isSupportedGiveResourceKey(resourceKey)) return void (await ctx.reply(unsupportedGiveItemText(item)));
+  if (!isSupportedGiveResourceKey(resourceKey)) return void (await ctx.reply(unsupportedGiveItemText()));
 
   const targets = await visibleTextTargets(player.currentLocationId, player.id);
   const match = bestTargetMatch(target, targets);
   if (match.kind === "none") {
-    return void (await ctx.reply(`Поруч не видно, кому це передати.\n\n${GIVE_USAGE_TEXT}`));
+    return void (await ctx.reply(`Поруч не видно, кому це передати.\n\n${GIVE_USAGE_TEXT}`, GIVE_USAGE_OPTIONS));
   }
   if (match.kind === "many") {
     return void (await ctx.reply(`Знайшов кілька подібних цілей. Уточніть назвою або номером.\n\n${targetListText(match.targets)}`));

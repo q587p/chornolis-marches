@@ -50,6 +50,8 @@ If a slash command has a no-argument usage hint, its English/MUD-style and Ukrai
 
 Actual Telegram keyboard button labels should stay short and clean: Ukrainian label plus icon where helpful. Use slash commands in parentheses in help, commands, news, release notes and docs, but do not append `(/command)` hints inside reply or inline keyboard button text. In `news.md`, prefer naming the working command beside each player-facing action, for example `Речі` (`/inv`) or `Підпалити вогнище` (`/light_campfire`), so missing aliases are caught before publication.
 
+Short usage prompts like `Напиши так:` or `Напишіть так:` should visually emphasize the command verb with Telegram HTML italics. Example: `Напишіть так: <i>give</i> сире м'ясо коту або <i>дати</i> сире м'ясо коту.` Keep the example readable and do not italicize the whole sentence.
+
 - `/look`
 - `/examine`
 - `/me`
