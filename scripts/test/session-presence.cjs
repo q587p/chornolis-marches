@@ -14,6 +14,7 @@ const {
   isAutoAfkDue,
   isAutoEndSessionDue,
   playerPresenceDisplaySuffix,
+  renderSessionReturnHint,
   sessionPresenceLabel,
   sessionPresenceReasonLabel,
 } = require("../../src/services/sessionPresence");
@@ -72,6 +73,21 @@ assert.equal(playerPresenceDisplaySuffix({ sessionPresence: "AFK", pronoun: "THE
 assert.equal(playerPresenceDisplaySuffix({ sessionPresence: "ACTIVE" }), "");
 assert.equal(playerPresenceDisplaySuffix({ sessionPresence: "ENDED" }), "");
 assert.equal(playerPresenceDisplaySuffix(null), "");
+
+assert.equal(renderSessionReturnHint(null), null);
+assert.equal(renderSessionReturnHint({ from: "ACTIVE", since: new Date("2026-05-30T12:00:00.000Z") }), null);
+assert.ok(
+  renderSessionReturnHint(
+    { from: "AFK", since: new Date("2026-05-30T12:00:00.000Z") },
+    new Date("2026-05-30T12:13:00.000Z")
+  ).includes("13 хв")
+);
+assert.ok(
+  renderSessionReturnHint(
+    { from: "ENDED", since: new Date("2026-05-30T12:00:00.000Z") },
+    new Date("2026-05-30T13:01:00.000Z")
+  ).includes("сесія була завершена")
+);
 
 assert.equal(sessionPresenceReasonLabel("manual_afk"), "ручний AFK (/afk або кнопка)");
 assert.equal(sessionPresenceReasonLabel("auto_afk"), "авто-AFK через неактивність");

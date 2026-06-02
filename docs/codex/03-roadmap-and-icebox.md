@@ -89,7 +89,7 @@ Do not jump straight into full combat, deep crafting, economy or PvP after the t
 
 ## World/calendar ideas
 
-- Current world flavor noted: **587 літо після Великого Відступу — Рік Сича під Тихим Вітром**.
+- Current world flavor noted: **587 літо після Великого Відступу — рік Сича під Тихим Вітром**.
 - Possible calendar idea: 13 lunar circles and 13 year-creatures.
 
 ## Dream tutorial / guide ideas

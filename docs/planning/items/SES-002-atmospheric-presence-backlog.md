@@ -46,9 +46,13 @@ After the practical AFK / End Session / Auto-AFK MVP is stable, make presence fe
 
 ```text
 Ви знову прислухаєтеся до Чорнолісу.
-Ви біля заболоченої стежки. На півдні — туманна просіка, на півночі — темний вільшаник.
+  Ви біля заболоченої стежки. На півдні — туманна просіка, на півночі — темний вільшаник.
 ```
 
+- Release/news return hint:
+  - remember which public news/release entry a player has already seen;
+  - when the player returns from AFK or ended session, softly mention if world updates appeared while they were away;
+  - keep it compact and point to `Новини` (`/news`) instead of dumping a full changelog into `/start`.
 - Later notification preferences:
   - no reminders;
   - minimal reminders;

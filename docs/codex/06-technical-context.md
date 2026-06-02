@@ -94,6 +94,6 @@ User wanted a unified time system around version `0.7.5/0.7.6` ideas:
 
 Previously noted world flavor:
 
-- **587 літо після Великого Відступу — Рік Сича під Тихим Вітром**.
+- **587 літо після Великого Відступу — рік Сича під Тихим Вітром**.
 
 Treat as a desired worldbuilding direction unless the current repo says otherwise.

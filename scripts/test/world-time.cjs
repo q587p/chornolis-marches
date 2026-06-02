@@ -11,6 +11,7 @@ const {
   worldTimeSnapshotFromAbsoluteMinute,
 } = require("../../src/data/worldClock");
 const {
+  getWorldYearName,
   renderApproximateWorldClock,
   renderCurrentWorldTime,
   renderWorldDreamDateLine,
@@ -89,10 +90,13 @@ assert.equal(renderApproximateWorldClock({ hour: 17, minute: 55 }), "майже 
 const dreamDate = renderWorldDreamDateLine(start);
 assert.ok(dreamDate.includes("587"));
 assert.ok(dreamDate.includes("Коло Зеленого Шуму"));
+assert.ok(dreamDate.includes("— рік"));
+assert.ok(dreamDate.includes(", Коло Зеленого Шуму"));
 assert.ok(dreamDate.includes("17 день"));
 assert.ok(!dreamDate.includes("17:00"));
 assert.ok(!dreamDate.includes("Погода"));
 assert.ok(!dreamDate.includes("передвечір"));
+assert.ok(getWorldYearName(start.year).startsWith("рік "));
 
 assert.equal(renderWeatherLine(worldTimeSnapshotFromAbsoluteMinute(START_WORLD_ABSOLUTE_MINUTE, "rain", 70)), "дощ; густа");
 assert.ok(renderCurrentWeather(worldTimeSnapshotFromAbsoluteMinute(START_WORLD_ABSOLUTE_MINUTE, "mist", 55)).includes("Погода Порубіжжя"));
