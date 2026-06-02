@@ -168,6 +168,8 @@ Canonical intent for the first MVP:
 
 Future `GIVE-002` slices should broaden the same approach beyond the raw-meat/camp-cat case: player/NPC gifts, quest hand-ins, item-instance ambiguity and barter should reuse this parser shape instead of adding one-off verbs.
 
+Current implementation watchpoint: the first cat `give` is intentionally immediate and writes a visible item action only after a successful transfer. This is acceptable for a tiny camp gesture, but broader `give` / transfer / barter work should either move the transfer into the action queue or explicitly separate "instant small gestures" from time-costing item transfers.
+
 Compatibility aliases:
 
 - `/feed_raw_meat` → parse as `give raw meat cat`;
