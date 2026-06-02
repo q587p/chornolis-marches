@@ -2741,7 +2741,7 @@
   {
     "id": "ONB-009",
     "title": "Tutorial dream ground item cleanup",
-    "status": "proposed",
+    "status": "testing",
     "type": "tech",
     "area": "onboarding",
     "priority": "high",
@@ -4280,7 +4280,7 @@
   {
     "id": "WORLD-004",
     "title": "Time/calendar/weather command split",
-    "status": "backlog",
+    "status": "testing",
     "type": "ux",
     "area": "world_time",
     "priority": "medium",

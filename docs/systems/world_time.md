@@ -70,7 +70,8 @@ Do not use `Date.getHours()`, server timezone, player timezone or real-world cal
 
 - persistent internal world-clock state;
 - daypart helper from internal world minutes;
-- `/time` reading actual internal world state;
+- `/time` reading the concise current daypart/approximate world-time state;
+- `/calendar` reading the fuller year/lunar-circle/day/moon state;
 - 13 lunar circles per year;
 - 28 days per lunar circle;
 - moon phase label;
@@ -86,7 +87,7 @@ Do not use `Date.getHours()`, server timezone, player timezone or real-world cal
 - `WorldState.absoluteMinute` stores the current internal Chornolis minute.
 - `WorldState.lastAdvancedAt` stores the real timestamp used only to calculate elapsed time since the previous advancement.
 - `worldTick()` advances the stored minute count through the shared world-time service.
-- `/time` reads the stored/derived world-clock state and shows the current year, lunar circle, day, approximate clock phrase, daypart, moon phase, weather and a compact light label. Ordinary player-facing time should not expose exact minutes; keep minute-level labels in scribe/admin debug surfaces such as `/timeDebug`.
+- `/time` reads the stored/derived world-clock state and shows only the current daypart, approximate clock phrase, light label and a short daypart mood line. `/calendar` shows the fuller year, lunar circle, day and moon phase. Ordinary player-facing time should not expose exact minutes; keep minute-level labels in scribe/admin debug surfaces such as `/timeDebug`.
 - The heartbeat emits compact player-facing notices when the internal daypart changes: dawn, day, dusk or night. These notices describe the world getting lighter or darker, but they do not yet apply full darkness/visibility penalties. Daypart notices are waking-world messages only: tutorial dream locations and future dream layers at `z <= -10` should not receive them, so ordinary world time does not interrupt dream scenes.
 - Seed creates missing world-clock storage without rewinding existing time; `/reset world` and `/reset full` return the world clock to the canonical starter timestamp.
 
@@ -94,7 +95,7 @@ Do not use `Date.getHours()`, server timezone, player timezone or real-world cal
 
 - `WorldState.weatherKey`, `weatherIntensity` and `weatherEndsAtMinute` store a tiny internal weather state.
 - Weather advances through the shared world-time service and writes non-proactive `WorldEvent` rows when it changes.
-- `/time` and `/weather` both read through the shared world-time service, so either command may advance stored weather state and create non-proactive weather-change events when enough internal time has elapsed.
+- `/time`, `/calendar` and `/weather` all read through the shared world-time service, so any of them may advance stored weather state and create non-proactive weather-change events when enough internal time has elapsed.
 - `/weather` shows the current Chornolis weather as a compact atmospheric readout.
 - The shared light snapshot helper combines daypart, moon illumination, weather modifiers and optional local active light into one reusable result for future visibility consumers.
 

@@ -8,6 +8,7 @@ import { safeAnswerCallbackQuery } from "../utils/telegram";
 const ALLOWED_SLEEP_ALIAS_KINDS = new Set<ParsedAliasCommand["kind"]>([
   "wake",
   "time",
+  "calendar",
   "weather",
   "help",
   "news",
@@ -22,6 +23,7 @@ const ALLOWED_SLEEP_TEXT_COMMANDS = new Set([
   "wake",
   "wakeup",
   "time",
+  "calendar",
   "weather",
   "help",
   "h",
@@ -43,6 +45,8 @@ const ALLOWED_SLEEP_TEXT_COMMANDS = new Set([
   "прокинутися",
   "прокинутись",
   "час",
+  "календар",
+  "дата",
   "погода",
   "допомога",
   "команди",
@@ -67,6 +71,8 @@ const ALLOWED_SLEEP_CALLBACK_PREFIXES = [
 const ALLOWED_SLEEP_CALLBACKS = new Set([
   "sleep:wake",
   "time:show",
+  "calendar:show",
+  "weather:show",
   "settings:show",
   "settings:back",
   "settings:hint-dismiss",

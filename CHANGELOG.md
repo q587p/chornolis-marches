@@ -7,6 +7,20 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.18 - Tutorial cleanup and calendar split - 12026-06-03
+
+### Added
+
+- Added a public `/calendar` command, text aliases (`calendar`, `календар`, `дата`, `місячне коло`) and safe deep-link payload support for `cmd_calendar`.
+- Added tutorial-time prompt buttons for `Час`, `Погода` and `Календар`, so the dream lesson teaches the three world-state surfaces separately.
+- Added `scripts/test/tutorial-ground-items.cjs` to ensure unrelated waking-world ground items stay hidden in tutorial dream locations.
+
+### Changed
+
+- Reduced `/time` to a concise current daypart, approximate world-time and light readout; the year, lunar circle, day and moon-phase readout moved to `/calendar`.
+- Restricted tutorial dream ground-resource visibility to authored tutorial loose resources (`berries` and `herbs`), hiding unrelated pickable resources such as twigs, torches, meat and coins inside tutorial locations.
+- Updated `/help`, input-alias docs, calendar docs, onboarding docs and planning notes for the split time/calendar/weather surfaces.
+
 ## 0.15.17 - Observation cues and quiet omens - 12026-06-02
 
 ### Added

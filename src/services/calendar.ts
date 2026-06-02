@@ -1,6 +1,5 @@
 import { START_WORLD_ABSOLUTE_MINUTE, worldTimeSnapshotFromAbsoluteMinute, type WorldTimeSnapshot } from "../data/worldClock";
 import { lightSnapshotFromWorldTime } from "./lightSnapshot";
-import { renderWeatherLine } from "./weather";
 
 export type YearBeast = {
   nominative: string;
@@ -179,16 +178,26 @@ export function renderCurrentWorldTime(snapshot = worldTimeSnapshotFromAbsoluteM
   return [
     "🌒 Час Порубіжжя",
     "",
+    `Час доби: ${daypartLabel}.`,
+    `Межовий час: ${renderApproximateWorldClock(snapshot)}.`,
+    `Світло: ${light.label}.`,
+    "",
+    worldDaypartMood(snapshot),
+  ].join("\n");
+}
+
+export function renderCurrentWorldCalendar(snapshot = worldTimeSnapshotFromAbsoluteMinute(START_WORLD_ABSOLUTE_MINUTE)) {
+  const daypartLabel = snapshot.daypart === "day" && snapshot.hour >= 16 ? "передвечір'я" : snapshot.daypartLabel;
+  return [
+    "📅 Календар Порубіжжя",
+    "",
     `${formatWorldYear(snapshot.year)}.`,
     `Пора: ${CURRENT_WORLD_SEASON}.`,
     `Місячне коло: ${snapshot.lunarCircleName}.`,
     `День кола: ${snapshot.dayOfCircle}.`,
     `Час доби: ${daypartLabel}.`,
-    `Межовий час: ${renderApproximateWorldClock(snapshot)}.`,
     `Місяць: ${snapshot.moonPhaseLabel}.`,
-    `Погода: ${renderWeatherLine(snapshot)}.`,
-    `Світло: ${light.label}.`,
     "",
-    worldDaypartMood(snapshot),
+    "Коло пам’ятає більше, ніж окремий вечір, але не відкриває всього за один погляд.",
   ].join("\n");
 }

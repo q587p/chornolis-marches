@@ -29,6 +29,7 @@ export type ParsedAliasCommand =
   | { kind: "chat"; mode?: ChatAliasMode; window?: string }
   | { kind: "all"; showDead?: boolean }
   | { kind: "time" }
+  | { kind: "calendar" }
   | { kind: "weather" }
   | { kind: "menu" }
   | { kind: "settings" }
@@ -300,6 +301,11 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "час": { kind: "time" },
   "котра година": { kind: "time" },
   "який час": { kind: "time" },
+  calendar: { kind: "calendar" },
+  "календар": { kind: "calendar" },
+  "дата": { kind: "calendar" },
+  "місячне коло": { kind: "calendar" },
+  "яке коло": { kind: "calendar" },
   weather: { kind: "weather" },
   "погода": { kind: "weather" },
   "яка погода": { kind: "weather" },
@@ -851,6 +857,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "who") return "/who";
   if (parsed.kind === "all") return "/all";
   if (parsed.kind === "time") return "/time";
+  if (parsed.kind === "calendar") return "/calendar";
   if (parsed.kind === "weather") return "/weather";
   if (parsed.kind === "menu") return "/menu";
   if (parsed.kind === "settings") return "/settings";

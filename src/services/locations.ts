@@ -1257,7 +1257,10 @@ export async function renderLocationFeatureInteraction(
   if (isTutorialRestSeatFeature(feature)) keyboard.text("🧘 Присісти і відпочити", "rest:start").row();
   if (isTutorialInsideFeature(feature)) keyboard.text("🕳️ Всередину", "move:INSIDE").row();
   if (isTutorialOutsideFeature(feature)) keyboard.text("🕳️ Назовні", "move:OUTSIDE").row();
-  if (featureData(feature).tutorial_time_prompt === true) keyboard.text("🌒 Час", "time:show").row();
+  if (featureData(feature).tutorial_time_prompt === true) {
+    keyboard.text("🌒 Час", "time:show").text("🌦 Погода", "weather:show").row();
+    keyboard.text("📅 Календар", "calendar:show").row();
+  }
   if (isTutorialEndFeature(feature)) keyboard.text("✅ Закінчити навчання", "tutorial:end").row();
   if (featureData(feature).tutorial_wake_prompt === true) keyboard.text("🌅 Прокинутися", "tutorial:wake").row();
   if (isTorchSourceFeature(feature)) keyboard.text("🕯 Взяти факел", `torch:take:${feature.id}`).row();

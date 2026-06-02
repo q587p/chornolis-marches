@@ -1,7 +1,7 @@
 ---
 id: ONB-009
 title: Tutorial dream ground item cleanup
-status: proposed
+status: testing
 type: tech
 area: onboarding
 priority: high
@@ -35,6 +35,15 @@ The tutorial dream is a controlled teaching space. If ordinary dropped items, le
 - Make `/tutorialReset`, new-character tutorial entry, and any future dream restart path leave the dream in a clean authored state.
 - Add a focused regression test that unrelated ground items in tutorial dream cells do not appear in ordinary tutorial `/look` / `/examine` output after the cleanup path.
 
+## 0.15.18 Slice
+
+- Hide unrelated visible ground resources in tutorial dream locations through the shared `isVisibleGroundResource(...)` boundary.
+- Keep only authored tutorial loose resources (`berries`, `herbs`) visible there for the current foraging lesson.
+- Preserve ordinary waking-world pickup visibility outside tutorial locations.
+- Add `scripts/test/tutorial-ground-items.cjs` to cover the tutorial/waking split without needing database setup.
+
+This first slice is a visibility and normal-pickup guard. It does not delete old database rows that may already exist in dream cells; a later origin-marking or cleanup command can remove persisted leftovers if needed.
+
 ## Out of Scope
 
 - Full item-instance lifetime or dream-item transfer system.
@@ -54,6 +63,6 @@ The tutorial dream is a controlled teaching space. If ordinary dropped items, le
 
 - `node scripts/test/tutorial-gate.cjs`
 - `node scripts/test/tutorial-voices.cjs`
-- focused tutorial ground-item cleanup test
+- `node scripts/test/tutorial-ground-items.cjs`
 - `npm test`
 - `npm run build`

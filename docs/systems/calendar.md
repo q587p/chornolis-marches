@@ -28,6 +28,12 @@ This is intentionally not tied to Christianity, the Holocene calendar, Trypillia
 
 ## Player-facing calendar surface
 
+`/time` is now the quick current-time surface: it shows the current daypart, an approximate in-world clock phrase, the current light label and one short daypart mood line. It should stay concise enough to use repeatedly.
+
+`/calendar` is the fuller public date surface. It shows the year, season, lunar circle, day of circle, daypart and moon phase without weather or exact debug clock data. Ukrainian aliases include `календар`, `дата` and `місячне коло`.
+
+`/weather` remains separate: sky, rain, fog, storm and visibility-adjacent weather text should go there instead of turning `/time` back into an all-purpose world-state card.
+
 The starter camp has an inspectable `Береста кіл року` feature. It lists the lunar circles in order without numbers, as a local memory aid rather than a technical table, and adds short seasonal work notes: warmth and repairs in cold circles, paths and herbs in thawing circles, hay/fishing/honey in green and hot circles, supplies and caution before the dark half of the year.
 
 Scribe/admin debug surfaces may show the exact ordinal circle number, e.g. `місячне коло 5/13 — Коло Зеленого Шуму`, but ordinary player-facing calendar copy should usually prefer names, order and atmosphere over raw numbering.
@@ -57,7 +63,8 @@ The current format is:
 The year name should be usable in:
 
 - `/start` and onboarding text;
-- `/time`;
+- `/calendar`;
+- `/time` only when a short current-time line is enough;
 - `/weather`;
 - news;
 - rumors;

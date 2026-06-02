@@ -32,7 +32,7 @@ import { buildAllPage, buildChatLogPage, buildStatBrief, buildWhoPage } from "./
 import { renderDepletedVegetationInspection, renderLocationBrief, renderLocationExits, renderLocationFeatureInteraction, renderLocationFeatureInteractionByQuery, renderLocationGlance, shakeTreeAtCurrentLocation } from "../services/locations";
 import { buildNewsIndexPage } from "./news";
 import { hideReplyKeyboard, showMainKeyboard, showMenu } from "./menu";
-import { showTime, showWeather } from "./time";
+import { showCalendar, showTime, showWeather } from "./time";
 import { submitMove as submitCanonicalMove } from "./movement";
 import { submitGather as submitCanonicalGather } from "./gather";
 import { submitPosture } from "./posture";
@@ -970,7 +970,9 @@ async function resolveVisibleTargetForAlias(ctx: any, targetQuery: string) {
   return { player, locationId, targetRef: match.target, target };
 }
 
-function pickupResourceKey(target: string): VisibleGroundResourceKey | null {
+type PickupResourceQueryKey = VisibleGroundResourceKey | "mushrooms";
+
+function pickupResourceKey(target: string): PickupResourceQueryKey | null {
   if (["torch", "torches", "факел", "факели", "факела", "факелів"].includes(target)) return "torch";
   if (["lit torch", "lit_torch", "burning torch", "запалений факел", "палаючий факел"].includes(target)) return "lit_torch";
   if (["twigs", "twig", "хмиз"].includes(target)) return "twigs";
@@ -984,7 +986,7 @@ function pickupResourceKey(target: string): VisibleGroundResourceKey | null {
   return null;
 }
 
-function naturalResourcePickupHint(key: VisibleGroundResourceKey) {
+function naturalResourcePickupHint(key: PickupResourceQueryKey) {
   if (key === "berries") return "Ягоди тут не лежать окремо. Якщо вони ростуть у цій місцині, їх можна зібрати: напишіть «зібрати ягоди».";
   if (key === "mushrooms") return "Гриби тут не лежать окремо. Якщо вони ростуть у цій місцині, їх можна зібрати: напишіть «зібрати гриби».";
   if (key === "herbs") return "Лікарські трави тут не лежать окремо. Якщо вони ростуть у цій місцині, їх можна зібрати: напишіть «зібрати трави».";
@@ -1069,6 +1071,10 @@ async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
       const filterResourceKey = allFilter ? pickupResourceKey(allFilter) : null;
 
       if (filterResourceKey) {
+        if (filterResourceKey === "mushrooms") {
+          await ctx.reply(naturalResourcePickupHint(filterResourceKey));
+          return;
+        }
         const result = await pickUpAllVisibleGroundResourcesByKey(player.id, filterResourceKey);
         picked.push(...result.items);
         locationId = result.locationId;
@@ -1118,7 +1124,11 @@ async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
     try {
       assertCanPerformPhysicalAction(player, "PICK_UP");
-      const item = resourceKey === "berries" || resourceKey === "mushrooms" || resourceKey === "herbs"
+      if (resourceKey === "mushrooms") {
+        await ctx.reply(naturalResourcePickupHint(resourceKey));
+        return;
+      }
+      const item = resourceKey === "berries" || resourceKey === "herbs"
         ? await pickUpFirstVisibleGroundResourceByKey(player.id, resourceKey)
         : await pickUpFirstGroundResourceByKey(player.id, resourceKey);
       await recordVisibleItemAction(bot, {
@@ -1463,6 +1473,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "chat") return replyWithChat(ctx, parsed.mode, parsed.window);
     if (parsed.kind === "all") return replyWithAll(ctx, parsed.showDead);
     if (parsed.kind === "time") return showTime(ctx);
+    if (parsed.kind === "calendar") return showCalendar(ctx);
     if (parsed.kind === "weather") return showWeather(ctx);
     if (parsed.kind === "menu") return showMenu(ctx);
     if (parsed.kind === "settings") return showSettings(ctx);

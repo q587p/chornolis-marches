@@ -3,7 +3,7 @@ import { resourceTypeDisplayName } from "./corpses";
 import { assertCanPerformPhysicalAction } from "./postureRules";
 
 const PICKABLE_RESOURCE_KEYS = ["torch", "lit_torch", "twigs", "raw_meat", "cooked_meat", "shah", "grivna"] as const;
-const TUTORIAL_LOOSE_RESOURCE_KEYS = ["berries", "herbs", "mushrooms"] as const;
+const TUTORIAL_LOOSE_RESOURCE_KEYS = ["berries", "herbs"] as const;
 export type PickableResourceKey = (typeof PICKABLE_RESOURCE_KEYS)[number];
 export type TutorialLooseResourceKey = (typeof TUTORIAL_LOOSE_RESOURCE_KEYS)[number];
 export type VisibleGroundResourceKey = PickableResourceKey | TutorialLooseResourceKey;
@@ -24,7 +24,10 @@ export function isVisibleGroundResource(
   resource: { amount: number; resourceType: { key: string } },
   location?: { key?: string | null; z?: number | null; region?: { key?: string | null } | null } | null,
 ) {
-  return resource.amount > 0 && (isPickableResourceKey(resource.resourceType.key) || (isTutorialLocationLike(location) && isTutorialLooseResourceKey(resource.resourceType.key)));
+  if (resource.amount <= 0) return false;
+  const key = resource.resourceType.key;
+  if (isTutorialLocationLike(location)) return isTutorialLooseResourceKey(key);
+  return isPickableResourceKey(key);
 }
 
 export function canPickUpGroundItem(player: { hp: number; stamina: number; isResting: boolean; posture?: string | null; sleepState?: string | null }) {
