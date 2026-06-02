@@ -1614,7 +1614,7 @@
     "status": "next",
     "type": "ux",
     "area": "learning",
-    "priority": "medium",
+    "priority": "high",
     "tags": [
       "learning",
       "technical-details",
@@ -1625,6 +1625,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/LEARN-001-D.md"
+  },
+  {
+    "id": "LEARN-002",
+    "title": "Skill effects on stamina, success and quality",
+    "status": "next",
+    "type": "feature",
+    "area": "learning",
+    "priority": "high",
+    "tags": [
+      "learning",
+      "skills",
+      "stamina",
+      "success",
+      "balance"
+    ],
+    "depends_on": [
+      "LEARN-001-C"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/LEARN-002-skill-effects-cost-success-and-quality.md"
   },
   {
     "id": "LOOP-001-A",
@@ -2787,7 +2807,7 @@
     "status": "backlog",
     "type": "feature",
     "area": "progression",
-    "priority": "medium",
+    "priority": "high",
     "tags": [
       "skills",
       "observation",

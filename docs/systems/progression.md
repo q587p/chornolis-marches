@@ -28,6 +28,19 @@ After the first dream tutorial, the next progression priority is an observation-
 
 These placeholders should be replaced by the shared learning service once `LEARN-001-C` and the observation-learning MVP are active.
 
+## Near-Term Skill Effects
+
+The next learning layer should make skill growth matter mechanically. A message such as `Навичка <b>атаки</b> підросла.` should not remain purely decorative once persistent skill storage exists.
+
+Preferred first effects are bounded and action-specific:
+
+- better success chance for practiced actions;
+- slightly lower stamina cost for familiar repeated work, with a hard floor so actions never become free;
+- better yield or quality where the action already has variable output;
+- softer failure consequences where the design allows it.
+
+Early candidates are attack/hunting, freshening/butchering, gathering/herbalism, cooking and attentive inspection/observation. Ordinary player-facing text should stay qualitative; exact modifiers belong only in technical or scribe/admin views.
+
 ## Principles
 
 - No universal character level.

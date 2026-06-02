@@ -14,6 +14,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added `docs/content/signs-dreams-and-quotations.md` as a content/design bible for recurring signs, quotation guardrails, owl/dream/fire/fishing/map motifs and local rumor seeds.
 - Added Codex-ready planning items for the liminal signs layer, dream-threshold owl refrain, conditional owl examine copy, magical campfire examine copy and future deep-water fishing lines.
 - Added `OBS-003` as a near-term 0.15.x planning slice for danger-aware `/examine` atmosphere when local danger rises, while exact danger numbers stay technical/scribe-only.
+- Added `LEARN-002` and raised the skill-learning priorities so the next real skill layer defines bounded effects on success chance, stamina efficiency, result quality/yield or failure softness instead of leaving skill-growth messages decorative.
 - Promoted the riverbank fisher NPC/tiny-slice planning path to high priority so a first visible fisher profession moment can follow the observation-learning line sooner.
 - Added `/call_scribes` / `call scribes` / Ukrainian aliases as an auditable manual rescue request for players whose ordinary `/respawn` return is no longer available.
 - Added Scribe/admin notifications for return-help requests, with an inline return-sign action that cancels the player's active queue/rest/auto state and returns them to the start location when a Scribe applies it.

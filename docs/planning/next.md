@@ -89,7 +89,8 @@ Observation learning remains the main `0.15` line. Darkness, distance and light 
 - OBS-003: add danger-aware `/examine` atmosphere for raised local danger, so players can sense unsafe pressure qualitatively while exact danger numbers stay technical/scribe-only.
 - FISH-002: promote the riverbank fisher tiny slice as a near-term living-profession step: one named fisher or visible fisher action near authored riverbank/bridge locations, quiet professional behavior, and first observation/conversation hints without a full fishing economy.
 - RAVEN-001: add a near-term dream-raven presence near the carrion ravine: rare night/dusk/dawn appearance, one-time per-character recognition using local arrival date wording, and varied local `/examine` activity lines without a full NPC/dialogue system.
-- LEARN-001: minimal learning storage decision.
+- LEARN-001: minimal learning storage decision and helper foundation; keep raw progress technical-only once effects exist.
+- LEARN-002: first bounded skill effects. After the text-only `Навичка ... підросла` bridge, skill growth should affect success chance, stamina efficiency, result quality/yield or failure softness for actions such as attack, freshening, gathering, cooking and attentive inspection.
 - OBS-001: observe action and herbalist learning moment.
 - SOC-002: follow intent MVP, so a player can `Слідувати` / `/follow` a visible being before full `Гурт` movement exists.
 - TRACK-LEARN-001: track-reading / animal movement learning moment.
