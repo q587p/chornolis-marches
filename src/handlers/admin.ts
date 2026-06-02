@@ -31,6 +31,7 @@ import { COOKED_MEAT_KEY, ensureMeatResourceTypes, RAW_MEAT_KEY } from "../servi
 import { WEAPON_DEFINITIONS, isWeaponResourceKey } from "../services/weapons";
 import { parseTeleportCoordinateCommand } from "../services/adminTeleportLinks";
 import { approveScribeReturnRequest, buildScribeReturnAuditText } from "../services/scribeReturnHelp";
+import { escapeHtml } from "../utils/text";
 
 function normalizeLookup(value: string | null | undefined) {
   return String(value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
@@ -38,6 +39,19 @@ function normalizeLookup(value: string | null | undefined) {
 
 function playerDisplayName(player: { nameNominative?: string | null; firstName?: string | null; username?: string | null; id: number }) {
   return player.nameNominative ?? player.firstName ?? player.username ?? `#${player.id}`;
+}
+
+export function tutorialResetScribeReplyText(playerName: string, movedCurrent: boolean) {
+  const resetNote = movedCurrent
+    ? "Персонажа повернуто на початок сну."
+    : "Наступний <i>навчальний сон</i> (/sleep_tutorial) почнеться з початку.";
+  return `🌙 Навчальний сон скинуто для ${escapeHtml(playerName)}. ${resetNote}`;
+}
+
+export function tutorialResetPlayerNoticeText(movedCurrent: boolean) {
+  return movedCurrent
+    ? "🌙 Писар Порубіжжя повернув ваш навчальний сон до початку."
+    : "🌙 Писар Порубіжжя повернув ваш навчальний сон до початку. Ви можете знову ввійти через <i>навчальний сон</i> (/sleep_tutorial).";
 }
 
 async function resolvePlayerForAdmin(ctx: any, rawTarget: string) {
@@ -291,6 +305,67 @@ export const ADMIN_HELP_TEXT = [
   "Повний службовий список доступний тільки писарям Порубіжжя. Права писаря можна отримати через прихований локально налаштований секрет.",
 ].join("\n");
 
+const ADMIN_HELP_SECTION_DEFINITIONS = [
+  { key: "overview", label: "Огляди", title: "Огляди й службові сторінки" },
+  { key: "chat", label: "Журнали", title: "Журнали й репліки" },
+  { key: "players", label: "Персонажі", title: "Персонажі й доступ" },
+  { key: "world_add", label: "Додати у світ", title: "Додавання у світ" },
+  { key: "cleanup", label: "Прибирання", title: "Прибирання й тестові стани" },
+  { key: "danger", label: "Важелі", title: "Небезпечні світові важелі" },
+] as const;
+
+export const ADMIN_HELP_SECTIONS = (() => {
+  const lines = ADMIN_HELP_TEXT.split("\n");
+  return ADMIN_HELP_SECTION_DEFINITIONS.map((definition, index) => {
+    const start = lines.indexOf(definition.title);
+    const nextTitle = ADMIN_HELP_SECTION_DEFINITIONS[index + 1]?.title;
+    const end = nextTitle ? lines.indexOf(nextTitle) : lines.length;
+    const sectionLines = start >= 0 ? lines.slice(start, end >= 0 ? end : lines.length) : [definition.title];
+    return {
+      ...definition,
+      text: sectionLines.join("\n").trim(),
+    };
+  });
+})();
+
+export const ADMIN_HELP_INDEX_TEXT = [
+  "🛠 Довідка Писарів Порубіжжя",
+  "",
+  "Звичайні ігрові команди дивіться в /help. Тут лишено службові й небезпечні інструменти.",
+  "Писарські slash-команди можна писати й без початкового `/`: наприклад `teleport forest_07_00` працює як `/teleport forest_07_00`.",
+  "",
+  "Оберіть розділ нижче. Так довідка не губиться в одному надто довгому сувої.",
+].join("\n");
+
+function adminHelpIndexKeyboard() {
+  const keyboard = new InlineKeyboard();
+  for (const section of ADMIN_HELP_SECTIONS) {
+    keyboard.text(section.label, `adminHelp:${section.key}`).row();
+  }
+  return keyboard;
+}
+
+function adminHelpSectionKeyboard() {
+  return new InlineKeyboard().text("🛠 До розділів", "adminHelp:index");
+}
+
+async function replyAdminHelpIndex(ctx: any) {
+  await ctx.reply(ADMIN_HELP_INDEX_TEXT, {
+    reply_markup: adminHelpIndexKeyboard(),
+  });
+}
+
+async function replyAdminHelpSection(ctx: any, sectionKey: string) {
+  const section = ADMIN_HELP_SECTIONS.find((candidate) => candidate.key === sectionKey);
+  if (!section) {
+    await replyAdminHelpIndex(ctx);
+    return;
+  }
+  await ctx.reply(section.text, {
+    reply_markup: adminHelpSectionKeyboard(),
+  });
+}
+
 export function registerAdminHandlers(bot: Bot) {
   async function replyAdminMenu(ctx: any) {
     if (!(await requireScribeAdmin(ctx))) return;
@@ -487,7 +562,7 @@ export function registerAdminHandlers(bot: Bot) {
   bot.command(["weatherSet", "weatherset"], (ctx) => runWeatherSetCommand(ctx));
   bot.hears(WEATHER_SET_TEXT_COMMAND, (ctx) => runWeatherSetCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
   bot.hears(["🌿 Ресурси"], replyAdminResourcesMenu);
-  bot.hears(["🎒 Речі", "Речі"], replyAdminItemsMenu);
+  bot.hears(["🎒 Додати речі", "Додати речі", "🎒 Речі для Писаря", "Речі для Писаря"], replyAdminItemsMenu);
   bot.hears(["🔥 Вогонь"], replyAdminFireMenu);
   bot.hears(["🐾 Істоти", "Істоти"], replyAdminCreaturesMenu);
   bot.hears(["🧭 Телепорт", "Телепорт", "🧭 Телепорт (/teleport)", "Телепорт (/teleport)"], replyTeleportMenu);
@@ -606,15 +681,25 @@ export function registerAdminHandlers(bot: Bot) {
 
   bot.command(["adminHelp", "adminhelp"], async (ctx) => {
     if (!(await requireScribeAdmin(ctx))) return;
-    await ctx.reply(ADMIN_HELP_TEXT);
+    await replyAdminHelpIndex(ctx);
   });
   bot.hears(ADMIN_HELP_TEXT_COMMAND, async (ctx) => {
     if (!(await requireScribeAdmin(ctx))) return;
-    await ctx.reply(ADMIN_HELP_TEXT);
+    await replyAdminHelpIndex(ctx);
   });
-  bot.hears(["🛠 Повна довідка", "Повна довідка", "🛠 Повна довідка (/adminHelp)", "Повна довідка (/adminHelp)"], async (ctx) => {
+  bot.hears(["🛠 Довідка Писаря", "Довідка Писаря", "🛠 Повна довідка", "Повна довідка", "🛠 Повна довідка (/adminHelp)", "Повна довідка (/adminHelp)"], async (ctx) => {
     if (!(await requireScribeAdmin(ctx))) return;
-    await ctx.reply(ADMIN_HELP_TEXT);
+    await replyAdminHelpIndex(ctx);
+  });
+  bot.callbackQuery(/^adminHelp:(index|[a-z_]+)$/, async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+    await ctx.answerCallbackQuery().catch(() => undefined);
+    const key = String(ctx.match?.[1] ?? "index");
+    if (key === "index") {
+      await replyAdminHelpIndex(ctx);
+      return;
+    }
+    await replyAdminHelpSection(ctx, key);
   });
 
   async function runAdminSetCommand(ctx: any, rawPassword = String(ctx.match ?? "").trim()) {
@@ -731,13 +816,17 @@ export function registerAdminHandlers(bot: Bot) {
       ? { reply_markup: targetKeyboard }
       : undefined;
 
-    await ctx.reply(`🌙 Навчальний сон скинуто для ${playerDisplayName(player)}. ${reset.movedCurrent ? "Персонажа повернуто на початок сну." : "Наступний /sleep tutorial почнеться з початку."}`, selfResetOptions);
+    await ctx.reply(tutorialResetScribeReplyText(playerDisplayName(player), reset.movedCurrent), {
+      parse_mode: "HTML",
+      ...(selfResetOptions ?? {}),
+    });
 
     if (Number.isSafeInteger(telegramId) && telegramId !== ctx.from?.id) {
-      await bot.api.sendMessage(telegramId, reset.movedCurrent
-        ? "🌙 Писар Порубіжжя повернув ваш навчальний сон до початку."
-        : "🌙 Писар Порубіжжя повернув ваш навчальний сон до початку. Ви можете знову ввійти через /sleep tutorial.",
-        targetKeyboard ? { reply_markup: targetKeyboard } : undefined
+      await bot.api.sendMessage(telegramId, tutorialResetPlayerNoticeText(reset.movedCurrent),
+        {
+          parse_mode: "HTML",
+          ...(targetKeyboard ? { reply_markup: targetKeyboard } : {}),
+        }
       ).catch(() => undefined);
     }
   }

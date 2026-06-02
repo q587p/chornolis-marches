@@ -1,6 +1,7 @@
 import { Bot, InlineKeyboard } from "grammy";
 import fs from "fs/promises";
 import path from "path";
+import { escapeHtml } from "../utils/text";
 
 const NEWS_ENTRY_PAGE_SIZE = 8;
 const NEWS_TEXT_MAX_CHARS = 3300;
@@ -58,6 +59,36 @@ function splitTextIntoPages(text: string, maxChars: number) {
 
   if (current.length > 0) pages.push(current.join("\n"));
   return pages.length ? pages : ["Новин поки немає."];
+}
+
+const NEWS_INLINE_TOKEN_PATTERN = /`([^`\n]+)`/g;
+
+function renderNewsInlineForTelegram(text: string) {
+  let output = "";
+  let lastIndex = 0;
+
+  for (const match of text.matchAll(NEWS_INLINE_TOKEN_PATTERN)) {
+    const index = match.index ?? 0;
+    const token = match[1] ?? "";
+    output += escapeHtml(text.slice(lastIndex, index));
+    output += token.startsWith("/") ? escapeHtml(token) : `<i>${escapeHtml(token)}</i>`;
+    lastIndex = index + match[0].length;
+  }
+
+  output += escapeHtml(text.slice(lastIndex));
+  return output;
+}
+
+export function renderNewsMarkdownForTelegram(text: string) {
+  return text
+    .split("\n")
+    .map((line) => {
+      if (line.startsWith("## ")) return `<b>${escapeHtml(line.replace(/^##\s+/, "").trim())}</b>`;
+      if (line.startsWith("- ")) return `• ${renderNewsInlineForTelegram(line.slice(2))}`;
+      if (line.trim() === "---") return "—";
+      return renderNewsInlineForTelegram(line);
+    })
+    .join("\n");
 }
 
 export function parseNewsListPageRequest(text?: string | null) {
@@ -118,7 +149,7 @@ export async function buildNewsIndexPage(requestedListPage: number) {
   ].join("\n");
 
   return {
-    text,
+    text: renderNewsMarkdownForTelegram(text),
     keyboard: buildNewsIndexKeyboard(entries, listPage, totalListPages),
   };
 }
@@ -152,13 +183,13 @@ async function buildNewsEntryPage(entryIndex: number, requestedEntryPage: number
   const prefix = entryPages.length > 1 ? `📰 ${entry.title}\nСторінка ${entryPage + 1}/${entryPages.length}\n\n` : "";
 
   return {
-    text: `${prefix}${entryPages[entryPage]}`,
+    text: renderNewsMarkdownForTelegram(`${prefix}${entryPages[entryPage]}`),
     keyboard: buildNewsEntryKeyboard(entry.index, entryPage, entryPages.length, listPage, entries.length),
   };
 }
 
 async function editOrReply(ctx: any, text: string, keyboard?: InlineKeyboard) {
-  const options = keyboard ? { reply_markup: keyboard } : undefined;
+  const options = keyboard ? { parse_mode: "HTML" as const, reply_markup: keyboard } : { parse_mode: "HTML" as const };
 
   if (ctx.callbackQuery?.message) {
     await ctx.editMessageText(text, options);
@@ -170,7 +201,7 @@ async function editOrReply(ctx: any, text: string, keyboard?: InlineKeyboard) {
 
 export async function sendNews(ctx: any) {
   const page = await buildNewsIndexPage(parseNewsListPageRequest(ctx.message?.text));
-  await ctx.reply(page.text, page.keyboard ? { reply_markup: page.keyboard } : undefined);
+  await ctx.reply(page.text, page.keyboard ? { parse_mode: "HTML", reply_markup: page.keyboard } : { parse_mode: "HTML" });
 }
 
 export function registerNewsHandlers(bot: Bot) {

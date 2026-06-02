@@ -276,6 +276,26 @@ for (const key of [
   assertKnown(locationKeys, key, `Tutorial action ladder location should exist: ${key}`);
 }
 
+const tutorialActionLadderFeatures = features.filter((item) => typeof item.data?.tutorial_action_ladder === "string");
+assert.ok(tutorialActionLadderFeatures.length >= 3, "Tutorial action ladder should have inspectable lesson features");
+for (const feature of tutorialActionLadderFeatures) {
+  assert.ok(
+    typeof feature.data?.examine_summary === "string" && feature.data.examine_summary.trim().length > 0,
+    `Tutorial action ladder feature should have examine summary: ${feature.key}`,
+  );
+}
+
+const tutorialSignFeatures = features.filter((item) => item.locationKey === "dream_tutorial_signs");
+assert.equal(tutorialSignFeatures.length, 3, "Tutorial signs location copy describes three signs, so it should expose three sign features");
+for (const key of ["dream_tutorial_back_sign", "dream_tutorial_silent_sign", "dream_tutorial_sign_post"]) {
+  const feature = features.find((item) => item.key === key);
+  assert.ok(feature, `Tutorial sign feature should exist: ${key}`);
+  assert.equal(feature.locationKey, "dream_tutorial_signs", `Tutorial sign feature should stay in signs location: ${key}`);
+  assert.ok(typeof feature.description === "string" && feature.description.trim().length > 0, `Tutorial sign feature should have full inspect text: ${key}`);
+  assert.ok(typeof feature.data?.examine_summary === "string" && feature.data.examine_summary.trim().length > 0, `Tutorial sign feature should have examine summary: ${key}`);
+  assert.ok(Array.isArray(feature.data?.aliases) && feature.data.aliases.length > 0, `Tutorial sign feature should have aliases: ${key}`);
+}
+
 for (const [fromKey, toKey, direction] of [
   ["dream_tutorial_safety", "dream_tutorial_attention_path", "SOUTH"],
   ["dream_tutorial_attention_path", "dream_tutorial_signs", "SOUTH"],

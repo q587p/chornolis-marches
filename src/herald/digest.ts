@@ -3,6 +3,8 @@ import { prisma } from "../db";
 import { getChatLog, publicChatLog } from "../services/chatLog";
 import { getPublicEcologySignStats } from "../services/ecologyStats";
 import { getStatusData } from "../services/status";
+import { formatWorldYear } from "../services/calendar";
+import { START_WORLD_ABSOLUTE_MINUTE, worldTimeSnapshotFromAbsoluteMinute, type WorldTimeSnapshot } from "../data/worldClock";
 
 export type WorldDigest = {
   title: string;
@@ -28,6 +30,27 @@ function digestHash(title: string, body: string) {
 
 function digestSourceId(now = new Date()) {
   return now.toISOString().slice(0, 13);
+}
+
+export function formatWorldDigestDateLine(snapshot: Pick<WorldTimeSnapshot, "year" | "lunarCircleName" | "dayOfCircle">) {
+  return `Дата запису: ${formatWorldYear(snapshot.year)}, ${snapshot.lunarCircleName}, ${snapshot.dayOfCircle} день.`;
+}
+
+async function currentWorldDigestDateLine() {
+  const state = await prisma.worldState.findUnique({
+    where: { id: 1 },
+    select: {
+      absoluteMinute: true,
+      weatherKey: true,
+      weatherIntensity: true,
+    },
+  });
+  const snapshot = worldTimeSnapshotFromAbsoluteMinute(
+    state?.absoluteMinute ?? START_WORLD_ABSOLUTE_MINUTE,
+    state?.weatherKey ?? undefined,
+    state?.weatherIntensity ?? undefined,
+  );
+  return formatWorldDigestDateLine(snapshot);
 }
 
 function strongestAnimalPresence(rows: Array<{ name: string; alive: number }>) {
@@ -91,22 +114,27 @@ async function latestSafeEventSigns(limit = 2) {
 }
 
 export async function buildWorldDigest(now = new Date()): Promise<WorldDigest> {
-  const [status, ecology, chat, eventSigns] = await Promise.all([
+  const [status, ecology, chat, eventSigns, dateLine] = await Promise.all([
     getStatusData(),
     getPublicEcologySignStats(),
     getChatLog({ mode: "time", window: 24, page: 0, perPage: 5 }).then(publicChatLog),
     latestSafeEventSigns(),
+    currentWorldDigestDateLine(),
   ]);
 
-  const title = "Запис із краю Чорнолісу";
+  const title = "🌘 Запис із краю Чорнолісу";
+  const eventLines = eventSigns.slice(0, 2).map((line) => `Ще одна зарубка: ${line}.`);
   const bodyLines = [
-    "🌘 Запис із краю Чорнолісу",
+    dateLine,
     "",
     animalPressureLine(ecology),
+    "",
     resourceLine(ecology),
+    "",
     voicesLine(chat.total),
+    "",
     worldShapeLine(status),
-    ...eventSigns.slice(0, 2).map((line) => `Ще одна зарубка: ${line}.`),
+    ...(eventLines.length ? ["", ...eventLines] : []),
     "",
     "Тим, хто давно не виходив за межу, варто пам’ятати: стежки не чекають незмінними.",
   ];

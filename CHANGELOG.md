@@ -7,6 +7,25 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.17 - Observation cues and quiet omens - 12026-06-02
+
+### Added
+
+- Added qualitative danger-aware `/examine` cues for raised local danger, using calm/low/medium/high atmospheric bands without exposing raw danger values to ordinary players.
+- Added empty-find `/examine` cues for starter-adjacent and calm regions so an attentive but currently fruitless search feels local and temporary rather than like a barren world.
+- Added focused `observation-cues` tests for effective danger, recent-attack pressure, empty-find copy and conditional owl-sign copy.
+- Added high-priority `ONB-009` planning for cleaning unrelated ground items/resources out of the tutorial dream.
+
+### Changed
+
+- Owl-sign full inspection now has stronger dusk/night and dawn condition copy while keeping ordinary day inspection quiet and avoiding direct dream-threshold quotation reuse.
+- Scribe `/adminHelp` now opens a compact section index instead of sending the full command list as one overlong Telegram message.
+- Tutorial and lucid dream locations now use stable dream light by default, so daypart/weather darkness does not hide tutorial descriptions, targets, tracks or ground objects.
+- Tutorial action-ladder features now include concise `/examine` summaries, and the signs lesson exposes the three signs described in prose instead of only one generic sign.
+- Game deep links like `/start cmd_look` and `/start cmd_examine` now read the payload from real Telegram command text as well as the grammY command match, and only avoid action routing while the character is actually in onboarding/tutorial space.
+- Herald world digest previews/posts now avoid duplicate `Запис із краю Чорнолісу` headings, include an in-world date line and separate digest lines into readable paragraphs.
+- Updated planning notes for `OBS-003`, `OWL-004`, `ONB-009` and the remaining `LOOT-001` follow-up scope.
+
 ## 0.15.16 - Money and low-risk loot MVP - 12026-06-02
 
 ### Added

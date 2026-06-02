@@ -38,6 +38,8 @@ import { visibilityDarknessText, visibilityPresenceText, visibilityRulesForLocat
 import { getCurrentWorldTimeSnapshot } from "./worldTime";
 import { owlSignDetailLine, owlSignInspectionText } from "./owlSigns";
 import { isStrangeTotemFeature, strangeTotemDetailLine, strangeTotemInspectionText } from "./strangeTotems";
+import { effectiveLocationDanger, locationDangerExamineCue } from "./locationDanger";
+import { emptySmallFindExamineCue } from "./locationExamineCues";
 import {
   beginnerCacheContributeButtonLabel,
   beginnerCacheContributeAllButtonLabel,
@@ -968,6 +970,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
   const lockedExits = await lockedExitDirections(location.id);
   const targets = visibleTargets(location, viewerPlayerId, { showAnimalAge: true, showTechnicalDetails, showCorpses: visibility.showGroundObjects });
+  const visibleLivingCreatureCount = location.creatures.filter(isVisibleLivingCreature).length;
   const activeActions = visibility.showNearbyDetails ? await activeActionsForTargets(targets) : new Map<string, any>();
   const actionLabeledTargets = targets.map((target) => ({
     ...target,
@@ -1003,12 +1006,15 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   const hiddenGroundText = !visibility.showGroundObjects && (corpses.length || location.resources.some((r) => isVisibleGroundResource(r, location)))
     ? `\n\n<i>${escapeHtml(visibilityPresenceText(visibility, "ground"))}</i>`
     : "";
+  const emptyFindCue = visibility.showGroundObjects && visibility.showResourceDetails && !lyingLines.length && !resourceLines.length && !tracksHint.hasTracks
+    ? emptySmallFindExamineCue(location.region.key)
+    : null;
   const lyingText = lyingLines.length
     ? `\n\nЛежить:\n${lyingLines
         .slice(0, 8)
         .map((line) => `- ${escapeHtml(line)}`)
         .join("\n")}${lyingLines.length > 8 ? `\n- ...і ще ${lyingLines.length - 8}` : ""}`
-    : hiddenGroundText;
+    : hiddenGroundText || (emptyFindCue ? `\n\n<i>${escapeHtml(emptyFindCue)}</i>` : "");
   const keyboard = new InlineKeyboard();
   const resources = visibility.showResourceDetails ? await resourceButtonData(location.resources, viewerPlayerId) : [];
 
@@ -1035,6 +1041,8 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   const technicalLocationText = showTechnicalDetails
     ? `\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}`
     : "";
+  const dangerCue = locationDangerExamineCue(effectiveLocationDanger(location.dangerLevel, location.players.length + visibleLivingCreatureCount, location.features));
+  const dangerText = dangerCue ? `\n\n<i>${escapeHtml(dangerCue)}</i>` : "";
 
   const tracksText = tracksHint.hasTracks
     ? visibility.showTracks ? tracksHint.text : `\n\n<i>${escapeHtml(visibilityPresenceText(visibility, "tracks"))}</i>`
@@ -1044,7 +1052,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     : `<i>${escapeHtml(visibilityDarknessText(visibility))}</i>`;
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${descriptionText}${featuresText(location, "details", showTechnicalDetails)}\n\n<i>Ви роздивляєтесь уважніше.</i>${technicalLocationText}\n\n${escapeHtml(detailedExitsText(location.exitsFrom, lockedExits))}${resourcesText}${charactersText}${tracksText}${lyingText}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${descriptionText}${featuresText(location, "details", showTechnicalDetails)}\n\n<i>Ви роздивляєтесь уважніше.</i>${dangerText}${technicalLocationText}\n\n${escapeHtml(detailedExitsText(location.exitsFrom, lockedExits))}${resourcesText}${charactersText}${tracksText}${lyingText}`,
     keyboard,
   };
 }

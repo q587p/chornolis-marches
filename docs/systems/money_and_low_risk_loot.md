@@ -37,7 +37,9 @@ Starter money finds should remain modest and authored:
 - do not seed tutorial-dream money;
 - keep amounts small enough that careful looking feels rewarded without turning nearby camp into a money route.
 
-Future low-risk loot can add small objects, empty-search atmosphere and item lifetime rules, but this MVP intentionally stops before generic treasure tables.
+Future low-risk loot can add small objects, item lifetime rules and offering hooks, but this MVP intentionally stops before generic treasure tables.
+
+The 0.15.17 observation-cue follow-up adds a first empty-search atmosphere line during full `/examine` when the current location has no visible small finds, gatherable resources, corpses or tracks. This is copy only: it does not create hidden loot and it does not turn every location into a search table.
 
 ## Gather Bonus
 

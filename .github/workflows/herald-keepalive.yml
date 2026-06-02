@@ -1,0 +1,28 @@
+name: Herald keepalive
+
+on:
+  schedule:
+    - cron: "7,17,27,37,47,57 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping-herald:
+    name: Ping Herald health endpoint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      HERALD_HEALTH_URL: ${{ secrets.HERALD_HEALTH_URL || vars.HERALD_HEALTH_URL }}
+    steps:
+      - name: Check configured URL
+        run: |
+          if [ -z "$HERALD_HEALTH_URL" ]; then
+            echo "HERALD_HEALTH_URL is not configured as a repository secret or variable."
+            exit 1
+          fi
+
+      - name: Ping Herald health endpoint
+        run: |
+          curl --fail --silent --show-error --max-time 15 --retry 2 --retry-delay 3 "$HERALD_HEALTH_URL"

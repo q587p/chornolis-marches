@@ -1,6 +1,7 @@
 import type { HeraldNewsEntry } from "./newsMarkdown";
 import { linkHeraldGameCommandMentions } from "./gameLinks";
 import { sanitizeHeraldChannelText } from "./safety";
+import { escapeHtml } from "../utils/text";
 
 export type HeraldPublicationMessageSource = {
   id?: number;
@@ -38,7 +39,21 @@ export function formatHeraldPublicationPlainMessage(publication: HeraldPublicati
   ].join("\n"));
 }
 
+function linkArchivePublicationMessage(text: string) {
+  const titlePrefix = "Архівний запис: ";
+  return text
+    .split("\n")
+    .map((line) => {
+      if (!line.startsWith(titlePrefix)) return linkHeraldGameCommandMentions(line);
+      return `${escapeHtml(titlePrefix)}<b>${escapeHtml(line.slice(titlePrefix.length))}</b>`;
+    })
+    .join("\n");
+}
+
 export function formatHeraldPublicationMessage(publication: HeraldPublicationMessageSource) {
+  if (publication.sourceType === "NEWS_MD_ARCHIVE") {
+    return linkArchivePublicationMessage(formatHeraldPublicationPlainMessage(publication));
+  }
   return linkHeraldGameCommandMentions(formatHeraldPublicationPlainMessage(publication));
 }
 

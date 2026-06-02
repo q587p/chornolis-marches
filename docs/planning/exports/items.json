@@ -832,6 +832,28 @@
     "file": "docs/planning/items/ECO-008-herbivore-carrion-and-mouse-cannibalism.md"
   },
   {
+    "id": "ECO-009",
+    "title": "Seasonal ecology and environment variation",
+    "status": "backlog",
+    "type": "system",
+    "area": "ecology",
+    "priority": "low",
+    "tags": [
+      "ecology",
+      "seasons",
+      "calendar",
+      "resources",
+      "animals",
+      "atmosphere"
+    ],
+    "depends_on": [
+      "CAL-001",
+      "WORLD-001-E"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ECO-009-seasonal-ecology-and-environment.md"
+  },
+  {
     "id": "ECON-001",
     "title": "Barter and trade",
     "status": "backlog",
@@ -2211,7 +2233,7 @@
   {
     "id": "OBS-003",
     "title": "Danger-aware examine cues",
-    "status": "next",
+    "status": "done",
     "type": "feature",
     "area": "learning",
     "priority": "high",
@@ -2717,6 +2739,26 @@
     "file": "docs/planning/items/ONB-008-owl-threshold-refrain-in-dream.md"
   },
   {
+    "id": "ONB-009",
+    "title": "Tutorial dream ground item cleanup",
+    "status": "proposed",
+    "type": "tech",
+    "area": "onboarding",
+    "priority": "high",
+    "tags": [
+      "tutorial",
+      "dream",
+      "cleanup",
+      "items",
+      "resources"
+    ],
+    "depends_on": [
+      "ONB-006"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-009-tutorial-dream-ground-item-cleanup.md"
+  },
+  {
     "id": "OWL-002",
     "title": "Nocturnal owl tuning and indirect signs",
     "status": "testing",
@@ -2761,7 +2803,7 @@
   {
     "id": "OWL-004",
     "title": "Conditional owl examine copy and refrain echoes",
-    "status": "proposed",
+    "status": "done",
     "type": "content",
     "area": "ecology",
     "priority": "medium",
@@ -4234,6 +4276,27 @@
     ],
     "exports": {},
     "file": "docs/planning/items/WORLD-003-world-time-survival-and-lifetime-timers.md"
+  },
+  {
+    "id": "WORLD-004",
+    "title": "Time/calendar/weather command split",
+    "status": "backlog",
+    "type": "ux",
+    "area": "world_time",
+    "priority": "medium",
+    "tags": [
+      "world-time",
+      "calendar",
+      "weather",
+      "commands",
+      "tutorial"
+    ],
+    "depends_on": [
+      "WORLD-001-D",
+      "WORLD-001-E"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WORLD-004-time-calendar-weather-command-split.md"
   },
   {
     "id": "WPN-001",

@@ -1,7 +1,7 @@
 ---
 id: OBS-003
 title: Danger-aware examine cues
-status: next
+status: done
 type: feature
 area: learning
 priority: high
@@ -68,3 +68,13 @@ Animals already react to raised danger pressure. Players should also be able to 
 
 - This belongs near the 0.15 attention/observation lane because it teaches that careful inspection can reveal more than a location name and exits.
 - The first implementation should be small and copy-focused, then later connect to observation skill, visibility, light and tracking.
+
+## 0.15.17 Slice
+
+Shipped a first qualitative cue layer for full location examination:
+
+- `renderLocationDetails` now adds an atmospheric line when effective local danger rises above calm baseline.
+- The helper uses base location danger, crowd pressure and recent-attack feature pressure, but player-facing text never shows raw danger numbers.
+- Focused tests cover calm/no-cue, raised-danger bands, crowd pressure and recent-attack pressure.
+
+Follow-up observation work can make these cues more precise through skill, light, tracking and distance.

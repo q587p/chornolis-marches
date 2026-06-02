@@ -12,7 +12,7 @@ const {
   suggestKeyboardLayoutAliasEntries,
 } = require("../../src/input/aliases");
 const { inventoryResourceKeyFromText } = require("../../src/services/inventoryUse");
-const { parseStartActionPayload } = require("../../src/input/startPayloads");
+const { parseStartActionPayload, parseStartActionPayloadFromText, resolveStartActionPayload } = require("../../src/input/startPayloads");
 const { autoCommandModeFromText } = require("../../src/handlers/auto");
 const { isDreamGateOpeningPhrase, localGateOpenAttemptText } = require("../../src/services/tutorial");
 const { normalizeCreatureActionText } = require("../../src/utils/creatureActionText");
@@ -43,6 +43,13 @@ assert.equal(normalizeInput("з’їсти   ягоди."), "з'їсти яго�
 assert.equal(parseStartActionPayload("cmd_start"), "start");
 assert.equal(parseStartActionPayload("cmd_look"), "look");
 assert.equal(parseStartActionPayload("cmd_examine"), "examine");
+assert.equal(parseStartActionPayloadFromText("/start cmd_look"), "look");
+assert.equal(parseStartActionPayloadFromText("/start@Chornolis_bot cmd_examine"), "examine");
+assert.equal(parseStartActionPayloadFromText("start cmd_news"), "news");
+assert.equal(parseStartActionPayloadFromText("/start"), null);
+assert.equal(parseStartActionPayloadFromText("/start cmd_look extra"), null);
+assert.equal(resolveStartActionPayload({ match: undefined, text: "/start cmd_examine" }), "examine");
+assert.equal(resolveStartActionPayload({ match: "cmd_look", text: "/start" }), "look");
 
 assert.equal(formatTeleportCoordinateCommand({ x: 0, y: 9, z: -13 }), "/tp_0_9__13");
 assert.equal(parseTeleportCoordinateCommand("/tp_0_9__13"), "0,9,-13");

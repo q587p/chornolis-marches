@@ -185,8 +185,8 @@ For manual archive recovery from the deployed `news.md`, use:
 - `/news_archive_list` to reread deployed `news.md`, list stable oldest-first
   indexes for the current file and show published/pending/canceled/missing
   counts;
-- `/news_archive_preview <index>` to render one archive entry without posting;
-- `/news_archive_post <index>` to publish exactly one selected archive entry to
+- `/news_archive_preview [number]` to render one archive entry without posting;
+- `/news_archive_post [number]` to publish exactly one selected archive entry to
   `HERALD_CHANNEL_ID`;
 - `/news_archive_reload` to explicitly reread deployed `news.md`.
 
@@ -212,6 +212,22 @@ Manual channel-delete and repost semantics are intentionally narrow:
   command does not delete anything in Telegram.
 - `/repost_publication` creates a new Telegram message from the saved snapshot.
   It does not restore the old channel timestamp or original message id.
+
+## Optional Herald Keepalive
+
+`.github/workflows/herald-keepalive.yml` can ping the standalone Herald Web
+Service health endpoint every 10 minutes. Set `HERALD_HEALTH_URL` in GitHub
+repository Actions secrets or variables to the Herald `/health` URL, for example
+`https://example.onrender.com/health`.
+
+GitHub scheduled workflows run only from the default branch, so the schedule
+starts only after the workflow is merged to `main`. The workflow also has
+`workflow_dispatch` for manual checks.
+
+This does not change Herald runtime behavior and does not replace the Render
+service health check. It is only a keepalive ping. Keeping a Render free Web
+Service awake consumes free instance hours; disable the workflow or unset
+`HERALD_HEALTH_URL` when sleeping is preferred.
 
 ## Icebox: Embedded Herald Mode
 
