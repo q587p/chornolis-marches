@@ -1147,6 +1147,29 @@
     "file": "docs/planning/items/FOOD-006-mushroom-varieties-and-identification.md"
   },
   {
+    "id": "FOOD-007",
+    "title": "Mushroom visions and dream effects",
+    "status": "icebox",
+    "type": "feature",
+    "area": "survival",
+    "priority": "low",
+    "tags": [
+      "food",
+      "mushrooms",
+      "dreams",
+      "visions",
+      "effects",
+      "alchemy"
+    ],
+    "depends_on": [
+      "FOOD-006",
+      "DREAM-001",
+      "SLEEP-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FOOD-007-mushroom-visions-and-dream-effects.md"
+  },
+  {
     "id": "GIVE-001",
     "title": "Generic give command MVP and exchange bridge",
     "status": "next",

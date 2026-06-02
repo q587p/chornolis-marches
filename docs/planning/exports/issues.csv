@@ -57,6 +57,7 @@ FOOD-003,Freshened corpse remains,backlog,feature,survival,medium,"food,corpses,
 FOOD-004,Hunger cues and eating nudges,testing,feature,survival,medium,"food,hunger,reminders,ux",docs/planning/items/FOOD-004-hunger-cues-and-eating-nudges.md
 FOOD-005,Hunger consequences for health and stamina recovery,backlog,feature,survival,medium,"food,hunger,hp,stamina,survival",docs/planning/items/FOOD-005-hunger-consequences.md
 FOOD-006,Mushroom varieties and identification,backlog,feature,survival,medium,"food,mushrooms,foraging,alchemy,risk",docs/planning/items/FOOD-006-mushroom-varieties-and-identification.md
+FOOD-007,Mushroom visions and dream effects,icebox,feature,survival,low,"food,mushrooms,dreams,visions,effects,alchemy",docs/planning/items/FOOD-007-mushroom-visions-and-dream-effects.md
 GIVE-001,Generic give command MVP and exchange bridge,next,feature,inventory,high,"give,inventory,items,targets,exchange,barter,cat,telegram",docs/planning/items/GIVE-001-give-command-and-exchange-bridge.md
 GIVE-002,Ukrainian inflection-tolerant give parser and grammar bridge,testing,technical,input,high,"give,input,parser,ukrainian,grammar,lexicon,inventory,targets,barter",docs/planning/items/GIVE-002-ukrainian-give-parser-grammar.md
 HERALD-001,Embedded main-service mode for Boundary Mark Chancery Herald,icebox,technical,ops,low,"herald,telegram,render,ops,architecture,icebox",docs/planning/items/HERALD-001-embedded-main-service-mode.md

@@ -34,6 +34,7 @@ It is not a trash bin and not a promise. It is cold storage for ideas that need 
 - Weapon crafting trees and rare weapon materials.
 - Looting equipped weapons from corpses and combat drops.
 - SLEEP-004: external forced sleep causes from creatures, elixirs, illness, traps or rituals.
+- FOOD-007: mushroom visions, vivid dream effects and altered-perception "cartoon" moments after mushroom use, once food varieties, effects and dream separation are ready.
 - DREAM-004: advanced group dreams, place-spirit influence, dream conflict/appeasement and ritual dream spaces.
 
 ## Review Rhythm
