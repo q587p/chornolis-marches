@@ -110,6 +110,10 @@ export function strangeTotemDayIndex(absoluteMinute: number) {
   return Math.floor(Math.max(0, absoluteMinute) / MINUTES_PER_WORLD_DAY);
 }
 
+export function strangeTotemDailySpawnMarker(dayIndex: number) {
+  return `dayIndex=${Math.floor(Math.max(0, dayIndex))};`;
+}
+
 export function strangeTotemSchedule(feature: StrangeTotemFeatureLike, absoluteMinute: number) {
   const data = featureData(feature.data);
   const spawnedAtMinute = numberFromData(data.spawnedAtMinute) ?? Math.floor(absoluteMinute);
@@ -134,6 +138,12 @@ export function strangeTotemRecoveredTwigs(feature: StrangeTotemFeatureLike, abs
   const min = numberFromData(data.twigsFreshMin) ?? STRANGE_TOTEM_FRESH_TWIGS_MIN;
   const max = numberFromData(data.twigsFreshMax) ?? STRANGE_TOTEM_FRESH_TWIGS_MAX;
   return min + stableIndex(String(feature.key ?? feature.id ?? "strange_totem"), Math.max(1, max - min + 1));
+}
+
+export function strangeTotemDismantleText(recovered: number) {
+  return recovered > 1
+    ? `🧹 Ви розібрали підозрілий тотем. Сухі стебла, лозини й кора стали хмизом ×${recovered}.\n\nКоли останній вузол розпустився, вітер на мить стих.`
+    : "🧹 Тотем майже розсипався від дотику. Придатного хмизу лишилося тільки на одну в'язку.\n\nРешта стала трухою, пилом і тим неприємним відчуттям, що знак стояв тут не для вас.";
 }
 
 export function strangeTotemDetailLine(feature: StrangeTotemFeatureLike, absoluteMinute?: number) {
@@ -398,7 +408,7 @@ function totemDescriptionForRegion(regionKey: string) {
 export async function maybeSpawnDailyStrangeTotem(bot?: Bot | null, absoluteMinute?: number) {
   const currentMinute = absoluteMinute ?? await currentWorldMinute();
   const dayIndex = strangeTotemDayIndex(currentMinute);
-  const marker = `dayIndex=${dayIndex}`;
+  const marker = strangeTotemDailySpawnMarker(dayIndex);
   const existing = await prisma.worldEvent.findFirst({
     where: {
       type: "SYSTEM",
@@ -412,7 +422,7 @@ export async function maybeSpawnDailyStrangeTotem(bot?: Bot | null, absoluteMinu
     data: {
       type: "SYSTEM",
       title: STRANGE_TOTEM_DAILY_SPAWN_EVENT_TITLE,
-      description: `${marker}; chance=${spawnChancePercent()}`,
+      description: `${marker} chance=${spawnChancePercent()}`,
     },
   });
 
@@ -538,9 +548,7 @@ export async function dismantleStrangeTotem(playerId: number, featureId: number)
     });
   });
 
-  const text = recovered > 1
-    ? `🧹 Ви розібрали підозрілий тотем. Сухі стебла, лозини й кора стали хмизом ×${recovered}.\n\nКоли останній вузол розпустився, вітер на мить стих.`
-    : "🧹 Тотем майже розсипався від дотику. Придатного хмизу лишилося тільки ×1.\n\nРешта стала трухою, пилом і тим неприємним відчуттям, що знак стояв тут не для вас.";
+  const text = strangeTotemDismantleText(recovered);
 
   return {
     text,

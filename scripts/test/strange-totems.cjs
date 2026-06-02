@@ -13,7 +13,9 @@ const {
   STRANGE_TOTEM_OLD_TWIGS,
   isStrangeTotemFeature,
   strangeTotemAgeState,
+  strangeTotemDailySpawnMarker,
   strangeTotemDetailLine,
+  strangeTotemDismantleText,
   strangeTotemInspectionTextSync,
   strangeTotemRecoveredTwigs,
   strangeTotemRegionCap,
@@ -38,6 +40,12 @@ assert.equal(totemsByRegion.get("riverbank"), 1);
 assert.equal(strangeTotemRegionCap("dry_luka"), 5);
 assert.equal(strangeTotemRegionCap("riverbank"), 2);
 assert.equal(strangeTotemRegionCap("chornolis_border"), 0);
+
+const day1Marker = strangeTotemDailySpawnMarker(1);
+const day10Marker = strangeTotemDailySpawnMarker(10);
+assert.equal(`${day1Marker} chance=35`.includes(day1Marker), true);
+assert.equal(`${day10Marker} chance=35`.includes(day10Marker), true);
+assert.equal(`${day10Marker} chance=35`.includes(day1Marker), false);
 
 const freshTotem = {
   id: 13,
@@ -73,5 +81,7 @@ assert.equal(strangeTotemRecoveredTwigs({ ...scheduledTotem, data: { ...schedule
 assert.match(strangeTotemDetailLine(scheduledTotem, minute), /розібрати|хмиз/u);
 assert.match(strangeTotemDetailLine(scheduledTotem, schedule.fadingAtMinute), /давно|скоро/u);
 assert.match(strangeTotemInspectionTextSync(scheduledTotem, schedule.fadingAtMinute), /давно|розвалиться|хмиз/u);
+assert.doesNotMatch(strangeTotemDismantleText(1), /×1/u);
+assert.match(strangeTotemDismantleText(3), /×3/u);
 
 console.log("Strange totems OK");
