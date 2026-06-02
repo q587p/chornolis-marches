@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const { playerStaminaCostConfig, REST_STAMINA_REGEN_PER_INTERVAL } = require("../../src/gameConfig");
-const { playerHungerAfterStaminaSpend } = require("../../src/services/actionRecovery");
+const { playerHungerAfterStaminaSpend, shouldRefreshMainKeyboardAfterVitalsChange } = require("../../src/services/actionRecovery");
 const { actionTitle } = require("../../src/services/actionRules");
 const { CAMPFIRE_REST_STAMINA_REGEN_MULTIPLIER, isLitRestCampfireFeature, restStaminaRegenMultiplierForFeatures } = require("../../src/services/locationFeatures");
 
@@ -36,6 +36,34 @@ assert.equal(playerHungerAfterStaminaSpend({ currentHunger: 0, staminaAfter: 37,
 assert.equal(playerHungerAfterStaminaSpend({ currentHunger: 0, staminaAfter: 35, cost: 7 }), 1);
 assert.equal(playerHungerAfterStaminaSpend({ currentHunger: 4, staminaAfter: -1, cost: 3 }), 5);
 assert.equal(playerHungerAfterStaminaSpend({ currentHunger: 13, staminaAfter: 20, cost: 7 }), 13);
+
+assert.equal(shouldRefreshMainKeyboardAfterVitalsChange({
+  beforeHp: 20,
+  afterHp: 20,
+  hpMax: 20,
+  beforeStamina: 39,
+  afterStamina: 30,
+  staminaMax: 42,
+  showTechnicalDetails: true,
+}), true);
+assert.equal(shouldRefreshMainKeyboardAfterVitalsChange({
+  beforeHp: 20,
+  afterHp: 20,
+  hpMax: 20,
+  beforeStamina: 39,
+  afterStamina: 38,
+  staminaMax: 42,
+  showTechnicalDetails: false,
+}), false);
+assert.equal(shouldRefreshMainKeyboardAfterVitalsChange({
+  beforeHp: 20,
+  afterHp: 20,
+  hpMax: 20,
+  beforeStamina: 34,
+  afterStamina: 30,
+  staminaMax: 42,
+  showTechnicalDetails: false,
+}), true);
 
 const litCampfire = { type: "CAMPFIRE", providesLight: true, data: { is_campfire: true, handmade: true } };
 const litMagicCampfire = { type: "MAGIC_CAMPFIRE", providesLight: true, data: { magical: true } };

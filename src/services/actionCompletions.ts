@@ -78,6 +78,13 @@ const RECENT_ATTACK_DANGER_TICKS = Number(process.env.WORLD_RECENT_ATTACK_DANGER
 const RECENT_ATTACK_DANGER_MS = RECENT_ATTACK_DANGER_TICKS * Number(process.env.WORLD_TICK_INTERVAL_MS || 1500);
 const PANIC_HERBIVORE_FLEE_CHANCE = Number(process.env.WORLD_PANIC_HERBIVORE_FLEE_CHANCE || 85);
 const PANIC_HERBIVORE_MAX_FLEE = Number(process.env.WORLD_PANIC_HERBIVORE_MAX_FLEE || 18);
+
+type StaminaSpendResult = Awaited<ReturnType<typeof spendPlayerStamina>>;
+
+function replyOptionsAfterStaminaSpend(spend?: StaminaSpendResult | null, options: Record<string, any> = {}) {
+  if (!spend?.replyMarkup || options.reply_markup) return Object.keys(options).length ? options : undefined;
+  return { ...options, reply_markup: spend.replyMarkup };
+}
 const PANIC_HERBIVORE_MOVE_PRIORITY = Number(process.env.WORLD_PANIC_HERBIVORE_MOVE_PRIORITY || 60);
 const ANIMAL_SPEECH_PROVOCATION_WINDOW_MS = Number(process.env.ANIMAL_SPEECH_PROVOCATION_WINDOW_MS || 120_000);
 const WOLF_SPEECH_PROVOCATION_THRESHOLD = Number(process.env.WOLF_SPEECH_PROVOCATION_THRESHOLD || 3);
@@ -441,27 +448,27 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
     if (action.type === "USE_ITEM") {
       if (!isUsableInventoryResource(payload.resourceKey)) throw new Error("Цю річ не вдається використати з черги.");
       const resultText = await useInventoryResource(player.id, payload.resourceKey);
-      await spendPlayerStamina(bot, player.id, "USE_ITEM", chatId);
+      const staminaSpend = await spendPlayerStamina(bot, player.id, "USE_ITEM", chatId);
       const wellbeingAside = await rememberTutorialWellbeingAside(player.id, player.currentLocationId, payload.resourceKey);
       await setActionStatus(action, "DONE");
       await trimSatisfiedQueuedUseItems(player.id, payload.resourceKey);
-      if (chatId) await bot.api.sendMessage(chatId, wellbeingAside ? `${resultText}\n\n${TUTORIAL_WELLBEING_ASIDE_TEXT}` : resultText);
+      if (chatId) await bot.api.sendMessage(chatId, wellbeingAside ? `${resultText}\n\n${TUTORIAL_WELLBEING_ASIDE_TEXT}` : resultText, replyOptionsAfterStaminaSpend(staminaSpend));
       return;
     }
 
     if (action.type === "DROP_ITEM") {
       if (isBeginnerCacheContributionPayload(payload)) {
         const result = await contributeToBeginnerCache(player.id, payload.featureId, payload.resourceKey);
-        await spendPlayerStamina(bot, player.id, "DROP_ITEM", chatId);
+        const staminaSpend = await spendPlayerStamina(bot, player.id, "DROP_ITEM", chatId);
         await setActionStatus(action, "DONE");
-        if (chatId) await bot.api.sendMessage(chatId, result.text);
+        if (chatId) await bot.api.sendMessage(chatId, result.text, replyOptionsAfterStaminaSpend(staminaSpend));
         return;
       }
 
       const result = payload.allFilter !== undefined
         ? await dropInventoryResourcesDetailed(player.id, payload.allFilter || undefined)
         : await dropInventoryResourceDetailed(player.id, payload.target ?? "");
-      await spendPlayerStamina(bot, player.id, "DROP_ITEM", chatId);
+      const staminaSpend = await spendPlayerStamina(bot, player.id, "DROP_ITEM", chatId);
       await recordVisibleItemAction(bot, {
         playerId: player.id,
         locationId: result.locationId,
@@ -471,7 +478,7 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
         actionNote: payload.allFilter !== undefined ? `викладено: ${result.droppedName}` : `викинуто: ${result.droppedName}`,
       });
       await setActionStatus(action, "DONE");
-      if (chatId) await bot.api.sendMessage(chatId, result.text);
+      if (chatId) await bot.api.sendMessage(chatId, result.text, replyOptionsAfterStaminaSpend(staminaSpend));
       return;
     }
 
@@ -490,17 +497,17 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
       const resultText = payload.featureId
         ? await lightPlayerTorchAtCampfire(player.id, payload.featureId)
         : await lightPlayerTorchFromInventory(player.id);
-      await spendPlayerStamina(bot, player.id, "LIGHT_TORCH", chatId);
+      const staminaSpend = await spendPlayerStamina(bot, player.id, "LIGHT_TORCH", chatId);
       await setActionStatus(action, "DONE");
-      if (chatId) await bot.api.sendMessage(chatId, resultText);
+      if (chatId) await bot.api.sendMessage(chatId, resultText, replyOptionsAfterStaminaSpend(staminaSpend));
       return;
     }
 
     if (action.type === "DOUSE_TORCH") {
       const resultText = await dousePlayerTorchFromInventory(player.id);
-      await spendPlayerStamina(bot, player.id, "DOUSE_TORCH", chatId);
+      const staminaSpend = await spendPlayerStamina(bot, player.id, "DOUSE_TORCH", chatId);
       await setActionStatus(action, "DONE");
-      if (chatId) await bot.api.sendMessage(chatId, resultText);
+      if (chatId) await bot.api.sendMessage(chatId, resultText, replyOptionsAfterStaminaSpend(staminaSpend));
       return;
     }
 
@@ -532,18 +539,18 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
       if (action.type === "DISMANTLE_CAMPFIRE") {
         if (!payload.featureId) throw new Error("Не видно вогнища, яке можна розібрати.");
         const result = await dismantleCampfire(player.id, payload.featureId);
-        await spendPlayerStamina(bot, player.id, "DISMANTLE_CAMPFIRE", chatId);
+        const staminaSpend = await spendPlayerStamina(bot, player.id, "DISMANTLE_CAMPFIRE", chatId);
         await setActionStatus(action, "DONE");
-        if (chatId) await bot.api.sendMessage(chatId, result.text);
+        if (chatId) await bot.api.sendMessage(chatId, result.text, replyOptionsAfterStaminaSpend(staminaSpend));
         return;
       }
 
       if (action.type === "DISMANTLE_TOTEM") {
         if (!payload.featureId) throw new Error("Не видно тотема, який можна розібрати.");
         const result = await dismantleStrangeTotem(player.id, payload.featureId);
-        await spendPlayerStamina(bot, player.id, "DISMANTLE_TOTEM", chatId);
+        const staminaSpend = await spendPlayerStamina(bot, player.id, "DISMANTLE_TOTEM", chatId);
         await setActionStatus(action, "DONE");
-        if (chatId) await bot.api.sendMessage(chatId, result.text);
+        if (chatId) await bot.api.sendMessage(chatId, result.text, replyOptionsAfterStaminaSpend(staminaSpend));
         return;
       }
 
@@ -684,8 +691,9 @@ async function completeGather(bot: Bot, action: WorldAction) {
     && Boolean(resourceKey && TUTORIAL_FORAGING_RESOURCE_KEYS.has(resourceKey));
 
   let gatherAttemptsAfterAttempt: number | null = null;
+  let staminaSpend: Awaited<ReturnType<typeof spendPlayerStamina>> | null = null;
   if (isPlayer) {
-    await spendPlayerStamina(bot, (actor as any).id, action.type, chatId);
+    staminaSpend = await spendPlayerStamina(bot, (actor as any).id, action.type, chatId);
     const updatedPlayer = await prisma.player.update({
       where: { id: (actor as any).id },
       data: { gatherAttempts: { increment: 1 } },
@@ -723,6 +731,7 @@ async function completeGather(bot: Bot, action: WorldAction) {
         await bot.api.sendMessage(
           chatId,
           `Ви витратили час і снагу на пошуки${durationText}, але нічого корисного не знайшли.\n\nБільше ви тут цього не знайдете найближчий час. Спробуйте пізніше або в іншій місцині.`,
+          replyOptionsAfterStaminaSpend(staminaSpend),
         );
       }
     }
@@ -764,7 +773,7 @@ async function completeGather(bot: Bot, action: WorldAction) {
         `Ви витратили час і снагу на пошуки${durationText} і знайшли: ${resource.resourceType.name} ×${found}.`,
         isTutorialForagingSuccess
           ? { reply_markup: await buildMainReplyKeyboardForTelegramId(Number((actor as any).telegramId), false) }
-          : undefined,
+          : replyOptionsAfterStaminaSpend(staminaSpend),
       );
     }
     if (isTutorialForagingSuccess) {
@@ -931,10 +940,10 @@ async function completeInspect(bot: Bot, action: WorldAction) {
     if (chatId) await bot.api.sendMessage(chatId, "Цілі вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() });
     return;
   }
-  await spendPlayerStamina(bot, player.id, "INSPECT", chatId);
+  const staminaSpend = await spendPlayerStamina(bot, player.id, "INSPECT", chatId);
   await logEvent("INSPECT", "Player inspected target", `${target.kind}:${target.id}`, player.currentLocationId);
   if (chatId) {
-    await bot.api.sendMessage(chatId, `${targetIntro(target, payload.mode === "mystery")}\n\n${target.inspect}`);
+    await bot.api.sendMessage(chatId, `${targetIntro(target, payload.mode === "mystery")}\n\n${target.inspect}`, replyOptionsAfterStaminaSpend(staminaSpend));
     const observation = await recordAttackObservation({ playerId: player.id, locationId: player.currentLocationId });
     if (observation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, ATTACK_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
     if (target.kind === "player" || (!target.isAnimal && !target.isCorpse)) {
@@ -971,7 +980,7 @@ async function completeGreet(bot: Bot, action: WorldAction) {
   const actorForms = playerForms(player);
   const verb = saidVerb(player);
   const targetPlayer = target.kind === "player" ? await prisma.player.findUnique({ where: { id: target.id } }) : null;
-  await spendPlayerStamina(bot, player.id, "GREET", chatId);
+  const staminaSpend = await spendPlayerStamina(bot, player.id, "GREET", chatId);
   await prisma.player.updateMany({ where: { id: player.id }, data: { greetings: { increment: 1 } } });
   if (targetPlayer) {
     const delivered = await safeSendMessage(
@@ -994,7 +1003,7 @@ async function completeGreet(bot: Bot, action: WorldAction) {
   );
   await setActionStatus(action, "DONE");
   await logEvent("GREET", `${actorForms.nominative} ${verb} ${target.forms.dative}`, greeting, player.currentLocationId);
-  if (chatId) await bot.api.sendMessage(chatId, `Ви сказали ${escapeHtml(target.forms.dative)}:\n${quoteBlock(greeting)}`, { parse_mode: "HTML" });
+  if (chatId) await bot.api.sendMessage(chatId, `Ви сказали ${escapeHtml(target.forms.dative)}:\n${quoteBlock(greeting)}`, replyOptionsAfterStaminaSpend(staminaSpend, { parse_mode: "HTML" }));
   await queueHunterGreetingReaction(player, target, action.id);
 }
 
@@ -1074,7 +1083,7 @@ async function completeFreshen(bot: Bot, action: WorldAction) {
     if (chatId) await bot.api.sendMessage(chatId, freshenWeaponFailureText(weapon?.key));
     return;
   }
-  await spendPlayerStamina(bot, player.id, "FRESHEN", chatId);
+  const staminaSpend = await spendPlayerStamina(bot, player.id, "FRESHEN", chatId);
   let meat: Awaited<ReturnType<typeof freshenCorpseForMeat>>;
   try {
     meat = await freshenCorpseForMeat({
@@ -1102,7 +1111,7 @@ async function completeFreshen(bot: Bot, action: WorldAction) {
     const resultText = meat.succeeded
       ? `🔪 Ви освіжували ${target.forms.accusative} ${weapon.forms.instrumental} й отримали ${meat.resourceName} ×${meat.amount}.`
       : `🔪 Ви освіжували ${target.forms.accusative} ${weapon.forms.instrumental}, але придатне м'ясо не вдалося зняти. Лишилися тільки рвані рештки.`;
-    await bot.api.sendMessage(chatId, resultText);
+    await bot.api.sendMessage(chatId, resultText, replyOptionsAfterStaminaSpend(staminaSpend));
     if (learning.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, FRESHENING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" }));
   }
 }
@@ -1367,7 +1376,7 @@ async function completeSay(bot: Bot, action: WorldAction) {
       const targetPlayer = target.kind === "player"
         ? await prisma.player.findFirst({ where: { id: target.id, currentLocationId: player.currentLocationId } })
         : null;
-      await spendPlayerStamina(bot, player.id, "SAY", chatId);
+      const staminaSpend = await spendPlayerStamina(bot, player.id, "SAY", chatId);
       await prisma.player.updateMany({ where: { id: player.id }, data: { says: { increment: 1 } } });
       await notifyLocationExcept(
         bot,
@@ -1388,7 +1397,7 @@ async function completeSay(bot: Bot, action: WorldAction) {
           await rememberPlayerReplyTarget({ playerId: targetPlayer.id, speakerName: actorForms.nominative, speakerPlayerId: player.id, locationId: player.currentLocationId });
         }
       }
-      if (chatId) await bot.api.sendMessage(chatId, `Ви шепнули ${escapeHtml(target.forms.dative)}:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
+      if (chatId) await bot.api.sendMessage(chatId, `Ви шепнули ${escapeHtml(target.forms.dative)}:\n${quoteBlock(text)}`, replyOptionsAfterStaminaSpend(staminaSpend, { parse_mode: "HTML" }));
       await setActionStatus(action, "DONE");
       await logEvent("SAY", `${actorForms.nominative} шепоче ${target.forms.dative}`, "приватний шепіт", player.currentLocationId);
       if (payload.targetType === "creature") await queueAnimalDirectedSpeechReaction(bot, { player, targetCreatureId: payload.targetId });
@@ -1396,7 +1405,7 @@ async function completeSay(bot: Bot, action: WorldAction) {
     }
 
     if (payload.mode === "yell") {
-      await spendPlayerStaminaAmount(bot, player.id, Math.max(1, (playerStaminaCostConfig.SAY ?? 1) * 2), chatId);
+      const staminaSpend = await spendPlayerStaminaAmount(bot, player.id, Math.max(1, (playerStaminaCostConfig.SAY ?? 1) * 2), chatId);
       await prisma.player.updateMany({ where: { id: player.id }, data: { says: { increment: 1 } } });
       const exits = await prisma.locationExit.findMany({
         where: { fromLocationId: player.currentLocationId, isHidden: false },
@@ -1421,13 +1430,13 @@ async function completeSay(bot: Bot, action: WorldAction) {
       }
       await setActionStatus(action, "DONE");
       await logEvent("SAY", `${actorForms.nominative} гукає поруч`, text, player.currentLocationId);
-      if (chatId) await bot.api.sendMessage(chatId, `Ви гукнули поруч:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
+      if (chatId) await bot.api.sendMessage(chatId, `Ви гукнули поруч:\n${quoteBlock(text)}`, replyOptionsAfterStaminaSpend(staminaSpend, { parse_mode: "HTML" }));
       return;
     }
 
     if (payload.mode === "shout") {
-      await spendPlayerStamina(bot, player.id, "SAY", chatId);
-      await spendPlayerStamina(bot, player.id, "TRACK", chatId);
+      const staminaSpend = await spendPlayerStamina(bot, player.id, "SAY", chatId);
+      const trackStaminaSpend = await spendPlayerStamina(bot, player.id, "TRACK", chatId);
       await prisma.player.updateMany({ where: { id: player.id }, data: { says: { increment: 1 } } });
       const location = await prisma.cellLocation.findUnique({ where: { id: player.currentLocationId }, select: { regionId: true } });
       const shoutVerb = shoutedVerb(player);
@@ -1442,12 +1451,12 @@ async function completeSay(bot: Bot, action: WorldAction) {
       }
       await setActionStatus(action, "DONE");
       await logEvent("SAY", `${actorForms.nominative} ${shoutVerb}`, text, player.currentLocationId);
-      if (chatId) await bot.api.sendMessage(chatId, `Ви гукнули:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
+      if (chatId) await bot.api.sendMessage(chatId, `Ви гукнули:\n${quoteBlock(text)}`, replyOptionsAfterStaminaSpend(trackStaminaSpend.replyMarkup ? trackStaminaSpend : staminaSpend, { parse_mode: "HTML" }));
       return;
     }
 
     if (payload.mode === "reply") {
-      await spendPlayerStamina(bot, player.id, "SAY", chatId);
+      const staminaSpend = await spendPlayerStamina(bot, player.id, "SAY", chatId);
       await prisma.player.updateMany({ where: { id: player.id }, data: { says: { increment: 1 } } });
       const replyVerb = repliedVerb(player);
       const replyTargetPlayer = payload.targetType === "player" && payload.targetId
@@ -1476,12 +1485,12 @@ async function completeSay(bot: Bot, action: WorldAction) {
       }
       await setActionStatus(action, "DONE");
       await logEvent("SAY", `${actorForms.nominative} ${replyVerb}${replyTargetDative ? ` ${replyTargetDative}` : ""}`, text, player.currentLocationId);
-      if (chatId) await bot.api.sendMessage(chatId, replyTargetDative ? `Ви відповіли ${escapeHtml(replyTargetDative)}:\n${quoteBlock(text)}` : `Ви відповіли:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
+      if (chatId) await bot.api.sendMessage(chatId, replyTargetDative ? `Ви відповіли ${escapeHtml(replyTargetDative)}:\n${quoteBlock(text)}` : `Ви відповіли:\n${quoteBlock(text)}`, replyOptionsAfterStaminaSpend(staminaSpend, { parse_mode: "HTML" }));
       if (replyTargetCreature) await queueHunterConversationReply({ actionId: action.id, player, targetCreatureId: replyTargetCreature.id });
       return;
     }
 
-    await spendPlayerStamina(bot, player.id, "SAY", chatId);
+    const staminaSpend = await spendPlayerStamina(bot, player.id, "SAY", chatId);
     await prisma.player.updateMany({ where: { id: player.id }, data: { says: { increment: 1 } } });
     await notifyLocationExcept(
       bot,
@@ -1502,7 +1511,7 @@ async function completeSay(bot: Bot, action: WorldAction) {
       ? await openDreamGate(player.id)
       : null;
     if (chatId) {
-      await bot.api.sendMessage(chatId, targetDative ? `Ви сказали ${escapeHtml(targetDative)}:\n${quoteBlock(text)}` : `Ви сказали:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
+      await bot.api.sendMessage(chatId, targetDative ? `Ви сказали ${escapeHtml(targetDative)}:\n${quoteBlock(text)}` : `Ви сказали:\n${quoteBlock(text)}`, replyOptionsAfterStaminaSpend(staminaSpend, { parse_mode: "HTML" }));
       if (dreamGateText) {
         await bot.api.sendMessage(chatId, dreamGateText, {
           reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false),
