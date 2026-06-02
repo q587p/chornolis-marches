@@ -43,9 +43,12 @@ assert.equal(strangeTotemRegionCap("chornolis_border"), 0);
 
 const day1Marker = strangeTotemDailySpawnMarker(1);
 const day10Marker = strangeTotemDailySpawnMarker(10);
-assert.equal(`${day1Marker} chance=35`.includes(day1Marker), true);
-assert.equal(`${day10Marker} chance=35`.includes(day10Marker), true);
-assert.equal(`${day10Marker} chance=35`.includes(day1Marker), false);
+const day1AttemptDescription = `${day1Marker} chance=35`;
+const day10AttemptDescription = `${day10Marker} chance=35`;
+assert.equal(day1AttemptDescription.includes(day1Marker), true);
+assert.equal(day10AttemptDescription.includes(day10Marker), true);
+assert.equal(day10AttemptDescription.includes(day1Marker), false);
+assert.equal(day1AttemptDescription.includes(day10Marker), false);
 
 const freshTotem = {
   id: 13,

@@ -111,7 +111,7 @@ export function strangeTotemDayIndex(absoluteMinute: number) {
 }
 
 export function strangeTotemDailySpawnMarker(dayIndex: number) {
-  return `dayIndex=${Math.floor(Math.max(0, dayIndex))};`;
+  return `strangeTotemDay:${Math.floor(Math.max(0, dayIndex))};`;
 }
 
 export function strangeTotemSchedule(feature: StrangeTotemFeatureLike, absoluteMinute: number) {
