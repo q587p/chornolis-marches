@@ -83,4 +83,10 @@ Attach at most one `🐾 Сліди` button at the end.
 - flushes send one compact message with one `Сліди` button;
 - the first slice deliberately omits arrival target buttons from coalesced movement messages, which avoids stale target buttons when a spirit/NPC already left before the flush.
 
+0.15.10 restores useful target buttons safely:
+
+- the flush checks the current creature state and location before adding any arrival target button;
+- target buttons are shown only for living, visible, non-animal creatures that are still in the flushed location;
+- stale target buttons are still cleared through `clearKeys`, so a creature that already left keeps only the movement text and `Сліди`.
+
 An in-memory debounce is acceptable for a first slice if the risk is documented: a process restart may drop pending movement flavor lines. If this becomes important, move the pending buffer to a persisted notification queue.

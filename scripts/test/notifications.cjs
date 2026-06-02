@@ -5,6 +5,7 @@ require("ts-node/register");
 const {
   combineMovementNotificationLines,
   createNonPlayerMovementNotificationBuffer,
+  movementNotificationTargetsStillPresent,
   nonPlayerMovementNotificationOptions,
   runInlineReplacementForKey,
 } = require("../../src/services/notifications");
@@ -48,12 +49,24 @@ async function sleep(ms) {
   assert.deepEqual(flushed[0].creatureIds, [7]);
   assert.equal(combineMovementNotificationLines(flushed[0].lines), "Кіт-бережник зайшов сюди знизу.\nКіт-бережник пішов звідси.");
 
-  const options = nonPlayerMovementNotificationOptions(42, [7, 7, 8]);
+  const targets = movementNotificationTargetsStillPresent(42, [7, 8, 9, 10, 11, 12], [
+    { id: 7, locationId: 42, isAlive: true, isGone: false, isHidden: false, label: "Кіт-бережник", species: { kind: "SPIRIT" } },
+    { id: 8, locationId: 43, isAlive: true, isGone: false, isHidden: false, label: "Дід лісовик", species: { kind: "SPIRIT" } },
+    { id: 9, locationId: 42, isAlive: true, isGone: false, isHidden: false, label: "миша", species: { kind: "ANIMAL" } },
+    { id: 10, locationId: 42, isAlive: false, isGone: false, isHidden: false, label: "мертва тінь", species: { kind: "SPIRIT" } },
+    { id: 11, locationId: 42, isAlive: true, isGone: true, isHidden: false, label: "зникла тінь", species: { kind: "SPIRIT" } },
+    { id: 12, locationId: 42, isAlive: true, isGone: false, isHidden: true, label: "схована тінь", species: { kind: "SPIRIT" } },
+  ]);
+  assert.deepEqual(targets, [{ id: 7, label: "Кіт-бережник" }]);
+
+  const options = nonPlayerMovementNotificationOptions(42, [7, 7, 8], targets);
   assert.equal(options.replaceKey, "tracks:42");
   assert.deepEqual(options.clearKeys, ["target:creature:7", "target:creature:8"]);
-  assert.equal(options.keyboard.inline_keyboard.length, 1);
+  assert.equal(options.keyboard.inline_keyboard.length, 2);
   assert.equal(options.keyboard.inline_keyboard[0].length, 1);
-  assert.equal(options.keyboard.inline_keyboard[0][0].text, "🐾 Сліди");
+  assert.equal(options.keyboard.inline_keyboard[0][0].text, "Кіт-бережник");
+  assert.equal(options.keyboard.inline_keyboard[0][0].callback_data, "target:creature:7");
+  assert.equal(options.keyboard.inline_keyboard[1][0].text, "🐾 Сліди");
 
   console.log("Notification replacement locks OK");
 })().catch((error) => {

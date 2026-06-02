@@ -7,6 +7,14 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.10 - Movement target buttons and animal escalation - 12026-06-02
+
+### Changed
+
+- Coalesced non-player/non-animal creature movement notifications can now include target buttons only for living, visible creatures still present in the location at flush time, while stale movement buttons are still cleared.
+- Repeated directed speech toward a wolf within a short runtime window can escalate from a warning growl to a local danger marker.
+- Added `ANIMAL_SPEECH_PROVOCATION_WINDOW_MS` and `WOLF_SPEECH_PROVOCATION_THRESHOLD` runtime knobs for tuning repeated animal-speech escalation.
+
 ## 0.15.9 - Quieter movement and animal speech reactions - 12026-06-02
 
 ### Changed
