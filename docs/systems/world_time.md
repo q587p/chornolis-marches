@@ -86,7 +86,7 @@ Do not use `Date.getHours()`, server timezone, player timezone or real-world cal
 - `WorldState.absoluteMinute` stores the current internal Chornolis minute.
 - `WorldState.lastAdvancedAt` stores the real timestamp used only to calculate elapsed time since the previous advancement.
 - `worldTick()` advances the stored minute count through the shared world-time service.
-- `/time` reads the stored/derived world-clock state and shows the current year, lunar circle, day, approximate clock, daypart, moon phase, weather and a compact light label.
+- `/time` reads the stored/derived world-clock state and shows the current year, lunar circle, day, approximate clock phrase, daypart, moon phase, weather and a compact light label. Ordinary player-facing time should not expose exact minutes; keep minute-level labels in scribe/admin debug surfaces such as `/timeDebug`.
 - The heartbeat emits compact player-facing notices when the internal daypart changes: dawn, day, dusk or night. These notices describe the world getting lighter or darker, but they do not yet apply full darkness/visibility penalties. Daypart notices are waking-world messages only: tutorial dream locations and future dream layers at `z <= -10` should not receive them, so ordinary world time does not interrupt dream scenes.
 - Seed creates missing world-clock storage without rewinding existing time; `/reset world` and `/reset full` return the world clock to the canonical starter timestamp.
 

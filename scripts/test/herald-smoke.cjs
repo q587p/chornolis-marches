@@ -180,9 +180,11 @@ assert.doesNotMatch(formatted, /123456:abcdefghijklmnopqrstuvwxyz/);
 assert.doesNotMatch(formatted, /border_12_09/);
 assert.match(formatted, /Канцелярія Межового Знаку/);
 
-const linkedCommands = linkHeraldGameCommandMentions("`/news` /auto /cleanupCreatures /unknown", "Chornolis_bot");
+const linkedCommands = linkHeraldGameCommandMentions("`/news` /auto `/track` /inventory /cleanupCreatures /unknown", "Chornolis_bot");
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_news">\/news<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_auto">\/auto<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_track">\/track<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_inventory">\/inventory<\/a>/);
 assert.match(linkedCommands, /\/cleanupCreatures/);
 assert.match(linkedCommands, /\/unknown/);
 assert.doesNotMatch(linkHeraldGameCommandMentions("/cleanupCreatures", "Chornolis_bot"), /href=/);

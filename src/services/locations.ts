@@ -254,7 +254,7 @@ async function tutorialObservationLesson(viewerPlayerId: number, locationId: num
 
 function torchLightButtonText(torchState: { isLit: boolean; plainAmount: number; litAmount: number }) {
   if (torchState.isLit && torchState.plainAmount > 0) return "🔥 Підпалити ще один факел";
-  return torchState.isLit ? "🔥 Оновити вогонь на факелі" : "🔥 Підпалити факел";
+  return torchState.isLit ? "🔥🕯 Оновити вогонь на факелі" : "🔥🕯 Підпалити факел";
 }
 
 const FEATURE_MOVE_DIRECTIONS = ["UP", "DOWN", "INSIDE", "OUTSIDE"] as const;
@@ -1170,11 +1170,11 @@ export async function renderLocationFeatureInteraction(
       if (torchState.isLit) keyboard.text("🔥 Підпалити", `fire:light:${feature.id}`).row();
       if (isDismantlableCampfire(feature)) keyboard.text("🧹 Розібрати", `fire:dismantle:${feature.id}`).row();
     } else {
-      keyboard.text("🔥 Відпочити", "rest:start").row();
+      keyboard.text("🔥🧘 Відпочити", "rest:start").row();
       const rawMeatAmount = await playerRawMeatAmount(viewerPlayerId);
       if (rawMeatAmount > 0) {
-        keyboard.text("🔥 Посмажити м’ясо", "inventory:cook:meat");
-        if (rawMeatAmount > 1) keyboard.text("🔥 Посмажити все", "inventory:cook:all");
+        keyboard.text("🔥🥩 Посмажити м’ясо", "inventory:cook:meat");
+        if (rawMeatAmount > 1) keyboard.text("🔥🥩 Посмажити все", "inventory:cook:all");
         keyboard.row();
       }
       if (feature.type !== "MAGIC_CAMPFIRE" && canAddTwigsToCampfire(feature)) keyboard.text("🪵 Додати хмиз", `fire:addTwigs:${feature.id}`).row();

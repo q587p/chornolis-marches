@@ -40,7 +40,7 @@ Players can and will try to talk to animals. That should feel like Chornolis not
   - mouse: high chance to flee through a valid nearby exit;
   - rabbit: high chance to flee or freeze briefly;
   - fox: lower chance to flee, chance to look back / show wary curiosity;
-  - wolf: chance to growl or warn; repeated nearby directed speech can queue an attack if the wolf stays present.
+  - wolf: chance to growl or warn; repeated nearby directed speech can become a dangerous local threat if the wolf stays present.
 - Record reactions in ordinary local messaging and/or `WorldEvent` without spamming broad proactive channels.
 - Respect action queue, presence/session send guards and existing animal movement boundaries.
 
@@ -63,6 +63,17 @@ Players can and will try to talk to animals. That should feel like Chornolis not
 - wolves can warn with a growl, but repeated-provocation escalation remains future work.
 
 The broader item stays in progress until wolf escalation, richer context and deeper tests land.
+
+## 0.15.9 Follow-Up
+
+0.15.9 adds a first repeated-provocation guard:
+
+- animal speech provocation is counted in a short in-memory window per player/animal pair;
+- repeated directed speech to a wolf can escalate from warning growl to a dangerous local threat line;
+- the escalation marks the location as recently dangerous, so nearby context can react to the risk;
+- the first escalation slice does not add direct wolf damage against players, because creature `ATTACK` currently targets prey creatures rather than player bodies.
+
+Future work can connect this to the broader combat/damage system once predator-vs-player attacks are designed.
 
 ## Out of Scope
 

@@ -1,36 +1,19 @@
 import { config } from "../config";
+import {
+  gameCommandDeepLink,
+  isSafeGameCommand,
+  SAFE_GAME_COMMAND_PAYLOADS,
+  type SafeGameCommand,
+} from "../services/gameCommandLinks";
 import { escapeHtml } from "../utils/text";
 
-export const HERALD_SAFE_GAME_COMMAND_PAYLOADS = {
-  "/look": "cmd_look",
-  "/examine": "cmd_examine",
-  "/news": "cmd_news",
-  "/auto": "cmd_auto",
-  "/autoStop": "cmd_auto_stop",
-  "/me": "cmd_me",
-  "/help": "cmd_help",
-} as const;
-
-export type HeraldSafeGameCommand = keyof typeof HERALD_SAFE_GAME_COMMAND_PAYLOADS;
+export const HERALD_SAFE_GAME_COMMAND_PAYLOADS = SAFE_GAME_COMMAND_PAYLOADS;
+export type HeraldSafeGameCommand = SafeGameCommand;
 
 const BACKTICKED_COMMAND_PATTERN = /`(\/[A-Za-z][A-Za-z0-9_]*)`|(\/[A-Za-z][A-Za-z0-9_]*)/g;
 
-function normalizeGameBotUsername(username = config.gameBotUsername) {
-  return username.trim().replace(/^@/, "") || "Chornolis_bot";
-}
-
-function commandDeepLink(command: HeraldSafeGameCommand, username = config.gameBotUsername) {
-  const botUsername = encodeURIComponent(normalizeGameBotUsername(username));
-  const payload = encodeURIComponent(HERALD_SAFE_GAME_COMMAND_PAYLOADS[command]);
-  return `https://t.me/${botUsername}?start=${payload}`;
-}
-
-function isSafeGameCommand(command: string): command is HeraldSafeGameCommand {
-  return Object.prototype.hasOwnProperty.call(HERALD_SAFE_GAME_COMMAND_PAYLOADS, command);
-}
-
 function renderCommandHtml(command: HeraldSafeGameCommand, username = config.gameBotUsername) {
-  return `<a href="${commandDeepLink(command, username)}">${escapeHtml(command)}</a>`;
+  return `<a href="${gameCommandDeepLink(command, username)}">${escapeHtml(command)}</a>`;
 }
 
 export function linkHeraldGameCommandMentions(text: string, username = config.gameBotUsername) {

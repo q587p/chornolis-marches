@@ -211,6 +211,19 @@ export function isDismantlableCampfire(feature: { type?: string | null; data?: u
   return isPreparedCampfire(feature) || isExtinguishedCampfire(feature);
 }
 
+export function adminHandmadeCampfireData(worldMinute: number | null | undefined) {
+  return {
+    is_campfire: true,
+    handmade: true,
+    created_by: "addCampfire",
+    prepared: true,
+    unlit: true,
+    fuelTwigs: CAMPFIRE_BUILD_TWIG_COST,
+    builtAtMinute: worldMinute ?? null,
+    adminCreated: true,
+  };
+}
+
 export async function douseableHandmadeCampfireId(playerId: number) {
   await expireTimedCampfires();
   const player = await prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } });
@@ -631,6 +644,24 @@ export async function createDebugCampfire(locationId: number) {
       providesLight: true,
       restStaminaCapMultiplier: null,
       data: timedFireData("addCampfire"),
+    },
+  });
+}
+
+export async function createAdminHandmadeCampfire(locationId: number) {
+  const key = `handmade_admin_campfire_${locationId}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const worldMinute = await currentWorldMinute();
+  return prisma.locationFeature.create({
+    data: {
+      key,
+      locationId,
+      type: "CAMPFIRE",
+      name: "Складене вогнище",
+      description: "Хмиз складено в сухе гніздо. Лишилося дати йому вогонь.",
+      isActive: true,
+      providesLight: false,
+      restStaminaCapMultiplier: null,
+        data: jsonInput(adminHandmadeCampfireData(worldMinute)),
     },
   });
 }

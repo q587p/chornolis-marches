@@ -25,11 +25,13 @@ import {
   type PreparedCharacterName,
 } from "../services/characterNames";
 import { disablePlayerAuto, requestOrEnablePlayerAuto, replyStopPlayerAuto } from "./auto";
+import { submitTrack, submitYell } from "./aliases";
 import { sendHelp } from "./help";
 import { sendNews } from "./news";
 import { parseStartActionPayload, type StartActionPayload } from "../input/startPayloads";
 import { runExamineCurrentLocation } from "./look";
-import { showCharacter, showLocationForPlayer } from "./player";
+import { showCharacter, showInventory, showLocationForPlayer } from "./player";
+import { showTime, showWeather } from "./time";
 import { grantStarterKnifeIfMissing } from "../services/weapons";
 
 type NameFormPrompt = { key: keyof NameForms; question: string; button: string; prefix?: string };
@@ -662,6 +664,31 @@ async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayl
 
   if (action === "help") {
     await sendHelp(ctx);
+    return true;
+  }
+
+  if (action === "track") {
+    await submitTrack(bot, ctx);
+    return true;
+  }
+
+  if (action === "time") {
+    await showTime(ctx);
+    return true;
+  }
+
+  if (action === "weather") {
+    await showWeather(ctx);
+    return true;
+  }
+
+  if (action === "inventory") {
+    await showInventory(from.id, (text, options) => ctx.reply(text, options));
+    return true;
+  }
+
+  if (action === "yell") {
+    await submitYell(bot, ctx, "");
     return true;
   }
 

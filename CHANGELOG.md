@@ -7,6 +7,19 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.9 - Movement target buttons and animal escalation - 12026-06-02
+
+### Changed
+
+- Coalesced non-player/non-animal creature movement notifications can now include target buttons only for living, visible creatures still present in the location at flush time, while stale movement buttons are still cleared.
+- Repeated directed speech toward a wolf within a short runtime window can escalate from a warning growl to a local danger marker.
+- Added `ANIMAL_SPEECH_PROVOCATION_WINDOW_MS` and `WOLF_SPEECH_PROVOCATION_THRESHOLD` runtime knobs for tuning repeated animal-speech escalation.
+- Clarified campfire-adjacent action button icons so rest, cooking and torch-lighting controls are easier to distinguish.
+- Player-facing `/time` now renders the borderland clock as an approximate phrase without exact minutes; exact minute-level time remains in scribe/admin debug surfaces.
+- Softened posture-block copy for pickup/build-adjacent actions so failed physical actions while sitting or lying describe the intended work more accurately.
+- Web `/news` now renders inline backtick text as emphasis and turns whitelisted public slash commands into deep links to the main game bot.
+- `/addCampfire` now creates a player-made-like prepared campfire by default for scribe/admin QA of light/douse/dismantle buttons; `/addCampfire debug` keeps the old immediately burning debug campfire behavior.
+
 ## 0.15.8 - Polish, quieter movement and survival edges - 12026-06-02
 
 ### Changed

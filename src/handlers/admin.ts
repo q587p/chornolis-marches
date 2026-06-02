@@ -12,7 +12,7 @@ import {
 } from "../services/adminReset";
 import { logEvent } from "../services/worldEvents";
 import { logScribeAction } from "../services/scribeAudit";
-import { createDebugCampfire, ensureTorchResourceTypes } from "../services/fire";
+import { createAdminHandmadeCampfire, createDebugCampfire, ensureTorchResourceTypes } from "../services/fire";
 import { requireScribeAdmin } from "../services/adminAccess";
 import { adminSecretMatches } from "../services/adminSecret";
 import { syncChatBotCommandsForTelegramId } from "../services/telegramCommands";
@@ -233,7 +233,7 @@ export const ADMIN_HELP_TEXT = [
   "/addCreatureHelp — список speciesKey для тварин",
   "/addResource <resourceKey> [locationKey|x,y,z] [amount] — відновити ресурс у місцині; без місцини бере поточну, без кількості додає 1",
   "/addResourceHelp — список ключів ресурсів; /addResourse теж працює як запасний варіант",
-  "/addCampfire [locationKey|x,y,z|персонаж] — додати звичайне вогнище",
+  "/addCampfire [locationKey|x,y,z|персонаж] [debug] — додати складене рукотворне вогнище; debug створює одразу палаюче службове",
   "/addTorch [персонаж] [кількість] — додати факел у речі собі або вказаному персонажу; без кількості додає 1",
   "/addTwigs [персонаж] [кількість] — додати хмиз у речі собі або вказаному персонажу; без кількості додає 1",
   "/carcassQuest start — примусово відновити заклик біля падального рову й мисливський тиск",
@@ -577,13 +577,20 @@ export function registerAdminHandlers(bot: Bot) {
   async function runAddCampfireCommand(ctx: any, rawTarget = String(ctx.match ?? "").trim()) {
     if (!(await requireScribeAdmin(ctx))) return;
 
-    const location = await resolveLocationForAdmin(ctx, rawTarget);
+    const parts = rawTarget.split(/\s+/).filter(Boolean);
+    const debug = parts.some((part) => part.toLowerCase() === "debug");
+    const target = parts.filter((part) => part.toLowerCase() !== "debug").join(" ");
+    const location = await resolveLocationForAdmin(ctx, target);
     if (!location) return;
 
-    const feature = await createDebugCampfire(location.id);
+    const feature = debug
+      ? await createDebugCampfire(location.id)
+      : await createAdminHandmadeCampfire(location.id);
 
-    await logEvent("SYSTEM", "Debug campfire added", `${feature.key} at ${location.key}`, location.id);
-    await ctx.reply(`🔥 Додано звичайне вогнище у місцині: ${location.name}.\nКлюч: ${feature.key}`);
+    await logEvent("SYSTEM", debug ? "Debug campfire added" : "Handmade admin campfire added", `${feature.key} at ${location.key}`, location.id);
+    return ctx.reply(debug
+      ? `🔥 Додано debug-вогнище у місцині: ${location.name}.\nКлюч: ${feature.key}`
+      : `🪵 Додано складене рукотворне вогнище у місцині: ${location.name}.\nКлюч: ${feature.key}\nЙого можна тестово підпалити, погасити й розібрати як вогнище, складене персонажем.`);
   }
 
   bot.command("addCampfire", (ctx) => runAddCampfireCommand(ctx));

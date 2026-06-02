@@ -67,7 +67,7 @@ type SayPayload = { text: string; mode?: "say" | "whisper" | "reply" | "yell" | 
 type SocialPayload = { targetType: "player" | "creature"; targetId: number; mode?: "known" | "mystery"; detail?: "brief" | "full"; socialId?: string };
 
 type AnimalSpeechReactionPlan = {
-  kind: "flee" | "freeze" | "watch" | "warn";
+  kind: "flee" | "freeze" | "watch" | "warn" | "threaten";
   currentAction: string;
 };
 
@@ -77,14 +77,30 @@ const RECENT_ATTACK_DANGER_MS = RECENT_ATTACK_DANGER_TICKS * Number(process.env.
 const PANIC_HERBIVORE_FLEE_CHANCE = Number(process.env.WORLD_PANIC_HERBIVORE_FLEE_CHANCE || 85);
 const PANIC_HERBIVORE_MAX_FLEE = Number(process.env.WORLD_PANIC_HERBIVORE_MAX_FLEE || 18);
 const PANIC_HERBIVORE_MOVE_PRIORITY = Number(process.env.WORLD_PANIC_HERBIVORE_MOVE_PRIORITY || 60);
+const ANIMAL_SPEECH_PROVOCATION_WINDOW_MS = Number(process.env.ANIMAL_SPEECH_PROVOCATION_WINDOW_MS || 120_000);
+const WOLF_SPEECH_PROVOCATION_THRESHOLD = Number(process.env.WOLF_SPEECH_PROVOCATION_THRESHOLD || 3);
 const TUTORIAL_REST_ENTRY_EVENT_TITLE = "Tutorial rest entry stamina lesson";
 const TUTORIAL_FORAGING_RESOURCE_KEYS = new Set(["berries", "herbs"]);
 const TUTORIAL_FORAGING_SUCCESS_COMMENT = "Тут усе вдалося з першого разу, бо сон сам нахилив гілки до ваших рук. Не уві сні так буває не завжди: іноді доведеться спробувати ще раз, а з досвідом руки ставатимуть певніші й швидші.";
 const TUTORIAL_REST_FAST_COMMENT = "У навчальному сні жар повертає снагу дуже швидко, майже за один подих. Наяву відпочинок триватиме довше.";
 const TUTORIAL_REST_FULL_COMMENT = "Ось так виглядає короткий перепочинок у навчальному сні. Наяву до повної снаги шлях буде довший, і не кожне вогнище тримає вас так легко.";
 const TUTORIAL_REST_EXTRA_COMMENT = "Якщо на клавіатурі бачите «екстра», це не помилка. Сон на мить дає снаги більше, ніж тіло звикло тримати наяву: надлишок допомагає навчитися, але за межами сну таке буде рідкісним і недовгим.";
+const animalSpeechProvocations = new Map<string, { count: number; lastAt: number }>();
 
-export function animalSpeechReactionPlan(speciesKey: string, roll = Math.random()): AnimalSpeechReactionPlan | null {
+export function nextAnimalSpeechProvocationCount(previous: { count: number; lastAt: number } | undefined, now: number, windowMs: number) {
+  if (!previous || now - previous.lastAt > windowMs) return 1;
+  return previous.count + 1;
+}
+
+function rememberAnimalSpeechProvocation(playerId: number, creatureId: number, now = Date.now()) {
+  const key = `${playerId}:${creatureId}`;
+  const previous = animalSpeechProvocations.get(key);
+  const count = nextAnimalSpeechProvocationCount(previous, now, ANIMAL_SPEECH_PROVOCATION_WINDOW_MS);
+  animalSpeechProvocations.set(key, { count, lastAt: now });
+  return count;
+}
+
+export function animalSpeechReactionPlan(speciesKey: string, roll = Math.random(), options: { provocationCount?: number } = {}): AnimalSpeechReactionPlan | null {
   const normalized = speciesKey.trim().toLowerCase();
   if (normalized === "mouse") {
     return roll < 0.85
@@ -97,7 +113,11 @@ export function animalSpeechReactionPlan(speciesKey: string, roll = Math.random(
       : { kind: "freeze", currentAction: "насторожено завмирає" };
   }
   if (normalized === "fox") return { kind: "watch", currentAction: "насторожено слухає" };
-  if (normalized === "wolf") return { kind: "warn", currentAction: "низько гарчить" };
+  if (normalized === "wolf") {
+    return (options.provocationCount ?? 1) >= WOLF_SPEECH_PROVOCATION_THRESHOLD
+      ? { kind: "threaten", currentAction: "готується кинутися" }
+      : { kind: "warn", currentAction: "низько гарчить" };
+  }
   return null;
 }
 
@@ -105,6 +125,7 @@ function animalSpeechReactionLine(plan: AnimalSpeechReactionPlan, forms: { nomin
   if (plan.kind === "flee") return `${forms.nominative} сіпається від голосу й кидається геть.`;
   if (plan.kind === "freeze") return `${forms.nominative} завмирає, ніби сам звук на мить став тінню.`;
   if (plan.kind === "watch") return `${forms.nominative} озирається й дивиться у відповідь насторожено, без людської згоди чи незгоди.`;
+  if (plan.kind === "threaten") return `${forms.nominative} ступає ближче й гарчить так, що стежка на мить стає менш певною.`;
   return `${forms.nominative} низько гарчить у відповідь. Словам тут краще знати міру.`;
 }
 
@@ -1287,7 +1308,8 @@ async function queueAnimalDirectedSpeechReaction(bot: Bot, input: {
   });
   if (!creature) return;
 
-  const plan = animalSpeechReactionPlan(creature.species.key);
+  const provocationCount = rememberAnimalSpeechProvocation(input.player.id, creature.id);
+  const plan = animalSpeechReactionPlan(creature.species.key, Math.random(), { provocationCount });
   if (!plan) return;
 
   const forms = creatureForms(creature);
@@ -1297,6 +1319,7 @@ async function queueAnimalDirectedSpeechReaction(bot: Bot, input: {
   });
   await notifyLocationAll(bot, creature.locationId, animalSpeechReactionLine(plan, forms));
 
+  if (plan.kind === "threaten") await markRecentAttackDanger(creature.locationId);
   if (plan.kind === "flee") await queueAnimalSpeechFlee(creature);
 }
 
