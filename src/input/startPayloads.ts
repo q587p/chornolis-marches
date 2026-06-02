@@ -23,6 +23,7 @@ export type StartActionPayload =
   | "dismantleTotem";
 
 const SAFE_START_PAYLOAD = /^[A-Za-z0-9_-]+$/;
+const START_COMMAND_WITH_PAYLOAD = /^\/?start(?:@[A-Za-z0-9_]+)?(?:\s+([^\s]+))?\s*$/i;
 
 export function parseStartActionPayload(value: unknown): StartActionPayload | null {
   const payload = typeof value === "string" ? value.trim() : "";
@@ -52,4 +53,16 @@ export function parseStartActionPayload(value: unknown): StartActionPayload | nu
   if (payload === "cmd_dismantle_totem") return "dismantleTotem";
 
   return null;
+}
+
+export function parseStartActionPayloadFromText(value: unknown): StartActionPayload | null {
+  const text = typeof value === "string" ? value.trim() : "";
+  if (!text) return null;
+  const match = text.match(START_COMMAND_WITH_PAYLOAD);
+  if (!match?.[1]) return null;
+  return parseStartActionPayload(match[1]);
+}
+
+export function resolveStartActionPayload(input: { match?: unknown; text?: unknown }): StartActionPayload | null {
+  return parseStartActionPayload(input.match) ?? parseStartActionPayloadFromText(input.text);
 }

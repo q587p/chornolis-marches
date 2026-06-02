@@ -28,7 +28,7 @@ import { disablePlayerAuto, requestOrEnablePlayerAuto, replyStopPlayerAuto } fro
 import { requestScribeReturnAssistance, submitBuildCampfire, submitDismantleCampfire, submitDismantleTotem, submitDouseCampfire, submitLightCampfire, submitSay, submitTrack, submitYell } from "./aliases";
 import { sendHelp } from "./help";
 import { sendNews } from "./news";
-import { parseStartActionPayload, type StartActionPayload } from "../input/startPayloads";
+import { resolveStartActionPayload, type StartActionPayload } from "../input/startPayloads";
 import { runExamineCurrentLocation } from "./look";
 import { showCharacter, showInventory, showLocationForPlayer } from "./player";
 import { startRest } from "./rest";
@@ -384,7 +384,7 @@ async function enterWorld(ctx: any, isMenuRefresh = false) {
     ? "Ви вже в навчальному сні. /start не скидає сон і не переносить вас, а просто повертає актуальні навчальні кнопки."
     : tutorialCompleted
       ? "Ви вже в грі. Клавіатура чекає під полем вводу, але всі команди можна і просто текстом вводити 👇"
-      : "Ви вже в грі. Навчальний сон ще не завершено: можна повернутися командою /sleep tutorial або написати «навчальний сон». Клавіатура чекає під полем вводу, але всі команди можна і просто текстом вводити 👇";
+      : "Ви вже в грі. Навчальний сон ще не завершено: можна повернутися через <i>навчальний сон</i> (/sleep_tutorial). Клавіатура чекає під полем вводу, але всі команди можна і просто текстом вводити 👇";
   const returnHint = renderSessionReturnHint((ctx as any).sessionReturnMarker);
   const returnHintBlock = returnHint ? `\n\n${returnHint}` : "";
 
@@ -611,19 +611,14 @@ type StartPayloadPlayer = {
 async function canRunStartPayloadAction(player: StartPayloadPlayer) {
   if (!player.onboardingComplete || !player.currentLocationId) return false;
 
-  const [tutorialCompleted, currentLocation] = await Promise.all([
-    hasCompletedTutorial(player.id),
-    prisma.cellLocation.findUnique({
-      where: { id: player.currentLocationId },
-      select: {
-        key: true,
-        z: true,
-        region: { select: { key: true } },
-      },
-    }),
-  ]);
-
-  if (!tutorialCompleted) return false;
+  const currentLocation = await prisma.cellLocation.findUnique({
+    where: { id: player.currentLocationId },
+    select: {
+      key: true,
+      z: true,
+      region: { select: { key: true } },
+    },
+  });
   return currentLocation ? !isTutorialLocation(currentLocation) : false;
 }
 
@@ -751,7 +746,10 @@ async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayl
 }
 
 async function handleStartCommand(bot: Bot, ctx: any) {
-  const action = parseStartActionPayload(ctx.match);
+  const action = resolveStartActionPayload({
+    match: ctx.match,
+    text: ctx.message?.text,
+  });
   if (action && (await runStartPayloadAction(bot, ctx, action))) return;
 
   await enterWorld(ctx, false);

@@ -603,7 +603,38 @@
     "data": {
       "icon": "👁",
       "tutorial_action_ladder": "look",
+      "examine_summary": "показує різницю між загальним поглядом і уважною подробицею",
       "aliases": ["мох", "моху", "мохом", "уважний мох", "погляд", "look moss"]
+    }
+  },
+  {
+    "key": "dream_tutorial_back_sign",
+    "locationKey": "dream_tutorial_signs",
+    "type": "LANDMARK",
+    "name": "Знак назад",
+    "description": "На першому знаку вирізано стрілку назад. Вона не забороняє йти далі й не сварить за відступ. Просто нагадує: іноді правильний шлях починається з того, що ви впізнали, звідки прийшли.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "↩️",
+      "tutorial_action_ladder": "signs",
+      "examine_summary": "показує, що знак може бути пам'яттю про напрям, а не наказом",
+      "aliases": ["знак назад", "назад", "стрілка назад", "перший знак", "back sign"]
+    }
+  },
+  {
+    "key": "dream_tutorial_silent_sign",
+    "locationKey": "dream_tutorial_signs",
+    "type": "LANDMARK",
+    "name": "Мовчазний знак",
+    "description": "Другий знак майже порожній. На дереві лишилися тільки темні місця від старих зарубок, ніби слова тут були, але сон забрав їх раніше за вас. Мовчання теж буває підказкою: не всяка річ готова назвати себе першою.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "◻️",
+      "tutorial_action_ladder": "signs",
+      "examine_summary": "нагадує, що відсутній напис теж може бути частиною місцини",
+      "aliases": ["мовчазний знак", "порожній знак", "другий знак", "тихий знак", "silent sign"]
     }
   },
   {
@@ -617,6 +648,7 @@
     "data": {
       "icon": "🪧",
       "tutorial_action_ladder": "signs",
+      "examine_summary": "нагадує, що знаки читають не поспіхом, а за формою, місцем і словами",
       "aliases": ["знак", "знака", "знаку", "знаком", "схилений знак", "табличка", "sign"]
     }
   },
@@ -631,6 +663,7 @@
     "data": {
       "icon": "🐾",
       "tutorial_action_ladder": "traces",
+      "examine_summary": "підказує, що сліди різняться глибиною, напрямком і тим, хто їх лишив",
       "aliases": ["сліди", "слід", "слідів", "слідам", "різні сліди", "піщаний слід", "traces", "tracks"]
     }
   },
@@ -646,6 +679,7 @@
       "icon": "🪧",
       "tutorial_end_prompt": true,
       "tutorial_wake_prompt": true,
+      "examine_summary": "збирає короткі уроки сну перед тим, як можна прокинутися",
       "aliases": ["межовий знак", "останній знак", "знак", "знака", "знаку", "знаком", "finish marker"]
     }
   },

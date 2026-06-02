@@ -16,6 +16,12 @@ export type LightSnapshotOptions = {
   hasLocalLight?: boolean;
 };
 
+type LocationLightContext = {
+  key?: string | null;
+  z?: number | null;
+  region?: { key?: string | null } | null;
+};
+
 function clampLight(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
@@ -58,7 +64,32 @@ export function lightSnapshotFromWorldTime(snapshot: WorldTimeSnapshot, options:
   };
 }
 
+export function isDreamLocationForLight(location?: LocationLightContext | null) {
+  if (!location) return false;
+  if (typeof location.z === "number" && location.z <= -10) return true;
+  const regionKey = location.region?.key ?? "";
+  const locationKey = location.key ?? "";
+  return regionKey.startsWith("dream") || locationKey.startsWith("dream_");
+}
+
+export function dreamLightSnapshot(): LightSnapshot {
+  return {
+    score: 72,
+    naturalScore: 72,
+    weatherModifier: 0,
+    hasLocalLight: false,
+    level: "clear",
+    label: LIGHT_LABELS.clear,
+  };
+}
+
 export async function lightSnapshotForLocation(locationId: number, snapshot: WorldTimeSnapshot): Promise<LightSnapshot> {
+  const { prisma } = await import("../db");
+  const location = await prisma.cellLocation.findUnique({
+    where: { id: locationId },
+    select: { key: true, z: true, region: { select: { key: true } } },
+  });
+  if (isDreamLocationForLight(location)) return dreamLightSnapshot();
   const { hasActiveLightAtLocation } = await import("./fire");
   return lightSnapshotFromWorldTime(snapshot, {
     hasLocalLight: await hasActiveLightAtLocation(locationId),

@@ -178,6 +178,34 @@ HERALD_EMBEDDED_ENABLED=true
 
 Tracking item: `HERALD-001`.
 
+## GitHub Actions Keepalive
+
+The repository includes `.github/workflows/herald-keepalive.yml` for the standalone
+Herald Render free Web Service. It pings the Herald health endpoint every 10
+minutes, offset from minute `0`, and also supports manual `workflow_dispatch`
+testing from GitHub Actions.
+
+Configure the URL in GitHub before relying on the workflow:
+
+1. Open the repository on GitHub.
+2. Go to `Settings` -> `Secrets and variables` -> `Actions`.
+3. Add either a repository secret or repository variable named
+   `HERALD_HEALTH_URL`.
+4. Set it to the public health endpoint of the standalone Herald Web Service,
+   for example `https://example.onrender.com/health`.
+
+Do not commit the real Render URL if it should stay private. Do not store bot
+tokens, channel ids, admin ids or database URLs in the workflow file.
+
+GitHub scheduled workflows run only on the repository default branch. Changes to
+the keepalive workflow on a feature branch will not run on schedule until that
+branch is merged into `main`; use `workflow_dispatch` for manual testing after
+the workflow exists on the default branch.
+
+Keeping a Render free Web Service warm consumes free instance hours. If the
+Herald service should be allowed to sleep, disable the schedule or remove
+`HERALD_HEALTH_URL`.
+
 ## BotFather Commands
 
 Suggested BotFather command list:
@@ -223,8 +251,8 @@ preview_world_digest - попередній перегляд дайджесту 
 - `/backfill_news_reschedule_pending [13m]` — заново впорядкувати й розкласти ще не опубліковані архівні записи `news.md`, не торкаючись уже опублікованих Telegram-повідомлень.
 - `/backfill_news_status` — звірити стан архівного backfill для `news.md`: скільки очікує, скільки вже опубліковано, який наступний запис і чи ввімкнено overdue rebalance.
 - `/news_archive_list` — перечитати deployed `news.md` і показати стабільні індекси архівних записів від найстарішого до найновішого, разом зі станом `опубліковано` / `у черзі` / `скасовано` / `ще не внесено`.
-- `/news_archive_preview <index>` — показати один архівний запис у тому вигляді, в якому він піде в Telegram, але нічого не публікувати.
-- `/news_archive_post <index>` — вручну опублікувати рівно один архівний запис із deployed `news.md`. Команда не ставить у чергу всі старі новини й не дублює запис, якщо той самий `contentHash` уже опублікований.
+- `/news_archive_preview [номер]` — показати один архівний запис у тому вигляді, в якому він піде в Telegram, але нічого не публікувати.
+- `/news_archive_post [номер]` — вручну опублікувати рівно один архівний запис із deployed `news.md`. Команда не ставить у чергу всі старі новини й не дублює запис, якщо той самий `contentHash` уже опублікований.
 - `/news_archive_reload` — явне повторне перечитування deployed `news.md`; зараз кешу немає, команда поводиться як повторний `/news_archive_list`.
 - `/queue_world_digest` — поставити світовий запис в outbox без негайної публікації.
 - `/post_world_digest` — поставити і одразу опублікувати світовий запис.

@@ -35,7 +35,10 @@ async function sleepTutorial(bot: Bot, ctx: any, forceTutorial = false) {
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   if (!forceTutorial && await hasCompletedTutorial(player.id)) {
-    return void (await ctx.reply("Звичайний сон ще не вплетений у правила світу. Для навчального сну використайте /sleep tutorial.", { reply_markup: buildTutorialSleepKeyboard() }));
+    return void (await ctx.reply("Звичайний сон ще не вплетений у правила світу. Для повторення використайте <i>навчальний сон</i> (/sleep_tutorial).", {
+      parse_mode: "HTML",
+      reply_markup: buildTutorialSleepKeyboard(),
+    }));
   }
 
   await disablePlayerAuto(ctx.from.id);
@@ -120,7 +123,8 @@ export async function requestTutorialEnd(ctx: any) {
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   if (await hasCompletedTutorial(player.id)) {
-    return void (await ctx.reply("Навчання вже завершено. Якщо хочеться повторити короткий сон, напишіть /sleep tutorial.", {
+    return void (await ctx.reply("Навчання вже завершено. Якщо хочеться повторити короткий сон, напишіть <i>навчальний сон</i> (/sleep_tutorial).", {
+      parse_mode: "HTML",
       reply_markup: buildTutorialSleepKeyboard(),
     }));
   }

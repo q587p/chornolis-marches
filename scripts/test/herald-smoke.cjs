@@ -6,6 +6,7 @@ require("ts-node/register");
 const { parseHeraldAdminIds, isHeraldAdminId } = require("../../src/herald/admin");
 const { formatHeraldPublicationMessage, formatHeraldPublicationRepostMessage } = require("../../src/herald/format");
 const { linkHeraldGameCommandMentions } = require("../../src/herald/gameLinks");
+const { formatWorldDigestDateLine } = require("../../src/herald/digest");
 const { formatHeraldCommandList, formatHeraldWhoami } = require("../../src/herald/help");
 const { renderHeraldAnonymousInfoTarget, renderHeraldPublicInfoMissing, renderHeraldPublicPlayerInfo } = require("../../src/herald/info");
 const { resolveHeraldInfoTargetUser } = require("../../src/herald/infoCommands");
@@ -22,6 +23,7 @@ const {
   formatBackfillInterval,
   parseBackfillIntervalMs,
 } = require("../../src/herald/newsBackfill");
+const { formatArchiveList, splitArchiveListMessage } = require("../../src/herald/newsArchiveCommands");
 const {
   extractNewsSourceMetadata,
   parseLatestNewsEntry,
@@ -127,6 +129,23 @@ assert.equal(formatBackfillInterval(13 * 60 * 1000), "13 хв");
 assert.equal(formatBackfillInterval(2 * 60 * 60 * 1000), "2 год");
 assert.match(formatArchiveBody(entries[1]), /Цей запис уже нижче/);
 
+const archiveList = formatArchiveList({
+  ok: true,
+  rows: [{
+    index: 1,
+    entry: { title: "0.1.0 <raw>", contentHash: "hash" },
+    publication: undefined,
+    status: "missing",
+  }],
+  counts: { missing: 1, pending: 0, canceled: 0, published: 0 },
+  pendingTotal: 0,
+});
+assert.match(archiveList, /0\.1\.0 &lt;raw&gt;/);
+assert.doesNotMatch(archiveList, /<raw>|<index>/);
+assert.match(archiveList, /\/news_archive_preview \[/);
+assert.match(archiveList, /\/news_archive_post \[/);
+assert.ok(splitArchiveListMessage(["header", ...Array.from({ length: 80 }, (_, index) => `${index + 1}. ${"entry ".repeat(20)}`)].join("\n"), 600).length > 1);
+
 const admins = parseHeraldAdminIds([" 123 ", "", "456"]);
 assert.equal(admins.size, 2);
 assert.equal(isHeraldAdminId(123, admins), true);
@@ -226,9 +245,17 @@ const archiveFormatted = formatHeraldPublicationMessage({
   body: formatArchiveBody(entries[1]),
 });
 assert.match(archiveFormatted, /📜 З архіву Канцелярії/);
-assert.match(archiveFormatted, /Архівний запис: 12026-05-31/);
+assert.match(archiveFormatted, /Архівний запис: <b>12026-05-31/);
 assert.match(archiveFormatted, /Цей запис уже нижче/);
 assert.doesNotMatch(archiveFormatted, /📜 Канцелярія Межового Знаку/);
+
+const archiveFormattedEscapedTitle = formatHeraldPublicationMessage({
+  sourceType: "NEWS_MD_ARCHIVE",
+  title: "0.0.x <ранній>",
+  body: "Тихий запис.",
+});
+assert.match(archiveFormattedEscapedTitle, /Архівний запис: <b>0\.0\.x &lt;ранній&gt;<\/b>/);
+assert.doesNotMatch(archiveFormattedEscapedTitle, /<ранній>/);
 
 const savedSnapshot = formatHeraldPublicationMessage({
   title: "Старий заголовок",
@@ -247,6 +274,24 @@ const repost = formatHeraldPublicationRepostMessage({
 assert.match(repost, /📜 З архіву Канцелярії/);
 assert.match(repost, /Повторна публікація з книги Канцелярії #77/);
 assert.match(repost, /Збережений відбиток/);
+
+const worldDigestFormatted = formatHeraldPublicationMessage({
+  title: "🌘 Запис із краю Чорнолісу",
+  body: [
+    formatWorldDigestDateLine({
+      year: 587,
+      lunarCircleName: "Коло Зеленого Шуму",
+      dayOfCircle: 18,
+    }),
+    "",
+    "Звірі розійшлися ширше, ніж учора.",
+    "",
+    "У кількох місцинах земля стала уважнішою.",
+  ].join("\n"),
+});
+assert.equal((worldDigestFormatted.match(/Запис із краю Чорнолісу/g) ?? []).length, 1);
+assert.match(worldDigestFormatted, /Дата запису: 587 літо після Великого Відступу — рік Сича під Тихим Вітром, Коло Зеленого Шуму, 18 день\./);
+assert.match(worldDigestFormatted, /Звірі розійшлися ширше[^\n]*\n\nУ кількох місцинах/);
 
 assert.equal(heraldTrailPhrase(0), "Канцелярія ще майже не має записів про ці кроки.");
 assert.equal(heraldTrailPhrase(3), "сліди трапляються зрідка");

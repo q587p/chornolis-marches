@@ -17,7 +17,7 @@ const {
   renderWorldDreamDateLine,
   renderWorldYearLine,
 } = require("../../src/services/calendar");
-const { lightSnapshotFromWorldTime } = require("../../src/services/lightSnapshot");
+const { dreamLightSnapshot, isDreamLocationForLight, lightSnapshotFromWorldTime } = require("../../src/services/lightSnapshot");
 const {
   visibilityDarknessText,
   visibilityPresenceText,
@@ -121,9 +121,12 @@ const fullClearNight = worldTimeSnapshotFromAbsoluteMinute(
 const darkLight = lightSnapshotFromWorldTime(moonlessStormNight);
 const fullLight = lightSnapshotFromWorldTime(fullClearNight);
 const localLight = lightSnapshotFromWorldTime(moonlessStormNight, { hasLocalLight: true });
+const dreamLight = dreamLightSnapshot();
 assert.equal(darkLight.level, "dark");
 assert.ok(fullLight.score > darkLight.score);
 assert.ok(localLight.score >= 78);
+assert.equal(dreamLight.level, "clear");
+assert.equal(dreamLight.weatherModifier, 0);
 
 assert.equal(visibilityRulesFromLight(darkLight, "brief").showNearbyDetails, false);
 assert.equal(visibilityRulesFromLight(fullLight, "brief").showNearbyDetails, false);
@@ -132,6 +135,8 @@ assert.equal(visibilityRulesFromLight(darkLight, "details").showLocationDescript
 assert.equal(visibilityRulesFromLight(darkLight, "details").showNearbyDetails, false);
 assert.equal(visibilityRulesFromLight(darkLight, "details").showTracks, false);
 assert.equal(visibilityRulesFromLight(localLight, "details").showLocationDescription, true);
+assert.equal(visibilityRulesFromLight(dreamLight, "details").showLocationDescription, true);
+assert.equal(visibilityRulesFromLight(dreamLight, "details").showTracks, true);
 assert.ok(visibilityDarknessText(visibilityRulesFromLight(darkLight, "brief")).includes("Темрява"));
 assert.ok(visibilityPresenceText(visibilityRulesFromLight(darkLight, "details"), "tracks").includes("слідів"));
 assert.equal(textTargetVisibleUnderRules({ isCorpse: true }, visibilityRulesFromLight(darkLight, "details")), false);
@@ -176,5 +181,8 @@ assert.equal(isDreamLocationForWorldNotice({ key: "dream_tutorial_threshold", z:
 assert.equal(isDreamLocationForWorldNotice({ key: "future_lucid_dream", z: -10, region: { key: "dreams" } }), true);
 assert.equal(isDreamLocationForWorldNotice({ key: "underground_cave", z: -1, region: { key: "caves" } }), false);
 assert.equal(isDreamLocationForWorldNotice({ key: "start_border_camp", z: 0, region: { key: "riverbank" } }), false);
+assert.equal(isDreamLocationForLight({ key: "dream_tutorial_threshold", z: -13, region: { key: "dream_tutorial" } }), true);
+assert.equal(isDreamLocationForLight({ key: "future_lucid_dream", z: -10, region: { key: "dreams" } }), true);
+assert.equal(isDreamLocationForLight({ key: "underground_cave", z: -1, region: { key: "caves" } }), false);
 
 console.log("World time helpers OK");

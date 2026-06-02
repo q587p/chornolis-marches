@@ -74,3 +74,13 @@ The first money/loot slice landed as `MONEY-001`:
 - Successful waking-world gathering can very rarely turn up one `shah`.
 
 Remaining `LOOT-001` work should focus on richer authored small finds, empty-search atmosphere, item lifetime, future offering hooks and avoiding an unlimited local farm. Do not promote shops, vendors, conversion rates, theft or a broad economy from this MVP alone.
+
+## 0.15.17 Follow-Up
+
+The observation-cue slice added the first empty-search atmosphere:
+
+- full `/examine` can now add a short regional line when no visible small finds, gatherable resources, corpses or tracks are present;
+- dream tutorial locations are excluded;
+- the line frames "nothing found" as a local moment, not a permanent barren state.
+
+Remaining `LOOT-001` work: richer authored small find objects, item lifetime, offering hooks and future search/observe integration.

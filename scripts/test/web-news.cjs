@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 
 require("ts-node/register");
 
-const { buildNewsIndexPage, parseNewsListPageRequest } = require("../../src/handlers/news");
+const { buildNewsIndexPage, parseNewsListPageRequest, renderNewsMarkdownForTelegram } = require("../../src/handlers/news");
 const { readWebNewsEntries, renderNewsInlineMarkdown, renderNewsPage } = require("../../src/server/statusServer");
 const { escapeHtml } = require("../../src/utils/text");
 
@@ -41,6 +41,8 @@ function literalPattern(value) {
     text: button.text,
     callback: "callback_data" in button ? button.callback_data : undefined,
   })) ?? [];
+  assert.doesNotMatch(deepPage.text, /`/);
+  assert.doesNotMatch(deepPage.text, /^## /m);
   assert.match(deepPage.text, /Архів новин: 41-48 з/);
   assert.match(deepPage.text, /Можна перейти одразу: \/news 6\./);
   assert.ok(buttons.some((button) => button.text === "⏮️ Початок" && button.callback === "news:list:0"), "deep news archive page should link to the first page");
@@ -52,6 +54,11 @@ function literalPattern(value) {
   assert.equal(
     renderNewsInlineMarkdown("`Гукнути поруч` (`/yell`) `/say` `/build_campfire` `/light_campfire` `/douse_campfire` `/dismantle_campfire` /cleanupCreatures /unknown"),
     '<em>Гукнути поруч</em> (<a class="game-command" href="https://t.me/Chornolis_bot?start=cmd_yell"><em>/yell</em></a>) <a class="game-command" href="https://t.me/Chornolis_bot?start=cmd_say"><em>/say</em></a> <a class="game-command" href="https://t.me/Chornolis_bot?start=cmd_build_campfire"><em>/build_campfire</em></a> <a class="game-command" href="https://t.me/Chornolis_bot?start=cmd_light_campfire"><em>/light_campfire</em></a> <a class="game-command" href="https://t.me/Chornolis_bot?start=cmd_douse_campfire"><em>/douse_campfire</em></a> <a class="game-command" href="https://t.me/Chornolis_bot?start=cmd_dismantle_campfire"><em>/dismantle_campfire</em></a> /cleanupCreatures /unknown',
+  );
+
+  assert.equal(
+    renderNewsMarkdownForTelegram("## 0.0.0 — Test\n\n- `Речі` (`/inv`) і <raw>"),
+    "<b>0.0.0 — Test</b>\n\n• <i>Речі</i> (/inv) і &lt;raw&gt;",
   );
 
   console.log("Web news archive OK");

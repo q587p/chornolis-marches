@@ -7,6 +7,7 @@ import { archiveOrderedNewsEntries, formatArchiveBody, NEWS_ARCHIVE_SOURCE_TYPE 
 import type { HeraldNewsEntry } from "./newsMarkdown";
 import { heraldNewsErrorLogDetails, readAllNewsEntries } from "./newsMarkdown";
 import { truncateTelegramMessage } from "./safety";
+import { escapeHtml } from "../utils/text";
 import {
   countPendingPublications,
   findExistingPublicationsByHashes,
@@ -16,7 +17,7 @@ import {
 } from "./publications";
 import { publishHeraldPublication } from "./publisher";
 
-const ARCHIVE_LIST_LIMIT = 30;
+const ARCHIVE_LIST_MESSAGE_LIMIT = 3600;
 
 type ArchiveEntryStatus = "missing" | "pending" | "canceled" | "published";
 
@@ -131,15 +132,15 @@ async function loadArchiveEntriesWithStatus() {
   return { ok: true as const, rows, counts, pendingTotal };
 }
 
-function formatArchiveList(input: Awaited<ReturnType<typeof loadArchiveEntriesWithStatus>> & { ok: true }) {
+export function formatArchiveList(input: Awaited<ReturnType<typeof loadArchiveEntriesWithStatus>> & { ok: true }) {
   if (!input.rows.length) return "Канцелярія перечитала deployed news.md, але не знайшла архівних записів.";
 
-  const sample = input.rows.slice(0, ARCHIVE_LIST_LIMIT).map((row) => (
-    `${row.index}. ${row.entry.title} — ${archiveStatusLabel(row.status)}`
+  const sample = input.rows.map((row) => (
+    `${row.index}. ${escapeHtml(row.entry.title)} — ${archiveStatusLabel(row.status)}`
   ));
   const tail = input.rows.length > sample.length ? [`...і ще ${input.rows.length - sample.length}.`] : [];
 
-  return truncateTelegramMessage([
+  return [
     "Архів news.md перечитано з deployed файлу.",
     "",
     `Усього записів: ${input.rows.length}.`,
@@ -150,10 +151,28 @@ function formatArchiveList(input: Awaited<ReturnType<typeof loadArchiveEntriesWi
     ...sample,
     ...tail,
     "",
-    "Перегляд: /news_archive_preview <index>",
-    "Опублікувати один запис: /news_archive_post <index>",
+    "Перегляд: /news_archive_preview [номер]",
+    "Опублікувати один запис: /news_archive_post [номер]",
     "На Render зміна news.md потребує commit/push/redeploy.",
-  ].join("\n"));
+  ].join("\n");
+}
+
+export function splitArchiveListMessage(text: string, maxLength = ARCHIVE_LIST_MESSAGE_LIMIT) {
+  const chunks: string[] = [];
+  let current: string[] = [];
+
+  for (const line of text.split("\n")) {
+    const candidate = [...current, line].join("\n");
+    if (current.length && candidate.length > maxLength) {
+      chunks.push(current.join("\n"));
+      current = [line];
+    } else {
+      current.push(line);
+    }
+  }
+
+  if (current.length) chunks.push(current.join("\n"));
+  return chunks.map((chunk) => truncateTelegramMessage(chunk));
 }
 
 function formatArchivePreview(input: Awaited<ReturnType<typeof loadArchiveEntriesWithStatus>> & { ok: true }, index: number) {
@@ -174,7 +193,9 @@ async function replyWithArchiveList(ctx: Context) {
     await ctx.reply(archiveReadFailureReply(archive));
     return;
   }
-  await ctx.reply(formatArchiveList(archive), HERALD_CHANNEL_MESSAGE_OPTIONS);
+  for (const chunk of splitArchiveListMessage(formatArchiveList(archive))) {
+    await ctx.reply(chunk, HERALD_CHANNEL_MESSAGE_OPTIONS);
+  }
 }
 
 async function replyWithArchivePreview(ctx: Context) {

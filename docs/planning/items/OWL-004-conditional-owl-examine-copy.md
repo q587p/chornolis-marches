@@ -1,7 +1,7 @@
 ---
 id: OWL-004
 title: Conditional owl examine copy and refrain echoes
-status: proposed
+status: done
 type: content
 area: ecology
 priority: medium
@@ -76,3 +76,14 @@ Add rare, conditional `Роздивитися` / examine copy for owl signs or v
 - `node scripts/test/starter-animals.cjs`
 - `npm test`
 - `npm run build`
+
+## 0.15.17 Slice
+
+Shipped the first small conditional copy pass for existing owl signs:
+
+- dusk/night full inspection now adds a quiet extra echo around the "night listener" idea;
+- dawn full inspection adds a line about signs seeming simpler after the dark;
+- day inspection remains practical and quiet;
+- no direct dream-threshold quote is repeated in waking-world owl signs.
+
+Visible owl creature examination remains a follow-up target for the broader observation-content audit.

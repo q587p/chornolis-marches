@@ -81,6 +81,8 @@ Tutorial sleep remains a special onboarding entry point:
 
 It should not be treated as ordinary sleep. For now it may keep its existing implementation, but the docs and command copy should make the separation visible.
 
+Tutorial and other explicitly dream-keyed/lucid-dream locations use their own stable dream light by default. Waking-world night, daypart notices and weather-based visibility reductions should not hide dream descriptions, lessons, visible targets, tracks or ground objects unless a later special dream opts into that rule deliberately.
+
 ### Lucid Dreams / Усвідомлені сни
 
 A lucid dream is a dream instance where the character’s sleeping body remains in the waking location, while a dream presence appears in a dream-space location.
