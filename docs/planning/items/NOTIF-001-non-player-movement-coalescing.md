@@ -74,7 +74,7 @@ Attach at most one `🐾 Сліди` button at the end.
 
 ## Notes
 
-0.15.9 adds the first conservative implementation:
+0.15.8 adds the first conservative implementation:
 
 - `NON_PLAYER_MOVEMENT_NOTIFICATION_WINDOW_MS` controls the window and defaults to 60 seconds;
 - player movement remains immediate;

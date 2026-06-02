@@ -53,9 +53,9 @@ Players can and will try to talk to animals. That should feel like Chornolis not
 - Reactions use species key / diet / current danger context rather than a single generic animal response.
 - Tests cover at least mouse flee, fox non-human reaction and wolf escalation guard.
 
-## 0.15.9 First Slice
+## 0.15.8 First Slice
 
-0.15.9 adds the first small reaction layer:
+0.15.8 adds the first small reaction layer:
 
 - directed `say` / `whisper` to visible animals can produce a short local species-shaped response;
 - mice and rabbits can be startled into an ordinary queued `MOVE` through existing animal movement boundaries;
