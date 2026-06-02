@@ -191,13 +191,6 @@ async function hideCompletedFreshenSourceMessage(bot: Bot, action: WorldAction, 
   if (typeof action.messageId !== "number") return;
 
   try {
-    await bot.api.editMessageText(chatId, action.messageId, "Здобич освіжовано. Придатне м'ясо забрано.");
-    return;
-  } catch {
-    // The source message may be too old or already changed; still try to remove stale buttons.
-  }
-
-  try {
     await bot.api.editMessageReplyMarkup(chatId, action.messageId, { reply_markup: undefined });
   } catch {
     // Stale target buttons are best-effort cleanup and should not fail the completed action.
