@@ -97,6 +97,26 @@ function targetSearchKeysForCreature(creature: any) {
     species.nameVocative,
   ]);
 
+  if (isCampSpiritCatCreature(creature)) {
+    return uniqueKeys([
+      ...baseKeys,
+      "cat",
+      "camp cat",
+      "spirit cat",
+      "camp spirit cat",
+      "кіт",
+      "кота",
+      "коту",
+      "котові",
+      "кіт-бережник",
+      "кота-бережника",
+      "коту-бережнику",
+      "кіт бережник",
+      "кота бережника",
+      "коту бережнику",
+    ]);
+  }
+
   if (!isCorpse) return baseKeys;
   return uniqueKeys([
     ...baseKeys,

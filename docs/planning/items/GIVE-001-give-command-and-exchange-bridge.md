@@ -49,6 +49,7 @@ Compatibility aliases for the cat slice:
 
 ## Scope
 
+- `0.15.13` partial slice: add the canonical parser/handler bridge for one supported resource (`raw_meat`) to one valid target (`camp_spirit_cat`) without adding a new Prisma action enum or full barter surface.
 - Add or formalize a generic `GIVE` command/action path.
 - Resolve a visible nearby target by name/alias/button target id.
 - Resolve a valid item/resource from the giver’s inventory using existing item naming rules.
@@ -62,6 +63,7 @@ Compatibility aliases for the cat slice:
 
 ## Out of scope
 
+- `0.15.13` explicitly keeps full player-to-player transfer, NPC gifts, quest hand-ins and merchant/barter confirmation out of scope.
 - Price negotiation.
 - Two-sided trade confirmation.
 - Full merchant UI.
@@ -81,6 +83,7 @@ Compatibility aliases for the cat slice:
 
 ## Suggested validation
 
+- `0.15.13`: parser/button coverage may live in `scripts/test/input-aliases.cjs` plus existing camp-cat/help tests instead of a dedicated `give.cjs` until broader transfer behavior lands.
 - New `node scripts/test/give.cjs` or equivalent focused parser/action test.
 - `node scripts/test/input-aliases.cjs`.
 - `node scripts/test/slashless-command-coverage.cjs` if slashless variants are added.

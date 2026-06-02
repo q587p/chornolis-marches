@@ -7,6 +7,14 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.13 - Camp cat raw-meat give bridge - 12026-06-02
+
+### Changed
+
+- Added a first generic `give` bridge for giving one raw-meat unit to a visible valid target, currently the camp spirit cat.
+- Added `Дати сире м'ясо` target UI for the camp spirit cat when the player has raw meat, plus `/give`, slashless `give`, Ukrainian `дати`, `/feed_raw_meat` and typo-tolerant `/feed_raw_meet` parser coverage.
+- Updated help, camp cat ecology docs and planning notes for the small exchange/feeding slice.
+
 ## 0.15.12 - Camp cat mouse pounce and attentive examination - 12026-06-02
 
 ### Changed

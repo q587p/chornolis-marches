@@ -98,6 +98,13 @@ assertAlias("закінчити навчання", { kind: "tutorial-end" });
 assertAlias("вийти з кущів", { kind: "move", direction: "OUTSIDE" });
 assertAlias("/use_mushrooms", { kind: "use-item", item: "mushrooms" });
 assertAlias("/gather_berries", { kind: "gather", resourceKey: "berries" });
+assertAlias("/give сире м'ясо коту", { kind: "give-item", item: "сире м'ясо", target: "коту" });
+assertAlias("дати 1 сире мʼясо коту-бережнику", { kind: "give-item", item: "сире м'ясо", target: "коту-бережнику", amount: 1 });
+assertAlias("give raw meat to cat", { kind: "give-item", item: "raw meat", target: "cat" });
+assertAlias("/feed_raw_meat", { kind: "give-item", item: "raw meat", target: "cat", amount: 1 });
+assertAlias("/feed_raw_meet", { kind: "give-item", item: "raw meat", target: "cat", amount: 1 });
+assert.equal(inventoryResourceKeyFromText("сире м'ясо"), "raw_meat");
+assert.equal(inventoryResourceKeyFromText("сирого м'яса"), "raw_meat");
 
 assertAlias("хто", { kind: "who" });
 assertAlias("хтоя", { kind: "me" });

@@ -12,6 +12,7 @@ type TargetRef = {
   isAnimal?: boolean;
   isCorpse?: boolean;
   canFreshen?: boolean;
+  canReceiveRawMeat?: boolean;
 };
 
 const TARGETS_PER_PAGE = 8;
@@ -137,7 +138,7 @@ export function buildAnonymousTargetKeyboard(target: Pick<TargetRef, "type" | "i
   return keyboard;
 }
 
-export function buildTargetActionKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet" | "canAttack" | "isAnimal">, again = false, returnCallback = "location:details") {
+export function buildTargetActionKeyboard(target: Pick<TargetRef, "type" | "id" | "canGreet" | "canAttack" | "isAnimal" | "canReceiveRawMeat">, again = false, returnCallback = "location:details") {
   const pageSuffix = targetPageSuffix(returnCallback);
   const canGreetVerbally = target.canGreet && !target.isAnimal;
   const keyboard = new InlineKeyboard()
@@ -153,6 +154,7 @@ export function buildTargetActionKeyboard(target: Pick<TargetRef, "type" | "id" 
     const social = SOCIAL_DEFINITIONS.find((item) => item.id === socialId);
     if (social) keyboard.text(social.label, `signal:${social.id}:${target.type}:${target.id}:known`);
   }
+  if (target.canReceiveRawMeat) keyboard.row().text("🥩 Дати сире м’ясо", `give:raw_meat:${target.type}:${target.id}`);
   keyboard.text("✨ Ще сигнали", `signalMenu:${target.type}:${target.id}:known`).row();
   keyboard.text("↩️ Назад", returnCallback);
   return keyboard;
