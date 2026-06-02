@@ -170,6 +170,35 @@ export async function queueHeraldPublication(input: QueueHeraldPublicationInput)
   }
 }
 
+export async function prepareManualHeraldPublication(input: QueueHeraldPublicationInput) {
+  if (input.contentHash) {
+    const existing = await findExistingPublicationByHash(input.contentHash);
+    if (existing) {
+      if (existing.publishedAt) return existing;
+
+      return prisma.heraldPublication.update({
+        where: { id: existing.id },
+        data: {
+          sourceType: input.sourceType,
+          sourceId: input.sourceId,
+          sourceDate: input.sourceDate,
+          sourceVersion: input.sourceVersion,
+          title: input.title,
+          body: input.body,
+          renderedText: input.renderedText,
+          archiveOrder: input.archiveOrder,
+          priority: input.priority ?? existing.priority,
+          visibility: input.visibility ?? "PUBLIC",
+          availableAt: input.availableAt ?? new Date(),
+          error: null,
+        },
+      });
+    }
+  }
+
+  return queueHeraldPublication(input);
+}
+
 export async function markPublicationPublished(id: number, telegramMessageId?: number) {
   return prisma.heraldPublication.update({
     where: { id },

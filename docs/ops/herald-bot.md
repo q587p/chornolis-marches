@@ -58,6 +58,7 @@ Recommended:
 - `HERALD_CHANNEL_ID` — канал, куди Канцелярія публікує записи. Може бути username на кшталт `@channel_name` або numeric id.
 - `GAME_BOT_USERNAME` — username основного ігрового бота для безпечних deep links у публічних новинах Канцелярії та web-архіві `/news`. Дефолт: `Chornolis_bot`.
 - `HERALD_ENABLED` — `true`/`false`. Якщо `false`, automatic publisher loop не стартує; ручні bot commands і health server лишаються runtime-поведінкою самого entrypoint.
+- `HERALD_PUBLICATIONS_PAUSED` — `true`/`false`. Якщо `true`, Канцелярія після deploy/restart/wake-up одразу ставить durable publication queue на паузу. `/resume_publications` може зняти паузу під час runtime; прапорець потрібен як Render safety rail, щоб великий backlog не пішов у канал одразу після пробудження сервісу.
 - `HERALD_PUBLISH_INTERVAL_MS` — інтервал publisher loop. Мінімально ефективне значення в конфігу: `1000`, дефолт: `30000`.
 - `HERALD_ARCHIVE_INTERVAL_MINUTES` — інтервал між архівними записами `news.md` у backfill drip-feed. Дефолт: `13`.
 - `HERALD_MAX_PUBLICATIONS_PER_TICK` — скільки записів publisher loop може винести за один обхід. Дефолт: `1`, щоб після Render sleep Канцелярія не скидала кілька архівних вістей одразу.
@@ -191,6 +192,10 @@ publish_pending - опублікувати очікувані записи
 pause_publications - призупинити автоматичну публікацію черги
 resume_publications - відновити автоматичну публікацію черги
 cancel_pending_publications - скасувати неопубліковані записи новин/архіву
+news_archive_list - показати deployed news.md від найстарішого
+news_archive_preview - переглянути один архівний запис
+news_archive_post - вручну опублікувати один архівний запис
+news_archive_reload - заново перечитати deployed news.md
 list_publications - показати останні записи книги публікацій
 show_publication - показати збережений запис за номером
 repost_publication - повторно опублікувати збережений запис як архів
@@ -217,6 +222,10 @@ preview_world_digest - попередній перегляд дайджесту 
 - `/backfill_news_cancel` — alias для безпечного скасування неопублікованих записів новин/архіву, коли backfill поставив забагато старих вістей.
 - `/backfill_news_reschedule_pending [13m]` — заново впорядкувати й розкласти ще не опубліковані архівні записи `news.md`, не торкаючись уже опублікованих Telegram-повідомлень.
 - `/backfill_news_status` — звірити стан архівного backfill для `news.md`: скільки очікує, скільки вже опубліковано, який наступний запис і чи ввімкнено overdue rebalance.
+- `/news_archive_list` — перечитати deployed `news.md` і показати стабільні індекси архівних записів від найстарішого до найновішого, разом зі станом `опубліковано` / `у черзі` / `скасовано` / `ще не внесено`.
+- `/news_archive_preview <index>` — показати один архівний запис у тому вигляді, в якому він піде в Telegram, але нічого не публікувати.
+- `/news_archive_post <index>` — вручну опублікувати рівно один архівний запис із deployed `news.md`. Команда не ставить у чергу всі старі новини й не дублює запис, якщо той самий `contentHash` уже опублікований.
+- `/news_archive_reload` — явне повторне перечитування deployed `news.md`; зараз кешу немає, команда поводиться як повторний `/news_archive_list`.
 - `/queue_world_digest` — поставити світовий запис в outbox без негайної публікації.
 - `/post_world_digest` — поставити і одразу опублікувати світовий запис.
 

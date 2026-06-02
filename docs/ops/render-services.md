@@ -76,6 +76,7 @@ Recommended Herald env:
 - `HERALD_STARTUP_NOTICE_ENABLED`;
 - `HERALD_STARTUP_NOTICE_CHAT_ID`;
 - `HERALD_PUBLISH_INTERVAL_MS`;
+- `HERALD_PUBLICATIONS_PAUSED` — default `false`; set `true` on Render when the Herald should wake up with automatic publication paused until `/resume_publications`;
 - `HERALD_ARCHIVE_INTERVAL_MINUTES` — default `13` for historical `news.md` drip-feed spacing;
 - `HERALD_MAX_PUBLICATIONS_PER_TICK` — default `1` so a sleeping free Web Service does not dump several overdue archive posts at once;
 - `HERALD_REBALANCE_OVERDUE_PUBLICATIONS` — default `true` to move overdue archive posts forward after Render sleep/wake-up.
@@ -173,6 +174,27 @@ cancel the outbox instead of suspending the whole Web Service:
 - `/cancel_pending_publications` and `/backfill_news_cancel` mark unpublished
   `NEWS_MD` / `NEWS_MD_ARCHIVE` rows as `CANCELED`, preserving already
   published history and leaving unrelated future publication types alone.
+
+Set `HERALD_PUBLICATIONS_PAUSED=true` as a Render safety rail when the outbox has
+a large backlog. On startup the Herald writes the durable pause state before the
+publisher tick can send due rows, so a free-service wake-up does not immediately
+dump old archive posts. `/resume_publications` can resume publication at runtime.
+
+For manual archive recovery from the deployed `news.md`, use:
+
+- `/news_archive_list` to reread deployed `news.md`, list stable oldest-first
+  indexes for the current file and show published/pending/canceled/missing
+  counts;
+- `/news_archive_preview <index>` to render one archive entry without posting;
+- `/news_archive_post <index>` to publish exactly one selected archive entry to
+  `HERALD_CHANNEL_ID`;
+- `/news_archive_reload` to explicitly reread deployed `news.md`.
+
+Manual archive posting does not enqueue the full historical backlog. It uses the
+same `contentHash` dedupe as the outbox and refuses to repost a selected archive
+entry that is already published unless a future explicit force option is added.
+On Render, `news.md` is the deployed file; changing it requires commit, push and
+redeploy before these commands see the new text.
 
 Pause applies between publisher-loop sends. If a Telegram `sendMessage` call is
 already in flight when pause is enabled, that send may still finish and be

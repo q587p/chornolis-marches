@@ -19,12 +19,12 @@ function literalPattern(value) {
   assert.match(latestHtml, /href="\/news\?entry=1"/);
   assert.match(latestHtml, /<strong>[^<]+<\/strong>/);
   assert.doesNotMatch(latestHtml, /`\/examine`/);
-  assert.match(latestHtml, /<a class="game-command" href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_examine"><em>\/examine<\/em><\/a>/);
 
   const olderHtml = await renderNewsPage("/news?entry=1");
   assert.match(olderHtml, /href="\/news"/);
   assert.match(olderHtml, /href="\/news\?entry=2"/);
   assert.match(olderHtml, literalPattern(escapeHtml(entries[1].title)));
+  assert.match(olderHtml, /<a class="game-command" href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_examine"><em>\/examine<\/em><\/a>/);
 
   const clampedHtml = await renderNewsPage("/news?entry=999999");
   assert.match(clampedHtml, literalPattern(escapeHtml(entries.at(-1).title)));
