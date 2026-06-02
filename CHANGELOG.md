@@ -26,6 +26,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Carrion-ravine button contributions now use the same feature-specific validation as text `/put`, so stale buttons fail cleanly if the ravine is no longer nearby.
 - Scribe/admin world-time debug now shows the lunar circle ordinal alongside the lunar circle name.
 - Lighting the first active campfire in a location now adds a short warmth/rest cue, and adds a visibility cue when the location had no active local light before the fire.
+- Player attack, freshening and cooking actions now spend less stamina, and the first fatigue cue now suggests recovery options with contextual inline buttons.
 - Regenerated planning exports for the new liminal-sign planning items and the fisher-priority update.
 
 ## 0.15.14 - Herald manual archive controls - 12026-06-02
