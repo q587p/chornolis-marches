@@ -5,6 +5,7 @@ require("ts-node/register");
 const {
   nextResourceAmount,
   parseAddResourceArgs,
+  parseAdminInventoryItemArgs,
   parseAdminInventoryResourceArgs,
 } = require("../../src/services/adminResources");
 
@@ -55,6 +56,27 @@ assert.deepEqual(parseAdminInventoryResourceArgs("#5 3"), {
   amount: 3,
 });
 assert.deepEqual(parseAdminInventoryResourceArgs("Вербові 10"), {
+  playerArg: "Вербові",
+  amount: 10,
+});
+
+assert.deepEqual(parseAdminInventoryItemArgs("berries"), {
+  resourceKey: "berries",
+  playerArg: "",
+  amount: 1,
+});
+assert.deepEqual(parseAdminInventoryItemArgs("raw_meat #5 3"), {
+  resourceKey: "raw_meat",
+  playerArg: "#5",
+  amount: 3,
+});
+assert.deepEqual(parseAdminInventoryItemArgs("#5 2", "lit_torch"), {
+  resourceKey: "lit_torch",
+  playerArg: "#5",
+  amount: 2,
+});
+assert.deepEqual(parseAdminInventoryItemArgs("Вербові 10", "twigs"), {
+  resourceKey: "twigs",
   playerArg: "Вербові",
   amount: 10,
 });

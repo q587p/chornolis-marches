@@ -72,6 +72,16 @@ export function isPublicWhoCreature(creature: { species?: { kind?: string | null
 }
 const pendingAdminTeleports = new Map<number, { playerId: number; returnContext: AllReturnContext }>();
 const REMOVE_REPLY_KEYBOARD = { remove_keyboard: true } as const;
+type LocationAllEntry = {
+  id: number;
+  key: string;
+  name: string;
+  x: number;
+  y: number;
+  z: number;
+  dangerLevel: number;
+  region: { key: string; name: string };
+};
 
 function buildRestartConfirmKeyboard(playerId: number) {
   return new InlineKeyboard()
@@ -1096,12 +1106,42 @@ export async function buildWhoPage(requestedPage = 0, now = new Date()) {
   };
 }
 
-function buildLocationAllPaginationKeyboard(page: number, totalPages: number) {
-  if (totalPages <= 1) return undefined;
+function splitLocationsIntoPages(locations: LocationAllEntry[], maxChars: number) {
+  const pages: LocationAllEntry[][] = [];
+  let current: LocationAllEntry[] = [];
+  let currentLength = 0;
+
+  for (const location of locations) {
+    const line = formatLocationAllLine(location);
+    const nextLength = currentLength + line.length + 1;
+    if (current.length > 0 && nextLength > maxChars) {
+      pages.push(current);
+      current = [];
+      currentLength = 0;
+    }
+    current.push(location);
+    currentLength += line.length + 1;
+  }
+
+  if (current.length > 0) pages.push(current);
+  return pages.length ? pages : [[]];
+}
+
+function formatLocationAllLine(location: LocationAllEntry) {
+  return `${location.key} — ${location.name} (${location.x},${location.y},${location.z}); danger=${location.dangerLevel}; region=${location.region.name}`;
+}
+
+function buildLocationAllPaginationKeyboard(page: number, totalPages: number, locations: LocationAllEntry[] = []) {
   const keyboard = new InlineKeyboard();
-  if (page > 0) keyboard.text("◀️ Назад", `locationAll:${page - 1}`);
-  if (page < totalPages - 1) keyboard.text("Далі ▶️", `locationAll:${page + 1}`);
-  return keyboard;
+  for (const location of locations) {
+    keyboard.text(`🧭 ${location.x},${location.y},${location.z}`, `locationTeleport:${location.id}`).row();
+  }
+
+  if (totalPages > 1) {
+    if (page > 0) keyboard.text("◀️ Назад", `locationAll:${page - 1}`);
+    if (page < totalPages - 1) keyboard.text("Далі ▶️", `locationAll:${page + 1}`);
+  }
+  return locations.length || totalPages > 1 ? keyboard : undefined;
 }
 
 function formatChatEventTime(value: Date) {
@@ -1168,6 +1208,7 @@ async function buildLocationAllPage(requestedPage: number) {
   try {
     const locations = await prisma.cellLocation.findMany({
       select: {
+        id: true,
         key: true,
         name: true,
         x: true,
@@ -1191,14 +1232,15 @@ async function buildLocationAllPage(requestedPage: number) {
         || a.name.localeCompare(b.name, "uk")
         || a.key.localeCompare(b.key);
     });
-    const lines = orderedLocations.map((l) => `${l.key} — ${l.name} (${l.x},${l.y},${l.z}); danger=${l.dangerLevel}; region=${l.region.name}`);
-    const pages = splitLinesIntoPages(lines.length ? lines : ["немає"], LOCATION_PAGE_MAX_CHARS);
+    const pages = splitLocationsIntoPages(orderedLocations, LOCATION_PAGE_MAX_CHARS);
     const page = Math.max(0, Math.min(requestedPage, pages.length - 1));
+    const pageLocations = pages[page] ?? [];
+    const pageLines = pageLocations.map(formatLocationAllLine);
     logStatusPerf("buildLocationAllPage", startedAt, `ok=1; locations=${locations.length}; pages=${pages.length}`);
 
     return {
-      text: `📍 Усі місцини\nСторінка ${page + 1}/${pages.length}; місцин ${locations.length}\n\n${pages[page].join("\n")}`,
-      keyboard: buildLocationAllPaginationKeyboard(page, pages.length),
+      text: `📍 Усі місцини\nСторінка ${page + 1}/${pages.length}; місцин ${locations.length}\n\n${pageLines.length ? pageLines.join("\n") : "немає"}`,
+      keyboard: buildLocationAllPaginationKeyboard(page, pages.length, pageLocations),
     };
   } catch (error) {
     logStatusPerf("buildLocationAllPage", startedAt, "ok=0");
@@ -1465,6 +1507,29 @@ export function registerStatusHandlers(bot: Bot) {
     }
 
     await ctx.reply(page.text, { reply_markup: page.keyboard });
+  });
+
+  bot.callbackQuery(/^locationTeleport:(\d+)$/, async (ctx) => {
+    if (!(await isScribeAdmin(ctx.from?.id))) {
+      await ctx.answerCallbackQuery({ text: "Ця дія доступна тільки писарям Порубіжжя.", show_alert: true });
+      return;
+    }
+
+    const locationId = Number(ctx.match[1]);
+    const scribe = await getPlayerByTelegramId(ctx.from.id);
+    if (!scribe) {
+      await ctx.answerCallbackQuery({ text: "Спершу увійди у світ через /start.", show_alert: true });
+      return;
+    }
+
+    const result = await teleportPlayerByScribe(bot, scribe.id, locationId, ctx.from.id);
+    if (!result.ok) {
+      await ctx.answerCallbackQuery({ text: result.message, show_alert: true });
+      return;
+    }
+
+    await ctx.answerCallbackQuery({ text: `Перенесено: ${result.location.name}` });
+    await ctx.reply(`🧭 Перенесено ${playerForms(result.player).nominative} до місцини: ${result.location.name} (${result.location.key}).`);
   });
 
   async function replyAddCreatureHelp(ctx: any) {

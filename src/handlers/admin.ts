@@ -16,8 +16,8 @@ import { createAdminHandmadeCampfire, createDebugCampfire, ensureTorchResourceTy
 import { requireScribeAdmin } from "../services/adminAccess";
 import { adminSecretMatches } from "../services/adminSecret";
 import { syncChatBotCommandsForTelegramId } from "../services/telegramCommands";
-import { buildAdminCreaturesReplyKeyboard, buildAdminFireReplyKeyboard, buildAdminMenuReplyKeyboard, buildAdminResourcesReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
-import { nextResourceAmount, parseAddResourceArgs, parseAdminInventoryResourceArgs } from "../services/adminResources";
+import { buildAdminCreaturesReplyKeyboard, buildAdminFireReplyKeyboard, buildAdminItemsReplyKeyboard, buildAdminMenuReplyKeyboard, buildAdminResourcesReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
+import { nextResourceAmount, parseAddResourceArgs, parseAdminInventoryItemArgs, parseAdminInventoryResourceArgs } from "../services/adminResources";
 import { stopAllPlayerAuto } from "./auto";
 import { resetTutorialProgressForPlayer } from "../services/tutorial";
 import { getGateHuntingSaturationState, setCarcassQuestOverride, type CarcassQuestOverride } from "../services/carcassDropoff";
@@ -27,6 +27,8 @@ import { worldTimeSnapshotFromAbsoluteMinute } from "../data/worldClock";
 import { lightSnapshotForLocation } from "../services/lightSnapshot";
 import { getCurrentWorldState, setWorldClockAbsoluteMinute, setWorldWeatherState } from "../services/worldTime";
 import { parseWeatherSetTarget, parseWorldTimeSetTarget, renderWorldTimeDebug } from "../services/worldTimeDebug";
+import { COOKED_MEAT_KEY, ensureMeatResourceTypes, RAW_MEAT_KEY } from "../services/meat";
+import { WEAPON_DEFINITIONS, isWeaponResourceKey } from "../services/weapons";
 
 function normalizeLookup(value: string | null | undefined) {
   return String(value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
@@ -77,6 +79,26 @@ async function ensureResourceType(key: string, name: string, description: string
     update: { name, description },
     create: { key, name, description },
   });
+}
+
+async function ensureAdminInventoryResourceType(key: string) {
+  if (key === RAW_MEAT_KEY || key === COOKED_MEAT_KEY) {
+    const meat = await ensureMeatResourceTypes();
+    return key === RAW_MEAT_KEY ? meat.rawMeat : meat.cookedMeat;
+  }
+
+  if (isWeaponResourceKey(key)) {
+    const weapon = WEAPON_DEFINITIONS[key];
+    return ensureResourceType(key, weapon.name, weapon.description);
+  }
+
+  const torches = await ensureTorchResourceTypes();
+  if (key === "torch") return torches.torch;
+  if (key === "lit_torch") return torches.litTorch;
+  if (key === "doused_torch") return torches.dousedTorch;
+  if (key === "twigs") return torches.twigs;
+
+  return prisma.resourceType.findUnique({ where: { key } });
 }
 
 async function addInventoryResource(playerId: number, resourceTypeId: number, amount = 1) {
@@ -182,7 +204,9 @@ const TELEPORT_TEXT_COMMAND = slashlessCommandPattern(["teleport"]);
 const TUTORIAL_RESET_TEXT_COMMAND = slashlessCommandPattern(["tutorialReset", "tutorialreset"]);
 const RESET_TEXT_COMMAND = slashlessCommandPattern(["reset"]);
 const ADD_TORCH_TEXT_COMMAND = slashlessCommandPattern(["addTorch", "addtorch"]);
+const ADD_LIT_TORCH_TEXT_COMMAND = slashlessCommandPattern(["addLitTorch", "addlittorch"]);
 const ADD_TWIGS_TEXT_COMMAND = slashlessCommandPattern(["addTwigs", "addtwigs"]);
+const ADD_ITEM_TEXT_COMMAND = slashlessCommandPattern(["addItem", "additem"]);
 const ADD_RESOURCE_HELP_TEXT_COMMAND = slashlessCommandPattern(["addResourceHelp", "addresourcehelp", "addResourseHelp", "addresoursehelp"]);
 const ADD_RESOURCE_TEXT_COMMAND = slashlessCommandPattern(["addResource", "addresource", "addResourse", "addresourse"]);
 const RESTORE_BERRIES_TEXT_COMMAND = slashlessCommandPattern(["restoreBerries", "restoreberries"]);
@@ -233,9 +257,11 @@ export const ADMIN_HELP_TEXT = [
   "/addCreatureHelp — список speciesKey для тварин",
   "/addResource <resourceKey> [locationKey|x,y,z] [amount] — відновити ресурс у місцині; без місцини бере поточну, без кількості додає 1",
   "/addResourceHelp — список ключів ресурсів; /addResourse теж працює як запасний варіант",
-  "/addCampfire [locationKey|x,y,z|персонаж] [debug] — додати складене рукотворне вогнище; debug створює одразу палаюче службове",
+  "/addCampfire [locationKey|x,y,z|персонаж] [debug] — додати й одразу підпалити рукотворне вогнище; debug створює старий службовий варіант",
   "/addTorch [персонаж] [кількість] — додати факел у речі собі або вказаному персонажу; без кількості додає 1",
+  "/addLitTorch [персонаж] [кількість] — додати запалений факел у речі собі або вказаному персонажу; без кількості додає 1",
   "/addTwigs [персонаж] [кількість] — додати хмиз у речі собі або вказаному персонажу; без кількості додає 1",
+  "/addItem <resourceKey> [персонаж] [кількість] — додати будь-який відомий resourceKey у речі собі або вказаному персонажу; без кількості додає 1",
   "/carcassQuest start — примусово відновити заклик біля падального рову й мисливський тиск",
   "/carcassQuest stop — примусово перевести падальний рів у стан «поки досить»",
   "",
@@ -345,13 +371,28 @@ export function registerAdminHandlers(bot: Bot) {
     });
   }
 
+  async function replyAdminItemsMenu(ctx: any) {
+    if (!(await requireScribeAdmin(ctx))) return;
+    await ctx.reply([
+      "🎒 Речі",
+      "",
+      "Швидкі кнопки додають 1 одиницю в речі Писаря.",
+      "Формат: /addItem <resourceKey> [персонаж] [кількість].",
+      "Без персонажа команда додає річ Писарю; без кількості додає 1.",
+      "Приклади: /addItem berries #3 5, /addItem raw_meat Вербові 2.",
+    ].join("\n"), {
+      reply_markup: buildAdminItemsReplyKeyboard(),
+    });
+  }
+
   async function replyAdminFireMenu(ctx: any) {
     if (!(await requireScribeAdmin(ctx))) return;
     await ctx.reply([
       "🔥 Вогонь",
       "",
-      "Без параметрів /addCampfire додає вогнище в поточній місцині Писаря.",
-      "/addTorch і /addTwigs без параметрів додають 1 факел або 1 хмиз Писарю. Останнє число задає кількість: /addTorch #3 5, /addTwigs Вербові 10.",
+      "Без параметрів /addCampfire додає й підпалює рукотворне вогнище в поточній місцині Писаря.",
+      "/addCampfire debug лишає старий службовий варіант для вузьких перевірок.",
+      "/addTorch, /addLitTorch і /addTwigs без параметрів додають 1 факел, запалений факел або 1 хмиз Писарю. Останнє число задає кількість: /addTorch #3 5, /addLitTorch 2, /addTwigs Вербові 10.",
     ].join("\n"), {
       reply_markup: buildAdminFireReplyKeyboard(),
     });
@@ -436,6 +477,7 @@ export function registerAdminHandlers(bot: Bot) {
   bot.command(["weatherSet", "weatherset"], (ctx) => runWeatherSetCommand(ctx));
   bot.hears(WEATHER_SET_TEXT_COMMAND, (ctx) => runWeatherSetCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
   bot.hears(["🌿 Ресурси"], replyAdminResourcesMenu);
+  bot.hears(["🎒 Речі", "Речі"], replyAdminItemsMenu);
   bot.hears(["🔥 Вогонь"], replyAdminFireMenu);
   bot.hears(["🐾 Істоти", "Істоти"], replyAdminCreaturesMenu);
   bot.hears(["🧭 Телепорт", "Телепорт", "🧭 Телепорт (/teleport)", "Телепорт (/teleport)"], replyTeleportMenu);
@@ -590,12 +632,13 @@ export function registerAdminHandlers(bot: Bot) {
     await logEvent("SYSTEM", debug ? "Debug campfire added" : "Handmade admin campfire added", `${feature.key} at ${location.key}`, location.id);
     return ctx.reply(debug
       ? `🔥 Додано debug-вогнище у місцині: ${location.name}.\nКлюч: ${feature.key}`
-      : `🪵 Додано складене рукотворне вогнище у місцині: ${location.name}.\nКлюч: ${feature.key}\nЙого можна тестово підпалити, погасити й розібрати як вогнище, складене персонажем.`);
+      : `🔥 Додано й підпалено рукотворне вогнище у місцині: ${location.name}.\nКлюч: ${feature.key}\nЙого можна тестово погасити й розібрати як вогнище, складене персонажем.`);
   }
 
   bot.command("addCampfire", (ctx) => runAddCampfireCommand(ctx));
   bot.hears(ADD_CAMPFIRE_TEXT_COMMAND, (ctx) => runAddCampfireCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
   bot.hears(["🔥 Додати вогнище", "Додати вогнище", "🔥 Додати вогнище (/addCampfire)", "Додати вогнище (/addCampfire)"], (ctx) => runAddCampfireCommand(ctx, ""));
+  bot.hears(["🔥 Debug-вогнище", "Debug-вогнище", "🔥 Debug-вогнище (/addCampfire debug)", "Debug-вогнище (/addCampfire debug)"], (ctx) => runAddCampfireCommand(ctx, "debug"));
 
   async function runTeleportCommand(ctx: any, raw = String(ctx.match ?? "").trim()) {
     if (!(await requireScribeAdmin(ctx))) return;
@@ -680,6 +723,22 @@ export function registerAdminHandlers(bot: Bot) {
   bot.hears(ADD_TORCH_TEXT_COMMAND, (ctx) => runAddTorchCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
   bot.hears(["🕯 Додати факел", "Додати факел", "🕯 Додати факел (/addTorch)", "Додати факел (/addTorch)"], (ctx) => runAddTorchCommand(ctx, ""));
 
+  async function runAddLitTorchCommand(ctx: any, rawTarget = String(ctx.match ?? "").trim()) {
+    if (!(await requireScribeAdmin(ctx))) return;
+
+    const parsed = parseAdminInventoryResourceArgs(rawTarget);
+    const player = await resolvePlayerForAdmin(ctx, parsed.playerArg);
+    if (!player) return;
+    const { litTorch } = await ensureTorchResourceTypes();
+    await addInventoryResource(player.id, litTorch.id, parsed.amount);
+    await logEvent("SYSTEM", "Debug lit torch added to inventory", `player=${player.id}; amount=${parsed.amount}`);
+    await ctx.reply(`🔥🕯 Додано запалений факел у речі: ${playerDisplayName(player)} ×${parsed.amount}.`);
+  }
+
+  bot.command(["addLitTorch", "addlittorch"], (ctx) => runAddLitTorchCommand(ctx));
+  bot.hears(ADD_LIT_TORCH_TEXT_COMMAND, (ctx) => runAddLitTorchCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
+  bot.hears(["🔥🕯 Додати запалений факел", "Додати запалений факел", "🔥🕯 Додати запалений факел (/addLitTorch)", "Додати запалений факел (/addLitTorch)"], (ctx) => runAddLitTorchCommand(ctx, ""));
+
   async function runAddTwigsCommand(ctx: any, rawTarget = String(ctx.match ?? "").trim()) {
     if (!(await requireScribeAdmin(ctx))) return;
 
@@ -695,6 +754,49 @@ export function registerAdminHandlers(bot: Bot) {
   bot.command("addTwigs", (ctx) => runAddTwigsCommand(ctx));
   bot.hears(ADD_TWIGS_TEXT_COMMAND, (ctx) => runAddTwigsCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
   bot.hears(["🪵 Додати хмиз", "Додати хмиз", "🪵 Додати хмиз (/addTwigs)", "Додати хмиз (/addTwigs)"], (ctx) => runAddTwigsCommand(ctx, ""));
+
+  async function runAddItemCommand(ctx: any, defaultResourceKey = "", rawArgs = String(ctx.match ?? "")) {
+    if (!(await requireScribeAdmin(ctx))) return;
+
+    const parsed = parseAdminInventoryItemArgs(rawArgs, defaultResourceKey);
+    if (!parsed.resourceKey) {
+      await ctx.reply("Вкажи ключ речі. Формат: /addItem <resourceKey> [персонаж] [кількість].");
+      return;
+    }
+
+    const resourceType = await ensureAdminInventoryResourceType(parsed.resourceKey);
+    if (!resourceType) {
+      await ctx.reply(`Невідомий resourceKey для речей: ${parsed.resourceKey}. Перевір /addResourceHelp або resourceTypes.`);
+      return;
+    }
+
+    const player = await resolvePlayerForAdmin(ctx, parsed.playerArg);
+    if (!player) return;
+    await addInventoryResource(player.id, resourceType.id, parsed.amount);
+    await logEvent("SYSTEM", "Admin item added to inventory", `player=${player.id}; resource=${resourceType.key}; amount=${parsed.amount}`);
+    await ctx.reply(`🎒 Додано «${resourceType.name}» у речі: ${playerDisplayName(player)} ×${parsed.amount}.`);
+  }
+
+  bot.command(["addItem", "additem"], (ctx) => runAddItemCommand(ctx));
+  bot.hears(ADD_ITEM_TEXT_COMMAND, (ctx) => runAddItemCommand(ctx, "", String(ctx.match?.[1] ?? "").trim()));
+  bot.hears(["🍓 Додати ягоди в речі", "Додати ягоди в речі"], (ctx) => runAddItemCommand(ctx, "berries", ""));
+  bot.hears(["🌿 Додати трави в речі", "Додати трави в речі"], (ctx) => runAddItemCommand(ctx, "herbs", ""));
+  bot.hears(["🍄 Додати гриби в речі", "Додати гриби в речі"], (ctx) => runAddItemCommand(ctx, "mushrooms", ""));
+  bot.hears(["🌾 Додати траву в речі", "Додати траву в речі"], (ctx) => runAddItemCommand(ctx, "grass", ""));
+  bot.hears(["🕯 Додати притушений факел", "Додати притушений факел"], (ctx) => runAddItemCommand(ctx, "doused_torch", ""));
+  bot.hears(["🥩 Додати сире м'ясо", "Додати сире м'ясо"], (ctx) => runAddItemCommand(ctx, RAW_MEAT_KEY, ""));
+  bot.hears(["🍖 Додати смажене м'ясо", "Додати смажене м'ясо"], (ctx) => runAddItemCommand(ctx, COOKED_MEAT_KEY, ""));
+  bot.hears(["🔪 Додати ніж", "Додати ніж"], (ctx) => runAddItemCommand(ctx, "knife", ""));
+  bot.hears(["🪵 Додати спис", "Додати спис"], (ctx) => runAddItemCommand(ctx, "hunting_spear", ""));
+  bot.hears(["🌾 Додати серп", "Додати серп"], (ctx) => runAddItemCommand(ctx, "sickle", ""));
+  bot.hears(["🪓 Додати сокиру", "Додати сокиру"], (ctx) => runAddItemCommand(ctx, "hand_axe", ""));
+  bot.hears(["🗡 Додати меч", "Додати меч"], (ctx) => runAddItemCommand(ctx, "short_sword", ""));
+  bot.hears(["➕ Додати річ", "Додати річ"], async (ctx) => {
+    if (!(await requireScribeAdmin(ctx))) return;
+    await ctx.reply("Формат: /addItem <resourceKey> [персонаж] [кількість]. Наприклад: /addItem berries #3 5.", {
+      reply_markup: buildAdminItemsReplyKeyboard(),
+    });
+  });
 
   async function replyAddResourceHelp(ctx: any) {
     if (!(await requireScribeAdmin(ctx))) return;

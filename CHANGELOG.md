@@ -17,6 +17,8 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Strange Totems now age on world time: old totems can shed a small `twigs` bundle once, and active totems expire after seven in-game days.
 - Added a guarded daily ambient spawn pass for Strange Totems in dry luka and riverbank locations, with region caps, player/presence safety checks and suspicious tracks toward a visible exit.
 - Updated location feature inspection, `/help`, `/commands`, deep-link handling and regression coverage for the new dismantle path.
+- Scribe/admin `/addCampfire` now creates a lit handmade campfire by default, while `/addCampfire debug` keeps the old service-fire path.
+- Added `/addLitTorch`, `/addItem`, a scribe/admin inventory-items submenu, and coordinate teleport buttons on `/locationAll`.
 
 ## 0.15.12 - Ukrainian give parser and rest recovery polish - 12026-06-02
 
