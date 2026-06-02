@@ -717,7 +717,7 @@ async function submitYell(bot: Bot, ctx: any, text: string) {
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const safeText = stripUnsafeText(text);
-  if (!safeText) return void (await ctx.reply("Напиши так: yell текст або гукнути текст"));
+  if (!safeText) return void (await ctx.reply("Напиши так: <b>yell текст</b> або <b>гукнути текст</b>", { parse_mode: "HTML" }));
 
   const durationMs = actionDurationMs("SAY", player.stamina) * 2;
   try {
