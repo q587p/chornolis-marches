@@ -1,7 +1,7 @@
 import { Bot, InlineKeyboard } from "grammy";
 import type { Prisma, WorldActionType } from "@prisma/client";
 import { prisma } from "../db";
-import { BASE_HP, BASE_STAMINA, HEALTH_REGEN_PER_INTERVAL, PASSIVE_HEALTH_REGEN_INTERVAL_MS, PASSIVE_STAMINA_REGEN_PER_INTERVAL, PLAYER_HUNGER_MAX, REST_HEALTH_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_PER_INTERVAL, STAMINA_REGEN_INTERVAL_MS } from "../gameConfig";
+import { BASE_HP, BASE_STAMINA, HEALTH_REGEN_PER_INTERVAL, PASSIVE_STAMINA_REGEN_PER_INTERVAL, PLAYER_HUNGER_MAX, REST_HEALTH_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_PER_INTERVAL, STAMINA_REGEN_INTERVAL_MS } from "../gameConfig";
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { renderLocationBrief, renderLocationFeatureInteractionByQuery } from "../services/locations";
 import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
@@ -31,7 +31,7 @@ import { tutorialActionHintComment, tutorialLookPaceComments } from "../services
 import { escapeHtml } from "../utils/text";
 import { noteKnownMessage } from "../utils/messageTracker";
 import { hasCompletedTutorial, isTutorialLocation, rememberTutorialCommandHintIfInTutorial } from "../services/tutorial";
-import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "../services/locationFeatures";
+import { CAMPFIRE_REST_STAMINA_REGEN_MULTIPLIER, getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "../services/locationFeatures";
 import { canCookPlayerMeat, COOKED_MEAT_KEY, RAW_MEAT_KEY } from "../services/meat";
 import { queueAllRawMeatCooking } from "../services/cookingQueue";
 import { eatAllButtonLabel, queueAllUsableInventoryResource } from "../services/eatingQueue";
@@ -52,6 +52,11 @@ function minutes(ms: number) {
   return Math.max(1, Math.ceil(ms / 60_000));
 }
 
+function recoveryMinutes(remaining: number, amount: number, intervalMs: number) {
+  if (remaining <= 0) return 0;
+  return minutes(Math.ceil(remaining / Math.max(1, amount)) * intervalMs);
+}
+
 function formatDateTime(value: Date | string | null | undefined) {
   if (!value) return "невідомо";
   const date = value instanceof Date ? value : new Date(value);
@@ -68,22 +73,42 @@ function formatDateTime(value: Date | string | null | undefined) {
 
 async function recoveryText(player: any) {
   if (player.sleepState === "ORDINARY_SLEEP") return "\nВідновлення: тіло відпочиває глибше, поки ви спите.";
-  const staminaMax = player.isResting ? await getPlayerRestStaminaCap(player.id) : player.staminaMax ?? BASE_STAMINA;
+  const staminaMax = player.staminaMax ?? BASE_STAMINA;
+  const restStaminaCap = await getPlayerRestStaminaCap(player.id);
   const hpMax = player.hpMax ?? BASE_HP;
   const staminaRemaining = Math.max(0, staminaMax - player.stamina);
+  const restStaminaRemaining = Math.max(0, restStaminaCap - player.stamina);
   const hpRemaining = Math.max(0, hpMax - player.hp);
-  if (staminaRemaining <= 0 && hpRemaining <= 0) return "";
+  if (staminaRemaining <= 0 && restStaminaRemaining <= 0 && hpRemaining <= 0) return "";
 
-  const passiveStaminaMinutes = Math.ceil(staminaRemaining / PASSIVE_STAMINA_REGEN_PER_INTERVAL) * minutes(STAMINA_REGEN_INTERVAL_MS);
-  const restRate = REST_STAMINA_REGEN_PER_INTERVAL * await getPlayerRestStaminaRegenMultiplier(player.id);
-  const restStaminaMinutes = minutes(Math.ceil(staminaRemaining / Math.max(1, restRate)) * REST_STAMINA_REGEN_INTERVAL_MS);
-  const passiveHpMinutes = Math.ceil(hpRemaining / HEALTH_REGEN_PER_INTERVAL) * minutes(PASSIVE_HEALTH_REGEN_INTERVAL_MS);
-  const restHpMinutes = Math.ceil(hpRemaining / HEALTH_REGEN_PER_INTERVAL) * minutes(REST_HEALTH_REGEN_INTERVAL_MS);
-  const passiveMinutes = Math.max(passiveStaminaMinutes, passiveHpMinutes);
-  const restMinutes = Math.max(restStaminaMinutes, restHpMinutes);
+  const restMultiplier = await getPlayerRestStaminaRegenMultiplier(player.id);
+  const passiveStaminaMinutes = recoveryMinutes(staminaRemaining, PASSIVE_STAMINA_REGEN_PER_INTERVAL, STAMINA_REGEN_INTERVAL_MS);
+  const restStaminaMinutes = recoveryMinutes(restStaminaRemaining, REST_STAMINA_REGEN_PER_INTERVAL * restMultiplier, REST_STAMINA_REGEN_INTERVAL_MS);
+  const campfireStaminaMinutes = recoveryMinutes(
+    restStaminaRemaining,
+    REST_STAMINA_REGEN_PER_INTERVAL * Math.max(restMultiplier, CAMPFIRE_REST_STAMINA_REGEN_MULTIPLIER),
+    REST_STAMINA_REGEN_INTERVAL_MS,
+  );
+  const restHpMinutes = recoveryMinutes(hpRemaining, HEALTH_REGEN_PER_INTERVAL, REST_HEALTH_REGEN_INTERVAL_MS);
 
-  if (player.isResting) return `\nВідновлення: приблизно ${restMinutes} хв під час відпочинку.`;
-  return `\nВідновлення без відпочинку: приблизно ${passiveMinutes} хв. Через /rest або 🧘 Відпочити: приблизно ${restMinutes} хв.`;
+  if (player.isResting) {
+    const lines: string[] = [];
+    if (restStaminaRemaining > 0) lines.push(`Відновлення снаги: приблизно ${restStaminaMinutes} хв під час відпочинку.`);
+    if (hpRemaining > 0) lines.push(`Життя з відпочинком: приблизно ${restHpMinutes} хв.`);
+    return `\n${lines.join("\n")}`;
+  }
+
+  const lines: string[] = [];
+  if (staminaRemaining > 0 || restStaminaRemaining > 0) {
+    lines.push("Відновлення снаги:");
+    if (staminaRemaining > 0) lines.push(`Без відпочинку: приблизно ${passiveStaminaMinutes} хв.`);
+    if (restStaminaRemaining > 0) {
+      lines.push(`З відпочинком: приблизно ${restStaminaMinutes} хв.`);
+      lines.push(`Біля вогнища: щонайбільше приблизно ${campfireStaminaMinutes} хв.`);
+    }
+  }
+  if (hpRemaining > 0) lines.push(`Життя з відпочинком: приблизно ${restHpMinutes} хв.`);
+  return `\n${lines.join("\n")}`;
 }
 
 export function buildCharacterAutoKeyboard(autoEnabled: boolean, options: { posture?: string | null; sleepState?: string | null; isResting?: boolean | null; showSleep?: boolean; hasActionQueue?: boolean } = {}) {

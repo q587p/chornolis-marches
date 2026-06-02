@@ -7,7 +7,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
-## 0.15.12 - Ukrainian give parser polish - 12026-06-02
+## 0.15.12 - Ukrainian give parser and rest recovery polish - 12026-06-02
 
 ### Changed
 
@@ -16,6 +16,9 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Canonicalized camp cat target forms such as `коту`, `котові`, `кіт`, `бережнику` and hyphenated `котові-бережнику` to the same visible target search.
 - Extended input-alias and target-alias coverage so `/give`, slashless `give`, Ukrainian `дати`, `/feed_raw_meat` and `/feed_raw_meet` remain on one canonical action path.
 - Updated camp spirit cat, input-alias and planning docs for the first `GIVE-002` parser slice while keeping broader gifts, item-instance transfer and barter as follow-up work.
+- Increased active-rest stamina recovery from `13` to `26` stamina per rest interval.
+- Active campfires now provide a minimum `x3` stamina-rest speed multiplier, while authored stronger rest multipliers still win when present.
+- Split character-card recovery hints so stamina timing no longer gets hidden behind HP recovery, and the player sees separate `without rest`, `with rest` and `near campfire` estimates.
 
 ## 0.15.11 - Camp cat raw-meat give bridge - 12026-06-02
 

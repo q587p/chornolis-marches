@@ -15,6 +15,7 @@ Chornolis uses fire as an early survival and visibility tool.
 - During the final 2 in-game hours, currently 4 real minutes, location and feature text notes that the fire is fading.
 - In that fading window, `/examine` shows the low-fire state: the campfire is догорає, but still lights the місцина until it expires.
 - `/look` lists campfires only as visible features. `/examine` shows the gameplay meaning: whether the fire gives light, whether it improves rest, and whether it is fading or extinguished.
+- Active campfires now improve active rest mechanically: they provide at least a `x3` stamina-rest speed multiplier, unless a stronger authored location multiplier already applies.
 - In `/look`, an extinguished campfire should be listed only by name, e.g. `Згасле вогнище`. The ash/no-light/no-warmth details belong in `/examine`.
 - After at least 1 in-game hour, currently 2 real minutes, a campfire feature can show `Додати хмиз`.
 - `Додати хмиз`, `додати хмиз` and `/add twigs campfire` consume one `twigs` resource from inventory.

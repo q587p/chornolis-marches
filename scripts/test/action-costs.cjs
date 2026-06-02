@@ -2,9 +2,10 @@ const assert = require("node:assert/strict");
 
 require("ts-node/register");
 
-const { playerStaminaCostConfig } = require("../../src/gameConfig");
+const { playerStaminaCostConfig, REST_STAMINA_REGEN_PER_INTERVAL } = require("../../src/gameConfig");
 const { playerHungerAfterStaminaSpend } = require("../../src/services/actionRecovery");
 const { actionTitle } = require("../../src/services/actionRules");
+const { CAMPFIRE_REST_STAMINA_REGEN_MULTIPLIER } = require("../../src/services/locationFeatures");
 
 assert.equal(playerStaminaCostConfig.FRESHEN, 3);
 assert.equal(playerStaminaCostConfig.USE_ITEM, 1);
@@ -16,6 +17,8 @@ assert.equal(playerStaminaCostConfig.BUILD_CAMPFIRE, 3);
 assert.equal(playerStaminaCostConfig.DOUSE_CAMPFIRE, 1);
 assert.equal(playerStaminaCostConfig.DISMANTLE_CAMPFIRE, 2);
 assert.equal(playerStaminaCostConfig.COOK, 4);
+assert.equal(REST_STAMINA_REGEN_PER_INTERVAL, 26);
+assert.equal(CAMPFIRE_REST_STAMINA_REGEN_MULTIPLIER, 3);
 
 assert.equal(actionTitle({ type: "USE_ITEM", payload: { resourceKey: "berries" } }), "їмо ягоди");
 assert.equal(actionTitle({ type: "DROP_ITEM", payload: { allFilter: "corpse" } }), "викладаємо речі");
