@@ -2,7 +2,7 @@ export const CAMP_SPIRIT_CAT_SPECIES_KEY = "camp_spirit_cat";
 export const CAMP_SPIRIT_CAT_NAME = "Кіт-бережник";
 export const CAMP_SPIRIT_CAT_START_LOCATION_KEY = "start_border_camp";
 export const CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY = "start_border_watchtower";
-export const CAMP_SPIRIT_CAT_MOUSE_POUNCE_CHANCE = 0.55;
+export const CAMP_SPIRIT_CAT_MOUSE_POUNCE_CHANCE = 0.9;
 
 const CAMP_SPIRIT_CAT_LOCATION_KEYS = new Set([
   CAMP_SPIRIT_CAT_START_LOCATION_KEY,

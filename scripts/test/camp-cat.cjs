@@ -74,7 +74,8 @@ assert.match(
 assert.equal(campSpiritCatShouldPrioritizeLocalMice({ hasLocalMice: true }), true);
 assert.equal(campSpiritCatShouldPrioritizeLocalMice({ hasLocalMice: false }), false);
 assert.equal(campSpiritCatMouseBehaviorPlan({ hasLocalMice: true, roll: 0.1 }), "pounce");
-assert.equal(campSpiritCatMouseBehaviorPlan({ hasLocalMice: true, roll: 0.9 }), "watch");
+assert.equal(campSpiritCatMouseBehaviorPlan({ hasLocalMice: true, roll: 0.85 }), "pounce");
+assert.equal(campSpiritCatMouseBehaviorPlan({ hasLocalMice: true, roll: 0.95 }), "watch");
 assert.equal(campSpiritCatMouseBehaviorPlan({ hasLocalMice: false, roll: 0.1 }), "watch");
 assert.match(
   campSpiritCatWatchPosture({ daypart: "night", hasActiveCampfire: true }),

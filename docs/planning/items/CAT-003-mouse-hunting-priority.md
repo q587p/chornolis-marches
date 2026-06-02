@@ -40,6 +40,16 @@ Make camp mice the cat’s first normal behavior priority, above meat interest a
 
 The broader CAT-003 hunting acceptance remains open for tuning, corpse cleanup/feeding details and future give/meat interaction.
 
+## Future corpse cleanup slice
+
+After the cat has killed the visible camp mice, add a small catlike cleanup loop:
+
+- if mouse corpses remain in the starter camp and no live camp mice need attention, the cat may take one corpse at a time;
+- carry it up to the watchtower through the allowed vertical route;
+- drop it from the top of the tower with clear local flavor text;
+- keep this as camp cleanup and cat behavior, not a general hauling or loot system;
+- add cooldowns or a per-tick budget so the scene does not spam the camp chat.
+
 ## Out of scope
 
 - Full predator ecology changes outside camp.

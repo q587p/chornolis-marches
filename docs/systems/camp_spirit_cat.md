@@ -208,6 +208,8 @@ Rules:
 
 `0.15.6` implementation note: the first watch-posture slice adds quiet body-language text for camp-local mice, night/dusk/dawn, active campfire light and the starter watchtower. Direct `look` and `examine` inspection are intentionally distinct: brief look stays compact, while full examination gives richer attentive detail about the cat's boundary-guard nature. This is a visible-state/copy layer only: no proactive chat, no exact hidden-target warning, no hunting and no companion behavior.
 
+`0.15.13` tuning note: local mouse pounce is now much more likely when a live visible mouse is in the cat's current camp/watchtower location. This is still a same-location camp cleanup behavior, not full pursuit or ordinary predator ecology.
+
 ### Boundary
 
 - Кіт має `campBound: true` або еквівалент у species/behavior config.
