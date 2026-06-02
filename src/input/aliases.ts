@@ -1152,6 +1152,8 @@ function parseOpenIntent(text: string): ParsedAliasCommand | null {
 }
 
 function parseTargetAction(text: string): ParsedAliasCommand | null {
+  if (text === "attack_mouse") return { kind: "target-action", action: "attack", target: "mouse" };
+
   const patterns: Array<[TargetAction, RegExp]> = [
     ["inspect", /^(?:look\s+at|look|x|examine|inspect|роздивитися|оглянути|огл|глянути\s+на|подивитися\s+на|придивитися\s+до)\s+(.+)$/],
     ["attack", /^(?:attack|fight|hit|kill|kick|атака|атакувати|напасти\s+на|напасти|вдарити|ударити|копнути|бити|битися\s+з)\s+(.+)$/],
