@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 
 require("ts-node/register");
 
-const { EMPTY_KEYBOARD_BUTTON, buildAdminCreaturesReplyKeyboard, buildAdminFireReplyKeyboard, buildAdminMenuReplyKeyboard, buildAdminResourcesReplyKeyboard, buildMainReplyKeyboard, buildTutorialSecondStepReplyKeyboard, buildTutorialStartReplyKeyboard, mainStatusLabelForPlayer, postureActionLabelsForState, shouldShowInventoryButton, shouldUseFocusedTutorialReplyKeyboard } = require("../../src/ui/replyKeyboard");
+const { EMPTY_KEYBOARD_BUTTON, buildAdminCreaturesReplyKeyboard, buildAdminFireReplyKeyboard, buildAdminItemsReplyKeyboard, buildAdminMenuReplyKeyboard, buildAdminResourcesReplyKeyboard, buildMainReplyKeyboard, buildTutorialSecondStepReplyKeyboard, buildTutorialStartReplyKeyboard, mainStatusLabelForPlayer, postureActionLabelsForState, shouldShowInventoryButton, shouldUseFocusedTutorialReplyKeyboard } = require("../../src/ui/replyKeyboard");
 const { buildCharacterAutoKeyboard } = require("../../src/handlers/player");
 const { TUTORIAL_REST_LOCATION_KEY, TUTORIAL_SECOND_STEP_LOCATION_KEY, TUTORIAL_START_LOCATION_KEY } = require("../../src/services/tutorial");
 const { formatFatigueText, formatObservedPostureText, formatPostureText, formatVitalsSentence } = require("../../src/utils/playerText");
@@ -194,6 +194,7 @@ assert.equal(adminMenuButtons.flat().includes("👥 Усі"), true);
 assert.equal(adminMenuButtons.flat().includes("🧭 Телепорт"), true);
 assert.equal(adminMenuButtons.flat().includes("✨ Відновити снагу"), true);
 assert.equal(adminMenuButtons.flat().includes("🌿 Ресурси"), true);
+assert.equal(adminMenuButtons.flat().includes("🎒 Речі"), true);
 assert.equal(adminMenuButtons.flat().includes("🐾 Істоти"), true);
 assert.equal(adminMenuButtons.flat().includes("🔥 Вогонь"), true);
 assert.equal(adminMenuButtons.flat().includes("🔧 Технічні деталі"), true);
@@ -259,8 +260,19 @@ assert.equal(adminCreaturesButtons.includes("🦴 Додати трупи"), tru
 
 const adminFireButtons = buildAdminFireReplyKeyboard().keyboard.flat().map((button) => button.text);
 assert.equal(adminFireButtons.includes("🔥 Додати вогнище"), true);
+assert.equal(adminFireButtons.includes("🔥 Debug-вогнище"), true);
 assert.equal(adminFireButtons.includes("🕯 Додати факел"), true);
+assert.equal(adminFireButtons.includes("🔥🕯 Додати запалений факел"), true);
 assert.equal(adminFireButtons.includes("🪵 Додати хмиз"), true);
+
+const adminItemsButtons = buildAdminItemsReplyKeyboard().keyboard.flat().map((button) => button.text);
+assert.equal(adminItemsButtons.includes("🍓 Додати ягоди в речі"), true);
+assert.equal(adminItemsButtons.includes("🔥🕯 Додати запалений факел"), true);
+assert.equal(adminItemsButtons.includes("🕯 Додати притушений факел"), true);
+assert.equal(adminItemsButtons.includes("🥩 Додати сире м'ясо"), true);
+assert.equal(adminItemsButtons.includes("🪓 Додати сокиру"), true);
+assert.equal(adminItemsButtons.includes("🗡 Додати меч"), true);
+assert.equal(adminItemsButtons.includes("➕ Додати річ"), true);
 
 const replyKeyboardLabels = [
   ...adminMainButtons.flat(),
@@ -268,6 +280,7 @@ const replyKeyboardLabels = [
   ...adminResourceButtons,
   ...adminCreaturesButtons,
   ...adminFireButtons,
+  ...adminItemsButtons,
 ];
 for (const label of replyKeyboardLabels) {
   assert.doesNotMatch(label, /\(\/[A-Za-z]/, `Reply keyboard labels should not include slash-command hints: ${label}`);

@@ -18,9 +18,11 @@ import {
 } from "../gameConfig";
 import { buildFatigueRestKeyboard, buildLyingPostureKeyboard, buildStandUpKeyboard } from "../ui/keyboards";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
+import { formatLifeState, formatResourceState } from "../utils/playerText";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
 import { autoWakeOrdinarySleep, getPlayerSleepRecoveryProfile, shouldAutoWakeOrdinarySleep } from "./sleep";
 import { getCurrentWorldState } from "./worldTime";
+import { playerCanShowTechnicalDetails } from "./technicalDetails";
 import { hungerCueContextForPlayer, hungerCueLevel, hungerCueText } from "./hungerCues";
 import { tutorialIdlePaceComments } from "./tutorialVoices";
 import { isTutorialFastRestLocationKey } from "./tutorial";
@@ -44,6 +46,23 @@ export function playerHungerAfterStaminaSpend(input: {
   const maxHunger = input.maxHunger ?? PLAYER_HUNGER_MAX;
   const shouldIncrease = input.cost >= PLAYER_STRENUOUS_HUNGER_COST_THRESHOLD || input.staminaAfter < 0;
   return shouldIncrease ? Math.min(maxHunger, input.currentHunger + 1) : input.currentHunger;
+}
+
+export function shouldRefreshMainKeyboardAfterVitalsChange(input: {
+  beforeHp: number;
+  afterHp: number;
+  hpMax: number;
+  beforeStamina: number;
+  afterStamina: number;
+  staminaMax: number;
+  showTechnicalDetails?: boolean;
+}) {
+  if (input.showTechnicalDetails) {
+    return input.beforeHp !== input.afterHp || input.beforeStamina !== input.afterStamina;
+  }
+
+  return formatLifeState(input.beforeHp, input.hpMax) !== formatLifeState(input.afterHp, input.hpMax)
+    || formatResourceState(input.beforeStamina, input.staminaMax) !== formatResourceState(input.afterStamina, input.staminaMax);
 }
 
 const TUTORIAL_REST_FULL_COMMENT = "Ось так виглядає короткий перепочинок у навчальному сні. Наяву до повної снаги шлях буде довший, і не кожне вогнище тримає вас так легко.";
@@ -103,12 +122,19 @@ async function knockOutPlayer(bot: Bot, player: { id: number }, chatId?: number 
   }
 }
 
-async function spendPlayerStaminaCost(bot: Bot, playerId: number, cost: number, chatId?: number | string) {
-  if (cost <= 0) return;
+type PlayerStaminaSpendResult = {
+  replyMarkup?: Awaited<ReturnType<typeof buildMainReplyKeyboardForTelegramId>>;
+  shouldRefreshReplyKeyboard: boolean;
+};
+
+async function spendPlayerStaminaCost(bot: Bot, playerId: number, cost: number, chatId?: number | string): Promise<PlayerStaminaSpendResult> {
+  const noRefresh = { shouldRefreshReplyKeyboard: false };
+  if (cost <= 0) return noRefresh;
   const player = await prisma.player.findUnique({ where: { id: playerId } });
-  if (!player) return;
+  if (!player) return noRefresh;
 
   const max = player.staminaMax ?? BASE_STAMINA;
+  const hpMax = player.hpMax ?? BASE_HP;
   const before = player.stamina;
   const after = before - cost;
   const tookHp = before <= VERY_TIRED_STAMINA;
@@ -132,14 +158,24 @@ async function spendPlayerStaminaCost(bot: Bot, playerId: number, cost: number, 
       hunger: nextHunger,
     },
   });
-  if (updated.count === 0) return;
+  if (updated.count === 0) return noRefresh;
   if (nextHp <= 0 && player.hp > 0) await knockOutPlayer(bot, player, chatId);
+
+  const shouldRefreshReplyKeyboard = Boolean(chatId && shouldRefreshMainKeyboardAfterVitalsChange({
+    beforeHp: player.hp,
+    afterHp: nextHp,
+    hpMax,
+    beforeStamina: before,
+    afterStamina: after,
+    staminaMax: max,
+    showTechnicalDetails: playerCanShowTechnicalDetails(player),
+  }));
+  const refreshedKeyboard = shouldRefreshReplyKeyboard && Number.isSafeInteger(Number(player.telegramId))
+    ? await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), Boolean(player.isAutoEnabled))
+    : undefined;
 
   const messages = thresholdMessages(before, after, max, tookHp);
   if (chatId && messages.length) {
-    const refreshedKeyboard = Number.isSafeInteger(Number(player.telegramId))
-      ? await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), Boolean(player.isAutoEnabled))
-      : undefined;
     for (const message of messages) {
       await bot.api.sendMessage(chatId, message, refreshedKeyboard ? { reply_markup: refreshedKeyboard } : undefined);
     }
@@ -151,6 +187,8 @@ async function spendPlayerStaminaCost(bot: Bot, playerId: number, cost: number, 
     const refreshedKeyboard = await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), Boolean(player.isAutoEnabled));
     await bot.api.sendMessage(chatId, hungerCueText(hungerCue, context), { reply_markup: refreshedKeyboard });
   }
+
+  return { replyMarkup: refreshedKeyboard, shouldRefreshReplyKeyboard };
 }
 
 export async function spendPlayerStamina(bot: Bot, playerId: number, type: WorldActionType, chatId?: number | string) {

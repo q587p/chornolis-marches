@@ -15,7 +15,8 @@ export type StartActionPayload =
   | "buildCampfire"
   | "lightCampfire"
   | "douseCampfire"
-  | "dismantleCampfire";
+  | "dismantleCampfire"
+  | "dismantleTotem";
 
 const SAFE_START_PAYLOAD = /^[A-Za-z0-9_-]+$/;
 
@@ -40,6 +41,7 @@ export function parseStartActionPayload(value: unknown): StartActionPayload | nu
   if (payload === "cmd_light_campfire") return "lightCampfire";
   if (payload === "cmd_douse_campfire") return "douseCampfire";
   if (payload === "cmd_dismantle_campfire") return "dismantleCampfire";
+  if (payload === "cmd_dismantle_totem") return "dismantleTotem";
 
   return null;
 }

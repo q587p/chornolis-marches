@@ -55,9 +55,9 @@ Actions:
 - `збирати трави`, `збирати ягоди`, `збирати гриби`.
 - Pickup verbs such as `підібрати`, `підняти`, `взяти`, `pick`, `take` and `get` first mean visible ground-item pickup. Gather verbs such as `збирати`, `зібрати`, `шукати` and `gather` mean spending time and stamina on a local resource node. If a natural resource is not lying separately on the ground, pickup text should give a hint to gather it instead.
 - `підібрати ягоди`, `взяти трави`, `take herbs`, `get mushrooms` -> pick up matching loose ground resources only when they are actually visible as ground items; otherwise explain that these should be gathered.
-- `get all`, `pick all`, `взяти все`, `підняти все` -> pick up all visible loose ground resources and visible corpses listed under `Лежить:` in the current місцина.
-- `get all corpse`, `get all mouse`, `get all berries`, `підняти всі трупи` -> pick up only matching visible things from `Лежить:` when the type can be resolved.
-- Location-detail pickup buttons may also show a compact `всі` action beside a loose resource stack; it picks up all visible loose resources of that same type.
+- `/pick_all`, `/get_all`, `get all`, `pick all`, `взяти все`, `підібрати все`, `підняти все` -> pick up all visible loose ground resources and visible corpses listed under `Лежить:` in the current місцина.
+- `/pick_all corpse`, `/get_all corpse`, `get all corpse`, `get all mouse`, `get all berries`, `підняти всі трупи` -> pick up only matching visible things from `Лежить:` when the type can be resolved.
+- Location pickup buttons may also show a compact `всі` action beside a loose resource stack; it picks up all visible loose resources of that same type. When any pickable ground objects are visible under `Лежить:`, `Підібрати все` uses the same all-visible pickup path as `/pick_all` / `get all`.
 - Pickup costs `1` stamina per actual item/resource unit picked up; taking a stack of `19` loose items costs `19` stamina.
 - `з'їсти ягоди`, `їсти ягоди`, `використати ягоди`, `eat berries`, `use berries` -> eat carried berries from inventory to restore a small amount of stamina and ease hunger by a tiny amount.
 - `з'їсти всі ягоди`, `/eat_all_berries`, `eat all berries`, `use all berries` -> queue berry use until stamina and hunger no longer benefit, without removing unrelated queued actions.
@@ -95,7 +95,7 @@ Actions:
 - `shout Сюди`, `крикнути Сюди`, `кричати Допоможіть`, `крик Допоможіть`, `вигукнути Обережно`, `волати Не йдіть туди` -> shout across the current region. This uses the speech queue path but spends extra stamina compared with ordinary speech.
 - `черга`, `скасувати`, `очистити чергу`.
 - `/automessages`, `/automessages on`, `/automessages off`, `automessages`, `автоповідомлення`, `авто повідомлення` -> show or change whether own auto-mode action messages keep being delivered after Auto-AFK. Manual AFK and ended sessions remain stronger than this setting.
-- `/track`, `/examine tracks`, `роздивитися сліди`, `придивитися до слідів`. Future detail forms should include target-like aliases such as `роздивитися вовчий слід`, `роздивитися людський слід` and `роздивитися заячий слід`.
+- `/track`, `/track кіт`, `track cat`, `сліди миша`, `/examine tracks`, `роздивитися сліди`, `придивитися до слідів`. Targeted `/track <істота/персонаж>` filters recent visible tracks by actor label/name/species where the current track data can match it. Future detail forms should include target-like aliases such as `роздивитися вовчий слід`, `роздивитися людський слід` and `роздивитися заячий слід`.
 - `сказати Привіт`.
 - `додати хмиз`, `підкинути хмиз`, `/add twigs campfire` -> add carried `хмиз` to a nearby ordinary campfire.
 - `підібрати хмиз`, `взяти хмиз`, `pickup twigs` -> pick up visible loose `хмиз` in the current місцина.
@@ -109,7 +109,7 @@ Actions:
 
 Targets and signals:
 
-- `роздивитися труп`, `атакувати мишу`, `fight wolf`, `kick rabbit`, `привітати 1`, `освіжити труп`.
+- `роздивитися труп`, `атакувати мишу`, `атака миша`, `fight wolf`, `kick rabbit`, `привітати 1`, `освіжити труп`.
 - `підібрати труп`.
 - `освіжити труп`, `розібрати труп`, `freshen corpse`, `butcher corpse` -> gain raw meat from a sufficiently fresh corpse.
 - `/freshen_all`, `freshen all`, `свіжувати все`, `освіжити всі` -> queue freshening for every visible suitable corpse in the current місцина, one corpse at a time.
@@ -120,7 +120,7 @@ Targets and signals:
 - `/give сире м'ясо коту`, `give raw meat to cat`, `дати сире м'ясо коту`, `дати м'яса коту`, `дати мясо кіт`, `дати сирого м'яса бережнику`, `дати сирого мяса котові-бережнику`, `/feed_raw_meat`, `/feed_raw_meet` -> give one raw-meat unit to the visible camp spirit cat through the same narrow `give` path.
 - `кивнути 1`, `помахати мандрівник`, `вказати на вовка`, `насупитися вовк`.
 
-Target commands resolve visible nearby targets by number, id or visible name. If several targets match, the bot asks the player to clarify.
+Target commands resolve visible nearby targets by number, id or visible name. If several targets match, the bot asks the player to clarify; replying with that number while the prompt is fresh selects the listed target. Action-specific lookup should filter by what the action can actually use: `attack`/`атака` only lists attackable living targets, while `freshen`/`освіжити` focuses on visible corpses.
 
 Target focus buttons mirror the text commands: **Глянути** is a brief `/look <target>` style inspection, **Роздивитися** is fuller `/examine <target>`, **Сказати** prompts for addressed speech, **Прошепотіти** prompts for private/quiet addressed speech, and quick signal buttons stay beside **Ще сигнали**.
 

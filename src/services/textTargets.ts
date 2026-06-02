@@ -14,9 +14,17 @@ export type TextTargetRef = {
   label: string;
   actionLabel?: string;
   canGreet: boolean;
+  canAttack?: boolean;
   isCorpse?: boolean;
   searchKeys: string[];
 };
+
+export type TextTargetAction = "inspect" | "greet" | "attack" | "freshen";
+
+export type TextTargetMatch =
+  | { kind: "none" }
+  | { kind: "one"; target: TextTargetRef }
+  | { kind: "many"; targets: TextTargetRef[] };
 
 export function normalizeTargetKey(value: string) {
   return normalizeInput(value)
@@ -187,6 +195,7 @@ export async function visibleTextTargets(locationId: number, viewerPlayerId: num
     label: player.nameNominative ?? player.firstName ?? player.username ?? "мандрівник",
     actionLabel: heldWeaponLine(player.equippedWeaponKey)?.replace(/\.$/u, "").toLocaleLowerCase("uk-UA"),
     canGreet: true,
+    canAttack: false,
     searchKeys: targetSearchKeysForPlayer(player),
   }));
 
@@ -201,6 +210,7 @@ export async function visibleTextTargets(locationId: number, viewerPlayerId: num
         ? undefined
         : [heldWeaponLine(creature.equippedWeaponKey)?.replace(/\.$/u, "").toLocaleLowerCase("uk-UA"), normalizeCreatureActionText(creature.currentAction)].filter(Boolean).join("; ") || undefined,
       canGreet: !isCorpse && creature.species.kind !== "ANIMAL" && !isCampSpiritCatCreature(creature),
+      canAttack: !isCorpse && creature.species.kind === "ANIMAL" && creature.species.diet !== "CARNIVORE",
       isCorpse,
       searchKeys: targetSearchKeysForCreature(creature),
     };
@@ -213,6 +223,14 @@ export function targetListText(targets: TextTargetRef[]) {
   return targets.map((target, index) => `${index + 1}. ${targetDisplayLabel(target)}`).join("\n");
 }
 
+export function textTargetsForAction(action: TextTargetAction, targets: TextTargetRef[]) {
+  if (action === "inspect") return targets;
+  if (action === "greet") return targets.filter((target) => target.canGreet);
+  if (action === "attack") return targets.filter((target) => target.canAttack);
+  if (action === "freshen") return targets.filter((target) => target.isCorpse);
+  return targets;
+}
+
 export function inspectMissingText(targetQuery: string, targets: TextTargetRef[] = []) {
   const target = targetQuery.trim();
   const intro = target ? `Не бачу цього тут: «${target}».` : "Не бачу цього тут.";
@@ -220,7 +238,7 @@ export function inspectMissingText(targetQuery: string, targets: TextTargetRef[]
   return `${intro}\n\nПоруч можна роздивитися:\n${targetListText(targets)}`;
 }
 
-export function bestTargetMatch(query: string, targets: TextTargetRef[]) {
+export function bestTargetMatch(query: string, targets: TextTargetRef[]): TextTargetMatch {
   const target = normalizeTargetKey(query);
   if (!target) return { kind: "none" as const };
 
@@ -240,4 +258,37 @@ export function bestTargetMatch(query: string, targets: TextTargetRef[]) {
   if (fuzzy.length > 1) return { kind: "many" as const, targets: fuzzy };
 
   return { kind: "none" as const };
+}
+
+function splitTrailingVisibleIndex(query: string) {
+  const target = normalizeTargetKey(query);
+  const match = target.match(/^(.+?)\s+(\d+)$/u);
+  if (!match) return null;
+  const index = Number(match[2]);
+  if (!Number.isSafeInteger(index) || index < 1) return null;
+  return { prefix: match[1].trim(), index };
+}
+
+function targetMatchesPrefix(prefix: string, target: TextTargetRef) {
+  if (!prefix) return true;
+  return bestTargetMatch(prefix, [target]).kind === "one";
+}
+
+function collapseEquivalentAttackTargets(action: TextTargetAction, match: TextTargetMatch): TextTargetMatch {
+  if (action !== "attack" || match.kind !== "many" || match.targets.length === 0) return match;
+  const labels = new Set(match.targets.map((target) => normalizeTargetKey(target.label)));
+  return labels.size === 1 ? { kind: "one", target: match.targets[0] } : match;
+}
+
+export function bestTargetActionMatch(action: TextTargetAction, query: string, visibleTargets: TextTargetRef[]): TextTargetMatch {
+  const indexed = splitTrailingVisibleIndex(query);
+  if (indexed) {
+    const selected = visibleTargets[indexed.index - 1];
+    if (selected && textTargetsForAction(action, [selected]).length && targetMatchesPrefix(indexed.prefix, selected)) {
+      return { kind: "one", target: selected };
+    }
+  }
+
+  const candidates = textTargetsForAction(action, visibleTargets);
+  return collapseEquivalentAttackTargets(action, bestTargetMatch(query, candidates));
 }

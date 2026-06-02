@@ -2,7 +2,7 @@ export const CAMP_SPIRIT_CAT_SPECIES_KEY = "camp_spirit_cat";
 export const CAMP_SPIRIT_CAT_NAME = "Кіт-бережник";
 export const CAMP_SPIRIT_CAT_START_LOCATION_KEY = "start_border_camp";
 export const CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY = "start_border_watchtower";
-export const CAMP_SPIRIT_CAT_MOUSE_POUNCE_CHANCE = 0.55;
+export const CAMP_SPIRIT_CAT_MOUSE_POUNCE_CHANCE = 0.9;
 
 const CAMP_SPIRIT_CAT_LOCATION_KEYS = new Set([
   CAMP_SPIRIT_CAT_START_LOCATION_KEY,
@@ -113,12 +113,12 @@ export function campSpiritCatInspectionText(visibleAction: string, detail: "brie
     ].join("\n");
   }
 
-  return [
-    ...lines,
+  const paragraphs = [
     "Це табірний дух у котячій подобі: безмовний, уважний і прив'язаний до меж вогню та людей.",
     "Шерсть здається темнішою там, де світло не дістає землі, а очі довго не відпускають край табору.",
     "Він не відповідає словами. Вуха, хвіст і довгий погляд кажуть тут більше, ніж розмова.",
     campSpiritCatFullInspectionDetail(context),
     "Якщо просто глянути, видно тільки позу. Якщо роздивитися уважніше, стає ясніше, що він стереже не стежку, а саму межу.",
-  ].join("\n");
+  ];
+  return `${lines.join("\n")}\n\n${paragraphs.join("\n\n")}`;
 }

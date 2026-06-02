@@ -37,7 +37,11 @@ const adminPrepared = { ...prepared, data: adminHandmadeCampfireData(1234) };
 assert.equal(adminPrepared.data.created_by, "addCampfire");
 assert.equal(adminPrepared.data.adminCreated, true);
 assert.equal(isHandmadeCampfire(adminPrepared), true);
-assert.equal(isPreparedCampfire(adminPrepared), true);
+assert.equal(isPreparedCampfire({ ...adminPrepared, providesLight: true }), false);
+assert.equal(adminPrepared.data.prepared, false);
+assert.equal(adminPrepared.data.unlit, false);
+assert.equal(typeof adminPrepared.data.litAt, "string");
+assert.equal(typeof adminPrepared.data.expiresAt, "string");
 assert.equal(isHandmadeCampfire({ ...prepared, data: { ...adminPrepared.data, debug: true, handmade: false } }), false);
 
 assert.equal(handmadeCampfireCount([prepared, prepared]), 2);

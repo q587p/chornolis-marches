@@ -6,6 +6,7 @@ import { canSendProactiveToTelegramId } from "./sessionPresence";
 import { isTutorialLocation } from "./tutorial";
 import { canReceiveDaypartNotice } from "./playerNotificationSettings";
 import { creatureForms } from "./grammar";
+import { visibilityRulesForLocation } from "./visibility";
 
 type LocationNotificationOptions = {
   keyboard?: InlineKeyboard;
@@ -61,6 +62,12 @@ type MovementNotificationTarget = {
   label: string;
 };
 
+function labelAppearsInMovementLines(label: string, lines: string[] = []) {
+  const normalizedLabel = label.trim().toLocaleLowerCase("uk-UA");
+  if (!normalizedLabel) return false;
+  return lines.some((line) => line.trim().toLocaleLowerCase("uk-UA").startsWith(normalizedLabel));
+}
+
 function inlineMessageKey(chatId: string | number, key: string) {
   return `${chatId}:${key}`;
 }
@@ -69,7 +76,13 @@ export function combineMovementNotificationLines(lines: string[]) {
   return lines.map((line) => line.trim()).filter(Boolean).join("\n");
 }
 
-export function movementNotificationTargetsStillPresent(locationId: number, creatureIds: number[] = [], candidates: MovementNotificationCreatureCandidate[] = []): MovementNotificationTarget[] {
+export function movementNotificationTargetsStillPresent(
+  locationId: number,
+  creatureIds: number[] = [],
+  candidates: MovementNotificationCreatureCandidate[] = [],
+  options: { showNearbyDetails?: boolean; lines?: string[] } = {},
+): MovementNotificationTarget[] {
+  if (options.showNearbyDetails === false) return [];
   const uniqueCreatureIds = Array.from(new Set(creatureIds.filter((id) => Number.isFinite(id))));
   const candidatesById = new Map(candidates.map((creature) => [creature.id, creature]));
   const targets: MovementNotificationTarget[] = [];
@@ -80,6 +93,7 @@ export function movementNotificationTargetsStillPresent(locationId: number, crea
     if (creature.locationId !== locationId) continue;
     if (!creature.isAlive || creature.isGone || creature.isHidden) continue;
     if (creature.species?.kind === "ANIMAL") continue;
+    if (options.lines && !labelAppearsInMovementLines(creature.label, options.lines)) continue;
     targets.push({ id: creature.id, label: creature.label });
   }
 
@@ -100,10 +114,11 @@ export function nonPlayerMovementNotificationOptions(locationId: number, creatur
   };
 }
 
-async function movementNotificationTargetsAtFlush(locationId: number, creatureIds: number[] = []) {
+async function movementNotificationTargetsAtFlush(locationId: number, creatureIds: number[] = [], lines: string[] = []) {
   const uniqueCreatureIds = Array.from(new Set(creatureIds.filter((id) => Number.isFinite(id))));
   if (!uniqueCreatureIds.length) return [];
 
+  const visibility = await visibilityRulesForLocation(locationId, "brief");
   const creatures = await prisma.creature.findMany({
     where: { id: { in: uniqueCreatureIds } },
     include: { species: true },
@@ -116,7 +131,7 @@ async function movementNotificationTargetsAtFlush(locationId: number, creatureId
     isHidden: creature.isHidden,
     label: creatureForms(creature).nominative,
     species: creature.species,
-  })));
+  })), { showNearbyDetails: visibility.showNearbyDetails, lines });
 }
 
 export function createNonPlayerMovementNotificationBuffer(options: NonPlayerMovementNotificationBufferOptions) {
@@ -177,7 +192,7 @@ const nonPlayerMovementNotificationBuffer = createNonPlayerMovementNotificationB
     if (!event.bot) return;
     const text = combineMovementNotificationLines(event.lines);
     if (!text) return;
-    const targets = await movementNotificationTargetsAtFlush(event.locationId, event.creatureIds);
+    const targets = await movementNotificationTargetsAtFlush(event.locationId, event.creatureIds, event.lines);
     await notifyLocationAll(event.bot, event.locationId, text, nonPlayerMovementNotificationOptions(event.locationId, event.creatureIds, targets));
   },
 });

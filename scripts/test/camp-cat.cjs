@@ -74,7 +74,8 @@ assert.match(
 assert.equal(campSpiritCatShouldPrioritizeLocalMice({ hasLocalMice: true }), true);
 assert.equal(campSpiritCatShouldPrioritizeLocalMice({ hasLocalMice: false }), false);
 assert.equal(campSpiritCatMouseBehaviorPlan({ hasLocalMice: true, roll: 0.1 }), "pounce");
-assert.equal(campSpiritCatMouseBehaviorPlan({ hasLocalMice: true, roll: 0.9 }), "watch");
+assert.equal(campSpiritCatMouseBehaviorPlan({ hasLocalMice: true, roll: 0.85 }), "pounce");
+assert.equal(campSpiritCatMouseBehaviorPlan({ hasLocalMice: true, roll: 0.95 }), "watch");
 assert.equal(campSpiritCatMouseBehaviorPlan({ hasLocalMice: false, roll: 0.1 }), "watch");
 assert.match(
   campSpiritCatWatchPosture({ daypart: "night", hasActiveCampfire: true }),
@@ -131,6 +132,10 @@ assert.match(fullInspection, /Кіт-бережник/u);
 assert.match(fullInspection, /не відповідає словами/u);
 assert.match(fullInspection, /пружну лінію/u);
 assert.match(fullInspection, /Якщо роздивитися уважніше/u);
+assert.match(fullInspection, /Стан:[^\n]+\n\nЦе табірний дух/u);
+assert.match(fullInspection, /людей\.\n\nШерсть/u);
+assert.match(fullInspection, /розмова\.\n\nНайменше/u);
+assert.doesNotMatch(briefInspection, /\n\nВін мовчить/u);
 assert.ok(fullInspection.length > briefInspection.length + 100, "Full cat inspection should be substantially richer than brief look text");
 assert.doesNotMatch(`${briefInspection}\n${fullInspection}`, /HP|NPC|debug|companion|pet/u);
 

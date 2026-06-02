@@ -128,7 +128,7 @@ End session:
 Resume from AFK or ended should be short and attached to the player's next response, not sent as a separate proactive push:
 
 ```text
-Ти знову прислухаєшся до Чорнолісу.
+Ви знову прислухаєтеся до Чорнолісу.
 ```
 
 Do not add a long recap in the first slice unless a concise current-state renderer already exists.

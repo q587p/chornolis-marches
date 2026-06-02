@@ -9,6 +9,12 @@ export type ParsedAdminInventoryResourceArgs = {
   amount: number;
 };
 
+export type ParsedAdminInventoryItemArgs = {
+  resourceKey: string;
+  playerArg: string;
+  amount: number;
+};
+
 function isPositiveInteger(value: string | undefined) {
   return Boolean(value && /^\d+$/.test(value) && Number(value) > 0);
 }
@@ -41,6 +47,20 @@ export function parseAdminInventoryResourceArgs(raw: string): ParsedAdminInvento
   if (isPositiveInteger(parts[parts.length - 1])) amount = Number(parts.pop());
 
   return {
+    playerArg: parts.join(" "),
+    amount,
+  };
+}
+
+export function parseAdminInventoryItemArgs(raw: string, defaultResourceKey = ""): ParsedAdminInventoryItemArgs {
+  const parts = raw.trim().split(/\s+/).filter(Boolean);
+  let amount = 1;
+
+  if (isPositiveInteger(parts[parts.length - 1])) amount = Number(parts.pop());
+
+  const resourceKey = defaultResourceKey || String(parts.shift() ?? "").trim();
+  return {
+    resourceKey,
     playerArg: parts.join(" "),
     amount,
   };

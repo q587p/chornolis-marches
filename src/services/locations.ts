@@ -37,6 +37,7 @@ import { GATE_CARCASS_DROPOFF_FEATURE_KEY, gateHuntingDropoffText, gateHuntingNo
 import { visibilityDarknessText, visibilityPresenceText, visibilityRulesForLocation, type VisibilityRules } from "./visibility";
 import { getCurrentWorldTimeSnapshot } from "./worldTime";
 import { owlSignDetailLine, owlSignInspectionText } from "./owlSigns";
+import { isStrangeTotemFeature, strangeTotemDetailLine, strangeTotemInspectionText } from "./strangeTotems";
 import {
   beginnerCacheActionLabel,
   beginnerCacheContributeAllButtonLabel,
@@ -330,6 +331,7 @@ function featureIcon(feature: any) {
   if (isTutorialRestSeatFeature(feature)) return "🪑";
   if (isTutorialObservationFeature(feature)) return "🦊";
   if (isCampfireFeature(feature)) return isPreparedCampfire(feature) ? "🪵" : isExtinguishedCampfire(feature) ? "🪨" : "🔥";
+  if (isStrangeTotemFeature(feature)) return "🪵";
   if (isDepletedVegetationFeature(feature)) return "🌾";
   if (feature.type === "BORDER_MARKER") return "🪧";
   if (feature.type === "GATE") return "🚪";
@@ -429,6 +431,8 @@ function featureDetailLine(feature: any, showTechnicalDetails = false) {
     details.push(readyAt ? "сухе гілля вже струшене й ще не відновилося" : "сухе гілля можна струсити вниз");
   } else if (isOwlSignFeature(feature)) {
     details.push(owlSignDetailLine());
+  } else if (isStrangeTotemFeature(feature)) {
+    details.push(strangeTotemDetailLine(feature));
   } else if (feature.providesLight) {
     details.push("дає світло");
   } else if (feature.type === "BORDER_MARKER") {
@@ -564,6 +568,14 @@ function addGroundItemPickupButtons(keyboard: InlineKeyboard, groundItems: any[]
     for (const button of row) keyboard.text(button.text, button.callbackData);
     keyboard.row();
   }
+}
+
+export function hasPickableLyingObjects(groundItems: any[], corpses: any[]) {
+  return groundItems.length > 0 || corpses.some((corpse) => !isFreshenedCorpse(corpse.currentAction));
+}
+
+function addPickUpEverythingButton(keyboard: InlineKeyboard, groundItems: any[], corpses: any[]) {
+  if (hasPickableLyingObjects(groundItems, corpses)) keyboard.text("🤲 Підібрати все", "item:pickupEverything").row();
 }
 
 function presenceText(location: any, viewerPlayerId?: number, revealTargets = false, activeActions = new Map<string, any>(), visibility?: VisibilityRules) {
@@ -873,6 +885,7 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
   addFeatureButtons(keyboard, location.features, "brief");
   const groundItems = location.resources.filter((r) => isVisibleGroundResource(r, location));
   if (visibility.showGroundObjects && groundItems.length) addGroundItemPickupButtons(keyboard, groundItems);
+  addPickUpEverythingButton(keyboard, visibility.showGroundObjects ? groundItems : [], visibility.showGroundObjects ? location.creatures.filter(isVisibleCorpse) : []);
   if (revealTargets && targets.length) addInlineRows(keyboard, buildTargetListKeyboard(actionLabeledTargets, { page: options.targetPage, pageCallbackPrefix: "targetPage:brief" }));
 
   const descriptionText = visibility.showLocationDescription
@@ -994,6 +1007,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   }
 
   addGroundItemPickupButtons(keyboard, groundItems);
+  addPickUpEverythingButton(keyboard, groundItems, corpses);
 
   if (tracksHint.hasTracks && visibility.showTracks) {
     addInlineRows(keyboard, buildExamineTracksKeyboard());
@@ -1186,6 +1200,9 @@ export async function renderLocationFeatureInteraction(
   } else if (isOwlSignFeature(feature)) {
     const worldTime = await getCurrentWorldTimeSnapshot();
     text = owlSignInspectionText(worldTime.daypart, feature.description);
+  } else if (isStrangeTotemFeature(feature)) {
+    const worldTime = await getCurrentWorldTimeSnapshot();
+    text = await strangeTotemInspectionText(feature, worldTime.absoluteMinute);
   }
 
   const keyboard = new InlineKeyboard();
@@ -1236,6 +1253,7 @@ export async function renderLocationFeatureInteraction(
   const yellDirection = featureYellPromptDirection(feature);
   if (yellDirection) keyboard.text(featureYellPromptButtonLabel(yellDirection), `yell:prompt:${yellDirection}`).row();
   if (isShakeTreeFeature(feature)) keyboard.text("🍃 Потрусити", `tree:shake:${feature.id}`).row();
+  if (isStrangeTotemFeature(feature)) keyboard.text("🧹 Розібрати", `totem:dismantle:${feature.id}`).row();
   keyboard.text("↩️ Назад", `location:${returnMode}`);
   return { text, keyboard, quoteMessages, followupMessages };
 }

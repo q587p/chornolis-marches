@@ -25,7 +25,7 @@ import {
   type PreparedCharacterName,
 } from "../services/characterNames";
 import { disablePlayerAuto, requestOrEnablePlayerAuto, replyStopPlayerAuto } from "./auto";
-import { submitBuildCampfire, submitDismantleCampfire, submitDouseCampfire, submitLightCampfire, submitSay, submitTrack, submitYell } from "./aliases";
+import { submitBuildCampfire, submitDismantleCampfire, submitDismantleTotem, submitDouseCampfire, submitLightCampfire, submitSay, submitTrack, submitYell } from "./aliases";
 import { sendHelp } from "./help";
 import { sendNews } from "./news";
 import { parseStartActionPayload, type StartActionPayload } from "../input/startPayloads";
@@ -33,6 +33,7 @@ import { runExamineCurrentLocation } from "./look";
 import { showCharacter, showInventory, showLocationForPlayer } from "./player";
 import { showTime, showWeather } from "./time";
 import { grantStarterKnifeIfMissing } from "../services/weapons";
+import { renderSessionReturnHint } from "../services/sessionPresence";
 
 type NameFormPrompt = { key: keyof NameForms; question: string; button: string; prefix?: string };
 const CASE_BUTTON_LABELS: Partial<Record<keyof NameForms, string>> = {
@@ -378,14 +379,16 @@ async function enterWorld(ctx: any, isMenuRefresh = false) {
   const isInTutorial = currentLocation ? isTutorialLocation(currentLocation) : false;
   const tutorialCompleted = await hasCompletedTutorial(player.id);
   const keyboardHint = isInTutorial
-    ? "Ти вже в навчальному сні. /start не скидає сон і не переносить тебе, а просто повертає актуальні навчальні кнопки."
+    ? "Ви вже в навчальному сні. /start не скидає сон і не переносить вас, а просто повертає актуальні навчальні кнопки."
     : tutorialCompleted
-      ? "Ти вже в грі. Клавіатура чекає під полем вводу, але всі команди можна і просто текстом вводити 👇"
-      : "Ти вже в грі. Навчальний сон ще не завершено: можна повернутися командою /sleep tutorial або написати «навчальний сон». Клавіатура чекає під полем вводу, але всі команди можна і просто текстом вводити 👇";
+      ? "Ви вже в грі. Клавіатура чекає під полем вводу, але всі команди можна і просто текстом вводити 👇"
+      : "Ви вже в грі. Навчальний сон ще не завершено: можна повернутися командою /sleep tutorial або написати «навчальний сон». Клавіатура чекає під полем вводу, але всі команди можна і просто текстом вводити 👇";
+  const returnHint = renderSessionReturnHint((ctx as any).sessionReturnMarker);
+  const returnHintBlock = returnHint ? `\n\n${returnHint}` : "";
 
   const text = isMenuRefresh
-    ? `🌲 Меню оновлено.\n${dateLine}\n\nВітаю, ${displayName}.\n\n${keyboardHint}`
-    : `🌲 Порубіжжя Чорнолісу ожили.\n${dateLine}\n\nВітаю, ${displayName}. Твій слід збережено в Чорнолісі.\n\n${keyboardHint}`;
+    ? `🌲 Меню оновлено.\n${dateLine}\n\nВітаю, ${displayName}.${returnHintBlock}\n\n${keyboardHint}`
+    : `🌲 Порубіжжя Чорнолісу ожили.\n${dateLine}\n\nВітаю, ${displayName}. Ваш слід збережено в Чорнолісі.${returnHintBlock}\n\n${keyboardHint}`;
 
   await ctx.reply(text, { reply_markup: await buildMainReplyKeyboardForTelegramId(from.id, false) });
 }
@@ -714,6 +717,11 @@ async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayl
 
   if (action === "dismantleCampfire") {
     await submitDismantleCampfire(bot, ctx);
+    return true;
+  }
+
+  if (action === "dismantleTotem") {
+    await submitDismantleTotem(bot, ctx);
     return true;
   }
 

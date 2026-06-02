@@ -22,7 +22,7 @@ These commands already require scribe/admin access, but should either use `logSc
 - `/teleport`
 - `/tutorialReset`
 - `/restAdmin`
-- `/addCreature`, `/addCreatureCorpse`, `/addResource`, `/addCampfire`, `/addTorch`, `/addTwigs`
+- `/addCreature`, `/addCreatureCorpse`, `/addResource`, `/addCampfire`, `/addTorch`, `/addLitTorch`, `/addTwigs`, `/addItem`
 - `/cleanupCreature`, `/cleanupCreatures`
 - `/forceOld`
 - `/tick`, `/tickSet`

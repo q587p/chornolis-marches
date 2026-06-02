@@ -102,6 +102,30 @@ export function sessionPresenceLabel(session: {
   return `${state}; ${paused}; причина: ${reason}${changedAt}`;
 }
 
+export type SessionReturnMarker = {
+  from: PlayerSessionPresence | string;
+  since: Date | null;
+};
+
+function durationParts(ms: number) {
+  const minutes = Math.max(1, Math.round(ms / 60_000));
+  if (minutes < 60) return `${minutes} хв`;
+  const hours = Math.floor(minutes / 60);
+  const restMinutes = minutes % 60;
+  if (hours < 24) return restMinutes ? `${hours} год ${restMinutes} хв` : `${hours} год`;
+  const days = Math.floor(hours / 24);
+  const restHours = hours % 24;
+  return restHours ? `${days} д ${restHours} год` : `${days} д`;
+}
+
+export function renderSessionReturnHint(marker: SessionReturnMarker | null | undefined, now = new Date()) {
+  if (!marker || (marker.from !== "AFK" && marker.from !== "ENDED")) return null;
+
+  const pauseKind = marker.from === "ENDED" ? "сесія була завершена" : "стежка на мить стихла";
+  const since = marker.since ? ` Приблизно ${durationParts(Math.max(0, now.getTime() - marker.since.getTime()))} вас не було чути.` : "";
+  return `Ви знову прислухаєтеся до Чорнолісу: ${pauseKind}.${since}`;
+}
+
 export function idleReminderSceneKeyForLocation(locationId: number | null | undefined) {
   return locationId ? `location:${locationId}` : null;
 }
@@ -224,7 +248,7 @@ export async function canSendProactiveToTelegramId(telegramId: string | number) 
 export async function markPlayerInteraction(telegramId: string | number) {
   const player = await prisma.player.findUnique({
     where: { telegramId: String(telegramId) },
-    select: { id: true, sessionPresence: true },
+    select: { id: true, sessionPresence: true, sessionPresenceChangedAt: true, lastPlayerActionAt: true },
   });
   if (!player) return null;
 
@@ -239,7 +263,9 @@ export async function markPlayerInteraction(telegramId: string | number) {
       remindersPaused: false,
     },
   });
-  return player.sessionPresence === "AFK" || player.sessionPresence === "ENDED" ? player.sessionPresence : null;
+  return player.sessionPresence === "AFK" || player.sessionPresence === "ENDED"
+    ? { from: player.sessionPresence, since: player.lastPlayerActionAt ?? player.sessionPresenceChangedAt }
+    : null;
 }
 
 export async function setPlayerAfk(telegramId: string | number) {
@@ -277,7 +303,8 @@ export async function endPlayerSession(telegramId: string | number) {
 export function registerSessionPresenceMiddleware(bot: Bot) {
   bot.use(async (ctx, next) => {
     if (ctx.from?.id && (ctx.message || ctx.callbackQuery)) {
-      await markPlayerInteraction(ctx.from.id).catch(() => undefined);
+      const returnMarker = await markPlayerInteraction(ctx.from.id).catch(() => undefined);
+      if (returnMarker) (ctx as any).sessionReturnMarker = returnMarker;
     }
     await next();
   });

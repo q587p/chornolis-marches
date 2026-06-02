@@ -4,7 +4,7 @@
 
 The current starter date is:
 
-> 587 літо після Великого Відступу — Рік Сича під Тихим Вітром.
+> 587 літо після Великого Відступу — рік Сича під Тихим Вітром.
 
 The current starter timestamp for the internal world clock is:
 
@@ -45,7 +45,7 @@ Years may have common folk names in addition to their number.
 The current format is:
 
 ```text
-587 літо після Великого Відступу — Рік Сича під Тихим Вітром.
+587 літо після Великого Відступу — рік Сича під Тихим Вітром.
 ```
 
 The year name should be usable in:
@@ -100,9 +100,9 @@ Draft beast cycle:
 In prose, use the instrumental form:
 
 ```text
-Рік Сича під Тихим Вітром
-Рік Змія під Гострим Серпом
-Рік Вовка під Сніговою Межею
+рік Сича під Тихим Вітром
+рік Змія під Гострим Серпом
+рік Вовка під Сніговою Межею
 ```
 
 ## Future lunar calendar
@@ -163,11 +163,11 @@ A player should understand that it is the 587th year after some important Retrea
 Good text examples:
 
 ```text
-Зараз 587 літо після Великого Відступу — Рік Сича під Тихим Вітром.
+Зараз 587 літо після Великого Відступу — рік Сича під Тихим Вітром.
 ```
 
 ```text
-Старі кажуть: у Рік Сича ліс рідко говорить першим, зате добре чує тих, хто заходить надто далеко.
+Старі кажуть: у рік Сича ліс рідко говорить першим, зате добре чує тих, хто заходить надто далеко.
 ```
 
 ```text

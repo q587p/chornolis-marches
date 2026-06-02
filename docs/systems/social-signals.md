@@ -29,7 +29,7 @@ The first implemented set is intentionally small:
 
 When focusing on a visible target, the target action keyboard should keep the main target actions grouped and predictable:
 
-- first row: **Глянути**, **Роздивитися**, **Атакувати**;
+- first row: **Глянути**, **Роздивитися**, and **Атакувати** only when the target is actually attackable;
 - second row: **Привітати**, **Сказати**, **Прошепотіти** where the target can meaningfully receive them;
 - third row: quick contextual signals such as **Кивнути**, **Помахати**, plus **Ще сигнали**;
 - final row: **Назад**.

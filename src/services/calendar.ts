@@ -67,7 +67,7 @@ export function getWorldYearSign(year = CURRENT_WORLD_YEAR) {
 export function getWorldYearName(year = CURRENT_WORLD_YEAR) {
   const beast = getWorldYearBeast(year);
   const sign = getWorldYearSign(year);
-  return `Рік ${beast.genitive} під ${sign}`;
+  return `рік ${beast.genitive} під ${sign}`;
 }
 
 export function formatWorldYearShort(year = CURRENT_WORLD_YEAR) {
@@ -87,7 +87,7 @@ export function renderWorldYearLine(year = CURRENT_WORLD_YEAR) {
 }
 
 export function renderWorldDreamDateLine(snapshot = worldTimeSnapshotFromAbsoluteMinute(START_WORLD_ABSOLUTE_MINUTE)) {
-  return `${formatWorldYear(snapshot.year)} ${snapshot.lunarCircleName}, ${snapshot.dayOfCircle} день.`;
+  return `${formatWorldYear(snapshot.year)}, ${snapshot.lunarCircleName}, ${snapshot.dayOfCircle} день.`;
 }
 
 export function renderCurrentWorldYearLine() {

@@ -177,6 +177,7 @@ SURV-001-D,Actual return to start camp,testing,feature,survival,high,"respawn,lo
 SURV-001-E,Beginner return cooldown/consequence,testing,feature,survival,medium,"respawn,cooldown,balance",docs/planning/items/SURV-001-E.md
 SURV-001-F,Beginner return command-menu eligibility,backlog,polish,survival,medium,"respawn,telegram,balance,beginner",docs/planning/items/SURV-001-F.md
 TECH-001,Service boundary and duplication cleanup,backlog,technical,architecture,medium,"architecture,refactor,maintainability,services,dead-code,cleanup",docs/planning/items/TECH-001-service-boundary-and-duplication-cleanup.md
+TECH-002,Location feature archetypes and world-data deduplication,backlog,technical,world_data,medium,"world-data,features,seed,cleanup,templates",docs/planning/items/TECH-002-feature-archetypes-and-world-data-dedup.md
 THEFT-000,Risky theft and hiding epic,backlog,epic,social,medium,"theft,hiding,stealth,social-memory,0.15",docs/planning/items/THEFT-000-risky-theft-and-hiding-epic.md
 THEFT-001,Risky theft MVP,backlog,feature,social,medium,"theft,social-memory,inventory,action-queue,0.15",docs/planning/items/THEFT-001-risky-theft-mvp.md
 THEFT-002,World-controlled thief character,backlog,feature,npc,low,"theft,npc,autonomy,social-memory,future",docs/planning/items/THEFT-002-world-controlled-thief-character.md

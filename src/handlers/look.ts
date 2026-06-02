@@ -6,7 +6,8 @@ import { renderDepletedVegetationInspection, renderLocationBrief, renderLocation
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { actionQueueReplyOptions, sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { durationSecondsSuffix } from "../utils/durationText";
-import { isPickableResourceKey, isTutorialLooseResourceKey, pickUpAllVisibleGroundResourcesByKey, pickUpGroundResource, type VisibleGroundResourceKey } from "../services/groundItems";
+import { addVisibleCorpsesToInventory } from "../services/corpses";
+import { isPickableResourceKey, isTutorialLooseResourceKey, pickUpAllVisibleGroundResources, pickUpAllVisibleGroundResourcesByKey, pickUpGroundResource, type VisibleGroundResourceKey } from "../services/groundItems";
 import { pickupObserverText, recordVisibleItemAction } from "../services/visibleItemActions";
 import { escapeHtml } from "../utils/text";
 import { canEditCallbackMessage, noteKnownMessage } from "../utils/messageTracker";
@@ -24,6 +25,14 @@ import { buildWetCampfireConfirmKeyboard } from "../ui/fireKeyboards";
 
 function pickedItemsAmount(items: Array<{ amount: number }>) {
   return items.reduce((total, item) => total + Math.max(0, item.amount), 0);
+}
+
+function pickedItemsText(items: Array<{ name: string; amount: number }>) {
+  return items.map((item) => `${item.name}${item.amount > 1 ? ` ×${item.amount}` : ""}`).join(", ");
+}
+
+function isNoPickableNearbyError(error: unknown) {
+  return error instanceof Error && error.message.includes("Поруч немає");
 }
 
 function quoteBlock(text: string) {
@@ -331,6 +340,16 @@ export function registerLookHandlers(bot: Bot) {
     await submitFeatureQueuedAction(bot, ctx, player, "DISMANTLE_CAMPFIRE", { featureId: Number(ctx.match[1]) }, "Не вдалося розібрати вогнище.");
   });
 
+  bot.callbackQuery(/^totem:dismantle:(\d+)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    await submitFeatureQueuedAction(bot, ctx, player, "DISMANTLE_TOTEM", { featureId: Number(ctx.match[1]) }, "Не вдалося розібрати тотем.");
+  });
+
   bot.callbackQuery(/^fire:light:(\d+)$/, async (ctx) => {
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player) {
@@ -521,6 +540,55 @@ export function registerLookHandlers(bot: Bot) {
       });
       await spendPlayerStaminaAmount(bot, player.id, pickedAmount, ctx.chat?.id);
       await ctx.reply(`Ви підняли: ${itemText}.`, await inventoryGainReplyOptions(player, `pickup-all:${key}`));
+    } catch (error) {
+      const message = actionErrorMessage(error, "Не вдалося підняти це.");
+      await safeAnswerCallbackQuery(ctx, message);
+      await replyToActionError(ctx, error, "Не вдалося підняти це.", { replyFallback: false });
+    }
+  });
+
+  bot.callbackQuery("item:pickupEverything", async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    try {
+      assertCanPerformPhysicalAction(player, "PICK_UP");
+      const picked: Array<{ key: string; name: string; amount: number }> = [];
+      let locationId = player.currentLocationId ?? 0;
+
+      try {
+        const result = await pickUpAllVisibleGroundResources(player.id);
+        picked.push(...result.items);
+        locationId = result.locationId;
+      } catch (error) {
+        if (!isNoPickableNearbyError(error)) throw error;
+      }
+
+      try {
+        const result = await addVisibleCorpsesToInventory(player.id);
+        picked.push(...result.items);
+        locationId = result.locationId;
+      } catch (error) {
+        if (!isNoPickableNearbyError(error)) throw error;
+      }
+
+      if (!picked.length) throw new Error("Поруч немає речей, які можна підняти.");
+      const text = pickedItemsText(picked);
+      const pickedAmount = pickedItemsAmount(picked);
+      await safeAnswerCallbackQuery(ctx, "Підібрано.");
+      await recordVisibleItemAction(bot, {
+        playerId: player.id,
+        locationId,
+        observerText: pickupObserverText(player, `кілька речей: ${text}`),
+        eventTitle: "Player picked up all visible ground items",
+        eventDescription: `player=${player.id}; items=${picked.map((item) => `${item.key}:${item.amount}`).join(",")}`,
+        actionNote: `піднято все: ${text}`,
+      });
+      await spendPlayerStaminaAmount(bot, player.id, pickedAmount, ctx.chat?.id);
+      await ctx.reply(`Ви підняли: ${text}.`, await inventoryGainReplyOptions(player, "pickup-all"));
     } catch (error) {
       const message = actionErrorMessage(error, "Не вдалося підняти це.");
       await safeAnswerCallbackQuery(ctx, message);

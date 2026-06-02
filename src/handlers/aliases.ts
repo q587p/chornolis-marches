@@ -54,7 +54,7 @@ import { latestRememberedReplyTarget } from "../services/replyTargets";
 import { replyToActionError } from "../utils/actionErrorReply";
 import { assertCanPerformPhysicalAction } from "../services/postureRules";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
-import { bestTargetMatch, inspectMissingText, isSelfTargetQuery, normalizeTargetKey, targetDisplayLabel, targetListText, visibleTextTargets } from "../services/textTargets";
+import { bestTargetActionMatch, bestTargetMatch, inspectMissingText, isSelfTargetQuery, normalizeTargetKey, targetDisplayLabel, targetListText, textTargetsForAction, visibleTextTargets, type TextTargetRef } from "../services/textTargets";
 import { spendPlayerStaminaAmount } from "../services/actionRecovery";
 import { afkReplyOptions, endPlayerSession, SESSION_AFK_CONFIRMATION, SESSION_ENDED_CONFIRMATION, setPlayerAfk } from "../services/sessionPresence";
 import { setAutoActionMessageSetting, setDaypartNoticeSetting, showSettings } from "./settings";
@@ -79,8 +79,12 @@ import {
 } from "../services/fire";
 import { buildWetCampfireConfirmKeyboard } from "../ui/fireKeyboards";
 import { submitGiveItem } from "./give";
+import { firstStrangeTotemFeatureIdAtPlayerLocation } from "../services/strangeTotems";
 
 const pendingVerticalYell = new Map<number, { direction: VerticalYellPromptDirection }>();
+const pendingTargetActions = new Map<number, { action: TargetAction; targets: TextTargetRef[]; detail: "brief" | "full"; createdAt: number }>();
+const PENDING_TARGET_ACTION_TTL_MS = 60_000;
+
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
 }
@@ -372,13 +376,13 @@ async function submitQueue(ctx: any, mode: QueueAliasMode) {
   await showQueue(ctx, player.id);
 }
 
-export async function submitTrack(bot: Bot, ctx: any, detail = false) {
+export async function submitTrack(bot: Bot, ctx: any, detail = false, target?: string) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const durationMs = actionDurationMs("TRACK", player.stamina);
   try {
-    const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "TRACK", payload: { detail }, durationMs, chatId: ctx.chat?.id, interruptQueued: true });
+    const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "TRACK", payload: { detail, ...(target?.trim() ? { target: target.trim() } : {}) }, durationMs, chatId: ctx.chat?.id, interruptQueued: true });
     await ctx.reply(result.mode === "immediate" ? "Ви вдивляєтесь у сліди." : `Вистежування додано в чергу${durationSecondsSuffix(player, durationMs)}.`);
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {
@@ -530,6 +534,18 @@ export async function submitDismantleCampfire(bot: Bot, ctx: any) {
   await submitInventoryQueuedAction(bot, ctx, player, "DISMANTLE_CAMPFIRE", { featureId }, "Не вдалося розібрати вогнище.");
 }
 
+export async function submitDismantleTotem(bot: Bot, ctx: any, target = "") {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const featureId = await firstStrangeTotemFeatureIdAtPlayerLocation(player.id, target);
+  if (!featureId) {
+    await ctx.reply("Поруч немає підозрілого тотема, який можна розібрати.");
+    return;
+  }
+  await submitInventoryQueuedAction(bot, ctx, player, "DISMANTLE_TOTEM", { featureId }, "Не вдалося розібрати тотем.");
+}
+
 async function submitCookAllMeat(bot: Bot, ctx: any) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
@@ -664,7 +680,7 @@ export async function submitSay(bot: Bot, ctx: any, text: string) {
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const safeText = stripUnsafeText(text).slice(0, 300);
-  if (!safeText) return void (await ctx.reply("Напиши так: сказати текст"));
+  if (!safeText) return void (await ctx.reply("Напиши так: <i>сказати</i> текст", { parse_mode: "HTML" }));
 
   const durationMs = actionDurationMs("SAY", player.stamina);
   try {
@@ -681,12 +697,12 @@ async function submitWhisper(bot: Bot, ctx: any, text: string) {
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const safeText = stripUnsafeText(text);
-  if (!safeText) return void (await ctx.reply("Напиши так: whisper персонаж текст"));
+  if (!safeText) return void (await ctx.reply("Напиши так: <i>whisper</i> персонаж текст", { parse_mode: "HTML" }));
 
   const durationMs = actionDurationMs("SAY", player.stamina);
   try {
     const payload = await parseSpeechTarget(safeText, player.currentLocationId, player.id);
-    if (!payload.targetId) return void (await ctx.reply("Напиши так: whisper персонаж текст. Ціль має бути видимим персонажем або істотою поруч."));
+    if (!payload.targetId) return void (await ctx.reply("Напиши так: <i>whisper</i> персонаж текст. Ціль має бути видимим персонажем або істотою поруч.", { parse_mode: "HTML" }));
     if (payload.targetType !== "player" && payload.targetType !== "creature") return void (await ctx.reply("Шепіт зараз можна спрямувати тільки комусь видимому поруч."));
     const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "SAY", payload: { ...payload, mode: "whisper" }, durationMs, chatId: ctx.chat?.id });
     await sendActionSubmitFeedback(ctx, player.id, result);
@@ -743,7 +759,7 @@ async function submitReply(bot: Bot, ctx: any, text: string) {
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const safeText = stripUnsafeText(text);
-  if (!safeText) return void (await ctx.reply("Напиши так: reply текст"));
+  if (!safeText) return void (await ctx.reply("Напиши так: <i>reply</i> текст", { parse_mode: "HTML" }));
 
   const target = await lastAddressedSpeakerName(player);
   if (!target) return void (await ctx.reply("Поки немає репліки, на яку можна відповісти. Спробуйте звичайне /say або зверніться до видимого персонажа."));
@@ -791,7 +807,7 @@ async function submitShout(bot: Bot, ctx: any, text: string) {
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const safeText = stripUnsafeText(text);
-  if (!safeText) return void (await ctx.reply("Напиши так: shout текст"));
+  if (!safeText) return void (await ctx.reply("Напиши так: <i>shout</i> текст", { parse_mode: "HTML" }));
 
   const durationMs = actionDurationMs("SAY", player.stamina) * 2;
   try {
@@ -813,39 +829,31 @@ function validateTargetAction(action: TargetAction, target: ResolvedTarget) {
   return null;
 }
 
-async function submitTargetAction(bot: Bot, ctx: any, action: TargetAction, targetQuery: string, detail: "brief" | "full" = "full") {
-  const player = await getPlayerByTelegramId(ctx.from.id);
-  if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
-  if (action === "inspect" && isSelfTargetQuery(targetQuery)) return showCharacter(ctx.from.id, (text, options) => ctx.reply(text, options));
+function targetActionEmptyText(action: TargetAction) {
+  if (action === "attack") return "Поруч немає видимої живої істоти, яку зараз можна атакувати.";
+  if (action === "greet") return "Поруч немає видимої цілі, яку зараз можна привітати.";
+  if (action === "freshen") return "Поруч немає видимого свіжого трупа, який можна освіжити.";
+  return "Поруч немає видимих цілей.";
+}
 
-  const locationId = player.currentLocationId;
-  if (action === "freshen" && isAllTarget(targetQuery)) return submitFreshenAll(bot, ctx, player, locationId);
+function targetActionMissingText(action: TargetAction, targets: TextTargetRef[]) {
+  const list = targets.length ? `\n\nЦілі для цієї дії:\n${targetListText(targets)}` : "";
+  if (action === "attack") return `Не бачу такої цілі для атаки поруч.${list}`;
+  if (action === "greet") return `Не бачу такої цілі для привітання поруч.${list}`;
+  if (action === "freshen") return `Не бачу такого трупа поруч.${list}`;
+  return `Не бачу такої цілі поруч.${list}`;
+}
 
-  const visibleTargets = await visibleTextTargets(locationId, player.id);
-  if (!visibleTargets.length) {
-    if (action === "inspect" && (await tryReplyWithInventoryInspection(ctx, player.id, targetQuery))) return;
-    return void (await ctx.reply(action === "inspect" ? inspectMissingText(targetQuery) : "Поруч немає видимих цілей."));
-  }
+function targetActionManyText(action: TargetAction, targets: TextTargetRef[]) {
+  const list = targetListText(targets);
+  if (action === "attack") return `Знайшов кілька схожих цілей для атаки. Уточни назвою або номером.\n\nЦілі для атаки:\n${list}`;
+  if (action === "greet") return `Знайшов кілька схожих цілей для привітання. Уточни назвою або номером.\n\nЦілі для привітання:\n${list}`;
+  if (action === "freshen") return `Знайшов кілька схожих трупів. Уточни назвою або номером.\n\nТрупи поруч:\n${list}`;
+  return `Знайшов кілька схожих істот чи постатей. Уточни назвою або номером.\n\nПоруч можна роздивитися:\n${list}`;
+}
 
-  const match = bestTargetMatch(targetQuery, visibleTargets);
-  if (match.kind === "none") {
-    if (action === "inspect" && (await tryReplyWithInventoryInspection(ctx, player.id, targetQuery))) return;
-    await ctx.reply(action === "inspect"
-      ? inspectMissingText(targetQuery, visibleTargets)
-      : `Не бачу такої цілі поруч. Видимі цілі:\n${targetListText(visibleTargets)}`);
-    return;
-  }
-
-  if (match.kind === "many") {
-    const keyboard = new InlineKeyboard();
-    match.targets.forEach((target, index) => keyboard.text(`${index + 1}. ${targetDisplayLabel(target)}`, `target:${target.type}:${target.id}`).row());
-    await ctx.reply(action === "inspect"
-      ? `Знайшов кілька схожих істот чи постатей. Уточни назвою або номером.\n\nПоруч можна роздивитися:\n${targetListText(visibleTargets)}`
-      : `Знайшов кілька схожих цілей. Уточни назвою або номером із повного списку поруч.\n\nВидимі цілі:\n${targetListText(visibleTargets)}`, { reply_markup: keyboard });
-    return;
-  }
-
-  const target = await resolveTarget(match.target.type, match.target.id, locationId);
+async function submitResolvedTargetAction(bot: Bot, ctx: any, player: any, locationId: number, action: TargetAction, targetRef: TextTargetRef, detail: "brief" | "full" = "full") {
+  const target = await resolveTarget(targetRef.type, targetRef.id, locationId);
   if (!target) {
     return void (await ctx.reply(action === "inspect" ? "Цього вже немає поруч. Можна роздивитися місцину ще раз." : "Цілі вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() }));
   }
@@ -860,7 +868,7 @@ async function submitTargetAction(bot: Bot, ctx: any, action: TargetAction, targ
     const result = await performOrQueuePlayerAction(bot, {
       playerId: player.id,
       type: typeMap[action],
-      payload: { targetType: match.target.type, targetId: match.target.id, mode: "known", detail },
+      payload: { targetType: targetRef.type, targetId: targetRef.id, mode: "known", detail },
       durationMs,
       chatId: ctx.chat?.id,
       interruptCurrent: action === "attack",
@@ -871,6 +879,52 @@ async function submitTargetAction(bot: Bot, ctx: any, action: TargetAction, targ
   } catch (error) {
     await replyToActionError(ctx, error, "Не вдалося додати дію.");
   }
+}
+
+async function submitTargetAction(bot: Bot, ctx: any, action: TargetAction, targetQuery: string, detail: "brief" | "full" = "full") {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  if (action === "inspect" && isSelfTargetQuery(targetQuery)) return showCharacter(ctx.from.id, (text, options) => ctx.reply(text, options));
+
+  const locationId = player.currentLocationId;
+  if (action === "freshen" && isAllTarget(targetQuery)) return submitFreshenAll(bot, ctx, player, locationId);
+
+  const visibleTargets = await visibleTextTargets(locationId, player.id);
+  const actionTargets = textTargetsForAction(action, visibleTargets);
+  if (!actionTargets.length) {
+    if (action === "inspect" && (await tryReplyWithInventoryInspection(ctx, player.id, targetQuery))) return;
+    return void (await ctx.reply(action === "inspect" ? inspectMissingText(targetQuery) : targetActionEmptyText(action)));
+  }
+
+  const match = bestTargetActionMatch(action, targetQuery, visibleTargets);
+  if (match.kind === "none") {
+    if (action === "inspect" && (await tryReplyWithInventoryInspection(ctx, player.id, targetQuery))) return;
+    await ctx.reply(action === "inspect"
+      ? inspectMissingText(targetQuery, visibleTargets)
+      : targetActionMissingText(action, actionTargets));
+    return;
+  }
+
+  if (match.kind === "many") {
+    const keyboard = new InlineKeyboard();
+    match.targets.forEach((target, index) => keyboard.text(`${index + 1}. ${targetDisplayLabel(target)}`, `target:${target.type}:${target.id}`).row());
+    pendingTargetActions.set(ctx.from.id, { action, targets: match.targets, detail, createdAt: Date.now() });
+    await ctx.reply(targetActionManyText(action, match.targets), { reply_markup: keyboard });
+    return;
+  }
+
+  pendingTargetActions.delete(ctx.from.id);
+  await submitResolvedTargetAction(bot, ctx, player, locationId, action, match.target, detail);
+}
+
+async function submitAttackCommand(bot: Bot, ctx: any, targetQuery?: string) {
+  const target = targetQuery?.trim();
+  if (!target) {
+    await ctx.reply("Напишіть так: <i>attack</i> mouse або <i>атакувати</i> мишу.", { parse_mode: "HTML" });
+    return;
+  }
+
+  await submitTargetAction(bot, ctx, "attack", target);
 }
 
 async function resolveVisibleTargetForAlias(ctx: any, targetQuery: string) {
@@ -1113,6 +1167,21 @@ async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
   }
 }
 
+async function submitPickupCommand(bot: Bot, ctx: any, targetQuery?: string) {
+  const target = targetQuery?.trim();
+  if (!target) {
+    await ctx.reply("Напишіть так: /<i>pick</i> twigs, /<i>pick_all</i> або <i>підібрати все</i>.", { parse_mode: "HTML" });
+    return;
+  }
+
+  await submitPickupTarget(bot, ctx, target);
+}
+
+function pickupAllCommandTarget(rest?: string) {
+  const target = rest?.trim();
+  return target ? `all ${target}` : "all";
+}
+
 async function submitSocialSignal(bot: Bot, ctx: any, signal: SocialSignalAlias, targetQuery?: string) {
   if (!targetQuery) {
     const player = await getPlayerByTelegramId(ctx.from.id);
@@ -1219,6 +1288,7 @@ export function registerAliasHandlers(bot: Bot) {
     "light_campfire",
     "douse_campfire",
     "dismantle_campfire",
+    "dismantle_totem",
     "inv",
     "put",
     "respawn",
@@ -1230,6 +1300,11 @@ export function registerAliasHandlers(bot: Bot) {
     "exits",
     "reply",
   ], async (_ctx, next) => next());
+  bot.command(["attack", "fight", "kill", "kick"], async (ctx) => submitAttackCommand(bot, ctx, ctx.match ?? ""));
+  bot.command("attack_mouse", async (ctx) => submitAttackCommand(bot, ctx, "mouse"));
+  bot.command(["get", "pick", "pickup", "take"], async (ctx) => submitPickupCommand(bot, ctx, ctx.match ?? ""));
+  bot.command(["get_all", "pick_all", "pickup_all", "take_all"], async (ctx) => submitPickupCommand(bot, ctx, pickupAllCommandTarget(ctx.match ?? "")));
+  bot.command("track", async (ctx) => submitTrack(bot, ctx, false, ctx.match ?? ""));
   bot.command("yell", async (ctx) => submitYell(bot, ctx, ctx.match ?? ""));
   bot.command("shout", async (ctx) => submitShout(bot, ctx, ctx.match ?? ""));
 
@@ -1252,6 +1327,42 @@ export function registerAliasHandlers(bot: Bot) {
 
       pendingVerticalYell.delete(ctx.from.id);
       return submitYell(bot, ctx, text);
+    }
+
+    const pendingTargetAction = pendingTargetActions.get(ctx.from.id);
+    if (pendingTargetAction) {
+      const text = String(ctx.message.text ?? "").trim();
+      const normalized = normalizeInput(text);
+      const expired = Date.now() - pendingTargetAction.createdAt > PENDING_TARGET_ACTION_TTL_MS;
+      if (expired) {
+        pendingTargetActions.delete(ctx.from.id);
+      } else if (["/cancel", "cancel", "скасувати", "відмінити", "відміна", "стоп", "не треба"].includes(normalized)) {
+        pendingTargetActions.delete(ctx.from.id);
+        await ctx.reply("Добре, не уточнюємо ціль.");
+        return;
+      } else if (/^\d+$/u.test(normalized)) {
+        const index = Number(normalized);
+        if (index >= 1 && index <= pendingTargetAction.targets.length) {
+          pendingTargetActions.delete(ctx.from.id);
+          const player = await getPlayerByTelegramId(ctx.from.id);
+          if (!player?.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+          return submitResolvedTargetAction(
+            bot,
+            ctx,
+            player,
+            player.currentLocationId,
+            pendingTargetAction.action,
+            pendingTargetAction.targets[index - 1],
+            pendingTargetAction.detail,
+          );
+        }
+        await ctx.reply(`Уточни номером від 1 до ${pendingTargetAction.targets.length} або напиши команду повністю.`);
+        return;
+      } else if (text.startsWith("/")) {
+        pendingTargetActions.delete(ctx.from.id);
+      } else {
+        pendingTargetActions.delete(ctx.from.id);
+      }
     }
 
     const parsed = parseAlias(ctx.message.text);
@@ -1303,7 +1414,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "rest") return submitRest(bot, ctx, parsed.mode);
     if (parsed.kind === "auto") return submitAuto(bot, ctx, parsed.mode);
     if (parsed.kind === "queue") return submitQueue(ctx, parsed.mode);
-    if (parsed.kind === "track") return submitTrack(bot, ctx, Boolean(parsed.detail));
+    if (parsed.kind === "track") return submitTrack(bot, ctx, Boolean(parsed.detail), parsed.target);
     if (parsed.kind === "shake-tree") return submitShakeTree(ctx);
     if (parsed.kind === "wait") return submitWait(bot, ctx);
     if (parsed.kind === "use-item") return submitUseItem(bot, ctx, parsed.item);
@@ -1314,6 +1425,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "light-campfire") return submitLightCampfire(bot, ctx);
     if (parsed.kind === "douse-campfire") return submitDouseCampfire(bot, ctx);
     if (parsed.kind === "dismantle-campfire") return submitDismantleCampfire(bot, ctx);
+    if (parsed.kind === "dismantle-totem") return submitDismantleTotem(bot, ctx, parsed.target);
     if (parsed.kind === "cook-meat") return submitCookMeat(bot, ctx);
     if (parsed.kind === "cook-meat-all") return submitCookAllMeat(bot, ctx);
     if (parsed.kind === "sleep") return submitSleep(bot, ctx, parsed.tutorial);

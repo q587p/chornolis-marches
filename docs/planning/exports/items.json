@@ -3448,6 +3448,24 @@
     "file": "docs/planning/items/TECH-001-service-boundary-and-duplication-cleanup.md"
   },
   {
+    "id": "TECH-002",
+    "title": "Location feature archetypes and world-data deduplication",
+    "status": "backlog",
+    "type": "technical",
+    "area": "world_data",
+    "priority": "medium",
+    "tags": [
+      "world-data",
+      "features",
+      "seed",
+      "cleanup",
+      "templates"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/TECH-002-feature-archetypes-and-world-data-dedup.md"
+  },
+  {
     "id": "THEFT-000",
     "title": "Risky theft and hiding epic",
     "status": "backlog",

@@ -45,6 +45,26 @@ Current interactive examples:
 - authored vertical landmark: a feature can expose `data.vertical_hint = "UP"` to add a direct movement button such as `Вгору` when inspected, while the real movement still uses the ordinary exit graph.
 - shakeable branches: an upper-tree feature with a cooldown; `/examine` should explain whether dry twigs can be shaken down now or whether the tree needs time before it gives more.
 - shared beginner cache: a starter-camp/watchtower supply feature with small qualitative stock, focused take/contribute buttons and hidden unobserved restock stored in feature data. It is early mutual support, not a shop or fixed reward loop.
+- strange totem: a dry `LANDMARK` with `data.strange_totem = true`; `/look` lists it compactly, `/examine` explains its age and suspicious construction, and `Розібрати` / `/dismantle_totem` queues a dismantle action that can recover `twigs`.
+
+## Strange Totems
+
+Strange Totems are the first small ambient wilderness trace for dry luka and riverbank locations.
+
+- Seeded and spawned totems are `LocationFeature` rows with type `LANDMARK`, `isActive = true` and `data.strange_totem = true`.
+- The compact location overview should treat them like visible features. Direct feature inspection should explain whether the totem looks fresh, old or close to falling apart.
+- `DISMANTLE_TOTEM` is a queued action. It is exposed through the feature button, `/dismantle_totem`, slashless English aliases such as `dismantle totem`, and Ukrainian aliases such as `розібрати тотем`.
+- Fresh active totems recover a small variable amount of `twigs`; old last-day totems recover less.
+- Totems become old after six in-game days and expire after seven in-game days.
+- During the old last-day window, a totem can shed one small `twigs` bundle onto the ground. This drop is idempotent and recorded in feature data.
+- The world tick can attempt one ambient totem spawn per in-game day in the dry luka and riverbank regions. Region caps keep dry luka totems below five active features and riverbank totems below two.
+- Ambient spawns avoid locations with active players, avoid places that already have an active Strange Totem, and avoid visible non-animal NPC/monster/spirit presence.
+- Ambient spawns leave one suspicious track toward a visible exit. The current implementation uses a hidden technical `strange_totem_trace` actor for the `WorldTrack` relation; player-facing text should describe only the suspicious trace, not the technical actor.
+
+Future authored-data cleanup:
+
+- Repeated Strange Totem defaults should move toward `TECH-002` feature archetypes/templates instead of duplicating the same icon, aliases, twig yields and static top-level fields in every world JSON row.
+- Individual feature rows should keep only location-specific overrides once that authoring layer exists.
 
 Current tree-shake MVP limits:
 

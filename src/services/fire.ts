@@ -212,12 +212,13 @@ export function isDismantlableCampfire(feature: { type?: string | null; data?: u
 }
 
 export function adminHandmadeCampfireData(worldMinute: number | null | undefined) {
+  const lit = timedFireData("addCampfire", CAMPFIRE_DURATION_MS, false);
   return {
-    is_campfire: true,
+    ...lit,
     handmade: true,
     created_by: "addCampfire",
-    prepared: true,
-    unlit: true,
+    prepared: false,
+    unlit: false,
     fuelTwigs: CAMPFIRE_BUILD_TWIG_COST,
     builtAtMinute: worldMinute ?? null,
     adminCreated: true,
@@ -656,12 +657,12 @@ export async function createAdminHandmadeCampfire(locationId: number) {
       key,
       locationId,
       type: "CAMPFIRE",
-      name: "Складене вогнище",
-      description: "Хмиз складено в сухе гніздо. Лишилося дати йому вогонь.",
+      name: "Вогнище",
+      description: "Рукотворне вогнище вже горить: дає світло, тепло і може підпалити факел.",
       isActive: true,
-      providesLight: false,
+      providesLight: true,
       restStaminaCapMultiplier: null,
-        data: jsonInput(adminHandmadeCampfireData(worldMinute)),
+      data: jsonInput(adminHandmadeCampfireData(worldMinute)),
     },
   });
 }

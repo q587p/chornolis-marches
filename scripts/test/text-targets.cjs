@@ -2,7 +2,13 @@ const assert = require("node:assert/strict");
 
 require("ts-node/register");
 
-const { isSelfTargetQuery, targetDisplayLabel, visibleTextTargetCreatureWhere } = require("../../src/services/textTargets");
+const {
+  bestTargetActionMatch,
+  isSelfTargetQuery,
+  targetDisplayLabel,
+  textTargetsForAction,
+  visibleTextTargetCreatureWhere,
+} = require("../../src/services/textTargets");
 const { isVisibleCorpse } = require("../../src/services/locations");
 const { isFreshenedCorpse } = require("../../src/services/meat");
 const { resourceTypeDisplayName } = require("../../src/services/corpses");
@@ -54,6 +60,75 @@ assert.equal(targetDisplayLabel({
   canGreet: false,
   searchKeys: [],
 }), "миша — ворушиться в траві");
+
+const visibleTargets = [
+  {
+    type: "player",
+    id: 1,
+    label: "Антон",
+    canGreet: true,
+    canAttack: false,
+    searchKeys: ["антон", "гравець"],
+  },
+  {
+    type: "player",
+    id: 2,
+    label: "Берегові",
+    canGreet: true,
+    canAttack: false,
+    searchKeys: ["берегові", "персонаж"],
+  },
+  {
+    type: "creature",
+    id: 3,
+    label: "Кіт-бережник",
+    actionLabel: "озирається",
+    canGreet: false,
+    canAttack: false,
+    searchKeys: ["кіт", "кіт-бережник"],
+  },
+  {
+    type: "creature",
+    id: 4,
+    label: "миша",
+    actionLabel: "шукає їжу",
+    canGreet: false,
+    canAttack: true,
+    searchKeys: ["миша", "мишу"],
+  },
+  {
+    type: "creature",
+    id: 5,
+    label: "труп миші",
+    canGreet: false,
+    canAttack: false,
+    isCorpse: true,
+    searchKeys: ["миша", "труп", "труп миші"],
+  },
+  {
+    type: "creature",
+    id: 6,
+    label: "труп миші",
+    canGreet: false,
+    canAttack: false,
+    isCorpse: true,
+    searchKeys: ["миша", "труп", "труп миші"],
+  },
+];
+
+assert.deepEqual(textTargetsForAction("attack", visibleTargets).map((target) => target.id), [4]);
+assert.equal(bestTargetActionMatch("attack", "миша", visibleTargets).target.id, 4);
+assert.equal(bestTargetActionMatch("attack", "миша 4", visibleTargets).target.id, 4);
+assert.equal(bestTargetActionMatch("attack", "труп миші", visibleTargets).kind, "none");
+assert.deepEqual(textTargetsForAction("freshen", visibleTargets).map((target) => target.id), [5, 6]);
+
+const duplicateMiceMatch = bestTargetActionMatch("attack", "миша", [
+  visibleTargets[3],
+  { ...visibleTargets[3], id: 7, actionLabel: "озирається" },
+]);
+assert.equal(duplicateMiceMatch.kind, "one");
+assert.equal(duplicateMiceMatch.target.id, 4);
+
 assert.equal(resourceTypeDisplayName({ key: "corpse_mouse_male", name: "труп самця миші" }), "труп миша");
 assert.equal(resourceTypeDisplayName({ key: "corpse_mouse_female", name: "труп самиці миші" }), "труп миші");
 assert.equal(isSelfTargetQuery("me"), true);

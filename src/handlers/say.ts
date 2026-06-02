@@ -11,7 +11,7 @@ export function registerSayHandlers(bot: Bot) {
     if (!from) return;
 
     const text = stripUnsafeText(String(ctx.match || "").slice(0, 300));
-    if (!text) return void (await ctx.reply("Напиши так: /say текст"));
+    if (!text) return void (await ctx.reply("Напиши так: <i>/say</i> текст", { parse_mode: "HTML" }));
 
     const player = await getPlayerByTelegramId(from.id);
     if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));

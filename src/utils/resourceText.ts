@@ -8,3 +8,7 @@ export function resourceAccusativeName(resourceType: { key?: string | null; name
   if (resourceType.key === "raw_meat" || resourceType.key === "cooked_meat") return "м’ясо";
   return resourceType.name;
 }
+
+export function resourceAmountText(name: string, amount: number) {
+  return amount > 1 ? `${name} ×${amount}` : name;
+}

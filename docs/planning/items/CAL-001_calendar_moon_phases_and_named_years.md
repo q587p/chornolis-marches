@@ -24,7 +24,7 @@ Add a deeper calendar system for Chornolis Marches after the basic internal worl
 
 The current starter date is:
 
-> 587 літо після Великого Відступу — Рік Сича під Тихим Вітром.
+> 587 літо після Великого Відступу — рік Сича під Тихим Вітром.
 
 ## Direction
 
@@ -80,7 +80,7 @@ Draft cycle:
 
 587 should be treated as the starting visible year:
 
-> 587 літо після Великого Відступу — Рік Сича під Тихим Вітром.
+> 587 літо після Великого Відступу — рік Сича під Тихим Вітром.
 
 ## Notes
 

@@ -7,6 +7,32 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.13 - Strange totems and dismantle action - 12026-06-02
+
+### Changed
+
+- Added Strange Totem `LANDMARK` features to the dry luka and riverbank seed data as a first small wilderness trace.
+- Added a queued `DISMANTLE_TOTEM` action with a feature button, `/dismantle_totem`, English MUD-style aliases and Ukrainian aliases.
+- Dismantling an active Strange Totem now rewards `twigs`: fresh totems yield a small variable amount, while old last-day totems yield a smaller amount.
+- Strange Totems now age on world time: old totems can shed a small `twigs` bundle once, and active totems expire after seven in-game days.
+- Added a guarded daily ambient spawn pass for Strange Totems in dry luka and riverbank locations, with region caps, player/presence safety checks and suspicious tracks toward a visible exit.
+- Updated location feature inspection, `/help`, `/commands`, deep-link handling and regression coverage for the new dismantle path.
+- Scribe/admin `/addCampfire` now creates a lit handmade campfire by default, while `/addCampfire debug` keeps the old service-fire path.
+- Added `/addLitTorch`, `/addItem`, a scribe/admin inventory-items submenu, and coordinate teleport buttons on `/locationAll`.
+- Polished short Telegram usage prompts so command verbs such as `give`, `дати`, `say`, `whisper`, `reply` and `shout` are visually emphasized in examples.
+- Refreshed the main reply-keyboard vitals after stamina-spending action results such as freshening, speech and item actions when exact or visible status labels change.
+- Added a `Підібрати все` (`/get_all`) button/command path for visible ground objects so players can pick up all loose location items and visible corpses listed under `Лежить`.
+- Registered `/track` as a direct Telegram command with optional target filtering, so `/track cat` / `/track кіт` can narrow fresh tracks by actor label/name/species.
+- Player-facing resource gain messages now omit `×1` for single-item results such as one raw meat from freshening or one gathered resource.
+- Kept buffered non-player movement notifications and their target buttons aligned with visibility: uncertain `Хтось` movement no longer exposes a concrete target button, while lit/visible movement keeps the actor name.
+- Target action keyboards now hide `Атакувати` when the target is not actually attackable, including spirit presences such as the camp spirit cat.
+- Target text commands now filter ambiguity lists by action: `attack` / `атака` matches attackable living targets instead of mixing in players, spirits or corpses, and a fresh numeric clarification reply selects the listed target.
+- Camp spirit cat full inspection text now uses paragraph spacing so longer Telegram descriptions are easier to read.
+- Camp spirit cat local mouse response is now more eager, making same-location camp/watchtower pounces much more likely when visible mice are present.
+
+- Polished the world-date line used by `/start`, `/time` and tutorial date hints: named years now use lowercase `рік`, lunar circles are separated with a comma, and `/start` keeps the formal `Ви` tone.
+- Added a short return-from-AFK/end-session hint to `/start` when the player resumes after a quiet session pause.
+
 ## 0.15.12 - Ukrainian give parser and rest recovery polish - 12026-06-02
 
 ### Changed
@@ -2771,7 +2797,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ### Added
 
-- Added a lightweight Chornolis calendar service with the current world year line: `587 літо після Великого Відступу — Рік Сича під Тихим Вітром.`
+- Added a lightweight Chornolis calendar service with the current world year line: `587 літо після Великого Відступу — рік Сича під Тихим Вітром.`
 - Added `docs/systems/calendar.md` with the basic era, year naming, 13 lunar circles and 13 year-creature cycle direction.
 - Added Icebox planning item `CAL-001` for deeper calendar simulation: moon phases, seasons, sacred/dangerous days and generated year names.
 

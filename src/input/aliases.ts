@@ -56,7 +56,7 @@ export type ParsedAliasCommand =
   | { kind: "rest"; mode: RestAliasMode }
   | { kind: "auto"; mode: AutoAliasMode }
   | { kind: "queue"; mode: QueueAliasMode }
-  | { kind: "track"; detail?: boolean }
+  | { kind: "track"; detail?: boolean; target?: string }
   | { kind: "inspect-vegetation" }
   | { kind: "inspect-border-marker" }
   | { kind: "inspect-feature"; target: string; detail?: "brief" | "full" }
@@ -67,6 +67,7 @@ export type ParsedAliasCommand =
   | { kind: "light-campfire" }
   | { kind: "douse-campfire" }
   | { kind: "dismantle-campfire" }
+  | { kind: "dismantle-totem"; target?: string }
   | { kind: "cook-meat" }
   | { kind: "cook-meat-all" }
   | { kind: "beginner-cache"; action: "inspect" | "take" | "contribute" | "contribute-all"; item?: string }
@@ -460,6 +461,19 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "розібрати вогнище": { kind: "dismantle-campfire" },
   "розібрати багаття": { kind: "dismantle-campfire" },
   "прибрати вогнище": { kind: "dismantle-campfire" },
+  "dismantle_totem": { kind: "dismantle-totem" },
+  "dismantle totem": { kind: "dismantle-totem" },
+  "dismantle strange totem": { kind: "dismantle-totem" },
+  "take apart totem": { kind: "dismantle-totem" },
+  "break down totem": { kind: "dismantle-totem" },
+  "remove totem": { kind: "dismantle-totem" },
+  "розібрати тотем": { kind: "dismantle-totem" },
+  "розібрати підозрілий тотем": { kind: "dismantle-totem" },
+  "розібрати дивний тотем": { kind: "dismantle-totem" },
+  "прибрати тотем": { kind: "dismantle-totem" },
+  "розв'язати тотем": { kind: "dismantle-totem" },
+  "розв’язати тотем": { kind: "dismantle-totem" },
+  "розвязати тотем": { kind: "dismantle-totem" },
   "cook meat": { kind: "cook-meat" },
   "cook raw meat": { kind: "cook-meat" },
   "cook all": { kind: "cook-meat-all" },
@@ -675,6 +689,15 @@ const SUGGESTABLE_PATTERN_ALIASES = [
   "freshen all",
   "свіжувати все",
   "освіжити всі",
+  "attack",
+  "fight",
+  "kill",
+  "kick",
+  "атака",
+  "атакувати",
+  "напасти",
+  "вдарити",
+  "бити",
   "smile",
   "усміхнутися",
   "усміхнутись",
@@ -849,6 +872,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "light-campfire") return "/light_campfire";
   if (parsed.kind === "douse-campfire") return "/douse_campfire";
   if (parsed.kind === "dismantle-campfire") return "/dismantle_campfire";
+  if (parsed.kind === "dismantle-totem") return "/dismantle_totem";
   if (parsed.kind === "cook-meat") return "/cook_meat";
   if (parsed.kind === "cook-meat-all") return "/cook_all";
   if (parsed.kind === "beginner-cache") {
@@ -1075,6 +1099,12 @@ function parseAll(text: string): ParsedAliasCommand | null {
 }
 
 function parseTrackIntent(text: string): ParsedAliasCommand | null {
+  const direct = text.match(/^(?:track|відслідкувати|вистежити|сліди|шукати сліди|йти слідом)(?:\s+(.+))?$/u);
+  if (direct) {
+    const target = direct[1]?.trim();
+    return target ? { kind: "track", target } : { kind: "track" };
+  }
+
   if (/^(?:examine|inspect|look|x|роздивитися|роздивитись|придивитися|придивитись|оглянути|глянути)(?:\s+(?:tracks|track|сліди|слід)|\s+до\s+(?:слідів|сліду))$/.test(text)) {
     return { kind: "track", detail: true };
   }
@@ -1122,9 +1152,11 @@ function parseOpenIntent(text: string): ParsedAliasCommand | null {
 }
 
 function parseTargetAction(text: string): ParsedAliasCommand | null {
+  if (text === "attack_mouse") return { kind: "target-action", action: "attack", target: "mouse" };
+
   const patterns: Array<[TargetAction, RegExp]> = [
     ["inspect", /^(?:look\s+at|look|x|examine|inspect|роздивитися|оглянути|огл|глянути\s+на|подивитися\s+на|придивитися\s+до)\s+(.+)$/],
-    ["attack", /^(?:attack|fight|hit|kill|kick|атакувати|напасти\s+на|напасти|вдарити|ударити|копнути|бити|битися\s+з)\s+(.+)$/],
+    ["attack", /^(?:attack|fight|hit|kill|kick|атака|атакувати|напасти\s+на|напасти|вдарити|ударити|копнути|бити|битися\s+з)\s+(.+)$/],
     ["greet", /^(?:greet|привітати|привітатися\s+з|заговорити\s+з|говорити\s+з|звернутися\s+до)\s+(.+)$/],
     ["freshen", /^(?:freshen|butcher|освіжувати|освіжити|свіжувати|свіжити|зняти\s+шкуру\s+з|оббілувати|розібрати|обробити|підготувати\s+м'ясо\s+з|підготувати\s+м’ясо\s+з)\s+(.+)$/],
   ];
@@ -1138,6 +1170,12 @@ function parseTargetAction(text: string): ParsedAliasCommand | null {
 }
 
 function parsePickup(text: string): ParsedAliasCommand | null {
+  const allMatch = text.match(/^(?:get_all|pick_all|pickup_all|take_all)(?:\s+(.+))?$/);
+  if (allMatch) {
+    const filter = allMatch[1]?.trim();
+    return { kind: "pickup-target", target: filter ? `all ${filter}` : "all" };
+  }
+
   const match = text.match(/^(?:pickup|pick|take|get|підібрати|підняти|взяти|забрати)\s+(.+)$/);
   if (!match?.[1]?.trim()) return null;
   const target = match[1].trim();
@@ -1447,6 +1485,13 @@ function parseCampfireActionIntent(text: string): ParsedAliasCommand | null {
   return null;
 }
 
+function parseTotemDismantleIntent(text: string): ParsedAliasCommand | null {
+  const match = text.match(/^(?:dismantle|take apart|break down|remove|розібрати|прибрати|розв'язати|розв’язати|розвязати)\s+(?:strange\s+)?(?:totem|підозрілий\s+тотем|дивний\s+тотем|тотем)(?:\s+(.+))?$/u);
+  if (!match) return null;
+  const target = match[1]?.trim();
+  return target ? { kind: "dismantle-totem", target } : { kind: "dismantle-totem" };
+}
+
 function parseSocialSignal(text: string): ParsedAliasCommand | null {
   const patterns: Array<[SocialSignalAlias, RegExp, boolean]> = [
     ["smile", /^(?:smile|усміхнутися|усміхнутись|посміхнутися|посміхнутись|усміх|посміх)(?:\s+(.+))?$/, true],
@@ -1520,6 +1565,9 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
 
   const campfireIntent = parseCampfireActionIntent(commandText);
   if (campfireIntent) return campfireIntent;
+
+  const totemDismantleIntent = parseTotemDismantleIntent(commandText);
+  if (totemDismantleIntent) return totemDismantleIntent;
 
   const openIntent = parseOpenIntent(commandText);
   if (openIntent) return openIntent;

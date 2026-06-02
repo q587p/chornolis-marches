@@ -19,7 +19,7 @@ The clock may use real elapsed milliseconds to advance from `lastAdvancedAt`, bu
 Preserve the current public date as the initial world-clock state:
 
 ```text
-587 літо після Великого Відступу — Рік Сича під Тихим Вітром.
+587 літо після Великого Відступу — рік Сича під Тихим Вітром.
 Пізня весна, Коло Зеленого Шуму, 17 день, передвечір'я.
 ```
 
