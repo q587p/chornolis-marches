@@ -29,6 +29,7 @@ import { fatigueStateFor, spendCreatureStamina, spendPlayerStamina, spendPlayerS
 import { actorWhere, enqueueCreatureAction, hasActiveCreatureActions, interruptActorActions, type ActorRef } from "./actionLifecycle";
 import { attackHitsSpecies } from "./attackRules";
 import { escapeHtml } from "../utils/text";
+import { safeSendMessage } from "../utils/telegram";
 import { resourceAccusativeName } from "../utils/resourceText";
 import { canEditKnownMessage, noteKnownMessage } from "../utils/messageTracker";
 import { playerCanShowTechnicalDetails } from "./technicalDetails";
@@ -963,12 +964,16 @@ async function completeGreet(bot: Bot, action: WorldAction) {
   await spendPlayerStamina(bot, player.id, "GREET", chatId);
   await prisma.player.updateMany({ where: { id: player.id }, data: { greetings: { increment: 1 } } });
   if (targetPlayer) {
-    await bot.api.sendMessage(
+    const delivered = await safeSendMessage(
+      bot,
       targetPlayer.telegramId,
       `${escapeHtml(actorForms.nominative)} ${verb} вам:\n${quoteBlock(greeting)}`,
       { parse_mode: "HTML" },
+      "greet target sendMessage",
     );
-    await rememberPlayerReplyTarget({ playerId: targetPlayer.id, speakerName: actorForms.nominative, speakerPlayerId: player.id, locationId: player.currentLocationId });
+    if (delivered) {
+      await rememberPlayerReplyTarget({ playerId: targetPlayer.id, speakerName: actorForms.nominative, speakerPlayerId: player.id, locationId: player.currentLocationId });
+    }
   }
   await notifyLocationExcept(
     bot,
@@ -1362,12 +1367,16 @@ async function completeSay(bot: Bot, action: WorldAction) {
         { parseMode: "HTML" },
       );
       if (targetPlayer) {
-        await bot.api.sendMessage(
+        const delivered = await safeSendMessage(
+          bot,
           targetPlayer.telegramId,
           `${escapeHtml(actorForms.nominative)} шепоче вам:\n${quoteBlock(text)}`,
           { parse_mode: "HTML", reply_markup: await buildMainReplyKeyboardForTelegramId(Number(targetPlayer.telegramId), false) },
+          "whisper target sendMessage",
         );
-        await rememberPlayerReplyTarget({ playerId: targetPlayer.id, speakerName: actorForms.nominative, speakerPlayerId: player.id, locationId: player.currentLocationId });
+        if (delivered) {
+          await rememberPlayerReplyTarget({ playerId: targetPlayer.id, speakerName: actorForms.nominative, speakerPlayerId: player.id, locationId: player.currentLocationId });
+        }
       }
       if (chatId) await bot.api.sendMessage(chatId, `Ви шепнули ${escapeHtml(target.forms.dative)}:\n${quoteBlock(text)}`, { parse_mode: "HTML" });
       await setActionStatus(action, "DONE");
@@ -1514,18 +1523,22 @@ async function completeSay(bot: Bot, action: WorldAction) {
         `${escapeHtml(speakerForms.nominative)} відповідає ${escapeHtml(targetForms.dative)}:\n${quoteBlock(text)}`,
         { parseMode: "HTML" },
       );
-      await bot.api.sendMessage(
+      const delivered = await safeSendMessage(
+        bot,
         targetPlayer.telegramId,
         `${escapeHtml(speakerForms.nominative)} відповідає вам:\n${quoteBlock(text)}`,
         { parse_mode: "HTML", reply_markup: await buildMainReplyKeyboardForTelegramId(Number(targetPlayer.telegramId), false) },
+        "creature reply target sendMessage",
       );
-      await rememberPlayerReplyTarget({
-        playerId: targetPlayer.id,
-        speakerName: speakerForms.nominative,
-        speakerCreatureId: creature.id,
-        speakerDative: speakerForms.dative,
-        locationId: targetPlayer.currentLocationId ?? creature.locationId,
-      });
+      if (delivered) {
+        await rememberPlayerReplyTarget({
+          playerId: targetPlayer.id,
+          speakerName: speakerForms.nominative,
+          speakerCreatureId: creature.id,
+          speakerDative: speakerForms.dative,
+          locationId: targetPlayer.currentLocationId ?? creature.locationId,
+        });
+      }
       await setActionStatus(action, "DONE");
       await logEvent(creature.species.kind === "HUMAN" ? "SAY" : "NPC_SAY", `${speakerForms.nominative} відповідає ${targetForms.dative}`, text, creature.locationId);
       return;

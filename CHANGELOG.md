@@ -13,7 +13,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Added a first generic `give` bridge for giving one raw-meat unit to a visible valid target, currently the camp spirit cat.
 - Added `Дати сире м'ясо` target UI for the camp spirit cat when the player has raw meat, plus `/give`, slashless `give`, Ukrainian `дати`, `/feed_raw_meat` and typo-tolerant `/feed_raw_meet` parser coverage.
-- Hardened direct player-target Telegram deliveries for greetings, whispers, creature replies and social signals so a blocked-user private send no longer fails the action queue.
+- Hardened direct player-target Telegram deliveries for greetings, whispers, creature replies and social signals so blocked-user private sends no longer fail the action queue.
 - Polished the no-argument `/yell` usage prompt and kept the command examples visually emphasized.
 - Updated help, camp cat ecology docs and planning notes for the small exchange/feeding slice.
 
