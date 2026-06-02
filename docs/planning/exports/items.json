@@ -809,6 +809,29 @@
     "file": "docs/planning/items/ECO-007-animal-taming-companions.md"
   },
   {
+    "id": "ECO-008",
+    "title": "Herbivore carrion and mouse cannibalism pressure",
+    "status": "backlog",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "medium",
+    "tags": [
+      "ecology",
+      "creatures",
+      "hunger",
+      "carrion",
+      "mice",
+      "rabbits"
+    ],
+    "depends_on": [
+      "ECO-001",
+      "FOOD-003",
+      "PERF-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ECO-008-herbivore-carrion-and-mouse-cannibalism.md"
+  },
+  {
     "id": "ECON-001",
     "title": "Barter and trade",
     "status": "backlog",

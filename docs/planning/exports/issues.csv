@@ -40,6 +40,7 @@ ECO-004,Population floor restoration,testing,feature,ecology,high,"ecology,creat
 ECO-005,Animal restoration offerings,next,feature,ecology,high,"ecology,creatures,offerings,location-features",docs/planning/items/ECO-005-animal-restoration-offerings.md
 ECO-006,Animal movement boundaries for authored vertical exits,testing,feature,ecology,high,"ecology,animals,movement,verticality,camp",docs/planning/items/ECO-006-animal-movement-boundaries.md
 ECO-007,Animal taming and small companions,icebox,feature,ecology,medium,"ecology,creatures,companions,following,feeding",docs/planning/items/ECO-007-animal-taming-companions.md
+ECO-008,Herbivore carrion and mouse cannibalism pressure,backlog,feature,ecology,medium,"ecology,creatures,hunger,carrion,mice,rabbits",docs/planning/items/ECO-008-herbivore-carrion-and-mouse-cannibalism.md
 ECON-001,Barter and trade,backlog,feature,economy,medium,"barter,trade,npc,economy",docs/planning/items/ECON-001-barter-and-trade.md
 FIRE-001-A,Active light connects to visibility,testing,feature,survival,high,"fire,light,visibility",docs/planning/items/FIRE-001-A.md
 FIRE-001-B,Expired campfire behavior polish,next,feature,survival,medium,"fire,campfire,copy",docs/planning/items/FIRE-001-B.md
