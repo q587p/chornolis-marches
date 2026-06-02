@@ -95,7 +95,7 @@ Actions:
 - `shout Сюди`, `крикнути Сюди`, `кричати Допоможіть`, `крик Допоможіть`, `вигукнути Обережно`, `волати Не йдіть туди` -> shout across the current region. This uses the speech queue path but spends extra stamina compared with ordinary speech.
 - `черга`, `скасувати`, `очистити чергу`.
 - `/automessages`, `/automessages on`, `/automessages off`, `automessages`, `автоповідомлення`, `авто повідомлення` -> show or change whether own auto-mode action messages keep being delivered after Auto-AFK. Manual AFK and ended sessions remain stronger than this setting.
-- `/track`, `/examine tracks`, `роздивитися сліди`, `придивитися до слідів`. Future detail forms should include target-like aliases such as `роздивитися вовчий слід`, `роздивитися людський слід` and `роздивитися заячий слід`.
+- `/track`, `/track кіт`, `track cat`, `сліди миша`, `/examine tracks`, `роздивитися сліди`, `придивитися до слідів`. Targeted `/track <істота/персонаж>` filters recent visible tracks by actor label/name/species where the current track data can match it. Future detail forms should include target-like aliases such as `роздивитися вовчий слід`, `роздивитися людський слід` and `роздивитися заячий слід`.
 - `сказати Привіт`.
 - `додати хмиз`, `підкинути хмиз`, `/add twigs campfire` -> add carried `хмиз` to a nearby ordinary campfire.
 - `підібрати хмиз`, `взяти хмиз`, `pickup twigs` -> pick up visible loose `хмиз` in the current місцина.

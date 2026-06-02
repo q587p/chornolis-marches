@@ -168,6 +168,9 @@ assertAlias("chat character all", { kind: "chat", mode: "character", window: "al
 
 assertAlias("роздивитися сліди", { kind: "track", detail: true });
 assertAlias("/examine tracks", { kind: "track", detail: true });
+assertAlias("/track кіт", { kind: "track", target: "кіт" });
+assertAlias("track cat", { kind: "track", target: "cat" });
+assertAlias("сліди миша", { kind: "track", target: "миша" });
 assertAlias("роздивитися траву", { kind: "inspect-vegetation" });
 assertAlias("оцінити відновлення", { kind: "inspect-vegetation" });
 assertAlias("/examine sign", { kind: "inspect-border-marker" });

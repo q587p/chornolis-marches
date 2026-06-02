@@ -60,6 +60,7 @@ import { creatureAttackObserverText, freshenWeaponFailureText, getPlayerEquipped
 import { canCreatureUseExit, creatureUsableExits } from "./creatureMovement";
 import { contributeToBeginnerCache } from "./beginnerCache";
 import { isBeginnerCacheContributionPayload } from "./beginnerCacheQueue";
+import { normalizeTrackQuery, trackMatchesQuery } from "./trackSearch";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
@@ -1578,32 +1579,44 @@ async function completeTrack(bot: Bot, action: WorldAction) {
   const player = action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null;
   const chatId = await chatIdFromActionIfAllowed(action);
   if (!player || !player.currentLocationId || action.actorType !== "PLAYER") return void (await setActionStatus(action, "FAILED"));
-  const detail = Boolean(payloadOf<{ detail?: boolean }>(action).detail);
+  const payload = payloadOf<{ detail?: boolean; target?: string }>(action);
+  const detail = Boolean(payload.detail);
+  const targetQuery = typeof payload.target === "string" ? payload.target.trim() : "";
+  const normalizedTargetQuery = targetQuery ? normalizeTrackQuery(targetQuery) : "";
 
   const now = new Date();
   await prisma.worldTrack.deleteMany({ where: { expiresAt: { lt: now } } });
   await spendPlayerStamina(bot, player.id, "TRACK", chatId);
   const visibility = await visibilityRulesForLocation(player.currentLocationId, "details");
 
-  const tracks = await prisma.worldTrack.findMany({
+  const allTracks = await prisma.worldTrack.findMany({
     where: {
       expiresAt: { gt: now },
       OR: [{ fromLocationId: player.currentLocationId }, { toLocationId: player.currentLocationId }],
     },
+    include: {
+      player: true,
+      creature: { include: { species: true } },
+    },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    take: 8,
+    take: normalizedTargetQuery ? 40 : 8,
   });
+  const tracks = normalizedTargetQuery ? allTracks.filter((track) => trackMatchesQuery(track, normalizedTargetQuery)).slice(0, 8) : allTracks;
 
   await setActionStatus(action, "DONE");
 
   if (!chatId) return;
-  if (tracks.length && !visibility.showTracks) {
+  if (allTracks.length && !visibility.showTracks) {
     await bot.api.sendMessage(chatId, `👣 ${visibilityPresenceText(visibility, "tracks")}`);
     return;
   }
 
-  if (!tracks.length) {
+  if (!allTracks.length) {
     await bot.api.sendMessage(chatId, "👣 Ви вдивляєтесь у землю й траву, але свіжих слідів не знаходите.");
+    return;
+  }
+  if (normalizedTargetQuery && !tracks.length) {
+    await bot.api.sendMessage(chatId, `👣 Ви вдивляєтесь у сліди, але свіжих слідів за запитом «${escapeHtml(targetQuery)}» тут не бачите.`, { parse_mode: "HTML" });
     return;
   }
 

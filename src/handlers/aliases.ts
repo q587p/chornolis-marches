@@ -376,13 +376,13 @@ async function submitQueue(ctx: any, mode: QueueAliasMode) {
   await showQueue(ctx, player.id);
 }
 
-export async function submitTrack(bot: Bot, ctx: any, detail = false) {
+export async function submitTrack(bot: Bot, ctx: any, detail = false, target?: string) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const durationMs = actionDurationMs("TRACK", player.stamina);
   try {
-    const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "TRACK", payload: { detail }, durationMs, chatId: ctx.chat?.id, interruptQueued: true });
+    const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "TRACK", payload: { detail, ...(target?.trim() ? { target: target.trim() } : {}) }, durationMs, chatId: ctx.chat?.id, interruptQueued: true });
     await ctx.reply(result.mode === "immediate" ? "Ви вдивляєтесь у сліди." : `Вистежування додано в чергу${durationSecondsSuffix(player, durationMs)}.`);
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {
@@ -1303,6 +1303,7 @@ export function registerAliasHandlers(bot: Bot) {
   bot.command(["attack", "fight", "kill", "kick"], async (ctx) => submitAttackCommand(bot, ctx, ctx.match ?? ""));
   bot.command(["get", "pick", "pickup", "take"], async (ctx) => submitPickupCommand(bot, ctx, ctx.match ?? ""));
   bot.command(["get_all", "pick_all", "pickup_all", "take_all"], async (ctx) => submitPickupCommand(bot, ctx, pickupAllCommandTarget(ctx.match ?? "")));
+  bot.command("track", async (ctx) => submitTrack(bot, ctx, false, ctx.match ?? ""));
   bot.command("yell", async (ctx) => submitYell(bot, ctx, ctx.match ?? ""));
   bot.command("shout", async (ctx) => submitShout(bot, ctx, ctx.match ?? ""));
 
@@ -1412,7 +1413,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "rest") return submitRest(bot, ctx, parsed.mode);
     if (parsed.kind === "auto") return submitAuto(bot, ctx, parsed.mode);
     if (parsed.kind === "queue") return submitQueue(ctx, parsed.mode);
-    if (parsed.kind === "track") return submitTrack(bot, ctx, Boolean(parsed.detail));
+    if (parsed.kind === "track") return submitTrack(bot, ctx, Boolean(parsed.detail), parsed.target);
     if (parsed.kind === "shake-tree") return submitShakeTree(ctx);
     if (parsed.kind === "wait") return submitWait(bot, ctx);
     if (parsed.kind === "use-item") return submitUseItem(bot, ctx, parsed.item);

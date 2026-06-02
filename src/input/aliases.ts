@@ -56,7 +56,7 @@ export type ParsedAliasCommand =
   | { kind: "rest"; mode: RestAliasMode }
   | { kind: "auto"; mode: AutoAliasMode }
   | { kind: "queue"; mode: QueueAliasMode }
-  | { kind: "track"; detail?: boolean }
+  | { kind: "track"; detail?: boolean; target?: string }
   | { kind: "inspect-vegetation" }
   | { kind: "inspect-border-marker" }
   | { kind: "inspect-feature"; target: string; detail?: "brief" | "full" }
@@ -1099,6 +1099,12 @@ function parseAll(text: string): ParsedAliasCommand | null {
 }
 
 function parseTrackIntent(text: string): ParsedAliasCommand | null {
+  const direct = text.match(/^(?:track|відслідкувати|вистежити|сліди|шукати сліди|йти слідом)(?:\s+(.+))?$/u);
+  if (direct) {
+    const target = direct[1]?.trim();
+    return target ? { kind: "track", target } : { kind: "track" };
+  }
+
   if (/^(?:examine|inspect|look|x|роздивитися|роздивитись|придивитися|придивитись|оглянути|глянути)(?:\s+(?:tracks|track|сліди|слід)|\s+до\s+(?:слідів|сліду))$/.test(text)) {
     return { kind: "track", detail: true };
   }
