@@ -62,6 +62,10 @@ export type ParsedAliasCommand =
   | { kind: "shake-tree" }
   | { kind: "wait" }
   | { kind: "add-twigs-campfire" }
+  | { kind: "build-campfire" }
+  | { kind: "light-campfire" }
+  | { kind: "douse-campfire" }
+  | { kind: "dismantle-campfire" }
   | { kind: "cook-meat" }
   | { kind: "cook-meat-all" }
   | { kind: "beginner-cache"; action: "inspect" | "take" | "contribute" | "contribute-all"; item?: string }
@@ -415,6 +419,45 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "додати хмиз": { kind: "add-twigs-campfire" },
   "підкинути хмиз": { kind: "add-twigs-campfire" },
   "додати хмиз у вогнище": { kind: "add-twigs-campfire" },
+  "build campfire": { kind: "build-campfire" },
+  "make campfire": { kind: "build-campfire" },
+  "build fire": { kind: "build-campfire" },
+  "make fire": { kind: "build-campfire" },
+  "prepare campfire": { kind: "build-campfire" },
+  "build bonfire": { kind: "build-campfire" },
+  "make bonfire": { kind: "build-campfire" },
+  "скласти вогнище": { kind: "build-campfire" },
+  "розкласти вогнище": { kind: "build-campfire" },
+  "зробити вогнище": { kind: "build-campfire" },
+  "скласти багаття": { kind: "build-campfire" },
+  "розкласти багаття": { kind: "build-campfire" },
+  "зробити багаття": { kind: "build-campfire" },
+  "скласти хмиз": { kind: "build-campfire" },
+  "розкласти хмиз": { kind: "build-campfire" },
+  "light campfire": { kind: "light-campfire" },
+  "light fire": { kind: "light-campfire" },
+  "ignite campfire": { kind: "light-campfire" },
+  "запалити вогнище": { kind: "light-campfire" },
+  "підпалити вогнище": { kind: "light-campfire" },
+  "розпалити вогнище": { kind: "light-campfire" },
+  "підпалити багаття": { kind: "light-campfire" },
+  "розпалити багаття": { kind: "light-campfire" },
+  "douse campfire": { kind: "douse-campfire" },
+  "extinguish campfire": { kind: "douse-campfire" },
+  "put out campfire": { kind: "douse-campfire" },
+  "douse fire": { kind: "douse-campfire" },
+  "погасити вогнище": { kind: "douse-campfire" },
+  "загасити вогнище": { kind: "douse-campfire" },
+  "притушити вогнище": { kind: "douse-campfire" },
+  "потушити вогнище": { kind: "douse-campfire" },
+  "погасити багаття": { kind: "douse-campfire" },
+  "dismantle campfire": { kind: "dismantle-campfire" },
+  "take apart campfire": { kind: "dismantle-campfire" },
+  "break down campfire": { kind: "dismantle-campfire" },
+  "dismantle fire": { kind: "dismantle-campfire" },
+  "розібрати вогнище": { kind: "dismantle-campfire" },
+  "розібрати багаття": { kind: "dismantle-campfire" },
+  "прибрати вогнище": { kind: "dismantle-campfire" },
   "cook meat": { kind: "cook-meat" },
   "cook raw meat": { kind: "cook-meat" },
   "cook all": { kind: "cook-meat-all" },
@@ -800,6 +843,10 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "shake-tree") return "/shake_tree";
   if (parsed.kind === "wait") return "/wait";
   if (parsed.kind === "add-twigs-campfire") return "/add_twigs_campfire";
+  if (parsed.kind === "build-campfire") return "/build_campfire";
+  if (parsed.kind === "light-campfire") return "/light_campfire";
+  if (parsed.kind === "douse-campfire") return "/douse_campfire";
+  if (parsed.kind === "dismantle-campfire") return "/dismantle_campfire";
   if (parsed.kind === "cook-meat") return "/cook_meat";
   if (parsed.kind === "cook-meat-all") return "/cook_all";
   if (parsed.kind === "beginner-cache") {
@@ -1205,6 +1252,7 @@ function parsePutParts(value: string): { item: string; amount?: PutAliasAmount; 
 
 function parsePutIntent(text: string): ParsedAliasCommand | null {
   if (text === "put out torch") return null;
+  if (text === "put out campfire") return null;
   const defaultMatch = text.match(/^(?:put|покласти|класти)$/u);
   if (defaultMatch) return { kind: "put-item", item: "туша", container: "рів" };
 
@@ -1213,6 +1261,61 @@ function parsePutIntent(text: string): ParsedAliasCommand | null {
   const parsed = parsePutParts(match[1].trim());
   if (!parsed?.item || !parsed.container) return null;
   return { kind: "put-item", ...parsed };
+}
+
+function parseCampfireActionIntent(text: string): ParsedAliasCommand | null {
+  if ([
+    "build campfire",
+    "make campfire",
+    "build fire",
+    "make fire",
+    "prepare campfire",
+    "build bonfire",
+    "make bonfire",
+    "скласти вогнище",
+    "розкласти вогнище",
+    "зробити вогнище",
+    "скласти багаття",
+    "розкласти багаття",
+    "зробити багаття",
+    "скласти хмиз",
+    "розкласти хмиз",
+  ].includes(text)) return { kind: "build-campfire" };
+
+  if ([
+    "light campfire",
+    "light fire",
+    "ignite campfire",
+    "запалити вогнище",
+    "підпалити вогнище",
+    "розпалити вогнище",
+    "підпалити багаття",
+    "розпалити багаття",
+  ].includes(text)) return { kind: "light-campfire" };
+
+  if ([
+    "douse campfire",
+    "extinguish campfire",
+    "put out campfire",
+    "douse fire",
+    "погасити вогнище",
+    "загасити вогнище",
+    "притушити вогнище",
+    "потушити вогнище",
+    "погасити багаття",
+  ].includes(text)) return { kind: "douse-campfire" };
+
+  if ([
+    "dismantle campfire",
+    "take apart campfire",
+    "break down campfire",
+    "dismantle fire",
+    "розібрати вогнище",
+    "розібрати багаття",
+    "прибрати вогнище",
+  ].includes(text)) return { kind: "dismantle-campfire" };
+
+  return null;
 }
 
 function parseSocialSignal(text: string): ParsedAliasCommand | null {
@@ -1282,6 +1385,9 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
 
   const putIntent = parsePutIntent(commandText);
   if (putIntent) return putIntent;
+
+  const campfireIntent = parseCampfireActionIntent(commandText);
+  if (campfireIntent) return campfireIntent;
 
   const openIntent = parseOpenIntent(commandText);
   if (openIntent) return openIntent;

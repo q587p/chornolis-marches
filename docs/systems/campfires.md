@@ -58,6 +58,15 @@ Feature inspection:
 - Extinguished handmade campfire: existing add-twigs/light buttons, plus `🧹 Розібрати`.
 - Magic/special campfires: no douse/dismantle buttons.
 
+Text commands:
+
+- `/build_campfire`, `build campfire`, `make fire`, `скласти вогнище`, `розкласти вогнище`.
+- `/light_campfire`, `light campfire`, `підпалити вогнище`, `розпалити вогнище`.
+- `/douse_campfire`, `douse campfire`, `put out campfire`, `погасити вогнище`, `загасити вогнище`.
+- `/dismantle_campfire`, `dismantle campfire`, `розібрати вогнище`, `прибрати вогнище`.
+
+The no-target text commands choose the first suitable nearby handmade campfire for that state. If no suitable campfire is present, the command replies visibly instead of silently failing.
+
 Actions are queued:
 
 - `BUILD_CAMPFIRE`

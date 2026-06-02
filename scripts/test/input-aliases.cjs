@@ -202,6 +202,20 @@ assertAlias("eat all cooked meat", { kind: "use-item-all", item: "cooked_meat" }
 assertAlias("з'їсти все смажене м'ясо", { kind: "use-item-all", item: "cooked_meat" });
 assertAlias("запалити факел", { kind: "light-torch" });
 assertAlias("погасити факел", { kind: "douse-torch" });
+assertAlias("/build_campfire", { kind: "build-campfire" });
+assertAlias("build campfire", { kind: "build-campfire" });
+assertAlias("make fire", { kind: "build-campfire" });
+assertAlias("скласти вогнище", { kind: "build-campfire" });
+assertAlias("розкласти багаття", { kind: "build-campfire" });
+assertAlias("/light_campfire", { kind: "light-campfire" });
+assertAlias("light campfire", { kind: "light-campfire" });
+assertAlias("підпалити вогнище", { kind: "light-campfire" });
+assertAlias("/douse_campfire", { kind: "douse-campfire" });
+assertAlias("put out campfire", { kind: "douse-campfire" });
+assertAlias("погасити вогнище", { kind: "douse-campfire" });
+assertAlias("/dismantle_campfire", { kind: "dismantle-campfire" });
+assertAlias("dismantle campfire", { kind: "dismantle-campfire" });
+assertAlias("розібрати вогнище", { kind: "dismantle-campfire" });
 
 assertAlias("навчальний сон", { kind: "sleep", tutorial: true });
 assertAlias("навчання", { kind: "sleep", tutorial: true });

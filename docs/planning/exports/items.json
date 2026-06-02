@@ -171,6 +171,26 @@
     "file": "docs/planning/items/BARTER-001-early-exchange-and-barter-foundation.md"
   },
   {
+    "id": "BUILD-001",
+    "title": "Generic build command foundation",
+    "status": "backlog",
+    "type": "feature",
+    "area": "commands",
+    "priority": "medium",
+    "tags": [
+      "commands",
+      "aliases",
+      "building",
+      "crafting",
+      "mud"
+    ],
+    "depends_on": [
+      "CMD-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/BUILD-001-generic-build-command.md"
+  },
+  {
     "id": "CAL-001",
     "title": "Deep calendar, sacred days and named years",
     "status": "icebox",
@@ -859,6 +879,27 @@
     "depends_on": [],
     "exports": {},
     "file": "docs/planning/items/FIRE-001-D-light-source-matrix-test.md"
+  },
+  {
+    "id": "FIRE-002",
+    "title": "Target-aware campfire commands",
+    "status": "backlog",
+    "type": "feature",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "fire",
+      "campfire",
+      "commands",
+      "aliases",
+      "targets"
+    ],
+    "depends_on": [
+      "WORLD-002",
+      "BUILD-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/FIRE-002-targeted-campfire-commands.md"
   },
   {
     "id": "FISH-001",

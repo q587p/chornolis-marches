@@ -8,6 +8,7 @@ ALC-001,First herbal stamina elixir,backlog,feature,survival,high,"alchemy,herbs
 ANIMAL-001,Animal speech reactions,in_progress,feature,ecology,medium,"animals,speech,social,ecology,reactions",docs/planning/items/ANIMAL-001-speech-reactions.md
 AUTH-001,Profile protection and client-neutral login,icebox,system,account,medium,"auth,account,profile,mud,recovery",docs/planning/items/AUTH-001-profile-protection-and-client-neutral-login.md
 BARTER-001,Early exchange and barter foundation after give,next,feature,economy,high,"barter,exchange,give,inventory,economy,npc,trade",docs/planning/items/BARTER-001-early-exchange-and-barter-foundation.md
+BUILD-001,Generic build command foundation,backlog,feature,commands,medium,"commands,aliases,building,crafting,mud",docs/planning/items/BUILD-001-generic-build-command.md
 CAL-001,"Deep calendar, sacred days and named years",icebox,system,world_time,medium,"calendar,world-time,moon-phases,seasons,folklore,atmosphere",docs/planning/items/CAL-001_calendar_moon_phases_and_named_years.md
 CAMP-001,Starter camp prose and feature audit,done,content,core-loop,high,"camp,onboarding,mud,look,examine",docs/planning/items/CAMP-001-starter-camp-prose-and-feature-audit.md
 CAMP-002,Starter watchtower and camp torch-source route update,testing,feature,core-loop,high,"camp,map,torch,light,mud,vertical-exits",docs/planning/items/CAMP-002-starter-watchtower-and-torch-source.md
@@ -43,6 +44,7 @@ FIRE-001-A,Active light connects to visibility,testing,feature,survival,high,"fi
 FIRE-001-B,Expired campfire behavior polish,next,feature,survival,medium,"fire,campfire,copy",docs/planning/items/FIRE-001-B.md
 FIRE-001-C,Carried torch visibility,testing,feature,survival,high,"torch,light,visibility",docs/planning/items/FIRE-001-C.md
 FIRE-001-D,Light source matrix test,testing,qa,survival,high,"fire,light,visibility,torch,campfire,npc",docs/planning/items/FIRE-001-D-light-source-matrix-test.md
+FIRE-002,Target-aware campfire commands,backlog,feature,survival,high,"fire,campfire,commands,aliases,targets",docs/planning/items/FIRE-002-targeted-campfire-commands.md
 FISH-001,Riverbank fishing and fisher NPC,backlog,feature,survival,medium,"fishing,npc,skills,riverbank,observation",docs/planning/items/FISH-001-riverbank-fishing-and-fisher-npc.md
 FISH-002,Riverbank fisher tiny slice,proposed,feature,survival,medium,"fishing,npc,riverbank,observation,atmosphere",docs/planning/items/FISH-002-riverbank-fisher-tiny-slice.md
 FOOD-001,"Corpse freshening, meat and campfire cooking",testing,feature,survival,high,"food,corpses,freshening,cooking,hunger,campfire",docs/planning/items/FOOD-001-corpse-freshening-meat-and-campfire-cooking.md
