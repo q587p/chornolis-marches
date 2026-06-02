@@ -14,14 +14,14 @@ CAMP-002,Starter watchtower and camp torch-source route update,testing,feature,c
 CAMP-003,Shared beginner cache and hidden restock,testing,feature,core-loop,high,"camp,onboarding,inventory,light,restock",docs/planning/items/CAMP-003-shared-beginner-cache.md
 CAT-001,Camp spirit cat foundation,testing,feature,ecology,medium,"cat,camp,creature,ecology,spirit,immortal",docs/planning/items/CAT-001-camp-spirit-cat-foundation.md
 CAT-002,Camp boundary and vertical movement for the spirit cat,testing,feature,movement,medium,"cat,camp,movement,vertical,boundary",docs/planning/items/CAT-002-camp-boundary-and-vertical-movement.md
-CAT-003,Spirit cat mouse hunting priority inside camp,next,feature,ecology,medium,"cat,mouse,predator,camp,ecology",docs/planning/items/CAT-003-mouse-hunting-priority.md
+CAT-003,Spirit cat mouse hunting priority inside camp,in_progress,feature,ecology,medium,"cat,mouse,predator,camp,ecology",docs/planning/items/CAT-003-mouse-hunting-priority.md
 CAT-004,Raw meat interest and camp-box theft scene,next,feature,inventory,medium,"cat,meat,camp,inventory,give,affordance",docs/planning/items/CAT-004-raw-meat-interest-and-theft-scene.md
 CAT-005,"Cat social gestures: shoo, wave off, rub against, circle around",next,feature,social,medium,"cat,social,signals,telegram,actions,give",docs/planning/items/CAT-005-cat-social-actions.md
 CAT-006,"Body-language reactions to weather, daypart, fire and darkness",next,content,atmosphere,low,"cat,weather,daypart,fire,visibility,copy,ukrainian",docs/planning/items/CAT-006-body-language-weather-and-fire.md
 CAT-007,Camp cat tests and tuning pass,next,chore,testing,medium,"cat,tests,tuning,ecology,social",docs/planning/items/CAT-007-camp-cat-tests-and-tuning.md
 CAT-008,"Camp spirit cat docs, news and release notes",next,content,docs,low,"cat,docs,news,release,planning",docs/planning/items/CAT-008-docs-news-release.md
 CAT-009,Camp cat watch posture and soft warnings,testing,feature,atmosphere,medium,"cat,camp,atmosphere,safety,onboarding",docs/planning/items/CAT-009-camp-cat-watch-and-soft-warnings.md
-CAT-010,Camp cat cache and newcomer presence,backlog,feature,onboarding,low,"cat,camp,beginner-cache,onboarding,atmosphere",docs/planning/items/CAT-010-camp-cat-cache-and-newcomer-presence.md
+CAT-010,Camp cat cache and newcomer presence,testing,feature,onboarding,low,"cat,camp,beginner-cache,onboarding,atmosphere",docs/planning/items/CAT-010-camp-cat-cache-and-newcomer-presence.md
 CMD-001,Near-term text command pack,testing,feature,commands,high,"commands,aliases,mud,speech,navigation",docs/planning/items/CMD-001-near-term-text-command-pack.md
 CMD-002,Put items into local containers and features,testing,feature,commands,high,"commands,inventory,containers,aliases",docs/planning/items/CMD-002-put-items-into-containers.md
 COMBAT-001,Creature aggression and defense,backlog,feature,combat,medium,"animals,combat,predators,ecology",docs/planning/items/COMBAT-001-creature-aggression-and-defense.md

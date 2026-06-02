@@ -46,6 +46,7 @@ import {
   playerBeginnerCacheContributionKeys,
   prepareBeginnerCacheForInspection,
 } from "./beginnerCache";
+import { CAMP_SPIRIT_CAT_SPECIES_KEY, campSpiritCatCachePresenceLine } from "./campSpiritCat";
 
 const COMPACT_EXIT_ORDER = ["NORTH", "WEST", "SOUTH", "EAST", "UP", "DOWN", "INSIDE", "OUTSIDE"];
 const GATHERABLE_RESOURCE_KEYS = ["berries", "mushrooms", "herbs"] as const;
@@ -180,6 +181,31 @@ function isTorchSourceFeature(feature: any) {
 
 function isBeginnerCacheFeature(feature: any) {
   return isBeginnerCacheData(featureData(feature));
+}
+
+async function localCampSpiritCatCachePresenceLine(locationId: number) {
+  const [cat, localMice] = await Promise.all([
+    prisma.creature.findFirst({
+      where: {
+        locationId,
+        isAlive: true,
+        isGone: false,
+        isHidden: false,
+        species: { key: CAMP_SPIRIT_CAT_SPECIES_KEY },
+      },
+      select: { id: true },
+    }),
+    prisma.creature.count({
+      where: {
+        locationId,
+        isAlive: true,
+        isGone: false,
+        isHidden: false,
+        species: { key: "mouse" },
+      },
+    }),
+  ]);
+  return campSpiritCatCachePresenceLine({ isPresent: Boolean(cat), hasLocalMice: localMice > 0 });
 }
 
 function isClimbTreeFeature(feature: any) {
@@ -1089,7 +1115,9 @@ export async function renderLocationFeatureInteraction(
   }
   if (isBeginnerCacheFeature(feature)) {
     feature = await prepareBeginnerCacheForInspection(feature.id) ?? feature;
-    text = beginnerCacheInspectionText(feature);
+    text = beginnerCacheInspectionText(feature, {
+      catPresenceLine: await localCampSpiritCatCachePresenceLine(feature.locationId),
+    });
   } else if (featureData(feature).gate_hunting_notice === true || featureData(feature).carcass_dropoff === true) {
     const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
     const state = await getGateHuntingSaturationState(GATE_CARCASS_DROPOFF_FEATURE_KEY);

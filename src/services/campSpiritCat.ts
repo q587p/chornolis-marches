@@ -39,8 +39,20 @@ export type CampSpiritCatWatchContext = {
   hasActiveCampfire?: boolean;
 };
 
-export function campSpiritCatWatchPosture(context: CampSpiritCatWatchContext = {}) {
+export function campSpiritCatShouldPrioritizeLocalMice(context: { hasLocalMice?: boolean } = {}) {
+  return context.hasLocalMice === true;
+}
+
+export function campSpiritCatCachePresenceLine(context: { isPresent?: boolean; hasLocalMice?: boolean } = {}) {
+  if (!context.isPresent) return null;
   if (context.hasLocalMice) {
+    return "Кіт-бережник сидить біля ніжки скрині й слухає мишаче шарудіння так уважно, ніби саме дерево зараз щось скаже.";
+  }
+  return "Кіт-бережник тримається неподалік скрині: не стереже її як власність, а просто звіряє, чи табір не забув про прибулих.";
+}
+
+export function campSpiritCatWatchPosture(context: CampSpiritCatWatchContext = {}) {
+  if (campSpiritCatShouldPrioritizeLocalMice(context)) {
     return "завмер біля нижнього кута табору й слухає мишаче шарудіння";
   }
 

@@ -20,7 +20,7 @@ import { advanceWorldClock } from "./worldTime";
 import { notifyWorldDaypartChangeIfNeeded } from "./worldDaypartNotices";
 import { creatureUsableExits } from "./creatureMovement";
 import { worldTimeSnapshotFromAbsoluteMinute, type WorldDaypart } from "../data/worldClock";
-import { CAMP_SPIRIT_CAT_START_LOCATION_KEY, campSpiritCatWatchPosture, isCampSpiritCatAllowedExit, isCampSpiritCatCreature, isCampSpiritCatLocationKey } from "./campSpiritCat";
+import { CAMP_SPIRIT_CAT_START_LOCATION_KEY, campSpiritCatShouldPrioritizeLocalMice, campSpiritCatWatchPosture, isCampSpiritCatAllowedExit, isCampSpiritCatCreature, isCampSpiritCatLocationKey } from "./campSpiritCat";
 import { isStarterCampOwlSafeLocationKey } from "./owlSigns";
 import { advancePassivePlayerHunger } from "./playerHunger";
 
@@ -1148,15 +1148,6 @@ async function tickCampSpiritCat(c: any, daypart: WorldDaypart) {
     return "stoodDown";
   }
 
-  const campExits = c.location.exitsFrom.filter((exit: any) => isExit(exit) && isCampSpiritCatAllowedExit(exit));
-  const exit = pick(campExits);
-  if (isExit(exit) && chance(45)) {
-    const reason = exit.direction === "UP"
-      ? "безшумно підіймається над табором"
-      : "спускається ближче до межового вогню";
-    return queueMove(c, exit, reason);
-  }
-
   const [localMice, hasActiveCampfire] = await Promise.all([
     prisma.creature.count({
       where: {
@@ -1168,10 +1159,21 @@ async function tickCampSpiritCat(c: any, daypart: WorldDaypart) {
     }),
     Promise.resolve(Boolean(c.location.features?.some((feature: any) => feature.type === "MAGIC_CAMPFIRE" && feature.providesLight))),
   ]);
+  const hasLocalMice = localMice > 0;
+
+  const campExits = c.location.exitsFrom.filter((exit: any) => isExit(exit) && isCampSpiritCatAllowedExit(exit));
+  const exit = pick(campExits);
+  if (!campSpiritCatShouldPrioritizeLocalMice({ hasLocalMice }) && isExit(exit) && chance(45)) {
+    const reason = exit.direction === "UP"
+      ? "безшумно підіймається над табором"
+      : "спускається ближче до межового вогню";
+    return queueMove(c, exit, reason);
+  }
+
   const reason = campSpiritCatWatchPosture({
     locationKey: c.location?.key,
     daypart,
-    hasLocalMice: localMice > 0,
+    hasLocalMice,
     hasActiveCampfire,
   });
 

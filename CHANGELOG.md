@@ -7,6 +7,14 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.11 - Camp cat cache presence and mouse priority - 12026-06-02
+
+### Changed
+
+- Added quiet camp spirit cat presence copy to starter shared-cache inspection when the cat is visibly in the same location.
+- Added a first camp-local mouse-priority behavior for the spirit cat: local live mice now make the cat choose its mouse-listening watch posture before ordinary up/down movement.
+- Updated camp cat, beginner cache, ecology and onboarding docs for the new small behavior slice.
+
 ## 0.15.10 - Movement target buttons and animal escalation - 12026-06-02
 
 ### Changed

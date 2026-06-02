@@ -8,7 +8,9 @@ const {
   CAMP_SPIRIT_CAT_SPECIES_KEY,
   CAMP_SPIRIT_CAT_START_LOCATION_KEY,
   CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY,
+  campSpiritCatCachePresenceLine,
   campSpiritCatSafeLocationKey,
+  campSpiritCatShouldPrioritizeLocalMice,
   campSpiritCatWatchPosture,
   campSpiritCatInspectionText,
   isCampSpiritCatAllowedExit,
@@ -62,9 +64,20 @@ assert.match(
   campSpiritCatWatchPosture({ hasLocalMice: true, daypart: "night", hasActiveCampfire: true }),
   /мишаче шарудіння/u,
 );
+assert.equal(campSpiritCatShouldPrioritizeLocalMice({ hasLocalMice: true }), true);
+assert.equal(campSpiritCatShouldPrioritizeLocalMice({ hasLocalMice: false }), false);
 assert.match(
   campSpiritCatWatchPosture({ daypart: "night", hasActiveCampfire: true }),
   /межі світла й темряви/u,
+);
+assert.equal(campSpiritCatCachePresenceLine({ isPresent: false }), null);
+assert.match(
+  campSpiritCatCachePresenceLine({ isPresent: true, hasLocalMice: false }),
+  /не стереже її як власність/u,
+);
+assert.match(
+  campSpiritCatCachePresenceLine({ isPresent: true, hasLocalMice: true }),
+  /мишаче шарудіння/u,
 );
 assert.match(
   campSpiritCatWatchPosture({ locationKey: CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY, daypart: "day" }),

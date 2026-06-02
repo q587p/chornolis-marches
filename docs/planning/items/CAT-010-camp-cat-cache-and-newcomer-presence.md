@@ -1,7 +1,7 @@
 ---
 id: CAT-010
 title: Camp cat cache and newcomer presence
-status: backlog
+status: testing
 type: feature
 area: onboarding
 priority: low
@@ -47,6 +47,12 @@ The cat can sit near the beginner cache, inspect newcomers from a safe distance,
 - The cat does not block cache use or make supplies feel owned by a single player.
 - The feature works even if the cat is not currently in the location.
 - Any added behavior preserves the current camp boundary rules.
+
+## 0.15.11 Implementation Notes
+
+- Cache inspection can add one quiet Кіт-бережник presence line when the cat is visibly in the same watchtower location.
+- The line changes slightly if local mice are present, but it remains descriptive only: no rewards, punishment, ownership, theft or hidden player-facing counters.
+- If the cat is elsewhere, the cache inspection text remains unchanged.
 
 ## Suggested validation
 

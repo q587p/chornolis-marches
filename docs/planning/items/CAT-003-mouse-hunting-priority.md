@@ -1,7 +1,7 @@
 ---
 id: CAT-003
 title: Spirit cat mouse hunting priority inside camp
-status: next
+status: in_progress
 type: feature
 area: ecology
 priority: medium
@@ -26,6 +26,16 @@ Make camp mice the cat’s first normal behavior priority, above meat interest a
 - Keep the cat from pursuing prey outside camp.
 - Use cat-specific starter action text for stalk/pounce/fail/success.
 - Let a successful hunt leave sensible output and/or a small corpse cleanup path.
+
+## 0.15.11 Partial Slice
+
+0.15.11 adds the first pre-hunt priority behavior:
+
+- if live visible mice are in the cat's current camp/watchtower location, the cat chooses its local mouse-listening watch posture before ordinary up/down movement;
+- this keeps the cat from randomly leaving the exact node where mice are present during that tick;
+- it does not yet attack, kill, clean up corpses or touch predator kill counters.
+
+The broader CAT-003 hunting acceptance remains open for the next behavior slice.
 
 ## Out of scope
 
