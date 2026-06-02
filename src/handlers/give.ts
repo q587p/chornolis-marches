@@ -1,4 +1,5 @@
 import type { Bot } from "grammy";
+import { parseAlias } from "../input/aliases";
 import { getPlayerByTelegramId } from "../services/players";
 import { bestTargetMatch, targetListText, visibleTextTargets } from "../services/textTargets";
 import { inventoryResourceKeyFromText } from "../services/inventoryUse";
@@ -10,6 +11,19 @@ import { spendPlayerStaminaAmount } from "../services/actionRecovery";
 import { replyToActionError } from "../utils/actionErrorReply";
 
 const GIVE_USAGE_TEXT = "Напишіть так: give сире м'ясо коту або дати сире м'ясо коту.";
+
+export function registerGiveHandlers(bot: Bot) {
+  bot.command("give", async (ctx) => {
+    const rest = String(ctx.match ?? "").trim();
+    const parsed = parseAlias(rest ? `/give ${rest}` : "/give");
+    if (parsed?.kind === "give-item") {
+      await submitGiveItem(bot, ctx, parsed.item, parsed.target, parsed.amount);
+      return;
+    }
+
+    await ctx.reply(GIVE_USAGE_TEXT);
+  });
+}
 
 function unsupportedGiveItemText(item: string) {
   if (!item.trim()) return GIVE_USAGE_TEXT;

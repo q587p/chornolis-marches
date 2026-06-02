@@ -21,6 +21,8 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Split character-card recovery hints so stamina timing no longer gets hidden behind HP recovery, and the player sees separate `without rest`, `with rest` and `near campfire` estimates.
 - Added a runtime first-use mushroom warning so the first mushroom eaten after this release cautions that mushrooms can be poisonous and may be worth saving for future elixirs or tinctures.
 - Recorded follow-up planning for food-use statistics, including eaten resources and mushroom poisoning outcomes.
+- Registered `/give` as a direct Telegram bot command so clickable public-news command hints no longer rely on text-alias middleware.
+- Tightened the public-news clickable-command regression test so bare slash hints must be registered bot commands or public Herald commands.
 
 ## 0.15.11 - Camp cat raw-meat give bridge - 12026-06-02
 

@@ -108,6 +108,7 @@ assertAlias("закінчити навчання", { kind: "tutorial-end" });
 assertAlias("вийти з кущів", { kind: "move", direction: "OUTSIDE" });
 assertAlias("/use_mushrooms", { kind: "use-item", item: "mushrooms" });
 assertAlias("/gather_berries", { kind: "gather", resourceKey: "berries" });
+assertAlias("/give", { kind: "give-item", item: "", target: "" });
 assertAlias("/give сире м'ясо коту", { kind: "give-item", item: "raw meat", target: "cat" });
 assertAlias("дати 1 сире мʼясо коту-бережнику", { kind: "give-item", item: "raw meat", target: "cat", amount: 1 });
 assertAlias("дати м'яса коту", { kind: "give-item", item: "raw meat", target: "cat" });
