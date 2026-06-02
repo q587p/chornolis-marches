@@ -64,6 +64,8 @@ assert.equal(beginnerReturnStaminaAfter({ stamina: 42, staminaMax: 42 }), 14);
 assert.equal(beginnerReturnStaminaAfter({ stamina: 5, staminaMax: 42 }), 5);
 assert.equal(beginnerReturnStaminaAfter({ stamina: 0, staminaMax: 42 }), 1);
 assert.match(beginnerReturnRefusalText({ ok: false, reason: "established" }), /Стежка назад/);
+assert.match(beginnerReturnRefusalText({ ok: false, reason: "established" }), /\/call_scribes/);
+assert.match(beginnerReturnRefusalText({ ok: false, reason: "established" }), /yell/);
 assert.match(beginnerReturnSuccessText("beginner"), /межовий табір/);
 
 console.log("Beginner return helpers OK");

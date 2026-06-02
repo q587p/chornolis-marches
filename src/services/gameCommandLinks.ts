@@ -15,6 +15,7 @@ export const SAFE_GAME_COMMAND_PAYLOADS = {
   "/inv": "cmd_inventory",
   "/say": "cmd_say",
   "/yell": "cmd_yell",
+  "/call_scribes": "cmd_call_scribes",
   "/build_campfire": "cmd_build_campfire",
   "/light_campfire": "cmd_light_campfire",
   "/douse_campfire": "cmd_douse_campfire",

@@ -3,6 +3,7 @@ import { prisma } from "../db";
 import { BASE_STAMINA } from "../gameConfig";
 import { START_LOCATION_KEY, getStartLocationId } from "./players";
 import { fatigueStateFor } from "./actionRecovery";
+import { establishedReturnHelpText } from "./scribeReturnHelp";
 
 export const BEGINNER_RETURN_COMMAND = "/respawn";
 export const BEGINNER_RETURN_PROGRESS_LIMIT = 800;
@@ -91,7 +92,11 @@ export function beginnerReturnRefusalText(eligibility: BeginnerReturnEligibility
   if (eligibility.reason === "cooldown") {
     return `Стежка повернення ще не встигла зарости новою росою. Спробуйте знову за ${beginnerReturnCooldownText(eligibility.remainingMs ?? 0)}.`;
   }
-  return "Стежка назад більше не слухається так легко. Ви вже занадто міцно тримаєтеся цього світу, щоб Порубіжжя просто винесло вас до табору.";
+  return [
+    "Стежка назад більше не слухається так легко. Ви вже занадто міцно тримаєтеся цього світу, щоб Порубіжжя просто винесло вас до табору.",
+    "",
+    establishedReturnHelpText(),
+  ].join("\n");
 }
 
 export function beginnerReturnPromptText() {

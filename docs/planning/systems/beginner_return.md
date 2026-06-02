@@ -35,6 +35,14 @@ Possible text aliases:
 - Plain `повернутися` remains the local Back action; use explicit `повернення` or `повернутися до табору` for the return flow.
 - The first cooldown is 30 real-time minutes, tracked through the world event trail rather than a new schema field.
 
+## 0.15.15 Established-Character Fallback
+
+- If `/respawn` refuses because the character is too established, the refusal now points to two understandable actions instead of ending cold:
+  - `Гукнути поруч` (`/yell`) for a nearby call that other characters may hear;
+  - `Звернутися до Писарів` (`/call_scribes`) for manual rescue help.
+- `/call_scribes` writes a `Player requested scribe return help` world event and notifies available Scribes/admins with a `Застосувати знак Писаря` button.
+- Applying the sign cancels active/queued player actions, stops rest/auto, returns the character to the start camp, writes a `Scribe returned player to camp` event and notifies the player. This should remain rescue support, not fast travel.
+
 ## Eligibility Ideas
 
 A character may be eligible if:
@@ -60,3 +68,5 @@ Use only one or two in the first slice:
 ```text
 Стежка назад більше не слухається так легко. Ви вже занадто добре тримаєтеся цього світу, щоб сон просто виніс вас до табору.
 ```
+
+After that refusal, the player should also see clear next-step copy: they can yell nearby, or ask the Scribes for a return sign with `/call_scribes`.

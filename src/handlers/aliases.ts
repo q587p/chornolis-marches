@@ -59,6 +59,14 @@ import { spendPlayerStaminaAmount } from "../services/actionRecovery";
 import { afkReplyOptions, endPlayerSession, SESSION_AFK_CONFIRMATION, SESSION_ENDED_CONFIRMATION, setPlayerAfk } from "../services/sessionPresence";
 import { setAutoActionMessageSetting, setDaypartNoticeSetting, showSettings } from "./settings";
 import { beginnerReturnPromptText, beginnerReturnRefusalText, checkBeginnerReturnForPlayer, performBeginnerReturn } from "../services/beginnerReturn";
+import {
+  performScribeReturn,
+  requestScribeReturnHelp,
+  scribeHelpNoScribesText,
+  scribeHelpRequestedText,
+  scribeReturnHelpKeyboard,
+  SCRIBE_HELP_COMMAND,
+} from "../services/scribeReturnHelp";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { formatVitalsSentence } from "../utils/playerText";
 import {
@@ -82,6 +90,7 @@ import { submitGiveItem } from "./give";
 import { firstStrangeTotemFeatureIdAtPlayerLocation } from "../services/strangeTotems";
 
 const pendingVerticalYell = new Map<number, { direction: VerticalYellPromptDirection }>();
+const pendingReturnYell = new Set<number>();
 const pendingTargetActions = new Map<number, { action: TargetAction; targets: TextTargetRef[]; detail: "brief" | "full"; createdAt: number }>();
 const PENDING_TARGET_ACTION_TTL_MS = 60_000;
 
@@ -1235,6 +1244,51 @@ function buildBeginnerReturnConfirmKeyboard() {
     .text("↩️ Лишитися тут", "respawn:cancel");
 }
 
+async function replyWithReturnYellPrompt(ctx: any) {
+  if (!ctx.from?.id) return;
+  pendingReturnYell.add(ctx.from.id);
+  await ctx.reply("Гукніть так, щоб голос зачепив сусідні стежки. Напишіть, що саме крикнути поруч.", {
+    reply_markup: {
+      force_reply: true,
+      selective: true,
+      input_field_placeholder: "Допоможіть, я заблукав!",
+    },
+  });
+}
+
+export async function requestScribeReturnAssistance(bot: Bot, ctx: any) {
+  if (!ctx.from?.id) return;
+  const result = await requestScribeReturnHelp(bot, ctx.from.id);
+  if (!result.ok) {
+    await ctx.reply("Ти ще не увійшов у світ. Напиши /start");
+    return;
+  }
+
+  const suffix = result.sent > 0 ? "" : `\n\n${scribeHelpNoScribesText()}`;
+  await ctx.reply(`${scribeHelpRequestedText()}${suffix}`, {
+    reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+  });
+}
+
+async function performScribeReturnFromCallback(bot: Bot, ctx: any) {
+  await safeAnswerCallbackQuery(ctx);
+  if (!(await requireScribeAdmin(ctx))) return;
+
+  const playerId = Number(ctx.match?.[1]);
+  if (!Number.isSafeInteger(playerId) || playerId <= 0) {
+    await ctx.reply("Не вдалося прочитати, кого саме треба повернути.");
+    return;
+  }
+
+  const result = await performScribeReturn(bot, playerId, ctx.from.id);
+  if (!result.ok) {
+    await ctx.reply(result.message);
+    return;
+  }
+
+  await ctx.reply(`✒️ Знак Писаря застосовано. ${playerForms(result.player).nominative} повертається до межового табору: ${result.startLocation.name}.`);
+}
+
 async function requestBeginnerReturn(ctx: any) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
@@ -1243,7 +1297,10 @@ async function requestBeginnerReturn(ctx: any) {
   if (!checked) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
   if (!checked.eligibility.ok) {
     await ctx.reply(beginnerReturnRefusalText(checked.eligibility), {
-      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+      parse_mode: "HTML",
+      reply_markup: checked.eligibility.reason === "established"
+        ? scribeReturnHelpKeyboard()
+        : await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
     });
     return;
   }
@@ -1262,7 +1319,10 @@ async function confirmBeginnerReturn(ctx: any) {
   if (!result) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
   if (!result.moved) {
     await ctx.reply(beginnerReturnRefusalText(result.eligibility), {
-      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+      parse_mode: "HTML",
+      reply_markup: result.eligibility.reason === "established"
+        ? scribeReturnHelpKeyboard()
+        : await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
     });
     return;
   }
@@ -1292,6 +1352,8 @@ export function registerAliasHandlers(bot: Bot) {
     "inv",
     "put",
     "respawn",
+    "call_scribes",
+    "scribe_help",
     "shake_tree",
     "freshen_all",
     "smile",
@@ -1307,9 +1369,27 @@ export function registerAliasHandlers(bot: Bot) {
   bot.command("track", async (ctx) => submitTrack(bot, ctx, false, ctx.match ?? ""));
   bot.command("yell", async (ctx) => submitYell(bot, ctx, ctx.match ?? ""));
   bot.command("shout", async (ctx) => submitShout(bot, ctx, ctx.match ?? ""));
+  bot.command(["call_scribes", "scribe_help"], async (ctx) => requestScribeReturnAssistance(bot, ctx));
 
   bot.on("message:text", async (ctx, next) => {
     if (!ctx.from || !ctx.message?.text) return next();
+
+    if (pendingReturnYell.has(ctx.from.id)) {
+      const text = String(ctx.message.text ?? "").trim();
+      const normalized = normalizeInput(text);
+      if (["/cancel", "cancel", "скасувати", "відмінити", "відміна", "стоп", "не треба"].includes(normalized)) {
+        pendingReturnYell.delete(ctx.from.id);
+        await ctx.reply("Добре, не гукаємо.");
+        return;
+      }
+      if (text.startsWith("/")) {
+        pendingReturnYell.delete(ctx.from.id);
+        return next();
+      }
+
+      pendingReturnYell.delete(ctx.from.id);
+      return submitYell(bot, ctx, text);
+    }
 
     const pendingYell = pendingVerticalYell.get(ctx.from.id);
     if (pendingYell) {
@@ -1396,6 +1476,7 @@ export function registerAliasHandlers(bot: Bot) {
     }
     if (parsed.kind === "session-presence") return submitSessionPresence(ctx, parsed.mode);
     if (parsed.kind === "beginner-return") return requestBeginnerReturn(ctx);
+    if (parsed.kind === "call-scribes") return requestScribeReturnAssistance(bot, ctx);
     if (parsed.kind === "tutorial-end") return requestTutorialEnd(ctx);
     if (parsed.kind === "back") return showMainKeyboard(ctx);
     if (parsed.kind === "hide-keyboard") return hideReplyKeyboard(ctx);
@@ -1459,6 +1540,15 @@ export function registerAliasHandlers(bot: Bot) {
       reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
     });
   });
+  bot.callbackQuery("respawn:yell_help", async (ctx) => {
+    await safeAnswerCallbackQuery(ctx, "Напишіть текст крику.");
+    await replyWithReturnYellPrompt(ctx);
+  });
+  bot.callbackQuery("scribeReturn:request", async (ctx) => {
+    await safeAnswerCallbackQuery(ctx, "Передаємо прохання Писарям.");
+    await requestScribeReturnAssistance(bot, ctx);
+  });
+  bot.callbackQuery(/^scribeReturn:(\d+)$/, async (ctx) => performScribeReturnFromCallback(bot, ctx));
   bot.callbackQuery(/^yell:prompt:(UP|DOWN)$/, async (ctx) => {
     const direction = ctx.match[1] as VerticalYellPromptDirection;
     pendingVerticalYell.set(ctx.from.id, { direction });
