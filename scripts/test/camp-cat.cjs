@@ -131,6 +131,10 @@ assert.match(fullInspection, /Кіт-бережник/u);
 assert.match(fullInspection, /не відповідає словами/u);
 assert.match(fullInspection, /пружну лінію/u);
 assert.match(fullInspection, /Якщо роздивитися уважніше/u);
+assert.match(fullInspection, /Стан:[^\n]+\n\nЦе табірний дух/u);
+assert.match(fullInspection, /людей\.\n\nШерсть/u);
+assert.match(fullInspection, /розмова\.\n\nНайменше/u);
+assert.doesNotMatch(briefInspection, /\n\nВін мовчить/u);
 assert.ok(fullInspection.length > briefInspection.length + 100, "Full cat inspection should be substantially richer than brief look text");
 assert.doesNotMatch(`${briefInspection}\n${fullInspection}`, /HP|NPC|debug|companion|pet/u);
 

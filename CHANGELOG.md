@@ -24,6 +24,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added a `Підібрати все` button for visible ground objects so players can pick up all loose location items and visible corpses listed under `Лежить`.
 - Kept buffered non-player movement notifications and their target buttons aligned with visibility: uncertain `Хтось` movement no longer exposes a concrete target button, while lit/visible movement keeps the actor name.
 - Target action keyboards now hide `Атакувати` when the target is not actually attackable, including spirit presences such as the camp spirit cat.
+- Camp spirit cat full inspection text now uses paragraph spacing so longer Telegram descriptions are easier to read.
 
 - Polished the world-date line used by `/start`, `/time` and tutorial date hints: named years now use lowercase `рік`, lunar circles are separated with a comma, and `/start` keeps the formal `Ви` tone.
 - Added a short return-from-AFK/end-session hint to `/start` when the player resumes after a quiet session pause.
