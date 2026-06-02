@@ -689,6 +689,15 @@ const SUGGESTABLE_PATTERN_ALIASES = [
   "freshen all",
   "свіжувати все",
   "освіжити всі",
+  "attack",
+  "fight",
+  "kill",
+  "kick",
+  "атака",
+  "атакувати",
+  "напасти",
+  "вдарити",
+  "бити",
   "smile",
   "усміхнутися",
   "усміхнутись",
@@ -1139,7 +1148,7 @@ function parseOpenIntent(text: string): ParsedAliasCommand | null {
 function parseTargetAction(text: string): ParsedAliasCommand | null {
   const patterns: Array<[TargetAction, RegExp]> = [
     ["inspect", /^(?:look\s+at|look|x|examine|inspect|роздивитися|оглянути|огл|глянути\s+на|подивитися\s+на|придивитися\s+до)\s+(.+)$/],
-    ["attack", /^(?:attack|fight|hit|kill|kick|атакувати|напасти\s+на|напасти|вдарити|ударити|копнути|бити|битися\s+з)\s+(.+)$/],
+    ["attack", /^(?:attack|fight|hit|kill|kick|атака|атакувати|напасти\s+на|напасти|вдарити|ударити|копнути|бити|битися\s+з)\s+(.+)$/],
     ["greet", /^(?:greet|привітати|привітатися\s+з|заговорити\s+з|говорити\s+з|звернутися\s+до)\s+(.+)$/],
     ["freshen", /^(?:freshen|butcher|освіжувати|освіжити|свіжувати|свіжити|зняти\s+шкуру\s+з|оббілувати|розібрати|обробити|підготувати\s+м'ясо\s+з|підготувати\s+м’ясо\s+з)\s+(.+)$/],
   ];

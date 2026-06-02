@@ -109,7 +109,7 @@ Actions:
 
 Targets and signals:
 
-- `роздивитися труп`, `атакувати мишу`, `fight wolf`, `kick rabbit`, `привітати 1`, `освіжити труп`.
+- `роздивитися труп`, `атакувати мишу`, `атака миша`, `fight wolf`, `kick rabbit`, `привітати 1`, `освіжити труп`.
 - `підібрати труп`.
 - `освіжити труп`, `розібрати труп`, `freshen corpse`, `butcher corpse` -> gain raw meat from a sufficiently fresh corpse.
 - `/freshen_all`, `freshen all`, `свіжувати все`, `освіжити всі` -> queue freshening for every visible suitable corpse in the current місцина, one corpse at a time.
@@ -120,7 +120,7 @@ Targets and signals:
 - `/give сире м'ясо коту`, `give raw meat to cat`, `дати сире м'ясо коту`, `дати м'яса коту`, `дати мясо кіт`, `дати сирого м'яса бережнику`, `дати сирого мяса котові-бережнику`, `/feed_raw_meat`, `/feed_raw_meet` -> give one raw-meat unit to the visible camp spirit cat through the same narrow `give` path.
 - `кивнути 1`, `помахати мандрівник`, `вказати на вовка`, `насупитися вовк`.
 
-Target commands resolve visible nearby targets by number, id or visible name. If several targets match, the bot asks the player to clarify.
+Target commands resolve visible nearby targets by number, id or visible name. If several targets match, the bot asks the player to clarify; replying with that number while the prompt is fresh selects the listed target. Action-specific lookup should filter by what the action can actually use: `attack`/`атака` only lists attackable living targets, while `freshen`/`освіжити` focuses on visible corpses.
 
 Target focus buttons mirror the text commands: **Глянути** is a brief `/look <target>` style inspection, **Роздивитися** is fuller `/examine <target>`, **Сказати** prompts for addressed speech, **Прошепотіти** prompts for private/quiet addressed speech, and quick signal buttons stay beside **Ще сигнали**.
 

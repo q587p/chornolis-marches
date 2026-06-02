@@ -24,6 +24,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added a `Підібрати все` button for visible ground objects so players can pick up all loose location items and visible corpses listed under `Лежить`.
 - Kept buffered non-player movement notifications and their target buttons aligned with visibility: uncertain `Хтось` movement no longer exposes a concrete target button, while lit/visible movement keeps the actor name.
 - Target action keyboards now hide `Атакувати` when the target is not actually attackable, including spirit presences such as the camp spirit cat.
+- Target text commands now filter ambiguity lists by action: `attack` / `атака` matches attackable living targets instead of mixing in players, spirits or corpses, and a fresh numeric clarification reply selects the listed target.
 - Camp spirit cat full inspection text now uses paragraph spacing so longer Telegram descriptions are easier to read.
 - Camp spirit cat local mouse response is now more eager, making same-location camp/watchtower pounces much more likely when visible mice are present.
 
