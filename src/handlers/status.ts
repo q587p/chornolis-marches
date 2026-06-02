@@ -31,6 +31,7 @@ import { clearOnboardingStateForTelegramId } from "./start";
 import { hunterFieldInventorySummary } from "../services/targets";
 import { playerPresenceDisplaySuffix, sessionPresenceLabel } from "../services/sessionPresence";
 import { slashlessCommandPattern } from "../utils/slashlessCommands";
+import { formatTeleportCoordinateCommand } from "../services/adminTeleportLinks";
 
 const LOCATION_PAGE_MAX_CHARS = 3300;
 const TELEGRAM_TEXT_MAX_CHARS = 3900;
@@ -1145,20 +1146,15 @@ function splitLocationsIntoPages(locations: LocationAllEntry[], maxChars: number
 }
 
 function formatLocationAllLine(location: LocationAllEntry) {
-  return `${location.key} — ${location.name} (${location.x},${location.y},${location.z}); danger=${location.dangerLevel}; region=${location.region.name}`;
+  return `${location.key} (${formatTeleportCoordinateCommand(location)}) — ${location.name} (${location.x},${location.y},${location.z}); danger=${location.dangerLevel}; region=${location.region.name}`;
 }
 
-function buildLocationAllPaginationKeyboard(page: number, totalPages: number, locations: LocationAllEntry[] = []) {
+function buildLocationAllPaginationKeyboard(page: number, totalPages: number) {
+  if (totalPages <= 1) return undefined;
   const keyboard = new InlineKeyboard();
-  for (const location of locations) {
-    keyboard.text(`🧭 ${location.x},${location.y},${location.z}`, `locationTeleport:${location.id}`).row();
-  }
-
-  if (totalPages > 1) {
-    if (page > 0) keyboard.text("◀️ Назад", `locationAll:${page - 1}`);
-    if (page < totalPages - 1) keyboard.text("Далі ▶️", `locationAll:${page + 1}`);
-  }
-  return locations.length || totalPages > 1 ? keyboard : undefined;
+  if (page > 0) keyboard.text("◀️ Назад", `locationAll:${page - 1}`);
+  if (page < totalPages - 1) keyboard.text("Далі ▶️", `locationAll:${page + 1}`);
+  return keyboard;
 }
 
 function formatChatEventTime(value: Date) {
@@ -1257,7 +1253,7 @@ async function buildLocationAllPage(requestedPage: number) {
 
     return {
       text: `📍 Усі місцини\nСторінка ${page + 1}/${pages.length}; місцин ${locations.length}\n\n${pageLines.length ? pageLines.join("\n") : "немає"}`,
-      keyboard: buildLocationAllPaginationKeyboard(page, pages.length, pageLocations),
+      keyboard: buildLocationAllPaginationKeyboard(page, pages.length),
     };
   } catch (error) {
     logStatusPerf("buildLocationAllPage", startedAt, "ok=0");

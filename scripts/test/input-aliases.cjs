@@ -17,6 +17,10 @@ const { autoCommandModeFromText } = require("../../src/handlers/auto");
 const { isDreamGateOpeningPhrase, localGateOpenAttemptText } = require("../../src/services/tutorial");
 const { normalizeCreatureActionText } = require("../../src/utils/creatureActionText");
 const { resourceAccusativeName } = require("../../src/utils/resourceText");
+const {
+  formatTeleportCoordinateCommand,
+  parseTeleportCoordinateCommand,
+} = require("../../src/services/adminTeleportLinks");
 
 function assertAlias(input, expected) {
   assert.deepEqual(parseAlias(input), expected, `Unexpected alias parse for: ${input}`);
@@ -38,6 +42,11 @@ assert.equal(normalizeInput("з’їсти   ягоди."), "з'їсти яго�
 
 assert.equal(parseStartActionPayload("cmd_look"), "look");
 assert.equal(parseStartActionPayload("cmd_examine"), "examine");
+
+assert.equal(formatTeleportCoordinateCommand({ x: 0, y: 9, z: -13 }), "/tp_0_9__13");
+assert.equal(parseTeleportCoordinateCommand("/tp_0_9__13"), "0,9,-13");
+assert.equal(parseTeleportCoordinateCommand("tp__2_10_0"), "-2,10,0");
+assert.equal(parseTeleportCoordinateCommand("/tp_0_9__13@Chornolis_bot"), "0,9,-13");
 assert.equal(parseStartActionPayload("cmd_news"), "news");
 assert.equal(parseStartActionPayload("cmd_auto"), "auto");
 assert.equal(parseStartActionPayload("cmd_auto_stop"), "autoStop");
