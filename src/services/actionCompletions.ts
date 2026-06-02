@@ -31,7 +31,7 @@ import { actorWhere, enqueueCreatureAction, hasActiveCreatureActions, interruptA
 import { attackHitsSpecies } from "./attackRules";
 import { escapeHtml } from "../utils/text";
 import { safeSendMessage } from "../utils/telegram";
-import { resourceAccusativeName } from "../utils/resourceText";
+import { resourceAccusativeName, resourceAmountText } from "../utils/resourceText";
 import { canEditKnownMessage, noteKnownMessage } from "../utils/messageTracker";
 import { playerCanShowTechnicalDetails } from "./technicalDetails";
 import { canOpenDreamGateWithSpeech, ensureTutorialForagingResources, isLocationExitLocked, isTutorialFastRestLocationKey, openDreamGate, rememberTutorialCommandHintIfInTutorial, rememberTutorialForagingSuccess, rememberTutorialInventoryAvailable, rememberTutorialWellbeingAside, tutorialRestEntryStaminaMode, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_ENTRY_STAMINA_TEXT, TUTORIAL_REST_RETURN_FROM_HEAT_TEXT, TUTORIAL_WELLBEING_ASIDE_TEXT } from "./tutorial";
@@ -770,7 +770,7 @@ async function completeGather(bot: Bot, action: WorldAction) {
     if (chatId) {
       await bot.api.sendMessage(
         chatId,
-        `Ви витратили час і снагу на пошуки${durationText} і знайшли: ${resource.resourceType.name} ×${found}.`,
+        `Ви витратили час і снагу на пошуки${durationText} і знайшли: ${resourceAmountText(resource.resourceType.name, found)}.`,
         isTutorialForagingSuccess
           ? { reply_markup: await buildMainReplyKeyboardForTelegramId(Number((actor as any).telegramId), false) }
           : replyOptionsAfterStaminaSpend(staminaSpend),
@@ -1109,7 +1109,7 @@ async function completeFreshen(bot: Bot, action: WorldAction) {
   if (chatId) {
     await hideCompletedFreshenSourceMessage(bot, action, chatId);
     const resultText = meat.succeeded
-      ? `🔪 Ви освіжували ${target.forms.accusative} ${weapon.forms.instrumental} й отримали ${meat.resourceName} ×${meat.amount}.`
+      ? `🔪 Ви освіжували ${target.forms.accusative} ${weapon.forms.instrumental} й отримали ${resourceAmountText(meat.resourceName, meat.amount)}.`
       : `🔪 Ви освіжували ${target.forms.accusative} ${weapon.forms.instrumental}, але придатне м'ясо не вдалося зняти. Лишилися тільки рвані рештки.`;
     await bot.api.sendMessage(chatId, resultText, replyOptionsAfterStaminaSpend(staminaSpend));
     if (learning.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, FRESHENING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" }));

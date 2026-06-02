@@ -7,6 +7,7 @@ const {
   fresheningSucceeds,
   meatYieldForSpecies,
 } = require("../../src/services/meat");
+const { resourceAmountText } = require("../../src/utils/resourceText");
 const { MAX_QUEUED_ACTIONS_PER_ACTOR } = require("../../src/gameConfig");
 const { planCookAllRawMeat } = require("../../src/services/cookingQueue");
 const { cookingResultReplyOptions } = require("../../src/ui/inventoryItemKeyboard");
@@ -18,6 +19,8 @@ assert.equal(meatYieldForSpecies("rabbit"), 3);
 assert.equal(meatYieldForSpecies("fox"), 5);
 assert.equal(meatYieldForSpecies("wolf"), 7);
 assert.equal(meatYieldForSpecies("unknown"), 2);
+assert.equal(resourceAmountText("сире м'ясо", 1), "сире м'ясо");
+assert.equal(resourceAmountText("сире м'ясо", 3), "сире м'ясо ×3");
 
 assert.equal(fresheningSuccessChanceForSpecies("mouse"), 0.8);
 assert.equal(fresheningSuccessChanceForSpecies("rabbit"), 0.6);

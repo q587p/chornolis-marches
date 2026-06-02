@@ -22,6 +22,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Polished short Telegram usage prompts so command verbs such as `give`, `дати`, `say`, `whisper`, `reply` and `shout` are visually emphasized in examples.
 - Refreshed the main reply-keyboard vitals after stamina-spending action results such as freshening, speech and item actions when exact or visible status labels change.
 - Added a `Підібрати все` button for visible ground objects so players can pick up all loose location items and visible corpses listed under `Лежить`.
+- Player-facing resource gain messages now omit `×1` for single-item results such as one raw meat from freshening or one gathered resource.
 - Kept buffered non-player movement notifications and their target buttons aligned with visibility: uncertain `Хтось` movement no longer exposes a concrete target button, while lit/visible movement keeps the actor name.
 - Target action keyboards now hide `Атакувати` when the target is not actually attackable, including spirit presences such as the camp spirit cat.
 - Target text commands now filter ambiguity lists by action: `attack` / `атака` matches attackable living targets instead of mixing in players, spirits or corpses, and a fresh numeric clarification reply selects the listed target.
