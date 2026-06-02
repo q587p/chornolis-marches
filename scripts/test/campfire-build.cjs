@@ -6,6 +6,7 @@ const {
   CAMPFIRE_BUILD_TWIG_COST,
   MAX_HANDMADE_CAMPFIRES_PER_LOCATION,
   adminHandmadeCampfireData,
+  campfireIgnitionAtmosphereText,
   canBuildAnotherHandmadeCampfire,
   handmadeCampfireCount,
   isHandmadeCampfire,
@@ -47,5 +48,16 @@ assert.equal(isHandmadeCampfire({ ...prepared, data: { ...adminPrepared.data, de
 assert.equal(handmadeCampfireCount([prepared, prepared]), 2);
 assert.equal(canBuildAnotherHandmadeCampfire([prepared, prepared]), true);
 assert.equal(canBuildAnotherHandmadeCampfire([prepared, prepared, prepared]), false);
+
+const firstDarkFireText = campfireIgnitionAtmosphereText({ wasFirstActiveCampfire: true, hadLocalLightBefore: false });
+assert.match(firstDarkFireText, /затишніше/u);
+assert.match(firstDarkFireText, /відновлювати швидше/u);
+assert.match(firstDarkFireText, /легше помітити/u);
+
+const firstLitFireText = campfireIgnitionAtmosphereText({ wasFirstActiveCampfire: true, hadLocalLightBefore: true });
+assert.match(firstLitFireText, /затишніше/u);
+assert.doesNotMatch(firstLitFireText, /легше помітити/u);
+
+assert.equal(campfireIgnitionAtmosphereText({ wasFirstActiveCampfire: false, hadLocalLightBefore: false }), "");
 
 console.log("Campfire build helpers OK");

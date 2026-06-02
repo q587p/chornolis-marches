@@ -225,6 +225,46 @@ export function adminHandmadeCampfireData(worldMinute: number | null | undefined
   };
 }
 
+export type CampfireIgnitionAtmosphereInput = {
+  wasFirstActiveCampfire: boolean;
+  hadLocalLightBefore: boolean;
+};
+
+export function campfireIgnitionAtmosphereText(input: CampfireIgnitionAtmosphereInput) {
+  if (!input.wasFirstActiveCampfire) return "";
+  const lines = [
+    "Тепло розходиться місциною. Біля вогню стає затишніше: тут легше перепочити, а снагу можна відновлювати швидше й вище звичайної межі.",
+  ];
+  if (!input.hadLocalLightBefore) {
+    lines.push("Світло відсуває темряву від землі й речей поруч. Те, що ховалося в тіні, тепер легше помітити.");
+  }
+  return lines.join("\n\n");
+}
+
+async function campfireIgnitionAtmosphereState(locationId: number) {
+  const [hadLocalLightBefore, activeCampfireCount] = await Promise.all([
+    hasActiveLightAtLocation(locationId),
+    prisma.locationFeature.count({
+      where: {
+        locationId,
+        isActive: true,
+        providesLight: true,
+        type: { in: ["CAMPFIRE", "MAGIC_CAMPFIRE"] },
+      },
+    }),
+  ]);
+
+  return {
+    wasFirstActiveCampfire: activeCampfireCount === 0,
+    hadLocalLightBefore,
+  };
+}
+
+function appendCampfireIgnitionAtmosphere(base: string, atmosphereState: CampfireIgnitionAtmosphereInput, suffix?: string | null) {
+  const atmosphere = campfireIgnitionAtmosphereText(atmosphereState);
+  return [base, atmosphere, suffix].filter((part) => typeof part === "string" && part.trim().length > 0).join("\n\n");
+}
+
 export async function douseableHandmadeCampfireId(playerId: number) {
   await expireTimedCampfires();
   const player = await prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } });
@@ -634,7 +674,8 @@ export async function expireGroundLitTorches(bot?: Bot, now = new Date(), locati
 
 export async function createDebugCampfire(locationId: number) {
   const key = `debug_campfire_${locationId}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  return prisma.locationFeature.create({
+  const atmosphereState = await campfireIgnitionAtmosphereState(locationId);
+  const feature = await prisma.locationFeature.create({
     data: {
       key,
       locationId,
@@ -647,12 +688,14 @@ export async function createDebugCampfire(locationId: number) {
       data: timedFireData("addCampfire"),
     },
   });
+  return { feature, atmosphereText: campfireIgnitionAtmosphereText(atmosphereState) };
 }
 
 export async function createAdminHandmadeCampfire(locationId: number) {
   const key = `handmade_admin_campfire_${locationId}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const worldMinute = await currentWorldMinute();
-  return prisma.locationFeature.create({
+  const atmosphereState = await campfireIgnitionAtmosphereState(locationId);
+  const feature = await prisma.locationFeature.create({
     data: {
       key,
       locationId,
@@ -665,6 +708,7 @@ export async function createAdminHandmadeCampfire(locationId: number) {
       data: jsonInput(adminHandmadeCampfireData(worldMinute)),
     },
   });
+  return { feature, atmosphereText: campfireIgnitionAtmosphereText(atmosphereState) };
 }
 
 export async function playerTwigsAmount(playerId: number) {
@@ -1373,6 +1417,7 @@ export async function lightCampfireFromTorch(playerId: number, featureId: number
   const memoryText = canRevealOldCampfireMemory(feature) ? oldCampfireMemoryOmen(feature) : null;
   const durationMs = campfireDurationForLocation(feature.location);
   const nextData = relitFireData(feature.data, "torch", durationMs);
+  const atmosphereState = await campfireIgnitionAtmosphereState(feature.locationId);
   await prisma.locationFeature.update({
     where: { id: feature.id },
     data: {
@@ -1386,7 +1431,7 @@ export async function lightCampfireFromTorch(playerId: number, featureId: number
   const base = durationMs < CAMPFIRE_DURATION_MS
     ? "🔥 Ви підпалили вогнище від факела. Полум'я розгоряється й дає світло навколо, але волога під ним шипить: цей жар протримається недовго."
     : "🔥 Ви підпалили вогнище від факела. Полум'я розгоряється й дає світло навколо.";
-  return memoryText ? `${base}\n\n${memoryText}` : base;
+  return appendCampfireIgnitionAtmosphere(base, atmosphereState, memoryText);
 }
 
 export async function addTwigsToCampfire(playerId: number, featureId?: number) {

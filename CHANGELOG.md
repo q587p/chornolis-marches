@@ -25,6 +25,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Established-character `/respawn` refusal now teaches the player to use nearby `/yell` or request Scribe return help instead of only saying the beginner return path is closed.
 - Carrion-ravine button contributions now use the same feature-specific validation as text `/put`, so stale buttons fail cleanly if the ravine is no longer nearby.
 - Scribe/admin world-time debug now shows the lunar circle ordinal alongside the lunar circle name.
+- Lighting the first active campfire in a location now adds a short warmth/rest cue, and adds a visibility cue when the location had no active local light before the fire.
 - Regenerated planning exports for the new liminal-sign planning items and the fisher-priority update.
 
 ## 0.15.14 - Herald manual archive controls - 12026-06-02
