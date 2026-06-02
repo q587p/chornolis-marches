@@ -167,6 +167,9 @@ export async function buildStatBrief() {
   const speciesLines = stats.speciesRows
     .filter((row) => row.total > 0)
     .map((row) => `${row.name} [${row.key}]: живі ${formatStatNumber(row.alive)}; вік ${row.ages.CHILD}/${row.ages.YOUNG}/${row.ages.ADULT}/${row.ages.OLD}; трупи ${formatStatNumber(row.corpses)}`);
+  const specialCreatureLines = stats.specialCreatureRows
+    .filter((row) => row.total > 0)
+    .map((row) => `${row.name} [${row.key}; ${row.kind}/${row.diet}]: видимі ${formatStatNumber(row.alive)}, приховані ${formatStatNumber(row.hidden)}, неактивні ${formatStatNumber(row.inactive)}, зниклі ${formatStatNumber(row.gone)}`);
   const counters = stats.recent.counters;
   const rates = stats.recent.ratesPerHour;
   const observed = stats.recent.eventCount
@@ -202,6 +205,9 @@ export async function buildStatBrief() {
       "",
       "Види:",
       speciesLines.length ? speciesLines.join("\n") : "поки немає тварин",
+      "",
+      "Особливі присутності:",
+      specialCreatureLines.length ? specialCreatureLines.join("\n") : "поки немає окремих персонажів чи духів",
       "",
       `Останнє вікно: ${observed}.`,
       `Народження: зайці ${formatStatNumber(counters.rabbitBirths)} (${formatRate(rates.rabbitBirths)}/год), миші ${formatStatNumber(counters.mouseBirths)} (${formatRate(rates.mouseBirths)}/год).`,

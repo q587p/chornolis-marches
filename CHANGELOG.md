@@ -27,6 +27,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Scribe/admin world-time debug now shows the lunar circle ordinal alongside the lunar circle name.
 - Lighting the first active campfire in a location now adds a short warmth/rest cue, and adds a visibility cue when the location had no active local light before the fire.
 - Player attack, freshening and cooking actions now spend less stamina, and the first fatigue cue now suggests recovery options with contextual inline buttons.
+- Scribe/admin `/stat`, protected web `/stat` and `/stat.json` now keep ordinary animal predator species rows dynamic, so owls and future animal carnivores appear even before they have kills, while spirit presences such as the camp spirit cat are shown in a separate non-animal stats block.
 - Regenerated planning exports for the new liminal-sign planning items and the fisher-priority update.
 
 ## 0.15.14 - Herald manual archive controls - 12026-06-02
