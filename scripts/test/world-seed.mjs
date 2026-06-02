@@ -158,7 +158,7 @@ const gateTorchStand = features.find((item) => item.key === "closed_gate_torch_s
 assert.notEqual(gateTorchStand?.data?.icon, "🔥", "Torch stand should not use the fire icon reserved for flame/campfire actions");
 assert.equal(gateTorchStand?.data?.hunter_resupply, false, "Gate torch stand should no longer be the hunter resupply source");
 
-for (const key of ["start_border_marker", "start_newcomer_tablet", "start_border_watchtower_ladder"]) {
+for (const key of ["start_border_marker", "start_newcomer_tablet", "start_lunar_circles_birchbark", "start_border_watchtower_ladder"]) {
   const feature = features.find((item) => item.key === key);
   assert.ok(feature, `Starter camp feature should exist: ${key}`);
   assert.equal(feature.locationKey, "start_border_camp", `Starter camp feature should stay at the camp: ${key}`);
@@ -168,7 +168,7 @@ for (const key of ["start_border_marker", "start_newcomer_tablet", "start_border
 
 const startWatchtowerLadder = features.find((item) => item.key === "start_border_watchtower_ladder");
 assert.equal(startWatchtowerLadder?.data?.vertical_hint, "UP", "Starter watchtower feature should expose an UP action hint");
-for (const key of ["start_newcomer_tablet", "start_border_watchtower_ladder"]) {
+for (const key of ["start_newcomer_tablet", "start_lunar_circles_birchbark", "start_border_watchtower_ladder"]) {
   const feature = features.find((item) => item.key === key);
   assert.ok(typeof feature?.data?.examine_summary === "string" && feature.data.examine_summary.length > 0, `Starter authored landmark should have examine summary: ${key}`);
 }

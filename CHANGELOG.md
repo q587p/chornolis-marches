@@ -17,12 +17,14 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added `/call_scribes` / `call scribes` / Ukrainian aliases as an auditable manual rescue request for players whose ordinary `/respawn` return is no longer available.
 - Added Scribe/admin notifications for return-help requests, with an inline return-sign action that cancels the player's active queue/rest/auto state and returns them to the start location when a Scribe applies it.
 - Added `Покласти тушу` and `Покласти всі` buttons to the carrion-ravine feature view, mirroring the existing `/put` carcass/remains contribution path.
+- Added an inspectable starter-camp lunar-circle birchbark feature that lists the 13 lunar circles in order and frames common seasonal work around them.
 
 ### Changed
 
 - Updated README, game design and roadmap docs to frame recurring signs as diegetic folklore: direct quotation should stay rare and threshold-bound, while later echoes should be local, altered and uncertain.
 - Established-character `/respawn` refusal now teaches the player to use nearby `/yell` or request Scribe return help instead of only saying the beginner return path is closed.
 - Carrion-ravine button contributions now use the same feature-specific validation as text `/put`, so stale buttons fail cleanly if the ravine is no longer nearby.
+- Scribe/admin world-time debug now shows the lunar circle ordinal alongside the lunar circle name.
 - Regenerated planning exports for the new liminal-sign planning items and the fisher-priority update.
 
 ## 0.15.14 - Herald manual archive controls - 12026-06-02
