@@ -45,6 +45,7 @@ import {
   isBeginnerCacheData,
   playerBeginnerCacheContributionKeys,
   prepareBeginnerCacheForInspection,
+  type BeginnerCacheResourceKey,
 } from "./beginnerCache";
 import { CAMP_SPIRIT_CAT_SPECIES_KEY, campSpiritCatCachePresenceLine } from "./campSpiritCat";
 
@@ -1226,8 +1227,7 @@ export async function renderLocationFeatureInteraction(
     }
     const contributionKeys = await playerBeginnerCacheContributionKeys(viewerPlayerId);
     for (const key of contributionKeys) {
-      keyboard.text(`🤲 Лишити ${beginnerCacheActionLabel(key)}`, `cache:contribute:${feature.id}:${key}`).row();
-      keyboard.text(beginnerCacheContributeAllButtonLabel(key), `cache:contribute_all:${feature.id}:${key}`).row();
+      addBeginnerCacheContributionButtons(keyboard, feature.id, key);
     }
   }
   if (isClimbTreeFeature(feature)) keyboard.text("🌳 Залізти", "move:UP").row();
@@ -1238,6 +1238,13 @@ export async function renderLocationFeatureInteraction(
   if (isShakeTreeFeature(feature)) keyboard.text("🍃 Потрусити", `tree:shake:${feature.id}`).row();
   keyboard.text("↩️ Назад", `location:${returnMode}`);
   return { text, keyboard, quoteMessages, followupMessages };
+}
+
+export function addBeginnerCacheContributionButtons(keyboard: InlineKeyboard, featureId: number, key: BeginnerCacheResourceKey) {
+  keyboard
+    .text(`🤲 Лишити ${beginnerCacheActionLabel(key)}`, `cache:contribute:${featureId}:${key}`)
+    .text(beginnerCacheContributeAllButtonLabel(key), `cache:contribute_all:${featureId}:${key}`)
+    .row();
 }
 
 export async function renderLocationFeatureInteractionByQuery(

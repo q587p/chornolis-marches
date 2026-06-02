@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 
 require("ts-node/register");
 
+const { InlineKeyboard } = require("grammy");
 const {
   beginnerCacheDataAfterHiddenRestock,
   beginnerCacheDataAfterObservation,
@@ -14,6 +15,7 @@ const {
   isBeginnerCacheData,
 } = require("../../src/services/beginnerCache");
 const { planBeginnerCacheContributeAll } = require("../../src/services/beginnerCacheQueue");
+const { addBeginnerCacheContributionButtons } = require("../../src/services/locations");
 
 const base = {
   beginner_cache: true,
@@ -34,6 +36,14 @@ assert.deepEqual(beginnerCacheTakeKeys(base), ["berries", "raw_meat", "twigs"]);
 assert.equal(beginnerCacheContributeAllButtonLabel("herbs"), "🤲 Лишити всі лікарські трави");
 assert.equal(beginnerCacheContributeAllButtonLabel("twigs"), "🤲 Лишити весь хмиз");
 assert.equal(beginnerCacheContributeAllButtonLabel("raw_meat"), "🤲 Лишити все сире м'ясо");
+const contributionKeyboard = new InlineKeyboard();
+addBeginnerCacheContributionButtons(contributionKeyboard, 42, "herbs");
+assert.equal(contributionKeyboard.inline_keyboard.filter((row) => row.length > 0).length, 1);
+assert.equal(contributionKeyboard.inline_keyboard[0].length, 2);
+assert.equal(contributionKeyboard.inline_keyboard[0][0].text, "🤲 Лишити лікарські трави");
+assert.equal(contributionKeyboard.inline_keyboard[0][0].callback_data, "cache:contribute:42:herbs");
+assert.equal(contributionKeyboard.inline_keyboard[0][1].text, "🤲 Лишити всі лікарські трави");
+assert.equal(contributionKeyboard.inline_keyboard[0][1].callback_data, "cache:contribute_all:42:herbs");
 assert.ok(beginnerCacheStockLines(base).some((line) => line.includes("berries") || line.includes("ягоди")));
 assert.ok(beginnerCacheStockLines(base).some((line) => line.includes("сире м'ясо")));
 assert.match(
