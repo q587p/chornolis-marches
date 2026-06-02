@@ -13,6 +13,7 @@ Preferred spelling/style for this project:
 - `паґінаційний`
 - `етер`
 - `Атени`
+- money display should use `ґривня`, `ґривні`, `ґривень` for the `hryvnia` resource; avoid player-facing `гривня` / `гривень` in Chornolis copy.
 - use `ґ` where it naturally fits and supports the style.
 
 This is not a universal hard rule for every Ukrainian word, but it is a strong style direction for Chornolis Marches.

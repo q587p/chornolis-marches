@@ -1,7 +1,7 @@
 ---
 id: LOOT-001
 title: Local low-risk loot and small coin finds
-status: backlog
+status: in_progress
 type: feature
 area: core-loop
 priority: high
@@ -34,7 +34,7 @@ Recent feedback: if surrounding tiles have no loose loot and nothing useful to s
   - twigs, dry sticks, bark, moss or bones;
   - a few berries/herbs/mushrooms where the biome supports it;
   - rare small coins such as `шаг`;
-  - very rare larger coin finds such as `гривня` only where authored as a landmark or omen.
+  - very rare larger coin finds such as `ґривня` only where authored as a landmark or omen.
 - Let visibility matter: `/look` can reveal visible loose finds in good light, while `/examine` can surface harder-to-notice things in darkness or poor visibility.
 - Keep the first pass small and bounded: no full economy, vendors, theft, dynamic drop tables or reward inflation.
 - Prefer authored pockets and biome-aware tables over global random loot everywhere.
@@ -44,7 +44,7 @@ Recent feedback: if surrounding tiles have no loose loot and nothing useful to s
 
 Small money can bridge several existing ideas:
 
-- `шаг` and `гривня` as rare ground finds;
+- `шаг` and `ґривня` as rare ground finds;
 - future shrine/offering actions such as `кинути шаг`;
 - mapping/exploration rewards that do not require combat;
 - later creature/spirit drops or "someone lost this while fleeing" traces.
@@ -62,3 +62,15 @@ This should remain distinct from animal carcass loot and hunter economy. Early l
 ## Notes
 
 Coordinate with `MAP-002` biome foraging and `WORLD-003` item lifetime work so loose finds can later age, vanish, be picked up by NPCs or become part of small omens instead of remaining static piles forever.
+
+## 0.15.16 MVP Slice
+
+The first money/loot slice landed as `MONEY-001`:
+
+- `shah` and `hryvnia` are now named resource types with Ukrainian display/plural helpers.
+- A few authored `shah` finds exist near starter-adjacent or calm locations.
+- `shah` and `hryvnia` can move through the visible ground-pickup path.
+- The beginner shared cache has a separate small money box with explicit player take/contribute controls.
+- Successful waking-world gathering can very rarely turn up one `shah`.
+
+Remaining `LOOT-001` work should focus on richer authored small finds, empty-search atmosphere, item lifetime, future offering hooks and avoiding an unlimited local farm. Do not promote shops, vendors, conversion rates, theft or a broad economy from this MVP alone.

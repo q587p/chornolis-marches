@@ -5,10 +5,10 @@ import { MAX_QUEUED_ACTIONS_PER_ACTOR } from "../gameConfig";
 import { actionDurationMs, performOrQueuePlayerAction } from "./actionQueue";
 import {
   beginnerCacheActionLabel,
+  beginnerCacheCombinedMaxStock,
+  beginnerCacheCombinedStock,
   beginnerCacheDataAfterHiddenRestock,
-  beginnerCacheMaxStock,
   beginnerCacheResourceKeyFromText,
-  beginnerCacheStock,
   isBeginnerCacheData,
   type BeginnerCacheResourceKey,
 } from "./beginnerCache";
@@ -165,8 +165,8 @@ export async function queueAllBeginnerCacheContributions(
   }
 
   const restocked = beginnerCacheDataAfterHiddenRestock(feature.data);
-  const stock = beginnerCacheStock(restocked);
-  const maxStock = beginnerCacheMaxStock(restocked);
+  const stock = beginnerCacheCombinedStock(restocked);
+  const maxStock = beginnerCacheCombinedMaxStock(restocked);
   const plan = planBeginnerCacheContributeAll({
     carriedAmount,
     requestedAmount,

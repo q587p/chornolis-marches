@@ -14,8 +14,8 @@ These may become `next` after 0.13-0.15 foundations land.
 - RIVER-001: risky bridge/river jump action, where the current can carry a wounded or unconscious character downstream instead of acting like safe travel.
 - First useful NPC roles: guard, hunter, herbalist, fisher.
 - NPC-008: starter supply guards and watched beginner stores, so the watchtower/cache area feels maintained when animals or careless characters disturb beginner-critical supplies.
-- LOOT-001: local low-risk loot and small coin finds around starter-adjacent or calm locations, so early searching is not limited to defending distant forest resource spots.
-- Ground money and small find objects beyond the first omen should fold into `LOOT-001` before becoming a separate economy system.
+- LOOT-001 follow-up after the `0.15.16` money MVP: richer authored small finds, empty-search atmosphere, item lifetime and future offering hooks around starter-adjacent or calm locations, so early searching is not limited to defending distant forest resource spots.
+- Ground money and small find objects beyond the first `shah` MVP should keep folding into `LOOT-001` before becoming a separate economy system.
 - Local pickup/gather observer feedback beyond хмиз, after `ITEM-001` clarifies pickup versus gather command semantics.
 - ALC-001: first simple herbal stamina elixir from gathered herbs and possibly berries, before a full alchemy system.
 - Richer butchering outputs after `FOOD-001`: species-specific meat, bones, hide, fur, feathers, tools, skill-based yield and spoilage.

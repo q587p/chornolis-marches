@@ -96,6 +96,15 @@ Preferred:
 - Торба / Наплічник — container flavor if needed.
 - Здобич — newly acquired items.
 
+## Money Direction
+
+Use these player-facing money forms for the first money MVP:
+
+- `шаг`, `шаги`, `шагів`;
+- `ґривня`, `ґривні`, `ґривень`.
+
+The persisted resource key remains `hryvnia`, but Chornolis UI, news and diegetic docs should not print modern `гривня` / `гривень` forms for this resource.
+
 ## Additional Preferred Replacements
 
 | Avoid | Prefer |

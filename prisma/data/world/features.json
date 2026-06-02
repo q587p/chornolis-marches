@@ -414,6 +414,10 @@
         "cooked_meat": 2,
         "twigs": 8
       },
+      "cache_money_stock": {
+        "shah": 0,
+        "hryvnia": 0
+      },
       "cache_max_stock": {
         "berries": 10,
         "herbs": 6,
@@ -422,6 +426,10 @@
         "cooked_meat": 5,
         "twigs": 14
       },
+      "cache_money_max_stock": {
+        "shah": 200,
+        "hryvnia": 20
+      },
       "cache_restock_target": {
         "berries": 4,
         "herbs": 2,
@@ -429,6 +437,10 @@
         "raw_meat": 4,
         "cooked_meat": 2,
         "twigs": 8
+      },
+      "cache_money_restock_target": {
+        "shah": 0,
+        "hryvnia": 0
       },
       "aliases": [
         "спільна скриня",

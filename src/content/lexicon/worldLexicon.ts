@@ -91,6 +91,8 @@ export const WORLD_LEXICON = [
   entry("resource.lit_torch", "resource", "MASCULINE", "INANIMATE", ["resource", "fire", "light", "current"], ["запалений факел", "запаленого факела", "запаленому факелу", "запалений факел", "запаленим факелом", "запаленому факелі", "запалений факеле"]),
   entry("resource.doused_torch", "resource", "MASCULINE", "INANIMATE", ["resource", "fire", "light", "current"], ["притушений факел", "притушеного факела", "притушеному факелу", "притушений факел", "притушеним факелом", "притушеному факелі", "притушений факеле"]),
   entry("resource.twigs", "resource", "MASCULINE", "INANIMATE", ["resource", "fire", "fuel", "current"], ["хмиз", "хмизу", "хмизу", "хмиз", "хмизом", "хмизі", "хмизе"]),
+  entry("resource.shah", "resource", "MASCULINE", "INANIMATE", ["resource", "money", "current"], ["шаг", "шага", "шагу", "шаг", "шагом", "шагу", "шагу"]),
+  entry("resource.hryvnia", "resource", "FEMININE", "INANIMATE", ["resource", "money", "current"], ["ґривня", "ґривні", "ґривні", "ґривню", "ґривнею", "ґривні", "ґривне"]),
   entry("resource.knife", "resource", "MASCULINE", "INANIMATE", ["resource", "weapon", "tool", "current"], ["простий ніж", "простого ножа", "простому ножу", "простий ніж", "простим ножем", "простому ножі", "простий ножу"]),
   entry("resource.hunting_spear", "resource", "MASCULINE", "INANIMATE", ["resource", "weapon", "hunter", "current"], ["мисливський спис", "мисливського списа", "мисливському спису", "мисливський спис", "мисливським списом", "мисливському списі", "мисливський списе"]),
   entry("resource.sickle", "resource", "MASCULINE", "INANIMATE", ["resource", "weapon", "tool", "current"], ["серп", "серпа", "серпу", "серп", "серпом", "серпі", "серпе"]),

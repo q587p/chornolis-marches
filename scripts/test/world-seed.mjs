@@ -211,7 +211,18 @@ assert.equal(beginnerCache.data?.cache_stock?.torch, undefined, "Starter shared 
 assert.equal(beginnerCache.data?.cache_max_stock?.torch, undefined, "Starter shared beginner cache should not accept torch contributions");
 assert.equal(beginnerCache.data?.cache_stock?.raw_meat, 4, "Starter shared beginner cache should provide extra raw meat");
 assert.equal(beginnerCache.data?.cache_stock?.cooked_meat, 2, "Starter shared beginner cache should demonstrate cooked meat");
+assert.equal(beginnerCache.data?.cache_money_stock?.shah, 0, "Starter shared beginner cache should not restock money by default");
+assert.equal(beginnerCache.data?.cache_money_stock?.hryvnia, 0, "Starter shared beginner cache should not start with hryvnia");
+assert.equal(beginnerCache.data?.cache_money_max_stock?.shah, 200, "Starter shared beginner cache should accept modest shah contributions");
+assert.equal(beginnerCache.data?.cache_money_max_stock?.hryvnia, 20, "Starter shared beginner cache should accept modest hryvnia contributions");
 assert.ok(Array.isArray(beginnerCache.data?.aliases) && beginnerCache.data.aliases.includes("скриня"), "Starter shared beginner cache should have Ukrainian aliases");
+
+assert.equal(resourceTypeKeys.has("shah"), true, "Money MVP should define shah resource type");
+assert.equal(resourceTypeKeys.has("hryvnia"), true, "Money MVP should define hryvnia resource type");
+const starterShahNodes = resourceNodes.filter((node) => node.resourceKey === "shah");
+assert.equal(starterShahNodes.reduce((sum, node) => sum + node.amount, 0), 6, "Starter-adjacent authored shah finds should stay modest");
+assert.equal(starterShahNodes.some((node) => String(node.locationKey).startsWith("dream_")), false, "Starter shah finds should not appear in tutorial dream locations");
+assert.equal(resourceNodes.some((node) => node.resourceKey === "hryvnia"), false, "Starter seed should not place hryvnia ground loot");
 
 const tutorialRestBench = features.find((item) => item.key === "dream_tutorial_rest_fire");
 assert.ok(tutorialRestBench, "Tutorial rest bench feature should exist");

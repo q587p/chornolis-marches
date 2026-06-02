@@ -60,6 +60,7 @@ import { creatureAttackObserverText, freshenWeaponFailureText, getPlayerEquipped
 import { canCreatureUseExit, creatureUsableExits } from "./creatureMovement";
 import { contributeToBeginnerCache } from "./beginnerCache";
 import { isBeginnerCacheContributionPayload } from "./beginnerCacheQueue";
+import { maybeGrantGatherShahBonus } from "./smallLoot";
 import { normalizeTrackQuery, trackMatchesQuery } from "./trackSearch";
 
 type MovePayload = { direction: Direction; reason?: string };
@@ -781,6 +782,9 @@ async function completeGather(bot: Bot, action: WorldAction) {
       if (firstTutorialGather) {
         if (chatId) await bot.api.sendMessage(chatId, `Сон усміхається:\n${quoteBlock(TUTORIAL_FORAGING_SUCCESS_COMMENT)}`, { parse_mode: "HTML" });
       }
+    } else {
+      const smallLoot = await maybeGrantGatherShahBonus({ playerId: (actor as any).id, location: resource.location });
+      if (smallLoot && chatId) await bot.api.sendMessage(chatId, smallLoot.text);
     }
   } else {
     await prisma.creature.updateMany({ where: { id: (actor as any).id }, data: { successfulGathers: { increment: 1 }, currentAction: `зібрав ${resource.resourceType.name} ×${found}` } });

@@ -39,10 +39,11 @@ import { getCurrentWorldTimeSnapshot } from "./worldTime";
 import { owlSignDetailLine, owlSignInspectionText } from "./owlSigns";
 import { isStrangeTotemFeature, strangeTotemDetailLine, strangeTotemInspectionText } from "./strangeTotems";
 import {
-  beginnerCacheActionLabel,
+  beginnerCacheContributeButtonLabel,
   beginnerCacheContributeAllButtonLabel,
   beginnerCacheInspectionText,
   beginnerCacheTakeKeys,
+  beginnerCacheTakeButtonLabel,
   isBeginnerCacheData,
   playerBeginnerCacheContributionKeys,
   prepareBeginnerCacheForInspection,
@@ -1254,7 +1255,7 @@ export async function renderLocationFeatureInteraction(
   if (isTorchSourceFeature(feature)) keyboard.text("🕯 Взяти факел", `torch:take:${feature.id}`).row();
   if (isBeginnerCacheFeature(feature)) {
     for (const key of beginnerCacheTakeKeys(feature.data)) {
-      keyboard.text(`📦 Взяти ${beginnerCacheActionLabel(key)}`, `cache:take:${feature.id}:${key}`).row();
+      keyboard.text(beginnerCacheTakeButtonLabel(key), `cache:take:${feature.id}:${key}`).row();
     }
     const contributionKeys = await playerBeginnerCacheContributionKeys(viewerPlayerId);
     for (const key of contributionKeys) {
@@ -1275,7 +1276,7 @@ export async function renderLocationFeatureInteraction(
 
 export function addBeginnerCacheContributionButtons(keyboard: InlineKeyboard, featureId: number, key: BeginnerCacheResourceKey) {
   keyboard
-    .text(`🤲 Лишити ${beginnerCacheActionLabel(key)}`, `cache:contribute:${featureId}:${key}`)
+    .text(beginnerCacheContributeButtonLabel(key), `cache:contribute:${featureId}:${key}`)
     .text(beginnerCacheContributeAllButtonLabel(key), `cache:contribute_all:${featureId}:${key}`)
     .row();
 }

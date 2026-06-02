@@ -2214,6 +2214,30 @@
     "maxAmount": 100
   },
   {
+    "locationKey": "start_border_watchtower",
+    "resourceKey": "shah",
+    "amount": 2,
+    "maxAmount": 2
+  },
+  {
+    "locationKey": "old_bridge_west_span",
+    "resourceKey": "shah",
+    "amount": 1,
+    "maxAmount": 1
+  },
+  {
+    "locationKey": "riverbank_18_04",
+    "resourceKey": "shah",
+    "amount": 1,
+    "maxAmount": 1
+  },
+  {
+    "locationKey": "meadow_16_04",
+    "resourceKey": "shah",
+    "amount": 2,
+    "maxAmount": 2
+  },
+  {
     "locationKey": "under_bridge_18_05",
     "resourceKey": "berries",
     "amount": 0,

@@ -7,6 +7,25 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.16 - Money and low-risk loot MVP - 12026-06-02
+
+### Added
+
+- Added `shah` and `hryvnia` resource types with lexicon-backed Ukrainian names and shared pluralized money text helpers.
+- Added a money summary to `/me`, showing `Гроші: немає` when the character carries no money.
+- Added a few authored starter-adjacent `shah` ground finds without adding tutorial-dream money or broad starter `hryvnia` nodes.
+- Added `shah` and `hryvnia` to visible ground-resource pickup handling, including aliases and existing pickup-all paths.
+- Added a separate beginner-cache money box for `shah` and `hryvnia` with explicit player take/contribute controls.
+- Added a rare waking-world successful-gather bonus that can grant one `shah` directly to the player.
+- Added focused money/loot tests for pluralization, starter seed authoring, cache money behavior and gather bonus boundaries.
+- Added `docs/systems/money_and_low_risk_loot.md` and `MONEY-001` planning documentation.
+
+### Changed
+
+- Updated starter-cache documentation to clarify that hidden unobserved restock must never create money.
+- Updated `LOOT-001` planning status and next/backlog notes so the first money/loot MVP is recorded without promoting shops, vendors, conversion, theft or a broad economy.
+- Regenerated planning exports for the new money/loot planning item and LOOT-001 status update.
+
 ## 0.15.15 - Liminal signs and quotation guardrails - 12026-06-02
 
 ### Added
