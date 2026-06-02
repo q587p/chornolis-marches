@@ -29,6 +29,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Updated `LOOT-001` planning status and next/backlog notes so the first money/loot MVP is recorded without promoting shops, vendors, conversion, theft or a broad economy.
 - Return-help requests now notify the requesting player too when that player is themselves a Scribe/admin recipient, instead of leaving self-requests visible only as world-event records.
 - Regenerated planning exports for the new money/loot planning item and LOOT-001 status update.
+- Herald archive listing now uses the same deployed `news.md` reader as latest-news preview and logs resolved path, file existence and parsed-entry diagnostics when archive parsing/status checks fail.
 
 ## 0.15.15 - Liminal signs and quotation guardrails - 12026-06-02
 

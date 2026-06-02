@@ -3,8 +3,9 @@ import { config } from "../config";
 import { requireHeraldAdmin } from "./admin";
 import { formatHeraldPublicationMessage, formatHeraldPublicationPlainMessage } from "./format";
 import { HERALD_CHANNEL_MESSAGE_OPTIONS } from "./gameLinks";
-import { archiveOrderedNewsEntries, formatArchiveBody, NEWS_ARCHIVE_SOURCE_TYPE, readAllNewsEntries } from "./newsBackfill";
+import { archiveOrderedNewsEntries, formatArchiveBody, NEWS_ARCHIVE_SOURCE_TYPE } from "./newsBackfill";
 import type { HeraldNewsEntry } from "./newsMarkdown";
+import { heraldNewsErrorLogDetails, readAllNewsEntries } from "./newsMarkdown";
 import { truncateTelegramMessage } from "./safety";
 import {
   countPendingPublications,
@@ -18,6 +19,56 @@ import { publishHeraldPublication } from "./publisher";
 const ARCHIVE_LIST_LIMIT = 30;
 
 type ArchiveEntryStatus = "missing" | "pending" | "canceled" | "published";
+
+function archiveReadFailureReply(read: { error: string; exists?: boolean }) {
+  if (read.exists) {
+    return "Канцелярія знайшла news.md, але спіткнулася на розборі архіву. Подробиці записано в logs.";
+  }
+  return read.error;
+}
+
+function logArchiveReadFailure(context: string, read: {
+  filePath?: string;
+  exists?: boolean;
+  parsedEntries?: number;
+  error?: string;
+  cause?: unknown;
+}) {
+  console.error(`${context}: Herald news.md read/parse failed`, {
+    newsPath: read.filePath ?? "unknown",
+    exists: read.exists ?? false,
+    parsedEntries: read.parsedEntries ?? 0,
+    error: read.cause ? heraldNewsErrorLogDetails(read.cause) : read.error,
+  });
+}
+
+async function logArchiveCommandFailure(context: string, error: unknown) {
+  let newsDiagnostics: {
+    newsPath?: string;
+    exists?: boolean;
+    parsedEntries?: number;
+    readError?: string | { message: string; stack?: string };
+  } = {};
+
+  try {
+    const read = await readAllNewsEntries();
+    newsDiagnostics = {
+      newsPath: read.filePath,
+      exists: read.exists,
+      parsedEntries: read.ok ? read.parsedEntries : (read.parsedEntries ?? 0),
+      readError: read.ok ? undefined : (read.cause ? heraldNewsErrorLogDetails(read.cause) : read.error),
+    };
+  } catch (diagnosticError) {
+    newsDiagnostics = {
+      readError: heraldNewsErrorLogDetails(diagnosticError),
+    };
+  }
+
+  console.error(`${context}: Herald news archive command failed`, {
+    ...newsDiagnostics,
+    error: heraldNewsErrorLogDetails(error),
+  });
+}
 
 function parseArchiveIndex(input: string | undefined, total: number) {
   const match = input?.trim().match(/^#?(\d+)$/);
@@ -119,7 +170,8 @@ function formatArchivePreview(input: Awaited<ReturnType<typeof loadArchiveEntrie
 async function replyWithArchiveList(ctx: Context) {
   const archive = await loadArchiveEntriesWithStatus();
   if (!archive.ok) {
-    await ctx.reply(archive.error);
+    logArchiveReadFailure("news_archive_list", archive);
+    await ctx.reply(archiveReadFailureReply(archive));
     return;
   }
   await ctx.reply(formatArchiveList(archive), HERALD_CHANNEL_MESSAGE_OPTIONS);
@@ -128,7 +180,8 @@ async function replyWithArchiveList(ctx: Context) {
 async function replyWithArchivePreview(ctx: Context) {
   const archive = await loadArchiveEntriesWithStatus();
   if (!archive.ok) {
-    await ctx.reply(archive.error);
+    logArchiveReadFailure("news_archive_preview", archive);
+    await ctx.reply(archiveReadFailureReply(archive));
     return;
   }
 
@@ -149,7 +202,8 @@ async function replyAfterArchivePost(ctx: Context, bot: Bot) {
 
   const archive = await loadArchiveEntriesWithStatus();
   if (!archive.ok) {
-    await ctx.reply(archive.error);
+    logArchiveReadFailure("news_archive_post", archive);
+    await ctx.reply(archiveReadFailureReply(archive));
     return;
   }
 
@@ -216,8 +270,8 @@ export function registerHeraldNewsArchiveCommands(bot: Bot, heraldAdminIds: Read
     try {
       await replyWithArchiveList(ctx);
     } catch (error) {
-      console.error("Herald news archive list failed:", publicationErrorMessage(error));
-      await ctx.reply("Канцелярія не змогла перечитати архів news.md.");
+      await logArchiveCommandFailure("news_archive_list", error);
+      await ctx.reply("Канцелярія знайшла news.md, але спіткнулася на розборі архіву. Подробиці записано в logs.");
     }
   });
 
@@ -226,8 +280,8 @@ export function registerHeraldNewsArchiveCommands(bot: Bot, heraldAdminIds: Read
     try {
       await replyWithArchiveList(ctx);
     } catch (error) {
-      console.error("Herald news archive reload failed:", publicationErrorMessage(error));
-      await ctx.reply("Канцелярія не змогла заново перечитати deployed news.md.");
+      await logArchiveCommandFailure("news_archive_reload", error);
+      await ctx.reply("Канцелярія знайшла news.md, але спіткнулася на повторному розборі архіву. Подробиці записано в logs.");
     }
   });
 

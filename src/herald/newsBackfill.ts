@@ -1,8 +1,6 @@
-import fs from "fs/promises";
-import path from "path";
 import { config } from "../config";
 import type { HeraldNewsEntry } from "./newsMarkdown";
-import { parseNewsEntries } from "./newsMarkdown";
+import { readAllNewsEntries } from "./newsMarkdown";
 import { formatHeraldPublicationPlainMessage } from "./format";
 import {
   countArchivePublications,
@@ -94,14 +92,7 @@ export function formatArchiveBody(entry: HeraldNewsEntry) {
   return entry.body || "У цьому записі лишився тільки заголовок.";
 }
 
-export async function readAllNewsEntries(filePath = path.join(process.cwd(), "news.md")) {
-  try {
-    const raw = await fs.readFile(filePath, "utf8");
-    return { ok: true as const, entries: parseNewsEntries(raw) };
-  } catch {
-    return { ok: false as const, error: "Канцелярія не змогла прочитати news.md." };
-  }
-}
+export { readAllNewsEntries };
 
 async function newsBackfillPlan(entries: readonly HeraldNewsEntry[]) {
   const chronological = chronologicalNewsEntries(entries);

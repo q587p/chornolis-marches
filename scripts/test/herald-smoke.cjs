@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const path = require("node:path");
 
 require("ts-node/register");
 
@@ -21,7 +22,14 @@ const {
   formatBackfillInterval,
   parseBackfillIntervalMs,
 } = require("../../src/herald/newsBackfill");
-const { extractNewsSourceMetadata, parseLatestNewsEntry, parseNewsEntries } = require("../../src/herald/newsMarkdown");
+const {
+  extractNewsSourceMetadata,
+  parseLatestNewsEntry,
+  parseNewsEntries,
+  readAllNewsEntries,
+  readLatestNewsEntry,
+  resolveHeraldNewsPath,
+} = require("../../src/herald/newsMarkdown");
 const { HERALD_NEWS_SOURCE_TYPES } = require("../../src/herald/publications");
 const {
   assertNoSecrets,
@@ -284,4 +292,27 @@ assert.match(publicInfo, /Ліс пам’ятає:/);
 assert.match(publicInfo, /Прикмети:/);
 assert.doesNotMatch(publicInfo, /Telegram user ID|Chat ID|playerId|id=|Життя|Снага|Остання позначка/);
 
-console.log("herald smoke tests passed");
+async function runAsyncChecks() {
+  const expectedNewsPath = path.resolve(process.cwd(), "news.md");
+  const [archiveRead, latestRead] = await Promise.all([
+    readAllNewsEntries(),
+    readLatestNewsEntry(),
+  ]);
+
+  assert.equal(resolveHeraldNewsPath(), expectedNewsPath);
+  assert.equal(archiveRead.ok, true, archiveRead.error);
+  assert.equal(latestRead.ok, true, latestRead.error);
+  assert.equal(archiveRead.filePath, expectedNewsPath);
+  assert.equal(latestRead.filePath, expectedNewsPath);
+  assert.equal(latestRead.parsedEntries, archiveRead.parsedEntries);
+  assert.equal(latestRead.entry.contentHash, archiveRead.entries[0].contentHash);
+}
+
+runAsyncChecks()
+  .then(() => {
+    console.log("herald smoke tests passed");
+  })
+  .catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
