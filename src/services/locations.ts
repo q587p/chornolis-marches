@@ -12,7 +12,10 @@ import {
   getPlayerTorchState,
   isActiveLitTorchResource,
   isCampfireFading,
+  isDismantlableCampfire,
   isExtinguishedCampfire,
+  isHandmadeCampfire,
+  isPreparedCampfire,
   lightCampfireFromTorch,
   oldCampfireMemoryInspectionText,
   takeTorchFromFeature,
@@ -298,7 +301,7 @@ function featureIcon(feature: any) {
   if (isTutorialInsideFeature(feature) || isTutorialOutsideFeature(feature)) return "🕳️";
   if (isTutorialRestSeatFeature(feature)) return "🪑";
   if (isTutorialObservationFeature(feature)) return "🦊";
-  if (isCampfireFeature(feature)) return isExtinguishedCampfire(feature) ? "🪨" : "🔥";
+  if (isCampfireFeature(feature)) return isPreparedCampfire(feature) ? "🪵" : isExtinguishedCampfire(feature) ? "🪨" : "🔥";
   if (isDepletedVegetationFeature(feature)) return "🌾";
   if (feature.type === "BORDER_MARKER") return "🪧";
   if (feature.type === "GATE") return "🚪";
@@ -365,7 +368,10 @@ function featureDetailLine(feature: any, showTechnicalDetails = false) {
   if (authoredSummary) details.push(authoredSummary);
 
   if (isCampfireFeature(feature)) {
-    if (isExtinguishedCampfire(feature)) {
+    if (isPreparedCampfire(feature)) {
+      details.push("складено, але ще не дає світла");
+      if (data.wetPenalty === true) details.push("мокра місцина швидше забере жар");
+    } else if (isExtinguishedCampfire(feature)) {
       if (feature.name === "Ледь помітне вогнище") {
         details.push("майже розсипалося в землю");
       } else {
@@ -1100,7 +1106,10 @@ export async function renderLocationFeatureInteraction(
       publicEcologyReport(stats, showTechnicalDetails),
     ].join("\n");
   } else if (isCampfireFeature(feature)) {
-    if (isExtinguishedCampfire(feature)) {
+    if (isPreparedCampfire(feature)) {
+      text = "Хмиз складено в сухе гніздо. Лишилося дати йому вогонь.";
+      if (featureData(feature).wetPenalty === true) text += "\n\nМісцина мокра. Коли це вогнище займеться, вода швидко потягне жар униз.";
+    } else if (isExtinguishedCampfire(feature)) {
       text = feature.name === "Ледь помітне вогнище"
         ? "Ледь помітне вогнище майже розсипалося в землю. Попіл змішався з пилом, чорні головешки кришаться під поглядом. Світла й тепла воно вже не дає."
         : "Згасле вогнище лишило по собі попіл і чорні головешки. Світла й тепла воно не дає.";
@@ -1152,9 +1161,13 @@ export async function renderLocationFeatureInteraction(
   const keyboard = new InlineKeyboard();
   if (isCampfireFeature(feature)) {
     const torchState = await getPlayerTorchState(viewerPlayerId);
-    if (isExtinguishedCampfire(feature)) {
+    if (isPreparedCampfire(feature)) {
+      if (torchState.isLit) keyboard.text("🔥 Підпалити", `fire:light:${feature.id}`).row();
+      keyboard.text("🧹 Розібрати", `fire:dismantle:${feature.id}`).row();
+    } else if (isExtinguishedCampfire(feature)) {
       keyboard.text("🪵 Додати хмиз", `fire:addTwigs:${feature.id}`).row();
       if (torchState.isLit) keyboard.text("🔥 Підпалити", `fire:light:${feature.id}`).row();
+      if (isDismantlableCampfire(feature)) keyboard.text("🧹 Розібрати", `fire:dismantle:${feature.id}`).row();
     } else {
       keyboard.text("🔥 Відпочити", "rest:start").row();
       const rawMeatAmount = await playerRawMeatAmount(viewerPlayerId);
@@ -1164,6 +1177,7 @@ export async function renderLocationFeatureInteraction(
         keyboard.row();
       }
       if (feature.type !== "MAGIC_CAMPFIRE" && canAddTwigsToCampfire(feature)) keyboard.text("🪵 Додати хмиз", `fire:addTwigs:${feature.id}`).row();
+      if (isHandmadeCampfire(feature)) keyboard.text("🫗 Погасити", `fire:douse:${feature.id}`).row();
       if (torchState.hasTorch) {
         keyboard.text(torchLightButtonText(torchState), `torch:light:${feature.id}`).row();
       }

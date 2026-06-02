@@ -12,12 +12,18 @@ assert.equal(playerStaminaCostConfig.DROP_ITEM, 1);
 assert.equal(playerStaminaCostConfig.LIGHT_TORCH, 2);
 assert.equal(playerStaminaCostConfig.ADD_TWIGS, 2);
 assert.equal(playerStaminaCostConfig.LIGHT_CAMPFIRE, 2);
+assert.equal(playerStaminaCostConfig.BUILD_CAMPFIRE, 3);
+assert.equal(playerStaminaCostConfig.DOUSE_CAMPFIRE, 1);
+assert.equal(playerStaminaCostConfig.DISMANTLE_CAMPFIRE, 2);
 assert.equal(playerStaminaCostConfig.COOK, 4);
 
 assert.equal(actionTitle({ type: "USE_ITEM", payload: { resourceKey: "berries" } }), "їмо ягоди");
 assert.equal(actionTitle({ type: "DROP_ITEM", payload: { allFilter: "corpse" } }), "викладаємо речі");
 assert.equal(actionTitle({ type: "DROP_ITEM", payload: { cacheContribution: true, resourceKey: "twigs" } }), "лишаємо хмиз у скрині");
 assert.equal(actionTitle({ type: "LIGHT_TORCH", payload: {} }), "запалюємо факел");
+assert.equal(actionTitle({ type: "BUILD_CAMPFIRE", payload: {} }), "складаємо вогнище");
+assert.equal(actionTitle({ type: "DOUSE_CAMPFIRE", payload: {} }), "гасимо вогнище");
+assert.equal(actionTitle({ type: "DISMANTLE_CAMPFIRE", payload: {} }), "розбираємо вогнище");
 assert.equal(actionTitle({ type: "COOK", payload: {} }), "підсмажуємо м'ясо");
 
 assert.equal(playerHungerAfterStaminaSpend({ currentHunger: 0, staminaAfter: 39, cost: 3 }), 0);

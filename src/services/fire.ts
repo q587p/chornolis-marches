@@ -11,6 +11,10 @@ export const CAMPFIRE_DURATION_MS = 16 * 60_000;
 export const CAMPFIRE_FADING_MS = 4 * 60_000;
 export const CAMPFIRE_TWIGS_AFTER_MS = 2 * 60_000;
 export const CAMPFIRE_TWIGS_EXTENSION_MS = 4 * 60_000;
+export const CAMPFIRE_BUILD_TWIG_COST = 5;
+export const MAX_HANDMADE_CAMPFIRES_PER_LOCATION = 3;
+export const WET_RIVER_CAMPFIRE_DURATION_MULTIPLIER = 0.3;
+export const WET_SWAMP_CAMPFIRE_DURATION_MULTIPLIER = 0.2;
 export const EXTINGUISHED_CAMPFIRE_DECAY_MINUTES = 2 * MINUTES_PER_WORLD_DAY;
 export const EXTINGUISHED_CAMPFIRE_FADING_MINUTES = 2 * 60;
 export const TORCH_DURATION_MS = 10 * 60_000;
@@ -86,17 +90,17 @@ function withoutAshDecaySchedule(data: unknown) {
   return rest;
 }
 
-function timedFireData(createdBy: string) {
+function timedFireData(createdBy: string, durationMs = CAMPFIRE_DURATION_MS, debug = true) {
   const litAt = new Date();
-  const expiresAt = new Date(litAt.getTime() + CAMPFIRE_DURATION_MS);
+  const expiresAt = new Date(litAt.getTime() + durationMs);
   return {
-    debug: true,
+    debug,
     is_campfire: true,
     created_by: createdBy,
     magical: false,
     litAt: litAt.toISOString(),
     expiresAt: expiresAt.toISOString(),
-    durationMs: CAMPFIRE_DURATION_MS,
+    durationMs,
   };
 }
 
@@ -110,12 +114,15 @@ function extinguishedFireData(data: unknown, absoluteMinute?: number | null) {
   return jsonRecord(data).seeded === true ? next : withAshDecaySchedule(next, absoluteMinute);
 }
 
-function relitFireData(data: unknown, createdBy: string) {
-  const base = timedFireData(createdBy);
+function relitFireData(data: unknown, createdBy: string, durationMs = CAMPFIRE_DURATION_MS) {
+  const current = jsonRecord(data);
+  const base = timedFireData(createdBy, durationMs, current.handmade !== true);
   return {
-    ...withoutAshDecaySchedule(data),
+    ...withoutAshDecaySchedule(current),
     ...base,
     extinguished: false,
+    prepared: false,
+    unlit: false,
     relitAt: base.litAt,
   };
 }
@@ -180,6 +187,59 @@ function extendFireData(data: unknown, now = new Date()) {
 
 function featureData(value: unknown): JsonRecord {
   return jsonRecord(value);
+}
+
+export function isHandmadeCampfire(feature: { type?: string | null; data?: unknown | null }) {
+  const data = featureData(feature.data);
+  return feature.type === "CAMPFIRE"
+    && data.is_campfire === true
+    && data.handmade === true
+    && data.seeded !== true
+    && data.magical !== true;
+}
+
+export function isPreparedCampfire(feature: { type?: string | null; data?: unknown | null; providesLight?: boolean | null }) {
+  const data = featureData(feature.data);
+  return isHandmadeCampfire(feature)
+    && data.prepared === true
+    && data.unlit === true
+    && feature.providesLight !== true;
+}
+
+export function isDismantlableCampfire(feature: { type?: string | null; data?: unknown | null; providesLight?: boolean | null }) {
+  if (!isHandmadeCampfire(feature)) return false;
+  return isPreparedCampfire(feature) || isExtinguishedCampfire(feature);
+}
+
+export function isWetCampfireLocation(location: { biome?: string | null } | null | undefined) {
+  return location?.biome === "RIVER" || location?.biome === "SWAMP";
+}
+
+export function campfireDurationForLocation(location: { biome?: string | null } | null | undefined) {
+  if (location?.biome === "SWAMP") return Math.max(1, Math.floor(CAMPFIRE_DURATION_MS * WET_SWAMP_CAMPFIRE_DURATION_MULTIPLIER));
+  if (location?.biome === "RIVER") return Math.max(1, Math.floor(CAMPFIRE_DURATION_MS * WET_RIVER_CAMPFIRE_DURATION_MULTIPLIER));
+  return CAMPFIRE_DURATION_MS;
+}
+
+export function handmadeCampfireCount(features: Array<{ type?: string | null; isActive?: boolean | null; data?: unknown | null }>) {
+  return features.filter((feature) => feature.isActive !== false && isHandmadeCampfire(feature)).length;
+}
+
+export function canBuildAnotherHandmadeCampfire(features: Array<{ type?: string | null; isActive?: boolean | null; data?: unknown | null }>) {
+  return handmadeCampfireCount(features) < MAX_HANDMADE_CAMPFIRES_PER_LOCATION;
+}
+
+export function campfireRecoveredTwigs(
+  feature: { type?: string | null; data?: unknown | null; providesLight?: boolean | null },
+  absoluteMinute: number,
+) {
+  if (!isDismantlableCampfire(feature)) return 0;
+  if (isPreparedCampfire(feature)) return Math.max(1, CAMPFIRE_BUILD_TWIG_COST - 1);
+
+  const expiresAtMinute = campfireAshExpiresAtMinute(feature);
+  if (expiresAtMinute != null && absoluteMinute >= expiresAtMinute) return 0;
+  if (isExtinguishedCampfireAshFading(feature, absoluteMinute)) return 1;
+  return 2;
 }
 
 function remainingMs(expiresAt: Date, now = new Date()) {
@@ -273,6 +333,7 @@ export function canAddTwigsToCampfire(feature: { data?: unknown | null; createdA
 }
 
 export function campfireStateLine(feature: { data?: unknown | null }) {
+  if (isPreparedCampfire(feature)) return "складено; ще не дає світла";
   if (isExtinguishedCampfire(feature)) return "згасло; не дає світла";
   if (isCampfireFading(feature)) return "полум'я нижчає; скоро згасне, варто додати хмизу";
   return null;
@@ -533,6 +594,220 @@ export async function createDebugCampfire(locationId: number) {
       data: timedFireData("addCampfire"),
     },
   });
+}
+
+export async function playerTwigsAmount(playerId: number) {
+  const { twigs } = await ensureTorchResourceTypes();
+  const carried = await prisma.playerResource.findUnique({
+    where: { playerId_resourceTypeId: { playerId, resourceTypeId: twigs.id } },
+    select: { amount: true },
+  });
+  return carried?.amount ?? 0;
+}
+
+export async function canBuildCampfireFromInventory(playerId: number) {
+  return (await playerTwigsAmount(playerId)) >= CAMPFIRE_BUILD_TWIG_COST;
+}
+
+export async function campfireBuildConfirmationText(playerId: number) {
+  const twigsAmount = await playerTwigsAmount(playerId);
+  if (twigsAmount < CAMPFIRE_BUILD_TWIG_COST) {
+    throw new Error(`Потрібно хмизу ×${CAMPFIRE_BUILD_TWIG_COST}, щоб скласти вогнище. Зараз у вас замало сухих гілок.`);
+  }
+
+  const player = await prisma.player.findUnique({
+    where: { id: playerId },
+    select: { currentLocationId: true, hp: true, stamina: true, isResting: true, posture: true, sleepState: true },
+  });
+  if (!player?.currentLocationId) throw new Error("Ти ще не увійшов у світ. Напиши /start");
+  if (!canPickUpGroundItem(player)) throw new Error("Ви надто втомлені, щоб складати вогнище просто зараз. Спершу перепочиньте.");
+
+  const location = await prisma.cellLocation.findUnique({
+    where: { id: player.currentLocationId },
+    select: {
+      biome: true,
+      features: { where: { isActive: true, type: "CAMPFIRE" }, select: { type: true, isActive: true, data: true } },
+    },
+  });
+  if (!location) throw new Error("Місцину не знайдено.");
+  if (!canBuildAnotherHandmadeCampfire(location.features)) {
+    throw new Error("Тут уже досить вогнищ. Щоб скласти нове, спершу розберіть або приберіть одне зі старих.");
+  }
+
+  return isWetCampfireLocation(location)
+    ? "Тут мокро. Вогнище можна скласти, але воно швидко втягне воду й згасне. Складати все одно?"
+    : null;
+}
+
+export async function buildCampfireFromInventory(playerId: number, options: { confirmWet?: boolean } = {}) {
+  await expireTimedCampfires();
+  const { twigs } = await ensureTorchResourceTypes();
+  const worldMinute = await currentWorldMinute();
+  const player = await prisma.player.findUnique({
+    where: { id: playerId },
+    select: { currentLocationId: true, hp: true, stamina: true, isResting: true, posture: true, sleepState: true },
+  });
+  if (!player?.currentLocationId) throw new Error("Ти ще не увійшов у світ. Напиши /start");
+  if (!canPickUpGroundItem(player)) throw new Error("Ви надто втомлені, щоб складати вогнище просто зараз. Спершу перепочиньте.");
+
+  const location = await prisma.cellLocation.findUnique({
+    where: { id: player.currentLocationId },
+    select: {
+      id: true,
+      key: true,
+      biome: true,
+      features: { where: { isActive: true, type: "CAMPFIRE" }, select: { type: true, isActive: true, data: true } },
+    },
+  });
+  if (!location) throw new Error("Місцину не знайдено.");
+  if (!canBuildAnotherHandmadeCampfire(location.features)) {
+    throw new Error("Тут уже досить вогнищ. Щоб скласти нове, спершу розберіть або приберіть одне зі старих.");
+  }
+  if (isWetCampfireLocation(location) && !options.confirmWet) {
+    throw new Error("Тут мокро. Вогнище можна скласти, але воно швидко втягне воду й згасне. Складати все одно?");
+  }
+
+  const key = `handmade_campfire_${location.id}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const wet = isWetCampfireLocation(location);
+  const feature = await prisma.$transaction(async (tx) => {
+    const carried = await tx.playerResource.findUnique({
+      where: { playerId_resourceTypeId: { playerId, resourceTypeId: twigs.id } },
+    });
+    if (!carried || carried.amount < CAMPFIRE_BUILD_TWIG_COST) {
+      throw new Error(`Потрібно хмизу ×${CAMPFIRE_BUILD_TWIG_COST}, щоб скласти вогнище. Зараз у вас замало сухих гілок.`);
+    }
+
+    if (carried.amount > CAMPFIRE_BUILD_TWIG_COST) {
+      await tx.playerResource.update({
+        where: { playerId_resourceTypeId: { playerId, resourceTypeId: twigs.id } },
+        data: { amount: { decrement: CAMPFIRE_BUILD_TWIG_COST } },
+      });
+    } else {
+      await tx.playerResource.delete({ where: { playerId_resourceTypeId: { playerId, resourceTypeId: twigs.id } } });
+    }
+
+    return tx.locationFeature.create({
+      data: {
+        key,
+        locationId: location.id,
+        type: "CAMPFIRE",
+        name: "Складене вогнище",
+        description: "Хмиз складено в сухе гніздо. Лишилося дати йому вогонь.",
+        isActive: true,
+        providesLight: false,
+        restStaminaCapMultiplier: null,
+        data: jsonInput({
+          is_campfire: true,
+          handmade: true,
+          created_by: "player",
+          createdByPlayerId: playerId,
+          prepared: true,
+          unlit: true,
+          fuelTwigs: CAMPFIRE_BUILD_TWIG_COST,
+          builtAtMinute: worldMinute,
+          ...(wet ? { wetPenalty: true, wetBiome: location.biome } : {}),
+        }),
+      },
+      select: { id: true, locationId: true },
+    });
+  });
+
+  return {
+    text: wet
+      ? "🪵 Ви склали невелике вогнище з хмизу. Гілки слухняно лягли в купу, але волога вже підступає знизу: коли воно займеться, горітиме недовго."
+      : "🪵 Ви склали невелике вогнище з хмизу. Гілки лежать сухим гніздом — тільки й чекають вогню.",
+    featureId: feature.id,
+    locationId: feature.locationId,
+  };
+}
+
+export async function douseCampfire(playerId: number, featureId: number) {
+  await expireTimedCampfires();
+  const worldMinute = await currentWorldMinute();
+  const player = await prisma.player.findUnique({
+    where: { id: playerId },
+    select: { currentLocationId: true, hp: true, stamina: true, isResting: true, posture: true, sleepState: true },
+  });
+  if (!player?.currentLocationId) throw new Error("Ти ще не увійшов у світ. Напиши /start");
+  if (!canPickUpGroundItem(player)) throw new Error("Ви надто втомлені, щоб поратися з вогнем просто зараз. Спершу перепочиньте.");
+
+  const feature = await prisma.locationFeature.findFirst({
+    where: { id: featureId, locationId: player.currentLocationId, isActive: true, type: "CAMPFIRE" },
+    select: { id: true, locationId: true, type: true, data: true, providesLight: true },
+  });
+  if (!feature || !isHandmadeCampfire(feature) || isPreparedCampfire(feature) || isExtinguishedCampfire(feature) || !feature.providesLight) {
+    throw new Error("Це вогнище не вдається погасити так просто.");
+  }
+
+  await prisma.locationFeature.update({
+    where: { id: feature.id },
+    data: {
+      name: "Згасле вогнище",
+      providesLight: false,
+      restStaminaCapMultiplier: null,
+      data: jsonInput(extinguishedFireData({ ...featureData(feature.data), dousedByPlayerId: playerId }, worldMinute)),
+    },
+  });
+
+  return {
+    text: "🫗 Ви пригасили вогнище. Полум’я зникло в попелі, лишивши чорні головешки й теплий слід.",
+    featureId: feature.id,
+    locationId: feature.locationId,
+  };
+}
+
+export async function dismantleCampfire(playerId: number, featureId: number) {
+  await expireTimedCampfires();
+  const worldMinute = await currentWorldMinute();
+  const { twigs } = await ensureTorchResourceTypes();
+  const player = await prisma.player.findUnique({
+    where: { id: playerId },
+    select: { currentLocationId: true, hp: true, stamina: true, isResting: true, posture: true, sleepState: true },
+  });
+  if (!player?.currentLocationId) throw new Error("Ти ще не увійшов у світ. Напиши /start");
+  if (!canPickUpGroundItem(player)) throw new Error("Ви надто втомлені, щоб розбирати вогнище просто зараз. Спершу перепочиньте.");
+
+  const feature = await prisma.locationFeature.findFirst({
+    where: { id: featureId, locationId: player.currentLocationId, isActive: true, type: "CAMPFIRE" },
+    select: { id: true, locationId: true, type: true, data: true, providesLight: true },
+  });
+  if (!feature || !isDismantlableCampfire(feature)) {
+    throw new Error("Це вогнище не варто розбирати: воно або ще горить, або тримається не лише на хмизі.");
+  }
+
+  const recovered = campfireRecoveredTwigs(feature, worldMinute);
+  await prisma.$transaction(async (tx) => {
+    await tx.locationFeature.update({
+      where: { id: feature.id },
+      data: {
+        isActive: false,
+        providesLight: false,
+        restStaminaCapMultiplier: null,
+        name: "Розібране вогнище",
+        data: jsonInput({
+          ...featureData(feature.data),
+          dismantledAtMinute: worldMinute,
+          dismantledByPlayerId: playerId,
+          recoveredTwigs: recovered,
+        }),
+      },
+    });
+    if (recovered > 0) {
+      await tx.playerResource.upsert({
+        where: { playerId_resourceTypeId: { playerId, resourceTypeId: twigs.id } },
+        update: { amount: { increment: recovered } },
+        create: { playerId, resourceTypeId: twigs.id, amount: recovered },
+      });
+    }
+  });
+
+  return {
+    text: recovered > 0
+      ? `🧹 Ви розібрали вогнище й повернули до речей хмиз ×${recovered}. Решта вже стала попелом і землею.`
+      : "🧹 Ви розібрали вогнище. Хмизу з нього вже не врятувати: все пішло в попіл і землю.",
+    locationId: feature.locationId,
+    recoveredTwigs: recovered,
+  };
 }
 
 export async function ensureTorchResourceTypes() {
@@ -998,9 +1273,23 @@ export async function lightCampfireFromTorch(playerId: number, featureId: number
   await expireTimedCampfires();
   const { litTorch } = await ensureTorchResourceTypes();
   const player = await prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } });
-  const feature = await prisma.locationFeature.findUnique({ where: { id: featureId }, select: { id: true, key: true, locationId: true, isActive: true, type: true, data: true } });
+  const feature = await prisma.locationFeature.findUnique({
+    where: { id: featureId },
+    select: {
+      id: true,
+      key: true,
+      locationId: true,
+      isActive: true,
+      type: true,
+      data: true,
+      location: { select: { biome: true } },
+    },
+  });
   if (!player?.currentLocationId || !feature?.isActive || player.currentLocationId !== feature.locationId || feature.type !== "CAMPFIRE") {
     return "Це вогнище вже не вдається підпалити.";
+  }
+  if (!isPreparedCampfire(feature) && !isExtinguishedCampfire(feature)) {
+    return "Вогнище вже горить. Йому зараз потрібен не вогонь, а хмиз ближче до згасання.";
   }
 
   const lit = await prisma.playerResource.findUnique({ where: { playerId_resourceTypeId: { playerId, resourceTypeId: litTorch.id } } });
@@ -1011,7 +1300,8 @@ export async function lightCampfireFromTorch(playerId: number, featureId: number
   }
 
   const memoryText = canRevealOldCampfireMemory(feature) ? oldCampfireMemoryOmen(feature) : null;
-  const nextData = relitFireData(feature.data, "torch");
+  const durationMs = campfireDurationForLocation(feature.location);
+  const nextData = relitFireData(feature.data, "torch", durationMs);
   await prisma.locationFeature.update({
     where: { id: feature.id },
     data: {
@@ -1022,7 +1312,9 @@ export async function lightCampfireFromTorch(playerId: number, featureId: number
     },
   });
 
-  const base = "🔥 Ви підпалили вогнище від факела. Полум'я розгоряється й дає світло навколо.";
+  const base = durationMs < CAMPFIRE_DURATION_MS
+    ? "🔥 Ви підпалили вогнище від факела. Полум'я розгоряється й дає світло навколо, але волога під ним шипить: цей жар протримається недовго."
+    : "🔥 Ви підпалили вогнище від факела. Полум'я розгоряється й дає світло навколо.";
   return memoryText ? `${base}\n\n${memoryText}` : base;
 }
 
@@ -1105,7 +1397,7 @@ export async function relightableCampfireFromTorchId(playerId: number, featureId
         orderBy: [{ providesLight: "asc" }, { id: "asc" }],
       });
 
-  return feature && isExtinguishedCampfire(feature) ? feature.id : null;
+  return feature && (isPreparedCampfire(feature) || isExtinguishedCampfire(feature)) ? feature.id : null;
 }
 
 export async function canAddTwigsToNearbyCampfire(playerId: number) {

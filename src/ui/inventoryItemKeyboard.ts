@@ -1,5 +1,6 @@
 import { InlineKeyboard } from "grammy";
 import {
+  canBuildCampfireFromInventory,
   canAddTwigsToNearbyCampfire,
   canDousePlayerTorchFromInventory,
   canLightPlayerTorchFromInventory,
@@ -31,8 +32,9 @@ export function cookingResultReplyOptions(result: { rawMeatRemaining?: number | 
 }
 
 export async function buildInventoryItemKeyboard(playerId: number, resourceKey: string) {
-  const [canAddTwigs, canDouseTorch, canLightTorch, canCookMeat, equippedWeapon, rawMeatAmount, itemAmount] = await Promise.all([
+  const [canAddTwigs, canBuildCampfire, canDouseTorch, canLightTorch, canCookMeat, equippedWeapon, rawMeatAmount, itemAmount] = await Promise.all([
     canAddTwigsToNearbyCampfire(playerId),
+    canBuildCampfireFromInventory(playerId),
     canDousePlayerTorchFromInventory(playerId),
     canLightPlayerTorchFromInventory(playerId),
     canCookPlayerMeat(playerId),
@@ -69,6 +71,7 @@ export async function buildInventoryItemKeyboard(playerId: number, resourceKey: 
     if (rawMeatAmount > 1) keyboard.text("🔥 Посмажити все", "inventory:cook:all");
     keyboard.row();
   }
+  if (resourceKey === "twigs" && canBuildCampfire) keyboard.text("🪵 Скласти вогнище", "fire:build").row();
   if (resourceKey === "twigs" && canAddTwigs) keyboard.text("🪵 Підкинути хмиз", "inventory:add-twigs").row();
   if (resourceKey === "torch" && canLightTorch) keyboard.text("🔥 Запалити факел", "inventory:light:torch").row();
   if (resourceKey === "doused_torch" && canLightTorch) keyboard.text("🔥 Запалити факел", "inventory:light:torch").row();

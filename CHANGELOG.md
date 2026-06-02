@@ -7,6 +7,34 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.7 - Player-made campfires - 12026-06-02
+
+### Added
+
+- Added player-made ordinary campfires built from `twigs ×5`, starting as prepared unlit `CAMPFIRE` location features.
+- Added queued `BUILD_CAMPFIRE`, `DOUSE_CAMPFIRE` and `DISMANTLE_CAMPFIRE` actions with stamina costs, priorities and action titles.
+- Added inventory and feature-inspection buttons for building, lighting, dousing and dismantling handmade campfires.
+- Added wet-location campfire handling for `RIVER` and `SWAMP` biomes: wet builds ask for confirmation and burn for a shorter duration once lit.
+- Added local handmade campfire clutter limits and focused helper tests for build state, dismantling, wet duration, location limits and action costs.
+- Added campfire system and implementation-planning docs for the new survival loop.
+
+### Changed
+
+- Lighting a prepared handmade campfire from a lit torch now uses the existing ordinary campfire light path while preserving the handmade feature state.
+- `twigs` inventory inspection now explains when fewer than five are carried, instead of silently hiding the build action.
+- Magic and seeded lore campfires remain protected from dousing/dismantling controls.
+
+### Validation
+
+- Ran `node scripts/test/campfire-build.cjs`.
+- Ran `node scripts/test/campfire-dismantle.cjs`.
+- Ran `node scripts/test/campfire-location-limit.cjs`.
+- Ran `node scripts/test/campfire-wet-location.cjs`.
+- Ran `node scripts/test/action-costs.cjs`.
+- Ran `cmd /c npm test`.
+- Ran `cmd /c npm run build`.
+- Ran `git diff --check`.
+
 ## 0.15.6 - Camp cat watch and owl boundary - 12026-06-01
 
 ### Added
