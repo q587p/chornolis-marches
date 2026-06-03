@@ -61,6 +61,12 @@ Operational watchpoints:
 - `/gather_beeswax` does not guarantee wax. It invokes the same raid as `/gather_honey`; honey is the success reward and beeswax is an additional chance.
 - Events created before the `absoluteMinute` marker existed are treated as expired for cooldown purposes. This deliberately unblocks live hives that could otherwise stay unavailable until a long real-time cooldown passed.
 
+Future disturbed-hive tuning:
+
+- After an apiary is disturbed, lingering nearby should become sharply more dangerous for a while.
+- During that disturbed period, passive sting chance can rise as high as `930` promille and damage should be stronger than ordinary passive stings, so players feel pressure to leave the location and recover.
+- Player-facing copy should not expose those numbers. Use a distinct atmospheric warning that the bees are no longer simply guarding the hollow, the air has become hostile, and stepping away may be wiser than staying under the swarm's anger.
+
 ## Future Work
 
 Bear loops should start as signs and constrained behavior, not full combat. A bear may later smell honey, raid an apiary, flee after stings and leave tracks or damaged wax, but this should not turn the starter camp into a bear trap.
