@@ -7,6 +7,14 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.29 - Starter watchtower torch light fix - 12026-06-04
+
+### Fixed
+
+- Added authored reflected campfire light to the starter watchtower torch stand so new players can inspect and use the torch source at night without already carrying a lit torch.
+- Kept the starter cellar and ordinary dark feature inspection light-gated, including the hidden water-word clue guards.
+- Added focused regression coverage for the starter watchtower light exception and the existing starter infrastructure no-resource invariant.
+
 ## 0.15.28 - Herbalist water-word demonstration - 12026-06-03
 
 ### Added

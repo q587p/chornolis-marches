@@ -23,6 +23,7 @@ module.exports = [
   nodeTest("scripts/test/campfire-location-limit.cjs"),
   nodeTest("scripts/test/campfire-wet-location.cjs"),
   nodeTest("scripts/test/torch-source.cjs"),
+  nodeTest("scripts/test/starter-watchtower-light.cjs"),
   nodeTest("scripts/test/tree-features.cjs"),
   nodeTest("scripts/test/natural-twigs.cjs"),
   nodeTest("scripts/test/strange-totems.cjs"),
