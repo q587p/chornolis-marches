@@ -14,6 +14,7 @@ const scribeCommands = commandNames(SCRIBE_BOT_COMMANDS);
 assert.deepEqual(defaultCommands.slice(0, 4), ["start", "afk", "help", "respawn"], "/help sits right after /afk, with /respawn below help");
 assert.deepEqual(scribeCommands.slice(0, 4), ["start", "afk", "help", "respawn"], "scribe side command menu inherits the /afk, /help and /respawn quick slots");
 assert.equal(defaultCommands.includes("refresh"), false, "public command menu must not expose /refresh");
+assert.equal(defaultCommands.includes("call_scribes"), false, "public command menu must not expose /call_scribes");
 assert.equal(defaultCommands.at(-1), "end_session", "/end_session stays at the bottom of the public side command menu");
 assert.equal(scribeCommands.indexOf("end_session"), DEFAULT_BOT_COMMANDS.length - 1, "/end_session stays at the bottom of the shared command block");
 

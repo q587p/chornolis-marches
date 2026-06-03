@@ -16,6 +16,10 @@ function canSeeDetails(light: LightSnapshot) {
   return light.hasLocalLight || light.level === "bright" || light.level === "clear";
 }
 
+export function canShowFeatureDetails(rules: VisibilityRules) {
+  return rules.showLocationDescription;
+}
+
 export function visibilityDarknessText(rules: VisibilityRules) {
   if (rules.light.level === "dim") {
     return "Присмерк краде дрібні обриси. Видно достатньо, щоб не збитися зі стежки, але не все відкривається з першого погляду.";

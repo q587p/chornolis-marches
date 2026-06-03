@@ -4,7 +4,7 @@ require("ts-node/register");
 
 const { HUNTER_FIELD_LINES } = require("../../src/services/carcassDropoff");
 const { AUTO_LINES, orderAutoActionKeys } = require("../../src/handlers/auto");
-const { HERBALIST_LINES } = require("../../src/services/worldTick");
+const { HERBALIST_LINES } = require("../../src/services/npcHerbalist");
 const { HUNTER_CONVERSATION_REPLY_LINES } = require("../../src/services/npcHunter");
 
 function assertLineBank(name, lines, minimum) {

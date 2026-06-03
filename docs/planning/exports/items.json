@@ -2104,7 +2104,7 @@
   {
     "id": "NPC-003",
     "title": "Herbalist service layer",
-    "status": "next",
+    "status": "in_testing",
     "type": "technical",
     "area": "npc",
     "priority": "medium",
@@ -2304,7 +2304,7 @@
   {
     "id": "OBS-002",
     "title": "Visible herbalist observation moment",
-    "status": "proposed",
+    "status": "in_testing",
     "type": "feature",
     "area": "learning",
     "priority": "high",

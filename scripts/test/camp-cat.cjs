@@ -6,6 +6,7 @@ require("ts-node/register");
 const {
   CAMP_SPIRIT_CAT_NAME,
   CAMP_SPIRIT_CAT_SPECIES_KEY,
+  CAMP_SPIRIT_CAT_CELLAR_LOCATION_KEY,
   CAMP_SPIRIT_CAT_START_LOCATION_KEY,
   CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY,
   campSpiritCatCachePresenceLine,
@@ -64,9 +65,11 @@ assert.equal(isCampSpiritCatCreature({ species: { key: CAMP_SPIRIT_CAT_SPECIES_K
 assert.equal(isCampSpiritCatCreature({ species: { key: "cat" } }), false);
 assert.equal(isCampSpiritCatLocationKey(CAMP_SPIRIT_CAT_START_LOCATION_KEY), true);
 assert.equal(isCampSpiritCatLocationKey(CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY), true);
+assert.equal(isCampSpiritCatLocationKey(CAMP_SPIRIT_CAT_CELLAR_LOCATION_KEY), true);
 assert.equal(isCampSpiritCatLocationKey("meadow_16_05"), false);
 assert.equal(campSpiritCatSafeLocationKey("meadow_16_05"), CAMP_SPIRIT_CAT_START_LOCATION_KEY);
 assert.equal(campSpiritCatSafeLocationKey(CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY), CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY);
+assert.equal(campSpiritCatSafeLocationKey(CAMP_SPIRIT_CAT_CELLAR_LOCATION_KEY), CAMP_SPIRIT_CAT_CELLAR_LOCATION_KEY);
 assert.match(
   campSpiritCatWatchPosture({ hasLocalMice: true, daypart: "night", hasActiveCampfire: true }),
   /мишаче шарудіння/u,
@@ -94,9 +97,14 @@ assert.match(
   campSpiritCatWatchPosture({ locationKey: CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY, daypart: "day" }),
   /вище над табором/u,
 );
+assert.match(
+  campSpiritCatWatchPosture({ locationKey: CAMP_SPIRIT_CAT_CELLAR_LOCATION_KEY, daypart: "day" }),
+  /погреба/u,
+);
 assert.match(campSpiritCatFullInspectionDetail({ hasLocalMice: true }), /пружну лінію/u);
 assert.match(campSpiritCatFullInspectionDetail({ daypart: "night", hasActiveCampfire: true }), /Полум'я/u);
 assert.match(campSpiritCatFullInspectionDetail({ locationKey: CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY }), /щілини між дошками/u);
+assert.match(campSpiritCatFullInspectionDetail({ locationKey: CAMP_SPIRIT_CAT_CELLAR_LOCATION_KEY }), /У погребі/u);
 assert.doesNotMatch(
   campSpiritCatWatchPosture({ daypart: "dusk" }),
   /NPC|debug|companion|pet|сова|вовк|лисиц/u,
@@ -105,6 +113,13 @@ assert.equal(
   isCampSpiritCatAllowedExit({
     direction: "UP",
     toLocation: { key: CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY },
+  }),
+  true,
+);
+assert.equal(
+  isCampSpiritCatAllowedExit({
+    direction: "DOWN",
+    toLocation: { key: CAMP_SPIRIT_CAT_CELLAR_LOCATION_KEY },
   }),
   true,
 );

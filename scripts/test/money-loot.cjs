@@ -88,9 +88,12 @@ assert.equal(isWakingWorldLootLocation({ key: "dream_tutorial_foraging", z: -13 
 assert.equal(isWakingWorldLootLocation({ key: "dream_gate", z: 0 }), false);
 
 const resourceNodes = JSON.parse(fs.readFileSync(path.join(__dirname, "../../prisma/data/world/resourceNodes.json"), "utf8"));
+const locations = JSON.parse(fs.readFileSync(path.join(__dirname, "../../prisma/data/world/locations.json"), "utf8"));
+const starterCampLocationKeys = new Set(locations.filter((location) => location.regionKey === "starter_camp").map((location) => location.key));
 const starterShahs = resourceNodes.filter((node) => node.resourceKey === "shah");
-assert.equal(starterShahs.reduce((sum, node) => sum + node.amount, 0), 6);
+assert.equal(starterShahs.reduce((sum, node) => sum + node.amount, 0), 4);
 assert.equal(starterShahs.some((node) => String(node.locationKey).startsWith("dream_")), false);
+assert.equal(starterShahs.some((node) => starterCampLocationKeys.has(node.locationKey)), false, "Starter camp infrastructure should not place shah ground loot");
 assert.equal(resourceNodes.some((node) => node.resourceKey === "grivna"), false, "Starter seed should not place grivna ground loot");
 
 console.log("money-loot tests passed");

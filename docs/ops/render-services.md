@@ -185,6 +185,8 @@ For manual archive recovery from the deployed `news.md`, use:
 - `/news_archive_list` to reread deployed `news.md`, list stable oldest-first
   indexes for the current file and show published/pending/canceled/missing
   counts;
+- `/news_archive_find [release]` to find the current archive index for a
+  release number, for example `/news_archive_find 0.4.4`;
 - `/news_archive_preview [number]` to render one archive entry without posting;
 - `/news_archive_post [number]` to publish exactly one selected archive entry to
   `HERALD_CHANNEL_ID`;

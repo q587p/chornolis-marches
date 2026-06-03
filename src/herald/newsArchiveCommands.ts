@@ -80,6 +80,23 @@ function parseArchiveIndex(input: string | undefined, total: number) {
   return Number.isSafeInteger(index) && index >= 1 && index <= total ? index : null;
 }
 
+function normalizeArchiveVersionQuery(input: string | undefined) {
+  const raw = input?.trim().replace(/^v/i, "");
+  if (!raw) return null;
+  const match = raw.match(/^(\d+(?:\.(?:\d+|x))+)\.?$/i);
+  return match ? match[1].toLowerCase() : null;
+}
+
+export function findArchiveRowByReleaseVersion(
+  input: Awaited<ReturnType<typeof loadArchiveEntriesWithStatus>> & { ok: true },
+  versionInput: string | undefined,
+) {
+  const version = normalizeArchiveVersionQuery(versionInput);
+  if (!version) return null;
+
+  return input.rows.find((row) => row.entry.sourceVersion?.toLowerCase() === version) ?? null;
+}
+
 function archivePublicationMessage(entry: HeraldNewsEntry) {
   return formatHeraldPublicationMessage({
     sourceType: NEWS_ARCHIVE_SOURCE_TYPE,
@@ -178,6 +195,7 @@ export function formatArchiveList(input: Awaited<ReturnType<typeof loadArchiveEn
     ...sample,
     ...tail,
     "",
+    "Знайти номер за релізом: /news_archive_find [реліз]",
     "Перегляд: /news_archive_preview [номер]",
     "Опублікувати один запис: /news_archive_post [номер]",
     "Повторно передати явно: /news_archive_force_post [номер]",
@@ -214,6 +232,40 @@ function formatArchivePreview(input: Awaited<ReturnType<typeof loadArchiveEntrie
   ].join("\n"));
 }
 
+export function formatArchiveFindReply(
+  input: Awaited<ReturnType<typeof loadArchiveEntriesWithStatus>> & { ok: true },
+  versionInput: string | undefined,
+) {
+  const version = normalizeArchiveVersionQuery(versionInput);
+  if (!version) {
+    return [
+      "Канцелярія просить номер релізу.",
+      "",
+      "Приклад: /news_archive_find 0.4.4",
+    ].join("\n");
+  }
+
+  const row = findArchiveRowByReleaseVersion(input, version);
+  if (!row) {
+    return [
+      `Канцелярія перечитала ${input.rows.length} архівних записів, але не знайшла реліз ${version}.`,
+      "",
+      "Спробуйте /news_archive_list, якщо треба звірити заголовки.",
+    ].join("\n");
+  }
+
+  return [
+    `Канцелярія знайшла реліз ${row.entry.sourceVersion ?? version}.`,
+    "",
+    `Це архівний запис #${row.index}/${input.rows.length}.`,
+    `Назва: ${row.entry.title}`,
+    "",
+    `Переглянути: /news_archive_preview ${row.index}`,
+    `Передати в канал: /news_archive_post ${row.index}`,
+    `Повторно передати явно: /news_archive_force_post ${row.index}`,
+  ].join("\n");
+}
+
 async function replyWithArchiveList(ctx: Context) {
   const archive = await loadArchiveEntriesWithStatus();
   if (!archive.ok) {
@@ -224,6 +276,17 @@ async function replyWithArchiveList(ctx: Context) {
   for (const chunk of splitArchiveListMessage(formatArchiveList(archive))) {
     await ctx.reply(chunk, HERALD_CHANNEL_MESSAGE_OPTIONS);
   }
+}
+
+async function replyWithArchiveFind(ctx: Context) {
+  const archive = await loadArchiveEntriesWithStatus();
+  if (!archive.ok) {
+    logArchiveReadFailure("news_archive_find", archive);
+    await ctx.reply(archiveReadFailureReply(archive));
+    return;
+  }
+
+  await ctx.reply(formatArchiveFindReply(archive, String(ctx.match ?? "")));
 }
 
 async function replyWithArchivePreview(ctx: Context) {
@@ -353,6 +416,16 @@ export function registerHeraldNewsArchiveCommands(bot: Bot, heraldAdminIds: Read
     } catch (error) {
       await logArchiveCommandFailure("news_archive_reload", error);
       await ctx.reply("Канцелярія знайшла news.md, але спіткнулася на повторному розборі архіву. Подробиці записано в logs.");
+    }
+  });
+
+  bot.command("news_archive_find", async (ctx) => {
+    if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
+    try {
+      await replyWithArchiveFind(ctx);
+    } catch (error) {
+      await logArchiveCommandFailure("news_archive_find", error);
+      await ctx.reply("Канцелярія не змогла знайти архівний номер за релізом. Подробиці записано в logs.");
     }
   });
 

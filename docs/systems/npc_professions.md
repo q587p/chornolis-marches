@@ -24,6 +24,8 @@ Hunters also answer a few fitting directed social signals through the same share
 
 The old generic label `Травник` should become a profession/fах, not a personal name.
 
+`0.15.26` adds the first lightweight visible herbalist route. A herbalist can occasionally stage through the starter cellar/watchtower, gather herbs, berries or mushrooms through the ordinary creature `GATHER_SPECIFIC` action path, then return to the cellar to sort/rest narratively. The cellar shelf remains a no-loot staging marker, not a shared container, and torch preparation is symbolic until NPC-held inventory/light is promoted.
+
 ## Design direction
 
 Professions should eventually be derived from accumulated skills rather than assigned as rigid classes.

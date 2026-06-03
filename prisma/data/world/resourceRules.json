@@ -90,6 +90,12 @@
       "mushrooms": 0,
       "herbs": 0
     },
+    "start_border_cellar": {
+      "grass": 0,
+      "berries": 0,
+      "mushrooms": 0,
+      "herbs": 0
+    },
     "old_bridge_west_span": {
       "grass": 0,
       "berries": 0,
