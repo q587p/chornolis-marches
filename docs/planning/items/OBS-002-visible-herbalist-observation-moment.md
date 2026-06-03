@@ -1,7 +1,7 @@
 ---
 id: OBS-002
 title: Visible herbalist observation moment
-status: proposed
+status: in_testing
 type: feature
 area: learning
 priority: high
@@ -44,6 +44,12 @@ Let players witness one clear herbalist action and use it as the first narrow "l
 - If observation progress is available, observing grants a small diegetic hint/progress.
 - Player sees no raw numbers.
 - Tests/build pass.
+
+## 0.15.26 Slice
+
+`0.15.26` adds the first visible herbalist supply-run MVP. A herbalist can stage through the starter cellar/watchtower, visibly prepare for an outing, gather herbs/berries/mushrooms through existing `GATHER_SPECIFIC` creature actions, then return to the cellar to sort/rest narratively.
+
+This uses the existing gathering source / observation bridge from `/look`, `/examine` and witnessed gathering. It does not add `/observe`, follow intent, a public skill UI, real shared cellar storage or a full profession loop.
 
 ## Example Text
 

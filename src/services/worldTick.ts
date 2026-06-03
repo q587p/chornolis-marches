@@ -2,16 +2,16 @@ import { Bot } from "grammy";
 import { CreatureAge, Direction, LocationExit, Prisma } from "@prisma/client";
 import { prisma } from "../db";
 import { notifyLocationAll, notifyRegion, notifyRegionTechnicalScribes } from "./notifications";
-import { actionDurationMs, enqueueCreatureAction, gatherDurationMs, movementDurationMs, restartActionQueueLoop } from "./actionQueue";
+import { actionDurationMs, enqueueCreatureAction, movementDurationMs, restartActionQueueLoop } from "./actionQueue";
 import { BASE_STAMINA, TICK_MS, VERY_TIRED_STAMINA, getRuntimeTimingConfig, setRuntimeTickMs } from "../gameConfig";
 import { restartPlayerAutoTimers } from "../handlers/auto";
 import { carriedCorpseAction, carriedCorpseOwnerId, removeDecayedCorpseFromInventory } from "./corpses";
 import { requireScribeAdmin } from "./adminAccess";
 import { notifyFadingFireTimers } from "./fire";
-import { maybePerformHerbalistSignal } from "./socialAutonomy";
 import { filterLisovykAllowedLocations, isLisovykForbiddenLocation, isLisovykForbiddenRegion } from "./lisovykBoundaries";
 import { DREAM_GATE_FEATURE_KEY, DREAM_GATE_FEATURE_KEYS } from "./tutorial";
 import { hunterClaimedCorpseDecayAction, isHunterCreature, tickNpcHunter } from "./npcHunter";
+import { isHerbalistCreature, tickNpcHerbalist } from "./npcHerbalist";
 import { chance, chancePermille, pickOptional as pick, randomInt } from "../utils/random";
 import { restorePopulationFloors } from "./populationRestoration";
 import { PREDATOR_PREY_CLAIM_PREFIX, isUnclaimedHerbivoreCorpseForScavenging, predatorClaimedCorpseDecayAction, predatorClaimedCorpseMarker } from "./predatorFeeding";
@@ -39,7 +39,6 @@ const NATURAL_TWIGS_MAX_AMOUNT = Number(process.env.WORLD_NATURAL_TWIGS_MAX_AMOU
 const NATURAL_TWIGS_LOCATION_DIVISOR = Number(process.env.WORLD_NATURAL_TWIGS_LOCATION_DIVISOR || 3);
 const NATURAL_TWIGS_REGION_KEYS = new Set((process.env.WORLD_NATURAL_TWIGS_REGION_KEYS || "chornolis_border").split(",").map((key) => key.trim()).filter(Boolean));
 const LISOVYK_WAKE_DELAY_TICKS = Number(process.env.WORLD_LISOVYK_WAKE_DELAY_TICKS || 12);
-const HERBALIST_SPEAK_CHANCE = Number(process.env.HERBALIST_SPEAK_CHANCE || 12);
 const RABBIT_REPRODUCTION_EVERY_TICKS = Number(process.env.WORLD_RABBIT_REPRODUCTION_EVERY_TICKS || 120);
 const RABBIT_MIN_LITTER_SIZE = Number(process.env.WORLD_RABBIT_MIN_LITTER_SIZE || 5);
 const RABBIT_MAX_LITTER_SIZE = Number(process.env.WORLD_RABBIT_MAX_LITTER_SIZE || 10);
@@ -160,74 +159,6 @@ async function syncOwlNocturnalActivity(daypart: WorldDaypart) {
 
   return { slept: slept.count, woke: 0 };
 }
-
-export const HERBALIST_LINES = [
-  "Трави самі говорять, якщо слухати тихо.",
-  "Не кожен корінь лікує. Деякі тільки пам’ятають біль.",
-  "Чорноліс сьогодні пахне дощем і старою корою.",
-  "Не топчи мох без потреби — він старший за нас.",
-  "Ягоди темнішають. Це не завжди добрий знак.",
-  "Коли ліс мовчить — слухай землю.",
-  "Тут десь має бути деревій... або щось, що ним прикидається.",
-  "Гриби не брешуть. Люди — часто.",
-  "Хто забирає все, той будить старше за себе.",
-  "Тиша теж буває голодною.",
-  "Якщо листя блищить без дощу, не поспішай торкатися.",
-  "Полин гіркий, зате чесний.",
-  "Корінь, вирваний зі злістю, лікує гірше.",
-  "Те, що росте біля стежки, чує більше за нас.",
-  "Стара кора знає, хто тут проходив до тебе.",
-  "Не всяка ягода проситься до руки. Деякі кличуть тільки око.",
-  "Коли трава лягає проти вітру, краще ступати тихіше.",
-  "У добрій настоянці половина сили від терпіння.",
-  "Лікувати можна і словом, але слово теж треба сушити.",
-  "Тутешній мох не любить поспіху.",
-  "Якщо гриб надто гарний, спершу привітайся здалеку.",
-  "У лісі немає бур’янів. Є тільки рослини, яких ти ще не знаєш.",
-  "Не рви останнього листка. Йому ще тримати пам’ять місцини.",
-  "Дощ змиває сліди, але не завжди запах.",
-  "Там, де трава мовчить, часто говорить камінь.",
-  "Кропива сердита, бо її всі чіпають без дозволу.",
-  "Ліс дає ліки повільніше, ніж люди просять.",
-  "Сухий лист під ногою іноді гучніший за крик.",
-  "Перш ніж збирати, подивися, хто вже їв тут до тебе.",
-  "У темних ягодах буває сонце, тільки старе.",
-  "Хвороба любить поспіх. Знахар ні.",
-  "Не всякий запах попереджає. Деякі заманюють.",
-  "Під корою теж є стежки, просто не для людської ноги.",
-  "Якщо земля тепла без сонця, не лягай на неї.",
-  "Свіжа рана слухає краще, коли навколо тихо.",
-  "Мед лікує не все. Іноді він тільки переконує біль зачекати.",
-  "Вода пам’ятає руки, що її брали.",
-  "Деревій не любить, коли його називають навмання.",
-  "Є трави для тіла, є для страху, а є такі, що краще не будити.",
-  "Край лікується повільно. Ми лише підставляємо руки.",
-  "Коли ліс надто щедрий, спершу спитай себе, кому він винен.",
-  "Чорна земля не завжди мертва. Іноді вона просто думає.",
-  "Свіжий пагін легше зламати, ніж попросити пробачення.",
-  "У кожного кореня є низ, якого не видно.",
-  "Гіркота часто приходить першою, щоб солодке не розлінилося.",
-  "Листя шелестить по-різному для хворого і здорового.",
-  "Справжні ліки не завжди пахнуть приємно.",
-  "Поки рука тремтить, краще збирати очима.",
-  "Лісовий пил осідає навіть на думках.",
-  "Не все, що лікує звіра, витримає людину.",
-  "Знахарська торба порожніє швидше, коли рука нетерпляча.",
-  "Ягода може нагодувати, а може тільки нагадати про голод.",
-  "Молодий пагін не питає, чи ти поспішаєш.",
-  "Якщо місце виснажене, не кричи на нього ногами.",
-  "Де трава повертається сама, там краще не ставати першим.",
-  "Старий гриб знає більше доріг під землею, ніж ми на стежці.",
-  "Трава не ворог. Ворог — рука, що бере без пам'яті.",
-  "Коли лікуєш тіло, не забувай, що страх теж має корінь.",
-  "Не всяка гіркота погана. Деяка просто чесна.",
-  "Перший листок після винищення не чіпають.",
-  "Якщо зілля пахне димом, спершу згадай, хто палив вогонь.",
-  "На межі навіть мох росте насторожено.",
-  "Де забагато слідів, там рослинам важче говорити.",
-  "Ліки люблять чисті руки, але не завжди чисті думки.",
-  "Кущ, який пережив ніч, не завжди готовий до чужої торби.",
-];
 
 const STAGE_HP_MULTIPLIER: Record<CreatureAge, number> = {
   CHILD: 0.35,
@@ -1092,34 +1023,9 @@ async function processAnimalLifecycle() {
   return { aged, died, starved, decayed, gone };
 }
 
-async function maybeHerbalistSpeak(c: any) {
-  if (!chance(HERBALIST_SPEAK_CHANCE)) return false;
-  const line = pick(HERBALIST_LINES);
-  if (!line) return false;
-  await enqueueCreatureAction({ creatureId: c.id, type: "SAY", payload: { text: line }, durationMs: actionDurationMs("SAY", c.stamina) });
-  return true;
-}
-
 async function queueMove(c: any, exit: LocationExit, reason: string) {
   await enqueueCreatureAction({ creatureId: c.id, type: "MOVE", payload: { direction: exit.direction as Direction, reason }, durationMs: movementDurationMs(exit.travelCost, c.stamina) });
   return "queuedMove";
-}
-
-async function tickHerbalist(c: any) {
-  if (botInstance && await maybePerformHerbalistSignal(botInstance, c)) return "queuedLook";
-
-  if (await maybeHerbalistSpeak(c)) return "queuedSay";
-
-  const herbs = c.location.resources.find((r: any) => r.resourceType.key === "herbs");
-  if (herbs && herbs.amount > 0) {
-    await enqueueCreatureAction({ creatureId: c.id, type: "GATHER_SPECIFIC", payload: { resourceKey: "herbs" }, durationMs: gatherDurationMs("herbs", c.stamina) });
-    return "queuedGather";
-  }
-
-  const exit = pick(creatureUsableExits(c, c.location.exitsFrom));
-  if (isExit(exit)) return queueMove(c, exit, "шукає лікарські трави");
-  await enqueueCreatureAction({ creatureId: c.id, type: "REST", payload: {}, durationMs: actionDurationMs("REST", c.stamina) });
-  return "queuedRest";
 }
 
 async function tickCampSpiritCat(c: any, daypart: WorldDaypart) {
@@ -1813,7 +1719,7 @@ export async function worldTick() {
           continue;
         }
         else if (isHunterCreature(c)) result = await tickNpcHunter(botInstance, c);
-        else if (c.species.key === "herbalist") result = await tickHerbalist(c);
+        else if (isHerbalistCreature(c)) result = await tickNpcHerbalist(botInstance, c, worldTime.absoluteMinute);
         else if (c.species.key === "lisovyk") {
           const exit = pick(c.location.exitsFrom.filter((candidate: any) => isExit(candidate) && !isLisovykForbiddenLocation((candidate as any).toLocation)));
           if (isExit(exit) && chance(50)) {

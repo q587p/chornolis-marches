@@ -7,6 +7,21 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.26 - Herbalist cellar supply-run MVP - 12026-06-03
+
+### Added
+
+- Added `src/services/npcHerbalist.ts` as the first dedicated herbalist service layer, keeping world tick responsible for dispatch instead of owning the profession body.
+- Added a low-frequency in-world-time herbalist supply-run MVP that can stage through the starter cellar/watchtower, gather herbs/berries/mushrooms through existing `GATHER_SPECIFIC` creature actions, then return to the cellar and rest.
+- Added `Herbalist supply run` WorldEvent markers for baseline, route stages and completion without adding a Prisma migration.
+- Added `Сухі лежанки` as an inspectable no-loot cellar rest landmark and marked the cellar shelf as herbalist supply-run staging without making it a shared container.
+- Added focused helper tests for herbalist cadence, supported gather resources, symbolic torch-preparation text and route-direction helpers.
+
+### Changed
+
+- Preserved the existing herbalist ambient/social behavior as the fallback when the supply run is not due or already active.
+- Updated world seed validation, planning docs, changelog, public news and release notes for the 0.15.26 visible profession-route slice.
+
 ## 0.15.25 - Starter cellar and map-maker landmarks - 12026-06-03
 
 ### Added

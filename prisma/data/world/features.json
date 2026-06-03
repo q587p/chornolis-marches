@@ -582,20 +582,49 @@
     "locationKey": "start_border_cellar",
     "type": "LANDMARK",
     "name": "Порожня полиця",
-    "description": "Полиця суха, вузька й майже порожня. На дереві лишилися круглі сліди від глечиків і прямі подряпини від ножа.",
+    "description": "Полиця суха, вузька й майже порожня. На дереві лишилися круглі сліди від глечиків, прямі подряпини від ножа й кілька новіших плям від трав'яного пилу.",
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
       "icon": "🪵",
       "inspectable": true,
-      "examine_summary": "полиця не дає припасів, зате показує, що погріб був місцем пам'яті й обліку, а не другою скринею для новачків",
+      "examine_summary": "полиця не дає припасів, зате вже схожа на місце, де знахар може сортувати принесені трави після обходу",
       "no_loot": true,
+      "future_herbalist_deposit": true,
+      "storage_staging": "herbalist_supply_run",
       "aliases": [
         "полиця",
         "порожня полиця",
+        "знахарська полиця",
+        "полиця трав",
         "дошка",
         "shelf",
         "empty shelf"
+      ]
+    }
+  },
+  {
+    "key": "start_cellar_dry_bunks",
+    "locationKey": "start_border_cellar",
+    "type": "LANDMARK",
+    "name": "Сухі лежанки",
+    "description": "Уздовж теплішої стіни лежать дві низькі дерев'яні лежанки. Вони не роблять погріб домом, але дозволяють тому, хто повернувся з обходу, стишити руки й не заважати табору над головою.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🛏",
+      "inspectable": true,
+      "examine_summary": "прості сухі лежанки для короткого перепочинку після обходу; це не нова система сну й не прихований запас",
+      "no_loot": true,
+      "herbalist_rest_staging": true,
+      "aliases": [
+        "лежанки",
+        "сухі лежанки",
+        "ліжка",
+        "нари",
+        "місце відпочинку",
+        "bunks",
+        "dry bunks"
       ]
     }
   },

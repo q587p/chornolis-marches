@@ -12,7 +12,7 @@ These may become `next` after 0.13-0.15 foundations land.
 - MAP-WILLOW-002: under-bridge and watchtower integration for the Willow Floodplain pocket, keeping the under-bridge place distinct and the settlement gate closed.
 - QA-WILLOW-002: post-merge smoke for Willow feature inspect aliases, `/cook_all`, eat-all, `/all`, `/shout` and animal movement near vertical exits; include an admin cleanup plan for stranded upper-level creatures if needed.
 - RIVER-001: risky bridge/river jump action, where the current can carry a wounded or unconscious character downstream instead of acting like safe travel.
-- First useful NPC roles: guard, hunter, herbalist, fisher.
+- First useful NPC roles: guard, hunter, herbalist, fisher. Herbalist now has a first visible cellar supply-run MVP in testing; deeper inventory, storage, food and profession scheduling remain backlog.
 - NPC-008: starter supply guards and watched beginner stores, so the watchtower/cache area feels maintained when animals or careless characters disturb beginner-critical supplies.
 - LOOT-001 follow-up after the `0.15.16` money MVP: richer authored small finds, empty-search atmosphere, item lifetime and future offering hooks around starter-adjacent or calm locations, so early searching is not limited to defending distant forest resource spots.
 - Ground money and small find objects beyond the first `shah` MVP should keep folding into `LOOT-001` before becoming a separate economy system.
