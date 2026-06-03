@@ -35,7 +35,7 @@ import { isFreshenedCorpse, playerRawMeatAmount } from "./meat";
 import { heldWeaponLine } from "./weapons";
 import { spiritCallActionPrefix, spiritGuidedTargetHint } from "./spiritCall";
 import { GATE_CARCASS_DROPOFF_FEATURE_KEY, gateHuntingDropoffText, gateHuntingNoticeText, getGateHuntingSaturationState } from "./carcassDropoff";
-import { visibilityDarknessText, visibilityPresenceText, visibilityRulesForLocation, type VisibilityRules } from "./visibility";
+import { canShowFeatureDetails, visibilityDarknessText, visibilityPresenceText, visibilityRulesForLocation, type VisibilityRules } from "./visibility";
 import { getCurrentWorldTimeSnapshot } from "./worldTime";
 import { approximateWorldDurationFromRealMs } from "../data/worldClock";
 import { owlSignDetailLine, owlSignInspectionText } from "./owlSigns";
@@ -438,8 +438,27 @@ function featureBriefLine(feature: any) {
   return `${featureIcon(feature)} <i>${escapeHtml(feature.name)}</i>`;
 }
 
-function featureDetailLine(feature: any, showTechnicalDetails = false, displayState: FeatureDisplayState = {}) {
+function darkFeatureOutlineText(feature: any) {
+  const name = String(feature.name ?? "").toLowerCase();
+  if (name.includes("мап")) return "папір видно, написів — ні";
+  if (name.includes("заруб")) return "без світла зарубки не розібрати";
+  if (name.includes("знак")) return "без світла знаки не розібрати";
+  if (name.includes("полиц")) return "у темряві видно тільки обриси";
+  return "у темряві видно тільки обриси";
+}
+
+export function darkFeatureInspectionText(feature: any) {
+  return [
+    `${featureIcon(feature)} <i>${escapeHtml(feature.name)}</i>`,
+    "",
+    "Без світла ви бачите лише обриси. Щоб розібрати зарубки, напис чи дрібні знаки, потрібен запалений факел або інше світло.",
+  ].join("\n");
+}
+
+function featureDetailLine(feature: any, showTechnicalDetails = false, displayState: FeatureDisplayState = {}, showFeatureDetails = true) {
   const line = `${featureIcon(feature)} <i>${escapeHtml(feature.name)}</i>`;
+  if (!showFeatureDetails) return `${line}; ${escapeHtml(darkFeatureOutlineText(feature))}`;
+
   const details: string[] = [];
   const data = featureData(feature);
   const authoredSummary = typeof data.examine_summary === "string" ? data.examine_summary.trim() : "";
@@ -507,8 +526,8 @@ function featureDetailLine(feature: any, showTechnicalDetails = false, displaySt
   return details.length ? `${line}; ${details.map(escapeHtml).join("; ")}` : line;
 }
 
-export function featureBriefInspectionText(feature: any, showTechnicalDetails = false) {
-  return featureDetailLine(feature, showTechnicalDetails);
+export function featureBriefInspectionText(feature: any, showTechnicalDetails = false, displayState: FeatureDisplayState = {}, showFeatureDetails = true) {
+  return featureDetailLine(feature, showTechnicalDetails, displayState, showFeatureDetails);
 }
 
 function formatPublicCount(value: number) {
@@ -567,11 +586,17 @@ function publicEcologyReport(stats: PublicEcologySignStats, showTechnicalDetails
   ].join("\n");
 }
 
-function featuresText(location: any, mode: "brief" | "details", showTechnicalDetails = false, displayStates: Map<number, FeatureDisplayState> = new Map()) {
+function featuresText(
+  location: any,
+  mode: "brief" | "details",
+  showTechnicalDetails = false,
+  displayStates: Map<number, FeatureDisplayState> = new Map(),
+  showFeatureDetails = true,
+) {
   const features = (location.features ?? []).filter(isInteractiveFeature);
   if (!features.length) return "";
   const title = mode === "brief" ? "<b>Особливості:</b>" : "<b>Особливості місцини:</b>";
-  const lines = features.map((feature: any) => mode === "brief" ? featureBriefLine(feature) : featureDetailLine(feature, showTechnicalDetails, displayStates.get(feature.id)));
+  const lines = features.map((feature: any) => mode === "brief" ? featureBriefLine(feature) : featureDetailLine(feature, showTechnicalDetails, displayStates.get(feature.id), showFeatureDetails));
   return `\n\n${title}\n${lines.join("\n")}`;
 }
 
@@ -957,7 +982,7 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
     ? escapeHtml(location.description ?? "")
     : `<i>${escapeHtml(visibilityDarknessText(visibility))}</i>`;
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${descriptionText}${featuresText(location, "brief", showTechnicalDetails)}${presenceText(location, viewerPlayerId, revealTargets, activeActions, visibility)}\n\n${escapeHtml(compactExitsText(location.exitsFrom, lockedExits))}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${descriptionText}${featuresText(location, "brief", showTechnicalDetails, new Map(), canShowFeatureDetails(visibility))}${presenceText(location, viewerPlayerId, revealTargets, activeActions, visibility)}\n\n${escapeHtml(compactExitsText(location.exitsFrom, lockedExits))}`,
     keyboard,
   };
 }
@@ -1101,7 +1126,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     : `<i>${escapeHtml(visibilityDarknessText(visibility))}</i>`;
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${descriptionText}${featuresText(location, "details", showTechnicalDetails, featureDisplayStates)}\n\n<i>Ви роздивляєтесь уважніше.</i>${dangerText}${technicalLocationText}\n\n${escapeHtml(detailedExitsText(location.exitsFrom, lockedExits))}${resourcesText}${charactersText}${tracksText}${lyingText}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${descriptionText}${featuresText(location, "details", showTechnicalDetails, featureDisplayStates, canShowFeatureDetails(visibility))}\n\n<i>Ви роздивляєтесь уважніше.</i>${dangerText}${technicalLocationText}\n\n${escapeHtml(detailedExitsText(location.exitsFrom, lockedExits))}${resourcesText}${charactersText}${tracksText}${lyingText}`,
     keyboard,
   };
 }
@@ -1177,8 +1202,11 @@ export async function renderLocationFeatureInteraction(
 ) {
   const player = await prisma.player.findUnique({ where: { id: viewerPlayerId }, select: { currentLocationId: true } });
   let feature = await prisma.locationFeature.findUnique({ where: { id: featureId }, include: { location: true } });
-  if (feature?.locationId) await expireTimedCampfires(feature.locationId);
+  if (feature?.locationId) await Promise.all([expireTimedCampfires(feature.locationId), expireGroundLitTorches(undefined, new Date(), feature.locationId)]);
   if (!player || !feature || !feature.isActive || player.currentLocationId !== feature.locationId || !isInteractiveFeature(feature)) return null;
+
+  const visibility = await visibilityRulesForLocation(feature.locationId, detailMode === "brief" ? "brief" : "details");
+  const showFeatureDetails = canShowFeatureDetails(visibility);
 
   if (detailMode === "brief") {
     const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
@@ -1188,7 +1216,20 @@ export async function renderLocationFeatureInteraction(
       .row()
       .text("↩️ Назад", `location:${returnMode}`);
     return {
-      text: featureDetailLine(feature, showTechnicalDetails, displayState),
+      text: featureDetailLine(feature, showTechnicalDetails, displayState, showFeatureDetails),
+      keyboard,
+      quoteMessages: [] satisfies VoiceQuoteMessage[],
+      followupMessages: [] satisfies HtmlFollowupMessage[],
+    };
+  }
+
+  if (!showFeatureDetails) {
+    const keyboard = new InlineKeyboard();
+    const moveDirection = featureMoveDirection(feature);
+    if (moveDirection) keyboard.text(featureMoveButtonLabelForFeature(feature, moveDirection), `move:${moveDirection}`).row();
+    keyboard.text("↩️ Назад", `location:${returnMode}`);
+    return {
+      text: darkFeatureInspectionText(feature),
       keyboard,
       quoteMessages: [] satisfies VoiceQuoteMessage[],
       followupMessages: [] satisfies HtmlFollowupMessage[],

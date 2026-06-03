@@ -7,6 +7,15 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.27 - Darkness-aware feature inspection - 12026-06-03
+
+### Fixed
+
+- Fixed detailed location feature rendering so dim/dark locations without valid light no longer reveal authored `examine_summary` clues during `/examine`.
+- Fixed direct feature inspection in darkness to return a dark-safe outline message instead of full feature descriptions or special inspection text.
+- Preserved full feature summaries and direct inspection behavior when daylight, a lit torch, a campfire or another valid local light source makes details visible.
+- Added regression coverage for dark feature lines and direct dark inspection fallback copy.
+
 ## 0.15.26 - Herbalist cellar supply-run MVP - 12026-06-03
 
 ### Added
