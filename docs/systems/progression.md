@@ -57,6 +57,19 @@ skill UI or a new observation command. Future track/follow learning can reuse
 this pattern: a witnessed unusual movement may become a source for attention,
 tracking or route-memory progress once those slices exist.
 
+`0.15.29` adds the first follow-intent foundation. A player can mark one visible
+local player, creature or local character as the being whose movement they are
+trying to keep in mind. This is attention context only: it does not move the
+follower, create a group, grant learning progress, or guarantee future tracking.
+Future observation and track-learning slices can query that intent when deciding
+whether a witnessed route, track or profession action was watched closely enough
+to matter.
+
+Follow movement is intentionally separate from this marker. When it exists, it
+should be explicit and should still respect darkness, stamina, queues, visible
+exits and learned route knowledge. Hidden passages such as the cellar water-word
+route must not be repeated merely because the followed actor used them.
+
 Observed actor skill remains future work. A later slice should add a small helper
 such as `observedActorSkillLevel(...)` that can read player learning progress or
 return profession/species profile defaults for herbalists, hunters and animals

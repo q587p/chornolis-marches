@@ -20,6 +20,16 @@ export function isSpiritCallPayload(payload: unknown): payload is SpiritCallPayl
   return data.spiritCall === true || data.source === SPIRIT_CALL_SOURCE;
 }
 
+export type SpiritCallActionLike = {
+  payload?: unknown | null;
+  note?: string | null;
+};
+
+export function isSpiritCallActionLike(action: SpiritCallActionLike) {
+  const note = typeof action.note === "string" ? action.note.trim().toLocaleLowerCase("uk-UA") : "";
+  return isSpiritCallPayload(action.payload) || note.startsWith("auto:");
+}
+
 export function spiritGuidedTargetHint(isEnabled?: boolean | null) {
   return isEnabled ? "за кроком тягнеться тихий поклик" : undefined;
 }

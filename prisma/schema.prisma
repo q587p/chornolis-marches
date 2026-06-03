@@ -82,6 +82,8 @@ model Player {
   actions   WorldAction[]
   tracks    WorldTrack[]
   learningProgress CharacterLearningProgress[]
+  followIntent PlayerFollowIntent? @relation("PlayerFollowIntentOwner")
+  followedByIntents PlayerFollowIntent[] @relation("PlayerFollowIntentTargetPlayer")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -123,6 +125,7 @@ model CellLocation {
   creatures Creature[]
   resources ResourceNode[]
   features  LocationFeature[]
+  followIntentsLastSeen PlayerFollowIntent[]
 
   exitsFrom LocationExit[] @relation("ExitFrom")
   exitsTo   LocationExit[] @relation("ExitTo")
@@ -302,9 +305,34 @@ model Creature {
   actions WorldAction[]
   tracks  WorldTrack[]
   resources CreatureResource[]
+  followedByIntents PlayerFollowIntent[] @relation("PlayerFollowIntentTargetCreature")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model PlayerFollowIntent {
+  id       Int    @id @default(autoincrement())
+  playerId Int    @unique
+  player   Player @relation("PlayerFollowIntentOwner", fields: [playerId], references: [id], onDelete: Cascade)
+
+  targetType       String
+  targetPlayerId   Int?
+  targetPlayer     Player?   @relation("PlayerFollowIntentTargetPlayer", fields: [targetPlayerId], references: [id], onDelete: SetNull)
+  targetCreatureId Int?
+  targetCreature   Creature? @relation("PlayerFollowIntentTargetCreature", fields: [targetCreatureId], references: [id], onDelete: SetNull)
+
+  setAt                DateTime @default(now())
+  lastSeenLocationId   Int?
+  lastSeenLocation     CellLocation? @relation(fields: [lastSeenLocationId], references: [id], onDelete: SetNull)
+  lastKnownTargetLabel String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([targetType, targetPlayerId])
+  @@index([targetType, targetCreatureId])
+  @@index([lastSeenLocationId])
 }
 
 // =======================

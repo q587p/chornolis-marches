@@ -68,6 +68,8 @@ assert.equal(parseStartActionPayload("cmd_help"), "help");
 assert.equal(parseStartActionPayload("cmd_rest"), "rest");
 assert.equal(parseStartActionPayload("cmd_sleep"), "sleep");
 assert.equal(parseStartActionPayload("cmd_track"), "track");
+assert.equal(parseStartActionPayload("cmd_follow"), "follow");
+assert.equal(parseStartActionPayload("cmd_unfollow"), "unfollow");
 assert.equal(parseStartActionPayload("cmd_time"), "time");
 assert.equal(parseStartActionPayload("cmd_calendar"), "calendar");
 assert.equal(parseStartActionPayload("cmd_weather"), "weather");
@@ -466,6 +468,15 @@ assertAlias("кивнути Здравомир", { kind: "social-signal", signal
 assertAlias("smile", { kind: "social-signal", signal: "smile" });
 assertAlias("посміх", { kind: "social-signal", signal: "smile" });
 assertAlias("усміхнутися", { kind: "social-signal", signal: "smile" });
+assertAlias("/follow знахар", { kind: "follow", target: "знахар" });
+assertAlias("follow herbalist", { kind: "follow", target: "herbalist" });
+assertAlias("слідувати за знахарем", { kind: "follow", target: "знахарем" });
+assertAlias("йти за Нестором", { kind: "follow", target: "нестором" });
+assertAlias("триматися за Лукана", { kind: "follow", target: "лукана" });
+assertAlias("стежити за мишею", { kind: "follow", target: "мишею" });
+assertAlias("/unfollow", { kind: "unfollow" });
+assertAlias("відстати", { kind: "unfollow" });
+assertAlias("stop follow", { kind: "unfollow" });
 
 assert.equal(parseAlias("це точно не команда"), null);
 assert.ok(suggestAliasInputs("роздивит").includes("роздивитися"), "Expected alias suggestions to include роздивитися");

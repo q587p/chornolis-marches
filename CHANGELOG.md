@@ -7,6 +7,28 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.29 - Follow intent and starter guidance fixes - 12026-06-04
+
+### Added
+
+- Added persistent `PlayerFollowIntent` storage so each player can mark one visible local player, creature or local character as the being they are watching/following.
+- Added `/follow <target>` and `/unfollow` with English/MUD-style and Ukrainian text aliases.
+- Added reusable follow-intent helpers for future observation, track-learning and route-memory slices.
+- Added a small `/me` status line for the current followed target label without exposing raw IDs, coordinates or tracking state.
+- Added focused alias and helper tests for follow-intent parsing and target data shaping.
+
+### Changed
+
+- Updated progression, NPC profession, social/group and input-alias docs to clarify that follow intent is attention context only, not automatic movement, party/group membership or learning progress by itself.
+
+### Fixed
+
+- Added authored reflected campfire light to the starter watchtower torch stand so new players can inspect and use the torch source at night without already carrying a lit torch.
+- Kept the starter cellar and ordinary dark feature inspection light-gated, including the hidden water-word clue guards.
+- Added focused regression coverage for the starter watchtower light exception and the existing starter infrastructure no-resource invariant.
+- Let the manual cellar water-word speech trigger override only queued/running Spirit Call actions instead of getting stuck behind automatic choices.
+- Kept targeted speech, ordinary speech outside the cellar and non-Spirit-Call action queues on their existing paths.
+
 ## 0.15.28 - Herbalist water-word demonstration - 12026-06-03
 
 ### Added

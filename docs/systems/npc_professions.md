@@ -28,6 +28,12 @@ The old generic label `Травник` should become a profession/fах, not a p
 
 `0.15.28` lets that route rarely demonstrate the hidden cellar water-word passage during cellar staging. This is not a visible exit, not a new command and not follow intent: nearby players can learn the phrase only by being present for the local observer text. After the demonstration, the herbalist resumes the ordinary gathering route from under the old bridge through existing pathfinding.
 
+`0.15.29` adds follow intent as player-side attention context only. It does not
+change herbalist routes, schedules, speech triggers or the water-word passage,
+but later profession-observation hooks may treat a player who is intentionally
+following a visible herbalist as paying closer attention than someone merely in
+the same location.
+
 ## Design direction
 
 Professions should eventually be derived from accumulated skills rather than assigned as rigid classes.

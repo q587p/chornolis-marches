@@ -98,6 +98,7 @@ Actions:
 - `черга`, `скасувати`, `очистити чергу`.
 - `/automessages`, `/automessages on`, `/automessages off`, `automessages`, `автоповідомлення`, `авто повідомлення` -> show or change whether own auto-mode action messages keep being delivered after Auto-AFK. Manual AFK and ended sessions remain stronger than this setting.
 - `/track`, `/track кіт`, `track cat`, `сліди миша`, `/examine tracks`, `роздивитися сліди`, `придивитися до слідів`. Targeted `/track <істота/персонаж>` filters recent visible tracks by actor label/name/species where the current track data can match it. Future detail forms should include target-like aliases such as `роздивитися вовчий слід`, `роздивитися людський слід` and `роздивитися заячий слід`.
+- `/follow знахар`, `follow herbalist`, `слідувати за знахарем`, `йти за Нестором`, `триматися за Лукана`, `стежити за мишею` -> mark one visible local player, creature or local character as the being whose movement you are watching. This stores attention context only: it does not move the follower, create a group, accept a companion or grant learning by itself. `/unfollow`, `unfollow`, `stop follow`, `не слідувати`, `припинити слідувати`, `відстати` clears that intent.
 - `сказати Привіт`.
 - `додати хмиз`, `підкинути хмиз`, `/add twigs campfire` -> add carried `хмиз` to a nearby ordinary campfire.
 - `підібрати хмиз`, `взяти хмиз`, `pickup twigs` -> pick up visible loose `хмиз` in the current місцина.

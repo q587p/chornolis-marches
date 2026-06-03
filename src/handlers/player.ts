@@ -47,6 +47,7 @@ import { performPlayerLocationSignal, socialDefinitionById } from "../services/s
 import { firstNightGuidanceForPlayer } from "../services/beginnerGuidance";
 import { equipPlayerWeapon, ownHeldWeaponLine, unequipPlayerWeapon } from "../services/weapons";
 import { playerMoneyText } from "../utils/moneyText";
+import { followIntentStatusLine, getPlayerFollowIntent } from "../services/following";
 
 const tutorialInventoryVoiceSeen = new Set<number>();
 
@@ -344,9 +345,11 @@ async function renderCharacterView(telegramId: number) {
   const nameApprovedText = characterNameApprovalStatusText(player.isNameApproved);
   const isTutorialDream = player.currentLocation ? isTutorialLocation(player.currentLocation) : false;
   const hasActionQueue = await hasPlayerActionQueueControls(player.id);
+  const followIntent = await getPlayerFollowIntent(player.id);
+  const followIntentText = followIntentStatusLine(followIntent?.lastKnownTargetLabel);
 
   return {
-    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}${tutorialStatusText}\n\n${formatPostureText({ ...player, isSleeping: isTutorialDream })}${torchText}\n${weaponText}\n${vitals.join("\n")}\nСтан: ${formatFatigueText(player)}${await recoveryText(player)}\n${hungerText}\nМісцина: ${locationText}\nГроші: ${playerMoneyText(player.resources)}\nПоклик духа: ${autoText}${technicalDetailsText}\nЗареєстровано: ${formatDateTime(player.createdAt)}${statsText}`,
+    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}${tutorialStatusText}\n\n${formatPostureText({ ...player, isSleeping: isTutorialDream })}${torchText}\n${weaponText}\n${vitals.join("\n")}\nСтан: ${formatFatigueText(player)}${await recoveryText(player)}\n${hungerText}\nМісцина: ${locationText}\nГроші: ${playerMoneyText(player.resources)}\nПоклик духа: ${autoText}${followIntentText ? `\n${followIntentText}` : ""}${technicalDetailsText}\nЗареєстровано: ${formatDateTime(player.createdAt)}${statsText}`,
     keyboard: buildCharacterAutoKeyboard(autoEnabled, { posture: player.posture, sleepState: player.sleepState, isResting: player.isResting, showSleep: !isTutorialDream, hasActionQueue }),
   };
 }

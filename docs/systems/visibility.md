@@ -24,6 +24,12 @@ The `0.15.27` slice closes the first feature-inspection leak:
 - direct feature inspection in darkness returns a dark-safe outline message and a way back instead of revealing the full feature text;
 - full feature details return normally when daylight, a lit torch, active campfire or other valid local light is present.
 
+The `0.15.29` starter-lighting fix keeps this darkness rule, but adds one authored exception:
+
+- the torch stand on `start_border_watchtower` provides narrow local light through reflected glow from the unfading campfire below;
+- this lets beginners inspect and use the starter torch source at night without already carrying a lit torch;
+- the exception is tied to the authored watchtower torch stand, not to all `starter_camp` locations, all `z = 1` locations or the starter cellar.
+
 Future `VIS-001-B/C/D/E/F` slices should expand this same service instead of scattering darkness checks through handlers:
 
 - finish feature-specific darkness hints and hidden-target lookup copy;
