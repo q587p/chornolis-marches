@@ -54,6 +54,22 @@ export function extractNewsSourceMetadata(title: string) {
   return { sourceDate, sourceVersion };
 }
 
+export function extractChangelogVersionDates(markdown: string) {
+  const versionDates = new Map<string, string>();
+  for (const match of markdown.matchAll(/^##\s+(\d+\.\d+\.(?:\d+|x))\b[^\n]*\b(\d{4,5}-\d{2}-\d{2})\b/gimu)) {
+    versionDates.set(match[1], match[2]);
+  }
+  return versionDates;
+}
+
+export function applyNewsSourceDateFallbacks(entries: readonly HeraldNewsEntry[], versionDates: ReadonlyMap<string, string>) {
+  return entries.map((entry) => {
+    if (entry.sourceDate || !entry.sourceVersion) return entry;
+    const sourceDate = versionDates.get(entry.sourceVersion);
+    return sourceDate ? { ...entry, sourceDate } : entry;
+  });
+}
+
 export function parseLatestNewsEntry(markdown: string): HeraldNewsEntry | null {
   return parseNewsEntries(markdown)[0] ?? null;
 }
@@ -116,7 +132,13 @@ export async function readAllNewsEntries(filePath?: string): Promise<HeraldNewsE
   if (!file.ok) return file;
 
   try {
-    const entries = parseNewsEntries(file.raw);
+    let entries = parseNewsEntries(file.raw);
+    try {
+      const changelog = await fs.readFile(path.join(path.dirname(file.filePath), "CHANGELOG.md"), "utf8");
+      entries = applyNewsSourceDateFallbacks(entries, extractChangelogVersionDates(changelog));
+    } catch {
+      // news.md is the canonical source; CHANGELOG.md only fills older missing dates when available.
+    }
     return {
       ok: true,
       entries,

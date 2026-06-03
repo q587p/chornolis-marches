@@ -13,22 +13,62 @@ export type HeraldPublicationMessageSource = {
   renderedText?: string | null;
 };
 
+function titleWithSourceDate(title: string, sourceDate?: string | null) {
+  if (!sourceDate || title.includes(sourceDate)) return title;
+  return `${title} — ${sourceDate}`;
+}
+
+function ensureRenderedTitleDate(text: string, publication: HeraldPublicationMessageSource) {
+  if (!publication.sourceDate) return text;
+
+  const titlePrefix = "Архівний запис: ";
+  const lines = text.split("\n");
+  let changed = false;
+
+  let updated = lines.map((line) => {
+    if (publication.sourceType === "NEWS_MD_ARCHIVE" && line.startsWith(titlePrefix)) {
+      const title = line.slice(titlePrefix.length);
+      if (title.includes(publication.sourceDate!)) return line;
+      changed = true;
+      return `${titlePrefix}${titleWithSourceDate(title, publication.sourceDate)}`;
+    }
+
+    if (line === publication.title) {
+      changed = true;
+      return titleWithSourceDate(line, publication.sourceDate);
+    }
+
+    return line;
+  });
+
+  if (publication.sourceType === "NEWS_MD_ARCHIVE") {
+    const legacyDateLine = `Дата запису: ${publication.sourceDate}`;
+    const filtered = updated.filter((line) => line !== legacyDateLine);
+    if (filtered.length !== updated.length) {
+      changed = true;
+      updated = filtered;
+    }
+  }
+
+  return changed ? updated.join("\n") : text;
+}
+
 export function formatHeraldNewsMessage(entry: HeraldNewsEntry, options: { linkCommands?: boolean } = {}) {
   const body = entry.body || entry.raw.replace(/^##\s+.*(?:\n|$)/, "").trim();
-  const plain = formatHeraldPublicationPlainMessage({ title: entry.title, body });
+  const plain = formatHeraldPublicationPlainMessage({ title: entry.title, sourceDate: entry.sourceDate, body });
   return options.linkCommands === false ? plain : linkHeraldGameCommandMentions(plain);
 }
 
 export function formatHeraldPublicationPlainMessage(publication: HeraldPublicationMessageSource) {
-  if (publication.renderedText) return sanitizeHeraldChannelText(publication.renderedText);
+  if (publication.renderedText) {
+    return sanitizeHeraldChannelText(ensureRenderedTitleDate(publication.renderedText, publication));
+  }
 
   if (publication.sourceType === "NEWS_MD_ARCHIVE") {
-    const metadata = publication.sourceDate ? [`Дата запису: ${publication.sourceDate}`] : [];
     return sanitizeHeraldChannelText([
       "📜 З архіву Канцелярії",
       "",
-      `Архівний запис: ${publication.title}`,
-      ...metadata,
+      `Архівний запис: ${titleWithSourceDate(publication.title, publication.sourceDate)}`,
       "",
       publication.body || "У цьому записі лишився тільки заголовок.",
     ].join("\n"));
@@ -37,7 +77,7 @@ export function formatHeraldPublicationPlainMessage(publication: HeraldPublicati
   return sanitizeHeraldChannelText([
     "📜 Канцелярія Межового Знаку",
     "",
-    publication.title,
+    titleWithSourceDate(publication.title, publication.sourceDate),
     "",
     publication.body || "Запис поки порожній.",
   ].join("\n"));
