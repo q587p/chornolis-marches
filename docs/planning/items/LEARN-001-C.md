@@ -1,7 +1,7 @@
 ---
 id: LEARN-001-C
 title: grantSkillProgress helper
-status: next
+status: testing
 type: feature
 area: learning
 priority: high
@@ -34,3 +34,9 @@ Add a single service helper for learning progress.
 ## Implementation Order
 
 Do after: `LEARN-001-B`.
+
+## 0.15.21 Foundation
+
+`src/services/learning.ts` provides the reusable progress helper foundation for
+future `OBS-001` and `TRACK-LEARN-001` slices. Existing food practice learning
+bridges into the helper narrowly while preserving old visible milestone cadence.

@@ -1,7 +1,7 @@
 ---
 id: LEARN-001-A
 title: Minimal learning storage decision
-status: next
+status: testing
 type: design
 area: learning
 priority: high
@@ -33,3 +33,9 @@ Decide whether the MVP needs persistent skill storage now.
 ## Implementation Order
 
 Can be done independently.
+
+## 0.15.21 Foundation
+
+Decision: use a minimal persistent `CharacterLearningProgress` table rather than
+event-only storage. It records player, skill key, source key and context key
+without defining the final skill tree or public skill sheet.

@@ -36,3 +36,9 @@ Let careful examination of fresh tracks teach a tiny tracking hint.
 ## Implementation Order
 
 Do after: `LEARN-001-C`, `VIS-001-D`.
+
+## Foundation Note
+
+Use `src/services/learning.ts` and `CharacterLearningProgress` from the
+`LEARN-001` foundation. Track-reading progress should not invent separate
+storage.

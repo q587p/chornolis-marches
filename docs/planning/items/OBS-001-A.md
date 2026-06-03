@@ -36,3 +36,8 @@ Add a narrow `Спостерігати` action that can target visible beings.
 ## Implementation Order
 
 Do after: `LEARN-001-C`, `VIS-001-C`.
+
+## Foundation Note
+
+Use `src/services/learning.ts` and `CharacterLearningProgress` from the
+`LEARN-001` foundation. Do not add a separate observation-only progress store.

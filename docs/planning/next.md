@@ -14,15 +14,16 @@ The last apiary slices are now treated as completed/in-testing content endpoints
 - `APIARY-003`: `0.15.20` shipped the first risky honey/beeswax harvest/raid slice.
 - `APIARY-004`: bear honey behavior remains backlog/future.
 
-Do not open another broad content loop before the learning/observation foundation lands. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
+The `LEARN-001` foundation is in testing after the minimal persistent learning/progress slice. Future observation and track-learning work should use `src/services/learning.ts` and `CharacterLearningProgress` instead of inventing separate storage.
+
+Do not open another broad content loop before the learning/observation foundation is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
 ## Immediate Sequence
 
 1. **TECH/QA:** clean up the test script/runner split or test manifest if it still blocks focused validation.
-2. **LEARN-001:** decide the minimal persistent learning/progress storage shape and add the helper foundation.
-3. **OBS-PREP-001:** audit where `look` and `examine` still collapse to the same text.
-4. **OBS-001:** add the first narrow observe action and a herbalist / знахар learning moment.
-5. **TRACK-LEARN-001:** add the first track-reading / animal movement learning moment.
+2. **OBS-PREP-001:** audit where `look` and `examine` still collapse to the same text.
+3. **OBS-001:** add the first narrow observe action and a herbalist / знахар learning moment.
+4. **TRACK-LEARN-001:** add the first track-reading / animal movement learning moment.
 
 Near-term content candidates after that foundation:
 
@@ -35,6 +36,7 @@ Near-term content candidates after that foundation:
 - Honey/wax food, remedy, offering, crafting, shop, barter and economy uses.
 - Broader theft/hiding or social-risk systems before observation/visibility learning is stable.
 - Full profession/economy loops before the first observation-learning spine exists.
+- Broad `/skills` UI and skill modifiers/effects before bounded learning moments prove the foundation.
 
 ## Promotion Checklist
 
