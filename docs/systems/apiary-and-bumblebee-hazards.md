@@ -54,6 +54,12 @@ decide whether they want that coupling or a read-only snapshot path.
 
 Honey and beeswax are resources for inventory/storage and future systems. They are not yet a full food/remedy/crafting economy, and `0.15.20` should be treated as the first harvest endpoint rather than a reason to open a broad apiary/economy loop immediately.
 
+Operational watchpoints:
+
+- `RAID_APIARY` is a Prisma enum migration. Production deploys must apply migrations before the new bot runtime handles queued raid actions. If rollback is needed after PostgreSQL sees the enum value, prefer reverting runtime use and leaving the unused enum value in place unless a deliberate enum rebuild is planned.
+- The current completion path applies raid reward/damage/event side effects before stamina spend. Keep that in mind if future stamina handling becomes a validation gate instead of post-completion bookkeeping.
+- `/gather_beeswax` does not guarantee wax. It invokes the same raid as `/gather_honey`; honey is the success reward and beeswax is an additional chance.
+
 ## Future Work
 
 Bear loops should start as signs and constrained behavior, not full combat. A bear may later smell honey, raid an apiary, flee after stings and leave tracks or damaged wax, but this should not turn the starter camp into a bear trap.
