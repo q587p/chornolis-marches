@@ -1653,12 +1653,15 @@
     "status": "backlog",
     "type": "chore",
     "area": "content",
-    "priority": "medium",
+    "priority": "high",
     "tags": [
       "ukrainian",
       "lexicon",
       "grammar",
-      "text"
+      "text",
+      "optimization",
+      "corpses",
+      "resources"
     ],
     "depends_on": [],
     "exports": {},

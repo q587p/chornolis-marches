@@ -54,6 +54,7 @@ These may become `next` after 0.13-0.15 foundations land.
 ## Technical Backlog
 
 - Continue behavior-preserving service boundary cleanup.
+- LANG-001: move duplicated corpse/resource display names and aliases toward lexicon/grammar-backed helpers, especially `corpses.ts` and inventory resource paths that currently repeat per-species or per-sex strings.
 - TECH-002: add location feature archetypes / world-data deduplication so repeated authored defaults such as Strange Totem icons, aliases, twig yield data and static top-level fields can live in one reusable template with per-instance overrides.
 - Extract visibility and world-time helpers away from handlers.
 - Split broad completion logic only when feature work touches it.
