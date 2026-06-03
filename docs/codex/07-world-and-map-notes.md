@@ -63,6 +63,7 @@ In `prisma/data/chornolis_world_seed.json`, edits may include:
 - `start_border_cellar` intentionally uses `z = -1` as the starter-camp cellar below `start_border_camp`; it is connected by `DOWN` / `UP` exits and is a safe waking-world storage/interior landmark, not a dream layer.
 - `start_border_camp`, `start_border_watchtower` and `start_border_cellar` belong to the small `starter_camp` region (`Межовий табір`). Treat it as authored safe starter infrastructure: no ordinary natural resource nodes or natural regeneration should be added there, and camp-bound beings such as the camp spirit cat should stay inside this region.
 - `under_bridge_18_05` uses `z = -1` as an ordinary lower waking-world place under the bridge; it is not a dream layer.
+- `start_border_cellar` has an intentional hidden, one-way spoken-word passage to `under_bridge_18_05`. It is triggered by ordinary speech in the cellar and must not be added as a visible exit, map link, public-news spoiler or ordinary feature button. The hint belongs in full inspection text on cellar landmarks, and future herbalist behavior may make it learnable by observation.
 - Do not create two exits from one location in the same direction.
 - Keep authored location names unique across the playable map; repeated names make player-made maps and exit lists hard to read.
 - Keep full authored location descriptions unique too. Similar terrain can share motifs, but not the exact same paragraph.

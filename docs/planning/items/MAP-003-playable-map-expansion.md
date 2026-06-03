@@ -74,6 +74,12 @@ This is a content pressure task, not only a future worldbuilding wish. The first
 - Added seed validation and runtime guardrails so ordinary resource nodes/regeneration stay out of the starter infrastructure region.
 - Extended camp spirit cat bounds to include the cellar while still preventing movement outside starter infrastructure.
 
+## Hidden Cellar Water-Word Passage Follow-Up
+
+- Added an intentional hidden, one-way spoken-word passage from `start_border_cellar` to `under_bridge_18_05`.
+- Kept it out of ordinary exits, visible map docs, public news and buttons; the route is hinted only through careful inspection of cellar landmark text.
+- Future herbalist supply-run work may occasionally use the same phrase so players can learn it by watching, but this task does not implement NPC route usage, follow intent or signal triggers.
+
 ## Implementation Notes
 
 - Active hand-edited map data lives under `prisma/data/world/`; update split files there first.
