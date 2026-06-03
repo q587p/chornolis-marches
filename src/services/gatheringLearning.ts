@@ -1,5 +1,6 @@
 import { prisma } from "../db";
 import {
+  GATHERING_PRACTICE_ATTEMPT_INTERVAL,
   GATHERING_OBSERVATION_INTERVAL,
   GATHERING_OBSERVATION_EVENT_TITLE,
   GATHERING_OBSERVATION_MILESTONE_EVENT_TITLE,
@@ -38,11 +39,15 @@ type GatheringLearningDb = {
 const OBSERVABLE_GATHERING_RESOURCE_KEYS = new Set(["berries", "mushrooms", "herbs"]);
 const GATHERING_SKILL_RESOURCE_KEYS = OBSERVABLE_GATHERING_RESOURCE_KEYS;
 
-export function observableGatheringContextKey(sourceDescription: string | null | undefined) {
-  const resourceKey = sourceDescription?.match(/(?:^|;\s*)resource=([A-Za-z0-9_-]+)/u)?.[1];
+export function gatheringLearningContextKeyForResource(resourceKey: string | null | undefined) {
   return resourceKey && OBSERVABLE_GATHERING_RESOURCE_KEYS.has(resourceKey)
     ? `resource:${resourceKey}`
     : null;
+}
+
+export function observableGatheringContextKey(sourceDescription: string | null | undefined) {
+  const resourceKey = sourceDescription?.match(/(?:^|;\s*)resource=([A-Za-z0-9_-]+)/u)?.[1];
+  return gatheringLearningContextKeyForResource(resourceKey);
 }
 
 export type GatheringSkillEffect = {
@@ -131,9 +136,12 @@ export async function recordGatheringSource(input: {
   actorCreatureId?: number;
   resourceKey?: string;
   success: boolean;
-}) {
+  skipCanonicalPractice?: boolean;
+}, db: GatheringLearningDb = prisma) {
+  let sourceEventId: number | undefined;
+  let sourceRecorded = false;
   try {
-    await prisma.worldEvent.create({
+    const sourceEvent = await db.worldEvent.create({
       data: {
         type: "SYSTEM",
         title: GATHERING_SOURCE_EVENT_TITLE,
@@ -142,8 +150,43 @@ export async function recordGatheringSource(input: {
         locationId: input.locationId,
       },
     });
+    sourceRecorded = true;
+    sourceEventId = sourceEvent?.id;
   } catch (error) {
     console.warn("Failed to write gathering learning source event:", error);
+  }
+
+  const contextKey = gatheringLearningContextKeyForResource(input.resourceKey);
+  if (!input.actorPlayerId || !contextKey || input.skipCanonicalPractice) {
+    return {
+      sourceRecorded,
+      canonicalProgressRecorded: false,
+      canonicalMilestone: false,
+    };
+  }
+
+  try {
+    const learning = await recordLearningProgress({
+      playerId: input.actorPlayerId,
+      skillKey: "gathering",
+      sourceKey: "practice",
+      contextKey,
+      amount: 1,
+      milestoneEvery: GATHERING_PRACTICE_ATTEMPT_INTERVAL,
+      lastSourceEventId: sourceEventId,
+    }, db as any);
+    return {
+      sourceRecorded,
+      canonicalProgressRecorded: true,
+      canonicalMilestone: learning.milestone,
+    };
+  } catch (error) {
+    console.warn("Failed to write canonical gathering practice progress:", error);
+    return {
+      sourceRecorded,
+      canonicalProgressRecorded: false,
+      canonicalMilestone: false,
+    };
   }
 }
 

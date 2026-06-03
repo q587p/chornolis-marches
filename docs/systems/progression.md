@@ -35,9 +35,13 @@ valid herbs/berries/mushrooms observation in the same short attention window.
 
 The first bounded mechanical effect is deliberately narrow: gathering progress
 for herbs, berries and mushrooms can slightly improve the matching gather
-success chance and reduce stamina cost by at most a small capped amount. Honey,
-beeswax, twigs, money, loot-like finds and unrelated gather-like actions do not
-receive this effect.
+success chance and reduce stamina cost by at most a small capped amount. That
+progress can now come from supported personal practice as well as observation:
+ordinary player attempts on herbs, berries and mushrooms record `gathering` /
+`practice` progress, including failed attempts that still spend time and
+stamina. Tutorial dream foraging remains outside persistent practice progress so
+the lesson cannot become a grind room. Honey, beeswax, twigs, money, loot-like
+finds and unrelated gather-like actions do not receive this effect.
 
 Observed actor skill remains future work. A later slice should add a small helper
 such as `observedActorSkillLevel(...)` that can read player learning progress or
@@ -63,6 +67,7 @@ Future observation, tracking, apprenticeship and practice slices should use this
 - inspecting another character/NPC, using `examine` for the location, or using the brief `look` while the location has active light can record one observation of that recent gather source;
 - every fifth such recorded observation sends only that observer `Навичка <b>збирання</b> трохи підросла.`;
 - as of `0.15.21`, the observation side also writes canonical `CharacterLearningProgress` rows only for herbs, berries and mushrooms, while the visible milestone cadence remains intentionally sparse.
+- as of `0.15.23`, ordinary player practice also writes canonical `CharacterLearningProgress` rows for herbs, berries and mushrooms, while tutorial foraging and unsupported gather-like sources stay outside that persistent path.
 
 ## Near-Term Skill Effects
 

@@ -156,7 +156,11 @@ a later task explicitly designs them.
 `0.15.23` adds the first technical level policy and a small bounded effect:
 levels are `0..5` with thresholds at `0`, `3`, `8`, `18`, `35` and `60` total
 progress, and herbs/berries/mushrooms gathering progress can slightly improve
-the matching success chance and stamina cost. Raw values remain hidden from
+the matching success chance and stamina cost. Supported ordinary player
+practice now records `gathering` / `practice` progress too, including failed
+attempts that still spend time and stamina. Tutorial dream foraging and
+unsupported gather-like sources such as honey, beeswax, twigs, money and random
+loot stay outside persistent practice progression. Raw values remain hidden from
 ordinary players; scribes can inspect them through the command-only `/learning`
 surface.
 

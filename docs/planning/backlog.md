@@ -36,6 +36,7 @@ These may become `next` after 0.13-0.15 foundations land.
 - CRAFT-001: craftable placeable chests as local containers, after generic `put`/container semantics are stable enough.
 - PROG-006: chronicle registration backfill, local arrival messages and a scribe/admin real-time event view.
 - Deferred private-message delivery for `whisper` / addressed speech while a player is AFK or has ended the session: store a capped queue and deliver a compact recap only when they return.
+- Web `/chat` filtering for automatic character/NPC lines: add a mode or toggle that hides automated world speech and shows only real player communication for review and moderation.
 - HERALD-002: stronger Herald outbox idempotency/locking so a Telegram-send success followed by a DB marking failure cannot blindly repost a pending publication later.
 - HERALD-003: Herald relay for public chronicle entries into a configured Telegram chat/channel, with idempotency and backfill-spam guards.
 - Item details, safer drop/pickup and item-instance groundwork.

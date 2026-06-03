@@ -726,6 +726,7 @@ async function completeGather(bot: Bot, action: WorldAction) {
     actorCreatureId: isPlayer ? undefined : (actor as any).id,
     resourceKey,
     success,
+    skipCanonicalPractice: isTutorialForagingSuccess,
   });
 
   const sendGatheringPracticeMessage = async () => {

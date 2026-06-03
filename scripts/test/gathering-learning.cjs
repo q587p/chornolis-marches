@@ -15,9 +15,11 @@ const {
   isGatheringPracticeMilestone,
 } = require("../../src/services/gatheringLearningRules");
 const {
+  gatheringLearningContextKeyForResource,
   gatheringSkillEffectForProgressRows,
   observableGatheringContextKey,
   recordGatheringObservation,
+  recordGatheringSource,
 } = require("../../src/services/gatheringLearning");
 
 assert.equal(isGatheringPracticeMilestone(0), false);
@@ -43,6 +45,12 @@ assert.equal(observableGatheringContextKey("actorCreature=9; success=true; resou
 assert.equal(observableGatheringContextKey("actorCreature=9; success=true; resource=honey"), null);
 assert.equal(observableGatheringContextKey("actorCreature=9; success=true; resource=beeswax"), null);
 assert.equal(observableGatheringContextKey("actorCreature=9; success=true"), null);
+assert.equal(gatheringLearningContextKeyForResource("berries"), "resource:berries");
+assert.equal(gatheringLearningContextKeyForResource("mushrooms"), "resource:mushrooms");
+assert.equal(gatheringLearningContextKeyForResource("herbs"), "resource:herbs");
+assert.equal(gatheringLearningContextKeyForResource("honey"), null);
+assert.equal(gatheringLearningContextKeyForResource("beeswax"), null);
+assert.equal(gatheringLearningContextKeyForResource(undefined), null);
 
 assert.deepEqual(
   gatheringSkillEffectForProgressRows({
@@ -191,6 +199,69 @@ function fakeGatheringObservationDb(sourceDescription = "actorCreature=9; succes
 }
 
 (async () => {
+  for (const resourceKey of ["herbs", "berries", "mushrooms"]) {
+    const practiceDb = fakeGatheringObservationDb([]);
+    const failedPractice = await recordGatheringSource({
+      locationId: 13,
+      actorPlayerId: 7,
+      resourceKey,
+      success: false,
+    }, practiceDb);
+    assert.equal(failedPractice.sourceRecorded, true);
+    assert.equal(failedPractice.canonicalProgressRecorded, true);
+    assert.equal(failedPractice.canonicalMilestone, false);
+    assert.equal(practiceDb.progressRows.length, 1);
+    assert.equal(practiceDb.progressRows[0].skillKey, "gathering");
+    assert.equal(practiceDb.progressRows[0].sourceKey, "practice");
+    assert.equal(practiceDb.progressRows[0].contextKey, `resource:${resourceKey}`);
+    assert.equal(practiceDb.progressRows[0].totalProgress, 1);
+
+    const successfulPractice = await recordGatheringSource({
+      locationId: 13,
+      actorPlayerId: 7,
+      resourceKey,
+      success: true,
+    }, practiceDb);
+    assert.equal(successfulPractice.canonicalProgressRecorded, true);
+    assert.equal(practiceDb.progressRows.length, 1);
+    assert.equal(practiceDb.progressRows[0].totalProgress, 2);
+  }
+
+  for (const resourceKey of ["honey", "beeswax", "twigs", "shah", undefined]) {
+    const unsupportedPracticeDb = fakeGatheringObservationDb([]);
+    const unsupportedPractice = await recordGatheringSource({
+      locationId: 13,
+      actorPlayerId: 7,
+      resourceKey,
+      success: true,
+    }, unsupportedPracticeDb);
+    assert.equal(unsupportedPractice.sourceRecorded, true);
+    assert.equal(unsupportedPractice.canonicalProgressRecorded, false);
+    assert.equal(unsupportedPractice.canonicalMilestone, false);
+    assert.equal(unsupportedPracticeDb.progressRows.length, 0, `${resourceKey} should not create practice progress`);
+  }
+
+  const creaturePracticeDb = fakeGatheringObservationDb([]);
+  await recordGatheringSource({
+    locationId: 13,
+    actorCreatureId: 11,
+    resourceKey: "herbs",
+    success: true,
+  }, creaturePracticeDb);
+  assert.equal(creaturePracticeDb.progressRows.length, 0, "creature source events should teach observers later, not create player practice progress");
+
+  const tutorialPracticeDb = fakeGatheringObservationDb([]);
+  const tutorialPractice = await recordGatheringSource({
+    locationId: 13,
+    actorPlayerId: 7,
+    resourceKey: "berries",
+    success: true,
+    skipCanonicalPractice: true,
+  }, tutorialPracticeDb);
+  assert.equal(tutorialPractice.sourceRecorded, true);
+  assert.equal(tutorialPractice.canonicalProgressRecorded, false);
+  assert.equal(tutorialPracticeDb.progressRows.length, 0, "tutorial foraging should not grind persistent practice progress");
+
   const db = fakeGatheringObservationDb();
   const observed = await recordGatheringObservation({
     playerId: 7,
