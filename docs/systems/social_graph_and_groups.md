@@ -29,20 +29,38 @@ Suggested UI words:
 - `Виключити з гурту` - leader removes a member.
 - `Повернутися до гурту` - lagging member rejoins once co-located.
 
-### 2. Following Is Weaker Than Group Membership
+### 2. Follow Intent Is Attention, Not Movement
+
+As of `0.15.29`, follow intent is a player-side attention marker. It means:
+
+- the player marks one visible local being whose movement/actions they are watching;
+- future observation, track-learning and route-memory systems can treat that target as stronger attention context;
+- the follower does not move automatically;
+- the target is not notified, accepted into a group or treated as a companion by this marker alone.
+
+This is deliberately narrower than MUD-style automatic follow. It is not a
+travel-group command yet.
+
+Future follow movement should be a separate explicit slice. It may add a visible
+ordinary-exit action such as "try to keep following", but it must respect
+darkness, `Снага`, action queues, hidden exits/passages and route knowledge.
+Hidden routes such as the cellar water-word passage must not be auto-repeated
+unless the follower has learned the route or independently triggers it.
+
+### 3. Following Is Weaker Than Group Membership
 
 Following should be possible even without an existing contact. It means:
 
 - the follower marks a chosen visible being as a leader candidate;
-- the leader can see that someone is following or wants to go with them;
-- the leader may add that follower to a `Гурт`;
-- automatic group movement starts only after accepted membership.
+- leader-visible follower lists are future `SOC-003` work, not part of the `0.15.29` intent marker;
+- the leader may later add that follower to a `Гурт`;
+- automatic group movement starts only after accepted membership in a later group/travel slice.
 
 This matches the intended MUD-like flow:
 
 > first follow someone, then the leader groups you, then you move/act together.
 
-### 3. Active Group Members Are Co-Located And Capable
+### 4. Active Group Members Are Co-Located And Capable
 
 A group member participates only when they are:
 
@@ -55,7 +73,7 @@ A group member participates only when they are:
 
 When a member cannot keep up, they do not break the whole group. They become `LAGGING` or simply remain behind. The leader and other capable members continue. When leader/member meet again, the lagging member can rejoin.
 
-### 4. Do Not Expose Player-vs-NPC Too Much
+### 5. Do Not Expose Player-vs-NPC Too Much
 
 The long-term goal is that it becomes harder to instantly know who is a live player and who is an NPC. Therefore:
 
@@ -63,7 +81,7 @@ The long-term goal is that it becomes harder to instantly know who is a live pla
 - debug mode may show actor keys and technical actor types;
 - group logic should support both `PLAYER` and `CREATURE` actor refs from the start even if the MVP UI exposes only player-led groups.
 
-### 5. Low-Spam Telegram UX
+### 6. Low-Spam Telegram UX
 
 Group movement can easily spam. Prefer compact messages:
 
@@ -278,7 +296,10 @@ As of `0.15.29`, only the first part exists: a player can store one active
 follow intent for a visible local player or creature. It is an attention marker,
 not movement, party membership, companion ownership or learning progress. Group
 acceptance, follower lists for leaders and stale-intent moderation remain
-future `SOC-003` work.
+future `SOC-003` work. Future follow movement must be explicit and route-aware:
+darkness, stamina, queues, hidden passages and learned route knowledge should
+matter, and hidden passages should not be repeated just because the target used
+them.
 
 ### `travelGroups.ts`
 
