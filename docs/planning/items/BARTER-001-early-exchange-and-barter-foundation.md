@@ -1,7 +1,7 @@
 ---
 id: BARTER-001
 title: Early exchange and barter foundation after give
-status: next
+status: backlog
 type: feature
 area: economy
 priority: high
@@ -19,7 +19,7 @@ tags:
 
 ## Summary
 
-Move basic exchange/barter work earlier in the roadmap instead of treating it as distant economy-only scope. After `GIVE-001`, add the smallest barter foundation that can reuse the same item-resolution, target-resolution and transfer validation primitives.
+Keep basic exchange/barter visible as a likely follow-up after `give`, but defer it behind the `LEARN` / `OBS` foundation. When it is promoted again, add the smallest barter foundation that can reuse the same item-resolution, target-resolution and transfer validation primitives.
 
 The goal is not a full economy. The goal is to stop every future “hand item to someone” or “trade for something” feature from becoming a one-off command.
 
@@ -48,7 +48,7 @@ The goal is not a full economy. The goal is to stop every future “hand item to
 
 ## Acceptance criteria
 
-- Roadmap / `docs/planning/next.md` lists exchange/barter as an early follow-up after `GIVE-001`.
+- Roadmap / `docs/planning/backlog.md` keeps exchange/barter visible as a deferred follow-up after `GIVE-001`.
 - The barter foundation explicitly reuses `give` primitives rather than adding a separate parser stack.
 - At least one minimal barter/exchange scenario can be represented in docs or tests, even if implementation is deferred to the next slice.
 - Future features that need “give item / receive item” have a shared path to hook into.

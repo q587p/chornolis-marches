@@ -133,7 +133,7 @@
   {
     "id": "APIARY-001",
     "title": "Seed old log apiary feature",
-    "status": "in_progress",
+    "status": "testing",
     "type": "feature",
     "area": "ecology",
     "priority": "medium",
@@ -150,7 +150,7 @@
   {
     "id": "APIARY-002",
     "title": "Passive bumblebee sting hazard",
-    "status": "in_progress",
+    "status": "testing",
     "type": "feature",
     "area": "ecology",
     "priority": "medium",
@@ -167,7 +167,7 @@
   {
     "id": "APIARY-003",
     "title": "Honey wax and hive robbery",
-    "status": "in_progress",
+    "status": "testing",
     "type": "feature",
     "area": "resources",
     "priority": "medium",
@@ -221,7 +221,7 @@
   {
     "id": "BARTER-001",
     "title": "Early exchange and barter foundation after give",
-    "status": "next",
+    "status": "backlog",
     "type": "feature",
     "area": "economy",
     "priority": "high",

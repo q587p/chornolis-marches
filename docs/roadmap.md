@@ -93,6 +93,8 @@ See:
 
 Goal: prove that the world teaches attentive characters.
 
+`0.15.19` / `0.15.20` added the old log apiary, passive bumblebee danger and first honey/beeswax raid as a bounded living-world side branch. Treat that work as in testing, not as permission to open the next broad content loop. The active `0.15` spine should return to persistent learning, observation, track-reading and careful differences between `look` and `examine` before bear behavior, honey/wax uses, barter, shops, economy or deeper apiary consequences move forward.
+
 Primary outcomes:
 
 - A minimal persistent learning/progress storage exists only if needed by the MVP.

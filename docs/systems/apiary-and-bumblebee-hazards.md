@@ -52,10 +52,12 @@ decide whether they want that coupling or a read-only snapshot path.
 - the raid uses stronger sting damage than passive stings and still clamps the player to at least 1 HP;
 - cooldown is stored in `WorldEvent` using `title = "Apiary raid"` and an `apiaryKey=...` marker, so the same hive cannot be farmed repeatedly.
 
-Honey and beeswax are resources for inventory/storage and future systems. They are not yet a full food/remedy/crafting economy.
+Honey and beeswax are resources for inventory/storage and future systems. They are not yet a full food/remedy/crafting economy, and `0.15.20` should be treated as the first harvest endpoint rather than a reason to open a broad apiary/economy loop immediately.
 
 ## Future Work
 
 Bear loops should start as signs and constrained behavior, not full combat. A bear may later smell honey, raid an apiary, flee after stings and leave tracks or damaged wax, but this should not turn the starter camp into a bear trap.
 
 Honey and wax should not become a generic farmable chest. Future passes can add uses, offerings, crafting and economy hooks, but each should keep stock/cooldown and anti-grief pacing.
+
+Keep these follow-ups behind the learning/observation foundation: the next active `0.15` work should return to attention, signs, traces and first learning moments.
