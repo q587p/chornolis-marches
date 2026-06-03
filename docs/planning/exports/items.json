@@ -588,6 +588,24 @@
     "file": "docs/planning/items/CMD-003-news-command-deep-link-audit.md"
   },
   {
+    "id": "CMD-004",
+    "title": "Compact help and current command reference",
+    "status": "backlog",
+    "type": "feature",
+    "area": "commands",
+    "priority": "high",
+    "tags": [
+      "commands",
+      "help",
+      "onboarding",
+      "aliases",
+      "ux"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/CMD-004-help-and-commands-split.md"
+  },
+  {
     "id": "COMBAT-001",
     "title": "Creature aggression and defense",
     "status": "backlog",

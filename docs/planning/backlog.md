@@ -31,7 +31,7 @@ These may become `next` after 0.13-0.15 foundations land.
 - ECO-009: seasonal ecology and environment variation, so lunar circles and seasons can later affect resources, animal behavior, local work rhythms and `look` / `examine` atmosphere without becoming a full simulation too early.
 - Local console client for command/action smoke tests.
 - Shared command registry and per-command help: keep `/commands`, `/help`, text aliases, future MUD commands, Telegram buttons and permissions from drifting apart.
-- Rework `/commands` into a cleaner hidden command reference instead of a broad alias wall: group it by real player goals, keep survival advice in `/help` or tutorial surfaces, and document which commands are current, planned or scribe-only.
+- CMD-004: shrink `/help` to the minimal useful beginner surface and rewrite `/commands` as the current grouped command reference, with admin/scribe-only commands kept in `/adminHelp`.
 - Follow-up command packs after `CMD-001`: `give`, `put`, `drink`, `skills`, `effects`, `consider`, `compare`, `journal`, `party`, `guild`, `spells`, `cast`, `weather`, builder commands and moderation commands.
 - CRAFT-001: craftable placeable chests as local containers, after generic `put`/container semantics are stable enough.
 - PROG-006: chronicle registration backfill, local arrival messages and a scribe/admin real-time event view.

@@ -30,6 +30,7 @@ CAT-010,Camp cat cache and newcomer presence,testing,feature,onboarding,low,"cat
 CMD-001,Near-term text command pack,testing,feature,commands,high,"commands,aliases,mud,speech,navigation",docs/planning/items/CMD-001-near-term-text-command-pack.md
 CMD-002,Put items into local containers and features,testing,feature,commands,high,"commands,inventory,containers,aliases",docs/planning/items/CMD-002-put-items-into-containers.md
 CMD-003,Public news command deep-link audit,backlog,technical,commands,high,"commands,news,telegram,deep-links,web",docs/planning/items/CMD-003-news-command-deep-link-audit.md
+CMD-004,Compact help and current command reference,backlog,feature,commands,high,"commands,help,onboarding,aliases,ux",docs/planning/items/CMD-004-help-and-commands-split.md
 COMBAT-001,Creature aggression and defense,backlog,feature,combat,medium,"animals,combat,predators,ecology",docs/planning/items/COMBAT-001-creature-aggression-and-defense.md
 CRAFT-001,Craftable placeable chests,backlog,feature,crafting,medium,"crafting,containers,storage,item-instances,camp",docs/planning/items/CRAFT-001-craftable-placeable-chests.md
 DAYNOTICE-001,Player daypart notice settings,testing,feature,notifications,high,"notifications,world-time,daypart,sleep,settings,0.14",docs/planning/items/DAYNOTICE-001-player-daypart-notice-settings.md
