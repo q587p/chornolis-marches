@@ -7,6 +7,7 @@ import { isFreshenedCorpse } from "./meat";
 import { heldWeaponLine } from "./weapons";
 import { isCampSpiritCatCreature } from "./campSpiritCat";
 import { visibilityRulesForLocation, type VisibilityRules } from "./visibility";
+import { spiritGuidedTargetHint } from "./spiritCall";
 
 export type TextTargetRef = {
   type: "player" | "creature";
@@ -214,15 +215,20 @@ export async function visibleTextTargets(locationId: number, viewerPlayerId: num
     }),
   ]);
 
-  const playerTargets = players.map((player) => ({
-    type: "player" as const,
-    id: player.id,
-    label: player.nameNominative ?? player.firstName ?? player.username ?? "мандрівник",
-    actionLabel: heldWeaponLine(player.equippedWeaponKey)?.replace(/\.$/u, "").toLocaleLowerCase("uk-UA"),
-    canGreet: true,
-    canAttack: false,
-    searchKeys: targetSearchKeysForPlayer(player),
-  }));
+  const playerTargets = players.map((player) => {
+    const actionLabel = [spiritGuidedTargetHint(player.isAutoEnabled), heldWeaponLine(player.equippedWeaponKey)?.replace(/\.$/u, "").toLocaleLowerCase("uk-UA")]
+      .filter(Boolean)
+      .join("; ") || undefined;
+    return {
+      type: "player" as const,
+      id: player.id,
+      label: player.nameNominative ?? player.firstName ?? player.username ?? "мандрівник",
+      actionLabel,
+      canGreet: true,
+      canAttack: false,
+      searchKeys: targetSearchKeysForPlayer(player),
+    };
+  });
 
   const creatureTargets = creatures.map((creature) => {
     const isCorpse = !creature.isAlive && creature.age === "CORPSE";

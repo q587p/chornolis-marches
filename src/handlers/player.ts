@@ -142,7 +142,7 @@ export function buildCharacterAutoKeyboard(autoEnabled: boolean, options: { post
   keyboard.row();
 
   keyboard
-    .text(autoEnabled ? "⏹ Зупинити авто" : "🤖 Увімкнути авто", autoEnabled ? "character:auto:stop" : "character:auto:start");
+    .text(autoEnabled ? "🌫️ Відпустити духа" : "🌫️ Поклик духа", autoEnabled ? "character:auto:stop" : "character:auto:start");
 
   return keyboard;
 }
@@ -325,7 +325,7 @@ async function renderCharacterView(telegramId: number) {
   if (!player) return null;
 
   const autoEnabled = Boolean(player.isAutoEnabled || isPlayerAutoEnabled(telegramId));
-  const autoText = autoEnabled ? "увімкнено 🤖" : "вимкнено";
+  const autoText = autoEnabled ? "озивається 🌫️" : "мовчить";
   const torchState = await getPlayerTorchState(player.id);
   const canToggleTechnicalDetails = await isScribeAdmin(telegramId);
   const showTechnicalDetails = playerCanShowTechnicalDetails(player);
@@ -333,7 +333,7 @@ async function renderCharacterView(telegramId: number) {
   const vitals = formatVitalsLine(player, { showTechnicalDetails, hpFallback: BASE_HP, staminaFallback: BASE_STAMINA });
   const hungerText = showTechnicalDetails ? `Голод: ${Math.min(PLAYER_HUNGER_MAX, Math.max(0, player.hunger))}/${PLAYER_HUNGER_MAX}` : formatHungerState(player.hunger, PLAYER_HUNGER_MAX);
   const originStats = showTechnicalDetails ? await actionOriginStats(player.id) : null;
-  const statsText = showTechnicalDetails ? `\n\nСтатистика:\n${formatPlayerStats(player, { includeRestStats: true })}\nАвто-дій: ${originStats?.autoActions ?? 0}\nРучних дій: ${originStats?.manualActions ?? 0}` : "";
+  const statsText = showTechnicalDetails ? `\n\nСтатистика:\n${formatPlayerStats(player, { includeRestStats: true })}\nДій Поклику: ${originStats?.autoActions ?? 0}\nРучних дій: ${originStats?.manualActions ?? 0}` : "";
   const completedTutorial = await hasCompletedTutorial(player.id);
   const tutorialStatusText = completedTutorial ? "" : "\nВи ще не пройшли навчальний сон.";
   const torchText = ownHeldTorchText(torchState);
@@ -346,7 +346,7 @@ async function renderCharacterView(telegramId: number) {
   const hasActionQueue = await hasPlayerActionQueueControls(player.id);
 
   return {
-    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}${tutorialStatusText}\n\n${formatPostureText({ ...player, isSleeping: isTutorialDream })}${torchText}\n${weaponText}\n${vitals.join("\n")}\nСтан: ${formatFatigueText(player)}${await recoveryText(player)}\n${hungerText}\nМісцина: ${locationText}\nГроші: ${playerMoneyText(player.resources)}\nАвто-режим: ${autoText}${technicalDetailsText}\nЗареєстровано: ${formatDateTime(player.createdAt)}${statsText}`,
+    text: `🧍 Ти:\n\nІм’я: ${player.nameNominative ?? player.firstName ?? "невідомо"}\n${nameApprovedText}\nВідмінки імені: ${nameCasesText(player)}${tutorialStatusText}\n\n${formatPostureText({ ...player, isSleeping: isTutorialDream })}${torchText}\n${weaponText}\n${vitals.join("\n")}\nСтан: ${formatFatigueText(player)}${await recoveryText(player)}\n${hungerText}\nМісцина: ${locationText}\nГроші: ${playerMoneyText(player.resources)}\nПоклик духа: ${autoText}${technicalDetailsText}\nЗареєстровано: ${formatDateTime(player.createdAt)}${statsText}`,
     keyboard: buildCharacterAutoKeyboard(autoEnabled, { posture: player.posture, sleepState: player.sleepState, isResting: player.isResting, showSleep: !isTutorialDream, hasActionQueue }),
   };
 }
@@ -705,7 +705,7 @@ export function registerPlayerHandlers(bot: Bot) {
     await disablePlayerAuto(ctx.from.id);
 
     const view = await renderCharacterView(ctx.from.id);
-    await safeAnswerCallbackQuery(ctx, "Авто зупинено.");
+    await safeAnswerCallbackQuery(ctx, "Поклик стих.");
     if (!view) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
     try {

@@ -38,6 +38,11 @@ export function parseStartActionPayload(value: unknown): StartActionPayload | nu
   if (payload === "cmd_news") return "news";
   if (payload === "cmd_auto") return "auto";
   if (payload === "cmd_auto_stop") return "autoStop";
+  if (payload === "cmd_spirit") return "auto";
+  if (payload === "cmd_spirit_stop") return "autoStop";
+  if (payload === "cmd_dukh") return "auto";
+  if (payload === "cmd_dukh_stop") return "autoStop";
+  if (payload === "cmd_poklyk") return "auto";
   if (payload === "cmd_me") return "me";
   if (payload === "cmd_help") return "help";
   if (payload === "cmd_rest") return "rest";

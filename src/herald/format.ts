@@ -55,8 +55,9 @@ function ensureRenderedTitleDate(text: string, publication: HeraldPublicationMes
 
 export function formatHeraldNewsMessage(entry: HeraldNewsEntry, options: { linkCommands?: boolean } = {}) {
   const body = entry.body || entry.raw.replace(/^##\s+.*(?:\n|$)/, "").trim();
-  const plain = formatHeraldPublicationPlainMessage({ title: entry.title, sourceDate: entry.sourceDate, body });
-  return options.linkCommands === false ? plain : linkHeraldGameCommandMentions(plain);
+  const source = { title: entry.title, sourceDate: entry.sourceDate, sourceType: "NEWS_MD", body };
+  const plain = formatHeraldPublicationPlainMessage(source);
+  return options.linkCommands === false ? plain : linkNewsPublicationMessage(plain, source);
 }
 
 export function formatHeraldPublicationPlainMessage(publication: HeraldPublicationMessageSource) {
@@ -94,9 +95,23 @@ function linkArchivePublicationMessage(text: string) {
     .join("\n");
 }
 
+function linkNewsPublicationMessage(text: string, publication: HeraldPublicationMessageSource) {
+  const title = titleWithSourceDate(publication.title, publication.sourceDate);
+  return text
+    .split("\n")
+    .map((line) => {
+      if (line === title || line === publication.title) return `<b>${escapeHtml(line)}</b>`;
+      return linkHeraldGameCommandMentions(line);
+    })
+    .join("\n");
+}
+
 export function formatHeraldPublicationMessage(publication: HeraldPublicationMessageSource) {
   if (publication.sourceType === "NEWS_MD_ARCHIVE") {
     return linkArchivePublicationMessage(formatHeraldPublicationPlainMessage(publication));
+  }
+  if (publication.sourceType === "NEWS_MD") {
+    return linkNewsPublicationMessage(formatHeraldPublicationPlainMessage(publication), publication);
   }
   return linkHeraldGameCommandMentions(formatHeraldPublicationPlainMessage(publication));
 }

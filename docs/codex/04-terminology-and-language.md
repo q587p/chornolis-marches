@@ -33,6 +33,7 @@ Canonical terminology source: `docs/design/terminology.md`.
 | Lie down | **Лягти** | Changes posture only; it does not start sleep or rest. |
 | HP | **Життя** / **Стан** | Avoid raw abbreviation in player-facing text. |
 | Inventory | **Речі** / **Поклажа** | Prefer over direct “Інвентар” in player-facing UI. |
+| Auto mode | **Поклик духа** | Player-facing name for the simple automatic-action helper. Keep `auto` for internal notes, DB/log identifiers and legacy command compatibility. Do not use **Провід** for this feature. |
 
 ## Commands and UI labels mentioned
 
@@ -79,7 +80,7 @@ Possible buttons/labels:
 - **Придивитися**
 - **Відпочити**
 - **Час**
-- **Авто**
+- **Поклик духа**
 
 ## Name cases / grammar
 

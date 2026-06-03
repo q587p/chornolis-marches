@@ -32,6 +32,7 @@ import { hunterFieldInventorySummary } from "../services/targets";
 import { playerPresenceDisplaySuffix, sessionPresenceLabel } from "../services/sessionPresence";
 import { slashlessCommandPattern } from "../utils/slashlessCommands";
 import { formatTeleportCoordinateCommand } from "../services/adminTeleportLinks";
+import { learningLevelLabel } from "../services/learning";
 
 const LOCATION_PAGE_MAX_CHARS = 3300;
 const TELEGRAM_TEXT_MAX_CHARS = 3900;
@@ -58,6 +59,7 @@ const CLEANUP_CREATURE_TEXT_COMMAND = slashlessCommandPattern(["cleanupCreature"
 const FORCE_OLD_TEXT_COMMAND = slashlessCommandPattern(["forceOld", "forceold"]);
 const WHO_ACTIVE_WINDOW_MS = 60 * 60 * 1000;
 const STATUS_PERF_DEBUG = process.env.STATUS_PERF_DEBUG === "true";
+const ADMIN_PLAYER_LEARNING_SUMMARY_LIMIT = 8;
 type AllFilter =
   | { kind: "all" }
   | { kind: "player" }
@@ -583,6 +585,35 @@ function yesNo(value: boolean | null | undefined) {
   return value ? "так" : "ні";
 }
 
+type AdminLearningSummaryRow = {
+  skillKey: string;
+  sourceKey: string;
+  contextKey: string;
+  level: number;
+  progress: number;
+  totalProgress: number;
+  milestoneCount: number;
+};
+
+export function formatAdminLearningSummary(rows: AdminLearningSummaryRow[], options: { playerId: number; totalRows?: number; limit?: number }) {
+  const limit = Math.max(1, Math.floor(options.limit ?? ADMIN_PLAYER_LEARNING_SUMMARY_LIMIT));
+  if (!rows.length) return "- немає збереженого прогресу";
+
+  const visible = rows.slice(0, limit).map((row) => [
+    `- ${row.skillKey}/${row.sourceKey}/${row.contextKey}`,
+    `level=${row.level} (${learningLevelLabel(row.level)})`,
+    `progress=${row.progress}`,
+    `total=${row.totalProgress}`,
+    `milestones=${row.milestoneCount}`,
+  ].join("; "));
+  const hasMoreRows = rows.length > limit;
+  const totalRows = options.totalRows === undefined ? null : Math.max(options.totalRows, rows.length);
+  const hidden = totalRows === null ? 0 : Math.max(0, totalRows - visible.length);
+  if (hidden > 0) visible.push(`- …ще ${hidden}; повністю: /learning #${options.playerId}`);
+  else if (hasMoreRows) visible.push(`- …є ще; повністю: /learning #${options.playerId}`);
+  return visible.join("\n");
+}
+
 function nameCasesLine(player: any) {
   return [
     player.nameNominative,
@@ -884,7 +915,18 @@ async function buildAdminPlayerDetailsView(playerId: number, returnContext: AllR
   if (!player) return { text: "Персонажа не знайдено.", keyboard: undefined };
 
   const forms = playerForms(player);
-  const actionOriginStats = await playerActionOriginStats(player.id);
+  const [actionOriginStats, learningRows] = await Promise.all([
+    playerActionOriginStats(player.id),
+    prisma.characterLearningProgress.findMany({
+      where: { playerId: player.id },
+      orderBy: [
+        { skillKey: "asc" },
+        { sourceKey: "asc" },
+        { contextKey: "asc" },
+      ],
+      take: ADMIN_PLAYER_LEARNING_SUMMARY_LIMIT + 1,
+    }),
+  ]);
   const location = player.currentLocation
     ? `${player.currentLocation.name} (${player.currentLocation.x},${player.currentLocation.y},${player.currentLocation.z}); регіон: ${player.currentLocation.region.name}`
     : "невідомо";
@@ -917,6 +959,9 @@ async function buildAdminPlayerDetailsView(playerId: number, returnContext: AllR
     `- авто: ${yesNo(player.isAutoEnabled)}`,
     `- сесія: ${sessionPresenceLabel(player, formatAdminDate)}`,
     `- технічні деталі: ${yesNo(player.showTechnicalDetails)}`,
+    "",
+    "Навчання:",
+    formatAdminLearningSummary(learningRows, { playerId: player.id }),
     "",
     "Статистика:",
     `- кроків: ${player.steps}`,

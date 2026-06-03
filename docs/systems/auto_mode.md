@@ -1,44 +1,58 @@
-# Auto Mode
+# Spirit Call Auto Mode
 
-Авто-режим — тимчасовий режим, у якому персонаж сам періодично обирає просту дію: сказати фразу, зібрати ресурс, придивитися, рушити або відпочити при сильній втомі.
+`🌫️ Поклик духа` is the player-facing name for the old auto-mode surface. It is still the same small autonomous helper under the hood: the character periodically chooses a simple action such as saying a short line, gathering a nearby resource, looking around, moving, or sitting down to rest when badly tired.
 
-## Поточна поведінка
+Do not use `Провід` for this feature. The tone should stay closer to a quiet borderland whisper than a formal guide.
 
-- `/auto` вмикає авто-режим або нагадує, що він уже увімкнений.
-- `/auto_stop`, `/autoStop`, `/auto stop`, `вимкнути авто`, `стоп авто` і `авто стоп` вимикають авто-режим.
-- У картці `🧍 Персонаж` є кнопка для вмикання або зупинки авто.
-- `☰ Меню` більше не містить авто-режим, бо це стан персонажа, а не загальна системна дія.
-- Авто-режим використовує ті самі `WorldAction`, що й ручні дії.
-- Авто-режим пам’ятає останній широкий тип обраної дії й, якщо можливо, спершу пробує іншу дію, щоб не повторювати однакові авто-повідомлення поспіль.
-- Якщо персонаж зайнятий або втомлений, дія може стати в чергу.
-- Якщо персонаж дуже втомлений, авто може сам почати відпочинок.
-- Якщо персонаж лишився сидіти після відпочинку, авто перед фізичною дією на кшталт руху чи збирання спершу підводить його через звичайне правило постави.
-- Вхід у сон або навчальний сон вимикає авто-режим: сон має бути окремим станом уваги, а не місцем, де персонаж продовжує автономно блукати, збирати чи говорити.
+## Current Behavior
 
-## Збереження між апдейтами
+- `/spirit`, `/dukh`, `/poklyk`, `поклик духа`, `покликати духа`, `дух веде` and similar text aliases start the mode or remind the player that it is already active.
+- `/spirit_stop`, `/dukh_stop`, `подякувати духу`, `відпустити духа`, `зупинити духа` and similar aliases stop it.
+- Legacy `/auto`, `/auto_stop`, `/autoStop`, `/auto stop`, `авто`, `вимкнути авто`, `стоп авто` and `авто стоп` remain supported for compatibility.
+- The character card may still expose the control, but player-facing copy should prefer `Поклик духа` over `Авто`.
+- `☰ Меню` should not grow a large auto/settings cluster; this remains a character/game-flow state.
+- The mode uses the same `WorldAction` records as manual actions.
+- If the character is busy or tired, the chosen action may enter the queue.
+- If the character is badly tired, the mode may start ordinary rest.
+- If the character is sitting after rest, the mode stands them up through the ordinary posture rule before physical actions such as movement or gathering.
+- Ordinary sleep and tutorial dream locations disable the mode: sleep is a separate attention state, not a place where the character keeps wandering or gathering.
 
-Стан авто-режиму зберігається в полі `Player.isAutoEnabled`.
+## Internal Compatibility
 
-Після рестарту процесу бот відновлює таймери для гравців, у яких `isAutoEnabled = true`.
+The implementation may keep existing internal names such as `auto`, `isAutoEnabled`, `registerAutoHandlers`, `auto:*` action notes and auto-message settings. These names are stable technical wiring and scribe/debug vocabulary, not the preferred player-facing metaphor.
 
-## Reset
+Auto-created player actions should carry payload metadata such as:
 
-`/reset world` і `/reset full` скидають persistent auto-state для всіх гравців і зупиняють активні авто-таймери в поточному процесі. `/reset stats` не чіпає авто-режим.
+```json
+{ "spiritCall": true, "source": "spirit_call" }
+```
 
-Це відповідає загальному правилу світового reset: світ, черги, сліди, події, тварини й тимчасові runtime-стани повертаються до стартового стану.
+Use that payload marker when a visible message needs to distinguish a spirit-guided action from a manual action made while the mode is enabled. Do not infer that every action by an `isAutoEnabled` character was created by the spirit call.
 
-## Майбутнє
+Visible lists and full inspection may mark a character subtly, for example:
 
-Можливі напрями розвитку:
+- `за кроком тягнеться тихий поклик`
+- `За кроком відчувається тихий поклик духа...`
 
-- окремі профілі авто-поведінки: збирач, дослідник, обережний, мисливець;
-- заборона авто в небезпечних станах або регіонах;
-- персонаж може сам вимкнути авто після травми, непритомности або важливої події;
-- авто може враховувати навички й професії персонажа.
+Avoid broad new notifications just to announce this state.
 
-## 0.11.9 Notes
+## Persistence
 
-- Перше вмикання `/auto` просить підтвердження: персонаж справді почне час від часу сам обирати прості дії.
-- Авто-дії позначаються службовою нотаткою `auto:*`, щоб технічний режим міг показати, скільки дій персонаж зробив автоматично, а скільки вручну.
-- У `⚙️ Налаштуваннях` є окремий перемикач авто-повідомлень. За замовчуванням він вимкнений: після Auto-AFK рутинні повідомлення про власні авто-дії можуть стихати, щоб не флудити. Якщо гравець увімкне `/automessages on`, власні `auto:*` вибори, завершення дій і оновлення черги можуть доходити навіть після Auto-AFK. Ручний AFK і завершена сесія все одно сильніші за це налаштування.
-- Поточне авто лишається базовим профілем збирача/мандрівника. У планах уже є окремі профілі: авто-збирання, авто-полювання, професійні або ситуаційні профілі, безпекові налаштування і поведінка NPC за схожими правилами.
+The state is stored in `Player.isAutoEnabled`.
+
+After a process restart, the bot restores timers for players with `isAutoEnabled = true`.
+
+`/reset world` and `/reset full` reset persistent auto-state for all players and stop active timers in the current process. `/reset stats` does not touch it.
+
+## Future Directions
+
+- Separate spirit-call profiles or later auto-behavior profiles: gatherer, careful explorer, hunter, profession-specific modes.
+- Safety limits for dangerous states, regions, injuries or important events.
+- Skill- and profession-aware behavior.
+- NPC behavior that can share parts of the same pacing rules without exposing the player-facing spirit-call metaphor everywhere.
+
+## Notes
+
+- First activation asks for confirmation.
+- Technical mode can still count `auto:*` actions separately from manual actions.
+- `⚙️ Налаштування` has an auto-message toggle. Keep its command names stable for now, but future player-facing copy can explain it as messages about spirit-guided choices and results.

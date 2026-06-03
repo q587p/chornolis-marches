@@ -33,6 +33,7 @@ import { dreamGateStatusText, ensureTutorialForagingResources, isDreamGateFeatur
 import { formatObservedPostureText } from "../utils/playerText";
 import { isFreshenedCorpse, playerRawMeatAmount } from "./meat";
 import { heldWeaponLine } from "./weapons";
+import { spiritCallActionPrefix, spiritGuidedTargetHint } from "./spiritCall";
 import { GATE_CARCASS_DROPOFF_FEATURE_KEY, gateHuntingDropoffText, gateHuntingNoticeText, getGateHuntingSaturationState } from "./carcassDropoff";
 import { visibilityDarknessText, visibilityPresenceText, visibilityRulesForLocation, type VisibilityRules } from "./visibility";
 import { getCurrentWorldTimeSnapshot } from "./worldTime";
@@ -142,7 +143,10 @@ function visibleTargets(
       fatigueState: p.fatigueState,
       grammaticalGender: p.grammaticalGender,
       pronoun: p.pronoun,
-      actionLabel: heldWeaponLine(p.equippedWeaponKey)?.replace(/\.$/u, "").toLocaleLowerCase("uk-UA"),
+      actionLabel: joinVisibleActionLabels(
+        spiritGuidedTargetHint(p.isAutoEnabled),
+        heldWeaponLine(p.equippedWeaponKey)?.replace(/\.$/u, "").toLocaleLowerCase("uk-UA")
+      ),
     }));
 
   const livingCreatures = location.creatures
@@ -764,18 +768,20 @@ function gatherResourceLabel(action: any) {
 
 function activeActionLabel(action: any) {
   if (!action) return undefined;
+  const prefix = spiritCallActionPrefix(action.payload);
   const queued = action.status === "QUEUED";
   if (action.type === "MOVE") {
     const direction = (action.payload as any)?.direction;
-    return direction
+    const label = direction
       ? queued
         ? `збирається піти на ${String(directionLabels[direction] ?? direction).toLowerCase()}`
         : `йде на ${String(directionLabels[direction] ?? direction).toLowerCase()}`
       : queued ? "збирається рушити" : "йде";
+    return `${prefix}${label}`;
   }
-  if (action.type === "GATHER") return queued ? "планує пошукати припаси" : "шукає припаси";
-  if (action.type === "GATHER_SPECIFIC") return queued ? `планує зібрати ${gatherResourceLabel(action)}` : `збирає ${gatherResourceLabel(action)}`;
-  if (action.type === "LOOK") return queued ? "збирається озирнутися" : "озирається";
+  if (action.type === "GATHER") return `${prefix}${queued ? "планує пошукати припаси" : "шукає припаси"}`;
+  if (action.type === "GATHER_SPECIFIC") return `${prefix}${queued ? `планує зібрати ${gatherResourceLabel(action)}` : `збирає ${gatherResourceLabel(action)}`}`;
+  if (action.type === "LOOK") return `${prefix}${queued ? "збирається озирнутися" : "озирається"}`;
   if (action.type === "INSPECT") return "роздивляється";
   if (action.type === "GREET") return "вітається";
   if (action.type === "ATTACK") return "атакує";

@@ -7,6 +7,21 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.24 - Spirit Call auto visibility - 12026-06-03
+
+### Added
+
+- Added `/spirit`, `/dukh` and `/poklyk` as player-facing command aliases for the existing automatic-action helper, plus `/spirit_stop` and `/dukh_stop` stop aliases.
+- Added a `spirit_call` action payload marker so automatically created player actions can be distinguished from manual actions while the helper is enabled.
+- Added subtle spirit-call hints to visible target lists and player inspection surfaces.
+- Added a compact learning-progress summary to full scribe/admin player detail cards, with a `/learning #id` pointer for the complete view.
+- Added focused tests for spirit-call payload helpers, command aliases and help copy.
+
+### Changed
+
+- Rethemed player-facing auto-mode copy, character-card controls and confirmation text as `Поклик духа` while preserving internal `auto:*` notes and legacy `/auto` compatibility.
+- Updated system and Codex documentation to keep `auto` as an internal/legacy term and avoid the rejected `Провід` label.
+
 ## 0.15.23 - Progression stabilization and gathering skill tuning - 12026-06-03
 
 ### Added

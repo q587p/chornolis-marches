@@ -20,6 +20,7 @@ import { heldWeaponLine } from "./weapons";
 import { campSpiritCatInspectionText, isCampSpiritCatCreature } from "./campSpiritCat";
 import { visibilityRulesForLocation } from "./visibility";
 import { getCurrentWorldTimeSnapshot } from "./worldTime";
+import { spiritGuidedInspectionLine } from "./spiritCall";
 
 export type ResolvedTarget = {
   kind: "player" | "creature";
@@ -242,12 +243,14 @@ export async function resolveTarget(type: string, id: number, locationId: number
     const heldWeaponText = heldWeaponLine(target.equippedWeaponKey);
     const weaponText = heldWeaponText ?? genderedUnarmed(target);
     const torchText = visibleHeldTorchTextWithContext(torchState, { hasOtherHeldItem: Boolean(heldWeaponText) });
+    const spiritLine = spiritGuidedInspectionLine(target.isAutoEnabled);
     const visibleLines = [
       `Ви бачите ${forms.accusative}.`,
       "",
       formatObservedPostureText(target),
       `Стан: ${genderedPlayerState(target)}`,
       formatObservedVitalsText(target, { hpFallback: BASE_HP, staminaFallback: BASE_STAMINA }),
+      ...(spiritLine ? [spiritLine] : []),
       weaponText,
       ...(torchText ? [torchText] : []),
     ];

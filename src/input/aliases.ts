@@ -398,11 +398,24 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "підвестись": { kind: "posture", mode: "stand" },
 
   auto: { kind: "auto", mode: "start" },
+  spirit: { kind: "auto", mode: "start" },
+  dukh: { kind: "auto", mode: "start" },
+  poklyk: { kind: "auto", mode: "start" },
   "авто": { kind: "auto", mode: "start" },
+  "поклик духа": { kind: "auto", mode: "start" },
+  "покликати духа": { kind: "auto", mode: "start" },
+  "покликати дух": { kind: "auto", mode: "start" },
+  "дух веде": { kind: "auto", mode: "start" },
+  "дух хай веде": { kind: "auto", mode: "start" },
+  "хай дух веде": { kind: "auto", mode: "start" },
   autostop: { kind: "auto", mode: "stop" },
   "auto stop": { kind: "auto", mode: "stop" },
   "auto off": { kind: "auto", mode: "stop" },
   "stop auto": { kind: "auto", mode: "stop" },
+  "spirit stop": { kind: "auto", mode: "stop" },
+  "spirit off": { kind: "auto", mode: "stop" },
+  "dukh stop": { kind: "auto", mode: "stop" },
+  "dukh off": { kind: "auto", mode: "stop" },
   "увімкнути авто": { kind: "auto", mode: "start" },
   "ввімкнути авто": { kind: "auto", mode: "start" },
   "запустити авто": { kind: "auto", mode: "start" },
@@ -415,6 +428,13 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "стоп авто": { kind: "auto", mode: "stop" },
   "авто зупинити": { kind: "auto", mode: "stop" },
   "авто вимкнути": { kind: "auto", mode: "stop" },
+  "подякувати духу": { kind: "auto", mode: "stop" },
+  "відпустити духа": { kind: "auto", mode: "stop" },
+  "відпустити дух": { kind: "auto", mode: "stop" },
+  "зупинити духа": { kind: "auto", mode: "stop" },
+  "зупинити дух": { kind: "auto", mode: "stop" },
+  "дух стоп": { kind: "auto", mode: "stop" },
+  "стоп дух": { kind: "auto", mode: "stop" },
 
   queue: { kind: "queue", mode: "status" },
   q: { kind: "queue", mode: "status" },
@@ -1578,6 +1598,25 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
     "попросити писарів",
     "допомога писарів",
   ].includes(commandText)) return { kind: "call-scribes" };
+
+  if ([
+    "поклик духа",
+    "покликати духа",
+    "покликати дух",
+    "дух веде",
+    "дух хай веде",
+    "хай дух веде",
+  ].includes(commandText)) return { kind: "auto", mode: "start" };
+
+  if ([
+    "подякувати духу",
+    "відпустити духа",
+    "відпустити дух",
+    "зупинити духа",
+    "зупинити дух",
+    "дух стоп",
+    "стоп дух",
+  ].includes(commandText)) return { kind: "auto", mode: "stop" };
 
   const directedSpeech = parseDirectedSpeech(raw, text);
   if (directedSpeech) return directedSpeech;
