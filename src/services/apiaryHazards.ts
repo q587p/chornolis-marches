@@ -1,6 +1,6 @@
 import { Bot } from "grammy";
 import { prisma } from "../db";
-import type { WorldDaypart } from "../data/worldClock";
+import { REAL_MS_PER_GAME_MINUTE, type WorldDaypart } from "../data/worldClock";
 import { getCurrentWorldTimeSnapshot } from "./worldTime";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { noteKnownMessage } from "../utils/messageTracker";
@@ -8,6 +8,8 @@ import { noteKnownMessage } from "../utils/messageTracker";
 export const APIARY_STING_EVENT_TITLE = "Apiary sting";
 export const APIARY_PASSIVE_STING_LINE = "Поки ви милувалися квітами, вас боляче вжалив джміль!";
 export const APIARY_RAID_EVENT_TITLE = "Apiary raid";
+export const APIARY_DISTURBED_FEATURE_SUMMARY = "стривожена; гуде різко й сердито; меду зараз не дасть, краще відійти й дати борті стихнути";
+export const APIARY_DISTURBED_INSPECTION_TEXT = "Гул у борті став різким і сердитим. Джмелі вже не кружляють ліниво над квітами, а б'ють повітря короткими злими колами. Меду зараз не дістанеш; краще відійти й дати місцині трохи стихнути.";
 export const HONEY_RESOURCE_KEY = "honey";
 export const BEESWAX_RESOURCE_KEY = "beeswax";
 
@@ -76,7 +78,7 @@ export function apiaryPassiveChancePermille(kind: ApiaryAuraKind, data: ApiaryDa
 }
 
 export function apiaryPassiveDamageRange(kind: ApiaryAuraKind, data: ApiaryData): [number, number] {
-  if (kind === "center") return damageRangeFromData(data, "center_damage", [1, 2]);
+  if (kind === "center") return damageRangeFromData(data, "center_damage", [2, 3]);
   if (kind === "neighbor") return damageRangeFromData(data, "neighbor_damage", [1, 1]);
   return [0, 0];
 }
@@ -106,6 +108,26 @@ export function isApiaryCooldownActive(
   return now.getTime() - previousCreatedAt.getTime() < cooldownMs;
 }
 
+export function apiaryCooldownWorldMinutes(cooldownMs: number, realMsPerGameMinute = REAL_MS_PER_GAME_MINUTE) {
+  if (cooldownMs <= 0) return 0;
+  return Math.max(1, Math.ceil(cooldownMs / Math.max(1, realMsPerGameMinute)));
+}
+
+export function apiaryEventAbsoluteMinute(description: string | null | undefined) {
+  const match = description?.match(/(?:^|;\s*)absoluteMinute=(\d+)(?:;|$)/);
+  return match ? Math.max(0, Math.floor(Number(match[1]))) : null;
+}
+
+export function isApiaryWorldCooldownActive(
+  previousDescription: string | null | undefined,
+  currentAbsoluteMinute: number,
+  cooldownMs: number,
+) {
+  const previousAbsoluteMinute = apiaryEventAbsoluteMinute(previousDescription);
+  if (previousAbsoluteMinute == null || cooldownMs <= 0) return false;
+  return Math.max(0, Math.floor(currentAbsoluteMinute) - previousAbsoluteMinute) < apiaryCooldownWorldMinutes(cooldownMs);
+}
+
 export function passiveApiaryDamageResult(currentHp: number, rolledDamage: number) {
   const hp = Math.max(0, Math.floor(currentHp));
   const damage = Math.max(0, Math.floor(rolledDamage));
@@ -131,6 +153,11 @@ export function apiaryRaidDamageRange(data: ApiaryData): [number, number] {
 
 export function apiaryRaidHoneyAmount(data: ApiaryData) {
   return Math.max(1, Math.floor(numberFromData(data, "raid_honey_amount", 1)));
+}
+
+export function apiaryFeatureSummary(data: ApiaryData, disturbed = false) {
+  if (disturbed) return APIARY_DISTURBED_FEATURE_SUMMARY;
+  return typeof data.examine_summary === "string" ? data.examine_summary.trim() : "";
 }
 
 export function apiaryRaidOutcome(data: ApiaryData, currentHp: number, random: () => number = Math.random) {
@@ -263,26 +290,29 @@ export async function raidApiaryForPlayer(playerId: number, featureId?: number, 
   if (!apiary) throw new Error("Поруч немає борті, з якої можна дістати мед.");
 
   const cooldownMs = apiaryRaidCooldownMs(apiary.data);
+  const time = await getCurrentWorldTimeSnapshot(prisma, now);
   const previous = await prisma.worldEvent.findFirst({
     where: {
       title: APIARY_RAID_EVENT_TITLE,
       description: { contains: apiaryEventMarker(apiary.feature.key) },
     },
     orderBy: { createdAt: "desc" },
-    select: { createdAt: true },
+    select: { description: true },
   });
-  if (isApiaryCooldownActive(previous?.createdAt, now, cooldownMs)) {
+  if (isApiaryWorldCooldownActive(previous?.description, time.absoluteMinute, cooldownMs)) {
     throw new Error("Бортя вже потривожена. Гул усередині ще надто густий, щоб знову лізти руками.");
   }
 
-  const time = await getCurrentWorldTimeSnapshot(prisma, now);
   const outcome = apiaryRaidOutcome(apiary.data, player.hp, random);
 
   await prisma.$transaction(async (tx) => {
     const resources = await ensureApiaryRewardResourceTypes(tx);
     await tx.player.update({
       where: { id: player.id },
-      data: { hp: outcome.nextHp },
+      data: {
+        hp: outcome.nextHp,
+        lastHpRegenAt: outcome.appliedDamage > 0 ? now : undefined,
+      },
     });
     if (outcome.honey > 0) {
       await tx.playerResource.upsert({
@@ -304,7 +334,7 @@ export async function raidApiaryForPlayer(playerId: number, featureId?: number, 
         title: APIARY_RAID_EVENT_TITLE,
         playerId: player.id,
         locationId: player.currentLocationId,
-        description: `${apiaryEventMarker(apiary.feature.key)}; success=${outcome.success}; honey=${outcome.honey}; beeswax=${outcome.beeswax}; damage=${outcome.appliedDamage}; daypart=${time.daypart}`,
+        description: `${apiaryEventMarker(apiary.feature.key)}; absoluteMinute=${time.absoluteMinute}; success=${outcome.success}; honey=${outcome.honey}; beeswax=${outcome.beeswax}; damage=${outcome.appliedDamage}; daypart=${time.daypart}`,
       },
     });
   });
@@ -343,9 +373,9 @@ export async function maybeTriggerPassiveApiarySting(bot: Bot, input: MaybeTrigg
       description: { contains: apiaryEventMarker(source.feature.key) },
     },
     orderBy: { createdAt: "desc" },
-    select: { createdAt: true },
+    select: { description: true },
   });
-  if (isApiaryCooldownActive(previous?.createdAt, now, cooldownMs)) return false;
+  if (isApiaryWorldCooldownActive(previous?.description, time.absoluteMinute, cooldownMs)) return false;
 
   const player = await prisma.player.findUnique({
     where: { id: input.playerId },
@@ -359,7 +389,7 @@ export async function maybeTriggerPassiveApiarySting(bot: Bot, input: MaybeTrigg
 
   await prisma.player.update({
     where: { id: player.id },
-    data: { hp: result.nextHp },
+    data: { hp: result.nextHp, lastHpRegenAt: now },
   });
   await prisma.worldEvent.create({
     data: {
@@ -367,7 +397,7 @@ export async function maybeTriggerPassiveApiarySting(bot: Bot, input: MaybeTrigg
       title: APIARY_STING_EVENT_TITLE,
       playerId: player.id,
       locationId: input.locationId,
-      description: `${apiaryEventMarker(source.feature.key)}; hazard=bumblebee_sting; damage=${result.appliedDamage}; passive=true; reason=${input.reason}`,
+      description: `${apiaryEventMarker(source.feature.key)}; absoluteMinute=${time.absoluteMinute}; hazard=bumblebee_sting; damage=${result.appliedDamage}; passive=true; reason=${input.reason}`,
     },
   });
 

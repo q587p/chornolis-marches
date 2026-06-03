@@ -55,6 +55,8 @@ export function parseStartActionPayload(value: unknown): StartActionPayload | nu
   if (payload === "cmd_douse_campfire") return "douseCampfire";
   if (payload === "cmd_dismantle_campfire") return "dismantleCampfire";
   if (payload === "cmd_dismantle_totem") return "dismantleTotem";
+  if (payload === "cmd_search_honey") return "gatherHoney";
+  if (payload === "cmd_search_beeswax") return "gatherBeeswax";
   if (payload === "cmd_gather_honey") return "gatherHoney";
   if (payload === "cmd_gather_beeswax") return "gatherBeeswax";
 

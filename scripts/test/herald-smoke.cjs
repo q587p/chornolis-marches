@@ -25,6 +25,8 @@ const {
 } = require("../../src/herald/newsBackfill");
 const { formatArchiveList, splitArchiveListMessage } = require("../../src/herald/newsArchiveCommands");
 const {
+  applyNewsSourceDateFallbacks,
+  extractChangelogVersionDates,
   extractNewsSourceMetadata,
   parseLatestNewsEntry,
   parseNewsEntries,
@@ -72,6 +74,16 @@ assert.deepEqual(extractNewsSourceMetadata("0.0.x — Ранній протот�
   sourceDate: undefined,
   sourceVersion: "0.0.x",
 });
+const changelogDates = extractChangelogVersionDates([
+  "## 0.4.0 - world tick - 12026-05-06",
+  "",
+  "## 0.15.20 - Apiary Honey And Wax Raid",
+  "",
+  "Date: 12026-06-03",
+].join("\n"));
+assert.equal(changelogDates.get("0.4.0"), "12026-05-06");
+const fallbackDatedEntries = applyNewsSourceDateFallbacks(parseNewsEntries("## 0.4.0 — World tick\n\nold body"), changelogDates);
+assert.equal(fallbackDatedEntries[0].sourceDate, "12026-05-06");
 
 const entries = parseNewsEntries(markdown);
 assert.equal(entries.length, 2);
@@ -229,7 +241,7 @@ assert.doesNotMatch(formatted, /123456:abcdefghijklmnopqrstuvwxyz/);
 assert.doesNotMatch(formatted, /border_12_09/);
 assert.match(formatted, /Канцелярія Межового Знаку/);
 
-const linkedCommands = linkHeraldGameCommandMentions("`/start` `/news` /auto `/rest` /sleep `/track` /time /calendar /weather /inventory /gather_honey /gather_beeswax /cleanupCreatures /unknown", "Chornolis_bot");
+const linkedCommands = linkHeraldGameCommandMentions("`/start` `/news` /auto `/rest` /sleep `/track` /time /calendar /weather /inventory /search_honey /search_beeswax /gather_honey /gather_beeswax /cleanupCreatures /unknown", "Chornolis_bot");
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_start">\/start<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_news">\/news<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_auto">\/auto<\/a>/);
@@ -240,6 +252,8 @@ assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_calendar">\/calendar<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_weather">\/weather<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_inventory">\/inventory<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_search_honey">\/search_honey<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_search_beeswax">\/search_beeswax<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_gather_honey">\/gather_honey<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_gather_beeswax">\/gather_beeswax<\/a>/);
 assert.match(linkedCommands, /\/cleanupCreatures/);
@@ -255,9 +269,18 @@ const archiveFormatted = formatHeraldPublicationMessage({
 });
 assert.match(archiveFormatted, /📜 З архіву Канцелярії/);
 assert.match(archiveFormatted, /Архівний запис: <b>12026-05-31/);
-assert.match(archiveFormatted, /Дата запису: 12026-05-31/);
+assert.doesNotMatch(archiveFormatted, /Дата запису: 12026-05-31/);
 assert.match(archiveFormatted, /Цей запис уже нижче/);
 assert.doesNotMatch(archiveFormatted, /📜 Канцелярія Межового Знаку/);
+
+const archiveFormattedWithFallbackDate = formatHeraldPublicationMessage({
+  sourceType: "NEWS_MD_ARCHIVE",
+  title: fallbackDatedEntries[0].title,
+  sourceDate: fallbackDatedEntries[0].sourceDate,
+  body: formatArchiveBody(fallbackDatedEntries[0]),
+});
+assert.match(archiveFormattedWithFallbackDate, /Архівний запис: <b>0\.4\.0 — World tick — 12026-05-06<\/b>/);
+assert.doesNotMatch(archiveFormattedWithFallbackDate, /Дата запису: 12026-05-06/);
 
 const archiveFormattedEscapedTitle = formatHeraldPublicationMessage({
   sourceType: "NEWS_MD_ARCHIVE",
@@ -274,6 +297,24 @@ const savedSnapshot = formatHeraldPublicationMessage({
 });
 assert.match(savedSnapshot, /Збережений відбиток/);
 assert.doesNotMatch(savedSnapshot, /Старе тіло/);
+
+const savedArchiveSnapshot = formatHeraldPublicationMessage({
+  sourceType: "NEWS_MD_ARCHIVE",
+  title: "0.4.0 — World tick",
+  body: "Старе тіло",
+  sourceDate: "12026-05-06",
+  renderedText: [
+    "📜 З архіву Канцелярії",
+    "",
+    "Архівний запис: 0.4.0 — World tick",
+    "Дата запису: 12026-05-06",
+    "",
+    "Старий відбиток.",
+  ].join("\n"),
+});
+assert.match(savedArchiveSnapshot, /Архівний запис: <b>0\.4\.0 — World tick — 12026-05-06<\/b>/);
+assert.doesNotMatch(savedArchiveSnapshot, /Дата запису: 12026-05-06/);
+assert.match(savedArchiveSnapshot, /Старий відбиток/);
 
 const repost = formatHeraldPublicationRepostMessage({
   id: 77,

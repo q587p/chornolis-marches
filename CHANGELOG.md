@@ -7,6 +7,20 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.22 - Learning foundation stabilization - 12026-06-03
+
+### Changed
+
+- Hardened gathering observation source selection so already observed or unsupported recent gather-like events no longer block a still-valid herbs, berries or mushrooms observation inside the same attention window.
+- Renamed the player-facing old-log-apiary command surface from `/gather_honey` / `/gather_beeswax` to `/search_honey` / `/search_beeswax`, keeping the old names as legacy compatibility routes.
+- Documented and kept the old log apiary passive center sting tuning at `2-3` HP damage, while adjacent aura stings remain lighter.
+- Updated progression and `next` planning docs to record the stabilization pass and keep follow intent, track-learning and skill effects deferred.
+
+### Fixed
+
+- Added regression coverage for the case where a recent unsupported source such as honey appears after a supported herbs source and previously could mask the supported observation path.
+- Fixed old log apiary raid cooldowns so honey/wax attempts reopen by in-world time markers instead of feeling one-shot under long wall-clock cooldowns.
+
 ## 0.15.21 - Attentive presence learning bridge - 12026-06-03
 
 ### Added
@@ -26,9 +40,9 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ### Added
 
-- Added active apiary robbery through the queued `RAID_APIARY` action, available from the old log apiary feature button and typed `/gather_honey` / `/gather_beeswax` routes.
+- Added active apiary robbery through the queued `RAID_APIARY` action, available from the old log apiary feature button and typed `/search_honey` / `/search_beeswax` routes.
 - Added `honey` and `beeswax` resource types, lexicon entries, inventory lookup aliases, scribe `/addItem` support and admin menu buttons.
-- Added safe game deep-link payloads for `/gather_honey` and `/gather_beeswax`, so Herald/news links can open the main bot and run the matching command.
+- Added safe game deep-link payloads for `/search_honey` and `/search_beeswax`, so Herald/news links can open the main bot and run the matching command.
 - Added focused tests for apiary raid chance/damage/reward helpers, action cost/title, posture blocking, aliases, admin item parsing, Herald command linking and seed metadata.
 - Added a Prisma migration for the `RAID_APIARY` world action type.
 

@@ -172,10 +172,12 @@ assert.equal(oldLogApiary.data?.hazard_key, "bumblebee_sting", "Old log apiary s
 assert.equal(oldLogApiary.data?.aura_radius, 1, "Old log apiary should start with a one-step aura");
 assert.equal(oldLogApiary.data?.center_sting_chance_permille, 777, "Old log apiary center chance should match authored MVP tuning");
 assert.equal(oldLogApiary.data?.neighbor_sting_chance_permille, 130, "Old log apiary neighbor chance should match authored MVP tuning");
+assert.deepEqual(oldLogApiary.data?.center_damage, [2, 3], "Old log apiary center sting damage should feel noticeable but survivable");
+assert.deepEqual(oldLogApiary.data?.neighbor_damage, [1, 1], "Old log apiary neighbor sting damage should stay mild");
 assert.equal(oldLogApiary.data?.passive_cooldown_ms, 120_000, "Old log apiary passive cooldown should match one default in-game hour");
 assert.equal(resourceTypeKeys.has("honey"), true, "Apiary harvest MVP should define honey resource type");
 assert.equal(resourceTypeKeys.has("beeswax"), true, "Apiary harvest MVP should define beeswax resource type");
-assert.equal(oldLogApiary.data?.raid_cooldown_ms, 21_600_000, "Old log apiary should limit repeated hive robbery");
+assert.equal(oldLogApiary.data?.raid_cooldown_ms, 720_000, "Old log apiary should limit repeated hive robbery to roughly six in-game hours");
 assert.equal(oldLogApiary.data?.raid_success_chance_permille, 700, "Old log apiary should have authored raid success chance");
 assert.equal(oldLogApiary.data?.raid_wax_chance_permille, 350, "Old log apiary should have authored wax chance");
 assert.deepEqual(oldLogApiary.data?.raid_damage, [2, 5], "Old log apiary should have stronger disturbance sting damage");
@@ -197,6 +199,18 @@ for (const key of ["start_border_marker", "start_newcomer_tablet", "start_lunar_
   assert.ok(feature.data?.icon, `Starter camp feature should have a distinct icon: ${key}`);
   assert.ok(Array.isArray(feature.data?.aliases) && feature.data.aliases.length > 0, `Starter camp feature should have aliases: ${key}`);
 }
+
+assert.deepEqual(
+  features.filter((item) => item.locationKey === "start_border_camp").slice(0, 5).map((item) => item.key),
+  [
+    "start_border_watchtower_ladder",
+    "start_border_marker",
+    "start_newcomer_tablet",
+    "start_lunar_circles_birchbark",
+    "start_unfading_campfire",
+  ],
+  "Starter camp feature order should lead with the watchtower and leave the unfading campfire last",
+);
 
 const startWatchtowerLadder = features.find((item) => item.key === "start_border_watchtower_ladder");
 assert.equal(startWatchtowerLadder?.data?.vertical_hint, "UP", "Starter watchtower feature should expose an UP action hint");
@@ -225,6 +239,16 @@ assert.equal(startCampTorchStand?.locationKey, "start_border_watchtower", "Start
 assert.notEqual(startCampTorchStand?.data?.hunter_resupply, false, "Starter watchtower torch stand should remain available for hunter resupply");
 assert.notEqual(startCampTorchStand?.data?.icon, "🔥", "Starter camp torch stand should not use the fire icon reserved for flame/campfire actions");
 assertFeatureExamineSummary(startCampTorchStand, "Starter camp torch stand should explain the torch source on examine");
+
+assert.deepEqual(
+  features.filter((item) => item.locationKey === "start_border_watchtower").slice(0, 3).map((item) => item.key),
+  [
+    "start_watchtower_stairs_down",
+    "start_beginner_shared_cache",
+    "start_camp_torch_stand",
+  ],
+  "Starter watchtower feature order should lead with stairs, then cache, then torch stand",
+);
 
 for (const key of ["forest_04_02_owl_sign", "forest_09_04_owl_sign", "meadow_14_04_owl_sign", "riverbank_13_00_owl_sign"]) {
   const feature = features.find((item) => item.key === key);

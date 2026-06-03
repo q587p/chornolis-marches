@@ -8,7 +8,7 @@ ALC-001,First herbal stamina elixir,backlog,feature,survival,high,"alchemy,herbs
 ANIMAL-001,Animal speech reactions,in_progress,feature,ecology,medium,"animals,speech,social,ecology,reactions",docs/planning/items/ANIMAL-001-speech-reactions.md
 APIARY-001,Seed old log apiary feature,testing,feature,ecology,medium,"apiary,bumblebee,world-seed,feature",docs/planning/items/APIARY-001-seed-apiary-feature.md
 APIARY-002,Passive bumblebee sting hazard,testing,feature,ecology,medium,"apiary,bumblebee,hazard,hp",docs/planning/items/APIARY-002-passive-sting-hazard.md
-APIARY-003,Honey wax and hive robbery,testing,feature,resources,medium,"apiary,honey,beeswax,resources",docs/planning/items/APIARY-003-honey-wax-and-robbery.md
+APIARY-003,Honey wax and hive robbery,testing,feature,resources,medium,"apiary,honey,beeswax,resources,fire",docs/planning/items/APIARY-003-honey-wax-and-robbery.md
 APIARY-004,Bear honey loop scaffold,backlog,feature,ecology,low,"apiary,bear,ecology,tracks",docs/planning/items/APIARY-004-bear-honey-loop.md
 AUTH-001,Profile protection and client-neutral login,icebox,system,account,medium,"auth,account,profile,mud,recovery",docs/planning/items/AUTH-001-profile-protection-and-client-neutral-login.md
 BARTER-001,Early exchange and barter foundation after give,backlog,feature,economy,high,"barter,exchange,give,inventory,economy,npc,trade",docs/planning/items/BARTER-001-early-exchange-and-barter-foundation.md
@@ -30,6 +30,7 @@ CAT-010,Camp cat cache and newcomer presence,testing,feature,onboarding,low,"cat
 CMD-001,Near-term text command pack,testing,feature,commands,high,"commands,aliases,mud,speech,navigation",docs/planning/items/CMD-001-near-term-text-command-pack.md
 CMD-002,Put items into local containers and features,testing,feature,commands,high,"commands,inventory,containers,aliases",docs/planning/items/CMD-002-put-items-into-containers.md
 CMD-003,Public news command deep-link audit,backlog,technical,commands,high,"commands,news,telegram,deep-links,web",docs/planning/items/CMD-003-news-command-deep-link-audit.md
+CMD-004,Compact help and current command reference,backlog,feature,commands,high,"commands,help,onboarding,aliases,ux",docs/planning/items/CMD-004-help-and-commands-split.md
 COMBAT-001,Creature aggression and defense,backlog,feature,combat,medium,"animals,combat,predators,ecology",docs/planning/items/COMBAT-001-creature-aggression-and-defense.md
 CRAFT-001,Craftable placeable chests,backlog,feature,crafting,medium,"crafting,containers,storage,item-instances,camp",docs/planning/items/CRAFT-001-craftable-placeable-chests.md
 DAYNOTICE-001,Player daypart notice settings,testing,feature,notifications,high,"notifications,world-time,daypart,sleep,settings,0.14",docs/planning/items/DAYNOTICE-001-player-daypart-notice-settings.md
@@ -82,7 +83,7 @@ ICE-004,"Camps, shelters and construction",icebox,feature,construction,low,"surv
 ICE-005,Pit traps and vertical hazard cells,icebox,feature,world,low,"traps,verticality,movement,damage,map",docs/planning/items/ICE-005-pit-trap-vertical-hazards.md
 ITEM-001,Pickup versus gather command semantics,testing,bug,inventory,high,"aliases,pickup,gather,inventory,ground-items",docs/planning/items/ITEM-001-pickup-vs-gather-semantics.md
 ITEM-002,Queued pickup actions,backlog,feature,inventory,medium,"pickup,inventory,action-queue,stamina,ground-items",docs/planning/items/ITEM-002-queued-pickup-actions.md
-LANG-001,Lexicon and agreement audit,backlog,chore,content,medium,"ukrainian,lexicon,grammar,text",docs/planning/items/LANG-001-lexicon-and-agreement-audit.md
+LANG-001,Lexicon and agreement audit,backlog,chore,content,high,"ukrainian,lexicon,grammar,text,optimization,corpses,resources",docs/planning/items/LANG-001-lexicon-and-agreement-audit.md
 LEARN-001-A,Minimal learning storage decision,testing,design,learning,high,"learning,progression,schema",docs/planning/items/LEARN-001-A.md
 LEARN-001-B,Minimal CharacterSkill model,testing,technical,learning,high,"learning,schema,skills",docs/planning/items/LEARN-001-B.md
 LEARN-001-C,grantSkillProgress helper,testing,feature,learning,high,"learning,service,progression",docs/planning/items/LEARN-001-C.md
@@ -228,4 +229,5 @@ WPN-001,Minimal weapon catalog and equip foundation,done,feature,items,medium,"w
 WPN-002,"Weapon-aware look, examine, attack and freshen",done,feature,items,medium,"weapons,inventory,combat,freshening",docs/planning/items/WPN-002-weapon-aware-look-examine-attack-freshen.md
 WPN-003,Themed NPC weapons and hunter spear,backlog,feature,npc,medium,"weapons,npc,hunter,seed",docs/planning/items/WPN-003-themed-npc-weapons-and-hunter-spear.md
 WPN-004,"Weapon condition, dulling and sharpening hooks",backlog,technical,items,low,"weapons,durability,item-instances,backlog",docs/planning/items/WPN-004-weapon-condition-backlog.md
+WPN-005,Hand slots and visible held items,backlog,feature,items,high,"weapons,inventory,equipment,visibility,npcs",docs/planning/items/WPN-005-hand-slots-and-visible-held-items.md
 WPN-ICE-001,Deep combat and weapon lifetime,icebox,feature,combat,low,"weapons,combat,durability,icebox",docs/planning/items/WPN-ICE-001-deep-combat-and-weapon-lifetime.md

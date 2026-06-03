@@ -52,6 +52,8 @@ Outcome: if a mouse is in camp, the cat prioritizes it.
 
 Add interest in raw meat in camp box / ground / player inventory. Start a scene before theft so players get readable affordances. `Дати сире м’ясо` must call `give сире м’ясо коту`.
 
+If there are no visible mice or urgent rodent-pressure targets in the camp, the cat may pick up and eat raw meat lying on the ground. Mouse-hunting stays higher priority than ground-meat scavenging, so this fallback must not distract the cat from protecting the camp and beginner cache.
+
 Outcome: the cat tries to steal or beg for raw meat, but nearby players can respond; voluntary feeding uses generic `give`.
 
 ### Slice 5 — CAT-005 / social gestures
@@ -119,6 +121,7 @@ Useful existing areas suggested by release/test history:
 These are design suggestions, not hard constants:
 
 - `mousePriority`: 100
+- `groundMeatScavengePriority`: 40 when no mice or urgent rodent-pressure targets are visible
 - `meatInterestPriority`: 45 when no mice; 70 if raw meat is visible in open camp box
 - `fireComfortPriority`: 35; +20 if cold/rain/night
 - `socialRubPriority`: 20; +35 if target has raw meat

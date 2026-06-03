@@ -2,7 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "../db";
 import { normalizeInput } from "../input/aliases";
 import { normalizeCreatureActionText } from "../utils/creatureActionText";
-import { creatureForms } from "./grammar";
+import { creatureForms, playerForms } from "./grammar";
 import { isFreshenedCorpse } from "./meat";
 import { heldWeaponLine } from "./weapons";
 import { isCampSpiritCatCreature } from "./campSpiritCat";
@@ -67,6 +67,31 @@ export function isSelfTargetQuery(value: string) {
 
 function uniqueKeys(keys: Array<string | null | undefined>) {
   return [...new Set(keys.filter(Boolean).map((key) => normalizeTargetKey(String(key))).filter(Boolean))];
+}
+
+export function selfTargetSearchKeysForPlayer(player: any) {
+  const forms = playerForms(player);
+  return uniqueKeys([
+    ...Object.values(forms),
+    player.nameNominative,
+    player.nameGenitive,
+    player.nameDative,
+    player.nameAccusative,
+    player.nameInstrumental,
+    player.nameLocative,
+    player.nameVocative,
+    player.firstName,
+    player.lastName,
+    player.username,
+  ]);
+}
+
+export function isSelfTargetQueryForPlayer(value: string, player: any) {
+  if (isSelfTargetQuery(value)) return true;
+  const target = normalizeTargetKey(value)
+    .replace(/^(?:at|на|до)\s+/, "")
+    .trim();
+  return Boolean(target && selfTargetSearchKeysForPlayer(player).some((key) => key === target));
 }
 
 function targetSearchKeysForPlayer(player: any) {

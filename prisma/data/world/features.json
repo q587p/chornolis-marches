@@ -94,8 +94,8 @@
       "center_sting_chance_permille": 777,
       "neighbor_sting_chance_permille": 130,
       "center_damage": [
-        1,
-        2
+        2,
+        3
       ],
       "neighbor_damage": [
         1,
@@ -104,7 +104,7 @@
       "passive_cooldown_ms": 120000,
       "night_passive_sleeping": true,
       "robbery_wakes_swarm": true,
-      "raid_cooldown_ms": 21600000,
+      "raid_cooldown_ms": 720000,
       "raid_success_chance_permille": 700,
       "raid_wax_chance_permille": 350,
       "raid_damage": [
@@ -281,6 +281,30 @@
     }
   },
   {
+    "key": "start_border_watchtower_ladder",
+    "locationKey": "start_border_camp",
+    "type": "LANDMARK",
+    "name": "Сторожова вежа",
+    "description": "Невисока дерев’яна вежа стоїть над краєм табору. Драбина скрипить, але тримає; згори легше побачити міст, ворота, річку й темний край лісу. Якщо треба взяти світло перед дорогою, варто піднятися вгору.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🪜",
+      "examine_summary": "драбина веде вгору, де видно темряву за табором і тримають світло для першої дороги",
+      "inspectable": true,
+      "vertical_hint": "UP",
+      "aliases": [
+        "сторожова вежа",
+        "вежа",
+        "драбина",
+        "на вежу",
+        "watchtower",
+        "tower",
+        "ladder"
+      ]
+    }
+  },
+  {
     "key": "start_border_marker",
     "locationKey": "start_border_camp",
     "type": "BORDER_MARKER",
@@ -300,27 +324,6 @@
         "межа",
         "border marker",
         "marker"
-      ]
-    }
-  },
-  {
-    "key": "start_unfading_campfire",
-    "locationKey": "start_border_camp",
-    "type": "MAGIC_CAMPFIRE",
-    "name": "Незгасне вогнище",
-    "description": "Полум’я горить рівно, не потребує хмизу й дає світло всій локації. Під час активного відпочинку тут можна відновити витривалість до п’ятикратного максимуму.",
-    "providesLight": true,
-    "restStaminaCapMultiplier": 5,
-    "data": {
-      "rest_stamina_cap_multiplier": 5,
-      "night_light": "location",
-      "aliases": [
-        "вогнище",
-        "незгасне вогнище",
-        "вогонь",
-        "багаття",
-        "campfire",
-        "fire"
       ]
     }
   },
@@ -377,26 +380,23 @@
     }
   },
   {
-    "key": "start_border_watchtower_ladder",
+    "key": "start_unfading_campfire",
     "locationKey": "start_border_camp",
-    "type": "LANDMARK",
-    "name": "Сторожова вежа",
-    "description": "Невисока дерев’яна вежа стоїть над краєм табору. Драбина скрипить, але тримає; згори легше побачити міст, ворота, річку й темний край лісу. Якщо треба взяти світло перед дорогою, варто піднятися вгору.",
-    "providesLight": false,
-    "restStaminaCapMultiplier": null,
+    "type": "MAGIC_CAMPFIRE",
+    "name": "Незгасне вогнище",
+    "description": "Полум’я горить рівно, не потребує хмизу й дає світло всій локації. Під час активного відпочинку тут можна відновити витривалість до п’ятикратного максимуму.",
+    "providesLight": true,
+    "restStaminaCapMultiplier": 5,
     "data": {
-      "icon": "🪜",
-      "examine_summary": "драбина веде вгору, де видно темряву за табором і тримають світло для першої дороги",
-      "inspectable": true,
-      "vertical_hint": "UP",
+      "rest_stamina_cap_multiplier": 5,
+      "night_light": "location",
       "aliases": [
-        "сторожова вежа",
-        "вежа",
-        "драбина",
-        "на вежу",
-        "watchtower",
-        "tower",
-        "ladder"
+        "вогнище",
+        "незгасне вогнище",
+        "вогонь",
+        "багаття",
+        "campfire",
+        "fire"
       ]
     }
   },
@@ -427,34 +427,7 @@
       ]
     }
   },
-  {
-    "key": "start_camp_torch_stand",
-    "locationKey": "start_border_watchtower",
-    "type": "LANDMARK",
-    "name": "Смоляна поставка з факелами",
-    "description": "Факели сухі й густо просмолені. Їх тримають під навісом сторожової вежі для тих, хто виходить із табору в присмерк або вертається з темряви. Світло не робить шлях безпечним, але дозволяє помітити те, що ніч ховає першим.",
-    "providesLight": false,
-    "restStaminaCapMultiplier": null,
-    "data": {
-      "icon": "🕯",
-      "inspectable": true,
-      "torch_source": true,
-      "examine_summary": "суха смола тримає вогонь довше, але сам факел не робить стежку безпечною",
-      "infinite_for_now": true,
-      "future_limited_stock": true,
-      "moved_to_watchtower": true,
-      "aliases": [
-        "факели",
-        "факел",
-        "поставка",
-        "смоляна поставка",
-        "поставка з факелами",
-        "світло",
-        "torch",
-        "torches"
-      ]
-    }
-  },
+
   {
     "key": "start_beginner_shared_cache",
     "locationKey": "start_border_watchtower",
@@ -520,6 +493,35 @@
         "припаси",
         "cache",
         "supply cache"
+      ]
+    }
+  },
+
+  {
+    "key": "start_camp_torch_stand",
+    "locationKey": "start_border_watchtower",
+    "type": "LANDMARK",
+    "name": "Смоляна поставка з факелами",
+    "description": "Факели сухі й густо просмолені. Їх тримають під навісом сторожової вежі для тих, хто виходить із табору в присмерк або вертається з темряви. Світло не робить шлях безпечним, але дозволяє помітити те, що ніч ховає першим.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🕯",
+      "inspectable": true,
+      "torch_source": true,
+      "examine_summary": "суха смола тримає вогонь довше, але сам факел не робить стежку безпечною",
+      "infinite_for_now": true,
+      "future_limited_stock": true,
+      "moved_to_watchtower": true,
+      "aliases": [
+        "факели",
+        "факел",
+        "поставка",
+        "смоляна поставка",
+        "поставка з факелами",
+        "світло",
+        "torch",
+        "torches"
       ]
     }
   },

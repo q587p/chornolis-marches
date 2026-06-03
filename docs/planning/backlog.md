@@ -16,7 +16,7 @@ These may become `next` after 0.13-0.15 foundations land.
 - NPC-008: starter supply guards and watched beginner stores, so the watchtower/cache area feels maintained when animals or careless characters disturb beginner-critical supplies.
 - LOOT-001 follow-up after the `0.15.16` money MVP: richer authored small finds, empty-search atmosphere, item lifetime and future offering hooks around starter-adjacent or calm locations, so early searching is not limited to defending distant forest resource spots.
 - Ground money and small find objects beyond the first `shah` MVP should keep folding into `LOOT-001` before becoming a separate economy system.
-- APIARY-004 and apiary follow-ups after `0.15.19` / `0.15.20`: keep the bear honey loop, honey/wax food/remedy/offering/crafting uses, trade value, shop/barter hooks and deeper bumblebee consequences visible here, but do not promote them before the `LEARN` / `OBS` foundation. The first old log apiary, passive sting hazard and honey/beeswax raid are in testing as the current apiary endpoint.
+- APIARY-004 and apiary follow-ups after `0.15.19` / `0.15.20`: keep the bear honey loop, honey/wax food/remedy/offering/crafting uses, trade value, shop/barter hooks and deeper bumblebee consequences visible here, including a disturbed-hive danger pass where recently troubled bees become much more aggressive for a while. Do not promote these before the `LEARN` / `OBS` foundation. The first old log apiary, passive sting hazard and honey/beeswax raid are in testing as the current apiary endpoint.
 - Local pickup/gather observer feedback beyond хмиз, after `ITEM-001` clarifies pickup versus gather command semantics.
 - ALC-001: first simple herbal stamina elixir from gathered herbs and possibly berries, before a full alchemy system.
 - Richer butchering outputs after `FOOD-001`: species-specific meat, bones, hide, fur, feathers, tools, skill-based yield and spoilage.
@@ -31,7 +31,7 @@ These may become `next` after 0.13-0.15 foundations land.
 - ECO-009: seasonal ecology and environment variation, so lunar circles and seasons can later affect resources, animal behavior, local work rhythms and `look` / `examine` atmosphere without becoming a full simulation too early.
 - Local console client for command/action smoke tests.
 - Shared command registry and per-command help: keep `/commands`, `/help`, text aliases, future MUD commands, Telegram buttons and permissions from drifting apart.
-- Rework `/commands` into a cleaner hidden command reference instead of a broad alias wall: group it by real player goals, keep survival advice in `/help` or tutorial surfaces, and document which commands are current, planned or scribe-only.
+- CMD-004: shrink `/help` to the minimal useful beginner surface and rewrite `/commands` as the current grouped command reference, with admin/scribe-only commands kept in `/adminHelp`.
 - Follow-up command packs after `CMD-001`: `give`, `put`, `drink`, `skills`, `effects`, `consider`, `compare`, `journal`, `party`, `guild`, `spells`, `cast`, `weather`, builder commands and moderation commands.
 - CRAFT-001: craftable placeable chests as local containers, after generic `put`/container semantics are stable enough.
 - PROG-006: chronicle registration backfill, local arrival messages and a scribe/admin real-time event view.
@@ -54,6 +54,7 @@ These may become `next` after 0.13-0.15 foundations land.
 ## Technical Backlog
 
 - Continue behavior-preserving service boundary cleanup.
+- LANG-001: move duplicated corpse/resource display names and aliases toward lexicon/grammar-backed helpers, especially `corpses.ts` and inventory resource paths that currently repeat per-species or per-sex strings.
 - TECH-002: add location feature archetypes / world-data deduplication so repeated authored defaults such as Strange Totem icons, aliases, twig yield data and static top-level fields can live in one reusable template with per-instance overrides.
 - Extract visibility and world-time helpers away from handlers.
 - Split broad completion logic only when feature work touches it.

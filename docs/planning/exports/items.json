@@ -175,7 +175,8 @@
       "apiary",
       "honey",
       "beeswax",
-      "resources"
+      "resources",
+      "fire"
     ],
     "depends_on": [],
     "exports": {},
@@ -586,6 +587,24 @@
     "depends_on": [],
     "exports": {},
     "file": "docs/planning/items/CMD-003-news-command-deep-link-audit.md"
+  },
+  {
+    "id": "CMD-004",
+    "title": "Compact help and current command reference",
+    "status": "backlog",
+    "type": "feature",
+    "area": "commands",
+    "priority": "high",
+    "tags": [
+      "commands",
+      "help",
+      "onboarding",
+      "aliases",
+      "ux"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/CMD-004-help-and-commands-split.md"
   },
   {
     "id": "COMBAT-001",
@@ -1635,12 +1654,15 @@
     "status": "backlog",
     "type": "chore",
     "area": "content",
-    "priority": "medium",
+    "priority": "high",
     "tags": [
       "ukrainian",
       "lexicon",
       "grammar",
-      "text"
+      "text",
+      "optimization",
+      "corpses",
+      "resources"
     ],
     "depends_on": [],
     "exports": {},
@@ -4444,6 +4466,27 @@
     ],
     "exports": {},
     "file": "docs/planning/items/WPN-004-weapon-condition-backlog.md"
+  },
+  {
+    "id": "WPN-005",
+    "title": "Hand slots and visible held items",
+    "status": "backlog",
+    "type": "feature",
+    "area": "items",
+    "priority": "high",
+    "tags": [
+      "weapons",
+      "inventory",
+      "equipment",
+      "visibility",
+      "npcs"
+    ],
+    "depends_on": [
+      "WPN-001",
+      "WPN-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WPN-005-hand-slots-and-visible-held-items.md"
   },
   {
     "id": "WPN-ICE-001",

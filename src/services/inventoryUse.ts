@@ -311,6 +311,7 @@ export async function useInventoryResource(playerId: number, resourceKey: Usable
         data: {
           hp: outcome.nextHp,
           hunger: outcome.nextHunger,
+          lastHpRegenAt: outcome.nextHp < player.hp ? new Date() : undefined,
           lastPassiveHungerAtMinute: outcome.hungerChanged ? worldState.absoluteMinute : undefined,
         },
       });

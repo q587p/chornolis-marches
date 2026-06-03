@@ -18,8 +18,9 @@ This connects to existing inventory, corpse freshening, hunter/NPC inventory and
 1. `WPN-001` — catalog, resource types, equipped fields, player equip/unequip.
 2. `WPN-002` — weapon-aware `look` / `examine`, `attack`, `freshen`.
 3. `WPN-003` — themed NPC seeded weapons and hunter spear attack text; do this immediately after WPN-002 if the weapon MVP still has room, otherwise keep it as near-term backlog.
-4. Keep `WPN-004` cold until item-instance groundwork is real.
-5. Keep `WPN-ICE-001` in icebox until full combat is intentionally promoted.
+4. `WPN-005` — coherent hand slots and visible held items for players and NPC/local characters.
+5. Keep `WPN-004` cold until item-instance groundwork is real.
+6. Keep `WPN-ICE-001` in icebox until full combat is intentionally promoted.
 
 ## Near-term guardrail
 
@@ -50,6 +51,7 @@ src/handlers/start.ts
 - Weapon display must respect visibility/light rules already used by look/examine.
 - The current torch system is already a held-item signal; do not break torch visibility.
 - The MVP may allow weapon + torch at once. Model hand conflicts later.
+- That follow-up is now `WPN-005`: display what is in each hand coherently for both player characters and NPC/local characters, including torch + knife/spear/tool combinations.
 - Freshen should validate weapon at completion time, because queue state can change before the action resolves.
 - Weapon and equipped-tool nouns should be lexicon-backed. The MVP weapon keys already have forms in `src/content/lexicon/worldLexicon.ts`; future weapons should add full case forms there and route display/action text through shared weapon/grammar helpers instead of inferring from `ResourceType.name` or local maps.
 - Event logs should include weapon key where useful.

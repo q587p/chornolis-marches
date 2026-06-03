@@ -198,6 +198,7 @@ async function spendPlayerStaminaCost(bot: Bot, playerId: number, cost: number, 
     cost,
   });
   const nextState = fatigueStateFor(after, max);
+  const actionAt = new Date();
 
   const updated = await prisma.player.updateMany({
     where: { id: playerId },
@@ -206,8 +207,9 @@ async function spendPlayerStaminaCost(bot: Bot, playerId: number, cost: number, 
       hp: nextHp,
       fatigueState: nextState,
       isResting: false,
-      lastActionAt: new Date(),
-      lastStaminaRegenAt: new Date(),
+      lastActionAt: actionAt,
+      lastStaminaRegenAt: actionAt,
+      lastHpRegenAt: tookHp ? actionAt : undefined,
       hunger: nextHunger,
     },
   });

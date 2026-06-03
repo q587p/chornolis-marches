@@ -10,6 +10,7 @@ tags:
   - honey
   - beeswax
   - resources
+  - fire
 ---
 
 # APIARY-003 — Honey, Wax And Hive Robbery
@@ -37,3 +38,13 @@ Add honey and beeswax as useful but limited rewards, then add a deliberate risky
 - Honey and wax render with correct Ukrainian forms.
 - Robbery cannot be spam-farmed.
 - Disturbance is risky and visible, but understandable from inspection copy.
+- A later disturbed-hive tuning pass should make a recently disturbed apiary feel unsafe to linger near: passive sting chance can rise as high as `930` promille for the disturbed period, damage should be stronger than ordinary passive stings, and the player-facing warning should be atmospheric rather than numeric, e.g. making it clear that the bees are agitated and the character may want to back away and recover.
+- A later fire interaction pass should decide how bumblebees react to nearby fire sources. Active campfires, smoke, carried lit torches and freshly lit fires may calm, repel, confuse or sharply anger the hive depending on distance and context. Do not collapse this into one generic "fire nearby" flag without deciding the player-facing consequence and warning copy.
+
+## Watchpoints
+
+- `0.15.20` uses a Prisma enum migration for `RAID_APIARY`. Deploy order matters: run `prisma migrate deploy` before starting the new bot runtime. PostgreSQL enum rollback is not a simple reverse migration, so rollback usually means reverting code while leaving the unused enum value in place.
+- `completeApiaryRaid()` currently applies `raidApiaryForPlayer()` reward/damage/event side effects before spending stamina. This is acceptable while stamina spend is completion bookkeeping, but if stamina spending later becomes a validation gate or can fail, move stamina validation/spend before the raid side effects or make the whole completion transactional.
+- `/search_beeswax` starts the same risky apiary raid as `/search_honey`: honey is the success reward, while beeswax is chance-based. Legacy `/gather_honey` and `/gather_beeswax` routes may remain for old links, but player-facing copy should prefer `search`, because this is a feature interaction rather than ordinary location-resource gathering.
+- Disturbed-hive copy should avoid raw numbers. Prefer a short warning that the air has become sharper and more hostile, that the bees no longer merely guard the hollow, and that stepping away may be wiser than testing their anger.
+- Fire interaction copy should distinguish campfire smoke from a carried torch. A campfire might eventually create a safer harvesting tactic, while a torch shoved too close to the hollow might look like a threat and provoke a stronger response.
