@@ -19,6 +19,11 @@ After the first dream tutorial, the next progression priority is an observation-
 
 The first canonical observation bridge is intentionally narrow: attentive presence around visible gathering of medicinal herbs, berries and mushrooms can record `gathering` progress with `observation` as the source and a resource-specific context. Honey, beeswax, twigs, money, loot-like finds and missing resource metadata do not create canonical gathering learning progress unless a later design task explicitly adds them.
 
+`0.15.22` stabilizes this bridge by scanning a small set of recent gathering
+source events and skipping sources the same player has already observed. This
+keeps one already-seen or unsupported gather-like event from blocking a still
+valid herbs/berries/mushrooms observation in the same short attention window.
+
 Future observation, tracking, apprenticeship and practice slices should use this service instead of inventing separate progress storage.
 
 ## 0.13.11+ Learning Placeholders and Bridges

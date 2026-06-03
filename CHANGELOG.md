@@ -7,6 +7,17 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.22 - Learning foundation stabilization - 12026-06-03
+
+### Changed
+
+- Hardened gathering observation source selection so already observed or unsupported recent gather-like events no longer block a still-valid herbs, berries or mushrooms observation inside the same attention window.
+- Updated progression and `next` planning docs to record the stabilization pass and keep follow intent, track-learning and skill effects deferred.
+
+### Fixed
+
+- Added regression coverage for the case where a recent unsupported source such as honey appears after a supported herbs source and previously could mask the supported observation path.
+
 ## 0.15.21 - Attentive presence learning bridge - 12026-06-03
 
 ### Added

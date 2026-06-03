@@ -20,10 +20,12 @@ export {
 } from "./gatheringLearningRules";
 
 const GATHERING_OBSERVATION_WINDOW_MS = Number(process.env.WORLD_GATHERING_OBSERVATION_WINDOW_MS || 120_000);
+const GATHERING_OBSERVATION_SOURCE_SCAN_LIMIT = 8;
 
 type GatheringLearningDb = {
   worldEvent: {
     findFirst: (...args: any[]) => Promise<any>;
+    findMany: (...args: any[]) => Promise<any[]>;
     create: (...args: any[]) => Promise<any>;
     count: (...args: any[]) => Promise<number>;
   };
@@ -66,7 +68,7 @@ export async function recordGatheringObservation(input: { playerId: number; loca
   const since = new Date(now.getTime() - GATHERING_OBSERVATION_WINDOW_MS);
 
   try {
-    const source = await db.worldEvent.findFirst({
+    const sources = await db.worldEvent.findMany({
       where: {
         title: GATHERING_SOURCE_EVENT_TITLE,
         locationId: input.locationId,
@@ -74,69 +76,74 @@ export async function recordGatheringObservation(input: { playerId: number; loca
         OR: [{ playerId: null }, { playerId: { not: input.playerId } }],
       },
       orderBy: { createdAt: "desc" },
+      take: GATHERING_OBSERVATION_SOURCE_SCAN_LIMIT,
       select: { id: true, description: true },
     });
-    if (!source) return { observed: false, milestone: false, observationCount: 0 };
+    if (!sources.length) return { observed: false, milestone: false, observationCount: 0 };
 
-    const description = gatheringObservationDescription(source.id);
-    const existing = await db.worldEvent.findFirst({
-      where: {
-        title: GATHERING_OBSERVATION_EVENT_TITLE,
-        playerId: input.playerId,
-        description,
-      },
-      select: { id: true },
-    });
-    if (existing) return { observed: false, milestone: false, observationCount: 0 };
-
-    await db.worldEvent.create({
-      data: {
-        type: "SYSTEM",
-        title: GATHERING_OBSERVATION_EVENT_TITLE,
-        description,
-        playerId: input.playerId,
-        locationId: input.locationId,
-      },
-    });
-
-    const contextKey = observableGatheringContextKey(source.description);
-    if (contextKey) {
-      try {
-        await recordLearningProgress({
+    for (const source of sources) {
+      const description = gatheringObservationDescription(source.id);
+      const existing = await db.worldEvent.findFirst({
+        where: {
+          title: GATHERING_OBSERVATION_EVENT_TITLE,
           playerId: input.playerId,
-          skillKey: "gathering",
-          sourceKey: "observation",
-          contextKey,
-          amount: 1,
-          milestoneEvery: GATHERING_OBSERVATION_INTERVAL,
-          lastSourceEventId: source.id,
-        }, db as any);
-      } catch (error) {
-        console.warn("Failed to write canonical gathering observation progress:", error);
-      }
-    }
+          description,
+        },
+        select: { id: true },
+      });
+      if (existing) continue;
 
-    const observationCount = await db.worldEvent.count({
-      where: {
-        title: GATHERING_OBSERVATION_EVENT_TITLE,
-        playerId: input.playerId,
-      },
-    });
-    const milestone = isGatheringObservationMilestone(observationCount);
-
-    if (milestone) {
       await db.worldEvent.create({
         data: {
           type: "SYSTEM",
-          title: GATHERING_OBSERVATION_MILESTONE_EVENT_TITLE,
-          description: `count=${observationCount}`,
+          title: GATHERING_OBSERVATION_EVENT_TITLE,
+          description,
           playerId: input.playerId,
           locationId: input.locationId,
         },
       });
+
+      const contextKey = observableGatheringContextKey(source.description);
+      if (contextKey) {
+        try {
+          await recordLearningProgress({
+            playerId: input.playerId,
+            skillKey: "gathering",
+            sourceKey: "observation",
+            contextKey,
+            amount: 1,
+            milestoneEvery: GATHERING_OBSERVATION_INTERVAL,
+            lastSourceEventId: source.id,
+          }, db as any);
+        } catch (error) {
+          console.warn("Failed to write canonical gathering observation progress:", error);
+        }
+      }
+
+      const observationCount = await db.worldEvent.count({
+        where: {
+          title: GATHERING_OBSERVATION_EVENT_TITLE,
+          playerId: input.playerId,
+        },
+      });
+      const milestone = isGatheringObservationMilestone(observationCount);
+
+      if (milestone) {
+        await db.worldEvent.create({
+          data: {
+            type: "SYSTEM",
+            title: GATHERING_OBSERVATION_MILESTONE_EVENT_TITLE,
+            description: `count=${observationCount}`,
+            playerId: input.playerId,
+            locationId: input.locationId,
+          },
+        });
+      }
+
+      return { observed: true, milestone, observationCount };
     }
 
-    return { observed: true, milestone, observationCount };
+    return { observed: false, milestone: false, observationCount: 0 };
   } catch (error) {
     console.warn("Failed to record gathering observation:", error);
     return { observed: false, milestone: false, observationCount: 0 };
