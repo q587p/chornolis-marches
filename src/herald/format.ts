@@ -8,6 +8,8 @@ export type HeraldPublicationMessageSource = {
   title: string;
   body: string;
   sourceType?: string;
+  sourceDate?: string | null;
+  sourceVersion?: string | null;
   renderedText?: string | null;
 };
 
@@ -21,10 +23,12 @@ export function formatHeraldPublicationPlainMessage(publication: HeraldPublicati
   if (publication.renderedText) return sanitizeHeraldChannelText(publication.renderedText);
 
   if (publication.sourceType === "NEWS_MD_ARCHIVE") {
+    const metadata = publication.sourceDate ? [`Дата запису: ${publication.sourceDate}`] : [];
     return sanitizeHeraldChannelText([
       "📜 З архіву Канцелярії",
       "",
       `Архівний запис: ${publication.title}`,
+      ...metadata,
       "",
       publication.body || "У цьому записі лишився тільки заголовок.",
     ].join("\n"));
@@ -60,11 +64,15 @@ export function formatHeraldPublicationMessage(publication: HeraldPublicationMes
 export function formatHeraldPublicationRepostMessage(publication: HeraldPublicationMessageSource) {
   const snapshot = formatHeraldPublicationMessage(publication);
   const idText = publication.id ? ` #${publication.id}` : "";
+  const originalDateText = publication.sourceDate
+    ? `Первісна дата запису: ${publication.sourceDate}.`
+    : "Первісну дату не знайдено в збереженому записі.";
   return sanitizeHeraldChannelText([
     "📜 З архіву Канцелярії",
     "",
     `Повторна публікація з книги Канцелярії${idText}.`,
-    "Telegram показує час нового повідомлення; первісну дату дивіться в самому записі, якщо вона там є.",
+    originalDateText,
+    "Telegram показує час нового повідомлення; старий час публікації не відновлювався.",
     "",
     snapshot,
   ].join("\n"));

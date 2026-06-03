@@ -89,6 +89,8 @@ export function registerHeraldNewsBackfillCommands(bot: Bot, heraldAdminIds: Rea
         ? ["", "Так виглядатиме перший архівний допис:", "", formatHeraldPublicationMessage({
           sourceType: "NEWS_MD_ARCHIVE",
           title: sample.title,
+          sourceDate: sample.sourceDate,
+          sourceVersion: sample.sourceVersion,
           body: formatArchiveBody(sample),
         })].join("\n")
         : "";

@@ -137,6 +137,8 @@ export async function queueNewsBackfill(entries: readonly HeraldNewsEntry[], int
       renderedText: formatHeraldPublicationPlainMessage({
         sourceType: NEWS_ARCHIVE_SOURCE_TYPE,
         title: entry.title,
+        sourceDate: entry.sourceDate,
+        sourceVersion: entry.sourceVersion,
         body: formatArchiveBody(entry),
       }),
       archiveOrder,

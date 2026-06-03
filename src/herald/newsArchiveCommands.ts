@@ -84,6 +84,8 @@ function archivePublicationMessage(entry: HeraldNewsEntry) {
   return formatHeraldPublicationMessage({
     sourceType: NEWS_ARCHIVE_SOURCE_TYPE,
     title: entry.title,
+    sourceDate: entry.sourceDate,
+    sourceVersion: entry.sourceVersion,
     body: formatArchiveBody(entry),
   });
 }
@@ -100,6 +102,8 @@ function archivePublicationInput(row: { index: number; entry: HeraldNewsEntry })
     renderedText: formatHeraldPublicationPlainMessage({
       sourceType: NEWS_ARCHIVE_SOURCE_TYPE,
       title: row.entry.title,
+      sourceDate: row.entry.sourceDate,
+      sourceVersion: row.entry.sourceVersion,
       body,
     }),
     archiveOrder: row.index - 1,
