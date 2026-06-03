@@ -50,6 +50,13 @@ path. Nearby players still learn through the existing `/look`, `/examine` and
 witnessed-action surfaces; there is no new `/observe`, public skill sheet or
 separate herbalist-learning storage.
 
+`0.15.28` adds a second tiny observation-shaped moment to the same profession
+route: a herbalist in the cellar may rarely demonstrate a hidden spoken passage.
+This teaches by being present for a local world action, not by adding a public
+skill UI or a new observation command. Future track/follow learning can reuse
+this pattern: a witnessed unusual movement may become a source for attention,
+tracking or route-memory progress once those slices exist.
+
 Observed actor skill remains future work. A later slice should add a small helper
 such as `observedActorSkillLevel(...)` that can read player learning progress or
 return profession/species profile defaults for herbalists, hunters and animals

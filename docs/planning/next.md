@@ -22,6 +22,8 @@ The `LEARN-001` foundation is in testing after the minimal persistent learning/p
 
 `0.15.26` puts that cellar to work as a small observation bridge: a herbalist can occasionally stage through the cellar/watchtower, gather herbs/berries/mushrooms through existing actions and return to sort/rest. This is the first visible profession-route MVP, not a full profession system or follow-intent implementation.
 
+`0.15.28` adds a rare herbalist demonstration of the cellar's hidden spoken passage. Treat it as another proof that world actions can teach attentive players, while leaving follow intent, auto-follow and route-learning storage for later slices.
+
 Do not open another broad content loop before the learning/observation foundation is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
 ## Immediate Sequence

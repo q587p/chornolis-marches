@@ -7,6 +7,20 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.28 - Herbalist water-word demonstration - 12026-06-03
+
+### Added
+
+- Let herbalists rarely demonstrate the hidden cellar water-word passage during supply-run staging, moving from the starter cellar to the under-bridge without adding visible exits, buttons or a return route.
+- Added local observer copy that can reveal the spoken phrase only to nearby players present for the moment.
+- Added `Herbalist water-word passage` WorldEvent markers with creature/source/destination/trigger metadata for debugging.
+- Added focused helper coverage for herbalist-only/location-only/chance-gated usage, observer copy and event metadata.
+
+### Changed
+
+- Kept the herbalist supply-run route compatible with the existing gather-stage pathfinding after the demonstration by resuming at the ordinary `to_gather` stage.
+- Updated NPC profession, progression and Codex map notes to record the demonstration as an observation bridge, not a follow-intent or auto-follow feature.
+
 ## 0.15.27 - Darkness-aware feature inspection - 12026-06-03
 
 ### Fixed
