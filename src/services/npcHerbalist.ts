@@ -3,18 +3,25 @@ import { Direction, LocationExit } from "@prisma/client";
 import { prisma } from "../db";
 import { actionDurationMs, gatherDurationMs, movementDurationMs } from "./actionRules";
 import { enqueueCreatureAction } from "./actionLifecycle";
+import {
+  CELLAR_WATER_PASSAGE_DESTINATION_KEY,
+  CELLAR_WATER_PASSAGE_SOURCE_KEY,
+} from "./cellarWaterPassage";
 import { creatureUsableExits } from "./creatureMovement";
 import { findLocationRoute, type RouteStep } from "./routeFinding";
+import { notifyLocationAll } from "./notifications";
 import { maybePerformHerbalistSignal } from "./socialAutonomy";
 
 export const HERBALIST_PROFESSION_KEYS = ["znakhar", "travnytsia"] as const;
 export const HERBALIST_SUPPLY_RUN_STAGE_EVENT_TITLE = "Herbalist supply run stage";
 export const HERBALIST_SUPPLY_RUN_COMPLETED_EVENT_TITLE = "Herbalist supply run completed";
 export const HERBALIST_SUPPLY_RUN_BASELINE_EVENT_TITLE = "Herbalist supply run baseline";
+export const HERBALIST_WATER_WORD_PASSAGE_EVENT_TITLE = "Herbalist water-word passage";
 export const HERBALIST_SUPPLY_RUN_MIN_INTERVAL_MINUTES = 3 * 24 * 60;
 export const HERBALIST_SUPPLY_RUN_FORCE_INTERVAL_MINUTES = 7 * 24 * 60;
 export const HERBALIST_SUPPLY_RUN_CHANCE_AFTER_MIN = 8;
-export const HERBALIST_CELLAR_LOCATION_KEY = "start_border_cellar";
+export const HERBALIST_WATER_WORD_PASSAGE_CHANCE_PERCENT = 20;
+export const HERBALIST_CELLAR_LOCATION_KEY = CELLAR_WATER_PASSAGE_SOURCE_KEY;
 export const HERBALIST_WATCHTOWER_LOCATION_KEY = "start_border_watchtower";
 export const HERBALIST_GATHER_LOCATION_KEY = "meadow_16_05";
 export const HERBALIST_GATHER_RESOURCE_KEYS = ["herbs", "berries", "mushrooms"] as const;
@@ -112,6 +119,17 @@ function eventCreatureMarker(creatureId: number) {
   return `creatureId=${creatureId}`;
 }
 
+export function herbalistWaterWordPassageEventDescription(creatureId: number, absoluteMinute: number) {
+  return [
+    eventCreatureMarker(creatureId),
+    `absoluteMinute=${Math.max(0, Math.floor(absoluteMinute))}`,
+    `source=${CELLAR_WATER_PASSAGE_SOURCE_KEY}`,
+    `destination=${CELLAR_WATER_PASSAGE_DESTINATION_KEY}`,
+    "trigger=water_word_phrase",
+    "stage=supply_run",
+  ].join("; ");
+}
+
 function stageDescription(creatureId: number, stage: HerbalistSupplyRunStage, absoluteMinute: number, extra: Record<string, string | number> = {}) {
   const parts = [eventCreatureMarker(creatureId), `stage=${stage}`, `absoluteMinute=${Math.max(0, Math.floor(absoluteMinute))}`];
   for (const [key, value] of Object.entries(extra)) parts.push(`${key}=${value}`);
@@ -131,6 +149,17 @@ function parseAbsoluteMinute(description: string | null | undefined) {
 
 export function isHerbalistCreature(creature: { species?: { key?: string | null } | null; professionKey?: string | null }) {
   return creature.species?.key === "herbalist" || (creature.professionKey ? (HERBALIST_PROFESSION_KEYS as readonly string[]).includes(creature.professionKey) : false);
+}
+
+export function shouldHerbalistUseWaterWordPassage(input: {
+  creature: { species?: { key?: string | null } | null; professionKey?: string | null };
+  locationKey?: string | null;
+  randomPercent?: number;
+}) {
+  if (!isHerbalistCreature(input.creature)) return false;
+  if (input.locationKey !== CELLAR_WATER_PASSAGE_SOURCE_KEY) return false;
+  const roll = input.randomPercent ?? Math.random() * 100;
+  return roll < HERBALIST_WATER_WORD_PASSAGE_CHANCE_PERCENT;
 }
 
 export function isHerbalistSupplyRunDue(input: {
@@ -160,6 +189,18 @@ export function herbalistCellarShelfCheckText() {
 
 export function herbalistCellarDepositText() {
   return "сортує трави в погребі";
+}
+
+export function herbalistWaterWordCellarObserverText() {
+  return "Знахар торкається стіни зарубок і тихо каже: «До води». На мить у сухому погребі чути воду — і його крок зникає.";
+}
+
+export function herbalistWaterWordDestinationObserverText() {
+  return "Знахар виходить з мокрої темряви під мостом, ніби прийшов не стежкою, а словом.";
+}
+
+export function herbalistWaterWordCurrentAction() {
+  return "виходить з мокрої темряви під мостом";
 }
 
 export function herbalistGatherText(resourceKey: HerbalistGatherResourceKey) {
@@ -336,6 +377,55 @@ async function queueRestInCellar(creature: any) {
   return "queuedRest";
 }
 
+async function maybeUseHerbalistWaterWordPassage(bot: Bot | null, creature: any, absoluteMinute: number) {
+  if (!shouldHerbalistUseWaterWordPassage({
+    creature,
+    locationKey: creature.location?.key,
+  })) return false;
+
+  const destination = await prisma.cellLocation.findUnique({
+    where: { key: CELLAR_WATER_PASSAGE_DESTINATION_KEY },
+    select: { id: true },
+  });
+  if (!destination) return false;
+
+  const sourceLocationId = creature.locationId;
+  const moved = await prisma.$transaction(async (tx) => {
+    const updated = await tx.creature.updateMany({
+      where: {
+        id: creature.id,
+        locationId: sourceLocationId,
+        isAlive: true,
+        isGone: false,
+      },
+      data: {
+        locationId: destination.id,
+        activity: "MOVING",
+        currentAction: herbalistWaterWordCurrentAction(),
+        steps: { increment: 1 },
+      },
+    });
+    if (updated.count === 0) return false;
+
+    await tx.worldEvent.create({
+      data: {
+        type: "SYSTEM",
+        title: HERBALIST_WATER_WORD_PASSAGE_EVENT_TITLE,
+        description: herbalistWaterWordPassageEventDescription(creature.id, absoluteMinute),
+        locationId: sourceLocationId,
+      },
+    });
+    return true;
+  });
+  if (!moved) return false;
+
+  if (bot) {
+    await notifyLocationAll(bot, sourceLocationId, herbalistWaterWordCellarObserverText());
+    await notifyLocationAll(bot, destination.id, herbalistWaterWordDestinationObserverText());
+  }
+  return true;
+}
+
 async function maybeHerbalistSpeak(creature: any) {
   if (!chance(Number(process.env.HERBALIST_SPEAK_CHANCE || 12))) return false;
   const line = pick(HERBALIST_LINES);
@@ -384,7 +474,7 @@ async function tickLegacyHerbalist(bot: Bot | null, creature: any) {
   return "queuedRest";
 }
 
-async function tickSupplyRunStage(creature: any, stage: HerbalistSupplyRunStage, absoluteMinute: number) {
+async function tickSupplyRunStage(bot: Bot | null, creature: any, stage: HerbalistSupplyRunStage, absoluteMinute: number) {
   const [cellarLocationId, watchtowerLocationId, gatherLocationId] = await Promise.all([
     locationIdByKey(HERBALIST_CELLAR_LOCATION_KEY),
     locationIdByKey(HERBALIST_WATCHTOWER_LOCATION_KEY),
@@ -405,6 +495,14 @@ async function tickSupplyRunStage(creature: any, stage: HerbalistSupplyRunStage,
   }
 
   if (stage === "cellar_check") {
+    if (await maybeUseHerbalistWaterWordPassage(bot, creature, absoluteMinute)) {
+      await recordSupplyRunStage(creature, "to_gather", absoluteMinute, {
+        target: HERBALIST_GATHER_LOCATION_KEY,
+        route: "water_word_passage",
+      });
+      return "queuedMove";
+    }
+
     await recordSupplyRunStage(creature, "to_watchtower", absoluteMinute);
     const move = await moveTowardOrPause(
       creature,
@@ -483,7 +581,7 @@ export async function tickNpcHerbalist(bot: Bot | null, creature: any, absoluteM
   if (!isHerbalistCreature(creature)) return "queuedRest";
 
   const stage = await activeSupplyRunStage(creature.id);
-  if (stage) return tickSupplyRunStage(creature, stage, absoluteMinute);
+  if (stage) return tickSupplyRunStage(bot, creature, stage, absoluteMinute);
 
   const anchor = await lastSupplyRunAnchorMinute(creature.id);
   if (anchor === null) {
@@ -493,7 +591,7 @@ export async function tickNpcHerbalist(bot: Bot | null, creature: any, absoluteM
 
   if (isHerbalistSupplyRunDue({ currentAbsoluteMinute: absoluteMinute, lastAnchorAbsoluteMinute: anchor })) {
     await recordSupplyRunStage(creature, "to_cellar", absoluteMinute);
-    return tickSupplyRunStage(creature, "to_cellar", absoluteMinute);
+    return tickSupplyRunStage(bot, creature, "to_cellar", absoluteMinute);
   }
 
   return tickLegacyHerbalist(bot, creature);
