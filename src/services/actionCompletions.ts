@@ -63,6 +63,7 @@ import { contributeToBeginnerCache } from "./beginnerCache";
 import { isBeginnerCacheContributionPayload } from "./beginnerCacheQueue";
 import { maybeGrantGatherShahBonus } from "./smallLoot";
 import { normalizeTrackQuery, trackMatchesQuery } from "./trackSearch";
+import { tryCompleteCellarWaterWordPassage } from "./cellarWaterPassage";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
@@ -1530,6 +1531,10 @@ async function completeSay(bot: Bot, action: WorldAction) {
 
     const staminaSpend = await spendPlayerStamina(bot, player.id, "SAY", chatId);
     await prisma.player.updateMany({ where: { id: player.id }, data: { says: { increment: 1 } } });
+    if (!targetDative && await tryCompleteCellarWaterWordPassage(bot, { playerId: player.id, text, chatId })) {
+      await setActionStatus(action, "DONE");
+      return;
+    }
     await notifyLocationExcept(
       bot,
       player.currentLocationId,
