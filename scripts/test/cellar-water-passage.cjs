@@ -6,12 +6,17 @@ require("ts-node/register");
 const {
   CELLAR_WATER_PASSAGE_DESTINATION_KEY,
   CELLAR_WATER_PASSAGE_EVENT_TITLE,
+  CELLAR_WATER_PASSAGE_RESULT_TEXT,
   CELLAR_WATER_PASSAGE_SOURCE_KEY,
   canTriggerCellarWaterWordPassage,
   cellarWaterWordPassageEventDescription,
   isCellarWaterWordPhrase,
   normalizeCellarWaterWordPhrase,
 } = require("../../src/services/cellarWaterPassage");
+const {
+  darkFeatureInspectionText,
+  featureBriefInspectionText,
+} = require("../../src/services/locations");
 
 assert.equal(normalizeCellarWaterWordPhrase("До води!"), "до води");
 assert.equal(isCellarWaterWordPhrase("До води"), true);
@@ -56,7 +61,19 @@ for (const feature of [notchWall, mapBoard]) {
   assert.equal(feature.locationKey, CELLAR_WATER_PASSAGE_SOURCE_KEY, "Water-word hint should stay in the cellar");
   const text = `${feature.description}\n${feature.data?.examine_summary ?? ""}`;
   assert.match(text, /до води/i, "Feature inspection text should hint the water-word phrase");
+
+  for (const darkText of [
+    darkFeatureInspectionText(feature),
+    featureBriefInspectionText(feature, false, {}, false),
+  ]) {
+    assert.doesNotMatch(darkText, /До води/i, "Dark feature text should not reveal the water-word phrase");
+    assert.doesNotMatch(darkText, /до води/i, "Dark feature text should not reveal the water-word phrase");
+    assert.doesNotMatch(darkText, /under_bridge_18_05/i, "Dark feature text should not reveal the destination key");
+    assert.doesNotMatch(darkText, /під мостом/i, "Dark feature text should not reveal the under-bridge clue");
+  }
 }
+
+assert.match(CELLAR_WATER_PASSAGE_RESULT_TEXT, /Тепер варто озирнутися\./);
 
 const eventDescription = cellarWaterWordPassageEventDescription(42);
 assert.equal(CELLAR_WATER_PASSAGE_EVENT_TITLE, "Cellar water-word passage");

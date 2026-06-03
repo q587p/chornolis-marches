@@ -10,7 +10,7 @@ export const CELLAR_WATER_PASSAGE_SOURCE_KEY = "start_border_cellar";
 export const CELLAR_WATER_PASSAGE_DESTINATION_KEY = "under_bridge_18_05";
 export const CELLAR_WATER_PASSAGE_EVENT_TITLE = "Cellar water-word passage";
 export const CELLAR_WATER_PASSAGE_RESULT_TEXT =
-  "Слова падають у суху глину. На мить під ногами чути воду. Коли темрява повертається на місце, ви стоїте під старим мостом.";
+  "Слова падають у суху глину. На мить під ногами чути воду. Коли темрява повертається на місце, ви стоїте під старим мостом. Тепер варто озирнутися.";
 
 export function normalizeCellarWaterWordPhrase(text: string) {
   return text
