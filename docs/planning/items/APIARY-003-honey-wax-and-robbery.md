@@ -10,6 +10,7 @@ tags:
   - honey
   - beeswax
   - resources
+  - fire
 ---
 
 # APIARY-003 — Honey, Wax And Hive Robbery
@@ -38,6 +39,7 @@ Add honey and beeswax as useful but limited rewards, then add a deliberate risky
 - Robbery cannot be spam-farmed.
 - Disturbance is risky and visible, but understandable from inspection copy.
 - A later disturbed-hive tuning pass should make a recently disturbed apiary feel unsafe to linger near: passive sting chance can rise as high as `930` promille for the disturbed period, damage should be stronger than ordinary passive stings, and the player-facing warning should be atmospheric rather than numeric, e.g. making it clear that the bees are agitated and the character may want to back away and recover.
+- A later fire interaction pass should decide how bumblebees react to nearby fire sources. Active campfires, smoke, carried lit torches and freshly lit fires may calm, repel, confuse or sharply anger the hive depending on distance and context. Do not collapse this into one generic "fire nearby" flag without deciding the player-facing consequence and warning copy.
 
 ## Watchpoints
 
@@ -45,3 +47,4 @@ Add honey and beeswax as useful but limited rewards, then add a deliberate risky
 - `completeApiaryRaid()` currently applies `raidApiaryForPlayer()` reward/damage/event side effects before spending stamina. This is acceptable while stamina spend is completion bookkeeping, but if stamina spending later becomes a validation gate or can fail, move stamina validation/spend before the raid side effects or make the whole completion transactional.
 - `/gather_beeswax` starts the same risky apiary raid as `/gather_honey`: honey is the success reward, while beeswax is chance-based. If player copy starts implying guaranteed wax, update the wording or split the mechanic.
 - Disturbed-hive copy should avoid raw numbers. Prefer a short warning that the air has become sharper and more hostile, that the bees no longer merely guard the hollow, and that stepping away may be wiser than testing their anger.
+- Fire interaction copy should distinguish campfire smoke from a carried torch. A campfire might eventually create a safer harvesting tactic, while a torch shoved too close to the hollow might look like a threat and provoke a stronger response.

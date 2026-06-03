@@ -175,7 +175,8 @@
       "apiary",
       "honey",
       "beeswax",
-      "resources"
+      "resources",
+      "fire"
     ],
     "depends_on": [],
     "exports": {},

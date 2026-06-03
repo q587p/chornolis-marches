@@ -8,7 +8,7 @@ ALC-001,First herbal stamina elixir,backlog,feature,survival,high,"alchemy,herbs
 ANIMAL-001,Animal speech reactions,in_progress,feature,ecology,medium,"animals,speech,social,ecology,reactions",docs/planning/items/ANIMAL-001-speech-reactions.md
 APIARY-001,Seed old log apiary feature,testing,feature,ecology,medium,"apiary,bumblebee,world-seed,feature",docs/planning/items/APIARY-001-seed-apiary-feature.md
 APIARY-002,Passive bumblebee sting hazard,testing,feature,ecology,medium,"apiary,bumblebee,hazard,hp",docs/planning/items/APIARY-002-passive-sting-hazard.md
-APIARY-003,Honey wax and hive robbery,testing,feature,resources,medium,"apiary,honey,beeswax,resources",docs/planning/items/APIARY-003-honey-wax-and-robbery.md
+APIARY-003,Honey wax and hive robbery,testing,feature,resources,medium,"apiary,honey,beeswax,resources,fire",docs/planning/items/APIARY-003-honey-wax-and-robbery.md
 APIARY-004,Bear honey loop scaffold,backlog,feature,ecology,low,"apiary,bear,ecology,tracks",docs/planning/items/APIARY-004-bear-honey-loop.md
 AUTH-001,Profile protection and client-neutral login,icebox,system,account,medium,"auth,account,profile,mud,recovery",docs/planning/items/AUTH-001-profile-protection-and-client-neutral-login.md
 BARTER-001,Early exchange and barter foundation after give,backlog,feature,economy,high,"barter,exchange,give,inventory,economy,npc,trade",docs/planning/items/BARTER-001-early-exchange-and-barter-foundation.md

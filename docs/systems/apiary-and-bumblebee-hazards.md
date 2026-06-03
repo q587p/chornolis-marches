@@ -67,6 +67,12 @@ Future disturbed-hive tuning:
 - During that disturbed period, passive sting chance can rise as high as `930` promille and damage should be stronger than ordinary passive stings, so players feel pressure to leave the location and recover.
 - Player-facing copy should not expose those numbers. Use a distinct atmospheric warning that the bees are no longer simply guarding the hollow, the air has become hostile, and stepping away may be wiser than staying under the swarm's anger.
 
+Future fire interaction:
+
+- Decide how active campfires, smoke and carried lit torches affect bumblebee behavior before implementing a generic fire modifier.
+- Campfire smoke might later calm or redirect the swarm, while a carried torch too close to the hollow might read as a threat and make the bees strike harder.
+- Player-facing text should teach the difference through smell, smoke, wing-noise and distance rather than saying "fire bonus" or "sting modifier".
+
 ## Future Work
 
 Bear loops should start as signs and constrained behavior, not full combat. A bear may later smell honey, raid an apiary, flee after stings and leave tracks or damaged wax, but this should not turn the starter camp into a bear trap.
