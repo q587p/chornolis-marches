@@ -107,7 +107,7 @@ MONEY-001,Money resource and small loot MVP,done,feature,core-loop,high,"money,l
 NAV-001,Location-to-location route finding,testing,feature,world,medium,"navigation,movement,npc,world",docs/planning/items/NAV-001-location-route-finding.md
 NOTIF-001,Non-player movement notification coalescing,testing,feature,notifications,high,"telegram,notifications,movement,npc,spirit,camp",docs/planning/items/NOTIF-001-non-player-movement-coalescing.md
 NPC-002,Hunter auto-program MVP,backlog,feature,npc,high,"npc,ecology,hunting,living-world",docs/planning/items/NPC-002-hunter-auto-program.md
-NPC-003,Herbalist service layer,next,technical,npc,medium,"npc,herbalist,architecture,world-tick",docs/planning/items/NPC-003-herbalist-service-layer.md
+NPC-003,Herbalist service layer,in_testing,technical,npc,medium,"npc,herbalist,architecture,world-tick",docs/planning/items/NPC-003-herbalist-service-layer.md
 NPC-004,Actor inventory and held light foundation,in_progress,technical,npc,high,"npc,actors,inventory,torch,light",docs/planning/items/NPC-004-actor-inventory-held-light.md
 NPC-005,NPC hunger and food behavior,next,feature,npc,high,"npc,actors,hunger,food,cooking,herbalist,hunting",docs/planning/items/NPC-005-npc-hunger-and-food-behavior.md
 NPC-006,Hunter patrol and meat practice loop,next,feature,npc,high,"npc,hunting,cooking,freshening,observation-learning,living-world",docs/planning/items/NPC-006-hunter-patrol-meat-practice-loop.md
@@ -117,7 +117,7 @@ OBS-001-A,Observation through existing attention surfaces,testing,feature,learni
 OBS-001-B,Visible gathering action,testing,feature,learning,high,"observe,npc,gathering",docs/planning/items/OBS-001-B.md
 OBS-001-C,Gathering progress from attentive presence,testing,feature,learning,high,"observe,gathering,progression",docs/planning/items/OBS-001-C.md
 OBS-001-D,Observation anti-farming cooldown,testing,feature,learning,medium,"observe,cooldown,anti-grind",docs/planning/items/OBS-001-D.md
-OBS-002,Visible herbalist observation moment,proposed,feature,learning,high,"observe,npc,herbalism,progression",docs/planning/items/OBS-002-visible-herbalist-observation-moment.md
+OBS-002,Visible herbalist observation moment,in_testing,feature,learning,high,"observe,npc,herbalism,progression",docs/planning/items/OBS-002-visible-herbalist-observation-moment.md
 OBS-003,Danger-aware examine cues,done,feature,learning,high,"observe,examine,danger,ecology,atmosphere",docs/planning/items/OBS-003-danger-aware-examine-cues.md
 OBS-PREP-001,Look/examine content audit before observation MVP,testing,design,learning,high,"look,examine,observation,content-audit",docs/planning/items/OBS-PREP-001-look-examine-content-audit.md
 OMEN-001-A,Choose one living-world omen,next,design,world,medium,"omen,ambient,living-world",docs/planning/items/OMEN-001-A.md

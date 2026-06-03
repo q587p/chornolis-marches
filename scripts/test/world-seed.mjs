@@ -256,6 +256,7 @@ assertFeatureExamineSummary(startCellarHatch, "Starter cellar hatch should expla
 const startCellarFeatures = [
   "start_cellar_old_notch_wall",
   "start_cellar_empty_shelf",
+  "start_cellar_dry_bunks",
   "start_cellar_torn_map_board",
 ];
 for (const key of startCellarFeatures) {
@@ -268,6 +269,13 @@ for (const key of startCellarFeatures) {
   assert.ok(Array.isArray(feature.data?.aliases) && feature.data.aliases.length >= 3, `Starter cellar feature should have aliases: ${key}`);
   assertFeatureExamineSummary(feature, `Starter cellar feature should have meaningful examine summary: ${key}`);
 }
+const startCellarShelf = features.find((item) => item.key === "start_cellar_empty_shelf");
+assert.equal(startCellarShelf?.data?.no_loot, true, "Starter cellar shelf should stay no-loot");
+assert.equal(startCellarShelf?.data?.future_herbalist_deposit, true, "Starter cellar shelf should mark future herbalist deposit staging");
+assert.equal(startCellarShelf?.data?.storage_staging, "herbalist_supply_run", "Starter cellar shelf should stage herbalist supply runs without becoming a container");
+const startCellarDryBunks = features.find((item) => item.key === "start_cellar_dry_bunks");
+assert.equal(startCellarDryBunks?.data?.no_loot, true, "Starter cellar dry bunks should not hide loot");
+assert.equal(startCellarDryBunks?.data?.herbalist_rest_staging, true, "Starter cellar dry bunks should stage herbalist rest only");
 assert.equal(resourceNodes.some((node) => node.locationKey === "start_border_cellar"), false, "Starter cellar should not add starter loot/resource nodes");
 
 const startCampTorchStand = features.find((item) => item.key === "start_camp_torch_stand");
