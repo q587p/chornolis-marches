@@ -23,7 +23,7 @@ Do not open another broad content loop before the learning/observation foundatio
 ## Immediate Sequence
 
 1. **TECH/QA:** clean up the test script/runner split or test manifest if it still blocks focused validation.
-2. **OBS-001:** add the first narrow attentive-presence learning bridge through existing `look`, `examine`, witnessed local actions and herbalist / знахар context; do not add a separate `/observe` command yet.
+2. **OBS-001:** add the first narrow attentive-presence learning bridge through existing `look`, `examine` and witnessed local gathering of medicinal herbs, berries and mushrooms; do not add a separate `/observe` command yet.
 3. **SOC-002:** add follow intent only if it directly supports the learning bridge and stays smaller than a travel/group system.
 4. **TRACK-LEARN-001:** add the first track-reading / animal movement learning moment.
 

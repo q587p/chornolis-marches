@@ -62,9 +62,9 @@ Detailed task files live in `docs/planning/items/`.
 3. `LEARN-001-C` — add `grantSkillProgress` helper.
 4. `LEARN-001-D` — keep raw progress technical-only.
 5. `LEARN-002` — add bounded skill effects for success, stamina cost or result quality.
-6. `OBS-001-A` — add observe action/alias skeleton.
-7. `OBS-001-B` — add visible herbalist action.
-8. `OBS-001-C` — grant first herbalism/gathering progress.
+6. `OBS-001-A` — use existing `look`/`examine`/witnessed-context surfaces instead of adding `/observe`.
+7. `OBS-001-B` — expose narrow visible gathering contexts through existing behavior.
+8. `OBS-001-C` — grant first gathering progress from attentive presence.
 9. `OBS-001-D` — add observation anti-farming cooldown.
 10. `OBS-003` — add danger-aware `/examine` atmosphere without raw danger numbers.
 11. `TRACK-LEARN-001-A` — add first track-examine progress hint.

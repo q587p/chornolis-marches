@@ -1,5 +1,6 @@
 import { prisma } from "../db";
 import {
+  GATHERING_OBSERVATION_INTERVAL,
   GATHERING_OBSERVATION_EVENT_TITLE,
   GATHERING_OBSERVATION_MILESTONE_EVENT_TITLE,
   GATHERING_SOURCE_EVENT_TITLE,
@@ -7,6 +8,7 @@ import {
   gatheringSourceDescription,
   isGatheringObservationMilestone,
 } from "./gatheringLearningRules";
+import { recordLearningProgress } from "./learning";
 
 export {
   GATHERING_OBSERVATION_GROWTH_MESSAGE,
@@ -18,6 +20,24 @@ export {
 } from "./gatheringLearningRules";
 
 const GATHERING_OBSERVATION_WINDOW_MS = Number(process.env.WORLD_GATHERING_OBSERVATION_WINDOW_MS || 120_000);
+
+type GatheringLearningDb = {
+  worldEvent: {
+    findFirst: (...args: any[]) => Promise<any>;
+    create: (...args: any[]) => Promise<any>;
+    count: (...args: any[]) => Promise<number>;
+  };
+  characterLearningProgress: any;
+};
+
+const OBSERVABLE_GATHERING_RESOURCE_KEYS = new Set(["berries", "mushrooms", "herbs"]);
+
+export function gatheringObservationContextKey(sourceDescription: string | null | undefined) {
+  const resourceKey = sourceDescription?.match(/(?:^|;\s*)resource=([A-Za-z0-9_-]+)/u)?.[1];
+  return resourceKey && OBSERVABLE_GATHERING_RESOURCE_KEYS.has(resourceKey)
+    ? `resource:${resourceKey}`
+    : "foraging";
+}
 
 export async function recordGatheringSource(input: {
   locationId: number;
@@ -41,12 +61,12 @@ export async function recordGatheringSource(input: {
   }
 }
 
-export async function recordGatheringObservation(input: { playerId: number; locationId: number; now?: Date }) {
+export async function recordGatheringObservation(input: { playerId: number; locationId: number; now?: Date }, db: GatheringLearningDb = prisma) {
   const now = input.now ?? new Date();
   const since = new Date(now.getTime() - GATHERING_OBSERVATION_WINDOW_MS);
 
   try {
-    const source = await prisma.worldEvent.findFirst({
+    const source = await db.worldEvent.findFirst({
       where: {
         title: GATHERING_SOURCE_EVENT_TITLE,
         locationId: input.locationId,
@@ -54,12 +74,12 @@ export async function recordGatheringObservation(input: { playerId: number; loca
         OR: [{ playerId: null }, { playerId: { not: input.playerId } }],
       },
       orderBy: { createdAt: "desc" },
-      select: { id: true },
+      select: { id: true, description: true },
     });
     if (!source) return { observed: false, milestone: false, observationCount: 0 };
 
     const description = gatheringObservationDescription(source.id);
-    const existing = await prisma.worldEvent.findFirst({
+    const existing = await db.worldEvent.findFirst({
       where: {
         title: GATHERING_OBSERVATION_EVENT_TITLE,
         playerId: input.playerId,
@@ -69,7 +89,7 @@ export async function recordGatheringObservation(input: { playerId: number; loca
     });
     if (existing) return { observed: false, milestone: false, observationCount: 0 };
 
-    await prisma.worldEvent.create({
+    await db.worldEvent.create({
       data: {
         type: "SYSTEM",
         title: GATHERING_OBSERVATION_EVENT_TITLE,
@@ -79,7 +99,21 @@ export async function recordGatheringObservation(input: { playerId: number; loca
       },
     });
 
-    const observationCount = await prisma.worldEvent.count({
+    try {
+      await recordLearningProgress({
+        playerId: input.playerId,
+        skillKey: "gathering",
+        sourceKey: "observation",
+        contextKey: gatheringObservationContextKey(source.description),
+        amount: 1,
+        milestoneEvery: GATHERING_OBSERVATION_INTERVAL,
+        lastSourceEventId: source.id,
+      }, db as any);
+    } catch (error) {
+      console.warn("Failed to write canonical gathering observation progress:", error);
+    }
+
+    const observationCount = await db.worldEvent.count({
       where: {
         title: GATHERING_OBSERVATION_EVENT_TITLE,
         playerId: input.playerId,
@@ -88,7 +122,7 @@ export async function recordGatheringObservation(input: { playerId: number; loca
     const milestone = isGatheringObservationMilestone(observationCount);
 
     if (milestone) {
-      await prisma.worldEvent.create({
+      await db.worldEvent.create({
         data: {
           type: "SYSTEM",
           title: GATHERING_OBSERVATION_MILESTONE_EVENT_TITLE,

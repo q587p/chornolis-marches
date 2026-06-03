@@ -98,8 +98,8 @@ Goal: prove that the world teaches attentive characters.
 Primary outcomes:
 
 - A minimal persistent learning/progress storage exists only if needed by the MVP.
-- `Спостерігати` / observation is a narrow usable action, not a broad skill sheet.
-- Watching a herbalist or relevant action can teach a first herbalism/gathering hint.
+- Observation starts as attentive presence through `/look`, `/examine`, witnessed local actions and later follow intent; a separate `/observe` command stays deferred unless playtesting proves it is needed.
+- Watching someone gather medicinal herbs, berries or mushrooms can teach a first gathering hint; herbalists / знахарі are a natural example, not the only source.
 - The tutorial dream can add optional action-semantics rooms where `Озирнутися` gives orientation and `Роздивитися` reveals a concrete detail or next action.
 - The direct owl refrain belongs at the dream/waking threshold, not as ordinary starter-camp description.
 - Reading fresh tracks or watching an animal can teach a first tracking hint.

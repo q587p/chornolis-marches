@@ -112,10 +112,10 @@ NPC-005,NPC hunger and food behavior,next,feature,npc,high,"npc,actors,hunger,fo
 NPC-006,Hunter patrol and meat practice loop,next,feature,npc,high,"npc,hunting,cooking,freshening,observation-learning,living-world",docs/planning/items/NPC-006-hunter-patrol-meat-practice-loop.md
 NPC-007,Larger hunter and herbalist line banks,testing,content,npc,high,"npc,hunter,herbalist,ambient,speech,polish",docs/planning/items/NPC-007-profession-line-banks.md
 NPC-008,Starter supply guards and watched beginner stores,backlog,feature,npc,medium,"npc,guards,camp,supplies,onboarding",docs/planning/items/NPC-008-starter-supply-guards.md
-OBS-001-A,Observe action and alias skeleton,next,feature,learning,high,"observe,aliases,targets",docs/planning/items/OBS-001-A.md
-OBS-001-B,Visible herbalist action,next,feature,learning,high,"observe,npc,herbalism",docs/planning/items/OBS-001-B.md
-OBS-001-C,Herbalism/gathering progress from observation,next,feature,learning,high,"observe,herbalism,progression",docs/planning/items/OBS-001-C.md
-OBS-001-D,Observation anti-farming cooldown,next,feature,learning,medium,"observe,cooldown,anti-grind",docs/planning/items/OBS-001-D.md
+OBS-001-A,Observation through existing attention surfaces,testing,feature,learning,high,"observe,look,examine,attentive-presence",docs/planning/items/OBS-001-A.md
+OBS-001-B,Visible gathering action,testing,feature,learning,high,"observe,npc,gathering",docs/planning/items/OBS-001-B.md
+OBS-001-C,Gathering progress from attentive presence,testing,feature,learning,high,"observe,gathering,progression",docs/planning/items/OBS-001-C.md
+OBS-001-D,Observation anti-farming cooldown,testing,feature,learning,medium,"observe,cooldown,anti-grind",docs/planning/items/OBS-001-D.md
 OBS-002,Visible herbalist observation moment,proposed,feature,learning,high,"observe,npc,herbalism,progression",docs/planning/items/OBS-002-visible-herbalist-observation-moment.md
 OBS-003,Danger-aware examine cues,done,feature,learning,high,"observe,examine,danger,ecology,atmosphere",docs/planning/items/OBS-003-danger-aware-examine-cues.md
 OBS-PREP-001,Look/examine content audit before observation MVP,testing,design,learning,high,"look,examine,observation,content-audit",docs/planning/items/OBS-PREP-001-look-examine-content-audit.md
