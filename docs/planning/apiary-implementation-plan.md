@@ -23,7 +23,7 @@ Status: first slice in `0.15.19`.
 
 ## Phase 3: Honey And Wax
 
-Status: active slice in `0.15.20`.
+Status: in testing after `0.15.20`.
 
 - Add `honey` and `beeswax` resources with lexicon forms.
 - Add deliberate hive robbery/harvest with action timing, stamina cost, stronger disturbance stings, success/failure outcomes and cooldown limits.
@@ -36,6 +36,10 @@ Status: backlog.
 - Add den and bear behavior only after the apiary and honey/wax loops are stable.
 - Prefer visible signs and constrained local routing before combat.
 - Avoid broad predator redesign.
+
+Do not promote this phase back into `next` until the `LEARN` / `OBS` foundation
+exists. Bear signs can become useful observation content later; a full bear loop
+should not displace the active Attention and Learning MVP.
 
 ## Risks
 

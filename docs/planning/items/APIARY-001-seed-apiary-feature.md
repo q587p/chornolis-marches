@@ -1,7 +1,7 @@
 ---
 id: APIARY-001
 title: Seed old log apiary feature
-status: in_progress
+status: testing
 type: feature
 area: ecology
 priority: medium

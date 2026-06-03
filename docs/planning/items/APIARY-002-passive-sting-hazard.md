@@ -1,7 +1,7 @@
 ---
 id: APIARY-002
 title: Passive bumblebee sting hazard
-status: in_progress
+status: testing
 type: feature
 area: ecology
 priority: medium

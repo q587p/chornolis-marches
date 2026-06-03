@@ -1,7 +1,7 @@
 ---
 id: APIARY-003
 title: Honey wax and hive robbery
-status: in_progress
+status: testing
 type: feature
 area: resources
 priority: medium

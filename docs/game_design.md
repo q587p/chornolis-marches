@@ -18,6 +18,8 @@ The next playable version should make a new player feel this path:
 
 Everything near-term should support this path.
 
+After a bounded living-world side branch lands, planning should fold it back into this path instead of immediately widening it. For example, the first apiary/honey slice can remain a place with danger and reward, but bear loops, honey/wax crafting, shops, barter or economy should wait until attention, observation and first learning moments have a durable foundation.
+
 ## Core Pillars
 
 ### Atmosphere First
