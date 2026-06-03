@@ -8,7 +8,6 @@ export const DEFAULT_BOT_COMMANDS = [
   { command: "afk", description: "🌙 AFK / відійти" },
   { command: "help", description: "🧭 Допомога новачку" },
   { command: "respawn", description: "🧭 Повернення до табору" },
-  { command: "call_scribes", description: "✒️ Звернутися до Писарів" },
   { command: "me", description: "🧍 Персонаж" },
   { command: "look", description: "👀 Озирнутися" },
   { command: "menu", description: "☰ Меню" },

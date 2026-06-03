@@ -7,7 +7,7 @@ The first `0.14.4` implementation is intentionally small:
 - `src/services/lightSnapshot.ts` computes a light snapshot from daypart, moon illumination, weather and local active light.
 - `src/services/visibility.ts` turns that light snapshot into simple visibility rules.
 - Brief `Озирнутися` / `/look` now asks the shared visibility service whether nearby beings, ground objects and target buttons should be shown.
-- Detailed `Роздивитися` / `/examine` still shows full details for now.
+- Detailed `Роздивитися` / `/examine` is handled by the same visibility layer for location description, nearby details, resources, tracks, ground objects and feature detail summaries.
 
 The `0.14.5` slice makes darkness player-visible:
 
@@ -16,6 +16,13 @@ The `0.14.5` slice makes darkness player-visible:
 - corpses count as ground objects for this rule: if light changes after an attack, corpse inspection, pickup and freshening buttons/actions must check visibility again at use/completion time and disappear or fail safely without light;
 - `/track` uses the same visibility helper at completion time before revealing track lines;
 - carried, dropped or feature-provided light can restore normal detail through the shared light snapshot.
+
+The `0.15.27` slice closes the first feature-inspection leak:
+
+- location features may still be listed as dark-safe silhouettes so players are not trapped by invisible navigation anchors;
+- authored `examine_summary`, written marks, route hints and full feature descriptions are not shown without valid light;
+- direct feature inspection in darkness returns a dark-safe outline message and a way back instead of revealing the full feature text;
+- full feature details return normally when daylight, a lit torch, active campfire or other valid local light is present.
 
 Future `VIS-001-B/C/D/E/F` slices should expand this same service instead of scattering darkness checks through handlers:
 

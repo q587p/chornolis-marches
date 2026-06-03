@@ -58,6 +58,10 @@ const locationKeys = keySet(locations, "location");
 const resourceTypeKeys = keySet(resourceTypes, "resource type");
 keySet(features, "feature");
 
+const starterCampRegion = regions.find((item) => item.key === "starter_camp");
+assert.ok(starterCampRegion, "Starter camp infrastructure region should exist");
+assert.equal(starterCampRegion.name, "Межовий табір", "Starter camp region should have the authored Ukrainian name");
+
 function assertUniqueLocationText(field, label) {
   const seen = new Map();
   for (const location of locations) {
@@ -220,17 +224,29 @@ for (const key of ["start_newcomer_tablet", "start_lunar_circles_birchbark", "st
 }
 
 const startWatchtower = locations.find((item) => item.key === "start_border_watchtower");
+const startCamp = locations.find((item) => item.key === "start_border_camp");
+const underBridge = locations.find((item) => item.key === "under_bridge_18_05");
+assert.ok(startCamp, "Starter camp should exist");
+assert.equal(startCamp.regionKey, "starter_camp", "Starter camp should use the starter infrastructure region");
 assert.ok(startWatchtower, "Starter camp watchtower should exist as a real location");
 assert.equal(startWatchtower.x, 17, "Starter camp watchtower should sit above the camp x coordinate");
 assert.equal(startWatchtower.y, 5, "Starter camp watchtower should sit above the camp y coordinate");
 assert.equal(startWatchtower.z, 1, "Starter camp watchtower should use z = 1");
+assert.equal(startWatchtower.regionKey, "starter_camp", "Starter watchtower should use the starter infrastructure region");
 const startCellar = locations.find((item) => item.key === "start_border_cellar");
 assert.ok(startCellar, "Starter camp cellar should exist as a real waking-world location");
 assert.equal(startCellar.x, 17, "Starter camp cellar should sit below the camp x coordinate");
 assert.equal(startCellar.y, 5, "Starter camp cellar should sit below the camp y coordinate");
 assert.equal(startCellar.z, -1, "Starter camp cellar should use z = -1");
-assert.equal(startCellar.regionKey, "riverbank", "Starter camp cellar should stay in the starter camp region");
+assert.equal(startCellar.regionKey, "starter_camp", "Starter camp cellar should use the starter infrastructure region");
 assert.equal(startCellar.dangerLevel, 0, "Starter camp cellar should stay safe");
+assert.equal(underBridge?.regionKey, "old_bridge", "Under-bridge location should remain in the old bridge region");
+const starterCampLocationKeys = new Set(locations.filter((item) => item.regionKey === "starter_camp").map((item) => item.key));
+assert.deepEqual(
+  [...starterCampLocationKeys].sort(),
+  ["start_border_camp", "start_border_cellar", "start_border_watchtower"].sort(),
+  "Starter infrastructure region should contain only the camp vertical stack",
+);
 assert.ok(
   exits.some((exit) => exit.fromKey === "start_border_camp" && exit.toKey === "start_border_watchtower" && exit.direction === "UP"),
   "Starter camp should have an UP exit to the watchtower",
@@ -277,6 +293,11 @@ const startCellarDryBunks = features.find((item) => item.key === "start_cellar_d
 assert.equal(startCellarDryBunks?.data?.no_loot, true, "Starter cellar dry bunks should not hide loot");
 assert.equal(startCellarDryBunks?.data?.herbalist_rest_staging, true, "Starter cellar dry bunks should stage herbalist rest only");
 assert.equal(resourceNodes.some((node) => node.locationKey === "start_border_cellar"), false, "Starter cellar should not add starter loot/resource nodes");
+assert.deepEqual(
+  resourceNodes.filter((node) => starterCampLocationKeys.has(node.locationKey)).map((node) => `${node.locationKey}:${node.resourceKey}`),
+  [],
+  "Starter camp infrastructure region should not have ordinary resource nodes",
+);
 
 const startCampTorchStand = features.find((item) => item.key === "start_camp_torch_stand");
 assert.equal(startCampTorchStand?.data?.torch_source, true, "Starter camp torch stand should be a torch source");
@@ -329,7 +350,7 @@ assertFeatureExamineSummary(beginnerCache, "Starter shared beginner cache should
 assert.equal(resourceTypeKeys.has("shah"), true, "Money MVP should define shah resource type");
 assert.equal(resourceTypeKeys.has("grivna"), true, "Money MVP should define grivna resource type");
 const starterShahNodes = resourceNodes.filter((node) => node.resourceKey === "shah");
-assert.equal(starterShahNodes.reduce((sum, node) => sum + node.amount, 0), 6, "Starter-adjacent authored shah finds should stay modest");
+assert.equal(starterShahNodes.reduce((sum, node) => sum + node.amount, 0), 4, "Starter-adjacent authored shah finds should stay modest");
 assert.equal(starterShahNodes.some((node) => String(node.locationKey).startsWith("dream_")), false, "Starter shah finds should not appear in tutorial dream locations");
 assert.equal(resourceNodes.some((node) => node.resourceKey === "grivna"), false, "Starter seed should not place grivna ground loot");
 
