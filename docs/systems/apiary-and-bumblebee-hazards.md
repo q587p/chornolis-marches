@@ -25,7 +25,7 @@ It is a `LANDMARK` with `data.apiary === true`, not a new Prisma enum. The JSON 
 
 Passive bumblebee stings are intentionally rare and rate-limited.
 
-- center location: higher chance, `1-2` HP damage;
+- center location: higher chance, `2-3` HP damage;
 - adjacent aura: lower chance, `1` HP damage;
 - passive stings do not fire at night when `night_passive_sleeping` is true;
 - passive stings never kill in the MVP and clamp the player to at least 1 HP;

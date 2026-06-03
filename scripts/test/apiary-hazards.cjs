@@ -28,7 +28,7 @@ const apiaryData = {
   aura_radius: 1,
   center_sting_chance_permille: 777,
   neighbor_sting_chance_permille: 130,
-  center_damage: [1, 2],
+  center_damage: [2, 3],
   neighbor_damage: [1, 1],
   passive_cooldown_ms: 120_000,
   night_passive_sleeping: true,
@@ -50,7 +50,7 @@ assert.equal(apiaryAuraKind(2, apiaryData), "outside");
 assert.equal(apiaryPassiveChancePermille("center", apiaryData), 777);
 assert.equal(apiaryPassiveChancePermille("neighbor", apiaryData), 130);
 assert.equal(apiaryPassiveChancePermille("outside", apiaryData), 0);
-assert.deepEqual(apiaryPassiveDamageRange("center", apiaryData), [1, 2]);
+assert.deepEqual(apiaryPassiveDamageRange("center", apiaryData), [2, 3]);
 assert.deepEqual(apiaryPassiveDamageRange("neighbor", apiaryData), [1, 1]);
 assert.deepEqual(apiaryPassiveDamageRange("outside", apiaryData), [0, 0]);
 

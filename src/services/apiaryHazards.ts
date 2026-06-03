@@ -78,7 +78,7 @@ export function apiaryPassiveChancePermille(kind: ApiaryAuraKind, data: ApiaryDa
 }
 
 export function apiaryPassiveDamageRange(kind: ApiaryAuraKind, data: ApiaryData): [number, number] {
-  if (kind === "center") return damageRangeFromData(data, "center_damage", [1, 2]);
+  if (kind === "center") return damageRangeFromData(data, "center_damage", [2, 3]);
   if (kind === "neighbor") return damageRangeFromData(data, "neighbor_damage", [1, 1]);
   return [0, 0];
 }
@@ -309,7 +309,10 @@ export async function raidApiaryForPlayer(playerId: number, featureId?: number, 
     const resources = await ensureApiaryRewardResourceTypes(tx);
     await tx.player.update({
       where: { id: player.id },
-      data: { hp: outcome.nextHp },
+      data: {
+        hp: outcome.nextHp,
+        lastHpRegenAt: outcome.appliedDamage > 0 ? now : undefined,
+      },
     });
     if (outcome.honey > 0) {
       await tx.playerResource.upsert({
@@ -386,7 +389,7 @@ export async function maybeTriggerPassiveApiarySting(bot: Bot, input: MaybeTrigg
 
   await prisma.player.update({
     where: { id: player.id },
-    data: { hp: result.nextHp },
+    data: { hp: result.nextHp, lastHpRegenAt: now },
   });
   await prisma.worldEvent.create({
     data: {

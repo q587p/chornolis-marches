@@ -172,6 +172,8 @@ assert.equal(oldLogApiary.data?.hazard_key, "bumblebee_sting", "Old log apiary s
 assert.equal(oldLogApiary.data?.aura_radius, 1, "Old log apiary should start with a one-step aura");
 assert.equal(oldLogApiary.data?.center_sting_chance_permille, 777, "Old log apiary center chance should match authored MVP tuning");
 assert.equal(oldLogApiary.data?.neighbor_sting_chance_permille, 130, "Old log apiary neighbor chance should match authored MVP tuning");
+assert.deepEqual(oldLogApiary.data?.center_damage, [2, 3], "Old log apiary center sting damage should feel noticeable but survivable");
+assert.deepEqual(oldLogApiary.data?.neighbor_damage, [1, 1], "Old log apiary neighbor sting damage should stay mild");
 assert.equal(oldLogApiary.data?.passive_cooldown_ms, 120_000, "Old log apiary passive cooldown should match one default in-game hour");
 assert.equal(resourceTypeKeys.has("honey"), true, "Apiary harvest MVP should define honey resource type");
 assert.equal(resourceTypeKeys.has("beeswax"), true, "Apiary harvest MVP should define beeswax resource type");

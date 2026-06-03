@@ -94,8 +94,8 @@
       "center_sting_chance_permille": 777,
       "neighbor_sting_chance_permille": 130,
       "center_damage": [
-        1,
-        2
+        2,
+        3
       ],
       "neighbor_damage": [
         1,
