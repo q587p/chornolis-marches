@@ -4468,6 +4468,27 @@
     "file": "docs/planning/items/WPN-004-weapon-condition-backlog.md"
   },
   {
+    "id": "WPN-005",
+    "title": "Hand slots and visible held items",
+    "status": "backlog",
+    "type": "feature",
+    "area": "items",
+    "priority": "high",
+    "tags": [
+      "weapons",
+      "inventory",
+      "equipment",
+      "visibility",
+      "npcs"
+    ],
+    "depends_on": [
+      "WPN-001",
+      "WPN-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/WPN-005-hand-slots-and-visible-held-items.md"
+  },
+  {
     "id": "WPN-ICE-001",
     "title": "Deep combat and weapon lifetime",
     "status": "icebox",

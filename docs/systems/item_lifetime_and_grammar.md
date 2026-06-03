@@ -49,4 +49,4 @@ Looking at another character should describe only obvious visible state: name, p
 - Two lit torches are described as `В обох руках горять запалені факели.`
 - `Руки порожні.` should appear only when the character has no obvious held item.
 
-Future equipment should extend this same visible-appearance layer: weapons, tools, packs and clothing can be shown when they are openly carried or worn, while hidden inventory remains private unless a later skill, search rule or scribe/debug view reveals it.
+Future equipment should extend this same visible-appearance layer: weapons, tools, packs and clothing can be shown when they are openly carried or worn, while hidden inventory remains private unless a later skill, search rule or scribe/debug view reveals it. `WPN-005` tracks the near-term hand-slot cleanup: a character with a lit torch and a knife/spear/tool should show those as two coherent held things, NPC / local-character descriptions should use the same helper, and `Руки порожні.` must not appear while any obvious item is in either hand.
