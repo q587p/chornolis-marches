@@ -137,6 +137,9 @@ function fakeGatheringObservationDb(sourceDescription = "actorCreature=9; succes
     now: new Date("2026-06-03T09:01:00Z"),
   }, db);
   assert.equal(observed.observed, true);
+  assert.equal(observed.canonicalProgressRecorded, true);
+  assert.equal(observed.canonicalMilestone, false);
+  assert.equal(observed.milestone, false);
   assert.equal(db.progressRows.length, 1);
   assert.equal(db.progressRows[0].skillKey, "gathering");
   assert.equal(db.progressRows[0].sourceKey, "observation");
@@ -163,9 +166,32 @@ function fakeGatheringObservationDb(sourceDescription = "actorCreature=9; succes
       now: new Date("2026-06-03T09:01:00Z"),
     }, unsupportedDb);
     assert.equal(unsupported.observed, true, "unsupported source still records legacy observation marker");
+    assert.equal(unsupported.canonicalProgressRecorded, false);
+    assert.equal(unsupported.canonicalMilestone, false);
+    assert.equal(unsupported.milestone, false);
     assert.equal(unsupportedDb.events.some((event) => event.title === GATHERING_OBSERVATION_EVENT_TITLE), true);
     assert.equal(unsupportedDb.progressRows.length, 0, `${unsupportedDescription} should not create canonical progress`);
   }
+
+  const unsupportedMilestoneDb = fakeGatheringObservationDb([
+    "actorCreature=9; success=true; resource=honey",
+    "actorCreature=9; success=true; resource=beeswax",
+    "actorCreature=9; success=true",
+    "actorCreature=9; success=true; resource=honey",
+    "actorCreature=9; success=true; resource=beeswax",
+  ]);
+  for (let index = 0; index < 5; index += 1) {
+    const unsupported = await recordGatheringObservation({
+      playerId: 7,
+      locationId: 13,
+      now: new Date(`2026-06-03T09:01:0${index}Z`),
+    }, unsupportedMilestoneDb);
+    assert.equal(unsupported.observed, true, `unsupported source ${index + 1} should still record a legacy marker`);
+    assert.equal(unsupported.canonicalProgressRecorded, false);
+    assert.equal(unsupported.canonicalMilestone, false);
+    assert.equal(unsupported.milestone, false, "unsupported-only observations must not produce visible learning milestones");
+  }
+  assert.equal(unsupportedMilestoneDb.progressRows.length, 0, "unsupported-only observations should not create canonical progress");
 
   const mixedDb = fakeGatheringObservationDb([
     "actorCreature=9; success=true; resource=herbs",
@@ -177,6 +203,8 @@ function fakeGatheringObservationDb(sourceDescription = "actorCreature=9; succes
     now: new Date("2026-06-03T09:01:00Z"),
   }, mixedDb);
   assert.equal(noisyFirst.observed, true);
+  assert.equal(noisyFirst.canonicalProgressRecorded, false);
+  assert.equal(noisyFirst.milestone, false);
   assert.equal(mixedDb.progressRows.length, 0, "unsupported latest source should not create canonical progress");
 
   const supportedSecond = await recordGatheringObservation({
@@ -185,6 +213,8 @@ function fakeGatheringObservationDb(sourceDescription = "actorCreature=9; succes
     now: new Date("2026-06-03T09:01:30Z"),
   }, mixedDb);
   assert.equal(supportedSecond.observed, true, "already observed unsupported source should not block older supported source");
+  assert.equal(supportedSecond.canonicalProgressRecorded, true);
+  assert.equal(supportedSecond.milestone, false);
   assert.equal(mixedDb.progressRows.length, 1);
   assert.equal(mixedDb.progressRows[0].contextKey, "resource:herbs");
 

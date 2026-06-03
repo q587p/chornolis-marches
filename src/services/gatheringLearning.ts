@@ -6,7 +6,6 @@ import {
   GATHERING_SOURCE_EVENT_TITLE,
   gatheringObservationDescription,
   gatheringSourceDescription,
-  isGatheringObservationMilestone,
 } from "./gatheringLearningRules";
 import { recordLearningProgress } from "./learning";
 
@@ -79,7 +78,15 @@ export async function recordGatheringObservation(input: { playerId: number; loca
       take: GATHERING_OBSERVATION_SOURCE_SCAN_LIMIT,
       select: { id: true, description: true },
     });
-    if (!sources.length) return { observed: false, milestone: false, observationCount: 0 };
+    if (!sources.length) {
+      return {
+        observed: false,
+        milestone: false,
+        observationCount: 0,
+        canonicalProgressRecorded: false,
+        canonicalMilestone: false,
+      };
+    }
 
     for (const source of sources) {
       const description = gatheringObservationDescription(source.id);
@@ -104,9 +111,11 @@ export async function recordGatheringObservation(input: { playerId: number; loca
       });
 
       const contextKey = observableGatheringContextKey(source.description);
+      let canonicalProgressRecorded = false;
+      let canonicalMilestone = false;
       if (contextKey) {
         try {
-          await recordLearningProgress({
+          const learning = await recordLearningProgress({
             playerId: input.playerId,
             skillKey: "gathering",
             sourceKey: "observation",
@@ -115,6 +124,8 @@ export async function recordGatheringObservation(input: { playerId: number; loca
             milestoneEvery: GATHERING_OBSERVATION_INTERVAL,
             lastSourceEventId: source.id,
           }, db as any);
+          canonicalProgressRecorded = true;
+          canonicalMilestone = learning.milestone;
         } catch (error) {
           console.warn("Failed to write canonical gathering observation progress:", error);
         }
@@ -126,26 +137,43 @@ export async function recordGatheringObservation(input: { playerId: number; loca
           playerId: input.playerId,
         },
       });
-      const milestone = isGatheringObservationMilestone(observationCount);
 
-      if (milestone) {
+      if (canonicalMilestone) {
         await db.worldEvent.create({
           data: {
             type: "SYSTEM",
             title: GATHERING_OBSERVATION_MILESTONE_EVENT_TITLE,
-            description: `count=${observationCount}`,
+            description: `source=${source.id}; context=${contextKey}; count=${observationCount}`,
             playerId: input.playerId,
             locationId: input.locationId,
           },
         });
       }
 
-      return { observed: true, milestone, observationCount };
+      return {
+        observed: true,
+        milestone: canonicalMilestone,
+        observationCount,
+        canonicalProgressRecorded,
+        canonicalMilestone,
+      };
     }
 
-    return { observed: false, milestone: false, observationCount: 0 };
+    return {
+      observed: false,
+      milestone: false,
+      observationCount: 0,
+      canonicalProgressRecorded: false,
+      canonicalMilestone: false,
+    };
   } catch (error) {
     console.warn("Failed to record gathering observation:", error);
-    return { observed: false, milestone: false, observationCount: 0 };
+    return {
+      observed: false,
+      milestone: false,
+      observationCount: 0,
+      canonicalProgressRecorded: false,
+      canonicalMilestone: false,
+    };
   }
 }

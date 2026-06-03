@@ -13,6 +13,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Hardened gathering observation source selection so already observed or unsupported recent gather-like events no longer block a still-valid herbs, berries or mushrooms observation inside the same attention window.
 - Renamed the player-facing old-log-apiary command surface from `/gather_honey` / `/gather_beeswax` to `/search_honey` / `/search_beeswax`, keeping the old names as legacy compatibility routes.
+- Documented and kept the old log apiary passive center sting tuning at `2-3` HP damage, while adjacent aura stings remain lighter.
 - Updated progression and `next` planning docs to record the stabilization pass and keep follow intent, track-learning and skill effects deferred.
 
 ### Fixed
