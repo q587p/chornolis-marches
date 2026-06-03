@@ -225,6 +225,10 @@ function isOwlSignFeature(feature: any) {
   return featureData(feature).owl_sign === true;
 }
 
+function isApiaryFeature(feature: any) {
+  return featureData(feature).apiary === true;
+}
+
 export function treeShakeAmount(min = 5, max = 8, random = Math.random) {
   const safeMin = Math.max(0, Math.floor(min));
   const safeMax = Math.max(safeMin, Math.floor(max));
@@ -1274,6 +1278,7 @@ export async function renderLocationFeatureInteraction(
     }
   }
   if (featureData(feature).carcass_dropoff === true) addCarcassDropoffButtons(keyboard, feature.id);
+  if (isApiaryFeature(feature)) keyboard.text("🍯 Взяти мед", `apiary:raid:${feature.id}`).row();
   if (isClimbTreeFeature(feature)) keyboard.text("🌳 Залізти", "move:UP").row();
   const moveDirection = featureMoveDirection(feature);
   if (moveDirection) keyboard.text(featureMoveButtonLabelForFeature(feature, moveDirection), `move:${moveDirection}`).row();

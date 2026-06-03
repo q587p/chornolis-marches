@@ -1,6 +1,6 @@
 import { Direction } from "@prisma/client";
 
-export type GatherKey = "berries" | "mushrooms" | "herbs";
+export type GatherKey = "berries" | "mushrooms" | "herbs" | "honey" | "beeswax";
 export type UseItemKey = "berries" | "herbs" | "mushrooms" | "cooked_meat";
 export type TargetAction = "inspect" | "greet" | "attack" | "freshen";
 export type QueueAliasMode = "status" | "cancel-current" | "clear";
@@ -360,6 +360,15 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "пошукати": { kind: "gather" },
   "пошук поживи": { kind: "gather" },
   "збір": { kind: "gather" },
+  "взяти мед": { kind: "gather", resourceKey: "honey" },
+  "добути мед": { kind: "gather", resourceKey: "honey" },
+  "зібрати мед": { kind: "gather", resourceKey: "honey" },
+  "обібрати вулик": { kind: "gather", resourceKey: "honey" },
+  "обібрати бортю": { kind: "gather", resourceKey: "honey" },
+  "пограбувати бортю": { kind: "gather", resourceKey: "honey" },
+  "добути віск": { kind: "gather", resourceKey: "beeswax" },
+  "gather_honey": { kind: "gather", resourceKey: "honey" },
+  "gather_beeswax": { kind: "gather", resourceKey: "beeswax" },
 
   rest: { kind: "rest", mode: "start" },
   "відпочити": { kind: "rest", mode: "start" },
@@ -1019,6 +1028,8 @@ function parseGatherResource(resource: string): ParsedAliasCommand | null {
   if (["berries", "berry", "ягоди", "ягід"].includes(resource)) return { kind: "gather", resourceKey: "berries" };
   if (["mushrooms", "mushroom", "гриби", "грибів"].includes(resource)) return { kind: "gather", resourceKey: "mushrooms" };
   if (["herbs", "herb", "трави", "трав", "лікарські трави", "зілля", "зіллячко"].includes(resource)) return { kind: "gather", resourceKey: "herbs" };
+  if (["honey", "мед", "меду"].includes(resource)) return { kind: "gather", resourceKey: "honey" };
+  if (["beeswax", "wax", "віск", "воску"].includes(resource)) return { kind: "gather", resourceKey: "beeswax" };
   return null;
 }
 
@@ -1206,6 +1217,10 @@ function parsePickup(text: string): ParsedAliasCommand | null {
   const match = text.match(/^(?:pickup|pick|take|get|підібрати|підняти|взяти|забрати)\s+(.+)$/);
   if (!match?.[1]?.trim()) return null;
   const target = match[1].trim();
+  const apiaryGather = parseGatherResource(target);
+  if (apiaryGather?.kind === "gather" && (apiaryGather.resourceKey === "honey" || apiaryGather.resourceKey === "beeswax")) {
+    return apiaryGather;
+  }
   return { kind: "pickup-target", target };
 }
 

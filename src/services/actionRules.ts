@@ -82,6 +82,7 @@ export function actionTitle(action: Pick<WorldAction, "type" | "payload" | "dura
   if (action.type === "DOUSE_CAMPFIRE") return "гасимо вогнище";
   if (action.type === "DISMANTLE_CAMPFIRE") return "розбираємо вогнище";
   if (action.type === "DISMANTLE_TOTEM") return "розбираємо підозрілий тотем";
+  if (action.type === "RAID_APIARY") return "шукаємо мед у борті";
   if (action.type === "LOOK") return "озираємось";
   if (action.type === "INSPECT") return "роздивляємось ціль";
   if (action.type === "GREET") return "вітаємось";

@@ -17,6 +17,7 @@ assert.equal(playerStaminaCostConfig.BUILD_CAMPFIRE, 3);
 assert.equal(playerStaminaCostConfig.DOUSE_CAMPFIRE, 1);
 assert.equal(playerStaminaCostConfig.DISMANTLE_CAMPFIRE, 2);
 assert.equal(playerStaminaCostConfig.DISMANTLE_TOTEM, 2);
+assert.equal(playerStaminaCostConfig.RAID_APIARY, 4);
 assert.equal(playerStaminaCostConfig.COOK, 3);
 assert.equal(playerStaminaCostConfig.ATTACK, 5);
 assert.equal(REST_STAMINA_REGEN_PER_INTERVAL, 26);
@@ -30,6 +31,7 @@ assert.equal(actionTitle({ type: "BUILD_CAMPFIRE", payload: {} }), "склада
 assert.equal(actionTitle({ type: "DOUSE_CAMPFIRE", payload: {} }), "гасимо вогнище");
 assert.equal(actionTitle({ type: "DISMANTLE_CAMPFIRE", payload: {} }), "розбираємо вогнище");
 assert.equal(actionTitle({ type: "DISMANTLE_TOTEM", payload: {} }), "розбираємо підозрілий тотем");
+assert.equal(actionTitle({ type: "RAID_APIARY", payload: {} }), "шукаємо мед у борті");
 assert.equal(actionTitle({ type: "COOK", payload: {} }), "підсмажуємо м'ясо");
 
 assert.equal(playerHungerAfterStaminaSpend({ currentHunger: 0, staminaAfter: 39, cost: 3 }), 0);

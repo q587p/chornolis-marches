@@ -56,7 +56,7 @@ import { cookingResultReplyOptions } from "../ui/inventoryItemKeyboard";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 import { visibilityPresenceText, visibilityRulesForLocation } from "./visibility";
 import { firstNightGuidanceForPlayer } from "./beginnerGuidance";
-import { maybeTriggerPassiveApiarySting } from "./apiaryHazards";
+import { maybeTriggerPassiveApiarySting, raidApiaryForPlayer } from "./apiaryHazards";
 import { creatureAttackObserverText, freshenWeaponFailureText, getPlayerEquippedWeapon, grantAndEquipLegacyFresheningKnife, legacyFresheningKnifeGrantText, playerAttackKillText, playerAttackObserverText } from "./weapons";
 import { canCreatureUseExit, creatureUsableExits } from "./creatureMovement";
 import { contributeToBeginnerCache } from "./beginnerCache";
@@ -314,6 +314,7 @@ export async function completeAction(bot: Bot, action: WorldAction) {
   if (action.type === "GREET") return completeGreet(bot, action);
   if (action.type === "ATTACK") return completeAttack(bot, action);
   if (action.type === "FRESHEN") return completeFreshen(bot, action);
+  if (action.type === "RAID_APIARY") return completeApiaryRaid(bot, action);
   if (action.type === "SAY") return completeSay(bot, action);
   if (action.type === "TRACK") return completeTrack(bot, action);
   if (action.type === "REST" || action.type === "WAIT" || action.type === "SET_TRAP") return completeSimple(bot, action);
@@ -1122,6 +1123,23 @@ async function completeFreshen(bot: Bot, action: WorldAction) {
       : `🔪 Ви освіжували ${target.forms.accusative} ${weapon.forms.instrumental}, але придатне м'ясо не вдалося зняти. Лишилися тільки рвані рештки.`;
     await bot.api.sendMessage(chatId, resultText, replyOptionsAfterStaminaSpend(staminaSpend));
     if (learning.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, FRESHENING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+  }
+}
+
+async function completeApiaryRaid(bot: Bot, action: WorldAction) {
+  const payload = payloadOf<{ featureId?: number }>(action);
+  const player = action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null;
+  const chatId = await chatIdFromActionIfAllowed(action);
+  if (!player || action.actorType !== "PLAYER") return void (await setActionStatus(action, "FAILED"));
+
+  try {
+    const result = await raidApiaryForPlayer(player.id, payload.featureId);
+    const staminaSpend = await spendPlayerStamina(bot, player.id, "RAID_APIARY", chatId);
+    await setActionStatus(action, "DONE");
+    if (chatId) await bot.api.sendMessage(chatId, result.text, replyOptionsAfterStaminaSpend(staminaSpend));
+  } catch (error) {
+    await setActionStatus(action, "FAILED");
+    if (chatId) await bot.api.sendMessage(chatId, error instanceof Error ? error.message : "Не вдалося дістати мед із борті.");
   }
 }
 

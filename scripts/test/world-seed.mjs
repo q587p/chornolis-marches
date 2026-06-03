@@ -164,6 +164,13 @@ assert.equal(oldLogApiary.data?.hazard_key, "bumblebee_sting", "Old log apiary s
 assert.equal(oldLogApiary.data?.aura_radius, 1, "Old log apiary should start with a one-step aura");
 assert.equal(oldLogApiary.data?.center_sting_chance_permille, 55, "Old log apiary center chance should match authored MVP tuning");
 assert.equal(oldLogApiary.data?.neighbor_sting_chance_permille, 16, "Old log apiary neighbor chance should match authored MVP tuning");
+assert.equal(resourceTypeKeys.has("honey"), true, "Apiary harvest MVP should define honey resource type");
+assert.equal(resourceTypeKeys.has("beeswax"), true, "Apiary harvest MVP should define beeswax resource type");
+assert.equal(oldLogApiary.data?.raid_cooldown_ms, 21_600_000, "Old log apiary should limit repeated hive robbery");
+assert.equal(oldLogApiary.data?.raid_success_chance_permille, 700, "Old log apiary should have authored raid success chance");
+assert.equal(oldLogApiary.data?.raid_wax_chance_permille, 350, "Old log apiary should have authored wax chance");
+assert.deepEqual(oldLogApiary.data?.raid_damage, [2, 5], "Old log apiary should have stronger disturbance sting damage");
+assert.deepEqual(oldLogApiary.data?.raid_rewards, ["honey", "beeswax"], "Old log apiary should expose current raid rewards");
 assert.ok(typeof oldLogApiary.data?.examine_summary === "string" && oldLogApiary.data.examine_summary.length > 0, "Old log apiary should have an examine summary");
 for (const alias of ["бортя", "вулик", "мед", "віск"]) {
   assert.ok(oldLogApiary.data?.aliases?.includes(alias), `Old log apiary should include alias: ${alias}`);

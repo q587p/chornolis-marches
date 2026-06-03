@@ -104,7 +104,15 @@
       "passive_cooldown_ms": 10800000,
       "night_passive_sleeping": true,
       "robbery_wakes_swarm": true,
-      "future_rewards": [
+      "raid_cooldown_ms": 21600000,
+      "raid_success_chance_permille": 700,
+      "raid_wax_chance_permille": 350,
+      "raid_damage": [
+        2,
+        5
+      ],
+      "raid_honey_amount": 1,
+      "raid_rewards": [
         "honey",
         "beeswax"
       ],

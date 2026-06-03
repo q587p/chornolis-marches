@@ -1,0 +1,1 @@
+ALTER TYPE "WorldActionType" ADD VALUE 'RAID_APIARY';

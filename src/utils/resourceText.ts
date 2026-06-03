@@ -6,6 +6,8 @@ export function resourceAccusativeName(resourceType: { key?: string | null; name
   if (resourceType.key === "torch" || resourceType.key === "lit_torch" || resourceType.key === "doused_torch") return "факел";
   if (resourceType.key === "twigs") return "хмиз";
   if (resourceType.key === "raw_meat" || resourceType.key === "cooked_meat") return "м’ясо";
+  if (resourceType.key === "honey") return "мед";
+  if (resourceType.key === "beeswax") return "віск";
   return resourceType.name;
 }
 

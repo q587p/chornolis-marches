@@ -1,7 +1,7 @@
 ---
 id: APIARY-003
 title: Honey wax and hive robbery
-status: backlog
+status: in_progress
 type: feature
 area: resources
 priority: medium
@@ -21,7 +21,7 @@ Add honey and beeswax as useful but limited rewards, then add a deliberate risky
 ## Scope
 
 - Add `honey` and `beeswax` resource types and lexicon forms.
-- Add inventory display/use decisions for honey and wax.
+- Add inventory display/use decisions for honey and wax; `0.15.20` adds carry, inspect, drop and scribe grant surfaces, while edible/crafting use remains later.
 - Add a deliberate action with warning copy, timing, stock/cooldown limits and stronger disturbance stings.
 - Keep yields modest.
 
@@ -30,6 +30,7 @@ Add honey and beeswax as useful but limited rewards, then add a deliberate risky
 - Shops, price tables or broad economy.
 - Full bumblebee swarm creatures.
 - Bear behavior.
+- Full honey food/remedy/crafting/economy uses.
 
 ## Acceptance Criteria
 

@@ -70,10 +70,20 @@ assert.deepEqual(parseAdminInventoryItemArgs("raw_meat #5 3"), {
   playerArg: "#5",
   amount: 3,
 });
+assert.deepEqual(parseAdminInventoryItemArgs("honey #5 2"), {
+  resourceKey: "honey",
+  playerArg: "#5",
+  amount: 2,
+});
 assert.deepEqual(parseAdminInventoryItemArgs("#5 2", "lit_torch"), {
   resourceKey: "lit_torch",
   playerArg: "#5",
   amount: 2,
+});
+assert.deepEqual(parseAdminInventoryItemArgs("#5 3", "beeswax"), {
+  resourceKey: "beeswax",
+  playerArg: "#5",
+  amount: 3,
 });
 assert.deepEqual(parseAdminInventoryItemArgs("Вербові 10", "twigs"), {
   resourceKey: "twigs",

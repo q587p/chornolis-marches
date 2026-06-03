@@ -9,6 +9,12 @@ const {
   apiaryPassiveChancePermille,
   apiaryPassiveCooldownMs,
   apiaryPassiveDamageRange,
+  apiaryRaidCooldownMs,
+  apiaryRaidDamageRange,
+  apiaryRaidHoneyAmount,
+  apiaryRaidOutcome,
+  apiaryRaidSuccessChancePermille,
+  apiaryRaidWaxChancePermille,
   isApiaryCooldownActive,
   isApiarySleepingForPassiveHazard,
   passiveApiaryDamageResult,
@@ -22,6 +28,11 @@ const apiaryData = {
   neighbor_damage: [1, 1],
   passive_cooldown_ms: 10_800_000,
   night_passive_sleeping: true,
+  raid_cooldown_ms: 21_600_000,
+  raid_success_chance_permille: 700,
+  raid_wax_chance_permille: 350,
+  raid_damage: [2, 5],
+  raid_honey_amount: 1,
 };
 
 assert.equal(apiaryAuraDistanceFromLinks(10, 10, [11, 12], 1), 0);
@@ -56,5 +67,32 @@ assert.equal(isApiaryCooldownActive(null, now, 10_800_000), false);
 assert.deepEqual(passiveApiaryDamageResult(2, 5), { appliedDamage: 1, nextHp: 1 });
 assert.deepEqual(passiveApiaryDamageResult(20, 2), { appliedDamage: 2, nextHp: 18 });
 assert.deepEqual(passiveApiaryDamageResult(1, 1), { appliedDamage: 0, nextHp: 1 });
+
+assert.equal(apiaryRaidCooldownMs(apiaryData), 21_600_000);
+assert.equal(apiaryRaidSuccessChancePermille(apiaryData), 700);
+assert.equal(apiaryRaidWaxChancePermille(apiaryData), 350);
+assert.deepEqual(apiaryRaidDamageRange(apiaryData), [2, 5]);
+assert.equal(apiaryRaidHoneyAmount(apiaryData), 1);
+
+function scriptedRandom(values) {
+  let index = 0;
+  return () => values[index++] ?? 0;
+}
+
+assert.deepEqual(apiaryRaidOutcome(apiaryData, 10, scriptedRandom([0.1, 0.2, 0.0])), {
+  success: true,
+  honey: 1,
+  beeswax: 1,
+  appliedDamage: 2,
+  nextHp: 8,
+});
+
+assert.deepEqual(apiaryRaidOutcome(apiaryData, 3, scriptedRandom([0.9, 0.0])), {
+  success: false,
+  honey: 0,
+  beeswax: 0,
+  appliedDamage: 2,
+  nextHp: 1,
+});
 
 console.log("Apiary hazard helpers OK");

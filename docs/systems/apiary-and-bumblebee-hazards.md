@@ -2,9 +2,9 @@
 
 ## Goal
 
-Apiaries and wild hives should become small living-world pressure points: inspectable places that smell of honey and wax, occasionally hurt the inattentive, and later support honey, wax, bear, offering and settlement-economy loops.
+Apiaries and wild hives should become small living-world pressure points: inspectable places that smell of honey and wax, occasionally hurt the inattentive, and later support bear, offering and settlement-economy loops.
 
-The first MVP uses a location feature rather than a full creature swarm. This keeps the slice small: a player can notice the hive, inspect it, and rarely get stung while moving, looking or waiting nearby.
+The MVP uses a location feature rather than a full creature swarm. This keeps the slice small: a player can notice the hive, inspect it, rarely get stung while moving, looking or waiting nearby, or deliberately risk disturbing it for honey.
 
 ## First Feature
 
@@ -18,7 +18,8 @@ It is a `LANDMARK` with `data.apiary === true`, not a new Prisma enum. The JSON 
 - passive sting chances and damage ranges;
 - passive cooldown;
 - night sleeping behavior;
-- future hooks for honey, wax and bear loops.
+- active raid cooldown, success, wax, damage and reward metadata;
+- future hooks for bear loops.
 
 ## Passive Sting Rules
 
@@ -32,8 +33,22 @@ Passive bumblebee stings are intentionally rare and rate-limited.
 
 Player-facing copy should stay atmospheric and not say "hazard radius" or expose raw chances.
 
+## Active Hive Robbery
+
+`0.15.20` adds the first deliberate apiary raid action through `RAID_APIARY`.
+
+- typed routes include `/gather_honey`, `/gather_beeswax`, `gather honey`, `взяти мед`, `зібрати мед`, `обібрати вулик`, `пограбувати бортю` and `добути віск`;
+- the action only works at the active apiary center, not in the passive aura;
+- deliberate robbery wakes the swarm even at night;
+- success grants a small amount of `honey`, with a smaller chance of `beeswax`;
+- failure grants nothing;
+- the raid uses stronger sting damage than passive stings and still clamps the player to at least 1 HP;
+- cooldown is stored in `WorldEvent` using `title = "Apiary raid"` and an `apiaryKey=...` marker, so the same hive cannot be farmed repeatedly.
+
+Honey and beeswax are resources for inventory/storage and future systems. They are not yet a full food/remedy/crafting economy.
+
 ## Future Work
 
-Honey and wax should not become a generic farmable chest. Future robbery/harvest actions need warning copy, action timing, stronger disturbance stings, stock/cooldown limits and clear anti-grief pacing.
-
 Bear loops should start as signs and constrained behavior, not full combat. A bear may later smell honey, raid an apiary, flee after stings and leave tracks or damaged wax, but this should not turn the starter camp into a bear trap.
+
+Honey and wax should not become a generic farmable chest. Future passes can add uses, offerings, crafting and economy hooks, but each should keep stock/cooldown and anti-grief pacing.

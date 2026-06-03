@@ -23,11 +23,11 @@ Status: first slice in `0.15.19`.
 
 ## Phase 3: Honey And Wax
 
-Status: backlog.
+Status: active slice in `0.15.20`.
 
 - Add `honey` and `beeswax` resources with lexicon forms.
-- Decide whether honey is food, remedy ingredient, trade good, offering hook or all of these in separate later slices.
-- Add deliberate hive robbery/harvest only with stock/cooldown limits and clear warning copy.
+- Add deliberate hive robbery/harvest with action timing, stamina cost, stronger disturbance stings, success/failure outcomes and cooldown limits.
+- Keep honey/wax use decisions for later: food, remedy ingredient, trade good, offering hook or crafting input can land in separate slices.
 
 ## Phase 4: Bear Honey Loop
 

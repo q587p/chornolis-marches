@@ -25,6 +25,8 @@ export const SAFE_GAME_COMMAND_PAYLOADS = {
   "/douse_campfire": "cmd_douse_campfire",
   "/dismantle_campfire": "cmd_dismantle_campfire",
   "/dismantle_totem": "cmd_dismantle_totem",
+  "/gather_honey": "cmd_gather_honey",
+  "/gather_beeswax": "cmd_gather_beeswax",
 } as const;
 
 export type SafeGameCommand = keyof typeof SAFE_GAME_COMMAND_PAYLOADS;
