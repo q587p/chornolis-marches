@@ -5,6 +5,8 @@ require("ts-node/register");
 const {
   bestTargetActionMatch,
   isSelfTargetQuery,
+  isSelfTargetQueryForPlayer,
+  selfTargetSearchKeysForPlayer,
   targetDisplayLabel,
   textTargetsForAction,
   visibleTextTargetCreatureWhere,
@@ -141,5 +143,27 @@ assert.equal(isSelfTargetQuery("на мене"), true);
 assert.equal(isSelfTargetQuery("себе"), true);
 assert.equal(isSelfTargetQuery("мій персонаж"), true);
 assert.equal(isSelfTargetQuery("лисиця"), false);
+
+const selfPlayer = {
+  id: 9,
+  firstName: "Нестор",
+  lastName: "Межовий",
+  username: "nestor_user",
+  grammaticalGender: "MASCULINE",
+  animacy: "ANIMATE",
+  nameNominative: "Нестор Межовий",
+  nameGenitive: "Нестора Межового",
+  nameDative: "Нестору Межовому",
+  nameAccusative: "Нестора Межового",
+  nameInstrumental: "Нестором Межовим",
+  nameLocative: "Несторі Межовому",
+  nameVocative: "Несторе Межовий",
+};
+assert.equal(selfTargetSearchKeysForPlayer(selfPlayer).includes("нестор"), true);
+assert.equal(isSelfTargetQueryForPlayer("Нестор", selfPlayer), true);
+assert.equal(isSelfTargetQueryForPlayer("нестор", selfPlayer), true);
+assert.equal(isSelfTargetQueryForPlayer("на Нестора Межового", selfPlayer), true);
+assert.equal(isSelfTargetQueryForPlayer("Несторе Межовий", selfPlayer), true);
+assert.equal(isSelfTargetQueryForPlayer("заєць", selfPlayer), false);
 
 console.log("Text target visibility OK");

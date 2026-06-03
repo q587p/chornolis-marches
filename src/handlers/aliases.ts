@@ -54,7 +54,7 @@ import { latestRememberedReplyTarget } from "../services/replyTargets";
 import { replyToActionError } from "../utils/actionErrorReply";
 import { assertCanPerformPhysicalAction } from "../services/postureRules";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
-import { bestTargetActionMatch, bestTargetMatch, inspectMissingText, isSelfTargetQuery, normalizeTargetKey, targetDisplayLabel, targetListText, textTargetsForAction, visibleTextTargets, type TextTargetRef } from "../services/textTargets";
+import { bestTargetActionMatch, bestTargetMatch, inspectMissingText, isSelfTargetQueryForPlayer, normalizeTargetKey, targetDisplayLabel, targetListText, textTargetsForAction, visibleTextTargets, type TextTargetRef } from "../services/textTargets";
 import { spendPlayerStaminaAmount } from "../services/actionRecovery";
 import { afkReplyOptions, endPlayerSession, SESSION_AFK_CONFIRMATION, SESSION_ENDED_CONFIRMATION, setPlayerAfk } from "../services/sessionPresence";
 import { setAutoActionMessageSetting, setDaypartNoticeSetting, showSettings } from "./settings";
@@ -259,7 +259,7 @@ function isBeginnerCacheContainerQuery(container: string) {
 async function submitFeatureInspection(bot: Bot, ctx: any, targetQuery: string, detail: "brief" | "full" = "full") {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player?.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
-  if (isSelfTargetQuery(targetQuery)) return showCharacter(ctx.from.id, (text, options) => ctx.reply(text, options));
+  if (isSelfTargetQueryForPlayer(targetQuery, player)) return showCharacter(ctx.from.id, (text, options) => ctx.reply(text, options));
 
   const returnMode = detail === "brief" ? "brief" : "details";
   const view = await renderLocationFeatureInteractionByQuery(player.currentLocationId, player.id, targetQuery, returnMode, detail);
@@ -895,7 +895,7 @@ async function submitResolvedTargetAction(bot: Bot, ctx: any, player: any, locat
 async function submitTargetAction(bot: Bot, ctx: any, action: TargetAction, targetQuery: string, detail: "brief" | "full" = "full") {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
-  if (action === "inspect" && isSelfTargetQuery(targetQuery)) return showCharacter(ctx.from.id, (text, options) => ctx.reply(text, options));
+  if (action === "inspect" && isSelfTargetQueryForPlayer(targetQuery, player)) return showCharacter(ctx.from.id, (text, options) => ctx.reply(text, options));
 
   const locationId = player.currentLocationId;
   if (action === "freshen" && isAllTarget(targetQuery)) return submitFreshenAll(bot, ctx, player, locationId);

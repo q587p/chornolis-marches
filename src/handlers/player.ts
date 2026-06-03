@@ -39,7 +39,7 @@ import { eatAllButtonLabel, queueAllUsableInventoryResource } from "../services/
 import { GATHERING_OBSERVATION_GROWTH_MESSAGE, recordGatheringObservation } from "../services/gatheringLearning";
 import { COOKING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_OBSERVATION_GROWTH_MESSAGE, recordCookingObservation, recordFresheningObservation } from "../services/foodLearning";
 import { rememberTutorialInventoryForPlayer } from "../utils/tutorialInventory";
-import { bestTargetMatch, inspectMissingText, isSelfTargetQuery, targetDisplayLabel, targetListText, visibleTextTargets } from "../services/textTargets";
+import { bestTargetMatch, inspectMissingText, isSelfTargetQueryForPlayer, targetDisplayLabel, targetListText, visibleTextTargets } from "../services/textTargets";
 import { actionQueueReplyOptions, sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { durationSecondsSuffix } from "../utils/durationText";
 import { characterNameApprovalStatusText } from "../services/characterNames";
@@ -254,7 +254,7 @@ async function tryReplyWithInventoryInspection(ctx: any, playerId: number, targe
 }
 
 async function submitLookTarget(bot: Bot, ctx: any, player: any, targetQuery: string) {
-  if (isSelfTargetQuery(targetQuery)) return showCharacter(ctx.from.id, (text, options) => ctx.reply(text, options));
+  if (isSelfTargetQueryForPlayer(targetQuery, player)) return showCharacter(ctx.from.id, (text, options) => ctx.reply(text, options));
 
   const visibleTargets = await visibleTextTargets(player.currentLocationId, player.id);
   if (!visibleTargets.length) {
