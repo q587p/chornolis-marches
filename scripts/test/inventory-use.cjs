@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const {
+  inventoryResourceKeyFromText,
   MUSHROOM_FIRST_USE_WARNING_TEXT,
   MUSHROOM_POISON_CHANCE,
   mushroomFirstUseWarningForPlayer,
@@ -13,6 +14,8 @@ const {
 } = require("../../src/services/inventoryUse");
 
 assert.equal(MUSHROOM_POISON_CHANCE, 0.1);
+assert.equal(inventoryResourceKeyFromText("труп сови"), "corpse_owl");
+assert.equal(inventoryResourceKeyFromText("труп сова"), "corpse_owl");
 assert.equal(mushroomPoisoningHits(0), true);
 assert.equal(mushroomPoisoningHits(0.09), true);
 assert.equal(mushroomPoisoningHits(0.1), false);

@@ -23,6 +23,8 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Passive bumblebee stings around the old log apiary now use a one default in-game hour cooldown and higher center/nearby chances, making the hive feel less dormant while still staying rate-limited.
 - The starter shared cache can now accept player-contributed honey and beeswax without hidden restock creating either resource.
 - Lit-torch lifetime text now uses approximate in-world hours instead of real minutes across location, inventory and character views.
+- Owl corpses now have explicit freshening support: successful freshening yields two raw meat and carried owl corpses render with a proper Ukrainian name.
+- Registered `/freshen` / `/butcher` as direct Telegram commands, matching the existing text freshening path and public news command hints.
 - Apiary documentation and planning now record `APIARY-003` as the active 0.15.20 harvest slice while keeping honey uses and bear behavior in later backlog.
 - `/help` now mentions risky honey collection separately from ordinary gathering.
 

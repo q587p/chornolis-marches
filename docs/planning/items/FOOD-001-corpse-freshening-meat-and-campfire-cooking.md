@@ -37,6 +37,7 @@ This should be the first small bridge between combat/hunting, corpse lifetime, i
 - Produce one universal raw meat resource for now.
 - Suggested first yields:
   - mouse: `1` raw meat;
+  - owl: `2` raw meat;
   - hare/rabbit: `3` raw meat;
   - fox: `5` raw meat;
   - wolf: more than fox, exact first value can be tuned during implementation.
@@ -76,6 +77,8 @@ This should be the first small bridge between combat/hunting, corpse lifetime, i
 Prefer `освіжити труп` / `freshen corpse` compatibility for the existing command path, but player-facing copy may use more natural wording such as `обробити труп`, `розібрати труп` or `підготувати м'ясо` where it fits.
 
 0.13.3 first pass handles fresh visible corpses in the current location. Inventory-held corpse butchering and perishable meat timers are explicit follow-ups, not part of the first implementation.
+
+0.15.20 explicitly supports owl corpses in the freshening table: a successful freshening yields `2` raw meat with a moderate `0.5` first-pass success chance, and carried owl corpses render as `труп сови` instead of falling back to generic unknown-species handling.
 
 ## Watchpoint
 

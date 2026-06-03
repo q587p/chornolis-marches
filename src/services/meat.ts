@@ -14,12 +14,14 @@ const DEFAULT_FRESHENING_SUCCESS_CHANCE = 0.5;
 const FRESHENING_SUCCESS_CHANCES: Record<string, number> = {
   mouse: 0.8,
   rabbit: 0.6,
+  owl: 0.5,
   fox: 0.4,
   wolf: 0.4,
 };
 
 export function meatYieldForSpecies(speciesKey: string) {
   if (speciesKey === "mouse") return 1;
+  if (speciesKey === "owl") return 2;
   if (speciesKey === "rabbit") return 3;
   if (speciesKey === "fox") return 5;
   if (speciesKey === "wolf") return 7;

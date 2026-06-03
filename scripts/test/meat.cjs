@@ -15,6 +15,7 @@ const { cookingResultReplyOptions } = require("../../src/ui/inventoryItemKeyboar
 assert.equal(MAX_QUEUED_ACTIONS_PER_ACTOR, 17);
 
 assert.equal(meatYieldForSpecies("mouse"), 1);
+assert.equal(meatYieldForSpecies("owl"), 2);
 assert.equal(meatYieldForSpecies("rabbit"), 3);
 assert.equal(meatYieldForSpecies("fox"), 5);
 assert.equal(meatYieldForSpecies("wolf"), 7);
@@ -23,6 +24,7 @@ assert.equal(resourceAmountText("сире м'ясо", 1), "сире м'ясо");
 assert.equal(resourceAmountText("сире м'ясо", 3), "сире м'ясо ×3");
 
 assert.equal(fresheningSuccessChanceForSpecies("mouse"), 0.8);
+assert.equal(fresheningSuccessChanceForSpecies("owl"), 0.5);
 assert.equal(fresheningSuccessChanceForSpecies("rabbit"), 0.6);
 assert.equal(fresheningSuccessChanceForSpecies("fox"), 0.4);
 assert.equal(fresheningSuccessChanceForSpecies("wolf"), 0.4);
@@ -30,6 +32,8 @@ assert.equal(fresheningSuccessChanceForSpecies("unknown"), 0.5);
 
 assert.equal(fresheningSucceeds("mouse", 0.79), true);
 assert.equal(fresheningSucceeds("mouse", 0.8), false);
+assert.equal(fresheningSucceeds("owl", 0.49), true);
+assert.equal(fresheningSucceeds("owl", 0.5), false);
 assert.equal(fresheningSucceeds("rabbit", 0.59), true);
 assert.equal(fresheningSucceeds("rabbit", 0.6), false);
 assert.equal(fresheningSucceeds("fox", 0.39), true);
