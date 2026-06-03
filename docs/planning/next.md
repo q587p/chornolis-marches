@@ -16,13 +16,15 @@ The last apiary slices are now treated as completed/in-testing content endpoints
 
 The `LEARN-001` foundation is in testing after the minimal persistent learning/progress slice. Future observation and track-learning work should use `src/services/learning.ts` and `CharacterLearningProgress` instead of inventing separate storage.
 
+`OBS-PREP-001` has a representative look/examine audit pass in testing. Use its checklist for incremental cleanup, but do not keep expanding it before the first narrow observation moment.
+
 Do not open another broad content loop before the learning/observation foundation is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
 ## Immediate Sequence
 
 1. **TECH/QA:** clean up the test script/runner split or test manifest if it still blocks focused validation.
-2. **OBS-PREP-001:** audit where `look` and `examine` still collapse to the same text.
-3. **OBS-001:** add the first narrow observe action and a herbalist / знахар learning moment.
+2. **OBS-001:** add the first narrow attentive-presence learning bridge through existing `look`, `examine`, witnessed local actions and herbalist / знахар context; do not add a separate `/observe` command yet.
+3. **SOC-002:** add follow intent only if it directly supports the learning bridge and stays smaller than a travel/group system.
 4. **TRACK-LEARN-001:** add the first track-reading / animal movement learning moment.
 
 Near-term content candidates after that foundation:

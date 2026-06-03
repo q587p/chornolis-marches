@@ -1,7 +1,7 @@
 ---
 id: OBS-PREP-001
 title: Look/examine content audit before observation MVP
-status: next
+status: testing
 type: design
 area: learning
 priority: high
@@ -41,6 +41,27 @@ The project rule is now explicit: `look` may stay brief, but `examine` should re
   - quick copy fix;
   - needs system support;
   - acceptable same-text no-action decision with reason.
+
+## Audit Checklist
+
+- **Location features:** keep compact feature labels in `/look`; direct `/examine <feature>` should add use, constraint, local consequence or atmosphere.
+- **Creatures:** brief views can show name/posture/action; full inspection should add condition, held item, behavior cue or special-presence context where available.
+- **Corpses and tracks:** brief views can show presence; full inspection should add freshness, direction, age, usable action or uncertainty without raw debug values.
+- **Starter camp / watchtower / beginner cache:** inspection should explain light, first-road safety and mutual supplies without turning the cache into a shop.
+- **Apiary:** the old log apiary should read as a risky living place, not only a honey button.
+- **Strange totems:** overview should list the object; inspection should explain suspicious construction, age/state and why dismantling may matter.
+- **Campfires:** overview should stay compact; inspection should explain light, rest, fuel, fading or magical support depending on state.
+- **Willow Floodplain landmarks:** inspection should reward attention to reeds, mud, roots, water and hidden routes without opening a new visibility system.
+- **Tutorial dream features:** every lesson surface should make the `look` / `examine` difference legible through action consequences rather than glossary text.
+
+## 0.15.22 Representative Pass
+
+- Added richer `examine_summary` text for the old log apiary, starter watchtower ladder, starter torch source and shared beginner cache.
+- Added short full-detail cues for tutorial hub/bush/rest/fox-motion surfaces that previously depended mostly on the long direct description.
+- Strengthened Willow reed-wall and mudflat summaries so careful inspection hints at paths and fading tracks.
+- Added missing seeded Strange Totem summaries so location detail views do not show only a bare suspicious object before full inspection.
+
+Remaining cleanup should stay incremental: creatures, corpses/tracks and broader campfire/context variants can use this checklist as OBS-001 and TRACK-LEARN-001 begin consuming examination output.
 
 ## Acceptance
 

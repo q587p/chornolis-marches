@@ -118,7 +118,7 @@ OBS-001-C,Herbalism/gathering progress from observation,next,feature,learning,hi
 OBS-001-D,Observation anti-farming cooldown,next,feature,learning,medium,"observe,cooldown,anti-grind",docs/planning/items/OBS-001-D.md
 OBS-002,Visible herbalist observation moment,proposed,feature,learning,high,"observe,npc,herbalism,progression",docs/planning/items/OBS-002-visible-herbalist-observation-moment.md
 OBS-003,Danger-aware examine cues,done,feature,learning,high,"observe,examine,danger,ecology,atmosphere",docs/planning/items/OBS-003-danger-aware-examine-cues.md
-OBS-PREP-001,Look/examine content audit before observation MVP,next,design,learning,high,"look,examine,observation,content-audit",docs/planning/items/OBS-PREP-001-look-examine-content-audit.md
+OBS-PREP-001,Look/examine content audit before observation MVP,testing,design,learning,high,"look,examine,observation,content-audit",docs/planning/items/OBS-PREP-001-look-examine-content-audit.md
 OMEN-001-A,Choose one living-world omen,next,design,world,medium,"omen,ambient,living-world",docs/planning/items/OMEN-001-A.md
 OMEN-001-B,Omen trigger and rate limit,next,feature,world,medium,"omen,ambient,cooldown",docs/planning/items/OMEN-001-B.md
 OMEN-001-C,Omen local text,next,content,world,medium,"omen,copy,atmosphere",docs/planning/items/OMEN-001-C.md
