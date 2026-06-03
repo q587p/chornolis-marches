@@ -198,6 +198,18 @@ for (const key of ["start_border_marker", "start_newcomer_tablet", "start_lunar_
   assert.ok(Array.isArray(feature.data?.aliases) && feature.data.aliases.length > 0, `Starter camp feature should have aliases: ${key}`);
 }
 
+assert.deepEqual(
+  features.filter((item) => item.locationKey === "start_border_camp").slice(0, 5).map((item) => item.key),
+  [
+    "start_border_watchtower_ladder",
+    "start_border_marker",
+    "start_newcomer_tablet",
+    "start_lunar_circles_birchbark",
+    "start_unfading_campfire",
+  ],
+  "Starter camp feature order should lead with the watchtower and leave the unfading campfire last",
+);
+
 const startWatchtowerLadder = features.find((item) => item.key === "start_border_watchtower_ladder");
 assert.equal(startWatchtowerLadder?.data?.vertical_hint, "UP", "Starter watchtower feature should expose an UP action hint");
 for (const key of ["start_newcomer_tablet", "start_lunar_circles_birchbark", "start_border_watchtower_ladder"]) {

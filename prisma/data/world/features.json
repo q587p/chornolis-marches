@@ -281,6 +281,30 @@
     }
   },
   {
+    "key": "start_border_watchtower_ladder",
+    "locationKey": "start_border_camp",
+    "type": "LANDMARK",
+    "name": "Сторожова вежа",
+    "description": "Невисока дерев’яна вежа стоїть над краєм табору. Драбина скрипить, але тримає; згори легше побачити міст, ворота, річку й темний край лісу. Якщо треба взяти світло перед дорогою, варто піднятися вгору.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🪜",
+      "examine_summary": "драбина веде вгору, де видно темряву за табором і тримають світло для першої дороги",
+      "inspectable": true,
+      "vertical_hint": "UP",
+      "aliases": [
+        "сторожова вежа",
+        "вежа",
+        "драбина",
+        "на вежу",
+        "watchtower",
+        "tower",
+        "ladder"
+      ]
+    }
+  },
+  {
     "key": "start_border_marker",
     "locationKey": "start_border_camp",
     "type": "BORDER_MARKER",
@@ -300,27 +324,6 @@
         "межа",
         "border marker",
         "marker"
-      ]
-    }
-  },
-  {
-    "key": "start_unfading_campfire",
-    "locationKey": "start_border_camp",
-    "type": "MAGIC_CAMPFIRE",
-    "name": "Незгасне вогнище",
-    "description": "Полум’я горить рівно, не потребує хмизу й дає світло всій локації. Під час активного відпочинку тут можна відновити витривалість до п’ятикратного максимуму.",
-    "providesLight": true,
-    "restStaminaCapMultiplier": 5,
-    "data": {
-      "rest_stamina_cap_multiplier": 5,
-      "night_light": "location",
-      "aliases": [
-        "вогнище",
-        "незгасне вогнище",
-        "вогонь",
-        "багаття",
-        "campfire",
-        "fire"
       ]
     }
   },
@@ -377,26 +380,23 @@
     }
   },
   {
-    "key": "start_border_watchtower_ladder",
+    "key": "start_unfading_campfire",
     "locationKey": "start_border_camp",
-    "type": "LANDMARK",
-    "name": "Сторожова вежа",
-    "description": "Невисока дерев’яна вежа стоїть над краєм табору. Драбина скрипить, але тримає; згори легше побачити міст, ворота, річку й темний край лісу. Якщо треба взяти світло перед дорогою, варто піднятися вгору.",
-    "providesLight": false,
-    "restStaminaCapMultiplier": null,
+    "type": "MAGIC_CAMPFIRE",
+    "name": "Незгасне вогнище",
+    "description": "Полум’я горить рівно, не потребує хмизу й дає світло всій локації. Під час активного відпочинку тут можна відновити витривалість до п’ятикратного максимуму.",
+    "providesLight": true,
+    "restStaminaCapMultiplier": 5,
     "data": {
-      "icon": "🪜",
-      "examine_summary": "драбина веде вгору, де видно темряву за табором і тримають світло для першої дороги",
-      "inspectable": true,
-      "vertical_hint": "UP",
+      "rest_stamina_cap_multiplier": 5,
+      "night_light": "location",
       "aliases": [
-        "сторожова вежа",
-        "вежа",
-        "драбина",
-        "на вежу",
-        "watchtower",
-        "tower",
-        "ladder"
+        "вогнище",
+        "незгасне вогнище",
+        "вогонь",
+        "багаття",
+        "campfire",
+        "fire"
       ]
     }
   },
