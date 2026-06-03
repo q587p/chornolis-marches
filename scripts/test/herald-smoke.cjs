@@ -23,7 +23,7 @@ const {
   formatBackfillInterval,
   parseBackfillIntervalMs,
 } = require("../../src/herald/newsBackfill");
-const { formatArchiveList, splitArchiveListMessage } = require("../../src/herald/newsArchiveCommands");
+const { findArchiveRowByReleaseVersion, formatArchiveFindReply, formatArchiveList, splitArchiveListMessage } = require("../../src/herald/newsArchiveCommands");
 const {
   applyNewsSourceDateFallbacks,
   extractChangelogVersionDates,
@@ -159,6 +159,26 @@ assert.match(archiveList, /\/news_archive_post \[/);
 assert.match(archiveList, /\/news_archive_force_post \[/);
 assert.ok(splitArchiveListMessage(["header", ...Array.from({ length: 80 }, (_, index) => `${index + 1}. ${"entry ".repeat(20)}`)].join("\n"), 600).length > 1);
 
+const archiveFindRows = archiveOrderedNewsEntries(parseNewsEntries(versionMarkdown)).map((entry, index) => ({
+  index: index + 1,
+  entry,
+  publication: undefined,
+  status: "missing",
+}));
+const archiveFindInput = {
+  ok: true,
+  rows: archiveFindRows,
+  counts: { missing: archiveFindRows.length, pending: 0, canceled: 0, published: 0 },
+  pendingTotal: 0,
+};
+assert.equal(findArchiveRowByReleaseVersion(archiveFindInput, "0.4.1")?.index, 2);
+assert.equal(findArchiveRowByReleaseVersion(archiveFindInput, "v0.4.10")?.index, 5);
+assert.equal(findArchiveRowByReleaseVersion(archiveFindInput, "0.4.404"), null);
+assert.match(formatArchiveFindReply(archiveFindInput, "0.4.1"), /архівний запис #2\/5/);
+assert.match(formatArchiveFindReply(archiveFindInput, "0.4.1"), /\/news_archive_post 2/);
+assert.match(formatArchiveFindReply(archiveFindInput, ""), /Приклад: \/news_archive_find 0\.4\.4/);
+assert.match(formatArchiveFindReply(archiveFindInput, "0.4.404"), /не знайшла реліз 0\.4\.404/);
+
 const admins = parseHeraldAdminIds([" 123 ", "", "456"]);
 assert.equal(admins.size, 2);
 assert.equal(isHeraldAdminId(123, admins), true);
@@ -176,9 +196,11 @@ assert.match(heraldAdminCommands, /\/news_archive_list/);
 assert.match(heraldAdminCommands, /\/news_archive_preview/);
 assert.match(heraldAdminCommands, /\/news_archive_post/);
 assert.match(heraldAdminCommands, /\/news_archive_force_post/);
+assert.match(heraldAdminCommands, /\/news_archive_find/);
 assert.match(heraldAdminCommands, /\/news_archive_reload/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/pause_publications/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_post/);
+assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_find/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_force_post/);
 
 const whoami = formatHeraldWhoami({
