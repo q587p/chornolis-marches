@@ -51,9 +51,9 @@ assert.equal(isVisibleGroundResource({ amount: 0, resourceType: { key: "shah" } 
 
 const cache = {
   beginner_cache: true,
-  cache_stock: { berries: 1, herbs: 0, mushrooms: 0, raw_meat: 1, cooked_meat: 0, twigs: 1 },
-  cache_max_stock: { berries: 10, herbs: 6, mushrooms: 6, raw_meat: 8, cooked_meat: 5, twigs: 14 },
-  cache_restock_target: { berries: 4, herbs: 2, mushrooms: 2, raw_meat: 4, cooked_meat: 2, twigs: 8 },
+  cache_stock: { berries: 1, herbs: 0, mushrooms: 0, raw_meat: 1, cooked_meat: 0, honey: 0, beeswax: 0, twigs: 1 },
+  cache_max_stock: { berries: 10, herbs: 6, mushrooms: 6, raw_meat: 8, cooked_meat: 5, honey: 5, beeswax: 5, twigs: 14 },
+  cache_restock_target: { berries: 4, herbs: 2, mushrooms: 2, raw_meat: 4, cooked_meat: 2, honey: 0, beeswax: 0, twigs: 8 },
   cache_money_stock: { shah: 2, grivna: 1 },
   cache_money_max_stock: { shah: 200, grivna: 20 },
   cache_money_restock_target: { shah: 0, grivna: 0 },
@@ -72,7 +72,7 @@ assert.equal(beginnerCacheContributeAllButtonLabel("grivna"), "🪙 Лишити
 assert.ok(beginnerCacheMoneyStockLines(cache).some((line) => line.includes("2 шаги")));
 assert.ok(beginnerCacheMoneyStockLines(cache).some((line) => line.includes("1 ґривня")));
 const restocked = beginnerCacheDataAfterHiddenRestock(cache, new Date("2026-06-01T12:00:00.000Z"));
-assert.deepEqual(beginnerCacheStock(restocked), { berries: 4, herbs: 2, mushrooms: 2, raw_meat: 4, cooked_meat: 2, twigs: 8 });
+assert.deepEqual(beginnerCacheStock(restocked), { berries: 4, herbs: 2, mushrooms: 2, raw_meat: 4, cooked_meat: 2, honey: 0, beeswax: 0, twigs: 8 });
 assert.deepEqual(beginnerCacheMoneyStock(restocked), { shah: 2, grivna: 1 }, "Hidden restock must not create or change money");
 
 assert.equal(gatherShahChancePermille("30"), 30);

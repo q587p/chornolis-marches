@@ -234,6 +234,12 @@ assert.equal(beginnerCache.data?.cache_stock?.torch, undefined, "Starter shared 
 assert.equal(beginnerCache.data?.cache_max_stock?.torch, undefined, "Starter shared beginner cache should not accept torch contributions");
 assert.equal(beginnerCache.data?.cache_stock?.raw_meat, 4, "Starter shared beginner cache should provide extra raw meat");
 assert.equal(beginnerCache.data?.cache_stock?.cooked_meat, 2, "Starter shared beginner cache should demonstrate cooked meat");
+assert.equal(beginnerCache.data?.cache_stock?.honey, 0, "Starter shared beginner cache should not start with honey");
+assert.equal(beginnerCache.data?.cache_stock?.beeswax, 0, "Starter shared beginner cache should not start with beeswax");
+assert.equal(beginnerCache.data?.cache_max_stock?.honey, 5, "Starter shared beginner cache should accept honey contributions");
+assert.equal(beginnerCache.data?.cache_max_stock?.beeswax, 5, "Starter shared beginner cache should accept beeswax contributions");
+assert.equal(beginnerCache.data?.cache_restock_target?.honey, 0, "Starter shared beginner cache should not hidden-restock honey");
+assert.equal(beginnerCache.data?.cache_restock_target?.beeswax, 0, "Starter shared beginner cache should not hidden-restock beeswax");
 assert.equal(beginnerCache.data?.cache_money_stock?.shah, 0, "Starter shared beginner cache should not restock money by default");
 assert.equal(beginnerCache.data?.cache_money_stock?.grivna, 0, "Starter shared beginner cache should not start with grivna");
 assert.equal(beginnerCache.data?.cache_money_max_stock?.shah, 200, "Starter shared beginner cache should accept modest shah contributions");

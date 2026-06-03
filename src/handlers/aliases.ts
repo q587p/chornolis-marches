@@ -1384,6 +1384,10 @@ export function registerAliasHandlers(bot: Bot) {
   bot.command("yell", async (ctx) => submitYell(bot, ctx, ctx.match ?? ""));
   bot.command("shout", async (ctx) => submitShout(bot, ctx, ctx.match ?? ""));
   bot.command(["call_scribes", "scribe_help"], async (ctx) => requestScribeReturnAssistance(bot, ctx));
+  bot.command("cache", async (ctx) => replyWithBeginnerCache(ctx));
+  bot.command(["take_cache", "cache_take"], async (ctx) => submitBeginnerCacheTake(bot, ctx, ctx.match ?? ""));
+  bot.command(["contribute_cache", "cache_contribute"], async (ctx) => submitBeginnerCacheContribute(bot, ctx, ctx.match ?? ""));
+  bot.command(["contribute_cache_all", "cache_contribute_all"], async (ctx) => submitBeginnerCacheContributeAll(bot, ctx, ctx.match ?? ""));
 
   bot.on("message:text", async (ctx, next) => {
     if (!ctx.from || !ctx.message?.text) return next();

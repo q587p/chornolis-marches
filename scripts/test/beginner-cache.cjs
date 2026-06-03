@@ -19,9 +19,9 @@ const { addBeginnerCacheContributionButtons } = require("../../src/services/loca
 
 const base = {
   beginner_cache: true,
-  cache_stock: { berries: 1, herbs: 0, mushrooms: 0, raw_meat: 1, cooked_meat: 0, twigs: 1 },
-  cache_max_stock: { berries: 10, herbs: 6, mushrooms: 6, raw_meat: 8, cooked_meat: 5, twigs: 14 },
-  cache_restock_target: { berries: 4, herbs: 2, mushrooms: 2, raw_meat: 4, cooked_meat: 2, twigs: 8 },
+  cache_stock: { berries: 1, herbs: 0, mushrooms: 0, raw_meat: 1, cooked_meat: 0, honey: 0, beeswax: 0, twigs: 1 },
+  cache_max_stock: { berries: 10, herbs: 6, mushrooms: 6, raw_meat: 8, cooked_meat: 5, honey: 5, beeswax: 5, twigs: 14 },
+  cache_restock_target: { berries: 4, herbs: 2, mushrooms: 2, raw_meat: 4, cooked_meat: 2, honey: 0, beeswax: 0, twigs: 8 },
   cache_restock_after_ms: 1000,
 };
 
@@ -31,10 +31,14 @@ assert.equal(beginnerCacheResourceKeyFromText("torch"), null);
 assert.equal(beginnerCacheResourceKeyFromText("berries"), "berries");
 assert.equal(beginnerCacheResourceKeyFromText("raw meat"), "raw_meat");
 assert.equal(beginnerCacheResourceKeyFromText("смажене м'ясо"), "cooked_meat");
+assert.equal(beginnerCacheResourceKeyFromText("мед"), "honey");
+assert.equal(beginnerCacheResourceKeyFromText("віск"), "beeswax");
 
 assert.deepEqual(beginnerCacheTakeKeys(base), ["berries", "raw_meat", "twigs"]);
 assert.equal(beginnerCacheContributeAllButtonLabel("herbs"), "🤲 Лишити всі лікарські трави");
 assert.equal(beginnerCacheContributeAllButtonLabel("twigs"), "🤲 Лишити весь хмиз");
+assert.equal(beginnerCacheContributeAllButtonLabel("honey"), "🤲 Лишити весь мед");
+assert.equal(beginnerCacheContributeAllButtonLabel("beeswax"), "🤲 Лишити весь віск");
 assert.equal(beginnerCacheContributeAllButtonLabel("raw_meat"), "🤲 Лишити все сире м'ясо");
 const contributionKeyboard = new InlineKeyboard();
 addBeginnerCacheContributionButtons(contributionKeyboard, 42, "herbs");
@@ -113,7 +117,7 @@ const restocked = beginnerCacheDataAfterHiddenRestock(
   { ...base, cache_last_observed_at: "2026-06-01T11:00:00.000Z", cache_last_restocked_at: "2026-06-01T11:00:00.000Z" },
   now,
 );
-assert.deepEqual(beginnerCacheStock(restocked), { berries: 4, herbs: 2, mushrooms: 2, raw_meat: 4, cooked_meat: 2, twigs: 8 });
+assert.deepEqual(beginnerCacheStock(restocked), { berries: 4, herbs: 2, mushrooms: 2, raw_meat: 4, cooked_meat: 2, honey: 0, beeswax: 0, twigs: 8 });
 assert.equal(restocked.cache_last_restocked_at, now.toISOString());
 
 const observed = beginnerCacheDataAfterObservation(base, now);

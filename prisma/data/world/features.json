@@ -474,6 +474,8 @@
         "mushrooms": 2,
         "raw_meat": 4,
         "cooked_meat": 2,
+        "honey": 0,
+        "beeswax": 0,
         "twigs": 8
       },
       "cache_money_stock": {
@@ -486,6 +488,8 @@
         "mushrooms": 6,
         "raw_meat": 8,
         "cooked_meat": 5,
+        "honey": 5,
+        "beeswax": 5,
         "twigs": 14
       },
       "cache_money_max_stock": {
@@ -498,6 +502,8 @@
         "mushrooms": 2,
         "raw_meat": 4,
         "cooked_meat": 2,
+        "honey": 0,
+        "beeswax": 0,
         "twigs": 8
       },
       "cache_money_restock_target": {
