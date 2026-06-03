@@ -7,6 +7,21 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.23 - Progression stabilization and gathering skill tuning - 12026-06-03
+
+### Added
+
+- Added a shared `0..5` learning level policy with total-progress thresholds and technical labels in `src/services/learning.ts`.
+- Added scribe-only `/learning` / `/learn` command support for inspecting one character's stored learning progress rows.
+- Added canonical `gathering` practice progress for player attempts on herbs, berries and mushrooms, including failed attempts that still spend time and stamina outside the tutorial dream.
+- Added focused tests for learning level thresholds, canonical gathering practice and bounded gathering skill effects.
+
+### Changed
+
+- Added the first bounded skill effect: herbs, berries and mushrooms gathering progress from supported practice or observation can slightly improve the matching gather success chance and reduce stamina cost with hard caps and a stamina floor.
+- Kept honey, beeswax, twigs, money, loot-like sources and unrelated gather-like actions outside canonical gathering skill effects.
+- Updated progression, planning and admin-command documentation for the new technical surface and the remaining learning follow-up scope.
+
 ## 0.15.22 - Learning foundation stabilization - 12026-06-03
 
 ### Changed
@@ -928,8 +943,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `npm test`.
 - Ran `git diff --check`.
 
----
-
 ## 0.14.6 - Boundary Mark Chancery Herald bot - 12026-06-01
 
 ### Added
@@ -953,8 +966,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `npm run build`.
 - Ran `npm test`.
 - Ran `git diff --check`.
-
----
 
 ## 0.14.2 - Tutorial polish and visible world-time beats - 12026-05-31
 
@@ -989,8 +1000,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `npm run build`.
 - Ran `git diff --check`.
 
----
-
 ## 0.14.3 - Weather MVP and light snapshot foundation - 12026-05-31
 
 ### Added
@@ -1013,8 +1022,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `node scripts/test/campfire-decay.cjs`.
 - Ran `node scripts/test/input-aliases.cjs`.
 - Ran `node scripts/test/slashless-command-coverage.cjs`.
-
----
 
 ## 0.14.5 - Darkness visibility reduction - 12026-05-31
 
@@ -1045,8 +1052,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `npm run build`.
 - Ran `git diff --check`.
 
----
-
 ## 0.14.4 - Visibility debug foundation - 12026-05-31
 
 ### Added
@@ -1073,8 +1078,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `npm test`.
 - Ran `npm run build`.
 
----
-
 ## 0.14.3 - Weather MVP and light snapshot foundation - 12026-05-31
 
 ### Added
@@ -1095,8 +1098,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `node scripts/test/world-time.cjs`.
 - Ran `node scripts/test/input-aliases.cjs`.
 - Ran `node scripts/test/slashless-command-coverage.cjs`.
-
----
 
 ## 0.14.1 - Stored internal world clock - 12026-05-31
 
@@ -1132,8 +1133,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `npm test`.
 - Ran `npm run build`.
 
----
-
 ## 0.14.0 - Internal world-clock planning and prepared names - 12026-05-31
 
 ### Added
@@ -1157,8 +1156,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `npm test`.
 - Ran `npm run build`.
 
----
-
 ## 0.13.27 - Core loop closure audit and attack misses - 12026-05-31
 
 ### Added
@@ -1178,8 +1175,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `npm run planning:export`.
 - Ran `npm run build`.
 - Ran `npm test`.
-
----
 
 ## 0.13.26 - Queued inventory, firewood upkeep and 0.14 planning - 12026-05-31
 
@@ -1218,8 +1213,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `npm run build`.
 - Ran `npm test`.
 
----
-
 ## 0.13.25 - Feature inspection layers and slashless command parity - 12026-05-31
 
 ### Changed
@@ -1238,8 +1231,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `npm run planning:export`.
 - Ran `npm test`.
 - Ran `npm run build`.
-
----
 
 ## 0.13.24 - Hunger cues, tutorial completion and inventory polish - 12026-05-31
 
@@ -1278,8 +1269,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `npm test`.
 - Ran `npm run build`.
 
----
-
 ## 0.13.23 - Target-list return context, scribe corpse setup and climbable trees - 12026-05-31
 
 ### Added
@@ -1310,8 +1299,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `npm test`.
 - Ran `npm run build`.
 
----
-
 ## 0.13.22 - Queue visibility, AFK labels and command-menu polish - 12026-05-31
 
 ### Changed
@@ -1340,8 +1327,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `node scripts/test/reply-keyboard-refresh.cjs`.
 - Ran `npm test`.
 - Ran `npm run build`.
-
----
 
 ## 0.13.21 - Population recovery and northern forest pocket - 12026-05-31
 
@@ -1372,8 +1357,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `npm run planning:export`.
 - Ran `npm run map:render`.
 - Ran `npm run build`.
-
----
 
 ## 0.13.20 - Name review, social hints, admin menu and visibility polish - 12026-05-30
 
@@ -1423,8 +1406,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran `npm run build`.
 - Ran `node scripts/test/character-names.cjs`.
 
----
-
 ## 0.13.19 - Session presence, quieter forest reactions and PR discipline - 12026-05-30
 
 ### Added
@@ -1454,8 +1435,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ran planning export after updating planning items.
 - Ran `npm run build`.
 - Ran `npm test`.
-
----
 
 ## 0.13.18 - Hunter hardening, weapon planning and scribe audit - 12026-05-30
 
@@ -1492,8 +1471,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added scribe-audit helper coverage.
 - Ran the full project test suite.
 
----
-
 ## 0.13.17 - Small polish, status visibility and target interactions - 12026-05-30
 
 ### Added
@@ -1522,8 +1499,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added or extended regression coverage for runtime status helpers, ecology death counters, admin reset modes, target keyboard layout, reply targets and input aliases.
 - Ran the project build and full test suite.
 
----
-
 ## 0.13.16 - World lexicon case forms - 12026-05-30
 
 ### Added
@@ -1540,8 +1515,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Extended character-name and grammar coverage for lexicon lookups and seed species helper forms.
 
----
-
 ## 0.13.15 - Auto stand-up after rest - 12026-05-30
 
 ### Fixed
@@ -1551,8 +1524,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Tests
 
 - Extended posture helper coverage for the auto stand-up decision.
-
----
 
 ## 0.13.14 - Core loop omen and tutorial keyboard polish - 12026-05-30
 
@@ -1575,8 +1546,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added `scripts/test/campfire-memory.cjs` coverage for first-reveal and later-inspection behavior.
 - Extended posture/reply-keyboard coverage for progressive tutorial dream controls.
 - Extended input-alias coverage for brief/full target inspection parsing and hidden hunter marker cleanup.
-
----
 
 ## 0.13.13 - NPC held torch inventory foundation - 12026-05-30
 
@@ -1615,8 +1584,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added reply-keyboard helper coverage for tutorial inventory-button visibility.
 - Added parser, suggestion and seed coverage for Dream Gate inspection aliases.
 
----
-
 ## 0.13.12 - Gate hunting saturation stand-down - 12026-05-30
 
 ### Added
@@ -1645,8 +1612,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added parser/helper coverage for `/open` feedback on visible but currently non-openable gates.
 - Added parser coverage for targeted open aliases such as `відкрити ворота` and `o gate`.
 - Added helper coverage for gathering practice and observation milestones.
-
----
 
 ## 0.13.11 - NPC hunter state-machine slice - 12026-05-30
 
@@ -1677,8 +1642,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added ambient line-bank coverage so herbalist and auto speech variety does not shrink below 50 unique lines each.
 - Added attack-learning helper coverage for practice and observation milestone cadence.
 
----
-
 ## 0.13.10 - Hunter route plan and posture action guards - 12026-05-30
 
 ### Added
@@ -1700,8 +1663,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added focused NPC hunter helper coverage for route directions, total travel cost, missing route reasons and torch bundle constants.
 - Added parser and posture text regression coverage for bulk pickup and dream-sleep posture layering.
 
----
-
 ## 0.13.9 - NPC drop-off contribution foundation - 12026-05-30
 
 ### Added
@@ -1718,8 +1679,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Extended gate hunting loop helper coverage for deterministic hunter field lines.
 
----
-
 ## 0.13.8 - Location route finding foundation - 12026-05-30
 
 ### Added
@@ -1734,8 +1693,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Tests
 
 - Added route-finding coverage for simple routes, no-route results, hidden-exit filtering, caller-blocked directions and depth limits.
-
----
 
 ## 0.13.7 - Gate hunting loop foundation - 12026-05-30
 
@@ -1768,8 +1725,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added parser coverage for additional Ukrainian `shout` synonyms.
 - Added suggestion coverage for speech-command aliases that are parsed by regex instead of exact command entries.
 
----
-
 ## 0.13.6 - Speech commands and sitting rest posture - 12026-05-29
 
 ### Added
@@ -1793,8 +1748,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added parser coverage for English and Ukrainian `whisper`, `reply` and `shout` forms.
 - Added parser coverage for posture aliases and focused helper coverage for posture text/button states.
 
----
-
 ## 0.13.5 - Enter and leave text navigation - 12026-05-29
 
 ### Added
@@ -1809,8 +1762,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Tests
 
 - Added parser coverage for `/enter`, `enter bushes`, `увійти в кущі`, `/leave`, `leave cave` and `вийти з кущів`.
-
----
 
 ## 0.13.4 - Quick navigation commands - 12026-05-29
 
@@ -1828,8 +1779,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Tests
 
 - Added input-alias regression coverage for the new `glance` and `exits` forms.
-
----
 
 ## 0.13.3 - Meat and campfire cooking loop - 12026-05-29
 
@@ -1852,8 +1801,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Added input-alias regression coverage for meat cooking, cooked meat eating, edible herb aliases and corpse butchering aliases.
 
----
-
 ## 0.13.2 - Pickup and gather command semantics - 12026-05-29
 
 ### Changed
@@ -1867,8 +1814,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Tests
 
 - Updated input-alias regression coverage for pickup verbs on natural resources.
-
----
 
 ## 0.13.1 - Forbidden-name normalization - 12026-05-29
 
@@ -1902,8 +1847,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added regression cases for spaced-out or separator-split forbidden names.
 - Added coverage to ensure prepared character names are not accidentally rejected by forbidden-name checks.
 
----
-
 ## 0.13.0 - Prepared-name pool expansion - 12026-05-29
 
 ### Added
@@ -1916,8 +1859,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Prepared-name onboarding now has a larger minimum available pool: at least 8 masculine names, 8 feminine names and 6 plural-form names for playtesting.
 - Updated character-name and onboarding documentation for the 0.13 Core Loop & Onboarding Stability lane.
 - Marked the repository-docs planning source-of-truth slice as ready for testing after verifying the planning index and roadmap language.
-
----
 
 ## 0.12.15 - Tutorial gate, inside movement and drop feedback - 12026-05-29
 
@@ -1944,8 +1885,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Tutorial dream berries, herbs and mushrooms can appear as visible loose ground resources when they are on the ground.
 - Parser regression tests now use a neutral target example instead of a real player name.
 
----
-
 ## 0.12.14 - Tutorial rest and location readability - 12026-05-29
 
 ### Changed
@@ -1962,8 +1901,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Completing rest now refreshes the main reply keyboard/status label along with the completion message.
 - Stale onboarding inline buttons no longer reopen name selection after the character has already completed onboarding; they show a restart hint instead.
-
----
 
 ## 0.12.13 - Tutorial speech and onboarding polish - 12026-05-29
 
@@ -1992,8 +1929,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - `/restart` now also works while character onboarding is still in progress, clearing the pending onboarding state before the next `/start`.
 - Prepared onboarding names now exclude names already used by named NPCs, including `Ведана`.
 
----
-
 ## 0.12.12 - Prepared-name reservations - 12026-05-28
 
 ### Changed
@@ -2001,8 +1936,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Moved the prepared character-name pool into a typed data module with explicit reservation state.
 - Prepared names now stay hidden when reserved for future NPCs or events, not only when already used by a character.
 - Expanded focused character-name regression coverage for reserved prepared names.
-
----
 
 ## 0.12.11 - Prepared character names - 12026-05-28
 
@@ -2014,8 +1947,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Custom name entry now shows a setting-fit warning and rejects exact duplicates plus a first set of creature, spirit, sacred and famous-name conflicts.
 - Added focused regression coverage for prepared-name availability and forbidden custom names.
 
----
-
 ## 0.12.10 - Beginner tutorial return prompts - 12026-05-28
 
 ### Changed
@@ -2023,8 +1954,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - `/start`, `/help` and unknown-input fallback messages now remind unfinished characters how to return to the tutorial dream.
 - `/help` now adds a direct tutorial button for characters who have not completed the tutorial yet.
 - Added natural Ukrainian tutorial-return aliases such as `навчання`, `пройти навчання` and `повернутися до навчання`.
-
----
 
 ## 0.12.9 - Border marker ecology report - 12026-05-28
 
@@ -2038,8 +1967,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Changed
 
 - Border marker ecology text now hides exact counts by default; exact values are only appended for scribes/admins with technical details enabled.
-
----
 
 ## 0.12.8 - Tutorial observation branch - 12026-05-28
 
@@ -2061,8 +1988,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Depleted-grass inspection text no longer repeats the same recovery warning in multiple paragraphs.
 - `/restAdmin` now reports the actual saved stamina value and refreshes the main reply keyboard after use.
 - Full `/stat`, the menu stats button and web `/stat` / `/stat.json` are now scribe/admin surfaces; public ecology reporting is planned as a separate diegetic feature.
-
----
 
 ## 0.12.7 - Website news and tutorial polish - 12026-05-28
 
@@ -2086,8 +2011,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Tutorial voice comments from Сон and Дрімота are treated as private player guidance and no longer write world-event log entries.
 - Expanded docs/planning for rest posture, tutorial observation-learning, first skill vocabulary and future fox/attack observation lessons.
 
----
-
 ## 0.12.6 - Roadmap and performance planning refresh - 12026-05-28
 
 ### Changed
@@ -2096,8 +2019,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Refreshed README and Codex memory docs with the current identity: a Telegram-first living liminal frontier sandbox where characters grow through use, observation and survival.
 - Expanded progression, social-signal and onboarding docs so future tutorial branches teach attention to the world rather than a mechanical checklist.
 - Promoted the runtime performance notes into the planning backlog: world tick staging, action lifecycle metrics, status DB pagination, auto scheduler refactor and creature simulation budgeting.
-
----
 
 ## 0.12.5 - Status and player action performance - 12026-05-28
 
@@ -2111,8 +2032,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Fixed the narrowed `/all` player query to use actual `Player` schema fields, avoiding a Prisma validation crash after the status optimization.
 - Due player actions now complete with bounded concurrency instead of a fully serial loop, matching the existing creature-action completion shape while keeping each actor's actions ordered.
 - Added `PLAYER_COMPLETION_CONCURRENCY` as a Render/runtime tuning knob for due player-action completion.
-
----
 
 ## 0.12.4 - Tutorial time and safety rooms - 12026-05-27
 
@@ -2132,8 +2051,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - The tutorial now uses the same main 3×3 reply keyboard shape from the first room onward, with exits and tutorial actions opening by location.
 - Updated beginner guidance and ONB-001 planning notes for the new tutorial branch coverage.
 
----
-
 ## 0.12.3 - Action queue performance pass - 12026-05-27
 
 ### Changed
@@ -2146,8 +2063,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Varied tutorial pace comments and added escalating cooldowns so repeated idle/look reminders become less frequent.
 - Changed the character card in the tutorial dream to show sleeping posture, hide the Sleep button and warn that nested sleep is not implemented.
 - Reworded locked exit messages so the blocker name comes before the closed state, for example `Брама сну (закрито)`.
-
----
 
 ## 0.12.2 - Tutorial branches and inventory fire polish - 12026-05-27
 
@@ -2166,8 +2081,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Changed `Назад` in the Telegram menu to hide the persistent reply keyboard, with `/menu` or `/start` available to bring buttons back.
 - Updated the Telegram command-menu description for `/start` and clarified in the `/start` response that buttons live under the input field while text commands still work.
 - Updated the tutorial hub, beginner guidance and ONB-001 planning notes to reflect the new optional branch coverage.
-
----
 
 ## 0.12.1 - Tutorial dream polish and visible actions - 12026-05-27
 
@@ -2189,8 +2102,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Public `/stat` character rows no longer expose whether a listed character is player-controlled or NPC-backed.
 - The character card now exposes a Sleep button, and unavailable normal sleep offers a direct tutorial sleep button.
 
----
-
 ## 0.12.0 - Dream tutorial - 12026-05-27
 
 ### Added
@@ -2207,8 +2118,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Updated onboarding, input-alias, map and release documentation for the new tutorial flow.
 - Removed stale top-level split seed JSON duplicates from `prisma/data/`; the active world seed source is now unambiguous under `prisma/data/world/`.
 
----
-
 ## 0.11.12 - First inventory uses - 12026-05-27
 
 ### Added
@@ -2223,8 +2132,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Updated survival, fire/light, input-alias and planning docs now that the inventory screen has first modest item actions.
 
----
-
 ## 0.11.11 - Vegetation inspection and firewood fuel - 12026-05-27
 
 ### Added
@@ -2237,8 +2144,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - `Додати хмиз` now consumes carried `twigs`: burning ordinary campfires get a capped time extension, while extinguished campfires can receive prepared fuel before being relit.
 - Updated fire/light, input-alias and planning docs now that `twigs` is a working fuel item instead of a placeholder.
-
----
 
 ## 0.11.10 - Ecology pressure, track details and admin polish - 12026-05-27
 
@@ -2262,8 +2167,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added a technical planning item for large-file/service-boundary cleanup after reviewing current refactor hotspots.
 - Updated ecology docs and backlog notes now that the first hunger/starvation loop exists.
 - Updated Codex and project docs to emphasize tests, command aliases in English/Ukrainian, Holocene-local release dates, and current 0.11.10 planning notes.
-
----
 
 ## 0.11.9 - Softer player text, clearer admin tools and fire cleanup - 12026-05-27
 
@@ -2291,8 +2194,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Updated fire/light documentation for the torch-to-хмиз lifecycle.
 - Added release notes for 0.11.9 and refreshed planning notes for onboarding upkeep, first gathered-resource uses, teaching, starter clothing and future NPC/admin controls.
 
----
-
 ## 0.11.8 - Chat privacy, stable keyboard grid and web stat polish - 12026-05-27
 
 ### Changed
@@ -2303,8 +2204,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Ordinary human-like NPC speech now appears as `SAY` in Telegram `/chat`, the web chat page and `/chat.json`; visibly non-human voices such as the lisovyk elder still keep `NPC_SAY`.
 - Telegram `/chat` and the scribe `/world` status now trim oversized pages before sending, preventing Telegram `message is too long` runtime errors while keeping full records available on the web/JSON views.
 - The public website home page now gives `emblem-logo-01.png` more visual weight and lets the long tone line span the full tone grid instead of wrapping as a narrow column.
-
----
 
 ## 0.11.7 - Local detail mode, keyboard UX and public web status - 12026-05-27
 
@@ -2351,8 +2250,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added a temporary infinite torch stand at the closed settlement gate.
 - Trimmed the public Telegram command menu to the core entries: `/start`, `/me`, `/look`, `/menu`, `/news` and `/help`.
 
----
-
 ## 0.11.6 - Fire, light, nearby text and scribe access - 12026-05-26
 
 ### Added
@@ -2381,8 +2278,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Admin/debug commands now use scribe access: configured admin Telegram IDs still work, and a hidden `/adminSet <secret>` can grant the current character the `Писар Порубіжжя` role when `ADMIN_SET_SECRET` is configured for the environment.
 - The Telegram command menu keeps `/adminHelp` hidden globally, but adds `/adminhelp` back as a chat-scoped command for players who already have `Писар Порубіжжя` access; the handler still accepts both `/adminHelp` and `/adminhelp`.
 
----
-
 ## 0.11.5 - Ukrainian command aliases and button parity - 12026-05-26
 
 ### Added
@@ -2401,8 +2296,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Updated release notes, system docs and planning notes for command/button parity and future shared command registry work.
 
----
-
 ## 0.11.4 - Social signals, chat menu and planning refresh - 12026-05-26
 
 ### Added
@@ -2419,8 +2312,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - `/adminHelp` now uses a single canonical handler again, avoiding drift between admin command lists.
 - `/adminHelp` and admin-command docs now include `/stat`, `/chat` and `/addCampfire`.
 - `docs/planning/next.md` now reflects the current `next` planning lane: biome resources, day/night, campfires/light and early respawn.
-
----
 
 ## 0.11.3 - Chat polish, campfire debug and panic reaction - 12026-05-26
 
@@ -2440,8 +2331,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Added agent/workflow notes that release and update dates should use the local project date with the Holocene calendar year.
 - Added backlog planning for speech range and privacy modes such as whispering, shouting and wider announcement-like speech.
-
----
 
 ## 0.11.2 - Player action responsiveness, chat log and UI terminology - 12026-05-26
 
@@ -2468,8 +2357,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Added planning notes for visible local pickup/gather feedback, interactive map features, localization, vegetation recovery and deeper predator/resource ecology.
 
----
-
 ## 0.11.1 - Creature queue throughput - 12026-05-26
 
 ### Changed
@@ -2480,8 +2367,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Corpse target cards now offer `Підібрати`; picked-up corpses appear in `Речі` and keep decaying until the world removes them.
 - Greeting/social output now uses separate actor, target and observer messages, with spoken text formatted as a quote block.
 - Render deployment docs now list the creature action batch/concurrency tuning knobs.
-
----
 
 ## 0.11.0 - Terminology, rest flow and project vision - 12026-05-26
 
@@ -2508,8 +2393,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - The rest UI no longer advertises bed iconography for the basic `Відпочити` action.
 - Help and admin command lists now point to `/look` / `Озирнутися`, `/examine` / `Роздивитися` and updated terminology.
 
----
-
 ## 0.10.13 - Action queue diagnostics and latency cleanup - 12026-05-26
 
 ### Added
@@ -2528,8 +2411,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Quick action timing text now matches the actual `100ms` player quick-action duration.
 
----
-
 ## 0.10.12 - Seed typecheck and deploy announcements - 12026-05-26
 
 ### Fixed
@@ -2539,8 +2420,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Deploy announcements now suppress older version messages when a same-or-newer `DEPLOY:x.y.z` world event already exists.
 - Added a deployment checklist that documents when a migration is needed, when seed should run and the manual deploy order.
 - Renamed the visible gatherable `herbs` resource to `лікарські трави` while keeping the stable `herbs` key and command alias.
-
----
 
 ## 0.10.11 - Starter predators and predator ecology - 12026-05-26
 
@@ -2558,8 +2437,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Documentation
 
 - Updated ecology docs for starter predators and predator reproduction.
-
----
 
 ## 0.10.10 - Predator kills in ecology stats - 12026-05-26
 
@@ -2583,8 +2460,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added a backlog item for animal experience and titles based on hunting history.
 - Added a backlog item for creature aggression and defense against people or threats.
 
----
-
 ## 0.10.9 - Animal pressure and ecology danger - 12026-05-25
 
 ### Fixed
@@ -2603,8 +2478,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added Icebox notes for future species-specific fear, aggression and offspring-defense behavior.
 - Updated ecology docs for animal pressure and recent-attack danger.
 
----
-
 ## 0.10.8 - Timing and action queue fixes - 12026-05-25
 
 ### Fixed
@@ -2620,8 +2493,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Reduced tired/non-quick action durations by lowering `ACTION_BASE_TICKS` from 9 to 3, and clarified `/tickGet` that those action durations apply during fatigue or to creatures without quick mode.
 - Reduced quick player action duration to 0.1s and action queue polling to 0.1s so quick actions complete promptly.
 - Decoupled attack duration from stamina cost: tired/non-quick attacks now take 2x movement time while still costing more stamina.
-
----
 
 ## 0.10.7 - Safer reset and tick commands - 12026-05-25
 
@@ -2647,8 +2518,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Updated admin command docs.
 
----
-
 ## 0.10.6 - Unknown command fallback - 12026-05-25
 
 ### Added
@@ -2663,8 +2532,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Slowed the mouse lifecycle from seconds-scale growth to a short but readable cycle that remains faster than rabbits.
 - Mouse reproduction now runs faster than rabbit reproduction and uses smaller 4-8 offspring litters.
 - Seed upserts now use bounded concurrency and starter animal `createMany` batches to reduce database round trips.
-
----
 
 ## 0.10.5 - World map v7 and starter ecology - 12026-05-25
 
@@ -2686,8 +2553,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Hardened action, recovery, world-tick and debug/reset writes against records that were already removed by reset, cleanup or another concurrent loop.
 - CI now runs the static world seed test before build.
 
----
-
 ## 0.10.4 - Ecology web stats - 12026-05-25
 
 ### Added
@@ -2707,8 +2572,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Updated deployment docs with the 0.10.4 stats notes.
 
----
-
 ## 0.10.3 - Rabbit pacing and spread - 12026-05-25
 
 ### Changed
@@ -2723,8 +2586,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Updated ecology docs and ECO-001 notes with the slower pacing and overcrowding spread behavior.
 
----
-
 ## 0.10.2 - Paginated long Telegram outputs - 12026-05-25
 
 ### Added
@@ -2738,8 +2599,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Replaced manual 3500-character chunking in long admin outputs with page builders and `Next` / `Back` callbacks.
 - Kept page sizes below Telegram's 4096-character message limit with a 3300-character target.
 
----
-
 ## 0.10.1 - Rabbit litter tuning - 12026-05-25
 
 ### Changed
@@ -2751,8 +2610,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Updated ecology docs and ECO-001 notes with the 5-10 litter size.
 - Added a future Icebox note for opportunistic rabbit consumption of small bird prey or carrion after birds, carcasses and deeper attack systems exist.
-
----
 
 ## 0.10.0 - Rabbit reproduction and overgrazing - 12026-05-25
 
@@ -2772,8 +2629,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Updated ecology and planning docs after implementing the first ECO-001 slice.
 
----
-
 ## 0.9.12 - Action completion refactor - 12026-05-25
 
 ### Changed
@@ -2785,8 +2640,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Documentation
 
 - Updated `docs/planning/next.md` after completing the action queue completion-handler split.
-
----
 
 ## 0.9.11 - Action lifecycle refactor - 12026-05-25
 
@@ -2800,8 +2653,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Updated `docs/planning/next.md` so the remaining action queue refactor item only covers completion handler modules.
 
----
-
 ## 0.9.10 - Planning export CI validation - 12026-05-25
 
 ### Changed
@@ -2811,8 +2662,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Documentation
 
 - Updated `docs/planning/next.md` after completing planning export CI validation.
-
----
 
 ## 0.9.9 - Planning export script - 12026-05-25
 
@@ -2830,8 +2679,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Updated planning docs to describe the export command.
 - Updated `docs/planning/next.md` after completing the local planning export workflow.
 
----
-
 ## 0.9.8 - Action recovery refactor - 12026-05-24
 
 ### Changed
@@ -2842,8 +2689,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Documentation
 
 - Updated `docs/planning/next.md` to remove stamina/rest recovery from the remaining action queue refactor TODO.
-
----
 
 ## 0.9.7 - Action queue refactoring and terminology cleanup - 12026-05-24
 
@@ -2858,8 +2703,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Updated `docs/planning/next.md` after completing the queued-action terminology cleanup and the first queue rendering/rules split.
 
----
-
 ## 0.9.6 - Refactoring - 12026-05-24
 
 ### Changed
@@ -2870,8 +2713,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Documentation
 
 - Added a follow-up planning note to continue splitting the large `src/services/actionQueue.ts` into smaller queue, completion, stamina/rest and rendering modules.
-
----
 
 ## 0.9.5 - Озирнутися, stamina 42, character card and static time - 12026-05-24
 
@@ -2906,8 +2747,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Some older queued-action internal phrasing may still say `придивляється`; the visible UI pass is covered here, and the remaining large `actionQueue.ts` wording can be cleaned in a smaller follow-up when editing the full file directly.
 
----
-
 ## 0.9.4 - Documentation restructure and canonical design docs - 12026-05-23
 
 ### Added
@@ -2929,8 +2768,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Standardized most technical/design documentation to English.
 - Kept `news.md` and in-world flavor text primarily Ukrainian for atmosphere and world identity.
 - Clarified liminal frontier identity and use-/observation-based progression pillars across the docs.
-
----
 
 ## 0.9.3 - Admin help recovery, persistent auto and visible location features - 12026-05-22
 
@@ -2956,8 +2793,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Avoided the duplicate `/adminHelp` behavior where the new short admin handler could hide the older full debug command list.
 - Made manual tick feedback more useful for checking animal/NPC behavior by surfacing the world tick counters in chat.
 
----
-
 ## 0.9.2 - Chornolis calendar service - 12026-05-22
 
 ### Added
@@ -2970,8 +2805,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - `/start` and the post-onboarding welcome message now mention the current Chornolis year.
 - Calendar text uses explicit `\n` line breaks in Telegram strings instead of physical newlines inside template literals.
-
----
 
 ## 0.9.1 - Improve menu, location features, added reset the world - 12026-05-22
 
@@ -2993,8 +2826,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Bridge plank features are no longer clickable until bridge/fishing mechanics exist.
 - World seed resources are normalized: no gatherables at bridge/start camp/gate, riverbanks seed herbs only, and dry luka has no mushrooms.
 - Chornolis split seed package
-
----
 
 ## 0.9.0 - Expanded world seed and bridge start - 12026-05-21
 
@@ -3033,8 +2864,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - For a local dev database, the cleanest way to replace the old 3×3 map is still `npx prisma migrate reset` followed by `npm run seed`.
 
----
-
 ## 0.8.4 - Visual identity and generated art prompts - 12026-05-21
 
 ### Added
@@ -3057,8 +2886,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Documented the preferred visual style as dark Ukrainian / Slavic inspired forest frontier fantasy.
 - Clarified that generated images are concept/direction references for Telegram UI, README, landing page, future banners and icon work.
 
----
-
 ## 0.8.3 - Web map and multi-client server idea in Icebox - 12026-05-21
 
 ### Added
@@ -3077,8 +2904,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Clarified that Telegram should remain an important client, but not the only place where game logic lives.
 - Framed web and MUD support as a future multi-client server direction rather than an immediate implementation task.
-
----
 
 ## 0.8.2 - Planning-as-code and portable backlog - 12026-05-21
 
@@ -3123,8 +2948,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - GitHub Issues/Projects are now treated as a working interface, not the only source of truth.
 - Roadmap/backlog ideas can now be stored, reviewed, exported and migrated as plain text files in the repository.
 
----
-
 ## 0.8.1 - Liminal identity and progression design - 12026-05-20
 
 ### Added
@@ -3145,8 +2968,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Updated roadmap pillars to include liminality and skill progression through use, observation and apprenticeship.
 - Updated roadmap Phase 2 with observation-based learning.
-
----
 
 ## 0.8.0 - Roadmap and design documentation - 12026-05-21
 
@@ -3173,8 +2994,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
   - settlements.
 - Added GitHub workflow notes under `docs/ux/github_workflow.md`.
 
----
-
 ### 0.7.6 - unified player actions and auto timing - 12026-05-20
 
 ### 🎮 Gameplay / UX
@@ -3196,8 +3015,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added live `AUTO_INTERVAL_MS` derived from runtime `TICK_MS`.
 - Added auto timer restart support after runtime tick changes.
 
----
-
 ### 0.7.5 - runtime tick tuning - 12026-05-19
 
 ### ✨ Added
@@ -3216,8 +3033,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Tick-derived constants in `gameConfig.ts` are now live `let` exports recalculated by `setRuntimeTickMs()`.
 - The action/recovery loop can be restarted after runtime tick changes.
-
----
 
 ### 0.7.4 - unified tick, help and knockout - 12026-05-18
 
@@ -3254,8 +3069,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added `config.tickMs` and centralized tick-derived gameplay constants in `src/gameConfig.ts`.
 - Updated `/tickGet` / `/tickSet` messaging to clarify runtime tick changes versus env-driven boot configuration.
 
----
-
 ### 0.7.3 - rest/queue/navigation follow-up - 12026-05-18
 
 ### ✨ Added
@@ -3284,8 +3097,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### 🛠 Technical
 
 - Added migration `20260518072200_rest_statistics` for rest counters on `Player`.
-
----
 
 ## 0.7.2 - stamina/rest queue UX fixes - 12026-05-18
 
@@ -3329,8 +3140,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### 📝 Notes
 
 - This release supersedes the previous 0.7.1 fix3 archive and should be applied on top of committed 0.7.1.
-
----
 
 ## 0.7.1 - stamina, rest, priorities and tracks - 12026-05-18
 
@@ -3396,8 +3205,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - `staminaMax` is intentionally stored now so future housing, campfire, skills, traits or environment bonuses can modify it.
 - Track interpretation is intentionally minimal for now; richer scents, footprints, freshness and stealth can build on `WorldTrack`.
 
-
----
 
 ## 0.7.0 - universal delayed action queue - 12026-05-16
 
@@ -3476,8 +3283,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Predator hunting can later become queued `ATTACK`/`EAT` behavior without changing the overall queue architecture.
 - Future crafting, traps, resting effects, gathering professions and travel skills should reuse `WorldAction`.
 
----
-
 ## 0.6.2 - compound Ukrainian names grammar - 12026-05-16
 
 ### ✨ Added
@@ -3506,8 +3311,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - No Prisma migration required.
 - Stored full-case forms remain the source of truth after onboarding confirmation.
 
----
-
 ## 0.6.1 - restart onboarding reset command - 12026-05-16
 
 ### ✨ Added
@@ -3525,8 +3328,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### 📝 Notes
 
 - `/restart` resets only the current Telegram user's own character. It does not delete other players.
-
----
 
 ## 0.6.0 - Ukrainian grammar and character onboarding - 12026-05-14
 
@@ -3580,8 +3381,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - This is a foundation for fuller localization, not a complete Ukrainian morphology engine.
 - Manual forms remain the source of truth for NPCs, monsters, fantasy names and future quest entities.
 
----
-
 ## 0.5.3 - corpse inspection, greetings and stats UX - 12026-05-11
 
 ### ✨ Added
@@ -3608,8 +3407,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Greeting actions continue to notify other players in the same location.
 - Greeting actions continue to write `GREET` world events.
 
----
-
 ## 0.5.2 - debug hunting and expanded stats - 12026-05-11
 
 ### ✨ Added
@@ -3635,8 +3432,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Updated social interaction handler for creature combat debug flow.
 - Extended Prisma Player schema with gathering/hunting counters.
 
----
-
 ## 0.5.1 - creature debug helpers and safer addCreature - 12026-05-11
 
 ### ✨ Added
@@ -3655,8 +3450,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### 🧪 Testing
 
 - Added a quicker manual way to verify non-zero old-age deaths and corpse decay counters by spawning old animals and running `/tick`.
-
----
 
 ## 0.5.0 - aging and corpse lifecycle - 12026-05-06
 
@@ -3705,16 +3498,12 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Predator hunting priority by old/weak prey is planned for a later version.
 - Full track freshness system is still planned separately.
 
----
-
 ## 0.4.12 - latest 0.4.x baseline - 12026-05-06
 
 ### 🛠 Technical
 
 - 0.5.0 was prepared on top of this version.
 - See Git history for detailed 0.4.9–0.4.12 changes.
-
----
 
 ## 0.4.8 - player auto mode and cleaner Telegram menu - 12026-05-06
 
@@ -3733,8 +3522,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Animal presence is visible in location descriptions as `Поруч щось є`.
 - Locations with animals show only `Оглянути` and `Атакувати` interaction buttons, without greeting.
 
----
-
 ## 0.4.7 - creature control and debug status UX - 12026-05-06
 
 ### ✨ Added
@@ -3748,7 +3535,34 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - `/cleanupCreatures` removes all animals and leaves only canonical unique NPCs.
 - Seed no longer spawns animals on every deploy/seed run.
 
----
+## 0.4.6 -- Removal of duplicate NPCs -- 6 May 2012
+
+- Added `/cleanupCreatures`.
+- Removed duplicates of early local characters.
+
+## 0.4.5 -- Resource regeneration and the Woodland Spirit’s sleep -- 06/05/2012
+
+- Added manual tick commands.
+- Resources regenerate slowly.
+- Did Chornolis may fall asleep after a resource has regenerated.
+
+## 0.4.4 -- Regional depletion logic -- 12 May 2026
+
+- Lisovyk wakes up when a resource disappears across the entire region.
+- Added system WorldEvent logs for ticks.
+
+## 0.4.3 -- Husky setup -- 12026-05-06
+
+- Completed technical configuration of Husky.
+
+## 0.4.2 -- GitHub release workflow -- 12026-05-06
+
+- Fixed GitHub Action for releases.
+
+## 0.4.1 -- Debug world tick -- 12026-05-06
+
+- Added initial service logic for the world tick.
+- The tick displays statistics on movement, harvesting, idle/looking and errors.
 
 ## 0.4.0 - world tick - 12026-05-06
 
@@ -3759,16 +3573,12 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Herbalist autonomously gathers herbs and moves toward nearby herb sources.
 - Lisovyk awakening is handled by world tick when resources are depleted.
 
----
-
 ## 0.3.0 - bot.ts refactor - 12026-05-06
 
 ### Changed
 
 - Split large `src/bot.ts` into focused modules.
 - Kept `src/bot.ts` as app composition/startup file.
-
----
 
 ## [0.2.0] - 12026-05-05
 
@@ -3779,8 +3589,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Basic inventory support.
 - World events logging.
 
----
-
 ## [0.1.0] - 12026-05-04
 
 ### ✨ Added
@@ -3789,8 +3597,6 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Player creation via `/start`.
 - PostgreSQL + Prisma integration.
 - Deployment to Render.
-
----
 
 ## [0.0.x] - Early prototype
 

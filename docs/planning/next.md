@@ -14,7 +14,7 @@ The last apiary slices are now treated as completed/in-testing content endpoints
 - `APIARY-003`: `0.15.20` shipped the first risky honey/beeswax harvest/raid slice.
 - `APIARY-004`: bear honey behavior remains backlog/future.
 
-The `LEARN-001` foundation is in testing after the minimal persistent learning/progress slice. Future observation and track-learning work should use `src/services/learning.ts` and `CharacterLearningProgress` instead of inventing separate storage. `0.15.22` is a narrow stabilization pass for this foundation, not a new feature lane.
+The `LEARN-001` foundation is in testing after the minimal persistent learning/progress slice. Future observation and track-learning work should use `src/services/learning.ts` and `CharacterLearningProgress` instead of inventing separate storage. `0.15.22` stabilized the first attentive gathering bridge, and `0.15.23` adds a technical `0..5` level policy plus the first narrow herbs/berries/mushrooms gathering effect. This still is not a broad skill-sheet lane.
 
 `OBS-PREP-001` has a representative look/examine audit pass in testing. Use its checklist for incremental cleanup, but do not keep expanding it before the first narrow observation moment.
 
@@ -22,9 +22,9 @@ Do not open another broad content loop before the learning/observation foundatio
 
 ## Immediate Sequence
 
-1. **0.15.22 stabilization:** harden the learning foundation and gathering observation edge cases after the first attentive-presence bridge.
-2. **SOC-002:** add follow intent only if it directly supports the learning bridge and stays smaller than a travel/group system.
-3. **TRACK-LEARN-001:** add the first track-reading / animal movement learning moment.
+1. **LEARN-002 follow-up:** extend bounded skill effects only after reviewing the `0.15.23` gathering tuning in live play.
+2. **TRACK-LEARN-001:** add the first track-reading / animal movement learning moment.
+3. **SOC-002:** add follow intent only if it directly supports the learning bridge and stays smaller than a travel/group system.
 
 Near-term content candidates after that foundation:
 

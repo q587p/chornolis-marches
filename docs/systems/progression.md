@@ -24,6 +24,30 @@ source events and skipping sources the same player has already observed. This
 keeps one already-seen or unsupported gather-like event from blocking a still
 valid herbs/berries/mushrooms observation in the same short attention window.
 
+`0.15.23` adds the first technical progression policy on top of that storage:
+
+- learning levels are capped at `0..5`;
+- level thresholds are `0`, `3`, `8`, `18`, `35` and `60` total progress;
+- level labels stay technical (`unfamiliar`, `noticed`, `practiced`, `skilled`,
+  `seasoned`, `masterful`) and are visible only through scribe/debug surfaces;
+- `/learning [#id|name|username]` gives scribes a command-only snapshot of stored
+  learning progress for one character.
+
+The first bounded mechanical effect is deliberately narrow: gathering progress
+for herbs, berries and mushrooms can slightly improve the matching gather
+success chance and reduce stamina cost by at most a small capped amount. That
+progress can now come from supported personal practice as well as observation:
+ordinary player attempts on herbs, berries and mushrooms record `gathering` /
+`practice` progress, including failed attempts that still spend time and
+stamina. Tutorial dream foraging remains outside persistent practice progress so
+the lesson cannot become a grind room. Honey, beeswax, twigs, money, loot-like
+finds and unrelated gather-like actions do not receive this effect.
+
+Observed actor skill remains future work. A later slice should add a small helper
+such as `observedActorSkillLevel(...)` that can read player learning progress or
+return profession/species profile defaults for herbalists, hunters and animals
+without introducing a broad NPC skill table.
+
 Future observation, tracking, apprenticeship and practice slices should use this service instead of inventing separate progress storage.
 
 ## 0.13.11+ Learning Placeholders and Bridges
@@ -43,12 +67,14 @@ Future observation, tracking, apprenticeship and practice slices should use this
 - inspecting another character/NPC, using `examine` for the location, or using the brief `look` while the location has active light can record one observation of that recent gather source;
 - every fifth such recorded observation sends only that observer `Навичка <b>збирання</b> трохи підросла.`;
 - as of `0.15.21`, the observation side also writes canonical `CharacterLearningProgress` rows only for herbs, berries and mushrooms, while the visible milestone cadence remains intentionally sparse.
+- as of `0.15.23`, ordinary player practice also writes canonical `CharacterLearningProgress` rows for herbs, berries and mushrooms, while tutorial foraging and unsupported gather-like sources stay outside that persistent path.
 
 ## Near-Term Skill Effects
 
-The next learning layer should make skill growth matter mechanically. A message such as `Навичка <b>атаки</b> підросла.` should not remain purely decorative once persistent skill storage exists.
+The next learning layers should continue making skill growth matter mechanically. A message such as `Навичка <b>атаки</b> підросла.` should not remain purely decorative once persistent skill storage exists.
 
-Preferred first effects are bounded and action-specific:
+`0.15.23` implements the first bounded effect only for herbs, berries and
+mushrooms. Preferred future effects remain bounded and action-specific:
 
 - better success chance for practiced actions;
 - slightly lower stamina cost for familiar repeated work, with a hard floor so actions never become free;
