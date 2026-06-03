@@ -6,7 +6,21 @@ import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { noteKnownMessage } from "../utils/messageTracker";
 
 export const APIARY_STING_EVENT_TITLE = "Apiary sting";
-export const APIARY_PASSIVE_STING_LINE = "Поки ви милувалися квітами, вас боляче вжалив джміль!";
+export const APIARY_PASSIVE_STING_LINES = [
+  "Поки ви задивилися на квіти, щось сердито вжалило вас у руку.",
+  "Над травами гуде літо — і один джміль нагадує, що ви тут не самі.",
+  "Ви нахилилися до квітів надто близько. Джміль не оцінив цієї ніжності.",
+  "Серед пахощів луки раптом спалахує гострий біль від укусу.",
+  "Квіти були гарні. Джміль — значно менш привітний.",
+  "Ви милувалися цвітом, аж поки гул біля вуха не скінчився болючим жалом.",
+  "Щось пухнасте й роздратоване вилетіло з квітів і вжалило вас.",
+  "Луки приймають вас запахом меду, пилком — і болючим укусом.",
+  "Ви потривожили невидимого сторожа квітів. Він відповів жалом.",
+  "Джміль важко виринув із квітів і переконливо пояснив, кому тут належить лука.",
+  "Пахощі квітів на мить приспали пильність. Біль швидко її повернув.",
+  "Ви простягнули руку до квітів — і одразу пошкодували про це.",
+  "У гулі над квітами ховався один дуже сердитий джміль.",
+] as const;
 export const APIARY_RAID_EVENT_TITLE = "Apiary raid";
 export const APIARY_DISTURBED_FEATURE_SUMMARY = "стривожена; гуде різко й сердито; меду зараз не дасть, краще відійти й дати борті стихнути";
 export const APIARY_DISTURBED_INSPECTION_TEXT = "Гул у борті став різким і сердитим. Джмелі вже не кружляють ліниво над квітами, а б'ють повітря короткими злими колами. Меду зараз не дістанеш; краще відійти й дати місцині трохи стихнути.";
@@ -133,6 +147,14 @@ export function passiveApiaryDamageResult(currentHp: number, rolledDamage: numbe
   const damage = Math.max(0, Math.floor(rolledDamage));
   const nextHp = Math.max(1, hp - damage);
   return { appliedDamage: Math.max(0, hp - nextHp), nextHp };
+}
+
+export function apiaryPassiveStingLine(random: () => number = Math.random) {
+  const index = Math.min(
+    APIARY_PASSIVE_STING_LINES.length - 1,
+    Math.max(0, Math.floor(random() * APIARY_PASSIVE_STING_LINES.length)),
+  );
+  return APIARY_PASSIVE_STING_LINES[index] ?? APIARY_PASSIVE_STING_LINES[0];
 }
 
 export function apiaryRaidCooldownMs(data: ApiaryData) {
@@ -404,7 +426,7 @@ export async function maybeTriggerPassiveApiarySting(bot: Bot, input: MaybeTrigg
   if (input.chatId) {
     noteKnownMessage(await bot.api.sendMessage(
       input.chatId,
-      `${APIARY_PASSIVE_STING_LINE}\n\n${hpFeedback(result.nextHp, player.hpMax)}`,
+      `${apiaryPassiveStingLine(random)}\n\n${hpFeedback(result.nextHp, player.hpMax)}`,
       { reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false) },
     ));
   }
