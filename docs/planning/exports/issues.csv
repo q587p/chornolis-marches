@@ -83,10 +83,10 @@ ICE-005,Pit traps and vertical hazard cells,icebox,feature,world,low,"traps,vert
 ITEM-001,Pickup versus gather command semantics,testing,bug,inventory,high,"aliases,pickup,gather,inventory,ground-items",docs/planning/items/ITEM-001-pickup-vs-gather-semantics.md
 ITEM-002,Queued pickup actions,backlog,feature,inventory,medium,"pickup,inventory,action-queue,stamina,ground-items",docs/planning/items/ITEM-002-queued-pickup-actions.md
 LANG-001,Lexicon and agreement audit,backlog,chore,content,medium,"ukrainian,lexicon,grammar,text",docs/planning/items/LANG-001-lexicon-and-agreement-audit.md
-LEARN-001-A,Minimal learning storage decision,next,design,learning,high,"learning,progression,schema",docs/planning/items/LEARN-001-A.md
-LEARN-001-B,Minimal CharacterSkill model,next,technical,learning,high,"learning,schema,skills",docs/planning/items/LEARN-001-B.md
-LEARN-001-C,grantSkillProgress helper,next,feature,learning,high,"learning,service,progression",docs/planning/items/LEARN-001-C.md
-LEARN-001-D,Raw progress technical-only,next,ux,learning,high,"learning,technical-details,ui",docs/planning/items/LEARN-001-D.md
+LEARN-001-A,Minimal learning storage decision,testing,design,learning,high,"learning,progression,schema",docs/planning/items/LEARN-001-A.md
+LEARN-001-B,Minimal CharacterSkill model,testing,technical,learning,high,"learning,schema,skills",docs/planning/items/LEARN-001-B.md
+LEARN-001-C,grantSkillProgress helper,testing,feature,learning,high,"learning,service,progression",docs/planning/items/LEARN-001-C.md
+LEARN-001-D,Raw progress technical-only,testing,ux,learning,high,"learning,technical-details,ui",docs/planning/items/LEARN-001-D.md
 LEARN-002,"Skill effects on stamina, success and quality",next,feature,learning,high,"learning,skills,stamina,success,balance",docs/planning/items/LEARN-002-skill-effects-cost-success-and-quality.md
 LOOP-001-A,Starter look/examine output audit,next,design,core-loop,medium,"look,examine,starter",docs/planning/items/LOOP-001-A.md
 LOOP-001-B,Starter camp prose polish,next,content,core-loop,medium,"prose,starter,look",docs/planning/items/LOOP-001-B.md

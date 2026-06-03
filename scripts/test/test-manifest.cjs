@@ -49,6 +49,7 @@ module.exports = [
   nodeTest("scripts/test/attack-learning.cjs"),
   nodeTest("scripts/test/gathering-learning.cjs"),
   nodeTest("scripts/test/food-learning.cjs"),
+  nodeTest("scripts/test/learning.cjs"),
   nodeTest("scripts/test/meat.cjs"),
   nodeTest("scripts/test/freshening-ui.cjs"),
   nodeTest("scripts/test/inventory-use.cjs"),

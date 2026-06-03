@@ -1,7 +1,7 @@
 ---
 id: LEARN-001-B
 title: Minimal CharacterSkill model
-status: next
+status: testing
 type: technical
 area: learning
 priority: high
@@ -39,3 +39,10 @@ Add minimal persistent skill progress if the decision requires it.
 ## Implementation Order
 
 Do after: `LEARN-001-A`.
+
+## 0.15.21 Foundation
+
+`CharacterLearningProgress` stores `playerId`, `skillKey`, `sourceKey`,
+`contextKey`, `level`, `progress`, `totalProgress`, `milestoneCount` and optional
+`lastSourceEventId`. Raw progress remains implementation data, not ordinary
+player-facing UI.

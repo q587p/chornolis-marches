@@ -14,6 +14,7 @@ import {
   isFresheningObservationMilestone,
   isFresheningPracticeMilestone,
 } from "./foodLearningRules";
+import { recordLearningProgress } from "./learning";
 
 export {
   COOKING_OBSERVATION_GROWTH_MESSAGE,
@@ -31,6 +32,12 @@ export {
 
 const FOOD_OBSERVATION_WINDOW_MS = Number(process.env.WORLD_FOOD_OBSERVATION_WINDOW_MS || 120_000);
 
+function foodPracticeSkillKey(title: string) {
+  if (title === FRESHENING_SOURCE_EVENT_TITLE) return "freshening";
+  if (title === COOKING_SOURCE_EVENT_TITLE) return "cooking";
+  return "food";
+}
+
 async function recordFoodSource(input: {
   title: string;
   description: string;
@@ -39,7 +46,7 @@ async function recordFoodSource(input: {
   milestoneCheck: (count: number) => boolean;
 }) {
   try {
-    await prisma.worldEvent.create({
+    const event = await prisma.worldEvent.create({
       data: {
         type: "SYSTEM",
         title: input.title,
@@ -47,6 +54,7 @@ async function recordFoodSource(input: {
         playerId: input.actorPlayerId,
         locationId: input.locationId,
       },
+      select: { id: true },
     });
 
     if (!input.actorPlayerId) return { sourceCount: 0, milestone: false };
@@ -57,6 +65,18 @@ async function recordFoodSource(input: {
         playerId: input.actorPlayerId,
       },
     });
+    try {
+      await recordLearningProgress({
+        playerId: input.actorPlayerId,
+        skillKey: foodPracticeSkillKey(input.title),
+        sourceKey: "practice",
+        contextKey: foodPracticeSkillKey(input.title),
+        amount: 1,
+        lastSourceEventId: event.id,
+      });
+    } catch (error) {
+      console.warn("Failed to write canonical food learning progress:", error);
+    }
     return { sourceCount, milestone: input.milestoneCheck(sourceCount) };
   } catch (error) {
     console.warn("Failed to write food learning source event:", error);

@@ -1649,7 +1649,7 @@
   {
     "id": "LEARN-001-A",
     "title": "Minimal learning storage decision",
-    "status": "next",
+    "status": "testing",
     "type": "design",
     "area": "learning",
     "priority": "high",
@@ -1665,7 +1665,7 @@
   {
     "id": "LEARN-001-B",
     "title": "Minimal CharacterSkill model",
-    "status": "next",
+    "status": "testing",
     "type": "technical",
     "area": "learning",
     "priority": "high",
@@ -1683,7 +1683,7 @@
   {
     "id": "LEARN-001-C",
     "title": "grantSkillProgress helper",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "learning",
     "priority": "high",
@@ -1701,7 +1701,7 @@
   {
     "id": "LEARN-001-D",
     "title": "Raw progress technical-only",
-    "status": "next",
+    "status": "testing",
     "type": "ux",
     "area": "learning",
     "priority": "high",

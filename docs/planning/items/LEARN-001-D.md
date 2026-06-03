@@ -1,7 +1,7 @@
 ---
 id: LEARN-001-D
 title: Raw progress technical-only
-status: next
+status: testing
 type: ux
 area: learning
 priority: high
@@ -33,3 +33,9 @@ Avoid exposing a broad public skill sheet too early.
 ## Implementation Order
 
 Do after: `LEARN-001-C`.
+
+## 0.15.21 Foundation
+
+No broad `/skills` UI was added. Ordinary players still see only diegetic
+learning messages from existing narrow moments; raw progress rows are reserved
+for future technical/scribe surfaces if needed.
