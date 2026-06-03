@@ -39,6 +39,10 @@ Check the static world seed data:
 npm test
 ```
 
+`npm test` reads its ordered command list from `scripts/test/test-manifest.cjs`
+through `scripts/test/run-tests.cjs`. When adding a new focused test, add it to
+that manifest in the intended order instead of expanding `package.json`.
+
 Check that the current database has the seeded start location and map basics:
 
 ```bash
