@@ -17,6 +17,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Moved `start_border_camp`, `start_border_watchtower` and `start_border_cellar` into a dedicated `starter_camp` / `Межовий табір` region for future starter-infrastructure rules.
 - Removed ordinary resource nodes from starter infrastructure and added region-based resource regeneration protection for `starter_camp`.
 - Allowed the camp spirit cat to include the starter cellar in its camp-bound movement while keeping it out of non-starter locations.
+- Removed `/call_scribes` from the short Telegram command menu while keeping the command and help/fallback paths available when needed.
 - Added regression coverage for dark feature lines and direct dark inspection fallback copy.
 
 ## 0.15.26 - Herbalist cellar supply-run MVP - 12026-06-03
