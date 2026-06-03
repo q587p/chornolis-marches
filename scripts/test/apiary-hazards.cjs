@@ -22,11 +22,11 @@ const {
 
 const apiaryData = {
   aura_radius: 1,
-  center_sting_chance_permille: 55,
-  neighbor_sting_chance_permille: 16,
+  center_sting_chance_permille: 130,
+  neighbor_sting_chance_permille: 40,
   center_damage: [1, 2],
   neighbor_damage: [1, 1],
-  passive_cooldown_ms: 10_800_000,
+  passive_cooldown_ms: 120_000,
   night_passive_sleeping: true,
   raid_cooldown_ms: 21_600_000,
   raid_success_chance_permille: 700,
@@ -43,8 +43,8 @@ assert.equal(apiaryAuraDistanceFromLinks(10, 11, [10, 12], 0), null);
 assert.equal(apiaryAuraKind(0, apiaryData), "center");
 assert.equal(apiaryAuraKind(1, apiaryData), "neighbor");
 assert.equal(apiaryAuraKind(2, apiaryData), "outside");
-assert.equal(apiaryPassiveChancePermille("center", apiaryData), 55);
-assert.equal(apiaryPassiveChancePermille("neighbor", apiaryData), 16);
+assert.equal(apiaryPassiveChancePermille("center", apiaryData), 130);
+assert.equal(apiaryPassiveChancePermille("neighbor", apiaryData), 40);
 assert.equal(apiaryPassiveChancePermille("outside", apiaryData), 0);
 assert.deepEqual(apiaryPassiveDamageRange("center", apiaryData), [1, 2]);
 assert.deepEqual(apiaryPassiveDamageRange("neighbor", apiaryData), [1, 1]);
@@ -55,14 +55,14 @@ assert.equal(isApiarySleepingForPassiveHazard("dusk", apiaryData), false);
 assert.equal(isApiarySleepingForPassiveHazard("dawn", apiaryData), false);
 assert.equal(isApiarySleepingForPassiveHazard("day", apiaryData), false);
 
-assert.equal(apiaryPassiveCooldownMs(apiaryData), 10_800_000);
+assert.equal(apiaryPassiveCooldownMs(apiaryData), 120_000);
 assert.equal(apiaryEventDescriptionMatches("apiaryKey=meadow_old_log_apiary_12_02; damage=1", "meadow_old_log_apiary_12_02"), true);
 assert.equal(apiaryEventDescriptionMatches("apiaryKey=other; damage=1", "meadow_old_log_apiary_12_02"), false);
 
 const now = new Date("2026-06-03T12:00:00.000Z");
-assert.equal(isApiaryCooldownActive(new Date(now.getTime() - 60_000), now, 10_800_000), true);
-assert.equal(isApiaryCooldownActive(new Date(now.getTime() - 10_800_001), now, 10_800_000), false);
-assert.equal(isApiaryCooldownActive(null, now, 10_800_000), false);
+assert.equal(isApiaryCooldownActive(new Date(now.getTime() - 60_000), now, 120_000), true);
+assert.equal(isApiaryCooldownActive(new Date(now.getTime() - 120_001), now, 120_000), false);
+assert.equal(isApiaryCooldownActive(null, now, 120_000), false);
 
 assert.deepEqual(passiveApiaryDamageResult(2, 5), { appliedDamage: 1, nextHp: 1 });
 assert.deepEqual(passiveApiaryDamageResult(20, 2), { appliedDamage: 2, nextHp: 18 });

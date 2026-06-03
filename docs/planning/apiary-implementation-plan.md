@@ -15,9 +15,9 @@ Status: first slice in `0.15.19`.
 Status: first slice in `0.15.19`.
 
 - Add `src/services/apiaryHazards.ts`.
-- Trigger rare passive checks after successful movement, full location look/inspection and waiting.
+- Trigger passive checks after successful movement, full location look/inspection and waiting.
 - Skip passive stings at night.
-- Rate-limit by player and apiary key through `WorldEvent`.
+- Rate-limit by player and apiary key through `WorldEvent`, currently tuned to one default in-game hour.
 - Clamp passive damage so it cannot kill a player.
 - Keep world-tick proactive checks out of the first slice.
 
@@ -42,3 +42,4 @@ Status: backlog.
 - Notification spam: passive hazards need cooldown-first tuning.
 - HP pressure: passive stings are damage, but must remain survivable in MVP.
 - Schema drift: stay with `LocationFeature.data` and `WorldEvent` until multiple hazards prove they need durable per-player state.
+- `WorldEvent` pruning can forget passive cooldown state for old apiary stings, and the current passive check uses the advancing world-time snapshot path.

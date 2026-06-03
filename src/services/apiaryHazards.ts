@@ -82,7 +82,7 @@ export function apiaryPassiveDamageRange(kind: ApiaryAuraKind, data: ApiaryData)
 }
 
 export function apiaryPassiveCooldownMs(data: ApiaryData) {
-  return Math.max(0, Math.floor(numberFromData(data, "passive_cooldown_ms", 3 * 60 * 60 * 1000)));
+  return Math.max(0, Math.floor(numberFromData(data, "passive_cooldown_ms", 120_000)));
 }
 
 export function isApiarySleepingForPassiveHazard(daypart: WorldDaypart, data: ApiaryData) {

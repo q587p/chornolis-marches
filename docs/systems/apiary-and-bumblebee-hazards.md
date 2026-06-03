@@ -29,9 +29,16 @@ Passive bumblebee stings are intentionally rare and rate-limited.
 - adjacent aura: lower chance, `1` HP damage;
 - passive stings do not fire at night when `night_passive_sleeping` is true;
 - passive stings never kill in the MVP and clamp the player to at least 1 HP;
+- passive cooldown is one default in-game hour;
 - cooldown is stored in `WorldEvent` using `title = "Apiary sting"` and an `apiaryKey=...` marker.
 
 Player-facing copy should stay atmospheric and not say "hazard radius" or expose raw chances.
+
+`WorldEvent` cooldown is acceptable for the MVP, but pruning old `Apiary sting`
+events can erase cooldown memory earlier than intended. The passive sting check
+also reads `getCurrentWorldTimeSnapshot()`, so it can advance the world clock in
+the same way as other current world-time reads; future hazard systems should
+decide whether they want that coupling or a read-only snapshot path.
 
 ## Active Hive Robbery
 
