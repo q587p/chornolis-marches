@@ -238,6 +238,16 @@ assert.notEqual(startCampTorchStand?.data?.hunter_resupply, false, "Starter watc
 assert.notEqual(startCampTorchStand?.data?.icon, "🔥", "Starter camp torch stand should not use the fire icon reserved for flame/campfire actions");
 assertFeatureExamineSummary(startCampTorchStand, "Starter camp torch stand should explain the torch source on examine");
 
+assert.deepEqual(
+  features.filter((item) => item.locationKey === "start_border_watchtower").slice(0, 3).map((item) => item.key),
+  [
+    "start_watchtower_stairs_down",
+    "start_beginner_shared_cache",
+    "start_camp_torch_stand",
+  ],
+  "Starter watchtower feature order should lead with stairs, then cache, then torch stand",
+);
+
 for (const key of ["forest_04_02_owl_sign", "forest_09_04_owl_sign", "meadow_14_04_owl_sign", "riverbank_13_00_owl_sign"]) {
   const feature = features.find((item) => item.key === key);
   assert.ok(feature, `Owl sign feature should exist: ${key}`);

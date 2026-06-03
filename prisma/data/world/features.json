@@ -427,34 +427,7 @@
       ]
     }
   },
-  {
-    "key": "start_camp_torch_stand",
-    "locationKey": "start_border_watchtower",
-    "type": "LANDMARK",
-    "name": "Смоляна поставка з факелами",
-    "description": "Факели сухі й густо просмолені. Їх тримають під навісом сторожової вежі для тих, хто виходить із табору в присмерк або вертається з темряви. Світло не робить шлях безпечним, але дозволяє помітити те, що ніч ховає першим.",
-    "providesLight": false,
-    "restStaminaCapMultiplier": null,
-    "data": {
-      "icon": "🕯",
-      "inspectable": true,
-      "torch_source": true,
-      "examine_summary": "суха смола тримає вогонь довше, але сам факел не робить стежку безпечною",
-      "infinite_for_now": true,
-      "future_limited_stock": true,
-      "moved_to_watchtower": true,
-      "aliases": [
-        "факели",
-        "факел",
-        "поставка",
-        "смоляна поставка",
-        "поставка з факелами",
-        "світло",
-        "torch",
-        "torches"
-      ]
-    }
-  },
+
   {
     "key": "start_beginner_shared_cache",
     "locationKey": "start_border_watchtower",
@@ -520,6 +493,35 @@
         "припаси",
         "cache",
         "supply cache"
+      ]
+    }
+  },
+
+  {
+    "key": "start_camp_torch_stand",
+    "locationKey": "start_border_watchtower",
+    "type": "LANDMARK",
+    "name": "Смоляна поставка з факелами",
+    "description": "Факели сухі й густо просмолені. Їх тримають під навісом сторожової вежі для тих, хто виходить із табору в присмерк або вертається з темряви. Світло не робить шлях безпечним, але дозволяє помітити те, що ніч ховає першим.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🕯",
+      "inspectable": true,
+      "torch_source": true,
+      "examine_summary": "суха смола тримає вогонь довше, але сам факел не робить стежку безпечною",
+      "infinite_for_now": true,
+      "future_limited_stock": true,
+      "moved_to_watchtower": true,
+      "aliases": [
+        "факели",
+        "факел",
+        "поставка",
+        "смоляна поставка",
+        "поставка з факелами",
+        "світло",
+        "torch",
+        "torches"
       ]
     }
   },
