@@ -24,6 +24,14 @@ function assertKnown(set, key, message) {
   assert.ok(set.has(key), `${message}: ${key}`);
 }
 
+function assertFeatureExamineSummary(feature, message) {
+  assert.ok(feature, `${message}: missing feature`);
+  const summary = typeof feature.data?.examine_summary === "string" ? feature.data.examine_summary.trim() : "";
+  assert.ok(summary.length >= 40, `${message}: examine_summary should be substantial`);
+  assert.notEqual(summary, feature.name, `${message}: examine_summary should not collapse to the feature name`);
+  assert.notEqual(summary, feature.description, `${message}: examine_summary should not duplicate the full description`);
+}
+
 function sourceLocationKeys(filePath) {
   const source = fs.readFileSync(path.join(root, filePath), "utf8");
   return [...source.matchAll(/locationKey:\s*"([^"]+)"/g)].map((match) => match[1]);
@@ -172,7 +180,8 @@ assert.equal(oldLogApiary.data?.raid_success_chance_permille, 700, "Old log apia
 assert.equal(oldLogApiary.data?.raid_wax_chance_permille, 350, "Old log apiary should have authored wax chance");
 assert.deepEqual(oldLogApiary.data?.raid_damage, [2, 5], "Old log apiary should have stronger disturbance sting damage");
 assert.deepEqual(oldLogApiary.data?.raid_rewards, ["honey", "beeswax"], "Old log apiary should expose current raid rewards");
-assert.ok(typeof oldLogApiary.data?.examine_summary === "string" && oldLogApiary.data.examine_summary.length > 0, "Old log apiary should have an examine summary");
+assertFeatureExamineSummary(oldLogApiary, "Old log apiary should have a meaningful examine summary");
+assert.match(oldLogApiary.data.examine_summary, /обачно|рук|щілина/u, "Old log apiary summary should warn through diegetic detail");
 for (const alias of ["бортя", "вулик", "мед", "віск"]) {
   assert.ok(oldLogApiary.data?.aliases?.includes(alias), `Old log apiary should include alias: ${alias}`);
 }
@@ -193,7 +202,7 @@ const startWatchtowerLadder = features.find((item) => item.key === "start_border
 assert.equal(startWatchtowerLadder?.data?.vertical_hint, "UP", "Starter watchtower feature should expose an UP action hint");
 for (const key of ["start_newcomer_tablet", "start_lunar_circles_birchbark", "start_border_watchtower_ladder"]) {
   const feature = features.find((item) => item.key === key);
-  assert.ok(typeof feature?.data?.examine_summary === "string" && feature.data.examine_summary.length > 0, `Starter authored landmark should have examine summary: ${key}`);
+  assertFeatureExamineSummary(feature, `Starter authored landmark should have meaningful examine summary: ${key}`);
 }
 
 const startWatchtower = locations.find((item) => item.key === "start_border_watchtower");
@@ -215,6 +224,7 @@ assert.equal(startCampTorchStand?.data?.torch_source, true, "Starter camp torch 
 assert.equal(startCampTorchStand?.locationKey, "start_border_watchtower", "Starter torch stand should live in the watchtower");
 assert.notEqual(startCampTorchStand?.data?.hunter_resupply, false, "Starter watchtower torch stand should remain available for hunter resupply");
 assert.notEqual(startCampTorchStand?.data?.icon, "🔥", "Starter camp torch stand should not use the fire icon reserved for flame/campfire actions");
+assertFeatureExamineSummary(startCampTorchStand, "Starter camp torch stand should explain the torch source on examine");
 
 for (const key of ["forest_04_02_owl_sign", "forest_09_04_owl_sign", "meadow_14_04_owl_sign", "riverbank_13_00_owl_sign"]) {
   const feature = features.find((item) => item.key === key);
@@ -245,6 +255,7 @@ assert.equal(beginnerCache.data?.cache_money_stock?.grivna, 0, "Starter shared b
 assert.equal(beginnerCache.data?.cache_money_max_stock?.shah, 200, "Starter shared beginner cache should accept modest shah contributions");
 assert.equal(beginnerCache.data?.cache_money_max_stock?.grivna, 20, "Starter shared beginner cache should accept modest grivna contributions");
 assert.ok(Array.isArray(beginnerCache.data?.aliases) && beginnerCache.data.aliases.includes("скриня"), "Starter shared beginner cache should have Ukrainian aliases");
+assertFeatureExamineSummary(beginnerCache, "Starter shared beginner cache should have a meaningful examine summary");
 
 assert.equal(resourceTypeKeys.has("shah"), true, "Money MVP should define shah resource type");
 assert.equal(resourceTypeKeys.has("grivna"), true, "Money MVP should define grivna resource type");
@@ -308,10 +319,7 @@ for (const key of [
 const tutorialActionLadderFeatures = features.filter((item) => typeof item.data?.tutorial_action_ladder === "string");
 assert.ok(tutorialActionLadderFeatures.length >= 3, "Tutorial action ladder should have inspectable lesson features");
 for (const feature of tutorialActionLadderFeatures) {
-  assert.ok(
-    typeof feature.data?.examine_summary === "string" && feature.data.examine_summary.trim().length > 0,
-    `Tutorial action ladder feature should have examine summary: ${feature.key}`,
-  );
+  assertFeatureExamineSummary(feature, `Tutorial action ladder feature should have meaningful examine summary: ${feature.key}`);
 }
 
 const tutorialSignFeatures = features.filter((item) => item.locationKey === "dream_tutorial_signs");
@@ -321,8 +329,30 @@ for (const key of ["dream_tutorial_back_sign", "dream_tutorial_silent_sign", "dr
   assert.ok(feature, `Tutorial sign feature should exist: ${key}`);
   assert.equal(feature.locationKey, "dream_tutorial_signs", `Tutorial sign feature should stay in signs location: ${key}`);
   assert.ok(typeof feature.description === "string" && feature.description.trim().length > 0, `Tutorial sign feature should have full inspect text: ${key}`);
-  assert.ok(typeof feature.data?.examine_summary === "string" && feature.data.examine_summary.trim().length > 0, `Tutorial sign feature should have examine summary: ${key}`);
+  assertFeatureExamineSummary(feature, `Tutorial sign feature should have meaningful examine summary: ${key}`);
   assert.ok(Array.isArray(feature.data?.aliases) && feature.data.aliases.length > 0, `Tutorial sign feature should have aliases: ${key}`);
+}
+
+for (const key of [
+  "dream_tutorial_future_lessons",
+  "dream_tutorial_bushes",
+  "dream_tutorial_rest_fire",
+  "dream_tutorial_fox_motion",
+  "dream_tutorial_observation_bushes",
+]) {
+  const feature = features.find((item) => item.key === key);
+  assertFeatureExamineSummary(feature, `Tutorial nearby feature should have a meaningful examine summary: ${key}`);
+}
+
+for (const key of ["willow_reed_wall_dense_reeds", "willow_mudflat_silt_tracks"]) {
+  const feature = features.find((item) => item.key === key);
+  assertFeatureExamineSummary(feature, `Willow landmark should have a meaningful examine summary: ${key}`);
+}
+
+const seededStrangeTotems = features.filter((item) => item.data?.strange_totem === true && item.data?.seeded === true);
+assert.ok(seededStrangeTotems.length >= 4, "Seed should include several inspectable Strange Totems");
+for (const feature of seededStrangeTotems) {
+  assertFeatureExamineSummary(feature, `Seeded Strange Totem should have a meaningful examine summary: ${feature.key}`);
 }
 
 for (const [fromKey, toKey, direction] of [

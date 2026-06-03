@@ -14,15 +14,16 @@ The last apiary slices are now treated as completed/in-testing content endpoints
 - `APIARY-003`: `0.15.20` shipped the first risky honey/beeswax harvest/raid slice.
 - `APIARY-004`: bear honey behavior remains backlog/future.
 
-Do not open another broad content loop before the learning/observation foundation lands. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
+`OBS-PREP-001` has a representative look/examine audit pass in testing. Use its checklist for incremental cleanup, but do not keep expanding it before the first narrow observation moment.
+
+Do not open another broad content loop before the learning/observation foundation lands and is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
 ## Immediate Sequence
 
 1. **TECH/QA:** clean up the test script/runner split or test manifest if it still blocks focused validation.
-2. **LEARN-001:** decide the minimal persistent learning/progress storage shape and add the helper foundation.
-3. **OBS-PREP-001:** audit where `look` and `examine` still collapse to the same text.
-4. **OBS-001:** add the first narrow observe action and a herbalist / знахар learning moment.
-5. **TRACK-LEARN-001:** add the first track-reading / animal movement learning moment.
+2. **LEARN-001:** land the minimal learning/progress helper foundation if it is still in review; future observation and track-learning work should not invent separate storage.
+3. **OBS-001:** add the first narrow observe action and a herbalist / знахар learning moment, using the LEARN-001 helper and OBS-PREP checklist.
+4. **TRACK-LEARN-001:** add the first track-reading / animal movement learning moment.
 
 Near-term content candidates after that foundation:
 

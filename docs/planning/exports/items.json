@@ -2321,7 +2321,7 @@
   {
     "id": "OBS-PREP-001",
     "title": "Look/examine content audit before observation MVP",
-    "status": "next",
+    "status": "testing",
     "type": "design",
     "area": "learning",
     "priority": "high",

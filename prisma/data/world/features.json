@@ -119,7 +119,7 @@
       "future_actor_hooks": [
         "bear_honey_loop"
       ],
-      "examine_summary": "гуде важким джмелиним життям; пахне медом і воском, але не просить рук",
+      "examine_summary": "гуде важким джмелиним життям; пахне медом і воском, але темна щілина попереджає тримати руки обачно",
       "aliases": [
         "бортя",
         "бортю",
@@ -386,7 +386,7 @@
     "restStaminaCapMultiplier": null,
     "data": {
       "icon": "🪜",
-      "examine_summary": "драбина веде вгору, до справжньої сторожової вежі над табором",
+      "examine_summary": "драбина веде вгору, де видно темряву за табором і тримають світло для першої дороги",
       "inspectable": true,
       "vertical_hint": "UP",
       "aliases": [
@@ -439,6 +439,7 @@
       "icon": "🕯",
       "inspectable": true,
       "torch_source": true,
+      "examine_summary": "суха смола тримає вогонь довше, але сам факел не робить стежку безпечною",
       "infinite_for_now": true,
       "future_limited_stock": true,
       "moved_to_watchtower": true,
@@ -465,6 +466,7 @@
     "data": {
       "icon": "📦",
       "inspectable": true,
+      "examine_summary": "скриня показує не нагороду, а взаємну пам'ять табору: бери потрібне й лишай зайве",
       "beginner_cache": true,
       "hidden_unobserved_restock": true,
       "cache_restock_after_ms": 2700000,
@@ -545,7 +547,8 @@
     "restStaminaCapMultiplier": null,
     "data": {
       "icon": "🪶",
-      "tutorial_wake_prompt": true
+      "tutorial_wake_prompt": true,
+      "examine_summary": "зарубки розкладають сон не як наказ, а як малі двері до дій, які можна спробувати"
     }
   },
   {
@@ -557,7 +560,8 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
-      "tutorial_inside_prompt": true
+      "tutorial_inside_prompt": true,
+      "examine_summary": "між гіллям видно хід усередину: не кожен вихід має назву сторони світу"
     }
   },
   {
@@ -616,6 +620,7 @@
       "rest_stamina_regen_multiplier": 10,
       "tutorial_rest_seat": true,
       "tutorial_hint": "rest",
+      "examine_summary": "лавка вчить короткого присілку: відпочинок повертає подих, але це ще не сон",
       "aliases": ["лавка", "лавку", "лавці", "лавкою", "bench", "seat", "Лавка короткого перепочинку"]
     }
   },
@@ -761,7 +766,8 @@
     "restStaminaCapMultiplier": null,
     "data": {
       "tutorial_observation_prompt": true,
-      "tutorial_observation_skill": "tracking"
+      "tutorial_observation_skill": "tracking",
+      "examine_summary": "лисячий рух лишає не тільки слід на землі, а й підказку про тиху ходу"
     }
   },
   {
@@ -773,7 +779,8 @@
     "providesLight": false,
     "restStaminaCapMultiplier": null,
     "data": {
-      "tutorial_outside_prompt": true
+      "tutorial_outside_prompt": true,
+      "examine_summary": "з цього боку вихід треба впізнати за просвітом між листям, а не за стороною світу"
     }
   },
   {
@@ -915,7 +922,7 @@
     "data": {
       "icon": "🌾",
       "inspectable": true,
-      "examine_summary": "стоїть вище плечей і ховає вузькі ходи між стеблами",
+      "examine_summary": "стоїть вище плечей; якщо придивитися до тіней між стеблами, хід не один",
       "future_hidden_route_hook": true,
       "aliases": [
         "очерет",
@@ -939,7 +946,7 @@
     "data": {
       "icon": "🐾",
       "inspectable": true,
-      "examine_summary": "у мулі видно відбитки, які вода повільно стирає",
+      "examine_summary": "у мулі видно відбитки, які вода повільно стирає; тут давні сліди швидко стають здогадом",
       "future_observation": "track_reading",
       "future_learning_hint": "tracking",
       "aliases": [
@@ -1153,6 +1160,7 @@
       "strange_totem": true,
       "seeded": true,
       "future_hook": "totem_makers",
+      "examine_summary": "крива постать зі стебел і кори стоїть надто навмисно: це не межовий знак і не дитяча забавка",
       "twigsFreshMin": 2,
       "twigsFreshMax": 3,
       "twigsOld": 1,
@@ -1184,6 +1192,7 @@
       "strange_totem": true,
       "seeded": true,
       "future_hook": "totem_makers",
+      "examine_summary": "стебла втиснуті в землю надто обережно; лоза тримає їх так, ніби хтось лишив знак поспіхом",
       "twigsFreshMin": 2,
       "twigsFreshMax": 3,
       "twigsOld": 1,
@@ -1214,6 +1223,7 @@
       "strange_totem": true,
       "seeded": true,
       "future_hook": "totem_makers",
+      "examine_summary": "трав’яний вузол повернутий до стежки; хмиз так не дивиться, навіть коли лежить схоже",
       "twigsFreshMin": 2,
       "twigsFreshMax": 3,
       "twigsOld": 1,
@@ -1244,6 +1254,7 @@
       "strange_totem": true,
       "seeded": true,
       "future_hook": "totem_makers",
+      "examine_summary": "мокра лоза й мул унизу натякають, що знак прийшов не з сухої трави поруч",
       "twigsFreshMin": 2,
       "twigsFreshMax": 3,
       "twigsOld": 1,
