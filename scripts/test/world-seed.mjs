@@ -154,6 +154,21 @@ for (const key of ["closed_gate_torch_stand", "closed_gate_hunting_notice", "clo
   assert.ok(feature?.data?.icon, `Gate feature should have a distinct icon: ${key}`);
 }
 
+const oldLogApiary = features.find((item) => item.key === "meadow_old_log_apiary_12_02");
+assert.ok(oldLogApiary, "Dry meadow old log apiary feature should exist");
+assert.equal(oldLogApiary.locationKey, "meadow_12_02", "Old log apiary should stay in meadow_12_02");
+assert.equal(oldLogApiary.type, "LANDMARK", "Old log apiary should be a LANDMARK feature");
+assert.equal(oldLogApiary.data?.apiary, true, "Old log apiary should be marked as an apiary");
+assert.equal(oldLogApiary.data?.apiary_kind, "old_log_hive", "Old log apiary should keep its apiary kind");
+assert.equal(oldLogApiary.data?.hazard_key, "bumblebee_sting", "Old log apiary should expose bumblebee hazard metadata");
+assert.equal(oldLogApiary.data?.aura_radius, 1, "Old log apiary should start with a one-step aura");
+assert.equal(oldLogApiary.data?.center_sting_chance_permille, 55, "Old log apiary center chance should match authored MVP tuning");
+assert.equal(oldLogApiary.data?.neighbor_sting_chance_permille, 16, "Old log apiary neighbor chance should match authored MVP tuning");
+assert.ok(typeof oldLogApiary.data?.examine_summary === "string" && oldLogApiary.data.examine_summary.length > 0, "Old log apiary should have an examine summary");
+for (const alias of ["бортя", "вулик", "мед", "віск"]) {
+  assert.ok(oldLogApiary.data?.aliases?.includes(alias), `Old log apiary should include alias: ${alias}`);
+}
+
 const gateTorchStand = features.find((item) => item.key === "closed_gate_torch_stand");
 assert.notEqual(gateTorchStand?.data?.icon, "🔥", "Torch stand should not use the fire icon reserved for flame/campfire actions");
 assert.equal(gateTorchStand?.data?.hunter_resupply, false, "Gate torch stand should no longer be the hunter resupply source");

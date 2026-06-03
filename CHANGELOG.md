@@ -7,6 +7,21 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.19 - Apiary and bumblebee hazard MVP - 12026-06-03
+
+### Added
+
+- Added the first old log apiary feature, `Стара бортя`, to the dry meadow seed as an inspectable `LANDMARK` with apiary metadata and Ukrainian aliases.
+- Added `src/services/apiaryHazards.ts` for rare passive bumblebee stings around apiary features, triggered conservatively after movement, full location inspection and waiting.
+- Added persistent per-player/per-apiary cooldown memory through `WorldEvent` records with the `Apiary sting` title.
+- Added helper and seed tests for apiary metadata, aura classification, daypart blocking, cooldown markers and passive HP damage clamping.
+- Added apiary system/planning docs and future backlog items for honey/wax robbery and a bear honey loop.
+
+### Changed
+
+- Passive apiary stings are disabled at night for sleeping hives and cannot reduce a player below 1 HP in the MVP.
+- Location feature seed validation now checks the apiary's aliases, inspectable summary and bumblebee hazard metadata.
+
 ## 0.15.18 - Tutorial cleanup and calendar split - 12026-06-03
 
 ### Added

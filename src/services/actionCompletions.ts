@@ -56,6 +56,7 @@ import { cookingResultReplyOptions } from "../ui/inventoryItemKeyboard";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 import { visibilityPresenceText, visibilityRulesForLocation } from "./visibility";
 import { firstNightGuidanceForPlayer } from "./beginnerGuidance";
+import { maybeTriggerPassiveApiarySting } from "./apiaryHazards";
 import { creatureAttackObserverText, freshenWeaponFailureText, getPlayerEquippedWeapon, grantAndEquipLegacyFresheningKnife, legacyFresheningKnifeGrantText, playerAttackKillText, playerAttackObserverText } from "./weapons";
 import { canCreatureUseExit, creatureUsableExits } from "./creatureMovement";
 import { contributeToBeginnerCache } from "./beginnerCache";
@@ -631,6 +632,7 @@ async function completeMove(bot: Bot, action: WorldAction) {
       noteKnownMessage(await bot.api.sendMessage(chatId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard }));
       await sendTutorialActionHint(bot, chatId, { ...player, currentLocationId: exit.toLocationId }, "look");
       await sendFirstNightGuidance(bot, chatId, player.id, exit.toLocationId);
+      await maybeTriggerPassiveApiarySting(bot, { playerId: player.id, locationId: exit.toLocationId, chatId, reason: "move" });
     }
     return;
   }
@@ -903,6 +905,7 @@ async function completeLook(bot: Bot, action: WorldAction) {
           await sendAttackObservationMessage();
           await sendGatheringObservationMessage();
           await sendFoodObservationMessages();
+          await maybeTriggerPassiveApiarySting(bot, { playerId: player.id, locationId, chatId, reason: "look" });
           return;
         } catch {
           // Fall back to a new message when Telegram cannot edit the source message.
@@ -917,6 +920,7 @@ async function completeLook(bot: Bot, action: WorldAction) {
       await sendAttackObservationMessage();
       await sendGatheringObservationMessage();
       await sendFoodObservationMessages();
+      await maybeTriggerPassiveApiarySting(bot, { playerId: player.id, locationId, chatId, reason: "look" });
     }
     return;
   }
@@ -1717,6 +1721,7 @@ async function completeSimple(bot: Bot, action: WorldAction) {
       for (const comment of voiceComments) {
         await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
       }
+      await maybeTriggerPassiveApiarySting(bot, { playerId: player.id, locationId: player.currentLocationId, chatId, reason: "wait" });
     }
   } else if (action.actorType === "CREATURE" && action.creatureId) {
     await prisma.creature.updateMany({ where: { id: action.creatureId }, data: { activity: "RESTING", currentAction: actionTitle(action) } });
