@@ -15,7 +15,7 @@ const {
   isGatheringPracticeMilestone,
 } = require("../../src/services/gatheringLearningRules");
 const {
-  gatheringObservationContextKey,
+  observableGatheringContextKey,
   recordGatheringObservation,
 } = require("../../src/services/gatheringLearning");
 
@@ -36,19 +36,21 @@ assert.equal(GATHERING_OBSERVATION_GROWTH_MESSAGE, "Навичка <b>збира
 assert.equal(gatheringSourceDescription({ actorPlayerId: 7, resourceKey: "berries", success: true }), "actorPlayer=7; success=true; resource=berries");
 assert.equal(gatheringSourceDescription({ actorCreatureId: 9, success: false }), "actorCreature=9; success=false");
 assert.equal(gatheringObservationDescription(42), "source=42");
-assert.equal(gatheringObservationContextKey("actorCreature=9; success=true; resource=berries"), "resource:berries");
-assert.equal(gatheringObservationContextKey("actorCreature=9; success=true; resource=mushrooms"), "resource:mushrooms");
-assert.equal(gatheringObservationContextKey("actorCreature=9; success=true; resource=herbs"), "resource:herbs");
-assert.equal(gatheringObservationContextKey("actorCreature=9; success=true; resource=honey"), "foraging");
+assert.equal(observableGatheringContextKey("actorCreature=9; success=true; resource=berries"), "resource:berries");
+assert.equal(observableGatheringContextKey("actorCreature=9; success=true; resource=mushrooms"), "resource:mushrooms");
+assert.equal(observableGatheringContextKey("actorCreature=9; success=true; resource=herbs"), "resource:herbs");
+assert.equal(observableGatheringContextKey("actorCreature=9; success=true; resource=honey"), null);
+assert.equal(observableGatheringContextKey("actorCreature=9; success=true; resource=beeswax"), null);
+assert.equal(observableGatheringContextKey("actorCreature=9; success=true"), null);
 
-function fakeGatheringObservationDb() {
+function fakeGatheringObservationDb(sourceDescription = "actorCreature=9; success=true; resource=herbs") {
   let nextEventId = 2;
   let nextProgressId = 1;
   const events = [{
     id: 1,
     type: "SYSTEM",
     title: GATHERING_SOURCE_EVENT_TITLE,
-    description: "actorCreature=9; success=true; resource=herbs",
+    description: sourceDescription,
     playerId: null,
     locationId: 13,
     createdAt: new Date("2026-06-03T09:00:00Z"),
@@ -137,6 +139,22 @@ function fakeGatheringObservationDb() {
   }, db);
   assert.equal(repeated.observed, false, "same gathering source should not grant progress twice");
   assert.equal(db.progressRows[0].totalProgress, 1);
+
+  for (const unsupportedDescription of [
+    "actorCreature=9; success=true; resource=honey",
+    "actorCreature=9; success=true; resource=beeswax",
+    "actorCreature=9; success=true",
+  ]) {
+    const unsupportedDb = fakeGatheringObservationDb(unsupportedDescription);
+    const unsupported = await recordGatheringObservation({
+      playerId: 7,
+      locationId: 13,
+      now: new Date("2026-06-03T09:01:00Z"),
+    }, unsupportedDb);
+    assert.equal(unsupported.observed, true, "unsupported source still records legacy observation marker");
+    assert.equal(unsupportedDb.events.some((event) => event.title === GATHERING_OBSERVATION_EVENT_TITLE), true);
+    assert.equal(unsupportedDb.progressRows.length, 0, `${unsupportedDescription} should not create canonical progress`);
+  }
 
   console.log("Gathering learning helpers OK");
 })().catch((error) => {

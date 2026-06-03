@@ -25,6 +25,7 @@ Create or expose one visible gathering action that can be learned from.
 - Use existing gathering source events where present.
 - Treat witnessed gathering of medicinal herbs, berries and mushrooms as the first learnable contexts.
 - Herbalists / знахарі remain a natural teaching example, but they are not the only valid source.
+- Keep apiary harvest, honey, beeswax, twigs, money, loot and other gather-like actions outside this first canonical learning bridge unless a later task explicitly designs them.
 - Leave a deeper dedicated herbalist service/action layer to `NPC-003` if it grows beyond this first bridge.
 
 ## Acceptance
@@ -39,4 +40,4 @@ Do after: `OBS-001-A`.
 
 ## 0.15.21 Note
 
-`0.15.21` uses existing visible gathering source events for medicinal herbs, berries and mushrooms as the first observation source. It does not add a new herbalist behavior loop.
+`0.15.21` uses existing visible gathering source events for medicinal herbs, berries and mushrooms as the first observation source. It does not add a new herbalist behavior loop, and apiary honey/wax remains outside this bridge.

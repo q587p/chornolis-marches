@@ -32,11 +32,11 @@ type GatheringLearningDb = {
 
 const OBSERVABLE_GATHERING_RESOURCE_KEYS = new Set(["berries", "mushrooms", "herbs"]);
 
-export function gatheringObservationContextKey(sourceDescription: string | null | undefined) {
+export function observableGatheringContextKey(sourceDescription: string | null | undefined) {
   const resourceKey = sourceDescription?.match(/(?:^|;\s*)resource=([A-Za-z0-9_-]+)/u)?.[1];
   return resourceKey && OBSERVABLE_GATHERING_RESOURCE_KEYS.has(resourceKey)
     ? `resource:${resourceKey}`
-    : "foraging";
+    : null;
 }
 
 export async function recordGatheringSource(input: {
@@ -99,18 +99,21 @@ export async function recordGatheringObservation(input: { playerId: number; loca
       },
     });
 
-    try {
-      await recordLearningProgress({
-        playerId: input.playerId,
-        skillKey: "gathering",
-        sourceKey: "observation",
-        contextKey: gatheringObservationContextKey(source.description),
-        amount: 1,
-        milestoneEvery: GATHERING_OBSERVATION_INTERVAL,
-        lastSourceEventId: source.id,
-      }, db as any);
-    } catch (error) {
-      console.warn("Failed to write canonical gathering observation progress:", error);
+    const contextKey = observableGatheringContextKey(source.description);
+    if (contextKey) {
+      try {
+        await recordLearningProgress({
+          playerId: input.playerId,
+          skillKey: "gathering",
+          sourceKey: "observation",
+          contextKey,
+          amount: 1,
+          milestoneEvery: GATHERING_OBSERVATION_INTERVAL,
+          lastSourceEventId: source.id,
+        }, db as any);
+      } catch (error) {
+        console.warn("Failed to write canonical gathering observation progress:", error);
+      }
     }
 
     const observationCount = await db.worldEvent.count({

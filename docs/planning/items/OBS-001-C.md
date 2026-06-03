@@ -25,6 +25,7 @@ Grant the first diegetic learning hint from attentive presence around visible ga
 
 - If a player notices a recent visible gathering source through existing attention surfaces, grant small progress through `CharacterLearningProgress`.
 - Record resource-specific contexts for medicinal herbs, berries and mushrooms, while keeping the ordinary player text broad and diegetic.
+- Do not create canonical learning progress for honey, beeswax, twigs, money, loot, missing resource keys or unrelated gather-like sources.
 - Show atmospheric learning text only on rare milestones.
 - Keep the effect text-only for now.
 
