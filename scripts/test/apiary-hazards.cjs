@@ -5,6 +5,8 @@ require("ts-node/register");
 const {
   apiaryAuraDistanceFromLinks,
   apiaryAuraKind,
+  apiaryCooldownWorldMinutes,
+  apiaryEventAbsoluteMinute,
   apiaryEventDescriptionMatches,
   apiaryPassiveChancePermille,
   apiaryPassiveCooldownMs,
@@ -16,6 +18,7 @@ const {
   apiaryRaidSuccessChancePermille,
   apiaryRaidWaxChancePermille,
   isApiaryCooldownActive,
+  isApiaryWorldCooldownActive,
   isApiarySleepingForPassiveHazard,
   passiveApiaryDamageResult,
 } = require("../../src/services/apiaryHazards");
@@ -28,7 +31,7 @@ const apiaryData = {
   neighbor_damage: [1, 1],
   passive_cooldown_ms: 120_000,
   night_passive_sleeping: true,
-  raid_cooldown_ms: 21_600_000,
+  raid_cooldown_ms: 720_000,
   raid_success_chance_permille: 700,
   raid_wax_chance_permille: 350,
   raid_damage: [2, 5],
@@ -63,12 +66,19 @@ const now = new Date("2026-06-03T12:00:00.000Z");
 assert.equal(isApiaryCooldownActive(new Date(now.getTime() - 60_000), now, 120_000), true);
 assert.equal(isApiaryCooldownActive(new Date(now.getTime() - 120_001), now, 120_000), false);
 assert.equal(isApiaryCooldownActive(null, now, 120_000), false);
+assert.equal(apiaryCooldownWorldMinutes(120_000, 2_000), 60);
+assert.equal(apiaryCooldownWorldMinutes(720_000, 2_000), 360);
+assert.equal(apiaryEventAbsoluteMinute("apiaryKey=meadow_old_log_apiary_12_02; absoluteMinute=123456; damage=1"), 123456);
+assert.equal(apiaryEventAbsoluteMinute("apiaryKey=meadow_old_log_apiary_12_02; damage=1"), null);
+assert.equal(isApiaryWorldCooldownActive("apiaryKey=x; absoluteMinute=1000; damage=1", 1059, 120_000), true);
+assert.equal(isApiaryWorldCooldownActive("apiaryKey=x; absoluteMinute=1000; damage=1", 1060, 120_000), false);
+assert.equal(isApiaryWorldCooldownActive("apiaryKey=x; damage=1", 1001, 120_000), false);
 
 assert.deepEqual(passiveApiaryDamageResult(2, 5), { appliedDamage: 1, nextHp: 1 });
 assert.deepEqual(passiveApiaryDamageResult(20, 2), { appliedDamage: 2, nextHp: 18 });
 assert.deepEqual(passiveApiaryDamageResult(1, 1), { appliedDamage: 0, nextHp: 1 });
 
-assert.equal(apiaryRaidCooldownMs(apiaryData), 21_600_000);
+assert.equal(apiaryRaidCooldownMs(apiaryData), 720_000);
 assert.equal(apiaryRaidSuccessChancePermille(apiaryData), 700);
 assert.equal(apiaryRaidWaxChancePermille(apiaryData), 350);
 assert.deepEqual(apiaryRaidDamageRange(apiaryData), [2, 5]);

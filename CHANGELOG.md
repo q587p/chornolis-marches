@@ -17,6 +17,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Fixed
 
 - Added regression coverage for the case where a recent unsupported source such as honey appears after a supported herbs source and previously could mask the supported observation path.
+- Fixed old log apiary raid cooldowns so honey/wax attempts reopen by in-world time markers instead of feeling one-shot under long wall-clock cooldowns.
 
 ## 0.15.21 - Attentive presence learning bridge - 12026-06-03
 

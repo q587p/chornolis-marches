@@ -104,7 +104,7 @@
       "passive_cooldown_ms": 120000,
       "night_passive_sleeping": true,
       "robbery_wakes_swarm": true,
-      "raid_cooldown_ms": 21600000,
+      "raid_cooldown_ms": 720000,
       "raid_success_chance_permille": 700,
       "raid_wax_chance_permille": 350,
       "raid_damage": [

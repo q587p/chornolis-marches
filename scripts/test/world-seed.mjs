@@ -175,7 +175,7 @@ assert.equal(oldLogApiary.data?.neighbor_sting_chance_permille, 130, "Old log ap
 assert.equal(oldLogApiary.data?.passive_cooldown_ms, 120_000, "Old log apiary passive cooldown should match one default in-game hour");
 assert.equal(resourceTypeKeys.has("honey"), true, "Apiary harvest MVP should define honey resource type");
 assert.equal(resourceTypeKeys.has("beeswax"), true, "Apiary harvest MVP should define beeswax resource type");
-assert.equal(oldLogApiary.data?.raid_cooldown_ms, 21_600_000, "Old log apiary should limit repeated hive robbery");
+assert.equal(oldLogApiary.data?.raid_cooldown_ms, 720_000, "Old log apiary should limit repeated hive robbery to roughly six in-game hours");
 assert.equal(oldLogApiary.data?.raid_success_chance_permille, 700, "Old log apiary should have authored raid success chance");
 assert.equal(oldLogApiary.data?.raid_wax_chance_permille, 350, "Old log apiary should have authored wax chance");
 assert.deepEqual(oldLogApiary.data?.raid_damage, [2, 5], "Old log apiary should have stronger disturbance sting damage");

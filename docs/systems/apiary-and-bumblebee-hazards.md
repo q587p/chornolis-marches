@@ -30,7 +30,7 @@ Passive bumblebee stings are intentionally rare and rate-limited.
 - passive stings do not fire at night when `night_passive_sleeping` is true;
 - passive stings never kill in the MVP and clamp the player to at least 1 HP;
 - passive cooldown is one default in-game hour;
-- cooldown is stored in `WorldEvent` using `title = "Apiary sting"` and an `apiaryKey=...` marker.
+- cooldown is stored in `WorldEvent` using `title = "Apiary sting"`, an `apiaryKey=...` marker and `absoluteMinute=...`.
 
 Player-facing copy should stay atmospheric and not say "hazard radius" or expose raw chances.
 
@@ -50,7 +50,7 @@ decide whether they want that coupling or a read-only snapshot path.
 - success grants a small amount of `honey`, with a smaller chance of `beeswax`;
 - failure grants nothing;
 - the raid uses stronger sting damage than passive stings and still clamps the player to at least 1 HP;
-- cooldown is stored in `WorldEvent` using `title = "Apiary raid"` and an `apiaryKey=...` marker, so the same hive cannot be farmed repeatedly.
+- cooldown is stored in `WorldEvent` using `title = "Apiary raid"`, an `apiaryKey=...` marker and `absoluteMinute=...`, so the same hive cannot be farmed repeatedly but does reopen by in-world time instead of real wall-clock time.
 
 Honey and beeswax are resources for inventory/storage and future systems. They are not yet a full food/remedy/crafting economy, and `0.15.20` should be treated as the first harvest endpoint rather than a reason to open a broad apiary/economy loop immediately.
 
@@ -59,6 +59,7 @@ Operational watchpoints:
 - `RAID_APIARY` is a Prisma enum migration. Production deploys must apply migrations before the new bot runtime handles queued raid actions. If rollback is needed after PostgreSQL sees the enum value, prefer reverting runtime use and leaving the unused enum value in place unless a deliberate enum rebuild is planned.
 - The current completion path applies raid reward/damage/event side effects before stamina spend. Keep that in mind if future stamina handling becomes a validation gate instead of post-completion bookkeeping.
 - `/gather_beeswax` does not guarantee wax. It invokes the same raid as `/gather_honey`; honey is the success reward and beeswax is an additional chance.
+- Events created before the `absoluteMinute` marker existed are treated as expired for cooldown purposes. This deliberately unblocks live hives that could otherwise stay unavailable until a long real-time cooldown passed.
 
 ## Future Work
 
