@@ -6,6 +6,7 @@ module.exports = [
   nodeTest("scripts/test/slashless-command-coverage.cjs"),
   nodeTest("scripts/test/session-presence.cjs"),
   nodeTest("scripts/test/spirit-call.cjs"),
+  nodeTest("scripts/test/follow-intent.cjs"),
   nodeTest("scripts/test/player-notification-settings.cjs"),
   nodeTest("scripts/test/posture.cjs"),
   nodeTest("scripts/test/sleep.cjs"),

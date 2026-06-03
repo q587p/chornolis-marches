@@ -80,6 +80,8 @@ export type ParsedAliasCommand =
   | { kind: "reply"; text: string }
   | { kind: "yell"; text: string }
   | { kind: "shout"; text: string }
+  | { kind: "follow"; target: string }
+  | { kind: "unfollow" }
   | { kind: "target-action"; action: TargetAction; target: string }
   | { kind: "pickup-target"; target: string }
   | { kind: "social-signal"; signal: SocialSignalAlias; target?: string };
@@ -891,6 +893,8 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "calendar") return "/calendar";
   if (parsed.kind === "weather") return "/weather";
   if (parsed.kind === "menu") return "/menu";
+  if (parsed.kind === "follow") return "/follow";
+  if (parsed.kind === "unfollow") return "/unfollow";
   if (parsed.kind === "settings") return "/settings";
   if (parsed.kind === "daypart-notices") return parsed.mode === "show" ? "/daynotices" : `/daynotices ${parsed.mode}`;
   if (parsed.kind === "auto-messages") return parsed.mode === "show" ? "/automessages" : `/automessages ${parsed.mode}`;
@@ -1580,6 +1584,22 @@ function parseSocialSignal(text: string): ParsedAliasCommand | null {
   return null;
 }
 
+function parseFollowIntent(text: string): ParsedAliasCommand | null {
+  if ([
+    "unfollow",
+    "stop follow",
+    "stop following",
+    "не слідувати",
+    "припинити слідувати",
+    "припинити стежити",
+    "відстати",
+  ].includes(text)) return { kind: "unfollow" };
+
+  const match = text.match(/^(?:follow|слідувати(?:\s+за)?|йти\s+за|триматися\s+за|стежити\s+за)(?:\s+(.+))?$/u);
+  if (!match) return null;
+  return { kind: "follow", target: match[1]?.trim() ?? "" };
+}
+
 export function parseAlias(raw: string): ParsedAliasCommand | null {
   const text = normalizeInput(raw);
   if (!text) return null;
@@ -1674,6 +1694,9 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
 
   const pickup = parsePickup(commandText);
   if (pickup) return pickup;
+
+  const followIntent = parseFollowIntent(commandText);
+  if (followIntent) return followIntent;
 
   const signal = parseSocialSignal(commandText);
   if (signal) return signal;

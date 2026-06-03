@@ -177,7 +177,7 @@ SLEEP-003,World-time auto-wake and sleep comfort,testing,feature,survival,medium
 SLEEP-004,External forced sleep causes,icebox,feature,survival,low,"sleep,creatures,elixirs,rituals,danger",docs/planning/items/SLEEP-004-external-forced-sleep-causes.md
 SLEEP-005,Ordinary sleep passive UX review,backlog,ux,survival,medium,"sleep,commands,inventory,queue",docs/planning/items/SLEEP-005-ordinary-sleep-passive-ux-review.md
 SOC-001,Contacts / acquaintances MVP,next,feature,social,high,"social,contacts,acquaintances,actors,telegram",docs/planning/items/SOC-001-contacts-acquaintances.md
-SOC-002,Follow intent MVP,next,feature,social,high,"social,following,actors,telegram,groups",docs/planning/items/SOC-002-follow-intent.md
+SOC-002,Follow intent MVP,testing,feature,social,high,"social,following,actors,telegram,groups",docs/planning/items/SOC-002-follow-intent.md
 SOC-003,Travel group core,next,feature,social,high,"social,groups,travel,actors,telegram",docs/planning/items/SOC-003-travel-group-core.md
 SOC-004,Group movement MVP,next,feature,social,high,"social,groups,movement,action-queue,stamina",docs/planning/items/SOC-004-group-movement.md
 SOC-005,Group combat assist conservative plan,backlog,feature,combat,medium,"social,groups,combat,balance",docs/planning/items/SOC-005-group-combat-assist.md

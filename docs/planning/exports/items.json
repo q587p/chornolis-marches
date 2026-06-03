@@ -3467,7 +3467,7 @@
   {
     "id": "SOC-002",
     "title": "Follow intent MVP",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "social",
     "priority": "high",

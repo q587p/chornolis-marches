@@ -78,6 +78,7 @@ import { equipPlayerWeapon, unequipPlayerWeapon } from "../services/weapons";
 import { queueAllRawMeatCooking } from "../services/cookingQueue";
 import { queueAllUsableInventoryResource } from "../services/eatingQueue";
 import { queueAllBeginnerCacheContributions } from "../services/beginnerCacheQueue";
+import { clearPlayerFollowIntent, followIntentStatusLine, setPlayerFollowIntent } from "../services/following";
 import { verticalYellPromptPlaceholder, verticalYellPromptText, type VerticalYellPromptDirection } from "../services/speechRanges";
 import {
   campfireBuildConfirmationText,
@@ -928,6 +929,51 @@ async function submitTargetAction(bot: Bot, ctx: any, action: TargetAction, targ
   await submitResolvedTargetAction(bot, ctx, player, locationId, action, match.target, detail);
 }
 
+function followUsageText() {
+  return "За ким слідувати? Спробуйте: /follow <ім'я> або «слідувати за знахарем».";
+}
+
+function followMissingText() {
+  return "Ви не бачите, за ким тут слідувати.";
+}
+
+function followManyText(targets: TextTargetRef[]) {
+  return `Поруч є кілька схожих слідів. Уточніть назвою або номером.\n\n${targetListText(targets)}`;
+}
+
+export async function submitFollowIntent(ctx: any, targetQuery: string) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const query = targetQuery.trim();
+  if (!query) return void (await ctx.reply(followUsageText()));
+  if (isSelfTargetQueryForPlayer(query, player)) return void (await ctx.reply("Власний слід і так під ногами."));
+
+  const visibleTargets = (await visibleTextTargets(player.currentLocationId, player.id)).filter((target) => !target.isCorpse);
+  if (!visibleTargets.length) return void (await ctx.reply(followMissingText()));
+
+  const match = bestTargetMatch(query, visibleTargets);
+  if (match.kind === "none") return void (await ctx.reply(followMissingText()));
+  if (match.kind === "many") return void (await ctx.reply(followManyText(match.targets)));
+  if (match.target.type === "player" && match.target.id === player.id) return void (await ctx.reply("Власний слід і так під ногами."));
+
+  await setPlayerFollowIntent(player.id, match.target, player.currentLocationId);
+  await ctx.reply(`Ви тримаєтеся сліду за ${match.target.label}. Це ще не крок за кроком — радше уважність до чужого руху.`);
+}
+
+export async function submitUnfollow(ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const cleared = await clearPlayerFollowIntent(player.id);
+  if (!cleared) return void (await ctx.reply("Ви зараз не тримаєтеся чужого сліду."));
+
+  const targetText = followIntentStatusLine(cleared.lastKnownTargetLabel);
+  await ctx.reply(targetText
+    ? `Ви відпускаєте чужий слід. Далі — власний крок.\n\nБуло: ${targetText}`
+    : "Ви відпускаєте чужий слід. Далі — власний крок.");
+}
+
 async function submitAttackCommand(bot: Bot, ctx: any, targetQuery?: string) {
   const target = targetQuery?.trim();
   if (!target) {
@@ -1382,6 +1428,8 @@ export function registerAliasHandlers(bot: Bot) {
   bot.command(["get", "pick", "pickup", "take"], async (ctx) => submitPickupCommand(bot, ctx, ctx.match ?? ""));
   bot.command(["get_all", "pick_all", "pickup_all", "take_all"], async (ctx) => submitPickupCommand(bot, ctx, pickupAllCommandTarget(ctx.match ?? "")));
   bot.command("track", async (ctx) => submitTrack(bot, ctx, false, ctx.match ?? ""));
+  bot.command("follow", async (ctx) => submitFollowIntent(ctx, ctx.match ?? ""));
+  bot.command("unfollow", async (ctx) => submitUnfollow(ctx));
   bot.command("yell", async (ctx) => submitYell(bot, ctx, ctx.match ?? ""));
   bot.command("shout", async (ctx) => submitShout(bot, ctx, ctx.match ?? ""));
   bot.command(["call_scribes", "scribe_help"], async (ctx) => requestScribeReturnAssistance(bot, ctx));
@@ -1548,6 +1596,8 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "reply") return submitReply(bot, ctx, parsed.text);
     if (parsed.kind === "yell") return submitYell(bot, ctx, parsed.text);
     if (parsed.kind === "shout") return submitShout(bot, ctx, parsed.text);
+    if (parsed.kind === "follow") return submitFollowIntent(ctx, parsed.target);
+    if (parsed.kind === "unfollow") return submitUnfollow(ctx);
     if (parsed.kind === "target-action") return submitTargetAction(bot, ctx, parsed.action, parsed.target);
     if (parsed.kind === "pickup-target") return submitPickupTarget(bot, ctx, parsed.target);
     if (parsed.kind === "social-signal") return submitSocialSignal(bot, ctx, parsed.signal, parsed.target);

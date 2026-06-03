@@ -26,7 +26,7 @@ import {
   type PreparedCharacterName,
 } from "../services/characterNames";
 import { disablePlayerAuto, requestOrEnablePlayerAuto, replyStopPlayerAuto } from "./auto";
-import { requestScribeReturnAssistance, submitBuildCampfire, submitDismantleCampfire, submitDismantleTotem, submitDouseCampfire, submitLightCampfire, submitSay, submitTrack, submitYell } from "./aliases";
+import { requestScribeReturnAssistance, submitBuildCampfire, submitDismantleCampfire, submitDismantleTotem, submitDouseCampfire, submitFollowIntent, submitLightCampfire, submitSay, submitTrack, submitUnfollow, submitYell } from "./aliases";
 import { sendHelp } from "./help";
 import { sendNews } from "./news";
 import { resolveStartActionPayload, type StartActionPayload } from "../input/startPayloads";
@@ -704,6 +704,16 @@ async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayl
 
   if (action === "track") {
     await submitTrack(bot, ctx);
+    return true;
+  }
+
+  if (action === "follow") {
+    await submitFollowIntent(ctx, "");
+    return true;
+  }
+
+  if (action === "unfollow") {
+    await submitUnfollow(ctx);
     return true;
   }
 

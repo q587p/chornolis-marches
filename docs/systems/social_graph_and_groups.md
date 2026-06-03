@@ -274,6 +274,12 @@ Responsibilities:
 - accept a follow intent into a group;
 - decline/cancel stale intents.
 
+As of `0.15.29`, only the first part exists: a player can store one active
+follow intent for a visible local player or creature. It is an attention marker,
+not movement, party membership, companion ownership or learning progress. Group
+acceptance, follower lists for leaders and stale-intent moderation remain
+future `SOC-003` work.
+
 ### `travelGroups.ts`
 
 Responsibilities:
