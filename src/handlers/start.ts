@@ -1,4 +1,5 @@
 import { Bot, InlineKeyboard, Keyboard } from "grammy";
+import { Direction } from "@prisma/client";
 import { prisma } from "../db";
 import { getStartLocationId } from "../services/players";
 import { renderLocationBrief } from "../services/locations";
@@ -37,6 +38,7 @@ import { showCalendar, showTime, showWeather } from "./time";
 import { submitSleepCommand } from "./tutorial";
 import { grantStarterKnifeIfMissing } from "../services/weapons";
 import { renderSessionReturnHint } from "../services/sessionPresence";
+import { submitMove } from "./movement";
 
 type NameFormPrompt = { key: keyof NameForms; question: string; button: string; prefix?: string };
 const CASE_BUTTON_LABELS: Partial<Record<keyof NameForms, string>> = {
@@ -623,6 +625,17 @@ async function canRunStartPayloadAction(player: StartPayloadPlayer) {
   return currentLocation ? !isTutorialLocation(currentLocation) : false;
 }
 
+const START_PAYLOAD_DIRECTIONS: Partial<Record<StartActionPayload, Direction>> = {
+  north: "NORTH",
+  south: "SOUTH",
+  west: "WEST",
+  east: "EAST",
+  up: "UP",
+  down: "DOWN",
+  inside: "INSIDE",
+  outside: "OUTSIDE",
+};
+
 async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayload) {
   const from = ctx.from;
   if (!from) return false;
@@ -637,6 +650,12 @@ async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayl
     select: { id: true, onboardingComplete: true, currentLocationId: true },
   });
   if (!player || !(await canRunStartPayloadAction(player))) return false;
+
+  const direction = START_PAYLOAD_DIRECTIONS[action];
+  if (direction) {
+    await submitMove(bot, ctx, direction, false);
+    return true;
+  }
 
   if (action === "look") {
     await showLocationForPlayer(from.id, (text, options) => ctx.reply(text, options));

@@ -18,6 +18,8 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Removed ordinary resource nodes from starter infrastructure and added region-based resource regeneration protection for `starter_camp`.
 - Allowed the camp spirit cat to include the starter cellar in its camp-bound movement while keeping it out of non-starter locations.
 - Removed `/call_scribes` from the short Telegram command menu while keeping the command and help/fallback paths available when needed.
+- Added a hidden, one-way spoken-word passage from the starter cellar to the under-bridge, with hints limited to cellar feature inspection and no visible exit/news/map spoiler.
+- Added safe Herald/site deep links for public movement commands such as `/up`, `/down` and the cardinal directions.
 - Added regression coverage for dark feature lines and direct dark inspection fallback copy.
 
 ## 0.15.26 - Herbalist cellar supply-run MVP - 12026-06-03
