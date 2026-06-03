@@ -44,7 +44,7 @@ decide whether they want that coupling or a read-only snapshot path.
 
 `0.15.20` adds the first deliberate apiary raid action through `RAID_APIARY`.
 
-- typed routes include `/gather_honey`, `/gather_beeswax`, `gather honey`, `взяти мед`, `зібрати мед`, `обібрати вулик`, `пограбувати бортю` and `добути віск`;
+- typed routes include `/search_honey`, `/search_beeswax`, `search honey`, `взяти мед`, `шукати мед`, `обібрати вулик`, `пограбувати бортю` and `добути віск`; legacy `/gather_honey` and `/gather_beeswax` routes may remain for old links, but player-facing copy should prefer `search`, because the action targets a location feature rather than a free location resource;
 - the action only works at the active apiary center, not in the passive aura;
 - deliberate robbery wakes the swarm even at night;
 - success grants a small amount of `honey`, with a smaller chance of `beeswax`;
@@ -58,7 +58,7 @@ Operational watchpoints:
 
 - `RAID_APIARY` is a Prisma enum migration. Production deploys must apply migrations before the new bot runtime handles queued raid actions. If rollback is needed after PostgreSQL sees the enum value, prefer reverting runtime use and leaving the unused enum value in place unless a deliberate enum rebuild is planned.
 - The current completion path applies raid reward/damage/event side effects before stamina spend. Keep that in mind if future stamina handling becomes a validation gate instead of post-completion bookkeeping.
-- `/gather_beeswax` does not guarantee wax. It invokes the same raid as `/gather_honey`; honey is the success reward and beeswax is an additional chance.
+- `/search_beeswax` does not guarantee wax. It invokes the same raid as `/search_honey`; honey is the success reward and beeswax is an additional chance.
 - Events created before the `absoluteMinute` marker existed are treated as expired for cooldown purposes. This deliberately unblocks live hives that could otherwise stay unavailable until a long real-time cooldown passed.
 
 Future disturbed-hive tuning:

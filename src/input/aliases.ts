@@ -367,6 +367,8 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "обібрати бортю": { kind: "gather", resourceKey: "honey" },
   "пограбувати бортю": { kind: "gather", resourceKey: "honey" },
   "добути віск": { kind: "gather", resourceKey: "beeswax" },
+  "search_honey": { kind: "gather", resourceKey: "honey" },
+  "search_beeswax": { kind: "gather", resourceKey: "beeswax" },
   "gather_honey": { kind: "gather", resourceKey: "honey" },
   "gather_beeswax": { kind: "gather", resourceKey: "beeswax" },
 
@@ -1014,7 +1016,7 @@ function parseDirectionPhrase(text: string): ParsedAliasCommand | null {
 }
 
 function parseGather(text: string): ParsedAliasCommand | null {
-  const match = text.match(/^(?:gather|збирати|зібрати|шукати|пошукати|назбирати)\s+(.+)$/);
+  const match = text.match(/^(?:gather|search|збирати|зібрати|шукати|пошукати|назбирати)\s+(.+)$/);
   if (!match) return null;
 
   const resource = match[1].trim();

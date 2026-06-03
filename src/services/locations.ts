@@ -1323,7 +1323,7 @@ export async function renderLocationFeatureInteraction(
     }
   }
   if (featureData(feature).carcass_dropoff === true) addCarcassDropoffButtons(keyboard, feature.id);
-  if (isApiaryFeature(feature)) keyboard.text("🍯 Взяти мед", `apiary:raid:${feature.id}`).row();
+  if (isApiaryFeature(feature)) keyboard.text("🍯 Пошукати мед", `apiary:raid:${feature.id}`).row();
   if (isClimbTreeFeature(feature)) keyboard.text("🌳 Залізти", "move:UP").row();
   const moveDirection = featureMoveDirection(feature);
   if (moveDirection) keyboard.text(featureMoveButtonLabelForFeature(feature, moveDirection), `move:${moveDirection}`).row();

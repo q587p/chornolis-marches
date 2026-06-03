@@ -86,11 +86,11 @@ export async function submitGather(bot: Bot, ctx: any, resourceKey?: GatherKey, 
 }
 
 export function registerGatherHandlers(bot: Bot) {
-  bot.command("gather_honey", async (ctx) => {
+  bot.command(["search_honey", "gather_honey"], async (ctx) => {
     await submitGather(bot, ctx, "honey", false);
   });
 
-  bot.command("gather_beeswax", async (ctx) => {
+  bot.command(["search_beeswax", "gather_beeswax"], async (ctx) => {
     await submitGather(bot, ctx, "beeswax", false);
   });
 
@@ -98,7 +98,7 @@ export function registerGatherHandlers(bot: Bot) {
     const arg = String(ctx.match || "").trim().toLowerCase();
     const resourceKey = arg ? GATHER_ALIASES[arg] : undefined;
     if (arg && !resourceKey) {
-      await ctx.reply("Не знаю, що саме збирати. Спробуйте /gather, /gather herbs, /gather berries, /gather mushrooms або /gather honey біля борті. Факел, якщо він лежить поруч, можна підняти окремо.");
+      await ctx.reply("Не знаю, що саме збирати. Спробуйте /gather, /gather herbs, /gather berries, /gather mushrooms або /search_honey біля борті. Факел, якщо він лежить поруч, можна підняти окремо.");
       return;
     }
     await submitGather(bot, ctx, resourceKey, false);
