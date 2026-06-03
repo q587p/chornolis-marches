@@ -2,7 +2,7 @@ name: Herald keepalive
 
 on:
   schedule:
-    - cron: "7,17,27,37,47,57 * * * *"
+    - cron: "5,13,21,29,37,45,51,59 * * * *"
   workflow_dispatch:
 
 permissions:
