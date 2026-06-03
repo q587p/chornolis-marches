@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const { buildNewsIndexPage, parseNewsListPageRequest, renderNewsMarkdownForTelegram } = require("../../src/handlers/news");
+const { renderWorldUpdatedAnnouncement } = require("../../src/services/deployAnnouncements");
 const { readWebNewsEntries, renderNewsInlineMarkdown, renderNewsPage } = require("../../src/server/statusServer");
 const { escapeHtml } = require("../../src/utils/text");
 
@@ -60,6 +61,16 @@ function literalPattern(value) {
     renderNewsMarkdownForTelegram("## 0.0.0 — Test\n\n- `Речі` (`/inv`) і <raw>"),
     "<b>0.0.0 — Test</b>\n\n• <i>Речі</i> (/inv) і &lt;raw&gt;",
   );
+
+  const deployNews = [
+    "📰 Остання новина: 0.0.0 — Test",
+    renderNewsMarkdownForTelegram("- `Люк до погреба`; `Вниз` (`/down`) і <raw>"),
+  ].join("\n");
+  const deployText = renderWorldUpdatedAnnouncement("0.0.0", deployNews);
+  assert.doesNotMatch(deployText, /`/);
+  assert.match(deployText, /<i>Люк до погреба<\/i>/);
+  assert.match(deployText, /<i>Вниз<\/i> \(\/down\)/);
+  assert.match(deployText, /&lt;raw&gt;/);
 
   console.log("Web news archive OK");
 })();
