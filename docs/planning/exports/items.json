@@ -131,6 +131,74 @@
     "file": "docs/planning/items/ANIMAL-001-speech-reactions.md"
   },
   {
+    "id": "APIARY-001",
+    "title": "Seed old log apiary feature",
+    "status": "in_progress",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "medium",
+    "tags": [
+      "apiary",
+      "bumblebee",
+      "world-seed",
+      "feature"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/APIARY-001-seed-apiary-feature.md"
+  },
+  {
+    "id": "APIARY-002",
+    "title": "Passive bumblebee sting hazard",
+    "status": "in_progress",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "medium",
+    "tags": [
+      "apiary",
+      "bumblebee",
+      "hazard",
+      "hp"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/APIARY-002-passive-sting-hazard.md"
+  },
+  {
+    "id": "APIARY-003",
+    "title": "Honey wax and hive robbery",
+    "status": "backlog",
+    "type": "feature",
+    "area": "resources",
+    "priority": "medium",
+    "tags": [
+      "apiary",
+      "honey",
+      "beeswax",
+      "resources"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/APIARY-003-honey-wax-and-robbery.md"
+  },
+  {
+    "id": "APIARY-004",
+    "title": "Bear honey loop scaffold",
+    "status": "backlog",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "low",
+    "tags": [
+      "apiary",
+      "bear",
+      "ecology",
+      "tracks"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/APIARY-004-bear-honey-loop.md"
+  },
+  {
     "id": "AUTH-001",
     "title": "Profile protection and client-neutral login",
     "status": "icebox",

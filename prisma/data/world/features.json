@@ -77,6 +77,60 @@
     }
   },
   {
+    "key": "meadow_old_log_apiary_12_02",
+    "locationKey": "meadow_12_02",
+    "type": "LANDMARK",
+    "name": "Стара бортя",
+    "description": "Стара бортя стоїть трохи криво, але всередині не порожньо.\n\nЗ темної щілини тягне медом і воском. Час від часу звідти вилітає важкий джміль, робить коло над полином і зникає назад.\n\nЗдається, краще не лізти руками без потреби.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🍯",
+      "inspectable": true,
+      "apiary": true,
+      "apiary_kind": "old_log_hive",
+      "hazard_key": "bumblebee_sting",
+      "aura_radius": 1,
+      "center_sting_chance_permille": 55,
+      "neighbor_sting_chance_permille": 16,
+      "center_damage": [
+        1,
+        2
+      ],
+      "neighbor_damage": [
+        1,
+        1
+      ],
+      "passive_cooldown_ms": 10800000,
+      "night_passive_sleeping": true,
+      "robbery_wakes_swarm": true,
+      "future_rewards": [
+        "honey",
+        "beeswax"
+      ],
+      "future_actor_hooks": [
+        "bear_honey_loop"
+      ],
+      "examine_summary": "гуде важким джмелиним життям; пахне медом і воском, але не просить рук",
+      "aliases": [
+        "бортя",
+        "бортю",
+        "борті",
+        "вулик",
+        "вулика",
+        "вулику",
+        "пасіка",
+        "пасіку",
+        "мед",
+        "віск",
+        "джмелі",
+        "джміль",
+        "колодяний вулик",
+        "стара бортя"
+      ]
+    }
+  },
+  {
     "key": "forest_moss_gravestone",
     "locationKey": "forest_02_02",
     "type": "LANDMARK",

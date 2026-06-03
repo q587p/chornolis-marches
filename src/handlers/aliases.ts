@@ -88,6 +88,7 @@ import {
 import { buildWetCampfireConfirmKeyboard } from "../ui/fireKeyboards";
 import { submitGiveItem } from "./give";
 import { firstStrangeTotemFeatureIdAtPlayerLocation } from "../services/strangeTotems";
+import { maybeTriggerPassiveApiarySting } from "../services/apiaryHazards";
 
 const pendingVerticalYell = new Map<number, { direction: VerticalYellPromptDirection }>();
 const pendingReturnYell = new Set<number>();
@@ -267,6 +268,7 @@ async function submitFeatureInspection(bot: Bot, ctx: any, targetQuery: string, 
   await rememberTutorialCommandHintIfInTutorial(player.id, "examine", player.currentLocationId);
   noteKnownMessage(await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard }));
   await sendFeatureFollowups(ctx, view);
+  await maybeTriggerPassiveApiarySting(bot, { playerId: player.id, locationId: player.currentLocationId, chatId: ctx.chat?.id, reason: "look" });
 }
 
 async function replyWithAll(ctx: any, showDead?: boolean) {

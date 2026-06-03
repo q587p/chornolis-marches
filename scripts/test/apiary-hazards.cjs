@@ -1,0 +1,60 @@
+const assert = require("node:assert/strict");
+
+require("ts-node/register");
+
+const {
+  apiaryAuraDistanceFromLinks,
+  apiaryAuraKind,
+  apiaryEventDescriptionMatches,
+  apiaryPassiveChancePermille,
+  apiaryPassiveCooldownMs,
+  apiaryPassiveDamageRange,
+  isApiaryCooldownActive,
+  isApiarySleepingForPassiveHazard,
+  passiveApiaryDamageResult,
+} = require("../../src/services/apiaryHazards");
+
+const apiaryData = {
+  aura_radius: 1,
+  center_sting_chance_permille: 55,
+  neighbor_sting_chance_permille: 16,
+  center_damage: [1, 2],
+  neighbor_damage: [1, 1],
+  passive_cooldown_ms: 10_800_000,
+  night_passive_sleeping: true,
+};
+
+assert.equal(apiaryAuraDistanceFromLinks(10, 10, [11, 12], 1), 0);
+assert.equal(apiaryAuraDistanceFromLinks(10, 11, [10, 12], 1), 1);
+assert.equal(apiaryAuraDistanceFromLinks(10, 12, [11, 13], 1), null);
+assert.equal(apiaryAuraDistanceFromLinks(10, 11, [10, 12], 0), null);
+
+assert.equal(apiaryAuraKind(0, apiaryData), "center");
+assert.equal(apiaryAuraKind(1, apiaryData), "neighbor");
+assert.equal(apiaryAuraKind(2, apiaryData), "outside");
+assert.equal(apiaryPassiveChancePermille("center", apiaryData), 55);
+assert.equal(apiaryPassiveChancePermille("neighbor", apiaryData), 16);
+assert.equal(apiaryPassiveChancePermille("outside", apiaryData), 0);
+assert.deepEqual(apiaryPassiveDamageRange("center", apiaryData), [1, 2]);
+assert.deepEqual(apiaryPassiveDamageRange("neighbor", apiaryData), [1, 1]);
+assert.deepEqual(apiaryPassiveDamageRange("outside", apiaryData), [0, 0]);
+
+assert.equal(isApiarySleepingForPassiveHazard("night", apiaryData), true);
+assert.equal(isApiarySleepingForPassiveHazard("dusk", apiaryData), false);
+assert.equal(isApiarySleepingForPassiveHazard("dawn", apiaryData), false);
+assert.equal(isApiarySleepingForPassiveHazard("day", apiaryData), false);
+
+assert.equal(apiaryPassiveCooldownMs(apiaryData), 10_800_000);
+assert.equal(apiaryEventDescriptionMatches("apiaryKey=meadow_old_log_apiary_12_02; damage=1", "meadow_old_log_apiary_12_02"), true);
+assert.equal(apiaryEventDescriptionMatches("apiaryKey=other; damage=1", "meadow_old_log_apiary_12_02"), false);
+
+const now = new Date("2026-06-03T12:00:00.000Z");
+assert.equal(isApiaryCooldownActive(new Date(now.getTime() - 60_000), now, 10_800_000), true);
+assert.equal(isApiaryCooldownActive(new Date(now.getTime() - 10_800_001), now, 10_800_000), false);
+assert.equal(isApiaryCooldownActive(null, now, 10_800_000), false);
+
+assert.deepEqual(passiveApiaryDamageResult(2, 5), { appliedDamage: 1, nextHp: 1 });
+assert.deepEqual(passiveApiaryDamageResult(20, 2), { appliedDamage: 2, nextHp: 18 });
+assert.deepEqual(passiveApiaryDamageResult(1, 1), { appliedDamage: 0, nextHp: 1 });
+
+console.log("Apiary hazard helpers OK");

@@ -18,6 +18,7 @@ import { tutorialActionHintComment } from "../services/tutorialVoices";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 import { spendPlayerStaminaAmount } from "../services/actionRecovery";
 import { firstNightGuidanceForPlayer } from "../services/beginnerGuidance";
+import { maybeTriggerPassiveApiarySting } from "../services/apiaryHazards";
 import { contributeToBeginnerCache, takeFromBeginnerCache } from "../services/beginnerCache";
 import { queueAllBeginnerCacheContributions } from "../services/beginnerCacheQueue";
 import { campfireBuildConfirmationText, TORCH_SOURCE_TAKE_EVENT_TITLE } from "../services/fire";
@@ -169,6 +170,7 @@ export function registerLookHandlers(bot: Bot) {
         await sendVoiceQuoteMessages(ctx, "quoteMessages" in view ? (view as any).quoteMessages : undefined);
         await sendHtmlFollowupMessages(ctx, "followupMessages" in view ? (view as any).followupMessages : undefined);
         await sendVoiceComment(ctx, await tutorialActionHintComment(player, "examine"));
+        await maybeTriggerPassiveApiarySting(bot, { playerId: player.id, locationId: player.currentLocationId, chatId: ctx.chat?.id, reason: "look" });
         return;
       }
     }
@@ -223,6 +225,7 @@ export function registerLookHandlers(bot: Bot) {
     await editCallbackMessageOrReply(ctx, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
     await sendVoiceComment(ctx, await tutorialActionHintComment(player, "examine"));
     await sendFirstNightGuidance(ctx, player.id, player.currentLocationId);
+    await maybeTriggerPassiveApiarySting(bot, { playerId: player.id, locationId: player.currentLocationId, chatId: ctx.chat?.id, reason: "look" });
   });
 
   bot.callbackQuery("location:brief", async (ctx) => {
@@ -278,6 +281,7 @@ export function registerLookHandlers(bot: Bot) {
     await sendVoiceQuoteMessages(ctx, "quoteMessages" in view ? view.quoteMessages : undefined);
     await sendHtmlFollowupMessages(ctx, "followupMessages" in view ? view.followupMessages : undefined);
     await sendVoiceComment(ctx, await tutorialActionHintComment(player, "examine"));
+    if (player.currentLocationId) await maybeTriggerPassiveApiarySting(bot, { playerId: player.id, locationId: player.currentLocationId, chatId: ctx.chat?.id, reason: "look" });
   });
 
   bot.callbackQuery("fire:build", async (ctx) => {
