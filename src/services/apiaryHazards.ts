@@ -8,6 +8,8 @@ import { noteKnownMessage } from "../utils/messageTracker";
 export const APIARY_STING_EVENT_TITLE = "Apiary sting";
 export const APIARY_PASSIVE_STING_LINE = "Поки ви милувалися квітами, вас боляче вжалив джміль!";
 export const APIARY_RAID_EVENT_TITLE = "Apiary raid";
+export const APIARY_DISTURBED_FEATURE_SUMMARY = "стривожена; гуде різко й сердито; меду зараз не дасть, краще відійти й дати борті стихнути";
+export const APIARY_DISTURBED_INSPECTION_TEXT = "Гул у борті став різким і сердитим. Джмелі вже не кружляють ліниво над квітами, а б'ють повітря короткими злими колами. Меду зараз не дістанеш; краще відійти й дати місцині трохи стихнути.";
 export const HONEY_RESOURCE_KEY = "honey";
 export const BEESWAX_RESOURCE_KEY = "beeswax";
 
@@ -151,6 +153,11 @@ export function apiaryRaidDamageRange(data: ApiaryData): [number, number] {
 
 export function apiaryRaidHoneyAmount(data: ApiaryData) {
   return Math.max(1, Math.floor(numberFromData(data, "raid_honey_amount", 1)));
+}
+
+export function apiaryFeatureSummary(data: ApiaryData, disturbed = false) {
+  if (disturbed) return APIARY_DISTURBED_FEATURE_SUMMARY;
+  return typeof data.examine_summary === "string" ? data.examine_summary.trim() : "";
 }
 
 export function apiaryRaidOutcome(data: ApiaryData, currentHp: number, random: () => number = Math.random) {

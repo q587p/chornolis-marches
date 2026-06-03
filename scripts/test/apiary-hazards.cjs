@@ -8,6 +8,7 @@ const {
   apiaryCooldownWorldMinutes,
   apiaryEventAbsoluteMinute,
   apiaryEventDescriptionMatches,
+  apiaryFeatureSummary,
   apiaryPassiveChancePermille,
   apiaryPassiveCooldownMs,
   apiaryPassiveDamageRange,
@@ -83,6 +84,10 @@ assert.equal(apiaryRaidSuccessChancePermille(apiaryData), 700);
 assert.equal(apiaryRaidWaxChancePermille(apiaryData), 350);
 assert.deepEqual(apiaryRaidDamageRange(apiaryData), [2, 5]);
 assert.equal(apiaryRaidHoneyAmount(apiaryData), 1);
+assert.equal(apiaryFeatureSummary({ examine_summary: "гуде важким джмелиним життям" }), "гуде важким джмелиним життям");
+assert.match(apiaryFeatureSummary({ examine_summary: "гуде важким джмелиним життям" }, true), /стривожена/u);
+assert.match(apiaryFeatureSummary({ examine_summary: "гуде важким джмелиним життям" }, true), /меду зараз не дасть/u);
+assert.doesNotMatch(apiaryFeatureSummary({ examine_summary: "гуде важким джмелиним життям" }, true), /гуде важким/u);
 
 function scriptedRandom(values) {
   let index = 0;

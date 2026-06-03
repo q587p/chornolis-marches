@@ -42,6 +42,14 @@ import { isStrangeTotemFeature, strangeTotemDetailLine, strangeTotemInspectionTe
 import { effectiveLocationDanger, locationDangerExamineCue } from "./locationDanger";
 import { emptySmallFindExamineCue } from "./locationExamineCues";
 import {
+  APIARY_DISTURBED_INSPECTION_TEXT,
+  APIARY_RAID_EVENT_TITLE,
+  apiaryEventMarker,
+  apiaryFeatureSummary,
+  apiaryRaidCooldownMs,
+  isApiaryWorldCooldownActive,
+} from "./apiaryHazards";
+import {
   beginnerCacheContributeButtonLabel,
   beginnerCacheContributeAllButtonLabel,
   beginnerCacheInspectionText,
@@ -80,6 +88,9 @@ type VoiceQuoteMessage = {
 };
 type HtmlFollowupMessage = {
   text: string;
+};
+type FeatureDisplayState = {
+  apiaryRaidCoolingDown?: boolean;
 };
 
 export function isVisibleCorpse(c: any) {
@@ -228,6 +239,31 @@ function isOwlSignFeature(feature: any) {
 
 function isApiaryFeature(feature: any) {
   return featureData(feature).apiary === true;
+}
+
+async function featureDisplayStateMap(features: any[]) {
+  const apiaries = features.filter(isApiaryFeature);
+  const result = new Map<number, FeatureDisplayState>();
+  if (!apiaries.length) return result;
+
+  const time = await getCurrentWorldTimeSnapshot();
+  await Promise.all(apiaries.map(async (feature) => {
+    const previous = await prisma.worldEvent.findFirst({
+      where: {
+        title: APIARY_RAID_EVENT_TITLE,
+        description: { contains: apiaryEventMarker(feature.key) },
+      },
+      orderBy: { createdAt: "desc" },
+      select: { description: true },
+    });
+    const apiaryRaidCoolingDown = isApiaryWorldCooldownActive(
+      previous?.description,
+      time.absoluteMinute,
+      apiaryRaidCooldownMs(featureData(feature)),
+    );
+    result.set(feature.id, { apiaryRaidCoolingDown });
+  }));
+  return result;
 }
 
 export function treeShakeAmount(min = 5, max = 8, random = Math.random) {
@@ -398,12 +434,14 @@ function featureBriefLine(feature: any) {
   return `${featureIcon(feature)} <i>${escapeHtml(feature.name)}</i>`;
 }
 
-function featureDetailLine(feature: any, showTechnicalDetails = false) {
+function featureDetailLine(feature: any, showTechnicalDetails = false, displayState: FeatureDisplayState = {}) {
   const line = `${featureIcon(feature)} <i>${escapeHtml(feature.name)}</i>`;
   const details: string[] = [];
   const data = featureData(feature);
   const authoredSummary = typeof data.examine_summary === "string" ? data.examine_summary.trim() : "";
-  if (authoredSummary) details.push(authoredSummary);
+  const apiarySummary = isApiaryFeature(feature) ? apiaryFeatureSummary(data, displayState.apiaryRaidCoolingDown === true) : "";
+  if (apiarySummary) details.push(apiarySummary);
+  else if (authoredSummary) details.push(authoredSummary);
 
   if (isCampfireFeature(feature)) {
     if (isPreparedCampfire(feature)) {
@@ -525,11 +563,11 @@ function publicEcologyReport(stats: PublicEcologySignStats, showTechnicalDetails
   ].join("\n");
 }
 
-function featuresText(location: any, mode: "brief" | "details", showTechnicalDetails = false) {
+function featuresText(location: any, mode: "brief" | "details", showTechnicalDetails = false, displayStates: Map<number, FeatureDisplayState> = new Map()) {
   const features = (location.features ?? []).filter(isInteractiveFeature);
   if (!features.length) return "";
   const title = mode === "brief" ? "<b>Особливості:</b>" : "<b>Особливості місцини:</b>";
-  const lines = features.map((feature: any) => mode === "brief" ? featureBriefLine(feature) : featureDetailLine(feature, showTechnicalDetails));
+  const lines = features.map((feature: any) => mode === "brief" ? featureBriefLine(feature) : featureDetailLine(feature, showTechnicalDetails, displayStates.get(feature.id)));
   return `\n\n${title}\n${lines.join("\n")}`;
 }
 
@@ -973,6 +1011,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   const visibility = await visibilityRulesForLocation(location.id, "details");
   const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
   const lockedExits = await lockedExitDirections(location.id);
+  const featureDisplayStates = await featureDisplayStateMap(location.features);
   const targets = visibleTargets(location, viewerPlayerId, { showAnimalAge: true, showTechnicalDetails, showCorpses: visibility.showGroundObjects });
   const visibleLivingCreatureCount = location.creatures.filter(isVisibleLivingCreature).length;
   const activeActions = visibility.showNearbyDetails ? await activeActionsForTargets(targets) : new Map<string, any>();
@@ -1056,7 +1095,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     : `<i>${escapeHtml(visibilityDarknessText(visibility))}</i>`;
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${descriptionText}${featuresText(location, "details", showTechnicalDetails)}\n\n<i>Ви роздивляєтесь уважніше.</i>${dangerText}${technicalLocationText}\n\n${escapeHtml(detailedExitsText(location.exitsFrom, lockedExits))}${resourcesText}${charactersText}${tracksText}${lyingText}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${descriptionText}${featuresText(location, "details", showTechnicalDetails, featureDisplayStates)}\n\n<i>Ви роздивляєтесь уважніше.</i>${dangerText}${technicalLocationText}\n\n${escapeHtml(detailedExitsText(location.exitsFrom, lockedExits))}${resourcesText}${charactersText}${tracksText}${lyingText}`,
     keyboard,
   };
 }
@@ -1137,12 +1176,13 @@ export async function renderLocationFeatureInteraction(
 
   if (detailMode === "brief") {
     const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);
+    const displayState = (await featureDisplayStateMap([feature])).get(feature.id);
     const keyboard = new InlineKeyboard()
       .text("🔎 Роздивитися", `feature:${feature.id}:${returnMode}`)
       .row()
       .text("↩️ Назад", `location:${returnMode}`);
     return {
-      text: featureBriefInspectionText(feature, showTechnicalDetails),
+      text: featureDetailLine(feature, showTechnicalDetails, displayState),
       keyboard,
       quoteMessages: [] satisfies VoiceQuoteMessage[],
       followupMessages: [] satisfies HtmlFollowupMessage[],
@@ -1230,6 +1270,11 @@ export async function renderLocationFeatureInteraction(
   } else if (isStrangeTotemFeature(feature)) {
     const worldTime = await getCurrentWorldTimeSnapshot();
     text = await strangeTotemInspectionText(feature, worldTime.absoluteMinute);
+  } else if (isApiaryFeature(feature)) {
+    const state = (await featureDisplayStateMap([feature])).get(feature.id);
+    text = state?.apiaryRaidCoolingDown
+      ? `${feature.description ?? "Стара бортя гуде всередині темного дерева."}\n\n${APIARY_DISTURBED_INSPECTION_TEXT}`
+      : feature.description ?? "Стара бортя гуде всередині темного дерева.";
   }
 
   const keyboard = new InlineKeyboard();
