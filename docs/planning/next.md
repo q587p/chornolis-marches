@@ -26,12 +26,14 @@ The `LEARN-001` foundation is in testing after the minimal persistent learning/p
 
 `0.15.29` adds follow intent as a narrow attention marker: a player can choose one visible local being whose movement they are trying to keep in mind. This is not auto-follow, not a group system and not learning by itself; it is support infrastructure for the next observation/track-learning slice.
 
+`0.15.30` turns that marker into the first route-memory MVP: followed visible ordinary movement can leave a personal direction hint and `/track` can prioritize the fresh trail. Darkness can still hide direction, and hidden water-word passages remain non-repeatable without independent learning/triggering.
+
 Do not open another broad content loop before the learning/observation foundation is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
 ## Immediate Sequence
 
-1. **TRACK-LEARN-001:** add the first track-reading / animal movement learning moment, using follow intent as stronger attention context where it fits.
-2. **LEARN-002 follow-up:** extend bounded skill effects only after reviewing the `0.15.23` gathering tuning and the `0.15.26` herbalist observation route in live play.
+1. **TRACK-LEARN-002:** review live route-memory cadence and decide whether the next slice should teach explicit track reading, not movement.
+2. **LEARN-002 follow-up:** extend bounded skill effects only after reviewing the `0.15.23` gathering tuning, `0.15.26` herbalist observation route and `0.15.30` followed-movement memory in live play.
 3. **SOC-003:** only after follow intent feels useful, decide whether any explicit group/travel acceptance layer is worth promoting.
 
 Near-term content candidates after that foundation:

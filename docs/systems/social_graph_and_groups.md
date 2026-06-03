@@ -47,6 +47,18 @@ darkness, `Снага`, action queues, hidden exits/passages and route knowledge
 Hidden routes such as the cellar water-word passage must not be auto-repeated
 unless the follower has learned the route or independently triggers it.
 
+As of `0.15.30`, follow intent has its first route-memory use:
+
+- when the followed visible local being leaves through an ordinary visible exit,
+  the follower may receive a short personal hint about the direction;
+- if darkness blocks track/detail visibility, the hint becomes non-directional;
+- hidden routes such as the cellar water-word passage can only leave a
+  non-directional memory that something disappeared by word/sign;
+- `/track` can prioritize fresh tracks that match the current follow intent.
+
+This still does not move the follower. It is a memory/attention layer, not an
+automatic travel contract.
+
 ### 3. Following Is Weaker Than Group Membership
 
 Following should be possible even without an existing contact. It means:

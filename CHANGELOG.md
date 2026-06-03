@@ -7,6 +7,20 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.30 - Follow-aware track memory MVP - 12026-06-04
+
+### Added
+
+- Added the first follow-aware route-memory layer: when a followed visible local player or creature leaves through an ordinary visible exit, nearby followers can receive a short personal direction hint.
+- Added internal `Follow intent route memory` and `Follow intent hidden route memory` WorldEvent markers for debugging witnessed movement without exposing raw IDs or coordinates to ordinary players.
+- Added a tiny silent `tracking` / `observation` / `followed_movement` learning record for clear witnessed followed movement.
+- Added focused helper coverage for follow-intent target matching, clear/dark/hidden route-memory text, event descriptions and `/track` prioritization helpers.
+
+### Changed
+
+- `/track` without a target now prioritizes fresh tracks that match the current follow intent and labels them as a qualitative `чужий слід` line instead of raw technical tracking data.
+- Hidden water-word passages can create only a non-directional follow-memory note for present followers; they do not create ordinary direction memory, visible exits, route replay or automatic movement.
+
 ## 0.15.29 - Follow intent and starter guidance fixes - 12026-06-04
 
 ### Added
