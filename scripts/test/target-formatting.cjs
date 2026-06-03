@@ -159,7 +159,7 @@ const litTorchLine = groundItemLine({
   updatedAt: new Date(),
   resourceType: { key: "lit_torch", name: "запалений факел" },
 });
-assert.match(litTorchLine, /^запалений факел; дає світло; горітиме ще приблизно \d+ хв$/);
+assert.match(litTorchLine, /^запалений факел; дає світло; горітиме ще приблизно \d+ годин/);
 assert.deepEqual(groundItemPickupButtonRows([
   { id: 41, amount: 1, resourceType: { key: "twigs", name: "хмиз" } },
 ]), [[{ text: "🤲 Підібрати: хмиз", callbackData: "item:pickup:41" }]]);

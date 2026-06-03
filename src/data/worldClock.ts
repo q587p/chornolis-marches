@@ -10,6 +10,23 @@ export const LUNAR_CIRCLES_PER_YEAR = 13;
 export const DAYS_PER_WORLD_YEAR = DAYS_PER_LUNAR_CIRCLE * LUNAR_CIRCLES_PER_YEAR;
 export const MINUTES_PER_WORLD_YEAR = DAYS_PER_WORLD_YEAR * MINUTES_PER_WORLD_DAY;
 
+function worldHourWord(value: number) {
+  const normalized = Math.abs(Math.floor(value));
+  const lastTwo = normalized % 100;
+  if (lastTwo >= 11 && lastTwo <= 14) return "годин";
+  const last = normalized % 10;
+  if (last === 1) return "годину";
+  if (last >= 2 && last <= 4) return "години";
+  return "годин";
+}
+
+export function approximateWorldDurationFromRealMs(ms: number) {
+  const safeMs = Math.max(0, Math.floor(ms));
+  const hours = Math.ceil(safeMs / REAL_MS_PER_GAME_HOUR);
+  if (hours <= 0) return "менш ніж годину";
+  return `приблизно ${hours} ${worldHourWord(hours)}`;
+}
+
 export const WORLD_START_YEAR = 587;
 export const WORLD_START_LUNAR_CIRCLE = 5;
 export const WORLD_START_DAY_OF_CIRCLE = 17;
