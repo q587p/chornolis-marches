@@ -10,6 +10,7 @@
     "The northern riverbank still wraps northward to the southern riverbank, with a reciprocal southward exit.",
     "The bridge area has expanded riverbank cells and a z=-1 under-bridge location connected only to nearby riverbank locations, not to the bridge deck.",
     "The starter camp watchtower is an authored z=1 upper room connected to the camp by UP/DOWN exits.",
+    "The starter camp cellar is an authored z=-1 waking-world storage room connected to the camp by DOWN/UP exits.",
     "The first Willow Floodplain pocket is an authored z=0 swamp/river loop reachable from existing riverbank anchors; settlement gates remain closed."
   ]
 }

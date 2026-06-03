@@ -21,6 +21,7 @@ node scripts/world/render-map-ascii.mjs --write
 - `S` — start / `/respawn`, border marker and unfading campfire.
 - `=` — old bridge.
 - `G` — closed settlement gate / future settlement placeholder.
+- `c` — starter camp cellar at `z = -1`.
 - `u` — under-bridge location at `z = -1`; it is not connected to the bridge deck.
 - `D` — dream tutorial location in `Дрімотна Межа` at `z = -13`.
 
@@ -57,9 +58,9 @@ y
 ## Layer z = -1
 
 ```text
-      18
+      17 18
 y
-  5    u
+  5    c  u
 ```
 
 ## Layer z = -13
@@ -94,6 +95,8 @@ y
 - `riverbank_18_04` — NORTH → `under_bridge_18_05`
 - `riverbank_18_06` — SOUTH → `under_bridge_18_05`
 - `start_border_camp` — UP → `start_border_watchtower`
+- `start_border_camp` — DOWN → `start_border_cellar`
+- `start_border_cellar` — UP → `start_border_camp`
 - `start_border_watchtower` — DOWN → `start_border_camp`
 - `under_bridge_18_05` — NORTH → `riverbank_18_06`
 - `under_bridge_18_05` — SOUTH → `riverbank_18_04`

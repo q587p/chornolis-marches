@@ -48,6 +48,7 @@ const treeLocationKeys = new Set(
 function symbolForLocation(location) {
   if (location.key === world.meta?.startLocationKey) return "S";
   if (location.key === "closed_east_gate") return "G";
+  if (location.key === "start_border_cellar") return "c";
   if (location.key === "under_bridge_18_05") return "u";
   if (location.regionKey === "dream_tutorial") return "D";
   if (treeLocationKeys.has(location.key)) return "T";
@@ -152,6 +153,7 @@ node scripts/world/render-map-ascii.mjs --write
 - \`S\` — start / \`/respawn\`, border marker and unfading campfire.
 - \`=\` — old bridge.
 - \`G\` — closed settlement gate / future settlement placeholder.
+- \`c\` — starter camp cellar at \`z = -1\`.
 - \`u\` — under-bridge location at \`z = -1\`; it is not connected to the bridge deck.
 - \`D\` — dream tutorial location in \`Дрімотна Межа\` at \`z = -13\`.
 

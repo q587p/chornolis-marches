@@ -12,12 +12,14 @@ const {
   apiaryPassiveChancePermille,
   apiaryPassiveCooldownMs,
   apiaryPassiveDamageRange,
+  apiaryPassiveStingLine,
   apiaryRaidCooldownMs,
   apiaryRaidDamageRange,
   apiaryRaidHoneyAmount,
   apiaryRaidOutcome,
   apiaryRaidSuccessChancePermille,
   apiaryRaidWaxChancePermille,
+  APIARY_PASSIVE_STING_LINES,
   isApiaryCooldownActive,
   isApiaryWorldCooldownActive,
   isApiarySleepingForPassiveHazard,
@@ -78,6 +80,11 @@ assert.equal(isApiaryWorldCooldownActive("apiaryKey=x; damage=1", 1001, 120_000)
 assert.deepEqual(passiveApiaryDamageResult(2, 5), { appliedDamage: 1, nextHp: 1 });
 assert.deepEqual(passiveApiaryDamageResult(20, 2), { appliedDamage: 2, nextHp: 18 });
 assert.deepEqual(passiveApiaryDamageResult(1, 1), { appliedDamage: 0, nextHp: 1 });
+assert.equal(APIARY_PASSIVE_STING_LINES.length, 13);
+const retiredPassiveStingLine = "Поки ви милувалися квітами, " + "вас боляче вжалив джміль!";
+assert.equal(APIARY_PASSIVE_STING_LINES.includes(retiredPassiveStingLine), false);
+assert.equal(apiaryPassiveStingLine(() => 0), APIARY_PASSIVE_STING_LINES[0]);
+assert.equal(apiaryPassiveStingLine(() => 0.999), APIARY_PASSIVE_STING_LINES[12]);
 
 assert.equal(apiaryRaidCooldownMs(apiaryData), 720_000);
 assert.equal(apiaryRaidSuccessChancePermille(apiaryData), 700);

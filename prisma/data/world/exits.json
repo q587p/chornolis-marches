@@ -2960,6 +2960,22 @@
     "isHidden": false
   },
   {
+    "fromKey": "start_border_camp",
+    "toKey": "start_border_cellar",
+    "direction": "DOWN",
+    "label": "вниз у погріб",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "start_border_cellar",
+    "toKey": "start_border_camp",
+    "direction": "UP",
+    "label": "вгору до табору",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
     "fromKey": "start_border_watchtower",
     "toKey": "start_border_camp",
     "direction": "DOWN",

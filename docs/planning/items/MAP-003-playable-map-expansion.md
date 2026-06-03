@@ -59,6 +59,14 @@ This is a content pressure task, not only a future worldbuilding wish. The first
 - Added an inspectable `Камінь малого сліду` feature as a future animal-restoration charm hook for `ECO-005`.
 - Removed the matching blocked-cell wall entries so the new pocket renders as playable space.
 
+## 0.15.25 Starter Cellar Slice
+
+- Added `start_border_cellar` / `Погріб прибулих`, a safe waking-world `z = -1` cellar under the starter camp.
+- Added reciprocal `DOWN` / `UP` exits between `start_border_camp` and the cellar without changing the starter location or tutorial dream.
+- Added a surface cellar hatch and three inspectable cellar landmarks for map-making, travel memory and atmospheric `Поклик духа` / future-follow hints without implementing follow intent.
+- Kept the slice content-only: no loot cache, combat, traps, economy, crafting, dream rooms or named spirit profiles.
+- Refreshed `docs/world/world_map.md` and world seed validation so the authored lower room stays explicit and test-covered.
+
 ## Implementation Notes
 
 - Active hand-edited map data lives under `prisma/data/world/`; update split files there first.
