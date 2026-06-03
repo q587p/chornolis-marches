@@ -119,22 +119,22 @@ function fakeDb(initial) {
   const enabledText = renderNotificationSettings({ daypartNoticesEnabled: true, autoActionMessagesEnabled: false });
   assert.ok(enabledText.includes("Повідомлення про зміну часу дня: увімкнено"));
   assert.ok(enabledText.includes("доведеться частіше звіряти /time, /weather"));
-  assert.ok(enabledText.includes("Авто-повідомлення: вимкнено"));
+  assert.ok(enabledText.includes("Повідомлення Поклику: вимкнено"));
 
   const disabledText = renderNotificationSettings({ daypartNoticesEnabled: false, autoActionMessagesEnabled: true });
   assert.ok(disabledText.includes("Повідомлення про зміну часу дня: вимкнено"));
   assert.ok(disabledText.includes("Світ усе одно світлішає"));
-  assert.ok(disabledText.includes("Авто-повідомлення: увімкнено"));
-  assert.match(AUTO_ACTION_MESSAGES_ENABLED_TEXT, /Авто-повідомлення увімкнено/);
-  assert.match(AUTO_ACTION_MESSAGES_DISABLED_TEXT, /Авто-повідомлення вимкнено/);
+  assert.ok(disabledText.includes("Повідомлення Поклику: увімкнено"));
+  assert.match(AUTO_ACTION_MESSAGES_ENABLED_TEXT, /Повідомлення Поклику увімкнено/);
+  assert.match(AUTO_ACTION_MESSAGES_DISABLED_TEXT, /Повідомлення Поклику вимкнено/);
 
   const keyboardWithAutoOff = buildSettingsKeyboard({ daypartNoticesEnabled: true, autoActionMessagesEnabled: false });
   const keyboardWithAutoOffText = keyboardWithAutoOff.inline_keyboard.flat().map((button) => button.text);
-  assert.ok(keyboardWithAutoOffText.includes("Увімкнути авто-повідомлення"));
+  assert.ok(keyboardWithAutoOffText.includes("Увімкнути повідомлення Поклику"));
 
   const keyboardWithAutoOn = buildSettingsKeyboard({ daypartNoticesEnabled: true, autoActionMessagesEnabled: true });
   const keyboardWithAutoOnText = keyboardWithAutoOn.inline_keyboard.flat().map((button) => button.text);
-  assert.ok(keyboardWithAutoOnText.includes("Вимкнути авто-повідомлення"));
+  assert.ok(keyboardWithAutoOnText.includes("Вимкнути повідомлення Поклику"));
 
   console.log("Player notification settings helpers OK");
 })();

@@ -70,9 +70,9 @@ export function buildActionQueueKeyboard(actionCount: number | boolean = true) {
 
 export function buildAutoConfirmKeyboard() {
   return new InlineKeyboard()
-    .text("Так, увімкнути авто", "auto:confirm")
+    .text("🌫️ Покликати духа", "auto:confirm")
     .row()
-    .text("Ні, лишити вручну", "auto:cancel");
+    .text("Власний крок", "auto:cancel");
 }
 
 export function buildFatigueRestKeyboard() {

@@ -4,7 +4,7 @@ const path = require("node:path");
 require("ts-node/register");
 
 const { parseHeraldAdminIds, isHeraldAdminId } = require("../../src/herald/admin");
-const { formatHeraldPublicationMessage, formatHeraldPublicationRepostMessage } = require("../../src/herald/format");
+const { formatHeraldNewsMessage, formatHeraldPublicationMessage, formatHeraldPublicationRepostMessage } = require("../../src/herald/format");
 const { linkHeraldGameCommandMentions } = require("../../src/herald/gameLinks");
 const { formatWorldDigestDateLine } = require("../../src/herald/digest");
 const { formatHeraldCommandList, formatHeraldWhoami } = require("../../src/herald/help");
@@ -265,6 +265,34 @@ assert.match(linkedLabelCommand, /<i>Озирнутися<\/i>/);
 assert.match(linkedLabelCommand, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_look">\/look<\/a>/);
 assert.match(linkedLabelCommand, /<i>Пошукати мед<\/i>/);
 assert.match(linkedLabelCommand, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_search_honey">\/search_honey<\/a>/);
+
+const currentNewsFormatted = formatHeraldNewsMessage({
+  title: "0.15.23 -- attentive title -- 12026-06-03",
+  sourceDate: "12026-06-03",
+  body: "- `Look` (/look)",
+  raw: "## 0.15.23 -- attentive title -- 12026-06-03\n\n- `Look` (/look)",
+  contentHash: "hash",
+});
+assert.match(currentNewsFormatted, /<b>0\.15\.23 -- attentive title -- 12026-06-03<\/b>/);
+assert.match(currentNewsFormatted, /<i>Look<\/i>/);
+assert.match(currentNewsFormatted, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_look">\/look<\/a>/);
+
+const currentPublicationFormatted = formatHeraldPublicationMessage({
+  sourceType: "NEWS_MD",
+  title: "0.15.23 -- attentive title",
+  sourceDate: "12026-06-03",
+  body: "- `Look` (/look)",
+  renderedText: [
+    "📜 Канцелярія Межового Знаку",
+    "",
+    "0.15.23 -- attentive title",
+    "",
+    "- `Look` (/look)",
+  ].join("\n"),
+});
+assert.match(currentPublicationFormatted, /<b>0\.15\.23 -- attentive title — 12026-06-03<\/b>/);
+assert.match(currentPublicationFormatted, /<i>Look<\/i>/);
+assert.match(currentPublicationFormatted, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_look">\/look<\/a>/);
 
 const archiveFormatted = formatHeraldPublicationMessage({
   sourceType: "NEWS_MD_ARCHIVE",

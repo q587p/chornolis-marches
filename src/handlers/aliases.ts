@@ -358,7 +358,7 @@ async function submitAuto(bot: Bot, ctx: any, mode: "start" | "stop") {
   }
 
   const stopped = await disablePlayerAuto(ctx.from.id);
-  await ctx.reply(stopped ? "Авто-режим зупинено." : "Авто-режим не був увімкнений.", {
+  await ctx.reply(stopped ? "Поклик духа стих." : "Поклик духа не озивався.", {
     reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
   });
 }

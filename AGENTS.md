@@ -67,7 +67,7 @@
 - `/adminMenu` should keep the current scribe/admin quick-action menu aligned with `/adminHelp` and `docs/systems/admin_commands.md`.
 - `/tick` should report animals/NPC/actions summary.
 - Location buttons/features such as `🪧 Межовий знак` should be visible immediately in the Location view where appropriate.
-- `Авто` belongs in character/game flow rather than as a detached menu; auto-state should persist across updates but reset on `/reset`.
+- Player-facing auto mode is **Поклик духа** (`/spirit`), not `Провід`; keep `auto` only for internal notes, DB/log identifiers and legacy `/auto` command compatibility. It belongs in character/game flow rather than as a detached menu; auto-state should persist across updates but reset on `/reset`.
 
 ## Map and world data
 

@@ -18,8 +18,33 @@ import { standPlayer } from "../services/posture";
 import { buildAutoConfirmKeyboard } from "../ui/keyboards";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { slashlessCommandPattern } from "../utils/slashlessCommands";
+import { SPIRIT_CALL_LABEL, markSpiritCallPayload } from "../services/spiritCall";
 
 const AUTO_STOP_TEXT_COMMAND = slashlessCommandPattern(["autoStop", "autostop", "auto_stop"]);
+const SPIRIT_CALL_START_TEXT_COMMAND = slashlessCommandPattern([
+  "spirit",
+  "dukh",
+  "poklyk",
+  "поклик духа",
+  "покликати духа",
+  "покликати дух",
+  "дух веде",
+  "дух хай веде",
+  "хай дух веде",
+]);
+const SPIRIT_CALL_STOP_TEXT_COMMAND = slashlessCommandPattern([
+  "spirit stop",
+  "spirit off",
+  "dukh stop",
+  "dukh off",
+  "подякувати духу",
+  "відпустити духа",
+  "відпустити дух",
+  "зупинити духа",
+  "зупинити дух",
+  "дух стоп",
+  "стоп дух",
+]);
 import { isTutorialLocation } from "../services/tutorial";
 import { notifyPlayerObservers, playerRestStartObserverText, playerStandObserverText } from "../services/playerVisibility";
 import { canSendPlayerActionMessageToPlayerId } from "../services/sessionPresence";
@@ -27,7 +52,7 @@ import { canSendPlayerActionMessageToPlayerId } from "../services/sessionPresenc
 const DEBUG = process.env.WORLD_DEBUG === "true" || process.env.WORLD_TICK_DEBUG === "true";
 const AUTO_SAY_CHANCE = Number(process.env.PLAYER_AUTO_SAY_CHANCE || 15);
 const AUTO_CONSENT_TITLE = "Player auto consent";
-export const AUTO_DREAM_BLOCK_MESSAGE = "Сон тихо каже:\n<blockquote>Уві сні краще йти власним кроком. Авто лишається за порогом.</blockquote>";
+export const AUTO_DREAM_BLOCK_MESSAGE = "Сон тихо каже:\n<blockquote>Уві сні краще йти власним кроком. Поклик духа лишається за порогом.</blockquote>";
 
 export type AutoActionKey = "say" | "gather" | "look" | "move";
 type AutoEnableResult = { started: boolean; blocked: boolean };
@@ -175,7 +200,7 @@ async function maybeStartAutoRest(bot: Bot, telegramId: number, player: any, loc
     await bot.api.sendMessage(
       telegramId,
       [
-        `🤖 Авто: ${reason}, тому персонаж сам починає відпочинок.`,
+        `${SPIRIT_CALL_LABEL}: ${reason}, тому персонаж присідає відпочити.`,
         "",
         "Поточну дію та чергу очищено. Нові дії під час відпочинку ставатимуть у чергу.",
         await renderPlayerActionQueue(player.id),
@@ -220,10 +245,10 @@ async function markPlayerAutoConsent(playerId: number) {
 
 function autoConfirmText() {
   return [
-    "🤖 Авто-режим буде час від часу сам обирати прості дії для персонажа: роздивлятися місцину, збирати ресурси, рухатися, говорити або відпочивати, коли персонаж дуже виснажений.",
-    `Автодії плануються ${playerAutoTimingText()}; вручну зазвичай можна діяти швидше.`,
+    `${SPIRIT_CALL_LABEL} — це тихе звернення до старого шепоту Порубіжжя. Дух час від часу обиратиме прості дії: озирнутися, зібрати припаси, рушити далі, сказати коротку фразу або присісти, коли тіло вже просить перепочинку.`,
+    `Поклик озиватиметься ${playerAutoTimingText()}; власний крок зазвичай швидший.`,
     "",
-    "Ви певні, що хочете увімкнути авто?",
+    "Ви певні, що хочете покликати духа?",
   ].join("\n");
 }
 
@@ -232,7 +257,7 @@ export function autoCommandModeFromText(raw: unknown): "start" | "stop" {
     .trim()
     .toLocaleLowerCase("uk-UA")
     .replace(/[_-]+/g, " ");
-  if (["stop", "off", "стоп", "зупинити", "вимкнути", "ні"].includes(arg)) return "stop";
+  if (["stop", "off", "стоп", "зупинити", "вимкнути", "подякувати", "відпустити", "ні"].includes(arg)) return "stop";
   return "start";
 }
 
@@ -248,9 +273,9 @@ async function notifyAutoChoice(bot: Bot, telegramId: number, playerId: number, 
   await logEvent("PLAYER_ACTION", mode === "queued" ? "Auto queued player action" : "Auto selected player action", description, locationId).catch(() => undefined);
   if (!(await canSendPlayerActionMessageToPlayerId(playerId, "auto:choice"))) return;
   const queueText = mode === "queued"
-    ? `\n\nВи вже втомлені або зайняті, тож дія стала в чергу.\n\n${await renderPlayerActionQueue(playerId)}`
+    ? `\n\nВи вже втомлені або зайняті, тож підказаний крок став у чергу.\n\n${await renderPlayerActionQueue(playerId)}`
     : "";
-  await bot.api.sendMessage(telegramId, `🤖 Авто: обрано дію — ${description}.${queueText}`, {
+  await bot.api.sendMessage(telegramId, `${SPIRIT_CALL_LABEL}: ${description}.${queueText}`, {
     reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, true),
   });
 }
@@ -264,7 +289,7 @@ async function maybeAutoSay(bot: Bot, telegramId: number, player: any, locationI
   const result = await performOrQueuePlayerAction(bot, {
     playerId: player.id,
     type: "SAY",
-    payload: { text: line },
+    payload: markSpiritCallPayload({ text: line }),
     durationMs: actionDurationMs("SAY", player.stamina),
     chatId: telegramId,
     note: "auto:say",
@@ -287,7 +312,7 @@ async function ensureAutoStandingBeforeAction(bot: Bot, telegramId: number, play
       observerText: playerStandObserverText,
     });
     if (await canSendPlayerActionMessageToPlayerId(player.id, "auto:stand")) {
-      await bot.api.sendMessage(telegramId, "🤖 Авто: персонаж встає (/stand), перш ніж діяти далі.", {
+      await bot.api.sendMessage(telegramId, `${SPIRIT_CALL_LABEL}: персонаж встає (/stand), перш ніж діяти далі.`, {
         reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, true),
       });
     }
@@ -311,7 +336,7 @@ async function autoGather(bot: Bot, telegramId: number, player: any, locationId:
   const result = await performOrQueuePlayerAction(bot, {
     playerId: activePlayer.id,
     type: "GATHER_SPECIFIC",
-    payload: { resourceKey: key },
+    payload: markSpiritCallPayload({ resourceKey: key }),
     durationMs: gatherDurationMs(key, activePlayer.stamina),
     chatId: telegramId,
     note: `auto:gather:${key}`,
@@ -325,7 +350,7 @@ async function autoLook(bot: Bot, telegramId: number, player: any, locationId: n
   const result = await performOrQueuePlayerAction(bot, {
     playerId: player.id,
     type: "LOOK",
-    payload: {},
+    payload: markSpiritCallPayload({}),
     durationMs: actionDurationMs("LOOK", player.stamina),
     chatId: telegramId,
     note: "auto:look",
@@ -348,7 +373,7 @@ async function autoMove(bot: Bot, telegramId: number, player: any, locationId: n
   const result = await performOrQueuePlayerAction(bot, {
     playerId: activePlayer.id,
     type: "MOVE",
-    payload: { direction: exit.direction },
+    payload: markSpiritCallPayload({ direction: exit.direction }),
     durationMs: movementDurationMs(exit.travelCost, activePlayer.stamina),
     chatId: telegramId,
     note: `auto:move:${exit.direction}`,
@@ -368,7 +393,7 @@ async function runAutoStep(bot: Bot, telegramId: number) {
     const player = await getPlayerByTelegramId(telegramId);
     if (!player) {
       await disablePlayerAuto(telegramId);
-      await bot.api.sendMessage(telegramId, "Авто зупинено: персонажа не знайдено. Напиши /start.", { reply_markup: buildMainReplyKeyboard(false) });
+      await bot.api.sendMessage(telegramId, "Поклик духа стих: персонажа не знайдено. Напиши /start.", { reply_markup: buildMainReplyKeyboard(false) });
       return;
     }
 
@@ -383,7 +408,7 @@ async function runAutoStep(bot: Bot, telegramId: number) {
     }
     if (player.sleepState === "ORDINARY_SLEEP") {
       await disablePlayerAuto(telegramId);
-      await bot.api.sendMessage(telegramId, "🤖 Авто зупинено: ви спите. Спершу прокиньтеся, якщо хочете знову діяти автоматично.", {
+      await bot.api.sendMessage(telegramId, `${SPIRIT_CALL_LABEL} стихає: ви спите. Спершу прокиньтеся, якщо хочете знову віддати крок шепоту Порубіжжя.`, {
         reply_markup: await buildMainReplyKeyboardForTelegramId(telegramId, false),
       });
       return;
@@ -468,7 +493,7 @@ export async function requestOrEnablePlayerAuto(bot: Bot, ctx: any) {
 
   if (player.sleepState === "ORDINARY_SLEEP") {
     await disablePlayerAuto(ctx.from.id);
-    await ctx.reply("Сон м’яко відсуває автоматичні звички. Спершу прокиньтеся, а тоді вже можна знову вмикати авто.", {
+    await ctx.reply("Сон м’яко відсуває чужий шепіт. Спершу прокиньтеся, а тоді вже можна знову покликати духа.", {
       reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
     });
     return;
@@ -491,8 +516,8 @@ export async function requestOrEnablePlayerAuto(bot: Bot, ctx: any) {
     return;
   }
 
-  const stopHint = result.started ? "" : "\nЩоб вимкнути, напишіть /auto_stop або «вимкнути авто».";
-  await ctx.reply(`${result.started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено."}\nАвтодії плануються ${playerAutoTimingText()}; вручну зазвичай можна діяти швидше.${stopHint}`, {
+  const stopHint = result.started ? "" : "\nЩоб відпустити духа, напишіть /spirit_stop, /auto_stop або «подякувати духу».";
+  await ctx.reply(`${result.started ? `${SPIRIT_CALL_LABEL} почув вас.` : `${SPIRIT_CALL_LABEL} уже веде.`}\nПоклик озиватиметься ${playerAutoTimingText()}; власний крок зазвичай швидший.${stopHint}`, {
     reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, true),
   });
 }
@@ -509,7 +534,7 @@ export async function disablePlayerAuto(telegramId: number) {
 export async function replyStopPlayerAuto(ctx: any) {
   if (!ctx.from) return;
   const stopped = await disablePlayerAuto(ctx.from.id);
-  await ctx.reply(stopped ? "⏹ Авто-режим зупинено." : "⏹ Авто-режим не був увімкнений.", {
+  await ctx.reply(stopped ? `${SPIRIT_CALL_LABEL} стихає. Далі — власний крок.` : `${SPIRIT_CALL_LABEL} і так мовчав. Ніхто не тримає ваш крок.`, {
     reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
   });
 }
@@ -578,19 +603,23 @@ export function registerAutoHandlers(bot: Bot) {
 
   restorePersistentAutoPlayers(bot).catch((error) => console.warn("Persistent auto restore failed:", error));
 
-  bot.command("auto", async (ctx) => {
+  async function startAutoCommand(ctx: any) {
     if (!ctx.from) return;
     if (autoCommandMode(ctx) === "stop") {
       await replyStopPlayerAuto(ctx);
       return;
     }
     await requestOrEnablePlayerAuto(bot, ctx);
-  });
+  }
 
-  bot.hears("🤖 Авто", async (ctx) => {
+  bot.command("auto", startAutoCommand);
+  bot.command(["spirit", "dukh", "poklyk"], startAutoCommand);
+
+  bot.hears(["🤖 Авто", SPIRIT_CALL_LABEL], async (ctx) => {
     if (!ctx.from) return;
     await requestOrEnablePlayerAuto(bot, ctx);
   });
+  bot.hears(SPIRIT_CALL_START_TEXT_COMMAND, startAutoCommand);
 
   bot.callbackQuery("auto:confirm", async (ctx) => {
     const player = await getPlayerByTelegramId(ctx.from.id);
@@ -600,7 +629,7 @@ export function registerAutoHandlers(bot: Bot) {
     }
 
     if (await isPlayerAutoBlockedByDream(player)) {
-      await safeAnswerCallbackQuery(ctx, "Уві сні авто не вмикається.");
+      await safeAnswerCallbackQuery(ctx, "Уві сні поклик не вмикається.");
       await disablePlayerAuto(ctx.from.id);
       await replyAutoBlockedByDream(ctx);
       return;
@@ -609,20 +638,20 @@ export function registerAutoHandlers(bot: Bot) {
     await markPlayerAutoConsent(player.id);
     const result = await enablePlayerAuto(bot, ctx.from.id);
     if (result.blocked) {
-      await safeAnswerCallbackQuery(ctx, "Уві сні авто не вмикається.");
+      await safeAnswerCallbackQuery(ctx, "Уві сні поклик не вмикається.");
       await replyAutoBlockedByDream(ctx);
       return;
     }
-    await safeAnswerCallbackQuery(ctx, "Авто увімкнено.");
-    const stopHint = result.started ? "" : "\nЩоб вимкнути, напишіть /auto_stop або «вимкнути авто».";
-    await ctx.reply(`${result.started ? "🤖 Авто-режим увімкнено." : "🤖 Авто-режим уже увімкнено."}\nАвтодії плануються ${playerAutoTimingText()}; вручну зазвичай можна діяти швидше.${stopHint}`, {
+    await safeAnswerCallbackQuery(ctx, "Поклик почуто.");
+    const stopHint = result.started ? "" : "\nЩоб відпустити духа, напишіть /spirit_stop, /auto_stop або «подякувати духу».";
+    await ctx.reply(`${result.started ? `${SPIRIT_CALL_LABEL} почув вас.` : `${SPIRIT_CALL_LABEL} уже веде.`}\nПоклик озиватиметься ${playerAutoTimingText()}; власний крок зазвичай швидший.${stopHint}`, {
       reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, true),
     });
   });
 
   bot.callbackQuery("auto:cancel", async (ctx) => {
-    await safeAnswerCallbackQuery(ctx, "Авто не увімкнено.");
-    await ctx.reply("Авто-режим не увімкнено. Ви лишаєте керування вручну.", {
+    await safeAnswerCallbackQuery(ctx, "Поклик не прийнято.");
+    await ctx.reply("Поклик духа не прийнято. Далі ви йдете власним кроком.", {
       reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
     });
   });
@@ -631,8 +660,9 @@ export function registerAutoHandlers(bot: Bot) {
     await replyStopPlayerAuto(ctx);
   }
 
-  bot.command(["autoStop", "autostop", "auto_stop"], stopAutoCommand);
+  bot.command(["autoStop", "autostop", "auto_stop", "spirit_stop", "dukh_stop"], stopAutoCommand);
   bot.hears(AUTO_STOP_TEXT_COMMAND, stopAutoCommand);
+  bot.hears(SPIRIT_CALL_STOP_TEXT_COMMAND, stopAutoCommand);
 
   bot.hears("⏹ Стоп", async (ctx) => {
     await replyStopPlayerAuto(ctx);

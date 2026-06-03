@@ -90,7 +90,7 @@ assert.equal(isAutoBlockedInLocation({ key: "shallow_cave", z: -1, region: { key
 assert.equal(isAutoBlockedInLocation({ key: "deep_dream", z: -10, region: { key: "dreams" } }), true);
 assert.equal(isAutoBlockedInLocation({ key: "start_border_camp", z: 0, region: { key: "borderland" } }), false);
 assert.match(AUTO_DREAM_BLOCK_MESSAGE, /Сон/);
-assert.match(AUTO_DREAM_BLOCK_MESSAGE, /Авто/);
+assert.match(AUTO_DREAM_BLOCK_MESSAGE, /Поклик духа/);
 assert.match(AUTO_DREAM_BLOCK_MESSAGE, /<blockquote>/);
 assert.equal(AUTO_DREAM_BLOCK_MESSAGE.includes("«"), false);
 
@@ -211,7 +211,7 @@ assert.deepEqual(characterButtons, [
   ["✨ Сигнали"],
   ["Сісти", "🧘 Відпочити"],
   ["Лягти", "🌙 Сон"],
-  ["🤖 Увімкнути авто"],
+  ["🌫️ Поклик духа"],
 ]);
 assert.equal(characterButtons.flat().includes("🔧 Технічні деталі"), false);
 
@@ -225,7 +225,7 @@ assert.deepEqual(sittingCharacterButtons, [
   ["✨ Сигнали"],
   ["Встати", "🧘 Відпочити"],
   ["Лягти", "🌙 Сон"],
-  ["🤖 Увімкнути авто"],
+  ["🌫️ Поклик духа"],
 ]);
 
 const lyingCharacterButtons = buildCharacterAutoKeyboard(false, {
@@ -238,7 +238,7 @@ assert.deepEqual(lyingCharacterButtons, [
   ["✨ Сигнали"],
   ["Встати", "🧘 Відпочити"],
   ["Сісти", "🌙 Сон"],
-  ["🤖 Увімкнути авто"],
+  ["🌫️ Поклик духа"],
 ]);
 
 const sleepingCharacterButtons = buildCharacterAutoKeyboard(false, {
