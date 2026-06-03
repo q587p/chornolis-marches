@@ -19,6 +19,7 @@ node scripts/world/render-map-ascii.mjs --write
 - `#` — local impassable thicket / obstacle.
 - `█` — impassable outer boundary.
 - `S` — start / `/respawn`, border marker and unfading campfire.
+- `M` — starter camp infrastructure in `starter_camp`, such as the watchtower.
 - `=` — old bridge.
 - `G` — closed settlement gate / future settlement placeholder.
 - `c` — starter camp cellar at `z = -1`.
@@ -32,7 +33,7 @@ node scripts/world/render-map-ascii.mjs --write
 y
   7    T  T
   6
-  5                         ,
+  5                         M
 ```
 
 ## Layer z = 0

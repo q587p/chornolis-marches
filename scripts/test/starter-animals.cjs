@@ -96,7 +96,7 @@ for (const [locationKey, expected] of Object.entries(expectedFoodOverrides)) {
   }
 }
 
-for (const locationKey of ["start_border_camp", "start_border_watchtower", "old_bridge_west_span", "old_bridge_east_span", "closed_east_gate"]) {
+for (const locationKey of ["start_border_camp", "start_border_watchtower", "start_border_cellar", "old_bridge_west_span", "old_bridge_east_span", "closed_east_gate"]) {
   const override = resourceRules.locationOverrides?.[locationKey];
   assert.ok(override, `Special zero-resource override should remain for ${locationKey}`);
   assert.equal(override.grass, 0, `${locationKey} should remain grass-free`);

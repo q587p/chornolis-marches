@@ -52,6 +52,7 @@ function symbolForLocation(location) {
   if (location.key === "under_bridge_18_05") return "u";
   if (location.regionKey === "dream_tutorial") return "D";
   if (treeLocationKeys.has(location.key)) return "T";
+  if (location.regionKey === "starter_camp") return "M";
   if (location.regionKey === "closed_settlement_gate") return "G";
   if (location.regionKey === "old_bridge") return "=";
   if (location.regionKey === "riverbank") return ",";
@@ -151,6 +152,7 @@ node scripts/world/render-map-ascii.mjs --write
 - \`#\` — local impassable thicket / obstacle.
 - \`█\` — impassable outer boundary.
 - \`S\` — start / \`/respawn\`, border marker and unfading campfire.
+- \`M\` — starter camp infrastructure in \`starter_camp\`, such as the watchtower.
 - \`=\` — old bridge.
 - \`G\` — closed settlement gate / future settlement placeholder.
 - \`c\` — starter camp cellar at \`z = -1\`.

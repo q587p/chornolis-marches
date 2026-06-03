@@ -2196,30 +2196,6 @@
     "maxAmount": 100
   },
   {
-    "locationKey": "start_border_camp",
-    "resourceKey": "berries",
-    "amount": 3,
-    "maxAmount": 100
-  },
-  {
-    "locationKey": "start_border_camp",
-    "resourceKey": "herbs",
-    "amount": 13,
-    "maxAmount": 100
-  },
-  {
-    "locationKey": "start_border_camp",
-    "resourceKey": "mushrooms",
-    "amount": 5,
-    "maxAmount": 100
-  },
-  {
-    "locationKey": "start_border_watchtower",
-    "resourceKey": "shah",
-    "amount": 2,
-    "maxAmount": 2
-  },
-  {
     "locationKey": "old_bridge_west_span",
     "resourceKey": "shah",
     "amount": 1,

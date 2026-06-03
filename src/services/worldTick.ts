@@ -24,6 +24,7 @@ import { CAMP_SPIRIT_CAT_START_LOCATION_KEY, campSpiritCatMouseBehaviorPlan, cam
 import { isStarterCampOwlSafeLocationKey } from "./owlSigns";
 import { advancePassivePlayerHunger } from "./playerHunger";
 import { ageStrangeTotemsIfNeeded, maybeSpawnDailyStrangeTotem } from "./strangeTotems";
+import { isStarterCampRegionKey } from "./starterRegion";
 
 const DEFAULT_TICK_INTERVAL_MS = TICK_MS;
 const TICK_TEXT_COMMAND = slashlessCommandPattern(["tick"]);
@@ -1462,11 +1463,12 @@ async function regenerateResourcesIfNeeded() {
     where: { amount: { gt: -1 } },
     include: {
       resourceType: true,
-      location: { include: { features: { where: { isActive: true } } } },
+      location: { include: { features: { where: { isActive: true } }, region: { select: { key: true } } } },
     },
   });
   let regenerated = 0;
   for (const node of nodes) {
+    if (isStarterCampRegionKey(node.location.region?.key)) continue;
     if (node.amount >= node.maxAmount) continue;
     const isExhausted = node.location.features.some((feature) => String(feature.key).startsWith(DEPLETED_VEGETATION_FEATURE_PREFIX));
     const interval = isExhausted

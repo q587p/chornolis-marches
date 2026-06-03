@@ -61,6 +61,7 @@ In `prisma/data/chornolis_world_seed.json`, edits may include:
 - The current dream-light heuristic treats very low `z <= -10` as a reserved dream layer. Future non-dream underground/deep places should avoid that reserved layer or carry an explicit non-dream marker before they rely on ordinary darkness/weather visibility.
 - `start_border_watchtower` intentionally uses `z = 1` as the starter-camp watchtower above `start_border_camp`; it is connected by `UP` / `DOWN` exits and is part of the first waking-world verticality slice.
 - `start_border_cellar` intentionally uses `z = -1` as the starter-camp cellar below `start_border_camp`; it is connected by `DOWN` / `UP` exits and is a safe waking-world storage/interior landmark, not a dream layer.
+- `start_border_camp`, `start_border_watchtower` and `start_border_cellar` belong to the small `starter_camp` region (`Межовий табір`). Treat it as authored safe starter infrastructure: no ordinary natural resource nodes or natural regeneration should be added there, and camp-bound beings such as the camp spirit cat should stay inside this region.
 - `under_bridge_18_05` uses `z = -1` as an ordinary lower waking-world place under the bridge; it is not a dream layer.
 - Do not create two exits from one location in the same direction.
 - Keep authored location names unique across the playable map; repeated names make player-made maps and exit lists hard to read.
