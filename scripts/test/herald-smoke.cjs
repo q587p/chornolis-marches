@@ -23,7 +23,7 @@ const {
   formatBackfillInterval,
   parseBackfillIntervalMs,
 } = require("../../src/herald/newsBackfill");
-const { formatArchiveList, splitArchiveListMessage } = require("../../src/herald/newsArchiveCommands");
+const { findArchiveRowByReleaseVersion, formatArchiveFindReply, formatArchiveList, splitArchiveListMessage } = require("../../src/herald/newsArchiveCommands");
 const {
   applyNewsSourceDateFallbacks,
   extractChangelogVersionDates,
@@ -159,6 +159,26 @@ assert.match(archiveList, /\/news_archive_post \[/);
 assert.match(archiveList, /\/news_archive_force_post \[/);
 assert.ok(splitArchiveListMessage(["header", ...Array.from({ length: 80 }, (_, index) => `${index + 1}. ${"entry ".repeat(20)}`)].join("\n"), 600).length > 1);
 
+const archiveFindRows = archiveOrderedNewsEntries(parseNewsEntries(versionMarkdown)).map((entry, index) => ({
+  index: index + 1,
+  entry,
+  publication: undefined,
+  status: "missing",
+}));
+const archiveFindInput = {
+  ok: true,
+  rows: archiveFindRows,
+  counts: { missing: archiveFindRows.length, pending: 0, canceled: 0, published: 0 },
+  pendingTotal: 0,
+};
+assert.equal(findArchiveRowByReleaseVersion(archiveFindInput, "0.4.1")?.index, 2);
+assert.equal(findArchiveRowByReleaseVersion(archiveFindInput, "v0.4.10")?.index, 5);
+assert.equal(findArchiveRowByReleaseVersion(archiveFindInput, "0.4.404"), null);
+assert.match(formatArchiveFindReply(archiveFindInput, "0.4.1"), /архівний запис #2\/5/);
+assert.match(formatArchiveFindReply(archiveFindInput, "0.4.1"), /\/news_archive_post 2/);
+assert.match(formatArchiveFindReply(archiveFindInput, ""), /Приклад: \/news_archive_find 0\.4\.4/);
+assert.match(formatArchiveFindReply(archiveFindInput, "0.4.404"), /не знайшла реліз 0\.4\.404/);
+
 const admins = parseHeraldAdminIds([" 123 ", "", "456"]);
 assert.equal(admins.size, 2);
 assert.equal(isHeraldAdminId(123, admins), true);
@@ -176,9 +196,11 @@ assert.match(heraldAdminCommands, /\/news_archive_list/);
 assert.match(heraldAdminCommands, /\/news_archive_preview/);
 assert.match(heraldAdminCommands, /\/news_archive_post/);
 assert.match(heraldAdminCommands, /\/news_archive_force_post/);
+assert.match(heraldAdminCommands, /\/news_archive_find/);
 assert.match(heraldAdminCommands, /\/news_archive_reload/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/pause_publications/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_post/);
+assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_find/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_force_post/);
 
 const whoami = formatHeraldWhoami({
@@ -241,7 +263,7 @@ assert.doesNotMatch(formatted, /123456:abcdefghijklmnopqrstuvwxyz/);
 assert.doesNotMatch(formatted, /border_12_09/);
 assert.match(formatted, /Канцелярія Межового Знаку/);
 
-const linkedCommands = linkHeraldGameCommandMentions("`/start` `/news` /auto `/rest` /sleep `/track` /time /calendar /weather /inventory /search_honey /search_beeswax /gather_honey /gather_beeswax /cleanupCreatures /unknown", "Chornolis_bot");
+const linkedCommands = linkHeraldGameCommandMentions("`/start` `/news` /auto `/rest` /sleep `/track` /time /calendar /weather /inventory /up /down /north /south /west /east /inside /outside /n /s /w /e /u /d /in /out /search_honey /search_beeswax /gather_honey /gather_beeswax /cleanupCreatures /unknown", "Chornolis_bot");
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_start">\/start<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_news">\/news<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_auto">\/auto<\/a>/);
@@ -252,6 +274,22 @@ assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_calendar">\/calendar<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_weather">\/weather<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_inventory">\/inventory<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_up">\/up<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_down">\/down<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_north">\/north<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_south">\/south<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_west">\/west<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_east">\/east<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_inside">\/inside<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_outside">\/outside<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_north">\/n<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_south">\/s<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_west">\/w<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_east">\/e<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_up">\/u<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_down">\/d<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_inside">\/in<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_outside">\/out<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_search_honey">\/search_honey<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_search_beeswax">\/search_beeswax<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_gather_honey">\/gather_honey<\/a>/);

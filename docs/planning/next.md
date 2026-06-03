@@ -20,13 +20,17 @@ The `LEARN-001` foundation is in testing after the minimal persistent learning/p
 
 `0.15.25` adds a tiny starter-adjacent waking-world cellar for map-making and verticality texture. Treat it as a completed content support slice, not a new map-expansion lane or follow-intent implementation.
 
+`0.15.26` puts that cellar to work as a small observation bridge: a herbalist can occasionally stage through the cellar/watchtower, gather herbs/berries/mushrooms through existing actions and return to sort/rest. This is the first visible profession-route MVP, not a full profession system or follow-intent implementation.
+
+`0.15.28` adds a rare herbalist demonstration of the cellar's hidden spoken passage. Treat it as another proof that world actions can teach attentive players, while leaving follow intent, auto-follow and route-learning storage for later slices.
+
 Do not open another broad content loop before the learning/observation foundation is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
 ## Immediate Sequence
 
-1. **LEARN-002 follow-up:** extend bounded skill effects only after reviewing the `0.15.23` gathering tuning in live play.
-2. **TRACK-LEARN-001:** add the first track-reading / animal movement learning moment.
-3. **SOC-002:** add follow intent only if it directly supports the learning bridge and stays smaller than a travel/group system.
+1. **TRACK-LEARN-001:** add the first track-reading / animal movement learning moment.
+2. **SOC-002:** add follow intent only if it directly supports the learning bridge and stays smaller than a travel/group system.
+3. **LEARN-002 follow-up:** extend bounded skill effects only after reviewing the `0.15.23` gathering tuning and the `0.15.26` herbalist observation route in live play.
 
 Near-term content candidates after that foundation:
 

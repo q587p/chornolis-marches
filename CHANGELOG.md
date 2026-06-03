@@ -7,6 +7,50 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.28 - Herbalist water-word demonstration - 12026-06-03
+
+### Added
+
+- Let herbalists rarely demonstrate the hidden cellar water-word passage during supply-run staging, moving from the starter cellar to the under-bridge without adding visible exits, buttons or a return route.
+- Added local observer copy that can reveal the spoken phrase only to nearby players present for the moment.
+- Added `Herbalist water-word passage` WorldEvent markers with creature/source/destination/trigger metadata for debugging.
+- Added focused helper coverage for herbalist-only/location-only/chance-gated usage, observer copy and event metadata.
+
+### Changed
+
+- Kept the herbalist supply-run route compatible with the existing gather-stage pathfinding after the demonstration by resuming at the ordinary `to_gather` stage.
+- Updated NPC profession, progression and Codex map notes to record the demonstration as an observation bridge, not a follow-intent or auto-follow feature.
+
+## 0.15.27 - Darkness-aware feature inspection - 12026-06-03
+
+### Fixed
+
+- Fixed detailed location feature rendering so dim/dark locations without valid light no longer reveal authored `examine_summary` clues during `/examine`.
+- Fixed direct feature inspection in darkness to return a dark-safe outline message instead of full feature descriptions or special inspection text.
+- Preserved full feature summaries and direct inspection behavior when daylight, a lit torch, a campfire or another valid local light source makes details visible.
+- Moved `start_border_camp`, `start_border_watchtower` and `start_border_cellar` into a dedicated `starter_camp` / `Межовий табір` region for future starter-infrastructure rules.
+- Removed ordinary resource nodes from starter infrastructure and added region-based resource regeneration protection for `starter_camp`.
+- Allowed the camp spirit cat to include the starter cellar in its camp-bound movement while keeping it out of non-starter locations.
+- Removed `/call_scribes` from the short Telegram command menu while keeping the command and help/fallback paths available when needed.
+- Added a hidden, one-way spoken-word passage from the starter cellar to the under-bridge, with hints limited to cellar feature inspection and no visible exit/news/map spoiler.
+- Added safe Herald/site deep links for public movement commands such as `/up`, `/down` and the cardinal directions.
+- Added regression coverage for dark feature lines and direct dark inspection fallback copy.
+
+## 0.15.26 - Herbalist cellar supply-run MVP - 12026-06-03
+
+### Added
+
+- Added `src/services/npcHerbalist.ts` as the first dedicated herbalist service layer, keeping world tick responsible for dispatch instead of owning the profession body.
+- Added a low-frequency in-world-time herbalist supply-run MVP that can stage through the starter cellar/watchtower, gather herbs/berries/mushrooms through existing `GATHER_SPECIFIC` creature actions, then return to the cellar and rest.
+- Added `Herbalist supply run` WorldEvent markers for baseline, route stages and completion without adding a Prisma migration.
+- Added `Сухі лежанки` as an inspectable no-loot cellar rest landmark and marked the cellar shelf as herbalist supply-run staging without making it a shared container.
+- Added focused helper tests for herbalist cadence, supported gather resources, symbolic torch-preparation text and route-direction helpers.
+
+### Changed
+
+- Preserved the existing herbalist ambient/social behavior as the fallback when the supply run is not due or already active.
+- Updated world seed validation, planning docs, changelog, public news and release notes for the 0.15.26 visible profession-route slice.
+
 ## 0.15.25 - Starter cellar and map-maker landmarks - 12026-06-03
 
 ### Added

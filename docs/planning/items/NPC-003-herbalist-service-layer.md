@@ -1,7 +1,7 @@
 ---
 id: NPC-003
 title: Herbalist service layer
-status: next
+status: in_testing
 type: technical
 area: npc
 priority: medium
@@ -46,3 +46,9 @@ This is near-term cleanup, not a behavior expansion. The point is to make future
 - Later herbalist inventory/resource decisions should build on this boundary instead of placing more profession code in `worldTick.ts`.
 - When herbalists carry gathered herbs, berries or mushrooms, public `examine` should summarize those supplies qualitatively (`без лікарських трав`, `трохи ягід`, `багато грибів`) rather than exposing exact private inventory counts. Scribe/admin views may show exact values.
 - Give herbalists their own profession-aware reactions to fitting social signals after the service layer exists. They can acknowledge nods, quiet people with `Притишити`, point toward herbs or danger, and ignore signals that do not fit their current work.
+
+## 0.15.26 Slice
+
+`0.15.26` adds `src/services/npcHerbalist.ts` and moves the active herbalist tick body out of `worldTick.ts`. The new service preserves the old ambient/social fallback, then adds a narrow supply-run MVP with `WorldEvent` route markers, starter-cellar staging and existing `GATHER_SPECIFIC` gather actions.
+
+This completes the first service-boundary step, but does not yet implement real herbalist inventory, food decisions, torch lifecycle, shared storage, richer social reactions or a full profession schedule.

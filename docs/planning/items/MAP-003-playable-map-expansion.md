@@ -67,6 +67,19 @@ This is a content pressure task, not only a future worldbuilding wish. The first
 - Kept the slice content-only: no loot cache, combat, traps, economy, crafting, dream rooms or named spirit profiles.
 - Refreshed `docs/world/world_map.md` and world seed validation so the authored lower room stays explicit and test-covered.
 
+## 0.15.27 Starter Camp Region Follow-Up
+
+- Split `start_border_camp`, `start_border_watchtower` and `start_border_cellar` into the narrow `starter_camp` / `Межовий табір` region so future starter-infrastructure rules can target the vertical stack together.
+- Kept `under_bridge_18_05` in `old_bridge`; there is still no cellar-to-bridge secret passage or herbalist route expansion in this slice.
+- Added seed validation and runtime guardrails so ordinary resource nodes/regeneration stay out of the starter infrastructure region.
+- Extended camp spirit cat bounds to include the cellar while still preventing movement outside starter infrastructure.
+
+## Hidden Cellar Water-Word Passage Follow-Up
+
+- Added an intentional hidden, one-way spoken-word passage from `start_border_cellar` to `under_bridge_18_05`.
+- Kept it out of ordinary exits, visible map docs, public news and buttons; the route is hinted only through careful inspection of cellar landmark text.
+- Future herbalist supply-run work may occasionally use the same phrase so players can learn it by watching, but this task does not implement NPC route usage, follow intent or signal triggers.
+
 ## Implementation Notes
 
 - Active hand-edited map data lives under `prisma/data/world/`; update split files there first.

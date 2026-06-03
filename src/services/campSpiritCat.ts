@@ -1,13 +1,13 @@
+import { STARTER_CAMP_LOCATION_KEYS } from "./starterRegion";
+
 export const CAMP_SPIRIT_CAT_SPECIES_KEY = "camp_spirit_cat";
 export const CAMP_SPIRIT_CAT_NAME = "Кіт-бережник";
 export const CAMP_SPIRIT_CAT_START_LOCATION_KEY = "start_border_camp";
 export const CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY = "start_border_watchtower";
+export const CAMP_SPIRIT_CAT_CELLAR_LOCATION_KEY = "start_border_cellar";
 export const CAMP_SPIRIT_CAT_MOUSE_POUNCE_CHANCE = 0.9;
 
-const CAMP_SPIRIT_CAT_LOCATION_KEYS = new Set([
-  CAMP_SPIRIT_CAT_START_LOCATION_KEY,
-  CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY,
-]);
+const CAMP_SPIRIT_CAT_LOCATION_KEYS = new Set<string>(STARTER_CAMP_LOCATION_KEYS);
 const CAMP_SPIRIT_CAT_VERTICAL_DIRECTIONS = new Set(["UP", "DOWN"]);
 
 export function isCampSpiritCatCreature(creature: { species?: { key?: string | null } | null }) {
@@ -81,6 +81,10 @@ export function campSpiritCatWatchPosture(context: CampSpiritCatWatchContext = {
     return "лежить вище над табором і стежить за рухом унизу";
   }
 
+  if (context.locationKey === CAMP_SPIRIT_CAT_CELLAR_LOCATION_KEY) {
+    return "спускається нижче табору й слухає суху темряву погреба";
+  }
+
   if (context.hasActiveCampfire) {
     return "лежить біля межового вогню, але не спускає погляду з краю табору";
   }
@@ -95,6 +99,7 @@ export function campSpiritCatFullInspectionDetail(context: CampSpiritCatWatchCon
   if (context.daypart === "dusk") return "У передвечір'ї він слухає не людей, а паузи між кроками.";
   if (context.daypart === "dawn") return "На світанку він ніби звіряє, чи ніч не лишила в таборі чужого сліду.";
   if (context.locationKey === CAMP_SPIRIT_CAT_WATCHTOWER_LOCATION_KEY) return "Звідси він дивиться не ширше за людину, а нижче: під лавки, під сходи, в щілини між дошками.";
+  if (context.locationKey === CAMP_SPIRIT_CAT_CELLAR_LOCATION_KEY) return "У погребі він не шукає припасів; радше звіряє, чи низ табору лишається своїм.";
   if (context.hasActiveCampfire) return "Тепло вогню його не розм'якшує; він просто знає, де табір має серце.";
   return "Його спокій не схожий на дрімоту. Це радше сторожа, яка не потребує кроків.";
 }

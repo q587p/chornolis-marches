@@ -5,6 +5,8 @@ import { prisma } from "../db";
 import { config } from "../config";
 import { logEvent } from "./worldEvents";
 import { canSendProactiveToTelegramId } from "./sessionPresence";
+import { renderNewsMarkdownForTelegram } from "../handlers/news";
+import { escapeHtml } from "../utils/text";
 
 async function readLatestNewsSummary() {
   const filePath = path.join(process.cwd(), "news.md");
@@ -27,12 +29,26 @@ async function readLatestNewsSummary() {
     const bullets = lines
       .filter((line) => line.startsWith("- "))
       .slice(0, 4)
-      .map((line) => `• ${line.replace(/^-\s+/, "")}`);
+      .join("\n");
 
-    return [`📰 Остання новина: ${title}`, ...bullets].join("\n");
+    return [
+      `📰 Остання новина: ${escapeHtml(title)}`,
+      ...(bullets ? [renderNewsMarkdownForTelegram(bullets)] : []),
+    ].join("\n");
   } catch {
     return null;
   }
+}
+
+export function renderWorldUpdatedAnnouncement(version: string, latestNews?: string | null) {
+  return [
+    "⚙️ Світ Чорнолісу оновився.",
+    "",
+    `Версія: ${escapeHtml(version)}`,
+    latestNews ? `\n${latestNews}` : "",
+    "",
+    "Можна продовжувати гру. Натисніть /start для оновлення меню та кнопок.",
+  ].join("\n");
 }
 
 function parseVersion(version: string) {
@@ -77,20 +93,13 @@ export async function announceWorldUpdatedOnce(bot: Bot) {
   let success = 0;
   let failed = 0;
 
-  const text = [
-    "⚙️ Світ Чорнолісу оновився.",
-    "",
-    `Версія: ${config.appVersion}`,
-    latestNews ? `\n${latestNews}` : "",
-    "",
-    "Можна продовжувати гру. Натисніть /start для оновлення меню та кнопок.",
-  ].join("\n");
+  const text = renderWorldUpdatedAnnouncement(config.appVersion, latestNews);
   const keyboard = new InlineKeyboard().text("Архів новин", "news:list:0");
 
   for (const player of players) {
     try {
       if (!(await canSendProactiveToTelegramId(player.telegramId))) continue;
-      await bot.api.sendMessage(player.telegramId, text, { reply_markup: keyboard });
+      await bot.api.sendMessage(player.telegramId, text, { parse_mode: "HTML", reply_markup: keyboard });
       success++;
     } catch (error) {
       failed++;

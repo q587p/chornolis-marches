@@ -17,6 +17,14 @@ export type StartActionPayload =
   | "say"
   | "yell"
   | "callScribes"
+  | "north"
+  | "south"
+  | "west"
+  | "east"
+  | "up"
+  | "down"
+  | "inside"
+  | "outside"
   | "buildCampfire"
   | "lightCampfire"
   | "douseCampfire"
@@ -55,6 +63,14 @@ export function parseStartActionPayload(value: unknown): StartActionPayload | nu
   if (payload === "cmd_say") return "say";
   if (payload === "cmd_yell") return "yell";
   if (payload === "cmd_call_scribes") return "callScribes";
+  if (payload === "cmd_north" || payload === "cmd_n") return "north";
+  if (payload === "cmd_south" || payload === "cmd_s") return "south";
+  if (payload === "cmd_west" || payload === "cmd_w") return "west";
+  if (payload === "cmd_east" || payload === "cmd_e") return "east";
+  if (payload === "cmd_up" || payload === "cmd_u") return "up";
+  if (payload === "cmd_down" || payload === "cmd_d") return "down";
+  if (payload === "cmd_inside" || payload === "cmd_in") return "inside";
+  if (payload === "cmd_outside" || payload === "cmd_out") return "outside";
   if (payload === "cmd_build_campfire") return "buildCampfire";
   if (payload === "cmd_light_campfire") return "lightCampfire";
   if (payload === "cmd_douse_campfire") return "douseCampfire";
