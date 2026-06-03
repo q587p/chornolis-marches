@@ -401,6 +401,32 @@
     }
   },
   {
+    "key": "start_border_cellar_hatch",
+    "locationKey": "start_border_camp",
+    "type": "LANDMARK",
+    "name": "Люк до погреба",
+    "description": "Між настилом і сухою глиною темніє низький люк. Він не ховається, але й не кличе голосно: під табором є місце, де старі прибулі лишали зарубки, полиці й плутані мапярські спроби.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🕳",
+      "inspectable": true,
+      "vertical_hint": "DOWN",
+      "examine_summary": "низький люк веде вниз у сухий погріб під табором, де лишилися старі зарубки для тих, хто вчиться пам'ятати шлях",
+      "aliases": [
+        "люк",
+        "люк до погреба",
+        "погріб",
+        "погреб",
+        "вниз",
+        "сходи вниз",
+        "cellar hatch",
+        "hatch",
+        "cellar"
+      ]
+    }
+  },
+  {
     "key": "start_watchtower_stairs_down",
     "locationKey": "start_border_watchtower",
     "type": "LANDMARK",
@@ -522,6 +548,79 @@
         "світло",
         "torch",
         "torches"
+      ]
+    }
+  },
+  {
+    "key": "start_cellar_old_notch_wall",
+    "locationKey": "start_border_cellar",
+    "type": "LANDMARK",
+    "name": "Стіна старих зарубок",
+    "description": "У глині й дерев'яній підпорі видно короткі риски: північ, південь, міст, ліс, вежа, вода. Деякі зарубки свіжіші, деякі вже стемніли від часу.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🧭",
+      "inspectable": true,
+      "examine_summary": "зарубки допомагають звіряти власну мапу з табором, але кілька старих рисок уже не збігаються з нинішніми виходами",
+      "map_maker_hint": true,
+      "aliases": [
+        "стіна",
+        "стіна зарубок",
+        "зарубки",
+        "старі зарубки",
+        "мітки",
+        "напрямки",
+        "notches",
+        "wall marks",
+        "map marks"
+      ]
+    }
+  },
+  {
+    "key": "start_cellar_empty_shelf",
+    "locationKey": "start_border_cellar",
+    "type": "LANDMARK",
+    "name": "Порожня полиця",
+    "description": "Полиця суха, вузька й майже порожня. На дереві лишилися круглі сліди від глечиків і прямі подряпини від ножа.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🪵",
+      "inspectable": true,
+      "examine_summary": "полиця не дає припасів, зате показує, що погріб був місцем пам'яті й обліку, а не другою скринею для новачків",
+      "no_loot": true,
+      "aliases": [
+        "полиця",
+        "порожня полиця",
+        "дошка",
+        "shelf",
+        "empty shelf"
+      ]
+    }
+  },
+  {
+    "key": "start_cellar_torn_map_board",
+    "locationKey": "start_border_cellar",
+    "type": "LANDMARK",
+    "name": "Обірвана мапа на дошці",
+    "description": "До дошки притиснуто клапоть старої мапи. На ньому є міст, табір і темна смуга лісу, але кілька стежок обриваються просто на краю паперу.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🗺",
+      "inspectable": true,
+      "examine_summary": "мапа не відкриває нових шляхів, але вчить корисній обережності: старий знак може підказати напрям, та не замінює власного огляду",
+      "spirit_call_hint": true,
+      "aliases": [
+        "мапа",
+        "обірвана мапа",
+        "дошка з мапою",
+        "клапоть мапи",
+        "карта",
+        "map",
+        "torn map",
+        "map board"
       ]
     }
   },

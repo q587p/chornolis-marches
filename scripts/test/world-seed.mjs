@@ -224,6 +224,13 @@ assert.ok(startWatchtower, "Starter camp watchtower should exist as a real locat
 assert.equal(startWatchtower.x, 17, "Starter camp watchtower should sit above the camp x coordinate");
 assert.equal(startWatchtower.y, 5, "Starter camp watchtower should sit above the camp y coordinate");
 assert.equal(startWatchtower.z, 1, "Starter camp watchtower should use z = 1");
+const startCellar = locations.find((item) => item.key === "start_border_cellar");
+assert.ok(startCellar, "Starter camp cellar should exist as a real waking-world location");
+assert.equal(startCellar.x, 17, "Starter camp cellar should sit below the camp x coordinate");
+assert.equal(startCellar.y, 5, "Starter camp cellar should sit below the camp y coordinate");
+assert.equal(startCellar.z, -1, "Starter camp cellar should use z = -1");
+assert.equal(startCellar.regionKey, "riverbank", "Starter camp cellar should stay in the starter camp region");
+assert.equal(startCellar.dangerLevel, 0, "Starter camp cellar should stay safe");
 assert.ok(
   exits.some((exit) => exit.fromKey === "start_border_camp" && exit.toKey === "start_border_watchtower" && exit.direction === "UP"),
   "Starter camp should have an UP exit to the watchtower",
@@ -232,6 +239,36 @@ assert.ok(
   exits.some((exit) => exit.fromKey === "start_border_watchtower" && exit.toKey === "start_border_camp" && exit.direction === "DOWN"),
   "Starter watchtower should have a DOWN exit to the camp",
 );
+assert.ok(
+  exits.some((exit) => exit.fromKey === "start_border_camp" && exit.toKey === "start_border_cellar" && exit.direction === "DOWN"),
+  "Starter camp should have a DOWN exit to the cellar",
+);
+assert.ok(
+  exits.some((exit) => exit.fromKey === "start_border_cellar" && exit.toKey === "start_border_camp" && exit.direction === "UP"),
+  "Starter cellar should have an UP exit to the camp",
+);
+
+const startCellarHatch = features.find((item) => item.key === "start_border_cellar_hatch");
+assert.equal(startCellarHatch?.locationKey, "start_border_camp", "Starter cellar hatch should live at the camp");
+assert.equal(startCellarHatch?.data?.vertical_hint, "DOWN", "Starter cellar hatch should expose a DOWN action hint");
+assertFeatureExamineSummary(startCellarHatch, "Starter cellar hatch should explain the downward route on examine");
+
+const startCellarFeatures = [
+  "start_cellar_old_notch_wall",
+  "start_cellar_empty_shelf",
+  "start_cellar_torn_map_board",
+];
+for (const key of startCellarFeatures) {
+  const feature = features.find((item) => item.key === key);
+  assert.ok(feature, `Starter cellar feature should exist: ${key}`);
+  assert.equal(feature.locationKey, "start_border_cellar", `Starter cellar feature should stay in the cellar: ${key}`);
+  assert.equal(feature.type, "LANDMARK", `Starter cellar feature should be a landmark: ${key}`);
+  assert.equal(feature.data?.inspectable, true, `Starter cellar feature should be inspectable: ${key}`);
+  assert.ok(feature.data?.icon, `Starter cellar feature should have a distinct icon: ${key}`);
+  assert.ok(Array.isArray(feature.data?.aliases) && feature.data.aliases.length >= 3, `Starter cellar feature should have aliases: ${key}`);
+  assertFeatureExamineSummary(feature, `Starter cellar feature should have meaningful examine summary: ${key}`);
+}
+assert.equal(resourceNodes.some((node) => node.locationKey === "start_border_cellar"), false, "Starter cellar should not add starter loot/resource nodes");
 
 const startCampTorchStand = features.find((item) => item.key === "start_camp_torch_stand");
 assert.equal(startCampTorchStand?.data?.torch_source, true, "Starter camp torch stand should be a torch source");

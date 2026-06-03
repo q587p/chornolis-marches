@@ -18,6 +18,8 @@ The `LEARN-001` foundation is in testing after the minimal persistent learning/p
 
 `OBS-PREP-001` has a representative look/examine audit pass in testing. Use its checklist for incremental cleanup, but do not keep expanding it before the first narrow observation moment.
 
+`0.15.25` adds a tiny starter-adjacent waking-world cellar for map-making and verticality texture. Treat it as a completed content support slice, not a new map-expansion lane or follow-intent implementation.
+
 Do not open another broad content loop before the learning/observation foundation is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
 ## Immediate Sequence

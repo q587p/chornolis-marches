@@ -7,6 +7,18 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.25 - Starter cellar and map-maker landmarks - 12026-06-03
+
+### Added
+
+- Added `start_border_cellar` / `Погріб прибулих`, a safe waking-world `z = -1` cellar below the starter camp with reciprocal `DOWN` / `UP` exits.
+- Added an inspectable starter-camp cellar hatch and three cellar landmarks for map-making texture: old notches, an empty shelf and a torn map board.
+- Updated world seed validation and ASCII map rendering so the starter cellar is explicitly represented as a `c` marker instead of a generic biome cell.
+
+### Changed
+
+- Updated map/Codex/planning documentation and public news for the small 0.15.25 waking-world verticality slice.
+
 ## 0.15.24 - Spirit Call auto visibility - 12026-06-03
 
 ### Added
