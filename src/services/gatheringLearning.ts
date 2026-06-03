@@ -7,7 +7,7 @@ import {
   gatheringObservationDescription,
   gatheringSourceDescription,
 } from "./gatheringLearningRules";
-import { recordLearningProgress } from "./learning";
+import { learningLevelForTotalProgress, recordLearningProgress } from "./learning";
 
 export {
   GATHERING_OBSERVATION_GROWTH_MESSAGE,
@@ -20,6 +20,10 @@ export {
 
 const GATHERING_OBSERVATION_WINDOW_MS = Number(process.env.WORLD_GATHERING_OBSERVATION_WINDOW_MS || 120_000);
 const GATHERING_OBSERVATION_SOURCE_SCAN_LIMIT = 8;
+const GATHERING_SKILL_SUCCESS_BONUS_PER_LEVEL = 0.03;
+const GATHERING_SKILL_SUCCESS_BONUS_CAP = 0.15;
+const GATHERING_SKILL_SUCCESS_CHANCE_CAP = 0.95;
+const GATHERING_SKILL_STAMINA_FLOOR = 3;
 
 type GatheringLearningDb = {
   worldEvent: {
@@ -32,12 +36,93 @@ type GatheringLearningDb = {
 };
 
 const OBSERVABLE_GATHERING_RESOURCE_KEYS = new Set(["berries", "mushrooms", "herbs"]);
+const GATHERING_SKILL_RESOURCE_KEYS = OBSERVABLE_GATHERING_RESOURCE_KEYS;
 
 export function observableGatheringContextKey(sourceDescription: string | null | undefined) {
   const resourceKey = sourceDescription?.match(/(?:^|;\s*)resource=([A-Za-z0-9_-]+)/u)?.[1];
   return resourceKey && OBSERVABLE_GATHERING_RESOURCE_KEYS.has(resourceKey)
     ? `resource:${resourceKey}`
     : null;
+}
+
+export type GatheringSkillEffect = {
+  supported: boolean;
+  level: number;
+  successChanceBonus: number;
+  successChance: number;
+  staminaCostReduction: number;
+  staminaCost: number;
+};
+
+type GatheringProgressRow = {
+  level?: number | null;
+  totalProgress?: number | null;
+};
+
+export function gatheringSkillEffectForProgressRows(input: {
+  resourceKey?: string | null;
+  baseSuccessChance: number;
+  baseStaminaCost: number;
+  progressRows?: GatheringProgressRow[];
+}): GatheringSkillEffect {
+  const supported = Boolean(input.resourceKey && GATHERING_SKILL_RESOURCE_KEYS.has(input.resourceKey));
+  const baseSuccessChance = Number.isFinite(input.baseSuccessChance) ? input.baseSuccessChance : 0;
+  const baseStaminaCost = Number.isFinite(input.baseStaminaCost) ? Math.max(0, Math.floor(input.baseStaminaCost)) : 0;
+  if (!supported) {
+    return {
+      supported: false,
+      level: 0,
+      successChanceBonus: 0,
+      successChance: baseSuccessChance,
+      staminaCostReduction: 0,
+      staminaCost: baseStaminaCost,
+    };
+  }
+
+  const level = Math.max(
+    0,
+    ...(input.progressRows ?? []).map((row) => Math.max(
+      Number.isFinite(row.level) ? Math.floor(row.level ?? 0) : 0,
+      learningLevelForTotalProgress(row.totalProgress ?? 0),
+    )),
+  );
+  const successChanceBonus = Math.min(GATHERING_SKILL_SUCCESS_BONUS_CAP, level * GATHERING_SKILL_SUCCESS_BONUS_PER_LEVEL);
+  const staminaCostReduction = level >= 4 ? 2 : level >= 2 ? 1 : 0;
+
+  return {
+    supported: true,
+    level,
+    successChanceBonus,
+    successChance: Math.min(GATHERING_SKILL_SUCCESS_CHANCE_CAP, baseSuccessChance + successChanceBonus),
+    staminaCostReduction,
+    staminaCost: Math.max(GATHERING_SKILL_STAMINA_FLOOR, baseStaminaCost - staminaCostReduction),
+  };
+}
+
+export async function gatheringSkillEffectForPlayer(input: {
+  playerId: number;
+  resourceKey?: string | null;
+  baseSuccessChance: number;
+  baseStaminaCost: number;
+}, db: Pick<typeof prisma, "characterLearningProgress"> = prisma) {
+  if (!input.resourceKey || !GATHERING_SKILL_RESOURCE_KEYS.has(input.resourceKey)) {
+    return gatheringSkillEffectForProgressRows(input);
+  }
+
+  const contextKey = `resource:${input.resourceKey}`;
+  const progressRows = await db.characterLearningProgress.findMany({
+    where: {
+      playerId: input.playerId,
+      skillKey: "gathering",
+      OR: [
+        { contextKey },
+        { contextKey: "general" },
+      ],
+    },
+    select: { level: true, totalProgress: true },
+  });
+
+  return gatheringSkillEffectForProgressRows({ ...input, progressRows });
 }
 
 export async function recordGatheringSource(input: {

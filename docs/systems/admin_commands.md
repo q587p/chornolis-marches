@@ -1,5 +1,13 @@
 # Admin and Debug Commands
 
+## 0.15.23 Learning Debug Surface
+
+- `/learning [#id|ім’я|username]` or `/learn` shows a scribe-only technical
+  `CharacterLearningProgress` snapshot for one character: skill/source/context,
+  level, accumulated progress, milestone count and update time.
+- This is a command-only scribe/admin surface. It is not a public `/skills`
+  sheet and should not be added to ordinary player news or menus.
+
 Адмінські й debug-команди доступні писарям Порубіжжя. Писарем Порубіжжя вважається гравець із роллю `SCRIBE` у базі або Telegram ID, доданий у `ADMIN_TELEGRAM_IDS`.
 
 Є прихована команда `/adminSet <secret>`: якщо `ADMIN_SET_SECRET` збігається з параметром команди, поточний персонаж отримує роль `Писар Порубіжжя`. Саму команду не треба показувати у `/adminHelp` чи публічному списку команд; секрет зберігається тільки в локальному `.env` і змінних середовища Render.

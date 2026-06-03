@@ -1741,7 +1741,7 @@
   {
     "id": "LEARN-002",
     "title": "Skill effects on stamina, success and quality",
-    "status": "next",
+    "status": "in_progress",
     "type": "feature",
     "area": "learning",
     "priority": "high",

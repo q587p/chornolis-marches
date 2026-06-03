@@ -45,7 +45,7 @@ import { hunterClaimedCorpseAction, hunterConversationReplyLine, hunterReactionD
 import { isUnclaimedHerbivoreCorpseForScavenging, predatorClaimedCorpseAction, predatorClaimedCorpseFoodValue, predatorClaimedCorpseOwnerId, predatorPreyFoodValue } from "./predatorFeeding";
 import { predatorKillCurrentAction, predatorKillObserverText, predatorMissCurrentAction, predatorMissObserverText, predatorWoundCurrentAction, predatorWoundObserverText } from "./predatorActionText";
 import { ATTACK_OBSERVATION_GROWTH_MESSAGE, ATTACK_PRACTICE_GROWTH_MESSAGE, isAttackPracticeMilestone, recordAttackKillSource, recordAttackObservation } from "./attackLearning";
-import { GATHERING_OBSERVATION_GROWTH_MESSAGE, GATHERING_PRACTICE_GROWTH_MESSAGE, isGatheringPracticeMilestone, recordGatheringObservation, recordGatheringSource } from "./gatheringLearning";
+import { GATHERING_OBSERVATION_GROWTH_MESSAGE, GATHERING_PRACTICE_GROWTH_MESSAGE, gatheringSkillEffectForPlayer, isGatheringPracticeMilestone, recordGatheringObservation, recordGatheringSource } from "./gatheringLearning";
 import { COOKING_OBSERVATION_GROWTH_MESSAGE, COOKING_PRACTICE_GROWTH_MESSAGE, FRESHENING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_PRACTICE_GROWTH_MESSAGE, recordCookingObservation, recordFresheningObservation, recordFresheningSource } from "./foodLearning";
 import { notifyPlayerObservers, playerRestStopObserverText } from "./playerVisibility";
 import { dropInventoryResourceDetailed, dropInventoryResourcesDetailed, useInventoryResource, type UsableInventoryResource } from "./inventoryUse";
@@ -694,11 +694,21 @@ async function completeGather(bot: Bot, action: WorldAction) {
     isPlayer
     && resource?.location.key === TUTORIAL_FORAGING_LOCATION_KEY
     && Boolean(resourceKey && TUTORIAL_FORAGING_RESOURCE_KEYS.has(resourceKey));
+  const gatheringSkillEffect = isPlayer && resourceKey && cfg && !isTutorialForagingSuccess
+    ? await gatheringSkillEffectForPlayer({
+        playerId: (actor as any).id,
+        resourceKey,
+        baseSuccessChance: cfg.chance,
+        baseStaminaCost: actionCost(action.type),
+      })
+    : null;
+  const gatherSuccessChance = gatheringSkillEffect?.supported ? gatheringSkillEffect.successChance : cfg?.chance;
+  const gatherStaminaCost = gatheringSkillEffect?.supported ? gatheringSkillEffect.staminaCost : actionCost(action.type);
 
   let gatherAttemptsAfterAttempt: number | null = null;
   let staminaSpend: Awaited<ReturnType<typeof spendPlayerStamina>> | null = null;
   if (isPlayer) {
-    staminaSpend = await spendPlayerStamina(bot, (actor as any).id, action.type, chatId);
+    staminaSpend = await spendPlayerStaminaAmount(bot, (actor as any).id, gatherStaminaCost, chatId);
     const updatedPlayer = await prisma.player.update({
       where: { id: (actor as any).id },
       data: { gatherAttempts: { increment: 1 } },
@@ -723,7 +733,7 @@ async function completeGather(bot: Bot, action: WorldAction) {
     noteKnownMessage(await bot.api.sendMessage(chatId, GATHERING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" }));
   };
 
-  if (!resource || !resourceKey || !cfg || (!isTutorialForagingSuccess && Math.random() > cfg.chance)) {
+  if (!resource || !resourceKey || !cfg || (!isTutorialForagingSuccess && Math.random() > (gatherSuccessChance ?? cfg.chance))) {
     await setActionStatus(action, "DONE");
     if (chatId) {
       if (resource && resourceKey && cfg) {

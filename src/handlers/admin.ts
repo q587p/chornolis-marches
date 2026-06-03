@@ -33,6 +33,7 @@ import { BEESWAX_RESOURCE_KEY, HONEY_RESOURCE_KEY } from "../services/apiaryHaza
 import { parseTeleportCoordinateCommand } from "../services/adminTeleportLinks";
 import { approveScribeReturnRequest, buildScribeReturnAuditText } from "../services/scribeReturnHelp";
 import { escapeHtml } from "../utils/text";
+import { learningLevelLabel } from "../services/learning";
 
 function normalizeLookup(value: string | null | undefined) {
   return String(value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
@@ -250,6 +251,7 @@ const CARCASS_QUEST_TEXT_COMMAND = slashlessCommandPattern(["carcassQuest", "car
 const TIME_DEBUG_TEXT_COMMAND = slashlessCommandPattern(["timeDebug", "timedebug"]);
 const TIME_SET_TEXT_COMMAND = slashlessCommandPattern(["timeSet", "timeset"]);
 const WEATHER_SET_TEXT_COMMAND = slashlessCommandPattern(["weatherSet", "weatherset"]);
+const LEARNING_TEXT_COMMAND = slashlessCommandPattern(["learning", "learn", "навчання", "прогрес"]);
 const CALL_SCRIBES_AUDIT_TEXT_COMMAND = slashlessCommandPattern(["call_scribes_audit", "callScribesAudit", "callscribesaudit"]);
 const CALL_SCRIBES_APPROVE_TEXT_COMMAND = slashlessCommandPattern(["call_scribes_approve", "callScribesApprove", "callscribesapprove"]);
 const CALL_SCRIBES_APPROVE_SHORT_COMMAND = /^\/?call_scribes_approve_(\d+)(?:@\w+)?$/i;
@@ -272,6 +274,7 @@ export const ADMIN_HELP_TEXT = [
   "/all animal [speciesKey] — тільки тварини, за потреби одного виду: /all animal mouse або /all mouse",
   "/locationAll — список усіх місцин і ключів",
   "/playerAdmin <#id|ім’я|username> — детальна службова картка гравця",
+  "/learning [#id|ім’я|username] — технічний зріз stored learning progress персонажа",
   "/call_scribes_audit — останні звернення до Писарів про ручне повернення",
   "/call_scribes_approve <eventId> або /call_scribes_approve_123 — застосувати знак Писаря до конкретного звернення",
   "/timeDebug — точний службовий стан часу, місяця, погоди й світла в поточній місцині",
@@ -460,6 +463,40 @@ export function registerAdminHandlers(bot: Bot) {
     await ctx.reply(`🌦 Погоду виставлено: ${snapshot.weatherKey}; ${snapshot.weatherIntensity}.`);
   }
 
+  async function runLearningCommand(ctx: any, rawTarget = String(ctx.match ?? "").trim()) {
+    if (!(await requireScribeAdmin(ctx))) return;
+
+    const player = await resolvePlayerForAdmin(ctx, rawTarget);
+    if (!player) return;
+
+    const rows = await prisma.characterLearningProgress.findMany({
+      where: { playerId: player.id },
+      orderBy: [
+        { skillKey: "asc" },
+        { sourceKey: "asc" },
+        { contextKey: "asc" },
+      ],
+      take: 50,
+    });
+    const lines = [`📚 Learning progress: ${playerDisplayName(player)} (#${player.id})`, ""];
+    if (!rows.length) {
+      lines.push("No stored learning progress yet.");
+    } else {
+      for (const row of rows) {
+        lines.push([
+          `${row.skillKey}/${row.sourceKey}/${row.contextKey}`,
+          `level=${row.level} (${learningLevelLabel(row.level)})`,
+          `progress=${row.progress}`,
+          `total=${row.totalProgress}`,
+          `milestones=${row.milestoneCount}`,
+          `updated=${row.updatedAt.toISOString()}`,
+        ].join("; "));
+      }
+      if (rows.length >= 50) lines.push("", "Showing first 50 rows.");
+    }
+    await ctx.reply(lines.join("\n"), { reply_markup: buildAdminMenuReplyKeyboard() });
+  }
+
   async function replyAdminResourcesMenu(ctx: any) {
     if (!(await requireScribeAdmin(ctx))) return;
     await ctx.reply([
@@ -578,6 +615,8 @@ export function registerAdminHandlers(bot: Bot) {
   bot.hears(TIME_SET_TEXT_COMMAND, (ctx) => runTimeSetCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
   bot.command(["weatherSet", "weatherset"], (ctx) => runWeatherSetCommand(ctx));
   bot.hears(WEATHER_SET_TEXT_COMMAND, (ctx) => runWeatherSetCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
+  bot.command(["learning", "learn"], (ctx) => runLearningCommand(ctx));
+  bot.hears(LEARNING_TEXT_COMMAND, (ctx) => runLearningCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
   bot.hears(["🌿 Ресурси"], replyAdminResourcesMenu);
   bot.hears(["🎒 Додати речі", "Додати речі", "🎒 Речі для Писаря", "Речі для Писаря"], replyAdminItemsMenu);
   bot.hears(["🔥 Вогонь"], replyAdminFireMenu);

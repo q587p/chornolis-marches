@@ -88,7 +88,7 @@ LEARN-001-A,Minimal learning storage decision,testing,design,learning,high,"lear
 LEARN-001-B,Minimal CharacterSkill model,testing,technical,learning,high,"learning,schema,skills",docs/planning/items/LEARN-001-B.md
 LEARN-001-C,grantSkillProgress helper,testing,feature,learning,high,"learning,service,progression",docs/planning/items/LEARN-001-C.md
 LEARN-001-D,Raw progress technical-only,testing,ux,learning,high,"learning,technical-details,ui",docs/planning/items/LEARN-001-D.md
-LEARN-002,"Skill effects on stamina, success and quality",next,feature,learning,high,"learning,skills,stamina,success,balance",docs/planning/items/LEARN-002-skill-effects-cost-success-and-quality.md
+LEARN-002,"Skill effects on stamina, success and quality",in_progress,feature,learning,high,"learning,skills,stamina,success,balance",docs/planning/items/LEARN-002-skill-effects-cost-success-and-quality.md
 LOOP-001-A,Starter look/examine output audit,next,design,core-loop,medium,"look,examine,starter",docs/planning/items/LOOP-001-A.md
 LOOP-001-B,Starter camp prose polish,next,content,core-loop,medium,"prose,starter,look",docs/planning/items/LOOP-001-B.md
 LOOP-001-C,Bridge threshold prose polish,next,content,core-loop,medium,"prose,bridge,liminality",docs/planning/items/LOOP-001-C.md

@@ -1,7 +1,7 @@
 ---
 id: LEARN-002
 title: Skill effects on stamina, success and quality
-status: next
+status: in_progress
 type: feature
 area: learning
 priority: high
@@ -30,6 +30,10 @@ The preferred answer is: better skill can improve success chance, reduce stamina
 
 ## First Scope
 
+- `0.15.23` implements the first narrow slice: herbs, berries and mushrooms
+  gathering progress can slightly improve matching success chance and reduce
+  stamina cost, with caps and a hard stamina floor. This item remains open for
+  attack, freshening, cooking, tracking and broader tuning.
 - Define small, bounded skill-effect rules for the first few repeated actions:
   - attack / hunting or combat;
   - freshening / butchering;

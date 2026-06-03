@@ -24,6 +24,26 @@ source events and skipping sources the same player has already observed. This
 keeps one already-seen or unsupported gather-like event from blocking a still
 valid herbs/berries/mushrooms observation in the same short attention window.
 
+`0.15.23` adds the first technical progression policy on top of that storage:
+
+- learning levels are capped at `0..5`;
+- level thresholds are `0`, `3`, `8`, `18`, `35` and `60` total progress;
+- level labels stay technical (`unfamiliar`, `noticed`, `practiced`, `skilled`,
+  `seasoned`, `masterful`) and are visible only through scribe/debug surfaces;
+- `/learning [#id|name|username]` gives scribes a command-only snapshot of stored
+  learning progress for one character.
+
+The first bounded mechanical effect is deliberately narrow: gathering progress
+for herbs, berries and mushrooms can slightly improve the matching gather
+success chance and reduce stamina cost by at most a small capped amount. Honey,
+beeswax, twigs, money, loot-like finds and unrelated gather-like actions do not
+receive this effect.
+
+Observed actor skill remains future work. A later slice should add a small helper
+such as `observedActorSkillLevel(...)` that can read player learning progress or
+return profession/species profile defaults for herbalists, hunters and animals
+without introducing a broad NPC skill table.
+
 Future observation, tracking, apprenticeship and practice slices should use this service instead of inventing separate progress storage.
 
 ## 0.13.11+ Learning Placeholders and Bridges
@@ -46,9 +66,10 @@ Future observation, tracking, apprenticeship and practice slices should use this
 
 ## Near-Term Skill Effects
 
-The next learning layer should make skill growth matter mechanically. A message such as `Навичка <b>атаки</b> підросла.` should not remain purely decorative once persistent skill storage exists.
+The next learning layers should continue making skill growth matter mechanically. A message such as `Навичка <b>атаки</b> підросла.` should not remain purely decorative once persistent skill storage exists.
 
-Preferred first effects are bounded and action-specific:
+`0.15.23` implements the first bounded effect only for herbs, berries and
+mushrooms. Preferred future effects remain bounded and action-specific:
 
 - better success chance for practiced actions;
 - slightly lower stamina cost for familiar repeated work, with a hard floor so actions never become free;

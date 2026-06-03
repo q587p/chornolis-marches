@@ -152,3 +152,15 @@ tables. The first canonical bridge records `gathering` / `observation` progress
 only for medicinal herbs, berries and mushrooms. Honey, beeswax, twigs, money,
 loot-like finds and missing resource metadata remain outside that bridge unless
 a later task explicitly designs them.
+
+`0.15.23` adds the first technical level policy and a small bounded effect:
+levels are `0..5` with thresholds at `0`, `3`, `8`, `18`, `35` and `60` total
+progress, and herbs/berries/mushrooms gathering progress can slightly improve
+the matching success chance and stamina cost. Raw values remain hidden from
+ordinary players; scribes can inspect them through the command-only `/learning`
+surface.
+
+Observed actor skill is still a follow-up helper/design task, not a broad NPC
+skill table. The intended shape is a small `observedActorSkillLevel(...)`-style
+helper that reads player progress or returns tiny profession/species defaults
+for herbalists, hunters and animals.

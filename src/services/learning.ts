@@ -2,6 +2,16 @@ import { prisma } from "../db";
 
 export const DEFAULT_LEARNING_SOURCE_KEY = "practice";
 export const DEFAULT_LEARNING_CONTEXT_KEY = "general";
+export const LEARNING_LEVEL_THRESHOLDS = [0, 3, 8, 18, 35, 60] as const;
+export const MAX_LEARNING_LEVEL = LEARNING_LEVEL_THRESHOLDS.length - 1;
+export const LEARNING_LEVEL_LABELS = [
+  "unfamiliar",
+  "noticed",
+  "practiced",
+  "skilled",
+  "seasoned",
+  "masterful",
+] as const;
 
 export type LearningProgressState = {
   level: number;
@@ -40,18 +50,33 @@ export function normalizeLearningAmount(amount = 1) {
   return Math.max(0, Math.floor(amount));
 }
 
+export function learningLevelForTotalProgress(totalProgress: number) {
+  const total = Math.max(0, Math.floor(Number.isFinite(totalProgress) ? totalProgress : 0));
+  let level = 0;
+  for (let index = 0; index < LEARNING_LEVEL_THRESHOLDS.length; index += 1) {
+    if (total >= LEARNING_LEVEL_THRESHOLDS[index]) level = index;
+  }
+  return Math.min(MAX_LEARNING_LEVEL, level);
+}
+
+export function learningLevelLabel(level: number) {
+  const safeLevel = Math.max(0, Math.min(MAX_LEARNING_LEVEL, Math.floor(Number.isFinite(level) ? level : 0)));
+  return LEARNING_LEVEL_LABELS[safeLevel];
+}
+
 export function applyLearningProgress(current: LearningProgressState, input: { amount?: number; milestoneEvery?: number }): LearningProgressDelta {
   const amount = normalizeLearningAmount(input.amount);
   const previousTotalProgress = Math.max(0, Math.floor(current.totalProgress));
   const previousMilestoneCount = Math.max(0, Math.floor(current.milestoneCount));
   const milestoneEvery = input.milestoneEvery && input.milestoneEvery > 0 ? Math.floor(input.milestoneEvery) : 0;
   const totalProgress = previousTotalProgress + amount;
+  const level = learningLevelForTotalProgress(totalProgress);
   const milestoneCount = milestoneEvery > 0
     ? Math.max(previousMilestoneCount, Math.floor(totalProgress / milestoneEvery))
     : previousMilestoneCount;
 
   return {
-    level: Math.max(0, Math.floor(current.level)),
+    level,
     progress: Math.max(0, Math.floor(current.progress)) + amount,
     totalProgress,
     milestoneCount,

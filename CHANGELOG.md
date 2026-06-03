@@ -7,6 +7,20 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.23 - Progression stabilization and gathering skill tuning - 12026-06-03
+
+### Added
+
+- Added a shared `0..5` learning level policy with total-progress thresholds and technical labels in `src/services/learning.ts`.
+- Added scribe-only `/learning` / `/learn` command support for inspecting one character's stored learning progress rows.
+- Added focused tests for learning level thresholds and bounded gathering skill effects.
+
+### Changed
+
+- Added the first bounded skill effect: herbs, berries and mushrooms gathering progress can slightly improve the matching gather success chance and reduce stamina cost with hard caps and a stamina floor.
+- Kept honey, beeswax, twigs, money, loot-like sources and unrelated gather-like actions outside canonical gathering skill effects.
+- Updated progression, planning and admin-command documentation for the new technical surface and the remaining learning follow-up scope.
+
 ## 0.15.22 - Learning foundation stabilization - 12026-06-03
 
 ### Changed

@@ -15,6 +15,7 @@ const {
   isGatheringPracticeMilestone,
 } = require("../../src/services/gatheringLearningRules");
 const {
+  gatheringSkillEffectForProgressRows,
   observableGatheringContextKey,
   recordGatheringObservation,
 } = require("../../src/services/gatheringLearning");
@@ -42,6 +43,66 @@ assert.equal(observableGatheringContextKey("actorCreature=9; success=true; resou
 assert.equal(observableGatheringContextKey("actorCreature=9; success=true; resource=honey"), null);
 assert.equal(observableGatheringContextKey("actorCreature=9; success=true; resource=beeswax"), null);
 assert.equal(observableGatheringContextKey("actorCreature=9; success=true"), null);
+
+assert.deepEqual(
+  gatheringSkillEffectForProgressRows({
+    resourceKey: "herbs",
+    baseSuccessChance: 0.2,
+    baseStaminaCost: 5,
+    progressRows: [],
+  }),
+  {
+    supported: true,
+    level: 0,
+    successChanceBonus: 0,
+    successChance: 0.2,
+    staminaCostReduction: 0,
+    staminaCost: 5,
+  },
+);
+const practicedBerriesEffect = gatheringSkillEffectForProgressRows({
+  resourceKey: "berries",
+  baseSuccessChance: 0.25,
+  baseStaminaCost: 5,
+  progressRows: [{ level: 4, totalProgress: 35 }],
+});
+assert.equal(practicedBerriesEffect.supported, true);
+assert.equal(practicedBerriesEffect.level, 4);
+assert.ok(Math.abs(practicedBerriesEffect.successChanceBonus - 0.12) < 0.000001);
+assert.ok(Math.abs(practicedBerriesEffect.successChance - 0.37) < 0.000001);
+assert.equal(practicedBerriesEffect.staminaCostReduction, 2);
+assert.equal(practicedBerriesEffect.staminaCost, 3);
+assert.equal(
+  gatheringSkillEffectForProgressRows({
+    resourceKey: "mushrooms",
+    baseSuccessChance: 0.9,
+    baseStaminaCost: 4,
+    progressRows: [{ level: 5, totalProgress: 60 }],
+  }).successChance,
+  0.95,
+  "gathering skill chance bonus is capped below certainty",
+);
+assert.equal(
+  gatheringSkillEffectForProgressRows({
+    resourceKey: "herbs",
+    baseSuccessChance: 0.2,
+    baseStaminaCost: 3,
+    progressRows: [{ level: 5, totalProgress: 60 }],
+  }).staminaCost,
+  3,
+  "gathering skill stamina reduction respects the hard floor",
+);
+for (const resourceKey of ["honey", "beeswax", "twigs", "shah", undefined]) {
+  const effect = gatheringSkillEffectForProgressRows({
+    resourceKey,
+    baseSuccessChance: 0.5,
+    baseStaminaCost: 5,
+    progressRows: [{ level: 5, totalProgress: 99 }],
+  });
+  assert.equal(effect.supported, false, `${resourceKey} should not receive gathering skill effects`);
+  assert.equal(effect.successChance, 0.5);
+  assert.equal(effect.staminaCost, 5);
+}
 
 function fakeGatheringObservationDb(sourceDescription = "actorCreature=9; success=true; resource=herbs") {
   let nextEventId = 2;
