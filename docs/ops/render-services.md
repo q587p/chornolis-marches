@@ -188,11 +188,16 @@ For manual archive recovery from the deployed `news.md`, use:
 - `/news_archive_preview [number]` to render one archive entry without posting;
 - `/news_archive_post [number]` to publish exactly one selected archive entry to
   `HERALD_CHANNEL_ID`;
+- `/news_archive_force_post [number]` to explicitly create a new
+  archive/repost Telegram message for an archive entry by current deployed
+  index;
 - `/news_archive_reload` to explicitly reread deployed `news.md`.
 
 Manual archive posting does not enqueue the full historical backlog. It uses the
 same `contentHash` dedupe as the outbox and refuses to repost a selected archive
-entry that is already published unless a future explicit force option is added.
+entry that is already published. Use `/news_archive_force_post [number]` only
+when an admin intentionally wants a new archive/repost message from the deployed
+archive index.
 On Render, `news.md` is the deployed file; changing it requires commit, push and
 redeploy before these commands see the new text.
 
@@ -219,6 +224,11 @@ Manual channel-delete and repost semantics are intentionally narrow:
 Service health endpoint every 10 minutes. Set `HERALD_HEALTH_URL` in GitHub
 repository Actions secrets or variables to the Herald `/health` URL, for example
 `https://example.onrender.com/health`.
+
+If `HERALD_HEALTH_URL` is absent after this workflow is on `main`, the scheduled
+job will fail as a configuration reminder. That is not a game or Herald runtime
+failure; either add the secret/variable, disable the schedule or ignore the
+scheduled check until keepalive is wanted.
 
 GitHub scheduled workflows run only from the default branch, so the schedule
 starts only after the workflow is merged to `main`. The workflow also has

@@ -13,6 +13,7 @@ export const SAFE_GAME_COMMAND_PAYLOADS = {
   "/sleep": "cmd_sleep",
   "/track": "cmd_track",
   "/time": "cmd_time",
+  "/calendar": "cmd_calendar",
   "/weather": "cmd_weather",
   "/inventory": "cmd_inventory",
   "/inv": "cmd_inventory",

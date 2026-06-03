@@ -59,6 +59,7 @@ Short usage prompts like `Напиши так:` or `Напишіть так:` sh
 - `/world`
 - `/all`
 - `/time`
+- `/calendar`
 - `/adminHelp`
 - `/adminMenu`
 - `/tick`

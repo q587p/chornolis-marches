@@ -13,6 +13,7 @@ const {
 const {
   getWorldYearName,
   renderApproximateWorldClock,
+  renderCurrentWorldCalendar,
   renderCurrentWorldTime,
   renderWorldDreamDateLine,
   renderWorldYearLine,
@@ -78,12 +79,22 @@ assert.equal(advanced.absoluteMinute, START_WORLD_ABSOLUTE_MINUTE + 3);
 assert.equal(advanced.lastAdvancedAt.toISOString(), "2026-05-31T12:00:06.000Z");
 
 const rendered = renderCurrentWorldTime(start);
-assert.ok(rendered.includes("Коло Зеленого Шуму"));
+assert.ok(rendered.includes("Час Порубіжжя"));
+assert.ok(rendered.includes("Час доби: передвечір'я."));
 assert.ok(rendered.includes("Межовий час: близько п'ятої після полудня."));
 assert.ok(!rendered.includes("17:00"));
-assert.ok(rendered.includes("Місяць:"));
-assert.ok(rendered.includes("Погода:"));
 assert.ok(rendered.includes("Світло:"));
+assert.ok(!rendered.includes("Коло Зеленого Шуму"));
+assert.ok(!rendered.includes("Місяць:"));
+assert.ok(!rendered.includes("Погода:"));
+const renderedCalendar = renderCurrentWorldCalendar(start);
+assert.ok(renderedCalendar.includes("Календар Порубіжжя"));
+assert.ok(renderedCalendar.includes("587 літо після Великого Відступу"));
+assert.ok(renderedCalendar.includes("Коло Зеленого Шуму"));
+assert.ok(renderedCalendar.includes("День кола: 17."));
+assert.ok(renderedCalendar.includes("Місяць:"));
+assert.ok(!renderedCalendar.includes("Погода:"));
+assert.ok(!renderedCalendar.includes("Світло:"));
 const renderedDebugTime = renderWorldTimeDebug(start, {
   weatherEndsAtMinute: null,
   lastAdvancedAt: new Date("2026-06-02T12:00:00.000Z"),

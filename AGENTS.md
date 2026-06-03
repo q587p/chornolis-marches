@@ -58,7 +58,7 @@
 
 ## Core commands / UI concepts to respect
 
-- Existing/recurring commands include `/look`, `/examine`, `/me`, `/world`, `/all`, `/time`, `/adminHelp`, `/tick`, `/restart`.
+- Existing/recurring commands include `/look`, `/examine`, `/me`, `/world`, `/all`, `/time`, `/calendar`, `/adminHelp`, `/tick`, `/restart`.
 - `/look` is the player-facing command for **Озирнутися** / current location overview.
 - `/examine` is the player-facing command for **Роздивитися** / closer inspection.
 - `/location` and `/loc` may remain as legacy aliases for `/look`, but player-facing menus should prefer `/look`.

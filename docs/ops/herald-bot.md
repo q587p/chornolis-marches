@@ -194,6 +194,12 @@ Configure the URL in GitHub before relying on the workflow:
 4. Set it to the public health endpoint of the standalone Herald Web Service,
    for example `https://example.onrender.com/health`.
 
+If `HERALD_HEALTH_URL` is not configured after the workflow lands on `main`, the
+scheduled keepalive job will fail visibly in GitHub Actions. This does not block
+the game runtime or the Herald runtime; either add the secret/variable, disable
+the schedule, or treat the failed scheduled job as a reminder that keepalive is
+not configured yet.
+
 Do not commit the real Render URL if it should stay private. Do not store bot
 tokens, channel ids, admin ids or database URLs in the workflow file.
 
@@ -223,6 +229,7 @@ cancel_pending_publications - скасувати неопубліковані з
 news_archive_list - показати deployed news.md від найстарішого
 news_archive_preview - переглянути один архівний запис
 news_archive_post - вручну опублікувати один архівний запис
+news_archive_force_post - явно повторно передати архівний запис
 news_archive_reload - заново перечитати deployed news.md
 list_publications - показати останні записи книги публікацій
 show_publication - показати збережений запис за номером
@@ -253,6 +260,7 @@ preview_world_digest - попередній перегляд дайджесту 
 - `/news_archive_list` — перечитати deployed `news.md` і показати стабільні індекси архівних записів від найстарішого до найновішого, разом зі станом `опубліковано` / `у черзі` / `скасовано` / `ще не внесено`.
 - `/news_archive_preview [номер]` — показати один архівний запис у тому вигляді, в якому він піде в Telegram, але нічого не публікувати.
 - `/news_archive_post [номер]` — вручну опублікувати рівно один архівний запис із deployed `news.md`. Команда не ставить у чергу всі старі новини й не дублює запис, якщо той самий `contentHash` уже опублікований.
+- `/news_archive_force_post [номер]` — явно повторно передати архівний запис із deployed `news.md` за його поточним індексом. Це створює нове Telegram-повідомлення, позначене як архівний repost, і не намагається відновити старий timestamp.
 - `/news_archive_reload` — явне повторне перечитування deployed `news.md`; зараз кешу немає, команда поводиться як повторний `/news_archive_list`.
 - `/queue_world_digest` — поставити світовий запис в outbox без негайної публікації.
 - `/post_world_digest` — поставити і одразу опублікувати світовий запис.

@@ -32,7 +32,7 @@ import { resolveStartActionPayload, type StartActionPayload } from "../input/sta
 import { runExamineCurrentLocation } from "./look";
 import { showCharacter, showInventory, showLocationForPlayer } from "./player";
 import { startRest } from "./rest";
-import { showTime, showWeather } from "./time";
+import { showCalendar, showTime, showWeather } from "./time";
 import { submitSleepCommand } from "./tutorial";
 import { grantStarterKnifeIfMissing } from "../services/weapons";
 import { renderSessionReturnHint } from "../services/sessionPresence";
@@ -689,6 +689,11 @@ async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayl
 
   if (action === "time") {
     await showTime(ctx);
+    return true;
+  }
+
+  if (action === "calendar") {
+    await showCalendar(ctx);
     return true;
   }
 

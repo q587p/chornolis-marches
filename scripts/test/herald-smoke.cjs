@@ -144,6 +144,7 @@ assert.match(archiveList, /0\.1\.0 &lt;raw&gt;/);
 assert.doesNotMatch(archiveList, /<raw>|<index>/);
 assert.match(archiveList, /\/news_archive_preview \[/);
 assert.match(archiveList, /\/news_archive_post \[/);
+assert.match(archiveList, /\/news_archive_force_post \[/);
 assert.ok(splitArchiveListMessage(["header", ...Array.from({ length: 80 }, (_, index) => `${index + 1}. ${"entry ".repeat(20)}`)].join("\n"), 600).length > 1);
 
 const admins = parseHeraldAdminIds([" 123 ", "", "456"]);
@@ -162,9 +163,11 @@ assert.match(heraldAdminCommands, /\/backfill_news_cancel/);
 assert.match(heraldAdminCommands, /\/news_archive_list/);
 assert.match(heraldAdminCommands, /\/news_archive_preview/);
 assert.match(heraldAdminCommands, /\/news_archive_post/);
+assert.match(heraldAdminCommands, /\/news_archive_force_post/);
 assert.match(heraldAdminCommands, /\/news_archive_reload/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/pause_publications/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_post/);
+assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_force_post/);
 
 const whoami = formatHeraldWhoami({
   telegramUserId: 123456789,
@@ -226,13 +229,16 @@ assert.doesNotMatch(formatted, /123456:abcdefghijklmnopqrstuvwxyz/);
 assert.doesNotMatch(formatted, /border_12_09/);
 assert.match(formatted, /Канцелярія Межового Знаку/);
 
-const linkedCommands = linkHeraldGameCommandMentions("`/start` `/news` /auto `/rest` /sleep `/track` /inventory /cleanupCreatures /unknown", "Chornolis_bot");
+const linkedCommands = linkHeraldGameCommandMentions("`/start` `/news` /auto `/rest` /sleep `/track` /time /calendar /weather /inventory /cleanupCreatures /unknown", "Chornolis_bot");
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_start">\/start<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_news">\/news<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_auto">\/auto<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_rest">\/rest<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_sleep">\/sleep<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_track">\/track<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_time">\/time<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_calendar">\/calendar<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_weather">\/weather<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_inventory">\/inventory<\/a>/);
 assert.match(linkedCommands, /\/cleanupCreatures/);
 assert.match(linkedCommands, /\/unknown/);

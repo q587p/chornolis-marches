@@ -83,6 +83,8 @@ It should not be treated as ordinary sleep. For now it may keep its existing imp
 
 Tutorial and other explicitly dream-keyed/lucid-dream locations use their own stable dream light by default. Waking-world night, daypart notices and weather-based visibility reductions should not hide dream descriptions, lessons, visible targets, tracks or ground objects unless a later special dream opts into that rule deliberately.
 
+Implementation note: the first slice also treats very low `z <= -10` as a reserved dream layer for dream-light and dream-notice guards. Future ordinary underground locations should avoid that reserved depth or add an explicit non-dream classification before depending on waking-world darkness and weather.
+
 ### Lucid Dreams / Усвідомлені сни
 
 A lucid dream is a dream instance where the character’s sleeping body remains in the waking location, while a dream presence appears in a dream-space location.

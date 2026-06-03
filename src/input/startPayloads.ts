@@ -11,6 +11,7 @@ export type StartActionPayload =
   | "sleep"
   | "track"
   | "time"
+  | "calendar"
   | "weather"
   | "inventory"
   | "say"
@@ -41,6 +42,7 @@ export function parseStartActionPayload(value: unknown): StartActionPayload | nu
   if (payload === "cmd_sleep") return "sleep";
   if (payload === "cmd_track") return "track";
   if (payload === "cmd_time") return "time";
+  if (payload === "cmd_calendar") return "calendar";
   if (payload === "cmd_weather") return "weather";
   if (payload === "cmd_inventory") return "inventory";
   if (payload === "cmd_say") return "say";

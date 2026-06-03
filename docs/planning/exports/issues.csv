@@ -140,7 +140,7 @@ ONB-004,First night guidance,done,ux,onboarding,medium,"onboarding,night,light,t
 ONB-006,Look/examine semantics in the dream,testing,ux,onboarding,high,"tutorial,look,examine,ux,copy",docs/planning/items/ONB-006-look-examine-semantics-in-dream.md
 ONB-007,Dream tree and vertical tutorial,proposed,feature,onboarding,high,"sleep,dream,tutorial,verticality,speech,onboarding",docs/planning/items/ONB-007-dream-tree-and-vertical-tutorial.md
 ONB-008,Owl threshold refrain in the dream,proposed,content,onboarding,medium,"onboarding,dream,owl,examine,atmosphere",docs/planning/items/ONB-008-owl-threshold-refrain-in-dream.md
-ONB-009,Tutorial dream ground item cleanup,proposed,tech,onboarding,high,"tutorial,dream,cleanup,items,resources",docs/planning/items/ONB-009-tutorial-dream-ground-item-cleanup.md
+ONB-009,Tutorial dream ground item cleanup,testing,tech,onboarding,high,"tutorial,dream,cleanup,items,resources",docs/planning/items/ONB-009-tutorial-dream-ground-item-cleanup.md
 OWL-002,Nocturnal owl tuning and indirect signs,testing,tuning,ecology,high,"owl,ecology,night,predator,observation,tuning",docs/planning/items/OWL-002-nocturnal-owl-tuning-and-signs.md
 OWL-003,Starter camp owl boundary and night signs,testing,tuning,ecology,medium,"owl,camp,ecology,night,onboarding",docs/planning/items/OWL-003-starter-camp-boundary-and-night-signs.md
 OWL-004,Conditional owl examine copy and refrain echoes,done,content,ecology,medium,"owl,examine,night,observation,atmosphere",docs/planning/items/OWL-004-conditional-owl-examine-copy.md
@@ -219,7 +219,7 @@ WORLD-001-G,Time and weather debug controls,testing,technical,world_time,medium,
 WORLD-002,Campfires and light,next,feature,survival,high,"survival,light,crafting,night",docs/planning/items/WORLD-002-campfires-and-light.md
 WORLD-002-hidden-spirit,Hidden spirit seed and boundaries,backlog,feature,world,medium,"world,hidden-presence,spirit,campfire",docs/planning/items/WORLD-002-hidden-spirit-seed-and-boundaries.md
 WORLD-003,World-time survival and item lifetime timers,next,system,world_time,high,"world-time,survival,hunger,torches,campfires,decay,item-lifetime",docs/planning/items/WORLD-003-world-time-survival-and-lifetime-timers.md
-WORLD-004,Time/calendar/weather command split,backlog,ux,world_time,medium,"world-time,calendar,weather,commands,tutorial",docs/planning/items/WORLD-004-time-calendar-weather-command-split.md
+WORLD-004,Time/calendar/weather command split,testing,ux,world_time,medium,"world-time,calendar,weather,commands,tutorial",docs/planning/items/WORLD-004-time-calendar-weather-command-split.md
 WPN-001,Minimal weapon catalog and equip foundation,done,feature,items,medium,"weapons,inventory,equipment,freshening",docs/planning/items/WPN-001-minimal-weapon-catalog-and-equip.md
 WPN-002,"Weapon-aware look, examine, attack and freshen",done,feature,items,medium,"weapons,inventory,combat,freshening",docs/planning/items/WPN-002-weapon-aware-look-examine-attack-freshen.md
 WPN-003,Themed NPC weapons and hunter spear,backlog,feature,npc,medium,"weapons,npc,hunter,seed",docs/planning/items/WPN-003-themed-npc-weapons-and-hunter-spear.md

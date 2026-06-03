@@ -13,6 +13,7 @@ type LocationNotificationOptions = {
   parseMode?: "HTML";
   replaceKey?: string;
   clearKeys?: string[];
+  includeSleeping?: boolean;
 };
 
 const latestInlineMessageByChatAndKey = new Map<string, number>();
@@ -257,8 +258,14 @@ async function clearPreviousInlineKey(bot: Bot, telegramId: string, key: string)
   }
 }
 
-async function sendLocationNotification(bot: Bot, player: { telegramId: string }, text: string, options: LocationNotificationOptions = {}) {
+export function canReceiveLocationNotification(player: { sleepState?: string | null }, options: { includeSleeping?: boolean } = {}) {
+  if (!options.includeSleeping && player.sleepState === "ORDINARY_SLEEP") return false;
+  return true;
+}
+
+async function sendLocationNotification(bot: Bot, player: { telegramId: string; sleepState?: string | null }, text: string, options: LocationNotificationOptions = {}) {
   try {
+    if (!canReceiveLocationNotification(player, options)) return;
     if (!(await canSendProactiveToTelegramId(player.telegramId))) return;
     const send = async () => {
       for (const key of options.clearKeys ?? []) {
@@ -288,33 +295,25 @@ async function sendLocationNotification(bot: Bot, player: { telegramId: string }
 
 export async function notifyLocation(bot: Bot, locationId: number, exceptPlayerId: number, text: string, optionsOrKeyboard?: InlineKeyboard | LocationNotificationOptions) {
   const options = optionsOrKeyboard instanceof InlineKeyboard ? { keyboard: optionsOrKeyboard } : optionsOrKeyboard;
-  const players = await prisma.player.findMany({ where: { currentLocationId: locationId, NOT: { id: exceptPlayerId } }, select: { telegramId: true } });
+  const players = await prisma.player.findMany({ where: { currentLocationId: locationId, NOT: { id: exceptPlayerId } }, select: { telegramId: true, sleepState: true } });
   for (const player of players) {
     await sendLocationNotification(bot, player, text, options);
   }
 }
 
-export async function notifyLocationExcept(bot: Bot, locationId: number, exceptPlayerIds: number[], text: string, options: { parseMode?: "HTML"; keyboard?: InlineKeyboard } = {}) {
+export async function notifyLocationExcept(bot: Bot, locationId: number, exceptPlayerIds: number[], text: string, options: LocationNotificationOptions = {}) {
   const players = await prisma.player.findMany({
     where: { currentLocationId: locationId, id: { notIn: exceptPlayerIds } },
-    select: { telegramId: true },
+    select: { telegramId: true, sleepState: true },
   });
   for (const player of players) {
-    try {
-      if (!(await canSendProactiveToTelegramId(player.telegramId))) continue;
-      await bot.api.sendMessage(player.telegramId, text, {
-        parse_mode: options.parseMode,
-        reply_markup: options.keyboard ?? await mainKeyboardForPlayer(player.telegramId),
-      });
-    } catch (error) {
-      console.warn("Failed to notify location player:", error);
-    }
+    await sendLocationNotification(bot, player, text, options);
   }
 }
 
 export async function notifyLocationAll(bot: Bot, locationId: number, text: string, optionsOrKeyboard?: InlineKeyboard | LocationNotificationOptions) {
   const options = optionsOrKeyboard instanceof InlineKeyboard ? { keyboard: optionsOrKeyboard } : optionsOrKeyboard;
-  const players = await prisma.player.findMany({ where: { currentLocationId: locationId }, select: { telegramId: true } });
+  const players = await prisma.player.findMany({ where: { currentLocationId: locationId }, select: { telegramId: true, sleepState: true } });
   for (const player of players) {
     await sendLocationNotification(bot, player, text, options);
   }

@@ -382,7 +382,7 @@ export async function tutorialSpiritMoveComment(fromLocationId: number, toLocati
     return {
       speaker: "Сон",
       title: "Сон показує плесо",
-      text: "Час у Порубіжжі не завжди кричить про себе. Іноді його треба спитати окремо: /time або кнопкою біля води.",
+      text: "Час, календар і погода в Порубіжжі не одне й те саме. /time питає, яка зараз пора доби; /calendar згадує коло й рік; /weather слухає небо.",
     };
   }
 

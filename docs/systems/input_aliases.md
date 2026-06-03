@@ -6,7 +6,7 @@ When a player-facing button performs an in-world action, there should be an equi
 
 ## Current intent
 
-- Keep canonical slash commands stable: `/look`, `/examine`, `/me`, `/inventory`, `/stat`, `/chat`, `/who`, `/time`, `/weather`, `/news`, `/chronicles`, `/help`, `/menu`, `/settings`, `/daynotices`, `/automessages`, `/gather`, `/rest`, `/queue`, `/say`, movement commands and admin/debug commands.
+- Keep canonical slash commands stable: `/look`, `/examine`, `/me`, `/inventory`, `/stat`, `/chat`, `/who`, `/time`, `/calendar`, `/weather`, `/news`, `/chronicles`, `/help`, `/menu`, `/settings`, `/daynotices`, `/automessages`, `/gather`, `/rest`, `/queue`, `/say`, movement commands and admin/debug commands.
 - Add Ukrainian aliases as a convenience layer over the same handlers where possible.
 - Preserve existing callback buttons for Telegram ergonomics.
 - Reply to unknown text with a short "не зрозуміли" message, `❔ Допомога` (`/help`) / `☰ Меню` (`/menu`) hints and close alias suggestions where possible. Suggestions should include the closest clickable slash command in parentheses when there is a stable one, for example `оглянутися (/look)`, `статистика (/stat)`, `використати гриби (/use_mushrooms)` or `швидкий огляд (/glance)`.
@@ -31,7 +31,8 @@ Menu and status:
 - `статистика`, `/статистика` -> canonical `/stat` view for scribes/admins only.
 - `репліки`, `/репліки`, `chat`, `chat all`, `chat location 1`, `chat character all` -> canonical `/chat` view.
 - `хто`, `хто активний`, `хто тут`, `хто поруч` -> canonical `/who` view.
-- `час`, `/час` -> canonical `/time` view.
+- `час`, `/час` -> canonical `/time` view for the current daypart, approximate world time and light.
+- `календар`, `дата`, `місячне коло`, `/calendar` -> canonical `/calendar` view for year, season, lunar circle, day and moon phase.
 - `погода`, `/погода` -> canonical `/weather` view.
 - `новини`, `/новини` -> canonical `/news` view.
 - `/news N` -> open the Nth Telegram archive page directly, for example `/news 6`. Archive pagination buttons may remain callback-only.

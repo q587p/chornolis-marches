@@ -1,7 +1,7 @@
 ---
 id: WORLD-004
 title: Time/calendar/weather command split
-status: backlog
+status: testing
 type: ux
 area: world_time
 priority: medium
@@ -48,6 +48,15 @@ too much for a quick time check and overlaps with `/weather`.
   buttons or text hints after the first use.
 - Keep `/timeDebug` as the exact scribe/admin surface.
 
+## 0.15.18 Slice
+
+- `/time` now stays concise: current daypart, approximate in-world time, light label and one daypart mood sentence.
+- `/calendar` carries the fuller public year, season, lunar circle, day and moon-phase readout.
+- `/weather` remains the weather-specific command.
+- Added aliases for `calendar`, `календар`, `дата` and `місячне коло`.
+- Added safe `cmd_calendar` deep-link routing for Herald/news/site links.
+- Updated the dream time-pool tutorial prompt to present `Час`, `Погода` and `Календар` together.
+
 ## Tutorial / Help Follow-Up
 
 - Update the tutorial time/weather lesson so it does not teach `/time` as the
@@ -71,5 +80,6 @@ too much for a quick time check and overlaps with `/weather`.
 ## Notes
 
 - This is a future UX split, not a request to remove calendar lore.
-- Naming is still open. `/calendar` is the current obvious candidate, but the
-  final label should be checked against Ukrainian tone and existing aliases.
+- Naming remains open for future flavor. `/calendar` is now the stable
+  compatibility command; if a better diegetic label appears later, add it as an
+  alias instead of removing `/calendar`.

@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const {
+  canReceiveLocationNotification,
   combineMovementNotificationLines,
   createNonPlayerMovementNotificationBuffer,
   movementNotificationTargetsStillPresent,
@@ -76,6 +77,10 @@ async function sleep(ms) {
   assert.equal(options.keyboard.inline_keyboard[0][0].text, "Кіт-бережник");
   assert.equal(options.keyboard.inline_keyboard[0][0].callback_data, "target:creature:7");
   assert.equal(options.keyboard.inline_keyboard[1][0].text, "🐾 Сліди");
+
+  assert.equal(canReceiveLocationNotification({ sleepState: "AWAKE" }), true);
+  assert.equal(canReceiveLocationNotification({ sleepState: "ORDINARY_SLEEP" }), false);
+  assert.equal(canReceiveLocationNotification({ sleepState: "ORDINARY_SLEEP" }, { includeSleeping: true }), true);
 
   console.log("Notification replacement locks OK");
 })().catch((error) => {
