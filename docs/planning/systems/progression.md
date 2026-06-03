@@ -130,20 +130,25 @@ Repeated use can teach, but grinding should have diminishing returns. Dangerous,
 
 ## Data Notes
 
-A minimal future storage model may be enough:
+`0.15.21` adds the minimal persistent storage layer as `CharacterLearningProgress`.
+It is intentionally generic and small:
 
 ```prisma
-model CharacterSkill {
-  id           Int      @id @default(autoincrement())
-  playerId     Int
-  key          String
-  level        Int      @default(0)
-  progress     Int      @default(0)
-  discoveredAt DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@unique([playerId, key])
+model CharacterLearningProgress {
+  id             Int
+  playerId       Int
+  skillKey       String
+  sourceKey      String
+  contextKey     String
+  level          Int
+  progress       Int
+  totalProgress  Int
+  milestoneCount Int
 }
 ```
 
-Do not add this until the observation MVP actually needs persistent progress.
+Use `src/services/learning.ts` for new learning slices instead of adding parallel
+tables. The first canonical bridge records `gathering` / `observation` progress
+only for medicinal herbs, berries and mushrooms. Honey, beeswax, twigs, money,
+loot-like finds and missing resource metadata remain outside that bridge unless
+a later task explicitly designs them.

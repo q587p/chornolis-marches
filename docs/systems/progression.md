@@ -8,14 +8,27 @@ Progression should happen through use, observation and lived experience. A chara
 
 After the first dream tutorial, the next progression priority is an observation-learning MVP rather than a broad stat tree. The first implementation can be narrow, scripted and local as long as it proves that attention to the world can teach.
 
-## 0.13.11+ Text-Only Learning Placeholders
+## Persistent Learning Foundation
+
+`0.15.21` adds the first shared persistence layer for learning:
+
+- `CharacterLearningProgress` stores progress by player, skill key, source key and context key.
+- `src/services/learning.ts` owns the small reusable helpers for recording progress, reading progress and detecting milestone transitions.
+- Raw progress values stay technical-only; ordinary player text should remain qualitative and diegetic.
+- The foundation is deliberately not a broad skill tree, not a public `/skills` UI and not a complete progression system.
+
+The first canonical observation bridge is intentionally narrow: attentive presence around visible gathering of medicinal herbs, berries and mushrooms can record `gathering` progress with `observation` as the source and a resource-specific context. Honey, beeswax, twigs, money, loot-like finds and missing resource metadata do not create canonical gathering learning progress unless a later design task explicitly adds them.
+
+Future observation, tracking, apprenticeship and practice slices should use this service instead of inventing separate progress storage.
+
+## 0.13.11+ Learning Placeholders and Bridges
 
 `0.13.11` adds a deliberately small attack-learning bridge before real skill rows exist:
 
 - every thirteenth successful player animal kill through `ATTACK` sends only that player `Навичка <b>атаки</b> підросла.`;
 - when a player uses `look` or `examine` soon after someone else kills prey in the same location, that observation is recorded once for that kill;
 - every fifth such recorded observation sends only that observer `Навичка <b>атаки</b> трохи підросла.`;
-- these messages do not change numeric skill state yet.
+- these messages are still mostly legacy text/`WorldEvent` cadence and should be moved onto the shared learning service in a focused follow-up.
 
 `0.13.12` extends the same text-only bridge to gathering:
 
@@ -24,9 +37,7 @@ After the first dream tutorial, the next progression priority is an observation-
 - every completed player or NPC gather attempt records a short hidden observation source;
 - inspecting another character/NPC, using `examine` for the location, or using the brief `look` while the location has active light can record one observation of that recent gather source;
 - every fifth such recorded observation sends only that observer `Навичка <b>збирання</b> трохи підросла.`;
-- these messages also do not change numeric skill state yet.
-
-These placeholders should be replaced by the shared learning service once `LEARN-001-C` and the observation-learning MVP are active.
+- as of `0.15.21`, the observation side also writes canonical `CharacterLearningProgress` rows only for herbs, berries and mushrooms, while the visible milestone cadence remains intentionally sparse.
 
 ## Near-Term Skill Effects
 
