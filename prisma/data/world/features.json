@@ -91,8 +91,8 @@
       "apiary_kind": "old_log_hive",
       "hazard_key": "bumblebee_sting",
       "aura_radius": 1,
-      "center_sting_chance_permille": 130,
-      "neighbor_sting_chance_permille": 40,
+      "center_sting_chance_permille": 777,
+      "neighbor_sting_chance_permille": 130,
       "center_damage": [
         1,
         2
