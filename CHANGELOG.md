@@ -7,6 +7,21 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.21 - Attentive presence learning bridge - 12026-06-03
+
+### Added
+
+- Added the `CharacterLearningProgress` table as a minimal persistent foundation for future skill/progression work, keyed by player, skill, source and context without exposing raw progress to ordinary players.
+- Added `src/services/learning.ts` with small reusable helpers for recording and reading learning progress and milestone transitions.
+- Added the first canonical gathering observation bridge: attentive presence around visible gathering of herbs, berries and mushrooms can record `gathering` observation progress through the shared learning helper.
+- Added focused learning and gathering-learning tests, including negative coverage so honey, beeswax, twigs, money, loot-like sources and missing resource metadata do not create canonical gathering learning progress.
+
+### Changed
+
+- Kept observation learning on existing `look`, `examine`, character inspection and witnessed-action surfaces instead of adding a separate `/observe` command.
+- Preserved legacy hidden `WorldEvent` observation markers and milestone messages while narrowing canonical progress to the intended starter resource contexts.
+- Updated planning and progression docs so future observation and track-learning slices build on `CharacterLearningProgress` rather than inventing separate storage.
+
 ## 0.15.20 - Apiary honey and wax raid - 12026-06-03
 
 ### Added
