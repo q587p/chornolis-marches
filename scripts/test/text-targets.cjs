@@ -131,6 +131,8 @@ assert.equal(duplicateMiceMatch.target.id, 4);
 
 assert.equal(resourceTypeDisplayName({ key: "corpse_mouse_male", name: "труп самця миші" }), "труп миша");
 assert.equal(resourceTypeDisplayName({ key: "corpse_mouse_female", name: "труп самиці миші" }), "труп миші");
+assert.equal(resourceTypeDisplayName({ key: "corpse_owl", name: "труп сови" }), "труп сови");
+assert.equal(resourceTypeDisplayName({ key: "corpse_owl_male", name: "труп сови" }), "труп сови");
 assert.equal(isSelfTargetQuery("me"), true);
 assert.equal(isSelfTargetQuery("at me"), true);
 assert.equal(isSelfTargetQuery("я"), true);

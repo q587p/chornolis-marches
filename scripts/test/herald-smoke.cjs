@@ -229,7 +229,7 @@ assert.doesNotMatch(formatted, /123456:abcdefghijklmnopqrstuvwxyz/);
 assert.doesNotMatch(formatted, /border_12_09/);
 assert.match(formatted, /Канцелярія Межового Знаку/);
 
-const linkedCommands = linkHeraldGameCommandMentions("`/start` `/news` /auto `/rest` /sleep `/track` /time /calendar /weather /inventory /cleanupCreatures /unknown", "Chornolis_bot");
+const linkedCommands = linkHeraldGameCommandMentions("`/start` `/news` /auto `/rest` /sleep `/track` /time /calendar /weather /inventory /gather_honey /gather_beeswax /cleanupCreatures /unknown", "Chornolis_bot");
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_start">\/start<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_news">\/news<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_auto">\/auto<\/a>/);
@@ -240,6 +240,8 @@ assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_calendar">\/calendar<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_weather">\/weather<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_inventory">\/inventory<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_gather_honey">\/gather_honey<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_gather_beeswax">\/gather_beeswax<\/a>/);
 assert.match(linkedCommands, /\/cleanupCreatures/);
 assert.match(linkedCommands, /\/unknown/);
 assert.doesNotMatch(linkHeraldGameCommandMentions("/cleanupCreatures", "Chornolis_bot"), /href=/);
@@ -248,10 +250,12 @@ assert.doesNotMatch(linkHeraldGameCommandMentions("/unknown", "Chornolis_bot"), 
 const archiveFormatted = formatHeraldPublicationMessage({
   sourceType: "NEWS_MD_ARCHIVE",
   title: entries[1].title,
+  sourceDate: entries[1].sourceDate,
   body: formatArchiveBody(entries[1]),
 });
 assert.match(archiveFormatted, /📜 З архіву Канцелярії/);
 assert.match(archiveFormatted, /Архівний запис: <b>12026-05-31/);
+assert.match(archiveFormatted, /Дата запису: 12026-05-31/);
 assert.match(archiveFormatted, /Цей запис уже нижче/);
 assert.doesNotMatch(archiveFormatted, /📜 Канцелярія Межового Знаку/);
 
@@ -275,10 +279,12 @@ const repost = formatHeraldPublicationRepostMessage({
   id: 77,
   title: "Старий заголовок",
   body: "Старе тіло",
+  sourceDate: "12026-05-04",
   renderedText: "📜 Збережений відбиток\n\nТекст уже не залежить від news.md",
 });
 assert.match(repost, /📜 З архіву Канцелярії/);
 assert.match(repost, /Повторна публікація з книги Канцелярії #77/);
+assert.match(repost, /Первісна дата запису: 12026-05-04/);
 assert.match(repost, /Збережений відбиток/);
 
 const worldDigestFormatted = formatHeraldPublicationMessage({

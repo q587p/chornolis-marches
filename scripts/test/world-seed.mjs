@@ -162,8 +162,16 @@ assert.equal(oldLogApiary.data?.apiary, true, "Old log apiary should be marked a
 assert.equal(oldLogApiary.data?.apiary_kind, "old_log_hive", "Old log apiary should keep its apiary kind");
 assert.equal(oldLogApiary.data?.hazard_key, "bumblebee_sting", "Old log apiary should expose bumblebee hazard metadata");
 assert.equal(oldLogApiary.data?.aura_radius, 1, "Old log apiary should start with a one-step aura");
-assert.equal(oldLogApiary.data?.center_sting_chance_permille, 55, "Old log apiary center chance should match authored MVP tuning");
-assert.equal(oldLogApiary.data?.neighbor_sting_chance_permille, 16, "Old log apiary neighbor chance should match authored MVP tuning");
+assert.equal(oldLogApiary.data?.center_sting_chance_permille, 777, "Old log apiary center chance should match authored MVP tuning");
+assert.equal(oldLogApiary.data?.neighbor_sting_chance_permille, 130, "Old log apiary neighbor chance should match authored MVP tuning");
+assert.equal(oldLogApiary.data?.passive_cooldown_ms, 120_000, "Old log apiary passive cooldown should match one default in-game hour");
+assert.equal(resourceTypeKeys.has("honey"), true, "Apiary harvest MVP should define honey resource type");
+assert.equal(resourceTypeKeys.has("beeswax"), true, "Apiary harvest MVP should define beeswax resource type");
+assert.equal(oldLogApiary.data?.raid_cooldown_ms, 21_600_000, "Old log apiary should limit repeated hive robbery");
+assert.equal(oldLogApiary.data?.raid_success_chance_permille, 700, "Old log apiary should have authored raid success chance");
+assert.equal(oldLogApiary.data?.raid_wax_chance_permille, 350, "Old log apiary should have authored wax chance");
+assert.deepEqual(oldLogApiary.data?.raid_damage, [2, 5], "Old log apiary should have stronger disturbance sting damage");
+assert.deepEqual(oldLogApiary.data?.raid_rewards, ["honey", "beeswax"], "Old log apiary should expose current raid rewards");
 assert.ok(typeof oldLogApiary.data?.examine_summary === "string" && oldLogApiary.data.examine_summary.length > 0, "Old log apiary should have an examine summary");
 for (const alias of ["бортя", "вулик", "мед", "віск"]) {
   assert.ok(oldLogApiary.data?.aliases?.includes(alias), `Old log apiary should include alias: ${alias}`);
@@ -226,6 +234,12 @@ assert.equal(beginnerCache.data?.cache_stock?.torch, undefined, "Starter shared 
 assert.equal(beginnerCache.data?.cache_max_stock?.torch, undefined, "Starter shared beginner cache should not accept torch contributions");
 assert.equal(beginnerCache.data?.cache_stock?.raw_meat, 4, "Starter shared beginner cache should provide extra raw meat");
 assert.equal(beginnerCache.data?.cache_stock?.cooked_meat, 2, "Starter shared beginner cache should demonstrate cooked meat");
+assert.equal(beginnerCache.data?.cache_stock?.honey, 0, "Starter shared beginner cache should not start with honey");
+assert.equal(beginnerCache.data?.cache_stock?.beeswax, 0, "Starter shared beginner cache should not start with beeswax");
+assert.equal(beginnerCache.data?.cache_max_stock?.honey, 5, "Starter shared beginner cache should accept honey contributions");
+assert.equal(beginnerCache.data?.cache_max_stock?.beeswax, 5, "Starter shared beginner cache should accept beeswax contributions");
+assert.equal(beginnerCache.data?.cache_restock_target?.honey, 0, "Starter shared beginner cache should not hidden-restock honey");
+assert.equal(beginnerCache.data?.cache_restock_target?.beeswax, 0, "Starter shared beginner cache should not hidden-restock beeswax");
 assert.equal(beginnerCache.data?.cache_money_stock?.shah, 0, "Starter shared beginner cache should not restock money by default");
 assert.equal(beginnerCache.data?.cache_money_stock?.grivna, 0, "Starter shared beginner cache should not start with grivna");
 assert.equal(beginnerCache.data?.cache_money_max_stock?.shah, 200, "Starter shared beginner cache should accept modest shah contributions");

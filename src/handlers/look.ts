@@ -356,6 +356,16 @@ export function registerLookHandlers(bot: Bot) {
     await submitFeatureQueuedAction(bot, ctx, player, "DISMANTLE_TOTEM", { featureId: Number(ctx.match[1]) }, "Не вдалося розібрати тотем.");
   });
 
+  bot.callbackQuery(/^apiary:raid:(\d+)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    await submitFeatureQueuedAction(bot, ctx, player, "RAID_APIARY", { featureId: Number(ctx.match[1]) }, "Не вдалося дістати мед із борті.");
+  });
+
   bot.callbackQuery(/^fire:light:(\d+)$/, async (ctx) => {
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player) {

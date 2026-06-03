@@ -36,6 +36,7 @@ import { heldWeaponLine } from "./weapons";
 import { GATE_CARCASS_DROPOFF_FEATURE_KEY, gateHuntingDropoffText, gateHuntingNoticeText, getGateHuntingSaturationState } from "./carcassDropoff";
 import { visibilityDarknessText, visibilityPresenceText, visibilityRulesForLocation, type VisibilityRules } from "./visibility";
 import { getCurrentWorldTimeSnapshot } from "./worldTime";
+import { approximateWorldDurationFromRealMs } from "../data/worldClock";
 import { owlSignDetailLine, owlSignInspectionText } from "./owlSigns";
 import { isStrangeTotemFeature, strangeTotemDetailLine, strangeTotemInspectionText } from "./strangeTotems";
 import { effectiveLocationDanger, locationDangerExamineCue } from "./locationDanger";
@@ -223,6 +224,10 @@ function isShakeTreeFeature(feature: any) {
 
 function isOwlSignFeature(feature: any) {
   return featureData(feature).owl_sign === true;
+}
+
+function isApiaryFeature(feature: any) {
+  return featureData(feature).apiary === true;
 }
 
 export function treeShakeAmount(min = 5, max = 8, random = Math.random) {
@@ -649,8 +654,7 @@ export function groundItemLine(resource: any) {
   if (resource.resourceType.key !== "lit_torch") return `${resourceTypeDisplayName(resource.resourceType)}${amount}`;
 
   const leftMs = resource.updatedAt.getTime() + TORCH_DURATION_MS - Date.now();
-  const minutes = Math.max(1, Math.ceil(leftMs / 60_000));
-  return `${resourceTypeDisplayName(resource.resourceType)}${amount}; дає світло; горітиме ще приблизно ${minutes} хв`;
+  return `${resourceTypeDisplayName(resource.resourceType)}${amount}; дає світло; горітиме ще ${approximateWorldDurationFromRealMs(leftMs)}`;
 }
 
 function sortedExits(exits: any[]) {
@@ -1274,6 +1278,7 @@ export async function renderLocationFeatureInteraction(
     }
   }
   if (featureData(feature).carcass_dropoff === true) addCarcassDropoffButtons(keyboard, feature.id);
+  if (isApiaryFeature(feature)) keyboard.text("🍯 Взяти мед", `apiary:raid:${feature.id}`).row();
   if (isClimbTreeFeature(feature)) keyboard.text("🌳 Залізти", "move:UP").row();
   const moveDirection = featureMoveDirection(feature);
   if (moveDirection) keyboard.text(featureMoveButtonLabelForFeature(feature, moveDirection), `move:${moveDirection}`).row();

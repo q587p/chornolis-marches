@@ -7,6 +7,28 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.20 - Apiary honey and wax raid - 12026-06-03
+
+### Added
+
+- Added active apiary robbery through the queued `RAID_APIARY` action, available from the old log apiary feature button and typed `/gather_honey` / `/gather_beeswax` routes.
+- Added `honey` and `beeswax` resource types, lexicon entries, inventory lookup aliases, scribe `/addItem` support and admin menu buttons.
+- Added safe game deep-link payloads for `/gather_honey` and `/gather_beeswax`, so Herald/news links can open the main bot and run the matching command.
+- Added focused tests for apiary raid chance/damage/reward helpers, action cost/title, posture blocking, aliases, admin item parsing, Herald command linking and seed metadata.
+- Added a Prisma migration for the `RAID_APIARY` world action type.
+
+### Changed
+
+- The old log apiary seed data now exposes current raid reward metadata instead of future-only honey/wax hooks.
+- Passive bumblebee stings around the old log apiary now use a one default in-game hour cooldown and much stronger center/nearby chances, making the hive feel actively defended while still staying rate-limited.
+- The starter shared cache can now accept player-contributed honey and beeswax without hidden restock creating either resource.
+- Lit-torch lifetime text now uses approximate in-world hours instead of real minutes across location, inventory and character views.
+- Owl corpses now have explicit freshening support: successful freshening yields two raw meat and carried owl corpses render with a proper Ukrainian name.
+- Registered `/freshen` / `/butcher` as direct Telegram commands, matching the existing text freshening path and public news command hints.
+- Herald archive publication and force-repost templates now include the original `news.md` source date when one is available.
+- Apiary documentation and planning now record `APIARY-003` as the active 0.15.20 harvest slice while keeping honey uses and bear behavior in later backlog.
+- `/help` now mentions risky honey collection separately from ordinary gathering.
+
 ## 0.15.19 - Apiary and bumblebee hazard MVP - 12026-06-03
 
 ### Added

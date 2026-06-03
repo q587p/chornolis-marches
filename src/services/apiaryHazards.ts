@@ -7,12 +7,16 @@ import { noteKnownMessage } from "../utils/messageTracker";
 
 export const APIARY_STING_EVENT_TITLE = "Apiary sting";
 export const APIARY_PASSIVE_STING_LINE = "Поки ви милувалися квітами, вас боляче вжалив джміль!";
+export const APIARY_RAID_EVENT_TITLE = "Apiary raid";
+export const HONEY_RESOURCE_KEY = "honey";
+export const BEESWAX_RESOURCE_KEY = "beeswax";
 
 export type ApiaryAuraKind = "center" | "neighbor" | "outside";
 export type ApiaryHazardReason = "move" | "look" | "wait";
 export type ApiaryData = Record<string, unknown>;
 
 type ApiaryFeature = {
+  id?: number;
   key: string;
   locationId: number;
   data: unknown;
@@ -78,7 +82,7 @@ export function apiaryPassiveDamageRange(kind: ApiaryAuraKind, data: ApiaryData)
 }
 
 export function apiaryPassiveCooldownMs(data: ApiaryData) {
-  return Math.max(0, Math.floor(numberFromData(data, "passive_cooldown_ms", 3 * 60 * 60 * 1000)));
+  return Math.max(0, Math.floor(numberFromData(data, "passive_cooldown_ms", 120_000)));
 }
 
 export function isApiarySleepingForPassiveHazard(daypart: WorldDaypart, data: ApiaryData) {
@@ -109,6 +113,38 @@ export function passiveApiaryDamageResult(currentHp: number, rolledDamage: numbe
   return { appliedDamage: Math.max(0, hp - nextHp), nextHp };
 }
 
+export function apiaryRaidCooldownMs(data: ApiaryData) {
+  return Math.max(0, Math.floor(numberFromData(data, "raid_cooldown_ms", 6 * 60 * 60 * 1000)));
+}
+
+export function apiaryRaidSuccessChancePermille(data: ApiaryData) {
+  return Math.max(0, Math.floor(numberFromData(data, "raid_success_chance_permille", 700)));
+}
+
+export function apiaryRaidWaxChancePermille(data: ApiaryData) {
+  return Math.max(0, Math.floor(numberFromData(data, "raid_wax_chance_permille", 350)));
+}
+
+export function apiaryRaidDamageRange(data: ApiaryData): [number, number] {
+  return damageRangeFromData(data, "raid_damage", [2, 5]);
+}
+
+export function apiaryRaidHoneyAmount(data: ApiaryData) {
+  return Math.max(1, Math.floor(numberFromData(data, "raid_honey_amount", 1)));
+}
+
+export function apiaryRaidOutcome(data: ApiaryData, currentHp: number, random: () => number = Math.random) {
+  const success = Math.floor(random() * 1000) < apiaryRaidSuccessChancePermille(data);
+  const beeswax = success && Math.floor(random() * 1000) < apiaryRaidWaxChancePermille(data) ? 1 : 0;
+  const rolledDamage = rollDamage(apiaryRaidDamageRange(data), random);
+  return {
+    success,
+    honey: success ? apiaryRaidHoneyAmount(data) : 0,
+    beeswax,
+    ...passiveApiaryDamageResult(currentHp, rolledDamage),
+  };
+}
+
 function rollDamage(range: [number, number], random: () => number) {
   const [min, max] = range;
   if (max <= min) return min;
@@ -124,7 +160,7 @@ function hpFeedback(nextHp: number, maxHp: number | null | undefined) {
 async function activeApiaryFeatures() {
   const features = await prisma.locationFeature.findMany({
     where: { isActive: true },
-    select: { key: true, locationId: true, data: true },
+    select: { id: true, key: true, locationId: true, data: true },
     orderBy: { id: "asc" },
   });
   return features.filter((feature) => apiaryData(feature).apiary === true);
@@ -160,6 +196,133 @@ async function nearestApiaryAtLocation(locationId: number) {
   return nearest;
 }
 
+async function apiaryAtCenterLocation(locationId: number, featureId?: number) {
+  const apiaries = await activeApiaryFeatures();
+  const matches = apiaries.filter((feature) => {
+    if (feature.locationId !== locationId) return false;
+    if (featureId && featureId !== (feature as any).id) return false;
+    return true;
+  });
+  const feature = matches[0] as (ApiaryFeature & { id?: number }) | undefined;
+  return feature ? { feature, data: apiaryData(feature) } : null;
+}
+
+async function ensureApiaryRewardResourceTypes(tx: any = prisma) {
+  const [honey, beeswax] = await Promise.all([
+    tx.resourceType.upsert({
+      where: { key: HONEY_RESOURCE_KEY },
+      update: {
+        name: "мед",
+        description: "Густий дикий мед із борті: їжа, ліки, приманка і майбутній торговий товар. Дістати його важче, ніж ягоди.",
+      },
+      create: {
+        key: HONEY_RESOURCE_KEY,
+        name: "мед",
+        description: "Густий дикий мед із борті: їжа, ліки, приманка і майбутній торговий товар. Дістати його важче, ніж ягоди.",
+      },
+    }),
+    tx.resourceType.upsert({
+      where: { key: BEESWAX_RESOURCE_KEY },
+      update: {
+        name: "віск",
+        description: "Жовтий віск із борті: матеріал для свічок, герметизації, обрядів і кращого світла.",
+      },
+      create: {
+        key: BEESWAX_RESOURCE_KEY,
+        name: "віск",
+        description: "Жовтий віск із борті: матеріал для свічок, герметизації, обрядів і кращого світла.",
+      },
+    }),
+  ]);
+  return { honey, beeswax };
+}
+
+function apiaryRaidRewardText(outcome: ReturnType<typeof apiaryRaidOutcome>) {
+  if (!outcome.success) return "Мед лишається глибше в темній щілині. Цього разу рука повертається порожньою.";
+  if (outcome.beeswax > 0) return "У руці лишається липкий мед і жовтий шматочок воску.";
+  return "У руці лишається липкий мед.";
+}
+
+function apiaryRaidDamageText(outcome: ReturnType<typeof apiaryRaidOutcome>) {
+  if (outcome.appliedDamage <= 0) return "Джмелі сердяться, але цього разу не знаходять шкіри.";
+  return outcome.nextHp <= 3
+    ? "Джмелі не відпускають вас без плати. Тіло просить обережності."
+    : "Джмелі не відпускають вас без плати.";
+}
+
+export async function raidApiaryForPlayer(playerId: number, featureId?: number, random: () => number = Math.random) {
+  const now = new Date();
+  const player = await prisma.player.findUnique({
+    where: { id: playerId },
+    select: { id: true, currentLocationId: true, hp: true, hpMax: true },
+  });
+  if (!player?.currentLocationId) throw new Error("Ви ще не стоїте біля місця, де можна шукати мед.");
+  if (player.hp <= 1) throw new Error("Тіло ледве тримається на ногах. Лізти до борті зараз нерозумно.");
+
+  const apiary = await apiaryAtCenterLocation(player.currentLocationId, featureId);
+  if (!apiary) throw new Error("Поруч немає борті, з якої можна дістати мед.");
+
+  const cooldownMs = apiaryRaidCooldownMs(apiary.data);
+  const previous = await prisma.worldEvent.findFirst({
+    where: {
+      title: APIARY_RAID_EVENT_TITLE,
+      description: { contains: apiaryEventMarker(apiary.feature.key) },
+    },
+    orderBy: { createdAt: "desc" },
+    select: { createdAt: true },
+  });
+  if (isApiaryCooldownActive(previous?.createdAt, now, cooldownMs)) {
+    throw new Error("Бортя вже потривожена. Гул усередині ще надто густий, щоб знову лізти руками.");
+  }
+
+  const time = await getCurrentWorldTimeSnapshot(prisma, now);
+  const outcome = apiaryRaidOutcome(apiary.data, player.hp, random);
+
+  await prisma.$transaction(async (tx) => {
+    const resources = await ensureApiaryRewardResourceTypes(tx);
+    await tx.player.update({
+      where: { id: player.id },
+      data: { hp: outcome.nextHp },
+    });
+    if (outcome.honey > 0) {
+      await tx.playerResource.upsert({
+        where: { playerId_resourceTypeId: { playerId: player.id, resourceTypeId: resources.honey.id } },
+        update: { amount: { increment: outcome.honey } },
+        create: { playerId: player.id, resourceTypeId: resources.honey.id, amount: outcome.honey },
+      });
+    }
+    if (outcome.beeswax > 0) {
+      await tx.playerResource.upsert({
+        where: { playerId_resourceTypeId: { playerId: player.id, resourceTypeId: resources.beeswax.id } },
+        update: { amount: { increment: outcome.beeswax } },
+        create: { playerId: player.id, resourceTypeId: resources.beeswax.id, amount: outcome.beeswax },
+      });
+    }
+    await tx.worldEvent.create({
+      data: {
+        type: "PLAYER_ACTION",
+        title: APIARY_RAID_EVENT_TITLE,
+        playerId: player.id,
+        locationId: player.currentLocationId,
+        description: `${apiaryEventMarker(apiary.feature.key)}; success=${outcome.success}; honey=${outcome.honey}; beeswax=${outcome.beeswax}; damage=${outcome.appliedDamage}; daypart=${time.daypart}`,
+      },
+    });
+  });
+
+  const opening = time.daypart === "night"
+    ? "Уночі бортя спала тихо — доки ви не торкнулися її руками. Гул прокидається одразу, злий і низький."
+    : "Ви обережно торкаєтеся старої борті. Гул усередині густішає.";
+
+  return {
+    text: [
+      opening,
+      apiaryRaidRewardText(outcome),
+      apiaryRaidDamageText(outcome),
+    ].join("\n\n"),
+    outcome,
+  };
+}
+
 export async function maybeTriggerPassiveApiarySting(bot: Bot, input: MaybeTriggerPassiveApiaryStingInput) {
   const now = input.now ?? new Date();
   const random = input.random ?? Math.random;
@@ -186,7 +349,7 @@ export async function maybeTriggerPassiveApiarySting(bot: Bot, input: MaybeTrigg
 
   const player = await prisma.player.findUnique({
     where: { id: input.playerId },
-    select: { id: true, telegramId: true, hp: true, maxHp: true, currentLocationId: true },
+    select: { id: true, telegramId: true, hp: true, hpMax: true, currentLocationId: true },
   });
   if (!player || player.currentLocationId !== input.locationId || player.hp <= 1) return false;
 
@@ -211,7 +374,7 @@ export async function maybeTriggerPassiveApiarySting(bot: Bot, input: MaybeTrigg
   if (input.chatId) {
     noteKnownMessage(await bot.api.sendMessage(
       input.chatId,
-      `${APIARY_PASSIVE_STING_LINE}\n\n${hpFeedback(result.nextHp, player.maxHp)}`,
+      `${APIARY_PASSIVE_STING_LINE}\n\n${hpFeedback(result.nextHp, player.hpMax)}`,
       { reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false) },
     ));
   }

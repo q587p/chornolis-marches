@@ -1378,12 +1378,17 @@ export function registerAliasHandlers(bot: Bot) {
   ], async (_ctx, next) => next());
   bot.command(["attack", "fight", "kill", "kick"], async (ctx) => submitAttackCommand(bot, ctx, ctx.match ?? ""));
   bot.command("attack_mouse", async (ctx) => submitAttackCommand(bot, ctx, "mouse"));
+  bot.command(["freshen", "butcher"], async (ctx) => submitTargetAction(bot, ctx, "freshen", (ctx.match ?? "").trim() || "corpse"));
   bot.command(["get", "pick", "pickup", "take"], async (ctx) => submitPickupCommand(bot, ctx, ctx.match ?? ""));
   bot.command(["get_all", "pick_all", "pickup_all", "take_all"], async (ctx) => submitPickupCommand(bot, ctx, pickupAllCommandTarget(ctx.match ?? "")));
   bot.command("track", async (ctx) => submitTrack(bot, ctx, false, ctx.match ?? ""));
   bot.command("yell", async (ctx) => submitYell(bot, ctx, ctx.match ?? ""));
   bot.command("shout", async (ctx) => submitShout(bot, ctx, ctx.match ?? ""));
   bot.command(["call_scribes", "scribe_help"], async (ctx) => requestScribeReturnAssistance(bot, ctx));
+  bot.command("cache", async (ctx) => replyWithBeginnerCache(ctx));
+  bot.command(["take_cache", "cache_take"], async (ctx) => submitBeginnerCacheTake(bot, ctx, ctx.match ?? ""));
+  bot.command(["contribute_cache", "cache_contribute"], async (ctx) => submitBeginnerCacheContribute(bot, ctx, ctx.match ?? ""));
+  bot.command(["contribute_cache_all", "cache_contribute_all"], async (ctx) => submitBeginnerCacheContributeAll(bot, ctx, ctx.match ?? ""));
 
   bot.on("message:text", async (ctx, next) => {
     if (!ctx.from || !ctx.message?.text) return next();

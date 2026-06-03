@@ -7,6 +7,7 @@ const {
   REAL_MS_PER_GAME_MINUTE,
   START_WORLD_ABSOLUTE_MINUTE,
   advanceWorldClockFields,
+  approximateWorldDurationFromRealMs,
   worldDaypartForHour,
   worldTimeSnapshotFromAbsoluteMinute,
 } = require("../../src/data/worldClock");
@@ -45,6 +46,9 @@ const { daypartFromNoticeDescription, worldDaypartNoticeText } = require("../../
 assert.equal(REAL_MS_PER_GAME_HOUR, 120_000);
 assert.equal(REAL_MS_PER_GAME_MINUTE, 2_000);
 assert.equal(START_WORLD_ABSOLUTE_MINUTE, 185_340);
+assert.equal(approximateWorldDurationFromRealMs(10 * 60_000), "приблизно 5 годин");
+assert.equal(approximateWorldDurationFromRealMs(REAL_MS_PER_GAME_HOUR), "приблизно 1 годину");
+assert.equal(approximateWorldDurationFromRealMs(2 * REAL_MS_PER_GAME_HOUR), "приблизно 2 години");
 
 const start = worldTimeSnapshotFromAbsoluteMinute(START_WORLD_ABSOLUTE_MINUTE);
 assert.equal(start.year, 587);

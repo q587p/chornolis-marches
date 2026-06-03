@@ -15,19 +15,19 @@ Status: first slice in `0.15.19`.
 Status: first slice in `0.15.19`.
 
 - Add `src/services/apiaryHazards.ts`.
-- Trigger rare passive checks after successful movement, full location look/inspection and waiting.
+- Trigger passive checks after successful movement, full location look/inspection and waiting.
 - Skip passive stings at night.
-- Rate-limit by player and apiary key through `WorldEvent`.
+- Rate-limit by player and apiary key through `WorldEvent`, currently tuned to one default in-game hour.
 - Clamp passive damage so it cannot kill a player.
 - Keep world-tick proactive checks out of the first slice.
 
 ## Phase 3: Honey And Wax
 
-Status: backlog.
+Status: active slice in `0.15.20`.
 
 - Add `honey` and `beeswax` resources with lexicon forms.
-- Decide whether honey is food, remedy ingredient, trade good, offering hook or all of these in separate later slices.
-- Add deliberate hive robbery/harvest only with stock/cooldown limits and clear warning copy.
+- Add deliberate hive robbery/harvest with action timing, stamina cost, stronger disturbance stings, success/failure outcomes and cooldown limits.
+- Keep honey/wax use decisions for later: food, remedy ingredient, trade good, offering hook or crafting input can land in separate slices.
 
 ## Phase 4: Bear Honey Loop
 
@@ -42,3 +42,4 @@ Status: backlog.
 - Notification spam: passive hazards need cooldown-first tuning.
 - HP pressure: passive stings are damage, but must remain survivable in MVP.
 - Schema drift: stay with `LocationFeature.data` and `WorldEvent` until multiple hazards prove they need durable per-player state.
+- `WorldEvent` pruning can forget passive cooldown state for old apiary stings, and the current passive check uses the advancing world-time snapshot path.

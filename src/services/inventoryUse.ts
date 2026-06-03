@@ -1,4 +1,5 @@
 import { prisma } from "../db";
+import { approximateWorldDurationFromRealMs } from "../data/worldClock";
 import { BASE_HP, BASE_STAMINA, PLAYER_HUNGER_MAX } from "../gameConfig";
 import type { Prisma } from "@prisma/client";
 import { CAMPFIRE_BUILD_TWIG_COST, ensureTorchResourceTypes, TORCH_DURATION_MS, TORCH_FADING_MS } from "./fire";
@@ -117,6 +118,13 @@ const RESOURCE_ALIASES: Record<string, string> = {
   "притушені факели": "doused_torch",
   twigs: "twigs",
   хмиз: "twigs",
+  honey: "honey",
+  мед: "honey",
+  меду: "honey",
+  beeswax: "beeswax",
+  wax: "beeswax",
+  віск: "beeswax",
+  воску: "beeswax",
   shah: "shah",
   shahs: "shah",
   "small coin": "shah",
@@ -176,6 +184,9 @@ const RESOURCE_ALIASES: Record<string, string> = {
   "труп миші": "corpse_mouse_female",
   "труп зайця": "corpse_rabbit_male",
   "труп зайчихи": "corpse_rabbit_female",
+  "труп сови": "corpse_owl",
+  "труп сова": "corpse_owl",
+  "труп сову": "corpse_owl",
   "труп лиса": "corpse_fox_male",
   "труп лисиці": "corpse_fox_female",
   "труп вовка": "corpse_wolf_male",
@@ -329,15 +340,6 @@ export async function useInventoryResource(playerId: number, resourceKey: Usable
   });
 }
 
-function approximateDuration(ms: number) {
-  const safeMs = Math.max(0, ms);
-  const minutesLeft = Math.ceil(safeMs / 60_000);
-  if (minutesLeft <= 0) return "менш ніж хвилину";
-  if (minutesLeft === 1) return "приблизно 1 хвилину";
-  if (minutesLeft >= 5) return `приблизно ${minutesLeft} хвилин`;
-  return `приблизно ${minutesLeft} хвилини`;
-}
-
 export async function inspectInventoryResource(playerId: number, resourceQuery: string) {
   const key = inventoryResourceKeyFromText(resourceQuery);
   const carried = await prisma.playerResource.findFirst({
@@ -358,7 +360,7 @@ export async function inspectInventoryResource(playerId: number, resourceQuery: 
     : "";
   const torchDetails =
     carried.resourceType.key === "lit_torch"
-      ? `\nГорітиме ще ${approximateDuration(carried.updatedAt.getTime() + TORCH_DURATION_MS - Date.now())}${carried.updatedAt.getTime() + TORCH_DURATION_MS - Date.now() <= TORCH_FADING_MS ? "; скоро погасне" : ""}.`
+      ? `\nГорітиме ще ${approximateWorldDurationFromRealMs(carried.updatedAt.getTime() + TORCH_DURATION_MS - Date.now())}${carried.updatedAt.getTime() + TORCH_DURATION_MS - Date.now() <= TORCH_FADING_MS ? "; скоро погасне" : ""}.`
       : carried.resourceType.key === "doused_torch"
         ? "\nПолум'я притушене. Якщо знову підпалити цей факел, він продовжить горіти з того місця, де його загасили."
       : "";
@@ -415,7 +417,7 @@ export async function dropInventoryResourceDetailed(playerId: number, resourceQu
     if (carried.resourceType.key === "lit_torch") {
       const remainingMs = Math.max(0, carried.updatedAt.getTime() + TORCH_DURATION_MS - Date.now());
       return {
-        text: `Ви викинули запалений факел. Він ще горить на землі${remainingMs > 0 ? `, приблизно ${approximateDuration(remainingMs)}` : ""}.`,
+        text: `Ви викинули запалений факел. Він ще горить на землі${remainingMs > 0 ? `; горітиме ще ${approximateWorldDurationFromRealMs(remainingMs)}` : ""}.`,
         locationId: player.currentLocationId!,
         droppedName: resourceTypeDisplayName(carried.resourceType),
         carriedName: resourceTypeDisplayName(carried.resourceType),

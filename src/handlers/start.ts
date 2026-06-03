@@ -32,6 +32,7 @@ import { resolveStartActionPayload, type StartActionPayload } from "../input/sta
 import { runExamineCurrentLocation } from "./look";
 import { showCharacter, showInventory, showLocationForPlayer } from "./player";
 import { startRest } from "./rest";
+import { submitGather } from "./gather";
 import { showCalendar, showTime, showWeather } from "./time";
 import { submitSleepCommand } from "./tutorial";
 import { grantStarterKnifeIfMissing } from "../services/weapons";
@@ -744,6 +745,16 @@ async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayl
 
   if (action === "dismantleTotem") {
     await submitDismantleTotem(bot, ctx);
+    return true;
+  }
+
+  if (action === "gatherHoney") {
+    await submitGather(bot, ctx, "honey", false);
+    return true;
+  }
+
+  if (action === "gatherBeeswax") {
+    await submitGather(bot, ctx, "beeswax", false);
     return true;
   }
 

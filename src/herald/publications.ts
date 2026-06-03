@@ -174,7 +174,23 @@ export async function prepareManualHeraldPublication(input: QueueHeraldPublicati
   if (input.contentHash) {
     const existing = await findExistingPublicationByHash(input.contentHash);
     if (existing) {
-      if (existing.publishedAt) return existing;
+      if (existing.publishedAt) {
+        const missingSourceMetadata =
+          (input.sourceDate && !existing.sourceDate) ||
+          (input.sourceVersion && !existing.sourceVersion) ||
+          (input.archiveOrder !== undefined && existing.archiveOrder === null);
+        if (missingSourceMetadata) {
+          return prisma.heraldPublication.update({
+            where: { id: existing.id },
+            data: {
+              sourceDate: existing.sourceDate ?? input.sourceDate,
+              sourceVersion: existing.sourceVersion ?? input.sourceVersion,
+              archiveOrder: existing.archiveOrder ?? input.archiveOrder,
+            },
+          });
+        }
+        return existing;
+      }
 
       return prisma.heraldPublication.update({
         where: { id: existing.id },

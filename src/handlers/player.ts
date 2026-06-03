@@ -1,6 +1,7 @@
 import { Bot, InlineKeyboard } from "grammy";
 import type { Prisma, WorldActionType } from "@prisma/client";
 import { prisma } from "../db";
+import { approximateWorldDurationFromRealMs } from "../data/worldClock";
 import { BASE_HP, BASE_STAMINA, HEALTH_REGEN_PER_INTERVAL, PASSIVE_STAMINA_REGEN_PER_INTERVAL, PLAYER_HUNGER_MAX, REST_HEALTH_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_PER_INTERVAL, STAMINA_REGEN_INTERVAL_MS } from "../gameConfig";
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { renderLocationBrief, renderLocationFeatureInteractionByQuery } from "../services/locations";
@@ -215,15 +216,6 @@ function nameCasesText(player: any) {
   ].map((value) => value ?? "—").join(" / ");
 }
 
-function approximateDuration(ms: number) {
-  const safeMs = Math.max(0, ms);
-  const minutesLeft = Math.ceil(safeMs / 60_000);
-  if (minutesLeft <= 0) return "менш ніж хвилину";
-  if (minutesLeft === 1) return "приблизно 1 хвилину";
-  if (minutesLeft >= 5) return `приблизно ${minutesLeft} хвилин`;
-  return `приблизно ${minutesLeft} хвилини`;
-}
-
 function amountSuffix(amount: number) {
   return amount > 1 ? ` ×${amount}` : "";
 }
@@ -318,7 +310,7 @@ function inventoryResourceLine(resource: any) {
   const fading = leftMs > 0 && leftMs <= TORCH_FADING_MS;
   if (fading) return `- ${name}${amountSuffix(amount)} (скоро погасне)`;
   const state = "горітиме";
-  return `- ${name}${amountSuffix(amount)}; ${state} ще ${approximateDuration(leftMs)}`;
+  return `- ${name}${amountSuffix(amount)}; ${state} ще ${approximateWorldDurationFromRealMs(leftMs)}`;
 }
 
 async function renderCharacterView(telegramId: number) {

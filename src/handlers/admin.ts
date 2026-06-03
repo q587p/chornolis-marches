@@ -29,6 +29,7 @@ import { getCurrentWorldState, setWorldClockAbsoluteMinute, setWorldWeatherState
 import { parseWeatherSetTarget, parseWorldTimeSetTarget, renderWorldTimeDebug } from "../services/worldTimeDebug";
 import { COOKED_MEAT_KEY, ensureMeatResourceTypes, RAW_MEAT_KEY } from "../services/meat";
 import { WEAPON_DEFINITIONS, isWeaponResourceKey } from "../services/weapons";
+import { BEESWAX_RESOURCE_KEY, HONEY_RESOURCE_KEY } from "../services/apiaryHazards";
 import { parseTeleportCoordinateCommand } from "../services/adminTeleportLinks";
 import { approveScribeReturnRequest, buildScribeReturnAuditText } from "../services/scribeReturnHelp";
 import { escapeHtml } from "../utils/text";
@@ -101,6 +102,22 @@ async function ensureAdminInventoryResourceType(key: string) {
   if (key === RAW_MEAT_KEY || key === COOKED_MEAT_KEY) {
     const meat = await ensureMeatResourceTypes();
     return key === RAW_MEAT_KEY ? meat.rawMeat : meat.cookedMeat;
+  }
+
+  if (key === HONEY_RESOURCE_KEY) {
+    return ensureResourceType(
+      HONEY_RESOURCE_KEY,
+      "мед",
+      "Густий дикий мед із борті: їжа, ліки, приманка і майбутній торговий товар.",
+    );
+  }
+
+  if (key === BEESWAX_RESOURCE_KEY) {
+    return ensureResourceType(
+      BEESWAX_RESOURCE_KEY,
+      "віск",
+      "Жовтий віск із борті: матеріал для свічок, герметизації, обрядів і кращого світла.",
+    );
   }
 
   if (isWeaponResourceKey(key)) {
@@ -913,6 +930,8 @@ export function registerAdminHandlers(bot: Bot) {
   bot.hears(["🕯 Додати притушений факел", "Додати притушений факел"], (ctx) => runAddItemCommand(ctx, "doused_torch", ""));
   bot.hears(["🥩 Додати сире м'ясо", "Додати сире м'ясо"], (ctx) => runAddItemCommand(ctx, RAW_MEAT_KEY, ""));
   bot.hears(["🍖 Додати смажене м'ясо", "Додати смажене м'ясо"], (ctx) => runAddItemCommand(ctx, COOKED_MEAT_KEY, ""));
+  bot.hears(["🍯 Додати мед", "Додати мед"], (ctx) => runAddItemCommand(ctx, HONEY_RESOURCE_KEY, ""));
+  bot.hears(["🕯 Додати віск", "Додати віск"], (ctx) => runAddItemCommand(ctx, BEESWAX_RESOURCE_KEY, ""));
   bot.hears(["🔪 Додати ніж", "Додати ніж"], (ctx) => runAddItemCommand(ctx, "knife", ""));
   bot.hears(["🪵 Додати спис", "Додати спис"], (ctx) => runAddItemCommand(ctx, "hunting_spear", ""));
   bot.hears(["🌾 Додати серп", "Додати серп"], (ctx) => runAddItemCommand(ctx, "sickle", ""));
