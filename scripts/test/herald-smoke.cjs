@@ -260,6 +260,11 @@ assert.match(linkedCommands, /\/cleanupCreatures/);
 assert.match(linkedCommands, /\/unknown/);
 assert.doesNotMatch(linkHeraldGameCommandMentions("/cleanupCreatures", "Chornolis_bot"), /href=/);
 assert.doesNotMatch(linkHeraldGameCommandMentions("/unknown", "Chornolis_bot"), /href=/);
+const linkedLabelCommand = linkHeraldGameCommandMentions("`Озирнутися` (/look) і `Пошукати мед` (/search_honey)", "Chornolis_bot");
+assert.match(linkedLabelCommand, /<i>Озирнутися<\/i>/);
+assert.match(linkedLabelCommand, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_look">\/look<\/a>/);
+assert.match(linkedLabelCommand, /<i>Пошукати мед<\/i>/);
+assert.match(linkedLabelCommand, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_search_honey">\/search_honey<\/a>/);
 
 const archiveFormatted = formatHeraldPublicationMessage({
   sourceType: "NEWS_MD_ARCHIVE",
