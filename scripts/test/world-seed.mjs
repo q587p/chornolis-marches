@@ -302,6 +302,8 @@ assert.deepEqual(
 const startCampTorchStand = features.find((item) => item.key === "start_camp_torch_stand");
 assert.equal(startCampTorchStand?.data?.torch_source, true, "Starter camp torch stand should be a torch source");
 assert.equal(startCampTorchStand?.locationKey, "start_border_watchtower", "Starter torch stand should live in the watchtower");
+assert.equal(startCampTorchStand?.providesLight, true, "Starter watchtower torch stand should provide reflected campfire light for beginners at night");
+assert.equal(startCampTorchStand?.data?.starter_reflected_campfire_light, true, "Starter torch stand light should be marked as a narrow starter exception");
 assert.notEqual(startCampTorchStand?.data?.hunter_resupply, false, "Starter watchtower torch stand should remain available for hunter resupply");
 assert.notEqual(startCampTorchStand?.data?.icon, "🔥", "Starter camp torch stand should not use the fire icon reserved for flame/campfire actions");
 assertFeatureExamineSummary(startCampTorchStand, "Starter camp torch stand should explain the torch source on examine");

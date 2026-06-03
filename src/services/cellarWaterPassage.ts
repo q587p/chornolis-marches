@@ -5,6 +5,7 @@ import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { escapeHtml } from "../utils/text";
 import { playerForms } from "./grammar";
 import { notifyLocationExcept } from "./notifications";
+import { cancelQueuedOrRunningSpiritCallActionsForPlayer, summarizeQueuedOrRunningSpiritCallActionsForPlayer } from "./spiritCallActions";
 
 export const CELLAR_WATER_PASSAGE_SOURCE_KEY = "start_border_cellar";
 export const CELLAR_WATER_PASSAGE_DESTINATION_KEY = "under_bridge_18_05";
@@ -41,8 +42,49 @@ export function canTriggerCellarWaterWordPassage(input: {
   );
 }
 
+export function canTriggerManualCellarWaterWordPassage(input: {
+  text: string;
+  locationKey?: string | null;
+  hp?: number | null;
+  isResting?: boolean | null;
+  sleepState?: string | null;
+  hasTarget?: boolean | null;
+}) {
+  return !input.hasTarget && canTriggerCellarWaterWordPassage(input);
+}
+
 export function cellarWaterWordPassageEventDescription(playerId: number) {
   return `player=${playerId}; source=${CELLAR_WATER_PASSAGE_SOURCE_KEY}; destination=${CELLAR_WATER_PASSAGE_DESTINATION_KEY}; trigger=water_word_phrase`;
+}
+
+export async function tryTriggerManualCellarWaterWordPassage(bot: Bot, input: {
+  playerId: number;
+  text: string;
+  chatId?: string | number | null;
+  hasTarget?: boolean | null;
+}) {
+  if (input.hasTarget || !isCellarWaterWordPhrase(input.text)) return false;
+
+  const player = await prisma.player.findUnique({
+    where: { id: input.playerId },
+    include: { currentLocation: { select: { key: true } } },
+  });
+  if (!player || !canTriggerManualCellarWaterWordPassage({
+    text: input.text,
+    locationKey: player.currentLocation?.key,
+    hp: player.hp,
+    isResting: player.isResting,
+    sleepState: player.sleepState,
+    hasTarget: input.hasTarget,
+  })) {
+    return false;
+  }
+
+  const actionSummary = await summarizeQueuedOrRunningSpiritCallActionsForPlayer(player.id);
+  if (actionSummary.otherCount > 0) return false;
+
+  await cancelQueuedOrRunningSpiritCallActionsForPlayer(player.id, "manual water-word passage");
+  return tryCompleteCellarWaterWordPassage(bot, input);
 }
 
 export async function tryCompleteCellarWaterWordPassage(bot: Bot, input: { playerId: number; text: string; chatId?: string | number | null }) {

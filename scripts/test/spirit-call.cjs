@@ -5,6 +5,7 @@ require("ts-node/register");
 const {
   SPIRIT_CALL_LABEL,
   SPIRIT_CALL_SOURCE,
+  isSpiritCallActionLike,
   isSpiritCallPayload,
   markSpiritCallPayload,
   spiritCallActionPrefix,
@@ -21,6 +22,11 @@ assert.equal(payload.spiritCall, true);
 assert.equal(isSpiritCallPayload(payload), true);
 assert.equal(isSpiritCallPayload({ source: SPIRIT_CALL_SOURCE }), true);
 assert.equal(isSpiritCallPayload({ direction: "NORTH" }), false);
+assert.equal(isSpiritCallActionLike({ payload: { source: SPIRIT_CALL_SOURCE } }), true);
+assert.equal(isSpiritCallActionLike({ payload: { spiritCall: true } }), true);
+assert.equal(isSpiritCallActionLike({ note: "auto:move:NORTH" }), true);
+assert.equal(isSpiritCallActionLike({ note: "AUTO:look" }), true);
+assert.equal(isSpiritCallActionLike({ payload: { text: "До води" }, note: "manual say" }), false);
 assert.equal(spiritCallActionPrefix(payload), "дух веде: ");
 assert.equal(spiritCallActionPrefix({ direction: "NORTH" }), "");
 assert.equal(spiritGuidedTargetHint(true), "за кроком тягнеться тихий поклик");

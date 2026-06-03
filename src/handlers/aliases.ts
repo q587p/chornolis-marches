@@ -42,6 +42,7 @@ import { requireScribeAdmin } from "../services/adminAccess";
 import { playerCanShowTechnicalDetails } from "../services/technicalDetails";
 import { pickUpAllVisibleGroundResources, pickUpAllVisibleGroundResourcesByKey, pickUpFirstGroundResourceByKey, pickUpFirstVisibleGroundResourceByKey, type VisibleGroundResourceKey } from "../services/groundItems";
 import { parseSpeechTarget } from "../services/speechTargets";
+import { tryTriggerManualCellarWaterWordPassage } from "../services/cellarWaterPassage";
 import { inspectInventoryResource, inventoryResourceKeyFromText, type UsableInventoryResource } from "../services/inventoryUse";
 import { openDreamGate, rememberTutorialCommandHintIfInTutorial } from "../services/tutorial";
 import { requestTutorialEnd, submitSleepCommand, submitWakeCommand } from "./tutorial";
@@ -697,6 +698,15 @@ export async function submitSay(bot: Bot, ctx: any, text: string) {
   const durationMs = actionDurationMs("SAY", player.stamina);
   try {
     const payload = await parseSpeechTarget(safeText, player.currentLocationId, player.id);
+    const hasTarget = Boolean(payload.targetType || payload.targetId || payload.targetName || payload.targetDative);
+    if (await tryTriggerManualCellarWaterWordPassage(bot, {
+      playerId: player.id,
+      text: payload.text,
+      chatId: ctx.chat?.id,
+      hasTarget,
+    })) {
+      return;
+    }
     const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "SAY", payload, durationMs, chatId: ctx.chat?.id });
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {

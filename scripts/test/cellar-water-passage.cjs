@@ -9,6 +9,7 @@ const {
   CELLAR_WATER_PASSAGE_RESULT_TEXT,
   CELLAR_WATER_PASSAGE_SOURCE_KEY,
   canTriggerCellarWaterWordPassage,
+  canTriggerManualCellarWaterWordPassage,
   cellarWaterWordPassageEventDescription,
   isCellarWaterWordPhrase,
   normalizeCellarWaterWordPhrase,
@@ -43,6 +44,22 @@ assert.equal(
 );
 assert.equal(
   canTriggerCellarWaterWordPassage({ text: "До води!", locationKey: CELLAR_WATER_PASSAGE_SOURCE_KEY, hp: 20, isResting: false, sleepState: "ORDINARY_SLEEP" }),
+  false,
+);
+assert.equal(
+  canTriggerManualCellarWaterWordPassage({ text: "До води!", locationKey: CELLAR_WATER_PASSAGE_SOURCE_KEY, hp: 20, isResting: false, sleepState: "AWAKE", hasTarget: false }),
+  true,
+);
+assert.equal(
+  canTriggerManualCellarWaterWordPassage({ text: "До води!", locationKey: CELLAR_WATER_PASSAGE_SOURCE_KEY, hp: 20, isResting: false, sleepState: "AWAKE", hasTarget: true }),
+  false,
+);
+assert.equal(
+  canTriggerManualCellarWaterWordPassage({ text: "До води!", locationKey: "start_border_camp", hp: 20, isResting: false, sleepState: "AWAKE", hasTarget: false }),
+  false,
+);
+assert.equal(
+  canTriggerManualCellarWaterWordPassage({ text: "Ліс бачить", locationKey: CELLAR_WATER_PASSAGE_SOURCE_KEY, hp: 20, isResting: false, sleepState: "AWAKE", hasTarget: false }),
   false,
 );
 
