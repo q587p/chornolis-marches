@@ -21,6 +21,7 @@ export const HERALD_COMMANDS: HeraldCommandInfo[] = [
   { command: "/whoami", description: "показати печатку відправника й chat diagnostics" },
   { command: "/info", description: "показати безпечний запис про себе або людину, якій відповідаєте" },
   { command: "/info_full", description: "службово переглянути докладніший запис за іменем або печаткою", adminOnly: true },
+  { command: "/news_updates", description: "перечитати news.md і показати записи, які ще не мають активної публікації", adminOnly: true },
   { command: "/preview_latest_news", description: "переглянути останній запис із news.md", adminOnly: true },
   { command: "/queue_latest_news", description: "поставити останній запис із news.md у чергу", adminOnly: true },
   { command: "/post_latest_news", description: "поставити й одразу передати останній запис із news.md", adminOnly: true },

@@ -220,6 +220,7 @@ Suggested BotFather command list:
 ping - перевірити, чи Канцелярія на місці
 info - безпечний атмосферний запис про себе або людину у відповіді
 preview_latest_news - показати останню новину без публікації
+news_updates - показати записи news.md, які ще не мають активної публікації
 post_latest_news - опублікувати останню новину в канал
 pending_publications - показати чергу публікацій
 publish_pending - опублікувати очікувані записи
@@ -246,6 +247,7 @@ preview_world_digest - попередній перегляд дайджесту 
 - `/info` — публічний безпечний запис: без reply показує запис відправника, у reply показує запис людини, якій відповідають, якщо Telegram передав її `from`.
 - `/info_full` — службовий докладніший запис за іменем або печаткою; потребує `HERALD_ADMIN_IDS`.
 - `/queue_latest_news` — поставити останню новину в outbox без негайної публікації.
+- `/news_updates` або `/check_news_updates` — перечитати deployed `news.md`, знайти записи без активної queued/published публікації, показати короткі прев'ю й готові команди `/news_archive_preview N` та `/news_archive_post N`.
 - `/pause_publications` — призупинити автоматичний publisher loop, не зупиняючи бота, health server чи інші службові команди. Стан паузи зберігається в БД.
 - `/resume_publications` — відновити автоматичну публікацію очікуваних записів.
 - `/cancel_pending_publications` — позначити неопубліковані записи `NEWS_MD` і `NEWS_MD_ARCHIVE` як `CANCELED`, не видаляючи вже опубліковану історію й не торкаючись інших майбутніх типів публікацій.

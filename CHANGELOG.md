@@ -7,6 +7,18 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.33 - Herald news update notices - 12026-06-04
+
+### Added
+
+- Added Herald admin commands `/news_updates` and `/check_news_updates` to scan deployed `news.md` for entries that do not yet have an active queued or published `HeraldPublication`.
+- Added compact missing-news previews with stable archive indices and ready `/news_archive_preview N` / `/news_archive_post N` follow-up commands.
+
+### Fixed
+
+- Reused the shared Herald `news.md` parsing and archive ordering path so latest-news checks, archive indices and missed-news notices stay aligned.
+- Added smoke coverage for missed-news detection, safe HTML escaping and admin-only command visibility.
+
 ## 0.15.32 - Try to keep following via remembered route - 12026-06-04
 
 ### Added

@@ -4,6 +4,7 @@ import { formatHeraldNewsMessage, formatHeraldNewsPreview, formatHeraldPublicati
 import { HERALD_CHANNEL_MESSAGE_OPTIONS } from "./gameLinks";
 import { requireHeraldAdmin } from "./admin";
 import { readLatestNewsEntry } from "./newsMarkdown";
+import { formatHeraldNewsUpdatesNotice, readHeraldNewsUpdatePlan } from "./newsUpdates";
 import {
   findExistingPublicationByHash,
   markPublicationFailed,
@@ -38,6 +39,23 @@ async function queueLatestNewsPublication() {
 }
 
 export function registerHeraldNewsCommands(bot: Bot, heraldAdminIds: ReadonlySet<string>) {
+  bot.command(["news_updates", "check_news_updates"], async (ctx) => {
+    if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
+
+    try {
+      const result = await readHeraldNewsUpdatePlan();
+      if (!result.ok) {
+        await ctx.reply(result.error);
+        return;
+      }
+
+      await ctx.reply(formatHeraldNewsUpdatesNotice(result), HERALD_CHANNEL_MESSAGE_OPTIONS);
+    } catch (error) {
+      console.error("Herald news update check failed:", publicationErrorMessage(error));
+      await ctx.reply("Канцелярія не змогла звірити новини з книгою публікацій.");
+    }
+  });
+
   bot.command("preview_latest_news", async (ctx) => {
     if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
 
