@@ -80,6 +80,14 @@ This is a content pressure task, not only a future worldbuilding wish. The first
 - Kept it out of ordinary exits, visible map docs, public news and buttons; the route is hinted only through careful inspection of cellar landmark text.
 - Future herbalist supply-run work may occasionally use the same phrase so players can learn it by watching, but this task does not implement NPC route usage, follow intent or signal triggers.
 
+## Future Hatch State Follow-Up
+
+- Make `Люк до погреба` a stateful camp feature: it can be open or closed, and the `DOWN` route into `start_border_cellar` should require opening it first when closed.
+- Add typed and button paths for opening/closing the hatch, using the same ordinary open/close interaction style as other authored gates/features where possible.
+- Ordinary small animals such as mice should not be able to open the hatch or use the cellar route while it is closed.
+- Human-like/profession NPCs such as hunters and herbalists, plus camp-bound special beings such as the camp spirit cat, may open and close the hatch when their route needs the cellar.
+- Keep the hatch state diegetic and local; do not turn the starter cellar into a locked quest, loot room or public spoiler for the hidden water-word passage.
+
 ## Implementation Notes
 
 - Active hand-edited map data lives under `prisma/data/world/`; update split files there first.
@@ -92,3 +100,4 @@ This is a content pressure task, not only a future worldbuilding wish. The first
 - `MAP-003-A`: choose expansion direction and sketch the first 10-20 reachable cells.
 - `MAP-003-B`: implement the first expansion in split seed data with exits/resources/features.
 - `MAP-003-C`: add seed/map validation or docs updates for the new region shape if existing checks are not enough.
+- `MAP-003-D`: implement the stateful cellar hatch open/close loop and route permissions for players, profession NPCs, camp spirit cat and ordinary animals.
