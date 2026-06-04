@@ -21,6 +21,7 @@ import { getPlayerByTelegramId } from "../services/players";
 import { resolveTarget, type ResolvedTarget } from "../services/targets";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { buildExamineLocationKeyboard, buildRestWithQueueChoiceKeyboard, buildStandUpKeyboard } from "../ui/keyboards";
+import { directionLabels } from "../ui/labels";
 import { buildInventoryItemKeyboard } from "../ui/inventoryItemKeyboard";
 import { actionQueueReplyOptions, sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { durationSecondsSuffix } from "../utils/durationText";
@@ -80,6 +81,7 @@ import { queueAllRawMeatCooking } from "../services/cookingQueue";
 import { queueAllUsableInventoryResource } from "../services/eatingQueue";
 import { queueAllBeginnerCacheContributions } from "../services/beginnerCacheQueue";
 import { clearPlayerFollowIntent, followIntentStatusLine, setPlayerFollowIntent } from "../services/following";
+import { followStepDirectionForPlayer, followStepFailureText } from "../services/followRouteMemory";
 import { verticalYellPromptPlaceholder, verticalYellPromptText, type VerticalYellPromptDirection } from "../services/speechRanges";
 import {
   campfireBuildConfirmationText,
@@ -984,6 +986,28 @@ export async function submitUnfollow(ctx: any) {
     : "Ви відпускаєте чужий слід. Далі — власний крок.");
 }
 
+function followStepDirectionPhrase(direction: keyof typeof directionLabels) {
+  const label = directionLabels[direction].toLowerCase();
+  if (["UP", "DOWN", "INSIDE", "OUTSIDE"].includes(direction)) return label;
+  return `на ${label}`;
+}
+
+async function submitFollowStep(bot: Bot, ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const remembered = await followStepDirectionForPlayer(player.id);
+  if (!remembered.ok) {
+    await ctx.reply(followStepFailureText(remembered.reason), {
+      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+    });
+    return;
+  }
+
+  await ctx.reply(`Ви тримаєте власний крок за чужим слідом: ${followStepDirectionPhrase(remembered.direction)}.`);
+  await submitCanonicalMove(bot, ctx, remembered.direction, false);
+}
+
 async function submitAttackCommand(bot: Bot, ctx: any, targetQuery?: string) {
   const target = targetQuery?.trim();
   if (!target) {
@@ -1439,6 +1463,7 @@ export function registerAliasHandlers(bot: Bot) {
   bot.command(["get_all", "pick_all", "pickup_all", "take_all"], async (ctx) => submitPickupCommand(bot, ctx, pickupAllCommandTarget(ctx.match ?? "")));
   bot.command("track", async (ctx) => submitTrack(bot, ctx, false, ctx.match ?? ""));
   bot.command("follow", async (ctx) => submitFollowIntent(ctx, ctx.match ?? ""));
+  bot.command(["follow_step", "keep_following", "trail"], async (ctx) => submitFollowStep(bot, ctx));
   bot.command("unfollow", async (ctx) => submitUnfollow(ctx));
   bot.command("yell", async (ctx) => submitYell(bot, ctx, ctx.match ?? ""));
   bot.command("shout", async (ctx) => submitShout(bot, ctx, ctx.match ?? ""));
@@ -1574,6 +1599,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "auto") return submitAuto(bot, ctx, parsed.mode);
     if (parsed.kind === "queue") return submitQueue(ctx, parsed.mode);
     if (parsed.kind === "track") return submitTrack(bot, ctx, Boolean(parsed.detail), parsed.target);
+    if (parsed.kind === "follow-step") return submitFollowStep(bot, ctx);
     if (parsed.kind === "shake-tree") return submitShakeTree(ctx);
     if (parsed.kind === "wait") return submitWait(bot, ctx);
     if (parsed.kind === "use-item") return submitUseItem(bot, ctx, parsed.item);

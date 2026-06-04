@@ -78,10 +78,17 @@ markers, so repeating the same movement context cannot rapidly farm tracking
 progress or keep nudging the same follower. This does not change skill effects
 or expose new public progress UI.
 
-Follow movement is intentionally separate from this marker. When it exists, it
-should be explicit and should still respect darkness, stamina, queues, visible
-exits and learned route knowledge. Hidden passages such as the cellar water-word
-route must not be repeated merely because the followed actor used them.
+`0.15.32` lets clear route memory guide one explicit manual step through
+`Йти слідом` (`/follow_step`). This does not add new learning progress by
+itself: the previous witnessed movement remains the learning source. The manual
+step simply asks the existing movement rules to use a fresh remembered ordinary
+direction.
+
+Follow movement remains intentionally limited. The current slice is one manual
+action, not a continuous mode. It still respects darkness, stamina, queues,
+visible exits and learned route knowledge. Hidden passages such as the cellar
+water-word route must not be repeated merely because the followed actor used
+them.
 
 Observed actor skill remains future work. A later slice should add a small helper
 such as `observedActorSkillLevel(...)` that can read player learning progress or

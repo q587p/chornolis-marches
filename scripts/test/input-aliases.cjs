@@ -474,6 +474,15 @@ assertAlias("слідувати за знахарем", { kind: "follow", target
 assertAlias("йти за Нестором", { kind: "follow", target: "нестором" });
 assertAlias("триматися за Лукана", { kind: "follow", target: "лукана" });
 assertAlias("стежити за мишею", { kind: "follow", target: "мишею" });
+assertAlias("/follow_step", { kind: "follow-step" });
+assertAlias("/keep_following", { kind: "follow-step" });
+assertAlias("/trail", { kind: "follow-step" });
+assertAlias("йти слідом", { kind: "follow-step" });
+assertAlias("спробувати йти слідом", { kind: "follow-step" });
+assertAlias("піти слідом", { kind: "follow-step" });
+assertAlias("рушити слідом", { kind: "follow-step" });
+assertAlias("йти за слідом", { kind: "follow-step" });
+assertAlias("триматися сліду", { kind: "follow-step" });
 assertAlias("/unfollow", { kind: "unfollow" });
 assertAlias("відстати", { kind: "unfollow" });
 assertAlias("stop follow", { kind: "unfollow" });

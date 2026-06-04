@@ -7,6 +7,24 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.32 - Try to keep following via remembered route - 12026-06-04
+
+### Added
+
+- Added `/follow_step`, `/keep_following` and `/trail` as a manual follow-step action that can use fresh clear follow route-memory to submit an ordinary `MOVE`.
+- Added English/MUD-style and Ukrainian text aliases for trying to keep following, including `йти слідом`, `спробувати йти слідом`, `піти слідом`, `рушити слідом`, `йти за слідом` and `триматися сліду`.
+- Added route-memory parsing and safety helpers for accepting only fresh clear `visible_move` WorldEvent markers with matching follow intent and matching source location.
+
+### Changed
+
+- The follow-step action reuses the existing movement submission path, so posture, stamina, action queue, locked exits and hidden exits stay on the normal movement rules.
+- Dark, stale, hidden-route, wrong-location and missing-exit route memories now have explicit player-facing refusal copy.
+
+### Fixed
+
+- Kept hidden water-word passage memory non-directional: follow-step never repeats the phrase, never teleports and never turns hidden movement into route replay.
+- Added focused alias and route-memory helper coverage for manual follow-step acceptance and rejection cases.
+
 ## 0.15.31 - Follow route memory stabilization - 12026-06-04
 
 ### Changed
