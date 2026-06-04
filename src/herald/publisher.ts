@@ -7,6 +7,7 @@ import {
   getPendingPublications,
   cancelPendingPublications,
   countPendingPublications,
+  forgetPublishedPublications,
   HERALD_NEWS_SOURCE_TYPES,
   getHeraldPublicationById,
   isPublicationQueuePaused,
@@ -321,6 +322,35 @@ async function replyAfterCancelPendingPublications(ctx: Context, sourceTypes = H
   }));
 }
 
+async function replyAfterForgetPublishedPublications(ctx: Context, sourceTypes = HERALD_NEWS_SOURCE_TYPES) {
+  const confirmation = String(ctx.match ?? "").trim().toLowerCase();
+  if (confirmation !== "confirm") {
+    const counts = await publicationQueueStateCounts(sourceTypes);
+    await ctx.reply([
+      "Канцелярія може забути вже опубліковані записи новин та архіву у своїй книзі публікацій.",
+      "",
+      "Telegram-повідомлення в каналі не видалятимуться, старий час публікації не відновлюватиметься, а повторне внесення створить нові записи.",
+      `Ще чекає новин/архіву: ${counts.waiting}.`,
+      "",
+      "Щоб підтвердити, напишіть: /forget_published_news confirm",
+    ].join("\n"));
+    return;
+  }
+
+  const forgotten = await forgetPublishedPublications(sourceTypes);
+  const counts = await publicationQueueStateCounts(sourceTypes);
+  await ctx.reply([
+    "Канцелярія забула опубліковані записи новин та архіву у своїй книзі публікацій.",
+    "",
+    `Забуто записів: ${forgotten.count}. Telegram-повідомлення не видалялися.`,
+    `Стан публікації: ${counts.paused ? "призупинено" : "увімкнено"}.`,
+    `Ще чекає новин/архіву: ${counts.waiting}.`,
+    counts.allWaiting !== counts.waiting
+      ? `Інших майбутніх записів не торкалися; усього у скрині: ${counts.allWaiting}.`
+      : `Усього у скрині: ${counts.allWaiting}.`,
+  ].join("\n"));
+}
+
 async function replyWithRecentPublications(ctx: Context) {
   const publications = await listRecentHeraldPublications(RECENT_PUBLICATIONS_LIMIT);
   if (!publications.length) {
@@ -459,6 +489,16 @@ export function registerHeraldPublisherCommands(bot: Bot, heraldAdminIds: Readon
     } catch (error) {
       console.error("Herald cancel pending publications command failed:", publicationErrorMessage(error));
       await ctx.reply("Канцелярія не змогла скасувати очікувані записи.");
+    }
+  });
+
+  bot.command(["forget_published_news", "forget_published_publications"], async (ctx) => {
+    if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
+    try {
+      await replyAfterForgetPublishedPublications(ctx);
+    } catch (error) {
+      console.error("Herald forget published publications command failed:", publicationErrorMessage(error));
+      await ctx.reply("Канцелярія не змогла забути опубліковані записи новин та архіву.");
     }
   });
 

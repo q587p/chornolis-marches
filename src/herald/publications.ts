@@ -23,8 +23,11 @@ function isUniqueConstraintError(error: unknown) {
 
 function semanticVersionParts(value?: string | null) {
   if (!value) return null;
-  const parts = value.split(".").map((part) => Number(part));
-  if (parts.length < 2 || parts.some((part) => !Number.isInteger(part) || part < 0)) return null;
+  const parts = value.split(".").map((part) => {
+    if (part.toLowerCase() === "x") return -1;
+    return Number(part);
+  });
+  if (parts.length < 2 || parts.some((part) => !Number.isInteger(part) || part < -1)) return null;
   return parts;
 }
 
@@ -125,7 +128,7 @@ export async function queueHeraldPublication(input: QueueHeraldPublicationInput)
         (input.sourceDate && !existing.sourceDate) ||
         (input.sourceVersion && !existing.sourceVersion) ||
         (input.renderedText && !existing.renderedText) ||
-        (input.archiveOrder !== undefined && existing.archiveOrder === null);
+        (input.archiveOrder !== undefined && existing.archiveOrder !== input.archiveOrder);
 
       if (missingSnapshot) {
         return prisma.heraldPublication.update({
@@ -134,7 +137,7 @@ export async function queueHeraldPublication(input: QueueHeraldPublicationInput)
             sourceDate: existing.sourceDate ?? input.sourceDate,
             sourceVersion: existing.sourceVersion ?? input.sourceVersion,
             renderedText: existing.renderedText ?? input.renderedText,
-            archiveOrder: existing.archiveOrder ?? input.archiveOrder,
+            archiveOrder: input.archiveOrder ?? existing.archiveOrder,
           },
         });
       }
@@ -178,14 +181,14 @@ export async function prepareManualHeraldPublication(input: QueueHeraldPublicati
         const missingSourceMetadata =
           (input.sourceDate && !existing.sourceDate) ||
           (input.sourceVersion && !existing.sourceVersion) ||
-          (input.archiveOrder !== undefined && existing.archiveOrder === null);
+          (input.archiveOrder !== undefined && existing.archiveOrder !== input.archiveOrder);
         if (missingSourceMetadata) {
           return prisma.heraldPublication.update({
             where: { id: existing.id },
             data: {
               sourceDate: existing.sourceDate ?? input.sourceDate,
               sourceVersion: existing.sourceVersion ?? input.sourceVersion,
-              archiveOrder: existing.archiveOrder ?? input.archiveOrder,
+              archiveOrder: input.archiveOrder ?? existing.archiveOrder,
             },
           });
         }
@@ -293,6 +296,15 @@ export async function cancelPendingPublications(sourceTypes: readonly string[] =
     data: {
       visibility: "CANCELED",
       error: null,
+    },
+  });
+}
+
+export async function forgetPublishedPublications(sourceTypes: readonly string[] = HERALD_NEWS_SOURCE_TYPES) {
+  return prisma.heraldPublication.deleteMany({
+    where: {
+      publishedAt: { not: null },
+      sourceType: { in: [...sourceTypes] },
     },
   });
 }

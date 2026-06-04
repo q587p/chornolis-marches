@@ -44,6 +44,7 @@ export const HERALD_COMMANDS: HeraldCommandInfo[] = [
   { command: "/pause_publications", description: "призупинити автоматичну публікацію черги", adminOnly: true },
   { command: "/resume_publications", description: "відновити автоматичну публікацію черги", adminOnly: true },
   { command: "/cancel_pending_publications", description: "скасувати неопубліковані записи новин/архіву", adminOnly: true },
+  { command: "/forget_published_news", description: "за підтвердженням забути вже опубліковані записи новин/архіву", adminOnly: true },
   { command: "/list_publications", description: "показати останні записи книги публікацій", adminOnly: true },
   { command: "/show_publication", description: "показати збережений snapshot запису за номером", adminOnly: true },
   { command: "/repost_publication", description: "повторно передати збережений запис як архівний repost", adminOnly: true },

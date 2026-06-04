@@ -113,6 +113,19 @@ assert.deepEqual(archiveOrderedNewsEntries(parseNewsEntries(versionMarkdown)).ma
   "0.4.3",
   "0.4.10",
 ]);
+const versionBeforeDateMarkdown = [
+  "## 0.4.2 — later dated — 12026-05-02",
+  "two",
+  "## 0.4.1 — earlier version, later file slot — 12026-05-10",
+  "one",
+  "## 0.4.10 — numeric ten, older date — 12026-05-01",
+  "ten",
+].join("\n\n");
+assert.deepEqual(archiveOrderedNewsEntries(parseNewsEntries(versionBeforeDateMarkdown)).map((entry) => entry.sourceVersion), [
+  "0.4.1",
+  "0.4.2",
+  "0.4.10",
+]);
 const earlyPrototypeMarkdown = [
   "## 0.1.0 — Перший бот Порубіжжя — 12026-05-04",
   "first bot",
@@ -215,6 +228,7 @@ assert.match(heraldAdminCommands, /\/pause_publications/);
 assert.match(heraldAdminCommands, /\/resume_publications/);
 assert.match(heraldAdminCommands, /\/cancel_pending_publications/);
 assert.match(heraldAdminCommands, /\/backfill_news_cancel/);
+assert.match(heraldAdminCommands, /\/forget_published_news/);
 assert.match(heraldAdminCommands, /\/news_archive_list/);
 assert.match(heraldAdminCommands, /\/news_archive_preview/);
 assert.match(heraldAdminCommands, /\/news_archive_post/);
@@ -223,6 +237,7 @@ assert.match(heraldAdminCommands, /\/news_archive_find/);
 assert.match(heraldAdminCommands, /\/news_archive_reload/);
 assert.match(heraldAdminCommands, /\/news_updates/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/pause_publications/);
+assert.doesNotMatch(formatHeraldCommandList(false), /\/forget_published_news/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_post/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_find/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_force_post/);

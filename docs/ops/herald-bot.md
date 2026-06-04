@@ -227,6 +227,7 @@ publish_pending - опублікувати очікувані записи
 pause_publications - призупинити автоматичну публікацію черги
 resume_publications - відновити автоматичну публікацію черги
 cancel_pending_publications - скасувати неопубліковані записи новин/архіву
+forget_published_news - за підтвердженням забути опубліковані записи новин/архіву
 news_archive_list - показати deployed news.md від найстарішого
 news_archive_find - знайти архівний номер за релізом
 news_archive_preview - переглянути один архівний запис
@@ -251,6 +252,7 @@ preview_world_digest - попередній перегляд дайджесту 
 - `/pause_publications` — призупинити автоматичний publisher loop, не зупиняючи бота, health server чи інші службові команди. Стан паузи зберігається в БД.
 - `/resume_publications` — відновити автоматичну публікацію очікуваних записів.
 - `/cancel_pending_publications` — позначити неопубліковані записи `NEWS_MD` і `NEWS_MD_ARCHIVE` як `CANCELED`, не видаляючи вже опубліковану історію й не торкаючись інших майбутніх типів публікацій.
+- `/forget_published_news confirm` — видалити з книги публікацій уже опубліковані записи `NEWS_MD` і `NEWS_MD_ARCHIVE`, щоб deployed `news.md` можна було заново поставити в чергу або вручну передати. Команда не видаляє Telegram-повідомлення, не торкається pending-записів і потребує явного `confirm`.
 - `/list_publications` — показати останні записи книги публікацій із Telegram message id, published/deleted/repost markers, якщо вони є.
 - `/show_publication <id>` — показати збережений snapshot запису з outbox, навіть якщо його вже немає в `news.md`.
 - `/repost_publication <id>` — повторно опублікувати збережений snapshot як архівний repost. Це створює нове Telegram-повідомлення й не відновлює старий timestamp.
@@ -260,7 +262,7 @@ preview_world_digest - попередній перегляд дайджесту 
 - `/backfill_news_cancel` — alias для безпечного скасування неопублікованих записів новин/архіву, коли backfill поставив забагато старих вістей.
 - `/backfill_news_reschedule_pending [13m]` — заново впорядкувати й розкласти ще не опубліковані архівні записи `news.md`, не торкаючись уже опублікованих Telegram-повідомлень.
 - `/backfill_news_status` — звірити стан архівного backfill для `news.md`: скільки очікує, скільки вже опубліковано, який наступний запис і чи ввімкнено overdue rebalance.
-- `/news_archive_list` — перечитати deployed `news.md` і показати стабільні індекси архівних записів від найстарішого до найновішого, разом зі станом `опубліковано` / `у черзі` / `скасовано` / `ще не внесено`.
+- `/news_archive_list` — перечитати deployed `news.md` і показати стабільні індекси архівних записів за номером релізу від найстарішого до найновішого, разом зі станом `опубліковано` / `у черзі` / `скасовано` / `ще не внесено`.
 - `/news_archive_find [реліз]` — знайти поточний архівний індекс за номером релізу, наприклад `/news_archive_find 0.4.4`, щоб потім використати `/news_archive_preview [номер]` або `/news_archive_post [номер]`.
 - `/news_archive_preview [номер]` — показати один архівний запис у тому вигляді, в якому він піде в Telegram, але нічого не публікувати.
 - `/news_archive_post [номер]` — вручну опублікувати рівно один архівний запис із deployed `news.md`. Команда не ставить у чергу всі старі новини й не дублює запис, якщо той самий `contentHash` уже опублікований.
@@ -275,6 +277,7 @@ preview_world_digest - попередній перегляд дайджесту 
 - `/mark_publication_deleted` is advisory DB state. Telegram does not reliably send the Herald a webhook/update when a channel message is manually deleted, and this command does not delete anything in Telegram.
 - `/repost_publication` intentionally creates a new Telegram message from the saved snapshot. It is an explicit admin repost, not a restoration of the old channel timestamp or original message id.
 - `/pause_publications` stops future automatic publisher-loop sends between publication attempts. It does not cancel a Telegram `sendMessage` call that has already started; that in-flight send may still complete and then be marked/logged normally.
+- `/forget_published_news confirm` deletes published `NEWS_MD` / `NEWS_MD_ARCHIVE` rows from the outbox history so their `contentHash` can be queued again from the deployed `news.md`. It is an explicit recovery command: Telegram channel messages stay untouched and any future reposts are new Telegram messages with new timestamps.
 
 ## Smoke Checks
 

@@ -13,10 +13,13 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Added Herald admin commands `/news_updates` and `/check_news_updates` to scan deployed `news.md` for entries that do not yet have an active queued or published `HeraldPublication`.
 - Added compact missing-news previews with stable archive indices and ready `/news_archive_preview N` / `/news_archive_post N` follow-up commands.
+- Added an admin-only confirmed `/forget_published_news` recovery command that forgets published `NEWS_MD` / `NEWS_MD_ARCHIVE` outbox rows without deleting Telegram channel messages.
 
 ### Fixed
 
 - Reused the shared Herald `news.md` parsing and archive ordering path so latest-news checks, archive indices and missed-news notices stay aligned.
+- Changed Herald archive ordering to prefer semantic release versions before source dates, so version-like entries such as `0.4.0`, `0.4.1`, `0.4.2` stay in numeric release order even when dates differ.
+- Let re-queue/manual archive preparation repair stale `archiveOrder` values on existing matching `contentHash` rows.
 - Added smoke coverage for missed-news detection, safe HTML escaping and admin-only command visibility.
 - Made player movement notices respect the observer's own active torch light, so lit observers should not see visible arriving/leaving players as anonymous `Хтось`.
 - Fixed visible creature/hunter attack copy so lit observers can see a named hunter instead of anonymous `Щось`, and prey names use accusative forms in miss/wound/kill text.

@@ -148,9 +148,10 @@ gameplay information.
 ## Herald Archive Catch-Up
 
 Historical `news.md` backfill uses the durable `HeraldPublication` outbox. The
-archive queue should stay in source order: explicit news dates first when they
-exist, otherwise semantic-like versions such as `0.4.0`, `0.4.1`, `0.4.2` are
-sorted numerically, with source file order as the final fallback.
+archive queue should stay in release order: semantic-like versions such as
+`0.4.0`, `0.4.1`, `0.4.2` are sorted numerically first. Explicit news dates are
+used as a fallback when version sorting is not available, and source file order
+is the final fallback.
 
 Render free Web Services may sleep and wake up with several archive
 publications already overdue. Keep the default catch-up controls unless there is
@@ -174,6 +175,10 @@ cancel the outbox instead of suspending the whole Web Service:
 - `/cancel_pending_publications` and `/backfill_news_cancel` mark unpublished
   `NEWS_MD` / `NEWS_MD_ARCHIVE` rows as `CANCELED`, preserving already
   published history and leaving unrelated future publication types alone.
+- `/forget_published_news confirm` deletes already published `NEWS_MD` /
+  `NEWS_MD_ARCHIVE` rows from the outbox history so deployed `news.md` can be
+  queued again from a clean publication book. It does not delete Telegram
+  channel messages and does not touch pending rows.
 
 Set `HERALD_PUBLICATIONS_PAUSED=true` as a Render safety rail when the outbox has
 a large backlog. On startup the Herald writes the durable pause state before the
@@ -182,7 +187,7 @@ dump old archive posts. `/resume_publications` can resume publication at runtime
 
 For manual archive recovery from the deployed `news.md`, use:
 
-- `/news_archive_list` to reread deployed `news.md`, list stable oldest-first
+- `/news_archive_list` to reread deployed `news.md`, list stable release-order
   indexes for the current file and show published/pending/canceled/missing
   counts;
 - `/news_archive_find [release]` to find the current archive index for a
