@@ -23,6 +23,7 @@ Planned NPCs:
 - Rumors.
 - Beginner guidance.
 - Notice board / public settlement notices.
+- Mail / letters.
 - Crafting stations.
 - Local reputation.
 

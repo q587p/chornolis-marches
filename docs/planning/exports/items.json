@@ -3692,6 +3692,29 @@
     "file": "docs/planning/items/SOC-008-speech-ranges-and-vertical-voice.md"
   },
   {
+    "id": "SOC-009",
+    "title": "Mail and letter delivery",
+    "status": "backlog",
+    "type": "feature",
+    "area": "social",
+    "priority": "medium",
+    "tags": [
+      "social",
+      "mail",
+      "letters",
+      "items",
+      "settlement",
+      "async"
+    ],
+    "depends_on": [
+      "SES-003",
+      "GIVE-001",
+      "SETTLE-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SOC-009-mail-and-letter-delivery.md"
+  },
+  {
     "id": "SOCIAL-003",
     "title": "Theft reaction signals",
     "status": "backlog",
