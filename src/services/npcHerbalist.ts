@@ -11,6 +11,9 @@ import { creatureUsableExits } from "./creatureMovement";
 import { findLocationRoute, type RouteStep } from "./routeFinding";
 import { notifyLocationAll } from "./notifications";
 import { maybePerformHerbalistSignal } from "./socialAutonomy";
+import { FOLLOW_TARGET_CREATURE } from "./following";
+import { rememberFollowedTargetHiddenRoute } from "./followRouteMemory";
+import { creatureForms } from "./grammar";
 
 export const HERBALIST_PROFESSION_KEYS = ["znakhar", "travnytsia"] as const;
 export const HERBALIST_SUPPLY_RUN_STAGE_EVENT_TITLE = "Herbalist supply run stage";
@@ -420,6 +423,11 @@ async function maybeUseHerbalistWaterWordPassage(bot: Bot | null, creature: any,
   if (!moved) return false;
 
   if (bot) {
+    await rememberFollowedTargetHiddenRoute(bot, {
+      sourceLocationId,
+      destinationLocationId: destination.id,
+      target: { type: FOLLOW_TARGET_CREATURE, id: creature.id, label: creatureForms(creature).nominative, visible: !creature.isHidden },
+    });
     await notifyLocationAll(bot, sourceLocationId, herbalistWaterWordCellarObserverText());
     await notifyLocationAll(bot, destination.id, herbalistWaterWordDestinationObserverText());
   }

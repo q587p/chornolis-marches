@@ -65,6 +65,13 @@ Future observation and track-learning slices can query that intent when deciding
 whether a witnessed route, track or profession action was watched closely enough
 to matter.
 
+`0.15.30` adds the first follow-aware route-memory use of that marker. When a
+followed visible local being moves through an ordinary visible exit, a co-located
+follower may receive a short direction hint and `/track` can prioritize that
+fresh trail. Clear witnessed followed movement also records a tiny silent
+`tracking` / `observation` / `followed_movement` learning row. There is still no
+public skill UI, no broad tracking modifier and no automatic movement.
+
 Follow movement is intentionally separate from this marker. When it exists, it
 should be explicit and should still respect darkness, stamina, queues, visible
 exits and learned route knowledge. Hidden passages such as the cellar water-word

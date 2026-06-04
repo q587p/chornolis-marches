@@ -64,6 +64,12 @@ import { isBeginnerCacheContributionPayload } from "./beginnerCacheQueue";
 import { maybeGrantGatherShahBonus } from "./smallLoot";
 import { normalizeTrackQuery, trackMatchesQuery } from "./trackSearch";
 import { tryCompleteCellarWaterWordPassage } from "./cellarWaterPassage";
+import {
+  followedTrackDisplayLabel,
+  prioritizeFollowIntentTracks,
+  rememberFollowedTargetVisibleMove,
+} from "./followRouteMemory";
+import { FOLLOW_TARGET_CREATURE, FOLLOW_TARGET_PLAYER, getPlayerFollowIntent } from "./following";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
@@ -612,6 +618,12 @@ async function completeMove(bot: Bot, action: WorldAction) {
       clearKeys: [`target:player:${player.id}`],
     });
     await createTrack({ actorType: "PLAYER", playerId: player.id }, currentLocationId, exit.toLocationId, payload.direction, "людський слід");
+    await rememberFollowedTargetVisibleMove(bot, {
+      sourceLocationId: currentLocationId,
+      destinationLocationId: exit.toLocationId,
+      direction: payload.direction,
+      target: { type: FOLLOW_TARGET_PLAYER, id: player.id, label: playerName, visible: true },
+    });
     await spendPlayerStamina(bot, player.id, "MOVE", chatId);
     const dreamItemsStolen = await removeTutorialForagingDreamItems(player.id, currentLocationId);
     await prisma.player.updateMany({ where: { id: player.id }, data: { currentLocationId: exit.toLocationId, steps: { increment: 1 } } });
@@ -657,6 +669,12 @@ async function completeMove(bot: Bot, action: WorldAction) {
     });
   }
   await createTrack({ actorType: "CREATURE", creatureId: creature.id }, creature.locationId, exit.toLocationId, payload.direction, isAnimal ? `сліди: ${creature.species.name}` : `слід: ${name}`);
+  await rememberFollowedTargetVisibleMove(bot, {
+    sourceLocationId: creature.locationId,
+    destinationLocationId: exit.toLocationId,
+    direction: payload.direction,
+    target: { type: FOLLOW_TARGET_CREATURE, id: creature.id, label: name, visible: !creature.isHidden },
+  });
   await spendCreatureStamina(creature, actionCost("MOVE"));
   await prisma.creature.updateMany({ where: { id: creature.id }, data: { locationId: exit.toLocationId, activity: "MOVING", currentAction: payload.reason ?? actionTitle(action), steps: { increment: 1 }, hunger: { increment: 1 } } });
   if (!isAnimal) {
@@ -1643,7 +1661,9 @@ async function completeTrack(bot: Bot, action: WorldAction) {
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: normalizedTargetQuery ? 40 : 8,
   });
-  const tracks = normalizedTargetQuery ? allTracks.filter((track) => trackMatchesQuery(track, normalizedTargetQuery)).slice(0, 8) : allTracks;
+  const followIntent = normalizedTargetQuery ? null : await getPlayerFollowIntent(player.id);
+  const orderedTracks = normalizedTargetQuery ? allTracks : prioritizeFollowIntentTracks(allTracks, followIntent);
+  const tracks = normalizedTargetQuery ? orderedTracks.filter((track) => trackMatchesQuery(track, normalizedTargetQuery)).slice(0, 8) : orderedTracks;
 
   await setActionStatus(action, "DONE");
 
@@ -1676,7 +1696,7 @@ async function completeTrack(bot: Bot, action: WorldAction) {
   };
 
   const lines = tracks.map((track) => {
-    const label = cleanTrackLabel(String(track.label ?? "хтось"));
+    const label = followedTrackDisplayLabel(followIntent, track, cleanTrackLabel(String(track.label ?? "хтось")));
     const direction = track.fromLocationId === player.currentLocationId
       ? `${trackVerb(label, "left")} на ${directionLabels[track.direction].toLowerCase()}`
       : `${trackVerb(label, "arrived")} ${FROM_DIRECTION_LABELS[track.direction] ?? "звідкись"}`;

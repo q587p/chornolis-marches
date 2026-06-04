@@ -6,6 +6,8 @@ import { escapeHtml } from "../utils/text";
 import { playerForms } from "./grammar";
 import { notifyLocationExcept } from "./notifications";
 import { cancelQueuedOrRunningSpiritCallActionsForPlayer, summarizeQueuedOrRunningSpiritCallActionsForPlayer } from "./spiritCallActions";
+import { FOLLOW_TARGET_PLAYER } from "./following";
+import { rememberFollowedTargetHiddenRoute } from "./followRouteMemory";
 
 export const CELLAR_WATER_PASSAGE_SOURCE_KEY = "start_border_cellar";
 export const CELLAR_WATER_PASSAGE_DESTINATION_KEY = "under_bridge_18_05";
@@ -142,6 +144,12 @@ export async function tryCompleteCellarWaterWordPassage(bot: Bot, input: { playe
     return true;
   });
   if (!moved) return false;
+
+  await rememberFollowedTargetHiddenRoute(bot, {
+    sourceLocationId,
+    destinationLocationId: destination.id,
+    target: { type: FOLLOW_TARGET_PLAYER, id: player.id, label: forms.nominative, visible: true },
+  });
 
   await notifyLocationExcept(
     bot,
