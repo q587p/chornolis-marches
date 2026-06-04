@@ -88,6 +88,13 @@ This is a content pressure task, not only a future worldbuilding wish. The first
 - Human-like/profession NPCs such as hunters and herbalists, plus camp-bound special beings such as the camp spirit cat, may open and close the hatch when their route needs the cellar.
 - Keep the hatch state diegetic and local; do not turn the starter cellar into a locked quest, loot room or public spoiler for the hidden water-word passage.
 
+## Future Adjacent Tree-Canopy Follow-Up
+
+- When two climbable tree/crown locations sit beside each other on the map (`T  T`-style adjacency), add authored lateral movement between them where it makes sense.
+- Prefer a diegetic feature such as `Переплетені гілки`, `Гілка до сусіднього дерева` or a cautious `Стрибнути на сусіднє дерево` action rather than silently treating every adjacent tree as connected.
+- Keep the first slice narrow: one or two paired trees with reciprocal exits, inspectable branch text and clear aliases/buttons if the movement is safe enough for ordinary use.
+- Do not let ordinary ground animals use these upper/canopy crossings unless the route is explicitly marked animal-friendly; keep authored vertical-route boundaries aligned with `ECO-006`.
+
 ## Implementation Notes
 
 - Active hand-edited map data lives under `prisma/data/world/`; update split files there first.
@@ -101,3 +108,4 @@ This is a content pressure task, not only a future worldbuilding wish. The first
 - `MAP-003-B`: implement the first expansion in split seed data with exits/resources/features.
 - `MAP-003-C`: add seed/map validation or docs updates for the new region shape if existing checks are not enough.
 - `MAP-003-D`: implement the stateful cellar hatch open/close loop and route permissions for players, profession NPCs, camp spirit cat and ordinary animals.
+- `MAP-003-E`: add authored lateral movement between adjacent climbable tree/canopy locations, via intertwined branches or a careful jump where the map visibly suggests `T  T` adjacency.

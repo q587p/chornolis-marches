@@ -100,6 +100,7 @@ Location coordinates appear as three numbers, e.g. `(1,0,0)`:
 There is a backlog direction to add a small, authored vertical/interior map pass. This should be explicit and diegetic, not a casual `z` change:
 
 - a climbable tree can use an `UP` exit to a high branch/lookout;
+- adjacent authored climbable trees may later use explicit lateral canopy exits, intertwined-branch features or careful jump actions; do not assume every `T  T` pair is automatically connected;
 - the starter-camp watchtower uses an `UP` exit to a real upper room and a `DOWN` exit back to the camp;
 - a bear den or similar lair can use an `INSIDE` exit into a real interior location;
 - a pit, ravine or hole can use a `DOWN` exit to a lower place.
