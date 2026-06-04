@@ -10,6 +10,7 @@ const {
   nonPlayerMovementNotificationOptions,
   runInlineReplacementForKey,
 } = require("../../src/services/notifications");
+const { movementLabelFromVisibility } = require("../../src/services/actionCompletions");
 
 async function sleep(ms) {
   await new Promise((resolve) => setTimeout(resolve, ms));
@@ -81,6 +82,9 @@ async function sleep(ms) {
   assert.equal(canReceiveLocationNotification({ sleepState: "AWAKE" }), true);
   assert.equal(canReceiveLocationNotification({ sleepState: "ORDINARY_SLEEP" }), false);
   assert.equal(canReceiveLocationNotification({ sleepState: "ORDINARY_SLEEP" }, { includeSleeping: true }), true);
+  assert.equal(movementLabelFromVisibility({ showNearbyDetails: false }, false, "Хтось", "Орина"), "Хтось");
+  assert.equal(movementLabelFromVisibility({ showNearbyDetails: false }, true, "Хтось", "Орина"), "Орина");
+  assert.equal(movementLabelFromVisibility({ showNearbyDetails: true }, false, "Хтось", "Орина"), "Орина");
 
   console.log("Notification replacement locks OK");
 })().catch((error) => {

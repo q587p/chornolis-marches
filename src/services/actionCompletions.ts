@@ -16,8 +16,8 @@ import { directionLabels } from "../ui/labels";
 import { buildCorpseActionKeyboard, buildExamineLocationKeyboard, buildExamineTracksKeyboard, buildGatherRetryKeyboard, buildLookLocationKeyboard, buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { lightLocationCampfire, renderLocationBrief, renderLocationDetails } from "./locations";
-import { notifyLocation, notifyLocationAll, notifyLocationExcept, notifyRegionExcept, queueNonPlayerMovementNotification } from "./notifications";
-import { addTwigsToCampfire, buildCampfireFromInventory, dismantleCampfire, douseCampfire, dousePlayerTorchFromInventory, lightPlayerTorchAtCampfire, lightPlayerTorchFromInventory } from "./fire";
+import { notifyLocation, notifyLocationAll, notifyLocationDynamic, notifyLocationExcept, notifyRegionExcept, queueNonPlayerMovementNotification } from "./notifications";
+import { addTwigsToCampfire, buildCampfireFromInventory, dismantleCampfire, douseCampfire, dousePlayerTorchFromInventory, hasActiveLitTorchForPlayer, lightPlayerTorchAtCampfire, lightPlayerTorchFromInventory } from "./fire";
 import { dismantleStrangeTotem } from "./strangeTotems";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
 import { getStartLocationId } from "./players";
@@ -303,6 +303,21 @@ function trackAgeText(createdAt: Date, now = new Date()) {
 async function visibleMoverLabel(locationId: number, fallback: string, visibleName: string) {
   const visibility = await visibilityRulesForLocation(locationId, "brief");
   return visibility.showNearbyDetails ? visibleName : fallback;
+}
+
+export function movementLabelFromVisibility(
+  visibility: { showNearbyDetails: boolean },
+  observerHasLight: boolean,
+  fallback: string,
+  visibleName: string,
+) {
+  return visibility.showNearbyDetails || observerHasLight ? visibleName : fallback;
+}
+
+async function visibleMoverLabelForObserver(locationId: number, observerPlayerId: number, fallback: string, visibleName: string) {
+  const visibility = await visibilityRulesForLocation(locationId, "brief");
+  const observerHasLight = visibility.showNearbyDetails ? false : await hasActiveLitTorchForPlayer(observerPlayerId);
+  return movementLabelFromVisibility(visibility, observerHasLight, fallback, visibleName);
 }
 
 function movementPastVerb(actor: unknown, visibleLabel: string, fallback: string, masculine: string, feminine: string, plural: string) {
@@ -611,11 +626,16 @@ async function completeMove(bot: Bot, action: WorldAction) {
 
     const playerName = playerForms(player).nominative;
     const fallbackMover = "Хтось";
-    const departureLabel = await visibleMoverLabel(currentLocationId, fallbackMover, playerName);
-    await notifyLocation(bot, currentLocationId, player.id, `${departureLabel} ${movementPastVerb(player, departureLabel, fallbackMover, "пішов", "пішла", "пішли")} звідси.`, {
-      keyboard: buildTrackKeyboard(),
-      replaceKey: `tracks:${currentLocationId}`,
-      clearKeys: [`target:player:${player.id}`],
+    await notifyLocationDynamic(bot, currentLocationId, player.id, async (observer) => {
+      const departureLabel = await visibleMoverLabelForObserver(currentLocationId, observer.id, fallbackMover, playerName);
+      return {
+        text: `${departureLabel} ${movementPastVerb(player, departureLabel, fallbackMover, "пішов", "пішла", "пішли")} звідси.`,
+        options: {
+          keyboard: buildTrackKeyboard(),
+          replaceKey: `tracks:${currentLocationId}`,
+          clearKeys: [`target:player:${player.id}`],
+        },
+      };
     });
     await createTrack({ actorType: "PLAYER", playerId: player.id }, currentLocationId, exit.toLocationId, payload.direction, "людський слід");
     await rememberFollowedTargetVisibleMove(bot, {
@@ -628,10 +648,15 @@ async function completeMove(bot: Bot, action: WorldAction) {
     const dreamItemsStolen = await removeTutorialForagingDreamItems(player.id, currentLocationId);
     await prisma.player.updateMany({ where: { id: player.id }, data: { currentLocationId: exit.toLocationId, steps: { increment: 1 } } });
     const tutorialRestEntryText = await applyTutorialRestEntryStaminaLesson(player.id, currentLocationId, exit.toLocationId, payload.direction);
-    const arrivalLabel = await visibleMoverLabel(exit.toLocationId, fallbackMover, playerName);
-    await notifyLocation(bot, exit.toLocationId, player.id, `${arrivalLabel} ${movementPastVerb(player, arrivalLabel, fallbackMover, "зайшов", "зайшла", "зайшли")} сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, {
-      keyboard: buildTargetListKeyboard([{ type: "player", id: player.id, label: arrivalLabel, canGreet: true }]),
-      replaceKey: `target:player:${player.id}`,
+    await notifyLocationDynamic(bot, exit.toLocationId, player.id, async (observer) => {
+      const arrivalLabel = await visibleMoverLabelForObserver(exit.toLocationId, observer.id, fallbackMover, playerName);
+      return {
+        text: `${arrivalLabel} ${movementPastVerb(player, arrivalLabel, fallbackMover, "зайшов", "зайшла", "зайшли")} сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`,
+        options: {
+          keyboard: buildTargetListKeyboard([{ type: "player", id: player.id, label: arrivalLabel, canGreet: true }]),
+          replaceKey: `target:player:${player.id}`,
+        },
+      };
     });
     await setActionStatus(action, "DONE");
     await logEvent("MOVE", "Player queued move completed", payload.direction, exit.toLocationId);

@@ -8,12 +8,18 @@ import { canReceiveDaypartNotice } from "./playerNotificationSettings";
 import { creatureForms } from "./grammar";
 import { visibilityRulesForLocation } from "./visibility";
 
-type LocationNotificationOptions = {
+export type LocationNotificationOptions = {
   keyboard?: InlineKeyboard;
   parseMode?: "HTML";
   replaceKey?: string;
   clearKeys?: string[];
   includeSleeping?: boolean;
+};
+
+export type LocationNotificationRecipient = {
+  id: number;
+  telegramId: string;
+  sleepState?: string | null;
 };
 
 const latestInlineMessageByChatAndKey = new Map<string, number>();
@@ -298,6 +304,22 @@ export async function notifyLocation(bot: Bot, locationId: number, exceptPlayerI
   const players = await prisma.player.findMany({ where: { currentLocationId: locationId, NOT: { id: exceptPlayerId } }, select: { telegramId: true, sleepState: true } });
   for (const player of players) {
     await sendLocationNotification(bot, player, text, options);
+  }
+}
+
+export async function notifyLocationDynamic(
+  bot: Bot,
+  locationId: number,
+  exceptPlayerId: number,
+  build: (player: LocationNotificationRecipient) => Promise<{ text: string; options?: LocationNotificationOptions }>,
+) {
+  const players = await prisma.player.findMany({
+    where: { currentLocationId: locationId, NOT: { id: exceptPlayerId } },
+    select: { id: true, telegramId: true, sleepState: true },
+  });
+  for (const player of players) {
+    const message = await build(player);
+    await sendLocationNotification(bot, player, message.text, message.options);
   }
 }
 

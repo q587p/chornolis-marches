@@ -18,6 +18,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - Reused the shared Herald `news.md` parsing and archive ordering path so latest-news checks, archive indices and missed-news notices stay aligned.
 - Added smoke coverage for missed-news detection, safe HTML escaping and admin-only command visibility.
+- Made player movement notices respect the observer's own active torch light, so lit observers should not see visible arriving/leaving players as anonymous `Хтось`.
 
 ## 0.15.32 - Try to keep following via remembered route - 12026-06-04
 
