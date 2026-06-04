@@ -1,6 +1,8 @@
 import { Bot } from "grammy";
 import { config, requireConfigValue } from "../config";
 import { parseHeraldAdminIds, isHeraldAdminId } from "../herald/admin";
+import { registerHeraldChronicleCommands } from "../herald/chronicleCommands";
+import { startHeraldChronicleRelayLoop } from "../herald/chronicleRelay";
 import { registerHeraldDigestCommands } from "../herald/digestCommands";
 import { registerHeraldHelpCommands, registerHeraldUnknownCommandFallback } from "../herald/help";
 import { registerHeraldInfoCommands } from "../herald/infoCommands";
@@ -33,6 +35,7 @@ registerHeraldNewsArchiveCommands(bot, heraldAdminIds);
 registerHeraldNewsBackfillCommands(bot, heraldAdminIds);
 registerHeraldDigestCommands(bot, heraldAdminIds);
 registerHeraldPublisherCommands(bot, heraldAdminIds);
+registerHeraldChronicleCommands(bot, heraldAdminIds);
 registerHeraldUnknownCommandFallback(bot, heraldAdminIds);
 
 bot.catch((error) => {
@@ -90,6 +93,7 @@ function startHeraldHeartbeatOnce() {
 
 startHeraldHealthServer();
 startHeraldPublisherLoop(bot);
+startHeraldChronicleRelayLoop(bot);
 bot.start({
   onStart: () => {
     startHeraldHeartbeatOnce();

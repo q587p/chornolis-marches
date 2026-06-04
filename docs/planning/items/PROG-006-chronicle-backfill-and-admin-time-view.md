@@ -1,7 +1,7 @@
 ---
 id: PROG-006
 title: Chronicle registration backfill and admin real-time view
-status: backlog
+status: testing
 type: feature
 area: progression
 priority: high
@@ -61,5 +61,7 @@ The current `/chronicles` MVP records new arrivals only after the chronicle slic
 - Tests cover backfill idempotency and chronicle/admin time formatting.
 
 ## Notes
+
+0.15.33 implements the first runtime slice: `/chronicles` renders public entries with internal world-time labels, scribes can use `/chronicles_real` for real `Europe/Kyiv` audit timestamps, and `/chronicles_backfill_players` / Herald `/chronicles_backfill_players` can idempotently create missing arrival chronicle rows from `Player.createdAt`. Local arrival messages remain a follow-up.
 
 This should probably land before personal chronicles become larger. A complete public arrival archive makes later private/public history split easier to reason about.

@@ -39,6 +39,9 @@ export const HERALD_COMMANDS: HeraldCommandInfo[] = [
   { command: "/preview_world_digest", description: "переглянути світовий запис", adminOnly: true },
   { command: "/queue_world_digest", description: "поставити світовий запис у чергу", adminOnly: true },
   { command: "/post_world_digest", description: "поставити й одразу передати світовий запис", adminOnly: true },
+  { command: "/chronicles_pending", description: "показати зарубки, які Канцелярія ще не передала до чату", adminOnly: true },
+  { command: "/publish_chronicles", description: "вручну передати очікувані хроніки до чату", adminOnly: true },
+  { command: "/chronicles_backfill_players", description: "створити пропущені хроніки прибуття з записів персонажів", adminOnly: true },
   { command: "/pending_publications", description: "показати готові до публікації записи", adminOnly: true },
   { command: "/publish_pending", description: "передати готові записи до каналу", adminOnly: true },
   { command: "/pause_publications", description: "призупинити автоматичну публікацію черги", adminOnly: true },
@@ -126,6 +129,12 @@ export function formatHeraldHelp(isAdmin: boolean) {
       commandLine("/preview_world_digest", "переглянути дайджест світу"),
       commandLine("/queue_world_digest", "поставити дайджест у чергу"),
       commandLine("/post_world_digest", "поставити й одразу опублікувати дайджест"),
+    ]),
+    "",
+    section("Хроніки Порубіжжя", [
+      commandLine("/chronicles_pending", "показати зарубки, які ще не передано до чату"),
+      commandLine("/publish_chronicles", "вручну передати очікувані хроніки"),
+      commandLine("/chronicles_backfill_players", "додати пропущені прибуття з давніших записів персонажів"),
     ]),
     "",
     section("Приклади", [
