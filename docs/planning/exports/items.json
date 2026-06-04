@@ -3394,6 +3394,27 @@
     "file": "docs/planning/items/SETTLE-001-starter-settlement.md"
   },
   {
+    "id": "SETTLE-002",
+    "title": "Gate notice board",
+    "status": "backlog",
+    "type": "feature",
+    "area": "settlements",
+    "priority": "medium",
+    "tags": [
+      "settlement",
+      "gate",
+      "notices",
+      "feature",
+      "rumors"
+    ],
+    "depends_on": [
+      "SETTLE-001",
+      "LOOP-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SETTLE-002-gate-notice-board.md"
+  },
+  {
     "id": "SLEEP-001",
     "title": "Lying posture and lie command",
     "status": "testing",

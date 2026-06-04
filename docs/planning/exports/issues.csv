@@ -173,6 +173,7 @@ SES-001-C,Session presence tests and manual checklist,testing,qa,session,high,"t
 SES-002,Atmospheric presence and notification design,backlog,design,session,medium,"telegram,session,atmosphere,notifications",docs/planning/items/SES-002-atmospheric-presence-backlog.md
 SES-003,Deferred private message delivery for AFK and ended sessions,backlog,feature,session,medium,"telegram,session,speech,whisper,anti-spam",docs/planning/items/SES-003-deferred-private-message-delivery.md
 SETTLE-001,Starter settlement,backlog,feature,settlements,high,"settlement,npc,onboarding",docs/planning/items/SETTLE-001-starter-settlement.md
+SETTLE-002,Gate notice board,backlog,feature,settlements,medium,"settlement,gate,notices,feature,rumors",docs/planning/items/SETTLE-002-gate-notice-board.md
 SLEEP-001,Lying posture and lie command,testing,feature,survival,high,"sleep,posture,aliases,rest",docs/planning/items/SLEEP-001-lying-posture-and-lie-command.md
 SLEEP-002,Ordinary sleep MVP,testing,feature,survival,high,"sleep,wake,stamina,hp,tutorial",docs/planning/items/SLEEP-002-ordinary-sleep-mvp.md
 SLEEP-002-A,Ordinary sleep command gate,testing,feature,survival,high,"sleep,commands,wake,survival",docs/planning/items/SLEEP-002-A-ordinary-sleep-command-gate.md
