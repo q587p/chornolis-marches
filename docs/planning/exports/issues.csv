@@ -69,6 +69,7 @@ GIVE-002,Ukrainian inflection-tolerant give parser and grammar bridge,testing,te
 HERALD-001,Embedded main-service mode for Boundary Mark Chancery Herald,icebox,technical,ops,low,"herald,telegram,render,ops,architecture,icebox",docs/planning/items/HERALD-001-embedded-main-service-mode.md
 HERALD-002,Herald outbox idempotency and locking,backlog,reliability,herald,medium,"herald,outbox,idempotency,locking,telegram",docs/planning/items/HERALD-002-outbox-idempotency-and-locking.md
 HERALD-003,Herald chronicle chat relay,backlog,feature,herald,medium,"herald,chronicle,telegram,chat,world-events",docs/planning/items/HERALD-003-chronicle-chat-relay.md
+HERALD-004,Herald news update scheduler and admin notice,backlog,feature,herald,medium,"herald,news,scheduler,telegram,admin",docs/planning/items/HERALD-004-news-update-scheduler.md
 HIDE-001,Hidden approach MVP,backlog,feature,visibility,medium,"hiding,stealth,visibility,social-memory,0.15",docs/planning/items/HIDE-001-hidden-approach-mvp.md
 HMYZ-001-A,Audit hmyz model,testing,technical,survival,high,"hmyz,resources,inventory",docs/planning/items/HMYZ-001-A.md
 HMYZ-001-B,Seed starter hmyz,testing,feature,survival,high,"hmyz,seed,starter",docs/planning/items/HMYZ-001-B.md

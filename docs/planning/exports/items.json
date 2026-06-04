@@ -1382,6 +1382,26 @@
     "file": "docs/planning/items/HERALD-003-chronicle-chat-relay.md"
   },
   {
+    "id": "HERALD-004",
+    "title": "Herald news update scheduler and admin notice",
+    "status": "backlog",
+    "type": "feature",
+    "area": "herald",
+    "priority": "medium",
+    "tags": [
+      "herald",
+      "news",
+      "scheduler",
+      "telegram",
+      "admin"
+    ],
+    "depends_on": [
+      "HERALD-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/HERALD-004-news-update-scheduler.md"
+  },
+  {
     "id": "HIDE-001",
     "title": "Hidden approach MVP",
     "status": "backlog",

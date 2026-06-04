@@ -39,6 +39,7 @@ These may become `next` after 0.13-0.15 foundations land.
 - Web `/chat` filtering for automatic character/NPC lines: add a mode or toggle that hides automated world speech and shows only real player communication for review and moderation.
 - HERALD-002: stronger Herald outbox idempotency/locking so a Telegram-send success followed by a DB marking failure cannot blindly repost a pending publication later.
 - HERALD-003: Herald relay for public chronicle entries into a configured Telegram chat/channel, with idempotency and backfill-spam guards.
+- HERALD-004: scheduled Herald check for deployed `news.md` entries that still need admin review, with compact previews and suggested manual publish/queue commands but no automatic publication.
 - Item details, safer drop/pickup and item-instance groundwork.
 - Dream item origin tracking for tutorial resources, so leaving the dream removes only dream-gathered supplies and never resources brought from the waking world.
 - Reply UX for addressed speech is now part of `CMD-001`; later polish can add inline reply buttons and generated answer options.
