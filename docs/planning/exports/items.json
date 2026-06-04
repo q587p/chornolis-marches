@@ -3924,6 +3924,26 @@
     "file": "docs/planning/items/SURV-001-F.md"
   },
   {
+    "id": "SURV-002",
+    "title": "Death locations and lethal hazard pacing",
+    "status": "backlog",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "death",
+      "hazards",
+      "locations",
+      "survival",
+      "world"
+    ],
+    "depends_on": [
+      "SURV-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SURV-002-death-locations.md"
+  },
+  {
     "id": "TECH-001",
     "title": "Service boundary and duplication cleanup",
     "status": "backlog",

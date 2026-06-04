@@ -59,6 +59,7 @@ Near-term content candidates after that foundation:
 - Broader theft/hiding or social-risk systems before observation/visibility learning is stable.
 - Full profession/economy loops before the first observation-learning spine exists.
 - Broad `/skills` UI and skill modifiers/effects before bounded learning moments prove the foundation.
+- `SURV-002`: authored death locations and lethal hazard pacing. Keep this as a survival/world-hazard framework task until death/knockout/respawn handling and clueing rules are ready; do not add unavoidable instant-death cells to beginner paths.
 
 ## Promotion Checklist
 
