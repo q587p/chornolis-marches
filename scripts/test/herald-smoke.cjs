@@ -7,7 +7,7 @@ const { parseHeraldAdminIds, isHeraldAdminId } = require("../../src/herald/admin
 const { formatHeraldNewsMessage, formatHeraldPublicationMessage, formatHeraldPublicationRepostMessage } = require("../../src/herald/format");
 const { linkHeraldGameCommandMentions } = require("../../src/herald/gameLinks");
 const { formatWorldDigestDateLine } = require("../../src/herald/digest");
-const { formatHeraldCommandList, formatHeraldWhoami } = require("../../src/herald/help");
+const { formatHeraldCommandList, formatHeraldHelp, formatHeraldWhoami } = require("../../src/herald/help");
 const { renderHeraldAnonymousInfoTarget, renderHeraldPublicInfoMissing, renderHeraldPublicPlayerInfo } = require("../../src/herald/info");
 const { resolveHeraldInfoTargetUser } = require("../../src/herald/infoCommands");
 const {
@@ -242,6 +242,24 @@ assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_post/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_find/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_force_post/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/news_updates/);
+
+const heraldAdminHelp = formatHeraldHelp(true);
+assert.match(heraldAdminHelp, /Основні:/);
+assert.match(heraldAdminHelp, /Новини news\.md:/);
+assert.match(heraldAdminHelp, /Архів news\.md:/);
+assert.match(heraldAdminHelp, /Черга й публікації:/);
+assert.match(heraldAdminHelp, /Приклади:/);
+assert.match(heraldAdminHelp, /\/backfill_news_queue 23m/);
+assert.match(heraldAdminHelp, /\/backfill_news_reschedule_pending 23m/);
+assert.match(heraldAdminHelp, /13m/);
+assert.match(heraldAdminHelp, /2h/);
+assert.ok(heraldAdminHelp.length < 3900, "Herald admin help should fit in one Telegram message");
+
+const heraldPublicHelp = formatHeraldHelp(false);
+assert.match(heraldPublicHelp, /Основні:/);
+assert.doesNotMatch(heraldPublicHelp, /\/backfill_news_queue/);
+assert.doesNotMatch(heraldPublicHelp, /\/pending_publications/);
+assert.match(heraldPublicHelp, /Службові розділи/);
 
 const whoami = formatHeraldWhoami({
   telegramUserId: 123456789,

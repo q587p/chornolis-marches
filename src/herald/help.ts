@@ -58,14 +58,84 @@ export function formatHeraldCommandList(isAdmin: boolean) {
     .join("\n");
 }
 
+function commandLine(command: string, description: string) {
+  return `${command} — ${description}`;
+}
+
+function section(title: string, lines: string[]) {
+  return [`${title}:`, ...lines].join("\n");
+}
+
 export function formatHeraldHelp(isAdmin: boolean) {
+  const publicSections = [
+    section("Основні", [
+      commandLine("/ping", "перевірити, чи Канцелярія на місці"),
+      commandLine("/whoami", "показати власний Telegram/chat ID для налаштування"),
+      commandLine("/info", "безпечний запис про себе або людину, якій відповідаєте"),
+    ]),
+  ];
+
+  if (!isAdmin) {
+    return [
+      "Канцелярія Межового Знаку тримає окрему книгу наказів.",
+      "",
+      ...publicSections,
+      "",
+      "Службові розділи показуються тільки за впізнаною печаткою.",
+    ].join("\n");
+  }
+
   return [
     "Канцелярія Межового Знаку тримає окрему книгу наказів.",
     "",
-    "Відомі команди:",
-    formatHeraldCommandList(isAdmin),
+    ...publicSections,
     "",
-    "Для службових команд потрібна впізнана печатка.",
+    section("Новини news.md", [
+      commandLine("/news_updates", "знайти новини без активної публікації"),
+      commandLine("/preview_latest_news", "переглянути останню новину"),
+      commandLine("/queue_latest_news", "поставити останню новину в чергу"),
+      commandLine("/post_latest_news", "поставити й одразу опублікувати останню новину"),
+    ]),
+    "",
+    section("Архів news.md", [
+      commandLine("/backfill_news_preview", "перевірити старі записи перед чергою"),
+      commandLine("/backfill_news_queue [інтервал]", "поставити старі записи drip-feed чергою"),
+      commandLine("/backfill_news_status", "показати стан архівної черги"),
+      commandLine("/backfill_news_reschedule_pending [інтервал]", "перерозкласти pending архів"),
+      commandLine("/backfill_news_cancel", "скасувати pending news/archive записи"),
+      commandLine("/news_archive_find <реліз>", "знайти архівний номер за версією"),
+      commandLine("/news_archive_list", "показати архівні індекси"),
+      commandLine("/news_archive_preview <номер>", "переглянути один архівний запис"),
+      commandLine("/news_archive_post <номер>", "опублікувати один архівний запис"),
+      commandLine("/news_archive_force_post <номер>", "явно повторно передати архівний запис"),
+    ]),
+    "",
+    section("Черга й публікації", [
+      commandLine("/pending_publications", "показати записи в outbox"),
+      commandLine("/publish_pending", "опублікувати готові записи"),
+      commandLine("/pause_publications", "поставити publisher loop на паузу"),
+      commandLine("/resume_publications", "відновити publisher loop"),
+      commandLine("/cancel_pending_publications", "скасувати pending news/archive записи"),
+      commandLine("/list_publications", "показати останні записи книги публікацій"),
+      commandLine("/show_publication <id>", "показати збережений snapshot"),
+      commandLine("/repost_publication <id>", "повторно опублікувати snapshot"),
+      commandLine("/mark_publication_deleted <id>", "позначити Telegram-повідомлення як вручну видалене"),
+    ]),
+    "",
+    section("Світові записи", [
+      commandLine("/preview_world_digest", "переглянути дайджест світу"),
+      commandLine("/queue_world_digest", "поставити дайджест у чергу"),
+      commandLine("/post_world_digest", "поставити й одразу опублікувати дайджест"),
+    ]),
+    "",
+    section("Приклади", [
+      "/backfill_news_queue 23m — поставити архів із паузою 23 хвилини між вістями",
+      "/backfill_news_reschedule_pending 23m — заново розкласти pending архів із таким інтервалом",
+      "/news_archive_find 0.4.4 — знайти номер старої вісті за релізом",
+      "/news_archive_post 9 — вручну передати архівний запис #9",
+    ]),
+    "",
+    "Інтервал можна задавати як `13m`, `23m`, `2h`. Без аргументу backfill бере `HERALD_ARCHIVE_INTERVAL_MINUTES`.",
   ].join("\n");
 }
 
