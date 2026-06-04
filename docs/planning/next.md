@@ -28,11 +28,16 @@ The `LEARN-001` foundation is in testing after the minimal persistent learning/p
 
 `0.15.30` turns that marker into the first route-memory MVP: followed visible ordinary movement can leave a personal direction hint and `/track` can prioritize the fresh trail. Darkness can still hide direction, and hidden water-word passages remain non-repeatable without independent learning/triggering.
 
+`0.15.31` stabilizes that route-memory layer with cooldowns for repeated hints
+and silent tracking-observation progress. Treat follow intent as useful
+attention context now, but do not promote automatic follow movement until live
+cadence and darkness/hidden-route behavior feel settled.
+
 Do not open another broad content loop before the learning/observation foundation is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
 ## Immediate Sequence
 
-1. **TRACK-LEARN-002:** review live route-memory cadence and decide whether the next slice should teach explicit track reading, not movement.
+1. **TRACK-LEARN-002:** review live route-memory cadence after the `0.15.31` cooldown pass and decide whether the next slice should teach explicit track reading, not movement.
 2. **LEARN-002 follow-up:** extend bounded skill effects only after reviewing the `0.15.23` gathering tuning, `0.15.26` herbalist observation route and `0.15.30` followed-movement memory in live play.
 3. **SOC-003:** only after follow intent feels useful, decide whether any explicit group/travel acceptance layer is worth promoting.
 

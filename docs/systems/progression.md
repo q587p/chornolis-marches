@@ -72,6 +72,12 @@ fresh trail. Clear witnessed followed movement also records a tiny silent
 `tracking` / `observation` / `followed_movement` learning row. There is still no
 public skill UI, no broad tracking modifier and no automatic movement.
 
+`0.15.31` adds anti-grind cadence to that bridge. The route-memory hint and the
+silent followed-movement learning row now use narrow `WorldEvent` cooldown
+markers, so repeating the same movement context cannot rapidly farm tracking
+progress or keep nudging the same follower. This does not change skill effects
+or expose new public progress UI.
+
 Follow movement is intentionally separate from this marker. When it exists, it
 should be explicit and should still respect darkness, stamina, queues, visible
 exits and learned route knowledge. Hidden passages such as the cellar water-word
