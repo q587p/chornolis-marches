@@ -126,13 +126,16 @@ export function buildAnonymousTargetKeyboard(target: Pick<TargetRef, "type" | "i
   const canGreetVerbally = target.canGreet && !target.isAnimal;
   const keyboard = new InlineKeyboard()
     .text("👁 Глянути", `social:look:${target.type}:${target.id}:mystery`)
-    .text("🔎 Роздивитися", `social:inspect:${target.type}:${target.id}:mystery`);
-  if (target.canAttack) keyboard.text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:mystery`);
+    .text("🔎 Роздивитися", `social:inspect:${target.type}:${target.id}:mystery`)
+    .text("👣 Слідувати", `social:follow:${target.type}:${target.id}:mystery`);
   keyboard.row();
 
+  if (target.canAttack) keyboard.text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:mystery`);
   if (canGreetVerbally) keyboard.text("💬 Привітати", `social:greet:${target.type}:${target.id}:mystery`);
   keyboard.text("🗣 Сказати", `targetSpeech:say:${target.type}:${target.id}:mystery`);
-  keyboard.text("🤫 Прошепотіти", `targetSpeech:whisper:${target.type}:${target.id}:mystery`).row();
+  keyboard.text("🤫 Прошепотіти", `targetSpeech:whisper:${target.type}:${target.id}:mystery`);
+  keyboard.row();
+
   keyboard.text("✨ Сигнали", `signalMenu:${target.type}:${target.id}:mystery`).row();
   keyboard.text("↩️ Назад", "location:details");
   return keyboard;
@@ -143,13 +146,16 @@ export function buildTargetActionKeyboard(target: Pick<TargetRef, "type" | "id" 
   const canGreetVerbally = target.canGreet && !target.isAnimal;
   const keyboard = new InlineKeyboard()
     .text("👁 Глянути", `social:look:${target.type}:${target.id}:known${pageSuffix}`)
-    .text(again ? "🔎 Роздивитися ще раз" : "🔎 Роздивитися", `social:inspect:${target.type}:${target.id}:known${pageSuffix}`);
-  if (target.canAttack) keyboard.text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:known${pageSuffix}`);
+    .text(again ? "🔎 Роздивитися ще раз" : "🔎 Роздивитися", `social:inspect:${target.type}:${target.id}:known${pageSuffix}`)
+    .text("👣 Слідувати", `social:follow:${target.type}:${target.id}:known${pageSuffix}`);
   keyboard.row();
 
+  if (target.canAttack) keyboard.text("⚔️ Атакувати", `social:attack:${target.type}:${target.id}:known${pageSuffix}`);
   if (canGreetVerbally) keyboard.text("💬 Привітати", `social:greet:${target.type}:${target.id}:known${pageSuffix}`);
   keyboard.text("🗣 Сказати", `targetSpeech:say:${target.type}:${target.id}:known`);
-  keyboard.text("🤫 Прошепотіти", `targetSpeech:whisper:${target.type}:${target.id}:known`).row();
+  keyboard.text("🤫 Прошепотіти", `targetSpeech:whisper:${target.type}:${target.id}:known`);
+  keyboard.row();
+
   for (const socialId of quickSocialsForTarget({ kind: target.type, isAnimal: Boolean(target.isAnimal), canGreet: target.canGreet })) {
     const social = SOCIAL_DEFINITIONS.find((item) => item.id === socialId);
     if (social) keyboard.text(social.label, `signal:${social.id}:${target.type}:${target.id}:known`);

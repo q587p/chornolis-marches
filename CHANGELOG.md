@@ -16,6 +16,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added an admin-only confirmed `/forget_published_news` recovery command that forgets published `NEWS_MD` / `NEWS_MD_ARCHIVE` outbox rows without deleting Telegram channel messages.
 - Added world-time rendering for public `/chronicles`, plus scribe/admin `/chronicles_real` and idempotent `/chronicles_backfill_players` commands for real-time audit and older player-registration backfill.
 - Added Herald chronicle relay support for sending public `Chronicle:` rows into a configured chat, with restart-safe `WorldEvent` relay markers and admin commands for pending/publish/backfill checks.
+- Added `Слідувати` to living target action keyboards so visible players, creatures and local characters can be marked for follow intent without typing `/follow <target>`.
 
 ### Fixed
 
