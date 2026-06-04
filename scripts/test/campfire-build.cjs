@@ -8,6 +8,7 @@ const {
   adminHandmadeCampfireData,
   campfireIgnitionAtmosphereText,
   canBuildAnotherHandmadeCampfire,
+  firstRelightableCampfireId,
   handmadeCampfireCount,
   isHandmadeCampfire,
   isPreparedCampfire,
@@ -49,6 +50,15 @@ assert.equal(isHandmadeCampfire({ ...prepared, data: { ...adminPrepared.data, de
 assert.equal(handmadeCampfireCount([prepared, prepared]), 2);
 assert.equal(canBuildAnotherHandmadeCampfire([prepared, prepared]), true);
 assert.equal(canBuildAnotherHandmadeCampfire([prepared, prepared, prepared]), false);
+assert.equal(firstRelightableCampfireId([
+  {
+    id: 10,
+    type: "CAMPFIRE",
+    providesLight: false,
+    data: { is_campfire: true, handmade: true },
+  },
+  { ...prepared, id: 11 },
+]), 11);
 
 const firstDarkFireText = campfireIgnitionAtmosphereText({ wasFirstActiveCampfire: true, hadLocalLightBefore: false });
 assert.match(firstDarkFireText, /затишніше/u);
