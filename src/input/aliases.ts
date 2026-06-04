@@ -83,6 +83,7 @@ export type ParsedAliasCommand =
   | { kind: "follow"; target: string }
   | { kind: "follow-step" }
   | { kind: "unfollow" }
+  | { kind: "crawl-root-gap" }
   | { kind: "target-action"; action: TargetAction; target: string }
   | { kind: "pickup-target"; target: string }
   | { kind: "social-signal"; signal: SocialSignalAlias; target?: string };
@@ -476,6 +477,15 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "рушити слідом": { kind: "follow-step" },
   "йти за слідом": { kind: "follow-step" },
   "триматися сліду": { kind: "follow-step" },
+  crawl: { kind: "crawl-root-gap" },
+  "crawl gap": { kind: "crawl-root-gap" },
+  "crawl into gap": { kind: "crawl-root-gap" },
+  "пролізти": { kind: "crawl-root-gap" },
+  "пролізти в щілину": { kind: "crawl-root-gap" },
+  "пролізти у щілину": { kind: "crawl-root-gap" },
+  "лізти в щілину": { kind: "crawl-root-gap" },
+  "лізти у щілину": { kind: "crawl-root-gap" },
+  "пролізти під коріння": { kind: "crawl-root-gap" },
 
   wait: { kind: "wait" },
   w8: { kind: "wait" },
@@ -762,6 +772,11 @@ const SUGGESTABLE_PATTERN_ALIASES = [
   "рушити слідом",
   "йти за слідом",
   "триматися сліду",
+  "crawl",
+  "crawl gap",
+  "пролізти",
+  "пролізти в щілину",
+  "лізти в щілину",
   "freshen all",
   "свіжувати все",
   "освіжити всі",
@@ -945,6 +960,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "auto") return parsed.mode === "stop" ? "/auto_stop" : "/auto";
   if (parsed.kind === "queue") return "/queue";
   if (parsed.kind === "track") return "/track";
+  if (parsed.kind === "crawl-root-gap") return "/crawl";
   if (parsed.kind === "inspect-vegetation" || parsed.kind === "inspect-border-marker" || parsed.kind === "inspect-feature") return "/examine";
   if (parsed.kind === "shake-tree") return "/shake_tree";
   if (parsed.kind === "wait") return "/wait";

@@ -1,8 +1,9 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
 
 require("ts-node/register");
 
-const { buildNewsIndexPage, parseNewsListPageRequest, renderNewsMarkdownForTelegram } = require("../../src/handlers/news");
+const { buildNewsIndexPage, newsHtmlReplyOptions, parseNewsListPageRequest, renderNewsMarkdownForTelegram } = require("../../src/handlers/news");
 const { renderWorldUpdatedAnnouncement } = require("../../src/services/deployAnnouncements");
 const { readWebNewsEntries, renderNewsInlineMarkdown, renderNewsPage } = require("../../src/server/statusServer");
 const { escapeHtml } = require("../../src/utils/text");
@@ -38,12 +39,15 @@ function literalPattern(value) {
   assert.equal(parseNewsListPageRequest("/news 0"), 0);
 
   const deepPage = await buildNewsIndexPage(5);
+  const newsOptions = newsHtmlReplyOptions(deepPage.keyboard);
   const buttons = deepPage.keyboard?.inline_keyboard.flat().map((button) => ({
     text: button.text,
     callback: "callback_data" in button ? button.callback_data : undefined,
   })) ?? [];
   assert.doesNotMatch(deepPage.text, /`/);
   assert.doesNotMatch(deepPage.text, /^## /m);
+  assert.match(deepPage.text, /<b>[^<]+<\/b>/, "Telegram news text uses HTML markup for headings");
+  assert.equal(newsOptions.parse_mode, "HTML", "Telegram news pages must be sent with HTML parse mode");
   assert.match(deepPage.text, /Архів новин: 41-48 з/);
   assert.match(deepPage.text, /Можна перейти одразу: \/news 6\./);
   assert.ok(buttons.some((button) => button.text === "⏮️ Початок" && button.callback === "news:list:0"), "deep news archive page should link to the first page");
@@ -51,6 +55,13 @@ function literalPattern(value) {
   assert.ok(buttons.some((button) => button.text.match(/^\d+\/\d+$/) && button.callback === "news:list:noop"), "deep news archive page should show a noop page indicator");
   assert.ok(buttons.some((button) => button.text === "Далі ▶️" && button.callback === "news:list:6"), "deep news archive page should link to the next page");
   assert.ok(buttons.some((button) => button.text === "Кінець ⏭️" && button.callback), "deep news archive page should link to the last page");
+
+  const aliasesSource = fs.readFileSync("src/handlers/aliases.ts", "utf8");
+  assert.match(
+    aliasesSource,
+    /ctx\.reply\(page\.text,\s*newsHtmlReplyOptions\(page\.keyboard\)\)/,
+    "Alias/deep-link news reply path must keep HTML parse mode so <b> headings do not leak as text",
+  );
 
   assert.equal(
     renderNewsInlineMarkdown("`Гукнути поруч` (`/yell`) `/say` `/build_campfire` `/light_campfire` `/douse_campfire` `/dismantle_campfire` /cleanupCreatures /unknown"),

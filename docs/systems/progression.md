@@ -94,6 +94,13 @@ If a route memory was recorded in darkness, lighting a torch later does not
 turn that old memory into a clear direction. The player should use `/track`,
 fresh observation or another witnessed movement to recover the trail.
 
+`0.15.35` adds the first attention-gated location proof for MAP-004. The root
+gap under the starter cellar is not a skill-level lock yet: it uses the existing
+light/feature-detail visibility rules so `/examine` can reveal a careful
+`Пролізти` (`/crawl`) action only when the player can actually make out the
+opening. This proves the access pattern without exposing a public skill sheet,
+adding a loot room or introducing a broad gated-exit framework.
+
 Observed actor skill remains future work. A later slice should add a small helper
 such as `observedActorSkillLevel(...)` that can read player learning progress or
 return profession/species profile defaults for herbalists, hunters and animals

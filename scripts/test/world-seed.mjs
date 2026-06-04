@@ -226,6 +226,7 @@ for (const key of ["start_newcomer_tablet", "start_lunar_circles_birchbark", "st
 const startWatchtower = locations.find((item) => item.key === "start_border_watchtower");
 const startCamp = locations.find((item) => item.key === "start_border_camp");
 const underBridge = locations.find((item) => item.key === "under_bridge_18_05");
+const startRootPocket = locations.find((item) => item.key === "start_cellar_root_pocket");
 assert.ok(startCamp, "Starter camp should exist");
 assert.equal(startCamp.regionKey, "starter_camp", "Starter camp should use the starter infrastructure region");
 assert.ok(startWatchtower, "Starter camp watchtower should exist as a real location");
@@ -240,12 +241,16 @@ assert.equal(startCellar.y, 5, "Starter camp cellar should sit below the camp y 
 assert.equal(startCellar.z, -1, "Starter camp cellar should use z = -1");
 assert.equal(startCellar.regionKey, "starter_camp", "Starter camp cellar should use the starter infrastructure region");
 assert.equal(startCellar.dangerLevel, 0, "Starter camp cellar should stay safe");
+assert.ok(startRootPocket, "Starter cellar root pocket should exist as the first attention-gated location");
+assert.equal(startRootPocket.z, -1, "Starter cellar root pocket should stay in the intentional lower starter layer");
+assert.equal(startRootPocket.regionKey, "starter_camp", "Starter cellar root pocket should use the starter infrastructure region");
+assert.equal(startRootPocket.dangerLevel, 0, "Starter cellar root pocket should stay safe");
 assert.equal(underBridge?.regionKey, "old_bridge", "Under-bridge location should remain in the old bridge region");
 const starterCampLocationKeys = new Set(locations.filter((item) => item.regionKey === "starter_camp").map((item) => item.key));
 assert.deepEqual(
   [...starterCampLocationKeys].sort(),
-  ["start_border_camp", "start_border_cellar", "start_border_watchtower"].sort(),
-  "Starter infrastructure region should contain only the camp vertical stack",
+  ["start_border_camp", "start_border_cellar", "start_border_watchtower", "start_cellar_root_pocket"].sort(),
+  "Starter infrastructure region should contain only the camp vertical stack and attention-gated root pocket",
 );
 assert.ok(
   exits.some((exit) => exit.fromKey === "start_border_camp" && exit.toKey === "start_border_watchtower" && exit.direction === "UP"),
@@ -263,6 +268,14 @@ assert.ok(
   exits.some((exit) => exit.fromKey === "start_border_cellar" && exit.toKey === "start_border_camp" && exit.direction === "UP"),
   "Starter cellar should have an UP exit to the camp",
 );
+assert.ok(
+  exits.some((exit) => exit.fromKey === "start_border_cellar" && exit.toKey === "start_cellar_root_pocket" && exit.direction === "INSIDE" && exit.isHidden === true),
+  "Starter cellar should have a hidden attention-gated INSIDE exit to the root pocket",
+);
+assert.ok(
+  exits.some((exit) => exit.fromKey === "start_cellar_root_pocket" && exit.toKey === "start_border_cellar" && exit.direction === "OUTSIDE" && exit.isHidden === false),
+  "Starter root pocket should have a visible OUTSIDE return to the cellar",
+);
 
 const startCellarHatch = features.find((item) => item.key === "start_border_cellar_hatch");
 assert.equal(startCellarHatch?.locationKey, "start_border_camp", "Starter cellar hatch should live at the camp");
@@ -273,6 +286,7 @@ const startCellarFeatures = [
   "start_cellar_old_notch_wall",
   "start_cellar_empty_shelf",
   "start_cellar_dry_bunks",
+  "start_cellar_root_gap",
   "start_cellar_torn_map_board",
 ];
 for (const key of startCellarFeatures) {
@@ -292,7 +306,12 @@ assert.equal(startCellarShelf?.data?.storage_staging, "herbalist_supply_run", "S
 const startCellarDryBunks = features.find((item) => item.key === "start_cellar_dry_bunks");
 assert.equal(startCellarDryBunks?.data?.no_loot, true, "Starter cellar dry bunks should not hide loot");
 assert.equal(startCellarDryBunks?.data?.herbalist_rest_staging, true, "Starter cellar dry bunks should stage herbalist rest only");
+const startCellarRootGap = features.find((item) => item.key === "start_cellar_root_gap");
+assert.equal(startCellarRootGap?.data?.attention_gate, "root_gap_light", "Starter root gap should declare its attention gate");
+assert.equal(startCellarRootGap?.data?.destination_location_key, "start_cellar_root_pocket", "Starter root gap should point to the root pocket destination");
+assert.equal(startCellarRootGap?.data?.no_loot, true, "Starter root gap should not become a loot source");
 assert.equal(resourceNodes.some((node) => node.locationKey === "start_border_cellar"), false, "Starter cellar should not add starter loot/resource nodes");
+assert.equal(resourceNodes.some((node) => node.locationKey === "start_cellar_root_pocket"), false, "Starter root pocket should not add starter loot/resource nodes");
 assert.deepEqual(
   resourceNodes.filter((node) => starterCampLocationKeys.has(node.locationKey)).map((node) => `${node.locationKey}:${node.resourceKey}`),
   [],

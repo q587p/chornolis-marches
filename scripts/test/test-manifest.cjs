@@ -53,6 +53,7 @@ module.exports = [
   nodeTest("scripts/test/npc-hunter.cjs"),
   nodeTest("scripts/test/npc-herbalist.cjs"),
   nodeTest("scripts/test/cellar-water-passage.cjs"),
+  nodeTest("scripts/test/attention-gated-location.cjs"),
   nodeTest("scripts/test/attack-rules.cjs"),
   nodeTest("scripts/test/attack-learning.cjs"),
   nodeTest("scripts/test/gathering-learning.cjs"),

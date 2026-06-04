@@ -1,7 +1,7 @@
 ---
 id: MAP-004
 title: Skill and attention gated locations
-status: backlog
+status: in_testing
 type: feature
 area: world
 priority: high
@@ -27,13 +27,26 @@ Let some waking-world locations be reachable only when the character has enough 
 
 This should not feel like a dry “requires level 3” lock. It should feel like the world asks for a steadier hand, a sharper eye, a remembered route, or the kind of bodily knowledge that comes from doing and watching.
 
-## First Slice Candidate
+## First Slice In Testing
 
-Add one small starter-adjacent cellar side room as a proof of concept.
+`0.15.35` adds the first runtime proof as a deliberately small light/examine gate rather than a broad skill framework:
+
+- Source: `start_border_cellar` / `Погріб прибулих`.
+- Feature: `start_cellar_root_gap` / `Щілина під старим коренем`.
+- Destination: `start_cellar_root_pocket` / `Коренева кишеня під погребом`.
+- Gate: in darkness the feature stays a vague dark patch; when existing light/visibility rules allow feature detail, `/examine` can reveal the careful `Пролізти` (`/crawl`) action.
+- The entry is an authored hidden `INSIDE` edge for seed consistency, but it is not shown as an ordinary visible exit.
+- The destination is safe, has a visible return and does not add loot/resources.
+
+This proves the MAP-004 runtime pattern in a low-risk way: location access can depend on attention and light without becoming a new tutorial, shop, cache or auto-follow path.
+
+## Next Slice Candidate
+
+Add one small starter-adjacent cellar side room as a skill/progress proof of concept.
 
 Suggested shape:
 
-- Source: `start_border_cellar` / `Погріб прибулих`.
+- Source: `start_border_cellar` / `Погріб прибулих`, or another starter-adjacent waking-world space that does not block onboarding.
 - Destination: a tiny additional room or niche under the starter infrastructure, for example:
   - `Засипана комірчина`;
   - `Суха бокова комірка`;

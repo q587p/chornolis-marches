@@ -7,6 +7,25 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.35 - First attention-gated location - 12026-06-04
+
+### Added
+
+- Added `start_cellar_root_pocket`, a tiny safe waking-world root pocket beneath the starter cellar.
+- Added an attention-gated cellar feature that stays vague in darkness and reveals a crawl action only when feature details are visible through the existing light/visibility rules.
+- Added `/crawl` plus English and Ukrainian text aliases for the new careful crawl action.
+- Added focused regression coverage for the hidden exit, dark-text leak prevention, crawl aliases and no-loot/no-resource guard.
+
+### Changed
+
+- Updated MAP-004 planning notes to mark the first light/examine runtime proof as in testing while keeping broader skill/progress-gated rooms for a later slice.
+
+### Risks
+
+- The crawl transition is a small authored feature action rather than a reusable generic gated-exit framework.
+- The first gate uses the current location light/visibility model; more personal viewer-aware attention gates remain future work.
+- The hidden authored `INSIDE` exit exists for seed/map consistency but is not exposed as an ordinary visible exit.
+
 ## 0.15.34 - Post-0.15.33 regression polish - 12026-06-04
 
 ### Added

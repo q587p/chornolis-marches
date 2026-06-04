@@ -124,6 +124,10 @@ function buildNewsIndexKeyboard(entries: NewsEntry[], listPage: number, totalLis
   return keyboard.inline_keyboard.length ? keyboard : undefined;
 }
 
+export function newsHtmlReplyOptions(keyboard?: InlineKeyboard) {
+  return keyboard ? { parse_mode: "HTML" as const, reply_markup: keyboard } : { parse_mode: "HTML" as const };
+}
+
 export async function buildNewsIndexPage(requestedListPage: number) {
   const entries = await readNewsEntries();
   if (!entries.length) return { text: "Новини поки недоступні: файл news.md не знайдено або він порожній.", keyboard: undefined };
@@ -189,7 +193,7 @@ async function buildNewsEntryPage(entryIndex: number, requestedEntryPage: number
 }
 
 async function editOrReply(ctx: any, text: string, keyboard?: InlineKeyboard) {
-  const options = keyboard ? { parse_mode: "HTML" as const, reply_markup: keyboard } : { parse_mode: "HTML" as const };
+  const options = newsHtmlReplyOptions(keyboard);
 
   if (ctx.callbackQuery?.message) {
     await ctx.editMessageText(text, options);
@@ -201,7 +205,7 @@ async function editOrReply(ctx: any, text: string, keyboard?: InlineKeyboard) {
 
 export async function sendNews(ctx: any) {
   const page = await buildNewsIndexPage(parseNewsListPageRequest(ctx.message?.text));
-  await ctx.reply(page.text, page.keyboard ? { parse_mode: "HTML", reply_markup: page.keyboard } : { parse_mode: "HTML" });
+  await ctx.reply(page.text, newsHtmlReplyOptions(page.keyboard));
 }
 
 export function registerNewsHandlers(bot: Bot) {
