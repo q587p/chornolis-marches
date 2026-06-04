@@ -65,6 +65,9 @@ too much for a quick time check and overlaps with `/weather`.
   current time and `Погода` (`/weather`) for sky/visibility.
 - If `/calendar` lands, add it to help/news/docs with the usual Ukrainian label
   plus slash command in parentheses.
+- See `UX-003` for the follow-up keyboard audit: ordinary menus should expose
+  `Час`, `Погода` and `Календар` coherently instead of leaving the latter two
+  as typed-only commands.
 
 ## Acceptance
 

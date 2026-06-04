@@ -204,6 +204,7 @@ TRACK-LEARN-001-B,Animal movement observation,next,feature,learning,medium,"trac
 TRACK-LEARN-001-C,Learning respects visibility and light,next,feature,learning,high,"learning,visibility,light",docs/planning/items/TRACK-LEARN-001-C.md
 UX-001,Command and feature icon collision audit,backlog,chore,ux,low,"ux,icons,keyboard,features",docs/planning/items/UX-001-command-feature-icon-collision.md
 UX-002,Target pagination return context,testing,chore,ux,medium,"ux,pagination,corpses,telegram",docs/planning/items/UX-002-target-pagination-return-context.md
+UX-003,Secondary keyboard world-state audit,backlog,chore,ux,medium,"ux,keyboard,menu,world-time,calendar,weather",docs/planning/items/UX-003-secondary-keyboard-world-state-audit.md
 VIS-001-A,Shared visibility service skeleton,testing,technical,visibility,high,"visibility,night,light",docs/planning/items/VIS-001-A.md
 VIS-001-B,Hide location details in darkness,testing,feature,visibility,high,"visibility,look,night",docs/planning/items/VIS-001-B.md
 VIS-001-C,Nearby beings visibility in darkness,testing,feature,visibility,high,"visibility,targets,night",docs/planning/items/VIS-001-C.md

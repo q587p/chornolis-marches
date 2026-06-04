@@ -3987,6 +3987,27 @@
     "file": "docs/planning/items/UX-002-target-pagination-return-context.md"
   },
   {
+    "id": "UX-003",
+    "title": "Secondary keyboard world-state audit",
+    "status": "backlog",
+    "type": "chore",
+    "area": "ux",
+    "priority": "medium",
+    "tags": [
+      "ux",
+      "keyboard",
+      "menu",
+      "world-time",
+      "calendar",
+      "weather"
+    ],
+    "depends_on": [
+      "WORLD-004"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/UX-003-secondary-keyboard-world-state-audit.md"
+  },
+  {
     "id": "VIS-001-A",
     "title": "Shared visibility service skeleton",
     "status": "testing",
