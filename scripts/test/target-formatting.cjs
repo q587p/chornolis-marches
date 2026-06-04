@@ -1,4 +1,6 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 
 require("ts-node/register");
 
@@ -159,6 +161,11 @@ const returnAwareCorpseKeyboard = buildCorpseActionKeyboard({
 assert.equal(returnAwareCorpseKeyboard.inline_keyboard[1][0].callback_data, "social:pickup:creature:21:details:1");
 assert.equal(returnAwareCorpseKeyboard.inline_keyboard.at(-1)[0].callback_data, "targetPage:details:1");
 assert.ok(!returnAwareCorpseKeyboard.inline_keyboard.flat().some((button) => String(button.callback_data).includes("follow")), "Corpse keyboards should not expose follow intent.");
+
+const socialHandlerSource = fs.readFileSync(path.join(process.cwd(), "src", "handlers", "social.ts"), "utf8");
+assert.match(socialHandlerSource, /bot\.callbackQuery\(\s*\/\^social:follow:/, "Follow target keyboard callback should be registered as social:follow.");
+assert.match(socialHandlerSource, /submitTargetFollowIntent\(ctx,\s*ctx\.match\[1\]/, "social:follow callback should route through the target follow-intent helper.");
+assert.match(socialHandlerSource, /setPlayerFollowIntent\(/, "Target follow-intent helper should reuse the shared follow-intent service.");
 
 assert.equal(inventoryResourceSummary([
   { amount: 1, resourceType: { key: "cooked_meat", name: "смажене м'ясо" } },

@@ -11,6 +11,7 @@ const {
   runInlineReplacementForKey,
 } = require("../../src/services/notifications");
 const { movementLabelFromVisibility } = require("../../src/services/actionCompletions");
+const { actorLabelFromVisibility } = require("../../src/services/visibilityLabels");
 
 async function sleep(ms) {
   await new Promise((resolve) => setTimeout(resolve, ms));
@@ -85,6 +86,9 @@ async function sleep(ms) {
   assert.equal(movementLabelFromVisibility({ showNearbyDetails: false }, false, "Хтось", "Орина"), "Хтось");
   assert.equal(movementLabelFromVisibility({ showNearbyDetails: false }, true, "Хтось", "Орина"), "Орина");
   assert.equal(movementLabelFromVisibility({ showNearbyDetails: true }, false, "Хтось", "Орина"), "Орина");
+  assert.equal(actorLabelFromVisibility({ showNearbyDetails: true }, false, "Хтось", "Лукан"), "Лукан");
+  assert.equal(actorLabelFromVisibility({ showNearbyDetails: false }, true, "Хтось", "Лукан"), "Лукан");
+  assert.equal(actorLabelFromVisibility({ showNearbyDetails: false }, false, "Хтось", "Лукан"), "Хтось");
 
   console.log("Notification replacement locks OK");
 })().catch((error) => {
