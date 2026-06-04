@@ -37,7 +37,7 @@ import { playerCanShowTechnicalDetails } from "./technicalDetails";
 import { canOpenDreamGateWithSpeech, ensureTutorialForagingResources, isLocationExitLocked, isTutorialFastRestLocationKey, openDreamGate, rememberTutorialCommandHintIfInTutorial, rememberTutorialForagingSuccess, rememberTutorialInventoryAvailable, rememberTutorialWellbeingAside, tutorialRestEntryStaminaMode, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_ENTRY_STAMINA_TEXT, TUTORIAL_REST_RETURN_FROM_HEAT_TEXT, TUTORIAL_WELLBEING_ASIDE_TEXT } from "./tutorial";
 import { tutorialActionHintComment, tutorialGateSpeechComment, tutorialLookPaceComments, tutorialSpiritMoveComment, tutorialTrackComments, tutorialWaitPaceComments } from "./tutorialVoices";
 import { chance, pick, shuffle } from "../utils/random";
-import { canSendPlayerActionMessageToPlayerId } from "./sessionPresence";
+import { canSendPlayerActionMessageToPlayerId, canSendProactiveToTelegramId } from "./sessionPresence";
 import { cookRawMeat, freshenCorpseForMeat } from "./meat";
 import { rememberPlayerReplyTarget } from "./replyTargets";
 import { nearbySpeechDirectionIntro, nearbySpeechRecipients } from "./speechRanges";
@@ -249,6 +249,25 @@ function targetIntro(target: ResolvedTarget, isMystery: boolean) {
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
+}
+
+async function sendPrivateSpeechMessage(
+  bot: Bot,
+  targetPlayer: { telegramId: string | number },
+  text: string,
+  context: string,
+) {
+  if (!(await canSendProactiveToTelegramId(targetPlayer.telegramId))) return null;
+  return safeSendMessage(
+    bot,
+    targetPlayer.telegramId,
+    text,
+    {
+      parse_mode: "HTML",
+      reply_markup: await buildMainReplyKeyboardForTelegramId(Number(targetPlayer.telegramId), false),
+    },
+    context,
+  );
 }
 
 async function sendTutorialActionHint(bot: Bot, chatId: number | string, player: { id: number; currentLocationId: number | null }, commandKey: "look" | "examine") {
@@ -1055,11 +1074,10 @@ async function completeGreet(bot: Bot, action: WorldAction) {
   const staminaSpend = await spendPlayerStamina(bot, player.id, "GREET", chatId);
   await prisma.player.updateMany({ where: { id: player.id }, data: { greetings: { increment: 1 } } });
   if (targetPlayer) {
-    const delivered = await safeSendMessage(
+    const delivered = await sendPrivateSpeechMessage(
       bot,
-      targetPlayer.telegramId,
+      targetPlayer,
       `${escapeHtml(actorForms.nominative)} ${verb} вам:\n${quoteBlock(greeting)}`,
-      { parse_mode: "HTML" },
       "greet target sendMessage",
     );
     if (delivered) {
@@ -1476,11 +1494,10 @@ async function completeSay(bot: Bot, action: WorldAction) {
         { parseMode: "HTML" },
       );
       if (targetPlayer) {
-        const delivered = await safeSendMessage(
+        const delivered = await sendPrivateSpeechMessage(
           bot,
-          targetPlayer.telegramId,
+          targetPlayer,
           `${escapeHtml(actorForms.nominative)} шепоче вам:\n${quoteBlock(text)}`,
-          { parse_mode: "HTML", reply_markup: await buildMainReplyKeyboardForTelegramId(Number(targetPlayer.telegramId), false) },
           "whisper target sendMessage",
         );
         if (delivered) {
@@ -1559,10 +1576,11 @@ async function completeSay(bot: Bot, action: WorldAction) {
       const replyTargetCreatureForms = replyTargetCreature ? creatureForms(replyTargetCreature) : null;
       const replyTargetDative = replyTargetForms?.dative ?? replyTargetCreatureForms?.dative ?? targetDative;
       if (replyTargetPlayer && replyTargetPlayer.currentLocationId !== player.currentLocationId) {
-        await bot.api.sendMessage(
-          replyTargetPlayer.telegramId,
+        await sendPrivateSpeechMessage(
+          bot,
+          replyTargetPlayer,
           `${escapeHtml(actorForms.nominative)} ${replyVerb} вам:\n${quoteBlock(text)}`,
-          { parse_mode: "HTML", reply_markup: await buildMainReplyKeyboardForTelegramId(Number(replyTargetPlayer.telegramId), false) },
+          "player reply target sendMessage",
         );
       } else {
         await notifyLocationExcept(
@@ -1636,11 +1654,10 @@ async function completeSay(bot: Bot, action: WorldAction) {
         `${escapeHtml(speakerForms.nominative)} відповідає ${escapeHtml(targetForms.dative)}:\n${quoteBlock(text)}`,
         { parseMode: "HTML" },
       );
-      const delivered = await safeSendMessage(
+      const delivered = await sendPrivateSpeechMessage(
         bot,
-        targetPlayer.telegramId,
+        targetPlayer,
         `${escapeHtml(speakerForms.nominative)} відповідає вам:\n${quoteBlock(text)}`,
-        { parse_mode: "HTML", reply_markup: await buildMainReplyKeyboardForTelegramId(Number(targetPlayer.telegramId), false) },
         "creature reply target sendMessage",
       );
       if (delivered) {

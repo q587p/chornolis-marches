@@ -5,6 +5,7 @@ module.exports = [
   nodeTest("scripts/test/slashless-commands.cjs"),
   nodeTest("scripts/test/slashless-command-coverage.cjs"),
   nodeTest("scripts/test/session-presence.cjs"),
+  nodeTest("scripts/test/private-speech-presence.cjs"),
   nodeTest("scripts/test/spirit-call.cjs"),
   nodeTest("scripts/test/follow-intent.cjs"),
   nodeTest("scripts/test/follow-route-memory.cjs"),

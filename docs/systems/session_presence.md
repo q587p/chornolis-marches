@@ -152,6 +152,12 @@ Disallowed:
 
 Do not only block new scheduling. Every delayed/proactive sender should use a shared helper such as `canSendProactiveMessage` immediately before sending, because the player may have gone AFK or ended the session after the message was scheduled.
 
+Private addressed speech also counts as proactive delivery for the recipient when
+the recipient is not the one currently pressing a command or button. Immediate
+greetings, whispers and direct replies must check the same send-time presence
+guard before pushing a Telegram message. Deferred return delivery remains
+`SES-003` follow-up work.
+
 Idle reminders should use the stricter `canSendIdleReminder` / scene-claim helper immediately before sending, because the player may also have changed scenes or already received the one allowed reminder for that unresolved prompt.
 
 ## Backlog
