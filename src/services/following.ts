@@ -1,3 +1,4 @@
+import { PlayerSleepState } from "@prisma/client";
 import { prisma } from "../db";
 import type { TextTargetRef } from "./textTargets";
 
@@ -28,9 +29,9 @@ export function followIntentDataForTarget(target: FollowIntentTargetRef, locatio
   };
 }
 
-export function followIntentStatusLine(label: string | null | undefined): string | null {
+export function followIntentStatusLine(label: string | null | undefined, options: { stale?: boolean } = {}): string | null {
   const safeLabel = label?.trim();
-  return safeLabel ? `Чужий слід: ${safeLabel}.` : null;
+  return safeLabel ? `Чужий слід: ${safeLabel}${options.stale ? " (останній помічений)" : ""}.` : null;
 }
 
 export function followIntentAttentionContext(
@@ -48,6 +49,36 @@ export function followIntentAttentionContext(
 
 export async function getPlayerFollowIntent(playerId: number) {
   return prisma.playerFollowIntent.findUnique({ where: { playerId } });
+}
+
+export async function isFollowIntentTargetVisibleAtLocation(intent: Awaited<ReturnType<typeof getPlayerFollowIntent>> | null | undefined, locationId: number | null | undefined) {
+  if (!intent || !locationId) return false;
+  if (intent.targetType === FOLLOW_TARGET_PLAYER && intent.targetPlayerId) {
+    const target = await prisma.player.findFirst({
+      where: {
+        id: intent.targetPlayerId,
+        currentLocationId: locationId,
+        hp: { gt: 0 },
+        sleepState: PlayerSleepState.AWAKE,
+      },
+      select: { id: true },
+    });
+    return Boolean(target);
+  }
+  if (intent.targetType === FOLLOW_TARGET_CREATURE && intent.targetCreatureId) {
+    const target = await prisma.creature.findFirst({
+      where: {
+        id: intent.targetCreatureId,
+        locationId,
+        isAlive: true,
+        isGone: false,
+        isHidden: false,
+      },
+      select: { id: true },
+    });
+    return Boolean(target);
+  }
+  return false;
 }
 
 export async function setPlayerFollowIntent(playerId: number, target: FollowIntentTargetRef, locationId: number) {

@@ -59,6 +59,20 @@ As of `0.15.30`, follow intent has its first route-memory use:
 This still does not move the follower. It is a memory/attention layer, not an
 automatic travel contract.
 
+As of `0.15.31`, that memory layer is rate-limited:
+
+- repeated movement through the same followed source/direction does not keep
+  sending the same proactive hint;
+- hidden-route disappearance hints have their own longer cooldown;
+- tiny silent tracking-observation progress also has a separate cooldown, so
+  rapid back-and-forth movement cannot farm the same attention context.
+
+The visibility check currently follows the existing location-wide light model.
+If a torch, campfire or other local light makes the location readable, route
+memory can be clear; if the location snapshot says tracks/details are hidden,
+the hint stays non-directional. A future viewer-specific light pass may refine
+this, but it is not part of follow movement.
+
 ### 3. Following Is Weaker Than Group Membership
 
 Following should be possible even without an existing contact. It means:

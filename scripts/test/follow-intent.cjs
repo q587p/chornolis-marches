@@ -37,6 +37,7 @@ assert.equal(creatureData.lastSeenLocationId, 4);
 assert.equal(creatureData.lastKnownTargetLabel, "знахарка");
 
 assert.equal(followIntentStatusLine("знахарка"), "Чужий слід: знахарка.");
+assert.equal(followIntentStatusLine("знахарка", { stale: true }), "Чужий слід: знахарка (останній помічений).");
 assert.equal(followIntentStatusLine("  "), null);
 assert.deepEqual(followIntentAttentionContext(1, FOLLOW_TARGET_CREATURE, 7), {
   playerId: 1,

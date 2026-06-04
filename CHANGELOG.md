@@ -7,6 +7,20 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.31 - Follow route memory stabilization - 12026-06-04
+
+### Changed
+
+- Added narrow WorldEvent-backed cooldown keys for follow route-memory messages so repeated movement through the same followed route does not keep sending the same proactive hint.
+- Added a separate silent learning cooldown marker for followed movement, preventing rapid repeated target movement from farming `tracking` / `observation` / `followed_movement` progress.
+- Updated `/me` follow-intent status copy so a target that is no longer visible nearby is shown as `останній помічений` rather than implying a guaranteed live lock.
+- Documented that follow route memory still uses the location light/visibility snapshot; player-carried and local light affect it only through that existing location-wide light model.
+
+### Fixed
+
+- Kept hidden water-word passage memory non-directional while adding cooldown coverage for repeated hidden-route observations.
+- Expanded focused follow-intent and route-memory helper tests around cooldown keys, stale status copy and hidden/dark direction safety.
+
 ## 0.15.30 - Follow-aware track memory MVP - 12026-06-04
 
 ### Added
