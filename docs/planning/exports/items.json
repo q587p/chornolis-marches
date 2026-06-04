@@ -3738,6 +3738,27 @@
     "file": "docs/planning/items/SOC-009-mail-and-letter-delivery.md"
   },
   {
+    "id": "SOC-010",
+    "title": "Greeting inspiration stamina",
+    "status": "backlog",
+    "type": "feature",
+    "area": "social",
+    "priority": "medium",
+    "tags": [
+      "social",
+      "greet",
+      "stamina",
+      "cooldown",
+      "anti-farm"
+    ],
+    "depends_on": [
+      "SOC-001",
+      "SES-001-A"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SOC-010-greeting-inspiration-stamina.md"
+  },
+  {
     "id": "SOCIAL-003",
     "title": "Theft reaction signals",
     "status": "backlog",

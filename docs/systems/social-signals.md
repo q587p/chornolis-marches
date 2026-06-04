@@ -68,6 +68,14 @@ The character card should expose these targetless gestures through a compact `С
 
 Social signals write `SOCIAL_SIGNAL` world events. `/chat` includes these events alongside speech and greetings, so social gestures become part of the local conversational history instead of being only transient Telegram messages.
 
+## Future Greeting Inspiration
+
+`SOC-010` tracks a possible small stamina/ease benefit from direct greetings.
+If implemented, it should stay gentle and cooldowned: a greeting can make the
+recipient feel a little more ready for the road, but it should not replace rest,
+food, sleep or fire. Ordinary text should say that the greeting gave a small
+warmth or steadiness, not expose a raw `+Снага` number.
+
 ## NPC and auto use
 
 The shared social-signal layer can be used by players, auto-mode and NPCs.

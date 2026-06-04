@@ -190,6 +190,7 @@ SOC-006,NPC group compatibility,backlog,feature,social,medium,"social,groups,npc
 SOC-007,Telegram UI and copy for contacts / follow / groups,next,feature,social,high,"social,telegram,ui,copy,groups",docs/planning/items/SOC-007-telegram-ui-and-copy.md
 SOC-008,Speech ranges and vertical voice,testing,feature,social,high,"speech,social,mud-compatibility,stamina,verticality",docs/planning/items/SOC-008-speech-ranges-and-vertical-voice.md
 SOC-009,Mail and letter delivery,backlog,feature,social,medium,"social,mail,letters,items,settlement,async",docs/planning/items/SOC-009-mail-and-letter-delivery.md
+SOC-010,Greeting inspiration stamina,backlog,feature,social,medium,"social,greet,stamina,cooldown,anti-farm",docs/planning/items/SOC-010-greeting-inspiration-stamina.md
 SOCIAL-003,Theft reaction signals,backlog,feature,social,medium,"social,theft,signals,reactions,0.15",docs/planning/items/SOCIAL-003-theft-reaction-signals.md
 STAT-001,Web /stat predator species comparison table,testing,feature,web,medium,"web,stats,ecology,predators,owl,fox,wolf",docs/planning/items/STAT-001-web-predator-species-table.md
 SURV-001,Early respawn support,testing,feature,survival,high,"onboarding,respawn,beginner",docs/planning/items/SURV-001-early-respawn.md
