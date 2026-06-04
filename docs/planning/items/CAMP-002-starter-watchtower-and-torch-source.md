@@ -75,6 +75,6 @@ Add a real watchtower room above the starter camp and make beginner light sourci
 ## 0.14.19 Stabilization Slice
 
 - The starter watchtower torch source now keeps the first-session safety rail but limits players to 13 carried torches total.
-- Torch stands also refuse more than 13 successful takes per player during a short safety window, so dropping torches on the ground cannot immediately turn the stand into an endless dispenser.
+- Torch stands also refuse more than 13 successful takes per player during one in-game day, so dropping torches on the ground cannot immediately turn the stand into an endless dispenser.
 - The old gate torch source intentionally remains as a second emergency source until the future supply/cache pass decides whether to remove, convert or restock it.
 - Later, replace the stand with limited stock, a maintained container, or a restocking camp supply loop so it still protects beginners while sharing visible supply rules with NPCs and player-maintained camp storage.
