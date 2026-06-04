@@ -15,6 +15,9 @@ export const FOLLOW_ROUTE_HIDDEN_MEMORY_EVENT_TITLE = "Follow intent hidden rout
 export const FOLLOW_ROUTE_VISIBLE_HINT_COOLDOWN_MS = Number(process.env.FOLLOW_ROUTE_VISIBLE_HINT_COOLDOWN_MS || 90_000);
 export const FOLLOW_ROUTE_HIDDEN_HINT_COOLDOWN_MS = Number(process.env.FOLLOW_ROUTE_HIDDEN_HINT_COOLDOWN_MS || 5 * 60_000);
 export const FOLLOW_ROUTE_LEARNING_COOLDOWN_MS = Number(process.env.FOLLOW_ROUTE_LEARNING_COOLDOWN_MS || 5 * 60_000);
+export const FOLLOW_ROUTE_STEP_MEMORY_TTL_MS = Number(process.env.FOLLOW_ROUTE_STEP_MEMORY_TTL_MS || 10 * 60_000);
+
+const FOLLOW_STEP_DIRECTIONS = new Set<Direction>(["NORTH", "EAST", "SOUTH", "WEST", "UP", "DOWN", "INSIDE", "OUTSIDE"]);
 
 export type FollowRouteTarget = {
   type: FollowTargetType;
@@ -117,6 +120,138 @@ export function isWithinFollowRouteCooldown(createdAt: Date | string | number | 
   const time = createdAt instanceof Date ? createdAt.getTime() : new Date(createdAt).getTime();
   if (!Number.isFinite(time)) return false;
   return now - time < cooldownMs;
+}
+
+export type FollowRouteMemoryDescription = {
+  playerId?: number;
+  targetType?: FollowTargetType;
+  targetId?: number;
+  fromLocationId?: number;
+  toLocationId?: number;
+  direction?: Direction;
+  source?: "visible_move" | "hidden_route";
+  visibility?: "clear" | "dark" | "hidden";
+};
+
+export type FollowStepFailureReason =
+  | "no-intent"
+  | "no-memory"
+  | "stale"
+  | "dark"
+  | "hidden"
+  | "wrong-location"
+  | "wrong-target"
+  | "no-direction"
+  | "no-visible-exit";
+
+export type FollowStepMemoryResult =
+  | { ok: true; direction: Direction; targetLabel?: string | null }
+  | { ok: false; reason: FollowStepFailureReason };
+
+function numberField(value: string | undefined) {
+  if (!value || !/^\d+$/u.test(value)) return undefined;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) ? parsed : undefined;
+}
+
+export function parseFollowRouteMemoryEventDescription(description: string | null | undefined): FollowRouteMemoryDescription {
+  const fields = new Map<string, string>();
+  for (const part of String(description ?? "").split(";")) {
+    const [key, ...rest] = part.trim().split("=");
+    if (!key || !rest.length) continue;
+    fields.set(key, rest.join("=").trim());
+  }
+
+  const targetType = fields.get("targetType");
+  const direction = fields.get("direction");
+  const source = fields.get("source");
+  const visibility = fields.get("visibility");
+  return {
+    playerId: numberField(fields.get("playerId")),
+    targetType: targetType === FOLLOW_TARGET_PLAYER || targetType === FOLLOW_TARGET_CREATURE ? targetType : undefined,
+    targetId: numberField(fields.get("targetId")),
+    fromLocationId: numberField(fields.get("from")),
+    toLocationId: numberField(fields.get("to")),
+    direction: direction && FOLLOW_STEP_DIRECTIONS.has(direction as Direction) ? direction as Direction : undefined,
+    source: source === "visible_move" || source === "hidden_route" ? source : undefined,
+    visibility: visibility === "clear" || visibility === "dark" || visibility === "hidden" ? visibility : undefined,
+  };
+}
+
+export function followStepFailureText(reason: FollowStepFailureReason) {
+  if (reason === "no-intent") return "Ви ще не тримаєтеся жодного чужого сліду. Спершу: /follow <ціль>.";
+  if (reason === "dark" || reason === "no-direction") return "Ви пам’ятаєте, що чужий слід зрушив, але не напрям. Тут допоможе світло, сліди або уважніший огляд.";
+  if (reason === "hidden") return "Той слід зник не кроком. Його не повторити простою ходою.";
+  if (reason === "wrong-location") return "Ви вже не там, де втримали цей слід.";
+  if (reason === "no-visible-exit") return "Слід пам’ятає напрям, але стежка тут уже не відкривається простою ходою.";
+  return "Чужий слід уже розійшовся з шумом місцини. Спробуйте знову озирнутися або вистежити.";
+}
+
+export function evaluateFollowRouteMemoryForStep(input: {
+  intent?: FollowIntentRouteLike | null;
+  currentLocationId?: number | null;
+  event?: { title?: string | null; description?: string | null; createdAt?: Date | string | number | null } | null;
+  now?: number;
+  ttlMs?: number;
+}): FollowStepMemoryResult {
+  if (!input.intent) return { ok: false, reason: "no-intent" };
+  if (!input.event) return { ok: false, reason: "no-memory" };
+
+  const parsed = parseFollowRouteMemoryEventDescription(input.event.description);
+  if (input.event.title === FOLLOW_ROUTE_HIDDEN_MEMORY_EVENT_TITLE || parsed.source === "hidden_route" || parsed.visibility === "hidden") {
+    return { ok: false, reason: "hidden" };
+  }
+  if (input.event.title !== FOLLOW_ROUTE_MEMORY_EVENT_TITLE || parsed.source !== "visible_move") return { ok: false, reason: "no-memory" };
+
+  const eventTime = input.event.createdAt instanceof Date ? input.event.createdAt.getTime() : new Date(input.event.createdAt ?? 0).getTime();
+  const now = input.now ?? Date.now();
+  const ttlMs = input.ttlMs ?? FOLLOW_ROUTE_STEP_MEMORY_TTL_MS;
+  if (!Number.isFinite(eventTime) || ttlMs <= 0 || now - eventTime > ttlMs) return { ok: false, reason: "stale" };
+  if (parsed.visibility !== "clear") return { ok: false, reason: "dark" };
+  if (!parsed.direction) return { ok: false, reason: "no-direction" };
+  if (!input.currentLocationId || parsed.fromLocationId !== input.currentLocationId) return { ok: false, reason: "wrong-location" };
+  if (!parsed.targetType || !parsed.targetId || !followIntentMatchesMoveTarget(input.intent, { type: parsed.targetType, id: parsed.targetId })) {
+    return { ok: false, reason: "wrong-target" };
+  }
+
+  return { ok: true, direction: parsed.direction, targetLabel: input.intent.lastKnownTargetLabel };
+}
+
+export async function latestFollowRouteMemoryForPlayer(playerId: number) {
+  return prisma.worldEvent.findFirst({
+    where: {
+      playerId,
+      title: { in: [FOLLOW_ROUTE_MEMORY_EVENT_TITLE, FOLLOW_ROUTE_HIDDEN_MEMORY_EVENT_TITLE] },
+    },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      createdAt: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+export async function followStepDirectionForPlayer(playerId: number): Promise<FollowStepMemoryResult> {
+  const [player, intent, event] = await Promise.all([
+    prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } }),
+    prisma.playerFollowIntent.findUnique({ where: { playerId } }),
+    latestFollowRouteMemoryForPlayer(playerId),
+  ]);
+  const evaluated = evaluateFollowRouteMemoryForStep({
+    intent,
+    currentLocationId: player?.currentLocationId,
+    event,
+  });
+  if (!evaluated.ok) return evaluated;
+
+  const exit = await prisma.locationExit.findUnique({
+    where: { fromLocationId_direction: { fromLocationId: player!.currentLocationId!, direction: evaluated.direction } },
+    select: { id: true, isHidden: true },
+  });
+  if (!exit || exit.isHidden) return { ok: false, reason: "no-visible-exit" };
+  return evaluated;
 }
 
 export function followIntentTrackMatches(intent: FollowIntentRouteLike | null | undefined, track: any) {

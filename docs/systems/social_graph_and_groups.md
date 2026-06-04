@@ -73,6 +73,21 @@ memory can be clear; if the location snapshot says tracks/details are hidden,
 the hint stays non-directional. A future viewer-specific light pass may refine
 this, but it is not part of follow movement.
 
+As of `0.15.32`, a player can act on fresh clear route memory manually:
+
+- `Йти слідом` (`/follow_step`) checks the current follow intent and the latest
+  clear witnessed ordinary movement;
+- if that memory is still fresh, still starts from the player's current
+  location and still points through an ordinary visible exit, it submits a
+  normal `MOVE`;
+- stale, dark, hidden-route or wrong-location memory refuses with diegetic copy
+  instead of moving the player.
+
+This is still not automatic following. It is one explicit player action, not a
+continuous loop, party lock, companion behavior or route replay. Hidden routes
+such as the cellar water-word passage remain non-repeatable unless the player
+learns or triggers them independently.
+
 ### 3. Following Is Weaker Than Group Membership
 
 Following should be possible even without an existing contact. It means:

@@ -18,9 +18,12 @@ const {
   followRouteLearningCooldownKey,
   followRouteMemoryCooldownKey,
   followIntentTrackMatches,
+  evaluateFollowRouteMemoryForStep,
   followRouteMemoryEventDescription,
+  followStepFailureText,
   followRouteMemoryKind,
   isWithinFollowRouteCooldown,
+  parseFollowRouteMemoryEventDescription,
   prioritizeFollowIntentTracks,
 } = require("../../src/services/followRouteMemory");
 
@@ -125,10 +128,118 @@ assert.match(eventDescription, /source=visible_move/);
 assert.match(eventDescription, /cooldownKey=follow_route:player_1:target_CREATURE_13:from_101:direction_NORTH:source_visible_move/);
 assert.match(eventDescription, /learningKey=follow_learning:player_1:target_CREATURE_13/);
 
+const parsedMemoryDescription = parseFollowRouteMemoryEventDescription(eventDescription);
+assert.equal(parsedMemoryDescription.playerId, 1);
+assert.equal(parsedMemoryDescription.targetType, FOLLOW_TARGET_CREATURE);
+assert.equal(parsedMemoryDescription.targetId, 13);
+assert.equal(parsedMemoryDescription.fromLocationId, 101);
+assert.equal(parsedMemoryDescription.toLocationId, 102);
+assert.equal(parsedMemoryDescription.direction, "UP");
+assert.equal(parsedMemoryDescription.source, "visible_move");
+assert.equal(parsedMemoryDescription.visibility, "clear");
+
+const freshNow = Date.now();
+const clearStepMemory = {
+  title: FOLLOW_ROUTE_MEMORY_EVENT_TITLE,
+  description: eventDescription,
+  createdAt: new Date(freshNow - 1_000),
+};
+assert.deepEqual(
+  evaluateFollowRouteMemoryForStep({
+    intent: creatureIntent,
+    currentLocationId: 101,
+    event: clearStepMemory,
+    now: freshNow,
+  }),
+  { ok: true, direction: "UP", targetLabel: "знахарка" },
+);
+assert.deepEqual(
+  evaluateFollowRouteMemoryForStep({ intent: null, currentLocationId: 101, event: clearStepMemory, now: freshNow }),
+  { ok: false, reason: "no-intent" },
+);
+assert.deepEqual(
+  evaluateFollowRouteMemoryForStep({ intent: creatureIntent, currentLocationId: 101, event: null, now: freshNow }),
+  { ok: false, reason: "no-memory" },
+);
+assert.deepEqual(
+  evaluateFollowRouteMemoryForStep({
+    intent: creatureIntent,
+    currentLocationId: 101,
+    event: { ...clearStepMemory, createdAt: new Date(freshNow - 11 * 60_000) },
+    now: freshNow,
+  }),
+  { ok: false, reason: "stale" },
+);
+assert.deepEqual(
+  evaluateFollowRouteMemoryForStep({
+    intent: creatureIntent,
+    currentLocationId: 999,
+    event: clearStepMemory,
+    now: freshNow,
+  }),
+  { ok: false, reason: "wrong-location" },
+);
+assert.deepEqual(
+  evaluateFollowRouteMemoryForStep({
+    intent: playerIntent,
+    currentLocationId: 101,
+    event: clearStepMemory,
+    now: freshNow,
+  }),
+  { ok: false, reason: "wrong-target" },
+);
+assert.deepEqual(
+  evaluateFollowRouteMemoryForStep({
+    intent: creatureIntent,
+    currentLocationId: 101,
+    event: {
+      title: FOLLOW_ROUTE_MEMORY_EVENT_TITLE,
+      description: followRouteMemoryEventDescription({
+        playerId: 1,
+        targetType: FOLLOW_TARGET_CREATURE,
+        targetId: 13,
+        fromLocationId: 101,
+        toLocationId: 102,
+        direction: "NORTH",
+        source: "visible_move",
+        visibility: "dark",
+      }),
+      createdAt: new Date(freshNow - 1_000),
+    },
+    now: freshNow,
+  }),
+  { ok: false, reason: "dark" },
+);
+assert.deepEqual(
+  evaluateFollowRouteMemoryForStep({
+    intent: creatureIntent,
+    currentLocationId: 101,
+    event: {
+      title: FOLLOW_ROUTE_HIDDEN_MEMORY_EVENT_TITLE,
+      description: followRouteMemoryEventDescription({
+        playerId: 1,
+        targetType: FOLLOW_TARGET_CREATURE,
+        targetId: 13,
+        fromLocationId: 101,
+        toLocationId: 102,
+        source: "hidden_route",
+        visibility: "hidden",
+      }),
+      createdAt: new Date(freshNow - 1_000),
+    },
+    now: freshNow,
+  }),
+  { ok: false, reason: "hidden" },
+);
+assert.doesNotMatch(followStepFailureText("hidden"), /До води|до води|under_bridge/i, "Follow step hidden-route refusal must not reveal the water-word passage");
+
 const repoRoot = path.join(__dirname, "..", "..");
 const news = fs.readFileSync(path.join(repoRoot, "news.md"), "utf8");
 const release031 = news.match(/## 0\.15\.31[\s\S]*?(?=\n## 0\.15\.30\b)/)?.[0] ?? "";
 assert.match(release031, /не автоматична хода/, "0.15.31 public news should not imply auto-follow");
 assert.match(release031, /власний крок лишається вашим/, "0.15.31 public news should keep manual movement explicit");
+const release032 = news.match(/## 0\.15\.32[\s\S]*?(?=\n## 0\.15\.31\b)/)?.[0] ?? "";
+assert.match(release032, /не автослідування/, "0.15.32 public news should not imply auto-follow");
+assert.match(release032, /власний крок/, "0.15.32 public news should keep manual movement explicit");
 
 console.log("Follow route-memory helpers OK");

@@ -81,6 +81,7 @@ export type ParsedAliasCommand =
   | { kind: "yell"; text: string }
   | { kind: "shout"; text: string }
   | { kind: "follow"; target: string }
+  | { kind: "follow-step" }
   | { kind: "unfollow" }
   | { kind: "target-action"; action: TargetAction; target: string }
   | { kind: "pickup-target"; target: string }
@@ -466,7 +467,15 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "відслідкувати": { kind: "track" },
   "вистежити": { kind: "track" },
   "шукати сліди": { kind: "track" },
-  "йти слідом": { kind: "track" },
+  "follow step": { kind: "follow-step" },
+  "keep following": { kind: "follow-step" },
+  trail: { kind: "follow-step" },
+  "йти слідом": { kind: "follow-step" },
+  "спробувати йти слідом": { kind: "follow-step" },
+  "піти слідом": { kind: "follow-step" },
+  "рушити слідом": { kind: "follow-step" },
+  "йти за слідом": { kind: "follow-step" },
+  "триматися сліду": { kind: "follow-step" },
 
   wait: { kind: "wait" },
   w8: { kind: "wait" },
@@ -744,6 +753,15 @@ const SUGGESTABLE_PATTERN_ALIASES = [
   "загукати",
   "волати",
   "заволати",
+  "follow step",
+  "keep following",
+  "trail",
+  "йти слідом",
+  "спробувати йти слідом",
+  "піти слідом",
+  "рушити слідом",
+  "йти за слідом",
+  "триматися сліду",
   "freshen all",
   "свіжувати все",
   "освіжити всі",
@@ -894,6 +912,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "weather") return "/weather";
   if (parsed.kind === "menu") return "/menu";
   if (parsed.kind === "follow") return "/follow";
+  if (parsed.kind === "follow-step") return "/follow_step";
   if (parsed.kind === "unfollow") return "/unfollow";
   if (parsed.kind === "settings") return "/settings";
   if (parsed.kind === "daypart-notices") return parsed.mode === "show" ? "/daynotices" : `/daynotices ${parsed.mode}`;
@@ -1584,6 +1603,21 @@ function parseSocialSignal(text: string): ParsedAliasCommand | null {
   return null;
 }
 
+function parseFollowStepIntent(text: string): ParsedAliasCommand | null {
+  if ([
+    "follow step",
+    "keep following",
+    "trail",
+    "йти слідом",
+    "спробувати йти слідом",
+    "піти слідом",
+    "рушити слідом",
+    "йти за слідом",
+    "триматися сліду",
+  ].includes(text)) return { kind: "follow-step" };
+  return null;
+}
+
 function parseFollowIntent(text: string): ParsedAliasCommand | null {
   if ([
     "unfollow",
@@ -1655,6 +1689,9 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
 
   const all = parseAll(commandText);
   if (all) return all;
+
+  const followStepIntent = parseFollowStepIntent(commandText);
+  if (followStepIntent) return followStepIntent;
 
   const trackIntent = parseTrackIntent(commandText);
   if (trackIntent) return trackIntent;
