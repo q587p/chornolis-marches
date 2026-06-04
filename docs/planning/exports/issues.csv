@@ -68,7 +68,8 @@ GIVE-001,Generic give command MVP and exchange bridge,next,feature,inventory,hig
 GIVE-002,Ukrainian inflection-tolerant give parser and grammar bridge,testing,technical,input,high,"give,input,parser,ukrainian,grammar,lexicon,inventory,targets,barter",docs/planning/items/GIVE-002-ukrainian-give-parser-grammar.md
 HERALD-001,Embedded main-service mode for Boundary Mark Chancery Herald,icebox,technical,ops,low,"herald,telegram,render,ops,architecture,icebox",docs/planning/items/HERALD-001-embedded-main-service-mode.md
 HERALD-002,Herald outbox idempotency and locking,backlog,reliability,herald,medium,"herald,outbox,idempotency,locking,telegram",docs/planning/items/HERALD-002-outbox-idempotency-and-locking.md
-HERALD-003,Herald chronicle chat relay,backlog,feature,herald,medium,"herald,chronicle,telegram,chat,world-events",docs/planning/items/HERALD-003-chronicle-chat-relay.md
+HERALD-003,Herald chronicle chat relay,testing,feature,herald,medium,"herald,chronicle,telegram,chat,world-events",docs/planning/items/HERALD-003-chronicle-chat-relay.md
+HERALD-004,Herald news update scheduler and admin notice,backlog,feature,herald,medium,"herald,news,scheduler,telegram,admin",docs/planning/items/HERALD-004-news-update-scheduler.md
 HIDE-001,Hidden approach MVP,backlog,feature,visibility,medium,"hiding,stealth,visibility,social-memory,0.15",docs/planning/items/HIDE-001-hidden-approach-mvp.md
 HMYZ-001-A,Audit hmyz model,testing,technical,survival,high,"hmyz,resources,inventory",docs/planning/items/HMYZ-001-A.md
 HMYZ-001-B,Seed starter hmyz,testing,feature,survival,high,"hmyz,seed,starter",docs/planning/items/HMYZ-001-B.md
@@ -100,6 +101,7 @@ MAP-002-A,First biome foraging table,next,feature,world,high,"map,biome,foraging
 MAP-002-B,Generic gather uses biome candidates,next,feature,world,high,"gather,biome,foraging",docs/planning/items/MAP-002-B.md
 MAP-002-C,Biome foraging text variants,next,content,world,medium,"gather,biome,copy",docs/planning/items/MAP-002-C.md
 MAP-003,Playable map expansion,testing,content,world,high,"map,world,exploration,regions",docs/planning/items/MAP-003-playable-map-expansion.md
+MAP-004,Skill and attention gated locations,backlog,feature,world,high,"map,learning,skills,attention,exploration,cellar",docs/planning/items/MAP-004-skill-and-attention-gated-locations.md
 MAP-WILLOW-001,Willow Floodplain first contour,testing,content,world,high,"map,world,willow-floodplain,riverbank,exploration",docs/planning/items/MAP-WILLOW-001-first-contour.md
 MAP-WILLOW-002,Willow under-bridge and watchtower integration,backlog,content,world,medium,"map,world,willow-floodplain,under-bridge,watchtower",docs/planning/items/MAP-WILLOW-002-under-bridge-watchtower-integration.md
 MAP-WILLOW-003,"Willow Floodplain landmarks, resources and aliases",testing,content,world,high,"map,world,willow-floodplain,resources,aliases",docs/planning/items/MAP-WILLOW-003-landmarks-resources-and-aliases.md
@@ -155,7 +157,7 @@ PROG-002,Observation-based learning,backlog,feature,progression,high,"skills,obs
 PROG-003,Animal experience and titles,backlog,feature,progression,medium,"animals,ecology,progression,combat",docs/planning/items/PROG-003-animal-experience-and-titles.md
 PROG-004,Personal chronicle milestones,next,feature,progression,high,"journal,chronicle,milestones,cooking,learning,personal-history",docs/planning/items/PROG-004-personal-chronicle-milestones.md
 PROG-005,Global chronicles and world milestones,testing,feature,progression,high,"chronicle,world-events,onboarding,gate-hunting,milestones",docs/planning/items/PROG-005-global-chronicles-and-world-milestones.md
-PROG-006,Chronicle registration backfill and admin real-time view,backlog,feature,progression,high,"chronicle,world-events,onboarding,admin,local-chat",docs/planning/items/PROG-006-chronicle-backfill-and-admin-time-view.md
+PROG-006,Chronicle registration backfill and admin real-time view,testing,feature,progression,high,"chronicle,world-events,onboarding,admin,local-chat",docs/planning/items/PROG-006-chronicle-backfill-and-admin-time-view.md
 QA-001,0.13 first-session closure smoke,testing,qa,onboarding,high,"qa,onboarding,tutorial,core-loop,release",docs/planning/items/QA-001-0.13-first-session-closure-smoke.md
 QA-002,Camp and dream first-session smoke,next,qa,onboarding,medium,"onboarding,camp,dream,qa",docs/planning/items/QA-002-camp-dream-first-session-smoke.md
 QA-WILLOW-001,"Willow Floodplain seed, map and route smoke",testing,qa,world,high,"map,world,willow-floodplain,qa,routes",docs/planning/items/QA-WILLOW-001-seed-map-route-smoke.md
@@ -204,6 +206,7 @@ TRACK-LEARN-001-B,Animal movement observation,next,feature,learning,medium,"trac
 TRACK-LEARN-001-C,Learning respects visibility and light,next,feature,learning,high,"learning,visibility,light",docs/planning/items/TRACK-LEARN-001-C.md
 UX-001,Command and feature icon collision audit,backlog,chore,ux,low,"ux,icons,keyboard,features",docs/planning/items/UX-001-command-feature-icon-collision.md
 UX-002,Target pagination return context,testing,chore,ux,medium,"ux,pagination,corpses,telegram",docs/planning/items/UX-002-target-pagination-return-context.md
+UX-003,Secondary keyboard world-state audit,backlog,chore,ux,medium,"ux,keyboard,menu,world-time,calendar,weather",docs/planning/items/UX-003-secondary-keyboard-world-state-audit.md
 VIS-001-A,Shared visibility service skeleton,testing,technical,visibility,high,"visibility,night,light",docs/planning/items/VIS-001-A.md
 VIS-001-B,Hide location details in darkness,testing,feature,visibility,high,"visibility,look,night",docs/planning/items/VIS-001-B.md
 VIS-001-C,Nearby beings visibility in darkness,testing,feature,visibility,high,"visibility,targets,night",docs/planning/items/VIS-001-C.md

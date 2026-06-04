@@ -82,11 +82,23 @@ As of `0.15.32`, a player can act on fresh clear route memory manually:
   normal `MOVE`;
 - stale, dark, hidden-route or wrong-location memory refuses with diegetic copy
   instead of moving the player.
+- a dark route memory is not retroactively clarified by lighting a torch after
+  the fact; light helps the next observation or `/track` search, not the old
+  non-directional memory.
 
 This is still not automatic following. It is one explicit player action, not a
 continuous loop, party lock, companion behavior or route replay. Hidden routes
 such as the cellar water-word passage remain non-repeatable unless the player
 learns or triggers them independently.
+
+As of `0.15.33`, `/follow` without a target reports the current follow intent
+instead of always showing the setup prompt:
+
+- visible current targets are described as an active trace in the player's
+  attention;
+- no-longer-visible targets are marked as `останній помічений`;
+- the response explains how to change the target, clear it with `/unfollow`,
+  and, where appropriate, try one manual `/follow_step`.
 
 ### 3. Following Is Weaker Than Group Membership
 

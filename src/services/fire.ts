@@ -1546,6 +1546,21 @@ export async function hasActiveGroundTorchLightAtLocation(locationId: number, no
   return groundCount > 0;
 }
 
+export async function hasActiveLitTorchForPlayer(playerId: number, now = new Date()) {
+  const litTorch = await prisma.resourceType.findUnique({ where: { key: LIT_TORCH_KEY } });
+  if (!litTorch) return false;
+  const activeSince = activeLitTorchSince(now);
+  const count = await prisma.playerResource.count({
+    where: {
+      playerId,
+      resourceTypeId: litTorch.id,
+      amount: { gt: 0 },
+      updatedAt: { gt: activeSince },
+    },
+  });
+  return count > 0;
+}
+
 export async function hasActiveTorchLightAtLocation(locationId: number, now = new Date()) {
   const litTorch = await prisma.resourceType.findUnique({ where: { key: LIT_TORCH_KEY } });
   if (!litTorch) return false;

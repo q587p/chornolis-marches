@@ -77,12 +77,12 @@ function compareSemanticVersions(left?: string, right?: string) {
 
 export function archiveOrderedNewsEntries(entries: readonly HeraldNewsEntry[]) {
   return [...entries].sort((left, right) => {
+    const versionCompare = compareSemanticVersions(left.sourceVersion, right.sourceVersion);
+    if (versionCompare !== null && versionCompare !== 0) return versionCompare;
+
     if (left.sourceDate && right.sourceDate && left.sourceDate !== right.sourceDate) {
       return left.sourceDate.localeCompare(right.sourceDate);
     }
-
-    const versionCompare = compareSemanticVersions(left.sourceVersion, right.sourceVersion);
-    if (versionCompare !== null && versionCompare !== 0) return versionCompare;
 
     return left.sourceIndex - right.sourceIndex;
   });

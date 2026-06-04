@@ -180,7 +180,9 @@ export function parseFollowRouteMemoryEventDescription(description: string | nul
 
 export function followStepFailureText(reason: FollowStepFailureReason) {
   if (reason === "no-intent") return "Ви ще не тримаєтеся жодного чужого сліду. Спершу: /follow <ціль>.";
-  if (reason === "dark" || reason === "no-direction") return "Ви пам’ятаєте, що чужий слід зрушив, але не напрям. Тут допоможе світло, сліди або уважніший огляд.";
+  if (reason === "dark" || reason === "no-direction") {
+    return "Ви пам’ятаєте, що чужий слід зрушив, але не напрям. Якщо тепер маєте світло, спробуйте /track або «шукати сліди» — сам цей спогад уже не стане яснішим.";
+  }
   if (reason === "hidden") return "Той слід зник не кроком. Його не повторити простою ходою.";
   if (reason === "wrong-location") return "Ви вже не там, де втримали цей слід.";
   if (reason === "no-visible-exit") return "Слід пам’ятає напрям, але стежка тут уже не відкривається простою ходою.";

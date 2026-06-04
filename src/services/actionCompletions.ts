@@ -16,7 +16,7 @@ import { directionLabels } from "../ui/labels";
 import { buildCorpseActionKeyboard, buildExamineLocationKeyboard, buildExamineTracksKeyboard, buildGatherRetryKeyboard, buildLookLocationKeyboard, buildTargetListKeyboard, buildTrackKeyboard } from "../ui/keyboards";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { lightLocationCampfire, renderLocationBrief, renderLocationDetails } from "./locations";
-import { notifyLocation, notifyLocationAll, notifyLocationExcept, notifyRegionExcept, queueNonPlayerMovementNotification } from "./notifications";
+import { notifyLocation, notifyLocationAll, notifyLocationDynamic, notifyLocationExcept, notifyRegionExcept, queueNonPlayerMovementNotification } from "./notifications";
 import { addTwigsToCampfire, buildCampfireFromInventory, dismantleCampfire, douseCampfire, dousePlayerTorchFromInventory, lightPlayerTorchAtCampfire, lightPlayerTorchFromInventory } from "./fire";
 import { dismantleStrangeTotem } from "./strangeTotems";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
@@ -37,7 +37,7 @@ import { playerCanShowTechnicalDetails } from "./technicalDetails";
 import { canOpenDreamGateWithSpeech, ensureTutorialForagingResources, isLocationExitLocked, isTutorialFastRestLocationKey, openDreamGate, rememberTutorialCommandHintIfInTutorial, rememberTutorialForagingSuccess, rememberTutorialInventoryAvailable, rememberTutorialWellbeingAside, tutorialRestEntryStaminaMode, TUTORIAL_FORAGING_LOCATION_KEY, TUTORIAL_REST_ENTRY_STAMINA_TEXT, TUTORIAL_REST_RETURN_FROM_HEAT_TEXT, TUTORIAL_WELLBEING_ASIDE_TEXT } from "./tutorial";
 import { tutorialActionHintComment, tutorialGateSpeechComment, tutorialLookPaceComments, tutorialSpiritMoveComment, tutorialTrackComments, tutorialWaitPaceComments } from "./tutorialVoices";
 import { chance, pick, shuffle } from "../utils/random";
-import { canSendPlayerActionMessageToPlayerId } from "./sessionPresence";
+import { canSendPlayerActionMessageToPlayerId, canSendProactiveToTelegramId } from "./sessionPresence";
 import { cookRawMeat, freshenCorpseForMeat } from "./meat";
 import { rememberPlayerReplyTarget } from "./replyTargets";
 import { nearbySpeechDirectionIntro, nearbySpeechRecipients } from "./speechRanges";
@@ -55,6 +55,7 @@ import { campfireDismantleReplyOptions, campfireRelightReplyOptionsAfterBuild, c
 import { cookingResultReplyOptions } from "../ui/inventoryItemKeyboard";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 import { visibilityPresenceText, visibilityRulesForLocation } from "./visibility";
+import { actorLabelFromVisibility, visibleActorLabelForObserver } from "./visibilityLabels";
 import { firstNightGuidanceForPlayer } from "./beginnerGuidance";
 import { maybeTriggerPassiveApiarySting, raidApiaryForPlayer } from "./apiaryHazards";
 import { creatureAttackObserverText, freshenWeaponFailureText, getPlayerEquippedWeapon, grantAndEquipLegacyFresheningKnife, legacyFresheningKnifeGrantText, playerAttackKillText, playerAttackObserverText } from "./weapons";
@@ -251,6 +252,25 @@ function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
 }
 
+async function sendPrivateSpeechMessage(
+  bot: Bot,
+  targetPlayer: { telegramId: string | number },
+  text: string,
+  context: string,
+) {
+  if (!(await canSendProactiveToTelegramId(targetPlayer.telegramId))) return null;
+  return safeSendMessage(
+    bot,
+    targetPlayer.telegramId,
+    text,
+    {
+      parse_mode: "HTML",
+      reply_markup: await buildMainReplyKeyboardForTelegramId(Number(targetPlayer.telegramId), false),
+    },
+    context,
+  );
+}
+
 async function sendTutorialActionHint(bot: Bot, chatId: number | string, player: { id: number; currentLocationId: number | null }, commandKey: "look" | "examine") {
   const comment = await tutorialActionHintComment(player, commandKey);
   if (comment) noteKnownMessage(await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }));
@@ -304,6 +324,15 @@ async function visibleMoverLabel(locationId: number, fallback: string, visibleNa
   const visibility = await visibilityRulesForLocation(locationId, "brief");
   return visibility.showNearbyDetails ? visibleName : fallback;
 }
+
+async function visibleCreatureActionLabel(locationId: number, creature: { isHidden?: boolean | null; name?: string | null; professionKey?: string | null; species: { name: string; key?: string | null } }, fallback: string) {
+  if (creature.isHidden) return fallback;
+  const visibleName = creature.name ?? creatureForms(creature).nominative;
+  if (isHunterCreature(creature)) return visibleName;
+  return visibleMoverLabel(locationId, fallback, visibleName);
+}
+
+export const movementLabelFromVisibility = actorLabelFromVisibility;
 
 function movementPastVerb(actor: unknown, visibleLabel: string, fallback: string, masculine: string, feminine: string, plural: string) {
   return visibleLabel === fallback ? masculine : actorPastVerb(actor as any, masculine, feminine, plural);
@@ -611,11 +640,16 @@ async function completeMove(bot: Bot, action: WorldAction) {
 
     const playerName = playerForms(player).nominative;
     const fallbackMover = "Хтось";
-    const departureLabel = await visibleMoverLabel(currentLocationId, fallbackMover, playerName);
-    await notifyLocation(bot, currentLocationId, player.id, `${departureLabel} ${movementPastVerb(player, departureLabel, fallbackMover, "пішов", "пішла", "пішли")} звідси.`, {
-      keyboard: buildTrackKeyboard(),
-      replaceKey: `tracks:${currentLocationId}`,
-      clearKeys: [`target:player:${player.id}`],
+    await notifyLocationDynamic(bot, currentLocationId, player.id, async (observer) => {
+      const departureLabel = await visibleActorLabelForObserver(currentLocationId, observer.id, fallbackMover, playerName);
+      return {
+        text: `${departureLabel} ${movementPastVerb(player, departureLabel, fallbackMover, "пішов", "пішла", "пішли")} звідси.`,
+        options: {
+          keyboard: buildTrackKeyboard(),
+          replaceKey: `tracks:${currentLocationId}`,
+          clearKeys: [`target:player:${player.id}`],
+        },
+      };
     });
     await createTrack({ actorType: "PLAYER", playerId: player.id }, currentLocationId, exit.toLocationId, payload.direction, "людський слід");
     await rememberFollowedTargetVisibleMove(bot, {
@@ -628,10 +662,15 @@ async function completeMove(bot: Bot, action: WorldAction) {
     const dreamItemsStolen = await removeTutorialForagingDreamItems(player.id, currentLocationId);
     await prisma.player.updateMany({ where: { id: player.id }, data: { currentLocationId: exit.toLocationId, steps: { increment: 1 } } });
     const tutorialRestEntryText = await applyTutorialRestEntryStaminaLesson(player.id, currentLocationId, exit.toLocationId, payload.direction);
-    const arrivalLabel = await visibleMoverLabel(exit.toLocationId, fallbackMover, playerName);
-    await notifyLocation(bot, exit.toLocationId, player.id, `${arrivalLabel} ${movementPastVerb(player, arrivalLabel, fallbackMover, "зайшов", "зайшла", "зайшли")} сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`, {
-      keyboard: buildTargetListKeyboard([{ type: "player", id: player.id, label: arrivalLabel, canGreet: true }]),
-      replaceKey: `target:player:${player.id}`,
+    await notifyLocationDynamic(bot, exit.toLocationId, player.id, async (observer) => {
+      const arrivalLabel = await visibleActorLabelForObserver(exit.toLocationId, observer.id, fallbackMover, playerName);
+      return {
+        text: `${arrivalLabel} ${movementPastVerb(player, arrivalLabel, fallbackMover, "зайшов", "зайшла", "зайшли")} сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`,
+        options: {
+          keyboard: buildTargetListKeyboard([{ type: "player", id: player.id, label: arrivalLabel, canGreet: true }]),
+          replaceKey: `target:player:${player.id}`,
+        },
+      };
     });
     await setActionStatus(action, "DONE");
     await logEvent("MOVE", "Player queued move completed", payload.direction, exit.toLocationId);
@@ -1023,11 +1062,10 @@ async function completeGreet(bot: Bot, action: WorldAction) {
   const staminaSpend = await spendPlayerStamina(bot, player.id, "GREET", chatId);
   await prisma.player.updateMany({ where: { id: player.id }, data: { greetings: { increment: 1 } } });
   if (targetPlayer) {
-    const delivered = await safeSendMessage(
+    const delivered = await sendPrivateSpeechMessage(
       bot,
-      targetPlayer.telegramId,
+      targetPlayer,
       `${escapeHtml(actorForms.nominative)} ${verb} вам:\n${quoteBlock(greeting)}`,
-      { parse_mode: "HTML" },
       "greet target sendMessage",
     );
     if (delivered) {
@@ -1185,6 +1223,7 @@ async function completeCreatureAttack(bot: Bot, action: WorldAction) {
   const nextHp = target.hp - damage;
   const foodValue = predatorPreyFoodValue(target);
   const targetForms = creatureForms(target);
+  const attackerObserverLabel = await visibleCreatureActionLabel(attacker.locationId, attacker, "Щось");
   await spendCreatureStamina(attacker, actionCost("ATTACK"));
   await markRecentAttackDanger(attacker.locationId);
   await prisma.creature.updateMany({ where: { id: attacker.id }, data: { attackAttempts: { increment: 1 } } });
@@ -1198,7 +1237,7 @@ async function completeCreatureAttack(bot: Bot, action: WorldAction) {
       where: { id: target.id },
       data: { currentAction: "сахнулося від нападу" },
     });
-    await notifyLocation(bot, attacker.locationId, -1, predatorMissObserverText(attacker.species.key, targetForms.accusative, target.species.name));
+    await notifyLocation(bot, attacker.locationId, -1, predatorMissObserverText(attacker.species.key, targetForms.accusative, target.species.name, attackerObserverLabel));
     await logEvent("NPC_ACTION", "Creature missed prey", `${attacker.id} -> ${target.id}; species=${target.species.key}`, attacker.locationId);
     await setActionStatus(action, "DONE");
     return;
@@ -1225,7 +1264,7 @@ async function completeCreatureAttack(bot: Bot, action: WorldAction) {
       data: {
         hunger: attacker.hunger,
         activity: "FIGHTING",
-        currentAction: hunter ? `вполював ${target.species.name} і несе здобич` : predatorKillCurrentAction(attacker.species.key, targetForms.accusative, target.species.name),
+        currentAction: hunter ? `вполював ${targetForms.accusative} і несе здобич` : predatorKillCurrentAction(attacker.species.key, targetForms.accusative, target.species.name),
         successfulAttacks: { increment: 1 },
         kills: { increment: 1 },
       },
@@ -1233,17 +1272,17 @@ async function completeCreatureAttack(bot: Bot, action: WorldAction) {
     await triggerHerbivorePanic(attacker.locationId, target.id, "лякається хижака й крові");
     if (hunter) {
       const weaponText = creatureAttackObserverText(attacker.name ?? "Мисливець", attacker.equippedWeaponKey, creatureForms(target).accusative);
-      await notifyLocation(bot, attacker.locationId, -1, weaponText ?? `${attacker.name ?? "Мисливець"} збиває ${target.species.name} і підбирає здобич для падального рову.`);
+      await notifyLocation(bot, attacker.locationId, -1, weaponText ?? `${attacker.name ?? "Мисливець"} збиває ${targetForms.accusative} і підбирає здобич для падального рову.`);
       await logEvent("NPC_ACTION", "Hunter claimed prey", `${attacker.id} -> ${target.species.key} #${target.id}`, attacker.locationId);
     } else {
-      await notifyLocation(bot, attacker.locationId, -1, predatorKillObserverText(attacker.species.key, target.species.name));
+      await notifyLocation(bot, attacker.locationId, -1, predatorKillObserverText(attacker.species.key, target.species.name, attackerObserverLabel));
       await logEvent("NPC_ACTION", "Creature killed prey", `${attacker.species.key} #${attacker.id} -> ${target.species.key} #${target.id}; food=${foodValue}`, attacker.locationId);
     }
     await recordAttackKillSource({ locationId: attacker.locationId, attackerCreatureId: attacker.id, victimCreatureId: target.id });
   } else {
     await prisma.creature.updateMany({ where: { id: target.id }, data: { hp: nextHp, currentAction: "поранено" } });
     await prisma.creature.updateMany({ where: { id: attacker.id }, data: { activity: "FIGHTING", currentAction: predatorWoundCurrentAction(attacker.species.key, targetForms.accusative, target.species.name), successfulAttacks: { increment: 1 } } });
-    await notifyLocation(bot, attacker.locationId, -1, predatorWoundObserverText(attacker.species.key, targetForms.accusative, target.species.name));
+    await notifyLocation(bot, attacker.locationId, -1, predatorWoundObserverText(attacker.species.key, targetForms.accusative, target.species.name, attackerObserverLabel));
     await logEvent("NPC_ACTION", "Creature attacked prey", `${attacker.id} -> ${target.id}; damage=${damage}`, attacker.locationId);
   }
 
@@ -1443,11 +1482,10 @@ async function completeSay(bot: Bot, action: WorldAction) {
         { parseMode: "HTML" },
       );
       if (targetPlayer) {
-        const delivered = await safeSendMessage(
+        const delivered = await sendPrivateSpeechMessage(
           bot,
-          targetPlayer.telegramId,
+          targetPlayer,
           `${escapeHtml(actorForms.nominative)} шепоче вам:\n${quoteBlock(text)}`,
-          { parse_mode: "HTML", reply_markup: await buildMainReplyKeyboardForTelegramId(Number(targetPlayer.telegramId), false) },
           "whisper target sendMessage",
         );
         if (delivered) {
@@ -1526,10 +1564,11 @@ async function completeSay(bot: Bot, action: WorldAction) {
       const replyTargetCreatureForms = replyTargetCreature ? creatureForms(replyTargetCreature) : null;
       const replyTargetDative = replyTargetForms?.dative ?? replyTargetCreatureForms?.dative ?? targetDative;
       if (replyTargetPlayer && replyTargetPlayer.currentLocationId !== player.currentLocationId) {
-        await bot.api.sendMessage(
-          replyTargetPlayer.telegramId,
+        await sendPrivateSpeechMessage(
+          bot,
+          replyTargetPlayer,
           `${escapeHtml(actorForms.nominative)} ${replyVerb} вам:\n${quoteBlock(text)}`,
-          { parse_mode: "HTML", reply_markup: await buildMainReplyKeyboardForTelegramId(Number(replyTargetPlayer.telegramId), false) },
+          "player reply target sendMessage",
         );
       } else {
         await notifyLocationExcept(
@@ -1603,11 +1642,10 @@ async function completeSay(bot: Bot, action: WorldAction) {
         `${escapeHtml(speakerForms.nominative)} відповідає ${escapeHtml(targetForms.dative)}:\n${quoteBlock(text)}`,
         { parseMode: "HTML" },
       );
-      const delivered = await safeSendMessage(
+      const delivered = await sendPrivateSpeechMessage(
         bot,
-        targetPlayer.telegramId,
+        targetPlayer,
         `${escapeHtml(speakerForms.nominative)} відповідає вам:\n${quoteBlock(text)}`,
-        { parse_mode: "HTML", reply_markup: await buildMainReplyKeyboardForTelegramId(Number(targetPlayer.telegramId), false) },
         "creature reply target sendMessage",
       );
       if (delivered) {

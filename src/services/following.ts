@@ -34,6 +34,29 @@ export function followIntentStatusLine(label: string | null | undefined, options
   return safeLabel ? `Чужий слід: ${safeLabel}${options.stale ? " (останній помічений)" : ""}.` : null;
 }
 
+export function followIntentUsageText() {
+  return "За ким слідувати? Спробуйте: /follow <ім'я> або «слідувати за знахарем».";
+}
+
+export function followIntentHelpText(input?: {
+  label?: string | null;
+  targetVisible?: boolean | null;
+}) {
+  const label = input?.label?.trim();
+  if (!label) return followIntentUsageText();
+  const targetVisible = input?.targetVisible !== false;
+  const lines = [
+    `Ви тримаєтеся чужого сліду: ${label}${targetVisible ? "" : " (останній помічений)"}.`,
+    targetVisible
+      ? "Це ще не автоматична хода слідом — лише увага до чужого руху."
+      : "Ціль зараз не видно поруч, але цей слід лишається у вашій увазі.",
+    "Щоб змінити ціль: /follow <ім'я>",
+    "Щоб відпустити слід: /unfollow",
+  ];
+  if (targetVisible) lines.push("Щоб спробувати піти за свіжим ясним слідом: /follow_step");
+  return lines.join("\n");
+}
+
 export function followIntentAttentionContext(
   playerId: number,
   targetType: FollowTargetType,

@@ -7,6 +7,30 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.33 - Herald news update notices - 12026-06-04
+
+### Added
+
+- Added Herald admin commands `/news_updates` and `/check_news_updates` to scan deployed `news.md` for entries that do not yet have an active queued or published `HeraldPublication`.
+- Added compact missing-news previews with stable archive indices and ready `/news_archive_preview N` / `/news_archive_post N` follow-up commands.
+- Added an admin-only confirmed `/forget_published_news` recovery command that forgets published `NEWS_MD` / `NEWS_MD_ARCHIVE` outbox rows without deleting Telegram channel messages.
+- Added world-time rendering for public `/chronicles`, plus scribe/admin `/chronicles_real` and idempotent `/chronicles_backfill_players` commands for real-time audit and older player-registration backfill.
+- Added Herald chronicle relay support for sending public `Chronicle:` rows into a configured chat, with restart-safe `WorldEvent` relay markers and admin commands for pending/publish/backfill checks.
+- Added `Слідувати` to living target action keyboards so visible players, creatures and local characters can be marked for follow intent without typing `/follow <target>`.
+
+### Fixed
+
+- Clarified the `/follow_step` dark-memory refusal so it points players toward `/track` or fresh observation instead of implying that a torch can retroactively clarify an old dark memory.
+- Made `/follow` without a target show the current follow intent when one exists, including visible vs last-seen wording and `/unfollow` / `/follow_step` controls.
+- Reused the shared Herald `news.md` parsing and archive ordering path so latest-news checks, archive indices and missed-news notices stay aligned.
+- Changed Herald archive ordering to prefer semantic release versions before source dates, so version-like entries such as `0.4.0`, `0.4.1`, `0.4.2` stay in numeric release order even when dates differ.
+- Let re-queue/manual archive preparation repair stale `archiveOrder` values on existing matching `contentHash` rows.
+- Added smoke coverage for missed-news detection, safe HTML escaping and admin-only command visibility.
+- Made player movement notices respect the observer's own active torch light, so lit observers should not see visible arriving/leaving players as anonymous `Хтось`.
+- Fixed visible creature/hunter attack copy so lit observers can see a named hunter instead of anonymous `Щось`, and prey names use accusative forms in miss/wound/kill text.
+- Hid the Telegram menu `Репліки` button from non-Scribe players and gated `/chat`, `chat` aliases and stale chat pagination callbacks behind Scribe/admin access.
+- Guarded private speech delivery for greetings, whispers and direct replies so AFK or ended-session recipients are not nudged by immediate Telegram messages.
+
 ## 0.15.32 - Try to keep following via remembered route - 12026-06-04
 
 ### Added

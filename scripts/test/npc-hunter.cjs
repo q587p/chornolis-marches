@@ -15,6 +15,7 @@ const {
   HUNTER_TORCH_BUNDLE_SIZE,
   HUNTER_TORCH_SOURCE_FEATURE_KEY,
   formatHunterFieldSpeech,
+  formatHiddenHunterFieldSpeech,
   groupHunterClaimedCorpses,
   hunterCarriedTorchCount,
   hunterClaimedCorpseAction,
@@ -120,6 +121,10 @@ assert.equal(
 assert.equal(
   formatHunterFieldSpeech("Мисливець <нічний>", "Край > тиша."),
   "Мисливець &lt;нічний&gt; промовляє:\n<blockquote>Край &gt; тиша.</blockquote>",
+);
+assert.equal(
+  formatHiddenHunterFieldSpeech("Перевірю край, доки слід ще теплий."),
+  "Хтось промовляє поруч:\n<blockquote>Перевірю край, доки слід ще теплий.</blockquote>",
 );
 
 const claimedGroups = groupHunterClaimedCorpses([

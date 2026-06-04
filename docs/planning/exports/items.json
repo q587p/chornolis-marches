@@ -1363,7 +1363,7 @@
   {
     "id": "HERALD-003",
     "title": "Herald chronicle chat relay",
-    "status": "backlog",
+    "status": "testing",
     "type": "feature",
     "area": "herald",
     "priority": "medium",
@@ -1380,6 +1380,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/HERALD-003-chronicle-chat-relay.md"
+  },
+  {
+    "id": "HERALD-004",
+    "title": "Herald news update scheduler and admin notice",
+    "status": "backlog",
+    "type": "feature",
+    "area": "herald",
+    "priority": "medium",
+    "tags": [
+      "herald",
+      "news",
+      "scheduler",
+      "telegram",
+      "admin"
+    ],
+    "depends_on": [
+      "HERALD-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/HERALD-004-news-update-scheduler.md"
   },
   {
     "id": "HIDE-001",
@@ -1962,6 +1982,29 @@
     "depends_on": [],
     "exports": {},
     "file": "docs/planning/items/MAP-003-playable-map-expansion.md"
+  },
+  {
+    "id": "MAP-004",
+    "title": "Skill and attention gated locations",
+    "status": "backlog",
+    "type": "feature",
+    "area": "world",
+    "priority": "high",
+    "tags": [
+      "map",
+      "learning",
+      "skills",
+      "attention",
+      "exploration",
+      "cellar"
+    ],
+    "depends_on": [
+      "LEARN-001",
+      "LEARN-002",
+      "MAP-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/MAP-004-skill-and-attention-gated-locations.md"
   },
   {
     "id": "MAP-WILLOW-001",
@@ -3037,7 +3080,7 @@
   {
     "id": "PROG-006",
     "title": "Chronicle registration backfill and admin real-time view",
-    "status": "backlog",
+    "status": "testing",
     "type": "feature",
     "area": "progression",
     "priority": "high",
@@ -3985,6 +4028,27 @@
     "depends_on": [],
     "exports": {},
     "file": "docs/planning/items/UX-002-target-pagination-return-context.md"
+  },
+  {
+    "id": "UX-003",
+    "title": "Secondary keyboard world-state audit",
+    "status": "backlog",
+    "type": "chore",
+    "area": "ux",
+    "priority": "medium",
+    "tags": [
+      "ux",
+      "keyboard",
+      "menu",
+      "world-time",
+      "calendar",
+      "weather"
+    ],
+    "depends_on": [
+      "WORLD-004"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/UX-003-secondary-keyboard-world-state-audit.md"
   },
   {
     "id": "VIS-001-A",

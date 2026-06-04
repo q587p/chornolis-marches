@@ -21,6 +21,7 @@ import { visibleTextTargets } from "../services/textTargets";
 import { visibilityRulesForLocation } from "../services/visibility";
 import { playerHasRawMeat } from "../services/meat";
 import { submitGiveRawMeatToCreature } from "./give";
+import { setPlayerFollowIntent } from "../services/following";
 
 type TargetSpeechMode = "say" | "whisper";
 
@@ -152,6 +153,29 @@ async function submitFreshenAll(bot: Bot, ctx: any) {
   }
 }
 
+async function submitTargetFollowIntent(ctx: any, type: "player" | "creature", targetId: number) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player || !player.currentLocationId) {
+    await safeAnswerCallbackQuery(ctx);
+    return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  }
+
+  const target = await resolveTarget(type, targetId, player.currentLocationId);
+  if (!target || target.isCorpse) {
+    await safeAnswerCallbackQuery(ctx, "Цілі вже немає поруч.");
+    return void (await editOrReply(ctx, "Цілі вже немає поруч. Можна роздивитися місцину ще раз.", buildExamineLocationKeyboard()));
+  }
+
+  if (target.kind === "player" && target.id === player.id) {
+    await safeAnswerCallbackQuery(ctx, "Власний слід і так під ногами.");
+    return void (await ctx.reply("Власний слід і так під ногами."));
+  }
+
+  await setPlayerFollowIntent(player.id, { type: target.kind, id: target.id, label: target.forms.nominative }, player.currentLocationId);
+  await safeAnswerCallbackQuery(ctx, "Слід узято.");
+  await ctx.reply(`Ви тримаєтеся сліду за ${target.forms.instrumental}. Це ще не крок за кроком — радше уважність до чужого руху.`);
+}
+
 export function registerSocialHandlers(bot: Bot) {
   bot.callbackQuery(/^target:(player|creature):(\d+)(?::(brief|details):(\d+))?$/, async (ctx) => {
     const type = ctx.match[1];
@@ -176,6 +200,10 @@ export function registerSocialHandlers(bot: Bot) {
   bot.callbackQuery(/^give:raw_meat:creature:(\d+)$/, async (ctx) => {
     await safeAnswerCallbackQuery(ctx, "Передаємо.");
     await submitGiveRawMeatToCreature(bot, ctx, Number(ctx.match[1]));
+  });
+
+  bot.callbackQuery(/^social:follow:(player|creature):(\d+)(?::(known|mystery))?(?::(brief|details):(\d+))?$/, async (ctx) => {
+    await submitTargetFollowIntent(ctx, ctx.match[1] as "player" | "creature", Number(ctx.match[2]));
   });
 
   bot.callbackQuery(/^social:pickup:creature:(\d+)(?::(brief|details):(\d+))?$/, async (ctx) => {

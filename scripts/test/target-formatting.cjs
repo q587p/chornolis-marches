@@ -62,11 +62,21 @@ const interactionRows = buildTargetActionKeyboard({
 }).inline_keyboard.map((row) => row.map((button) => button.text));
 
 assert.deepEqual(interactionRows, [
-  ["👁 Глянути", "🔎 Роздивитися", "⚔️ Атакувати"],
-  ["💬 Привітати", "🗣 Сказати", "🤫 Прошепотіти"],
+  ["👁 Глянути", "🔎 Роздивитися", "👣 Слідувати"],
+  ["⚔️ Атакувати", "💬 Привітати", "🗣 Сказати", "🤫 Прошепотіти"],
   ["✅ Кивнути", "👋 Помахати", "✨ Ще сигнали"],
   ["↩️ Назад"],
 ]);
+assert.equal(
+  buildTargetActionKeyboard({
+    type: "player",
+    id: 12,
+    canGreet: true,
+    canAttack: false,
+    isAnimal: false,
+  }).inline_keyboard[0][2].callback_data,
+  "social:follow:player:12:known",
+);
 
 const multipleFreshCorpseRows = buildTargetListKeyboard([
   { type: "creature", id: 1, label: "труп миша", actionLabel: "розкладається; залишилось 92 тіків", canGreet: false, isAnimal: true, isCorpse: true, canFreshen: true },
@@ -110,6 +120,7 @@ const animalWithAccidentalGreetingRows = buildTargetActionKeyboard({
   isAnimal: true,
 }).inline_keyboard.map((row) => row.map((button) => button.callback_data));
 assert.ok(!animalWithAccidentalGreetingRows.flat().some((callbackData) => String(callbackData).startsWith("social:greet:")), "Animal target keyboards should not expose greeting buttons.");
+assert.ok(animalWithAccidentalGreetingRows.flat().includes("social:follow:creature:14:known"), "Animal target keyboards should expose follow intent.");
 
 const anonymousAnimalWithAccidentalGreetingRows = buildAnonymousTargetKeyboard({
   type: "creature",
@@ -119,6 +130,7 @@ const anonymousAnimalWithAccidentalGreetingRows = buildAnonymousTargetKeyboard({
   isAnimal: true,
 }).inline_keyboard.map((row) => row.map((button) => button.text));
 assert.ok(!anonymousAnimalWithAccidentalGreetingRows.flat().includes("💬 Привітати"), "Animal target keyboards should keep greeting off button text.");
+assert.ok(anonymousAnimalWithAccidentalGreetingRows.flat().includes("👣 Слідувати"), "Anonymous living targets should expose follow intent.");
 
 const spiritRows = buildTargetActionKeyboard({
   type: "creature",
@@ -146,6 +158,7 @@ const returnAwareCorpseKeyboard = buildCorpseActionKeyboard({
 }, "targetPage:details:1");
 assert.equal(returnAwareCorpseKeyboard.inline_keyboard[1][0].callback_data, "social:pickup:creature:21:details:1");
 assert.equal(returnAwareCorpseKeyboard.inline_keyboard.at(-1)[0].callback_data, "targetPage:details:1");
+assert.ok(!returnAwareCorpseKeyboard.inline_keyboard.flat().some((button) => String(button.callback_data).includes("follow")), "Corpse keyboards should not expose follow intent.");
 
 assert.equal(inventoryResourceSummary([
   { amount: 1, resourceType: { key: "cooked_meat", name: "смажене м'ясо" } },

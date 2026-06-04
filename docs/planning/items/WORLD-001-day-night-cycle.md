@@ -27,3 +27,11 @@ Add world time phases that change visibility, danger and available encounters.
 - Night-only creatures and events can appear.
 - Light sources reveal descriptions, exits, creatures and resources.
 - `/time` should read the same world-time state rather than only static starter flavor.
+
+## Future Daypart-Gated Exits
+
+- Add authored exits or passage states that depend on the internal daypart, for example a path that is only safely visible at dawn, a marsh crossing that opens toward evening, or a spirit-thin threshold that appears only at dusk.
+- Keep this explicit and diegetic: the location or feature should hint at the timing through `/look`, `/examine`, `/time` or local signs, instead of silently removing exits with no explanation.
+- Use the internal Chornolis world clock only. Do not bind these exits to server local time, player timezone or real-world sunrise/sunset.
+- Hidden/temporary exits should still respect ordinary movement rules when available and should not become free teleportation, quest acceptance or broad route replay.
+- Add tests for visible exit lists at different dayparts once the first daypart-gated passage is implemented.

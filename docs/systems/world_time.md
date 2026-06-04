@@ -59,7 +59,7 @@ Do not use `Date.getHours()`, server timezone, player timezone or real-world cal
 
 ## Boundaries And Non-Sources
 
-- Public chronicles may group real `createdAt` timestamps by `Europe/Kyiv` for the archive UI. That formatting is only a public archive convenience, not a world-time source. Do not derive Chornolis daypart, moon, weather or world events from the chronicle display date.
+- Public chronicles should render by the internal Chornolis clock, not by real `createdAt` dates. Since early chronicle rows do not store a persisted absolute world minute, the public archive may reconstruct an approximate world minute from current `WorldState` and the row's real `createdAt`; this is display-only and should not drive daypart, moon, weather or world events. Scribe/admin audit commands may still show real `Europe/Kyiv` timestamps when needed.
 - Starter weather fields are part of the stored world state; `0.14.3` adds the first weather simulation and player-facing weather display slice.
 - Production seed refresh creates the singleton `WorldState` row if it is missing, but it must not rewind an existing live world clock. Only explicit world/full reset should return time and weather to the starter state.
 - `/reset world` and `/reset full` reset the clock and weather state to the canonical starter values. `/reset stats` must not reset world time, weather or `lastAdvancedAt`.

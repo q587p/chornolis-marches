@@ -266,6 +266,8 @@ export const ADMIN_HELP_TEXT = [
   "/adminMenu — кнопкове меню писарських команд",
   "/adminHelp — ця підказка",
   "/world — стан світу й останні події",
+  "/chronicles_real — хроніки з реальними Europe/Kyiv датами й годинами для службової перевірки",
+  "/chronicles_backfill_players — додати пропущені хроніки появи персонажів із Player.createdAt без дублів",
   "/stat — службова статистика й посилання на захищену веб-/stat",
   "/all — усі живі персонажі та істоти",
   "/all dead — усі записи істот, включно з inactive/dead/corpse/gone",

@@ -7,7 +7,7 @@ const { parseHeraldAdminIds, isHeraldAdminId } = require("../../src/herald/admin
 const { formatHeraldNewsMessage, formatHeraldPublicationMessage, formatHeraldPublicationRepostMessage } = require("../../src/herald/format");
 const { linkHeraldGameCommandMentions } = require("../../src/herald/gameLinks");
 const { formatWorldDigestDateLine } = require("../../src/herald/digest");
-const { formatHeraldCommandList, formatHeraldWhoami } = require("../../src/herald/help");
+const { formatHeraldCommandList, formatHeraldHelp, formatHeraldWhoami } = require("../../src/herald/help");
 const { renderHeraldAnonymousInfoTarget, renderHeraldPublicInfoMissing, renderHeraldPublicPlayerInfo } = require("../../src/herald/info");
 const { resolveHeraldInfoTargetUser } = require("../../src/herald/infoCommands");
 const {
@@ -24,6 +24,7 @@ const {
   parseBackfillIntervalMs,
 } = require("../../src/herald/newsBackfill");
 const { findArchiveRowByReleaseVersion, formatArchiveFindReply, formatArchiveList, splitArchiveListMessage } = require("../../src/herald/newsArchiveCommands");
+const { buildHeraldNewsUpdateRows, formatHeraldNewsUpdatesNotice } = require("../../src/herald/newsUpdates");
 const {
   applyNewsSourceDateFallbacks,
   extractChangelogVersionDates,
@@ -112,6 +113,19 @@ assert.deepEqual(archiveOrderedNewsEntries(parseNewsEntries(versionMarkdown)).ma
   "0.4.3",
   "0.4.10",
 ]);
+const versionBeforeDateMarkdown = [
+  "## 0.4.2 — later dated — 12026-05-02",
+  "two",
+  "## 0.4.1 — earlier version, later file slot — 12026-05-10",
+  "one",
+  "## 0.4.10 — numeric ten, older date — 12026-05-01",
+  "ten",
+].join("\n\n");
+assert.deepEqual(archiveOrderedNewsEntries(parseNewsEntries(versionBeforeDateMarkdown)).map((entry) => entry.sourceVersion), [
+  "0.4.1",
+  "0.4.2",
+  "0.4.10",
+]);
 const earlyPrototypeMarkdown = [
   "## 0.1.0 — Перший бот Порубіжжя — 12026-05-04",
   "first bot",
@@ -176,6 +190,28 @@ assert.equal(findArchiveRowByReleaseVersion(archiveFindInput, "v0.4.10")?.index,
 assert.equal(findArchiveRowByReleaseVersion(archiveFindInput, "0.4.404"), null);
 assert.match(formatArchiveFindReply(archiveFindInput, "0.4.1"), /архівний запис #2\/5/);
 assert.match(formatArchiveFindReply(archiveFindInput, "0.4.1"), /\/news_archive_post 2/);
+const newsUpdateEntries = parseNewsEntries([
+  "## 0.1.0 - already handled",
+  "",
+  "Handled body.",
+  "",
+  "## 0.1.1 <unsafe> - missed",
+  "",
+  "Missed body.",
+].join("\n"));
+const newsUpdatePlan = buildHeraldNewsUpdateRows(newsUpdateEntries, [{
+  id: 77,
+  contentHash: newsUpdateEntries[0].contentHash,
+  publishedAt: new Date("2026-06-04T00:00:00.000Z"),
+  visibility: "PUBLIC",
+}]);
+assert.equal(newsUpdatePlan.actionableRows.length, 1);
+assert.equal(newsUpdatePlan.actionableRows[0].index, 2);
+const newsUpdateNotice = formatHeraldNewsUpdatesNotice(newsUpdatePlan);
+assert.match(newsUpdateNotice, /0\.1\.1 &lt;unsafe&gt; - missed/);
+assert.doesNotMatch(newsUpdateNotice, /<unsafe>/);
+assert.match(newsUpdateNotice, /\/news_archive_preview 2/);
+assert.match(newsUpdateNotice, /\/news_archive_post 2/);
 assert.match(formatArchiveFindReply(archiveFindInput, ""), /Приклад: \/news_archive_find 0\.4\.4/);
 assert.match(formatArchiveFindReply(archiveFindInput, "0.4.404"), /не знайшла реліз 0\.4\.404/);
 
@@ -192,16 +228,38 @@ assert.match(heraldAdminCommands, /\/pause_publications/);
 assert.match(heraldAdminCommands, /\/resume_publications/);
 assert.match(heraldAdminCommands, /\/cancel_pending_publications/);
 assert.match(heraldAdminCommands, /\/backfill_news_cancel/);
+assert.match(heraldAdminCommands, /\/forget_published_news/);
 assert.match(heraldAdminCommands, /\/news_archive_list/);
 assert.match(heraldAdminCommands, /\/news_archive_preview/);
 assert.match(heraldAdminCommands, /\/news_archive_post/);
 assert.match(heraldAdminCommands, /\/news_archive_force_post/);
 assert.match(heraldAdminCommands, /\/news_archive_find/);
 assert.match(heraldAdminCommands, /\/news_archive_reload/);
+assert.match(heraldAdminCommands, /\/news_updates/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/pause_publications/);
+assert.doesNotMatch(formatHeraldCommandList(false), /\/forget_published_news/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_post/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_find/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_force_post/);
+assert.doesNotMatch(formatHeraldCommandList(false), /\/news_updates/);
+
+const heraldAdminHelp = formatHeraldHelp(true);
+assert.match(heraldAdminHelp, /Основні:/);
+assert.match(heraldAdminHelp, /Новини news\.md:/);
+assert.match(heraldAdminHelp, /Архів news\.md:/);
+assert.match(heraldAdminHelp, /Черга й публікації:/);
+assert.match(heraldAdminHelp, /Приклади:/);
+assert.match(heraldAdminHelp, /\/backfill_news_queue 23m/);
+assert.match(heraldAdminHelp, /\/backfill_news_reschedule_pending 23m/);
+assert.match(heraldAdminHelp, /13m/);
+assert.match(heraldAdminHelp, /2h/);
+assert.ok(heraldAdminHelp.length < 3900, "Herald admin help should fit in one Telegram message");
+
+const heraldPublicHelp = formatHeraldHelp(false);
+assert.match(heraldPublicHelp, /Основні:/);
+assert.doesNotMatch(heraldPublicHelp, /\/backfill_news_queue/);
+assert.doesNotMatch(heraldPublicHelp, /\/pending_publications/);
+assert.match(heraldPublicHelp, /Службові розділи/);
 
 const whoami = formatHeraldWhoami({
   telegramUserId: 123456789,

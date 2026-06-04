@@ -67,6 +67,9 @@ const configuredHeraldMaxPublicationsPerTick = optionalNumberEnv("HERALD_MAX_PUB
 const configuredHeraldRebalanceOverduePublications = optionalBooleanEnv("HERALD_REBALANCE_OVERDUE_PUBLICATIONS") ?? true;
 const configuredHeraldPublicationsPaused = optionalBooleanEnv("HERALD_PUBLICATIONS_PAUSED") ?? false;
 const configuredHeraldStartupNoticeEnabled = optionalBooleanEnv("HERALD_STARTUP_NOTICE_ENABLED") ?? false;
+const configuredHeraldChronicleRelayEnabled = optionalBooleanEnv("HERALD_CHRONICLE_RELAY_ENABLED");
+const configuredHeraldChronicleRelayIntervalMs = optionalNumberEnv("HERALD_CHRONICLE_RELAY_INTERVAL_MS") ?? 60_000;
+const configuredHeraldChronicleRelayMaxPerTick = optionalNumberEnv("HERALD_CHRONICLE_RELAY_MAX_PER_TICK") ?? 3;
 const configuredNonPlayerMovementNotificationWindowMs = optionalNumberEnv("NON_PLAYER_MOVEMENT_NOTIFICATION_WINDOW_MS") ?? 60_000;
 const publicBaseUrl = normalizeBaseUrl(optionalStringEnv("PUBLIC_BASE_URL") ?? "https://chornolis-marches.onrender.com");
 const configuredGameBotUsername = optionalStringEnv("GAME_BOT_USERNAME") ?? "Chornolis_bot";
@@ -94,5 +97,9 @@ export const config = {
   heraldPublicationsPaused: configuredHeraldPublicationsPaused,
   heraldStartupNoticeEnabled: configuredHeraldStartupNoticeEnabled,
   heraldStartupNoticeChatId: optionalStringEnv("HERALD_STARTUP_NOTICE_CHAT_ID"),
+  heraldChronicleRelayEnabled: configuredHeraldChronicleRelayEnabled ?? false,
+  heraldChronicleRelayChatId: optionalStringEnv("HERALD_CHRONICLE_RELAY_CHAT_ID"),
+  heraldChronicleRelayIntervalMs: Math.max(5000, Math.floor(configuredHeraldChronicleRelayIntervalMs)),
+  heraldChronicleRelayMaxPerTick: Math.max(1, Math.min(10, Math.floor(configuredHeraldChronicleRelayMaxPerTick))),
   nonPlayerMovementNotificationWindowMs: Math.max(0, Math.floor(configuredNonPlayerMovementNotificationWindowMs)),
 };

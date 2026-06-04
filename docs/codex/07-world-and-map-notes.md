@@ -62,6 +62,7 @@ In `prisma/data/chornolis_world_seed.json`, edits may include:
 - `start_border_watchtower` intentionally uses `z = 1` as the starter-camp watchtower above `start_border_camp`; it is connected by `UP` / `DOWN` exits and is part of the first waking-world verticality slice.
 - `start_border_cellar` intentionally uses `z = -1` as the starter-camp cellar below `start_border_camp`; it is connected by `DOWN` / `UP` exits and is a safe waking-world storage/interior landmark, not a dream layer.
 - `start_border_camp`, `start_border_watchtower` and `start_border_cellar` belong to the small `starter_camp` region (`Межовий табір`). Treat it as authored safe starter infrastructure: no ordinary natural resource nodes or natural regeneration should be added there, and camp-bound beings such as the camp spirit cat should stay inside this region.
+- Future starter-cellar hatch work should make `Люк до погреба` stateful: players and human-like/profession NPCs can open/close it, camp-bound special beings may use it if authored, but ordinary small animals such as mice should not open a closed hatch or treat every human-authored vertical route as natural terrain.
 - `under_bridge_18_05` uses `z = -1` as an ordinary lower waking-world place under the bridge; it is not a dream layer.
 - `start_border_cellar` has an intentional hidden, one-way spoken-word passage to `under_bridge_18_05`. It is triggered by ordinary speech in the cellar and must not be added as a visible exit, map link, public-news spoiler or ordinary feature button. The hint belongs in full inspection text on cellar landmarks. Herbalists may rarely demonstrate the passage during their cellar supply-run staging, making it learnable by local observation without adding a public tutorial marker.
 - Do not create two exits from one location in the same direction.
@@ -99,6 +100,7 @@ Location coordinates appear as three numbers, e.g. `(1,0,0)`:
 There is a backlog direction to add a small, authored vertical/interior map pass. This should be explicit and diegetic, not a casual `z` change:
 
 - a climbable tree can use an `UP` exit to a high branch/lookout;
+- adjacent authored climbable trees may later use explicit lateral canopy exits, intertwined-branch features or careful jump actions; do not assume every `T  T` pair is automatically connected;
 - the starter-camp watchtower uses an `UP` exit to a real upper room and a `DOWN` exit back to the camp;
 - a bear den or similar lair can use an `INSIDE` exit into a real interior location;
 - a pit, ravine or hole can use a `DOWN` exit to a lower place.
@@ -106,6 +108,8 @@ There is a backlog direction to add a small, authored vertical/interior map pass
 When this lands, update both the world seed and `docs/world/world_map.md`, and make the surface entry features inspectable so players understand the available movement.
 
 Current climbable-tree MVP note: tree-shake cooldowns live in `Feature.data`, so reset/reseed can reset them, and `Потрусити дерево` / `/shake_tree` currently resolves immediately rather than through the action queue. See `HMYZ-001-F` for the future persistent cooldown / queued-action cleanup.
+
+Future time-aware exits may depend on the internal Chornolis daypart, such as dawn-only, dusk-only or evening-visible passages. Author them deliberately: provide local hints, keep them tied to the world clock rather than real time, and test both available and unavailable dayparts.
 
 ## Bridge / threshold location note
 
