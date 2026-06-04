@@ -7,7 +7,9 @@ const {
   FOLLOW_TARGET_PLAYER,
   followIntentAttentionContext,
   followIntentDataForTarget,
+  followIntentHelpText,
   followIntentStatusLine,
+  followIntentUsageText,
   followTargetTypeForRef,
   isSelfFollowTarget,
 } = require("../../src/services/following");
@@ -39,6 +41,20 @@ assert.equal(creatureData.lastKnownTargetLabel, "знахарка");
 assert.equal(followIntentStatusLine("знахарка"), "Чужий слід: знахарка.");
 assert.equal(followIntentStatusLine("знахарка", { stale: true }), "Чужий слід: знахарка (останній помічений).");
 assert.equal(followIntentStatusLine("  "), null);
+assert.equal(followIntentHelpText(), followIntentUsageText());
+const visibleHelp = followIntentHelpText({ label: "знахарка", targetVisible: true });
+assert.match(visibleHelp, /Ви тримаєтеся чужого сліду: знахарка\./);
+assert.match(visibleHelp, /не автоматична хода/);
+assert.match(visibleHelp, /\/follow <ім'я>/);
+assert.match(visibleHelp, /\/unfollow/);
+assert.match(visibleHelp, /\/follow_step/);
+const staleHelp = followIntentHelpText({ label: "знахарка", targetVisible: false });
+assert.match(staleHelp, /знахарка \(останній помічений\)/);
+assert.match(staleHelp, /Ціль зараз не видно поруч/);
+assert.match(staleHelp, /\/follow <ім'я>/);
+assert.match(staleHelp, /\/unfollow/);
+assert.doesNotMatch(staleHelp, /\/follow_step/);
+assert.doesNotMatch(staleHelp, /автоматична хода/);
 assert.deepEqual(followIntentAttentionContext(1, FOLLOW_TARGET_CREATURE, 7), {
   playerId: 1,
   targetType: FOLLOW_TARGET_CREATURE,

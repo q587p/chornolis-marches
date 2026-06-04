@@ -80,7 +80,15 @@ import { equipPlayerWeapon, unequipPlayerWeapon } from "../services/weapons";
 import { queueAllRawMeatCooking } from "../services/cookingQueue";
 import { queueAllUsableInventoryResource } from "../services/eatingQueue";
 import { queueAllBeginnerCacheContributions } from "../services/beginnerCacheQueue";
-import { clearPlayerFollowIntent, followIntentStatusLine, setPlayerFollowIntent } from "../services/following";
+import {
+  clearPlayerFollowIntent,
+  followIntentHelpText,
+  followIntentStatusLine,
+  followIntentUsageText,
+  getPlayerFollowIntent,
+  isFollowIntentTargetVisibleAtLocation,
+  setPlayerFollowIntent,
+} from "../services/following";
 import { followStepDirectionForPlayer, followStepFailureText } from "../services/followRouteMemory";
 import { verticalYellPromptPlaceholder, verticalYellPromptText, type VerticalYellPromptDirection } from "../services/speechRanges";
 import {
@@ -943,7 +951,7 @@ async function submitTargetAction(bot: Bot, ctx: any, action: TargetAction, targ
 }
 
 function followUsageText() {
-  return "За ким слідувати? Спробуйте: /follow <ім'я> або «слідувати за знахарем».";
+  return followIntentUsageText();
 }
 
 function followMissingText() {
@@ -959,7 +967,15 @@ export async function submitFollowIntent(ctx: any, targetQuery: string) {
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const query = targetQuery.trim();
-  if (!query) return void (await ctx.reply(followUsageText()));
+  if (!query) {
+    const intent = await getPlayerFollowIntent(player.id);
+    if (!intent) return void (await ctx.reply(followUsageText()));
+    const targetVisible = await isFollowIntentTargetVisibleAtLocation(intent, player.currentLocationId);
+    return void (await ctx.reply(followIntentHelpText({
+      label: intent.lastKnownTargetLabel,
+      targetVisible,
+    })));
+  }
   if (isSelfTargetQueryForPlayer(query, player)) return void (await ctx.reply("Власний слід і так під ногами."));
 
   const visibleTargets = (await visibleTextTargets(player.currentLocationId, player.id)).filter((target) => !target.isCorpse);

@@ -21,6 +21,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Fixed
 
 - Clarified the `/follow_step` dark-memory refusal so it points players toward `/track` or fresh observation instead of implying that a torch can retroactively clarify an old dark memory.
+- Made `/follow` without a target show the current follow intent when one exists, including visible vs last-seen wording and `/unfollow` / `/follow_step` controls.
 - Reused the shared Herald `news.md` parsing and archive ordering path so latest-news checks, archive indices and missed-news notices stay aligned.
 - Changed Herald archive ordering to prefer semantic release versions before source dates, so version-like entries such as `0.4.0`, `0.4.1`, `0.4.2` stay in numeric release order even when dates differ.
 - Let re-queue/manual archive preparation repair stale `archiveOrder` values on existing matching `contentHash` rows.

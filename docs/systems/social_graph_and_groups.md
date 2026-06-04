@@ -91,6 +91,15 @@ continuous loop, party lock, companion behavior or route replay. Hidden routes
 such as the cellar water-word passage remain non-repeatable unless the player
 learns or triggers them independently.
 
+As of `0.15.33`, `/follow` without a target reports the current follow intent
+instead of always showing the setup prompt:
+
+- visible current targets are described as an active trace in the player's
+  attention;
+- no-longer-visible targets are marked as `останній помічений`;
+- the response explains how to change the target, clear it with `/unfollow`,
+  and, where appropriate, try one manual `/follow_step`.
+
 ### 3. Following Is Weaker Than Group Membership
 
 Following should be possible even without an existing contact. It means:
