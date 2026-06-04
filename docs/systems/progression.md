@@ -90,6 +90,10 @@ visible exits and learned route knowledge. Hidden passages such as the cellar
 water-word route must not be repeated merely because the followed actor used
 them.
 
+If a route memory was recorded in darkness, lighting a torch later does not
+turn that old memory into a clear direction. The player should use `/track`,
+fresh observation or another witnessed movement to recover the trail.
+
 Observed actor skill remains future work. A later slice should add a small helper
 such as `observedActorSkillLevel(...)` that can read player learning progress or
 return profession/species profile defaults for herbalists, hunters and animals

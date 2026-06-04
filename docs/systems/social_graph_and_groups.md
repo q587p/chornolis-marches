@@ -82,6 +82,9 @@ As of `0.15.32`, a player can act on fresh clear route memory manually:
   normal `MOVE`;
 - stale, dark, hidden-route or wrong-location memory refuses with diegetic copy
   instead of moving the player.
+- a dark route memory is not retroactively clarified by lighting a torch after
+  the fact; light helps the next observation or `/track` search, not the old
+  non-directional memory.
 
 This is still not automatic following. It is one explicit player action, not a
 continuous loop, party lock, companion behavior or route replay. Hidden routes

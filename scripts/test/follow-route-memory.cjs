@@ -231,6 +231,17 @@ assert.deepEqual(
   }),
   { ok: false, reason: "hidden" },
 );
+assert.match(followStepFailureText("dark"), /\/track|шукати сліди|вистежити/i, "Dark follow-step refusal should point toward track search");
+assert.match(
+  followStepFailureText("dark"),
+  /сам цей спогад уже не стане яснішим/i,
+  "Dark follow-step refusal should not imply light retroactively clarifies the memory",
+);
+assert.doesNotMatch(
+  followStepFailureText("dark"),
+  /повторіть\s+\/follow_step|знову\s+\/follow_step|спробуйте\s+\/follow_step/i,
+  "Dark follow-step refusal should not tell players to repeat follow_step after lighting a torch",
+);
 assert.doesNotMatch(followStepFailureText("hidden"), /До води|до води|under_bridge/i, "Follow step hidden-route refusal must not reveal the water-word passage");
 
 const repoRoot = path.join(__dirname, "..", "..");
