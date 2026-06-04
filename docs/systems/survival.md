@@ -12,6 +12,7 @@ Survival should add pressure, atmosphere and decisions, not repetitive punishmen
 - Lying posture.
 - Ordinary sleep.
 - Knockout / unconsciousness at 0 HP.
+- Carried weight / encumbrance.
 - Campfires.
 - Firewood gathering.
 - Light and warmth.

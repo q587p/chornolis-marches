@@ -1669,6 +1669,29 @@
     "file": "docs/planning/items/ITEM-002-queued-pickup-actions.md"
   },
   {
+    "id": "ITEM-003",
+    "title": "Item weight and encumbrance",
+    "status": "backlog",
+    "type": "feature",
+    "area": "inventory",
+    "priority": "medium",
+    "tags": [
+      "inventory",
+      "items",
+      "stamina",
+      "movement",
+      "pickup",
+      "survival"
+    ],
+    "depends_on": [
+      "ITEM-001",
+      "ITEM-002",
+      "WPN-005"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ITEM-003-item-weight-and-encumbrance.md"
+  },
+  {
     "id": "LANG-001",
     "title": "Lexicon and agreement audit",
     "status": "backlog",
