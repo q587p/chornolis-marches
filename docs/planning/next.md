@@ -44,7 +44,8 @@ Do not open another broad content loop before the learning/observation foundatio
 
 1. **TRACK-LEARN-002:** review live route-memory and follow-step cadence after the `0.15.32` manual step and decide whether the next slice should teach explicit track reading.
 2. **LEARN-002 follow-up:** extend bounded skill effects only after reviewing the `0.15.23` gathering tuning, `0.15.26` herbalist observation route and `0.15.30` followed-movement memory in live play.
-3. **SOC-003:** only after follow intent feels useful, decide whether any explicit group/travel acceptance layer is worth promoting.
+3. **MAP-004:** prototype one skill/attention-gated waking-world location, preferably a small cellar side room that asks for enough gathering/herbalism practice and gives atmospheric refusal copy below the threshold.
+4. **SOC-003:** only after follow intent feels useful, decide whether any explicit group/travel acceptance layer is worth promoting.
 
 Near-term content candidates after that foundation:
 
