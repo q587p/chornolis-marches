@@ -109,6 +109,8 @@ When this lands, update both the world seed and `docs/world/world_map.md`, and m
 
 Current climbable-tree MVP note: tree-shake cooldowns live in `Feature.data`, so reset/reseed can reset them, and `Потрусити дерево` / `/shake_tree` currently resolves immediately rather than through the action queue. See `HMYZ-001-F` for the future persistent cooldown / queued-action cleanup.
 
+Future time-aware exits may depend on the internal Chornolis daypart, such as dawn-only, dusk-only or evening-visible passages. Author them deliberately: provide local hints, keep them tied to the world clock rather than real time, and test both available and unavailable dayparts.
+
 ## Bridge / threshold location note
 
 A small bridge before a settlement is a good place to express the project’s liminality. It does not have to be a combat encounter. It can be a boundary marker between ordinary settlement logic and the older/stranger Chornolis logic.
