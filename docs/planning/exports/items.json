@@ -2893,6 +2893,28 @@
     "file": "docs/planning/items/ONB-009-tutorial-dream-ground-item-cleanup.md"
   },
   {
+    "id": "ONB-010",
+    "title": "Newcomer starter kit",
+    "status": "backlog",
+    "type": "feature",
+    "area": "onboarding",
+    "priority": "medium",
+    "tags": [
+      "onboarding",
+      "beginner",
+      "inventory",
+      "weapons",
+      "food",
+      "torch"
+    ],
+    "depends_on": [
+      "WPN-001",
+      "CAMP-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-010-newcomer-kit.md"
+  },
+  {
     "id": "OWL-002",
     "title": "Nocturnal owl tuning and indirect signs",
     "status": "testing",
