@@ -7,9 +7,10 @@ import { GATE_CARCASS_DROPOFF_FEATURE_KEY, getGateHuntingSaturationState, hunter
 import { corpseResourceKey, resourceTypeDisplayName } from "./corpses";
 import { creatureCarriedTorchCount, ensureTorchResourceTypes, getCreatureTorchState, lightCreatureTorchAtCampfire } from "./fire";
 import { escapeHtml } from "../utils/text";
-import { notifyLocationAll, notifyLocationExcept } from "./notifications";
+import { notifyLocationAll, notifyLocationDynamic } from "./notifications";
 import { findLocationRoute, type RouteStep } from "./routeFinding";
 import { logEvent } from "./worldEvents";
+import { visibleActorLabelForObserver } from "./visibilityLabels";
 
 export const HUNTER_TORCH_BUNDLE_SIZE = 5;
 export const HUNTER_RETURN_TORCH_RESERVE = 1;
@@ -169,6 +170,10 @@ function quoteBlock(text: string) {
 
 export function formatHunterFieldSpeech(name: string, line: string) {
   return `${escapeHtml(name)} промовляє:\n${quoteBlock(line)}`;
+}
+
+export function formatHiddenHunterFieldSpeech(line: string) {
+  return `Хтось промовляє поруч:\n${quoteBlock(line)}`;
 }
 
 type HunterPreyCandidate = {
@@ -424,13 +429,18 @@ async function emitHunterFieldSpeech(
   });
   await logEvent("SAY", `${name} промовляє`, line, locationId);
   if (bot) {
-    const speech = formatHunterFieldSpeech(name, line);
-    await notifyLocationExcept(
+    await notifyLocationDynamic(
       bot,
       locationId,
-      [],
-      observerText ? `${escapeHtml(observerText)}\n\n${speech}` : speech,
-      { parseMode: "HTML" },
+      -1,
+      async (observer) => {
+        const label = await visibleActorLabelForObserver(locationId, observer.id, "", name);
+        const speech = label ? formatHunterFieldSpeech(label, line) : formatHiddenHunterFieldSpeech(line);
+        return {
+          text: observerText ? `${escapeHtml(observerText)}\n\n${speech}` : speech,
+          options: { parseMode: "HTML" },
+        };
+      },
     );
   }
 }

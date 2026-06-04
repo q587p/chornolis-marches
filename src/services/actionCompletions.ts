@@ -17,7 +17,7 @@ import { buildCorpseActionKeyboard, buildExamineLocationKeyboard, buildExamineTr
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { lightLocationCampfire, renderLocationBrief, renderLocationDetails } from "./locations";
 import { notifyLocation, notifyLocationAll, notifyLocationDynamic, notifyLocationExcept, notifyRegionExcept, queueNonPlayerMovementNotification } from "./notifications";
-import { addTwigsToCampfire, buildCampfireFromInventory, dismantleCampfire, douseCampfire, dousePlayerTorchFromInventory, hasActiveLitTorchForPlayer, lightPlayerTorchAtCampfire, lightPlayerTorchFromInventory } from "./fire";
+import { addTwigsToCampfire, buildCampfireFromInventory, dismantleCampfire, douseCampfire, dousePlayerTorchFromInventory, lightPlayerTorchAtCampfire, lightPlayerTorchFromInventory } from "./fire";
 import { dismantleStrangeTotem } from "./strangeTotems";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
 import { getStartLocationId } from "./players";
@@ -55,6 +55,7 @@ import { campfireDismantleReplyOptions, campfireRelightReplyOptionsAfterBuild, c
 import { cookingResultReplyOptions } from "../ui/inventoryItemKeyboard";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 import { visibilityPresenceText, visibilityRulesForLocation } from "./visibility";
+import { actorLabelFromVisibility, visibleActorLabelForObserver } from "./visibilityLabels";
 import { firstNightGuidanceForPlayer } from "./beginnerGuidance";
 import { maybeTriggerPassiveApiarySting, raidApiaryForPlayer } from "./apiaryHazards";
 import { creatureAttackObserverText, freshenWeaponFailureText, getPlayerEquippedWeapon, grantAndEquipLegacyFresheningKnife, legacyFresheningKnifeGrantText, playerAttackKillText, playerAttackObserverText } from "./weapons";
@@ -331,20 +332,7 @@ async function visibleCreatureActionLabel(locationId: number, creature: { isHidd
   return visibleMoverLabel(locationId, fallback, visibleName);
 }
 
-export function movementLabelFromVisibility(
-  visibility: { showNearbyDetails: boolean },
-  observerHasLight: boolean,
-  fallback: string,
-  visibleName: string,
-) {
-  return visibility.showNearbyDetails || observerHasLight ? visibleName : fallback;
-}
-
-async function visibleMoverLabelForObserver(locationId: number, observerPlayerId: number, fallback: string, visibleName: string) {
-  const visibility = await visibilityRulesForLocation(locationId, "brief");
-  const observerHasLight = visibility.showNearbyDetails ? false : await hasActiveLitTorchForPlayer(observerPlayerId);
-  return movementLabelFromVisibility(visibility, observerHasLight, fallback, visibleName);
-}
+export const movementLabelFromVisibility = actorLabelFromVisibility;
 
 function movementPastVerb(actor: unknown, visibleLabel: string, fallback: string, masculine: string, feminine: string, plural: string) {
   return visibleLabel === fallback ? masculine : actorPastVerb(actor as any, masculine, feminine, plural);
@@ -653,7 +641,7 @@ async function completeMove(bot: Bot, action: WorldAction) {
     const playerName = playerForms(player).nominative;
     const fallbackMover = "Хтось";
     await notifyLocationDynamic(bot, currentLocationId, player.id, async (observer) => {
-      const departureLabel = await visibleMoverLabelForObserver(currentLocationId, observer.id, fallbackMover, playerName);
+      const departureLabel = await visibleActorLabelForObserver(currentLocationId, observer.id, fallbackMover, playerName);
       return {
         text: `${departureLabel} ${movementPastVerb(player, departureLabel, fallbackMover, "пішов", "пішла", "пішли")} звідси.`,
         options: {
@@ -675,7 +663,7 @@ async function completeMove(bot: Bot, action: WorldAction) {
     await prisma.player.updateMany({ where: { id: player.id }, data: { currentLocationId: exit.toLocationId, steps: { increment: 1 } } });
     const tutorialRestEntryText = await applyTutorialRestEntryStaminaLesson(player.id, currentLocationId, exit.toLocationId, payload.direction);
     await notifyLocationDynamic(bot, exit.toLocationId, player.id, async (observer) => {
-      const arrivalLabel = await visibleMoverLabelForObserver(exit.toLocationId, observer.id, fallbackMover, playerName);
+      const arrivalLabel = await visibleActorLabelForObserver(exit.toLocationId, observer.id, fallbackMover, playerName);
       return {
         text: `${arrivalLabel} ${movementPastVerb(player, arrivalLabel, fallbackMover, "зайшов", "зайшла", "зайшли")} сюди ${FROM_DIRECTION_LABELS[payload.direction] ?? "звідкись"}.`,
         options: {
