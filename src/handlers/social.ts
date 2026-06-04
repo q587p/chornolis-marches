@@ -21,7 +21,7 @@ import { visibleTextTargets } from "../services/textTargets";
 import { visibilityRulesForLocation } from "../services/visibility";
 import { playerHasRawMeat } from "../services/meat";
 import { submitGiveRawMeatToCreature } from "./give";
-import { setPlayerFollowIntent } from "../services/following";
+import { followIntentSetText, setPlayerFollowIntent } from "../services/following";
 
 type TargetSpeechMode = "say" | "whisper";
 
@@ -173,7 +173,7 @@ async function submitTargetFollowIntent(ctx: any, type: "player" | "creature", t
 
   await setPlayerFollowIntent(player.id, { type: target.kind, id: target.id, label: target.forms.nominative }, player.currentLocationId);
   await safeAnswerCallbackQuery(ctx, "Слід узято.");
-  await ctx.reply(`Ви тримаєтеся сліду за ${target.forms.instrumental}. Це ще не крок за кроком — радше уважність до чужого руху.`);
+  await ctx.reply(followIntentSetText({ label: target.forms.nominative, forms: target.forms }));
 }
 
 export function registerSocialHandlers(bot: Bot) {
