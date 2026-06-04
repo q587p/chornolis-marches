@@ -4,6 +4,7 @@ require("ts-node/register");
 
 const {
   canWeaponFreshen,
+  creatureAttackObserverText,
   freshenWeaponFailureText,
   heldWeaponLine,
   isWeaponResourceKey,
@@ -35,5 +36,6 @@ assert.match(playerAttackKillText("hunting_spear", "зайця"), /вистав�
 assert.match(playerAttackObserverText("knife", "мишу"), /простим ножем/);
 assert.equal(playerAttackObserverText("knife", "мишу", "Аїд"), "Аїд збиває мишу простим ножем. Труп лишається на землі.");
 assert.equal(playerAttackObserverText(null, "мишеня", "Радана"), "Радана збиває мишеня ногою. Труп лишається на землі.");
+assert.equal(creatureAttackObserverText("Орина", "hunting_spear", "зайця"), "Орина виставляє мисливський спис і збиває зайця, тоді підбирає здобич для падального рову.");
 
 console.log("Weapon helpers OK");

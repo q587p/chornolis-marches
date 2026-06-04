@@ -82,6 +82,7 @@ import { queueAllUsableInventoryResource } from "../services/eatingQueue";
 import { queueAllBeginnerCacheContributions } from "../services/beginnerCacheQueue";
 import {
   clearPlayerFollowIntent,
+  followIntentSetText,
   followIntentHelpText,
   followIntentStatusLine,
   followIntentUsageText,
@@ -987,7 +988,7 @@ export async function submitFollowIntent(ctx: any, targetQuery: string) {
   if (match.target.type === "player" && match.target.id === player.id) return void (await ctx.reply("Власний слід і так під ногами."));
 
   await setPlayerFollowIntent(player.id, match.target, player.currentLocationId);
-  await ctx.reply(`Ви тримаєтеся сліду за ${match.target.label}. Це ще не крок за кроком — радше уважність до чужого руху.`);
+  await ctx.reply(followIntentSetText(match.target));
 }
 
 export async function submitUnfollow(ctx: any) {

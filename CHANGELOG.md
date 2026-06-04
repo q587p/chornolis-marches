@@ -7,6 +7,19 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.34 - Post-0.15.33 regression polish - 12026-06-04
+
+### Added
+
+- Added regression coverage for the living-target `Слідувати` keyboard callback so it keeps routing through the shared follow-intent path.
+- Added direct visibility-label coverage for lit observers, dark/unlit fallback labels and named visible actors.
+- Added Herald news-update status coverage for missing, pending, published and canceled `news.md` entries.
+- Added chronicle relay disabled-state coverage so misconfigured or disabled relay mode remains explicit.
+
+### Changed
+
+- No new gameplay behavior was added; this is a stabilization and test-coverage pass over the broad 0.15.33 release slice.
+
 ## 0.15.33 - Herald news update notices - 12026-06-04
 
 ### Added

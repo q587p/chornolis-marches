@@ -8,7 +8,9 @@ const {
   followIntentAttentionContext,
   followIntentDataForTarget,
   followIntentHelpText,
+  followIntentSetText,
   followIntentStatusLine,
+  followIntentTargetInstrumental,
   followIntentUsageText,
   followTargetTypeForRef,
   isSelfFollowTarget,
@@ -42,6 +44,9 @@ assert.equal(followIntentStatusLine("знахарка"), "Чужий слід: �
 assert.equal(followIntentStatusLine("знахарка", { stale: true }), "Чужий слід: знахарка (останній помічений).");
 assert.equal(followIntentStatusLine("  "), null);
 assert.equal(followIntentHelpText(), followIntentUsageText());
+assert.equal(followIntentTargetInstrumental({ label: "Орина", forms: { instrumental: "Ориною" } }), "Ориною");
+assert.equal(followIntentSetText({ label: "Орина", forms: { instrumental: "Ориною" } }), "Ви тримаєтеся сліду за Ориною. Це ще не крок за кроком — радше уважність до чужого руху.");
+assert.equal(followIntentTargetInstrumental({ label: "Орина" }), "Ориною");
 const visibleHelp = followIntentHelpText({ label: "знахарка", targetVisible: true });
 assert.match(visibleHelp, /Ви тримаєтеся чужого сліду: знахарка\./);
 assert.match(visibleHelp, /не автоматична хода/);

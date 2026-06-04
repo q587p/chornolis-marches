@@ -2,7 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "../db";
 import { normalizeInput } from "../input/aliases";
 import { normalizeCreatureActionText } from "../utils/creatureActionText";
-import { creatureForms, playerForms } from "./grammar";
+import { creatureForms, playerForms, type NameForms } from "./grammar";
 import { isFreshenedCorpse } from "./meat";
 import { heldWeaponLine } from "./weapons";
 import { isCampSpiritCatCreature } from "./campSpiritCat";
@@ -13,6 +13,7 @@ export type TextTargetRef = {
   type: "player" | "creature";
   id: number;
   label: string;
+  forms?: NameForms;
   actionLabel?: string;
   canGreet: boolean;
   canAttack?: boolean;
@@ -216,13 +217,15 @@ export async function visibleTextTargets(locationId: number, viewerPlayerId: num
   ]);
 
   const playerTargets = players.map((player) => {
+    const forms = playerForms(player);
     const actionLabel = [spiritGuidedTargetHint(player.isAutoEnabled), heldWeaponLine(player.equippedWeaponKey)?.replace(/\.$/u, "").toLocaleLowerCase("uk-UA")]
       .filter(Boolean)
       .join("; ") || undefined;
     return {
       type: "player" as const,
       id: player.id,
-      label: player.nameNominative ?? player.firstName ?? player.username ?? "мандрівник",
+      label: forms.nominative,
+      forms,
       actionLabel,
       canGreet: true,
       canAttack: false,
@@ -233,10 +236,12 @@ export async function visibleTextTargets(locationId: number, viewerPlayerId: num
   const creatureTargets = creatures.map((creature) => {
     const isCorpse = !creature.isAlive && creature.age === "CORPSE";
     const wasFreshened = isCorpse && isFreshenedCorpse(creature.currentAction);
+    const forms = creatureForms(creature);
     return {
       type: "creature" as const,
       id: creature.id,
-      label: isCorpse ? `${wasFreshened ? "рештки" : "труп"} ${creatureForms(creature).genitive}` : creature.name ?? creature.species.name,
+      label: isCorpse ? `${wasFreshened ? "рештки" : "труп"} ${forms.genitive}` : forms.nominative,
+      forms,
       actionLabel: isCorpse
         ? undefined
         : [heldWeaponLine(creature.equippedWeaponKey)?.replace(/\.$/u, "").toLocaleLowerCase("uk-UA"), normalizeCreatureActionText(creature.currentAction)].filter(Boolean).join("; ") || undefined,

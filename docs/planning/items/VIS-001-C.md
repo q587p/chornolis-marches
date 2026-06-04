@@ -40,3 +40,15 @@ Do after: `VIS-001-B`.
 - Brief and detailed location rendering now gate nearby target names/buttons through the shared visibility helper.
 - In dim/dark views without light, players get vague nearby-presence copy rather than full names or target buttons.
 - Local light or clear enough daylight restores normal nearby details.
+
+## Watchpoints
+
+- 0.15.33 makes direct player movement labels more viewer-aware, including the
+  observer's own carried light. The broader visibility model is not yet fully
+  per-recipient everywhere.
+- Non-player movement batching still uses location-wide visibility/light
+  snapshots. A future pass should decide whether coalesced NPC/spirit movement
+  notices need per-recipient rendering before sending one shared batch.
+- Creature attack notices are still shared local messages rather than fully
+  per-recipient text. Keep the current hunter/prey copy fixes, but do not forget
+  this debt when the next combat/visibility polish pass happens.

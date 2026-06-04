@@ -58,4 +58,10 @@ Let the Boundary Mark Chancery Herald publish selected public chronicle entries 
 
 0.15.33 adds the first small relay: a standalone Herald can publish public chronicle entries into `HERALD_CHRONICLE_RELAY_CHAT_ID`, guarded by `HERALD_CHRONICLE_RELAY_ENABLED`, with `WorldEvent` relay markers to avoid duplicate sends after restart. It deliberately relays only existing `Chronicle:` rows; broader event eligibility, richer catch-up policy and local-chat integration remain future refinements.
 
+Watchpoint: the MVP dedupe uses `WorldEvent` relay markers. If old `WorldEvent`
+rows are aggressively pruned, relay dedupe can forget prior sends. That is
+acceptable for the first slice, but if chronicle relay becomes important or
+high-volume, promote the marker into a durable relay/publication state table
+instead of relying on retained event history.
+
 This should follow or land together with `PROG-006`, because the public chronicle/local-message/admin-audit split needs to be clear before the Herald starts broadcasting chronicle entries outside the game chat.

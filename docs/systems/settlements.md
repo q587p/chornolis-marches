@@ -22,7 +22,8 @@ Planned NPCs:
 - Barter.
 - Rumors.
 - Beginner guidance.
-- Quest board.
+- Notice board / public settlement notices.
+- Mail / letters.
 - Crafting stations.
 - Local reputation.
 

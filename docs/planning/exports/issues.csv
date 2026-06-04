@@ -84,6 +84,7 @@ ICE-004,"Camps, shelters and construction",icebox,feature,construction,low,"surv
 ICE-005,Pit traps and vertical hazard cells,icebox,feature,world,low,"traps,verticality,movement,damage,map",docs/planning/items/ICE-005-pit-trap-vertical-hazards.md
 ITEM-001,Pickup versus gather command semantics,testing,bug,inventory,high,"aliases,pickup,gather,inventory,ground-items",docs/planning/items/ITEM-001-pickup-vs-gather-semantics.md
 ITEM-002,Queued pickup actions,backlog,feature,inventory,medium,"pickup,inventory,action-queue,stamina,ground-items",docs/planning/items/ITEM-002-queued-pickup-actions.md
+ITEM-003,Item weight and encumbrance,backlog,feature,inventory,medium,"inventory,items,stamina,movement,pickup,survival",docs/planning/items/ITEM-003-item-weight-and-encumbrance.md
 LANG-001,Lexicon and agreement audit,backlog,chore,content,high,"ukrainian,lexicon,grammar,text,optimization,corpses,resources",docs/planning/items/LANG-001-lexicon-and-agreement-audit.md
 LEARN-001-A,Minimal learning storage decision,testing,design,learning,high,"learning,progression,schema",docs/planning/items/LEARN-001-A.md
 LEARN-001-B,Minimal CharacterSkill model,testing,technical,learning,high,"learning,schema,skills",docs/planning/items/LEARN-001-B.md
@@ -148,6 +149,7 @@ ONB-006,Look/examine semantics in the dream,testing,ux,onboarding,high,"tutorial
 ONB-007,Dream tree and vertical tutorial,proposed,feature,onboarding,high,"sleep,dream,tutorial,verticality,speech,onboarding",docs/planning/items/ONB-007-dream-tree-and-vertical-tutorial.md
 ONB-008,Owl threshold refrain in the dream,proposed,content,onboarding,medium,"onboarding,dream,owl,examine,atmosphere",docs/planning/items/ONB-008-owl-threshold-refrain-in-dream.md
 ONB-009,Tutorial dream ground item cleanup,testing,tech,onboarding,high,"tutorial,dream,cleanup,items,resources",docs/planning/items/ONB-009-tutorial-dream-ground-item-cleanup.md
+ONB-010,Newcomer starter kit,backlog,feature,onboarding,medium,"onboarding,beginner,inventory,weapons,food,torch",docs/planning/items/ONB-010-newcomer-kit.md
 OWL-002,Nocturnal owl tuning and indirect signs,testing,tuning,ecology,high,"owl,ecology,night,predator,observation,tuning",docs/planning/items/OWL-002-nocturnal-owl-tuning-and-signs.md
 OWL-003,Starter camp owl boundary and night signs,testing,tuning,ecology,medium,"owl,camp,ecology,night,onboarding",docs/planning/items/OWL-003-starter-camp-boundary-and-night-signs.md
 OWL-004,Conditional owl examine copy and refrain echoes,done,content,ecology,medium,"owl,examine,night,observation,atmosphere",docs/planning/items/OWL-004-conditional-owl-examine-copy.md
@@ -172,6 +174,7 @@ SES-001-C,Session presence tests and manual checklist,testing,qa,session,high,"t
 SES-002,Atmospheric presence and notification design,backlog,design,session,medium,"telegram,session,atmosphere,notifications",docs/planning/items/SES-002-atmospheric-presence-backlog.md
 SES-003,Deferred private message delivery for AFK and ended sessions,backlog,feature,session,medium,"telegram,session,speech,whisper,anti-spam",docs/planning/items/SES-003-deferred-private-message-delivery.md
 SETTLE-001,Starter settlement,backlog,feature,settlements,high,"settlement,npc,onboarding",docs/planning/items/SETTLE-001-starter-settlement.md
+SETTLE-002,Gate notice board,backlog,feature,settlements,medium,"settlement,gate,notices,feature,rumors",docs/planning/items/SETTLE-002-gate-notice-board.md
 SLEEP-001,Lying posture and lie command,testing,feature,survival,high,"sleep,posture,aliases,rest",docs/planning/items/SLEEP-001-lying-posture-and-lie-command.md
 SLEEP-002,Ordinary sleep MVP,testing,feature,survival,high,"sleep,wake,stamina,hp,tutorial",docs/planning/items/SLEEP-002-ordinary-sleep-mvp.md
 SLEEP-002-A,Ordinary sleep command gate,testing,feature,survival,high,"sleep,commands,wake,survival",docs/planning/items/SLEEP-002-A-ordinary-sleep-command-gate.md
@@ -186,6 +189,8 @@ SOC-005,Group combat assist conservative plan,backlog,feature,combat,medium,"soc
 SOC-006,NPC group compatibility,backlog,feature,social,medium,"social,groups,npc,actors,creatures",docs/planning/items/SOC-006-npc-group-compatibility.md
 SOC-007,Telegram UI and copy for contacts / follow / groups,next,feature,social,high,"social,telegram,ui,copy,groups",docs/planning/items/SOC-007-telegram-ui-and-copy.md
 SOC-008,Speech ranges and vertical voice,testing,feature,social,high,"speech,social,mud-compatibility,stamina,verticality",docs/planning/items/SOC-008-speech-ranges-and-vertical-voice.md
+SOC-009,Mail and letter delivery,backlog,feature,social,medium,"social,mail,letters,items,settlement,async",docs/planning/items/SOC-009-mail-and-letter-delivery.md
+SOC-010,Greeting inspiration stamina,backlog,feature,social,medium,"social,greet,stamina,cooldown,anti-farm",docs/planning/items/SOC-010-greeting-inspiration-stamina.md
 SOCIAL-003,Theft reaction signals,backlog,feature,social,medium,"social,theft,signals,reactions,0.15",docs/planning/items/SOCIAL-003-theft-reaction-signals.md
 STAT-001,Web /stat predator species comparison table,testing,feature,web,medium,"web,stats,ecology,predators,owl,fox,wolf",docs/planning/items/STAT-001-web-predator-species-table.md
 SURV-001,Early respawn support,testing,feature,survival,high,"onboarding,respawn,beginner",docs/planning/items/SURV-001-early-respawn.md
@@ -195,6 +200,7 @@ SURV-001-C,Повернення confirmation and aliases,testing,feature,surviva
 SURV-001-D,Actual return to start camp,testing,feature,survival,high,"respawn,location,queue",docs/planning/items/SURV-001-D.md
 SURV-001-E,Beginner return cooldown/consequence,testing,feature,survival,medium,"respawn,cooldown,balance",docs/planning/items/SURV-001-E.md
 SURV-001-F,Beginner return command-menu eligibility,backlog,polish,survival,medium,"respawn,telegram,balance,beginner",docs/planning/items/SURV-001-F.md
+SURV-002,Death locations and lethal hazard pacing,backlog,feature,survival,medium,"death,hazards,locations,survival,world",docs/planning/items/SURV-002-death-locations.md
 TECH-001,Service boundary and duplication cleanup,backlog,technical,architecture,medium,"architecture,refactor,maintainability,services,dead-code,cleanup",docs/planning/items/TECH-001-service-boundary-and-duplication-cleanup.md
 TECH-002,Location feature archetypes and world-data deduplication,backlog,technical,world_data,medium,"world-data,features,seed,cleanup,templates",docs/planning/items/TECH-002-feature-archetypes-and-world-data-dedup.md
 THEFT-000,Risky theft and hiding epic,backlog,epic,social,medium,"theft,hiding,stealth,social-memory,0.15",docs/planning/items/THEFT-000-risky-theft-and-hiding-epic.md

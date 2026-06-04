@@ -173,6 +173,8 @@ const femaleMouse = creatureForms({ sex: "FEMALE", species: { key: "mouse", name
 assert.equal(femaleMouse.nominative, "миша");
 assert.equal(femaleMouse.genitive, "миші");
 assert.equal(femaleMouse.accusative, "мишу");
+const staleRabbit = creatureForms({ sex: null, species: { key: "rabbit", name: "заєць", nameAccusative: "заєць", grammaticalGender: "MASCULINE", animacy: "ANIMATE" } });
+assert.equal(staleRabbit.accusative, "зайця");
 assert.equal(findLexiconEntry("animal.rabbit").forms.accusative, "зайця");
 assert.equal(findLexiconEntry("animal.mouse_male").forms.instrumental, "мишем");
 assert.equal(formsByNominative()["вогнище"].locative, "вогнищі");

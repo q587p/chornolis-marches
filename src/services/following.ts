@@ -1,5 +1,6 @@
 import { PlayerSleepState } from "@prisma/client";
 import { prisma } from "../db";
+import { guessNameForms, type NameForms } from "./grammar";
 import type { TextTargetRef } from "./textTargets";
 
 export const FOLLOW_TARGET_PLAYER = "PLAYER";
@@ -7,7 +8,7 @@ export const FOLLOW_TARGET_CREATURE = "CREATURE";
 
 export type FollowTargetType = typeof FOLLOW_TARGET_PLAYER | typeof FOLLOW_TARGET_CREATURE;
 
-export type FollowIntentTargetRef = Pick<TextTargetRef, "type" | "id" | "label">;
+export type FollowIntentTargetRef = Pick<TextTargetRef, "type" | "id" | "label"> & { forms?: Pick<NameForms, "instrumental"> };
 
 export function followTargetTypeForRef(target: FollowIntentTargetRef): FollowTargetType {
   return target.type === "player" ? FOLLOW_TARGET_PLAYER : FOLLOW_TARGET_CREATURE;
@@ -36,6 +37,17 @@ export function followIntentStatusLine(label: string | null | undefined, options
 
 export function followIntentUsageText() {
   return "За ким слідувати? Спробуйте: /follow <ім'я> або «слідувати за знахарем».";
+}
+
+export function followIntentTargetInstrumental(target: Pick<FollowIntentTargetRef, "label" | "forms">) {
+  const explicit = target.forms?.instrumental?.trim();
+  if (explicit) return explicit;
+  const label = target.label?.trim();
+  return label ? guessNameForms(label).instrumental : "кимось";
+}
+
+export function followIntentSetText(target: Pick<FollowIntentTargetRef, "label" | "forms">) {
+  return `Ви тримаєтеся сліду за ${followIntentTargetInstrumental(target)}. Це ще не крок за кроком — радше уважність до чужого руху.`;
 }
 
 export function followIntentHelpText(input?: {

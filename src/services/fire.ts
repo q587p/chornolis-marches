@@ -211,6 +211,10 @@ export function isDismantlableCampfire(feature: { type?: string | null; data?: u
   return isPreparedCampfire(feature) || isExtinguishedCampfire(feature);
 }
 
+export function firstRelightableCampfireId(features: Array<{ id: number; type?: string | null; data?: unknown | null; providesLight?: boolean | null }>) {
+  return features.find((feature) => isPreparedCampfire(feature) || isExtinguishedCampfire(feature))?.id ?? null;
+}
+
 export function adminHandmadeCampfireData(worldMinute: number | null | undefined) {
   return {
     is_campfire: true,
@@ -1503,16 +1507,20 @@ export async function relightableCampfireFromTorchId(playerId: number, featureId
   });
   if (!player?.currentLocationId) return null;
 
-  const feature = featureId
-    ? await prisma.locationFeature.findFirst({
-        where: { id: featureId, locationId: player.currentLocationId, isActive: true, type: "CAMPFIRE" },
-      })
-    : await prisma.locationFeature.findFirst({
-        where: { locationId: player.currentLocationId, isActive: true, type: "CAMPFIRE" },
-        orderBy: [{ providesLight: "asc" }, { id: "asc" }],
-      });
+  if (featureId) {
+    const feature = await prisma.locationFeature.findFirst({
+      where: { id: featureId, locationId: player.currentLocationId, isActive: true, type: "CAMPFIRE" },
+    });
+    return feature && (isPreparedCampfire(feature) || isExtinguishedCampfire(feature)) ? feature.id : null;
+  }
 
-  return feature && (isPreparedCampfire(feature) || isExtinguishedCampfire(feature)) ? feature.id : null;
+  const features = await prisma.locationFeature.findMany({
+    where: { locationId: player.currentLocationId, isActive: true, type: "CAMPFIRE" },
+    select: { id: true, type: true, data: true, providesLight: true },
+    orderBy: [{ providesLight: "asc" }, { id: "asc" }],
+  });
+
+  return firstRelightableCampfireId(features);
 }
 
 export async function canAddTwigsToNearbyCampfire(playerId: number) {

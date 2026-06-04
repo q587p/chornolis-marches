@@ -72,6 +72,36 @@ After the practical AFK / End Session / Auto-AFK MVP is stable, make presence fe
   - on return through `/start` or a normal game action, show a short reappearance line before or with the usual location context.
 - Keep this split clear: Auto-AFK is "quiet but still in the world"; End Session is "not currently reachable for ordinary interaction".
 
+## Look / Examine Presence Surfaces
+
+At least direct character inspection should expose AFK / ended presence in
+atmospheric terms, so another player can understand why ordinary interaction may
+not get a live response.
+
+Possible wording direction:
+
+- AFK / deliberate away:
+  - `Здається, ця людина стоїть поруч, але увагою вже відійшла від стежки.`
+  - `Порубіжжя ще тримає її слід тут, та погляд не чіпляється за довколишнє.`
+- Auto-AFK / long silence:
+  - `Вона затихла біля місцини так, ніби світ прикрив її шумом трави.`
+  - `Слід лишився, але відповідь навряд чи прийде одразу.`
+- End Session:
+  - `Порубіжжя згорнуло довкола неї тиху складку. Вона ніби тут, але не для звичайної розмови.`
+  - `Духи стежки сховали цей слід до повернення.`
+
+Surface rules:
+
+- `look <character>` may stay brief, for example one short clause after posture
+  or visible held items.
+- `examine <character>` should show a clearer presence note when the target is
+  AFK, auto-AFK or ended.
+- Do not expose raw `presence` enum values, inactivity timestamps, Telegram ids
+  or notification settings in ordinary player-facing output.
+- Do not imply death, teleportation or punishment. AFK is quiet attention;
+  ended session is explicit absence from ordinary interaction.
+- Scribe/admin cards may keep exact technical session details separately.
+
 ## Not Now
 
 Do not move Auto-AFK back to backlog: the inactivity timeout belongs to `SES-001-B`. This item is only for richer labels, preferences, visibility and recap design after the MVP controls and send-time guards are stable.

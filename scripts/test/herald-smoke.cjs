@@ -212,6 +212,59 @@ assert.match(newsUpdateNotice, /0\.1\.1 &lt;unsafe&gt; - missed/);
 assert.doesNotMatch(newsUpdateNotice, /<unsafe>/);
 assert.match(newsUpdateNotice, /\/news_archive_preview 2/);
 assert.match(newsUpdateNotice, /\/news_archive_post 2/);
+const newsUpdateStatusEntries = parseNewsEntries([
+  "## 0.1.0 - missing",
+  "",
+  "Missing body.",
+  "",
+  "## 0.1.1 - pending",
+  "",
+  "Pending body.",
+  "",
+  "## 0.1.2 - published",
+  "",
+  "Published body.",
+  "",
+  "## 0.1.3 - canceled",
+  "",
+  "Canceled body.",
+].join("\n"));
+const newsUpdateStatusPlan = buildHeraldNewsUpdateRows(newsUpdateStatusEntries, [
+  {
+    id: 11,
+    contentHash: newsUpdateStatusEntries[1].contentHash,
+    publishedAt: null,
+    visibility: "PUBLIC",
+  },
+  {
+    id: 12,
+    contentHash: newsUpdateStatusEntries[2].contentHash,
+    publishedAt: new Date("2026-06-04T00:00:00.000Z"),
+    visibility: "PUBLIC",
+  },
+  {
+    id: 13,
+    contentHash: newsUpdateStatusEntries[3].contentHash,
+    publishedAt: null,
+    visibility: "CANCELED",
+  },
+]);
+assert.deepEqual(newsUpdateStatusPlan.rows.map((row) => row.status), [
+  "missing",
+  "pending",
+  "published",
+  "canceled",
+]);
+assert.deepEqual(newsUpdateStatusPlan.actionableRows.map((row) => row.index), [1, 4]);
+assert.equal(newsUpdateStatusPlan.counts.missing, 1);
+assert.equal(newsUpdateStatusPlan.counts.pending, 1);
+assert.equal(newsUpdateStatusPlan.counts.published, 1);
+assert.equal(newsUpdateStatusPlan.counts.canceled, 1);
+const newsUpdateStatusNotice = formatHeraldNewsUpdatesNotice(newsUpdateStatusPlan, 10);
+assert.match(newsUpdateStatusNotice, /0\.1\.0 - missing/);
+assert.match(newsUpdateStatusNotice, /0\.1\.3 - canceled/);
+assert.doesNotMatch(newsUpdateStatusNotice, /0\.1\.1 - pending/);
+assert.doesNotMatch(newsUpdateStatusNotice, /0\.1\.2 - published/);
 assert.match(formatArchiveFindReply(archiveFindInput, ""), /Приклад: \/news_archive_find 0\.4\.4/);
 assert.match(formatArchiveFindReply(archiveFindInput, "0.4.404"), /не знайшла реліз 0\.4\.404/);
 
