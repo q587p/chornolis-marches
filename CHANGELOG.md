@@ -23,6 +23,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added smoke coverage for missed-news detection, safe HTML escaping and admin-only command visibility.
 - Made player movement notices respect the observer's own active torch light, so lit observers should not see visible arriving/leaving players as anonymous `Хтось`.
 - Fixed visible creature/hunter attack copy so lit observers can see a named hunter instead of anonymous `Щось`, and prey names use accusative forms in miss/wound/kill text.
+- Hid the Telegram menu `Репліки` button from non-Scribe players and gated `/chat`, `chat` aliases and stale chat pagination callbacks behind Scribe/admin access.
 
 ## 0.15.32 - Try to keep following via remembered route - 12026-06-04
 

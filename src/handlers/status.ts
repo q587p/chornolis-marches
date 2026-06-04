@@ -1261,6 +1261,10 @@ export async function buildChatLogPage(mode: ChatLogMode, window: ChatLogWindow,
   };
 }
 
+async function requireScribeChatAccess(ctx: any) {
+  return requireScribeAdmin(ctx);
+}
+
 async function buildLocationAllPage(requestedPage: number) {
   const startedAt = statusPerfNow();
   try {
@@ -1636,17 +1640,23 @@ export function registerStatusHandlers(bot: Bot) {
   });
 
   bot.command("chat", async (ctx) => {
+    if (!(await requireScribeChatAccess(ctx))) return;
     const { mode, window } = parseChatLogRequest(ctx.match?.trim());
     const page = await buildChatLogPage(mode, window, 0);
     await ctx.reply(page.text, { reply_markup: page.keyboard });
   });
 
   bot.hears(["💬 Репліки", "Репліки"], async (ctx) => {
+    if (!(await requireScribeChatAccess(ctx))) return;
     const page = await buildChatLogPage("time", normalizeChatLogWindow(undefined), 0);
     await ctx.reply(page.text, { reply_markup: page.keyboard });
   });
 
   bot.callbackQuery(/^chat:(time|location|character):(all|\d+(?:\.\d+)?):(\d+)$/, async (ctx) => {
+    if (!(await isScribeAdmin(ctx.from?.id))) {
+      await ctx.answerCallbackQuery({ text: "Ця дія доступна тільки писарям Порубіжжя.", show_alert: true });
+      return;
+    }
     const mode = normalizeChatLogMode(ctx.match[1]);
     const window = normalizeChatLogWindow(ctx.match[2]);
     const requestedPage = Number(ctx.match[3]);
@@ -1662,6 +1672,10 @@ export function registerStatusHandlers(bot: Bot) {
   });
 
   bot.callbackQuery(/^chat:(all|\d+(?:\.\d+)?):(\d+)$/, async (ctx) => {
+    if (!(await isScribeAdmin(ctx.from?.id))) {
+      await ctx.answerCallbackQuery({ text: "Ця дія доступна тільки писарям Порубіжжя.", show_alert: true });
+      return;
+    }
     const window = normalizeChatLogWindow(ctx.match[1]);
     const requestedPage = Number(ctx.match[2]);
     const page = await buildChatLogPage("time", window, Number.isFinite(requestedPage) ? requestedPage : 0);
@@ -1676,6 +1690,10 @@ export function registerStatusHandlers(bot: Bot) {
   });
 
   bot.callbackQuery("chat:noop", async (ctx) => {
+    if (!(await isScribeAdmin(ctx.from?.id))) {
+      await ctx.answerCallbackQuery({ text: "Ця дія доступна тільки писарям Порубіжжя.", show_alert: true });
+      return;
+    }
     await ctx.answerCallbackQuery();
   });
 

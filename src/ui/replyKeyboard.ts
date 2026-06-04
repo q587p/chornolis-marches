@@ -162,13 +162,13 @@ export async function mainStatusLabelForPlayerId(playerId: number) {
   return mainStatusLabelForPlayer(player, { hasRestLesson: await hasTutorialCommandHint(player.id, "rest") });
 }
 
-export function buildMenuReplyKeyboard(options: { canSeeStats?: boolean } = {}) {
+export function buildMenuReplyKeyboard(options: { canSeeStats?: boolean; canSeeChat?: boolean } = {}) {
   const keyboard = new Keyboard()
     .text("📰 Новини");
   if (options.canSeeStats) keyboard.text("📊 Статистика");
+  keyboard.row();
+  if (options.canSeeChat) keyboard.text("💬 Репліки");
   keyboard
-    .row()
-    .text("💬 Репліки")
     .text("👥 Хто активний")
     .row()
     .text("🌒 Час")

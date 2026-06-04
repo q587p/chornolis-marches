@@ -129,6 +129,7 @@ async function replyWithWho(ctx: any) {
 }
 
 async function replyWithChat(ctx: any, mode?: string, window?: string) {
+  if (!(await requireScribeAdmin(ctx))) return;
   const page = await buildChatLogPage(normalizeChatLogMode(mode), normalizeChatLogWindow(window), 0);
   await ctx.reply(page.text, { reply_markup: page.keyboard });
 }

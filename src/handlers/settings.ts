@@ -58,7 +58,8 @@ export async function setAutoActionMessageSetting(ctx: any, enabled: boolean) {
 }
 
 async function showMenuFromSettings(ctx: any) {
-  await ctx.reply("☰ Меню", { reply_markup: buildMenuReplyKeyboard({ canSeeStats: await isScribeAdmin(ctx.from?.id) }) });
+  const canSeeScribeTools = await isScribeAdmin(ctx.from?.id);
+  await ctx.reply("☰ Меню", { reply_markup: buildMenuReplyKeyboard({ canSeeStats: canSeeScribeTools, canSeeChat: canSeeScribeTools }) });
 }
 
 function daynoticesArg(ctx: any) {
