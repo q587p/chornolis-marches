@@ -5,6 +5,7 @@ import { escapeHtml } from "../utils/text";
 import { playerForms } from "./grammar";
 import { notifyLocationExcept } from "./notifications";
 import { assertCanPerformPhysicalAction } from "./postureRules";
+import { hasActiveLitTorchForPlayer } from "./fire";
 import { canShowFeatureDetails, visibilityRulesForLocation, type VisibilityRules } from "./visibility";
 
 export const ATTENTION_ROOT_GAP_FEATURE_KEY = "start_cellar_root_gap";
@@ -52,8 +53,37 @@ export function attentionRootGapButtonLabel() {
   return "🕳 Пролізти в щілину";
 }
 
-export function canRevealAttentionRootGap(visibility: VisibilityRules) {
-  return canShowFeatureDetails(visibility);
+export function canRevealAttentionRootGap(visibility: VisibilityRules, options: { playerHasLitTorch?: boolean } = {}) {
+  return canShowFeatureDetails(visibility) || options.playerHasLitTorch === true;
+}
+
+export async function canPlayerRevealAttentionRootGap(playerId: number, locationId: number) {
+  const visibility = await visibilityRulesForLocation(locationId, "details");
+  if (canRevealAttentionRootGap(visibility)) return true;
+  return hasActiveLitTorchForPlayer(playerId);
+}
+
+export function attentionRootGapUseDecision(input: {
+  playerLocationId?: number | null;
+  playerLocationKey?: string | null;
+  feature?: (AttentionGateFeature & { id: number; locationId: number; isActive?: boolean | null }) | null;
+  visibility: VisibilityRules;
+  playerHasLitTorch?: boolean;
+}) {
+  if (!input.playerLocationId || input.playerLocationKey !== ATTENTION_ROOT_GAP_SOURCE_KEY) {
+    return { ok: false as const, reason: "wrong-location" as const };
+  }
+
+  const feature = input.feature;
+  if (!feature || !feature.isActive || feature.locationId !== input.playerLocationId || !isAttentionRootGapFeature(feature)) {
+    return { ok: false as const, reason: "missing-feature" as const };
+  }
+
+  if (!canRevealAttentionRootGap(input.visibility, { playerHasLitTorch: input.playerHasLitTorch })) {
+    return { ok: false as const, reason: "dark" as const, featureId: feature.id };
+  }
+
+  return { ok: true as const, featureId: feature.id };
 }
 
 export function attentionRootGapEventDescription(playerId: number) {
@@ -92,17 +122,27 @@ export async function attentionRootGapCanBeUsedByPlayer(playerId: number, featur
     return { ok: false as const, reason: "missing-feature" as const };
   }
 
-  const visibility = await visibilityRulesForLocation(feature.locationId, "details");
-  if (!canRevealAttentionRootGap(visibility)) {
-    return { ok: false as const, reason: "dark" as const, featureId: feature.id };
+  const [visibility, playerHasLitTorch] = await Promise.all([
+    visibilityRulesForLocation(feature.locationId, "details"),
+    hasActiveLitTorchForPlayer(player.id),
+  ]);
+  const decision = attentionRootGapUseDecision({
+    playerLocationId: player.currentLocationId,
+    playerLocationKey: player.currentLocation?.key,
+    feature,
+    visibility,
+    playerHasLitTorch,
+  });
+  if (!decision.ok) {
+    return decision;
   }
 
-  return { ok: true as const, player, featureId: feature.id };
+  return { ok: true as const, player, featureId: decision.featureId };
 }
 
 export function attentionRootGapFailureText(reason: "wrong-location" | "missing-feature" | "dark") {
   if (reason === "dark") {
-    return "Під корінням щось темніє, але без світла це не стає шляхом. Спершу потрібен запалений факел або інше світло, а тоді уважне роздивляння.";
+    return "Під корінням щось темніє, але без світла це не стає шляхом. Запаліть факел або знайдіть інше світло, а тоді роздивіться щілину знову.";
   }
   if (reason === "wrong-location") return "Тут немає тієї низької щілини, яку можна було б обережно пройти.";
   return "Поруч не видно щілини, через яку можна пролізти.";
@@ -181,6 +221,6 @@ export async function enterAttentionRootGap(bot: Bot, input: {
     { parseMode: "HTML" },
   );
 
-  const text = "Ви пригинаєтесь нижче, ніж зручно, і повільно просуваєтесь боком. Коріння шкрябає плече, суха глина тримає коліно, а потім вузьке місце раптом стає низькою кишенею під землею.";
+  const text = "Тепер, коли світло бере корінь збоку, щілина стає шляхом.\n\nВи пригинаєтесь нижче, ніж зручно, і повільно просуваєтесь боком. Коріння шкрябає плече, суха глина тримає коліно, а потім вузьке місце раптом стає низькою кишенею під землею.";
   return { ok: true as const, text, destinationLocationId: destination.id };
 }

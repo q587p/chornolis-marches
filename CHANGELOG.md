@@ -7,6 +7,23 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.36 - Attention-gate carried-light polish - 12026-06-04
+
+### Changed
+
+- Hardened the first attention-gated root gap so a player-carried active lit torch explicitly counts for revealing and using the crawl action.
+- Clarified the dark `/crawl` refusal copy to tell players to light a torch or find another light source, then inspect the gap again.
+- Added a small success lead-in for direct `/crawl` so using the command after finding light still reads as noticing the root gap in-world.
+
+### Fixed
+
+- Added focused coverage for dark/no-light, carried-lit-torch and local-light reveal cases around the root gap.
+
+### Risks
+
+- This remains a narrow authored gate, not a broad viewer-aware visibility refactor or generic skill-gated-location framework.
+- The DB path still relies on active lit torch lifetime through the existing torch resource rules.
+
 ## 0.15.35 - First attention-gated location - 12026-06-04
 
 ### Added
