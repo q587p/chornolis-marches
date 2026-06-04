@@ -31,7 +31,7 @@ import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } fro
 import { showCharacter, showInventory, showLocationForPlayer } from "./player";
 import { buildAllPage, buildChatLogPage, buildStatBrief, buildWhoPage } from "./status";
 import { renderDepletedVegetationInspection, renderLocationBrief, renderLocationExits, renderLocationFeatureInteraction, renderLocationFeatureInteractionByQuery, renderLocationGlance, shakeTreeAtCurrentLocation } from "../services/locations";
-import { buildNewsIndexPage } from "./news";
+import { buildNewsIndexPage, newsHtmlReplyOptions } from "./news";
 import { hideReplyKeyboard, showMainKeyboard, showMenu } from "./menu";
 import { showCalendar, showTime, showWeather } from "./time";
 import { submitMove as submitCanonicalMove } from "./movement";
@@ -102,6 +102,7 @@ import { buildWetCampfireConfirmKeyboard } from "../ui/fireKeyboards";
 import { submitGiveItem } from "./give";
 import { firstStrangeTotemFeatureIdAtPlayerLocation } from "../services/strangeTotems";
 import { maybeTriggerPassiveApiarySting } from "../services/apiaryHazards";
+import { enterAttentionRootGap } from "../services/attentionGatedLocation";
 
 const pendingVerticalYell = new Map<number, { direction: VerticalYellPromptDirection }>();
 const pendingReturnYell = new Set<number>();
@@ -123,7 +124,7 @@ async function sendFeatureFollowups(ctx: any, view: any) {
 
 async function replyWithNews(ctx: any) {
   const page = await buildNewsIndexPage(0);
-  await ctx.reply(page.text, page.keyboard ? { reply_markup: page.keyboard } : undefined);
+  await ctx.reply(page.text, newsHtmlReplyOptions(page.keyboard));
 }
 
 async function replyWithStat(ctx: any) {
@@ -1026,6 +1027,29 @@ async function submitFollowStep(bot: Bot, ctx: any) {
   await submitCanonicalMove(bot, ctx, remembered.direction, false);
 }
 
+async function submitCrawlRootGap(bot: Bot, ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  try {
+    const result = await enterAttentionRootGap(bot, { playerId: player.id });
+    if (!result.ok) {
+      await ctx.reply(result.text, {
+        reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+      });
+      return;
+    }
+
+    await ctx.reply(result.text, {
+      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+    });
+    const view = await renderLocationBrief(result.destinationLocationId, player.id);
+    noteKnownMessage(await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard }));
+  } catch (error) {
+    await replyToActionError(ctx, error, "Не вдалося пролізти крізь щілину.");
+  }
+}
+
 async function submitAttackCommand(bot: Bot, ctx: any, targetQuery?: string) {
   const target = targetQuery?.trim();
   if (!target) {
@@ -1469,10 +1493,11 @@ export function registerAliasHandlers(bot: Bot) {
     "shake_tree",
     "freshen_all",
     "smile",
-    "glance",
-    "enter",
-    "exits",
-    "reply",
+	    "glance",
+	    "enter",
+	    "crawl",
+	    "exits",
+	    "reply",
   ], async (_ctx, next) => next());
   bot.command(["attack", "fight", "kill", "kick"], async (ctx) => submitAttackCommand(bot, ctx, ctx.match ?? ""));
   bot.command("attack_mouse", async (ctx) => submitAttackCommand(bot, ctx, "mouse"));
@@ -1480,9 +1505,10 @@ export function registerAliasHandlers(bot: Bot) {
   bot.command(["get", "pick", "pickup", "take"], async (ctx) => submitPickupCommand(bot, ctx, ctx.match ?? ""));
   bot.command(["get_all", "pick_all", "pickup_all", "take_all"], async (ctx) => submitPickupCommand(bot, ctx, pickupAllCommandTarget(ctx.match ?? "")));
   bot.command("track", async (ctx) => submitTrack(bot, ctx, false, ctx.match ?? ""));
-  bot.command("follow", async (ctx) => submitFollowIntent(ctx, ctx.match ?? ""));
-  bot.command(["follow_step", "keep_following", "trail"], async (ctx) => submitFollowStep(bot, ctx));
-  bot.command("unfollow", async (ctx) => submitUnfollow(ctx));
+	  bot.command("follow", async (ctx) => submitFollowIntent(ctx, ctx.match ?? ""));
+	  bot.command(["follow_step", "keep_following", "trail"], async (ctx) => submitFollowStep(bot, ctx));
+	  bot.command("crawl", async (ctx) => submitCrawlRootGap(bot, ctx));
+	  bot.command("unfollow", async (ctx) => submitUnfollow(ctx));
   bot.command("yell", async (ctx) => submitYell(bot, ctx, ctx.match ?? ""));
   bot.command("shout", async (ctx) => submitShout(bot, ctx, ctx.match ?? ""));
   bot.command(["call_scribes", "scribe_help"], async (ctx) => requestScribeReturnAssistance(bot, ctx));
@@ -1618,6 +1644,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "queue") return submitQueue(ctx, parsed.mode);
     if (parsed.kind === "track") return submitTrack(bot, ctx, Boolean(parsed.detail), parsed.target);
     if (parsed.kind === "follow-step") return submitFollowStep(bot, ctx);
+    if (parsed.kind === "crawl-root-gap") return submitCrawlRootGap(bot, ctx);
     if (parsed.kind === "shake-tree") return submitShakeTree(ctx);
     if (parsed.kind === "wait") return submitWait(bot, ctx);
     if (parsed.kind === "use-item") return submitUseItem(bot, ctx, parsed.item);

@@ -628,6 +628,37 @@
     }
   },
   {
+    "key": "start_cellar_root_gap",
+    "locationKey": "start_border_cellar",
+    "type": "LANDMARK",
+    "name": "Щілина під старим коренем",
+    "description": "Під нижньою підпорою погреба корінь вигнувся так, що між ним і сухою глиною лишилася темна щілина. Здалеку вона схожа на нерівну тінь, але зблизька видно потерті боки, дрібний осип і слід від чиєїсь терплячої руки.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🕳",
+      "inspectable": true,
+      "attention_gate": "root_gap_light",
+      "destination_location_key": "start_cellar_root_pocket",
+      "examine_summary": "під корінням є темніша пляма; зі світлом вона може виявитися вузькою сухою щілиною, куди не пролізти поспіхом",
+      "no_loot": true,
+      "map_maker_hint": true,
+      "aliases": [
+        "щілина",
+        "щілина під коренем",
+        "щілина під старим коренем",
+        "старий корінь",
+        "корінь",
+          "темна пляма",
+          "пролізти під коріння",
+          "root gap",
+        "gap",
+        "crawlspace",
+        "root pocket"
+      ]
+    }
+  },
+  {
     "key": "start_cellar_torn_map_board",
     "locationKey": "start_border_cellar",
     "type": "LANDMARK",

@@ -2976,6 +2976,22 @@
     "isHidden": false
   },
   {
+    "fromKey": "start_border_cellar",
+    "toKey": "start_cellar_root_pocket",
+    "direction": "INSIDE",
+    "label": "крізь щілину під корінням",
+    "travelCost": 1,
+    "isHidden": true
+  },
+  {
+    "fromKey": "start_cellar_root_pocket",
+    "toKey": "start_border_cellar",
+    "direction": "OUTSIDE",
+    "label": "назовні до погреба",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
     "fromKey": "start_border_watchtower",
     "toKey": "start_border_camp",
     "direction": "DOWN",

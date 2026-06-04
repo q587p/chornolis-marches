@@ -2009,7 +2009,7 @@
   {
     "id": "MAP-004",
     "title": "Skill and attention gated locations",
-    "status": "backlog",
+    "status": "in_testing",
     "type": "feature",
     "area": "world",
     "priority": "high",

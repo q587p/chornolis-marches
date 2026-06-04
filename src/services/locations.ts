@@ -62,6 +62,13 @@ import {
   type BeginnerCacheResourceKey,
 } from "./beginnerCache";
 import { CAMP_SPIRIT_CAT_SPECIES_KEY, campSpiritCatCachePresenceLine } from "./campSpiritCat";
+import {
+  attentionRootGapButtonLabel,
+  attentionRootGapDarkInspectionText,
+  attentionRootGapDarkOutline,
+  attentionRootGapRevealText,
+  isAttentionRootGapFeature,
+} from "./attentionGatedLocation";
 
 const COMPACT_EXIT_ORDER = ["NORTH", "WEST", "SOUTH", "EAST", "UP", "DOWN", "INSIDE", "OUTSIDE"];
 const GATHERABLE_RESOURCE_KEYS = ["berries", "mushrooms", "herbs"] as const;
@@ -439,6 +446,7 @@ function featureBriefLine(feature: any) {
 }
 
 function darkFeatureOutlineText(feature: any) {
+  if (isAttentionRootGapFeature(feature)) return attentionRootGapDarkOutline();
   const name = String(feature.name ?? "").toLowerCase();
   if (name.includes("мап")) return "папір видно, написів — ні";
   if (name.includes("заруб")) return "без світла зарубки не розібрати";
@@ -448,6 +456,7 @@ function darkFeatureOutlineText(feature: any) {
 }
 
 export function darkFeatureInspectionText(feature: any) {
+  if (isAttentionRootGapFeature(feature)) return attentionRootGapDarkInspectionText();
   return [
     `${featureIcon(feature)} <i>${escapeHtml(feature.name)}</i>`,
     "",
@@ -1322,6 +1331,8 @@ export async function renderLocationFeatureInteraction(
     text = state?.apiaryRaidCoolingDown
       ? `${feature.description ?? "Стара бортя гуде всередині темного дерева."}\n\n${APIARY_DISTURBED_INSPECTION_TEXT}`
       : feature.description ?? "Стара бортя гуде всередині темного дерева.";
+  } else if (isAttentionRootGapFeature(feature)) {
+    text = `${feature.description ?? "Під корінням темніє вузька суха щілина."}\n\n${attentionRootGapRevealText()}`;
   }
 
   const keyboard = new InlineKeyboard();
@@ -1371,6 +1382,7 @@ export async function renderLocationFeatureInteraction(
   }
   if (featureData(feature).carcass_dropoff === true) addCarcassDropoffButtons(keyboard, feature.id);
   if (isApiaryFeature(feature)) keyboard.text("🍯 Пошукати мед", `apiary:raid:${feature.id}`).row();
+  if (isAttentionRootGapFeature(feature)) keyboard.text(attentionRootGapButtonLabel(), `attentionGate:rootGap:${feature.id}`).row();
   if (isClimbTreeFeature(feature)) keyboard.text("🌳 Залізти", "move:UP").row();
   const moveDirection = featureMoveDirection(feature);
   if (moveDirection) keyboard.text(featureMoveButtonLabelForFeature(feature, moveDirection), `move:${moveDirection}`).row();
