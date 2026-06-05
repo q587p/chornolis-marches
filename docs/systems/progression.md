@@ -189,12 +189,20 @@ MVP acceptance is covered by merged releases: the `0.15.21` learning foundation,
 and `0.15.42` attack canonical storage bridge. Broader skill-system ambitions
 remain separate future work rather than part of those closed MVP items.
 
+`0.15.45` adds the first high-skill qualitative outcomes. These are rare,
+bounded action details rather than a new loot table or public skill sheet:
+supported high-skill gathering can occasionally notice one extra ordinary unit
+of the same herbs, berries or mushrooms already being gathered, and high-skill
+freshening can occasionally add a cleaner-work note without changing meat yield.
+The current action uses previously stored learning for this chance; the practice
+recorded by that action only affects future attempts. Combat effects, broad rare
+finds, economy hooks and public raw skill UI remain deferred.
+
 After the actor-learning foundation, the intended near-term order is:
 
-- `0.15.44`: actor/tracking learning surface stabilization is in testing. The
-  next step can be training/arena planning, actor-default config cleanup,
-  high-skill qualitative finds or another small world curiosity. Do not jump
-  straight to attack modifiers.
+- `0.15.45`: high-skill qualitative outcomes are in testing for gathering and
+  freshening. Follow assist / auto-follow guardrails and group/travel intent
+  should remain near the front of the next planning queue.
 - Later high-skill slices may add occasional qualitative outcomes, such as a
   fine cut of meat, a special medicinal herb or a tiny incidental `шаг` find,
   but those belong behind bounded rare-result rules rather than the first

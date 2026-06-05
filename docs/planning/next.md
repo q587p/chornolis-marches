@@ -59,6 +59,12 @@ technical/scribe surfaces keep the raw rows. Action effects should use previous
 stored experience by default; a completed action then records practice for the
 next attempt.
 
+`0.15.45` adds the first high-skill qualitative outcomes without opening a broad
+loot or economy loop. Treat it as a small proof that skill can sometimes change
+the feel of a successful action: gathering may rarely notice one extra ordinary
+unit of the same supported resource, and freshening may rarely add cleaner-work
+text without increasing meat yield.
+
 Do not open another broad content loop before the learning/observation foundation is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
 ## Immediate Sequence
@@ -70,11 +76,11 @@ Do not open another broad content loop before the learning/observation foundatio
 5. **0.15.42 / LEARN-005:** attack practice/observation canonical learning bridge is done as storage only, with no attack effects and no full combat expansion.
 6. **0.15.43 / TRACK-LEARN-001-A:** tracking practice and track-reading quality is in testing: executed `/track` can teach, higher tracking can improve track output, and darkness still hides direction.
 7. **0.15.44:** learning surface and planning cleanup is in testing: ordinary summaries stay short/diegetic, technical views stay raw, `/track` uses previous experience for current output, and clearly completed LEARN planning items are closed.
-8. **TRACK-LEARN-002:** review live route-memory, follow-step and `0.15.37` track-gated passage cadence before teaching broader explicit track reading.
-9. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
-10. **High-skill qualitative finds:** later bounded skill effects may occasionally find better cuts, special herbs or tiny incidental money, but only behind rare/result-specific rules.
-11. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
-12. **SOC-003:** only after follow intent feels useful, decide whether any explicit group/travel acceptance layer is worth promoting.
+8. **0.15.45 / LEARN-006:** high-skill qualitative outcomes are in testing: rare gathering/freshening quality notes stay bounded, mostly textual and non-combat.
+9. **FOLLOW-ASSIST-001:** review live route-memory, follow-step and `0.15.37` track-gated passage cadence before adding guarded follow-assist or auto-follow-like prompts. Hidden routes must remain non-repeatable without independent learning/triggering.
+10. **SOC-003:** after follow assist guardrails, decide whether any explicit group/travel acceptance layer is worth promoting.
+11. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
+12. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
 
 Watch the new actor-learning surfaces before widening them: `0.15.41` proves
 one NPC observation bridge, but freshening/cooking observation should remain a

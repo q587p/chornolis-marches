@@ -7,6 +7,28 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.45 - High-skill qualitative outcomes MVP - 12026-06-06
+
+### Added
+
+- Added a tiny shared high-skill outcome helper with deterministic test coverage.
+- Added rare high-skill gathering outcomes for supported herbs, berries and mushrooms: a successful player gather can occasionally notice one extra ordinary unit of the same resource.
+- Added rare high-skill freshening qualitative text without changing meat yield.
+
+### Changed
+
+- High-skill outcomes use stored learning from before the current action; the action's newly recorded practice only affects future attempts.
+- Public progression docs now call out follow assist / auto-follow guardrails and group/travel intent as near-term follow-ups.
+
+### Tests
+
+- Added focused helper tests for level thresholds, deterministic rolls, unsupported resources, tutorial exclusion, text safety and reward boundaries.
+
+### Risks
+
+- The gathering reward is intentionally tiny but still economy-adjacent; live balance should watch whether rare +1 same-resource outcomes feel too frequent at high levels.
+- Freshening quality currently changes only text, so players may not always notice it unless they read the success message.
+
 ## 0.15.44 - Learning surfaces and planning cleanup - 12026-06-06
 
 ### Changed

@@ -47,6 +47,7 @@ import { predatorKillCurrentAction, predatorKillObserverText, predatorMissCurren
 import { ATTACK_OBSERVATION_GROWTH_MESSAGE, ATTACK_PRACTICE_GROWTH_MESSAGE, isAttackPracticeMilestone, recordAttackKillSource, recordAttackObservation, recordAttackPracticeLearning, recordCreatureAttackObservation } from "./attackLearning";
 import { GATHERING_OBSERVATION_GROWTH_MESSAGE, GATHERING_PRACTICE_GROWTH_MESSAGE, gatheringSkillEffectForPlayer, isGatheringPracticeMilestone, recordGatheringObservation, recordGatheringSource } from "./gatheringLearning";
 import { COOKING_OBSERVATION_GROWTH_MESSAGE, COOKING_PRACTICE_GROWTH_MESSAGE, FRESHENING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_PRACTICE_GROWTH_MESSAGE, recordCookingObservation, recordFresheningObservation, recordFresheningSource } from "./foodLearning";
+import { maybeHighSkillQualitativeOutcome } from "./highSkillOutcomes";
 import { notifyPlayerObservers, playerRestStopObserverText } from "./playerVisibility";
 import { dropInventoryResourceDetailed, dropInventoryResourcesDetailed, useInventoryResource, type UsableInventoryResource } from "./inventoryUse";
 import { trimSatisfiedQueuedUseItems } from "./eatingQueue";
@@ -818,7 +819,21 @@ async function completeGather(bot: Bot, action: WorldAction) {
   }
 
   const found = Math.min(resource.amount, isPlayer ? Math.floor(Math.random() * 3) + 1 : 1);
-  const nextAmount = isTutorialForagingSuccess ? resource.amount : resource.amount - found;
+  // High-skill outcomes use the pre-practice effect; this gather teaches the next attempt.
+  const highSkillOutcome = isPlayer && gatheringSkillEffect?.supported
+    ? maybeHighSkillQualitativeOutcome({
+        kind: "gathering",
+        level: gatheringSkillEffect.level,
+        resourceKey,
+        tutorial: isTutorialForagingSuccess,
+        textIndex: Math.floor(Math.random() * 2),
+      })
+    : null;
+  const highSkillExtraFound = highSkillOutcome?.triggered && !isTutorialForagingSuccess
+    ? Math.min(highSkillOutcome.extraAmount ?? 0, Math.max(0, resource.amount - found))
+    : 0;
+  const totalFound = found + highSkillExtraFound;
+  const nextAmount = isTutorialForagingSuccess ? resource.amount : resource.amount - totalFound;
   if (!isTutorialForagingSuccess) {
     await prisma.resourceNode.updateMany({ where: { id: resource.id }, data: { amount: nextAmount } });
   }
@@ -827,14 +842,14 @@ async function completeGather(bot: Bot, action: WorldAction) {
     const statFieldMap = { berries: "berriesGathered", mushrooms: "mushroomsGathered", herbs: "herbsGathered" } as const;
     await prisma.playerResource.upsert({
       where: { playerId_resourceTypeId: { playerId: (actor as any).id, resourceTypeId: resource.resourceTypeId } },
-      update: { amount: { increment: found } },
-      create: { playerId: (actor as any).id, resourceTypeId: resource.resourceTypeId, amount: found },
+      update: { amount: { increment: totalFound } },
+      create: { playerId: (actor as any).id, resourceTypeId: resource.resourceTypeId, amount: totalFound },
     });
     await prisma.player.updateMany({
       where: { id: (actor as any).id },
       data: {
         successfulGathers: { increment: 1 },
-        ...(resourceKey in statFieldMap ? { [statFieldMap[resourceKey as keyof typeof statFieldMap]]: { increment: found } } : {}),
+        ...(resourceKey in statFieldMap ? { [statFieldMap[resourceKey as keyof typeof statFieldMap]]: { increment: totalFound } } : {}),
       },
     });
     const firstTutorialGather = isTutorialForagingSuccess
@@ -846,7 +861,7 @@ async function completeGather(bot: Bot, action: WorldAction) {
     if (chatId) {
       await bot.api.sendMessage(
         chatId,
-        `Ви витратили час і снагу на пошуки${durationText} і знайшли: ${resourceAmountText(resource.resourceType.name, found)}.`,
+        `Ви витратили час і снагу на пошуки${durationText} і знайшли: ${resourceAmountText(resource.resourceType.name, totalFound)}.${highSkillOutcome?.triggered ? `\n\n${highSkillOutcome.text}` : ""}`,
         isTutorialForagingSuccess
           ? { reply_markup: await buildMainReplyKeyboardForTelegramId(Number((actor as any).telegramId), false) }
           : replyOptionsAfterStaminaSpend(staminaSpend),
@@ -867,7 +882,7 @@ async function completeGather(bot: Bot, action: WorldAction) {
   await setActionStatus(action, "DONE");
   await recordGatheringAttemptSource(true);
   await sendGatheringPracticeMessage();
-  if (isPlayer) await logEvent("GATHER", "Queued gather succeeded", `${resource.resourceType.name} ×${found}`, locationId);
+  if (isPlayer) await logEvent("GATHER", "Queued gather succeeded", `${resource.resourceType.name} ×${totalFound}`, locationId);
 
   if (!isTutorialForagingSuccess && resource.amount > 0 && nextAmount <= 0) await summonLisovykIfResourceDepleted(bot, resource.resourceType.name, resource.location.regionId);
 }
@@ -1167,8 +1182,11 @@ async function completeFreshen(bot: Bot, action: WorldAction) {
   }
   const staminaSpend = await spendPlayerStamina(bot, player.id, "FRESHEN", chatId);
   let meat: Awaited<ReturnType<typeof freshenCorpseForMeat>>;
+  let fresheningSkillLevel = 0;
   try {
+    // High-skill outcome text later uses this pre-practice level, before this freshening source is recorded.
     const skillEffect = await fresheningSkillEffectForPlayer(player.id, creature.species.key);
+    fresheningSkillLevel = skillEffect.level;
     meat = await freshenCorpseForMeat({
       playerId: player.id,
       creatureId: creature.id,
@@ -1192,8 +1210,15 @@ async function completeFreshen(bot: Bot, action: WorldAction) {
   });
   if (chatId) {
     await hideCompletedFreshenSourceMessage(bot, action, chatId);
+    const highSkillOutcome = meat.succeeded
+      ? maybeHighSkillQualitativeOutcome({
+          kind: "freshening",
+          level: fresheningSkillLevel,
+          textIndex: Math.floor(Math.random() * 2),
+        })
+      : null;
     const resultText = meat.succeeded
-      ? `🔪 Ви освіжували ${target.forms.accusative} ${weapon.forms.instrumental} й отримали ${resourceAmountText(meat.resourceName, meat.amount)}.`
+      ? `🔪 Ви освіжували ${target.forms.accusative} ${weapon.forms.instrumental} й отримали ${resourceAmountText(meat.resourceName, meat.amount)}.${highSkillOutcome?.triggered ? `\n\n${highSkillOutcome.text}` : ""}`
       : `🔪 Ви освіжували ${target.forms.accusative} ${weapon.forms.instrumental}, але придатне м'ясо не вдалося зняти. Лишилися тільки рвані рештки.`;
     await bot.api.sendMessage(chatId, resultText, replyOptionsAfterStaminaSpend(staminaSpend));
     if (learning.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, FRESHENING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" }));

@@ -1881,7 +1881,7 @@
   {
     "id": "LEARN-006",
     "title": "High-skill quality and rare finds",
-    "status": "backlog",
+    "status": "in_testing",
     "type": "feature",
     "area": "learning",
     "priority": "medium",
