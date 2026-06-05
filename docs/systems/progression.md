@@ -108,10 +108,28 @@ recent clear follow-route memory there. Hidden water-word route memory does not
 count, and this still does not add auto-follow, route replay or a public skill
 modifier.
 
+`0.15.38` makes freshening the next bounded skill-effect slice after gathering.
+Personal freshening practice already used canonical progress; observing a recent
+freshening source now writes canonical `freshening` / `observation` /
+`freshening` progress too. Stored freshening progress can slightly improve the
+ordinary player freshening success chance, with a small cap so failure remains
+possible. Meat yield, corpse lifetime, attack effects and public `/skills` UI
+remain deferred.
+
 Observed actor skill remains future work. A later slice should add a small helper
 such as `observedActorSkillLevel(...)` that can read player learning progress or
 return profession/species profile defaults for herbalists, hunters and animals
 without introducing a broad NPC skill table.
+
+After the freshening learning/effect slice, the intended near-term order is:
+
+- `0.15.39`: cooking observation/effect parity, following the same bounded food
+  learning shape as freshening;
+- `0.15.40`: a small observed-actor skill helper so observation can compare
+  player progress with profession/species defaults without a broad NPC skill
+  table;
+- `0.15.41`: attack practice/observation canonical learning storage only, with
+  no attack success/damage effects and no full combat expansion.
 
 Future observation, tracking, apprenticeship and practice slices should use this service instead of inventing separate progress storage.
 

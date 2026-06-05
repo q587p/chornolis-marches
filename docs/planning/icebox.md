@@ -7,9 +7,11 @@ It is not a trash bin and not a promise. It is cold storage for ideas that need 
 ## Keep Cold During 0.13–0.15
 
 - Full combat system.
+- Arena or training yard for post-combat sparring, combat observation learning, and possible later tournaments/titles.
 - Full crafting trees.
 - Full economy with regional prices.
 - Caravans and regional trade networks.
+- Horses and mounted travel after the world has distant zones where walking is intentionally slow.
 - Factions, kurins, Sich-like groups and frontier politics.
 - PvP bounty and witness system.
 - Dynamic settlement law.

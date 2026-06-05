@@ -52,13 +52,18 @@ Do not open another broad content loop before the learning/observation foundatio
 
 ## Immediate Sequence
 
-1. **TRACK-LEARN-002:** review live route-memory, follow-step and `0.15.37` track-gated passage cadence before teaching broader explicit track reading.
-2. **LEARN-002 follow-up:** extend bounded skill effects only after reviewing the `0.15.23` gathering tuning, `0.15.26` herbalist observation route and `0.15.30` followed-movement memory in live play.
-3. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
-4. **SOC-003:** only after follow intent feels useful, decide whether any explicit group/travel acceptance layer is worth promoting.
+1. **0.15.38 / LEARN-002:** freshening learning and skill tuning is in testing: canonical freshening observation progress plus a small bounded success effect, with meat yield and combat deferred.
+2. **0.15.39 / LEARN-003:** cooking observation/effect parity after freshening proves the shared food-learning shape.
+3. **0.15.40 / LEARN-004:** add a small `observedActorSkillLevel(...)`-style helper for player/NPC/profession skill difference in observation learning.
+4. **0.15.41 / LEARN-005:** bridge attack practice/observation into canonical learning storage only, with no attack effects and no full combat expansion.
+5. **TRACK-LEARN-002:** review live route-memory, follow-step and `0.15.37` track-gated passage cadence before teaching broader explicit track reading.
+6. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
+7. **SOC-003:** only after follow intent feels useful, decide whether any explicit group/travel acceptance layer is worth promoting.
 
 Near-term content candidates after that foundation:
 
+- `MAP-005`: regional active curiosities for swamp, riverbank, forest and meadow, with small interactions and different consequences instead of only prose variation.
+- `RET-001`: daily/weekly world tasks as optional return rhythm, not login streak punishment or a raw quest treadmill.
 - `FISH-002`: riverbank fisher tiny slice.
 - `RAVEN-001`: dream-raven presence near the carrion ravine.
 

@@ -34,6 +34,11 @@ The preferred answer is: better skill can improve success chance, reduce stamina
   gathering progress can slightly improve matching success chance and reduce
   stamina cost, with caps and a hard stamina floor. This item remains open for
   attack, freshening, cooking, tracking and broader tuning.
+- `0.15.38` implements the first freshening slice: personal practice and
+  observation can both contribute canonical `freshening` progress, and ordinary
+  player freshening can receive a small bounded success-chance improvement.
+  Meat yield, corpse decay, attack effects and public `/skills` UI remain
+  deferred.
 - Define small, bounded skill-effect rules for the first few repeated actions:
   - attack / hunting or combat;
   - freshening / butchering;
@@ -65,7 +70,7 @@ The preferred answer is: better skill can improve success chance, reduce stamina
 These are starting points, not final balance:
 
 - **Attack / Hunting:** skill improves hit chance or reduces miss frequency before it reduces damage costs.
-- **Freshening / Butchering:** skill improves useful meat yield and reduces failed freshening waste; stamina cost may fall by a small amount.
+- **Freshening / Butchering:** the first implemented effect improves success chance only. Later slices may consider softer failure consequences or stamina tuning, but meat yield should not increase until the food economy is ready.
 - **Gathering / Herbalism:** skill improves chance to find something useful and can slightly reduce stamina spent on failed searches.
 - **Cooking:** skill improves the chance that raw meat becomes cooked meat instead of being wasted.
 - **Observation / Attention:** skill can make `/examine` reveal danger, tracks, hidden hints or useful context more reliably before it reduces stamina cost.

@@ -626,6 +626,26 @@
     "file": "docs/planning/items/COMBAT-001-creature-aggression-and-defense.md"
   },
   {
+    "id": "COMBAT-002",
+    "title": "Training arena and combat observation",
+    "status": "icebox",
+    "type": "feature",
+    "area": "combat",
+    "priority": "low",
+    "tags": [
+      "combat",
+      "learning",
+      "observation",
+      "social"
+    ],
+    "depends_on": [
+      "COMBAT-001",
+      "WPN-ICE-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/COMBAT-002-training-arena-and-observation.md"
+  },
+  {
     "id": "CRAFT-001",
     "title": "Craftable placeable chests",
     "status": "backlog",
@@ -1802,6 +1822,63 @@
     "file": "docs/planning/items/LEARN-002-skill-effects-cost-success-and-quality.md"
   },
   {
+    "id": "LEARN-003",
+    "title": "Cooking observation and effect parity",
+    "status": "next",
+    "type": "feature",
+    "area": "learning",
+    "priority": "high",
+    "tags": [
+      "learning",
+      "cooking",
+      "food",
+      "observation"
+    ],
+    "depends_on": [
+      "LEARN-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/LEARN-003-cooking-observation-effect-parity.md"
+  },
+  {
+    "id": "LEARN-004",
+    "title": "Observed actor skill level helper",
+    "status": "next",
+    "type": "technical",
+    "area": "learning",
+    "priority": "high",
+    "tags": [
+      "learning",
+      "observation",
+      "npc",
+      "actors"
+    ],
+    "depends_on": [
+      "LEARN-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/LEARN-004-observed-actor-skill-level-helper.md"
+  },
+  {
+    "id": "LEARN-005",
+    "title": "Attack canonical learning bridge",
+    "status": "next",
+    "type": "feature",
+    "area": "learning",
+    "priority": "medium",
+    "tags": [
+      "learning",
+      "attack",
+      "observation",
+      "combat"
+    ],
+    "depends_on": [
+      "LEARN-004"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/LEARN-005-attack-canonical-bridge.md"
+  },
+  {
     "id": "LOOP-001-A",
     "title": "Starter look/examine output audit",
     "status": "next",
@@ -2029,6 +2106,27 @@
     ],
     "exports": {},
     "file": "docs/planning/items/MAP-004-skill-and-attention-gated-locations.md"
+  },
+  {
+    "id": "MAP-005",
+    "title": "Regional active curiosities",
+    "status": "backlog",
+    "type": "feature",
+    "area": "world",
+    "priority": "high",
+    "tags": [
+      "map",
+      "features",
+      "interactions",
+      "swamp",
+      "riverbank",
+      "forest"
+    ],
+    "depends_on": [
+      "MAP-004"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/MAP-005-regional-active-curiosities.md"
   },
   {
     "id": "MAP-WILLOW-001",
@@ -2939,6 +3037,26 @@
     "file": "docs/planning/items/ONB-010-newcomer-kit.md"
   },
   {
+    "id": "ONB-011",
+    "title": "Post-tutorial dream guided questlets",
+    "status": "backlog",
+    "type": "feature",
+    "area": "onboarding",
+    "priority": "medium",
+    "tags": [
+      "onboarding",
+      "quests",
+      "beginner",
+      "tutorial"
+    ],
+    "depends_on": [
+      "ONB-001",
+      "ONB-004"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ONB-011-post-dream-guided-questlets.md"
+  },
+  {
     "id": "OWL-002",
     "title": "Nocturnal owl tuning and indirect signs",
     "status": "testing",
@@ -3282,6 +3400,27 @@
     ],
     "exports": {},
     "file": "docs/planning/items/REL-001-release-branch-pr-summary-risk.md"
+  },
+  {
+    "id": "RET-001",
+    "title": "Daily and weekly world tasks",
+    "status": "backlog",
+    "type": "feature",
+    "area": "retention",
+    "priority": "medium",
+    "tags": [
+      "retention",
+      "quests",
+      "daily",
+      "weekly",
+      "world-time"
+    ],
+    "depends_on": [
+      "ONB-011",
+      "PROG-004"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/RET-001-daily-weekly-world-tasks.md"
   },
   {
     "id": "RIVER-001",
@@ -4125,6 +4264,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/TRACK-LEARN-001-C.md"
+  },
+  {
+    "id": "TRAVEL-001",
+    "title": "Horses and mounted travel",
+    "status": "icebox",
+    "type": "feature",
+    "area": "travel",
+    "priority": "low",
+    "tags": [
+      "travel",
+      "mounts",
+      "animals",
+      "distance"
+    ],
+    "depends_on": [
+      "NAV-001",
+      "SOC-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/TRAVEL-001-horses-and-mounted-travel.md"
   },
   {
     "id": "UX-001",

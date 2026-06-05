@@ -1,7 +1,12 @@
 const assert = require("node:assert/strict");
 
+process.env.DATABASE_URL ||= "postgresql://user:pass@localhost:5432/chornolis_test";
+
 require("ts-node/register");
 
+const {
+  foodObservationLearningProgressInput,
+} = require("../../src/services/foodLearning");
 const {
   COOKING_OBSERVATION_GROWTH_MESSAGE,
   COOKING_PRACTICE_GROWTH_MESSAGE,
@@ -51,5 +56,23 @@ assert.equal(fresheningSourceDescription({ actorCreatureId: 9 }), "actorCreature
 assert.equal(cookingSourceDescription({ actorPlayerId: 7, success: true }), "actorPlayer=7; success=true");
 assert.equal(cookingSourceDescription({ actorCreatureId: 9, success: false }), "actorCreature=9; success=false");
 assert.equal(foodObservationDescription(42), "source=42");
+
+assert.deepEqual(
+  foodObservationLearningProgressInput({
+    playerId: 7,
+    sourceEventId: 42,
+    skillKey: "freshening",
+    contextKey: "freshening",
+  }),
+  {
+    playerId: 7,
+    skillKey: "freshening",
+    sourceKey: "observation",
+    contextKey: "freshening",
+    amount: 1,
+    lastSourceEventId: 42,
+  },
+);
+assert.equal(foodObservationLearningProgressInput({ playerId: 7, sourceEventId: 42 }), null);
 
 console.log("Food learning helpers OK");

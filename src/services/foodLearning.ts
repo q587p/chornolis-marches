@@ -92,6 +92,8 @@ async function recordFoodObservation(input: {
   observationTitle: string;
   milestoneTitle: string;
   milestoneCheck: (count: number) => boolean;
+  learningSkillKey?: string;
+  learningContextKey?: string;
 }) {
   const now = input.now ?? new Date();
   const since = new Date(now.getTime() - FOOD_OBSERVATION_WINDOW_MS);
@@ -120,7 +122,7 @@ async function recordFoodObservation(input: {
     });
     if (existing) return { observed: false, milestone: false, observationCount: 0 };
 
-    await prisma.worldEvent.create({
+    const observation = await prisma.worldEvent.create({
       data: {
         type: "SYSTEM",
         title: input.observationTitle,
@@ -128,7 +130,22 @@ async function recordFoodObservation(input: {
         playerId: input.playerId,
         locationId: input.locationId,
       },
+      select: { id: true },
     });
+
+    const learningInput = foodObservationLearningProgressInput({
+      playerId: input.playerId,
+      sourceEventId: source.id ?? observation.id,
+      skillKey: input.learningSkillKey,
+      contextKey: input.learningContextKey,
+    });
+    if (learningInput) {
+      try {
+        await recordLearningProgress(learningInput);
+      } catch (error) {
+        console.warn("Failed to write canonical food observation learning progress:", error);
+      }
+    }
 
     const observationCount = await prisma.worldEvent.count({
       where: {
@@ -196,7 +213,26 @@ export function recordFresheningObservation(input: { playerId: number; locationI
     observationTitle: FRESHENING_OBSERVATION_EVENT_TITLE,
     milestoneTitle: FRESHENING_OBSERVATION_MILESTONE_EVENT_TITLE,
     milestoneCheck: isFresheningObservationMilestone,
+    learningSkillKey: "freshening",
+    learningContextKey: "freshening",
   });
+}
+
+export function foodObservationLearningProgressInput(input: {
+  playerId: number;
+  sourceEventId: number;
+  skillKey?: string;
+  contextKey?: string;
+}) {
+  if (!input.skillKey) return null;
+  return {
+    playerId: input.playerId,
+    skillKey: input.skillKey,
+    sourceKey: "observation",
+    contextKey: input.contextKey ?? input.skillKey,
+    amount: 1,
+    lastSourceEventId: input.sourceEventId,
+  };
 }
 
 export function recordCookingObservation(input: { playerId: number; locationId: number; now?: Date }) {
