@@ -56,10 +56,11 @@ Do not open another broad content loop before the learning/observation foundatio
 2. **0.15.39 / LEARN-003:** cooking observation/effect parity is in testing: canonical cooking observation progress plus a small bounded success effect, with recipes, food quality and economy deferred.
 3. **0.15.40 / LEARN-004:** actor learning foundation is in testing: creature learning storage, conservative observed-actor defaults and qualitative/technical learning summaries.
 4. **0.15.41 / LEARN-004 follow-up:** NPC observation learning MVP is in testing: eligible local characters can learn from nearby supported non-combat gathering source events without a broad scheduler or combat effects.
-5. **0.15.42 / LEARN-005:** bridge attack practice/observation into canonical learning storage only, with no attack effects and no full combat expansion.
-6. **TRACK-LEARN-002:** review live route-memory, follow-step and `0.15.37` track-gated passage cadence before teaching broader explicit track reading.
-7. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
-8. **SOC-003:** only after follow intent feels useful, decide whether any explicit group/travel acceptance layer is worth promoting.
+5. **0.15.42 / LEARN-005:** attack practice/observation canonical learning bridge is in testing: storage only, with no attack effects and no full combat expansion.
+6. **0.15.43 candidate:** stabilize actor/attack learning surfaces, review live `Навички:` noise, or move `observedActorSkillLevel(...)` defaults into a small data/config map before adding stronger skill effects.
+7. **TRACK-LEARN-002:** review live route-memory, follow-step and `0.15.37` track-gated passage cadence before teaching broader explicit track reading.
+8. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
+9. **SOC-003:** only after follow intent feels useful, decide whether any explicit group/travel acceptance layer is worth promoting.
 
 Watch the new actor-learning surfaces before widening them: `0.15.41` proves
 one NPC observation bridge, but freshening/cooking observation should remain a

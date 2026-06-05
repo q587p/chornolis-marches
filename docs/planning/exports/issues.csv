@@ -94,7 +94,7 @@ LEARN-001-D,Raw progress technical-only,testing,ux,learning,high,"learning,techn
 LEARN-002,"Skill effects on stamina, success and quality",in_progress,feature,learning,high,"learning,skills,stamina,success,balance",docs/planning/items/LEARN-002-skill-effects-cost-success-and-quality.md
 LEARN-003,Cooking observation and effect parity,in_testing,feature,learning,high,"learning,cooking,food,observation",docs/planning/items/LEARN-003-cooking-observation-effect-parity.md
 LEARN-004,Observed actor skill level helper,in_testing,technical,learning,high,"learning,observation,npc,actors",docs/planning/items/LEARN-004-observed-actor-skill-level-helper.md
-LEARN-005,Attack canonical learning bridge,next,feature,learning,medium,"learning,attack,observation,combat",docs/planning/items/LEARN-005-attack-canonical-bridge.md
+LEARN-005,Attack canonical learning bridge,in_testing,feature,learning,medium,"learning,attack,observation,combat",docs/planning/items/LEARN-005-attack-canonical-bridge.md
 LEARN-006,High-skill quality and rare finds,backlog,feature,learning,medium,"learning,quality,rare-finds,freshening,gathering",docs/planning/items/LEARN-006-high-skill-quality-and-rare-finds.md
 LOOP-001-A,Starter look/examine output audit,next,design,core-loop,medium,"look,examine,starter",docs/planning/items/LOOP-001-A.md
 LOOP-001-B,Starter camp prose polish,next,content,core-loop,medium,"prose,starter,look",docs/planning/items/LOOP-001-B.md

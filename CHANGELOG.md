@@ -7,6 +7,28 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.42 - Attack canonical learning bridge - 12026-06-05
+
+### Added
+
+- Added canonical `attack` / `practice` / `attack` learning progress for eligible player and creature attack completion paths.
+- Added canonical `attack` / `observation` / `attack` learning progress for the existing player attack observation surface.
+- Added a narrow hunter-only creature attack observation bridge through existing creature `LOOK` completion.
+- Added canonical attack practice/observation `WorldEvent` markers while preserving the older kill-observation milestone flavor.
+- Added focused tests for player and creature attack practice rows, player observation rows, hunter observation eligibility, duplicate-source dedupe and the no-combat-modifier boundary.
+
+### Changed
+
+- Existing attack hit/miss/damage, stamina, weapons, predator AI and PvP boundaries are unchanged.
+- Technical learning surfaces can now show `skillKey=attack` rows once practice or observation records exist.
+- LEARN-005 is now in testing as a storage bridge only; attack effects remain future combat-design work.
+
+### Risks
+
+- Attack observation dedupe still relies on `WorldEvent` markers and source-event retention.
+- Creature attack observation is deliberately conservative: hunter-like local characters can learn, while herbalists and ordinary animals do not.
+- Canonical attack practice records misses, wounds and kills as learning attempts; live tuning may later decide whether all outcomes should have the same amount.
+
 ## 0.15.41 - NPC observation learning MVP - 12026-06-05
 
 ### Added

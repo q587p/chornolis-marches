@@ -1862,7 +1862,7 @@
   {
     "id": "LEARN-005",
     "title": "Attack canonical learning bridge",
-    "status": "next",
+    "status": "in_testing",
     "type": "feature",
     "area": "learning",
     "priority": "medium",

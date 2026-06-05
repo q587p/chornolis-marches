@@ -146,10 +146,19 @@ can learn from this narrow nearby work, while ordinary animals do not become
 broad gatherers, cooks or fresheners. Dedupe uses explicit `WorldEvent` markers
 so one creature/source event does not grant repeated progress.
 
+`0.15.42` moves the old attack-learning bridge onto canonical storage. Eligible
+player and creature attack attempts can now write `attack` / `practice` /
+`attack` rows, and witnessed attack sources can write `attack` / `observation` /
+`attack` rows through the existing observation surfaces. Hunter-like local
+characters can also learn from attack observation through their existing `LOOK`
+completion path. This is storage only: hit chance, damage, weapons, predator AI,
+PvP boundaries and combat pacing do not change.
+
 After the actor-learning foundation, the intended near-term order is:
 
-- `0.15.42`: attack practice/observation canonical learning storage only, with
-  no attack success/damage effects and no full combat expansion.
+- `0.15.43`: stabilize actor/attack learning surfaces and decide whether the next
+  step should be training/arena planning, actor-default config cleanup or another
+  non-combat observation bridge. Do not jump straight to attack modifiers.
 - Later high-skill slices may add occasional qualitative outcomes, such as a
   fine cut of meat, a special medicinal herb or a tiny incidental `шаг` find,
   but those belong behind bounded rare-result rules rather than the first

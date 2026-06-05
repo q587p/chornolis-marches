@@ -44,7 +44,7 @@ import { nearbySpeechDirectionIntro, nearbySpeechRecipients } from "./speechRang
 import { hunterClaimedCorpseAction, hunterConversationReplyLine, hunterReactionDurationMs, hunterSocialReactionSignal, isHunterCreature } from "./npcHunter";
 import { isUnclaimedHerbivoreCorpseForScavenging, predatorClaimedCorpseAction, predatorClaimedCorpseFoodValue, predatorClaimedCorpseOwnerId, predatorPreyFoodValue } from "./predatorFeeding";
 import { predatorKillCurrentAction, predatorKillObserverText, predatorMissCurrentAction, predatorMissObserverText, predatorWoundCurrentAction, predatorWoundObserverText } from "./predatorActionText";
-import { ATTACK_OBSERVATION_GROWTH_MESSAGE, ATTACK_PRACTICE_GROWTH_MESSAGE, isAttackPracticeMilestone, recordAttackKillSource, recordAttackObservation } from "./attackLearning";
+import { ATTACK_OBSERVATION_GROWTH_MESSAGE, ATTACK_PRACTICE_GROWTH_MESSAGE, isAttackPracticeMilestone, recordAttackKillSource, recordAttackObservation, recordAttackPracticeLearning, recordCreatureAttackObservation } from "./attackLearning";
 import { GATHERING_OBSERVATION_GROWTH_MESSAGE, GATHERING_PRACTICE_GROWTH_MESSAGE, gatheringSkillEffectForPlayer, isGatheringPracticeMilestone, recordGatheringObservation, recordGatheringSource } from "./gatheringLearning";
 import { COOKING_OBSERVATION_GROWTH_MESSAGE, COOKING_PRACTICE_GROWTH_MESSAGE, FRESHENING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_PRACTICE_GROWTH_MESSAGE, recordCookingObservation, recordFresheningObservation, recordFresheningSource } from "./foodLearning";
 import { notifyPlayerObservers, playerRestStopObserverText } from "./playerVisibility";
@@ -1003,6 +1003,7 @@ async function completeLook(bot: Bot, action: WorldAction) {
       data: { looks: { increment: 1 }, activity: "LOOKING", currentAction: payload.reason?.trim() || "озирається" },
     });
     await maybeRecordCreatureObservationLearning({ creatureId: action.creatureId });
+    await recordCreatureAttackObservation({ creatureId: action.creatureId });
   }
   await setActionStatus(action, "DONE");
 }
@@ -1243,6 +1244,7 @@ async function completeCreatureAttack(bot: Bot, action: WorldAction) {
     });
     await notifyLocation(bot, attacker.locationId, -1, predatorMissObserverText(attacker.species.key, targetForms.accusative, target.species.name, attackerObserverLabel));
     await logEvent("NPC_ACTION", "Creature missed prey", `${attacker.id} -> ${target.id}; species=${target.species.key}`, attacker.locationId);
+    await recordAttackPracticeLearning({ locationId: attacker.locationId, attackerCreatureId: attacker.id, targetCreatureId: target.id, outcome: "miss" });
     await setActionStatus(action, "DONE");
     return;
   }
@@ -1283,11 +1285,13 @@ async function completeCreatureAttack(bot: Bot, action: WorldAction) {
       await logEvent("NPC_ACTION", "Creature killed prey", `${attacker.species.key} #${attacker.id} -> ${target.species.key} #${target.id}; food=${foodValue}`, attacker.locationId);
     }
     await recordAttackKillSource({ locationId: attacker.locationId, attackerCreatureId: attacker.id, victimCreatureId: target.id });
+    await recordAttackPracticeLearning({ locationId: attacker.locationId, attackerCreatureId: attacker.id, targetCreatureId: target.id, outcome: "kill" });
   } else {
     await prisma.creature.updateMany({ where: { id: target.id }, data: { hp: nextHp, currentAction: "поранено" } });
     await prisma.creature.updateMany({ where: { id: attacker.id }, data: { activity: "FIGHTING", currentAction: predatorWoundCurrentAction(attacker.species.key, targetForms.accusative, target.species.name), successfulAttacks: { increment: 1 } } });
     await notifyLocation(bot, attacker.locationId, -1, predatorWoundObserverText(attacker.species.key, targetForms.accusative, target.species.name, attackerObserverLabel));
     await logEvent("NPC_ACTION", "Creature attacked prey", `${attacker.id} -> ${target.id}; damage=${damage}`, attacker.locationId);
+    await recordAttackPracticeLearning({ locationId: attacker.locationId, attackerCreatureId: attacker.id, targetCreatureId: target.id, outcome: "wound" });
   }
 
   await setActionStatus(action, "DONE");
@@ -1330,6 +1334,7 @@ async function completeAttack(bot: Bot, action: WorldAction) {
     await notifyLocation(bot, player.currentLocationId, player.id, `${actorLabel} намагається затоптати ${target.forms.accusative}, але промахується.`);
     await setActionStatus(action, "DONE");
     await logEvent("PLAYER_ACTION", "Player missed animal", `${target.kind}:${target.id}; species=${creature.species.key}`, player.currentLocationId);
+    await recordAttackPracticeLearning({ locationId: player.currentLocationId, attackerPlayerId: player.id, targetCreatureId: creature.id, outcome: "miss" });
     if (chatId) {
       await bot.api.sendMessage(chatId, `⚔️ Ви кинулися на ${target.forms.accusative}, але ціль вислизнула. Якщо вона не втече, можна спробувати ще раз.`, {
         reply_markup: buildLookLocationKeyboard(),
@@ -1347,6 +1352,7 @@ async function completeAttack(bot: Bot, action: WorldAction) {
   await setActionStatus(action, "DONE");
   await logEvent("PLAYER_ACTION", "Player killed animal", `${target.kind}:${target.id}; weapon=${weapon?.key ?? "unarmed"}`, player.currentLocationId);
   await recordAttackKillSource({ locationId: player.currentLocationId, attackerPlayerId: player.id, victimCreatureId: creature.id });
+  await recordAttackPracticeLearning({ locationId: player.currentLocationId, attackerPlayerId: player.id, targetCreatureId: creature.id, outcome: "kill" });
   if (chatId) {
     const corpseTarget = await resolveTarget("creature", creature.id, player.currentLocationId);
     await bot.api.sendMessage(

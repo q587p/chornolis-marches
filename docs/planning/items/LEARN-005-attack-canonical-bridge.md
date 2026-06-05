@@ -1,7 +1,7 @@
 ---
 id: LEARN-005
 title: Attack canonical learning bridge
-status: next
+status: in_testing
 type: feature
 area: learning
 priority: medium
@@ -46,4 +46,11 @@ Preferred release target: `0.15.42`.
 
 ## Current Boundary
 
-After `0.15.41`, actor-aware learning helpers and the first non-combat creature observation bridge exist, but this item is still future work. Do not add attack success, damage, weapon or combat effects when implementing the canonical bridge.
+`0.15.42` implements this as a storage bridge:
+
+- eligible player and creature attack attempts can write canonical `attack` / `practice` / `attack` rows;
+- existing player attack observation can write canonical `attack` / `observation` / `attack` rows;
+- hunter-like local characters can learn from attack observation through the existing creature `LOOK` completion path;
+- old sparse kill-observation flavor remains in place.
+
+This still does not add attack success, damage, weapon or combat effects.
