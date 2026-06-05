@@ -20,7 +20,7 @@ depends_on:
 
 Move the existing attack practice/observation bridge onto canonical learning progress without adding attack skill effects or opening the full combat system.
 
-Preferred release target: `0.15.41`.
+Preferred release target: `0.15.42`.
 
 ## Scope
 
@@ -46,4 +46,4 @@ Preferred release target: `0.15.41`.
 
 ## Current Boundary
 
-After `0.15.40`, actor-aware learning helpers exist, but this item is still future work. Do not add attack success, damage, weapon or combat effects when implementing the canonical bridge.
+After `0.15.41`, actor-aware learning helpers and the first non-combat creature observation bridge exist, but this item is still future work. Do not add attack success, damage, weapon or combat effects when implementing the canonical bridge.
