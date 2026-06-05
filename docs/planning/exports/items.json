@@ -4232,7 +4232,7 @@
   {
     "id": "TRACK-LEARN-001-A",
     "title": "Track-examine progress hint",
-    "status": "next",
+    "status": "in_testing",
     "type": "feature",
     "area": "learning",
     "priority": "high",

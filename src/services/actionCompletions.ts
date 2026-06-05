@@ -64,6 +64,7 @@ import { contributeToBeginnerCache } from "./beginnerCache";
 import { isBeginnerCacheContributionPayload } from "./beginnerCacheQueue";
 import { maybeGrantGatherShahBonus } from "./smallLoot";
 import { normalizeTrackQuery, trackMatchesQuery } from "./trackSearch";
+import { recordTrackingPractice, roughTrackAgeText, trackingDarkPresenceText, trackingSkillEffectForPlayer } from "./trackingLearning";
 import { tryCompleteCellarWaterWordPassage } from "./cellarWaterPassage";
 import {
   followedTrackDisplayLabel,
@@ -1695,7 +1696,15 @@ async function completeTrack(bot: Bot, action: WorldAction) {
   const now = new Date();
   await prisma.worldTrack.deleteMany({ where: { expiresAt: { lt: now } } });
   await spendPlayerStamina(bot, player.id, "TRACK", chatId);
+  // Track-reading quality uses previous experience; this search records practice for future reads.
+  const trackingSkillEffect = await trackingSkillEffectForPlayer(player.id);
+  await recordTrackingPractice({
+    playerId: player.id,
+    locationId: player.currentLocationId,
+    detail,
+  });
   const visibility = await visibilityRulesForLocation(player.currentLocationId, "details");
+  const trackDisplayLimit = trackingSkillEffect.maxTrackResults;
 
   const allTracks = await prisma.worldTrack.findMany({
     where: {
@@ -1707,17 +1716,20 @@ async function completeTrack(bot: Bot, action: WorldAction) {
       creature: { include: { species: true } },
     },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    take: normalizedTargetQuery ? 40 : 8,
+    take: normalizedTargetQuery ? 40 : trackDisplayLimit,
   });
   const followIntent = normalizedTargetQuery ? null : await getPlayerFollowIntent(player.id);
   const orderedTracks = normalizedTargetQuery ? allTracks : prioritizeFollowIntentTracks(allTracks, followIntent);
-  const tracks = normalizedTargetQuery ? orderedTracks.filter((track) => trackMatchesQuery(track, normalizedTargetQuery)).slice(0, 8) : orderedTracks;
+  const tracks = normalizedTargetQuery ? orderedTracks.filter((track) => trackMatchesQuery(track, normalizedTargetQuery)).slice(0, trackDisplayLimit) : orderedTracks;
 
   await setActionStatus(action, "DONE");
 
   if (!chatId) return;
   if (allTracks.length && !visibility.showTracks) {
-    await bot.api.sendMessage(chatId, `👣 ${visibilityPresenceText(visibility, "tracks")}`);
+    await bot.api.sendMessage(chatId, `👣 ${trackingDarkPresenceText({
+      visibilityText: visibilityPresenceText(visibility, "tracks"),
+      canReadWeakTrackHint: trackingSkillEffect.canReadWeakTrackHint,
+    })}`);
     return;
   }
 
@@ -1748,7 +1760,11 @@ async function completeTrack(bot: Bot, action: WorldAction) {
     const direction = track.fromLocationId === player.currentLocationId
       ? `${trackVerb(label, "left")} на ${directionLabels[track.direction].toLowerCase()}`
       : `${trackVerb(label, "arrived")} ${FROM_DIRECTION_LABELS[track.direction] ?? "звідкись"}`;
-    const age = detail ? ` — ${trackAgeText(track.createdAt, now)}` : "";
+    const age = detail
+      ? ` — ${trackAgeText(track.createdAt, now)}`
+      : trackingSkillEffect.canShowRoughAgeInBrief
+        ? ` — ${roughTrackAgeText(track.createdAt, now)}`
+        : "";
     return `- ${label} ${direction}${age}`;
   });
 

@@ -13,6 +13,7 @@ import {
   FOLLOW_ROUTE_STEP_MEMORY_TTL_MS,
   latestFollowRouteMemoryForPlayer,
 } from "./followRouteMemory";
+import { recordTrackingPractice, TRACKING_PRACTICE_CONTEXT_TRACK_GATE } from "./trackingLearning";
 
 export const TRACK_GATE_FEATURE_KEY = "meadow_16_05_animal_run";
 export const TRACK_GATE_SOURCE_KEY = "meadow_16_05";
@@ -277,6 +278,11 @@ export async function enterTrackGatedPassage(bot: Bot, input: {
     return true;
   });
   if (!moved) return { ok: false as const, text: "Слід на мить є, але ваш крок не знаходить його знову." };
+  await recordTrackingPractice({
+    playerId: player.id,
+    locationId: sourceLocationId,
+    contextKey: TRACKING_PRACTICE_CONTEXT_TRACK_GATE,
+  });
 
   await notifyLocationExcept(
     bot,

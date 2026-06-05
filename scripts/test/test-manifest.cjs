@@ -16,6 +16,7 @@ module.exports = [
   nodeTest("scripts/test/target-formatting.cjs"),
   nodeTest("scripts/test/text-targets.cjs"),
   nodeTest("scripts/test/track-search.cjs"),
+  nodeTest("scripts/test/tracking-learning.cjs"),
   nodeTest("scripts/test/world-time.cjs"),
   nodeTest("scripts/test/chronicles.cjs"),
   nodeTest("scripts/test/gate-hunting-loop.cjs"),
