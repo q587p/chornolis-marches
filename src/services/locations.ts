@@ -67,6 +67,7 @@ import {
   attentionRootGapDarkInspectionText,
   attentionRootGapDarkOutline,
   attentionRootGapRevealText,
+  canPlayerRevealAttentionRootGap,
   isAttentionRootGapFeature,
 } from "./attentionGatedLocation";
 
@@ -1215,7 +1216,9 @@ export async function renderLocationFeatureInteraction(
   if (!player || !feature || !feature.isActive || player.currentLocationId !== feature.locationId || !isInteractiveFeature(feature)) return null;
 
   const visibility = await visibilityRulesForLocation(feature.locationId, detailMode === "brief" ? "brief" : "details");
-  const showFeatureDetails = canShowFeatureDetails(visibility);
+  const showFeatureDetails = isAttentionRootGapFeature(feature)
+    ? await canPlayerRevealAttentionRootGap(viewerPlayerId, feature.locationId)
+    : canShowFeatureDetails(visibility);
 
   if (detailMode === "brief") {
     const showTechnicalDetails = await playerShowsTechnicalDetails(viewerPlayerId);

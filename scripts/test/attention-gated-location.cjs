@@ -12,11 +12,16 @@ const {
   attentionRootGapDarkOutline,
   attentionRootGapEventDescription,
   attentionRootGapRevealText,
+  attentionRootGapUseDecision,
+  canRevealAttentionRootGap,
 } = require("../../src/services/attentionGatedLocation");
+const { worldTimeSnapshotFromAbsoluteMinute } = require("../../src/data/worldClock");
+const { lightSnapshotFromWorldTime } = require("../../src/services/lightSnapshot");
 const {
   darkFeatureInspectionText,
   featureBriefInspectionText,
 } = require("../../src/services/locations");
+const { visibilityRulesFromLight } = require("../../src/services/visibility");
 const { parseAlias } = require("../../src/input/aliases");
 
 const locations = JSON.parse(fs.readFileSync("prisma/data/world/locations.json", "utf8"));
@@ -84,6 +89,54 @@ assert.match(attentionRootGapRevealText(), /вузьку суху щілину/i
 assert.match(attentionRootGapRevealText(), /пролізти обережно/i);
 assert.match(featureBriefInspectionText(rootGap), /зі світлом/i);
 
+const darkWorldTime = worldTimeSnapshotFromAbsoluteMinute(23 * 60, "clear", 0);
+const darkVisibility = visibilityRulesFromLight(lightSnapshotFromWorldTime(darkWorldTime), "details");
+assert.equal(canRevealAttentionRootGap(darkVisibility), false, "Darkness without local or carried light should not reveal the root gap");
+assert.equal(
+  canRevealAttentionRootGap(darkVisibility, { playerHasLitTorch: true }),
+  true,
+  "A player-carried active lit torch should be enough to reveal the root gap",
+);
+assert.equal(
+  canRevealAttentionRootGap(visibilityRulesFromLight(lightSnapshotFromWorldTime(darkWorldTime, { hasLocalLight: true }), "details")),
+  true,
+  "Existing local light should still reveal the root gap",
+);
+assert.deepEqual(
+  attentionRootGapUseDecision({
+    playerLocationId: 101,
+    playerLocationKey: ATTENTION_ROOT_GAP_SOURCE_KEY,
+    feature: {
+      id: 202,
+      key: ATTENTION_ROOT_GAP_FEATURE_KEY,
+      locationId: 101,
+      isActive: true,
+      data: { attention_gate: "root_gap_light" },
+    },
+    visibility: darkVisibility,
+    playerHasLitTorch: true,
+  }),
+  { ok: true, featureId: 202 },
+  "A player in the cellar with an active carried lit torch should pass the root gap use decision",
+);
+assert.deepEqual(
+  attentionRootGapUseDecision({
+    playerLocationId: 101,
+    playerLocationKey: ATTENTION_ROOT_GAP_SOURCE_KEY,
+    feature: {
+      id: 202,
+      key: ATTENTION_ROOT_GAP_FEATURE_KEY,
+      locationId: 101,
+      isActive: true,
+      data: { attention_gate: "root_gap_light" },
+    },
+    visibility: darkVisibility,
+    playerHasLitTorch: false,
+  }),
+  { ok: false, reason: "dark", featureId: 202 },
+  "The same cellar/root gap decision should fail clearly in darkness without carried or local light",
+);
+
 for (const input of ["/crawl", "crawl", "пролізти", "пролізти в щілину", "лізти в щілину"]) {
   const parsed = parseAlias(input);
   assert.equal(parsed?.kind, "crawl-root-gap", `Expected crawl-root-gap alias for ${input}`);
@@ -98,5 +151,17 @@ assert.match(eventDescription, new RegExp(`feature=${ATTENTION_ROOT_GAP_FEATURE_
 
 const news = fs.readFileSync("news.md", "utf8");
 assert.doesNotMatch(news, /start_cellar_root_pocket/i, "Public news should not expose the raw hidden location key");
+
+const locationsServiceSource = fs.readFileSync("src/services/locations.ts", "utf8");
+assert.match(
+  locationsServiceSource,
+  /canPlayerRevealAttentionRootGap/,
+  "Feature interaction rendering should import the player-aware root-gap reveal helper",
+);
+assert.match(
+  locationsServiceSource,
+  /isAttentionRootGapFeature\(feature\)[\s\S]{0,160}canPlayerRevealAttentionRootGap\(viewerPlayerId, feature\.locationId\)/,
+  "Direct root-gap feature inspection should use player-aware carried-light reveal before showing the dark fallback",
+);
 
 console.log("Attention-gated location helpers OK");
