@@ -7,6 +7,28 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.40 - Actor learning foundation - 12026-06-05
+
+### Added
+
+- Added persistent `CreatureLearningProgress` storage alongside existing player `CharacterLearningProgress`.
+- Added actor-aware learning helpers for player/creature refs, qualitative summaries, raw technical rows and conservative observed actor skill defaults.
+- Added canonical creature learning for supported non-combat gathering practice on herbs, berries and mushrooms.
+- Added compact qualitative learning summaries to ordinary `/me` and visible target inspection, plus raw learning rows in technical details.
+- Extended the scribe/admin `/learning` command with `creature #id` lookup.
+
+### Changed
+
+- Existing player learning helpers and player learning rows remain compatible.
+- Player gathering, freshening and cooking skill effects are unchanged.
+- Updated progression and planning docs so attack canonical learning remains a storage bridge future slice, not a combat-effects slice.
+
+### Risks
+
+- Creature learning starts as a separate table to avoid risky player-table migration; future broad actor learning may revisit the storage shape.
+- Profession/species defaults are conservative observed-skill estimates, not a full NPC skill tree.
+- The first creature bridge covers supported gathering practice only; creature observation, attack learning and broad NPC learning remain future work.
+
 ## 0.15.39 - Cooking learning and skill tuning - 12026-06-05
 
 ### Added

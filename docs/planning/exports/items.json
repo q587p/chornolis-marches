@@ -1843,7 +1843,7 @@
   {
     "id": "LEARN-004",
     "title": "Observed actor skill level helper",
-    "status": "next",
+    "status": "in_testing",
     "type": "technical",
     "area": "learning",
     "priority": "high",

@@ -10,9 +10,16 @@ const {
   LEARNING_LEVEL_THRESHOLDS,
   applyLearningProgress,
   getLearningProgress,
+  actorLearningInput,
+  formatLearningSummary,
+  formatLearningTechnicalRows,
+  learningQualitativeLevelLabel,
   learningLevelForTotalProgress,
   learningLevelLabel,
+  observedActorSkillLevel,
+  observedCreatureDefaultLearningRows,
   normalizeLearningAmount,
+  recordActorLearningProgress,
   recordLearningProgress,
 } = require("../../src/services/learning");
 
@@ -36,6 +43,43 @@ assert.equal(learningLevelForTotalProgress(999), 5);
 assert.equal(learningLevelLabel(0), "unfamiliar");
 assert.equal(learningLevelLabel(5), "masterful");
 assert.equal(learningLevelLabel(99), "masterful");
+assert.equal(learningQualitativeLevelLabel(0), "ледве знайоме");
+assert.equal(learningQualitativeLevelLabel(3), "уміле");
+assert.equal(learningQualitativeLevelLabel(99), "майстерне");
+assert.deepEqual(actorLearningInput({ actorType: "PLAYER", playerId: 7 }, { skillKey: "tracking", amount: 1 }), {
+  skillKey: "tracking",
+  amount: 1,
+  playerId: 7,
+});
+assert.deepEqual(actorLearningInput({ actorType: "CREATURE", creatureId: 9 }, { skillKey: "gathering", amount: 1 }), {
+  skillKey: "gathering",
+  amount: 1,
+  creatureId: 9,
+});
+assert.equal(
+  formatLearningSummary([
+    { skillKey: "gathering", sourceKey: "practice", contextKey: "resource:herbs", level: 3, progress: 1, totalProgress: 18, milestoneCount: 0 },
+    { skillKey: "cooking", sourceKey: "observation", contextKey: "cooking", level: 2, progress: 1, totalProgress: 8, milestoneCount: 0 },
+  ]),
+  "Навички: збирання — уміле; готування — призвичаєне.",
+);
+assert.equal(formatLearningSummary([]), "");
+const technicalRows = formatLearningTechnicalRows({ actorType: "CREATURE", creatureId: 9 }, [
+  {
+    skillKey: "gathering",
+    sourceKey: "practice",
+    contextKey: "resource:herbs",
+    level: 3,
+    progress: 4,
+    totalProgress: 18,
+    milestoneCount: 1,
+    lastSourceEventId: 42,
+    updatedAt: new Date("2026-06-05T09:00:00Z"),
+  },
+]);
+assert.equal(technicalRows[0].includes("actor=creature:9"), true);
+assert.equal(technicalRows[0].includes("totalProgress=18"), true);
+assert.equal(technicalRows[0].includes("sourceKey=practice"), true);
 
 assert.deepEqual(
   applyLearningProgress({ level: 0, progress: 12, totalProgress: 12, milestoneCount: 0 }, { amount: 1, milestoneEvery: 13 }),
@@ -60,8 +104,18 @@ assert.equal(
 function fakeLearningDb() {
   let nextId = 1;
   const rows = [];
+  const creatureRows = [];
+  const creatures = new Map([
+    [9, {
+      id: 9,
+      professionKey: "herbalist",
+      professionName: "знахар",
+      species: { key: "human", diet: "OMNIVORE", kind: "HUMANOID" },
+    }],
+  ]);
   return {
     rows,
+    creatureRows,
     characterLearningProgress: {
       findUnique: async ({ where }) => {
         if (where.id) return rows.find((row) => row.id === where.id) ?? null;
@@ -73,6 +127,7 @@ function fakeLearningDb() {
           row.contextKey === key.contextKey
         ) ?? null;
       },
+      findMany: async ({ where }) => rows.filter((row) => row.playerId === where.playerId),
       create: async ({ data }) => {
         const row = {
           id: nextId++,
@@ -90,6 +145,39 @@ function fakeLearningDb() {
         Object.assign(row, data, { updatedAt: new Date("2026-06-03T09:01:00Z") });
         return row;
       },
+    },
+    creatureLearningProgress: {
+      findUnique: async ({ where }) => {
+        if (where.id) return creatureRows.find((row) => row.id === where.id) ?? null;
+        const key = where.creatureId_skillKey_sourceKey_contextKey;
+        return creatureRows.find((row) =>
+          row.creatureId === key.creatureId &&
+          row.skillKey === key.skillKey &&
+          row.sourceKey === key.sourceKey &&
+          row.contextKey === key.contextKey
+        ) ?? null;
+      },
+      findMany: async ({ where }) => creatureRows.filter((row) => row.creatureId === where.creatureId),
+      create: async ({ data }) => {
+        const row = {
+          id: nextId++,
+          ...data,
+          discoveredAt: new Date("2026-06-03T09:00:00Z"),
+          createdAt: new Date("2026-06-03T09:00:00Z"),
+          updatedAt: new Date("2026-06-03T09:00:00Z"),
+        };
+        creatureRows.push(row);
+        return row;
+      },
+      update: async ({ where, data }) => {
+        const row = creatureRows.find((entry) => entry.id === where.id);
+        assert.ok(row, "fake creature row exists for update");
+        Object.assign(row, data, { updatedAt: new Date("2026-06-03T09:01:00Z") });
+        return row;
+      },
+    },
+    creature: {
+      findUnique: async ({ where }) => creatures.get(where.id) ?? null,
     },
   };
 }
@@ -123,6 +211,32 @@ function fakeLearningDb() {
   const loaded = await getLearningProgress({ playerId: 7, skillKey: "tracking", sourceKey: "observation", contextKey: "tracks" }, db);
   assert.equal(loaded.totalProgress, 8);
   assert.equal(loaded.level, 2);
+
+  const creatureFirst = await recordActorLearningProgress(
+    { actorType: "CREATURE", creatureId: 9 },
+    { skillKey: "gathering", sourceKey: "practice", contextKey: "resource:herbs", amount: 8 },
+    db,
+  );
+  assert.equal(creatureFirst.created, true);
+  assert.equal(creatureFirst.creatureId, 9);
+  assert.equal(creatureFirst.level, 2);
+  assert.equal(db.creatureRows.length, 1);
+
+  const creatureSecond = await recordActorLearningProgress(
+    { actorType: "CREATURE", creatureId: 9 },
+    { skillKey: "gathering", sourceKey: "practice", contextKey: "resource:herbs", amount: 10 },
+    db,
+  );
+  assert.equal(creatureSecond.created, false);
+  assert.equal(creatureSecond.level, 3);
+  assert.equal(db.creatureRows[0].totalProgress, 18);
+  assert.equal(await observedActorSkillLevel({ actorType: "CREATURE", creatureId: 9 }, "gathering", db), 3);
+  assert.equal(await observedActorSkillLevel({ actorType: "CREATURE", creatureId: 9 }, "cooking", db), 1);
+  assert.equal(await observedActorSkillLevel({ actorType: "PLAYER", playerId: 7 }, "tracking", db), 2);
+  assert.equal(observedCreatureDefaultLearningRows({
+    professionKey: "hunter",
+    species: { key: "human", diet: "OMNIVORE", kind: "HUMANOID" },
+  }).some((row) => row.skillKey === "tracking" && row.level === 3), true);
 
   console.log("Learning progress helpers OK");
 })().catch((error) => {

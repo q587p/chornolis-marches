@@ -54,7 +54,7 @@ Do not open another broad content loop before the learning/observation foundatio
 
 1. **0.15.38 / LEARN-002:** freshening learning and skill tuning is in testing: canonical freshening observation progress plus a small bounded success effect, with meat yield and combat deferred.
 2. **0.15.39 / LEARN-003:** cooking observation/effect parity is in testing: canonical cooking observation progress plus a small bounded success effect, with recipes, food quality and economy deferred.
-3. **0.15.40 / LEARN-004:** add a small `observedActorSkillLevel(...)`-style helper for player/NPC/profession skill difference in observation learning.
+3. **0.15.40 / LEARN-004:** actor learning foundation is in testing: creature learning storage, conservative observed-actor defaults and qualitative/technical learning summaries.
 4. **0.15.41 / LEARN-005:** bridge attack practice/observation into canonical learning storage only, with no attack effects and no full combat expansion.
 5. **TRACK-LEARN-002:** review live route-memory, follow-step and `0.15.37` track-gated passage cadence before teaching broader explicit track reading.
 6. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
