@@ -215,7 +215,7 @@ THEFT-000,Risky theft and hiding epic,backlog,epic,social,medium,"theft,hiding,s
 THEFT-001,Risky theft MVP,backlog,feature,social,medium,"theft,social-memory,inventory,action-queue,0.15",docs/planning/items/THEFT-001-risky-theft-mvp.md
 THEFT-002,World-controlled thief character,backlog,feature,npc,low,"theft,npc,autonomy,social-memory,future",docs/planning/items/THEFT-002-world-controlled-thief-character.md
 THEFT-003,Strange and spirit theft MVP,backlog,feature,spirits,low,"theft,spirits,omen,hidden-presence,future",docs/planning/items/THEFT-003-spirit-theft-mvp.md
-TRACK-LEARN-001-A,Track-examine progress hint,next,feature,learning,high,"tracking,tracks,progression",docs/planning/items/TRACK-LEARN-001-A.md
+TRACK-LEARN-001-A,Track-examine progress hint,in_testing,feature,learning,high,"tracking,tracks,progression",docs/planning/items/TRACK-LEARN-001-A.md
 TRACK-LEARN-001-B,Animal movement observation,next,feature,learning,medium,"tracking,animals,observe",docs/planning/items/TRACK-LEARN-001-B.md
 TRACK-LEARN-001-C,Learning respects visibility and light,next,feature,learning,high,"learning,visibility,light",docs/planning/items/TRACK-LEARN-001-C.md
 TRAVEL-001,Horses and mounted travel,icebox,feature,travel,low,"travel,mounts,animals,distance",docs/planning/items/TRAVEL-001-horses-and-mounted-travel.md

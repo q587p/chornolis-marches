@@ -154,11 +154,23 @@ characters can also learn from attack observation through their existing `LOOK`
 completion path. This is storage only: hit chance, damage, weapons, predator AI,
 PvP boundaries and combat pacing do not change.
 
+`0.15.43` makes `/track` itself a canonical tracking practice path. Executed
+track searches can now write `tracking` / `practice` / `track_search` progress,
+and detailed track inspection writes `tracking` / `practice` / `track_detail`.
+Successfully using the small track-gated grass-run passage can also record a
+tiny `tracking` / `practice` / `track_gate` row. Stored tracking progress now
+has the first bounded output-quality effects: rough age labels in brief track
+results, a small capped result-count increase and a higher-skill darkness hint
+that says track signs exist without revealing direction or identity. This still
+does not add auto-follow, route replay, hidden water-word repetition, tracking
+through darkness or a public `/skills` sheet.
+
 After the actor-learning foundation, the intended near-term order is:
 
-- `0.15.43`: stabilize actor/attack learning surfaces and decide whether the next
-  step should be training/arena planning, actor-default config cleanup or another
-  non-combat observation bridge. Do not jump straight to attack modifiers.
+- `0.15.44`: stabilize the actor/tracking learning surfaces and decide whether
+  the next step should be training/arena planning, actor-default config cleanup
+  or another non-combat observation bridge. Do not jump straight to attack
+  modifiers.
 - Later high-skill slices may add occasional qualitative outcomes, such as a
   fine cut of meat, a special medicinal herb or a tiny incidental `шаг` find,
   but those belong behind bounded rare-result rules rather than the first

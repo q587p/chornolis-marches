@@ -7,6 +7,26 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.43 - Tracking practice and track-reading quality - 12026-06-05
+
+### Added
+
+- Added canonical `tracking` / `practice` learning progress for executed player `/track` actions, including detailed track inspection.
+- Added a small `Tracking practice` source marker so tracking practice can be tied to a local action event.
+- Added a tiny `tracking` / `practice` / `track_gate` row when a player successfully uses the track-gated grass-run passage.
+- Added focused tests for tracking practice input, storage, bounded reading effects, rough age labels and darkness-safe track hints.
+
+### Changed
+
+- Stored tracking progress can now improve track-reading output quality in small bounded ways: rough age labels in brief results, a slightly larger result cap at higher skill, and a better dark-presence hint without revealing direction.
+- `/track` still spends stamina, respects visibility, preserves follow-intent prioritization and does not add automatic movement or hidden-route replay.
+
+### Risks
+
+- Tracking practice is intentionally broad: executed searches can teach even when no track is found, because the player still spent stamina reading terrain noise.
+- The new quality effects are output-only and capped, but live play should decide whether rough age labels make brief `/track` too busy.
+- High tracking can sense that tracks exist in darkness, but it still does not reveal direction or identity without light.
+
 ## 0.15.42 - Attack canonical learning bridge - 12026-06-05
 
 ### Added

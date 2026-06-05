@@ -48,6 +48,11 @@ fresh tracks or clear follow-route memory can reveal `Пройти за слід
 (`/follow_trace`) through a tiny grass-run passage. Treat this as a track-aware
 micro-place, not auto-follow, route replay or a loot/content loop.
 
+`0.15.43` makes explicit `Сліди` (`/track`) practice canonical and adds the
+first bounded track-reading quality effects. Treat this as output polish for
+reading traces, not auto-follow, route replay, hidden-route repetition or a
+public skill sheet.
+
 Do not open another broad content loop before the learning/observation foundation is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
 ## Immediate Sequence
@@ -57,10 +62,11 @@ Do not open another broad content loop before the learning/observation foundatio
 3. **0.15.40 / LEARN-004:** actor learning foundation is in testing: creature learning storage, conservative observed-actor defaults and qualitative/technical learning summaries.
 4. **0.15.41 / LEARN-004 follow-up:** NPC observation learning MVP is in testing: eligible local characters can learn from nearby supported non-combat gathering source events without a broad scheduler or combat effects.
 5. **0.15.42 / LEARN-005:** attack practice/observation canonical learning bridge is in testing: storage only, with no attack effects and no full combat expansion.
-6. **0.15.43 candidate:** stabilize actor/attack learning surfaces, review live `Навички:` noise, or move `observedActorSkillLevel(...)` defaults into a small data/config map before adding stronger skill effects.
-7. **TRACK-LEARN-002:** review live route-memory, follow-step and `0.15.37` track-gated passage cadence before teaching broader explicit track reading.
-8. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
-9. **SOC-003:** only after follow intent feels useful, decide whether any explicit group/travel acceptance layer is worth promoting.
+6. **0.15.43 / TRACK-LEARN-001-A:** tracking practice and track-reading quality is in testing: executed `/track` can teach, higher tracking can improve track output, and darkness still hides direction.
+7. **0.15.44 candidate:** stabilize actor/attack/tracking learning surfaces, review live `Навички:` and `/track` output noise, or move `observedActorSkillLevel(...)` defaults into a small data/config map before adding stronger skill effects.
+8. **TRACK-LEARN-002:** review live route-memory, follow-step and `0.15.37` track-gated passage cadence before teaching broader explicit track reading.
+9. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
+10. **SOC-003:** only after follow intent feels useful, decide whether any explicit group/travel acceptance layer is worth promoting.
 
 Watch the new actor-learning surfaces before widening them: `0.15.41` proves
 one NPC observation bridge, but freshening/cooking observation should remain a
