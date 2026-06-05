@@ -73,6 +73,22 @@ assert.deepEqual(
     lastSourceEventId: 42,
   },
 );
+assert.deepEqual(
+  foodObservationLearningProgressInput({
+    playerId: 7,
+    sourceEventId: 43,
+    skillKey: "cooking",
+    contextKey: "cooking",
+  }),
+  {
+    playerId: 7,
+    skillKey: "cooking",
+    sourceKey: "observation",
+    contextKey: "cooking",
+    amount: 1,
+    lastSourceEventId: 43,
+  },
+);
 assert.equal(foodObservationLearningProgressInput({ playerId: 7, sourceEventId: 42 }), null);
 
 console.log("Food learning helpers OK");

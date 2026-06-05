@@ -1824,7 +1824,7 @@
   {
     "id": "LEARN-003",
     "title": "Cooking observation and effect parity",
-    "status": "next",
+    "status": "in_testing",
     "type": "feature",
     "area": "learning",
     "priority": "high",

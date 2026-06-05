@@ -10,6 +10,9 @@ const FRESHENED_CORPSE_MARKER = "freshened_by_player:";
 const FRESHENED_CORPSE_PATTERN = /(?:^|;\s*)freshened_by_(?:player|hunter):\d+\b/;
 const COOKED_MEAT_HUNGER_RELIEF = 5;
 const COOKING_SUCCESS_CHANCE = 0.6;
+const COOKING_SKILL_BONUS_PER_LEVEL = 0.03;
+const COOKING_SKILL_BONUS_CAP = 0.15;
+const COOKING_SUCCESS_CHANCE_CAP = 0.9;
 const DEFAULT_FRESHENING_SUCCESS_CHANCE = 0.5;
 const FRESHENING_SKILL_BONUS_PER_LEVEL = 0.03;
 const FRESHENING_SKILL_BONUS_CAP = 0.15;
@@ -63,18 +66,45 @@ export async function fresheningSkillEffectForPlayer(playerId: number, _speciesK
   return fresheningSkillEffectForProgressRows(rows);
 }
 
+export function cookingSkillEffectForProgressRows(rows: Array<{ totalProgress: number }>) {
+  const totalProgress = rows.reduce((sum, row) => {
+    const value = Number.isFinite(row.totalProgress) ? Math.floor(row.totalProgress) : 0;
+    return sum + Math.max(0, value);
+  }, 0);
+  const level = learningLevelForTotalProgress(totalProgress);
+  const bonus = Math.min(COOKING_SKILL_BONUS_CAP, level * COOKING_SKILL_BONUS_PER_LEVEL);
+  return { totalProgress, level, bonus };
+}
+
+export async function cookingSkillEffectForPlayer(playerId: number) {
+  const rows = await prisma.characterLearningProgress.findMany({
+    where: {
+      playerId,
+      skillKey: "cooking",
+      contextKey: "cooking",
+    },
+    select: { totalProgress: true },
+  });
+  return cookingSkillEffectForProgressRows(rows);
+}
+
 export function adjustedFresheningSuccessChance(speciesKey: string, successChanceBonus = 0) {
   const baseChance = fresheningSuccessChanceForSpecies(speciesKey);
   const bonus = Math.min(FRESHENING_SKILL_BONUS_CAP, Math.max(0, clampChance(successChanceBonus)));
   return Math.min(FRESHENING_SUCCESS_CHANCE_CAP, baseChance + bonus);
 }
 
+export function adjustedCookingSuccessChance(successChanceBonus = 0) {
+  const bonus = Math.min(COOKING_SKILL_BONUS_CAP, Math.max(0, clampChance(successChanceBonus)));
+  return Math.min(COOKING_SUCCESS_CHANCE_CAP, COOKING_SUCCESS_CHANCE + bonus);
+}
+
 export function isFreshenedCorpse(currentAction: string | null | undefined) {
   return FRESHENED_CORPSE_PATTERN.test(currentAction ?? "");
 }
 
-export function meatCookingSucceeds(roll = Math.random()) {
-  return roll < COOKING_SUCCESS_CHANCE;
+export function meatCookingSucceeds(roll = Math.random(), successChanceBonus = 0) {
+  return roll < adjustedCookingSuccessChance(successChanceBonus);
 }
 
 export function fresheningSucceeds(speciesKey: string, roll = Math.random(), successChanceBonus = 0) {
@@ -204,7 +234,8 @@ export async function cookRawMeat(playerId: number) {
   if (!(await canCookMeatAtLocation(player.currentLocationId))) {
     throw new Error("Потрібне вогнище поруч. Самого факела замало, щоб підсмажити м'ясо.");
   }
-  const cookedSuccessfully = meatCookingSucceeds();
+  const skillEffect = await cookingSkillEffectForPlayer(playerId);
+  const cookedSuccessfully = meatCookingSucceeds(Math.random(), skillEffect.bonus);
   let rawMeatRemaining = 0;
 
   await prisma.$transaction(async (tx) => {

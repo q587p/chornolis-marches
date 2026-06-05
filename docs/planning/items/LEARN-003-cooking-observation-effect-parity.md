@@ -1,7 +1,7 @@
 ---
 id: LEARN-003
 title: Cooking observation and effect parity
-status: next
+status: in_testing
 type: feature
 area: learning
 priority: high
@@ -44,3 +44,16 @@ Preferred release target: `0.15.39`.
 - Cooking observation records canonical progress once per observed source.
 - Higher cooking progress can slightly improve success chance but cannot guarantee success.
 - Player-facing text stays qualitative and does not expose formulas.
+
+## Implementation Notes
+
+`0.15.39` implements the MVP parity slice:
+
+- cooking observation writes canonical `cooking` / `observation` / `cooking` progress;
+- stored cooking progress adds a small capped success-chance bonus for ordinary player cooking;
+- raw meat cost, cooked meat yield, hunger relief, recipes, food quality and public skill UI remain unchanged.
+
+Watchpoints:
+
+- observation dedupe still depends on existing WorldEvent source markers and retention;
+- the first aggregation policy uses all canonical rows with `skillKey=cooking` and `contextKey=cooking`; if future cooking contexts split by recipe, station or food type, this helper should get a more explicit policy.
