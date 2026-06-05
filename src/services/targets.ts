@@ -293,10 +293,21 @@ export async function resolveTarget(type: string, id: number, locationId: number
     const weaponText = heldWeaponLine(target.equippedWeaponKey);
     const actorLearningRows = isCorpse ? [] : await learningRowsForActor({ actorType: "CREATURE", creatureId: target.id });
     const defaultLearningRows = isCorpse ? [] : observedCreatureDefaultLearningRows(target);
-    const learningSummary = formatLearningSummary([...actorLearningRows, ...defaultLearningRows], { limit: 3 });
+    const learningSummary = formatLearningSummary(actorLearningRows, { limit: 2, minLevel: 2 });
     const learningText = learningSummary ? `\n${learningSummary}` : "";
+    const technicalLearningRows = [
+      "Stored rows:",
+      ...formatLearningTechnicalRows({ actorType: "CREATURE", creatureId: target.id }, actorLearningRows),
+      ...(defaultLearningRows.length
+        ? [
+          "",
+          "Profile defaults:",
+          ...formatLearningTechnicalRows({ actorType: "CREATURE", creatureId: target.id }, defaultLearningRows),
+        ]
+        : []),
+    ];
     const technicalLearningText = showTechnicalDetails
-      ? `\n\nНавчання:\n${formatLearningTechnicalRows({ actorType: "CREATURE", creatureId: target.id }, [...actorLearningRows, ...defaultLearningRows]).join("\n")}`
+      ? `\n\nНавчання:\n${technicalLearningRows.join("\n")}`
       : "";
 
     if (isCorpse) {

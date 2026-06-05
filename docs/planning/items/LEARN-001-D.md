@@ -1,7 +1,7 @@
 ---
 id: LEARN-001-D
 title: Raw progress technical-only
-status: testing
+status: done
 type: ux
 area: learning
 priority: high
@@ -39,3 +39,18 @@ Do after: `LEARN-001-C`.
 No broad `/skills` UI was added. Ordinary players still see only diegetic
 learning messages from existing narrow moments; raw progress rows are reserved
 for future technical/scribe surfaces if needed.
+
+## Closure
+
+Done in `0.15.21`, with later surface hardening in `0.15.40` and `0.15.44`.
+
+Validation:
+
+- `node scripts/test/learning.cjs`
+- `node scripts/test/admin-learning-summary.cjs`
+- `npm test`
+- `npm run build`
+
+Boundary: raw progress remains technical-only. This does not close future polish
+around how much qualitative `Навички:` text ordinary target inspection should
+show in live play.

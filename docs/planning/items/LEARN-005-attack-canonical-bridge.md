@@ -1,7 +1,7 @@
 ---
 id: LEARN-005
 title: Attack canonical learning bridge
-status: in_testing
+status: done
 type: feature
 area: learning
 priority: medium
@@ -54,3 +54,20 @@ Preferred release target: `0.15.42`.
 - old sparse kill-observation flavor remains in place.
 
 This still does not add attack success, damage, weapon or combat effects.
+
+## Closure
+
+Done in `0.15.42` / PR `#141`.
+
+Validation:
+
+- `node scripts/test/attack-learning.cjs`
+- `node scripts/test/learning.cjs`
+- `node scripts/test/npc-hunter.cjs`
+- `node scripts/test/target-formatting.cjs`
+- `npm test`
+- `npm run build`
+
+Boundary: this closes canonical attack learning storage only. Attack chance,
+damage, weapon effects, arena/training-yard runtime and full combat redesign
+remain future work.

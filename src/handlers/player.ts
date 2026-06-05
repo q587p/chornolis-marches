@@ -336,7 +336,7 @@ async function renderCharacterView(telegramId: number) {
   const hungerText = showTechnicalDetails ? `Голод: ${Math.min(PLAYER_HUNGER_MAX, Math.max(0, player.hunger))}/${PLAYER_HUNGER_MAX}` : formatHungerState(player.hunger, PLAYER_HUNGER_MAX);
   const originStats = showTechnicalDetails ? await actionOriginStats(player.id) : null;
   const learningRows = await learningRowsForActor({ actorType: "PLAYER", playerId: player.id });
-  const learningSummary = formatLearningSummary(learningRows);
+  const learningSummary = formatLearningSummary(learningRows, { limit: 5 });
   const learningText = learningSummary ? `\n${learningSummary}` : "";
   const learningTechnicalText = showTechnicalDetails
     ? `\n\nНавчання:\n${formatLearningTechnicalRows({ actorType: "PLAYER", playerId: player.id }, learningRows).join("\n")}`

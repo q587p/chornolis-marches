@@ -64,6 +64,21 @@ assert.equal(
   "Навички: збирання — уміле; готування — призвичаєне.",
 );
 assert.equal(formatLearningSummary([]), "");
+const ordinarySummary = formatLearningSummary([
+  { skillKey: "tracking", sourceKey: "practice", contextKey: "track_search", level: 4, progress: 2, totalProgress: 35, milestoneCount: 0, playerId: 7 },
+  { skillKey: "attack", sourceKey: "observation", contextKey: "attack", level: 3, progress: 1, totalProgress: 18, milestoneCount: 0, lastSourceEventId: 99 },
+  { skillKey: "freshening", sourceKey: "practice", contextKey: "freshening", level: 2, progress: 1, totalProgress: 8, milestoneCount: 0 },
+], { limit: 2 });
+assert.equal(ordinarySummary.startsWith("Навички:"), true);
+assert.equal((ordinarySummary.match(/;/g) ?? []).length, 1, "ordinary summary respects display limit");
+assert.equal(/skillKey|sourceKey|contextKey|totalProgress|player:|creature:|lastSourceEventId|35|18|99/.test(ordinarySummary), false);
+const targetStyleSummary = formatLearningSummary([
+  { skillKey: "tracking", sourceKey: "profile", contextKey: "default", level: 1, progress: 0, totalProgress: 0, milestoneCount: 0 },
+  { skillKey: "gathering", sourceKey: "practice", contextKey: "resource:herbs", level: 2, progress: 1, totalProgress: 8, milestoneCount: 0 },
+], { limit: 3, minLevel: 2 });
+assert.equal(targetStyleSummary.includes("атака"), false);
+assert.equal(targetStyleSummary.includes("сліди"), false);
+assert.equal(targetStyleSummary.includes("збирання"), true);
 const technicalRows = formatLearningTechnicalRows({ actorType: "CREATURE", creatureId: 9 }, [
   {
     skillKey: "gathering",
@@ -80,6 +95,7 @@ const technicalRows = formatLearningTechnicalRows({ actorType: "CREATURE", creat
 assert.equal(technicalRows[0].includes("actor=creature:9"), true);
 assert.equal(technicalRows[0].includes("totalProgress=18"), true);
 assert.equal(technicalRows[0].includes("sourceKey=practice"), true);
+assert.deepEqual(formatLearningTechnicalRows({ actorType: "PLAYER", playerId: 7 }, []), ["Learning rows: none."]);
 
 assert.deepEqual(
   applyLearningProgress({ level: 0, progress: 12, totalProgress: 12, milestoneCount: 0 }, { amount: 1, milestoneEvery: 13 }),

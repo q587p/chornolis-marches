@@ -1,7 +1,7 @@
 ---
 id: LEARN-001-A
 title: Minimal learning storage decision
-status: testing
+status: done
 type: design
 area: learning
 priority: high
@@ -39,3 +39,17 @@ Can be done independently.
 Decision: use a minimal persistent `CharacterLearningProgress` table rather than
 event-only storage. It records player, skill key, source key and context key
 without defining the final skill tree or public skill sheet.
+
+## Closure
+
+Done in `0.15.21`.
+
+Validation:
+
+- `node scripts/test/learning.cjs`
+- `node scripts/test/gathering-learning.cjs`
+- `npm test`
+- `npm run build`
+
+Boundary: this closes only the minimal storage decision. It did not add a broad
+skill sheet, final skill taxonomy or public raw-progress UI.

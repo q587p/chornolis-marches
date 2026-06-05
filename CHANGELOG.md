@@ -7,6 +7,27 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.44 - Learning surfaces and planning cleanup - 12026-06-06
+
+### Changed
+
+- Tightened ordinary learning summaries so `/me` stays qualitative and target inspection shows only a small number of meaningful stored skills instead of profile defaults.
+- Split target technical learning details into stored rows and profile defaults so scribe/debug views can distinguish raw progress from fallback estimates.
+- Made admin `/learning` output consistent for players and creatures when no rows exist.
+- Documented the learning-effect ordering policy: current action effects should use previous stored experience, then record practice for future attempts.
+- Closed clearly completed learning planning items: LEARN-001-A/B/C/D, LEARN-003, LEARN-004 and LEARN-005.
+
+### Tests
+
+- Added learning formatter coverage for ordinary summary limits, raw-key hiding, target-style minimum levels and empty technical rows.
+- Regenerated planning exports after the LEARN item status cleanup.
+
+### Risks
+
+- Target inspection may now show fewer `Навички:` lines for local characters until they have stored progress that reaches a visible threshold.
+- Profile defaults are still regex-style conservative estimates; future cleanup can move them into a small data/config map.
+- The planning cleanup intentionally avoids broad testing-bucket cleanup; only clearly completed learning items were moved to `done`.
+
 ## 0.15.43 - Tracking practice and track-reading quality - 12026-06-05
 
 ### Added

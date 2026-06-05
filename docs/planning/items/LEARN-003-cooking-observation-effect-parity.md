@@ -1,7 +1,7 @@
 ---
 id: LEARN-003
 title: Cooking observation and effect parity
-status: in_testing
+status: done
 type: feature
 area: learning
 priority: high
@@ -57,3 +57,19 @@ Watchpoints:
 
 - observation dedupe still depends on existing WorldEvent source markers and retention;
 - the first aggregation policy uses all canonical rows with `skillKey=cooking` and `contextKey=cooking`; if future cooking contexts split by recipe, station or food type, this helper should get a more explicit policy.
+
+## Closure
+
+Done in `0.15.39` / PR `#138`.
+
+Validation:
+
+- `node scripts/test/food-learning.cjs`
+- `node scripts/test/meat.cjs`
+- `node scripts/test/learning.cjs`
+- `npm test`
+- `npm run build`
+
+Boundary: this closes cooking observation/effect parity only. Recipes, stations,
+food quality, extra yield, economy hooks and public `/skills` remain separate
+future work.
