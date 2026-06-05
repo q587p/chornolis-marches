@@ -116,15 +116,20 @@ ordinary player freshening success chance, with a small cap so failure remains
 possible. Meat yield, corpse lifetime, attack effects and public `/skills` UI
 remain deferred.
 
+`0.15.39` gives cooking the same bounded food-learning shape. Personal cooking
+practice remains canonical, and observing a recent cooking source now writes
+canonical `cooking` / `observation` / `cooking` progress. Stored cooking
+progress can slightly improve the ordinary player cooking success chance, while
+raw meat cost, cooked meat yield, hunger relief, recipes, food quality, stations,
+economy hooks and public `/skills` UI remain deferred.
+
 Observed actor skill remains future work. A later slice should add a small helper
 such as `observedActorSkillLevel(...)` that can read player learning progress or
 return profession/species profile defaults for herbalists, hunters and animals
 without introducing a broad NPC skill table.
 
-After the freshening learning/effect slice, the intended near-term order is:
+After the cooking learning/effect slice, the intended near-term order is:
 
-- `0.15.39`: cooking observation/effect parity, following the same bounded food
-  learning shape as freshening;
 - `0.15.40`: a small observed-actor skill helper so observation can compare
   player progress with profession/species defaults without a broad NPC skill
   table;

@@ -7,6 +7,26 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.39 - Cooking learning and skill tuning - 12026-06-05
+
+### Added
+
+- Added canonical `cooking` / `observation` learning progress when players observe a recent cooking source, while preserving the existing sparse observation milestone cadence.
+- Added a small bounded cooking success-chance effect from stored canonical cooking progress.
+- Added focused helper coverage for cooking observation learning input, cooking skill-effect aggregation, success caps and unchanged base behavior.
+
+### Changed
+
+- Player cooking now applies the bounded success-chance bonus only through the ordinary player cooking path.
+- Raw meat cost, cooked meat yield, hunger relief, recipes, stations and public skill UI remain unchanged.
+- Updated progression and near-term planning docs so observed actor skill comparison and attack canonical learning remain separate future slices.
+
+### Risks
+
+- Cooking learning aggregation is intentionally simple: practice and observation rows with `skillKey=cooking` and `contextKey=cooking` contribute together.
+- The bonus is deliberately small and capped; live tuning may still adjust the exact point-per-level values after cooking cadence is observed.
+- Observation dedupe still relies on existing food-observation WorldEvent source markers and retention.
+
 ## 0.15.38 - Freshening learning and skill tuning - 12026-06-05
 
 ### Added

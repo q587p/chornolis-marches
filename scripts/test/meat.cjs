@@ -3,10 +3,13 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const {
+  adjustedCookingSuccessChance,
   adjustedFresheningSuccessChance,
+  cookingSkillEffectForProgressRows,
   fresheningSkillEffectForProgressRows,
   fresheningSuccessChanceForSpecies,
   fresheningSucceeds,
+  meatCookingSucceeds,
   meatYieldForSpecies,
 } = require("../../src/services/meat");
 const { resourceAmountText } = require("../../src/utils/resourceText");
@@ -66,6 +69,29 @@ assert.equal(fresheningSucceeds("fox", 0.39), true);
 assert.equal(fresheningSucceeds("fox", 0.4), false);
 assert.equal(fresheningSucceeds("wolf", 0.39), true);
 assert.equal(fresheningSucceeds("wolf", 0.4), false);
+
+assert.equal(adjustedCookingSuccessChance(0), 0.6);
+assertApprox(adjustedCookingSuccessChance(0.06), 0.66);
+assert.equal(adjustedCookingSuccessChance(0.15), 0.75);
+assert.equal(adjustedCookingSuccessChance(99), 0.75);
+assert.equal(cookingSkillEffectForProgressRows([]).level, 0);
+assert.equal(cookingSkillEffectForProgressRows([]).bonus, 0);
+assert.deepEqual(cookingSkillEffectForProgressRows([{ totalProgress: 8 }]), {
+  totalProgress: 8,
+  level: 2,
+  bonus: 0.06,
+});
+assert.deepEqual(cookingSkillEffectForProgressRows([{ totalProgress: 60 }, { totalProgress: 20 }]), {
+  totalProgress: 80,
+  level: 5,
+  bonus: 0.15,
+});
+assert.equal(meatCookingSucceeds(0.59), true);
+assert.equal(meatCookingSucceeds(0.6), false);
+assert.equal(meatCookingSucceeds(0.65, 0.06), true);
+assert.equal(meatCookingSucceeds(0.66, 0.06), false);
+assert.equal(meatCookingSucceeds(0.74, 0.99), true);
+assert.equal(meatCookingSucceeds(0.75, 0.99), false);
 
 assert.equal(cookingResultReplyOptions({ rawMeatRemaining: 0 }), undefined);
 assert.equal(cookingResultReplyOptions({ rawMeatRemaining: null }), undefined);

@@ -242,5 +242,7 @@ export function recordCookingObservation(input: { playerId: number; locationId: 
     observationTitle: COOKING_OBSERVATION_EVENT_TITLE,
     milestoneTitle: COOKING_OBSERVATION_MILESTONE_EVENT_TITLE,
     milestoneCheck: isCookingObservationMilestone,
+    learningSkillKey: "cooking",
+    learningContextKey: "cooking",
   });
 }
