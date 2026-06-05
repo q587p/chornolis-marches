@@ -87,14 +87,14 @@ ITEM-001,Pickup versus gather command semantics,testing,bug,inventory,high,"alia
 ITEM-002,Queued pickup actions,backlog,feature,inventory,medium,"pickup,inventory,action-queue,stamina,ground-items",docs/planning/items/ITEM-002-queued-pickup-actions.md
 ITEM-003,Item weight and encumbrance,backlog,feature,inventory,medium,"inventory,items,stamina,movement,pickup,survival",docs/planning/items/ITEM-003-item-weight-and-encumbrance.md
 LANG-001,Lexicon and agreement audit,backlog,chore,content,high,"ukrainian,lexicon,grammar,text,optimization,corpses,resources",docs/planning/items/LANG-001-lexicon-and-agreement-audit.md
-LEARN-001-A,Minimal learning storage decision,testing,design,learning,high,"learning,progression,schema",docs/planning/items/LEARN-001-A.md
-LEARN-001-B,Minimal CharacterSkill model,testing,technical,learning,high,"learning,schema,skills",docs/planning/items/LEARN-001-B.md
-LEARN-001-C,grantSkillProgress helper,testing,feature,learning,high,"learning,service,progression",docs/planning/items/LEARN-001-C.md
-LEARN-001-D,Raw progress technical-only,testing,ux,learning,high,"learning,technical-details,ui",docs/planning/items/LEARN-001-D.md
+LEARN-001-A,Minimal learning storage decision,done,design,learning,high,"learning,progression,schema",docs/planning/items/LEARN-001-A.md
+LEARN-001-B,Minimal CharacterSkill model,done,technical,learning,high,"learning,schema,skills",docs/planning/items/LEARN-001-B.md
+LEARN-001-C,grantSkillProgress helper,done,feature,learning,high,"learning,service,progression",docs/planning/items/LEARN-001-C.md
+LEARN-001-D,Raw progress technical-only,done,ux,learning,high,"learning,technical-details,ui",docs/planning/items/LEARN-001-D.md
 LEARN-002,"Skill effects on stamina, success and quality",in_progress,feature,learning,high,"learning,skills,stamina,success,balance",docs/planning/items/LEARN-002-skill-effects-cost-success-and-quality.md
-LEARN-003,Cooking observation and effect parity,in_testing,feature,learning,high,"learning,cooking,food,observation",docs/planning/items/LEARN-003-cooking-observation-effect-parity.md
-LEARN-004,Observed actor skill level helper,in_testing,technical,learning,high,"learning,observation,npc,actors",docs/planning/items/LEARN-004-observed-actor-skill-level-helper.md
-LEARN-005,Attack canonical learning bridge,in_testing,feature,learning,medium,"learning,attack,observation,combat",docs/planning/items/LEARN-005-attack-canonical-bridge.md
+LEARN-003,Cooking observation and effect parity,done,feature,learning,high,"learning,cooking,food,observation",docs/planning/items/LEARN-003-cooking-observation-effect-parity.md
+LEARN-004,Observed actor skill level helper,done,technical,learning,high,"learning,observation,npc,actors",docs/planning/items/LEARN-004-observed-actor-skill-level-helper.md
+LEARN-005,Attack canonical learning bridge,done,feature,learning,medium,"learning,attack,observation,combat",docs/planning/items/LEARN-005-attack-canonical-bridge.md
 LEARN-006,High-skill quality and rare finds,backlog,feature,learning,medium,"learning,quality,rare-finds,freshening,gathering",docs/planning/items/LEARN-006-high-skill-quality-and-rare-finds.md
 LOOP-001-A,Starter look/examine output audit,next,design,core-loop,medium,"look,examine,starter",docs/planning/items/LOOP-001-A.md
 LOOP-001-B,Starter camp prose polish,next,content,core-loop,medium,"prose,starter,look",docs/planning/items/LOOP-001-B.md

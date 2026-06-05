@@ -1734,7 +1734,7 @@
   {
     "id": "LEARN-001-A",
     "title": "Minimal learning storage decision",
-    "status": "testing",
+    "status": "done",
     "type": "design",
     "area": "learning",
     "priority": "high",
@@ -1750,7 +1750,7 @@
   {
     "id": "LEARN-001-B",
     "title": "Minimal CharacterSkill model",
-    "status": "testing",
+    "status": "done",
     "type": "technical",
     "area": "learning",
     "priority": "high",
@@ -1768,7 +1768,7 @@
   {
     "id": "LEARN-001-C",
     "title": "grantSkillProgress helper",
-    "status": "testing",
+    "status": "done",
     "type": "feature",
     "area": "learning",
     "priority": "high",
@@ -1786,7 +1786,7 @@
   {
     "id": "LEARN-001-D",
     "title": "Raw progress technical-only",
-    "status": "testing",
+    "status": "done",
     "type": "ux",
     "area": "learning",
     "priority": "high",
@@ -1824,7 +1824,7 @@
   {
     "id": "LEARN-003",
     "title": "Cooking observation and effect parity",
-    "status": "in_testing",
+    "status": "done",
     "type": "feature",
     "area": "learning",
     "priority": "high",
@@ -1843,7 +1843,7 @@
   {
     "id": "LEARN-004",
     "title": "Observed actor skill level helper",
-    "status": "in_testing",
+    "status": "done",
     "type": "technical",
     "area": "learning",
     "priority": "high",
@@ -1862,7 +1862,7 @@
   {
     "id": "LEARN-005",
     "title": "Attack canonical learning bridge",
-    "status": "in_testing",
+    "status": "done",
     "type": "feature",
     "area": "learning",
     "priority": "medium",

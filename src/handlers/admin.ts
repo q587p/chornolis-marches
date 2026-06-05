@@ -493,12 +493,8 @@ export function registerAdminHandlers(bot: Bot) {
 
     const rows = await learningRowsForActor({ actorType: "PLAYER", playerId: player.id });
     const lines = [`📚 Learning progress: ${playerDisplayName(player)} (#${player.id})`, ""];
-    if (!rows.length) {
-      lines.push("No stored learning progress yet.");
-    } else {
-      lines.push(...formatLearningTechnicalRows({ actorType: "PLAYER", playerId: player.id }, rows));
-      if (rows.length >= 50) lines.push("", "Showing first 50 rows.");
-    }
+    lines.push(...formatLearningTechnicalRows({ actorType: "PLAYER", playerId: player.id }, rows));
+    if (rows.length >= 50) lines.push("", "Showing first 50 rows.");
     await ctx.reply(lines.join("\n"), { reply_markup: buildAdminMenuReplyKeyboard() });
   }
 

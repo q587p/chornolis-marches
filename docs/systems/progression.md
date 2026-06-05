@@ -165,12 +165,36 @@ that says track signs exist without revealing direction or identity. This still
 does not add auto-follow, route replay, hidden water-word repetition, tracking
 through darkness or a public `/skills` sheet.
 
+`0.15.44` stabilizes the visible learning surfaces after the first actor and
+tracking run. Ordinary `/me` text stays compact and qualitative: it shows only a
+few top skill names with Ukrainian level labels, never `skillKey`, `sourceKey`,
+`contextKey`, ids or raw totals. Target inspection is stricter so visible local
+characters do not become public stat sheets: ordinary text shows only stored
+learning rows that have become meaningful enough to notice, while profile
+defaults remain technical context. Technical details and scribe/admin learning
+views still show raw rows, including actor type/id, skill/source/context keys,
+level, progress, total progress, milestone count, last source event and update
+time.
+
+Learning effects should normally use experience from before the current action.
+The current action can still record practice after it is executed, but its newly
+written progress should shape the next attempt unless a future slice explicitly
+documents a same-action exception. `/track` follows that policy: track-reading
+quality is computed first, then the paid search records practice for future
+reads.
+
+The same release also closes the clearly completed LEARN planning items whose
+MVP acceptance is covered by merged releases: the `0.15.21` learning foundation,
+`0.15.39` cooking parity, `0.15.40`/`0.15.41` actor/NPC observation foundation
+and `0.15.42` attack canonical storage bridge. Broader skill-system ambitions
+remain separate future work rather than part of those closed MVP items.
+
 After the actor-learning foundation, the intended near-term order is:
 
-- `0.15.44`: stabilize the actor/tracking learning surfaces and decide whether
-  the next step should be training/arena planning, actor-default config cleanup
-  or another non-combat observation bridge. Do not jump straight to attack
-  modifiers.
+- `0.15.44`: actor/tracking learning surface stabilization is in testing. The
+  next step can be training/arena planning, actor-default config cleanup,
+  high-skill qualitative finds or another small world curiosity. Do not jump
+  straight to attack modifiers.
 - Later high-skill slices may add occasional qualitative outcomes, such as a
   fine cut of meat, a special medicinal herb or a tiny incidental `шаг` find,
   but those belong behind bounded rare-result rules rather than the first

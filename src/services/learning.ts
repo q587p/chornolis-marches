@@ -347,8 +347,12 @@ export function learningSummaryFromRows(rows: LearningRowLike[], limit = 5) {
     .slice(0, limit);
 }
 
-export function formatLearningSummary(rows: LearningRowLike[], options: { limit?: number; prefix?: string } = {}) {
-  const summary = learningSummaryFromRows(rows, options.limit ?? 5);
+export function formatLearningSummary(rows: LearningRowLike[], options: { limit?: number; prefix?: string; minLevel?: number } = {}) {
+  const limit = options.limit ?? 5;
+  const minLevel = Math.max(0, Math.floor(options.minLevel ?? 0));
+  const summary = learningSummaryFromRows(rows, Math.max(limit, 50))
+    .filter((entry) => entry.level >= minLevel)
+    .slice(0, limit);
   if (!summary.length) return "";
   const entries = summary.map((entry) => `${learningSkillDisplayName(entry.skillKey)} — ${learningQualitativeLevelLabel(entry.level)}`);
   return `${options.prefix ?? "Навички"}: ${entries.join("; ")}.`;

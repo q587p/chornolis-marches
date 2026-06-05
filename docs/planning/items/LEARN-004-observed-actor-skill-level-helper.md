@@ -1,7 +1,7 @@
 ---
 id: LEARN-004
 title: Observed actor skill level helper
-status: in_testing
+status: done
 type: technical
 area: learning
 priority: high
@@ -80,3 +80,19 @@ This is still not a broad NPC skill tree. Attack learning and combat effects rem
   characters. Watch live play: if ordinary inspection starts feeling like an RPG
   stat sheet, narrow the public surface to top non-zero profession-flavored hints
   or move more of it behind detailed/technical views.
+
+## Closure
+
+Done across `0.15.40` / PR `#139` and `0.15.41` / PR `#140`.
+
+Validation:
+
+- `node scripts/test/learning.cjs`
+- `node scripts/test/gathering-learning.cjs`
+- `node scripts/test/creature-observation-learning.cjs`
+- `npm test`
+- `npm run build`
+
+Boundary: this closes the helper/foundation and first narrow NPC observation
+MVP. It does not close broader NPC observation scheduling, freshening/cooking
+observation for creatures, default-config cleanup or public skill UI.
