@@ -34,6 +34,11 @@ The preferred answer is: better skill can improve success chance, reduce stamina
   gathering progress can slightly improve matching success chance and reduce
   stamina cost, with caps and a hard stamina floor. This item remains open for
   attack, freshening, cooking, tracking and broader tuning.
+- `0.15.38` implements the first freshening slice: personal practice and
+  observation can both contribute canonical `freshening` progress, and ordinary
+  player freshening can receive a small bounded success-chance improvement.
+  Meat yield, corpse decay, attack effects and public `/skills` UI remain
+  deferred.
 - Define small, bounded skill-effect rules for the first few repeated actions:
   - attack / hunting or combat;
   - freshening / butchering;
@@ -45,6 +50,7 @@ The preferred answer is: better skill can improve success chance, reduce stamina
   - improve success chance for chance-based actions;
   - improve yield or quality where the action already has variable output;
   - reduce hard waste on some failures later, if the action design allows it.
+- Keep rare high-skill qualitative outcomes, such as fine meat, special herbs or tiny incidental coin finds, in a separate follow-up (`LEARN-006`) so the first effects do not quietly become a loot/economy system.
 - Keep raw numeric skill and exact modifiers hidden from ordinary player-facing text.
 - Show only diegetic hints such as:
   - `Рух виходить певнішим, і сил іде трохи менше.`
@@ -65,10 +71,11 @@ The preferred answer is: better skill can improve success chance, reduce stamina
 These are starting points, not final balance:
 
 - **Attack / Hunting:** skill improves hit chance or reduces miss frequency before it reduces damage costs.
-- **Freshening / Butchering:** skill improves useful meat yield and reduces failed freshening waste; stamina cost may fall by a small amount.
+- **Freshening / Butchering:** the first implemented effect improves success chance only. Later slices may consider softer failure consequences or stamina tuning, but meat yield should not increase until the food economy is ready.
 - **Gathering / Herbalism:** skill improves chance to find something useful and can slightly reduce stamina spent on failed searches.
 - **Cooking:** skill improves the chance that raw meat becomes cooked meat instead of being wasted.
 - **Observation / Attention:** skill can make `/examine` reveal danger, tracks, hidden hints or useful context more reliably before it reduces stamina cost.
+- **High-skill quality / rare finds:** later slices may add rare qualitative results such as a fine cut of meat, a special medicinal herb, or one `шаг` found through careful work. These should stay bounded, flavorful and hard to farm.
 
 ## Acceptance
 

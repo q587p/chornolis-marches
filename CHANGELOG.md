@@ -7,6 +7,27 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.38 - Freshening learning and skill tuning - 12026-06-05
+
+### Added
+
+- Added canonical `freshening` / `observation` learning progress when players observe a recent freshening source, while preserving the existing sparse observation milestone cadence.
+- Added a small bounded freshening success-chance effect from stored canonical freshening progress.
+- Added focused helper coverage for freshening observation learning input, freshening skill-effect aggregation, success caps and unchanged yield boundaries.
+- Added planning items for cooking parity, observed-actor skill comparison, attack canonical learning, post-combat arena/training ideas, mounted travel, regional active curiosities and daily/weekly world tasks.
+
+### Changed
+
+- Player freshening now applies the bounded success-chance bonus only through the ordinary player freshening completion path.
+- Meat yield remains species-based and unchanged; higher freshening progress does not create extra meat.
+- Updated progression and near-term planning docs so cooking parity, observed actor skill and attack learning remain separate future slices.
+
+### Risks
+
+- Freshening learning aggregation is intentionally simple: practice and observation rows with `skillKey=freshening` and `contextKey=freshening` contribute together.
+- The bonus is deliberately small and capped; live tuning may still adjust the exact point-per-level values after freshening cadence is observed.
+- Observation dedupe still relies on existing food-observation WorldEvent source markers and retention.
+
 ## 0.15.37 - Track-aware attention-gated passage - 12026-06-05
 
 ### Added

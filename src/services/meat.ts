@@ -1,6 +1,7 @@
 import { prisma } from "../db";
 import { isExtinguishedCampfire } from "./fire";
 import { recordCookingSource } from "./foodLearning";
+import { learningLevelForTotalProgress } from "./learning";
 import { getCurrentWorldState } from "./worldTime";
 
 export const RAW_MEAT_KEY = "raw_meat";
@@ -10,6 +11,9 @@ const FRESHENED_CORPSE_PATTERN = /(?:^|;\s*)freshened_by_(?:player|hunter):\d+\b
 const COOKED_MEAT_HUNGER_RELIEF = 5;
 const COOKING_SUCCESS_CHANCE = 0.6;
 const DEFAULT_FRESHENING_SUCCESS_CHANCE = 0.5;
+const FRESHENING_SKILL_BONUS_PER_LEVEL = 0.03;
+const FRESHENING_SKILL_BONUS_CAP = 0.15;
+const FRESHENING_SUCCESS_CHANCE_CAP = 0.9;
 
 const FRESHENING_SUCCESS_CHANCES: Record<string, number> = {
   mouse: 0.8,
@@ -32,6 +36,39 @@ export function fresheningSuccessChanceForSpecies(speciesKey: string) {
   return FRESHENING_SUCCESS_CHANCES[speciesKey] ?? DEFAULT_FRESHENING_SUCCESS_CHANCE;
 }
 
+function clampChance(value: number) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(1, value));
+}
+
+export function fresheningSkillEffectForProgressRows(rows: Array<{ totalProgress: number }>) {
+  const totalProgress = rows.reduce((sum, row) => {
+    const value = Number.isFinite(row.totalProgress) ? Math.floor(row.totalProgress) : 0;
+    return sum + Math.max(0, value);
+  }, 0);
+  const level = learningLevelForTotalProgress(totalProgress);
+  const bonus = Math.min(FRESHENING_SKILL_BONUS_CAP, level * FRESHENING_SKILL_BONUS_PER_LEVEL);
+  return { totalProgress, level, bonus };
+}
+
+export async function fresheningSkillEffectForPlayer(playerId: number, _speciesKey?: string) {
+  const rows = await prisma.characterLearningProgress.findMany({
+    where: {
+      playerId,
+      skillKey: "freshening",
+      contextKey: "freshening",
+    },
+    select: { totalProgress: true },
+  });
+  return fresheningSkillEffectForProgressRows(rows);
+}
+
+export function adjustedFresheningSuccessChance(speciesKey: string, successChanceBonus = 0) {
+  const baseChance = fresheningSuccessChanceForSpecies(speciesKey);
+  const bonus = Math.min(FRESHENING_SKILL_BONUS_CAP, Math.max(0, clampChance(successChanceBonus)));
+  return Math.min(FRESHENING_SUCCESS_CHANCE_CAP, baseChance + bonus);
+}
+
 export function isFreshenedCorpse(currentAction: string | null | undefined) {
   return FRESHENED_CORPSE_PATTERN.test(currentAction ?? "");
 }
@@ -40,8 +77,8 @@ export function meatCookingSucceeds(roll = Math.random()) {
   return roll < COOKING_SUCCESS_CHANCE;
 }
 
-export function fresheningSucceeds(speciesKey: string, roll = Math.random()) {
-  return roll < fresheningSuccessChanceForSpecies(speciesKey);
+export function fresheningSucceeds(speciesKey: string, roll = Math.random(), successChanceBonus = 0) {
+  return roll < adjustedFresheningSuccessChance(speciesKey, successChanceBonus);
 }
 
 function freshenedCorpseAction(playerId: number, amount: number, succeeded: boolean) {
@@ -84,9 +121,10 @@ export async function freshenCorpseForMeat(input: {
   locationId: number;
   speciesKey: string;
   roll?: number;
+  successChanceBonus?: number;
 }) {
   const { rawMeat } = await ensureMeatResourceTypes();
-  const succeeded = fresheningSucceeds(input.speciesKey, input.roll);
+  const succeeded = fresheningSucceeds(input.speciesKey, input.roll, input.successChanceBonus);
   const amount = succeeded ? meatYieldForSpecies(input.speciesKey) : 0;
 
   await prisma.$transaction(async (tx) => {

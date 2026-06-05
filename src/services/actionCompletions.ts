@@ -38,7 +38,7 @@ import { canOpenDreamGateWithSpeech, ensureTutorialForagingResources, isLocation
 import { tutorialActionHintComment, tutorialGateSpeechComment, tutorialLookPaceComments, tutorialSpiritMoveComment, tutorialTrackComments, tutorialWaitPaceComments } from "./tutorialVoices";
 import { chance, pick, shuffle } from "../utils/random";
 import { canSendPlayerActionMessageToPlayerId, canSendProactiveToTelegramId } from "./sessionPresence";
-import { cookRawMeat, freshenCorpseForMeat } from "./meat";
+import { cookRawMeat, freshenCorpseForMeat, fresheningSkillEffectForPlayer } from "./meat";
 import { rememberPlayerReplyTarget } from "./replyTargets";
 import { nearbySpeechDirectionIntro, nearbySpeechRecipients } from "./speechRanges";
 import { hunterClaimedCorpseAction, hunterConversationReplyLine, hunterReactionDurationMs, hunterSocialReactionSignal, isHunterCreature } from "./npcHunter";
@@ -1164,11 +1164,13 @@ async function completeFreshen(bot: Bot, action: WorldAction) {
   const staminaSpend = await spendPlayerStamina(bot, player.id, "FRESHEN", chatId);
   let meat: Awaited<ReturnType<typeof freshenCorpseForMeat>>;
   try {
+    const skillEffect = await fresheningSkillEffectForPlayer(player.id, creature.species.key);
     meat = await freshenCorpseForMeat({
       playerId: player.id,
       creatureId: creature.id,
       locationId: player.currentLocationId,
       speciesKey: creature.species.key,
+      successChanceBonus: skillEffect.bonus,
     });
   } catch (error) {
     await setActionStatus(action, "FAILED");

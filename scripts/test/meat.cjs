@@ -3,6 +3,8 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const {
+  adjustedFresheningSuccessChance,
+  fresheningSkillEffectForProgressRows,
   fresheningSuccessChanceForSpecies,
   fresheningSucceeds,
   meatYieldForSpecies,
@@ -11,6 +13,10 @@ const { resourceAmountText } = require("../../src/utils/resourceText");
 const { MAX_QUEUED_ACTIONS_PER_ACTOR } = require("../../src/gameConfig");
 const { planCookAllRawMeat } = require("../../src/services/cookingQueue");
 const { cookingResultReplyOptions } = require("../../src/ui/inventoryItemKeyboard");
+
+function assertApprox(actual, expected, message) {
+  assert.ok(Math.abs(actual - expected) < 0.000001, message ?? `${actual} ~= ${expected}`);
+}
 
 assert.equal(MAX_QUEUED_ACTIONS_PER_ACTOR, 17);
 
@@ -29,9 +35,29 @@ assert.equal(fresheningSuccessChanceForSpecies("rabbit"), 0.6);
 assert.equal(fresheningSuccessChanceForSpecies("fox"), 0.4);
 assert.equal(fresheningSuccessChanceForSpecies("wolf"), 0.4);
 assert.equal(fresheningSuccessChanceForSpecies("unknown"), 0.5);
+assert.equal(adjustedFresheningSuccessChance("rabbit", 0), 0.6);
+assertApprox(adjustedFresheningSuccessChance("rabbit", 0.06), 0.66);
+assert.equal(adjustedFresheningSuccessChance("mouse", 0.15), 0.9);
+assert.equal(adjustedFresheningSuccessChance("mouse", 99), 0.9);
+assert.equal(fresheningSkillEffectForProgressRows([]).level, 0);
+assert.equal(fresheningSkillEffectForProgressRows([]).bonus, 0);
+assert.deepEqual(fresheningSkillEffectForProgressRows([{ totalProgress: 8 }]), {
+  totalProgress: 8,
+  level: 2,
+  bonus: 0.06,
+});
+assert.deepEqual(fresheningSkillEffectForProgressRows([{ totalProgress: 60 }, { totalProgress: 20 }]), {
+  totalProgress: 80,
+  level: 5,
+  bonus: 0.15,
+});
 
 assert.equal(fresheningSucceeds("mouse", 0.79), true);
 assert.equal(fresheningSucceeds("mouse", 0.8), false);
+assert.equal(fresheningSucceeds("rabbit", 0.65, 0.06), true);
+assert.equal(fresheningSucceeds("rabbit", 0.66, 0.06), false);
+assert.equal(fresheningSucceeds("mouse", 0.89, 0.15), true);
+assert.equal(fresheningSucceeds("mouse", 0.9, 0.15), false);
 assert.equal(fresheningSucceeds("owl", 0.49), true);
 assert.equal(fresheningSucceeds("owl", 0.5), false);
 assert.equal(fresheningSucceeds("rabbit", 0.59), true);

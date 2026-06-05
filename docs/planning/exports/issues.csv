@@ -32,6 +32,7 @@ CMD-002,Put items into local containers and features,testing,feature,commands,hi
 CMD-003,Public news command deep-link audit,backlog,technical,commands,high,"commands,news,telegram,deep-links,web",docs/planning/items/CMD-003-news-command-deep-link-audit.md
 CMD-004,Compact help and current command reference,backlog,feature,commands,high,"commands,help,onboarding,aliases,ux",docs/planning/items/CMD-004-help-and-commands-split.md
 COMBAT-001,Creature aggression and defense,backlog,feature,combat,medium,"animals,combat,predators,ecology",docs/planning/items/COMBAT-001-creature-aggression-and-defense.md
+COMBAT-002,Training arena and combat observation,icebox,feature,combat,low,"combat,learning,observation,social",docs/planning/items/COMBAT-002-training-arena-and-observation.md
 CRAFT-001,Craftable placeable chests,backlog,feature,crafting,medium,"crafting,containers,storage,item-instances,camp",docs/planning/items/CRAFT-001-craftable-placeable-chests.md
 DAYNOTICE-001,Player daypart notice settings,testing,feature,notifications,high,"notifications,world-time,daypart,sleep,settings,0.14",docs/planning/items/DAYNOTICE-001-player-daypart-notice-settings.md
 DREAM-001,Sleeping body and dream presence separation,backlog,technical,dreams,high,"dreams,tutorial,architecture,body,liminality",docs/planning/items/DREAM-001-sleeping-body-and-dream-presence.md
@@ -91,6 +92,10 @@ LEARN-001-B,Minimal CharacterSkill model,testing,technical,learning,high,"learni
 LEARN-001-C,grantSkillProgress helper,testing,feature,learning,high,"learning,service,progression",docs/planning/items/LEARN-001-C.md
 LEARN-001-D,Raw progress technical-only,testing,ux,learning,high,"learning,technical-details,ui",docs/planning/items/LEARN-001-D.md
 LEARN-002,"Skill effects on stamina, success and quality",in_progress,feature,learning,high,"learning,skills,stamina,success,balance",docs/planning/items/LEARN-002-skill-effects-cost-success-and-quality.md
+LEARN-003,Cooking observation and effect parity,next,feature,learning,high,"learning,cooking,food,observation",docs/planning/items/LEARN-003-cooking-observation-effect-parity.md
+LEARN-004,Observed actor skill level helper,next,technical,learning,high,"learning,observation,npc,actors",docs/planning/items/LEARN-004-observed-actor-skill-level-helper.md
+LEARN-005,Attack canonical learning bridge,next,feature,learning,medium,"learning,attack,observation,combat",docs/planning/items/LEARN-005-attack-canonical-bridge.md
+LEARN-006,High-skill quality and rare finds,backlog,feature,learning,medium,"learning,quality,rare-finds,freshening,gathering",docs/planning/items/LEARN-006-high-skill-quality-and-rare-finds.md
 LOOP-001-A,Starter look/examine output audit,next,design,core-loop,medium,"look,examine,starter",docs/planning/items/LOOP-001-A.md
 LOOP-001-B,Starter camp prose polish,next,content,core-loop,medium,"prose,starter,look",docs/planning/items/LOOP-001-B.md
 LOOP-001-C,Bridge threshold prose polish,next,content,core-loop,medium,"prose,bridge,liminality",docs/planning/items/LOOP-001-C.md
@@ -103,6 +108,7 @@ MAP-002-B,Generic gather uses biome candidates,next,feature,world,high,"gather,b
 MAP-002-C,Biome foraging text variants,next,content,world,medium,"gather,biome,copy",docs/planning/items/MAP-002-C.md
 MAP-003,Playable map expansion,testing,content,world,high,"map,world,exploration,regions",docs/planning/items/MAP-003-playable-map-expansion.md
 MAP-004,Skill and attention gated locations,in_testing,feature,world,high,"map,learning,skills,attention,exploration,cellar,tracking",docs/planning/items/MAP-004-skill-and-attention-gated-locations.md
+MAP-005,Regional active curiosities,backlog,feature,world,high,"map,features,interactions,swamp,riverbank,forest",docs/planning/items/MAP-005-regional-active-curiosities.md
 MAP-WILLOW-001,Willow Floodplain first contour,testing,content,world,high,"map,world,willow-floodplain,riverbank,exploration",docs/planning/items/MAP-WILLOW-001-first-contour.md
 MAP-WILLOW-002,Willow under-bridge and watchtower integration,backlog,content,world,medium,"map,world,willow-floodplain,under-bridge,watchtower",docs/planning/items/MAP-WILLOW-002-under-bridge-watchtower-integration.md
 MAP-WILLOW-003,"Willow Floodplain landmarks, resources and aliases",testing,content,world,high,"map,world,willow-floodplain,resources,aliases",docs/planning/items/MAP-WILLOW-003-landmarks-resources-and-aliases.md
@@ -150,6 +156,7 @@ ONB-007,Dream tree and vertical tutorial,proposed,feature,onboarding,high,"sleep
 ONB-008,Owl threshold refrain in the dream,proposed,content,onboarding,medium,"onboarding,dream,owl,examine,atmosphere",docs/planning/items/ONB-008-owl-threshold-refrain-in-dream.md
 ONB-009,Tutorial dream ground item cleanup,testing,tech,onboarding,high,"tutorial,dream,cleanup,items,resources",docs/planning/items/ONB-009-tutorial-dream-ground-item-cleanup.md
 ONB-010,Newcomer starter kit,backlog,feature,onboarding,medium,"onboarding,beginner,inventory,weapons,food,torch",docs/planning/items/ONB-010-newcomer-kit.md
+ONB-011,Post-tutorial dream guided questlets,backlog,feature,onboarding,medium,"onboarding,quests,beginner,tutorial",docs/planning/items/ONB-011-post-dream-guided-questlets.md
 OWL-002,Nocturnal owl tuning and indirect signs,testing,tuning,ecology,high,"owl,ecology,night,predator,observation,tuning",docs/planning/items/OWL-002-nocturnal-owl-tuning-and-signs.md
 OWL-003,Starter camp owl boundary and night signs,testing,tuning,ecology,medium,"owl,camp,ecology,night,onboarding",docs/planning/items/OWL-003-starter-camp-boundary-and-night-signs.md
 OWL-004,Conditional owl examine copy and refrain echoes,done,content,ecology,medium,"owl,examine,night,observation,atmosphere",docs/planning/items/OWL-004-conditional-owl-examine-copy.md
@@ -167,6 +174,7 @@ QA-WILLOW-002,Willow live command and vertical edge smoke,backlog,qa,world,mediu
 QUOTE-001,Liminal signs and quotation layer,proposed,content,content,medium,"quotes,signs,atmosphere,lore,dream,owl",docs/planning/items/QUOTE-001-liminal-signs-and-quotation-layer.md
 RAVEN-001,Dream raven presence near the carrion ravine,backlog,feature,world,high,"raven,dream,carrion-ravine,onboarding,world-time,atmosphere",docs/planning/items/RAVEN-001-dream-raven-carrion-ravine-presence.md
 REL-001,Release branch PR summary and risk discipline,testing,process,release,high,"release,github,pr,planning",docs/planning/items/REL-001-release-branch-pr-summary-risk.md
+RET-001,Daily and weekly world tasks,backlog,feature,retention,medium,"retention,quests,daily,weekly,world-time",docs/planning/items/RET-001-daily-weekly-world-tasks.md
 RIVER-001,Bridge jump and river-current hazard,backlog,feature,survival,medium,"river,bridge,movement,hazard,survival",docs/planning/items/RIVER-001-bridge-jump-current-hazard.md
 SES-001-A,AFK and End Session controls,testing,feature,session,high,"telegram,session,afk,ux",docs/planning/items/SES-001-A.md
 SES-001-B,Auto-AFK and proactive message guards,testing,feature,session,high,"telegram,session,reminders,tutorial",docs/planning/items/SES-001-B.md
@@ -210,6 +218,7 @@ THEFT-003,Strange and spirit theft MVP,backlog,feature,spirits,low,"theft,spirit
 TRACK-LEARN-001-A,Track-examine progress hint,next,feature,learning,high,"tracking,tracks,progression",docs/planning/items/TRACK-LEARN-001-A.md
 TRACK-LEARN-001-B,Animal movement observation,next,feature,learning,medium,"tracking,animals,observe",docs/planning/items/TRACK-LEARN-001-B.md
 TRACK-LEARN-001-C,Learning respects visibility and light,next,feature,learning,high,"learning,visibility,light",docs/planning/items/TRACK-LEARN-001-C.md
+TRAVEL-001,Horses and mounted travel,icebox,feature,travel,low,"travel,mounts,animals,distance",docs/planning/items/TRAVEL-001-horses-and-mounted-travel.md
 UX-001,Command and feature icon collision audit,backlog,chore,ux,low,"ux,icons,keyboard,features",docs/planning/items/UX-001-command-feature-icon-collision.md
 UX-002,Target pagination return context,testing,chore,ux,medium,"ux,pagination,corpses,telegram",docs/planning/items/UX-002-target-pagination-return-context.md
 UX-003,Secondary keyboard world-state audit,backlog,chore,ux,medium,"ux,keyboard,menu,world-time,calendar,weather",docs/planning/items/UX-003-secondary-keyboard-world-state-audit.md
