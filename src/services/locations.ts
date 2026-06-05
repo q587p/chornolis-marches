@@ -70,6 +70,15 @@ import {
   canPlayerRevealAttentionRootGap,
   isAttentionRootGapFeature,
 } from "./attentionGatedLocation";
+import {
+  canPlayerRevealTrackGate,
+  isTrackGateFeature,
+  trackGateButtonLabel,
+  trackGateDarkInspectionText,
+  trackGateDarkOutline,
+  trackGateRevealStateForPlayer,
+  trackGateRevealText,
+} from "./trackGatedLocation";
 
 const COMPACT_EXIT_ORDER = ["NORTH", "WEST", "SOUTH", "EAST", "UP", "DOWN", "INSIDE", "OUTSIDE"];
 const GATHERABLE_RESOURCE_KEYS = ["berries", "mushrooms", "herbs"] as const;
@@ -448,6 +457,7 @@ function featureBriefLine(feature: any) {
 
 function darkFeatureOutlineText(feature: any) {
   if (isAttentionRootGapFeature(feature)) return attentionRootGapDarkOutline();
+  if (isTrackGateFeature(feature)) return trackGateDarkOutline();
   const name = String(feature.name ?? "").toLowerCase();
   if (name.includes("мап")) return "папір видно, написів — ні";
   if (name.includes("заруб")) return "без світла зарубки не розібрати";
@@ -458,6 +468,7 @@ function darkFeatureOutlineText(feature: any) {
 
 export function darkFeatureInspectionText(feature: any) {
   if (isAttentionRootGapFeature(feature)) return attentionRootGapDarkInspectionText();
+  if (isTrackGateFeature(feature)) return trackGateDarkInspectionText();
   return [
     `${featureIcon(feature)} <i>${escapeHtml(feature.name)}</i>`,
     "",
@@ -1218,6 +1229,8 @@ export async function renderLocationFeatureInteraction(
   const visibility = await visibilityRulesForLocation(feature.locationId, detailMode === "brief" ? "brief" : "details");
   const showFeatureDetails = isAttentionRootGapFeature(feature)
     ? await canPlayerRevealAttentionRootGap(viewerPlayerId, feature.locationId)
+    : isTrackGateFeature(feature)
+      ? await canPlayerRevealTrackGate(viewerPlayerId, feature.locationId)
     : canShowFeatureDetails(visibility);
 
   if (detailMode === "brief") {
@@ -1336,6 +1349,9 @@ export async function renderLocationFeatureInteraction(
       : feature.description ?? "Стара бортя гуде всередині темного дерева.";
   } else if (isAttentionRootGapFeature(feature)) {
     text = `${feature.description ?? "Під корінням темніє вузька суха щілина."}\n\n${attentionRootGapRevealText()}`;
+  } else if (isTrackGateFeature(feature)) {
+    const reveal = await trackGateRevealStateForPlayer(viewerPlayerId, feature.locationId);
+    text = `${feature.description ?? "У траві є прим’ята смуга."}\n\n${trackGateRevealText(reveal.reason ?? "either")}`;
   }
 
   const keyboard = new InlineKeyboard();
@@ -1386,6 +1402,7 @@ export async function renderLocationFeatureInteraction(
   if (featureData(feature).carcass_dropoff === true) addCarcassDropoffButtons(keyboard, feature.id);
   if (isApiaryFeature(feature)) keyboard.text("🍯 Пошукати мед", `apiary:raid:${feature.id}`).row();
   if (isAttentionRootGapFeature(feature)) keyboard.text(attentionRootGapButtonLabel(), `attentionGate:rootGap:${feature.id}`).row();
+  if (isTrackGateFeature(feature)) keyboard.text(trackGateButtonLabel(), `attentionGate:trackGate:${feature.id}`).row();
   if (isClimbTreeFeature(feature)) keyboard.text("🌳 Залізти", "move:UP").row();
   const moveDirection = featureMoveDirection(feature);
   if (moveDirection) keyboard.text(featureMoveButtonLabelForFeature(feature, moveDirection), `move:${moveDirection}`).row();

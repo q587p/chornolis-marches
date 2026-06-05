@@ -103,6 +103,7 @@ import { submitGiveItem } from "./give";
 import { firstStrangeTotemFeatureIdAtPlayerLocation } from "../services/strangeTotems";
 import { maybeTriggerPassiveApiarySting } from "../services/apiaryHazards";
 import { enterAttentionRootGap } from "../services/attentionGatedLocation";
+import { enterTrackGatedPassage } from "../services/trackGatedLocation";
 
 const pendingVerticalYell = new Map<number, { direction: VerticalYellPromptDirection }>();
 const pendingReturnYell = new Set<number>();
@@ -1050,6 +1051,29 @@ async function submitCrawlRootGap(bot: Bot, ctx: any) {
   }
 }
 
+async function submitTrackGatePassage(bot: Bot, ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  try {
+    const result = await enterTrackGatedPassage(bot, { playerId: player.id });
+    if (!result.ok) {
+      await ctx.reply(result.text, {
+        reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+      });
+      return;
+    }
+
+    await ctx.reply(result.text, {
+      reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false),
+    });
+    const view = await renderLocationBrief(result.destinationLocationId, player.id);
+    noteKnownMessage(await ctx.reply(view.text, { parse_mode: "HTML", reply_markup: view.keyboard }));
+  } catch (error) {
+    await replyToActionError(ctx, error, "Не вдалося пройти за слідом.");
+  }
+}
+
 async function submitAttackCommand(bot: Bot, ctx: any, targetQuery?: string) {
   const target = targetQuery?.trim();
   if (!target) {
@@ -1496,6 +1520,7 @@ export function registerAliasHandlers(bot: Bot) {
 	    "glance",
 	    "enter",
 	    "crawl",
+	    "follow_trace",
 	    "exits",
 	    "reply",
   ], async (_ctx, next) => next());
@@ -1508,6 +1533,7 @@ export function registerAliasHandlers(bot: Bot) {
 	  bot.command("follow", async (ctx) => submitFollowIntent(ctx, ctx.match ?? ""));
 	  bot.command(["follow_step", "keep_following", "trail"], async (ctx) => submitFollowStep(bot, ctx));
 	  bot.command("crawl", async (ctx) => submitCrawlRootGap(bot, ctx));
+	  bot.command("follow_trace", async (ctx) => submitTrackGatePassage(bot, ctx));
 	  bot.command("unfollow", async (ctx) => submitUnfollow(ctx));
   bot.command("yell", async (ctx) => submitYell(bot, ctx, ctx.match ?? ""));
   bot.command("shout", async (ctx) => submitShout(bot, ctx, ctx.match ?? ""));
@@ -1645,6 +1671,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "track") return submitTrack(bot, ctx, Boolean(parsed.detail), parsed.target);
     if (parsed.kind === "follow-step") return submitFollowStep(bot, ctx);
     if (parsed.kind === "crawl-root-gap") return submitCrawlRootGap(bot, ctx);
+    if (parsed.kind === "track-gate") return submitTrackGatePassage(bot, ctx);
     if (parsed.kind === "shake-tree") return submitShakeTree(ctx);
     if (parsed.kind === "wait") return submitWait(bot, ctx);
     if (parsed.kind === "use-item") return submitUseItem(bot, ctx, parsed.item);

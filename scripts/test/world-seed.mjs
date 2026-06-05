@@ -227,6 +227,7 @@ const startWatchtower = locations.find((item) => item.key === "start_border_watc
 const startCamp = locations.find((item) => item.key === "start_border_camp");
 const underBridge = locations.find((item) => item.key === "under_bridge_18_05");
 const startRootPocket = locations.find((item) => item.key === "start_cellar_root_pocket");
+const meadowTrackRun = locations.find((item) => item.key === "meadow_16_05_grass_run");
 assert.ok(startCamp, "Starter camp should exist");
 assert.equal(startCamp.regionKey, "starter_camp", "Starter camp should use the starter infrastructure region");
 assert.ok(startWatchtower, "Starter camp watchtower should exist as a real location");
@@ -245,6 +246,10 @@ assert.ok(startRootPocket, "Starter cellar root pocket should exist as the first
 assert.equal(startRootPocket.z, -1, "Starter cellar root pocket should stay in the intentional lower starter layer");
 assert.equal(startRootPocket.regionKey, "starter_camp", "Starter cellar root pocket should use the starter infrastructure region");
 assert.equal(startRootPocket.dangerLevel, 0, "Starter cellar root pocket should stay safe");
+assert.ok(meadowTrackRun, "Track-aware attention-gated grass run should exist");
+assert.equal(meadowTrackRun.regionKey, "dry_luka", "Track-aware grass run should stay in the dry luka region");
+assert.equal(meadowTrackRun.z, -1, "Track-aware grass run should use an intentional low surface layer");
+assert.equal(meadowTrackRun.dangerLevel, 0, "Track-aware grass run should stay safe");
 assert.equal(underBridge?.regionKey, "old_bridge", "Under-bridge location should remain in the old bridge region");
 const starterCampLocationKeys = new Set(locations.filter((item) => item.regionKey === "starter_camp").map((item) => item.key));
 assert.deepEqual(
@@ -310,8 +315,23 @@ const startCellarRootGap = features.find((item) => item.key === "start_cellar_ro
 assert.equal(startCellarRootGap?.data?.attention_gate, "root_gap_light", "Starter root gap should declare its attention gate");
 assert.equal(startCellarRootGap?.data?.destination_location_key, "start_cellar_root_pocket", "Starter root gap should point to the root pocket destination");
 assert.equal(startCellarRootGap?.data?.no_loot, true, "Starter root gap should not become a loot source");
+const meadowTrackGate = features.find((item) => item.key === "meadow_16_05_animal_run");
+assert.equal(meadowTrackGate?.locationKey, "meadow_16_05", "Track-aware gate should stay in the authored meadow source");
+assert.equal(meadowTrackGate?.data?.attention_gate, "fresh_tracks", "Track-aware gate should declare a fresh-tracks attention gate");
+assert.equal(meadowTrackGate?.data?.destination_location_key, "meadow_16_05_grass_run", "Track-aware gate should point to the grass run destination");
+assert.equal(meadowTrackGate?.data?.no_loot, true, "Track-aware gate should not become a loot source");
+assertFeatureExamineSummary(meadowTrackGate, "Track-aware gate should have a meaningful examine summary");
+assert.ok(
+  exits.some((exit) => exit.fromKey === "meadow_16_05" && exit.toKey === "meadow_16_05_grass_run" && exit.direction === "INSIDE" && exit.isHidden === true),
+  "Track-aware gate should have a hidden INSIDE entry",
+);
+assert.ok(
+  exits.some((exit) => exit.fromKey === "meadow_16_05_grass_run" && exit.toKey === "meadow_16_05" && exit.direction === "OUTSIDE" && exit.isHidden === false),
+  "Track-aware grass run should have a visible OUTSIDE return",
+);
 assert.equal(resourceNodes.some((node) => node.locationKey === "start_border_cellar"), false, "Starter cellar should not add starter loot/resource nodes");
 assert.equal(resourceNodes.some((node) => node.locationKey === "start_cellar_root_pocket"), false, "Starter root pocket should not add starter loot/resource nodes");
+assert.equal(resourceNodes.some((node) => node.locationKey === "meadow_16_05_grass_run"), false, "Track-aware grass run should not add loot/resource nodes");
 assert.deepEqual(
   resourceNodes.filter((node) => starterCampLocationKeys.has(node.locationKey)).map((node) => `${node.locationKey}:${node.resourceKey}`),
   [],
