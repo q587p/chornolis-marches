@@ -130,6 +130,10 @@ After the freshening learning/effect slice, the intended near-term order is:
   table;
 - `0.15.41`: attack practice/observation canonical learning storage only, with
   no attack success/damage effects and no full combat expansion.
+- Later high-skill slices may add occasional qualitative outcomes, such as a
+  fine cut of meat, a special medicinal herb or a tiny incidental `шаг` find,
+  but those belong behind bounded rare-result rules rather than the first
+  chance/cost effects.
 
 Future observation, tracking, apprenticeship and practice slices should use this service instead of inventing separate progress storage.
 

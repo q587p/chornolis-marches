@@ -1879,6 +1879,27 @@
     "file": "docs/planning/items/LEARN-005-attack-canonical-bridge.md"
   },
   {
+    "id": "LEARN-006",
+    "title": "High-skill quality and rare finds",
+    "status": "backlog",
+    "type": "feature",
+    "area": "learning",
+    "priority": "medium",
+    "tags": [
+      "learning",
+      "quality",
+      "rare-finds",
+      "freshening",
+      "gathering"
+    ],
+    "depends_on": [
+      "LEARN-003",
+      "LEARN-004"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/LEARN-006-high-skill-quality-and-rare-finds.md"
+  },
+  {
     "id": "LOOP-001-A",
     "title": "Starter look/examine output audit",
     "status": "next",
