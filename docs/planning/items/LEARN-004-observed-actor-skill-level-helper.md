@@ -57,3 +57,26 @@ Observation should eventually care whether the observed being is meaningfully be
 - raw rows remain available through technical details and scribe/admin surfaces.
 
 This is still not a broad NPC skill tree. Attack learning and combat effects remain outside this slice.
+
+`0.15.41` adds the first narrow observation use of this foundation:
+
+- eligible local characters can learn from nearby supported gathering source events when they complete ordinary `LOOK`;
+- the canonical row is `gathering` / `observation` / `resource:<key>` for herbs, berries or mushrooms;
+- dedupe uses explicit creature observation `WorldEvent` markers;
+- unsupported sources, ordinary animals and combat stay outside this item.
+
+## Follow-up Watchpoints
+
+- NPC/creature observation is no longer empty after `0.15.41`, but it is still
+  only the first narrow bridge. Future slices should decide whether freshening,
+  cooking or other non-combat observations should be added, and whether they
+  should still trigger from existing `LOOK` moments or from a dedicated bounded
+  observation cadence.
+- `observedActorSkillLevel(...)` currently uses conservative profession/species
+  defaults close to the helper. If these defaults start to matter in more
+  places, move them into a small data/config map instead of spreading semantic
+  policy through regex-style matching.
+- Target inspection can now show compact `Навички:` summaries for visible local
+  characters. Watch live play: if ordinary inspection starts feeling like an RPG
+  stat sheet, narrow the public surface to top non-zero profession-flavored hints
+  or move more of it behind detailed/technical views.

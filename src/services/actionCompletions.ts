@@ -71,6 +71,7 @@ import {
   rememberFollowedTargetVisibleMove,
 } from "./followRouteMemory";
 import { FOLLOW_TARGET_CREATURE, FOLLOW_TARGET_PLAYER, getPlayerFollowIntent } from "./following";
+import { maybeRecordCreatureObservationLearning } from "./creatureObservationLearning";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
@@ -1001,6 +1002,7 @@ async function completeLook(bot: Bot, action: WorldAction) {
       where: { id: action.creatureId },
       data: { looks: { increment: 1 }, activity: "LOOKING", currentAction: payload.reason?.trim() || "озирається" },
     });
+    await maybeRecordCreatureObservationLearning({ creatureId: action.creatureId });
   }
   await setActionStatus(action, "DONE");
 }

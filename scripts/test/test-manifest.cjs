@@ -60,6 +60,7 @@ module.exports = [
   nodeTest("scripts/test/gathering-learning.cjs"),
   nodeTest("scripts/test/food-learning.cjs"),
   nodeTest("scripts/test/learning.cjs"),
+  nodeTest("scripts/test/creature-observation-learning.cjs"),
   nodeTest("scripts/test/admin-learning-summary.cjs"),
   nodeTest("scripts/test/meat.cjs"),
   nodeTest("scripts/test/freshening-ui.cjs"),

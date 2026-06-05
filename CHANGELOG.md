@@ -7,6 +7,27 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.41 - NPC observation learning MVP - 12026-06-05
+
+### Added
+
+- Added the first narrow creature/NPC observation-learning service for supported non-combat gathering sources.
+- Creature `LOOK` completion can now scan recent local herbs, berries and mushrooms gathering source events and write canonical `CreatureLearningProgress` observation rows for eligible local characters.
+- Added explicit observation dedupe markers so the same creature/source event does not grant repeated learning.
+- Added focused tests for creature observation eligibility, source parsing, unsupported source filtering, dedupe and canonical creature storage.
+
+### Changed
+
+- The observation bridge is intentionally profession-gated: herbalists and hunters can learn from narrow supported gathering sources, while ordinary animals do not become broad cooks or gatherers.
+- Technical learning surfaces from 0.15.40 can now show creature observation rows once they exist.
+- Attack canonical learning remains deferred and unchanged.
+
+### Risks
+
+- Creature observation dedupe relies on `WorldEvent` markers; aggressive event retention could allow old source observations to be learned again sooner than intended.
+- The first bridge only covers supported gathering observation. Freshening/cooking observation for creatures remains a future slice unless a safe current NPC action path needs it.
+- Creature observation triggers on existing creature `LOOK` completion, so live cadence depends on existing NPC look behavior.
+
 ## 0.15.40 - Actor learning foundation - 12026-06-05
 
 ### Added

@@ -137,9 +137,18 @@ player targets use stored learning rows, while creature targets can combine
 stored creature rows with small profession/species defaults. Those defaults are
 profile estimates, not exact public numbers.
 
+`0.15.41` adds the first narrow NPC/creature observation-learning path. When an
+eligible local character completes an ordinary `LOOK`, the world can scan recent
+supported gathering source events in the same location and record canonical
+creature `gathering` / `observation` progress for herbs, berries or mushrooms.
+This is intentionally profession-gated and non-combat: herbalists and hunters
+can learn from this narrow nearby work, while ordinary animals do not become
+broad gatherers, cooks or fresheners. Dedupe uses explicit `WorldEvent` markers
+so one creature/source event does not grant repeated progress.
+
 After the actor-learning foundation, the intended near-term order is:
 
-- `0.15.41`: attack practice/observation canonical learning storage only, with
+- `0.15.42`: attack practice/observation canonical learning storage only, with
   no attack success/damage effects and no full combat expansion.
 - Later high-skill slices may add occasional qualitative outcomes, such as a
   fine cut of meat, a special medicinal herb or a tiny incidental `шаг` find,
