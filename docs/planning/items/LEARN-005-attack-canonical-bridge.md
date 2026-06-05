@@ -43,3 +43,7 @@ Preferred release target: `0.15.41`.
 - Attack learning becomes canonical storage, not a parallel WorldEvent-only bridge.
 - No player-facing text implies that combat has become deeper or safer.
 - Tests prove this is a learning-storage bridge only, with no attack mechanics change.
+
+## Current Boundary
+
+After `0.15.40`, actor-aware learning helpers exist, but this item is still future work. Do not add attack success, damage, weapon or combat effects when implementing the canonical bridge.

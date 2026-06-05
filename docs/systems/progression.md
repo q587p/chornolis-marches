@@ -123,16 +123,22 @@ progress can slightly improve the ordinary player cooking success chance, while
 raw meat cost, cooked meat yield, hunger relief, recipes, food quality, stations,
 economy hooks and public `/skills` UI remain deferred.
 
-Observed actor skill remains future work. A later slice should add a small helper
-such as `observedActorSkillLevel(...)` that can read player learning progress or
-return profession/species profile defaults for herbalists, hunters and animals
-without introducing a broad NPC skill table.
+`0.15.40` adds the first actor-learning foundation beyond players. Creature and
+local-character learning uses a separate `CreatureLearningProgress` table so the
+existing player learning rows stay stable. The first bridge is intentionally
+non-combat: when a creature performs supported gathering practice on herbs,
+berries or mushrooms, it can now leave canonical creature learning progress.
+Ordinary player-facing surfaces show only compact qualitative skill summaries;
+technical details and scribe/admin learning views can show raw rows. Attack,
+combat effects, broad NPC observation and a public skill sheet remain deferred.
 
-After the cooking learning/effect slice, the intended near-term order is:
+`observedActorSkillLevel(...)` now exists as a conservative foundation helper:
+player targets use stored learning rows, while creature targets can combine
+stored creature rows with small profession/species defaults. Those defaults are
+profile estimates, not exact public numbers.
 
-- `0.15.40`: a small observed-actor skill helper so observation can compare
-  player progress with profession/species defaults without a broad NPC skill
-  table;
+After the actor-learning foundation, the intended near-term order is:
+
 - `0.15.41`: attack practice/observation canonical learning storage only, with
   no attack success/damage effects and no full combat expansion.
 - Later high-skill slices may add occasional qualitative outcomes, such as a

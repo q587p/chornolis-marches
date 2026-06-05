@@ -33,7 +33,7 @@ import { BEESWAX_RESOURCE_KEY, HONEY_RESOURCE_KEY } from "../services/apiaryHaza
 import { parseTeleportCoordinateCommand } from "../services/adminTeleportLinks";
 import { approveScribeReturnRequest, buildScribeReturnAuditText } from "../services/scribeReturnHelp";
 import { escapeHtml } from "../utils/text";
-import { learningLevelLabel } from "../services/learning";
+import { formatLearningTechnicalRows, learningRowsForActor } from "../services/learning";
 
 function normalizeLookup(value: string | null | undefined) {
   return String(value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
@@ -468,32 +468,35 @@ export function registerAdminHandlers(bot: Bot) {
   async function runLearningCommand(ctx: any, rawTarget = String(ctx.match ?? "").trim()) {
     if (!(await requireScribeAdmin(ctx))) return;
 
+    const creatureMatch = rawTarget.match(/^(?:creature|істота|creature:|істота:)\s*#?(\d+)$/iu);
+    if (creatureMatch) {
+      const creatureId = Number(creatureMatch[1]);
+      const creature = Number.isSafeInteger(creatureId)
+        ? await prisma.creature.findUnique({ where: { id: creatureId }, include: { species: true } })
+        : null;
+      if (!creature) {
+        await ctx.reply("Не знайшов такої істоти.");
+        return;
+      }
+      const rows = await learningRowsForActor({ actorType: "CREATURE", creatureId: creature.id });
+      const name = creature.name ?? creature.species.name;
+      await ctx.reply([
+        `📚 Learning progress: ${name} (creature #${creature.id})`,
+        "",
+        ...formatLearningTechnicalRows({ actorType: "CREATURE", creatureId: creature.id }, rows),
+      ].join("\n"), { reply_markup: buildAdminMenuReplyKeyboard() });
+      return;
+    }
+
     const player = await resolvePlayerForAdmin(ctx, rawTarget);
     if (!player) return;
 
-    const rows = await prisma.characterLearningProgress.findMany({
-      where: { playerId: player.id },
-      orderBy: [
-        { skillKey: "asc" },
-        { sourceKey: "asc" },
-        { contextKey: "asc" },
-      ],
-      take: 50,
-    });
+    const rows = await learningRowsForActor({ actorType: "PLAYER", playerId: player.id });
     const lines = [`📚 Learning progress: ${playerDisplayName(player)} (#${player.id})`, ""];
     if (!rows.length) {
       lines.push("No stored learning progress yet.");
     } else {
-      for (const row of rows) {
-        lines.push([
-          `${row.skillKey}/${row.sourceKey}/${row.contextKey}`,
-          `level=${row.level} (${learningLevelLabel(row.level)})`,
-          `progress=${row.progress}`,
-          `total=${row.totalProgress}`,
-          `milestones=${row.milestoneCount}`,
-          `updated=${row.updatedAt.toISOString()}`,
-        ].join("; "));
-      }
+      lines.push(...formatLearningTechnicalRows({ actorType: "PLAYER", playerId: player.id }, rows));
       if (rows.length >= 50) lines.push("", "Showing first 50 rows.");
     }
     await ctx.reply(lines.join("\n"), { reply_markup: buildAdminMenuReplyKeyboard() });

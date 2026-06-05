@@ -8,7 +8,7 @@ import {
   gatheringObservationDescription,
   gatheringSourceDescription,
 } from "./gatheringLearningRules";
-import { learningLevelForTotalProgress, recordLearningProgress } from "./learning";
+import { learningLevelForTotalProgress, recordActorLearningProgress, recordLearningProgress } from "./learning";
 
 export {
   GATHERING_OBSERVATION_GROWTH_MESSAGE,
@@ -34,6 +34,7 @@ type GatheringLearningDb = {
     count: (...args: any[]) => Promise<number>;
   };
   characterLearningProgress: any;
+  creatureLearningProgress?: any;
 };
 
 const OBSERVABLE_GATHERING_RESOURCE_KEYS = new Set(["berries", "mushrooms", "herbs"]);
@@ -157,7 +158,12 @@ export async function recordGatheringSource(input: {
   }
 
   const contextKey = gatheringLearningContextKeyForResource(input.resourceKey);
-  if (!input.actorPlayerId || !contextKey || input.skipCanonicalPractice) {
+  const actor = input.actorPlayerId
+    ? { actorType: "PLAYER" as const, playerId: input.actorPlayerId }
+    : input.actorCreatureId
+      ? { actorType: "CREATURE" as const, creatureId: input.actorCreatureId }
+      : null;
+  if (!actor || !contextKey || input.skipCanonicalPractice) {
     return {
       sourceRecorded,
       canonicalProgressRecorded: false,
@@ -166,8 +172,7 @@ export async function recordGatheringSource(input: {
   }
 
   try {
-    const learning = await recordLearningProgress({
-      playerId: input.actorPlayerId,
+    const learning = await recordActorLearningProgress(actor, {
       skillKey: "gathering",
       sourceKey: "practice",
       contextKey,

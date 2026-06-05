@@ -21,6 +21,7 @@ import { campSpiritCatInspectionText, isCampSpiritCatCreature } from "./campSpir
 import { visibilityRulesForLocation } from "./visibility";
 import { getCurrentWorldTimeSnapshot } from "./worldTime";
 import { spiritGuidedInspectionLine } from "./spiritCall";
+import { formatLearningSummary, formatLearningTechnicalRows, learningRowsForActor, observedCreatureDefaultLearningRows } from "./learning";
 
 export type ResolvedTarget = {
   kind: "player" | "creature";
@@ -290,6 +291,13 @@ export async function resolveTarget(type: string, id: number, locationId: number
     const torchState = isCorpse ? null : await getCreatureTorchState(target.id);
     const torchText = torchState ? visibleCreatureHeldTorchText(torchState) : "";
     const weaponText = heldWeaponLine(target.equippedWeaponKey);
+    const actorLearningRows = isCorpse ? [] : await learningRowsForActor({ actorType: "CREATURE", creatureId: target.id });
+    const defaultLearningRows = isCorpse ? [] : observedCreatureDefaultLearningRows(target);
+    const learningSummary = formatLearningSummary([...actorLearningRows, ...defaultLearningRows], { limit: 3 });
+    const learningText = learningSummary ? `\n${learningSummary}` : "";
+    const technicalLearningText = showTechnicalDetails
+      ? `\n\nНавчання:\n${formatLearningTechnicalRows({ actorType: "CREATURE", creatureId: target.id }, [...actorLearningRows, ...defaultLearningRows]).join("\n")}`
+      : "";
 
     if (isCorpse) {
       const corpseLabel = wasFreshened ? "рештки" : "труп";
@@ -352,6 +360,7 @@ export async function resolveTarget(type: string, id: number, locationId: number
         `Вік: ${formatCreatureAge(target.age, target)}.`,
         weaponText,
         torchText,
+        learningText,
       ].filter(Boolean).join("\n")
       : [
         forms.nominative,
@@ -361,6 +370,7 @@ export async function resolveTarget(type: string, id: number, locationId: number
         weaponText,
         torchText,
         hunterSection,
+        learningText,
       ].filter(Boolean).join("\n");
     if (!showTechnicalDetails) {
       return {
@@ -390,8 +400,8 @@ export async function resolveTarget(type: string, id: number, locationId: number
       canFreshen: false,
       canReceiveRawMeat: isCampSpiritCat,
       inspect: isAnimal
-        ? `Це ${forms.nominative}.\n\n${formatCreatureStatusLine(target, visibleAction)}\nЖиття: ${target.hp}/${target.maxHp ?? target.species.baseHp}\nСтать: ${formatSex(target.sex)}\nВік: ${target.age}\nТіків віку: ${target.ageTicks}${weaponText ? `\n${weaponText}` : ""}${torchText ? `\n${torchText}` : ""}\n\nСтатистика:\n${formatCreatureStats(target)}`
-        : `${campSpiritCatDetails ?? `${forms.nominative}\n\n${formatCreatureStatusLine(target, visibleAction)}`}\n\nЖиття: ${target.hp}/${target.maxHp ?? target.species.baseHp}${weaponText ? `\n${weaponText}` : ""}${torchText ? `\n${torchText}` : ""}${isCampSpiritCat ? "" : hunterSection}\n\nСтатистика:\n${formatCreatureStats(target)}`,
+        ? `Це ${forms.nominative}.\n\n${formatCreatureStatusLine(target, visibleAction)}\nЖиття: ${target.hp}/${target.maxHp ?? target.species.baseHp}\nСтать: ${formatSex(target.sex)}\nВік: ${target.age}\nТіків віку: ${target.ageTicks}${weaponText ? `\n${weaponText}` : ""}${torchText ? `\n${torchText}` : ""}${learningText}\n\nСтатистика:\n${formatCreatureStats(target)}${technicalLearningText}`
+        : `${campSpiritCatDetails ?? `${forms.nominative}\n\n${formatCreatureStatusLine(target, visibleAction)}`}\n\nЖиття: ${target.hp}/${target.maxHp ?? target.species.baseHp}${weaponText ? `\n${weaponText}` : ""}${torchText ? `\n${torchText}` : ""}${isCampSpiritCat ? "" : hunterSection}${learningText}\n\nСтатистика:\n${formatCreatureStats(target)}${technicalLearningText}`,
     };
   }
 

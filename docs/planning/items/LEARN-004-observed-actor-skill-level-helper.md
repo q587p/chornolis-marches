@@ -1,7 +1,7 @@
 ---
 id: LEARN-004
 title: Observed actor skill level helper
-status: next
+status: in_testing
 type: technical
 area: learning
 priority: high
@@ -46,3 +46,14 @@ Observation should eventually care whether the observed being is meaningfully be
 - Existing learning progress readers remain the source of truth for player skill.
 - Profession/species defaults are small, documented and testable.
 - Helpers can answer "unknown / no useful difference" safely.
+
+## Implementation Notes
+
+`0.15.40` implements the foundation form:
+
+- player targets use existing canonical `CharacterLearningProgress` rows;
+- creature targets can use stored `CreatureLearningProgress` rows plus small profession/species defaults;
+- ordinary display stays qualitative and hides raw numbers;
+- raw rows remain available through technical details and scribe/admin surfaces.
+
+This is still not a broad NPC skill tree. Attack learning and combat effects remain outside this slice.

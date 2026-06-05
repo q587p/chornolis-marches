@@ -305,6 +305,7 @@ model Creature {
   actions WorldAction[]
   tracks  WorldTrack[]
   resources CreatureResource[]
+  learningProgress CreatureLearningProgress[]
   followedByIntents PlayerFollowIntent[] @relation("PlayerFollowIntentTargetCreature")
 
   createdAt DateTime @default(now())
@@ -494,6 +495,31 @@ model CharacterLearningProgress {
 
   @@unique([playerId, skillKey, sourceKey, contextKey])
   @@index([playerId, skillKey])
+  @@index([skillKey, sourceKey])
+}
+
+model CreatureLearningProgress {
+  id Int @id @default(autoincrement())
+
+  creatureId Int
+  creature   Creature @relation(fields: [creatureId], references: [id], onDelete: Cascade)
+
+  skillKey   String
+  sourceKey  String @default("practice")
+  contextKey String @default("general")
+
+  level          Int @default(0)
+  progress       Int @default(0)
+  totalProgress  Int @default(0)
+  milestoneCount Int @default(0)
+
+  lastSourceEventId Int?
+  discoveredAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([creatureId, skillKey, sourceKey, contextKey])
+  @@index([creatureId, skillKey])
   @@index([skillKey, sourceKey])
 }
 

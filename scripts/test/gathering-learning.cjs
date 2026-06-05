@@ -127,10 +127,12 @@ function fakeGatheringObservationDb(sourceDescription = "actorCreature=9; succes
   }));
   nextEventId = events.length + 1;
   const progressRows = [];
+  const creatureProgressRows = [];
 
   return {
     events,
     progressRows,
+    creatureProgressRows,
     worldEvent: {
       findMany: async ({ where, take }) => events
         .filter((event) =>
@@ -195,6 +197,34 @@ function fakeGatheringObservationDb(sourceDescription = "actorCreature=9; succes
         return row;
       },
     },
+    creatureLearningProgress: {
+      findUnique: async ({ where }) => {
+        const key = where.creatureId_skillKey_sourceKey_contextKey;
+        return creatureProgressRows.find((row) =>
+          row.creatureId === key.creatureId &&
+          row.skillKey === key.skillKey &&
+          row.sourceKey === key.sourceKey &&
+          row.contextKey === key.contextKey
+        ) ?? null;
+      },
+      create: async ({ data }) => {
+        const row = {
+          id: nextProgressId++,
+          ...data,
+          discoveredAt: new Date("2026-06-03T09:01:00Z"),
+          createdAt: new Date("2026-06-03T09:01:00Z"),
+          updatedAt: new Date("2026-06-03T09:01:00Z"),
+        };
+        creatureProgressRows.push(row);
+        return row;
+      },
+      update: async ({ where, data }) => {
+        const row = creatureProgressRows.find((entry) => entry.id === where.id);
+        assert.ok(row, "fake creature learning progress row exists");
+        Object.assign(row, data, { updatedAt: new Date("2026-06-03T09:02:00Z") });
+        return row;
+      },
+    },
   };
 }
 
@@ -248,7 +278,22 @@ function fakeGatheringObservationDb(sourceDescription = "actorCreature=9; succes
     resourceKey: "herbs",
     success: true,
   }, creaturePracticeDb);
-  assert.equal(creaturePracticeDb.progressRows.length, 0, "creature source events should teach observers later, not create player practice progress");
+  assert.equal(creaturePracticeDb.progressRows.length, 0, "creature source events should not create player practice progress");
+  assert.equal(creaturePracticeDb.creatureProgressRows.length, 1, "supported creature gathering should create creature practice progress");
+  assert.equal(creaturePracticeDb.creatureProgressRows[0].creatureId, 11);
+  assert.equal(creaturePracticeDb.creatureProgressRows[0].skillKey, "gathering");
+  assert.equal(creaturePracticeDb.creatureProgressRows[0].sourceKey, "practice");
+  assert.equal(creaturePracticeDb.creatureProgressRows[0].contextKey, "resource:herbs");
+  assert.equal(creaturePracticeDb.creatureProgressRows[0].totalProgress, 1);
+
+  const unsupportedCreaturePracticeDb = fakeGatheringObservationDb([]);
+  await recordGatheringSource({
+    locationId: 13,
+    actorCreatureId: 11,
+    resourceKey: "honey",
+    success: true,
+  }, unsupportedCreaturePracticeDb);
+  assert.equal(unsupportedCreaturePracticeDb.creatureProgressRows.length, 0, "unsupported creature gathering should not create creature practice progress");
 
   const tutorialPracticeDb = fakeGatheringObservationDb([]);
   const tutorialPractice = await recordGatheringSource({
