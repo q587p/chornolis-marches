@@ -7,6 +7,21 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.37 - Track-aware attention-gated passage - 12026-06-05
+
+### Added
+
+- Added a second MAP-004 runtime proof: a small waking-world grass-run passage revealed by fresh visible tracks or recent clear follow route-memory.
+- Added an inspectable `Прим’ята трава` feature near the early dry meadow with a guarded `Пройти за слідом` (`/follow_trace`) action.
+- Added `/follow_trace` plus English and Ukrainian text aliases for the one-off track-gated passage action.
+- Added focused regression coverage for hidden-exit leak prevention, no-loot/no-resource boundaries, track/follow-memory gate decisions and aliases.
+
+### Risks
+
+- This remains a narrow authored track gate rather than a generic gated-location framework.
+- Fresh-track behavior depends on current `WorldTrack` retention and visibility rules.
+- Hidden water-word route memory intentionally does not count as ordinary track/follow memory for this gate.
+
 ## 0.15.36 - Attention-gate carried-light polish - 12026-06-04
 
 ### Changed

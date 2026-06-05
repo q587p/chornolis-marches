@@ -84,6 +84,7 @@ export type ParsedAliasCommand =
   | { kind: "follow-step" }
   | { kind: "unfollow" }
   | { kind: "crawl-root-gap" }
+  | { kind: "track-gate" }
   | { kind: "target-action"; action: TargetAction; target: string }
   | { kind: "pickup-target"; target: string }
   | { kind: "social-signal"; signal: SocialSignalAlias; target?: string };
@@ -480,6 +481,19 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   crawl: { kind: "crawl-root-gap" },
   "crawl gap": { kind: "crawl-root-gap" },
   "crawl into gap": { kind: "crawl-root-gap" },
+  "follow_trace": { kind: "track-gate" },
+  "follow trace": { kind: "track-gate" },
+  "track passage": { kind: "track-gate" },
+  "go by track": { kind: "track-gate" },
+  "go by traces": { kind: "track-gate" },
+  "пройти за слідом": { kind: "track-gate" },
+  "пройти слідом": { kind: "track-gate" },
+  "пролізти за слідом": { kind: "track-gate" },
+  "пролізти слідом": { kind: "track-gate" },
+  "йти за прим'ятою травою": { kind: "track-gate" },
+  "йти за прим’ятою травою": { kind: "track-gate" },
+  "пройти за прим'ятою травою": { kind: "track-gate" },
+  "пройти за прим’ятою травою": { kind: "track-gate" },
   "пролізти": { kind: "crawl-root-gap" },
   "пролізти в щілину": { kind: "crawl-root-gap" },
   "пролізти у щілину": { kind: "crawl-root-gap" },
@@ -961,6 +975,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "queue") return "/queue";
   if (parsed.kind === "track") return "/track";
   if (parsed.kind === "crawl-root-gap") return "/crawl";
+  if (parsed.kind === "track-gate") return "/follow_trace";
   if (parsed.kind === "inspect-vegetation" || parsed.kind === "inspect-border-marker" || parsed.kind === "inspect-feature") return "/examine";
   if (parsed.kind === "shake-tree") return "/shake_tree";
   if (parsed.kind === "wait") return "/wait";
@@ -1634,6 +1649,25 @@ function parseFollowStepIntent(text: string): ParsedAliasCommand | null {
   return null;
 }
 
+function parseTrackGateIntent(text: string): ParsedAliasCommand | null {
+  if ([
+    "follow_trace",
+    "follow trace",
+    "track passage",
+    "go by track",
+    "go by traces",
+    "пройти за слідом",
+    "пройти слідом",
+    "пролізти за слідом",
+    "пролізти слідом",
+    "йти за прим'ятою травою",
+    "йти за прим’ятою травою",
+    "пройти за прим'ятою травою",
+    "пройти за прим’ятою травою",
+  ].includes(text)) return { kind: "track-gate" };
+  return null;
+}
+
 function parseFollowIntent(text: string): ParsedAliasCommand | null {
   if ([
     "unfollow",
@@ -1708,6 +1742,9 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
 
   const followStepIntent = parseFollowStepIntent(commandText);
   if (followStepIntent) return followStepIntent;
+
+  const trackGateIntent = parseTrackGateIntent(commandText);
+  if (trackGateIntent) return trackGateIntent;
 
   const trackIntent = parseTrackIntent(commandText);
   if (trackIntent) return trackIntent;

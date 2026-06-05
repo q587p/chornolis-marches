@@ -102,7 +102,7 @@ MAP-002-A,First biome foraging table,next,feature,world,high,"map,biome,foraging
 MAP-002-B,Generic gather uses biome candidates,next,feature,world,high,"gather,biome,foraging",docs/planning/items/MAP-002-B.md
 MAP-002-C,Biome foraging text variants,next,content,world,medium,"gather,biome,copy",docs/planning/items/MAP-002-C.md
 MAP-003,Playable map expansion,testing,content,world,high,"map,world,exploration,regions",docs/planning/items/MAP-003-playable-map-expansion.md
-MAP-004,Skill and attention gated locations,in_testing,feature,world,high,"map,learning,skills,attention,exploration,cellar",docs/planning/items/MAP-004-skill-and-attention-gated-locations.md
+MAP-004,Skill and attention gated locations,in_testing,feature,world,high,"map,learning,skills,attention,exploration,cellar,tracking",docs/planning/items/MAP-004-skill-and-attention-gated-locations.md
 MAP-WILLOW-001,Willow Floodplain first contour,testing,content,world,high,"map,world,willow-floodplain,riverbank,exploration",docs/planning/items/MAP-WILLOW-001-first-contour.md
 MAP-WILLOW-002,Willow under-bridge and watchtower integration,backlog,content,world,medium,"map,world,willow-floodplain,under-bridge,watchtower",docs/planning/items/MAP-WILLOW-002-under-bridge-watchtower-integration.md
 MAP-WILLOW-003,"Willow Floodplain landmarks, resources and aliases",testing,content,world,high,"map,world,willow-floodplain,resources,aliases",docs/planning/items/MAP-WILLOW-003-landmarks-resources-and-aliases.md

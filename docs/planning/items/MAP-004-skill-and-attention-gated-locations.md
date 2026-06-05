@@ -13,6 +13,7 @@ tags:
   - attention
   - exploration
   - cellar
+  - tracking
 depends_on:
   - LEARN-001
   - LEARN-002
@@ -39,6 +40,18 @@ This should not feel like a dry “requires level 3” lock. It should feel like
 - The destination is safe, has a visible return and does not add loot/resources.
 
 This proves the MAP-004 runtime pattern in a low-risk way: location access can depend on attention and light without becoming a new tutorial, shop, cache or auto-follow path.
+
+`0.15.37` adds the second runtime proof through a different attention path: fresh tracks and clear follow route-memory.
+
+- Source: `meadow_16_05` / early dry meadow.
+- Feature: `meadow_16_05_animal_run` / `Прим’ята трава`.
+- Destination: `meadow_16_05_grass_run` / `Низький звіриний лаз`.
+- Gate: the feature stays vague without a fresh trace; fresh visible `WorldTrack` rows or a recent clear follow-route memory from the same location can reveal `Пройти за слідом` (`/follow_trace`).
+- Hidden water-word route memory does not count for this ordinary track gate.
+- The entry is an authored hidden `INSIDE` edge, while the return is a visible `OUTSIDE` edge.
+- The destination is safe and has no resource nodes, loot cache, combat hook or economy loop.
+
+This keeps MAP-004 from becoming light-only: some hidden spaces can answer to track reading and attention to movement while still requiring an explicit player action.
 
 ## Next Slice Candidate
 

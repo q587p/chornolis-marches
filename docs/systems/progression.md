@@ -101,6 +101,13 @@ light/feature-detail visibility rules so `/examine` can reveal a careful
 opening. This proves the access pattern without exposing a public skill sheet,
 adding a loot room or introducing a broad gated-exit framework.
 
+`0.15.37` adds a second MAP-004 proof through track attention rather than
+another light-only gate. A small low grass-run can reveal `Пройти за слідом`
+(`/follow_trace`) when the player has fresh visible tracks in the location or a
+recent clear follow-route memory there. Hidden water-word route memory does not
+count, and this still does not add auto-follow, route replay or a public skill
+modifier.
+
 Observed actor skill remains future work. A later slice should add a small helper
 such as `observedActorSkillLevel(...)` that can read player learning progress or
 return profession/species profile defaults for herbalists, hunters and animals

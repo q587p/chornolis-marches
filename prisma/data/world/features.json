@@ -240,6 +240,32 @@
     }
   },
   {
+    "key": "meadow_16_05_animal_run",
+    "locationKey": "meadow_16_05",
+    "type": "LANDMARK",
+    "name": "Прим’ята трава",
+    "description": "У траві є прим’ята смуга. На перший погляд це може бути вітер, дрібна звірина або чийсь давній крок, який уже не хоче відповідати.",
+    "isActive": true,
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "attention_gate": "fresh_tracks",
+      "destination_location_key": "meadow_16_05_grass_run",
+      "no_loot": true,
+      "icon": "🐾",
+      "examine_summary": "прим’ята трава; без свіжого сліду ще не складається в шлях",
+      "aliases": [
+        "звіриний лаз",
+        "низький лаз",
+        "слідова трава",
+        "прим’ята трава",
+        "animal run",
+        "track run",
+        "grass run"
+      ]
+    }
+  },
+  {
     "key": "meadow_dry_well",
     "locationKey": "meadow_13_05",
     "type": "LANDMARK",

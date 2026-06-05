@@ -43,13 +43,18 @@ attention-gated waking-world pocket that needs light-aware `/examine` before it
 offers a careful `Пролізти` (`/crawl`) action. Treat this as a small proof of
 attention-gated access, not a broad skill-lock framework or loot location.
 
+`0.15.37` adds the second MAP-004 proof with a different attention path:
+fresh tracks or clear follow-route memory can reveal `Пройти за слідом`
+(`/follow_trace`) through a tiny grass-run passage. Treat this as a track-aware
+micro-place, not auto-follow, route replay or a loot/content loop.
+
 Do not open another broad content loop before the learning/observation foundation is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
 ## Immediate Sequence
 
-1. **TRACK-LEARN-002:** review live route-memory and follow-step cadence after the `0.15.32` manual step and decide whether the next slice should teach explicit track reading.
+1. **TRACK-LEARN-002:** review live route-memory, follow-step and `0.15.37` track-gated passage cadence before teaching broader explicit track reading.
 2. **LEARN-002 follow-up:** extend bounded skill effects only after reviewing the `0.15.23` gathering tuning, `0.15.26` herbalist observation route and `0.15.30` followed-movement memory in live play.
-3. **MAP-004 follow-up:** after the `0.15.35` light/examine proof, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
+3. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
 4. **SOC-003:** only after follow intent feels useful, decide whether any explicit group/travel acceptance layer is worth promoting.
 
 Near-term content candidates after that foundation:

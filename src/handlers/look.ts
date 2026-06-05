@@ -26,6 +26,7 @@ import { buildWetCampfireConfirmKeyboard } from "../ui/fireKeyboards";
 import { putInventoryIntoLocalFeature } from "../services/carcassDropoff";
 import { playerForms } from "../services/grammar";
 import { enterAttentionRootGap } from "../services/attentionGatedLocation";
+import { enterTrackGatedPassage } from "../services/trackGatedLocation";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 
 function pickedItemsAmount(items: Array<{ amount: number }>) {
@@ -307,6 +308,30 @@ export function registerLookHandlers(bot: Bot) {
     } catch (error) {
       await safeAnswerCallbackQuery(ctx, error instanceof Error ? error.message : "Не вдалося пролізти крізь щілину.");
       await replyToActionError(ctx, error, "Не вдалося пролізти крізь щілину.", { replyFallback: false });
+    }
+  });
+
+  bot.callbackQuery(/^attentionGate:trackGate:(\d+)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    try {
+      const result = await enterTrackGatedPassage(bot, {
+        playerId: player.id,
+        featureId: Number(ctx.match[1]),
+      });
+      await safeAnswerCallbackQuery(ctx, result.ok ? "Ви йдете за свіжим слідом." : result.text);
+      if (!result.ok) return void (await ctx.reply(result.text));
+
+      const view = await renderLocationBrief(result.destinationLocationId, player.id);
+      await editCallbackMessageOrReply(ctx, result.text, { reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, false) });
+      await replyAndTrack(ctx, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
+    } catch (error) {
+      await safeAnswerCallbackQuery(ctx, error instanceof Error ? error.message : "Не вдалося пройти за слідом.");
+      await replyToActionError(ctx, error, "Не вдалося пройти за слідом.", { replyFallback: false });
     }
   });
 

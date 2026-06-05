@@ -2640,6 +2640,22 @@
     "isHidden": false
   },
   {
+    "fromKey": "meadow_16_05",
+    "toKey": "meadow_16_05_grass_run",
+    "direction": "INSIDE",
+    "label": "низький слід у траві",
+    "travelCost": 1,
+    "isHidden": true
+  },
+  {
+    "fromKey": "meadow_16_05_grass_run",
+    "toKey": "meadow_16_05",
+    "direction": "OUTSIDE",
+    "label": "назовні",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
     "fromKey": "old_bridge_east_span",
     "toKey": "closed_east_gate",
     "direction": "EAST",

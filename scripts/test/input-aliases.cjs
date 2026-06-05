@@ -222,6 +222,10 @@ assertAlias("роздивитися сліди", { kind: "track", detail: true }
 assertAlias("/examine tracks", { kind: "track", detail: true });
 assertAlias("/track кіт", { kind: "track", target: "кіт" });
 assertAlias("track cat", { kind: "track", target: "cat" });
+assertAlias("/follow_trace", { kind: "track-gate" });
+assertAlias("follow trace", { kind: "track-gate" });
+assertAlias("пройти за слідом", { kind: "track-gate" });
+assertAlias("пролізти за слідом", { kind: "track-gate" });
 assertAlias("сліди миша", { kind: "track", target: "миша" });
 assertAlias("роздивитися траву", { kind: "inspect-vegetation" });
 assertAlias("оцінити відновлення", { kind: "inspect-vegetation" });
