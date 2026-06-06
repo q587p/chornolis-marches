@@ -35,6 +35,10 @@ export function followIntentStatusLine(label: string | null | undefined, options
   return safeLabel ? `Чужий слід: ${safeLabel}${options.stale ? " (останній помічений)" : ""}.` : null;
 }
 
+export function followAssistStateText(enabled: boolean | null | undefined) {
+  return `Автоспроба слідом: ${enabled ? "увімкнено" : "вимкнено"}.`;
+}
+
 export function followIntentUsageText() {
   return "За ким слідувати? Спробуйте: /follow <ім'я> або «слідувати за знахарем».";
 }
@@ -53,6 +57,7 @@ export function followIntentSetText(target: Pick<FollowIntentTargetRef, "label" 
 export function followIntentHelpText(input?: {
   label?: string | null;
   targetVisible?: boolean | null;
+  assistEnabled?: boolean | null;
 }) {
   const label = input?.label?.trim();
   if (!label) return followIntentUsageText();
@@ -66,6 +71,8 @@ export function followIntentHelpText(input?: {
     "Щоб відпустити слід: /unfollow",
   ];
   if (targetVisible) lines.push("Щоб спробувати піти за свіжим ясним слідом: /follow_step");
+  lines.push(followAssistStateText(Boolean(input?.assistEnabled)));
+  lines.push("Щоб змінити автоспробу: /follow_assist on або /follow_assist off");
   return lines.join("\n");
 }
 
@@ -125,6 +132,19 @@ export async function setPlayerFollowIntent(playerId: number, target: FollowInte
       ...data,
     },
     update: data,
+  });
+}
+
+export async function setFollowAssistEnabled(playerId: number, enabled: boolean) {
+  const existing = await prisma.playerFollowIntent.findUnique({ where: { playerId } });
+  if (!existing) return null;
+  return prisma.playerFollowIntent.update({
+    where: { playerId },
+    data: {
+      assistEnabled: enabled,
+      assistUpdatedAt: new Date(),
+      ...(enabled ? {} : { lastAssistAt: null }),
+    },
   });
 }
 

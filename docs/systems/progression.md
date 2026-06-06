@@ -198,11 +198,19 @@ The current action uses previously stored learning for this chance; the practice
 recorded by that action only affects future attempts. Combat effects, broad rare
 finds, economy hooks and public raw skill UI remain deferred.
 
+`0.15.46` adds guarded follow assist on top of the existing attention and
+route-memory spine. It is not a new learning effect: if a player explicitly
+enables `Автокрок слідом` (`/follow_assist on`) for the current follow intent,
+clear ordinary visible movement by the followed target may submit one normal
+`MOVE` for the follower. Hidden routes, darkness, missing exits, stamina,
+posture, sleep, death and existing queued work still block it, and the cellar
+water-word passage is not repeated automatically.
+
 After the actor-learning foundation, the intended near-term order is:
 
-- `0.15.45`: high-skill qualitative outcomes are in testing for gathering and
-  freshening. Follow assist / auto-follow guardrails and group/travel intent
-  should remain near the front of the next planning queue.
+- `0.15.46`: guarded follow assist is in testing as an opt-in ordinary-exit
+  auto-attempt. It should be watched for chat cadence and conservative blocking
+  before promoting any group/travel layer.
 - Later high-skill slices may add occasional qualitative outcomes, such as a
   fine cut of meat, a special medicinal herb or a tiny incidental `шаг` find,
   but those belong behind bounded rare-result rules rather than the first

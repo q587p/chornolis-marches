@@ -86,8 +86,10 @@ import {
   followIntentHelpText,
   followIntentStatusLine,
   followIntentUsageText,
+  followAssistStateText,
   getPlayerFollowIntent,
   isFollowIntentTargetVisibleAtLocation,
+  setFollowAssistEnabled,
   setPlayerFollowIntent,
 } from "../services/following";
 import { followStepDirectionForPlayer, followStepFailureText } from "../services/followRouteMemory";
@@ -977,6 +979,7 @@ export async function submitFollowIntent(ctx: any, targetQuery: string) {
     return void (await ctx.reply(followIntentHelpText({
       label: intent.lastKnownTargetLabel,
       targetVisible,
+      assistEnabled: intent.assistEnabled,
     })));
   }
   if (isSelfTargetQueryForPlayer(query, player)) return void (await ctx.reply("Власний слід і так під ногами."));
@@ -991,6 +994,31 @@ export async function submitFollowIntent(ctx: any, targetQuery: string) {
 
   await setPlayerFollowIntent(player.id, match.target, player.currentLocationId);
   await ctx.reply(followIntentSetText(match.target));
+}
+
+async function submitFollowAssist(ctx: any, mode: "show" | "on" | "off") {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  const intent = await getPlayerFollowIntent(player.id);
+  if (!intent) return void (await ctx.reply("Спершу оберіть чужий слід: /follow <ціль>."));
+
+  if (mode === "on") {
+    await setFollowAssistEnabled(player.id, true);
+    return void (await ctx.reply("Ви домовляєтесь із власними ногами: якщо чужий слід поруч рушить звичайною стежкою, ви спробуєте не відстати. Це не гурт і не Поклик духа — тільки уважний крок слідом."));
+  }
+  if (mode === "off") {
+    await setFollowAssistEnabled(player.id, false);
+    return void (await ctx.reply("Ви більше не підхоплюєте чужий крок автоматично. Далі — власний темп."));
+  }
+
+  const targetVisible = await isFollowIntentTargetVisibleAtLocation(intent, player.currentLocationId);
+  await ctx.reply([
+    followIntentStatusLine(intent.lastKnownTargetLabel, { stale: Boolean(!targetVisible) }),
+    followAssistStateText(intent.assistEnabled),
+    "Увімкнути: /follow_assist on",
+    "Вимкнути: /follow_assist off",
+  ].filter(Boolean).join("\n"));
 }
 
 export async function submitUnfollow(ctx: any) {
@@ -1531,6 +1559,11 @@ export function registerAliasHandlers(bot: Bot) {
   bot.command(["get_all", "pick_all", "pickup_all", "take_all"], async (ctx) => submitPickupCommand(bot, ctx, pickupAllCommandTarget(ctx.match ?? "")));
   bot.command("track", async (ctx) => submitTrack(bot, ctx, false, ctx.match ?? ""));
 	  bot.command("follow", async (ctx) => submitFollowIntent(ctx, ctx.match ?? ""));
+	  bot.command(["follow_assist", "follow_auto", "autofollow"], async (ctx) => {
+	    const mode = String(ctx.match ?? "").trim().toLowerCase();
+	    await submitFollowAssist(ctx, mode === "on" ? "on" : mode === "off" ? "off" : "show");
+	  });
+	  bot.command("stop_follow_assist", async (ctx) => submitFollowAssist(ctx, "off"));
 	  bot.command(["follow_step", "keep_following", "trail"], async (ctx) => submitFollowStep(bot, ctx));
 	  bot.command("crawl", async (ctx) => submitCrawlRootGap(bot, ctx));
 	  bot.command("follow_trace", async (ctx) => submitTrackGatePassage(bot, ctx));
@@ -1670,6 +1703,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "queue") return submitQueue(ctx, parsed.mode);
     if (parsed.kind === "track") return submitTrack(bot, ctx, Boolean(parsed.detail), parsed.target);
     if (parsed.kind === "follow-step") return submitFollowStep(bot, ctx);
+    if (parsed.kind === "follow-assist") return submitFollowAssist(ctx, parsed.mode);
     if (parsed.kind === "crawl-root-gap") return submitCrawlRootGap(bot, ctx);
     if (parsed.kind === "track-gate") return submitTrackGatePassage(bot, ctx);
     if (parsed.kind === "shake-tree") return submitShakeTree(ctx);

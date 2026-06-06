@@ -478,6 +478,18 @@ assertAlias("слідувати за знахарем", { kind: "follow", target
 assertAlias("йти за Нестором", { kind: "follow", target: "нестором" });
 assertAlias("триматися за Лукана", { kind: "follow", target: "лукана" });
 assertAlias("стежити за мишею", { kind: "follow", target: "мишею" });
+assertAlias("/follow_assist", { kind: "follow-assist", mode: "show" });
+assertAlias("/follow_assist on", { kind: "follow-assist", mode: "on" });
+assertAlias("/follow_assist off", { kind: "follow-assist", mode: "off" });
+assertAlias("/follow_auto", { kind: "follow-assist", mode: "show" });
+assertAlias("/autofollow", { kind: "follow-assist", mode: "show" });
+assertAlias("/stop_follow_assist", { kind: "follow-assist", mode: "off" });
+assertAlias("йти слідом автоматично", { kind: "follow-assist", mode: "on" });
+assertAlias("триматися сліду автоматично", { kind: "follow-assist", mode: "on" });
+assertAlias("автослідування", { kind: "follow-assist", mode: "show" });
+assertAlias("увімкнути слідування", { kind: "follow-assist", mode: "on" });
+assertAlias("вимкнути слідування", { kind: "follow-assist", mode: "off" });
+assertAlias("не йти слідом автоматично", { kind: "follow-assist", mode: "off" });
 assertAlias("/follow_step", { kind: "follow-step" });
 assertAlias("/keep_following", { kind: "follow-step" });
 assertAlias("/trail", { kind: "follow-step" });

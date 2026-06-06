@@ -1,5 +1,5 @@
 import type { Bot } from "grammy";
-import type { Direction } from "@prisma/client";
+import { PlayerPosture, PlayerSleepState, type Direction } from "@prisma/client";
 import { prisma } from "../db";
 import { directionLabels } from "../ui/labels";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
@@ -9,6 +9,9 @@ import { canSendProactiveToTelegramId } from "./sessionPresence";
 import { visibilityRulesForLocation } from "./visibility";
 import { recordLearningProgress } from "./learning";
 import { FOLLOW_TARGET_CREATURE, FOLLOW_TARGET_PLAYER, type FollowTargetType } from "./following";
+import { movementDurationMs } from "./actionRules";
+import { performOrQueuePlayerAction } from "./actionLifecycle";
+import { locationLockedExitMessageForPlayer } from "./tutorial";
 
 export const FOLLOW_ROUTE_MEMORY_EVENT_TITLE = "Follow intent route memory";
 export const FOLLOW_ROUTE_HIDDEN_MEMORY_EVENT_TITLE = "Follow intent hidden route memory";
@@ -16,6 +19,8 @@ export const FOLLOW_ROUTE_VISIBLE_HINT_COOLDOWN_MS = Number(process.env.FOLLOW_R
 export const FOLLOW_ROUTE_HIDDEN_HINT_COOLDOWN_MS = Number(process.env.FOLLOW_ROUTE_HIDDEN_HINT_COOLDOWN_MS || 5 * 60_000);
 export const FOLLOW_ROUTE_LEARNING_COOLDOWN_MS = Number(process.env.FOLLOW_ROUTE_LEARNING_COOLDOWN_MS || 5 * 60_000);
 export const FOLLOW_ROUTE_STEP_MEMORY_TTL_MS = Number(process.env.FOLLOW_ROUTE_STEP_MEMORY_TTL_MS || 10 * 60_000);
+export const FOLLOW_ASSIST_EVENT_TITLE = "Follow assist queued move";
+export const FOLLOW_ASSIST_COOLDOWN_MS = Number(process.env.FOLLOW_ASSIST_COOLDOWN_MS || 90_000);
 
 const FOLLOW_STEP_DIRECTIONS = new Set<Direction>(["NORTH", "EAST", "SOUTH", "WEST", "UP", "DOWN", "INSIDE", "OUTSIDE"]);
 
@@ -115,6 +120,22 @@ export function followRouteLearningCooldownKey(input: {
   return `follow_learning:player_${input.playerId}:target_${input.targetType}_${input.targetId}`;
 }
 
+export function followAssistCooldownKey(input: {
+  playerId: number;
+  targetType: FollowTargetType;
+  targetId: number;
+  fromLocationId: number;
+  direction?: Direction | string | null;
+}) {
+  return [
+    "follow_assist",
+    `player_${input.playerId}`,
+    `target_${input.targetType}_${input.targetId}`,
+    `from_${input.fromLocationId}`,
+    input.direction ? `direction_${input.direction}` : null,
+  ].filter(Boolean).join(":");
+}
+
 export function isWithinFollowRouteCooldown(createdAt: Date | string | number | null | undefined, now = Date.now(), cooldownMs: number) {
   if (!createdAt || cooldownMs <= 0) return false;
   const time = createdAt instanceof Date ? createdAt.getTime() : new Date(createdAt).getTime();
@@ -147,6 +168,25 @@ export type FollowStepFailureReason =
 export type FollowStepMemoryResult =
   | { ok: true; direction: Direction; targetLabel?: string | null }
   | { ok: false; reason: FollowStepFailureReason };
+
+export type FollowAssistFailureReason =
+  | "assist-disabled"
+  | "no-memory"
+  | "dark"
+  | "hidden"
+  | "wrong-location"
+  | "wrong-target"
+  | "no-direction"
+  | "no-visible-exit"
+  | "busy"
+  | "resting"
+  | "incapacitated"
+  | "cooldown"
+  | "no-stamina";
+
+export type FollowAssistEligibilityResult =
+  | { ok: true; direction: Direction; cooldownKey: string }
+  | { ok: false; reason: FollowAssistFailureReason };
 
 function numberField(value: string | undefined) {
   if (!value || !/^\d+$/u.test(value)) return undefined;
@@ -217,6 +257,74 @@ export function evaluateFollowRouteMemoryForStep(input: {
   }
 
   return { ok: true, direction: parsed.direction, targetLabel: input.intent.lastKnownTargetLabel };
+}
+
+export function evaluateFollowAssistEligibility(input: {
+  intent?: (FollowIntentRouteLike & { playerId?: number | null; assistEnabled?: boolean | null }) | null;
+  currentLocationId?: number | null;
+  event?: { title?: string | null; description?: string | null; createdAt?: Date | string | number | null } | null;
+  player?: {
+    hp?: number | null;
+    stamina?: number | null;
+    posture?: string | null;
+    sleepState?: string | null;
+    isResting?: boolean | null;
+  } | null;
+  activeActionCount?: number;
+  hasVisibleExit?: boolean;
+  locked?: boolean;
+  hasRecentAssist?: boolean;
+  now?: number;
+  ttlMs?: number;
+}): FollowAssistEligibilityResult {
+  if (!input.intent?.assistEnabled) return { ok: false, reason: "assist-disabled" };
+  const player = input.player;
+  if (!player || (player.hp ?? 0) <= 0 || player.sleepState !== PlayerSleepState.AWAKE) return { ok: false, reason: "incapacitated" };
+  if (player.isResting || player.posture !== PlayerPosture.STANDING) return { ok: false, reason: "resting" };
+  if ((player.stamina ?? 0) <= 0) return { ok: false, reason: "no-stamina" };
+  if ((input.activeActionCount ?? 0) > 0) return { ok: false, reason: "busy" };
+  if (input.hasRecentAssist) return { ok: false, reason: "cooldown" };
+
+  const remembered = evaluateFollowRouteMemoryForStep({
+    intent: input.intent,
+    currentLocationId: input.currentLocationId,
+    event: input.event,
+    now: input.now,
+    ttlMs: input.ttlMs,
+  });
+  if (!remembered.ok) {
+    if (remembered.reason === "stale" || remembered.reason === "no-intent") return { ok: false, reason: "no-memory" };
+    return { ok: false, reason: remembered.reason };
+  }
+  if (!input.hasVisibleExit || input.locked) return { ok: false, reason: "no-visible-exit" };
+
+  return {
+    ok: true,
+    direction: remembered.direction,
+    cooldownKey: followAssistCooldownKey({
+      playerId: input.intent.playerId ?? 0,
+      targetType: input.intent.targetType as FollowTargetType,
+      targetId: input.intent.targetType === FOLLOW_TARGET_PLAYER ? input.intent.targetPlayerId ?? 0 : input.intent.targetCreatureId ?? 0,
+      fromLocationId: input.currentLocationId ?? 0,
+      direction: remembered.direction,
+    }),
+  };
+}
+
+export function followAssistQueuedText(direction: Direction) {
+  const label = String(directionLabels[direction] ?? direction).toLocaleLowerCase("uk-UA");
+  const phrase = ["UP", "DOWN", "INSIDE", "OUTSIDE"].includes(direction) ? label : `на ${label}`;
+  return `Ви підхоплюєте чужий крок: ${phrase}.`;
+}
+
+export function followAssistFailureText(reason: FollowAssistFailureReason) {
+  if (reason === "hidden") return "Чужий слід зник не кроком. Автокрок мовчить.";
+  if (reason === "dark" || reason === "no-direction") return "Темрява забрала напрям. Автокрок не знає, куди йти.";
+  if (reason === "busy") return "Ви вже зайняті іншим кроком. Автокрок не втручається.";
+  if (reason === "resting" || reason === "incapacitated") return "Тіло не підхоплює чужий крок просто зараз.";
+  if (reason === "no-stamina") return "Снаги не стає на автокрок слідом.";
+  if (reason === "no-visible-exit") return "Автокрок пам'ятає напрям, але звичайна стежка тут не відкривається.";
+  return "Автокрок слідом не знаходить ясного руху.";
 }
 
 export async function latestFollowRouteMemoryForPlayer(playerId: number) {
@@ -324,6 +432,98 @@ async function hasRecentFollowRouteMemoryMarker(input: {
   }));
 }
 
+async function hasRecentFollowAssistMarker(playerId: number, cooldownKey: string) {
+  if (FOLLOW_ASSIST_COOLDOWN_MS <= 0) return false;
+  const since = new Date(Date.now() - FOLLOW_ASSIST_COOLDOWN_MS);
+  return Boolean(await prisma.worldEvent.findFirst({
+    where: {
+      title: FOLLOW_ASSIST_EVENT_TITLE,
+      playerId,
+      createdAt: { gte: since },
+      description: { contains: `cooldownKey=${cooldownKey}` },
+    },
+    select: { id: true },
+    orderBy: { createdAt: "desc" },
+  }));
+}
+
+async function maybeQueueFollowAssistMove(bot: Bot, input: {
+  intent: Awaited<ReturnType<typeof followersForTargetAtLocation>>[number];
+  event: { title: string; description: string | null; createdAt: Date };
+  sourceLocationId: number;
+  target: FollowRouteTarget;
+  direction: Direction;
+}) {
+  const player = input.intent.player;
+  const preliminaryCooldownKey = followAssistCooldownKey({
+    playerId: input.intent.playerId,
+    targetType: input.target.type,
+    targetId: input.target.id,
+    fromLocationId: input.sourceLocationId,
+    direction: input.direction,
+  });
+  const [activeActionCount, exit, lockedMessage, hasRecentAssist] = await Promise.all([
+    prisma.worldAction.count({ where: { actorType: "PLAYER", playerId: input.intent.playerId, status: { in: ["QUEUED", "RUNNING"] } } }),
+    prisma.locationExit.findUnique({
+      where: { fromLocationId_direction: { fromLocationId: input.sourceLocationId, direction: input.direction } },
+      select: { id: true, isHidden: true, travelCost: true },
+    }),
+    locationLockedExitMessageForPlayer(input.intent.playerId, input.sourceLocationId, input.direction),
+    hasRecentFollowAssistMarker(input.intent.playerId, preliminaryCooldownKey),
+  ]);
+
+  const eligibility = evaluateFollowAssistEligibility({
+    intent: input.intent,
+    currentLocationId: player.currentLocationId,
+    event: input.event,
+    player,
+    activeActionCount,
+    hasVisibleExit: Boolean(exit && !exit.isHidden),
+    locked: Boolean(lockedMessage),
+    hasRecentAssist,
+  });
+  if (!eligibility.ok) return eligibility;
+  const parsedMemory = parseFollowRouteMemoryEventDescription(input.event.description);
+
+  const result = await performOrQueuePlayerAction(bot, {
+    playerId: input.intent.playerId,
+    type: "MOVE",
+    payload: { direction: eligibility.direction },
+    durationMs: movementDurationMs(exit?.travelCost, player.stamina),
+    chatId: player.telegramId,
+    note: "follow-assist",
+  });
+
+  await prisma.$transaction([
+    prisma.worldEvent.create({
+      data: {
+        type: "MOVE",
+        title: FOLLOW_ASSIST_EVENT_TITLE,
+        description: followRouteMemoryEventDescription({
+          playerId: input.intent.playerId,
+          targetType: input.target.type,
+          targetId: input.target.id,
+          fromLocationId: input.sourceLocationId,
+          toLocationId: parsedMemory.toLocationId,
+          direction: eligibility.direction,
+          source: "visible_move",
+          visibility: "clear",
+          cooldownKey: eligibility.cooldownKey,
+        }),
+        playerId: input.intent.playerId,
+        locationId: input.sourceLocationId,
+      },
+    }),
+    prisma.playerFollowIntent.update({
+      where: { playerId: input.intent.playerId },
+      data: { lastAssistAt: new Date() },
+    }),
+  ]);
+
+  await sendFollowRouteMemoryMessage(bot, player, followAssistQueuedText(eligibility.direction));
+  return { ...eligibility, result };
+}
+
 export async function rememberFollowedTargetVisibleMove(bot: Bot, input: {
   sourceLocationId: number;
   destinationLocationId: number;
@@ -381,7 +581,8 @@ export async function rememberFollowedTargetVisibleMove(bot: Bot, input: {
           },
         });
 
-        if (!shouldNotify && !shouldLearn) continue;
+        const shouldAssist = Boolean(intent.assistEnabled && kind === "clear");
+        if (!shouldNotify && !shouldLearn && !shouldAssist) continue;
 
         const event = await prisma.worldEvent.create({
           data: {
@@ -419,6 +620,15 @@ export async function rememberFollowedTargetVisibleMove(bot: Bot, input: {
             direction: input.direction,
             kind,
           }));
+        }
+        if (shouldAssist) {
+          await maybeQueueFollowAssistMove(bot, {
+            intent,
+            event,
+            sourceLocationId: input.sourceLocationId,
+            target: input.target,
+            direction: input.direction,
+          });
         }
       } catch (error) {
         console.warn("Failed to record follow route memory:", error);

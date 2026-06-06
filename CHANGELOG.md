@@ -7,6 +7,26 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.46 - Guarded follow assist - 12026-06-06
+
+### Added
+
+- Added opt-in guarded follow assist state on `PlayerFollowIntent`, with `/follow_assist on`, `/follow_assist off`, `/follow_auto`, `/autofollow` and Ukrainian text aliases.
+- Added a follow-assist queue bridge from clear follow route-memory: when a followed target leaves through an ordinary visible exit, an eligible follower with assist enabled can queue one ordinary `MOVE`.
+- Added follow-assist status text to `/follow` no-argument help and `/me`.
+- Added a Prisma migration for follow-assist state and focused tests for assist eligibility, hidden-route safety and aliases.
+
+### Changed
+
+- `/unfollow` continues to clear the whole follow intent, which also clears any enabled assist state.
+- Follow assist uses existing movement/action queue rules instead of directly moving the player.
+
+### Risks
+
+- Follow assist adds another proactive personal message when it successfully queues movement; live play should watch whether route-memory hints plus assist notices feel too chatty.
+- The first version is deliberately conservative: resting, sleep, no stamina, existing queued/running actions, hidden exits, locked exits and darkness all block the assist.
+- Assist cooldowns use `WorldEvent` markers; aggressive event retention could make duplicate-loop protection shorter than intended.
+
 ## 0.15.45 - High-skill qualitative outcomes MVP - 12026-06-06
 
 ### Added
