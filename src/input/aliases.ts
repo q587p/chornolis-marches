@@ -15,6 +15,7 @@ export type SessionPresenceAliasMode = "afk" | "end";
 export type DaypartNoticeAliasMode = "show" | "on" | "off";
 export type AutoMessageAliasMode = "show" | "on" | "off";
 export type FollowAssistAliasMode = "show" | "on" | "off";
+export type TravelGroupAliasAction = "show" | "create" | "invite" | "accept" | "decline" | "leave" | "disband" | "follow-leader";
 
 export type ParsedAliasCommand =
   | { kind: "location" }
@@ -85,6 +86,7 @@ export type ParsedAliasCommand =
   | { kind: "follow-assist"; mode: FollowAssistAliasMode }
   | { kind: "follow-step" }
   | { kind: "unfollow" }
+  | { kind: "travel-group"; action: TravelGroupAliasAction; target?: string }
   | { kind: "crawl-root-gap" }
   | { kind: "track-gate" }
   | { kind: "target-action"; action: TargetAction; target: string }
@@ -943,6 +945,16 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "weather") return "/weather";
   if (parsed.kind === "menu") return "/menu";
   if (parsed.kind === "follow") return "/follow";
+  if (parsed.kind === "travel-group") {
+    if (parsed.action === "show") return "/group";
+    if (parsed.action === "create") return "/group_create";
+    if (parsed.action === "invite") return "/group_invite";
+    if (parsed.action === "accept") return "/group_accept";
+    if (parsed.action === "decline") return "/group_decline";
+    if (parsed.action === "leave") return "/group_leave";
+    if (parsed.action === "disband") return "/group_disband";
+    return "/group_follow_leader";
+  }
   if (parsed.kind === "follow-step") return "/follow_step";
   if (parsed.kind === "unfollow") return "/unfollow";
   if (parsed.kind === "settings") return "/settings";
@@ -1692,6 +1704,81 @@ function parseFollowAssistIntent(text: string): ParsedAliasCommand | null {
   return null;
 }
 
+function parseTravelGroupIntent(text: string): ParsedAliasCommand | null {
+  if ([
+    "group",
+    "travel group",
+    "travel_group",
+    "гурт",
+    "дорожній гурт",
+  ].includes(text)) return { kind: "travel-group", action: "show" };
+
+  if ([
+    "group create",
+    "group_create",
+    "create group",
+    "create travel group",
+    "створити гурт",
+    "зібрати гурт",
+    "створити дорожній гурт",
+    "зібрати дорожній гурт",
+  ].includes(text)) return { kind: "travel-group", action: "create" };
+
+  const invite = text.match(/^(?:group invite|group_invite|invite to group|invite to travel group|запросити до гурту|покликати до гурту|кликати до гурту)\s+(.+)$/u);
+  if (invite?.[1]?.trim()) return { kind: "travel-group", action: "invite", target: invite[1].trim() };
+
+  if ([
+    "group accept",
+    "group_accept",
+    "accept group",
+    "accept travel group",
+    "прийняти гурт",
+    "стати до гурту",
+    "приєднатися до гурту",
+    "приєднатись до гурту",
+  ].includes(text)) return { kind: "travel-group", action: "accept" };
+
+  if ([
+    "group decline",
+    "group_decline",
+    "decline group",
+    "decline travel group",
+    "відхилити гурт",
+    "відмовитися від гурту",
+    "відмовитись від гурту",
+  ].includes(text)) return { kind: "travel-group", action: "decline" };
+
+  if ([
+    "group leave",
+    "group_leave",
+    "leave group",
+    "leave travel group",
+    "вийти з гурту",
+    "залишити гурт",
+  ].includes(text)) return { kind: "travel-group", action: "leave" };
+
+  if ([
+    "group disband",
+    "group_disband",
+    "disband group",
+    "disband travel group",
+    "розпустити гурт",
+    "розпустити дорожній гурт",
+  ].includes(text)) return { kind: "travel-group", action: "disband" };
+
+  if ([
+    "group follow leader",
+    "group_follow_leader",
+    "follow group leader",
+    "follow travel leader",
+    "йти за провідником гурту",
+    "триматися гурту",
+    "триматися провідника гурту",
+  ].includes(text)) return { kind: "travel-group", action: "follow-leader" };
+
+  return null;
+}
+
 function parseTrackGateIntent(text: string): ParsedAliasCommand | null {
   if ([
     "follow_trace",
@@ -1785,6 +1872,9 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
 
   const followAssistIntent = parseFollowAssistIntent(commandText);
   if (followAssistIntent) return followAssistIntent;
+
+  const travelGroupIntent = parseTravelGroupIntent(commandText);
+  if (travelGroupIntent) return travelGroupIntent;
 
   const followStepIntent = parseFollowStepIntent(commandText);
   if (followStepIntent) return followStepIntent;

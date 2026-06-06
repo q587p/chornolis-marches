@@ -490,6 +490,17 @@ assertAlias("автослідування", { kind: "follow-assist", mode: "show
 assertAlias("увімкнути слідування", { kind: "follow-assist", mode: "on" });
 assertAlias("вимкнути слідування", { kind: "follow-assist", mode: "off" });
 assertAlias("не йти слідом автоматично", { kind: "follow-assist", mode: "off" });
+assertAlias("/group", { kind: "travel-group", action: "show" });
+assertAlias("/travel_group", { kind: "travel-group", action: "show" });
+assertAlias("гурт", { kind: "travel-group", action: "show" });
+assertAlias("створити гурт", { kind: "travel-group", action: "create" });
+assertAlias("запросити до гурту Орина", { kind: "travel-group", action: "invite", target: "орина" });
+assertAlias("прийняти гурт", { kind: "travel-group", action: "accept" });
+assertAlias("відхилити гурт", { kind: "travel-group", action: "decline" });
+assertAlias("вийти з гурту", { kind: "travel-group", action: "leave" });
+assertAlias("розпустити гурт", { kind: "travel-group", action: "disband" });
+assertAlias("йти за провідником гурту", { kind: "travel-group", action: "follow-leader" });
+assertAlias("триматися гурту", { kind: "travel-group", action: "follow-leader" });
 assertAlias("/follow_step", { kind: "follow-step" });
 assertAlias("/keep_following", { kind: "follow-step" });
 assertAlias("/trail", { kind: "follow-step" });

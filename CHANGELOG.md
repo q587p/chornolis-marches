@@ -7,6 +7,27 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.47 - Travel group foundation - 12026-06-06
+
+### Added
+
+- Added minimal consensual travel group storage with `TravelGroup` and `TravelGroupMember`.
+- Added player commands for group status, create, invite, accept, decline, leave, disband and follow-leader setup.
+- Added Ukrainian and English/MUD-style aliases for the group command surface.
+- Added a group helper that sets follow intent to the visible local group leader without enabling follow assist silently or queuing movement.
+- Added focused tests for travel group copy boundaries and alias parsing.
+
+### Changed
+
+- Travel groups are social/travel context only: no automatic group movement, shared combat, loot, inventory, learning or hidden-route sharing.
+- Leader leaving/disbanding marks the group's active/invited memberships as left for the MVP rather than promoting a new leader.
+
+### Risks
+
+- The first group implementation enforces active/invite constraints in service logic rather than partial database unique indexes, because Prisma does not model partial unique constraints portably.
+- Invite delivery uses existing proactive-message presence guards; AFK/ended players may not receive a private invite notification until they return.
+- Group status is intentionally simple and may need live copy tuning once players use it with members spread across locations.
+
 ## 0.15.46 - Guarded follow assist - 12026-06-06
 
 ### Added

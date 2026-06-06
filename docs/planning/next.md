@@ -68,7 +68,16 @@ text without increasing meat yield.
 `0.15.46` adds guarded follow assist as an opt-in ordinary-exit auto-attempt.
 Treat it as a conservative bridge from route-memory to movement, not group
 travel, route replay or hidden-passage repetition. Watch proactive message
-cadence and blocking reasons in live play before widening it.
+cadence and blocking reasons in live play before widening it: successful assist
+currently adds a personal assist message after the route-memory hint, and failed
+assist attempts return internal reasons without player-facing nudges. If live
+play feels noisy or confusing, add a small throttled follow-assist polish pass
+instead of expanding group movement.
+
+`0.15.47` adds the first consensual travel group foundation. Treat it as social
+and travel context only: create/invite/accept/leave/disband and follow-leader
+setup, with no automatic group movement, shared combat, loot, inventory or
+hidden-route sharing.
 
 Do not open another broad content loop before the learning/observation foundation is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
@@ -83,9 +92,10 @@ Do not open another broad content loop before the learning/observation foundatio
 7. **0.15.44:** learning surface and planning cleanup is in testing: ordinary summaries stay short/diegetic, technical views stay raw, `/track` uses previous experience for current output, and clearly completed LEARN planning items are closed.
 8. **0.15.45 / LEARN-006:** high-skill qualitative outcomes are in testing: rare gathering/freshening quality notes stay bounded, mostly textual and non-combat.
 9. **FOLLOW-ASSIST-001 / 0.15.46:** guarded follow assist is in testing: opt-in, ordinary visible exits only, no hidden-route repeat, no group semantics.
-10. **SOC-003:** after live follow-assist guardrails, decide whether any explicit group/travel acceptance layer is worth promoting.
-11. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
-12. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
+10. **SOC-003 / 0.15.47:** travel group foundation is in testing: consensual membership and follow-leader setup only, no automatic group movement.
+11. **Group/follow live polish:** watch whether invite copy, group status, follow-leader + `/follow_assist on`, follow-assist double messages, and quiet failed-assist reasons feel clear before adding any group movement slice.
+12. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
+13. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
 
 Watch the new actor-learning surfaces before widening them: `0.15.41` proves
 one NPC observation bridge, but freshening/cooking observation should remain a
