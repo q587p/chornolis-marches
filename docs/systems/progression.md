@@ -223,6 +223,14 @@ the mentor, but does not grant learning progress, multiply observation, enable
 follow assist, create a travel group or share hidden routes. Future observation
 bonuses can use this stored context in a separate slice.
 
+`0.16.1` makes active mentorship matter through actual observation. When a
+player with active `gathering` mentorship observes that same mentor gathering a
+supported resource (`herbs`, `berries` or `mushrooms`), the usual canonical
+`gathering` / `observation` / `resource:*` progress can be a little stronger.
+This is still not passive learning: accepting mentorship alone grants nothing,
+unrelated gatherers do not count, unsupported resources do not count and hunter
+tracking mentorship remains a separate follow-up.
+
 After the actor-learning foundation, the intended near-term order is:
 
 - `0.15.46`: guarded follow assist is in testing as an opt-in ordinary-exit

@@ -1818,10 +1818,11 @@ export function registerAliasHandlers(bot: Bot) {
       }
     }
 
-    if (await maybeHandleMentorshipAnswer(ctx)) return;
-
     const parsed = parseAlias(ctx.message.text);
-    if (!parsed) return next();
+    if (!parsed) {
+      if (await maybeHandleMentorshipAnswer(ctx)) return;
+      return next();
+    }
 
     if (parsed.kind === "location") return showLocationForPlayer(ctx.from.id, (text, options) => ctx.reply(text, options));
     if (parsed.kind === "glance") return replyWithLocationGlance(ctx);

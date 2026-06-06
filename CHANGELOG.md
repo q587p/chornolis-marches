@@ -7,6 +7,26 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.1 - Mentorship observation bonus - 12026-06-06
+
+### Added
+
+- Added active mentorship lookup helpers and a narrow observation bonus helper for matching mentor/source/skill contexts.
+- Added the first active-mentorship learning effect: observing an active gathering mentor gather supported herbs, berries or mushrooms now records the same canonical observation row with a slightly larger amount.
+- Added a `Mentorship observation` WorldEvent marker so mentored observations can be audited without adding a new learning source key.
+- Added regression coverage for active-only mentorship matching, gathering mentorship bonus, answer parsing and alias-first pending-answer handling.
+
+### Changed
+
+- Pending mentorship offers no longer swallow known slashless aliases such as `гурт`; aliases are parsed before unclear mentorship-answer handling.
+- `/mentor` status now shows whether the player is currently holding the mentor's follow intent and whether follow assist is enabled.
+- Progression and social docs now clarify that mentorship improves learning only when the player actually observes relevant mentor action.
+
+### Risks
+
+- The first mentorship bonus covers supported gathering only; hunter/tracking mentorship remains a separate follow-up.
+- Mentored observation still relies on gathering source WorldEvents and their retention window.
+
 ## 0.16.0 - NPC mentorship offer foundation - 12026-06-06
 
 ### Added

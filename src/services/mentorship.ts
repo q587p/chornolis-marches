@@ -9,6 +9,7 @@ export const MENTORSHIP_STATUS_OFFERED = "OFFERED";
 export const MENTORSHIP_STATUS_ACTIVE = "ACTIVE";
 export const MENTORSHIP_STATUS_DECLINED = "DECLINED";
 export const MENTORSHIP_STATUS_ENDED = "ENDED";
+export const MENTORSHIP_OBSERVATION_EVENT_TITLE = "Mentorship observation";
 export const MENTORSHIP_OFFER_COOLDOWN_MS = Number(process.env.MENTORSHIP_OFFER_COOLDOWN_MS || 10 * 60_000);
 
 const APOSTROPHES = /[ʼ’`´]/g;
@@ -26,6 +27,11 @@ type MentorshipCreatureLike = {
 };
 
 export type MentorshipAnswerKind = "accept" | "decline" | "unclear";
+
+type MentorshipDb = {
+  playerMentorship: any;
+  worldEvent?: any;
+};
 
 function normalizeMentorshipAnswerInput(text: string) {
   return String(text ?? "")
@@ -129,6 +135,73 @@ export async function mentorSkillComparison(playerId: number, mentorCreatureId: 
     playerLevel,
     mentorLevel,
     canTeach: mentorCanTeach(playerLevel, mentorLevel),
+  };
+}
+
+export async function activeMentorshipForPlayer(playerId: number, db: MentorshipDb = prisma) {
+  return db.playerMentorship.findFirst({
+    where: { playerId, status: MENTORSHIP_STATUS_ACTIVE },
+    orderBy: { updatedAt: "desc" },
+    include: { mentorCreature: { include: { species: true } } },
+  });
+}
+
+export async function activeMentorshipForPlayerAndMentor(input: {
+  playerId: number;
+  mentorCreatureId: number;
+  skillKey?: string | null;
+}, db: MentorshipDb = prisma) {
+  return db.playerMentorship.findFirst({
+    where: {
+      playerId: input.playerId,
+      mentorCreatureId: input.mentorCreatureId,
+      status: MENTORSHIP_STATUS_ACTIVE,
+      ...(input.skillKey ? { skillKey: input.skillKey } : {}),
+    },
+    orderBy: { updatedAt: "desc" },
+    include: { mentorCreature: { include: { species: true } } },
+  });
+}
+
+export function mentorshipObservationContext(input: {
+  sourceDescription?: string | null;
+  skillKey: string;
+  contextKey?: string | null;
+}) {
+  const mentorCreatureId = input.sourceDescription?.match(/(?:^|;\s*)actorCreature=(\d+)/u)?.[1];
+  if (!mentorCreatureId || !input.contextKey) return null;
+  return {
+    mentorCreatureId: Number(mentorCreatureId),
+    skillKey: input.skillKey,
+    contextKey: input.contextKey,
+  };
+}
+
+export async function mentorshipObservationBonusForSource(input: {
+  playerId: number;
+  sourceEventId: number;
+  sourceDescription?: string | null;
+  skillKey: string;
+  contextKey?: string | null;
+}, db: MentorshipDb = prisma) {
+  const context = mentorshipObservationContext(input);
+  if (!context || !Number.isFinite(context.mentorCreatureId)) {
+    return { applies: false as const, amount: 1 };
+  }
+  const mentorship = await activeMentorshipForPlayerAndMentor({
+    playerId: input.playerId,
+    mentorCreatureId: context.mentorCreatureId,
+    skillKey: context.skillKey,
+  }, db);
+  if (!mentorship) return { applies: false as const, amount: 1 };
+  return {
+    applies: true as const,
+    amount: 2,
+    mentorship,
+    mentorCreatureId: context.mentorCreatureId,
+    skillKey: context.skillKey,
+    contextKey: context.contextKey,
+    description: `player=${input.playerId}; mentorCreature=${context.mentorCreatureId}; source=${input.sourceEventId}; skillKey=${context.skillKey}; contextKey=${context.contextKey}; amount=2`,
   };
 }
 
@@ -303,7 +376,20 @@ export async function mentorshipStatusText(playerId: number) {
   const forms = creatureForms(mentorship.mentorCreature);
   const skill = learningSkillDisplayName(mentorship.skillKey);
   if (mentorship.status === MENTORSHIP_STATUS_ACTIVE) {
-    return `Наука: ${forms.nominative} — ${skill}.\nЦе домовленість дивитися й іти поруч, не гарантія знання.`;
+    const intent = await getPlayerFollowIntent(playerId);
+    const followsMentor = intent?.targetType === "creature" && intent.targetCreatureId === mentorship.mentorCreatureId;
+    const followLine = followsMentor
+      ? "Слід наставника: тримаєте."
+      : `Слід наставника: не тримаєте. Взяти знову: /follow ${forms.nominative}.`;
+    const assistLine = intent?.assistEnabled
+      ? "Автокрок: увімкнено."
+      : "Автокрок: вимкнено. Увімкнути: /follow_assist on.";
+    return [
+      `Наука: ${forms.nominative} — ${skill}.`,
+      followLine,
+      assistLine,
+      "Це домовленість дивитися й іти поруч, не гарантія знання.",
+    ].join("\n");
   }
   return `Очікує відповідь: ${forms.nominative} — ${skill}.\nСкажіть “так, хочу” або “не зараз”.`;
 }

@@ -9,6 +9,7 @@ import {
   gatheringSourceDescription,
 } from "./gatheringLearningRules";
 import { learningLevelForTotalProgress, recordActorLearningProgress, recordLearningProgress } from "./learning";
+import { MENTORSHIP_OBSERVATION_EVENT_TITLE, mentorshipObservationBonusForSource } from "./mentorship";
 
 export {
   GATHERING_OBSERVATION_GROWTH_MESSAGE,
@@ -18,6 +19,7 @@ export {
   isGatheringObservationMilestone,
   isGatheringPracticeMilestone,
 } from "./gatheringLearningRules";
+export { MENTORSHIP_OBSERVATION_EVENT_TITLE } from "./mentorship";
 
 const GATHERING_OBSERVATION_WINDOW_MS = Number(process.env.WORLD_GATHERING_OBSERVATION_WINDOW_MS || 120_000);
 const GATHERING_OBSERVATION_SOURCE_SCAN_LIMIT = 8;
@@ -35,6 +37,7 @@ type GatheringLearningDb = {
   };
   characterLearningProgress: any;
   creatureLearningProgress?: any;
+  playerMentorship?: any;
 };
 
 const OBSERVABLE_GATHERING_RESOURCE_KEYS = new Set(["berries", "mushrooms", "herbs"]);
@@ -244,6 +247,15 @@ export async function recordGatheringObservation(input: { playerId: number; loca
       });
 
       const contextKey = observableGatheringContextKey(source.description);
+      const mentorshipBonus = contextKey
+        ? await mentorshipObservationBonusForSource({
+          playerId: input.playerId,
+          sourceEventId: source.id,
+          sourceDescription: source.description,
+          skillKey: "gathering",
+          contextKey,
+        }, db as any)
+        : { applies: false as const, amount: 1 };
       let canonicalProgressRecorded = false;
       let canonicalMilestone = false;
       if (contextKey) {
@@ -253,12 +265,23 @@ export async function recordGatheringObservation(input: { playerId: number; loca
             skillKey: "gathering",
             sourceKey: "observation",
             contextKey,
-            amount: 1,
+            amount: mentorshipBonus.amount,
             milestoneEvery: GATHERING_OBSERVATION_INTERVAL,
             lastSourceEventId: source.id,
           }, db as any);
           canonicalProgressRecorded = true;
           canonicalMilestone = learning.milestone;
+          if (mentorshipBonus.applies) {
+            await db.worldEvent.create({
+              data: {
+                type: "SYSTEM",
+                title: MENTORSHIP_OBSERVATION_EVENT_TITLE,
+                description: mentorshipBonus.description,
+                playerId: input.playerId,
+                locationId: input.locationId,
+              },
+            });
+          }
         } catch (error) {
           console.warn("Failed to write canonical gathering observation progress:", error);
         }
@@ -289,6 +312,8 @@ export async function recordGatheringObservation(input: { playerId: number; loca
         observationCount,
         canonicalProgressRecorded,
         canonicalMilestone,
+        mentorshipBonus: mentorshipBonus.applies,
+        learningAmount: contextKey ? mentorshipBonus.amount : 0,
       };
     }
 
