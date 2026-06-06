@@ -214,6 +214,15 @@ clear ordinary visible movement by the followed target may submit one normal
 posture, sleep, death and existing queued work still block it, and the cellar
 water-word passage is not repeated automatically.
 
+`0.16.0` starts the mentorship line. When a player deliberately follows a
+suitable local character, that character may offer teaching if their observed
+skill is meaningfully ahead of the player's. The first mentor roles are narrow:
+herbalist-like locals can offer `gathering`, and hunter-like locals can offer
+`tracking`. Accepting stores active mentorship context and sets follow intent to
+the mentor, but does not grant learning progress, multiply observation, enable
+follow assist, create a travel group or share hidden routes. Future observation
+bonuses can use this stored context in a separate slice.
+
 After the actor-learning foundation, the intended near-term order is:
 
 - `0.15.46`: guarded follow assist is in testing as an opt-in ordinary-exit

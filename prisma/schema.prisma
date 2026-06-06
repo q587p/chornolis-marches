@@ -87,6 +87,7 @@ model Player {
   travelGroupsLed TravelGroup[] @relation("TravelGroupLeader")
   travelGroupMemberships TravelGroupMember[] @relation("TravelGroupMemberPlayer")
   travelGroupInvitesSent TravelGroupMember[] @relation("TravelGroupInviter")
+  mentorships PlayerMentorship[] @relation("PlayerMentorshipStudent")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -310,6 +311,7 @@ model Creature {
   resources CreatureResource[]
   learningProgress CreatureLearningProgress[]
   followedByIntents PlayerFollowIntent[] @relation("PlayerFollowIntentTargetCreature")
+  mentorshipsOffered PlayerMentorship[] @relation("PlayerMentorshipMentorCreature")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -382,6 +384,33 @@ model TravelGroupMember {
   @@index([groupId, status])
   @@index([playerId, status])
   @@index([invitedByPlayerId])
+}
+
+model PlayerMentorship {
+  id Int @id @default(autoincrement())
+
+  playerId Int
+  player   Player @relation("PlayerMentorshipStudent", fields: [playerId], references: [id], onDelete: Cascade)
+
+  mentorCreatureId Int
+  mentorCreature   Creature @relation("PlayerMentorshipMentorCreature", fields: [mentorCreatureId], references: [id], onDelete: Cascade)
+
+  skillKey String
+  status   String @default("OFFERED")
+
+  offeredAt DateTime @default(now())
+  acceptedAt DateTime?
+  declinedAt DateTime?
+  endedAt DateTime?
+  lastPromptAt DateTime?
+  clarificationCount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([playerId, status])
+  @@index([mentorCreatureId, status])
+  @@index([playerId, mentorCreatureId, skillKey, status])
 }
 
 // =======================
