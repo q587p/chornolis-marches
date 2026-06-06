@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
 
 require("ts-node/register");
 
@@ -8,8 +9,10 @@ const {
 const {
   FOLLOW_ROUTE_HIDDEN_MEMORY_EVENT_TITLE,
   FOLLOW_ROUTE_MEMORY_EVENT_TITLE,
+  FOLLOW_ASSIST_CATCH_UP_NOTE,
   evaluateFollowAssistEligibility,
   followAssistCooldownKey,
+  followAssistCatchUpQueuedText,
   followAssistFailureCooldownKey,
   followAssistFailureText,
   followAssistQueuedText,
@@ -167,6 +170,27 @@ result = evaluateFollowAssistEligibility({
 });
 assert.deepEqual(result, { ok: false, reason: "wrong-target" });
 
+result = evaluateFollowAssistEligibility({
+  intent: intent(),
+  currentLocationId: 101,
+  event: clearEvent(),
+  player: player(),
+  activeActionCount: 0,
+  hasVisibleExit: true,
+});
+assert.deepEqual(result, { ok: false, reason: "wrong-location" });
+
+result = evaluateFollowAssistEligibility({
+  intent: intent(),
+  currentLocationId: 100,
+  event: clearEvent({ createdAt: new Date(Date.now() - 60 * 60_000) }),
+  player: player(),
+  activeActionCount: 0,
+  hasVisibleExit: true,
+  ttlMs: 1_000,
+});
+assert.deepEqual(result, { ok: false, reason: "no-memory" });
+
 const hiddenText = followAssistFailureText("hidden");
 assert.equal(hiddenText.includes("До води"), false);
 assert.equal(hiddenText.includes("до води"), false);
@@ -176,6 +200,8 @@ assert.equal(
   followAssistQueuedText("NORTH", "Орина"),
   "Ви трималися чужого сліду: Орина рушає на північ. Автокрок підхоплює цей рух.",
 );
+assert.equal(followAssistCatchUpQueuedText("NORTH"), "Автокрок не губить слід: далі на північ.");
+assert.equal(FOLLOW_ASSIST_CATCH_UP_NOTE, "follow-assist:catch-up");
 assert.equal(
   followAssistFailureCooldownKey({
     playerId: 7,
@@ -186,5 +212,18 @@ assert.equal(
   }),
   "follow_assist_failure:player_7:target_CREATURE_42:from_100:reason_hidden",
 );
+
+const followRouteMemorySource = fs.readFileSync("src/services/followRouteMemory.ts", "utf8");
+assert.match(followRouteMemorySource, /withSlowLog\("followAssist\.catchUp"/);
+assert.match(followRouteMemorySource, /note: FOLLOW_ASSIST_CATCH_UP_NOTE/);
+const catchUpLookupSource = followRouteMemorySource.slice(
+  followRouteMemorySource.indexOf("async function latestFollowRouteMemoryForCatchUp"),
+  followRouteMemorySource.indexOf("export async function maybeQueueFollowAssistCatchUp"),
+);
+assert.match(catchUpLookupSource, /title: FOLLOW_ROUTE_MEMORY_EVENT_TITLE/);
+assert.match(catchUpLookupSource, /take: Math\.max/);
+assert.equal(catchUpLookupSource.includes("description: { contains"), false);
+const actionCompletionsSource = fs.readFileSync("src/services/actionCompletions.ts", "utf8");
+assert.match(actionCompletionsSource, /maybeQueueFollowAssistCatchUp\(bot, \{ playerId: player\.id \}\)/);
 
 console.log("follow assist tests passed");

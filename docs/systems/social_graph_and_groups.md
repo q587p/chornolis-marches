@@ -123,6 +123,15 @@ is busy, lacks `Снага`, cannot see a direction in darkness, or the target
 vanishes through a non-ordinary route. Hidden-route hints stay non-directional
 and do not reveal trigger phrases or destinations.
 
+As of `0.15.50`, follow assist can also perform a guarded catch-up check after
+the follower's own `MOVE` completes. If the follower arrives at a location that
+has fresh clear route-memory for the same followed target, and the next step is
+still an ordinary visible exit, assist may submit one more normal `MOVE`.
+This is not a synchronous path replay or a while-loop: each catch-up step is
+checked after arrival, goes through the ordinary action queue, and stops on
+darkness, stale memory, hidden routes, locked exits, manual queued actions,
+sleep/rest/incapacitation or missing `Снага`.
+
 As of `0.15.47`, the first consensual travel-group foundation exists:
 
 - `Дорожній гурт` (`/group`) is a visible agreement between players, not a
@@ -148,7 +157,8 @@ This means the current stack is:
 1. follow intent: attention to one target;
 2. `/follow_step`: one explicit manual step from fresh clear route memory;
 3. `/follow_assist on`: opt-in guarded ordinary-exit auto-attempt;
-4. `/group`: consensual social/travel context that can help members choose the
+4. continuous follow-assist catch-up: one post-arrival ordinary step at a time;
+5. `/group`: consensual social/travel context that can help members choose the
    leader as their follow target.
 
 ### 3. Following Is Weaker Than Group Membership
