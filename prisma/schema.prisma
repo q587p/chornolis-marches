@@ -84,6 +84,9 @@ model Player {
   learningProgress CharacterLearningProgress[]
   followIntent PlayerFollowIntent? @relation("PlayerFollowIntentOwner")
   followedByIntents PlayerFollowIntent[] @relation("PlayerFollowIntentTargetPlayer")
+  travelGroupsLed TravelGroup[] @relation("TravelGroupLeader")
+  travelGroupMemberships TravelGroupMember[] @relation("TravelGroupMemberPlayer")
+  travelGroupInvitesSent TravelGroupMember[] @relation("TravelGroupInviter")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -337,6 +340,48 @@ model PlayerFollowIntent {
   @@index([targetType, targetPlayerId])
   @@index([targetType, targetCreatureId])
   @@index([lastSeenLocationId])
+}
+
+model TravelGroup {
+  id Int @id @default(autoincrement())
+
+  leaderPlayerId Int
+  leaderPlayer   Player @relation("TravelGroupLeader", fields: [leaderPlayerId], references: [id], onDelete: Cascade)
+
+  name String?
+
+  members TravelGroupMember[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([leaderPlayerId])
+}
+
+model TravelGroupMember {
+  id Int @id @default(autoincrement())
+
+  groupId Int
+  group   TravelGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  playerId Int
+  player   Player @relation("TravelGroupMemberPlayer", fields: [playerId], references: [id], onDelete: Cascade)
+
+  role   String @default("MEMBER")
+  status String @default("INVITED")
+
+  invitedByPlayerId Int?
+  invitedByPlayer   Player? @relation("TravelGroupInviter", fields: [invitedByPlayerId], references: [id], onDelete: SetNull)
+
+  joinedAt DateTime?
+  leftAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([groupId, status])
+  @@index([playerId, status])
+  @@index([invitedByPlayerId])
 }
 
 // =======================

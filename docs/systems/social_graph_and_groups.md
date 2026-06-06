@@ -116,6 +116,28 @@ As of `0.15.46`, follow intent can also carry an opt-in guarded assist flag:
 This is still weaker than group travel. It is a guarded convenience for a
 single clear ordinary step, not accepted membership in a shared route.
 
+As of `0.15.47`, the first consensual travel-group foundation exists:
+
+- `Дорожній гурт` (`/group`) is a visible agreement between players, not a
+  hidden party engine;
+- a player can create a group, invite a visible local player, and the invitee
+  must accept or decline;
+- the leader is also an active member, and leader leave/disband marks the MVP
+  group inactive instead of promoting a new leader;
+- `Триматися провідника гурту` (`/group_follow_leader`) sets follow intent to a
+  visible local leader, but does not silently enable `/follow_assist on` and
+  does not queue movement;
+- there is no shared combat, loot, inventory, learning, group chat, target
+  consent model, hidden-route sharing or group movement in this slice.
+
+This means the current stack is:
+
+1. follow intent: attention to one target;
+2. `/follow_step`: one explicit manual step from fresh clear route memory;
+3. `/follow_assist on`: opt-in guarded ordinary-exit auto-attempt;
+4. `/group`: consensual social/travel context that can help members choose the
+   leader as their follow target.
+
 ### 3. Following Is Weaker Than Group Membership
 
 Following should be possible even without an existing contact. It means:
@@ -124,6 +146,7 @@ Following should be possible even without an existing contact. It means:
 - leader-visible follower lists are future `SOC-003` work, not part of the `0.15.29` intent marker;
 - the leader may later add that follower to a `Гурт`;
 - automatic group movement starts only after accepted membership in a later group/travel slice.
+- current `0.15.47` group membership still does not move anyone by itself.
 
 This matches the intended MUD-like flow:
 

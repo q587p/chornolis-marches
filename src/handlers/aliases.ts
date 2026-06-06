@@ -58,7 +58,7 @@ import { assertCanPerformPhysicalAction } from "../services/postureRules";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
 import { bestTargetActionMatch, bestTargetMatch, inspectMissingText, isSelfTargetQueryForPlayer, normalizeTargetKey, targetDisplayLabel, targetListText, textTargetsForAction, visibleTextTargets, type TextTargetRef } from "../services/textTargets";
 import { spendPlayerStaminaAmount } from "../services/actionRecovery";
-import { afkReplyOptions, endPlayerSession, SESSION_AFK_CONFIRMATION, SESSION_ENDED_CONFIRMATION, setPlayerAfk } from "../services/sessionPresence";
+import { afkReplyOptions, canSendProactiveToTelegramId, endPlayerSession, SESSION_AFK_CONFIRMATION, SESSION_ENDED_CONFIRMATION, setPlayerAfk } from "../services/sessionPresence";
 import { setAutoActionMessageSetting, setDaypartNoticeSetting, showSettings } from "./settings";
 import { beginnerReturnPromptText, beginnerReturnRefusalText, checkBeginnerReturnForPlayer, performBeginnerReturn } from "../services/beginnerReturn";
 import {
@@ -69,7 +69,7 @@ import {
   scribeReturnHelpKeyboard,
   SCRIBE_HELP_COMMAND,
 } from "../services/scribeReturnHelp";
-import { safeAnswerCallbackQuery } from "../utils/telegram";
+import { safeAnswerCallbackQuery, safeSendMessage } from "../utils/telegram";
 import { formatVitalsSentence } from "../utils/playerText";
 import {
   BEGINNER_CACHE_FEATURE_KEY,
@@ -106,6 +106,16 @@ import { firstStrangeTotemFeatureIdAtPlayerLocation } from "../services/strangeT
 import { maybeTriggerPassiveApiarySting } from "../services/apiaryHazards";
 import { enterAttentionRootGap } from "../services/attentionGatedLocation";
 import { enterTrackGatedPassage } from "../services/trackGatedLocation";
+import {
+  acceptTravelGroupInvite,
+  createTravelGroupForPlayer,
+  declineTravelGroupInvite,
+  disbandTravelGroup,
+  followTravelGroupLeader,
+  invitePlayerToTravelGroup,
+  leaveTravelGroup,
+  travelGroupStatusForPlayer,
+} from "../services/travelGroups";
 
 const pendingVerticalYell = new Map<number, { direction: VerticalYellPromptDirection }>();
 const pendingReturnYell = new Set<number>();
@@ -1021,6 +1031,87 @@ async function submitFollowAssist(ctx: any, mode: "show" | "on" | "off") {
   ].filter(Boolean).join("\n"));
 }
 
+async function submitTravelGroupStatus(ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  await ctx.reply(await travelGroupStatusForPlayer(player.id));
+}
+
+async function submitTravelGroupCreate(ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  const result = await createTravelGroupForPlayer(player.id);
+  await ctx.reply(result.text);
+}
+
+async function submitTravelGroupInvite(bot: Bot, ctx: any, targetQuery: string) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player?.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  const query = targetQuery.trim();
+  if (!query) return void (await ctx.reply("Кого покликати до гурту? Спробуйте: /group_invite <ім'я>."));
+  if (isSelfTargetQueryForPlayer(query, player)) return void (await ctx.reply("Власний крок уже з вами. До гурту кличуть інших."));
+
+  const visiblePlayers = (await visibleTextTargets(player.currentLocationId, player.id))
+    .filter((target) => target.type === "player" && !target.isCorpse);
+  if (!visiblePlayers.length) return void (await ctx.reply("Поруч не видно мандрівника, якого можна покликати до гурту."));
+
+  const match = bestTargetMatch(query, visiblePlayers);
+  if (match.kind === "none") return void (await ctx.reply("Поруч не видно такого мандрівника."));
+  if (match.kind === "many") return void (await ctx.reply(`Кого саме покликати?\n${targetListText(match.targets)}`));
+
+  const result = await invitePlayerToTravelGroup({ leaderPlayerId: player.id, targetPlayerId: match.target.id });
+  await ctx.reply(result.text);
+  if (result.ok && await canSendProactiveToTelegramId(result.target.telegramId)) {
+    await safeSendMessage(bot, result.target.telegramId, result.targetMessage, undefined, "travel group invite");
+  }
+}
+
+async function submitTravelGroupAccept(ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  const result = await acceptTravelGroupInvite(player.id);
+  await ctx.reply(result.text);
+}
+
+async function submitTravelGroupDecline(ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  const result = await declineTravelGroupInvite(player.id);
+  await ctx.reply(result.text);
+}
+
+async function submitTravelGroupLeave(ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  const result = await leaveTravelGroup(player.id);
+  await ctx.reply(result.text);
+}
+
+async function submitTravelGroupDisband(ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  const result = await disbandTravelGroup(player.id);
+  await ctx.reply(result.text);
+}
+
+async function submitTravelGroupFollowLeader(ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+  const result = await followTravelGroupLeader(player.id);
+  await ctx.reply(result.text);
+}
+
+async function submitTravelGroupCommand(bot: Bot, ctx: any, action: "show" | "create" | "invite" | "accept" | "decline" | "leave" | "disband" | "follow-leader", target = "") {
+  if (action === "show") return submitTravelGroupStatus(ctx);
+  if (action === "create") return submitTravelGroupCreate(ctx);
+  if (action === "invite") return submitTravelGroupInvite(bot, ctx, target);
+  if (action === "accept") return submitTravelGroupAccept(ctx);
+  if (action === "decline") return submitTravelGroupDecline(ctx);
+  if (action === "leave") return submitTravelGroupLeave(ctx);
+  if (action === "disband") return submitTravelGroupDisband(ctx);
+  return submitTravelGroupFollowLeader(ctx);
+}
+
 export async function submitUnfollow(ctx: any) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
@@ -1565,6 +1656,14 @@ export function registerAliasHandlers(bot: Bot) {
 	  });
 	  bot.command("stop_follow_assist", async (ctx) => submitFollowAssist(ctx, "off"));
 	  bot.command(["follow_step", "keep_following", "trail"], async (ctx) => submitFollowStep(bot, ctx));
+	  bot.command(["group", "travel_group"], async (ctx) => submitTravelGroupCommand(bot, ctx, "show"));
+	  bot.command("group_create", async (ctx) => submitTravelGroupCommand(bot, ctx, "create"));
+	  bot.command("group_invite", async (ctx) => submitTravelGroupCommand(bot, ctx, "invite", ctx.match ?? ""));
+	  bot.command("group_accept", async (ctx) => submitTravelGroupCommand(bot, ctx, "accept"));
+	  bot.command("group_decline", async (ctx) => submitTravelGroupCommand(bot, ctx, "decline"));
+	  bot.command("group_leave", async (ctx) => submitTravelGroupCommand(bot, ctx, "leave"));
+	  bot.command("group_disband", async (ctx) => submitTravelGroupCommand(bot, ctx, "disband"));
+	  bot.command("group_follow_leader", async (ctx) => submitTravelGroupCommand(bot, ctx, "follow-leader"));
 	  bot.command("crawl", async (ctx) => submitCrawlRootGap(bot, ctx));
 	  bot.command("follow_trace", async (ctx) => submitTrackGatePassage(bot, ctx));
 	  bot.command("unfollow", async (ctx) => submitUnfollow(ctx));
@@ -1704,6 +1803,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "track") return submitTrack(bot, ctx, Boolean(parsed.detail), parsed.target);
     if (parsed.kind === "follow-step") return submitFollowStep(bot, ctx);
     if (parsed.kind === "follow-assist") return submitFollowAssist(ctx, parsed.mode);
+    if (parsed.kind === "travel-group") return submitTravelGroupCommand(bot, ctx, parsed.action, parsed.target);
     if (parsed.kind === "crawl-root-gap") return submitCrawlRootGap(bot, ctx);
     if (parsed.kind === "track-gate") return submitTrackGatePassage(bot, ctx);
     if (parsed.kind === "shake-tree") return submitShakeTree(ctx);
