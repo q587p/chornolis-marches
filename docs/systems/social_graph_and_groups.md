@@ -116,6 +116,13 @@ As of `0.15.46`, follow intent can also carry an opt-in guarded assist flag:
 This is still weaker than group travel. It is a guarded convenience for a
 single clear ordinary step, not accepted membership in a shared route.
 
+As of `0.15.49`, successful assist uses one combined personal note instead of
+stacking a route-memory hint and a second "queued" line for the same movement.
+Useful blocked attempts may get throttled hints, for example when the follower
+is busy, lacks `Снага`, cannot see a direction in darkness, or the target
+vanishes through a non-ordinary route. Hidden-route hints stay non-directional
+and do not reveal trigger phrases or destinations.
+
 As of `0.15.47`, the first consensual travel-group foundation exists:
 
 - `Дорожній гурт` (`/group`) is a visible agreement between players, not a
@@ -129,6 +136,12 @@ As of `0.15.47`, the first consensual travel-group foundation exists:
   does not queue movement;
 - there is no shared combat, loot, inventory, learning, group chat, target
   consent model, hidden-route sharing or group movement in this slice.
+
+As of `0.15.49`, `/group` status separates active members who are currently
+nearby from members who are not in the same location, and Telegram invite/status
+surfaces can offer buttons for accepting, declining, following the leader,
+leaving or disbanding. These buttons call the same explicit group commands and
+still do not add group movement.
 
 This means the current stack is:
 

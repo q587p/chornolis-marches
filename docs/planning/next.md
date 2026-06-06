@@ -86,6 +86,13 @@ many recent marker-backed systems. Treat this as infrastructure stabilization,
 not new gameplay. If event marker lookups keep growing, move hot cooldown/dedupe
 keys out of `description contains` and into structured storage.
 
+`0.15.49` polishes the current group/follow layer instead of adding group
+movement: follow-assist success copy is less duplicative, useful blocked-assist
+reasons can be hinted with cooldowns, `/group` distinguishes nearby and
+elsewhere members, and invite/status buttons route to existing explicit group
+commands. Keep automatic group movement, shared combat/loot/inventory and party
+chat deferred.
+
 Do not open another broad content loop before the learning/observation foundation is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
 ## Immediate Sequence
@@ -101,9 +108,11 @@ Do not open another broad content loop before the learning/observation foundatio
 9. **FOLLOW-ASSIST-001 / 0.15.46:** guarded follow assist is in testing: opt-in, ordinary visible exits only, no hidden-route repeat, no group semantics.
 10. **SOC-003 / 0.15.47:** travel group foundation is in testing: consensual membership and follow-leader setup only, no automatic group movement.
 11. **0.15.48:** learning lookup and WorldEvent performance indexes are in testing: named creature learning lookup, first WorldEvent indexes and slow-path logs, with gameplay unchanged.
-12. **Group/follow live polish:** watch whether invite copy, group status, follow-leader + `/follow_assist on`, follow-assist double messages, and quiet failed-assist reasons feel clear before adding any group movement slice.
-13. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
-14. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
+12. **0.15.49:** group/follow polish is in testing: clearer follow-assist messages, throttled blocker hints, grouped member presence and group action buttons, with group movement still deferred.
+13. **Perf marker follow-up:** use slow logs to decide whether hot WorldEvent marker lookups need structured cooldown/dedupe storage instead of `description contains`.
+14. **Group movement design:** if live group UX is clear, draft a separate consensual group movement slice with strict no-hidden-route/no-AFK-drag guardrails.
+15. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
+16. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
 
 Watch the new actor-learning surfaces before widening them: `0.15.41` proves
 one NPC observation bridge, but freshening/cooking observation should remain a

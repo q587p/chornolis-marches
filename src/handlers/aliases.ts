@@ -114,7 +114,7 @@ import {
   followTravelGroupLeader,
   invitePlayerToTravelGroup,
   leaveTravelGroup,
-  travelGroupStatusForPlayer,
+  travelGroupStatusViewForPlayer,
 } from "../services/travelGroups";
 
 const pendingVerticalYell = new Map<number, { direction: VerticalYellPromptDirection }>();
@@ -1034,7 +1034,28 @@ async function submitFollowAssist(ctx: any, mode: "show" | "on" | "off") {
 async function submitTravelGroupStatus(ctx: any) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
-  await ctx.reply(await travelGroupStatusForPlayer(player.id));
+  const view = await travelGroupStatusViewForPlayer(player.id);
+  await ctx.reply(view.text, { reply_markup: travelGroupStatusKeyboard(view) });
+}
+
+function travelGroupStatusKeyboard(view: Awaited<ReturnType<typeof travelGroupStatusViewForPlayer>>) {
+  const keyboard = new InlineKeyboard();
+  if (view.state === "invited") {
+    keyboard.text("Прийняти гурт", "travelGroup:accept").text("Відхилити", "travelGroup:decline");
+    return keyboard;
+  }
+  if (view.state === "active") {
+    if (!view.isLeader) keyboard.text("Триматися провідника", "travelGroup:follow-leader").row();
+    keyboard.text(view.isLeader ? "Розпустити гурт" : "Вийти з гурту", view.isLeader ? "travelGroup:disband" : "travelGroup:leave");
+    return keyboard;
+  }
+  return undefined;
+}
+
+function travelGroupInviteKeyboard() {
+  return new InlineKeyboard()
+    .text("Прийняти гурт", "travelGroup:accept")
+    .text("Відхилити", "travelGroup:decline");
 }
 
 async function submitTravelGroupCreate(ctx: any) {
@@ -1062,7 +1083,7 @@ async function submitTravelGroupInvite(bot: Bot, ctx: any, targetQuery: string) 
   const result = await invitePlayerToTravelGroup({ leaderPlayerId: player.id, targetPlayerId: match.target.id });
   await ctx.reply(result.text);
   if (result.ok && await canSendProactiveToTelegramId(result.target.telegramId)) {
-    await safeSendMessage(bot, result.target.telegramId, result.targetMessage, undefined, "travel group invite");
+    await safeSendMessage(bot, result.target.telegramId, result.targetMessage, { reply_markup: travelGroupInviteKeyboard() }, "travel group invite");
   }
 }
 
@@ -1861,6 +1882,11 @@ export function registerAliasHandlers(bot: Bot) {
     await requestScribeReturnAssistance(bot, ctx);
   });
   bot.callbackQuery(/^scribeReturn:(\d+)$/, async (ctx) => performScribeReturnFromCallback(bot, ctx));
+  bot.callbackQuery(/^travelGroup:(accept|decline|leave|disband|follow-leader)$/, async (ctx) => {
+    await safeAnswerCallbackQuery(ctx);
+    const action = ctx.match[1] as "accept" | "decline" | "leave" | "disband" | "follow-leader";
+    await submitTravelGroupCommand(bot, ctx, action);
+  });
   bot.callbackQuery(/^yell:prompt:(UP|DOWN)$/, async (ctx) => {
     const direction = ctx.match[1] as VerticalYellPromptDirection;
     pendingVerticalYell.set(ctx.from.id, { direction });

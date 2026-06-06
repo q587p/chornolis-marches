@@ -10,6 +10,7 @@ const {
   FOLLOW_ROUTE_MEMORY_EVENT_TITLE,
   evaluateFollowAssistEligibility,
   followAssistCooldownKey,
+  followAssistFailureCooldownKey,
   followAssistFailureText,
   followAssistQueuedText,
   followRouteMemoryEventDescription,
@@ -171,5 +172,19 @@ assert.equal(hiddenText.includes("До води"), false);
 assert.equal(hiddenText.includes("до води"), false);
 assert.equal(hiddenText.includes("under_bridge"), false);
 assert.equal(followAssistQueuedText("NORTH"), "Ви підхоплюєте чужий крок: на північ.");
+assert.equal(
+  followAssistQueuedText("NORTH", "Орина"),
+  "Ви трималися чужого сліду: Орина рушає на північ. Автокрок підхоплює цей рух.",
+);
+assert.equal(
+  followAssistFailureCooldownKey({
+    playerId: 7,
+    targetType: FOLLOW_TARGET_CREATURE,
+    targetId: 42,
+    fromLocationId: 100,
+    reason: "hidden",
+  }),
+  "follow_assist_failure:player_7:target_CREATURE_42:from_100:reason_hidden",
+);
 
 console.log("follow assist tests passed");
