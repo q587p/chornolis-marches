@@ -661,6 +661,13 @@ model WorldEvent {
   location CellLocation? @relation(fields: [locationId], references: [id])
 
   createdAt DateTime @default(now())
+
+  @@index([title, createdAt])
+  @@index([title, locationId, createdAt])
+  @@index([title, playerId, createdAt])
+  @@index([playerId, createdAt])
+  @@index([locationId, createdAt])
+  @@index([type, createdAt])
 }
 
 // =======================

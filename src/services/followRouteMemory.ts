@@ -5,6 +5,7 @@ import { directionLabels } from "../ui/labels";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { escapeHtml } from "../utils/text";
 import { safeSendMessage } from "../utils/telegram";
+import { withSlowLog } from "../utils/slowLog";
 import { canSendProactiveToTelegramId } from "./sessionPresence";
 import { visibilityRulesForLocation } from "./visibility";
 import { recordLearningProgress } from "./learning";
@@ -530,6 +531,15 @@ export async function rememberFollowedTargetVisibleMove(bot: Bot, input: {
   direction: Direction;
   target: FollowRouteTarget;
 }) {
+  return withSlowLog("followRoute.visibleMove", () => rememberFollowedTargetVisibleMoveInner(bot, input));
+}
+
+async function rememberFollowedTargetVisibleMoveInner(bot: Bot, input: {
+  sourceLocationId: number;
+  destinationLocationId: number;
+  direction: Direction;
+  target: FollowRouteTarget;
+}) {
   try {
     const followers = await followersForTargetAtLocation(input.sourceLocationId, input.target);
     if (!followers.length) return 0;
@@ -643,6 +653,14 @@ export async function rememberFollowedTargetVisibleMove(bot: Bot, input: {
 }
 
 export async function rememberFollowedTargetHiddenRoute(bot: Bot, input: {
+  sourceLocationId: number;
+  destinationLocationId?: number | null;
+  target: FollowRouteTarget;
+}) {
+  return withSlowLog("followRoute.hiddenRoute", () => rememberFollowedTargetHiddenRouteInner(bot, input));
+}
+
+async function rememberFollowedTargetHiddenRouteInner(bot: Bot, input: {
   sourceLocationId: number;
   destinationLocationId?: number | null;
   target: FollowRouteTarget;
