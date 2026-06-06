@@ -132,6 +132,18 @@ checked after arrival, goes through the ordinary action queue, and stops on
 darkness, stale memory, hidden routes, locked exits, manual queued actions,
 sleep/rest/incapacitation or missing `Снага`.
 
+As of `0.15.51`, catch-up is treated as a stabilized guardrail rather than a new
+movement mode:
+
+- any queued/running player action blocks catch-up, whether it is manual or an
+  already queued assist step;
+- AFK/ended/unavailable players are filtered by the same proactive
+  session-presence guard used for private follow messages;
+- follow-assist events carry small diagnostics such as `assistKind=catch_up`
+  and the action note, so live logs can distinguish same-room assist from
+  post-arrival catch-up;
+- `slow:followAssist.catchUp` is the ops label to watch if catch-up feels slow.
+
 As of `0.15.47`, the first consensual travel-group foundation exists:
 
 - `Дорожній гурт` (`/group`) is a visible agreement between players, not a
@@ -160,6 +172,11 @@ This means the current stack is:
 4. continuous follow-assist catch-up: one post-arrival ordinary step at a time;
 5. `/group`: consensual social/travel context that can help members choose the
    leader as their follow target.
+
+`0.15.51` closes this follow-assist stretch as a stabilization point before the
+next major `0.16` NPC mentorship line. Mentorship should be separate from
+`TravelGroup`: a teacher/student relationship can use attention, observation and
+learning systems, while `TravelGroup` remains a player-player road agreement.
 
 ### 3. Following Is Weaker Than Group Membership
 
