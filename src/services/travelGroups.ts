@@ -12,6 +12,8 @@ export const TRAVEL_GROUP_STATUS_LEFT = "LEFT";
 const CURRENT_GROUP_STATUSES = [TRAVEL_GROUP_STATUS_ACTIVE, TRAVEL_GROUP_STATUS_INVITED];
 
 type PlayerLabelInput = {
+  id?: number | null;
+  currentLocationId?: number | null;
   firstName?: string | null;
   nameNominative?: string | null;
   nameGenitive?: string | null;
@@ -33,6 +35,11 @@ type TravelGroupLike = {
   leaderPlayer: PlayerLabelInput;
   members: TravelGroupMemberLike[];
 };
+
+export type TravelGroupStatusView =
+  | { state: "none"; text: string }
+  | { state: "invited"; text: string }
+  | { state: "active"; text: string; isLeader: boolean };
 
 export function travelGroupPlayerLabel(player: PlayerLabelInput | null | undefined) {
   return player ? playerForms(player).nominative : "невідомий мандрівник";
@@ -87,19 +94,32 @@ export function travelGroupNoRawIds(text: string) {
   return !/(?:groupId|playerId|#\d+|id=|\bID\b)/u.test(text);
 }
 
-export function travelGroupStatusText(group: TravelGroupLike) {
+export function travelGroupStatusText(group: TravelGroupLike, options: { viewerLocationId?: number | null } = {}) {
   const leader = travelGroupPlayerLabel(group.leaderPlayer);
   const activeMembers = group.members
-    .filter((member) => member.status === TRAVEL_GROUP_STATUS_ACTIVE && member.role !== TRAVEL_GROUP_ROLE_LEADER)
-    .map((member) => travelGroupPlayerLabel(member.player));
+    .filter((member) => member.status === TRAVEL_GROUP_STATUS_ACTIVE && member.role !== TRAVEL_GROUP_ROLE_LEADER);
+  const nearbyMembers = options.viewerLocationId == null
+    ? activeMembers
+    : activeMembers.filter((member) => member.player.currentLocationId === options.viewerLocationId);
+  const elsewhereMembers = options.viewerLocationId == null
+    ? []
+    : activeMembers.filter((member) => member.player.currentLocationId !== options.viewerLocationId);
   const invited = group.members
     .filter((member) => member.status === TRAVEL_GROUP_STATUS_INVITED)
     .map((member) => travelGroupPlayerLabel(member.player));
   const lines = [
     "Дорожній гурт:",
     `Провідник: ${leader}`,
-    `У гурті: ${activeMembers.length ? activeMembers.join(", ") : "поки нікого поруч із домовленістю"}`,
   ];
+  if (options.viewerLocationId == null) {
+    const names = activeMembers.map((member) => travelGroupPlayerLabel(member.player));
+    lines.push(`У гурті: ${names.length ? names.join(", ") : "поки нікого поруч із домовленістю"}`);
+  } else {
+    lines.push(`Поруч: ${nearbyMembers.length ? nearbyMembers.map((member) => travelGroupPlayerLabel(member.player)).join(", ") : "поки нікого"}`);
+    if (elsewhereMembers.length) {
+      lines.push(`Не поруч: ${elsewhereMembers.map((member) => travelGroupPlayerLabel(member.player)).join(", ")}`);
+    }
+  }
   if (invited.length) lines.push(`Запрошені: ${invited.join(", ")}`);
   lines.push("Триматися провідника: /group_follow_leader");
   lines.push("Вийти: /group_leave");
@@ -139,17 +159,30 @@ export async function pendingTravelGroupInvite(playerId: number) {
 }
 
 export async function travelGroupStatusForPlayer(playerId: number) {
+  return (await travelGroupStatusViewForPlayer(playerId)).text;
+}
+
+export async function travelGroupStatusViewForPlayer(playerId: number): Promise<TravelGroupStatusView> {
   const active = await activeTravelGroupMembership(playerId);
-  if (active) return travelGroupStatusText(active.group);
+  if (active) {
+    return {
+      state: "active",
+      text: travelGroupStatusText(active.group, { viewerLocationId: active.player.currentLocationId }),
+      isLeader: active.role === TRAVEL_GROUP_ROLE_LEADER || active.group.leaderPlayerId === playerId,
+    };
+  }
   const invite = await pendingTravelGroupInvite(playerId);
   if (invite) {
-    return [
+    return {
+      state: "invited",
+      text: [
       `Вас кличуть до дорожнього гурту ${travelGroupPlayerLabel(invite.group.leaderPlayer)}.`,
       "Прийняти: /group_accept",
       "Відхилити: /group_decline",
-    ].join("\n");
+      ].join("\n"),
+    };
   }
-  return travelGroupUsageText();
+  return { state: "none", text: travelGroupUsageText() };
 }
 
 export async function createTravelGroupForPlayer(playerId: number) {

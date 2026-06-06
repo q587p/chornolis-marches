@@ -7,6 +7,24 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.49 - Group and follow polish - 12026-06-06
+
+### Added
+
+- Added throttled follow-assist blocker hints for useful failure cases such as darkness, hidden movement, no stamina, busy actions and unavailable visible exits.
+- Added travel group inline buttons for pending invites, follow-leader setup, leaving and disbanding, routed through the existing group command helpers.
+- Documented slashless scribe/admin `learning <target>` aliases and `SLOW_COMMAND_LOG_MS` slow-command logging.
+
+### Changed
+
+- Follow-assist success copy now uses one combined personal message instead of stacking a route-memory hint and a separate assist queued line for the same move.
+- Travel group status now separates members in the current location from members elsewhere.
+
+### Risks
+
+- Follow-assist blocker hints still use `WorldEvent` cooldown markers, so aggressive event retention can shorten hint dedupe windows.
+- Travel group buttons remain command shortcuts only; they do not add group movement or shared state beyond the existing group foundation.
+
 ## 0.15.48 - Learning lookup and WorldEvent performance indexes - 12026-06-06
 
 ### Added

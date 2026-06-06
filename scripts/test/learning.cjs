@@ -121,6 +121,12 @@ assert.equal(formatLearningCreatureDisambiguation(learningLookupCreatures).inclu
 assert.equal(slowLogThresholdMs("250"), 250);
 assert.equal(slowLogThresholdMs("bad"), 1000);
 const prismaSchema = fs.readFileSync("prisma/schema.prisma", "utf8");
+const adminSource = fs.readFileSync("src/handlers/admin.ts", "utf8");
+assert.equal(adminSource.includes('slashlessCommandPattern(["learning", "learn", "навчання", "прогрес"])'), true);
+assert.equal(adminSource.includes("runLearningCommand(ctx, String(ctx.match?.[1] ?? \"\").trim())"), true);
+const slowLogSource = fs.readFileSync("src/utils/slowLog.ts", "utf8");
+assert.equal(slowLogSource.includes("slow:${label} durationMs=${durationMs}"), true);
+assert.doesNotMatch(slowLogSource, /messageText|ctx\.message|private/i);
 for (const index of [
   "@@index([title, createdAt])",
   "@@index([title, locationId, createdAt])",

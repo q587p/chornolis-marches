@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
 
 require("ts-node/register");
 
@@ -27,7 +28,8 @@ const {
 } = require("../../src/services/travelGroups");
 
 const leader = { nameNominative: "Орина", firstName: "Орина" };
-const member = { nameNominative: "Левко", firstName: "Левко" };
+const member = { nameNominative: "Левко", firstName: "Левко", currentLocationId: 10 };
+const elsewhereMember = { nameNominative: "Марена", firstName: "Марена", currentLocationId: 11 };
 const invited = { nameNominative: "Нестор", firstName: "Нестор" };
 
 const status = travelGroupStatusText({
@@ -35,16 +37,31 @@ const status = travelGroupStatusText({
   members: [
     { role: TRAVEL_GROUP_ROLE_LEADER, status: TRAVEL_GROUP_STATUS_ACTIVE, player: leader },
     { role: TRAVEL_GROUP_ROLE_MEMBER, status: TRAVEL_GROUP_STATUS_ACTIVE, player: member },
+    { role: TRAVEL_GROUP_ROLE_MEMBER, status: TRAVEL_GROUP_STATUS_ACTIVE, player: elsewhereMember },
     { role: TRAVEL_GROUP_ROLE_MEMBER, status: TRAVEL_GROUP_STATUS_INVITED, player: invited },
   ],
 });
 
 assert.match(status, /Дорожній гурт:/);
 assert.match(status, /Провідник: Орина/);
-assert.match(status, /У гурті: Левко/);
+assert.match(status, /У гурті: Левко, Марена/);
 assert.match(status, /Запрошені: Нестор/);
 assert.match(status, /\/group_follow_leader/);
 assert.equal(travelGroupNoRawIds(status), true);
+
+const locatedStatus = travelGroupStatusText({
+  leaderPlayer: { ...leader, currentLocationId: 10 },
+  members: [
+    { role: TRAVEL_GROUP_ROLE_LEADER, status: TRAVEL_GROUP_STATUS_ACTIVE, player: { ...leader, currentLocationId: 10 } },
+    { role: TRAVEL_GROUP_ROLE_MEMBER, status: TRAVEL_GROUP_STATUS_ACTIVE, player: member },
+    { role: TRAVEL_GROUP_ROLE_MEMBER, status: TRAVEL_GROUP_STATUS_ACTIVE, player: elsewhereMember },
+    { role: TRAVEL_GROUP_ROLE_MEMBER, status: TRAVEL_GROUP_STATUS_INVITED, player: invited },
+  ],
+}, { viewerLocationId: 10 });
+assert.match(locatedStatus, /Поруч: Левко/);
+assert.match(locatedStatus, /Не поруч: Марена/);
+assert.match(locatedStatus, /Запрошені: Нестор/);
+assert.equal(travelGroupNoRawIds(locatedStatus), true);
 
 const usage = travelGroupUsageText();
 assert.match(usage, /\/group_create/);
@@ -82,6 +99,17 @@ for (const text of [
 ]) {
   assert.doesNotMatch(text.toLowerCase(), /party|raid/u);
   assert.equal(travelGroupNoRawIds(text), true);
+}
+
+const aliasesSource = fs.readFileSync("src/handlers/aliases.ts", "utf8");
+for (const callback of [
+  "travelGroup:accept",
+  "travelGroup:decline",
+  "travelGroup:leave",
+  "travelGroup:disband",
+  "travelGroup:follow-leader",
+]) {
+  assert.match(aliasesSource, new RegExp(callback.replace("-", "\\-")));
 }
 
 console.log("Travel group helpers OK");

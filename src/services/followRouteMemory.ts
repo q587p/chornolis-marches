@@ -22,6 +22,7 @@ export const FOLLOW_ROUTE_LEARNING_COOLDOWN_MS = Number(process.env.FOLLOW_ROUTE
 export const FOLLOW_ROUTE_STEP_MEMORY_TTL_MS = Number(process.env.FOLLOW_ROUTE_STEP_MEMORY_TTL_MS || 10 * 60_000);
 export const FOLLOW_ASSIST_EVENT_TITLE = "Follow assist queued move";
 export const FOLLOW_ASSIST_COOLDOWN_MS = Number(process.env.FOLLOW_ASSIST_COOLDOWN_MS || 90_000);
+export const FOLLOW_ASSIST_FAILURE_HINT_COOLDOWN_MS = Number(process.env.FOLLOW_ASSIST_FAILURE_HINT_COOLDOWN_MS || 90_000);
 
 const FOLLOW_STEP_DIRECTIONS = new Set<Direction>(["NORTH", "EAST", "SOUTH", "WEST", "UP", "DOWN", "INSIDE", "OUTSIDE"]);
 
@@ -133,6 +134,24 @@ export function followAssistCooldownKey(input: {
     `player_${input.playerId}`,
     `target_${input.targetType}_${input.targetId}`,
     `from_${input.fromLocationId}`,
+    input.direction ? `direction_${input.direction}` : null,
+  ].filter(Boolean).join(":");
+}
+
+export function followAssistFailureCooldownKey(input: {
+  playerId: number;
+  targetType: FollowTargetType;
+  targetId: number;
+  fromLocationId: number;
+  reason: FollowAssistFailureReason;
+  direction?: Direction | string | null;
+}) {
+  return [
+    "follow_assist_failure",
+    `player_${input.playerId}`,
+    `target_${input.targetType}_${input.targetId}`,
+    `from_${input.fromLocationId}`,
+    `reason_${input.reason}`,
     input.direction ? `direction_${input.direction}` : null,
   ].filter(Boolean).join(":");
 }
@@ -312,9 +331,11 @@ export function evaluateFollowAssistEligibility(input: {
   };
 }
 
-export function followAssistQueuedText(direction: Direction) {
+export function followAssistQueuedText(direction: Direction, targetLabel?: string | null) {
   const label = String(directionLabels[direction] ?? direction).toLocaleLowerCase("uk-UA");
   const phrase = ["UP", "DOWN", "INSIDE", "OUTSIDE"].includes(direction) ? label : `на ${label}`;
+  const target = targetLabel?.trim();
+  if (target) return `Ви трималися чужого сліду: ${escapeHtml(target)} рушає ${phrase}. Автокрок підхоплює цей рух.`;
   return `Ви підхоплюєте чужий крок: ${phrase}.`;
 }
 
@@ -448,12 +469,70 @@ async function hasRecentFollowAssistMarker(playerId: number, cooldownKey: string
   }));
 }
 
+async function hasRecentFollowAssistFailureMarker(playerId: number, failureKey: string) {
+  if (FOLLOW_ASSIST_FAILURE_HINT_COOLDOWN_MS <= 0) return false;
+  const since = new Date(Date.now() - FOLLOW_ASSIST_FAILURE_HINT_COOLDOWN_MS);
+  return Boolean(await prisma.worldEvent.findFirst({
+    where: {
+      title: FOLLOW_ASSIST_EVENT_TITLE,
+      playerId,
+      createdAt: { gte: since },
+      description: { contains: `failureKey=${failureKey}` },
+    },
+    select: { id: true },
+    orderBy: { createdAt: "desc" },
+  }));
+}
+
+function shouldSendFollowAssistFailureHint(reason: FollowAssistFailureReason) {
+  return ["busy", "no-stamina", "dark", "hidden", "no-visible-exit", "resting", "incapacitated"].includes(reason);
+}
+
+async function maybeSendFollowAssistFailureHint(bot: Bot, input: {
+  intent: Awaited<ReturnType<typeof followersForTargetAtLocation>>[number];
+  target: FollowRouteTarget;
+  sourceLocationId: number;
+  reason: FollowAssistFailureReason;
+  direction?: Direction | null;
+}) {
+  if (!shouldSendFollowAssistFailureHint(input.reason)) return false;
+  const failureKey = followAssistFailureCooldownKey({
+    playerId: input.intent.playerId,
+    targetType: input.target.type,
+    targetId: input.target.id,
+    fromLocationId: input.sourceLocationId,
+    reason: input.reason,
+    direction: input.direction,
+  });
+  if (await hasRecentFollowAssistFailureMarker(input.intent.playerId, failureKey)) return false;
+  await prisma.worldEvent.create({
+    data: {
+      type: "MOVE",
+      title: FOLLOW_ASSIST_EVENT_TITLE,
+      description: [
+        `playerId=${input.intent.playerId}`,
+        `targetType=${input.target.type}`,
+        `targetId=${input.target.id}`,
+        `from=${input.sourceLocationId}`,
+        input.direction ? `direction=${input.direction}` : null,
+        `reason=${input.reason}`,
+        `failureKey=${failureKey}`,
+      ].filter(Boolean).join("; "),
+      playerId: input.intent.playerId,
+      locationId: input.sourceLocationId,
+    },
+  });
+  await sendFollowRouteMemoryMessage(bot, input.intent.player, followAssistFailureText(input.reason));
+  return true;
+}
+
 async function maybeQueueFollowAssistMove(bot: Bot, input: {
   intent: Awaited<ReturnType<typeof followersForTargetAtLocation>>[number];
   event: { title: string; description: string | null; createdAt: Date };
   sourceLocationId: number;
   target: FollowRouteTarget;
   direction: Direction;
+  successText?: string;
 }) {
   const player = input.intent.player;
   const preliminaryCooldownKey = followAssistCooldownKey({
@@ -483,7 +562,16 @@ async function maybeQueueFollowAssistMove(bot: Bot, input: {
     locked: Boolean(lockedMessage),
     hasRecentAssist,
   });
-  if (!eligibility.ok) return eligibility;
+  if (!eligibility.ok) {
+    const hinted = await maybeSendFollowAssistFailureHint(bot, {
+      intent: input.intent,
+      target: input.target,
+      sourceLocationId: input.sourceLocationId,
+      reason: eligibility.reason,
+      direction: input.direction,
+    });
+    return { ...eligibility, hinted };
+  }
   const parsedMemory = parseFollowRouteMemoryEventDescription(input.event.description);
 
   const result = await performOrQueuePlayerAction(bot, {
@@ -521,7 +609,7 @@ async function maybeQueueFollowAssistMove(bot: Bot, input: {
     }),
   ]);
 
-  await sendFollowRouteMemoryMessage(bot, player, followAssistQueuedText(eligibility.direction));
+  await sendFollowRouteMemoryMessage(bot, player, input.successText ?? followAssistQueuedText(eligibility.direction));
   return { ...eligibility, result };
 }
 
@@ -591,7 +679,7 @@ async function rememberFollowedTargetVisibleMoveInner(bot: Bot, input: {
           },
         });
 
-        const shouldAssist = Boolean(intent.assistEnabled && kind === "clear");
+        const shouldAssist = Boolean(intent.assistEnabled);
         if (!shouldNotify && !shouldLearn && !shouldAssist) continue;
 
         const event = await prisma.worldEvent.create({
@@ -624,21 +712,24 @@ async function rememberFollowedTargetVisibleMoveInner(bot: Bot, input: {
             lastSourceEventId: event.id,
           });
         }
-        if (shouldNotify) {
-          await sendFollowRouteMemoryMessage(bot, intent.player, followedRouteMemoryText({
-            label,
-            direction: input.direction,
-            kind,
-          }));
-        }
+        let assistResult: Awaited<ReturnType<typeof maybeQueueFollowAssistMove>> | null = null;
         if (shouldAssist) {
-          await maybeQueueFollowAssistMove(bot, {
+          assistResult = await maybeQueueFollowAssistMove(bot, {
             intent,
             event,
             sourceLocationId: input.sourceLocationId,
             target: input.target,
             direction: input.direction,
+            successText: followAssistQueuedText(input.direction, label),
           });
+        }
+        const shouldSuppressRouteHint = Boolean(assistResult?.ok || (assistResult && !assistResult.ok && (assistResult.hinted || ["dark", "hidden"].includes(assistResult.reason))));
+        if (shouldNotify && !shouldSuppressRouteHint) {
+          await sendFollowRouteMemoryMessage(bot, intent.player, followedRouteMemoryText({
+            label,
+            direction: input.direction,
+            kind,
+          }));
         }
       } catch (error) {
         console.warn("Failed to record follow route memory:", error);
@@ -714,7 +805,16 @@ async function rememberFollowedTargetHiddenRouteInner(bot: Bot, input: {
             locationId: input.sourceLocationId,
           },
         });
-        await sendFollowRouteMemoryMessage(bot, intent.player, followedHiddenRouteMemoryText());
+        if (intent.assistEnabled) {
+          await maybeSendFollowAssistFailureHint(bot, {
+            intent,
+            target: input.target,
+            sourceLocationId: input.sourceLocationId,
+            reason: "hidden",
+          });
+        } else {
+          await sendFollowRouteMemoryMessage(bot, intent.player, followedHiddenRouteMemoryText());
+        }
       } catch (error) {
         console.warn("Failed to record hidden follow route memory:", error);
       }

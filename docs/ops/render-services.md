@@ -145,6 +145,24 @@ The status page must not expose secrets, tokens, admin ids, private chat ids,
 private channel ids, raw `DATABASE_URL`, queued private content, or hidden
 gameplay information.
 
+## Slow Command Logs
+
+The main game bot has small opt-in timing logs around a few high-risk command
+and action paths. Set `SLOW_COMMAND_LOG_MS` to change the threshold in
+milliseconds; the default is `1000`, and `0` disables these warnings.
+
+Slow logs use the compact format:
+
+```text
+slow:<label> durationMs=<number>
+```
+
+Labels describe code paths such as learning lookup, target inspection, tracking
+or follow-route memory. They must not include private player message text,
+Telegram payloads, whispers, direct replies, tokens or database secrets. Use
+these logs to identify remaining hotspots before rewriting WorldEvent marker
+storage or adding broader indexes.
+
 ## Herald Archive Catch-Up
 
 Historical `news.md` backfill uses the durable `HeraldPublication` outbox. The

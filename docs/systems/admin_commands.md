@@ -12,6 +12,10 @@
   falls back to a named creature if no player matches. Creature output separates
   stored rows from profile defaults; profile defaults are profession/species
   estimates, not stored learning.
+- As of `0.15.49`, the same scribe/admin lookup also accepts slashless text
+  forms such as `learning Орина` and `навчання Орина`. They route to the same
+  guarded handler as `/learning`; ordinary players still cannot access the
+  learning debug surface.
 - This is a command-only scribe/admin surface. It is not a public `/skills`
   sheet and should not be added to ordinary player news or menus.
 
