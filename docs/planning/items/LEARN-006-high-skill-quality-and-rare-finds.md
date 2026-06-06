@@ -1,7 +1,7 @@
 ---
 id: LEARN-006
 title: High-skill quality and rare finds
-status: backlog
+status: in_testing
 type: feature
 area: learning
 priority: medium
@@ -55,3 +55,17 @@ The result should feel like skilled attention finding something that was plausib
 - The effect is bounded, tested and cooldown/cap-safe.
 - Ordinary players see atmospheric outcome text, not raw skill math.
 - Economy-facing rewards stay tiny and cannot be farmed reliably.
+
+## Implementation Notes
+
+`0.15.45` implements the first MVP slice:
+
+- high gathering can rarely notice one extra ordinary unit of the same supported
+  resource already being gathered (`herbs`, `berries` or `mushrooms`);
+- high freshening can rarely add a cleaner-work qualitative note without
+  changing meat yield;
+- tutorial foraging, unsupported resources, combat, cooking quality, money finds
+  and broad loot tables remain out of scope.
+
+The outcome chance uses learning already stored before the current action. The
+practice recorded by that action only affects future attempts.
