@@ -23,6 +23,7 @@ export const FOLLOW_ROUTE_STEP_MEMORY_TTL_MS = Number(process.env.FOLLOW_ROUTE_S
 export const FOLLOW_ASSIST_EVENT_TITLE = "Follow assist queued move";
 export const FOLLOW_ASSIST_COOLDOWN_MS = Number(process.env.FOLLOW_ASSIST_COOLDOWN_MS || 90_000);
 export const FOLLOW_ASSIST_FAILURE_HINT_COOLDOWN_MS = Number(process.env.FOLLOW_ASSIST_FAILURE_HINT_COOLDOWN_MS || 90_000);
+export const FOLLOW_ASSIST_STEP_NOTE = "follow-assist";
 export const FOLLOW_ASSIST_CATCH_UP_NOTE = "follow-assist:catch-up";
 const FOLLOW_ASSIST_CATCH_UP_EVENT_TAKE = Number(process.env.FOLLOW_ASSIST_CATCH_UP_EVENT_TAKE || 20);
 
@@ -96,6 +97,17 @@ export function followRouteMemoryEventDescription(input: {
     input.cooldownKey ? `cooldownKey=${input.cooldownKey}` : null,
     input.learningKey ? `learningKey=${input.learningKey}` : null,
   ].filter(Boolean).join("; ");
+}
+
+export function followAssistEventDescription(input: Parameters<typeof followRouteMemoryEventDescription>[0] & {
+  assistKind: "same_room" | "catch_up";
+  note: string;
+}) {
+  return [
+    followRouteMemoryEventDescription(input),
+    `assistKind=${input.assistKind}`,
+    `note=${input.note}`,
+  ].join("; ");
 }
 
 export function followRouteMemoryCooldownKey(input: {
@@ -509,6 +521,12 @@ async function hasRecentFollowAssistFailureMarker(playerId: number, failureKey: 
   }));
 }
 
+export async function hasBlockingPlayerActionsForFollowAssist(playerId: number) {
+  return prisma.worldAction.count({
+    where: { actorType: "PLAYER", playerId, status: { in: ["QUEUED", "RUNNING"] } },
+  });
+}
+
 function shouldSendFollowAssistFailureHint(reason: FollowAssistFailureReason) {
   return ["busy", "no-stamina", "dark", "hidden", "no-visible-exit", "resting", "incapacitated"].includes(reason);
 }
@@ -568,7 +586,7 @@ async function maybeQueueFollowAssistMove(bot: Bot, input: {
     direction: input.direction,
   });
   const [activeActionCount, exit, lockedMessage, hasRecentAssist] = await Promise.all([
-    prisma.worldAction.count({ where: { actorType: "PLAYER", playerId: input.intent.playerId, status: { in: ["QUEUED", "RUNNING"] } } }),
+    hasBlockingPlayerActionsForFollowAssist(input.intent.playerId),
     prisma.locationExit.findUnique({
       where: { fromLocationId_direction: { fromLocationId: input.sourceLocationId, direction: input.direction } },
       select: { id: true, isHidden: true, travelCost: true },
@@ -605,7 +623,7 @@ async function maybeQueueFollowAssistMove(bot: Bot, input: {
     payload: { direction: eligibility.direction },
     durationMs: movementDurationMs(exit?.travelCost, player.stamina),
     chatId: player.telegramId,
-    note: "follow-assist",
+    note: FOLLOW_ASSIST_STEP_NOTE,
   });
 
   await prisma.$transaction([
@@ -613,7 +631,7 @@ async function maybeQueueFollowAssistMove(bot: Bot, input: {
       data: {
         type: "MOVE",
         title: FOLLOW_ASSIST_EVENT_TITLE,
-        description: followRouteMemoryEventDescription({
+        description: followAssistEventDescription({
           playerId: input.intent.playerId,
           targetType: input.target.type,
           targetId: input.target.id,
@@ -623,6 +641,8 @@ async function maybeQueueFollowAssistMove(bot: Bot, input: {
           source: "visible_move",
           visibility: "clear",
           cooldownKey: eligibility.cooldownKey,
+          assistKind: "same_room",
+          note: FOLLOW_ASSIST_STEP_NOTE,
         }),
         playerId: input.intent.playerId,
         locationId: input.sourceLocationId,
@@ -700,7 +720,7 @@ async function maybeQueueFollowAssistCatchUpInner(bot: Bot, input: {
   }) : null;
 
   const [activeActionCount, exit, lockedMessage, hasRecentAssist] = await Promise.all([
-    prisma.worldAction.count({ where: { actorType: "PLAYER", playerId: input.playerId, status: { in: ["QUEUED", "RUNNING"] } } }),
+    hasBlockingPlayerActionsForFollowAssist(input.playerId),
     preliminaryDirection
       ? prisma.locationExit.findUnique({
         where: { fromLocationId_direction: { fromLocationId: player.currentLocationId, direction: preliminaryDirection } },
@@ -746,7 +766,7 @@ async function maybeQueueFollowAssistCatchUpInner(bot: Bot, input: {
       data: {
         type: "MOVE",
         title: FOLLOW_ASSIST_EVENT_TITLE,
-        description: followRouteMemoryEventDescription({
+        description: followAssistEventDescription({
           playerId: input.playerId,
           targetType: target.type,
           targetId: target.id,
@@ -756,6 +776,8 @@ async function maybeQueueFollowAssistCatchUpInner(bot: Bot, input: {
           source: "visible_move",
           visibility: "clear",
           cooldownKey: eligibility.cooldownKey,
+          assistKind: "catch_up",
+          note: FOLLOW_ASSIST_CATCH_UP_NOTE,
         }),
         playerId: input.playerId,
         locationId: player.currentLocationId,

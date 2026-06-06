@@ -9,8 +9,10 @@ const {
 const {
   FOLLOW_ROUTE_HIDDEN_MEMORY_EVENT_TITLE,
   FOLLOW_ROUTE_MEMORY_EVENT_TITLE,
+  FOLLOW_ASSIST_STEP_NOTE,
   FOLLOW_ASSIST_CATCH_UP_NOTE,
   evaluateFollowAssistEligibility,
+  followAssistEventDescription,
   followAssistCooldownKey,
   followAssistCatchUpQueuedText,
   followAssistFailureCooldownKey,
@@ -96,6 +98,19 @@ result = evaluateFollowAssistEligibility({
   hasVisibleExit: true,
 });
 assert.deepEqual(result, { ok: false, reason: "busy" });
+
+// A queued manual action and an already queued follow-assist action both block catch-up.
+for (const actionKind of ["manual", "follow-assist"]) {
+  result = evaluateFollowAssistEligibility({
+    intent: intent(),
+    currentLocationId: 100,
+    event: clearEvent(),
+    player: player(),
+    activeActionCount: 1,
+    hasVisibleExit: true,
+  });
+  assert.deepEqual(result, { ok: false, reason: "busy" }, `${actionKind} action should block follow assist`);
+}
 
 result = evaluateFollowAssistEligibility({
   intent: intent(),
@@ -195,13 +210,34 @@ const hiddenText = followAssistFailureText("hidden");
 assert.equal(hiddenText.includes("До води"), false);
 assert.equal(hiddenText.includes("до води"), false);
 assert.equal(hiddenText.includes("under_bridge"), false);
+assert.equal(hiddenText.includes("under_bridge_18_05"), false);
+const darkText = followAssistFailureText("dark");
+assert.equal(darkText.includes("NORTH"), false);
+assert.equal(darkText.includes("північ"), false);
 assert.equal(followAssistQueuedText("NORTH"), "Ви підхоплюєте чужий крок: на північ.");
 assert.equal(
   followAssistQueuedText("NORTH", "Орина"),
   "Ви трималися чужого сліду: Орина рушає на північ. Автокрок підхоплює цей рух.",
 );
 assert.equal(followAssistCatchUpQueuedText("NORTH"), "Автокрок не губить слід: далі на північ.");
+assert.equal(FOLLOW_ASSIST_STEP_NOTE, "follow-assist");
 assert.equal(FOLLOW_ASSIST_CATCH_UP_NOTE, "follow-assist:catch-up");
+assert.equal(
+  followAssistEventDescription({
+    playerId: 7,
+    targetType: FOLLOW_TARGET_CREATURE,
+    targetId: 42,
+    fromLocationId: 100,
+    toLocationId: 101,
+    direction: "NORTH",
+    source: "visible_move",
+    visibility: "clear",
+    cooldownKey: "k",
+    assistKind: "catch_up",
+    note: FOLLOW_ASSIST_CATCH_UP_NOTE,
+  }).includes("assistKind=catch_up; note=follow-assist:catch-up"),
+  true,
+);
 assert.equal(
   followAssistFailureCooldownKey({
     playerId: 7,
@@ -215,6 +251,8 @@ assert.equal(
 
 const followRouteMemorySource = fs.readFileSync("src/services/followRouteMemory.ts", "utf8");
 assert.match(followRouteMemorySource, /withSlowLog\("followAssist\.catchUp"/);
+assert.match(followRouteMemorySource, /canSendProactiveToPlayerId\(input\.playerId\)/);
+assert.match(followRouteMemorySource, /hasBlockingPlayerActionsForFollowAssist\(input\.playerId\)/);
 assert.match(followRouteMemorySource, /note: FOLLOW_ASSIST_CATCH_UP_NOTE/);
 const catchUpLookupSource = followRouteMemorySource.slice(
   followRouteMemorySource.indexOf("async function latestFollowRouteMemoryForCatchUp"),
@@ -223,6 +261,14 @@ const catchUpLookupSource = followRouteMemorySource.slice(
 assert.match(catchUpLookupSource, /title: FOLLOW_ROUTE_MEMORY_EVENT_TITLE/);
 assert.match(catchUpLookupSource, /take: Math\.max/);
 assert.equal(catchUpLookupSource.includes("description: { contains"), false);
+const catchUpSource = followRouteMemorySource.slice(
+  followRouteMemorySource.indexOf("async function maybeQueueFollowAssistCatchUpInner"),
+  followRouteMemorySource.indexOf("export async function rememberFollowedTargetVisibleMove"),
+);
+assert.match(catchUpSource, /assistKind: "catch_up"/);
+assert.match(catchUpSource, /note: FOLLOW_ASSIST_CATCH_UP_NOTE/);
+assert.equal(catchUpSource.includes("prisma.player.update"), false);
+assert.equal(catchUpSource.includes("currentLocationId:"), true);
 const actionCompletionsSource = fs.readFileSync("src/services/actionCompletions.ts", "utf8");
 assert.match(actionCompletionsSource, /maybeQueueFollowAssistCatchUp\(bot, \{ playerId: player\.id \}\)/);
 

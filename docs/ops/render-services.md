@@ -163,6 +163,20 @@ not include private player message text, Telegram payloads, whispers, direct
 replies, tokens or database secrets. Use these logs to identify remaining
 hotspots before rewriting WorldEvent marker storage or adding broader indexes.
 
+`slow:followAssist.catchUp` means a post-arrival follow-assist check took longer
+than the configured threshold. The usual suspects are:
+
+- latest route-memory lookup in recent `WorldEvent` rows;
+- queued/running action count for the follower;
+- locked/visible exit checks;
+- throttled proactive Telegram sends for assist messages or blocker hints.
+
+For a short live smoke after follow-assist changes, temporarily set
+`SLOW_COMMAND_LOG_MS=500`, follow a visible target through several ordinary
+exits, and watch whether repeated `slow:followAssist.catchUp` lines appear. If
+that path is hot, prefer structured marker storage or exact marker fields over
+adding more `description contains` lookups.
+
 ## Herald Archive Catch-Up
 
 Historical `news.md` backfill uses the durable `HeraldPublication` outbox. The

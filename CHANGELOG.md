@@ -7,6 +7,25 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.51 - Follow catch-up stability pass - 12026-06-06
+
+### Added
+
+- Added a named `hasBlockingPlayerActionsForFollowAssist(...)` guard so immediate assist and post-arrival catch-up share the same queued/running action boundary.
+- Added follow-assist event diagnostics for `assistKind=same_room` / `assistKind=catch_up` and the action note that created the assist move.
+- Added stronger follow-assist regression coverage for manual-action blocking, duplicate catch-up blocking, session-presence source guards, hidden-route copy safety and catch-up diagnostics.
+
+### Changed
+
+- Catch-up keeps treating any queued/running player action as a blocker, including manual actions and already queued assist actions.
+- Ops docs now explain what `slow:followAssist.catchUp` means and how to smoke-check it in live logs.
+- Planning now marks the 0.15 follow/catch-up line as stabilizing before the 0.16 NPC mentorship line.
+
+### Risks
+
+- Follow-assist diagnostics still live in `WorldEvent` description text; this is enough for the stability pass but not a substitute for future structured marker storage if slow logs show hot marker lookups.
+- Catch-up intentionally remains conservative, so manual actions and duplicate assist actions may stop a chain earlier than a player expects.
+
 ## 0.15.50 - Continuous follow assist catch-up - 12026-06-06
 
 ### Added
