@@ -65,6 +65,11 @@ the feel of a successful action: gathering may rarely notice one extra ordinary
 unit of the same supported resource, and freshening may rarely add cleaner-work
 text without increasing meat yield.
 
+`0.15.46` adds guarded follow assist as an opt-in ordinary-exit auto-attempt.
+Treat it as a conservative bridge from route-memory to movement, not group
+travel, route replay or hidden-passage repetition. Watch proactive message
+cadence and blocking reasons in live play before widening it.
+
 Do not open another broad content loop before the learning/observation foundation is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
 ## Immediate Sequence
@@ -77,8 +82,8 @@ Do not open another broad content loop before the learning/observation foundatio
 6. **0.15.43 / TRACK-LEARN-001-A:** tracking practice and track-reading quality is in testing: executed `/track` can teach, higher tracking can improve track output, and darkness still hides direction.
 7. **0.15.44:** learning surface and planning cleanup is in testing: ordinary summaries stay short/diegetic, technical views stay raw, `/track` uses previous experience for current output, and clearly completed LEARN planning items are closed.
 8. **0.15.45 / LEARN-006:** high-skill qualitative outcomes are in testing: rare gathering/freshening quality notes stay bounded, mostly textual and non-combat.
-9. **FOLLOW-ASSIST-001:** review live route-memory, follow-step and `0.15.37` track-gated passage cadence before adding guarded follow-assist or auto-follow-like prompts. Hidden routes must remain non-repeatable without independent learning/triggering.
-10. **SOC-003:** after follow assist guardrails, decide whether any explicit group/travel acceptance layer is worth promoting.
+9. **FOLLOW-ASSIST-001 / 0.15.46:** guarded follow assist is in testing: opt-in, ordinary visible exits only, no hidden-route repeat, no group semantics.
+10. **SOC-003:** after live follow-assist guardrails, decide whether any explicit group/travel acceptance layer is worth promoting.
 11. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
 12. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
 

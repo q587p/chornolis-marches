@@ -100,6 +100,22 @@ instead of always showing the setup prompt:
 - the response explains how to change the target, clear it with `/unfollow`,
   and, where appropriate, try one manual `/follow_step`.
 
+As of `0.15.46`, follow intent can also carry an opt-in guarded assist flag:
+
+- `Автокрок слідом` (`/follow_assist on`) is an auto-attempt, not a group,
+  party, companion or `Поклик духа` mode;
+- it only reacts to the followed target's ordinary visible movement after clear
+  route-memory is recorded;
+- it submits one normal `MOVE` through the same movement/action queue rules as
+  a manual step, so stamina, posture, sleep, death, queues, locked exits and
+  visible exits still matter;
+- it does not repeat hidden routes, does not trigger the cellar water-word
+  passage, does not reveal dark/non-directional memory and does not guarantee a
+  continuous lock on the target.
+
+This is still weaker than group travel. It is a guarded convenience for a
+single clear ordinary step, not accepted membership in a shared route.
+
 ### 3. Following Is Weaker Than Group Membership
 
 Following should be possible even without an existing contact. It means:

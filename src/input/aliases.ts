@@ -14,6 +14,7 @@ export type GiveAliasAmount = number;
 export type SessionPresenceAliasMode = "afk" | "end";
 export type DaypartNoticeAliasMode = "show" | "on" | "off";
 export type AutoMessageAliasMode = "show" | "on" | "off";
+export type FollowAssistAliasMode = "show" | "on" | "off";
 
 export type ParsedAliasCommand =
   | { kind: "location" }
@@ -81,6 +82,7 @@ export type ParsedAliasCommand =
   | { kind: "yell"; text: string }
   | { kind: "shout"; text: string }
   | { kind: "follow"; target: string }
+  | { kind: "follow-assist"; mode: FollowAssistAliasMode }
   | { kind: "follow-step" }
   | { kind: "unfollow" }
   | { kind: "crawl-root-gap" }
@@ -1649,6 +1651,47 @@ function parseFollowStepIntent(text: string): ParsedAliasCommand | null {
   return null;
 }
 
+function parseFollowAssistIntent(text: string): ParsedAliasCommand | null {
+  if ([
+    "follow assist",
+    "follow_assist",
+    "follow auto",
+    "follow_auto",
+    "autofollow",
+    "автослідування",
+  ].includes(text)) return { kind: "follow-assist", mode: "show" };
+
+  if ([
+    "follow assist on",
+    "follow_assist on",
+    "follow auto on",
+    "follow_auto on",
+    "autofollow on",
+    "йти слідом автоматично",
+    "триматися сліду автоматично",
+    "увімкнути слідування",
+    "ввімкнути слідування",
+    "увімкнути автослідування",
+    "ввімкнути автослідування",
+  ].includes(text)) return { kind: "follow-assist", mode: "on" };
+
+  if ([
+    "follow assist off",
+    "follow_assist off",
+    "stop follow assist",
+    "stop_follow_assist",
+    "follow auto off",
+    "follow_auto off",
+    "autofollow off",
+    "не йти слідом автоматично",
+    "вимкнути слідування",
+    "вимкнути автослідування",
+    "зупинити автослідування",
+  ].includes(text)) return { kind: "follow-assist", mode: "off" };
+
+  return null;
+}
+
 function parseTrackGateIntent(text: string): ParsedAliasCommand | null {
   if ([
     "follow_trace",
@@ -1739,6 +1782,9 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
 
   const all = parseAll(commandText);
   if (all) return all;
+
+  const followAssistIntent = parseFollowAssistIntent(commandText);
+  if (followAssistIntent) return followAssistIntent;
 
   const followStepIntent = parseFollowStepIntent(commandText);
   if (followStepIntent) return followStepIntent;

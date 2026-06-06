@@ -327,6 +327,9 @@ model PlayerFollowIntent {
   lastSeenLocationId   Int?
   lastSeenLocation     CellLocation? @relation(fields: [lastSeenLocationId], references: [id], onDelete: SetNull)
   lastKnownTargetLabel String?
+  assistEnabled        Boolean @default(false)
+  assistUpdatedAt      DateTime?
+  lastAssistAt         DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

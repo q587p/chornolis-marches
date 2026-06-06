@@ -9,6 +9,7 @@ module.exports = [
   nodeTest("scripts/test/spirit-call.cjs"),
   nodeTest("scripts/test/follow-intent.cjs"),
   nodeTest("scripts/test/follow-route-memory.cjs"),
+  nodeTest("scripts/test/follow-assist.cjs"),
   nodeTest("scripts/test/player-notification-settings.cjs"),
   nodeTest("scripts/test/posture.cjs"),
   nodeTest("scripts/test/sleep.cjs"),
