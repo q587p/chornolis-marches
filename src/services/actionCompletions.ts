@@ -70,6 +70,7 @@ import { recordTrackingPractice, roughTrackAgeText, trackingDarkPresenceText, tr
 import { tryCompleteCellarWaterWordPassage } from "./cellarWaterPassage";
 import {
   followedTrackDisplayLabel,
+  maybeQueueFollowAssistCatchUp,
   prioritizeFollowIntentTracks,
   rememberFollowedTargetVisibleMove,
 } from "./followRouteMemory";
@@ -691,6 +692,7 @@ async function completeMove(bot: Bot, action: WorldAction) {
       await sendFirstNightGuidance(bot, chatId, player.id, exit.toLocationId);
       await maybeTriggerPassiveApiarySting(bot, { playerId: player.id, locationId: exit.toLocationId, chatId, reason: "move" });
     }
+    await maybeQueueFollowAssistCatchUp(bot, { playerId: player.id });
     return;
   }
 

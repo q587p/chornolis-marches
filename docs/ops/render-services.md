@@ -157,11 +157,11 @@ Slow logs use the compact format:
 slow:<label> durationMs=<number>
 ```
 
-Labels describe code paths such as learning lookup, target inspection, tracking
-or follow-route memory. They must not include private player message text,
-Telegram payloads, whispers, direct replies, tokens or database secrets. Use
-these logs to identify remaining hotspots before rewriting WorldEvent marker
-storage or adding broader indexes.
+Labels describe code paths such as learning lookup, target inspection, tracking,
+follow-route memory, or `followAssist.catchUp` after a completed move. They must
+not include private player message text, Telegram payloads, whispers, direct
+replies, tokens or database secrets. Use these logs to identify remaining
+hotspots before rewriting WorldEvent marker storage or adding broader indexes.
 
 ## Herald Archive Catch-Up
 

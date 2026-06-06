@@ -7,6 +7,24 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.50 - Continuous follow assist catch-up - 12026-06-06
+
+### Added
+
+- Added guarded post-arrival follow-assist catch-up: after a player completes a `MOVE`, enabled follow assist can queue one more ordinary `MOVE` from fresh clear route-memory at the player's current location.
+- Added a `follow-assist:catch-up` action note for catch-up moves and `slow:followAssist.catchUp` timing around the catch-up helper.
+- Added focused follow-assist tests for catch-up copy, action notes, stale/wrong-location rejection and bounded latest-memory lookup.
+
+### Changed
+
+- Follow route-memory can now record clear visible movement for assist-enabled followers who were expected at the source location but are still catching up, without sending proactive messages or learning progress for movement they did not witness.
+- Travel groups remain social/travel context only; group follow-leader continues to rely on per-player follow intent and opt-in follow assist.
+
+### Risks
+
+- Continuous catch-up still depends on fresh `WorldEvent` route-memory and cooldown markers, so aggressive event retention can shorten the chain or duplicate-protection window.
+- Buffered catch-up memory is intentionally limited to assist-enabled followers and ordinary visible movement, but live play should watch whether long target/follower gaps need tighter TTL or step-count tuning.
+
 ## 0.15.49 - Group and follow polish - 12026-06-06
 
 ### Added

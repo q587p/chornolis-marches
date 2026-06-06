@@ -6,7 +6,7 @@ import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { escapeHtml } from "../utils/text";
 import { safeSendMessage } from "../utils/telegram";
 import { withSlowLog } from "../utils/slowLog";
-import { canSendProactiveToTelegramId } from "./sessionPresence";
+import { canSendProactiveToPlayerId, canSendProactiveToTelegramId } from "./sessionPresence";
 import { visibilityRulesForLocation } from "./visibility";
 import { recordLearningProgress } from "./learning";
 import { FOLLOW_TARGET_CREATURE, FOLLOW_TARGET_PLAYER, type FollowTargetType } from "./following";
@@ -23,6 +23,8 @@ export const FOLLOW_ROUTE_STEP_MEMORY_TTL_MS = Number(process.env.FOLLOW_ROUTE_S
 export const FOLLOW_ASSIST_EVENT_TITLE = "Follow assist queued move";
 export const FOLLOW_ASSIST_COOLDOWN_MS = Number(process.env.FOLLOW_ASSIST_COOLDOWN_MS || 90_000);
 export const FOLLOW_ASSIST_FAILURE_HINT_COOLDOWN_MS = Number(process.env.FOLLOW_ASSIST_FAILURE_HINT_COOLDOWN_MS || 90_000);
+export const FOLLOW_ASSIST_CATCH_UP_NOTE = "follow-assist:catch-up";
+const FOLLOW_ASSIST_CATCH_UP_EVENT_TAKE = Number(process.env.FOLLOW_ASSIST_CATCH_UP_EVENT_TAKE || 20);
 
 const FOLLOW_STEP_DIRECTIONS = new Set<Direction>(["NORTH", "EAST", "SOUTH", "WEST", "UP", "DOWN", "INSIDE", "OUTSIDE"]);
 
@@ -339,6 +341,12 @@ export function followAssistQueuedText(direction: Direction, targetLabel?: strin
   return `Ви підхоплюєте чужий крок: ${phrase}.`;
 }
 
+export function followAssistCatchUpQueuedText(direction: Direction) {
+  const label = String(directionLabels[direction] ?? direction).toLocaleLowerCase("uk-UA");
+  const phrase = ["UP", "DOWN", "INSIDE", "OUTSIDE"].includes(direction) ? label : `на ${label}`;
+  return `Автокрок не губить слід: далі ${phrase}.`;
+}
+
 export function followAssistFailureText(reason: FollowAssistFailureReason) {
   if (reason === "hidden") return "Чужий слід зник не кроком. Автокрок мовчить.";
   if (reason === "dark" || reason === "no-direction") return "Темрява забрала напрям. Автокрок не знає, куди йти.";
@@ -425,6 +433,23 @@ async function followersForTargetAtLocation(sourceLocationId: number, target: Fo
       ...(target.type === FOLLOW_TARGET_PLAYER ? { targetPlayerId: target.id } : { targetCreatureId: target.id }),
       player: {
         currentLocationId: sourceLocationId,
+        hp: { gt: 0 },
+        sleepState: "AWAKE",
+      },
+    },
+    include: { player: true },
+  });
+}
+
+async function assistFollowersExpectingTargetAtLocation(sourceLocationId: number, target: FollowRouteTarget) {
+  return prisma.playerFollowIntent.findMany({
+    where: {
+      targetType: target.type,
+      ...(target.type === FOLLOW_TARGET_PLAYER ? { targetPlayerId: target.id } : { targetCreatureId: target.id }),
+      assistEnabled: true,
+      lastSeenLocationId: sourceLocationId,
+      player: {
+        currentLocationId: { not: sourceLocationId },
         hp: { gt: 0 },
         sleepState: "AWAKE",
       },
@@ -613,6 +638,139 @@ async function maybeQueueFollowAssistMove(bot: Bot, input: {
   return { ...eligibility, result };
 }
 
+async function latestFollowRouteMemoryForCatchUp(playerId: number, currentLocationId: number) {
+  const ttlMs = FOLLOW_ROUTE_STEP_MEMORY_TTL_MS;
+  const since = new Date(Date.now() - ttlMs);
+  const events = await prisma.worldEvent.findMany({
+    where: {
+      playerId,
+      title: FOLLOW_ROUTE_MEMORY_EVENT_TITLE,
+      createdAt: { gte: since },
+    },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      createdAt: true,
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: Math.max(1, Math.min(50, FOLLOW_ASSIST_CATCH_UP_EVENT_TAKE)),
+  });
+  return events.find((event) => {
+    const parsed = parseFollowRouteMemoryEventDescription(event.description);
+    return parsed.source === "visible_move" && parsed.fromLocationId === currentLocationId;
+  }) ?? null;
+}
+
+export async function maybeQueueFollowAssistCatchUp(bot: Bot, input: {
+  playerId: number;
+}) {
+  return withSlowLog("followAssist.catchUp", () => maybeQueueFollowAssistCatchUpInner(bot, input));
+}
+
+async function maybeQueueFollowAssistCatchUpInner(bot: Bot, input: {
+  playerId: number;
+}) {
+  if (!(await canSendProactiveToPlayerId(input.playerId))) return { ok: false as const, reason: "incapacitated" as const };
+
+  const [player, intent] = await Promise.all([
+    prisma.player.findUnique({ where: { id: input.playerId } }),
+    prisma.playerFollowIntent.findUnique({ where: { playerId: input.playerId } }),
+  ]);
+  if (!player?.currentLocationId || !intent?.assistEnabled || !intent.targetType) {
+    return { ok: false as const, reason: "assist-disabled" as const };
+  }
+
+  const event = await latestFollowRouteMemoryForCatchUp(input.playerId, player.currentLocationId);
+  const parsed = event ? parseFollowRouteMemoryEventDescription(event.description) : {};
+  const target: FollowRouteTarget | null = intent.targetType === FOLLOW_TARGET_PLAYER && intent.targetPlayerId
+    ? { type: FOLLOW_TARGET_PLAYER, id: intent.targetPlayerId, label: intent.lastKnownTargetLabel ?? "хтось" }
+    : intent.targetType === FOLLOW_TARGET_CREATURE && intent.targetCreatureId
+      ? { type: FOLLOW_TARGET_CREATURE, id: intent.targetCreatureId, label: intent.lastKnownTargetLabel ?? "хтось" }
+      : null;
+  if (!target) return { ok: false as const, reason: "wrong-target" as const };
+
+  const preliminaryDirection = parsed.direction;
+  const preliminaryCooldownKey = preliminaryDirection ? followAssistCooldownKey({
+    playerId: input.playerId,
+    targetType: target.type,
+    targetId: target.id,
+    fromLocationId: player.currentLocationId,
+    direction: preliminaryDirection,
+  }) : null;
+
+  const [activeActionCount, exit, lockedMessage, hasRecentAssist] = await Promise.all([
+    prisma.worldAction.count({ where: { actorType: "PLAYER", playerId: input.playerId, status: { in: ["QUEUED", "RUNNING"] } } }),
+    preliminaryDirection
+      ? prisma.locationExit.findUnique({
+        where: { fromLocationId_direction: { fromLocationId: player.currentLocationId, direction: preliminaryDirection } },
+        select: { id: true, isHidden: true, travelCost: true },
+      })
+      : Promise.resolve(null),
+    preliminaryDirection ? locationLockedExitMessageForPlayer(input.playerId, player.currentLocationId, preliminaryDirection) : Promise.resolve(null),
+    preliminaryCooldownKey ? hasRecentFollowAssistMarker(input.playerId, preliminaryCooldownKey) : Promise.resolve(false),
+  ]);
+
+  const eligibility = evaluateFollowAssistEligibility({
+    intent,
+    currentLocationId: player.currentLocationId,
+    event,
+    player,
+    activeActionCount,
+    hasVisibleExit: Boolean(exit && !exit.isHidden),
+    locked: Boolean(lockedMessage),
+    hasRecentAssist,
+  });
+  if (!eligibility.ok) {
+    await maybeSendFollowAssistFailureHint(bot, {
+      intent: { ...intent, player },
+      target,
+      sourceLocationId: player.currentLocationId,
+      reason: eligibility.reason,
+      direction: preliminaryDirection,
+    });
+    return eligibility;
+  }
+
+  const result = await performOrQueuePlayerAction(bot, {
+    playerId: input.playerId,
+    type: "MOVE",
+    payload: { direction: eligibility.direction },
+    durationMs: movementDurationMs(exit?.travelCost, player.stamina),
+    chatId: player.telegramId,
+    note: FOLLOW_ASSIST_CATCH_UP_NOTE,
+  });
+
+  await prisma.$transaction([
+    prisma.worldEvent.create({
+      data: {
+        type: "MOVE",
+        title: FOLLOW_ASSIST_EVENT_TITLE,
+        description: followRouteMemoryEventDescription({
+          playerId: input.playerId,
+          targetType: target.type,
+          targetId: target.id,
+          fromLocationId: player.currentLocationId,
+          toLocationId: parsed.toLocationId,
+          direction: eligibility.direction,
+          source: "visible_move",
+          visibility: "clear",
+          cooldownKey: eligibility.cooldownKey,
+        }),
+        playerId: input.playerId,
+        locationId: player.currentLocationId,
+      },
+    }),
+    prisma.playerFollowIntent.update({
+      where: { playerId: input.playerId },
+      data: { lastAssistAt: new Date() },
+    }),
+  ]);
+
+  await sendFollowRouteMemoryMessage(bot, player, followAssistCatchUpQueuedText(eligibility.direction));
+  return { ...eligibility, result };
+}
+
 export async function rememberFollowedTargetVisibleMove(bot: Bot, input: {
   sourceLocationId: number;
   destinationLocationId: number;
@@ -629,7 +787,16 @@ async function rememberFollowedTargetVisibleMoveInner(bot: Bot, input: {
   target: FollowRouteTarget;
 }) {
   try {
-    const followers = await followersForTargetAtLocation(input.sourceLocationId, input.target);
+    const [presentFollowers, expectedFollowers] = await Promise.all([
+      followersForTargetAtLocation(input.sourceLocationId, input.target),
+      assistFollowersExpectingTargetAtLocation(input.sourceLocationId, input.target),
+    ]);
+    const followers = [
+      ...presentFollowers.map((intent) => ({ intent, present: true })),
+      ...expectedFollowers
+        .filter((intent) => !presentFollowers.some((present) => present.playerId === intent.playerId))
+        .map((intent) => ({ intent, present: false })),
+    ];
     if (!followers.length) return 0;
 
     const visibility = await visibilityRulesForLocation(input.sourceLocationId, "brief");
@@ -640,8 +807,9 @@ async function rememberFollowedTargetVisibleMoveInner(bot: Bot, input: {
     });
     if (kind === "none") return 0;
 
-    for (const intent of followers) {
+    for (const follower of followers) {
       try {
+        const { intent, present } = follower;
         const label = input.target.label || intent.lastKnownTargetLabel || "хтось";
         const cooldownKey = followRouteMemoryCooldownKey({
           playerId: intent.playerId,
@@ -656,14 +824,14 @@ async function rememberFollowedTargetVisibleMoveInner(bot: Bot, input: {
           targetType: input.target.type,
           targetId: input.target.id,
         });
-        const shouldNotify = !(await hasRecentFollowRouteMemoryMarker({
+        const shouldNotify = present && !(await hasRecentFollowRouteMemoryMarker({
           title: FOLLOW_ROUTE_MEMORY_EVENT_TITLE,
           playerId: intent.playerId,
           markerName: "cooldownKey",
           markerValue: cooldownKey,
           cooldownMs: FOLLOW_ROUTE_VISIBLE_HINT_COOLDOWN_MS,
         }));
-        const shouldLearn = kind === "clear" && !(await hasRecentFollowRouteMemoryMarker({
+        const shouldLearn = present && kind === "clear" && !(await hasRecentFollowRouteMemoryMarker({
           title: FOLLOW_ROUTE_MEMORY_EVENT_TITLE,
           playerId: intent.playerId,
           markerName: "learningKey",
@@ -679,8 +847,9 @@ async function rememberFollowedTargetVisibleMoveInner(bot: Bot, input: {
           },
         });
 
-        const shouldAssist = Boolean(intent.assistEnabled);
-        if (!shouldNotify && !shouldLearn && !shouldAssist) continue;
+        const shouldAssist = Boolean(present && intent.assistEnabled);
+        const shouldRecordCatchUpMemory = Boolean(!present && intent.assistEnabled);
+        if (!shouldNotify && !shouldLearn && !shouldAssist && !shouldRecordCatchUpMemory) continue;
 
         const event = await prisma.worldEvent.create({
           data: {
