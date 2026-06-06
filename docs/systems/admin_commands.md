@@ -5,6 +5,13 @@
 - `/learning [#id|ім’я|username]` or `/learn` shows a scribe-only technical
   `CharacterLearningProgress` snapshot for one character: skill/source/context,
   level, accumulated progress, milestone count and update time.
+- As of `0.15.48`, `/learning creature #id`, `/learning істота #id`,
+  `/learning creature <name>` and `/learning істота <name>` show stored
+  `CreatureLearningProgress` rows for a creature/local character. Without the
+  explicit creature prefix, `/learning <name>` resolves players first and then
+  falls back to a named creature if no player matches. Creature output separates
+  stored rows from profile defaults; profile defaults are profession/species
+  estimates, not stored learning.
 - This is a command-only scribe/admin surface. It is not a public `/skills`
   sheet and should not be added to ordinary player news or menus.
 

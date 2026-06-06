@@ -5,6 +5,7 @@ import {
 } from "./gatheringLearningRules";
 import { observableGatheringContextKey } from "./gatheringLearning";
 import { recordActorLearningProgress } from "./learning";
+import { withSlowLog } from "../utils/slowLog";
 
 export const CREATURE_GATHERING_OBSERVATION_EVENT_TITLE = "Creature gathering observation";
 
@@ -180,5 +181,5 @@ export async function maybeRecordCreatureObservationLearning(input: {
   creatureId: number;
   now?: Date;
 }, db: CreatureObservationDb = prisma) {
-  return recordCreatureGatheringObservation(input, db);
+  return withSlowLog("creature.observationLearning", () => recordCreatureGatheringObservation(input, db));
 }

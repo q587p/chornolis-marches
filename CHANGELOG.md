@@ -7,6 +7,25 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.15.48 - Learning lookup and WorldEvent performance indexes - 12026-06-06
+
+### Added
+
+- Added named creature/local-character resolution for the scribe-only `/learning` command, including `creature <name>` / `істота <name>` lookup and compact ambiguity output.
+- Added pragmatic `WorldEvent` indexes for title/time, title/location/time, title/player/time, player/time, location/time and type/time query patterns.
+- Added small opt-in slow-path timing logs for admin learning lookup, track completion, creature observation learning and follow route-memory paths.
+
+### Changed
+
+- Creature learning output now separates stored `CreatureLearningProgress` rows from profession/species profile defaults.
+- `/learning <target>` still resolves players first; if no player matches, it can fall back to a named creature/local character.
+
+### Risks
+
+- The new indexes help title/location/player/time pruning, but existing `description contains` marker lookups still need structured marker storage if they become hot.
+- Named creature lookup scans a bounded creature list for admin commands; this is acceptable for the current world size but may want a dedicated search index later.
+- Slow logs intentionally avoid private text and only report labels/durations, so they identify hotspots but not full query context.
+
 ## 0.15.47 - Travel group foundation - 12026-06-06
 
 ### Added

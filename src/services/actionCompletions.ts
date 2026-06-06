@@ -31,6 +31,7 @@ import { actorWhere, enqueueCreatureAction, hasActiveCreatureActions, interruptA
 import { attackHitsSpecies } from "./attackRules";
 import { escapeHtml } from "../utils/text";
 import { safeSendMessage } from "../utils/telegram";
+import { withSlowLog } from "../utils/slowLog";
 import { resourceAccusativeName, resourceAmountText } from "../utils/resourceText";
 import { canEditKnownMessage, noteKnownMessage } from "../utils/messageTracker";
 import { playerCanShowTechnicalDetails } from "./technicalDetails";
@@ -1710,6 +1711,10 @@ async function completeSay(bot: Bot, action: WorldAction) {
 }
 
 async function completeTrack(bot: Bot, action: WorldAction) {
+  return withSlowLog("action.completeTrack", () => completeTrackInner(bot, action));
+}
+
+async function completeTrackInner(bot: Bot, action: WorldAction) {
   const player = action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null;
   const chatId = await chatIdFromActionIfAllowed(action);
   if (!player || !player.currentLocationId || action.actorType !== "PLAYER") return void (await setActionStatus(action, "FAILED"));

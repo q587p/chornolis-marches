@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
 
 process.env.DATABASE_URL ||= "postgresql://user:pass@localhost:5432/chornolis_test";
 
@@ -22,6 +23,13 @@ const {
   recordActorLearningProgress,
   recordLearningProgress,
 } = require("../../src/services/learning");
+const {
+  formatLearningCreatureDisambiguation,
+  learningCreatureDisplayName,
+  parseLearningCreatureTarget,
+  resolveLearningCreatureCandidates,
+} = require("../../src/services/adminLearningLookup");
+const { slowLogThresholdMs } = require("../../src/utils/slowLog");
 
 assert.equal(normalizeLearningAmount(2.9), 2);
 assert.equal(normalizeLearningAmount(-3), 0);
@@ -96,6 +104,33 @@ assert.equal(technicalRows[0].includes("actor=creature:9"), true);
 assert.equal(technicalRows[0].includes("totalProgress=18"), true);
 assert.equal(technicalRows[0].includes("sourceKey=practice"), true);
 assert.deepEqual(formatLearningTechnicalRows({ actorType: "PLAYER", playerId: 7 }, []), ["Learning rows: none."]);
+assert.deepEqual(parseLearningCreatureTarget("creature Орина"), { forcedCreature: true, query: "Орина" });
+assert.deepEqual(parseLearningCreatureTarget("істота #17"), { forcedCreature: true, query: "#17" });
+assert.deepEqual(parseLearningCreatureTarget("Орина"), { forcedCreature: false, query: "Орина" });
+const learningLookupCreatures = [
+  { id: 17, name: "Орина", nameGenitive: "Орини", species: { name: "людина" }, location: { name: "Межовий табір" } },
+  { id: 18, name: "Орися", species: { name: "людина" }, location: { name: "Старий міст" } },
+  { id: 19, name: "Лукан", species: { name: "людина" }, location: { name: "Суха лука" } },
+];
+assert.equal(resolveLearningCreatureCandidates(learningLookupCreatures, "Орина").kind, "single");
+assert.equal(resolveLearningCreatureCandidates(learningLookupCreatures, "Лук").kind, "single");
+assert.equal(resolveLearningCreatureCandidates(learningLookupCreatures, "Ори").kind, "ambiguous");
+assert.equal(resolveLearningCreatureCandidates(learningLookupCreatures, "неіснує").kind, "none");
+assert.equal(learningCreatureDisplayName({ id: 20, species: { name: "миша" } }), "миша");
+assert.equal(formatLearningCreatureDisambiguation(learningLookupCreatures).includes("creature #17; Межовий табір"), true);
+assert.equal(slowLogThresholdMs("250"), 250);
+assert.equal(slowLogThresholdMs("bad"), 1000);
+const prismaSchema = fs.readFileSync("prisma/schema.prisma", "utf8");
+for (const index of [
+  "@@index([title, createdAt])",
+  "@@index([title, locationId, createdAt])",
+  "@@index([title, playerId, createdAt])",
+  "@@index([playerId, createdAt])",
+  "@@index([locationId, createdAt])",
+  "@@index([type, createdAt])",
+]) {
+  assert.equal(prismaSchema.includes(index), true, `WorldEvent schema keeps ${index}`);
+}
 
 assert.deepEqual(
   applyLearningProgress({ level: 0, progress: 12, totalProgress: 12, milestoneCount: 0 }, { amount: 1, milestoneEvery: 13 }),

@@ -17,6 +17,13 @@ const {
   travelGroupNoRawIds,
   travelGroupStatusText,
   travelGroupUsageText,
+  acceptTravelGroupInvite,
+  createTravelGroupForPlayer,
+  declineTravelGroupInvite,
+  disbandTravelGroup,
+  followTravelGroupLeader,
+  invitePlayerToTravelGroup,
+  leaveTravelGroup,
 } = require("../../src/services/travelGroups");
 
 const leader = { nameNominative: "Орина", firstName: "Орина" };
@@ -52,6 +59,17 @@ assert.match(travelGroupAcceptText("Орина"), /власний крок/);
 assert.match(travelGroupLeaveText(), /\/unfollow/);
 assert.match(travelGroupDisbandText(), /розпускаєте дорожній гурт/);
 assert.match(travelGroupFollowLeaderText("Орина"), /\/follow_assist on/);
+for (const entrypoint of [
+  acceptTravelGroupInvite,
+  createTravelGroupForPlayer,
+  declineTravelGroupInvite,
+  disbandTravelGroup,
+  followTravelGroupLeader,
+  invitePlayerToTravelGroup,
+  leaveTravelGroup,
+]) {
+  assert.equal(typeof entrypoint, "function", "travel group service entrypoint stays exported");
+}
 
 for (const text of [
   travelGroupCreateText(),

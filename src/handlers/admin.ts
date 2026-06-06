@@ -33,7 +33,14 @@ import { BEESWAX_RESOURCE_KEY, HONEY_RESOURCE_KEY } from "../services/apiaryHaza
 import { parseTeleportCoordinateCommand } from "../services/adminTeleportLinks";
 import { approveScribeReturnRequest, buildScribeReturnAuditText } from "../services/scribeReturnHelp";
 import { escapeHtml } from "../utils/text";
-import { formatLearningTechnicalRows, learningRowsForActor } from "../services/learning";
+import { formatLearningTechnicalRows, learningRowsForActor, observedCreatureDefaultLearningRows } from "../services/learning";
+import {
+  formatLearningCreatureDisambiguation,
+  learningCreatureDisplayName,
+  parseLearningCreatureTarget,
+  resolveLearningCreatureCandidates,
+} from "../services/adminLearningLookup";
+import { withSlowLog } from "../utils/slowLog";
 
 function normalizeLookup(value: string | null | undefined) {
   return String(value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
@@ -56,7 +63,7 @@ export function tutorialResetPlayerNoticeText(movedCurrent: boolean) {
     : "🌙 Писар Порубіжжя повернув ваш навчальний сон до початку. Ви можете знову ввійти через <i>навчальний сон</i> (/sleep_tutorial).";
 }
 
-async function resolvePlayerForAdmin(ctx: any, rawTarget: string) {
+async function resolvePlayerForAdmin(ctx: any, rawTarget: string, options: { notFoundReply?: boolean } = {}) {
   const target = normalizeLookup(rawTarget);
   if (!target) {
     const telegramId = ctx.from?.id;
@@ -87,7 +94,36 @@ async function resolvePlayerForAdmin(ctx: any, rawTarget: string) {
     return null;
   }
 
-  await ctx.reply("Не знайшов такого персонажа.");
+  if (options.notFoundReply !== false) await ctx.reply("Не знайшов такого персонажа.");
+  return null;
+}
+
+async function resolveCreatureForLearning(ctx: any, rawTarget: string) {
+  const parsed = parseLearningCreatureTarget(rawTarget);
+  if (!parsed.query) return null;
+
+  const numeric = parsed.query.match(/^#?(\d+)$/u);
+  if (numeric) {
+    const creatureId = Number(numeric[1]);
+    const creature = Number.isSafeInteger(creatureId)
+      ? await prisma.creature.findUnique({ where: { id: creatureId }, include: { species: true, location: true } })
+      : null;
+    if (!creature) await ctx.reply("Не знайшов такої істоти.");
+    return creature;
+  }
+
+  const creatures = await prisma.creature.findMany({
+    include: { species: true, location: true },
+    orderBy: { id: "asc" },
+    take: 500,
+  });
+  const result = resolveLearningCreatureCandidates(creatures, parsed.query);
+  if (result.kind === "single") return result.creature as typeof creatures[number];
+  if (result.kind === "ambiguous") {
+    await ctx.reply(formatLearningCreatureDisambiguation(result.creatures));
+    return null;
+  }
+  await ctx.reply(parsed.forcedCreature ? "Не знайшов такої істоти." : "Не знайшов такого персонажа або істоти.");
   return null;
 }
 
@@ -276,7 +312,7 @@ export const ADMIN_HELP_TEXT = [
   "/all animal [speciesKey] — тільки тварини, за потреби одного виду: /all animal mouse або /all mouse",
   "/locationAll — список усіх місцин і ключів",
   "/playerAdmin <#id|ім’я|username> — детальна службова картка гравця",
-  "/learning [#id|ім’я|username] — технічний зріз stored learning progress персонажа",
+  "/learning [#id|ім’я|username|creature #id|creature ім’я] — технічний зріз stored learning progress персонажа або істоти",
   "/call_scribes_audit — останні звернення до Писарів про ручне повернення",
   "/call_scribes_approve <eventId> або /call_scribes_approve_123 — застосувати знак Писаря до конкретного звернення",
   "/timeDebug — точний службовий стан часу, місяця, погоди й світла в поточній місцині",
@@ -466,36 +502,47 @@ export function registerAdminHandlers(bot: Bot) {
   }
 
   async function runLearningCommand(ctx: any, rawTarget = String(ctx.match ?? "").trim()) {
-    if (!(await requireScribeAdmin(ctx))) return;
+    return withSlowLog("admin.learning", async () => {
+      if (!(await requireScribeAdmin(ctx))) return;
 
-    const creatureMatch = rawTarget.match(/^(?:creature|істота|creature:|істота:)\s*#?(\d+)$/iu);
-    if (creatureMatch) {
-      const creatureId = Number(creatureMatch[1]);
-      const creature = Number.isSafeInteger(creatureId)
-        ? await prisma.creature.findUnique({ where: { id: creatureId }, include: { species: true } })
-        : null;
+      const creatureTarget = parseLearningCreatureTarget(rawTarget);
+      if (!creatureTarget.forcedCreature) {
+        const player = await resolvePlayerForAdmin(ctx, rawTarget, { notFoundReply: !rawTarget.trim() });
+        if (player) {
+          const rows = await learningRowsForActor({ actorType: "PLAYER", playerId: player.id });
+          const lines = [`📚 Learning progress: ${playerDisplayName(player)} (#${player.id})`, ""];
+          lines.push(...formatLearningTechnicalRows({ actorType: "PLAYER", playerId: player.id }, rows));
+          if (rows.length >= 50) lines.push("", "Showing first 50 rows.");
+          await ctx.reply(lines.join("\n"), { reply_markup: buildAdminMenuReplyKeyboard() });
+          return;
+        }
+      }
+
+      const creature = rawTarget.trim() ? await resolveCreatureForLearning(ctx, rawTarget) : null;
       if (!creature) {
-        await ctx.reply("Не знайшов такої істоти.");
         return;
       }
+
       const rows = await learningRowsForActor({ actorType: "CREATURE", creatureId: creature.id });
-      const name = creature.name ?? creature.species.name;
-      await ctx.reply([
+      const defaultRows = observedCreatureDefaultLearningRows(creature);
+      const name = learningCreatureDisplayName(creature);
+      const lines = [
         `📚 Learning progress: ${name} (creature #${creature.id})`,
         "",
+        "Stored rows:",
         ...formatLearningTechnicalRows({ actorType: "CREATURE", creatureId: creature.id }, rows),
-      ].join("\n"), { reply_markup: buildAdminMenuReplyKeyboard() });
-      return;
-    }
-
-    const player = await resolvePlayerForAdmin(ctx, rawTarget);
-    if (!player) return;
-
-    const rows = await learningRowsForActor({ actorType: "PLAYER", playerId: player.id });
-    const lines = [`📚 Learning progress: ${playerDisplayName(player)} (#${player.id})`, ""];
-    lines.push(...formatLearningTechnicalRows({ actorType: "PLAYER", playerId: player.id }, rows));
-    if (rows.length >= 50) lines.push("", "Showing first 50 rows.");
-    await ctx.reply(lines.join("\n"), { reply_markup: buildAdminMenuReplyKeyboard() });
+      ];
+      if (defaultRows.length) {
+        lines.push(
+          "",
+          "Profile defaults:",
+          "These are profession/species estimates, not stored learning rows.",
+          ...formatLearningTechnicalRows({ actorType: "CREATURE", creatureId: creature.id }, defaultRows),
+        );
+      }
+      if (rows.length >= 50) lines.push("", "Showing first 50 stored rows.");
+      await ctx.reply(lines.join("\n"), { reply_markup: buildAdminMenuReplyKeyboard() });
+    });
   }
 
   async function replyAdminResourcesMenu(ctx: any) {

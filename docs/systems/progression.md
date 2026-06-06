@@ -176,6 +176,14 @@ views still show raw rows, including actor type/id, skill/source/context keys,
 level, progress, total progress, milestone count, last source event and update
 time.
 
+`0.15.48` tightens that scribe/admin lookup surface: `/learning creature #id`,
+`/learning creature <name>` and `/learning істота <name>` can resolve named
+local characters as creature actors. Plain `/learning <name>` still prefers a
+player match first, then falls back to a creature/local-character match if no
+player is found. Creature output keeps stored learning rows separate from
+profile defaults, because profile defaults are profession/species estimates and
+not persistent progress.
+
 Learning effects should normally use experience from before the current action.
 The current action can still record practice after it is executed, but its newly
 written progress should shape the next attempt unless a future slice explicitly

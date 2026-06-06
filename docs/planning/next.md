@@ -79,6 +79,13 @@ and travel context only: create/invite/accept/leave/disband and follow-leader
 setup, with no automatic group movement, shared combat, loot, inventory or
 hidden-route sharing.
 
+`0.15.48` is a bugfix/performance cleanup after the learning and social run:
+scribe/admin learning lookup can resolve named local characters as creature
+actors, and `WorldEvent` gets first title/location/player/time indexes for the
+many recent marker-backed systems. Treat this as infrastructure stabilization,
+not new gameplay. If event marker lookups keep growing, move hot cooldown/dedupe
+keys out of `description contains` and into structured storage.
+
 Do not open another broad content loop before the learning/observation foundation is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
 ## Immediate Sequence
@@ -93,9 +100,10 @@ Do not open another broad content loop before the learning/observation foundatio
 8. **0.15.45 / LEARN-006:** high-skill qualitative outcomes are in testing: rare gathering/freshening quality notes stay bounded, mostly textual and non-combat.
 9. **FOLLOW-ASSIST-001 / 0.15.46:** guarded follow assist is in testing: opt-in, ordinary visible exits only, no hidden-route repeat, no group semantics.
 10. **SOC-003 / 0.15.47:** travel group foundation is in testing: consensual membership and follow-leader setup only, no automatic group movement.
-11. **Group/follow live polish:** watch whether invite copy, group status, follow-leader + `/follow_assist on`, follow-assist double messages, and quiet failed-assist reasons feel clear before adding any group movement slice.
-12. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
-13. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
+11. **0.15.48:** learning lookup and WorldEvent performance indexes are in testing: named creature learning lookup, first WorldEvent indexes and slow-path logs, with gameplay unchanged.
+12. **Group/follow live polish:** watch whether invite copy, group status, follow-leader + `/follow_assist on`, follow-assist double messages, and quiet failed-assist reasons feel clear before adding any group movement slice.
+13. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
+14. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
 
 Watch the new actor-learning surfaces before widening them: `0.15.41` proves
 one NPC observation bridge, but freshening/cooking observation should remain a
