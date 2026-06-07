@@ -37,6 +37,7 @@ import { canCookPlayerMeat, COOKED_MEAT_KEY, RAW_MEAT_KEY } from "../services/me
 import { queueAllRawMeatCooking } from "../services/cookingQueue";
 import { eatAllButtonLabel, queueAllUsableInventoryResource } from "../services/eatingQueue";
 import { GATHERING_OBSERVATION_GROWTH_MESSAGE, recordGatheringObservation } from "../services/gatheringLearning";
+import { maybeCreateMentorshipPracticePrompt } from "../services/mentorship";
 import { COOKING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_OBSERVATION_GROWTH_MESSAGE, recordCookingObservation, recordFresheningObservation } from "../services/foodLearning";
 import { rememberTutorialInventoryForPlayer } from "../utils/tutorialInventory";
 import { bestTargetMatch, inspectMissingText, isSelfTargetQueryForPlayer, targetDisplayLabel, targetListText, visibleTextTargets } from "../services/textTargets";
@@ -437,6 +438,12 @@ export async function showLocationForPlayer(telegramId: number, reply: (text: st
     }
     if (observation.mentorshipLessonText) {
       noteKnownMessage(await reply(observation.mentorshipLessonText));
+    }
+    if (observation.mentorshipLessonContext) {
+      const prompt = await maybeCreateMentorshipPracticePrompt(observation.mentorshipLessonContext);
+      if (prompt.text) {
+        noteKnownMessage(await reply(prompt.text, prompt.ok && prompt.keyboard ? { reply_markup: prompt.keyboard } : undefined));
+      }
     }
     const fresheningObservation = await recordFresheningObservation({ playerId: player.id, locationId });
     if (fresheningObservation.milestone) {

@@ -211,6 +211,12 @@ The `Відповісти` button also has clearer timeout/cancel copy; known co
 aliases keep priority over pending reply text, and the button remains directed
 speech UX rather than shared chat.
 
+As of `0.16.4`, a real mentored gathering lesson may occasionally be followed by
+an optional practice prompt. The mentor can step aside and offer a
+`Спробувати зібрати` button, but the button only submits the existing gather
+action for the nearby supported resource. It is not a quest order, group
+movement, guaranteed skill gain or mentor control over the player.
+
 ### 3. Following Is Weaker Than Group Membership
 
 Following should be possible even without an existing contact. It means:
