@@ -172,6 +172,15 @@ see service commands without exposing them to ordinary players. Treat it as
 content/suggestion organization only: no new signals, no keyboard/help changes
 and no gameplay behavior changes.
 
+Near-term mentorship/actor-learning should add a visible NPC learning loop:
+one local character can occasionally learn by watching or following another
+specialist, such as a herbalist or hunter, and drift through the world while
+doing so. Once that learner reaches the teacher's rough level or passes it, the
+loop should stop, the learner should eventually sleep or otherwise lose that
+temporary gain, and the cycle should be able to begin again. Keep it narrow and
+observable, so there is always a living example of attention-based learning
+without turning it into a broad profession economy.
+
 Do not open another broad content loop before the learning/observation foundation is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
 ## Immediate Sequence
@@ -199,11 +208,12 @@ Do not open another broad content loop before the learning/observation foundatio
 21. **0.16.6 / Resource text lexicon cleanup:** resource/corpse text helpers are in testing, with duplicate display/grammar maps reduced and gameplay unchanged.
 22. **0.16.7 / Grammar agreement helper cleanup and archive republish queue:** player/creature gender and word agreement helpers are in testing, with visible target/player text kept stable; Herald can queue a full deployed `news.md` archive republish run for channel rebuilds without changing gameplay.
 23. **0.16.8 / Social signal content extraction and scribe suggestions:** social signal labels and message templates are in testing as content, with service behavior and visible strings kept stable; scribe-only unknown-command suggestions can see admin commands without changing command routing.
-24. **Mentor guided tracking prompt:** consider a narrow tracking practice prompt only after gathering prompts and marker cooldowns feel stable.
-25. **Mentor route polish:** consider a tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
-26. **Group movement design:** if live group UX is clear, draft a separate consensual group movement slice with strict no-hidden-route/no-AFK-drag guardrails.
-27. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
-28. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
+24. **NPC learner loop:** design a narrow NPC-watches-NPC learning loop where a local learner can follow or observe a specialist, stop once they catch up, then sleep/decay the temporary gain so the visible learning example can repeat.
+25. **Mentor guided tracking prompt:** consider a narrow tracking practice prompt only after gathering prompts and marker cooldowns feel stable.
+26. **Mentor route polish:** consider a tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
+27. **Group movement design:** if live group UX is clear, draft a separate consensual group movement slice with strict no-hidden-route/no-AFK-drag guardrails.
+28. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
+29. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
 
 Watch the new actor-learning surfaces before widening them: `0.15.41` proves
 one NPC observation bridge, but freshening/cooking observation should remain a
