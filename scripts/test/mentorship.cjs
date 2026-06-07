@@ -20,7 +20,10 @@ const {
   mentorshipOfferKeyboard,
   mentorshipOfferText,
   mentorshipSkillForCreature,
+  mentorshipTrackingObservationLearningInput,
+  mentorshipTrackingRouteMemoryContext,
   parseMentorshipAnswer,
+  TRACKING_MENTORSHIP_FOLLOWED_MOVEMENT_CONTEXT,
 } = require("../../src/services/mentorship");
 
 assert.equal(MENTORSHIP_STATUS_OFFERED, "OFFERED");
@@ -28,6 +31,7 @@ assert.equal(MENTORSHIP_STATUS_ACTIVE, "ACTIVE");
 assert.equal(MENTORSHIP_STATUS_DECLINED, "DECLINED");
 assert.equal(MENTORSHIP_STATUS_ENDED, "ENDED");
 assert.equal(MENTORSHIP_OBSERVATION_EVENT_TITLE, "Mentorship observation");
+assert.equal(TRACKING_MENTORSHIP_FOLLOWED_MOVEMENT_CONTEXT, "mentorship_followed_movement");
 
 assert.equal(mentorshipSkillForCreature({ professionKey: "herbalist", professionName: "Herbalist" }), "gathering");
 assert.equal(mentorshipSkillForCreature({ professionKey: "znakhar", professionName: "знахар" }), "gathering");
@@ -45,6 +49,35 @@ assert.equal(mentorCanTeach(0, 1), true);
 assert.equal(mentorCanTeach(2, 3), true);
 assert.equal(mentorCanTeach(3, 3), false);
 assert.equal(mentorCanTeach(4, 3), false);
+
+assert.deepEqual(mentorshipTrackingRouteMemoryContext({
+  targetType: "CREATURE",
+  targetId: 9,
+  source: "visible_move",
+  visibility: "clear",
+}), {
+  mentorCreatureId: 9,
+  skillKey: "tracking",
+  contextKey: "mentorship_followed_movement",
+});
+assert.equal(mentorshipTrackingRouteMemoryContext({
+  targetType: "CREATURE",
+  targetId: 9,
+  source: "visible_move",
+  visibility: "dark",
+}), null);
+assert.equal(mentorshipTrackingRouteMemoryContext({
+  targetType: "CREATURE",
+  targetId: 9,
+  source: "hidden_route",
+  visibility: "hidden",
+}), null);
+assert.equal(mentorshipTrackingRouteMemoryContext({
+  targetType: "PLAYER",
+  targetId: 9,
+  source: "visible_move",
+  visibility: "clear",
+}), null);
 
 assert.deepEqual(mentorshipObservationContext({
   sourceDescription: "actorCreature=9; success=true; resource=herbs",
@@ -139,6 +172,8 @@ async function runAsyncAssertions() {
   const activeDb = fakeMentorshipDb([
     { id: 1, playerId: 7, mentorCreatureId: 9, skillKey: "gathering", status: "ACTIVE" },
     { id: 2, playerId: 7, mentorCreatureId: 10, skillKey: "gathering", status: "OFFERED" },
+    { id: 3, playerId: 7, mentorCreatureId: 11, skillKey: "tracking", status: "ACTIVE" },
+    { id: 4, playerId: 7, mentorCreatureId: 12, skillKey: "tracking", status: "DECLINED" },
   ]);
   assert.equal((await activeMentorshipForPlayer(7, activeDb)).id, 1);
   assert.equal((await activeMentorshipForPlayerAndMentor({ playerId: 7, mentorCreatureId: 9, skillKey: "gathering" }, activeDb)).id, 1);
@@ -166,6 +201,54 @@ async function runAsyncAssertions() {
   }, activeDb);
   assert.equal(inactiveBonus.applies, false);
   assert.equal(inactiveBonus.amount, 1);
+
+  assert.deepEqual(await mentorshipTrackingObservationLearningInput({
+    playerId: 7,
+    sourceEventId: 55,
+    targetType: "CREATURE",
+    targetId: 11,
+    source: "visible_move",
+    visibility: "clear",
+  }, activeDb), {
+    playerId: 7,
+    skillKey: "tracking",
+    sourceKey: "observation",
+    contextKey: "mentorship_followed_movement",
+    amount: 1,
+    lastSourceEventId: 55,
+  });
+  assert.equal(await mentorshipTrackingObservationLearningInput({
+    playerId: 7,
+    sourceEventId: 56,
+    targetType: "CREATURE",
+    targetId: 12,
+    source: "visible_move",
+    visibility: "clear",
+  }, activeDb), null);
+  assert.equal(await mentorshipTrackingObservationLearningInput({
+    playerId: 7,
+    sourceEventId: 57,
+    targetType: "CREATURE",
+    targetId: 11,
+    source: "hidden_route",
+    visibility: "hidden",
+  }, activeDb), null);
+  assert.equal(await mentorshipTrackingObservationLearningInput({
+    playerId: 7,
+    sourceEventId: 58,
+    targetType: "CREATURE",
+    targetId: 11,
+    source: "visible_move",
+    visibility: "dark",
+  }, activeDb), null);
+  assert.equal(await mentorshipTrackingObservationLearningInput({
+    playerId: 7,
+    sourceEventId: 59,
+    targetType: "CREATURE",
+    targetId: 9,
+    source: "visible_move",
+    visibility: "clear",
+  }, activeDb), null);
 }
 
 assert.ok(
@@ -173,6 +256,12 @@ assert.ok(
   aliases.indexOf("if (await maybeHandleMentorshipAnswer(ctx)) return;"),
   "slashless aliases should be parsed before mentorship unclear-answer handling",
 );
+assert.ok(
+  aliases.indexOf("if (await maybeHandleMentorshipAnswer(ctx)) return;") <
+  aliases.indexOf("consumePendingReplyMode(player.id)"),
+  "mentorship yes/no handling should run before pending free-text reply consumption",
+);
+assert.match(aliases, /replyTarget:pending/);
 
 runAsyncAssertions()
   .then(() => console.log("Mentorship foundation helpers OK"))

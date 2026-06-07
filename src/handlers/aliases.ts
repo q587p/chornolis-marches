@@ -52,7 +52,15 @@ import { notifyPlayerObservers, playerRestStartObserverText, playerRestStopObser
 import { noteKnownMessage } from "../utils/messageTracker";
 import { playerForms } from "../services/grammar";
 import { putInventoryIntoLocalFeature } from "../services/carcassDropoff";
-import { latestRememberedReplyTarget } from "../services/replyTargets";
+import {
+  clearPendingReplyMode,
+  consumePendingReplyMode,
+  isPendingReplyCancelText,
+  latestRememberedReplyTarget,
+  pendingReplyModePrompt,
+  setPendingReplyMode,
+  type RememberedReplyTarget,
+} from "../services/replyTargets";
 import { replyToActionError } from "../utils/actionErrorReply";
 import { assertCanPerformPhysicalAction } from "../services/postureRules";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
@@ -822,14 +830,14 @@ async function lastAddressedSpeakerName(player: any) {
   return null;
 }
 
-async function submitReply(bot: Bot, ctx: any, text: string) {
+async function submitReply(bot: Bot, ctx: any, text: string, targetOverride?: RememberedReplyTarget | null) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const safeText = stripUnsafeText(text);
   if (!safeText) return void (await ctx.reply("Напиши так: <i>reply</i> текст", { parse_mode: "HTML" }));
 
-  const target = await lastAddressedSpeakerName(player);
+  const target = targetOverride ?? await lastAddressedSpeakerName(player);
   if (!target) return void (await ctx.reply("Поки немає репліки, на яку можна відповісти. Спробуйте звичайне /say або зверніться до видимого персонажа."));
 
   const durationMs = actionDurationMs("SAY", player.stamina);
@@ -1820,7 +1828,16 @@ export function registerAliasHandlers(bot: Bot) {
 
     const parsed = parseAlias(ctx.message.text);
     if (!parsed) {
+      const player = await getPlayerByTelegramId(ctx.from.id);
+      if (player && isPendingReplyCancelText(ctx.message.text) && clearPendingReplyMode(player.id)) {
+        await ctx.reply("Добре, відповідь скасовано.");
+        return;
+      }
       if (await maybeHandleMentorshipAnswer(ctx)) return;
+      if (player) {
+        const pendingReply = consumePendingReplyMode(player.id);
+        if (pendingReply) return submitReply(bot, ctx, ctx.message.text, pendingReply);
+      }
       return next();
     }
 
@@ -1949,6 +1966,15 @@ export function registerAliasHandlers(bot: Bot) {
       ? await acceptMentorship(player.id, mentorshipId)
       : await declineMentorship(player.id, mentorshipId);
     await ctx.reply(result.text);
+  });
+  bot.callbackQuery("replyTarget:pending", async (ctx) => {
+    await safeAnswerCallbackQuery(ctx);
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    const target = await latestRememberedReplyTarget(player.id);
+    if (!target) return void (await ctx.reply("Поки немає репліки, на яку можна відповісти."));
+    setPendingReplyMode(player.id, target);
+    await ctx.reply(pendingReplyModePrompt(target));
   });
   bot.callbackQuery(/^yell:prompt:(UP|DOWN)$/, async (ctx) => {
     const direction = ctx.match[1] as VerticalYellPromptDirection;

@@ -195,6 +195,14 @@ does not add learning on accept, group movement, hidden-route sharing or a
 global skill multiplier. Pending mentorship answers also run after normal alias
 parsing so commands like `гурт` are not swallowed as unclear replies.
 
+As of `0.16.2`, hunter/tracking mentorship can also matter through attention to
+movement: fresh clear route-memory from the active mentor's ordinary visible
+step can record a small tracking observation context. This still does not make a
+hunter a `TravelGroup` leader, does not enable follow assist, and does not share
+hidden routes. The same slice adds a small `Відповісти` button for private
+directed speech; it only prepares the next free-text message for the existing
+reply path and is not group chat or a shared party channel.
+
 ### 3. Following Is Weaker Than Group Membership
 
 Following should be possible even without an existing contact. It means:

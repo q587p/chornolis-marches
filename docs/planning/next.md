@@ -115,6 +115,13 @@ gathering. Treat it as proof that mentorship matters only through real attention
 the player must observe the active mentor doing relevant work. Tracking
 mentorship, generic reply UX and broader teaching effects remain separate.
 
+`0.16.2` adds hunter/tracking mentorship and a small reply-button foundation.
+Tracking mentorship now has its first observation path through fresh clear
+ordinary movement by the active mentor, while `Відповісти` makes directed speech
+easier to answer without becoming group chat. Keep both narrow: no learning on
+accept, no hidden-route sharing, no attack teaching and no automatic group
+movement.
+
 Do not open another broad content loop before the learning/observation foundation is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
 ## Immediate Sequence
@@ -135,11 +142,12 @@ Do not open another broad content loop before the learning/observation foundatio
 14. **0.15.51:** follow catch-up stability pass is in testing: manual/duplicate/session guardrails are documented and tested before widening the social layer.
 15. **0.16.0 / NPC mentorship:** mentorship offer foundation is in testing: eligible local characters can offer teaching after follow intent, with accept/decline consent and no travel-group movement.
 16. **0.16.1 / Mentorship observation:** gathering mentorship observation bonus is in testing: active mentorship can strengthen matching supported gathering observation, without learning on accept or global multipliers.
-17. **0.16.2 candidate:** tracking mentorship bonus or generic reply button polish, whichever live UX needs first.
-18. **Perf marker follow-up:** use slow logs to decide whether hot WorldEvent marker lookups need structured cooldown/dedupe storage instead of `description contains`.
-19. **Group movement design:** if live group UX is clear, draft a separate consensual group movement slice with strict no-hidden-route/no-AFK-drag guardrails.
-20. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
-21. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
+17. **0.16.2 / Tracking mentorship and reply UX:** tracking mentorship observation and the `Відповісти` button are in testing, with no group chat, attack teaching or hidden-route sharing.
+18. **Mentorship live polish:** watch whether reply buttons, mentorship prompts and follow-assist hints feel clear in Telegram before widening teaching effects.
+19. **Perf marker follow-up:** use slow logs to decide whether hot WorldEvent marker lookups need structured cooldown/dedupe storage instead of `description contains`.
+20. **Group movement design:** if live group UX is clear, draft a separate consensual group movement slice with strict no-hidden-route/no-AFK-drag guardrails.
+21. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
+22. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
 
 Watch the new actor-learning surfaces before widening them: `0.15.41` proves
 one NPC observation bridge, but freshening/cooking observation should remain a

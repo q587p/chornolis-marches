@@ -231,6 +231,15 @@ This is still not passive learning: accepting mentorship alone grants nothing,
 unrelated gatherers do not count, unsupported resources do not count and hunter
 tracking mentorship remains a separate follow-up.
 
+`0.16.2` adds the first hunter/tracking mentorship observation bonus. When a
+player has active `tracking` mentorship with a hunter-like local character and
+receives fresh clear follow-route memory from that mentor's ordinary visible
+movement, the player can also record canonical `tracking` / `observation` /
+`mentorship_followed_movement` progress. Hidden routes, dark/non-directional
+memory, stale movement, non-mentor movement and offered/declined mentorship do
+not count. This still does not grant learning on accept and does not add attack
+teaching, route replay or hidden-route sharing.
+
 After the actor-learning foundation, the intended near-term order is:
 
 - `0.15.46`: guarded follow assist is in testing as an opt-in ordinary-exit

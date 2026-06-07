@@ -245,6 +245,9 @@ assert.doesNotMatch(
 assert.doesNotMatch(followStepFailureText("hidden"), /До води|до води|under_bridge/i, "Follow step hidden-route refusal must not reveal the water-word passage");
 
 const repoRoot = path.join(__dirname, "..", "..");
+const followRouteMemorySource = fs.readFileSync(path.join(repoRoot, "src/services/followRouteMemory.ts"), "utf8");
+assert.match(followRouteMemorySource, /mentorshipTrackingObservationLearningInput/);
+assert.match(followRouteMemorySource, /contextKey: "followed_movement"[\s\S]*mentorshipTrackingObservationLearningInput/);
 const news = fs.readFileSync(path.join(repoRoot, "news.md"), "utf8");
 const release031 = news.match(/## 0\.15\.31[\s\S]*?(?=\n## 0\.15\.30\b)/)?.[0] ?? "";
 assert.match(release031, /не автоматична хода/, "0.15.31 public news should not imply auto-follow");

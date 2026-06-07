@@ -10,6 +10,7 @@ export const MENTORSHIP_STATUS_ACTIVE = "ACTIVE";
 export const MENTORSHIP_STATUS_DECLINED = "DECLINED";
 export const MENTORSHIP_STATUS_ENDED = "ENDED";
 export const MENTORSHIP_OBSERVATION_EVENT_TITLE = "Mentorship observation";
+export const TRACKING_MENTORSHIP_FOLLOWED_MOVEMENT_CONTEXT = "mentorship_followed_movement";
 export const MENTORSHIP_OFFER_COOLDOWN_MS = Number(process.env.MENTORSHIP_OFFER_COOLDOWN_MS || 10 * 60_000);
 
 const APOSTROPHES = /[ʼ’`´]/g;
@@ -202,6 +203,49 @@ export async function mentorshipObservationBonusForSource(input: {
     skillKey: context.skillKey,
     contextKey: context.contextKey,
     description: `player=${input.playerId}; mentorCreature=${context.mentorCreatureId}; source=${input.sourceEventId}; skillKey=${context.skillKey}; contextKey=${context.contextKey}; amount=2`,
+  };
+}
+
+export function mentorshipTrackingRouteMemoryContext(input: {
+  targetType?: string | null;
+  targetId?: number | null;
+  source?: string | null;
+  visibility?: string | null;
+}) {
+  if (input.targetType !== "CREATURE") return null;
+  if (!input.targetId) return null;
+  if (input.source !== "visible_move") return null;
+  if (input.visibility !== "clear") return null;
+  return {
+    mentorCreatureId: input.targetId,
+    skillKey: "tracking",
+    contextKey: TRACKING_MENTORSHIP_FOLLOWED_MOVEMENT_CONTEXT,
+  };
+}
+
+export async function mentorshipTrackingObservationLearningInput(input: {
+  playerId: number;
+  sourceEventId?: number | null;
+  targetType?: string | null;
+  targetId?: number | null;
+  source?: string | null;
+  visibility?: string | null;
+}, db: MentorshipDb = prisma) {
+  const context = mentorshipTrackingRouteMemoryContext(input);
+  if (!context) return null;
+  const mentorship = await activeMentorshipForPlayerAndMentor({
+    playerId: input.playerId,
+    mentorCreatureId: context.mentorCreatureId,
+    skillKey: context.skillKey,
+  }, db);
+  if (!mentorship) return null;
+  return {
+    playerId: input.playerId,
+    skillKey: "tracking",
+    sourceKey: "observation",
+    contextKey: context.contextKey,
+    amount: 1,
+    ...(input.sourceEventId ? { lastSourceEventId: input.sourceEventId } : {}),
   };
 }
 

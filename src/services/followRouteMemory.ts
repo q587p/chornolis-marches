@@ -13,6 +13,7 @@ import { FOLLOW_TARGET_CREATURE, FOLLOW_TARGET_PLAYER, type FollowTargetType } f
 import { movementDurationMs } from "./actionRules";
 import { performOrQueuePlayerAction } from "./actionLifecycle";
 import { locationLockedExitMessageForPlayer } from "./tutorial";
+import { mentorshipTrackingObservationLearningInput } from "./mentorship";
 
 export const FOLLOW_ROUTE_MEMORY_EVENT_TITLE = "Follow intent route memory";
 export const FOLLOW_ROUTE_HIDDEN_MEMORY_EVENT_TITLE = "Follow intent hidden route memory";
@@ -902,6 +903,17 @@ async function rememberFollowedTargetVisibleMoveInner(bot: Bot, input: {
             amount: 1,
             lastSourceEventId: event.id,
           });
+          const mentorshipLearningInput = await mentorshipTrackingObservationLearningInput({
+            playerId: intent.playerId,
+            sourceEventId: event.id,
+            targetType: input.target.type,
+            targetId: input.target.id,
+            source: "visible_move",
+            visibility: kind,
+          });
+          if (mentorshipLearningInput) {
+            await recordLearningProgress(mentorshipLearningInput);
+          }
         }
         let assistResult: Awaited<ReturnType<typeof maybeQueueFollowAssistMove>> | null = null;
         if (shouldAssist) {
