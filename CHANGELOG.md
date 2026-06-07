@@ -22,10 +22,11 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Kept current social signal labels and player-facing message strings stable for player targets, creature targets and targetless signals.
 - Unknown-command fallback now checks scribe access before adding admin-command suggestions, while public alias suggestions remain unchanged.
 - Exact known aliases no longer offer unrelated fuzzy suggestions.
+- Shortened public `/help` by removing one-off or highly specific command blurbs, and clarified that AFK starts automatically after 13 minutes of inactivity.
 
 ### Risks
 
-- This is intended as content/suggestion cleanup only; WorldEvent/WorldEventMarker logic, Prisma schema, migrations, Herald archive republish, gameplay rules, keyboards, help text, location prose and action completions are unchanged.
+- This is intended as content/suggestion/help cleanup only; WorldEvent/WorldEventMarker logic, Prisma schema, migrations, Herald archive republish, gameplay rules, keyboards, location prose and action completions are unchanged.
 - Future social signal content expansion should stay separate from this refactor.
 
 ## 0.16.7 - Grammar agreement helper cleanup and archive republish queue - 12026-06-07
