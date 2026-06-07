@@ -40,7 +40,7 @@ import { tutorialActionHintComment, tutorialGateSpeechComment, tutorialLookPaceC
 import { chance, pick, shuffle } from "../utils/random";
 import { canSendPlayerActionMessageToPlayerId, canSendProactiveToTelegramId } from "./sessionPresence";
 import { cookRawMeat, freshenCorpseForMeat, fresheningSkillEffectForPlayer } from "./meat";
-import { rememberPlayerReplyTarget } from "./replyTargets";
+import { pendingReplyButton, rememberPlayerReplyTarget, type RememberedReplyTarget } from "./replyTargets";
 import { nearbySpeechDirectionIntro, nearbySpeechRecipients } from "./speechRanges";
 import { hunterClaimedCorpseAction, hunterConversationReplyLine, hunterReactionDurationMs, hunterSocialReactionSignal, isHunterCreature } from "./npcHunter";
 import { isUnclaimedHerbivoreCorpseForScavenging, predatorClaimedCorpseAction, predatorClaimedCorpseFoodValue, predatorClaimedCorpseOwnerId, predatorPreyFoodValue } from "./predatorFeeding";
@@ -262,6 +262,7 @@ async function sendPrivateSpeechMessage(
   targetPlayer: { telegramId: string | number },
   text: string,
   context: string,
+  replyTarget?: RememberedReplyTarget,
 ) {
   if (!(await canSendProactiveToTelegramId(targetPlayer.telegramId))) return null;
   return safeSendMessage(
@@ -270,7 +271,7 @@ async function sendPrivateSpeechMessage(
     text,
     {
       parse_mode: "HTML",
-      reply_markup: await buildMainReplyKeyboardForTelegramId(Number(targetPlayer.telegramId), false),
+      reply_markup: replyTarget ? pendingReplyButton() : await buildMainReplyKeyboardForTelegramId(Number(targetPlayer.telegramId), false),
     },
     context,
   );
@@ -1089,6 +1090,7 @@ async function completeGreet(bot: Bot, action: WorldAction) {
       targetPlayer,
       `${escapeHtml(actorForms.nominative)} ${verb} вам:\n${quoteBlock(greeting)}`,
       "greet target sendMessage",
+      { speakerName: actorForms.nominative, speakerPlayerId: player.id },
     );
     if (delivered) {
       await rememberPlayerReplyTarget({ playerId: targetPlayer.id, speakerName: actorForms.nominative, speakerPlayerId: player.id, locationId: player.currentLocationId });
@@ -1526,6 +1528,7 @@ async function completeSay(bot: Bot, action: WorldAction) {
           targetPlayer,
           `${escapeHtml(actorForms.nominative)} шепоче вам:\n${quoteBlock(text)}`,
           "whisper target sendMessage",
+          { speakerName: actorForms.nominative, speakerPlayerId: player.id },
         );
         if (delivered) {
           await rememberPlayerReplyTarget({ playerId: targetPlayer.id, speakerName: actorForms.nominative, speakerPlayerId: player.id, locationId: player.currentLocationId });
@@ -1608,6 +1611,7 @@ async function completeSay(bot: Bot, action: WorldAction) {
           replyTargetPlayer,
           `${escapeHtml(actorForms.nominative)} ${replyVerb} вам:\n${quoteBlock(text)}`,
           "player reply target sendMessage",
+          { speakerName: actorForms.nominative, speakerPlayerId: player.id },
         );
       } else {
         await notifyLocationExcept(
@@ -1686,6 +1690,7 @@ async function completeSay(bot: Bot, action: WorldAction) {
         targetPlayer,
         `${escapeHtml(speakerForms.nominative)} відповідає вам:\n${quoteBlock(text)}`,
         "creature reply target sendMessage",
+        { speakerName: speakerForms.nominative, speakerCreatureId: creature.id, speakerDative: speakerForms.dative },
       );
       if (delivered) {
         await rememberPlayerReplyTarget({

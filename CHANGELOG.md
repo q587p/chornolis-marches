@@ -7,6 +7,24 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.2 - Tracking mentorship and reply button - 12026-06-07
+
+### Added
+
+- Added the first hunter/tracking mentorship observation bonus: when a player with active tracking mentorship observes fresh clear ordinary movement from that mentor through follow route-memory, the player also records canonical `tracking` / `observation` / `mentorship_followed_movement` progress.
+- Added a small `Відповісти` inline button foundation for private directed speech, backed by the existing remembered reply-target and `/reply` path.
+- Added pending reply-mode helpers with a short timeout, cancellation text, and regression coverage for command/alias ordering.
+
+### Changed
+
+- Mentorship yes/no answers still take priority over free-text pending replies, while known aliases and commands continue to run before pending reply text is consumed.
+- Private greetings, whispers and directed replies can now attach a reply button without adding group chat or changing public speech behavior.
+
+### Risks
+
+- Tracking mentorship currently uses the existing follow route-memory learning cadence and cooldowns; it does not add a new scheduler or direct track-reading bonus.
+- The reply button is an in-process pending mode layered over persisted remembered reply targets, so it is intentionally lightweight rather than durable conversation state.
+
 ## 0.16.1 - Mentorship observation bonus - 12026-06-06
 
 ### Added
