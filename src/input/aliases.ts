@@ -357,6 +357,13 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "звернутися до писаря": { kind: "call-scribes" },
   "попросити писарів": { kind: "call-scribes" },
   "допомога писарів": { kind: "call-scribes" },
+  skills: { kind: "me" },
+  effects: { kind: "me" },
+  journal: { kind: "me" },
+  "навички": { kind: "me" },
+  "стани": { kind: "me" },
+  "літопис": { kind: "me" },
+  "особистий літопис": { kind: "me" },
 
   back: { kind: "back" },
   "назад": { kind: "back" },
@@ -1091,6 +1098,7 @@ export function formatAliasSuggestion(suggestion: AliasSuggestion) {
 export function suggestAliasEntries(raw: string, limit = 4): AliasSuggestion[] {
   const query = withoutLeadingSlash(normalizeInput(raw));
   if (!query) return [];
+  if (Object.prototype.hasOwnProperty.call(EXACT_ALIASES, query) && parseAlias(raw)) return [];
 
   return SUGGESTABLE_ALIASES
     .map((alias) => ({ alias, score: aliasSuggestionScore(query, alias) }))
@@ -1348,6 +1356,9 @@ function parseOpenIntent(text: string): ParsedAliasCommand | null {
 
 function parseTargetAction(text: string): ParsedAliasCommand | null {
   if (text === "attack_mouse") return { kind: "target-action", action: "attack", target: "mouse" };
+  if (/^(?:attack|fight|hit|kill|kick|атака|атакувати|напасти|вдарити|ударити|копнути|бити)$/u.test(text)) {
+    return { kind: "target-action", action: "attack", target: "" };
+  }
 
   const patterns: Array<[TargetAction, RegExp]> = [
     ["inspect", /^(?:look\s+at|look|x|examine|inspect|роздивитися|оглянути|огл|глянути\s+на|подивитися\s+на|придивитися\s+до)\s+(.+)$/],

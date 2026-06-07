@@ -1932,7 +1932,10 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "shout") return submitShout(bot, ctx, parsed.text);
     if (parsed.kind === "follow") return submitFollowIntent(ctx, parsed.target);
     if (parsed.kind === "unfollow") return submitUnfollow(ctx);
-    if (parsed.kind === "target-action") return submitTargetAction(bot, ctx, parsed.action, parsed.target);
+    if (parsed.kind === "target-action") {
+      if (parsed.action === "attack" && !parsed.target.trim()) return submitAttackCommand(bot, ctx, "");
+      return submitTargetAction(bot, ctx, parsed.action, parsed.target);
+    }
     if (parsed.kind === "pickup-target") return submitPickupTarget(bot, ctx, parsed.target);
     if (parsed.kind === "social-signal") return submitSocialSignal(bot, ctx, parsed.signal, parsed.target);
   });

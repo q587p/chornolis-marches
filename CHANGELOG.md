@@ -14,12 +14,14 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added `src/content/social/socialSignals.ts` as the content home for social signal labels and message templates.
 - Added focused social-signal regression coverage for stable signal IDs, labels, representative rendered messages and quick-social target defaults.
 - Added scribe/admin-only unknown-command suggestions for service commands, including the lit-torch helper, without exposing those suggestions to ordinary players.
+- Added alias regressions so suggested exact inputs such as `kill` and documented personal-summary inputs such as `skills` route to existing responses instead of falling back to unknown-command text.
 
 ### Changed
 
 - Moved `SOCIAL_DEFINITIONS` content out of `socialSignals.ts` while keeping target resolution, notification delivery, creature/NPC reactions, world/audit event creation and creature `currentAction` updates in the service layer.
 - Kept current social signal labels and player-facing message strings stable for player targets, creature targets and targetless signals.
 - Unknown-command fallback now checks scribe access before adding admin-command suggestions, while public alias suggestions remain unchanged.
+- Exact known aliases no longer offer unrelated fuzzy suggestions.
 
 ### Risks
 

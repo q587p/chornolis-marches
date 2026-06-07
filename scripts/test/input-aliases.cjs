@@ -456,6 +456,10 @@ assertAlias("freshen all", { kind: "target-action", action: "freshen", target: "
 assertAlias("/freshen_all", { kind: "target-action", action: "freshen", target: "all" });
 assertAlias("свіжувати все", { kind: "target-action", action: "freshen", target: "все" });
 assertAlias("освіжити всі", { kind: "target-action", action: "freshen", target: "всі" });
+assertAlias("skills", { kind: "me" });
+assertAlias("Skills", { kind: "me" });
+assertAlias("journal", { kind: "me" });
+assertAlias("kill", { kind: "target-action", action: "attack", target: "" });
 assertAlias("викинути факел", { kind: "drop-inventory-item", target: "факел" });
 assertAlias("drop all", { kind: "drop-inventory-item", target: "all" });
 assertAlias("drop all corpse", { kind: "drop-inventory-item", target: "all corpse" });
@@ -536,6 +540,7 @@ assert.ok(suggestAliasEntries("огл брама").map(formatAliasSuggestion).in
 assert.ok(suggestAliasEntries("швидк").map(formatAliasSuggestion).includes("швидкий огляд (/glance)"), "Expected formatted suggestions to include slash command for quick glance");
 assert.ok(suggestAliasEntries("стат").map(formatAliasSuggestion).includes("статистика (/stat)"), "Expected formatted suggestions to include slash command for statistics");
 assert.ok(suggestAliasEntries("гриб").map(formatAliasSuggestion).some((suggestion) => suggestion.includes("(/use_mushrooms)")), "Expected formatted suggestions to include slash command for using mushrooms");
+assert.ok(!suggestAliasEntries("Skills").map(formatAliasSuggestion).includes("kill (/attack)"), "Exact skills alias should not suggest kill.");
 assert.ok(suggestAliasEntries("навч").map(formatAliasSuggestion).some((suggestion) => suggestion.includes("(/sleep_tutorial)")), "Expected formatted tutorial suggestions to use clickable slash command");
 assert.ok(suggestAliasEntries("повернен").map(formatAliasSuggestion).includes("повернення (/respawn)"), "Expected formatted beginner-return suggestions to use /respawn");
 assert.ok(suggestAliasEntries("писар").map(formatAliasSuggestion).includes("покликати писарів (/call_scribes)"), "Expected formatted scribe-help suggestions to use /call_scribes");
