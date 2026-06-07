@@ -175,6 +175,14 @@ current corpse names now share lexicon-backed helpers, while gameplay rules and
 marker storage stay unchanged. Future text cleanup can take separate small
 slices in `locations.ts`, `targets.ts` or `actionCompletions.ts` if a duplicated
 map is fully covered by tests.
+Watch one small layering nit from this slice: `src/utils/resourceText.ts`
+currently imports `creatureForms` from `src/services/grammar.ts`. This is safe
+while grammar does not import resource text, but a future cleanup should either
+move resource/corpse text helpers closer to `services/resourceText.ts` /
+`services/text/*` or move the corpse phrase builder closer to grammar/content.
+Also consider replacing the first `scripts/test/resource-text.cjs`
+`Object.fromEntries(... === expected)` assertions with direct `assert.equal(...)`
+checks so failures show the mismatched resource string more clearly.
 
 `0.16.7` cleans up a narrow slice of Ukrainian gender/agreement helpers and adds
 an operator-only Herald archive republish queue. Treat the grammar part as
