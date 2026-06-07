@@ -152,6 +152,10 @@ the first lesson per mentor/context instead of adding more variants.
 lesson. Treat it as "you watched, now try" rather than a quest system: optional,
 cooldowned, no direct learning grant, and routed through the existing gather
 action. Tracking prompts and mentor-specific route lessons remain future slices.
+The first prompt currently appears only when a new lesson feedback marker is
+created; if live play makes "mentor showed it, but never asks me to try" feel
+too rare, split lesson feedback cooldown from practice-prompt cooldown rather
+than making every observation generate copy.
 
 `0.16.5` moves the hottest short-lived cooldown/dedupe markers into structured
 `WorldEventMarker` rows while keeping readable `WorldEvent` audit rows. Treat it

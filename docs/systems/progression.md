@@ -269,6 +269,12 @@ player to try the existing gather action. The prompt is optional, does not grant
 learning by itself and does not change success, stamina, rewards or practice
 rules. Tracking prompts remain a separate follow-up.
 
+The first prompt appears only when lesson feedback itself is not on cooldown and
+a new lesson marker is created. That keeps mentor chat quiet, but it means live
+players may sometimes see a mentor demonstrate work without getting the optional
+"you try" prompt. If that feels too sparse, split lesson feedback cadence from
+practice-prompt cadence instead of making every observed mentor action speak.
+
 `0.16.5` is a technical marker-storage refactor for the same learning and follow
 spine. `WorldEvent` still carries readable lesson, prompt and follow-assist
 audit rows, while short-lived cooldown/dedupe checks for follow-assist failure
