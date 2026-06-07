@@ -248,6 +248,15 @@ cancel the outbox instead of suspending the whole Web Service:
 - `/pause_publications` stops automatic outbox publication while the Herald bot,
   health endpoint and admin commands remain alive;
 - `/resume_publications` resumes automatic publication;
+- `/publication_queue_status` shows the full unpublished PUBLIC outbox count,
+  due-now count, future scheduled count, per-`sourceType` totals, the next
+  `availableAt` overall and by source type, plus the durable pause state;
+- `/future_publications` lists the next 10 unpublished PUBLIC rows scheduled for
+  the future, with id, source type, source/title, archive order and Kyiv
+  `availableAt`;
+- `/pending_publications` is intentionally due-now only (`availableAt <= now`),
+  so it can be empty while `/publication_queue_status` still reports future
+  scheduled rows;
 - `/cancel_pending_publications` and `/backfill_news_cancel` mark unpublished
   `NEWS_MD` / `NEWS_MD_ARCHIVE` rows as `CANCELED`, preserving already
   published history and leaving unrelated future publication types alone.

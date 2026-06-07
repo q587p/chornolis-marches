@@ -15,6 +15,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added focused social-signal regression coverage for stable signal IDs, labels, representative rendered messages and quick-social target defaults.
 - Added scribe/admin-only unknown-command suggestions for service commands, including the lit-torch helper, without exposing those suggestions to ordinary players.
 - Added alias regressions so suggested exact inputs such as `kill` and documented personal-summary inputs such as `skills` route to existing responses instead of falling back to unknown-command text.
+- Added admin-only Herald publication queue diagnostics for distinguishing all unpublished PUBLIC rows, due-now rows and future scheduled rows.
 
 ### Changed
 
@@ -26,6 +27,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Expanded strange-totem dismantle feedback to a stable set of 13 atmospheric aftermath lines.
 - Updated follow-assist hints to use clickable `/follow_assist_on` and `/follow_assist_off` commands while keeping `/follow_assist on/off` as compatible aliases.
 - Changed legacy `auto` / `/auto` input to show Spirit Call status and controls instead of immediately enabling the helper; explicit `/spirit` still enables it.
+- Clarified `/pending_publications` as ready-now output and added `/future_publications` for upcoming scheduled outbox rows.
 
 ### Risks
 
