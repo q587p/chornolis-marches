@@ -4,6 +4,7 @@ import { withSlowLog } from "../utils/slowLog";
 import { getPlayerFollowIntent, setPlayerFollowIntent } from "./following";
 import { creatureForms } from "./grammar";
 import { learningSkillDisplayName, observedActorSkillLevel } from "./learning";
+import { createWorldEventMarker, findRecentWorldEventMarker } from "./worldEventMarkers";
 
 export const MENTORSHIP_STATUS_OFFERED = "OFFERED";
 export const MENTORSHIP_STATUS_ACTIVE = "ACTIVE";
@@ -12,6 +13,8 @@ export const MENTORSHIP_STATUS_ENDED = "ENDED";
 export const MENTORSHIP_OBSERVATION_EVENT_TITLE = "Mentorship observation";
 export const MENTORSHIP_LESSON_FEEDBACK_EVENT_TITLE = "Mentorship lesson feedback";
 export const MENTORSHIP_PRACTICE_PROMPT_EVENT_TITLE = "Mentorship practice prompt";
+export const MENTORSHIP_LESSON_FEEDBACK_MARKER_KEY = "mentorship_lesson_feedback";
+export const MENTORSHIP_PRACTICE_PROMPT_MARKER_KEY = "mentorship_practice_prompt";
 export const TRACKING_MENTORSHIP_FOLLOWED_MOVEMENT_CONTEXT = "mentorship_followed_movement";
 export const MENTORSHIP_OFFER_COOLDOWN_MS = Number(process.env.MENTORSHIP_OFFER_COOLDOWN_MS || 10 * 60_000);
 export const MENTORSHIP_LESSON_FEEDBACK_COOLDOWN_MS = Number(process.env.MENTORSHIP_LESSON_FEEDBACK_COOLDOWN_MS || 10 * 60_000);
@@ -36,6 +39,7 @@ export type MentorshipAnswerKind = "accept" | "decline" | "unclear";
 type MentorshipDb = {
   playerMentorship: any;
   worldEvent?: any;
+  worldEventMarker?: any;
   resourceNode?: any;
 };
 
@@ -292,6 +296,10 @@ export function mentorshipLessonFeedbackDescription(input: Pick<MentorshipLesson
   return `player=${input.playerId}; mentorCreature=${input.mentorCreatureId}; skillKey=${input.skillKey}; contextKey=${input.contextKey}`;
 }
 
+export function mentorshipLessonFeedbackMarkerContext(input: Pick<MentorshipLessonInput, "skillKey" | "contextKey">) {
+  return `${input.skillKey}:${input.contextKey}`;
+}
+
 export function mentorshipPracticePromptAction(input: Pick<MentorshipPracticePromptInput, "skillKey" | "contextKey">) {
   if (input.skillKey !== "gathering") return null;
   const resourceKey = input.contextKey.match(/^resource:(herbs|berries|mushrooms)$/u)?.[1] as MentorshipPracticePromptAction["resourceKey"] | undefined;
@@ -301,6 +309,10 @@ export function mentorshipPracticePromptAction(input: Pick<MentorshipPracticePro
 
 export function mentorshipPracticePromptDescription(input: Pick<MentorshipPracticePromptInput, "playerId" | "mentorCreatureId" | "skillKey" | "contextKey"> & { action: string }) {
   return `player=${input.playerId}; mentorCreature=${input.mentorCreatureId}; skillKey=${input.skillKey}; contextKey=${input.contextKey}; action=${input.action}`;
+}
+
+export function mentorshipPracticePromptMarkerContext(input: Pick<MentorshipPracticePromptInput, "skillKey" | "contextKey"> & { action: string }) {
+  return `${input.skillKey}:${input.contextKey}:${input.action}`;
 }
 
 export function mentorshipPracticePromptText(input: { mentorName?: string | null; skillKey: string; contextKey: string; blocked?: "no-resource" | null }) {
@@ -361,7 +373,7 @@ function mentorshipPracticePromptMatches(description: string | null | undefined,
     parsed.action === input.action);
 }
 
-export async function recentMentorshipLessonFeedback(input: Pick<MentorshipLessonInput, "playerId" | "mentorCreatureId" | "skillKey" | "contextKey"> & { now?: Date }, db: MentorshipDb = prisma) {
+async function recentMentorshipLessonFeedbackWorldEvent(input: Pick<MentorshipLessonInput, "playerId" | "mentorCreatureId" | "skillKey" | "contextKey"> & { now?: Date }, db: MentorshipDb = prisma) {
   if (!db.worldEvent || MENTORSHIP_LESSON_FEEDBACK_COOLDOWN_MS <= 0) return null;
   const now = input.now ?? new Date();
   const since = new Date(now.getTime() - MENTORSHIP_LESSON_FEEDBACK_COOLDOWN_MS);
@@ -376,6 +388,20 @@ export async function recentMentorshipLessonFeedback(input: Pick<MentorshipLesso
     take: 8,
   });
   return events.find((event: any) => mentorshipLessonFeedbackMatches(event.description, input)) ?? null;
+}
+
+export async function recentMentorshipLessonFeedback(input: Pick<MentorshipLessonInput, "playerId" | "mentorCreatureId" | "skillKey" | "contextKey"> & { now?: Date }, db: MentorshipDb = prisma) {
+  if (MENTORSHIP_LESSON_FEEDBACK_COOLDOWN_MS <= 0) return null;
+  const marker = await findRecentWorldEventMarker({
+    markerKey: MENTORSHIP_LESSON_FEEDBACK_MARKER_KEY,
+    scopeType: "PLAYER_MENTOR",
+    playerId: input.playerId,
+    creatureId: input.mentorCreatureId,
+    contextKey: mentorshipLessonFeedbackMarkerContext(input),
+    cooldownMs: MENTORSHIP_LESSON_FEEDBACK_COOLDOWN_MS,
+    now: input.now,
+  }, db as any);
+  return marker ?? recentMentorshipLessonFeedbackWorldEvent(input, db);
 }
 
 export async function maybeRecordMentorshipLessonFeedback(input: MentorshipLessonInput, db: MentorshipDb = prisma) {
@@ -393,6 +419,23 @@ export async function maybeRecordMentorshipLessonFeedback(input: MentorshipLesso
       ...(input.now ? { createdAt: input.now } : {}),
     },
   });
+  if (db.worldEventMarker) {
+    await createWorldEventMarker({
+      markerKey: MENTORSHIP_LESSON_FEEDBACK_MARKER_KEY,
+      scopeType: "PLAYER_MENTOR",
+      playerId: input.playerId,
+      creatureId: input.mentorCreatureId,
+      locationId: input.locationId,
+      contextKey: mentorshipLessonFeedbackMarkerContext(input),
+      worldEventId: event.id,
+      ttlMs: MENTORSHIP_LESSON_FEEDBACK_COOLDOWN_MS,
+      now: input.now,
+      metadata: {
+        skillKey: input.skillKey,
+        contextKey: input.contextKey,
+      },
+    }, db as any);
+  }
   return {
     ok: true as const,
     event,
@@ -401,7 +444,7 @@ export async function maybeRecordMentorshipLessonFeedback(input: MentorshipLesso
   };
 }
 
-export async function recentMentorshipPracticePrompt(input: Pick<MentorshipPracticePromptInput, "playerId" | "mentorCreatureId" | "skillKey" | "contextKey"> & { action: string; now?: Date }, db: MentorshipDb = prisma) {
+async function recentMentorshipPracticePromptWorldEvent(input: Pick<MentorshipPracticePromptInput, "playerId" | "mentorCreatureId" | "skillKey" | "contextKey"> & { action: string; now?: Date }, db: MentorshipDb = prisma) {
   if (!db.worldEvent || MENTORSHIP_PRACTICE_PROMPT_COOLDOWN_MS <= 0) return null;
   const now = input.now ?? new Date();
   const since = new Date(now.getTime() - MENTORSHIP_PRACTICE_PROMPT_COOLDOWN_MS);
@@ -416,6 +459,20 @@ export async function recentMentorshipPracticePrompt(input: Pick<MentorshipPract
     take: 8,
   });
   return events.find((event: any) => mentorshipPracticePromptMatches(event.description, input)) ?? null;
+}
+
+export async function recentMentorshipPracticePrompt(input: Pick<MentorshipPracticePromptInput, "playerId" | "mentorCreatureId" | "skillKey" | "contextKey"> & { action: string; now?: Date }, db: MentorshipDb = prisma) {
+  if (MENTORSHIP_PRACTICE_PROMPT_COOLDOWN_MS <= 0) return null;
+  const marker = await findRecentWorldEventMarker({
+    markerKey: MENTORSHIP_PRACTICE_PROMPT_MARKER_KEY,
+    scopeType: "PLAYER_MENTOR",
+    playerId: input.playerId,
+    creatureId: input.mentorCreatureId,
+    contextKey: mentorshipPracticePromptMarkerContext(input),
+    cooldownMs: MENTORSHIP_PRACTICE_PROMPT_COOLDOWN_MS,
+    now: input.now,
+  }, db as any);
+  return marker ?? recentMentorshipPracticePromptWorldEvent(input, db);
 }
 
 export async function maybeCreateMentorshipPracticePrompt(input: MentorshipPracticePromptInput, db: MentorshipDb = prisma) {
@@ -459,6 +516,25 @@ export async function maybeCreateMentorshipPracticePrompt(input: MentorshipPract
       ...(input.now ? { createdAt: input.now } : {}),
     },
   });
+  if (db.worldEventMarker) {
+    await createWorldEventMarker({
+      markerKey: MENTORSHIP_PRACTICE_PROMPT_MARKER_KEY,
+      scopeType: "PLAYER_MENTOR",
+      playerId: input.playerId,
+      creatureId: input.mentorCreatureId,
+      locationId: input.locationId,
+      contextKey: mentorshipPracticePromptMarkerContext({ ...input, action: `${action.action}:${action.resourceKey}` }),
+      worldEventId: event.id,
+      ttlMs: MENTORSHIP_PRACTICE_PROMPT_COOLDOWN_MS,
+      now: input.now,
+      metadata: {
+        skillKey: input.skillKey,
+        contextKey: input.contextKey,
+        action: action.action,
+        resourceKey: action.resourceKey,
+      },
+    }, db as any);
+  }
   return {
     ok: true as const,
     event,

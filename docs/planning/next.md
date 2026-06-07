@@ -133,6 +133,13 @@ lesson. Treat it as "you watched, now try" rather than a quest system: optional,
 cooldowned, no direct learning grant, and routed through the existing gather
 action. Tracking prompts and mentor-specific route lessons remain future slices.
 
+`0.16.5` moves the hottest short-lived cooldown/dedupe markers into structured
+`WorldEventMarker` rows while keeping readable `WorldEvent` audit rows. Treat it
+as infrastructure testing only: no new mentorship content, no group movement, no
+combat effects and no public skill UI. Next candidates after this are mentor
+guided tracking prompt, mentor route polish, and group movement design only if
+live follow/group behavior stays stable.
+
 Do not open another broad content loop before the learning/observation foundation is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
 ## Immediate Sequence
@@ -156,11 +163,12 @@ Do not open another broad content loop before the learning/observation foundatio
 17. **0.16.2 / Tracking mentorship and reply UX:** tracking mentorship observation and the `Відповісти` button are in testing, with no group chat, attack teaching or hidden-route sharing.
 18. **0.16.3 / Mentorship lesson feedback:** mentorship/reply polish is in testing: rare qualitative lesson lines, compact `/mentor` recent hints and clearer pending-reply timeout/cancel behavior, with no new skill effects.
 19. **0.16.4 / Mentorship guided practice:** the first gathering practice prompt is in testing: optional, cooldowned and routed to existing gather action, with no direct skill grant or quest loop.
-20. **Perf marker follow-up:** use slow logs to decide whether hot WorldEvent marker lookups need structured cooldown/dedupe storage instead of `description contains`.
-21. **Mentor route polish:** consider a tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
-22. **Group movement design:** if live group UX is clear, draft a separate consensual group movement slice with strict no-hidden-route/no-AFK-drag guardrails.
-23. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
-24. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
+20. **0.16.5 / Structured WorldEvent markers:** marker storage refactor is in testing: follow-assist and mentorship cooldown/dedupe hot paths use `WorldEventMarker`, with `WorldEvent` audit rows preserved and gameplay unchanged.
+21. **Mentor guided tracking prompt:** consider a narrow tracking practice prompt only after gathering prompts and marker cooldowns feel stable.
+22. **Mentor route polish:** consider a tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
+23. **Group movement design:** if live group UX is clear, draft a separate consensual group movement slice with strict no-hidden-route/no-AFK-drag guardrails.
+24. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
+25. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
 
 Watch the new actor-learning surfaces before widening them: `0.15.41` proves
 one NPC observation bridge, but freshening/cooking observation should remain a
