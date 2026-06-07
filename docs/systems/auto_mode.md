@@ -46,6 +46,12 @@ After a process restart, the bot restores timers for players with `isAutoEnabled
 
 ## Future Directions
 
+- Future unlock gating: `Поклик духа` should not necessarily be available as an
+  immediate default control. A later mentorship/attention slice should consider
+  unlocking or strengthening it only after the player has followed an
+  appropriate teacher for some time and seen that teacher's pattern often
+  enough. Keep the requirement diegetic and teacher-specific, not a raw global
+  level gate.
 - Separate spirit-call profiles or later auto-behavior profiles: gatherer, careful explorer, hunter, profession-specific modes.
 - Safety limits for dangerous states, regions, injuries or important events.
 - Skill- and profession-aware behavior.

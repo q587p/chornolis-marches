@@ -187,6 +187,13 @@ temporary gain, and the cycle should be able to begin again. Keep it narrow and
 observable, so there is always a living example of attention-based learning
 without turning it into a broad profession economy.
 
+Future `Поклик духа` (`/spirit`) work should tie access or stronger behavior to
+attention-based learning instead of leaving it as an always-immediate default:
+after the player follows an appropriate teacher for long enough and sees enough
+of their pattern, the spirit call can open or become more capable in that
+teacher-specific direction. Keep it diegetic and narrow, not a public skill
+level gate.
+
 Do not open another broad content loop before the learning/observation foundation is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
 ## Immediate Sequence
@@ -215,11 +222,12 @@ Do not open another broad content loop before the learning/observation foundatio
 22. **0.16.7 / Grammar agreement helper cleanup and archive republish queue:** player/creature gender and word agreement helpers are in testing, with visible target/player text kept stable; Herald can queue a full deployed `news.md` archive republish run for channel rebuilds without changing gameplay.
 23. **0.16.8 / Social signal content extraction and scribe suggestions:** social signal labels and message templates are in testing as content, with service behavior and visible strings kept stable; scribe-only unknown-command suggestions can see admin commands without changing command routing.
 24. **NPC learner loop:** design a narrow NPC-watches-NPC learning loop where a local learner can follow or observe a specialist, stop once they catch up, then sleep/decay the temporary gain so the visible learning example can repeat.
-25. **Mentor guided tracking prompt:** consider a narrow tracking practice prompt only after gathering prompts and marker cooldowns feel stable.
-26. **Mentor route polish:** consider a tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
-27. **Group movement design:** if live group UX is clear, draft a separate consensual group movement slice with strict no-hidden-route/no-AFK-drag guardrails.
-28. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
-29. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
+25. **Spirit-call teacher unlock:** design a narrow `Поклик духа` (`/spirit`) unlock or capability gate that opens only after sustained following/attention around an appropriate teacher, not immediately at default character start.
+26. **Mentor guided tracking prompt:** consider a narrow tracking practice prompt only after gathering prompts and marker cooldowns feel stable.
+27. **Mentor route polish:** consider a tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
+28. **Group movement design:** if live group UX is clear, draft a separate consensual group movement slice with strict no-hidden-route/no-AFK-drag guardrails.
+29. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
+30. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
 
 Watch the new actor-learning surfaces before widening them: `0.15.41` proves
 one NPC observation bridge, but freshening/cooking observation should remain a
