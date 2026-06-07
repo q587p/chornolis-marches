@@ -7,6 +7,24 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.6 - Resource text lexicon cleanup - 12026-06-07
+
+### Added
+
+- Added lexicon-backed resource text helpers for resource forms, display names, accusative names and corpse resource names.
+- Added focused resource text regression coverage for resource display, accusative forms, corpse names and corpse query matching.
+
+### Changed
+
+- Moved supported sexed rabbit, fox and wolf forms into the world lexicon instead of keeping duplicate inline grammar tables.
+- Replaced the local corpse/resource display-name map in `corpses.ts` with shared resource text helpers while preserving existing imports.
+- Kept current player-facing resource and corpse strings stable for raw meat, cooked meat, torches, twigs, honey, beeswax and current animal corpses.
+
+### Risks
+
+- This is intended as text/lexicon/grammar cleanup only; gameplay rules, WorldEvent/WorldEventMarker storage and Prisma migrations are unchanged.
+- Wider cleanup in `locations.ts`, `targets.ts` and `actionCompletions.ts` remains future focused work.
+
 ## 0.16.5 - Structured WorldEvent markers - 12026-06-07
 
 ### Added
