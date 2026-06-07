@@ -56,6 +56,7 @@ module.exports = [
   nodeTest("scripts/test/notifications.cjs"),
   nodeTest("scripts/test/route-finding.cjs"),
   nodeTest("scripts/test/speech-ranges.cjs"),
+  nodeTest("scripts/test/social-signals.cjs"),
   nodeTest("scripts/test/animal-speech.cjs"),
   nodeTest("scripts/test/npc-hunter.cjs"),
   nodeTest("scripts/test/npc-herbalist.cjs"),
