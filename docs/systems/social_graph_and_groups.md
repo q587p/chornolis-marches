@@ -194,6 +194,9 @@ mentor's supported herbs/berries/mushrooms gathering count a little more. This
 does not add learning on accept, group movement, hidden-route sharing or a
 global skill multiplier. Pending mentorship answers also run after normal alias
 parsing so commands like `гурт` are not swallowed as unclear replies.
+The current gathering-offer copy was authored for the first feminine mentor
+case; if gathering mentorship broadens to male or non-feminine mentors, make the
+offer line use mentor forms/gender instead of a fixed `її сліду` phrase.
 
 As of `0.16.2`, hunter/tracking mentorship can also matter through attention to
 movement: fresh clear route-memory from the active mentor's ordinary visible

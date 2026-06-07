@@ -114,6 +114,11 @@ enable follow assist, move the player or share hidden routes.
 gathering. Treat it as proof that mentorship matters only through real attention:
 the player must observe the active mentor doing relevant work. Tracking
 mentorship, generic reply UX and broader teaching effects remain separate.
+The `0.16.1` alias-first pending-answer fix should stay in place so slashless
+commands are not swallowed as unclear mentorship answers. A remaining copy
+follow-up is the gathering offer phrasing: it still assumes a feminine mentor in
+the "її сліду" line, so make mentor offer text gender/form-aware before widening
+gathering mentors beyond the current authored case.
 
 `0.16.2` adds hunter/tracking mentorship and a small reply-button foundation.
 Tracking mentorship now has its first observation path through fresh clear
