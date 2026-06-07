@@ -1,4 +1,6 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 
 require("ts-node/register");
 
@@ -7,6 +9,7 @@ const {
   formatAliasSuggestion,
   normalizeInput,
   parseAlias,
+  suggestAdminCommandEntries,
   suggestAliasEntries,
   suggestAliasInputs,
   suggestKeyboardLayoutAliasEntries,
@@ -544,9 +547,15 @@ assert.ok(suggestAliasEntries("потрус").map(formatAliasSuggestion).include
 assert.ok(suggestAliasEntries("гук").map(formatAliasSuggestion).includes("гукнути (/yell)"), "Expected formatted suggestions to include slash command for nearby yell");
 assert.ok(suggestAliasEntries("гукнти").map(formatAliasSuggestion).includes("гукнути (/yell)"), "Expected formatted suggestions to include slash command for mistyped nearby yell");
 assert.ok(suggestAliasEntries("вола").map(formatAliasSuggestion).includes("волати (/shout)"), "Expected formatted suggestions to keep волати as region shout");
+assert.ok(!suggestAliasEntries("/addl").map(formatAliasSuggestion).includes("addLitTorch (/addLitTorch)"), "Public suggestions should not expose scribe-only commands.");
+assert.ok(suggestAdminCommandEntries("/addl").map(formatAliasSuggestion).includes("addLitTorch (/addLitTorch)"), "Scribe/admin suggestions should include /addLitTorch for /addl.");
+assert.ok(suggestAdminCommandEntries("add lit").map(formatAliasSuggestion).includes("addLitTorch (/addLitTorch)"), "Scribe/admin suggestions should include /addLitTorch for spaced text.");
 assert.ok(suggestAliasInputs("усхмі").includes("усміх"), "Expected social suggestions to include усміх for a mistyped smile");
 assert.ok(suggestAliasInputs("посмі").includes("посміх"), "Expected social suggestions to include посміх");
 assert.ok(suggestAliasEntries("усхмі").map(formatAliasSuggestion).includes("усміх (/smile)"), "Expected formatted social suggestions to include slash command for smile");
+const fallbackSource = fs.readFileSync(path.join(process.cwd(), "src", "handlers", "fallback.ts"), "utf8");
+assert.match(fallbackSource, /isScribeAdmin\(ctx\.from\?\.id\)/, "Unknown-command fallback should check scribe access before including admin command suggestions.");
+assert.match(fallbackSource, /suggestAdminCommandEntries/, "Unknown-command fallback should include admin command suggestions for scribes.");
 assert.ok(alternateKeyboardLayoutInputs("[nj").includes("хто"), "Expected English-layout typo [nj to convert to хто");
 assert.ok(suggestKeyboardLayoutAliasEntries("[nj").map(formatAliasSuggestion).includes("хто (/who)"), "Expected keyboard-layout suggestions to include /who");
 assert.ok(suggestKeyboardLayoutAliasEntries("htxb").map(formatAliasSuggestion).includes("речі (/inventory)"), "Expected keyboard-layout suggestions to include inventory");
