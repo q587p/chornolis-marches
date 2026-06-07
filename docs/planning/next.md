@@ -157,8 +157,10 @@ oldest-first without using repost formatting or changing gameplay.
 
 `0.16.8` extracts social signal labels and message templates into a content
 module while keeping target resolution, notifications, reactions and event
-logging in the service layer. Treat it as content organization only: no new
-signals, no keyboard/help changes and no gameplay behavior changes.
+logging in the service layer, and lets scribe-only unknown-command suggestions
+see service commands without exposing them to ordinary players. Treat it as
+content/suggestion organization only: no new signals, no keyboard/help changes
+and no gameplay behavior changes.
 
 Do not open another broad content loop before the learning/observation foundation is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
@@ -186,7 +188,7 @@ Do not open another broad content loop before the learning/observation foundatio
 20. **0.16.5 / Structured WorldEvent markers:** marker storage refactor is in testing: follow-assist and mentorship cooldown/dedupe hot paths use `WorldEventMarker`, with `WorldEvent` audit rows preserved and gameplay unchanged.
 21. **0.16.6 / Resource text lexicon cleanup:** resource/corpse text helpers are in testing, with duplicate display/grammar maps reduced and gameplay unchanged.
 22. **0.16.7 / Grammar agreement helper cleanup and archive republish queue:** player/creature gender and word agreement helpers are in testing, with visible target/player text kept stable; Herald can queue a full deployed `news.md` archive republish run for channel rebuilds without changing gameplay.
-23. **0.16.8 / Social signal content extraction:** social signal labels and message templates are in testing as content, with service behavior and visible strings kept stable.
+23. **0.16.8 / Social signal content extraction and scribe suggestions:** social signal labels and message templates are in testing as content, with service behavior and visible strings kept stable; scribe-only unknown-command suggestions can see admin commands without changing command routing.
 24. **Mentor guided tracking prompt:** consider a narrow tracking practice prompt only after gathering prompts and marker cooldowns feel stable.
 25. **Mentor route polish:** consider a tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
 26. **Group movement design:** if live group UX is clear, draft a separate consensual group movement slice with strict no-hidden-route/no-AFK-drag guardrails.

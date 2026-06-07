@@ -7,21 +7,23 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
-## 0.16.8 - Social signal content extraction - 12026-06-07
+## 0.16.8 - Social signal content extraction and scribe suggestions - 12026-06-07
 
 ### Added
 
 - Added `src/content/social/socialSignals.ts` as the content home for social signal labels and message templates.
 - Added focused social-signal regression coverage for stable signal IDs, labels, representative rendered messages and quick-social target defaults.
+- Added scribe/admin-only unknown-command suggestions for service commands, including the lit-torch helper, without exposing those suggestions to ordinary players.
 
 ### Changed
 
 - Moved `SOCIAL_DEFINITIONS` content out of `socialSignals.ts` while keeping target resolution, notification delivery, creature/NPC reactions, world/audit event creation and creature `currentAction` updates in the service layer.
 - Kept current social signal labels and player-facing message strings stable for player targets, creature targets and targetless signals.
+- Unknown-command fallback now checks scribe access before adding admin-command suggestions, while public alias suggestions remain unchanged.
 
 ### Risks
 
-- This is intended as content extraction only; WorldEvent/WorldEventMarker logic, Prisma schema, migrations, Herald archive republish, gameplay rules, keyboards, help text, location prose and action completions are unchanged.
+- This is intended as content/suggestion cleanup only; WorldEvent/WorldEventMarker logic, Prisma schema, migrations, Herald archive republish, gameplay rules, keyboards, help text, location prose and action completions are unchanged.
 - Future social signal content expansion should stay separate from this refactor.
 
 ## 0.16.7 - Grammar agreement helper cleanup and archive republish queue - 12026-06-07
