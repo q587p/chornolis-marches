@@ -13,6 +13,10 @@ export type HeraldPublicationMessageSource = {
   renderedText?: string | null;
 };
 
+function isArchivePublicationSource(sourceType?: string) {
+  return sourceType === "NEWS_MD_ARCHIVE" || sourceType === "NEWS_MD_ARCHIVE_REPUBLISH";
+}
+
 function titleWithSourceDate(title: string, sourceDate?: string | null) {
   if (!sourceDate || title.includes(sourceDate)) return title;
   return `${title} — ${sourceDate}`;
@@ -26,7 +30,7 @@ function ensureRenderedTitleDate(text: string, publication: HeraldPublicationMes
   let changed = false;
 
   let updated = lines.map((line) => {
-    if (publication.sourceType === "NEWS_MD_ARCHIVE" && line.startsWith(titlePrefix)) {
+    if (isArchivePublicationSource(publication.sourceType) && line.startsWith(titlePrefix)) {
       const title = line.slice(titlePrefix.length);
       if (title.includes(publication.sourceDate!)) return line;
       changed = true;
@@ -41,7 +45,7 @@ function ensureRenderedTitleDate(text: string, publication: HeraldPublicationMes
     return line;
   });
 
-  if (publication.sourceType === "NEWS_MD_ARCHIVE") {
+  if (isArchivePublicationSource(publication.sourceType)) {
     const legacyDateLine = `Дата запису: ${publication.sourceDate}`;
     const filtered = updated.filter((line) => line !== legacyDateLine);
     if (filtered.length !== updated.length) {
@@ -65,7 +69,7 @@ export function formatHeraldPublicationPlainMessage(publication: HeraldPublicati
     return sanitizeHeraldChannelText(ensureRenderedTitleDate(publication.renderedText, publication));
   }
 
-  if (publication.sourceType === "NEWS_MD_ARCHIVE") {
+  if (isArchivePublicationSource(publication.sourceType)) {
     return sanitizeHeraldChannelText([
       "📜 З архіву Канцелярії",
       "",
@@ -107,7 +111,7 @@ function linkNewsPublicationMessage(text: string, publication: HeraldPublication
 }
 
 export function formatHeraldPublicationMessage(publication: HeraldPublicationMessageSource) {
-  if (publication.sourceType === "NEWS_MD_ARCHIVE") {
+  if (isArchivePublicationSource(publication.sourceType)) {
     return linkArchivePublicationMessage(formatHeraldPublicationPlainMessage(publication));
   }
   if (publication.sourceType === "NEWS_MD") {

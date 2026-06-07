@@ -3,11 +3,16 @@ import { requireHeraldAdmin } from "./admin";
 import { formatHeraldPublicationMessage } from "./format";
 import { HERALD_CHANNEL_MESSAGE_OPTIONS } from "./gameLinks";
 import {
+  archiveRepublishStatus,
+  cancelArchiveRepublishPendingPublications,
+  DEFAULT_ARCHIVE_REPUBLISH_INTERVAL_MS,
   formatBackfillInterval,
   formatArchiveBody,
   parseBackfillIntervalMs,
   newsBackfillStatus,
+  previewArchiveRepublish,
   previewNewsBackfill,
+  queueArchiveRepublish,
   queueNewsBackfill,
   readAllNewsEntries,
   rescheduleNewsBackfillPending,
@@ -16,6 +21,10 @@ import { publicationErrorMessage } from "./publications";
 
 function previewLine(entry: { title: string }, index: number) {
   return `${index + 1}. ${entry.title}`;
+}
+
+function formatKyivDateTime(value: Date) {
+  return value.toLocaleString("uk-UA", { timeZone: "Europe/Kyiv" });
 }
 
 function formatPreviewReply(result: Awaited<ReturnType<typeof previewNewsBackfill>>) {
@@ -63,6 +72,67 @@ function formatQueueReply(result: Awaited<ReturnType<typeof queueNewsBackfill>>)
     `Інтервал: ${formatBackfillInterval(result.intervalMs)}.`,
     `Перший запис стане доступний: ${first.availableAt.toLocaleString("uk-UA", { timeZone: "Europe/Kyiv" })}.`,
     `Останній із доданих: ${last.availableAt.toLocaleString("uk-UA", { timeZone: "Europe/Kyiv" })}.`,
+  ].join("\n");
+}
+
+function formatArchiveRepublishPreviewReply(result: Awaited<ReturnType<typeof previewArchiveRepublish>>) {
+  if (!result.total) {
+    return "Канцелярія перечитала deployed news.md, але не знайшла архівних записів для повторної черги.";
+  }
+
+  return [
+    "Канцелярія звірила архів для повторної публікації.",
+    "",
+    `Run: ${result.runId}.`,
+    `Усього записів: ${result.total}.`,
+    `Перший: ${result.first?.title ?? "немає"}.`,
+    `Останній: ${result.last?.title ?? "немає"}.`,
+    `Інтервал: ${formatBackfillInterval(result.intervalMs)}.`,
+    result.estimatedFinishAt ? `Орієнтовне завершення: ${formatKyivDateTime(result.estimatedFinishAt)}.` : "Орієнтовне завершення: немає записів.",
+    `Уже є queued republish run: ${result.alreadyQueued ? "так" : "ні"}.`,
+    `Очікує: ${result.pending}. Опубліковано в цьому run: ${result.published}. Скасовано: ${result.canceled}. Ще не внесено: ${result.missing}.`,
+    "",
+    "Пости в канал підуть як звичайні архівні записи: «📜 З архіву Канцелярії», без позначки повторної публікації.",
+  ].join("\n");
+}
+
+function formatArchiveRepublishQueueReply(result: Awaited<ReturnType<typeof queueArchiveRepublish>>) {
+  if (!result.total) {
+    return "Канцелярія перечитала deployed news.md, але не знайшла архівних записів для повторної черги.";
+  }
+
+  if (result.alreadyQueued) {
+    return [
+      "Канцелярія вже має активну чергу повторної архівної публікації для цього run.",
+      "",
+      `Run: ${result.runId}.`,
+      `Очікує: ${result.pending}.`,
+      "Нові дублікати не створено. Для іншого run потрібна окрема зміна версії/namespace.",
+    ].join("\n");
+  }
+
+  if (!result.queued.length) {
+    return [
+      "Канцелярія не додала нових записів у повторну архівну чергу.",
+      "",
+      `Run: ${result.runId}.`,
+      `Усього записів у news.md: ${result.total}.`,
+      `Пропущено як уже опубліковані в цьому run: ${result.skipped}.`,
+    ].join("\n");
+  }
+
+  const first = result.queued[0];
+  const last = result.queued[result.queued.length - 1];
+  return [
+    "Канцелярія поставила архів у повторну чергу.",
+    "",
+    `Run: ${result.runId}.`,
+    `Додано: ${result.queued.length}.`,
+    `Пропущено як уже опубліковані в цьому run: ${result.skipped}.`,
+    `Інтервал: ${formatBackfillInterval(result.intervalMs)}.`,
+    `Перший запис стане доступний: ${formatKyivDateTime(first.availableAt)}.`,
+    `Останній із доданих: ${formatKyivDateTime(last.availableAt)}.`,
+    "Формат каналу: звичайний архівний допис, без позначки повторної публікації.",
   ].join("\n");
 }
 
@@ -172,6 +242,89 @@ export function registerHeraldNewsBackfillCommands(bot: Bot, heraldAdminIds: Rea
     } catch (error) {
       console.error("Herald news backfill reschedule failed:", publicationErrorMessage(error));
       await ctx.reply("Канцелярія не змогла перепланувати архівну чергу.");
+    }
+  });
+
+  bot.command("archive_republish_preview", async (ctx) => {
+    if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
+
+    try {
+      const intervalMs = parseBackfillIntervalMs(String(ctx.match ?? ""), DEFAULT_ARCHIVE_REPUBLISH_INTERVAL_MS);
+      if (intervalMs === null) {
+        await ctx.reply("Канцелярія не впізнала інтервал. Спробуйте: /archive_republish_preview 30m");
+        return;
+      }
+
+      const entries = await readEntriesOrReply(ctx);
+      if (!entries) return;
+
+      const result = await previewArchiveRepublish(entries, intervalMs);
+      await ctx.reply(formatArchiveRepublishPreviewReply(result));
+    } catch (error) {
+      console.error("Herald archive republish preview failed:", publicationErrorMessage(error));
+      await ctx.reply("Канцелярія не змогла підготувати перегляд повторної архівної черги.");
+    }
+  });
+
+  bot.command("archive_republish_queue", async (ctx) => {
+    if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
+
+    try {
+      const intervalMs = parseBackfillIntervalMs(String(ctx.match ?? ""), DEFAULT_ARCHIVE_REPUBLISH_INTERVAL_MS);
+      if (intervalMs === null) {
+        await ctx.reply("Канцелярія не впізнала інтервал. Спробуйте: /archive_republish_queue 30m");
+        return;
+      }
+
+      const entries = await readEntriesOrReply(ctx);
+      if (!entries) return;
+
+      const result = await queueArchiveRepublish(entries, intervalMs);
+      await ctx.reply(formatArchiveRepublishQueueReply(result));
+    } catch (error) {
+      console.error("Herald archive republish queue failed:", publicationErrorMessage(error));
+      await ctx.reply("Канцелярія не змогла поставити архів у повторну чергу.");
+    }
+  });
+
+  bot.command("archive_republish_status", async (ctx) => {
+    if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
+
+    try {
+      const status = await archiveRepublishStatus();
+      await ctx.reply([
+        "Канцелярія звірила повторну архівну чергу.",
+        "",
+        `Run: ${status.runId}.`,
+        `Очікує: ${status.pending}.`,
+        `Опубліковано: ${status.published}.`,
+        status.next
+          ? `Наступний запис: #${status.next.id} · ${status.next.title}\nДоступний: ${formatKyivDateTime(status.next.availableAt)}.`
+          : "Наступного очікуваного запису немає.",
+      ].join("\n"));
+    } catch (error) {
+      console.error("Herald archive republish status failed:", publicationErrorMessage(error));
+      await ctx.reply("Канцелярія не змогла звірити повторну архівну чергу.");
+    }
+  });
+
+  bot.command("archive_republish_cancel", async (ctx) => {
+    if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
+
+    try {
+      const canceled = await cancelArchiveRepublishPendingPublications();
+      const status = await archiveRepublishStatus();
+      await ctx.reply([
+        "Канцелярія скасувала неопубліковані записи повторної архівної черги.",
+        "",
+        `Скасовано: ${canceled.count}.`,
+        `Ще очікує в цьому run: ${status.pending}.`,
+        `Уже опубліковано в цьому run: ${status.published}.`,
+        "Звичайні pending news/archive записи й уже опублікована історія не змінювались.",
+      ].join("\n"));
+    } catch (error) {
+      console.error("Herald archive republish cancel failed:", publicationErrorMessage(error));
+      await ctx.reply("Канцелярія не змогла скасувати повторну архівну чергу.");
     }
   });
 }

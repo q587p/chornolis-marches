@@ -1,4 +1,5 @@
 import { VERY_TIRED_STAMINA } from "../gameConfig";
+import { playerGrammarGender, playerWord } from "../services/grammar";
 
 type PlayerStats = {
   steps: number;
@@ -33,19 +34,6 @@ type PlayerVitals = {
   grammaticalGender?: string | null;
   pronoun?: string | null;
 };
-
-type ObservedPlayerGender = "MASCULINE" | "FEMININE" | "NEUTER" | "PLURAL";
-
-function observedGender(player: { grammaticalGender?: string | null; pronoun?: string | null }): ObservedPlayerGender {
-  if (player.grammaticalGender === "FEMININE" || player.grammaticalGender === "NEUTER" || player.grammaticalGender === "PLURAL") return player.grammaticalGender;
-  if (player.pronoun === "SHE") return "FEMININE";
-  if (player.pronoun === "THEY") return "PLURAL";
-  return "MASCULINE";
-}
-
-function observedWord(player: { grammaticalGender?: string | null; pronoun?: string | null }, forms: Record<ObservedPlayerGender, string>) {
-  return forms[observedGender(player)];
-}
 
 export function formatPercent(success: number, attempts: number) {
   if (!attempts) return "0%";
@@ -110,7 +98,7 @@ export function formatPostureText(player: PlayerFatigue & { isSleeping?: boolean
 }
 
 export function formatObservedPostureText(player: PlayerFatigue & { isSleeping?: boolean | null; grammaticalGender?: string | null; pronoun?: string | null }) {
-  const plural = observedGender(player) === "PLURAL";
+  const plural = playerGrammarGender(player) === "PLURAL";
   if (player.sleepState === "ORDINARY_SLEEP") return plural ? "Сплять." : "Спить.";
   if (player.isSleeping) {
     if (player.posture === "SITTING" || player.isResting) {
@@ -144,21 +132,22 @@ export function formatObservedVitalsText(player: PlayerVitals, options: { hpFall
   const staminaMax = player.staminaMax ?? options.staminaFallback;
   const hpRatio = hpMax > 0 ? player.hp / hpMax : 0;
   const staminaRatio = staminaMax > 0 ? player.stamina / staminaMax : 0;
-  const looks = observedGender(player) === "PLURAL" ? "Виглядають" : "Виглядає";
+  const gender = playerGrammarGender(player);
+  const looks = gender === "PLURAL" ? "Виглядають" : "Виглядає";
   const lifeText = player.hp <= 0
-    ? `${looks} ${observedWord(player, { MASCULINE: "непритомним", FEMININE: "непритомною", NEUTER: "непритомним", PLURAL: "непритомними" })}.`
+    ? `${looks} ${playerWord(player, { MASCULINE: "непритомним", FEMININE: "непритомною", NEUTER: "непритомним", PLURAL: "непритомними" })}.`
     : hpRatio >= 0.85
-      ? `${looks} ${observedWord(player, { MASCULINE: "сповненим", FEMININE: "сповненою", NEUTER: "сповненим", PLURAL: "сповненими" })} життя.`
+      ? `${looks} ${playerWord(player, { MASCULINE: "сповненим", FEMININE: "сповненою", NEUTER: "сповненим", PLURAL: "сповненими" })} життя.`
       : hpRatio >= 0.45
-        ? `${looks} ${observedWord(player, { MASCULINE: "побитим", FEMININE: "побитою", NEUTER: "побитим", PLURAL: "побитими" })}, але ${observedGender(player) === "PLURAL" ? "тримаються" : "тримається"}.`
-        : `${looks} тяжко ${observedWord(player, { MASCULINE: "пораненим", FEMININE: "пораненою", NEUTER: "пораненим", PLURAL: "пораненими" })}.`;
+        ? `${looks} ${playerWord(player, { MASCULINE: "побитим", FEMININE: "побитою", NEUTER: "побитим", PLURAL: "побитими" })}, але ${gender === "PLURAL" ? "тримаються" : "тримається"}.`
+        : `${looks} тяжко ${playerWord(player, { MASCULINE: "пораненим", FEMININE: "пораненою", NEUTER: "пораненим", PLURAL: "пораненими" })}.`;
   const staminaText = player.stamina <= 0
-    ? `${looks} ${observedWord(player, { MASCULINE: "виснаженим", FEMININE: "виснаженою", NEUTER: "виснаженим", PLURAL: "виснаженими" })}.`
+    ? `${looks} ${playerWord(player, { MASCULINE: "виснаженим", FEMININE: "виснаженою", NEUTER: "виснаженим", PLURAL: "виснаженими" })}.`
     : staminaRatio >= 0.75
-      ? `${looks} ${observedWord(player, { MASCULINE: "відпочилим", FEMININE: "відпочилою", NEUTER: "відпочилим", PLURAL: "відпочилими" })}.`
+      ? `${looks} ${playerWord(player, { MASCULINE: "відпочилим", FEMININE: "відпочилою", NEUTER: "відпочилим", PLURAL: "відпочилими" })}.`
       : staminaRatio >= 0.4
-        ? `${looks} трохи ${observedWord(player, { MASCULINE: "втомленим", FEMININE: "втомленою", NEUTER: "втомленим", PLURAL: "втомленими" })}.`
-        : `${looks} ${observedWord(player, { MASCULINE: "втомленим", FEMININE: "втомленою", NEUTER: "втомленим", PLURAL: "втомленими" })}.`;
+        ? `${looks} трохи ${playerWord(player, { MASCULINE: "втомленим", FEMININE: "втомленою", NEUTER: "втомленим", PLURAL: "втомленими" })}.`
+        : `${looks} ${playerWord(player, { MASCULINE: "втомленим", FEMININE: "втомленою", NEUTER: "втомленим", PLURAL: "втомленими" })}.`;
   return [lifeText, staminaText].join("\n");
 }
 

@@ -17,6 +17,14 @@ type ActorGenderRef = {
   pronoun?: string | null;
   sex?: string | null;
 };
+type PlayerGenderRef = Pick<ActorGenderRef, "grammaticalGender" | "pronoun">;
+type CreatureGenderRef = {
+  sex?: string | null;
+  grammaticalGender?: string | null;
+  species?: {
+    grammaticalGender?: string | null;
+  } | null;
+};
 
 const INVISIBLE_OR_BIDI = /[\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g;
 const CYRILLIC_NAME = /^[\p{Script=Cyrillic}](?:[\p{Script=Cyrillic}\p{Mark}]|[ '’ʼʻʹ`´\-‐‑‒–](?=[\p{Script=Cyrillic}])){1,63}$/u;
@@ -216,8 +224,12 @@ export function guessGenderFromPronoun(pronoun?: string | null): Gender {
   return "MASCULINE";
 }
 
+function isGrammarGender(value: string | null | undefined): value is Gender {
+  return value === "MASCULINE" || value === "FEMININE" || value === "NEUTER" || value === "PLURAL";
+}
+
 export function actorGrammarGender(actor: ActorGenderRef): Gender {
-  if (actor.grammaticalGender === "FEMININE" || actor.grammaticalGender === "NEUTER" || actor.grammaticalGender === "PLURAL") {
+  if (isGrammarGender(actor.grammaticalGender)) {
     return actor.grammaticalGender;
   }
   if (actor.pronoun === "SHE" || actor.sex === "FEMALE") return "FEMININE";
@@ -225,11 +237,36 @@ export function actorGrammarGender(actor: ActorGenderRef): Gender {
   return "MASCULINE";
 }
 
+export function playerGrammarGender(player: PlayerGenderRef): Gender {
+  return actorGrammarGender(player);
+}
+
+export function creatureGrammarGender(creature: CreatureGenderRef): Gender {
+  if (creature.sex === "MALE") return "MASCULINE";
+  if (creature.sex === "FEMALE") return "FEMININE";
+  if (isGrammarGender(creature.grammaticalGender)) return creature.grammaticalGender;
+  if (isGrammarGender(creature.species?.grammaticalGender)) return creature.species.grammaticalGender;
+  return "MASCULINE";
+}
+
+export function wordByGender(gender: Gender, forms: Record<Gender, string>) {
+  return forms[gender];
+}
+
+export function actorWord(actor: ActorGenderRef, forms: Record<Gender, string>) {
+  return wordByGender(actorGrammarGender(actor), forms);
+}
+
+export function playerWord(player: PlayerGenderRef, forms: Record<Gender, string>) {
+  return wordByGender(playerGrammarGender(player), forms);
+}
+
+export function creatureWord(creature: CreatureGenderRef, forms: Record<Gender, string>) {
+  return wordByGender(creatureGrammarGender(creature), forms);
+}
+
 export function actorPastVerb(actor: ActorGenderRef, masculine: string, feminine: string, plural: string) {
-  const gender = actorGrammarGender(actor);
-  if (gender === "FEMININE") return feminine;
-  if (gender === "PLURAL") return plural;
-  return masculine;
+  return actorWord(actor, { MASCULINE: masculine, FEMININE: feminine, NEUTER: masculine, PLURAL: plural });
 }
 
 function preserveCase(original: string, declined: string) {

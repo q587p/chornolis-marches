@@ -147,6 +147,14 @@ marker storage stay unchanged. Future text cleanup can take separate small
 slices in `locations.ts`, `targets.ts` or `actionCompletions.ts` if a duplicated
 map is fully covered by tests.
 
+`0.16.7` cleans up a narrow slice of Ukrainian gender/agreement helpers and adds
+an operator-only Herald archive republish queue. Treat the grammar part as
+infrastructure only: player and creature gender fallback plus gendered word
+selection are shared, while social signals, keyboards, help text, location prose
+and action completions remain future focused slices. Treat the Herald part as
+channel recovery tooling only: deployed `news.md` archive entries can be queued
+oldest-first without using repost formatting or changing gameplay.
+
 Do not open another broad content loop before the learning/observation foundation is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
 ## Immediate Sequence
@@ -172,11 +180,12 @@ Do not open another broad content loop before the learning/observation foundatio
 19. **0.16.4 / Mentorship guided practice:** the first gathering practice prompt is in testing: optional, cooldowned and routed to existing gather action, with no direct skill grant or quest loop.
 20. **0.16.5 / Structured WorldEvent markers:** marker storage refactor is in testing: follow-assist and mentorship cooldown/dedupe hot paths use `WorldEventMarker`, with `WorldEvent` audit rows preserved and gameplay unchanged.
 21. **0.16.6 / Resource text lexicon cleanup:** resource/corpse text helpers are in testing, with duplicate display/grammar maps reduced and gameplay unchanged.
-22. **Mentor guided tracking prompt:** consider a narrow tracking practice prompt only after gathering prompts and marker cooldowns feel stable.
-23. **Mentor route polish:** consider a tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
-24. **Group movement design:** if live group UX is clear, draft a separate consensual group movement slice with strict no-hidden-route/no-AFK-drag guardrails.
-25. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
-26. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
+22. **0.16.7 / Grammar agreement helper cleanup and archive republish queue:** player/creature gender and word agreement helpers are in testing, with visible target/player text kept stable; Herald can queue a full deployed `news.md` archive republish run for channel rebuilds without changing gameplay.
+23. **Mentor guided tracking prompt:** consider a narrow tracking practice prompt only after gathering prompts and marker cooldowns feel stable.
+24. **Mentor route polish:** consider a tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
+25. **Group movement design:** if live group UX is clear, draft a separate consensual group movement slice with strict no-hidden-route/no-AFK-drag guardrails.
+26. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
+27. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
 
 Watch the new actor-learning surfaces before widening them: `0.15.41` proves
 one NPC observation bridge, but freshening/cooking observation should remain a

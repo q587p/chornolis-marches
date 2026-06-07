@@ -265,6 +265,26 @@ same `contentHash` dedupe as the outbox and refuses to repost a selected archive
 entry that is already published. Use `/news_archive_force_post [number]` only
 when an admin intentionally wants a new archive/repost message from the deployed
 archive index.
+
+For rebuilding an archival channel from the deployed `news.md`, use the explicit
+archive republish queue instead of `/repost_publication`:
+
+- `/archive_republish_preview [30m]` rereads deployed `news.md`, shows total
+  entries, first/last archive entry, interval, estimated finish time and whether
+  a republish run is already queued;
+- `/archive_republish_queue [30m]` queues the full archive oldest-first in
+  `HeraldPublication` using stable `archiveOrder` and spaced `availableAt`
+  values;
+- `/archive_republish_status` shows pending/published republish-run rows and the
+  next queued item;
+- `/archive_republish_cancel` cancels only unpublished republish-run rows.
+
+Archive republish rows use source type `NEWS_MD_ARCHIVE_REPUBLISH` and a
+`republish:v1:*` content-hash namespace, so existing published archive rows do
+not block the rebuild run. Channel posts render with the normal archive header,
+`📜 З архіву Канцелярії`, and intentionally do not add a repeated-publication
+disclaimer. Canceling the republish queue does not touch ordinary pending
+`NEWS_MD` / `NEWS_MD_ARCHIVE` rows or already published history.
 On Render, `news.md` is the deployed file; changing it requires commit, push and
 redeploy before these commands see the new text.
 

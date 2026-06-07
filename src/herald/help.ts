@@ -30,6 +30,10 @@ export const HERALD_COMMANDS: HeraldCommandInfo[] = [
   { command: "/backfill_news_status", description: "звірити стан архівної черги news.md", adminOnly: true },
   { command: "/backfill_news_reschedule_pending", description: "перепланувати очікувані архівні записи news.md з новим інтервалом", adminOnly: true },
   { command: "/backfill_news_cancel", description: "скасувати неопубліковані записи новин/архіву", adminOnly: true },
+  { command: "/archive_republish_preview", description: "переглянути повну повторну архівну чергу news.md", adminOnly: true },
+  { command: "/archive_republish_queue", description: "поставити весь архів news.md у повторну чергу", adminOnly: true },
+  { command: "/archive_republish_status", description: "звірити стан повторної архівної черги", adminOnly: true },
+  { command: "/archive_republish_cancel", description: "скасувати неопубліковані записи повторної архівної черги", adminOnly: true },
   { command: "/news_archive_list", description: "перечитати deployed news.md і показати архівні індекси від найстарішого", adminOnly: true },
   { command: "/news_archive_reload", description: "заново перечитати deployed news.md для ручного архіву", adminOnly: true },
   { command: "/news_archive_find", description: "знайти архівний індекс news.md за номером релізу", adminOnly: true },
@@ -106,6 +110,10 @@ export function formatHeraldHelp(isAdmin: boolean) {
       commandLine("/backfill_news_status", "показати стан архівної черги"),
       commandLine("/backfill_news_reschedule_pending [інтервал]", "перерозкласти pending архів"),
       commandLine("/backfill_news_cancel", "скасувати pending news/archive записи"),
+      commandLine("/archive_republish_preview [інтервал]", "переглянути повну повторну чергу"),
+      commandLine("/archive_republish_queue [інтервал]", "поставити весь архів у повторну чергу"),
+      commandLine("/archive_republish_status", "показати стан повторної черги"),
+      commandLine("/archive_republish_cancel", "скасувати pending повторної черги"),
       commandLine("/news_archive_find <реліз>", "знайти архівний номер за версією"),
       commandLine("/news_archive_list", "показати архівні індекси"),
       commandLine("/news_archive_preview <номер>", "переглянути один архівний запис"),
@@ -140,11 +148,12 @@ export function formatHeraldHelp(isAdmin: boolean) {
     section("Приклади", [
       "/backfill_news_queue 23m — поставити архів із паузою 23 хвилини між вістями",
       "/backfill_news_reschedule_pending 23m — заново розкласти pending архів із таким інтервалом",
+      "/archive_republish_queue 30m — заново поставити весь deployed архів без repost-позначки",
       "/news_archive_find 0.4.4 — знайти номер старої вісті за релізом",
       "/news_archive_post 9 — вручну передати архівний запис #9",
     ]),
     "",
-    "Інтервал можна задавати як `13m`, `23m`, `2h`. Без аргументу backfill бере `HERALD_ARCHIVE_INTERVAL_MINUTES`.",
+    "Інтервал можна задавати як `13m`, `23m`, `30m`, `2h`. Без аргументу backfill бере `HERALD_ARCHIVE_INTERVAL_MINUTES`, а archive republish бере 30m.",
   ].join("\n");
 }
 
