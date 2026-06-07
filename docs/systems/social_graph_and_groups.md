@@ -214,6 +214,21 @@ The `Відповісти` button also has clearer timeout/cancel copy; known co
 aliases keep priority over pending reply text, and the button remains directed
 speech UX rather than shared chat.
 
+Pending reply mode is currently an in-process helper over the persisted
+remembered reply target. After a bot restart or deploy, the `Відповісти` button
+may no longer have its next-message pending state; that is acceptable for the
+foundation because the mode only prepares one immediate free-text reply. If live
+players often answer after restarts, either restore the pending state from the
+remembered target or return a soft "press reply again" prompt instead of making
+this a broad chat persistence system.
+
+Tracking mentorship currently records its learning on the fresh route-memory
+event rather than a separate "hunter actively teaches" event. That is acceptable
+for the MVP because the player is learning by attention to the mentor's real
+movement. Future tracking polish should keep diegetic lesson feedback tied to
+that route-memory trigger, or add a narrow explicit teaching event only if it is
+needed for clarity.
+
 As of `0.16.4`, a real mentored gathering lesson may occasionally be followed by
 an optional practice prompt. The mentor can step aside and offer a
 `Спробувати зібрати` button, but the button only submits the existing gather

@@ -131,12 +131,18 @@ ordinary movement by the active mentor, while `Відповісти` makes direc
 easier to answer without becoming group chat. Keep both narrow: no learning on
 accept, no hidden-route sharing, no attack teaching and no automatic group
 movement.
+Reply pending state remains an in-memory next-message helper after the
+persisted remembered reply target; if restarts make players lose replies often,
+add a soft "press reply again" path or restore the pending state narrowly.
 
 `0.16.3` adds live-polish around that foundation: rare cooldowned mentorship
 lesson feedback when a real mentored observation bonus happens, compact recent
 lesson status in `/mentor`, and clearer timeout/cancel behavior for the
 `Відповісти` button. Keep this as qualitative feedback, not a new learning
 source or public skill surface.
+Tracking mentorship lesson feedback should stay tied to the route-memory
+learning trigger until a separate explicit hunter-teaches event is worth the
+extra machinery.
 
 `0.16.4` adds the first guided practice prompt after a real mentored gathering
 lesson. Treat it as "you watched, now try" rather than a quest system: optional,
