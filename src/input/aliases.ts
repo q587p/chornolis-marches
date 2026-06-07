@@ -1754,6 +1754,7 @@ function parseFollowAssistIntent(text: string): ParsedAliasCommand | null {
   if ([
     "follow assist on",
     "follow_assist on",
+    "follow_assist_on",
     "follow auto on",
     "follow_auto on",
     "autofollow on",
@@ -1768,6 +1769,7 @@ function parseFollowAssistIntent(text: string): ParsedAliasCommand | null {
   if ([
     "follow assist off",
     "follow_assist off",
+    "follow_assist_off",
     "stop follow assist",
     "stop_follow_assist",
     "follow auto off",

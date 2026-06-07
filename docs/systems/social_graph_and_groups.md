@@ -102,7 +102,8 @@ instead of always showing the setup prompt:
 
 As of `0.15.46`, follow intent can also carry an opt-in guarded assist flag:
 
-- `Автокрок слідом` (`/follow_assist on`) is an auto-attempt, not a group,
+- `Автокрок слідом` (`/follow_assist_on`, compatible with `/follow_assist on`)
+  is an auto-attempt, not a group,
   party, companion or `Поклик духа` mode;
 - it only reacts to the followed target's ordinary visible movement after clear
   route-memory is recorded;
@@ -153,7 +154,7 @@ As of `0.15.47`, the first consensual travel-group foundation exists:
 - the leader is also an active member, and leader leave/disband marks the MVP
   group inactive instead of promoting a new leader;
 - `Триматися провідника гурту` (`/group_follow_leader`) sets follow intent to a
-  visible local leader, but does not silently enable `/follow_assist on` and
+  visible local leader, but does not silently enable `/follow_assist_on` and
   does not queue movement;
 - there is no shared combat, loot, inventory, learning, group chat, target
   consent model, hidden-route sharing or group movement in this slice.
@@ -168,7 +169,7 @@ This means the current stack is:
 
 1. follow intent: attention to one target;
 2. `/follow_step`: one explicit manual step from fresh clear route memory;
-3. `/follow_assist on`: opt-in guarded ordinary-exit auto-attempt;
+3. `/follow_assist_on`: opt-in guarded ordinary-exit auto-attempt;
 4. continuous follow-assist catch-up: one post-arrival ordinary step at a time;
 5. `/group`: consensual social/travel context that can help members choose the
    leader as their follow target.

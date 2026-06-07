@@ -671,7 +671,7 @@ export async function acceptMentorship(playerId: number, mentorshipId: number) {
 
   const assistLine = previousIntent?.assistEnabled
     ? "\nАвтокрок уже готовий підхопити видимий крок, але приховані переходи він не повторить."
-    : "\nАвтокрок можна ввімкнути окремо: /follow_assist on.";
+    : "\nАвтокрок можна ввімкнути окремо: /follow_assist_on.";
   return {
     ok: true as const,
     mentorship: updated,
@@ -746,7 +746,7 @@ export async function mentorshipStatusText(playerId: number) {
       : `Слід наставника: не тримаєте. Взяти знову: /follow ${forms.nominative}.`;
     const assistLine = intent?.assistEnabled
       ? "Автокрок: увімкнено."
-      : "Автокрок: вимкнено. Увімкнути: /follow_assist on.";
+      : "Автокрок: вимкнено. Увімкнути: /follow_assist_on.";
     const recentLessonLine = await latestMentorshipLessonLine({
       playerId,
       mentorCreatureId: mentorship.mentorCreatureId,

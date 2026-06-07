@@ -1082,8 +1082,8 @@ async function submitFollowAssist(ctx: any, mode: "show" | "on" | "off") {
   await ctx.reply([
     followIntentStatusLine(intent.lastKnownTargetLabel, { stale: Boolean(!targetVisible) }),
     followAssistStateText(intent.assistEnabled),
-    "Увімкнути: /follow_assist on",
-    "Вимкнути: /follow_assist off",
+    "Увімкнути: /follow_assist_on",
+    "Вимкнути: /follow_assist_off",
   ].filter(Boolean).join("\n"));
 }
 
@@ -1731,7 +1731,8 @@ export function registerAliasHandlers(bot: Bot) {
 	    const mode = String(ctx.match ?? "").trim().toLowerCase();
 	    await submitFollowAssist(ctx, mode === "on" ? "on" : mode === "off" ? "off" : "show");
 	  });
-	  bot.command("stop_follow_assist", async (ctx) => submitFollowAssist(ctx, "off"));
+	  bot.command("follow_assist_on", async (ctx) => submitFollowAssist(ctx, "on"));
+	  bot.command(["follow_assist_off", "stop_follow_assist"], async (ctx) => submitFollowAssist(ctx, "off"));
 	  bot.command(["follow_step", "keep_following", "trail"], async (ctx) => submitFollowStep(bot, ctx));
 	  bot.command(["group", "travel_group"], async (ctx) => submitTravelGroupCommand(bot, ctx, "show"));
 	  bot.command("group_create", async (ctx) => submitTravelGroupCommand(bot, ctx, "create"));

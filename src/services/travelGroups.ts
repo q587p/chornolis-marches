@@ -87,7 +87,7 @@ export function travelGroupDisbandText() {
 }
 
 export function travelGroupFollowLeaderText(leaderLabel: string) {
-  return `Ви тримаєтеся сліду провідника гурту: ${leaderLabel}. Це ще не спільна хода; для автокроку слідом увімкніть /follow_assist on.`;
+  return `Ви тримаєтеся сліду провідника гурту: ${leaderLabel}. Це ще не спільна хода; для автокроку слідом увімкніть /follow_assist_on.`;
 }
 
 export function travelGroupNoRawIds(text: string) {
