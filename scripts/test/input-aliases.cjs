@@ -501,6 +501,12 @@ assertAlias("вийти з гурту", { kind: "travel-group", action: "leave" 
 assertAlias("розпустити гурт", { kind: "travel-group", action: "disband" });
 assertAlias("йти за провідником гурту", { kind: "travel-group", action: "follow-leader" });
 assertAlias("триматися гурту", { kind: "travel-group", action: "follow-leader" });
+assertAlias("/mentor", { kind: "mentor", action: "show" });
+assertAlias("/mentorship", { kind: "mentor", action: "show" });
+assertAlias("наставник", { kind: "mentor", action: "show" });
+assertAlias("наука", { kind: "mentor", action: "show" });
+assertAlias("mentor end", { kind: "mentor", action: "end" });
+assertAlias("припинити науку", { kind: "mentor", action: "end" });
 assertAlias("/follow_step", { kind: "follow-step" });
 assertAlias("/keep_following", { kind: "follow-step" });
 assertAlias("/trail", { kind: "follow-step" });

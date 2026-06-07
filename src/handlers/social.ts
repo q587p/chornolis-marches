@@ -22,6 +22,7 @@ import { visibilityRulesForLocation } from "../services/visibility";
 import { playerHasRawMeat } from "../services/meat";
 import { submitGiveRawMeatToCreature } from "./give";
 import { followIntentSetText, setPlayerFollowIntent } from "../services/following";
+import { maybeOfferMentorshipAfterFollow, mentorshipOfferKeyboard } from "../services/mentorship";
 
 type TargetSpeechMode = "say" | "whisper";
 
@@ -174,6 +175,14 @@ async function submitTargetFollowIntent(ctx: any, type: "player" | "creature", t
   await setPlayerFollowIntent(player.id, { type: target.kind, id: target.id, label: target.forms.nominative }, player.currentLocationId);
   await safeAnswerCallbackQuery(ctx, "Слід узято.");
   await ctx.reply(followIntentSetText({ label: target.forms.nominative, forms: target.forms }));
+  if (target.kind === "creature") {
+    const mentorship = await maybeOfferMentorshipAfterFollow({ playerId: player.id, mentorCreatureId: target.id });
+    if (mentorship.kind === "offer") {
+      await ctx.reply(mentorship.text, { reply_markup: mentorshipOfferKeyboard(mentorship.mentorship.id) });
+    } else if (mentorship.kind === "active" || mentorship.kind === "not-better") {
+      await ctx.reply(mentorship.text);
+    }
+  }
 }
 
 export function registerSocialHandlers(bot: Bot) {

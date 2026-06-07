@@ -178,6 +178,15 @@ next major `0.16` NPC mentorship line. Mentorship should be separate from
 `TravelGroup`: a teacher/student relationship can use attention, observation and
 learning systems, while `TravelGroup` remains a player-player road agreement.
 
+As of `0.16.0`, the first mentorship foundation exists. When a player follows a
+suitable local character, that character may offer teaching if their observed
+skill is meaningfully ahead of the player's. Accepting mentorship stores a
+player-to-creature learning context and sets follow intent to the mentor, but it
+does not make the mentor a `TravelGroup` leader, does not enable follow assist,
+does not move the player, does not grant learning progress and does not share
+hidden routes. Use player-facing `наука` / `наставництво` language for this
+relationship; reserve `гурт` for player-player road groups.
+
 ### 3. Following Is Weaker Than Group Membership
 
 Following should be possible even without an existing contact. It means:
@@ -504,9 +513,9 @@ For MVP:
 Later:
 
 - NPCs may follow players after dialogue, payment, fear, respect, ritual obligation or quest state;
-- NPCs may lead a group along a route;
+- NPCs may lead a group along a route in a future escort/group-movement design, but mentorship is not that system;
 - NPCs may refuse to follow if scared, wounded, hostile, guarding a location or bound to another duty;
-- NPCs should use the same `TravelGroup` and `FollowIntent` tables.
+- NPC mentorship should use `PlayerMentorship` plus follow intent, while `TravelGroup` remains player-player until a separate group/NPC travel slice changes that boundary.
 
 ## Quest Hooks Later
 

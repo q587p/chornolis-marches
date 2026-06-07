@@ -7,6 +7,26 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.0 - NPC mentorship offer foundation - 12026-06-06
+
+### Added
+
+- Added `PlayerMentorship` storage for player-to-local-character learning intent with offered, active, declined and ended states.
+- Added narrow mentorship eligibility for suitable local characters: herbalist-like mentors can offer `gathering`, and hunter-like mentors can offer `tracking` when their observed skill is meaningfully ahead of the player.
+- Added mentorship offer buttons and text-answer parsing for accepting, declining and one clarification after an unclear answer.
+- Added `/mentor` / `/mentorship` status and end commands plus Ukrainian text aliases for checking or ending active mentorship.
+
+### Changed
+
+- Following an eligible local character can now create or refresh a mentorship offer after normal follow intent is set.
+- Accepting mentorship stores active learning context and sets follow intent to the mentor creature, but it does not enable follow assist or grant learning progress.
+- Documentation now separates NPC mentorship from `TravelGroup`: mentorship is teacher/student learning context, while travel groups remain player-player road context.
+
+### Risks
+
+- Mentor defaults still depend on conservative `observedActorSkillLevel(...)` profile estimates, so live tuning may need a small data/config map for profession skill defaults.
+- Mentorship currently stores context only; future observation bonuses need a separate slice and should avoid turning acceptance into automatic skill gain.
+
 ## 0.15.51 - Follow catch-up stability pass - 12026-06-06
 
 ### Added

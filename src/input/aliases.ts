@@ -16,6 +16,7 @@ export type DaypartNoticeAliasMode = "show" | "on" | "off";
 export type AutoMessageAliasMode = "show" | "on" | "off";
 export type FollowAssistAliasMode = "show" | "on" | "off";
 export type TravelGroupAliasAction = "show" | "create" | "invite" | "accept" | "decline" | "leave" | "disband" | "follow-leader";
+export type MentorAliasAction = "show" | "end";
 
 export type ParsedAliasCommand =
   | { kind: "location" }
@@ -87,6 +88,7 @@ export type ParsedAliasCommand =
   | { kind: "follow-step" }
   | { kind: "unfollow" }
   | { kind: "travel-group"; action: TravelGroupAliasAction; target?: string }
+  | { kind: "mentor"; action: MentorAliasAction }
   | { kind: "crawl-root-gap" }
   | { kind: "track-gate" }
   | { kind: "target-action"; action: TargetAction; target: string }
@@ -1779,6 +1781,32 @@ function parseTravelGroupIntent(text: string): ParsedAliasCommand | null {
   return null;
 }
 
+function parseMentorIntent(text: string): ParsedAliasCommand | null {
+  if ([
+    "mentor",
+    "mentorship",
+    "mentor status",
+    "mentorship status",
+    "наставник",
+    "наставництво",
+    "наука",
+    "статус науки",
+  ].includes(text)) return { kind: "mentor", action: "show" };
+
+  if ([
+    "mentor end",
+    "mentorship end",
+    "stop mentorship",
+    "end mentorship",
+    "припинити науку",
+    "завершити науку",
+    "відпустити науку",
+    "припинити наставництво",
+  ].includes(text)) return { kind: "mentor", action: "end" };
+
+  return null;
+}
+
 function parseTrackGateIntent(text: string): ParsedAliasCommand | null {
   if ([
     "follow_trace",
@@ -1875,6 +1903,9 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
 
   const travelGroupIntent = parseTravelGroupIntent(commandText);
   if (travelGroupIntent) return travelGroupIntent;
+
+  const mentorIntent = parseMentorIntent(commandText);
+  if (mentorIntent) return mentorIntent;
 
   const followStepIntent = parseFollowStepIntent(commandText);
   if (followStepIntent) return followStepIntent;

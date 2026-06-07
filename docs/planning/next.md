@@ -4,7 +4,8 @@ This file should stay small. If everything is next, nothing is next.
 
 ## Current Lane
 
-The active `0.15.x` lane is **Attention and Learning MVP**:
+The active `0.16.x` lane is **NPC Mentorship / Guided Learning MVP**, built on
+the completed `0.15.x` attention and learning foundation:
 
 > dream -> waking edge -> location -> look/examine -> signs/traces/small finds -> stamina/rest -> day/night/light -> first safe return -> first learning by observation.
 
@@ -103,9 +104,11 @@ running player actions block catch-up, AFK/ended/unavailable players stay out of
 the loop, assist events carry small diagnostics, and `slow:followAssist.catchUp`
 is documented for live smoke checks.
 
-After that, the next major line is **0.16 NPC mentorship**. Keep mentorship
+`0.16.0` starts NPC mentorship with offers after follow intent. Keep mentorship
 separate from `TravelGroup`: mentorship is teacher/student attention and
 learning context, while `TravelGroup` remains a player-player road group.
+Acceptance stores context and sets follow intent, but does not grant learning,
+enable follow assist, move the player or share hidden routes.
 
 Do not open another broad content loop before the learning/observation foundation is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
@@ -125,11 +128,12 @@ Do not open another broad content loop before the learning/observation foundatio
 12. **0.15.49:** group/follow polish is in testing: clearer follow-assist messages, throttled blocker hints, grouped member presence and group action buttons, with group movement still deferred.
 13. **0.15.50:** continuous follow-assist catch-up is in testing: per-player opt-in, post-arrival, ordinary visible exits only, with no group movement or hidden-route replay.
 14. **0.15.51:** follow catch-up stability pass is in testing: manual/duplicate/session guardrails are documented and tested before widening the social layer.
-15. **0.16.0 / NPC mentorship:** start a separate mentorship line for teacher/student attention and learning, not travel-group movement.
-16. **Perf marker follow-up:** use slow logs to decide whether hot WorldEvent marker lookups need structured cooldown/dedupe storage instead of `description contains`.
-17. **Group movement design:** if live group UX is clear, draft a separate consensual group movement slice with strict no-hidden-route/no-AFK-drag guardrails.
-18. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
-17. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
+15. **0.16.0 / NPC mentorship:** mentorship offer foundation is in testing: eligible local characters can offer teaching after follow intent, with accept/decline consent and no travel-group movement.
+16. **0.16.1 candidate:** mentorship observation bonus/live polish, using active mentorship context without granting learning merely for acceptance.
+17. **Perf marker follow-up:** use slow logs to decide whether hot WorldEvent marker lookups need structured cooldown/dedupe storage instead of `description contains`.
+18. **Group movement design:** if live group UX is clear, draft a separate consensual group movement slice with strict no-hidden-route/no-AFK-drag guardrails.
+19. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
+20. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
 
 Watch the new actor-learning surfaces before widening them: `0.15.41` proves
 one NPC observation bridge, but freshening/cooking observation should remain a

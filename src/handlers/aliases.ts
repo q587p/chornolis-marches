@@ -116,11 +116,31 @@ import {
   leaveTravelGroup,
   travelGroupStatusViewForPlayer,
 } from "../services/travelGroups";
+import {
+  acceptMentorship,
+  declineMentorship,
+  endActiveMentorship,
+  maybeOfferMentorshipAfterFollow,
+  mentorshipOfferKeyboard,
+  mentorshipStatusText,
+  respondToMentorshipOffer,
+} from "../services/mentorship";
 
 const pendingVerticalYell = new Map<number, { direction: VerticalYellPromptDirection }>();
 const pendingReturnYell = new Set<number>();
 const pendingTargetActions = new Map<number, { action: TargetAction; targets: TextTargetRef[]; detail: "brief" | "full"; createdAt: number }>();
 const PENDING_TARGET_ACTION_TTL_MS = 60_000;
+
+async function maybeReplyWithMentorshipOffer(ctx: any, playerId: number, mentorCreatureId: number) {
+  const result = await maybeOfferMentorshipAfterFollow({ playerId, mentorCreatureId });
+  if (result.kind === "offer") {
+    await ctx.reply(result.text, { reply_markup: mentorshipOfferKeyboard(result.mentorship.id) });
+    return;
+  }
+  if (result.kind === "active" || result.kind === "not-better") {
+    await ctx.reply(result.text);
+  }
+}
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
@@ -1004,6 +1024,33 @@ export async function submitFollowIntent(ctx: any, targetQuery: string) {
 
   await setPlayerFollowIntent(player.id, match.target, player.currentLocationId);
   await ctx.reply(followIntentSetText(match.target));
+  if (match.target.type === "creature") {
+    await maybeReplyWithMentorshipOffer(ctx, player.id, match.target.id);
+  }
+}
+
+async function submitMentorCommand(ctx: any, mode: "show" | "end" = "show") {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  if (mode === "end") {
+    const result = await endActiveMentorship(player.id);
+    return void (await ctx.reply(result.text));
+  }
+
+  await ctx.reply(await mentorshipStatusText(player.id));
+}
+
+async function maybeHandleMentorshipAnswer(ctx: any) {
+  const text = String(ctx.message?.text ?? "").trim();
+  if (!text || text.startsWith("/")) return false;
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return false;
+
+  const result = await respondToMentorshipOffer(player.id, text);
+  if (!result.handled) return false;
+  await ctx.reply(result.text);
+  return true;
 }
 
 async function submitFollowAssist(ctx: any, mode: "show" | "on" | "off") {
@@ -1685,6 +1732,7 @@ export function registerAliasHandlers(bot: Bot) {
 	  bot.command("group_leave", async (ctx) => submitTravelGroupCommand(bot, ctx, "leave"));
 	  bot.command("group_disband", async (ctx) => submitTravelGroupCommand(bot, ctx, "disband"));
 	  bot.command("group_follow_leader", async (ctx) => submitTravelGroupCommand(bot, ctx, "follow-leader"));
+	  bot.command(["mentor", "mentorship"], async (ctx) => submitMentorCommand(ctx, normalizeInput(ctx.match ?? "") === "end" ? "end" : "show"));
 	  bot.command("crawl", async (ctx) => submitCrawlRootGap(bot, ctx));
 	  bot.command("follow_trace", async (ctx) => submitTrackGatePassage(bot, ctx));
 	  bot.command("unfollow", async (ctx) => submitUnfollow(ctx));
@@ -1770,6 +1818,8 @@ export function registerAliasHandlers(bot: Bot) {
       }
     }
 
+    if (await maybeHandleMentorshipAnswer(ctx)) return;
+
     const parsed = parseAlias(ctx.message.text);
     if (!parsed) return next();
 
@@ -1825,6 +1875,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "follow-step") return submitFollowStep(bot, ctx);
     if (parsed.kind === "follow-assist") return submitFollowAssist(ctx, parsed.mode);
     if (parsed.kind === "travel-group") return submitTravelGroupCommand(bot, ctx, parsed.action, parsed.target);
+    if (parsed.kind === "mentor") return submitMentorCommand(ctx, parsed.action);
     if (parsed.kind === "crawl-root-gap") return submitCrawlRootGap(bot, ctx);
     if (parsed.kind === "track-gate") return submitTrackGatePassage(bot, ctx);
     if (parsed.kind === "shake-tree") return submitShakeTree(ctx);
@@ -1886,6 +1937,17 @@ export function registerAliasHandlers(bot: Bot) {
     await safeAnswerCallbackQuery(ctx);
     const action = ctx.match[1] as "accept" | "decline" | "leave" | "disband" | "follow-leader";
     await submitTravelGroupCommand(bot, ctx, action);
+  });
+  bot.callbackQuery(/^mentorship:(accept|decline):(\d+)$/, async (ctx) => {
+    await safeAnswerCallbackQuery(ctx);
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    const action = ctx.match[1] as "accept" | "decline";
+    const mentorshipId = Number(ctx.match[2]);
+    const result = action === "accept"
+      ? await acceptMentorship(player.id, mentorshipId)
+      : await declineMentorship(player.id, mentorshipId);
+    await ctx.reply(result.text);
   });
   bot.callbackQuery(/^yell:prompt:(UP|DOWN)$/, async (ctx) => {
     const direction = ctx.match[1] as VerticalYellPromptDirection;
