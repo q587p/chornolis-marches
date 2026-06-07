@@ -722,12 +722,12 @@ model WorldEventMarker {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([markerKey, createdAt])
-  @@index([markerKey, playerId, createdAt])
-  @@index([markerKey, playerId, locationId, createdAt])
-  @@index([markerKey, playerId, targetType, targetId, createdAt])
-  @@index([markerKey, creatureId, createdAt])
-  @@index([markerKey, locationId, createdAt])
+  @@index([markerKey, scopeType, createdAt])
+  @@index([markerKey, scopeType, playerId, createdAt])
+  @@index([markerKey, scopeType, playerId, locationId, createdAt])
+  @@index([markerKey, scopeType, playerId, targetType, targetId, createdAt])
+  @@index([markerKey, scopeType, creatureId, createdAt])
+  @@index([markerKey, scopeType, locationId, createdAt])
   @@index([expiresAt])
 }
 

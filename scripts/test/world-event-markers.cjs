@@ -17,7 +17,7 @@ const {
 
 function matchesWhere(row, where) {
   if (where.markerKey && row.markerKey !== where.markerKey) return false;
-  for (const field of ["playerId", "creatureId", "locationId", "targetType", "targetId", "sourceEventId", "worldEventId", "contextKey"]) {
+  for (const field of ["scopeType", "playerId", "creatureId", "locationId", "targetType", "targetId", "sourceEventId", "worldEventId", "contextKey"]) {
     if (Object.prototype.hasOwnProperty.call(where, field) && row[field] !== where[field]) return false;
   }
   if (where.createdAt?.gte && row.createdAt < where.createdAt.gte) return false;
@@ -150,6 +150,41 @@ function fakeMarkerDb() {
     cooldownMs: 15 * 60_000,
     now: new Date("2026-06-07T10:01:00Z"),
   }, db), false, "different context does not collide");
+
+  const playerScoped = await createWorldEventMarker({
+    markerKey: "shared_scope_key",
+    playerId: 7,
+    contextKey: "shared-context",
+    now: new Date("2026-06-07T10:20:00Z"),
+  }, db);
+  const targetScoped = await createWorldEventMarker({
+    markerKey: "shared_scope_key",
+    playerId: 7,
+    targetType: "CREATURE",
+    targetId: 42,
+    contextKey: "shared-context",
+    now: new Date("2026-06-07T10:21:00Z"),
+  }, db);
+  assert.equal(playerScoped.scopeType, "PLAYER");
+  assert.equal(targetScoped.scopeType, "PLAYER_TARGET");
+  const playerLookup = await findRecentWorldEventMarker({
+    markerKey: "shared_scope_key",
+    playerId: 7,
+    contextKey: "shared-context",
+    cooldownMs: 15 * 60_000,
+    now: new Date("2026-06-07T10:22:00Z"),
+  }, db);
+  const targetLookup = await findRecentWorldEventMarker({
+    markerKey: "shared_scope_key",
+    playerId: 7,
+    targetType: "CREATURE",
+    targetId: 42,
+    contextKey: "shared-context",
+    cooldownMs: 15 * 60_000,
+    now: new Date("2026-06-07T10:22:00Z"),
+  }, db);
+  assert.equal(playerLookup.id, playerScoped.id, "player-scoped marker does not collide with target-scoped marker");
+  assert.equal(targetLookup.id, targetScoped.id, "target-scoped marker does not collide with player-scoped marker");
 
   await createWorldEventMarker({
     markerKey: "follow_assist_failure",

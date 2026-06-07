@@ -98,6 +98,7 @@ function markerWhere(input: WorldEventMarkerLookupInput) {
   const now = input.now ?? new Date();
   const where: Record<string, unknown> = definedData({
     markerKey: input.markerKey,
+    scopeType: input.scopeType ?? markerScopeType(input),
     playerId: input.playerId ?? undefined,
     creatureId: input.creatureId ?? undefined,
     locationId: input.locationId ?? undefined,

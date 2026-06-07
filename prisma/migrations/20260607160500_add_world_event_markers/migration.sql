@@ -20,22 +20,22 @@ CREATE TABLE "WorldEventMarker" (
 );
 
 -- CreateIndex
-CREATE INDEX "WorldEventMarker_markerKey_createdAt_idx" ON "WorldEventMarker"("markerKey", "createdAt");
+CREATE INDEX "WorldEventMarker_markerKey_scopeType_createdAt_idx" ON "WorldEventMarker"("markerKey", "scopeType", "createdAt");
 
 -- CreateIndex
-CREATE INDEX "WorldEventMarker_markerKey_playerId_createdAt_idx" ON "WorldEventMarker"("markerKey", "playerId", "createdAt");
+CREATE INDEX "WorldEventMarker_markerKey_scopeType_playerId_createdAt_idx" ON "WorldEventMarker"("markerKey", "scopeType", "playerId", "createdAt");
 
 -- CreateIndex
-CREATE INDEX "WorldEventMarker_markerKey_playerId_locationId_createdAt_idx" ON "WorldEventMarker"("markerKey", "playerId", "locationId", "createdAt");
+CREATE INDEX "WorldEventMarker_markerKey_scopeType_playerId_locationId_createdAt_idx" ON "WorldEventMarker"("markerKey", "scopeType", "playerId", "locationId", "createdAt");
 
 -- CreateIndex
-CREATE INDEX "WorldEventMarker_markerKey_playerId_targetType_targetId_createdAt_idx" ON "WorldEventMarker"("markerKey", "playerId", "targetType", "targetId", "createdAt");
+CREATE INDEX "WorldEventMarker_markerKey_scopeType_playerId_targetType_targetId_createdAt_idx" ON "WorldEventMarker"("markerKey", "scopeType", "playerId", "targetType", "targetId", "createdAt");
 
 -- CreateIndex
-CREATE INDEX "WorldEventMarker_markerKey_creatureId_createdAt_idx" ON "WorldEventMarker"("markerKey", "creatureId", "createdAt");
+CREATE INDEX "WorldEventMarker_markerKey_scopeType_creatureId_createdAt_idx" ON "WorldEventMarker"("markerKey", "scopeType", "creatureId", "createdAt");
 
 -- CreateIndex
-CREATE INDEX "WorldEventMarker_markerKey_locationId_createdAt_idx" ON "WorldEventMarker"("markerKey", "locationId", "createdAt");
+CREATE INDEX "WorldEventMarker_markerKey_scopeType_locationId_createdAt_idx" ON "WorldEventMarker"("markerKey", "scopeType", "locationId", "createdAt");
 
 -- CreateIndex
 CREATE INDEX "WorldEventMarker_expiresAt_idx" ON "WorldEventMarker"("expiresAt");
