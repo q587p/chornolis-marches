@@ -11,6 +11,8 @@ const {
   FOLLOW_ROUTE_MEMORY_EVENT_TITLE,
   FOLLOW_ASSIST_STEP_NOTE,
   FOLLOW_ASSIST_CATCH_UP_NOTE,
+  FOLLOW_ASSIST_MARKER_KEY,
+  FOLLOW_ASSIST_FAILURE_MARKER_KEY,
   evaluateFollowAssistEligibility,
   followAssistEventDescription,
   followAssistCooldownKey,
@@ -222,6 +224,8 @@ assert.equal(
 assert.equal(followAssistCatchUpQueuedText("NORTH"), "Автокрок не губить слід: далі на північ.");
 assert.equal(FOLLOW_ASSIST_STEP_NOTE, "follow-assist");
 assert.equal(FOLLOW_ASSIST_CATCH_UP_NOTE, "follow-assist:catch-up");
+assert.equal(FOLLOW_ASSIST_MARKER_KEY, "follow_assist_queued_move");
+assert.equal(FOLLOW_ASSIST_FAILURE_MARKER_KEY, "follow_assist_failure");
 assert.equal(
   followAssistEventDescription({
     playerId: 7,
@@ -261,6 +265,26 @@ const catchUpLookupSource = followRouteMemorySource.slice(
 assert.match(catchUpLookupSource, /title: FOLLOW_ROUTE_MEMORY_EVENT_TITLE/);
 assert.match(catchUpLookupSource, /take: Math\.max/);
 assert.equal(catchUpLookupSource.includes("description: { contains"), false);
+const assistCooldownSource = followRouteMemorySource.slice(
+  followRouteMemorySource.indexOf("async function hasRecentFollowAssistMarker"),
+  followRouteMemorySource.indexOf("async function hasRecentFollowAssistFailureMarker"),
+);
+assert.match(assistCooldownSource, /hasRecentWorldEventMarker/);
+assert.match(assistCooldownSource, /FOLLOW_ASSIST_MARKER_KEY/);
+assert.equal(assistCooldownSource.includes("description: { contains"), false);
+const assistFailureCooldownSource = followRouteMemorySource.slice(
+  followRouteMemorySource.indexOf("async function hasRecentFollowAssistFailureMarker"),
+  followRouteMemorySource.indexOf("function shouldSendFollowAssistFailureHint"),
+);
+assert.match(assistFailureCooldownSource, /hasRecentWorldEventMarker/);
+assert.match(assistFailureCooldownSource, /FOLLOW_ASSIST_FAILURE_MARKER_KEY/);
+assert.equal(assistFailureCooldownSource.includes("description: { contains"), false);
+const assistFailureHintSource = followRouteMemorySource.slice(
+  followRouteMemorySource.indexOf("async function maybeSendFollowAssistFailureHint"),
+  followRouteMemorySource.indexOf("async function maybeQueueFollowAssistMove"),
+);
+assert.match(assistFailureHintSource, /recordWorldEventMarkerIfAbsent/);
+assert.match(assistFailureHintSource, /prisma\.worldEvent\.create/);
 const catchUpSource = followRouteMemorySource.slice(
   followRouteMemorySource.indexOf("async function maybeQueueFollowAssistCatchUpInner"),
   followRouteMemorySource.indexOf("export async function rememberFollowedTargetVisibleMove"),

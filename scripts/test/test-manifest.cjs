@@ -10,6 +10,7 @@ module.exports = [
   nodeTest("scripts/test/follow-intent.cjs"),
   nodeTest("scripts/test/follow-route-memory.cjs"),
   nodeTest("scripts/test/follow-assist.cjs"),
+  nodeTest("scripts/test/world-event-markers.cjs"),
   nodeTest("scripts/test/travel-groups.cjs"),
   nodeTest("scripts/test/mentorship.cjs"),
   nodeTest("scripts/test/player-notification-settings.cjs"),

@@ -163,19 +163,47 @@ not include private player message text, Telegram payloads, whispers, direct
 replies, tokens or database secrets. Use these logs to identify remaining
 hotspots before rewriting WorldEvent marker storage or adding broader indexes.
 
+## WorldEvent And Structured Markers
+
+`WorldEvent` remains the human-readable narrative, audit and history stream:
+public/history events, chronicles, visible actions and scribe-readable traces
+should still be written there when the record is useful to inspect.
+
+`WorldEventMarker` is the structured machine-readable layer for short-lived
+cooldown, dedupe and state markers. It should be preferred when code only needs
+to ask whether a recent marker exists for a player, creature, location, target
+or context. The first hot paths moved to this table are follow-assist failure
+hints, follow-assist queued-move cooldowns, mentorship lesson feedback cooldowns
+and mentorship practice prompt cooldowns. These paths still keep readable
+`WorldEvent` audit rows where useful.
+
+Marker lookups are indexed by marker key plus common player, target, creature
+and location fields. Avoid putting private message text, Telegram payloads or
+secrets into marker metadata; use compact keys such as `skillKey`,
+`resourceKey`, `reason` or `action` instead.
+
+`slow:worldEventMarker.lookup` means a structured marker lookup crossed
+`SLOW_COMMAND_LOG_MS`. If this appears repeatedly, inspect whether the marker
+needs a narrower indexed field or whether too many rows are being retained.
+Short-lived cooldown markers may reset across deploys for old pre-marker
+`WorldEvent` rows where no fallback is kept; that is acceptable for narrow
+cooldowns, but not for durable history.
+
 `slow:followAssist.catchUp` means a post-arrival follow-assist check took longer
 than the configured threshold. The usual suspects are:
 
 - latest route-memory lookup in recent `WorldEvent` rows;
 - queued/running action count for the follower;
 - locked/visible exit checks;
-- throttled proactive Telegram sends for assist messages or blocker hints.
+- throttled proactive Telegram sends for assist messages or blocker hints;
+- structured `WorldEventMarker` cooldown lookups for assist attempts and
+  failure hints.
 
 For a short live smoke after follow-assist changes, temporarily set
 `SLOW_COMMAND_LOG_MS=500`, follow a visible target through several ordinary
 exits, and watch whether repeated `slow:followAssist.catchUp` lines appear. If
-that path is hot, prefer structured marker storage or exact marker fields over
-adding more `description contains` lookups.
+that path is hot, prefer narrower structured marker fields over adding more
+`description contains` lookups.
 
 ## Herald Archive Catch-Up
 

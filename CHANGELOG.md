@@ -7,6 +7,25 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.5 - Structured WorldEvent markers - 12026-06-07
+
+### Added
+
+- Added `WorldEventMarker` storage for structured cooldown/dedupe markers.
+- Added marker service helpers for creating, finding, recording-if-absent and pruning expired marker rows.
+- Added focused `WorldEventMarker` helper tests and included them in the test manifest.
+
+### Changed
+
+- Moved follow-assist queued-move and failure-hint cooldown checks from parsed `WorldEvent` descriptions to structured marker rows.
+- Moved mentorship lesson feedback and mentorship practice prompt cooldown checks to structured marker rows.
+- Kept readable `WorldEvent` audit rows for follow assist, mentorship lesson feedback and mentorship practice prompts.
+
+### Risks
+
+- Short-lived cooldowns may reset for any old pre-marker rows not covered by the compatibility fallback, but no durable history is backfilled or removed.
+- Route-memory, chronicles/herald relay and broader learning observation markers intentionally remain on `WorldEvent` until a focused future slice.
+
 ## 0.16.4 - Mentorship guided practice prompt - 12026-06-07
 
 ### Added

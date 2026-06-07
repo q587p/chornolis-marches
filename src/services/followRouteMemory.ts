@@ -14,6 +14,7 @@ import { movementDurationMs } from "./actionRules";
 import { performOrQueuePlayerAction } from "./actionLifecycle";
 import { locationLockedExitMessageForPlayer } from "./tutorial";
 import { maybeRecordMentorshipLessonFeedback, mentorshipTrackingObservationLearningInput } from "./mentorship";
+import { createWorldEventMarker, hasRecentWorldEventMarker, recordWorldEventMarkerIfAbsent } from "./worldEventMarkers";
 
 export const FOLLOW_ROUTE_MEMORY_EVENT_TITLE = "Follow intent route memory";
 export const FOLLOW_ROUTE_HIDDEN_MEMORY_EVENT_TITLE = "Follow intent hidden route memory";
@@ -22,6 +23,8 @@ export const FOLLOW_ROUTE_HIDDEN_HINT_COOLDOWN_MS = Number(process.env.FOLLOW_RO
 export const FOLLOW_ROUTE_LEARNING_COOLDOWN_MS = Number(process.env.FOLLOW_ROUTE_LEARNING_COOLDOWN_MS || 5 * 60_000);
 export const FOLLOW_ROUTE_STEP_MEMORY_TTL_MS = Number(process.env.FOLLOW_ROUTE_STEP_MEMORY_TTL_MS || 10 * 60_000);
 export const FOLLOW_ASSIST_EVENT_TITLE = "Follow assist queued move";
+export const FOLLOW_ASSIST_MARKER_KEY = "follow_assist_queued_move";
+export const FOLLOW_ASSIST_FAILURE_MARKER_KEY = "follow_assist_failure";
 export const FOLLOW_ASSIST_COOLDOWN_MS = Number(process.env.FOLLOW_ASSIST_COOLDOWN_MS || 90_000);
 export const FOLLOW_ASSIST_FAILURE_HINT_COOLDOWN_MS = Number(process.env.FOLLOW_ASSIST_FAILURE_HINT_COOLDOWN_MS || 90_000);
 export const FOLLOW_ASSIST_STEP_NOTE = "follow-assist";
@@ -492,34 +495,44 @@ async function hasRecentFollowRouteMemoryMarker(input: {
   }));
 }
 
-async function hasRecentFollowAssistMarker(playerId: number, cooldownKey: string) {
+async function hasRecentFollowAssistMarker(input: {
+  playerId: number;
+  targetType: FollowTargetType;
+  targetId: number;
+  locationId: number;
+  cooldownKey: string;
+}) {
   if (FOLLOW_ASSIST_COOLDOWN_MS <= 0) return false;
-  const since = new Date(Date.now() - FOLLOW_ASSIST_COOLDOWN_MS);
-  return Boolean(await prisma.worldEvent.findFirst({
-    where: {
-      title: FOLLOW_ASSIST_EVENT_TITLE,
-      playerId,
-      createdAt: { gte: since },
-      description: { contains: `cooldownKey=${cooldownKey}` },
-    },
-    select: { id: true },
-    orderBy: { createdAt: "desc" },
-  }));
+  return hasRecentWorldEventMarker({
+    markerKey: FOLLOW_ASSIST_MARKER_KEY,
+    scopeType: "PLAYER_TARGET",
+    playerId: input.playerId,
+    targetType: input.targetType,
+    targetId: input.targetId,
+    locationId: input.locationId,
+    contextKey: input.cooldownKey,
+    cooldownMs: FOLLOW_ASSIST_COOLDOWN_MS,
+  });
 }
 
-async function hasRecentFollowAssistFailureMarker(playerId: number, failureKey: string) {
+async function hasRecentFollowAssistFailureMarker(input: {
+  playerId: number;
+  targetType: FollowTargetType;
+  targetId: number;
+  locationId: number;
+  failureKey: string;
+}) {
   if (FOLLOW_ASSIST_FAILURE_HINT_COOLDOWN_MS <= 0) return false;
-  const since = new Date(Date.now() - FOLLOW_ASSIST_FAILURE_HINT_COOLDOWN_MS);
-  return Boolean(await prisma.worldEvent.findFirst({
-    where: {
-      title: FOLLOW_ASSIST_EVENT_TITLE,
-      playerId,
-      createdAt: { gte: since },
-      description: { contains: `failureKey=${failureKey}` },
-    },
-    select: { id: true },
-    orderBy: { createdAt: "desc" },
-  }));
+  return hasRecentWorldEventMarker({
+    markerKey: FOLLOW_ASSIST_FAILURE_MARKER_KEY,
+    scopeType: "PLAYER_TARGET",
+    playerId: input.playerId,
+    targetType: input.targetType,
+    targetId: input.targetId,
+    locationId: input.locationId,
+    contextKey: input.failureKey,
+    cooldownMs: FOLLOW_ASSIST_FAILURE_HINT_COOLDOWN_MS,
+  });
 }
 
 export async function hasBlockingPlayerActionsForFollowAssist(playerId: number) {
@@ -548,7 +561,29 @@ async function maybeSendFollowAssistFailureHint(bot: Bot, input: {
     reason: input.reason,
     direction: input.direction,
   });
-  if (await hasRecentFollowAssistFailureMarker(input.intent.playerId, failureKey)) return false;
+  if (await hasRecentFollowAssistFailureMarker({
+    playerId: input.intent.playerId,
+    targetType: input.target.type,
+    targetId: input.target.id,
+    locationId: input.sourceLocationId,
+    failureKey,
+  })) return false;
+  const marker = await recordWorldEventMarkerIfAbsent({
+    markerKey: FOLLOW_ASSIST_FAILURE_MARKER_KEY,
+    scopeType: "PLAYER_TARGET",
+    playerId: input.intent.playerId,
+    targetType: input.target.type,
+    targetId: input.target.id,
+    locationId: input.sourceLocationId,
+    contextKey: failureKey,
+    cooldownMs: FOLLOW_ASSIST_FAILURE_HINT_COOLDOWN_MS,
+    ttlMs: FOLLOW_ASSIST_FAILURE_HINT_COOLDOWN_MS,
+    metadata: {
+      reason: input.reason,
+      direction: input.direction ?? null,
+    },
+  });
+  if (!marker.created) return false;
   await prisma.worldEvent.create({
     data: {
       type: "MOVE",
@@ -593,7 +628,13 @@ async function maybeQueueFollowAssistMove(bot: Bot, input: {
       select: { id: true, isHidden: true, travelCost: true },
     }),
     locationLockedExitMessageForPlayer(input.intent.playerId, input.sourceLocationId, input.direction),
-    hasRecentFollowAssistMarker(input.intent.playerId, preliminaryCooldownKey),
+    hasRecentFollowAssistMarker({
+      playerId: input.intent.playerId,
+      targetType: input.target.type,
+      targetId: input.target.id,
+      locationId: input.sourceLocationId,
+      cooldownKey: preliminaryCooldownKey,
+    }),
   ]);
 
   const eligibility = evaluateFollowAssistEligibility({
@@ -627,8 +668,8 @@ async function maybeQueueFollowAssistMove(bot: Bot, input: {
     note: FOLLOW_ASSIST_STEP_NOTE,
   });
 
-  await prisma.$transaction([
-    prisma.worldEvent.create({
+  const auditEvent = await prisma.$transaction(async (tx) => {
+    const auditEvent = await tx.worldEvent.create({
       data: {
         type: "MOVE",
         title: FOLLOW_ASSIST_EVENT_TITLE,
@@ -648,15 +689,32 @@ async function maybeQueueFollowAssistMove(bot: Bot, input: {
         playerId: input.intent.playerId,
         locationId: input.sourceLocationId,
       },
-    }),
-    prisma.playerFollowIntent.update({
+    });
+    await createWorldEventMarker({
+      markerKey: FOLLOW_ASSIST_MARKER_KEY,
+      scopeType: "PLAYER_TARGET",
+      playerId: input.intent.playerId,
+      targetType: input.target.type,
+      targetId: input.target.id,
+      locationId: input.sourceLocationId,
+      contextKey: eligibility.cooldownKey,
+      worldEventId: auditEvent.id,
+      ttlMs: FOLLOW_ASSIST_COOLDOWN_MS,
+      metadata: {
+        assistKind: "same_room",
+        note: FOLLOW_ASSIST_STEP_NOTE,
+        direction: eligibility.direction,
+      },
+    }, tx as any);
+    await tx.playerFollowIntent.update({
       where: { playerId: input.intent.playerId },
       data: { lastAssistAt: new Date() },
-    }),
-  ]);
+    });
+    return auditEvent;
+  });
 
   await sendFollowRouteMemoryMessage(bot, player, input.successText ?? followAssistQueuedText(eligibility.direction));
-  return { ...eligibility, result };
+  return { ...eligibility, result, event: auditEvent };
 }
 
 async function latestFollowRouteMemoryForCatchUp(playerId: number, currentLocationId: number) {
@@ -729,7 +787,13 @@ async function maybeQueueFollowAssistCatchUpInner(bot: Bot, input: {
       })
       : Promise.resolve(null),
     preliminaryDirection ? locationLockedExitMessageForPlayer(input.playerId, player.currentLocationId, preliminaryDirection) : Promise.resolve(null),
-    preliminaryCooldownKey ? hasRecentFollowAssistMarker(input.playerId, preliminaryCooldownKey) : Promise.resolve(false),
+    preliminaryCooldownKey ? hasRecentFollowAssistMarker({
+      playerId: input.playerId,
+      targetType: target.type,
+      targetId: target.id,
+      locationId: player.currentLocationId,
+      cooldownKey: preliminaryCooldownKey,
+    }) : Promise.resolve(false),
   ]);
 
   const eligibility = evaluateFollowAssistEligibility({
@@ -762,8 +826,8 @@ async function maybeQueueFollowAssistCatchUpInner(bot: Bot, input: {
     note: FOLLOW_ASSIST_CATCH_UP_NOTE,
   });
 
-  await prisma.$transaction([
-    prisma.worldEvent.create({
+  const auditEvent = await prisma.$transaction(async (tx) => {
+    const auditEvent = await tx.worldEvent.create({
       data: {
         type: "MOVE",
         title: FOLLOW_ASSIST_EVENT_TITLE,
@@ -771,7 +835,7 @@ async function maybeQueueFollowAssistCatchUpInner(bot: Bot, input: {
           playerId: input.playerId,
           targetType: target.type,
           targetId: target.id,
-          fromLocationId: player.currentLocationId,
+          fromLocationId: player.currentLocationId!,
           toLocationId: parsed.toLocationId,
           direction: eligibility.direction,
           source: "visible_move",
@@ -783,15 +847,32 @@ async function maybeQueueFollowAssistCatchUpInner(bot: Bot, input: {
         playerId: input.playerId,
         locationId: player.currentLocationId,
       },
-    }),
-    prisma.playerFollowIntent.update({
+    });
+    await createWorldEventMarker({
+      markerKey: FOLLOW_ASSIST_MARKER_KEY,
+      scopeType: "PLAYER_TARGET",
+      playerId: input.playerId,
+      targetType: target.type,
+      targetId: target.id,
+      locationId: player.currentLocationId!,
+      contextKey: eligibility.cooldownKey,
+      worldEventId: auditEvent.id,
+      ttlMs: FOLLOW_ASSIST_COOLDOWN_MS,
+      metadata: {
+        assistKind: "catch_up",
+        note: FOLLOW_ASSIST_CATCH_UP_NOTE,
+        direction: eligibility.direction,
+      },
+    }, tx as any);
+    await tx.playerFollowIntent.update({
       where: { playerId: input.playerId },
       data: { lastAssistAt: new Date() },
-    }),
-  ]);
+    });
+    return auditEvent;
+  });
 
   await sendFollowRouteMemoryMessage(bot, player, followAssistCatchUpQueuedText(eligibility.direction));
-  return { ...eligibility, result };
+  return { ...eligibility, result, event: auditEvent };
 }
 
 export async function rememberFollowedTargetVisibleMove(bot: Bot, input: {

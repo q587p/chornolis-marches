@@ -254,6 +254,13 @@ player to try the existing gather action. The prompt is optional, does not grant
 learning by itself and does not change success, stamina, rewards or practice
 rules. Tracking prompts remain a separate follow-up.
 
+`0.16.5` is a technical marker-storage refactor for the same learning and follow
+spine. `WorldEvent` still carries readable lesson, prompt and follow-assist
+audit rows, while short-lived cooldown/dedupe checks for follow-assist failure
+hints, follow-assist queued moves, mentorship lesson feedback and mentorship
+practice prompts now use structured `WorldEventMarker` rows. This does not add
+new mentorship content, skill effects, public skill UI or gameplay rules.
+
 After the actor-learning foundation, the intended near-term order is:
 
 - `0.15.46`: guarded follow assist is in testing as an opt-in ordinary-exit

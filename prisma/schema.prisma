@@ -699,6 +699,38 @@ model WorldEvent {
   @@index([type, createdAt])
 }
 
+model WorldEventMarker {
+  id Int @id @default(autoincrement())
+
+  markerKey String
+  scopeType String
+
+  playerId   Int?
+  creatureId Int?
+  locationId Int?
+
+  targetType String?
+  targetId   Int?
+
+  sourceEventId Int?
+  worldEventId  Int?
+
+  contextKey String?
+  metadata   Json?
+
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([markerKey, scopeType, createdAt])
+  @@index([markerKey, scopeType, playerId, createdAt])
+  @@index([markerKey, scopeType, playerId, locationId, createdAt])
+  @@index([markerKey, scopeType, playerId, targetType, targetId, createdAt])
+  @@index([markerKey, scopeType, creatureId, createdAt])
+  @@index([markerKey, scopeType, locationId, createdAt])
+  @@index([expiresAt])
+}
+
 // =======================
 // ENUMS
 // =======================

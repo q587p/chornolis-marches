@@ -19,7 +19,8 @@ For release/patch work that is meant to be reviewed or merged:
 
 - Start from a separate branch, preferably with the `codex/` prefix.
 - Open a PR from that branch into `main` instead of committing directly to `main`.
-- PRs should target `main` by default. Use a stacked feature branch as the PR base only when that exception was explicitly discussed for the current slice, and retarget/rebase the PR onto `main` after the parent branch lands.
+- PRs should target `main` by default. Do not infer a stacked PR base from the current local branch, commit ancestry, or convenience. Use a stacked feature branch as the PR base only when that exception was explicitly discussed for the current slice, and retarget/rebase the PR onto `main` after the parent branch lands.
+- Before presenting a PR as ready, fetch the latest `origin/main` and verify the branch has no merge conflicts. If conflicts exist, rebase or merge from `main`, resolve them locally, rerun relevant checks, and push the resolved branch before handing over the PR.
 - The PR body should include a concise summary, validation/checks, and explicit risks or rollback notes.
 - If the work is still planning-only, say that in the PR summary and do not invent gameplay risk.
 
