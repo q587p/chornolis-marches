@@ -23,10 +23,16 @@ export type LexiconEntry = {
 
 export const WORLD_LEXICON = [
   entry("animal.rabbit", "creature", "MASCULINE", "ANIMATE", ["animal", "prey", "current"], ["заєць", "зайця", "зайцю", "зайця", "зайцем", "зайці", "зайцю"]),
+  entry("animal.rabbit_male", "creature", "MASCULINE", "ANIMATE", ["animal", "prey", "current", "sexed"], ["заєць", "зайця", "зайцеві", "зайця", "зайцем", "зайцеві", "зайцю"]),
+  entry("animal.rabbit_female", "creature", "FEMININE", "ANIMATE", ["animal", "prey", "current", "sexed"], ["зайчиха", "зайчихи", "зайчисі", "зайчиху", "зайчихою", "зайчисі", "зайчихо"]),
   entry("animal.mouse", "creature", "FEMININE", "ANIMATE", ["animal", "prey", "current"], ["миша", "миші", "миші", "мишу", "мишею", "миші", "мише"]),
   entry("animal.mouse_male", "creature", "MASCULINE", "ANIMATE", ["animal", "prey", "current", "sexed"], ["миш", "миша", "мишу", "миша", "мишем", "миші", "мишу"]),
   entry("animal.fox", "creature", "FEMININE", "ANIMATE", ["animal", "predator", "current"], ["лисиця", "лисиці", "лисиці", "лисицю", "лисицею", "лисиці", "лисице"]),
+  entry("animal.fox_male", "creature", "MASCULINE", "ANIMATE", ["animal", "predator", "current", "sexed"], ["лис", "лиса", "лисові", "лиса", "лисом", "лисові", "лисе"]),
+  entry("animal.fox_female", "creature", "FEMININE", "ANIMATE", ["animal", "predator", "current", "sexed"], ["лисиця", "лисиці", "лисиці", "лисицю", "лисицею", "лисиці", "лисице"]),
   entry("animal.wolf", "creature", "MASCULINE", "ANIMATE", ["animal", "predator", "current"], ["вовк", "вовка", "вовку", "вовка", "вовком", "вовку", "вовче"]),
+  entry("animal.wolf_male", "creature", "MASCULINE", "ANIMATE", ["animal", "predator", "current", "sexed"], ["вовк", "вовка", "вовкові", "вовка", "вовком", "вовкові", "вовче"]),
+  entry("animal.wolf_female", "creature", "FEMININE", "ANIMATE", ["animal", "predator", "current", "sexed"], ["вовчиця", "вовчиці", "вовчиці", "вовчицю", "вовчицею", "вовчиці", "вовчице"]),
   entry("animal.boar", "creature", "MASCULINE", "ANIMATE", ["animal", "forest", "future"], ["кабан", "кабана", "кабану", "кабана", "кабаном", "кабані", "кабане"]),
   entry("animal.deer", "creature", "MASCULINE", "ANIMATE", ["animal", "forest", "future"], ["олень", "оленя", "оленю", "оленя", "оленем", "олені", "оленю"]),
   entry("animal.roe", "creature", "FEMININE", "ANIMATE", ["animal", "forest", "future"], ["сарна", "сарни", "сарні", "сарну", "сарною", "сарні", "сарно"]),
@@ -80,7 +86,8 @@ export const WORLD_LEXICON = [
   entry("common.trace", "common", "MASCULINE", "INANIMATE", ["track"], ["слід", "сліду", "сліду", "слід", "слідом", "сліді", "сліде"]),
   entry("common.human_trace", "common", "MASCULINE", "INANIMATE", ["track"], ["людський слід", "людського сліду", "людському сліду", "людський слід", "людським слідом", "людському сліді", "людський сліде"]),
 
-  entry("resource.herbs", "resource", "PLURAL", "INANIMATE", ["resource", "gathering", "current"], ["трави", "трав", "травам", "трави", "травами", "травах", "трави"]),
+  entry("resource.grass", "resource", "FEMININE", "INANIMATE", ["resource", "forage", "current"], ["трава", "трави", "траві", "траву", "травою", "траві", "траво"]),
+  entry("resource.herbs", "resource", "PLURAL", "INANIMATE", ["resource", "gathering", "current"], ["лікарські трави", "лікарських трав", "лікарським травам", "лікарські трави", "лікарськими травами", "лікарських травах", "лікарські трави"]),
   entry("resource.berries", "resource", "PLURAL", "INANIMATE", ["resource", "gathering", "current"], ["ягоди", "ягід", "ягодам", "ягоди", "ягодами", "ягодах", "ягоди"]),
   entry("resource.mushrooms", "resource", "PLURAL", "INANIMATE", ["resource", "gathering", "current"], ["гриби", "грибів", "грибам", "гриби", "грибами", "грибах", "гриби"]),
   entry("resource.root", "resource", "MASCULINE", "INANIMATE", ["resource", "roots", "future"], ["корінь", "кореня", "кореню", "корінь", "коренем", "корені", "кореню"]),
