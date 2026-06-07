@@ -1,40 +1,27 @@
 import { prisma } from "../db";
 import type { Prisma } from "@prisma/client";
+import {
+  corpseResourceKey,
+  corpseResourceName,
+  isCorpseResourceKey,
+  resourceTypeDisplayName,
+  resourceTypeGrammaticalGender,
+  type ResourceDisplayGender,
+} from "../utils/resourceText";
 import { creatureForms } from "./grammar";
 import { isFreshenedCorpse } from "./meat";
 import { visibilityRulesForLocation } from "./visibility";
 
 const CARRIED_CORPSE_MARKER = "carried_corpse_by_player:";
 
-const CORPSE_RESOURCE_DISPLAY_NAMES: Record<string, string> = {
-  raw_meat: "сире м'ясо",
-  cooked_meat: "смажене м'ясо",
-  corpse_mouse: "труп миші",
-  corpse_mouse_male: "труп миша",
-  corpse_mouse_female: "труп миші",
-  corpse_rabbit: "труп зайця",
-  corpse_rabbit_male: "труп зайця",
-  corpse_rabbit_female: "труп зайчихи",
-  corpse_owl: "труп сови",
-  corpse_owl_male: "труп сови",
-  corpse_owl_female: "труп сови",
-  corpse_fox: "труп лисиці",
-  corpse_fox_male: "труп лиса",
-  corpse_fox_female: "труп лисиці",
-  corpse_wolf: "труп вовка",
-  corpse_wolf_male: "труп вовка",
-  corpse_wolf_female: "труп вовчиці",
+export {
+  corpseResourceKey,
+  corpseResourceName,
+  isCorpseResourceKey,
+  resourceTypeDisplayName,
+  resourceTypeGrammaticalGender,
+  type ResourceDisplayGender,
 };
-
-export type ResourceDisplayGender = "MASCULINE" | "FEMININE" | "NEUTER" | "PLURAL";
-
-export function resourceTypeGrammaticalGender(resourceType: { key: string; name: string }): ResourceDisplayGender {
-  if (resourceType.key === "raw_meat" || resourceType.key === "cooked_meat") return "NEUTER";
-  if (resourceType.key === "berries" || resourceType.key === "mushrooms" || resourceType.key === "herbs") return "PLURAL";
-  if (resourceType.key === "hand_axe") return "FEMININE";
-  if (resourceType.key === "grivna") return "FEMININE";
-  return "MASCULINE";
-}
 
 type CorpseResourceCreature = {
   sex?: string | null;
@@ -49,28 +36,6 @@ type CorpseResourceCreature = {
     nameVocative?: string | null;
   };
 };
-
-export function corpseResourceKey(creature: CorpseResourceCreature | { key: string }) {
-  if ("species" in creature) {
-    const sexSuffix = creature.sex ? `_${String(creature.sex).toLowerCase()}` : "";
-    return `corpse_${creature.species.key}${sexSuffix}`;
-  }
-  return `corpse_${creature.key}`;
-}
-
-export function isCorpseResourceKey(key: string | null | undefined) {
-  return Boolean(key?.startsWith("corpse_"));
-}
-
-export function corpseResourceName(creature: CorpseResourceCreature) {
-  return `труп ${creatureForms(creature).genitive}`;
-}
-
-export function resourceTypeDisplayName(resourceType: { key: string; name: string }) {
-  if (resourceType.key === "torch") return "факел";
-  if (resourceType.key === "lit_torch") return "запалений факел";
-  return CORPSE_RESOURCE_DISPLAY_NAMES[resourceType.key] ?? resourceType.name;
-}
 
 export function carriedCorpseAction(playerId: number, decayLeft: number) {
   return `${CARRIED_CORPSE_MARKER}${playerId}; розкладається; залишилось ${decayLeft} тіків`;
@@ -111,7 +76,7 @@ export function isCorpseQuery(query: string | null | undefined) {
   return ["corpse", "corpses", "body", "bodies", "carcass", "carcasses", "труп", "трупи", "туша", "туші", "рештки"].includes(normalized);
 }
 
-function corpseMatchesQuery(creature: CorpseResourceCreature, query?: string | null) {
+export function corpseMatchesQuery(creature: CorpseResourceCreature, query?: string | null) {
   if (!query || isCorpseQuery(query)) return true;
 
   const normalized = stripCorpseWords(query);
