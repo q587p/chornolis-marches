@@ -119,6 +119,11 @@ commands are not swallowed as unclear mentorship answers. A remaining copy
 follow-up is the gathering offer phrasing: it still assumes a feminine mentor in
 the "її сліду" line, so make mentor offer text gender/form-aware before widening
 gathering mentors beyond the current authored case.
+Also watch the `amount=2` gathering observation bonus in live play. If following
+one herbalist grows gathering too quickly, add a cooldown or separate
+`mentorship_observation` context; if mentorship starts depending on more source
+descriptions, prefer structured source markers over parsing `actorCreature=...`
+strings.
 
 `0.16.2` adds hunter/tracking mentorship and a small reply-button foundation.
 Tracking mentorship now has its first observation path through fresh clear

@@ -231,6 +231,15 @@ This is still not passive learning: accepting mentorship alone grants nothing,
 unrelated gatherers do not count, unsupported resources do not count and hunter
 tracking mentorship remains a separate follow-up.
 
+Current mentor matching for this gathering bridge depends on the observed source
+description carrying `actorCreature=<id>`. That is acceptable for the current
+source-description format, but if source descriptions change or more mentored
+observation families join the system, move mentor/source identity into
+structured source markers instead of relying on string parsing. Also watch live
+gathering growth from the first `amount=2` mentored observation bonus: if a
+player can follow one herbalist for too much progress too quickly, add a
+cooldown or separate `mentorship_observation` context before widening it.
+
 `0.16.2` adds the first hunter/tracking mentorship observation bonus. When a
 player has active `tracking` mentorship with a hunter-like local character and
 receives fresh clear follow-route memory from that mentor's ordinary visible
