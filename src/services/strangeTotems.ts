@@ -76,6 +76,22 @@ const TRACK_LABELS = [
   "слід, ніби хтось ішов дуже обережно",
 ];
 
+export const STRANGE_TOTEM_DISMANTLE_FLOURISHES = [
+  "Коли останній вузол розпустився, вітер на мить стих.",
+  "Остання лозина тріснула так тихо, ніби хтось за деревами затамував подих.",
+  "Під травою ворухнувся холодок, але за мить місцина знову стала просто місциною.",
+  "Клаптик темної кори впав лицем до землі, і від цього знак остаточно втратив подобу.",
+  "Суха трава навколо поволі випросталася, наче давно чекала, коли їй дадуть спокій.",
+  "У розпущеному вузлі на мить блиснула пилюка, тонка й сіра, мов попіл без вогню.",
+  "Лозини розійшлися в руках легко, аж надто легко для того, що так уперто стояло.",
+  "Після останнього руху стало чути дрібний шелест трави там, де щойно мовчав знак.",
+  "Один уламок кори перевернувся сам, показавши чистий бік без жодної подряпини.",
+  "Тінь від постаті зламалася на кілька простих гілочок і вже не збиралася докупи.",
+  "Найтугіший перев'яз розсипався сухим пилом, лишивши на пальцях гіркуватий запах кори.",
+  "Над хмизом пройшла коротка хвиля тиші, а тоді повернулися звичайні звуки місцини.",
+  "Те, що тримало форму тотема, відступило без голосу, тільки стебла непевно здригнулися.",
+] as const;
+
 function featureData(value: unknown): JsonRecord {
   return value && typeof value === "object" && !Array.isArray(value) ? value as JsonRecord : {};
 }
@@ -140,10 +156,11 @@ export function strangeTotemRecoveredTwigs(feature: StrangeTotemFeatureLike, abs
   return min + stableIndex(String(feature.key ?? feature.id ?? "strange_totem"), Math.max(1, max - min + 1));
 }
 
-export function strangeTotemDismantleText(recovered: number) {
+export function strangeTotemDismantleText(recovered: number, seed = "") {
+  const flourish = STRANGE_TOTEM_DISMANTLE_FLOURISHES[stableIndex(seed || String(recovered), STRANGE_TOTEM_DISMANTLE_FLOURISHES.length)];
   return recovered > 1
-    ? `🧹 Ви розібрали підозрілий тотем. Сухі стебла, лозини й кора стали хмизом ×${recovered}.\n\nКоли останній вузол розпустився, вітер на мить стих.`
-    : "🧹 Тотем майже розсипався від дотику. Придатного хмизу лишилося тільки на одну в'язку.\n\nРешта стала трухою, пилом і тим неприємним відчуттям, що знак стояв тут не для вас.";
+    ? `🧹 Ви розібрали підозрілий тотем. Сухі стебла, лозини й кора стали хмизом ×${recovered}.\n\n${flourish}`
+    : `🧹 Тотем майже розсипався від дотику. Придатного хмизу лишилося тільки на одну в'язку.\n\n${flourish}`;
 }
 
 export function strangeTotemDetailLine(feature: StrangeTotemFeatureLike, absoluteMinute?: number) {
@@ -548,7 +565,7 @@ export async function dismantleStrangeTotem(playerId: number, featureId: number)
     });
   });
 
-  const text = strangeTotemDismantleText(recovered);
+  const text = strangeTotemDismantleText(recovered, String(feature.key ?? feature.id ?? featureId));
 
   return {
     text,

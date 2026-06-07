@@ -23,6 +23,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Unknown-command fallback now checks scribe access before adding admin-command suggestions, while public alias suggestions remain unchanged.
 - Exact known aliases no longer offer unrelated fuzzy suggestions.
 - Shortened public `/help` by removing one-off or highly specific command blurbs, and clarified that AFK starts automatically after 13 minutes of inactivity.
+- Expanded strange-totem dismantle feedback to a stable set of 13 atmospheric aftermath lines.
 
 ### Risks
 
