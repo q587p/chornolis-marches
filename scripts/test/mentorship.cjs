@@ -6,12 +6,17 @@ process.env.DATABASE_URL ||= "postgresql://user:pass@localhost:5432/chornolis_te
 require("ts-node/register");
 
 const {
+  MENTORSHIP_OBSERVATION_EVENT_TITLE,
   MENTORSHIP_STATUS_ACTIVE,
   MENTORSHIP_STATUS_DECLINED,
   MENTORSHIP_STATUS_ENDED,
   MENTORSHIP_STATUS_OFFERED,
+  activeMentorshipForPlayer,
+  activeMentorshipForPlayerAndMentor,
   canCreatureOfferMentorship,
   mentorCanTeach,
+  mentorshipObservationBonusForSource,
+  mentorshipObservationContext,
   mentorshipOfferKeyboard,
   mentorshipOfferText,
   mentorshipSkillForCreature,
@@ -22,6 +27,7 @@ assert.equal(MENTORSHIP_STATUS_OFFERED, "OFFERED");
 assert.equal(MENTORSHIP_STATUS_ACTIVE, "ACTIVE");
 assert.equal(MENTORSHIP_STATUS_DECLINED, "DECLINED");
 assert.equal(MENTORSHIP_STATUS_ENDED, "ENDED");
+assert.equal(MENTORSHIP_OBSERVATION_EVENT_TITLE, "Mentorship observation");
 
 assert.equal(mentorshipSkillForCreature({ professionKey: "herbalist", professionName: "Herbalist" }), "gathering");
 assert.equal(mentorshipSkillForCreature({ professionKey: "znakhar", professionName: "знахар" }), "gathering");
@@ -39,6 +45,26 @@ assert.equal(mentorCanTeach(0, 1), true);
 assert.equal(mentorCanTeach(2, 3), true);
 assert.equal(mentorCanTeach(3, 3), false);
 assert.equal(mentorCanTeach(4, 3), false);
+
+assert.deepEqual(mentorshipObservationContext({
+  sourceDescription: "actorCreature=9; success=true; resource=herbs",
+  skillKey: "gathering",
+  contextKey: "resource:herbs",
+}), {
+  mentorCreatureId: 9,
+  skillKey: "gathering",
+  contextKey: "resource:herbs",
+});
+assert.equal(mentorshipObservationContext({
+  sourceDescription: "actorPlayer=7; success=true; resource=herbs",
+  skillKey: "gathering",
+  contextKey: "resource:herbs",
+}), null);
+assert.equal(mentorshipObservationContext({
+  sourceDescription: "actorCreature=9; success=true; resource=honey",
+  skillKey: "gathering",
+  contextKey: null,
+}), null);
 
 for (const text of ["так", "ага", "хочу", "звісно", "добре", "давай", "так, хочу", "я хочу", "навчи", "повчи мене", "yes"]) {
   assert.equal(parseMentorshipAnswer(text), "accept", `expected accept for ${text}`);
@@ -96,4 +122,61 @@ assert.match(social, /mentorshipOfferKeyboard/);
 const travelGroups = fs.readFileSync("src/services/travelGroups.ts", "utf8");
 assert.doesNotMatch(travelGroups, /PlayerMentorship|mentorCreatureId|mentorship:/);
 
-console.log("Mentorship foundation helpers OK");
+function fakeMentorshipDb(rows) {
+  return {
+    playerMentorship: {
+      findFirst: async ({ where }) => rows.find((row) =>
+        row.playerId === where.playerId &&
+        (!where.mentorCreatureId || row.mentorCreatureId === where.mentorCreatureId) &&
+        row.status === where.status &&
+        (!where.skillKey || row.skillKey === where.skillKey)
+      ) ?? null,
+    },
+  };
+}
+
+async function runAsyncAssertions() {
+  const activeDb = fakeMentorshipDb([
+    { id: 1, playerId: 7, mentorCreatureId: 9, skillKey: "gathering", status: "ACTIVE" },
+    { id: 2, playerId: 7, mentorCreatureId: 10, skillKey: "gathering", status: "OFFERED" },
+  ]);
+  assert.equal((await activeMentorshipForPlayer(7, activeDb)).id, 1);
+  assert.equal((await activeMentorshipForPlayerAndMentor({ playerId: 7, mentorCreatureId: 9, skillKey: "gathering" }, activeDb)).id, 1);
+  assert.equal(await activeMentorshipForPlayerAndMentor({ playerId: 7, mentorCreatureId: 10, skillKey: "gathering" }, activeDb), null);
+  assert.equal(await activeMentorshipForPlayerAndMentor({ playerId: 7, mentorCreatureId: 9, skillKey: "tracking" }, activeDb), null);
+
+  const bonus = await mentorshipObservationBonusForSource({
+    playerId: 7,
+    sourceEventId: 42,
+    sourceDescription: "actorCreature=9; success=true; resource=herbs",
+    skillKey: "gathering",
+    contextKey: "resource:herbs",
+  }, activeDb);
+  assert.equal(bonus.applies, true);
+  assert.equal(bonus.amount, 2);
+  assert.match(bonus.description, /mentorCreature=9/);
+  assert.match(bonus.description, /source=42/);
+
+  const inactiveBonus = await mentorshipObservationBonusForSource({
+    playerId: 7,
+    sourceEventId: 43,
+    sourceDescription: "actorCreature=10; success=true; resource=herbs",
+    skillKey: "gathering",
+    contextKey: "resource:herbs",
+  }, activeDb);
+  assert.equal(inactiveBonus.applies, false);
+  assert.equal(inactiveBonus.amount, 1);
+}
+
+assert.ok(
+  aliases.indexOf("const parsed = parseAlias(ctx.message.text);") <
+  aliases.indexOf("if (await maybeHandleMentorshipAnswer(ctx)) return;"),
+  "slashless aliases should be parsed before mentorship unclear-answer handling",
+);
+
+runAsyncAssertions()
+  .then(() => console.log("Mentorship foundation helpers OK"))
+  .catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });

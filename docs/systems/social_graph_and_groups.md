@@ -187,6 +187,14 @@ does not move the player, does not grant learning progress and does not share
 hidden routes. Use player-facing `наука` / `наставництво` language for this
 relationship; reserve `гурт` for player-player road groups.
 
+As of `0.16.1`, active mentorship can strengthen the relevant observation only
+when the player actually watches the mentor do the matching work. The first
+slice is gathering-only: active gathering mentorship can make observation of the
+mentor's supported herbs/berries/mushrooms gathering count a little more. This
+does not add learning on accept, group movement, hidden-route sharing or a
+global skill multiplier. Pending mentorship answers also run after normal alias
+parsing so commands like `гурт` are not swallowed as unclear replies.
+
 ### 3. Following Is Weaker Than Group Membership
 
 Following should be possible even without an existing contact. It means:

@@ -15,6 +15,7 @@ const {
   isGatheringPracticeMilestone,
 } = require("../../src/services/gatheringLearningRules");
 const {
+  MENTORSHIP_OBSERVATION_EVENT_TITLE,
   gatheringLearningContextKeyForResource,
   gatheringSkillEffectForProgressRows,
   observableGatheringContextKey,
@@ -112,7 +113,7 @@ for (const resourceKey of ["honey", "beeswax", "twigs", "shah", undefined]) {
   assert.equal(effect.staminaCost, 5);
 }
 
-function fakeGatheringObservationDb(sourceDescription = "actorCreature=9; success=true; resource=herbs") {
+function fakeGatheringObservationDb(sourceDescription = "actorCreature=9; success=true; resource=herbs", mentorshipRows = []) {
   let nextEventId = 2;
   let nextProgressId = 1;
   const sourceDescriptions = Array.isArray(sourceDescription) ? sourceDescription : [sourceDescription];
@@ -168,6 +169,14 @@ function fakeGatheringObservationDb(sourceDescription = "actorCreature=9; succes
         return select?.id ? { id: row.id } : row;
       },
       count: async ({ where }) => events.filter((event) => event.title === where.title && event.playerId === where.playerId).length,
+    },
+    playerMentorship: {
+      findFirst: async ({ where }) => mentorshipRows.find((row) =>
+        row.playerId === where.playerId &&
+        row.mentorCreatureId === where.mentorCreatureId &&
+        row.status === where.status &&
+        (!where.skillKey || row.skillKey === where.skillKey)
+      ) ?? null,
     },
     characterLearningProgress: {
       findUnique: async ({ where }) => {
@@ -321,6 +330,7 @@ function fakeGatheringObservationDb(sourceDescription = "actorCreature=9; succes
   assert.equal(db.progressRows[0].skillKey, "gathering");
   assert.equal(db.progressRows[0].sourceKey, "observation");
   assert.equal(db.progressRows[0].contextKey, "resource:herbs");
+  assert.equal(db.progressRows[0].totalProgress, 1);
   assert.equal(db.events.some((event) => event.title === GATHERING_OBSERVATION_EVENT_TITLE), true);
 
   const repeated = await recordGatheringObservation({
@@ -330,6 +340,48 @@ function fakeGatheringObservationDb(sourceDescription = "actorCreature=9; succes
   }, db);
   assert.equal(repeated.observed, false, "same gathering source should not grant progress twice");
   assert.equal(db.progressRows[0].totalProgress, 1);
+
+  const mentoredDb = fakeGatheringObservationDb("actorCreature=9; success=true; resource=herbs", [
+    { playerId: 7, mentorCreatureId: 9, skillKey: "gathering", status: "ACTIVE" },
+  ]);
+  const mentored = await recordGatheringObservation({
+    playerId: 7,
+    locationId: 13,
+    now: new Date("2026-06-03T09:01:00Z"),
+  }, mentoredDb);
+  assert.equal(mentored.observed, true);
+  assert.equal(mentored.mentorshipBonus, true);
+  assert.equal(mentored.learningAmount, 2);
+  assert.equal(mentoredDb.progressRows.length, 1);
+  assert.equal(mentoredDb.progressRows[0].sourceKey, "observation");
+  assert.equal(mentoredDb.progressRows[0].contextKey, "resource:herbs");
+  assert.equal(mentoredDb.progressRows[0].totalProgress, 2);
+  assert.equal(mentoredDb.events.some((event) => event.title === MENTORSHIP_OBSERVATION_EVENT_TITLE), true);
+
+  const nonMentorDb = fakeGatheringObservationDb("actorCreature=10; success=true; resource=herbs", [
+    { playerId: 7, mentorCreatureId: 9, skillKey: "gathering", status: "ACTIVE" },
+  ]);
+  const nonMentor = await recordGatheringObservation({
+    playerId: 7,
+    locationId: 13,
+    now: new Date("2026-06-03T09:01:00Z"),
+  }, nonMentorDb);
+  assert.equal(nonMentor.mentorshipBonus, false);
+  assert.equal(nonMentor.learningAmount, 1);
+  assert.equal(nonMentorDb.progressRows[0].totalProgress, 1);
+  assert.equal(nonMentorDb.events.some((event) => event.title === MENTORSHIP_OBSERVATION_EVENT_TITLE), false);
+
+  const inactiveMentorshipDb = fakeGatheringObservationDb("actorCreature=9; success=true; resource=herbs", [
+    { playerId: 7, mentorCreatureId: 9, skillKey: "gathering", status: "OFFERED" },
+  ]);
+  const inactiveMentorship = await recordGatheringObservation({
+    playerId: 7,
+    locationId: 13,
+    now: new Date("2026-06-03T09:01:00Z"),
+  }, inactiveMentorshipDb);
+  assert.equal(inactiveMentorship.mentorshipBonus, false);
+  assert.equal(inactiveMentorship.learningAmount, 1);
+  assert.equal(inactiveMentorshipDb.progressRows[0].totalProgress, 1);
 
   for (const unsupportedDescription of [
     "actorCreature=9; success=true; resource=honey",
