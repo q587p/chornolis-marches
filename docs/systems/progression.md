@@ -256,6 +256,12 @@ a cooldowned marker. `/mentor` can also show one compact recent-lesson hint.
 These lines never expose raw progress, XP, levels, amounts or chances, and they
 do not create progress by themselves.
 
+The default lesson-feedback cooldown is 10 minutes per player/mentor/context.
+Watch live rooms where players frequently use `/look` or `/examine`: if active
+mentors generate enough gathering or tracking observations that lesson copy
+feels noisy, make feedback rarer or limit it to the first lesson per
+mentor/context before adding more lesson text.
+
 `0.16.4` adds the first guided practice prompt after a real mentored lesson. The
 initial prompt is gathering-only: after a cooldowned gathering lesson, if the
 same supported resource is still available nearby, the mentor can invite the

@@ -143,6 +143,10 @@ source or public skill surface.
 Tracking mentorship lesson feedback should stay tied to the route-memory
 learning trigger until a separate explicit hunter-teaches event is worth the
 extra machinery.
+Live-watch lesson frequency in places where players often use `/look` or
+`/examine`: the 10-minute marker cooldown should keep copy sparse, but if
+mentor-heavy rooms still feel chatty, make lesson feedback rarer or limit it to
+the first lesson per mentor/context instead of adding more variants.
 
 `0.16.4` adds the first guided practice prompt after a real mentored gathering
 lesson. Treat it as "you watched, now try" rather than a quest system: optional,
@@ -155,6 +159,11 @@ as infrastructure testing only: no new mentorship content, no group movement, no
 combat effects and no public skill UI. Next candidates after this are mentor
 guided tracking prompt, mentor route polish, and group movement design only if
 live follow/group behavior stays stable.
+Mentorship lesson/practice cooldowns are already structured marker rows; if
+slow logs heat up again, tune indexed marker fields or retention rather than
+returning to `WorldEvent.description` parsing. Route-memory remains
+`WorldEvent`-backed for now, so repeated route-memory hotspots should become a
+structured route-memory/marker follow-up rather than broader event scans.
 
 `0.16.6` cleans up a narrow slice of resource/corpse text helpers. Treat it as
 text/lexicon/grammar cleanup only: resource display names, accusative names and
