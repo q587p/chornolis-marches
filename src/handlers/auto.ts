@@ -252,17 +252,45 @@ function autoConfirmText() {
   ].join("\n");
 }
 
-export function autoCommandModeFromText(raw: unknown): "start" | "stop" {
+export type AutoCommandMode = "show" | "start" | "stop";
+
+export function autoCommandModeFromText(raw: unknown): AutoCommandMode {
   const arg = String(raw ?? "")
     .trim()
     .toLocaleLowerCase("uk-UA")
     .replace(/[_-]+/g, " ");
+  if (!arg) return "show";
   if (["stop", "off", "стоп", "зупинити", "вимкнути", "подякувати", "відпустити", "ні"].includes(arg)) return "stop";
+  if (["on", "start", "увімкнути", "ввімкнути", "запустити", "так"].includes(arg)) return "start";
   return "start";
 }
 
-function autoCommandMode(ctx: any): "start" | "stop" {
+function autoCommandMode(ctx: any): AutoCommandMode {
   return autoCommandModeFromText(ctx.match);
+}
+
+export function autoStatusText(input: { enabled?: boolean | null; spiritLabel?: string | null } = {}) {
+  const enabled = Boolean(input.enabled);
+  const spiritLabel = input.spiritLabel?.trim() || "тихий шепіт Порубіжжя";
+  return [
+    `Поклик духа: ${enabled ? "озивається" : "мовчить"}.`,
+    `Обраний дух: ${spiritLabel}.`,
+    `Ритм поклику: ${playerAutoTimingText()}.`,
+    "Увімкнути: /spirit",
+    "Вимкнути: /spirit_stop",
+  ].join("\n");
+}
+
+export async function replyPlayerAutoStatus(ctx: any) {
+  if (!ctx.from) return;
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) {
+    await ctx.reply("Ти ще не увійшов у світ. Напиши /start", { reply_markup: buildMainReplyKeyboard(false) });
+    return;
+  }
+  await ctx.reply(autoStatusText({ enabled: player.isAutoEnabled || isPlayerAutoEnabled(ctx.from.id) }), {
+    reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, Boolean(player.isAutoEnabled || isPlayerAutoEnabled(ctx.from.id))),
+  });
 }
 
 async function replyWithAutoConfirmation(ctx: any) {
@@ -605,7 +633,12 @@ export function registerAutoHandlers(bot: Bot) {
 
   async function startAutoCommand(ctx: any) {
     if (!ctx.from) return;
-    if (autoCommandMode(ctx) === "stop") {
+    const mode = autoCommandMode(ctx);
+    if (mode === "show") {
+      await replyPlayerAutoStatus(ctx);
+      return;
+    }
+    if (mode === "stop") {
       await replyStopPlayerAuto(ctx);
       return;
     }
@@ -615,7 +648,12 @@ export function registerAutoHandlers(bot: Bot) {
   bot.command("auto", startAutoCommand);
   bot.command(["spirit", "dukh", "poklyk"], startAutoCommand);
 
-  bot.hears(["🤖 Авто", SPIRIT_CALL_LABEL], async (ctx) => {
+  bot.hears("🤖 Авто", async (ctx) => {
+    if (!ctx.from) return;
+    await replyPlayerAutoStatus(ctx);
+  });
+
+  bot.hears(SPIRIT_CALL_LABEL, async (ctx) => {
     if (!ctx.from) return;
     await requestOrEnablePlayerAuto(bot, ctx);
   });

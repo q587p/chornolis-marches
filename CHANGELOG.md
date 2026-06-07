@@ -25,6 +25,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Shortened public `/help` by removing one-off or highly specific command blurbs, and clarified that AFK starts automatically after 13 minutes of inactivity.
 - Expanded strange-totem dismantle feedback to a stable set of 13 atmospheric aftermath lines.
 - Updated follow-assist hints to use clickable `/follow_assist_on` and `/follow_assist_off` commands while keeping `/follow_assist on/off` as compatible aliases.
+- Changed legacy `auto` / `/auto` input to show Spirit Call status and controls instead of immediately enabling the helper; explicit `/spirit` still enables it.
 
 ### Risks
 

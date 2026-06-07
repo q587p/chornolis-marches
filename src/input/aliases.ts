@@ -4,7 +4,7 @@ export type GatherKey = "berries" | "mushrooms" | "herbs" | "honey" | "beeswax";
 export type UseItemKey = "berries" | "herbs" | "mushrooms" | "cooked_meat";
 export type TargetAction = "inspect" | "greet" | "attack" | "freshen";
 export type QueueAliasMode = "status" | "cancel-current" | "clear";
-export type AutoAliasMode = "start" | "stop";
+export type AutoAliasMode = "show" | "start" | "stop";
 export type RestAliasMode = "start" | "queue" | "interrupt";
 export type PostureAliasMode = "sit" | "lie" | "stand";
 export type SocialSignalAlias = "smile" | "laugh" | "nod" | "bow" | "point" | "glare" | "sigh" | "wave";
@@ -419,11 +419,15 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "підвестися": { kind: "posture", mode: "stand" },
   "підвестись": { kind: "posture", mode: "stand" },
 
-  auto: { kind: "auto", mode: "start" },
+  auto: { kind: "auto", mode: "show" },
   spirit: { kind: "auto", mode: "start" },
   dukh: { kind: "auto", mode: "start" },
   poklyk: { kind: "auto", mode: "start" },
-  "авто": { kind: "auto", mode: "start" },
+  "авто": { kind: "auto", mode: "show" },
+  "auto on": { kind: "auto", mode: "start" },
+  "auto start": { kind: "auto", mode: "start" },
+  "auto_on": { kind: "auto", mode: "start" },
+  "auto_start": { kind: "auto", mode: "start" },
   "поклик духа": { kind: "auto", mode: "start" },
   "покликати духа": { kind: "auto", mode: "start" },
   "покликати дух": { kind: "auto", mode: "start" },
@@ -1044,7 +1048,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "douse-torch") return "/douse_torch";
   if (parsed.kind === "posture") return parsed.mode === "sit" ? "/sit" : parsed.mode === "lie" ? "/lie" : "/stand";
   if (parsed.kind === "rest") return "/rest";
-  if (parsed.kind === "auto") return parsed.mode === "stop" ? "/auto_stop" : "/auto";
+  if (parsed.kind === "auto") return parsed.mode === "show" ? "/auto" : parsed.mode === "stop" ? "/auto_stop" : "/spirit";
   if (parsed.kind === "queue") return "/queue";
   if (parsed.kind === "track") return "/track";
   if (parsed.kind === "crawl-root-gap") return "/crawl";

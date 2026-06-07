@@ -27,7 +27,7 @@ import { actionQueueReplyOptions, sendActionSubmitFeedback } from "../utils/acti
 import { durationSecondsSuffix } from "../utils/durationText";
 import { escapeHtml, stripUnsafeText } from "../utils/text";
 import { sendHelp } from "./help";
-import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } from "./auto";
+import { disablePlayerAuto, isPlayerAutoEnabled, replyPlayerAutoStatus, requestOrEnablePlayerAuto } from "./auto";
 import { showCharacter, showInventory, showLocationForPlayer } from "./player";
 import { buildAllPage, buildChatLogPage, buildStatBrief, buildWhoPage } from "./status";
 import { renderDepletedVegetationInspection, renderLocationBrief, renderLocationExits, renderLocationFeatureInteraction, renderLocationFeatureInteractionByQuery, renderLocationGlance, shakeTreeAtCurrentLocation } from "../services/locations";
@@ -408,7 +408,12 @@ async function submitRest(bot: Bot, ctx: any, mode: RestAliasMode = "start") {
   await beginRestNow(bot, ctx, player.id);
 }
 
-async function submitAuto(bot: Bot, ctx: any, mode: "start" | "stop") {
+async function submitAuto(bot: Bot, ctx: any, mode: "show" | "start" | "stop") {
+  if (mode === "show") {
+    await replyPlayerAutoStatus(ctx);
+    return;
+  }
+
   if (mode === "start") {
     await requestOrEnablePlayerAuto(bot, ctx);
     return;
