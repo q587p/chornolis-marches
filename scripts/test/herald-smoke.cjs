@@ -17,10 +17,13 @@ const {
 } = require("../../src/herald/infoThresholds");
 const {
   archiveOrderedNewsEntries,
+  archiveRepublishContentHash,
   chronologicalNewsEntries,
+  DEFAULT_ARCHIVE_REPUBLISH_INTERVAL_MS,
   DEFAULT_BACKFILL_INTERVAL_MS,
   formatArchiveBody,
   formatBackfillInterval,
+  NEWS_ARCHIVE_REPUBLISH_SOURCE_TYPE,
   parseBackfillIntervalMs,
 } = require("../../src/herald/newsBackfill");
 const { findArchiveRowByReleaseVersion, formatArchiveFindReply, formatArchiveList, splitArchiveListMessage } = require("../../src/herald/newsArchiveCommands");
@@ -151,9 +154,12 @@ assert.equal(parseBackfillIntervalMs("13m"), 13 * 60 * 1000);
 assert.equal(parseBackfillIntervalMs("30m"), 30 * 60 * 1000);
 assert.equal(parseBackfillIntervalMs("2h"), 2 * 60 * 60 * 1000);
 assert.equal(parseBackfillIntervalMs("bad interval"), null);
+assert.equal(parseBackfillIntervalMs(undefined, DEFAULT_ARCHIVE_REPUBLISH_INTERVAL_MS), 30 * 60 * 1000);
 assert.equal(formatBackfillInterval(13 * 60 * 1000), "13 хв");
 assert.equal(formatBackfillInterval(2 * 60 * 60 * 1000), "2 год");
 assert.match(formatArchiveBody(entries[1]), /Цей запис уже нижче/);
+assert.equal(NEWS_ARCHIVE_REPUBLISH_SOURCE_TYPE, "NEWS_MD_ARCHIVE_REPUBLISH");
+assert.equal(archiveRepublishContentHash("abc123"), "republish:v1:abc123");
 
 const archiveList = formatArchiveList({
   ok: true,
@@ -289,12 +295,17 @@ assert.match(heraldAdminCommands, /\/news_archive_force_post/);
 assert.match(heraldAdminCommands, /\/news_archive_find/);
 assert.match(heraldAdminCommands, /\/news_archive_reload/);
 assert.match(heraldAdminCommands, /\/news_updates/);
+assert.match(heraldAdminCommands, /\/archive_republish_preview/);
+assert.match(heraldAdminCommands, /\/archive_republish_queue/);
+assert.match(heraldAdminCommands, /\/archive_republish_status/);
+assert.match(heraldAdminCommands, /\/archive_republish_cancel/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/pause_publications/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/forget_published_news/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_post/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_find/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_force_post/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/news_updates/);
+assert.doesNotMatch(formatHeraldCommandList(false), /\/archive_republish_queue/);
 
 const heraldAdminHelp = formatHeraldHelp(true);
 assert.match(heraldAdminHelp, /Основні:/);
@@ -304,6 +315,7 @@ assert.match(heraldAdminHelp, /Черга й публікації:/);
 assert.match(heraldAdminHelp, /Приклади:/);
 assert.match(heraldAdminHelp, /\/backfill_news_queue 23m/);
 assert.match(heraldAdminHelp, /\/backfill_news_reschedule_pending 23m/);
+assert.match(heraldAdminHelp, /\/archive_republish_queue 30m/);
 assert.match(heraldAdminHelp, /13m/);
 assert.match(heraldAdminHelp, /2h/);
 assert.ok(heraldAdminHelp.length < 3900, "Herald admin help should fit in one Telegram message");
@@ -311,6 +323,7 @@ assert.ok(heraldAdminHelp.length < 3900, "Herald admin help should fit in one Te
 const heraldPublicHelp = formatHeraldHelp(false);
 assert.match(heraldPublicHelp, /Основні:/);
 assert.doesNotMatch(heraldPublicHelp, /\/backfill_news_queue/);
+assert.doesNotMatch(heraldPublicHelp, /\/archive_republish_queue/);
 assert.doesNotMatch(heraldPublicHelp, /\/pending_publications/);
 assert.match(heraldPublicHelp, /Службові розділи/);
 
@@ -456,6 +469,17 @@ assert.match(archiveFormatted, /Архівний запис: <b>12026-05-31/);
 assert.doesNotMatch(archiveFormatted, /Дата запису: 12026-05-31/);
 assert.match(archiveFormatted, /Цей запис уже нижче/);
 assert.doesNotMatch(archiveFormatted, /📜 Канцелярія Межового Знаку/);
+
+const archiveRepublishFormatted = formatHeraldPublicationMessage({
+  sourceType: "NEWS_MD_ARCHIVE_REPUBLISH",
+  title: entries[1].title,
+  sourceDate: entries[1].sourceDate,
+  body: formatArchiveBody(entries[1]),
+});
+assert.match(archiveRepublishFormatted, /📜 З архіву Канцелярії/);
+assert.match(archiveRepublishFormatted, /Архівний запис: <b>12026-05-31/);
+assert.doesNotMatch(archiveRepublishFormatted, /Повторна публікація/);
+assert.doesNotMatch(archiveRepublishFormatted, /repost/i);
 
 const archiveFormattedWithFallbackDate = formatHeraldPublicationMessage({
   sourceType: "NEWS_MD_ARCHIVE",

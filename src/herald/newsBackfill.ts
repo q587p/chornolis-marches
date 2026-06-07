@@ -3,17 +3,30 @@ import type { HeraldNewsEntry } from "./newsMarkdown";
 import { readAllNewsEntries } from "./newsMarkdown";
 import { formatHeraldPublicationPlainMessage } from "./format";
 import {
+  cancelPendingPublications,
   countArchivePublications,
   findExistingPublicationsByHashes,
   listPendingArchivePublications,
+  prepareManualHeraldPublication,
   queueHeraldPublication,
   reschedulePendingArchivePublications,
 } from "./publications";
 
 export const NEWS_ARCHIVE_SOURCE_TYPE = "NEWS_MD_ARCHIVE";
+export const NEWS_ARCHIVE_REPUBLISH_SOURCE_TYPE = "NEWS_MD_ARCHIVE_REPUBLISH";
 export const DEFAULT_BACKFILL_INTERVAL_MS = 13 * 60 * 1000;
+export const DEFAULT_ARCHIVE_REPUBLISH_INTERVAL_MS = 30 * 60 * 1000;
+export const ARCHIVE_REPUBLISH_RUN_ID = "v1";
 const MIN_BACKFILL_INTERVAL_MS = 60 * 1000;
 const MAX_BACKFILL_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+type ArchiveRepublishStore = {
+  findExistingPublicationsByHashes?: typeof findExistingPublicationsByHashes;
+  prepareManualHeraldPublication?: typeof prepareManualHeraldPublication;
+  countArchivePublications?: typeof countArchivePublications;
+  listPendingArchivePublications?: typeof listPendingArchivePublications;
+  cancelPendingPublications?: typeof cancelPendingPublications;
+};
 
 function clampInterval(value: number) {
   if (!Number.isFinite(value)) return DEFAULT_BACKFILL_INTERVAL_MS;
@@ -46,6 +59,10 @@ export function formatBackfillInterval(ms: number) {
   const minutes = Math.round(ms / 60_000);
   if (minutes >= 60 && minutes % 60 === 0) return `${minutes / 60} год`;
   return `${minutes} хв`;
+}
+
+export function archiveRepublishContentHash(originalHash: string, runId = ARCHIVE_REPUBLISH_RUN_ID) {
+  return `republish:${runId}:${originalHash}`;
 }
 
 export function chronologicalNewsEntries(entries: readonly HeraldNewsEntry[]) {
@@ -206,4 +223,145 @@ export async function newsBackfillStatus() {
     intervalMs: config.heraldArchiveIntervalMs,
     rebalanceOverdue: config.heraldRebalanceOverduePublications,
   };
+}
+
+async function archiveRepublishPlan(
+  entries: readonly HeraldNewsEntry[],
+  runId = ARCHIVE_REPUBLISH_RUN_ID,
+  store: ArchiveRepublishStore = {},
+) {
+  const chronological = chronologicalNewsEntries(entries);
+  const hashes = chronological.map((entry) => archiveRepublishContentHash(entry.contentHash, runId));
+  const existing = await (store.findExistingPublicationsByHashes ?? findExistingPublicationsByHashes)(hashes);
+  const existingByHash = new Map(existing.flatMap((publication) => (
+    publication.contentHash ? [[publication.contentHash, publication] as const] : []
+  )));
+
+  const rows = chronological.map((entry, index) => {
+    const contentHash = archiveRepublishContentHash(entry.contentHash, runId);
+    return {
+      entry,
+      index,
+      contentHash,
+      publication: existingByHash.get(contentHash) ?? null,
+    };
+  });
+
+  const pending = rows.filter((row) => row.publication && !row.publication.publishedAt && row.publication.visibility === "PUBLIC");
+  const published = rows.filter((row) => row.publication?.publishedAt);
+  const canceled = rows.filter((row) => row.publication && !row.publication.publishedAt && row.publication.visibility !== "PUBLIC");
+  const missing = rows.filter((row) => !row.publication);
+
+  return {
+    runId,
+    rows,
+    missing,
+    pending,
+    published,
+    canceled,
+    alreadyQueued: pending.length > 0,
+  };
+}
+
+export async function previewArchiveRepublish(
+  entries: readonly HeraldNewsEntry[],
+  intervalMs = DEFAULT_ARCHIVE_REPUBLISH_INTERVAL_MS,
+  now = new Date(),
+  store: ArchiveRepublishStore = {},
+) {
+  const plan = await archiveRepublishPlan(entries, ARCHIVE_REPUBLISH_RUN_ID, store);
+  const lastAvailableAt = plan.rows.length
+    ? new Date(now.getTime() + (plan.rows.length - 1) * intervalMs)
+    : null;
+
+  return {
+    runId: plan.runId,
+    total: plan.rows.length,
+    first: plan.rows[0]?.entry ?? null,
+    last: plan.rows[plan.rows.length - 1]?.entry ?? null,
+    intervalMs,
+    estimatedFinishAt: lastAvailableAt,
+    alreadyQueued: plan.alreadyQueued,
+    pending: plan.pending.length,
+    published: plan.published.length,
+    canceled: plan.canceled.length,
+    missing: plan.missing.length,
+  };
+}
+
+export async function queueArchiveRepublish(
+  entries: readonly HeraldNewsEntry[],
+  intervalMs = DEFAULT_ARCHIVE_REPUBLISH_INTERVAL_MS,
+  now = new Date(),
+  store: ArchiveRepublishStore = {},
+) {
+  const plan = await archiveRepublishPlan(entries, ARCHIVE_REPUBLISH_RUN_ID, store);
+  if (plan.alreadyQueued) {
+    return {
+      runId: plan.runId,
+      total: plan.rows.length,
+      queued: [],
+      skipped: plan.rows.length - plan.pending.length,
+      alreadyQueued: true,
+      pending: plan.pending.length,
+      intervalMs,
+    };
+  }
+
+  const queued = [];
+  for (const [position, row] of plan.rows.entries()) {
+    if (row.publication?.publishedAt) continue;
+
+    const body = formatArchiveBody(row.entry);
+    const publication = await (store.prepareManualHeraldPublication ?? prepareManualHeraldPublication)({
+      sourceType: NEWS_ARCHIVE_REPUBLISH_SOURCE_TYPE,
+      sourceId: row.entry.title,
+      sourceDate: row.entry.sourceDate,
+      sourceVersion: row.entry.sourceVersion,
+      title: row.entry.title,
+      body,
+      renderedText: formatHeraldPublicationPlainMessage({
+        sourceType: NEWS_ARCHIVE_REPUBLISH_SOURCE_TYPE,
+        title: row.entry.title,
+        sourceDate: row.entry.sourceDate,
+        sourceVersion: row.entry.sourceVersion,
+        body,
+      }),
+      archiveOrder: row.index,
+      availableAt: new Date(now.getTime() + position * intervalMs),
+      contentHash: row.contentHash,
+    });
+    queued.push(publication);
+  }
+
+  return {
+    runId: plan.runId,
+    total: plan.rows.length,
+    queued,
+    skipped: plan.published.length,
+    alreadyQueued: false,
+    pending: queued.length,
+    intervalMs,
+  };
+}
+
+export async function archiveRepublishStatus() {
+  return archiveRepublishStatusWithStore();
+}
+
+export async function archiveRepublishStatusWithStore(store: ArchiveRepublishStore = {}) {
+  const [counts, pending] = await Promise.all([
+    (store.countArchivePublications ?? countArchivePublications)(NEWS_ARCHIVE_REPUBLISH_SOURCE_TYPE),
+    (store.listPendingArchivePublications ?? listPendingArchivePublications)(NEWS_ARCHIVE_REPUBLISH_SOURCE_TYPE),
+  ]);
+  return {
+    pending: counts.pending,
+    published: counts.published,
+    next: pending[0] ?? null,
+    runId: ARCHIVE_REPUBLISH_RUN_ID,
+  };
+}
+
+export async function cancelArchiveRepublishPendingPublications(store: ArchiveRepublishStore = {}) {
+  return (store.cancelPendingPublications ?? cancelPendingPublications)([NEWS_ARCHIVE_REPUBLISH_SOURCE_TYPE]);
 }

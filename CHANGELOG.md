@@ -7,6 +7,28 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.7 - Grammar agreement helper cleanup and archive republish queue - 12026-06-07
+
+### Added
+
+- Added shared grammar agreement helpers for player and creature grammatical gender plus gendered word selection.
+- Expanded Ukrainian grammar regression coverage for player/creature gender fallback and representative visible target/player text.
+- Added admin-only Herald archive republish controls for queueing deployed `news.md` archive entries oldest-first through the durable publication outbox.
+- Added a distinct `NEWS_MD_ARCHIVE_REPUBLISH` source type and `republish:v1:*` content-hash namespace for archive rebuild runs.
+
+### Changed
+
+- Replaced duplicated local gender/agreement helpers in `targets.ts` and `playerText.ts` with shared grammar helpers.
+- Kept current creature status/life/age text, observed player posture/vitals text and gendered unarmed/player state text stable.
+- Kept archive republish channel posts on the normal archive template, without `/repost_publication` disclaimer text.
+- Updated Herald admin help and operations docs for archive republish preview/queue/status/cancel.
+
+### Risks
+
+- This is intended as grammar/helper cleanup only; gameplay rules, WorldEvent/WorldEventMarker storage, Prisma schema and migrations are unchanged.
+- Archive republish is admin/operator-facing; cancellation only marks unpublished republish-run rows and leaves ordinary pending news/archive rows plus published history untouched.
+- Wider text cleanup in social signals, keyboards, help text, location feature prose and action completions remains out of scope.
+
 ## 0.16.6 - Resource text lexicon cleanup - 12026-06-07
 
 ### Added

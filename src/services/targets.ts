@@ -3,7 +3,7 @@ import { BASE_HP, BASE_STAMINA } from "../gameConfig";
 import { formatObservedPostureText, formatObservedVitalsText, formatPlayerStats, formatVitalsLine } from "../utils/playerText";
 import { visibleHeldTorchTextWithContext } from "../utils/torchText";
 import { normalizeCreatureActionText } from "../utils/creatureActionText";
-import { creatureForms, playerForms, type NameForms } from "./grammar";
+import { creatureForms, creatureWord, playerForms, playerGrammarGender, playerWord, wordByGender, type NameForms } from "./grammar";
 import { lifetimeSummary } from "./itemLifetime";
 import { playerShowsTechnicalDetails } from "./technicalDetails";
 import { creatureCarriedTorchCount, getCreatureTorchState, getPlayerTorchState } from "./fire";
@@ -67,19 +67,6 @@ function formatCreatureStats(target: {
   ].join("\n");
 }
 
-type CreatureGender = "MASCULINE" | "FEMININE" | "NEUTER" | "PLURAL";
-
-function creatureGender(target: { sex?: string | null; species: { grammaticalGender?: string | null } }): CreatureGender {
-  if (target.sex === "MALE") return "MASCULINE";
-  if (target.sex === "FEMALE") return "FEMININE";
-  if (target.species.grammaticalGender === "FEMININE" || target.species.grammaticalGender === "NEUTER" || target.species.grammaticalGender === "PLURAL") return target.species.grammaticalGender;
-  return "MASCULINE";
-}
-
-function creatureWord(target: { sex?: string | null; species: { grammaticalGender?: string | null } }, words: Record<CreatureGender, string>) {
-  return words[creatureGender(target)];
-}
-
 function stripSentenceEnd(text: string) {
   return text.trim().replace(/[.!?…]+$/u, "");
 }
@@ -108,27 +95,24 @@ function formatCreatureAge(age: string, target: { sex?: string | null; species: 
   return creatureWord(target, { MASCULINE: "дорослий", FEMININE: "доросла", NEUTER: "доросле", PLURAL: "дорослі" });
 }
 
-function playerGender(player: { grammaticalGender?: string | null; pronoun?: string | null }) {
-  if (player.grammaticalGender === "FEMININE" || player.grammaticalGender === "NEUTER" || player.grammaticalGender === "PLURAL") return player.grammaticalGender;
-  if (player.pronoun === "SHE") return "FEMININE";
-  if (player.pronoun === "THEY") return "PLURAL";
-  return "MASCULINE";
-}
-
 function genderedPlayerState(player: { grammaticalGender?: string | null; pronoun?: string | null }) {
-  const gender = playerGender(player);
-  if (gender === "FEMININE") return "жива й активна";
-  if (gender === "NEUTER") return "живе й активне";
-  if (gender === "PLURAL") return "живі й активні";
-  return "живий і активний";
+  return playerWord(player, {
+    MASCULINE: "живий і активний",
+    FEMININE: "жива й активна",
+    NEUTER: "живе й активне",
+    PLURAL: "живі й активні",
+  });
 }
 
 function genderedUnarmed(player: { grammaticalGender?: string | null; pronoun?: string | null }) {
-  const looks = playerGender(player) === "PLURAL" ? "Виглядають" : "Виглядає";
-  if (playerGender(player) === "FEMININE") return `${looks} беззбройною.`;
-  if (playerGender(player) === "NEUTER") return `${looks} беззбройним.`;
-  if (playerGender(player) === "PLURAL") return `${looks} беззбройними.`;
-  return `${looks} беззбройним.`;
+  const gender = playerGrammarGender(player);
+  const looks = gender === "PLURAL" ? "Виглядають" : "Виглядає";
+  return `${looks} ${wordByGender(gender, {
+    MASCULINE: "беззбройним",
+    FEMININE: "беззбройною",
+    NEUTER: "беззбройним",
+    PLURAL: "беззбройними",
+  })}.`;
 }
 
 function qualitativeAmount(amount: number, gender: ResourceDisplayGender = "MASCULINE") {

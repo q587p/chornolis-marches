@@ -46,6 +46,7 @@ module.exports = [
   nodeTest("scripts/test/web-stat-render.cjs"),
   nodeTest("scripts/test/news-clickable-commands.cjs"),
   nodeTest("scripts/test/herald-smoke.cjs"),
+  nodeTest("scripts/test/herald-archive-republish.cjs"),
   nodeTest("scripts/test/herald-chronicles.cjs"),
   nodeTest("scripts/test/telegram-commands.cjs"),
   nodeTest("scripts/test/who-public-creatures.cjs"),
