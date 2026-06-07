@@ -11,9 +11,11 @@ export const MENTORSHIP_STATUS_DECLINED = "DECLINED";
 export const MENTORSHIP_STATUS_ENDED = "ENDED";
 export const MENTORSHIP_OBSERVATION_EVENT_TITLE = "Mentorship observation";
 export const MENTORSHIP_LESSON_FEEDBACK_EVENT_TITLE = "Mentorship lesson feedback";
+export const MENTORSHIP_PRACTICE_PROMPT_EVENT_TITLE = "Mentorship practice prompt";
 export const TRACKING_MENTORSHIP_FOLLOWED_MOVEMENT_CONTEXT = "mentorship_followed_movement";
 export const MENTORSHIP_OFFER_COOLDOWN_MS = Number(process.env.MENTORSHIP_OFFER_COOLDOWN_MS || 10 * 60_000);
 export const MENTORSHIP_LESSON_FEEDBACK_COOLDOWN_MS = Number(process.env.MENTORSHIP_LESSON_FEEDBACK_COOLDOWN_MS || 10 * 60_000);
+export const MENTORSHIP_PRACTICE_PROMPT_COOLDOWN_MS = Number(process.env.MENTORSHIP_PRACTICE_PROMPT_COOLDOWN_MS || 15 * 60_000);
 
 const APOSTROPHES = /[ʼ’`´]/g;
 const MENTORSHIP_ANSWER_PUNCTUATION = /[!?.,;:]+/g;
@@ -34,6 +36,7 @@ export type MentorshipAnswerKind = "accept" | "decline" | "unclear";
 type MentorshipDb = {
   playerMentorship: any;
   worldEvent?: any;
+  resourceNode?: any;
 };
 
 type MentorshipLessonInput = {
@@ -45,6 +48,11 @@ type MentorshipLessonInput = {
   mentorName?: string | null;
   now?: Date;
 };
+
+type MentorshipPracticePromptInput = Pick<MentorshipLessonInput, "playerId" | "mentorCreatureId" | "skillKey" | "contextKey" | "locationId" | "now">;
+type MentorshipPracticePromptAction = { action: "gather"; resourceKey: "herbs" | "berries" | "mushrooms" };
+
+const MENTORSHIP_GATHER_PROMPT_RESOURCES = new Set(["herbs", "berries", "mushrooms"]);
 
 function normalizeMentorshipAnswerInput(text: string) {
   return String(text ?? "")
@@ -284,6 +292,35 @@ export function mentorshipLessonFeedbackDescription(input: Pick<MentorshipLesson
   return `player=${input.playerId}; mentorCreature=${input.mentorCreatureId}; skillKey=${input.skillKey}; contextKey=${input.contextKey}`;
 }
 
+export function mentorshipPracticePromptAction(input: Pick<MentorshipPracticePromptInput, "skillKey" | "contextKey">) {
+  if (input.skillKey !== "gathering") return null;
+  const resourceKey = input.contextKey.match(/^resource:(herbs|berries|mushrooms)$/u)?.[1] as MentorshipPracticePromptAction["resourceKey"] | undefined;
+  if (!resourceKey || !MENTORSHIP_GATHER_PROMPT_RESOURCES.has(resourceKey)) return null;
+  return { action: "gather" as const, resourceKey };
+}
+
+export function mentorshipPracticePromptDescription(input: Pick<MentorshipPracticePromptInput, "playerId" | "mentorCreatureId" | "skillKey" | "contextKey"> & { action: string }) {
+  return `player=${input.playerId}; mentorCreature=${input.mentorCreatureId}; skillKey=${input.skillKey}; contextKey=${input.contextKey}; action=${input.action}`;
+}
+
+export function mentorshipPracticePromptText(input: { mentorName?: string | null; skillKey: string; contextKey: string; blocked?: "no-resource" | null }) {
+  const mentorName = input.mentorName?.trim() || "Наставник";
+  if (input.blocked === "no-resource") {
+    return `${mentorName} дивиться на порожнє місце: “Тут уже нічого вчити рукою. Ходімо далі.”`;
+  }
+  if (input.skillKey === "gathering") {
+    return `${mentorName} відступає від стебел: “Тепер ти. Не поспішай — земля сама покаже, де відпустити.”`;
+  }
+  return `${mentorName} відступає на крок: “Тепер спробуй сам.”`;
+}
+
+export function mentorshipPracticePromptKeyboard(input: MentorshipPracticePromptAction) {
+  if (input.action === "gather") {
+    return new InlineKeyboard().text("Спробувати зібрати", `mentorship:practice:gather:${input.resourceKey}`);
+  }
+  return undefined;
+}
+
 function parseMentorshipLessonFeedbackDescription(description?: string | null) {
   if (!description) return null;
   const playerId = Number(description.match(/(?:^|;\s*)player=(\d+)/u)?.[1]);
@@ -294,6 +331,17 @@ function parseMentorshipLessonFeedbackDescription(description?: string | null) {
   return { playerId, mentorCreatureId, skillKey, contextKey };
 }
 
+function parseMentorshipPracticePromptDescription(description?: string | null) {
+  if (!description) return null;
+  const playerId = Number(description.match(/(?:^|;\s*)player=(\d+)/u)?.[1]);
+  const mentorCreatureId = Number(description.match(/(?:^|;\s*)mentorCreature=(\d+)/u)?.[1]);
+  const skillKey = description.match(/(?:^|;\s*)skillKey=([^;]+)/u)?.[1]?.trim();
+  const contextKey = description.match(/(?:^|;\s*)contextKey=([^;]+)/u)?.[1]?.trim();
+  const action = description.match(/(?:^|;\s*)action=([^;]+)/u)?.[1]?.trim();
+  if (!Number.isSafeInteger(playerId) || !Number.isSafeInteger(mentorCreatureId) || !skillKey || !contextKey || !action) return null;
+  return { playerId, mentorCreatureId, skillKey, contextKey, action };
+}
+
 function mentorshipLessonFeedbackMatches(description: string | null | undefined, input: Pick<MentorshipLessonInput, "playerId" | "mentorCreatureId" | "skillKey" | "contextKey">) {
   const parsed = parseMentorshipLessonFeedbackDescription(description);
   return Boolean(parsed &&
@@ -301,6 +349,16 @@ function mentorshipLessonFeedbackMatches(description: string | null | undefined,
     parsed.mentorCreatureId === input.mentorCreatureId &&
     parsed.skillKey === input.skillKey &&
     parsed.contextKey === input.contextKey);
+}
+
+function mentorshipPracticePromptMatches(description: string | null | undefined, input: Pick<MentorshipPracticePromptInput, "playerId" | "mentorCreatureId" | "skillKey" | "contextKey"> & { action: string }) {
+  const parsed = parseMentorshipPracticePromptDescription(description);
+  return Boolean(parsed &&
+    parsed.playerId === input.playerId &&
+    parsed.mentorCreatureId === input.mentorCreatureId &&
+    parsed.skillKey === input.skillKey &&
+    parsed.contextKey === input.contextKey &&
+    parsed.action === input.action);
 }
 
 export async function recentMentorshipLessonFeedback(input: Pick<MentorshipLessonInput, "playerId" | "mentorCreatureId" | "skillKey" | "contextKey"> & { now?: Date }, db: MentorshipDb = prisma) {
@@ -340,6 +398,73 @@ export async function maybeRecordMentorshipLessonFeedback(input: MentorshipLesso
     event,
     description,
     text: mentorshipLessonText(input),
+  };
+}
+
+export async function recentMentorshipPracticePrompt(input: Pick<MentorshipPracticePromptInput, "playerId" | "mentorCreatureId" | "skillKey" | "contextKey"> & { action: string; now?: Date }, db: MentorshipDb = prisma) {
+  if (!db.worldEvent || MENTORSHIP_PRACTICE_PROMPT_COOLDOWN_MS <= 0) return null;
+  const now = input.now ?? new Date();
+  const since = new Date(now.getTime() - MENTORSHIP_PRACTICE_PROMPT_COOLDOWN_MS);
+  const events = await db.worldEvent.findMany({
+    where: {
+      type: "SYSTEM",
+      title: MENTORSHIP_PRACTICE_PROMPT_EVENT_TITLE,
+      playerId: input.playerId,
+      createdAt: { gte: since },
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: 8,
+  });
+  return events.find((event: any) => mentorshipPracticePromptMatches(event.description, input)) ?? null;
+}
+
+export async function maybeCreateMentorshipPracticePrompt(input: MentorshipPracticePromptInput, db: MentorshipDb = prisma) {
+  if (!db.worldEvent) return { ok: false as const, reason: "missing-world-event" as const };
+  const action = mentorshipPracticePromptAction(input);
+  if (!action) return { ok: false as const, reason: "unsupported-context" as const };
+  const mentorship = await activeMentorshipForPlayerAndMentor({
+    playerId: input.playerId,
+    mentorCreatureId: input.mentorCreatureId,
+    skillKey: input.skillKey,
+  }, db);
+  if (!mentorship) return { ok: false as const, reason: "inactive-mentorship" as const };
+  const mentorName = creatureForms(mentorship.mentorCreature).nominative;
+  if (action.action === "gather" && input.locationId && db.resourceNode) {
+    const available = await db.resourceNode.findFirst({
+      where: {
+        locationId: input.locationId,
+        amount: { gt: 0 },
+        resourceType: { key: action.resourceKey },
+      },
+      select: { id: true },
+    });
+    if (!available) {
+      return {
+        ok: false as const,
+        reason: "no-resource" as const,
+        text: mentorshipPracticePromptText({ mentorName, skillKey: input.skillKey, contextKey: input.contextKey, blocked: "no-resource" }),
+      };
+    }
+  }
+  const description = mentorshipPracticePromptDescription({ ...input, action: `${action.action}:${action.resourceKey}` });
+  const recent = await recentMentorshipPracticePrompt({ ...input, action: `${action.action}:${action.resourceKey}` }, db);
+  if (recent) return { ok: false as const, reason: "cooldown" as const, event: recent };
+  const event = await db.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: MENTORSHIP_PRACTICE_PROMPT_EVENT_TITLE,
+      description,
+      playerId: input.playerId,
+      locationId: input.locationId ?? undefined,
+      ...(input.now ? { createdAt: input.now } : {}),
+    },
+  });
+  return {
+    ok: true as const,
+    event,
+    description,
+    text: mentorshipPracticePromptText({ mentorName, skillKey: input.skillKey, contextKey: input.contextKey }),
+    keyboard: mentorshipPracticePromptKeyboard(action),
   };
 }
 

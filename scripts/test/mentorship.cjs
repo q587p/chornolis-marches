@@ -8,6 +8,7 @@ require("ts-node/register");
 const {
   MENTORSHIP_OBSERVATION_EVENT_TITLE,
   MENTORSHIP_LESSON_FEEDBACK_EVENT_TITLE,
+  MENTORSHIP_PRACTICE_PROMPT_EVENT_TITLE,
   MENTORSHIP_STATUS_ACTIVE,
   MENTORSHIP_STATUS_DECLINED,
   MENTORSHIP_STATUS_ENDED,
@@ -17,6 +18,7 @@ const {
   canCreatureOfferMentorship,
   latestMentorshipLessonLine,
   mentorCanTeach,
+  maybeCreateMentorshipPracticePrompt,
   maybeRecordMentorshipLessonFeedback,
   mentorshipLessonFeedbackDescription,
   mentorshipLessonRecentLine,
@@ -25,6 +27,10 @@ const {
   mentorshipObservationContext,
   mentorshipOfferKeyboard,
   mentorshipOfferText,
+  mentorshipPracticePromptAction,
+  mentorshipPracticePromptDescription,
+  mentorshipPracticePromptKeyboard,
+  mentorshipPracticePromptText,
   mentorshipSkillForCreature,
   mentorshipTrackingObservationLearningInput,
   mentorshipTrackingRouteMemoryContext,
@@ -38,6 +44,7 @@ assert.equal(MENTORSHIP_STATUS_DECLINED, "DECLINED");
 assert.equal(MENTORSHIP_STATUS_ENDED, "ENDED");
 assert.equal(MENTORSHIP_OBSERVATION_EVENT_TITLE, "Mentorship observation");
 assert.equal(MENTORSHIP_LESSON_FEEDBACK_EVENT_TITLE, "Mentorship lesson feedback");
+assert.equal(MENTORSHIP_PRACTICE_PROMPT_EVENT_TITLE, "Mentorship practice prompt");
 assert.equal(TRACKING_MENTORSHIP_FOLLOWED_MOVEMENT_CONTEXT, "mentorship_followed_movement");
 
 assert.equal(mentorshipSkillForCreature({ professionKey: "herbalist", professionName: "Herbalist" }), "gathering");
@@ -136,6 +143,19 @@ assert.equal(
   mentorshipLessonFeedbackDescription({ playerId: 7, mentorCreatureId: 11, skillKey: "tracking", contextKey: "mentorship_followed_movement" }),
   "player=7; mentorCreature=11; skillKey=tracking; contextKey=mentorship_followed_movement",
 );
+assert.deepEqual(mentorshipPracticePromptAction({ skillKey: "gathering", contextKey: "resource:herbs" }), { action: "gather", resourceKey: "herbs" });
+assert.equal(mentorshipPracticePromptAction({ skillKey: "gathering", contextKey: "resource:honey" }), null);
+assert.equal(mentorshipPracticePromptAction({ skillKey: "tracking", contextKey: "mentorship_followed_movement" }), null);
+assert.equal(
+  mentorshipPracticePromptDescription({ playerId: 7, mentorCreatureId: 9, skillKey: "gathering", contextKey: "resource:herbs", action: "gather:herbs" }),
+  "player=7; mentorCreature=9; skillKey=gathering; contextKey=resource:herbs; action=gather:herbs",
+);
+assert.match(mentorshipPracticePromptText({ mentorName: "Орина", skillKey: "gathering", contextKey: "resource:herbs" }), /Тепер ти/);
+assert.match(mentorshipPracticePromptText({ mentorName: "Орина", skillKey: "gathering", contextKey: "resource:herbs", blocked: "no-resource" }), /нічого вчити рукою/);
+assert.doesNotMatch(mentorshipPracticePromptText({ mentorName: "Орина", skillKey: "gathering", contextKey: "resource:herbs" }), /\b(?:XP|level|bonus|amount|quest|daily)\b|\+\d|\d/u);
+const practiceKeyboard = mentorshipPracticePromptKeyboard({ action: "gather", resourceKey: "herbs" });
+assert.equal(practiceKeyboard.inline_keyboard[0][0].text, "Спробувати зібрати");
+assert.equal(practiceKeyboard.inline_keyboard[0][0].callback_data, "mentorship:practice:gather:herbs");
 
 const keyboard = mentorshipOfferKeyboard(42);
 assert.deepEqual(keyboard.inline_keyboard[0].map((button) => button.text), ["Так, хочу", "Не зараз"]);
@@ -199,6 +219,51 @@ function fakeMentorshipLessonDb(existingEvents = []) {
   return {
     playerMentorship: {
       findFirst: async () => null,
+    },
+    worldEvent: {
+      findMany: async ({ where, take }) => events
+        .filter((event) =>
+          (!where.type || event.type === where.type) &&
+          (!where.title || event.title === where.title) &&
+          (!where.playerId || event.playerId === where.playerId) &&
+          (!where.createdAt?.gte || event.createdAt >= where.createdAt.gte)
+        )
+        .sort((a, b) => b.createdAt - a.createdAt || b.id - a.id)
+        .slice(0, take ?? events.length),
+      create: async ({ data }) => {
+        const event = {
+          id: events.length + 1,
+          createdAt: data.createdAt ?? new Date(),
+          ...data,
+        };
+        events.push(event);
+        return event;
+      },
+    },
+    events,
+  };
+}
+
+function fakeMentorshipPracticePromptDb({ rows = [], resources = [{ locationId: 13, resourceKey: "herbs" }], existingEvents = [] } = {}) {
+  const events = existingEvents.map((event, index) => ({
+    id: index + 1,
+    createdAt: event.createdAt ?? new Date(),
+    ...event,
+  }));
+  return {
+    playerMentorship: {
+      findFirst: async ({ where }) => rows.find((row) =>
+        row.playerId === where.playerId &&
+        row.mentorCreatureId === where.mentorCreatureId &&
+        row.status === where.status &&
+        (!where.skillKey || row.skillKey === where.skillKey)
+      ) ?? null,
+    },
+    resourceNode: {
+      findFirst: async ({ where }) => resources.find((resource) =>
+        resource.locationId === where.locationId &&
+        resource.resourceKey === where.resourceType?.key
+      ) ? { id: 1 } : null,
     },
     worldEvent: {
       findMany: async ({ where, take }) => events
@@ -331,6 +396,70 @@ async function runAsyncAssertions() {
   assert.equal(lessonDb.events.length, 1);
   assert.equal(await latestMentorshipLessonLine({ playerId: 7, mentorCreatureId: 11, skillKey: "tracking" }, lessonDb), "Останнє, що зачепилося: трава видала крок раніше, ніж ви побачили слід.");
   assert.equal(await latestMentorshipLessonLine({ playerId: 7, mentorCreatureId: 9, skillKey: "tracking" }, lessonDb), null);
+
+  const mentorCreature = { id: 9, name: "Орина", species: { name: "людина", key: "human" } };
+  const promptDb = fakeMentorshipPracticePromptDb({
+    rows: [{ id: 1, playerId: 7, mentorCreatureId: 9, skillKey: "gathering", status: "ACTIVE", mentorCreature }],
+  });
+  const prompt = await maybeCreateMentorshipPracticePrompt({
+    playerId: 7,
+    mentorCreatureId: 9,
+    skillKey: "gathering",
+    contextKey: "resource:herbs",
+    locationId: 13,
+    now: new Date("2026-06-07T10:02:00Z"),
+  }, promptDb);
+  assert.equal(prompt.ok, true);
+  assert.match(prompt.text, /Тепер ти/);
+  assert.equal(prompt.keyboard.inline_keyboard[0][0].callback_data, "mentorship:practice:gather:herbs");
+  assert.equal(promptDb.events.length, 1);
+  assert.equal(promptDb.events[0].title, MENTORSHIP_PRACTICE_PROMPT_EVENT_TITLE);
+  assert.match(promptDb.events[0].description, /action=gather:herbs/);
+  const duplicatePrompt = await maybeCreateMentorshipPracticePrompt({
+    playerId: 7,
+    mentorCreatureId: 9,
+    skillKey: "gathering",
+    contextKey: "resource:herbs",
+    locationId: 13,
+    now: new Date("2026-06-07T10:03:00Z"),
+  }, promptDb);
+  assert.equal(duplicatePrompt.ok, false);
+  assert.equal(duplicatePrompt.reason, "cooldown");
+  assert.equal(promptDb.events.length, 1);
+
+  const inactivePromptDb = fakeMentorshipPracticePromptDb({
+    rows: [{ id: 2, playerId: 7, mentorCreatureId: 9, skillKey: "gathering", status: "OFFERED", mentorCreature }],
+  });
+  assert.equal((await maybeCreateMentorshipPracticePrompt({
+    playerId: 7,
+    mentorCreatureId: 9,
+    skillKey: "gathering",
+    contextKey: "resource:herbs",
+    locationId: 13,
+  }, inactivePromptDb)).ok, false);
+  const unsupportedPrompt = await maybeCreateMentorshipPracticePrompt({
+    playerId: 7,
+    mentorCreatureId: 9,
+    skillKey: "gathering",
+    contextKey: "resource:honey",
+    locationId: 13,
+  }, promptDb);
+  assert.equal(unsupportedPrompt.ok, false);
+  assert.equal(unsupportedPrompt.reason, "unsupported-context");
+  const emptyPromptDb = fakeMentorshipPracticePromptDb({
+    rows: [{ id: 3, playerId: 7, mentorCreatureId: 9, skillKey: "gathering", status: "ACTIVE", mentorCreature }],
+    resources: [],
+  });
+  const emptyPrompt = await maybeCreateMentorshipPracticePrompt({
+    playerId: 7,
+    mentorCreatureId: 9,
+    skillKey: "gathering",
+    contextKey: "resource:herbs",
+    locationId: 13,
+  }, emptyPromptDb);
+  assert.equal(emptyPrompt.ok, false);
+  assert.equal(emptyPrompt.reason, "no-resource");
+  assert.match(emptyPrompt.text, /нічого вчити рукою/);
 }
 
 assert.ok(
@@ -344,6 +473,10 @@ assert.ok(
   "mentorship yes/no handling should run before pending free-text reply consumption",
 );
 assert.match(aliases, /replyTarget:pending/);
+
+const gatherHandler = fs.readFileSync("src/handlers/gather.ts", "utf8");
+assert.match(gatherHandler, /mentorship:practice:gather:\(berries\|mushrooms\|herbs\)/);
+assert.match(gatherHandler, /submitGather\(bot, ctx, ctx\.match\[1\] as GatherKey, true\)/);
 
 runAsyncAssertions()
   .then(() => console.log("Mentorship foundation helpers OK"))

@@ -7,6 +7,24 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.4 - Mentorship guided practice prompt - 12026-06-07
+
+### Added
+
+- Added the first mentorship-guided practice prompt after a real mentored gathering lesson.
+- Added cooldowned `Mentorship practice prompt` WorldEvent markers so mentors do not suggest the same nearby practice moment repeatedly.
+- Added a `Спробувати зібрати` prompt button that routes into the existing gather action path for supported herbs, berries and mushrooms.
+
+### Changed
+
+- Mentored gathering observation can now return prompt context only when a lesson marker was actually created.
+- Location/look observation surfaces can send the lesson line and then, if eligible, the optional practice prompt.
+
+### Risks
+
+- The first guided-practice prompt covers gathering only; tracking prompts remain a follow-up so the route-memory/track UI cadence stays narrow.
+- Prompt markers still use WorldEvent cooldowns; structured marker storage remains the performance follow-up if slow logs show marker lookups as hot.
+
 ## 0.16.3 - Mentorship lesson feedback and reply polish - 12026-06-07
 
 ### Added

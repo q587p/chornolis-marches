@@ -47,6 +47,7 @@ import { isUnclaimedHerbivoreCorpseForScavenging, predatorClaimedCorpseAction, p
 import { predatorKillCurrentAction, predatorKillObserverText, predatorMissCurrentAction, predatorMissObserverText, predatorWoundCurrentAction, predatorWoundObserverText } from "./predatorActionText";
 import { ATTACK_OBSERVATION_GROWTH_MESSAGE, ATTACK_PRACTICE_GROWTH_MESSAGE, isAttackPracticeMilestone, recordAttackKillSource, recordAttackObservation, recordAttackPracticeLearning, recordCreatureAttackObservation } from "./attackLearning";
 import { GATHERING_OBSERVATION_GROWTH_MESSAGE, GATHERING_PRACTICE_GROWTH_MESSAGE, gatheringSkillEffectForPlayer, isGatheringPracticeMilestone, recordGatheringObservation, recordGatheringSource } from "./gatheringLearning";
+import { maybeCreateMentorshipPracticePrompt } from "./mentorship";
 import { COOKING_OBSERVATION_GROWTH_MESSAGE, COOKING_PRACTICE_GROWTH_MESSAGE, FRESHENING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_PRACTICE_GROWTH_MESSAGE, recordCookingObservation, recordFresheningObservation, recordFresheningSource } from "./foodLearning";
 import { maybeHighSkillQualitativeOutcome } from "./highSkillOutcomes";
 import { notifyPlayerObservers, playerRestStopObserverText } from "./playerVisibility";
@@ -979,6 +980,10 @@ async function completeLook(bot: Bot, action: WorldAction) {
         const observation = await recordGatheringObservation({ playerId: player.id, locationId });
         if (observation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
         if (observation.mentorshipLessonText) noteKnownMessage(await bot.api.sendMessage(chatId, observation.mentorshipLessonText));
+        if (observation.mentorshipLessonContext) {
+          const prompt = await maybeCreateMentorshipPracticePrompt(observation.mentorshipLessonContext);
+          if (prompt.text) noteKnownMessage(await bot.api.sendMessage(chatId, prompt.text, prompt.ok && prompt.keyboard ? { reply_markup: prompt.keyboard } : undefined));
+        }
       };
       const sendFoodObservationMessages = async () => {
         const freshening = await recordFresheningObservation({ playerId: player.id, locationId });
@@ -1053,6 +1058,10 @@ async function completeInspect(bot: Bot, action: WorldAction) {
       const gatheringObservation = await recordGatheringObservation({ playerId: player.id, locationId: player.currentLocationId });
       if (gatheringObservation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
       if (gatheringObservation.mentorshipLessonText) noteKnownMessage(await bot.api.sendMessage(chatId, gatheringObservation.mentorshipLessonText));
+      if (gatheringObservation.mentorshipLessonContext) {
+        const prompt = await maybeCreateMentorshipPracticePrompt(gatheringObservation.mentorshipLessonContext);
+        if (prompt.text) noteKnownMessage(await bot.api.sendMessage(chatId, prompt.text, prompt.ok && prompt.keyboard ? { reply_markup: prompt.keyboard } : undefined));
+      }
     }
     const fresheningObservation = await recordFresheningObservation({ playerId: player.id, locationId: player.currentLocationId });
     if (fresheningObservation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, FRESHENING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));

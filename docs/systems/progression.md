@@ -247,6 +247,13 @@ a cooldowned marker. `/mentor` can also show one compact recent-lesson hint.
 These lines never expose raw progress, XP, levels, amounts or chances, and they
 do not create progress by themselves.
 
+`0.16.4` adds the first guided practice prompt after a real mentored lesson. The
+initial prompt is gathering-only: after a cooldowned gathering lesson, if the
+same supported resource is still available nearby, the mentor can invite the
+player to try the existing gather action. The prompt is optional, does not grant
+learning by itself and does not change success, stamina, rewards or practice
+rules. Tracking prompts remain a separate follow-up.
+
 After the actor-learning foundation, the intended near-term order is:
 
 - `0.15.46`: guarded follow assist is in testing as an opt-in ordinary-exit

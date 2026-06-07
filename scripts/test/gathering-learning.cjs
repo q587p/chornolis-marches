@@ -363,6 +363,13 @@ function fakeGatheringObservationDb(sourceDescription = "actorCreature=9; succes
   assert.equal(mentoredDb.events.some((event) => event.title === MENTORSHIP_LESSON_FEEDBACK_EVENT_TITLE), true);
   assert.match(mentored.mentorshipLessonText, /стебло|рука|землю/u);
   assert.doesNotMatch(mentored.mentorshipLessonText, /\b(?:XP|level|bonus|amount)\b|\+\d|\d/u);
+  assert.deepEqual(mentored.mentorshipLessonContext, {
+    playerId: 7,
+    mentorCreatureId: 9,
+    skillKey: "gathering",
+    contextKey: "resource:herbs",
+    locationId: 13,
+  });
 
   const nonMentorDb = fakeGatheringObservationDb("actorCreature=10; success=true; resource=herbs", [
     { playerId: 7, mentorCreatureId: 9, skillKey: "gathering", status: "ACTIVE" },
@@ -374,6 +381,7 @@ function fakeGatheringObservationDb(sourceDescription = "actorCreature=9; succes
   }, nonMentorDb);
   assert.equal(nonMentor.mentorshipBonus, false);
   assert.equal(nonMentor.mentorshipLessonText, null);
+  assert.equal(nonMentor.mentorshipLessonContext, null);
   assert.equal(nonMentor.learningAmount, 1);
   assert.equal(nonMentorDb.progressRows[0].totalProgress, 1);
   assert.equal(nonMentorDb.events.some((event) => event.title === MENTORSHIP_OBSERVATION_EVENT_TITLE), false);
@@ -388,6 +396,7 @@ function fakeGatheringObservationDb(sourceDescription = "actorCreature=9; succes
   }, inactiveMentorshipDb);
   assert.equal(inactiveMentorship.mentorshipBonus, false);
   assert.equal(inactiveMentorship.mentorshipLessonText, null);
+  assert.equal(inactiveMentorship.mentorshipLessonContext, null);
   assert.equal(inactiveMentorship.learningAmount, 1);
   assert.equal(inactiveMentorshipDb.progressRows[0].totalProgress, 1);
 

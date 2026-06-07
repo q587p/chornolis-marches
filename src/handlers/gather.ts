@@ -124,4 +124,8 @@ export function registerGatherHandlers(bot: Bot) {
   bot.callbackQuery(/^gather:(berries|mushrooms|herbs)$/, async (ctx) => {
     await submitGather(bot, ctx, ctx.match[1] as GatherKey, true);
   });
+
+  bot.callbackQuery(/^mentorship:practice:gather:(berries|mushrooms|herbs)$/, async (ctx) => {
+    await submitGather(bot, ctx, ctx.match[1] as GatherKey, true);
+  });
 }
