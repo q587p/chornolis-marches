@@ -10,8 +10,10 @@ export const MENTORSHIP_STATUS_ACTIVE = "ACTIVE";
 export const MENTORSHIP_STATUS_DECLINED = "DECLINED";
 export const MENTORSHIP_STATUS_ENDED = "ENDED";
 export const MENTORSHIP_OBSERVATION_EVENT_TITLE = "Mentorship observation";
+export const MENTORSHIP_LESSON_FEEDBACK_EVENT_TITLE = "Mentorship lesson feedback";
 export const TRACKING_MENTORSHIP_FOLLOWED_MOVEMENT_CONTEXT = "mentorship_followed_movement";
 export const MENTORSHIP_OFFER_COOLDOWN_MS = Number(process.env.MENTORSHIP_OFFER_COOLDOWN_MS || 10 * 60_000);
+export const MENTORSHIP_LESSON_FEEDBACK_COOLDOWN_MS = Number(process.env.MENTORSHIP_LESSON_FEEDBACK_COOLDOWN_MS || 10 * 60_000);
 
 const APOSTROPHES = /[ʼ’`´]/g;
 const MENTORSHIP_ANSWER_PUNCTUATION = /[!?.,;:]+/g;
@@ -32,6 +34,16 @@ export type MentorshipAnswerKind = "accept" | "decline" | "unclear";
 type MentorshipDb = {
   playerMentorship: any;
   worldEvent?: any;
+};
+
+type MentorshipLessonInput = {
+  playerId: number;
+  mentorCreatureId: number;
+  skillKey: string;
+  contextKey: string;
+  locationId?: number | null;
+  mentorName?: string | null;
+  now?: Date;
 };
 
 function normalizeMentorshipAnswerInput(text: string) {
@@ -249,6 +261,112 @@ export async function mentorshipTrackingObservationLearningInput(input: {
   };
 }
 
+export function mentorshipLessonText(input: Pick<MentorshipLessonInput, "skillKey" | "mentorName">) {
+  const mentorName = input.mentorName?.trim();
+  if (input.skillKey === "tracking") {
+    return mentorName
+      ? `${mentorName} не дивиться на слід довше за вас. Погляд лягає раніше — туди, де земля ще не встигла замовкнути.`
+      : "Ви не просто бачите, куди рушив мисливець; починаєте вловлювати, чому трава видала цей крок.";
+  }
+  return mentorName
+    ? `${mentorName} не пояснює довго. Рука просто показує, де стебло саме відпускає землю.`
+    : "Ви не просто бачите, як працює наставник; ви починаєте ловити, чому рука не рве зайвого.";
+}
+
+export function mentorshipLessonRecentLine(input: Pick<MentorshipLessonInput, "skillKey" | "contextKey">) {
+  if (input.skillKey === "tracking") {
+    return "Останнє, що зачепилося: трава видала крок раніше, ніж ви побачили слід.";
+  }
+  return "Останнє, що зачепилося: рука наставника не рве зайвого.";
+}
+
+export function mentorshipLessonFeedbackDescription(input: Pick<MentorshipLessonInput, "playerId" | "mentorCreatureId" | "skillKey" | "contextKey">) {
+  return `player=${input.playerId}; mentorCreature=${input.mentorCreatureId}; skillKey=${input.skillKey}; contextKey=${input.contextKey}`;
+}
+
+function parseMentorshipLessonFeedbackDescription(description?: string | null) {
+  if (!description) return null;
+  const playerId = Number(description.match(/(?:^|;\s*)player=(\d+)/u)?.[1]);
+  const mentorCreatureId = Number(description.match(/(?:^|;\s*)mentorCreature=(\d+)/u)?.[1]);
+  const skillKey = description.match(/(?:^|;\s*)skillKey=([^;]+)/u)?.[1]?.trim();
+  const contextKey = description.match(/(?:^|;\s*)contextKey=([^;]+)/u)?.[1]?.trim();
+  if (!Number.isSafeInteger(playerId) || !Number.isSafeInteger(mentorCreatureId) || !skillKey || !contextKey) return null;
+  return { playerId, mentorCreatureId, skillKey, contextKey };
+}
+
+function mentorshipLessonFeedbackMatches(description: string | null | undefined, input: Pick<MentorshipLessonInput, "playerId" | "mentorCreatureId" | "skillKey" | "contextKey">) {
+  const parsed = parseMentorshipLessonFeedbackDescription(description);
+  return Boolean(parsed &&
+    parsed.playerId === input.playerId &&
+    parsed.mentorCreatureId === input.mentorCreatureId &&
+    parsed.skillKey === input.skillKey &&
+    parsed.contextKey === input.contextKey);
+}
+
+export async function recentMentorshipLessonFeedback(input: Pick<MentorshipLessonInput, "playerId" | "mentorCreatureId" | "skillKey" | "contextKey"> & { now?: Date }, db: MentorshipDb = prisma) {
+  if (!db.worldEvent || MENTORSHIP_LESSON_FEEDBACK_COOLDOWN_MS <= 0) return null;
+  const now = input.now ?? new Date();
+  const since = new Date(now.getTime() - MENTORSHIP_LESSON_FEEDBACK_COOLDOWN_MS);
+  const events = await db.worldEvent.findMany({
+    where: {
+      type: "SYSTEM",
+      title: MENTORSHIP_LESSON_FEEDBACK_EVENT_TITLE,
+      playerId: input.playerId,
+      createdAt: { gte: since },
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: 8,
+  });
+  return events.find((event: any) => mentorshipLessonFeedbackMatches(event.description, input)) ?? null;
+}
+
+export async function maybeRecordMentorshipLessonFeedback(input: MentorshipLessonInput, db: MentorshipDb = prisma) {
+  if (!db.worldEvent) return { ok: false as const, reason: "missing-world-event" as const };
+  const recent = await recentMentorshipLessonFeedback(input, db);
+  if (recent) return { ok: false as const, reason: "cooldown" as const, event: recent };
+  const description = mentorshipLessonFeedbackDescription(input);
+  const event = await db.worldEvent.create({
+    data: {
+      type: "SYSTEM",
+      title: MENTORSHIP_LESSON_FEEDBACK_EVENT_TITLE,
+      description,
+      playerId: input.playerId,
+      locationId: input.locationId ?? undefined,
+      ...(input.now ? { createdAt: input.now } : {}),
+    },
+  });
+  return {
+    ok: true as const,
+    event,
+    description,
+    text: mentorshipLessonText(input),
+  };
+}
+
+export async function latestMentorshipLessonLine(input: { playerId: number; mentorCreatureId?: number | null; skillKey?: string | null }, db: MentorshipDb = prisma) {
+  if (!db.worldEvent) return null;
+  const events = await db.worldEvent.findMany({
+    where: {
+      type: "SYSTEM",
+      title: MENTORSHIP_LESSON_FEEDBACK_EVENT_TITLE,
+      playerId: input.playerId,
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: 5,
+  });
+  for (const event of events) {
+    const parsed = parseMentorshipLessonFeedbackDescription(event.description);
+    if (input.mentorCreatureId && parsed?.mentorCreatureId !== input.mentorCreatureId) continue;
+    if (input.skillKey && parsed?.skillKey !== input.skillKey) continue;
+    if (parsed) return mentorshipLessonRecentLine(parsed);
+  }
+  return null;
+}
+
+export async function latestMentorshipLessonLineForPlayer(playerId: number, db: MentorshipDb = prisma) {
+  return latestMentorshipLessonLine({ playerId }, db);
+}
+
 export async function maybeOfferMentorshipAfterFollow(input: {
   playerId: number;
   mentorCreatureId: number;
@@ -428,10 +546,16 @@ export async function mentorshipStatusText(playerId: number) {
     const assistLine = intent?.assistEnabled
       ? "Автокрок: увімкнено."
       : "Автокрок: вимкнено. Увімкнути: /follow_assist on.";
+    const recentLessonLine = await latestMentorshipLessonLine({
+      playerId,
+      mentorCreatureId: mentorship.mentorCreatureId,
+      skillKey: mentorship.skillKey,
+    });
     return [
       `Наука: ${forms.nominative} — ${skill}.`,
       followLine,
       assistLine,
+      ...(recentLessonLine ? [recentLessonLine] : []),
       "Це домовленість дивитися й іти поруч, не гарантія знання.",
     ].join("\n");
   }

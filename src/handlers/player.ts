@@ -435,6 +435,9 @@ export async function showLocationForPlayer(telegramId: number, reply: (text: st
     if (observation.milestone) {
       noteKnownMessage(await reply(GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
     }
+    if (observation.mentorshipLessonText) {
+      noteKnownMessage(await reply(observation.mentorshipLessonText));
+    }
     const fresheningObservation = await recordFresheningObservation({ playerId: player.id, locationId });
     if (fresheningObservation.milestone) {
       noteKnownMessage(await reply(FRESHENING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));

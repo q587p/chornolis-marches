@@ -13,7 +13,7 @@ import { FOLLOW_TARGET_CREATURE, FOLLOW_TARGET_PLAYER, type FollowTargetType } f
 import { movementDurationMs } from "./actionRules";
 import { performOrQueuePlayerAction } from "./actionLifecycle";
 import { locationLockedExitMessageForPlayer } from "./tutorial";
-import { mentorshipTrackingObservationLearningInput } from "./mentorship";
+import { maybeRecordMentorshipLessonFeedback, mentorshipTrackingObservationLearningInput } from "./mentorship";
 
 export const FOLLOW_ROUTE_MEMORY_EVENT_TITLE = "Follow intent route memory";
 export const FOLLOW_ROUTE_HIDDEN_MEMORY_EVENT_TITLE = "Follow intent hidden route memory";
@@ -913,6 +913,19 @@ async function rememberFollowedTargetVisibleMoveInner(bot: Bot, input: {
           });
           if (mentorshipLearningInput) {
             await recordLearningProgress(mentorshipLearningInput);
+            if (input.target.type === FOLLOW_TARGET_CREATURE) {
+              const lesson = await maybeRecordMentorshipLessonFeedback({
+                playerId: intent.playerId,
+                mentorCreatureId: input.target.id,
+                skillKey: "tracking",
+                contextKey: mentorshipLearningInput.contextKey,
+                locationId: input.sourceLocationId,
+                mentorName: label,
+              });
+              if (lesson.ok && present) {
+                await sendFollowRouteMemoryMessage(bot, intent.player, lesson.text);
+              }
+            }
           }
         }
         let assistResult: Awaited<ReturnType<typeof maybeQueueFollowAssistMove>> | null = null;

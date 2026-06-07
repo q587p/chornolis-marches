@@ -7,6 +7,7 @@ require("ts-node/register");
 
 const {
   MENTORSHIP_OBSERVATION_EVENT_TITLE,
+  MENTORSHIP_LESSON_FEEDBACK_EVENT_TITLE,
   MENTORSHIP_STATUS_ACTIVE,
   MENTORSHIP_STATUS_DECLINED,
   MENTORSHIP_STATUS_ENDED,
@@ -14,7 +15,12 @@ const {
   activeMentorshipForPlayer,
   activeMentorshipForPlayerAndMentor,
   canCreatureOfferMentorship,
+  latestMentorshipLessonLine,
   mentorCanTeach,
+  maybeRecordMentorshipLessonFeedback,
+  mentorshipLessonFeedbackDescription,
+  mentorshipLessonRecentLine,
+  mentorshipLessonText,
   mentorshipObservationBonusForSource,
   mentorshipObservationContext,
   mentorshipOfferKeyboard,
@@ -31,6 +37,7 @@ assert.equal(MENTORSHIP_STATUS_ACTIVE, "ACTIVE");
 assert.equal(MENTORSHIP_STATUS_DECLINED, "DECLINED");
 assert.equal(MENTORSHIP_STATUS_ENDED, "ENDED");
 assert.equal(MENTORSHIP_OBSERVATION_EVENT_TITLE, "Mentorship observation");
+assert.equal(MENTORSHIP_LESSON_FEEDBACK_EVENT_TITLE, "Mentorship lesson feedback");
 assert.equal(TRACKING_MENTORSHIP_FOLLOWED_MOVEMENT_CONTEXT, "mentorship_followed_movement");
 
 assert.equal(mentorshipSkillForCreature({ professionKey: "herbalist", professionName: "Herbalist" }), "gathering");
@@ -115,6 +122,21 @@ const hunterOffer = mentorshipOfferText({ name: "Лукан" }, "tracking");
 assert.match(hunterOffer, /Лукан/);
 assert.match(hunterOffer, /Учитися хочеш/);
 
+for (const text of [
+  mentorshipLessonText({ skillKey: "gathering", mentorName: "Орина" }),
+  mentorshipLessonText({ skillKey: "tracking", mentorName: "Лукан" }),
+  mentorshipLessonRecentLine({ skillKey: "gathering", contextKey: "resource:herbs" }),
+  mentorshipLessonRecentLine({ skillKey: "tracking", contextKey: "mentorship_followed_movement" }),
+]) {
+  assert.doesNotMatch(text, /\b(?:XP|level|bonus|amount)\b|\+\d|\d/u);
+}
+assert.match(mentorshipLessonText({ skillKey: "gathering", mentorName: "Орина" }), /Орина/);
+assert.match(mentorshipLessonText({ skillKey: "tracking", mentorName: "Лукан" }), /Лукан/);
+assert.equal(
+  mentorshipLessonFeedbackDescription({ playerId: 7, mentorCreatureId: 11, skillKey: "tracking", contextKey: "mentorship_followed_movement" }),
+  "player=7; mentorCreature=11; skillKey=tracking; contextKey=mentorship_followed_movement",
+);
+
 const keyboard = mentorshipOfferKeyboard(42);
 assert.deepEqual(keyboard.inline_keyboard[0].map((button) => button.text), ["Так, хочу", "Не зараз"]);
 assert.deepEqual(keyboard.inline_keyboard[0].map((button) => button.callback_data), ["mentorship:accept:42", "mentorship:decline:42"]);
@@ -165,6 +187,40 @@ function fakeMentorshipDb(rows) {
         (!where.skillKey || row.skillKey === where.skillKey)
       ) ?? null,
     },
+  };
+}
+
+function fakeMentorshipLessonDb(existingEvents = []) {
+  const events = existingEvents.map((event, index) => ({
+    id: index + 1,
+    createdAt: event.createdAt ?? new Date(),
+    ...event,
+  }));
+  return {
+    playerMentorship: {
+      findFirst: async () => null,
+    },
+    worldEvent: {
+      findMany: async ({ where, take }) => events
+        .filter((event) =>
+          (!where.type || event.type === where.type) &&
+          (!where.title || event.title === where.title) &&
+          (!where.playerId || event.playerId === where.playerId) &&
+          (!where.createdAt?.gte || event.createdAt >= where.createdAt.gte)
+        )
+        .sort((a, b) => b.createdAt - a.createdAt || b.id - a.id)
+        .slice(0, take ?? events.length),
+      create: async ({ data }) => {
+        const event = {
+          id: events.length + 1,
+          createdAt: data.createdAt ?? new Date(),
+          ...data,
+        };
+        events.push(event);
+        return event;
+      },
+    },
+    events,
   };
 }
 
@@ -249,6 +305,32 @@ async function runAsyncAssertions() {
     source: "visible_move",
     visibility: "clear",
   }, activeDb), null);
+
+  const lessonDb = fakeMentorshipLessonDb();
+  const lesson = await maybeRecordMentorshipLessonFeedback({
+    playerId: 7,
+    mentorCreatureId: 11,
+    skillKey: "tracking",
+    contextKey: "mentorship_followed_movement",
+    mentorName: "Лукан",
+    now: new Date("2026-06-07T10:00:00Z"),
+  }, lessonDb);
+  assert.equal(lesson.ok, true);
+  assert.match(lesson.text, /Лукан/);
+  assert.equal(lessonDb.events.length, 1);
+  const cooldownLesson = await maybeRecordMentorshipLessonFeedback({
+    playerId: 7,
+    mentorCreatureId: 11,
+    skillKey: "tracking",
+    contextKey: "mentorship_followed_movement",
+    mentorName: "Лукан",
+    now: new Date("2026-06-07T10:01:00Z"),
+  }, lessonDb);
+  assert.equal(cooldownLesson.ok, false);
+  assert.equal(cooldownLesson.reason, "cooldown");
+  assert.equal(lessonDb.events.length, 1);
+  assert.equal(await latestMentorshipLessonLine({ playerId: 7, mentorCreatureId: 11, skillKey: "tracking" }, lessonDb), "Останнє, що зачепилося: трава видала крок раніше, ніж ви побачили слід.");
+  assert.equal(await latestMentorshipLessonLine({ playerId: 7, mentorCreatureId: 9, skillKey: "tracking" }, lessonDb), null);
 }
 
 assert.ok(
@@ -258,7 +340,7 @@ assert.ok(
 );
 assert.ok(
   aliases.indexOf("if (await maybeHandleMentorshipAnswer(ctx)) return;") <
-  aliases.indexOf("consumePendingReplyMode(player.id)"),
+  aliases.indexOf("consumePendingReplyModeResult(player.id)"),
   "mentorship yes/no handling should run before pending free-text reply consumption",
 );
 assert.match(aliases, /replyTarget:pending/);

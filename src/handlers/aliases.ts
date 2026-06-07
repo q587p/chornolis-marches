@@ -54,9 +54,10 @@ import { playerForms } from "../services/grammar";
 import { putInventoryIntoLocalFeature } from "../services/carcassDropoff";
 import {
   clearPendingReplyMode,
-  consumePendingReplyMode,
+  consumePendingReplyModeResult,
   isPendingReplyCancelText,
   latestRememberedReplyTarget,
+  PENDING_REPLY_TIMEOUT_TEXT,
   pendingReplyModePrompt,
   setPendingReplyMode,
   type RememberedReplyTarget,
@@ -835,7 +836,7 @@ async function submitReply(bot: Bot, ctx: any, text: string, targetOverride?: Re
   if (!player || !player.currentLocationId) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const safeText = stripUnsafeText(text);
-  if (!safeText) return void (await ctx.reply("Напиши так: <i>reply</i> текст", { parse_mode: "HTML" }));
+  if (!safeText) return void (await ctx.reply("Можна натиснути «Відповісти» під останнім зверненням або написати <i>/reply</i> текст.", { parse_mode: "HTML" }));
 
   const target = targetOverride ?? await lastAddressedSpeakerName(player);
   if (!target) return void (await ctx.reply("Поки немає репліки, на яку можна відповісти. Спробуйте звичайне /say або зверніться до видимого персонажа."));
@@ -1835,8 +1836,9 @@ export function registerAliasHandlers(bot: Bot) {
       }
       if (await maybeHandleMentorshipAnswer(ctx)) return;
       if (player) {
-        const pendingReply = consumePendingReplyMode(player.id);
-        if (pendingReply) return submitReply(bot, ctx, ctx.message.text, pendingReply);
+        const pendingReply = consumePendingReplyModeResult(player.id);
+        if (pendingReply.kind === "ready") return submitReply(bot, ctx, ctx.message.text, pendingReply.target);
+        if (pendingReply.kind === "expired") return void (await ctx.reply(PENDING_REPLY_TIMEOUT_TEXT));
       }
       return next();
     }
