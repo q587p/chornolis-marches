@@ -15,7 +15,10 @@ const {
   isGatheringPracticeMilestone,
 } = require("../../src/services/gatheringLearningRules");
 const {
+  MENTORSHIP_LESSON_FEEDBACK_EVENT_TITLE,
   MENTORSHIP_OBSERVATION_EVENT_TITLE,
+} = require("../../src/services/mentorship");
+const {
   gatheringLearningContextKeyForResource,
   gatheringSkillEffectForProgressRows,
   observableGatheringContextKey,
@@ -357,6 +360,9 @@ function fakeGatheringObservationDb(sourceDescription = "actorCreature=9; succes
   assert.equal(mentoredDb.progressRows[0].contextKey, "resource:herbs");
   assert.equal(mentoredDb.progressRows[0].totalProgress, 2);
   assert.equal(mentoredDb.events.some((event) => event.title === MENTORSHIP_OBSERVATION_EVENT_TITLE), true);
+  assert.equal(mentoredDb.events.some((event) => event.title === MENTORSHIP_LESSON_FEEDBACK_EVENT_TITLE), true);
+  assert.match(mentored.mentorshipLessonText, /стебло|рука|землю/u);
+  assert.doesNotMatch(mentored.mentorshipLessonText, /\b(?:XP|level|bonus|amount)\b|\+\d|\d/u);
 
   const nonMentorDb = fakeGatheringObservationDb("actorCreature=10; success=true; resource=herbs", [
     { playerId: 7, mentorCreatureId: 9, skillKey: "gathering", status: "ACTIVE" },
@@ -367,6 +373,7 @@ function fakeGatheringObservationDb(sourceDescription = "actorCreature=9; succes
     now: new Date("2026-06-03T09:01:00Z"),
   }, nonMentorDb);
   assert.equal(nonMentor.mentorshipBonus, false);
+  assert.equal(nonMentor.mentorshipLessonText, null);
   assert.equal(nonMentor.learningAmount, 1);
   assert.equal(nonMentorDb.progressRows[0].totalProgress, 1);
   assert.equal(nonMentorDb.events.some((event) => event.title === MENTORSHIP_OBSERVATION_EVENT_TITLE), false);
@@ -380,6 +387,7 @@ function fakeGatheringObservationDb(sourceDescription = "actorCreature=9; succes
     now: new Date("2026-06-03T09:01:00Z"),
   }, inactiveMentorshipDb);
   assert.equal(inactiveMentorship.mentorshipBonus, false);
+  assert.equal(inactiveMentorship.mentorshipLessonText, null);
   assert.equal(inactiveMentorship.learningAmount, 1);
   assert.equal(inactiveMentorshipDb.progressRows[0].totalProgress, 1);
 

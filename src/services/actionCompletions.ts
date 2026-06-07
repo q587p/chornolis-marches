@@ -978,6 +978,7 @@ async function completeLook(bot: Bot, action: WorldAction) {
       const sendGatheringObservationMessage = async () => {
         const observation = await recordGatheringObservation({ playerId: player.id, locationId });
         if (observation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+        if (observation.mentorshipLessonText) noteKnownMessage(await bot.api.sendMessage(chatId, observation.mentorshipLessonText));
       };
       const sendFoodObservationMessages = async () => {
         const freshening = await recordFresheningObservation({ playerId: player.id, locationId });
@@ -1051,6 +1052,7 @@ async function completeInspect(bot: Bot, action: WorldAction) {
     if (target.kind === "player" || (!target.isAnimal && !target.isCorpse)) {
       const gatheringObservation = await recordGatheringObservation({ playerId: player.id, locationId: player.currentLocationId });
       if (gatheringObservation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+      if (gatheringObservation.mentorshipLessonText) noteKnownMessage(await bot.api.sendMessage(chatId, gatheringObservation.mentorshipLessonText));
     }
     const fresheningObservation = await recordFresheningObservation({ playerId: player.id, locationId: player.currentLocationId });
     if (fresheningObservation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, FRESHENING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));

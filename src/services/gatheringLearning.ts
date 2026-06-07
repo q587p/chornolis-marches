@@ -9,7 +9,7 @@ import {
   gatheringSourceDescription,
 } from "./gatheringLearningRules";
 import { learningLevelForTotalProgress, recordActorLearningProgress, recordLearningProgress } from "./learning";
-import { MENTORSHIP_OBSERVATION_EVENT_TITLE, mentorshipObservationBonusForSource } from "./mentorship";
+import { MENTORSHIP_OBSERVATION_EVENT_TITLE, maybeRecordMentorshipLessonFeedback, mentorshipObservationBonusForSource } from "./mentorship";
 
 export {
   GATHERING_OBSERVATION_GROWTH_MESSAGE,
@@ -221,6 +221,7 @@ export async function recordGatheringObservation(input: { playerId: number; loca
         observationCount: 0,
         canonicalProgressRecorded: false,
         canonicalMilestone: false,
+        mentorshipLessonText: null,
       };
     }
 
@@ -258,6 +259,7 @@ export async function recordGatheringObservation(input: { playerId: number; loca
         : { applies: false as const, amount: 1 };
       let canonicalProgressRecorded = false;
       let canonicalMilestone = false;
+      let mentorshipLessonText: string | null = null;
       if (contextKey) {
         try {
           const learning = await recordLearningProgress({
@@ -281,6 +283,14 @@ export async function recordGatheringObservation(input: { playerId: number; loca
                 locationId: input.locationId,
               },
             });
+            const lesson = await maybeRecordMentorshipLessonFeedback({
+              playerId: input.playerId,
+              mentorCreatureId: mentorshipBonus.mentorCreatureId,
+              skillKey: mentorshipBonus.skillKey,
+              contextKey: mentorshipBonus.contextKey,
+              locationId: input.locationId,
+            }, db as any);
+            if (lesson.ok) mentorshipLessonText = lesson.text;
           }
         } catch (error) {
           console.warn("Failed to write canonical gathering observation progress:", error);
@@ -313,6 +323,7 @@ export async function recordGatheringObservation(input: { playerId: number; loca
         canonicalProgressRecorded,
         canonicalMilestone,
         mentorshipBonus: mentorshipBonus.applies,
+        mentorshipLessonText,
         learningAmount: contextKey ? mentorshipBonus.amount : 0,
       };
     }
@@ -323,6 +334,7 @@ export async function recordGatheringObservation(input: { playerId: number; loca
       observationCount: 0,
       canonicalProgressRecorded: false,
       canonicalMilestone: false,
+      mentorshipLessonText: null,
     };
   } catch (error) {
     console.warn("Failed to record gathering observation:", error);
@@ -332,6 +344,7 @@ export async function recordGatheringObservation(input: { playerId: number; loca
       observationCount: 0,
       canonicalProgressRecorded: false,
       canonicalMilestone: false,
+      mentorshipLessonText: null,
     };
   }
 }

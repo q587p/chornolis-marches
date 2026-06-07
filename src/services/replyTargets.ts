@@ -4,6 +4,7 @@ import { prisma } from "../db";
 const REPLY_TARGET_EVENT_TITLE = "Reply target remembered";
 const REPLY_TARGET_KIND = "reply-target";
 export const PENDING_REPLY_MODE_TTL_MS = Number(process.env.PENDING_REPLY_MODE_TTL_MS || 2 * 60_000);
+export const PENDING_REPLY_TIMEOUT_TEXT = "Ця відповідь розійшлася з часом. Натисніть «Відповісти» ще раз або скажіть /reply <текст>.";
 
 type RememberedReplyTargetPayload = {
   kind: typeof REPLY_TARGET_KIND;
@@ -25,6 +26,11 @@ type PendingReplyMode = {
   createdAt: number;
 };
 
+export type PendingReplyModeResult =
+  | { kind: "none" }
+  | { kind: "ready"; target: RememberedReplyTarget }
+  | { kind: "expired"; target: RememberedReplyTarget };
+
 const pendingReplyModes = new Map<number, PendingReplyMode>();
 
 export function pendingReplyButton() {
@@ -40,12 +46,17 @@ export function setPendingReplyMode(playerId: number, target: RememberedReplyTar
   pendingReplyModes.set(playerId, { target, createdAt: now });
 }
 
-export function consumePendingReplyMode(playerId: number, now = Date.now()) {
+export function consumePendingReplyModeResult(playerId: number, now = Date.now()): PendingReplyModeResult {
   const pending = pendingReplyModes.get(playerId);
-  if (!pending) return null;
+  if (!pending) return { kind: "none" };
   pendingReplyModes.delete(playerId);
-  if (now - pending.createdAt > PENDING_REPLY_MODE_TTL_MS) return null;
-  return pending.target;
+  if (now - pending.createdAt > PENDING_REPLY_MODE_TTL_MS) return { kind: "expired", target: pending.target };
+  return { kind: "ready", target: pending.target };
+}
+
+export function consumePendingReplyMode(playerId: number, now = Date.now()) {
+  const result = consumePendingReplyModeResult(playerId, now);
+  return result.kind === "ready" ? result.target : null;
 }
 
 export function clearPendingReplyMode(playerId: number) {
@@ -54,7 +65,7 @@ export function clearPendingReplyMode(playerId: number) {
 
 export function isPendingReplyCancelText(text: string) {
   const normalized = String(text ?? "").trim().toLocaleLowerCase("uk-UA");
-  return ["/cancel", "cancel", "скасувати відповідь", "не відповідати"].includes(normalized);
+  return ["/cancel", "cancel", "скасувати", "скасувати відповідь", "не відповідати"].includes(normalized);
 }
 
 export function rememberedReplyTargetDescription(input: string | RememberedReplyTarget) {

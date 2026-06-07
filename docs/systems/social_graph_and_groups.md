@@ -203,6 +203,14 @@ hidden routes. The same slice adds a small `Відповісти` button for pri
 directed speech; it only prepares the next free-text message for the existing
 reply path and is not group chat or a shared party channel.
 
+As of `0.16.3`, active mentorship can occasionally return a short qualitative
+lesson line when the mentored observation bonus actually fires. The line is
+cooldowned, non-numeric and may appear in `/mentor` as a compact recent hint.
+It still does not grant learning on accept or make mentorship into group travel.
+The `Відповісти` button also has clearer timeout/cancel copy; known commands and
+aliases keep priority over pending reply text, and the button remains directed
+speech UX rather than shared chat.
+
 ### 3. Following Is Weaker Than Group Membership
 
 Following should be possible even without an existing contact. It means:

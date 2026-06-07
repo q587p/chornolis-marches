@@ -240,6 +240,13 @@ memory, stale movement, non-mentor movement and offered/declined mentorship do
 not count. This still does not grant learning on accept and does not add attack
 teaching, route replay or hidden-route sharing.
 
+`0.16.3` lets mentored learning occasionally speak back in a diegetic way. When
+the active mentorship bonus actually applies to gathering or tracking
+observation, the player may receive a short qualitative lesson line, guarded by
+a cooldowned marker. `/mentor` can also show one compact recent-lesson hint.
+These lines never expose raw progress, XP, levels, amounts or chances, and they
+do not create progress by themselves.
+
 After the actor-learning foundation, the intended near-term order is:
 
 - `0.15.46`: guarded follow assist is in testing as an opt-in ordinary-exit

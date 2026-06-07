@@ -7,6 +7,24 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.3 - Mentorship lesson feedback and reply polish - 12026-06-07
+
+### Added
+
+- Added rare qualitative mentorship lesson feedback when active gathering or tracking mentorship actually strengthens observation learning.
+- Added `Mentorship lesson feedback` WorldEvent markers and compact recent-lesson text for `/mentor` status without exposing raw progress numbers.
+- Added pending reply timeout copy so expired `Відповісти` mode tells players how to retry.
+
+### Changed
+
+- `/reply` with no text now mentions both the `Відповісти` button flow and the typed `/reply <text>` path.
+- Pending reply cancellation accepts `скасувати` in addition to the existing reply-cancel texts, while known aliases still run before pending reply text is consumed.
+
+### Risks
+
+- Mentorship lesson feedback still uses WorldEvent markers and cooldowns; if slow logs show marker lookups as a hotspot, structured marker storage remains the next performance step.
+- Reply mode is still intentionally in-process and short-lived, backed by persisted remembered reply targets rather than a durable conversation table.
+
 ## 0.16.2 - Tracking mentorship and reply button - 12026-06-07
 
 ### Added
