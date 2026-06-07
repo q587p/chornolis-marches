@@ -1,9 +1,10 @@
 import { Bot } from "grammy";
 import { buildMainReplyKeyboardForTelegramId, EMPTY_KEYBOARD_BUTTON } from "../ui/replyKeyboard";
-import { formatAliasSuggestion, suggestAliasEntries, suggestKeyboardLayoutAliasEntries } from "../input/aliases";
+import { formatAliasSuggestion, suggestAdminCommandEntries, suggestAliasEntries, suggestKeyboardLayoutAliasEntries } from "../input/aliases";
 import { escapeHtml, stripUnsafeText } from "../utils/text";
 import { getPlayerByTelegramId } from "../services/players";
 import { canOpenDreamGateWithSpeech, hasCompletedTutorial } from "../services/tutorial";
+import { isScribeAdmin } from "../services/adminAccess";
 
 function commandName(text: string) {
   const match = text.trim().match(/^\/([^\s@]+)(?:@\w+)?(?:\s|$)/u);
@@ -25,13 +26,27 @@ function formatSuggestionLines(suggestions: ReturnType<typeof suggestAliasEntrie
   return suggestions.map((suggestion) => `- ${escapeHtml(formatAliasSuggestion(suggestion))}`).join("\n");
 }
 
-function unknownInputSuggestionText(text: string) {
+function mergeSuggestions(...groups: ReturnType<typeof suggestAliasEntries>[]) {
+  const seen = new Set<string>();
+  const merged = [];
+  for (const suggestion of groups.flat()) {
+    const key = `${suggestion.alias}\u0000${suggestion.command ?? ""}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(suggestion);
+  }
+  return merged;
+}
+
+function unknownInputSuggestionText(text: string, options: { includeAdminCommands?: boolean } = {}) {
   const layoutSuggestions = suggestKeyboardLayoutAliasEntries(text);
   if (layoutSuggestions.length) {
     return `\n\nСхоже, це могла бути інша розкладка. Можливо, ти мав на увазі:\n${formatSuggestionLines(layoutSuggestions)}`;
   }
 
-  const suggestions = suggestAliasEntries(text);
+  const suggestions = options.includeAdminCommands
+    ? mergeSuggestions(suggestAdminCommandEntries(text), suggestAliasEntries(text))
+    : suggestAliasEntries(text);
   return suggestions.length
     ? `\n\nМожливо, ти мав на увазі:\n${formatSuggestionLines(suggestions)}`
     : "";
@@ -63,7 +78,7 @@ export function registerFallbackHandlers(bot: Bot) {
       }
 
       const safeText = escapeHtml(stripUnsafeText(text).trim().slice(0, 80));
-      const suggestionText = unknownInputSuggestionText(text);
+      const suggestionText = unknownInputSuggestionText(text, { includeAdminCommands: await isScribeAdmin(ctx.from?.id) });
 
       await ctx.reply(
         `Не зовсім розумію${safeText ? `: “${safeText}”` : ""}.${suggestionText}\n\n${fallbackNavigationHint()}${await unfinishedTutorialHint(ctx.from?.id)}`,
@@ -73,7 +88,7 @@ export function registerFallbackHandlers(bot: Bot) {
     }
 
     const command = commandName(text);
-    const suggestionText = unknownInputSuggestionText(text);
+    const suggestionText = unknownInputSuggestionText(text, { includeAdminCommands: await isScribeAdmin(ctx.from?.id) });
 
     await ctx.reply(
       `Не впізнаю команду ${command ? `/${escapeHtml(command)}` : "з таким записом"}.${suggestionText}\n\n${fallbackNavigationHint()}${await unfinishedTutorialHint(ctx.from?.id)}`,

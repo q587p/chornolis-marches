@@ -100,6 +100,10 @@ export type AliasSuggestion = {
   command?: string;
 };
 
+type AdminCommandSuggestion = AliasSuggestion & {
+  matches: string[];
+};
+
 const APOSTROPHES = /[ʼ’`´]/g;
 const TRAILING_PUNCTUATION = /[!?.,;:]+$/g;
 const EN_TO_UK_KEYBOARD: Record<string, string> = {
@@ -836,6 +840,52 @@ const SUGGESTABLE_PATTERN_ALIASES = [
 
 const SUGGESTABLE_ALIASES = [...new Set([...Object.keys(EXACT_ALIASES), ...Object.keys(DIRECTION_ALIASES), ...SUGGESTABLE_PATTERN_ALIASES])];
 
+const ADMIN_COMMAND_SUGGESTIONS: AdminCommandSuggestion[] = [
+  { alias: "adminMenu", command: "/adminMenu", matches: ["adminMenu", "adminmenu"] },
+  { alias: "adminHelp", command: "/adminHelp", matches: ["adminHelp", "adminhelp"] },
+  { alias: "adminSet", command: "/adminSet", matches: ["adminSet", "adminset"] },
+  { alias: "world", command: "/world", matches: ["world"] },
+  { alias: "chronicles_real", command: "/chronicles_real", matches: ["chronicles_real", "chronicles real"] },
+  { alias: "chronicles_backfill_players", command: "/chronicles_backfill_players", matches: ["chronicles_backfill_players", "chronicles backfill players"] },
+  { alias: "all dead", command: "/all dead", matches: ["all dead"] },
+  { alias: "playerAdmin", command: "/playerAdmin", matches: ["playerAdmin", "playeradmin", "player"] },
+  { alias: "learning", command: "/learning", matches: ["learning", "learn"] },
+  { alias: "call_scribes_audit", command: "/call_scribes_audit", matches: ["call_scribes_audit", "callScribesAudit", "callscribesaudit"] },
+  { alias: "call_scribes_approve", command: "/call_scribes_approve", matches: ["call_scribes_approve", "callScribesApprove", "callscribesapprove"] },
+  { alias: "timeDebug", command: "/timeDebug", matches: ["timeDebug", "timedebug"] },
+  { alias: "timeSet", command: "/timeSet", matches: ["timeSet", "timeset"] },
+  { alias: "weatherSet", command: "/weatherSet", matches: ["weatherSet", "weatherset"] },
+  { alias: "tutorialReset", command: "/tutorialReset", matches: ["tutorialReset", "tutorialreset"] },
+  { alias: "teleport", command: "/teleport", matches: ["teleport"] },
+  { alias: "tp", command: "/tp", matches: ["tp"] },
+  { alias: "debugGet", command: "/debugGet", matches: ["debugGet", "debugget"] },
+  { alias: "debugSet", command: "/debugSet", matches: ["debugSet", "debugset"] },
+  { alias: "restAdmin", command: "/restAdmin", matches: ["restAdmin", "restadmin"] },
+  { alias: "addCreature", command: "/addCreature", matches: ["addCreature", "addcreature"] },
+  { alias: "addCreatureCorpse", command: "/addCreatureCorpse", matches: ["addCreatureCorpse", "addcreaturecorpse"] },
+  { alias: "addCreatureHelp", command: "/addCreatureHelp", matches: ["addCreatureHelp", "addcreaturehelp"] },
+  { alias: "addResource", command: "/addResource", matches: ["addResource", "addresource", "addResourse", "addresourse"] },
+  { alias: "addResourceHelp", command: "/addResourceHelp", matches: ["addResourceHelp", "addresourcehelp", "addResourseHelp", "addresoursehelp"] },
+  { alias: "addCampfire", command: "/addCampfire", matches: ["addCampfire", "addcampfire"] },
+  { alias: "addTorch", command: "/addTorch", matches: ["addTorch", "addtorch"] },
+  { alias: "addLitTorch", command: "/addLitTorch", matches: ["addLitTorch", "addlittorch", "add lit torch"] },
+  { alias: "addTwigs", command: "/addTwigs", matches: ["addTwigs", "addtwigs"] },
+  { alias: "addItem", command: "/addItem", matches: ["addItem", "additem"] },
+  { alias: "carcassQuest", command: "/carcassQuest", matches: ["carcassQuest", "carcassquest"] },
+  { alias: "forceOld", command: "/forceOld", matches: ["forceOld", "forceold"] },
+  { alias: "cleanupCreature", command: "/cleanupCreature", matches: ["cleanupCreature", "cleanupcreature"] },
+  { alias: "cleanupCreatures", command: "/cleanupCreatures", matches: ["cleanupCreatures", "cleanupcreatures"] },
+  { alias: "reset", command: "/reset", matches: ["reset"] },
+  { alias: "tick", command: "/tick", matches: ["tick"] },
+  { alias: "tickGet", command: "/tickGet", matches: ["tickGet", "tickget"] },
+  { alias: "tickSet", command: "/tickSet", matches: ["tickSet", "tickset"] },
+  { alias: "restart", command: "/restart", matches: ["restart"] },
+  { alias: "archive_republish_preview", command: "/archive_republish_preview", matches: ["archive_republish_preview", "archive republish preview"] },
+  { alias: "archive_republish_queue", command: "/archive_republish_queue", matches: ["archive_republish_queue", "archive republish queue"] },
+  { alias: "archive_republish_status", command: "/archive_republish_status", matches: ["archive_republish_status", "archive republish status"] },
+  { alias: "archive_republish_cancel", command: "/archive_republish_cancel", matches: ["archive_republish_cancel", "archive republish cancel"] },
+];
+
 function normalizeSlashCommand(text: string) {
   return text.replace(/^\/([^\s@]+)@[A-Za-z0-9_]+/i, "/$1");
 }
@@ -1048,6 +1098,21 @@ export function suggestAliasEntries(raw: string, limit = 4): AliasSuggestion[] {
     .sort((a, b) => a.score - b.score || a.alias.length - b.alias.length || a.alias.localeCompare(b.alias, "uk"))
     .slice(0, limit)
     .map((item) => ({ alias: item.alias, command: slashCommandForAlias(item.alias) }));
+}
+
+export function suggestAdminCommandEntries(raw: string, limit = 4): AliasSuggestion[] {
+  const query = withoutLeadingSlash(normalizeInput(raw));
+  if (!query) return [];
+
+  return ADMIN_COMMAND_SUGGESTIONS
+    .map((suggestion) => {
+      const scores = suggestion.matches.map((match) => aliasSuggestionScore(query, withoutLeadingSlash(normalizeInput(match))));
+      return { ...suggestion, score: Math.min(...scores) };
+    })
+    .filter((item) => Number.isFinite(item.score) && item.matches.every((match) => withoutLeadingSlash(normalizeInput(match)) !== query))
+    .sort((a, b) => a.score - b.score || a.alias.length - b.alias.length || a.alias.localeCompare(b.alias, "uk"))
+    .slice(0, limit)
+    .map((item) => ({ alias: item.alias, command: item.command }));
 }
 
 export function suggestKeyboardLayoutAliasEntries(raw: string, limit = 4): AliasSuggestion[] {
