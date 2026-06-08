@@ -4,7 +4,12 @@ ADM-001-A,Dangerous scribe tool audit,done,technical,admin,medium,"admin,audit,s
 ADM-001-B,Scribe action audit helper,done,technical,admin,medium,"admin,audit,world-events",docs/planning/items/ADM-001-B.md
 ADM-001-C,Restart confirmation and HTML safety hardening,testing,technical,admin,high,"admin,safety,restart,slashless,html,features",docs/planning/items/ADM-001-C.md
 ADM-002,Scribe creature corpse creation command,testing,feature,admin,medium,"admin,creatures,corpses,testing",docs/planning/items/ADM-002-add-creature-corpse-command.md
-ALC-001,First herbal stamina elixir,backlog,feature,survival,high,"alchemy,herbs,berries,stamina,crafting,inventory",docs/planning/items/ALC-001-herbal-stamina-elixir.md
+ALC-001,First herbal stamina tincture,backlog,feature,survival,high,"alchemy,herbs,berries,stamina,bottles,crafting,inventory",docs/planning/items/ALC-001-herbal-stamina-elixir.md
+ALC-002,Root-pocket bottle cache and empty vessel resource,backlog,feature,survival,high,"alchemy,bottles,inventory,map,cellar,onboarding",docs/planning/items/ALC-002-bottle-cache-and-empty-vessels.md
+ALC-003,Healing and night-sight draughts,backlog,feature,survival,medium,"alchemy,healing,night,visibility,effects,mushrooms,wetland",docs/planning/items/ALC-003-healing-and-night-sight-draughts.md
+ALC-004,Herbalist bottle route and brewing demonstration,backlog,feature,npc,high,"npc,herbalist,alchemy,bottles,observation-learning,living-world",docs/planning/items/ALC-004-herbalist-bottle-route-and-brewing-demo.md
+ALC-005,Herbalist mentorship brewing hint,backlog,ux,learning,medium,"mentorship,herbalist,alchemy,bottles,learning,onboarding",docs/planning/items/ALC-005-mentorship-brewing-hints.md
+ALC-006,Herbalism skill and brewing failure policy,backlog,feature,learning,high,"herbalism,alchemy,learning,failure,bottles,crafting",docs/planning/items/ALC-006-herbalism-skill-and-failure-policy.md
 ANIMAL-001,Animal speech reactions,in_progress,feature,ecology,medium,"animals,speech,social,ecology,reactions",docs/planning/items/ANIMAL-001-speech-reactions.md
 APIARY-001,Seed old log apiary feature,testing,feature,ecology,medium,"apiary,bumblebee,world-seed,feature",docs/planning/items/APIARY-001-seed-apiary-feature.md
 APIARY-002,Passive bumblebee sting hazard,testing,feature,ecology,medium,"apiary,bumblebee,hazard,hp",docs/planning/items/APIARY-002-passive-sting-hazard.md
@@ -173,7 +178,9 @@ QA-WILLOW-001,"Willow Floodplain seed, map and route smoke",testing,qa,world,hig
 QA-WILLOW-002,Willow live command and vertical edge smoke,backlog,qa,world,medium,"willow-floodplain,qa,aliases,verticality,admin",docs/planning/items/QA-WILLOW-002-live-command-and-vertical-smoke.md
 QUOTE-001,Liminal signs and quotation layer,proposed,content,content,medium,"quotes,signs,atmosphere,lore,dream,owl",docs/planning/items/QUOTE-001-liminal-signs-and-quotation-layer.md
 RAVEN-001,Dream raven presence near the carrion ravine,backlog,feature,world,high,"raven,dream,carrion-ravine,onboarding,world-time,atmosphere",docs/planning/items/RAVEN-001-dream-raven-carrion-ravine-presence.md
+RECIPE-001,Minimal resource recipe service,backlog,technical,crafting,high,"recipes,crafting,resources,inventory,actors",docs/planning/items/RECIPE-001-minimal-resource-recipe-service.md
 REL-001,Release branch PR summary and risk discipline,testing,process,release,high,"release,github,pr,planning",docs/planning/items/REL-001-release-branch-pr-summary-risk.md
+RES-001,Wetland medicinal reagents,backlog,feature,resources,medium,"resources,riverbank,swamp,willow,alchemy,herbalism",docs/planning/items/RES-001-wetland-medicinal-reagents.md
 RET-001,Daily and weekly world tasks,backlog,feature,retention,medium,"retention,quests,daily,weekly,world-time",docs/planning/items/RET-001-daily-weekly-world-tasks.md
 RIVER-001,Bridge jump and river-current hazard,backlog,feature,survival,medium,"river,bridge,movement,hazard,survival",docs/planning/items/RIVER-001-bridge-jump-current-hazard.md
 SES-001-A,AFK and End Session controls,testing,feature,session,high,"telegram,session,afk,ux",docs/planning/items/SES-001-A.md
