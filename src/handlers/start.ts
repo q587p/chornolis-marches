@@ -678,6 +678,11 @@ async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayl
   }
 
   if (action === "spirit") {
+    await replyPlayerAutoStatus(ctx);
+    return true;
+  }
+
+  if (action === "spiritOn") {
     await requestOrEnablePlayerAuto(bot, ctx);
     return true;
   }

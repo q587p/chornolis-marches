@@ -7,6 +7,8 @@ require("ts-node/register");
 const {
   AUTO_START_COMMANDS,
   SPIRIT_CALL_START_COMMANDS,
+  SPIRIT_CALL_STATUS_COMMANDS,
+  SPIRIT_CALL_STOP_COMMANDS,
   autoCommandModeFromText,
 } = require("../../src/handlers/auto");
 const {
@@ -42,7 +44,9 @@ assert.match(spiritGuidedInspectionLine(true), /поклик духа/);
 assert.equal(spiritGuidedInspectionLine(false), undefined);
 
 assert.deepEqual([...AUTO_START_COMMANDS], ["auto_on", "auto_start"]);
-assert.deepEqual([...SPIRIT_CALL_START_COMMANDS], ["spirit", "dukh", "poklyk"]);
+assert.deepEqual([...SPIRIT_CALL_STATUS_COMMANDS], ["spirit", "dukh", "poklyk"]);
+assert.deepEqual([...SPIRIT_CALL_START_COMMANDS], ["spirit_on", "dukh_on", "poklyk_on"]);
+assert.deepEqual([...SPIRIT_CALL_STOP_COMMANDS], ["spirit_off", "dukh_off", "spirit_stop", "dukh_stop"]);
 assert.equal(autoCommandModeFromText("", "show"), "show");
 assert.equal(autoCommandModeFromText("", "start"), "start");
 assert.equal(autoCommandModeFromText("stop", "start"), "stop");
@@ -50,7 +54,8 @@ assert.equal(autoCommandModeFromText("stop", "start"), "stop");
 const autoHandlerSource = fs.readFileSync(path.join(__dirname, "../../src/handlers/auto.ts"), "utf8");
 assert.match(autoHandlerSource, /bot\.command\("auto", autoCommand\);/);
 assert.match(autoHandlerSource, /bot\.command\(\["auto_on", "auto_start"\], startAutoCommand\);/);
-assert.match(autoHandlerSource, /bot\.command\(\["spirit", "dukh", "poklyk"\], startAutoCommand\);/);
-assert.match(autoHandlerSource, /bot\.hears\(SPIRIT_CALL_LABEL[\s\S]*?requestOrEnablePlayerAuto\(bot, ctx\)/);
+assert.match(autoHandlerSource, /bot\.command\(\["spirit", "dukh", "poklyk"\], autoCommand\);/);
+assert.match(autoHandlerSource, /bot\.command\(\["spirit_on", "dukh_on", "poklyk_on"\], startAutoCommand\);/);
+assert.match(autoHandlerSource, /bot\.hears\(SPIRIT_CALL_LABEL[\s\S]*?replyPlayerAutoStatus\(ctx\)/);
 
 console.log("Spirit call helpers OK");

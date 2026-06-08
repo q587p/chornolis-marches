@@ -22,10 +22,18 @@ import { SPIRIT_CALL_LABEL, markSpiritCallPayload } from "../services/spiritCall
 
 const AUTO_STOP_TEXT_COMMAND = slashlessCommandPattern(["autoStop", "autostop", "auto_stop"]);
 export const AUTO_START_COMMANDS = ["auto_on", "auto_start"] as const;
-export const SPIRIT_CALL_START_COMMANDS = ["spirit", "dukh", "poklyk"] as const;
+export const SPIRIT_CALL_STATUS_COMMANDS = ["spirit", "dukh", "poklyk"] as const;
+export const SPIRIT_CALL_START_COMMANDS = ["spirit_on", "dukh_on", "poklyk_on"] as const;
+export const SPIRIT_CALL_STOP_COMMANDS = ["spirit_off", "dukh_off", "spirit_stop", "dukh_stop"] as const;
+const SPIRIT_CALL_STATUS_TEXT_COMMAND = slashlessCommandPattern([
+  ...SPIRIT_CALL_STATUS_COMMANDS,
+  "поклик духа",
+  "дух",
+]);
 const SPIRIT_CALL_START_TEXT_COMMAND = slashlessCommandPattern([
   ...SPIRIT_CALL_START_COMMANDS,
-  "поклик духа",
+  "spirit on",
+  "dukh on",
   "покликати духа",
   "покликати дух",
   "дух веде",
@@ -33,6 +41,7 @@ const SPIRIT_CALL_START_TEXT_COMMAND = slashlessCommandPattern([
   "хай дух веде",
 ]);
 const SPIRIT_CALL_STOP_TEXT_COMMAND = slashlessCommandPattern([
+  ...SPIRIT_CALL_STOP_COMMANDS,
   "spirit stop",
   "spirit off",
   "dukh stop",
@@ -276,8 +285,8 @@ export function autoStatusText(input: { enabled?: boolean | null; spiritLabel?: 
     `Поклик духа: ${enabled ? "озивається" : "мовчить"}.`,
     `Обраний дух: ${spiritLabel}.`,
     `Ритм поклику: ${playerAutoTimingText()}.`,
-    "Увімкнути: /spirit",
-    "Вимкнути: /spirit_stop",
+    "Увімкнути: /spirit_on",
+    "Вимкнути: /spirit_off",
   ].join("\n");
 }
 
@@ -544,7 +553,7 @@ export async function requestOrEnablePlayerAuto(bot: Bot, ctx: any) {
     return;
   }
 
-  const stopHint = result.started ? "" : "\nЩоб відпустити духа, напишіть /spirit_stop, /auto_stop або «подякувати духу».";
+  const stopHint = result.started ? "" : "\nЩоб відпустити духа, напишіть /spirit_off, /auto_stop або «подякувати духу».";
   await ctx.reply(`${result.started ? `${SPIRIT_CALL_LABEL} почув вас.` : `${SPIRIT_CALL_LABEL} уже веде.`}\nПоклик озиватиметься ${playerAutoTimingText()}; власний крок зазвичай швидший.${stopHint}`, {
     reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, true),
   });
@@ -655,7 +664,8 @@ export function registerAutoHandlers(bot: Bot) {
 
   bot.command("auto", autoCommand);
   bot.command(["auto_on", "auto_start"], startAutoCommand);
-  bot.command(["spirit", "dukh", "poklyk"], startAutoCommand);
+  bot.command(["spirit", "dukh", "poklyk"], autoCommand);
+  bot.command(["spirit_on", "dukh_on", "poklyk_on"], startAutoCommand);
 
   bot.hears("🤖 Авто", async (ctx) => {
     if (!ctx.from) return;
@@ -664,8 +674,9 @@ export function registerAutoHandlers(bot: Bot) {
 
   bot.hears(SPIRIT_CALL_LABEL, async (ctx) => {
     if (!ctx.from) return;
-    await requestOrEnablePlayerAuto(bot, ctx);
+    await replyPlayerAutoStatus(ctx);
   });
+  bot.hears(SPIRIT_CALL_STATUS_TEXT_COMMAND, autoCommand);
   bot.hears(SPIRIT_CALL_START_TEXT_COMMAND, startAutoCommand);
 
   bot.callbackQuery("auto:confirm", async (ctx) => {
@@ -690,7 +701,7 @@ export function registerAutoHandlers(bot: Bot) {
       return;
     }
     await safeAnswerCallbackQuery(ctx, "Поклик почуто.");
-    const stopHint = result.started ? "" : "\nЩоб відпустити духа, напишіть /spirit_stop, /auto_stop або «подякувати духу».";
+    const stopHint = result.started ? "" : "\nЩоб відпустити духа, напишіть /spirit_off, /auto_stop або «подякувати духу».";
     await ctx.reply(`${result.started ? `${SPIRIT_CALL_LABEL} почув вас.` : `${SPIRIT_CALL_LABEL} уже веде.`}\nПоклик озиватиметься ${playerAutoTimingText()}; власний крок зазвичай швидший.${stopHint}`, {
       reply_markup: await buildMainReplyKeyboardForTelegramId(ctx.from.id, true),
     });
@@ -707,7 +718,7 @@ export function registerAutoHandlers(bot: Bot) {
     await replyStopPlayerAuto(ctx);
   }
 
-  bot.command(["autoStop", "autostop", "auto_stop", "spirit_stop", "dukh_stop"], stopAutoCommand);
+  bot.command(["autoStop", "autostop", "auto_stop", "spirit_off", "dukh_off", "spirit_stop", "dukh_stop"], stopAutoCommand);
   bot.hears(AUTO_STOP_TEXT_COMMAND, stopAutoCommand);
   bot.hears(SPIRIT_CALL_STOP_TEXT_COMMAND, stopAutoCommand);
 

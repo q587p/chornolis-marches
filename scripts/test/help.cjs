@@ -19,6 +19,8 @@ assert.ok(COMMANDS_TEXT_PAGES.some((page) => page.includes("/help")));
 assert.equal(HELP_TEXT.includes("/commands"), false);
 assert.ok(HELP_TEXT.includes("Поклик духа"));
 assert.ok(HELP_TEXT.includes("/spirit"));
+assert.ok(HELP_TEXT.includes("/spirit_on"));
+assert.ok(HELP_TEXT.includes("/spirit_off"));
 assert.equal(HELP_TEXT.includes("Провід"), false);
 assert.ok(HELP_TEXT.includes("AFK / відійти"));
 assert.ok(HELP_TEXT.includes("13 хвилин"));
