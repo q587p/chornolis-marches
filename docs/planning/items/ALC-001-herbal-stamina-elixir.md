@@ -1,6 +1,6 @@
 ---
 id: ALC-001
-title: First herbal stamina elixir
+title: First herbal stamina tincture
 status: backlog
 type: feature
 area: survival
@@ -11,55 +11,105 @@ tags:
   - herbs
   - berries
   - stamina
+  - bottles
   - crafting
   - inventory
 depends_on:
-  - FOOD-004
+  - RECIPE-001
+  - ALC-002
 ---
 
-# ALC-001: First Herbal Stamina Elixir
+# ALC-001: First Herbal Stamina Tincture
 
 ## Goal
 
-Add a first simple craftable drink made from gathered herbs and possibly berries that can restore part of stamina, with room to grow later into deeper herbalism and alchemy.
+Revise the existing first herbal elixir task into a bottle-based first tincture: a practical prepared drink made from gathered herbs and berries that strongly restores stamina and returns the empty bottle after use.
 
-This should be an early practical use for gathered supplies, not a full potion economy.
+This should be the first player-facing proof that gathered resources can become something made, not only something eaten.
 
-## First Scope
+## Recipe
 
-- Add one basic recipe for a stamina-restoring elixir:
-  - likely `лікарські трави` plus berries or another simple common ingredient;
-  - no rare reagent chain yet;
-  - no dedicated crafting station unless the implementation needs a small campfire/kettle placeholder.
-- Add a carried inventory item/resource for the prepared elixir with Ukrainian forms.
-- Add player-facing actions and aliases:
-  - `зробити еліксир`;
-  - `приготувати еліксир`;
-  - `випити еліксир`;
-  - `drink elixir`;
-  - `use elixir` as a compatibility alias.
-- Drinking restores a meaningful amount of stamina:
-  - start with partial recovery;
-  - allow a later stronger recipe or rare variant to restore all stamina.
-- Use atmospheric text that frames this as a rough herbal draught, not laboratory alchemy.
+Inputs:
+
+```text
+empty_bottle x1
+herbs x2
+berries x1
+```
+
+Output:
+
+```text
+herbal_tincture x1
+```
+
+Suggested Ukrainian name:
+
+```text
+трав’яна настоянка
+```
+
+## Commands and Aliases
+
+Target forms:
+
+```text
+/brew tincture
+/make_tincture
+/brew herbal_tincture
+зробити настоянку
+приготувати настоянку
+зробити зілля
+приготувати зілля
+```
+
+Drink forms:
+
+```text
+/drink tincture
+/use tincture
+випити настоянку
+випити зілля
+```
+
+## Effect
+
+- Restore a large capped amount of stamina.
+- Suggested first tuning: restore `32` or `36` stamina, capped by max stamina.
+- If stamina is already full, do not consume the tincture.
+- After drinking, remove one `herbal_tincture` and add one `empty_bottle`.
+- No dirty bottle yet.
+- No water/thirst/washing dependency yet.
+- Optional: record `herbalism` or `gathering` practice if the learning service can do this cheaply and without broad skill UI.
+
+## Player-Facing Tone
+
+Example craft success:
+
+```text
+Ви розтираєте лікарські трави з темними ягодами й зливаєте гіркий сік у пляшечку. Настоянка не пахне гостинцем, але тіло таке запам’ятовує.
+```
+
+Example drink:
+
+```text
+Настоянка гірка, аж щелепи стискаються. За кілька вдихів у тіло повертається дорога.
+```
 
 ## Guardrails
 
-- Do not make gathered herbs and berries obsolete as direct-use items; the elixir should be better but require preparation.
-- Do not let the first recipe trivialize rest, sleep, campfires or exhaustion.
-- Do not expose exact hidden formulas in normal player text.
-- Do not add a broad alchemy skill tree in this slice. Record learning hooks only if the progression storage is ready.
-- If a station is required, keep it humble: kettle, cup, warm stones, campfire or знахарська kit, not a full crafting UI.
+- Do not make rest, sleep or campfires obsolete.
+- Do not expose exact hidden formulas in ordinary text beyond clear missing ingredients.
+- Do not add a full recipe book or crafting menu.
+- Do not add HP healing or night-sight in this first slice.
+- Do not consume ingredients or bottles on failed validation.
+- Do not allow tutorial dream resources to become a grind source unless explicitly allowed.
 
 ## Acceptance
 
-- A player with the required ingredients can prepare one stamina elixir.
-- The ingredients are consumed and the elixir appears in inventory.
-- The player can drink it from inventory or by text command.
-- Drinking restores stamina and gives clear feedback when already full, when missing the elixir or when missing ingredients.
-- `/help`, `/commands` or inventory docs mention the stable command only if the action becomes player-facing.
-- Focused tests cover recipe validation, stamina recovery cap behavior and aliases where practical.
-
-## Notes
-
-This belongs earlier than full alchemy because it gives gathered herbs/berries a concrete survival role. Later recipes can branch into stronger stamina recovery, HP recovery, night-sight, hiding scent from animals, dream/sleep effects, poison and risky mushroom-based elixirs.
+- A player with bottle, herbs and berries can craft one tincture.
+- Missing bottle, herbs or berries fail clearly without consuming anything.
+- Drinking restores stamina up to cap and returns one empty bottle.
+- Drinking at full stamina does not consume the tincture.
+- `/help` / `/commands` mention stable commands only if the action becomes player-facing.
+- Tests cover recipe validation, stamina cap behavior, bottle return and aliases.

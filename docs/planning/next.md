@@ -23,6 +23,10 @@ Keep the next patches narrow and reviewable:
 7. `MAP-004` follow-up — decide the next gated place after light/examine and track/follow-memory proofs.
 8. `QA-002` / camp-dream first-session smoke — keep the first-session vertical experience honest before widening systems.
 
+## Post-0.16 Candidate Lane
+
+After the current mentorship/NPC-learning lane stabilizes, the next practical survival lane can be **bottles, herbalism and first prepared remedies**: `ALC-002` bottle source, `RECIPE-001` minimal recipe helper, revised `ALC-001` stamina tincture, then herbalist hints/demonstrations and wetland reagents. Keep it humble: no full alchemy tree, broad crafting UI, shops, barter or public skill sheet.
+
 ## Boundaries
 
 - Keep mentorship separate from `TravelGroup`: mentorship is teacher/student attention and learning context; travel groups remain player-player road groups.
