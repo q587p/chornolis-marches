@@ -72,7 +72,7 @@ export function followIntentHelpText(input?: {
   ];
   if (targetVisible) lines.push("Щоб спробувати піти за свіжим ясним слідом: /follow_step");
   lines.push(followAssistStateText(Boolean(input?.assistEnabled)));
-  lines.push("Щоб змінити автоспробу: /follow_assist on або /follow_assist off");
+  lines.push("Щоб змінити автоспробу: /follow_assist_on або /follow_assist_off");
   return lines.join("\n");
 }
 

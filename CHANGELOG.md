@@ -7,6 +7,33 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.8 - Social signal content extraction and scribe suggestions - 12026-06-07
+
+### Added
+
+- Added `src/content/social/socialSignals.ts` as the content home for social signal labels and message templates.
+- Added focused social-signal regression coverage for stable signal IDs, labels, representative rendered messages and quick-social target defaults.
+- Added scribe/admin-only unknown-command suggestions for service commands, including the lit-torch helper, without exposing those suggestions to ordinary players.
+- Added alias regressions so suggested exact inputs such as `kill` and documented personal-summary inputs such as `skills` route to existing responses instead of falling back to unknown-command text.
+- Added admin-only Herald publication queue diagnostics for distinguishing all unpublished PUBLIC rows, due-now rows and future scheduled rows.
+
+### Changed
+
+- Moved `SOCIAL_DEFINITIONS` content out of `socialSignals.ts` while keeping target resolution, notification delivery, creature/NPC reactions, world/audit event creation and creature `currentAction` updates in the service layer.
+- Kept current social signal labels and player-facing message strings stable for player targets, creature targets and targetless signals.
+- Unknown-command fallback now checks scribe access before adding admin-command suggestions, while public alias suggestions remain unchanged.
+- Exact known aliases no longer offer unrelated fuzzy suggestions.
+- Shortened public `/help` by removing one-off or highly specific command blurbs, and clarified that AFK starts automatically after 13 minutes of inactivity.
+- Expanded strange-totem dismantle feedback to a stable set of 13 atmospheric aftermath lines.
+- Updated follow-assist hints to use clickable `/follow_assist_on` and `/follow_assist_off` commands while keeping `/follow_assist on/off` as compatible aliases.
+- Changed legacy `auto` / `/auto` input to show Spirit Call status and controls instead of immediately enabling the helper; explicit `/spirit` still enables it.
+- Clarified `/pending_publications` as ready-now output and added `/future_publications` for upcoming scheduled outbox rows.
+
+### Risks
+
+- This is intended as content/suggestion/help cleanup only; WorldEvent/WorldEventMarker logic, Prisma schema, migrations, Herald archive republish, gameplay rules, keyboards, location prose and action completions are unchanged.
+- Future social signal content expansion should stay separate from this refactor.
+
 ## 0.16.7 - Grammar agreement helper cleanup and archive republish queue - 12026-06-07
 
 ### Added

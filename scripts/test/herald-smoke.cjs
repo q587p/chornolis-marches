@@ -10,6 +10,7 @@ const { formatWorldDigestDateLine } = require("../../src/herald/digest");
 const { formatHeraldCommandList, formatHeraldHelp, formatHeraldWhoami } = require("../../src/herald/help");
 const { renderHeraldAnonymousInfoTarget, renderHeraldPublicInfoMissing, renderHeraldPublicPlayerInfo } = require("../../src/herald/info");
 const { resolveHeraldInfoTargetUser } = require("../../src/herald/infoCommands");
+const { formatFuturePublicationsReply, formatPublicationQueueDiagnosticsReply } = require("../../src/herald/publisher");
 const {
   heraldGatheringLine,
   heraldPracticePhrase,
@@ -299,6 +300,8 @@ assert.match(heraldAdminCommands, /\/archive_republish_preview/);
 assert.match(heraldAdminCommands, /\/archive_republish_queue/);
 assert.match(heraldAdminCommands, /\/archive_republish_status/);
 assert.match(heraldAdminCommands, /\/archive_republish_cancel/);
+assert.match(heraldAdminCommands, /\/publication_queue_status/);
+assert.match(heraldAdminCommands, /\/future_publications/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/pause_publications/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/forget_published_news/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_post/);
@@ -306,6 +309,8 @@ assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_find/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/news_archive_force_post/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/news_updates/);
 assert.doesNotMatch(formatHeraldCommandList(false), /\/archive_republish_queue/);
+assert.doesNotMatch(formatHeraldCommandList(false), /\/publication_queue_status/);
+assert.doesNotMatch(formatHeraldCommandList(false), /\/future_publications/);
 
 const heraldAdminHelp = formatHeraldHelp(true);
 assert.match(heraldAdminHelp, /Основні:/);
@@ -316,6 +321,8 @@ assert.match(heraldAdminHelp, /Приклади:/);
 assert.match(heraldAdminHelp, /\/backfill_news_queue 23m/);
 assert.match(heraldAdminHelp, /\/backfill_news_reschedule_pending 23m/);
 assert.match(heraldAdminHelp, /\/archive_republish_queue 30m/);
+assert.match(heraldAdminHelp, /\/publication_queue_status/);
+assert.match(heraldAdminHelp, /\/future_publications/);
 assert.match(heraldAdminHelp, /13m/);
 assert.match(heraldAdminHelp, /2h/);
 assert.ok(heraldAdminHelp.length < 3900, "Herald admin help should fit in one Telegram message");
@@ -325,7 +332,45 @@ assert.match(heraldPublicHelp, /Основні:/);
 assert.doesNotMatch(heraldPublicHelp, /\/backfill_news_queue/);
 assert.doesNotMatch(heraldPublicHelp, /\/archive_republish_queue/);
 assert.doesNotMatch(heraldPublicHelp, /\/pending_publications/);
+assert.doesNotMatch(heraldPublicHelp, /\/publication_queue_status/);
+assert.doesNotMatch(heraldPublicHelp, /\/future_publications/);
 assert.match(heraldPublicHelp, /Службові розділи/);
+
+const publicationQueueDiagnostics = formatPublicationQueueDiagnosticsReply({
+  paused: true,
+  totalUnpublished: 129,
+  dueNow: 0,
+  futureScheduled: 129,
+  nextAvailableAt: new Date("2026-06-08T09:30:00.000Z"),
+  sourceTypes: [{
+    sourceType: "NEWS_MD_ARCHIVE_REPUBLISH",
+    totalUnpublished: 129,
+    dueNow: 0,
+    futureScheduled: 129,
+    nextAvailableAt: new Date("2026-06-08T09:30:00.000Z"),
+  }],
+});
+assert.match(publicationQueueDiagnostics, /publisher loop/);
+assert.match(publicationQueueDiagnostics, /PUBLIC: 129/);
+assert.match(publicationQueueDiagnostics, /availableAt <= now\): 0/);
+assert.match(publicationQueueDiagnostics, /availableAt > now\): 129/);
+assert.match(publicationQueueDiagnostics, /NEWS_MD_ARCHIVE_REPUBLISH/);
+assertNoSecrets(publicationQueueDiagnostics, "publication queue diagnostics");
+
+const futurePublications = formatFuturePublicationsReply([{
+  id: 77,
+  sourceType: "NEWS_MD_ARCHIVE_REPUBLISH",
+  sourceId: "0.1.0 -- first",
+  title: "0.1.0 -- first",
+  archiveOrder: 1,
+  availableAt: new Date("2026-06-08T10:00:00.000Z"),
+}]);
+assert.match(futurePublications, /#77/);
+assert.match(futurePublications, /NEWS_MD_ARCHIVE_REPUBLISH/);
+assert.match(futurePublications, /archiveOrder=1/);
+assert.match(futurePublications, /0\.1\.0 -- first/);
+assertNoSecrets(futurePublications, "future publication list");
+assert.match(formatFuturePublicationsReply([]), /PUBLIC/);
 
 const whoami = formatHeraldWhoami({
   telegramUserId: 123456789,

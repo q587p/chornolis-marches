@@ -114,6 +114,16 @@ enable follow assist, move the player or share hidden routes.
 gathering. Treat it as proof that mentorship matters only through real attention:
 the player must observe the active mentor doing relevant work. Tracking
 mentorship, generic reply UX and broader teaching effects remain separate.
+The `0.16.1` alias-first pending-answer fix should stay in place so slashless
+commands are not swallowed as unclear mentorship answers. A remaining copy
+follow-up is the gathering offer phrasing: it still assumes a feminine mentor in
+the "її сліду" line, so make mentor offer text gender/form-aware before widening
+gathering mentors beyond the current authored case.
+Also watch the `amount=2` gathering observation bonus in live play. If following
+one herbalist grows gathering too quickly, add a cooldown or separate
+`mentorship_observation` context; if mentorship starts depending on more source
+descriptions, prefer structured source markers over parsing `actorCreature=...`
+strings.
 
 `0.16.2` adds hunter/tracking mentorship and a small reply-button foundation.
 Tracking mentorship now has its first observation path through fresh clear
@@ -121,17 +131,31 @@ ordinary movement by the active mentor, while `Відповісти` makes direc
 easier to answer without becoming group chat. Keep both narrow: no learning on
 accept, no hidden-route sharing, no attack teaching and no automatic group
 movement.
+Reply pending state remains an in-memory next-message helper after the
+persisted remembered reply target; if restarts make players lose replies often,
+add a soft "press reply again" path or restore the pending state narrowly.
 
 `0.16.3` adds live-polish around that foundation: rare cooldowned mentorship
 lesson feedback when a real mentored observation bonus happens, compact recent
 lesson status in `/mentor`, and clearer timeout/cancel behavior for the
 `Відповісти` button. Keep this as qualitative feedback, not a new learning
 source or public skill surface.
+Tracking mentorship lesson feedback should stay tied to the route-memory
+learning trigger until a separate explicit hunter-teaches event is worth the
+extra machinery.
+Live-watch lesson frequency in places where players often use `/look` or
+`/examine`: the 10-minute marker cooldown should keep copy sparse, but if
+mentor-heavy rooms still feel chatty, make lesson feedback rarer or limit it to
+the first lesson per mentor/context instead of adding more variants.
 
 `0.16.4` adds the first guided practice prompt after a real mentored gathering
 lesson. Treat it as "you watched, now try" rather than a quest system: optional,
 cooldowned, no direct learning grant, and routed through the existing gather
 action. Tracking prompts and mentor-specific route lessons remain future slices.
+The first prompt currently appears only when a new lesson feedback marker is
+created; if live play makes "mentor showed it, but never asks me to try" feel
+too rare, split lesson feedback cooldown from practice-prompt cooldown rather
+than making every observation generate copy.
 
 `0.16.5` moves the hottest short-lived cooldown/dedupe markers into structured
 `WorldEventMarker` rows while keeping readable `WorldEvent` audit rows. Treat it
@@ -139,6 +163,11 @@ as infrastructure testing only: no new mentorship content, no group movement, no
 combat effects and no public skill UI. Next candidates after this are mentor
 guided tracking prompt, mentor route polish, and group movement design only if
 live follow/group behavior stays stable.
+Mentorship lesson/practice cooldowns are already structured marker rows; if
+slow logs heat up again, tune indexed marker fields or retention rather than
+returning to `WorldEvent.description` parsing. Route-memory remains
+`WorldEvent`-backed for now, so repeated route-memory hotspots should become a
+structured route-memory/marker follow-up rather than broader event scans.
 
 `0.16.6` cleans up a narrow slice of resource/corpse text helpers. Treat it as
 text/lexicon/grammar cleanup only: resource display names, accusative names and
@@ -146,6 +175,14 @@ current corpse names now share lexicon-backed helpers, while gameplay rules and
 marker storage stay unchanged. Future text cleanup can take separate small
 slices in `locations.ts`, `targets.ts` or `actionCompletions.ts` if a duplicated
 map is fully covered by tests.
+Watch one small layering nit from this slice: `src/utils/resourceText.ts`
+currently imports `creatureForms` from `src/services/grammar.ts`. This is safe
+while grammar does not import resource text, but a future cleanup should either
+move resource/corpse text helpers closer to `services/resourceText.ts` /
+`services/text/*` or move the corpse phrase builder closer to grammar/content.
+Also consider replacing the first `scripts/test/resource-text.cjs`
+`Object.fromEntries(... === expected)` assertions with direct `assert.equal(...)`
+checks so failures show the mismatched resource string more clearly.
 
 `0.16.7` cleans up a narrow slice of Ukrainian gender/agreement helpers and adds
 an operator-only Herald archive republish queue. Treat the grammar part as
@@ -154,6 +191,36 @@ selection are shared, while social signals, keyboards, help text, location prose
 and action completions remain future focused slices. Treat the Herald part as
 channel recovery tooling only: deployed `news.md` archive entries can be queued
 oldest-first without using repost formatting or changing gameplay.
+
+`0.16.8` extracts social signal labels and message templates into a content
+module while keeping target resolution, notifications, reactions and event
+logging in the service layer, and lets scribe-only unknown-command suggestions
+see service commands without exposing them to ordinary players. Treat it as
+content/suggestion organization only: no new signals, no keyboard/help changes
+and no gameplay behavior changes.
+
+Near-term mentorship/actor-learning should add a visible NPC learning loop:
+one local character can occasionally learn by watching or following another
+specialist, such as a herbalist or hunter, and drift through the world while
+doing so. Once that learner reaches the teacher's rough level or passes it, the
+loop should stop, the learner should eventually sleep or otherwise lose that
+temporary gain, and the cycle should be able to begin again. Keep it narrow and
+observable, so there is always a living example of attention-based learning
+without turning it into a broad profession economy.
+
+Future `Поклик духа` (`/spirit`) work should tie access or stronger behavior to
+attention-based learning instead of leaving it as an always-immediate default:
+after the player follows an appropriate teacher for long enough and sees enough
+of their pattern, the spirit call can open or become more capable in that
+teacher-specific direction. Keep it diegetic and narrow, not a public skill
+level gate.
+
+Future Лісовик work should revisit the character deliberately instead of
+patching individual lines in place. Decide whether дід Лісовик should be
+finished as the current old-forest mentor/watchful local presence or redesigned
+into a sharper spirit/threshold figure, then align his dialogue, behavior,
+learning hooks and visible role with that decision. Keep this as a focused
+character/content slice, not a broad forest rewrite.
 
 Do not open another broad content loop before the learning/observation foundation is used by real attention moments. Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops should stay behind the attention-learning spine.
 
@@ -181,11 +248,15 @@ Do not open another broad content loop before the learning/observation foundatio
 20. **0.16.5 / Structured WorldEvent markers:** marker storage refactor is in testing: follow-assist and mentorship cooldown/dedupe hot paths use `WorldEventMarker`, with `WorldEvent` audit rows preserved and gameplay unchanged.
 21. **0.16.6 / Resource text lexicon cleanup:** resource/corpse text helpers are in testing, with duplicate display/grammar maps reduced and gameplay unchanged.
 22. **0.16.7 / Grammar agreement helper cleanup and archive republish queue:** player/creature gender and word agreement helpers are in testing, with visible target/player text kept stable; Herald can queue a full deployed `news.md` archive republish run for channel rebuilds without changing gameplay.
-23. **Mentor guided tracking prompt:** consider a narrow tracking practice prompt only after gathering prompts and marker cooldowns feel stable.
-24. **Mentor route polish:** consider a tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
-25. **Group movement design:** if live group UX is clear, draft a separate consensual group movement slice with strict no-hidden-route/no-AFK-drag guardrails.
-26. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
-27. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
+23. **0.16.8 / Social signal content extraction and scribe suggestions:** social signal labels and message templates are in testing as content, with service behavior and visible strings kept stable; scribe-only unknown-command suggestions can see admin commands without changing command routing.
+24. **NPC learner loop:** design a narrow NPC-watches-NPC learning loop where a local learner can follow or observe a specialist, stop once they catch up, then sleep/decay the temporary gain so the visible learning example can repeat.
+25. **Spirit-call teacher unlock:** design a narrow `Поклик духа` (`/spirit`) unlock or capability gate that opens only after sustained following/attention around an appropriate teacher, not immediately at default character start.
+26. **Дід Лісовик character pass:** finish or redesign дід Лісовик as a deliberate old-forest mentor/spirit/threshold presence, aligning his dialogue, behavior, learning hooks and visible role without rewriting the broader forest.
+27. **Mentor guided tracking prompt:** consider a narrow tracking practice prompt only after gathering prompts and marker cooldowns feel stable.
+28. **Mentor route polish:** consider a tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
+29. **Group movement design:** if live group UX is clear, draft a separate consensual group movement slice with strict no-hidden-route/no-AFK-drag guardrails.
+30. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
+31. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
 
 Watch the new actor-learning surfaces before widening them: `0.15.41` proves
 one NPC observation bridge, but freshening/cooking observation should remain a

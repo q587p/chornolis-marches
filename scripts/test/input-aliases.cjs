@@ -1,4 +1,6 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 
 require("ts-node/register");
 
@@ -7,13 +9,19 @@ const {
   formatAliasSuggestion,
   normalizeInput,
   parseAlias,
+  suggestAdminCommandEntries,
   suggestAliasEntries,
   suggestAliasInputs,
   suggestKeyboardLayoutAliasEntries,
 } = require("../../src/input/aliases");
 const { inventoryResourceKeyFromText } = require("../../src/services/inventoryUse");
 const { parseStartActionPayload, parseStartActionPayloadFromText, resolveStartActionPayload } = require("../../src/input/startPayloads");
-const { autoCommandModeFromText } = require("../../src/handlers/auto");
+const {
+  AUTO_START_COMMANDS,
+  SPIRIT_CALL_START_COMMANDS,
+  autoCommandModeFromText,
+  autoStatusText,
+} = require("../../src/handlers/auto");
 const { isDreamGateOpeningPhrase, localGateOpenAttemptText } = require("../../src/services/tutorial");
 const { normalizeCreatureActionText } = require("../../src/utils/creatureActionText");
 const { resourceAccusativeName } = require("../../src/utils/resourceText");
@@ -58,11 +66,11 @@ assert.equal(parseTeleportCoordinateCommand("/tp_0_9__13@Chornolis_bot"), "0,9,-
 assert.equal(parseStartActionPayload("cmd_news"), "news");
 assert.equal(parseStartActionPayload("cmd_auto"), "auto");
 assert.equal(parseStartActionPayload("cmd_auto_stop"), "autoStop");
-assert.equal(parseStartActionPayload("cmd_spirit"), "auto");
+assert.equal(parseStartActionPayload("cmd_spirit"), "spirit");
 assert.equal(parseStartActionPayload("cmd_spirit_stop"), "autoStop");
-assert.equal(parseStartActionPayload("cmd_dukh"), "auto");
+assert.equal(parseStartActionPayload("cmd_dukh"), "spirit");
 assert.equal(parseStartActionPayload("cmd_dukh_stop"), "autoStop");
-assert.equal(parseStartActionPayload("cmd_poklyk"), "auto");
+assert.equal(parseStartActionPayload("cmd_poklyk"), "spirit");
 assert.equal(parseStartActionPayload("cmd_me"), "me");
 assert.equal(parseStartActionPayload("cmd_help"), "help");
 assert.equal(parseStartActionPayload("cmd_rest"), "rest");
@@ -369,6 +377,10 @@ assertAlias("/queue_cancel", { kind: "queue", mode: "cancel-current" });
 assertAlias("/queue_clear", { kind: "queue", mode: "clear" });
 assertAlias("скасувати", { kind: "queue", mode: "cancel-current" });
 assertAlias("очистити чергу", { kind: "queue", mode: "clear" });
+assertAlias("/auto", { kind: "auto", mode: "show" });
+assertAlias("авто", { kind: "auto", mode: "show" });
+assertAlias("/auto on", { kind: "auto", mode: "start" });
+assertAlias("/auto_on", { kind: "auto", mode: "start" });
 assertAlias("/auto_stop", { kind: "auto", mode: "stop" });
 assertAlias("/spirit", { kind: "auto", mode: "start" });
 assertAlias("/dukh", { kind: "auto", mode: "start" });
@@ -386,13 +398,27 @@ assertAlias("авто вимкнути", { kind: "auto", mode: "stop" });
 assert.equal(formatAliasSuggestion(suggestAliasEntries("стоп ав")[0]), "стоп авто (/auto_stop)");
 assert.equal(formatAliasSuggestion(suggestAliasEntries("авто ст")[0]), "авто стоп (/auto_stop)");
 assert.equal(formatAliasSuggestion(suggestAliasEntries("вимкнути авт")[0]), "вимкнути авто (/auto_stop)");
+assert.equal(formatAliasSuggestion(suggestAliasEntries("авт")[0]), "авто (/auto)");
+assert.equal(formatAliasSuggestion(suggestAliasEntries("увімкнути авт")[0]), "увімкнути авто (/spirit)");
+assert.deepEqual([...AUTO_START_COMMANDS], ["auto_on", "auto_start"]);
+assert.deepEqual([...SPIRIT_CALL_START_COMMANDS], ["spirit", "dukh", "poklyk"]);
 assert.equal(autoCommandModeFromText("stop"), "stop");
 assert.equal(autoCommandModeFromText("off"), "stop");
 assert.equal(autoCommandModeFromText("стоп"), "stop");
 assert.equal(autoCommandModeFromText("вимкнути"), "stop");
 assert.equal(autoCommandModeFromText("подякувати"), "stop");
 assert.equal(autoCommandModeFromText("відпустити"), "stop");
-assert.equal(autoCommandModeFromText(""), "start");
+assert.equal(autoCommandModeFromText(""), "show");
+assert.equal(autoCommandModeFromText("", "show"), "show");
+assert.equal(autoCommandModeFromText("", "start"), "start");
+assert.equal(autoCommandModeFromText("on"), "start");
+assert.equal(autoCommandModeFromText("start"), "start");
+assert.equal(autoCommandModeFromText("stop", "start"), "stop");
+assert.match(autoStatusText({ enabled: false }), /Поклик духа: мовчить\./);
+assert.match(autoStatusText({ enabled: true }), /Поклик духа: озивається\./);
+assert.match(autoStatusText({ enabled: false }), /Обраний дух: тихий шепіт Порубіжжя\./);
+assert.match(autoStatusText({ enabled: false }), /Увімкнути: \/spirit/);
+assert.match(autoStatusText({ enabled: false }), /Вимкнути: \/spirit_stop/);
 
 assertAlias("сказати Хай стежка буде м'якою.", { kind: "say", text: "Хай стежка буде м'якою." });
 assertAlias("/say Відчинитися", { kind: "say", text: "Відчинитися" });
@@ -453,6 +479,10 @@ assertAlias("freshen all", { kind: "target-action", action: "freshen", target: "
 assertAlias("/freshen_all", { kind: "target-action", action: "freshen", target: "all" });
 assertAlias("свіжувати все", { kind: "target-action", action: "freshen", target: "все" });
 assertAlias("освіжити всі", { kind: "target-action", action: "freshen", target: "всі" });
+assertAlias("skills", { kind: "me" });
+assertAlias("Skills", { kind: "me" });
+assertAlias("journal", { kind: "me" });
+assertAlias("kill", { kind: "target-action", action: "attack", target: "" });
 assertAlias("викинути факел", { kind: "drop-inventory-item", target: "факел" });
 assertAlias("drop all", { kind: "drop-inventory-item", target: "all" });
 assertAlias("drop all corpse", { kind: "drop-inventory-item", target: "all corpse" });
@@ -480,7 +510,9 @@ assertAlias("триматися за Лукана", { kind: "follow", target: "�
 assertAlias("стежити за мишею", { kind: "follow", target: "мишею" });
 assertAlias("/follow_assist", { kind: "follow-assist", mode: "show" });
 assertAlias("/follow_assist on", { kind: "follow-assist", mode: "on" });
+assertAlias("/follow_assist_on", { kind: "follow-assist", mode: "on" });
 assertAlias("/follow_assist off", { kind: "follow-assist", mode: "off" });
+assertAlias("/follow_assist_off", { kind: "follow-assist", mode: "off" });
 assertAlias("/follow_auto", { kind: "follow-assist", mode: "show" });
 assertAlias("/autofollow", { kind: "follow-assist", mode: "show" });
 assertAlias("/stop_follow_assist", { kind: "follow-assist", mode: "off" });
@@ -533,6 +565,7 @@ assert.ok(suggestAliasEntries("огл брама").map(formatAliasSuggestion).in
 assert.ok(suggestAliasEntries("швидк").map(formatAliasSuggestion).includes("швидкий огляд (/glance)"), "Expected formatted suggestions to include slash command for quick glance");
 assert.ok(suggestAliasEntries("стат").map(formatAliasSuggestion).includes("статистика (/stat)"), "Expected formatted suggestions to include slash command for statistics");
 assert.ok(suggestAliasEntries("гриб").map(formatAliasSuggestion).some((suggestion) => suggestion.includes("(/use_mushrooms)")), "Expected formatted suggestions to include slash command for using mushrooms");
+assert.ok(!suggestAliasEntries("Skills").map(formatAliasSuggestion).includes("kill (/attack)"), "Exact skills alias should not suggest kill.");
 assert.ok(suggestAliasEntries("навч").map(formatAliasSuggestion).some((suggestion) => suggestion.includes("(/sleep_tutorial)")), "Expected formatted tutorial suggestions to use clickable slash command");
 assert.ok(suggestAliasEntries("повернен").map(formatAliasSuggestion).includes("повернення (/respawn)"), "Expected formatted beginner-return suggestions to use /respawn");
 assert.ok(suggestAliasEntries("писар").map(formatAliasSuggestion).includes("покликати писарів (/call_scribes)"), "Expected formatted scribe-help suggestions to use /call_scribes");
@@ -544,9 +577,15 @@ assert.ok(suggestAliasEntries("потрус").map(formatAliasSuggestion).include
 assert.ok(suggestAliasEntries("гук").map(formatAliasSuggestion).includes("гукнути (/yell)"), "Expected formatted suggestions to include slash command for nearby yell");
 assert.ok(suggestAliasEntries("гукнти").map(formatAliasSuggestion).includes("гукнути (/yell)"), "Expected formatted suggestions to include slash command for mistyped nearby yell");
 assert.ok(suggestAliasEntries("вола").map(formatAliasSuggestion).includes("волати (/shout)"), "Expected formatted suggestions to keep волати as region shout");
+assert.ok(!suggestAliasEntries("/addl").map(formatAliasSuggestion).includes("addLitTorch (/addLitTorch)"), "Public suggestions should not expose scribe-only commands.");
+assert.ok(suggestAdminCommandEntries("/addl").map(formatAliasSuggestion).includes("addLitTorch (/addLitTorch)"), "Scribe/admin suggestions should include /addLitTorch for /addl.");
+assert.ok(suggestAdminCommandEntries("add lit").map(formatAliasSuggestion).includes("addLitTorch (/addLitTorch)"), "Scribe/admin suggestions should include /addLitTorch for spaced text.");
 assert.ok(suggestAliasInputs("усхмі").includes("усміх"), "Expected social suggestions to include усміх for a mistyped smile");
 assert.ok(suggestAliasInputs("посмі").includes("посміх"), "Expected social suggestions to include посміх");
 assert.ok(suggestAliasEntries("усхмі").map(formatAliasSuggestion).includes("усміх (/smile)"), "Expected formatted social suggestions to include slash command for smile");
+const fallbackSource = fs.readFileSync(path.join(process.cwd(), "src", "handlers", "fallback.ts"), "utf8");
+assert.match(fallbackSource, /isScribeAdmin\(ctx\.from\?\.id\)/, "Unknown-command fallback should check scribe access before including admin command suggestions.");
+assert.match(fallbackSource, /suggestAdminCommandEntries/, "Unknown-command fallback should include admin command suggestions for scribes.");
 assert.ok(alternateKeyboardLayoutInputs("[nj").includes("хто"), "Expected English-layout typo [nj to convert to хто");
 assert.ok(suggestKeyboardLayoutAliasEntries("[nj").map(formatAliasSuggestion).includes("хто (/who)"), "Expected keyboard-layout suggestions to include /who");
 assert.ok(suggestKeyboardLayoutAliasEntries("htxb").map(formatAliasSuggestion).includes("речі (/inventory)"), "Expected keyboard-layout suggestions to include inventory");

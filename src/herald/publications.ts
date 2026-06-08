@@ -276,6 +276,22 @@ export async function getPendingPublications(limit: number) {
   });
 }
 
+export async function getFuturePublications(limit: number, now = new Date()) {
+  return prisma.heraldPublication.findMany({
+    where: {
+      publishedAt: null,
+      availableAt: { gt: now },
+      visibility: "PUBLIC",
+    },
+    orderBy: [
+      { availableAt: "asc" },
+      { archiveOrder: "asc" },
+      { id: "asc" },
+    ],
+    take: Math.max(1, Math.min(100, Math.floor(limit))),
+  });
+}
+
 export async function countPendingPublications(sourceTypes?: readonly string[]) {
   return prisma.heraldPublication.count({
     where: {
@@ -284,6 +300,94 @@ export async function countPendingPublications(sourceTypes?: readonly string[]) 
       ...(sourceTypes?.length ? { sourceType: { in: [...sourceTypes] } } : {}),
     },
   });
+}
+
+function countBySourceMap(rows: Array<{ sourceType: string; _count: { _all: number } }>) {
+  return new Map(rows.map((row) => [row.sourceType, row._count._all]));
+}
+
+function nextBySourceMap(rows: Array<{ sourceType: string; _min: { availableAt: Date | null } }>) {
+  return new Map(rows.map((row) => [row.sourceType, row._min.availableAt]));
+}
+
+export async function getPublicationQueueDiagnostics(now = new Date()) {
+  const publicUnpublishedWhere = {
+    publishedAt: null,
+    visibility: "PUBLIC",
+  };
+  const dueWhere = {
+    ...publicUnpublishedWhere,
+    availableAt: { lte: now },
+  };
+  const futureWhere = {
+    ...publicUnpublishedWhere,
+    availableAt: { gt: now },
+  };
+
+  const [
+    paused,
+    totalUnpublished,
+    dueNow,
+    futureScheduled,
+    nextPublication,
+    totalBySourceRows,
+    dueBySourceRows,
+    futureBySourceRows,
+    nextBySourceRows,
+  ] = await Promise.all([
+    isPublicationQueuePaused(),
+    prisma.heraldPublication.count({ where: publicUnpublishedWhere }),
+    prisma.heraldPublication.count({ where: dueWhere }),
+    prisma.heraldPublication.count({ where: futureWhere }),
+    prisma.heraldPublication.findFirst({
+      where: publicUnpublishedWhere,
+      orderBy: [{ availableAt: "asc" }, { id: "asc" }],
+      select: { availableAt: true },
+    }),
+    prisma.heraldPublication.groupBy({
+      by: ["sourceType"],
+      where: publicUnpublishedWhere,
+      _count: { _all: true },
+      orderBy: { sourceType: "asc" },
+    }),
+    prisma.heraldPublication.groupBy({
+      by: ["sourceType"],
+      where: dueWhere,
+      _count: { _all: true },
+      orderBy: { sourceType: "asc" },
+    }),
+    prisma.heraldPublication.groupBy({
+      by: ["sourceType"],
+      where: futureWhere,
+      _count: { _all: true },
+      orderBy: { sourceType: "asc" },
+    }),
+    prisma.heraldPublication.groupBy({
+      by: ["sourceType"],
+      where: publicUnpublishedWhere,
+      _min: { availableAt: true },
+      orderBy: { sourceType: "asc" },
+    }),
+  ]);
+
+  const dueBySource = countBySourceMap(dueBySourceRows);
+  const futureBySource = countBySourceMap(futureBySourceRows);
+  const nextBySource = nextBySourceMap(nextBySourceRows);
+
+  return {
+    paused,
+    totalUnpublished,
+    dueNow,
+    futureScheduled,
+    nextAvailableAt: nextPublication?.availableAt ?? null,
+    sourceTypes: totalBySourceRows.map((row) => ({
+      sourceType: row.sourceType,
+      totalUnpublished: row._count._all,
+      dueNow: dueBySource.get(row.sourceType) ?? 0,
+      futureScheduled: futureBySource.get(row.sourceType) ?? 0,
+      nextAvailableAt: nextBySource.get(row.sourceType) ?? null,
+    })),
+  };
 }
 
 export async function cancelPendingPublications(sourceTypes: readonly string[] = HERALD_NEWS_SOURCE_TYPES) {

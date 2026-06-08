@@ -25,7 +25,7 @@ import {
   validateCustomCharacterName,
   type PreparedCharacterName,
 } from "../services/characterNames";
-import { disablePlayerAuto, requestOrEnablePlayerAuto, replyStopPlayerAuto } from "./auto";
+import { disablePlayerAuto, replyPlayerAutoStatus, requestOrEnablePlayerAuto, replyStopPlayerAuto } from "./auto";
 import { requestScribeReturnAssistance, submitBuildCampfire, submitDismantleCampfire, submitDismantleTotem, submitDouseCampfire, submitFollowIntent, submitLightCampfire, submitSay, submitTrack, submitUnfollow, submitYell } from "./aliases";
 import { sendHelp } from "./help";
 import { sendNews } from "./news";
@@ -673,6 +673,11 @@ async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayl
   }
 
   if (action === "auto") {
+    await replyPlayerAutoStatus(ctx);
+    return true;
+  }
+
+  if (action === "spirit") {
     await requestOrEnablePlayerAuto(bot, ctx);
     return true;
   }

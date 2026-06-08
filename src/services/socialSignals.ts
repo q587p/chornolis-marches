@@ -11,20 +11,17 @@ import { logEvent } from "./worldEvents";
 import { hunterReactionDurationMs, hunterSocialReactionSignal, isHunterCreature } from "./npcHunter";
 import { canSendProactiveToTelegramId } from "./sessionPresence";
 import { creatureUsableExits } from "./creatureMovement";
+import {
+  SOCIAL_DEFINITIONS,
+  type SocialDefinition,
+  type SocialTemplateContext,
+} from "../content/social/socialSignals";
+
+export { SOCIAL_DEFINITIONS } from "../content/social/socialSignals";
 
 type SocialContext = {
   actor: { kind: "player" | "creature"; id: number; locationId: number; forms: NameForms; telegramId?: string };
   target?: ResolvedTarget;
-};
-
-type SocialDefinition = {
-  id: string;
-  label: string;
-  actorMessage: (ctx: SocialContext) => string;
-  targetMessage: (ctx: SocialContext) => string;
-  roomMessage: (ctx: SocialContext) => string;
-  targetlessActorMessage?: (ctx: SocialContext) => string;
-  targetlessRoomMessage?: (ctx: SocialContext) => string;
 };
 
 function actorName(ctx: SocialContext) {
@@ -48,87 +45,33 @@ function targetAccusative(ctx: SocialContext) {
   return escapeHtml(ctx.target?.forms.accusative ?? "когось поруч");
 }
 
-export const SOCIAL_DEFINITIONS: SocialDefinition[] = [
-  {
-    id: "smile",
-    label: "🙂 Усміхнутися",
-    actorMessage: (ctx) => `Ви усміхаєтеся ${targetDative(ctx)}.`,
-    targetMessage: (ctx) => `${actorName(ctx)} усміхається вам.`,
-    roomMessage: (ctx) => `${actorName(ctx)} усміхається ${targetDative(ctx)}.`,
-    targetlessActorMessage: () => "Ви усміхаєтеся.",
-    targetlessRoomMessage: (ctx) => `${actorName(ctx)} усміхається.`,
-  },
-  {
-    id: "laugh",
-    label: "😄 Засміятися",
-    actorMessage: (ctx) => `Ви тихо смієтеся, дивлячись на ${targetAccusative(ctx)}.`,
-    targetMessage: (ctx) => `${actorName(ctx)} тихо сміється, дивлячись на вас.`,
-    roomMessage: (ctx) => `${actorName(ctx)} тихо сміється, дивлячись на ${targetAccusative(ctx)}.`,
-    targetlessActorMessage: () => "Ви тихо смієтеся.",
-    targetlessRoomMessage: (ctx) => `${actorName(ctx)} тихо сміється.`,
-  },
-  {
-    id: "nod",
-    label: "✅ Кивнути",
-    actorMessage: (ctx) => `Ви киваєте ${targetDative(ctx)}.`,
-    targetMessage: (ctx) => `${actorName(ctx)} киває вам.`,
-    roomMessage: (ctx) => `${actorName(ctx)} киває ${targetDative(ctx)}.`,
-    targetlessActorMessage: () => "Ви киваєте.",
-    targetlessRoomMessage: (ctx) => `${actorName(ctx)} киває.`,
-  },
-  {
-    id: "bow",
-    label: "🙇 Вклонитися",
-    actorMessage: (ctx) => `Ви вклоняєтеся ${targetDative(ctx)}.`,
-    targetMessage: (ctx) => `${actorName(ctx)} вклоняється вам.`,
-    roomMessage: (ctx) => `${actorName(ctx)} вклоняється ${targetDative(ctx)}.`,
-    targetlessActorMessage: () => "Ви вклоняєтеся.",
-    targetlessRoomMessage: (ctx) => `${actorName(ctx)} вклоняється.`,
-  },
-  {
-    id: "point",
-    label: "👉 Вказати",
-    actorMessage: (ctx) => `Ви вказуєте на ${targetAccusative(ctx)}.`,
-    targetMessage: (ctx) => `${actorName(ctx)} вказує на вас.`,
-    roomMessage: (ctx) => `${actorName(ctx)} вказує на ${targetAccusative(ctx)}.`,
-  },
-  {
-    id: "glare",
-    label: "😠 Насупитися",
-    actorMessage: (ctx) => `Ви насуплено дивитеся на ${targetAccusative(ctx)}.`,
-    targetMessage: (ctx) => `${actorName(ctx)} насуплено дивиться на вас.`,
-    roomMessage: (ctx) => `${actorName(ctx)} насуплено дивиться на ${targetAccusative(ctx)}.`,
-    targetlessActorMessage: () => "Ви насуплюєтеся.",
-    targetlessRoomMessage: (ctx) => `${actorName(ctx)} насуплюється.`,
-  },
-  {
-    id: "sigh",
-    label: "😮‍💨 Зітхнути",
-    actorMessage: (ctx) => `Ви зітхаєте, дивлячись на ${targetAccusative(ctx)}.`,
-    targetMessage: (ctx) => `${actorName(ctx)} зітхає, дивлячись на вас.`,
-    roomMessage: (ctx) => `${actorName(ctx)} зітхає, дивлячись на ${targetAccusative(ctx)}.`,
-    targetlessActorMessage: () => "Ви зітхаєте.",
-    targetlessRoomMessage: (ctx) => `${actorName(ctx)} зітхає.`,
-  },
-  {
-    id: "wave",
-    label: "👋 Помахати",
-    actorMessage: (ctx) => `Ви махаєте ${targetDative(ctx)}.`,
-    targetMessage: (ctx) => `${actorName(ctx)} махає вам.`,
-    roomMessage: (ctx) => `${actorName(ctx)} махає ${targetDative(ctx)}.`,
-    targetlessActorMessage: () => "Ви махаєте рукою.",
-    targetlessRoomMessage: (ctx) => `${actorName(ctx)} махає рукою.`,
-  },
-  {
-    id: "hush",
-    label: "🤫 Притишити",
-    actorMessage: (ctx) => `Ви прикладаєте палець до вуст, дивлячись на ${targetAccusative(ctx)}.`,
-    targetMessage: (ctx) => `${actorName(ctx)} прикладає палець до вуст, дивлячись на вас.`,
-    roomMessage: (ctx) => `${actorName(ctx)} прикладає палець до вуст, дивлячись на ${targetAccusative(ctx)}.`,
-    targetlessActorMessage: () => "Ви прикладаєте палець до вуст і просите тиші.",
-    targetlessRoomMessage: (ctx) => `${actorName(ctx)} прикладає палець до вуст і просить тиші.`,
-  },
-];
+function socialTemplateContext(ctx: SocialContext): SocialTemplateContext {
+  return {
+    actorName: actorName(ctx),
+    targetDative: targetDative(ctx),
+    targetAccusative: targetAccusative(ctx),
+  };
+}
+
+function socialActorMessage(social: SocialDefinition, ctx: SocialContext) {
+  return social.actorMessage(socialTemplateContext(ctx));
+}
+
+function socialTargetMessage(social: SocialDefinition, ctx: SocialContext) {
+  return social.targetMessage(socialTemplateContext(ctx));
+}
+
+function socialRoomMessage(social: SocialDefinition, ctx: SocialContext) {
+  return social.roomMessage(socialTemplateContext(ctx));
+}
+
+function socialTargetlessActorMessage(social: SocialDefinition, ctx: SocialContext) {
+  return social.targetlessActorMessage?.(socialTemplateContext(ctx));
+}
+
+function socialTargetlessRoomMessage(social: SocialDefinition, ctx: SocialContext) {
+  return social.targetlessRoomMessage?.(socialTemplateContext(ctx));
+}
 
 export function socialDefinitionById(id: string) {
   return SOCIAL_DEFINITIONS.find((social) => social.id === id);
@@ -279,22 +222,22 @@ async function performSocialSignalForActor(bot: Bot, actor: SocialContext["actor
   const ctx: SocialContext = { actor, target };
   const targetPlayer = target.kind === "player" ? await prisma.player.findUnique({ where: { id: target.id } }) : null;
   if (targetPlayer && await canSendProactiveToTelegramId(targetPlayer.telegramId)) {
-    await safeSendMessage(bot, targetPlayer.telegramId, social.targetMessage(ctx), { parse_mode: "HTML" }, "social signal target sendMessage");
+    await safeSendMessage(bot, targetPlayer.telegramId, socialTargetMessage(social, ctx), { parse_mode: "HTML" }, "social signal target sendMessage");
   }
 
+  const roomMessage = socialRoomMessage(social, ctx);
   await notifyLocationExcept(
     bot,
     actor.locationId,
     [actor.kind === "player" ? actor.id : null, targetPlayer?.id].filter((id): id is number => Boolean(id)),
-    social.roomMessage(ctx),
+    roomMessage,
     { parseMode: "HTML" },
   );
 
-  const roomMessage = social.roomMessage(ctx);
   await writeSocialEvent(roomMessage, target, actor.locationId);
 
   if (chatId) {
-    await bot.api.sendMessage(chatId, social.actorMessage(ctx), { parse_mode: "HTML" });
+    await bot.api.sendMessage(chatId, socialActorMessage(social, ctx), { parse_mode: "HTML" });
   }
 
   await maybeReactToSocialSignal(bot, actor, target, socialId);
@@ -312,8 +255,8 @@ export async function performPlayerLocationSignal(bot: Bot, player: any, socialI
   if (!social) throw new Error("Невідомий сигнал.");
   const actorForms = playerForms(player);
   const ctx: SocialContext = { actor: { kind: "player", id: player.id, locationId: player.currentLocationId, forms: actorForms, telegramId: player.telegramId } };
-  const actorMessage = social.targetlessActorMessage?.(ctx);
-  const roomMessage = social.targetlessRoomMessage?.(ctx);
+  const actorMessage = socialTargetlessActorMessage(social, ctx);
+  const roomMessage = socialTargetlessRoomMessage(social, ctx);
   if (!actorMessage || !roomMessage) throw new Error("Цей сигнал просить ціль поруч.");
 
   await notifyLocationExcept(bot, player.currentLocationId, [player.id], roomMessage, { parseMode: "HTML" });
@@ -333,9 +276,10 @@ export async function performCreatureSocialSignal(bot: Bot, creature: any, targe
 
   await performSocialSignalForActor(bot, actor, target, socialId);
   const ctx: SocialContext = { actor, target };
+  const roomMessage = socialRoomMessage(social, ctx);
   await prisma.creature.updateMany({
     where: { id: creature.id },
-    data: { activity: "LOOKING", currentAction: currentActionFromRoomMessage(ctx, social.roomMessage(ctx)) },
+    data: { activity: "LOOKING", currentAction: currentActionFromRoomMessage(ctx, roomMessage) },
   });
 }
 
@@ -344,7 +288,7 @@ export async function performCreatureLocationSignal(bot: Bot, creature: any, soc
   if (!social) throw new Error("Невідомий сигнал.");
   const actorForms = creatureForms(creature);
   const ctx: SocialContext = { actor: { kind: "creature", id: creature.id, locationId: creature.locationId, forms: actorForms } };
-  const message = social.targetlessRoomMessage?.(ctx) ?? `${actorName(ctx)} подає знак.`;
+  const message = socialTargetlessRoomMessage(social, ctx) ?? `${actorName(ctx)} подає знак.`;
   await notifyLocationAll(bot, creature.locationId, message);
   await writeSocialEvent(message, null, creature.locationId);
   await prisma.creature.updateMany({

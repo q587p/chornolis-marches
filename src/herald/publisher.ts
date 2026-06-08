@@ -8,8 +8,10 @@ import {
   cancelPendingPublications,
   countPendingPublications,
   forgetPublishedPublications,
+  getFuturePublications,
   HERALD_NEWS_SOURCE_TYPES,
   getHeraldPublicationById,
+  getPublicationQueueDiagnostics,
   isPublicationQueuePaused,
   listRecentHeraldPublications,
   markPublicationFailed,
@@ -23,6 +25,7 @@ import {
 import { parseTelegramChannelId, truncateTelegramMessage } from "./safety";
 
 const PENDING_LIST_LIMIT = 10;
+const FUTURE_LIST_LIMIT = 10;
 const RECENT_PUBLICATIONS_LIMIT = 10;
 
 function formatDate(value: Date) {
@@ -38,6 +41,7 @@ function formatDate(value: Date) {
 
 function pendingPublicationLine(publication: {
   id: number;
+  sourceType?: string;
   title: string;
   priority: number;
   availableAt: Date;
@@ -45,7 +49,23 @@ function pendingPublicationLine(publication: {
   error: string | null;
 }) {
   const errorText = publication.error ? "; є записана помилка" : "";
-  return `#${publication.id} · p${publication.priority} · ${formatDate(publication.availableAt)} · спроб: ${publication.attempts}${errorText}\n${publication.title}`;
+  const sourceText = publication.sourceType ? ` · ${publication.sourceType}` : "";
+  return `#${publication.id}${sourceText} · p${publication.priority} · ${formatDate(publication.availableAt)} · спроб: ${publication.attempts}${errorText}\n${publication.title}`;
+}
+
+function futurePublicationLine(publication: {
+  id: number;
+  sourceType: string;
+  sourceId: string | null;
+  title: string;
+  archiveOrder: number | null;
+  availableAt: Date;
+}) {
+  const source = publication.sourceId && publication.sourceId !== publication.title
+    ? `${publication.title} / ${publication.sourceId}`
+    : publication.title;
+  const archive = publication.archiveOrder === null ? "" : ` · archiveOrder=${publication.archiveOrder}`;
+  return `#${publication.id} · ${publication.sourceType}${archive}\n${source}\nДоступний: ${formatDate(publication.availableAt)}`;
 }
 
 function markerText(publication: {
@@ -147,6 +167,47 @@ function formatPublicationSnapshot(publication: {
   ].join("\n"));
 }
 
+export function formatPublicationQueueDiagnosticsReply(input: Awaited<ReturnType<typeof getPublicationQueueDiagnostics>>) {
+  const sourceLines = input.sourceTypes.length
+    ? input.sourceTypes.map((source) => [
+      `- ${source.sourceType}: усього ${source.totalUnpublished}; готові зараз ${source.dueNow}; майбутні ${source.futureScheduled}.`,
+      source.nextAvailableAt ? `  Наступний availableAt: ${formatDate(source.nextAvailableAt)}.` : "  Наступного availableAt немає.",
+    ].join("\n")).join("\n")
+    : "немає неопублікованих PUBLIC записів.";
+
+  return [
+    "Канцелярія звірила скриню публікацій.",
+    "",
+    `Стан publisher loop: ${input.paused ? "призупинено" : "активно"}.`,
+    `Усього неопублікованих PUBLIC: ${input.totalUnpublished}.`,
+    `Готові зараз (availableAt <= now): ${input.dueNow}.`,
+    `Заплановано на майбутнє (availableAt > now): ${input.futureScheduled}.`,
+    input.nextAvailableAt ? `Найближчий availableAt: ${formatDate(input.nextAvailableAt)}.` : "Найближчого availableAt немає.",
+    "",
+    "За sourceType:",
+    sourceLines,
+  ].join("\n");
+}
+
+export function formatFuturePublicationsReply(publications: Array<{
+  id: number;
+  sourceType: string;
+  sourceId: string | null;
+  title: string;
+  archiveOrder: number | null;
+  availableAt: Date;
+}>) {
+  if (!publications.length) {
+    return "У книзі Канцелярії немає майбутніх PUBLIC записів.";
+  }
+
+  return [
+    `Майбутні PUBLIC записи (${publications.length}):`,
+    "",
+    publications.map(futurePublicationLine).join("\n\n"),
+  ].join("\n");
+}
+
 export async function publishPendingHeraldPublications(bot: Bot, options: { limit?: number } = {}) {
   const channelId = config.heraldChannelId;
   if (!channelId) {
@@ -235,15 +296,23 @@ export async function publishHeraldPublication(
 async function replyWithPendingPublications(ctx: Context) {
   const pending = await getPendingPublications(PENDING_LIST_LIMIT);
   if (!pending.length) {
-    await ctx.reply("У книзі Канцелярії немає записів, готових до публікації.");
+    await ctx.reply("У книзі Канцелярії немає записів, готових до публікації зараз.");
     return;
   }
 
   await ctx.reply([
-    `Готові до публікації записи (${pending.length}):`,
+    `Готові зараз до публікації записи (${pending.length}):`,
     "",
     pending.map(pendingPublicationLine).join("\n\n"),
   ].join("\n"));
+}
+
+async function replyWithPublicationQueueDiagnostics(ctx: Context) {
+  await ctx.reply(formatPublicationQueueDiagnosticsReply(await getPublicationQueueDiagnostics()));
+}
+
+async function replyWithFuturePublications(ctx: Context) {
+  await ctx.reply(formatFuturePublicationsReply(await getFuturePublications(FUTURE_LIST_LIMIT)));
 }
 
 async function replyAfterPublish(ctx: Context, bot: Bot) {
@@ -449,6 +518,26 @@ export function registerHeraldPublisherCommands(bot: Bot, heraldAdminIds: Readon
     } catch (error) {
       console.error("Herald pending publications command failed:", publicationErrorMessage(error));
       await ctx.reply("Канцелярія не змогла прочитати чергу публікацій.");
+    }
+  });
+
+  bot.command("publication_queue_status", async (ctx) => {
+    if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
+    try {
+      await replyWithPublicationQueueDiagnostics(ctx);
+    } catch (error) {
+      console.error("Herald publication queue status command failed:", publicationErrorMessage(error));
+      await ctx.reply("Канцелярія не змогла звірити стан скрині публікацій.");
+    }
+  });
+
+  bot.command("future_publications", async (ctx) => {
+    if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
+    try {
+      await replyWithFuturePublications(ctx);
+    } catch (error) {
+      console.error("Herald future publications command failed:", publicationErrorMessage(error));
+      await ctx.reply("Канцелярія не змогла прочитати майбутні записи публікацій.");
     }
   });
 

@@ -6,6 +6,7 @@ require("ts-node/register");
 
 const { MINUTES_PER_WORLD_DAY } = require("../../src/data/worldClock");
 const {
+  STRANGE_TOTEM_DISMANTLE_FLOURISHES,
   STRANGE_TOTEM_FRESH_TWIGS_MAX,
   STRANGE_TOTEM_FRESH_TWIGS_MIN,
   STRANGE_TOTEM_LAST_DAY_START_DAYS,
@@ -86,5 +87,17 @@ assert.match(strangeTotemDetailLine(scheduledTotem, schedule.fadingAtMinute), /�
 assert.match(strangeTotemInspectionTextSync(scheduledTotem, schedule.fadingAtMinute), /давно|розвалиться|хмиз/u);
 assert.doesNotMatch(strangeTotemDismantleText(1), /×1/u);
 assert.match(strangeTotemDismantleText(3), /×3/u);
+assert.equal(STRANGE_TOTEM_DISMANTLE_FLOURISHES.length, 13);
+assert.equal(new Set(STRANGE_TOTEM_DISMANTLE_FLOURISHES).size, 13);
+
+const generatedDismantleFlourishes = new Set();
+for (let index = 0; index < 500 && generatedDismantleFlourishes.size < STRANGE_TOTEM_DISMANTLE_FLOURISHES.length; index += 1) {
+  const text = strangeTotemDismantleText(3, `test_totem_${index}`);
+  generatedDismantleFlourishes.add(text.split("\n\n").at(-1));
+}
+assert.equal(generatedDismantleFlourishes.size, 13);
+for (const line of STRANGE_TOTEM_DISMANTLE_FLOURISHES) {
+  assert.ok(generatedDismantleFlourishes.has(line), `Expected generated dismantle text to include: ${line}`);
+}
 
 console.log("Strange totems OK");

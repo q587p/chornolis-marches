@@ -102,7 +102,8 @@ instead of always showing the setup prompt:
 
 As of `0.15.46`, follow intent can also carry an opt-in guarded assist flag:
 
-- `Автокрок слідом` (`/follow_assist on`) is an auto-attempt, not a group,
+- `Автокрок слідом` (`/follow_assist_on`, compatible with `/follow_assist on`)
+  is an auto-attempt, not a group,
   party, companion or `Поклик духа` mode;
 - it only reacts to the followed target's ordinary visible movement after clear
   route-memory is recorded;
@@ -153,7 +154,7 @@ As of `0.15.47`, the first consensual travel-group foundation exists:
 - the leader is also an active member, and leader leave/disband marks the MVP
   group inactive instead of promoting a new leader;
 - `Триматися провідника гурту` (`/group_follow_leader`) sets follow intent to a
-  visible local leader, but does not silently enable `/follow_assist on` and
+  visible local leader, but does not silently enable `/follow_assist_on` and
   does not queue movement;
 - there is no shared combat, loot, inventory, learning, group chat, target
   consent model, hidden-route sharing or group movement in this slice.
@@ -168,7 +169,7 @@ This means the current stack is:
 
 1. follow intent: attention to one target;
 2. `/follow_step`: one explicit manual step from fresh clear route memory;
-3. `/follow_assist on`: opt-in guarded ordinary-exit auto-attempt;
+3. `/follow_assist_on`: opt-in guarded ordinary-exit auto-attempt;
 4. continuous follow-assist catch-up: one post-arrival ordinary step at a time;
 5. `/group`: consensual social/travel context that can help members choose the
    leader as their follow target.
@@ -194,6 +195,9 @@ mentor's supported herbs/berries/mushrooms gathering count a little more. This
 does not add learning on accept, group movement, hidden-route sharing or a
 global skill multiplier. Pending mentorship answers also run after normal alias
 parsing so commands like `гурт` are not swallowed as unclear replies.
+The current gathering-offer copy was authored for the first feminine mentor
+case; if gathering mentorship broadens to male or non-feminine mentors, make the
+offer line use mentor forms/gender instead of a fixed `її сліду` phrase.
 
 As of `0.16.2`, hunter/tracking mentorship can also matter through attention to
 movement: fresh clear route-memory from the active mentor's ordinary visible
@@ -210,6 +214,21 @@ It still does not grant learning on accept or make mentorship into group travel.
 The `Відповісти` button also has clearer timeout/cancel copy; known commands and
 aliases keep priority over pending reply text, and the button remains directed
 speech UX rather than shared chat.
+
+Pending reply mode is currently an in-process helper over the persisted
+remembered reply target. After a bot restart or deploy, the `Відповісти` button
+may no longer have its next-message pending state; that is acceptable for the
+foundation because the mode only prepares one immediate free-text reply. If live
+players often answer after restarts, either restore the pending state from the
+remembered target or return a soft "press reply again" prompt instead of making
+this a broad chat persistence system.
+
+Tracking mentorship currently records its learning on the fresh route-memory
+event rather than a separate "hunter actively teaches" event. That is acceptable
+for the MVP because the player is learning by attention to the mentor's real
+movement. Future tracking polish should keep diegetic lesson feedback tied to
+that route-memory trigger, or add a narrow explicit teaching event only if it is
+needed for clarity.
 
 As of `0.16.4`, a real mentored gathering lesson may occasionally be followed by
 an optional practice prompt. The mentor can step aside and offer a

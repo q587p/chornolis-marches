@@ -4,7 +4,7 @@ export type GatherKey = "berries" | "mushrooms" | "herbs" | "honey" | "beeswax";
 export type UseItemKey = "berries" | "herbs" | "mushrooms" | "cooked_meat";
 export type TargetAction = "inspect" | "greet" | "attack" | "freshen";
 export type QueueAliasMode = "status" | "cancel-current" | "clear";
-export type AutoAliasMode = "start" | "stop";
+export type AutoAliasMode = "show" | "start" | "stop";
 export type RestAliasMode = "start" | "queue" | "interrupt";
 export type PostureAliasMode = "sit" | "lie" | "stand";
 export type SocialSignalAlias = "smile" | "laugh" | "nod" | "bow" | "point" | "glare" | "sigh" | "wave";
@@ -98,6 +98,10 @@ export type ParsedAliasCommand =
 export type AliasSuggestion = {
   alias: string;
   command?: string;
+};
+
+type AdminCommandSuggestion = AliasSuggestion & {
+  matches: string[];
 };
 
 const APOSTROPHES = /[ʼ’`´]/g;
@@ -353,6 +357,13 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "звернутися до писаря": { kind: "call-scribes" },
   "попросити писарів": { kind: "call-scribes" },
   "допомога писарів": { kind: "call-scribes" },
+  skills: { kind: "me" },
+  effects: { kind: "me" },
+  journal: { kind: "me" },
+  "навички": { kind: "me" },
+  "стани": { kind: "me" },
+  "літопис": { kind: "me" },
+  "особистий літопис": { kind: "me" },
 
   back: { kind: "back" },
   "назад": { kind: "back" },
@@ -408,11 +419,15 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "підвестися": { kind: "posture", mode: "stand" },
   "підвестись": { kind: "posture", mode: "stand" },
 
-  auto: { kind: "auto", mode: "start" },
+  auto: { kind: "auto", mode: "show" },
   spirit: { kind: "auto", mode: "start" },
   dukh: { kind: "auto", mode: "start" },
   poklyk: { kind: "auto", mode: "start" },
-  "авто": { kind: "auto", mode: "start" },
+  "авто": { kind: "auto", mode: "show" },
+  "auto on": { kind: "auto", mode: "start" },
+  "auto start": { kind: "auto", mode: "start" },
+  "auto_on": { kind: "auto", mode: "start" },
+  "auto_start": { kind: "auto", mode: "start" },
   "поклик духа": { kind: "auto", mode: "start" },
   "покликати духа": { kind: "auto", mode: "start" },
   "покликати дух": { kind: "auto", mode: "start" },
@@ -836,6 +851,52 @@ const SUGGESTABLE_PATTERN_ALIASES = [
 
 const SUGGESTABLE_ALIASES = [...new Set([...Object.keys(EXACT_ALIASES), ...Object.keys(DIRECTION_ALIASES), ...SUGGESTABLE_PATTERN_ALIASES])];
 
+const ADMIN_COMMAND_SUGGESTIONS: AdminCommandSuggestion[] = [
+  { alias: "adminMenu", command: "/adminMenu", matches: ["adminMenu", "adminmenu"] },
+  { alias: "adminHelp", command: "/adminHelp", matches: ["adminHelp", "adminhelp"] },
+  { alias: "adminSet", command: "/adminSet", matches: ["adminSet", "adminset"] },
+  { alias: "world", command: "/world", matches: ["world"] },
+  { alias: "chronicles_real", command: "/chronicles_real", matches: ["chronicles_real", "chronicles real"] },
+  { alias: "chronicles_backfill_players", command: "/chronicles_backfill_players", matches: ["chronicles_backfill_players", "chronicles backfill players"] },
+  { alias: "all dead", command: "/all dead", matches: ["all dead"] },
+  { alias: "playerAdmin", command: "/playerAdmin", matches: ["playerAdmin", "playeradmin", "player"] },
+  { alias: "learning", command: "/learning", matches: ["learning", "learn"] },
+  { alias: "call_scribes_audit", command: "/call_scribes_audit", matches: ["call_scribes_audit", "callScribesAudit", "callscribesaudit"] },
+  { alias: "call_scribes_approve", command: "/call_scribes_approve", matches: ["call_scribes_approve", "callScribesApprove", "callscribesapprove"] },
+  { alias: "timeDebug", command: "/timeDebug", matches: ["timeDebug", "timedebug"] },
+  { alias: "timeSet", command: "/timeSet", matches: ["timeSet", "timeset"] },
+  { alias: "weatherSet", command: "/weatherSet", matches: ["weatherSet", "weatherset"] },
+  { alias: "tutorialReset", command: "/tutorialReset", matches: ["tutorialReset", "tutorialreset"] },
+  { alias: "teleport", command: "/teleport", matches: ["teleport"] },
+  { alias: "tp", command: "/tp", matches: ["tp"] },
+  { alias: "debugGet", command: "/debugGet", matches: ["debugGet", "debugget"] },
+  { alias: "debugSet", command: "/debugSet", matches: ["debugSet", "debugset"] },
+  { alias: "restAdmin", command: "/restAdmin", matches: ["restAdmin", "restadmin"] },
+  { alias: "addCreature", command: "/addCreature", matches: ["addCreature", "addcreature"] },
+  { alias: "addCreatureCorpse", command: "/addCreatureCorpse", matches: ["addCreatureCorpse", "addcreaturecorpse"] },
+  { alias: "addCreatureHelp", command: "/addCreatureHelp", matches: ["addCreatureHelp", "addcreaturehelp"] },
+  { alias: "addResource", command: "/addResource", matches: ["addResource", "addresource", "addResourse", "addresourse"] },
+  { alias: "addResourceHelp", command: "/addResourceHelp", matches: ["addResourceHelp", "addresourcehelp", "addResourseHelp", "addresoursehelp"] },
+  { alias: "addCampfire", command: "/addCampfire", matches: ["addCampfire", "addcampfire"] },
+  { alias: "addTorch", command: "/addTorch", matches: ["addTorch", "addtorch"] },
+  { alias: "addLitTorch", command: "/addLitTorch", matches: ["addLitTorch", "addlittorch", "add lit torch"] },
+  { alias: "addTwigs", command: "/addTwigs", matches: ["addTwigs", "addtwigs"] },
+  { alias: "addItem", command: "/addItem", matches: ["addItem", "additem"] },
+  { alias: "carcassQuest", command: "/carcassQuest", matches: ["carcassQuest", "carcassquest"] },
+  { alias: "forceOld", command: "/forceOld", matches: ["forceOld", "forceold"] },
+  { alias: "cleanupCreature", command: "/cleanupCreature", matches: ["cleanupCreature", "cleanupcreature"] },
+  { alias: "cleanupCreatures", command: "/cleanupCreatures", matches: ["cleanupCreatures", "cleanupcreatures"] },
+  { alias: "reset", command: "/reset", matches: ["reset"] },
+  { alias: "tick", command: "/tick", matches: ["tick"] },
+  { alias: "tickGet", command: "/tickGet", matches: ["tickGet", "tickget"] },
+  { alias: "tickSet", command: "/tickSet", matches: ["tickSet", "tickset"] },
+  { alias: "restart", command: "/restart", matches: ["restart"] },
+  { alias: "archive_republish_preview", command: "/archive_republish_preview", matches: ["archive_republish_preview", "archive republish preview"] },
+  { alias: "archive_republish_queue", command: "/archive_republish_queue", matches: ["archive_republish_queue", "archive republish queue"] },
+  { alias: "archive_republish_status", command: "/archive_republish_status", matches: ["archive_republish_status", "archive republish status"] },
+  { alias: "archive_republish_cancel", command: "/archive_republish_cancel", matches: ["archive_republish_cancel", "archive republish cancel"] },
+];
+
 function normalizeSlashCommand(text: string) {
   return text.replace(/^\/([^\s@]+)@[A-Za-z0-9_]+/i, "/$1");
 }
@@ -987,7 +1048,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "douse-torch") return "/douse_torch";
   if (parsed.kind === "posture") return parsed.mode === "sit" ? "/sit" : parsed.mode === "lie" ? "/lie" : "/stand";
   if (parsed.kind === "rest") return "/rest";
-  if (parsed.kind === "auto") return parsed.mode === "stop" ? "/auto_stop" : "/auto";
+  if (parsed.kind === "auto") return parsed.mode === "show" ? "/auto" : parsed.mode === "stop" ? "/auto_stop" : "/spirit";
   if (parsed.kind === "queue") return "/queue";
   if (parsed.kind === "track") return "/track";
   if (parsed.kind === "crawl-root-gap") return "/crawl";
@@ -1041,6 +1102,7 @@ export function formatAliasSuggestion(suggestion: AliasSuggestion) {
 export function suggestAliasEntries(raw: string, limit = 4): AliasSuggestion[] {
   const query = withoutLeadingSlash(normalizeInput(raw));
   if (!query) return [];
+  if (Object.prototype.hasOwnProperty.call(EXACT_ALIASES, query) && parseAlias(raw)) return [];
 
   return SUGGESTABLE_ALIASES
     .map((alias) => ({ alias, score: aliasSuggestionScore(query, alias) }))
@@ -1048,6 +1110,21 @@ export function suggestAliasEntries(raw: string, limit = 4): AliasSuggestion[] {
     .sort((a, b) => a.score - b.score || a.alias.length - b.alias.length || a.alias.localeCompare(b.alias, "uk"))
     .slice(0, limit)
     .map((item) => ({ alias: item.alias, command: slashCommandForAlias(item.alias) }));
+}
+
+export function suggestAdminCommandEntries(raw: string, limit = 4): AliasSuggestion[] {
+  const query = withoutLeadingSlash(normalizeInput(raw));
+  if (!query) return [];
+
+  return ADMIN_COMMAND_SUGGESTIONS
+    .map((suggestion) => {
+      const scores = suggestion.matches.map((match) => aliasSuggestionScore(query, withoutLeadingSlash(normalizeInput(match))));
+      return { ...suggestion, score: Math.min(...scores) };
+    })
+    .filter((item) => Number.isFinite(item.score) && item.matches.every((match) => withoutLeadingSlash(normalizeInput(match)) !== query))
+    .sort((a, b) => a.score - b.score || a.alias.length - b.alias.length || a.alias.localeCompare(b.alias, "uk"))
+    .slice(0, limit)
+    .map((item) => ({ alias: item.alias, command: item.command }));
 }
 
 export function suggestKeyboardLayoutAliasEntries(raw: string, limit = 4): AliasSuggestion[] {
@@ -1283,6 +1360,9 @@ function parseOpenIntent(text: string): ParsedAliasCommand | null {
 
 function parseTargetAction(text: string): ParsedAliasCommand | null {
   if (text === "attack_mouse") return { kind: "target-action", action: "attack", target: "mouse" };
+  if (/^(?:attack|fight|hit|kill|kick|атака|атакувати|напасти|вдарити|ударити|копнути|бити)$/u.test(text)) {
+    return { kind: "target-action", action: "attack", target: "" };
+  }
 
   const patterns: Array<[TargetAction, RegExp]> = [
     ["inspect", /^(?:look\s+at|look|x|examine|inspect|роздивитися|оглянути|огл|глянути\s+на|подивитися\s+на|придивитися\s+до)\s+(.+)$/],
@@ -1678,6 +1758,7 @@ function parseFollowAssistIntent(text: string): ParsedAliasCommand | null {
   if ([
     "follow assist on",
     "follow_assist on",
+    "follow_assist_on",
     "follow auto on",
     "follow_auto on",
     "autofollow on",
@@ -1692,6 +1773,7 @@ function parseFollowAssistIntent(text: string): ParsedAliasCommand | null {
   if ([
     "follow assist off",
     "follow_assist off",
+    "follow_assist_off",
     "stop follow assist",
     "stop_follow_assist",
     "follow auto off",

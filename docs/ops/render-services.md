@@ -205,6 +205,22 @@ exits, and watch whether repeated `slow:followAssist.catchUp` lines appear. If
 that path is hot, prefer narrower structured marker fields over adding more
 `description contains` lookups.
 
+Also watch the player feel of continuous catch-up in live Telegram sessions:
+
+- chase chains should be allowed to feel useful, but a fast-moving target should
+  not drag a follower through a surprisingly long run; if this feels too long,
+  tune TTL/cooldowns or add a step-count guard before considering broader group
+  movement;
+- manual control should win: if the follower presses another action after an
+  auto-follow step, queued/running action blocking should stop the next
+  catch-up from competing with the player's choice;
+- route-memory lookup is bounded and does not use `description contains`; if
+  `slow:followAssist.catchUp` becomes a repeated hotspot, consider a structured
+  route-memory table rather than widening `WorldEvent` scans;
+- AFK, ended or otherwise unavailable players should not be moved by catch-up;
+  verify this with a live smoke because the code relies on the proactive-session
+  guard before queueing the next assist step.
+
 ## Herald Archive Catch-Up
 
 Historical `news.md` backfill uses the durable `HeraldPublication` outbox. The
@@ -232,6 +248,15 @@ cancel the outbox instead of suspending the whole Web Service:
 - `/pause_publications` stops automatic outbox publication while the Herald bot,
   health endpoint and admin commands remain alive;
 - `/resume_publications` resumes automatic publication;
+- `/publication_queue_status` shows the full unpublished PUBLIC outbox count,
+  due-now count, future scheduled count, per-`sourceType` totals, the next
+  `availableAt` overall and by source type, plus the durable pause state;
+- `/future_publications` lists the next 10 unpublished PUBLIC rows scheduled for
+  the future, with id, source type, source/title, archive order and Kyiv
+  `availableAt`;
+- `/pending_publications` is intentionally due-now only (`availableAt <= now`),
+  so it can be empty while `/publication_queue_status` still reports future
+  scheduled rows;
 - `/cancel_pending_publications` and `/backfill_news_cancel` mark unpublished
   `NEWS_MD` / `NEWS_MD_ARCHIVE` rows as `CANCELED`, preserving already
   published history and leaving unrelated future publication types alone.

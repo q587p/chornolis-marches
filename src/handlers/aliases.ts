@@ -27,7 +27,7 @@ import { actionQueueReplyOptions, sendActionSubmitFeedback } from "../utils/acti
 import { durationSecondsSuffix } from "../utils/durationText";
 import { escapeHtml, stripUnsafeText } from "../utils/text";
 import { sendHelp } from "./help";
-import { disablePlayerAuto, isPlayerAutoEnabled, requestOrEnablePlayerAuto } from "./auto";
+import { disablePlayerAuto, isPlayerAutoEnabled, replyPlayerAutoStatus, requestOrEnablePlayerAuto } from "./auto";
 import { showCharacter, showInventory, showLocationForPlayer } from "./player";
 import { buildAllPage, buildChatLogPage, buildStatBrief, buildWhoPage } from "./status";
 import { renderDepletedVegetationInspection, renderLocationBrief, renderLocationExits, renderLocationFeatureInteraction, renderLocationFeatureInteractionByQuery, renderLocationGlance, shakeTreeAtCurrentLocation } from "../services/locations";
@@ -408,7 +408,12 @@ async function submitRest(bot: Bot, ctx: any, mode: RestAliasMode = "start") {
   await beginRestNow(bot, ctx, player.id);
 }
 
-async function submitAuto(bot: Bot, ctx: any, mode: "start" | "stop") {
+async function submitAuto(bot: Bot, ctx: any, mode: "show" | "start" | "stop") {
+  if (mode === "show") {
+    await replyPlayerAutoStatus(ctx);
+    return;
+  }
+
   if (mode === "start") {
     await requestOrEnablePlayerAuto(bot, ctx);
     return;
@@ -1082,8 +1087,8 @@ async function submitFollowAssist(ctx: any, mode: "show" | "on" | "off") {
   await ctx.reply([
     followIntentStatusLine(intent.lastKnownTargetLabel, { stale: Boolean(!targetVisible) }),
     followAssistStateText(intent.assistEnabled),
-    "Увімкнути: /follow_assist on",
-    "Вимкнути: /follow_assist off",
+    "Увімкнути: /follow_assist_on",
+    "Вимкнути: /follow_assist_off",
   ].filter(Boolean).join("\n"));
 }
 
@@ -1731,7 +1736,8 @@ export function registerAliasHandlers(bot: Bot) {
 	    const mode = String(ctx.match ?? "").trim().toLowerCase();
 	    await submitFollowAssist(ctx, mode === "on" ? "on" : mode === "off" ? "off" : "show");
 	  });
-	  bot.command("stop_follow_assist", async (ctx) => submitFollowAssist(ctx, "off"));
+	  bot.command("follow_assist_on", async (ctx) => submitFollowAssist(ctx, "on"));
+	  bot.command(["follow_assist_off", "stop_follow_assist"], async (ctx) => submitFollowAssist(ctx, "off"));
 	  bot.command(["follow_step", "keep_following", "trail"], async (ctx) => submitFollowStep(bot, ctx));
 	  bot.command(["group", "travel_group"], async (ctx) => submitTravelGroupCommand(bot, ctx, "show"));
 	  bot.command("group_create", async (ctx) => submitTravelGroupCommand(bot, ctx, "create"));
@@ -1932,7 +1938,10 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "shout") return submitShout(bot, ctx, parsed.text);
     if (parsed.kind === "follow") return submitFollowIntent(ctx, parsed.target);
     if (parsed.kind === "unfollow") return submitUnfollow(ctx);
-    if (parsed.kind === "target-action") return submitTargetAction(bot, ctx, parsed.action, parsed.target);
+    if (parsed.kind === "target-action") {
+      if (parsed.action === "attack" && !parsed.target.trim()) return submitAttackCommand(bot, ctx, "");
+      return submitTargetAction(bot, ctx, parsed.action, parsed.target);
+    }
     if (parsed.kind === "pickup-target") return submitPickupTarget(bot, ctx, parsed.target);
     if (parsed.kind === "social-signal") return submitSocialSignal(bot, ctx, parsed.signal, parsed.target);
   });

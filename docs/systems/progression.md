@@ -208,8 +208,9 @@ finds, economy hooks and public raw skill UI remain deferred.
 
 `0.15.46` adds guarded follow assist on top of the existing attention and
 route-memory spine. It is not a new learning effect: if a player explicitly
-enables `Автокрок слідом` (`/follow_assist on`) for the current follow intent,
-clear ordinary visible movement by the followed target may submit one normal
+enables `Автокрок слідом` (`/follow_assist_on`, compatible with
+`/follow_assist on`) for the current follow intent, clear ordinary visible
+movement by the followed target may submit one normal
 `MOVE` for the follower. Hidden routes, darkness, missing exits, stamina,
 posture, sleep, death and existing queued work still block it, and the cellar
 water-word passage is not repeated automatically.
@@ -231,6 +232,15 @@ This is still not passive learning: accepting mentorship alone grants nothing,
 unrelated gatherers do not count, unsupported resources do not count and hunter
 tracking mentorship remains a separate follow-up.
 
+Current mentor matching for this gathering bridge depends on the observed source
+description carrying `actorCreature=<id>`. That is acceptable for the current
+source-description format, but if source descriptions change or more mentored
+observation families join the system, move mentor/source identity into
+structured source markers instead of relying on string parsing. Also watch live
+gathering growth from the first `amount=2` mentored observation bonus: if a
+player can follow one herbalist for too much progress too quickly, add a
+cooldown or separate `mentorship_observation` context before widening it.
+
 `0.16.2` adds the first hunter/tracking mentorship observation bonus. When a
 player has active `tracking` mentorship with a hunter-like local character and
 receives fresh clear follow-route memory from that mentor's ordinary visible
@@ -247,12 +257,24 @@ a cooldowned marker. `/mentor` can also show one compact recent-lesson hint.
 These lines never expose raw progress, XP, levels, amounts or chances, and they
 do not create progress by themselves.
 
+The default lesson-feedback cooldown is 10 minutes per player/mentor/context.
+Watch live rooms where players frequently use `/look` or `/examine`: if active
+mentors generate enough gathering or tracking observations that lesson copy
+feels noisy, make feedback rarer or limit it to the first lesson per
+mentor/context before adding more lesson text.
+
 `0.16.4` adds the first guided practice prompt after a real mentored lesson. The
 initial prompt is gathering-only: after a cooldowned gathering lesson, if the
 same supported resource is still available nearby, the mentor can invite the
 player to try the existing gather action. The prompt is optional, does not grant
 learning by itself and does not change success, stamina, rewards or practice
 rules. Tracking prompts remain a separate follow-up.
+
+The first prompt appears only when lesson feedback itself is not on cooldown and
+a new lesson marker is created. That keeps mentor chat quiet, but it means live
+players may sometimes see a mentor demonstrate work without getting the optional
+"you try" prompt. If that feels too sparse, split lesson feedback cadence from
+practice-prompt cadence instead of making every observed mentor action speak.
 
 `0.16.5` is a technical marker-storage refactor for the same learning and follow
 spine. `WorldEvent` still carries readable lesson, prompt and follow-assist

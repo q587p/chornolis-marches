@@ -75,7 +75,7 @@ assert.match(travelGroupInviteReceivedText("Орина"), /\/group_accept/);
 assert.match(travelGroupAcceptText("Орина"), /власний крок/);
 assert.match(travelGroupLeaveText(), /\/unfollow/);
 assert.match(travelGroupDisbandText(), /розпускаєте дорожній гурт/);
-assert.match(travelGroupFollowLeaderText("Орина"), /\/follow_assist on/);
+assert.match(travelGroupFollowLeaderText("Орина"), /\/follow_assist_on/);
 for (const entrypoint of [
   acceptTravelGroupInvite,
   createTravelGroupForPlayer,
