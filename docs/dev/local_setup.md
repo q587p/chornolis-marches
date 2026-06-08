@@ -42,6 +42,25 @@ npm test
 `npm test` reads its ordered command list from `scripts/test/test-manifest.cjs`
 through `scripts/test/run-tests.cjs`. When adding a new focused test, add it to
 that manifest in the intended order instead of expanding `package.json`.
+The runner prints per-command durations and a slowest-command summary. It runs
+serially by default; use `TEST_JOBS` for a faster local pass when the machine can
+handle concurrent Node processes:
+
+```bash
+TEST_JOBS=4 npm test
+```
+
+On Windows PowerShell:
+
+```powershell
+$env:TEST_JOBS=4; npm.cmd test
+```
+
+The runner clamps `TEST_JOBS` to a small positive range and preserves the
+manifest order in command labels and the final slowest list. Test subprocesses
+default to `TS_NODE_TRANSPILE_ONLY=1`; the manifest still runs
+`tsc -p tsconfig.seed.json`, and CI runs `npm run typecheck`, so type coverage
+stays explicit.
 
 Check that the current database has the seeded start location and map basics:
 
