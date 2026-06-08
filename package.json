@@ -8,6 +8,7 @@
     "build": "prisma generate && tsc",
     "start": "node dist/bot.js",
     "test": "node scripts/test/run-tests.cjs",
+    "typecheck": "tsc",
     "test:seed": "node scripts/test/world-seed.mjs",
     "test:seed:types": "tsc -p tsconfig.seed.json",
     "test:db": "node scripts/test/db-smoke.mjs",
