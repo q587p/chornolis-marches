@@ -1,5 +1,5 @@
 export type StarterAnimalAge = "CHILD" | "YOUNG" | "ADULT" | "OLD" | "CORPSE";
-export type StarterAnimalSpeciesKey = "rabbit" | "mouse" | "fox" | "wolf" | "owl";
+export type StarterAnimalSpeciesKey = "rabbit" | "mouse" | "frog" | "fox" | "wolf" | "owl" | "hawk" | "snake";
 
 export type StarterAnimalGroup = {
   speciesKey: StarterAnimalSpeciesKey;
@@ -20,10 +20,6 @@ export const STARTER_RABBITS: StarterAnimalGroup[] = [
   { speciesKey: "rabbit", locationKey: "meadow_12_04", count: 3, age: "YOUNG" },
   { speciesKey: "rabbit", locationKey: "meadow_12_04", count: 3, age: "CHILD" },
 
-  { speciesKey: "rabbit", locationKey: "riverbank_15_02", count: 1, age: "ADULT", sex: "FEMALE" },
-  { speciesKey: "rabbit", locationKey: "riverbank_15_02", count: 1, age: "ADULT", sex: "MALE" },
-  { speciesKey: "rabbit", locationKey: "riverbank_15_02", count: 2, age: "YOUNG" },
-
   { speciesKey: "rabbit", locationKey: "meadow_14_05", count: 2, age: "CORPSE" },
 ];
 
@@ -38,11 +34,21 @@ export const STARTER_MICE: StarterAnimalGroup[] = [
   { speciesKey: "mouse", locationKey: "meadow_11_04", count: 4, age: "YOUNG" },
   { speciesKey: "mouse", locationKey: "meadow_11_04", count: 4, age: "CHILD" },
 
-  { speciesKey: "mouse", locationKey: "riverbank_14_01", count: 2, age: "ADULT", sex: "FEMALE" },
-  { speciesKey: "mouse", locationKey: "riverbank_14_01", count: 1, age: "ADULT", sex: "MALE" },
-  { speciesKey: "mouse", locationKey: "riverbank_14_01", count: 4, age: "YOUNG" },
-
   { speciesKey: "mouse", locationKey: "meadow_14_05", count: 2, age: "CORPSE" },
+];
+
+export const STARTER_FROGS: StarterAnimalGroup[] = [
+  { speciesKey: "frog", locationKey: "riverbank_14_01", count: 2, age: "ADULT", sex: "FEMALE" },
+  { speciesKey: "frog", locationKey: "riverbank_14_01", count: 1, age: "ADULT", sex: "MALE" },
+  { speciesKey: "frog", locationKey: "riverbank_14_01", count: 4, age: "YOUNG" },
+
+  { speciesKey: "frog", locationKey: "willow_still_pool_15_10", count: 1, age: "ADULT", sex: "FEMALE" },
+  { speciesKey: "frog", locationKey: "willow_still_pool_15_10", count: 1, age: "ADULT", sex: "MALE" },
+  { speciesKey: "frog", locationKey: "willow_still_pool_15_10", count: 2, age: "YOUNG" },
+
+  { speciesKey: "frog", locationKey: "willow_frog_pool_17_10", count: 2, age: "ADULT", sex: "FEMALE" },
+  { speciesKey: "frog", locationKey: "willow_frog_pool_17_10", count: 1, age: "ADULT", sex: "MALE" },
+  { speciesKey: "frog", locationKey: "willow_frog_pool_17_10", count: 4, age: "CHILD" },
 ];
 
 export const STARTER_PREDATORS: StarterAnimalGroup[] = [
@@ -54,6 +60,11 @@ export const STARTER_PREDATORS: StarterAnimalGroup[] = [
   { speciesKey: "owl", locationKey: "forest_09_04", count: 1, age: "ADULT", sex: "MALE" },
   { speciesKey: "owl", locationKey: "meadow_14_04", count: 1, age: "YOUNG", sex: "FEMALE" },
   { speciesKey: "owl", locationKey: "riverbank_13_00", count: 1, age: "ADULT", sex: "MALE" },
+  { speciesKey: "hawk", locationKey: "meadow_15_03", count: 1, age: "ADULT", sex: "FEMALE" },
+  { speciesKey: "hawk", locationKey: "riverbank_17_04", count: 1, age: "ADULT", sex: "MALE" },
+  { speciesKey: "snake", locationKey: "riverbank_15_02", count: 1, age: "ADULT", sex: "FEMALE" },
+  { speciesKey: "snake", locationKey: "willow_reed_wall_17_09", count: 1, age: "ADULT", sex: "MALE" },
+  { speciesKey: "snake", locationKey: "willow_root_tangle_16_10", count: 1, age: "YOUNG", sex: "FEMALE" },
 ];
 
 export function starterAnimalAgeTicks(
@@ -96,6 +107,25 @@ export function starterAnimalAction(speciesKey: string, age: StarterAnimalAge) {
     if (age === "OLD") return "сидить у дуплі й повільно кліпає";
     if (age === "CORPSE") return "лежить нерухомо серед сірого пір'я";
     return "беззвучно дослухається до мишачого шарудіння";
+  }
+  if (speciesKey === "hawk") {
+    if (age === "YOUNG") return "вчиться тримати денне коло над травою";
+    if (age === "OLD") return "сидить на сухій гілці й стежить за лукою";
+    if (age === "CORPSE") return "лежить нерухомо серед прим'ятого пір'я";
+    return "ширяє в денному світлі над відкритою травою";
+  }
+  if (speciesKey === "frog") {
+    if (age === "CHILD") return "ховається у мокрій траві біля води";
+    if (age === "YOUNG") return "стрибає між осокою й мокрим мулом";
+    if (age === "OLD") return "тихо сидить у холодній калюжі";
+    if (age === "CORPSE") return "лежить нерухомо біля вологого берега";
+    return "сидить у мокрій траві й прислухається до води";
+  }
+  if (speciesKey === "snake") {
+    if (age === "YOUNG") return "обережно ковзає між корінням";
+    if (age === "OLD") return "гріється на сухішому клапті берега";
+    if (age === "CORPSE") return "лежить нерухомо в очереті";
+    return "повзе вздовж вологого коріння";
   }
   if (speciesKey === "mouse") {
     if (age === "CHILD") return "пищить у сухій траві";

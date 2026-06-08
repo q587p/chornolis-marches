@@ -1168,6 +1168,7 @@ export function registerAdminHandlers(bot: Bot) {
         `Дублів унікальних NPC прибрано: ${summary.removedDuplicateUniqueCreatures}`,
         `Зайців створено: ${summary.rabbitsCreated}`,
         `Мишей створено: ${summary.miceCreated}`,
+        `Жаб створено: ${summary.frogsCreated}`,
         `Хижаків створено: ${summary.predatorsCreated}`,
         `Авто-режимів вимкнено: ${autoStopped}`,
         `Час світу скинуто: хвилина ${summary.worldClockResetTo}`,

@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { Prisma } from "@prisma/client";
 import {
+  STARTER_FROGS,
   STARTER_MICE,
   STARTER_PREDATORS,
   STARTER_RABBITS,
@@ -116,6 +117,7 @@ type ResetSummary = {
   uniqueCreatureSummaries: string[];
   rabbitsCreated: number;
   miceCreated: number;
+  frogsCreated: number;
   predatorsCreated: number;
   playerAutoStatesCleared: number;
   worldClockResetTo: string;
@@ -466,6 +468,15 @@ async function resetStarterAnimals(speciesKey: StarterAnimalSpeciesKey, groups: 
   return created;
 }
 
+async function resetStarterPredators() {
+  let created = 0;
+  const speciesKeys = [...new Set(STARTER_PREDATORS.map((group) => group.speciesKey))];
+  for (const speciesKey of speciesKeys) {
+    created += await resetStarterAnimals(speciesKey, STARTER_PREDATORS.filter((group) => group.speciesKey === speciesKey));
+  }
+  return created;
+}
+
 async function clearPlayerAutoState() {
   const result = await prisma.player.updateMany({
     where: { isAutoEnabled: true },
@@ -496,9 +507,8 @@ export async function resetWorldState(): Promise<ResetSummary> {
   const unique = await resetUniqueCreatures(world);
   const rabbitsCreated = await resetStarterAnimals("rabbit", STARTER_RABBITS);
   const miceCreated = await resetStarterAnimals("mouse", STARTER_MICE);
-  const foxesCreated = await resetStarterAnimals("fox", STARTER_PREDATORS.filter((group) => group.speciesKey === "fox"));
-  const wolvesCreated = await resetStarterAnimals("wolf", STARTER_PREDATORS.filter((group) => group.speciesKey === "wolf"));
-  const predatorsCreated = foxesCreated + wolvesCreated;
+  const frogsCreated = await resetStarterAnimals("frog", STARTER_FROGS);
+  const predatorsCreated = await resetStarterPredators();
   const worldClock = await resetWorldClockState();
   await resetPlayerWorldTimeState();
 
@@ -507,7 +517,7 @@ export async function resetWorldState(): Promise<ResetSummary> {
     data: {
       type: "SYSTEM",
       title: "Світ скинуто",
-      description: `Reset to ${world.meta.version}: ${world.uniqueCreatures.map(uniqueCreatureSummary).join("; ")}. Зайці, миші, лисиці й вовки повернулись у стартові місцини, авто-режими вимкнено, час світу повернено до стартової хвилини ${worldClock.absoluteMinute}.`,
+      description: `Reset to ${world.meta.version}: ${world.uniqueCreatures.map(uniqueCreatureSummary).join("; ")}. Стартові звірі повернулись у стартові місцини, авто-режими вимкнено, час світу повернено до стартової хвилини ${worldClock.absoluteMinute}.`,
       locationId: start?.id,
     },
   });
@@ -521,6 +531,7 @@ export async function resetWorldState(): Promise<ResetSummary> {
     uniqueCreatureSummaries: world.uniqueCreatures.map(uniqueCreatureSummary),
     rabbitsCreated,
     miceCreated,
+    frogsCreated,
     predatorsCreated,
     playerAutoStatesCleared,
     worldClockResetTo: `${worldClock.absoluteMinute}`,

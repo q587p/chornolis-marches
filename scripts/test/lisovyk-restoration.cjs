@@ -28,9 +28,12 @@ const { normalizeCreatureActionText } = require("../../src/utils/creatureActionT
 const species = [
   { id: 1, key: "rabbit", kind: "ANIMAL", baseHp: 10, childTicks: 24, youngTicks: 48, adultTicks: 96 },
   { id: 2, key: "mouse", kind: "ANIMAL", baseHp: 4, childTicks: 8, youngTicks: 16, adultTicks: 32 },
-  { id: 3, key: "fox", kind: "ANIMAL", baseHp: 14, childTicks: 60, youngTicks: 120, adultTicks: 360 },
-  { id: 4, key: "wolf", kind: "ANIMAL", baseHp: 22, childTicks: 90, youngTicks: 180, adultTicks: 720 },
-  { id: 5, key: "owl", kind: "ANIMAL", baseHp: 5, childTicks: 120, youngTicks: 360, adultTicks: 1800 },
+  { id: 3, key: "frog", kind: "ANIMAL", baseHp: 2, childTicks: 18, youngTicks: 36, adultTicks: 360 },
+  { id: 4, key: "fox", kind: "ANIMAL", baseHp: 14, childTicks: 60, youngTicks: 120, adultTicks: 360 },
+  { id: 5, key: "wolf", kind: "ANIMAL", baseHp: 22, childTicks: 90, youngTicks: 180, adultTicks: 720 },
+  { id: 6, key: "owl", kind: "ANIMAL", baseHp: 5, childTicks: 120, youngTicks: 360, adultTicks: 1800 },
+  { id: 7, key: "hawk", kind: "ANIMAL", baseHp: 6, childTicks: 120, youngTicks: 360, adultTicks: 1800 },
+  { id: 8, key: "snake", kind: "ANIMAL", baseHp: 4, childTicks: 90, youngTicks: 240, adultTicks: 1200 },
 ];
 const locationKeys = [...new Set(POPULATION_FLOOR_GROUPS.map((group) => group.locationKey))];
 const locations = locationKeys.map((key, index) => ({ id: index + 10, key }));
@@ -57,9 +60,13 @@ const noRabbitBreedingPair = planLisovykRestorationTarget({
     { speciesKey: "rabbit", locationKey: "forest_04_00", age: "CHILD", sex: null },
     { speciesKey: "mouse", locationKey: "forest_03_02", age: "ADULT", sex: "FEMALE" },
     { speciesKey: "mouse", locationKey: "forest_03_02", age: "ADULT", sex: "MALE" },
+    { speciesKey: "frog", locationKey: "riverbank_14_01", age: "ADULT", sex: "FEMALE" },
+    { speciesKey: "frog", locationKey: "riverbank_14_01", age: "ADULT", sex: "MALE" },
     { speciesKey: "fox", locationKey: "forest_07_02", age: "ADULT", sex: "FEMALE" },
     { speciesKey: "wolf", locationKey: "forest_00_08", age: "ADULT", sex: "FEMALE" },
     { speciesKey: "owl", locationKey: "forest_04_02", age: "ADULT", sex: "FEMALE" },
+    { speciesKey: "hawk", locationKey: "meadow_15_03", age: "ADULT", sex: "FEMALE" },
+    { speciesKey: "snake", locationKey: "riverbank_15_02", age: "ADULT", sex: "FEMALE" },
   ],
 });
 assert.equal(noRabbitBreedingPair.speciesKey, "rabbit");
@@ -81,6 +88,22 @@ const healthy = planLisovykRestorationTarget({
     }))),
 });
 assert.equal(healthy, null, "Lisovyk should not choose a restoration target when starter floors are present");
+
+const wetTarget = planLisovykRestorationTarget({
+  species,
+  locations,
+  livingCreatures: POPULATION_FLOOR_GROUPS
+    .filter((group) => group.age !== "CORPSE" && group.speciesKey !== "frog")
+    .flatMap((group) => Array.from({ length: group.count }, () => ({
+      speciesKey: group.speciesKey,
+      locationKey: group.locationKey,
+      age: group.age,
+      sex: group.sex ?? null,
+    }))),
+});
+assert.equal(wetTarget.speciesKey, "frog", "Lisovyk should be able to choose wetland/riverbank starter fauna restoration");
+assert.ok(["riverbank_14_01", "willow_frog_pool_17_10", "willow_still_pool_15_10"].includes(wetTarget.locationKey));
+assert.equal(wetTarget.rows.length, wetTarget.expectedCount, "wet restoration should still restore one bounded starter group");
 
 const markerAction = formatLisovykRestorationAction(
   { speciesKey: "rabbit", locationKey: "forest_04_00" },
@@ -169,7 +192,7 @@ const serviceSource = fs.readFileSync("src/services/lisovykRestoration.ts", "utf
 const worldTickSource = fs.readFileSync("src/services/worldTick.ts", "utf8");
 assert.equal(serviceSource.includes("worldEventMarker"), false, "Lisovyk MVP should use WorldEvent descriptions, not WorldEventMarker writes");
 assert.equal(JSON.stringify({ emptyTarget, markerAction }).includes("playerId"), false);
-assert.deepEqual(POPULATION_FLOOR_SPECIES_KEYS.sort(), ["fox", "mouse", "owl", "rabbit", "wolf"]);
+assert.deepEqual(POPULATION_FLOOR_SPECIES_KEYS.sort(), ["fox", "frog", "hawk", "mouse", "owl", "rabbit", "snake", "wolf"]);
 
 assert.match(
   worldTickSource,

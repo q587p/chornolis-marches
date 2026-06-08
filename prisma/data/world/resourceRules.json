@@ -145,9 +145,15 @@
       "grass": 90,
       "herbs": 20
     },
-    "riverbank_15_02": {
-      "grass": 90,
-      "herbs": 20
+    "willow_still_pool_15_10": {
+      "grass": 45,
+      "mushrooms": 8,
+      "herbs": 18
+    },
+    "willow_frog_pool_17_10": {
+      "grass": 55,
+      "mushrooms": 8,
+      "herbs": 16
     },
     "dream_tutorial_hub": {
       "grass": 0,
