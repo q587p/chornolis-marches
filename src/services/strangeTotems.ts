@@ -24,9 +24,26 @@ type StrangeTotemFeatureLike = {
 };
 
 export const STRANGE_TOTEM_REGION_CAPS = {
-  dry_luka: 5,
-  riverbank: 2,
+  dry_luka: 13,
+  riverbank: 3,
+  chornolis_border: 5,
+  willow_floodplain: 1,
 } as const;
+export const STRANGE_TOTEM_PROTECTED_REGION_KEYS = [
+  "old_bridge",
+  "closed_settlement_gate",
+  "dream_tutorial",
+] as const;
+export const STRANGE_TOTEM_PROTECTED_LOCATION_KEYS = [
+  "start_border_camp",
+  "start_border_watchtower",
+  "start_border_cellar",
+  "closed_east_gate",
+  "settlement_inner_placeholder",
+  "under_bridge_18_05",
+  "old_bridge_west_span",
+  "old_bridge_east_span",
+] as const;
 export const STRANGE_TOTEM_LIFETIME_DAYS = 7;
 export const STRANGE_TOTEM_LAST_DAY_START_DAYS = 6;
 export const STRANGE_TOTEM_FRESH_TWIGS_MIN = 2;
@@ -61,12 +78,45 @@ const DRY_LUKA_DESCRIPTIONS = [
   "Кілька сухих стебел, тонка лозина й клаптик темної кори зв'язані в малу криву постать. Вона не схожа ні на межовий знак, ні на дитячу забавку.",
   "Сухі стебла стоять у траві надто рівно, ніби їх хтось обережно втиснув у землю і стягнув тонкою лозиною.",
   "Малий вузол із трави й кори повернутий до стежки. Його легко було б сплутати з хмизом, якби не надто навмисна форма.",
+  "Пучок ковили перев'язаний сухою жилкою лози, а зверху встромлено маленький уламок кори. Уся постать нахилена так, ніби слухає луку.",
+  "Серед пожовклої трави стоїть вузький хмизовий знак. Його тінь коротша за інші тіні й чомусь лягає впоперек стежки.",
+  "Три сухі стеблини зведені докупи, мов ноги малої постаті, а між ними затиснуто сірий листок. Вітер торкає траву довкола, але знак не ворушиться.",
+  "У низькій траві хтось склав маленьке ребристе коло з кори й тонких прутиків. Воно не перекриває шлях, але око весь час повертається до нього.",
+  "Поряд із кущиком полину стоїть сухий вузлик, обвитий блідою лозою. Від нього тягнеться ледь помітна смужка прим'ятої трави.",
+  "Дві лозини схрещені над жмутом сірої трави, наче хтось позначив місце без жодного людського знака. Нічого корисного тут не видно, крім самого неспокою.",
+  "Кора, стебла й сухий будяк стягнуті в маленьку постать із неприродно рівною спиною. У відкритій луці вона виглядає занадто сторожкою.",
+  "Низький знак із хмизу стоїть між двома заячими стежками. Він ніби показує не напрямок, а саму думку про напрямок.",
+  "У траві лишено вузол із сухих перев'язів і темної кори. Його можна було б розтоптати випадково, та форма просить спершу придивитися.",
+  "Малий сухий стовпчик обкладений стеблами так, ніби це не стовпчик, а чиясь зігнута постать. На землі біля нього немає звичайних слідів рук.",
 ];
 
 const RIVERBANK_DESCRIPTIONS = [
   "Очеретини скручені в маленьку постать і стягнуті мокрою лозою. Внизу налип мул, хоча навколо трава сухіша.",
   "Біля берега стоїть низький очеретяний знак. Він майже сором'язливий, але від цього не стає випадковим.",
+  "Мокрий корінець тримає разом кілька трісок і стебел очерету. На мулі під ними видно тонкий знак, наче вода щойно відступила тільки тут.",
+  "Плавун і дрібна кора сплетені в криву фігуру на самому краю вогкої землі. Поряд у воді повільно розходяться кола, хоча нічого не впало.",
+  "Знак зібраний із намоклого хмизу, річкового мулу й тонких зелених стебел. Він повернутий не до стежки, а до тихого місця між течією й берегом.",
 ];
+
+const CHORNOLIS_BORDER_DESCRIPTIONS = [
+  "На межі між деревами стоїть вузол із корінців і темної кори. Він низький, але тримається так, наче підпирає тінь старого лісу.",
+  "Сухі гілочки зведені в малу постать біля кореня. З одного боку пахне відкритою землею, з іншого — вологим лісом, і знак стоїть рівно посеред цього подиху.",
+  "Тонка лоза обмотує тріску й жмут моху. Постать повернута до стежки з такою впертістю, ніби позначає не місце, а поріг.",
+  "Між двома коренями лишено хмизовий знак із темним шматком кори замість лиця. За ним ліс виглядає глибшим, ніж мав би з цієї відстані.",
+  "Кілька старих корінців стягнуті сухою травою в маленького сторожа. Він стоїть там, де край лісу ніби вагається, чи пускати далі.",
+  "Під кущем лежить і водночас стоїть дивна постать із кори, моху й тонких прутиків. Вона схожа на річ, яку поставили на межі, щоб межа пам'ятала себе.",
+];
+
+const WILLOW_FLOODPLAIN_DESCRIPTIONS = [
+  "Вербові корінці, мокрий очерет і темна тріска зв'язані в малий знак над вогкою землею. Довкола пахне мулом і стоячою водою, а сама постать здається принесеною повінню й залишеною навмисно.",
+];
+
+export const STRANGE_TOTEM_DESCRIPTION_POOLS = {
+  dry_luka: DRY_LUKA_DESCRIPTIONS,
+  riverbank: RIVERBANK_DESCRIPTIONS,
+  chornolis_border: CHORNOLIS_BORDER_DESCRIPTIONS,
+  willow_floodplain: WILLOW_FLOODPLAIN_DESCRIPTIONS,
+} as const;
 
 const TRACK_LABELS = [
   "підозрілі сліди в сухій траві",
@@ -122,6 +172,17 @@ export function strangeTotemRegionCap(regionKey: string | null | undefined) {
     : 0;
 }
 
+export function isStrangeTotemProtectedSpawnLocation(location: { key?: string | null; region?: { key?: string | null } | null }) {
+  const locationKey = location.key ?? "";
+  const regionKey = location.region?.key ?? "";
+  if ((STRANGE_TOTEM_PROTECTED_REGION_KEYS as readonly string[]).includes(regionKey)) return true;
+  if ((STRANGE_TOTEM_PROTECTED_LOCATION_KEYS as readonly string[]).includes(locationKey)) return true;
+  if (locationKey.startsWith("dream_tutorial_")) return true;
+  if (locationKey.startsWith("old_bridge_")) return true;
+  if (locationKey.startsWith("closed_")) return true;
+  return false;
+}
+
 export function strangeTotemDayIndex(absoluteMinute: number) {
   return Math.floor(Math.max(0, absoluteMinute) / MINUTES_PER_WORLD_DAY);
 }
@@ -174,7 +235,7 @@ export function strangeTotemInspectionTextSync(feature: StrangeTotemFeatureLike,
   const data = featureData(feature.data);
   const regionKey = feature.location?.region?.key;
   const baseDescription = feature.description
-    ?? (regionKey === "riverbank" ? RIVERBANK_DESCRIPTIONS[0] : DRY_LUKA_DESCRIPTIONS[0]);
+    ?? strangeTotemDescriptionPoolForRegion(regionKey)[0];
   const state = strangeTotemAgeState(feature, absoluteMinute);
 
   if (state === "old") {
@@ -356,6 +417,7 @@ async function eligibleSpawnLocations(counts: Map<string, number>) {
   return locations.filter((location) => {
     const cap = strangeTotemRegionCap(location.region.key);
     if (cap <= 0 || (counts.get(location.region.key) ?? 0) >= cap) return false;
+    if (isStrangeTotemProtectedSpawnLocation(location)) return false;
     if (location.players.length > 0 || location.creatures.length > 0) return false;
     if (location.features.some(isStrangeTotemFeature)) return false;
     return location.exitsFrom.length > 0;
@@ -418,8 +480,14 @@ async function ensureTotemTrackActor(locationId: number) {
   });
 }
 
-function totemDescriptionForRegion(regionKey: string) {
-  return regionKey === "riverbank" ? pick(RIVERBANK_DESCRIPTIONS) : pick(DRY_LUKA_DESCRIPTIONS);
+export function strangeTotemDescriptionPoolForRegion(regionKey: string | null | undefined) {
+  return regionKey && regionKey in STRANGE_TOTEM_DESCRIPTION_POOLS
+    ? STRANGE_TOTEM_DESCRIPTION_POOLS[regionKey as keyof typeof STRANGE_TOTEM_DESCRIPTION_POOLS]
+    : DRY_LUKA_DESCRIPTIONS;
+}
+
+export function strangeTotemDescriptionForRegion(regionKey: string | null | undefined) {
+  return pick(strangeTotemDescriptionPoolForRegion(regionKey));
 }
 
 export async function maybeSpawnDailyStrangeTotem(bot?: Bot | null, absoluteMinute?: number) {
@@ -465,7 +533,7 @@ export async function maybeSpawnDailyStrangeTotem(bot?: Bot | null, absoluteMinu
       locationId: location.id,
       type: "LANDMARK",
       name: pick(TOTEM_NAMES),
-      description: totemDescriptionForRegion(location.region.key),
+      description: strangeTotemDescriptionForRegion(location.region.key),
       isActive: true,
       providesLight: false,
       restStaminaCapMultiplier: null,

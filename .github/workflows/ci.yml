@@ -36,8 +36,10 @@ jobs:
           npm run planning:export
           git diff --exit-code -- docs/planning/exports/items.json docs/planning/exports/issues.csv
 
-      - name: Test seed data
+      - name: Test
+        env:
+          TEST_JOBS: 4
         run: npm test
 
-      - name: Build
-        run: npm run build
+      - name: Typecheck
+        run: npm run typecheck

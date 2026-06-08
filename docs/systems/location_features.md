@@ -49,7 +49,7 @@ Current interactive examples:
 
 ## Strange Totems
 
-Strange Totems are the first small ambient wilderness trace for dry luka and riverbank locations.
+Strange Totems are the first small ambient wilderness trace for dry luka, riverbank, Chornolis border and willow floodplain locations.
 
 - Seeded and spawned totems are `LocationFeature` rows with type `LANDMARK`, `isActive = true` and `data.strange_totem = true`.
 - The compact location overview should treat them like visible features. Direct feature inspection should explain whether the totem looks fresh, old or close to falling apart.
@@ -57,8 +57,9 @@ Strange Totems are the first small ambient wilderness trace for dry luka and riv
 - Fresh active totems recover a small variable amount of `twigs`; old last-day totems recover less.
 - Totems become old after six in-game days and expire after seven in-game days.
 - During the old last-day window, a totem can shed one small `twigs` bundle onto the ground. This drop is idempotent and recorded in feature data.
-- The world tick can attempt one ambient totem spawn per in-game day in the dry luka and riverbank regions. Region caps keep dry luka totems below five active features and riverbank totems below two.
-- Ambient spawns avoid locations with active players, avoid places that already have an active Strange Totem, and avoid visible non-animal NPC/monster/spirit presence.
+- The world tick can attempt one ambient totem spawn per in-game day in enabled regions. Region caps keep active totems bounded: `dry_luka=13`, `riverbank=3`, `chornolis_border=5` and `willow_floodplain=1`.
+- Ambient spawns avoid locations with active players, avoid places that already have an active Strange Totem, avoid visible non-animal NPC/monster/spirit presence, and keep protected/special places such as the starter camp/watchtower/cellar, old bridge, dream tutorial and closed settlement gate excluded.
+- Ambient spawned totems use regional description pools: dry luka variants lean on dry grass, stems and open-meadow signs; riverbank variants lean on water, mud, reeds, driftwood and wet roots; Chornolis border variants lean on old roots, tree-shadow and threshold flavor; willow floodplain has one rare wetland/floodplain flavor.
 - Ambient spawns leave one suspicious track toward a visible exit. The current implementation uses a hidden technical `strange_totem_trace` actor for the `WorldTrack` relation; player-facing text should describe only the suspicious trace, not the technical actor.
 
 Future authored-data cleanup:

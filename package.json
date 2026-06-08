@@ -1,6 +1,6 @@
 {
   "name": "chornolis-marches",
-  "version": "0.16.11",
+  "version": "0.16.12",
   "description": "Text-based Telegram RPG with a living ecosystem, inspired by MUDs, Ultima Online, and Ukrainian folklore.",
   "main": "dist/bot.js",
   "scripts": {
@@ -8,6 +8,7 @@
     "build": "prisma generate && tsc",
     "start": "node dist/bot.js",
     "test": "node scripts/test/run-tests.cjs",
+    "typecheck": "tsc",
     "test:seed": "node scripts/test/world-seed.mjs",
     "test:seed:types": "tsc -p tsconfig.seed.json",
     "test:db": "node scripts/test/db-smoke.mjs",

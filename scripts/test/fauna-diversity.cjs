@@ -87,8 +87,8 @@ for (const speciesKey of ["frog", "hawk", "snake"]) {
 
 assert.deepEqual(
   STRANGE_TOTEM_REGION_CAPS,
-  { dry_luka: 5, riverbank: 2 },
-  "0.16.11 fauna pass must not change strange-totem caps",
+  { dry_luka: 13, riverbank: 3, chornolis_border: 5, willow_floodplain: 1 },
+  "0.16.12 totem cap pass should be the only near-term strange-totem cap expansion",
 );
 
 console.log("Fauna diversity authoring OK");

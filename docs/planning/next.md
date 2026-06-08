@@ -12,7 +12,7 @@ the completed `0.15.x` attention and learning foundation:
 Near-term release order:
 
 - `0.16.11`: fauna diversity pass — activate hawk/frog/snake seed ecology, daytime bird presence and wet-zone starter/restoration groups.
-- `0.16.12`: strange totem cap expansion — future-only; do not fold it into fauna diversity.
+- `0.16.12`: strange totem cap expansion — in testing; regionalize active totem caps and flavor without changing fauna, Lisovyk restoration or `/spirit`.
 - `0.16.13`: Lisovyk character pass / possible `Поклик духа` connection — future-only; do not fold it into fauna diversity or totem cap work.
 
 The last apiary slices are now treated as completed/in-testing content endpoints, not the center of the next sequence:
@@ -232,9 +232,15 @@ work or `/spirit` unlock.
 `0.16.11` is the narrow fauna diversity pass: activate hawk/frog/snake seed
 ecology, keep hawks as daytime birds distinct from owls, and move wet-zone
 starter/restoration pressure toward frogs and snakes instead of dryland
-rabbits, mice and foxes. Strange-totem cap expansion remains `0.16.12`, and the
-full Лісовик character / possible `Поклик духа` connection remains `0.16.13`
-or later.
+rabbits, mice and foxes.
+
+`0.16.12` is the focused strange-totem cap expansion: dry luka can carry more
+active curiosity, riverbank gets a small wet-edge increase, Chornolis border
+can now receive threshold/root-flavored ambient totems, and willow floodplain
+gets one rare wetland slot. This does not change fauna seed groups, Lisovyk
+restoration behavior, `/spirit`, mentorship, group movement, combat, economy or
+profession systems. The full Лісовик character / possible `Поклик духа`
+connection remains `0.16.13` or later.
 
 Future Лісовик character work should still revisit the character deliberately
 instead of patching individual lines in place. Decide whether дід Лісовик
@@ -273,7 +279,7 @@ Do not open another broad content loop before the learning/observation foundatio
 24. **0.16.9 / NPC learner loop:** visible learner-NPC attention loop is in testing: one local `profession_learner` can follow or observe matching specialist profiles such as herbalist or hunter, stop once caught up and rest/decay for a later repeat, with no broad profession/economy or public skill UI.
 25. **0.16.10 / Дід Лісовик restoration walk:** physical starter-animal restoration presence is in testing: choose one useful floor target, walk through ordinary visible routes, restore one bounded starter group/location, settle briefly, return to an old-forest anchor when no next target is useful, and keep fright/displacement guarded.
 26. **0.16.11 / Fauna diversity pass:** hawk/frog/snake seed ecology is in testing: daytime hawks are distinct from nocturnal owls, wet-zone starter groups use frogs/snakes, and restoration/Lisovyk target planning can restore those region-appropriate groups.
-27. **0.16.12 / Strange totem cap expansion:** future-only; expand or retune totem caps in a focused PR, not in fauna diversity.
+27. **0.16.12 / Strange totem cap expansion:** in testing: exact active caps are `dry_luka=13`, `riverbank=3`, `chornolis_border=5` and `willow_floodplain=1`, with regional description flavor and protected/special locations still excluded.
 28. **0.16.13 / Дід Лісовик character pass:** future-only; finish or redesign дід Лісовик as a deliberate old-forest mentor/spirit/threshold presence, including any possible `Поклик духа` (`/spirit`) connection, without rewriting the broader forest.
 29. **Spirit-call teacher unlock:** design a narrow `Поклик духа` (`/spirit`) unlock or capability gate that opens only after sustained following/attention around an appropriate teacher, not immediately at default character start.
 30. **Mentor guided tracking prompt:** consider a narrow tracking practice prompt only after gathering prompts and marker cooldowns feel stable.
