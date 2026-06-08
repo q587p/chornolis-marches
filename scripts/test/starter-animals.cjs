@@ -4,6 +4,7 @@ const fs = require("node:fs");
 require("ts-node/register");
 
 const {
+  STARTER_FROGS,
   STARTER_MICE,
   STARTER_PREDATORS,
   STARTER_RABBITS,
@@ -12,7 +13,7 @@ const {
 const resourceRules = JSON.parse(fs.readFileSync("prisma/data/world/resourceRules.json", "utf8"));
 
 function allGroups() {
-  return [...STARTER_MICE, ...STARTER_RABBITS, ...STARTER_PREDATORS];
+  return [...STARTER_MICE, ...STARTER_RABBITS, ...STARTER_FROGS, ...STARTER_PREDATORS];
 }
 
 function adultBreedingLocations(groups, speciesKey) {
@@ -38,6 +39,7 @@ for (const group of allGroups()) {
 
 const mouseBreedingLocations = adultBreedingLocations(STARTER_MICE, "mouse");
 const rabbitBreedingLocations = adultBreedingLocations(STARTER_RABBITS, "rabbit");
+const frogBreedingLocations = adultBreedingLocations(STARTER_FROGS, "frog");
 const predatorStartLocations = new Set(
   STARTER_PREDATORS
     .filter((group) => group.age !== "CORPSE" && group.count > 0)
@@ -46,17 +48,28 @@ const predatorStartLocations = new Set(
 const starterOwlCount = STARTER_PREDATORS
   .filter((group) => group.speciesKey === "owl" && group.age !== "CORPSE")
   .reduce((sum, group) => sum + group.count, 0);
+const starterHawkCount = STARTER_PREDATORS
+  .filter((group) => group.speciesKey === "hawk" && group.age !== "CORPSE")
+  .reduce((sum, group) => sum + group.count, 0);
+const starterSnakeCount = STARTER_PREDATORS
+  .filter((group) => group.speciesKey === "snake" && group.age !== "CORPSE")
+  .reduce((sum, group) => sum + group.count, 0);
 
 assert.deepEqual(
   mouseBreedingLocations.sort(),
-  ["forest_03_02", "meadow_11_04", "riverbank_14_01"].sort(),
-  "Mice should have forest, meadow and riverbank adult breeding clusters",
+  ["forest_03_02", "meadow_11_04"].sort(),
+  "Mice should keep forest and meadow adult breeding clusters without owning the wet riverbank starter slot",
 );
 assert.ok(rabbitBreedingLocations.length >= 2, "Rabbits should have at least two adult breeding clusters");
 assert.ok(rabbitBreedingLocations.includes("forest_04_00"), "Rabbits should breed at forest_04_00");
 assert.ok(rabbitBreedingLocations.includes("meadow_12_04"), "Rabbits should breed at meadow_12_04");
+assert.deepEqual(
+  frogBreedingLocations.sort(),
+  ["riverbank_14_01", "willow_frog_pool_17_10", "willow_still_pool_15_10"].sort(),
+  "Frogs should own the wet riverbank/willow adult breeding clusters",
+);
 
-for (const locationKey of [...mouseBreedingLocations, ...rabbitBreedingLocations]) {
+for (const locationKey of [...mouseBreedingLocations, ...rabbitBreedingLocations, ...frogBreedingLocations]) {
   assert.equal(
     predatorStartLocations.has(locationKey),
     false,
@@ -71,9 +84,24 @@ assert.equal(
   "Starter predators should include only one wolf in this balance slice",
 );
 assert.equal(starterOwlCount, 4, "Starter predators should include exactly four owls after the riverbank tuning pass");
+assert.equal(starterHawkCount, 2, "Starter predators should include two daytime hawks");
+assert.equal(starterSnakeCount, 3, "Starter predators should include a small wet-zone snake set");
 assert.ok(
   STARTER_PREDATORS.some((group) => group.speciesKey === "owl" && group.locationKey === "riverbank_13_00"),
-  "Starter owls should include a riverbank edge owl near the riverbank mouse cluster",
+  "Starter owls should keep a nocturnal riverbank edge presence",
+);
+assert.ok(
+  STARTER_PREDATORS.some((group) => group.speciesKey === "hawk" && group.locationKey === "riverbank_17_04"),
+  "Starter hawks should add daytime riverbank bird presence",
+);
+assert.ok(
+  STARTER_PREDATORS.some((group) => group.speciesKey === "snake" && group.locationKey.startsWith("willow_")),
+  "Starter snakes should include willow floodplain pressure",
+);
+assert.equal(
+  allGroups().some((group) => ["rabbit", "mouse", "fox"].includes(group.speciesKey) && (group.locationKey.startsWith("riverbank_") || group.locationKey.startsWith("willow_"))),
+  false,
+  "Wet-zone starter groups should not be mainly dryland rabbits, mice or foxes",
 );
 
 const expectedFoodOverrides = {
@@ -82,7 +110,8 @@ const expectedFoodOverrides = {
   meadow_11_04: { grass: 95, berries: 8, herbs: 20 },
   meadow_12_04: { grass: 90, berries: 8, herbs: 20 },
   riverbank_14_01: { grass: 90, herbs: 20 },
-  riverbank_15_02: { grass: 90, herbs: 20 },
+  willow_still_pool_15_10: { grass: 45, mushrooms: 8, herbs: 18 },
+  willow_frog_pool_17_10: { grass: 55, mushrooms: 8, herbs: 16 },
 };
 
 for (const [locationKey, expected] of Object.entries(expectedFoodOverrides)) {

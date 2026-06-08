@@ -5,6 +5,7 @@ import path from "path";
 import pg from "pg";
 import * as dotenv from "dotenv";
 import {
+  STARTER_FROGS,
   STARTER_MICE,
   STARTER_PREDATORS,
   STARTER_RABBITS,
@@ -379,6 +380,26 @@ const species = [
     mushroomBonusOnDecay: 1,
   },
   {
+    key: "frog",
+    ...creatureSpeciesNameFields("frog"),
+    kind: "ANIMAL",
+    diet: "HERBIVORE",
+    baseHp: 2,
+    strength: 1,
+    agility: 6,
+    perception: 5,
+    endurance: 2,
+    instinct: 6,
+    childTicks: 18,
+    youngTicks: 36,
+    adultTicks: 360,
+    oldTicks: 90,
+    oldDeathChancePermille: 5,
+    oldDeathChanceGrowthPermille: 2,
+    corpseDecayTicks: 90,
+    mushroomBonusOnDecay: 1,
+  },
+  {
     key: "fox",
     ...creatureSpeciesNameFields("fox"),
     kind: "ANIMAL",
@@ -437,6 +458,46 @@ const species = [
     oldDeathChanceGrowthPermille: 1,
     corpseDecayTicks: 240,
     mushroomBonusOnDecay: 2,
+  },
+  {
+    key: "hawk",
+    ...creatureSpeciesNameFields("hawk"),
+    kind: "ANIMAL",
+    diet: "CARNIVORE",
+    baseHp: 6,
+    strength: 4,
+    agility: 9,
+    perception: 9,
+    endurance: 4,
+    instinct: 8,
+    childTicks: 120,
+    youngTicks: 360,
+    adultTicks: 1800,
+    oldTicks: 500,
+    oldDeathChancePermille: 4,
+    oldDeathChanceGrowthPermille: 1,
+    corpseDecayTicks: 240,
+    mushroomBonusOnDecay: 2,
+  },
+  {
+    key: "snake",
+    ...creatureSpeciesNameFields("snake"),
+    kind: "ANIMAL",
+    diet: "CARNIVORE",
+    baseHp: 4,
+    strength: 3,
+    agility: 6,
+    perception: 6,
+    endurance: 4,
+    instinct: 7,
+    childTicks: 90,
+    youngTicks: 240,
+    adultTicks: 1200,
+    oldTicks: 360,
+    oldDeathChancePermille: 4,
+    oldDeathChanceGrowthPermille: 1,
+    corpseDecayTicks: 180,
+    mushroomBonusOnDecay: 1,
   },
   {
     key: "lisovyk",
@@ -837,6 +898,11 @@ async function main() {
   await seedStep("Starter mice", async () => {
     const created = await ensureStarterAnimals(speciesByKey, locationsByKey, STARTER_MICE);
     console.log(`  - starter mice created: ${created}`);
+  });
+
+  await seedStep("Starter frogs", async () => {
+    const created = await ensureStarterAnimals(speciesByKey, locationsByKey, STARTER_FROGS);
+    console.log(`  - starter frogs created: ${created}`);
   });
 
   await seedStep("Starter predators", async () => {

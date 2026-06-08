@@ -119,6 +119,32 @@ export function owlNocturnalSyncPlan(daypart: WorldDaypart) {
   } as const;
 }
 
+export function isHawkActiveDaypart(daypart: WorldDaypart) {
+  return daypart === "day";
+}
+
+export function hawkDaytimeSyncPlan(daypart: WorldDaypart) {
+  if (isHawkActiveDaypart(daypart)) {
+    return {
+      cancelActiveActions: false,
+      creatureData: {
+        activity: "IDLE",
+        isHidden: false,
+        currentAction: "ширяє в денному світлі над відкритою травою",
+      },
+    } as const;
+  }
+
+  return {
+    cancelActiveActions: true,
+    creatureData: {
+      activity: "SLEEPING",
+      isHidden: true,
+      currentAction: "сидить високо в гіллі, сховавшись від темряви",
+    },
+  } as const;
+}
+
 async function syncOwlNocturnalActivity(daypart: WorldDaypart) {
   const plan = owlNocturnalSyncPlan(daypart);
 
@@ -153,6 +179,50 @@ async function syncOwlNocturnalActivity(daypart: WorldDaypart) {
       status: { in: ["QUEUED", "RUNNING"] },
     },
     data: { status: "CANCELLED", note: "сова ховається на день" },
+  });
+
+  const slept = await prisma.creature.updateMany({
+    where: { id: { in: ids } },
+    data: plan.creatureData,
+  });
+
+  return { slept: slept.count, woke: 0 };
+}
+
+async function syncHawkDaytimeActivity(daypart: WorldDaypart) {
+  const plan = hawkDaytimeSyncPlan(daypart);
+
+  if (!plan.cancelActiveActions) {
+    const woke = await prisma.creature.updateMany({
+      where: {
+        isAlive: true,
+        isGone: false,
+        species: { key: "hawk", kind: "ANIMAL" },
+        OR: [{ activity: "SLEEPING" }, { isHidden: true }],
+      },
+      data: plan.creatureData,
+    });
+    return { slept: 0, woke: woke.count };
+  }
+
+  const livingHawks = await prisma.creature.findMany({
+    where: {
+      isAlive: true,
+      isGone: false,
+      species: { key: "hawk", kind: "ANIMAL" },
+    },
+    select: { id: true },
+  });
+  const ids = livingHawks.map((hawk) => hawk.id);
+  if (ids.length === 0) return { slept: 0, woke: 0 };
+
+  await prisma.worldAction.updateMany({
+    where: {
+      actorType: "CREATURE",
+      creatureId: { in: ids },
+      status: { in: ["QUEUED", "RUNNING"] },
+    },
+    data: { status: "CANCELLED", note: "сокіл ховається не в денний час" },
   });
 
   const slept = await prisma.creature.updateMany({
@@ -1276,6 +1346,17 @@ export function predatorPreyPreference(predator: any, prey: any) {
     if (prey.species.key === "rabbit" && prey.age === "YOUNG") return 8;
     return 0;
   }
+  if (predator.species.key === "hawk") {
+    if (prey.species.key === "frog") return 75;
+    if (prey.species.key === "mouse") return 45;
+    if (prey.species.key === "rabbit" && prey.age === "CHILD") return 12;
+    return 0;
+  }
+  if (predator.species.key === "snake") {
+    if (prey.species.key === "frog") return 90;
+    if (prey.species.key === "mouse") return 30;
+    return 0;
+  }
   if (predator.species.key === "fox") {
     if (prey.species.key === "mouse") return 80;
     if (prey.species.key === "rabbit") return 35;
@@ -1292,9 +1373,10 @@ async function selectPredatorPrey(c: any) {
     where: { isAlive: true, isGone: false, locationId: c.locationId, species: { diet: "HERBIVORE" } },
     include: { species: true },
   });
+  const requiresSpecificPrey = new Set(["owl", "hawk", "snake"]);
   return prey
     .map((target) => ({ target, preference: predatorPreyPreference(c, target) }))
-    .filter(({ preference }) => c.species.key !== "owl" || preference > 0)
+    .filter(({ preference }) => !requiresSpecificPrey.has(c.species.key) || preference > 0)
     .map(({ target, preference }) => ({ target, score: preference + preyVulnerabilityScore(target) + Math.floor(Math.random() * 12) }))
     .sort((a, b) => b.score - a.score)[0]?.target;
 }
@@ -1303,7 +1385,15 @@ export function predatorAttackChance(predator: any, prey: any) {
   const hungerBonus = Math.min(25, Math.max(0, predator.hunger ?? 0) * 3);
   const strengthGap = Math.max(-20, Math.min(25, (predator.species.strength - prey.species.endurance) * 4));
   const vulnerabilityBonus = Math.max(0, Math.min(20, Math.round(preyVulnerabilityScore(prey) / 3)));
-  const speciesBase = predator.species.key === "wolf" ? 45 : predator.species.key === "owl" ? 42 : predator.species.key === "fox" ? 38 : 35;
+  const speciesBase = predator.species.key === "wolf"
+    ? 45
+    : predator.species.key === "owl" || predator.species.key === "hawk"
+      ? 42
+      : predator.species.key === "fox"
+        ? 38
+        : predator.species.key === "snake"
+          ? 34
+          : 35;
   return Math.max(12, Math.min(85, speciesBase + hungerBonus + strengthGap + vulnerabilityBonus));
 }
 
@@ -1589,6 +1679,7 @@ export async function worldTick() {
       worldClock.state.weatherIntensity,
     );
     await syncOwlNocturnalActivity(worldTime.daypart);
+    await syncHawkDaytimeActivity(worldTime.daypart);
     const strangeTotemAging = await ageStrangeTotemsIfNeeded(botInstance, worldTime.absoluteMinute);
     strangeTotemsScheduled = strangeTotemAging.scheduled;
     strangeTotemsDropped = strangeTotemAging.dropped;

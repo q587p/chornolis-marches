@@ -526,10 +526,14 @@ assert.equal(campSpiritCat.locationKey, "start_border_camp");
 assert.equal(campSpiritCat.isAlive, true);
 assert.equal(campSpiritCat.isHidden, false);
 
-for (const filePath of ["prisma/seed.ts", "src/services/worldReset.ts"]) {
+for (const filePath of ["prisma/seed.ts", "src/services/worldReset.ts", "src/data/starterAnimals.ts"]) {
   for (const locationKey of sourceLocationKeys(filePath)) {
     assertKnown(locationKeys, locationKey, `Unknown hardcoded starter location in ${filePath}`);
   }
+}
+
+for (const key of ["riverbank_14_01", "willow_still_pool_15_10", "willow_frog_pool_17_10", "riverbank_17_04"]) {
+  assertKnown(locationKeys, key, `Fauna diversity starter location should exist: ${key}`);
 }
 
 const seedSource = fs.readFileSync("prisma/seed.ts", "utf8");

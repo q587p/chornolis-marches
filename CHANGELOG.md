@@ -7,6 +7,25 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.11 - Fauna diversity pass - 12026-06-08
+
+### Added
+
+- Added `frog`, `snake` and `hawk` as real seeded animal species using lexicon-backed Ukrainian forms.
+- Added a narrow daytime hawk profile: hawks wake and stay visible during day, then hide/rest outside the daytime window instead of sharing owl nocturnal behavior.
+- Added wet-zone starter fauna: frogs as riverbank/willow prey and snakes as small riverbank/willow predators.
+- Added `scripts/test/fauna-diversity.cjs` for lexicon, seed, daypart, wet-zone, restoration and strange-totem cap guardrails.
+
+### Changed
+
+- Moved wet riverbank/willow starter pressure away from dryland rabbits, mice and foxes.
+- Updated population-floor restoration groups so the same starter fauna diversity is available to the fallback restoration helper and Lisovyk restoration target planning.
+- Updated `/reset world` starter-animal reset coverage so owls, hawks and snakes are reset with the predator starter set and frogs reset with the wet prey set.
+
+### Risks
+
+- This is a seed/ecology diversity pass only: no strange-totem cap expansion, `/spirit` unlock, group movement, player reward, new combat mechanic, economy/profession system, full Lisovyk character rewrite, Prisma schema, migrations or WorldEventMarker changes.
+
 ## 0.16.10 - Lisovyk restoration walk MVP - 12026-06-08
 
 ### Added

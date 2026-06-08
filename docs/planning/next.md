@@ -9,6 +9,12 @@ the completed `0.15.x` attention and learning foundation:
 
 > dream -> waking edge -> location -> look/examine -> signs/traces/small finds -> stamina/rest -> day/night/light -> first safe return -> first learning by observation.
 
+Near-term release order:
+
+- `0.16.11`: fauna diversity pass — activate hawk/frog/snake seed ecology, daytime bird presence and wet-zone starter/restoration groups.
+- `0.16.12`: strange totem cap expansion — future-only; do not fold it into fauna diversity.
+- `0.16.13`: Lisovyk character pass / possible `Поклик духа` connection — future-only; do not fold it into fauna diversity or totem cap work.
+
 The last apiary slices are now treated as completed/in-testing content endpoints, not the center of the next sequence:
 
 - `APIARY-001` / `APIARY-002`: `0.15.19` shipped the old log apiary and passive bumblebee hazard.
@@ -220,8 +226,15 @@ when a useful starter-animal floor target is missing, he can walk there through
 ordinary visible routes, restore one bounded group/location, settle briefly, and
 return toward his old-forest anchor if no next target is useful. This is a
 living-world restoration presence only, not a full Лісовик dialogue/character
-rewrite, not a new animal-species pass, not hawk/daytime bird tuning, not
-strange-totem cap work and not a `/spirit` unlock.
+rewrite, and did not include the later animal-species pass, strange-totem cap
+work or `/spirit` unlock.
+
+`0.16.11` is the narrow fauna diversity pass: activate hawk/frog/snake seed
+ecology, keep hawks as daytime birds distinct from owls, and move wet-zone
+starter/restoration pressure toward frogs and snakes instead of dryland
+rabbits, mice and foxes. Strange-totem cap expansion remains `0.16.12`, and the
+full Лісовик character / possible `Поклик духа` connection remains `0.16.13`
+or later.
 
 Future Лісовик character work should still revisit the character deliberately
 instead of patching individual lines in place. Decide whether дід Лісовик
@@ -259,13 +272,15 @@ Do not open another broad content loop before the learning/observation foundatio
 23. **0.16.8 / Social signal content extraction and scribe suggestions:** social signal labels and message templates are in testing as content, with service behavior and visible strings kept stable; scribe-only unknown-command suggestions can see admin commands without changing command routing.
 24. **0.16.9 / NPC learner loop:** visible learner-NPC attention loop is in testing: one local `profession_learner` can follow or observe matching specialist profiles such as herbalist or hunter, stop once caught up and rest/decay for a later repeat, with no broad profession/economy or public skill UI.
 25. **0.16.10 / Дід Лісовик restoration walk:** physical starter-animal restoration presence is in testing: choose one useful floor target, walk through ordinary visible routes, restore one bounded starter group/location, settle briefly, return to an old-forest anchor when no next target is useful, and keep fright/displacement guarded.
-26. **Spirit-call teacher unlock:** design a narrow `Поклик духа` (`/spirit`) unlock or capability gate that opens only after sustained following/attention around an appropriate teacher, not immediately at default character start.
-27. **Дід Лісовик character pass:** finish or redesign дід Лісовик as a deliberate old-forest mentor/spirit/threshold presence, aligning his dialogue, behavior, learning hooks and visible role without rewriting the broader forest.
-28. **Mentor guided tracking prompt:** consider a narrow tracking practice prompt only after gathering prompts and marker cooldowns feel stable.
-29. **Mentor route polish:** consider a tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
-30. **Group movement design:** if live group UX is clear, draft a separate consensual group movement slice with strict no-hidden-route/no-AFK-drag guardrails.
-31. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
-32. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
+26. **0.16.11 / Fauna diversity pass:** hawk/frog/snake seed ecology is in testing: daytime hawks are distinct from nocturnal owls, wet-zone starter groups use frogs/snakes, and restoration/Lisovyk target planning can restore those region-appropriate groups.
+27. **0.16.12 / Strange totem cap expansion:** future-only; expand or retune totem caps in a focused PR, not in fauna diversity.
+28. **0.16.13 / Дід Лісовик character pass:** future-only; finish or redesign дід Лісовик as a deliberate old-forest mentor/spirit/threshold presence, including any possible `Поклик духа` (`/spirit`) connection, without rewriting the broader forest.
+29. **Spirit-call teacher unlock:** design a narrow `Поклик духа` (`/spirit`) unlock or capability gate that opens only after sustained following/attention around an appropriate teacher, not immediately at default character start.
+30. **Mentor guided tracking prompt:** consider a narrow tracking practice prompt only after gathering prompts and marker cooldowns feel stable.
+31. **Mentor route polish:** consider a tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
+32. **Group movement design:** if live group UX is clear, draft a separate consensual group movement slice with strict no-hidden-route/no-AFK-drag guardrails.
+33. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
+34. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
 
 Watch the new actor-learning surfaces before widening them: `0.15.41` proves
 one NPC observation bridge, but freshening/cooking observation should remain a
