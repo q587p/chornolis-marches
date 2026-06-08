@@ -215,10 +215,18 @@ of their pattern, the spirit call can open or become more capable in that
 teacher-specific direction. Keep it diegetic and narrow, not a public skill
 level gate.
 
-Future Лісовик work should revisit the character deliberately instead of
-patching individual lines in place. Decide whether дід Лісовик should be
-finished as the current old-forest mentor/watchful local presence or redesigned
-into a sharper spirit/threshold figure, then align his dialogue, behavior,
+`0.16.10` adds a narrow physical restoration-walk MVP for Дід Лісовик:
+when a useful starter-animal floor target is missing, he can walk there through
+ordinary visible routes, restore one bounded group/location, settle briefly, and
+return toward his old-forest anchor if no next target is useful. This is a
+living-world restoration presence only, not a full Лісовик dialogue/character
+rewrite, not a new animal-species pass, not hawk/daytime bird tuning, not
+strange-totem cap work and not a `/spirit` unlock.
+
+Future Лісовик character work should still revisit the character deliberately
+instead of patching individual lines in place. Decide whether дід Лісовик
+should be finished as the current old-forest mentor/watchful local presence or
+redesigned into a sharper spirit/threshold figure, then align his dialogue,
 learning hooks and visible role with that decision. Keep this as a focused
 character/content slice, not a broad forest rewrite.
 
@@ -250,13 +258,14 @@ Do not open another broad content loop before the learning/observation foundatio
 22. **0.16.7 / Grammar agreement helper cleanup and archive republish queue:** player/creature gender and word agreement helpers are in testing, with visible target/player text kept stable; Herald can queue a full deployed `news.md` archive republish run for channel rebuilds without changing gameplay.
 23. **0.16.8 / Social signal content extraction and scribe suggestions:** social signal labels and message templates are in testing as content, with service behavior and visible strings kept stable; scribe-only unknown-command suggestions can see admin commands without changing command routing.
 24. **0.16.9 / NPC learner loop:** visible learner-NPC attention loop is in testing: one local `profession_learner` can follow or observe matching specialist profiles such as herbalist or hunter, stop once caught up and rest/decay for a later repeat, with no broad profession/economy or public skill UI.
-25. **Spirit-call teacher unlock:** design a narrow `Поклик духа` (`/spirit`) unlock or capability gate that opens only after sustained following/attention around an appropriate teacher, not immediately at default character start.
-26. **Дід Лісовик character pass:** finish or redesign дід Лісовик as a deliberate old-forest mentor/spirit/threshold presence, aligning his dialogue, behavior, learning hooks and visible role without rewriting the broader forest.
-27. **Mentor guided tracking prompt:** consider a narrow tracking practice prompt only after gathering prompts and marker cooldowns feel stable.
-28. **Mentor route polish:** consider a tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
-29. **Group movement design:** if live group UX is clear, draft a separate consensual group movement slice with strict no-hidden-route/no-AFK-drag guardrails.
-30. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
-31. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
+25. **0.16.10 / Дід Лісовик restoration walk:** physical starter-animal restoration presence is in testing: choose one useful floor target, walk through ordinary visible routes, restore one bounded starter group/location, settle briefly, return to an old-forest anchor when no next target is useful, and keep fright/displacement guarded.
+26. **Spirit-call teacher unlock:** design a narrow `Поклик духа` (`/spirit`) unlock or capability gate that opens only after sustained following/attention around an appropriate teacher, not immediately at default character start.
+27. **Дід Лісовик character pass:** finish or redesign дід Лісовик as a deliberate old-forest mentor/spirit/threshold presence, aligning his dialogue, behavior, learning hooks and visible role without rewriting the broader forest.
+28. **Mentor guided tracking prompt:** consider a narrow tracking practice prompt only after gathering prompts and marker cooldowns feel stable.
+29. **Mentor route polish:** consider a tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
+30. **Group movement design:** if live group UX is clear, draft a separate consensual group movement slice with strict no-hidden-route/no-AFK-drag guardrails.
+31. **Training/arena planning:** after full combat design, add a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
+32. **MAP-004 follow-up:** after the light/examine and track/follow-memory proofs, decide whether the next gated place should use minimal gathering/herbalism/tracking progress and atmospheric below-threshold refusal copy.
 
 Watch the new actor-learning surfaces before widening them: `0.15.41` proves
 one NPC observation bridge, but freshening/cooking observation should remain a
@@ -279,7 +288,7 @@ Near-term content candidates after that foundation:
 - Full profession/economy loops before the first observation-learning spine exists.
 - Broad `/skills` UI and skill modifiers/effects before bounded learning moments prove the foundation.
 - `SURV-002`: authored death locations and lethal hazard pacing. Keep this as a survival/world-hazard framework task until death/knockout/respawn handling and clueing rules are ready; do not add unavoidable instant-death cells to beginner paths.
-- Spirit-call teacher unlocks, mentorship UI, group movement and a Лісовик learning pass remain future work and are unchanged by the NPC learner MVP.
+- Spirit-call teacher unlocks, mentorship UI, group movement and a full Лісовик learning/character pass remain future work and are unchanged by the Lisovyk restoration-walk MVP.
 
 ## Promotion Checklist
 

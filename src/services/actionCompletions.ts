@@ -63,6 +63,7 @@ import { firstNightGuidanceForPlayer } from "./beginnerGuidance";
 import { maybeTriggerPassiveApiarySting, raidApiaryForPlayer } from "./apiaryHazards";
 import { creatureAttackObserverText, freshenWeaponFailureText, getPlayerEquippedWeapon, grantAndEquipLegacyFresheningKnife, legacyFresheningKnifeGrantText, playerAttackKillText, playerAttackObserverText } from "./weapons";
 import { canCreatureUseExit, creatureUsableExits } from "./creatureMovement";
+import { maybeQueueLisovykFrightAfterMove } from "./lisovykRestoration";
 import { contributeToBeginnerCache } from "./beginnerCache";
 import { isBeginnerCacheContributionPayload } from "./beginnerCacheQueue";
 import { maybeGrantGatherShahBonus } from "./smallLoot";
@@ -732,6 +733,9 @@ async function completeMove(bot: Bot, action: WorldAction) {
   }
   await setActionStatus(action, "DONE");
   if (!isAnimal) await logEvent("NPC_MOVE", "Creature queued move completed", `${creature.id}:${payload.direction}`, exit.toLocationId);
+  if (creature.species.key === "lisovyk") {
+    await maybeQueueLisovykFrightAfterMove({ lisovykId: creature.id, locationId: exit.toLocationId });
+  }
 }
 
 async function completeGather(bot: Bot, action: WorldAction) {

@@ -13,6 +13,7 @@ import { DREAM_GATE_FEATURE_KEY, DREAM_GATE_FEATURE_KEYS } from "./tutorial";
 import { hunterClaimedCorpseDecayAction, isHunterCreature, tickNpcHunter } from "./npcHunter";
 import { isHerbalistCreature, tickNpcHerbalist } from "./npcHerbalist";
 import { tickNpcLearner } from "./npcLearner";
+import { hasActiveLisovykRestorationWalk, parseLisovykRestorationState, tickLisovykRestoration, wakeLisovykForStarterAnimalRestorationIfNeeded } from "./lisovykRestoration";
 import { chance, chancePermille, pickOptional as pick, randomInt } from "../utils/random";
 import { restorePopulationFloors } from "./populationRestoration";
 import { PREDATOR_PREY_CLAIM_PREFIX, isUnclaimedHerbivoreCorpseForScavenging, predatorClaimedCorpseDecayAction, predatorClaimedCorpseMarker } from "./predatorFeeding";
@@ -1438,8 +1439,9 @@ async function putLisovykToSleepIfForestRecovered() {
   const species = await prisma.creatureSpecies.findUnique({ where: { key: "lisovyk" } });
   if (!species) return false;
   const lisovyk = await prisma.creature.findFirst({ where: { speciesId: species.id, name: { in: ["Дід лісовик", "Дід Чорноліс"] }, isAlive: true }, include: { location: true } });
-  const match = lisovyk?.currentAction?.match(/зник ресурс ([a-zA-Z0-9_-]+)/);
   if (!lisovyk || lisovyk.isHidden || lisovyk.activity === "SLEEPING") return false;
+  if (parseLisovykRestorationState(lisovyk.currentAction)) return false;
+  const match = lisovyk.currentAction?.match(/зник ресурс ([a-zA-Z0-9_-]+)/);
   const resourceKey = match?.[1];
   const regionId = lisovyk.location.regionId;
   if (resourceKey) {
@@ -1605,9 +1607,6 @@ export async function worldTick() {
     corpsesDecaying = lifecycle.decayed;
     corpsesGone = lifecycle.gone;
 
-    const populationFloor = await restorePopulationFloors();
-    populationFloorRestored = populationFloor.restored;
-
     const ecology = await processSmallHerbivoreEcology();
     rabbitBirths = ecology.rabbitBirths;
     mouseBirths = ecology.mouseBirths;
@@ -1624,9 +1623,15 @@ export async function worldTick() {
     wolfPreyUnits = predatorEcology.wolfPreyUnits;
 
     lisovykAwakened = await wakeLisovykIfNeeded();
+    const lisovykRestorationReserved = lisovykAwakened ? false : await wakeLisovykForStarterAnimalRestorationIfNeeded();
+    const lisovykRestorationActive = lisovykRestorationReserved || await hasActiveLisovykRestorationWalk();
+    if (!lisovykAwakened && !lisovykRestorationActive) {
+      const populationFloor = await restorePopulationFloors();
+      populationFloorRestored = populationFloor.restored;
+    }
     regenerated = await regenerateResourcesIfNeeded();
     regenerated += await regenerateNaturalTwigsIfNeeded();
-    if (!lisovykAwakened) lisovykSlept = await putLisovykToSleepIfForestRecovered();
+    if (!lisovykAwakened && !lisovykRestorationActive) lisovykSlept = await putLisovykToSleepIfForestRecovered();
 
     const [playerLocationCounts, activeCreatureActions, creatureLocationCountRows, sleepingCreatureCount] = await Promise.all([
       prisma.player.groupBy({
@@ -1727,17 +1732,21 @@ export async function worldTick() {
           else if (isHunterCreature(c)) result = await tickNpcHunter(botInstance, c);
           else if (isHerbalistCreature(c)) result = await tickNpcHerbalist(botInstance, c, worldTime.absoluteMinute);
           else if (c.species.key === "lisovyk") {
-            const exit = pick(c.location.exitsFrom.filter((candidate: any) => isExit(candidate) && !isLisovykForbiddenLocation((candidate as any).toLocation)));
-            if (isExit(exit) && chance(50)) {
-              result = await queueMove(c, exit, "нишпорить між деревами");
-            } else {
-              await enqueueCreatureAction({
-                creatureId: c.id,
-                type: "LOOK",
-                payload: { reason: "полює й дослухається до лісу" },
-                durationMs: actionDurationMs("LOOK", c.stamina),
-              });
-              result = "queuedLook";
+            const restorationResult = await tickLisovykRestoration(botInstance, c);
+            if (restorationResult) result = restorationResult;
+            else {
+              const exit = pick(c.location.exitsFrom.filter((candidate: any) => isExit(candidate) && !isLisovykForbiddenLocation((candidate as any).toLocation)));
+              if (isExit(exit) && chance(50)) {
+                result = await queueMove(c, exit, "нишпорить між деревами");
+              } else {
+                await enqueueCreatureAction({
+                  creatureId: c.id,
+                  type: "LOOK",
+                  payload: { reason: "полює й дослухається до лісу" },
+                  durationMs: actionDurationMs("LOOK", c.stamina),
+                });
+                result = "queuedLook";
+              }
             }
           }
           else if (c.species.diet === "HERBIVORE") result = await tickHerbivore(c, localPresenceCount);

@@ -80,6 +80,7 @@ module.exports = [
   nodeTest("scripts/test/starter-animals.cjs"),
   nodeTest("scripts/test/ecology-stats.cjs"),
   nodeTest("scripts/test/population-restoration.cjs"),
+  nodeTest("scripts/test/lisovyk-restoration.cjs"),
   nodeTest("scripts/test/owl-nocturnal.cjs"),
   nodeTest("scripts/test/apiary-hazards.cjs"),
   nodeTest("scripts/test/observation-cues.cjs"),

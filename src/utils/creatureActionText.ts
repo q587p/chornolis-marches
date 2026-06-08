@@ -1,6 +1,7 @@
 export function normalizeCreatureActionText(action: string | null | undefined, fallback?: string) {
   if (!action) return fallback;
   return action
+    .replace(/^lisovyk_restoration:v1;species=[A-Za-z0-9_-]+;location=[A-Za-z0-9_-]+;(?:phase=(?:travel|restore|settle|return);settle=\d+;fright=\d+;)?\s*/, "")
     .replace(/^npc_learner:profession:v1;profile=[A-Za-z0-9_-]+;teacher=(?:none|\d+);progress=\d+;rest=\d+;\s*/, "")
     .replace(/^claimed_by_hunter:\d+;\s*/, "")
     .replace(/;\s*predator_prey_claimed_by:\d+\b/g, "")

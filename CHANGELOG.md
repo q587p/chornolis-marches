@@ -7,6 +7,25 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.10 - Lisovyk restoration walk MVP - 12026-06-08
+
+### Added
+
+- Added a narrow physical restoration-walk loop for Дід Лісовик: choose one useful starter-animal floor target, route there through ordinary visible exits, restore one bounded missing starter group/location, settle briefly, then return toward a stable home anchor when no next target is useful.
+- Added marker-backed `travel` / `restore` / `settle` / `return` lifecycle state in Lisovyk `currentAction`, stripped from public creature action text.
+- Added a guarded fright/displacement hook that can queue one local animal move after Lisovyk completes his own movement, with cooldown guardrails to avoid immediate repeat displacement.
+- Added `scripts/test/lisovyk-restoration.cjs` and included it in the test manifest.
+
+### Changed
+
+- Routed the existing starter population-floor safeguard through Lisovyk's physical restoration walk when the old resource-depletion Lisovyk wake is not active.
+- Kept the old population-floor restoration helper as fallback when Lisovyk cannot reserve a useful route/target.
+- Kept old resource-depletion Lisovyk behavior ahead of the new starter-animal restoration walk.
+
+### Risks
+
+- This is a bounded living-world presence only: no new animal species, hawk/daytime bird tuning, strange-totem cap changes, full Лісовик dialogue rewrite, `/spirit` teacher unlock, mentorship change, group movement, economy/profession system, Prisma schema, migrations or WorldEventMarker changes.
+
 ## 0.16.9 - Visible NPC learner loop MVP - 12026-06-08
 
 ### Added
