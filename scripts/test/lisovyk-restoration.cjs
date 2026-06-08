@@ -166,8 +166,35 @@ assert.equal(markerModel.includes("lisovyk"), false, "Lisovyk restoration must n
 assert.equal(fs.existsSync("prisma/migrations"), true, "Migrations directory should still exist, but this MVP should not require new migration assertions");
 
 const serviceSource = fs.readFileSync("src/services/lisovykRestoration.ts", "utf8");
+const worldTickSource = fs.readFileSync("src/services/worldTick.ts", "utf8");
 assert.equal(serviceSource.includes("worldEventMarker"), false, "Lisovyk MVP should use WorldEvent descriptions, not WorldEventMarker writes");
 assert.equal(JSON.stringify({ emptyTarget, markerAction }).includes("playerId"), false);
 assert.deepEqual(POPULATION_FLOOR_SPECIES_KEYS.sort(), ["fox", "mouse", "owl", "rabbit", "wolf"]);
+
+assert.match(
+  worldTickSource,
+  /const lisovykRestorationActive = lisovykRestorationReserved \|\| await hasActiveLisovykRestorationWalk\(\);/,
+  "worldTick should treat a fresh restoration reservation as an active walk",
+);
+assert.match(
+  worldTickSource,
+  /if \(!lisovykAwakened && !lisovykRestorationActive\) lisovykSlept = await putLisovykToSleepIfForestRecovered\(\);/,
+  "old resource-recovery sleep hook must not run during active restoration walks",
+);
+assert.match(
+  worldTickSource,
+  /if \(parseLisovykRestorationState\(lisovyk\.currentAction\)\) return false;/,
+  "sleep hook should defensively ignore lisovyk_restoration:v1 marker state",
+);
+assert.match(
+  worldTickSource,
+  /currentAction\?\.match\(\/зник ресурс \(\[a-zA-Z0-9_-\]\+\)\/\)/,
+  "resource-depletion Lisovyk sleep behavior should still parse the old resource marker when no restoration marker exists",
+);
+assert.match(
+  worldTickSource,
+  /data: \{ isAlive: true, isHidden: true, activity: "SLEEPING"/,
+  "old resource-depletion sleep path should remain available for non-restoration Lisovyk state",
+);
 
 console.log("Lisovyk restoration-walk helpers OK");

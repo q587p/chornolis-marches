@@ -13,7 +13,7 @@ import { DREAM_GATE_FEATURE_KEY, DREAM_GATE_FEATURE_KEYS } from "./tutorial";
 import { hunterClaimedCorpseDecayAction, isHunterCreature, tickNpcHunter } from "./npcHunter";
 import { isHerbalistCreature, tickNpcHerbalist } from "./npcHerbalist";
 import { tickNpcLearner } from "./npcLearner";
-import { hasActiveLisovykRestorationWalk, tickLisovykRestoration, wakeLisovykForStarterAnimalRestorationIfNeeded } from "./lisovykRestoration";
+import { hasActiveLisovykRestorationWalk, parseLisovykRestorationState, tickLisovykRestoration, wakeLisovykForStarterAnimalRestorationIfNeeded } from "./lisovykRestoration";
 import { chance, chancePermille, pickOptional as pick, randomInt } from "../utils/random";
 import { restorePopulationFloors } from "./populationRestoration";
 import { PREDATOR_PREY_CLAIM_PREFIX, isUnclaimedHerbivoreCorpseForScavenging, predatorClaimedCorpseDecayAction, predatorClaimedCorpseMarker } from "./predatorFeeding";
@@ -1439,8 +1439,9 @@ async function putLisovykToSleepIfForestRecovered() {
   const species = await prisma.creatureSpecies.findUnique({ where: { key: "lisovyk" } });
   if (!species) return false;
   const lisovyk = await prisma.creature.findFirst({ where: { speciesId: species.id, name: { in: ["Дід лісовик", "Дід Чорноліс"] }, isAlive: true }, include: { location: true } });
-  const match = lisovyk?.currentAction?.match(/зник ресурс ([a-zA-Z0-9_-]+)/);
   if (!lisovyk || lisovyk.isHidden || lisovyk.activity === "SLEEPING") return false;
+  if (parseLisovykRestorationState(lisovyk.currentAction)) return false;
+  const match = lisovyk.currentAction?.match(/зник ресурс ([a-zA-Z0-9_-]+)/);
   const resourceKey = match?.[1];
   const regionId = lisovyk.location.regionId;
   if (resourceKey) {
@@ -1623,13 +1624,14 @@ export async function worldTick() {
 
     lisovykAwakened = await wakeLisovykIfNeeded();
     const lisovykRestorationReserved = lisovykAwakened ? false : await wakeLisovykForStarterAnimalRestorationIfNeeded();
-    if (!lisovykAwakened && !lisovykRestorationReserved && !(await hasActiveLisovykRestorationWalk())) {
+    const lisovykRestorationActive = lisovykRestorationReserved || await hasActiveLisovykRestorationWalk();
+    if (!lisovykAwakened && !lisovykRestorationActive) {
       const populationFloor = await restorePopulationFloors();
       populationFloorRestored = populationFloor.restored;
     }
     regenerated = await regenerateResourcesIfNeeded();
     regenerated += await regenerateNaturalTwigsIfNeeded();
-    if (!lisovykAwakened) lisovykSlept = await putLisovykToSleepIfForestRecovered();
+    if (!lisovykAwakened && !lisovykRestorationActive) lisovykSlept = await putLisovykToSleepIfForestRecovered();
 
     const [playerLocationCounts, activeCreatureActions, creatureLocationCountRows, sleepingCreatureCount] = await Promise.all([
       prisma.player.groupBy({
