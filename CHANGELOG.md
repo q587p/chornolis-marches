@@ -16,6 +16,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added per-command timing and optional `TEST_JOBS` parallel execution to the manifest test runner.
 - Added a small authored riverbank walk extension near the old bridge and willow edge so the bank can be walked for longer without entering dry luka or the floodplain.
 - Added explicit Spirit Call toggle commands `/spirit_on` and `/spirit_off` so bare `/spirit`, `/dukh`, `/poklyk`, `auto`, `дух` and `поклик духа` can consistently show current status.
+- Added scribe/admin `/learning_chart` to show the shared learning level thresholds, technical keys and qualitative Ukrainian labels.
 
 ### Changed
 
@@ -26,6 +27,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - CI now runs the manifest test suite with `TEST_JOBS=4` and follows the explicit Prisma generate step with `npm run typecheck`.
 - Kept existing Spirit Call start/stop aliases such as `покликати духа`, `дух веде`, `/spirit_stop`, `/auto_stop` and `стоп авто` compatible.
 - Ordinary sleep start text now shows the approximate world-clock auto-wake time if the player takes no further action.
+- Kept the new learning chart as an admin/debug reference only, not a public skill sheet.
 
 ### Risks
 

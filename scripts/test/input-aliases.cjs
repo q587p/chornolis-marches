@@ -591,6 +591,7 @@ assert.ok(suggestAliasEntries("вола").map(formatAliasSuggestion).includes("�
 assert.ok(!suggestAliasEntries("/addl").map(formatAliasSuggestion).includes("addLitTorch (/addLitTorch)"), "Public suggestions should not expose scribe-only commands.");
 assert.ok(suggestAdminCommandEntries("/addl").map(formatAliasSuggestion).includes("addLitTorch (/addLitTorch)"), "Scribe/admin suggestions should include /addLitTorch for /addl.");
 assert.ok(suggestAdminCommandEntries("add lit").map(formatAliasSuggestion).includes("addLitTorch (/addLitTorch)"), "Scribe/admin suggestions should include /addLitTorch for spaced text.");
+assert.ok(suggestAdminCommandEntries("learningc").map(formatAliasSuggestion).includes("learning_chart (/learning_chart)"), "Scribe/admin suggestions should include /learning_chart.");
 assert.ok(suggestAliasInputs("усхмі").includes("усміх"), "Expected social suggestions to include усміх for a mistyped smile");
 assert.ok(suggestAliasInputs("посмі").includes("посміх"), "Expected social suggestions to include посміх");
 assert.ok(suggestAliasEntries("усхмі").map(formatAliasSuggestion).includes("усміх (/smile)"), "Expected formatted social suggestions to include slash command for smile");

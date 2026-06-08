@@ -870,6 +870,7 @@ const ADMIN_COMMAND_SUGGESTIONS: AdminCommandSuggestion[] = [
   { alias: "all dead", command: "/all dead", matches: ["all dead"] },
   { alias: "playerAdmin", command: "/playerAdmin", matches: ["playerAdmin", "playeradmin", "player"] },
   { alias: "learning", command: "/learning", matches: ["learning", "learn"] },
+  { alias: "learning_chart", command: "/learning_chart", matches: ["learning_chart", "learningchart", "learning chart", "learning levels"] },
   { alias: "call_scribes_audit", command: "/call_scribes_audit", matches: ["call_scribes_audit", "callScribesAudit", "callscribesaudit"] },
   { alias: "call_scribes_approve", command: "/call_scribes_approve", matches: ["call_scribes_approve", "callScribesApprove", "callscribesapprove"] },
   { alias: "timeDebug", command: "/timeDebug", matches: ["timeDebug", "timedebug"] },
