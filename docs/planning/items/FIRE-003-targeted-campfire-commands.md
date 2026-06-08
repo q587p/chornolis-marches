@@ -1,5 +1,5 @@
 ---
-id: FIRE-002
+id: FIRE-003
 title: Target-aware campfire commands
 status: backlog
 type: feature
@@ -17,7 +17,7 @@ depends_on:
   - BUILD-001
 ---
 
-# FIRE-002: Target-Aware Campfire Commands
+# FIRE-003: Target-Aware Campfire Commands
 
 ## Goal
 

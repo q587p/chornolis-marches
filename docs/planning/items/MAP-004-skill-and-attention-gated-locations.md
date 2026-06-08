@@ -1,7 +1,7 @@
 ---
 id: MAP-004
 title: Skill and attention gated locations
-status: in_testing
+status: testing
 type: feature
 area: world
 priority: high

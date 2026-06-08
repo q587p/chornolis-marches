@@ -1,7 +1,7 @@
 ---
 id: LEARN-006
 title: High-skill quality and rare finds
-status: in_testing
+status: testing
 type: feature
 area: learning
 priority: medium
