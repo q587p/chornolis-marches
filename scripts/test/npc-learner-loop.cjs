@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
 
 process.env.DATABASE_URL ||= "postgresql://user:pass@localhost:5432/chornolis_test";
 
@@ -19,6 +20,9 @@ const {
   parseNpcLearnerState,
   stripNpcLearnerActionMarker,
 } = require("../../src/services/npcLearner");
+const {
+  NPC_LEARNER_TEACHER_PROFILE_CONTENT,
+} = require("../../src/content/npc/npcLearnerProfiles");
 const { normalizeCreatureActionText } = require("../../src/utils/creatureActionText");
 
 const learner = {
@@ -52,6 +56,11 @@ assert.deepEqual(
   NPC_LEARNER_TEACHER_PROFILES.map((profile) => profile.key),
   ["herbalist", "hunter"],
   "learner profiles should already be table-driven beyond one profession",
+);
+assert.deepEqual(
+  NPC_LEARNER_TEACHER_PROFILE_CONTENT.map((profile) => profile.key),
+  ["herbalist", "hunter"],
+  "stable learner profile copy should live in content",
 );
 assert.equal(isNpcLearnerCreature(learner), true);
 assert.equal(isNpcLearnerCreature({ professionKey: "travnytsia", currentAction: null }), false);
@@ -136,5 +145,11 @@ for (const plan of [herbalistObserve, hunterObserve, follow, stopped, decayed, n
   assert.equal(serialized.includes("reward"), false, "NPC learner loop should not expose reward fields");
   assert.equal(normalizeCreatureActionText(plan.currentAction).includes("progress="), false, "public action text should hide technical progress");
 }
+
+const npcLearnerServiceSource = fs.readFileSync("src/services/npcLearner.ts", "utf8");
+assert.equal(npcLearnerServiceSource.includes("visibleFallbackName:"), false);
+assert.equal(npcLearnerServiceSource.includes("noTeacherAction:"), false);
+assert.equal(npcLearnerServiceSource.includes("restAction:"), false);
+assert.equal(npcLearnerServiceSource.includes("decayAction:"), false);
 
 console.log("NPC learner loop helpers OK");

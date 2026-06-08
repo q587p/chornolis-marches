@@ -29,8 +29,13 @@ The player should not see tutorial/help copy that mentions `Календар` or
 ## Problem
 
 The current secondary menu includes useful entries such as `Новини`,
-`Статистика`, `Репліки`, `Хто активний`, `Час` and `Налаштування`, but it does
-not expose `Календар` (`/calendar`) or `Погода` (`/weather`) as buttons.
+`Хто активний`, `Час` and `Налаштування`, but it does not expose `Календар`
+(`/calendar`) or `Погода` (`/weather`) as buttons.
+
+As of `0.16.9`, the ordinary `☰ Меню` keyboard is intentionally identical for
+players and scribes. Scribe-only `Статистика` (`/stat`) and `Репліки` (`/chat`)
+no longer appear there; `Статистика` lives in `🛠 Адмін меню` (`/adminMenu`) and
+both service surfaces remain available through direct commands.
 
 This makes the world-state split feel unfinished:
 
@@ -50,8 +55,6 @@ This makes the world-state split feel unfinished:
   of every command.
 - Review whether current buttons should stay in the same menu or move deeper:
   - `Новини` (`/news`);
-  - `Статистика` (`/stat`);
-  - `Репліки` (`/chat`);
   - `Хто активний` (`/who`);
   - `AFK / відійти` (`/afk`);
   - `Завершити сесію` (`/end_session`).
@@ -62,12 +65,12 @@ This makes the world-state split feel unfinished:
 ## Candidate Layout Questions
 
 - Should `Час`, `Погода` and `Календар` become one compact world-state row?
-- Should `Новини`, `Репліки`, `Хто активний` and `Статистика` become a
-  "records/social" cluster?
+- Should `Новини` and `Хто активний` remain in the ordinary menu, or should
+  they move under a future records/social cluster?
 - Should `AFK / відійти` and `Завершити сесію` stay in the first secondary
   screen, or move under a session/safety cluster?
-- Should `Статистика` be renamed or relocated if it reads too technical beside
-  atmospheric world-state buttons?
+- Scribe-only `Статистика` has already moved out of ordinary `☰ Меню`; keep it
+  in `🛠 Адмін меню` unless a later admin UX pass finds a better service cluster.
 
 ## Acceptance
 

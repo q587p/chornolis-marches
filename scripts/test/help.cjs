@@ -1,14 +1,21 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
 
 require("ts-node/register");
 
 const {
+  COMMANDS_TEXT_PAGES,
   HELP_TEXT,
   TUTORIAL_HELP_IN_DREAM_TEXT,
   TUTORIAL_HELP_RETURN_TEXT,
+  helpTextForTutorialStatus,
   tutorialHelpFollowupText,
 } = require("../../src/handlers/help");
 
+assert.equal(Array.isArray(COMMANDS_TEXT_PAGES), true);
+assert.equal(COMMANDS_TEXT_PAGES.length, 3);
+assert.ok(COMMANDS_TEXT_PAGES[0].includes("/look"));
+assert.ok(COMMANDS_TEXT_PAGES.some((page) => page.includes("/help")));
 assert.equal(HELP_TEXT.includes("/commands"), false);
 assert.ok(HELP_TEXT.includes("Поклик духа"));
 assert.ok(HELP_TEXT.includes("/spirit"));
@@ -25,8 +32,15 @@ assert.equal(HELP_TEXT.includes("/search_honey"), false);
 assert.equal(HELP_TEXT.includes("/dismantle_totem"), false);
 assert.equal(tutorialHelpFollowupText(false), TUTORIAL_HELP_RETURN_TEXT);
 assert.equal(tutorialHelpFollowupText(true), TUTORIAL_HELP_IN_DREAM_TEXT);
+assert.equal(helpTextForTutorialStatus(false), HELP_TEXT);
+assert.equal(helpTextForTutorialStatus(true).includes("/sleep_tutorial"), false);
 assert.ok(TUTORIAL_HELP_RETURN_TEXT.includes("повернутися туди"));
 assert.equal(TUTORIAL_HELP_IN_DREAM_TEXT.includes("повернутися туди"), false);
 assert.ok(TUTORIAL_HELP_IN_DREAM_TEXT.includes("ще триває"));
+
+const helpHandlerSource = fs.readFileSync("src/handlers/help.ts", "utf8");
+assert.equal(helpHandlerSource.includes("export const HELP_TEXT = ["), false);
+assert.equal(helpHandlerSource.includes("export const COMMANDS_TEXT_PAGES = ["), false);
+assert.equal(helpHandlerSource.includes("function commandsPageKeyboard"), true);
 
 console.log("Help tutorial follow-up OK");

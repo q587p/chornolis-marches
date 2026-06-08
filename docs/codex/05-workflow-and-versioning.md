@@ -19,9 +19,10 @@ For release/patch work that is meant to be reviewed or merged:
 
 - Start from a separate branch, preferably with the `codex/` prefix.
 - Open a PR from that branch into `main` instead of committing directly to `main`.
-- PRs should target `main` by default. Do not infer a stacked PR base from the current local branch, commit ancestry, or convenience. Use a stacked feature branch as the PR base only when that exception was explicitly discussed for the current slice, and retarget/rebase the PR onto `main` after the parent branch lands.
+- PRs should target `main` by default. Do not infer a stacked PR base from the current local branch, commit ancestry, convenience, or wording like "after PR #123"; that wording is scheduling context, not permission to target another branch. Use a stacked feature branch as the PR base only when the user explicitly asks for a stacked PR or names the non-main base branch for the current slice. If a stack is used, state it in the PR title/body and final summary, and retarget/rebase the PR onto `main` before presenting it as ready to merge.
 - Before presenting a PR as ready, fetch the latest `origin/main` and verify the branch has no merge conflicts. If conflicts exist, rebase or merge from `main`, resolve them locally, rerun relevant checks, and push the resolved branch before handing over the PR.
 - The PR body should include a concise summary, validation/checks, and explicit risks or rollback notes.
+- Before opening or updating a release-scoped PR, make the release surface explicit: version in the branch name, PR title/body, package files when bumped, and matching docs/news/changelog/release notes when the change is player-visible, numbered, or otherwise release-bound. If a PR is intentionally unversioned or has no public news/changelog/docs, say that explicitly in the PR body and final summary with the reason.
 - If the work is still planning-only, say that in the PR summary and do not invent gameplay risk.
 
 ## Test/build/check rule
@@ -39,6 +40,8 @@ npm run build
 ```
 
 `npm test` currently validates world seed references and type-checks `prisma/seed.ts` without executing the seed. Treat it as important for map/world/seed/data-shape changes and useful as a general regression check when behavior touches shared game systems.
+
+On Windows PowerShell, use `npm.cmd test` / `npm.cmd run build` if `npm` is blocked by the local execution policy. The full test suite grows with `scripts/test/test-manifest.cjs` and commonly exceeds a 120-second tool timeout; start full-suite runs with a longer timeout, currently at least 300 seconds, and raise that baseline as the manifest grows. Focused `node scripts/test/*.cjs` checks can keep shorter timeouts.
 
 Add or extend focused tests when a new rule can be checked cheaply and repeatably, especially for:
 

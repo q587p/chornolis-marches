@@ -12,6 +12,7 @@ Chornolis Marches is a Ukrainian dark-fantasy Telegram RPG / living-world sandbo
 1a. Do not put scribe/admin-only commands or hidden service tooling into public `news.md`; keep them in changelog, release notes, `/adminHelp`, `/adminMenu`, and admin docs.
 1b. Do not expose `NPC` as a public-news category. Ukrainian `news.md` should describe people and presences diegetically, as `персонажі`, `місцеві`, professions or roles; keep `NPC` for technical/admin docs and English release notes when useful.
 1c. Every numbered release must add a `news.md` entry. If the release is internal, scribe-only or operator-focused, write a short atmospheric public note without admin-only command names, hidden service tooling or implementation details; do not leave gaps in public news version numbers.
+1d. PRs target `main` by default. "After PR #123" is not permission to make a stacked PR; stack only when the user explicitly asks for a stacked PR or names the non-main base branch. Release-scoped PRs should show their version in the branch name and PR title/body, and should either include the matching docs/news/changelog/release notes or explicitly explain why the PR is unversioned/no-news.
 2. Preserve current functionality unless the user explicitly asks to replace it.
 3. Prefer Ukrainian UI and project-specific terminology.
 4. Use `docs/codex/` files for context before editing unfamiliar systems.

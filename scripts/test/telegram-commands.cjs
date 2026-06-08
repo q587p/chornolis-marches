@@ -8,11 +8,22 @@ function commandNames(commands) {
   return commands.map((command) => command.command);
 }
 
+function commandDescription(commands, commandName) {
+  return commands.find((command) => command.command === commandName)?.description;
+}
+
 const defaultCommands = commandNames(DEFAULT_BOT_COMMANDS);
 const scribeCommands = commandNames(SCRIBE_BOT_COMMANDS);
 
 assert.deepEqual(defaultCommands.slice(0, 4), ["start", "afk", "help", "respawn"], "/help sits right after /afk, with /respawn below help");
 assert.deepEqual(scribeCommands.slice(0, 4), ["start", "afk", "help", "respawn"], "scribe side command menu inherits the /afk, /help and /respawn quick slots");
+assert.equal(commandDescription(DEFAULT_BOT_COMMANDS, "help"), "❔ Допомога новачку");
+assert.equal(commandDescription(DEFAULT_BOT_COMMANDS, "respawn"), "🏕️ Повернення до табору");
+assert.notEqual(
+  commandDescription(DEFAULT_BOT_COMMANDS, "help")?.slice(0, 2),
+  commandDescription(DEFAULT_BOT_COMMANDS, "respawn")?.slice(0, 2),
+  "/help and /respawn should not share the same side-menu icon",
+);
 assert.equal(defaultCommands.includes("refresh"), false, "public command menu must not expose /refresh");
 assert.equal(defaultCommands.includes("call_scribes"), false, "public command menu must not expose /call_scribes");
 assert.equal(defaultCommands.at(-1), "end_session", "/end_session stays at the bottom of the public side command menu");
