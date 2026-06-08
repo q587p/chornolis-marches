@@ -7,6 +7,26 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.9 - Visible NPC learner loop MVP - 12026-06-08
+
+### Added
+
+- Added a narrow `profession_learner` NPC loop where one local learner can follow or watch a matching specialist profile.
+- Added table-driven learner teacher profiles for herbalists and hunters so future fisher or other profession teachers can be added without rewriting the loop.
+- Added Radana as the first seeded learner near the starter border camp.
+- Added focused tests for learner eligibility, bounded gains, caught-up stop behavior, decay/reset, hidden technical progress text and creature-observation coverage.
+
+### Changed
+
+- Routed creature ticks through the learner loop before ordinary hunter/herbalist behavior so the learner does not become a full specialist or profession economy actor.
+- Kept learner progress technical-only in `currentAction` marker state while stripping the marker from public location/inspection text.
+- Updated progression and next-planning docs to keep `/spirit` teacher unlocks, mentorship, group movement, Лісовик learning and broader profession/economy work future-only.
+
+### Risks
+
+- This is intentionally one visible living-world proof, not a broad profession/economy system, player reward path, public skill UI, combat change, group movement change, mentorship unlock or `/spirit` teacher gate.
+- WorldEvent/WorldEventMarker schema and migrations are unchanged.
+
 ## 0.16.8 - Social signal content extraction and scribe suggestions - 12026-06-07
 
 ### Added

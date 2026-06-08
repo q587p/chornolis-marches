@@ -116,6 +116,8 @@ export const PREPARED_CHARACTER_NAMES = [
   },
   {
     key: "radana",
+    reserved: true,
+    reservationNote: "already used by the profession learner NPC Radana",
     forms: {
       nominative: "Радана",
       genitive: "Радани",
@@ -1554,5 +1556,20 @@ export const PREPARED_CHARACTER_NAMES = [
     rarity: "рідкісне",
     note: "plural form for Вони",
     suggestedGender: "PLURAL",
+  },
+  {
+    key: "lada",
+    forms: {
+      nominative: "Лада",
+      genitive: "Лади",
+      dative: "Ладі",
+      accusative: "Ладу",
+      instrumental: "Ладою",
+      locative: "Ладі",
+      vocative: "Ладо",
+    },
+    origin: "слов'янське / прикордонне",
+    rarity: "звичне",
+    suggestedGender: "FEMININE",
   },
 ] satisfies PreparedCharacterName[];

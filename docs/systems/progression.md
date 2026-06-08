@@ -293,6 +293,19 @@ After the actor-learning foundation, the intended near-term order is:
   but those belong behind bounded rare-result rules rather than the first
   chance/cost effects.
 
+The first NPC-to-NPC learner proof is deliberately narrower than full observed
+actor skill. A `profession_learner` marker on one local NPC lets that NPC seek a
+matching specialist profile, currently herbalist or hunter, then either stay
+nearby, follow the specialist's trail, or quietly watch the specialist work.
+Progress is stored only as bounded technical marker state in the learner's
+`currentAction`, stops once the learner roughly catches up to the profile's
+supported level, and decays after a short rest so the behavior can repeat later.
+It does not grant player rewards, expose a public skill UI, add a profession
+economy, unlock `/spirit` teachers, create mentorship UI, change group movement,
+or alter WorldEvent/WorldEventMarker schema.
+
+Spirit-call teacher unlocks and a Лісовик learning pass remain future slices.
+
 Future observation, tracking, apprenticeship and practice slices should use this service instead of inventing separate progress storage.
 
 ## 0.13.11+ Learning Placeholders and Bridges

@@ -1,6 +1,7 @@
 export function normalizeCreatureActionText(action: string | null | undefined, fallback?: string) {
   if (!action) return fallback;
   return action
+    .replace(/^npc_learner:profession:v1;profile=[A-Za-z0-9_-]+;teacher=(?:none|\d+);progress=\d+;rest=\d+;\s*/, "")
     .replace(/^claimed_by_hunter:\d+;\s*/, "")
     .replace(/;\s*predator_prey_claimed_by:\d+\b/g, "")
     .replace(/;\s*prey_food:\d+\b/g, "")

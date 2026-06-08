@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 require("ts-node/register");
 
 const {
+  HERBALIST_LINES,
   herbalistCellarDepositText,
   herbalistCellarShelfCheckText,
   herbalistGatherText,
@@ -29,6 +30,13 @@ const {
   CELLAR_WATER_PASSAGE_DESTINATION_KEY,
   CELLAR_WATER_PASSAGE_SOURCE_KEY,
 } = require("../../src/services/cellarWaterPassage");
+const {
+  NPC_LEARNER_DEFAULT_PROFILE_KEY,
+  NPC_LEARNER_PROFESSION_KEY,
+  isNpcLearnerCreature,
+  npcLearnerPlan,
+} = require("../../src/services/npcLearner");
+const uniqueCreatures = require("../../prisma/data/world/uniqueCreatures.json");
 
 assert.equal(HERBALIST_CELLAR_LOCATION_KEY, "start_border_cellar");
 assert.equal(HERBALIST_CELLAR_LOCATION_KEY, CELLAR_WATER_PASSAGE_SOURCE_KEY);
@@ -37,6 +45,7 @@ assert.equal(HERBALIST_GATHER_LOCATION_KEY, "meadow_16_05");
 assert.deepEqual(HERBALIST_GATHER_RESOURCE_KEYS, ["herbs", "berries", "mushrooms"]);
 assert.equal(HERBALIST_WATER_WORD_PASSAGE_CHANCE_PERCENT, 20);
 assert.equal(HERBALIST_WATER_WORD_PASSAGE_EVENT_TITLE, "Herbalist water-word passage");
+assert.ok(HERBALIST_LINES.length >= 10, "herbalists should keep a varied line pool");
 
 assert.equal(isHerbalistCreature({ species: { key: "herbalist" }, professionKey: null }), true);
 assert.equal(isHerbalistCreature({ species: { key: "wolf" }, professionKey: "znakhar" }), true);
@@ -116,5 +125,39 @@ assert.match(waterWordEventDescription, new RegExp(`source=${CELLAR_WATER_PASSAG
 assert.match(waterWordEventDescription, new RegExp(`destination=${CELLAR_WATER_PASSAGE_DESTINATION_KEY}`));
 assert.match(waterWordEventDescription, /trigger=water_word_phrase/);
 assert.match(waterWordEventDescription, /stage=supply_run/);
+
+const herbalists = uniqueCreatures.filter((creature) => creature.speciesKey === "herbalist");
+const specialists = herbalists.filter((creature) => ["znakhar", "travnytsia"].includes(creature.professionKey));
+const learner = herbalists.find((creature) => creature.professionKey === NPC_LEARNER_PROFESSION_KEY);
+
+assert.equal(specialists.length >= 2, true, "seed should keep existing herbalist specialists");
+assert.ok(learner, "seed should include one profession learner near existing specialists");
+assert.equal(learner.locationKey, "start_border_camp");
+assert.equal(learner.professionName, "учениця");
+assert.equal(isNpcLearnerCreature({ professionKey: learner.professionKey, currentAction: learner.action }), true);
+
+const plan = npcLearnerPlan({
+  learner: {
+    id: 100,
+    locationId: 1,
+    professionKey: learner.professionKey,
+    currentAction: learner.action,
+  },
+  teacher: {
+    id: 101,
+    locationId: 1,
+    name: "Здравомир",
+    professionKey: "znakhar",
+    professionName: "знахар",
+    activity: "LOOKING",
+    currentAction: "сушить трави біля торби",
+    species: { key: "herbalist" },
+  },
+});
+
+assert.equal(plan.kind, "observeTeacher");
+assert.equal(plan.state.profileKey, "herbalist");
+assert.equal(plan.state.progress, 2);
+assert.notEqual(plan.state.profileKey, NPC_LEARNER_DEFAULT_PROFILE_KEY);
 
 console.log("NPC herbalist helpers OK");
