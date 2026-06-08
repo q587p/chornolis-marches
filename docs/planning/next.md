@@ -25,7 +25,7 @@ Keep the next patches narrow and reviewable:
 
 ## Post-0.16 Candidate Lane
 
-After the current mentorship/NPC-learning lane stabilizes, the next practical survival lane can be **bottles, herbalism and first prepared remedies**: `ALC-002` bottle source, `RECIPE-001` minimal recipe helper, revised `ALC-001` stamina tincture, then herbalist hints/demonstrations and wetland reagents. Keep it humble: no full alchemy tree, broad crafting UI, shops, barter or public skill sheet.
+After the current mentorship/NPC-learning lane stabilizes, the next practical survival lane can be **bottles, herbalism and first prepared remedies**: `ALC-002` bottle source, `RECIPE-001` minimal recipe helper, `ALC-006` herbalism/failure policy, revised `ALC-001` stamina tincture, then herbalist hints/demonstrations and wetland reagents. Keep it humble: no full alchemy tree, broad crafting UI, shops, barter or public skill sheet.
 
 ## Boundaries
 

@@ -17,6 +17,7 @@ tags:
 depends_on:
   - RECIPE-001
   - ALC-002
+  - ALC-006
 ---
 
 # ALC-001: First Herbal Stamina Tincture
@@ -80,7 +81,16 @@ Drink forms:
 - After drinking, remove one `herbal_tincture` and add one `empty_bottle`.
 - No dirty bottle yet.
 - No water/thirst/washing dependency yet.
-- Optional: record `herbalism` or `gathering` practice if the learning service can do this cheaply and without broad skill UI.
+
+## Failure Policy
+
+Brewing uses `ALC-006` instead of guaranteed "press brew -> get tincture" crafting.
+
+- Success consumes the bottle input and ingredients, produces one `herbal_tincture`, and can record `herbalism` practice.
+- Ordinary failure consumes herbs/berries but keeps the empty bottle.
+- Critical failure consumes herbs/berries and can break or consume the empty bottle.
+- Failed validation, such as missing ingredients, missing bottle, full stamina when drinking, invalid location or unavailable action, never consumes ingredients or bottle and should not count as practice.
+- Success and both failure outcomes can teach through `herbalism` when learning storage supports it.
 
 ## Player-Facing Tone
 
@@ -102,14 +112,18 @@ Example drink:
 - Do not expose exact hidden formulas in ordinary text beyond clear missing ingredients.
 - Do not add a full recipe book or crafting menu.
 - Do not add HP healing or night-sight in this first slice.
-- Do not consume ingredients or bottles on failed validation.
+- Do not consume anything on failed validation.
 - Do not allow tutorial dream resources to become a grind source unless explicitly allowed.
 
 ## Acceptance
 
-- A player with bottle, herbs and berries can craft one tincture.
+- A player with bottle, herbs and berries can attempt to craft one tincture.
 - Missing bottle, herbs or berries fail clearly without consuming anything.
+- Brewing uses the herbalism success/failure policy from `ALC-006`.
+- Ordinary failure consumes herbs/berries but keeps the bottle.
+- Critical failure can consume herbs/berries and break the bottle.
+- Practice is recorded for success and failure where learning storage supports it.
 - Drinking restores stamina up to cap and returns one empty bottle.
 - Drinking at full stamina does not consume the tincture.
 - `/help` / `/commands` mention stable commands only if the action becomes player-facing.
-- Tests cover recipe validation, stamina cap behavior, bottle return and aliases.
+- Tests cover recipe validation, stamina cap behavior, bottle return, ordinary failure, critical failure, failed validation with no consumption, practice recording and aliases.

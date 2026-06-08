@@ -107,7 +107,8 @@
     ],
     "depends_on": [
       "RECIPE-001",
-      "ALC-002"
+      "ALC-002",
+      "ALC-006"
     ],
     "exports": {},
     "file": "docs/planning/items/ALC-001-herbal-stamina-elixir.md"
@@ -205,6 +206,29 @@
     ],
     "exports": {},
     "file": "docs/planning/items/ALC-005-mentorship-brewing-hints.md"
+  },
+  {
+    "id": "ALC-006",
+    "title": "Herbalism skill and brewing failure policy",
+    "status": "backlog",
+    "type": "feature",
+    "area": "learning",
+    "priority": "high",
+    "tags": [
+      "herbalism",
+      "alchemy",
+      "learning",
+      "failure",
+      "bottles",
+      "crafting"
+    ],
+    "depends_on": [
+      "LEARN-001",
+      "RECIPE-001",
+      "ALC-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ALC-006-herbalism-skill-and-failure-policy.md"
   },
   {
     "id": "ANIMAL-001",
