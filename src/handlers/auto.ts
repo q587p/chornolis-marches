@@ -21,10 +21,10 @@ import { slashlessCommandPattern } from "../utils/slashlessCommands";
 import { SPIRIT_CALL_LABEL, markSpiritCallPayload } from "../services/spiritCall";
 
 const AUTO_STOP_TEXT_COMMAND = slashlessCommandPattern(["autoStop", "autostop", "auto_stop"]);
+export const AUTO_START_COMMANDS = ["auto_on", "auto_start"] as const;
+export const SPIRIT_CALL_START_COMMANDS = ["spirit", "dukh", "poklyk"] as const;
 const SPIRIT_CALL_START_TEXT_COMMAND = slashlessCommandPattern([
-  "spirit",
-  "dukh",
-  "poklyk",
+  ...SPIRIT_CALL_START_COMMANDS,
   "поклик духа",
   "покликати духа",
   "покликати дух",
@@ -254,19 +254,19 @@ function autoConfirmText() {
 
 export type AutoCommandMode = "show" | "start" | "stop";
 
-export function autoCommandModeFromText(raw: unknown): AutoCommandMode {
+export function autoCommandModeFromText(raw: unknown, emptyMode: AutoCommandMode = "show"): AutoCommandMode {
   const arg = String(raw ?? "")
     .trim()
     .toLocaleLowerCase("uk-UA")
     .replace(/[_-]+/g, " ");
-  if (!arg) return "show";
+  if (!arg) return emptyMode;
   if (["stop", "off", "стоп", "зупинити", "вимкнути", "подякувати", "відпустити", "ні"].includes(arg)) return "stop";
   if (["on", "start", "увімкнути", "ввімкнути", "запустити", "так"].includes(arg)) return "start";
   return "start";
 }
 
-function autoCommandMode(ctx: any): AutoCommandMode {
-  return autoCommandModeFromText(ctx.match);
+function autoCommandMode(ctx: any, emptyMode: AutoCommandMode = "show"): AutoCommandMode {
+  return autoCommandModeFromText(ctx.match, emptyMode);
 }
 
 export function autoStatusText(input: { enabled?: boolean | null; spiritLabel?: string | null } = {}) {
@@ -631,9 +631,9 @@ export function registerAutoHandlers(bot: Bot) {
 
   restorePersistentAutoPlayers(bot).catch((error) => console.warn("Persistent auto restore failed:", error));
 
-  async function startAutoCommand(ctx: any) {
+  async function submitAutoCommand(ctx: any, emptyMode: AutoCommandMode) {
     if (!ctx.from) return;
-    const mode = autoCommandMode(ctx);
+    const mode = autoCommandMode(ctx, emptyMode);
     if (mode === "show") {
       await replyPlayerAutoStatus(ctx);
       return;
@@ -645,7 +645,16 @@ export function registerAutoHandlers(bot: Bot) {
     await requestOrEnablePlayerAuto(bot, ctx);
   }
 
-  bot.command("auto", startAutoCommand);
+  async function autoCommand(ctx: any) {
+    await submitAutoCommand(ctx, "show");
+  }
+
+  async function startAutoCommand(ctx: any) {
+    await submitAutoCommand(ctx, "start");
+  }
+
+  bot.command("auto", autoCommand);
+  bot.command(["auto_on", "auto_start"], startAutoCommand);
   bot.command(["spirit", "dukh", "poklyk"], startAutoCommand);
 
   bot.hears("🤖 Авто", async (ctx) => {

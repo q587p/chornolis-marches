@@ -16,7 +16,12 @@ const {
 } = require("../../src/input/aliases");
 const { inventoryResourceKeyFromText } = require("../../src/services/inventoryUse");
 const { parseStartActionPayload, parseStartActionPayloadFromText, resolveStartActionPayload } = require("../../src/input/startPayloads");
-const { autoCommandModeFromText, autoStatusText } = require("../../src/handlers/auto");
+const {
+  AUTO_START_COMMANDS,
+  SPIRIT_CALL_START_COMMANDS,
+  autoCommandModeFromText,
+  autoStatusText,
+} = require("../../src/handlers/auto");
 const { isDreamGateOpeningPhrase, localGateOpenAttemptText } = require("../../src/services/tutorial");
 const { normalizeCreatureActionText } = require("../../src/utils/creatureActionText");
 const { resourceAccusativeName } = require("../../src/utils/resourceText");
@@ -395,6 +400,8 @@ assert.equal(formatAliasSuggestion(suggestAliasEntries("авто ст")[0]), "а
 assert.equal(formatAliasSuggestion(suggestAliasEntries("вимкнути авт")[0]), "вимкнути авто (/auto_stop)");
 assert.equal(formatAliasSuggestion(suggestAliasEntries("авт")[0]), "авто (/auto)");
 assert.equal(formatAliasSuggestion(suggestAliasEntries("увімкнути авт")[0]), "увімкнути авто (/spirit)");
+assert.deepEqual([...AUTO_START_COMMANDS], ["auto_on", "auto_start"]);
+assert.deepEqual([...SPIRIT_CALL_START_COMMANDS], ["spirit", "dukh", "poklyk"]);
 assert.equal(autoCommandModeFromText("stop"), "stop");
 assert.equal(autoCommandModeFromText("off"), "stop");
 assert.equal(autoCommandModeFromText("стоп"), "stop");
@@ -402,7 +409,11 @@ assert.equal(autoCommandModeFromText("вимкнути"), "stop");
 assert.equal(autoCommandModeFromText("подякувати"), "stop");
 assert.equal(autoCommandModeFromText("відпустити"), "stop");
 assert.equal(autoCommandModeFromText(""), "show");
+assert.equal(autoCommandModeFromText("", "show"), "show");
+assert.equal(autoCommandModeFromText("", "start"), "start");
 assert.equal(autoCommandModeFromText("on"), "start");
+assert.equal(autoCommandModeFromText("start"), "start");
+assert.equal(autoCommandModeFromText("stop", "start"), "stop");
 assert.match(autoStatusText({ enabled: false }), /Поклик духа: мовчить\./);
 assert.match(autoStatusText({ enabled: true }), /Поклик духа: озивається\./);
 assert.match(autoStatusText({ enabled: false }), /Обраний дух: тихий шепіт Порубіжжя\./);
