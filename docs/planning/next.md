@@ -12,7 +12,7 @@ the completed `0.15.x` attention and learning foundation:
 Near-term release order:
 
 - `0.16.11`: fauna diversity pass — activate hawk/frog/snake seed ecology, daytime bird presence and wet-zone starter/restoration groups.
-- `0.16.12`: strange totem cap expansion — in testing; regionalize active totem caps and flavor without changing fauna, Lisovyk restoration or `/spirit`.
+- `0.16.12`: strange totem cap expansion — in testing; regionalize active totem caps/flavor and add a small authored riverbank walk extension without changing fauna, Lisovyk restoration or `/spirit`.
 - `0.16.13`: Lisovyk character pass / possible `Поклик духа` connection — future-only; do not fold it into fauna diversity or totem cap work.
 
 The last apiary slices are now treated as completed/in-testing content endpoints, not the center of the next sequence:

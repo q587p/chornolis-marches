@@ -2705,6 +2705,14 @@
   },
   {
     "fromKey": "riverbank_13_00",
+    "toKey": "riverbank_14_00",
+    "direction": "EAST",
+    "label": "схід, уздовж берега",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_13_00",
     "toKey": "meadow_12_00",
     "direction": "WEST",
     "label": "захід",
@@ -2729,7 +2737,31 @@
   },
   {
     "fromKey": "riverbank_13_09",
+    "toKey": "riverbank_14_09",
+    "direction": "EAST",
+    "label": "схід, береговою низиною",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_13_09",
     "toKey": "meadow_12_09",
+    "direction": "WEST",
+    "label": "захід",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_14_00",
+    "toKey": "riverbank_14_01",
+    "direction": "NORTH",
+    "label": "північ, вздовж берега",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_14_00",
+    "toKey": "riverbank_13_00",
     "direction": "WEST",
     "label": "захід",
     "travelCost": 1,
@@ -2745,9 +2777,33 @@
   },
   {
     "fromKey": "riverbank_14_01",
+    "toKey": "riverbank_14_00",
+    "direction": "SOUTH",
+    "label": "південь, береговою стежкою",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_14_01",
+    "toKey": "riverbank_15_01",
+    "direction": "EAST",
+    "label": "схід, уздовж води",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_14_01",
     "toKey": "meadow_13_01",
     "direction": "WEST",
     "label": "захід",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_14_08",
+    "toKey": "riverbank_14_09",
+    "direction": "NORTH",
+    "label": "північ, береговою низиною",
     "travelCost": 1,
     "isHidden": false
   },
@@ -2761,7 +2817,47 @@
   },
   {
     "fromKey": "riverbank_14_08",
+    "toKey": "riverbank_15_08",
+    "direction": "EAST",
+    "label": "схід, береговою перемичкою",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_14_08",
     "toKey": "meadow_13_08",
+    "direction": "WEST",
+    "label": "захід",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_14_09",
+    "toKey": "riverbank_14_08",
+    "direction": "SOUTH",
+    "label": "південь, до осокового краю",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_14_09",
+    "toKey": "riverbank_13_09",
+    "direction": "WEST",
+    "label": "захід",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_15_01",
+    "toKey": "riverbank_15_02",
+    "direction": "NORTH",
+    "label": "північ, уздовж берега",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_15_01",
+    "toKey": "riverbank_14_01",
     "direction": "WEST",
     "label": "захід",
     "travelCost": 1,
@@ -2777,9 +2873,33 @@
   },
   {
     "fromKey": "riverbank_15_02",
+    "toKey": "riverbank_15_01",
+    "direction": "SOUTH",
+    "label": "південь, береговою кромкою",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_15_02",
+    "toKey": "riverbank_16_02",
+    "direction": "EAST",
+    "label": "схід, по мулу",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_15_02",
     "toKey": "meadow_14_02",
     "direction": "WEST",
     "label": "захід",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_15_07",
+    "toKey": "riverbank_15_08",
+    "direction": "NORTH",
+    "label": "північ, береговою перемичкою",
     "travelCost": 1,
     "isHidden": false
   },
@@ -2800,10 +2920,58 @@
     "isHidden": false
   },
   {
+    "fromKey": "riverbank_15_08",
+    "toKey": "riverbank_15_07",
+    "direction": "SOUTH",
+    "label": "південь, до пташиних слідів",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_15_08",
+    "toKey": "riverbank_14_08",
+    "direction": "WEST",
+    "label": "захід, береговою перемичкою",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_16_02",
+    "toKey": "riverbank_16_03",
+    "direction": "NORTH",
+    "label": "північ, уздовж берега",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_16_02",
+    "toKey": "riverbank_15_02",
+    "direction": "WEST",
+    "label": "захід",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
     "fromKey": "riverbank_16_03",
     "toKey": "meadow_16_04",
     "direction": "NORTH",
     "label": "північ",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_16_03",
+    "toKey": "riverbank_16_02",
+    "direction": "SOUTH",
+    "label": "південь, по мулистому сліду",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_16_03",
+    "toKey": "riverbank_17_03",
+    "direction": "EAST",
+    "label": "схід, до очеретяного зламу",
     "travelCost": 1,
     "isHidden": false
   },
@@ -2856,10 +3024,34 @@
     "isHidden": false
   },
   {
+    "fromKey": "riverbank_17_03",
+    "toKey": "riverbank_17_04",
+    "direction": "NORTH",
+    "label": "північ, до старого мосту",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_17_03",
+    "toKey": "riverbank_16_03",
+    "direction": "WEST",
+    "label": "захід",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
     "fromKey": "riverbank_17_04",
     "toKey": "riverbank_18_04",
     "direction": "EAST",
     "label": "схід",
+    "travelCost": 1,
+    "isHidden": false
+  },
+  {
+    "fromKey": "riverbank_17_04",
+    "toKey": "riverbank_17_03",
+    "direction": "SOUTH",
+    "label": "південь, береговим зламом",
     "travelCost": 1,
     "isHidden": false
   },

@@ -14,12 +14,14 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added region-specific ambient Strange Totem description pools for dry luka, riverbank, Chornolis border and willow floodplain locations.
 - Added focused strange-totem coverage for exact region caps, protected spawn boundaries, regional description pools and stable dismantle reward behavior.
 - Added per-command timing and optional `TEST_JOBS` parallel execution to the manifest test runner.
+- Added a small authored riverbank walk extension near the old bridge and willow edge so the bank can be walked for longer without entering dry luka or the floodplain.
 
 ### Changed
 
 - Expanded active Strange Totem region caps: `dry_luka` from 5 to 13, `riverbank` from 2 to 3, `chornolis_border` from 0 to 5 and `willow_floodplain` from 0 to 1.
 - Kept daily spawn scheduling, seven-day lifetime, old-day twig shedding and dismantle twig rewards unchanged.
-- Kept starter camp, old bridge, dream tutorial and closed settlement gate regions/locations excluded from ambient totem spawning.
+- Changed the under-bridge location to count as `riverbank` for regional world behavior while keeping it explicitly excluded from ambient totem spawning.
+- Kept starter camp, old bridge spans, the under-bridge passage, dream tutorial and closed settlement gate regions/locations excluded from ambient totem spawning.
 - CI now runs the manifest test suite with `TEST_JOBS=4` and follows the explicit Prisma generate step with `npm run typecheck`.
 
 ### Risks
