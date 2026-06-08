@@ -1,11 +1,9 @@
 import { Bot } from "grammy";
 import { buildMainReplyKeyboardForTelegramId, buildMenuReplyKeyboard } from "../ui/replyKeyboard";
-import { isScribeAdmin } from "../services/adminAccess";
 import { isPlayerAutoEnabled } from "./auto";
 
 export async function showMenu(ctx: any) {
-  const canSeeScribeTools = await isScribeAdmin(ctx.from?.id);
-  await ctx.reply("☰ Меню", { reply_markup: buildMenuReplyKeyboard({ canSeeStats: canSeeScribeTools, canSeeChat: canSeeScribeTools }) });
+  await ctx.reply("☰ Меню", { reply_markup: buildMenuReplyKeyboard() });
 }
 
 export async function showMainKeyboard(ctx: any) {

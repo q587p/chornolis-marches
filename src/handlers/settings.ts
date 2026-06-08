@@ -13,7 +13,6 @@ import {
   setDaypartNoticesEnabled,
 } from "../services/playerNotificationSettings";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
-import { isScribeAdmin } from "../services/adminAccess";
 
 async function playerForContext(ctx: any) {
   if (!ctx.from?.id) return null;
@@ -58,8 +57,7 @@ export async function setAutoActionMessageSetting(ctx: any, enabled: boolean) {
 }
 
 async function showMenuFromSettings(ctx: any) {
-  const canSeeScribeTools = await isScribeAdmin(ctx.from?.id);
-  await ctx.reply("☰ Меню", { reply_markup: buildMenuReplyKeyboard({ canSeeStats: canSeeScribeTools, canSeeChat: canSeeScribeTools }) });
+  await ctx.reply("☰ Меню", { reply_markup: buildMenuReplyKeyboard() });
 }
 
 function daynoticesArg(ctx: any) {

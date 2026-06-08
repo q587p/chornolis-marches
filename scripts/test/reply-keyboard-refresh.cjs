@@ -26,8 +26,7 @@ assert.match(ordinaryMenuLabels.join("\n"), /Новини/);
 assert.doesNotMatch(ordinaryMenuLabels.join("\n"), /Репліки/);
 assert.doesNotMatch(ordinaryMenuLabels.join("\n"), /Статистика/);
 
-const scribeMenuLabels = keyboardLabels(buildMenuReplyKeyboard({ canSeeStats: true, canSeeChat: true }));
-assert.match(scribeMenuLabels.join("\n"), /Репліки/);
-assert.match(scribeMenuLabels.join("\n"), /Статистика/);
+const scribeMenuLabels = keyboardLabels(buildMenuReplyKeyboard());
+assert.deepEqual(scribeMenuLabels, ordinaryMenuLabels, "ordinary Menu should stay identical for players and scribes");
 
 console.log("Reply keyboard refresh noise guards OK");
