@@ -3,6 +3,12 @@ import { prisma } from "../db";
 import { actionDurationMs, enqueueCreatureAction, movementDurationMs } from "./actionQueue";
 import { findLocationRoute, type RouteStep } from "./routeFinding";
 import { learningLevelForTotalProgress } from "./learning";
+import {
+  NPC_LEARNER_TEACHER_PROFILE_CONTENT,
+  npcLearnerFollowTeacherAction,
+  npcLearnerObserveTeacherAction,
+  type NpcLearnerTeacherProfileContent,
+} from "../content/npc/npcLearnerProfiles";
 
 export const NPC_LEARNER_PROFESSION_KEY = "profession_learner";
 export const NPC_LEARNER_LOOP_MARKER = "npc_learner:profession:v1";
@@ -14,51 +20,14 @@ export const NPC_LEARNER_DECAY_AMOUNT = 4;
 
 const LEARNER_ROUTE_MAX_DEPTH = 10;
 
-type NpcLearnerTeacherProfile = {
-  key: string;
-  skillKey: string;
-  contextKey: string;
-  speciesKeys: readonly string[];
-  professionKeys: readonly string[];
-  relevantActivity: readonly string[];
-  relevantActionWords: readonly string[];
+type NpcLearnerTeacherProfile = NpcLearnerTeacherProfileContent & {
   teacherLevel: number;
-  visibleFallbackName: string;
-  noTeacherAction: string;
-  restAction: string;
-  decayAction: string;
 };
 
-export const NPC_LEARNER_TEACHER_PROFILES = [
-  {
-    key: "herbalist",
-    skillKey: "gathering",
-    contextKey: "resource:herbs",
-    speciesKeys: ["herbalist"],
-    professionKeys: ["znakhar", "travnytsia"],
-    relevantActivity: ["GATHERING", "LOOKING"],
-    relevantActionWords: ["збира", "трав", "кор", "суш"],
-    teacherLevel: NPC_LEARNER_TEACHER_LEVEL,
-    visibleFallbackName: "травник",
-    noTeacherAction: "прислухається, чи не працює десь майстер",
-    restAction: "відпочиває після довгого придивляння до трав",
-    decayAction: "відпочиває й перебирає в пам'яті трав'яні прикмети",
-  },
-  {
-    key: "hunter",
-    skillKey: "tracking",
-    contextKey: "profession:hunter",
-    speciesKeys: ["hunter"],
-    professionKeys: ["hunter"],
-    relevantActivity: ["MOVING", "LOOKING", "FIGHTING"],
-    relevantActionWords: ["слід", "здобич", "полю", "гризун", "зайц", "миша", "миші", "мислив"],
-    teacherLevel: NPC_LEARNER_TEACHER_LEVEL,
-    visibleFallbackName: "мисливець",
-    noTeacherAction: "прислухається, чи не працює десь майстер",
-    restAction: "відпочиває після довгого придивляння до слідів",
-    decayAction: "відпочиває й перебирає в пам'яті мисливські прикмети",
-  },
-] as const satisfies readonly NpcLearnerTeacherProfile[];
+export const NPC_LEARNER_TEACHER_PROFILES = NPC_LEARNER_TEACHER_PROFILE_CONTENT.map((profile) => ({
+  ...profile,
+  teacherLevel: NPC_LEARNER_TEACHER_LEVEL,
+})) satisfies readonly NpcLearnerTeacherProfile[];
 
 const TEACHER_SPECIES_KEYS = [...new Set(NPC_LEARNER_TEACHER_PROFILES.flatMap((profile) => profile.speciesKeys))];
 const TEACHER_PROFESSION_KEYS = [...new Set(NPC_LEARNER_TEACHER_PROFILES.flatMap((profile) => profile.professionKeys))];
@@ -226,7 +195,7 @@ export function npcLearnerPlan(input: {
         activity: "MOVING",
         route,
         state,
-        currentAction: formatNpcLearnerAction(state, `тримається сліду ${visibleTeacherName(teacher, teacherProfile)}`),
+        currentAction: formatNpcLearnerAction(state, npcLearnerFollowTeacherAction(visibleTeacherName(teacher, teacherProfile))),
       };
     }
   }
@@ -243,7 +212,7 @@ export function npcLearnerPlan(input: {
     activity: "LOOKING",
     state,
     amount,
-    currentAction: formatNpcLearnerAction(state, `дивиться, як працює ${visibleTeacherName(teacher, teacherProfile)}`),
+    currentAction: formatNpcLearnerAction(state, npcLearnerObserveTeacherAction(visibleTeacherName(teacher, teacherProfile))),
   };
 }
 

@@ -8,6 +8,12 @@ The lexicon is now one of the content sources that must be maintained when stabl
 
 Use `src/content/onboarding/playerNames.ts` for suggested player names only.
 
+## Content boundaries
+
+Stable reusable content belongs under `src/content/**`: lexicon entries, prepared help pages, onboarding copy, reusable NPC profile text and similar authored tables. Service and handler modules should keep behavior, routing, persistence, queueing and Telegram send/callback logic.
+
+Behavior-specific one-off action result text may remain in service modules until a focused slice extracts it. Do not use this rule as a reason for a broad locations or `actionCompletions` rewrite in the same pass.
+
 ## Why this exists
 
 Chornolis Marches builds many sentences dynamically:
