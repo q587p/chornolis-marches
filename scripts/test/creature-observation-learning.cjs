@@ -14,7 +14,16 @@ const {
 } = require("../../src/services/creatureObservationLearning");
 const {
   GATHERING_SOURCE_EVENT_TITLE,
+  gatheringSourceDescription,
 } = require("../../src/services/gatheringLearningRules");
+const {
+  observableGatheringContextKey,
+  recordGatheringSource,
+} = require("../../src/services/gatheringLearning");
+const {
+  NPC_LEARNER_PROFESSION_KEY,
+  npcLearnerPlan,
+} = require("../../src/services/npcLearner");
 
 assert.equal(
   canCreatureLearnByObservation({
@@ -231,7 +240,78 @@ function fakeCreatureObservationDb({ creatureOverrides = {}, sourceDescriptions 
   };
 }
 
+function fakeGatheringSourceDb() {
+  const events = [];
+  const creatureProgressRows = [];
+  return {
+    events,
+    creatureProgressRows,
+    worldEvent: {
+      create: async ({ data }) => {
+        const row = { id: events.length + 1, createdAt: new Date("2026-06-08T09:00:00Z"), ...data };
+        events.push(row);
+        return row;
+      },
+      findFirst: async () => null,
+      findMany: async () => [],
+      count: async () => 0,
+    },
+    characterLearningProgress: {
+      findUnique: async () => null,
+      create: async () => {
+        throw new Error("creature observation source should not create player progress directly");
+      },
+      update: async () => {
+        throw new Error("creature observation source should not update player progress directly");
+      },
+    },
+    creatureLearningProgress: {
+      findUnique: async ({ where }) => {
+        const key = where.creatureId_skillKey_sourceKey_contextKey;
+        return creatureProgressRows.find((row) =>
+          row.creatureId === key.creatureId &&
+          row.skillKey === key.skillKey &&
+          row.sourceKey === key.sourceKey &&
+          row.contextKey === key.contextKey
+        ) ?? null;
+      },
+      create: async ({ data }) => {
+        const row = { id: creatureProgressRows.length + 1, ...data };
+        creatureProgressRows.push(row);
+        return row;
+      },
+      update: async ({ where, data }) => {
+        const row = creatureProgressRows.find((entry) => entry.id === where.id);
+        assert.ok(row, "fake creature practice row exists");
+        Object.assign(row, data);
+        return row;
+      },
+    },
+  };
+}
+
 (async () => {
+  assert.equal(
+    gatheringSourceDescription({ actorCreatureId: 9, resourceKey: "herbs", success: true }),
+    "actorCreature=9; success=true; resource=herbs",
+  );
+  assert.equal(observableGatheringContextKey("actorCreature=9; success=true; resource=herbs"), "resource:herbs");
+
+  const sourceDb = fakeGatheringSourceDb();
+  const source = await recordGatheringSource({
+    locationId: 13,
+    actorCreatureId: 9,
+    resourceKey: "herbs",
+    success: true,
+  }, sourceDb);
+  assert.equal(source.sourceRecorded, true);
+  assert.equal(source.canonicalProgressRecorded, true, "creature source events may record creature practice without rewarding players");
+  assert.equal(sourceDb.creatureProgressRows.length, 1);
+  assert.equal(sourceDb.creatureProgressRows[0].creatureId, 9);
+  assert.equal(sourceDb.creatureProgressRows[0].sourceKey, "practice");
+  assert.equal(sourceDb.events[0].title, GATHERING_SOURCE_EVENT_TITLE);
+  assert.equal(sourceDb.events[0].playerId, undefined);
+
   const db = fakeCreatureObservationDb();
   const observed = await recordCreatureGatheringObservation({
     creatureId: 7,
@@ -312,6 +392,29 @@ function fakeCreatureObservationDb({ creatureOverrides = {}, sourceDescriptions 
   }, animalDb);
   assert.equal(animal.observed, false, "ordinary animals should not learn broad gathering observation in this MVP");
   assert.equal(animalDb.creatureProgressRows.length, 0);
+
+  const learnerPlan = npcLearnerPlan({
+    learner: {
+      id: 11,
+      locationId: 13,
+      professionKey: NPC_LEARNER_PROFESSION_KEY,
+      currentAction: "npc_learner:profession:v1;profile=any;teacher=none;progress=0;rest=0; придивляється",
+    },
+    teacher: {
+      id: 9,
+      locationId: 13,
+      name: "Ведана",
+      professionKey: "travnytsia",
+      professionName: "травниця",
+      activity: "GATHERING",
+      currentAction: "збирає кору й шепоче над травами",
+      species: { key: "herbalist" },
+    },
+  });
+  assert.equal(learnerPlan.kind, "observeTeacher");
+  assert.equal(learnerPlan.state.profileKey, "herbalist");
+  assert.equal(learnerPlan.state.progress, 2);
+  assert.equal(JSON.stringify(learnerPlan).includes("playerId"), false);
 
   console.log("Creature observation learning helpers OK");
 })().catch((error) => {

@@ -52,6 +52,18 @@
     }
   },
   {
+    "speciesKey": "local_person",
+    "locationKey": "start_border_camp",
+    "name": "Радана",
+    "sex": "FEMALE",
+    "isAlive": true,
+    "isHidden": false,
+    "professionKey": "profession_learner",
+    "professionName": "учениця",
+    "action": "npc_learner:profession:v1;profile=any;teacher=none;progress=0;rest=0; придивляється до чужої роботи",
+    "activity": "LOOKING"
+  },
+  {
     "speciesKey": "herbalist",
     "locationKey": "forest_04_04",
     "name": "Ведана",

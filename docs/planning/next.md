@@ -15,7 +15,7 @@ The last apiary slices are now treated as completed/in-testing content endpoints
 - `APIARY-003`: `0.15.20` shipped the first risky honey/beeswax harvest/raid slice.
 - `APIARY-004`: bear honey behavior remains backlog/future.
 
-The `LEARN-001` foundation is in testing after the minimal persistent learning/progress slice. Future observation and track-learning work should use `src/services/learning.ts` and `CharacterLearningProgress` instead of inventing separate storage. `0.15.22` stabilized the first attentive gathering bridge, and `0.15.23` adds a technical `0..5` level policy plus the first narrow herbs/berries/mushrooms gathering effect. This still is not a broad skill-sheet lane.
+The `LEARN-001` foundation is in testing after the minimal persistent learning/progress slice. Future observation and track-learning work should use `src/services/learning.ts` and `CharacterLearningProgress` instead of inventing separate storage. `0.15.22` stabilized the first attentive gathering bridge, and `0.15.23` adds a technical `0..5` level policy plus the first narrow herbs/berries/mushrooms gathering effect. A narrow NPC learner loop now proves the same idea for the living world: one `profession_learner` NPC can follow or watch a nearby specialist profile such as herbalist or hunter, gain bounded technical-only familiarity, stop when caught up, then rest/decay enough to repeat later. This still is not a broad skill-sheet lane.
 
 `OBS-PREP-001` has a representative look/examine audit pass in testing. Use its checklist for incremental cleanup, but do not keep expanding it before the first narrow observation moment.
 
@@ -249,7 +249,7 @@ Do not open another broad content loop before the learning/observation foundatio
 21. **0.16.6 / Resource text lexicon cleanup:** resource/corpse text helpers are in testing, with duplicate display/grammar maps reduced and gameplay unchanged.
 22. **0.16.7 / Grammar agreement helper cleanup and archive republish queue:** player/creature gender and word agreement helpers are in testing, with visible target/player text kept stable; Herald can queue a full deployed `news.md` archive republish run for channel rebuilds without changing gameplay.
 23. **0.16.8 / Social signal content extraction and scribe suggestions:** social signal labels and message templates are in testing as content, with service behavior and visible strings kept stable; scribe-only unknown-command suggestions can see admin commands without changing command routing.
-24. **NPC learner loop:** design a narrow NPC-watches-NPC learning loop where a local learner can follow or observe a specialist, stop once they catch up, then sleep/decay the temporary gain so the visible learning example can repeat.
+24. **0.16.9 / NPC learner loop:** visible learner-NPC attention loop is in testing: one local `profession_learner` can follow or observe matching specialist profiles such as herbalist or hunter, stop once caught up and rest/decay for a later repeat, with no broad profession/economy or public skill UI.
 25. **Spirit-call teacher unlock:** design a narrow `Поклик духа` (`/spirit`) unlock or capability gate that opens only after sustained following/attention around an appropriate teacher, not immediately at default character start.
 26. **Дід Лісовик character pass:** finish or redesign дід Лісовик as a deliberate old-forest mentor/spirit/threshold presence, aligning his dialogue, behavior, learning hooks and visible role without rewriting the broader forest.
 27. **Mentor guided tracking prompt:** consider a narrow tracking practice prompt only after gathering prompts and marker cooldowns feel stable.
@@ -279,6 +279,7 @@ Near-term content candidates after that foundation:
 - Full profession/economy loops before the first observation-learning spine exists.
 - Broad `/skills` UI and skill modifiers/effects before bounded learning moments prove the foundation.
 - `SURV-002`: authored death locations and lethal hazard pacing. Keep this as a survival/world-hazard framework task until death/knockout/respawn handling and clueing rules are ready; do not add unavoidable instant-death cells to beginner paths.
+- Spirit-call teacher unlocks, mentorship UI, group movement and a Лісовик learning pass remain future work and are unchanged by the NPC learner MVP.
 
 ## Promotion Checklist
 

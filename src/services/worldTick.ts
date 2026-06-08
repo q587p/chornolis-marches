@@ -12,6 +12,7 @@ import { filterLisovykAllowedLocations, isLisovykForbiddenLocation, isLisovykFor
 import { DREAM_GATE_FEATURE_KEY, DREAM_GATE_FEATURE_KEYS } from "./tutorial";
 import { hunterClaimedCorpseDecayAction, isHunterCreature, tickNpcHunter } from "./npcHunter";
 import { isHerbalistCreature, tickNpcHerbalist } from "./npcHerbalist";
+import { tickNpcLearner } from "./npcLearner";
 import { chance, chancePermille, pickOptional as pick, randomInt } from "../utils/random";
 import { restorePopulationFloors } from "./populationRestoration";
 import { PREDATOR_PREY_CLAIM_PREFIX, isUnclaimedHerbivoreCorpseForScavenging, predatorClaimedCorpseDecayAction, predatorClaimedCorpseMarker } from "./predatorFeeding";
@@ -1720,29 +1721,32 @@ export async function worldTick() {
           queuedRest++;
           continue;
         }
-        else if (isHunterCreature(c)) result = await tickNpcHunter(botInstance, c);
-        else if (isHerbalistCreature(c)) result = await tickNpcHerbalist(botInstance, c, worldTime.absoluteMinute);
-        else if (c.species.key === "lisovyk") {
-          const exit = pick(c.location.exitsFrom.filter((candidate: any) => isExit(candidate) && !isLisovykForbiddenLocation((candidate as any).toLocation)));
-          if (isExit(exit) && chance(50)) {
-            result = await queueMove(c, exit, "нишпорить між деревами");
-          } else {
-            await enqueueCreatureAction({
-              creatureId: c.id,
-              type: "LOOK",
-              payload: { reason: "полює й дослухається до лісу" },
-              durationMs: actionDurationMs("LOOK", c.stamina),
-            });
-            result = "queuedLook";
+        else {
+          const learnerResult = await tickNpcLearner(c);
+          if (learnerResult) result = learnerResult;
+          else if (isHunterCreature(c)) result = await tickNpcHunter(botInstance, c);
+          else if (isHerbalistCreature(c)) result = await tickNpcHerbalist(botInstance, c, worldTime.absoluteMinute);
+          else if (c.species.key === "lisovyk") {
+            const exit = pick(c.location.exitsFrom.filter((candidate: any) => isExit(candidate) && !isLisovykForbiddenLocation((candidate as any).toLocation)));
+            if (isExit(exit) && chance(50)) {
+              result = await queueMove(c, exit, "нишпорить між деревами");
+            } else {
+              await enqueueCreatureAction({
+                creatureId: c.id,
+                type: "LOOK",
+                payload: { reason: "полює й дослухається до лісу" },
+                durationMs: actionDurationMs("LOOK", c.stamina),
+              });
+              result = "queuedLook";
+            }
+          }
+          else if (c.species.diet === "HERBIVORE") result = await tickHerbivore(c, localPresenceCount);
+          else if (c.species.diet === "CARNIVORE") result = await tickCarnivore(c);
+          else {
+            await enqueueCreatureAction({ creatureId: c.id, type: "REST", payload: {}, durationMs: actionDurationMs("REST", c.stamina) });
+            result = "queuedRest";
           }
         }
-        else if (c.species.diet === "HERBIVORE") result = await tickHerbivore(c, localPresenceCount);
-        else if (c.species.diet === "CARNIVORE") result = await tickCarnivore(c);
-        else {
-          await enqueueCreatureAction({ creatureId: c.id, type: "REST", payload: {}, durationMs: actionDurationMs("REST", c.stamina) });
-          result = "queuedRest";
-        }
-
         if (result === "queuedMove") queuedMove++;
         else if (result === "queuedGather") queuedGather++;
         else if (result === "queuedEat") queuedEat++;
