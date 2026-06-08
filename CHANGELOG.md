@@ -7,6 +7,25 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.13 - Root-pocket bottle cache foundation - 12026-06-08
+
+### Added
+
+- Added `empty_bottle` as the first empty vessel resource for future herbal preparations.
+- Added a narrow root-pocket bottle niche in `start_cellar_root_pocket`, with feature inspection, a take button and `/take_bottle`, `take bottle` and Ukrainian bottle-taking aliases.
+- Added focused bottle-cache, input-alias and world-seed coverage for the source flags, resource type and command paths.
+
+### Changed
+
+- Kept the root pocket safe and non-loot-focused: the bottle niche is a narrow authored source, not a broad cache or recipe/crafting UI.
+- Updated admin/input/location-feature docs and planning exports for ALC-002.
+
+### Risks
+
+- Existing production worlds need seed/map refresh after deploy for `empty_bottle` and the bottle niche to appear.
+- The bottle source is intentionally unlimited for now; limited stock, dirty bottles, washing and herbalist resupply remain future ALC work.
+- No Prisma schema, migration, tincture, `/brew`, recipe service, shop/barter/economy or public skill-sheet change.
+
 ## 0.16.12 - Strange totem cap expansion - 12026-06-08
 
 ### Added
