@@ -1,7 +1,7 @@
 ---
 id: TRACK-LEARN-001-A
 title: Track-examine progress hint
-status: in_testing
+status: testing
 type: feature
 area: learning
 priority: high

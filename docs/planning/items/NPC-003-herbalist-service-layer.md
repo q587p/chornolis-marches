@@ -1,7 +1,7 @@
 ---
 id: NPC-003
 title: Herbalist service layer
-status: in_testing
+status: testing
 type: technical
 area: npc
 priority: medium

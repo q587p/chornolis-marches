@@ -1,5 +1,7 @@
 # Three-Month Plan — May to August 2026
 
+> Historical context: this 0.13/0.14/0.15 plan describes the first vertical-slice push. It is preserved for reference after those foundations landed. Use `docs/planning/next.md` for active work.
+
 ## Goal
 
 Build the first true Chornolis moment:

@@ -1071,7 +1071,7 @@
     "file": "docs/planning/items/FIRE-002-magic-campfire-examine-layer.md"
   },
   {
-    "id": "FIRE-002",
+    "id": "FIRE-003",
     "title": "Target-aware campfire commands",
     "status": "backlog",
     "type": "feature",
@@ -1089,7 +1089,7 @@
       "BUILD-001"
     ],
     "exports": {},
-    "file": "docs/planning/items/FIRE-002-targeted-campfire-commands.md"
+    "file": "docs/planning/items/FIRE-003-targeted-campfire-commands.md"
   },
   {
     "id": "FISH-001",
@@ -1881,7 +1881,7 @@
   {
     "id": "LEARN-006",
     "title": "High-skill quality and rare finds",
-    "status": "in_testing",
+    "status": "testing",
     "type": "feature",
     "area": "learning",
     "priority": "medium",
@@ -2107,7 +2107,7 @@
   {
     "id": "MAP-004",
     "title": "Skill and attention gated locations",
-    "status": "in_testing",
+    "status": "testing",
     "type": "feature",
     "area": "world",
     "priority": "high",
@@ -2290,7 +2290,7 @@
   {
     "id": "NPC-003",
     "title": "Herbalist service layer",
-    "status": "in_testing",
+    "status": "testing",
     "type": "technical",
     "area": "npc",
     "priority": "medium",
@@ -2490,7 +2490,7 @@
   {
     "id": "OBS-002",
     "title": "Visible herbalist observation moment",
-    "status": "in_testing",
+    "status": "testing",
     "type": "feature",
     "area": "learning",
     "priority": "high",
@@ -4232,7 +4232,7 @@
   {
     "id": "TRACK-LEARN-001-A",
     "title": "Track-examine progress hint",
-    "status": "in_testing",
+    "status": "testing",
     "type": "feature",
     "area": "learning",
     "priority": "high",

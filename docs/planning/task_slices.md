@@ -1,5 +1,7 @@
 # Ordered Task Slices
 
+> Historical context: this file records the original 0.13-0.15 slice order. New active work should be steered through `docs/planning/next.md` plus item files under `docs/planning/items/`.
+
 All tasks in this file are intended to be small, independent 1–2 hour slices.
 
 Detailed task files live in `docs/planning/items/`.
