@@ -1,5 +1,7 @@
 # Project Review — 2026-05-28
 
+> Historical context: this review guided the 0.13-0.15 vertical slice. It is preserved for design memory, but it is not the current active lane. Use `docs/planning/next.md` and `docs/planning/post_0_16_lane.md` for current planning.
+
 ## Verdict
 
 Chornolis Marches should spend the next three months building one vertical experience, not many parallel systems.

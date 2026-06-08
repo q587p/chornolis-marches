@@ -91,7 +91,7 @@
   },
   {
     "id": "ALC-001",
-    "title": "First herbal stamina elixir",
+    "title": "First herbal stamina tincture",
     "status": "backlog",
     "type": "feature",
     "area": "survival",
@@ -101,14 +101,134 @@
       "herbs",
       "berries",
       "stamina",
+      "bottles",
       "crafting",
       "inventory"
     ],
     "depends_on": [
-      "FOOD-004"
+      "RECIPE-001",
+      "ALC-002",
+      "ALC-006"
     ],
     "exports": {},
     "file": "docs/planning/items/ALC-001-herbal-stamina-elixir.md"
+  },
+  {
+    "id": "ALC-002",
+    "title": "Root-pocket bottle cache and empty vessel resource",
+    "status": "backlog",
+    "type": "feature",
+    "area": "survival",
+    "priority": "high",
+    "tags": [
+      "alchemy",
+      "bottles",
+      "inventory",
+      "map",
+      "cellar",
+      "onboarding"
+    ],
+    "depends_on": [
+      "MAP-004",
+      "ITEM-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ALC-002-bottle-cache-and-empty-vessels.md"
+  },
+  {
+    "id": "ALC-003",
+    "title": "Healing and night-sight draughts",
+    "status": "backlog",
+    "type": "feature",
+    "area": "survival",
+    "priority": "medium",
+    "tags": [
+      "alchemy",
+      "healing",
+      "night",
+      "visibility",
+      "effects",
+      "mushrooms",
+      "wetland"
+    ],
+    "depends_on": [
+      "ALC-001",
+      "RES-001",
+      "FOOD-006"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ALC-003-healing-and-night-sight-draughts.md"
+  },
+  {
+    "id": "ALC-004",
+    "title": "Herbalist bottle route and brewing demonstration",
+    "status": "backlog",
+    "type": "feature",
+    "area": "npc",
+    "priority": "high",
+    "tags": [
+      "npc",
+      "herbalist",
+      "alchemy",
+      "bottles",
+      "observation-learning",
+      "living-world"
+    ],
+    "depends_on": [
+      "NPC-003",
+      "NPC-004",
+      "RECIPE-001",
+      "ALC-001",
+      "ALC-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ALC-004-herbalist-bottle-route-and-brewing-demo.md"
+  },
+  {
+    "id": "ALC-005",
+    "title": "Herbalist mentorship brewing hint",
+    "status": "backlog",
+    "type": "ux",
+    "area": "learning",
+    "priority": "medium",
+    "tags": [
+      "mentorship",
+      "herbalist",
+      "alchemy",
+      "bottles",
+      "learning",
+      "onboarding"
+    ],
+    "depends_on": [
+      "ALC-002",
+      "ALC-001",
+      "NPC-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ALC-005-mentorship-brewing-hints.md"
+  },
+  {
+    "id": "ALC-006",
+    "title": "Herbalism skill and brewing failure policy",
+    "status": "backlog",
+    "type": "feature",
+    "area": "learning",
+    "priority": "high",
+    "tags": [
+      "herbalism",
+      "alchemy",
+      "learning",
+      "failure",
+      "bottles",
+      "crafting"
+    ],
+    "depends_on": [
+      "LEARN-001",
+      "RECIPE-001",
+      "ALC-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ALC-006-herbalism-skill-and-failure-policy.md"
   },
   {
     "id": "ANIMAL-001",
@@ -1071,7 +1191,7 @@
     "file": "docs/planning/items/FIRE-002-magic-campfire-examine-layer.md"
   },
   {
-    "id": "FIRE-002",
+    "id": "FIRE-003",
     "title": "Target-aware campfire commands",
     "status": "backlog",
     "type": "feature",
@@ -1089,7 +1209,7 @@
       "BUILD-001"
     ],
     "exports": {},
-    "file": "docs/planning/items/FIRE-002-targeted-campfire-commands.md"
+    "file": "docs/planning/items/FIRE-003-targeted-campfire-commands.md"
   },
   {
     "id": "FISH-001",
@@ -1881,7 +2001,7 @@
   {
     "id": "LEARN-006",
     "title": "High-skill quality and rare finds",
-    "status": "in_testing",
+    "status": "testing",
     "type": "feature",
     "area": "learning",
     "priority": "medium",
@@ -2107,7 +2227,7 @@
   {
     "id": "MAP-004",
     "title": "Skill and attention gated locations",
-    "status": "in_testing",
+    "status": "testing",
     "type": "feature",
     "area": "world",
     "priority": "high",
@@ -2290,7 +2410,7 @@
   {
     "id": "NPC-003",
     "title": "Herbalist service layer",
-    "status": "in_testing",
+    "status": "testing",
     "type": "technical",
     "area": "npc",
     "priority": "medium",
@@ -2490,7 +2610,7 @@
   {
     "id": "OBS-002",
     "title": "Visible herbalist observation moment",
-    "status": "in_testing",
+    "status": "testing",
     "type": "feature",
     "area": "learning",
     "priority": "high",
@@ -3404,6 +3524,26 @@
     "file": "docs/planning/items/RAVEN-001-dream-raven-carrion-ravine-presence.md"
   },
   {
+    "id": "RECIPE-001",
+    "title": "Minimal resource recipe service",
+    "status": "backlog",
+    "type": "technical",
+    "area": "crafting",
+    "priority": "high",
+    "tags": [
+      "recipes",
+      "crafting",
+      "resources",
+      "inventory",
+      "actors"
+    ],
+    "depends_on": [
+      "ITEM-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/RECIPE-001-minimal-resource-recipe-service.md"
+  },
+  {
     "id": "REL-001",
     "title": "Release branch PR summary and risk discipline",
     "status": "testing",
@@ -3421,6 +3561,28 @@
     ],
     "exports": {},
     "file": "docs/planning/items/REL-001-release-branch-pr-summary-risk.md"
+  },
+  {
+    "id": "RES-001",
+    "title": "Wetland medicinal reagents",
+    "status": "backlog",
+    "type": "feature",
+    "area": "resources",
+    "priority": "medium",
+    "tags": [
+      "resources",
+      "riverbank",
+      "swamp",
+      "willow",
+      "alchemy",
+      "herbalism"
+    ],
+    "depends_on": [
+      "MAP-005",
+      "ALC-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/RES-001-wetland-medicinal-reagents.md"
   },
   {
     "id": "RET-001",
@@ -4232,7 +4394,7 @@
   {
     "id": "TRACK-LEARN-001-A",
     "title": "Track-examine progress hint",
-    "status": "in_testing",
+    "status": "testing",
     "type": "feature",
     "area": "learning",
     "priority": "high",

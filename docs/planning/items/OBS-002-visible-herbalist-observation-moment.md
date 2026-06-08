@@ -1,7 +1,7 @@
 ---
 id: OBS-002
 title: Visible herbalist observation moment
-status: in_testing
+status: testing
 type: feature
 area: learning
 priority: high

@@ -4,7 +4,12 @@ ADM-001-A,Dangerous scribe tool audit,done,technical,admin,medium,"admin,audit,s
 ADM-001-B,Scribe action audit helper,done,technical,admin,medium,"admin,audit,world-events",docs/planning/items/ADM-001-B.md
 ADM-001-C,Restart confirmation and HTML safety hardening,testing,technical,admin,high,"admin,safety,restart,slashless,html,features",docs/planning/items/ADM-001-C.md
 ADM-002,Scribe creature corpse creation command,testing,feature,admin,medium,"admin,creatures,corpses,testing",docs/planning/items/ADM-002-add-creature-corpse-command.md
-ALC-001,First herbal stamina elixir,backlog,feature,survival,high,"alchemy,herbs,berries,stamina,crafting,inventory",docs/planning/items/ALC-001-herbal-stamina-elixir.md
+ALC-001,First herbal stamina tincture,backlog,feature,survival,high,"alchemy,herbs,berries,stamina,bottles,crafting,inventory",docs/planning/items/ALC-001-herbal-stamina-elixir.md
+ALC-002,Root-pocket bottle cache and empty vessel resource,backlog,feature,survival,high,"alchemy,bottles,inventory,map,cellar,onboarding",docs/planning/items/ALC-002-bottle-cache-and-empty-vessels.md
+ALC-003,Healing and night-sight draughts,backlog,feature,survival,medium,"alchemy,healing,night,visibility,effects,mushrooms,wetland",docs/planning/items/ALC-003-healing-and-night-sight-draughts.md
+ALC-004,Herbalist bottle route and brewing demonstration,backlog,feature,npc,high,"npc,herbalist,alchemy,bottles,observation-learning,living-world",docs/planning/items/ALC-004-herbalist-bottle-route-and-brewing-demo.md
+ALC-005,Herbalist mentorship brewing hint,backlog,ux,learning,medium,"mentorship,herbalist,alchemy,bottles,learning,onboarding",docs/planning/items/ALC-005-mentorship-brewing-hints.md
+ALC-006,Herbalism skill and brewing failure policy,backlog,feature,learning,high,"herbalism,alchemy,learning,failure,bottles,crafting",docs/planning/items/ALC-006-herbalism-skill-and-failure-policy.md
 ANIMAL-001,Animal speech reactions,in_progress,feature,ecology,medium,"animals,speech,social,ecology,reactions",docs/planning/items/ANIMAL-001-speech-reactions.md
 APIARY-001,Seed old log apiary feature,testing,feature,ecology,medium,"apiary,bumblebee,world-seed,feature",docs/planning/items/APIARY-001-seed-apiary-feature.md
 APIARY-002,Passive bumblebee sting hazard,testing,feature,ecology,medium,"apiary,bumblebee,hazard,hp",docs/planning/items/APIARY-002-passive-sting-hazard.md
@@ -54,7 +59,7 @@ FIRE-001-B,Expired campfire behavior polish,next,feature,survival,medium,"fire,c
 FIRE-001-C,Carried torch visibility,testing,feature,survival,high,"torch,light,visibility",docs/planning/items/FIRE-001-C.md
 FIRE-001-D,Light source matrix test,testing,qa,survival,high,"fire,light,visibility,torch,campfire,npc",docs/planning/items/FIRE-001-D-light-source-matrix-test.md
 FIRE-002,Magical campfire examine layer,proposed,content,survival,medium,"fire,campfire,examine,light,atmosphere",docs/planning/items/FIRE-002-magic-campfire-examine-layer.md
-FIRE-002,Target-aware campfire commands,backlog,feature,survival,high,"fire,campfire,commands,aliases,targets",docs/planning/items/FIRE-002-targeted-campfire-commands.md
+FIRE-003,Target-aware campfire commands,backlog,feature,survival,high,"fire,campfire,commands,aliases,targets",docs/planning/items/FIRE-003-targeted-campfire-commands.md
 FISH-001,Riverbank fishing and fisher NPC,backlog,feature,survival,high,"fishing,npc,skills,riverbank,observation",docs/planning/items/FISH-001-riverbank-fishing-and-fisher-npc.md
 FISH-002,Riverbank fisher tiny slice,backlog,feature,survival,high,"fishing,npc,riverbank,observation,atmosphere",docs/planning/items/FISH-002-riverbank-fisher-tiny-slice.md
 FISH-003,Deep-water fishing line seeds,proposed,content,survival,medium,"fishing,water,atmosphere,examine,future",docs/planning/items/FISH-003-deep-water-fishing-lines.md
@@ -95,7 +100,7 @@ LEARN-002,"Skill effects on stamina, success and quality",in_progress,feature,le
 LEARN-003,Cooking observation and effect parity,done,feature,learning,high,"learning,cooking,food,observation",docs/planning/items/LEARN-003-cooking-observation-effect-parity.md
 LEARN-004,Observed actor skill level helper,done,technical,learning,high,"learning,observation,npc,actors",docs/planning/items/LEARN-004-observed-actor-skill-level-helper.md
 LEARN-005,Attack canonical learning bridge,done,feature,learning,medium,"learning,attack,observation,combat",docs/planning/items/LEARN-005-attack-canonical-bridge.md
-LEARN-006,High-skill quality and rare finds,in_testing,feature,learning,medium,"learning,quality,rare-finds,freshening,gathering",docs/planning/items/LEARN-006-high-skill-quality-and-rare-finds.md
+LEARN-006,High-skill quality and rare finds,testing,feature,learning,medium,"learning,quality,rare-finds,freshening,gathering",docs/planning/items/LEARN-006-high-skill-quality-and-rare-finds.md
 LOOP-001-A,Starter look/examine output audit,next,design,core-loop,medium,"look,examine,starter",docs/planning/items/LOOP-001-A.md
 LOOP-001-B,Starter camp prose polish,next,content,core-loop,medium,"prose,starter,look",docs/planning/items/LOOP-001-B.md
 LOOP-001-C,Bridge threshold prose polish,next,content,core-loop,medium,"prose,bridge,liminality",docs/planning/items/LOOP-001-C.md
@@ -107,7 +112,7 @@ MAP-002-A,First biome foraging table,next,feature,world,high,"map,biome,foraging
 MAP-002-B,Generic gather uses biome candidates,next,feature,world,high,"gather,biome,foraging",docs/planning/items/MAP-002-B.md
 MAP-002-C,Biome foraging text variants,next,content,world,medium,"gather,biome,copy",docs/planning/items/MAP-002-C.md
 MAP-003,Playable map expansion,testing,content,world,high,"map,world,exploration,regions",docs/planning/items/MAP-003-playable-map-expansion.md
-MAP-004,Skill and attention gated locations,in_testing,feature,world,high,"map,learning,skills,attention,exploration,cellar,tracking",docs/planning/items/MAP-004-skill-and-attention-gated-locations.md
+MAP-004,Skill and attention gated locations,testing,feature,world,high,"map,learning,skills,attention,exploration,cellar,tracking",docs/planning/items/MAP-004-skill-and-attention-gated-locations.md
 MAP-005,Regional active curiosities,backlog,feature,world,high,"map,features,interactions,swamp,riverbank,forest",docs/planning/items/MAP-005-regional-active-curiosities.md
 MAP-WILLOW-001,Willow Floodplain first contour,testing,content,world,high,"map,world,willow-floodplain,riverbank,exploration",docs/planning/items/MAP-WILLOW-001-first-contour.md
 MAP-WILLOW-002,Willow under-bridge and watchtower integration,backlog,content,world,medium,"map,world,willow-floodplain,under-bridge,watchtower",docs/planning/items/MAP-WILLOW-002-under-bridge-watchtower-integration.md
@@ -116,7 +121,7 @@ MONEY-001,Money resource and small loot MVP,done,feature,core-loop,high,"money,l
 NAV-001,Location-to-location route finding,testing,feature,world,medium,"navigation,movement,npc,world",docs/planning/items/NAV-001-location-route-finding.md
 NOTIF-001,Non-player movement notification coalescing,testing,feature,notifications,high,"telegram,notifications,movement,npc,spirit,camp",docs/planning/items/NOTIF-001-non-player-movement-coalescing.md
 NPC-002,Hunter auto-program MVP,backlog,feature,npc,high,"npc,ecology,hunting,living-world",docs/planning/items/NPC-002-hunter-auto-program.md
-NPC-003,Herbalist service layer,in_testing,technical,npc,medium,"npc,herbalist,architecture,world-tick",docs/planning/items/NPC-003-herbalist-service-layer.md
+NPC-003,Herbalist service layer,testing,technical,npc,medium,"npc,herbalist,architecture,world-tick",docs/planning/items/NPC-003-herbalist-service-layer.md
 NPC-004,Actor inventory and held light foundation,in_progress,technical,npc,high,"npc,actors,inventory,torch,light",docs/planning/items/NPC-004-actor-inventory-held-light.md
 NPC-005,NPC hunger and food behavior,next,feature,npc,high,"npc,actors,hunger,food,cooking,herbalist,hunting",docs/planning/items/NPC-005-npc-hunger-and-food-behavior.md
 NPC-006,Hunter patrol and meat practice loop,next,feature,npc,high,"npc,hunting,cooking,freshening,observation-learning,living-world",docs/planning/items/NPC-006-hunter-patrol-meat-practice-loop.md
@@ -126,7 +131,7 @@ OBS-001-A,Observation through existing attention surfaces,testing,feature,learni
 OBS-001-B,Visible gathering action,testing,feature,learning,high,"observe,npc,gathering",docs/planning/items/OBS-001-B.md
 OBS-001-C,Gathering progress from attentive presence,testing,feature,learning,high,"observe,gathering,progression",docs/planning/items/OBS-001-C.md
 OBS-001-D,Observation anti-farming cooldown,testing,feature,learning,medium,"observe,cooldown,anti-grind",docs/planning/items/OBS-001-D.md
-OBS-002,Visible herbalist observation moment,in_testing,feature,learning,high,"observe,npc,herbalism,progression",docs/planning/items/OBS-002-visible-herbalist-observation-moment.md
+OBS-002,Visible herbalist observation moment,testing,feature,learning,high,"observe,npc,herbalism,progression",docs/planning/items/OBS-002-visible-herbalist-observation-moment.md
 OBS-003,Danger-aware examine cues,done,feature,learning,high,"observe,examine,danger,ecology,atmosphere",docs/planning/items/OBS-003-danger-aware-examine-cues.md
 OBS-PREP-001,Look/examine content audit before observation MVP,testing,design,learning,high,"look,examine,observation,content-audit",docs/planning/items/OBS-PREP-001-look-examine-content-audit.md
 OMEN-001-A,Choose one living-world omen,next,design,world,medium,"omen,ambient,living-world",docs/planning/items/OMEN-001-A.md
@@ -173,7 +178,9 @@ QA-WILLOW-001,"Willow Floodplain seed, map and route smoke",testing,qa,world,hig
 QA-WILLOW-002,Willow live command and vertical edge smoke,backlog,qa,world,medium,"willow-floodplain,qa,aliases,verticality,admin",docs/planning/items/QA-WILLOW-002-live-command-and-vertical-smoke.md
 QUOTE-001,Liminal signs and quotation layer,proposed,content,content,medium,"quotes,signs,atmosphere,lore,dream,owl",docs/planning/items/QUOTE-001-liminal-signs-and-quotation-layer.md
 RAVEN-001,Dream raven presence near the carrion ravine,backlog,feature,world,high,"raven,dream,carrion-ravine,onboarding,world-time,atmosphere",docs/planning/items/RAVEN-001-dream-raven-carrion-ravine-presence.md
+RECIPE-001,Minimal resource recipe service,backlog,technical,crafting,high,"recipes,crafting,resources,inventory,actors",docs/planning/items/RECIPE-001-minimal-resource-recipe-service.md
 REL-001,Release branch PR summary and risk discipline,testing,process,release,high,"release,github,pr,planning",docs/planning/items/REL-001-release-branch-pr-summary-risk.md
+RES-001,Wetland medicinal reagents,backlog,feature,resources,medium,"resources,riverbank,swamp,willow,alchemy,herbalism",docs/planning/items/RES-001-wetland-medicinal-reagents.md
 RET-001,Daily and weekly world tasks,backlog,feature,retention,medium,"retention,quests,daily,weekly,world-time",docs/planning/items/RET-001-daily-weekly-world-tasks.md
 RIVER-001,Bridge jump and river-current hazard,backlog,feature,survival,medium,"river,bridge,movement,hazard,survival",docs/planning/items/RIVER-001-bridge-jump-current-hazard.md
 SES-001-A,AFK and End Session controls,testing,feature,session,high,"telegram,session,afk,ux",docs/planning/items/SES-001-A.md
@@ -215,7 +222,7 @@ THEFT-000,Risky theft and hiding epic,backlog,epic,social,medium,"theft,hiding,s
 THEFT-001,Risky theft MVP,backlog,feature,social,medium,"theft,social-memory,inventory,action-queue,0.15",docs/planning/items/THEFT-001-risky-theft-mvp.md
 THEFT-002,World-controlled thief character,backlog,feature,npc,low,"theft,npc,autonomy,social-memory,future",docs/planning/items/THEFT-002-world-controlled-thief-character.md
 THEFT-003,Strange and spirit theft MVP,backlog,feature,spirits,low,"theft,spirits,omen,hidden-presence,future",docs/planning/items/THEFT-003-spirit-theft-mvp.md
-TRACK-LEARN-001-A,Track-examine progress hint,in_testing,feature,learning,high,"tracking,tracks,progression",docs/planning/items/TRACK-LEARN-001-A.md
+TRACK-LEARN-001-A,Track-examine progress hint,testing,feature,learning,high,"tracking,tracks,progression",docs/planning/items/TRACK-LEARN-001-A.md
 TRACK-LEARN-001-B,Animal movement observation,next,feature,learning,medium,"tracking,animals,observe",docs/planning/items/TRACK-LEARN-001-B.md
 TRACK-LEARN-001-C,Learning respects visibility and light,next,feature,learning,high,"learning,visibility,light",docs/planning/items/TRACK-LEARN-001-C.md
 TRAVEL-001,Horses and mounted travel,icebox,feature,travel,low,"travel,mounts,animals,distance",docs/planning/items/TRAVEL-001-horses-and-mounted-travel.md
