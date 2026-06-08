@@ -5,6 +5,12 @@ import { directionLabels, directionShortLabels } from "../ui/labels";
 import { buildExamineTracksKeyboard, buildResourceMenuKeyboard, buildTargetListKeyboard } from "../ui/keyboards";
 import { isCampfireFeature } from "./locationFeatures";
 import {
+  EMPTY_BOTTLE_TAKE_BUTTON_LABEL,
+  emptyBottleSourceInspectionText,
+  isEmptyBottleSourceFeature,
+  takeBottleFromFeature,
+} from "./bottles";
+import {
   campfireStateLine,
   canAddTwigsToCampfire,
   expireGroundLitTorches,
@@ -215,6 +221,10 @@ function isCorpseTarget(target: ReturnType<typeof visibleTargets>[number]) {
 
 function isTorchSourceFeature(feature: any) {
   return featureData(feature).torch_source === true;
+}
+
+function isBottleSourceFeature(feature: any) {
+  return isEmptyBottleSourceFeature(feature);
 }
 
 function isBeginnerCacheFeature(feature: any) {
@@ -1329,6 +1339,8 @@ export async function renderLocationFeatureInteraction(
     text = `${feature.description ?? "Десь збоку ворушаться майбутні уроки."}\n\nВи можете прокинутися зараз і повернутися до цього місця сну пізніше.`;
   } else if (isTorchSourceFeature(feature)) {
     text = feature.description ?? "Тут лежать сухі факели. Один можна взяти з собою.";
+  } else if (isBottleSourceFeature(feature)) {
+    text = emptyBottleSourceInspectionText(feature.description);
   } else if (isClimbTreeFeature(feature)) {
     text = `${feature.description ?? "Дерево стоїть досить близько, щоб узятися за кору."}\n\nКора шорстка, сучки міцні. Можна піднятися вгору й подивитися на луку з крони.`;
   } else if (isShakeTreeFeature(feature)) {
@@ -1390,6 +1402,7 @@ export async function renderLocationFeatureInteraction(
   if (isTutorialEndFeature(feature)) keyboard.text("✅ Закінчити навчання", "tutorial:end").row();
   if (featureData(feature).tutorial_wake_prompt === true) keyboard.text("🌅 Прокинутися", "tutorial:wake").row();
   if (isTorchSourceFeature(feature)) keyboard.text("🕯 Взяти факел", `torch:take:${feature.id}`).row();
+  if (isBottleSourceFeature(feature)) keyboard.text(EMPTY_BOTTLE_TAKE_BUTTON_LABEL, `bottle:take:${feature.id}`).row();
   if (isBeginnerCacheFeature(feature)) {
     for (const key of beginnerCacheTakeKeys(feature.data)) {
       keyboard.text(beginnerCacheTakeButtonLabel(key), `cache:take:${feature.id}:${key}`).row();
@@ -1516,4 +1529,8 @@ export async function lightLocationCampfire(featureId: number, viewerPlayerId: n
 
 export async function takeTorchFromLocationFeature(featureId: number, viewerPlayerId: number) {
   return takeTorchFromFeature(viewerPlayerId, featureId);
+}
+
+export async function takeBottleFromLocationFeature(featureId: number, viewerPlayerId: number) {
+  return takeBottleFromFeature(viewerPlayerId, featureId);
 }

@@ -1,7 +1,7 @@
 ---
 id: ALC-002
 title: Root-pocket bottle cache and empty vessel resource
-status: backlog
+status: testing
 type: feature
 area: survival
 priority: high
@@ -68,3 +68,10 @@ The bottle source should feel like a humble camp/herbalist utility, similar in f
 - Invalid location / missing feature / hidden feature cases fail without inventory changes.
 - Focused tests cover source detection, grant behavior and aliases.
 - `world-seed` tests assert the feature is in `start_cellar_root_pocket`.
+
+## Implementation Notes
+
+- Runtime slice added `empty_bottle` / `порожня пляшечка`, a narrow `start_root_pocket_bottle_niche` feature in `start_cellar_root_pocket`, and `empty_bottle_source` handling.
+- The source is intentionally unlimited for now and gives exactly one bottle per take action.
+- Supported player paths include the feature button, `/take_bottle`, `take bottle`, `взяти пляшечку` and ordinary pickup fallback for dropped `empty_bottle` ground items.
+- This slice does not add tinctures, `/brew`, recipe services, dirty/broken bottles, water/thirst, washing, shops, barter, NPC herbalist brewing, or a public crafting UI.

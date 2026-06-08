@@ -91,6 +91,7 @@ export const WORLD_LEXICON = [
   entry("resource.herbs", "resource", "PLURAL", "INANIMATE", ["resource", "gathering", "current"], ["лікарські трави", "лікарських трав", "лікарським травам", "лікарські трави", "лікарськими травами", "лікарських травах", "лікарські трави"]),
   entry("resource.berries", "resource", "PLURAL", "INANIMATE", ["resource", "gathering", "current"], ["ягоди", "ягід", "ягодам", "ягоди", "ягодами", "ягодах", "ягоди"]),
   entry("resource.mushrooms", "resource", "PLURAL", "INANIMATE", ["resource", "gathering", "current"], ["гриби", "грибів", "грибам", "гриби", "грибами", "грибах", "гриби"]),
+  entry("resource.empty_bottle", "resource", "FEMININE", "INANIMATE", ["resource", "bottles", "herbalism", "current"], ["порожня пляшечка", "порожньої пляшечки", "порожній пляшечці", "порожню пляшечку", "порожньою пляшечкою", "порожній пляшечці", "порожня пляшечко"]),
   entry("resource.root", "resource", "MASCULINE", "INANIMATE", ["resource", "roots", "future"], ["корінь", "кореня", "кореню", "корінь", "коренем", "корені", "кореню"]),
   entry("resource.potion", "resource", "NEUTER", "INANIMATE", ["resource", "potion", "future"], ["зілля", "зілля", "зіллю", "зілля", "зіллям", "зіллі", "зілля"]),
   entry("resource.raw_meat", "resource", "NEUTER", "INANIMATE", ["resource", "food", "current"], ["сире м'ясо", "сирого м'яса", "сирому м'ясу", "сире м'ясо", "сирим м'ясом", "сирому м'ясі", "сире м'ясо"]),

@@ -323,6 +323,17 @@ const startCellarRootGap = features.find((item) => item.key === "start_cellar_ro
 assert.equal(startCellarRootGap?.data?.attention_gate, "root_gap_light", "Starter root gap should declare its attention gate");
 assert.equal(startCellarRootGap?.data?.destination_location_key, "start_cellar_root_pocket", "Starter root gap should point to the root pocket destination");
 assert.equal(startCellarRootGap?.data?.no_loot, true, "Starter root gap should not become a loot source");
+const startRootPocketBottleNiche = features.find((item) => item.key === "start_root_pocket_bottle_niche");
+assert.ok(startRootPocketBottleNiche, "Starter root pocket should have the narrow bottle niche");
+assert.equal(startRootPocketBottleNiche.locationKey, "start_cellar_root_pocket", "Bottle niche should live inside the root pocket");
+assert.equal(startRootPocketBottleNiche.type, "LANDMARK", "Bottle niche should be a landmark feature");
+assert.equal(startRootPocketBottleNiche.data?.inspectable, true, "Bottle niche should be inspectable");
+assert.equal(startRootPocketBottleNiche.data?.empty_bottle_source, true, "Bottle niche should be an empty bottle source");
+assert.equal(startRootPocketBottleNiche.data?.infinite_for_now, true, "Bottle niche source should be infinite for the first slice");
+assert.equal(startRootPocketBottleNiche.data?.future_dirty_bottle_washing, true, "Bottle niche should carry future dirty-bottle washing metadata only");
+assert.equal(startRootPocketBottleNiche.data?.herbalist_resupply, true, "Bottle niche should carry future herbalist resupply metadata only");
+assert.equal(startRootPocketBottleNiche.data?.no_broad_loot, true, "Bottle niche should stay narrow and not become a broad loot cache");
+assertFeatureExamineSummary(startRootPocketBottleNiche, "Bottle niche should explain what examine reveals");
 const meadowTrackGate = features.find((item) => item.key === "meadow_16_05_animal_run");
 assert.equal(meadowTrackGate?.locationKey, "meadow_16_05", "Track-aware gate should stay in the authored meadow source");
 assert.equal(meadowTrackGate?.data?.attention_gate, "fresh_tracks", "Track-aware gate should declare a fresh-tracks attention gate");
@@ -398,6 +409,7 @@ assertFeatureExamineSummary(beginnerCache, "Starter shared beginner cache should
 
 assert.equal(resourceTypeKeys.has("shah"), true, "Money MVP should define shah resource type");
 assert.equal(resourceTypeKeys.has("grivna"), true, "Money MVP should define grivna resource type");
+assert.equal(resourceTypeKeys.has("empty_bottle"), true, "Herbalism bottle foundation should define empty_bottle resource type");
 const starterShahNodes = resourceNodes.filter((node) => node.resourceKey === "shah");
 assert.equal(starterShahNodes.reduce((sum, node) => sum + node.amount, 0), 4, "Starter-adjacent authored shah finds should stay modest");
 assert.equal(starterShahNodes.some((node) => String(node.locationKey).startsWith("dream_")), false, "Starter shah finds should not appear in tutorial dream locations");

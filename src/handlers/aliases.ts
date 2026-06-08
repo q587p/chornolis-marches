@@ -88,6 +88,12 @@ import {
 import { equipPlayerWeapon, unequipPlayerWeapon } from "../services/weapons";
 import { queueAllRawMeatCooking } from "../services/cookingQueue";
 import { queueAllUsableInventoryResource } from "../services/eatingQueue";
+import {
+  EMPTY_BOTTLE_NO_SOURCE_TEXT,
+  EMPTY_BOTTLE_SOURCE_TAKE_EVENT_TITLE,
+  isEmptyBottleTarget,
+  takeBottleFromCurrentLocation,
+} from "../services/bottles";
 import { queueAllBeginnerCacheContributions } from "../services/beginnerCacheQueue";
 import {
   clearPlayerFollowIntent,
@@ -1327,6 +1333,7 @@ function pickupResourceKey(target: string): PickupResourceQueryKey | null {
   if (["twigs", "twig", "хмиз"].includes(target)) return "twigs";
   if (["raw meat", "raw_meat", "сире м'ясо", "сире м’ясо", "м'ясо", "м’ясо"].includes(target)) return "raw_meat";
   if (["cooked meat", "cooked_meat", "смажене м'ясо", "смажене м’ясо"].includes(target)) return "cooked_meat";
+  if (isEmptyBottleTarget(target)) return "empty_bottle";
   if (["shah", "shahs", "small coin", "coin", "шаг", "шага", "шаги", "шагів", "монета", "монету", "монети"].includes(target)) return "shah";
   if (["grivna", "grivnas", "ґривня", "ґривню", "ґривні", "ґривень"].includes(target)) return "grivna";
   if (["berries", "berry", "ягоди", "ягід"].includes(target)) return "berries";
@@ -1465,6 +1472,33 @@ async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
       await replyToActionError(ctx, error, "Не вдалося підняти це.");
     }
     return;
+  }
+
+  if (isEmptyBottleTarget(normalizedTarget)) {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    try {
+      assertCanPerformPhysicalAction(player, "PICK_UP");
+      const text = await takeBottleFromCurrentLocation(player.id);
+      if (text !== EMPTY_BOTTLE_NO_SOURCE_TEXT) {
+        if (player.currentLocationId && text.includes("Ви взяли")) {
+          await recordVisibleItemAction(bot, {
+            playerId: player.id,
+            locationId: player.currentLocationId,
+            observerText: pickupObserverText(player, "порожню пляшечку"),
+            eventTitle: EMPTY_BOTTLE_SOURCE_TAKE_EVENT_TITLE,
+            eventDescription: `player=${player.id}; item=empty_bottle; source=current-location`,
+            actionNote: "піднято: порожня пляшечка",
+          });
+          await spendPlayerStaminaAmount(bot, player.id, 1, ctx.chat?.id);
+        }
+        await ctx.reply(text, await inventoryGainReplyOptions(player, "take-bottle"));
+        return;
+      }
+    } catch (error) {
+      await replyToActionError(ctx, error, "Не вдалося взяти пляшечку.");
+      return;
+    }
   }
 
   const resourceKey = pickupResourceKey(normalizedTarget);
@@ -1717,6 +1751,7 @@ export function registerAliasHandlers(bot: Bot) {
     "scribe_help",
     "shake_tree",
     "freshen_all",
+    "take_bottle",
     "smile",
 	    "glance",
 	    "enter",
@@ -1729,6 +1764,7 @@ export function registerAliasHandlers(bot: Bot) {
   bot.command("attack_mouse", async (ctx) => submitAttackCommand(bot, ctx, "mouse"));
   bot.command(["freshen", "butcher"], async (ctx) => submitTargetAction(bot, ctx, "freshen", (ctx.match ?? "").trim() || "corpse"));
   bot.command(["get", "pick", "pickup", "take"], async (ctx) => submitPickupCommand(bot, ctx, ctx.match ?? ""));
+  bot.command("take_bottle", async (ctx) => submitPickupCommand(bot, ctx, (ctx.match ?? "").trim() || "empty bottle"));
   bot.command(["get_all", "pick_all", "pickup_all", "take_all"], async (ctx) => submitPickupCommand(bot, ctx, pickupAllCommandTarget(ctx.match ?? "")));
   bot.command("track", async (ctx) => submitTrack(bot, ctx, false, ctx.match ?? ""));
 	  bot.command("follow", async (ctx) => submitFollowIntent(ctx, ctx.match ?? ""));

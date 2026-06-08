@@ -212,6 +212,10 @@ assertAlias("сховати клавіатуру", { kind: "hide-keyboard" });
 
 assertAlias("/cache", { kind: "beginner-cache", action: "inspect" });
 assertAlias("cache", { kind: "beginner-cache", action: "inspect" });
+assertAlias("/take_bottle", { kind: "pickup-target", target: "empty bottle" });
+assertAlias("take_bottle", { kind: "pickup-target", target: "empty bottle" });
+assertAlias("take bottle", { kind: "pickup-target", target: "empty bottle" });
+assertAlias("взяти пляшечку", { kind: "pickup-target", target: "empty bottle" });
 assertAlias("/take_cache berries", { kind: "beginner-cache", action: "take", item: "berries" });
 assertAlias("take from cache berries", { kind: "beginner-cache", action: "take", item: "berries" });
 assertAlias("/take_cache raw meat", { kind: "beginner-cache", action: "take", item: "raw meat" });
