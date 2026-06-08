@@ -48,6 +48,7 @@ export const WORLD_LEXICON = [
   entry("animal.dog", "creature", "MASCULINE", "ANIMATE", ["animal", "settlement", "future"], ["пес", "пса", "псу", "пса", "псом", "псі", "псе"]),
   entry("animal.cat", "creature", "MASCULINE", "ANIMATE", ["animal", "settlement", "future"], ["кіт", "кота", "коту", "кота", "котом", "коті", "коте"]),
   entry("animal.horse", "creature", "MASCULINE", "ANIMATE", ["animal", "settlement", "future"], ["кінь", "коня", "коню", "коня", "конем", "коні", "коню"]),
+  entry("local_person", "creature", "FEMININE", "ANIMATE", ["human", "local", "current"], ["місцева людина", "місцевої людини", "місцевій людині", "місцеву людину", "місцевою людиною", "місцевій людині", "місцева людино"]),
 
   entry("profession.herbalist.m", "profession", "MASCULINE", "ANIMATE", ["human", "healer", "current"], ["травник", "травника", "травнику", "травника", "травником", "травнику", "травнику"]),
   entry("profession.herbalist.f", "profession", "FEMININE", "ANIMATE", ["human", "healer", "future"], ["травниця", "травниці", "травниці", "травницю", "травницею", "травниці", "травнице"]),

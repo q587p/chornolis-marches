@@ -179,6 +179,7 @@ assert.equal(findLexiconEntry("animal.rabbit").forms.accusative, "зайця");
 assert.equal(findLexiconEntry("animal.mouse_male").forms.instrumental, "мишем");
 assert.equal(formsByNominative()["вогнище"].locative, "вогнищі");
 assert.equal(guessNameForms("крук", "MASCULINE", "ANIMATE").vocative, "круче");
+assert.equal(creatureSpeciesNameFields("local_person").nameAccusative, "місцеву людину");
 assert.equal(creatureSpeciesNameFields("hunter").nameGenitive, "мисливця");
 assert.equal(creatureSpeciesNameFields("stezhnyk").nameAccusative, "стежника");
 

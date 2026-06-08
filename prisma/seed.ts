@@ -463,6 +463,18 @@ const species = [
     instinct: 9,
   },
   {
+    key: "local_person",
+    ...creatureSpeciesNameFields("local_person"),
+    kind: "HUMAN",
+    diet: "OMNIVORE",
+    baseHp: 18,
+    strength: 3,
+    agility: 4,
+    perception: 5,
+    endurance: 5,
+    instinct: 5,
+  },
+  {
     key: "herbalist",
     ...creatureSpeciesNameFields("herbalist"),
     kind: "HUMAN",
