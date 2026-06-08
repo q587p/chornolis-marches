@@ -1,6 +1,7 @@
 import { PlayerPosture, PlayerSleepState, WorldActionType } from "@prisma/client";
 import { prisma } from "../db";
 import { BASE_STAMINA, HEALTH_REGEN_PER_INTERVAL, REST_STAMINA_REGEN_PER_INTERVAL } from "../gameConfig";
+import { worldTimeSnapshotFromAbsoluteMinute } from "../data/worldClock";
 import { fatigueStateFor } from "./actionRecovery";
 import { hasActiveCampfire, getLocationRestStaminaCap, getLocationRestStaminaRegenMultiplier } from "./locationFeatures";
 import { getCurrentWorldState } from "./worldTime";
@@ -56,6 +57,11 @@ export function shouldAutoWakeOrdinarySleep(input: {
   const recoveredEnough = input.stamina >= input.staminaCap && input.hp >= input.hpMax;
   if (sleptMinutes >= ORDINARY_SLEEP_FORCE_AUTO_WAKE_MINUTES) return true;
   return recoveredEnough && sleptMinutes >= ORDINARY_SLEEP_FULL_AUTO_WAKE_MINUTES;
+}
+
+export function ordinarySleepAutoWakeHint(startedAtMinute: number) {
+  const wakeTime = worldTimeSnapshotFromAbsoluteMinute(startedAtMinute + ORDINARY_SLEEP_FORCE_AUTO_WAKE_MINUTES);
+  return `Без додаткових дій ви прокинетеся приблизно о ${wakeTime.clockLabel} за межовим часом.`;
 }
 
 export function sleepRecoveryProfileFromSignals(input: {
@@ -131,7 +137,7 @@ export async function startOrdinarySleep(playerId: number): Promise<SleepChangeR
   return {
     changed: true,
     locationId: player.currentLocationId,
-    message: "Ви лягаєте й засинаєте. Світ відступає тихіше; тіло бере своє.",
+    message: `Ви лягаєте й засинаєте. Світ відступає тихіше; тіло бере своє.\n${ordinarySleepAutoWakeHint(worldState.absoluteMinute)}`,
   };
 }
 

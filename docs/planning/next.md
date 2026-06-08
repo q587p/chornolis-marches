@@ -14,7 +14,7 @@ Do not replace or derail it with broad combat, economy, theft, crafting, group m
 
 Keep the next patches narrow and reviewable:
 
-1. `0.16.12` / Strange totem cap expansion — focused retune only; do not fold into fauna diversity.
+1. `0.16.12` / Strange totem cap expansion — in testing; focused retune only, with no fauna seed, Lisovyk, mentorship, group, combat, economy or profession changes.
 2. `0.16.13` / Дід Лісовик character pass — finish or redesign him deliberately as old-forest mentor/spirit/threshold presence.
 3. Mentor guided tracking prompt — add only after gathering prompts and marker cooldowns feel stable.
 4. Mentor route polish — tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
@@ -29,6 +29,7 @@ After the current mentorship/NPC-learning lane stabilizes, the next practical su
 
 ## Boundaries
 
+- `0.16.12` changes only the Spirit Call command-control surface; it does not add a `/spirit` unlock, teacher gate, mentorship effect, stronger spirit behavior or hidden-route sharing.
 - Keep mentorship separate from `TravelGroup`: mentorship is teacher/student attention and learning context; travel groups remain player-player road groups.
 - Do not add public skill sheets or broad modifiers before bounded learning moments stay readable in play.
 - Do not open another broad content loop before the attention-learning spine is used by real attention moments.

@@ -10,6 +10,7 @@ const {
   DEFAULT_LEARNING_SOURCE_KEY,
   LEARNING_LEVEL_THRESHOLDS,
   applyLearningProgress,
+  formatLearningLevelChart,
   getLearningProgress,
   actorLearningInput,
   formatLearningSummary,
@@ -54,6 +55,10 @@ assert.equal(learningLevelLabel(99), "masterful");
 assert.equal(learningQualitativeLevelLabel(0), "ледве знайоме");
 assert.equal(learningQualitativeLevelLabel(3), "уміле");
 assert.equal(learningQualitativeLevelLabel(99), "майстерне");
+const levelChart = formatLearningLevelChart();
+assert.match(levelChart, /level 0: unfamiliar \/ ледве знайоме — totalProgress >= 0/);
+assert.match(levelChart, /level 5: masterful \/ майстерне — totalProgress >= 60/);
+assert.match(levelChart, /Admin\/debug reference only/);
 assert.deepEqual(actorLearningInput({ actorType: "PLAYER", playerId: 7 }, { skillKey: "tracking", amount: 1 }), {
   skillKey: "tracking",
   amount: 1,
@@ -123,7 +128,14 @@ assert.equal(slowLogThresholdMs("bad"), 1000);
 const prismaSchema = fs.readFileSync("prisma/schema.prisma", "utf8");
 const adminSource = fs.readFileSync("src/handlers/admin.ts", "utf8");
 assert.equal(adminSource.includes('slashlessCommandPattern(["learning", "learn", "навчання", "прогрес"])'), true);
+assert.equal(adminSource.includes('slashlessCommandPattern(["learning_chart", "learningChart", "learningchart", "learning chart", "learning levels", "шкала навчання", "рівні навчання"])'), true);
+assert.equal(adminSource.includes('bot.command(["learning_chart", "learningchart"], runLearningChartCommand)'), true);
 assert.equal(adminSource.includes("runLearningCommand(ctx, String(ctx.match?.[1] ?? \"\").trim())"), true);
+assert.ok(
+  adminSource.indexOf("bot.hears(LEARNING_CHART_TEXT_COMMAND, runLearningChartCommand)") <
+    adminSource.indexOf("bot.hears(LEARNING_TEXT_COMMAND"),
+  "learning chart text command must be registered before generic learning target lookup",
+);
 const slowLogSource = fs.readFileSync("src/utils/slowLog.ts", "utf8");
 assert.equal(slowLogSource.includes("slow:${label} durationMs=${durationMs}"), true);
 assert.doesNotMatch(slowLogSource, /messageText|ctx\.message|private/i);

@@ -7,6 +7,32 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.12 - Strange totem cap expansion - 12026-06-08
+
+### Added
+
+- Added region-specific ambient Strange Totem description pools for dry luka, riverbank, Chornolis border and willow floodplain locations.
+- Added focused strange-totem coverage for exact region caps, protected spawn boundaries, regional description pools and stable dismantle reward behavior.
+- Added per-command timing and optional `TEST_JOBS` parallel execution to the manifest test runner.
+- Added a small authored riverbank walk extension near the old bridge and willow edge so the bank can be walked for longer without entering dry luka or the floodplain.
+- Added explicit Spirit Call toggle commands `/spirit_on` and `/spirit_off` so bare `/spirit`, `/dukh`, `/poklyk`, `auto`, `дух` and `поклик духа` can consistently show current status.
+- Added scribe/admin `/learning_chart` to show the shared learning level thresholds, technical keys and qualitative Ukrainian labels.
+
+### Changed
+
+- Expanded active Strange Totem region caps: `dry_luka` from 5 to 13, `riverbank` from 2 to 3, `chornolis_border` from 0 to 5 and `willow_floodplain` from 0 to 1.
+- Kept daily spawn scheduling, seven-day lifetime, old-day twig shedding and dismantle twig rewards unchanged.
+- Changed the under-bridge location to count as `riverbank` for regional world behavior while keeping it explicitly excluded from ambient totem spawning.
+- Kept starter camp, old bridge spans, the under-bridge passage, dream tutorial and closed settlement gate regions/locations excluded from ambient totem spawning.
+- CI now runs the manifest test suite with `TEST_JOBS=4` and follows the explicit Prisma generate step with `npm run typecheck`.
+- Kept existing Spirit Call start/stop aliases such as `покликати духа`, `дух веде`, `/spirit_stop`, `/auto_stop` and `стоп авто` compatible.
+- Ordinary sleep start text now shows the approximate world-clock auto-wake time if the player takes no further action.
+- Kept the new learning chart as an admin/debug reference only, not a public skill sheet.
+
+### Risks
+
+- This is a regional curiosity tuning pass only: no fauna seed group changes, Lisovyk restoration behavior, `/spirit` unlock, mentorship behavior, group movement, combat, economy/profession system, Prisma schema, migrations or WorldEventMarker changes.
+
 ## 0.16.11 - Fauna diversity pass - 12026-06-08
 
 ### Added
@@ -91,7 +117,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Shortened public `/help` by removing one-off or highly specific command blurbs, and clarified that AFK starts automatically after 13 minutes of inactivity.
 - Expanded strange-totem dismantle feedback to a stable set of 13 atmospheric aftermath lines.
 - Updated follow-assist hints to use clickable `/follow_assist_on` and `/follow_assist_off` commands while keeping `/follow_assist on/off` as compatible aliases.
-- Changed legacy `auto` / `/auto` input to show Spirit Call status and controls instead of immediately enabling the helper; explicit `/spirit` still enables it.
+- Changed legacy `auto` / `/auto` input to show Spirit Call status and controls instead of immediately enabling the helper; the later explicit control surface uses `/spirit_on` and `/spirit_off`, while bare `/spirit` shows status.
 - Clarified `/pending_publications` as ready-now output and added `/future_publications` for upcoming scheduled outbox rows.
 
 ### Risks

@@ -420,15 +420,22 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "підвестись": { kind: "posture", mode: "stand" },
 
   auto: { kind: "auto", mode: "show" },
-  spirit: { kind: "auto", mode: "start" },
-  dukh: { kind: "auto", mode: "start" },
-  poklyk: { kind: "auto", mode: "start" },
+  spirit: { kind: "auto", mode: "show" },
+  dukh: { kind: "auto", mode: "show" },
+  poklyk: { kind: "auto", mode: "show" },
   "авто": { kind: "auto", mode: "show" },
   "auto on": { kind: "auto", mode: "start" },
   "auto start": { kind: "auto", mode: "start" },
   "auto_on": { kind: "auto", mode: "start" },
   "auto_start": { kind: "auto", mode: "start" },
-  "поклик духа": { kind: "auto", mode: "start" },
+  "spirit on": { kind: "auto", mode: "start" },
+  "spirit_on": { kind: "auto", mode: "start" },
+  "dukh on": { kind: "auto", mode: "start" },
+  "dukh_on": { kind: "auto", mode: "start" },
+  "poklyk on": { kind: "auto", mode: "start" },
+  "poklyk_on": { kind: "auto", mode: "start" },
+  "поклик духа": { kind: "auto", mode: "show" },
+  "дух": { kind: "auto", mode: "show" },
   "покликати духа": { kind: "auto", mode: "start" },
   "покликати дух": { kind: "auto", mode: "start" },
   "дух веде": { kind: "auto", mode: "start" },
@@ -438,8 +445,10 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "auto stop": { kind: "auto", mode: "stop" },
   "auto off": { kind: "auto", mode: "stop" },
   "stop auto": { kind: "auto", mode: "stop" },
+  "spirit_off": { kind: "auto", mode: "stop" },
   "spirit stop": { kind: "auto", mode: "stop" },
   "spirit off": { kind: "auto", mode: "stop" },
+  "dukh_off": { kind: "auto", mode: "stop" },
   "dukh stop": { kind: "auto", mode: "stop" },
   "dukh off": { kind: "auto", mode: "stop" },
   "увімкнути авто": { kind: "auto", mode: "start" },
@@ -861,6 +870,7 @@ const ADMIN_COMMAND_SUGGESTIONS: AdminCommandSuggestion[] = [
   { alias: "all dead", command: "/all dead", matches: ["all dead"] },
   { alias: "playerAdmin", command: "/playerAdmin", matches: ["playerAdmin", "playeradmin", "player"] },
   { alias: "learning", command: "/learning", matches: ["learning", "learn"] },
+  { alias: "learning_chart", command: "/learning_chart", matches: ["learning_chart", "learningchart", "learning chart", "learning levels"] },
   { alias: "call_scribes_audit", command: "/call_scribes_audit", matches: ["call_scribes_audit", "callScribesAudit", "callscribesaudit"] },
   { alias: "call_scribes_approve", command: "/call_scribes_approve", matches: ["call_scribes_approve", "callScribesApprove", "callscribesapprove"] },
   { alias: "timeDebug", command: "/timeDebug", matches: ["timeDebug", "timedebug"] },
@@ -1048,7 +1058,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "douse-torch") return "/douse_torch";
   if (parsed.kind === "posture") return parsed.mode === "sit" ? "/sit" : parsed.mode === "lie" ? "/lie" : "/stand";
   if (parsed.kind === "rest") return "/rest";
-  if (parsed.kind === "auto") return parsed.mode === "show" ? "/auto" : parsed.mode === "stop" ? "/auto_stop" : "/spirit";
+  if (parsed.kind === "auto") return parsed.mode === "show" ? "/spirit" : parsed.mode === "stop" ? "/spirit_off" : "/spirit_on";
   if (parsed.kind === "queue") return "/queue";
   if (parsed.kind === "track") return "/track";
   if (parsed.kind === "crawl-root-gap") return "/crawl";
@@ -1945,6 +1955,10 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
 
   if ([
     "поклик духа",
+    "дух",
+  ].includes(commandText)) return { kind: "auto", mode: "show" };
+
+  if ([
     "покликати духа",
     "покликати дух",
     "дух веде",

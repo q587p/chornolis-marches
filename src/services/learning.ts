@@ -115,6 +115,22 @@ export function learningSkillDisplayName(skillKey: string) {
   return LEARNING_SKILL_UKRAINIAN_LABELS[key] ?? key.replace(/[_:-]+/g, " ");
 }
 
+export function formatLearningLevelChart() {
+  const lines = [
+    "📚 Learning level chart",
+    "",
+    "Admin/debug reference only. Ordinary player surfaces should stay qualitative and avoid raw progress numbers.",
+  ];
+
+  for (let level = 0; level <= MAX_LEARNING_LEVEL; level += 1) {
+    lines.push(
+      `- level ${level}: ${learningLevelLabel(level)} / ${learningQualitativeLevelLabel(level)} — totalProgress >= ${LEARNING_LEVEL_THRESHOLDS[level]}`,
+    );
+  }
+
+  return lines.join("\n");
+}
+
 export function applyLearningProgress(current: LearningProgressState, input: { amount?: number; milestoneEvery?: number }): LearningProgressDelta {
   const amount = normalizeLearningAmount(input.amount);
   const previousTotalProgress = Math.max(0, Math.floor(current.totalProgress));

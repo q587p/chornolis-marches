@@ -33,7 +33,7 @@ import { BEESWAX_RESOURCE_KEY, HONEY_RESOURCE_KEY } from "../services/apiaryHaza
 import { parseTeleportCoordinateCommand } from "../services/adminTeleportLinks";
 import { approveScribeReturnRequest, buildScribeReturnAuditText } from "../services/scribeReturnHelp";
 import { escapeHtml } from "../utils/text";
-import { formatLearningTechnicalRows, learningRowsForActor, observedCreatureDefaultLearningRows } from "../services/learning";
+import { formatLearningLevelChart, formatLearningTechnicalRows, learningRowsForActor, observedCreatureDefaultLearningRows } from "../services/learning";
 import {
   formatLearningCreatureDisambiguation,
   learningCreatureDisplayName,
@@ -288,6 +288,7 @@ const TIME_DEBUG_TEXT_COMMAND = slashlessCommandPattern(["timeDebug", "timedebug
 const TIME_SET_TEXT_COMMAND = slashlessCommandPattern(["timeSet", "timeset"]);
 const WEATHER_SET_TEXT_COMMAND = slashlessCommandPattern(["weatherSet", "weatherset"]);
 const LEARNING_TEXT_COMMAND = slashlessCommandPattern(["learning", "learn", "навчання", "прогрес"]);
+const LEARNING_CHART_TEXT_COMMAND = slashlessCommandPattern(["learning_chart", "learningChart", "learningchart", "learning chart", "learning levels", "шкала навчання", "рівні навчання"]);
 const CALL_SCRIBES_AUDIT_TEXT_COMMAND = slashlessCommandPattern(["call_scribes_audit", "callScribesAudit", "callscribesaudit"]);
 const CALL_SCRIBES_APPROVE_TEXT_COMMAND = slashlessCommandPattern(["call_scribes_approve", "callScribesApprove", "callscribesapprove"]);
 const CALL_SCRIBES_APPROVE_SHORT_COMMAND = /^\/?call_scribes_approve_(\d+)(?:@\w+)?$/i;
@@ -313,6 +314,7 @@ export const ADMIN_HELP_TEXT = [
   "/locationAll — список усіх місцин і ключів",
   "/playerAdmin <#id|ім’я|username> — детальна службова картка гравця",
   "/learning [#id|ім’я|username|creature #id|creature ім’я] — технічний зріз stored learning progress персонажа або істоти",
+  "/learning_chart — службова шкала рівнів learning progress: thresholds, technical labels і якісні українські назви",
   "/call_scribes_audit — останні звернення до Писарів про ручне повернення",
   "/call_scribes_approve <eventId> або /call_scribes_approve_123 — застосувати знак Писаря до конкретного звернення",
   "/timeDebug — точний службовий стан часу, місяця, погоди й світла в поточній місцині",
@@ -545,6 +547,11 @@ export function registerAdminHandlers(bot: Bot) {
     });
   }
 
+  async function runLearningChartCommand(ctx: any) {
+    if (!(await requireScribeAdmin(ctx))) return;
+    await ctx.reply(formatLearningLevelChart(), { reply_markup: buildAdminMenuReplyKeyboard() });
+  }
+
   async function replyAdminResourcesMenu(ctx: any) {
     if (!(await requireScribeAdmin(ctx))) return;
     await ctx.reply([
@@ -663,6 +670,8 @@ export function registerAdminHandlers(bot: Bot) {
   bot.hears(TIME_SET_TEXT_COMMAND, (ctx) => runTimeSetCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
   bot.command(["weatherSet", "weatherset"], (ctx) => runWeatherSetCommand(ctx));
   bot.hears(WEATHER_SET_TEXT_COMMAND, (ctx) => runWeatherSetCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
+  bot.command(["learning_chart", "learningchart"], runLearningChartCommand);
+  bot.hears(LEARNING_CHART_TEXT_COMMAND, runLearningChartCommand);
   bot.command(["learning", "learn"], (ctx) => runLearningCommand(ctx));
   bot.hears(LEARNING_TEXT_COMMAND, (ctx) => runLearningCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
   bot.hears(["🌿 Ресурси"], replyAdminResourcesMenu);

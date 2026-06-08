@@ -6,8 +6,9 @@ Do not use `Провід` for this feature. The tone should stay closer to a qui
 
 ## Current Behavior
 
-- `/spirit`, `/dukh`, `/poklyk`, `поклик духа`, `покликати духа`, `дух веде` and similar text aliases start the mode or remind the player that it is already active.
-- `/spirit_stop`, `/dukh_stop`, `подякувати духу`, `відпустити духа`, `зупинити духа` and similar aliases stop it.
+- `/auto`, `/spirit`, `/dukh`, `/poklyk`, `авто`, `дух`, `поклик духа` and similar status aliases show whether the mode is active, which whisper is selected and which control commands are available.
+- `/spirit_on`, `/dukh_on`, `spirit on`, `покликати духа`, `дух веде` and similar start aliases enable the mode or remind the player that it is already active.
+- `/spirit_off`, `/dukh_off`, `/spirit_stop`, `/dukh_stop`, `подякувати духу`, `відпустити духа`, `зупинити духа` and similar aliases stop it.
 - Legacy `/auto`, `/auto_stop`, `/autoStop`, `/auto stop`, `авто`, `вимкнути авто`, `стоп авто` and `авто стоп` remain supported for compatibility.
 - The character card may still expose the control, but player-facing copy should prefer `Поклик духа` over `Авто`.
 - `☰ Меню` should not grow a large auto/settings cluster; this remains a character/game-flow state.

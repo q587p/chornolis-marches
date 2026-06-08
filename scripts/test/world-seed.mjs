@@ -55,6 +55,7 @@ assert.ok(
 
 const regionKeys = keySet(regions, "region");
 const locationKeys = keySet(locations, "location");
+const locationByKey = new Map(locations.map((location) => [location.key, location]));
 const resourceTypeKeys = keySet(resourceTypes, "resource type");
 keySet(features, "feature");
 
@@ -93,6 +94,13 @@ for (const location of locations) {
 for (const exit of exits) {
   assertKnown(locationKeys, exit.fromKey, "Unknown fromKey for exit");
   assertKnown(locationKeys, exit.toKey, "Unknown toKey for exit");
+}
+
+const exitDirectionKeys = new Set();
+for (const exit of exits) {
+  const directionKey = `${exit.fromKey}:${exit.direction}`;
+  assert.equal(exitDirectionKeys.has(directionKey), false, `Duplicate exit direction from ${exit.fromKey}: ${exit.direction}`);
+  exitDirectionKeys.add(directionKey);
 }
 
 const resourceNodeKeys = new Set();
@@ -250,7 +258,7 @@ assert.ok(meadowTrackRun, "Track-aware attention-gated grass run should exist");
 assert.equal(meadowTrackRun.regionKey, "dry_luka", "Track-aware grass run should stay in the dry luka region");
 assert.equal(meadowTrackRun.z, -1, "Track-aware grass run should use an intentional low surface layer");
 assert.equal(meadowTrackRun.dangerLevel, 0, "Track-aware grass run should stay safe");
-assert.equal(underBridge?.regionKey, "old_bridge", "Under-bridge location should remain in the old bridge region");
+assert.equal(underBridge?.regionKey, "riverbank", "Under-bridge location should count as riverbank for regional world behavior");
 const starterCampLocationKeys = new Set(locations.filter((item) => item.regionKey === "starter_camp").map((item) => item.key));
 assert.deepEqual(
   [...starterCampLocationKeys].sort(),
@@ -534,6 +542,44 @@ for (const filePath of ["prisma/seed.ts", "src/services/worldReset.ts", "src/dat
 
 for (const key of ["riverbank_14_01", "willow_still_pool_15_10", "willow_frog_pool_17_10", "riverbank_17_04"]) {
   assertKnown(locationKeys, key, `Fauna diversity starter location should exist: ${key}`);
+}
+
+for (const key of [
+  "riverbank_14_00",
+  "riverbank_15_01",
+  "riverbank_16_02",
+  "riverbank_17_03",
+  "riverbank_15_08",
+  "riverbank_14_09",
+  "under_bridge_18_05",
+]) {
+  const location = locationByKey.get(key);
+  assert.ok(location, `Riverbank walk location should exist: ${key}`);
+  assert.equal(location.regionKey, "riverbank", `Riverbank walk location should belong to riverbank: ${key}`);
+}
+
+function assertVisibleRiverbankRoute(fromKey, toKey) {
+  const queue = [[fromKey]];
+  const visited = new Set([fromKey]);
+  while (queue.length > 0) {
+    const route = queue.shift();
+    const currentKey = route.at(-1);
+    if (currentKey === toKey) return route;
+    for (const exit of exits.filter((item) => item.fromKey === currentKey && item.isHidden !== true)) {
+      const next = locationByKey.get(exit.toKey);
+      if (!next || next.regionKey !== "riverbank" || visited.has(exit.toKey)) continue;
+      visited.add(exit.toKey);
+      queue.push([...route, exit.toKey]);
+    }
+  }
+  assert.fail(`Expected visible riverbank-only route from ${fromKey} to ${toKey}`);
+}
+
+assertVisibleRiverbankRoute("riverbank_14_00", "under_bridge_18_05");
+assertVisibleRiverbankRoute("riverbank_15_07", "riverbank_13_09");
+for (const exit of exits.filter((item) => item.fromKey === "riverbank_15_08" || item.toKey === "riverbank_15_08")) {
+  const otherKey = exit.fromKey === "riverbank_15_08" ? exit.toKey : exit.fromKey;
+  assert.notEqual(locationByKey.get(otherKey)?.regionKey, "willow_floodplain", "riverbank_15_08 should not directly cross into willow floodplain");
 }
 
 const seedSource = fs.readFileSync("prisma/seed.ts", "utf8");

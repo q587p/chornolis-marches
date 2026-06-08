@@ -43,25 +43,26 @@ y
 y
  11                                                       w  w  w
  10    █  █  █  F  F  F  █  █  █  █  █  █  █  █     w  w  w  w  w
-  9    █  #  #  F  #  #  #  #  #  F  F  .  .  .  ,  ~  w  w  w
-  8    █  F  F  F  #  F  F  F  F  F  #  .  #  .  .  ,  ~  w
+  9    █  #  #  F  #  #  #  #  #  F  F  .  .  .  ,  ,  w  w  w
+  8    █  F  F  F  #  F  F  F  F  F  #  .  #  .  .  ,  ,  w
   7    █  F  #  #  #  F  #  #  #  F  F  T  T  .  .  .  ,  ,  ~
   6    █  F  F  F  F  F  #  F  F  F  F  .  .  .  .  .  #  ,  ,  ,  ~  ~
   5    █  #  #  F  #  #  #  F  #  F  #  .  .  .  .  .  .  .  S  =  =  G  G
   4    █  F  F  F  #  F  F  F  #  F  F  .  .  .  .  .  .  .  ,  ,  ~  ~
-  3    █  F  #  #  #  F  #  F  #  #  F  .  .  .  #  .  .  ,  ~  ~
-  2    █  F  F  F  F  F  #  F  F  F  F  .  .  .  .  .  ,  ~  ~
-  1    █  #  #  F  #  F  #  #  F  #  F  .  .  #  .  ,  ~  ~
-  0    █  F  F  F  #  F  F  F  F  #  F  .  .  .  ,  ~  ~
+  3    █  F  #  #  #  F  #  F  #  #  F  .  .  .  #  .  .  ,  ,  ~
+  2    █  F  F  F  F  F  #  F  F  F  F  .  .  .  .  .  ,  ,  ~
+  1    █  #  #  F  #  F  #  #  F  #  F  .  .  #  .  ,  ,  ~
+  0    █  F  F  F  #  F  F  F  F  #  F  .  .  .  ,  ,  ~
  -1    █  █  █  █  █  █  █  █  █  █  █  █  █  █
 ```
 
 ## Layer z = -1
 
 ```text
-      17 18
+      16 17 18
 y
-  5    c  u
+  6       M
+  5    .  c  u
 ```
 
 ## Layer z = -13
@@ -91,6 +92,8 @@ y
 - `meadow_11_07` — UP → `meadow_11_07_scratched_pine_crown`
 - `meadow_11_07_scratched_pine_crown` — DOWN → `meadow_11_07`
 - `meadow_11_09` — NORTH → `meadow_11_00`
+- `meadow_16_05` — INSIDE → `meadow_16_05_grass_run`
+- `meadow_16_05_grass_run` — OUTSIDE → `meadow_16_05`
 - `riverbank_13_00` — SOUTH → `riverbank_13_09`
 - `riverbank_13_09` — NORTH → `riverbank_13_00`
 - `riverbank_18_04` — NORTH → `under_bridge_18_05`

@@ -29,10 +29,15 @@ Current cautions and live-watch notes that should inform near-term work without 
 
 ## Content And Ecology Watchpoints
 
+- More active Strange Totems can make wilderness curiosity denser, especially across `dry_luka` and `chornolis_border`; watch `/look` clutter before increasing caps again.
 - Do not turn the Lisovyk restoration-walk MVP into a broad forest rewrite. Future Lisovyk character work should deliberately choose whether he remains an old-forest mentor/watchful local presence or becomes a sharper spirit/threshold figure.
 - Fauna diversity should keep hawks, frogs and snakes region-appropriate without widening into a full seasonal ecology simulation.
 - Apiary content is a completed/testing endpoint for now: old log apiary, passive bumblebee hazard and risky honey/beeswax harvest exist; bear honey behavior and deeper honey/wax uses remain backlog/future.
 - Map-gated pockets should stay small proofs of attention/light/tracks, not loot loops or broad skill-lock framework.
+
+## Spirit Call Watchpoints
+
+- Bare `/spirit` is now status; enabling is explicit `/spirit_on`. Do not treat this as a spirit unlock, teacher gate, stronger spirit behavior or hidden-route sharing.
 
 ## Operational Watchpoints
 
