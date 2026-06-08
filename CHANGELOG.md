@@ -15,13 +15,19 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Added a neutral `local_person` creature species for the first learner so herbalist/hunter specialist behavior does not accidentally treat the learner as a specialist.
 - Added table-driven learner teacher profiles for herbalists and hunters so future fisher or other profession teachers can be added without rewriting the loop.
 - Added Radana as the first seeded learner near the starter border camp.
+- Added content-boundary modules for learner profile copy and help/commands authored pages.
 - Added focused tests for learner eligibility, bounded gains, caught-up stop behavior, decay/reset, hidden technical progress text and creature-observation coverage.
 
 ### Changed
 
 - Routed creature ticks through the learner loop before ordinary hunter/herbalist behavior so the learner does not become a full specialist or profession economy actor.
 - Kept learner progress technical-only in `currentAction` marker state while stripping the marker from public location/inspection text.
+- Moved `/help` and `/commands` text out of the Telegram handler into `src/content/help/helpText.ts`.
+- Moved NPC learner profile copy and stable learner action phrases into `src/content/npc/npcLearnerProfiles.ts`.
+- Differentiated the Telegram side-command icons for `/help` and `/respawn`.
+- Kept ordinary `☰ Меню` identical for players and scribes; scribe-only `/stat` remains reachable from `🛠 Адмін меню` and direct command surfaces instead of the ordinary menu.
 - Updated progression and next-planning docs to keep `/spirit` teacher unlocks, mentorship, group movement, Лісовик learning and broader profession/economy work future-only.
+- Strengthened PR/release workflow docs so PRs target `main` unless explicitly stacked, release surfaces name their version, and full `npm.cmd test` runs use a longer timeout.
 
 ### Risks
 
