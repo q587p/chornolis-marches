@@ -40,6 +40,8 @@ npm run build
 
 `npm test` currently validates world seed references and type-checks `prisma/seed.ts` without executing the seed. Treat it as important for map/world/seed/data-shape changes and useful as a general regression check when behavior touches shared game systems.
 
+On Windows PowerShell, use `npm.cmd test` / `npm.cmd run build` if `npm` is blocked by the local execution policy. The full test suite grows with `scripts/test/test-manifest.cjs` and commonly exceeds a 120-second tool timeout; start full-suite runs with a longer timeout, currently at least 300 seconds, and raise that baseline as the manifest grows. Focused `node scripts/test/*.cjs` checks can keep shorter timeouts.
+
 Add or extend focused tests when a new rule can be checked cheaply and repeatably, especially for:
 
 - world seed and map invariants;
