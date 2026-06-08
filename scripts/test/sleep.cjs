@@ -5,6 +5,7 @@ require("ts-node/register");
 const {
   ORDINARY_SLEEP_FORCE_AUTO_WAKE_MINUTES,
   ORDINARY_SLEEP_FULL_AUTO_WAKE_MINUTES,
+  ordinarySleepAutoWakeHint,
   ordinarySleepDurationMinutes,
   shouldAllowOrdinarySleepCallback,
   shouldAllowOrdinarySleepText,
@@ -14,6 +15,7 @@ const {
   ...require("../../src/services/sleep"),
   ...require("../../src/services/sleepCommandGate"),
 };
+const { START_WORLD_ABSOLUTE_MINUTE } = require("../../src/data/worldClock");
 
 assert.equal(ordinarySleepDurationMinutes(null, 1000), 0);
 assert.equal(ordinarySleepDurationMinutes(1000, 999), 0);
@@ -65,6 +67,11 @@ assert.equal(
     hpMax: 20,
   }),
   true,
+);
+
+assert.equal(
+  ordinarySleepAutoWakeHint(START_WORLD_ABSOLUTE_MINUTE),
+  "Без додаткових дій ви прокинетеся приблизно о 03:00 за межовим часом.",
 );
 
 const bareProfile = sleepRecoveryProfileFromSignals({

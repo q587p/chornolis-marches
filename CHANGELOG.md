@@ -25,6 +25,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Kept starter camp, old bridge spans, the under-bridge passage, dream tutorial and closed settlement gate regions/locations excluded from ambient totem spawning.
 - CI now runs the manifest test suite with `TEST_JOBS=4` and follows the explicit Prisma generate step with `npm run typecheck`.
 - Kept existing Spirit Call start/stop aliases such as `покликати духа`, `дух веде`, `/spirit_stop`, `/auto_stop` and `стоп авто` compatible.
+- Ordinary sleep start text now shows the approximate world-clock auto-wake time if the player takes no further action.
 
 ### Risks
 
