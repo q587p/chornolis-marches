@@ -1,7 +1,7 @@
 ---
 id: ALC-006
 title: Herbalism skill and brewing failure policy
-status: backlog
+status: testing
 type: feature
 area: learning
 priority: high
@@ -142,3 +142,13 @@ Example critical failure copy:
 - Success and failure can both teach through the learning service.
 - Player-facing text stays qualitative.
 - Tests for the eventual implementation should cover success, ordinary failure, critical failure, failed validation with no consumption, bottle return/break behavior and no raw-key leaks.
+
+## Implementation Notes
+
+- Added `src/services/herbalism.ts` as the pure brewing outcome policy foundation.
+- The service defines `herbalism` / `знахарство`, practice/observation source keys and the first `brew:herbal_tincture` context key.
+- The first outcome table uses deterministic permille rows for levels `0..5`, clamps invalid levels and exposes a deterministic roll helper for tests.
+- Practice amounts are policy-only for now: success `+2`, ordinary failure `+1`, critical failure `+2`; failed validation records no practice and is not a rolled outcome.
+- Consumption policy is descriptive only: success consumes inputs and produces output, ordinary failure keeps the empty bottle, critical failure can consume/break it.
+- Qualitative Ukrainian outcome copy avoids raw chances, raw level names and technical outcome keys.
+- This slice does not add `/brew`, `herbal_tincture`, live resource consumption, stamina restoration, dirty bottles, water/thirst, NPC brewing, public skill UI, Prisma schema or migrations.

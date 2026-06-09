@@ -283,6 +283,15 @@ hints, follow-assist queued moves, mentorship lesson feedback and mentorship
 practice prompts now use structured `WorldEventMarker` rows. This does not add
 new mentorship content, skill effects, public skill UI or gameplay rules.
 
+`0.16.15` adds the first `herbalism` / `знахарство` brewing outcome policy for
+future prepared remedies. Herbalism is separate from `gathering` and `cooking`:
+gathering finds herbs and berries, cooking prepares ordinary food, while
+herbalism governs careful tincture/draught preparation. The first policy stays
+hidden and qualitative: ordinary players should not see raw success chances,
+levels or thresholds. Success, ordinary failure and harsher bottle-breaking
+failure are now described by helper policy, but no public `/brew` command,
+tincture resource or live inventory consumption exists yet.
+
 After the actor-learning foundation, the intended near-term order is:
 
 - `0.15.46`: guarded follow assist is in testing as an opt-in ordinary-exit

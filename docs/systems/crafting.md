@@ -37,3 +37,13 @@ Crafting should start simple and gradually become profession-based.
 - The current runtime helper supports player `PlayerResource` application through a transaction, but does not add a public recipe book, broad crafting UI or economy.
 - Output resource types must already exist; the foundation does not create future tincture resources by itself.
 - The first planned gameplay consumer is `ALC-001`, after `ALC-006` defines the herbalism success/failure policy.
+
+## Herbalism Outcome Policy
+
+`ALC-006` keeps brewing outcome policy separate from the recipe helper.
+
+- The recipe helper validates and applies resource stacks.
+- The herbalism policy decides whether a brewing attempt should succeed, fail while keeping the empty bottle, or fail harshly enough that the bottle can break.
+- Failed validation, such as missing ingredients or an unavailable action, happens before the policy roll and must consume nothing.
+- Ordinary player-facing text should stay qualitative; raw chances and levels remain technical/admin context.
+- There is still no public `/brew`, tincture resource, broad crafting UI or economy in this foundation slice.

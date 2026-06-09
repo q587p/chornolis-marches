@@ -210,7 +210,7 @@
   {
     "id": "ALC-006",
     "title": "Herbalism skill and brewing failure policy",
-    "status": "backlog",
+    "status": "testing",
     "type": "feature",
     "area": "learning",
     "priority": "high",

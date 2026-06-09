@@ -26,7 +26,7 @@ const LEARNING_SKILL_UKRAINIAN_LABELS: Record<string, string> = {
   cooking: "готування",
   freshening: "свіжування",
   gathering: "збирання",
-  herbalism: "травництво",
+  herbalism: "знахарство",
   hunting: "полювання",
   movement: "рух",
   stealth: "скрадливість",
