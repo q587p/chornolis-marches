@@ -23,6 +23,7 @@ For release/patch work that is meant to be reviewed or merged:
 - Before presenting a PR as ready, fetch the latest `origin/main` and verify the branch has no merge conflicts. If conflicts exist, rebase or merge from `main`, resolve them locally, rerun relevant checks, and push the resolved branch before handing over the PR.
 - The PR body should include a concise summary, validation/checks, and explicit risks or rollback notes.
 - Before opening or updating a release-scoped PR, make the release surface explicit: version in the branch name, PR title/body, package files when bumped, and matching docs/news/changelog/release notes when the change is player-visible, numbered, or otherwise release-bound. If a PR is intentionally unversioned or has no public news/changelog/docs, say that explicitly in the PR body and final summary with the reason.
+- Treat runtime foundation PRs intended for merge as release-scoped by default, even when they are helper-only and not immediately player-facing. Use a versioned branch, versioned PR title/body, package bump, changelog, release notes and public news unless the maintainer explicitly agrees in the current task that this PR is unversioned.
 - If the work is still planning-only, say that in the PR summary and do not invent gameplay risk.
 
 ## Test/build/check rule

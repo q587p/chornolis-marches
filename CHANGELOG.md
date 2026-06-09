@@ -7,6 +7,24 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.14 - Minimal resource recipe service - 12026-06-09
+
+### Added
+
+- Added a minimal resource recipe service for authored resource-stack recipes.
+- Added pure helpers for recipe definition validation, duplicate input normalization, exact missing-ingredient reporting, optional actor support and optional feature-tag checks.
+- Added a narrow player-resource apply helper that validates all inputs in a Prisma transaction before consuming resources and producing the output stack.
+- Added focused recipe coverage and marked RECIPE-001 as testing in planning exports/docs.
+
+### Changed
+
+- Documented the resource recipe foundation in crafting/planning docs as helper-only infrastructure for the bottles/herbalism/prepared-remedy lane.
+
+### Risks
+
+- This is infrastructure only: no `/brew`, tinctures, herbalism success/failure policy, public crafting UI, shops/barter/economy, Prisma schema or migration.
+- Future ALC-001 still needs ALC-006 herbalism success/failure policy before consuming ingredients in live gameplay.
+
 ## 0.16.13 - Root-pocket bottle cache foundation - 12026-06-09
 
 ### Added
