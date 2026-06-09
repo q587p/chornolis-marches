@@ -411,6 +411,7 @@ assertFeatureExamineSummary(beginnerCache, "Starter shared beginner cache should
 assert.equal(resourceTypeKeys.has("shah"), true, "Money MVP should define shah resource type");
 assert.equal(resourceTypeKeys.has("grivna"), true, "Money MVP should define grivna resource type");
 assert.equal(resourceTypeKeys.has("empty_bottle"), true, "Herbalism bottle foundation should define empty_bottle resource type");
+assert.equal(resourceTypeKeys.has("herbal_tincture"), true, "First herbal tincture should define herbal_tincture resource type");
 const starterShahNodes = resourceNodes.filter((node) => node.resourceKey === "shah");
 assert.equal(starterShahNodes.reduce((sum, node) => sum + node.amount, 0), 4, "Starter-adjacent authored shah finds should stay modest");
 assert.equal(starterShahNodes.some((node) => String(node.locationKey).startsWith("dream_")), false, "Starter shah finds should not appear in tutorial dream locations");

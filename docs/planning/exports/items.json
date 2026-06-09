@@ -92,7 +92,7 @@
   {
     "id": "ALC-001",
     "title": "First herbal stamina tincture",
-    "status": "backlog",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",

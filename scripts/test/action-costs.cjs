@@ -24,6 +24,7 @@ assert.equal(REST_STAMINA_REGEN_PER_INTERVAL, 26);
 assert.equal(CAMPFIRE_REST_STAMINA_REGEN_MULTIPLIER, 3);
 
 assert.equal(actionTitle({ type: "USE_ITEM", payload: { resourceKey: "berries" } }), "їмо ягоди");
+assert.equal(actionTitle({ type: "USE_ITEM", payload: { resourceKey: "herbal_tincture" } }), "п'ємо трав'яну настоянку");
 assert.equal(actionTitle({ type: "DROP_ITEM", payload: { allFilter: "corpse" } }), "викладаємо речі");
 assert.equal(actionTitle({ type: "DROP_ITEM", payload: { cacheContribution: true, resourceKey: "twigs" } }), "лишаємо хмиз у скрині");
 assert.equal(actionTitle({ type: "LIGHT_TORCH", payload: {} }), "запалюємо факел");

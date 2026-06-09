@@ -6,6 +6,7 @@ import { actionDurationMs, performOrQueuePlayerAction } from "./actionQueue";
 import { assertCanPerformPhysicalAction } from "./postureRules";
 import type { UsableInventoryResource } from "./inventoryUse";
 import { COOKED_MEAT_KEY } from "./meat";
+import { HERBAL_TINCTURE_KEY, HERBAL_TINCTURE_STAMINA_RESTORE } from "./tinctures";
 
 type EatAllPlayer = {
   id: number;
@@ -32,6 +33,7 @@ const USE_EFFECTS = {
   herbs: { hp: 2 },
   mushrooms: { hunger: 3 },
   [COOKED_MEAT_KEY]: { hunger: 5 },
+  [HERBAL_TINCTURE_KEY]: { stamina: HERBAL_TINCTURE_STAMINA_RESTORE },
 } as const satisfies Record<UsableInventoryResource, Record<string, number>>;
 
 function actionPayloadResourceKey(action: Pick<WorldAction, "payload">) {
@@ -55,6 +57,10 @@ export function usefulUseItemCountForVitals(resourceKey: UsableInventoryResource
 
   if (resourceKey === "mushrooms") return divideCeil(vitals.hunger, USE_EFFECTS.mushrooms.hunger);
   if (resourceKey === COOKED_MEAT_KEY) return divideCeil(vitals.hunger, USE_EFFECTS[COOKED_MEAT_KEY].hunger);
+  if (resourceKey === HERBAL_TINCTURE_KEY) {
+    const staminaMax = vitals.staminaMax ?? BASE_STAMINA;
+    return divideCeil(staminaMax - vitals.stamina, USE_EFFECTS[HERBAL_TINCTURE_KEY].stamina);
+  }
 
   const hpMax = vitals.hpMax ?? BASE_HP;
   return divideCeil(hpMax - vitals.hp, USE_EFFECTS.herbs.hp);
@@ -96,6 +102,7 @@ function saturatedText(resourceKey: UsableInventoryResource) {
   if (resourceKey === "berries") return "Снаги й так досить, і голод не дошкуляє. Ягоди краще лишити на потім.";
   if (resourceKey === "mushrooms") return "Ви не голодні. Гриби краще лишити на потім.";
   if (resourceKey === "herbs") return "Ви не поранені настільки, щоб витрачати лікарські трави.";
+  if (resourceKey === HERBAL_TINCTURE_KEY) return "Снаги й так досить. Настоянку краще лишити на потім.";
   return "Ви не голодні. Смажене м’ясо краще лишити на потім.";
 }
 
@@ -149,6 +156,7 @@ export async function queueAllUsableInventoryResource(bot: Bot, player: EatAllPl
 
 export function eatAllButtonLabel(resourceKey: UsableInventoryResource) {
   if (resourceKey === COOKED_MEAT_KEY) return "🥩 З’їсти все";
+  if (resourceKey === HERBAL_TINCTURE_KEY) return "🍶 Випити всі";
   if (resourceKey === "berries") return "🫐 З’їсти всі";
   if (resourceKey === "mushrooms") return "🍄 З’їсти всі";
   return "🌿 З’їсти всі";

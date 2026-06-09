@@ -5,15 +5,17 @@ import type { Prisma } from "@prisma/client";
 import { CAMPFIRE_BUILD_TWIG_COST, ensureTorchResourceTypes, TORCH_DURATION_MS, TORCH_FADING_MS } from "./fire";
 import { dropCarriedCorpseResource, isCorpseQuery, isCorpseResourceKey, resourceTypeDisplayName } from "./corpses";
 import { COOKED_MEAT_KEY, RAW_MEAT_KEY, eatCookedMeat } from "./meat";
+import { HERBAL_TINCTURE_KEY, drinkHerbalTinctureForPlayer } from "./tinctures";
 import { getPlayerEquippedWeapon, isWeaponResourceKey } from "./weapons";
 import { getCurrentWorldState } from "./worldTime";
 
-export type UsableInventoryResource = "berries" | "herbs" | "mushrooms" | "cooked_meat";
+export type UsableInventoryResource = "berries" | "herbs" | "mushrooms" | "cooked_meat" | typeof HERBAL_TINCTURE_KEY;
 
 const USE_CONFIG = {
   berries: { stamina: 4, hunger: 1 },
   herbs: { amount: 2 },
   mushrooms: { amount: 3 },
+  [HERBAL_TINCTURE_KEY]: { stamina: 36 },
 } as const;
 export const MUSHROOM_POISON_CHANCE = 0.1;
 export const MUSHROOM_FIRST_USE_WARNING_TEXT = "Обережно з грибами: ліс не завжди кладе до рук саму поживу. Вони можуть трохи вгамувати голод, але серед них трапляються отруйні; іноді мудріше лишити гриби для майбутніх настоянок чи зілля.";
@@ -96,6 +98,20 @@ const RESOURCE_ALIASES: Record<string, string> = {
   "смаженого м'яса": COOKED_MEAT_KEY,
   "м'ясо": COOKED_MEAT_KEY,
   "м’ясо": COOKED_MEAT_KEY,
+  herbal_tincture: HERBAL_TINCTURE_KEY,
+  tincture: HERBAL_TINCTURE_KEY,
+  "herbal tincture": HERBAL_TINCTURE_KEY,
+  potion: HERBAL_TINCTURE_KEY,
+  "трав'яна настоянка": HERBAL_TINCTURE_KEY,
+  "трав’яна настоянка": HERBAL_TINCTURE_KEY,
+  "травʼяна настоянка": HERBAL_TINCTURE_KEY,
+  "травяну настоянку": HERBAL_TINCTURE_KEY,
+  "трав'яну настоянку": HERBAL_TINCTURE_KEY,
+  "трав’яну настоянку": HERBAL_TINCTURE_KEY,
+  "травʼяну настоянку": HERBAL_TINCTURE_KEY,
+  настоянка: HERBAL_TINCTURE_KEY,
+  настоянку: HERBAL_TINCTURE_KEY,
+  зілля: HERBAL_TINCTURE_KEY,
   raw_meat: RAW_MEAT_KEY,
   "raw meat": RAW_MEAT_KEY,
   "сире м'ясо": RAW_MEAT_KEY,
@@ -252,6 +268,11 @@ async function addGroundResource(
 
 export async function useInventoryResource(playerId: number, resourceKey: UsableInventoryResource) {
   if (resourceKey === COOKED_MEAT_KEY) return eatCookedMeat(playerId);
+  if (resourceKey === HERBAL_TINCTURE_KEY) {
+    const result = await drinkHerbalTinctureForPlayer(playerId);
+    if (!result.ok) throw new Error(result.text);
+    return result.text;
+  }
 
   const worldState = await getCurrentWorldState();
   return prisma.$transaction(async (tx) => {

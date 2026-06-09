@@ -1,7 +1,7 @@
 ---
 id: ALC-001
 title: First herbal stamina tincture
-status: backlog
+status: testing
 type: feature
 area: survival
 priority: high
@@ -127,3 +127,16 @@ Example drink:
 - Drinking at full stamina does not consume the tincture.
 - `/help` / `/commands` mention stable commands only if the action becomes player-facing.
 - Tests cover recipe validation, stamina cap behavior, bottle return, ordinary failure, critical failure, failed validation with no consumption, practice recording and aliases.
+
+## Implementation Notes
+
+- `0.16.16` adds `herbal_tincture` as the first prepared-remedy resource.
+- Brewing is a narrow synchronous physical command path (`/brew tincture`, `/make_tincture` and Ukrainian aliases), not a broad recipe-book UI.
+- The recipe is `empty_bottle x1`, `herbs x2`, `berries x1` -> `herbal_tincture x1`.
+- Missing ingredients are checked before the ALC-006 outcome roll; failed validation consumes nothing and records no practice.
+- Success uses the RECIPE-001 player recipe helper to consume all inputs and produce one tincture.
+- Ordinary failure consumes herbs/berries, keeps the empty bottle and produces no tincture.
+- Critical failure consumes herbs/berries and the empty bottle, but does not create a broken-bottle resource yet.
+- Successful and failed real attempts record `herbalism` / `practice` / `brew:herbal_tincture` after the outcome.
+- Drinking uses `/drink tincture`, `/use tincture`, Ukrainian aliases or the inventory button, restores up to `36` stamina capped by max stamina, consumes one tincture and returns one `empty_bottle`.
+- This slice intentionally does not add healing/night-sight tinctures, dirty bottles, washing, water/thirst, NPC brewing, mentor hints, shops/economy, a public `/skills` sheet, Prisma schema or migrations.

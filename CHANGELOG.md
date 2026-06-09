@@ -7,6 +7,28 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.16 - First herbal stamina tincture - 12026-06-09
+
+### Added
+
+- Added `herbal_tincture` as the first prepared remedy resource.
+- Added live brewing commands and aliases for the first stamina tincture: `/brew tincture`, `/make_tincture`, English text forms and Ukrainian text forms.
+- Added tincture drinking through `/drink tincture`, `/use tincture`, Ukrainian aliases and the inventory item button.
+- Added focused tincture coverage for recipe definition, missing ingredients, outcome consumption policy, stamina cap behavior, aliases and inventory UI wiring.
+
+### Changed
+
+- Wired the first tincture to the existing recipe helper and herbalism outcome policy: missing ingredients consume nothing, success produces one tincture, ordinary failure keeps the bottle, and harsh failure can consume the bottle.
+- Drinking a tincture restores stamina up to the character cap, consumes one `herbal_tincture` and returns one `empty_bottle`.
+- Brewing attempts now record `herbalism` practice after real success/failure outcomes.
+- Updated help, command docs, crafting/progression docs and ALC-001 planning exports.
+
+### Risks
+
+- This is only the first stamina tincture, not broad alchemy, healing/night-sight draughts, dirty bottles, water/thirst, NPC brewing, shops/barter/economy, public recipe UI or a public skill sheet.
+- Existing production worlds need seed/resource refresh after deploy for `herbal_tincture` to exist as a `ResourceType`.
+- No Prisma schema or migration change.
+
 ## 0.16.15 - Herbalism brewing outcome policy - 12026-06-09
 
 ### Added

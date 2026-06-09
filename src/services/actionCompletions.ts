@@ -52,6 +52,7 @@ import { COOKING_OBSERVATION_GROWTH_MESSAGE, COOKING_PRACTICE_GROWTH_MESSAGE, FR
 import { maybeHighSkillQualitativeOutcome } from "./highSkillOutcomes";
 import { notifyPlayerObservers, playerRestStopObserverText } from "./playerVisibility";
 import { dropInventoryResourceDetailed, dropInventoryResourcesDetailed, useInventoryResource, type UsableInventoryResource } from "./inventoryUse";
+import { HERBAL_TINCTURE_KEY } from "./tinctures";
 import { trimSatisfiedQueuedUseItems } from "./eatingQueue";
 import { dropObserverText, recordVisibleItemAction } from "./visibleItemActions";
 import { campfireDismantleReplyOptions, campfireRelightReplyOptionsAfterBuild, campfireRelightReplyOptionsAfterTwigs } from "../ui/fireKeyboards";
@@ -483,7 +484,7 @@ async function triggerHerbivorePanic(locationId: number, victimCreatureId: numbe
 }
 
 function isUsableInventoryResource(value: string | undefined): value is UsableInventoryResource {
-  return value === "berries" || value === "herbs" || value === "mushrooms" || value === "cooked_meat";
+  return value === "berries" || value === "herbs" || value === "mushrooms" || value === "cooked_meat" || value === HERBAL_TINCTURE_KEY;
 }
 
 async function completeInventoryAction(bot: Bot, action: WorldAction) {

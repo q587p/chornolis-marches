@@ -7,6 +7,7 @@ import {
 } from "../services/fire";
 import { canCookPlayerMeat, COOKED_MEAT_KEY, playerRawMeatAmount, RAW_MEAT_KEY } from "../services/meat";
 import { eatAllButtonLabel, playerInventoryResourceAmount } from "../services/eatingQueue";
+import { HERBAL_TINCTURE_KEY } from "../services/tinctures";
 import { getPlayerEquippedWeapon, isWeaponResourceKey } from "../services/weapons";
 
 function inventoryItemDropLabel(resourceKey: string) {
@@ -15,6 +16,7 @@ function inventoryItemDropLabel(resourceKey: string) {
   if (resourceKey === "herbs") return "Викинути трави";
   if (resourceKey === COOKED_MEAT_KEY || resourceKey === RAW_MEAT_KEY) return "Викинути м’ясо";
   if (resourceKey === "empty_bottle") return "Викинути пляшечку";
+  if (resourceKey === HERBAL_TINCTURE_KEY) return "Викинути настоянку";
   if (resourceKey === "twigs") return "Викинути хмиз";
   if (resourceKey === "torch" || resourceKey === "doused_torch" || resourceKey === "lit_torch") return "Викинути факел";
   return "Викинути";
@@ -41,7 +43,7 @@ export async function buildInventoryItemKeyboard(playerId: number, resourceKey: 
     canCookPlayerMeat(playerId),
     getPlayerEquippedWeapon(playerId),
     resourceKey === RAW_MEAT_KEY ? playerRawMeatAmount(playerId) : Promise.resolve(0),
-    resourceKey === "berries" || resourceKey === "mushrooms" || resourceKey === "herbs" || resourceKey === COOKED_MEAT_KEY
+    resourceKey === "berries" || resourceKey === "mushrooms" || resourceKey === "herbs" || resourceKey === COOKED_MEAT_KEY || resourceKey === HERBAL_TINCTURE_KEY
       ? playerInventoryResourceAmount(playerId, resourceKey)
       : Promise.resolve(0),
   ]);
@@ -66,6 +68,9 @@ export async function buildInventoryItemKeyboard(playerId: number, resourceKey: 
     keyboard.text("🥩 З’їсти м’ясо", `inventory:use:${COOKED_MEAT_KEY}`);
     if (itemAmount > 1) keyboard.text(eatAllButtonLabel(COOKED_MEAT_KEY), `inventory:use-all:${COOKED_MEAT_KEY}`);
     keyboard.row();
+  }
+  if (resourceKey === HERBAL_TINCTURE_KEY) {
+    keyboard.text("🍶 Випити настоянку", `inventory:use:${HERBAL_TINCTURE_KEY}`).row();
   }
   if (resourceKey === RAW_MEAT_KEY && canCookMeat) {
     keyboard.text("🔥🥩 Підсмажити м’ясо", "inventory:cook:meat");
