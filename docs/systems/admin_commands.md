@@ -43,6 +43,8 @@
 - `/chronicles_real` — службовий перегляд хронік із реальними `Europe/Kyiv` датами й годинами; звичайний `/chronicles` показує зарубки через внутрішній час Порубіжжя.
 - `/chronicles_backfill_players` — ідемпотентно додати пропущені хроніки появи персонажів із `Player.createdAt`, не дублюючи тих, що вже мають `Chronicle: new_player`.
 - `/stat` — службова статистика світу й посилання на захищену веб-/stat; показує народження, смерті від старості, голоду, хижаків і персонажів, відновлення стартових популяцій, а також активність персонажів. Видові підсумки відновлення стартових популяцій рахуються з `WorldEvent`-описів, тому старі періоди без таких подій або видових деталей не backfill’яться.
+- `/queueDebug` — сcribe/admin-only зріз runtime-черги дій: чи триває прохід, коли був останній прохід, скільки тривали фази player completion / player start / keyboard refresh / creature kick, скільки queued/running/overdue дій мають гравці й істоти, і топ прострочених дій. Slashless `queueDebug` / `queuedebug` ведуть у той самий guarded handler.
+- `/queueNudge` — scribe/admin-only безпечний запит на один прохід черги дій. Команда використовує наявний loop guard, не створює нового interval, не запускає overlap і не чистить чергу. Slashless `queueNudge` / `queuenudge` ведуть у той самий guarded handler.
 - `/chat time [hours|all]` — репліки гравців і NPC за часом; старий формат `/chat 1` або `/chat all` лишається сумісним.
 - `/chat location [hours|all]` — ті самі репліки, впорядковані за місциною; веб-режим `/chat?mode=location`.
 - `/chat character [hours|all]` — ті самі репліки, впорядковані за мовцем/персонажем; веб-режим `/chat?mode=character`.

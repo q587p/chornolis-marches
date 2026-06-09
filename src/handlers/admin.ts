@@ -32,6 +32,8 @@ import { WEAPON_DEFINITIONS, isWeaponResourceKey } from "../services/weapons";
 import { BEESWAX_RESOURCE_KEY, HONEY_RESOURCE_KEY } from "../services/apiaryHazards";
 import { parseTeleportCoordinateCommand } from "../services/adminTeleportLinks";
 import { approveScribeReturnRequest, buildScribeReturnAuditText } from "../services/scribeReturnHelp";
+import { nudgeActionQueueLoop } from "../services/actionQueue";
+import { buildActionQueueDebugReport } from "../services/actionQueueDiagnostics";
 import { escapeHtml } from "../utils/text";
 import { formatLearningLevelChart, formatLearningTechnicalRows, learningRowsForActor, observedCreatureDefaultLearningRows } from "../services/learning";
 import {
@@ -290,6 +292,8 @@ const TIME_SET_TEXT_COMMAND = slashlessCommandPattern(["timeSet", "timeset"]);
 const WEATHER_SET_TEXT_COMMAND = slashlessCommandPattern(["weatherSet", "weatherset"]);
 const LEARNING_TEXT_COMMAND = slashlessCommandPattern(["learning", "learn", "навчання", "прогрес"]);
 const LEARNING_CHART_TEXT_COMMAND = slashlessCommandPattern(["learning_chart", "learningChart", "learningchart", "learning chart", "learning levels", "шкала навчання", "рівні навчання"]);
+const QUEUE_DEBUG_TEXT_COMMAND = slashlessCommandPattern(["queueDebug", "queuedebug"]);
+const QUEUE_NUDGE_TEXT_COMMAND = slashlessCommandPattern(["queueNudge", "queuenudge"]);
 const CALL_SCRIBES_AUDIT_TEXT_COMMAND = slashlessCommandPattern(["call_scribes_audit", "callScribesAudit", "callscribesaudit"]);
 const CALL_SCRIBES_APPROVE_TEXT_COMMAND = slashlessCommandPattern(["call_scribes_approve", "callScribesApprove", "callscribesapprove"]);
 const CALL_SCRIBES_APPROVE_SHORT_COMMAND = /^\/?call_scribes_approve_(\d+)(?:@\w+)?$/i;
@@ -307,6 +311,8 @@ export const ADMIN_HELP_TEXT = [
   "/chronicles_real — хроніки з реальними Europe/Kyiv датами й годинами для службової перевірки",
   "/chronicles_backfill_players — додати пропущені хроніки появи персонажів із Player.createdAt без дублів",
   "/stat — службова статистика й посилання на захищену веб-/stat",
+  "/queueDebug — службовий зріз черги дій: runtime pass, фази, queued/running/overdue за акторами",
+  "/queueNudge — безпечно попросити чергу дій зробити один прохід без нового interval і без overlap",
   "/all — усі живі персонажі та істоти",
   "/all dead — усі записи істот, включно з inactive/dead/corpse/gone",
   "/all player або /all players — тільки гравці",
@@ -554,6 +560,22 @@ export function registerAdminHandlers(bot: Bot) {
     await ctx.reply(formatLearningLevelChart(), { reply_markup: buildAdminMenuReplyKeyboard() });
   }
 
+  async function runQueueDebugCommand(ctx: any) {
+    if (!(await requireScribeAdmin(ctx))) return;
+    await ctx.reply(await buildActionQueueDebugReport(), { reply_markup: buildAdminMenuReplyKeyboard() });
+  }
+
+  async function runQueueNudgeCommand(ctx: any) {
+    if (!(await requireScribeAdmin(ctx))) return;
+    const requested = nudgeActionQueueLoop();
+    await ctx.reply(
+      requested
+        ? "🧵 Чергу дій штовхнуто до одного безпечного проходу. Якщо прохід уже триває, overlap guard не пустить другий."
+        : "🧵 Черга дій ще не має активного bot instance; nudge не запущено.",
+      { reply_markup: buildAdminMenuReplyKeyboard() },
+    );
+  }
+
   async function replyAdminResourcesMenu(ctx: any) {
     if (!(await requireScribeAdmin(ctx))) return;
     await ctx.reply([
@@ -676,6 +698,11 @@ export function registerAdminHandlers(bot: Bot) {
   bot.hears(LEARNING_CHART_TEXT_COMMAND, runLearningChartCommand);
   bot.command(["learning", "learn"], (ctx) => runLearningCommand(ctx));
   bot.hears(LEARNING_TEXT_COMMAND, (ctx) => runLearningCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
+  bot.command(["queueDebug", "queuedebug"], runQueueDebugCommand);
+  bot.hears(QUEUE_DEBUG_TEXT_COMMAND, runQueueDebugCommand);
+  bot.command(["queueNudge", "queuenudge"], runQueueNudgeCommand);
+  bot.hears(QUEUE_NUDGE_TEXT_COMMAND, runQueueNudgeCommand);
+  bot.hears(["🧵 Черга дій", "Черга дій"], runQueueDebugCommand);
   bot.hears(["🌿 Ресурси"], replyAdminResourcesMenu);
   bot.hears(["🎒 Додати речі", "Додати речі", "🎒 Речі для Писаря", "Речі для Писаря"], replyAdminItemsMenu);
   bot.hears(["🔥 Вогонь"], replyAdminFireMenu);
