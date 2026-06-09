@@ -1,4 +1,11 @@
-import { getActionQueueRuntimeSnapshot, type ActionQueuePhaseDurations, type ActionQueueRuntimeSnapshot } from "../runtimeState";
+import {
+  getActionQueueRuntimeSnapshot,
+  getCreatureQueueRuntimeSnapshot,
+  type ActionQueuePhaseDurations,
+  type ActionQueueRuntimeSnapshot,
+  type CreatureQueuePhaseDurations,
+  type CreatureQueueRuntimeSnapshot,
+} from "../runtimeState";
 import { getActionQueueStats } from "./status";
 
 export type ActionQueueStatsSnapshot = Awaited<ReturnType<typeof getActionQueueStats>>;
@@ -20,12 +27,21 @@ export function formatQueuePhaseDurations(durations: ActionQueuePhaseDurations |
   ].join("; ");
 }
 
+export function formatCreatureQueuePhaseDurations(durations: CreatureQueuePhaseDurations | null | undefined) {
+  if (!durations) return "немає завершеного проходу";
+  return [
+    `complete=${formatQueueDurationMs(durations.creatureCompleteMs)}`,
+    `start=${formatQueueDurationMs(durations.creatureStartMs)}`,
+    `total=${formatQueueDurationMs(durations.totalMs)}`,
+  ].join("; ");
+}
+
 function formatAgo(value: Date | null | undefined, now: Date) {
   if (!value) return "немає";
   return `${formatQueueDurationMs(now.getTime() - value.getTime())} тому`;
 }
 
-function formatRunning(snapshot: ActionQueueRuntimeSnapshot, now: Date) {
+function formatRunning(snapshot: Pick<ActionQueueRuntimeSnapshot | CreatureQueueRuntimeSnapshot, "running" | "runningSince">, now: Date) {
   if (!snapshot.running) return "ні";
   return snapshot.runningSince ? `так, ${formatQueueDurationMs(now.getTime() - snapshot.runningSince.getTime())}` : "так";
 }
@@ -43,16 +59,20 @@ function formatTopOverdue(stats: ActionQueueStatsSnapshot) {
 export function formatActionQueueDebugReport(
   stats: ActionQueueStatsSnapshot,
   snapshot: ActionQueueRuntimeSnapshot,
+  creatureSnapshot: CreatureQueueRuntimeSnapshot = getCreatureQueueRuntimeSnapshot(),
   now = new Date(),
 ) {
   return [
-    "🧵 Черга дій: debug",
+    "🧵 Службова черга: debug",
     `running: ${formatRunning(snapshot, now)}`,
     `lastStarted: ${formatAgo(snapshot.lastStartedAt, now)}`,
     `lastFinished: ${formatAgo(snapshot.lastFinishedAt, now)}`,
     `lastError: ${snapshot.lastError ?? "немає"}`,
     `phaseMs: ${formatQueuePhaseDurations(snapshot.lastPhaseDurations)}`,
     `lastCounts: completedPlayer=${snapshot.lastCompletedPlayerActions}; startedPlayer=${snapshot.lastStartedPlayerActions}; creatureKick=${snapshot.lastTriggeredCreatureQueue ? "так" : "ні"}`,
+    `creatureQueue: running=${formatRunning(creatureSnapshot, now)}; mode=${creatureSnapshot.lastMode ?? "немає"}; reason=${creatureSnapshot.lastReason ?? "немає"}`,
+    `creaturePhaseMs: ${formatCreatureQueuePhaseDurations(creatureSnapshot.lastPhaseDurations)}`,
+    `creatureCounts: completed=${creatureSnapshot.lastCompletedCreatureActions}; started=${creatureSnapshot.lastStartedCreatureActions}; skippedStarts=${creatureSnapshot.lastSkippedCreatureStarts ? "yes" : "no"}`,
     `queued: player=${stats.playerQueued}; creature=${stats.creatureQueued}; total=${stats.totalQueued}`,
     `runningActions: player=${stats.playerRunning}; creature=${stats.creatureRunning}; total=${stats.totalRunning}`,
     `oldestQueued: player=${formatQueueDurationMs(stats.oldestQueuedPlayerAgeMs)}; creature=${formatQueueDurationMs(stats.oldestQueuedCreatureAgeMs)}; total=${formatQueueDurationMs(stats.oldestQueuedAgeMs)}`,
@@ -63,9 +83,10 @@ export function formatActionQueueDebugReport(
 }
 
 export async function buildActionQueueDebugReport() {
-  const [stats, snapshot] = await Promise.all([
+  const [stats, snapshot, creatureSnapshot] = await Promise.all([
     getActionQueueStats(),
     Promise.resolve(getActionQueueRuntimeSnapshot()),
+    Promise.resolve(getCreatureQueueRuntimeSnapshot()),
   ]);
-  return formatActionQueueDebugReport(stats, snapshot);
+  return formatActionQueueDebugReport(stats, snapshot, creatureSnapshot);
 }

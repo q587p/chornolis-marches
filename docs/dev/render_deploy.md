@@ -115,7 +115,7 @@ Render Web Service exposes:
 
 - `/` — public Ukrainian status and project overview page with `запущено`, version, shared active-character `/who` count, navigation links, emblem, vision and tone.
 - `/world` — protected service status page with world counts, action queue diagnostics and latest events; asks for `ADMIN_SET_SECRET`. Queue diagnostics should distinguish player and creature queued/running/overdue pressure.
-- `/queueDebug` / `/queueNudge` — scribe/admin-only Telegram tools for a compact runtime queue snapshot and one safe queue pass request. They must remain guarded, must not clear or pause queue work, and must not be advertised in public `news.md`.
+- `/queueDebug` / `/queueNudge` — scribe/admin-only Telegram tools for a compact runtime queue snapshot, creature backpressure diagnostics and one safe queue pass request. They must remain guarded, must not clear or pause queue work, and must not be advertised in public `news.md`.
 - `/all` — protected service view of `/all`; asks for `ADMIN_SET_SECRET` before showing the list.
 - `/health` — JSON health check.
 - `/who` — public active-character list with pagination (`?page=0`).

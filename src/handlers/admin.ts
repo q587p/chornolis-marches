@@ -311,8 +311,8 @@ export const ADMIN_HELP_TEXT = [
   "/chronicles_real — хроніки з реальними Europe/Kyiv датами й годинами для службової перевірки",
   "/chronicles_backfill_players — додати пропущені хроніки появи персонажів із Player.createdAt без дублів",
   "/stat — службова статистика й посилання на захищену веб-/stat",
-  "/queueDebug — службовий зріз черги дій: runtime pass, фази, queued/running/overdue за акторами",
-  "/queueNudge — безпечно попросити чергу дій зробити один прохід без нового interval і без overlap",
+  "/queueDebug — службовий зріз черги дій: runtime pass, backpressure істот, фази, queued/running/overdue за акторами",
+  "/queueNudge — безпечно попросити службову чергу зробити один прохід без нового interval і без overlap",
   "/all — усі живі персонажі та істоти",
   "/all dead — усі записи істот, включно з inactive/dead/corpse/gone",
   "/all player або /all players — тільки гравці",
@@ -570,8 +570,8 @@ export function registerAdminHandlers(bot: Bot) {
     const requested = nudgeActionQueueLoop();
     await ctx.reply(
       requested
-        ? "🧵 Чергу дій штовхнуто до одного безпечного проходу. Якщо прохід уже триває, overlap guard не пустить другий."
-        : "🧵 Черга дій ще не має активного bot instance; nudge не запущено.",
+        ? "🧵 Службову чергу штовхнуто до одного безпечного проходу. Якщо прохід уже триває, overlap guard не пустить другий."
+        : "🧵 Службова черга ще не має активного bot instance; nudge не запущено.",
       { reply_markup: buildAdminMenuReplyKeyboard() },
     );
   }
@@ -702,7 +702,7 @@ export function registerAdminHandlers(bot: Bot) {
   bot.hears(QUEUE_DEBUG_TEXT_COMMAND, runQueueDebugCommand);
   bot.command(["queueNudge", "queuenudge"], runQueueNudgeCommand);
   bot.hears(QUEUE_NUDGE_TEXT_COMMAND, runQueueNudgeCommand);
-  bot.hears(["🧵 Черга дій", "Черга дій"], runQueueDebugCommand);
+  bot.hears(["🧵 Службова черга", "Службова черга"], runQueueDebugCommand);
   bot.hears(["🌿 Ресурси"], replyAdminResourcesMenu);
   bot.hears(["🎒 Додати речі", "Додати речі", "🎒 Речі для Писаря", "Речі для Писаря"], replyAdminItemsMenu);
   bot.hears(["🔥 Вогонь"], replyAdminFireMenu);

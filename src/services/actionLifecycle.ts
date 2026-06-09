@@ -14,8 +14,17 @@ import {
 } from "../gameConfig";
 import { buildFatigueRestKeyboard } from "../ui/keyboards";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
-import { setLastRuntimeError, type ActionQueuePassMetrics, type ActionQueuePhaseDurations } from "../runtimeState";
+import {
+  markCreatureQueuePassError,
+  markCreatureQueuePassFinished,
+  markCreatureQueuePassStarted,
+  setLastRuntimeError,
+  type ActionQueuePassMetrics,
+  type ActionQueuePhaseDurations,
+  type CreatureQueuePhaseDurations,
+} from "../runtimeState";
 import { actionPriority, actionTitle, effectivePlayerActionDurationMs } from "./actionRules";
+import { planCreatureQueueBackpressure } from "./actionQueueBackpressure";
 import { fatigueStateFor } from "./actionRecovery";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
 import { assertCanPerformPhysicalAction, isPhysicalPlayerAction } from "./postureRules";
@@ -83,6 +92,36 @@ const CREATURE_COMPLETION_CONCURRENCY = positiveIntEnv("CREATURE_COMPLETION_CONC
 const PLAYER_QUEUED_ACTION_BATCH = 200;
 const CREATURE_QUEUED_ACTION_BATCH = 1000;
 let creatureQueueProcessing = false;
+
+async function getPlayerQueuePressure(now: Date) {
+  const [groups, oldestOverduePlayer] = await Promise.all([
+    prisma.worldAction.groupBy({
+      by: ["status"],
+      where: { actorType: "PLAYER", status: { in: ["QUEUED", "RUNNING"] } },
+      _count: { _all: true },
+    }),
+    prisma.worldAction.findFirst({
+      where: { actorType: "PLAYER", status: "RUNNING", executeAt: { lte: now } },
+      orderBy: [{ executeAt: "asc" }, { id: "asc" }],
+      select: { executeAt: true },
+    }),
+  ]);
+  let playerQueued = 0;
+  let playerRunning = 0;
+  for (const group of groups) {
+    if (group.status === "QUEUED") playerQueued = group._count._all;
+    if (group.status === "RUNNING") playerRunning = group._count._all;
+  }
+  const playerOverdue = oldestOverduePlayer ? await prisma.worldAction.count({
+    where: { actorType: "PLAYER", status: "RUNNING", executeAt: { lte: now } },
+  }) : 0;
+  return {
+    playerQueued,
+    playerRunning,
+    playerOverdue,
+    playerMaxOverdueMs: oldestOverduePlayer?.executeAt ? Math.max(0, now.getTime() - oldestOverduePlayer.executeAt.getTime()) : 0,
+  };
+}
 
 async function runWithConcurrency<T>(items: T[], concurrency: number, worker: (item: T) => Promise<void>) {
   const limit = Math.max(1, Math.floor(concurrency));
@@ -606,22 +645,78 @@ async function startQueuedActionsForActorType(bot: Bot, actorType: WorldActorTyp
 async function processCreatureActionQueue(bot: Bot, completeAction: (bot: Bot, action: WorldAction) => Promise<unknown>) {
   if (creatureQueueProcessing) return;
   creatureQueueProcessing = true;
+  markCreatureQueuePassStarted();
+  const totalStartedAt = Date.now();
+  const phaseDurations: CreatureQueuePhaseDurations = {
+    creatureCompleteMs: 0,
+    creatureStartMs: 0,
+    totalMs: 0,
+  };
   try {
     const now = new Date();
-    const dueCreatureRunning = await prisma.worldAction.findMany({
-      where: { actorType: "CREATURE", status: "RUNNING", executeAt: { lte: now } },
-      orderBy: [{ executeAt: "asc" }, { id: "asc" }],
-      take: CREATURE_RUNNING_ACTION_BATCH,
+    const [playerPressure, creatureGroups] = await Promise.all([
+      getPlayerQueuePressure(now),
+      prisma.worldAction.groupBy({
+        by: ["status"],
+        where: { actorType: "CREATURE", status: { in: ["QUEUED", "RUNNING"] } },
+        _count: { _all: true },
+      }),
+    ]);
+    let creatureQueued = 0;
+    let creatureRunning = 0;
+    for (const group of creatureGroups) {
+      if (group.status === "QUEUED") creatureQueued = group._count._all;
+      if (group.status === "RUNNING") creatureRunning = group._count._all;
+    }
+    const plan = planCreatureQueueBackpressure({
+      ...playerPressure,
+      creatureQueued,
+      creatureRunning,
+      config: {
+        normalRunningBatch: CREATURE_RUNNING_ACTION_BATCH,
+        normalCompletionConcurrency: CREATURE_COMPLETION_CONCURRENCY,
+        normalStartBatch: CREATURE_QUEUED_ACTION_BATCH,
+      },
     });
-    await runWithConcurrency(dueCreatureRunning, CREATURE_COMPLETION_CONCURRENCY, async (action) => {
+
+    const creatureCompleteStartedAt = Date.now();
+    const dueCreatureRunning = plan.runningBatch > 0
+      ? await prisma.worldAction.findMany({
+        where: { actorType: "CREATURE", status: "RUNNING", executeAt: { lte: now } },
+        orderBy: [{ executeAt: "asc" }, { id: "asc" }],
+        take: plan.runningBatch,
+      })
+      : [];
+    let completedCreatureActions = 0;
+    await runWithConcurrency(dueCreatureRunning, plan.completionConcurrency, async (action) => {
       try {
         await completeAction(bot, action);
+        completedCreatureActions += 1;
       } catch (error) {
         if (!isMissingRecordError(error)) throw error;
       }
     });
+    phaseDurations.creatureCompleteMs = Date.now() - creatureCompleteStartedAt;
 
-    await startQueuedActionsForActorType(bot, "CREATURE", CREATURE_QUEUED_ACTION_BATCH);
+    let startedCreatureActions = 0;
+    const skippedCreatureStarts = plan.startBatch <= 0 && plan.mode !== "normal" && creatureQueued > 0;
+    const creatureStartStartedAt = Date.now();
+    if (plan.startBatch > 0) {
+      startedCreatureActions = await startQueuedActionsForActorType(bot, "CREATURE", plan.startBatch);
+    }
+    phaseDurations.creatureStartMs = Date.now() - creatureStartStartedAt;
+    phaseDurations.totalMs = Date.now() - totalStartedAt;
+    markCreatureQueuePassFinished({
+      mode: plan.mode,
+      reason: plan.reason,
+      completedCreatureActions,
+      startedCreatureActions,
+      skippedCreatureStarts,
+      phaseDurations,
+    });
+  } catch (error) {
+    markCreatureQueuePassError(error);
+    throw error;
   } finally {
     creatureQueueProcessing = false;
   }

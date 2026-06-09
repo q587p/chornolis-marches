@@ -13,6 +13,7 @@ const {
 } = require("../../src/services/actionLifecycle");
 const {
   getActionQueueRuntimeSnapshot,
+  getCreatureQueueRuntimeSnapshot,
   markActionQueuePassError,
   markActionQueuePassFinished,
   markActionQueuePassStarted,
@@ -148,8 +149,8 @@ const report = formatActionQueueDebugReport({
     executeAt: new Date("2026-06-09T09:59:54.000Z"),
     overdueMs: 6000,
   }],
-}, snapshot, new Date("2026-06-09T10:00:03.000Z"));
-assert.match(report, /Черга дій: debug/);
+}, snapshot, getCreatureQueueRuntimeSnapshot(), new Date("2026-06-09T10:00:03.000Z"));
+assert.match(report, /Службова черга: debug/);
 assert.match(report, /queued: player=1; creature=3; total=4/);
 assert.match(report, /#42 creature:9 MOVE overdue=6 s/);
 
@@ -160,5 +161,7 @@ assert.match(adminSource, /runQueueDebugCommand[\s\S]{0,160}requireScribeAdmin/)
 assert.match(adminSource, /runQueueNudgeCommand[\s\S]{0,160}requireScribeAdmin/);
 assert.match(adminSource, /bot\.command\(\["queueDebug", "queuedebug"\]/);
 assert.match(adminSource, /bot\.command\(\["queueNudge", "queuenudge"\]/);
+assert.match(adminSource, /bot\.hears\(\["🧵 Службова черга", "Службова черга"\]/);
+assert.equal(adminSource.includes('bot.hears(["🧵 Черга дій", "Черга дій"]'), false);
 
 console.log("Action queue performance guards OK");
