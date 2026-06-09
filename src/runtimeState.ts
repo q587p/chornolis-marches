@@ -27,6 +27,37 @@ export type ActionQueueRuntimeSnapshot = {
   lastTriggeredCreatureQueue: boolean;
 };
 
+export type CreatureQueuePhaseDurations = {
+  creatureCompleteMs: number;
+  creatureStartMs: number;
+  totalMs: number;
+};
+
+export type CreatureQueueRuntimeMode = "normal" | "limited" | "pause-starts";
+
+export type CreatureQueuePassMetrics = {
+  mode: CreatureQueueRuntimeMode;
+  reason: string;
+  completedCreatureActions: number;
+  startedCreatureActions: number;
+  skippedCreatureStarts: boolean;
+  phaseDurations: CreatureQueuePhaseDurations;
+};
+
+export type CreatureQueueRuntimeSnapshot = {
+  running: boolean;
+  runningSince: Date | null;
+  lastStartedAt: Date | null;
+  lastFinishedAt: Date | null;
+  lastError: string | null;
+  lastMode: CreatureQueueRuntimeMode | null;
+  lastReason: string | null;
+  lastCompletedCreatureActions: number;
+  lastStartedCreatureActions: number;
+  lastSkippedCreatureStarts: boolean;
+  lastPhaseDurations: CreatureQueuePhaseDurations | null;
+};
+
 const EMPTY_ACTION_QUEUE_PHASE_DURATIONS: ActionQueuePhaseDurations = {
   playerCompleteMs: 0,
   playerStartMs: 0,
@@ -45,6 +76,26 @@ let actionQueueRuntimeSnapshot: ActionQueueRuntimeSnapshot = {
   lastCompletedPlayerActions: 0,
   lastStartedPlayerActions: 0,
   lastTriggeredCreatureQueue: false,
+};
+
+const EMPTY_CREATURE_QUEUE_PHASE_DURATIONS: CreatureQueuePhaseDurations = {
+  creatureCompleteMs: 0,
+  creatureStartMs: 0,
+  totalMs: 0,
+};
+
+let creatureQueueRuntimeSnapshot: CreatureQueueRuntimeSnapshot = {
+  running: false,
+  runningSince: null,
+  lastStartedAt: null,
+  lastFinishedAt: null,
+  lastError: null,
+  lastMode: null,
+  lastReason: null,
+  lastCompletedCreatureActions: 0,
+  lastStartedCreatureActions: 0,
+  lastSkippedCreatureStarts: false,
+  lastPhaseDurations: null,
 };
 
 let telegramBotStatus: {
@@ -73,6 +124,10 @@ function compactRuntimeError(error: unknown) {
 }
 
 function clonePhaseDurations(value: ActionQueuePhaseDurations | null): ActionQueuePhaseDurations | null {
+  return value ? { ...value } : null;
+}
+
+function cloneCreaturePhaseDurations(value: CreatureQueuePhaseDurations | null): CreatureQueuePhaseDurations | null {
   return value ? { ...value } : null;
 }
 
@@ -114,6 +169,49 @@ export function getActionQueueRuntimeSnapshot(): ActionQueueRuntimeSnapshot {
   return {
     ...actionQueueRuntimeSnapshot,
     lastPhaseDurations: clonePhaseDurations(actionQueueRuntimeSnapshot.lastPhaseDurations),
+  };
+}
+
+export function markCreatureQueuePassStarted(now = new Date()) {
+  creatureQueueRuntimeSnapshot = {
+    ...creatureQueueRuntimeSnapshot,
+    running: true,
+    runningSince: now,
+    lastStartedAt: now,
+    lastError: null,
+  };
+}
+
+export function markCreatureQueuePassFinished(metrics: CreatureQueuePassMetrics, now = new Date()) {
+  creatureQueueRuntimeSnapshot = {
+    running: false,
+    runningSince: null,
+    lastStartedAt: creatureQueueRuntimeSnapshot.lastStartedAt,
+    lastFinishedAt: now,
+    lastError: null,
+    lastMode: metrics.mode,
+    lastReason: metrics.reason,
+    lastCompletedCreatureActions: metrics.completedCreatureActions,
+    lastStartedCreatureActions: metrics.startedCreatureActions,
+    lastSkippedCreatureStarts: metrics.skippedCreatureStarts,
+    lastPhaseDurations: { ...EMPTY_CREATURE_QUEUE_PHASE_DURATIONS, ...metrics.phaseDurations },
+  };
+}
+
+export function markCreatureQueuePassError(error: unknown, now = new Date()) {
+  creatureQueueRuntimeSnapshot = {
+    ...creatureQueueRuntimeSnapshot,
+    running: false,
+    runningSince: null,
+    lastFinishedAt: now,
+    lastError: compactRuntimeError(error),
+  };
+}
+
+export function getCreatureQueueRuntimeSnapshot(): CreatureQueueRuntimeSnapshot {
+  return {
+    ...creatureQueueRuntimeSnapshot,
+    lastPhaseDurations: cloneCreaturePhaseDurations(creatureQueueRuntimeSnapshot.lastPhaseDurations),
   };
 }
 

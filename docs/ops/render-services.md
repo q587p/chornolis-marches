@@ -169,6 +169,36 @@ together when checking responsiveness. The action queue should finish due
 actions without waiting for the full stamina/HP recovery scan; recovery runs on
 `RECOVERY_POLL_MS`, defaulting to 5000 ms.
 
+## Action Queue Backpressure
+
+The game bot keeps player action completion/start first. Creature queue work
+runs through a conservative backpressure planner when player actions are
+overdue:
+
+- `normal` — no player overdue pressure above the threshold; creature batches
+  use the normal action-lifecycle constants.
+- `limited` — player actions are overdue; due creature completions continue in
+  a smaller batch/concurrency and queued creature starts default to zero.
+- `pause-starts` — the oldest overdue player action is past the pause-starts
+  threshold; due creature completions can still proceed in the smaller batch,
+  but new queued creature starts are skipped.
+
+Default knobs:
+
+- `CREATURE_QUEUE_BACKPRESSURE_ENABLED=true`
+- `CREATURE_QUEUE_BACKPRESSURE_PLAYER_OVERDUE_MS=1000`
+- `CREATURE_QUEUE_BACKPRESSURE_PAUSE_STARTS_MS=5000`
+- `CREATURE_QUEUE_BACKPRESSURE_RUNNING_BATCH=50`
+- `CREATURE_QUEUE_BACKPRESSURE_COMPLETION_CONCURRENCY=5`
+- `CREATURE_QUEUE_BACKPRESSURE_START_BATCH=0`
+
+This is not a cleanup or pause-all mechanism. It does not cancel, delete,
+reorder or reprioritize queued creature actions; they wait for later passes.
+Use guarded `/queueDebug` to inspect creature queue mode/reason, phase timings,
+completed/started creature counts and skipped-start state. The admin keyboard
+label for that guarded view is `🧵 Службова черга`, while the ordinary player
+`/queue` surface remains separate.
+
 ## WorldEvent And Structured Markers
 
 `WorldEvent` remains the human-readable narrative, audit and history stream:

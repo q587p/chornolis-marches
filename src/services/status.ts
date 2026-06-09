@@ -1,6 +1,6 @@
 import { prisma } from "../db";
 import { config } from "../config";
-import { getActionQueueRuntimeSnapshot, getHttpServerStartedAt, getLastRuntimeError, getTelegramBotStatus, setLastRuntimeError } from "../runtimeState";
+import { getActionQueueRuntimeSnapshot, getCreatureQueueRuntimeSnapshot, getHttpServerStartedAt, getLastRuntimeError, getTelegramBotStatus, setLastRuntimeError } from "../runtimeState";
 import { getRuntimeTimingConfig } from "../gameConfig";
 import {
   HERALD_SERVICE_KEY,
@@ -197,17 +197,21 @@ export function worldTickRuntimeStatus(latestTick: { createdAt: Date } | null | 
 export function actionQueueRuntimeStatus(actionQueue: Awaited<ReturnType<typeof getActionQueueStats>> | null, now = new Date()): RuntimeServiceStatus {
   if (!actionQueue) return serviceStatus("actionQueue", "Черга дій", "warning", "Чергу дій не вдалося прочитати.", now);
   const runtime = getActionQueueRuntimeSnapshot();
+  const creatureRuntime = getCreatureQueueRuntimeSnapshot();
   const runningText = runtime.running
     ? ` Прохід триває ${formatDurationShort(now.getTime() - (runtime.runningSince ?? now).getTime())}.`
     : runtime.lastFinishedAt
       ? ` Останній прохід ${formatDurationShort(now.getTime() - runtime.lastFinishedAt.getTime())} тому.`
       : "";
+  const creatureBackpressureText = creatureRuntime.lastMode && creatureRuntime.lastMode !== "normal"
+    ? ` Істоти: ${creatureRuntime.lastMode} через ${creatureRuntime.lastReason ?? "backpressure"}.`
+    : "";
   if (actionQueue.overdueRunning > 0) {
     return serviceStatus(
       "actionQueue",
       "Черга дій",
       "warning",
-      `Прострочено дій: ${actionQueue.overdueRunning} (гравці=${actionQueue.playerOverdue}, істоти=${actionQueue.creatureOverdue}); найбільша затримка ${formatDurationShort(actionQueue.maxOverdueMs)}.${runningText}`,
+      `Прострочено дій: ${actionQueue.overdueRunning} (гравці=${actionQueue.playerOverdue}, істоти=${actionQueue.creatureOverdue}); найбільша затримка ${formatDurationShort(actionQueue.maxOverdueMs)}.${runningText}${creatureBackpressureText}`,
       now,
     );
   }
@@ -215,7 +219,7 @@ export function actionQueueRuntimeStatus(actionQueue: Awaited<ReturnType<typeof 
     "actionQueue",
     "Черга дій",
     "ok",
-    `Очікує ${actionQueue.totalQueued}, виконується ${actionQueue.totalRunning}.${runningText}`,
+    `Очікує ${actionQueue.totalQueued}, виконується ${actionQueue.totalRunning}.${runningText}${creatureBackpressureText}`,
     now,
   );
 }

@@ -7,6 +7,26 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.21 - Creature queue backpressure - 12026-06-09
+
+### Added
+
+- Added a pure creature queue backpressure planner with conservative defaults for player-first queue pressure.
+- Added creature queue runtime snapshots with mode/reason, completion/start timings, completed/started creature counts and skipped-start markers.
+- Extended guarded `/queueDebug` output with creature queue mode, reason, timings and backpressure counts.
+- Added focused backpressure tests for planner decisions, runtime snapshots, debug formatting and admin text boundaries.
+
+### Changed
+
+- Creature queue processing now checks overdue player pressure before doing creature work. When player actions are overdue, creature completion uses a smaller batch/concurrency and queued creature starts are paused by default.
+- Renamed the admin debug keyboard/hears label from `🧵 Черга дій` / bare `Черга дій` to `🧵 Службова черга` / `Службова черга`, while keeping `/queueDebug`, slashless `queueDebug`, `/queueNudge`, slashless `queueNudge` and ordinary player `/queue` unchanged.
+- Runtime status can now mention the last active creature backpressure mode compactly, leaving detailed diagnostics in `/queueDebug`.
+
+### Risks
+
+- Backpressure is intentionally non-destructive: it does not cancel, delete, reorder or reprioritize queued creature actions. It only limits creature completion capacity and skips starting new creature actions while players are overdue.
+- No Prisma schema, migrations, action duration, stamina cost, player queue semantics, tracking result, movement, combat, predator, sleep, social alias, totem or WorldEventMarker behavior changes.
+
 ## 0.16.20 - Action queue observability and safe nudge - 12026-06-09
 
 ### Added
