@@ -23,7 +23,7 @@ Recommended order:
 2. `RECIPE-001`: minimal resource recipe service foundation, now in testing as helper-only infrastructure.
 3. `ALC-006`: herbalism skill and brewing failure policy, now in testing as outcome-policy infrastructure.
 4. Revised `ALC-001`: first herbal stamina tincture using `empty_bottle`, herbs and berries, now in testing with bottle return after drinking and brewing failure policy.
-5. `ALC-005`: rare herbalist mentorship hint toward brewing and the bottle niche.
+5. `ALC-005`: rare herbalist mentorship hint toward brewing and the bottle niche, now in testing as a one-time qualitative mentor hint.
 6. `ALC-004`: herbalist bottle route and visible brewing demonstration.
 7. `RES-001`: wetland medicinal reagent, starting with `willow_bark`.
 8. `ALC-003`: healing and night-sight draughts after stamina tincture, reagent and effect foundations are stable.

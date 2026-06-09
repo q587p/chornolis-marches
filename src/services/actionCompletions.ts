@@ -47,6 +47,7 @@ import { isUnclaimedHerbivoreCorpseForScavenging, predatorClaimedCorpseAction, p
 import { predatorKillCurrentAction, predatorKillObserverText, predatorMissCurrentAction, predatorMissObserverText, predatorWoundCurrentAction, predatorWoundObserverText } from "./predatorActionText";
 import { ATTACK_OBSERVATION_GROWTH_MESSAGE, ATTACK_PRACTICE_GROWTH_MESSAGE, isAttackPracticeMilestone, recordAttackKillSource, recordAttackObservation, recordAttackPracticeLearning, recordCreatureAttackObservation } from "./attackLearning";
 import { GATHERING_OBSERVATION_GROWTH_MESSAGE, GATHERING_PRACTICE_GROWTH_MESSAGE, gatheringSkillEffectForPlayer, isGatheringPracticeMilestone, recordGatheringObservation, recordGatheringSource } from "./gatheringLearning";
+import { maybeHerbalistBrewingHintForPlayer } from "./herbalistBrewingHints";
 import { maybeCreateMentorshipPracticePrompt } from "./mentorship";
 import { COOKING_OBSERVATION_GROWTH_MESSAGE, COOKING_PRACTICE_GROWTH_MESSAGE, FRESHENING_OBSERVATION_GROWTH_MESSAGE, FRESHENING_PRACTICE_GROWTH_MESSAGE, recordCookingObservation, recordFresheningObservation, recordFresheningSource } from "./foodLearning";
 import { maybeHighSkillQualitativeOutcome } from "./highSkillOutcomes";
@@ -86,6 +87,13 @@ type InventoryActionPayload = { resourceKey?: string; target?: string; allFilter
 type LookPayload = { reason?: string };
 type SayPayload = { text: string; mode?: "say" | "whisper" | "reply" | "yell" | "shout"; targetType?: "player" | "creature"; targetId?: number; targetName?: string; targetDative?: string };
 type SocialPayload = { targetType: "player" | "creature"; targetId: number; mode?: "known" | "mystery"; detail?: "brief" | "full"; socialId?: string };
+type MentorshipLessonFollowupContext = {
+  playerId: number;
+  mentorCreatureId: number;
+  skillKey: string;
+  contextKey: string;
+  locationId: number;
+};
 
 type AnimalSpeechReactionPlan = {
   kind: "flee" | "freeze" | "watch" | "warn" | "threaten";
@@ -1020,6 +1028,21 @@ async function completeEat(bot: Bot, action: WorldAction) {
   await setActionStatus(action, "DONE");
 }
 
+async function sendMentorshipLessonFollowups(bot: Bot, chatId: number | string, context: MentorshipLessonFollowupContext) {
+  const prompt = await maybeCreateMentorshipPracticePrompt(context);
+  if (prompt.text) {
+    noteKnownMessage(await bot.api.sendMessage(chatId, prompt.text, prompt.ok && prompt.keyboard ? { reply_markup: prompt.keyboard } : undefined));
+  }
+
+  const brewingHint = await maybeHerbalistBrewingHintForPlayer(context.playerId, {
+    locationId: context.locationId,
+    mentorCreatureId: context.mentorCreatureId,
+  });
+  if (brewingHint.ok) {
+    noteKnownMessage(await bot.api.sendMessage(chatId, brewingHint.text, { parse_mode: "HTML" }));
+  }
+}
+
 async function completeLook(bot: Bot, action: WorldAction) {
   if (action.actorType === "PLAYER") {
     const player = action.playerId ? await prisma.player.findUnique({ where: { id: action.playerId } }) : null;
@@ -1042,8 +1065,7 @@ async function completeLook(bot: Bot, action: WorldAction) {
         if (observation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
         if (observation.mentorshipLessonText) noteKnownMessage(await bot.api.sendMessage(chatId, observation.mentorshipLessonText));
         if (observation.mentorshipLessonContext) {
-          const prompt = await maybeCreateMentorshipPracticePrompt(observation.mentorshipLessonContext);
-          if (prompt.text) noteKnownMessage(await bot.api.sendMessage(chatId, prompt.text, prompt.ok && prompt.keyboard ? { reply_markup: prompt.keyboard } : undefined));
+          await sendMentorshipLessonFollowups(bot, chatId, observation.mentorshipLessonContext);
         }
       };
       const sendFoodObservationMessages = async () => {
@@ -1120,8 +1142,7 @@ async function completeInspect(bot: Bot, action: WorldAction) {
       if (gatheringObservation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
       if (gatheringObservation.mentorshipLessonText) noteKnownMessage(await bot.api.sendMessage(chatId, gatheringObservation.mentorshipLessonText));
       if (gatheringObservation.mentorshipLessonContext) {
-        const prompt = await maybeCreateMentorshipPracticePrompt(gatheringObservation.mentorshipLessonContext);
-        if (prompt.text) noteKnownMessage(await bot.api.sendMessage(chatId, prompt.text, prompt.ok && prompt.keyboard ? { reply_markup: prompt.keyboard } : undefined));
+        await sendMentorshipLessonFollowups(bot, chatId, gatheringObservation.mentorshipLessonContext);
       }
     }
     const fresheningObservation = await recordFresheningObservation({ playerId: player.id, locationId: player.currentLocationId });

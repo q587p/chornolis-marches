@@ -61,3 +61,15 @@ Crafting should start simple and gradually become profession-based.
 - Drinking uses `/drink tincture`, `/use tincture`, `випити настоянку`, `випити зілля` or the inventory button. It restores stamina up to the character cap and returns one `empty_bottle`.
 
 Still out of scope: broad crafting UI, healing or night-sight draughts, dirty bottles, washing, water/thirst, NPC brewing, shops/barter/economy and public raw skill sheets.
+
+## Herbalist Brewing Hints
+
+`ALC-005` adds a small onboarding layer for the existing tincture loop rather
+than a recipe book. A herbalist-like mentor who has already taught through a real
+gathering observation may rarely hint that practiced hands can try настоювання
+and mention the old bottle niche below the cellar.
+
+The hint does not add ingredients, recipes, command aliases, NPC brewing,
+barter, shops or a public crafting screen. Independent discovery still works:
+players can find bottles and use the brewing commands without ever receiving the
+mentor hint.

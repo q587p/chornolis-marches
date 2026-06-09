@@ -1,7 +1,7 @@
 ---
 id: ALC-005
 title: Herbalist mentorship brewing hint
-status: backlog
+status: testing
 type: ux
 area: learning
 priority: medium
@@ -67,3 +67,12 @@ Shorter variant:
 - The hint does not expose raw learning data.
 - A player who has already crafted a tincture does not keep receiving beginner brewing hints.
 - Tests cover trigger eligibility, cooldown/dedupe and no raw-key leaks in ordinary text.
+
+## Implementation Notes
+
+- `0.16.19` adds `src/services/herbalistBrewingHints.ts` as a narrow hint/onboarding layer for the existing bottle-and-tincture loop.
+- The first live trigger is deliberately conservative: after an existing mentored gathering lesson from a herbalist-like mentor, the helper may rarely send one diegetic brewing hint if the player has meaningful gathering/herbalism context.
+- Eligibility requires the root-pocket bottle source to exist, a nearby/active herbalist-like mentor context, no previous beginner hint marker and no existing `herbalism` / `practice` / `brew:herbal_tincture` progress.
+- Dedupe uses a player-scoped `WorldEventMarker` with key `herbalist_brewing_hint:v1`; failed eligibility and chance misses do not write a marker.
+- The hint text points toward the cellar/root-pocket bottle niche qualitatively and uses Telegram quote-block rendering for direct speech.
+- This slice does not add NPC brewing, herbalist bottle routes, new recipes, new tinctures, shops/barter/economy, quest markers, public skill UI, schema changes or migrations.

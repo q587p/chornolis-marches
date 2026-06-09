@@ -36,6 +36,11 @@ but later profession-observation hooks may treat a player who is intentionally
 following a visible herbalist as paying closer attention than someone merely in
 the same location.
 
+`0.16.19` lets herbalist-like mentors give one rare, qualitative hint toward the
+existing bottle/tincture loop after real mentored gathering learning. This is
+speech/teaching only: herbalists still do not run a bottle route, brew tinctures
+for players, sell supplies, create quests or expose raw learning thresholds.
+
 ## Design direction
 
 Professions should eventually be derived from accumulated skills rather than assigned as rigid classes.
