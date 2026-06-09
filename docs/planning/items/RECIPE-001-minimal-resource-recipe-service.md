@@ -1,7 +1,7 @@
 ---
 id: RECIPE-001
 title: Minimal resource recipe service
-status: backlog
+status: testing
 type: technical
 area: crafting
 priority: high
@@ -58,3 +58,14 @@ This is not a full crafting UI, profession tree, station system or economy. It i
 - Successful crafting consumes exact inputs and adds exact outputs.
 - The helper can be called from a player command now and from an NPC service later.
 - Existing inventory/resource tests still pass.
+
+## Implementation Notes
+
+- Added `src/services/recipes.ts` as a minimal resource-stack recipe helper.
+- Recipe definitions support a recipe key, normalized input resource stacks, one output stack, optional actor type support and an optional required feature tag.
+- Duplicate input resource keys are normalized by summing amounts, so future authored recipes can stay compact without changing validation behavior.
+- Pure helpers validate recipe shape, compare a resource-key inventory snapshot and report exact missing amounts.
+- Added a generic Ukrainian missing-ingredient formatter for attempted recipe actions.
+- Added a narrow player apply helper that validates all inputs in a Prisma transaction before consuming any resources, then increments the output resource.
+- Output `ResourceType` rows are required to already exist for this foundation; RECIPE-001 does not create future tincture resources or item-instance semantics.
+- This foundation intentionally adds no `/brew`, no public recipe book UI, no `herbal_tincture`, no herbalism success/failure policy and no live gameplay recipe consumer yet.

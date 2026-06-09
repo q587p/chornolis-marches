@@ -3526,7 +3526,7 @@
   {
     "id": "RECIPE-001",
     "title": "Minimal resource recipe service",
-    "status": "backlog",
+    "status": "testing",
     "type": "technical",
     "area": "crafting",
     "priority": "high",

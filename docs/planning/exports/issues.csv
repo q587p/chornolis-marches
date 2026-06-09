@@ -178,7 +178,7 @@ QA-WILLOW-001,"Willow Floodplain seed, map and route smoke",testing,qa,world,hig
 QA-WILLOW-002,Willow live command and vertical edge smoke,backlog,qa,world,medium,"willow-floodplain,qa,aliases,verticality,admin",docs/planning/items/QA-WILLOW-002-live-command-and-vertical-smoke.md
 QUOTE-001,Liminal signs and quotation layer,proposed,content,content,medium,"quotes,signs,atmosphere,lore,dream,owl",docs/planning/items/QUOTE-001-liminal-signs-and-quotation-layer.md
 RAVEN-001,Dream raven presence near the carrion ravine,backlog,feature,world,high,"raven,dream,carrion-ravine,onboarding,world-time,atmosphere",docs/planning/items/RAVEN-001-dream-raven-carrion-ravine-presence.md
-RECIPE-001,Minimal resource recipe service,backlog,technical,crafting,high,"recipes,crafting,resources,inventory,actors",docs/planning/items/RECIPE-001-minimal-resource-recipe-service.md
+RECIPE-001,Minimal resource recipe service,testing,technical,crafting,high,"recipes,crafting,resources,inventory,actors",docs/planning/items/RECIPE-001-minimal-resource-recipe-service.md
 REL-001,Release branch PR summary and risk discipline,testing,process,release,high,"release,github,pr,planning",docs/planning/items/REL-001-release-branch-pr-summary-risk.md
 RES-001,Wetland medicinal reagents,backlog,feature,resources,medium,"resources,riverbank,swamp,willow,alchemy,herbalism",docs/planning/items/RES-001-wetland-medicinal-reagents.md
 RET-001,Daily and weekly world tasks,backlog,feature,retention,medium,"retention,quests,daily,weekly,world-time",docs/planning/items/RET-001-daily-weekly-world-tasks.md
