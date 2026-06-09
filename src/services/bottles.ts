@@ -2,14 +2,17 @@ import { prisma } from "../db";
 import { canPickUpGroundItem } from "./groundItems";
 
 export const EMPTY_BOTTLE_KEY = "empty_bottle";
+export const EMPTY_BOTTLE_SOURCE_CARRY_CAP = 3;
 export const EMPTY_BOTTLE_SOURCE_TAKE_EVENT_TITLE = "Player took empty bottle";
 export const EMPTY_BOTTLE_TAKE_BUTTON_LABEL = "🧪 Взяти пляшечку";
 export const EMPTY_BOTTLE_NO_SOURCE_TEXT = "Поруч немає ніші з порожніми пляшечками.";
+export const EMPTY_BOTTLE_SOURCE_CARRY_CAP_TEXT = "У вас уже є кілька порожніх пляшечок. Брати більше з ніші зараз ні до чого: скло в дорозі любить тріскатися не тоді, коли його просять.";
 
 const EMPTY_BOTTLE_NAME = "порожня пляшечка";
 const EMPTY_BOTTLE_ACCUSATIVE = "порожню пляшечку";
 
 type JsonRecord = Record<string, unknown>;
+export type EmptyBottleTakeResult = { taken: boolean; text: string };
 
 function jsonRecord(value: unknown): JsonRecord {
   return value && typeof value === "object" && !Array.isArray(value) ? value as JsonRecord : {};
@@ -51,6 +54,10 @@ export function emptyBottleSourceInspectionText(fallback?: string | null) {
     ?? "У сухій глині стоять малі чисті пляшечки. Одну можна взяти з собою для майбутніх трав'яних приготувань.";
 }
 
+export function canTakeBottleFromSourceAmount(amount: number) {
+  return Math.max(0, Math.floor(amount)) < EMPTY_BOTTLE_SOURCE_CARRY_CAP;
+}
+
 async function ensureEmptyBottleResourceType() {
   return prisma.resourceType.upsert({
     where: { key: EMPTY_BOTTLE_KEY },
@@ -66,7 +73,20 @@ async function ensureEmptyBottleResourceType() {
   });
 }
 
-export async function takeBottleFromFeature(playerId: number, featureId: number) {
+export async function emptyBottleCarryAmount(playerId: number, resourceTypeId?: number) {
+  const resourceType = resourceTypeId
+    ? { id: resourceTypeId }
+    : await prisma.resourceType.findUnique({ where: { key: EMPTY_BOTTLE_KEY }, select: { id: true } });
+  if (!resourceType) return 0;
+
+  const carried = await prisma.playerResource.findUnique({
+    where: { playerId_resourceTypeId: { playerId, resourceTypeId: resourceType.id } },
+    select: { amount: true },
+  });
+  return carried?.amount ?? 0;
+}
+
+export async function takeBottleFromFeature(playerId: number, featureId: number): Promise<EmptyBottleTakeResult> {
   const [resourceType, player] = await Promise.all([
     ensureEmptyBottleResourceType(),
     prisma.player.findUnique({
@@ -75,15 +95,19 @@ export async function takeBottleFromFeature(playerId: number, featureId: number)
     }),
   ]);
 
-  if (!player?.currentLocationId) return "Ти ще не увійшов у світ. Напиши /start";
-  if (!canPickUpGroundItem(player)) return "Ви надто втомлені, щоб брати це просто зараз. Спершу перепочиньте.";
+  if (!player?.currentLocationId) return { taken: false, text: "Ти ще не увійшов у світ. Напиши /start" };
+  if (!canPickUpGroundItem(player)) return { taken: false, text: "Ви надто втомлені, щоб брати це просто зараз. Спершу перепочиньте." };
 
   const feature = await prisma.locationFeature.findUnique({
     where: { id: featureId },
     select: { locationId: true, isActive: true, data: true },
   });
   if (!feature?.isActive || feature.locationId !== player.currentLocationId || !isEmptyBottleSourceFeature(feature)) {
-    return "Тут уже не видно, звідки взяти пляшечку.";
+    return { taken: false, text: "Тут уже не видно, звідки взяти пляшечку." };
+  }
+
+  if (!canTakeBottleFromSourceAmount(await emptyBottleCarryAmount(playerId, resourceType.id))) {
+    return { taken: false, text: EMPTY_BOTTLE_SOURCE_CARRY_CAP_TEXT };
   }
 
   await prisma.playerResource.upsert({
@@ -92,12 +116,12 @@ export async function takeBottleFromFeature(playerId: number, featureId: number)
     create: { playerId, resourceTypeId: resourceType.id, amount: 1 },
   });
 
-  return `🧪 Ви взяли ${EMPTY_BOTTLE_ACCUSATIVE}.`;
+  return { taken: true, text: `🧪 Ви взяли ${EMPTY_BOTTLE_ACCUSATIVE}.` };
 }
 
-export async function takeBottleFromCurrentLocation(playerId: number) {
+export async function takeBottleFromCurrentLocation(playerId: number): Promise<EmptyBottleTakeResult> {
   const player = await prisma.player.findUnique({ where: { id: playerId }, select: { currentLocationId: true } });
-  if (!player?.currentLocationId) return "Ти ще не увійшов у світ. Напиши /start";
+  if (!player?.currentLocationId) return { taken: false, text: "Ти ще не увійшов у світ. Напиши /start" };
 
   const source = (await prisma.locationFeature.findMany({
     where: { locationId: player.currentLocationId, isActive: true },
@@ -105,6 +129,6 @@ export async function takeBottleFromCurrentLocation(playerId: number) {
     select: { id: true, data: true },
   })).find(isEmptyBottleSourceFeature);
 
-  if (!source) return EMPTY_BOTTLE_NO_SOURCE_TEXT;
+  if (!source) return { taken: false, text: EMPTY_BOTTLE_NO_SOURCE_TEXT };
   return takeBottleFromFeature(playerId, source.id);
 }

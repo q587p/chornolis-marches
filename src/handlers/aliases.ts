@@ -1479,9 +1479,9 @@ async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
     try {
       assertCanPerformPhysicalAction(player, "PICK_UP");
-      const text = await takeBottleFromCurrentLocation(player.id);
-      if (text !== EMPTY_BOTTLE_NO_SOURCE_TEXT) {
-        if (player.currentLocationId && text.includes("Ви взяли")) {
+      const result = await takeBottleFromCurrentLocation(player.id);
+      if (result.text !== EMPTY_BOTTLE_NO_SOURCE_TEXT) {
+        if (player.currentLocationId && result.taken) {
           await recordVisibleItemAction(bot, {
             playerId: player.id,
             locationId: player.currentLocationId,
@@ -1492,7 +1492,7 @@ async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
           });
           await spendPlayerStaminaAmount(bot, player.id, 1, ctx.chat?.id);
         }
-        await ctx.reply(text, await inventoryGainReplyOptions(player, "take-bottle"));
+        await ctx.reply(result.text, result.taken ? await inventoryGainReplyOptions(player, "take-bottle") : undefined);
         return;
       }
     } catch (error) {

@@ -698,11 +698,12 @@
       "empty_bottle_source": true,
       "infinite_for_now": true,
       "future_limited_stock": true,
+      "source_carry_cap": 3,
       "future_dirty_bottle_washing": true,
       "herbalist_resupply": true,
       "narrow_bottle_cache": true,
       "no_broad_loot": true,
-      "examine_summary": "ніша не є скарбницею, але дозволяє взяти одну порожню пляшечку для майбутніх трав'яних приготувань; запас поки не вичерпується",
+      "examine_summary": "ніша не є скарбницею, але дозволяє взяти одну порожню пляшечку для майбутніх трав'яних приготувань; запас поки не вичерпується, та брати більше трьох порожніх пляшечок у дорогу не варто",
       "aliases": [
         "ніша",
         "глиняна ніша",

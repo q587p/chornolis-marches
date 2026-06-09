@@ -47,8 +47,9 @@ The bottle source should feel like a humble camp/herbalist utility, similar in f
   - `take bottle`;
   - `взяти пляшечку`;
   - `взяти пляшку`.
-- Taking a bottle grants exactly one `empty_bottle`.
-- Keep the source unlimited for now, with future metadata for washing/limited stock.
+- Taking a bottle grants exactly one `empty_bottle` while the player carries fewer than 3 empty bottles from this source path.
+- Keep the authored source non-depleting for now, with future metadata for washing/limited stock.
+- The temporary source-take carry cap prevents free bottle hoarding until real stock, weight, dirty bottles, washing and bottle lifecycle rules exist.
 - Add admin/scribe resource surfaces if new resource types require explicit updates.
 
 ## Guardrails
@@ -64,7 +65,8 @@ The bottle source should feel like a humble camp/herbalist utility, similar in f
 
 - `empty_bottle` exists as a resource with Ukrainian name/forms.
 - The root-pocket bottle niche exists, is inspectable, has aliases and carries the source flags.
-- A player in the root pocket can take one empty bottle.
+- A player in the root pocket can take one empty bottle while carrying fewer than 3 empty bottles from this source path.
+- A player already carrying 3 or more empty bottles gets a clear refusal without gaining another bottle.
 - Invalid location / missing feature / hidden feature cases fail without inventory changes.
 - Focused tests cover source detection, grant behavior and aliases.
 - `world-seed` tests assert the feature is in `start_cellar_root_pocket`.
@@ -72,6 +74,7 @@ The bottle source should feel like a humble camp/herbalist utility, similar in f
 ## Implementation Notes
 
 - Runtime slice added `empty_bottle` / `порожня пляшечка`, a narrow `start_root_pocket_bottle_niche` feature in `start_cellar_root_pocket`, and `empty_bottle_source` handling.
-- The source is intentionally unlimited for now and gives exactly one bottle per take action.
+- The source remains marked `infinite_for_now` and non-depleting for now, but gives exactly one bottle per take action only while the player carries fewer than 3 `empty_bottle`.
+- The source carry cap is temporary until real stock, weight, dirty bottles, washing and bottle lifecycle rules exist.
 - Supported player paths include the feature button, `/take_bottle`, `take bottle`, `взяти пляшечку` and ordinary pickup fallback for dropped `empty_bottle` ground items.
 - This slice does not add tinctures, `/brew`, recipe services, dirty/broken bottles, water/thirst, washing, shops, barter, NPC herbalist brewing, or a public crafting UI.

@@ -477,9 +477,9 @@ export function registerLookHandlers(bot: Bot) {
 
     try {
       assertCanPerformPhysicalAction(player, "PICK_UP");
-      const text = await takeBottleFromLocationFeature(Number(ctx.match[1]), player.id);
+      const result = await takeBottleFromLocationFeature(Number(ctx.match[1]), player.id);
       await safeAnswerCallbackQuery(ctx);
-      if (player.currentLocationId && text.includes("Ви взяли")) {
+      if (player.currentLocationId && result.taken) {
         await recordVisibleItemAction(bot, {
           playerId: player.id,
           locationId: player.currentLocationId,
@@ -490,7 +490,7 @@ export function registerLookHandlers(bot: Bot) {
         });
         await spendPlayerStaminaAmount(bot, player.id, 1, ctx.chat?.id);
       }
-      await ctx.reply(text, await inventoryGainReplyOptions(player, "take-bottle"));
+      await ctx.reply(result.text, result.taken ? await inventoryGainReplyOptions(player, "take-bottle") : undefined);
     } catch (error) {
       const message = actionErrorMessage(error, "Не вдалося взяти пляшечку.");
       await safeAnswerCallbackQuery(ctx, message);

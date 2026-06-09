@@ -330,6 +330,7 @@ assert.equal(startRootPocketBottleNiche.type, "LANDMARK", "Bottle niche should b
 assert.equal(startRootPocketBottleNiche.data?.inspectable, true, "Bottle niche should be inspectable");
 assert.equal(startRootPocketBottleNiche.data?.empty_bottle_source, true, "Bottle niche should be an empty bottle source");
 assert.equal(startRootPocketBottleNiche.data?.infinite_for_now, true, "Bottle niche source should be infinite for the first slice");
+assert.equal(startRootPocketBottleNiche.data?.source_carry_cap, 3, "Bottle niche source should document the temporary carry cap");
 assert.equal(startRootPocketBottleNiche.data?.future_dirty_bottle_washing, true, "Bottle niche should carry future dirty-bottle washing metadata only");
 assert.equal(startRootPocketBottleNiche.data?.herbalist_resupply, true, "Bottle niche should carry future herbalist resupply metadata only");
 assert.equal(startRootPocketBottleNiche.data?.no_broad_loot, true, "Bottle niche should stay narrow and not become a broad loot cache");
