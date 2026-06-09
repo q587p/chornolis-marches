@@ -70,7 +70,7 @@ Shorter variant:
 
 ## Implementation Notes
 
-- `0.16.19` adds `src/services/herbalistBrewingHints.ts` as a narrow hint/onboarding layer for the existing bottle-and-tincture loop.
+- `0.16.21` adds `src/services/herbalistBrewingHints.ts` as a narrow hint/onboarding layer for the existing bottle-and-tincture loop.
 - The first live trigger is deliberately conservative: after an existing mentored gathering lesson from a herbalist-like mentor, the helper may rarely send one diegetic brewing hint if the player has meaningful gathering/herbalism context.
 - Eligibility requires the root-pocket bottle source to exist, a nearby/active herbalist-like mentor context, no previous beginner hint marker and no existing `herbalism` / `practice` / `brew:herbal_tincture` progress.
 - Dedupe uses a player-scoped `WorldEventMarker` with key `herbalist_brewing_hint:v1`; failed eligibility and chance misses do not write a marker.

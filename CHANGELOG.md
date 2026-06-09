@@ -7,7 +7,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
-## 0.16.19 - Herbalist brewing hint - 12026-06-09
+## 0.16.21 - Herbalist brewing hint - 12026-06-09
 
 ### Added
 

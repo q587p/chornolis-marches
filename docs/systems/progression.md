@@ -298,7 +298,7 @@ practice. Real attempts record `herbalism` / `practice` /
 `brew:herbal_tincture` after the outcome, so success and meaningful failures
 teach the next attempt without showing raw numbers to ordinary players.
 
-`0.16.19` adds a narrow herbalist mentorship hint on top of that loop. After a
+`0.16.21` adds a narrow herbalist mentorship hint on top of that loop. After a
 real mentored gathering lesson, a herbalist-like mentor may rarely notice a
 player's practiced hands and point them qualitatively toward the cellar bottle
 niche and tincture preparation. The hint is deduped per player, does not expose
