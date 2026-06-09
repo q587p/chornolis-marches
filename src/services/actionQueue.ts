@@ -1,6 +1,6 @@
 import { Bot } from "grammy";
 import * as gameConfig from "../gameConfig";
-import { setLastRuntimeError } from "../runtimeState";
+import { markActionQueuePassError, markActionQueuePassFinished, markActionQueuePassStarted, setLastRuntimeError } from "../runtimeState";
 import { logEvent } from "./worldEvents";
 import { completeAction } from "./actionCompletions";
 import { processActionQueue } from "./actionLifecycle";
@@ -33,8 +33,13 @@ let actionQueueRunning = false;
 function runActionQueueLoop(bot: Bot) {
   if (actionQueueRunning) return;
   actionQueueRunning = true;
+  markActionQueuePassStarted();
   withSlowLog("actionQueue.process", () => processActionQueue(bot, completeAction))
+    .then((metrics) => {
+      markActionQueuePassFinished(metrics);
+    })
     .catch((error) => {
+      markActionQueuePassError(error);
       setLastRuntimeError(error);
       console.error("Action queue failed:", error);
       logEvent("ERROR", "Action queue failed", String(error)).catch(() => undefined);
@@ -49,6 +54,12 @@ export function restartActionQueueLoop() {
   if (actionQueueTimer) clearInterval(actionQueueTimer);
   runActionQueueLoop(actionQueueBot);
   actionQueueTimer = setInterval(() => runActionQueueLoop(actionQueueBot!), gameConfig.ACTION_QUEUE_POLL_MS);
+}
+
+export function nudgeActionQueueLoop() {
+  if (!actionQueueBot) return false;
+  runActionQueueLoop(actionQueueBot);
+  return true;
 }
 
 export function startActionQueueLoop(bot: Bot) {

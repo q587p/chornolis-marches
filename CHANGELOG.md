@@ -7,6 +7,22 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.20 - Action queue observability and safe nudge - 12026-06-09
+
+### Added
+
+- Added runtime action-queue pass snapshots with running state, last start/finish/error, player completion/start counts and per-phase timings for player completion, player startup, keyboard refresh, creature queue kick and total pass time.
+- Extended action queue stats with player/creature overdue splits, per-actor oldest queued ages and the top five overdue running actions.
+- Added guarded scribe/admin `/queueDebug` and `/queueNudge` command paths with slashless aliases. `/queueNudge` requests one safe pass through the existing overlap guard and does not create a new interval.
+
+### Changed
+
+- Protected status surfaces can now expose the richer queue diagnostics through `/health` and service status without changing queue semantics.
+
+### Risks
+
+- The new diagnostics are intentionally read-only except for `/queueNudge`, which only asks the existing loop to make one pass. No queue cleanup, pause, stamina recovery, action duration, combat, movement, predator, social alias, totem, Prisma schema or migration behavior changes.
+
 ## 0.16.19 - Herbalist brewing hint - 12026-06-09
 
 ### Added
