@@ -4,6 +4,7 @@ import { setLastRuntimeError } from "../runtimeState";
 import { logEvent } from "./worldEvents";
 import { completeAction } from "./actionCompletions";
 import { processActionQueue } from "./actionLifecycle";
+import { withSlowLog } from "../utils/slowLog";
 
 export { actionDurationMs, actionStaminaCost, gatherDurationMs, movementDurationMs } from "./actionRules";
 export { playerRestStatusText, renderPlayerActionQueue } from "./actionQueueView";
@@ -19,6 +20,7 @@ export {
   interruptActorActions,
   performOrQueuePlayerAction,
   playerActionQueueControlCount,
+  playerObservationActionDedupePolicy,
   queuePlayerRest,
   startPlayerRest,
   stopPlayerRest,
@@ -31,7 +33,7 @@ let actionQueueRunning = false;
 function runActionQueueLoop(bot: Bot) {
   if (actionQueueRunning) return;
   actionQueueRunning = true;
-  processActionQueue(bot, completeAction)
+  withSlowLog("actionQueue.process", () => processActionQueue(bot, completeAction))
     .catch((error) => {
       setLastRuntimeError(error);
       console.error("Action queue failed:", error);
