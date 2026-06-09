@@ -7,6 +7,24 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.18 - Action queue responsiveness - 12026-06-09
+
+### Changed
+
+- Made identical active player `LOOK` and `TRACK` submissions idempotent, so repeated quick clicks do not stack duplicate observation actions for the same payload.
+- Answered `LOOK`/`TRACK` callback queries before slow queue work, while keeping the detailed queue feedback in the normal chat reply path.
+- Moved full stamina/HP recovery out of the hot action queue poll and into a guarded recovery loop with its own cadence.
+- Added minimal slow-path logs for `slow:actionQueue.process` and `slow:recoveryLoop.pass`.
+
+### Added
+
+- Added focused action-queue performance guard coverage for observation-action dedupe and recovery-loop source boundaries.
+
+### Risks
+
+- Recovery now runs on the separate `RECOVERY_POLL_MS` cadence, defaulting to 5 seconds; rest/sleep math is unchanged, but recovery notifications follow that loop.
+- No Prisma schema, migrations, WorldEventMarker, sleep comfort, predator visibility, vertical movement, social alias, totem behavior or 0.16.17 gameplay-surface changes.
+
 ## 0.16.17 - Sleep comfort and field command polish - 12026-06-09
 
 ### Added

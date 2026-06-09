@@ -11,6 +11,7 @@ import {
   clearQueuedPlayerActions,
   hasPlayerActionQueueControls,
   performOrQueuePlayerAction,
+  playerObservationActionDedupePolicy,
   playerRestStatusText,
   queuePlayerRest,
   renderPlayerActionQueue,
@@ -347,7 +348,7 @@ async function submitLookAction(bot: Bot, ctx: any) {
 
   const durationMs = actionDurationMs("LOOK", player.stamina);
   try {
-    const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "LOOK", payload: {}, durationMs, chatId: ctx.chat?.id });
+    const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "LOOK", payload: {}, durationMs, chatId: ctx.chat?.id, dedupe: playerObservationActionDedupePolicy("LOOK") });
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {
     await ctx.reply(error instanceof Error ? error.message : "Не вдалося виконати дію.");
@@ -462,7 +463,7 @@ export async function submitTrack(bot: Bot, ctx: any, detail = false, target?: s
 
   const durationMs = actionDurationMs("TRACK", player.stamina);
   try {
-    const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "TRACK", payload: { detail, ...(target?.trim() ? { target: target.trim() } : {}) }, durationMs, chatId: ctx.chat?.id, interruptQueued: true });
+    const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "TRACK", payload: { detail, ...(target?.trim() ? { target: target.trim() } : {}) }, durationMs, chatId: ctx.chat?.id, interruptQueued: true, dedupe: playerObservationActionDedupePolicy("TRACK") });
     await ctx.reply(result.mode === "immediate" ? "Ви вдивляєтесь у сліди." : `Вистежування додано в чергу${durationSecondsSuffix(player, durationMs)}.`);
     await sendActionSubmitFeedback(ctx, player.id, result);
   } catch (error) {

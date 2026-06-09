@@ -16,7 +16,7 @@ import { buildFatigueRestKeyboard } from "../ui/keyboards";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { setLastRuntimeError } from "../runtimeState";
 import { actionPriority, actionTitle, effectivePlayerActionDurationMs } from "./actionRules";
-import { fatigueStateFor, recoverStamina } from "./actionRecovery";
+import { fatigueStateFor } from "./actionRecovery";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
 import { assertCanPerformPhysicalAction, isPhysicalPlayerAction } from "./postureRules";
 import { logEvent } from "./worldEvents";
@@ -54,6 +54,13 @@ type PlayerActionRequest = {
   note?: string;
   chatId?: number | string;
   messageId?: number;
+  dedupe?: PlayerActionDedupePolicy;
+};
+
+export type PlayerActionDedupePolicy = {
+  key?: string;
+  runningMessage: string;
+  queuedMessage: string;
 };
 
 type PlayerActionSubmitResult = {
@@ -114,6 +121,67 @@ function actorWhereFromAction(action: WorldAction) {
 
 function actorKey(action: Pick<WorldAction, "actorType" | "playerId" | "creatureId">) {
   return action.actorType === "PLAYER" ? `PLAYER:${action.playerId}` : `CREATURE:${action.creatureId}`;
+}
+
+function stableJsonStringify(value: unknown): string {
+  if (value === null || value === undefined) return "{}";
+  if (Array.isArray(value)) return `[${value.map(stableJsonStringify).join(",")}]`;
+  if (typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return `{${Object.keys(record).sort().map((key) => `${JSON.stringify(key)}:${stableJsonStringify(record[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+export function playerActionDedupeKey(input: Pick<PlayerActionRequest, "type" | "payload">, explicitKey?: string) {
+  return explicitKey ?? `${input.type}:${stableJsonStringify(input.payload ?? {})}`;
+}
+
+export const PLAYER_OBSERVATION_ACTION_DEDUPE_MESSAGES: Partial<Record<WorldActionType, PlayerActionDedupePolicy>> = {
+  TRACK: {
+    runningMessage: "Вистежування вже триває.",
+    queuedMessage: "Вистежування вже є в плані.",
+  },
+  LOOK: {
+    runningMessage: "Огляд уже триває.",
+    queuedMessage: "Огляд уже є в плані.",
+  },
+};
+
+export function playerObservationActionDedupePolicy(type: WorldActionType) {
+  return PLAYER_OBSERVATION_ACTION_DEDUPE_MESSAGES[type];
+}
+
+export function matchingPlayerActionDedupeMessage(
+  input: Pick<PlayerActionRequest, "type" | "payload" | "dedupe">,
+  action: Pick<WorldAction, "type" | "payload" | "status">,
+) {
+  if (!input.dedupe || action.type !== input.type) return null;
+  if (playerActionDedupeKey(input, input.dedupe.key) !== playerActionDedupeKey(action as any, input.dedupe.key)) return null;
+  return action.status === "RUNNING" ? input.dedupe.runningMessage : input.dedupe.queuedMessage;
+}
+
+async function findSimilarActivePlayerAction(input: Pick<PlayerActionRequest, "playerId" | "type" | "payload" | "dedupe">) {
+  if (!input.dedupe) return null;
+  const active = await prisma.worldAction.findMany({
+    where: {
+      actorType: "PLAYER",
+      playerId: input.playerId,
+      type: input.type,
+      status: { in: ["RUNNING", "QUEUED"] },
+    },
+    orderBy: [{ position: "asc" }, { id: "asc" }],
+  });
+  active.sort((left, right) => {
+    if (left.status === right.status) return left.position - right.position || left.id - right.id;
+    return left.status === "RUNNING" ? -1 : 1;
+  });
+
+  for (const action of active) {
+    const message = matchingPlayerActionDedupeMessage(input, action);
+    if (message) return { action, message };
+  }
+  return null;
 }
 
 function isMissingRecordError(error: unknown) {
@@ -232,6 +300,9 @@ export async function performOrQueuePlayerAction(bot: Bot, input: PlayerActionRe
   const wasResting = Boolean(player.isResting);
   const remainingToMax = Math.max(0, (player.staminaMax ?? BASE_STAMINA) - player.stamina);
   const normalizedInput = { ...input };
+
+  const similarActiveAction = await findSimilarActivePlayerAction(normalizedInput);
+  if (similarActiveAction) throw new Error(similarActiveAction.message);
 
   if (normalizedInput.interruptCurrent) {
     await interruptActorActions({ actorType: "PLAYER", playerId: input.playerId }, `перервано дією ${input.type}`, Boolean(input.interruptQueued));
@@ -553,7 +624,6 @@ async function processCreatureActionQueue(bot: Bot, completeAction: (bot: Bot, a
 }
 
 export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, action: WorldAction) => Promise<unknown>) {
-  await recoverStamina(bot);
   const now = new Date();
   const completedPlayerActions: WorldAction[] = [];
   const duePlayerRunning = await prisma.worldAction.findMany({

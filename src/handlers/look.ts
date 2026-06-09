@@ -1,6 +1,6 @@
 import { Bot } from "grammy";
 import type { Prisma, WorldActionType } from "@prisma/client";
-import { actionDurationMs, performOrQueuePlayerAction, renderPlayerActionQueue } from "../services/actionQueue";
+import { actionDurationMs, performOrQueuePlayerAction, playerObservationActionDedupePolicy, renderPlayerActionQueue } from "../services/actionQueue";
 import { getPlayerByTelegramId } from "../services/players";
 import { renderDepletedVegetationInspection, renderLocationBrief, renderLocationDetails, renderLocationFeatureInteraction, renderLocationFeatureInteractionByQuery, shakeTreeFeature, takeBottleFromLocationFeature, takeTorchFromLocationFeature } from "../services/locations";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
@@ -135,7 +135,7 @@ export function registerLookHandlers(bot: Bot) {
 
     const durationMs = actionDurationMs("TRACK", player.stamina);
     try {
-      const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "TRACK", payload: { detail: true }, durationMs, chatId: ctx.chat?.id, interruptQueued: true });
+      const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "TRACK", payload: { detail: true }, durationMs, chatId: ctx.chat?.id, interruptQueued: true, dedupe: playerObservationActionDedupePolicy("TRACK") });
       await ctx.reply(result.mode === "immediate" ? "Ви вдивляєтесь у сліди." : `Пошук слідів додано в чергу${durationSecondsSuffix(player, durationMs)}.`);
       await sendActionSubmitFeedback(ctx, player.id, result);
     } catch (error) {
@@ -181,7 +181,7 @@ export function registerLookHandlers(bot: Bot) {
 
     const durationMs = actionDurationMs("LOOK", player.stamina);
     try {
-      const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "LOOK", payload: {}, durationMs, chatId: ctx.chat?.id });
+      const result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "LOOK", payload: {}, durationMs, chatId: ctx.chat?.id, dedupe: playerObservationActionDedupePolicy("LOOK") });
       await sendActionSubmitFeedback(ctx, player.id, result);
     } catch (error) {
       await ctx.reply(error instanceof Error ? error.message : "Не вдалося виконати дію.");
@@ -203,6 +203,7 @@ export function registerLookHandlers(bot: Bot) {
 
     const durationMs = actionDurationMs("LOOK", player.stamina);
     try {
+      await safeAnswerCallbackQuery(ctx, "Прийнято.");
       const result = await performOrQueuePlayerAction(bot, {
         playerId: player.id,
         type: "LOOK",
@@ -210,11 +211,11 @@ export function registerLookHandlers(bot: Bot) {
         durationMs,
         chatId: ctx.chat?.id,
         messageId: ctx.callbackQuery.message?.message_id,
+        dedupe: playerObservationActionDedupePolicy("LOOK"),
       });
-      await safeAnswerCallbackQuery(ctx, result.mode === "immediate" ? "Ви роздивляєтесь." : `Роздивляння додано в чергу${durationSecondsSuffix(player, durationMs)}.`);
       await sendActionSubmitFeedback(ctx, player.id, result);
     } catch (error) {
-      await safeAnswerCallbackQuery(ctx, error instanceof Error ? error.message : "Не вдалося виконати дію.");
+      await replyToActionError(ctx, error, "Не вдалося виконати дію.", { replyFallback: true });
     }
   });
   bot.callbackQuery("location:details", async (ctx) => {

@@ -158,10 +158,16 @@ slow:<label> durationMs=<number>
 ```
 
 Labels describe code paths such as learning lookup, target inspection, tracking,
-follow-route memory, or `followAssist.catchUp` after a completed move. They must
+the action queue pass, the separate recovery pass, follow-route memory, or
+`followAssist.catchUp` after a completed move. They must
 not include private player message text, Telegram payloads, whispers, direct
 replies, tokens or database secrets. Use these logs to identify remaining
 hotspots before rewriting WorldEvent marker storage or adding broader indexes.
+
+`slow:actionQueue.process` and `slow:recoveryLoop.pass` should be watched
+together when checking responsiveness. The action queue should finish due
+actions without waiting for the full stamina/HP recovery scan; recovery runs on
+`RECOVERY_POLL_MS`, defaulting to 5000 ms.
 
 ## WorldEvent And Structured Markers
 

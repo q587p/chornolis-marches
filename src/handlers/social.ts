@@ -2,7 +2,7 @@ import { Bot, InlineKeyboard } from "grammy";
 import { getPlayerByTelegramId } from "../services/players";
 import { buildCorpseActionKeyboard, buildExamineLocationKeyboard, buildSocialSignalKeyboard, buildTargetActionKeyboard } from "../ui/keyboards";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
-import { actionDurationMs, performOrQueuePlayerAction } from "../services/actionQueue";
+import { actionDurationMs, performOrQueuePlayerAction, playerObservationActionDedupePolicy } from "../services/actionQueue";
 import { actionQueueReplyOptions, sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { resolveTarget, type ResolvedTarget } from "../services/targets";
 import { prisma } from "../db";
@@ -439,14 +439,14 @@ export function registerSocialHandlers(bot: Bot) {
     const durationMs = actionDurationMs("TRACK", player.stamina);
     let result: Awaited<ReturnType<typeof performOrQueuePlayerAction>>;
     try {
+      await safeAnswerCallbackQuery(ctx, "Прийнято.");
       const detail = ctx.callbackQuery.data === "track:details";
-      result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "TRACK", payload: { detail }, durationMs, chatId: ctx.chat?.id, interruptQueued: true });
+      result = await performOrQueuePlayerAction(bot, { playerId: player.id, type: "TRACK", payload: { detail }, durationMs, chatId: ctx.chat?.id, interruptQueued: true, dedupe: playerObservationActionDedupePolicy("TRACK") });
     } catch (error) {
-      await safeAnswerCallbackQuery(ctx, error instanceof Error ? error.message : "Не вдалося додати дію.");
+      await replyToActionError(ctx, error, "Не вдалося додати дію.");
       return;
     }
 
-    await safeAnswerCallbackQuery(ctx, result.mode === "immediate" ? "Ви вдивляєтесь у сліди." : `Вистежування додано в чергу${durationSecondsSuffix(player, durationMs)}.`);
     await sendActionSubmitFeedback(ctx, player.id, result);
   });
 }

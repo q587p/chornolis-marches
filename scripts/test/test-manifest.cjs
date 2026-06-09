@@ -81,6 +81,7 @@ module.exports = [
   nodeTest("scripts/test/inventory-use.cjs"),
   nodeTest("scripts/test/weapons.cjs"),
   nodeTest("scripts/test/action-costs.cjs"),
+  nodeTest("scripts/test/action-queue-performance.cjs"),
   nodeTest("scripts/test/starter-animals.cjs"),
   nodeTest("scripts/test/fauna-diversity.cjs"),
   nodeTest("scripts/test/ecology-stats.cjs"),

@@ -71,6 +71,7 @@ const configuredHeraldChronicleRelayEnabled = optionalBooleanEnv("HERALD_CHRONIC
 const configuredHeraldChronicleRelayIntervalMs = optionalNumberEnv("HERALD_CHRONICLE_RELAY_INTERVAL_MS") ?? 60_000;
 const configuredHeraldChronicleRelayMaxPerTick = optionalNumberEnv("HERALD_CHRONICLE_RELAY_MAX_PER_TICK") ?? 3;
 const configuredNonPlayerMovementNotificationWindowMs = optionalNumberEnv("NON_PLAYER_MOVEMENT_NOTIFICATION_WINDOW_MS") ?? 60_000;
+const configuredRecoveryPollMs = optionalNumberEnv("RECOVERY_POLL_MS") ?? 5_000;
 const publicBaseUrl = normalizeBaseUrl(optionalStringEnv("PUBLIC_BASE_URL") ?? "https://chornolis-marches.onrender.com");
 const configuredGameBotUsername = optionalStringEnv("GAME_BOT_USERNAME") ?? "Chornolis_bot";
 
@@ -102,4 +103,5 @@ export const config = {
   heraldChronicleRelayIntervalMs: Math.max(5000, Math.floor(configuredHeraldChronicleRelayIntervalMs)),
   heraldChronicleRelayMaxPerTick: Math.max(1, Math.min(10, Math.floor(configuredHeraldChronicleRelayMaxPerTick))),
   nonPlayerMovementNotificationWindowMs: Math.max(0, Math.floor(configuredNonPlayerMovementNotificationWindowMs)),
+  recoveryPollMs: Math.max(1_000, Math.floor(configuredRecoveryPollMs)),
 };
