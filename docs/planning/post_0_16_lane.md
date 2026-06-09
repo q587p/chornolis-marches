@@ -20,7 +20,7 @@ This is not a replacement for `next.md`. Promote from here only when the active 
 Recommended order:
 
 1. `ALC-002`: root-pocket bottle cache and `empty_bottle` resource.
-2. `RECIPE-001`: minimal resource recipe service.
+2. `RECIPE-001`: minimal resource recipe service foundation, now in testing as helper-only infrastructure.
 3. `ALC-006`: herbalism skill and brewing failure policy.
 4. Revised `ALC-001`: first herbal stamina tincture using `empty_bottle`, herbs and berries, with bottle return after drinking and brewing failure policy.
 5. `ALC-005`: rare herbalist mentorship hint toward brewing and the bottle niche.
