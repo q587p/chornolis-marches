@@ -79,6 +79,13 @@ After darkness starts hiding descriptions, beings, ground objects, resources or 
 
 The tutorial dream also keeps ordinary waking-world loose items out of its visible ground-item layer. Authored tutorial resources such as the berries and herbs in the foraging lesson can still appear, but ordinary dropped loot, money, torches, twigs or meat should not distract from the lesson there.
 
+Prepared remedies are now taught outside the dream through the waking-world
+mentorship layer: a herbalist-like mentor may rarely hint toward bottles and
+настоювання after the player has enough real gathering/herbalism context. Keep
+that as optional local knowledge rather than a forced tutorial step; the dream
+should not hand out bottle-route spoilers until a later lesson explicitly needs
+them.
+
 ## Design Rule
 
 Teach only what the player can meaningfully use now. Prefer small, diegetic nudges over a mechanical checklist.

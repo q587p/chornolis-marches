@@ -68,6 +68,7 @@ module.exports = [
   nodeTest("scripts/test/recipes.cjs"),
   nodeTest("scripts/test/herbalism.cjs"),
   nodeTest("scripts/test/herbal-tincture.cjs"),
+  nodeTest("scripts/test/herbalist-brewing-hints.cjs"),
   nodeTest("scripts/test/attack-rules.cjs"),
   nodeTest("scripts/test/attack-learning.cjs"),
   nodeTest("scripts/test/gathering-learning.cjs"),

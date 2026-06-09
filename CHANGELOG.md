@@ -7,6 +7,24 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.19 - Herbalist brewing hint - 12026-06-09
+
+### Added
+
+- Added a rare herbalist-like mentorship hint that can point experienced gatherers toward the existing bottle niche and tincture brewing loop.
+- Added player-scoped `WorldEventMarker` dedupe for the beginner brewing hint.
+- Added focused herbalist brewing hint coverage for eligibility, text safety, dedupe and suppression after real tincture brewing attempts.
+
+### Changed
+
+- Existing mentored gathering lesson follow-ups can now include the brewing hint after the current practice prompt path.
+- Updated progression, crafting, onboarding, NPC profession and ALC-005 planning docs for the hint-only onboarding layer.
+
+### Risks
+
+- The hint must stay rare and qualitative; it should not expose learning thresholds, force a quest flow or block independent brewing discovery.
+- This does not add NPC brewing routes, herbalist bottle routes, new recipes, new tinctures, shops/barter/economy, a broad recipe UI, public skill sheet, Prisma schema or migrations.
+
 ## 0.16.18 - Action queue responsiveness - 12026-06-09
 
 ### Changed
