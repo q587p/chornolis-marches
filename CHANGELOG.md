@@ -7,6 +7,23 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.22 - Recovery loop pruning - 12026-06-09
+
+### Added
+
+- Added recovery loop runtime snapshots with running state, last finish/error, player/creature phase timings and recovery pass counts.
+- Extended guarded `/queueDebug` output with recovery loop phase timings and recovery counts beside the existing action and creature queue diagnostics.
+- Added focused recovery-loop guard tests for runtime snapshots, debug formatting and the creature recovery scan boundary.
+
+### Changed
+
+- Creature passive stamina recovery now scans a smaller candidate set: creatures below base stamina, creatures with a custom stamina maximum and currently queued/running creatures that may need their recovery timestamp refreshed.
+- The separate recovery loop still owns passive/rest/sleep stamina recovery, HP recovery, ordinary sleep auto-wake, active-player recovery refreshes, active-creature recovery refreshes and tutorial/rest messages.
+
+### Risks
+
+- This is an operational pruning pass only. It does not change player-facing stamina/HP math, action durations, stamina costs, sleep/rest behavior, creature action semantics, player queue behavior, combat, movement, predator, social, totem, Prisma schema or migration behavior.
+
 ## 0.16.21 - Creature queue backpressure - 12026-06-09
 
 ### Added

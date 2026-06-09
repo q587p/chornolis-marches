@@ -1,6 +1,11 @@
 import { Bot } from "grammy";
 import { config } from "../config";
-import { setLastRuntimeError } from "../runtimeState";
+import {
+  markRecoveryPassError,
+  markRecoveryPassFinished,
+  markRecoveryPassStarted,
+  setLastRuntimeError,
+} from "../runtimeState";
 import { withSlowLog } from "../utils/slowLog";
 import { recoverStamina } from "./actionRecovery";
 import { logEvent } from "./worldEvents";
@@ -12,8 +17,13 @@ let recoveryRunning = false;
 function runRecoveryLoop(bot: Bot) {
   if (recoveryRunning) return;
   recoveryRunning = true;
+  markRecoveryPassStarted();
   withSlowLog("recoveryLoop.pass", () => recoverStamina(bot))
+    .then((metrics) => {
+      markRecoveryPassFinished(metrics);
+    })
     .catch((error) => {
+      markRecoveryPassError(error);
       setLastRuntimeError(error);
       console.error("Recovery loop failed:", error);
       logEvent("ERROR", "Recovery loop failed", String(error)).catch(() => undefined);

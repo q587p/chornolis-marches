@@ -169,6 +169,16 @@ together when checking responsiveness. The action queue should finish due
 actions without waiting for the full stamina/HP recovery scan; recovery runs on
 `RECOVERY_POLL_MS`, defaulting to 5000 ms.
 
+As of `0.16.22`, the recovery loop also records a compact runtime snapshot for
+guarded `/queueDebug`: player/creature phase durations, scanned/updated player
+counts, active-player skips, proactive recovery messages, creature candidates
+scanned, creatures updated and active creatures refreshed. The creature recovery
+phase no longer starts from every non-gone creature. It first asks for likely
+candidates: creatures below base stamina, creatures with a custom `staminaMax`,
+and queued/running creatures that may need `lastStaminaRegenAt` refreshed.
+Player recovery math, sleep/rest behavior and creature action semantics stay
+unchanged.
+
 ## Action Queue Backpressure
 
 The game bot keeps player action completion/start first. Creature queue work

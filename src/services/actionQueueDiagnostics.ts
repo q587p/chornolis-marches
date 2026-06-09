@@ -1,10 +1,13 @@
 import {
   getActionQueueRuntimeSnapshot,
   getCreatureQueueRuntimeSnapshot,
+  getRecoveryRuntimeSnapshot,
   type ActionQueuePhaseDurations,
   type ActionQueueRuntimeSnapshot,
   type CreatureQueuePhaseDurations,
   type CreatureQueueRuntimeSnapshot,
+  type RecoveryPhaseDurations,
+  type RecoveryRuntimeSnapshot,
 } from "../runtimeState";
 import { getActionQueueStats } from "./status";
 
@@ -36,12 +39,21 @@ export function formatCreatureQueuePhaseDurations(durations: CreatureQueuePhaseD
   ].join("; ");
 }
 
+export function formatRecoveryPhaseDurations(durations: RecoveryPhaseDurations | null | undefined) {
+  if (!durations) return "немає завершеного проходу";
+  return [
+    `players=${formatQueueDurationMs(durations.playersMs)}`,
+    `creatures=${formatQueueDurationMs(durations.creaturesMs)}`,
+    `total=${formatQueueDurationMs(durations.totalMs)}`,
+  ].join("; ");
+}
+
 function formatAgo(value: Date | null | undefined, now: Date) {
   if (!value) return "немає";
   return `${formatQueueDurationMs(now.getTime() - value.getTime())} тому`;
 }
 
-function formatRunning(snapshot: Pick<ActionQueueRuntimeSnapshot | CreatureQueueRuntimeSnapshot, "running" | "runningSince">, now: Date) {
+function formatRunning(snapshot: Pick<ActionQueueRuntimeSnapshot | CreatureQueueRuntimeSnapshot | RecoveryRuntimeSnapshot, "running" | "runningSince">, now: Date) {
   if (!snapshot.running) return "ні";
   return snapshot.runningSince ? `так, ${formatQueueDurationMs(now.getTime() - snapshot.runningSince.getTime())}` : "так";
 }
@@ -60,8 +72,11 @@ export function formatActionQueueDebugReport(
   stats: ActionQueueStatsSnapshot,
   snapshot: ActionQueueRuntimeSnapshot,
   creatureSnapshot: CreatureQueueRuntimeSnapshot = getCreatureQueueRuntimeSnapshot(),
-  now = new Date(),
+  recoverySnapshotOrNow: RecoveryRuntimeSnapshot | Date = getRecoveryRuntimeSnapshot(),
+  nowMaybe?: Date,
 ) {
+  const recoverySnapshot = recoverySnapshotOrNow instanceof Date ? getRecoveryRuntimeSnapshot() : recoverySnapshotOrNow;
+  const now = recoverySnapshotOrNow instanceof Date ? recoverySnapshotOrNow : nowMaybe ?? new Date();
   return [
     "🧵 Службова черга: debug",
     `running: ${formatRunning(snapshot, now)}`,
@@ -73,6 +88,9 @@ export function formatActionQueueDebugReport(
     `creatureQueue: running=${formatRunning(creatureSnapshot, now)}; mode=${creatureSnapshot.lastMode ?? "немає"}; reason=${creatureSnapshot.lastReason ?? "немає"}`,
     `creaturePhaseMs: ${formatCreatureQueuePhaseDurations(creatureSnapshot.lastPhaseDurations)}`,
     `creatureCounts: completed=${creatureSnapshot.lastCompletedCreatureActions}; started=${creatureSnapshot.lastStartedCreatureActions}; skippedStarts=${creatureSnapshot.lastSkippedCreatureStarts ? "yes" : "no"}`,
+    `recovery: running=${formatRunning(recoverySnapshot, now)}; lastFinished=${formatAgo(recoverySnapshot.lastFinishedAt, now)}; lastError=${recoverySnapshot.lastError ?? "немає"}`,
+    `recoveryPhaseMs: ${formatRecoveryPhaseDurations(recoverySnapshot.lastPhaseDurations)}`,
+    `recoveryCounts: playersScanned=${recoverySnapshot.lastPlayersScanned}; playersUpdated=${recoverySnapshot.lastPlayersUpdated}; playersSkippedActive=${recoverySnapshot.lastPlayersSkippedActive}; idleReminders=${recoverySnapshot.lastIdleRemindersSent}; sleepAutoWakes=${recoverySnapshot.lastSleepAutoWakes}; playerMessages=${recoverySnapshot.lastPlayerMessagesSent}; creaturesScanned=${recoverySnapshot.lastCreaturesScanned}; creaturesUpdated=${recoverySnapshot.lastCreaturesUpdated}; activeCreaturesRefreshed=${recoverySnapshot.lastActiveCreaturesRefreshed}`,
     `queued: player=${stats.playerQueued}; creature=${stats.creatureQueued}; total=${stats.totalQueued}`,
     `runningActions: player=${stats.playerRunning}; creature=${stats.creatureRunning}; total=${stats.totalRunning}`,
     `oldestQueued: player=${formatQueueDurationMs(stats.oldestQueuedPlayerAgeMs)}; creature=${formatQueueDurationMs(stats.oldestQueuedCreatureAgeMs)}; total=${formatQueueDurationMs(stats.oldestQueuedAgeMs)}`,
@@ -83,10 +101,11 @@ export function formatActionQueueDebugReport(
 }
 
 export async function buildActionQueueDebugReport() {
-  const [stats, snapshot, creatureSnapshot] = await Promise.all([
+  const [stats, snapshot, creatureSnapshot, recoverySnapshot] = await Promise.all([
     getActionQueueStats(),
     Promise.resolve(getActionQueueRuntimeSnapshot()),
     Promise.resolve(getCreatureQueueRuntimeSnapshot()),
+    Promise.resolve(getRecoveryRuntimeSnapshot()),
   ]);
-  return formatActionQueueDebugReport(stats, snapshot, creatureSnapshot);
+  return formatActionQueueDebugReport(stats, snapshot, creatureSnapshot, recoverySnapshot);
 }

@@ -30,6 +30,7 @@ import { escapeHtml } from "../utils/text";
 import { canSendProactiveToTelegramId, claimIdleReminderForPlayerScene, idleReminderSceneKeyForLocation } from "./sessionPresence";
 import { buildDaypartNoticeHintKeyboard, recordOrdinaryWakeAndClaimDaypartHint } from "./playerNotificationSettings";
 import { CAMPFIRE_BUILD_TWIG_COST } from "./fire";
+import type { RecoveryPassMetrics } from "../runtimeState";
 
 export function fatigueStateFor(stamina: number, staminaMax = BASE_STAMINA): FatigueState {
   if (stamina <= VERY_TIRED_STAMINA) return "VERY_TIRED";
@@ -278,8 +279,30 @@ export async function spendCreatureStamina(creature: { id: number; hp?: number; 
   });
 }
 
-export async function recoverStamina(bot: Bot) {
+function emptyRecoveryPassMetrics(): RecoveryPassMetrics {
+  return {
+    phaseDurations: {
+      playersMs: 0,
+      creaturesMs: 0,
+      totalMs: 0,
+    },
+    playersScanned: 0,
+    playersUpdated: 0,
+    playersSkippedActive: 0,
+    idleRemindersSent: 0,
+    sleepAutoWakes: 0,
+    playerMessagesSent: 0,
+    creaturesScanned: 0,
+    creaturesUpdated: 0,
+    activeCreaturesRefreshed: 0,
+  };
+}
+
+export async function recoverStamina(bot: Bot): Promise<RecoveryPassMetrics> {
+  const totalStartedAt = Date.now();
+  const metrics = emptyRecoveryPassMetrics();
   const now = new Date();
+  const playersStartedAt = Date.now();
   const [players, activePlayerActions, worldState] = await Promise.all([
     prisma.player.findMany({ include: { currentLocation: { select: { key: true, z: true, region: { select: { key: true } } } } } }),
     prisma.worldAction.findMany({
@@ -288,6 +311,7 @@ export async function recoverStamina(bot: Bot) {
     }),
     getCurrentWorldState(),
   ]);
+  metrics.playersScanned = players.length;
   const activePlayerIds = new Set(activePlayerActions.map((action) => action.playerId).filter((id): id is number => Boolean(id)));
 
   for (const player of players) {
@@ -306,6 +330,8 @@ export async function recoverStamina(bot: Bot) {
         if (voiceComments.length && sceneKey && !(await claimIdleReminderForPlayerScene(player.id, sceneKey))) continue;
         for (const comment of voiceComments) {
           await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
+          metrics.idleRemindersSent += 1;
+          metrics.playerMessagesSent += 1;
         }
       }
     }
@@ -320,10 +346,15 @@ export async function recoverStamina(bot: Bot) {
     })) {
       const result = await autoWakeOrdinarySleep(player.id);
       const chatId = Number(player.telegramId);
+      if (result?.changed) metrics.sleepAutoWakes += 1;
       if (result?.changed && Number.isSafeInteger(chatId) && await canSendProactiveToTelegramId(player.telegramId)) {
         await bot.api.sendMessage(chatId, result.message, { reply_markup: buildLyingPostureKeyboard() });
+        metrics.playerMessagesSent += 1;
         const hint = await recordOrdinaryWakeAndClaimDaypartHint(player.id);
-        if (hint) await bot.api.sendMessage(chatId, hint, { reply_markup: buildDaypartNoticeHintKeyboard() });
+        if (hint) {
+          await bot.api.sendMessage(chatId, hint, { reply_markup: buildDaypartNoticeHintKeyboard() });
+          metrics.playerMessagesSent += 1;
+        }
       }
       continue;
     }
@@ -331,7 +362,9 @@ export async function recoverStamina(bot: Bot) {
     if (player.stamina >= max && player.hp >= hpMax && !player.isResting && !isSleeping) continue;
 
     if (hasActiveActions && !player.isResting && !isSleeping) {
-      await prisma.player.updateMany({ where: { id: player.id }, data: { lastStaminaRegenAt: now, lastHpRegenAt: now } });
+      metrics.playersSkippedActive += 1;
+      const updated = await prisma.player.updateMany({ where: { id: player.id }, data: { lastStaminaRegenAt: now, lastHpRegenAt: now } });
+      metrics.playersUpdated += updated.count;
       continue;
     }
 
@@ -376,10 +409,11 @@ export async function recoverStamina(bot: Bot) {
     if (intervals > 0) data.lastStaminaRegenAt = new Date(last.getTime() + intervals * staminaIntervalMs);
     if (hpIntervals > 0) data.lastHpRegenAt = new Date(hpLast.getTime() + hpIntervals * hpIntervalMs);
 
-    await prisma.player.updateMany({
+    const updated = await prisma.player.updateMany({
       where: { id: player.id },
       data,
     });
+    metrics.playersUpdated += updated.count;
 
     if (isSleeping && shouldAutoWakeOrdinarySleep({
       startedAtMinute: player.ordinarySleepStartedAtMinute,
@@ -391,10 +425,15 @@ export async function recoverStamina(bot: Bot) {
     })) {
       const result = await autoWakeOrdinarySleep(player.id);
       const chatId = Number(player.telegramId);
+      if (result?.changed) metrics.sleepAutoWakes += 1;
       if (result?.changed && Number.isSafeInteger(chatId) && await canSendProactiveToTelegramId(player.telegramId)) {
         await bot.api.sendMessage(chatId, result.message, { reply_markup: buildLyingPostureKeyboard() });
+        metrics.playerMessagesSent += 1;
         const hint = await recordOrdinaryWakeAndClaimDaypartHint(player.id);
-        if (hint) await bot.api.sendMessage(chatId, hint, { reply_markup: buildDaypartNoticeHintKeyboard() });
+        if (hint) {
+          await bot.api.sendMessage(chatId, hint, { reply_markup: buildDaypartNoticeHintKeyboard() });
+          metrics.playerMessagesSent += 1;
+        }
       }
       continue;
     }
@@ -409,6 +448,7 @@ export async function recoverStamina(bot: Bot) {
           message,
           { reply_markup: replyMarkup }
         );
+        metrics.playerMessagesSent += 1;
       }
 
       if (shouldSendTutorialRestFullComment) {
@@ -417,18 +457,32 @@ export async function recoverStamina(bot: Bot) {
           `Сон стиха каже:\n${quoteBlock(TUTORIAL_REST_FULL_COMMENT)}`,
           { parse_mode: "HTML", reply_markup: refreshedKeyboard }
         );
+        metrics.playerMessagesSent += 1;
       }
     }
   }
 
-  const [creatures, activeCreatureActions] = await Promise.all([
-    prisma.creature.findMany({ where: { isGone: false } }),
-    prisma.worldAction.findMany({
-      where: { actorType: "CREATURE", status: { in: ["QUEUED", "RUNNING"] }, creatureId: { not: null } },
-      select: { creatureId: true },
-    }),
-  ]);
+  metrics.phaseDurations.playersMs = Date.now() - playersStartedAt;
+
+  const creaturesStartedAt = Date.now();
+  const activeCreatureActions = await prisma.worldAction.findMany({
+    where: { actorType: "CREATURE", status: { in: ["QUEUED", "RUNNING"] }, creatureId: { not: null } },
+    select: { creatureId: true },
+  });
   const activeCreatureIds = new Set(activeCreatureActions.map((action) => action.creatureId).filter((id): id is number => Boolean(id)));
+  const activeCreatureIdList = Array.from(activeCreatureIds);
+  const creatureRecoveryCandidates: Prisma.CreatureWhereInput[] = [
+    { stamina: { lt: BASE_STAMINA } },
+    { staminaMax: { gt: BASE_STAMINA } },
+  ];
+  if (activeCreatureIdList.length > 0) creatureRecoveryCandidates.push({ id: { in: activeCreatureIdList } });
+  const creatures = await prisma.creature.findMany({
+    where: {
+      isGone: false,
+      OR: creatureRecoveryCandidates,
+    },
+  });
+  metrics.creaturesScanned = creatures.length;
   const activeCreatureIdsToRefresh: number[] = [];
 
   for (const creature of creatures) {
@@ -444,7 +498,7 @@ export async function recoverStamina(bot: Bot) {
     const intervals = Math.floor((now.getTime() - last.getTime()) / STAMINA_REGEN_INTERVAL_MS);
     if (intervals <= 0) continue;
     const after = Math.min(max, creature.stamina + intervals * PASSIVE_STAMINA_REGEN_PER_INTERVAL);
-    await prisma.creature.updateMany({
+    const updated = await prisma.creature.updateMany({
       where: { id: creature.id },
       data: {
         stamina: after,
@@ -452,12 +506,18 @@ export async function recoverStamina(bot: Bot) {
         lastStaminaRegenAt: new Date(last.getTime() + intervals * STAMINA_REGEN_INTERVAL_MS),
       },
     });
+    metrics.creaturesUpdated += updated.count;
   }
 
   if (activeCreatureIdsToRefresh.length > 0) {
-    await prisma.creature.updateMany({
+    const refreshed = await prisma.creature.updateMany({
       where: { id: { in: activeCreatureIdsToRefresh } },
       data: { lastStaminaRegenAt: now },
     });
+    metrics.activeCreaturesRefreshed = refreshed.count;
   }
+
+  metrics.phaseDurations.creaturesMs = Date.now() - creaturesStartedAt;
+  metrics.phaseDurations.totalMs = Date.now() - totalStartedAt;
+  return metrics;
 }
