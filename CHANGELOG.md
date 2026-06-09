@@ -7,6 +7,26 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.15 - Herbalism brewing outcome policy - 12026-06-09
+
+### Added
+
+- Added a pure herbalism brewing outcome policy for success, ordinary failure and critical failure.
+- Added deterministic permille chance helpers for internal `herbalism` levels `0..5`.
+- Added herbalism practice amount and consumption-policy helpers for future recipe integration.
+- Added qualitative Ukrainian outcome copy for future brewing attempts without exposing raw chances or technical outcome keys.
+- Added focused herbalism policy coverage.
+
+### Changed
+
+- Aligned the `herbalism` learning display label to `знахарство`.
+- Documented herbalism as separate from gathering/cooking and marked ALC-006 as testing.
+
+### Risks
+
+- This is policy infrastructure only: no `/brew`, `herbal_tincture`, stamina restoration, live resource consumption, NPC brewing, public skill UI, Prisma schema or migration.
+- ALC-001 still needs to combine this policy with the recipe service before any live brewing command can consume ingredients.
+
 ## 0.16.14 - Minimal resource recipe service - 12026-06-09
 
 ### Added
