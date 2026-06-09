@@ -169,6 +169,16 @@ together when checking responsiveness. The action queue should finish due
 actions without waiting for the full stamina/HP recovery scan; recovery runs on
 `RECOVERY_POLL_MS`, defaulting to 5000 ms.
 
+As of `0.16.22`, the recovery loop also records a compact runtime snapshot for
+guarded `/queueDebug`: player/creature phase durations, scanned/updated player
+counts, active-player skips, proactive recovery messages, creature candidates
+scanned, creatures updated and active creatures refreshed. The creature recovery
+phase no longer starts from every non-gone creature. It first asks for likely
+candidates: creatures below base stamina, creatures with a custom `staminaMax`,
+and queued/running creatures that may need `lastStaminaRegenAt` refreshed.
+Player recovery math, sleep/rest behavior and creature action semantics stay
+unchanged.
+
 ## Action Queue Backpressure
 
 The game bot keeps player action completion/start first. Creature queue work
@@ -338,6 +348,11 @@ archive republish queue instead of `/repost_publication`:
   values;
 - `/archive_republish_status` shows pending/published republish-run rows and the
   next queued item;
+- `/archive_republish_gap` compares the deployed `news.md` archive against
+  visible published `NEWS_MD_ARCHIVE` / `NEWS_MD_ARCHIVE_REPUBLISH` rows,
+  reports total deployed entries, visible published entries, missing entries,
+  the last published archive index and the first missing index, and labels the
+  result as a tail gap or internal holes;
 - `/archive_republish_cancel` cancels only unpublished republish-run rows.
 
 Archive republish rows use source type `NEWS_MD_ARCHIVE_REPUBLISH` and a
@@ -346,6 +361,9 @@ not block the rebuild run. Channel posts render with the normal archive header,
 `📜 З архіву Канцелярії`, and intentionally do not add a repeated-publication
 disclaimer. Canceling the republish queue does not touch ordinary pending
 `NEWS_MD` / `NEWS_MD_ARCHIVE` rows or already published history.
+The gap check is read-only: it does not publish, queue, cancel or mutate
+publication rows. Use it when a republish run says it has no pending rows but
+the deployed archive has grown since that run was queued.
 On Render, `news.md` is the deployed file; changing it requires commit, push and
 redeploy before these commands see the new text.
 

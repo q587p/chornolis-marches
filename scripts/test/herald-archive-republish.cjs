@@ -5,9 +5,12 @@ require("ts-node/register");
 const { formatHeraldPublicationMessage } = require("../../src/herald/format");
 const {
   archiveRepublishContentHash,
+  archiveRepublishGapReport,
   cancelArchiveRepublishPendingPublications,
   DEFAULT_ARCHIVE_REPUBLISH_INTERVAL_MS,
+  formatArchiveRepublishGapReply,
   NEWS_ARCHIVE_REPUBLISH_SOURCE_TYPE,
+  NEWS_ARCHIVE_SOURCE_TYPE,
   previewArchiveRepublish,
   queueArchiveRepublish,
 } = require("../../src/herald/newsBackfill");
@@ -48,6 +51,7 @@ function createPublicationStore(seed = []) {
     visibility: row.visibility ?? "PUBLIC",
     availableAt: row.availableAt ?? new Date("2026-06-07T10:00:00.000Z"),
     publishedAt: row.publishedAt ?? null,
+    manuallyDeletedAt: row.manuallyDeletedAt ?? null,
     contentHash: row.contentHash ?? null,
     error: row.error ?? null,
   }));
@@ -98,6 +102,7 @@ function createPublicationStore(seed = []) {
           visibility: input.visibility ?? "PUBLIC",
           availableAt: input.availableAt ?? new Date(),
           publishedAt: null,
+          manuallyDeletedAt: null,
           contentHash: input.contentHash ?? null,
           error: null,
         };
@@ -145,6 +150,20 @@ function republishSeed(entry, status, id) {
     visibility: status === "canceled" ? "CANCELED" : "PUBLIC",
     publishedAt: status === "published" ? new Date("2026-06-07T11:00:00.000Z") : null,
     contentHash: archiveRepublishContentHash(entry.contentHash),
+  };
+}
+
+function archiveSeed(entry, status, id) {
+  return {
+    id,
+    sourceType: NEWS_ARCHIVE_SOURCE_TYPE,
+    sourceId: entry.title,
+    title: entry.title,
+    body: entry.body,
+    archiveOrder: Number(entry.sourceVersion?.split(".").at(-1) ?? 0),
+    visibility: status === "canceled" ? "CANCELED" : "PUBLIC",
+    publishedAt: status === "published" ? new Date("2026-06-07T11:00:00.000Z") : null,
+    contentHash: entry.contentHash,
   };
 }
 
@@ -268,6 +287,77 @@ async function run() {
     assert.match(formatted, /📜 З архіву Канцелярії/);
     assert.doesNotMatch(formatted, /Повторна публікація/);
     assert.doesNotMatch(formatted, /repost/i);
+  }
+
+  {
+    const ordered = entries.slice().sort((left, right) => left.sourceVersion.localeCompare(right.sourceVersion));
+    const { store } = createPublicationStore([
+      republishSeed(ordered[0], "published", 501),
+      republishSeed(ordered[1], "published", 502),
+    ]);
+    const gap = await archiveRepublishGapReport(entries, undefined, store);
+    assert.equal(gap.total, 4);
+    assert.equal(gap.published, 2);
+    assert.equal(gap.missing, 2);
+    assert.equal(gap.lastPublished.index, 2);
+    assert.equal(gap.firstMissing.index, 3);
+    assert.equal(gap.hasTailGap, true);
+    assert.equal(gap.hasInternalHoles, false);
+
+    const reply = formatArchiveRepublishGapReply(gap);
+    assert.match(reply, /У deployed news\.md: 4/);
+    assert.match(reply, /Видимих опублікованих архівних записів: 2/);
+    assert.match(reply, /Не знайдено в каналі\/книзі: 2/);
+    assert.match(reply, /#2 · 0\.4\.1 — Second — 12026-05-02/);
+    assert.match(reply, /#3 · 0\.4\.2 — Third — 12026-05-03/);
+    assert.match(reply, /хвіст архіву/);
+    assert.match(reply, /\/news_archive_post <index>/);
+    assert.match(reply, /нічого не публікує й не ставить у чергу/);
+  }
+
+  {
+    const ordered = entries.slice().sort((left, right) => left.sourceVersion.localeCompare(right.sourceVersion));
+    const { store } = createPublicationStore([
+      republishSeed(ordered[0], "published", 601),
+      republishSeed(ordered[2], "published", 602),
+    ]);
+    const gap = await archiveRepublishGapReport(entries, undefined, store);
+    assert.equal(gap.hasTailGap, false);
+    assert.equal(gap.hasInternalHoles, true);
+    assert.equal(gap.firstMissing.index, 2);
+    assert.match(formatArchiveRepublishGapReply(gap), /внутрішні пропуски/);
+  }
+
+  {
+    const ordered = entries.slice().sort((left, right) => left.sourceVersion.localeCompare(right.sourceVersion));
+    const { store } = createPublicationStore([
+      archiveSeed(ordered[0], "published", 701),
+      republishSeed(ordered[1], "published", 702),
+      { ...republishSeed(ordered[2], "published", 703), manuallyDeletedAt: new Date("2026-06-07T12:00:00.000Z") },
+      republishSeed(ordered[3], "pending", 704),
+    ]);
+    const gap = await archiveRepublishGapReport(entries, undefined, store);
+    assert.equal(gap.published, 2, "visible published archive/republish rows count; deleted and pending rows do not");
+    assert.deepEqual(gap.missingRows.map((row) => row.index), [3, 4]);
+  }
+
+  {
+    const ordered = entries.slice().sort((left, right) => left.sourceVersion.localeCompare(right.sourceVersion));
+    const { store } = createPublicationStore([
+      republishSeed(ordered[0], "published", 751),
+      republishSeed(ordered[0], "pending", 752),
+    ]);
+    const gap = await archiveRepublishGapReport([ordered[0]], undefined, store);
+    assert.equal(gap.published, 1, "a pending duplicate must not hide a visible published archive row");
+    assert.equal(gap.missing, 0);
+  }
+
+  {
+    const ordered = entries.slice().sort((left, right) => left.sourceVersion.localeCompare(right.sourceVersion));
+    const { store } = createPublicationStore(ordered.map((entry, index) => republishSeed(entry, "published", 801 + index)));
+    const gap = await archiveRepublishGapReport(entries, undefined, store);
+    assert.equal(gap.missing, 0);
+    assert.match(formatArchiveRepublishGapReply(gap), /повністю опублікованим/);
   }
 }
 

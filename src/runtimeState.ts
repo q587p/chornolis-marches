@@ -58,6 +58,43 @@ export type CreatureQueueRuntimeSnapshot = {
   lastPhaseDurations: CreatureQueuePhaseDurations | null;
 };
 
+export type RecoveryPhaseDurations = {
+  playersMs: number;
+  creaturesMs: number;
+  totalMs: number;
+};
+
+export type RecoveryPassMetrics = {
+  phaseDurations: RecoveryPhaseDurations;
+  playersScanned: number;
+  playersUpdated: number;
+  playersSkippedActive: number;
+  idleRemindersSent: number;
+  sleepAutoWakes: number;
+  playerMessagesSent: number;
+  creaturesScanned: number;
+  creaturesUpdated: number;
+  activeCreaturesRefreshed: number;
+};
+
+export type RecoveryRuntimeSnapshot = {
+  running: boolean;
+  runningSince: Date | null;
+  lastStartedAt: Date | null;
+  lastFinishedAt: Date | null;
+  lastError: string | null;
+  lastPhaseDurations: RecoveryPhaseDurations | null;
+  lastPlayersScanned: number;
+  lastPlayersUpdated: number;
+  lastPlayersSkippedActive: number;
+  lastIdleRemindersSent: number;
+  lastSleepAutoWakes: number;
+  lastPlayerMessagesSent: number;
+  lastCreaturesScanned: number;
+  lastCreaturesUpdated: number;
+  lastActiveCreaturesRefreshed: number;
+};
+
 const EMPTY_ACTION_QUEUE_PHASE_DURATIONS: ActionQueuePhaseDurations = {
   playerCompleteMs: 0,
   playerStartMs: 0,
@@ -98,6 +135,30 @@ let creatureQueueRuntimeSnapshot: CreatureQueueRuntimeSnapshot = {
   lastPhaseDurations: null,
 };
 
+const EMPTY_RECOVERY_PHASE_DURATIONS: RecoveryPhaseDurations = {
+  playersMs: 0,
+  creaturesMs: 0,
+  totalMs: 0,
+};
+
+let recoveryRuntimeSnapshot: RecoveryRuntimeSnapshot = {
+  running: false,
+  runningSince: null,
+  lastStartedAt: null,
+  lastFinishedAt: null,
+  lastError: null,
+  lastPhaseDurations: null,
+  lastPlayersScanned: 0,
+  lastPlayersUpdated: 0,
+  lastPlayersSkippedActive: 0,
+  lastIdleRemindersSent: 0,
+  lastSleepAutoWakes: 0,
+  lastPlayerMessagesSent: 0,
+  lastCreaturesScanned: 0,
+  lastCreaturesUpdated: 0,
+  lastActiveCreaturesRefreshed: 0,
+};
+
 let telegramBotStatus: {
   state: "starting" | "ready" | "error";
   checkedAt: Date | null;
@@ -128,6 +189,10 @@ function clonePhaseDurations(value: ActionQueuePhaseDurations | null): ActionQue
 }
 
 function cloneCreaturePhaseDurations(value: CreatureQueuePhaseDurations | null): CreatureQueuePhaseDurations | null {
+  return value ? { ...value } : null;
+}
+
+function cloneRecoveryPhaseDurations(value: RecoveryPhaseDurations | null): RecoveryPhaseDurations | null {
   return value ? { ...value } : null;
 }
 
@@ -212,6 +277,53 @@ export function getCreatureQueueRuntimeSnapshot(): CreatureQueueRuntimeSnapshot 
   return {
     ...creatureQueueRuntimeSnapshot,
     lastPhaseDurations: cloneCreaturePhaseDurations(creatureQueueRuntimeSnapshot.lastPhaseDurations),
+  };
+}
+
+export function markRecoveryPassStarted(now = new Date()) {
+  recoveryRuntimeSnapshot = {
+    ...recoveryRuntimeSnapshot,
+    running: true,
+    runningSince: now,
+    lastStartedAt: now,
+    lastError: null,
+  };
+}
+
+export function markRecoveryPassFinished(metrics: RecoveryPassMetrics, now = new Date()) {
+  recoveryRuntimeSnapshot = {
+    running: false,
+    runningSince: null,
+    lastStartedAt: recoveryRuntimeSnapshot.lastStartedAt,
+    lastFinishedAt: now,
+    lastError: null,
+    lastPhaseDurations: { ...EMPTY_RECOVERY_PHASE_DURATIONS, ...metrics.phaseDurations },
+    lastPlayersScanned: metrics.playersScanned,
+    lastPlayersUpdated: metrics.playersUpdated,
+    lastPlayersSkippedActive: metrics.playersSkippedActive,
+    lastIdleRemindersSent: metrics.idleRemindersSent,
+    lastSleepAutoWakes: metrics.sleepAutoWakes,
+    lastPlayerMessagesSent: metrics.playerMessagesSent,
+    lastCreaturesScanned: metrics.creaturesScanned,
+    lastCreaturesUpdated: metrics.creaturesUpdated,
+    lastActiveCreaturesRefreshed: metrics.activeCreaturesRefreshed,
+  };
+}
+
+export function markRecoveryPassError(error: unknown, now = new Date()) {
+  recoveryRuntimeSnapshot = {
+    ...recoveryRuntimeSnapshot,
+    running: false,
+    runningSince: null,
+    lastFinishedAt: now,
+    lastError: compactRuntimeError(error),
+  };
+}
+
+export function getRecoveryRuntimeSnapshot(): RecoveryRuntimeSnapshot {
+  return {
+    ...recoveryRuntimeSnapshot,
+    lastPhaseDurations: cloneRecoveryPhaseDurations(recoveryRuntimeSnapshot.lastPhaseDurations),
   };
 }
 
