@@ -1807,9 +1807,11 @@ export function registerAliasHandlers(bot: Bot) {
     if (isHerbalTinctureCommandTarget(target)) return submitBrewTincture(bot, ctx);
     await ctx.reply("Напишіть так: /brew tincture або /make_tincture.");
   });
-  bot.command("make_tincture", async (ctx) => submitBrewTincture(bot, ctx));
+  bot.command(["make_tincture", "brew_tincture"], async (ctx) => submitBrewTincture(bot, ctx));
   bot.command("drink", async (ctx) => submitDrinkOrUseCommand(bot, ctx, String(ctx.match ?? ""), "Напишіть так: /drink tincture."));
+  bot.command("drink_tincture", async (ctx) => submitUseItem(bot, ctx, HERBAL_TINCTURE_KEY));
   bot.command("use", async (ctx) => submitDrinkOrUseCommand(bot, ctx, String(ctx.match ?? ""), "Напишіть так: /use tincture."));
+  bot.command("use_tincture", async (ctx) => submitUseItem(bot, ctx, HERBAL_TINCTURE_KEY));
   bot.command(["get_all", "pick_all", "pickup_all", "take_all"], async (ctx) => submitPickupCommand(bot, ctx, pickupAllCommandTarget(ctx.match ?? "")));
   bot.command("track", async (ctx) => submitTrack(bot, ctx, false, ctx.match ?? ""));
 	  bot.command("follow", async (ctx) => submitFollowIntent(ctx, ctx.match ?? ""));

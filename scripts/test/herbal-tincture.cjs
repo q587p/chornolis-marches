@@ -137,11 +137,14 @@ assert.deepEqual(herbalTinctureDrinkPlan({ stamina: 5, staminaMax: 50 }), {
 
 assertAlias("/brew tincture", { kind: "brew-tincture" });
 assertAlias("/brew herbal_tincture", { kind: "brew-tincture" });
+assertAlias("/brew_tincture", { kind: "brew-tincture" });
 assertAlias("/make_tincture", { kind: "brew-tincture" });
 assertAlias("зробити настоянку", { kind: "brew-tincture" });
 assertAlias("приготувати зілля", { kind: "brew-tincture" });
 assertAlias("/drink tincture", { kind: "use-item", item: HERBAL_TINCTURE_KEY });
+assertAlias("/drink_tincture", { kind: "use-item", item: HERBAL_TINCTURE_KEY });
 assertAlias("/use tincture", { kind: "use-item", item: HERBAL_TINCTURE_KEY });
+assertAlias("/use_tincture", { kind: "use-item", item: HERBAL_TINCTURE_KEY });
 assertAlias("випити настоянку", { kind: "use-item", item: HERBAL_TINCTURE_KEY });
 assert.equal(inventoryResourceKeyFromText("трав’яна настоянка"), HERBAL_TINCTURE_KEY);
 assert.equal(inventoryResourceKeyFromText("трав’яну настоянку"), HERBAL_TINCTURE_KEY);
@@ -150,9 +153,11 @@ assert.equal(resourceDisplayName(HERBAL_TINCTURE_KEY, "accusative"), "трав�
 
 const handlersSource = fs.readFileSync(path.join(root, "src", "handlers", "aliases.ts"), "utf8");
 assert.match(handlersSource, /bot\.command\("brew"/);
-assert.match(handlersSource, /bot\.command\("make_tincture"/);
+assert.match(handlersSource, /bot\.command\(\["make_tincture", "brew_tincture"\]/);
 assert.match(handlersSource, /bot\.command\("drink"/);
+assert.match(handlersSource, /bot\.command\("drink_tincture"/);
 assert.match(handlersSource, /bot\.command\("use"/);
+assert.match(handlersSource, /bot\.command\("use_tincture"/);
 assert.match(handlersSource, /attemptHerbalTinctureBrewForPlayer/);
 
 const playerHandlerSource = fs.readFileSync(path.join(root, "src", "handlers", "player.ts"), "utf8");
