@@ -596,7 +596,7 @@ export function registerPlayerHandlers(bot: Bot) {
     }
   });
 
-  bot.callbackQuery(/^inventory:use:(berries|herbs|mushrooms|cooked_meat)$/, async (ctx) => {
+  bot.callbackQuery(/^inventory:use:(berries|herbs|mushrooms|cooked_meat|herbal_tincture)$/, async (ctx) => {
     const resourceKey = ctx.match[1] as UsableInventoryResource;
     const player = await getPlayerByTelegramId(ctx.from.id);
     await safeAnswerCallbackQuery(ctx);

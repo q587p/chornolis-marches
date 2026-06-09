@@ -1,7 +1,7 @@
 import { Direction } from "@prisma/client";
 
 export type GatherKey = "berries" | "mushrooms" | "herbs" | "honey" | "beeswax";
-export type UseItemKey = "berries" | "herbs" | "mushrooms" | "cooked_meat";
+export type UseItemKey = "berries" | "herbs" | "mushrooms" | "cooked_meat" | "herbal_tincture";
 export type TargetAction = "inspect" | "greet" | "attack" | "freshen";
 export type QueueAliasMode = "status" | "cancel-current" | "clear";
 export type AutoAliasMode = "show" | "start" | "stop";
@@ -46,6 +46,7 @@ export type ParsedAliasCommand =
   | { kind: "hide-keyboard" }
   | { kind: "move"; direction: Direction }
   | { kind: "gather"; resourceKey?: GatherKey }
+  | { kind: "brew-tincture" }
   | { kind: "use-item"; item: UseItemKey }
   | { kind: "use-item-all"; item: UseItemKey }
   | { kind: "light-torch" }
@@ -620,6 +621,24 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "приготувати м’ясо": { kind: "cook-meat" },
   "приготувати все м'ясо": { kind: "cook-meat-all" },
   "приготувати все м’ясо": { kind: "cook-meat-all" },
+  "brew tincture": { kind: "brew-tincture" },
+  "brew herbal_tincture": { kind: "brew-tincture" },
+  "brew herbal tincture": { kind: "brew-tincture" },
+  "make tincture": { kind: "brew-tincture" },
+  "make herbal tincture": { kind: "brew-tincture" },
+  "make_tincture": { kind: "brew-tincture" },
+  "prepare tincture": { kind: "brew-tincture" },
+  "prepare herbal tincture": { kind: "brew-tincture" },
+  "зробити настоянку": { kind: "brew-tincture" },
+  "приготувати настоянку": { kind: "brew-tincture" },
+  "зробити трав'яну настоянку": { kind: "brew-tincture" },
+  "зробити трав’яну настоянку": { kind: "brew-tincture" },
+  "зробити травʼяну настоянку": { kind: "brew-tincture" },
+  "приготувати трав'яну настоянку": { kind: "brew-tincture" },
+  "приготувати трав’яну настоянку": { kind: "brew-tincture" },
+  "приготувати травʼяну настоянку": { kind: "brew-tincture" },
+  "зробити зілля": { kind: "brew-tincture" },
+  "приготувати зілля": { kind: "brew-tincture" },
 
   "eat berries": { kind: "use-item", item: "berries" },
   "eat all berries": { kind: "use-item-all", item: "berries" },
@@ -715,6 +734,21 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "використати все смажене м'ясо": { kind: "use-item-all", item: "cooked_meat" },
   "використати смажене м’ясо": { kind: "use-item", item: "cooked_meat" },
   "використати все смажене м’ясо": { kind: "use-item-all", item: "cooked_meat" },
+  "drink tincture": { kind: "use-item", item: "herbal_tincture" },
+  "drink herbal_tincture": { kind: "use-item", item: "herbal_tincture" },
+  "drink herbal tincture": { kind: "use-item", item: "herbal_tincture" },
+  "use tincture": { kind: "use-item", item: "herbal_tincture" },
+  "use herbal_tincture": { kind: "use-item", item: "herbal_tincture" },
+  "use herbal tincture": { kind: "use-item", item: "herbal_tincture" },
+  "випити настоянку": { kind: "use-item", item: "herbal_tincture" },
+  "випити трав'яну настоянку": { kind: "use-item", item: "herbal_tincture" },
+  "випити трав’яну настоянку": { kind: "use-item", item: "herbal_tincture" },
+  "випити травʼяну настоянку": { kind: "use-item", item: "herbal_tincture" },
+  "випити зілля": { kind: "use-item", item: "herbal_tincture" },
+  "використати настоянку": { kind: "use-item", item: "herbal_tincture" },
+  "використати трав'яну настоянку": { kind: "use-item", item: "herbal_tincture" },
+  "використати трав’яну настоянку": { kind: "use-item", item: "herbal_tincture" },
+  "використати травʼяну настоянку": { kind: "use-item", item: "herbal_tincture" },
   "light torch": { kind: "light-torch" },
   "use torch": { kind: "light-torch" },
   "запалити факел": { kind: "light-torch" },
@@ -1052,6 +1086,7 @@ function slashCommandForAlias(alias: string): string | undefined {
     if (parsed.direction === "OUTSIDE") return "/outside";
   }
   if (parsed.kind === "gather") return parsed.resourceKey ? `/gather_${parsed.resourceKey}` : "/gather";
+  if (parsed.kind === "brew-tincture") return "/brew tincture";
   if (parsed.kind === "use-item") return `/use_${parsed.item}`;
   if (parsed.kind === "use-item-all") return `/eat_all_${parsed.item}`;
   if (parsed.kind === "light-torch") return "/light_torch";

@@ -63,6 +63,7 @@ export function actionTitle(action: Pick<WorldAction, "type" | "payload" | "dura
     if (payload.resourceKey === "mushrooms") return "їмо гриби";
     if (payload.resourceKey === "herbs") return "використовуємо трави";
     if (payload.resourceKey === "cooked_meat") return "їмо смажене м'ясо";
+    if (payload.resourceKey === "herbal_tincture") return "п'ємо трав'яну настоянку";
     return "використовуємо річ";
   }
   if (action.type === "DROP_ITEM") {

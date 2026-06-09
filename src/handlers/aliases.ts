@@ -94,6 +94,7 @@ import {
   isEmptyBottleTarget,
   takeBottleFromCurrentLocation,
 } from "../services/bottles";
+import { HERBAL_TINCTURE_KEY, attemptHerbalTinctureBrewForPlayer } from "../services/tinctures";
 import { queueAllBeginnerCacheContributions } from "../services/beginnerCacheQueue";
 import {
   clearPlayerFollowIntent,
@@ -525,6 +526,41 @@ async function submitUseItem(bot: Bot, ctx: any, item: UsableInventoryResource) 
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   await submitInventoryQueuedAction(bot, ctx, player, "USE_ITEM", { resourceKey: item }, "Не вдалося використати це.");
+}
+
+function isUsableInventoryResourceKey(value: string): value is UsableInventoryResource {
+  return value === "berries" || value === "herbs" || value === "mushrooms" || value === "cooked_meat" || value === HERBAL_TINCTURE_KEY;
+}
+
+function isHerbalTinctureCommandTarget(value: string | undefined | null) {
+  if (!value) return false;
+  return inventoryResourceKeyFromText(value) === HERBAL_TINCTURE_KEY;
+}
+
+async function submitBrewTincture(bot: Bot, ctx: any) {
+  const player = await getPlayerByTelegramId(ctx.from.id);
+  if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+
+  try {
+    assertCanPerformPhysicalAction(player, "BREW");
+    const result = await attemptHerbalTinctureBrewForPlayer(player.id);
+    if (!result.ok) {
+      await ctx.reply(result.text);
+      return;
+    }
+
+    const staminaSpend = await spendPlayerStaminaAmount(bot, player.id, 1, ctx.chat?.id);
+    await ctx.reply(result.text, staminaSpend.replyMarkup ? { reply_markup: staminaSpend.replyMarkup } : undefined);
+  } catch (error) {
+    await replyToActionError(ctx, error, "Не вдалося приготувати настоянку.");
+  }
+}
+
+async function submitDrinkOrUseCommand(bot: Bot, ctx: any, target: string, fallbackUsage: string) {
+  if (!target.trim()) return void (await ctx.reply(fallbackUsage));
+  const resourceKey = inventoryResourceKeyFromText(target);
+  if (!isUsableInventoryResourceKey(resourceKey)) return void (await ctx.reply(fallbackUsage));
+  return submitUseItem(bot, ctx, resourceKey);
 }
 
 async function submitUseAllItems(bot: Bot, ctx: any, item: UsableInventoryResource) {
@@ -1752,6 +1788,7 @@ export function registerAliasHandlers(bot: Bot) {
     "shake_tree",
     "freshen_all",
     "take_bottle",
+    "make_tincture",
     "smile",
 	    "glance",
 	    "enter",
@@ -1765,6 +1802,14 @@ export function registerAliasHandlers(bot: Bot) {
   bot.command(["freshen", "butcher"], async (ctx) => submitTargetAction(bot, ctx, "freshen", (ctx.match ?? "").trim() || "corpse"));
   bot.command(["get", "pick", "pickup", "take"], async (ctx) => submitPickupCommand(bot, ctx, ctx.match ?? ""));
   bot.command("take_bottle", async (ctx) => submitPickupCommand(bot, ctx, (ctx.match ?? "").trim() || "empty bottle"));
+  bot.command("brew", async (ctx) => {
+    const target = String(ctx.match ?? "").trim();
+    if (isHerbalTinctureCommandTarget(target)) return submitBrewTincture(bot, ctx);
+    await ctx.reply("Напишіть так: /brew tincture або /make_tincture.");
+  });
+  bot.command("make_tincture", async (ctx) => submitBrewTincture(bot, ctx));
+  bot.command("drink", async (ctx) => submitDrinkOrUseCommand(bot, ctx, String(ctx.match ?? ""), "Напишіть так: /drink tincture."));
+  bot.command("use", async (ctx) => submitDrinkOrUseCommand(bot, ctx, String(ctx.match ?? ""), "Напишіть так: /use tincture."));
   bot.command(["get_all", "pick_all", "pickup_all", "take_all"], async (ctx) => submitPickupCommand(bot, ctx, pickupAllCommandTarget(ctx.match ?? "")));
   bot.command("track", async (ctx) => submitTrack(bot, ctx, false, ctx.match ?? ""));
 	  bot.command("follow", async (ctx) => submitFollowIntent(ctx, ctx.match ?? ""));
@@ -1929,6 +1974,7 @@ export function registerAliasHandlers(bot: Bot) {
     }
     if (parsed.kind === "move") return submitCanonicalMove(bot, ctx, parsed.direction, false);
     if (parsed.kind === "gather") return submitCanonicalGather(bot, ctx, parsed.resourceKey, false);
+    if (parsed.kind === "brew-tincture") return submitBrewTincture(bot, ctx);
     if (parsed.kind === "posture") return submitPosture(bot, ctx, parsed.mode);
     if (parsed.kind === "rest") return submitRest(bot, ctx, parsed.mode);
     if (parsed.kind === "auto") return submitAuto(bot, ctx, parsed.mode);

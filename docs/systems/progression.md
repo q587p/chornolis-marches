@@ -289,8 +289,14 @@ gathering finds herbs and berries, cooking prepares ordinary food, while
 herbalism governs careful tincture/draught preparation. The first policy stays
 hidden and qualitative: ordinary players should not see raw success chances,
 levels or thresholds. Success, ordinary failure and harsher bottle-breaking
-failure are now described by helper policy, but no public `/brew` command,
-tincture resource or live inventory consumption exists yet.
+failure are described by helper policy.
+
+`0.16.16` wires that policy into the first live prepared remedy. Brewing a
+`herbal_tincture` uses the recipe helper for input validation and the herbalism
+policy for the outcome. Missing ingredients consume nothing and record no
+practice. Real attempts record `herbalism` / `practice` /
+`brew:herbal_tincture` after the outcome, so success and meaningful failures
+teach the next attempt without showing raw numbers to ordinary players.
 
 After the actor-learning foundation, the intended near-term order is:
 
