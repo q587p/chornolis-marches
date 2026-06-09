@@ -2,7 +2,7 @@ import { Bot } from "grammy";
 import type { Prisma, WorldActionType } from "@prisma/client";
 import { actionDurationMs, performOrQueuePlayerAction, renderPlayerActionQueue } from "../services/actionQueue";
 import { getPlayerByTelegramId } from "../services/players";
-import { renderDepletedVegetationInspection, renderLocationBrief, renderLocationDetails, renderLocationFeatureInteraction, renderLocationFeatureInteractionByQuery, shakeTreeFeature, takeTorchFromLocationFeature } from "../services/locations";
+import { renderDepletedVegetationInspection, renderLocationBrief, renderLocationDetails, renderLocationFeatureInteraction, renderLocationFeatureInteractionByQuery, shakeTreeFeature, takeBottleFromLocationFeature, takeTorchFromLocationFeature } from "../services/locations";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { actionQueueReplyOptions, sendActionSubmitFeedback } from "../utils/actionQueueUi";
 import { durationSecondsSuffix } from "../utils/durationText";
@@ -22,6 +22,7 @@ import { maybeTriggerPassiveApiarySting } from "../services/apiaryHazards";
 import { contributeToBeginnerCache, takeFromBeginnerCache } from "../services/beginnerCache";
 import { queueAllBeginnerCacheContributions } from "../services/beginnerCacheQueue";
 import { campfireBuildConfirmationText, TORCH_SOURCE_TAKE_EVENT_TITLE } from "../services/fire";
+import { EMPTY_BOTTLE_SOURCE_TAKE_EVENT_TITLE } from "../services/bottles";
 import { buildWetCampfireConfirmKeyboard } from "../ui/fireKeyboards";
 import { putInventoryIntoLocalFeature } from "../services/carcassDropoff";
 import { playerForms } from "../services/grammar";
@@ -464,6 +465,36 @@ export function registerLookHandlers(bot: Bot) {
       const message = actionErrorMessage(error, "Не вдалося взяти факел.");
       await safeAnswerCallbackQuery(ctx, message);
       await replyToActionError(ctx, error, "Не вдалося взяти факел.", { replyFallback: false });
+    }
+  });
+
+  bot.callbackQuery(/^bottle:take:(\d+)$/, async (ctx) => {
+    const player = await getPlayerByTelegramId(ctx.from.id);
+    if (!player) {
+      await safeAnswerCallbackQuery(ctx);
+      return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
+    }
+
+    try {
+      assertCanPerformPhysicalAction(player, "PICK_UP");
+      const result = await takeBottleFromLocationFeature(Number(ctx.match[1]), player.id);
+      await safeAnswerCallbackQuery(ctx);
+      if (player.currentLocationId && result.taken) {
+        await recordVisibleItemAction(bot, {
+          playerId: player.id,
+          locationId: player.currentLocationId,
+          observerText: pickupObserverText(player, "порожню пляшечку"),
+          eventTitle: EMPTY_BOTTLE_SOURCE_TAKE_EVENT_TITLE,
+          eventDescription: `player=${player.id}; item=empty_bottle; source=feature:${ctx.match[1]}`,
+          actionNote: "піднято: порожня пляшечка",
+        });
+        await spendPlayerStaminaAmount(bot, player.id, 1, ctx.chat?.id);
+      }
+      await ctx.reply(result.text, result.taken ? await inventoryGainReplyOptions(player, "take-bottle") : undefined);
+    } catch (error) {
+      const message = actionErrorMessage(error, "Не вдалося взяти пляшечку.");
+      await safeAnswerCallbackQuery(ctx, message);
+      await replyToActionError(ctx, error, "Не вдалося взяти пляшечку.", { replyFallback: false });
     }
   });
 

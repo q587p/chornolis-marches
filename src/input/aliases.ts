@@ -1390,6 +1390,10 @@ function parseTargetAction(text: string): ParsedAliasCommand | null {
 }
 
 function parsePickup(text: string): ParsedAliasCommand | null {
+  if (/^(?:take_bottle|take bottle|взяти пляшечку|взяти пляшку|забрати пляшечку|забрати пляшку)$/u.test(text)) {
+    return { kind: "pickup-target", target: "empty bottle" };
+  }
+
   const allMatch = text.match(/^(?:get_all|pick_all|pickup_all|take_all)(?:\s+(.+))?$/);
   if (allMatch) {
     const filter = allMatch[1]?.trim();

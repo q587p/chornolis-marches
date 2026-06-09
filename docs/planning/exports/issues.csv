@@ -5,7 +5,7 @@ ADM-001-B,Scribe action audit helper,done,technical,admin,medium,"admin,audit,wo
 ADM-001-C,Restart confirmation and HTML safety hardening,testing,technical,admin,high,"admin,safety,restart,slashless,html,features",docs/planning/items/ADM-001-C.md
 ADM-002,Scribe creature corpse creation command,testing,feature,admin,medium,"admin,creatures,corpses,testing",docs/planning/items/ADM-002-add-creature-corpse-command.md
 ALC-001,First herbal stamina tincture,backlog,feature,survival,high,"alchemy,herbs,berries,stamina,bottles,crafting,inventory",docs/planning/items/ALC-001-herbal-stamina-elixir.md
-ALC-002,Root-pocket bottle cache and empty vessel resource,backlog,feature,survival,high,"alchemy,bottles,inventory,map,cellar,onboarding",docs/planning/items/ALC-002-bottle-cache-and-empty-vessels.md
+ALC-002,Root-pocket bottle cache and empty vessel resource,testing,feature,survival,high,"alchemy,bottles,inventory,map,cellar,onboarding",docs/planning/items/ALC-002-bottle-cache-and-empty-vessels.md
 ALC-003,Healing and night-sight draughts,backlog,feature,survival,medium,"alchemy,healing,night,visibility,effects,mushrooms,wetland",docs/planning/items/ALC-003-healing-and-night-sight-draughts.md
 ALC-004,Herbalist bottle route and brewing demonstration,backlog,feature,npc,high,"npc,herbalist,alchemy,bottles,observation-learning,living-world",docs/planning/items/ALC-004-herbalist-bottle-route-and-brewing-demo.md
 ALC-005,Herbalist mentorship brewing hint,backlog,ux,learning,medium,"mentorship,herbalist,alchemy,bottles,learning,onboarding",docs/planning/items/ALC-005-mentorship-brewing-hints.md

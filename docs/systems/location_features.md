@@ -45,6 +45,7 @@ Current interactive examples:
 - authored vertical landmark: a feature can expose `data.vertical_hint = "UP"` to add a direct movement button such as `Вгору` when inspected, while the real movement still uses the ordinary exit graph.
 - shakeable branches: an upper-tree feature with a cooldown; `/examine` should explain whether dry twigs can be shaken down now or whether the tree needs time before it gives more.
 - shared beginner cache: a starter-camp/watchtower supply feature with small qualitative stock, focused take/contribute buttons and hidden unobserved restock stored in feature data. It is early mutual support, not a shop or fixed reward loop.
+- empty-bottle niche: a narrow starter-cellar/root-pocket utility feature with `data.empty_bottle_source = true`; `/examine` should explain that one `порожня пляшечка` can be taken for future herbal preparations. The authored source remains non-depleting for now, but its source path stops giving bottles once the player already carries 3 `empty_bottle`. It is intentionally not a broad loot cache, shop, recipe UI, potion source or global inventory system.
 - strange totem: a dry `LANDMARK` with `data.strange_totem = true`; `/look` lists it compactly, `/examine` explains its age and suspicious construction, and `Розібрати` / `/dismantle_totem` queues a dismantle action that can recover `twigs`.
 
 ## Strange Totems

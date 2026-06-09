@@ -64,6 +64,7 @@ module.exports = [
   nodeTest("scripts/test/cellar-water-passage.cjs"),
   nodeTest("scripts/test/attention-gated-location.cjs"),
   nodeTest("scripts/test/track-gated-location.cjs"),
+  nodeTest("scripts/test/bottle-cache.cjs"),
   nodeTest("scripts/test/attack-rules.cjs"),
   nodeTest("scripts/test/attack-learning.cjs"),
   nodeTest("scripts/test/gathering-learning.cjs"),

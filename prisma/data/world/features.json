@@ -685,6 +685,40 @@
     }
   },
   {
+    "key": "start_root_pocket_bottle_niche",
+    "locationKey": "start_cellar_root_pocket",
+    "type": "LANDMARK",
+    "name": "Глиняна ніша з пляшечками",
+    "description": "У сухій глині між коренями зроблено низьку нішу. Всередині стоять кілька малих пляшечок, чистих і порожніх, ніби їх берегли не для продажу, а для першої тихої спроби змішати траву, ягоду й терпіння.",
+    "providesLight": false,
+    "restStaminaCapMultiplier": null,
+    "data": {
+      "icon": "🧪",
+      "inspectable": true,
+      "empty_bottle_source": true,
+      "infinite_for_now": true,
+      "future_limited_stock": true,
+      "source_carry_cap": 3,
+      "future_dirty_bottle_washing": true,
+      "herbalist_resupply": true,
+      "narrow_bottle_cache": true,
+      "no_broad_loot": true,
+      "examine_summary": "ніша не є скарбницею, але дозволяє взяти одну порожню пляшечку для майбутніх трав'яних приготувань; запас поки не вичерпується, та брати більше трьох порожніх пляшечок у дорогу не варто",
+      "aliases": [
+        "ніша",
+        "глиняна ніша",
+        "пляшечки",
+        "порожні пляшечки",
+        "пляшечка",
+        "пляшка",
+        "порожня пляшечка",
+        "bottle niche",
+        "empty bottles",
+        "bottle"
+      ]
+    }
+  },
+  {
     "key": "start_cellar_torn_map_board",
     "locationKey": "start_border_cellar",
     "type": "LANDMARK",

@@ -116,7 +116,7 @@
   {
     "id": "ALC-002",
     "title": "Root-pocket bottle cache and empty vessel resource",
-    "status": "backlog",
+    "status": "testing",
     "type": "feature",
     "area": "survival",
     "priority": "high",

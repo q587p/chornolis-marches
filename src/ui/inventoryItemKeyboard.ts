@@ -14,6 +14,7 @@ function inventoryItemDropLabel(resourceKey: string) {
   if (resourceKey === "mushrooms") return "Викинути гриби";
   if (resourceKey === "herbs") return "Викинути трави";
   if (resourceKey === COOKED_MEAT_KEY || resourceKey === RAW_MEAT_KEY) return "Викинути м’ясо";
+  if (resourceKey === "empty_bottle") return "Викинути пляшечку";
   if (resourceKey === "twigs") return "Викинути хмиз";
   if (resourceKey === "torch" || resourceKey === "doused_torch" || resourceKey === "lit_torch") return "Викинути факел";
   return "Викинути";
