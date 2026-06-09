@@ -15,10 +15,15 @@ import {
 import { buildFatigueRestKeyboard } from "../ui/keyboards";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import {
+  actionCompletionSlowThresholdMs,
+  compactActionCompletionError,
+  markActionCompletionObserved,
   markCreatureQueuePassError,
   markCreatureQueuePassFinished,
   markCreatureQueuePassStarted,
   setLastRuntimeError,
+  type ActionCompletionOutcome,
+  type ActionCompletionObservation,
   type ActionQueuePassMetrics,
   type ActionQueuePhaseDurations,
   type CreatureQueuePhaseDurations,
@@ -225,6 +230,71 @@ async function findSimilarActivePlayerAction(input: Pick<PlayerActionRequest, "p
 
 function isMissingRecordError(error: unknown) {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025";
+}
+
+function sanitizeCompletionLogText(value: string | null) {
+  if (!value) return null;
+  return value.replace(/\s+/g, " ").slice(0, 240);
+}
+
+function logActionCompletionObservation(observation: ActionCompletionObservation) {
+  const threshold = actionCompletionSlowThresholdMs();
+  const isSlow = threshold > 0 && observation.durationMs >= threshold;
+  if (!isSlow && observation.outcome !== "error") return;
+
+  const error = sanitizeCompletionLogText(observation.error);
+  console.warn([
+    `slow:actionCompletion actor=${observation.actorType}`,
+    `type=${observation.type}`,
+    `id=${observation.actionId}`,
+    `durationMs=${observation.durationMs}`,
+    `overdueMs=${observation.overdueMs}`,
+    `outcome=${observation.outcome}`,
+    error ? `error=${error}` : null,
+  ].filter(Boolean).join(" "));
+}
+
+function recordActionCompletionObservation(
+  action: WorldAction,
+  startedAtMs: number,
+  outcome: ActionCompletionOutcome,
+  error: string | null,
+) {
+  const finishedAtMs = Date.now();
+  const observation: ActionCompletionObservation = {
+    observedAt: new Date(finishedAtMs),
+    actionId: action.id,
+    actorType: action.actorType === "CREATURE" ? "CREATURE" : "PLAYER",
+    playerId: action.playerId ?? null,
+    creatureId: action.creatureId ?? null,
+    type: action.type,
+    durationMs: Math.max(0, finishedAtMs - startedAtMs),
+    overdueMs: action.executeAt ? Math.max(0, startedAtMs - action.executeAt.getTime()) : 0,
+    outcome,
+    error: error ? sanitizeCompletionLogText(error) : null,
+  };
+  markActionCompletionObserved(observation);
+  logActionCompletionObservation(observation);
+}
+
+export async function completeActionWithObservation(
+  bot: Bot,
+  action: WorldAction,
+  completeAction: (bot: Bot, action: WorldAction) => Promise<unknown>,
+): Promise<ActionCompletionOutcome> {
+  const startedAtMs = Date.now();
+  try {
+    await completeAction(bot, action);
+    recordActionCompletionObservation(action, startedAtMs, "ok", null);
+    return "ok";
+  } catch (error) {
+    if (isMissingRecordError(error)) {
+      recordActionCompletionObservation(action, startedAtMs, "missing", compactActionCompletionError(error));
+      return "missing";
+    }
+    recordActionCompletionObservation(action, startedAtMs, "error", compactActionCompletionError(error));
+    throw error;
+  }
 }
 
 function chatIdFromAction(action: WorldAction) {
@@ -689,11 +759,9 @@ async function processCreatureActionQueue(bot: Bot, completeAction: (bot: Bot, a
       : [];
     let completedCreatureActions = 0;
     await runWithConcurrency(dueCreatureRunning, plan.completionConcurrency, async (action) => {
-      try {
-        await completeAction(bot, action);
+      const outcome = await completeActionWithObservation(bot, action, completeAction);
+      if (outcome === "ok") {
         completedCreatureActions += 1;
-      } catch (error) {
-        if (!isMissingRecordError(error)) throw error;
       }
     });
     phaseDurations.creatureCompleteMs = Date.now() - creatureCompleteStartedAt;
@@ -742,11 +810,9 @@ export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, ac
   const duePlayerGroups = groupActionsByActor(duePlayerRunning);
   await runWithConcurrency(duePlayerGroups, PLAYER_COMPLETION_CONCURRENCY, async (actions) => {
     for (const action of actions) {
-      try {
-        await completeAction(bot, action);
+      const outcome = await completeActionWithObservation(bot, action, completeAction);
+      if (outcome === "ok") {
         completedPlayerActions.push(action);
-      } catch (error) {
-        if (!isMissingRecordError(error)) throw error;
       }
     }
   });

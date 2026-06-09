@@ -1,7 +1,10 @@
 import {
+  getActionCompletionRuntimeSnapshot,
   getActionQueueRuntimeSnapshot,
   getCreatureQueueRuntimeSnapshot,
   getRecoveryRuntimeSnapshot,
+  type ActionCompletionObservation,
+  type ActionCompletionRuntimeSnapshot,
   type ActionQueuePhaseDurations,
   type ActionQueueRuntimeSnapshot,
   type CreatureQueuePhaseDurations,
@@ -68,6 +71,29 @@ function formatTopOverdue(stats: ActionQueueStatsSnapshot) {
     .join("\n");
 }
 
+export function formatActionCompletionObservation(observation: ActionCompletionObservation) {
+  const actor = observation.actorType === "PLAYER"
+    ? `PLAYER player:${observation.playerId ?? "?"}`
+    : `CREATURE creature:${observation.creatureId ?? "?"}`;
+  const error = observation.error ? ` error=${observation.error}` : "";
+  return `#${observation.actionId} ${actor} ${observation.type} duration=${formatQueueDurationMs(observation.durationMs)} overdue=${formatQueueDurationMs(observation.overdueMs)} outcome=${observation.outcome}${error}`;
+}
+
+function formatActionCompletionObservationList(observations: ActionCompletionObservation[]) {
+  if (observations.length === 0) return "немає";
+  return observations.map(formatActionCompletionObservation).join("\n");
+}
+
+export function formatActionCompletionDebugSection(snapshot: ActionCompletionRuntimeSnapshot) {
+  return [
+    `completionSlow: threshold=${formatQueueDurationMs(snapshot.slowThresholdMs)}; total=${snapshot.totalObservedSinceStart}; slow=${snapshot.slowObservedSinceStart}`,
+    "recentSlowCompletions:",
+    formatActionCompletionObservationList(snapshot.recentSlow),
+    "recentCompletionErrors:",
+    formatActionCompletionObservationList(snapshot.recentErrors),
+  ].join("\n");
+}
+
 export function formatActionQueueDebugReport(
   stats: ActionQueueStatsSnapshot,
   snapshot: ActionQueueRuntimeSnapshot,
@@ -91,6 +117,7 @@ export function formatActionQueueDebugReport(
     `recovery: running=${formatRunning(recoverySnapshot, now)}; lastFinished=${formatAgo(recoverySnapshot.lastFinishedAt, now)}; lastError=${recoverySnapshot.lastError ?? "немає"}`,
     `recoveryPhaseMs: ${formatRecoveryPhaseDurations(recoverySnapshot.lastPhaseDurations)}`,
     `recoveryCounts: playersScanned=${recoverySnapshot.lastPlayersScanned}; playersUpdated=${recoverySnapshot.lastPlayersUpdated}; playersSkippedActive=${recoverySnapshot.lastPlayersSkippedActive}; idleReminders=${recoverySnapshot.lastIdleRemindersSent}; sleepAutoWakes=${recoverySnapshot.lastSleepAutoWakes}; playerMessages=${recoverySnapshot.lastPlayerMessagesSent}; creaturesScanned=${recoverySnapshot.lastCreaturesScanned}; creaturesUpdated=${recoverySnapshot.lastCreaturesUpdated}; activeCreaturesRefreshed=${recoverySnapshot.lastActiveCreaturesRefreshed}`,
+    formatActionCompletionDebugSection(getActionCompletionRuntimeSnapshot()),
     `queued: player=${stats.playerQueued}; creature=${stats.creatureQueued}; total=${stats.totalQueued}`,
     `runningActions: player=${stats.playerRunning}; creature=${stats.creatureRunning}; total=${stats.totalRunning}`,
     `oldestQueued: player=${formatQueueDurationMs(stats.oldestQueuedPlayerAgeMs)}; creature=${formatQueueDurationMs(stats.oldestQueuedCreatureAgeMs)}; total=${formatQueueDurationMs(stats.oldestQueuedAgeMs)}`,

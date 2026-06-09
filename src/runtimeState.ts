@@ -95,6 +95,30 @@ export type RecoveryRuntimeSnapshot = {
   lastActiveCreaturesRefreshed: number;
 };
 
+export type ActionCompletionOutcome = "ok" | "error" | "missing";
+
+export type ActionCompletionObservation = {
+  observedAt: Date;
+  actionId: number;
+  actorType: "PLAYER" | "CREATURE";
+  playerId: number | null;
+  creatureId: number | null;
+  type: string;
+  durationMs: number;
+  overdueMs: number;
+  outcome: ActionCompletionOutcome;
+  error: string | null;
+};
+
+export type ActionCompletionRuntimeSnapshot = {
+  slowThresholdMs: number;
+  lastObservedAt: Date | null;
+  totalObservedSinceStart: number;
+  slowObservedSinceStart: number;
+  recentSlow: ActionCompletionObservation[];
+  recentErrors: ActionCompletionObservation[];
+};
+
 const EMPTY_ACTION_QUEUE_PHASE_DURATIONS: ActionQueuePhaseDurations = {
   playerCompleteMs: 0,
   playerStartMs: 0,
@@ -159,6 +183,16 @@ let recoveryRuntimeSnapshot: RecoveryRuntimeSnapshot = {
   lastActiveCreaturesRefreshed: 0,
 };
 
+let actionCompletionRuntimeState: Omit<ActionCompletionRuntimeSnapshot, "slowThresholdMs"> = {
+  lastObservedAt: null,
+  totalObservedSinceStart: 0,
+  slowObservedSinceStart: 0,
+  recentSlow: [],
+  recentErrors: [],
+};
+
+const DEFAULT_ACTION_COMPLETION_SLOW_MS = 1000;
+
 let telegramBotStatus: {
   state: "starting" | "ready" | "error";
   checkedAt: Date | null;
@@ -182,6 +216,36 @@ export function setLastRuntimeError(error: unknown) {
 function compactRuntimeError(error: unknown) {
   const text = String(error instanceof Error ? error.message : error);
   return text.length > 240 ? `${text.slice(0, 237)}...` : text;
+}
+
+function intEnv(name: string, fallback: number) {
+  const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env;
+  const value = Number(env?.[name]);
+  return Number.isFinite(value) ? Math.floor(value) : fallback;
+}
+
+export function actionCompletionSlowThresholdMs() {
+  return Math.max(0, intEnv("ACTION_COMPLETION_SLOW_MS", intEnv("SLOW_COMMAND_LOG_MS", DEFAULT_ACTION_COMPLETION_SLOW_MS)));
+}
+
+export function actionCompletionSampleLimit() {
+  return Math.max(1, Math.min(50, intEnv("ACTION_COMPLETION_SAMPLE_LIMIT", 10)));
+}
+
+export function compactActionCompletionError(error: unknown) {
+  return compactRuntimeError(error);
+}
+
+function cloneActionCompletionObservation(observation: ActionCompletionObservation): ActionCompletionObservation {
+  return {
+    ...observation,
+    observedAt: new Date(observation.observedAt.getTime()),
+  };
+}
+
+function pushCapped<T>(items: T[], item: T, limit: number) {
+  items.unshift(item);
+  if (items.length > limit) items.length = limit;
 }
 
 function clonePhaseDurations(value: ActionQueuePhaseDurations | null): ActionQueuePhaseDurations | null {
@@ -324,6 +388,46 @@ export function getRecoveryRuntimeSnapshot(): RecoveryRuntimeSnapshot {
   return {
     ...recoveryRuntimeSnapshot,
     lastPhaseDurations: cloneRecoveryPhaseDurations(recoveryRuntimeSnapshot.lastPhaseDurations),
+  };
+}
+
+export function markActionCompletionObserved(observation: ActionCompletionObservation): void {
+  const threshold = actionCompletionSlowThresholdMs();
+  const limit = actionCompletionSampleLimit();
+  const cloned = cloneActionCompletionObservation(observation);
+  const isSlow = threshold > 0 && cloned.durationMs >= threshold;
+
+  actionCompletionRuntimeState = {
+    ...actionCompletionRuntimeState,
+    lastObservedAt: cloned.observedAt,
+    totalObservedSinceStart: actionCompletionRuntimeState.totalObservedSinceStart + 1,
+    slowObservedSinceStart: actionCompletionRuntimeState.slowObservedSinceStart + (isSlow ? 1 : 0),
+    recentSlow: [...actionCompletionRuntimeState.recentSlow],
+    recentErrors: [...actionCompletionRuntimeState.recentErrors],
+  };
+
+  if (isSlow) pushCapped(actionCompletionRuntimeState.recentSlow, cloned, limit);
+  if (cloned.outcome === "error") pushCapped(actionCompletionRuntimeState.recentErrors, cloned, limit);
+}
+
+export function getActionCompletionRuntimeSnapshot(): ActionCompletionRuntimeSnapshot {
+  return {
+    slowThresholdMs: actionCompletionSlowThresholdMs(),
+    lastObservedAt: actionCompletionRuntimeState.lastObservedAt ? new Date(actionCompletionRuntimeState.lastObservedAt.getTime()) : null,
+    totalObservedSinceStart: actionCompletionRuntimeState.totalObservedSinceStart,
+    slowObservedSinceStart: actionCompletionRuntimeState.slowObservedSinceStart,
+    recentSlow: actionCompletionRuntimeState.recentSlow.map(cloneActionCompletionObservation),
+    recentErrors: actionCompletionRuntimeState.recentErrors.map(cloneActionCompletionObservation),
+  };
+}
+
+export function resetActionCompletionRuntimeSnapshotForTests(): void {
+  actionCompletionRuntimeState = {
+    lastObservedAt: null,
+    totalObservedSinceStart: 0,
+    slowObservedSinceStart: 0,
+    recentSlow: [],
+    recentErrors: [],
   };
 }
 

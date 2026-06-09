@@ -158,16 +158,26 @@ slow:<label> durationMs=<number>
 ```
 
 Labels describe code paths such as learning lookup, target inspection, tracking,
-the action queue pass, the separate recovery pass, follow-route memory, or
-`followAssist.catchUp` after a completed move. They must
-not include private player message text, Telegram payloads, whispers, direct
-replies, tokens or database secrets. Use these logs to identify remaining
+the action queue pass, individual action completions, the separate recovery
+pass, follow-route memory, or `followAssist.catchUp` after a completed move.
+They must not include private player message text, Telegram payloads, whispers,
+direct replies, tokens or database secrets. Use these logs to identify remaining
 hotspots before rewriting WorldEvent marker storage or adding broader indexes.
 
 `slow:actionQueue.process` and `slow:recoveryLoop.pass` should be watched
 together when checking responsiveness. The action queue should finish due
 actions without waiting for the full stamina/HP recovery scan; recovery runs on
 `RECOVERY_POLL_MS`, defaulting to 5000 ms.
+
+As of `0.16.23`, individual completed player/creature actions also record a
+small sanitized runtime sample. `slow:actionCompletion` appears only for slow
+completions or completion errors and includes action id, actor type, player or
+creature id, action type, duration, overdue age and outcome. It intentionally
+does not log raw action payload JSON, Telegram chat ids, private text, whispers
+or secrets. `ACTION_COMPLETION_SLOW_MS` can override the threshold for this
+path; otherwise it follows `SLOW_COMMAND_LOG_MS` and defaults to `1000`.
+`ACTION_COMPLETION_SAMPLE_LIMIT` controls how many recent slow/error samples
+guarded `/queueDebug` keeps, defaulting to `10` and capped at `50`.
 
 As of `0.16.22`, the recovery loop also records a compact runtime snapshot for
 guarded `/queueDebug`: player/creature phase durations, scanned/updated player
@@ -178,6 +188,12 @@ candidates: creatures below base stamina, creatures with a custom `staminaMax`,
 and queued/running creatures that may need `lastStaminaRegenAt` refreshed.
 Player recovery math, sleep/rest behavior and creature action semantics stay
 unchanged.
+
+Guarded `/queueDebug` now also shows `completionSlow`, `recentSlowCompletions`
+and `recentCompletionErrors`. Use that section when `playerCompleteMs` or
+`creatureCompleteMs` is high but the pass-level timings do not show which
+specific action type or actor was slow. This is observability only: Telegram
+sends inside completion handlers are still awaited as before.
 
 ## Action Queue Backpressure
 

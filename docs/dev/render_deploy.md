@@ -115,13 +115,17 @@ Render Web Service exposes:
 
 - `/` — public Ukrainian status and project overview page with `запущено`, version, shared active-character `/who` count, navigation links, emblem, vision and tone.
 - `/world` — protected service status page with world counts, action queue diagnostics and latest events; asks for `ADMIN_SET_SECRET`. Queue diagnostics should distinguish player and creature queued/running/overdue pressure.
-- `/queueDebug` / `/queueNudge` — scribe/admin-only Telegram tools for a compact runtime queue snapshot, creature backpressure diagnostics, recovery-loop timings/counts and one safe queue pass request. They must remain guarded, must not clear or pause queue work, and must not be advertised in public `news.md`.
+- `/queueDebug` / `/queueNudge` — scribe/admin-only Telegram tools for a compact runtime queue snapshot, creature backpressure diagnostics, recovery-loop timings/counts, individual slow completion samples and one safe queue pass request. They must remain guarded, must not clear or pause queue work, and must not be advertised in public `news.md`.
 - `/all` — protected service view of `/all`; asks for `ADMIN_SET_SECRET` before showing the list.
 - `/health` — JSON health check.
 - `/who` — public active-character list with pagination (`?page=0`).
 - `/who.json` — JSON active-character list page and shared public count (`?page=0`).
 - `/stat` — protected human-readable statistics page; asks for `ADMIN_SET_SECRET`.
 - `/stat.json` — protected JSON statistics; requires the same admin cookie as `/stat`.
+
+Guarded queue diagnostics include individual slow completion samples and
+completion errors, but never raw action payloads, Telegram chat ids, private
+text, whispers or secrets.
 
 Start command:
 
@@ -148,6 +152,8 @@ Optional:
 - `PLAYER_COMPLETION_CONCURRENCY` — optional concurrency for completing due player actions. Defaults to `10`.
 - `CREATURE_RUNNING_ACTION_BATCH` — optional due creature-action completion batch size. Defaults to `1000`.
 - `CREATURE_COMPLETION_CONCURRENCY` — optional concurrency for completing due creature actions. Defaults to `25`.
+- `ACTION_COMPLETION_SLOW_MS` — optional threshold for individual action-completion slow samples and `slow:actionCompletion` warnings. Defaults to `SLOW_COMMAND_LOG_MS`, then `1000`; `0` disables slow-only samples/logs while errors are still sampled.
+- `ACTION_COMPLETION_SAMPLE_LIMIT` — optional recent slow/error completion sample count for guarded diagnostics. Defaults to `10`, minimum `1`, maximum `50`.
 - `WORLD_RESOURCE_REGEN_EVERY_TICKS` — optional resource-node regeneration cadence. Defaults to `160`.
 - `WORLD_RESOURCE_REGEN_AMOUNT` — optional amount restored per resource regeneration tick. Defaults to `1`.
 - `WORLD_GRASS_REGEN_EVERY_TICKS` — optional grass regeneration cadence. Defaults to `120`.
