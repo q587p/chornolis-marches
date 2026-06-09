@@ -28,6 +28,15 @@ type ArchiveRepublishStore = {
   cancelPendingPublications?: typeof cancelPendingPublications;
 };
 
+type ArchiveGapPublication = {
+  id: number;
+  sourceType: string;
+  contentHash: string | null;
+  publishedAt: Date | null;
+  visibility: string;
+  manuallyDeletedAt?: Date | null;
+};
+
 function clampInterval(value: number) {
   if (!Number.isFinite(value)) return DEFAULT_BACKFILL_INTERVAL_MS;
   return Math.max(MIN_BACKFILL_INTERVAL_MS, Math.min(MAX_BACKFILL_INTERVAL_MS, Math.floor(value)));
@@ -364,4 +373,136 @@ export async function archiveRepublishStatusWithStore(store: ArchiveRepublishSto
 
 export async function cancelArchiveRepublishPendingPublications(store: ArchiveRepublishStore = {}) {
   return (store.cancelPendingPublications ?? cancelPendingPublications)([NEWS_ARCHIVE_REPUBLISH_SOURCE_TYPE]);
+}
+
+function isVisiblePublishedArchivePublication(publication: ArchiveGapPublication | undefined | null) {
+  return Boolean(
+    publication
+    && publication.publishedAt
+    && publication.visibility === "PUBLIC"
+    && !publication.manuallyDeletedAt
+    && (publication.sourceType === NEWS_ARCHIVE_SOURCE_TYPE || publication.sourceType === NEWS_ARCHIVE_REPUBLISH_SOURCE_TYPE)
+  );
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function archiveEntryDisplayTitle(entry: HeraldNewsEntry) {
+  let title = entry.title;
+  if (entry.sourceVersion) {
+    title = title.replace(new RegExp(`^${escapeRegExp(entry.sourceVersion)}\\s*(?:--|—|-)?\\s*`, "u"), "");
+  }
+  if (entry.sourceDate) {
+    title = title.replace(new RegExp(`\\s*(?:--|—|-)?\\s*${escapeRegExp(entry.sourceDate)}$`, "u"), "");
+  }
+  return title.trim() || entry.title;
+}
+
+export function archiveGapEntryLine(row: { index: number; entry: HeraldNewsEntry }) {
+  const version = row.entry.sourceVersion ?? "без релізу";
+  const title = archiveEntryDisplayTitle(row.entry);
+  const date = row.entry.sourceDate ?? "без дати";
+  return `#${row.index} · ${version} — ${title} — ${date}`;
+}
+
+export async function archiveRepublishGapReport(
+  entries: readonly HeraldNewsEntry[],
+  runId = ARCHIVE_REPUBLISH_RUN_ID,
+  store: ArchiveRepublishStore = {},
+) {
+  const ordered = chronologicalNewsEntries(entries);
+  const hashes = ordered.flatMap((entry) => [
+    entry.contentHash,
+    archiveRepublishContentHash(entry.contentHash, runId),
+  ]);
+  const existing = (await (store.findExistingPublicationsByHashes ?? findExistingPublicationsByHashes)(hashes)) as ArchiveGapPublication[];
+  const existingByHash = new Map<string, ArchiveGapPublication[]>();
+  for (const publication of existing) {
+    if (!publication.contentHash) continue;
+    const publications = existingByHash.get(publication.contentHash) ?? [];
+    publications.push(publication);
+    existingByHash.set(publication.contentHash, publications);
+  }
+
+  const rows = ordered.map((entry, index) => {
+    const publications = [
+      ...(existingByHash.get(entry.contentHash) ?? []),
+      ...(existingByHash.get(archiveRepublishContentHash(entry.contentHash, runId)) ?? []),
+    ];
+    const visiblePublication = publications.find(isVisiblePublishedArchivePublication) ?? null;
+    return {
+      index: index + 1,
+      entry,
+      visiblePublication,
+      isPublished: Boolean(visiblePublication),
+    };
+  });
+
+  const publishedRows = rows.filter((row) => row.isPublished);
+  const missingRows = rows.filter((row) => !row.isPublished);
+  const lastPublished = publishedRows[publishedRows.length - 1] ?? null;
+  const firstMissing = missingRows[0] ?? null;
+  const hasInternalHoles = Boolean(lastPublished && missingRows.some((row) => row.index < lastPublished.index));
+  const hasTailGap = Boolean(lastPublished && missingRows.length > 0 && missingRows.every((row) => row.index > lastPublished.index));
+
+  return {
+    runId,
+    total: rows.length,
+    published: publishedRows.length,
+    missing: missingRows.length,
+    lastPublished,
+    firstMissing,
+    missingRows,
+    hasTailGap,
+    hasInternalHoles,
+  };
+}
+
+export function formatArchiveRepublishGapReply(result: Awaited<ReturnType<typeof archiveRepublishGapReport>>) {
+  if (!result.total) {
+    return "Канцелярія перечитала deployed news.md, але не знайшла архівних записів для звіряння.";
+  }
+
+  if (!result.missing) {
+    return [
+      "Канцелярія звірила архів із книгою публікацій.",
+      "",
+      `У deployed news.md: ${result.total}.`,
+      `Видимих опублікованих архівних записів: ${result.published}.`,
+      "Не знайдено в каналі/книзі: 0.",
+      "",
+      "Deployed архів виглядає повністю опублікованим.",
+    ].join("\n");
+  }
+
+  const missingPreview = result.missingRows.slice(0, 20).map(archiveGapEntryLine);
+  const hidden = result.missingRows.length - missingPreview.length;
+  const gapNote = result.hasInternalHoles
+    ? "Увага: це не лише хвіст. Перед уже опублікованими пізнішими записами є внутрішні пропуски."
+    : result.hasTailGap
+      ? "Це схоже на хвіст архіву після завершення старого run. Продовжувати його можна окремою командою або вручну через /news_archive_post <index>."
+      : "Канцелярія не знайшла жодного видимого опублікованого архівного запису; це схоже на ще не відбудований архів.";
+
+  return [
+    "Канцелярія звірила архів із книгою публікацій.",
+    "",
+    `У deployed news.md: ${result.total}.`,
+    `Видимих опублікованих архівних записів: ${result.published}.`,
+    `Не знайдено в каналі/книзі: ${result.missing}.`,
+    "",
+    "Останній опублікований:",
+    result.lastPublished ? archiveGapEntryLine(result.lastPublished) : "немає видимого опублікованого архівного запису.",
+    "",
+    "Перший пропущений:",
+    result.firstMissing ? archiveGapEntryLine(result.firstMissing) : "немає.",
+    "",
+    "Пропущені записи:",
+    ...missingPreview,
+    hidden > 0 ? `...і ще ${hidden}.` : null,
+    "",
+    gapNote,
+    "Ця команда нічого не публікує й не ставить у чергу.",
+  ].filter((line): line is string => Boolean(line)).join("\n");
 }

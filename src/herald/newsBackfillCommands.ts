@@ -6,6 +6,8 @@ import {
   archiveRepublishStatus,
   cancelArchiveRepublishPendingPublications,
   DEFAULT_ARCHIVE_REPUBLISH_INTERVAL_MS,
+  archiveRepublishGapReport,
+  formatArchiveRepublishGapReply,
   formatBackfillInterval,
   formatArchiveBody,
   parseBackfillIntervalMs,
@@ -139,6 +141,21 @@ function formatArchiveRepublishQueueReply(result: Awaited<ReturnType<typeof queu
 async function readEntriesOrReply(ctx: Context) {
   const read = await readAllNewsEntries();
   if (!read.ok) {
+    await ctx.reply(read.error);
+    return null;
+  }
+  return read.entries;
+}
+
+async function readEntriesForArchiveGapOrReply(ctx: Context) {
+  const read = await readAllNewsEntries();
+  if (!read.ok) {
+    console.error("Herald archive republish gap read failed:", {
+      newsPath: read.filePath,
+      exists: read.exists,
+      parsedEntries: read.parsedEntries ?? 0,
+      error: read.error,
+    });
     await ctx.reply(read.error);
     return null;
   }
@@ -305,6 +322,21 @@ export function registerHeraldNewsBackfillCommands(bot: Bot, heraldAdminIds: Rea
     } catch (error) {
       console.error("Herald archive republish status failed:", publicationErrorMessage(error));
       await ctx.reply("Канцелярія не змогла звірити повторну архівну чергу.");
+    }
+  });
+
+  bot.command("archive_republish_gap", async (ctx) => {
+    if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
+
+    try {
+      const entries = await readEntriesForArchiveGapOrReply(ctx);
+      if (!entries) return;
+
+      const result = await archiveRepublishGapReport(entries);
+      await ctx.reply(formatArchiveRepublishGapReply(result));
+    } catch (error) {
+      console.error("Herald archive republish gap failed:", publicationErrorMessage(error));
+      await ctx.reply("Канцелярія не змогла звірити deployed news.md із книгою архівних публікацій. Подробиці записано в logs.");
     }
   });
 
