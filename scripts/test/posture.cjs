@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
 
 require("ts-node/register");
 
@@ -129,6 +130,31 @@ const verticalButtons = buildMainReplyKeyboard({
 }).keyboard.map((row) => row.map((button) => button.text));
 assert.equal(verticalButtons[0][1], "⬆️ Вгору");
 assert.equal(verticalButtons[2][1], "⬇️ Вниз");
+
+const thresholdButtons = buildMainReplyKeyboard({
+  exits: ["INSIDE", "OUTSIDE"],
+  showUtilityActions: false,
+}).keyboard.map((row) => row.map((button) => button.text));
+assert.equal(thresholdButtons[1][0], "🚪 Всередину");
+assert.equal(thresholdButtons[1][2], "🚪 Назовні");
+
+const mixedVerticalThresholdButtons = buildMainReplyKeyboard({
+  exits: ["UP", "DOWN", "INSIDE", "OUTSIDE"],
+  showUtilityActions: false,
+}).keyboard.map((row) => row.map((button) => button.text));
+assert.equal(mixedVerticalThresholdButtons[0][1], "⬆️ Вгору");
+assert.equal(mixedVerticalThresholdButtons[1][0], "🚪 Всередину");
+assert.equal(mixedVerticalThresholdButtons[1][2], "🚪 Назовні");
+assert.equal(mixedVerticalThresholdButtons[2][1], "⬇️ Вниз");
+
+const compassButtonsTakePriorityOverThresholdButtons = buildMainReplyKeyboard({
+  exits: ["WEST", "EAST", "INSIDE", "OUTSIDE"],
+  showUtilityActions: false,
+}).keyboard.map((row) => row.map((button) => button.text));
+assert.equal(compassButtonsTakePriorityOverThresholdButtons[1][0], "⬅️ Захід");
+assert.equal(compassButtonsTakePriorityOverThresholdButtons[1][2], "Схід ➡️");
+assert.equal(compassButtonsTakePriorityOverThresholdButtons.flat().includes("🚪 Всередину"), false);
+assert.equal(compassButtonsTakePriorityOverThresholdButtons.flat().includes("🚪 Назовні"), false);
 
 const earlyDreamButtons = buildMainReplyKeyboard({
   exits: ["NORTH", "SOUTH"],
@@ -262,6 +288,7 @@ assert.equal(adminCreaturesButtons.includes("🦴 Додати трупи"), tru
 
 const adminFireButtons = buildAdminFireReplyKeyboard().keyboard.flat().map((button) => button.text);
 assert.equal(adminFireButtons.includes("🔥 Додати вогнище"), true);
+assert.equal(adminFireButtons.includes("🧹 Прибрати вогнище"), true);
 assert.equal(adminFireButtons.includes("🔥 Debug-вогнище"), true);
 assert.equal(adminFireButtons.includes("🕯 Додати факел"), true);
 assert.equal(adminFireButtons.includes("🔥🕯 Додати запалений факел"), true);
@@ -287,5 +314,11 @@ const replyKeyboardLabels = [
 for (const label of replyKeyboardLabels) {
   assert.doesNotMatch(label, /\(\/[A-Za-z]/, `Reply keyboard labels should not include slash-command hints: ${label}`);
 }
+
+const movementHandlerSource = fs.readFileSync("src/handlers/movement.ts", "utf8");
+assert.match(movementHandlerSource, /🚪 Всередину/);
+assert.match(movementHandlerSource, /🚪 Назовні/);
+assert.match(movementHandlerSource, /submitMove\(bot, ctx, "INSIDE"/);
+assert.match(movementHandlerSource, /submitMove\(bot, ctx, "OUTSIDE"/);
 
 console.log("Posture helpers OK");

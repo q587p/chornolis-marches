@@ -44,6 +44,10 @@ npm run build
 
 On Windows PowerShell, use `npm.cmd test` / `npm.cmd run build` if `npm` is blocked by the local execution policy. The full test suite grows with `scripts/test/test-manifest.cjs` and commonly exceeds a 120-second tool timeout; start full-suite runs with a longer timeout, currently at least 300 seconds, and raise that baseline as the manifest grows. Focused `node scripts/test/*.cjs` checks can keep shorter timeouts.
 
+The manifest runner supports optional `TEST_JOBS` parallelism for local speedups, but default local `npm test` is serial. Parallel runs can reveal hidden ordering or global-state assumptions; call that out as a PR risk when enabling or relying on them, and do not treat parallel mode as the local baseline unless the current PR/CI explicitly does.
+
+`npm run typecheck` is only `tsc`. CI runs `npx prisma generate` before it, while `npm run build` remains `prisma generate && tsc`. On a clean local install, run `npm run build` or `npx prisma generate` before `npm run typecheck` if the generated Prisma client may be absent.
+
 Add or extend focused tests when a new rule can be checked cheaply and repeatably, especially for:
 
 - world seed and map invariants;
@@ -100,6 +104,8 @@ User preference:
 - Changelog and release-note titles should describe the final scope of the patch/minor after follow-up fixes and additions, not only the initial change that started the version.
 - Do not include internal operational reminders about package files.
 - Do not include scribe/admin-only commands, hidden service URLs, secrets, or debug-only tooling in public Ukrainian `news.md`; document those in changelog, release notes, `/adminHelp`, `/adminMenu`, and admin docs instead.
+- Do not add public `news.md` bullets that only say a nearby system is unchanged. If `/spirit`, group movement, combat, professions, Lisovyk or another system did not change in the release, omit it from public news. Keep those scope guardrails in PR summaries, changelog risk notes, release-note risks or technical docs when reviewers need them.
+- Do not add public `news.md` bullets whose only job is to say a feature is absent, such as no shops, no raw chance tables, no crafting screen, no combat rules or no public skill sheet. Mention that kind of limit only when it is necessary to prevent a likely player misunderstanding of the visible change.
 - Keep changelog useful and clear.
 - Avoid mentioning hidden implementation details unless they matter to users/admins.
 - In public Ukrainian news, do not expose `NPC` as a category. Describe visible people as `персонажі`, `місцеві`, professions or diegetic roles, as if they belong to the world; keep `NPC` for technical docs, admin/scribe surfaces and English release notes where useful. Also avoid listing seeded/reserved NPC names when the player-facing point can be described diegetically, e.g. "мисливиця біля лісу" instead of a specific internal character name.

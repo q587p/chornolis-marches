@@ -305,10 +305,15 @@ export function gateHuntingNoticeText(baseText: string | null | undefined, state
   return showTechnicalDetails ? `${text}\n\n${saturationTechnicalLine(state)}` : text;
 }
 
+function dropoffUsageHintText(text: string) {
+  const hint = "Якщо маєте придатну тушу в речах, можна написати: <i>покласти</i> або <i>покласти тушу в рів</i>.";
+  return text.includes(hint) ? text : `${text}\n\n${hint}`;
+}
+
 export function gateHuntingDropoffText(baseText: string | null | undefined, state: GateHuntingSaturationState, showTechnicalDetails = false) {
-  const text = state.active
+  const text = dropoffUsageHintText(state.active
     ? "Падальний рів під частоколом не засипаний, але сторожовий кілок біля нього перев’язано свіжою смугою берести: поки вистачить.\n\nЯкщо ви вже несете придатну тушу чи рештки, їх можна скласти сюди. Писар поставить зарубку, але нових припасів за це зараз не видаватимуть: край має перепочити від полювання."
-    : baseText ?? "Тут складають туші та рештки здобичі для писарського рахунку.";
+    : baseText ?? "Тут складають туші та рештки здобичі для писарського рахунку.");
   return showTechnicalDetails ? `${text}\n\n${saturationTechnicalLine(state)}` : text;
 }
 

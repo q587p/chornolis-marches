@@ -1,5 +1,6 @@
 export const PREDATOR_PREY_CLAIM_PREFIX = "predator_prey_claimed_by:";
 const PREDATOR_PREY_FOOD_MARKER = "prey_food:";
+export type PredatorFeedingObserverMode = "claimed" | "stolen" | "scavenged" | "lost";
 const PROTECTED_CORPSE_MARKERS = [
   "claimed_by_hunter:",
   "carried_corpse_by_player:",
@@ -48,4 +49,11 @@ export function isUnclaimedHerbivoreCorpseForScavenging(corpse: any) {
   if (corpse.species?.diet !== "HERBIVORE") return false;
   const action = String(corpse.currentAction ?? "");
   return !PROTECTED_CORPSE_MARKERS.some((marker) => action.includes(marker));
+}
+
+export function predatorFeedingObserverText(mode: PredatorFeedingObserverMode, predatorLabel = "Щось") {
+  if (mode === "stolen") return `${predatorLabel} перехоплює чужу здобич і тягне її в темнішу траву.`;
+  if (mode === "scavenged") return `${predatorLabel} знаходить покинуту здобич і тягне її в темнішу траву.`;
+  if (mode === "lost") return `${predatorLabel} повертається до здобичі, але знаходить лише прим’ятий мох.`;
+  return `${predatorLabel} повертається до здобичі й тягне її в темнішу траву.`;
 }

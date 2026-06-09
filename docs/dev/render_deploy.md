@@ -91,6 +91,7 @@ Use this before committing or pushing a release patch.
 5. Release-note hygiene:
 
    - `CHANGELOG.md` should describe player-visible, admin-visible or operationally meaningful changes. Public `news.md` should describe player-visible changes and should not include scribe/admin-only commands, hidden service URLs, secrets or debug-only tooling.
+   - Public `news.md` should not list unchanged adjacent systems as a guardrail. If a release does not touch `/spirit`, group movement, combat, professions, Lisovyk or another nearby system, leave that out of public news and keep the boundary in PR/release-note risk sections if needed.
    - Do not add bookkeeping-only bullets such as "Bumped package metadata to x.y.z", "Added release notes for x.y.z", or "Updated news/changelog".
    - Version bumps, release-note files and documentation bookkeeping can stay in the commit diff; they do not need their own changelog/news bullets unless they change behavior or workflow.
 

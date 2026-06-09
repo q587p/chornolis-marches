@@ -4,7 +4,7 @@ Social signals are a small MUD-like expressive system for Chornolis Marches.
 
 They are not real gameplay actions like attacking, gathering or moving. They are short, controlled gestures that show attitude, mood or intent toward another character, creature, spirit or the surrounding location.
 
-Player-facing UI should call them **Сигнали**.
+Player-facing UI should call them **Сигнали**. The visible button label should also be a typed alias: `сигнал`, `сигнали`, `signals`, `socials` and `/signals` open the same targetless signal menu from the character card.
 
 Design priority after the tutorial: keep signals visible as part of the minimal living-world loop. They should make nearby beings feel present and responsive before larger speech, reputation, faction or combat systems arrive.
 

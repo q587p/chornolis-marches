@@ -1,4 +1,6 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 
 require("ts-node/register");
 
@@ -10,6 +12,7 @@ const {
   predatorClaimedCorpseFoodValue,
   predatorClaimedCorpseMarker,
   predatorClaimedCorpseOwnerId,
+  predatorFeedingObserverText,
   predatorPreyFoodValue,
 } = require("../../src/services/predatorFeeding");
 const { normalizeCreatureActionText } = require("../../src/utils/creatureActionText");
@@ -51,5 +54,15 @@ assert.equal(isUnclaimedHerbivoreCorpseForScavenging({ ...ordinaryMouseCorpse, c
 assert.equal(isUnclaimedHerbivoreCorpseForScavenging({ ...ordinaryMouseCorpse, currentAction: "freshened_by_player:1; м'ясо=1" }), false);
 assert.equal(isUnclaimedHerbivoreCorpseForScavenging({ ...ordinaryMouseCorpse, currentAction: `${PREDATOR_PREY_CLAIM_PREFIX}2; prey_food:1` }), false);
 assert.equal(isUnclaimedHerbivoreCorpseForScavenging({ ...ordinaryMouseCorpse, species: { key: "fox", diet: "CARNIVORE", baseHp: 14 } }), false);
+
+assert.equal(predatorFeedingObserverText("claimed"), "Щось повертається до здобичі й тягне її в темнішу траву.");
+assert.equal(predatorFeedingObserverText("claimed", "Лис"), "Лис повертається до здобичі й тягне її в темнішу траву.");
+assert.equal(predatorFeedingObserverText("stolen", "Лис"), "Лис перехоплює чужу здобич і тягне її в темнішу траву.");
+assert.equal(predatorFeedingObserverText("scavenged", "Лис"), "Лис знаходить покинуту здобич і тягне її в темнішу траву.");
+assert.equal(predatorFeedingObserverText("lost", "Лис"), "Лис повертається до здобичі, але знаходить лише прим’ятий мох.");
+
+const actionCompletionsSource = fs.readFileSync(path.join(__dirname, "..", "..", "src", "services", "actionCompletions.ts"), "utf8");
+assert.match(actionCompletionsSource, /notifyPredatorFeeding[\s\S]{0,420}visibleCreatureActionLabelForObserver/u);
+assert.doesNotMatch(actionCompletionsSource, /notifyLocation\(bot, creature\.locationId, -1, [`"']Щось (?:повертається|перехоплює|знаходить)/u);
 
 console.log("Predator feeding helpers OK");

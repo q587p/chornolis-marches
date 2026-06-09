@@ -62,6 +62,16 @@ default to `TS_NODE_TRANSPILE_ONLY=1`; the manifest still runs
 `tsc -p tsconfig.seed.json`, and CI runs `npm run typecheck`, so type coverage
 stays explicit.
 
+Keep the default local suite serial unless you intentionally want the faster
+parallel pass. `TEST_JOBS` can expose hidden ordering or global-state
+assumptions in focused tests; treat those failures as useful signal, but do not
+assume the parallel mode is the required baseline unless the PR or CI says so.
+
+`npm run typecheck` is intentionally just `tsc`. CI runs `npx prisma generate`
+before it, and `npm run build` still runs `prisma generate && tsc`. After a
+clean local install or whenever the generated Prisma client may be missing, run
+`npm run build` or `npx prisma generate` before `npm run typecheck`.
+
 Check that the current database has the seeded start location and map basics:
 
 ```bash

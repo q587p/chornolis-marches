@@ -3,6 +3,8 @@ import { BASE_STAMINA } from "../gameConfig";
 import { expireTimedCampfires, isExtinguishedCampfire } from "./fire";
 
 export const CAMPFIRE_REST_STAMINA_REGEN_MULTIPLIER = 3;
+export const DEFAULT_SLEEP_COMFORT_MULTIPLIER = 1;
+export const COMFORTABLE_SLEEP_MULTIPLIER = 1.5;
 
 export async function getLocationRestStaminaCap(locationId: number | null | undefined, baseMax = BASE_STAMINA) {
   if (!locationId) return baseMax;
@@ -41,6 +43,12 @@ function restStaminaRegenMultiplierFromData(data: Record<string, unknown>) {
   return Number.isFinite(multiplier) && multiplier > 1 ? Math.floor(multiplier) : 1;
 }
 
+function sleepComfortMultiplierFromData(data: Record<string, unknown>) {
+  const value = data.sleep_comfort_multiplier ?? data.sleepComfortMultiplier;
+  const multiplier = Number(value);
+  return Number.isFinite(multiplier) && multiplier > 1 ? Math.min(2, multiplier) : DEFAULT_SLEEP_COMFORT_MULTIPLIER;
+}
+
 export async function getLocationRestStaminaRegenMultiplier(locationId: number | null | undefined) {
   if (!locationId) return 1;
   await expireTimedCampfires(locationId);
@@ -59,6 +67,26 @@ export async function getLocationRestStaminaRegenMultiplier(locationId: number |
 export function restStaminaRegenMultiplierForFeatures(features: Array<CampfireLikeFeature>) {
   const campfireMultiplier = features.some(isLitRestCampfireFeature) ? CAMPFIRE_REST_STAMINA_REGEN_MULTIPLIER : 1;
   return Math.max(campfireMultiplier, ...features.map((feature) => restStaminaRegenMultiplierFromData(featureData(feature))));
+}
+
+export function sleepComfortMultiplierForFeatures(features: Array<CampfireLikeFeature>) {
+  const campfireMultiplier = features.some(isLitRestCampfireFeature) ? COMFORTABLE_SLEEP_MULTIPLIER : DEFAULT_SLEEP_COMFORT_MULTIPLIER;
+  return Math.max(campfireMultiplier, ...features.map((feature) => sleepComfortMultiplierFromData(featureData(feature))));
+}
+
+export async function getLocationSleepComfortMultiplier(locationId: number | null | undefined) {
+  if (!locationId) return DEFAULT_SLEEP_COMFORT_MULTIPLIER;
+  await expireTimedCampfires(locationId);
+
+  const features = await prisma.locationFeature.findMany({
+    where: {
+      locationId,
+      isActive: true,
+    },
+    select: { type: true, key: true, name: true, providesLight: true, data: true },
+  });
+
+  return sleepComfortMultiplierForFeatures(features);
 }
 
 export async function getPlayerRestStaminaRegenMultiplier(playerId: number) {

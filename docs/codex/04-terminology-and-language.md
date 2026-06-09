@@ -34,6 +34,7 @@ Canonical terminology source: `docs/design/terminology.md`.
 | HP | **Життя** / **Стан** | Avoid raw abbreviation in player-facing text. |
 | Inventory | **Речі** / **Поклажа** | Prefer over direct “Інвентар” in player-facing UI. |
 | Auto mode | **Поклик духа** | Player-facing name for the simple automatic-action helper. Keep `auto` for internal notes, DB/log identifiers and legacy command compatibility. Do not use **Провід** for this feature. |
+| Follow assist | **Слідова підмога** | Player-facing name for the opt-in helper that can repeat a visible followed step. Keep `followAssist` / `follow_assist` for code, commands and ops labels; avoid **Автокрок**, **Автоспроба** and similar auto-technical labels in player-facing copy. |
 
 ## Commands and UI labels mentioned
 
@@ -50,9 +51,13 @@ Direct slash commands should also accept the same direct text form without the l
 
 If a slash command has a no-argument usage hint, its English/MUD-style and Ukrainian aliases should route to that same hint too. For example `/yell`, `yell`, `call` and `гукнути` without text should all explain how to add the message text, not fall into the generic unknown-command response.
 
+When a player-facing slash command example includes spaces or arguments, keep the Telegram-clickable underscore form working as the same input. Examples: `/attack_all_mouse` -> `/attack all mouse`, `/sleep_tutorial` -> `/sleep tutorial`, `/queue_cancel` -> `/queue cancel`. Document any exception explicitly instead of relying on players to guess.
+
 Actual Telegram keyboard button labels should stay short and clean: Ukrainian label plus icon where helpful. Use slash commands in parentheses in help, commands, news, release notes and docs, but do not append `(/command)` hints inside reply or inline keyboard button text. In `news.md`, prefer naming the working command beside each player-facing action, for example `Речі` (`/inv`) or `Підпалити вогнище` (`/light_campfire`), so missing aliases are caught before publication.
 
 Short usage prompts like `Напиши так:` or `Напишіть так:` should visually emphasize the command verb with Telegram HTML italics. Example: `Напишіть так: <i>give</i> сире м'ясо коту або <i>дати</i> сире м'ясо коту.` Keep the example readable and do not italicize the whole sentence.
+
+Player-facing direct speech from characters, creatures, spirits, dreams or tutorial voices should render as Telegram quote blocks (`<blockquote>...</blockquote>`) through service/renderer helpers, not as bare inline quoted prose. Keep raw HTML out of authored world JSON; add quote markup at the rendering/service boundary.
 
 - `/look`
 - `/examine`

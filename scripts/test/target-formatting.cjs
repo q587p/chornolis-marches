@@ -5,7 +5,7 @@ const path = require("node:path");
 require("ts-node/register");
 
 const { formatCreatureLifeState, formatCreatureStatusLine, inventoryResourceSummary } = require("../../src/services/targets");
-const { animalAgeDescription, groundItemLine, groundItemPickupButtonRows, hasPickableLyingObjects, joinVisibleActionLabels } = require("../../src/services/locations");
+const { PICK_UP_EVERYTHING_BUTTON_TEXT, animalAgeDescription, groundItemLine, groundItemPickupButtonRows, groundItemPickupIcon, hasPickableLyingObjects, joinVisibleActionLabels } = require("../../src/services/locations");
 const { buildAnonymousTargetKeyboard, buildCorpseActionKeyboard, buildTargetActionKeyboard, buildTargetListKeyboard } = require("../../src/ui/keyboards");
 const { visibleHeldTorchTextWithContext } = require("../../src/utils/torchText");
 
@@ -95,6 +95,24 @@ const singleFreshCorpseRows = buildTargetListKeyboard([
 ]).inline_keyboard.map((row) => row.map((button) => button.text));
 assert.deepEqual(singleFreshCorpseRows, [["труп миша"]]);
 
+const livingTargetRows = buildTargetListKeyboard([
+  { type: "creature", id: 31, label: "Орина", actionLabel: "шукає гризунів і зайців; тримає запалений факел", canGreet: true, sex: "FEMALE", speciesKind: "HUMAN" },
+  { type: "creature", id: 32, label: "Лукан", actionLabel: "тримає слід", canGreet: true, sex: "MALE", speciesKind: "HUMAN" },
+  { type: "player", id: 33, label: "Вербові", actionLabel: "Поклик духа веде", canGreet: true, grammaticalGender: "PLURAL" },
+  { type: "creature", id: 34, label: "миша", actionLabel: "шукає їжу", canGreet: false, isAnimal: true, speciesKey: "mouse", speciesKind: "ANIMAL" },
+  { type: "creature", id: 35, label: "лисиця", actionLabel: "нюхає траву", canGreet: false, isAnimal: true, speciesKey: "fox", speciesKind: "ANIMAL" },
+  { type: "creature", id: 36, label: "невідомий звір", actionLabel: "ворушиться", canGreet: false, isAnimal: true, speciesKey: "unknown", speciesKind: "ANIMAL" },
+]).inline_keyboard.map((row) => row.map((button) => button.text));
+assert.deepEqual(livingTargetRows, [
+  ["👩 Орина"],
+  ["👨 Лукан"],
+  ["👥 Вербові"],
+  ["🐭 миша"],
+  ["🦊 лисиця"],
+  ["🐾 невідомий звір"],
+]);
+assert.equal(livingTargetRows.flat().some((label) => label.includes("шукає гризунів")), false);
+
 const pagedTargets = Array.from({ length: 10 }, (_, index) => ({
   type: "creature",
   id: index + 1,
@@ -182,20 +200,25 @@ const litTorchLine = groundItemLine({
 assert.match(litTorchLine, /^запалений факел; дає світло; горітиме ще приблизно \d+ годин/);
 assert.deepEqual(groundItemPickupButtonRows([
   { id: 41, amount: 1, resourceType: { key: "twigs", name: "хмиз" } },
-]), [[{ text: "🤲 Підібрати: хмиз", callbackData: "item:pickup:41" }]]);
+]), [[{ text: "🤲🪵 Підібрати: хмиз", callbackData: "item:pickup:41" }]]);
+assert.deepEqual(groundItemPickupButtonRows([
+  { id: 43, amount: 1, resourceType: { key: "torch", name: "факел" } },
+]), [[{ text: "🤲🕯 Підібрати: факел", callbackData: "item:pickup:43" }]]);
 assert.deepEqual(groundItemPickupButtonRows([
   { id: 41, amount: 1, resourceType: { key: "twigs", name: "хмиз" } },
   { id: 42, amount: 2, resourceType: { key: "twigs", name: "хмиз" } },
 ]), [
   [
-    { text: "🤲 Підібрати: хмиз", callbackData: "item:pickup:41" },
-    { text: "всі", callbackData: "item:pickupAll:twigs" },
+    { text: "🤲🪵 Підібрати: хмиз", callbackData: "item:pickup:41" },
+    { text: "🤲🪵 всі", callbackData: "item:pickupAll:twigs" },
   ],
   [
-    { text: "🤲 Підібрати: хмиз", callbackData: "item:pickup:42" },
-    { text: "всі", callbackData: "item:pickupAll:twigs" },
+    { text: "🤲🪵 Підібрати: хмиз", callbackData: "item:pickup:42" },
+    { text: "🤲🪵 всі", callbackData: "item:pickupAll:twigs" },
   ],
 ]);
+assert.equal(groundItemPickupIcon("unknown_loot"), "🤲📦");
+assert.equal(PICK_UP_EVERYTHING_BUTTON_TEXT, "🤲🎒 Підібрати все");
 
 assert.equal(hasPickableLyingObjects([], []), false);
 assert.equal(hasPickableLyingObjects([{ id: 41, amount: 1 }], []), true);

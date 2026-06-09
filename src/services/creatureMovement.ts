@@ -2,6 +2,7 @@ import { Direction, LocationExit } from "@prisma/client";
 import { isStarterCampOwlSafeLocationKey } from "./owlSigns";
 
 const ANIMAL_RESTRICTED_DIRECTIONS = new Set<Direction>(["UP"]);
+const SPECIES_VERTICAL_UP_KEYS = new Set(["fox", "hawk", "owl", "snake"]);
 
 function exitData(exit: LocationExit | Record<string, unknown>) {
   const data = (exit as any).data;
@@ -16,12 +17,21 @@ export function isAnimalFriendlyExit(exit: LocationExit | Record<string, unknown
     || (data as any).animal_friendly === true;
 }
 
+export function isVerticalUpExit(exit: LocationExit | Record<string, unknown>) {
+  return (exit as any).direction === "UP";
+}
+
+export function canSpeciesUseVerticalUpExit(speciesKey?: string | null) {
+  return Boolean(speciesKey && SPECIES_VERTICAL_UP_KEYS.has(speciesKey));
+}
+
 export function canCreatureUseExit(creature: { species?: { key?: string | null; kind?: string | null } | null }, exit: LocationExit | Record<string, unknown>) {
   if (creature.species?.kind !== "ANIMAL") return true;
   if (creature.species.key === "owl" && isStarterCampOwlSafeLocationKey((exit as any).toLocation?.key)) return false;
   const direction = (exit as any).direction as Direction | undefined;
   if (!direction) return false;
   if (!ANIMAL_RESTRICTED_DIRECTIONS.has(direction)) return true;
+  if (canSpeciesUseVerticalUpExit(creature.species.key)) return true;
   return isAnimalFriendlyExit(exit);
 }
 

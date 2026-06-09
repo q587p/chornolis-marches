@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
 
 require("ts-node/register");
 
@@ -25,10 +26,16 @@ for (const [kind, lines] of Object.entries(HUNTER_FIELD_LINES)) {
   assertLineBank(`HUNTER_FIELD_LINES.${kind}`, lines, 8);
 }
 
-assert.deepEqual(orderAutoActionKeys(0.2), ["say", "gather", "look", "move"]);
-assert.deepEqual(orderAutoActionKeys(0.2, "gather"), ["say", "look", "move", "gather"]);
+assert.deepEqual(orderAutoActionKeys(0.2), ["say", "light_torch", "gather", "look", "move"]);
+assert.deepEqual(orderAutoActionKeys(0.2, "gather"), ["say", "light_torch", "look", "move", "gather"]);
+assert.deepEqual(orderAutoActionKeys(0.2, "light_torch"), ["say", "gather", "look", "move", "light_torch"]);
 assert.deepEqual(orderAutoActionKeys(0.5, "look"), ["say", "move", "look"]);
 assert.deepEqual(orderAutoActionKeys(0.9, "move"), ["say", "look", "move"]);
 assert.deepEqual(orderAutoActionKeys(0.9, "say"), ["move", "look", "say"]);
+
+const autoSource = fs.readFileSync("src/handlers/auto.ts", "utf8");
+assert.match(autoSource, /canLightPlayerTorchFromInventory/);
+assert.match(autoSource, /type: "LIGHT_TORCH"/);
+assert.match(autoSource, /note: "auto:light_torch"/);
 
 console.log("Ambient line banks OK");

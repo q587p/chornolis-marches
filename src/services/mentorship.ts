@@ -5,6 +5,7 @@ import { getPlayerFollowIntent, setPlayerFollowIntent } from "./following";
 import { creatureForms } from "./grammar";
 import { learningSkillDisplayName, observedActorSkillLevel } from "./learning";
 import { createWorldEventMarker, findRecentWorldEventMarker } from "./worldEventMarkers";
+import { escapeHtml } from "../utils/text";
 
 export const MENTORSHIP_STATUS_OFFERED = "OFFERED";
 export const MENTORSHIP_STATUS_ACTIVE = "ACTIVE";
@@ -121,9 +122,13 @@ export function parseMentorshipAnswer(text: string): MentorshipAnswerKind {
 export function mentorshipOfferText(creature: MentorshipCreatureLike, skillKey: string) {
   const name = creature.name?.trim() || creature.species?.name || "місцевий";
   if (skillKey === "tracking") {
-    return `${name} озирається на ваш крок: “Якщо йдеш за мною, дивись не на мене. Дивись, де трава не встигла випростатись. Учитися хочеш?”`;
+    return `${escapeHtml(name)} озирається на ваш крок:\n${quoteBlock("Якщо йдеш за мною, дивись не на мене. Дивись, де трава не встигла випростатись. Учитися хочеш?")}`;
   }
-  return `${name} помічає, що ви тримаєтесь її сліду, і стишує крок: “Хочеш повчитися, як не рвати землю дарма?”`;
+  return `${escapeHtml(name)} помічає, що ви тримаєтесь її сліду, і стишує крок:\n${quoteBlock("Хочеш повчитися, як не рвати землю дарма?")}`;
+}
+
+function quoteBlock(text: string) {
+  return `<blockquote>${escapeHtml(text)}</blockquote>`;
 }
 
 export function mentorshipOfferKeyboard(id: number) {
@@ -134,7 +139,7 @@ export function mentorshipOfferKeyboard(id: number) {
 
 export function mentorshipNotBetterText(creature: MentorshipCreatureLike) {
   const name = creature.name?.trim() || creature.species?.name || "місцевий";
-  return `${name} хитає головою: “Ти вже тримаєш цей слід не гірше за мене. Можеш іти поруч, але вчитись тут буде мало з чого.”`;
+  return `${escapeHtml(name)} хитає головою:\n${quoteBlock("Ти вже тримаєш цей слід не гірше за мене. Можеш іти поруч, але вчитись тут буде мало з чого.")}`;
 }
 
 function mentorshipActiveText(creature: MentorshipCreatureLike, skillKey: string) {
@@ -670,8 +675,8 @@ export async function acceptMentorship(playerId: number, mentorshipId: number) {
   }, player.currentLocationId);
 
   const assistLine = previousIntent?.assistEnabled
-    ? "\nАвтокрок уже готовий підхопити видимий крок, але приховані переходи він не повторить."
-    : "\nАвтокрок можна ввімкнути окремо: /follow_assist_on.";
+    ? "\nСлідова підмога вже готова підхопити видимий крок, але приховані переходи вона не повторить."
+    : "\nСлідову підмогу можна ввімкнути окремо: /follow_assist_on.";
   return {
     ok: true as const,
     mentorship: updated,
@@ -745,8 +750,8 @@ export async function mentorshipStatusText(playerId: number) {
       ? "Слід наставника: тримаєте."
       : `Слід наставника: не тримаєте. Взяти знову: /follow ${forms.nominative}.`;
     const assistLine = intent?.assistEnabled
-      ? "Автокрок: увімкнено."
-      : "Автокрок: вимкнено. Увімкнути: /follow_assist_on.";
+      ? "Слідова підмога: увімкнено."
+      : "Слідова підмога: вимкнено. Увімкнути: /follow_assist_on.";
     const recentLessonLine = await latestMentorshipLessonLine({
       playerId,
       mentorCreatureId: mentorship.mentorCreatureId,

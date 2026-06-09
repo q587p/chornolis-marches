@@ -26,6 +26,7 @@ const {
   mentorshipLessonFeedbackMarkerContext,
   mentorshipLessonRecentLine,
   mentorshipLessonText,
+  mentorshipNotBetterText,
   mentorshipObservationBonusForSource,
   mentorshipObservationContext,
   mentorshipOfferKeyboard,
@@ -130,10 +131,19 @@ assert.equal(parseMentorshipAnswer("може"), "unclear");
 const herbOffer = mentorshipOfferText({ name: "Орина" }, "gathering");
 assert.match(herbOffer, /Орина/);
 assert.match(herbOffer, /Хочеш повчитися/);
+assert.match(herbOffer, /:\n<blockquote>Хочеш повчитися, як не рвати землю дарма\?<\/blockquote>/);
+assert.doesNotMatch(herbOffer, /: “/u);
 assert.doesNotMatch(herbOffer, /TravelGroup|гуртова хода|\/skills/u);
 const hunterOffer = mentorshipOfferText({ name: "Лукан" }, "tracking");
 assert.match(hunterOffer, /Лукан/);
 assert.match(hunterOffer, /Учитися хочеш/);
+assert.match(hunterOffer, /:\n<blockquote>Якщо йдеш за мною, дивись не на мене\. Дивись, де трава не встигла випростатись\. Учитися хочеш\?<\/blockquote>/);
+assert.doesNotMatch(hunterOffer, /: “/u);
+assert.match(mentorshipOfferText({ name: "Орина <нічна>" }, "tracking"), /Орина &lt;нічна&gt; озирається/);
+assert.match(
+  mentorshipNotBetterText({ name: "Лукан" }),
+  /Лукан хитає головою:\n<blockquote>Ти вже тримаєш цей слід не гірше за мене\./,
+);
 
 for (const text of [
   mentorshipLessonText({ skillKey: "gathering", mentorName: "Орина" }),

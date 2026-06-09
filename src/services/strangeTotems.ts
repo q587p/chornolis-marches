@@ -30,19 +30,10 @@ export const STRANGE_TOTEM_REGION_CAPS = {
   willow_floodplain: 1,
 } as const;
 export const STRANGE_TOTEM_PROTECTED_REGION_KEYS = [
+  "starter_camp",
   "old_bridge",
   "closed_settlement_gate",
   "dream_tutorial",
-] as const;
-export const STRANGE_TOTEM_PROTECTED_LOCATION_KEYS = [
-  "start_border_camp",
-  "start_border_watchtower",
-  "start_border_cellar",
-  "closed_east_gate",
-  "settlement_inner_placeholder",
-  "under_bridge_18_05",
-  "old_bridge_west_span",
-  "old_bridge_east_span",
 ] as const;
 export const STRANGE_TOTEM_LIFETIME_DAYS = 7;
 export const STRANGE_TOTEM_LAST_DAY_START_DAYS = 6;
@@ -142,6 +133,22 @@ export const STRANGE_TOTEM_DISMANTLE_FLOURISHES = [
   "Те, що тримало форму тотема, відступило без голосу, тільки стебла непевно здригнулися.",
 ] as const;
 
+export const STRANGE_TOTEM_NPC_DISMANTLE_LINES = [
+  "присідає біля підозрілого тотема й розпускає найтугіший вузол першим",
+  "нахиляє голову до хмизової постаті, ніби слухає, куди вона дивиться, а тоді розбирає її",
+  "торкається сухої лози двома пальцями й поволі знімає знак із землі",
+  "обходить тотем півколом, знаходить прихований перев'яз і тягне саме за нього",
+  "ламає криву постать не силою, а терплячим рухом, стебло за стеблом",
+  "відсовує траву довкола знака й розбирає його так, щоб не лишити форми",
+  "притискає хмизовий знак до землі й розпускає лозу, поки він не стає просто гіллям",
+  "дивиться на тотем без привітання й розбирає його, наче прибирає чужий слід",
+  "знімає з тотема темний уламок кори, і вся мала постать одразу втрачає впертість",
+  "перевіряє землю під знаком, а потім розбирає його короткими обережними рухами",
+  "не лишає підозрілий знак стояти: знаходить сухий вузол і розпускає його до кінця",
+  "обережно витягає лозини з трави, щоб знак більше не дивився на стежку",
+  "стискає губи біля кривої постаті й розбирає її так тихо, ніби гасить поганий шепіт",
+] as const;
+
 function featureData(value: unknown): JsonRecord {
   return value && typeof value === "object" && !Array.isArray(value) ? value as JsonRecord : {};
 }
@@ -173,13 +180,8 @@ export function strangeTotemRegionCap(regionKey: string | null | undefined) {
 }
 
 export function isStrangeTotemProtectedSpawnLocation(location: { key?: string | null; region?: { key?: string | null } | null }) {
-  const locationKey = location.key ?? "";
   const regionKey = location.region?.key ?? "";
   if ((STRANGE_TOTEM_PROTECTED_REGION_KEYS as readonly string[]).includes(regionKey)) return true;
-  if ((STRANGE_TOTEM_PROTECTED_LOCATION_KEYS as readonly string[]).includes(locationKey)) return true;
-  if (locationKey.startsWith("dream_tutorial_")) return true;
-  if (locationKey.startsWith("old_bridge_")) return true;
-  if (locationKey.startsWith("closed_")) return true;
   return false;
 }
 
@@ -222,6 +224,10 @@ export function strangeTotemDismantleText(recovered: number, seed = "") {
   return recovered > 1
     ? `🧹 Ви розібрали підозрілий тотем. Сухі стебла, лозини й кора стали хмизом ×${recovered}.\n\n${flourish}`
     : `🧹 Тотем майже розсипався від дотику. Придатного хмизу лишилося тільки на одну в'язку.\n\n${flourish}`;
+}
+
+export function strangeTotemNpcDismantleLine(seed = "") {
+  return STRANGE_TOTEM_NPC_DISMANTLE_LINES[stableIndex(seed || "strange_totem_npc", STRANGE_TOTEM_NPC_DISMANTLE_LINES.length)];
 }
 
 export function strangeTotemDetailLine(feature: StrangeTotemFeatureLike, absoluteMinute?: number) {
@@ -401,16 +407,6 @@ async function eligibleSpawnLocations(counts: Map<string, number>) {
       region: true,
       exitsFrom: { where: { isHidden: false }, include: { toLocation: true } },
       features: { where: { isActive: true, type: "LANDMARK" } },
-      players: { where: { sessionPresence: "ACTIVE" }, select: { id: true } },
-      creatures: {
-        where: {
-          isAlive: true,
-          isGone: false,
-          isHidden: false,
-          species: { kind: { not: "ANIMAL" } },
-        },
-        select: { id: true },
-      },
     },
   });
 
@@ -418,7 +414,6 @@ async function eligibleSpawnLocations(counts: Map<string, number>) {
     const cap = strangeTotemRegionCap(location.region.key);
     if (cap <= 0 || (counts.get(location.region.key) ?? 0) >= cap) return false;
     if (isStrangeTotemProtectedSpawnLocation(location)) return false;
-    if (location.players.length > 0 || location.creatures.length > 0) return false;
     if (location.features.some(isStrangeTotemFeature)) return false;
     return location.exitsFrom.length > 0;
   });
@@ -639,6 +634,69 @@ export async function dismantleStrangeTotem(playerId: number, featureId: number)
     text,
     recoveredTwigs: recovered,
     locationId: feature.locationId,
+  };
+}
+
+export async function dismantleStrangeTotemByCreature(creatureId: number, featureId: number) {
+  const currentMinute = await currentWorldMinute();
+  const { twigs } = await ensureTorchResourceTypes();
+  const creature = await prisma.creature.findUnique({
+    where: { id: creatureId },
+    select: { id: true, name: true, locationId: true, isAlive: true, isGone: true },
+  });
+  if (!creature?.locationId || !creature.isAlive || creature.isGone) throw new Error("Creature cannot dismantle a totem right now.");
+
+  const feature = await prisma.locationFeature.findFirst({
+    where: { id: featureId, locationId: creature.locationId, isActive: true, type: "LANDMARK" },
+    include: { location: { include: { region: true } } },
+  });
+  if (!feature || !isStrangeTotemFeature(feature)) throw new Error("No active strange totem is available for the creature to dismantle.");
+
+  const data = dataWithSchedule(feature, currentMinute);
+  const scheduledFeature = { ...feature, data };
+  const recovered = strangeTotemRecoveredTwigs(scheduledFeature, currentMinute);
+  const line = strangeTotemNpcDismantleLine(`${creatureId}:${feature.key ?? feature.id}`);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.locationFeature.update({
+      where: { id: feature.id },
+      data: {
+        isActive: false,
+        name: "Розібраний підозрілий тотем",
+        data: jsonInput({
+          ...data,
+          dismantledAtMinute: currentMinute,
+          dismantledByCreatureId: creatureId,
+          recoveredTwigs: recovered,
+        }),
+      },
+    });
+    if (recovered > 0) {
+      await tx.creatureResource.upsert({
+        where: { creatureId_resourceTypeId: { creatureId, resourceTypeId: twigs.id } },
+        update: { amount: { increment: recovered } },
+        create: { creatureId, resourceTypeId: twigs.id, amount: recovered },
+      });
+    }
+    await tx.creature.updateMany({
+      where: { id: creatureId, isAlive: true, isGone: false },
+      data: { activity: "LOOKING", currentAction: line },
+    });
+    await tx.worldEvent.create({
+      data: {
+        type: "NPC_ACTION",
+        title: "Strange totem dismantled by profession NPC",
+        description: `creature=${creatureId}; feature=${feature.key}; recoveredTwigs=${recovered}`,
+        locationId: feature.locationId,
+      },
+    });
+  });
+
+  return {
+    line,
+    locationId: feature.locationId,
+    creatureName: creature.name ?? "Місцевий",
+    recoveredTwigs: recovered,
   };
 }
 

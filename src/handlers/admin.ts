@@ -12,7 +12,7 @@ import {
 } from "../services/adminReset";
 import { logEvent } from "../services/worldEvents";
 import { logScribeAction } from "../services/scribeAudit";
-import { createAdminHandmadeCampfire, createDebugCampfire, ensureTorchResourceTypes } from "../services/fire";
+import { createAdminHandmadeCampfire, createDebugCampfire, deleteAdminCampfiresAtLocation, ensureTorchResourceTypes } from "../services/fire";
 import { requireScribeAdmin } from "../services/adminAccess";
 import { adminSecretMatches } from "../services/adminSecret";
 import { syncChatBotCommandsForTelegramId } from "../services/telegramCommands";
@@ -270,6 +270,7 @@ const ADMIN_MENU_TEXT_COMMAND = slashlessCommandPattern(["adminMenu", "adminmenu
 const ADMIN_HELP_TEXT_COMMAND = slashlessCommandPattern(["adminHelp", "adminhelp"]);
 const ADMIN_SET_TEXT_COMMAND = slashlessCommandPattern(["adminSet", "adminset"]);
 const ADD_CAMPFIRE_TEXT_COMMAND = slashlessCommandPattern(["addCampfire", "addcampfire"]);
+const DELETE_CAMPFIRE_TEXT_COMMAND = slashlessCommandPattern(["deleteCampfire", "deletecampfire", "removeCampfire", "removecampfire"]);
 const TELEPORT_TEXT_COMMAND = slashlessCommandPattern(["teleport", "tp"]);
 const TELEPORT_COORDINATE_TEXT_COMMAND = /^\/?tp_(_?\d+)_(_?\d+)_(_?\d+)(?:@\w+)?$/i;
 const TUTORIAL_RESET_TEXT_COMMAND = slashlessCommandPattern(["tutorialReset", "tutorialreset"]);
@@ -308,9 +309,9 @@ export const ADMIN_HELP_TEXT = [
   "/stat — службова статистика й посилання на захищену веб-/stat",
   "/all — усі живі персонажі та істоти",
   "/all dead — усі записи істот, включно з inactive/dead/corpse/gone",
-  "/all player — тільки гравці",
-  "/all npc — тільки NPC / не-тварини",
-  "/all animal [speciesKey] — тільки тварини, за потреби одного виду: /all animal mouse або /all mouse",
+  "/all player або /all players — тільки гравці",
+  "/all npc або /all NPC — тільки NPC / не-тварини",
+  "/all animal або /all animals [speciesKey] — тільки тварини, за потреби одного виду: /all animal mouse або /all mouse",
   "/locationAll — список усіх місцин і ключів",
   "/playerAdmin <#id|ім’я|username> — детальна службова картка гравця",
   "/learning [#id|ім’я|username|creature #id|creature ім’я] — технічний зріз stored learning progress персонажа або істоти",
@@ -341,6 +342,7 @@ export const ADMIN_HELP_TEXT = [
   "/addResource <resourceKey> [locationKey|x,y,z] [amount] — відновити ресурс у місцині; без місцини бере поточну, без кількості додає 1",
   "/addResourceHelp — список ключів ресурсів; /addResourse теж працює як запасний варіант",
   "/addCampfire [locationKey|x,y,z|персонаж] [debug] — додати й одразу підпалити рукотворне вогнище; debug створює старий службовий варіант",
+  "/deleteCampfire [locationKey|x,y,z|персонаж] — прибрати немагічні вогнища в поточній або вказаній місцині; незгасне/магічне не чіпає",
   "/addTorch [персонаж] [кількість] — додати факел у речі собі або вказаному персонажу; без кількості додає 1",
   "/addLitTorch [персонаж] [кількість] — додати запалений факел у речі собі або вказаному персонажу; без кількості додає 1",
   "/addTwigs [персонаж] [кількість] — додати хмиз у речі собі або вказаному персонажу; без кількості додає 1",
@@ -366,12 +368,12 @@ export const ADMIN_HELP_TEXT = [
 ].join("\n");
 
 const ADMIN_HELP_SECTION_DEFINITIONS = [
-  { key: "overview", label: "Огляди", title: "Огляди й службові сторінки" },
-  { key: "chat", label: "Журнали", title: "Журнали й репліки" },
-  { key: "players", label: "Персонажі", title: "Персонажі й доступ" },
-  { key: "world_add", label: "Додати у світ", title: "Додавання у світ" },
-  { key: "cleanup", label: "Прибирання", title: "Прибирання й тестові стани" },
-  { key: "danger", label: "Важелі", title: "Небезпечні світові важелі" },
+  { key: "overview", label: "🧭 Огляди", title: "Огляди й службові сторінки" },
+  { key: "chat", label: "🗒 Журнали", title: "Журнали й репліки" },
+  { key: "players", label: "👥 Персонажі", title: "Персонажі й доступ" },
+  { key: "world_add", label: "➕ Додати у світ", title: "Додавання у світ" },
+  { key: "cleanup", label: "🧹 Прибирання", title: "Прибирання й тестові стани" },
+  { key: "danger", label: "⚠️ Важелі", title: "Небезпечні світові важелі" },
 ] as const;
 
 export const ADMIN_HELP_SECTIONS = (() => {
@@ -871,6 +873,26 @@ export function registerAdminHandlers(bot: Bot) {
   bot.hears(ADD_CAMPFIRE_TEXT_COMMAND, (ctx) => runAddCampfireCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
   bot.hears(["🔥 Додати вогнище", "Додати вогнище", "🔥 Додати вогнище (/addCampfire)", "Додати вогнище (/addCampfire)"], (ctx) => runAddCampfireCommand(ctx, ""));
   bot.hears(["🔥 Debug-вогнище", "Debug-вогнище", "🔥 Debug-вогнище (/addCampfire debug)", "Debug-вогнище (/addCampfire debug)"], (ctx) => runAddCampfireCommand(ctx, "debug"));
+
+  async function runDeleteCampfireCommand(ctx: any, rawTarget = String(ctx.match ?? "").trim()) {
+    if (!(await requireScribeAdmin(ctx))) return;
+
+    const location = await resolveLocationForAdmin(ctx, rawTarget);
+    if (!location) return;
+
+    const result = await deleteAdminCampfiresAtLocation(location.id);
+    await logEvent("SYSTEM", "Admin campfires deleted", `location=${location.key}; deleted=${result.deletedCount}; protected_magic=${result.protectedMagicCount}; keys=${result.deletedKeys.join(",")}`, location.id);
+    if (result.deletedCount <= 0) {
+      const protectedText = result.protectedMagicCount > 0 ? " Поруч є магічне вогнище, але команда його не чіпає." : "";
+      return ctx.reply(`🧹 У місцині ${location.name} немає немагічних вогнищ для прибирання.${protectedText}`);
+    }
+    const protectedText = result.protectedMagicCount > 0 ? ` Магічних вогнищ не чіпав: ${result.protectedMagicCount}.` : "";
+    return ctx.reply(`🧹 Прибрано немагічних вогнищ: ${result.deletedCount} у місцині ${location.name}.${protectedText}`);
+  }
+
+  bot.command(["deleteCampfire", "deletecampfire", "removeCampfire", "removecampfire"], (ctx) => runDeleteCampfireCommand(ctx));
+  bot.hears(DELETE_CAMPFIRE_TEXT_COMMAND, (ctx) => runDeleteCampfireCommand(ctx, String(ctx.match?.[1] ?? "").trim()));
+  bot.hears(["🧹 Прибрати вогнище", "Прибрати вогнище", "🧹 Прибрати вогнище (/deleteCampfire)", "Прибрати вогнище (/deleteCampfire)"], (ctx) => runDeleteCampfireCommand(ctx, ""));
 
   async function runTeleportCommand(ctx: any, raw = String(ctx.match ?? "").trim()) {
     if (!(await requireScribeAdmin(ctx))) return;

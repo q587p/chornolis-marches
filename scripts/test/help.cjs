@@ -17,10 +17,15 @@ assert.equal(COMMANDS_TEXT_PAGES.length, 3);
 assert.ok(COMMANDS_TEXT_PAGES[0].includes("/look"));
 assert.ok(COMMANDS_TEXT_PAGES.some((page) => page.includes("/help")));
 assert.equal(HELP_TEXT.includes("/commands"), false);
+assert.ok(HELP_TEXT.includes("<i>Сліди</i> (/track)"));
+assert.ok(HELP_TEXT.includes("<i>Сліди лисиці</i> (/track_fox)"));
+assert.ok(HELP_TEXT.includes("<i>Сигнали</i> (/signals, сигнали)"));
 assert.ok(HELP_TEXT.includes("Поклик духа"));
 assert.ok(HELP_TEXT.includes("/spirit"));
 assert.ok(HELP_TEXT.includes("/spirit_on"));
 assert.ok(HELP_TEXT.includes("/spirit_off"));
+assert.equal(HELP_TEXT.includes("/auto_stop"), false);
+assert.equal(HELP_TEXT.includes("стоп авто"), false);
 assert.equal(HELP_TEXT.includes("Провід"), false);
 assert.ok(HELP_TEXT.includes("AFK / відійти"));
 assert.ok(HELP_TEXT.includes("13 хвилин"));
@@ -39,6 +44,18 @@ assert.equal(helpTextForTutorialStatus(true).includes("/sleep_tutorial"), false)
 assert.ok(TUTORIAL_HELP_RETURN_TEXT.includes("повернутися туди"));
 assert.equal(TUTORIAL_HELP_IN_DREAM_TEXT.includes("повернутися туди"), false);
 assert.ok(TUTORIAL_HELP_IN_DREAM_TEXT.includes("ще триває"));
+
+const commandsText = COMMANDS_TEXT_PAGES.join("\n");
+assert.equal(commandsText.includes("/dukh"), false);
+assert.equal(commandsText.includes("/dukh_on"), false);
+assert.equal(commandsText.includes("/dukh_off"), false);
+assert.equal(commandsText.includes("/auto_stop"), false);
+assert.equal(commandsText.includes("стоп авто"), false);
+assert.ok(commandsText.includes("/spirit_on"));
+assert.ok(commandsText.includes("/spirit_off"));
+assert.ok(commandsText.includes("/track_fox"));
+assert.ok(commandsText.includes("/signals"));
+assert.ok(commandsText.includes("сигнал, сигнали"));
 
 const helpHandlerSource = fs.readFileSync("src/handlers/help.ts", "utf8");
 assert.equal(helpHandlerSource.includes("export const HELP_TEXT = ["), false);

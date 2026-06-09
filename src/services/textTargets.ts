@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../db";
+import { MAX_QUEUED_ACTIONS_PER_ACTOR } from "../gameConfig";
 import { normalizeInput } from "../input/aliases";
 import { normalizeCreatureActionText } from "../utils/creatureActionText";
 import { creatureForms, playerForms, type NameForms } from "./grammar";
@@ -18,6 +19,10 @@ export type TextTargetRef = {
   canGreet: boolean;
   canAttack?: boolean;
   isCorpse?: boolean;
+  sex?: string | null;
+  grammaticalGender?: string | null;
+  speciesKey?: string | null;
+  speciesKind?: string | null;
   searchKeys: string[];
 };
 
@@ -110,6 +115,26 @@ function targetSearchKeysForPlayer(player: any) {
   ]);
 }
 
+const SPECIES_PLURAL_SEARCH_ALIASES: Record<string, string[]> = {
+  fox: ["лиси", "лисиці", "лисиць"],
+  frog: ["жаби", "жаб"],
+  hawk: ["соколи", "соколів"],
+  mouse: ["миші", "мишей"],
+  owl: ["сови", "сов"],
+  rabbit: ["зайці", "зайців"],
+  snake: ["змії", "змій"],
+  wolf: ["вовки", "вовків"],
+};
+
+function speciesKeySearchAliases(speciesKey: string | null | undefined) {
+  if (!speciesKey) return [];
+  return [
+    speciesKey,
+    speciesKey === "mouse" ? "mice" : `${speciesKey}s`,
+    ...(SPECIES_PLURAL_SEARCH_ALIASES[speciesKey] ?? []),
+  ];
+}
+
 function targetSearchKeysForCreature(creature: any) {
   const isCorpse = !creature.isAlive && creature.age === "CORPSE";
   const species = creature.species;
@@ -123,6 +148,7 @@ function targetSearchKeysForCreature(creature: any) {
     creature.nameInstrumental,
     creature.nameLocative,
     creature.nameVocative,
+    ...speciesKeySearchAliases(species.key),
     species.name,
     species.nameGenitive,
     species.nameDative,
@@ -229,6 +255,7 @@ export async function visibleTextTargets(locationId: number, viewerPlayerId: num
       actionLabel,
       canGreet: true,
       canAttack: false,
+      grammaticalGender: player.grammaticalGender,
       searchKeys: targetSearchKeysForPlayer(player),
     };
   });
@@ -248,6 +275,11 @@ export async function visibleTextTargets(locationId: number, viewerPlayerId: num
       canGreet: !isCorpse && creature.species.kind !== "ANIMAL" && !isCampSpiritCatCreature(creature),
       canAttack: !isCorpse && creature.species.kind === "ANIMAL" && creature.species.diet !== "CARNIVORE",
       isCorpse,
+      isAnimal: creature.species.kind === "ANIMAL",
+      sex: creature.sex,
+      grammaticalGender: creature.species.grammaticalGender,
+      speciesKey: creature.species.key,
+      speciesKind: creature.species.kind,
       searchKeys: targetSearchKeysForCreature(creature),
     };
   });
@@ -265,6 +297,18 @@ export function textTargetsForAction(action: TextTargetAction, targets: TextTarg
   if (action === "attack") return targets.filter((target) => target.canAttack);
   if (action === "freshen") return targets.filter((target) => target.isCorpse);
   return targets;
+}
+
+export function textTargetsMatchingActionQuery(action: TextTargetAction, query: string, targets: TextTargetRef[]) {
+  const candidates = textTargetsForAction(action, targets);
+  const target = normalizeTargetKey(query);
+  if (!target) return candidates;
+  return candidates.filter((candidate) => bestTargetMatch(target, [candidate]).kind === "one");
+}
+
+export function assertBulkAttackQueueCapacity(targetCount: number, maxQueuedActions = MAX_QUEUED_ACTIONS_PER_ACTOR) {
+  if (targetCount <= maxQueuedActions) return;
+  throw new Error(`Масова атака знайшла ${targetCount} цілей, а черга вміщує щонайбільше ${maxQueuedActions}. Уточніть ціль або атакуйте меншу групу.`);
 }
 
 export function inspectMissingText(targetQuery: string, targets: TextTargetRef[] = []) {

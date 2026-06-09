@@ -69,7 +69,7 @@ As of `0.12.0`, the first concrete newcomer path is the dream tutorial in `Др�
 
 ## Starter Camp and First Night
 
-`Межовий табір біля мосту` is the waking-world return anchor for early characters, not just a starting coordinate. Keep it readable as a shared border camp: a stable fire, the boundary marker, signs of other people, the bridge/gate direction and the forest edge should all be legible when the player first arrives or returns through `/respawn`.
+`Межовий табір біля мосту` is the waking-world return anchor for early characters, not just a starting coordinate. Keep it readable as a shared border camp: a stable fire, signs of other people, the bridge/gate direction and the forest edge should all be legible when the player first arrives or returns through `/respawn`. The boundary marker now belongs at the start of the old bridge, close enough to teach the threshold without crowding the camp surface.
 
 The camp now has an inspectable `Дошка для прибулих` with compact diegetic advice: look around, take light, and leave something for the next person later. This is advice, not a quest checklist. A beginner torch source exists above the camp on the watchtower as a first-session safety tool; the older closed-gate torch source remains for the gate/hunter area and should not be removed until a later route/supply pass decides the final distribution.
 

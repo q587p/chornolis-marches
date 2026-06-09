@@ -460,6 +460,20 @@ export async function showLocationForPlayer(telegramId: number, reply: (text: st
   }
 }
 
+function locationSocialSignalsText() {
+  return [
+    "✨ Сигнали",
+    "",
+    "Короткі жести без окремої цілі. Якщо хочеш звернутися саме до когось, роздивись ціль у місцині або напиши жест із її ім’ям.",
+  ].join("\n");
+}
+
+export async function showLocationSocialSignals(telegramId: number, reply: (text: string, options?: any) => Promise<unknown>) {
+  const player = await getPlayerByTelegramId(telegramId);
+  if (!player) return void (await reply("Ти ще не увійшов у світ. Напиши /start"));
+  await reply(locationSocialSignalsText(), { reply_markup: buildLocationSocialSignalKeyboard() });
+}
+
 async function submitInventoryQueuedAction(
   bot: Bot,
   ctx: any,
@@ -565,11 +579,7 @@ export function registerPlayerHandlers(bot: Bot) {
     const player = await getPlayerByTelegramId(ctx.from.id);
     if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
-    const text = [
-      "✨ Сигнали",
-      "",
-      "Короткі жести без окремої цілі. Якщо хочеш звернутися саме до когось, роздивись ціль у місцині або напиши жест із її ім’ям.",
-    ].join("\n");
+    const text = locationSocialSignalsText();
     try {
       await ctx.editMessageText(text, { reply_markup: buildLocationSocialSignalKeyboard() });
     } catch {

@@ -654,6 +654,27 @@
     "file": "docs/planning/items/CAT-010-camp-cat-cache-and-newcomer-presence.md"
   },
   {
+    "id": "CAT-011",
+    "title": "Camp spirit cat shadow absence and camp return",
+    "status": "backlog",
+    "type": "feature",
+    "area": "atmosphere",
+    "priority": "medium",
+    "tags": [
+      "cat",
+      "camp",
+      "atmosphere",
+      "liminality",
+      "world-time"
+    ],
+    "depends_on": [
+      "CAT-003",
+      "CAT-009"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/CAT-011-shadow-absence-and-camp-return.md"
+  },
+  {
     "id": "CMD-001",
     "title": "Near-term text command pack",
     "status": "testing",
@@ -764,6 +785,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/COMBAT-002-training-arena-and-observation.md"
+  },
+  {
+    "id": "COMBAT-003",
+    "title": "Predator raw-meat scent aggression",
+    "status": "icebox",
+    "type": "feature",
+    "area": "combat",
+    "priority": "medium",
+    "tags": [
+      "animals",
+      "combat",
+      "predators",
+      "survival",
+      "inventory"
+    ],
+    "depends_on": [
+      "COMBAT-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/COMBAT-003-predator-meat-scent-aggression.md"
   },
   {
     "id": "CRAFT-001",
@@ -1079,6 +1120,27 @@
     ],
     "exports": {},
     "file": "docs/planning/items/ECO-009-seasonal-ecology-and-environment.md"
+  },
+  {
+    "id": "ECO-010",
+    "title": "Ground resource animal foraging",
+    "status": "backlog",
+    "type": "feature",
+    "area": "ecology",
+    "priority": "medium",
+    "tags": [
+      "animals",
+      "ecology",
+      "hunger",
+      "resources",
+      "food"
+    ],
+    "depends_on": [
+      "ECO-001",
+      "PERF-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ECO-010-ground-resource-animal-foraging.md"
   },
   {
     "id": "ECON-001",
@@ -3198,6 +3260,25 @@
     "file": "docs/planning/items/ONB-011-post-dream-guided-questlets.md"
   },
   {
+    "id": "ONB-012",
+    "title": "Learning surface command hints refresh",
+    "status": "next",
+    "type": "feature",
+    "area": "onboarding",
+    "priority": "high",
+    "tags": [
+      "onboarding",
+      "tutorial",
+      "commands",
+      "help",
+      "learning",
+      "ux"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/ONB-012-learning-surface-command-hints.md"
+  },
+  {
     "id": "OWL-002",
     "title": "Nocturnal owl tuning and indirect signs",
     "status": "testing",
@@ -4100,6 +4181,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/SOCIAL-003-theft-reaction-signals.md"
+  },
+  {
+    "id": "SOUND-001",
+    "title": "Neighboring animal sounds and loud nearby events",
+    "status": "next",
+    "type": "feature",
+    "area": "world",
+    "priority": "medium",
+    "tags": [
+      "atmosphere",
+      "sound",
+      "ecology",
+      "daypart",
+      "visibility"
+    ],
+    "depends_on": [
+      "SOC-008"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SOUND-001-neighboring-animal-sounds.md"
   },
   {
     "id": "STAT-001",

@@ -7,6 +7,7 @@ const {
   POPULATION_FLOOR_SPECIES_KEYS,
   planPopulationFloorRestoration,
 } = require("../../src/services/populationRestoration");
+const { STARTER_ANIMAL_GROUPS } = require("../../src/data/starterAnimals");
 
 const species = [
   { id: 1, key: "rabbit", kind: "ANIMAL", baseHp: 10, childTicks: 24, youngTicks: 48, adultTicks: 96 },
@@ -24,6 +25,14 @@ const locations = locationKeys.map((key, index) => ({ id: index + 10, key }));
 
 assert.deepEqual(POPULATION_FLOOR_SPECIES_KEYS.sort(), ["fox", "frog", "hawk", "mouse", "owl", "rabbit", "snake", "wolf"]);
 assert.equal(POPULATION_FLOOR_GROUPS.some((group) => group.age === "CORPSE"), false);
+assert.deepEqual(
+  POPULATION_FLOOR_SPECIES_KEYS.sort(),
+  [...new Set(STARTER_ANIMAL_GROUPS.filter((group) => group.age !== "CORPSE").map((group) => group.speciesKey))].sort(),
+  "every living starter animal species should be eligible for population-floor restoration",
+);
+for (const speciesKey of ["hawk", "frog", "snake"]) {
+  assert.ok(POPULATION_FLOOR_SPECIES_KEYS.includes(speciesKey), `${speciesKey} should remain population-floor protected`);
+}
 
 const starterCounts = Object.fromEntries(
   POPULATION_FLOOR_SPECIES_KEYS.map((speciesKey) => [
@@ -141,6 +150,23 @@ const restoredNoFrogPair = planPopulationFloorRestoration({
 
 assert.equal(restoredNoFrogPair.rows.length, starterCounts.frog);
 assert.deepEqual(Object.keys(restoredNoFrogPair.bySpecies), ["frog"]);
+
+const frogSpeciesLevelNotPerLocation = planPopulationFloorRestoration({
+  groups: POPULATION_FLOOR_GROUPS.filter((group) => group.speciesKey === "frog"),
+  species,
+  locations,
+  livingCountsBySpeciesKey: { frog: 3 },
+  livingBreedingBySpeciesKey: {
+    frog: { adultFemales: 1, adultMales: 1 },
+  },
+});
+
+assert.equal(
+  frogSpeciesLevelNotPerLocation.rows.length,
+  0,
+  "frog restoration should remain species-level, not a guarantee that every starter frog pool is refilled",
+);
+assert.deepEqual(frogSpeciesLevelNotPerLocation.bySpecies, {});
 
 const missingLocation = planPopulationFloorRestoration({
   groups: [{ speciesKey: "rabbit", locationKey: "missing", count: 2, age: "ADULT" }],

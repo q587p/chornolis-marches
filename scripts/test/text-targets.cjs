@@ -4,13 +4,16 @@ require("ts-node/register");
 
 const {
   bestTargetActionMatch,
+  assertBulkAttackQueueCapacity,
   isSelfTargetQuery,
   isSelfTargetQueryForPlayer,
   selfTargetSearchKeysForPlayer,
   targetDisplayLabel,
   textTargetsForAction,
+  textTargetsMatchingActionQuery,
   visibleTextTargetCreatureWhere,
 } = require("../../src/services/textTargets");
+const { MAX_QUEUED_ACTIONS_PER_ACTOR } = require("../../src/gameConfig");
 const { isVisibleCorpse } = require("../../src/services/locations");
 const { isFreshenedCorpse } = require("../../src/services/meat");
 const { resourceTypeDisplayName } = require("../../src/services/corpses");
@@ -130,6 +133,24 @@ const duplicateMiceMatch = bestTargetActionMatch("attack", "миша", [
 ]);
 assert.equal(duplicateMiceMatch.kind, "one");
 assert.equal(duplicateMiceMatch.target.id, 4);
+
+const bulkAttackTargets = [
+  { ...visibleTargets[3], id: 7, searchKeys: ["mouse", "mice", "миші", "мишей"] },
+  { ...visibleTargets[3], id: 8, label: "rabbit", searchKeys: ["rabbit", "rabbits", "зайці", "зайців"] },
+  { ...visibleTargets[4], searchKeys: ["mouse"] },
+];
+assert.deepEqual(textTargetsMatchingActionQuery("attack", "", bulkAttackTargets).map((target) => target.id), [7, 8]);
+assert.deepEqual(textTargetsMatchingActionQuery("attack", "mouse", bulkAttackTargets).map((target) => target.id), [7]);
+assert.deepEqual(textTargetsMatchingActionQuery("attack", "mice", bulkAttackTargets).map((target) => target.id), [7]);
+assert.deepEqual(textTargetsMatchingActionQuery("attack", "мишей", bulkAttackTargets).map((target) => target.id), [7]);
+assert.deepEqual(textTargetsMatchingActionQuery("attack", "rabbits", bulkAttackTargets).map((target) => target.id), [8]);
+assert.deepEqual(textTargetsMatchingActionQuery("attack", "зайців", bulkAttackTargets).map((target) => target.id), [8]);
+assert.deepEqual(textTargetsMatchingActionQuery("freshen", "mouse", bulkAttackTargets).map((target) => target.id), [5]);
+assert.doesNotThrow(() => assertBulkAttackQueueCapacity(MAX_QUEUED_ACTIONS_PER_ACTOR));
+assert.throws(
+  () => assertBulkAttackQueueCapacity(MAX_QUEUED_ACTIONS_PER_ACTOR + 1),
+  /Масова атака знайшла 18 цілей/,
+);
 
 assert.equal(resourceTypeDisplayName({ key: "corpse_mouse_male", name: "труп самця миші" }), "труп миша");
 assert.equal(resourceTypeDisplayName({ key: "corpse_mouse_female", name: "труп самиці миші" }), "труп миші");

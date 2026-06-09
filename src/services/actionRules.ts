@@ -14,7 +14,7 @@ import { directionLabels } from "../ui/labels";
 
 type MovePayload = { direction?: keyof typeof directionLabels };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
-type InventoryPayload = { resourceKey?: string; target?: string; allFilter?: string | null; cacheContribution?: boolean };
+type InventoryPayload = { resourceKey?: string; target?: string; allFilter?: string | null; cacheContribution?: boolean; reason?: string };
 
 const CACHE_CONTRIBUTION_LABELS: Record<string, string> = {
   berries: "ягоди",
@@ -82,7 +82,10 @@ export function actionTitle(action: Pick<WorldAction, "type" | "payload" | "dura
   if (action.type === "BUILD_CAMPFIRE") return "складаємо вогнище";
   if (action.type === "DOUSE_CAMPFIRE") return "гасимо вогнище";
   if (action.type === "DISMANTLE_CAMPFIRE") return "розбираємо вогнище";
-  if (action.type === "DISMANTLE_TOTEM") return "розбираємо підозрілий тотем";
+  if (action.type === "DISMANTLE_TOTEM") {
+    const payload = action.payload as unknown as InventoryPayload;
+    return payload.reason || "розбираємо підозрілий тотем";
+  }
   if (action.type === "RAID_APIARY") return "шукаємо мед у борті";
   if (action.type === "LOOK") return "озираємось";
   if (action.type === "INSPECT") return "роздивляємось ціль";

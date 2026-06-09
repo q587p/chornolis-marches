@@ -178,9 +178,9 @@ async function submitTargetFollowIntent(ctx: any, type: "player" | "creature", t
   if (target.kind === "creature") {
     const mentorship = await maybeOfferMentorshipAfterFollow({ playerId: player.id, mentorCreatureId: target.id });
     if (mentorship.kind === "offer") {
-      await ctx.reply(mentorship.text, { reply_markup: mentorshipOfferKeyboard(mentorship.mentorship.id) });
+      await ctx.reply(mentorship.text, { parse_mode: "HTML", reply_markup: mentorshipOfferKeyboard(mentorship.mentorship.id) });
     } else if (mentorship.kind === "active" || mentorship.kind === "not-better") {
-      await ctx.reply(mentorship.text);
+      await ctx.reply(mentorship.text, { parse_mode: "HTML" });
     }
   }
 }

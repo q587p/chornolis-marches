@@ -5,6 +5,7 @@ require("ts-node/register");
 const {
   CAMPFIRE_BUILD_TWIG_COST,
   campfireRecoveredTwigs,
+  isAdminDeletableCampfire,
   isDismantlableCampfire,
 } = require("../../src/services/fire");
 
@@ -39,5 +40,9 @@ assert.equal(campfireRecoveredTwigs(extinguished, 200), 1);
 assert.equal(campfireRecoveredTwigs(extinguished, 300), 0);
 assert.equal(isDismantlableCampfire({ ...extinguished, providesLight: true, data: { ...extinguished.data, extinguished: false } }), false);
 assert.equal(isDismantlableCampfire({ ...extinguished, type: "MAGIC_CAMPFIRE" }), false);
+assert.equal(isAdminDeletableCampfire({ type: "CAMPFIRE", data: { is_campfire: true, magical: false } }), true);
+assert.equal(isAdminDeletableCampfire({ type: "CAMPFIRE", data: { is_campfire: true, handmade: true } }), true);
+assert.equal(isAdminDeletableCampfire({ type: "CAMPFIRE", data: { is_campfire: true, magical: true } }), false);
+assert.equal(isAdminDeletableCampfire({ type: "MAGIC_CAMPFIRE", data: { is_campfire: true, magical: true } }), false);
 
 console.log("Campfire dismantle helpers OK");

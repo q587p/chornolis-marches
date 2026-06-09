@@ -2,10 +2,7 @@ import { CreatureAge, CreatureSex } from "@prisma/client";
 import { BASE_STAMINA } from "../gameConfig";
 import { prisma } from "../db";
 import {
-  STARTER_FROGS,
-  STARTER_MICE,
-  STARTER_PREDATORS,
-  STARTER_RABBITS,
+  STARTER_ANIMAL_GROUPS,
   StarterAnimalGroup,
   starterAnimalAction,
   starterAnimalAgeTicks,
@@ -62,12 +59,7 @@ export type PopulationFloorResult = PopulationFloorPlan & {
   restored: number;
 };
 
-export const POPULATION_FLOOR_GROUPS: StarterAnimalGroup[] = [
-  ...STARTER_RABBITS,
-  ...STARTER_MICE,
-  ...STARTER_FROGS,
-  ...STARTER_PREDATORS,
-].filter((group) => group.age !== "CORPSE");
+export const POPULATION_FLOOR_GROUPS: StarterAnimalGroup[] = STARTER_ANIMAL_GROUPS.filter((group) => group.age !== "CORPSE");
 
 export const POPULATION_FLOOR_SPECIES_KEYS = [...new Set(POPULATION_FLOOR_GROUPS.map((group) => group.speciesKey))];
 const BREEDING_PAIR_RESTORATION_SPECIES_KEYS = new Set(["rabbit", "mouse", "frog"]);

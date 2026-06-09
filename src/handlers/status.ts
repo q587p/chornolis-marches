@@ -60,12 +60,12 @@ const FORCE_OLD_TEXT_COMMAND = slashlessCommandPattern(["forceOld", "forceold"])
 const WHO_ACTIVE_WINDOW_MS = 60 * 60 * 1000;
 const STATUS_PERF_DEBUG = process.env.STATUS_PERF_DEBUG === "true";
 const ADMIN_PLAYER_LEARNING_SUMMARY_LIMIT = 8;
-type AllFilter =
+export type AllFilter =
   | { kind: "all" }
   | { kind: "player" }
   | { kind: "npc" }
   | { kind: "animal"; speciesKey?: string };
-type AllReturnContext = { showDead: boolean; page: number; filter: AllFilter };
+export type AllReturnContext = { showDead: boolean; page: number; filter: AllFilter };
 const pendingNameRejections = new Map<number, { playerId: number; returnContext: AllReturnContext }>();
 
 export function isPublicWhoCreature(creature: { species?: { kind?: string | null; diet?: string | null } | null }) {
@@ -415,7 +415,7 @@ function hpForAge(species: any, age: CreatureAge) {
   return Math.max(1, Math.round(species.baseHp * multiplier));
 }
 
-function allFilterToken(filter: AllFilter) {
+export function allFilterToken(filter: AllFilter) {
   if (filter.kind === "animal" && filter.speciesKey) return `animal-${filter.speciesKey}`;
   return filter.kind;
 }

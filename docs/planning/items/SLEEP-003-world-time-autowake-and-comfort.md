@@ -31,7 +31,7 @@ Connect ordinary sleep to internal world time, campfires and location comfort.
 - Allow about 9-10 game hours when recovery is still incomplete.
 - Let manual `/wake` still work unless a special forced-sleep rule applies.
 - Active nearby campfires improve sleep recovery and may raise temporary Снага cap.
-- Add or prepare location metadata for shelter/comfort instead of hardcoding every place.
+- Add or prepare location/feature metadata for shelter/comfort instead of hardcoding every place.
 
 ## Acceptance
 
@@ -47,12 +47,12 @@ Connect ordinary sleep to internal world time, campfires and location comfort.
 - Ordinary sleep now stores the world-clock minute when it begins.
 - Recovery checks can auto-wake an ordinary sleeper after roughly eight in-world hours once HP and stamina reach the relevant local cap.
 - Ordinary sleep has a hard upper bound of roughly ten in-world hours for the first slice, so it cannot continue forever if recovery is still incomplete.
-- A shared sleep recovery profile now folds in local rest caps and active campfires: fire can raise the temporary stamina cap a little and improves sleep recovery.
+- A shared sleep recovery profile now folds in local rest caps, active campfires and the first bounded feature-level sleep comfort signal: fire can raise the temporary stamina cap a little, while fire or marked dry bunks can modestly improve sleep stamina recovery.
 - Manual `/wake` still works and clears the stored sleep-start minute.
 
 ## Follow-up Notes
 
-- Location shelter/comfort metadata is still future work; the first slice uses existing rest-cap and active-campfire signals. Do not treat the current campfire modifier as the final shelter system.
+- Broad location shelter/safety metadata is still future work; the current slice only adds a small feature-level `sleep_comfort_multiplier` for authored surfaces such as dry bunks, plus the existing active-campfire signal. Do not treat this as the final shelter system.
 - Danger interruption is still future work. Later safety work should decide how attacks, predator presence, loud events, direct wake/social actions and lucid dreams interrupt or reshape ordinary sleep.
 - Scribe/admin `/timeSet` can shorten or lengthen ordinary sleep because sleep duration and auto-wake checks use internal world minutes. Treat that as an admin-only QA/live-ops risk: document it, avoid surprising live players when forcing time, and add a guard or explicit warning if time edits become common during active sessions.
 

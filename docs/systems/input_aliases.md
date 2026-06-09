@@ -10,7 +10,7 @@ When a player-facing button performs an in-world action, there should be an equi
 - Add Ukrainian aliases as a convenience layer over the same handlers where possible.
 - Preserve existing callback buttons for Telegram ergonomics.
 - Reply to unknown text with a short "не зрозуміли" message, `❔ Допомога` (`/help`) / `☰ Меню` (`/menu`) hints and close alias suggestions where possible. Suggestions should include the closest clickable slash command in parentheses when there is a stable one, for example `оглянутися (/look)`, `статистика (/stat)`, `використати гриби (/use_mushrooms)` or `швидкий огляд (/glance)`.
-- Player-facing help text can use clickable Telegram-style slash hints with underscores for multi-word commands. The input normalizer treats `_` as a space, so `/sleep_tutorial` is parsed like `/sleep tutorial`, `/queue_cancel` like `/queue cancel`, and `/auto_stop` like `/auto stop`.
+- Player-facing help text can use clickable Telegram-style slash hints with underscores for multi-word commands. The input normalizer treats `_` as a space, so `/sleep_tutorial` is parsed like `/sleep tutorial`, `/queue_cancel` like `/queue cancel`, `/auto_stop` like `/auto stop`, and `/attack_all_mouse` like `/attack all mouse`. When adding a new public slash example with spaces or arguments, add or test the underscore form unless there is an explicitly documented exception.
 - Direct slash commands should also accept the same direct text form without the leading slash when practical. This applies strongly to scribe/admin commands and future MUD-style clients: `/teleport forest_07_00` and `teleport forest_07_00` should route to the same command.
 - If a slash command has a no-argument usage response, its direct text aliases should route to that same response instead of falling through to unknown-input fallback. For example `/yell`, `yell`, `call` and `гукнути` without text should all explain how to add the message text.
 - When a visible button/action or stable command surface is mentioned in `/help`, `/commands`, news or release notes, prefer the player-facing label followed by its canonical slash command in parentheses, for example `Речі` (`/inv`), `🌙 AFK / відійти` (`/afk`) or `🚪 Завершити сесію` (`/end_session`). Compatibility aliases may be listed after that, but the first slash hint should be the stable command. In `news.md`, this doubles as a smoke-check: if the line cannot name a working slash command beside a player-facing action, verify the command/alias implementation first.
@@ -84,7 +84,7 @@ Actions:
 - When adding a new action alias, button or callback, classify it against the same physical-action guard. If it is physical, it should require standing through the shared posture rule instead of adding a one-off exception.
 - `/stand`, `stand`, `stand up`, `встати`, `підвестися`, `підвестись` -> stand up; if active rest is running, standing interrupts it.
 - `/rest`, `відпочити`, `перепочити`, `додати відпочинок у чергу`, `перервати відпочинок` -> sit if needed and start, queue or interrupt active recovery.
-- `🌙 AFK / відійти`, `/afk`, `afk`, `відійти` -> set session presence to AFK and pause reminders until the player returns with `/start` or any normal game action.
+- `🌙 AFK / відійти`, `/afk`, `afk`, `афк`, `відійти` -> set session presence to AFK and pause reminders until the player returns with `/start` or any normal game action.
 - `🚪 Завершити сесію`, `/end_session`, `/endSession`, `/quit`, `/leave`, `завершити сесію`, `вийти` -> end the current Telegram session without deleting character state. Returning is explicit enough through `/start` or any normal game action.
 - `Повернення`, `/respawn`, `повернення`, `повернутися до табору`, `вернутися до табору`, `назад до табору` -> ask for confirmation and then return an eligible early or weak character to the start camp with an atmospheric stamina consequence and cooldown. Plain `повернутися` remains the local Back action. If the character is already too established for ordinary beginner return, the refusal should offer `Гукнути поруч` (`/yell`) and `Звернутися до Писарів` (`/call_scribes`) instead of becoming a dead end.
 - `/call_scribes`, `call scribes`, `scribe help`, `ask scribes`, `покликати писарів`, `звернутися до писарів`, `допомога писарів` -> request manual Scribe return help when ordinary `/respawn` is no longer available. The request writes an event, notifies available Scribes/admins, and gives them a return-sign button that can move the character back to the start camp when appropriate.
@@ -115,10 +115,12 @@ Actions:
 
 Targets and signals:
 
+- Button labels should be accepted as text aliases where practical. The character-card **Сигнали** button is mirrored by `сигнал`, `сигнали`, `signals`, `socials` and `/signals`, which open the targetless signal menu.
 - `роздивитися труп`, `атакувати мишу`, `атака миша`, `fight wolf`, `kick rabbit`, `привітати 1`, `освіжити труп`.
 - `підібрати труп`.
 - `освіжити труп`, `розібрати труп`, `freshen corpse`, `butcher corpse` -> gain raw meat from a sufficiently fresh corpse.
 - `/freshen_all`, `freshen all`, `свіжувати все`, `освіжити всі` -> queue freshening for every visible suitable corpse in the current місцина, one corpse at a time.
+- `/attack_all mouse`, `/attack_all_mouse`, `/kill_all rabbit`, `/kill_all_rabbit`, `kill all mouse`, `attack all rabbit`, `attack all <species>`, `вбити всіх мишей`, `убити усіх зайців` -> queue attacks for every matching visible attackable target in the current location, one target at a time.
 - `підсмажити м'ясо`, `смажити м'ясо`, `cook meat` -> cook one raw meat at a nearby campfire; a torch alone is not enough.
 - `/cook_all`, `посмажити все`, `підсмажити все м'ясо`, `cook all meat` -> queue all carried raw meat for cooking, one piece at a time.
 - `з'їсти м'ясо`, `їсти смажене м'ясо`, `eat cooked meat`, `use cooked meat` -> eat cooked meat for hunger relief.

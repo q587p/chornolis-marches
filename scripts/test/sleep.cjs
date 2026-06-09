@@ -6,6 +6,7 @@ const {
   ORDINARY_SLEEP_FORCE_AUTO_WAKE_MINUTES,
   ORDINARY_SLEEP_FULL_AUTO_WAKE_MINUTES,
   ordinarySleepAutoWakeHint,
+  ordinarySleepApproximateHourText,
   ordinarySleepDurationMinutes,
   shouldAllowOrdinarySleepCallback,
   shouldAllowOrdinarySleepText,
@@ -71,26 +72,47 @@ assert.equal(
 
 assert.equal(
   ordinarySleepAutoWakeHint(START_WORLD_ABSOLUTE_MINUTE),
-  "Без додаткових дій ви прокинетеся приблизно о 03:00 за межовим часом.",
+  "Без додаткових дій ви прокинетеся приблизно о третій ночі за межовим часом.",
 );
+assert.equal(ordinarySleepApproximateHourText(0, 0), "опівночі");
+assert.equal(ordinarySleepApproximateHourText(3, 0), "о третій ночі");
+assert.equal(ordinarySleepApproximateHourText(11, 40), "опівдні");
+assert.equal(ordinarySleepApproximateHourText(17, 0), "о п’ятій дня");
+assert.equal(ordinarySleepApproximateHourText(23, 20), "об одинадцятій вечора");
 
 const bareProfile = sleepRecoveryProfileFromSignals({
   baseStaminaMax: 42,
   restStaminaCap: 42,
-  restRegenMultiplier: 1,
   hasActiveCampfire: false,
+});
+const comfortableProfile = sleepRecoveryProfileFromSignals({
+  baseStaminaMax: 42,
+  restStaminaCap: 42,
+  hasActiveCampfire: false,
+  sleepComfortMultiplier: 1.5,
 });
 const campfireProfile = sleepRecoveryProfileFromSignals({
   baseStaminaMax: 42,
   restStaminaCap: 42,
-  restRegenMultiplier: 1,
   hasActiveCampfire: true,
+  sleepComfortMultiplier: 1.5,
+});
+const cappedComfortProfile = sleepRecoveryProfileFromSignals({
+  baseStaminaMax: 42,
+  restStaminaCap: 42,
+  hasActiveCampfire: false,
+  sleepComfortMultiplier: 10,
 });
 
 assert.equal(bareProfile.staminaCap, 42);
 assert.equal(bareProfile.comfort, "bare");
+assert.equal(comfortableProfile.staminaCap, 42);
+assert.equal(comfortableProfile.comfort, "comfortable");
 assert.equal(campfireProfile.staminaCap, 52);
 assert.equal(campfireProfile.comfort, "campfire");
+assert.equal(comfortableProfile.staminaRate, Math.ceil(bareProfile.staminaRate * 1.5));
+assert.equal(campfireProfile.staminaRate, comfortableProfile.staminaRate);
+assert.equal(cappedComfortProfile.staminaRate, bareProfile.staminaRate * 2);
 assert.ok(campfireProfile.staminaRate > bareProfile.staminaRate);
 assert.ok(campfireProfile.hpRate > bareProfile.hpRate);
 

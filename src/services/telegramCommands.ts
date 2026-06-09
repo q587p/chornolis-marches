@@ -10,8 +10,10 @@ export const DEFAULT_BOT_COMMANDS = [
   { command: "respawn", description: "🏕️ Повернення до табору" },
   { command: "me", description: "🧍 Персонаж" },
   { command: "look", description: "👀 Озирнутися" },
+  { command: "follow_step", description: "👣 Йти слідом" },
   { command: "menu", description: "☰ Меню" },
   { command: "news", description: "📰 Останні новини світу" },
+  { command: "chronicles", description: "📜 Хроніки світу" },
   { command: "end_session", description: "🚪 Завершити сесію" },
 ];
 

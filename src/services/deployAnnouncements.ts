@@ -32,7 +32,7 @@ async function readLatestNewsSummary() {
       .join("\n");
 
     return [
-      `📰 Остання новина: ${escapeHtml(title)}`,
+      `📰 Остання новина: <strong>${escapeHtml(title)}</strong>`,
       ...(bullets ? [renderNewsMarkdownForTelegram(bullets)] : []),
     ].join("\n");
   } catch {
