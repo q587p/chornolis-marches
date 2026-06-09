@@ -1,6 +1,6 @@
 import { prisma } from "../db";
 import { config } from "../config";
-import { getHttpServerStartedAt, getLastRuntimeError, getTelegramBotStatus, setLastRuntimeError } from "../runtimeState";
+import { getActionQueueRuntimeSnapshot, getHttpServerStartedAt, getLastRuntimeError, getTelegramBotStatus, setLastRuntimeError } from "../runtimeState";
 import { getRuntimeTimingConfig } from "../gameConfig";
 import {
   HERALD_SERVICE_KEY,
@@ -31,7 +31,7 @@ function oldestAgeMs(value: Date | null | undefined, now: Date) {
 
 export async function getActionQueueStats() {
   const now = new Date();
-  const [groups, oldestQueued, oldestRunning, overdueRunning, overdueGroups] = await Promise.all([
+  const [groups, oldestQueued, oldestQueuedPlayer, oldestQueuedCreature, oldestRunning, overdueRunning, overdueGroups, topOverdueActions] = await Promise.all([
     prisma.worldAction.groupBy({
       by: ["actorType", "status"],
       where: { status: { in: [...ACTIVE_ACTION_STATUSES] } },
@@ -39,6 +39,16 @@ export async function getActionQueueStats() {
     }),
     prisma.worldAction.findFirst({
       where: { status: "QUEUED" },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      select: { createdAt: true },
+    }),
+    prisma.worldAction.findFirst({
+      where: { actorType: "PLAYER", status: "QUEUED" },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      select: { createdAt: true },
+    }),
+    prisma.worldAction.findFirst({
+      where: { actorType: "CREATURE", status: "QUEUED" },
       orderBy: [{ createdAt: "asc" }, { id: "asc" }],
       select: { createdAt: true },
     }),
@@ -57,6 +67,13 @@ export async function getActionQueueStats() {
       by: ["actorType"],
       where: { status: "RUNNING", executeAt: { lte: now } },
       _count: { _all: true },
+      _min: { executeAt: true },
+    }),
+    prisma.worldAction.findMany({
+      where: { status: "RUNNING", executeAt: { lte: now } },
+      orderBy: [{ executeAt: "asc" }, { id: "asc" }],
+      take: 5,
+      select: { id: true, actorType: true, playerId: true, creatureId: true, type: true, executeAt: true },
     }),
   ]);
 
@@ -68,9 +85,24 @@ export async function getActionQueueStats() {
     totalQueued: 0,
     totalRunning: 0,
     oldestQueuedAgeMs: oldestAgeMs(oldestQueued?.createdAt, now),
+    oldestQueuedPlayerAgeMs: oldestAgeMs(oldestQueuedPlayer?.createdAt, now),
+    oldestQueuedCreatureAgeMs: oldestAgeMs(oldestQueuedCreature?.createdAt, now),
     oldestRunningAgeMs: oldestAgeMs(oldestRunning?.startedAt, now),
     overdueRunning: 0,
     maxOverdueMs: oldestAgeMs(overdueRunning[0]?.executeAt, now),
+    playerOverdue: 0,
+    playerMaxOverdueMs: 0,
+    creatureOverdue: 0,
+    creatureMaxOverdueMs: 0,
+    topOverdueActions: topOverdueActions.map((action) => ({
+      id: action.id,
+      actorType: action.actorType,
+      playerId: action.playerId,
+      creatureId: action.creatureId,
+      type: action.type,
+      executeAt: action.executeAt,
+      overdueMs: oldestAgeMs(action.executeAt, now),
+    })),
   };
 
   for (const group of groups) {
@@ -83,7 +115,19 @@ export async function getActionQueueStats() {
     if (group.actorType === "CREATURE" && group.status === "RUNNING") stats.creatureRunning = count;
   }
 
-  stats.overdueRunning = overdueGroups.reduce((sum, group) => sum + group._count._all, 0);
+  for (const group of overdueGroups) {
+    const count = group._count._all;
+    const maxOverdueMs = oldestAgeMs(group._min.executeAt, now);
+    stats.overdueRunning += count;
+    if (group.actorType === "PLAYER") {
+      stats.playerOverdue = count;
+      stats.playerMaxOverdueMs = maxOverdueMs;
+    }
+    if (group.actorType === "CREATURE") {
+      stats.creatureOverdue = count;
+      stats.creatureMaxOverdueMs = maxOverdueMs;
+    }
+  }
 
   return stats;
 }
@@ -152,12 +196,18 @@ export function worldTickRuntimeStatus(latestTick: { createdAt: Date } | null | 
 
 export function actionQueueRuntimeStatus(actionQueue: Awaited<ReturnType<typeof getActionQueueStats>> | null, now = new Date()): RuntimeServiceStatus {
   if (!actionQueue) return serviceStatus("actionQueue", "Черга дій", "warning", "Чергу дій не вдалося прочитати.", now);
+  const runtime = getActionQueueRuntimeSnapshot();
+  const runningText = runtime.running
+    ? ` Прохід триває ${formatDurationShort(now.getTime() - (runtime.runningSince ?? now).getTime())}.`
+    : runtime.lastFinishedAt
+      ? ` Останній прохід ${formatDurationShort(now.getTime() - runtime.lastFinishedAt.getTime())} тому.`
+      : "";
   if (actionQueue.overdueRunning > 0) {
     return serviceStatus(
       "actionQueue",
       "Черга дій",
       "warning",
-      `Прострочено дій: ${actionQueue.overdueRunning}; найбільша затримка ${formatDurationShort(actionQueue.maxOverdueMs)}.`,
+      `Прострочено дій: ${actionQueue.overdueRunning} (гравці=${actionQueue.playerOverdue}, істоти=${actionQueue.creatureOverdue}); найбільша затримка ${formatDurationShort(actionQueue.maxOverdueMs)}.${runningText}`,
       now,
     );
   }
@@ -165,7 +215,7 @@ export function actionQueueRuntimeStatus(actionQueue: Awaited<ReturnType<typeof 
     "actionQueue",
     "Черга дій",
     "ok",
-    `Очікує ${actionQueue.totalQueued}, виконується ${actionQueue.totalRunning}.`,
+    `Очікує ${actionQueue.totalQueued}, виконується ${actionQueue.totalRunning}.${runningText}`,
     now,
   );
 }

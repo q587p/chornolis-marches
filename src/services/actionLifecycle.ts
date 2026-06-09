@@ -14,7 +14,7 @@ import {
 } from "../gameConfig";
 import { buildFatigueRestKeyboard } from "../ui/keyboards";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
-import { setLastRuntimeError } from "../runtimeState";
+import { setLastRuntimeError, type ActionQueuePassMetrics, type ActionQueuePhaseDurations } from "../runtimeState";
 import { actionPriority, actionTitle, effectivePlayerActionDurationMs } from "./actionRules";
 import { fatigueStateFor } from "./actionRecovery";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
@@ -527,7 +527,7 @@ async function startNextQueuedAction(bot: Bot, action: WorldAction) {
     where: { id: action.id, status: "QUEUED" },
     data: { status: "RUNNING", durationMs, startedAt, executeAt: new Date(startedAt.getTime() + durationMs) },
   });
-  if (result.count === 0) return;
+  if (result.count === 0) return false;
 
   if (action.actorType === "PLAYER" && action.playerId && action.type === "REST") {
     const player = await prisma.player.findUnique({ where: { id: action.playerId } });
@@ -548,6 +548,8 @@ async function startNextQueuedAction(bot: Bot, action: WorldAction) {
     const activity = action.type === "MOVE" ? "MOVING" : action.type === "GATHER" || action.type === "GATHER_SPECIFIC" ? "GATHERING" : action.type === "LOOK" || action.type === "INSPECT" || action.type === "TRACK" ? "LOOKING" : action.type === "ATTACK" ? "FIGHTING" : action.type === "SAY" || action.type === "GREET" ? "SPEAKING" : action.type === "REST" ? "RESTING" : undefined;
     await prisma.creature.updateMany({ where: { id: action.creatureId, isGone: false }, data: { activity, currentAction: actionTitle(action) } });
   }
+
+  return true;
 }
 
 async function startQueuedActionsForActorType(bot: Bot, actorType: WorldActorType, take: number) {
@@ -556,7 +558,7 @@ async function startQueuedActionsForActorType(bot: Bot, actorType: WorldActorTyp
     orderBy: [{ position: "asc" }, { id: "asc" }],
     take,
   });
-  if (nextQueued.length === 0) return;
+  if (nextQueued.length === 0) return 0;
 
   const runningActions = await prisma.worldAction.findMany({
     where: { actorType, status: "RUNNING" },
@@ -579,6 +581,7 @@ async function startQueuedActionsForActorType(bot: Bot, actorType: WorldActorTyp
     }
   }
 
+  let startedCount = 0;
   for (const action of nextQueued) {
     const key = actorKey(action);
     if (startedActors.has(key) || runningActors.has(key)) continue;
@@ -592,11 +595,12 @@ async function startQueuedActionsForActorType(bot: Bot, actorType: WorldActorTyp
     if (action.actorType === "PLAYER" && action.playerId && restingPlayerIds.has(action.playerId)) continue;
     startedActors.add(key);
     try {
-      await startNextQueuedAction(bot, action);
+      if (await startNextQueuedAction(bot, action)) startedCount += 1;
     } catch (error) {
       if (!isMissingRecordError(error)) throw error;
     }
   }
+  return startedCount;
 }
 
 async function processCreatureActionQueue(bot: Bot, completeAction: (bot: Bot, action: WorldAction) => Promise<unknown>) {
@@ -623,9 +627,18 @@ async function processCreatureActionQueue(bot: Bot, completeAction: (bot: Bot, a
   }
 }
 
-export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, action: WorldAction) => Promise<unknown>) {
+export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, action: WorldAction) => Promise<unknown>): Promise<ActionQueuePassMetrics> {
+  const totalStartedAt = Date.now();
+  const phaseDurations: ActionQueuePhaseDurations = {
+    playerCompleteMs: 0,
+    playerStartMs: 0,
+    playerRefreshMs: 0,
+    creatureKickMs: 0,
+    totalMs: 0,
+  };
   const now = new Date();
   const completedPlayerActions: WorldAction[] = [];
+  const playerCompleteStartedAt = Date.now();
   const duePlayerRunning = await prisma.worldAction.findMany({
     where: { actorType: "PLAYER", status: "RUNNING", executeAt: { lte: now } },
     orderBy: [{ executeAt: "asc" }, { id: "asc" }],
@@ -642,15 +655,31 @@ export async function processActionQueue(bot: Bot, completeAction: (bot: Bot, ac
       }
     }
   });
+  phaseDurations.playerCompleteMs = Date.now() - playerCompleteStartedAt;
 
-  await startQueuedActionsForActorType(bot, "PLAYER", PLAYER_QUEUED_ACTION_BATCH);
+  const playerStartStartedAt = Date.now();
+  const startedPlayerActions = await startQueuedActionsForActorType(bot, "PLAYER", PLAYER_QUEUED_ACTION_BATCH);
+  phaseDurations.playerStartMs = Date.now() - playerStartStartedAt;
+
+  const playerRefreshStartedAt = Date.now();
   for (const action of completedPlayerActions.sort((a, b) => a.id - b.id)) {
     await refreshKeyboardWhenPlayerQueueEnds(bot, action);
   }
+  phaseDurations.playerRefreshMs = Date.now() - playerRefreshStartedAt;
 
+  const creatureKickStartedAt = Date.now();
   void processCreatureActionQueue(bot, completeAction).catch((error) => {
     setLastRuntimeError(error);
     console.error("Creature action queue failed:", error);
     logEvent("ERROR", "Creature action queue failed", String(error)).catch(() => undefined);
   });
+  phaseDurations.creatureKickMs = Date.now() - creatureKickStartedAt;
+  phaseDurations.totalMs = Date.now() - totalStartedAt;
+
+  return {
+    phaseDurations,
+    completedPlayerActions: completedPlayerActions.length,
+    startedPlayerActions,
+    triggeredCreatureQueue: true,
+  };
 }
