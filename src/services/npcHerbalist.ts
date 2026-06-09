@@ -14,6 +14,7 @@ import { maybePerformHerbalistSignal } from "./socialAutonomy";
 import { FOLLOW_TARGET_CREATURE } from "./following";
 import { rememberFollowedTargetHiddenRoute } from "./followRouteMemory";
 import { creatureForms } from "./grammar";
+import { maybeQueueProfessionTotemDismantle } from "./npcTotemDismantling";
 
 export const HERBALIST_PROFESSION_KEYS = ["znakhar", "travnytsia"] as const;
 export const HERBALIST_SUPPLY_RUN_STAGE_EVENT_TITLE = "Herbalist supply run stage";
@@ -587,6 +588,7 @@ async function tickSupplyRunStage(bot: Bot | null, creature: any, stage: Herbali
 
 export async function tickNpcHerbalist(bot: Bot | null, creature: any, absoluteMinute: number) {
   if (!isHerbalistCreature(creature)) return "queuedRest";
+  if (await maybeQueueProfessionTotemDismantle(bot, creature)) return "queuedLook";
 
   const stage = await activeSupplyRunStage(creature.id);
   if (stage) return tickSupplyRunStage(bot, creature, stage, absoluteMinute);

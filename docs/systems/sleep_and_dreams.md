@@ -142,7 +142,7 @@ Ordinary sleep should restore more than active rest:
 
 Sleep records the in-world minute when ordinary sleep begins. Recovery checks may wake the character automatically after roughly eight game hours when HP and stamina have reached the relevant local cap, or after roughly ten game hours as a first hard upper bound.
 
-Active campfires use the shared sleep recovery profile to improve stamina and HP recovery and can raise the temporary stamina cap a little. Shelter/comfort metadata remains future work; for now the profile reuses active campfire and local rest-cap signals.
+Active campfires use the shared sleep recovery profile to improve stamina and HP recovery and can raise the temporary stamina cap a little. The first feature-level comfort signal is `sleep_comfort_multiplier`: dry bunks and active campfires can make sleep stamina recovery modestly faster than bare sleep. Broad shelter/safety metadata remains future work.
 
 ### Automatic waking
 
@@ -206,7 +206,7 @@ A nearby active campfire can:
 
 ### Shelter / Comfort flag
 
-Locations may eventually have a comfort/shelter marker, for example:
+Feature-level comfort may use a small bounded `sleep_comfort_multiplier` when a specific inspectable surface should support better ordinary sleep, such as starter cellar bunks. Locations may later gain broader comfort/shelter markers, for example:
 
 ```ts
 sleepComfort = NONE | POOR | BASIC | GOOD

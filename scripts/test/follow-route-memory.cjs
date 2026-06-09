@@ -50,6 +50,7 @@ assert.equal(followIntentMatchesMoveTarget(creatureIntent, { type: FOLLOW_TARGET
 
 assert.equal(followRouteMemoryKind({ exitVisible: true, targetVisible: true, showTracks: true }), "clear");
 assert.equal(followRouteMemoryKind({ exitVisible: true, targetVisible: true, showTracks: false }), "dark");
+assert.equal(followRouteMemoryKind({ exitVisible: true, targetVisible: true, showTracks: false, playerHasLight: true }), "clear");
 assert.equal(followRouteMemoryKind({ exitVisible: false, targetVisible: true, showTracks: true }), "none");
 assert.equal(followRouteMemoryKind({ exitVisible: true, targetVisible: false, showTracks: true }), "none");
 
@@ -215,6 +216,51 @@ assert.deepEqual(
     intent: creatureIntent,
     currentLocationId: 101,
     event: {
+      title: FOLLOW_ROUTE_MEMORY_EVENT_TITLE,
+      description: followRouteMemoryEventDescription({
+        playerId: 1,
+        targetType: FOLLOW_TARGET_CREATURE,
+        targetId: 13,
+        fromLocationId: 101,
+        toLocationId: 102,
+        direction: "NORTH",
+        source: "visible_move",
+        visibility: "dark",
+      }),
+      createdAt: new Date(freshNow - 1_000),
+    },
+    playerHasLight: true,
+    now: freshNow,
+  }),
+  { ok: true, direction: "NORTH", targetLabel: "знахарка" },
+);
+assert.deepEqual(
+  evaluateFollowRouteMemoryForStep({
+    intent: creatureIntent,
+    currentLocationId: 101,
+    event: {
+      title: FOLLOW_ROUTE_MEMORY_EVENT_TITLE,
+      description: followRouteMemoryEventDescription({
+        playerId: 1,
+        targetType: FOLLOW_TARGET_CREATURE,
+        targetId: 13,
+        fromLocationId: 101,
+        toLocationId: 102,
+        source: "visible_move",
+        visibility: "dark",
+      }),
+      createdAt: new Date(freshNow - 1_000),
+    },
+    playerHasLight: true,
+    now: freshNow,
+  }),
+  { ok: false, reason: "no-direction" },
+);
+assert.deepEqual(
+  evaluateFollowRouteMemoryForStep({
+    intent: creatureIntent,
+    currentLocationId: 101,
+    event: {
       title: FOLLOW_ROUTE_HIDDEN_MEMORY_EVENT_TITLE,
       description: followRouteMemoryEventDescription({
         playerId: 1,
@@ -248,6 +294,8 @@ const repoRoot = path.join(__dirname, "..", "..");
 const followRouteMemorySource = fs.readFileSync(path.join(repoRoot, "src/services/followRouteMemory.ts"), "utf8");
 assert.match(followRouteMemorySource, /mentorshipTrackingObservationLearningInput/);
 assert.match(followRouteMemorySource, /contextKey: "followed_movement"[\s\S]*mentorshipTrackingObservationLearningInput/);
+assert.match(followRouteMemorySource, /hasActiveLitTorchForPlayer/);
+assert.match(followRouteMemorySource, /playerHasLight/);
 const news = fs.readFileSync(path.join(repoRoot, "news.md"), "utf8");
 const release031 = news.match(/## 0\.15\.31[\s\S]*?(?=\n## 0\.15\.30\b)/)?.[0] ?? "";
 assert.match(release031, /не автоматична хода/, "0.15.31 public news should not imply auto-follow");

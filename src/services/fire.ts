@@ -1,4 +1,4 @@
-import { Bot } from "grammy";
+import { Bot, InlineKeyboard } from "grammy";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../db";
 import { notifyLocationAll } from "./notifications";
@@ -23,6 +23,7 @@ export const MAX_LIT_TORCHES_IN_HANDS = 2;
 export const TORCH_SOURCE_PLAYER_CARRY_LIMIT = 13;
 export const TORCH_SOURCE_TAKE_WINDOW_MS = 13 * 60_000;
 export const TORCH_SOURCE_TAKE_EVENT_TITLE = "Player took torch";
+export const TORCH_FADING_WARNING_TEXT = "🔥 Ваш факел догорає: жар уже бере останню суху серцевину. Якщо маєте інший факел, підпаліть його від цього полум'я, поки воно ще живе; інакше доведеться шукати вогнище.";
 
 const TORCH_KEY = "torch";
 const LIT_TORCH_KEY = "lit_torch";
@@ -209,6 +210,11 @@ export function isPreparedCampfire(feature: { type?: string | null; data?: unkno
 export function isDismantlableCampfire(feature: { type?: string | null; data?: unknown | null; providesLight?: boolean | null }) {
   if (!isHandmadeCampfire(feature)) return false;
   return isPreparedCampfire(feature) || isExtinguishedCampfire(feature);
+}
+
+export function isAdminDeletableCampfire(feature: { type?: string | null; data?: unknown | null }) {
+  const data = featureData(feature.data);
+  return feature.type === "CAMPFIRE" && data.magical !== true;
 }
 
 export function firstRelightableCampfireId(features: Array<{ id: number; type?: string | null; data?: unknown | null; providesLight?: boolean | null }>) {
@@ -622,7 +628,10 @@ export async function notifyFadingFireTimers(bot: Bot) {
 
     try {
       if (!(await canSendProactiveToTelegramId(resource.player.telegramId))) continue;
-      await bot.api.sendMessage(resource.player.telegramId, "🔥 Ваш факел догорає. Варто пошукати вогнище, щоб підпалити його знову.");
+      const torchState = await getPlayerTorchState(resource.playerId);
+      await bot.api.sendMessage(resource.player.telegramId, TORCH_FADING_WARNING_TEXT, {
+        reply_markup: torchFadingWarningReplyMarkup(torchState),
+      });
       await markTimerWarning(marker, resource.player.currentLocationId, resource.playerId);
     } catch (error) {
       console.warn("Failed to notify fading torch:", error);
@@ -712,6 +721,42 @@ export async function createAdminHandmadeCampfire(locationId: number) {
     },
   });
   return { feature, atmosphereText: null };
+}
+
+export async function deleteAdminCampfiresAtLocation(locationId: number) {
+  const worldMinute = await currentWorldMinute();
+  const features = await prisma.locationFeature.findMany({
+    where: {
+      locationId,
+      isActive: true,
+      type: { in: ["CAMPFIRE", "MAGIC_CAMPFIRE"] },
+    },
+    select: { id: true, key: true, name: true, type: true, data: true },
+    orderBy: { id: "asc" },
+  });
+
+  const deletable = features.filter(isAdminDeletableCampfire);
+  if (deletable.length > 0) {
+    await prisma.$transaction(deletable.map((feature) => prisma.locationFeature.update({
+      where: { id: feature.id },
+      data: {
+        isActive: false,
+        providesLight: false,
+        restStaminaCapMultiplier: null,
+        data: jsonInput({
+          ...featureData(feature.data),
+          adminDeletedAtMinute: worldMinute,
+          adminDeletedAt: new Date().toISOString(),
+        }),
+      },
+    })));
+  }
+
+  return {
+    deletedCount: deletable.length,
+    protectedMagicCount: features.length - deletable.length,
+    deletedKeys: deletable.map((feature) => feature.key),
+  };
 }
 
 export async function playerTwigsAmount(playerId: number) {
@@ -1018,6 +1063,17 @@ export async function getPlayerTorchState(playerId: number) {
 
 export function carriedTorchCount(torchState: Pick<Awaited<ReturnType<typeof getPlayerTorchState>>, "plainAmount" | "litAmount" | "dousedAmount">) {
   return torchState.plainAmount + torchState.litAmount + torchState.dousedAmount;
+}
+
+export function canPromptLightAnotherTorch(torchState: Pick<Awaited<ReturnType<typeof getPlayerTorchState>>, "plainAmount" | "litAmount" | "dousedAmount">) {
+  return torchState.litAmount > 0
+    && torchState.litAmount < MAX_LIT_TORCHES_IN_HANDS
+    && (torchState.plainAmount > 0 || torchState.dousedAmount > 0);
+}
+
+function torchFadingWarningReplyMarkup(torchState: Pick<Awaited<ReturnType<typeof getPlayerTorchState>>, "plainAmount" | "litAmount" | "dousedAmount">) {
+  if (!canPromptLightAnotherTorch(torchState)) return undefined;
+  return new InlineKeyboard().text("🔥 Підпалити ще", "inventory:light:torch");
 }
 
 export type TorchSourceTakeDecision =

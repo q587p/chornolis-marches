@@ -94,6 +94,7 @@ export type ParsedAliasCommand =
   | { kind: "track-gate" }
   | { kind: "target-action"; action: TargetAction; target: string }
   | { kind: "pickup-target"; target: string }
+  | { kind: "social-menu" }
   | { kind: "social-signal"; signal: SocialSignalAlias; target?: string };
 
 export type AliasSuggestion = {
@@ -331,6 +332,10 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "меню": { kind: "menu" },
   "дії": { kind: "menu" },
   "кнопки": { kind: "menu" },
+  signals: { kind: "social-menu" },
+  socials: { kind: "social-menu" },
+  "сигнал": { kind: "social-menu" },
+  "сигнали": { kind: "social-menu" },
   settings: { kind: "settings" },
   notifications: { kind: "settings" },
   notification: { kind: "settings" },
@@ -496,6 +501,7 @@ const EXACT_ALIASES: Record<string, ParsedAliasCommand> = {
   "стоп усе": { kind: "queue", mode: "clear" },
 
   track: { kind: "track" },
+  track_fox: { kind: "track", target: "fox" },
   "сліди": { kind: "track" },
   "відслідкувати": { kind: "track" },
   "вистежити": { kind: "track" },
@@ -892,6 +898,10 @@ const SUGGESTABLE_PATTERN_ALIASES = [
   "wave",
   "помахати",
   "махнути",
+  "signals",
+  "socials",
+  "сигнал",
+  "сигнали",
 ];
 
 const SUGGESTABLE_ALIASES = [...new Set([...Object.keys(EXACT_ALIASES), ...Object.keys(DIRECTION_ALIASES), ...SUGGESTABLE_PATTERN_ALIASES])];
@@ -924,6 +934,7 @@ const ADMIN_COMMAND_SUGGESTIONS: AdminCommandSuggestion[] = [
   { alias: "addResource", command: "/addResource", matches: ["addResource", "addresource", "addResourse", "addresourse"] },
   { alias: "addResourceHelp", command: "/addResourceHelp", matches: ["addResourceHelp", "addresourcehelp", "addResourseHelp", "addresoursehelp"] },
   { alias: "addCampfire", command: "/addCampfire", matches: ["addCampfire", "addcampfire"] },
+  { alias: "deleteCampfire", command: "/deleteCampfire", matches: ["deleteCampfire", "deletecampfire", "removeCampfire", "removecampfire"] },
   { alias: "addTorch", command: "/addTorch", matches: ["addTorch", "addtorch"] },
   { alias: "addLitTorch", command: "/addLitTorch", matches: ["addLitTorch", "addlittorch", "add lit torch"] },
   { alias: "addTwigs", command: "/addTwigs", matches: ["addTwigs", "addtwigs"] },
@@ -1053,6 +1064,7 @@ function slashCommandForAlias(alias: string): string | undefined {
   if (parsed.kind === "calendar") return "/calendar";
   if (parsed.kind === "weather") return "/weather";
   if (parsed.kind === "menu") return "/menu";
+  if (parsed.kind === "social-menu") return "/signals";
   if (parsed.kind === "follow") return "/follow";
   if (parsed.kind === "travel-group") {
     if (parsed.action === "show") return "/group";
@@ -1407,13 +1419,15 @@ function parseOpenIntent(text: string): ParsedAliasCommand | null {
 
 function parseTargetAction(text: string): ParsedAliasCommand | null {
   if (text === "attack_mouse") return { kind: "target-action", action: "attack", target: "mouse" };
-  if (/^(?:attack|fight|hit|kill|kick|атака|атакувати|напасти|вдарити|ударити|копнути|бити)$/u.test(text)) {
+  const attackAll = text.match(/^(?:attack_all|kill_all|fight_all|kick_all)(?:\s+(.+))?$/u);
+  if (attackAll) return { kind: "target-action", action: "attack", target: attackAll[1]?.trim() ? `all ${attackAll[1].trim()}` : "all" };
+  if (/^(?:attack|fight|hit|kill|kick|атака|атакувати|напасти|вдарити|ударити|копнути|бити|вбити|убити|вбий|убий|вбивай|убивай)$/u.test(text)) {
     return { kind: "target-action", action: "attack", target: "" };
   }
 
   const patterns: Array<[TargetAction, RegExp]> = [
     ["inspect", /^(?:look\s+at|look|x|examine|inspect|роздивитися|оглянути|огл|глянути\s+на|подивитися\s+на|придивитися\s+до)\s+(.+)$/],
-    ["attack", /^(?:attack|fight|hit|kill|kick|атака|атакувати|напасти\s+на|напасти|вдарити|ударити|копнути|бити|битися\s+з)\s+(.+)$/],
+    ["attack", /^(?:attack|fight|hit|kill|kick|атака|атакувати|напасти\s+на|напасти|вдарити|ударити|копнути|бити|битися\s+з|вбити|убити|вбий|убий|вбивай|убивай)\s+(.+)$/],
     ["greet", /^(?:greet|привітати|привітатися\s+з|заговорити\s+з|говорити\s+з|звернутися\s+до)\s+(.+)$/],
     ["freshen", /^(?:freshen|butcher|освіжувати|освіжити|свіжувати|свіжити|зняти\s+шкуру\s+з|оббілувати|розібрати|обробити|підготувати\s+м'ясо\s+з|підготувати\s+м’ясо\s+з)\s+(.+)$/],
   ];
@@ -1980,7 +1994,7 @@ export function parseAlias(raw: string): ParsedAliasCommand | null {
   if (!text) return null;
   const commandText = withoutLeadingSlash(text);
 
-  if (["afk", "відійти"].includes(commandText)) return { kind: "session-presence", mode: "afk" };
+  if (["afk", "афк", "відійти"].includes(commandText)) return { kind: "session-presence", mode: "afk" };
   if (["end session", "end-session", "endsession", "quit", "leave", "завершити сесію", "вийти"].includes(commandText)) return { kind: "session-presence", mode: "end" };
   if ([
     "call scribes",

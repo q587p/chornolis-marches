@@ -11,6 +11,10 @@ type TargetRef = {
   canAttack?: boolean;
   isAnimal?: boolean;
   isCorpse?: boolean;
+  sex?: string | null;
+  grammaticalGender?: string | null;
+  speciesKey?: string | null;
+  speciesKind?: string | null;
   canFreshen?: boolean;
   canReceiveRawMeat?: boolean;
 };
@@ -197,9 +201,37 @@ export function buildCorpseActionKeyboard(target: ResolvedTarget, returnCallback
   return keyboard;
 }
 
+const ANIMAL_TARGET_ICONS: Record<string, string> = {
+  camp_spirit_cat: "🐈",
+  cat: "🐈",
+  fox: "🦊",
+  frog: "🐸",
+  hawk: "🦅",
+  mouse: "🐭",
+  owl: "🦉",
+  rabbit: "🐇",
+  snake: "🐍",
+  wolf: "🐺",
+};
+
+function personTargetIcon(target: TargetRef) {
+  if (target.grammaticalGender === "PLURAL") return "👥";
+  if (target.sex === "FEMALE" || target.grammaticalGender === "FEMININE") return "👩";
+  if (target.sex === "MALE" || target.grammaticalGender === "MASCULINE") return "👨";
+  return "🧍";
+}
+
+function targetButtonIcon(target: TargetRef) {
+  if (target.isCorpse) return "";
+  if (target.type === "player") return personTargetIcon(target);
+  if (target.isAnimal || target.speciesKind === "ANIMAL") return ANIMAL_TARGET_ICONS[target.speciesKey ?? ""] ?? "🐾";
+  return personTargetIcon(target);
+}
+
 function targetButtonLabel(target: TargetRef) {
   if (target.isCorpse) return target.label;
-  return target.actionLabel ? `${target.label} — ${target.actionLabel}` : target.label;
+  const icon = targetButtonIcon(target);
+  return icon ? `${icon} ${target.label}` : target.label;
 }
 
 function targetButtonLabels(targets: TargetRef[]) {

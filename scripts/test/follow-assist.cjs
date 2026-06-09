@@ -167,6 +167,18 @@ assert.deepEqual(result, { ok: false, reason: "dark" });
 result = evaluateFollowAssistEligibility({
   intent: intent(),
   currentLocationId: 100,
+  event: clearEvent({ description: clearEvent().description.replace("visibility=clear", "visibility=dark") }),
+  player: player(),
+  activeActionCount: 0,
+  hasVisibleExit: true,
+  playerHasLight: true,
+});
+assert.equal(result.ok, true);
+assert.equal(result.direction, "NORTH");
+
+result = evaluateFollowAssistEligibility({
+  intent: intent(),
+  currentLocationId: 100,
   event: clearEvent({
     title: FOLLOW_ROUTE_HIDDEN_MEMORY_EVENT_TITLE,
     description: "playerId=7; targetType=CREATURE; targetId=42; from=100; to=18; source=hidden_route; visibility=hidden",
@@ -216,12 +228,15 @@ assert.equal(hiddenText.includes("under_bridge_18_05"), false);
 const darkText = followAssistFailureText("dark");
 assert.equal(darkText.includes("NORTH"), false);
 assert.equal(darkText.includes("північ"), false);
+const noDirectionText = followAssistFailureText("no-direction");
+assert.equal(noDirectionText.includes("Темрява"), false);
+assert.match(noDirectionText, /ясного напряму/);
 assert.equal(followAssistQueuedText("NORTH"), "Ви підхоплюєте чужий крок: на північ.");
 assert.equal(
   followAssistQueuedText("NORTH", "Орина"),
-  "Ви трималися чужого сліду: Орина рушає на північ. Автокрок підхоплює цей рух.",
+  "Ви трималися чужого сліду: Орина рушає на північ. Слідова підмога підхоплює цей рух.",
 );
-assert.equal(followAssistCatchUpQueuedText("NORTH"), "Автокрок не губить слід: далі на північ.");
+assert.equal(followAssistCatchUpQueuedText("NORTH"), "Слідова підмога не губить слід: далі на північ.");
 assert.equal(FOLLOW_ASSIST_STEP_NOTE, "follow-assist");
 assert.equal(FOLLOW_ASSIST_CATCH_UP_NOTE, "follow-assist:catch-up");
 assert.equal(FOLLOW_ASSIST_MARKER_KEY, "follow_assist_queued_move");
@@ -291,6 +306,8 @@ const catchUpSource = followRouteMemorySource.slice(
 );
 assert.match(catchUpSource, /assistKind: "catch_up"/);
 assert.match(catchUpSource, /note: FOLLOW_ASSIST_CATCH_UP_NOTE/);
+assert.match(catchUpSource, /hasActiveLitTorchForPlayer\(input\.playerId\)/);
+assert.match(catchUpSource, /playerHasLight/);
 assert.equal(catchUpSource.includes("prisma.player.update"), false);
 assert.equal(catchUpSource.includes("currentLocationId:"), true);
 const actionCompletionsSource = fs.readFileSync("src/services/actionCompletions.ts", "utf8");

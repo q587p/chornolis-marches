@@ -51,7 +51,7 @@ The near-gone ash notice is proactive local chat. It is guarded once per ash fea
 - From inventory, `Викинути` on a carried burning torch drops it as a burning ground item instead of immediately extinguishing it. It remains visible under `Лежить`, lights the місцина while it still burns, and can be picked up again.
 - A character can carry at most two lit torches at once, matching the current two-hands assumption.
 - A lit torch lasts 5 in-game hours, currently 10 real minutes internally. Player-facing remaining-time text should use approximate in-world hours rather than real minutes.
-- During the final in-game hour, currently 2 real minutes, the world tick sends the character a separate chat warning that the torch is going out.
+- During the final in-game hour, currently 2 real minutes, the world tick sends the character a separate chat warning that the torch is going out. The warning should not imply that the same spent torch can be restored after burnout: it points the player toward lighting another carried torch from the current flame while it still lives, or finding a campfire later. If the character carries another dry or doused torch and has a free lit-torch hand slot, the warning includes `🔥 Підпалити ще`.
 - When a lit torch burns out, inventory sync consumes `lit_torch` and returns `twigs` instead of a dry `torch`.
 - A lit torch gives light in the character's current місцина and can reveal nearby targets in the same way as campfire light. This applies to carried lit torches, future NPC-held lit torches, and burning lit torches lying on the ground. Light is a local-world effect, not only a property of already-visible actors.
 

@@ -77,7 +77,7 @@ export function registerMovementHandlers(bot: Bot) {
     await submitMove(bot, ctx, ctx.match[1] as Direction, true);
   });
 
-  bot.callbackQuery(/^cmd:(north|south|west|east|up|down)$/, async (ctx) => {
+  bot.callbackQuery(/^cmd:(north|south|west|east|up|down|inside|outside)$/, async (ctx) => {
     await submitMove(bot, ctx, COMMAND_DIRECTIONS[ctx.match[1]], true);
   });
 
@@ -110,5 +110,13 @@ export function registerMovementHandlers(bot: Bot) {
 
   bot.hears(["⬇️ Вниз", "(⬇️ Вниз)"], async (ctx) => {
     await submitMove(bot, ctx, "DOWN", false);
+  });
+
+  bot.hears(["🚪 Всередину", "(🚪 Всередину)"], async (ctx) => {
+    await submitMove(bot, ctx, "INSIDE", false);
+  });
+
+  bot.hears(["🚪 Назовні", "(🚪 Назовні)"], async (ctx) => {
+    await submitMove(bot, ctx, "OUTSIDE", false);
   });
 }

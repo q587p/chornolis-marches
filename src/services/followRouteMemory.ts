@@ -15,6 +15,7 @@ import { performOrQueuePlayerAction } from "./actionLifecycle";
 import { locationLockedExitMessageForPlayer } from "./tutorial";
 import { maybeRecordMentorshipLessonFeedback, mentorshipTrackingObservationLearningInput } from "./mentorship";
 import { createWorldEventMarker, hasRecentWorldEventMarker, recordWorldEventMarkerIfAbsent } from "./worldEventMarkers";
+import { hasActiveLitTorchForPlayer } from "./fire";
 
 export const FOLLOW_ROUTE_MEMORY_EVENT_TITLE = "Follow intent route memory";
 export const FOLLOW_ROUTE_HIDDEN_MEMORY_EVENT_TITLE = "Follow intent hidden route memory";
@@ -57,9 +58,10 @@ export function followRouteMemoryKind(input: {
   exitVisible?: boolean | null;
   targetVisible?: boolean | null;
   showTracks?: boolean | null;
+  playerHasLight?: boolean | null;
 }) {
   if (!input.exitVisible || input.targetVisible === false) return "none" as const;
-  return input.showTracks ? "clear" as const : "dark" as const;
+  return input.showTracks || input.playerHasLight ? "clear" as const : "dark" as const;
 }
 
 export function followedRouteMemoryText(input: {
@@ -271,6 +273,7 @@ export function evaluateFollowRouteMemoryForStep(input: {
   intent?: FollowIntentRouteLike | null;
   currentLocationId?: number | null;
   event?: { title?: string | null; description?: string | null; createdAt?: Date | string | number | null } | null;
+  playerHasLight?: boolean | null;
   now?: number;
   ttlMs?: number;
 }): FollowStepMemoryResult {
@@ -287,7 +290,9 @@ export function evaluateFollowRouteMemoryForStep(input: {
   const now = input.now ?? Date.now();
   const ttlMs = input.ttlMs ?? FOLLOW_ROUTE_STEP_MEMORY_TTL_MS;
   if (!Number.isFinite(eventTime) || ttlMs <= 0 || now - eventTime > ttlMs) return { ok: false, reason: "stale" };
-  if (parsed.visibility !== "clear") return { ok: false, reason: "dark" };
+  if (parsed.visibility !== "clear" && !(parsed.visibility === "dark" && input.playerHasLight)) {
+    return { ok: false, reason: "dark" };
+  }
   if (!parsed.direction) return { ok: false, reason: "no-direction" };
   if (!input.currentLocationId || parsed.fromLocationId !== input.currentLocationId) return { ok: false, reason: "wrong-location" };
   if (!parsed.targetType || !parsed.targetId || !followIntentMatchesMoveTarget(input.intent, { type: parsed.targetType, id: parsed.targetId })) {
@@ -312,6 +317,7 @@ export function evaluateFollowAssistEligibility(input: {
   hasVisibleExit?: boolean;
   locked?: boolean;
   hasRecentAssist?: boolean;
+  playerHasLight?: boolean | null;
   now?: number;
   ttlMs?: number;
 }): FollowAssistEligibilityResult {
@@ -327,6 +333,7 @@ export function evaluateFollowAssistEligibility(input: {
     intent: input.intent,
     currentLocationId: input.currentLocationId,
     event: input.event,
+    playerHasLight: input.playerHasLight,
     now: input.now,
     ttlMs: input.ttlMs,
   });
@@ -353,24 +360,25 @@ export function followAssistQueuedText(direction: Direction, targetLabel?: strin
   const label = String(directionLabels[direction] ?? direction).toLocaleLowerCase("uk-UA");
   const phrase = ["UP", "DOWN", "INSIDE", "OUTSIDE"].includes(direction) ? label : `на ${label}`;
   const target = targetLabel?.trim();
-  if (target) return `Ви трималися чужого сліду: ${escapeHtml(target)} рушає ${phrase}. Автокрок підхоплює цей рух.`;
+  if (target) return `Ви трималися чужого сліду: ${escapeHtml(target)} рушає ${phrase}. Слідова підмога підхоплює цей рух.`;
   return `Ви підхоплюєте чужий крок: ${phrase}.`;
 }
 
 export function followAssistCatchUpQueuedText(direction: Direction) {
   const label = String(directionLabels[direction] ?? direction).toLocaleLowerCase("uk-UA");
   const phrase = ["UP", "DOWN", "INSIDE", "OUTSIDE"].includes(direction) ? label : `на ${label}`;
-  return `Автокрок не губить слід: далі ${phrase}.`;
+  return `Слідова підмога не губить слід: далі ${phrase}.`;
 }
 
 export function followAssistFailureText(reason: FollowAssistFailureReason) {
-  if (reason === "hidden") return "Чужий слід зник не кроком. Автокрок мовчить.";
-  if (reason === "dark" || reason === "no-direction") return "Темрява забрала напрям. Автокрок не знає, куди йти.";
-  if (reason === "busy") return "Ви вже зайняті іншим кроком. Автокрок не втручається.";
+  if (reason === "hidden") return "Чужий слід зник не кроком. Слідова підмога мовчить.";
+  if (reason === "dark") return "Темрява забрала напрям. Слідова підмога не знає, куди йти.";
+  if (reason === "no-direction") return "У сліді не лишилося ясного напряму. Слідова підмога не знає, куди йти.";
+  if (reason === "busy") return "Ви вже зайняті іншим кроком. Слідова підмога не втручається.";
   if (reason === "resting" || reason === "incapacitated") return "Тіло не підхоплює чужий крок просто зараз.";
-  if (reason === "no-stamina") return "Снаги не стає на автокрок слідом.";
-  if (reason === "no-visible-exit") return "Автокрок пам'ятає напрям, але звичайна стежка тут не відкривається.";
-  return "Автокрок слідом не знаходить ясного руху.";
+  if (reason === "no-stamina") return "Снаги не стає на слідову підмогу.";
+  if (reason === "no-visible-exit") return "Слідова підмога пам'ятає напрям, але звичайна стежка тут не відкривається.";
+  return "Слідова підмога не знаходить ясного руху.";
 }
 
 export async function latestFollowRouteMemoryForPlayer(playerId: number) {
@@ -395,10 +403,13 @@ export async function followStepDirectionForPlayer(playerId: number): Promise<Fo
     prisma.playerFollowIntent.findUnique({ where: { playerId } }),
     latestFollowRouteMemoryForPlayer(playerId),
   ]);
+  const parsed = parseFollowRouteMemoryEventDescription(event?.description);
+  const playerHasLight = parsed.visibility === "dark" ? await hasActiveLitTorchForPlayer(playerId) : false;
   const evaluated = evaluateFollowRouteMemoryForStep({
     intent,
     currentLocationId: player?.currentLocationId,
     event,
+    playerHasLight,
   });
   if (!evaluated.ok) return evaluated;
 
@@ -795,6 +806,7 @@ async function maybeQueueFollowAssistCatchUpInner(bot: Bot, input: {
       cooldownKey: preliminaryCooldownKey,
     }) : Promise.resolve(false),
   ]);
+  const playerHasLight = parsed.visibility === "dark" ? await hasActiveLitTorchForPlayer(input.playerId) : false;
 
   const eligibility = evaluateFollowAssistEligibility({
     intent,
@@ -805,6 +817,7 @@ async function maybeQueueFollowAssistCatchUpInner(bot: Bot, input: {
     hasVisibleExit: Boolean(exit && !exit.isHidden),
     locked: Boolean(lockedMessage),
     hasRecentAssist,
+    playerHasLight,
   });
   if (!eligibility.ok) {
     await maybeSendFollowAssistFailureHint(bot, {
@@ -904,16 +917,19 @@ async function rememberFollowedTargetVisibleMoveInner(bot: Bot, input: {
     if (!followers.length) return 0;
 
     const visibility = await visibilityRulesForLocation(input.sourceLocationId, "brief");
-    const kind = followRouteMemoryKind({
-      exitVisible: true,
-      targetVisible: input.target.visible !== false,
-      showTracks: visibility.showTracks,
-    });
-    if (kind === "none") return 0;
+    if (input.target.visible === false) return 0;
 
     for (const follower of followers) {
       try {
         const { intent, present } = follower;
+        const playerHasLight = visibility.showTracks ? false : await hasActiveLitTorchForPlayer(intent.playerId);
+        const kind = followRouteMemoryKind({
+          exitVisible: true,
+          targetVisible: true,
+          showTracks: visibility.showTracks,
+          playerHasLight,
+        });
+        if (kind === "none") continue;
         const label = input.target.label || intent.lastKnownTargetLabel || "хтось";
         const cooldownKey = followRouteMemoryCooldownKey({
           playerId: intent.playerId,

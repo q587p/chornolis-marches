@@ -28,7 +28,7 @@ import { durationSecondsSuffix } from "../utils/durationText";
 import { escapeHtml, stripUnsafeText } from "../utils/text";
 import { sendHelp } from "./help";
 import { disablePlayerAuto, isPlayerAutoEnabled, replyPlayerAutoStatus, requestOrEnablePlayerAuto } from "./auto";
-import { showCharacter, showInventory, showLocationForPlayer } from "./player";
+import { showCharacter, showInventory, showLocationForPlayer, showLocationSocialSignals } from "./player";
 import { buildAllPage, buildChatLogPage, buildStatBrief, buildWhoPage } from "./status";
 import { renderDepletedVegetationInspection, renderLocationBrief, renderLocationExits, renderLocationFeatureInteraction, renderLocationFeatureInteractionByQuery, renderLocationGlance, shakeTreeAtCurrentLocation } from "../services/locations";
 import { buildNewsIndexPage, newsHtmlReplyOptions } from "./news";
@@ -65,7 +65,7 @@ import {
 import { replyToActionError } from "../utils/actionErrorReply";
 import { assertCanPerformPhysicalAction } from "../services/postureRules";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
-import { bestTargetActionMatch, bestTargetMatch, inspectMissingText, isSelfTargetQueryForPlayer, normalizeTargetKey, targetDisplayLabel, targetListText, textTargetsForAction, visibleTextTargets, type TextTargetRef } from "../services/textTargets";
+import { assertBulkAttackQueueCapacity, bestTargetActionMatch, bestTargetMatch, inspectMissingText, isSelfTargetQueryForPlayer, normalizeTargetKey, targetDisplayLabel, targetListText, textTargetsForAction, textTargetsMatchingActionQuery, visibleTextTargets, type TextTargetRef } from "../services/textTargets";
 import { spendPlayerStaminaAmount } from "../services/actionRecovery";
 import { afkReplyOptions, canSendProactiveToTelegramId, endPlayerSession, SESSION_AFK_CONFIRMATION, SESSION_ENDED_CONFIRMATION, setPlayerAfk } from "../services/sessionPresence";
 import { setAutoActionMessageSetting, setDaypartNoticeSetting, showSettings } from "./settings";
@@ -150,11 +150,11 @@ const PENDING_TARGET_ACTION_TTL_MS = 60_000;
 async function maybeReplyWithMentorshipOffer(ctx: any, playerId: number, mentorCreatureId: number) {
   const result = await maybeOfferMentorshipAfterFollow({ playerId, mentorCreatureId });
   if (result.kind === "offer") {
-    await ctx.reply(result.text, { reply_markup: mentorshipOfferKeyboard(result.mentorship.id) });
+    await ctx.reply(result.text, { parse_mode: "HTML", reply_markup: mentorshipOfferKeyboard(result.mentorship.id) });
     return;
   }
   if (result.kind === "active" || result.kind === "not-better") {
-    await ctx.reply(result.text);
+    await ctx.reply(result.text, { parse_mode: "HTML" });
   }
 }
 
@@ -743,7 +743,7 @@ async function submitInventoryUnequip(ctx: any, target?: string) {
   }
 }
 
-async function submitPutItem(bot: Bot, ctx: any, item: string, amount: number | "all" | undefined, container: string) {
+export async function submitPutItem(bot: Bot, ctx: any, item: string, amount: number | "all" | undefined, container: string) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
@@ -1012,6 +1012,7 @@ async function submitTargetAction(bot: Bot, ctx: any, action: TargetAction, targ
 
   const locationId = player.currentLocationId;
   if (action === "freshen" && isAllTarget(targetQuery)) return submitFreshenAll(bot, ctx, player, locationId);
+  if (action === "attack" && allTargetFilter(targetQuery) !== null) return submitAttackAll(bot, ctx, player, locationId, targetQuery);
 
   const visibleTargets = await visibleTextTargets(locationId, player.id);
   const actionTargets = textTargetsForAction(action, visibleTargets);
@@ -1225,7 +1226,7 @@ async function submitTravelGroupFollowLeader(ctx: any) {
   await ctx.reply(result.text);
 }
 
-async function submitTravelGroupCommand(bot: Bot, ctx: any, action: "show" | "create" | "invite" | "accept" | "decline" | "leave" | "disband" | "follow-leader", target = "") {
+export async function submitTravelGroupCommand(bot: Bot, ctx: any, action: "show" | "create" | "invite" | "accept" | "decline" | "leave" | "disband" | "follow-leader", target = "") {
   if (action === "show") return submitTravelGroupStatus(ctx);
   if (action === "create") return submitTravelGroupCreate(ctx);
   if (action === "invite") return submitTravelGroupInvite(bot, ctx, target);
@@ -1386,17 +1387,17 @@ function naturalResourcePickupHint(key: PickupResourceQueryKey) {
 }
 
 function isPickupAllTarget(target: string) {
-  return ["all", "everything", "все", "усе", "всі", "усі"].includes(target);
+  return ["all", "everything", "все", "усе", "всі", "усі", "всіх", "усіх"].includes(target);
 }
 
 function allTargetFilter(target: string) {
   const normalized = normalizeTargetKey(target);
   if (isPickupAllTarget(normalized)) return "";
 
-  const prefix = normalized.match(/^(?:all|everything|все|усе|всі|усі)\s+(.+)$/u);
+  const prefix = normalized.match(/^(?:all|everything|все|усе|всі|усі|всіх|усіх)\s+(.+)$/u);
   if (prefix?.[1]?.trim()) return prefix[1].trim();
 
-  const suffix = normalized.match(/^(.+?)\s+(?:all|everything|все|усе|всі|усі)$/u);
+  const suffix = normalized.match(/^(.+?)\s+(?:all|everything|все|усе|всі|усі|всіх|усіх)$/u);
   if (suffix?.[1]?.trim()) return suffix[1].trim();
 
   return null;
@@ -1446,6 +1447,49 @@ async function submitFreshenAll(bot: Bot, ctx: any, player: NonNullable<Awaited<
     await ctx.reply(`Додано свіжування туш: ${freshenable.length}. Будете обробляти їх по черзі${durationSecondsSuffix(player, durationMs)}.\n\n${queueText}`, await actionQueueReplyOptions(player.id));
   } catch (error) {
     await replyToActionError(ctx, error, "Не вдалося додати свіжування.");
+  }
+}
+
+async function submitAttackAll(bot: Bot, ctx: any, player: NonNullable<Awaited<ReturnType<typeof getPlayerByTelegramId>>>, locationId: number, targetQuery: string) {
+  try {
+    assertCanPerformPhysicalAction(player, "ATTACK");
+    const filter = allTargetFilter(targetQuery);
+    if (filter === null) return;
+
+    const visibleTargets = await visibleTextTargets(locationId, player.id);
+    const matchingTargets = textTargetsMatchingActionQuery("attack", filter, visibleTargets);
+    const attackable: Array<{ type: "creature"; id: number }> = [];
+
+    for (const target of matchingTargets) {
+      if (target.type !== "creature") continue;
+      const resolved = await resolveTarget(target.type, target.id, locationId);
+      if (resolved?.canAttack) attackable.push({ type: target.type, id: target.id });
+    }
+
+    if (!attackable.length) {
+      const attackTargets = textTargetsForAction("attack", visibleTargets);
+      await ctx.reply(filter ? targetActionMissingText("attack", attackTargets) : targetActionEmptyText("attack"));
+      return;
+    }
+    assertBulkAttackQueueCapacity(attackable.length);
+
+    const durationMs = actionDurationMs("ATTACK", player.stamina);
+    for (const [index, target] of attackable.entries()) {
+      await performOrQueuePlayerAction(bot, {
+        playerId: player.id,
+        type: "ATTACK",
+        payload: { targetType: target.type, targetId: target.id, mode: "known" },
+        durationMs,
+        chatId: ctx.chat?.id,
+        interruptCurrent: index === 0,
+        interruptQueued: index === 0,
+      });
+    }
+
+    const queueText = await renderPlayerActionQueue(player.id);
+    await ctx.reply(`Додано атак у чергу: ${attackable.length}. Будете атакувати цілі по черзі${durationSecondsSuffix(player, durationMs)}.\n\n${queueText}`, await actionQueueReplyOptions(player.id));
+  } catch (error) {
+    await replyToActionError(ctx, error, "Не вдалося додати атаки.");
   }
 }
 
@@ -1607,7 +1651,7 @@ async function submitPickupTarget(bot: Bot, ctx: any, targetQuery: string) {
   }
 }
 
-async function submitPickupCommand(bot: Bot, ctx: any, targetQuery?: string) {
+export async function submitPickupCommand(bot: Bot, ctx: any, targetQuery?: string) {
   const target = targetQuery?.trim();
   if (!target) {
     await ctx.reply("Напишіть так: /<i>pick</i> twigs, /<i>pick_all</i> або <i>підібрати все</i>.", { parse_mode: "HTML" });
@@ -1781,15 +1825,20 @@ export function registerAliasHandlers(bot: Bot) {
     "dismantle_campfire",
     "dismantle_totem",
     "inv",
+    "who",
     "put",
     "respawn",
     "call_scribes",
     "scribe_help",
     "shake_tree",
     "freshen_all",
+    "attack_all",
+    "kill_all",
     "take_bottle",
     "make_tincture",
     "smile",
+    "signals",
+    "socials",
 	    "glance",
 	    "enter",
 	    "crawl",
@@ -1798,6 +1847,7 @@ export function registerAliasHandlers(bot: Bot) {
 	    "reply",
   ], async (_ctx, next) => next());
   bot.command(["attack", "fight", "kill", "kick"], async (ctx) => submitAttackCommand(bot, ctx, ctx.match ?? ""));
+  bot.command(["attack_all", "kill_all"], async (ctx) => submitAttackCommand(bot, ctx, `all ${(ctx.match ?? "").trim()}`.trim()));
   bot.command("attack_mouse", async (ctx) => submitAttackCommand(bot, ctx, "mouse"));
   bot.command(["freshen", "butcher"], async (ctx) => submitTargetAction(bot, ctx, "freshen", (ctx.match ?? "").trim() || "corpse"));
   bot.command(["get", "pick", "pickup", "take"], async (ctx) => submitPickupCommand(bot, ctx, ctx.match ?? ""));
@@ -1813,7 +1863,13 @@ export function registerAliasHandlers(bot: Bot) {
   bot.command("use", async (ctx) => submitDrinkOrUseCommand(bot, ctx, String(ctx.match ?? ""), "Напишіть так: /use tincture."));
   bot.command("use_tincture", async (ctx) => submitUseItem(bot, ctx, HERBAL_TINCTURE_KEY));
   bot.command(["get_all", "pick_all", "pickup_all", "take_all"], async (ctx) => submitPickupCommand(bot, ctx, pickupAllCommandTarget(ctx.match ?? "")));
+  bot.command("who", async (ctx) => replyWithWho(ctx));
   bot.command("track", async (ctx) => submitTrack(bot, ctx, false, ctx.match ?? ""));
+  bot.command("track_fox", async (ctx) => submitTrack(bot, ctx, false, "fox"));
+  bot.command(["signals", "socials"], async (ctx) => {
+    if (!ctx.from) return;
+    return showLocationSocialSignals(ctx.from.id, (text, options) => ctx.reply(text, options));
+  });
 	  bot.command("follow", async (ctx) => submitFollowIntent(ctx, ctx.match ?? ""));
 	  bot.command(["follow_assist", "follow_auto", "autofollow"], async (ctx) => {
 	    const mode = String(ctx.match ?? "").trim().toLowerCase();
@@ -1948,6 +2004,7 @@ export function registerAliasHandlers(bot: Bot) {
     if (parsed.kind === "calendar") return showCalendar(ctx);
     if (parsed.kind === "weather") return showWeather(ctx);
     if (parsed.kind === "menu") return showMenu(ctx);
+    if (parsed.kind === "social-menu") return showLocationSocialSignals(ctx.from.id, (text, options) => ctx.reply(text, options));
     if (parsed.kind === "settings") return showSettings(ctx);
     if (parsed.kind === "daypart-notices") {
       if (parsed.mode === "on") return setDaypartNoticeSetting(ctx, true);

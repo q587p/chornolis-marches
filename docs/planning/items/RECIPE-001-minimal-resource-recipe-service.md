@@ -69,3 +69,4 @@ This is not a full crafting UI, profession tree, station system or economy. It i
 - Added a narrow player apply helper that validates all inputs in a Prisma transaction before consuming any resources, then increments the output resource.
 - Output `ResourceType` rows are required to already exist for this foundation; RECIPE-001 does not create future tincture resources or item-instance semantics.
 - This foundation intentionally adds no `/brew`, no public recipe book UI, no `herbal_tincture`, no herbalism success/failure policy and no live gameplay recipe consumer yet.
+- Testing note: `applyResourceRecipeForPlayer` is still helper-only and not connected to live gameplay in RECIPE-001. The next `ALC-001` player-facing consumer must add a real or well-isolated fixture integration test for the transactional inventory mutation path.

@@ -65,16 +65,27 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   const directionButton = (direction: Direction, label: string) => exits.has(direction)
     ? lockedExits.has(direction) ? `(${label})` : label
     : EMPTY_KEYBOARD_BUTTON;
+  const hasCardinalExit = exits.has("NORTH") || exits.has("SOUTH") || exits.has("WEST") || exits.has("EAST");
   const northOrUpButton = exits.has("NORTH") ? directionButton("NORTH", "⬆️ Північ") : directionButton("UP", "⬆️ Вгору");
   const southOrDownButton = exits.has("SOUTH") ? directionButton("SOUTH", "⬇️ Південь") : directionButton("DOWN", "⬇️ Вниз");
+  const westOrInsideButton = exits.has("WEST")
+    ? directionButton("WEST", "⬅️ Захід")
+    : !hasCardinalExit
+      ? directionButton("INSIDE", "🚪 Всередину")
+      : EMPTY_KEYBOARD_BUTTON;
+  const eastOrOutsideButton = exits.has("EAST")
+    ? directionButton("EAST", "Схід ➡️")
+    : !hasCardinalExit
+      ? directionButton("OUTSIDE", "🚪 Назовні")
+      : EMPTY_KEYBOARD_BUTTON;
   const keyboard = new Keyboard()
     .text("👀 Озирнутися");
   keyboard.text(northOrUpButton);
   keyboard.text(state.canExamine === false ? EMPTY_KEYBOARD_BUTTON : "🔎 Роздивитися").row();
 
-  keyboard.text(directionButton("WEST", "⬅️ Захід"));
+  keyboard.text(westOrInsideButton);
   keyboard.text(state.hasInventory ? "🎒 Речі" : EMPTY_KEYBOARD_BUTTON);
-  keyboard.text(directionButton("EAST", "Схід ➡️"));
+  keyboard.text(eastOrOutsideButton);
   keyboard.row();
 
   keyboard.text(utilityButton(state.showAdminMenu ? "🛠 Адмін меню" : "🧭 Допомога"));
@@ -241,6 +252,7 @@ export function buildAdminResourcesReplyKeyboard() {
 export function buildAdminFireReplyKeyboard() {
   return new Keyboard()
     .text("🔥 Додати вогнище")
+    .text("🧹 Прибрати вогнище")
     .row()
     .text("🔥 Debug-вогнище")
     .row()

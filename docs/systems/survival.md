@@ -56,7 +56,7 @@ Current tuning favors quick recovery during early testing:
 - passive stamina recovery: `+13` once per 40 world ticks;
 - active rest stamina recovery: `+13` once per 4 world ticks;
 - local features such as tutorial dream campfires can multiply active rest recovery and raise the temporary rest cap.
-- ordinary sleep now has its own recovery profile: it records the in-world minute when sleep begins, can wake automatically after enough world time passes, and active campfires improve sleep recovery.
+- ordinary sleep now has its own recovery profile: it records the in-world minute when sleep begins, can wake automatically after enough world time passes, and active campfires or bounded feature-level sleep comfort can improve sleep recovery.
 
 These values are balance constants, not final design. Player-facing UI should still prefer descriptive stamina states unless technical details are enabled.
 

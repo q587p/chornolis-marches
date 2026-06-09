@@ -32,12 +32,14 @@ CAT-007,Camp cat tests and tuning pass,next,chore,testing,medium,"cat,tests,tuni
 CAT-008,"Camp spirit cat docs, news and release notes",next,content,docs,low,"cat,docs,news,release,planning",docs/planning/items/CAT-008-docs-news-release.md
 CAT-009,Camp cat watch posture and soft warnings,testing,feature,atmosphere,medium,"cat,camp,atmosphere,safety,onboarding",docs/planning/items/CAT-009-camp-cat-watch-and-soft-warnings.md
 CAT-010,Camp cat cache and newcomer presence,testing,feature,onboarding,low,"cat,camp,beginner-cache,onboarding,atmosphere",docs/planning/items/CAT-010-camp-cat-cache-and-newcomer-presence.md
+CAT-011,Camp spirit cat shadow absence and camp return,backlog,feature,atmosphere,medium,"cat,camp,atmosphere,liminality,world-time",docs/planning/items/CAT-011-shadow-absence-and-camp-return.md
 CMD-001,Near-term text command pack,testing,feature,commands,high,"commands,aliases,mud,speech,navigation",docs/planning/items/CMD-001-near-term-text-command-pack.md
 CMD-002,Put items into local containers and features,testing,feature,commands,high,"commands,inventory,containers,aliases",docs/planning/items/CMD-002-put-items-into-containers.md
 CMD-003,Public news command deep-link audit,backlog,technical,commands,high,"commands,news,telegram,deep-links,web",docs/planning/items/CMD-003-news-command-deep-link-audit.md
 CMD-004,Compact help and current command reference,backlog,feature,commands,high,"commands,help,onboarding,aliases,ux",docs/planning/items/CMD-004-help-and-commands-split.md
 COMBAT-001,Creature aggression and defense,backlog,feature,combat,medium,"animals,combat,predators,ecology",docs/planning/items/COMBAT-001-creature-aggression-and-defense.md
 COMBAT-002,Training arena and combat observation,icebox,feature,combat,low,"combat,learning,observation,social",docs/planning/items/COMBAT-002-training-arena-and-observation.md
+COMBAT-003,Predator raw-meat scent aggression,icebox,feature,combat,medium,"animals,combat,predators,survival,inventory",docs/planning/items/COMBAT-003-predator-meat-scent-aggression.md
 CRAFT-001,Craftable placeable chests,backlog,feature,crafting,medium,"crafting,containers,storage,item-instances,camp",docs/planning/items/CRAFT-001-craftable-placeable-chests.md
 DAYNOTICE-001,Player daypart notice settings,testing,feature,notifications,high,"notifications,world-time,daypart,sleep,settings,0.14",docs/planning/items/DAYNOTICE-001-player-daypart-notice-settings.md
 DREAM-001,Sleeping body and dream presence separation,backlog,technical,dreams,high,"dreams,tutorial,architecture,body,liminality",docs/planning/items/DREAM-001-sleeping-body-and-dream-presence.md
@@ -53,6 +55,7 @@ ECO-006,Animal movement boundaries for authored vertical exits,testing,feature,e
 ECO-007,Animal taming and small companions,icebox,feature,ecology,medium,"ecology,creatures,companions,following,feeding",docs/planning/items/ECO-007-animal-taming-companions.md
 ECO-008,Herbivore carrion and mouse cannibalism pressure,backlog,feature,ecology,medium,"ecology,creatures,hunger,carrion,mice,rabbits",docs/planning/items/ECO-008-herbivore-carrion-and-mouse-cannibalism.md
 ECO-009,Seasonal ecology and environment variation,backlog,system,ecology,low,"ecology,seasons,calendar,resources,animals,atmosphere",docs/planning/items/ECO-009-seasonal-ecology-and-environment.md
+ECO-010,Ground resource animal foraging,backlog,feature,ecology,medium,"animals,ecology,hunger,resources,food",docs/planning/items/ECO-010-ground-resource-animal-foraging.md
 ECON-001,Barter and trade,backlog,feature,economy,medium,"barter,trade,npc,economy",docs/planning/items/ECON-001-barter-and-trade.md
 FIRE-001-A,Active light connects to visibility,testing,feature,survival,high,"fire,light,visibility",docs/planning/items/FIRE-001-A.md
 FIRE-001-B,Expired campfire behavior polish,next,feature,survival,medium,"fire,campfire,copy",docs/planning/items/FIRE-001-B.md
@@ -162,6 +165,7 @@ ONB-008,Owl threshold refrain in the dream,proposed,content,onboarding,medium,"o
 ONB-009,Tutorial dream ground item cleanup,testing,tech,onboarding,high,"tutorial,dream,cleanup,items,resources",docs/planning/items/ONB-009-tutorial-dream-ground-item-cleanup.md
 ONB-010,Newcomer starter kit,backlog,feature,onboarding,medium,"onboarding,beginner,inventory,weapons,food,torch",docs/planning/items/ONB-010-newcomer-kit.md
 ONB-011,Post-tutorial dream guided questlets,backlog,feature,onboarding,medium,"onboarding,quests,beginner,tutorial",docs/planning/items/ONB-011-post-dream-guided-questlets.md
+ONB-012,Learning surface command hints refresh,next,feature,onboarding,high,"onboarding,tutorial,commands,help,learning,ux",docs/planning/items/ONB-012-learning-surface-command-hints.md
 OWL-002,Nocturnal owl tuning and indirect signs,testing,tuning,ecology,high,"owl,ecology,night,predator,observation,tuning",docs/planning/items/OWL-002-nocturnal-owl-tuning-and-signs.md
 OWL-003,Starter camp owl boundary and night signs,testing,tuning,ecology,medium,"owl,camp,ecology,night,onboarding",docs/planning/items/OWL-003-starter-camp-boundary-and-night-signs.md
 OWL-004,Conditional owl examine copy and refrain echoes,done,content,ecology,medium,"owl,examine,night,observation,atmosphere",docs/planning/items/OWL-004-conditional-owl-examine-copy.md
@@ -207,6 +211,7 @@ SOC-008,Speech ranges and vertical voice,testing,feature,social,high,"speech,soc
 SOC-009,Mail and letter delivery,backlog,feature,social,medium,"social,mail,letters,items,settlement,async",docs/planning/items/SOC-009-mail-and-letter-delivery.md
 SOC-010,Greeting inspiration stamina,backlog,feature,social,medium,"social,greet,stamina,cooldown,anti-farm",docs/planning/items/SOC-010-greeting-inspiration-stamina.md
 SOCIAL-003,Theft reaction signals,backlog,feature,social,medium,"social,theft,signals,reactions,0.15",docs/planning/items/SOCIAL-003-theft-reaction-signals.md
+SOUND-001,Neighboring animal sounds and loud nearby events,next,feature,world,medium,"atmosphere,sound,ecology,daypart,visibility",docs/planning/items/SOUND-001-neighboring-animal-sounds.md
 STAT-001,Web /stat predator species comparison table,testing,feature,web,medium,"web,stats,ecology,predators,owl,fox,wolf",docs/planning/items/STAT-001-web-predator-species-table.md
 SURV-001,Early respawn support,testing,feature,survival,high,"onboarding,respawn,beginner",docs/planning/items/SURV-001-early-respawn.md
 SURV-001-A,Beginner return eligibility helper,testing,feature,survival,high,"respawn,beginner,safety",docs/planning/items/SURV-001-A.md

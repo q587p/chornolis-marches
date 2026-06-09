@@ -67,6 +67,13 @@ export const STARTER_PREDATORS: StarterAnimalGroup[] = [
   { speciesKey: "snake", locationKey: "willow_root_tangle_16_10", count: 1, age: "YOUNG", sex: "FEMALE" },
 ];
 
+export const STARTER_ANIMAL_GROUPS: StarterAnimalGroup[] = [
+  ...STARTER_RABBITS,
+  ...STARTER_MICE,
+  ...STARTER_FROGS,
+  ...STARTER_PREDATORS,
+];
+
 export function starterAnimalAgeTicks(
   species: { childTicks?: number; youngTicks?: number; adultTicks?: number },
   age: StarterAnimalAge,

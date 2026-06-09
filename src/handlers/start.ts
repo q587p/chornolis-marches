@@ -26,7 +26,7 @@ import {
   type PreparedCharacterName,
 } from "../services/characterNames";
 import { disablePlayerAuto, replyPlayerAutoStatus, requestOrEnablePlayerAuto, replyStopPlayerAuto } from "./auto";
-import { requestScribeReturnAssistance, submitBuildCampfire, submitDismantleCampfire, submitDismantleTotem, submitDouseCampfire, submitFollowIntent, submitLightCampfire, submitSay, submitTrack, submitUnfollow, submitYell } from "./aliases";
+import { requestScribeReturnAssistance, submitBuildCampfire, submitDismantleCampfire, submitDismantleTotem, submitDouseCampfire, submitFollowIntent, submitLightCampfire, submitPickupCommand, submitPutItem, submitSay, submitTrack, submitTravelGroupCommand, submitUnfollow, submitYell } from "./aliases";
 import { sendHelp } from "./help";
 import { sendNews } from "./news";
 import { resolveStartActionPayload, type StartActionPayload } from "../input/startPayloads";
@@ -39,6 +39,7 @@ import { submitSleepCommand } from "./tutorial";
 import { grantStarterKnifeIfMissing } from "../services/weapons";
 import { renderSessionReturnHint } from "../services/sessionPresence";
 import { submitMove } from "./movement";
+import { buildWhoPage } from "./status";
 
 type NameFormPrompt = { key: keyof NameForms; question: string; button: string; prefix?: string };
 const CASE_BUTTON_LABELS: Partial<Record<keyof NameForms, string>> = {
@@ -697,6 +698,12 @@ async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayl
     return true;
   }
 
+  if (action === "who") {
+    const page = await buildWhoPage(0);
+    await ctx.reply(page.text, page.keyboard ? { reply_markup: page.keyboard } : undefined);
+    return true;
+  }
+
   if (action === "help") {
     await sendHelp(ctx);
     return true;
@@ -727,6 +734,36 @@ async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayl
     return true;
   }
 
+  if (action === "travelGroup") {
+    await submitTravelGroupCommand(bot, ctx, "show");
+    return true;
+  }
+
+  if (action === "travelGroupCreate") {
+    await submitTravelGroupCommand(bot, ctx, "create");
+    return true;
+  }
+
+  if (action === "travelGroupInvite") {
+    await submitTravelGroupCommand(bot, ctx, "invite");
+    return true;
+  }
+
+  if (action === "travelGroupAccept") {
+    await submitTravelGroupCommand(bot, ctx, "accept");
+    return true;
+  }
+
+  if (action === "travelGroupLeave") {
+    await submitTravelGroupCommand(bot, ctx, "leave");
+    return true;
+  }
+
+  if (action === "travelGroupFollowLeader") {
+    await submitTravelGroupCommand(bot, ctx, "follow-leader");
+    return true;
+  }
+
   if (action === "time") {
     await showTime(ctx);
     return true;
@@ -744,6 +781,16 @@ async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayl
 
   if (action === "inventory") {
     await showInventory(from.id, (text, options) => ctx.reply(text, options));
+    return true;
+  }
+
+  if (action === "pickupAll") {
+    await submitPickupCommand(bot, ctx, "all");
+    return true;
+  }
+
+  if (action === "put") {
+    await submitPutItem(bot, ctx, "туша", undefined, "рів");
     return true;
   }
 

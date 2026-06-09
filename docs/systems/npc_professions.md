@@ -16,6 +16,8 @@ Hunters can answer direct speech by queuing their own reply-mode `SAY` action, t
 
 Hunters also answer a few fitting directed social signals through the same shared signal interface: nods, waves, smiles and bows can receive a small professional acknowledgement, while hostile or irrelevant gestures may be ignored. Herbalists, fishers and later professions should get their own small reaction sets rather than sharing one universal NPC reaction table.
 
+Hunters, знахарі and травниці can also notice and dismantle a local Strange Totem as a high-priority profession action before resuming their ordinary loops. This is a narrow world-maintenance reaction, not a profession economy: it removes the active feature, leaves an atmospheric visible action, and recovers `twigs` into that creature's carried resources the same way player dismantling recovers twigs into player resources.
+
 ## Current starter NPC
 
 - Name: Здравомир

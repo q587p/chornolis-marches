@@ -24,6 +24,6 @@ async function endSession(ctx: any) {
 export function registerSessionPresenceHandlers(bot: Bot) {
   bot.command("afk", setAfk);
   bot.command(["end_session", "endSession", "endsession", "quit", "leave"], endSession);
-  bot.hears(["🌙 AFK / відійти", "AFK / відійти", "afk", "відійти"], setAfk);
+  bot.hears(["🌙 AFK / відійти", "AFK / відійти", "afk", "афк", "відійти"], setAfk);
   bot.hears(["🚪 Завершити сесію", "Завершити сесію", "завершити сесію", "вийти"], endSession);
 }

@@ -19,11 +19,17 @@ assert.deepEqual(defaultCommands.slice(0, 4), ["start", "afk", "help", "respawn"
 assert.deepEqual(scribeCommands.slice(0, 4), ["start", "afk", "help", "respawn"], "scribe side command menu inherits the /afk, /help and /respawn quick slots");
 assert.equal(commandDescription(DEFAULT_BOT_COMMANDS, "help"), "❔ Допомога новачку");
 assert.equal(commandDescription(DEFAULT_BOT_COMMANDS, "respawn"), "🏕️ Повернення до табору");
+assert.equal(commandDescription(DEFAULT_BOT_COMMANDS, "follow_step"), "👣 Йти слідом");
+assert.equal(commandDescription(DEFAULT_BOT_COMMANDS, "chronicles"), "📜 Хроніки світу");
 assert.notEqual(
   commandDescription(DEFAULT_BOT_COMMANDS, "help")?.slice(0, 2),
   commandDescription(DEFAULT_BOT_COMMANDS, "respawn")?.slice(0, 2),
   "/help and /respawn should not share the same side-menu icon",
 );
+assert.equal(defaultCommands.includes("afk"), true, "public command menu exposes /afk");
+assert.equal(defaultCommands.includes("chronicles"), true, "public command menu exposes /chronicles");
+assert.equal(defaultCommands.includes("follow_step"), true, "public command menu exposes /follow_step");
+assert.equal(defaultCommands.includes("freshen"), false, "public command menu stays short: /freshen remains direct/news-clickable, not side-menu listed");
 assert.equal(defaultCommands.includes("refresh"), false, "public command menu must not expose /refresh");
 assert.equal(defaultCommands.includes("call_scribes"), false, "public command menu must not expose /call_scribes");
 assert.equal(defaultCommands.at(-1), "end_session", "/end_session stays at the bottom of the public side command menu");

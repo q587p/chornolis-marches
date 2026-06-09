@@ -8,16 +8,25 @@ export type StartActionPayload =
   | "spiritOn"
   | "autoStop"
   | "me"
+  | "who"
   | "help"
   | "rest"
   | "sleep"
   | "track"
   | "follow"
   | "unfollow"
+  | "travelGroup"
+  | "travelGroupCreate"
+  | "travelGroupInvite"
+  | "travelGroupAccept"
+  | "travelGroupLeave"
+  | "travelGroupFollowLeader"
   | "time"
   | "calendar"
   | "weather"
   | "inventory"
+  | "pickupAll"
+  | "put"
   | "say"
   | "yell"
   | "callScribes"
@@ -61,16 +70,25 @@ export function parseStartActionPayload(value: unknown): StartActionPayload | nu
   if (payload === "cmd_poklyk") return "spirit";
   if (payload === "cmd_poklyk_on") return "spiritOn";
   if (payload === "cmd_me") return "me";
+  if (payload === "cmd_who") return "who";
   if (payload === "cmd_help") return "help";
   if (payload === "cmd_rest") return "rest";
   if (payload === "cmd_sleep") return "sleep";
   if (payload === "cmd_track") return "track";
   if (payload === "cmd_follow") return "follow";
   if (payload === "cmd_unfollow") return "unfollow";
+  if (payload === "cmd_group") return "travelGroup";
+  if (payload === "cmd_group_create") return "travelGroupCreate";
+  if (payload === "cmd_group_invite") return "travelGroupInvite";
+  if (payload === "cmd_group_accept") return "travelGroupAccept";
+  if (payload === "cmd_group_leave") return "travelGroupLeave";
+  if (payload === "cmd_group_follow_leader") return "travelGroupFollowLeader";
   if (payload === "cmd_time") return "time";
   if (payload === "cmd_calendar") return "calendar";
   if (payload === "cmd_weather") return "weather";
   if (payload === "cmd_inventory") return "inventory";
+  if (payload === "cmd_get_all" || payload === "cmd_pick_all") return "pickupAll";
+  if (payload === "cmd_put") return "put";
   if (payload === "cmd_say") return "say";
   if (payload === "cmd_yell") return "yell";
   if (payload === "cmd_call_scribes") return "callScribes";

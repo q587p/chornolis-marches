@@ -57,10 +57,16 @@ function literalPattern(value) {
   assert.ok(buttons.some((button) => button.text === "Кінець ⏭️" && button.callback), "deep news archive page should link to the last page");
 
   const aliasesSource = fs.readFileSync("src/handlers/aliases.ts", "utf8");
+  const deployAnnouncementsSource = fs.readFileSync("src/services/deployAnnouncements.ts", "utf8");
   assert.match(
     aliasesSource,
     /ctx\.reply\(page\.text,\s*newsHtmlReplyOptions\(page\.keyboard\)\)/,
     "Alias/deep-link news reply path must keep HTML parse mode so <b> headings do not leak as text",
+  );
+  assert.match(
+    deployAnnouncementsSource,
+    /Остання новина: <strong>\$\{escapeHtml\(title\)\}<\/strong>/u,
+    "Deploy update announcements should bold the latest-news title so it does not blend into the label",
   );
 
   assert.equal(
@@ -73,12 +79,26 @@ function literalPattern(value) {
     "<b>0.0.0 — Test</b>\n\n• <i>Речі</i> (/inv) і &lt;raw&gt;",
   );
 
+  const activeNewsCommandLinks = renderNewsInlineMarkdown("`Хто активний` (`/who`), `Підібрати все` (`/get_all`), `Покласти тушу` (`/put`).");
+  assert.match(activeNewsCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_who"><em>\/who<\/em><\/a>/);
+  assert.match(activeNewsCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_get_all"><em>\/get_all<\/em><\/a>/);
+  assert.match(activeNewsCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_put"><em>\/put<\/em><\/a>/);
+
+  const groupNewsCommandLinks = renderNewsInlineMarkdown("`Гурт` (`/group`), `/group_create`, `/group_invite`, `/group_accept`, `/group_leave`, `/group_follow_leader`.");
+  assert.match(groupNewsCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_group"><em>\/group<\/em><\/a>/);
+  assert.match(groupNewsCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_group_create"><em>\/group_create<\/em><\/a>/);
+  assert.match(groupNewsCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_group_invite"><em>\/group_invite<\/em><\/a>/);
+  assert.match(groupNewsCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_group_accept"><em>\/group_accept<\/em><\/a>/);
+  assert.match(groupNewsCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_group_leave"><em>\/group_leave<\/em><\/a>/);
+  assert.match(groupNewsCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_group_follow_leader"><em>\/group_follow_leader<\/em><\/a>/);
+
   const deployNews = [
-    "📰 Остання новина: 0.0.0 — Test",
+    "📰 Остання новина: <strong>0.0.0 — Test</strong>",
     renderNewsMarkdownForTelegram("- `Люк до погреба`; `Вниз` (`/down`) і <raw>"),
   ].join("\n");
   const deployText = renderWorldUpdatedAnnouncement("0.0.0", deployNews);
   assert.doesNotMatch(deployText, /`/);
+  assert.match(deployText, /Остання новина: <strong>0\.0\.0 — Test<\/strong>/);
   assert.match(deployText, /<i>Люк до погреба<\/i>/);
   assert.match(deployText, /<i>Вниз<\/i> \(\/down\)/);
   assert.match(deployText, /&lt;raw&gt;/);

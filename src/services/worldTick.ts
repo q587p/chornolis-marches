@@ -189,11 +189,21 @@ async function syncOwlNocturnalActivity(daypart: WorldDaypart) {
   return { slept: slept.count, woke: 0 };
 }
 
-async function syncHawkDaytimeActivity(daypart: WorldDaypart) {
+type HawkDaytimeActivityDb = {
+  creature: {
+    findMany(args: unknown): Promise<Array<{ id: number }>>;
+    updateMany(args: unknown): Promise<{ count: number }>;
+  };
+  worldAction: {
+    updateMany(args: unknown): Promise<{ count: number }>;
+  };
+};
+
+export async function syncHawkDaytimeActivity(daypart: WorldDaypart, db: HawkDaytimeActivityDb = prisma) {
   const plan = hawkDaytimeSyncPlan(daypart);
 
   if (!plan.cancelActiveActions) {
-    const woke = await prisma.creature.updateMany({
+    const woke = await db.creature.updateMany({
       where: {
         isAlive: true,
         isGone: false,
@@ -205,7 +215,7 @@ async function syncHawkDaytimeActivity(daypart: WorldDaypart) {
     return { slept: 0, woke: woke.count };
   }
 
-  const livingHawks = await prisma.creature.findMany({
+  const livingHawks = await db.creature.findMany({
     where: {
       isAlive: true,
       isGone: false,
@@ -216,7 +226,7 @@ async function syncHawkDaytimeActivity(daypart: WorldDaypart) {
   const ids = livingHawks.map((hawk) => hawk.id);
   if (ids.length === 0) return { slept: 0, woke: 0 };
 
-  await prisma.worldAction.updateMany({
+  await db.worldAction.updateMany({
     where: {
       actorType: "CREATURE",
       creatureId: { in: ids },
@@ -225,7 +235,7 @@ async function syncHawkDaytimeActivity(daypart: WorldDaypart) {
     data: { status: "CANCELLED", note: "сокіл ховається не в денний час" },
   });
 
-  const slept = await prisma.creature.updateMany({
+  const slept = await db.creature.updateMany({
     where: { id: { in: ids } },
     data: plan.creatureData,
   });

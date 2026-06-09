@@ -1,6 +1,6 @@
 import { Bot } from "grammy";
 import { prisma } from "../db";
-import { AUTO_INTERVAL_MS, AUTO_INTERVAL_TICKS, VERY_TIRED_STAMINA, gatherConfig } from "../gameConfig";
+import { AUTO_INTERVAL_MS, VERY_TIRED_STAMINA, gatherConfig } from "../gameConfig";
 import {
   actionDurationMs,
   gatherDurationMs,
@@ -19,6 +19,7 @@ import { buildAutoConfirmKeyboard } from "../ui/keyboards";
 import { safeAnswerCallbackQuery } from "../utils/telegram";
 import { slashlessCommandPattern } from "../utils/slashlessCommands";
 import { SPIRIT_CALL_LABEL, markSpiritCallPayload } from "../services/spiritCall";
+import { canLightPlayerTorchFromInventory } from "../services/fire";
 
 const AUTO_STOP_TEXT_COMMAND = slashlessCommandPattern(["autoStop", "autostop", "auto_stop"]);
 export const AUTO_START_COMMANDS = ["auto_on", "auto_start"] as const;
@@ -63,7 +64,7 @@ const AUTO_SAY_CHANCE = Number(process.env.PLAYER_AUTO_SAY_CHANCE || 15);
 const AUTO_CONSENT_TITLE = "Player auto consent";
 export const AUTO_DREAM_BLOCK_MESSAGE = "Сон тихо каже:\n<blockquote>Уві сні краще йти власним кроком. Поклик духа лишається за порогом.</blockquote>";
 
-export type AutoActionKey = "say" | "gather" | "look" | "move";
+export type AutoActionKey = "say" | "light_torch" | "gather" | "look" | "move";
 type AutoEnableResult = { started: boolean; blocked: boolean };
 type AutoLocation = { key: string; z: number; region?: { key: string } | null };
 
@@ -144,6 +145,7 @@ function autoRestChance(player: any) {
 
 export function orderAutoActionKeys(roll: number, lastActionKey?: AutoActionKey) {
   const order: AutoActionKey[] = ["say"];
+  if (roll < 0.35) order.push("light_torch");
   if (roll < 0.45) order.push("gather");
   if (roll < 0.7) order.push("look");
   order.push("move", "look");
@@ -397,6 +399,22 @@ async function autoLook(bot: Bot, telegramId: number, player: any, locationId: n
   return true;
 }
 
+async function autoLightTorch(bot: Bot, telegramId: number, player: any, locationId: number) {
+  if (!(await canLightPlayerTorchFromInventory(player.id))) return false;
+
+  const result = await performOrQueuePlayerAction(bot, {
+    playerId: player.id,
+    type: "LIGHT_TORCH",
+    payload: markSpiritCallPayload({}),
+    durationMs: actionDurationMs("LIGHT_TORCH", player.stamina),
+    chatId: telegramId,
+    note: "auto:light_torch",
+  });
+
+  await notifyAutoChoice(bot, telegramId, player.id, result.mode, "запалити факел", locationId);
+  return true;
+}
+
 async function autoMove(bot: Bot, telegramId: number, player: any, locationId: number) {
   const exits = await prisma.locationExit.findMany({
     where: { fromLocationId: locationId, isHidden: false },
@@ -459,6 +477,7 @@ async function runAutoStep(bot: Bot, telegramId: number) {
     const roll = Math.random();
     const choices: Record<AutoActionKey, () => Promise<boolean>> = {
       say: () => maybeAutoSay(bot, telegramId, player, locationId),
+      light_torch: () => autoLightTorch(bot, telegramId, player, locationId),
       gather: () => autoGather(bot, telegramId, player, locationId),
       look: () => autoLook(bot, telegramId, player, locationId),
       move: () => autoMove(bot, telegramId, player, locationId),
@@ -631,8 +650,7 @@ async function restorePersistentAutoPlayers(bot: Bot) {
 }
 
 export function playerAutoTimingText() {
-  const seconds = Math.ceil(AUTO_INTERVAL_MS / 1000);
-  return `кожні ${AUTO_INTERVAL_TICKS} тіків ≈ ${seconds} с`;
+  return "приблизно кожну чверть ігрової години";
 }
 
 export function registerAutoHandlers(bot: Bot) {

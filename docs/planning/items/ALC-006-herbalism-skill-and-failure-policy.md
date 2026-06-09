@@ -142,7 +142,6 @@ Example critical failure copy:
 - Success and failure can both teach through the learning service.
 - Player-facing text stays qualitative.
 - Tests for the eventual implementation should cover success, ordinary failure, critical failure, failed validation with no consumption, bottle return/break behavior and no raw-key leaks.
-
 ## Implementation Notes
 
 - Added `src/services/herbalism.ts` as the pure brewing outcome policy foundation.
@@ -152,3 +151,4 @@ Example critical failure copy:
 - Consumption policy is descriptive only: success consumes inputs and produces output, ordinary failure keeps the empty bottle, critical failure can consume/break it.
 - Qualitative Ukrainian outcome copy avoids raw chances, raw level names and technical outcome keys.
 - This slice does not add `/brew`, `herbal_tincture`, live resource consumption, stamina restoration, dirty bottles, water/thirst, NPC brewing, public skill UI, Prisma schema or migrations.
+- Testing note: deterministic `rollHerbalismBrewOutcome(...)` coverage is the hard requirement for the policy table. If `randomHerbalismBrewOutcome(...)` remains a convenience wrapper around RNG when ALC-001 connects live brewing, cover it with injected/fixed RNG or a focused wrapper test so the player-facing path does not rely only on `typeof function` coverage.

@@ -3,7 +3,7 @@ import { prisma } from "../db";
 import { BASE_STAMINA, HEALTH_REGEN_PER_INTERVAL, REST_STAMINA_REGEN_PER_INTERVAL } from "../gameConfig";
 import { worldTimeSnapshotFromAbsoluteMinute } from "../data/worldClock";
 import { fatigueStateFor } from "./actionRecovery";
-import { hasActiveCampfire, getLocationRestStaminaCap, getLocationRestStaminaRegenMultiplier } from "./locationFeatures";
+import { hasActiveCampfire, getLocationRestStaminaCap, getLocationSleepComfortMultiplier } from "./locationFeatures";
 import { getCurrentWorldState } from "./worldTime";
 
 export const ORDINARY_SLEEP_FULL_AUTO_WAKE_MINUTES = 8 * 60;
@@ -61,36 +61,69 @@ export function shouldAutoWakeOrdinarySleep(input: {
 
 export function ordinarySleepAutoWakeHint(startedAtMinute: number) {
   const wakeTime = worldTimeSnapshotFromAbsoluteMinute(startedAtMinute + ORDINARY_SLEEP_FORCE_AUTO_WAKE_MINUTES);
-  return `Без додаткових дій ви прокинетеся приблизно о ${wakeTime.clockLabel} за межовим часом.`;
+  return `Без додаткових дій ви прокинетеся приблизно ${ordinarySleepApproximateHourText(wakeTime.hour, wakeTime.minute)} за межовим часом.`;
+}
+
+const UKRAINIAN_HOUR_LOCATIVE: Record<number, string> = {
+  1: "першій",
+  2: "другій",
+  3: "третій",
+  4: "четвертій",
+  5: "п’ятій",
+  6: "шостій",
+  7: "сьомій",
+  8: "восьмій",
+  9: "дев’ятій",
+  10: "десятій",
+  11: "одинадцятій",
+  12: "дванадцятій",
+};
+
+export function ordinarySleepApproximateHourText(hour: number, minute = 0) {
+  const roundedHour = ((Math.floor(hour) + (minute >= 30 ? 1 : 0)) % 24 + 24) % 24;
+  if (roundedHour === 0) return "опівночі";
+  if (roundedHour === 12) return "опівдні";
+
+  const hour12 = roundedHour % 12 || 12;
+  const preposition = hour12 === 11 ? "об" : "о";
+  const daypart = roundedHour < 5
+    ? "ночі"
+    : roundedHour < 12
+      ? "ранку"
+      : roundedHour < 18
+        ? "дня"
+        : "вечора";
+  return `${preposition} ${UKRAINIAN_HOUR_LOCATIVE[hour12]} ${daypart}`;
 }
 
 export function sleepRecoveryProfileFromSignals(input: {
   baseStaminaMax: number;
   restStaminaCap: number;
-  restRegenMultiplier: number;
   hasActiveCampfire: boolean;
+  sleepComfortMultiplier?: number;
 }) {
+  const sleepComfortMultiplier = Math.min(2, Math.max(1, input.sleepComfortMultiplier ?? 1));
   const campfireCap = input.hasActiveCampfire ? Math.floor(input.baseStaminaMax * 1.25) : input.baseStaminaMax;
   const staminaCap = Math.max(input.baseStaminaMax, input.restStaminaCap, campfireCap);
-  const staminaRate = REST_STAMINA_REGEN_PER_INTERVAL * (input.hasActiveCampfire ? Math.max(3, input.restRegenMultiplier + 2) : 2);
+  const staminaRate = REST_STAMINA_REGEN_PER_INTERVAL * Math.ceil(2 * sleepComfortMultiplier);
   const hpRate = HEALTH_REGEN_PER_INTERVAL * (input.hasActiveCampfire ? 2 : 1);
-  const comfort = input.hasActiveCampfire ? "campfire" : "bare";
+  const comfort = input.hasActiveCampfire ? "campfire" : sleepComfortMultiplier > 1 ? "comfortable" : "bare";
   return { staminaCap, staminaRate, hpRate, comfort };
 }
 
 export async function getPlayerSleepRecoveryProfile(player: { currentLocationId?: number | null; staminaMax?: number | null }) {
   const baseStaminaMax = player.staminaMax ?? BASE_STAMINA;
-  const [restStaminaCap, restRegenMultiplier, activeCampfire] = await Promise.all([
+  const [restStaminaCap, activeCampfire, sleepComfortMultiplier] = await Promise.all([
     getLocationRestStaminaCap(player.currentLocationId, baseStaminaMax),
-    getLocationRestStaminaRegenMultiplier(player.currentLocationId),
     hasActiveCampfire(player.currentLocationId),
+    getLocationSleepComfortMultiplier(player.currentLocationId),
   ]);
 
   return sleepRecoveryProfileFromSignals({
     baseStaminaMax,
     restStaminaCap,
-    restRegenMultiplier,
     hasActiveCampfire: activeCampfire,
+    sleepComfortMultiplier,
   });
 }
 

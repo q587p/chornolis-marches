@@ -18,7 +18,7 @@ import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { lightLocationCampfire, renderLocationBrief, renderLocationDetails } from "./locations";
 import { notifyLocation, notifyLocationAll, notifyLocationDynamic, notifyLocationExcept, notifyRegionExcept, queueNonPlayerMovementNotification } from "./notifications";
 import { addTwigsToCampfire, buildCampfireFromInventory, dismantleCampfire, douseCampfire, dousePlayerTorchFromInventory, lightPlayerTorchAtCampfire, lightPlayerTorchFromInventory } from "./fire";
-import { dismantleStrangeTotem } from "./strangeTotems";
+import { dismantleStrangeTotem, dismantleStrangeTotemByCreature } from "./strangeTotems";
 import { getPlayerRestStaminaCap, getPlayerRestStaminaRegenMultiplier } from "./locationFeatures";
 import { getStartLocationId } from "./players";
 import { summonLisovykIfResourceDepleted } from "./resources";
@@ -43,7 +43,7 @@ import { cookRawMeat, freshenCorpseForMeat, fresheningSkillEffectForPlayer } fro
 import { pendingReplyButton, rememberPlayerReplyTarget, type RememberedReplyTarget } from "./replyTargets";
 import { nearbySpeechDirectionIntro, nearbySpeechRecipients } from "./speechRanges";
 import { hunterClaimedCorpseAction, hunterConversationReplyLine, hunterReactionDurationMs, hunterSocialReactionSignal, isHunterCreature } from "./npcHunter";
-import { isUnclaimedHerbivoreCorpseForScavenging, predatorClaimedCorpseAction, predatorClaimedCorpseFoodValue, predatorClaimedCorpseOwnerId, predatorPreyFoodValue } from "./predatorFeeding";
+import { isUnclaimedHerbivoreCorpseForScavenging, predatorClaimedCorpseAction, predatorClaimedCorpseFoodValue, predatorClaimedCorpseOwnerId, predatorFeedingObserverText, predatorPreyFoodValue, type PredatorFeedingObserverMode } from "./predatorFeeding";
 import { predatorKillCurrentAction, predatorKillObserverText, predatorMissCurrentAction, predatorMissObserverText, predatorWoundCurrentAction, predatorWoundObserverText } from "./predatorActionText";
 import { ATTACK_OBSERVATION_GROWTH_MESSAGE, ATTACK_PRACTICE_GROWTH_MESSAGE, isAttackPracticeMilestone, recordAttackKillSource, recordAttackObservation, recordAttackPracticeLearning, recordCreatureAttackObservation } from "./attackLearning";
 import { GATHERING_OBSERVATION_GROWTH_MESSAGE, GATHERING_PRACTICE_GROWTH_MESSAGE, gatheringSkillEffectForPlayer, isGatheringPracticeMilestone, recordGatheringObservation, recordGatheringSource } from "./gatheringLearning";
@@ -82,7 +82,7 @@ import { maybeRecordCreatureObservationLearning } from "./creatureObservationLea
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
-type InventoryActionPayload = { resourceKey?: string; target?: string; allFilter?: string | null; featureId?: number; cacheContribution?: boolean; confirmWet?: boolean };
+type InventoryActionPayload = { resourceKey?: string; target?: string; allFilter?: string | null; featureId?: number; cacheContribution?: boolean; confirmWet?: boolean; reason?: string };
 type LookPayload = { reason?: string };
 type SayPayload = { text: string; mode?: "say" | "whisper" | "reply" | "yell" | "shout"; targetType?: "player" | "creature"; targetId?: number; targetName?: string; targetDative?: string };
 type SocialPayload = { targetType: "player" | "creature"; targetId: number; mode?: "known" | "mystery"; detail?: "brief" | "full"; socialId?: string };
@@ -188,6 +188,31 @@ const FROM_DIRECTION_LABELS: Record<string, string> = {
   INSIDE: "ззовні",
   OUTSIDE: "зсередини",
 };
+
+export function trackLineDisplayLabel(label: string) {
+  const trimmed = label.trim();
+  if (!trimmed) return trimmed;
+  return `${trimmed[0].toLocaleUpperCase("uk-UA")}${trimmed.slice(1)}`;
+}
+
+export function trackMovementVerb(label: string, verb: "arrived" | "left", speciesKey?: string | null) {
+  if (speciesKey === "hawk") return verb === "arrived" ? "прилетів" : "полетів";
+  if (speciesKey === "owl") return verb === "arrived" ? "прилетіла" : "полетіла";
+  if (speciesKey === "snake") return verb === "arrived" ? "приповзла" : "поповзла";
+
+  const normalized = label.toLowerCase();
+  const feminine = /[ая]$/.test(normalized) && !/(дитинча|звіря|лоша|щеня)$/.test(normalized);
+  if (verb === "arrived") return feminine ? "прийшла" : "прийшов";
+  return feminine ? "пішла" : "пішов";
+}
+
+export function trackDepartureDirectionText(direction: Direction | string) {
+  if (direction === "UP") return "угору";
+  if (direction === "DOWN") return "вниз";
+  if (direction === "INSIDE") return "усередину";
+  if (direction === "OUTSIDE") return "назовні";
+  return `на ${directionLabels[direction]?.toLowerCase() ?? "кудись"}`;
+}
 
 const GREETINGS = [
   "Вітаю тебе в тіні Чорнолісу.",
@@ -341,7 +366,21 @@ async function visibleCreatureActionLabel(locationId: number, creature: { isHidd
   return visibleMoverLabel(locationId, fallback, visibleName);
 }
 
+async function visibleCreatureActionLabelForObserver(locationId: number, observerPlayerId: number, creature: { isHidden?: boolean | null; name?: string | null; professionKey?: string | null; species: { name: string; key?: string | null } }, fallback: string) {
+  if (creature.isHidden) return fallback;
+  const visibleName = creature.name ?? creatureForms(creature).nominative;
+  if (isHunterCreature(creature)) return visibleName;
+  return visibleActorLabelForObserver(locationId, observerPlayerId, fallback, visibleName);
+}
+
 export const movementLabelFromVisibility = actorLabelFromVisibility;
+
+async function notifyPredatorFeeding(bot: Bot, locationId: number, creature: { isHidden?: boolean | null; name?: string | null; professionKey?: string | null; species: { name: string; key?: string | null } }, mode: PredatorFeedingObserverMode) {
+  await notifyLocationDynamic(bot, locationId, -1, async (observer) => {
+    const label = await visibleCreatureActionLabelForObserver(locationId, observer.id, creature, "Щось");
+    return { text: predatorFeedingObserverText(mode, label) };
+  });
+}
 
 function movementPastVerb(actor: unknown, visibleLabel: string, fallback: string, masculine: string, feminine: string, plural: string) {
   return visibleLabel === fallback ? masculine : actorPastVerb(actor as any, masculine, feminine, plural);
@@ -353,6 +392,7 @@ export async function completeAction(bot: Bot, action: WorldAction) {
   if (action.type === "MOVE") return completeMove(bot, action);
   if (action.type === "GATHER" || action.type === "GATHER_SPECIFIC") return completeGather(bot, action);
   if (action.type === "EAT") return completeEat(bot, action);
+  if (action.type === "DISMANTLE_TOTEM" && action.actorType === "CREATURE") return completeCreatureDismantleTotem(bot, action);
   if (action.type === "USE_ITEM" || action.type === "DROP_ITEM" || action.type === "COOK" || action.type === "LIGHT_TORCH" || action.type === "DOUSE_TORCH" || action.type === "ADD_TWIGS" || action.type === "LIGHT_CAMPFIRE" || action.type === "BUILD_CAMPFIRE" || action.type === "DOUSE_CAMPFIRE" || action.type === "DISMANTLE_CAMPFIRE" || action.type === "DISMANTLE_TOTEM") return completeInventoryAction(bot, action);
   if (action.type === "LOOK") return completeLook(bot, action);
   if (action.type === "INSPECT") return completeInspect(bot, action);
@@ -364,6 +404,19 @@ export async function completeAction(bot: Bot, action: WorldAction) {
   if (action.type === "TRACK") return completeTrack(bot, action);
   if (action.type === "REST" || action.type === "WAIT" || action.type === "SET_TRAP") return completeSimple(bot, action);
   await setActionStatus(action, "FAILED");
+}
+
+async function completeCreatureDismantleTotem(bot: Bot, action: WorldAction) {
+  const payload = payloadOf<InventoryActionPayload>(action);
+  if (!action.creatureId || !payload.featureId) return void (await setActionStatus(action, "FAILED"));
+
+  try {
+    const result = await dismantleStrangeTotemByCreature(action.creatureId, payload.featureId);
+    await setActionStatus(action, "DONE");
+    if (bot) await notifyLocationAll(bot, result.locationId, `${result.creatureName} ${result.line}.`);
+  } catch {
+    await setActionStatus(action, "FAILED");
+  }
 }
 
 async function createTrack(actor: ActorRef, fromLocationId: number, toLocationId: number, direction: Direction, label: string) {
@@ -703,7 +756,10 @@ async function completeMove(bot: Bot, action: WorldAction) {
   const creature = action.creatureId ? await prisma.creature.findUnique({ where: { id: action.creatureId }, include: { species: true } }) : null;
   if (!creature || !creature.isAlive || creature.isGone) return void (await setActionStatus(action, "FAILED"));
 
-  const exit = await prisma.locationExit.findUnique({ where: { fromLocationId_direction: { fromLocationId: creature.locationId, direction: payload.direction } } });
+  const exit = await prisma.locationExit.findUnique({
+    where: { fromLocationId_direction: { fromLocationId: creature.locationId, direction: payload.direction } },
+    include: { toLocation: { select: { key: true } } },
+  });
   if (!exit || exit.isHidden) return void (await setActionStatus(action, "FAILED"));
   if (!canCreatureUseExit(creature, exit)) return void (await setActionStatus(action, "FAILED"));
   if (await isLocationExitLocked(creature.locationId, payload.direction)) return void (await setActionStatus(action, "FAILED"));
@@ -920,7 +976,7 @@ async function completeEat(bot: Bot, action: WorldAction) {
         where: { id: creature.id },
         data: { hunger: nextHunger, activity: "RESTING", currentAction: ownerId === creature.id ? `доїдає ${corpse.species.name}` : `перехопив чужу здобич: ${corpse.species.name}` },
       });
-      await notifyLocation(bot, creature.locationId, -1, ownerId === creature.id ? `Щось повертається до здобичі й тягне її в темнішу траву.` : `Щось перехоплює чужу здобич і тягне її в темнішу траву.`);
+      await notifyPredatorFeeding(bot, creature.locationId, creature, ownerId === creature.id ? "claimed" : "stolen");
       await logEvent("NPC_ACTION", ownerId === creature.id ? "Predator ate prey corpse" : "Predator stole prey corpse", `${creature.species.key} #${creature.id} ate ${corpse.species.key} #${corpse.id}; owner=${ownerId}; food=${foodValue}`, creature.locationId);
       await setActionStatus(action, "DONE");
       return;
@@ -937,7 +993,7 @@ async function completeEat(bot: Bot, action: WorldAction) {
         where: { id: creature.id },
         data: { hunger: nextHunger, activity: "RESTING", currentAction: `доїдає покинуту здобич: ${corpse.species.name}` },
       });
-      await notifyLocation(bot, creature.locationId, -1, "Щось знаходить покинуту здобич і тягне її в темнішу траву.");
+      await notifyPredatorFeeding(bot, creature.locationId, creature, "scavenged");
       await logEvent("NPC_ACTION", "Predator scavenged corpse", `${creature.species.key} #${creature.id} ate unclaimed ${corpse.species.key} #${corpse.id}; food=${foodValue}`, creature.locationId);
       await setActionStatus(action, "DONE");
       return;
@@ -947,7 +1003,7 @@ async function completeEat(bot: Bot, action: WorldAction) {
       where: { id: creature.id },
       data: { activity: "LOOKING", currentAction: "нюхає прим'яту землю, де зникла здобич" },
     });
-    await notifyLocation(bot, creature.locationId, -1, `Щось повертається до здобичі, але знаходить лише прим’ятий мох.`);
+    await notifyPredatorFeeding(bot, creature.locationId, creature, "lost");
     await logEvent("NPC_ACTION", "Predator lost prey corpse", `${creature.species.key} #${creature.id}; corpse=${payload.corpseId}`, creature.locationId);
     await setActionStatus(action, "DONE");
     return;
@@ -1801,18 +1857,12 @@ async function completeTrackInner(bot: Bot, action: WorldAction) {
       .replace(/^слід:\s*/i, "")
       .replace(/^свіжий слід:\s*/i, "")
       .trim();
-  const trackVerb = (label: string, verb: "arrived" | "left") => {
-    const normalized = label.toLowerCase();
-    const feminine = /[ая]$/.test(normalized) && !/(дитинча|звіря|лоша|щеня)$/.test(normalized);
-    if (verb === "arrived") return feminine ? "прийшла" : "прийшов";
-    return feminine ? "пішла" : "пішов";
-  };
-
   const lines = tracks.map((track) => {
-    const label = followedTrackDisplayLabel(followIntent, track, cleanTrackLabel(String(track.label ?? "хтось")));
+    const label = trackLineDisplayLabel(followedTrackDisplayLabel(followIntent, track, cleanTrackLabel(String(track.label ?? "хтось"))));
+    const speciesKey = track.creature?.species?.key ?? null;
     const direction = track.fromLocationId === player.currentLocationId
-      ? `${trackVerb(label, "left")} на ${directionLabels[track.direction].toLowerCase()}`
-      : `${trackVerb(label, "arrived")} ${FROM_DIRECTION_LABELS[track.direction] ?? "звідкись"}`;
+      ? `${trackMovementVerb(label, "left", speciesKey)} ${trackDepartureDirectionText(track.direction)}`
+      : `${trackMovementVerb(label, "arrived", speciesKey)} ${FROM_DIRECTION_LABELS[track.direction] ?? "звідкись"}`;
     const age = detail
       ? ` — ${trackAgeText(track.createdAt, now)}`
       : trackingSkillEffect.canShowRoughAgeInBrief

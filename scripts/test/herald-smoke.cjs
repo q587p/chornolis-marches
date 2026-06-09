@@ -432,7 +432,7 @@ assert.doesNotMatch(formatted, /123456:abcdefghijklmnopqrstuvwxyz/);
 assert.doesNotMatch(formatted, /border_12_09/);
 assert.match(formatted, /Канцелярія Межового Знаку/);
 
-const linkedCommands = linkHeraldGameCommandMentions("`/start` `/news` /auto `/rest` /sleep `/track` /follow /unfollow /time /calendar /weather /inventory /up /down /north /south /west /east /inside /outside /n /s /w /e /u /d /in /out /search_honey /search_beeswax /gather_honey /gather_beeswax /cleanupCreatures /unknown", "Chornolis_bot");
+const linkedCommands = linkHeraldGameCommandMentions("`/start` `/news` /auto `/rest` /sleep `/track` /follow /unfollow /time /calendar /weather /inventory /who /get_all /pick_all /put /up /down /north /south /west /east /inside /outside /n /s /w /e /u /d /in /out /search_honey /search_beeswax /gather_honey /gather_beeswax /cleanupCreatures /unknown", "Chornolis_bot");
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_start">\/start<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_news">\/news<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_auto">\/auto<\/a>/);
@@ -445,6 +445,10 @@ assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_calendar">\/calendar<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_weather">\/weather<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_inventory">\/inventory<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_who">\/who<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_get_all">\/get_all<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_get_all">\/pick_all<\/a>/);
+assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_put">\/put<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_up">\/up<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_down">\/down<\/a>/);
 assert.match(linkedCommands, /<a href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_north">\/north<\/a>/);

@@ -2,7 +2,7 @@ import http from "http";
 import fs from "fs";
 import path from "path";
 import { config } from "../config";
-import { buildAllPage, buildWhoData, buildWhoPage } from "../handlers/status";
+import { allFilterToken, buildAllPage, buildWhoData, buildWhoPage, parseAllRequest, type AllFilter } from "../handlers/status";
 import { markHttpServerStarted, setLastRuntimeError } from "../runtimeState";
 import {
   chatEventGroupLabel,
@@ -217,27 +217,58 @@ function pageInfoFromAllText(text: string) {
   return { page: Math.max(0, Number(match[1]) - 1), totalPages: Math.max(1, Number(match[2])) };
 }
 
+export function allWebFilterParam(filter: AllFilter) {
+  if (filter.kind === "player") return "players";
+  if (filter.kind === "npc") return "npc";
+  if (filter.kind === "animal") return filter.speciesKey ?? "animals";
+  return "all";
+}
+
+export function allWebUrl(input: { mode?: "live" | "dead"; filter?: string; page?: number } = {}) {
+  const params = new URLSearchParams();
+  params.set("mode", input.mode ?? "live");
+  if (input.filter && input.filter !== "all") params.set("filter", input.filter);
+  if (input.page && input.page > 0) params.set("page", String(input.page));
+  return `/all?${params.toString()}`;
+}
+
+function allWebFilterLinks(mode: "live" | "dead", activeFilter: AllFilter) {
+  const activeKind = activeFilter.kind;
+  return [
+    { filter: "all", label: "Усі", active: activeKind === "all" },
+    { filter: "players", label: "Гравці", active: activeKind === "player" },
+    { filter: "npc", label: "NPC", active: activeKind === "npc" },
+    { filter: "animals", label: "Тварини", active: activeKind === "animal" },
+  ].map((item) => `<a${item.active ? " class=\"active\"" : ""} href="${allWebUrl({ mode, filter: item.filter })}">${escapeHtml(item.label)}</a>`).join("");
+}
+
 async function renderAllPage(url: string | undefined) {
   const parsed = parseQuery(url);
   const showDead = parsed.searchParams.get("mode") === "dead" || parsed.searchParams.get("dead") === "1";
   const requestedPage = Math.max(0, Number(parsed.searchParams.get("page") ?? 0) || 0);
-  const page = await buildAllPage(showDead, requestedPage);
+  const rawFilter = parsed.searchParams.get("filter") ?? parsed.searchParams.get("type") ?? "";
+  const request = { ...parseAllRequest(`${showDead ? "dead" : "live"} ${rawFilter}`), page: requestedPage };
+  const page = await buildAllPage(request);
   const info = pageInfoFromAllText(page.text);
   const mode = showDead ? "dead" : "live";
-  const prev = info.page > 0 ? `/all?mode=${mode}&page=${info.page - 1}` : null;
-  const next = info.page < info.totalPages - 1 ? `/all?mode=${mode}&page=${info.page + 1}` : null;
-  const otherMode = showDead ? "/all?mode=live" : "/all?mode=dead";
+  const filter = allWebFilterParam(request.filter);
+  const prev = info.page > 0 ? allWebUrl({ mode, filter, page: info.page - 1 }) : null;
+  const next = info.page < info.totalPages - 1 ? allWebUrl({ mode, filter, page: info.page + 1 }) : null;
+  const otherMode = allWebUrl({ mode: showDead ? "live" : "dead", filter });
   const otherLabel = showDead ? "Тільки живі" : "Усі записи";
+  const filterText = allFilterToken(request.filter);
 
   return `<!doctype html><html lang="uk"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Chornolis /all</title><style>
     body{font-family:system-ui,sans-serif;max-width:1120px;margin:32px auto;padding:0 18px;background:#10170f;color:#e8e0c9}
     a{color:#d8b55d}
     pre{white-space:pre-wrap;border:1px solid #3b4a2f;border-radius:8px;padding:14px;background:#172114;line-height:1.35}
     .actions a{display:inline-block;border:1px solid #5d6f3c;border-radius:8px;padding:8px 10px;margin:0 8px 8px 0;text-decoration:none;background:#1d2a18}
+    .actions a.active{border-color:#d8b55d;color:#f1d98a;background:#24331b}
     .muted{color:#b9b08f}
   </style></head><body>
     <h1>Службовий /all</h1>
-    <p class="muted">Доступ захищено ADMIN_SET_SECRET.</p>
+    <p class="muted">Доступ захищено ADMIN_SET_SECRET. Поточний фільтр: <code>${escapeHtml(filterText)}</code>.</p>
+    <p class="actions">${allWebFilterLinks(mode, request.filter)}</p>
     <p class="actions"><a href="/">Status</a><a href="/stat">/stat</a><a href="/chat">/chat</a><a href="/who">/who</a><a href="${otherMode}">${otherLabel}</a>${prev ? `<a href="${prev}">Назад</a>` : ""}${next ? `<a href="${next}">Далі</a>` : ""}</p>
     <pre>${escapeHtml(page.text)}</pre>
     <p class="actions">${prev ? `<a href="${prev}">Назад</a>` : ""}${next ? `<a href="${next}">Далі</a>` : ""}</p>
@@ -804,9 +835,10 @@ export function startHttpServer() {
         }
 
         if (path === "/all") {
+          const allTargetPath = req.url || "/all";
           if (!config.adminSetSecret) {
             res.writeHead(503, { "Content-Type": "text/html; charset=utf-8" });
-            res.end(renderAdminSecretForm(undefined, "/all", "Службовий /all"));
+            res.end(renderAdminSecretForm(undefined, allTargetPath, "Службовий /all"));
             return;
           }
 
@@ -815,7 +847,7 @@ export function startHttpServer() {
             const secret = body.get("secret") ?? "";
             if (!adminSecretMatches(secret)) {
               res.writeHead(403, { "Content-Type": "text/html; charset=utf-8" });
-              res.end(renderAdminSecretForm("Секрет не збігся.", "/all", "Службовий /all"));
+              res.end(renderAdminSecretForm("Секрет не збігся.", allTargetPath, "Службовий /all"));
               return;
             }
 
@@ -830,7 +862,7 @@ export function startHttpServer() {
 
           if (!hasAdminSecretCookie(req)) {
             res.writeHead(401, { "Content-Type": "text/html; charset=utf-8" });
-            res.end(renderAdminSecretForm(undefined, "/all", "Службовий /all"));
+            res.end(renderAdminSecretForm(undefined, allTargetPath, "Службовий /all"));
             return;
           }
 

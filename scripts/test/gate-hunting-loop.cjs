@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
 
 require("ts-node/register");
 
@@ -87,6 +88,8 @@ assert.equal(gateHuntingSaturationForSignals({
 }).active, true);
 assert.match(gateHuntingNoticeText("old notice", saturated), /Поки досить/);
 assert.match(gateHuntingDropoffText("old dropoff", saturated), /нових припасів/);
+assert.match(gateHuntingDropoffText("old dropoff", saturated), /<i>покласти<\/i> або <i>покласти тушу в рів<\/i>/);
+assert.match(gateHuntingDropoffText("old dropoff", { ...saturated, active: false }), /<i>покласти<\/i> або <i>покласти тушу в рів<\/i>/);
 assert.equal(gateHuntingNoticeText("old notice", { ...saturated, active: false }), "old notice");
 assert.match(gateHuntingNoticeText("old notice", { ...saturated, manualOverride: "stop" }, true), /override=stop/);
 assert.deepEqual(gateHuntingAreaLocationWhere({ x: 20, y: 5, z: 0 }), {
@@ -94,5 +97,10 @@ assert.deepEqual(gateHuntingAreaLocationWhere({ x: 20, y: 5, z: 0 }), {
   x: { gte: 16, lte: 24 },
   y: { gte: 1, lte: 9 },
 });
+
+const worldFeatures = JSON.parse(fs.readFileSync("prisma/data/world/features.json", "utf8"));
+const carcassDropoff = worldFeatures.find((feature) => feature.key === "closed_gate_carcass_dropoff");
+assert.ok(carcassDropoff, "Seed should include the carcass drop-off feature");
+assert.doesNotMatch(carcassDropoff.description, /\/put/, "Carcass drop-off seed copy should not advertise English slash commands");
 
 console.log("Gate hunting loop helpers OK");

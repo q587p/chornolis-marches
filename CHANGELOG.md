@@ -7,6 +7,31 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.17 - Sleep comfort and field command polish - 12026-06-09
+
+### Added
+
+- Added lie/sleep buttons to the starter cellar `Сухі лежанки` feature inspection and marked the bunks as a bounded sleep-comfort surface.
+- Added a species-specific vertical `UP` movement allowance for foxes, hawks, owls and snakes while keeping ordinary animal vertical movement guarded.
+- Added bulk visible-prey attack commands and aliases such as `/attack_all mouse`, `/kill_all rabbit`, `kill all mouse` and `attack all rabbit`, with a preflight queue-cap check so the command does not partially enqueue before failing.
+- Added `/signals` and `/socials` command routing for the social-signal surface, plus `/track_fox` for the common fox-track filter.
+- Added scribe/admin `/deleteCampfire` support for removing non-magical campfires from the current or named location.
+- Added creature-side strange-totem dismantling for supported profession NPCs so herbalists and hunters can remove suspicious totems through the shared dismantle/twig recovery path.
+
+### Changed
+
+- Ordinary sleep start text now shows the approximate no-action auto-wake world hour in words instead of a numeric clock label.
+- Ordinary sleep now reads a small `sleep_comfort_multiplier` location-feature signal; dry bunks and active campfires make sleep stamina recovery modestly faster than sleeping on bare ground, without adding a new sleep mode.
+- Predator observer text now capitalizes generic animal labels at sentence starts and uses per-observer visibility for predator feeding messages, so lit players can see `Лис` instead of a hardcoded `Щось`.
+- Session-presence aliases now accept Cyrillic `афк` as the same AFK command as `/afk`, `afk` and `відійти`.
+- The carried-torch fading warning now explains that the same spent torch cannot simply be relit, and offers a relight action when the player carries another unlit torch.
+- Strange-totem spawn boundaries now rely on protected regions rather than per-location exclusions for the starter camp and special areas, allowing ordinary eligible riverbank locations such as the under-bridge location to participate.
+- Population-floor restoration docs now call out that the safeguard remains species-level, not a per-location restoration guarantee.
+
+### Risks
+
+- No Prisma schema, migrations, WorldEventMarker, fauna seed group, Lisovyk restoration, `/spirit`, mentorship, group movement, broad combat rewrite, economy or profession-system changes.
+
 ## 0.16.16 - First herbal stamina tincture - 12026-06-09
 
 ### Added

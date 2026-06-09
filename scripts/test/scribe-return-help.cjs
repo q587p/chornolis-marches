@@ -15,6 +15,11 @@ assert.match(ADMIN_HELP_TEXT, /\/call_scribes_audit/, "Admin help should list sc
 assert.match(ADMIN_HELP_TEXT, /\/call_scribes_approve <eventId>/, "Admin help should list scribe return approval");
 assert.ok(ADMIN_HELP_INDEX_TEXT.length < 3900, "Admin help index should fit in one Telegram message");
 assert.ok(ADMIN_HELP_SECTIONS.length >= 6, "Admin help should expose focused sections");
+assert.deepEqual(
+  ADMIN_HELP_SECTIONS.map((section) => section.label),
+  ["🧭 Огляди", "🗒 Журнали", "👥 Персонажі", "➕ Додати у світ", "🧹 Прибирання", "⚠️ Важелі"],
+  "Admin help section buttons should keep distinct icons",
+);
 for (const section of ADMIN_HELP_SECTIONS) {
   assert.ok(section.text.length < 3900, `Admin help section should fit in one Telegram message: ${section.key}`);
 }

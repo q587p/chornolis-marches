@@ -5,7 +5,7 @@ require("ts-node/register");
 const { playerStaminaCostConfig, REST_STAMINA_REGEN_PER_INTERVAL } = require("../../src/gameConfig");
 const { buildFatigueGuidanceKeyboard, fatigueGuidanceText, playerHungerAfterStaminaSpend, shouldRefreshMainKeyboardAfterVitalsChange } = require("../../src/services/actionRecovery");
 const { actionTitle } = require("../../src/services/actionRules");
-const { CAMPFIRE_REST_STAMINA_REGEN_MULTIPLIER, isLitRestCampfireFeature, restStaminaRegenMultiplierForFeatures } = require("../../src/services/locationFeatures");
+const { CAMPFIRE_REST_STAMINA_REGEN_MULTIPLIER, COMFORTABLE_SLEEP_MULTIPLIER, isLitRestCampfireFeature, restStaminaRegenMultiplierForFeatures, sleepComfortMultiplierForFeatures } = require("../../src/services/locationFeatures");
 
 assert.equal(playerStaminaCostConfig.FRESHEN, 2);
 assert.equal(playerStaminaCostConfig.USE_ITEM, 1);
@@ -32,6 +32,7 @@ assert.equal(actionTitle({ type: "BUILD_CAMPFIRE", payload: {} }), "склада
 assert.equal(actionTitle({ type: "DOUSE_CAMPFIRE", payload: {} }), "гасимо вогнище");
 assert.equal(actionTitle({ type: "DISMANTLE_CAMPFIRE", payload: {} }), "розбираємо вогнище");
 assert.equal(actionTitle({ type: "DISMANTLE_TOTEM", payload: {} }), "розбираємо підозрілий тотем");
+assert.equal(actionTitle({ type: "DISMANTLE_TOTEM", payload: { reason: "розпускає підозрілий вузол" } }), "розпускає підозрілий вузол");
 assert.equal(actionTitle({ type: "RAID_APIARY", payload: {} }), "шукаємо мед у борті");
 assert.equal(actionTitle({ type: "COOK", payload: {} }), "підсмажуємо м'ясо");
 
@@ -83,6 +84,7 @@ const litMagicCampfire = { type: "MAGIC_CAMPFIRE", providesLight: true, data: { 
 const preparedCampfire = { type: "CAMPFIRE", providesLight: false, data: { is_campfire: true, handmade: true, prepared: true, unlit: true } };
 const extinguishedCampfire = { type: "CAMPFIRE", providesLight: false, data: { is_campfire: true, handmade: true, extinguished: true } };
 const strongerRestFeature = { type: "LANDMARK", providesLight: false, data: { rest_stamina_regen_multiplier: 10 } };
+const dryBunksFeature = { type: "LANDMARK", providesLight: false, data: { sleep_surface: true, sleep_comfort_multiplier: 1.5 } };
 
 assert.equal(isLitRestCampfireFeature(litCampfire), true);
 assert.equal(isLitRestCampfireFeature(litMagicCampfire), true);
@@ -92,5 +94,9 @@ assert.equal(restStaminaRegenMultiplierForFeatures([litCampfire]), 3);
 assert.equal(restStaminaRegenMultiplierForFeatures([litMagicCampfire]), 3);
 assert.equal(restStaminaRegenMultiplierForFeatures([preparedCampfire, extinguishedCampfire]), 1);
 assert.equal(restStaminaRegenMultiplierForFeatures([litCampfire, strongerRestFeature]), 10);
+assert.equal(sleepComfortMultiplierForFeatures([preparedCampfire, extinguishedCampfire]), 1);
+assert.equal(sleepComfortMultiplierForFeatures([litCampfire]), COMFORTABLE_SLEEP_MULTIPLIER);
+assert.equal(sleepComfortMultiplierForFeatures([dryBunksFeature]), 1.5);
+assert.equal(sleepComfortMultiplierForFeatures([litCampfire, dryBunksFeature]), 1.5);
 
 console.log("Action costs OK");

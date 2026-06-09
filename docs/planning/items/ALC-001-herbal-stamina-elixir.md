@@ -127,7 +127,6 @@ Example drink:
 - Drinking at full stamina does not consume the tincture.
 - `/help` / `/commands` mention stable commands only if the action becomes player-facing.
 - Tests cover recipe validation, stamina cap behavior, bottle return, ordinary failure, critical failure, failed validation with no consumption, practice recording and aliases.
-
 ## Implementation Notes
 
 - `0.16.16` adds `herbal_tincture` as the first prepared-remedy resource.
@@ -140,3 +139,4 @@ Example drink:
 - Successful and failed real attempts record `herbalism` / `practice` / `brew:herbal_tincture` after the outcome.
 - Drinking uses `/drink tincture`, `/use tincture`, Ukrainian aliases or the inventory button, restores up to `36` stamina capped by max stamina, consumes one tincture and returns one `empty_bottle`.
 - This slice intentionally does not add healing/night-sight tinctures, dirty bottles, washing, water/thirst, NPC brewing, mentor hints, shops/economy, a public `/skills` sheet, Prisma schema or migrations.
+- Because `RECIPE-001` landed as helper-only infrastructure, the ALC-001 PR must add a real or well-isolated fixture integration test for `applyResourceRecipeForPlayer`: successful transaction consumes exact inputs and adds the tincture output, while missing/changed inputs leave inventory unchanged.

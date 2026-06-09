@@ -327,6 +327,10 @@ function isTutorialRestSeatFeature(feature: any) {
   return featureData(feature).tutorial_rest_seat === true;
 }
 
+function isSleepSurfaceFeature(feature: any) {
+  return featureData(feature).sleep_surface === true;
+}
+
 function isTutorialInsideFeature(feature: any) {
   return featureData(feature).tutorial_inside_prompt === true;
 }
@@ -545,6 +549,8 @@ function featureDetailLine(feature: any, showTechnicalDetails = false, displaySt
     details.push("показує вихід назовні");
   } else if (isTutorialRestSeatFeature(feature)) {
     details.push("зручне місце для короткого перепочинку");
+  } else if (isSleepSurfaceFeature(feature)) {
+    details.push("можна лягти й заснути");
   } else if (isTutorialObservationFeature(feature)) {
     details.push("вчить уважно спостерігати");
   }
@@ -554,6 +560,8 @@ function featureDetailLine(feature: any, showTechnicalDetails = false, displaySt
   if (showTechnicalDetails && feature.restStaminaCapMultiplier) details.push(`відпочинок до ×${feature.restStaminaCapMultiplier} снаги`);
   const restSpeedMultiplier = Number(data.rest_stamina_regen_multiplier ?? data.restStaminaRegenMultiplier ?? 1);
   if (showTechnicalDetails && Number.isFinite(restSpeedMultiplier) && restSpeedMultiplier > 1) details.push(`відновлення снаги ×${Math.floor(restSpeedMultiplier)}`);
+  const sleepComfortMultiplier = Number(data.sleep_comfort_multiplier ?? data.sleepComfortMultiplier ?? 1);
+  if (showTechnicalDetails && Number.isFinite(sleepComfortMultiplier) && sleepComfortMultiplier > 1) details.push(`сон ×${sleepComfortMultiplier}`);
   return details.length ? `${line}; ${details.map(escapeHtml).join("; ")}` : line;
 }
 
@@ -655,18 +663,34 @@ export function groundItemPickupButtonRows(groundItems: any[]) {
   return groundItems.map((item) => {
     const row = [
       {
-        text: `🤲 Підібрати: ${item.resourceType.name}`,
+        text: `${groundItemPickupIcon(item.resourceType.key)} Підібрати: ${item.resourceType.name}`,
         callbackData: `item:pickup:${item.id}`,
       },
     ];
     if ((groundItemTotalsByKey.get(item.resourceType.key) ?? 0) > 1) {
       row.push({
-        text: "всі",
+        text: `${groundItemPickupIcon(item.resourceType.key)} всі`,
         callbackData: `item:pickupAll:${item.resourceType.key as VisibleGroundResourceKey}`,
       });
     }
     return row;
   });
+}
+
+export function groundItemPickupIcon(resourceKey: string) {
+  const itemIconByKey: Record<string, string> = {
+    torch: "🕯",
+    lit_torch: "🔥",
+    twigs: "🪵",
+    raw_meat: "🥩",
+    cooked_meat: "🍖",
+    empty_bottle: "🫙",
+    shah: "🪙",
+    grivna: "🪙",
+    berries: "🍓",
+    herbs: "🌿",
+  };
+  return `🤲${itemIconByKey[resourceKey] ?? "📦"}`;
 }
 
 function addGroundItemPickupButtons(keyboard: InlineKeyboard, groundItems: any[]) {
@@ -681,7 +705,7 @@ export function hasPickableLyingObjects(groundItems: any[], corpses: any[]) {
 }
 
 function addPickUpEverythingButton(keyboard: InlineKeyboard, groundItems: any[], corpses: any[]) {
-  if (hasPickableLyingObjects(groundItems, corpses)) keyboard.text("🤲 Підібрати все", "item:pickupEverything").row();
+  if (hasPickableLyingObjects(groundItems, corpses)) keyboard.text(PICK_UP_EVERYTHING_BUTTON_TEXT, "item:pickupEverything").row();
 }
 
 export function carcassDropoffButtonRows(featureId: number) {
@@ -1393,6 +1417,10 @@ export async function renderLocationFeatureInteraction(
   }
   if (feature.type === "GATE" && isDreamGateFeature(feature)) keyboard.text("💬 Сказати «Відчинитися»", "tutorial:sayOpenGate").row();
   if (isTutorialRestSeatFeature(feature)) keyboard.text("🧘 Присісти і відпочити", "rest:start").row();
+  if (isSleepSurfaceFeature(feature)) {
+    keyboard.text("🧘 Відпочити", "rest:start").row();
+    keyboard.text("Лягти", "posture:lie").text("🌙 Сон", "character:sleep").row();
+  }
   if (isTutorialInsideFeature(feature)) keyboard.text("🕳️ Всередину", "move:INSIDE").row();
   if (isTutorialOutsideFeature(feature)) keyboard.text("🕳️ Назовні", "move:OUTSIDE").row();
   if (featureData(feature).tutorial_time_prompt === true) {
@@ -1534,3 +1562,4 @@ export async function takeTorchFromLocationFeature(featureId: number, viewerPlay
 export async function takeBottleFromLocationFeature(featureId: number, viewerPlayerId: number) {
   return takeBottleFromFeature(viewerPlayerId, featureId);
 }
+export const PICK_UP_EVERYTHING_BUTTON_TEXT = "🤲🎒 Підібрати все";

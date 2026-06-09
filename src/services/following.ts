@@ -36,7 +36,7 @@ export function followIntentStatusLine(label: string | null | undefined, options
 }
 
 export function followAssistStateText(enabled: boolean | null | undefined) {
-  return `Автоспроба слідом: ${enabled ? "увімкнено" : "вимкнено"}.`;
+  return `Слідова підмога: ${enabled ? "увімкнено" : "вимкнено"}.`;
 }
 
 export function followIntentUsageText() {
@@ -72,7 +72,7 @@ export function followIntentHelpText(input?: {
   ];
   if (targetVisible) lines.push("Щоб спробувати піти за свіжим ясним слідом: /follow_step");
   lines.push(followAssistStateText(Boolean(input?.assistEnabled)));
-  lines.push("Щоб змінити автоспробу: /follow_assist_on або /follow_assist_off");
+  lines.push("Щоб змінити слідову підмогу: /follow_assist_on або /follow_assist_off");
   return lines.join("\n");
 }
 

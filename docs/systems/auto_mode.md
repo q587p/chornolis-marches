@@ -16,6 +16,7 @@ Do not use `Провід` for this feature. The tone should stay closer to a qui
 - If the character is busy or tired, the chosen action may enter the queue.
 - If the character is badly tired, the mode may start ordinary rest.
 - If the character is sitting after rest, the mode stands them up through the ordinary posture rule before physical actions such as movement or gathering.
+- If the character already carries a dry or doused torch and the ordinary fire rules allow it, the mode may queue `LIGHT_TORCH` to light or refresh a torch. It does not automatically grant or resupply torches.
 - Ordinary sleep and tutorial dream locations disable the mode: sleep is a separate attention state, not a place where the character keeps wandering or gathering.
 
 ## Internal Compatibility

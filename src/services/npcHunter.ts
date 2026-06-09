@@ -11,6 +11,7 @@ import { notifyLocationAll, notifyLocationDynamic } from "./notifications";
 import { findLocationRoute, type RouteStep } from "./routeFinding";
 import { logEvent } from "./worldEvents";
 import { visibleActorLabelForObserver } from "./visibilityLabels";
+import { maybeQueueProfessionTotemDismantle } from "./npcTotemDismantling";
 
 export const HUNTER_TORCH_BUNDLE_SIZE = 5;
 export const HUNTER_RETURN_TORCH_RESERVE = 1;
@@ -577,6 +578,7 @@ async function queueHunterStandDown(bot: Bot | null, hunter: { id: number; locat
 
 export async function tickNpcHunter(bot: Bot | null, hunter: any) {
   if (!isHunterCreature(hunter)) return "queuedRest";
+  if (await maybeQueueProfessionTotemDismantle(bot, hunter)) return "queuedLook";
 
   const planResult = await findHunterRoutePlan();
   if (!planResult.ok) {

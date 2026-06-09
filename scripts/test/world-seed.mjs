@@ -204,7 +204,7 @@ const gateTorchStand = features.find((item) => item.key === "closed_gate_torch_s
 assert.notEqual(gateTorchStand?.data?.icon, "🔥", "Torch stand should not use the fire icon reserved for flame/campfire actions");
 assert.equal(gateTorchStand?.data?.hunter_resupply, false, "Gate torch stand should no longer be the hunter resupply source");
 
-for (const key of ["start_border_marker", "start_newcomer_tablet", "start_lunar_circles_birchbark", "start_border_watchtower_ladder"]) {
+for (const key of ["start_newcomer_tablet", "start_lunar_circles_birchbark", "start_border_watchtower_ladder"]) {
   const feature = features.find((item) => item.key === key);
   assert.ok(feature, `Starter camp feature should exist: ${key}`);
   assert.equal(feature.locationKey, "start_border_camp", `Starter camp feature should stay at the camp: ${key}`);
@@ -212,16 +212,22 @@ for (const key of ["start_border_marker", "start_newcomer_tablet", "start_lunar_
   assert.ok(Array.isArray(feature.data?.aliases) && feature.data.aliases.length > 0, `Starter camp feature should have aliases: ${key}`);
 }
 
+const startBorderMarker = features.find((item) => item.key === "start_border_marker");
+assert.ok(startBorderMarker, "Boundary marker feature should exist");
+assert.equal(startBorderMarker.locationKey, "old_bridge_west_span", "Boundary marker should live at the old bridge west span");
+assert.ok(startBorderMarker.data?.icon, "Boundary marker should have a distinct icon");
+assert.ok(Array.isArray(startBorderMarker.data?.aliases) && startBorderMarker.data.aliases.length > 0, "Boundary marker should have aliases");
+
 assert.deepEqual(
   features.filter((item) => item.locationKey === "start_border_camp").slice(0, 5).map((item) => item.key),
   [
     "start_border_watchtower_ladder",
-    "start_border_marker",
     "start_newcomer_tablet",
     "start_lunar_circles_birchbark",
     "start_unfading_campfire",
+    "start_border_cellar_hatch",
   ],
-  "Starter camp feature order should lead with the watchtower and leave the unfading campfire last",
+  "Starter camp feature order should lead with the watchtower while keeping the boundary marker off the crowded camp surface",
 );
 
 const startWatchtowerLadder = features.find((item) => item.key === "start_border_watchtower_ladder");
@@ -319,6 +325,14 @@ assert.equal(startCellarShelf?.data?.storage_staging, "herbalist_supply_run", "S
 const startCellarDryBunks = features.find((item) => item.key === "start_cellar_dry_bunks");
 assert.equal(startCellarDryBunks?.data?.no_loot, true, "Starter cellar dry bunks should not hide loot");
 assert.equal(startCellarDryBunks?.data?.herbalist_rest_staging, true, "Starter cellar dry bunks should stage herbalist rest only");
+assert.equal(startCellarDryBunks?.data?.sleep_surface, true, "Starter cellar dry bunks should expose lie/sleep actions");
+assert.equal(startCellarDryBunks?.data?.sleep_comfort_multiplier, 1.5, "Starter cellar dry bunks should give a bounded sleep comfort bonus");
+const locationsServiceSource = fs.readFileSync(path.join(root, "src", "services", "locations.ts"), "utf8");
+assert.match(
+  locationsServiceSource,
+  /isSleepSurfaceFeature\(feature\)[\s\S]{0,240}posture:lie[\s\S]{0,120}character:sleep/u,
+  "Sleep-surface features should render lie and ordinary sleep buttons",
+);
 const startCellarRootGap = features.find((item) => item.key === "start_cellar_root_gap");
 assert.equal(startCellarRootGap?.data?.attention_gate, "root_gap_light", "Starter root gap should declare its attention gate");
 assert.equal(startCellarRootGap?.data?.destination_location_key, "start_cellar_root_pocket", "Starter root gap should point to the root pocket destination");

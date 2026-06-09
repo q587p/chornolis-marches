@@ -34,6 +34,7 @@ Commands and aliases:
 /leave
 /quit
 afk
+афк
 відійти
 завершити сесію
 вийти

@@ -21,6 +21,7 @@ const {
   SPIRIT_CALL_START_COMMANDS,
   autoCommandModeFromText,
   autoStatusText,
+  playerAutoTimingText,
 } = require("../../src/handlers/auto");
 const { isDreamGateOpeningPhrase, localGateOpenAttemptText } = require("../../src/services/tutorial");
 const { normalizeCreatureActionText } = require("../../src/utils/creatureActionText");
@@ -77,16 +78,26 @@ assert.equal(parseStartActionPayload("cmd_dukh_stop"), "autoStop");
 assert.equal(parseStartActionPayload("cmd_poklyk"), "spirit");
 assert.equal(parseStartActionPayload("cmd_poklyk_on"), "spiritOn");
 assert.equal(parseStartActionPayload("cmd_me"), "me");
+assert.equal(parseStartActionPayload("cmd_who"), "who");
 assert.equal(parseStartActionPayload("cmd_help"), "help");
 assert.equal(parseStartActionPayload("cmd_rest"), "rest");
 assert.equal(parseStartActionPayload("cmd_sleep"), "sleep");
 assert.equal(parseStartActionPayload("cmd_track"), "track");
 assert.equal(parseStartActionPayload("cmd_follow"), "follow");
 assert.equal(parseStartActionPayload("cmd_unfollow"), "unfollow");
+assert.equal(parseStartActionPayload("cmd_group"), "travelGroup");
+assert.equal(parseStartActionPayload("cmd_group_create"), "travelGroupCreate");
+assert.equal(parseStartActionPayload("cmd_group_invite"), "travelGroupInvite");
+assert.equal(parseStartActionPayload("cmd_group_accept"), "travelGroupAccept");
+assert.equal(parseStartActionPayload("cmd_group_leave"), "travelGroupLeave");
+assert.equal(parseStartActionPayload("cmd_group_follow_leader"), "travelGroupFollowLeader");
 assert.equal(parseStartActionPayload("cmd_time"), "time");
 assert.equal(parseStartActionPayload("cmd_calendar"), "calendar");
 assert.equal(parseStartActionPayload("cmd_weather"), "weather");
 assert.equal(parseStartActionPayload("cmd_inventory"), "inventory");
+assert.equal(parseStartActionPayload("cmd_get_all"), "pickupAll");
+assert.equal(parseStartActionPayload("cmd_pick_all"), "pickupAll");
+assert.equal(parseStartActionPayload("cmd_put"), "put");
 assert.equal(parseStartActionPayload("cmd_say"), "say");
 assert.equal(parseStartActionPayload("cmd_yell"), "yell");
 assert.equal(parseStartActionPayload("cmd_call_scribes"), "callScribes");
@@ -151,6 +162,7 @@ assertAlias("/leave", { kind: "session-presence", mode: "end" });
 assertAlias("leave cave", { kind: "move", direction: "OUTSIDE" });
 assertAlias("/afk", { kind: "session-presence", mode: "afk" });
 assertAlias("afk", { kind: "session-presence", mode: "afk" });
+assertAlias("афк", { kind: "session-presence", mode: "afk" });
 assertAlias("/end_session", { kind: "session-presence", mode: "end" });
 assertAlias("/endSession", { kind: "session-presence", mode: "end" });
 assertAlias("/quit", { kind: "session-presence", mode: "end" });
@@ -252,6 +264,8 @@ assertAlias("роздивитися сліди", { kind: "track", detail: true }
 assertAlias("/examine tracks", { kind: "track", detail: true });
 assertAlias("/track кіт", { kind: "track", target: "кіт" });
 assertAlias("track cat", { kind: "track", target: "cat" });
+assertAlias("/track_fox", { kind: "track", target: "fox" });
+assertAlias("track_fox", { kind: "track", target: "fox" });
 assertAlias("/follow_trace", { kind: "track-gate" });
 assertAlias("follow trace", { kind: "track-gate" });
 assertAlias("пройти за слідом", { kind: "track-gate" });
@@ -445,6 +459,10 @@ assert.equal(autoCommandModeFromText("stop", "start"), "stop");
 assert.match(autoStatusText({ enabled: false }), /Поклик духа: мовчить\./);
 assert.match(autoStatusText({ enabled: true }), /Поклик духа: озивається\./);
 assert.match(autoStatusText({ enabled: false }), /Обраний дух: тихий шепіт Порубіжжя\./);
+assert.equal(playerAutoTimingText(), "приблизно кожну чверть ігрової години");
+assert.doesNotMatch(playerAutoTimingText(), /тіків|≈|\d+\s*с/u);
+assert.match(autoStatusText({ enabled: false }), /Ритм поклику: приблизно кожну чверть ігрової години\./);
+assert.doesNotMatch(autoStatusText({ enabled: false }), /тіків|≈|\d+\s*с/u);
 assert.match(autoStatusText({ enabled: false }), /Увімкнути: \/spirit_on/);
 assert.match(autoStatusText({ enabled: false }), /Вимкнути: \/spirit_off/);
 
@@ -496,6 +514,16 @@ assertAlias("атакувати мишу", { kind: "target-action", action: "att
 assertAlias("атака миша", { kind: "target-action", action: "attack", target: "миша" });
 assertAlias("/attack mouse", { kind: "target-action", action: "attack", target: "mouse" });
 assertAlias("attack_mouse", { kind: "target-action", action: "attack", target: "mouse" });
+assertAlias("kill all mouse", { kind: "target-action", action: "attack", target: "all mouse" });
+assertAlias("attack all rabbit", { kind: "target-action", action: "attack", target: "all rabbit" });
+assertAlias("/kill all frog", { kind: "target-action", action: "attack", target: "all frog" });
+assertAlias("вбити всіх мишей", { kind: "target-action", action: "attack", target: "всіх мишей" });
+assertAlias("убити усіх зайців", { kind: "target-action", action: "attack", target: "усіх зайців" });
+assertAlias("/attack_all mouse", { kind: "target-action", action: "attack", target: "all mouse" });
+assertAlias("/attack_all_mouse", { kind: "target-action", action: "attack", target: "all mouse" });
+assertAlias("/kill_all rabbit", { kind: "target-action", action: "attack", target: "all rabbit" });
+assertAlias("kill_all_rabbit", { kind: "target-action", action: "attack", target: "all rabbit" });
+assertAlias("kill_all", { kind: "target-action", action: "attack", target: "all" });
 assertAlias("fight wolf", { kind: "target-action", action: "attack", target: "wolf" });
 assertAlias("kick rabbit", { kind: "target-action", action: "attack", target: "rabbit" });
 assertAlias("привітати 1", { kind: "target-action", action: "greet", target: "1" });
@@ -530,6 +558,11 @@ assertAlias("кивнути Здравомир", { kind: "social-signal", signal
 assertAlias("smile", { kind: "social-signal", signal: "smile" });
 assertAlias("посміх", { kind: "social-signal", signal: "smile" });
 assertAlias("усміхнутися", { kind: "social-signal", signal: "smile" });
+assertAlias("/signals", { kind: "social-menu" });
+assertAlias("signals", { kind: "social-menu" });
+assertAlias("socials", { kind: "social-menu" });
+assertAlias("сигнал", { kind: "social-menu" });
+assertAlias("сигнали", { kind: "social-menu" });
 assertAlias("/follow знахар", { kind: "follow", target: "знахар" });
 assertAlias("follow herbalist", { kind: "follow", target: "herbalist" });
 assertAlias("слідувати за знахарем", { kind: "follow", target: "знахарем" });
@@ -608,10 +641,15 @@ assert.ok(suggestAliasEntries("вола").map(formatAliasSuggestion).includes("�
 assert.ok(!suggestAliasEntries("/addl").map(formatAliasSuggestion).includes("addLitTorch (/addLitTorch)"), "Public suggestions should not expose scribe-only commands.");
 assert.ok(suggestAdminCommandEntries("/addl").map(formatAliasSuggestion).includes("addLitTorch (/addLitTorch)"), "Scribe/admin suggestions should include /addLitTorch for /addl.");
 assert.ok(suggestAdminCommandEntries("add lit").map(formatAliasSuggestion).includes("addLitTorch (/addLitTorch)"), "Scribe/admin suggestions should include /addLitTorch for spaced text.");
+assert.ok(suggestAdminCommandEntries("deletecamp").map(formatAliasSuggestion).includes("deleteCampfire (/deleteCampfire)"), "Scribe/admin suggestions should include /deleteCampfire.");
 assert.ok(suggestAdminCommandEntries("learningc").map(formatAliasSuggestion).includes("learning_chart (/learning_chart)"), "Scribe/admin suggestions should include /learning_chart.");
 assert.ok(suggestAliasInputs("усхмі").includes("усміх"), "Expected social suggestions to include усміх for a mistyped smile");
 assert.ok(suggestAliasInputs("посмі").includes("посміх"), "Expected social suggestions to include посміх");
 assert.ok(suggestAliasEntries("усхмі").map(formatAliasSuggestion).includes("усміх (/smile)"), "Expected formatted social suggestions to include slash command for smile");
+assert.ok(suggestAliasEntries("сиг").map(formatAliasSuggestion).includes("сигнал (/signals)"), "Expected formatted social menu suggestions to include /signals");
+const aliasHandlerSource = fs.readFileSync(path.join(process.cwd(), "src", "handlers", "aliases.ts"), "utf8");
+assert.match(aliasHandlerSource, /bot\.command\(\["signals", "socials"\]/, "Signals slash command should open the same text surface as the button label.");
+assert.match(aliasHandlerSource, /parsed\.kind === "social-menu"/, "Text aliases for Сигнали should route to the social menu.");
 const fallbackSource = fs.readFileSync(path.join(process.cwd(), "src", "handlers", "fallback.ts"), "utf8");
 assert.match(fallbackSource, /isScribeAdmin\(ctx\.from\?\.id\)/, "Unknown-command fallback should check scribe access before including admin command suggestions.");
 assert.match(fallbackSource, /suggestAdminCommandEntries/, "Unknown-command fallback should include admin command suggestions for scribes.");

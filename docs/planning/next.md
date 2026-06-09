@@ -14,14 +14,16 @@ Do not replace or derail it with broad combat, economy, theft, crafting, group m
 
 Keep the next patches narrow and reviewable:
 
-1. `0.16.12` / Strange totem cap expansion — in testing; focused retune only, with no fauna seed, Lisovyk, mentorship, group, combat, economy or profession changes.
-2. `0.16.13` / Дід Лісовик character pass — finish or redesign him deliberately as old-forest mentor/spirit/threshold presence.
+1. `0.16.17` / Sleep comfort and field command polish — in testing; feature-local sleep comfort, command-surface parity, light/predator text cleanup, strange-totem boundary polish and species-specific authored-`UP` movement for foxes, hawks, owls and snakes.
+2. `0.16.15` / Дід Лісовик character pass — finish or redesign him deliberately as old-forest mentor/spirit/threshold presence.
 3. Mentor guided tracking prompt — add only after gathering prompts and marker cooldowns feel stable.
 4. Mentor route polish — tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
 5. Spirit-call teacher unlock — design a narrow `Поклик духа` (`/spirit`) unlock or capability gate after sustained attention around an appropriate teacher.
 6. Group movement design — only a design slice, and only if live group/follow UX is clear.
 7. `MAP-004` follow-up — decide the next gated place after light/examine and track/follow-memory proofs.
-8. `QA-002` / camp-dream first-session smoke — keep the first-session vertical experience honest before widening systems.
+8. `ONB-012` / Навчання command hint refresh — keep the repeatable learning surface aware of follow, group and tincture/prepared-remedy possibilities; pair tutorial text changes with `QA-002` camp-dream smoke if they touch the first-session flow.
+9. `SOUND-001` / neighboring animal sounds — narrow atmospheric sound-propagation slice for wolves, night owls and wet-zone frogs after player speech ranges are stable; no full sound simulation or spammy room notifications.
+10. `CAT-011` / Кіт-бережник shadow absence — if the camp has no mice to watch, let the cat briefly vanish into the shadows and later return elsewhere inside the starter camp boundary.
 
 ## Post-0.16 Candidate Lane
 
@@ -29,10 +31,12 @@ After the current mentorship/NPC-learning lane stabilizes, the next practical su
 
 ## Boundaries
 
-- `0.16.12` changes only the Spirit Call command-control surface; it does not add a `/spirit` unlock, teacher gate, mentorship effect, stronger spirit behavior or hidden-route sharing.
+- `0.16.17` changes ordinary sleep comfort hints/surfaces, restored command surfaces, light/predator text, strange-totem boundary behavior and a narrow species-specific authored-`UP` movement boundary for foxes, hawks, owls and snakes; it does not add a `/spirit` unlock, teacher gate, mentorship effect, group movement, broad combat rewrite, economy/profession system or broad animal pathfinder.
 - Keep mentorship separate from `TravelGroup`: mentorship is teacher/student attention and learning context; travel groups remain player-player road groups.
 - Do not add public skill sheets or broad modifiers before bounded learning moments stay readable in play.
 - Do not open another broad content loop before the attention-learning spine is used by real attention moments.
+- `SOUND-001` should reuse speech-range/adjacency ideas without becoming global chat, hidden-exit reveal, combat tracking or broad animal AI.
+- `CAT-011` should stay atmospheric and camp-local: no pet system, danger detector, spirit unlock, reward or broad animal travel.
 - Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops stay behind the active learning/observation spine.
 
 ## References
@@ -52,3 +56,4 @@ Before moving an item into `next`, ask:
 3. Does it preserve incomplete information and atmosphere?
 4. Does it avoid becoming a new broad loop?
 5. Does it have text/alias parity if player-facing?
+6. If it adds player-facing functionality, does `Навчання` need at least a text hint even when a full lesson is out of scope?
