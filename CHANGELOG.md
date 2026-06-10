@@ -7,6 +7,23 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.23 - Action completion latency observability - 12026-06-10
+
+### Added
+
+- Added sanitized runtime observations for individual action completion duration, overdue age and outcome.
+- Extended guarded `/queueDebug` output with recent slow action completions and recent completion errors.
+- Added `slow:actionCompletion` console warnings for slow or failed action completions without logging raw action payloads, Telegram chat ids, player text, whispers or secrets.
+- Added focused action-completion diagnostics tests.
+
+### Changed
+
+- Player and creature action completion loops now pass through a shared observation wrapper while preserving existing completion, missing-record and error behavior.
+
+### Risks
+
+- This is an observability-only release. It does not change action durations, stamina/HP math, queue ordering, dedupe behavior, recovery cadence, creature backpressure, Telegram send awaiting, movement, combat, tracking result, predator, social, totem, Herald archive, Prisma schema or migration behavior.
+
 ## 0.16.22 - Recovery and archive diagnostics - 12026-06-09
 
 ### Added
