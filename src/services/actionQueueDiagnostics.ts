@@ -15,6 +15,7 @@ import {
   type TelegramSendObservation,
   type TelegramSendRuntimeSnapshot,
 } from "../runtimeState";
+import { getDeferredTelegramSnapshot, type DeferredTelegramRecent, type DeferredTelegramSnapshot } from "./deferredTelegram";
 import { getActionQueueStats } from "./status";
 
 export type ActionQueueStatsSnapshot = Awaited<ReturnType<typeof getActionQueueStats>>;
@@ -60,6 +61,11 @@ function formatAgo(value: Date | null | undefined, now: Date) {
 }
 
 function formatRunning(snapshot: Pick<ActionQueueRuntimeSnapshot | CreatureQueueRuntimeSnapshot | RecoveryRuntimeSnapshot, "running" | "runningSince">, now: Date) {
+  if (!snapshot.running) return "ні";
+  return snapshot.runningSince ? `так, ${formatQueueDurationMs(now.getTime() - snapshot.runningSince.getTime())}` : "так";
+}
+
+function formatRunningOptional(snapshot: Pick<DeferredTelegramSnapshot, "running" | "runningSince">, now: Date) {
   if (!snapshot.running) return "ні";
   return snapshot.runningSince ? `так, ${formatQueueDurationMs(now.getTime() - snapshot.runningSince.getTime())}` : "так";
 }
@@ -118,12 +124,32 @@ export function formatTelegramSendDebugSection(snapshot: TelegramSendRuntimeSnap
   ].join("\n");
 }
 
+export function formatDeferredTelegramRecent(item: DeferredTelegramRecent) {
+  const error = item.error ? ` error=${item.error}` : "";
+  return `${item.context} ${item.status}${error}`;
+}
+
+function formatDeferredTelegramRecentList(items: DeferredTelegramRecent[]) {
+  if (items.length === 0) return "немає";
+  return items.map(formatDeferredTelegramRecent).join("\n");
+}
+
+export function formatDeferredTelegramDebugSection(snapshot: DeferredTelegramSnapshot, now = new Date()) {
+  return [
+    `deferredTelegram: enabled=${snapshot.enabled ? "так" : "ні"}; running=${formatRunningOptional(snapshot, now)}; pending=${snapshot.pendingCount}; queued=${snapshot.totalQueuedSinceStart}; sent=${snapshot.totalSentSinceStart}; dropped=${snapshot.totalDroppedSinceStart}; expired=${snapshot.totalExpiredSinceStart}; errors=${snapshot.totalErrorsSinceStart}`,
+    `deferredTelegramLast: started=${formatAgo(snapshot.lastStartedAt, now)}; finished=${formatAgo(snapshot.lastFinishedAt, now)}; error=${snapshot.lastError ?? "немає"}`,
+    "deferredTelegramRecent:",
+    formatDeferredTelegramRecentList(snapshot.recent),
+  ].join("\n");
+}
+
 export function formatActionQueueDebugReport(
   stats: ActionQueueStatsSnapshot,
   snapshot: ActionQueueRuntimeSnapshot,
   creatureSnapshot: CreatureQueueRuntimeSnapshot = getCreatureQueueRuntimeSnapshot(),
   recoverySnapshotOrNow: RecoveryRuntimeSnapshot | Date = getRecoveryRuntimeSnapshot(),
   nowMaybe?: Date,
+  deferredSnapshot: DeferredTelegramSnapshot = getDeferredTelegramSnapshot(),
 ) {
   const recoverySnapshot = recoverySnapshotOrNow instanceof Date ? getRecoveryRuntimeSnapshot() : recoverySnapshotOrNow;
   const now = recoverySnapshotOrNow instanceof Date ? recoverySnapshotOrNow : nowMaybe ?? new Date();
@@ -143,6 +169,7 @@ export function formatActionQueueDebugReport(
     `recoveryCounts: playersScanned=${recoverySnapshot.lastPlayersScanned}; playersUpdated=${recoverySnapshot.lastPlayersUpdated}; playersSkippedActive=${recoverySnapshot.lastPlayersSkippedActive}; idleReminders=${recoverySnapshot.lastIdleRemindersSent}; sleepAutoWakes=${recoverySnapshot.lastSleepAutoWakes}; playerMessages=${recoverySnapshot.lastPlayerMessagesSent}; creaturesScanned=${recoverySnapshot.lastCreaturesScanned}; creaturesUpdated=${recoverySnapshot.lastCreaturesUpdated}; activeCreaturesRefreshed=${recoverySnapshot.lastActiveCreaturesRefreshed}`,
     formatActionCompletionDebugSection(getActionCompletionRuntimeSnapshot()),
     formatTelegramSendDebugSection(getTelegramSendRuntimeSnapshot()),
+    formatDeferredTelegramDebugSection(deferredSnapshot, now),
     `queued: player=${stats.playerQueued}; creature=${stats.creatureQueued}; total=${stats.totalQueued}`,
     `runningActions: player=${stats.playerRunning}; creature=${stats.creatureRunning}; total=${stats.totalRunning}`,
     `oldestQueued: player=${formatQueueDurationMs(stats.oldestQueuedPlayerAgeMs)}; creature=${formatQueueDurationMs(stats.oldestQueuedCreatureAgeMs)}; total=${formatQueueDurationMs(stats.oldestQueuedAgeMs)}`,
@@ -153,11 +180,12 @@ export function formatActionQueueDebugReport(
 }
 
 export async function buildActionQueueDebugReport() {
-  const [stats, snapshot, creatureSnapshot, recoverySnapshot] = await Promise.all([
+  const [stats, snapshot, creatureSnapshot, recoverySnapshot, deferredSnapshot] = await Promise.all([
     getActionQueueStats(),
     Promise.resolve(getActionQueueRuntimeSnapshot()),
     Promise.resolve(getCreatureQueueRuntimeSnapshot()),
     Promise.resolve(getRecoveryRuntimeSnapshot()),
+    Promise.resolve(getDeferredTelegramSnapshot()),
   ]);
-  return formatActionQueueDebugReport(stats, snapshot, creatureSnapshot, recoverySnapshot);
+  return formatActionQueueDebugReport(stats, snapshot, creatureSnapshot, recoverySnapshot, undefined, deferredSnapshot);
 }

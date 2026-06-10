@@ -7,6 +7,24 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.26 - Deferred non-critical Telegram follow-ups - 12026-06-10
+
+### Added
+
+- Added a bounded in-process deferred Telegram follow-up queue for explicitly non-critical tutorial, guidance and recovery-extra messages.
+- Added sanitized deferred follow-up runtime diagnostics to guarded `/queueDebug`, including pending/sent/dropped/expired/error counters and recent context-only rows.
+- Added focused deferred Telegram tests for queue bounds, expiry, delivery telemetry, error isolation, diagnostics sanitization and migrated source boundaries.
+
+### Changed
+
+- Selected optional tutorial/action guidance, first-night guidance, mentorship follow-up hints, idle reminder voice comments, daypart hints and tutorial rest flavor comments now enqueue as deferred follow-ups after the primary response path is already handled.
+- Primary action completion replies, failure replies, sleep auto-wake notices, fatigue/hunger warnings, knockout notices, queue-control replies, admin replies, Herald replies and notification fan-out paths remain awaited/direct.
+
+### Risks
+
+- Deferred follow-ups are best-effort and bounded: if disabled, full, expired or failing, they are dropped or counted without throwing into action completion or recovery.
+- This release does not change action durations, stamina/HP math, queue ordering, action dedupe, creature backpressure, recovery cadence, movement, combat, tracking, sleep, social, predator, totem, Herald behavior, Prisma schema or migrations.
+
 ## 0.16.25 - Direct Telegram send observability and admin/status polish - 12026-06-10
 
 ### Added

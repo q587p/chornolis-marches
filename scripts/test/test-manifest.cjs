@@ -55,6 +55,7 @@ module.exports = [
   nodeTest("scripts/test/telegram-safe-send.cjs"),
   nodeTest("scripts/test/telegram-observed-send.cjs"),
   nodeTest("scripts/test/telegram-send-diagnostics.cjs"),
+  nodeTest("scripts/test/deferred-telegram.cjs"),
   nodeTest("scripts/test/notifications.cjs"),
   nodeTest("scripts/test/route-finding.cjs"),
   nodeTest("scripts/test/speech-ranges.cjs"),

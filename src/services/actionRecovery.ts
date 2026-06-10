@@ -32,6 +32,7 @@ import { buildDaypartNoticeHintKeyboard, recordOrdinaryWakeAndClaimDaypartHint }
 import { CAMPFIRE_BUILD_TWIG_COST } from "./fire";
 import type { RecoveryPassMetrics } from "../runtimeState";
 import { observedSendMessage } from "../utils/telegram";
+import { deferTelegramFollowup } from "./deferredTelegram";
 
 export function fatigueStateFor(stamina: number, staminaMax = BASE_STAMINA): FatigueState {
   if (stamina <= VERY_TIRED_STAMINA) return "VERY_TIRED";
@@ -73,6 +74,23 @@ const FATIGUE_NOTICE_TEXT = "Ви відчуваєте втому. Наступ�
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
+}
+
+function deferRecoveryFollowup(
+  chatId: string | number,
+  text: string,
+  options: Parameters<typeof deferTelegramFollowup>[0]["options"],
+  context: string,
+  dedupeKey?: string,
+) {
+  return deferTelegramFollowup({
+    chatId,
+    text,
+    options,
+    context,
+    reason: "recovery-extra",
+    dedupeKey,
+  });
 }
 
 type FatigueGuidanceContext = {
@@ -330,9 +348,17 @@ export async function recoverStamina(bot: Bot): Promise<RecoveryPassMetrics> {
         const voiceComments = sceneKey ? await tutorialIdlePaceComments(player, now) : [];
         if (voiceComments.length && sceneKey && !(await claimIdleReminderForPlayerScene(player.id, sceneKey))) continue;
         for (const comment of voiceComments) {
-          await observedSendMessage(bot, chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }, "actionRecovery.idleReminder");
-          metrics.idleRemindersSent += 1;
-          metrics.playerMessagesSent += 1;
+          const queued = deferRecoveryFollowup(
+            chatId,
+            `${comment.title}:\n${quoteBlock(comment.text)}`,
+            { parse_mode: "HTML" },
+            "actionRecovery.idleReminder",
+            `idleReminder:${player.id}:${sceneKey}:${comment.title}`,
+          );
+          if (queued) {
+            metrics.idleRemindersSent += 1;
+            metrics.playerMessagesSent += 1;
+          }
         }
       }
     }
@@ -353,8 +379,13 @@ export async function recoverStamina(bot: Bot): Promise<RecoveryPassMetrics> {
         metrics.playerMessagesSent += 1;
         const hint = await recordOrdinaryWakeAndClaimDaypartHint(player.id);
         if (hint) {
-          await observedSendMessage(bot, chatId, hint, { reply_markup: buildDaypartNoticeHintKeyboard() }, "actionRecovery.daypartHint");
-          metrics.playerMessagesSent += 1;
+          if (deferRecoveryFollowup(
+            chatId,
+            hint,
+            { reply_markup: buildDaypartNoticeHintKeyboard() },
+            "actionRecovery.daypartHint",
+            `daypartHint:${player.id}:${worldState.absoluteMinute}`,
+          )) metrics.playerMessagesSent += 1;
         }
       }
       continue;
@@ -432,8 +463,13 @@ export async function recoverStamina(bot: Bot): Promise<RecoveryPassMetrics> {
         metrics.playerMessagesSent += 1;
         const hint = await recordOrdinaryWakeAndClaimDaypartHint(player.id);
         if (hint) {
-          await observedSendMessage(bot, chatId, hint, { reply_markup: buildDaypartNoticeHintKeyboard() }, "actionRecovery.daypartHint");
-          metrics.playerMessagesSent += 1;
+          if (deferRecoveryFollowup(
+            chatId,
+            hint,
+            { reply_markup: buildDaypartNoticeHintKeyboard() },
+            "actionRecovery.daypartHint",
+            `daypartHint:${player.id}:${worldState.absoluteMinute}`,
+          )) metrics.playerMessagesSent += 1;
         }
       }
       continue;
@@ -455,14 +491,13 @@ export async function recoverStamina(bot: Bot): Promise<RecoveryPassMetrics> {
       }
 
       if (shouldSendTutorialRestFullComment) {
-        await observedSendMessage(
-          bot,
+        if (deferRecoveryFollowup(
           chatId,
           `Сон стиха каже:\n${quoteBlock(TUTORIAL_REST_FULL_COMMENT)}`,
           { parse_mode: "HTML", reply_markup: refreshedKeyboard },
           "actionRecovery.tutorialRestNotice",
-        );
-        metrics.playerMessagesSent += 1;
+          `tutorialRestFull:${player.id}:${player.restFullRecoveries}`,
+        )) metrics.playerMessagesSent += 1;
       }
     }
   }

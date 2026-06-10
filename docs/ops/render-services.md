@@ -198,6 +198,25 @@ success returns the Telegram message, blocked-user errors are recorded as
 rethrown. `safeSendMessage` remains the fan-out helper that returns `null` for
 blocked-user errors.
 
+As of `0.16.26`, the main game bot also has a small in-process deferred
+Telegram follow-up queue for explicitly non-critical tutorial, guidance and
+recovery-extra messages. It is started only from the game bot startup path, not
+from the Herald standalone service. Deferred delivery still uses
+`observedSendMessage`, so Telegram send telemetry continues to show whether
+latency sits in primary sends or optional follow-ups. The defaults are:
+
+- `DEFERRED_TELEGRAM_ENABLED=true`;
+- `DEFERRED_TELEGRAM_POLL_MS=250`;
+- `DEFERRED_TELEGRAM_MAX_PENDING=200`;
+- `DEFERRED_TELEGRAM_MAX_PER_PASS=5`;
+- `DEFERRED_TELEGRAM_MAX_AGE_MS=300000`.
+
+If the deferred queue is disabled, full, expired or delivery fails, it records
+sanitized counters and does not throw back into action completion or recovery.
+Do not move primary action results, safety warnings, queue-control replies,
+admin replies, Herald replies or normal notification fan-out into this queue
+without a focused design pass.
+
 As of `0.16.22`, the recovery loop also records a compact runtime snapshot for
 guarded `/queueDebug`: player/creature phase durations, scanned/updated player
 counts, active-player skips, proactive recovery messages, creature candidates
@@ -222,6 +241,13 @@ notification loops remain serial, and blocked-user handling remains unchanged.
 As of `0.16.25`, that same section also includes selected direct action
 completion, recovery and torch-fading sends; direct sends still rethrow Telegram
 errors exactly as before.
+
+As of `0.16.26`, guarded `/queueDebug` also shows `deferredTelegram` and
+`deferredTelegramRecent`. Use that section when primary action completion looks
+healthy but optional tutorial/guidance/recovery-extra messages are lagging or
+being dropped. The section shows counts and sanitized context labels only; it
+must not expose chat ids, usernames, message text, payloads, parse-mode content,
+player speech, whispers, tokens, secrets or raw Telegram API responses.
 
 ## Action Queue Backpressure
 
