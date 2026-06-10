@@ -141,6 +141,29 @@ export type TelegramSendRuntimeSnapshot = {
   recentErrors: TelegramSendObservation[];
 };
 
+export type DatabaseQueryOutcome = "ok" | "error";
+
+export type DatabaseQueryObservation = {
+  observedAt: Date;
+  model: string | null;
+  action: string;
+  durationMs: number;
+  outcome: DatabaseQueryOutcome;
+  error: string | null;
+};
+
+export type DatabaseQueryRuntimeSnapshot = {
+  enabled: boolean;
+  slowThresholdMs: number;
+  sampleLimit: number;
+  lastObservedAt: Date | null;
+  totalObservedSinceStart: number;
+  slowObservedSinceStart: number;
+  errorSinceStart: number;
+  recentSlow: DatabaseQueryObservation[];
+  recentErrors: DatabaseQueryObservation[];
+};
+
 const EMPTY_ACTION_QUEUE_PHASE_DURATIONS: ActionQueuePhaseDurations = {
   playerCompleteMs: 0,
   playerStartMs: 0,
@@ -215,12 +238,22 @@ let actionCompletionRuntimeState: Omit<ActionCompletionRuntimeSnapshot, "slowThr
 
 const DEFAULT_ACTION_COMPLETION_SLOW_MS = 1000;
 const DEFAULT_TELEGRAM_SEND_SLOW_MS = 1000;
+const DEFAULT_DATABASE_QUERY_SLOW_MS = 100;
 
 let telegramSendRuntimeState: Omit<TelegramSendRuntimeSnapshot, "slowThresholdMs"> = {
   lastObservedAt: null,
   totalObservedSinceStart: 0,
   slowObservedSinceStart: 0,
   blockedSinceStart: 0,
+  errorSinceStart: 0,
+  recentSlow: [],
+  recentErrors: [],
+};
+
+let databaseQueryRuntimeState: Omit<DatabaseQueryRuntimeSnapshot, "enabled" | "slowThresholdMs" | "sampleLimit"> = {
+  lastObservedAt: null,
+  totalObservedSinceStart: 0,
+  slowObservedSinceStart: 0,
   errorSinceStart: 0,
   recentSlow: [],
   recentErrors: [],
@@ -257,6 +290,15 @@ function intEnv(name: string, fallback: number) {
   return Number.isFinite(value) ? Math.floor(value) : fallback;
 }
 
+function boolEnv(name: string, fallback: boolean) {
+  const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env;
+  const value = env?.[name]?.trim().toLowerCase();
+  if (value === undefined || value === "") return fallback;
+  if (["1", "true", "yes", "on"].includes(value)) return true;
+  if (["0", "false", "no", "off"].includes(value)) return false;
+  return fallback;
+}
+
 export function actionCompletionSlowThresholdMs() {
   return Math.max(0, intEnv("ACTION_COMPLETION_SLOW_MS", intEnv("SLOW_COMMAND_LOG_MS", DEFAULT_ACTION_COMPLETION_SLOW_MS)));
 }
@@ -281,6 +323,32 @@ export function compactTelegramSendError(error: unknown) {
   return compactRuntimeError(error);
 }
 
+export function databaseQueryObservabilityEnabled() {
+  return boolEnv("DATABASE_QUERY_OBSERVABILITY_ENABLED", true);
+}
+
+export function databaseQuerySlowThresholdMs() {
+  return Math.max(0, intEnv("DATABASE_QUERY_SLOW_MS", intEnv("SLOW_COMMAND_LOG_MS", DEFAULT_DATABASE_QUERY_SLOW_MS)));
+}
+
+export function databaseQuerySampleLimit() {
+  return Math.max(1, Math.min(50, intEnv("DATABASE_QUERY_SAMPLE_LIMIT", 10)));
+}
+
+function compactDatabaseQueryLabel(value: unknown, fallback: string) {
+  const text = String(value ?? fallback).replace(/[^a-zA-Z0-9_$.-]/g, "").slice(0, 64);
+  return text || fallback;
+}
+
+export function compactDatabaseQueryError(error: unknown) {
+  const text = String(error instanceof Error ? error.message : error)
+    .replace(/\s+/g, " ")
+    .replace(/\b(chatId|chat id|telegramId|telegram id|payload|token|secret|private whisper|whisper|message text|messageText|raw body|rawBody|query args|args|sql|params|parameters|row data)\b/gi, "[redacted]")
+    .replace(/[0-9]{5,}/g, "#")
+    .trim();
+  return text.length > 240 ? `${text.slice(0, 237)}...` : text;
+}
+
 function cloneActionCompletionObservation(observation: ActionCompletionObservation): ActionCompletionObservation {
   return {
     ...observation,
@@ -289,6 +357,13 @@ function cloneActionCompletionObservation(observation: ActionCompletionObservati
 }
 
 function cloneTelegramSendObservation(observation: TelegramSendObservation): TelegramSendObservation {
+  return {
+    ...observation,
+    observedAt: new Date(observation.observedAt.getTime()),
+  };
+}
+
+function cloneDatabaseQueryObservation(observation: DatabaseQueryObservation): DatabaseQueryObservation {
   return {
     ...observation,
     observedAt: new Date(observation.observedAt.getTime()),
@@ -523,6 +598,66 @@ export function resetTelegramSendRuntimeSnapshotForTests(): void {
     totalObservedSinceStart: 0,
     slowObservedSinceStart: 0,
     blockedSinceStart: 0,
+    errorSinceStart: 0,
+    recentSlow: [],
+    recentErrors: [],
+  };
+}
+
+export function markDatabaseQueryObserved(observation: DatabaseQueryObservation): void {
+  if (!databaseQueryObservabilityEnabled()) return;
+
+  const threshold = databaseQuerySlowThresholdMs();
+  const limit = databaseQuerySampleLimit();
+  const cloned: DatabaseQueryObservation = {
+    observedAt: new Date(observation.observedAt.getTime()),
+    model: observation.model ? compactDatabaseQueryLabel(observation.model, "unknown") : null,
+    action: compactDatabaseQueryLabel(observation.action, "unknown"),
+    durationMs: Math.max(0, observation.durationMs),
+    outcome: observation.outcome,
+    error: observation.error ? compactDatabaseQueryError(observation.error) : null,
+  };
+  const isSlow = threshold > 0 && cloned.durationMs >= threshold;
+
+  databaseQueryRuntimeState = {
+    ...databaseQueryRuntimeState,
+    lastObservedAt: cloned.observedAt,
+    totalObservedSinceStart: databaseQueryRuntimeState.totalObservedSinceStart + 1,
+    slowObservedSinceStart: databaseQueryRuntimeState.slowObservedSinceStart + (isSlow ? 1 : 0),
+    errorSinceStart: databaseQueryRuntimeState.errorSinceStart + (cloned.outcome === "error" ? 1 : 0),
+    recentSlow: [...databaseQueryRuntimeState.recentSlow],
+    recentErrors: [...databaseQueryRuntimeState.recentErrors],
+  };
+
+  if (isSlow) pushCapped(databaseQueryRuntimeState.recentSlow, cloned, limit);
+  if (cloned.outcome === "error") pushCapped(databaseQueryRuntimeState.recentErrors, cloned, limit);
+
+  if (isSlow || cloned.outcome === "error") {
+    const model = cloned.model ?? "unknown";
+    const errorText = cloned.error ? ` error=${cloned.error}` : "";
+    console.warn(`slow:databaseQuery model=${model} action=${cloned.action} durationMs=${Math.round(cloned.durationMs)} outcome=${cloned.outcome}${errorText}`);
+  }
+}
+
+export function getDatabaseQueryRuntimeSnapshot(): DatabaseQueryRuntimeSnapshot {
+  return {
+    enabled: databaseQueryObservabilityEnabled(),
+    slowThresholdMs: databaseQuerySlowThresholdMs(),
+    sampleLimit: databaseQuerySampleLimit(),
+    lastObservedAt: databaseQueryRuntimeState.lastObservedAt ? new Date(databaseQueryRuntimeState.lastObservedAt.getTime()) : null,
+    totalObservedSinceStart: databaseQueryRuntimeState.totalObservedSinceStart,
+    slowObservedSinceStart: databaseQueryRuntimeState.slowObservedSinceStart,
+    errorSinceStart: databaseQueryRuntimeState.errorSinceStart,
+    recentSlow: databaseQueryRuntimeState.recentSlow.map(cloneDatabaseQueryObservation),
+    recentErrors: databaseQueryRuntimeState.recentErrors.map(cloneDatabaseQueryObservation),
+  };
+}
+
+export function resetDatabaseQueryRuntimeSnapshotForTests(): void {
+  databaseQueryRuntimeState = {
+    lastObservedAt: null,
+    totalObservedSinceStart: 0,
+    slowObservedSinceStart: 0,
     errorSinceStart: 0,
     recentSlow: [],
     recentErrors: [],

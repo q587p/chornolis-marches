@@ -88,6 +88,7 @@ module.exports = [
   nodeTest("scripts/test/action-queue-backpressure.cjs"),
   nodeTest("scripts/test/action-queue-performance.cjs"),
   nodeTest("scripts/test/action-completion-diagnostics.cjs"),
+  nodeTest("scripts/test/database-query-diagnostics.cjs"),
   nodeTest("scripts/test/recovery-loop.cjs"),
   nodeTest("scripts/test/starter-animals.cjs"),
   nodeTest("scripts/test/fauna-diversity.cjs"),

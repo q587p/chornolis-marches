@@ -2,6 +2,7 @@ import {
   getActionCompletionRuntimeSnapshot,
   getActionQueueRuntimeSnapshot,
   getCreatureQueueRuntimeSnapshot,
+  getDatabaseQueryRuntimeSnapshot,
   getRecoveryRuntimeSnapshot,
   getTelegramSendRuntimeSnapshot,
   type ActionCompletionObservation,
@@ -10,6 +11,8 @@ import {
   type ActionQueueRuntimeSnapshot,
   type CreatureQueuePhaseDurations,
   type CreatureQueueRuntimeSnapshot,
+  type DatabaseQueryObservation,
+  type DatabaseQueryRuntimeSnapshot,
   type RecoveryPhaseDurations,
   type RecoveryRuntimeSnapshot,
   type TelegramSendObservation,
@@ -124,6 +127,27 @@ export function formatTelegramSendDebugSection(snapshot: TelegramSendRuntimeSnap
   ].join("\n");
 }
 
+export function formatDatabaseQueryObservation(observation: DatabaseQueryObservation) {
+  const model = observation.model ?? "unknown";
+  const error = observation.error ? ` error=${observation.error}` : "";
+  return `${model}.${observation.action} duration=${formatQueueDurationMs(observation.durationMs)} outcome=${observation.outcome}${error}`;
+}
+
+function formatDatabaseQueryObservationList(observations: DatabaseQueryObservation[]) {
+  if (observations.length === 0) return "немає";
+  return observations.map(formatDatabaseQueryObservation).join("\n");
+}
+
+export function formatDatabaseQueryDebugSection(snapshot: DatabaseQueryRuntimeSnapshot) {
+  return [
+    `databaseQuery: enabled=${snapshot.enabled ? "так" : "ні"}; threshold=${formatQueueDurationMs(snapshot.slowThresholdMs)}; sampleLimit=${snapshot.sampleLimit}; total=${snapshot.totalObservedSinceStart}; slow=${snapshot.slowObservedSinceStart}; errors=${snapshot.errorSinceStart}`,
+    "recentSlowDatabaseQueries:",
+    formatDatabaseQueryObservationList(snapshot.recentSlow),
+    "recentDatabaseQueryErrors:",
+    formatDatabaseQueryObservationList(snapshot.recentErrors),
+  ].join("\n");
+}
+
 export function formatDeferredTelegramRecent(item: DeferredTelegramRecent) {
   const error = item.error ? ` error=${item.error}` : "";
   return `${item.context} ${item.status}${error}`;
@@ -150,6 +174,7 @@ export function formatActionQueueDebugReport(
   recoverySnapshotOrNow: RecoveryRuntimeSnapshot | Date = getRecoveryRuntimeSnapshot(),
   nowMaybe?: Date,
   deferredSnapshot: DeferredTelegramSnapshot = getDeferredTelegramSnapshot(),
+  databaseQuerySnapshot: DatabaseQueryRuntimeSnapshot = getDatabaseQueryRuntimeSnapshot(),
 ) {
   const recoverySnapshot = recoverySnapshotOrNow instanceof Date ? getRecoveryRuntimeSnapshot() : recoverySnapshotOrNow;
   const now = recoverySnapshotOrNow instanceof Date ? recoverySnapshotOrNow : nowMaybe ?? new Date();
@@ -170,6 +195,7 @@ export function formatActionQueueDebugReport(
     formatActionCompletionDebugSection(getActionCompletionRuntimeSnapshot()),
     formatTelegramSendDebugSection(getTelegramSendRuntimeSnapshot()),
     formatDeferredTelegramDebugSection(deferredSnapshot, now),
+    formatDatabaseQueryDebugSection(databaseQuerySnapshot),
     `queued: player=${stats.playerQueued}; creature=${stats.creatureQueued}; total=${stats.totalQueued}`,
     `runningActions: player=${stats.playerRunning}; creature=${stats.creatureRunning}; total=${stats.totalRunning}`,
     `oldestQueued: player=${formatQueueDurationMs(stats.oldestQueuedPlayerAgeMs)}; creature=${formatQueueDurationMs(stats.oldestQueuedCreatureAgeMs)}; total=${formatQueueDurationMs(stats.oldestQueuedAgeMs)}`,
@@ -180,12 +206,13 @@ export function formatActionQueueDebugReport(
 }
 
 export async function buildActionQueueDebugReport() {
-  const [stats, snapshot, creatureSnapshot, recoverySnapshot, deferredSnapshot] = await Promise.all([
+  const [stats, snapshot, creatureSnapshot, recoverySnapshot, deferredSnapshot, databaseQuerySnapshot] = await Promise.all([
     getActionQueueStats(),
     Promise.resolve(getActionQueueRuntimeSnapshot()),
     Promise.resolve(getCreatureQueueRuntimeSnapshot()),
     Promise.resolve(getRecoveryRuntimeSnapshot()),
     Promise.resolve(getDeferredTelegramSnapshot()),
+    Promise.resolve(getDatabaseQueryRuntimeSnapshot()),
   ]);
-  return formatActionQueueDebugReport(stats, snapshot, creatureSnapshot, recoverySnapshot, undefined, deferredSnapshot);
+  return formatActionQueueDebugReport(stats, snapshot, creatureSnapshot, recoverySnapshot, undefined, deferredSnapshot, databaseQuerySnapshot);
 }

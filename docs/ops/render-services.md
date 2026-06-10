@@ -249,6 +249,20 @@ being dropped. The section shows counts and sanitized context labels only; it
 must not expose chat ids, usernames, message text, payloads, parse-mode content,
 player speech, whispers, tokens, secrets or raw Telegram API responses.
 
+As of `0.16.27`, guarded `/queueDebug` also shows `databaseQuery`,
+`recentSlowDatabaseQueries` and `recentDatabaseQueryErrors` for Prisma model
+operations. Use that section when action completion, recovery and Telegram
+delivery timings do not explain the delay and the next suspect is the shared
+database layer. `slow:databaseQuery` appears only for slow or failed Prisma
+model operations and includes model, action, duration, outcome and compact
+sanitized error text. It intentionally does not log query arguments, SQL,
+parameters, Telegram chat ids, message text, payloads, player speech, whispers,
+tokens, secrets or database URLs. `DATABASE_QUERY_OBSERVABILITY_ENABLED`
+defaults to `true`. `DATABASE_QUERY_SLOW_MS` can override the threshold for this
+path; otherwise it follows `SLOW_COMMAND_LOG_MS` and defaults to `100`.
+`DATABASE_QUERY_SAMPLE_LIMIT` controls how many recent slow/error samples
+guarded `/queueDebug` keeps, defaulting to `10` and capped at `50`.
+
 ## Action Queue Backpressure
 
 The game bot keeps player action completion/start first. Creature queue work
