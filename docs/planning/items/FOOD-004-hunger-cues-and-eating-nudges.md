@@ -43,7 +43,7 @@ The character card shows hunger state, and inventory actions can eat available f
 ## Example Copy
 
 ```text
-Живіт стиха нагадує про себе. У речах є щось їстівне.
+Живіт стиха нагадує про себе. Серед речей є щось їстівне.
 ```
 
 ```text

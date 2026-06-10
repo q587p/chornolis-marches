@@ -87,8 +87,8 @@ export function fatigueGuidanceText(context: FatigueGuidanceContext = {}) {
     "",
     "Можна сісти й відпочити або лягти спати, якщо шлях уже тисне на плечі.",
   ];
-  if (context.hasBerries) lines.push("У Речах є ягоди: вони трохи повертають снагу й ледь вгамовують голод.");
-  else if (context.hasEdibleInventory) lines.push("У Речах є щось їстівне; іноді тілу треба не крок, а коротка пожива.");
+  if (context.hasBerries) lines.push("Серед речей є ягоди: вони трохи повертають снагу й ледь вгамовують голод.");
+  else if (context.hasEdibleInventory) lines.push("Серед речей є щось їстівне; іноді тілу треба не крок, а коротка пожива.");
   if (context.canBuildCampfire) lines.push("Є хмиз і факел: можна скласти вогнище, а біля вогню відпочинок легший.");
   return lines.join("\n");
 }

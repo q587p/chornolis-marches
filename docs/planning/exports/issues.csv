@@ -73,6 +73,7 @@ FOOD-004,Hunger cues and eating nudges,testing,feature,survival,medium,"food,hun
 FOOD-005,Hunger consequences for health and stamina recovery,backlog,feature,survival,medium,"food,hunger,hp,stamina,survival",docs/planning/items/FOOD-005-hunger-consequences.md
 FOOD-006,Mushroom varieties and identification,backlog,feature,survival,medium,"food,mushrooms,foraging,alchemy,risk",docs/planning/items/FOOD-006-mushroom-varieties-and-identification.md
 FOOD-007,Mushroom visions and dream effects,icebox,feature,survival,low,"food,mushrooms,dreams,visions,effects,alchemy",docs/planning/items/FOOD-007-mushroom-visions-and-dream-effects.md
+GATHER-001,Low-light foraging penalty warning,backlog,feature,gathering,medium,"gathering,visibility,light,skills,beginner-safety",docs/planning/items/GATHER-001-low-light-foraging-penalty-warning.md
 GIVE-001,Generic give command MVP and exchange bridge,next,feature,inventory,high,"give,inventory,items,targets,exchange,barter,cat,telegram",docs/planning/items/GIVE-001-give-command-and-exchange-bridge.md
 GIVE-002,Ukrainian inflection-tolerant give parser and grammar bridge,testing,technical,input,high,"give,input,parser,ukrainian,grammar,lexicon,inventory,targets,barter",docs/planning/items/GIVE-002-ukrainian-give-parser-grammar.md
 HERALD-001,Embedded main-service mode for Boundary Mark Chancery Herald,icebox,technical,ops,low,"herald,telegram,render,ops,architecture,icebox",docs/planning/items/HERALD-001-embedded-main-service-mode.md
@@ -210,6 +211,7 @@ SOC-007,Telegram UI and copy for contacts / follow / groups,next,feature,social,
 SOC-008,Speech ranges and vertical voice,testing,feature,social,high,"speech,social,mud-compatibility,stamina,verticality",docs/planning/items/SOC-008-speech-ranges-and-vertical-voice.md
 SOC-009,Mail and letter delivery,backlog,feature,social,medium,"social,mail,letters,items,settlement,async",docs/planning/items/SOC-009-mail-and-letter-delivery.md
 SOC-010,Greeting inspiration stamina,backlog,feature,social,medium,"social,greet,stamina,cooldown,anti-farm",docs/planning/items/SOC-010-greeting-inspiration-stamina.md
+SOC-011,Social signal posture gates and catalog expansion,backlog,feature,social,medium,"social,signals,posture,aliases,ux",docs/planning/items/SOC-011-social-signal-posture-and-catalog.md
 SOCIAL-003,Theft reaction signals,backlog,feature,social,medium,"social,theft,signals,reactions,0.15",docs/planning/items/SOCIAL-003-theft-reaction-signals.md
 SOUND-001,Neighboring animal sounds and loud nearby events,next,feature,world,medium,"atmosphere,sound,ecology,daypart,visibility",docs/planning/items/SOUND-001-neighboring-animal-sounds.md
 STAT-001,Web /stat predator species comparison table,testing,feature,web,medium,"web,stats,ecology,predators,owl,fox,wolf",docs/planning/items/STAT-001-web-predator-species-table.md

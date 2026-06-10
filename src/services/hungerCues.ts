@@ -21,13 +21,13 @@ export function hungerCueLevel(before: number, after: number, max = PLAYER_HUNGE
 export function hungerCueText(level: HungerCueLevel, context: { hasEdibleInventory?: boolean; canCookRawMeat?: boolean; hasLocalFood?: boolean } = {}) {
   if (context.hasEdibleInventory) {
     return level === "serious"
-      ? "Голод уже не просто тінь. У Речах є щось їстівне (/inventory)."
-      : "Живіт стиха нагадує про себе. У Речах є щось їстівне (/inventory).";
+      ? "Голод уже не просто тінь. Серед речей є щось їстівне (/inventory)."
+      : "Живіт стиха нагадує про себе. Серед речей є щось їстівне (/inventory).";
   }
 
   if (context.canCookRawMeat) {
     return level === "serious"
-      ? "Голод уже не просто тінь. У Речах є сире м'ясо; біля вогню його можна підсмажити."
+      ? "Голод уже не просто тінь. Серед речей є сире м'ясо; біля вогню його можна підсмажити."
       : "Живіт стиха нагадує про себе. Сире м'ясо можна підсмажити біля вогню.";
   }
 

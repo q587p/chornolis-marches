@@ -44,6 +44,7 @@ assert.equal(playerHungerAfterStaminaSpend({ currentHunger: 4, staminaAfter: -1,
 assert.equal(playerHungerAfterStaminaSpend({ currentHunger: 13, staminaAfter: 20, cost: 7 }), 13);
 
 assert.match(fatigueGuidanceText({ hasBerries: true, canBuildCampfire: true }), /ягоди/);
+assert.match(fatigueGuidanceText({ hasBerries: true, canBuildCampfire: true }), /Серед речей є ягоди/);
 assert.match(fatigueGuidanceText({ hasBerries: true, canBuildCampfire: true }), /вогнище/);
 const fatigueKeyboard = buildFatigueGuidanceKeyboard({ hasBerries: true, hasEdibleInventory: true, canBuildCampfire: true });
 assert.deepEqual(

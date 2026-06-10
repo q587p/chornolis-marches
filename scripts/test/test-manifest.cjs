@@ -102,6 +102,7 @@ module.exports = [
   nodeTest("scripts/test/creature-tick-budget.cjs"),
   nodeTest("scripts/test/runtime-status.cjs"),
   nodeTest("scripts/test/admin-reset.cjs"),
+  nodeTest("scripts/test/admin-stat-species.cjs"),
   nodeTest("scripts/test/admin-resources.cjs"),
   nodeTest("scripts/test/admin-creatures.cjs"),
   nodeTest("scripts/test/scribe-audit.cjs"),
