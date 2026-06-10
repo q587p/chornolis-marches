@@ -7,6 +7,19 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.28 - Performance telemetry analysis pack - 12026-06-10
+
+### Added
+
+- Added `docs/ops/performance-triage.md` with a 10-15 minute live validation procedure, snapshot checklist and evidence-based decision tree for existing action queue, recovery, Telegram, deferred follow-up and database telemetry.
+- Added `docs/ops/performance-observation-template.md` for pasting idle, active and after-drain runtime snapshots plus matching slow-log excerpts.
+- Added pure `summarizeQueueDebugText(...)` helper coverage for pasted guarded queue debug text, including recommendations for the next narrow PR category.
+- Added a post-`0.16.27` operational watchpoint requiring at least three snapshots before tuning queue, recovery, Telegram, database or backpressure behavior.
+
+### Risks
+
+- This release is documentation/read-only analysis support. It does not change gameplay, queue ordering, action durations, stamina/HP math, recovery cadence, creature backpressure thresholds, Telegram send semantics, deferred follow-up policy, Herald archive behavior, Prisma schema, migrations, SQL indexes or query behavior.
+
 ## 0.16.27 - Prisma query latency observability - 12026-06-10
 
 ### Added
