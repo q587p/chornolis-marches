@@ -311,7 +311,7 @@ export const ADMIN_HELP_TEXT = [
   "/chronicles_real — хроніки з реальними Europe/Kyiv датами й годинами для службової перевірки",
   "/chronicles_backfill_players — додати пропущені хроніки появи персонажів із Player.createdAt без дублів",
   "/stat — службова статистика й посилання на захищену веб-/stat",
-  "/queueDebug — службовий зріз черги дій: runtime pass, backpressure істот, фази, completion samples, queued/running/overdue за акторами",
+  "/queueDebug — службовий зріз черги дій: runtime pass, backpressure істот, фази, completion і Telegram send samples, queued/running/overdue за акторами",
   "/queueNudge — безпечно попросити службову чергу зробити один прохід без нового interval і без overlap",
   "/all — усі живі персонажі та істоти",
   "/all dead — усі записи істот, включно з inactive/dead/corpse/gone",

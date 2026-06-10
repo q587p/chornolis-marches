@@ -6,6 +6,7 @@ import {
   archiveRepublishStatus,
   cancelArchiveRepublishPendingPublications,
   DEFAULT_ARCHIVE_REPUBLISH_INTERVAL_MS,
+  archiveGapEntryLine,
   archiveRepublishGapReport,
   formatArchiveRepublishGapReply,
   formatBackfillInterval,
@@ -13,8 +14,10 @@ import {
   parseBackfillIntervalMs,
   newsBackfillStatus,
   previewArchiveRepublish,
+  previewArchiveRepublishContinue,
   previewNewsBackfill,
   queueArchiveRepublish,
+  queueArchiveRepublishContinue,
   queueNewsBackfill,
   readAllNewsEntries,
   rescheduleNewsBackfillPending,
@@ -135,6 +138,87 @@ function formatArchiveRepublishQueueReply(result: Awaited<ReturnType<typeof queu
     `Перший запис стане доступний: ${formatKyivDateTime(first.availableAt)}.`,
     `Останній із доданих: ${formatKyivDateTime(last.availableAt)}.`,
     "Формат каналу: звичайний архівний допис, без позначки повторної публікації.",
+  ].join("\n");
+}
+
+function parseRequiredArchiveContinueInterval(input: unknown) {
+  const raw = String(input ?? "").trim();
+  if (!raw) return null;
+  return parseBackfillIntervalMs(raw, DEFAULT_ARCHIVE_REPUBLISH_INTERVAL_MS);
+}
+
+function archiveContinueRefusalReply(result: {
+  total: number;
+  published?: number;
+  missing: number;
+  hasInternalHoles: boolean;
+  hasTailGap: boolean;
+}) {
+  const counts = [
+    "",
+    `У deployed news.md: ${result.total}.`,
+    `Видимих опублікованих архівних записів: ${result.published ?? "невідомо"}.`,
+    `Не знайдено в каналі/книзі: ${result.missing}.`,
+  ].join("\n");
+
+  if (!result.total) {
+    return `Канцелярія перечитала deployed news.md, але не знайшла архівних записів для продовження.${counts}`;
+  }
+  if (!result.missing) {
+    return `Канцелярія не знайшла пропущеного хвоста: deployed архів уже виглядає опублікованим.${counts}`;
+  }
+  if (result.hasInternalHoles) {
+    return [
+      "Канцелярія не ставить це в автоматичне продовження.",
+      counts,
+      "",
+      "Перед уже опублікованими пізнішими записами є внутрішні пропуски. Потрібна ручна звірка через /archive_republish_gap і /news_archive_post <index>.",
+    ].join("\n");
+  }
+  if (!result.hasTailGap) {
+    return [
+      "Канцелярія не знайшла безпечного хвоста після останнього видимого архівного запису.",
+      counts,
+      "",
+      "Це може означати, що архів ще не починався або порядок потребує ручної перевірки через /archive_republish_gap.",
+    ].join("\n");
+  }
+  return `Канцелярія не знайшла записів, які можна безпечно додати автоматичним продовженням.${counts}`;
+}
+
+function formatArchiveRepublishContinuePreviewReply(result: Awaited<ReturnType<typeof previewArchiveRepublishContinue>>) {
+  if (!result.canContinue) return archiveContinueRefusalReply(result);
+
+  return [
+    "Канцелярія звірила хвіст архіву для продовження.",
+    "",
+    `Run: ${result.runId}.`,
+    `Пропущений хвіст: ${result.missingTailCount}.`,
+    `Перший запис: ${result.first ? archiveGapEntryLine(result.first) : "немає"}.`,
+    `Останній запис: ${result.last ? archiveGapEntryLine(result.last) : "немає"}.`,
+    `Інтервал: ${formatBackfillInterval(result.intervalMs)}.`,
+    result.firstAvailableAt ? `Перший стане доступний: ${formatKyivDateTime(result.firstAvailableAt)}.` : "Перший стане доступний: немає.",
+    result.estimatedLastAvailableAt ? `Останній стане доступний: ${formatKyivDateTime(result.estimatedLastAvailableAt)}.` : "Останній стане доступний: немає.",
+    `Уже стоїть у continue-черзі: ${result.alreadyQueued}.`,
+  ].join("\n");
+}
+
+function formatArchiveRepublishContinueQueueReply(result: Awaited<ReturnType<typeof queueArchiveRepublishContinue>>) {
+  if (!result.canContinue) return archiveContinueRefusalReply(result);
+
+  return [
+    "Канцелярія поставила хвіст архіву в чергу.",
+    "",
+    `Run: ${result.runId}.`,
+    `Додано: ${result.queued.length}.`,
+    `Пропущено як уже наявні: ${result.skippedExisting}.`,
+    `Перший запис: ${result.first ? archiveGapEntryLine(result.first) : "немає"}.`,
+    `Останній запис: ${result.last ? archiveGapEntryLine(result.last) : "немає"}.`,
+    `Інтервал: ${formatBackfillInterval(result.intervalMs)}.`,
+    result.firstAvailableAt ? `Перший стане доступний: ${formatKyivDateTime(result.firstAvailableAt)}.` : "Перший стане доступний: немає.",
+    result.lastAvailableAt ? `Останній стане доступний: ${formatKyivDateTime(result.lastAvailableAt)}.` : "Останній стане доступний: немає.",
+    "",
+    "Публікацію не відновлено автоматично. Якщо скриня на паузі, скористайтеся /resume_publications.",
   ].join("\n");
 }
 
@@ -337,6 +421,48 @@ export function registerHeraldNewsBackfillCommands(bot: Bot, heraldAdminIds: Rea
     } catch (error) {
       console.error("Herald archive republish gap failed:", publicationErrorMessage(error));
       await ctx.reply("Канцелярія не змогла звірити deployed news.md із книгою архівних публікацій. Подробиці записано в logs.");
+    }
+  });
+
+  bot.command("archive_republish_continue_preview", async (ctx) => {
+    if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
+
+    try {
+      const intervalMs = parseRequiredArchiveContinueInterval(ctx.match);
+      if (intervalMs === null) {
+        await ctx.reply("Канцелярія не впізнала інтервал. Спробуйте: /archive_republish_continue_preview 30m");
+        return;
+      }
+
+      const entries = await readEntriesForArchiveGapOrReply(ctx);
+      if (!entries) return;
+
+      const result = await previewArchiveRepublishContinue(entries, intervalMs);
+      await ctx.reply(formatArchiveRepublishContinuePreviewReply(result));
+    } catch (error) {
+      console.error("Herald archive republish continue preview failed:", publicationErrorMessage(error));
+      await ctx.reply("Канцелярія не змогла підготувати перегляд продовження архівного хвоста.");
+    }
+  });
+
+  bot.command("archive_republish_continue", async (ctx) => {
+    if (!(await requireHeraldAdmin(ctx, heraldAdminIds))) return;
+
+    try {
+      const intervalMs = parseRequiredArchiveContinueInterval(ctx.match);
+      if (intervalMs === null) {
+        await ctx.reply("Канцелярія не впізнала інтервал. Спробуйте: /archive_republish_continue 30m");
+        return;
+      }
+
+      const entries = await readEntriesForArchiveGapOrReply(ctx);
+      if (!entries) return;
+
+      const result = await queueArchiveRepublishContinue(entries, intervalMs);
+      await ctx.reply(formatArchiveRepublishContinueQueueReply(result));
+    } catch (error) {
+      console.error("Herald archive republish continue failed:", publicationErrorMessage(error));
+      await ctx.reply("Канцелярія не змогла поставити продовження архівного хвоста в чергу.");
     }
   });
 

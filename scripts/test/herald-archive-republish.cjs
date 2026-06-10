@@ -4,6 +4,7 @@ require("ts-node/register");
 
 const { formatHeraldPublicationMessage } = require("../../src/herald/format");
 const {
+  archiveRepublishContinueContentHash,
   archiveRepublishContentHash,
   archiveRepublishGapReport,
   cancelArchiveRepublishPendingPublications,
@@ -12,7 +13,9 @@ const {
   NEWS_ARCHIVE_REPUBLISH_SOURCE_TYPE,
   NEWS_ARCHIVE_SOURCE_TYPE,
   previewArchiveRepublish,
+  previewArchiveRepublishContinue,
   queueArchiveRepublish,
+  queueArchiveRepublishContinue,
 } = require("../../src/herald/newsBackfill");
 const { parseNewsEntries } = require("../../src/herald/newsMarkdown");
 
@@ -358,6 +361,91 @@ async function run() {
     const gap = await archiveRepublishGapReport(entries, undefined, store);
     assert.equal(gap.missing, 0);
     assert.match(formatArchiveRepublishGapReply(gap), /повністю опублікованим/);
+  }
+
+  {
+    const ordered = entries.slice().sort((left, right) => left.sourceVersion.localeCompare(right.sourceVersion));
+    const { rows, store } = createPublicationStore([
+      republishSeed(ordered[0], "published", 901),
+      archiveSeed(ordered[1], "published", 902),
+    ]);
+    const now = new Date("2026-06-07T12:00:00.000Z");
+    const intervalMs = 30 * 60 * 1000;
+    const preview = await previewArchiveRepublishContinue(entries, intervalMs, now, store);
+
+    assert.equal(preview.canContinue, true);
+    assert.equal(preview.missingTailCount, 2);
+    assert.equal(preview.first.index, 3);
+    assert.equal(preview.last.index, 4);
+    assert.equal(preview.firstAvailableAt.toISOString(), "2026-06-07T12:00:00.000Z");
+    assert.equal(preview.estimatedLastAvailableAt.toISOString(), "2026-06-07T12:30:00.000Z");
+    assert.equal(preview.alreadyQueued, 0);
+
+    const result = await queueArchiveRepublishContinue(entries, intervalMs, now, store);
+    assert.equal(result.canContinue, true);
+    assert.equal(result.queued.length, 2);
+    assert.equal(result.skippedExisting, 0);
+    assert.deepEqual(result.queued.map((row) => row.title), [
+      "0.4.2 -- Third -- 12026-05-03",
+      "0.4.3 -- Fourth -- 12026-05-04",
+    ]);
+    assert.deepEqual(result.queued.map((row) => row.sourceType), Array(2).fill(NEWS_ARCHIVE_REPUBLISH_SOURCE_TYPE));
+    assert.deepEqual(result.queued.map((row) => row.archiveOrder), [2, 3]);
+    assert.deepEqual(result.queued.map((row) => row.availableAt.toISOString()), [
+      "2026-06-07T12:00:00.000Z",
+      "2026-06-07T12:30:00.000Z",
+    ]);
+    assert.deepEqual(result.queued.map((row) => row.contentHash), [
+      archiveRepublishContinueContentHash(ordered[2].contentHash),
+      archiveRepublishContinueContentHash(ordered[3].contentHash),
+    ]);
+    assert.notEqual(result.queued[0].contentHash, ordered[2].contentHash);
+    assert.notEqual(result.queued[0].contentHash, archiveRepublishContentHash(ordered[2].contentHash));
+    assert.match(result.queued[0].renderedText, /📜 З архіву Канцелярії/);
+    assert.doesNotMatch(result.queued[0].renderedText, /Повторна публікація|repost/i);
+    assert.equal(rows.length, 4);
+
+    const second = await queueArchiveRepublishContinue(entries, intervalMs, new Date("2026-06-07T13:00:00.000Z"), store);
+    assert.equal(second.canContinue, true);
+    assert.equal(second.queued.length, 0);
+    assert.equal(second.skippedExisting, 2);
+    assert.equal(rows.length, 4, "running continue twice must not duplicate queued tail rows");
+
+    const gap = await archiveRepublishGapReport(entries, undefined, store);
+    assert.equal(gap.missing, 2, "queued continue rows are still missing until publisher posts them");
+    assert.equal(gap.queuedContinue, 2);
+    assert.match(formatArchiveRepublishGapReply(gap), /У черзі продовження хвоста: 2/);
+    assert.match(formatArchiveRepublishGapReply(gap), /continue-черзі/);
+  }
+
+  {
+    const ordered = entries.slice().sort((left, right) => left.sourceVersion.localeCompare(right.sourceVersion));
+    const { rows, store } = createPublicationStore([
+      republishSeed(ordered[0], "published", 1001),
+      republishSeed(ordered[2], "published", 1002),
+    ]);
+    const result = await queueArchiveRepublishContinue(entries, DEFAULT_ARCHIVE_REPUBLISH_INTERVAL_MS, new Date("2026-06-07T12:00:00.000Z"), store);
+    assert.equal(result.canContinue, false);
+    assert.equal(result.hasInternalHoles, true);
+    assert.equal(result.queued.length, 0);
+    assert.equal(rows.length, 2, "internal holes require manual review and must not queue continue rows");
+  }
+
+  {
+    const { rows, store } = createPublicationStore();
+    const result = await queueArchiveRepublishContinue(entries, DEFAULT_ARCHIVE_REPUBLISH_INTERVAL_MS, new Date("2026-06-07T12:00:00.000Z"), store);
+    assert.equal(result.canContinue, false);
+    assert.equal(result.hasTailGap, false);
+    assert.equal(result.queued.length, 0);
+    assert.equal(rows.length, 0, "without a latest published archive row there is no safe tail to continue");
+  }
+
+  {
+    const commandsSource = require("node:fs").readFileSync("src/herald/newsBackfillCommands.ts", "utf8");
+    assert.match(commandsSource, /bot\.command\("archive_republish_continue_preview"/);
+    assert.match(commandsSource, /bot\.command\("archive_republish_continue"/);
+    assert.match(commandsSource, /\/archive_republish_continue 30m/);
+    assert.doesNotMatch(commandsSource, /publishPendingHeraldPublications|resume_publications\(/, "continue command must not publish or resume automatically");
   }
 }
 

@@ -6,8 +6,14 @@ const {
   isTelegramBlockedByUserError,
   safeSendMessage,
 } = require("../../src/utils/telegram");
+const {
+  getTelegramSendRuntimeSnapshot,
+  resetTelegramSendRuntimeSnapshotForTests,
+} = require("../../src/runtimeState");
 
 (async () => {
+  resetTelegramSendRuntimeSnapshotForTests();
+
   const blockedError = {
     error_code: 403,
     description: "Forbidden: bot was blocked by the user",
@@ -30,8 +36,8 @@ const {
       },
     };
     assert.equal(await safeSendMessage(blockedBot, "123", "hello", undefined, "test blocked"), null);
-    assert.equal(warnings.length, 1);
-    assert.equal(warnings[0][0], "test blocked skipped: bot was blocked by the user");
+    assert.equal(warnings.length, 0);
+    assert.equal(getTelegramSendRuntimeSnapshot().blockedSinceStart, 1);
   } finally {
     console.warn = originalWarn;
   }
@@ -44,7 +50,16 @@ const {
       },
     },
   };
-  await assert.rejects(() => safeSendMessage(failingBot, "123", "hello"), unexpected);
+  const failingWarnings = [];
+  const originalFailingWarn = console.warn;
+  console.warn = (...args) => failingWarnings.push(args);
+  try {
+    await assert.rejects(() => safeSendMessage(failingBot, "123", "hello"), unexpected);
+    assert.equal(failingWarnings.length, 1);
+    assert.match(failingWarnings[0][0], /slow:telegramSend context=sendMessage durationMs=\d+ outcome=error error=network fell over/);
+  } finally {
+    console.warn = originalFailingWarn;
+  }
 
   const okBot = {
     api: {

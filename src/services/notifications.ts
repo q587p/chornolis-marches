@@ -2,6 +2,7 @@ import { Bot, InlineKeyboard } from "grammy";
 import { config } from "../config";
 import { prisma } from "../db";
 import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
+import { safeSendMessage } from "../utils/telegram";
 import { canSendProactiveToTelegramId } from "./sessionPresence";
 import { isTutorialLocation } from "./tutorial";
 import { canReceiveDaypartNotice } from "./playerNotificationSettings";
@@ -280,11 +281,11 @@ async function sendLocationNotification(bot: Bot, player: { telegramId: string; 
       if (options.replaceKey) {
         await clearPreviousInlineKey(bot, player.telegramId, options.replaceKey);
       }
-      const message = await bot.api.sendMessage(player.telegramId, text, {
+      const message = await safeSendMessage(bot, player.telegramId, text, {
         parse_mode: options.parseMode,
         reply_markup: options.keyboard ?? await mainKeyboardForPlayer(player.telegramId),
-      });
-      if (options.replaceKey && options.keyboard) {
+      }, "notifyLocation");
+      if (message && options.replaceKey && options.keyboard) {
         latestInlineMessageByChatAndKey.set(inlineMessageKey(player.telegramId, options.replaceKey), message.message_id);
       }
     };
@@ -346,7 +347,7 @@ export async function notifyRegion(bot: Bot, regionId: number, text: string) {
   for (const player of players) {
     try {
       if (!(await canSendProactiveToTelegramId(player.telegramId))) continue;
-      await bot.api.sendMessage(player.telegramId, text, { reply_markup: await mainKeyboardForPlayer(player.telegramId) });
+      await safeSendMessage(bot, player.telegramId, text, { reply_markup: await mainKeyboardForPlayer(player.telegramId) }, "notifyRegion");
     } catch (error) {
       console.warn("Failed to notify region player:", error);
     }
@@ -362,10 +363,10 @@ export async function notifyAllCurrentPlayers(bot: Bot, text: string, options: {
   for (const player of players) {
     try {
       if (!(await canSendProactiveToTelegramId(player.telegramId))) continue;
-      await bot.api.sendMessage(player.telegramId, text, {
+      await safeSendMessage(bot, player.telegramId, text, {
         parse_mode: options.parseMode,
         reply_markup: await mainKeyboardForPlayer(player.telegramId),
-      });
+      }, "notifyAllCurrentPlayers");
     } catch (error) {
       console.warn("Failed to notify current player:", error);
     }
@@ -391,10 +392,10 @@ export async function notifyAllWakingCurrentPlayers(bot: Bot, text: string, opti
     if (isDreamLocationForWorldNotice(player.currentLocation)) continue;
     try {
       if (!(await canSendProactiveToTelegramId(player.telegramId))) continue;
-      await bot.api.sendMessage(player.telegramId, text, {
+      await safeSendMessage(bot, player.telegramId, text, {
         parse_mode: options.parseMode,
         reply_markup: await mainKeyboardForPlayer(player.telegramId),
-      });
+      }, "notifyAllWakingCurrentPlayers");
     } catch (error) {
       console.warn("Failed to notify waking current player:", error);
     }
@@ -429,10 +430,10 @@ export async function notifyAllDaypartNoticePlayers(bot: Bot, text: string, opti
 
     try {
       if (!(await canSendProactiveToTelegramId(player.telegramId))) continue;
-      await bot.api.sendMessage(player.telegramId, text, {
+      await safeSendMessage(bot, player.telegramId, text, {
         parse_mode: options.parseMode,
         reply_markup: await mainKeyboardForPlayer(player.telegramId),
-      });
+      }, "notifyAllDaypartNoticePlayers");
     } catch (error) {
       console.warn("Failed to notify daypart player:", error);
     }
@@ -447,10 +448,10 @@ export async function notifyRegionExcept(bot: Bot, regionId: number, exceptPlaye
   for (const player of players) {
     try {
       if (!(await canSendProactiveToTelegramId(player.telegramId))) continue;
-      await bot.api.sendMessage(player.telegramId, text, {
+      await safeSendMessage(bot, player.telegramId, text, {
         parse_mode: options.parseMode,
         reply_markup: await mainKeyboardForPlayer(player.telegramId),
-      });
+      }, "notifyRegionExcept");
     } catch (error) {
       console.warn("Failed to notify region player:", error);
     }
@@ -472,7 +473,7 @@ export async function notifyRegionScribeAdmins(bot: Bot, regionId: number, text:
   for (const player of players) {
     try {
       if (!(await canSendProactiveToTelegramId(player.telegramId))) continue;
-      await bot.api.sendMessage(player.telegramId, text, { reply_markup: await mainKeyboardForPlayer(player.telegramId) });
+      await safeSendMessage(bot, player.telegramId, text, { reply_markup: await mainKeyboardForPlayer(player.telegramId) }, "notifyRegionScribeAdmins");
     } catch (error) {
       console.warn("Failed to notify region scribe/admin:", error);
     }
@@ -495,7 +496,7 @@ export async function notifyRegionTechnicalScribes(bot: Bot, regionId: number, t
   for (const player of players) {
     try {
       if (!(await canSendProactiveToTelegramId(player.telegramId))) continue;
-      await bot.api.sendMessage(player.telegramId, text, { reply_markup: await mainKeyboardForPlayer(player.telegramId) });
+      await safeSendMessage(bot, player.telegramId, text, { reply_markup: await mainKeyboardForPlayer(player.telegramId) }, "notifyRegionTechnicalScribes");
     } catch (error) {
       console.warn("Failed to notify region technical scribe/admin:", error);
     }
