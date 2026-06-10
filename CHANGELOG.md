@@ -7,6 +7,24 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.27 - Prisma query latency observability - 12026-06-10
+
+### Added
+
+- Added sanitized runtime observations for Prisma model query duration, outcome and compact error context.
+- Extended guarded `/queueDebug` output with database query totals, recent slow query samples and recent query error samples.
+- Added `slow:databaseQuery` console warnings for slow or failed Prisma model operations without logging query arguments, SQL, parameters, Telegram chat ids, message text, payloads, tokens, secrets or whispers.
+- Added focused database-query diagnostics tests and source-boundary coverage for the shared Prisma client instrumentation.
+
+### Changed
+
+- The shared Prisma client now passes model operations through a central observation extension while preserving the original query calls and error propagation.
+
+### Risks
+
+- This release is observability only and does not change query shape, indexes, Prisma schema, migrations, queue ordering, action duration, stamina/HP math, recovery cadence, backpressure, Telegram/deferred behavior, Herald behavior or gameplay rules.
+- Raw query calls outside Prisma model operations are not broadened in this PR; use the new diagnostics as a first pass before considering narrower query/index work.
+
 ## 0.16.26 - Deferred non-critical Telegram follow-ups - 12026-06-10
 
 ### Added
