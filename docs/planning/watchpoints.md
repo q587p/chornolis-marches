@@ -30,6 +30,7 @@ Current cautions and live-watch notes that should inform near-term work without 
 ## Content And Ecology Watchpoints
 
 - More active Strange Totems can make wilderness curiosity denser, especially across `dry_luka` and `chornolis_border`; watch `/look` clutter before increasing caps again.
+- Technical trace actors such as `strange_totem_trace` should not sit beside Lisovyk, herbalists or hunters in the admin/status "Особливі присутності" block forever. A focused status polish pass should either move them into a separate "службові сліди" style block or hide them from the living-world presence summary without changing totem behavior.
 - Do not turn the Lisovyk restoration-walk MVP into a broad forest rewrite. Future Lisovyk character work should deliberately choose whether he remains an old-forest mentor/watchful local presence or becomes a sharper spirit/threshold figure.
 - Fauna diversity should keep hawks, frogs and snakes region-appropriate without widening into a full seasonal ecology simulation.
 - Apiary content is a completed/testing endpoint for now: old log apiary, passive bumblebee hazard and risky honey/beeswax harvest exist; bear honey behavior and deeper honey/wax uses remain backlog/future.
@@ -43,3 +44,12 @@ Current cautions and live-watch notes that should inform near-term work without 
 
 - If event marker lookups keep growing, move hot cooldown/dedupe keys out of `description contains` scans and into structured storage.
 - Keep planning status changes conservative. Retag only when the item itself clearly changed state, not just because the surrounding roadmap moved.
+- Action dedupe for rapid Telegram callbacks is currently best-effort before action creation, not DB-atomic. This is good enough for ordinary click spam, but if duplicate active actions still appear in production, harden it in a later PR with a transactional or unique-key mechanism instead of adding more pre-create checks.
+- Repeated callbacks can still produce a later "already running/queued" chat reply after the early accepted feedback. This is acceptable while it prevents queue spam; if it feels noisy in live play, quiet repeated callback feedback in a small UX pass.
+- Recovery/rest/sleep notifications may land on the separate recovery loop cadence, up to roughly five seconds. That is the intended action-queue responsiveness tradeoff from the recovery decoupling work; tune only if live UX feels stale.
+- `0.16.22` recovery diagnostics intentionally included the read-only Herald archive gap check. Keep that scope honest in release notes, but do not treat archive diagnostics as action-queue performance work in future slices.
+- Player recovery still scans all players because it owns idle reminders, sleep auto-wake, rest messages and active refresh side effects. Do not narrow that scan without a focused side-effect audit.
+- Creature recovery candidates can include fully recovered creatures with custom stamina maxima because `staminaMax > BASE_STAMINA` is conservative. If `/queueDebug` still shows high `creaturesScanned`, refine the predicates later with production evidence.
+- Creature backpressure `limited` and `pause-starts` are intentionally close under default config because `startBatch = 0`; their difference is mode/threshold/env override. If lag remains while `creatureCompleteMs` is small, look next at recovery, status or debug queries.
+- Creature backpressure currently reacts to overdue running player actions, not a large queued player backlog without overdue. Keep that conservative until live data shows queued-only pressure needs to influence creature starts.
+- The default post-mentorship brewing hint chance may be a little generous at `0.35`, but the trigger is narrow and guarded by a one-time marker. If live play surfaces the hint too quickly, lower the env/config chance without changing the design.
