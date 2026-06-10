@@ -42,6 +42,7 @@ Current cautions and live-watch notes that should inform near-term work without 
 
 ## Operational Watchpoints
 
+- After `0.16.27`, collect at least three guarded queue snapshots under load before changing queue/backpressure/recovery/query behavior: idle baseline, active repeated-action sample and after-drain sample. Treat the next implementation PR as exactly one of database/index/query tuning, recovery pruning, Telegram delivery/deferred tuning, creature backpressure threshold tuning or action-specific optimization. Do not implement several categories at once unless the telemetry strongly points to the same bottleneck.
 - If event marker lookups keep growing, move hot cooldown/dedupe keys out of `description contains` scans and into structured storage.
 - Keep planning status changes conservative. Retag only when the item itself clearly changed state, not just because the surrounding roadmap moved.
 - Action dedupe DB atomicity: current dedupe is pre-create best-effort and good enough for rapid Telegram clicks, but not a strict DB-level guarantee. A later hardening PR can add transactional or unique-key protection if duplicate active actions still appear in production.
