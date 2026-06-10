@@ -7,9 +7,9 @@ import {
   type TelegramSendOutcome,
 } from "../runtimeState";
 
-type SendMessageOptions = Parameters<Bot["api"]["sendMessage"]>[2];
+export type SendMessageOptions = Parameters<Bot["api"]["sendMessage"]>[2];
 
-const TELEGRAM_DIAGNOSTIC_REDACTIONS = /\b(chatId|chat id|payload|token|secret|private whisper|whisper|message text|messageText)\b/gi;
+const TELEGRAM_DIAGNOSTIC_REDACTIONS = /\b(chatId|chat id|payload|token|secret|private whisper|whisper|message text|messageText|raw body)\b/gi;
 
 function sanitizeTelegramDiagnosticText(value: unknown, fallback: string, maxLength: number) {
   const text = String(value || fallback)
@@ -32,7 +32,7 @@ function sendHasReplyMarkup(options?: SendMessageOptions) {
   return Boolean(options && "reply_markup" in options && options.reply_markup);
 }
 
-function markObservedSend(
+function recordObservedTelegramSend(
   context: string,
   startedAt: number,
   outcome: TelegramSendOutcome,
@@ -85,14 +85,36 @@ export async function safeSendMessage(
   const startedAt = Date.now();
   try {
     const message = await bot.api.sendMessage(chatId, text, options);
-    markObservedSend(context, startedAt, "ok", null, options);
+    recordObservedTelegramSend(context, startedAt, "ok", null, options);
     return message;
   } catch (error) {
     if (isTelegramBlockedByUserError(error)) {
-      markObservedSend(context, startedAt, "blocked", error, options);
+      recordObservedTelegramSend(context, startedAt, "blocked", error, options);
       return null;
     }
-    markObservedSend(context, startedAt, "error", error, options);
+    recordObservedTelegramSend(context, startedAt, "error", error, options);
+    throw error;
+  }
+}
+
+export async function observedSendMessage(
+  bot: Bot,
+  chatId: string | number,
+  text: string,
+  options?: SendMessageOptions,
+  context = "sendMessage",
+) {
+  const startedAt = Date.now();
+  try {
+    const message = await bot.api.sendMessage(chatId, text, options);
+    recordObservedTelegramSend(context, startedAt, "ok", null, options);
+    return message;
+  } catch (error) {
+    if (isTelegramBlockedByUserError(error)) {
+      recordObservedTelegramSend(context, startedAt, "blocked", error, options);
+      throw error;
+    }
+    recordObservedTelegramSend(context, startedAt, "error", error, options);
     throw error;
   }
 }

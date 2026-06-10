@@ -190,6 +190,14 @@ and defaults to `1000`. `TELEGRAM_SEND_SAMPLE_LIMIT` controls how many recent
 slow/error samples guarded `/queueDebug` keeps, defaulting to `10` and capped at
 `50`.
 
+As of `0.16.25`, selected direct action completion, recovery and torch-fading
+sends also use the same sanitized Telegram send telemetry through
+`observedSendMessage`. That helper preserves direct-send delivery semantics:
+success returns the Telegram message, blocked-user errors are recorded as
+`blocked` and rethrown, and other send errors are recorded as `error` and
+rethrown. `safeSendMessage` remains the fan-out helper that returns `null` for
+blocked-user errors.
+
 As of `0.16.22`, the recovery loop also records a compact runtime snapshot for
 guarded `/queueDebug`: player/creature phase durations, scanned/updated player
 counts, active-player skips, proactive recovery messages, creature candidates
@@ -211,6 +219,9 @@ As of `0.16.24`, guarded `/queueDebug` also shows `telegramSend`,
 completion timings look healthy but notification delivery or high-volume fan-out
 paths are suspected. This is observability only: sends remain awaited, serial
 notification loops remain serial, and blocked-user handling remains unchanged.
+As of `0.16.25`, that same section also includes selected direct action
+completion, recovery and torch-fading sends; direct sends still rethrow Telegram
+errors exactly as before.
 
 ## Action Queue Backpressure
 

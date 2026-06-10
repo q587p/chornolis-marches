@@ -6,6 +6,7 @@ import { canPickUpGroundItem } from "./groundItems";
 import { canSendProactiveToTelegramId } from "./sessionPresence";
 import { MINUTES_PER_WORLD_DAY } from "../data/worldClock";
 import { ensureWorldState } from "./worldTime";
+import { observedSendMessage } from "../utils/telegram";
 
 export const CAMPFIRE_DURATION_MS = 16 * 60_000;
 export const CAMPFIRE_FADING_MS = 4 * 60_000;
@@ -629,9 +630,9 @@ export async function notifyFadingFireTimers(bot: Bot) {
     try {
       if (!(await canSendProactiveToTelegramId(resource.player.telegramId))) continue;
       const torchState = await getPlayerTorchState(resource.playerId);
-      await bot.api.sendMessage(resource.player.telegramId, TORCH_FADING_WARNING_TEXT, {
+      await observedSendMessage(bot, resource.player.telegramId, TORCH_FADING_WARNING_TEXT, {
         reply_markup: torchFadingWarningReplyMarkup(torchState),
-      });
+      }, "fire.fadingTorchNotice");
       await markTimerWarning(marker, resource.player.currentLocationId, resource.playerId);
     } catch (error) {
       console.warn("Failed to notify fading torch:", error);

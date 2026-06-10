@@ -11,7 +11,7 @@ assert.equal(hungerCueLevel(8, 9, 13), null);
 assert.equal(hungerCueLevel(11, 12, 13), "serious");
 assert.equal(hungerCueLevel(12, 13, 13), null);
 
-assert.match(hungerCueText("notice", { hasEdibleInventory: true }), /Речах є щось їстівне \(\/inventory\)/);
+assert.match(hungerCueText("notice", { hasEdibleInventory: true }), /Серед речей є щось їстівне \(\/inventory\)/);
 assert.match(hungerCueText("serious", { canCookRawMeat: true }), /сире м'ясо/);
 assert.match(hungerCueText("notice", { hasLocalFood: true }), /дрібна пожива/);
 assert.match(hungerCueText("serious"), /Варто поїсти/);

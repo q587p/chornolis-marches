@@ -51,6 +51,7 @@ const DEBUG_SET_TEXT_COMMAND = slashlessCommandPattern(["debugSet", "debugset"])
 const RESTART_TEXT_COMMAND = slashlessCommandPattern(["restart"]);
 const LOCATION_ALL_TEXT_COMMAND = slashlessCommandPattern(["locationAll", "locationall"]);
 const WORLD_TEXT_COMMAND = slashlessCommandPattern(["world"]);
+const STAT_SPECIES_TEXT_COMMAND = slashlessCommandPattern(["stat_species", "stats_species", "stat species", "species stats", "види", "статистика видів", "види тварин"]);
 const ALL_TEXT_COMMAND = slashlessCommandPattern(["all"]);
 const REST_ADMIN_TEXT_COMMAND = slashlessCommandPattern(["restAdmin", "restadmin"]);
 const PLAYER_ADMIN_TEXT_COMMAND = slashlessCommandPattern(["playerAdmin", "playeradmin", "player"]);
@@ -172,6 +173,34 @@ function genderedPast(player: { grammaticalGender?: string | null; pronoun?: str
 
 function playerPresenceName(player: Parameters<typeof playerForms>[0] & { sessionPresence?: string | null }) {
   return `${playerForms(player).nominative}${playerPresenceDisplaySuffix(player)}`;
+}
+
+type SpeciesStatsDisplayRow = {
+  key: string;
+  name: string;
+  alive: number;
+  corpses: number;
+  ages: {
+    CHILD: number;
+    YOUNG: number;
+    ADULT: number;
+    OLD: number;
+  };
+};
+
+export function formatSpeciesStatsBlock(speciesRows: SpeciesStatsDisplayRow[]) {
+  const speciesLines = speciesRows.map((row) => `${row.name} [${row.key}]: живі ${formatStatNumber(row.alive)}; вік ${row.ages.CHILD}/${row.ages.YOUNG}/${row.ages.ADULT}/${row.ages.OLD}; трупи ${formatStatNumber(row.corpses)}`);
+  return [
+    "Види:",
+    speciesLines.length ? speciesLines.join("\n") : "поки немає тварин",
+  ].join("\n");
+}
+
+export async function buildStatSpeciesBrief() {
+  const stats = await getEcologyStats();
+  return {
+    text: formatSpeciesStatsBlock(stats.speciesRows),
+  };
 }
 
 export async function buildStatBrief() {
@@ -336,6 +365,13 @@ async function replyStatBrief(ctx: any) {
 
   const stat = await buildStatBrief();
   await ctx.reply(stat.text, { reply_markup: stat.keyboard });
+}
+
+async function replyStatSpeciesBrief(ctx: any) {
+  if (!(await requireScribeAdmin(ctx))) return;
+
+  const stat = await buildStatSpeciesBrief();
+  await ctx.reply(stat.text);
 }
 
 async function replyAllPage(ctx: any, request: AllReturnContext = parseAllRequest()) {
@@ -1614,6 +1650,8 @@ export function registerStatusHandlers(bot: Bot) {
   bot.hears(["🌲 Світ", "Світ", "🌲 Світ (/world)", "Світ (/world)"], replyWorldStatus);
 
   bot.command(["stat", "stats"], replyStatBrief);
+  bot.command(["stat_species", "stats_species"], replyStatSpeciesBrief);
+  bot.hears(STAT_SPECIES_TEXT_COMMAND, replyStatSpeciesBrief);
 
   bot.command("who", async (ctx) => {
     const page = await buildWhoPage(0);
@@ -1702,6 +1740,7 @@ export function registerStatusHandlers(bot: Bot) {
   bot.hears(["✨ Відновити снагу", "Відновити снагу", "✨ Відновити снагу (/restAdmin)", "Відновити снагу (/restAdmin)"], (ctx) => runRestAdminCommand(bot, ctx, ""));
 
   bot.hears(["📊 Статистика", "Статистика", "📊 Статистика (/stat)", "Статистика (/stat)"], replyStatBrief);
+  bot.hears(["🐾 Види", "Види", "🐾 Види (/stat_species)", "Види (/stat_species)"], replyStatSpeciesBrief);
 
   bot.command("all", async (ctx) => {
     await replyAllPage(ctx, parseAllRequest(ctx.match ?? ""));

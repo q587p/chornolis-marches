@@ -31,6 +31,7 @@ import { canSendProactiveToTelegramId, claimIdleReminderForPlayerScene, idleRemi
 import { buildDaypartNoticeHintKeyboard, recordOrdinaryWakeAndClaimDaypartHint } from "./playerNotificationSettings";
 import { CAMPFIRE_BUILD_TWIG_COST } from "./fire";
 import type { RecoveryPassMetrics } from "../runtimeState";
+import { observedSendMessage } from "../utils/telegram";
 
 export function fatigueStateFor(stamina: number, staminaMax = BASE_STAMINA): FatigueState {
   if (stamina <= VERY_TIRED_STAMINA) return "VERY_TIRED";
@@ -86,8 +87,8 @@ export function fatigueGuidanceText(context: FatigueGuidanceContext = {}) {
     "",
     "Можна сісти й відпочити або лягти спати, якщо шлях уже тисне на плечі.",
   ];
-  if (context.hasBerries) lines.push("У Речах є ягоди: вони трохи повертають снагу й ледь вгамовують голод.");
-  else if (context.hasEdibleInventory) lines.push("У Речах є щось їстівне; іноді тілу треба не крок, а коротка пожива.");
+  if (context.hasBerries) lines.push("Серед речей є ягоди: вони трохи повертають снагу й ледь вгамовують голод.");
+  else if (context.hasEdibleInventory) lines.push("Серед речей є щось їстівне; іноді тілу треба не крок, а коротка пожива.");
   if (context.canBuildCampfire) lines.push("Є хмиз і факел: можна скласти вогнище, а біля вогню відпочинок легший.");
   return lines.join("\n");
 }
@@ -172,7 +173,7 @@ async function knockOutPlayer(bot: Bot, player: { id: number }, chatId?: number 
     data: { hp: 0, sleepState: "AWAKE", ordinarySleepStartedAtMinute: null, isResting: true, fatigueState: "VERY_TIRED", lastHpRegenAt: new Date(), lastStaminaRegenAt: new Date() },
   });
   if (chatId) {
-    await bot.api.sendMessage(chatId, "Життя впало до 0. Ви втрачаєте свідомість. Черга очищена, починається відпочинок. Поки життя не підніметься хоча б до 1, доступний лише відпочинок.", { reply_markup: buildFatigueRestKeyboard() });
+    await observedSendMessage(bot, chatId, "Життя впало до 0. Ви втрачаєте свідомість. Черга очищена, починається відпочинок. Поки життя не підніметься хоча б до 1, доступний лише відпочинок.", { reply_markup: buildFatigueRestKeyboard() }, "actionRecovery.knockoutNotice");
   }
 }
 
@@ -237,10 +238,10 @@ async function spendPlayerStaminaCost(bot: Bot, playerId: number, cost: number, 
       : null;
     for (const message of messages) {
       if (message === FATIGUE_NOTICE_TEXT) {
-        await bot.api.sendMessage(chatId, fatigueGuidanceText(fatigueGuidanceContext ?? {}), { reply_markup: buildFatigueGuidanceKeyboard(fatigueGuidanceContext ?? {}) });
+        await observedSendMessage(bot, chatId, fatigueGuidanceText(fatigueGuidanceContext ?? {}), { reply_markup: buildFatigueGuidanceKeyboard(fatigueGuidanceContext ?? {}) }, "actionRecovery.fatigueGuidance");
         continue;
       }
-      await bot.api.sendMessage(chatId, message, refreshedKeyboard ? { reply_markup: refreshedKeyboard } : undefined);
+      await observedSendMessage(bot, chatId, message, refreshedKeyboard ? { reply_markup: refreshedKeyboard } : undefined, "actionRecovery.staminaNotice");
     }
   }
 
@@ -248,7 +249,7 @@ async function spendPlayerStaminaCost(bot: Bot, playerId: number, cost: number, 
   if (chatId && hungerCue && Number.isSafeInteger(Number(player.telegramId)) && await canSendProactiveToTelegramId(player.telegramId)) {
     const context = await hungerCueContextForPlayer(player.id, player.currentLocationId);
     const refreshedKeyboard = await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), Boolean(player.isAutoEnabled));
-    await bot.api.sendMessage(chatId, hungerCueText(hungerCue, context), { reply_markup: refreshedKeyboard });
+    await observedSendMessage(bot, chatId, hungerCueText(hungerCue, context), { reply_markup: refreshedKeyboard }, "actionRecovery.hungerCue");
   }
 
   return { replyMarkup: refreshedKeyboard, shouldRefreshReplyKeyboard };
@@ -329,7 +330,7 @@ export async function recoverStamina(bot: Bot): Promise<RecoveryPassMetrics> {
         const voiceComments = sceneKey ? await tutorialIdlePaceComments(player, now) : [];
         if (voiceComments.length && sceneKey && !(await claimIdleReminderForPlayerScene(player.id, sceneKey))) continue;
         for (const comment of voiceComments) {
-          await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
+          await observedSendMessage(bot, chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }, "actionRecovery.idleReminder");
           metrics.idleRemindersSent += 1;
           metrics.playerMessagesSent += 1;
         }
@@ -348,11 +349,11 @@ export async function recoverStamina(bot: Bot): Promise<RecoveryPassMetrics> {
       const chatId = Number(player.telegramId);
       if (result?.changed) metrics.sleepAutoWakes += 1;
       if (result?.changed && Number.isSafeInteger(chatId) && await canSendProactiveToTelegramId(player.telegramId)) {
-        await bot.api.sendMessage(chatId, result.message, { reply_markup: buildLyingPostureKeyboard() });
+        await observedSendMessage(bot, chatId, result.message, { reply_markup: buildLyingPostureKeyboard() }, "actionRecovery.sleepAutoWake");
         metrics.playerMessagesSent += 1;
         const hint = await recordOrdinaryWakeAndClaimDaypartHint(player.id);
         if (hint) {
-          await bot.api.sendMessage(chatId, hint, { reply_markup: buildDaypartNoticeHintKeyboard() });
+          await observedSendMessage(bot, chatId, hint, { reply_markup: buildDaypartNoticeHintKeyboard() }, "actionRecovery.daypartHint");
           metrics.playerMessagesSent += 1;
         }
       }
@@ -427,11 +428,11 @@ export async function recoverStamina(bot: Bot): Promise<RecoveryPassMetrics> {
       const chatId = Number(player.telegramId);
       if (result?.changed) metrics.sleepAutoWakes += 1;
       if (result?.changed && Number.isSafeInteger(chatId) && await canSendProactiveToTelegramId(player.telegramId)) {
-        await bot.api.sendMessage(chatId, result.message, { reply_markup: buildLyingPostureKeyboard() });
+        await observedSendMessage(bot, chatId, result.message, { reply_markup: buildLyingPostureKeyboard() }, "actionRecovery.sleepAutoWake");
         metrics.playerMessagesSent += 1;
         const hint = await recordOrdinaryWakeAndClaimDaypartHint(player.id);
         if (hint) {
-          await bot.api.sendMessage(chatId, hint, { reply_markup: buildDaypartNoticeHintKeyboard() });
+          await observedSendMessage(bot, chatId, hint, { reply_markup: buildDaypartNoticeHintKeyboard() }, "actionRecovery.daypartHint");
           metrics.playerMessagesSent += 1;
         }
       }
@@ -443,19 +444,23 @@ export async function recoverStamina(bot: Bot): Promise<RecoveryPassMetrics> {
       const refreshedKeyboard = await buildMainReplyKeyboardForTelegramId(chatId, Boolean(player.isAutoEnabled));
       const replyMarkup = fullyRested && player.isResting ? buildStandUpKeyboard() : refreshedKeyboard;
       for (const message of messages) {
-        await bot.api.sendMessage(
+        await observedSendMessage(
+          bot,
           chatId,
           message,
-          { reply_markup: replyMarkup }
+          { reply_markup: replyMarkup },
+          "actionRecovery.restNotice",
         );
         metrics.playerMessagesSent += 1;
       }
 
       if (shouldSendTutorialRestFullComment) {
-        await bot.api.sendMessage(
+        await observedSendMessage(
+          bot,
           chatId,
           `Сон стиха каже:\n${quoteBlock(TUTORIAL_REST_FULL_COMMENT)}`,
-          { parse_mode: "HTML", reply_markup: refreshedKeyboard }
+          { parse_mode: "HTML", reply_markup: refreshedKeyboard },
+          "actionRecovery.tutorialRestNotice",
         );
         metrics.playerMessagesSent += 1;
       }

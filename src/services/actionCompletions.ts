@@ -30,7 +30,7 @@ import { fatigueStateFor, spendCreatureStamina, spendPlayerStamina, spendPlayerS
 import { actorWhere, enqueueCreatureAction, hasActiveCreatureActions, interruptActorActions, type ActorRef } from "./actionLifecycle";
 import { attackHitsSpecies } from "./attackRules";
 import { escapeHtml } from "../utils/text";
-import { safeSendMessage } from "../utils/telegram";
+import { observedSendMessage, safeSendMessage, type SendMessageOptions } from "../utils/telegram";
 import { withSlowLog } from "../utils/slowLog";
 import { resourceAccusativeName, resourceAmountText } from "../utils/resourceText";
 import { canEditKnownMessage, noteKnownMessage } from "../utils/messageTracker";
@@ -107,6 +107,21 @@ const PANIC_HERBIVORE_FLEE_CHANCE = Number(process.env.WORLD_PANIC_HERBIVORE_FLE
 const PANIC_HERBIVORE_MAX_FLEE = Number(process.env.WORLD_PANIC_HERBIVORE_MAX_FLEE || 18);
 
 type StaminaSpendResult = Awaited<ReturnType<typeof spendPlayerStamina>>;
+
+function actionCompletionContext(type: WorldAction["type"], detail = "reply") {
+  return `actionCompletion.${type.toLowerCase()}.${detail}`;
+}
+
+function sendActionCompletionMessage(
+  bot: Bot,
+  action: WorldAction,
+  chatId: string | number,
+  text: string,
+  options?: SendMessageOptions,
+  detail = "reply",
+) {
+  return observedSendMessage(bot, chatId, text, options, actionCompletionContext(action.type, detail));
+}
 
 function replyOptionsAfterStaminaSpend(spend?: StaminaSpendResult | null, options: Record<string, any> = {}) {
   if (!spend?.replyMarkup || options.reply_markup) return Object.keys(options).length ? options : undefined;
@@ -315,12 +330,12 @@ async function sendPrivateSpeechMessage(
 
 async function sendTutorialActionHint(bot: Bot, chatId: number | string, player: { id: number; currentLocationId: number | null }, commandKey: "look" | "examine") {
   const comment = await tutorialActionHintComment(player, commandKey);
-  if (comment) noteKnownMessage(await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }));
+  if (comment) noteKnownMessage(await observedSendMessage(bot, chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }, `actionCompletion.tutorial.${commandKey}Hint`));
 }
 
 async function sendFirstNightGuidance(bot: Bot, chatId: number | string, playerId: number, locationId: number | null | undefined) {
   const text = await firstNightGuidanceForPlayer(playerId, locationId);
-  if (text) noteKnownMessage(await bot.api.sendMessage(chatId, text));
+  if (text) noteKnownMessage(await observedSendMessage(bot, chatId, text, undefined, "actionCompletion.tutorial.firstNightGuidance"));
 }
 
 function saidVerb(player: any) {
@@ -562,7 +577,7 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
       const wellbeingAside = await rememberTutorialWellbeingAside(player.id, player.currentLocationId, payload.resourceKey);
       await setActionStatus(action, "DONE");
       await trimSatisfiedQueuedUseItems(player.id, payload.resourceKey);
-      if (chatId) await bot.api.sendMessage(chatId, wellbeingAside ? `${resultText}\n\n${TUTORIAL_WELLBEING_ASIDE_TEXT}` : resultText, replyOptionsAfterStaminaSpend(staminaSpend));
+      if (chatId) await sendActionCompletionMessage(bot, action, chatId, wellbeingAside ? `${resultText}\n\n${TUTORIAL_WELLBEING_ASIDE_TEXT}` : resultText, replyOptionsAfterStaminaSpend(staminaSpend));
       return;
     }
 
@@ -571,7 +586,7 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
         const result = await contributeToBeginnerCache(player.id, payload.featureId, payload.resourceKey);
         const staminaSpend = await spendPlayerStamina(bot, player.id, "DROP_ITEM", chatId);
         await setActionStatus(action, "DONE");
-        if (chatId) await bot.api.sendMessage(chatId, result.text, replyOptionsAfterStaminaSpend(staminaSpend));
+        if (chatId) await sendActionCompletionMessage(bot, action, chatId, result.text, replyOptionsAfterStaminaSpend(staminaSpend));
         return;
       }
 
@@ -588,7 +603,7 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
         actionNote: payload.allFilter !== undefined ? `викладено: ${result.droppedName}` : `викинуто: ${result.droppedName}`,
       });
       await setActionStatus(action, "DONE");
-      if (chatId) await bot.api.sendMessage(chatId, result.text, replyOptionsAfterStaminaSpend(staminaSpend));
+      if (chatId) await sendActionCompletionMessage(bot, action, chatId, result.text, replyOptionsAfterStaminaSpend(staminaSpend));
       return;
     }
 
@@ -597,8 +612,8 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
       await spendPlayerStamina(bot, player.id, "COOK", chatId);
       await setActionStatus(action, "DONE");
       if (chatId) {
-        await bot.api.sendMessage(chatId, result.text, cookingResultReplyOptions(result));
-        if (result.practiceMilestone) await bot.api.sendMessage(chatId, COOKING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" });
+        await sendActionCompletionMessage(bot, action, chatId, result.text, cookingResultReplyOptions(result));
+        if (result.practiceMilestone) await sendActionCompletionMessage(bot, action, chatId, COOKING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" }, "practiceMilestone");
       }
       return;
     }
@@ -609,7 +624,7 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
         : await lightPlayerTorchFromInventory(player.id);
       const staminaSpend = await spendPlayerStamina(bot, player.id, "LIGHT_TORCH", chatId);
       await setActionStatus(action, "DONE");
-      if (chatId) await bot.api.sendMessage(chatId, resultText, replyOptionsAfterStaminaSpend(staminaSpend));
+      if (chatId) await sendActionCompletionMessage(bot, action, chatId, resultText, replyOptionsAfterStaminaSpend(staminaSpend));
       return;
     }
 
@@ -617,7 +632,7 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
       const resultText = await dousePlayerTorchFromInventory(player.id);
       const staminaSpend = await spendPlayerStamina(bot, player.id, "DOUSE_TORCH", chatId);
       await setActionStatus(action, "DONE");
-      if (chatId) await bot.api.sendMessage(chatId, resultText, replyOptionsAfterStaminaSpend(staminaSpend));
+      if (chatId) await sendActionCompletionMessage(bot, action, chatId, resultText, replyOptionsAfterStaminaSpend(staminaSpend));
       return;
     }
 
@@ -625,7 +640,7 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
         const resultText = await addTwigsToCampfire(player.id, payload.featureId);
         await spendPlayerStamina(bot, player.id, "ADD_TWIGS", chatId);
         await setActionStatus(action, "DONE");
-        if (chatId) await bot.api.sendMessage(chatId, resultText, await campfireRelightReplyOptionsAfterTwigs(player.id, payload.featureId));
+        if (chatId) await sendActionCompletionMessage(bot, action, chatId, resultText, await campfireRelightReplyOptionsAfterTwigs(player.id, payload.featureId));
         return;
       }
 
@@ -633,7 +648,7 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
         const result = await buildCampfireFromInventory(player.id, { confirmWet: payload.confirmWet });
         await spendPlayerStamina(bot, player.id, "BUILD_CAMPFIRE", chatId);
         await setActionStatus(action, "DONE");
-        if (chatId) await bot.api.sendMessage(chatId, result.text, await campfireRelightReplyOptionsAfterBuild(player.id, result.featureId));
+        if (chatId) await sendActionCompletionMessage(bot, action, chatId, result.text, await campfireRelightReplyOptionsAfterBuild(player.id, result.featureId));
         return;
       }
 
@@ -642,7 +657,7 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
         const result = await douseCampfire(player.id, payload.featureId);
         await spendPlayerStamina(bot, player.id, "DOUSE_CAMPFIRE", chatId);
         await setActionStatus(action, "DONE");
-        if (chatId) await bot.api.sendMessage(chatId, result.text, campfireDismantleReplyOptions(result.featureId));
+        if (chatId) await sendActionCompletionMessage(bot, action, chatId, result.text, campfireDismantleReplyOptions(result.featureId));
         return;
       }
 
@@ -651,7 +666,7 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
         const result = await dismantleCampfire(player.id, payload.featureId);
         const staminaSpend = await spendPlayerStamina(bot, player.id, "DISMANTLE_CAMPFIRE", chatId);
         await setActionStatus(action, "DONE");
-        if (chatId) await bot.api.sendMessage(chatId, result.text, replyOptionsAfterStaminaSpend(staminaSpend));
+        if (chatId) await sendActionCompletionMessage(bot, action, chatId, result.text, replyOptionsAfterStaminaSpend(staminaSpend));
         return;
       }
 
@@ -660,7 +675,7 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
         const result = await dismantleStrangeTotem(player.id, payload.featureId);
         const staminaSpend = await spendPlayerStamina(bot, player.id, "DISMANTLE_TOTEM", chatId);
         await setActionStatus(action, "DONE");
-        if (chatId) await bot.api.sendMessage(chatId, result.text, replyOptionsAfterStaminaSpend(staminaSpend));
+        if (chatId) await sendActionCompletionMessage(bot, action, chatId, result.text, replyOptionsAfterStaminaSpend(staminaSpend));
         return;
       }
 
@@ -669,7 +684,7 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
         const resultText = await lightLocationCampfire(payload.featureId, player.id);
       await spendPlayerStamina(bot, player.id, "LIGHT_CAMPFIRE", chatId);
       await setActionStatus(action, "DONE");
-      if (chatId) await bot.api.sendMessage(chatId, resultText, await inventoryGainReplyOptions(player, "take-torch"));
+      if (chatId) await sendActionCompletionMessage(bot, action, chatId, resultText, await inventoryGainReplyOptions(player, "take-torch"));
       return;
     }
   } catch (error) {
@@ -677,7 +692,7 @@ async function completeInventoryAction(bot: Bot, action: WorldAction) {
       await trimSatisfiedQueuedUseItems(player.id, payload.resourceKey).catch(() => undefined);
     }
     await setActionStatus(action, "FAILED");
-    if (chatId) await bot.api.sendMessage(chatId, error instanceof Error ? error.message : "Дія з речами не вдалася.");
+    if (chatId) await sendActionCompletionMessage(bot, action, chatId, error instanceof Error ? error.message : "Дія з речами не вдалася.", undefined, "failure");
     return;
   }
 
@@ -696,14 +711,14 @@ async function completeMove(bot: Bot, action: WorldAction) {
     const exit = await prisma.locationExit.findUnique({ where: { fromLocationId_direction: { fromLocationId: currentLocationId, direction: payload.direction } } });
     if (!exit || exit.isHidden) {
       await setActionStatus(action, "FAILED");
-      if (chatId) await bot.api.sendMessage(chatId, "Шлях, яким ви збиралися йти, більше не видно.", { reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false) });
+      if (chatId) await sendActionCompletionMessage(bot, action, chatId, "Шлях, яким ви збиралися йти, більше не видно.", { reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false) }, "failure");
       await logEvent("ERROR", "Queued player move failed", payload.direction, currentLocationId);
       return;
     }
     const lockedMessage = await isLocationExitLocked(currentLocationId, payload.direction);
     if (lockedMessage) {
       await setActionStatus(action, "FAILED");
-      if (chatId) await bot.api.sendMessage(chatId, lockedMessage, { reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false) });
+      if (chatId) await sendActionCompletionMessage(bot, action, chatId, lockedMessage, { reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false) }, "blocked");
       await logEvent("ERROR", "Queued player move blocked", payload.direction, currentLocationId);
       return;
     }
@@ -748,11 +763,11 @@ async function completeMove(bot: Bot, action: WorldAction) {
 
     if (chatId) {
       const view = await renderLocationBrief(exit.toLocationId, player.id);
-      noteKnownMessage(await bot.api.sendMessage(chatId, `Ви дійшли: ${directionLabels[payload.direction]}`, { reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false) }));
-      if (spiritComment) noteKnownMessage(await bot.api.sendMessage(chatId, `${spiritComment.title}:\n${quoteBlock(spiritComment.text)}`, { parse_mode: "HTML" }));
-      if (dreamItemsStolen) noteKnownMessage(await bot.api.sendMessage(chatId, `Мара сміється десь між листям:\n${quoteBlock("Сонні ягоди й трави лишаються в просвіті. Варто винести їх за край — і вони розсипаються туманом.")}`, { parse_mode: "HTML" }));
-      if (tutorialRestEntryText) noteKnownMessage(await bot.api.sendMessage(chatId, tutorialRestEntryText, { reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false) }));
-      noteKnownMessage(await bot.api.sendMessage(chatId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard }));
+      noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, `Ви дійшли: ${directionLabels[payload.direction]}`, { reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false) }));
+      if (spiritComment) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, `${spiritComment.title}:\n${quoteBlock(spiritComment.text)}`, { parse_mode: "HTML" }, "tutorialComment"));
+      if (dreamItemsStolen) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, `Мара сміється десь між листям:\n${quoteBlock("Сонні ягоди й трави лишаються в просвіті. Варто винести їх за край — і вони розсипаються туманом.")}`, { parse_mode: "HTML" }, "tutorialComment"));
+      if (tutorialRestEntryText) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, tutorialRestEntryText, { reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false) }, "tutorialComment"));
+      noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard }, "locationView"));
       await sendTutorialActionHint(bot, chatId, { ...player, currentLocationId: exit.toLocationId }, "look");
       await sendFirstNightGuidance(bot, chatId, player.id, exit.toLocationId);
       await maybeTriggerPassiveApiarySting(bot, { playerId: player.id, locationId: exit.toLocationId, chatId, reason: "move" });
@@ -866,23 +881,29 @@ async function completeGather(bot: Bot, action: WorldAction) {
 
   const sendGatheringPracticeMessage = async () => {
     if (!chatId || !gatherAttemptsAfterAttempt || !isGatheringPracticeMilestone(gatherAttemptsAfterAttempt)) return;
-    noteKnownMessage(await bot.api.sendMessage(chatId, GATHERING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+    noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, GATHERING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" }, "practiceMilestone"));
   };
 
   if (!resource || !resourceKey || !cfg || (!isTutorialForagingSuccess && Math.random() > (gatherSuccessChance ?? cfg.chance))) {
     await setActionStatus(action, "DONE");
     if (chatId) {
       if (resource && resourceKey && cfg) {
-        await bot.api.sendMessage(
+        await sendActionCompletionMessage(
+          bot,
+          action,
           chatId,
           `Ви витратили час і снагу на пошуки${durationText}, але нічого корисного не знайшли.\n\nМожете спробувати пошукати ще.`,
           { reply_markup: buildGatherRetryKeyboard(resourceKey) },
+          "failure",
         );
       } else {
-        await bot.api.sendMessage(
+        await sendActionCompletionMessage(
+          bot,
+          action,
           chatId,
           `Ви витратили час і снагу на пошуки${durationText}, але нічого корисного не знайшли.\n\nБільше ви тут цього не знайдете найближчий час. Спробуйте пізніше або в іншій місцині.`,
           replyOptionsAfterStaminaSpend(staminaSpend),
+          "failure",
         );
       }
     }
@@ -933,7 +954,9 @@ async function completeGather(bot: Bot, action: WorldAction) {
       await rememberTutorialInventoryAvailable((actor as any).id, locationId, `gather:${resourceKey}`);
     }
     if (chatId) {
-      await bot.api.sendMessage(
+      await sendActionCompletionMessage(
+        bot,
+        action,
         chatId,
         `Ви витратили час і снагу на пошуки${durationText} і знайшли: ${resourceAmountText(resource.resourceType.name, totalFound)}.${highSkillOutcome?.triggered ? `\n\n${highSkillOutcome.text}` : ""}`,
         isTutorialForagingSuccess
@@ -943,11 +966,11 @@ async function completeGather(bot: Bot, action: WorldAction) {
     }
     if (isTutorialForagingSuccess) {
       if (firstTutorialGather) {
-        if (chatId) await bot.api.sendMessage(chatId, `Сон усміхається:\n${quoteBlock(TUTORIAL_FORAGING_SUCCESS_COMMENT)}`, { parse_mode: "HTML" });
+        if (chatId) await sendActionCompletionMessage(bot, action, chatId, `Сон усміхається:\n${quoteBlock(TUTORIAL_FORAGING_SUCCESS_COMMENT)}`, { parse_mode: "HTML" }, "tutorialComment");
       }
     } else {
       const smallLoot = await maybeGrantGatherShahBonus({ playerId: (actor as any).id, location: resource.location });
-      if (smallLoot && chatId) await bot.api.sendMessage(chatId, smallLoot.text);
+      if (smallLoot && chatId) await sendActionCompletionMessage(bot, action, chatId, smallLoot.text, undefined, "smallLoot");
     }
   } else {
     await prisma.creature.updateMany({ where: { id: (actor as any).id }, data: { successfulGathers: { increment: 1 }, currentAction: `зібрав ${resource.resourceType.name} ×${found}` } });
@@ -1031,7 +1054,7 @@ async function completeEat(bot: Bot, action: WorldAction) {
 async function sendMentorshipLessonFollowups(bot: Bot, chatId: number | string, context: MentorshipLessonFollowupContext) {
   const prompt = await maybeCreateMentorshipPracticePrompt(context);
   if (prompt.text) {
-    noteKnownMessage(await bot.api.sendMessage(chatId, prompt.text, prompt.ok && prompt.keyboard ? { reply_markup: prompt.keyboard } : undefined));
+    noteKnownMessage(await observedSendMessage(bot, chatId, prompt.text, prompt.ok && prompt.keyboard ? { reply_markup: prompt.keyboard } : undefined, "actionCompletion.mentorship.reply"));
   }
 
   const brewingHint = await maybeHerbalistBrewingHintForPlayer(context.playerId, {
@@ -1039,7 +1062,7 @@ async function sendMentorshipLessonFollowups(bot: Bot, chatId: number | string, 
     mentorCreatureId: context.mentorCreatureId,
   });
   if (brewingHint.ok) {
-    noteKnownMessage(await bot.api.sendMessage(chatId, brewingHint.text, { parse_mode: "HTML" }));
+    noteKnownMessage(await observedSendMessage(bot, chatId, brewingHint.text, { parse_mode: "HTML" }, "actionCompletion.mentorship.brewingHint"));
   }
 }
 
@@ -1058,27 +1081,27 @@ async function completeLook(bot: Bot, action: WorldAction) {
       const voiceComments = await tutorialLookPaceComments({ ...player, currentLocationId: locationId });
       const sendAttackObservationMessage = async () => {
         const observation = await recordAttackObservation({ playerId: player.id, locationId });
-        if (observation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, ATTACK_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+        if (observation.milestone) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, ATTACK_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }, "observationMilestone"));
       };
       const sendGatheringObservationMessage = async () => {
         const observation = await recordGatheringObservation({ playerId: player.id, locationId });
-        if (observation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
-        if (observation.mentorshipLessonText) noteKnownMessage(await bot.api.sendMessage(chatId, observation.mentorshipLessonText));
+        if (observation.milestone) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }, "observationMilestone"));
+        if (observation.mentorshipLessonText) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, observation.mentorshipLessonText, undefined, "mentorshipLesson"));
         if (observation.mentorshipLessonContext) {
           await sendMentorshipLessonFollowups(bot, chatId, observation.mentorshipLessonContext);
         }
       };
       const sendFoodObservationMessages = async () => {
         const freshening = await recordFresheningObservation({ playerId: player.id, locationId });
-        if (freshening.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, FRESHENING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+        if (freshening.milestone) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, FRESHENING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }, "observationMilestone"));
         const cooking = await recordCookingObservation({ playerId: player.id, locationId });
-        if (cooking.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, COOKING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+        if (cooking.milestone) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, COOKING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }, "observationMilestone"));
       };
       if (action.messageId && typeof chatId === "number" && canEditKnownMessage(chatId, action.messageId)) {
         try {
           await bot.api.editMessageText(chatId, action.messageId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard });
           for (const comment of voiceComments) {
-            noteKnownMessage(await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }));
+            noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }, "tutorialComment"));
           }
           await sendTutorialActionHint(bot, chatId, { ...player, currentLocationId: locationId }, "examine");
           await sendFirstNightGuidance(bot, chatId, player.id, locationId);
@@ -1091,9 +1114,9 @@ async function completeLook(bot: Bot, action: WorldAction) {
           // Fall back to a new message when Telegram cannot edit the source message.
         }
       }
-      noteKnownMessage(await bot.api.sendMessage(chatId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard }));
+      noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, view.text, { parse_mode: "HTML", reply_markup: view.keyboard }));
       for (const comment of voiceComments) {
-        noteKnownMessage(await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }));
+        noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }, "tutorialComment"));
       }
       await sendTutorialActionHint(bot, chatId, { ...player, currentLocationId: locationId }, "examine");
       await sendFirstNightGuidance(bot, chatId, player.id, locationId);
@@ -1128,27 +1151,27 @@ async function completeInspect(bot: Bot, action: WorldAction) {
   });
   await setActionStatus(action, target ? "DONE" : "FAILED");
   if (!target) {
-    if (chatId) await bot.api.sendMessage(chatId, "Цілі вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() });
+    if (chatId) await sendActionCompletionMessage(bot, action, chatId, "Цілі вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() }, "failure");
     return;
   }
   const staminaSpend = await spendPlayerStamina(bot, player.id, "INSPECT", chatId);
   await logEvent("INSPECT", "Player inspected target", `${target.kind}:${target.id}`, player.currentLocationId);
   if (chatId) {
-    await bot.api.sendMessage(chatId, `${targetIntro(target, payload.mode === "mystery")}\n\n${target.inspect}`, replyOptionsAfterStaminaSpend(staminaSpend));
+    await sendActionCompletionMessage(bot, action, chatId, `${targetIntro(target, payload.mode === "mystery")}\n\n${target.inspect}`, replyOptionsAfterStaminaSpend(staminaSpend));
     const observation = await recordAttackObservation({ playerId: player.id, locationId: player.currentLocationId });
-    if (observation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, ATTACK_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+    if (observation.milestone) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, ATTACK_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }, "observationMilestone"));
     if (target.kind === "player" || (!target.isAnimal && !target.isCorpse)) {
       const gatheringObservation = await recordGatheringObservation({ playerId: player.id, locationId: player.currentLocationId });
-      if (gatheringObservation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
-      if (gatheringObservation.mentorshipLessonText) noteKnownMessage(await bot.api.sendMessage(chatId, gatheringObservation.mentorshipLessonText));
+      if (gatheringObservation.milestone) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }, "observationMilestone"));
+      if (gatheringObservation.mentorshipLessonText) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, gatheringObservation.mentorshipLessonText, undefined, "mentorshipLesson"));
       if (gatheringObservation.mentorshipLessonContext) {
         await sendMentorshipLessonFollowups(bot, chatId, gatheringObservation.mentorshipLessonContext);
       }
     }
     const fresheningObservation = await recordFresheningObservation({ playerId: player.id, locationId: player.currentLocationId });
-    if (fresheningObservation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, FRESHENING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+    if (fresheningObservation.milestone) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, FRESHENING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }, "observationMilestone"));
     const cookingObservation = await recordCookingObservation({ playerId: player.id, locationId: player.currentLocationId });
-    if (cookingObservation.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, COOKING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+    if (cookingObservation.milestone) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, COOKING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }, "observationMilestone"));
   }
 }
 
@@ -1164,9 +1187,9 @@ async function completeGreet(bot: Bot, action: WorldAction) {
     await setActionStatus(action, "FAILED");
     if (chatId) {
       if (!target) {
-        await bot.api.sendMessage(chatId, "Цілі вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() });
+        await sendActionCompletionMessage(bot, action, chatId, "Цілі вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() }, "failure");
       } else {
-        await bot.api.sendMessage(chatId, `${target.forms.nominative} не виглядає співрозмовником.`);
+        await sendActionCompletionMessage(bot, action, chatId, `${target.forms.nominative} не виглядає співрозмовником.`, undefined, "failure");
       }
     }
     return;
@@ -1198,7 +1221,7 @@ async function completeGreet(bot: Bot, action: WorldAction) {
   );
   await setActionStatus(action, "DONE");
   await logEvent("GREET", `${actorForms.nominative} ${verb} ${target.forms.dative}`, greeting, player.currentLocationId);
-  if (chatId) await bot.api.sendMessage(chatId, `Ви сказали ${escapeHtml(target.forms.dative)}:\n${quoteBlock(greeting)}`, replyOptionsAfterStaminaSpend(staminaSpend, { parse_mode: "HTML" }));
+  if (chatId) await sendActionCompletionMessage(bot, action, chatId, `Ви сказали ${escapeHtml(target.forms.dative)}:\n${quoteBlock(greeting)}`, replyOptionsAfterStaminaSpend(staminaSpend, { parse_mode: "HTML" }));
   await queueHunterGreetingReaction(player, target, action.id);
 }
 
@@ -1250,13 +1273,13 @@ async function completeFreshen(bot: Bot, action: WorldAction) {
   const visibility = await visibilityRulesForLocation(player.currentLocationId, "details");
   if (!visibility.showGroundObjects) {
     await setActionStatus(action, "FAILED");
-    if (chatId) await bot.api.sendMessage(chatId, "Без світла трупів поруч не розібрати. Спершу озирніться при світлі або запаліть факел.", { reply_markup: buildExamineLocationKeyboard() });
+    if (chatId) await sendActionCompletionMessage(bot, action, chatId, "Без світла трупів поруч не розібрати. Спершу озирніться при світлі або запаліть факел.", { reply_markup: buildExamineLocationKeyboard() }, "failure");
     return;
   }
   const target = await resolveTarget(payload.targetType, payload.targetId, player.currentLocationId);
   if (!target || !target.isCorpse || !target.canFreshen) {
     await setActionStatus(action, "FAILED");
-    if (chatId) await bot.api.sendMessage(chatId, "Труп уже не підходить для освіжування.");
+    if (chatId) await sendActionCompletionMessage(bot, action, chatId, "Труп уже не підходить для освіжування.", undefined, "failure");
     return;
   }
   const creature = await prisma.creature.findFirst({
@@ -1265,17 +1288,17 @@ async function completeFreshen(bot: Bot, action: WorldAction) {
   });
   if (!creature) {
     await setActionStatus(action, "FAILED");
-    if (chatId) await bot.api.sendMessage(chatId, "Труп уже не підходить для освіжування.");
+    if (chatId) await sendActionCompletionMessage(bot, action, chatId, "Труп уже не підходить для освіжування.", undefined, "failure");
     return;
   }
   let weapon = await getPlayerEquippedWeapon(player.id);
   if (!weapon) {
     weapon = await grantAndEquipLegacyFresheningKnife(player.id);
-    if (chatId) await bot.api.sendMessage(chatId, legacyFresheningKnifeGrantText());
+    if (chatId) await sendActionCompletionMessage(bot, action, chatId, legacyFresheningKnifeGrantText(), undefined, "legacyKnife");
   }
   if (!weapon?.canFreshen) {
     await setActionStatus(action, "FAILED");
-    if (chatId) await bot.api.sendMessage(chatId, freshenWeaponFailureText(weapon?.key));
+    if (chatId) await sendActionCompletionMessage(bot, action, chatId, freshenWeaponFailureText(weapon?.key), undefined, "failure");
     return;
   }
   const staminaSpend = await spendPlayerStamina(bot, player.id, "FRESHEN", chatId);
@@ -1294,7 +1317,7 @@ async function completeFreshen(bot: Bot, action: WorldAction) {
     });
   } catch (error) {
     await setActionStatus(action, "FAILED");
-    if (chatId) await bot.api.sendMessage(chatId, error instanceof Error ? error.message : "Труп уже не підходить для освіжування.");
+    if (chatId) await sendActionCompletionMessage(bot, action, chatId, error instanceof Error ? error.message : "Труп уже не підходить для освіжування.", undefined, "failure");
     return;
   }
   await setActionStatus(action, "DONE");
@@ -1318,8 +1341,8 @@ async function completeFreshen(bot: Bot, action: WorldAction) {
     const resultText = meat.succeeded
       ? `🔪 Ви освіжували ${target.forms.accusative} ${weapon.forms.instrumental} й отримали ${resourceAmountText(meat.resourceName, meat.amount)}.${highSkillOutcome?.triggered ? `\n\n${highSkillOutcome.text}` : ""}`
       : `🔪 Ви освіжували ${target.forms.accusative} ${weapon.forms.instrumental}, але придатне м'ясо не вдалося зняти. Лишилися тільки рвані рештки.`;
-    await bot.api.sendMessage(chatId, resultText, replyOptionsAfterStaminaSpend(staminaSpend));
-    if (learning.milestone) noteKnownMessage(await bot.api.sendMessage(chatId, FRESHENING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+    await sendActionCompletionMessage(bot, action, chatId, resultText, replyOptionsAfterStaminaSpend(staminaSpend));
+    if (learning.milestone) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, FRESHENING_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" }, "practiceMilestone"));
   }
 }
 
@@ -1333,10 +1356,10 @@ async function completeApiaryRaid(bot: Bot, action: WorldAction) {
     const result = await raidApiaryForPlayer(player.id, payload.featureId);
     const staminaSpend = await spendPlayerStamina(bot, player.id, "RAID_APIARY", chatId);
     await setActionStatus(action, "DONE");
-    if (chatId) await bot.api.sendMessage(chatId, result.text, replyOptionsAfterStaminaSpend(staminaSpend));
+    if (chatId) await sendActionCompletionMessage(bot, action, chatId, result.text, replyOptionsAfterStaminaSpend(staminaSpend));
   } catch (error) {
     await setActionStatus(action, "FAILED");
-    if (chatId) await bot.api.sendMessage(chatId, error instanceof Error ? error.message : "Не вдалося дістати мед із борті.");
+    if (chatId) await sendActionCompletionMessage(bot, action, chatId, error instanceof Error ? error.message : "Не вдалося дістати мед із борті.", undefined, "failure");
   }
 }
 
@@ -1437,7 +1460,7 @@ async function completeAttack(bot: Bot, action: WorldAction) {
         : target.isCorpse
           ? "Це вже труп."
           : "Бій із хижаками й іншими персонажами ще не реалізований.";
-      await bot.api.sendMessage(chatId, message, !target ? { reply_markup: buildExamineLocationKeyboard() } : undefined);
+      await sendActionCompletionMessage(bot, action, chatId, message, !target ? { reply_markup: buildExamineLocationKeyboard() } : undefined, "failure");
     }
     return;
   }
@@ -1445,7 +1468,7 @@ async function completeAttack(bot: Bot, action: WorldAction) {
   const creature = await prisma.creature.findFirst({ where: { id: target.id, locationId: player.currentLocationId, isAlive: true, isGone: false }, include: { species: true } });
   if (!creature) {
     await setActionStatus(action, "FAILED");
-    if (chatId) await bot.api.sendMessage(chatId, "Цілі вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() });
+    if (chatId) await sendActionCompletionMessage(bot, action, chatId, "Цілі вже немає поруч. Можна роздивитися місцину ще раз.", { reply_markup: buildExamineLocationKeyboard() }, "failure");
     return;
   }
 
@@ -1460,9 +1483,9 @@ async function completeAttack(bot: Bot, action: WorldAction) {
     await logEvent("PLAYER_ACTION", "Player missed animal", `${target.kind}:${target.id}; species=${creature.species.key}`, player.currentLocationId);
     await recordAttackPracticeLearning({ locationId: player.currentLocationId, attackerPlayerId: player.id, targetCreatureId: creature.id, outcome: "miss" });
     if (chatId) {
-      await bot.api.sendMessage(chatId, `⚔️ Ви кинулися на ${target.forms.accusative}, але ціль вислизнула. Якщо вона не втече, можна спробувати ще раз.`, {
+      await sendActionCompletionMessage(bot, action, chatId, `⚔️ Ви кинулися на ${target.forms.accusative}, але ціль вислизнула. Якщо вона не втече, можна спробувати ще раз.`, {
         reply_markup: buildLookLocationKeyboard(),
-      });
+      }, "miss");
     }
     return;
   }
@@ -1479,12 +1502,15 @@ async function completeAttack(bot: Bot, action: WorldAction) {
   await recordAttackPracticeLearning({ locationId: player.currentLocationId, attackerPlayerId: player.id, targetCreatureId: creature.id, outcome: "kill" });
   if (chatId) {
     const corpseTarget = await resolveTarget("creature", creature.id, player.currentLocationId);
-    await bot.api.sendMessage(
+    await sendActionCompletionMessage(
+      bot,
+      action,
       chatId,
       playerAttackKillText(weapon?.key, target.forms.accusative),
       corpseTarget?.isCorpse ? { reply_markup: buildCorpseActionKeyboard(corpseTarget) } : undefined,
+      "kill",
     );
-    if (isAttackPracticeMilestone(updatedPlayer.animalsKilled)) noteKnownMessage(await bot.api.sendMessage(chatId, ATTACK_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" }));
+    if (isAttackPracticeMilestone(updatedPlayer.animalsKilled)) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, ATTACK_PRACTICE_GROWTH_MESSAGE, { parse_mode: "HTML" }, "practiceMilestone"));
   }
 }
 
@@ -1591,14 +1617,14 @@ async function completeSay(bot: Bot, action: WorldAction) {
     const verb = saidVerb(player);
     if (payload.mode === "whisper") {
       if (!payload.targetType || !payload.targetId) {
-        if (chatId) await bot.api.sendMessage(chatId, "Шепіт зараз треба спрямувати комусь поруч.");
+        if (chatId) await sendActionCompletionMessage(bot, action, chatId, "Шепіт зараз треба спрямувати комусь поруч.", undefined, "failure");
         await setActionStatus(action, "FAILED");
         return;
       }
 
       const target = await resolveTarget(payload.targetType, payload.targetId, player.currentLocationId);
       if (!target || target.isCorpse) {
-        if (chatId) await bot.api.sendMessage(chatId, "Того, кому ви шепотіли, вже немає поруч.");
+        if (chatId) await sendActionCompletionMessage(bot, action, chatId, "Того, кому ви шепотіли, вже немає поруч.", undefined, "failure");
         await setActionStatus(action, "FAILED");
         return;
       }
@@ -1627,7 +1653,7 @@ async function completeSay(bot: Bot, action: WorldAction) {
           await rememberPlayerReplyTarget({ playerId: targetPlayer.id, speakerName: actorForms.nominative, speakerPlayerId: player.id, locationId: player.currentLocationId });
         }
       }
-      if (chatId) await bot.api.sendMessage(chatId, `Ви шепнули ${escapeHtml(target.forms.dative)}:\n${quoteBlock(text)}`, replyOptionsAfterStaminaSpend(staminaSpend, { parse_mode: "HTML" }));
+      if (chatId) await sendActionCompletionMessage(bot, action, chatId, `Ви шепнули ${escapeHtml(target.forms.dative)}:\n${quoteBlock(text)}`, replyOptionsAfterStaminaSpend(staminaSpend, { parse_mode: "HTML" }));
       await setActionStatus(action, "DONE");
       await logEvent("SAY", `${actorForms.nominative} шепоче ${target.forms.dative}`, "приватний шепіт", player.currentLocationId);
       if (payload.targetType === "creature") await queueAnimalDirectedSpeechReaction(bot, { player, targetCreatureId: payload.targetId });
@@ -1660,7 +1686,7 @@ async function completeSay(bot: Bot, action: WorldAction) {
       }
       await setActionStatus(action, "DONE");
       await logEvent("SAY", `${actorForms.nominative} гукає поруч`, text, player.currentLocationId);
-      if (chatId) await bot.api.sendMessage(chatId, `Ви гукнули поруч:\n${quoteBlock(text)}`, replyOptionsAfterStaminaSpend(staminaSpend, { parse_mode: "HTML" }));
+      if (chatId) await sendActionCompletionMessage(bot, action, chatId, `Ви гукнули поруч:\n${quoteBlock(text)}`, replyOptionsAfterStaminaSpend(staminaSpend, { parse_mode: "HTML" }));
       return;
     }
 
@@ -1681,7 +1707,7 @@ async function completeSay(bot: Bot, action: WorldAction) {
       }
       await setActionStatus(action, "DONE");
       await logEvent("SAY", `${actorForms.nominative} ${shoutVerb}`, text, player.currentLocationId);
-      if (chatId) await bot.api.sendMessage(chatId, `Ви гукнули:\n${quoteBlock(text)}`, replyOptionsAfterStaminaSpend(trackStaminaSpend.replyMarkup ? trackStaminaSpend : staminaSpend, { parse_mode: "HTML" }));
+      if (chatId) await sendActionCompletionMessage(bot, action, chatId, `Ви гукнули:\n${quoteBlock(text)}`, replyOptionsAfterStaminaSpend(trackStaminaSpend.replyMarkup ? trackStaminaSpend : staminaSpend, { parse_mode: "HTML" }));
       return;
     }
 
@@ -1717,7 +1743,7 @@ async function completeSay(bot: Bot, action: WorldAction) {
       }
       await setActionStatus(action, "DONE");
       await logEvent("SAY", `${actorForms.nominative} ${replyVerb}${replyTargetDative ? ` ${replyTargetDative}` : ""}`, text, player.currentLocationId);
-      if (chatId) await bot.api.sendMessage(chatId, replyTargetDative ? `Ви відповіли ${escapeHtml(replyTargetDative)}:\n${quoteBlock(text)}` : `Ви відповіли:\n${quoteBlock(text)}`, replyOptionsAfterStaminaSpend(staminaSpend, { parse_mode: "HTML" }));
+      if (chatId) await sendActionCompletionMessage(bot, action, chatId, replyTargetDative ? `Ви відповіли ${escapeHtml(replyTargetDative)}:\n${quoteBlock(text)}` : `Ви відповіли:\n${quoteBlock(text)}`, replyOptionsAfterStaminaSpend(staminaSpend, { parse_mode: "HTML" }));
       if (replyTargetCreature) await queueHunterConversationReply({ actionId: action.id, player, targetCreatureId: replyTargetCreature.id });
       return;
     }
@@ -1747,13 +1773,13 @@ async function completeSay(bot: Bot, action: WorldAction) {
       ? await openDreamGate(player.id)
       : null;
     if (chatId) {
-      await bot.api.sendMessage(chatId, targetDative ? `Ви сказали ${escapeHtml(targetDative)}:\n${quoteBlock(text)}` : `Ви сказали:\n${quoteBlock(text)}`, replyOptionsAfterStaminaSpend(staminaSpend, { parse_mode: "HTML" }));
+      await sendActionCompletionMessage(bot, action, chatId, targetDative ? `Ви сказали ${escapeHtml(targetDative)}:\n${quoteBlock(text)}` : `Ви сказали:\n${quoteBlock(text)}`, replyOptionsAfterStaminaSpend(staminaSpend, { parse_mode: "HTML" }));
       if (dreamGateText) {
-        await bot.api.sendMessage(chatId, dreamGateText, {
+        await sendActionCompletionMessage(bot, action, chatId, dreamGateText, {
           reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false),
-        });
+        }, "dreamGate");
         const comment = await tutorialGateSpeechComment(player);
-        if (comment) await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
+        if (comment) await sendActionCompletionMessage(bot, action, chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }, "tutorialComment");
       }
     }
     if (payload.targetType === "creature" && payload.targetId) {
@@ -1856,7 +1882,7 @@ async function completeTrackInner(bot: Bot, action: WorldAction) {
 
   if (!chatId) return;
   if (allTracks.length && !visibility.showTracks) {
-    await bot.api.sendMessage(chatId, `👣 ${trackingDarkPresenceText({
+    await sendActionCompletionMessage(bot, action, chatId, `👣 ${trackingDarkPresenceText({
       visibilityText: visibilityPresenceText(visibility, "tracks"),
       canReadWeakTrackHint: trackingSkillEffect.canReadWeakTrackHint,
     })}`);
@@ -1864,11 +1890,11 @@ async function completeTrackInner(bot: Bot, action: WorldAction) {
   }
 
   if (!allTracks.length) {
-    await bot.api.sendMessage(chatId, "👣 Ви вдивляєтесь у землю й траву, але свіжих слідів не знаходите.");
+    await sendActionCompletionMessage(bot, action, chatId, "👣 Ви вдивляєтесь у землю й траву, але свіжих слідів не знаходите.");
     return;
   }
   if (normalizedTargetQuery && !tracks.length) {
-    await bot.api.sendMessage(chatId, `👣 Ви вдивляєтесь у сліди, але свіжих слідів за запитом «${escapeHtml(targetQuery)}» тут не бачите.`, { parse_mode: "HTML" });
+    await sendActionCompletionMessage(bot, action, chatId, `👣 Ви вдивляєтесь у сліди, але свіжих слідів за запитом «${escapeHtml(targetQuery)}» тут не бачите.`, { parse_mode: "HTML" });
     return;
   }
 
@@ -1893,10 +1919,10 @@ async function completeTrackInner(bot: Bot, action: WorldAction) {
   });
 
   const header = detail ? "👣 Ви уважніше роздивляєтеся сліди:" : "👣 Ви знаходите сліди:";
-  await bot.api.sendMessage(chatId, `${header}\n${lines.join("\n")}`, detail ? undefined : { reply_markup: buildExamineTracksKeyboard() });
+  await sendActionCompletionMessage(bot, action, chatId, `${header}\n${lines.join("\n")}`, detail ? undefined : { reply_markup: buildExamineTracksKeyboard() });
   const voiceComments = await tutorialTrackComments(player.currentLocationId, detail);
   for (const comment of voiceComments) {
-    await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
+    await sendActionCompletionMessage(bot, action, chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }, "tutorialComment");
   }
 }
 
@@ -1940,10 +1966,10 @@ async function completeSimple(bot: Bot, action: WorldAction) {
           if (next > (player.staminaMax ?? BASE_STAMINA)) commentParts.push(TUTORIAL_REST_EXTRA_COMMENT);
           const comment = commentParts.join("\n\n");
           await logEvent("NPC_SAY", "Сонний жар потріскує", comment, player.currentLocationId ?? undefined);
-          await bot.api.sendMessage(chatId, `Сонний жар потріскує:\n${quoteBlock(comment)}`, {
+          await sendActionCompletionMessage(bot, action, chatId, `Сонний жар потріскує:\n${quoteBlock(comment)}`, {
             parse_mode: "HTML",
             reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), false),
-          });
+          }, "tutorialRestComment");
         }
       }
     }
@@ -1961,7 +1987,7 @@ async function completeSimple(bot: Bot, action: WorldAction) {
     if (player?.currentLocationId && chatId) {
       const voiceComments = await tutorialWaitPaceComments(player);
       for (const comment of voiceComments) {
-        await bot.api.sendMessage(chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" });
+        await sendActionCompletionMessage(bot, action, chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }, "tutorialComment");
       }
       await maybeTriggerPassiveApiarySting(bot, { playerId: player.id, locationId: player.currentLocationId, chatId, reason: "wait" });
     }

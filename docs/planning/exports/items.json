@@ -1481,6 +1481,27 @@
     "file": "docs/planning/items/FOOD-007-mushroom-visions-and-dream-effects.md"
   },
   {
+    "id": "GATHER-001",
+    "title": "Low-light foraging penalty warning",
+    "status": "backlog",
+    "type": "feature",
+    "area": "gathering",
+    "priority": "medium",
+    "tags": [
+      "gathering",
+      "visibility",
+      "light",
+      "skills",
+      "beginner-safety"
+    ],
+    "depends_on": [
+      "VIS-001-A",
+      "WORLD-001-F"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/GATHER-001-low-light-foraging-penalty-warning.md"
+  },
+  {
     "id": "GIVE-001",
     "title": "Generic give command MVP and exchange bridge",
     "status": "next",
@@ -4163,6 +4184,26 @@
     "file": "docs/planning/items/SOC-010-greeting-inspiration-stamina.md"
   },
   {
+    "id": "SOC-011",
+    "title": "Social signal posture gates and catalog expansion",
+    "status": "backlog",
+    "type": "feature",
+    "area": "social",
+    "priority": "medium",
+    "tags": [
+      "social",
+      "signals",
+      "posture",
+      "aliases",
+      "ux"
+    ],
+    "depends_on": [
+      "SLEEP-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/SOC-011-social-signal-posture-and-catalog.md"
+  },
+  {
     "id": "SOCIAL-003",
     "title": "Theft reaction signals",
     "status": "backlog",
@@ -4221,6 +4262,23 @@
     "depends_on": [],
     "exports": {},
     "file": "docs/planning/items/STAT-001-web-predator-species-table.md"
+  },
+  {
+    "id": "STAT-002",
+    "title": "Service trace presence separation",
+    "status": "backlog",
+    "type": "polish",
+    "area": "admin",
+    "priority": "medium",
+    "tags": [
+      "admin",
+      "status",
+      "totems",
+      "visibility"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/STAT-002-service-trace-presence-separation.md"
   },
   {
     "id": "SURV-001",

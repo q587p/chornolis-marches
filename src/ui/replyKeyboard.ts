@@ -191,6 +191,7 @@ export function buildMenuReplyKeyboard() {
 export function buildAdminMenuReplyKeyboard() {
   return new Keyboard()
     .text("📊 Статистика")
+    .text("🐾 Види")
     .text("🌲 Світ")
     .row()
     .text("🧵 Службова черга")
