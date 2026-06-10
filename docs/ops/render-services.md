@@ -179,6 +179,17 @@ path; otherwise it follows `SLOW_COMMAND_LOG_MS` and defaults to `1000`.
 `ACTION_COMPLETION_SAMPLE_LIMIT` controls how many recent slow/error samples
 guarded `/queueDebug` keeps, defaulting to `10` and capped at `50`.
 
+As of `0.16.24`, Telegram `sendMessage` calls through `safeSendMessage` also
+record sanitized runtime samples. `slow:telegramSend` appears only for slow or
+failed sends and includes a developer-chosen context label, duration, outcome
+and compact sanitized error text. It intentionally does not log chat ids,
+usernames, message text, payloads, raw Telegram responses, parse-mode content,
+player speech, whispers, tokens or secrets. `TELEGRAM_SEND_SLOW_MS` can
+override the threshold for this path; otherwise it follows `SLOW_COMMAND_LOG_MS`
+and defaults to `1000`. `TELEGRAM_SEND_SAMPLE_LIMIT` controls how many recent
+slow/error samples guarded `/queueDebug` keeps, defaulting to `10` and capped at
+`50`.
+
 As of `0.16.22`, the recovery loop also records a compact runtime snapshot for
 guarded `/queueDebug`: player/creature phase durations, scanned/updated player
 counts, active-player skips, proactive recovery messages, creature candidates
@@ -194,6 +205,12 @@ and `recentCompletionErrors`. Use that section when `playerCompleteMs` or
 `creatureCompleteMs` is high but the pass-level timings do not show which
 specific action type or actor was slow. This is observability only: Telegram
 sends inside completion handlers are still awaited as before.
+
+As of `0.16.24`, guarded `/queueDebug` also shows `telegramSend`,
+`recentSlowTelegramSends` and `recentTelegramSendErrors`. Use that section when
+completion timings look healthy but notification delivery or high-volume fan-out
+paths are suspected. This is observability only: sends remain awaited, serial
+notification loops remain serial, and blocked-user handling remains unchanged.
 
 ## Action Queue Backpressure
 
@@ -369,17 +386,26 @@ archive republish queue instead of `/repost_publication`:
   reports total deployed entries, visible published entries, missing entries,
   the last published archive index and the first missing index, and labels the
   result as a tail gap or internal holes;
+- `/archive_republish_continue_preview 30m` previews only the missing tail
+  entries after the latest visible archive publication, refusing internal holes;
+- `/archive_republish_continue 30m` queues only that missing tail oldest-first
+  with stable `archiveOrder`, `archive-continue:*` content hashes and normal
+  archive rendering, without resuming the publisher loop;
 - `/archive_republish_cancel` cancels only unpublished republish-run rows.
 
 Archive republish rows use source type `NEWS_MD_ARCHIVE_REPUBLISH` and a
-`republish:v1:*` content-hash namespace, so existing published archive rows do
-not block the rebuild run. Channel posts render with the normal archive header,
+`republish:v1:*` content-hash namespace for full rebuild runs. Tail continuation
+uses `archive-continue:*` hashes tied to the original archive entry, so repeated
+continue commands do not duplicate already queued tail rows. Existing published
+archive rows do not block the rebuild run. Channel posts render with the normal archive header,
 `📜 З архіву Канцелярії`, and intentionally do not add a repeated-publication
 disclaimer. Canceling the republish queue does not touch ordinary pending
 `NEWS_MD` / `NEWS_MD_ARCHIVE` rows or already published history.
 The gap check is read-only: it does not publish, queue, cancel or mutate
-publication rows. Use it when a republish run says it has no pending rows but
-the deployed archive has grown since that run was queued.
+publication rows. If tail continuation rows are already queued, the gap check
+still reports them as not yet visible but calls out the queued continue count.
+Use it when a republish run says it has no pending rows but the deployed archive
+has grown since that run was queued.
 On Render, `news.md` is the deployed file; changing it requires commit, push and
 redeploy before these commands see the new text.
 

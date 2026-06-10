@@ -17,6 +17,7 @@ export const NEWS_ARCHIVE_REPUBLISH_SOURCE_TYPE = "NEWS_MD_ARCHIVE_REPUBLISH";
 export const DEFAULT_BACKFILL_INTERVAL_MS = 13 * 60 * 1000;
 export const DEFAULT_ARCHIVE_REPUBLISH_INTERVAL_MS = 30 * 60 * 1000;
 export const ARCHIVE_REPUBLISH_RUN_ID = "v1";
+export const ARCHIVE_REPUBLISH_CONTINUE_RUN_ID = "continue";
 const MIN_BACKFILL_INTERVAL_MS = 60 * 1000;
 const MAX_BACKFILL_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
@@ -72,6 +73,10 @@ export function formatBackfillInterval(ms: number) {
 
 export function archiveRepublishContentHash(originalHash: string, runId = ARCHIVE_REPUBLISH_RUN_ID) {
   return `republish:${runId}:${originalHash}`;
+}
+
+export function archiveRepublishContinueContentHash(originalHash: string) {
+  return `archive-continue:${originalHash}`;
 }
 
 export function chronologicalNewsEntries(entries: readonly HeraldNewsEntry[]) {
@@ -354,6 +359,151 @@ export async function queueArchiveRepublish(
   };
 }
 
+function isPendingPublicArchivePublication(publication: ArchiveGapPublication | undefined | null) {
+  return Boolean(
+    publication
+    && !publication.publishedAt
+    && publication.visibility === "PUBLIC"
+    && !publication.manuallyDeletedAt
+  );
+}
+
+async function archiveContinueRows(
+  entries: readonly HeraldNewsEntry[],
+  store: ArchiveRepublishStore = {},
+) {
+  const gap = await archiveRepublishGapReport(entries, ARCHIVE_REPUBLISH_RUN_ID, store);
+  const tailRows = gap.hasTailGap && !gap.hasInternalHoles ? gap.missingRows : [];
+  const hashes = tailRows.map((row) => archiveRepublishContinueContentHash(row.entry.contentHash));
+  const existing = (await (store.findExistingPublicationsByHashes ?? findExistingPublicationsByHashes)(hashes)) as ArchiveGapPublication[];
+  const existingByHash = new Map(existing.flatMap((publication) => (
+    publication.contentHash ? [[publication.contentHash, publication] as const] : []
+  )));
+
+  return {
+    gap,
+    rows: tailRows.map((row) => {
+      const contentHash = archiveRepublishContinueContentHash(row.entry.contentHash);
+      return {
+        ...row,
+        contentHash,
+        publication: existingByHash.get(contentHash) ?? null,
+      };
+    }),
+  };
+}
+
+export async function previewArchiveRepublishContinue(
+  entries: readonly HeraldNewsEntry[],
+  intervalMs: number,
+  now = new Date(),
+  store: ArchiveRepublishStore = {},
+) {
+  const plan = await archiveContinueRows(entries, store);
+  const rows = plan.rows;
+  const firstAvailableAt = rows.length ? now : null;
+  const lastAvailableAt = rows.length ? new Date(now.getTime() + (rows.length - 1) * intervalMs) : null;
+  const alreadyQueued = rows.filter((row) => isPendingPublicArchivePublication(row.publication)).length;
+
+  return {
+    runId: ARCHIVE_REPUBLISH_CONTINUE_RUN_ID,
+    canContinue: plan.gap.hasTailGap && !plan.gap.hasInternalHoles && rows.length > 0,
+    hasInternalHoles: plan.gap.hasInternalHoles,
+    hasTailGap: plan.gap.hasTailGap,
+    total: plan.gap.total,
+    published: plan.gap.published,
+    missing: plan.gap.missing,
+    missingTailCount: rows.length,
+    first: rows[0] ?? null,
+    last: rows[rows.length - 1] ?? null,
+    intervalMs,
+    firstAvailableAt,
+    estimatedLastAvailableAt: lastAvailableAt,
+    alreadyQueued,
+  };
+}
+
+export async function queueArchiveRepublishContinue(
+  entries: readonly HeraldNewsEntry[],
+  intervalMs: number,
+  now = new Date(),
+  store: ArchiveRepublishStore = {},
+) {
+  const plan = await archiveContinueRows(entries, store);
+  const rows = plan.rows;
+  if (!plan.gap.hasTailGap || plan.gap.hasInternalHoles || rows.length === 0) {
+    return {
+      runId: ARCHIVE_REPUBLISH_CONTINUE_RUN_ID,
+      canContinue: false,
+      hasInternalHoles: plan.gap.hasInternalHoles,
+      hasTailGap: plan.gap.hasTailGap,
+      total: plan.gap.total,
+      published: plan.gap.published,
+      missing: plan.gap.missing,
+      queued: [],
+      skippedExisting: 0,
+      first: rows[0] ?? null,
+      last: rows[rows.length - 1] ?? null,
+      intervalMs,
+      firstAvailableAt: null,
+      lastAvailableAt: null,
+    };
+  }
+
+  const queued = [];
+  let skippedExisting = 0;
+  for (const [position, row] of rows.entries()) {
+    if (row.publication) {
+      skippedExisting += 1;
+      continue;
+    }
+
+    const body = formatArchiveBody(row.entry);
+    const publication = await (store.prepareManualHeraldPublication ?? prepareManualHeraldPublication)({
+      sourceType: NEWS_ARCHIVE_REPUBLISH_SOURCE_TYPE,
+      sourceId: row.entry.title,
+      sourceDate: row.entry.sourceDate,
+      sourceVersion: row.entry.sourceVersion,
+      title: row.entry.title,
+      body,
+      renderedText: formatHeraldPublicationPlainMessage({
+        sourceType: NEWS_ARCHIVE_REPUBLISH_SOURCE_TYPE,
+        title: row.entry.title,
+        sourceDate: row.entry.sourceDate,
+        sourceVersion: row.entry.sourceVersion,
+        body,
+      }),
+      archiveOrder: row.index - 1,
+      availableAt: new Date(now.getTime() + position * intervalMs),
+      visibility: "PUBLIC",
+      contentHash: row.contentHash,
+    });
+    queued.push(publication);
+  }
+
+  const firstRow = rows[0] ?? null;
+  const lastRow = rows[rows.length - 1] ?? null;
+  const firstAvailableAt = rows.length ? new Date(now.getTime()) : null;
+  const lastAvailableAt = rows.length ? new Date(now.getTime() + (rows.length - 1) * intervalMs) : null;
+
+  return {
+    runId: ARCHIVE_REPUBLISH_CONTINUE_RUN_ID,
+    canContinue: true,
+    hasInternalHoles: false,
+    hasTailGap: true,
+    total: plan.gap.total,
+    published: plan.gap.published,
+    missing: plan.gap.missing,
+    queued,
+    skippedExisting,
+    first: firstRow,
+    last: lastRow,
+    intervalMs,
+    firstAvailableAt,
+    lastAvailableAt,
+  };
+}
+
 export async function archiveRepublishStatus() {
   return archiveRepublishStatusWithStore();
 }
@@ -416,6 +566,7 @@ export async function archiveRepublishGapReport(
   const hashes = ordered.flatMap((entry) => [
     entry.contentHash,
     archiveRepublishContentHash(entry.contentHash, runId),
+    archiveRepublishContinueContentHash(entry.contentHash),
   ]);
   const existing = (await (store.findExistingPublicationsByHashes ?? findExistingPublicationsByHashes)(hashes)) as ArchiveGapPublication[];
   const existingByHash = new Map<string, ArchiveGapPublication[]>();
@@ -430,18 +581,26 @@ export async function archiveRepublishGapReport(
     const publications = [
       ...(existingByHash.get(entry.contentHash) ?? []),
       ...(existingByHash.get(archiveRepublishContentHash(entry.contentHash, runId)) ?? []),
+      ...(existingByHash.get(archiveRepublishContinueContentHash(entry.contentHash)) ?? []),
     ];
     const visiblePublication = publications.find(isVisiblePublishedArchivePublication) ?? null;
+    const queuedContinuePublication = publications.find((publication) => (
+      publication.contentHash === archiveRepublishContinueContentHash(entry.contentHash)
+      && isPendingPublicArchivePublication(publication)
+    )) ?? null;
     return {
       index: index + 1,
       entry,
       visiblePublication,
+      queuedContinuePublication,
       isPublished: Boolean(visiblePublication),
+      isQueuedContinue: Boolean(queuedContinuePublication),
     };
   });
 
   const publishedRows = rows.filter((row) => row.isPublished);
   const missingRows = rows.filter((row) => !row.isPublished);
+  const queuedContinueRows = missingRows.filter((row) => row.isQueuedContinue);
   const lastPublished = publishedRows[publishedRows.length - 1] ?? null;
   const firstMissing = missingRows[0] ?? null;
   const hasInternalHoles = Boolean(lastPublished && missingRows.some((row) => row.index < lastPublished.index));
@@ -455,6 +614,8 @@ export async function archiveRepublishGapReport(
     lastPublished,
     firstMissing,
     missingRows,
+    queuedContinueRows,
+    queuedContinue: queuedContinueRows.length,
     hasTailGap,
     hasInternalHoles,
   };
@@ -491,6 +652,7 @@ export function formatArchiveRepublishGapReply(result: Awaited<ReturnType<typeof
     `У deployed news.md: ${result.total}.`,
     `Видимих опублікованих архівних записів: ${result.published}.`,
     `Не знайдено в каналі/книзі: ${result.missing}.`,
+    result.queuedContinue ? `У черзі продовження хвоста: ${result.queuedContinue}.` : null,
     "",
     "Останній опублікований:",
     result.lastPublished ? archiveGapEntryLine(result.lastPublished) : "немає видимого опублікованого архівного запису.",
@@ -503,6 +665,9 @@ export function formatArchiveRepublishGapReply(result: Awaited<ReturnType<typeof
     hidden > 0 ? `...і ще ${hidden}.` : null,
     "",
     gapNote,
+    result.queuedContinue
+      ? "Частина пропущених записів уже стоїть у durable continue-черзі, але ще не видима як опублікована."
+      : null,
     "Ця команда нічого не публікує й не ставить у чергу.",
   ].filter((line): line is string => Boolean(line)).join("\n");
 }

@@ -119,6 +119,28 @@ export type ActionCompletionRuntimeSnapshot = {
   recentErrors: ActionCompletionObservation[];
 };
 
+export type TelegramSendOutcome = "ok" | "blocked" | "error";
+
+export type TelegramSendObservation = {
+  observedAt: Date;
+  context: string;
+  durationMs: number;
+  outcome: TelegramSendOutcome;
+  error: string | null;
+  hasReplyMarkup?: boolean;
+};
+
+export type TelegramSendRuntimeSnapshot = {
+  slowThresholdMs: number;
+  lastObservedAt: Date | null;
+  totalObservedSinceStart: number;
+  slowObservedSinceStart: number;
+  blockedSinceStart: number;
+  errorSinceStart: number;
+  recentSlow: TelegramSendObservation[];
+  recentErrors: TelegramSendObservation[];
+};
+
 const EMPTY_ACTION_QUEUE_PHASE_DURATIONS: ActionQueuePhaseDurations = {
   playerCompleteMs: 0,
   playerStartMs: 0,
@@ -192,6 +214,17 @@ let actionCompletionRuntimeState: Omit<ActionCompletionRuntimeSnapshot, "slowThr
 };
 
 const DEFAULT_ACTION_COMPLETION_SLOW_MS = 1000;
+const DEFAULT_TELEGRAM_SEND_SLOW_MS = 1000;
+
+let telegramSendRuntimeState: Omit<TelegramSendRuntimeSnapshot, "slowThresholdMs"> = {
+  lastObservedAt: null,
+  totalObservedSinceStart: 0,
+  slowObservedSinceStart: 0,
+  blockedSinceStart: 0,
+  errorSinceStart: 0,
+  recentSlow: [],
+  recentErrors: [],
+};
 
 let telegramBotStatus: {
   state: "starting" | "ready" | "error";
@@ -236,7 +269,26 @@ export function compactActionCompletionError(error: unknown) {
   return compactRuntimeError(error);
 }
 
+export function telegramSendSlowThresholdMs() {
+  return Math.max(0, intEnv("TELEGRAM_SEND_SLOW_MS", intEnv("SLOW_COMMAND_LOG_MS", DEFAULT_TELEGRAM_SEND_SLOW_MS)));
+}
+
+export function telegramSendSampleLimit() {
+  return Math.max(1, Math.min(50, intEnv("TELEGRAM_SEND_SAMPLE_LIMIT", 10)));
+}
+
+export function compactTelegramSendError(error: unknown) {
+  return compactRuntimeError(error);
+}
+
 function cloneActionCompletionObservation(observation: ActionCompletionObservation): ActionCompletionObservation {
+  return {
+    ...observation,
+    observedAt: new Date(observation.observedAt.getTime()),
+  };
+}
+
+function cloneTelegramSendObservation(observation: TelegramSendObservation): TelegramSendObservation {
   return {
     ...observation,
     observedAt: new Date(observation.observedAt.getTime()),
@@ -426,6 +478,52 @@ export function resetActionCompletionRuntimeSnapshotForTests(): void {
     lastObservedAt: null,
     totalObservedSinceStart: 0,
     slowObservedSinceStart: 0,
+    recentSlow: [],
+    recentErrors: [],
+  };
+}
+
+export function markTelegramSendObserved(observation: TelegramSendObservation): void {
+  const threshold = telegramSendSlowThresholdMs();
+  const limit = telegramSendSampleLimit();
+  const cloned = cloneTelegramSendObservation(observation);
+  const isSlow = threshold > 0 && cloned.durationMs >= threshold;
+
+  telegramSendRuntimeState = {
+    ...telegramSendRuntimeState,
+    lastObservedAt: cloned.observedAt,
+    totalObservedSinceStart: telegramSendRuntimeState.totalObservedSinceStart + 1,
+    slowObservedSinceStart: telegramSendRuntimeState.slowObservedSinceStart + (isSlow ? 1 : 0),
+    blockedSinceStart: telegramSendRuntimeState.blockedSinceStart + (cloned.outcome === "blocked" ? 1 : 0),
+    errorSinceStart: telegramSendRuntimeState.errorSinceStart + (cloned.outcome === "error" ? 1 : 0),
+    recentSlow: [...telegramSendRuntimeState.recentSlow],
+    recentErrors: [...telegramSendRuntimeState.recentErrors],
+  };
+
+  if (isSlow) pushCapped(telegramSendRuntimeState.recentSlow, cloned, limit);
+  if (cloned.outcome === "error") pushCapped(telegramSendRuntimeState.recentErrors, cloned, limit);
+}
+
+export function getTelegramSendRuntimeSnapshot(): TelegramSendRuntimeSnapshot {
+  return {
+    slowThresholdMs: telegramSendSlowThresholdMs(),
+    lastObservedAt: telegramSendRuntimeState.lastObservedAt ? new Date(telegramSendRuntimeState.lastObservedAt.getTime()) : null,
+    totalObservedSinceStart: telegramSendRuntimeState.totalObservedSinceStart,
+    slowObservedSinceStart: telegramSendRuntimeState.slowObservedSinceStart,
+    blockedSinceStart: telegramSendRuntimeState.blockedSinceStart,
+    errorSinceStart: telegramSendRuntimeState.errorSinceStart,
+    recentSlow: telegramSendRuntimeState.recentSlow.map(cloneTelegramSendObservation),
+    recentErrors: telegramSendRuntimeState.recentErrors.map(cloneTelegramSendObservation),
+  };
+}
+
+export function resetTelegramSendRuntimeSnapshotForTests(): void {
+  telegramSendRuntimeState = {
+    lastObservedAt: null,
+    totalObservedSinceStart: 0,
+    slowObservedSinceStart: 0,
+    blockedSinceStart: 0,
+    errorSinceStart: 0,
     recentSlow: [],
     recentErrors: [],
   };

@@ -951,6 +951,8 @@ const ADMIN_COMMAND_SUGGESTIONS: AdminCommandSuggestion[] = [
   { alias: "archive_republish_preview", command: "/archive_republish_preview", matches: ["archive_republish_preview", "archive republish preview"] },
   { alias: "archive_republish_queue", command: "/archive_republish_queue", matches: ["archive_republish_queue", "archive republish queue"] },
   { alias: "archive_republish_status", command: "/archive_republish_status", matches: ["archive_republish_status", "archive republish status"] },
+  { alias: "archive_republish_continue_preview", command: "/archive_republish_continue_preview", matches: ["archive_republish_continue_preview", "archive republish continue preview"] },
+  { alias: "archive_republish_continue", command: "/archive_republish_continue", matches: ["archive_republish_continue", "archive republish continue"] },
   { alias: "archive_republish_cancel", command: "/archive_republish_cancel", matches: ["archive_republish_cancel", "archive republish cancel"] },
 ];
 

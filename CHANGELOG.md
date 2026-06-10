@@ -7,6 +7,26 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.24 - Telegram send latency observability - 12026-06-10
+
+### Added
+
+- Added sanitized runtime observations for Telegram `sendMessage` duration, outcome and compact error context.
+- Extended guarded `/queueDebug` output with Telegram send totals, slow samples and error samples.
+- Added `slow:telegramSend` console warnings for slow or failed sends without logging chat ids, message text, payloads, tokens, secrets or whispers.
+- Added admin-only Herald `/archive_republish_continue_preview` and `/archive_republish_continue <interval>` to queue only safe missing archive tail gaps after `/archive_republish_gap`.
+- Added focused Telegram-send diagnostics tests.
+
+### Changed
+
+- Central notification fan-out paths now route through observed `safeSendMessage` labels while preserving existing serial awaiting, blocked-user handling and caller catch behavior.
+- Herald archive continuation uses `archive-continue:*` content hashes so repeated continue runs do not duplicate already queued tail rows.
+
+### Risks
+
+- This release does not change Telegram delivery semantics, queue ordering, action durations, stamina/HP math, recovery cadence, creature backpressure, gameplay rules, Prisma schema or migrations.
+- Herald archive continuation refuses internal holes and does not publish immediately or resume the publisher loop automatically.
+
 ## 0.16.23 - Action completion latency observability - 12026-06-10
 
 ### Added

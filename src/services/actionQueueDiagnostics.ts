@@ -3,6 +3,7 @@ import {
   getActionQueueRuntimeSnapshot,
   getCreatureQueueRuntimeSnapshot,
   getRecoveryRuntimeSnapshot,
+  getTelegramSendRuntimeSnapshot,
   type ActionCompletionObservation,
   type ActionCompletionRuntimeSnapshot,
   type ActionQueuePhaseDurations,
@@ -11,6 +12,8 @@ import {
   type CreatureQueueRuntimeSnapshot,
   type RecoveryPhaseDurations,
   type RecoveryRuntimeSnapshot,
+  type TelegramSendObservation,
+  type TelegramSendRuntimeSnapshot,
 } from "../runtimeState";
 import { getActionQueueStats } from "./status";
 
@@ -94,6 +97,27 @@ export function formatActionCompletionDebugSection(snapshot: ActionCompletionRun
   ].join("\n");
 }
 
+export function formatTelegramSendObservation(observation: TelegramSendObservation) {
+  const error = observation.error ? ` error=${observation.error}` : "";
+  const replyMarkup = typeof observation.hasReplyMarkup === "boolean" ? ` replyMarkup=${observation.hasReplyMarkup ? "yes" : "no"}` : "";
+  return `${observation.context} duration=${formatQueueDurationMs(observation.durationMs)} outcome=${observation.outcome}${replyMarkup}${error}`;
+}
+
+function formatTelegramSendObservationList(observations: TelegramSendObservation[]) {
+  if (observations.length === 0) return "немає";
+  return observations.map(formatTelegramSendObservation).join("\n");
+}
+
+export function formatTelegramSendDebugSection(snapshot: TelegramSendRuntimeSnapshot) {
+  return [
+    `telegramSend: threshold=${formatQueueDurationMs(snapshot.slowThresholdMs)}; total=${snapshot.totalObservedSinceStart}; slow=${snapshot.slowObservedSinceStart}; blocked=${snapshot.blockedSinceStart}; errors=${snapshot.errorSinceStart}`,
+    "recentSlowTelegramSends:",
+    formatTelegramSendObservationList(snapshot.recentSlow),
+    "recentTelegramSendErrors:",
+    formatTelegramSendObservationList(snapshot.recentErrors),
+  ].join("\n");
+}
+
 export function formatActionQueueDebugReport(
   stats: ActionQueueStatsSnapshot,
   snapshot: ActionQueueRuntimeSnapshot,
@@ -118,6 +142,7 @@ export function formatActionQueueDebugReport(
     `recoveryPhaseMs: ${formatRecoveryPhaseDurations(recoverySnapshot.lastPhaseDurations)}`,
     `recoveryCounts: playersScanned=${recoverySnapshot.lastPlayersScanned}; playersUpdated=${recoverySnapshot.lastPlayersUpdated}; playersSkippedActive=${recoverySnapshot.lastPlayersSkippedActive}; idleReminders=${recoverySnapshot.lastIdleRemindersSent}; sleepAutoWakes=${recoverySnapshot.lastSleepAutoWakes}; playerMessages=${recoverySnapshot.lastPlayerMessagesSent}; creaturesScanned=${recoverySnapshot.lastCreaturesScanned}; creaturesUpdated=${recoverySnapshot.lastCreaturesUpdated}; activeCreaturesRefreshed=${recoverySnapshot.lastActiveCreaturesRefreshed}`,
     formatActionCompletionDebugSection(getActionCompletionRuntimeSnapshot()),
+    formatTelegramSendDebugSection(getTelegramSendRuntimeSnapshot()),
     `queued: player=${stats.playerQueued}; creature=${stats.creatureQueued}; total=${stats.totalQueued}`,
     `runningActions: player=${stats.playerRunning}; creature=${stats.creatureRunning}; total=${stats.totalRunning}`,
     `oldestQueued: player=${formatQueueDurationMs(stats.oldestQueuedPlayerAgeMs)}; creature=${formatQueueDurationMs(stats.oldestQueuedCreatureAgeMs)}; total=${formatQueueDurationMs(stats.oldestQueuedAgeMs)}`,
