@@ -80,6 +80,7 @@ import {
 } from "./followRouteMemory";
 import { FOLLOW_TARGET_CREATURE, FOLLOW_TARGET_PLAYER, getPlayerFollowIntent } from "./following";
 import { maybeRecordCreatureObservationLearning } from "./creatureObservationLearning";
+import { deferTelegramFollowup, type DeferredTelegramReason } from "./deferredTelegram";
 
 type MovePayload = { direction: Direction; reason?: string };
 type GatherPayload = { resourceKey?: "berries" | "mushrooms" | "herbs" };
@@ -121,6 +122,24 @@ function sendActionCompletionMessage(
   detail = "reply",
 ) {
   return observedSendMessage(bot, chatId, text, options, actionCompletionContext(action.type, detail));
+}
+
+function deferActionCompletionFollowup(
+  chatId: number | string,
+  text: string,
+  options: SendMessageOptions | undefined,
+  context: string,
+  reason: DeferredTelegramReason,
+  dedupeKey?: string,
+) {
+  deferTelegramFollowup({
+    chatId,
+    text,
+    options,
+    context,
+    reason,
+    dedupeKey,
+  });
 }
 
 function replyOptionsAfterStaminaSpend(spend?: StaminaSpendResult | null, options: Record<string, any> = {}) {
@@ -330,12 +349,30 @@ async function sendPrivateSpeechMessage(
 
 async function sendTutorialActionHint(bot: Bot, chatId: number | string, player: { id: number; currentLocationId: number | null }, commandKey: "look" | "examine") {
   const comment = await tutorialActionHintComment(player, commandKey);
-  if (comment) noteKnownMessage(await observedSendMessage(bot, chatId, `${comment.title}:\n${quoteBlock(comment.text)}`, { parse_mode: "HTML" }, `actionCompletion.tutorial.${commandKey}Hint`));
+  if (comment) {
+    deferActionCompletionFollowup(
+      chatId,
+      `${comment.title}:\n${quoteBlock(comment.text)}`,
+      { parse_mode: "HTML" },
+      `actionCompletion.tutorial.${commandKey}Hint`,
+      "tutorial",
+      `tutorial:${player.id}:${commandKey}:${player.currentLocationId ?? "unknown"}`,
+    );
+  }
 }
 
 async function sendFirstNightGuidance(bot: Bot, chatId: number | string, playerId: number, locationId: number | null | undefined) {
   const text = await firstNightGuidanceForPlayer(playerId, locationId);
-  if (text) noteKnownMessage(await observedSendMessage(bot, chatId, text, undefined, "actionCompletion.tutorial.firstNightGuidance"));
+  if (text) {
+    deferActionCompletionFollowup(
+      chatId,
+      text,
+      undefined,
+      "actionCompletion.tutorial.firstNightGuidance",
+      "guidance",
+      `firstNight:${playerId}:${locationId ?? "unknown"}`,
+    );
+  }
 }
 
 function saidVerb(player: any) {
@@ -1054,7 +1091,14 @@ async function completeEat(bot: Bot, action: WorldAction) {
 async function sendMentorshipLessonFollowups(bot: Bot, chatId: number | string, context: MentorshipLessonFollowupContext) {
   const prompt = await maybeCreateMentorshipPracticePrompt(context);
   if (prompt.text) {
-    noteKnownMessage(await observedSendMessage(bot, chatId, prompt.text, prompt.ok && prompt.keyboard ? { reply_markup: prompt.keyboard } : undefined, "actionCompletion.mentorship.reply"));
+    deferActionCompletionFollowup(
+      chatId,
+      prompt.text,
+      prompt.ok && prompt.keyboard ? { reply_markup: prompt.keyboard } : undefined,
+      "actionCompletion.mentorship.reply",
+      "guidance",
+      `mentorshipPractice:${context.playerId}:${context.skillKey}:${context.contextKey}`,
+    );
   }
 
   const brewingHint = await maybeHerbalistBrewingHintForPlayer(context.playerId, {
@@ -1062,7 +1106,14 @@ async function sendMentorshipLessonFollowups(bot: Bot, chatId: number | string, 
     mentorCreatureId: context.mentorCreatureId,
   });
   if (brewingHint.ok) {
-    noteKnownMessage(await observedSendMessage(bot, chatId, brewingHint.text, { parse_mode: "HTML" }, "actionCompletion.mentorship.brewingHint"));
+    deferActionCompletionFollowup(
+      chatId,
+      brewingHint.text,
+      { parse_mode: "HTML" },
+      "actionCompletion.mentorship.brewingHint",
+      "guidance",
+      `mentorshipBrewing:${context.playerId}:${context.mentorCreatureId}:${context.locationId}`,
+    );
   }
 }
 

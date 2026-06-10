@@ -4,6 +4,7 @@ import { markTelegramBotError, markTelegramBotReady, markTelegramBotStarting, se
 import { startHttpServer } from "../server/statusServer";
 import { announceWorldUpdatedOnce } from "../services/deployAnnouncements";
 import { startActionQueueLoop } from "../services/actionQueue";
+import { startDeferredTelegramLoop } from "../services/deferredTelegram";
 import { startRecoveryLoop } from "../services/recoveryLoop";
 import { startWorldTickLoop } from "../services/worldTick";
 import { registerActionQueueHandlers } from "../handlers/actionQueue";
@@ -121,6 +122,7 @@ announceWorldUpdatedOnce(bot).catch((error) => {
 });
 startWorldTickLoop(bot);
 startActionQueueLoop(bot);
+startDeferredTelegramLoop(bot);
 startRecoveryLoop(bot);
 startAutoAfkLoop();
 registerFallbackHandlers(bot);
