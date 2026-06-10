@@ -7,6 +7,23 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.25 - Direct Telegram send observability - 12026-06-10
+
+### Added
+
+- Added `observedSendMessage(...)` for direct Telegram sends that should record sanitized send timing without changing throw behavior.
+- Added focused tests for observed direct-send success, blocked-user rethrow behavior, unexpected error rethrow behavior, redaction and migrated source boundaries.
+
+### Changed
+
+- Selected action completion, recovery and torch-fading direct sends now record sanitized Telegram send telemetry beside the central notification fan-out paths.
+- Telegram send error sanitization now redacts raw response body wording in compact diagnostics.
+
+### Risks
+
+- Direct sends still rethrow Telegram errors, including blocked-user errors; `safeSendMessage(...)` still returns `null` for blocked-user errors.
+- This release does not change gameplay behavior, queue ordering, action durations, stamina/HP math, recovery cadence, backpressure, combat, movement, tracking, sleep, social rules, predator behavior, totems, Herald archive behavior, Prisma schema or migrations.
+
 ## 0.16.24 - Telegram send latency observability - 12026-06-10
 
 ### Added
