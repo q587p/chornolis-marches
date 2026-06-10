@@ -4264,6 +4264,23 @@
     "file": "docs/planning/items/STAT-001-web-predator-species-table.md"
   },
   {
+    "id": "STAT-002",
+    "title": "Service trace presence separation",
+    "status": "backlog",
+    "type": "polish",
+    "area": "admin",
+    "priority": "medium",
+    "tags": [
+      "admin",
+      "status",
+      "totems",
+      "visibility"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/STAT-002-service-trace-presence-separation.md"
+  },
+  {
     "id": "SURV-001",
     "title": "Early respawn support",
     "status": "testing",

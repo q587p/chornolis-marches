@@ -215,6 +215,7 @@ SOC-011,Social signal posture gates and catalog expansion,backlog,feature,social
 SOCIAL-003,Theft reaction signals,backlog,feature,social,medium,"social,theft,signals,reactions,0.15",docs/planning/items/SOCIAL-003-theft-reaction-signals.md
 SOUND-001,Neighboring animal sounds and loud nearby events,next,feature,world,medium,"atmosphere,sound,ecology,daypart,visibility",docs/planning/items/SOUND-001-neighboring-animal-sounds.md
 STAT-001,Web /stat predator species comparison table,testing,feature,web,medium,"web,stats,ecology,predators,owl,fox,wolf",docs/planning/items/STAT-001-web-predator-species-table.md
+STAT-002,Service trace presence separation,backlog,polish,admin,medium,"admin,status,totems,visibility",docs/planning/items/STAT-002-service-trace-presence-separation.md
 SURV-001,Early respawn support,testing,feature,survival,high,"onboarding,respawn,beginner",docs/planning/items/SURV-001-early-respawn.md
 SURV-001-A,Beginner return eligibility helper,testing,feature,survival,high,"respawn,beginner,safety",docs/planning/items/SURV-001-A.md
 SURV-001-B,/respawn command skeleton,testing,feature,survival,high,"respawn,telegram,command",docs/planning/items/SURV-001-B.md
