@@ -28,6 +28,7 @@
     ],
     "isAlive": true,
     "isHidden": false,
+    "sex": "MALE",
     "professionKey": "znakhar",
     "professionName": "знахар",
     "action": "придивляється до межового вогню й сушить трави біля торби",

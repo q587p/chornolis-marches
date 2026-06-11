@@ -3382,7 +3382,7 @@
   {
     "id": "ONB-012",
     "title": "Learning surface command hints refresh",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "onboarding",
     "priority": "high",
@@ -3624,7 +3624,7 @@
   {
     "id": "QA-002",
     "title": "Camp and dream first-session smoke",
-    "status": "next",
+    "status": "testing",
     "type": "qa",
     "area": "onboarding",
     "priority": "medium",

@@ -511,6 +511,18 @@ for (const key of [
   assertFeatureExamineSummary(feature, `Tutorial nearby feature should have a meaningful examine summary: ${key}`);
 }
 
+const tutorialFutureLessons = features.find((item) => item.key === "dream_tutorial_future_lessons");
+assert.match(tutorialFutureLessons?.description ?? "", /чужий слід/u, "Tutorial future lessons should hint at following");
+assert.match(tutorialFutureLessons?.description ?? "", /наставника/u, "Tutorial future lessons should hint at teacher attention");
+assert.match(tutorialFutureLessons?.description ?? "", /гуртова дорога/u, "Tutorial future lessons should hint at group travel");
+assert.match(tutorialFutureLessons?.description ?? "", /настоянки/u, "Tutorial future lessons should hint at tinctures");
+assert.match(tutorialFutureLessons?.description ?? "", /сутички/u, "Tutorial future lessons should hint at combat observation");
+assert.doesNotMatch(
+  tutorialFutureLessons?.description ?? "",
+  /\/(?:follow|group|make_tincture|skills)|\bXP\b|таблиц/ui,
+  "Tutorial future lessons should stay diegetic and avoid raw command/manual framing",
+);
+
 for (const key of ["willow_reed_wall_dense_reeds", "willow_mudflat_silt_tracks"]) {
   const feature = features.find((item) => item.key === key);
   assertFeatureExamineSummary(feature, `Willow landmark should have a meaningful examine summary: ${key}`);
@@ -554,6 +566,10 @@ assert.deepEqual(
   ["lit_torch:1", "torch:1"],
   "Орина should start with one lit torch and one spare torch",
 );
+
+const zdravomyr = uniqueCreatures.find((creature) => creature.name === "Здравомир");
+assert.ok(zdravomyr, "Seed should include Здравомир");
+assert.equal(zdravomyr.sex, "MALE", "Здравомир should be marked male for mentorship pronouns");
 
 const campSpiritCat = uniqueCreatures.find((creature) => creature.speciesKey === "camp_spirit_cat");
 assert.ok(campSpiritCat, "Seed should include the camp spirit cat");
