@@ -304,7 +304,6 @@ assertFeatureExamineSummary(startCellarHatch, "Starter cellar hatch should expla
 
 const startCellarFeatures = [
   "start_cellar_old_notch_wall",
-  "start_cellar_empty_shelf",
   "start_cellar_dry_bunks",
   "start_cellar_root_gap",
   "start_cellar_torn_map_board",
@@ -320,6 +319,12 @@ for (const key of startCellarFeatures) {
   assertFeatureExamineSummary(feature, `Starter cellar feature should have meaningful examine summary: ${key}`);
 }
 const startCellarShelf = features.find((item) => item.key === "start_cellar_empty_shelf");
+assert.equal(startCellarShelf?.locationKey, "start_cellar_root_pocket", "Starter empty shelf should live inside the hidden root pocket");
+assert.equal(startCellarShelf?.type, "LANDMARK", "Starter empty shelf should remain a landmark");
+assert.equal(startCellarShelf?.data?.inspectable, true, "Starter empty shelf should remain inspectable");
+assert.ok(startCellarShelf?.data?.icon, "Starter empty shelf should keep a distinct icon");
+assert.ok(Array.isArray(startCellarShelf?.data?.aliases) && startCellarShelf.data.aliases.length >= 3, "Starter empty shelf should keep aliases");
+assertFeatureExamineSummary(startCellarShelf, "Starter empty shelf should have meaningful examine summary");
 assert.equal(startCellarShelf?.data?.no_loot, true, "Starter cellar shelf should stay no-loot");
 assert.equal(startCellarShelf?.data?.future_herbalist_deposit, true, "Starter cellar shelf should mark future herbalist deposit staging");
 assert.equal(startCellarShelf?.data?.storage_staging, "herbalist_supply_run", "Starter cellar shelf should stage herbalist supply runs without becoming a container");

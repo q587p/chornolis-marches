@@ -604,7 +604,7 @@
   },
   {
     "key": "start_cellar_empty_shelf",
-    "locationKey": "start_border_cellar",
+    "locationKey": "start_cellar_root_pocket",
     "type": "LANDMARK",
     "name": "Порожня полиця",
     "description": "Полиця суха, вузька й майже порожня. На дереві лишилися круглі сліди від глечиків, прямі подряпини від ножа й кілька новіших плям від трав'яного пилу.",
