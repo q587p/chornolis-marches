@@ -29,7 +29,7 @@ export function predatorMissObserverText(speciesKey: string, targetAccusative: s
 export function predatorKillObserverText(speciesKey: string, targetNominative: string, attackerLabel = "Щось") {
   if (speciesKey === "owl") return `Крилата тінь падає згори. За мить ${targetNominative} завмирає в траві.`;
   if (speciesKey === "camp_spirit_cat") return `Кіт-бережник падає в тінь коротким стрибком. За мить ${targetNominative} завмирає біля його лап.`;
-  return `${sentenceStart(attackerLabel)} кидається на здобич. За мить ${sentenceStart(targetNominative)} падає нерухомо.`;
+  return `${sentenceStart(attackerLabel)} кидається на здобич. За мить ${targetNominative} падає нерухомо.`;
 }
 
 export function predatorWoundObserverText(speciesKey: string, targetAccusative: string, targetNominative: string, attackerLabel = "Щось") {

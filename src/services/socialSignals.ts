@@ -91,6 +91,14 @@ function pick<T>(items: T[]) {
   return items[Math.floor(Math.random() * items.length)];
 }
 
+function sentenceStart(text: string) {
+  return text ? text.charAt(0).toLocaleUpperCase("uk-UA") + text.slice(1) : text;
+}
+
+export function animalSignalFleeText(forms: Pick<NameForms, "nominative">) {
+  return `${sentenceStart(forms.nominative)} лякається жесту й кидається геть.`;
+}
+
 function animalSignalFleeChance(signalId: string, creature: any) {
   const speciesKey = creature.species?.key;
   const diet = creature.species?.diet;
@@ -159,7 +167,7 @@ async function maybeReactToSocialSignal(bot: Bot, actor: SocialContext["actor"],
     interruptQueued: true,
   });
 
-  const message = `${forms.nominative} лякається жесту й кидається геть.`;
+  const message = animalSignalFleeText(forms);
   await notifyLocationAll(bot, actor.locationId, message);
   await logEvent("NPC_ACTION", "Тварина злякалася сигналу", `${forms.nominative}; signal=${socialId}; exit=${exit.direction}`, actor.locationId);
 }

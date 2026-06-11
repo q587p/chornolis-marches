@@ -32,6 +32,7 @@ import { resetTutorialProgressForPlayer } from "../services/tutorial";
 import { getGateHuntingSaturationState, setCarcassQuestOverride, type CarcassQuestOverride } from "../services/carcassDropoff";
 import { recordCarcassQuestChronicle } from "../services/chronicles";
 import { slashlessCommandPattern } from "../utils/slashlessCommands";
+import { resourceAmountText } from "../utils/resourceText";
 import { worldTimeSnapshotFromAbsoluteMinute } from "../data/worldClock";
 import { lightSnapshotForLocation } from "../services/lightSnapshot";
 import { getCurrentWorldState, setWorldClockAbsoluteMinute, setWorldWeatherState } from "../services/worldTime";
@@ -1060,7 +1061,7 @@ export function registerAdminHandlers(bot: Bot) {
     const { torch } = await ensureTorchResourceTypes();
     await addInventoryResource(player.id, torch.id, parsed.amount);
     await logEvent("SYSTEM", "Debug torch added to inventory", `player=${player.id}; amount=${parsed.amount}`);
-    await ctx.reply(`🕯 Додано факел у речі: ${playerDisplayName(player)} ×${parsed.amount}.`);
+    await ctx.reply(`🕯 Додано факел у речі: ${resourceAmountText(playerDisplayName(player), parsed.amount)}.`);
   }
 
   bot.command("addTorch", (ctx) => runAddTorchCommand(ctx));
@@ -1076,7 +1077,7 @@ export function registerAdminHandlers(bot: Bot) {
     const { litTorch } = await ensureTorchResourceTypes();
     await addInventoryResource(player.id, litTorch.id, parsed.amount);
     await logEvent("SYSTEM", "Debug lit torch added to inventory", `player=${player.id}; amount=${parsed.amount}`);
-    await ctx.reply(`🔥🕯 Додано запалений факел у речі: ${playerDisplayName(player)} ×${parsed.amount}.`);
+    await ctx.reply(`🔥🕯 Додано запалений факел у речі: ${resourceAmountText(playerDisplayName(player), parsed.amount)}.`);
   }
 
   bot.command(["addLitTorch", "addlittorch"], (ctx) => runAddLitTorchCommand(ctx));
@@ -1092,7 +1093,7 @@ export function registerAdminHandlers(bot: Bot) {
     const twigs = await ensureResourceType("twigs", "хмиз", "Сухі дрібні гілки для підкидання у вогнище.");
     await addInventoryResource(player.id, twigs.id, parsed.amount);
     await logEvent("SYSTEM", "Debug twigs added to inventory", `player=${player.id}; amount=${parsed.amount}`);
-    await ctx.reply(`🪵 Додано хмиз у речі: ${playerDisplayName(player)} ×${parsed.amount}.`);
+    await ctx.reply(`🪵 Додано хмиз у речі: ${resourceAmountText(playerDisplayName(player), parsed.amount)}.`);
   }
 
   bot.command("addTwigs", (ctx) => runAddTwigsCommand(ctx));
@@ -1118,7 +1119,7 @@ export function registerAdminHandlers(bot: Bot) {
     if (!player) return;
     await addInventoryResource(player.id, resourceType.id, parsed.amount);
     await logEvent("SYSTEM", "Admin item added to inventory", `player=${player.id}; resource=${resourceType.key}; amount=${parsed.amount}`);
-    await ctx.reply(`🎒 Додано «${resourceType.name}» у речі: ${playerDisplayName(player)} ×${parsed.amount}.`);
+    await ctx.reply(`🎒 Додано «${resourceType.name}» у речі: ${resourceAmountText(playerDisplayName(player), parsed.amount)}.`);
   }
 
   bot.command(["addItem", "additem"], (ctx) => runAddItemCommand(ctx));

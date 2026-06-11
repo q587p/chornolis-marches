@@ -223,16 +223,19 @@ function personTargetIcon(target: TargetRef) {
 }
 
 function targetButtonIcon(target: TargetRef) {
-  if (target.isCorpse) return "";
-  if (target.type === "player") return personTargetIcon(target);
   const speciesIcon = ANIMAL_TARGET_ICONS[target.speciesKey ?? ""];
+  if (target.isCorpse) {
+    if (speciesIcon) return `☠️ ${speciesIcon}`;
+    if (target.isAnimal || target.speciesKind === "ANIMAL") return "☠️ 🐿️";
+    return "☠️";
+  }
+  if (target.type === "player") return personTargetIcon(target);
   if (speciesIcon) return speciesIcon;
   if (target.isAnimal || target.speciesKind === "ANIMAL") return "🐿️";
   return personTargetIcon(target);
 }
 
 function targetButtonLabel(target: TargetRef) {
-  if (target.isCorpse) return target.label;
   const icon = targetButtonIcon(target);
   return icon ? `${icon} ${target.label}` : target.label;
 }

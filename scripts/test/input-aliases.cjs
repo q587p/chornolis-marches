@@ -599,6 +599,7 @@ assertAlias("/follow_assist_off", { kind: "follow-assist", mode: "off" });
 assertAlias("/follow_auto", { kind: "follow-assist", mode: "show" });
 assertAlias("/autofollow", { kind: "follow-assist", mode: "show" });
 assertAlias("/stop_follow_assist", { kind: "follow-assist", mode: "off" });
+assertAlias("Слідування", { kind: "follow-assist", mode: "show" });
 assertAlias("йти слідом автоматично", { kind: "follow-assist", mode: "on" });
 assertAlias("триматися сліду автоматично", { kind: "follow-assist", mode: "on" });
 assertAlias("автослідування", { kind: "follow-assist", mode: "show" });

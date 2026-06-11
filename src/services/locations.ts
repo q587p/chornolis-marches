@@ -30,7 +30,7 @@ import {
 import { isVisibleGroundResource, type VisibleGroundResourceKey } from "./groundItems";
 import { escapeHtml } from "../utils/text";
 import { normalizeCreatureActionText } from "../utils/creatureActionText";
-import { creatureForms } from "./grammar";
+import { creatureForms, speciesForms } from "./grammar";
 import { resourceTypeDisplayName } from "./corpses";
 import { getPublicEcologySignStats, type PublicEcologySignStats } from "./ecologyStats";
 import { markLocationViewedForMovementNotifications } from "./notifications";
@@ -635,13 +635,21 @@ function featuresText(
   mode: "brief" | "details",
   showTechnicalDetails = false,
   displayStates: Map<number, FeatureDisplayState> = new Map(),
-  showFeatureDetails = true,
+  showFeatureDetails: boolean | ((feature: any) => boolean) = true,
 ) {
   const features = (location.features ?? []).filter(isInteractiveFeature);
   if (!features.length) return "";
   const title = mode === "brief" ? "<b>Особливості:</b>" : "<b>Особливості місцини:</b>";
-  const lines = features.map((feature: any) => mode === "brief" ? featureBriefLine(feature) : featureDetailLine(feature, showTechnicalDetails, displayStates.get(feature.id), showFeatureDetails));
+  const lines = features.map((feature: any) => {
+    const canShowDetails = typeof showFeatureDetails === "function" ? showFeatureDetails(feature) : showFeatureDetails;
+    return mode === "brief" ? featureBriefLine(feature) : featureDetailLine(feature, showTechnicalDetails, displayStates.get(feature.id), canShowDetails);
+  });
   return `\n\n${title}\n${lines.join("\n")}`;
+}
+
+export function canShowFeatureDetailsInCurrentVisibility(feature: any, visibility: VisibilityRules) {
+  if (isSleepSurfaceFeature(feature)) return true;
+  return canShowFeatureDetails(visibility);
 }
 
 function addFeatureButtons(keyboard: InlineKeyboard, features: any[], sourceMode: LocationViewMode) {
@@ -913,12 +921,12 @@ async function activeActionsForTargets(targets: ReturnType<typeof visibleTargets
 }
 
 function guessGenderFromForms(forms: ReturnType<typeof creatureForms>, fallback?: string | null, sex?: string | null) {
-  if (sex === "MALE") return "MASCULINE";
-  if (sex === "FEMALE") return "FEMININE";
   if (fallback === "PLURAL") return fallback;
   const lower = forms.nominative.toLocaleLowerCase("uk-UA");
   if (lower.endsWith("а") || lower.endsWith("я")) return "FEMININE";
-  if (lower.endsWith("о") || lower.endsWith("е") || lower.endsWith("я")) return "NEUTER";
+  if (lower.endsWith("о") || lower.endsWith("е")) return "NEUTER";
+  if (sex === "MALE") return "MASCULINE";
+  if (sex === "FEMALE") return "FEMININE";
   if (fallback === "FEMININE" || fallback === "NEUTER") return fallback;
   return "MASCULINE";
 }
@@ -928,7 +936,11 @@ export function animalAgeDescription(creature: any, showTechnicalDetails = false
   const ticks = showTechnicalDetails && Number.isFinite(creature.ageTicks) ? `, ${creature.ageTicks} тіків` : "";
   if (creature.age === "CHILD") return `дитинча ${forms.genitive}${ticks}`;
 
-  const gender = guessGenderFromForms(forms, creature.species?.grammaticalGender, creature.sex);
+  const baseSpeciesForms = speciesForms(creature.species);
+  const hasSexedSpeciesLabel = !creature.name
+    && (creature.sex === "MALE" || creature.sex === "FEMALE")
+    && forms.nominative !== baseSpeciesForms.nominative;
+  const gender = guessGenderFromForms(forms, creature.species?.grammaticalGender, hasSexedSpeciesLabel ? creature.sex : null);
   const adjective = CREATURE_AGE_ADJECTIVES[creature.age]?.[gender] ?? "";
   const label = adjective ? `${adjective} ${forms.nominative}` : forms.nominative;
   return `${label}${ticks}`;
@@ -1045,15 +1057,15 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
   const keyboard = new InlineKeyboard();
   addFeatureButtons(keyboard, location.features, "brief");
   const groundItems = location.resources.filter((r) => isVisibleGroundResource(r, location));
+  if (revealTargets && targets.length) addInlineRows(keyboard, buildTargetListKeyboard(actionLabeledTargets, { page: options.targetPage, pageCallbackPrefix: "targetPage:brief" }));
   if (visibility.showGroundObjects && groundItems.length) addGroundItemPickupButtons(keyboard, groundItems);
   addPickUpEverythingButton(keyboard, visibility.showGroundObjects ? groundItems : [], visibility.showGroundObjects ? location.creatures.filter(isVisibleCorpse) : []);
-  if (revealTargets && targets.length) addInlineRows(keyboard, buildTargetListKeyboard(actionLabeledTargets, { page: options.targetPage, pageCallbackPrefix: "targetPage:brief" }));
 
   const descriptionText = visibility.showLocationDescription
     ? escapeHtml(location.description ?? "")
     : `<i>${escapeHtml(visibilityDarknessText(visibility))}</i>`;
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${descriptionText}${featuresText(location, "brief", showTechnicalDetails, new Map(), canShowFeatureDetails(visibility))}${presenceText(location, viewerPlayerId, revealTargets, activeActions, visibility)}\n\n${escapeHtml(compactExitsText(location.exitsFrom, lockedExits))}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${descriptionText}${featuresText(location, "brief", showTechnicalDetails, new Map(), (feature) => canShowFeatureDetailsInCurrentVisibility(feature, visibility))}${presenceText(location, viewerPlayerId, revealTargets, activeActions, visibility)}\n\n${escapeHtml(compactExitsText(location.exitsFrom, lockedExits))}`,
     keyboard,
   };
 }
@@ -1172,9 +1184,6 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     keyboard.text("🌿 Зібрати", "gather:menu").row();
   }
 
-  addGroundItemPickupButtons(keyboard, groundItems);
-  addPickUpEverythingButton(keyboard, groundItems, corpses);
-
   if (tracksHint.hasTracks && visibility.showTracks) {
     addInlineRows(keyboard, buildExamineTracksKeyboard());
   }
@@ -1182,6 +1191,9 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   if (visibility.showNearbyDetails && targets.length > 0) {
     addInlineRows(keyboard, buildTargetListKeyboard(actionLabeledTargets, { page: options.targetPage, pageCallbackPrefix: "targetPage:details" }));
   }
+
+  addGroundItemPickupButtons(keyboard, groundItems);
+  addPickUpEverythingButton(keyboard, groundItems, corpses);
 
   const technicalLocationText = showTechnicalDetails
     ? `\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}`
@@ -1197,7 +1209,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     : `<i>${escapeHtml(visibilityDarknessText(visibility))}</i>`;
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${descriptionText}${featuresText(location, "details", showTechnicalDetails, featureDisplayStates, canShowFeatureDetails(visibility))}\n\n<i>Ви роздивляєтесь уважніше.</i>${dangerText}${technicalLocationText}\n\n${escapeHtml(detailedExitsText(location.exitsFrom, lockedExits))}${resourcesText}${charactersText}${tracksText}${lyingText}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${descriptionText}${featuresText(location, "details", showTechnicalDetails, featureDisplayStates, (feature) => canShowFeatureDetailsInCurrentVisibility(feature, visibility))}\n\n<i>Ви роздивляєтесь уважніше.</i>${dangerText}${technicalLocationText}\n\n${escapeHtml(detailedExitsText(location.exitsFrom, lockedExits))}${resourcesText}${charactersText}${tracksText}${lyingText}`,
     keyboard,
   };
 }
@@ -1277,7 +1289,9 @@ export async function renderLocationFeatureInteraction(
   if (!player || !feature || !feature.isActive || player.currentLocationId !== feature.locationId || !isInteractiveFeature(feature)) return null;
 
   const visibility = await visibilityRulesForLocation(feature.locationId, detailMode === "brief" ? "brief" : "details");
-  const showFeatureDetails = isAttentionRootGapFeature(feature)
+  const showFeatureDetails = isSleepSurfaceFeature(feature)
+    ? true
+    : isAttentionRootGapFeature(feature)
     ? await canPlayerRevealAttentionRootGap(viewerPlayerId, feature.locationId)
     : isTrackGateFeature(feature)
       ? await canPlayerRevealTrackGate(viewerPlayerId, feature.locationId)

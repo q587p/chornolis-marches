@@ -251,6 +251,27 @@
     "file": "docs/planning/items/ANIMAL-001-speech-reactions.md"
   },
   {
+    "id": "ANIMAL-002",
+    "title": "Animal lore through look/examine",
+    "status": "backlog",
+    "type": "feature",
+    "area": "progression",
+    "priority": "medium",
+    "tags": [
+      "animals",
+      "examine",
+      "skills",
+      "observation",
+      "ecology"
+    ],
+    "depends_on": [
+      "PROG-002",
+      "LEARN-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/ANIMAL-002-animal-lore-examine-skill.md"
+  },
+  {
     "id": "APIARY-001",
     "title": "Seed old log apiary feature",
     "status": "testing",
@@ -4710,7 +4731,7 @@
   {
     "id": "TRACK-LEARN-001-B",
     "title": "Animal movement observation",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "learning",
     "priority": "medium",

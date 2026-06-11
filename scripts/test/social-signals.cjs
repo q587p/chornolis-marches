@@ -4,6 +4,7 @@ require("ts-node/register");
 
 const {
   SOCIAL_DEFINITIONS,
+  animalSignalFleeText,
   quickSocialsForTarget,
   socialDefinitionById,
 } = require("../../src/services/socialSignals");
@@ -64,5 +65,9 @@ assert.deepEqual(quickSocialsForTarget({ kind: "player", isAnimal: false, canGre
 assert.deepEqual(quickSocialsForTarget({ kind: "creature", isAnimal: true, canGreet: false }), ["point", "glare"]);
 assert.deepEqual(quickSocialsForTarget({ kind: "creature", isAnimal: false, canGreet: true }), ["nod", "wave"]);
 assert.deepEqual(quickSocialsForTarget({ kind: "creature", isAnimal: false, canGreet: false }), ["bow", "glare"]);
+
+assert.equal(animalSignalFleeText({ nominative: "жаба" }), "Жаба лякається жесту й кидається геть.");
+assert.equal(animalSignalFleeText({ nominative: "миша" }), "Миша лякається жесту й кидається геть.");
+assert.equal(animalSignalFleeText({ nominative: "Кіт-бережник" }), "Кіт-бережник лякається жесту й кидається геть.");
 
 console.log("Social signal content helpers OK");

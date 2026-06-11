@@ -179,14 +179,14 @@ export function freshenWeaponFailureText(key: string | null | undefined) {
   return `${capitalizeFirst(forms?.nominative ?? weapon.name)} не підходить для чистого освіжування. Потрібне гостре лезо ближче до руки.`;
 }
 
-export function playerAttackKillText(key: string | null | undefined, targetAccusative: string) {
+export function playerAttackKillText(key: string | null | undefined, targetAccusative: string, targetNominative = targetAccusative) {
   const weapon = weaponDefinitionByKey(key);
   if (!weapon) return `⚔️ Ви збиваєте ${targetAccusative} ногою. Труп лишився на землі.`;
   if (weapon.attackProfile === "spear") return `⚔️ Ви виставляєте спис і пробиваєте коротким ударом. Здобич падає.`;
-  if (weapon.attackProfile === "axe") return `⚔️ Ви б’єте малою сокирою. ${capitalizeFirst(targetAccusative)} падає, і труп лишається на землі.`;
-  if (weapon.attackProfile === "sickle") return `⚔️ Ви ріжете серпом коротко й близько. ${capitalizeFirst(targetAccusative)} падає, і труп лишається на землі.`;
-  if (weapon.attackProfile === "sword") return `⚔️ Ви б’єте коротким мечем. ${capitalizeFirst(targetAccusative)} падає, і труп лишається на землі.`;
-  return `⚔️ Ви рвучко б’єте ножем. ${capitalizeFirst(targetAccusative)} падає, і труп лишається на землі.`;
+  if (weapon.attackProfile === "axe") return `⚔️ Ви б’єте малою сокирою. ${capitalizeFirst(targetNominative)} падає, і труп лишається на землі.`;
+  if (weapon.attackProfile === "sickle") return `⚔️ Ви ріжете серпом коротко й близько. ${capitalizeFirst(targetNominative)} падає, і труп лишається на землі.`;
+  if (weapon.attackProfile === "sword") return `⚔️ Ви б’єте коротким мечем. ${capitalizeFirst(targetNominative)} падає, і труп лишається на землі.`;
+  return `⚔️ Ви рвучко б’єте ножем. ${capitalizeFirst(targetNominative)} падає, і труп лишається на землі.`;
 }
 
 export function playerAttackObserverText(key: string | null | undefined, targetAccusative: string, actorName = "Хтось") {

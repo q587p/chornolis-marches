@@ -32,6 +32,7 @@ assert.match(legacyFresheningKnifeGrantText(), /Вимогу про гостре
 
 assert.equal(heldWeaponLine("knife"), "Тримає простий ніж.");
 assert.equal(playerAttackKillText(null, "мишу"), "⚔️ Ви збиваєте мишу ногою. Труп лишився на землі.");
+assert.equal(playerAttackKillText("short_sword", "жабу", "жаба"), "⚔️ Ви б’єте коротким мечем. Жаба падає, і труп лишається на землі.");
 assert.match(playerAttackKillText("hunting_spear", "зайця"), /виставляєте спис/);
 assert.match(playerAttackObserverText("knife", "мишу"), /простим ножем/);
 assert.equal(playerAttackObserverText("knife", "мишу", "Аїд"), "Аїд збиває мишу простим ножем. Труп лишається на землі.");

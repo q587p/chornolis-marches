@@ -5,9 +5,11 @@ const path = require("node:path");
 require("ts-node/register");
 
 const {
+  canShowFeatureDetailsInCurrentVisibility,
   darkFeatureInspectionText,
   featureBriefInspectionText,
 } = require("../../src/services/locations");
+const { visibilityRulesFromLight } = require("../../src/services/visibility");
 
 const worldDir = path.join(process.cwd(), "prisma", "data", "world");
 const locations = JSON.parse(fs.readFileSync(path.join(worldDir, "locations.json"), "utf8"));
@@ -44,11 +46,36 @@ const detailedTorchStand = featureBriefInspectionText(torchStand, false, {}, tru
 assert.doesNotMatch(detailedTorchStand, /Без світла/, "Lit watchtower torch stand detail should not use the darkness-blocked copy");
 assert.match(detailedTorchStand, /факели/, "Lit watchtower torch stand should still explain that torches can be taken");
 
+const darkDetailVisibility = visibilityRulesFromLight({
+  level: "dark",
+  score: 0,
+  hasLocalLight: false,
+  label: "темрява",
+}, "details");
+const dryBunks = features.find((item) => item.key === "start_cellar_dry_bunks");
+assert.ok(dryBunks, "Starter cellar dry bunks should exist");
+assert.equal(dryBunks.locationKey, "start_border_cellar", "Starter dry bunks should stay in the cellar");
+assert.equal(dryBunks.providesLight, false, "Starter dry bunks should not provide light");
+assert.equal(dryBunks.data?.sleep_surface, true, "Starter dry bunks should remain a sleep surface");
+assert.equal(
+  canShowFeatureDetailsInCurrentVisibility(dryBunks, darkDetailVisibility),
+  true,
+  "Sleep-surface bunks should remain usable without light",
+);
+const darkBunksLine = featureBriefInspectionText(dryBunks, false, {}, canShowFeatureDetailsInCurrentVisibility(dryBunks, darkDetailVisibility));
+assert.doesNotMatch(darkBunksLine, /Без світла/, "Dark sleep-surface line should not use the darkness-blocked copy");
+assert.match(darkBunksLine, /лягти й заснути/, "Dark sleep-surface line should still expose lie/sleep affordance");
+
 for (const key of ["start_cellar_old_notch_wall", "start_cellar_torn_map_board"]) {
   const feature = features.find((item) => item.key === key);
   assert.ok(feature, `Starter cellar feature should exist: ${key}`);
   assert.equal(feature.locationKey, "start_border_cellar", `Cellar feature should stay in the dark cellar: ${key}`);
   assert.equal(feature.providesLight, false, `Cellar feature should not provide light: ${key}`);
+  assert.equal(
+    canShowFeatureDetailsInCurrentVisibility(feature, darkDetailVisibility),
+    false,
+    `Non-sleep cellar feature details should still require light: ${key}`,
+  );
 
   const darkOutline = featureBriefInspectionText(feature, false, {}, false);
   const darkFull = darkFeatureInspectionText(feature);

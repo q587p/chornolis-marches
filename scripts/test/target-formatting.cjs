@@ -40,6 +40,26 @@ assert.equal(animalAgeDescription({ ...maleMouse, age: "OLD" }), "старий �
 assert.equal(formatCreatureStatusLine({ ...maleMouse, isAlive: true }), "Стан: живий.");
 assert.equal(formatCreatureLifeState({ ...maleMouse, hp: 1, maxHp: 12, species: { ...maleMouse.species, baseHp: 12 } }), "Життя: тяжко поранений.");
 
+const maleFrog = {
+  sex: "MALE",
+  species: { key: "frog", name: "жаба", grammaticalGender: "FEMININE", animacy: "ANIMATE" },
+};
+assert.equal(animalAgeDescription({ ...maleFrog, age: "YOUNG" }), "молода жаба");
+assert.equal(animalAgeDescription({ ...maleFrog, age: "ADULT" }), "доросла жаба");
+assert.equal(animalAgeDescription({ ...maleFrog, age: "OLD" }), "стара жаба");
+
+const maleSnake = {
+  sex: "MALE",
+  species: { key: "snake", name: "змія", grammaticalGender: "FEMININE", animacy: "ANIMATE" },
+};
+assert.equal(animalAgeDescription({ ...maleSnake, age: "ADULT" }), "доросла змія");
+
+const femaleHawk = {
+  sex: "FEMALE",
+  species: { key: "hawk", name: "сокіл", grammaticalGender: "MASCULINE", animacy: "ANIMATE" },
+};
+assert.equal(animalAgeDescription({ ...femaleHawk, age: "ADULT" }), "дорослий сокіл");
+
 assert.equal(joinVisibleActionLabels("йде на південь", "йде на південь"), "йде на південь");
 assert.equal(joinVisibleActionLabels("йде на південь; йде на південь", "тримає запалений факел"), "йде на південь; тримає запалений факел");
 assert.equal(joinVisibleActionLabels("простий ніж", undefined, "йде на південь"), "простий ніж; йде на південь");
@@ -81,19 +101,19 @@ assert.equal(
 );
 
 const multipleFreshCorpseRows = buildTargetListKeyboard([
-  { type: "creature", id: 1, label: "труп миша", actionLabel: "розкладається; залишилось 92 тіків", canGreet: false, isAnimal: true, isCorpse: true, canFreshen: true },
-  { type: "creature", id: 2, label: "труп миша", actionLabel: "розкладається; залишилось 116 тіків", canGreet: false, isAnimal: true, isCorpse: true, canFreshen: true },
+  { type: "creature", id: 1, label: "труп миша", actionLabel: "розкладається; залишилось 92 тіків", canGreet: false, isAnimal: true, isCorpse: true, speciesKey: "mouse", speciesKind: "ANIMAL", canFreshen: true },
+  { type: "creature", id: 2, label: "труп миша", actionLabel: "розкладається; залишилось 116 тіків", canGreet: false, isAnimal: true, isCorpse: true, speciesKey: "mouse", speciesKind: "ANIMAL", canFreshen: true },
 ]).inline_keyboard.map((row) => row.map((button) => button.text));
 assert.deepEqual(multipleFreshCorpseRows, [
-  ["труп миша"],
-  ["труп миша"],
+  ["☠️ 🐭 труп миша"],
+  ["☠️ 🐭 труп миша"],
   ["🔪 Освіжувати всі"],
 ]);
 
 const singleFreshCorpseRows = buildTargetListKeyboard([
-  { type: "creature", id: 1, label: "труп миша", actionLabel: "розкладається; залишилось 92 тіків", canGreet: false, isAnimal: true, isCorpse: true, canFreshen: true },
+  { type: "creature", id: 1, label: "труп миша", actionLabel: "розкладається; залишилось 92 тіків", canGreet: false, isAnimal: true, isCorpse: true, speciesKey: "mouse", speciesKind: "ANIMAL", canFreshen: true },
 ]).inline_keyboard.map((row) => row.map((button) => button.text));
-assert.deepEqual(singleFreshCorpseRows, [["труп миша"]]);
+assert.deepEqual(singleFreshCorpseRows, [["☠️ 🐭 труп миша"]]);
 
 const livingTargets = [
   { type: "creature", id: 31, label: "Орина", actionLabel: "шукає гризунів і зайців; тримає запалений факел", canGreet: true, sex: "FEMALE", speciesKind: "HUMAN" },
@@ -214,6 +234,30 @@ assert.match(socialHandlerSource, /setPlayerFollowIntent\(/, "Target follow-inte
 const locationsSource = fs.readFileSync(path.join(process.cwd(), "src", "services", "locations.ts"), "utf8");
 assert.match(locationsSource, /speciesKey:\s*c\.species\.key/, "Location target buttons should receive creature species keys for species-specific icons.");
 assert.match(locationsSource, /speciesKind:\s*c\.species\.kind/, "Location target buttons should receive creature species kind for animal fallback icons.");
+const briefRendererSource = locationsSource.slice(
+  locationsSource.indexOf("export async function renderLocationBrief"),
+  locationsSource.indexOf("export async function renderLocationGlance"),
+);
+const detailsRendererSource = locationsSource.slice(
+  locationsSource.indexOf("export async function renderLocationDetails"),
+  locationsSource.indexOf("export async function renderLocationFeatureInteraction"),
+);
+assert.ok(
+  briefRendererSource.indexOf("buildTargetListKeyboard") < briefRendererSource.indexOf("addGroundItemPickupButtons"),
+  "Brief location keyboards should list visible targets before loose ground pickup buttons.",
+);
+assert.ok(
+  briefRendererSource.indexOf("buildTargetListKeyboard") < briefRendererSource.indexOf("addPickUpEverythingButton"),
+  "Brief location keyboards should list visible targets before pick-up-everything.",
+);
+assert.ok(
+  detailsRendererSource.indexOf("buildTargetListKeyboard") < detailsRendererSource.indexOf("addGroundItemPickupButtons"),
+  "Detailed location keyboards should list visible targets before loose ground pickup buttons.",
+);
+assert.ok(
+  detailsRendererSource.indexOf("buildTargetListKeyboard") < detailsRendererSource.indexOf("addPickUpEverythingButton"),
+  "Detailed location keyboards should list visible targets before pick-up-everything.",
+);
 
 assert.equal(inventoryResourceSummary([
   { amount: 1, resourceType: { key: "cooked_meat", name: "смажене м'ясо" } },

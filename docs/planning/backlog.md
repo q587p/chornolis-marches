@@ -27,6 +27,7 @@ These may become `next` after 0.13-0.15 foundations land.
 - First weapon-learning hooks: using a spear teaches spear handling later; using a knife for freshening may feed hunting/butchering learning after progression storage is ready.
 - NPC hunter/archer route that leaves visible signs.
 - ANIMAL-001: directed speech reactions for animals: mice may flee, foxes may react warily, wolves may growl and eventually escalate if provoked.
+- ANIMAL-002: animal lore through `look` / `examine`: a future `Звірознавство` / `Тваринознавство` style skill that reveals qualitative animal health, sex, age, hunger, fear and breeding-readiness cues without raw stat tables or taming/pet-control mechanics.
 - ECO-008: rare, guarded carrion and mouse-cannibalism pressure for starving or stressed prey animals, after performance safeguards and corpse ownership rules are ready.
 - ECO-009: seasonal ecology and environment variation, so lunar circles and seasons can later affect resources, animal behavior, local work rhythms and `look` / `examine` atmosphere without becoming a full simulation too early.
 - Local console client for command/action smoke tests.

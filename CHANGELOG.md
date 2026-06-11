@@ -7,6 +7,30 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.33 - Animal movement observation tracking hint - 12026-06-11
+
+### Added
+
+- Added one bounded rabbit-movement observation cue: when a player can plausibly see a rabbit move under good visibility, the moment can record a small canonical tracking observation and show a short qualitative hint.
+- Added focused tracking-learning coverage for rabbit-only eligibility, visibility guardrails, duplicate/cooldown bounds, canonical observation progress storage and absence of raw skill numbers.
+- Added `docs/release_notes/0.16.33.md`.
+
+### Changed
+
+- The animal movement completion path now reuses existing track creation, visibility rules and learning/progression storage for this single observation pattern.
+- Generic predator-kill observer text now keeps prey species names lowercase inside the second sentence, e.g. `миша`/`жаба` after `За мить`, while still capitalizing the attacker at sentence start.
+- Player attack kill text now uses the target's nominative form for the falling subject, e.g. `Жаба падає`, not `Жабу падає`.
+- Animal age labels now keep adjective gender aligned with the visible species noun, so male frogs/snakes still display as `доросла жаба` / `доросла змія` unless the species has a distinct sexed label.
+- Animal social-signal flee text now capitalizes the visible species name at sentence start, e.g. `Жаба лякається жесту й кидається геть.`
+- Track age labels now use in-world boundary-time wording instead of real elapsed minutes.
+- Assorted world-data polish moved the no-loot empty cellar shelf into the hidden root pocket and lets cellar dry bunks keep their lie/sleep affordance in darkness.
+- Assorted UI/copy polish now keeps pickup buttons below visible targets, adds death/species icons to corpse target buttons, routes `Слідування` to follow-assist status, and hides `×1` in admin inventory-add confirmations.
+- Moved `TRACK-LEARN-001-B` to `testing`, regenerated planning exports, and cleaned `docs/planning/next.md` so completed `WPN-003` work no longer leads the immediate-candidate list.
+
+### Risks
+
+- Main risk is the observation cue feeling too tutorial-like or too farmable; the slice is limited to one species, good visibility and per-player dedupe/cooldown. No full following skill, follow-assist behavior, hidden-route bypass, auto-navigation, group movement, combat, schema/migration, scheduler/runtime, action queue, recovery, Telegram or Prisma tuning changes ship in this release.
+
 ## 0.16.32 - Themed NPC weapons and next-lane cleanup - 12026-06-11
 
 ### Added

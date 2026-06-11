@@ -65,12 +65,14 @@ import { firstNightGuidanceForPlayer } from "./beginnerGuidance";
 import { maybeTriggerPassiveApiarySting, raidApiaryForPlayer } from "./apiaryHazards";
 import { creatureAttackObserverText, freshenWeaponFailureText, getPlayerEquippedWeapon, grantAndEquipLegacyFresheningKnife, legacyFresheningKnifeGrantText, playerAttackKillText, playerAttackObserverText } from "./weapons";
 import { canCreatureUseExit, creatureUsableExits } from "./creatureMovement";
+import { notifyAnimalMovementTrackingObservation } from "./animalMovementObservation";
 import { maybeQueueLisovykFrightAfterMove } from "./lisovykRestoration";
 import { contributeToBeginnerCache } from "./beginnerCache";
 import { isBeginnerCacheContributionPayload } from "./beginnerCacheQueue";
 import { maybeGrantGatherShahBonus } from "./smallLoot";
 import { normalizeTrackQuery, trackMatchesQuery } from "./trackSearch";
 import { recordTrackingPractice, roughTrackAgeText, trackingDarkPresenceText, trackingSkillEffectForPlayer } from "./trackingLearning";
+import { preciseTrackAgeText } from "./trackAge";
 import { tryCompleteCellarWaterWordPassage } from "./cellarWaterPassage";
 import {
   followedTrackDisplayLabel,
@@ -403,15 +405,8 @@ function whisperedVerb(player: any) {
   return "щось прошепотів";
 }
 
-function trackAgeText(createdAt: Date, now = new Date()) {
-  const seconds = Math.max(0, Math.floor((now.getTime() - createdAt.getTime()) / 1000));
-  if (seconds < 20) return "щойно";
-  if (seconds < 60) return "менше хвилини тому";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 2) return "близько хвилини тому";
-  if (minutes < 5) return "кілька хвилин тому";
-  if (minutes < 15) return `${minutes} хв тому`;
-  return "давніше";
+export function trackAgeText(createdAt: Date, now = new Date()) {
+  return preciseTrackAgeText(createdAt, now);
 }
 
 async function visibleMoverLabel(locationId: number, fallback: string, visibleName: string) {
@@ -834,6 +829,16 @@ async function completeMove(bot: Bot, action: WorldAction) {
     });
   }
   await createTrack({ actorType: "CREATURE", creatureId: creature.id }, creature.locationId, exit.toLocationId, payload.direction, isAnimal ? `сліди: ${creature.species.name}` : `слід: ${name}`);
+  if (isAnimal) {
+    await notifyAnimalMovementTrackingObservation(bot, {
+      creatureId: creature.id,
+      speciesKey: creature.species.key,
+      isHidden: creature.isHidden,
+      sourceLocationId: creature.locationId,
+      destinationLocationId: exit.toLocationId,
+      direction: payload.direction,
+    });
+  }
   await rememberFollowedTargetVisibleMove(bot, {
     sourceLocationId: creature.locationId,
     destinationLocationId: exit.toLocationId,
@@ -1557,7 +1562,7 @@ async function completeAttack(bot: Bot, action: WorldAction) {
       bot,
       action,
       chatId,
-      playerAttackKillText(weapon?.key, target.forms.accusative),
+      playerAttackKillText(weapon?.key, target.forms.accusative, target.forms.nominative),
       corpseTarget?.isCorpse ? { reply_markup: buildCorpseActionKeyboard(corpseTarget) } : undefined,
       "kill",
     );

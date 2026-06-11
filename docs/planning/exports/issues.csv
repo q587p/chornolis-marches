@@ -11,6 +11,7 @@ ALC-004,Herbalist bottle route and brewing demonstration,backlog,feature,npc,hig
 ALC-005,Herbalist mentorship brewing hint,testing,ux,learning,medium,"mentorship,herbalist,alchemy,bottles,learning,onboarding",docs/planning/items/ALC-005-mentorship-brewing-hints.md
 ALC-006,Herbalism skill and brewing failure policy,testing,feature,learning,high,"herbalism,alchemy,learning,failure,bottles,crafting",docs/planning/items/ALC-006-herbalism-skill-and-failure-policy.md
 ANIMAL-001,Animal speech reactions,in_progress,feature,ecology,medium,"animals,speech,social,ecology,reactions",docs/planning/items/ANIMAL-001-speech-reactions.md
+ANIMAL-002,Animal lore through look/examine,backlog,feature,progression,medium,"animals,examine,skills,observation,ecology",docs/planning/items/ANIMAL-002-animal-lore-examine-skill.md
 APIARY-001,Seed old log apiary feature,testing,feature,ecology,medium,"apiary,bumblebee,world-seed,feature",docs/planning/items/APIARY-001-seed-apiary-feature.md
 APIARY-002,Passive bumblebee sting hazard,testing,feature,ecology,medium,"apiary,bumblebee,hazard,hp",docs/planning/items/APIARY-002-passive-sting-hazard.md
 APIARY-003,Honey wax and hive robbery,testing,feature,resources,medium,"apiary,honey,beeswax,resources,fire",docs/planning/items/APIARY-003-honey-wax-and-robbery.md
@@ -238,7 +239,7 @@ THEFT-002,World-controlled thief character,backlog,feature,npc,low,"theft,npc,au
 THEFT-003,Strange and spirit theft MVP,backlog,feature,spirits,low,"theft,spirits,omen,hidden-presence,future",docs/planning/items/THEFT-003-spirit-theft-mvp.md
 TRACK-LEARN-001,Following as a learned skill,backlog,feature,progression,medium,"skills,following,tracking,darkness,movement",docs/planning/items/TRACK-LEARN-001-following-skill.md
 TRACK-LEARN-001-A,Track-examine progress hint,testing,feature,learning,high,"tracking,tracks,progression",docs/planning/items/TRACK-LEARN-001-A.md
-TRACK-LEARN-001-B,Animal movement observation,next,feature,learning,medium,"tracking,animals,observe",docs/planning/items/TRACK-LEARN-001-B.md
+TRACK-LEARN-001-B,Animal movement observation,testing,feature,learning,medium,"tracking,animals,observe",docs/planning/items/TRACK-LEARN-001-B.md
 TRACK-LEARN-001-C,Learning respects visibility and light,next,feature,learning,high,"learning,visibility,light",docs/planning/items/TRACK-LEARN-001-C.md
 TRAVEL-001,Horses and mounted travel,icebox,feature,travel,low,"travel,mounts,animals,distance",docs/planning/items/TRAVEL-001-horses-and-mounted-travel.md
 UX-001,Command and feature icon collision audit,backlog,chore,ux,low,"ux,icons,keyboard,features",docs/planning/items/UX-001-command-feature-icon-collision.md
