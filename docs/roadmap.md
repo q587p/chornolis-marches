@@ -33,6 +33,14 @@ The active line is:
 
 > dream → waking edge → location → look/examine → signs/traces/small finds → stamina/rest → day/night/light → first safe return → first learning by observation.
 
+## 0.16 / 0.17 Transition
+
+`0.16.x` closes the attention-learning and production-readiness lane: mentorship/guided learning polish, first-session smoke, performance evidence, narrow bugfixes and planning capture.
+
+The central runtime heartbeat / scheduler rewrite belongs to `0.17.x`, not to the end of `0.16.x`. Start `0.17.x` with behavior-preserving runtime ownership: heartbeat scheduler skeleton, player-first action cadence, world tick phase split, due-based recovery/lifecycle audit and eventual region/zone runtime state.
+
+Attack practice and observation already have a minimal bridge. Do not use the `0.16.x` closeout as a back door for broad combat, training arenas, armor/wound rules, public skill sheets or group combat.
+
 ## 0.13 — Core Loop & Onboarding Stability
 
 Goal: make the first play session stable, understandable and atmospheric.

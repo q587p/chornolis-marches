@@ -4,44 +4,53 @@ This file should stay small. If everything is next, nothing is next.
 
 ## Current Lane
 
-The active `0.16.x` lane is **NPC Mentorship / Guided Learning MVP**.
+The active `0.16.x` lane is in **readiness, mentorship closure and planning closeout**.
 
-Do not replace or derail it with broad combat, economy, theft, crafting, group movement or deep spirit systems. The current lane should keep proving one vertical promise:
+Do not replace or derail it with a broad scheduler rewrite, combat system, economy, theft, crafting, group movement or deep spirit systems. The current lane should finish proving one vertical promise:
 
 > dream -> waking edge -> location -> look/examine -> signs/traces/small finds -> stamina/rest -> day/night/light -> first safe return -> first learning by observation -> guided practice with living teachers.
+
+`0.16.x` may still take narrow bugfixes, text polish, first-session smoke, evidence collection and docs-only planning. The central runtime heartbeat / scheduler lane belongs to `0.17.x`; see `docs/planning/runtime-heartbeats-and-0.17.md`.
 
 ## Immediate Candidates
 
 Keep the next patches narrow and reviewable:
 
-1. `0.16.17` / Sleep comfort and field command polish — in testing; feature-local sleep comfort, command-surface parity, light/predator text cleanup, strange-totem boundary polish and species-specific authored-`UP` movement for foxes, hawks, owls and snakes.
-2. `0.16.15` / Дід Лісовик character pass — finish or redesign him deliberately as old-forest mentor/spirit/threshold presence.
-3. Mentor guided tracking prompt — add only after gathering prompts and marker cooldowns feel stable.
-4. Mentor route polish — tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
-5. Spirit-call teacher unlock — design a narrow `Поклик духа` (`/spirit`) unlock or capability gate after sustained attention around an appropriate teacher.
-6. Group movement design — only a design slice, and only if live group/follow UX is clear.
-7. `MAP-004` follow-up — decide the next gated place after light/examine and track/follow-memory proofs.
-8. `ONB-012` / Навчання command hint refresh — keep the repeatable learning surface aware of follow, group and tincture/prepared-remedy possibilities; pair tutorial text changes with `QA-002` camp-dream smoke if they touch the first-session flow.
-9. `SOUND-001` / neighboring animal sounds — narrow atmospheric sound-propagation slice for wolves, night owls and wet-zone frogs after player speech ranges are stable; no full sound simulation or spammy room notifications.
-10. `CAT-011` / Кіт-бережник shadow absence — if the camp has no mice to watch, let the cat briefly vanish into the shadows and later return elsewhere inside the starter camp boundary.
+1. `0.16.30` / Runtime heartbeat planning closeout - docs-only decision note and prompt archive; no runtime behavior changes.
+2. Performance evidence report - use `docs/ops/performance-observation-template.md` and `docs/ops/performance-triage.md` to decide exactly one next tuning category, or choose no-code.
+3. `QA-002` / Camp-dream-waking smoke - verify the first-session promise after the latest readiness and mentorship polish.
+4. `ONB-012` / `Навчання` command hint refresh - keep repeatable learning aware of follow, group, tincture/prepared-remedy and existing attack-learning possibilities without exposing raw skill sheets.
+5. `TRACK-LEARN-001` / Following skill - design or implement only after current follow-assist copy and blockers stay clear in live play.
+6. `STAT-003` / Deferred heavy diagnostics replies - consider only if `/stat`, `/stat_species`, `/world`, `/all` or `/queueDebug` keep blocking ordinary play under evidence.
+7. Tiny WPN-003 seed/display slice - only if a visible hunter-with-spear/tool demonstration is needed for attack or freshening observation readability.
+8. Mentor guided tracking prompt - add only after gathering prompts and marker cooldowns feel stable.
+9. Mentor route polish - tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
+10. `MAP-004` follow-up - decide the next gated place after light/examine and track/follow-memory proofs.
 
 ## Post-0.16 Candidate Lane
 
-After the current mentorship/NPC-learning lane stabilizes, the next practical survival lane can be **bottles, herbalism and first prepared remedies**: `ALC-002` bottle source, `RECIPE-001` minimal recipe helper, `ALC-006` herbalism/failure policy, revised `ALC-001` stamina tincture, then herbalist hints/demonstrations and wetland reagents. Keep it humble: no full alchemy tree, broad crafting UI, shops, barter or public skill sheet.
+After the current mentorship/NPC-learning lane stabilizes, choose deliberately between:
+
+- `0.17.x` runtime heartbeats if production responsiveness remains questionable or telemetry does not point to one narrow `0.16.x` fix;
+- bottles, herbalism and first prepared remedies if runtime pressure is acceptable or consciously accepted.
+
+The practical content lane remains `ALC-002` bottle source, `RECIPE-001` minimal recipe helper, `ALC-006` herbalism/failure policy, revised `ALC-001` stamina tincture, then herbalist hints/demonstrations and wetland reagents. Keep it humble: no full alchemy tree, broad crafting UI, shops, barter or public skill sheet.
 
 ## Boundaries
 
-- `0.16.17` changes ordinary sleep comfort hints/surfaces, restored command surfaces, light/predator text, strange-totem boundary behavior and a narrow species-specific authored-`UP` movement boundary for foxes, hawks, owls and snakes; it does not add a `/spirit` unlock, teacher gate, mentorship effect, group movement, broad combat rewrite, economy/profession system or broad animal pathfinder.
+- `0.16.x` may document runtime architecture and collect guarded evidence; it should not hide a central heartbeat/scheduler rewrite inside a small release.
+- Attack practice and observation already exist as a minimal bridge. Do not turn remaining `0.16.x` work into training arenas, sparring, PvP, armor/round/wound rules, broad weapon modifiers or a public skill sheet.
 - Keep mentorship separate from `TravelGroup`: mentorship is teacher/student attention and learning context; travel groups remain player-player road groups.
 - Do not add public skill sheets or broad modifiers before bounded learning moments stay readable in play.
 - Do not open another broad content loop before the attention-learning spine is used by real attention moments.
-- `SOUND-001` should reuse speech-range/adjacency ideas without becoming global chat, hidden-exit reveal, combat tracking or broad animal AI.
-- `CAT-011` should stay atmospheric and camp-local: no pet system, danger detector, spirit unlock, reward or broad animal travel.
+- Spirit-call teacher unlock, full Lisovyk character pass, group movement automation and full combat remain future-only unless explicitly promoted into a narrow PR.
 - Honey/wax uses, shops, barter, economy, theft, bear behavior, deep crafting and new profession loops stay behind the active learning/observation spine.
 
 ## References
 
 - Current cautions: `docs/planning/watchpoints.md`
+- Runtime heartbeat lane: `docs/planning/runtime-heartbeats-and-0.17.md`
+- Attack-learning boundary: `docs/planning/attack-learning-0.16-review.md`
 - Post-0.16 candidate lane: `docs/planning/post_0_16_lane.md`
 - 0.15 learning/follow history: `docs/planning/history/0.15-learning-follow-history.md`
 - 0.16 mentorship history: `docs/planning/history/0.16-mentorship-history.md`

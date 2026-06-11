@@ -11,6 +11,9 @@ GitHub Issues and Projects may mirror these files, but should not be treated as 
 - `icebox.md` — good ideas that are too early, too large or not validated.
 - `watchpoints.md` — current risks, live-watch notes and follow-up cautions that should not bloat `next.md`.
 - `post_0_16_lane.md` — candidate lane after the active `0.16.x` mentorship / NPC learning work stabilizes.
+- `runtime-heartbeats-and-0.17.md` — planning-only decision note for moving central scheduler/heartbeat work into `0.17.x`.
+- `attack-learning-0.16-review.md` — planning-only boundary note for the existing attack-learning MVP and deferred combat work.
+- `prompts/` — archived planning and future-implementation prompts that should survive chat context loss.
 - `history/` — completed release-lane notes and pre-reset planning context preserved for reference.
 - `project_review_2026-05-28.md` — historical strategic audit.
 - `three_month_plan_2026-05.md` — historical 0.13/0.14/0.15 plan.

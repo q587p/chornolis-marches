@@ -7,6 +7,23 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.30 - Runtime heartbeat planning closeout - 12026-06-11
+
+### Added
+
+- Added `docs/planning/runtime-heartbeats-and-0.17.md` to record that central heartbeat / scheduler ownership belongs to a future `0.17.x` runtime lane, not to the active `0.16.x` closeout.
+- Added `docs/planning/attack-learning-0.16-review.md` to document the existing attack practice/observation MVP and keep training arenas, sparring and broad combat work deferred.
+- Added `docs/planning/prompts/` archives for future runtime-heartbeat implementation prompts and tiny attack-learning polish prompts.
+- Added `docs/release_notes/0.16.30.md` for the docs-only closeout.
+
+### Changed
+
+- Updated active planning, post-`0.16` lane guidance, roadmap transition notes and watchpoints so `0.16.x` remains readiness/telemetry/mentorship closure while `0.17.x` owns scheduler architecture.
+
+### Risks
+
+- Documentation and planning only: no runtime code, gameplay, action queue behavior, recovery cadence, creature backpressure, Telegram delivery, Prisma schema, migrations, diagnostics endpoints or content mechanics change.
+
 ## 0.16.29 - Readiness, follow polish and notification fixes - 12026-06-11
 
 ### Added
