@@ -1568,7 +1568,7 @@ async function completeAttack(bot: Bot, action: WorldAction) {
       bot,
       action,
       chatId,
-      playerAttackKillText(weapon?.key, target.forms.accusative),
+      playerAttackKillText(weapon?.key, target.forms.accusative, target.forms.nominative),
       corpseTarget?.isCorpse ? { reply_markup: buildCorpseActionKeyboard(corpseTarget) } : undefined,
       "kill",
     );
