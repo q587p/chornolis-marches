@@ -7,19 +7,36 @@ const {
   TRACKING_PRACTICE_CONTEXT_SEARCH,
   TRACKING_PRACTICE_CONTEXT_TRACK_GATE,
   TRACKING_PRACTICE_EVENT_TITLE,
+  TRACKING_ANIMAL_MOVEMENT_OBSERVATION_COOLDOWN_MS,
+  TRACKING_ANIMAL_MOVEMENT_OBSERVATION_TEXT,
+  TRACKING_OBSERVATION_CONTEXT_ANIMAL_MOVEMENT,
+  TRACKING_OBSERVATION_EVENT_TITLE,
+  recordTrackingAnimalMovementObservation,
   recordTrackingPractice,
   roughTrackAgeText,
+  trackingAnimalMovementObservationDescription,
+  trackingAnimalMovementObservationLearningInput,
   trackingDarkPresenceText,
   trackingPracticeDescription,
   trackingPracticeLearningInput,
   trackingSkillEffectForPlayer,
   trackingSkillEffectForProgressRows,
 } = require("../../src/services/trackingLearning");
+const {
+  TRACKING_ANIMAL_MOVEMENT_OBSERVATION_SPECIES_KEY,
+  canObserveAnimalMovementForTracking,
+} = require("../../src/services/animalMovementObservation");
 
 assert.equal(TRACKING_PRACTICE_EVENT_TITLE, "Tracking practice");
 assert.equal(TRACKING_PRACTICE_CONTEXT_SEARCH, "track_search");
 assert.equal(TRACKING_PRACTICE_CONTEXT_DETAIL, "track_detail");
 assert.equal(TRACKING_PRACTICE_CONTEXT_TRACK_GATE, "track_gate");
+assert.equal(TRACKING_OBSERVATION_EVENT_TITLE, "Tracking observation");
+assert.equal(TRACKING_OBSERVATION_CONTEXT_ANIMAL_MOVEMENT, "animal_movement_observation");
+assert.equal(TRACKING_ANIMAL_MOVEMENT_OBSERVATION_SPECIES_KEY, "rabbit");
+assert.ok(TRACKING_ANIMAL_MOVEMENT_OBSERVATION_COOLDOWN_MS >= 10 * 60_000);
+assert.equal(TRACKING_ANIMAL_MOVEMENT_OBSERVATION_TEXT.includes("+"), false);
+assert.doesNotMatch(TRACKING_ANIMAL_MOVEMENT_OBSERVATION_TEXT, /\b\d+\b/, "Observation text should not expose raw progress numbers");
 
 assert.deepEqual(trackingPracticeLearningInput({ playerId: 7 }), {
   playerId: 7,
@@ -45,6 +62,27 @@ assert.deepEqual(trackingPracticeLearningInput({ playerId: 7, contextKey: "track
 });
 assert.equal(trackingPracticeLearningInput({ playerId: null }), null);
 assert.match(trackingPracticeDescription({ playerId: 7, locationId: 13, contextKey: "track_search" }), /playerId=7; contextKey=track_search; locationId=13/);
+assert.deepEqual(trackingAnimalMovementObservationLearningInput({ playerId: 7, sourceEventId: 42 }), {
+  playerId: 7,
+  skillKey: "tracking",
+  sourceKey: "observation",
+  contextKey: "animal_movement_observation",
+  amount: 1,
+  lastSourceEventId: 42,
+});
+assert.equal(trackingAnimalMovementObservationLearningInput({ playerId: null }), null);
+assert.match(
+  trackingAnimalMovementObservationDescription({ playerId: 7, locationId: 13, creatureId: 91, fromLocationId: 13, toLocationId: 14, direction: "EAST" }),
+  /playerId=7; contextKey=animal_movement_observation; locationId=13; creatureId=91; fromLocationId=13; toLocationId=14; direction=EAST/,
+);
+
+const clearVisibility = { showNearbyDetails: true, showTracks: true };
+assert.equal(canObserveAnimalMovementForTracking({ speciesKey: "rabbit", sourceLocationId: 1, destinationLocationId: 2, visibility: clearVisibility }), true);
+assert.equal(canObserveAnimalMovementForTracking({ speciesKey: "mouse", sourceLocationId: 1, destinationLocationId: 2, visibility: clearVisibility }), false);
+assert.equal(canObserveAnimalMovementForTracking({ speciesKey: "rabbit", isHidden: true, sourceLocationId: 1, destinationLocationId: 2, visibility: clearVisibility }), false);
+assert.equal(canObserveAnimalMovementForTracking({ speciesKey: "rabbit", sourceLocationId: 1, destinationLocationId: 1, visibility: clearVisibility }), false);
+assert.equal(canObserveAnimalMovementForTracking({ speciesKey: "rabbit", sourceLocationId: 1, destinationLocationId: 2, visibility: { showNearbyDetails: false, showTracks: true } }), false);
+assert.equal(canObserveAnimalMovementForTracking({ speciesKey: "rabbit", sourceLocationId: 1, destinationLocationId: 2, visibility: { showNearbyDetails: true, showTracks: false } }), false);
 
 const level0 = trackingSkillEffectForProgressRows([]);
 assert.equal(level0.level, 0);
@@ -92,8 +130,19 @@ function fakeTrackingDb() {
     worldEvents,
     progressRows,
     worldEvent: {
+      findFirst: async ({ where }) => worldEvents.find((event) => {
+        if (where.type && event.type !== where.type) return false;
+        if (where.title && event.title !== where.title) return false;
+        if (where.playerId && event.playerId !== where.playerId) return false;
+        if (where.description) {
+          if (typeof where.description === "string" && event.description !== where.description) return false;
+          if (where.description.contains && !String(event.description ?? "").includes(where.description.contains)) return false;
+        }
+        if (where.createdAt?.gte && event.createdAt < where.createdAt.gte) return false;
+        return true;
+      }) ?? null,
       create: async ({ data }) => {
-        const event = { id: nextId++, createdAt: new Date("2026-06-05T12:00:00Z"), ...data };
+        const event = { id: nextId++, createdAt: data.createdAt ?? new Date("2026-06-05T12:00:00Z"), ...data };
         worldEvents.push(event);
         return event;
       },
@@ -180,6 +229,73 @@ function fakeTrackingDb() {
   assert.equal(invalid.recorded, false);
   assert.equal(invalidDb.worldEvents.length, 0);
   assert.equal(invalidDb.progressRows.length, 0);
+
+  const observationDb = fakeTrackingDb();
+  const observedAt = new Date("2026-06-05T12:00:00Z");
+  const observation = await recordTrackingAnimalMovementObservation({
+    playerId: 7,
+    locationId: 11,
+    creatureId: 91,
+    fromLocationId: 11,
+    toLocationId: 12,
+    direction: "EAST",
+    now: observedAt,
+  }, observationDb);
+  assert.equal(observation.recorded, true);
+  assert.equal(observation.text, TRACKING_ANIMAL_MOVEMENT_OBSERVATION_TEXT);
+  assert.equal(observationDb.worldEvents.length, 1);
+  assert.equal(observationDb.worldEvents[0].title, TRACKING_OBSERVATION_EVENT_TITLE);
+  assert.equal(observationDb.worldEvents[0].type, "SYSTEM");
+  assert.equal(observationDb.progressRows.length, 1);
+  assert.equal(observationDb.progressRows[0].skillKey, "tracking");
+  assert.equal(observationDb.progressRows[0].sourceKey, "observation");
+  assert.equal(observationDb.progressRows[0].contextKey, TRACKING_OBSERVATION_CONTEXT_ANIMAL_MOVEMENT);
+  assert.equal(observationDb.progressRows[0].totalProgress, 1);
+  assert.equal(observationDb.progressRows[0].lastSourceEventId, observation.sourceEventId);
+
+  const duplicate = await recordTrackingAnimalMovementObservation({
+    playerId: 7,
+    locationId: 11,
+    creatureId: 91,
+    fromLocationId: 11,
+    toLocationId: 12,
+    direction: "EAST",
+    now: new Date("2026-06-05T12:01:00Z"),
+  }, observationDb);
+  assert.equal(duplicate.recorded, false);
+  assert.equal(duplicate.reason, "duplicate");
+  assert.equal(observationDb.worldEvents.length, 1);
+  assert.equal(observationDb.progressRows[0].totalProgress, 1);
+
+  const cooldown = await recordTrackingAnimalMovementObservation({
+    playerId: 7,
+    locationId: 12,
+    creatureId: 92,
+    fromLocationId: 12,
+    toLocationId: 13,
+    direction: "EAST",
+    now: new Date("2026-06-05T12:05:00Z"),
+  }, observationDb);
+  assert.equal(cooldown.recorded, false);
+  assert.equal(cooldown.reason, "cooldown");
+  assert.equal(observationDb.worldEvents.length, 1);
+
+  const afterCooldown = await recordTrackingAnimalMovementObservation({
+    playerId: 7,
+    locationId: 12,
+    creatureId: 92,
+    fromLocationId: 12,
+    toLocationId: 13,
+    direction: "EAST",
+    now: new Date("2026-06-05T12:16:00Z"),
+  }, observationDb);
+  assert.equal(afterCooldown.recorded, true);
+  assert.equal(observationDb.worldEvents.length, 2);
+  assert.equal(observationDb.progressRows[0].totalProgress, 2);
+
+  const completionSource = require("node:fs").readFileSync(require("node:path").join(__dirname, "../../src/services/actionCompletions.ts"), "utf8");
+  assert.match(completionSource, /notifyAnimalMovementTrackingObservation/);
+  assert.match(completionSource, /if \(isAnimal\) \{\s*await notifyAnimalMovementTrackingObservation/s);
 
   console.log("Tracking learning helpers OK");
 })().catch((error) => {

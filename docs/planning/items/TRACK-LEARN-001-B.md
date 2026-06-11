@@ -1,7 +1,7 @@
 ---
 id: TRACK-LEARN-001-B
 title: Animal movement observation
-status: next
+status: testing
 type: feature
 area: learning
 priority: medium
@@ -34,3 +34,10 @@ Add one animal observation pattern that can teach tracking.
 ## Implementation Order
 
 Do after: `TRACK-LEARN-001-A`, `OBS-001-A`.
+
+## 0.16.33 Testing Note
+
+- Implemented as one rabbit movement observation cue only.
+- Good visibility is required; hidden movement and darkness do not grant the cue.
+- Progress uses the existing tracking learning storage with duplicate/cooldown bounds and qualitative text only.
+- Full `Слідування` skill mechanics remain future work under `TRACK-LEARN-001`.

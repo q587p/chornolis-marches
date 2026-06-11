@@ -349,7 +349,7 @@ export async function notifyLocationDynamic(
   bot: Bot,
   locationId: number,
   exceptPlayerId: number,
-  build: (player: LocationNotificationRecipient) => Promise<{ text: string; options?: LocationNotificationOptions }>,
+  build: (player: LocationNotificationRecipient) => Promise<{ text: string; options?: LocationNotificationOptions } | null>,
 ) {
   const players = await prisma.player.findMany({
     where: { currentLocationId: locationId, NOT: { id: exceptPlayerId } },
@@ -357,6 +357,7 @@ export async function notifyLocationDynamic(
   });
   for (const player of players) {
     const message = await build(player);
+    if (!message) continue;
     await sendLocationNotification(bot, player, message.text, message.options);
   }
 }

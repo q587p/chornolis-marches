@@ -65,6 +65,7 @@ import { firstNightGuidanceForPlayer } from "./beginnerGuidance";
 import { maybeTriggerPassiveApiarySting, raidApiaryForPlayer } from "./apiaryHazards";
 import { creatureAttackObserverText, freshenWeaponFailureText, getPlayerEquippedWeapon, grantAndEquipLegacyFresheningKnife, legacyFresheningKnifeGrantText, playerAttackKillText, playerAttackObserverText } from "./weapons";
 import { canCreatureUseExit, creatureUsableExits } from "./creatureMovement";
+import { notifyAnimalMovementTrackingObservation } from "./animalMovementObservation";
 import { maybeQueueLisovykFrightAfterMove } from "./lisovykRestoration";
 import { contributeToBeginnerCache } from "./beginnerCache";
 import { isBeginnerCacheContributionPayload } from "./beginnerCacheQueue";
@@ -834,6 +835,16 @@ async function completeMove(bot: Bot, action: WorldAction) {
     });
   }
   await createTrack({ actorType: "CREATURE", creatureId: creature.id }, creature.locationId, exit.toLocationId, payload.direction, isAnimal ? `сліди: ${creature.species.name}` : `слід: ${name}`);
+  if (isAnimal) {
+    await notifyAnimalMovementTrackingObservation(bot, {
+      creatureId: creature.id,
+      speciesKey: creature.species.key,
+      isHidden: creature.isHidden,
+      sourceLocationId: creature.locationId,
+      destinationLocationId: exit.toLocationId,
+      direction: payload.direction,
+    });
+  }
   await rememberFollowedTargetVisibleMove(bot, {
     sourceLocationId: creature.locationId,
     destinationLocationId: exit.toLocationId,

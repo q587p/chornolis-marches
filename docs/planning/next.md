@@ -16,7 +16,7 @@ Do not replace or derail it with a broad scheduler rewrite, combat system, econo
 
 Keep the next patches narrow and reviewable:
 
-1. Tiny WPN-003 seed/display slice - in testing for `0.16.32`; keep it to authored NPC tools/weapons and visible text.
+1. `TRACK-LEARN-001-B` animal movement observation - in testing for `0.16.33`; keep it to one visible rabbit movement cue and existing tracking learning storage.
 2. `TRACK-LEARN-001` / Following skill - design or implement only after current follow-assist copy and blockers stay clear in live play.
 3. `STAT-003` / Deferred heavy diagnostics replies - consider only if `/stat`, `/stat_species`, `/world`, `/all` or `/queueDebug` keep blocking ordinary play under evidence.
 4. Mentor guided tracking prompt - add only after gathering prompts and marker cooldowns feel stable.

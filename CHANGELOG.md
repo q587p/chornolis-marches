@@ -7,6 +7,23 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.33 - Animal movement observation tracking hint - 12026-06-11
+
+### Added
+
+- Added one bounded rabbit-movement observation cue: when a player can plausibly see a rabbit move under good visibility, the moment can record a small canonical tracking observation and show a short qualitative hint.
+- Added focused tracking-learning coverage for rabbit-only eligibility, visibility guardrails, duplicate/cooldown bounds, canonical observation progress storage and absence of raw skill numbers.
+- Added `docs/release_notes/0.16.33.md`.
+
+### Changed
+
+- The animal movement completion path now reuses existing track creation, visibility rules and learning/progression storage for this single observation pattern.
+- Moved `TRACK-LEARN-001-B` to `testing`, regenerated planning exports, and cleaned `docs/planning/next.md` so completed `WPN-003` work no longer leads the immediate-candidate list.
+
+### Risks
+
+- Main risk is the observation cue feeling too tutorial-like or too farmable; the slice is limited to one species, good visibility and per-player dedupe/cooldown. No full following skill, follow-assist behavior, hidden-route bypass, auto-navigation, group movement, combat, schema/migration, scheduler/runtime, action queue, recovery, Telegram or Prisma tuning changes ship in this release.
+
 ## 0.16.32 - Themed NPC weapons and next-lane cleanup - 12026-06-11
 
 ### Added

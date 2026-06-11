@@ -4710,7 +4710,7 @@
   {
     "id": "TRACK-LEARN-001-B",
     "title": "Animal movement observation",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "learning",
     "priority": "medium",
