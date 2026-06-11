@@ -26,6 +26,7 @@ import { escapeHtml } from "../utils/text";
 
 const ADMIN_COOKIE_NAME = "chornolis_admin";
 const EMBLEM_PATH = path.join(process.cwd(), "assets", "art", "generated", "emblem-logo-01.png");
+const MAIN_HTTP_HOST = "0.0.0.0";
 
 function publicRuntimeStatusText(value: string | null) {
   if (!value) return null;
@@ -42,6 +43,7 @@ export function buildHealthPayload() {
   return {
     ok: true,
     version: config.appVersion,
+    uptimeSeconds: Math.round(process.uptime()),
     lastRuntimeError: publicRuntimeStatusText(getLastRuntimeError()),
     telegramBot: {
       state: telegramBot.state,
@@ -888,8 +890,8 @@ export function startHttpServer() {
         res.end(JSON.stringify({ ok: false, error: String(error) }));
       }
     })
-    .listen(config.port, () => {
+    .listen(config.port, MAIN_HTTP_HOST, () => {
       markHttpServerStarted();
-      console.log(`Server running on port ${config.port}`);
+      console.log(`Server running on ${MAIN_HTTP_HOST}:${config.port}`);
     });
 }

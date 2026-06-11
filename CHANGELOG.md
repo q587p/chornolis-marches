@@ -17,6 +17,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Changed
 
 - Changed the main game service `/health` endpoint to answer from lightweight in-process runtime state instead of building the full world/status diagnostic payload before routing.
+- Bound the main HTTP server explicitly to `0.0.0.0:<port>` and included process uptime in the lightweight `/health` payload so Render readiness checks can see the service during Telegram polling startup/retry windows.
 - Kept the full database-backed status reads on the pages that need them, such as `/`, `/world` and `/stat`.
 - Added a compact startup log when Telegram long polling successfully starts, while preserving the existing polling conflict retry behavior.
 - Documented `/health` as the Render readiness path and `/world`/`/stat` as deeper diagnostics.

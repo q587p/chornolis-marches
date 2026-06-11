@@ -19,8 +19,9 @@ setLastRuntimeError(new Error("render startup probe"));
 const payload = buildHealthPayload();
 assert.equal(payload.ok, true);
 assert.equal(payload.version, pkg.version);
+assert.equal(typeof payload.uptimeSeconds, "number");
 assert.equal(payload.lastRuntimeError, "Error: render startup probe");
-assert.deepEqual(Object.keys(payload).sort(), ["lastRuntimeError", "ok", "telegramBot", "version"].sort());
+assert.deepEqual(Object.keys(payload).sort(), ["lastRuntimeError", "ok", "telegramBot", "uptimeSeconds", "version"].sort());
 assert.equal(payload.telegramBot.state, "ready");
 assert.equal(payload.telegramBot.username, "Chornolis_bot");
 assert.equal(payload.telegramBot.error, null);
@@ -38,6 +39,12 @@ const startIndex = source.indexOf("export function startHttpServer()");
 const pathIndex = source.indexOf("const path = req.url?.split", startIndex);
 const healthIndex = source.indexOf('if (path === "/health")', startIndex);
 const firstStatusDataIndex = source.indexOf("await getStatusData()", startIndex);
+const hostConstantIndex = source.indexOf('const MAIN_HTTP_HOST = "0.0.0.0";');
+const listenIndex = source.indexOf(".listen(config.port, MAIN_HTTP_HOST", startIndex);
+const hostLogIndex = source.indexOf("Server running on ${MAIN_HTTP_HOST}:${config.port}", listenIndex);
+assert.ok(hostConstantIndex > 0, "main HTTP server should define the explicit Render-compatible bind host");
+assert.ok(listenIndex > startIndex, "main HTTP server should listen on the explicit 0.0.0.0 host");
+assert.ok(hostLogIndex > listenIndex, "main HTTP server startup log should include host and port");
 assert.ok(pathIndex > startIndex, "startHttpServer should parse route path before dispatch");
 assert.ok(healthIndex > pathIndex, "/health should be dispatched after route path parsing");
 assert.ok(firstStatusDataIndex > healthIndex, "/health must be checked before any getStatusData call");
@@ -58,10 +65,14 @@ for (const forbidden of [
 
 const gameBotPath = path.join(process.cwd(), "src", "apps", "gameBot.ts");
 const gameBotSource = fs.readFileSync(gameBotPath, "utf8");
+const heraldPath = path.join(process.cwd(), "src", "apps", "heraldBot.ts");
+const heraldSource = fs.readFileSync(heraldPath, "utf8");
 const startPollingIndex = gameBotSource.indexOf("async function startTelegramPolling()");
 const botStartIndex = gameBotSource.indexOf("await bot.start();", startPollingIndex);
 const pollingLogIndex = gameBotSource.indexOf('console.log("Telegram polling started");', botStartIndex);
 assert.ok(botStartIndex > startPollingIndex, "startTelegramPolling should still call bot.start()");
 assert.ok(pollingLogIndex > botStartIndex, "successful polling start should log after bot.start()");
+assert.match(gameBotSource, /startDeferredTelegramLoop\(bot\)/, "deferred Telegram loop should remain gameBot-side");
+assert.doesNotMatch(heraldSource, /startDeferredTelegramLoop/, "Herald startup must not start the game deferred Telegram loop");
 
 console.log("Status health readiness OK");

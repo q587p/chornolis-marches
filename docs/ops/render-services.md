@@ -124,12 +124,16 @@ service should not run `npm run seed` as part of its build.
 
 ## Status Page
 
+The main game HTTP server binds explicitly to `0.0.0.0:<PORT>` so Render's
+port scanner can see the service while Telegram long polling is still starting
+or retrying a temporary polling conflict.
+
 `/health` on the main game service is a lightweight readiness endpoint. It
 answers from process/runtime memory only: process liveness, app version, last
-runtime error and the Telegram bot runtime state. It must stay independent from
-`getStatusData()`, ecology statistics, action queue statistics, Prisma and other
-database-backed diagnostics so Render port/readiness probes can complete even
-while the world/status pages are slow.
+runtime error, uptime and the Telegram bot runtime state. It must stay
+independent from `getStatusData()`, ecology statistics, action queue statistics,
+Prisma and other database-backed diagnostics so Render port/readiness probes can
+complete even while the world/status pages are slow.
 
 Use `/world`, `/stat`, `/queueDebug` and related guarded pages for deeper
 diagnostics. Those pages may read the database and can be slower; they are not
