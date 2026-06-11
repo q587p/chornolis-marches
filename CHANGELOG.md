@@ -19,6 +19,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 - The animal movement completion path now reuses existing track creation, visibility rules and learning/progression storage for this single observation pattern.
 - Generic predator-kill observer text now keeps prey species names lowercase inside the second sentence, e.g. `миша`/`жаба` after `За мить`, while still capitalizing the attacker at sentence start.
+- Animal age labels now keep adjective gender aligned with the visible species noun, so male frogs/snakes still display as `доросла жаба` / `доросла змія` unless the species has a distinct sexed label.
 - Moved `TRACK-LEARN-001-B` to `testing`, regenerated planning exports, and cleaned `docs/planning/next.md` so completed `WPN-003` work no longer leads the immediate-candidate list.
 
 ### Risks

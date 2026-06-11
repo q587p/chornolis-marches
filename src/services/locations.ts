@@ -30,7 +30,7 @@ import {
 import { isVisibleGroundResource, type VisibleGroundResourceKey } from "./groundItems";
 import { escapeHtml } from "../utils/text";
 import { normalizeCreatureActionText } from "../utils/creatureActionText";
-import { creatureForms } from "./grammar";
+import { creatureForms, speciesForms } from "./grammar";
 import { resourceTypeDisplayName } from "./corpses";
 import { getPublicEcologySignStats, type PublicEcologySignStats } from "./ecologyStats";
 import { markLocationViewedForMovementNotifications } from "./notifications";
@@ -913,12 +913,12 @@ async function activeActionsForTargets(targets: ReturnType<typeof visibleTargets
 }
 
 function guessGenderFromForms(forms: ReturnType<typeof creatureForms>, fallback?: string | null, sex?: string | null) {
-  if (sex === "MALE") return "MASCULINE";
-  if (sex === "FEMALE") return "FEMININE";
   if (fallback === "PLURAL") return fallback;
   const lower = forms.nominative.toLocaleLowerCase("uk-UA");
   if (lower.endsWith("а") || lower.endsWith("я")) return "FEMININE";
-  if (lower.endsWith("о") || lower.endsWith("е") || lower.endsWith("я")) return "NEUTER";
+  if (lower.endsWith("о") || lower.endsWith("е")) return "NEUTER";
+  if (sex === "MALE") return "MASCULINE";
+  if (sex === "FEMALE") return "FEMININE";
   if (fallback === "FEMININE" || fallback === "NEUTER") return fallback;
   return "MASCULINE";
 }
@@ -928,7 +928,11 @@ export function animalAgeDescription(creature: any, showTechnicalDetails = false
   const ticks = showTechnicalDetails && Number.isFinite(creature.ageTicks) ? `, ${creature.ageTicks} тіків` : "";
   if (creature.age === "CHILD") return `дитинча ${forms.genitive}${ticks}`;
 
-  const gender = guessGenderFromForms(forms, creature.species?.grammaticalGender, creature.sex);
+  const baseSpeciesForms = speciesForms(creature.species);
+  const hasSexedSpeciesLabel = !creature.name
+    && (creature.sex === "MALE" || creature.sex === "FEMALE")
+    && forms.nominative !== baseSpeciesForms.nominative;
+  const gender = guessGenderFromForms(forms, creature.species?.grammaticalGender, hasSexedSpeciesLabel ? creature.sex : null);
   const adjective = CREATURE_AGE_ADJECTIVES[creature.age]?.[gender] ?? "";
   const label = adjective ? `${adjective} ${forms.nominative}` : forms.nominative;
   return `${label}${ticks}`;
