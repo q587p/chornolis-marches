@@ -189,6 +189,10 @@ function visibleTargets(
       canGreet: c.species.kind !== "ANIMAL",
       isAnimal: c.species.kind === "ANIMAL",
       isCorpse: false,
+      sex: c.sex,
+      grammaticalGender: c.species.grammaticalGender,
+      speciesKey: c.species.key,
+      speciesKind: c.species.kind,
     }));
 
   const corpses = location.creatures

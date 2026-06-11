@@ -95,7 +95,7 @@ const singleFreshCorpseRows = buildTargetListKeyboard([
 ]).inline_keyboard.map((row) => row.map((button) => button.text));
 assert.deepEqual(singleFreshCorpseRows, [["труп миша"]]);
 
-const livingTargetRows = buildTargetListKeyboard([
+const livingTargets = [
   { type: "creature", id: 31, label: "Орина", actionLabel: "шукає гризунів і зайців; тримає запалений факел", canGreet: true, sex: "FEMALE", speciesKind: "HUMAN" },
   { type: "creature", id: 32, label: "Лукан", actionLabel: "тримає слід", canGreet: true, sex: "MALE", speciesKind: "HUMAN" },
   { type: "player", id: 33, label: "Вербові", actionLabel: "Поклик духа веде", canGreet: true, grammaticalGender: "PLURAL" },
@@ -103,8 +103,18 @@ const livingTargetRows = buildTargetListKeyboard([
   { type: "creature", id: 34, label: "миша", actionLabel: "шукає їжу", canGreet: false, isAnimal: true, speciesKey: "mouse", speciesKind: "ANIMAL" },
   { type: "creature", id: 35, label: "лисиця", actionLabel: "нюхає траву", canGreet: false, isAnimal: true, speciesKey: "fox", speciesKind: "ANIMAL" },
   { type: "creature", id: 36, label: "Кіт-бережник", actionLabel: "озирається", canGreet: false, isAnimal: false, speciesKey: "camp_spirit_cat", speciesKind: "SPIRIT" },
-  { type: "creature", id: 37, label: "невідомий звір", actionLabel: "ворушиться", canGreet: false, isAnimal: true, speciesKey: "unknown", speciesKind: "ANIMAL" },
-]).inline_keyboard.map((row) => row.map((button) => button.text));
+  { type: "creature", id: 37, label: "заєць", actionLabel: "причаївся", canGreet: false, isAnimal: true, speciesKey: "rabbit", speciesKind: "ANIMAL" },
+  { type: "creature", id: 39, label: "вовк", actionLabel: "нюхає землю", canGreet: false, isAnimal: true, speciesKey: "wolf", speciesKind: "ANIMAL" },
+  { type: "creature", id: 40, label: "сова", actionLabel: "сидить тихо", canGreet: false, isAnimal: true, speciesKey: "owl", speciesKind: "ANIMAL" },
+  { type: "creature", id: 41, label: "сокіл", actionLabel: "тримається високо", canGreet: false, isAnimal: true, speciesKey: "hawk", speciesKind: "ANIMAL" },
+  { type: "creature", id: 42, label: "жаба", actionLabel: "сидить у мокрій траві", canGreet: false, isAnimal: true, speciesKey: "frog", speciesKind: "ANIMAL" },
+  { type: "creature", id: 43, label: "змія", actionLabel: "повзе повільно", canGreet: false, isAnimal: true, speciesKey: "snake", speciesKind: "ANIMAL" },
+  { type: "creature", id: 44, label: "крук", actionLabel: "дивиться збоку", canGreet: false, isAnimal: true, speciesKey: "raven", speciesKind: "ANIMAL" },
+  { type: "creature", id: 45, label: "ведмідь", actionLabel: "важко дихає", canGreet: false, isAnimal: true, speciesKey: "bear", speciesKind: "ANIMAL" },
+  { type: "creature", id: 46, label: "невідомий звір", actionLabel: "ворушиться", canGreet: false, isAnimal: true, speciesKey: "unknown", speciesKind: "ANIMAL" },
+];
+const livingTargetRows = buildTargetListKeyboard(livingTargets).inline_keyboard.map((row) => row.map((button) => button.text));
+const secondLivingTargetRows = buildTargetListKeyboard(livingTargets, { page: 1 }).inline_keyboard.map((row) => row.map((button) => button.text));
 assert.deepEqual(livingTargetRows, [
   ["🧍‍♀️ Орина"],
   ["🧍‍♂️ Лукан"],
@@ -113,9 +123,21 @@ assert.deepEqual(livingTargetRows, [
   ["🐭 миша"],
   ["🦊 лисиця"],
   ["🐈 Кіт-бережник"],
-  ["🐾 невідомий звір"],
+  ["🐇 заєць"],
 ]);
-assert.equal(livingTargetRows.flat().some((label) => label.includes("шукає гризунів")), false);
+assert.deepEqual(secondLivingTargetRows, [
+  ["🐺 вовк"],
+  ["🦉 сова"],
+  ["🦅 сокіл"],
+  ["🐸 жаба"],
+  ["🐍 змія"],
+  ["🐦‍⬛ крук"],
+  ["🐻 ведмідь"],
+  ["🐿️ невідомий звір"],
+]);
+const allLivingTargetLabels = [...livingTargetRows.flat(), ...secondLivingTargetRows.flat()];
+assert.equal(allLivingTargetLabels.some((label) => label.includes("шукає гризунів")), false);
+assert.equal(allLivingTargetLabels.some((label) => label.startsWith("🐾 ")), false);
 
 const pagedTargets = Array.from({ length: 10 }, (_, index) => ({
   type: "creature",
@@ -188,6 +210,10 @@ const socialHandlerSource = fs.readFileSync(path.join(process.cwd(), "src", "han
 assert.match(socialHandlerSource, /bot\.callbackQuery\(\s*\/\^social:follow:/, "Follow target keyboard callback should be registered as social:follow.");
 assert.match(socialHandlerSource, /submitTargetFollowIntent\(ctx,\s*ctx\.match\[1\]/, "social:follow callback should route through the target follow-intent helper.");
 assert.match(socialHandlerSource, /setPlayerFollowIntent\(/, "Target follow-intent helper should reuse the shared follow-intent service.");
+
+const locationsSource = fs.readFileSync(path.join(process.cwd(), "src", "services", "locations.ts"), "utf8");
+assert.match(locationsSource, /speciesKey:\s*c\.species\.key/, "Location target buttons should receive creature species keys for species-specific icons.");
+assert.match(locationsSource, /speciesKind:\s*c\.species\.kind/, "Location target buttons should receive creature species kind for animal fallback icons.");
 
 assert.equal(inventoryResourceSummary([
   { amount: 1, resourceType: { key: "cooked_meat", name: "смажене м'ясо" } },

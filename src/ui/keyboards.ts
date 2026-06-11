@@ -202,6 +202,7 @@ export function buildCorpseActionKeyboard(target: ResolvedTarget, returnCallback
 }
 
 const ANIMAL_TARGET_ICONS: Record<string, string> = {
+  bear: "🐻",
   camp_spirit_cat: "🐈",
   cat: "🐈",
   fox: "🦊",
@@ -210,6 +211,7 @@ const ANIMAL_TARGET_ICONS: Record<string, string> = {
   mouse: "🐭",
   owl: "🦉",
   rabbit: "🐇",
+  raven: "🐦‍⬛",
   snake: "🐍",
   wolf: "🐺",
 };
@@ -225,7 +227,7 @@ function targetButtonIcon(target: TargetRef) {
   if (target.type === "player") return personTargetIcon(target);
   const speciesIcon = ANIMAL_TARGET_ICONS[target.speciesKey ?? ""];
   if (speciesIcon) return speciesIcon;
-  if (target.isAnimal || target.speciesKind === "ANIMAL") return "🐾";
+  if (target.isAnimal || target.speciesKind === "ANIMAL") return "🐿️";
   return personTargetIcon(target);
 }
 

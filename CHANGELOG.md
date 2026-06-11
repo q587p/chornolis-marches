@@ -23,7 +23,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Changed inside/outside movement buttons to use abstract `⤵️` / `⤴️` icons instead of door icons while keeping existing movement commands and callbacks unchanged.
 - Expanded session-return absence text from short hour/minute abbreviations to Ukrainian duration phrases with day, month and year forms.
 - Italicized the local Ukrainian `пролізти` crawl prompt in the root-gap reveal text and added `/crawl` to the full `/commands` catalog without adding the English command to the local reveal copy.
-- Kept species-specific target icons active for special creature keys too, so Кіт-бережник uses the cat icon instead of a generic person icon.
+- Kept species-specific target icons active for location target buttons, so visible animals such as mouse, fox, rabbit, wolf, owl, hawk, frog, snake and Кіт-бережник no longer collapse into generic person or track-like icons.
 - Changed mentorship practice and answer speech lines to use Telegram quote blocks instead of inline quoted prose.
 - Standardized human target icons across players and local human characters to the same gender-based standing-person set.
 - Changed repeated `/follow_assist_on` use to say that слідування is already watching the current followed trace, and italicized `гурт` / `поклик духа` in that mode boundary copy.
