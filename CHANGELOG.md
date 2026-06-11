@@ -18,6 +18,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 ### Changed
 
 - The animal movement completion path now reuses existing track creation, visibility rules and learning/progression storage for this single observation pattern.
+- Generic predator-kill observer text now keeps prey species names lowercase inside the second sentence, e.g. `миша`/`жаба` after `За мить`, while still capitalizing the attacker at sentence start.
 - Moved `TRACK-LEARN-001-B` to `testing`, regenerated planning exports, and cleaned `docs/planning/next.md` so completed `WPN-003` work no longer leads the immediate-candidate list.
 
 ### Risks
