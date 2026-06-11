@@ -37,6 +37,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Capitalized predator feeding observer text at sentence start even when the visible animal label is lowercase, so lines such as owl scavenging no longer start with a lowercase species name.
 - Hid the global `Підібрати все` button when there is only one visible pickable thing on the ground; single pickup remains available, and the all-pickup path still appears for multiple pickable things.
 - Changed weather summary lines to name the visible phenomenon behind intensity adjectives, so clear weather now reads like `ясність ледь помітна` instead of leaving `ледь помітна` without a noun.
+- Changed torch relighting from a carried flame so lighting a replacement torch lays the old carried burning stack on the ground with its existing burn timer instead of resetting the old carried stack timer in inventory.
 
 ### Risks
 
@@ -47,6 +48,7 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Attack observation learning still uses existing hidden source events, but creature-created sources must remain visibly attack-related before ordinary look/examine can record observation progress.
 - Movement notification suppression is per-player and only affects delayed non-player movement pings after a later location view; movement, tracks, creature location state and creature action state are unchanged.
 - Pickup button gating changes UI visibility only; `/get_all`, `/pick_all` and typed all-pickup aliases keep their existing behavior.
+- Torch relighting still uses the existing stack-based `PlayerResource` and `ResourceNode` model; true per-item torch timers remain future item-instance work.
 - `STAT-003` is planning-only; `/stat`, `/stat_species`, `/world`, `/all` and `/queueDebug` remain synchronous in this release.
 
 ## 0.16.28 - Performance telemetry analysis pack - 12026-06-10

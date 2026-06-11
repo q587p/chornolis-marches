@@ -42,7 +42,7 @@ The near-gone ash notice is proactive local chat. It is guarded once per ash fea
 - Picking up a loose torch or taking one from a torch stand is visible to other characters in the location and is recorded for world/admin history.
 - `/start`, `/reset` and ordinary bot startup do not add torches directly to player inventory. Development/scribe placement uses `/addTorch [персонаж] [кількість]`, `/addLitTorch [персонаж] [кількість]` and `/addItem <resourceKey> [персонаж] [кількість]`, which add one or more items to the current or named player's inventory.
 - Near an active light-giving campfire, a character with a torch can use `Підпалити факел`.
-- If the torch is already burning and the character carries another unlit torch, the action becomes `Підпалити ще один факел`.
+- If the torch is already burning and the character carries another unlit or doused torch, the action can still light another torch even when the current lit-torch stack is already at the two-hand cap. The service first lays the carried burning torch stack on the ground with its existing burn timer, then keeps the newly lit torch in hand with its own fresh or resumed timer. This is a no-schema bridge for independent carried-torch timing; true per-item inventory timers still belong to the future item-instance layer.
 - If the character already has a burning torch and no extra unlit torch, the same action becomes `Оновити вогонь на факелі` and resets its timer.
 - From inventory, the `Light torch` / `Запалити факел` action appears when the character carries an unlit torch and can reach fire from either a lit campfire in the current location or another lit torch already in hand.
 - From inventory, `Підкинути хмиз` appears when the character carries `twigs` and a nearby ordinary campfire can accept them.
@@ -51,14 +51,14 @@ The near-gone ash notice is proactive local chat. It is guarded once per ash fea
 - From inventory, `Викинути` on a carried burning torch drops it as a burning ground item instead of immediately extinguishing it. It remains visible under `Лежить`, lights the місцина while it still burns, and can be picked up again.
 - A character can carry at most two lit torches at once, matching the current two-hands assumption.
 - A lit torch lasts 5 in-game hours, currently 10 real minutes internally. Player-facing remaining-time text should use approximate in-world hours rather than real minutes.
-- During the final in-game hour, currently 2 real minutes, the world tick sends the character a separate chat warning that the torch is going out. The warning should not imply that the same spent torch can be restored after burnout: it points the player toward lighting another carried torch from the current flame while it still lives, or finding a campfire later. If the character carries another dry or doused torch and has a free lit-torch hand slot, the warning includes `🔥 Підпалити ще`.
+- During the final in-game hour, currently 2 real minutes, the world tick sends the character a separate chat warning that the torch is going out. The warning should not imply that the same spent torch can be restored after burnout: it points the player toward lighting another carried torch from the current flame while it still lives, or finding a campfire later. If the character carries another dry or doused torch, the warning includes `🔥 Підпалити ще`; at the lit-torch hand cap this action sets the old burning stack down before lighting the replacement.
 - When a lit torch burns out, inventory sync consumes `lit_torch` and returns `twigs` instead of a dry `torch`.
 - A lit torch gives light in the character's current місцина and can reveal nearby targets in the same way as campfire light. This applies to carried lit torches, future NPC-held lit torches, and burning lit torches lying on the ground. Light is a local-world effect, not only a property of already-visible actors.
 
 The current implementation stores torch state as inventory resources:
 
 - `torch` is an unlit torch.
-- `lit_torch` is a burning torch; its `updatedAt` timestamp is the active timer. The same temporary resource-stack timer is used for carried and dropped burning torches until real item instances exist.
+- `lit_torch` is a burning torch; its `updatedAt` timestamp is the active timer. The same temporary resource-stack timer is used for each carried or dropped burning stack until real item instances exist. When a player lights another torch from a carried flame, the old carried burning stack is moved to the ground before the new `lit_torch` is created in hand, so the old stack's timer is not reset by the new torch.
 - Dropped burning torches are still stack-based ground resources: one `ResourceNode` stack has one shared `updatedAt` timer. If several lit torches are lying together in the same location, they do not yet have separate per-torch burn timers.
 - `doused_torch` is a doused torch; the remaining burn time is preserved through an internal timer event until it is relit.
 - `twigs` / `хмиз` is the leftover fuel resource produced when a carried lit torch expires.
