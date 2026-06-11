@@ -127,5 +127,7 @@ assert.match(adminHandlerSource, /RESTORE_GRASS_TEXT_COMMAND/);
 assert.match(adminHandlerSource, /restoreGrass/);
 assert.match(adminHandlerSource, /Відновити траву/);
 assert.match(adminHandlerSource, /DEPLETED_VEGETATION_FEATURE_PREFIX/);
+assert.match(adminHandlerSource, /resourceAmountText\(playerDisplayName\(player\), parsed\.amount\)/);
+assert.doesNotMatch(adminHandlerSource, /playerDisplayName\(player\)} ×\$\{parsed\.amount\}/);
 
 console.log("Admin resource helpers OK");
