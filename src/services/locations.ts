@@ -635,13 +635,21 @@ function featuresText(
   mode: "brief" | "details",
   showTechnicalDetails = false,
   displayStates: Map<number, FeatureDisplayState> = new Map(),
-  showFeatureDetails = true,
+  showFeatureDetails: boolean | ((feature: any) => boolean) = true,
 ) {
   const features = (location.features ?? []).filter(isInteractiveFeature);
   if (!features.length) return "";
   const title = mode === "brief" ? "<b>Особливості:</b>" : "<b>Особливості місцини:</b>";
-  const lines = features.map((feature: any) => mode === "brief" ? featureBriefLine(feature) : featureDetailLine(feature, showTechnicalDetails, displayStates.get(feature.id), showFeatureDetails));
+  const lines = features.map((feature: any) => {
+    const canShowDetails = typeof showFeatureDetails === "function" ? showFeatureDetails(feature) : showFeatureDetails;
+    return mode === "brief" ? featureBriefLine(feature) : featureDetailLine(feature, showTechnicalDetails, displayStates.get(feature.id), canShowDetails);
+  });
   return `\n\n${title}\n${lines.join("\n")}`;
+}
+
+export function canShowFeatureDetailsInCurrentVisibility(feature: any, visibility: VisibilityRules) {
+  if (isSleepSurfaceFeature(feature)) return true;
+  return canShowFeatureDetails(visibility);
 }
 
 function addFeatureButtons(keyboard: InlineKeyboard, features: any[], sourceMode: LocationViewMode) {
@@ -1057,7 +1065,7 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
     ? escapeHtml(location.description ?? "")
     : `<i>${escapeHtml(visibilityDarknessText(visibility))}</i>`;
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${descriptionText}${featuresText(location, "brief", showTechnicalDetails, new Map(), canShowFeatureDetails(visibility))}${presenceText(location, viewerPlayerId, revealTargets, activeActions, visibility)}\n\n${escapeHtml(compactExitsText(location.exitsFrom, lockedExits))}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${descriptionText}${featuresText(location, "brief", showTechnicalDetails, new Map(), (feature) => canShowFeatureDetailsInCurrentVisibility(feature, visibility))}${presenceText(location, viewerPlayerId, revealTargets, activeActions, visibility)}\n\n${escapeHtml(compactExitsText(location.exitsFrom, lockedExits))}`,
     keyboard,
   };
 }
@@ -1201,7 +1209,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     : `<i>${escapeHtml(visibilityDarknessText(visibility))}</i>`;
 
   return {
-    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${descriptionText}${featuresText(location, "details", showTechnicalDetails, featureDisplayStates, canShowFeatureDetails(visibility))}\n\n<i>Ви роздивляєтесь уважніше.</i>${dangerText}${technicalLocationText}\n\n${escapeHtml(detailedExitsText(location.exitsFrom, lockedExits))}${resourcesText}${charactersText}${tracksText}${lyingText}`,
+    text: `<b>${escapeHtml(location.name)}</b>\n<i>Регіон: ${escapeHtml(location.region.name)}</i>\n\n${descriptionText}${featuresText(location, "details", showTechnicalDetails, featureDisplayStates, (feature) => canShowFeatureDetailsInCurrentVisibility(feature, visibility))}\n\n<i>Ви роздивляєтесь уважніше.</i>${dangerText}${technicalLocationText}\n\n${escapeHtml(detailedExitsText(location.exitsFrom, lockedExits))}${resourcesText}${charactersText}${tracksText}${lyingText}`,
     keyboard,
   };
 }
@@ -1281,7 +1289,9 @@ export async function renderLocationFeatureInteraction(
   if (!player || !feature || !feature.isActive || player.currentLocationId !== feature.locationId || !isInteractiveFeature(feature)) return null;
 
   const visibility = await visibilityRulesForLocation(feature.locationId, detailMode === "brief" ? "brief" : "details");
-  const showFeatureDetails = isAttentionRootGapFeature(feature)
+  const showFeatureDetails = isSleepSurfaceFeature(feature)
+    ? true
+    : isAttentionRootGapFeature(feature)
     ? await canPlayerRevealAttentionRootGap(viewerPlayerId, feature.locationId)
     : isTrackGateFeature(feature)
       ? await canPlayerRevealTrackGate(viewerPlayerId, feature.locationId)
