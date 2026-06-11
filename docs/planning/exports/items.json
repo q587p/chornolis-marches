@@ -2851,6 +2851,26 @@
     "file": "docs/planning/items/OBS-003-danger-aware-examine-cues.md"
   },
   {
+    "id": "OBS-004",
+    "title": "Danger and tension model review",
+    "status": "backlog",
+    "type": "tuning",
+    "area": "observation",
+    "priority": "high",
+    "tags": [
+      "observe",
+      "danger",
+      "ecology",
+      "technical-details",
+      "tuning"
+    ],
+    "depends_on": [
+      "OBS-003"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/OBS-004-danger-and-tension-model-review.md"
+  },
+  {
     "id": "OBS-PREP-001",
     "title": "Look/examine content audit before observation MVP",
     "status": "testing",
@@ -4750,7 +4770,7 @@
   {
     "id": "TRACK-LEARN-001-C",
     "title": "Learning respects visibility and light",
-    "status": "next",
+    "status": "testing",
     "type": "feature",
     "area": "learning",
     "priority": "high",

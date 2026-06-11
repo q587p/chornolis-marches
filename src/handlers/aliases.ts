@@ -546,7 +546,7 @@ function isHerbalTinctureCommandTarget(value: string | undefined | null) {
   return inventoryResourceKeyFromText(value) === HERBAL_TINCTURE_KEY;
 }
 
-async function submitBrewTincture(bot: Bot, ctx: any) {
+export async function submitBrewTincture(bot: Bot, ctx: any) {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
@@ -1119,7 +1119,7 @@ async function maybeHandleMentorshipAnswer(ctx: any) {
   return true;
 }
 
-async function submitFollowAssist(ctx: any, mode: "show" | "on" | "off") {
+export async function submitFollowAssist(ctx: any, mode: "show" | "on" | "off") {
   const player = await getPlayerByTelegramId(ctx.from.id);
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 

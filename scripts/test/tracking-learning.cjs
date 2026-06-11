@@ -26,6 +26,7 @@ const {
   TRACKING_ANIMAL_MOVEMENT_OBSERVATION_SPECIES_KEY,
   canObserveAnimalMovementForTracking,
 } = require("../../src/services/animalMovementObservation");
+const { canLearnFromVisibleObservation, visibilityRulesFromLight } = require("../../src/services/visibility");
 const { REAL_MS_PER_GAME_MINUTE } = require("../../src/data/worldClock");
 
 assert.equal(TRACKING_PRACTICE_EVENT_TITLE, "Tracking practice");
@@ -78,12 +79,32 @@ assert.match(
 );
 
 const clearVisibility = { showNearbyDetails: true, showTracks: true };
+const darkVisibility = visibilityRulesFromLight({
+  level: "dark",
+  score: 0,
+  hasLocalLight: false,
+  label: "темрява",
+}, "details");
+const litDarkVisibility = visibilityRulesFromLight({
+  level: "dark",
+  score: 0,
+  hasLocalLight: true,
+  label: "світло в темряві",
+}, "details");
+assert.equal(canLearnFromVisibleObservation(darkVisibility, "tracks"), false);
+assert.equal(canLearnFromVisibleObservation(darkVisibility, "animal_movement"), false);
+assert.equal(canLearnFromVisibleObservation(darkVisibility, "local_action"), false);
+assert.equal(canLearnFromVisibleObservation(litDarkVisibility, "tracks"), true);
+assert.equal(canLearnFromVisibleObservation(litDarkVisibility, "animal_movement"), true);
+assert.equal(canLearnFromVisibleObservation(litDarkVisibility, "local_action"), true);
 assert.equal(canObserveAnimalMovementForTracking({ speciesKey: "rabbit", sourceLocationId: 1, destinationLocationId: 2, visibility: clearVisibility }), true);
 assert.equal(canObserveAnimalMovementForTracking({ speciesKey: "mouse", sourceLocationId: 1, destinationLocationId: 2, visibility: clearVisibility }), false);
 assert.equal(canObserveAnimalMovementForTracking({ speciesKey: "rabbit", isHidden: true, sourceLocationId: 1, destinationLocationId: 2, visibility: clearVisibility }), false);
 assert.equal(canObserveAnimalMovementForTracking({ speciesKey: "rabbit", sourceLocationId: 1, destinationLocationId: 1, visibility: clearVisibility }), false);
 assert.equal(canObserveAnimalMovementForTracking({ speciesKey: "rabbit", sourceLocationId: 1, destinationLocationId: 2, visibility: { showNearbyDetails: false, showTracks: true } }), false);
 assert.equal(canObserveAnimalMovementForTracking({ speciesKey: "rabbit", sourceLocationId: 1, destinationLocationId: 2, visibility: { showNearbyDetails: true, showTracks: false } }), false);
+assert.equal(canObserveAnimalMovementForTracking({ speciesKey: "rabbit", sourceLocationId: 1, destinationLocationId: 2, visibility: darkVisibility }), false);
+assert.equal(canObserveAnimalMovementForTracking({ speciesKey: "rabbit", sourceLocationId: 1, destinationLocationId: 2, visibility: litDarkVisibility }), true);
 
 const level0 = trackingSkillEffectForProgressRows([]);
 assert.equal(level0.level, 0);
@@ -299,6 +320,11 @@ function fakeTrackingDb() {
   const completionSource = require("node:fs").readFileSync(require("node:path").join(__dirname, "../../src/services/actionCompletions.ts"), "utf8");
   assert.match(completionSource, /notifyAnimalMovementTrackingObservation/);
   assert.match(completionSource, /if \(isAnimal\) \{\s*await notifyAnimalMovementTrackingObservation/s);
+  assert.match(
+    completionSource,
+    /if \(canLearnFromVisibleObservation\(visibility, "tracks"\)\) \{\s*await recordTrackingPractice/s,
+    "Track practice learning should be guarded by track visibility",
+  );
 
   console.log("Tracking learning helpers OK");
 })().catch((error) => {

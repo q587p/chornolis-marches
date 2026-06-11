@@ -1,7 +1,7 @@
 ---
 id: TRACK-LEARN-001-C
 title: Learning respects visibility and light
-status: next
+status: testing
 type: feature
 area: learning
 priority: high
@@ -34,3 +34,10 @@ Make poor visibility reduce or block learning.
 ## Implementation Order
 
 Do after: `TRACK-LEARN-001-B`, `VIS-001-D`.
+
+## 0.16.34 Testing Note
+
+- Added a shared visibility helper for learning from visible observations.
+- `/track` practice no longer records learning progress when tracks cannot be read in darkness.
+- Existing rabbit movement observation and local look/inspect observation-learning paths now require visible nearby detail; local light makes those paths possible again.
+- Full `TRACK-LEARN-001` / following-skill behavior remains future work.

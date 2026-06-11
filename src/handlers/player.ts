@@ -2,7 +2,7 @@ import { Bot, InlineKeyboard } from "grammy";
 import type { Prisma, WorldActionType } from "@prisma/client";
 import { prisma } from "../db";
 import { approximateWorldDurationFromRealMs } from "../data/worldClock";
-import { BASE_HP, BASE_STAMINA, HEALTH_REGEN_PER_INTERVAL, PASSIVE_STAMINA_REGEN_PER_INTERVAL, PLAYER_HUNGER_MAX, REST_HEALTH_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_PER_INTERVAL, STAMINA_REGEN_INTERVAL_MS } from "../gameConfig";
+import { BASE_HP, BASE_STAMINA, HEALTH_REGEN_PER_INTERVAL, PASSIVE_HEALTH_REGEN_INTERVAL_MS, PASSIVE_STAMINA_REGEN_PER_INTERVAL, PLAYER_HUNGER_MAX, REST_HEALTH_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_INTERVAL_MS, REST_STAMINA_REGEN_PER_INTERVAL, STAMINA_REGEN_INTERVAL_MS } from "../gameConfig";
 import { getPlayerByTelegramId, getStartLocationId } from "../services/players";
 import { renderLocationBrief, renderLocationFeatureInteractionByQuery } from "../services/locations";
 import { buildMainReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
@@ -21,7 +21,6 @@ import {
   canDousePlayerTorchFromInventory,
   canLightPlayerTorchFromInventory,
   getPlayerTorchState,
-  hasActiveLightAtLocation,
   TORCH_DURATION_MS,
   TORCH_FADING_MS,
 } from "../services/fire";
@@ -50,6 +49,7 @@ import { equipPlayerWeapon, ownHeldWeaponLine, unequipPlayerWeapon } from "../se
 import { playerMoneyText } from "../utils/moneyText";
 import { followAssistStateText, followIntentStatusLine, getPlayerFollowIntent, isFollowIntentTargetVisibleAtLocation } from "../services/following";
 import { formatLearningSummary, formatLearningTechnicalRows, learningRowsForActor } from "../services/learning";
+import { canLearnFromVisibleObservation, visibilityRulesForLocation } from "../services/visibility";
 
 const tutorialInventoryVoiceSeen = new Set<number>();
 
@@ -76,17 +76,26 @@ function formatDateTime(value: Date | string | null | undefined) {
   }).format(date);
 }
 
-async function recoveryText(player: any) {
-  if (player.sleepState === "ORDINARY_SLEEP") return "\nВідновлення: тіло відпочиває глибше, поки ви спите.";
-  const staminaMax = player.staminaMax ?? BASE_STAMINA;
-  const restStaminaCap = await getPlayerRestStaminaCap(player.id);
-  const hpMax = player.hpMax ?? BASE_HP;
-  const staminaRemaining = Math.max(0, staminaMax - player.stamina);
-  const restStaminaRemaining = Math.max(0, restStaminaCap - player.stamina);
-  const hpRemaining = Math.max(0, hpMax - player.hp);
+export function formatRecoveryEstimateText(input: {
+  sleepState?: string | null;
+  isResting?: boolean | null;
+  stamina: number;
+  hp: number;
+  staminaMax?: number | null;
+  restStaminaCap?: number | null;
+  hpMax?: number | null;
+  restStaminaRegenMultiplier?: number | null;
+}) {
+  if (input.sleepState === "ORDINARY_SLEEP") return "\nВідновлення: тіло відпочиває глибше, поки ви спите.";
+  const staminaMax = input.staminaMax ?? BASE_STAMINA;
+  const restStaminaCap = input.restStaminaCap ?? staminaMax;
+  const hpMax = input.hpMax ?? BASE_HP;
+  const staminaRemaining = Math.max(0, staminaMax - input.stamina);
+  const restStaminaRemaining = Math.max(0, restStaminaCap - input.stamina);
+  const hpRemaining = Math.max(0, hpMax - input.hp);
   if (staminaRemaining <= 0 && restStaminaRemaining <= 0 && hpRemaining <= 0) return "";
 
-  const restMultiplier = await getPlayerRestStaminaRegenMultiplier(player.id);
+  const restMultiplier = input.restStaminaRegenMultiplier ?? 1;
   const passiveStaminaMinutes = recoveryMinutes(staminaRemaining, PASSIVE_STAMINA_REGEN_PER_INTERVAL, STAMINA_REGEN_INTERVAL_MS);
   const restStaminaMinutes = recoveryMinutes(restStaminaRemaining, REST_STAMINA_REGEN_PER_INTERVAL * restMultiplier, REST_STAMINA_REGEN_INTERVAL_MS);
   const campfireStaminaMinutes = recoveryMinutes(
@@ -94,12 +103,23 @@ async function recoveryText(player: any) {
     REST_STAMINA_REGEN_PER_INTERVAL * Math.max(restMultiplier, CAMPFIRE_REST_STAMINA_REGEN_MULTIPLIER),
     REST_STAMINA_REGEN_INTERVAL_MS,
   );
+  const passiveHpMinutes = recoveryMinutes(hpRemaining, HEALTH_REGEN_PER_INTERVAL, PASSIVE_HEALTH_REGEN_INTERVAL_MS);
   const restHpMinutes = recoveryMinutes(hpRemaining, HEALTH_REGEN_PER_INTERVAL, REST_HEALTH_REGEN_INTERVAL_MS);
+  const campfireHpMinutes = restHpMinutes;
 
-  if (player.isResting) {
+  const hpLines = hpRemaining > 0
+    ? [
+        "Відновлення життя:",
+        `Без відпочинку: приблизно ${passiveHpMinutes} хв.`,
+        `З відпочинком: приблизно ${restHpMinutes} хв.`,
+        `Біля вогнища: приблизно ${campfireHpMinutes} хв.`,
+      ]
+    : [];
+
+  if (input.isResting) {
     const lines: string[] = [];
     if (restStaminaRemaining > 0) lines.push(`Відновлення снаги: приблизно ${restStaminaMinutes} хв під час відпочинку.`);
-    if (hpRemaining > 0) lines.push(`Життя з відпочинком: приблизно ${restHpMinutes} хв.`);
+    lines.push(...hpLines);
     return `\n${lines.join("\n")}`;
   }
 
@@ -112,8 +132,25 @@ async function recoveryText(player: any) {
       lines.push(`Біля вогнища: щонайбільше приблизно ${campfireStaminaMinutes} хв.`);
     }
   }
-  if (hpRemaining > 0) lines.push(`Життя з відпочинком: приблизно ${restHpMinutes} хв.`);
+  lines.push(...hpLines);
   return `\n${lines.join("\n")}`;
+}
+
+async function recoveryText(player: any) {
+  const [restStaminaCap, restMultiplier] = await Promise.all([
+    getPlayerRestStaminaCap(player.id),
+    getPlayerRestStaminaRegenMultiplier(player.id),
+  ]);
+  return formatRecoveryEstimateText({
+    sleepState: player.sleepState,
+    isResting: player.isResting,
+    stamina: player.stamina,
+    hp: player.hp,
+    staminaMax: player.staminaMax,
+    restStaminaCap,
+    hpMax: player.hpMax,
+    restStaminaRegenMultiplier: restMultiplier,
+  });
 }
 
 export function buildCharacterAutoKeyboard(autoEnabled: boolean, options: { posture?: string | null; sleepState?: string | null; isResting?: boolean | null; showSleep?: boolean; hasActionQueue?: boolean } = {}) {
@@ -431,7 +468,8 @@ export async function showLocationForPlayer(telegramId: number, reply: (text: st
   await sendVoiceComment(reply, await tutorialActionHintComment({ ...player, currentLocationId: locationId }, "look"));
   const firstNightGuidance = await firstNightGuidanceForPlayer(player.id, locationId);
   if (firstNightGuidance) noteKnownMessage(await reply(firstNightGuidance));
-  if (await hasActiveLightAtLocation(locationId)) {
+  const learningVisibility = await visibilityRulesForLocation(locationId, "brief");
+  if (canLearnFromVisibleObservation(learningVisibility, "local_action")) {
     const observation = await recordGatheringObservation({ playerId: player.id, locationId });
     if (observation.milestone) {
       noteKnownMessage(await reply(GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }));

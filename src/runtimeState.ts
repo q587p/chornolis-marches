@@ -95,6 +95,22 @@ export type RecoveryRuntimeSnapshot = {
   lastActiveCreaturesRefreshed: number;
 };
 
+export type WorldTickPhaseDurations = Record<string, number>;
+
+export type WorldTickRuntimeSnapshot = {
+  running: boolean;
+  runningSince: Date | null;
+  lastStartedAt: Date | null;
+  lastFinishedAt: Date | null;
+  lastError: string | null;
+  lastPhase: string | null;
+  lastPhaseStartedAt: Date | null;
+  lastPhaseDurations: WorldTickPhaseDurations | null;
+  lastTickNumber: number;
+  skippedBecauseRunning: number;
+  lastRunDurationMs: number | null;
+};
+
 export type ActionCompletionOutcome = "ok" | "error" | "missing";
 
 export type ActionCompletionObservation = {
@@ -228,6 +244,20 @@ let recoveryRuntimeSnapshot: RecoveryRuntimeSnapshot = {
   lastActiveCreaturesRefreshed: 0,
 };
 
+let worldTickRuntimeSnapshot: WorldTickRuntimeSnapshot = {
+  running: false,
+  runningSince: null,
+  lastStartedAt: null,
+  lastFinishedAt: null,
+  lastError: null,
+  lastPhase: null,
+  lastPhaseStartedAt: null,
+  lastPhaseDurations: null,
+  lastTickNumber: 0,
+  skippedBecauseRunning: 0,
+  lastRunDurationMs: null,
+};
+
 let actionCompletionRuntimeState: Omit<ActionCompletionRuntimeSnapshot, "slowThresholdMs"> = {
   lastObservedAt: null,
   totalObservedSinceStart: 0,
@@ -239,6 +269,7 @@ let actionCompletionRuntimeState: Omit<ActionCompletionRuntimeSnapshot, "slowThr
 const DEFAULT_ACTION_COMPLETION_SLOW_MS = 1000;
 const DEFAULT_TELEGRAM_SEND_SLOW_MS = 1000;
 const DEFAULT_DATABASE_QUERY_SLOW_MS = 100;
+const DEFAULT_WORLD_TICK_STALE_MS = 180_000;
 
 let telegramSendRuntimeState: Omit<TelegramSendRuntimeSnapshot, "slowThresholdMs"> = {
   lastObservedAt: null,
@@ -335,6 +366,10 @@ export function databaseQuerySampleLimit() {
   return Math.max(1, Math.min(50, intEnv("DATABASE_QUERY_SAMPLE_LIMIT", 10)));
 }
 
+export function worldTickStaleThresholdMs() {
+  return Math.max(0, intEnv("WORLD_TICK_STALE_MS", DEFAULT_WORLD_TICK_STALE_MS));
+}
+
 function compactDatabaseQueryLabel(value: unknown, fallback: string) {
   const text = String(value ?? fallback).replace(/[^a-zA-Z0-9_$.-]/g, "").slice(0, 64);
   return text || fallback;
@@ -384,6 +419,10 @@ function cloneCreaturePhaseDurations(value: CreatureQueuePhaseDurations | null):
 }
 
 function cloneRecoveryPhaseDurations(value: RecoveryPhaseDurations | null): RecoveryPhaseDurations | null {
+  return value ? { ...value } : null;
+}
+
+function cloneWorldTickPhaseDurations(value: WorldTickPhaseDurations | null): WorldTickPhaseDurations | null {
   return value ? { ...value } : null;
 }
 
@@ -515,6 +554,106 @@ export function getRecoveryRuntimeSnapshot(): RecoveryRuntimeSnapshot {
   return {
     ...recoveryRuntimeSnapshot,
     lastPhaseDurations: cloneRecoveryPhaseDurations(recoveryRuntimeSnapshot.lastPhaseDurations),
+  };
+}
+
+export function markWorldTickStarted(tickNumber: number, now = new Date()): void {
+  worldTickRuntimeSnapshot = {
+    ...worldTickRuntimeSnapshot,
+    running: true,
+    runningSince: now,
+    lastStartedAt: now,
+    lastError: null,
+    lastPhase: null,
+    lastPhaseStartedAt: null,
+    lastPhaseDurations: {},
+    lastTickNumber: tickNumber,
+    lastRunDurationMs: null,
+  };
+}
+
+export function markWorldTickPhaseStarted(phase: string, now = new Date()): void {
+  worldTickRuntimeSnapshot = {
+    ...worldTickRuntimeSnapshot,
+    lastPhase: phase,
+    lastPhaseStartedAt: now,
+    lastPhaseDurations: worldTickRuntimeSnapshot.lastPhaseDurations ?? {},
+  };
+}
+
+export function markWorldTickPhaseFinished(phase: string, durationMs: number): void {
+  const durations = worldTickRuntimeSnapshot.lastPhaseDurations ?? {};
+  worldTickRuntimeSnapshot = {
+    ...worldTickRuntimeSnapshot,
+    lastPhaseDurations: {
+      ...durations,
+      [phase]: Math.max(0, Math.round(durationMs)),
+    },
+  };
+}
+
+export function markWorldTickFinished(tickNumber: number, now = new Date()): WorldTickRuntimeSnapshot {
+  const startedAt = worldTickRuntimeSnapshot.lastStartedAt;
+  const durationMs = startedAt ? Math.max(0, now.getTime() - startedAt.getTime()) : null;
+  worldTickRuntimeSnapshot = {
+    ...worldTickRuntimeSnapshot,
+    running: false,
+    runningSince: null,
+    lastFinishedAt: now,
+    lastError: null,
+    lastTickNumber: tickNumber,
+    lastRunDurationMs: durationMs,
+    lastPhaseDurations: cloneWorldTickPhaseDurations(worldTickRuntimeSnapshot.lastPhaseDurations) ?? {},
+  };
+  return getWorldTickRuntimeSnapshot();
+}
+
+export function markWorldTickError(error: unknown, now = new Date()): WorldTickRuntimeSnapshot {
+  const startedAt = worldTickRuntimeSnapshot.lastStartedAt;
+  const durationMs = startedAt ? Math.max(0, now.getTime() - startedAt.getTime()) : null;
+  worldTickRuntimeSnapshot = {
+    ...worldTickRuntimeSnapshot,
+    running: false,
+    runningSince: null,
+    lastFinishedAt: now,
+    lastError: compactRuntimeError(error),
+    lastRunDurationMs: durationMs,
+  };
+  return getWorldTickRuntimeSnapshot();
+}
+
+export function markWorldTickSkippedBecauseRunning(): WorldTickRuntimeSnapshot {
+  worldTickRuntimeSnapshot = {
+    ...worldTickRuntimeSnapshot,
+    skippedBecauseRunning: worldTickRuntimeSnapshot.skippedBecauseRunning + 1,
+  };
+  return getWorldTickRuntimeSnapshot();
+}
+
+export function getWorldTickRuntimeSnapshot(): WorldTickRuntimeSnapshot {
+  return {
+    ...worldTickRuntimeSnapshot,
+    runningSince: worldTickRuntimeSnapshot.runningSince ? new Date(worldTickRuntimeSnapshot.runningSince.getTime()) : null,
+    lastStartedAt: worldTickRuntimeSnapshot.lastStartedAt ? new Date(worldTickRuntimeSnapshot.lastStartedAt.getTime()) : null,
+    lastFinishedAt: worldTickRuntimeSnapshot.lastFinishedAt ? new Date(worldTickRuntimeSnapshot.lastFinishedAt.getTime()) : null,
+    lastPhaseStartedAt: worldTickRuntimeSnapshot.lastPhaseStartedAt ? new Date(worldTickRuntimeSnapshot.lastPhaseStartedAt.getTime()) : null,
+    lastPhaseDurations: cloneWorldTickPhaseDurations(worldTickRuntimeSnapshot.lastPhaseDurations),
+  };
+}
+
+export function resetWorldTickRuntimeSnapshotForTests(): void {
+  worldTickRuntimeSnapshot = {
+    running: false,
+    runningSince: null,
+    lastStartedAt: null,
+    lastFinishedAt: null,
+    lastError: null,
+    lastPhase: null,
+    lastPhaseStartedAt: null,
+    lastPhaseDurations: null,
+    lastTickNumber: 0,
+    skippedBecauseRunning: 0,
+    lastRunDurationMs: null,
   };
 }
 

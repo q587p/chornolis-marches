@@ -12,11 +12,13 @@ export type StartActionPayload =
   | "help"
   | "rest"
   | "sleep"
+  | "sleepTutorial"
   | "lie"
   | "track"
   | "trackFox"
   | "signals"
   | "follow"
+  | "followAssistOn"
   | "unfollow"
   | "travelGroup"
   | "travelGroupCreate"
@@ -48,6 +50,7 @@ export type StartActionPayload =
   | "dismantleTotem"
   | "gatherHoney"
   | "gatherBeeswax"
+  | "brewTincture"
   | "attackAll"
   | "killAll"
   | "attackAllMouse"
@@ -95,11 +98,13 @@ export function parseStartActionPayload(value: unknown): StartActionPayload | nu
   if (payload === "cmd_help") return "help";
   if (payload === "cmd_rest") return "rest";
   if (payload === "cmd_sleep") return "sleep";
+  if (payload === "cmd_sleep_tutorial") return "sleepTutorial";
   if (payload === "cmd_lie") return "lie";
   if (payload === "cmd_track") return "track";
   if (payload === "cmd_track_fox") return "trackFox";
   if (payload === "cmd_signals" || payload === "cmd_socials") return "signals";
   if (payload === "cmd_follow") return "follow";
+  if (payload === "cmd_follow_assist_on") return "followAssistOn";
   if (payload === "cmd_unfollow") return "unfollow";
   if (payload === "cmd_group") return "travelGroup";
   if (payload === "cmd_group_create") return "travelGroupCreate";
@@ -133,6 +138,7 @@ export function parseStartActionPayload(value: unknown): StartActionPayload | nu
   if (payload === "cmd_search_beeswax") return "gatherBeeswax";
   if (payload === "cmd_gather_honey") return "gatherHoney";
   if (payload === "cmd_gather_beeswax") return "gatherBeeswax";
+  if (payload === "cmd_brew_tincture" || payload === "cmd_make_tincture") return "brewTincture";
   if (payload === "cmd_attack_all") return "attackAll";
   if (payload === "cmd_kill_all") return "killAll";
   if (payload === "cmd_attack_all_mouse") return "attackAllMouse";

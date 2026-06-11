@@ -12,12 +12,23 @@ export type VisibilityRules = {
   showResourceDetails: boolean;
 };
 
+export type VisibleObservationLearningKind = "local_action" | "tracks" | "animal_movement";
+
 function canSeeDetails(light: LightSnapshot) {
   return light.hasLocalLight || light.level === "bright" || light.level === "clear";
 }
 
 export function canShowFeatureDetails(rules: VisibilityRules) {
   return rules.showLocationDescription;
+}
+
+export function canLearnFromVisibleObservation(
+  rules: Pick<VisibilityRules, "showNearbyDetails" | "showTracks">,
+  kind: VisibleObservationLearningKind = "local_action",
+) {
+  if (kind === "animal_movement") return rules.showNearbyDetails && rules.showTracks;
+  if (kind === "tracks") return rules.showTracks;
+  return rules.showNearbyDetails;
 }
 
 export function visibilityDarknessText(rules: VisibilityRules) {

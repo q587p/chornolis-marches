@@ -167,6 +167,17 @@ assert.deepEqual(result, { ok: false, reason: "no-visible-exit" });
 result = evaluateFollowAssistEligibility({
   intent: intent(),
   currentLocationId: 100,
+  event: clearEvent(),
+  player: player(),
+  activeActionCount: 0,
+  hasVisibleExit: true,
+  targetAtCurrentLocation: true,
+});
+assert.deepEqual(result, { ok: false, reason: "target-present" });
+
+result = evaluateFollowAssistEligibility({
+  intent: intent(),
+  currentLocationId: 100,
   event: clearEvent({ description: clearEvent().description.replace("visibility=clear", "visibility=dark") }),
   player: player(),
   activeActionCount: 0,
@@ -324,6 +335,8 @@ assert.match(catchUpSource, /assistKind: "catch_up"/);
 assert.match(catchUpSource, /note: FOLLOW_ASSIST_CATCH_UP_NOTE/);
 assert.match(catchUpSource, /hasActiveLitTorchForPlayer\(input\.playerId\)/);
 assert.match(catchUpSource, /playerHasLight/);
+assert.match(catchUpSource, /followTargetAtLocation\(target, player\.currentLocationId\)/);
+assert.match(catchUpSource, /targetAtCurrentLocation/);
 assert.equal(catchUpSource.includes("prisma.player.update"), false);
 assert.equal(catchUpSource.includes("currentLocationId:"), true);
 const actionCompletionsSource = fs.readFileSync("src/services/actionCompletions.ts", "utf8");

@@ -59,7 +59,7 @@ import { dropObserverText, recordVisibleItemAction } from "./visibleItemActions"
 import { campfireDismantleReplyOptions, campfireRelightReplyOptionsAfterBuild, campfireRelightReplyOptionsAfterTwigs } from "../ui/fireKeyboards";
 import { cookingResultReplyOptions } from "../ui/inventoryItemKeyboard";
 import { inventoryGainReplyOptions } from "../utils/tutorialInventory";
-import { visibilityPresenceText, visibilityRulesForLocation } from "./visibility";
+import { canLearnFromVisibleObservation, visibilityPresenceText, visibilityRulesForLocation } from "./visibility";
 import { actorLabelFromVisibility, visibleActorLabelForObserver } from "./visibilityLabels";
 import { firstNightGuidanceForPlayer } from "./beginnerGuidance";
 import { maybeTriggerPassiveApiarySting, raidApiaryForPlayer } from "./apiaryHazards";
@@ -1134,12 +1134,16 @@ async function completeLook(bot: Bot, action: WorldAction) {
     await setActionStatus(action, "DONE");
     if (chatId) {
       const view = await renderLocationDetails(locationId, player.id);
+      const learningVisibility = await visibilityRulesForLocation(locationId, "details");
+      const canLearnFromLocalObservation = canLearnFromVisibleObservation(learningVisibility, "local_action");
       const voiceComments = await tutorialLookPaceComments({ ...player, currentLocationId: locationId });
       const sendAttackObservationMessage = async () => {
+        if (!canLearnFromLocalObservation) return;
         const observation = await recordAttackObservation({ playerId: player.id, locationId });
         if (observation.milestone) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, ATTACK_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }, "observationMilestone"));
       };
       const sendGatheringObservationMessage = async () => {
+        if (!canLearnFromLocalObservation) return;
         const observation = await recordGatheringObservation({ playerId: player.id, locationId });
         if (observation.milestone) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }, "observationMilestone"));
         if (observation.mentorshipLessonText) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, observation.mentorshipLessonText, undefined, "mentorshipLesson"));
@@ -1148,6 +1152,7 @@ async function completeLook(bot: Bot, action: WorldAction) {
         }
       };
       const sendFoodObservationMessages = async () => {
+        if (!canLearnFromLocalObservation) return;
         const freshening = await recordFresheningObservation({ playerId: player.id, locationId });
         if (freshening.milestone) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, FRESHENING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }, "observationMilestone"));
         const cooking = await recordCookingObservation({ playerId: player.id, locationId });
@@ -1214,20 +1219,23 @@ async function completeInspect(bot: Bot, action: WorldAction) {
   await logEvent("INSPECT", "Player inspected target", `${target.kind}:${target.id}`, player.currentLocationId);
   if (chatId) {
     await sendActionCompletionMessage(bot, action, chatId, `${targetIntro(target, payload.mode === "mystery")}\n\n${target.inspect}`, replyOptionsAfterStaminaSpend(staminaSpend));
-    const observation = await recordAttackObservation({ playerId: player.id, locationId: player.currentLocationId });
-    if (observation.milestone) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, ATTACK_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }, "observationMilestone"));
-    if (target.kind === "player" || (!target.isAnimal && !target.isCorpse)) {
-      const gatheringObservation = await recordGatheringObservation({ playerId: player.id, locationId: player.currentLocationId });
-      if (gatheringObservation.milestone) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }, "observationMilestone"));
-      if (gatheringObservation.mentorshipLessonText) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, gatheringObservation.mentorshipLessonText, undefined, "mentorshipLesson"));
-      if (gatheringObservation.mentorshipLessonContext) {
-        await sendMentorshipLessonFollowups(bot, chatId, gatheringObservation.mentorshipLessonContext);
+    const learningVisibility = await visibilityRulesForLocation(player.currentLocationId, "details");
+    if (canLearnFromVisibleObservation(learningVisibility, "local_action")) {
+      const observation = await recordAttackObservation({ playerId: player.id, locationId: player.currentLocationId });
+      if (observation.milestone) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, ATTACK_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }, "observationMilestone"));
+      if (target.kind === "player" || (!target.isAnimal && !target.isCorpse)) {
+        const gatheringObservation = await recordGatheringObservation({ playerId: player.id, locationId: player.currentLocationId });
+        if (gatheringObservation.milestone) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, GATHERING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }, "observationMilestone"));
+        if (gatheringObservation.mentorshipLessonText) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, gatheringObservation.mentorshipLessonText, undefined, "mentorshipLesson"));
+        if (gatheringObservation.mentorshipLessonContext) {
+          await sendMentorshipLessonFollowups(bot, chatId, gatheringObservation.mentorshipLessonContext);
+        }
       }
+      const fresheningObservation = await recordFresheningObservation({ playerId: player.id, locationId: player.currentLocationId });
+      if (fresheningObservation.milestone) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, FRESHENING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }, "observationMilestone"));
+      const cookingObservation = await recordCookingObservation({ playerId: player.id, locationId: player.currentLocationId });
+      if (cookingObservation.milestone) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, COOKING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }, "observationMilestone"));
     }
-    const fresheningObservation = await recordFresheningObservation({ playerId: player.id, locationId: player.currentLocationId });
-    if (fresheningObservation.milestone) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, FRESHENING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }, "observationMilestone"));
-    const cookingObservation = await recordCookingObservation({ playerId: player.id, locationId: player.currentLocationId });
-    if (cookingObservation.milestone) noteKnownMessage(await sendActionCompletionMessage(bot, action, chatId, COOKING_OBSERVATION_GROWTH_MESSAGE, { parse_mode: "HTML" }, "observationMilestone"));
   }
 }
 
@@ -1910,12 +1918,14 @@ async function completeTrackInner(bot: Bot, action: WorldAction) {
   await spendPlayerStamina(bot, player.id, "TRACK", chatId);
   // Track-reading quality uses previous experience; this search records practice for future reads.
   const trackingSkillEffect = await trackingSkillEffectForPlayer(player.id);
-  await recordTrackingPractice({
-    playerId: player.id,
-    locationId: player.currentLocationId,
-    detail,
-  });
   const visibility = await visibilityRulesForLocation(player.currentLocationId, "details");
+  if (canLearnFromVisibleObservation(visibility, "tracks")) {
+    await recordTrackingPractice({
+      playerId: player.id,
+      locationId: player.currentLocationId,
+      detail,
+    });
+  }
   const trackDisplayLimit = trackingSkillEffect.maxTrackResults;
 
   const allTracks = await prisma.worldTrack.findMany({

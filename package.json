@@ -1,6 +1,6 @@
 {
   "name": "chornolis-marches",
-  "version": "0.16.33",
+  "version": "0.16.34",
   "description": "Text-based Telegram RPG with a living ecosystem, inspired by MUDs, Ultima Online, and Ukrainian folklore.",
   "main": "dist/bot.js",
   "scripts": {
