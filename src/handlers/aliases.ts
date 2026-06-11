@@ -105,6 +105,7 @@ import {
   followIntentStatusLine,
   followIntentUsageText,
   followAssistAlreadyEnabledText,
+  followAssistEmptyStatusText,
   followAssistEnabledText,
   followAssistStateText,
   getPlayerFollowIntent,
@@ -1123,7 +1124,10 @@ async function submitFollowAssist(ctx: any, mode: "show" | "on" | "off") {
   if (!player) return void (await ctx.reply("Ти ще не увійшов у світ. Напиши /start"));
 
   const intent = await getPlayerFollowIntent(player.id);
-  if (!intent) return void (await ctx.reply("Спершу оберіть чужий слід: /follow <ціль>."));
+  if (!intent) {
+    if (mode === "show") return void (await ctx.reply(followAssistEmptyStatusText()));
+    return void (await ctx.reply("Спершу оберіть чужий слід: /follow <ціль>."));
+  }
 
   if (mode === "on") {
     if (intent.assistEnabled) {

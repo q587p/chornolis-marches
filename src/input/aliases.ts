@@ -1819,6 +1819,7 @@ function parseFollowAssistIntent(text: string): ParsedAliasCommand | null {
     "follow auto",
     "follow_auto",
     "autofollow",
+    "слідування",
     "автослідування",
   ].includes(text)) return { kind: "follow-assist", mode: "show" };
 

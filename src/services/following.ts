@@ -40,6 +40,14 @@ export function followAssistStateText(enabled: boolean | null | undefined) {
   return `Слідування: ${enabled ? "увімкнено" : "вимкнено"}.`;
 }
 
+export function followAssistEmptyStatusText() {
+  return [
+    "Чужий слід: нікого не тримаєте в увазі.",
+    followAssistStateText(false),
+    "Щоб обрати слід: /follow <ім'я>.",
+  ].join("\n");
+}
+
 function followAssistTargetLine(label: string | null | undefined) {
   const safeLabel = label?.trim();
   return safeLabel ? `\nЧужий слід: ${escapeHtml(safeLabel)}.` : "";

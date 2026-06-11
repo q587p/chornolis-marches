@@ -8,6 +8,7 @@ const {
   FOLLOW_TARGET_PLAYER,
   followIntentClearedText,
   followAssistAlreadyEnabledText,
+  followAssistEmptyStatusText,
   followAssistEnabledText,
   followAssistStateText,
   followIntentAttentionContext,
@@ -50,6 +51,10 @@ assert.equal(followIntentStatusLine("знахарка", { stale: true }), "Чу�
 assert.equal(followIntentStatusLine("  "), null);
 assert.equal(followAssistStateText(true), "Слідування: увімкнено.");
 assert.equal(followAssistStateText(false), "Слідування: вимкнено.");
+assert.equal(
+  followAssistEmptyStatusText(),
+  "Чужий слід: нікого не тримаєте в увазі.\nСлідування: вимкнено.\nЩоб обрати слід: /follow <ім'я>.",
+);
 const followAssistEnabled = followAssistEnabledText("Орина <нічна>");
 assert.match(followAssistEnabled, /Ви домовляєтесь із власними ногами/);
 assert.match(followAssistEnabled, /Чужий слід: Орина &lt;нічна&gt;\./);
