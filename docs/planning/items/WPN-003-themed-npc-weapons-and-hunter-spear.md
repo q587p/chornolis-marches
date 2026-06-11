@@ -1,7 +1,7 @@
 ---
 id: WPN-003
 title: Themed NPC weapons and hunter spear
-status: backlog
+status: testing
 type: feature
 area: npc
 priority: medium
@@ -18,7 +18,7 @@ depends_on:
 
 # WPN-003 — Themed NPC weapons and hunter spear
 
-Status: near-term backlog
+Status: testing in 0.16.32
 
 Depends on: WPN-001, WPN-002
 
@@ -127,6 +127,10 @@ Do not implement full NPC freshening yet unless it already exists. But ensure hu
 - Hunter attack observer text mentions spear when equipped.
 - Existing hunter torch behavior still works.
 - Existing hunter carcass claim/dropoff behavior still works.
+
+## 0.16.32 Testing Note
+
+`0.16.32` seeds the existing authored знахар/травниця/hunter NPCs with narrow thematic tools and weapons: sickles for Здравомир and Ведана, hunting spears plus knives for Лукан and Орина, while preserving Орина's torch resources. The seed/reset path now applies valid `equippedWeaponKey` values only when the creature also carries that weapon resource. This remains display/readability polish: no combat mechanics, loot, weapon swapping, hand-slot model or broader NPC gear AI.
 
 ## Codex prompt
 

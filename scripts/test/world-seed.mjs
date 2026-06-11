@@ -58,6 +58,7 @@ const locationKeys = keySet(locations, "location");
 const locationByKey = new Map(locations.map((location) => [location.key, location]));
 const resourceTypeKeys = keySet(resourceTypes, "resource type");
 keySet(features, "feature");
+const weaponResourceKeys = new Set(["knife", "hunting_spear", "sickle", "hand_axe", "short_sword"]);
 
 const starterCampRegion = regions.find((item) => item.key === "starter_camp");
 assert.ok(starterCampRegion, "Starter camp infrastructure region should exist");
@@ -552,6 +553,14 @@ for (const creature of uniqueCreatures) {
     assertKnown(resourceTypeKeys, resource.resourceKey, `Unknown resourceKey for unique creature ${creature.name}`);
     assert.ok(Number.isInteger(resource.amount) && resource.amount > 0, `Invalid carried resource amount for ${creature.name}:${resource.resourceKey}`);
   }
+  if (creature.equippedWeaponKey) {
+    assertKnown(resourceTypeKeys, creature.equippedWeaponKey, `Unknown equippedWeaponKey for unique creature ${creature.name}`);
+    assert.ok(weaponResourceKeys.has(creature.equippedWeaponKey), `Unique creature ${creature.name} equips a non-weapon resource: ${creature.equippedWeaponKey}`);
+    assert.ok(
+      (creature.resources ?? []).some((resource) => resource.resourceKey === creature.equippedWeaponKey && resource.amount > 0),
+      `Unique creature ${creature.name} equips ${creature.equippedWeaponKey} without carrying it`,
+    );
+  }
 }
 
 const oryna = uniqueCreatures.find((creature) => creature.name === "Орина");
@@ -563,13 +572,38 @@ assert.equal(
 );
 assert.deepEqual(
   (oryna.resources ?? []).map((resource) => `${resource.resourceKey}:${resource.amount}`).sort(),
-  ["lit_torch:1", "torch:1"],
-  "Орина should start with one lit torch and one spare torch",
+  ["hunting_spear:1", "knife:1", "lit_torch:1", "torch:1"],
+  "Орина should start with hunting gear, one lit torch and one spare torch",
 );
+assert.equal(oryna.equippedWeaponKey, "hunting_spear", "Орина should visibly hold her hunting spear");
 
 const zdravomyr = uniqueCreatures.find((creature) => creature.name === "Здравомир");
 assert.ok(zdravomyr, "Seed should include Здравомир");
 assert.equal(zdravomyr.sex, "MALE", "Здравомир should be marked male for mentorship pronouns");
+assert.deepEqual(
+  (zdravomyr.resources ?? []).map((resource) => `${resource.resourceKey}:${resource.amount}`).sort(),
+  ["sickle:1"],
+  "Здравомир should carry a sickle for herbalist/znakhar readability",
+);
+assert.equal(zdravomyr.equippedWeaponKey, "sickle", "Здравомир should visibly hold his sickle");
+
+const vedana = uniqueCreatures.find((creature) => creature.name === "Ведана");
+assert.ok(vedana, "Seed should include Ведана");
+assert.deepEqual(
+  (vedana.resources ?? []).map((resource) => `${resource.resourceKey}:${resource.amount}`).sort(),
+  ["sickle:1"],
+  "Ведана should carry a sickle for herbalist readability",
+);
+assert.equal(vedana.equippedWeaponKey, "sickle", "Ведана should visibly hold her sickle");
+
+const lukan = uniqueCreatures.find((creature) => creature.name === "Лукан");
+assert.ok(lukan, "Seed should include Лукан");
+assert.deepEqual(
+  (lukan.resources ?? []).map((resource) => `${resource.resourceKey}:${resource.amount}`).sort(),
+  ["hunting_spear:1", "knife:1"],
+  "Лукан should carry a hunting spear and knife",
+);
+assert.equal(lukan.equippedWeaponKey, "hunting_spear", "Лукан should visibly hold his hunting spear");
 
 const campSpiritCat = uniqueCreatures.find((creature) => creature.speciesKey === "camp_spirit_cat");
 assert.ok(campSpiritCat, "Seed should include the camp spirit cat");

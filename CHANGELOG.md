@@ -7,6 +7,24 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.32 - Themed NPC weapons and next-lane cleanup - 12026-06-11
+
+### Added
+
+- Seeded existing authored знахар/herbalist and hunter NPCs with narrow thematic tools and weapons: sickles for Здравомир and Ведана, hunting spears and knives for Лукан and Орина, while preserving Орина's torch resources.
+- Added seed validation coverage for unique-creature `equippedWeaponKey` values so authored equipped weapons must be known weapons and present in carried resources.
+- Added `docs/release_notes/0.16.32.md`.
+
+### Changed
+
+- The unique-creature seed and reset paths now apply valid `equippedWeaponKey` values for authored NPCs and clear invalid or uncarried seed equipment rather than silently creating mismatched runtime display state.
+- Existing look/examine/target display and hunter attack observer text can now show the seeded held tools/weapons through the current weapon helpers; hunter spear text remains bounded to hunters that actually have a spear equipped.
+- Moved `WPN-003` to `testing`, regenerated planning exports, and cleaned `docs/planning/next.md` after completed `0.16.30`/`0.16.31` work and the no-code performance evidence report.
+
+### Risks
+
+- Main risk is seed/display mismatch if a weapon resource key drifts; focused seed tests cover the authored NPC equipment keys. No combat mechanics, target eligibility, loot, weapon swapping, hand-slot model, schema/migration, scheduler or runtime tuning changes ship in this release.
+
 ## 0.16.31 - Learning surface hints and first-session smoke - 12026-06-11
 
 ### Added

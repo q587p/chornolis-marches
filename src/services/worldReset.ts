@@ -83,7 +83,16 @@ type SeedUniqueCreature = {
   professionName?: string;
   nameOverrides?: Record<string, string>;
   resources?: SeedCreatureResource[];
+  equippedWeaponKey?: string;
 };
+
+const SEED_WEAPON_RESOURCE_KEYS = new Set(["knife", "hunting_spear", "sickle", "hand_axe", "short_sword"]);
+
+function seedCreatureEquippedWeaponKey(creature: SeedUniqueCreature) {
+  const key = creature.equippedWeaponKey?.trim();
+  if (!key || !SEED_WEAPON_RESOURCE_KEYS.has(key)) return null;
+  return (creature.resources ?? []).some((resource) => resource.resourceKey === key && resource.amount > 0) ? key : null;
+}
 
 function preparedCreatureNameOverrides(nominative: string): Record<string, string> {
   const prepared = preparedNameByNominative(nominative);
@@ -329,6 +338,7 @@ async function resetUniqueCreature(creature: SeedUniqueCreature) {
     orderBy: [{ isAlive: "desc" }, { updatedAt: "desc" }, { id: "asc" }],
   });
   const nameOverrides = { ...preparedCreatureNameOverrides(creature.name), ...(creature.nameOverrides ?? {}) };
+  const equippedWeaponKey = seedCreatureEquippedWeaponKey(creature);
 
   const data: Prisma.CreatureUncheckedUpdateInput = {
     ...nameOverrides,
@@ -352,6 +362,7 @@ async function resetUniqueCreature(creature: SeedUniqueCreature) {
     sex: creature.sex ?? null,
     professionKey: creature.professionKey ?? null,
     professionName: creature.professionName ?? null,
+    equippedWeaponKey,
   };
 
   const keep = existing[0];
@@ -379,6 +390,7 @@ async function resetUniqueCreature(creature: SeedUniqueCreature) {
         activity: creature.activity,
         professionKey: creature.professionKey,
         professionName: creature.professionName,
+        equippedWeaponKey,
       },
     });
     creatureId = created.id;
