@@ -171,7 +171,7 @@ ONB-008,Owl threshold refrain in the dream,proposed,content,onboarding,medium,"o
 ONB-009,Tutorial dream ground item cleanup,testing,tech,onboarding,high,"tutorial,dream,cleanup,items,resources",docs/planning/items/ONB-009-tutorial-dream-ground-item-cleanup.md
 ONB-010,Newcomer starter kit,backlog,feature,onboarding,medium,"onboarding,beginner,inventory,weapons,food,torch",docs/planning/items/ONB-010-newcomer-kit.md
 ONB-011,Post-tutorial dream guided questlets,backlog,feature,onboarding,medium,"onboarding,quests,beginner,tutorial",docs/planning/items/ONB-011-post-dream-guided-questlets.md
-ONB-012,Learning surface command hints refresh,next,feature,onboarding,high,"onboarding,tutorial,commands,help,learning,ux",docs/planning/items/ONB-012-learning-surface-command-hints.md
+ONB-012,Learning surface command hints refresh,testing,feature,onboarding,high,"onboarding,tutorial,commands,help,learning,ux",docs/planning/items/ONB-012-learning-surface-command-hints.md
 OWL-002,Nocturnal owl tuning and indirect signs,testing,tuning,ecology,high,"owl,ecology,night,predator,observation,tuning",docs/planning/items/OWL-002-nocturnal-owl-tuning-and-signs.md
 OWL-003,Starter camp owl boundary and night signs,testing,tuning,ecology,medium,"owl,camp,ecology,night,onboarding",docs/planning/items/OWL-003-starter-camp-boundary-and-night-signs.md
 OWL-004,Conditional owl examine copy and refrain echoes,done,content,ecology,medium,"owl,examine,night,observation,atmosphere",docs/planning/items/OWL-004-conditional-owl-examine-copy.md
@@ -183,7 +183,7 @@ PROG-004,Personal chronicle milestones,next,feature,progression,high,"journal,ch
 PROG-005,Global chronicles and world milestones,testing,feature,progression,high,"chronicle,world-events,onboarding,gate-hunting,milestones",docs/planning/items/PROG-005-global-chronicles-and-world-milestones.md
 PROG-006,Chronicle registration backfill and admin real-time view,testing,feature,progression,high,"chronicle,world-events,onboarding,admin,local-chat",docs/planning/items/PROG-006-chronicle-backfill-and-admin-time-view.md
 QA-001,0.13 first-session closure smoke,testing,qa,onboarding,high,"qa,onboarding,tutorial,core-loop,release",docs/planning/items/QA-001-0.13-first-session-closure-smoke.md
-QA-002,Camp and dream first-session smoke,next,qa,onboarding,medium,"onboarding,camp,dream,qa",docs/planning/items/QA-002-camp-dream-first-session-smoke.md
+QA-002,Camp and dream first-session smoke,testing,qa,onboarding,medium,"onboarding,camp,dream,qa",docs/planning/items/QA-002-camp-dream-first-session-smoke.md
 QA-WILLOW-001,"Willow Floodplain seed, map and route smoke",testing,qa,world,high,"map,world,willow-floodplain,qa,routes",docs/planning/items/QA-WILLOW-001-seed-map-route-smoke.md
 QA-WILLOW-002,Willow live command and vertical edge smoke,backlog,qa,world,medium,"willow-floodplain,qa,aliases,verticality,admin",docs/planning/items/QA-WILLOW-002-live-command-and-vertical-smoke.md
 QUOTE-001,Liminal signs and quotation layer,proposed,content,content,medium,"quotes,signs,atmosphere,lore,dream,owl",docs/planning/items/QUOTE-001-liminal-signs-and-quotation-layer.md

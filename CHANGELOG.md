@@ -7,6 +7,26 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.31 - Learning surface hints and first-session smoke - 12026-06-11
+
+### Added
+
+- Added a compact `Навчання й увага` section to the repeatable player help surface, covering action practice, following / follow assist, teacher attention, travel groups, live tincture commands and existing qualitative attack-learning awareness.
+- Updated the tutorial dream's `Майбутні уроки` sign so sleep-tutorial learning copy also hints at following, teacher attention, group travel, tinctures and combat observation without turning the dream into a command manual.
+- Added focused help-text and world-seed coverage so the new learning surfaces stay qualitative and do not expose `/skills`, raw progress numbers or XP-style wording.
+- Expanded `QA-002` with a concrete first-session smoke checklist for the tutorial dream, first look/examine, waking camp, marker/board/campfire/torch source, first-night guidance and learning-surface wording.
+- Added `docs/release_notes/0.16.31.md`.
+
+### Changed
+
+- Mentorship acceptance and gathering-mentor offer text now choose the mentor trace pronoun from the mentor's sex/grammar data instead of always saying `її слід`.
+- The help learning-surface tincture line now names the Ukrainian `Випити настоянку` action and its `випити настоянку` text alias beside `/drink_tincture`.
+- Moved `ONB-012` and `QA-002` to `testing` and regenerated planning exports.
+
+### Risks
+
+- This is discoverability and smoke coverage only. It does not add new mechanics, group movement, brewing/crafting gameplay, combat rules, public skill sheets, scheduler work, queue/recovery/Telegram/Prisma behavior, schema changes or migrations.
+
 ## 0.16.30 - Runtime heartbeat planning closeout - 12026-06-11
 
 ### Added

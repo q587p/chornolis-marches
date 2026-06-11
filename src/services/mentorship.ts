@@ -2,7 +2,7 @@ import { InlineKeyboard } from "grammy";
 import { prisma } from "../db";
 import { withSlowLog } from "../utils/slowLog";
 import { getPlayerFollowIntent, setPlayerFollowIntent } from "./following";
-import { creatureForms } from "./grammar";
+import { creatureForms, creatureWord } from "./grammar";
 import { learningSkillDisplayName, observedActorSkillLevel } from "./learning";
 import { createWorldEventMarker, findRecentWorldEventMarker } from "./worldEventMarkers";
 import { escapeHtml } from "../utils/text";
@@ -27,12 +27,14 @@ const MENTORSHIP_ANSWER_PUNCTUATION = /[!?.,;:]+/g;
 type MentorshipCreatureLike = {
   id?: number;
   name?: string | null;
+  sex?: string | null;
+  grammaticalGender?: string | null;
   professionKey?: string | null;
   professionName?: string | null;
   isAlive?: boolean | null;
   isGone?: boolean | null;
   isHidden?: boolean | null;
-  species?: { kind?: string | null; name?: string | null } | null;
+  species?: { kind?: string | null; name?: string | null; grammaticalGender?: string | null } | null;
 };
 
 export type MentorshipAnswerKind = "accept" | "decline" | "unclear";
@@ -119,12 +121,21 @@ export function parseMentorshipAnswer(text: string): MentorshipAnswerKind {
   return "unclear";
 }
 
+export function mentorshipTracePossessive(creature: MentorshipCreatureLike) {
+  return creatureWord(creature, {
+    MASCULINE: "його",
+    FEMININE: "її",
+    NEUTER: "його",
+    PLURAL: "їхній",
+  });
+}
+
 export function mentorshipOfferText(creature: MentorshipCreatureLike, skillKey: string) {
   const name = creature.name?.trim() || creature.species?.name || "місцевий";
   if (skillKey === "tracking") {
     return `${escapeHtml(name)} озирається на ваш крок:\n${quoteBlock("Якщо йдеш за мною, дивись не на мене. Дивись, де трава не встигла випростатись. Учитися хочеш?")}`;
   }
-  return `${escapeHtml(name)} помічає, що ви тримаєтесь її сліду, і стишує крок:\n${quoteBlock("Хочеш повчитися, як не рвати землю дарма?")}`;
+  return `${escapeHtml(name)} помічає, що ви тримаєтесь ${mentorshipTracePossessive(creature)} сліду, і стишує крок:\n${quoteBlock("Хочеш повчитися, як не рвати землю дарма?")}`;
 }
 
 function quoteBlock(text: string) {
@@ -681,7 +692,7 @@ export async function acceptMentorship(playerId: number, mentorshipId: number) {
   return {
     ok: true as const,
     mentorship: updated,
-    text: `Ви стаєте до науки ${forms.genitive}. Тримайте її слід уважно; це домовленість дивитися й іти поруч, не гурт і не наказ.${assistLine}`,
+    text: `Ви стаєте до науки ${forms.genitive}. Тримайте ${mentorshipTracePossessive(mentorship.mentorCreature)} слід уважно; це домовленість дивитися й іти поруч, не гурт і не наказ.${assistLine}`,
   };
 }
 

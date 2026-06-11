@@ -16,16 +16,14 @@ Do not replace or derail it with a broad scheduler rewrite, combat system, econo
 
 Keep the next patches narrow and reviewable:
 
-1. `0.16.30` / Runtime heartbeat planning closeout - docs-only decision note and prompt archive; no runtime behavior changes.
+1. `0.16.31` / Learning surface hints and first-session smoke - in testing; repeatable `/help` learning hints plus QA-002 smoke checklist, with no new mechanics.
 2. Performance evidence report - use `docs/ops/performance-observation-template.md` and `docs/ops/performance-triage.md` to decide exactly one next tuning category, or choose no-code.
-3. `QA-002` / Camp-dream-waking smoke - verify the first-session promise after the latest readiness and mentorship polish.
-4. `ONB-012` / `Навчання` command hint refresh - keep repeatable learning aware of follow, group, tincture/prepared-remedy and existing attack-learning possibilities without exposing raw skill sheets.
-5. `TRACK-LEARN-001` / Following skill - design or implement only after current follow-assist copy and blockers stay clear in live play.
-6. `STAT-003` / Deferred heavy diagnostics replies - consider only if `/stat`, `/stat_species`, `/world`, `/all` or `/queueDebug` keep blocking ordinary play under evidence.
-7. Tiny WPN-003 seed/display slice - only if a visible hunter-with-spear/tool demonstration is needed for attack or freshening observation readability.
-8. Mentor guided tracking prompt - add only after gathering prompts and marker cooldowns feel stable.
-9. Mentor route polish - tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
-10. `MAP-004` follow-up - decide the next gated place after light/examine and track/follow-memory proofs.
+3. `TRACK-LEARN-001` / Following skill - design or implement only after current follow-assist copy and blockers stay clear in live play.
+4. `STAT-003` / Deferred heavy diagnostics replies - consider only if `/stat`, `/stat_species`, `/world`, `/all` or `/queueDebug` keep blocking ordinary play under evidence.
+5. Tiny WPN-003 seed/display slice - only if a visible hunter-with-spear/tool demonstration is needed for attack or freshening observation readability.
+6. Mentor guided tracking prompt - add only after gathering prompts and marker cooldowns feel stable.
+7. Mentor route polish - tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
+8. `MAP-004` follow-up - decide the next gated place after light/examine and track/follow-memory proofs.
 
 ## Post-0.16 Candidate Lane
 

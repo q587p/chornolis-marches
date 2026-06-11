@@ -37,6 +37,7 @@ const {
   mentorshipPracticePromptKeyboard,
   mentorshipPracticePromptText,
   mentorshipSkillForCreature,
+  mentorshipTracePossessive,
   mentorshipTrackingObservationLearningInput,
   mentorshipTrackingRouteMemoryContext,
   parseMentorshipAnswer,
@@ -128,12 +129,20 @@ for (const text of ["ні", "не зараз", "потім", "ні дякую", 
 }
 assert.equal(parseMentorshipAnswer("може"), "unclear");
 
-const herbOffer = mentorshipOfferText({ name: "Орина" }, "gathering");
+assert.equal(mentorshipTracePossessive({ name: "Здравомир", sex: "MALE", species: { kind: "HUMAN", name: "знахар" } }), "його");
+assert.equal(mentorshipTracePossessive({ name: "Орина", sex: "FEMALE", species: { kind: "HUMAN", name: "мисливиця" } }), "її");
+
+const herbOffer = mentorshipOfferText({ name: "Орина", sex: "FEMALE" }, "gathering");
 assert.match(herbOffer, /Орина/);
+assert.match(herbOffer, /її сліду/);
 assert.match(herbOffer, /Хочеш повчитися/);
 assert.match(herbOffer, /:\n<blockquote>Хочеш повчитися, як не рвати землю дарма\?<\/blockquote>/);
 assert.doesNotMatch(herbOffer, /: “/u);
 assert.doesNotMatch(herbOffer, /TravelGroup|гуртова хода|\/skills/u);
+const maleHerbOffer = mentorshipOfferText({ name: "Здравомир", sex: "MALE" }, "gathering");
+assert.match(maleHerbOffer, /Здравомир/);
+assert.match(maleHerbOffer, /його сліду/);
+assert.doesNotMatch(maleHerbOffer, /її сліду/u);
 const hunterOffer = mentorshipOfferText({ name: "Лукан" }, "tracking");
 assert.match(hunterOffer, /Лукан/);
 assert.match(hunterOffer, /Учитися хочеш/);
