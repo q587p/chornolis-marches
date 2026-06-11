@@ -5,10 +5,12 @@ require("ts-node/register");
 const {
   animalSpeechReactionPlan,
   nextAnimalSpeechProvocationCount,
+  trackAgeText,
   trackDepartureDirectionText,
   trackLineDisplayLabel,
   trackMovementVerb,
 } = require("../../src/services/actionCompletions");
+const { REAL_MS_PER_GAME_MINUTE } = require("../../src/data/worldClock");
 
 assert.deepEqual(animalSpeechReactionPlan("mouse", 0.1), {
   kind: "flee",
@@ -59,5 +61,14 @@ assert.equal(trackMovementVerb("Лукан", "left"), "пішов");
 assert.equal(trackDepartureDirectionText("UP"), "угору");
 assert.equal(trackDepartureDirectionText("DOWN"), "вниз");
 assert.equal(trackDepartureDirectionText("WEST"), "на захід");
+
+const trackAgeNow = new Date("2026-06-05T12:00:00Z");
+const trackDateGameMinutesAgo = (minutes) => new Date(trackAgeNow.getTime() - minutes * REAL_MS_PER_GAME_MINUTE);
+assert.equal(trackAgeText(trackDateGameMinutesAgo(0), trackAgeNow), "щойно");
+assert.equal(trackAgeText(trackDateGameMinutesAgo(1), trackAgeNow), "менше межової хвилини тому");
+assert.equal(trackAgeText(trackDateGameMinutesAgo(7), trackAgeNow), "7 межових хвилин тому");
+assert.equal(trackAgeText(trackDateGameMinutesAgo(60), trackAgeNow), "близько межової години тому");
+assert.equal(trackAgeText(trackDateGameMinutesAgo(180), trackAgeNow), "3 межові години тому");
+assert.doesNotMatch(trackAgeText(trackDateGameMinutesAgo(7), trackAgeNow), /\d+\s+хв тому/u);
 
 console.log("Animal speech reactions OK");

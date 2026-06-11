@@ -26,6 +26,7 @@ const {
   TRACKING_ANIMAL_MOVEMENT_OBSERVATION_SPECIES_KEY,
   canObserveAnimalMovementForTracking,
 } = require("../../src/services/animalMovementObservation");
+const { REAL_MS_PER_GAME_MINUTE } = require("../../src/data/worldClock");
 
 assert.equal(TRACKING_PRACTICE_EVENT_TITLE, "Tracking practice");
 assert.equal(TRACKING_PRACTICE_CONTEXT_SEARCH, "track_search");
@@ -112,9 +113,11 @@ assert.equal(capped.level, 5);
 assert.equal(capped.maxTrackResults, 12);
 
 const now = new Date("2026-06-05T12:00:00Z");
-assert.equal(roughTrackAgeText(new Date("2026-06-05T11:59:30Z"), now), "свіжий слід");
-assert.equal(roughTrackAgeText(new Date("2026-06-05T11:54:00Z"), now), "недавній слід");
-assert.equal(roughTrackAgeText(new Date("2026-06-05T11:20:00Z"), now), "старіший слід");
+const trackDateGameMinutesAgo = (minutes) => new Date(now.getTime() - minutes * REAL_MS_PER_GAME_MINUTE);
+assert.equal(roughTrackAgeText(trackDateGameMinutesAgo(14), now), "свіжий слід");
+assert.equal(roughTrackAgeText(trackDateGameMinutesAgo(15), now), "недавній слід");
+assert.equal(roughTrackAgeText(trackDateGameMinutesAgo(119), now), "недавній слід");
+assert.equal(roughTrackAgeText(trackDateGameMinutesAgo(120), now), "старіший слід");
 
 assert.equal(trackingDarkPresenceText({ visibilityText: "Темрява ховає сліди." }), "Темрява ховає сліди.");
 const highDark = trackingDarkPresenceText({ visibilityText: "Темрява ховає сліди.", canReadWeakTrackHint: true });

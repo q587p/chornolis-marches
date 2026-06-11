@@ -1,5 +1,6 @@
 import { prisma } from "../db";
 import { learningLevelForTotalProgress, recordLearningProgress } from "./learning";
+import { roughTrackAgeText as roughTrackAgeTextFromGameTime } from "./trackAge";
 
 export const TRACKING_PRACTICE_EVENT_TITLE = "Tracking practice";
 export const TRACKING_PRACTICE_CONTEXT_SEARCH = "track_search";
@@ -128,10 +129,7 @@ export async function trackingSkillEffectForPlayer(
 }
 
 export function roughTrackAgeText(createdAt: Date, now = new Date()) {
-  const ageMs = Math.max(0, now.getTime() - createdAt.getTime());
-  if (ageMs < 2 * 60_000) return "свіжий слід";
-  if (ageMs < 10 * 60_000) return "недавній слід";
-  return "старіший слід";
+  return roughTrackAgeTextFromGameTime(createdAt, now);
 }
 
 export function trackingDarkPresenceText(input: {

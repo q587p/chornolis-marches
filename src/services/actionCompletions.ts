@@ -72,6 +72,7 @@ import { isBeginnerCacheContributionPayload } from "./beginnerCacheQueue";
 import { maybeGrantGatherShahBonus } from "./smallLoot";
 import { normalizeTrackQuery, trackMatchesQuery } from "./trackSearch";
 import { recordTrackingPractice, roughTrackAgeText, trackingDarkPresenceText, trackingSkillEffectForPlayer } from "./trackingLearning";
+import { preciseTrackAgeText } from "./trackAge";
 import { tryCompleteCellarWaterWordPassage } from "./cellarWaterPassage";
 import {
   followedTrackDisplayLabel,
@@ -404,15 +405,8 @@ function whisperedVerb(player: any) {
   return "щось прошепотів";
 }
 
-function trackAgeText(createdAt: Date, now = new Date()) {
-  const seconds = Math.max(0, Math.floor((now.getTime() - createdAt.getTime()) / 1000));
-  if (seconds < 20) return "щойно";
-  if (seconds < 60) return "менше хвилини тому";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 2) return "близько хвилини тому";
-  if (minutes < 5) return "кілька хвилин тому";
-  if (minutes < 15) return `${minutes} хв тому`;
-  return "давніше";
+export function trackAgeText(createdAt: Date, now = new Date()) {
+  return preciseTrackAgeText(createdAt, now);
 }
 
 async function visibleMoverLabel(locationId: number, fallback: string, visibleName: string) {
