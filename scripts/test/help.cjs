@@ -27,7 +27,7 @@ assert.ok(HELP_TEXT.includes("/spirit_off"));
 assert.ok(HELP_TEXT.includes("<b>Навчання й увага</b>"));
 assert.ok(HELP_TEXT.includes("<i>Слідування</i> (/follow_assist_on)"));
 assert.ok(HELP_TEXT.includes("<i>Гурт</i> (/group)"));
-assert.ok(HELP_TEXT.includes("<i>Приготувати настоянку</i> (/make_tincture)"));
+assert.ok(HELP_TEXT.includes("<i>Приготувати настоянку</i> (/brew tincture, /make_tincture)"));
 assert.ok(HELP_TEXT.includes("<i>Випити настоянку</i> (/drink_tincture, <i>випити настоянку</i>)"));
 assert.ok(HELP_TEXT.includes("власна атака або справжня сутичка поруч"));
 assert.ok(HELP_TEXT.includes("без таблиць"));
