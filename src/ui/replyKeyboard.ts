@@ -71,12 +71,12 @@ export function buildMainReplyKeyboard(stateOrAuto: MainKeyboardState | boolean 
   const westOrInsideButton = exits.has("WEST")
     ? directionButton("WEST", "⬅️ Захід")
     : !hasCardinalExit
-      ? directionButton("INSIDE", "🚪 Всередину")
+      ? directionButton("INSIDE", "⤵️ Всередину")
       : EMPTY_KEYBOARD_BUTTON;
   const eastOrOutsideButton = exits.has("EAST")
     ? directionButton("EAST", "Схід ➡️")
     : !hasCardinalExit
-      ? directionButton("OUTSIDE", "🚪 Назовні")
+      ? directionButton("OUTSIDE", "⤴️ Назовні")
       : EMPTY_KEYBOARD_BUTTON;
   const keyboard = new Keyboard()
     .text("👀 Озирнутися");
@@ -244,6 +244,8 @@ export function buildAdminResourcesReplyKeyboard() {
     .text("🌱 Додати трави")
     .row()
     .text("🍄 Додати гриби")
+    .text("🌾 Відновити траву")
+    .row()
     .text("➕ Додати ресурс")
     .row()
     .text("🛠 Адмін меню")

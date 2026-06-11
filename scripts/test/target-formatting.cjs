@@ -5,7 +5,7 @@ const path = require("node:path");
 require("ts-node/register");
 
 const { formatCreatureLifeState, formatCreatureStatusLine, inventoryResourceSummary } = require("../../src/services/targets");
-const { PICK_UP_EVERYTHING_BUTTON_TEXT, animalAgeDescription, groundItemLine, groundItemPickupButtonRows, groundItemPickupIcon, hasPickableLyingObjects, joinVisibleActionLabels } = require("../../src/services/locations");
+const { PICK_UP_EVERYTHING_BUTTON_TEXT, animalAgeDescription, groundItemLine, groundItemPickupButtonRows, groundItemPickupIcon, hasMultiplePickableLyingObjects, hasPickableLyingObjects, joinVisibleActionLabels, pickableLyingObjectCount } = require("../../src/services/locations");
 const { buildAnonymousTargetKeyboard, buildCorpseActionKeyboard, buildTargetActionKeyboard, buildTargetListKeyboard } = require("../../src/ui/keyboards");
 const { visibleHeldTorchTextWithContext } = require("../../src/utils/torchText");
 
@@ -99,16 +99,20 @@ const livingTargetRows = buildTargetListKeyboard([
   { type: "creature", id: 31, label: "Орина", actionLabel: "шукає гризунів і зайців; тримає запалений факел", canGreet: true, sex: "FEMALE", speciesKind: "HUMAN" },
   { type: "creature", id: 32, label: "Лукан", actionLabel: "тримає слід", canGreet: true, sex: "MALE", speciesKind: "HUMAN" },
   { type: "player", id: 33, label: "Вербові", actionLabel: "Поклик духа веде", canGreet: true, grammaticalGender: "PLURAL" },
+  { type: "player", id: 38, label: "Марена", actionLabel: "озирається", canGreet: true, sex: "FEMALE" },
   { type: "creature", id: 34, label: "миша", actionLabel: "шукає їжу", canGreet: false, isAnimal: true, speciesKey: "mouse", speciesKind: "ANIMAL" },
   { type: "creature", id: 35, label: "лисиця", actionLabel: "нюхає траву", canGreet: false, isAnimal: true, speciesKey: "fox", speciesKind: "ANIMAL" },
-  { type: "creature", id: 36, label: "невідомий звір", actionLabel: "ворушиться", canGreet: false, isAnimal: true, speciesKey: "unknown", speciesKind: "ANIMAL" },
+  { type: "creature", id: 36, label: "Кіт-бережник", actionLabel: "озирається", canGreet: false, isAnimal: false, speciesKey: "camp_spirit_cat", speciesKind: "SPIRIT" },
+  { type: "creature", id: 37, label: "невідомий звір", actionLabel: "ворушиться", canGreet: false, isAnimal: true, speciesKey: "unknown", speciesKind: "ANIMAL" },
 ]).inline_keyboard.map((row) => row.map((button) => button.text));
 assert.deepEqual(livingTargetRows, [
-  ["👩 Орина"],
-  ["👨 Лукан"],
-  ["👥 Вербові"],
+  ["🧍‍♀️ Орина"],
+  ["🧍‍♂️ Лукан"],
+  ["🧍 Вербові"],
+  ["🧍‍♀️ Марена"],
   ["🐭 миша"],
   ["🦊 лисиця"],
+  ["🐈 Кіт-бережник"],
   ["🐾 невідомий звір"],
 ]);
 assert.equal(livingTargetRows.flat().some((label) => label.includes("шукає гризунів")), false);
@@ -224,5 +228,10 @@ assert.equal(hasPickableLyingObjects([], []), false);
 assert.equal(hasPickableLyingObjects([{ id: 41, amount: 1 }], []), true);
 assert.equal(hasPickableLyingObjects([], [{ id: 1, currentAction: null }]), true);
 assert.equal(hasPickableLyingObjects([], [{ id: 2, currentAction: "freshened_by_player:1; meat=1" }]), false);
+assert.equal(pickableLyingObjectCount([{ id: 41, amount: 1 }], []), 1);
+assert.equal(hasMultiplePickableLyingObjects([{ id: 41, amount: 1 }], []), false);
+assert.equal(hasMultiplePickableLyingObjects([{ id: 41, amount: 2 }], []), true);
+assert.equal(hasMultiplePickableLyingObjects([{ id: 41, amount: 1 }], [{ id: 1, currentAction: null }]), true);
+assert.equal(hasMultiplePickableLyingObjects([{ id: 41, amount: 1 }], [{ id: 2, currentAction: "freshened_by_player:1; meat=1" }]), false);
 
 console.log("Target formatting OK");

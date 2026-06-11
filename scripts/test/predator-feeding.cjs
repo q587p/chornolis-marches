@@ -57,8 +57,10 @@ assert.equal(isUnclaimedHerbivoreCorpseForScavenging({ ...ordinaryMouseCorpse, s
 
 assert.equal(predatorFeedingObserverText("claimed"), "Щось повертається до здобичі й тягне її в темнішу траву.");
 assert.equal(predatorFeedingObserverText("claimed", "Лис"), "Лис повертається до здобичі й тягне її в темнішу траву.");
+assert.equal(predatorFeedingObserverText("claimed", "сова"), "Сова повертається до здобичі й тягне її в темнішу траву.");
 assert.equal(predatorFeedingObserverText("stolen", "Лис"), "Лис перехоплює чужу здобич і тягне її в темнішу траву.");
 assert.equal(predatorFeedingObserverText("scavenged", "Лис"), "Лис знаходить покинуту здобич і тягне її в темнішу траву.");
+assert.equal(predatorFeedingObserverText("scavenged", "сова"), "Сова знаходить покинуту здобич і тягне її в темнішу траву.");
 assert.equal(predatorFeedingObserverText("lost", "Лис"), "Лис повертається до здобичі, але знаходить лише прим’ятий мох.");
 
 const actionCompletionsSource = fs.readFileSync(path.join(__dirname, "..", "..", "src", "services", "actionCompletions.ts"), "utf8");

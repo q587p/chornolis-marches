@@ -15,6 +15,7 @@ const {
   isAutoEndSessionDue,
   playerPresenceDisplaySuffix,
   renderSessionReturnHint,
+  sessionAbsenceDurationText,
   sessionPresenceLabel,
   sessionPresenceReasonLabel,
 } = require("../../src/services/sessionPresence");
@@ -76,11 +77,33 @@ assert.equal(playerPresenceDisplaySuffix(null), "");
 
 assert.equal(renderSessionReturnHint(null), null);
 assert.equal(renderSessionReturnHint({ from: "ACTIVE", since: new Date("2026-05-30T12:00:00.000Z") }), null);
+assert.equal(sessionAbsenceDurationText(60_000), "1 хвилину");
+assert.equal(sessionAbsenceDurationText(2 * 60_000), "2 хвилини");
+assert.equal(sessionAbsenceDurationText(5 * 60_000), "5 хвилин");
+assert.equal(sessionAbsenceDurationText(60 * 60_000), "1 годину");
+assert.equal(sessionAbsenceDurationText(2 * 60 * 60_000), "2 години");
+assert.equal(sessionAbsenceDurationText(5 * 60 * 60_000), "5 годин");
+assert.equal(sessionAbsenceDurationText(24 * 60 * 60_000), "1 день");
+assert.equal(sessionAbsenceDurationText(2 * 24 * 60 * 60_000), "2 дні");
+assert.equal(sessionAbsenceDurationText(5 * 24 * 60 * 60_000), "5 днів");
+assert.equal(sessionAbsenceDurationText(30 * 24 * 60 * 60_000), "1 місяць");
+assert.equal(sessionAbsenceDurationText(2 * 30 * 24 * 60 * 60_000), "2 місяці");
+assert.equal(sessionAbsenceDurationText(5 * 30 * 24 * 60 * 60_000), "5 місяців");
+assert.equal(sessionAbsenceDurationText(365 * 24 * 60 * 60_000), "1 рік");
+assert.equal(sessionAbsenceDurationText(2 * 365 * 24 * 60 * 60_000), "2 роки");
+assert.equal(sessionAbsenceDurationText(5 * 365 * 24 * 60 * 60_000), "5 років");
+assert.equal(sessionAbsenceDurationText((365 + 3) * 24 * 60 * 60_000), "1 рік і 3 дні");
 assert.ok(
   renderSessionReturnHint(
     { from: "AFK", since: new Date("2026-05-30T12:00:00.000Z") },
     new Date("2026-05-30T12:13:00.000Z")
-  ).includes("13 хв")
+  ).includes("13 хвилин")
+);
+assert.ok(
+  renderSessionReturnHint(
+    { from: "ENDED", since: new Date("2026-05-30T12:00:00.000Z") },
+    new Date("2026-05-30T13:37:00.000Z")
+  ).includes("1 годину і 37 хвилин")
 );
 assert.ok(
   renderSessionReturnHint(

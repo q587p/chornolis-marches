@@ -34,7 +34,7 @@ async function readLatestNewsSummary() {
     return [
       `📰 Остання новина: <strong>${escapeHtml(title)}</strong>`,
       ...(bullets ? [renderNewsMarkdownForTelegram(bullets)] : []),
-    ].join("\n");
+    ].join("\n\n");
   } catch {
     return null;
   }

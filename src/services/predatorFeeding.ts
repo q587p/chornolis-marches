@@ -51,9 +51,17 @@ export function isUnclaimedHerbivoreCorpseForScavenging(corpse: any) {
   return !PROTECTED_CORPSE_MARKERS.some((marker) => action.includes(marker));
 }
 
+function sentenceStartLabel(label: string) {
+  const trimmed = label.trim() || "Щось";
+  const chars = Array.from(trimmed);
+  const first = chars.shift();
+  return first ? `${first.toLocaleUpperCase("uk-UA")}${chars.join("")}` : "Щось";
+}
+
 export function predatorFeedingObserverText(mode: PredatorFeedingObserverMode, predatorLabel = "Щось") {
-  if (mode === "stolen") return `${predatorLabel} перехоплює чужу здобич і тягне її в темнішу траву.`;
-  if (mode === "scavenged") return `${predatorLabel} знаходить покинуту здобич і тягне її в темнішу траву.`;
-  if (mode === "lost") return `${predatorLabel} повертається до здобичі, але знаходить лише прим’ятий мох.`;
-  return `${predatorLabel} повертається до здобичі й тягне її в темнішу траву.`;
+  const label = sentenceStartLabel(predatorLabel);
+  if (mode === "stolen") return `${label} перехоплює чужу здобич і тягне її в темнішу траву.`;
+  if (mode === "scavenged") return `${label} знаходить покинуту здобич і тягне її в темнішу траву.`;
+  if (mode === "lost") return `${label} повертається до здобичі, але знаходить лише прим’ятий мох.`;
+  return `${label} повертається до здобичі й тягне її в темнішу траву.`;
 }

@@ -215,16 +215,17 @@ const ANIMAL_TARGET_ICONS: Record<string, string> = {
 };
 
 function personTargetIcon(target: TargetRef) {
-  if (target.grammaticalGender === "PLURAL") return "👥";
-  if (target.sex === "FEMALE" || target.grammaticalGender === "FEMININE") return "👩";
-  if (target.sex === "MALE" || target.grammaticalGender === "MASCULINE") return "👨";
+  if (target.sex === "FEMALE" || target.grammaticalGender === "FEMININE") return "🧍‍♀️";
+  if (target.sex === "MALE" || target.grammaticalGender === "MASCULINE") return "🧍‍♂️";
   return "🧍";
 }
 
 function targetButtonIcon(target: TargetRef) {
   if (target.isCorpse) return "";
   if (target.type === "player") return personTargetIcon(target);
-  if (target.isAnimal || target.speciesKind === "ANIMAL") return ANIMAL_TARGET_ICONS[target.speciesKey ?? ""] ?? "🐾";
+  const speciesIcon = ANIMAL_TARGET_ICONS[target.speciesKey ?? ""];
+  if (speciesIcon) return speciesIcon;
+  if (target.isAnimal || target.speciesKind === "ANIMAL") return "🐾";
   return personTargetIcon(target);
 }
 

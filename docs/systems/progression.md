@@ -208,7 +208,7 @@ finds, economy hooks and public raw skill UI remain deferred.
 
 `0.15.46` adds guarded follow assist on top of the existing attention and
 route-memory spine. It is not a new learning effect: if a player explicitly
-enables `Слідова підмога` (`/follow_assist_on`, compatible with
+enables `Слідування` (`/follow_assist_on`, compatible with
 `/follow_assist on`) for the current follow intent, clear ordinary visible
 movement by the followed target may submit one normal
 `MOVE` for the follower. Hidden routes, darkness, missing exits, stamina,

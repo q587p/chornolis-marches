@@ -122,7 +122,17 @@ result = evaluateFollowAssistEligibility({
   activeActionCount: 0,
   hasVisibleExit: true,
 });
-assert.deepEqual(result, { ok: false, reason: "resting" });
+assert.deepEqual(result, { ok: false, reason: "sitting" });
+
+result = evaluateFollowAssistEligibility({
+  intent: intent(),
+  currentLocationId: 100,
+  event: clearEvent(),
+  player: player({ posture: "LYING" }),
+  activeActionCount: 0,
+  hasVisibleExit: true,
+});
+assert.deepEqual(result, { ok: false, reason: "lying" });
 
 result = evaluateFollowAssistEligibility({
   intent: intent(),
@@ -231,12 +241,16 @@ assert.equal(darkText.includes("північ"), false);
 const noDirectionText = followAssistFailureText("no-direction");
 assert.equal(noDirectionText.includes("Темрява"), false);
 assert.match(noDirectionText, /ясного напряму/);
+assert.match(followAssistFailureText("sitting"), /сидите/);
+assert.match(followAssistFailureText("sitting"), /встати/);
+assert.match(followAssistFailureText("lying"), /лежите/);
+assert.match(followAssistFailureText("lying"), /встати/);
 assert.equal(followAssistQueuedText("NORTH"), "Ви підхоплюєте чужий крок: на північ.");
 assert.equal(
   followAssistQueuedText("NORTH", "Орина"),
-  "Ви трималися чужого сліду: Орина рушає на північ. Слідова підмога підхоплює цей рух.",
+  "Ви трималися чужого сліду: Орина рушає на північ. Слідування підхоплює цей рух.",
 );
-assert.equal(followAssistCatchUpQueuedText("NORTH"), "Слідова підмога не губить слід: далі на північ.");
+assert.equal(followAssistCatchUpQueuedText("NORTH"), "Слідування не губить слід: далі на північ.");
 assert.equal(FOLLOW_ASSIST_STEP_NOTE, "follow-assist");
 assert.equal(FOLLOW_ASSIST_CATCH_UP_NOTE, "follow-assist:catch-up");
 assert.equal(FOLLOW_ASSIST_MARKER_KEY, "follow_assist_queued_move");
@@ -270,6 +284,8 @@ assert.equal(
 
 const followRouteMemorySource = fs.readFileSync("src/services/followRouteMemory.ts", "utf8");
 assert.match(followRouteMemorySource, /withSlowLog\("followAssist\.catchUp"/);
+assert.match(followRouteMemorySource, /buildStandUpKeyboard/);
+assert.match(followRouteMemorySource, /followAssistFailureReplyMarkup\(input\.reason\)/);
 assert.match(followRouteMemorySource, /canSendProactiveToPlayerId\(input\.playerId\)/);
 assert.match(followRouteMemorySource, /hasBlockingPlayerActionsForFollowAssist\(input\.playerId\)/);
 assert.match(followRouteMemorySource, /note: FOLLOW_ASSIST_CATCH_UP_NOTE/);

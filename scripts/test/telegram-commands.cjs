@@ -30,6 +30,9 @@ assert.equal(defaultCommands.includes("afk"), true, "public command menu exposes
 assert.equal(defaultCommands.includes("chronicles"), true, "public command menu exposes /chronicles");
 assert.equal(defaultCommands.includes("follow_step"), true, "public command menu exposes /follow_step");
 assert.equal(defaultCommands.includes("freshen"), false, "public command menu stays short: /freshen remains direct/news-clickable, not side-menu listed");
+for (const command of ["lie", "signals", "socials", "track_fox", "attack_all", "kill_all", "attack_all_mouse"]) {
+  assert.equal(defaultCommands.includes(command), false, `public command menu stays short: /${command} remains direct/news-clickable, not side-menu listed`);
+}
 assert.equal(defaultCommands.includes("refresh"), false, "public command menu must not expose /refresh");
 assert.equal(defaultCommands.includes("call_scribes"), false, "public command menu must not expose /call_scribes");
 assert.equal(defaultCommands.at(-1), "end_session", "/end_session stays at the bottom of the public side command menu");

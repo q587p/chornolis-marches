@@ -2,6 +2,7 @@ import { PlayerSleepState } from "@prisma/client";
 import { prisma } from "../db";
 import { guessNameForms, type NameForms } from "./grammar";
 import type { TextTargetRef } from "./textTargets";
+import { escapeHtml } from "../utils/text";
 
 export const FOLLOW_TARGET_PLAYER = "PLAYER";
 export const FOLLOW_TARGET_CREATURE = "CREATURE";
@@ -36,7 +37,29 @@ export function followIntentStatusLine(label: string | null | undefined, options
 }
 
 export function followAssistStateText(enabled: boolean | null | undefined) {
-  return `Слідова підмога: ${enabled ? "увімкнено" : "вимкнено"}.`;
+  return `Слідування: ${enabled ? "увімкнено" : "вимкнено"}.`;
+}
+
+function followAssistTargetLine(label: string | null | undefined) {
+  const safeLabel = label?.trim();
+  return safeLabel ? `\nЧужий слід: ${escapeHtml(safeLabel)}.` : "";
+}
+
+export function followAssistEnabledText(label: string | null | undefined) {
+  return [
+    "Ви домовляєтесь із власними ногами: якщо чужий слід поруч рушить звичайною стежкою, ви спробуєте не відстати.",
+    followAssistTargetLine(label).trim(),
+    "Це не <i>гурт</i> і не <i>поклик духа</i> — тільки уважний крок слідом.",
+  ].filter(Boolean).join("\n");
+}
+
+export function followAssistAlreadyEnabledText(label: string | null | undefined) {
+  return [
+    "Слідування вже насторожі.",
+    followAssistTargetLine(label).trim(),
+    "Якщо цей слід поруч рушить звичайною стежкою, ви спробуєте не відстати.",
+    "Це не <i>гурт</i> і не <i>поклик духа</i> — тільки уважний крок слідом.",
+  ].filter(Boolean).join("\n");
 }
 
 export function followIntentUsageText() {
@@ -52,6 +75,16 @@ export function followIntentTargetInstrumental(target: Pick<FollowIntentTargetRe
 
 export function followIntentSetText(target: Pick<FollowIntentTargetRef, "label" | "forms">) {
   return `Ви тримаєтеся сліду за ${followIntentTargetInstrumental(target)}. Це ще не крок за кроком — радше уважність до чужого руху.`;
+}
+
+export function followIntentClearedText(label: string | null | undefined) {
+  const safeLabel = label?.trim();
+  if (!safeLabel) return "Ви відпускаєте чужий слід. Далі — власний крок.";
+  return [
+    "Ви відпускаєте чужий слід. Далі — власний крок.",
+    "",
+    `Щойно ви трималися сліду ${guessNameForms(safeLabel).genitive}.`,
+  ].join("\n");
 }
 
 export function followIntentHelpText(input?: {
@@ -72,7 +105,7 @@ export function followIntentHelpText(input?: {
   ];
   if (targetVisible) lines.push("Щоб спробувати піти за свіжим ясним слідом: /follow_step");
   lines.push(followAssistStateText(Boolean(input?.assistEnabled)));
-  lines.push("Щоб змінити слідову підмогу: /follow_assist_on або /follow_assist_off");
+  lines.push("Щоб змінити слідування: /follow_assist_on або /follow_assist_off");
   return lines.join("\n");
 }
 

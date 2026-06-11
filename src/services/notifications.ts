@@ -15,6 +15,7 @@ export type LocationNotificationOptions = {
   replaceKey?: string;
   clearKeys?: string[];
   includeSleeping?: boolean;
+  suppressIfPlayerViewedLocationAfter?: { locationId: number; at: number };
 };
 
 export type LocationNotificationRecipient = {
@@ -38,6 +39,7 @@ type NonPlayerMovementNotificationFlush = {
   locationId: number;
   lines: string[];
   creatureIds: number[];
+  latestQueuedAt: number;
 };
 
 type PendingNonPlayerMovementNotification = {
@@ -45,6 +47,7 @@ type PendingNonPlayerMovementNotification = {
   locationId: number;
   lines: string[];
   creatureIds: Set<number>;
+  latestQueuedAt: number;
   timer?: ReturnType<typeof setTimeout>;
 };
 
@@ -69,6 +72,32 @@ type MovementNotificationTarget = {
   id: number;
   label: string;
 };
+
+const recentLocationViewByPlayerAndLocation = new Map<string, number>();
+const MAX_RECENT_LOCATION_VIEWS = 2000;
+
+function locationViewKey(playerId: number, locationId: number) {
+  return `${playerId}:${locationId}`;
+}
+
+function pruneRecentLocationViews() {
+  if (recentLocationViewByPlayerAndLocation.size <= MAX_RECENT_LOCATION_VIEWS) return;
+  const sorted = [...recentLocationViewByPlayerAndLocation.entries()].sort((a, b) => a[1] - b[1]);
+  for (const [key] of sorted.slice(0, Math.ceil(sorted.length / 4))) {
+    recentLocationViewByPlayerAndLocation.delete(key);
+  }
+}
+
+export function markLocationViewedForMovementNotifications(playerId: number | null | undefined, locationId: number | null | undefined, at: number = Date.now()) {
+  if (!Number.isFinite(playerId) || !Number.isFinite(locationId)) return;
+  recentLocationViewByPlayerAndLocation.set(locationViewKey(Number(playerId), Number(locationId)), at);
+  pruneRecentLocationViews();
+}
+
+export function hasPlayerViewedLocationSince(playerId: number | null | undefined, locationId: number | null | undefined, at: number) {
+  if (!Number.isFinite(playerId) || !Number.isFinite(locationId) || !Number.isFinite(at)) return false;
+  return (recentLocationViewByPlayerAndLocation.get(locationViewKey(Number(playerId), Number(locationId))) ?? 0) >= at;
+}
 
 function labelAppearsInMovementLines(label: string, lines: string[] = []) {
   const normalizedLabel = label.trim().toLocaleLowerCase("uk-UA");
@@ -108,7 +137,7 @@ export function movementNotificationTargetsStillPresent(
   return targets;
 }
 
-export function nonPlayerMovementNotificationOptions(locationId: number, creatureIds: number[] = [], targets: MovementNotificationTarget[] = []) {
+export function nonPlayerMovementNotificationOptions(locationId: number, creatureIds: number[] = [], targets: MovementNotificationTarget[] = [], latestQueuedAt: number = Date.now()) {
   const uniqueCreatureIds = Array.from(new Set(creatureIds.filter((id) => Number.isFinite(id))));
   const keyboard = new InlineKeyboard();
   for (const target of targets) {
@@ -119,6 +148,7 @@ export function nonPlayerMovementNotificationOptions(locationId: number, creatur
     keyboard,
     replaceKey: `tracks:${locationId}`,
     clearKeys: uniqueCreatureIds.map((id) => `target:creature:${id}`),
+    suppressIfPlayerViewedLocationAfter: { locationId, at: latestQueuedAt },
   };
 }
 
@@ -157,6 +187,7 @@ export function createNonPlayerMovementNotificationBuffer(options: NonPlayerMove
       locationId: bucket.locationId,
       lines: [...bucket.lines],
       creatureIds: Array.from(bucket.creatureIds),
+      latestQueuedAt: bucket.latestQueuedAt,
     });
   }
 
@@ -168,11 +199,13 @@ export function createNonPlayerMovementNotificationBuffer(options: NonPlayerMove
       locationId: event.locationId,
       lines: [],
       creatureIds: new Set<number>(),
+      latestQueuedAt: Date.now(),
     };
 
     bucket.bot = event.bot ?? bucket.bot;
     bucket.lines.push(event.line.trim());
     if (typeof event.creatureId === "number") bucket.creatureIds.add(event.creatureId);
+    bucket.latestQueuedAt = Date.now();
     if (bucket.timer) clearTimer(bucket.timer);
 
     if (options.delayMs <= 0) {
@@ -201,7 +234,7 @@ const nonPlayerMovementNotificationBuffer = createNonPlayerMovementNotificationB
     const text = combineMovementNotificationLines(event.lines);
     if (!text) return;
     const targets = await movementNotificationTargetsAtFlush(event.locationId, event.creatureIds, event.lines);
-    await notifyLocationAll(event.bot, event.locationId, text, nonPlayerMovementNotificationOptions(event.locationId, event.creatureIds, targets));
+    await notifyLocationAll(event.bot, event.locationId, text, nonPlayerMovementNotificationOptions(event.locationId, event.creatureIds, targets, event.latestQueuedAt));
   },
 });
 
@@ -270,9 +303,13 @@ export function canReceiveLocationNotification(player: { sleepState?: string | n
   return true;
 }
 
-async function sendLocationNotification(bot: Bot, player: { telegramId: string; sleepState?: string | null }, text: string, options: LocationNotificationOptions = {}) {
+async function sendLocationNotification(bot: Bot, player: { id?: number | null; telegramId: string; sleepState?: string | null }, text: string, options: LocationNotificationOptions = {}) {
   try {
     if (!canReceiveLocationNotification(player, options)) return;
+    if (
+      options.suppressIfPlayerViewedLocationAfter &&
+      hasPlayerViewedLocationSince(player.id, options.suppressIfPlayerViewedLocationAfter.locationId, options.suppressIfPlayerViewedLocationAfter.at)
+    ) return;
     if (!(await canSendProactiveToTelegramId(player.telegramId))) return;
     const send = async () => {
       for (const key of options.clearKeys ?? []) {
@@ -302,7 +339,7 @@ async function sendLocationNotification(bot: Bot, player: { telegramId: string; 
 
 export async function notifyLocation(bot: Bot, locationId: number, exceptPlayerId: number, text: string, optionsOrKeyboard?: InlineKeyboard | LocationNotificationOptions) {
   const options = optionsOrKeyboard instanceof InlineKeyboard ? { keyboard: optionsOrKeyboard } : optionsOrKeyboard;
-  const players = await prisma.player.findMany({ where: { currentLocationId: locationId, NOT: { id: exceptPlayerId } }, select: { telegramId: true, sleepState: true } });
+  const players = await prisma.player.findMany({ where: { currentLocationId: locationId, NOT: { id: exceptPlayerId } }, select: { id: true, telegramId: true, sleepState: true } });
   for (const player of players) {
     await sendLocationNotification(bot, player, text, options);
   }
@@ -327,7 +364,7 @@ export async function notifyLocationDynamic(
 export async function notifyLocationExcept(bot: Bot, locationId: number, exceptPlayerIds: number[], text: string, options: LocationNotificationOptions = {}) {
   const players = await prisma.player.findMany({
     where: { currentLocationId: locationId, id: { notIn: exceptPlayerIds } },
-    select: { telegramId: true, sleepState: true },
+    select: { id: true, telegramId: true, sleepState: true },
   });
   for (const player of players) {
     await sendLocationNotification(bot, player, text, options);
@@ -336,7 +373,7 @@ export async function notifyLocationExcept(bot: Bot, locationId: number, exceptP
 
 export async function notifyLocationAll(bot: Bot, locationId: number, text: string, optionsOrKeyboard?: InlineKeyboard | LocationNotificationOptions) {
   const options = optionsOrKeyboard instanceof InlineKeyboard ? { keyboard: optionsOrKeyboard } : optionsOrKeyboard;
-  const players = await prisma.player.findMany({ where: { currentLocationId: locationId }, select: { telegramId: true, sleepState: true } });
+  const players = await prisma.player.findMany({ where: { currentLocationId: locationId }, select: { id: true, telegramId: true, sleepState: true } });
   for (const player of players) {
     await sendLocationNotification(bot, player, text, options);
   }

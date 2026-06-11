@@ -7,6 +7,48 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.29 - Readiness, follow polish and notification fixes - 12026-06-11
+
+### Added
+
+- Added `STAT-003` as a planning item for deferred replies on heavy status diagnostics such as `/stat`, `/stat_species`, `/world`, `/all` and `/queueDebug`; no async status behavior ships in this release.
+- Added scribe/admin `/restoreGrass [locationKey|x,y,z] [amount|full]` plus a `🌾 Відновити траву` button in the resources submenu for restoring grass nodes and clearing active depleted-vegetation features once the recovery threshold is met.
+
+### Changed
+
+- Changed the main game service `/health` endpoint to answer from lightweight in-process runtime state instead of building the full world/status diagnostic payload before routing.
+- Kept the full database-backed status reads on the pages that need them, such as `/`, `/world` and `/stat`.
+- Added a compact startup log when Telegram long polling successfully starts, while preserving the existing polling conflict retry behavior.
+- Documented `/health` as the Render readiness path and `/world`/`/stat` as deeper diagnostics.
+- Changed inside/outside movement buttons to use abstract `⤵️` / `⤴️` icons instead of door icons while keeping existing movement commands and callbacks unchanged.
+- Expanded session-return absence text from short hour/minute abbreviations to Ukrainian duration phrases with day, month and year forms.
+- Italicized the local Ukrainian `пролізти` crawl prompt in the root-gap reveal text and added `/crawl` to the full `/commands` catalog without adding the English command to the local reveal copy.
+- Kept species-specific target icons active for special creature keys too, so Кіт-бережник uses the cat icon instead of a generic person icon.
+- Changed mentorship practice and answer speech lines to use Telegram quote blocks instead of inline quoted prose.
+- Standardized human target icons across players and local human characters to the same gender-based standing-person set.
+- Changed repeated `/follow_assist_on` use to say that слідування is already watching the current followed trace, and italicized `гурт` / `поклик духа` in that mode boundary copy.
+- Softened `/unfollow` copy so releasing a trace no longer nests the old `Чужий слід:` status line behind a technical `Було:` label.
+- Added Herald/web deep-link payloads for the public news commands `/lie`, `/signals`, `/socials`, `/track_fox`, `/attack_all`, `/kill_all` and current species-specific `/attack_all_*` / `/kill_all_*` forms without adding them to the Telegram side command menu.
+- Separated the latest-news heading from its body in world update announcements and changed mentorship acceptance hints to show the italicized Ukrainian `увімкнути слідування` alias instead of the raw `/follow_assist_on` command.
+- Made follow-assist failure hints name posture blockers directly and show a stand-up action when sitting, lying or resting prevents an automatic catch-up step.
+- Guarded gathering mentorship lesson flavor so it is sent only after the observation path records canonical gathering progress.
+- Guarded attack observation learning so looking around no longer grants attack progress from a stale creature attack source after the attacker has already moved on to ordinary hunting, travel or idle behavior.
+- Suppressed stale delayed non-player movement notifications for a player who already refreshed the same location after the movement notice was queued, so a visible local character should not appear to arrive after they are already shown nearby.
+- Capitalized predator feeding observer text at sentence start even when the visible animal label is lowercase, so lines such as owl scavenging no longer start with a lowercase species name.
+- Hid the global `Підібрати все` button when there is only one visible pickable thing on the ground; single pickup remains available, and the all-pickup path still appears for multiple pickable things.
+- Changed weather summary lines to name the visible phenomenon behind intensity adjectives, so clear weather now reads like `ясність ледь помітна` instead of leaving `ледь помітна` without a noun.
+
+### Risks
+
+- The readiness change does not alter gameplay, action queue behavior, recovery cadence, creature backpressure, deferred Telegram delivery, Prisma schema, migrations, Herald behavior, admin pages or Telegram polling semantics.
+- `/health` intentionally no longer reports database, action queue, ecology or world counters; use the guarded diagnostic pages for that detail.
+- Follow-assist posture failure polish does not auto-stand or move the player; high-skill automatic standing remains a planning-only follow-up.
+- Gathering mentorship lesson flavor remains tied to the existing observation/progress path; this does not add new rewards or public skill numbers.
+- Attack observation learning still uses existing hidden source events, but creature-created sources must remain visibly attack-related before ordinary look/examine can record observation progress.
+- Movement notification suppression is per-player and only affects delayed non-player movement pings after a later location view; movement, tracks, creature location state and creature action state are unchanged.
+- Pickup button gating changes UI visibility only; `/get_all`, `/pick_all` and typed all-pickup aliases keep their existing behavior.
+- `STAT-003` is planning-only; `/stat`, `/stat_species`, `/world`, `/all` and `/queueDebug` remain synchronous in this release.
+
 ## 0.16.28 - Performance telemetry analysis pack - 12026-06-10
 
 ### Added

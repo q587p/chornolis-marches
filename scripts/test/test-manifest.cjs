@@ -90,6 +90,7 @@ module.exports = [
   nodeTest("scripts/test/action-completion-diagnostics.cjs"),
   nodeTest("scripts/test/database-query-diagnostics.cjs"),
   nodeTest("scripts/test/queue-debug-analysis.cjs"),
+  nodeTest("scripts/test/status-health-readiness.cjs"),
   nodeTest("scripts/test/recovery-loop.cjs"),
   nodeTest("scripts/test/starter-animals.cjs"),
   nodeTest("scripts/test/fauna-diversity.cjs"),

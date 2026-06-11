@@ -68,6 +68,11 @@ function literalPattern(value) {
     /Остання новина: <strong>\$\{escapeHtml\(title\)\}<\/strong>/u,
     "Deploy update announcements should bold the latest-news title so it does not blend into the label",
   );
+  assert.match(
+    deployAnnouncementsSource,
+    /\]\.join\("\\n\\n"\);/,
+    "Deploy update announcements should leave an empty line between the latest-news heading and body",
+  );
 
   assert.equal(
     renderNewsInlineMarkdown("`Гукнути поруч` (`/yell`) `/say` `/build_campfire` `/light_campfire` `/douse_campfire` `/dismantle_campfire` /cleanupCreatures /unknown"),
@@ -92,13 +97,23 @@ function literalPattern(value) {
   assert.match(groupNewsCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_group_leave"><em>\/group_leave<\/em><\/a>/);
   assert.match(groupNewsCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_group_follow_leader"><em>\/group_follow_leader<\/em><\/a>/);
 
+  const releaseCommandLinks = renderNewsInlineMarkdown("`Lie` (`/lie`), `Signals` (`/signals` or `/socials`), `Fox tracks` (`/track_fox`), `Attack all` (`/attack_all`), `Kill all` (`/kill_all`), `/attack_all_mouse`, `/kill_all_rabbit`.");
+  assert.match(releaseCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_lie"><em>\/lie<\/em><\/a>/);
+  assert.match(releaseCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_signals"><em>\/signals<\/em><\/a>/);
+  assert.match(releaseCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_socials"><em>\/socials<\/em><\/a>/);
+  assert.match(releaseCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_track_fox"><em>\/track_fox<\/em><\/a>/);
+  assert.match(releaseCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_attack_all"><em>\/attack_all<\/em><\/a>/);
+  assert.match(releaseCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_kill_all"><em>\/kill_all<\/em><\/a>/);
+  assert.match(releaseCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_attack_all_mouse"><em>\/attack_all_mouse<\/em><\/a>/);
+  assert.match(releaseCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_kill_all_rabbit"><em>\/kill_all_rabbit<\/em><\/a>/);
+
   const deployNews = [
     "📰 Остання новина: <strong>0.0.0 — Test</strong>",
     renderNewsMarkdownForTelegram("- `Люк до погреба`; `Вниз` (`/down`) і <raw>"),
-  ].join("\n");
+  ].join("\n\n");
   const deployText = renderWorldUpdatedAnnouncement("0.0.0", deployNews);
   assert.doesNotMatch(deployText, /`/);
-  assert.match(deployText, /Остання новина: <strong>0\.0\.0 — Test<\/strong>/);
+  assert.match(deployText, /Остання новина: <strong>0\.0\.0 — Test<\/strong>\n\n/);
   assert.match(deployText, /<i>Люк до погреба<\/i>/);
   assert.match(deployText, /<i>Вниз<\/i> \(\/down\)/);
   assert.match(deployText, /&lt;raw&gt;/);

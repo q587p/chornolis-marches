@@ -12,7 +12,10 @@ export type StartActionPayload =
   | "help"
   | "rest"
   | "sleep"
+  | "lie"
   | "track"
+  | "trackFox"
+  | "signals"
   | "follow"
   | "unfollow"
   | "travelGroup"
@@ -44,7 +47,25 @@ export type StartActionPayload =
   | "dismantleCampfire"
   | "dismantleTotem"
   | "gatherHoney"
-  | "gatherBeeswax";
+  | "gatherBeeswax"
+  | "attackAll"
+  | "killAll"
+  | "attackAllMouse"
+  | "killAllMouse"
+  | "attackAllRabbit"
+  | "killAllRabbit"
+  | "attackAllFrog"
+  | "killAllFrog"
+  | "attackAllSnake"
+  | "killAllSnake"
+  | "attackAllFox"
+  | "killAllFox"
+  | "attackAllWolf"
+  | "killAllWolf"
+  | "attackAllOwl"
+  | "killAllOwl"
+  | "attackAllHawk"
+  | "killAllHawk";
 
 const SAFE_START_PAYLOAD = /^[A-Za-z0-9_-]+$/;
 const START_COMMAND_WITH_PAYLOAD = /^\/?start(?:@[A-Za-z0-9_]+)?(?:\s+([^\s]+))?\s*$/i;
@@ -74,7 +95,10 @@ export function parseStartActionPayload(value: unknown): StartActionPayload | nu
   if (payload === "cmd_help") return "help";
   if (payload === "cmd_rest") return "rest";
   if (payload === "cmd_sleep") return "sleep";
+  if (payload === "cmd_lie") return "lie";
   if (payload === "cmd_track") return "track";
+  if (payload === "cmd_track_fox") return "trackFox";
+  if (payload === "cmd_signals" || payload === "cmd_socials") return "signals";
   if (payload === "cmd_follow") return "follow";
   if (payload === "cmd_unfollow") return "unfollow";
   if (payload === "cmd_group") return "travelGroup";
@@ -109,6 +133,24 @@ export function parseStartActionPayload(value: unknown): StartActionPayload | nu
   if (payload === "cmd_search_beeswax") return "gatherBeeswax";
   if (payload === "cmd_gather_honey") return "gatherHoney";
   if (payload === "cmd_gather_beeswax") return "gatherBeeswax";
+  if (payload === "cmd_attack_all") return "attackAll";
+  if (payload === "cmd_kill_all") return "killAll";
+  if (payload === "cmd_attack_all_mouse") return "attackAllMouse";
+  if (payload === "cmd_kill_all_mouse") return "killAllMouse";
+  if (payload === "cmd_attack_all_rabbit") return "attackAllRabbit";
+  if (payload === "cmd_kill_all_rabbit") return "killAllRabbit";
+  if (payload === "cmd_attack_all_frog") return "attackAllFrog";
+  if (payload === "cmd_kill_all_frog") return "killAllFrog";
+  if (payload === "cmd_attack_all_snake") return "attackAllSnake";
+  if (payload === "cmd_kill_all_snake") return "killAllSnake";
+  if (payload === "cmd_attack_all_fox") return "attackAllFox";
+  if (payload === "cmd_kill_all_fox") return "killAllFox";
+  if (payload === "cmd_attack_all_wolf") return "attackAllWolf";
+  if (payload === "cmd_kill_all_wolf") return "killAllWolf";
+  if (payload === "cmd_attack_all_owl") return "attackAllOwl";
+  if (payload === "cmd_kill_all_owl") return "killAllOwl";
+  if (payload === "cmd_attack_all_hawk") return "attackAllHawk";
+  if (payload === "cmd_kill_all_hawk") return "killAllHawk";
 
   return null;
 }

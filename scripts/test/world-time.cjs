@@ -119,7 +119,10 @@ assert.ok(!dreamDate.includes("Погода"));
 assert.ok(!dreamDate.includes("передвечір"));
 assert.ok(getWorldYearName(start.year).startsWith("рік "));
 
-assert.equal(renderWeatherLine(worldTimeSnapshotFromAbsoluteMinute(START_WORLD_ABSOLUTE_MINUTE, "rain", 70)), "дощ; густа");
+assert.equal(renderWeatherLine(worldTimeSnapshotFromAbsoluteMinute(START_WORLD_ABSOLUTE_MINUTE, "clear", 15)), "ясно; ясність ледь помітна");
+assert.equal(renderWeatherLine(worldTimeSnapshotFromAbsoluteMinute(START_WORLD_ABSOLUTE_MINUTE, "rain", 15)), "дощ; дощ ледь помітний");
+assert.equal(renderWeatherLine(worldTimeSnapshotFromAbsoluteMinute(START_WORLD_ABSOLUTE_MINUTE, "rain", 70)), "дощ; дощ густий");
+assert.equal(renderWeatherLine(worldTimeSnapshotFromAbsoluteMinute(START_WORLD_ABSOLUTE_MINUTE, "mist", 35)), "туман; туман помірний");
 assert.ok(renderCurrentWeather(worldTimeSnapshotFromAbsoluteMinute(START_WORLD_ABSOLUTE_MINUTE, "mist", 55)).includes("Погода Порубіжжя"));
 assert.ok(weatherLightModifier("storm", 100) < weatherLightModifier("clear", 100));
 

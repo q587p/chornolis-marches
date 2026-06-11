@@ -86,7 +86,8 @@ for (const darkText of [
 }
 
 assert.match(attentionRootGapRevealText(), /вузьку суху щілину/i);
-assert.match(attentionRootGapRevealText(), /пролізти обережно/i);
+assert.match(attentionRootGapRevealText(), /<i>пролізти<\/i> обережно/i);
+assert.doesNotMatch(attentionRootGapRevealText(), /\/crawl/i);
 assert.match(featureBriefInspectionText(rootGap), /зі світлом/i);
 
 const darkWorldTime = worldTimeSnapshotFromAbsoluteMinute(23 * 60, "clear", 0);

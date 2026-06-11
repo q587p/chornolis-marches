@@ -15,9 +15,11 @@ const {
   isAttackPracticeMilestone,
 } = require("../../src/services/attackLearningRules");
 const {
+  attackSourceAttackerCreatureId,
   attackObservationLearningInput,
   attackPracticeLearningInput,
   canCreatureLearnAttackByObservation,
+  creatureStillShowsAttackSource,
   recordAttackObservation,
   recordAttackPracticeLearning,
   recordCreatureAttackObservation,
@@ -47,6 +49,12 @@ assert.equal(attackCanonicalObservationDescription({ playerId: 7, sourceEventId:
 assert.equal(attackCanonicalObservationDescription({ creatureId: 9, sourceEventId: 42 }), "creature=9; source=42; skillKey=attack; contextKey=attack");
 assert.equal(sourceWasCreatedByAttackCreature("attackerCreature=9; targetCreature=12; outcome=wound", 9), true);
 assert.equal(sourceWasCreatedByAttackCreature("attackerCreature=19; targetCreature=12; outcome=wound", 9), false);
+assert.equal(attackSourceAttackerCreatureId("attackerCreature=9; targetCreature=12; outcome=wound"), 9);
+assert.equal(attackSourceAttackerCreatureId("attackerPlayer=7; targetCreature=12; outcome=wound"), null);
+assert.equal(creatureStillShowsAttackSource({ locationId: 13, isAlive: true, isGone: false, isHidden: false, activity: "FIGHTING", currentAction: "шукає гризунів і зайців" }, 13), true);
+assert.equal(creatureStillShowsAttackSource({ locationId: 13, isAlive: true, isGone: false, isHidden: false, activity: "LOOKING", currentAction: "вполював мишу і несе здобич" }, 13), true);
+assert.equal(creatureStillShowsAttackSource({ locationId: 13, isAlive: true, isGone: false, isHidden: false, activity: "LOOKING", currentAction: "шукає гризунів і зайців" }, 13), false);
+assert.equal(creatureStillShowsAttackSource({ locationId: 14, isAlive: true, isGone: false, isHidden: false, activity: "FIGHTING", currentAction: "атакує мишу" }, 13), false);
 assert.deepEqual(
   attackPracticeLearningInput({ attackerPlayerId: 7, sourceEventId: 42 }),
   {
@@ -108,6 +116,8 @@ function fakeAttackLearningDb({
       professionKey: "hunter",
       professionName: "мисливець",
       species: { kind: "HUMANOID", diet: "OMNIVORE" },
+      activity: "FIGHTING",
+      currentAction: "атакує мишу",
       ...creatureOverrides,
     }],
     [10, {
@@ -265,6 +275,18 @@ function fakeAttackLearningDb({
   }, legacyKillDb);
   assert.equal(legacyObserved.observed, true, "legacy kill source remains observable");
   assert.equal(legacyObserved.canonicalProgressRecorded, true);
+
+  const staleCreatureSourceDb = fakeAttackLearningDb({
+    sourceDescriptions: ["attackerCreature=9; targetCreature=12; outcome=kill"],
+    creatureOverrides: { activity: "LOOKING", currentAction: "шукає гризунів і зайців" },
+  });
+  const staleObserved = await recordAttackObservation({
+    playerId: 7,
+    locationId: 13,
+    now: new Date("2026-06-03T09:01:00Z"),
+  }, staleCreatureSourceDb);
+  assert.equal(staleObserved.observed, false, "stale creature attack source should not grant player observation after the attacker moved on");
+  assert.equal(staleCreatureSourceDb.playerProgressRows.length, 0);
 
   const hunterObservationDb = fakeAttackLearningDb({
     sourceDescriptions: ["attackerPlayer=7; targetCreature=12; outcome=kill"],

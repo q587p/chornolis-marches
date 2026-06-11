@@ -26,12 +26,13 @@ import {
   type PreparedCharacterName,
 } from "../services/characterNames";
 import { disablePlayerAuto, replyPlayerAutoStatus, requestOrEnablePlayerAuto, replyStopPlayerAuto } from "./auto";
-import { requestScribeReturnAssistance, submitBuildCampfire, submitDismantleCampfire, submitDismantleTotem, submitDouseCampfire, submitFollowIntent, submitLightCampfire, submitPickupCommand, submitPutItem, submitSay, submitTrack, submitTravelGroupCommand, submitUnfollow, submitYell } from "./aliases";
+import { requestScribeReturnAssistance, submitAttackCommand, submitBuildCampfire, submitDismantleCampfire, submitDismantleTotem, submitDouseCampfire, submitFollowIntent, submitLightCampfire, submitPickupCommand, submitPutItem, submitSay, submitTrack, submitTravelGroupCommand, submitUnfollow, submitYell } from "./aliases";
 import { sendHelp } from "./help";
 import { sendNews } from "./news";
 import { resolveStartActionPayload, type StartActionPayload } from "../input/startPayloads";
 import { runExamineCurrentLocation } from "./look";
-import { showCharacter, showInventory, showLocationForPlayer } from "./player";
+import { showCharacter, showInventory, showLocationForPlayer, showLocationSocialSignals } from "./player";
+import { submitPosture } from "./posture";
 import { startRest } from "./rest";
 import { submitGather } from "./gather";
 import { showCalendar, showTime, showWeather } from "./time";
@@ -719,8 +720,24 @@ async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayl
     return true;
   }
 
+  if (action === "lie") {
+    await submitPosture(bot, ctx, "lie");
+    return true;
+  }
+
   if (action === "track") {
     await submitTrack(bot, ctx);
+    return true;
+  }
+
+  if (action === "trackFox") {
+    await submitTrack(bot, ctx, false, "fox");
+    return true;
+  }
+
+  if (action === "signals") {
+    if (!ctx.from) return true;
+    await showLocationSocialSignals(ctx.from.id, (text, options) => ctx.reply(text, options));
     return true;
   }
 
@@ -841,6 +858,35 @@ async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayl
 
   if (action === "gatherBeeswax") {
     await submitGather(bot, ctx, "beeswax", false);
+    return true;
+  }
+
+  if (action === "attackAll" || action === "killAll") {
+    await submitAttackCommand(bot, ctx, "all");
+    return true;
+  }
+
+  const bulkAttackTarget: Partial<Record<StartActionPayload, string>> = {
+    attackAllMouse: "mouse",
+    killAllMouse: "mouse",
+    attackAllRabbit: "rabbit",
+    killAllRabbit: "rabbit",
+    attackAllFrog: "frog",
+    killAllFrog: "frog",
+    attackAllSnake: "snake",
+    killAllSnake: "snake",
+    attackAllFox: "fox",
+    killAllFox: "fox",
+    attackAllWolf: "wolf",
+    killAllWolf: "wolf",
+    attackAllOwl: "owl",
+    killAllOwl: "owl",
+    attackAllHawk: "hawk",
+    killAllHawk: "hawk",
+  };
+  const target = bulkAttackTarget[action];
+  if (target) {
+    await submitAttackCommand(bot, ctx, `all ${target}`);
     return true;
   }
 

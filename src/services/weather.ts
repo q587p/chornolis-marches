@@ -111,6 +111,30 @@ export function weatherIntensityLabel(intensity: number) {
   return "сильна";
 }
 
+function masculineWeatherIntensityLabel(intensity: number) {
+  const band = weatherIntensityLabel(intensity);
+  if (band === "ледь помітна") return "ледь помітний";
+  if (band === "помірна") return "помірний";
+  if (band === "густа") return "густий";
+  return "сильний";
+}
+
+export function weatherIntensityPhrase(key: string | null | undefined, intensity: number) {
+  const band = weatherIntensityLabel(intensity);
+  switch (normalizeWeatherKey(key)) {
+    case "clear":
+      return `ясність ${band}`;
+    case "cloudy":
+      return `хмарність ${band}`;
+    case "mist":
+      return `туман ${masculineWeatherIntensityLabel(intensity)}`;
+    case "rain":
+      return `дощ ${masculineWeatherIntensityLabel(intensity)}`;
+    case "storm":
+      return `злива ${band}`;
+  }
+}
+
 export function weatherLightModifier(key: string | null | undefined, intensity: number) {
   const profile = weatherProfile(key);
   const scaled = profile.lightModifier * clampWeatherIntensity(intensity) / 100;
@@ -139,7 +163,7 @@ export function pickNextWeatherKey(currentKey: string | null | undefined, random
 
 export function renderWeatherLine(snapshot: Pick<WorldTimeSnapshot, "weatherKey" | "weatherIntensity">) {
   const profile = weatherProfile(snapshot.weatherKey);
-  return `${profile.label}; ${weatherIntensityLabel(snapshot.weatherIntensity)}`;
+  return `${profile.label}; ${weatherIntensityPhrase(snapshot.weatherKey, snapshot.weatherIntensity)}`;
 }
 
 export function renderCurrentWeather(snapshot: Pick<WorldTimeSnapshot, "weatherKey" | "weatherIntensity">) {
