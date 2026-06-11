@@ -16,14 +16,14 @@ Do not replace or derail it with a broad scheduler rewrite, combat system, econo
 
 Keep the next patches narrow and reviewable:
 
-1. `0.16.31` / Learning surface hints and first-session smoke - in testing; repeatable `/help` learning hints plus QA-002 smoke checklist, with no new mechanics.
-2. Performance evidence report - use `docs/ops/performance-observation-template.md` and `docs/ops/performance-triage.md` to decide exactly one next tuning category, or choose no-code.
-3. `TRACK-LEARN-001` / Following skill - design or implement only after current follow-assist copy and blockers stay clear in live play.
-4. `STAT-003` / Deferred heavy diagnostics replies - consider only if `/stat`, `/stat_species`, `/world`, `/all` or `/queueDebug` keep blocking ordinary play under evidence.
-5. Tiny WPN-003 seed/display slice - only if a visible hunter-with-spear/tool demonstration is needed for attack or freshening observation readability.
-6. Mentor guided tracking prompt - add only after gathering prompts and marker cooldowns feel stable.
-7. Mentor route polish - tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
-8. `MAP-004` follow-up - decide the next gated place after light/examine and track/follow-memory proofs.
+1. Tiny WPN-003 seed/display slice - in testing for `0.16.32`; keep it to authored NPC tools/weapons and visible text.
+2. `TRACK-LEARN-001` / Following skill - design or implement only after current follow-assist copy and blockers stay clear in live play.
+3. `STAT-003` / Deferred heavy diagnostics replies - consider only if `/stat`, `/stat_species`, `/world`, `/all` or `/queueDebug` keep blocking ordinary play under evidence.
+4. Mentor guided tracking prompt - add only after gathering prompts and marker cooldowns feel stable.
+5. Mentor route polish - tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
+6. `MAP-004` follow-up - decide the next gated place after light/examine and track/follow-memory proofs.
+
+The post-`0.16.28` performance evidence report is complete with outcome `no-code`: telemetry did not justify runtime tuning in this lane. Keep collecting guarded snapshots if responsiveness worsens, but do not start queue/recovery/Telegram/Prisma tuning without a new narrow evidence category.
 
 ## Post-0.16 Candidate Lane
 

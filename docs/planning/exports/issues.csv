@@ -267,7 +267,7 @@ WORLD-003,World-time survival and item lifetime timers,next,system,world_time,hi
 WORLD-004,Time/calendar/weather command split,testing,ux,world_time,medium,"world-time,calendar,weather,commands,tutorial",docs/planning/items/WORLD-004-time-calendar-weather-command-split.md
 WPN-001,Minimal weapon catalog and equip foundation,done,feature,items,medium,"weapons,inventory,equipment,freshening",docs/planning/items/WPN-001-minimal-weapon-catalog-and-equip.md
 WPN-002,"Weapon-aware look, examine, attack and freshen",done,feature,items,medium,"weapons,inventory,combat,freshening",docs/planning/items/WPN-002-weapon-aware-look-examine-attack-freshen.md
-WPN-003,Themed NPC weapons and hunter spear,backlog,feature,npc,medium,"weapons,npc,hunter,seed",docs/planning/items/WPN-003-themed-npc-weapons-and-hunter-spear.md
+WPN-003,Themed NPC weapons and hunter spear,testing,feature,npc,medium,"weapons,npc,hunter,seed",docs/planning/items/WPN-003-themed-npc-weapons-and-hunter-spear.md
 WPN-004,"Weapon condition, dulling and sharpening hooks",backlog,technical,items,low,"weapons,durability,item-instances,backlog",docs/planning/items/WPN-004-weapon-condition-backlog.md
 WPN-005,Hand slots and visible held items,backlog,feature,items,high,"weapons,inventory,equipment,visibility,npcs",docs/planning/items/WPN-005-hand-slots-and-visible-held-items.md
 WPN-ICE-001,Deep combat and weapon lifetime,icebox,feature,combat,low,"weapons,combat,durability,icebox",docs/planning/items/WPN-ICE-001-deep-combat-and-weapon-lifetime.md

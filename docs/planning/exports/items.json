@@ -5264,7 +5264,7 @@
   {
     "id": "WPN-003",
     "title": "Themed NPC weapons and hunter spear",
-    "status": "backlog",
+    "status": "testing",
     "type": "feature",
     "area": "npc",
     "priority": "medium",

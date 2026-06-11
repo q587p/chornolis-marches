@@ -148,7 +148,16 @@ type SeedUniqueCreature = {
   professionName?: string;
   nameOverrides?: CreatureNameOverrides;
   resources?: SeedCreatureResource[];
+  equippedWeaponKey?: string;
 };
+
+const SEED_WEAPON_RESOURCE_KEYS = new Set(["knife", "hunting_spear", "sickle", "hand_axe", "short_sword"]);
+
+function seedCreatureEquippedWeaponKey(creature: SeedUniqueCreature) {
+  const key = creature.equippedWeaponKey?.trim();
+  if (!key || !SEED_WEAPON_RESOURCE_KEYS.has(key)) return null;
+  return (creature.resources ?? []).some((resource) => resource.resourceKey === key && resource.amount > 0) ? key : null;
+}
 
 type WorldSeed = {
   meta: SeedMeta;
@@ -582,6 +591,7 @@ async function ensureUniqueCreature(
 
   const keep = existing[0];
   const nameOverrides = { ...preparedCreatureNameOverrides(creature.name), ...creature.nameOverrides };
+  const equippedWeaponKey = seedCreatureEquippedWeaponKey(creature);
 
   let creatureId: number;
 
@@ -601,6 +611,7 @@ async function ensureUniqueCreature(
         isHidden: creature.isHidden ?? false,
         professionKey: creature.professionKey,
         professionName: creature.professionName,
+        equippedWeaponKey,
       },
     });
     creatureId = created.id;
@@ -623,6 +634,7 @@ async function ensureUniqueCreature(
         isHidden: creature.isHidden ?? false,
         professionKey: creature.professionKey,
         professionName: creature.professionName,
+        equippedWeaponKey,
       },
     });
     creatureId = updated.id;
