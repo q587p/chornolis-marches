@@ -117,6 +117,25 @@ export function sourceWasCreatedByAttackCreature(sourceDescription: string | nul
   return new RegExp(`(?:^|;\\s*)attackerCreature=${creatureId}(?:$|;)`, "u").test(sourceDescription ?? "");
 }
 
+export function attackSourceAttackerCreatureId(sourceDescription: string | null | undefined) {
+  const match = String(sourceDescription ?? "").match(/(?:^|;\s*)attackerCreature=(\d+)(?:$|;)/u);
+  return match ? Number(match[1]) : null;
+}
+
+export function creatureStillShowsAttackSource(creature: {
+  locationId?: number | null;
+  isAlive?: boolean | null;
+  isGone?: boolean | null;
+  isHidden?: boolean | null;
+  activity?: string | null;
+  currentAction?: string | null;
+} | null | undefined, sourceLocationId: number) {
+  if (!creature || creature.locationId !== sourceLocationId || creature.isAlive === false || creature.isGone || creature.isHidden) return false;
+  if (creature.activity === "FIGHTING") return true;
+  const action = String(creature.currentAction ?? "").toLocaleLowerCase("uk-UA");
+  return /(атак|напада|промах|убив|вполював|зачеп|порани|несе здобич|тримається поруч зі здобич)/u.test(action);
+}
+
 export function canCreatureLearnAttackByObservation(creature: {
   isAlive?: boolean | null;
   isGone?: boolean | null;
@@ -130,6 +149,24 @@ export function canCreatureLearnAttackByObservation(creature: {
   const profession = `${creature.professionKey ?? ""} ${creature.professionName ?? ""}`.toLowerCase();
   if (/(hunter|мислив)/u.test(profession)) return true;
   return false;
+}
+
+async function attackSourceIsCurrentlyObservable(source: { description?: string | null }, locationId: number, db: any = prisma) {
+  const attackerCreatureId = attackSourceAttackerCreatureId(source.description);
+  if (!attackerCreatureId) return true;
+  const attacker = await db.creature.findUnique({
+    where: { id: attackerCreatureId },
+    select: {
+      id: true,
+      locationId: true,
+      isAlive: true,
+      isGone: true,
+      isHidden: true,
+      activity: true,
+      currentAction: true,
+    },
+  });
+  return creatureStillShowsAttackSource(attacker, locationId);
 }
 
 async function findRecentAttackSource(input: {
@@ -149,9 +186,13 @@ async function findRecentAttackSource(input: {
     take: 8,
     select: { id: true, title: true, description: true },
   });
-  if (!input.observerCreatureId) return sources[0] ?? null;
+  const observableSources = [];
+  for (const source of sources) {
+    if (await attackSourceIsCurrentlyObservable(source, input.locationId, db)) observableSources.push(source);
+  }
+  if (!input.observerCreatureId) return observableSources[0] ?? null;
   const observerCreatureId = input.observerCreatureId;
-  return sources.find((source: any) => !sourceWasCreatedByAttackCreature(source.description, observerCreatureId)) ?? null;
+  return observableSources.find((source: any) => !sourceWasCreatedByAttackCreature(source.description, observerCreatureId)) ?? null;
 }
 
 export async function recordAttackObservation(input: { playerId: number; locationId: number; now?: Date }, db: any = prisma) {

@@ -37,6 +37,7 @@ assert.equal(HELP_TEXT.includes("/stand"), false);
 assert.equal(HELP_TEXT.includes("/call_scribes"), false);
 assert.equal(HELP_TEXT.includes("/search_honey"), false);
 assert.equal(HELP_TEXT.includes("/dismantle_totem"), false);
+assert.equal(HELP_TEXT.includes("/crawl"), false);
 assert.equal(tutorialHelpFollowupText(false), TUTORIAL_HELP_RETURN_TEXT);
 assert.equal(tutorialHelpFollowupText(true), TUTORIAL_HELP_IN_DREAM_TEXT);
 assert.equal(helpTextForTutorialStatus(false), HELP_TEXT);
@@ -56,6 +57,8 @@ assert.ok(commandsText.includes("/spirit_off"));
 assert.ok(commandsText.includes("/track_fox"));
 assert.ok(commandsText.includes("/signals"));
 assert.ok(commandsText.includes("сигнал, сигнали"));
+assert.ok(commandsText.includes("/crawl"));
+assert.ok(commandsText.includes("пролізти в щілину"));
 
 const helpHandlerSource = fs.readFileSync("src/handlers/help.ts", "utf8");
 assert.equal(helpHandlerSource.includes("export const HELP_TEXT = ["), false);

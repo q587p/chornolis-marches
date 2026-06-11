@@ -99,10 +99,13 @@ import { HERBAL_TINCTURE_KEY, attemptHerbalTinctureBrewForPlayer } from "../serv
 import { queueAllBeginnerCacheContributions } from "../services/beginnerCacheQueue";
 import {
   clearPlayerFollowIntent,
+  followIntentClearedText,
   followIntentSetText,
   followIntentHelpText,
   followIntentStatusLine,
   followIntentUsageText,
+  followAssistAlreadyEnabledText,
+  followAssistEnabledText,
   followAssistStateText,
   getPlayerFollowIntent,
   isFollowIntentTargetVisibleAtLocation,
@@ -161,6 +164,10 @@ async function maybeReplyWithMentorshipOffer(ctx: any, playerId: number, mentorC
 
 function quoteBlock(text: string) {
   return `<blockquote>${escapeHtml(text)}</blockquote>`;
+}
+
+function hasTelegramHtmlMarkup(text: string) {
+  return /<(?:blockquote|i)>/.test(text);
 }
 
 async function sendFeatureFollowups(ctx: any, view: any) {
@@ -1107,7 +1114,7 @@ async function maybeHandleMentorshipAnswer(ctx: any) {
 
   const result = await respondToMentorshipOffer(player.id, text);
   if (!result.handled) return false;
-  await ctx.reply(result.text);
+  await ctx.reply(result.text, hasTelegramHtmlMarkup(result.text) ? { parse_mode: "HTML" } : undefined);
   return true;
 }
 
@@ -1119,8 +1126,11 @@ async function submitFollowAssist(ctx: any, mode: "show" | "on" | "off") {
   if (!intent) return void (await ctx.reply("Спершу оберіть чужий слід: /follow <ціль>."));
 
   if (mode === "on") {
+    if (intent.assistEnabled) {
+      return void (await ctx.reply(followAssistAlreadyEnabledText(intent.lastKnownTargetLabel), { parse_mode: "HTML" }));
+    }
     await setFollowAssistEnabled(player.id, true);
-    return void (await ctx.reply("Ви домовляєтесь із власними ногами: якщо чужий слід поруч рушить звичайною стежкою, ви спробуєте не відстати. Це не гурт і не Поклик духа — тільки уважний крок слідом."));
+    return void (await ctx.reply(followAssistEnabledText(intent.lastKnownTargetLabel), { parse_mode: "HTML" }));
   }
   if (mode === "off") {
     await setFollowAssistEnabled(player.id, false);
@@ -1135,6 +1145,43 @@ async function submitFollowAssist(ctx: any, mode: "show" | "on" | "off") {
     "Вимкнути: /follow_assist_off",
   ].filter(Boolean).join("\n"));
 }
+
+const BULK_ATTACK_TARGET_COMMANDS = {
+  attack_all_mouse: "mouse",
+  kill_all_mouse: "mouse",
+  attack_all_rabbit: "rabbit",
+  kill_all_rabbit: "rabbit",
+  attack_all_frog: "frog",
+  kill_all_frog: "frog",
+  attack_all_snake: "snake",
+  kill_all_snake: "snake",
+  attack_all_fox: "fox",
+  kill_all_fox: "fox",
+  attack_all_wolf: "wolf",
+  kill_all_wolf: "wolf",
+  attack_all_owl: "owl",
+  kill_all_owl: "owl",
+  attack_all_hawk: "hawk",
+  kill_all_hawk: "hawk",
+} as const;
+const BULK_ATTACK_TARGET_COMMAND_NAMES = [
+  "attack_all_mouse",
+  "kill_all_mouse",
+  "attack_all_rabbit",
+  "kill_all_rabbit",
+  "attack_all_frog",
+  "kill_all_frog",
+  "attack_all_snake",
+  "kill_all_snake",
+  "attack_all_fox",
+  "kill_all_fox",
+  "attack_all_wolf",
+  "kill_all_wolf",
+  "attack_all_owl",
+  "kill_all_owl",
+  "attack_all_hawk",
+  "kill_all_hawk",
+] as const;
 
 async function submitTravelGroupStatus(ctx: any) {
   const player = await getPlayerByTelegramId(ctx.from.id);
@@ -1245,10 +1292,7 @@ export async function submitUnfollow(ctx: any) {
   const cleared = await clearPlayerFollowIntent(player.id);
   if (!cleared) return void (await ctx.reply("Ви зараз не тримаєтеся чужого сліду."));
 
-  const targetText = followIntentStatusLine(cleared.lastKnownTargetLabel);
-  await ctx.reply(targetText
-    ? `Ви відпускаєте чужий слід. Далі — власний крок.\n\nБуло: ${targetText}`
-    : "Ви відпускаєте чужий слід. Далі — власний крок.");
+  await ctx.reply(followIntentClearedText(cleared.lastKnownTargetLabel));
 }
 
 function followStepDirectionPhrase(direction: keyof typeof directionLabels) {
@@ -1319,7 +1363,7 @@ async function submitTrackGatePassage(bot: Bot, ctx: any) {
   }
 }
 
-async function submitAttackCommand(bot: Bot, ctx: any, targetQuery?: string) {
+export async function submitAttackCommand(bot: Bot, ctx: any, targetQuery?: string) {
   const target = targetQuery?.trim();
   if (!target) {
     await ctx.reply("Напишіть так: <i>attack</i> mouse або <i>атакувати</i> мишу.", { parse_mode: "HTML" });
@@ -1835,6 +1879,7 @@ export function registerAliasHandlers(bot: Bot) {
     "freshen_all",
     "attack_all",
     "kill_all",
+    ...BULK_ATTACK_TARGET_COMMAND_NAMES,
     "take_bottle",
     "make_tincture",
     "smile",
@@ -1849,6 +1894,27 @@ export function registerAliasHandlers(bot: Bot) {
   ], async (_ctx, next) => next());
   bot.command(["attack", "fight", "kill", "kick"], async (ctx) => submitAttackCommand(bot, ctx, ctx.match ?? ""));
   bot.command(["attack_all", "kill_all"], async (ctx) => submitAttackCommand(bot, ctx, `all ${(ctx.match ?? "").trim()}`.trim()));
+  bot.command([
+    "attack_all_mouse",
+    "kill_all_mouse",
+    "attack_all_rabbit",
+    "kill_all_rabbit",
+    "attack_all_frog",
+    "kill_all_frog",
+    "attack_all_snake",
+    "kill_all_snake",
+    "attack_all_fox",
+    "kill_all_fox",
+    "attack_all_wolf",
+    "kill_all_wolf",
+    "attack_all_owl",
+    "kill_all_owl",
+    "attack_all_hawk",
+    "kill_all_hawk",
+  ], async (ctx) => {
+    const command = String(ctx.message?.text ?? "").trim().replace(/^\//, "").split(/[@\s]/, 1)[0].toLowerCase() as keyof typeof BULK_ATTACK_TARGET_COMMANDS;
+    await submitAttackCommand(bot, ctx, `all ${BULK_ATTACK_TARGET_COMMANDS[command]}`);
+  });
   bot.command("attack_mouse", async (ctx) => submitAttackCommand(bot, ctx, "mouse"));
   bot.command(["freshen", "butcher"], async (ctx) => submitTargetAction(bot, ctx, "freshen", (ctx.match ?? "").trim() || "corpse"));
   bot.command(["get", "pick", "pickup", "take"], async (ctx) => submitPickupCommand(bot, ctx, ctx.match ?? ""));
@@ -2118,7 +2184,7 @@ export function registerAliasHandlers(bot: Bot) {
     const result = action === "accept"
       ? await acceptMentorship(player.id, mentorshipId)
       : await declineMentorship(player.id, mentorshipId);
-    await ctx.reply(result.text);
+    await ctx.reply(result.text, hasTelegramHtmlMarkup(result.text) ? { parse_mode: "HTML" } : undefined);
   });
   bot.callbackQuery("replyTarget:pending", async (ctx) => {
     await safeAnswerCallbackQuery(ctx);

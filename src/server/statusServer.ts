@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { config } from "../config";
 import { allFilterToken, buildAllPage, buildWhoData, buildWhoPage, parseAllRequest, type AllFilter } from "../handlers/status";
-import { markHttpServerStarted, setLastRuntimeError } from "../runtimeState";
+import { getLastRuntimeError, getTelegramBotStatus, markHttpServerStarted, setLastRuntimeError } from "../runtimeState";
 import {
   chatEventGroupLabel,
   chatLogModeLabel,
@@ -26,6 +26,33 @@ import { escapeHtml } from "../utils/text";
 
 const ADMIN_COOKIE_NAME = "chornolis_admin";
 const EMBLEM_PATH = path.join(process.cwd(), "assets", "art", "generated", "emblem-logo-01.png");
+const MAIN_HTTP_HOST = "0.0.0.0";
+
+function publicRuntimeStatusText(value: string | null) {
+  if (!value) return null;
+  const text = value
+    .replace(/\b(chatId|chat id|telegramId|telegram id|payload|token|secret|DATABASE_URL|database url|raw body|message text|private whisper|whisper)\b/gi, "[redacted]")
+    .replace(/[0-9]{5,}/g, "#")
+    .replace(/\s+/g, " ")
+    .trim();
+  return text.length > 240 ? `${text.slice(0, 237)}...` : text;
+}
+
+export function buildHealthPayload() {
+  const telegramBot = getTelegramBotStatus();
+  return {
+    ok: true,
+    version: config.appVersion,
+    uptimeSeconds: Math.round(process.uptime()),
+    lastRuntimeError: publicRuntimeStatusText(getLastRuntimeError()),
+    telegramBot: {
+      state: telegramBot.state,
+      checkedAt: telegramBot.checkedAt?.toISOString() ?? null,
+      username: telegramBot.username,
+      error: publicRuntimeStatusText(telegramBot.error),
+    },
+  };
+}
 
 function renderEvents(events: any[]) {
   if (events.length === 0) return "<li><code>none</code></li>";
@@ -686,7 +713,6 @@ export function startHttpServer() {
   http
     .createServer(async (req, res) => {
       try {
-        const status = await getStatusData();
         const path = req.url?.split("?")[0] ?? "/";
         if (path === "/assets/art/generated/emblem-logo-01.png") {
           if (!fs.existsSync(EMBLEM_PATH)) {
@@ -699,32 +725,9 @@ export function startHttpServer() {
           return;
         }
 
-        if (req.url === "/health") {
-          const serviceStates = Object.fromEntries(status.services.map((service) => [service.key, service.state]));
-          const ok = status.services.every((service) => service.state === "ok");
+        if (path === "/health") {
           res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
-          res.end(JSON.stringify({
-            ok,
-            version: status.version,
-            services: status.services,
-            serviceStates,
-            databaseError: status.databaseError,
-            lastRuntimeError: status.lastRuntimeError,
-            playersCount: status.playersCount,
-            aliveAnimalsCount: status.aliveAnimalsCount,
-            animalCorpsesCount: status.animalCorpsesCount,
-            goneAnimalsCount: status.goneAnimalsCount,
-            npcCount: status.npcCount,
-            actionQueue: status.actionQueue,
-            latestEvent: status.latestEvent?.title ?? null,
-            latestTickAt: status.latestTickEvent?.createdAt ?? null,
-            latestEvents: status.latestEvents.map((event) => ({
-              id: event.id,
-              title: event.title,
-              description: event.description,
-              createdAt: event.createdAt,
-            })),
-          }));
+          res.end(JSON.stringify(buildHealthPayload()));
           return;
         }
 
@@ -819,6 +822,7 @@ export function startHttpServer() {
               "Content-Type": "text/html; charset=utf-8",
               "Set-Cookie": adminCookieHeader(secret),
             });
+            const status = await getStatusData();
             res.end(renderWorldPage(status));
             return;
           }
@@ -830,6 +834,7 @@ export function startHttpServer() {
           }
 
           res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+          const status = await getStatusData();
           res.end(renderWorldPage(status));
           return;
         }
@@ -873,6 +878,7 @@ export function startHttpServer() {
         }
 
         res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        const status = await getStatusData();
         res.end(await renderHomePage(status));
       } catch (error) {
         setLastRuntimeError(error);
@@ -884,8 +890,8 @@ export function startHttpServer() {
         res.end(JSON.stringify({ ok: false, error: String(error) }));
       }
     })
-    .listen(config.port, () => {
+    .listen(config.port, MAIN_HTTP_HOST, () => {
       markHttpServerStarted();
-      console.log(`Server running on port ${config.port}`);
+      console.log(`Server running on ${MAIN_HTTP_HOST}:${config.port}`);
     });
 }

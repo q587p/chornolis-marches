@@ -174,9 +174,16 @@ assert.equal(
   mentorshipPracticePromptMarkerContext({ skillKey: "gathering", contextKey: "resource:herbs", action: "gather:herbs" }),
   "gathering:resource:herbs:gather:herbs",
 );
-assert.match(mentorshipPracticePromptText({ mentorName: "Орина", skillKey: "gathering", contextKey: "resource:herbs" }), /Тепер ти/);
-assert.match(mentorshipPracticePromptText({ mentorName: "Орина", skillKey: "gathering", contextKey: "resource:herbs", blocked: "no-resource" }), /нічого вчити рукою/);
-assert.doesNotMatch(mentorshipPracticePromptText({ mentorName: "Орина", skillKey: "gathering", contextKey: "resource:herbs" }), /\b(?:XP|level|bonus|amount|quest|daily)\b|\+\d|\d/u);
+const gatheringPracticePrompt = mentorshipPracticePromptText({ mentorName: "Орина", skillKey: "gathering", contextKey: "resource:herbs" });
+assert.match(gatheringPracticePrompt, /Орина відступає від стебел:\n<blockquote>Тепер ти\. Не поспішай — земля сама покаже, де відпустити\.<\/blockquote>/);
+assert.doesNotMatch(gatheringPracticePrompt, /: “/u);
+assert.doesNotMatch(gatheringPracticePrompt, /\b(?:XP|level|bonus|amount|quest|daily)\b|\+\d|\d/u);
+const blockedPracticePrompt = mentorshipPracticePromptText({ mentorName: "Орина", skillKey: "gathering", contextKey: "resource:herbs", blocked: "no-resource" });
+assert.match(blockedPracticePrompt, /Орина дивиться на порожнє місце:\n<blockquote>Тут уже нічого вчити рукою\. Ходімо далі\.<\/blockquote>/);
+assert.doesNotMatch(blockedPracticePrompt, /: “/u);
+const fallbackPracticePrompt = mentorshipPracticePromptText({ mentorName: "Орина", skillKey: "tracking", contextKey: "mentorship_followed_movement" });
+assert.match(fallbackPracticePrompt, /Орина відступає на крок:\n<blockquote>Тепер спробуй сам\.<\/blockquote>/);
+assert.doesNotMatch(fallbackPracticePrompt, /: “/u);
 const practiceKeyboard = mentorshipPracticePromptKeyboard({ action: "gather", resourceKey: "herbs" });
 assert.equal(practiceKeyboard.inline_keyboard[0][0].text, "Спробувати зібрати");
 assert.equal(practiceKeyboard.inline_keyboard[0][0].callback_data, "mentorship:practice:gather:herbs");
@@ -209,18 +216,33 @@ assert.match(service, /MENTORSHIP_LESSON_FEEDBACK_MARKER_KEY/);
 assert.match(service, /MENTORSHIP_PRACTICE_PROMPT_MARKER_KEY/);
 assert.match(service, /findRecentWorldEventMarker/);
 assert.match(service, /createWorldEventMarker/);
+assert.doesNotMatch(service, /відступає від стебел: “/);
+assert.doesNotMatch(service, /дивиться на порожнє місце: “/);
+assert.doesNotMatch(service, /хитає головою: “/);
 assert.doesNotMatch(service, /createTravelGroup|TravelGroup|recordLearningProgress|recordActorLearningProgress/);
 assert.doesNotMatch(service, /setFollowAssistEnabled/);
+assert.match(service, /Слідування можна ввімкнути окремо: <i>увімкнути слідування<\/i>\./);
+assert.doesNotMatch(service, /Слідування можна ввімкнути окремо: \/follow_assist_on\./);
 
 const aliases = fs.readFileSync("src/handlers/aliases.ts", "utf8");
 assert.match(aliases, /maybeOfferMentorshipAfterFollow/);
 assert.match(aliases, /respondToMentorshipOffer/);
 assert.match(aliases, /mentorship:\(accept\|decline\):/);
 assert.match(aliases, /bot\.command\(\["mentor", "mentorship"\]/);
+assert.match(aliases, /function hasTelegramHtmlMarkup\(text: string\)/);
+assert.match(aliases, /hasTelegramHtmlMarkup\(result\.text\) \? \{ parse_mode: "HTML" \} : undefined/);
 
 const social = fs.readFileSync("src/handlers/social.ts", "utf8");
 assert.match(social, /maybeOfferMentorshipAfterFollow/);
 assert.match(social, /mentorshipOfferKeyboard/);
+
+const actionCompletions = fs.readFileSync("src/services/actionCompletions.ts", "utf8");
+assert.match(actionCompletions, /actionCompletion\.mentorship\.reply/);
+assert.match(actionCompletions, /parse_mode:\s*"HTML"[\s\S]*reply_markup:\s*prompt\.keyboard/);
+
+const playerHandler = fs.readFileSync("src/handlers/player.ts", "utf8");
+assert.match(playerHandler, /maybeCreateMentorshipPracticePrompt/);
+assert.match(playerHandler, /reply\(prompt\.text,[\s\S]*parse_mode:\s*"HTML"[\s\S]*reply_markup:\s*prompt\.keyboard/);
 
 const travelGroups = fs.readFileSync("src/services/travelGroups.ts", "utf8");
 assert.doesNotMatch(travelGroups, /PlayerMentorship|mentorCreatureId|mentorship:/);

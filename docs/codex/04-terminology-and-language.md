@@ -34,7 +34,7 @@ Canonical terminology source: `docs/design/terminology.md`.
 | HP | **Життя** / **Стан** | Avoid raw abbreviation in player-facing text. |
 | Inventory | **Речі** / **Поклажа** | Prefer over direct “Інвентар” in player-facing UI. |
 | Auto mode | **Поклик духа** | Player-facing name for the simple automatic-action helper. Keep `auto` for internal notes, DB/log identifiers and legacy command compatibility. Do not use **Провід** for this feature. |
-| Follow assist | **Слідова підмога** | Player-facing name for the opt-in helper that can repeat a visible followed step. Keep `followAssist` / `follow_assist` for code, commands and ops labels; avoid **Автокрок**, **Автоспроба** and similar auto-technical labels in player-facing copy. |
+| Follow assist | **Слідування** | Player-facing name for the opt-in helper that can repeat a visible followed step. Keep `followAssist` / `follow_assist` for code, commands and ops labels; avoid **Слідова підмога**, **Автокрок**, **Автоспроба** and similar helper/auto-technical labels in player-facing copy. |
 
 ## Commands and UI labels mentioned
 
@@ -54,6 +54,8 @@ If a slash command has a no-argument usage hint, its English/MUD-style and Ukrai
 When a player-facing slash command example includes spaces or arguments, keep the Telegram-clickable underscore form working as the same input. Examples: `/attack_all_mouse` -> `/attack all mouse`, `/sleep_tutorial` -> `/sleep tutorial`, `/queue_cancel` -> `/queue cancel`. Document any exception explicitly instead of relying on players to guess.
 
 Actual Telegram keyboard button labels should stay short and clean: Ukrainian label plus icon where helpful. Use slash commands in parentheses in help, commands, news, release notes and docs, but do not append `(/command)` hints inside reply or inline keyboard button text. In `news.md`, prefer naming the working command beside each player-facing action, for example `Речі` (`/inv`) or `Підпалити вогнище` (`/light_campfire`), so missing aliases are caught before publication.
+
+Do not add commands to the Telegram side command menu just because they appear in public news, Herald posts, `/help` or `/commands`. The side menu should stay intentionally short; update it only when the maintainer explicitly asks for a side-menu change. Public news/site/Herald command links should instead be backed by direct bot commands, safe `/start cmd_*` deep links and focused tests.
 
 Short usage prompts like `Напиши так:` or `Напишіть так:` should visually emphasize the command verb with Telegram HTML italics. Example: `Напишіть так: <i>give</i> сире м'ясо коту або <i>дати</i> сире м'ясо коту.` Keep the example readable and do not italicize the whole sentence.
 

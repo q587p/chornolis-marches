@@ -17,7 +17,16 @@ import { requireScribeAdmin } from "../services/adminAccess";
 import { adminSecretMatches } from "../services/adminSecret";
 import { syncChatBotCommandsForTelegramId } from "../services/telegramCommands";
 import { buildAdminCreaturesReplyKeyboard, buildAdminFireReplyKeyboard, buildAdminItemsReplyKeyboard, buildAdminMenuReplyKeyboard, buildAdminResourcesReplyKeyboard, buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
-import { nextResourceAmount, parseAddResourceArgs, parseAdminInventoryItemArgs, parseAdminInventoryResourceArgs } from "../services/adminResources";
+import {
+  DEFAULT_ADMIN_GRASS_MAX_AMOUNT,
+  grassRecoveryThreshold,
+  nextGrassRestoreAmount,
+  nextResourceAmount,
+  parseAddResourceArgs,
+  parseAdminInventoryItemArgs,
+  parseAdminInventoryResourceArgs,
+  parseRestoreGrassArgs,
+} from "../services/adminResources";
 import { stopAllPlayerAuto } from "./auto";
 import { resetTutorialProgressForPlayer } from "../services/tutorial";
 import { getGateHuntingSaturationState, setCarcassQuestOverride, type CarcassQuestOverride } from "../services/carcassDropoff";
@@ -203,6 +212,46 @@ async function addLocationResource(locationId: number, resourceTypeId: number, a
   };
 }
 
+async function restoreLocationGrass(locationId: number, amount: number | "full") {
+  const resourceType = await ensureResourceType(
+    "grass",
+    "трава",
+    "Трава, кущики й низька зелень місцини: пожива для дрібних тварин і знак, що земля ще тримається.",
+  );
+  const existing = await prisma.resourceNode.findUnique({
+    where: { locationId_resourceTypeId: { locationId, resourceTypeId: resourceType.id } },
+  });
+  const maxAmount = existing?.maxAmount ?? (amount === "full" ? DEFAULT_ADMIN_GRASS_MAX_AMOUNT : Math.max(DEFAULT_ADMIN_GRASS_MAX_AMOUNT, amount));
+  const before = existing?.amount ?? 0;
+  const after = nextGrassRestoreAmount(before, maxAmount, amount);
+  const node = existing
+    ? await prisma.resourceNode.update({ where: { id: existing.id }, data: { amount: after, maxAmount } })
+    : await prisma.resourceNode.create({
+      data: { locationId, resourceTypeId: resourceType.id, amount: after, maxAmount },
+    });
+  const threshold = grassRecoveryThreshold(maxAmount);
+  const cleared = after >= threshold
+    ? await prisma.locationFeature.updateMany({
+      where: {
+        locationId,
+        isActive: true,
+        key: { startsWith: DEPLETED_VEGETATION_FEATURE_PREFIX },
+      },
+      data: { isActive: false },
+    })
+    : { count: 0 };
+
+  return {
+    before,
+    after,
+    maxAmount,
+    threshold,
+    clearedFeatures: cleared.count,
+    node,
+    resourceType,
+  };
+}
+
 async function resolveLocationForAdmin(ctx: any, rawTarget: string) {
   const target = normalizeLookup(rawTarget);
   if (!target) {
@@ -286,6 +335,7 @@ const ADD_RESOURCE_TEXT_COMMAND = slashlessCommandPattern(["addResource", "addre
 const RESTORE_BERRIES_TEXT_COMMAND = slashlessCommandPattern(["restoreBerries", "restoreberries"]);
 const RESTORE_HERBS_TEXT_COMMAND = slashlessCommandPattern(["restoreHerbs", "restoreherbs"]);
 const RESTORE_MUSHROOMS_TEXT_COMMAND = slashlessCommandPattern(["restoreMushrooms", "restoremushrooms"]);
+const RESTORE_GRASS_TEXT_COMMAND = slashlessCommandPattern(["restoreGrass", "restoregrass"]);
 const CARCASS_QUEST_TEXT_COMMAND = slashlessCommandPattern(["carcassQuest", "carcassquest"]);
 const TIME_DEBUG_TEXT_COMMAND = slashlessCommandPattern(["timeDebug", "timedebug"]);
 const TIME_SET_TEXT_COMMAND = slashlessCommandPattern(["timeSet", "timeset"]);
@@ -297,6 +347,7 @@ const QUEUE_NUDGE_TEXT_COMMAND = slashlessCommandPattern(["queueNudge", "queuenu
 const CALL_SCRIBES_AUDIT_TEXT_COMMAND = slashlessCommandPattern(["call_scribes_audit", "callScribesAudit", "callscribesaudit"]);
 const CALL_SCRIBES_APPROVE_TEXT_COMMAND = slashlessCommandPattern(["call_scribes_approve", "callScribesApprove", "callscribesapprove"]);
 const CALL_SCRIBES_APPROVE_SHORT_COMMAND = /^\/?call_scribes_approve_(\d+)(?:@\w+)?$/i;
+const DEPLETED_VEGETATION_FEATURE_PREFIX = "depleted_vegetation_";
 
 export const ADMIN_HELP_TEXT = [
   "🛠 Команди писарів Порубіжжя",
@@ -348,6 +399,7 @@ export const ADMIN_HELP_TEXT = [
   "/addCreatureHelp — список speciesKey для тварин",
   "/addResource <resourceKey> [locationKey|x,y,z] [amount] — відновити ресурс у місцині; без місцини бере поточну, без кількості додає 1",
   "/addResourceHelp — список ключів ресурсів; /addResourse теж працює як запасний варіант",
+  "/restoreGrass [locationKey|x,y,z] [amount|full] — відновити траву в поточній або вказаній місцині; full знімає активну «Винищену траву», якщо трава дійшла до порога",
   "/addCampfire [locationKey|x,y,z|персонаж] [debug] — додати й одразу підпалити рукотворне вогнище; debug створює старий службовий варіант",
   "/deleteCampfire [locationKey|x,y,z|персонаж] — прибрати немагічні вогнища в поточній або вказаній місцині; незгасне/магічне не чіпає",
   "/addTorch [персонаж] [кількість] — додати факел у речі собі або вказаному персонажу; без кількості додає 1",
@@ -583,7 +635,9 @@ export function registerAdminHandlers(bot: Bot) {
       "🌿 Ресурси",
       "",
       "Швидкі кнопки додають 1 одиницю в поточній місцині Писаря.",
+      "Відновлення трави за замовчуванням піднімає її до повного вузла й прибирає активну «Винищену траву», якщо поріг уже пройдено.",
       "Для точного додавання: /addResource <resourceKey> [locationKey|x,y,z] [amount].",
+      "Для трави: /restoreGrass [locationKey|x,y,z] [amount|full].",
     ].join("\n"), {
       reply_markup: buildAdminResourcesReplyKeyboard(),
     });
@@ -1143,6 +1197,37 @@ export function registerAdminHandlers(bot: Bot) {
     await ctx.reply(`🌿 Додано ресурс «${resourceType.name}» у місцині ${location.name}: ${result.before} → ${result.after}.${capped}`);
   }
 
+  async function runRestoreGrassCommand(ctx: any, rawArgs = String(ctx.match ?? "")) {
+    if (!(await requireScribeAdmin(ctx))) return;
+
+    const parsed = parseRestoreGrassArgs(rawArgs);
+    const location = await resolveLocationForAdmin(ctx, parsed.locationArg);
+    if (!location) return;
+
+    const result = await restoreLocationGrass(location.id, parsed.amount);
+    const scribe = ctx.from?.id
+      ? await prisma.player.findUnique({ where: { telegramId: String(ctx.from.id) } })
+      : null;
+    await logEvent("SYSTEM", "Admin grass restored", `location=${location.key}; requested=${parsed.amount}; before=${result.before}; after=${result.after}; max=${result.maxAmount}; clearedFeatures=${result.clearedFeatures}`, location.id);
+    await logScribeAction({
+      actionKey: "restoreGrass",
+      scribePlayerId: scribe?.id,
+      scribeTelegramId: ctx.from?.id,
+      scribeName: scribe ? playerDisplayName(scribe) : null,
+      target: location.key,
+      outcome: "confirmed",
+      details: `requested=${parsed.amount}; before=${result.before}; after=${result.after}; max=${result.maxAmount}; clearedFeatures=${result.clearedFeatures}`,
+      locationId: location.id,
+    });
+
+    const cleared = result.clearedFeatures > 0
+      ? ` Активну «Винищену траву» знято: ${result.clearedFeatures}.`
+      : result.after >= result.threshold
+        ? " Активної «Винищеної трави» тут не було."
+        : ` «Винищена трава» лишиться, доки вузол не дійде до ${result.threshold}.`;
+    await ctx.reply(`🌾 Траву відновлено в місцині ${location.name}: ${result.before} → ${result.after}/${result.maxAmount}.${cleared}`);
+  }
+
   bot.command(["addResourceHelp", "addresourcehelp", "addResourseHelp", "addresoursehelp"], replyAddResourceHelp);
   bot.hears(ADD_RESOURCE_HELP_TEXT_COMMAND, replyAddResourceHelp);
   bot.hears(["🌿 Ключі ресурсів", "Ключі ресурсів", "🌿 Ключі ресурсів (/addResourceHelp)", "Ключі ресурсів (/addResourceHelp)"], replyAddResourceHelp);
@@ -1150,13 +1235,16 @@ export function registerAdminHandlers(bot: Bot) {
   bot.command(["restoreBerries", "restoreberries"], (ctx) => runAddResourceCommand(ctx, "berries"));
   bot.command(["restoreHerbs", "restoreherbs"], (ctx) => runAddResourceCommand(ctx, "herbs"));
   bot.command(["restoreMushrooms", "restoremushrooms"], (ctx) => runAddResourceCommand(ctx, "mushrooms"));
+  bot.command(["restoreGrass", "restoregrass"], (ctx) => runRestoreGrassCommand(ctx));
   bot.hears(ADD_RESOURCE_TEXT_COMMAND, (ctx) => runAddResourceCommand(ctx, "", String(ctx.match?.[1] ?? "")));
   bot.hears(RESTORE_BERRIES_TEXT_COMMAND, (ctx) => runAddResourceCommand(ctx, "berries", String(ctx.match?.[1] ?? "")));
   bot.hears(RESTORE_HERBS_TEXT_COMMAND, (ctx) => runAddResourceCommand(ctx, "herbs", String(ctx.match?.[1] ?? "")));
   bot.hears(RESTORE_MUSHROOMS_TEXT_COMMAND, (ctx) => runAddResourceCommand(ctx, "mushrooms", String(ctx.match?.[1] ?? "")));
+  bot.hears(RESTORE_GRASS_TEXT_COMMAND, (ctx) => runRestoreGrassCommand(ctx, String(ctx.match?.[1] ?? "")));
   bot.hears(["🍓 Додати ягоди", "Додати ягоди", "🍓 Додати ягоди (/restoreBerries)", "Додати ягоди (/restoreBerries)"], (ctx) => runAddResourceCommand(ctx, "berries", ""));
   bot.hears(["🌱 Додати трави", "Додати трави", "🌱 Додати трави (/restoreHerbs)", "Додати трави (/restoreHerbs)"], (ctx) => runAddResourceCommand(ctx, "herbs", ""));
   bot.hears(["🍄 Додати гриби", "Додати гриби", "🍄 Додати гриби (/restoreMushrooms)", "Додати гриби (/restoreMushrooms)"], (ctx) => runAddResourceCommand(ctx, "mushrooms", ""));
+  bot.hears(["🌾 Відновити траву", "Відновити траву", "🌾 Відновити траву (/restoreGrass)", "Відновити траву (/restoreGrass)"], (ctx) => runRestoreGrassCommand(ctx, ""));
 
   function resetModePromptText() {
     return [

@@ -124,6 +124,21 @@ service should not run `npm run seed` as part of its build.
 
 ## Status Page
 
+The main game HTTP server binds explicitly to `0.0.0.0:<PORT>` so Render's
+port scanner can see the service while Telegram long polling is still starting
+or retrying a temporary polling conflict.
+
+`/health` on the main game service is a lightweight readiness endpoint. It
+answers from process/runtime memory only: process liveness, app version, last
+runtime error, uptime and the Telegram bot runtime state. It must stay
+independent from `getStatusData()`, ecology statistics, action queue statistics,
+Prisma and other database-backed diagnostics so Render port/readiness probes can
+complete even while the world/status pages are slow.
+
+Use `/world`, `/stat`, `/queueDebug` and related guarded pages for deeper
+diagnostics. Those pages may read the database and can be slower; they are not
+the startup readiness path.
+
 The game-hosted status page should list services in a useful, non-secret way:
 
 - Основний бот / Game bot;
@@ -262,6 +277,16 @@ defaults to `true`. `DATABASE_QUERY_SLOW_MS` can override the threshold for this
 path; otherwise it follows `SLOW_COMMAND_LOG_MS` and defaults to `100`.
 `DATABASE_QUERY_SAMPLE_LIMIT` controls how many recent slow/error samples
 guarded `/queueDebug` keeps, defaulting to `10` and capped at `50`.
+
+This is model-operation telemetry, not raw SQL telemetry: raw query calls
+outside Prisma model operations are intentionally not broadened in the first DB
+observability pass. The runtime overhead should stay small because the hot path
+does timing, compact labels and counter updates, while retained samples are
+bounded to slow/error cases. If live overhead becomes suspicious, set
+`DATABASE_QUERY_OBSERVABILITY_ENABLED=false` to disable this path. The shared
+Prisma client currently uses a pragmatic `as unknown as PrismaClient` cast after
+`$extends`; if future code needs extension-specific helpers, revisit that type
+instead of adding more casts around call sites.
 
 ## Action Queue Backpressure
 

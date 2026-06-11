@@ -6,6 +6,8 @@ const {
   canReceiveLocationNotification,
   combineMovementNotificationLines,
   createNonPlayerMovementNotificationBuffer,
+  hasPlayerViewedLocationSince,
+  markLocationViewedForMovementNotifications,
   movementNotificationTargetsStillPresent,
   nonPlayerMovementNotificationOptions,
   runInlineReplacementForKey,
@@ -50,6 +52,7 @@ async function sleep(ms) {
     "Кіт-бережник пішов звідси.",
   ]);
   assert.deepEqual(flushed[0].creatureIds, [7]);
+  assert.equal(typeof flushed[0].latestQueuedAt, "number");
   assert.equal(combineMovementNotificationLines(flushed[0].lines), "Кіт-бережник зайшов сюди знизу.\nКіт-бережник пішов звідси.");
 
   const targets = movementNotificationTargetsStillPresent(42, [7, 8, 9, 10, 11, 12], [
@@ -71,14 +74,21 @@ async function sleep(ms) {
     { id: 7, locationId: 42, isAlive: true, isGone: false, isHidden: false, label: "Кіт-бережник", species: { kind: "SPIRIT" } },
   ], { showNearbyDetails: true, lines: ["Кіт-бережник зайшов сюди знизу."] }), [{ id: 7, label: "Кіт-бережник" }]);
 
-  const options = nonPlayerMovementNotificationOptions(42, [7, 7, 8], targets);
+  const queuedAt = Date.UTC(2026, 5, 11, 12, 0, 0);
+  const options = nonPlayerMovementNotificationOptions(42, [7, 7, 8], targets, queuedAt);
   assert.equal(options.replaceKey, "tracks:42");
   assert.deepEqual(options.clearKeys, ["target:creature:7", "target:creature:8"]);
+  assert.deepEqual(options.suppressIfPlayerViewedLocationAfter, { locationId: 42, at: queuedAt });
   assert.equal(options.keyboard.inline_keyboard.length, 2);
   assert.equal(options.keyboard.inline_keyboard[0].length, 1);
   assert.equal(options.keyboard.inline_keyboard[0][0].text, "Кіт-бережник");
   assert.equal(options.keyboard.inline_keyboard[0][0].callback_data, "target:creature:7");
   assert.equal(options.keyboard.inline_keyboard[1][0].text, "🐾 Сліди");
+
+  assert.equal(hasPlayerViewedLocationSince(100, 42, queuedAt), false);
+  markLocationViewedForMovementNotifications(100, 42, queuedAt + 1);
+  assert.equal(hasPlayerViewedLocationSince(100, 42, queuedAt), true);
+  assert.equal(hasPlayerViewedLocationSince(100, 43, queuedAt), false);
 
   assert.equal(canReceiveLocationNotification({ sleepState: "AWAKE" }), true);
   assert.equal(canReceiveLocationNotification({ sleepState: "ORDINARY_SLEEP" }), false);

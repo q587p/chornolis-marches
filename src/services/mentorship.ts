@@ -322,13 +322,14 @@ export function mentorshipPracticePromptMarkerContext(input: Pick<MentorshipPrac
 
 export function mentorshipPracticePromptText(input: { mentorName?: string | null; skillKey: string; contextKey: string; blocked?: "no-resource" | null }) {
   const mentorName = input.mentorName?.trim() || "Наставник";
+  const safeMentorName = escapeHtml(mentorName);
   if (input.blocked === "no-resource") {
-    return `${mentorName} дивиться на порожнє місце: “Тут уже нічого вчити рукою. Ходімо далі.”`;
+    return `${safeMentorName} дивиться на порожнє місце:\n${quoteBlock("Тут уже нічого вчити рукою. Ходімо далі.")}`;
   }
   if (input.skillKey === "gathering") {
-    return `${mentorName} відступає від стебел: “Тепер ти. Не поспішай — земля сама покаже, де відпустити.”`;
+    return `${safeMentorName} відступає від стебел:\n${quoteBlock("Тепер ти. Не поспішай — земля сама покаже, де відпустити.")}`;
   }
-  return `${mentorName} відступає на крок: “Тепер спробуй сам.”`;
+  return `${safeMentorName} відступає на крок:\n${quoteBlock("Тепер спробуй сам.")}`;
 }
 
 export function mentorshipPracticePromptKeyboard(input: MentorshipPracticePromptAction) {
@@ -675,8 +676,8 @@ export async function acceptMentorship(playerId: number, mentorshipId: number) {
   }, player.currentLocationId);
 
   const assistLine = previousIntent?.assistEnabled
-    ? "\nСлідова підмога вже готова підхопити видимий крок, але приховані переходи вона не повторить."
-    : "\nСлідову підмогу можна ввімкнути окремо: /follow_assist_on.";
+    ? "\nСлідування вже готове підхопити видимий крок, але приховані переходи воно не повторить."
+    : "\nСлідування можна ввімкнути окремо: <i>увімкнути слідування</i>.";
   return {
     ok: true as const,
     mentorship: updated,
@@ -699,7 +700,7 @@ export async function declineMentorship(playerId: number, mentorshipId: number) 
   return {
     ok: true as const,
     mentorship: updated,
-    text: `Ви не стаєте до науки зараз. ${name} киває: “Тоді просто не заважай землі говорити.”`,
+    text: `Ви не стаєте до науки зараз. ${escapeHtml(name)} киває:\n${quoteBlock("Тоді просто не заважай землі говорити.")}`,
   };
 }
 
@@ -720,7 +721,7 @@ export async function respondToMentorshipOffer(playerId: number, text: string) {
       data: { clarificationCount: { increment: 1 } },
     });
     const name = pending.mentorCreature.name?.trim() || pending.mentorCreature.species.name;
-    return { handled: true as const, ok: true as const, text: `${name} хитає головою: “Не вловила. То йдеш учитися чи ні?”` };
+    return { handled: true as const, ok: true as const, text: `${escapeHtml(name)} хитає головою:\n${quoteBlock("Не вловила. То йдеш учитися чи ні?")}` };
   }
 
   if (pending.clarificationCount > 1) return { handled: false as const };
@@ -750,8 +751,8 @@ export async function mentorshipStatusText(playerId: number) {
       ? "Слід наставника: тримаєте."
       : `Слід наставника: не тримаєте. Взяти знову: /follow ${forms.nominative}.`;
     const assistLine = intent?.assistEnabled
-      ? "Слідова підмога: увімкнено."
-      : "Слідова підмога: вимкнено. Увімкнути: /follow_assist_on.";
+      ? "Слідування: увімкнено."
+      : "Слідування: вимкнено. Увімкнути: /follow_assist_on.";
     const recentLessonLine = await latestMentorshipLessonLine({
       playerId,
       mentorCreatureId: mentorship.mentorCreatureId,

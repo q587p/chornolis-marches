@@ -37,6 +37,7 @@ CMD-001,Near-term text command pack,testing,feature,commands,high,"commands,alia
 CMD-002,Put items into local containers and features,testing,feature,commands,high,"commands,inventory,containers,aliases",docs/planning/items/CMD-002-put-items-into-containers.md
 CMD-003,Public news command deep-link audit,backlog,technical,commands,high,"commands,news,telegram,deep-links,web",docs/planning/items/CMD-003-news-command-deep-link-audit.md
 CMD-004,Compact help and current command reference,backlog,feature,commands,high,"commands,help,onboarding,aliases,ux",docs/planning/items/CMD-004-help-and-commands-split.md
+CMD-005,Generic use command router,backlog,feature,commands,high,"commands,aliases,inventory,usability,mud",docs/planning/items/CMD-005-generic-use-command-router.md
 COMBAT-001,Creature aggression and defense,backlog,feature,combat,medium,"animals,combat,predators,ecology",docs/planning/items/COMBAT-001-creature-aggression-and-defense.md
 COMBAT-002,Training arena and combat observation,icebox,feature,combat,low,"combat,learning,observation,social",docs/planning/items/COMBAT-002-training-arena-and-observation.md
 COMBAT-003,Predator raw-meat scent aggression,icebox,feature,combat,medium,"animals,combat,predators,survival,inventory",docs/planning/items/COMBAT-003-predator-meat-scent-aggression.md
@@ -96,6 +97,7 @@ ITEM-001,Pickup versus gather command semantics,testing,bug,inventory,high,"alia
 ITEM-002,Queued pickup actions,backlog,feature,inventory,medium,"pickup,inventory,action-queue,stamina,ground-items",docs/planning/items/ITEM-002-queued-pickup-actions.md
 ITEM-003,Item weight and encumbrance,backlog,feature,inventory,medium,"inventory,items,stamina,movement,pickup,survival",docs/planning/items/ITEM-003-item-weight-and-encumbrance.md
 LANG-001,Lexicon and agreement audit,backlog,chore,content,high,"ukrainian,lexicon,grammar,text,optimization,corpses,resources",docs/planning/items/LANG-001-lexicon-and-agreement-audit.md
+LANG-002,Combat result case audit,backlog,chore,content,high,"ukrainian,grammar,combat,creatures,text",docs/planning/items/LANG-002-combat-result-case-audit.md
 LEARN-001-A,Minimal learning storage decision,done,design,learning,high,"learning,progression,schema",docs/planning/items/LEARN-001-A.md
 LEARN-001-B,Minimal CharacterSkill model,done,technical,learning,high,"learning,schema,skills",docs/planning/items/LEARN-001-B.md
 LEARN-001-C,grantSkillProgress helper,done,feature,learning,high,"learning,service,progression",docs/planning/items/LEARN-001-C.md
@@ -105,6 +107,7 @@ LEARN-003,Cooking observation and effect parity,done,feature,learning,high,"lear
 LEARN-004,Observed actor skill level helper,done,technical,learning,high,"learning,observation,npc,actors",docs/planning/items/LEARN-004-observed-actor-skill-level-helper.md
 LEARN-005,Attack canonical learning bridge,done,feature,learning,medium,"learning,attack,observation,combat",docs/planning/items/LEARN-005-attack-canonical-bridge.md
 LEARN-006,High-skill quality and rare finds,testing,feature,learning,medium,"learning,quality,rare-finds,freshening,gathering",docs/planning/items/LEARN-006-high-skill-quality-and-rare-finds.md
+LEARN-007,Learning pace and UO-like curve audit,backlog,tuning,learning,high,"learning,progression,skills,balance,anti-grind",docs/planning/items/LEARN-007-learning-pace-and-uolike-curve.md
 LOOP-001-A,Starter look/examine output audit,next,design,core-loop,medium,"look,examine,starter",docs/planning/items/LOOP-001-A.md
 LOOP-001-B,Starter camp prose polish,next,content,core-loop,medium,"prose,starter,look",docs/planning/items/LOOP-001-B.md
 LOOP-001-C,Bridge threshold prose polish,next,content,core-loop,medium,"prose,bridge,liminality",docs/planning/items/LOOP-001-C.md
@@ -118,6 +121,8 @@ MAP-002-C,Biome foraging text variants,next,content,world,medium,"gather,biome,c
 MAP-003,Playable map expansion,testing,content,world,high,"map,world,exploration,regions",docs/planning/items/MAP-003-playable-map-expansion.md
 MAP-004,Skill and attention gated locations,testing,feature,world,high,"map,learning,skills,attention,exploration,cellar,tracking",docs/planning/items/MAP-004-skill-and-attention-gated-locations.md
 MAP-005,Regional active curiosities,backlog,feature,world,high,"map,features,interactions,swamp,riverbank,forest",docs/planning/items/MAP-005-regional-active-curiosities.md
+MAP-006,Dry meadow feature density pass,backlog,feature,world,medium,"map,dry_luka,location-features,atmosphere,content",docs/planning/items/MAP-006-dry-meadow-feature-density.md
+MAP-007,Animal run scratch interaction,backlog,feature,world,medium,"map,dry_luka,location-features,interactions,atmosphere",docs/planning/items/MAP-007-animal-run-scratch-interaction.md
 MAP-WILLOW-001,Willow Floodplain first contour,testing,content,world,high,"map,world,willow-floodplain,riverbank,exploration",docs/planning/items/MAP-WILLOW-001-first-contour.md
 MAP-WILLOW-002,Willow under-bridge and watchtower integration,backlog,content,world,medium,"map,world,willow-floodplain,under-bridge,watchtower",docs/planning/items/MAP-WILLOW-002-under-bridge-watchtower-integration.md
 MAP-WILLOW-003,"Willow Floodplain landmarks, resources and aliases",testing,content,world,high,"map,world,willow-floodplain,resources,aliases",docs/planning/items/MAP-WILLOW-003-landmarks-resources-and-aliases.md
@@ -216,6 +221,7 @@ SOCIAL-003,Theft reaction signals,backlog,feature,social,medium,"social,theft,si
 SOUND-001,Neighboring animal sounds and loud nearby events,next,feature,world,medium,"atmosphere,sound,ecology,daypart,visibility",docs/planning/items/SOUND-001-neighboring-animal-sounds.md
 STAT-001,Web /stat predator species comparison table,testing,feature,web,medium,"web,stats,ecology,predators,owl,fox,wolf",docs/planning/items/STAT-001-web-predator-species-table.md
 STAT-002,Service trace presence separation,backlog,polish,admin,medium,"admin,status,totems,visibility",docs/planning/items/STAT-002-service-trace-presence-separation.md
+STAT-003,Deferred replies for heavy status diagnostics,backlog,feature,status,medium,"status,diagnostics,responsiveness,telegram",docs/planning/items/STAT-003-deferred-heavy-diagnostics-replies.md
 SURV-001,Early respawn support,testing,feature,survival,high,"onboarding,respawn,beginner",docs/planning/items/SURV-001-early-respawn.md
 SURV-001-A,Beginner return eligibility helper,testing,feature,survival,high,"respawn,beginner,safety",docs/planning/items/SURV-001-A.md
 SURV-001-B,/respawn command skeleton,testing,feature,survival,high,"respawn,telegram,command",docs/planning/items/SURV-001-B.md
@@ -230,6 +236,7 @@ THEFT-000,Risky theft and hiding epic,backlog,epic,social,medium,"theft,hiding,s
 THEFT-001,Risky theft MVP,backlog,feature,social,medium,"theft,social-memory,inventory,action-queue,0.15",docs/planning/items/THEFT-001-risky-theft-mvp.md
 THEFT-002,World-controlled thief character,backlog,feature,npc,low,"theft,npc,autonomy,social-memory,future",docs/planning/items/THEFT-002-world-controlled-thief-character.md
 THEFT-003,Strange and spirit theft MVP,backlog,feature,spirits,low,"theft,spirits,omen,hidden-presence,future",docs/planning/items/THEFT-003-spirit-theft-mvp.md
+TRACK-LEARN-001,Following as a learned skill,backlog,feature,progression,medium,"skills,following,tracking,darkness,movement",docs/planning/items/TRACK-LEARN-001-following-skill.md
 TRACK-LEARN-001-A,Track-examine progress hint,testing,feature,learning,high,"tracking,tracks,progression",docs/planning/items/TRACK-LEARN-001-A.md
 TRACK-LEARN-001-B,Animal movement observation,next,feature,learning,medium,"tracking,animals,observe",docs/planning/items/TRACK-LEARN-001-B.md
 TRACK-LEARN-001-C,Learning respects visibility and light,next,feature,learning,high,"learning,visibility,light",docs/planning/items/TRACK-LEARN-001-C.md

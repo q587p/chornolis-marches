@@ -2,6 +2,7 @@ import type { Bot } from "grammy";
 import { PlayerPosture, PlayerSleepState, type Direction } from "@prisma/client";
 import { prisma } from "../db";
 import { directionLabels } from "../ui/labels";
+import { buildStandUpKeyboard } from "../ui/keyboards";
 import { buildMainReplyKeyboardForTelegramId } from "../ui/replyKeyboard";
 import { escapeHtml } from "../utils/text";
 import { safeSendMessage } from "../utils/telegram";
@@ -219,6 +220,8 @@ export type FollowAssistFailureReason =
   | "no-direction"
   | "no-visible-exit"
   | "busy"
+  | "sitting"
+  | "lying"
   | "resting"
   | "incapacitated"
   | "cooldown"
@@ -324,7 +327,10 @@ export function evaluateFollowAssistEligibility(input: {
   if (!input.intent?.assistEnabled) return { ok: false, reason: "assist-disabled" };
   const player = input.player;
   if (!player || (player.hp ?? 0) <= 0 || player.sleepState !== PlayerSleepState.AWAKE) return { ok: false, reason: "incapacitated" };
-  if (player.isResting || player.posture !== PlayerPosture.STANDING) return { ok: false, reason: "resting" };
+  if (player.isResting) return { ok: false, reason: "resting" };
+  if (player.posture === PlayerPosture.SITTING) return { ok: false, reason: "sitting" };
+  if (player.posture === PlayerPosture.LYING) return { ok: false, reason: "lying" };
+  if (player.posture !== PlayerPosture.STANDING) return { ok: false, reason: "resting" };
   if ((player.stamina ?? 0) <= 0) return { ok: false, reason: "no-stamina" };
   if ((input.activeActionCount ?? 0) > 0) return { ok: false, reason: "busy" };
   if (input.hasRecentAssist) return { ok: false, reason: "cooldown" };
@@ -360,25 +366,28 @@ export function followAssistQueuedText(direction: Direction, targetLabel?: strin
   const label = String(directionLabels[direction] ?? direction).toLocaleLowerCase("uk-UA");
   const phrase = ["UP", "DOWN", "INSIDE", "OUTSIDE"].includes(direction) ? label : `на ${label}`;
   const target = targetLabel?.trim();
-  if (target) return `Ви трималися чужого сліду: ${escapeHtml(target)} рушає ${phrase}. Слідова підмога підхоплює цей рух.`;
+  if (target) return `Ви трималися чужого сліду: ${escapeHtml(target)} рушає ${phrase}. Слідування підхоплює цей рух.`;
   return `Ви підхоплюєте чужий крок: ${phrase}.`;
 }
 
 export function followAssistCatchUpQueuedText(direction: Direction) {
   const label = String(directionLabels[direction] ?? direction).toLocaleLowerCase("uk-UA");
   const phrase = ["UP", "DOWN", "INSIDE", "OUTSIDE"].includes(direction) ? label : `на ${label}`;
-  return `Слідова підмога не губить слід: далі ${phrase}.`;
+  return `Слідування не губить слід: далі ${phrase}.`;
 }
 
 export function followAssistFailureText(reason: FollowAssistFailureReason) {
-  if (reason === "hidden") return "Чужий слід зник не кроком. Слідова підмога мовчить.";
-  if (reason === "dark") return "Темрява забрала напрям. Слідова підмога не знає, куди йти.";
-  if (reason === "no-direction") return "У сліді не лишилося ясного напряму. Слідова підмога не знає, куди йти.";
-  if (reason === "busy") return "Ви вже зайняті іншим кроком. Слідова підмога не втручається.";
-  if (reason === "resting" || reason === "incapacitated") return "Тіло не підхоплює чужий крок просто зараз.";
-  if (reason === "no-stamina") return "Снаги не стає на слідову підмогу.";
-  if (reason === "no-visible-exit") return "Слідова підмога пам'ятає напрям, але звичайна стежка тут не відкривається.";
-  return "Слідова підмога не знаходить ясного руху.";
+  if (reason === "hidden") return "Чужий слід зник не кроком. Слідування мовчить.";
+  if (reason === "dark") return "Темрява забрала напрям. Слідування не знає, куди йти.";
+  if (reason === "no-direction") return "У сліді не лишилося ясного напряму. Слідування не знає, куди йти.";
+  if (reason === "busy") return "Ви вже зайняті іншим кроком. Слідування не втручається.";
+  if (reason === "sitting") return "Ви сидите, тому тіло не підхоплює чужий крок. Спершу треба встати.";
+  if (reason === "lying") return "Ви лежите, тому тіло не підхоплює чужий крок. Спершу треба встати.";
+  if (reason === "resting") return "Ви відпочиваєте, тому слідування не підхоплює чужий крок. Спершу треба встати.";
+  if (reason === "incapacitated") return "Тіло не підхоплює чужий крок просто зараз.";
+  if (reason === "no-stamina") return "Снаги не стає на слідування.";
+  if (reason === "no-visible-exit") return "Слідування пам'ятає напрям, але звичайна стежка тут не відкривається.";
+  return "Слідування не знаходить ясного руху.";
 }
 
 export async function latestFollowRouteMemoryForPlayer(playerId: number) {
@@ -439,7 +448,7 @@ export function followedTrackDisplayLabel(intent: FollowIntentRouteLike | null |
   return `чужий слід: ${label}`;
 }
 
-async function sendFollowRouteMemoryMessage(bot: Bot, player: { telegramId: string; isAutoEnabled?: boolean | null }, text: string) {
+async function sendFollowRouteMemoryMessage(bot: Bot, player: { telegramId: string; isAutoEnabled?: boolean | null }, text: string, options: { replyMarkup?: any } = {}) {
   if (!(await canSendProactiveToTelegramId(player.telegramId))) return;
   await safeSendMessage(
     bot,
@@ -447,7 +456,7 @@ async function sendFollowRouteMemoryMessage(bot: Bot, player: { telegramId: stri
     text,
     {
       parse_mode: "HTML",
-      reply_markup: await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), Boolean(player.isAutoEnabled)),
+      reply_markup: options.replyMarkup ?? await buildMainReplyKeyboardForTelegramId(Number(player.telegramId), Boolean(player.isAutoEnabled)),
     },
     "follow route memory sendMessage",
   );
@@ -553,7 +562,12 @@ export async function hasBlockingPlayerActionsForFollowAssist(playerId: number) 
 }
 
 function shouldSendFollowAssistFailureHint(reason: FollowAssistFailureReason) {
-  return ["busy", "no-stamina", "dark", "hidden", "no-visible-exit", "resting", "incapacitated"].includes(reason);
+  return ["busy", "no-stamina", "dark", "hidden", "no-visible-exit", "sitting", "lying", "resting", "incapacitated"].includes(reason);
+}
+
+function followAssistFailureReplyMarkup(reason: FollowAssistFailureReason) {
+  if (reason === "sitting" || reason === "lying" || reason === "resting") return buildStandUpKeyboard();
+  return undefined;
 }
 
 async function maybeSendFollowAssistFailureHint(bot: Bot, input: {
@@ -612,7 +626,9 @@ async function maybeSendFollowAssistFailureHint(bot: Bot, input: {
       locationId: input.sourceLocationId,
     },
   });
-  await sendFollowRouteMemoryMessage(bot, input.intent.player, followAssistFailureText(input.reason));
+  await sendFollowRouteMemoryMessage(bot, input.intent.player, followAssistFailureText(input.reason), {
+    replyMarkup: followAssistFailureReplyMarkup(input.reason),
+  });
   return true;
 }
 

@@ -371,6 +371,32 @@ function fakeGatheringObservationDb(sourceDescription = "actorCreature=9; succes
     locationId: 13,
   });
 
+  const failedProgressMentorDb = fakeGatheringObservationDb("actorCreature=9; success=true; resource=herbs", [
+    { playerId: 7, mentorCreatureId: 9, skillKey: "gathering", status: "ACTIVE" },
+  ]);
+  failedProgressMentorDb.characterLearningProgress.create = async () => {
+    throw new Error("simulated progress write failure");
+  };
+  const originalWarn = console.warn;
+  console.warn = () => {};
+  let failedProgressMentor;
+  try {
+    failedProgressMentor = await recordGatheringObservation({
+      playerId: 7,
+      locationId: 13,
+      now: new Date("2026-06-03T09:01:00Z"),
+    }, failedProgressMentorDb);
+  } finally {
+    console.warn = originalWarn;
+  }
+  assert.equal(failedProgressMentor.observed, true, "legacy observation marker can still be recorded");
+  assert.equal(failedProgressMentor.canonicalProgressRecorded, false);
+  assert.equal(failedProgressMentor.mentorshipBonus, true);
+  assert.equal(failedProgressMentor.mentorshipLessonText, null, "mentorship lesson flavor should require actual gathering progress");
+  assert.equal(failedProgressMentor.mentorshipLessonContext, null);
+  assert.equal(failedProgressMentorDb.events.some((event) => event.title === MENTORSHIP_OBSERVATION_EVENT_TITLE), false);
+  assert.equal(failedProgressMentorDb.events.some((event) => event.title === MENTORSHIP_LESSON_FEEDBACK_EVENT_TITLE), false);
+
   const nonMentorDb = fakeGatheringObservationDb("actorCreature=10; success=true; resource=herbs", [
     { playerId: 7, mentorCreatureId: 9, skillKey: "gathering", status: "ACTIVE" },
   ]);

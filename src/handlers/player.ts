@@ -442,7 +442,7 @@ export async function showLocationForPlayer(telegramId: number, reply: (text: st
     if (observation.mentorshipLessonContext) {
       const prompt = await maybeCreateMentorshipPracticePrompt(observation.mentorshipLessonContext);
       if (prompt.text) {
-        noteKnownMessage(await reply(prompt.text, prompt.ok && prompt.keyboard ? { reply_markup: prompt.keyboard } : undefined));
+        noteKnownMessage(await reply(prompt.text, prompt.ok && prompt.keyboard ? { parse_mode: "HTML", reply_markup: prompt.keyboard } : { parse_mode: "HTML" }));
       }
     }
     const fresheningObservation = await recordFresheningObservation({ playerId: player.id, locationId });

@@ -1094,7 +1094,7 @@ async function sendMentorshipLessonFollowups(bot: Bot, chatId: number | string, 
     deferActionCompletionFollowup(
       chatId,
       prompt.text,
-      prompt.ok && prompt.keyboard ? { reply_markup: prompt.keyboard } : undefined,
+      prompt.ok && prompt.keyboard ? { parse_mode: "HTML", reply_markup: prompt.keyboard } : { parse_mode: "HTML" },
       "actionCompletion.mentorship.reply",
       "guidance",
       `mentorshipPractice:${context.playerId}:${context.skillKey}:${context.contextKey}`,

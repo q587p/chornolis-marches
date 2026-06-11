@@ -748,6 +748,26 @@
     "file": "docs/planning/items/CMD-004-help-and-commands-split.md"
   },
   {
+    "id": "CMD-005",
+    "title": "Generic use command router",
+    "status": "backlog",
+    "type": "feature",
+    "area": "commands",
+    "priority": "high",
+    "tags": [
+      "commands",
+      "aliases",
+      "inventory",
+      "usability",
+      "mud"
+    ],
+    "depends_on": [
+      "CMD-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/CMD-005-generic-use-command-router.md"
+  },
+  {
     "id": "COMBAT-001",
     "title": "Creature aggression and defense",
     "status": "backlog",
@@ -1935,6 +1955,26 @@
     "file": "docs/planning/items/LANG-001-lexicon-and-agreement-audit.md"
   },
   {
+    "id": "LANG-002",
+    "title": "Combat result case audit",
+    "status": "backlog",
+    "type": "chore",
+    "area": "content",
+    "priority": "high",
+    "tags": [
+      "ukrainian",
+      "grammar",
+      "combat",
+      "creatures",
+      "text"
+    ],
+    "depends_on": [
+      "LANG-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/LANG-002-combat-result-case-audit.md"
+  },
+  {
     "id": "LEARN-001-A",
     "title": "Minimal learning storage decision",
     "status": "done",
@@ -2101,6 +2141,27 @@
     ],
     "exports": {},
     "file": "docs/planning/items/LEARN-006-high-skill-quality-and-rare-finds.md"
+  },
+  {
+    "id": "LEARN-007",
+    "title": "Learning pace and UO-like curve audit",
+    "status": "backlog",
+    "type": "tuning",
+    "area": "learning",
+    "priority": "high",
+    "tags": [
+      "learning",
+      "progression",
+      "skills",
+      "balance",
+      "anti-grind"
+    ],
+    "depends_on": [
+      "LEARN-001-C",
+      "OBS-001-D"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/LEARN-007-learning-pace-and-uolike-curve.md"
   },
   {
     "id": "LOOP-001-A",
@@ -2351,6 +2412,44 @@
     ],
     "exports": {},
     "file": "docs/planning/items/MAP-005-regional-active-curiosities.md"
+  },
+  {
+    "id": "MAP-006",
+    "title": "Dry meadow feature density pass",
+    "status": "backlog",
+    "type": "feature",
+    "area": "world",
+    "priority": "medium",
+    "tags": [
+      "map",
+      "dry_luka",
+      "location-features",
+      "atmosphere",
+      "content"
+    ],
+    "depends_on": [],
+    "exports": {},
+    "file": "docs/planning/items/MAP-006-dry-meadow-feature-density.md"
+  },
+  {
+    "id": "MAP-007",
+    "title": "Animal run scratch interaction",
+    "status": "backlog",
+    "type": "feature",
+    "area": "world",
+    "priority": "medium",
+    "tags": [
+      "map",
+      "dry_luka",
+      "location-features",
+      "interactions",
+      "atmosphere"
+    ],
+    "depends_on": [
+      "MAP-004"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/MAP-007-animal-run-scratch-interaction.md"
   },
   {
     "id": "MAP-WILLOW-001",
@@ -4281,6 +4380,25 @@
     "file": "docs/planning/items/STAT-002-service-trace-presence-separation.md"
   },
   {
+    "id": "STAT-003",
+    "title": "Deferred replies for heavy status diagnostics",
+    "status": "backlog",
+    "type": "feature",
+    "area": "status",
+    "priority": "medium",
+    "tags": [
+      "status",
+      "diagnostics",
+      "responsiveness",
+      "telegram"
+    ],
+    "depends_on": [
+      "PERF-001"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/STAT-003-deferred-heavy-diagnostics-replies.md"
+  },
+  {
     "id": "SURV-001",
     "title": "Early respawn support",
     "status": "testing",
@@ -4549,6 +4667,26 @@
     ],
     "exports": {},
     "file": "docs/planning/items/THEFT-003-spirit-theft-mvp.md"
+  },
+  {
+    "id": "TRACK-LEARN-001",
+    "title": "Following as a learned skill",
+    "status": "backlog",
+    "type": "feature",
+    "area": "progression",
+    "priority": "medium",
+    "tags": [
+      "skills",
+      "following",
+      "tracking",
+      "darkness",
+      "movement"
+    ],
+    "depends_on": [
+      "PROG-002"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/TRACK-LEARN-001-following-skill.md"
   },
   {
     "id": "TRACK-LEARN-001-A",

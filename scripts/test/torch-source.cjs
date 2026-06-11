@@ -8,6 +8,7 @@ const {
   canPromptLightAnotherTorch,
   carriedTorchCount,
   decideTorchSourceTake,
+  planPlayerTorchRelightSwap,
   torchSourceTakeBlockedText,
 } = require("../../src/services/fire");
 
@@ -15,7 +16,19 @@ assert.equal(carriedTorchCount({ plainAmount: 11, litAmount: 1, dousedAmount: 1 
 assert.equal(canPromptLightAnotherTorch({ plainAmount: 1, litAmount: 1, dousedAmount: 0 }), true);
 assert.equal(canPromptLightAnotherTorch({ plainAmount: 0, litAmount: 1, dousedAmount: 1 }), true);
 assert.equal(canPromptLightAnotherTorch({ plainAmount: 0, litAmount: 1, dousedAmount: 0 }), false);
-assert.equal(canPromptLightAnotherTorch({ plainAmount: 1, litAmount: 2, dousedAmount: 0 }), false);
+assert.equal(canPromptLightAnotherTorch({ plainAmount: 1, litAmount: 2, dousedAmount: 0 }), true);
+assert.deepEqual(
+  planPlayerTorchRelightSwap({ plainAmount: 1, litAmount: 2, dousedAmount: 0 }),
+  { droppedLitAmount: 2, carriedLitAmount: 1 },
+);
+assert.deepEqual(
+  planPlayerTorchRelightSwap({ plainAmount: 0, litAmount: 1, dousedAmount: 1 }),
+  { droppedLitAmount: 1, carriedLitAmount: 1 },
+);
+assert.deepEqual(
+  planPlayerTorchRelightSwap({ plainAmount: 0, litAmount: 1, dousedAmount: 0 }),
+  { droppedLitAmount: 0, carriedLitAmount: 1 },
+);
 assert.match(TORCH_FADING_WARNING_TEXT, /інший факел/);
 assert.match(TORCH_FADING_WARNING_TEXT, /від цього полум'я/);
 assert.doesNotMatch(TORCH_FADING_WARNING_TEXT, /підпалити його знову/);

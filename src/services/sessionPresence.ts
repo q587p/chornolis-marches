@@ -107,22 +107,61 @@ export type SessionReturnMarker = {
   since: Date | null;
 };
 
-function durationParts(ms: number) {
-  const minutes = Math.max(1, Math.round(ms / 60_000));
-  if (minutes < 60) return `${minutes} хв`;
+function pluralForm(value: number, forms: [string, string, string]) {
+  const abs = Math.abs(value);
+  const lastTwo = abs % 100;
+  const last = abs % 10;
+  if (lastTwo >= 11 && lastTwo <= 14) return forms[2];
+  if (last === 1) return forms[0];
+  if (last >= 2 && last <= 4) return forms[1];
+  return forms[2];
+}
+
+function durationUnit(value: number, forms: [string, string, string]) {
+  return `${value} ${pluralForm(value, forms)}`;
+}
+
+export function sessionAbsenceDurationText(ms: number) {
+  let minutes = Math.max(1, Math.round(ms / 60_000));
+  const units: string[] = [];
+
+  const years = Math.floor(minutes / (365 * 24 * 60));
+  if (years > 0) {
+    units.push(durationUnit(years, ["рік", "роки", "років"]));
+    minutes -= years * 365 * 24 * 60;
+  }
+
+  const months = Math.floor(minutes / (30 * 24 * 60));
+  if (months > 0) {
+    units.push(durationUnit(months, ["місяць", "місяці", "місяців"]));
+    minutes -= months * 30 * 24 * 60;
+  }
+
+  const days = Math.floor(minutes / (24 * 60));
+  if (days > 0) {
+    units.push(durationUnit(days, ["день", "дні", "днів"]));
+    minutes -= days * 24 * 60;
+  }
+
   const hours = Math.floor(minutes / 60);
-  const restMinutes = minutes % 60;
-  if (hours < 24) return restMinutes ? `${hours} год ${restMinutes} хв` : `${hours} год`;
-  const days = Math.floor(hours / 24);
-  const restHours = hours % 24;
-  return restHours ? `${days} д ${restHours} год` : `${days} д`;
+  if (hours > 0) {
+    units.push(durationUnit(hours, ["годину", "години", "годин"]));
+    minutes -= hours * 60;
+  }
+
+  if (minutes > 0 || units.length === 0) {
+    units.push(durationUnit(minutes, ["хвилину", "хвилини", "хвилин"]));
+  }
+
+  if (units.length <= 1) return units[0];
+  return units.slice(0, 2).join(" і ");
 }
 
 export function renderSessionReturnHint(marker: SessionReturnMarker | null | undefined, now = new Date()) {
   if (!marker || (marker.from !== "AFK" && marker.from !== "ENDED")) return null;
 
   const pauseKind = marker.from === "ENDED" ? "сесія була завершена" : "стежка на мить стихла";
-  const since = marker.since ? ` Приблизно ${durationParts(Math.max(0, now.getTime() - marker.since.getTime()))} вас не було чути.` : "";
+  const since = marker.since ? ` Приблизно ${sessionAbsenceDurationText(Math.max(0, now.getTime() - marker.since.getTime()))} вас не було чути.` : "";
   return `Ви знову прислухаєтеся до Чорнолісу: ${pauseKind}.${since}`;
 }
 

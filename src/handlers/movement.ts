@@ -112,11 +112,11 @@ export function registerMovementHandlers(bot: Bot) {
     await submitMove(bot, ctx, "DOWN", false);
   });
 
-  bot.hears(["🚪 Всередину", "(🚪 Всередину)"], async (ctx) => {
+  bot.hears(["⤵️ Всередину", "(⤵️ Всередину)", "🚪 Всередину", "(🚪 Всередину)"], async (ctx) => {
     await submitMove(bot, ctx, "INSIDE", false);
   });
 
-  bot.hears(["🚪 Назовні", "(🚪 Назовні)"], async (ctx) => {
+  bot.hears(["⤴️ Назовні", "(⤴️ Назовні)", "🚪 Назовні", "(🚪 Назовні)"], async (ctx) => {
     await submitMove(bot, ctx, "OUTSIDE", false);
   });
 }

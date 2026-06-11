@@ -47,7 +47,7 @@ First proof added in `0.12.8`: `Лисячий просвіт сну` contains `
 
 This is still only a tutorial flag, not a real skill progression model.
 
-`PROG-002` is now an umbrella design item, not the next standalone implementation slice. Near-term work should be tracked through narrower learning items such as `LEARN-*`, `OBS-*` and `TRACK-LEARN-*`, then folded back into the shared progression model when that foundation exists.
+`PROG-002` is now an umbrella design item, not the next standalone implementation slice. Near-term work should be tracked through narrower learning items such as `LEARN-*`, `OBS-*` and `TRACK-LEARN-*`, then folded back into the shared progression model when that foundation exists. `TRACK-LEARN-001` covers `Слідування` as a future learned skill: repeated attentive following can eventually reduce darkness/visibility failure without becoming group movement, auto-navigation or a hidden-route bypass.
 
 - A crow, Сон or another tutorial voice warns the player to watch carefully.
 - A fox demonstrates movement, stalking or a simple attack.

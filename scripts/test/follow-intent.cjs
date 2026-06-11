@@ -1,10 +1,14 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
 
 require("ts-node/register");
 
 const {
   FOLLOW_TARGET_CREATURE,
   FOLLOW_TARGET_PLAYER,
+  followIntentClearedText,
+  followAssistAlreadyEnabledText,
+  followAssistEnabledText,
   followAssistStateText,
   followIntentAttentionContext,
   followIntentDataForTarget,
@@ -44,12 +48,27 @@ assert.equal(creatureData.lastKnownTargetLabel, "знахарка");
 assert.equal(followIntentStatusLine("знахарка"), "Чужий слід: знахарка.");
 assert.equal(followIntentStatusLine("знахарка", { stale: true }), "Чужий слід: знахарка (останній помічений).");
 assert.equal(followIntentStatusLine("  "), null);
-assert.equal(followAssistStateText(true), "Слідова підмога: увімкнено.");
-assert.equal(followAssistStateText(false), "Слідова підмога: вимкнено.");
+assert.equal(followAssistStateText(true), "Слідування: увімкнено.");
+assert.equal(followAssistStateText(false), "Слідування: вимкнено.");
+const followAssistEnabled = followAssistEnabledText("Орина <нічна>");
+assert.match(followAssistEnabled, /Ви домовляєтесь із власними ногами/);
+assert.match(followAssistEnabled, /Чужий слід: Орина &lt;нічна&gt;\./);
+assert.match(followAssistEnabled, /не <i>гурт<\/i> і не <i>поклик духа<\/i>/);
+assert.doesNotMatch(followAssistEnabled, /Поклик духа/);
+const followAssistAlready = followAssistAlreadyEnabledText("Орина");
+assert.match(followAssistAlready, /Слідування вже насторожі\./);
+assert.match(followAssistAlready, /Чужий слід: Орина\./);
+assert.match(followAssistAlready, /не <i>гурт<\/i> і не <i>поклик духа<\/i>/);
 assert.equal(followIntentHelpText(), followIntentUsageText());
 assert.equal(followIntentTargetInstrumental({ label: "Орина", forms: { instrumental: "Ориною" } }), "Ориною");
 assert.equal(followIntentSetText({ label: "Орина", forms: { instrumental: "Ориною" } }), "Ви тримаєтеся сліду за Ориною. Це ще не крок за кроком — радше уважність до чужого руху.");
 assert.equal(followIntentTargetInstrumental({ label: "Орина" }), "Ориною");
+assert.equal(followIntentClearedText(null), "Ви відпускаєте чужий слід. Далі — власний крок.");
+assert.equal(
+  followIntentClearedText("Лукан"),
+  "Ви відпускаєте чужий слід. Далі — власний крок.\n\nЩойно ви трималися сліду Лукана.",
+);
+assert.doesNotMatch(followIntentClearedText("Лукан"), /Було:|Чужий слід:/);
 const visibleHelp = followIntentHelpText({ label: "знахарка", targetVisible: true });
 assert.match(visibleHelp, /Ви тримаєтеся чужого сліду: знахарка\./);
 assert.match(visibleHelp, /не автоматична хода/);
@@ -72,5 +91,14 @@ assert.deepEqual(followIntentAttentionContext(1, FOLLOW_TARGET_CREATURE, 7), {
   targetId: 7,
   attention: "follow-intent",
 });
+
+const aliasesSource = fs.readFileSync("src/handlers/aliases.ts", "utf8");
+assert.match(aliasesSource, /followAssistAlreadyEnabledText\(intent\.lastKnownTargetLabel\)/);
+assert.ok(
+  aliasesSource.indexOf("followAssistAlreadyEnabledText(intent.lastKnownTargetLabel)") <
+    aliasesSource.indexOf("setFollowAssistEnabled(player.id, true)"),
+  "/follow_assist_on should report the already-enabled state before writing the same setting again.",
+);
+assert.match(aliasesSource, /followAssistEnabledText\(intent\.lastKnownTargetLabel\)/);
 
 console.log("Follow intent helpers OK");

@@ -68,6 +68,7 @@ async function startTelegramPolling() {
     try {
       await refreshTelegramBotIdentity();
       await bot.start();
+      console.log("Telegram polling started");
       return;
     } catch (error) {
       if (!isTelegramPollingConflict(error)) {

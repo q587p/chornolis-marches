@@ -33,6 +33,7 @@ import { normalizeCreatureActionText } from "../utils/creatureActionText";
 import { creatureForms } from "./grammar";
 import { resourceTypeDisplayName } from "./corpses";
 import { getPublicEcologySignStats, type PublicEcologySignStats } from "./ecologyStats";
+import { markLocationViewedForMovementNotifications } from "./notifications";
 import { lifetimeSummary } from "./itemLifetime";
 import { playerShowsTechnicalDetails } from "./technicalDetails";
 import { dreamGateStatusText, ensureTutorialForagingResources, isDreamGateFeature, lockedExitDirections, lockedExitLabel, rememberTutorialObservationLesson } from "./tutorial";
@@ -188,6 +189,10 @@ function visibleTargets(
       canGreet: c.species.kind !== "ANIMAL",
       isAnimal: c.species.kind === "ANIMAL",
       isCorpse: false,
+      sex: c.sex,
+      grammaticalGender: c.species.grammaticalGender,
+      speciesKey: c.species.key,
+      speciesKind: c.species.kind,
     }));
 
   const corpses = location.creatures
@@ -704,8 +709,18 @@ export function hasPickableLyingObjects(groundItems: any[], corpses: any[]) {
   return groundItems.length > 0 || corpses.some((corpse) => !isFreshenedCorpse(corpse.currentAction));
 }
 
+export function pickableLyingObjectCount(groundItems: any[], corpses: any[]) {
+  const groundCount = groundItems.reduce((sum, item) => sum + Math.max(0, Number(item.amount) || 0), 0);
+  const corpseCount = corpses.filter((corpse) => !isFreshenedCorpse(corpse.currentAction)).length;
+  return groundCount + corpseCount;
+}
+
+export function hasMultiplePickableLyingObjects(groundItems: any[], corpses: any[]) {
+  return pickableLyingObjectCount(groundItems, corpses) > 1;
+}
+
 function addPickUpEverythingButton(keyboard: InlineKeyboard, groundItems: any[], corpses: any[]) {
-  if (hasPickableLyingObjects(groundItems, corpses)) keyboard.text(PICK_UP_EVERYTHING_BUTTON_TEXT, "item:pickupEverything").row();
+  if (hasMultiplePickableLyingObjects(groundItems, corpses)) keyboard.text(PICK_UP_EVERYTHING_BUTTON_TEXT, "item:pickupEverything").row();
 }
 
 export function carcassDropoffButtonRows(featureId: number) {
@@ -1000,6 +1015,7 @@ async function resourceButtonData(resources: any[], viewerPlayerId?: number) {
 }
 
 export async function renderLocationBrief(locationId: number, viewerPlayerId?: number, options: LocationRenderOptions = {}) {
+  markLocationViewedForMovementNotifications(viewerPlayerId, locationId);
   await Promise.all([expireTimedCampfires(locationId), expireGroundLitTorches(undefined, new Date(), locationId)]);
   await ensureTutorialForagingResources(locationId);
   const location = await prisma.cellLocation.findUnique({
@@ -1421,8 +1437,8 @@ export async function renderLocationFeatureInteraction(
     keyboard.text("🧘 Відпочити", "rest:start").row();
     keyboard.text("Лягти", "posture:lie").text("🌙 Сон", "character:sleep").row();
   }
-  if (isTutorialInsideFeature(feature)) keyboard.text("🕳️ Всередину", "move:INSIDE").row();
-  if (isTutorialOutsideFeature(feature)) keyboard.text("🕳️ Назовні", "move:OUTSIDE").row();
+  if (isTutorialInsideFeature(feature)) keyboard.text("⤵️ Всередину", "move:INSIDE").row();
+  if (isTutorialOutsideFeature(feature)) keyboard.text("⤴️ Назовні", "move:OUTSIDE").row();
   if (featureData(feature).tutorial_time_prompt === true) {
     keyboard.text("🌒 Час", "time:show").text("🌦 Погода", "weather:show").row();
     keyboard.text("📅 Календар", "calendar:show").row();

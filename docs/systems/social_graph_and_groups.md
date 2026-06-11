@@ -102,7 +102,7 @@ instead of always showing the setup prompt:
 
 As of `0.15.46`, follow intent can also carry an opt-in guarded assist flag:
 
-- `Слідова підмога` (`/follow_assist_on`, compatible with `/follow_assist on`)
+- `Слідування` (`/follow_assist_on`, compatible with `/follow_assist on`)
   is an auto-attempt, not a group,
   party, companion or `Поклик духа` mode;
 - it only reacts to the followed target's ordinary visible movement after clear

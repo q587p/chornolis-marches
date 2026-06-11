@@ -135,16 +135,16 @@ const thresholdButtons = buildMainReplyKeyboard({
   exits: ["INSIDE", "OUTSIDE"],
   showUtilityActions: false,
 }).keyboard.map((row) => row.map((button) => button.text));
-assert.equal(thresholdButtons[1][0], "🚪 Всередину");
-assert.equal(thresholdButtons[1][2], "🚪 Назовні");
+assert.equal(thresholdButtons[1][0], "⤵️ Всередину");
+assert.equal(thresholdButtons[1][2], "⤴️ Назовні");
 
 const mixedVerticalThresholdButtons = buildMainReplyKeyboard({
   exits: ["UP", "DOWN", "INSIDE", "OUTSIDE"],
   showUtilityActions: false,
 }).keyboard.map((row) => row.map((button) => button.text));
 assert.equal(mixedVerticalThresholdButtons[0][1], "⬆️ Вгору");
-assert.equal(mixedVerticalThresholdButtons[1][0], "🚪 Всередину");
-assert.equal(mixedVerticalThresholdButtons[1][2], "🚪 Назовні");
+assert.equal(mixedVerticalThresholdButtons[1][0], "⤵️ Всередину");
+assert.equal(mixedVerticalThresholdButtons[1][2], "⤴️ Назовні");
 assert.equal(mixedVerticalThresholdButtons[2][1], "⬇️ Вниз");
 
 const compassButtonsTakePriorityOverThresholdButtons = buildMainReplyKeyboard({
@@ -153,8 +153,8 @@ const compassButtonsTakePriorityOverThresholdButtons = buildMainReplyKeyboard({
 }).keyboard.map((row) => row.map((button) => button.text));
 assert.equal(compassButtonsTakePriorityOverThresholdButtons[1][0], "⬅️ Захід");
 assert.equal(compassButtonsTakePriorityOverThresholdButtons[1][2], "Схід ➡️");
-assert.equal(compassButtonsTakePriorityOverThresholdButtons.flat().includes("🚪 Всередину"), false);
-assert.equal(compassButtonsTakePriorityOverThresholdButtons.flat().includes("🚪 Назовні"), false);
+assert.equal(compassButtonsTakePriorityOverThresholdButtons.flat().includes("⤵️ Всередину"), false);
+assert.equal(compassButtonsTakePriorityOverThresholdButtons.flat().includes("⤴️ Назовні"), false);
 
 const earlyDreamButtons = buildMainReplyKeyboard({
   exits: ["NORTH", "SOUTH"],
@@ -282,6 +282,7 @@ assert.deepEqual(sleepingCharacterButtons, [
 const adminResourceButtons = buildAdminResourcesReplyKeyboard().keyboard.flat().map((button) => button.text);
 assert.equal(adminResourceButtons.includes("🍓 Додати ягоди"), true);
 assert.equal(adminResourceButtons.includes("🌿 Ключі ресурсів"), true);
+assert.equal(adminResourceButtons.includes("🌾 Відновити траву"), true);
 
 const adminCreaturesButtons = buildAdminCreaturesReplyKeyboard().keyboard.flat().map((button) => button.text);
 assert.equal(adminCreaturesButtons.includes("🐾 Ключі істот"), true);
@@ -317,8 +318,8 @@ for (const label of replyKeyboardLabels) {
 }
 
 const movementHandlerSource = fs.readFileSync("src/handlers/movement.ts", "utf8");
-assert.match(movementHandlerSource, /🚪 Всередину/);
-assert.match(movementHandlerSource, /🚪 Назовні/);
+assert.match(movementHandlerSource, /⤵️ Всередину/);
+assert.match(movementHandlerSource, /⤴️ Назовні/);
 assert.match(movementHandlerSource, /submitMove\(bot, ctx, "INSIDE"/);
 assert.match(movementHandlerSource, /submitMove\(bot, ctx, "OUTSIDE"/);
 
