@@ -2432,6 +2432,26 @@
     "file": "docs/planning/items/MAP-006-dry-meadow-feature-density.md"
   },
   {
+    "id": "MAP-007",
+    "title": "Animal run scratch interaction",
+    "status": "backlog",
+    "type": "feature",
+    "area": "world",
+    "priority": "medium",
+    "tags": [
+      "map",
+      "dry_luka",
+      "location-features",
+      "interactions",
+      "atmosphere"
+    ],
+    "depends_on": [
+      "MAP-004"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/MAP-007-animal-run-scratch-interaction.md"
+  },
+  {
     "id": "MAP-WILLOW-001",
     "title": "Willow Floodplain first contour",
     "status": "testing",

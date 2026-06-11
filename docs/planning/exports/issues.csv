@@ -122,6 +122,7 @@ MAP-003,Playable map expansion,testing,content,world,high,"map,world,exploration
 MAP-004,Skill and attention gated locations,testing,feature,world,high,"map,learning,skills,attention,exploration,cellar,tracking",docs/planning/items/MAP-004-skill-and-attention-gated-locations.md
 MAP-005,Regional active curiosities,backlog,feature,world,high,"map,features,interactions,swamp,riverbank,forest",docs/planning/items/MAP-005-regional-active-curiosities.md
 MAP-006,Dry meadow feature density pass,backlog,feature,world,medium,"map,dry_luka,location-features,atmosphere,content",docs/planning/items/MAP-006-dry-meadow-feature-density.md
+MAP-007,Animal run scratch interaction,backlog,feature,world,medium,"map,dry_luka,location-features,interactions,atmosphere",docs/planning/items/MAP-007-animal-run-scratch-interaction.md
 MAP-WILLOW-001,Willow Floodplain first contour,testing,content,world,high,"map,world,willow-floodplain,riverbank,exploration",docs/planning/items/MAP-WILLOW-001-first-contour.md
 MAP-WILLOW-002,Willow under-bridge and watchtower integration,backlog,content,world,medium,"map,world,willow-floodplain,under-bridge,watchtower",docs/planning/items/MAP-WILLOW-002-under-bridge-watchtower-integration.md
 MAP-WILLOW-003,"Willow Floodplain landmarks, resources and aliases",testing,content,world,high,"map,world,willow-floodplain,resources,aliases",docs/planning/items/MAP-WILLOW-003-landmarks-resources-and-aliases.md
