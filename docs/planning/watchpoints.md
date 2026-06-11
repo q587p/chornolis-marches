@@ -4,6 +4,9 @@ Current cautions and live-watch notes that should inform near-term work without 
 
 ## Active 0.16 Watchpoints
 
+- `0.16.x` should close as readiness, mentorship closure, evidence collection and docs/planning. Do not fit the central runtime heartbeat / scheduler rewrite into this lane unless production telemetry identifies one narrow fix.
+- Runtime heartbeat work belongs to `0.17.x`: start behavior-preserving, make heartbeat ownership explicit, and avoid changing action durations, recovery math, creature AI, Telegram delivery, Prisma schema or diagnostics endpoints in the planning closeout.
+- Attack practice and observation already exist as a minimal MVP. Treat remaining `0.16.x` attack work as small docs/help/smoke/display polish only; defer training arenas, sparring, PvP, armor/wounds/rounds, broad weapon modifiers and public skill sheets.
 - Keep the `0.16.x` mentorship / NPC learning lane narrow. It should prove guided attention and practice, not become a broad profession economy.
 - The active mentor offer text still has known gender/form-awareness follow-up risk. Fix copy before widening gathering mentors beyond the current authored cases.
 - Watch the `amount=2` gathering observation bonus in live play. If following one herbalist grows gathering too quickly, add a cooldown or separate `mentorship_observation` context.

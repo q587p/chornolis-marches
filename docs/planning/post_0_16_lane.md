@@ -4,16 +4,26 @@ Candidate sequencing after the active `0.16.x` mentorship / NPC learning lane st
 
 This is not a replacement for `next.md`. Promote from here only when the active lane has landed or paused cleanly.
 
+## Decision Fork
+
+After `0.16.x`, choose the next lane from evidence instead of momentum:
+
+- If production responsiveness remains questionable and no single narrow `0.16.x` bottleneck is obvious, start the `0.17.x` runtime heartbeat / scheduler lane from `docs/planning/runtime-heartbeats-and-0.17.md`.
+- If responsiveness is acceptable or deliberately accepted, resume the practical content lane: bottles, herbalism and first prepared remedies.
+
+Do not mix those two lanes in one PR. Runtime ownership changes should stay behavior-preserving first; content work should not smuggle in scheduler, recovery, queue or schema rewrites.
+
 ## Recommended Direction
 
-1. **First-session vertical smoke:** run a camp/dream/waking-world pass that checks the whole beginner promise after the 0.15-0.16 learning work.
-2. **Guided tracking prompt:** add a narrow tracking-practice prompt only after gathering prompts and marker cooldowns feel stable.
-3. **Mentor route polish:** add a tiny mentor-specific route/lesson if live mentorship needs stronger movement teaching.
-4. **Spirit-call teacher unlock:** make `Поклик духа` (`/spirit`) depend on sustained attention around an appropriate teacher instead of being an always-immediate default.
-5. **Bottles, herbalism and first prepared remedies:** make gathered herbs/berries/mushrooms useful through a narrow bottle-and-tincture lane, starting with `ALC-002`, `RECIPE-001`, `ALC-006` and revised `ALC-001`.
-6. **Group movement design:** draft guardrails for consensual group movement only after follow/group behavior stays understandable.
-7. **Training/arena planning:** after full combat design, plan a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
-8. **MAP-004 follow-up:** choose the next attention-gated place after the light/examine and track/follow-memory proofs.
+1. **Runtime heartbeat lane if needed:** begin with a behavior-preserving scheduler skeleton, then player-first cadence, world tick phase split, due-based recovery/lifecycle audit and region/zone runtime state.
+2. **First-session vertical smoke:** run a camp/dream/waking-world pass that checks the whole beginner promise after the 0.15-0.16 learning work.
+3. **Guided tracking prompt:** add a narrow tracking-practice prompt only after gathering prompts and marker cooldowns feel stable.
+4. **Mentor route polish:** add a tiny mentor-specific route/lesson if live mentorship needs stronger movement teaching.
+5. **Spirit-call teacher unlock:** make `Поклик духа` (`/spirit`) depend on sustained attention around an appropriate teacher instead of being an always-immediate default.
+6. **Bottles, herbalism and first prepared remedies:** make gathered herbs/berries/mushrooms useful through a narrow bottle-and-tincture lane, starting with `ALC-002`, `RECIPE-001`, `ALC-006` and revised `ALC-001`.
+7. **Group movement design:** draft guardrails for consensual group movement only after follow/group behavior stays understandable.
+8. **Training/arena planning:** after full combat design, plan a safe practice place where players can fight, watch fights and grow relevant skills without opening combat modifiers prematurely.
+9. **MAP-004 follow-up:** choose the next attention-gated place after the light/examine and track/follow-memory proofs.
 
 ## Bottles, Herbalism And First Prepared Remedies
 
