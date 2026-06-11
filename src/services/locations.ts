@@ -1057,9 +1057,9 @@ export async function renderLocationBrief(locationId: number, viewerPlayerId?: n
   const keyboard = new InlineKeyboard();
   addFeatureButtons(keyboard, location.features, "brief");
   const groundItems = location.resources.filter((r) => isVisibleGroundResource(r, location));
+  if (revealTargets && targets.length) addInlineRows(keyboard, buildTargetListKeyboard(actionLabeledTargets, { page: options.targetPage, pageCallbackPrefix: "targetPage:brief" }));
   if (visibility.showGroundObjects && groundItems.length) addGroundItemPickupButtons(keyboard, groundItems);
   addPickUpEverythingButton(keyboard, visibility.showGroundObjects ? groundItems : [], visibility.showGroundObjects ? location.creatures.filter(isVisibleCorpse) : []);
-  if (revealTargets && targets.length) addInlineRows(keyboard, buildTargetListKeyboard(actionLabeledTargets, { page: options.targetPage, pageCallbackPrefix: "targetPage:brief" }));
 
   const descriptionText = visibility.showLocationDescription
     ? escapeHtml(location.description ?? "")
@@ -1184,9 +1184,6 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
     keyboard.text("🌿 Зібрати", "gather:menu").row();
   }
 
-  addGroundItemPickupButtons(keyboard, groundItems);
-  addPickUpEverythingButton(keyboard, groundItems, corpses);
-
   if (tracksHint.hasTracks && visibility.showTracks) {
     addInlineRows(keyboard, buildExamineTracksKeyboard());
   }
@@ -1194,6 +1191,9 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   if (visibility.showNearbyDetails && targets.length > 0) {
     addInlineRows(keyboard, buildTargetListKeyboard(actionLabeledTargets, { page: options.targetPage, pageCallbackPrefix: "targetPage:details" }));
   }
+
+  addGroundItemPickupButtons(keyboard, groundItems);
+  addPickUpEverythingButton(keyboard, groundItems, corpses);
 
   const technicalLocationText = showTechnicalDetails
     ? `\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}`

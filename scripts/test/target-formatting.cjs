@@ -234,6 +234,30 @@ assert.match(socialHandlerSource, /setPlayerFollowIntent\(/, "Target follow-inte
 const locationsSource = fs.readFileSync(path.join(process.cwd(), "src", "services", "locations.ts"), "utf8");
 assert.match(locationsSource, /speciesKey:\s*c\.species\.key/, "Location target buttons should receive creature species keys for species-specific icons.");
 assert.match(locationsSource, /speciesKind:\s*c\.species\.kind/, "Location target buttons should receive creature species kind for animal fallback icons.");
+const briefRendererSource = locationsSource.slice(
+  locationsSource.indexOf("export async function renderLocationBrief"),
+  locationsSource.indexOf("export async function renderLocationGlance"),
+);
+const detailsRendererSource = locationsSource.slice(
+  locationsSource.indexOf("export async function renderLocationDetails"),
+  locationsSource.indexOf("export async function renderLocationFeatureInteraction"),
+);
+assert.ok(
+  briefRendererSource.indexOf("buildTargetListKeyboard") < briefRendererSource.indexOf("addGroundItemPickupButtons"),
+  "Brief location keyboards should list visible targets before loose ground pickup buttons.",
+);
+assert.ok(
+  briefRendererSource.indexOf("buildTargetListKeyboard") < briefRendererSource.indexOf("addPickUpEverythingButton"),
+  "Brief location keyboards should list visible targets before pick-up-everything.",
+);
+assert.ok(
+  detailsRendererSource.indexOf("buildTargetListKeyboard") < detailsRendererSource.indexOf("addGroundItemPickupButtons"),
+  "Detailed location keyboards should list visible targets before loose ground pickup buttons.",
+);
+assert.ok(
+  detailsRendererSource.indexOf("buildTargetListKeyboard") < detailsRendererSource.indexOf("addPickUpEverythingButton"),
+  "Detailed location keyboards should list visible targets before pick-up-everything.",
+);
 
 assert.equal(inventoryResourceSummary([
   { amount: 1, resourceType: { key: "cooked_meat", name: "смажене м'ясо" } },
