@@ -22,6 +22,9 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 - Player attack kill text now uses the target's nominative form for the falling subject, e.g. `Жаба падає`, not `Жабу падає`.
 - Animal age labels now keep adjective gender aligned with the visible species noun, so male frogs/snakes still display as `доросла жаба` / `доросла змія` unless the species has a distinct sexed label.
 - Animal social-signal flee text now capitalizes the visible species name at sentence start, e.g. `Жаба лякається жесту й кидається геть.`
+- Track age labels now use in-world boundary-time wording instead of real elapsed minutes.
+- Assorted world-data polish moved the no-loot empty cellar shelf into the hidden root pocket and lets cellar dry bunks keep their lie/sleep affordance in darkness.
+- Assorted UI/copy polish now keeps pickup buttons below visible targets, adds death/species icons to corpse target buttons, routes `Слідування` to follow-assist status, and hides `×1` in admin inventory-add confirmations.
 - Moved `TRACK-LEARN-001-B` to `testing`, regenerated planning exports, and cleaned `docs/planning/next.md` so completed `WPN-003` work no longer leads the immediate-candidate list.
 
 ### Risks
