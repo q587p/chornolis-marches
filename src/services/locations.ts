@@ -47,7 +47,7 @@ import { getCurrentWorldTimeSnapshot } from "./worldTime";
 import { approximateWorldDurationFromRealMs } from "../data/worldClock";
 import { owlSignDetailLine, owlSignInspectionText } from "./owlSigns";
 import { isStrangeTotemFeature, strangeTotemDetailLine, strangeTotemInspectionText } from "./strangeTotems";
-import { effectiveLocationDanger, locationDangerExamineCue } from "./locationDanger";
+import { effectiveLocationDanger, locationDangerExamineCue, locationDangerTechnicalSummary } from "./locationDanger";
 import { emptySmallFindExamineCue } from "./locationExamineCues";
 import {
   APIARY_DISTURBED_INSPECTION_TEXT,
@@ -1195,10 +1195,12 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   addGroundItemPickupButtons(keyboard, groundItems);
   addPickUpEverythingButton(keyboard, groundItems, corpses);
 
+  const localPresenceCount = location.players.length + visibleLivingCreatureCount;
+  const effectiveDangerLevel = effectiveLocationDanger(location.dangerLevel, localPresenceCount, location.features);
   const technicalLocationText = showTechnicalDetails
-    ? `\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\nНебезпека: ${location.dangerLevel}`
+    ? `\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\n${locationDangerTechnicalSummary(location.dangerLevel, localPresenceCount, location.features)}`
     : "";
-  const dangerCue = locationDangerExamineCue(effectiveLocationDanger(location.dangerLevel, location.players.length + visibleLivingCreatureCount, location.features));
+  const dangerCue = locationDangerExamineCue(effectiveDangerLevel);
   const dangerText = dangerCue ? `\n\n<i>${escapeHtml(dangerCue)}</i>` : "";
 
   const tracksText = tracksHint.hasTracks

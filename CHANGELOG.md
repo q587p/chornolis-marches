@@ -7,6 +7,32 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.34 - Learning visibility guardrails - 12026-06-11
+
+### Added
+
+- Added a shared visibility helper for learning from visible observations so tracking and observation-learning paths can use the same light/readability rule.
+- Added focused tracking-learning coverage proving darkness blocks observation learning while local light makes it possible again.
+- Added world tick runtime snapshot coverage for running state, current phase, phase durations, stale warning text and already-running manual tick responses.
+- Added `docs/release_notes/0.16.34.md`.
+
+### Changed
+
+- `/track` practice now records tracking learning only when tracks are actually readable under the current visibility rules.
+- Rabbit movement observation now uses the shared visibility helper while preserving the existing requirement that both nearby detail and tracks are visible.
+- Existing local look/inspect observation-learning paths for attack, gathering, freshening and cooking now stay silent in poor visibility instead of granting progress for cues the player could not plausibly see.
+- Public news/web/Herald command links now register safe main-bot deep links for `/sleep_tutorial`, `/follow_assist_on`, `/make_tincture` and `/brew_tincture` without adding them to the Telegram side command menu.
+- Technical location details now distinguish base danger from temporary local tension, showing recent-attack or crowd pressure when the current effective danger is higher than the location's baseline.
+- Follow-assist catch-up now stops queuing another step once the follower reaches the target's current location, while keeping the tracked route/footprints intact.
+- Character-card recovery estimates now break HP recovery into passive, active-rest and near-campfire lines just like stamina, instead of showing only the active-rest HP estimate.
+- Guarded tick diagnostics now show whether `worldTick` is running, when it started, the current/last phase, recent phase durations, stale state and skipped already-running attempts.
+- Manual `/tick` now reports an already-running world tick instead of replying as if a new pass ran successfully.
+- Moved `TRACK-LEARN-001-C` to `testing`, updated `docs/planning/next.md`, and regenerated planning exports.
+
+### Risks
+
+- Main risk is accidentally suppressing a learning cue or follow-assist step that should still work in dim but readable conditions, or adding noisy scribe/admin diagnostics; focused tests cover dark-blocked, light-enabled, reached-target and world tick runtime-reporting cases. This release is guardrails and observability polish only: no full following skill, hidden-route bypass, auto-navigation, group movement, combat changes, ecology math changes, creature AI changes, scheduler rewrite, action queue/recovery cadence changes, public skill/progress UI, schema changes or migrations.
+
 ## 0.16.33 - Animal movement observation tracking hint - 12026-06-11
 
 ### Added

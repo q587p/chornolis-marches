@@ -107,6 +107,12 @@ function literalPattern(value) {
   assert.match(releaseCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_attack_all_mouse"><em>\/attack_all_mouse<\/em><\/a>/);
   assert.match(releaseCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_kill_all_rabbit"><em>\/kill_all_rabbit<\/em><\/a>/);
 
+  const learningNewsCommandLinks = renderNewsInlineMarkdown("`Навчальний сон` (`/sleep_tutorial`), `Слідування` (`/follow_assist_on`), `Приготувати настоянку` (`/make_tincture` або `/brew_tincture`).");
+  assert.match(learningNewsCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_sleep_tutorial"><em>\/sleep_tutorial<\/em><\/a>/);
+  assert.match(learningNewsCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_follow_assist_on"><em>\/follow_assist_on<\/em><\/a>/);
+  assert.match(learningNewsCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_make_tincture"><em>\/make_tincture<\/em><\/a>/);
+  assert.match(learningNewsCommandLinks, /href="https:\/\/t\.me\/Chornolis_bot\?start=cmd_brew_tincture"><em>\/brew_tincture<\/em><\/a>/);
+
   const deployNews = [
     "📰 Остання новина: <strong>0.0.0 — Test</strong>",
     renderNewsMarkdownForTelegram("- `Люк до погреба`; `Вниз` (`/down`) і <raw>"),

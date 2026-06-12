@@ -36,6 +36,25 @@ export function effectiveLocationDanger(baseDangerLevel: number, presenceCount: 
   return Math.max(0, Math.floor(baseDangerLevel)) + crowdDangerBonus(presenceCount) + recentAttackDangerBonus(features);
 }
 
+export function locationDangerTechnicalSummary(baseDangerLevel: number, presenceCount: number, features?: readonly DangerFeatureLike[]) {
+  const baseDanger = Math.max(0, Math.floor(baseDangerLevel));
+  const crowdBonus = crowdDangerBonus(presenceCount);
+  const attackBonus = recentAttackDangerBonus(features);
+  const tensionBonus = crowdBonus + attackBonus;
+
+  if (tensionBonus <= 0) {
+    return `Небезпека: ${baseDanger}`;
+  }
+
+  const sources = [
+    crowdBonus > 0 ? `+${crowdBonus} від скупчення живих` : null,
+    attackBonus > 0 ? `+${attackBonus} від недавнього нападу` : null,
+  ].filter(Boolean);
+  const sourceText = sources.length ? ` (${sources.join(", ")})` : "";
+
+  return `Небезпека: ${baseDanger}; напруга зараз: +${tensionBonus}${sourceText}; відчувається як ${baseDanger + tensionBonus}`;
+}
+
 export function locationDangerExamineCue(dangerLevel: number) {
   if (dangerLevel >= 7) {
     return "Земля, трава й тиша складаються в одне відчуття: тут варто бути обережнішими. Місцина не просто темна чи дика — вона насторожена.";

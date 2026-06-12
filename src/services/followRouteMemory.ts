@@ -212,6 +212,7 @@ export type FollowStepMemoryResult =
 
 export type FollowAssistFailureReason =
   | "assist-disabled"
+  | "target-present"
   | "no-memory"
   | "dark"
   | "hidden"
@@ -320,6 +321,7 @@ export function evaluateFollowAssistEligibility(input: {
   hasVisibleExit?: boolean;
   locked?: boolean;
   hasRecentAssist?: boolean;
+  targetAtCurrentLocation?: boolean;
   playerHasLight?: boolean | null;
   now?: number;
   ttlMs?: number;
@@ -332,6 +334,7 @@ export function evaluateFollowAssistEligibility(input: {
   if (player.posture === PlayerPosture.LYING) return { ok: false, reason: "lying" };
   if (player.posture !== PlayerPosture.STANDING) return { ok: false, reason: "resting" };
   if ((player.stamina ?? 0) <= 0) return { ok: false, reason: "no-stamina" };
+  if (input.targetAtCurrentLocation) return { ok: false, reason: "target-present" };
   if ((input.activeActionCount ?? 0) > 0) return { ok: false, reason: "busy" };
   if (input.hasRecentAssist) return { ok: false, reason: "cooldown" };
 
@@ -744,6 +747,20 @@ async function maybeQueueFollowAssistMove(bot: Bot, input: {
   return { ...eligibility, result, event: auditEvent };
 }
 
+async function followTargetAtLocation(target: FollowRouteTarget, locationId: number) {
+  if (target.type === FOLLOW_TARGET_PLAYER) {
+    return Boolean(await prisma.player.findFirst({
+      where: { id: target.id, currentLocationId: locationId, hp: { gt: 0 } },
+      select: { id: true },
+    }));
+  }
+
+  return Boolean(await prisma.creature.findFirst({
+    where: { id: target.id, locationId, isAlive: true, isGone: false },
+    select: { id: true },
+  }));
+}
+
 async function latestFollowRouteMemoryForCatchUp(playerId: number, currentLocationId: number) {
   const ttlMs = FOLLOW_ROUTE_STEP_MEMORY_TTL_MS;
   const since = new Date(Date.now() - ttlMs);
@@ -805,7 +822,7 @@ async function maybeQueueFollowAssistCatchUpInner(bot: Bot, input: {
     direction: preliminaryDirection,
   }) : null;
 
-  const [activeActionCount, exit, lockedMessage, hasRecentAssist] = await Promise.all([
+  const [activeActionCount, exit, lockedMessage, hasRecentAssist, targetAtCurrentLocation] = await Promise.all([
     hasBlockingPlayerActionsForFollowAssist(input.playerId),
     preliminaryDirection
       ? prisma.locationExit.findUnique({
@@ -821,6 +838,7 @@ async function maybeQueueFollowAssistCatchUpInner(bot: Bot, input: {
       locationId: player.currentLocationId,
       cooldownKey: preliminaryCooldownKey,
     }) : Promise.resolve(false),
+    followTargetAtLocation(target, player.currentLocationId),
   ]);
   const playerHasLight = parsed.visibility === "dark" ? await hasActiveLitTorchForPlayer(input.playerId) : false;
 
@@ -833,6 +851,7 @@ async function maybeQueueFollowAssistCatchUpInner(bot: Bot, input: {
     hasVisibleExit: Boolean(exit && !exit.isHidden),
     locked: Boolean(lockedMessage),
     hasRecentAssist,
+    targetAtCurrentLocation,
     playerHasLight,
   });
   if (!eligibility.ok) {

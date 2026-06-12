@@ -26,7 +26,7 @@ import {
   type PreparedCharacterName,
 } from "../services/characterNames";
 import { disablePlayerAuto, replyPlayerAutoStatus, requestOrEnablePlayerAuto, replyStopPlayerAuto } from "./auto";
-import { requestScribeReturnAssistance, submitAttackCommand, submitBuildCampfire, submitDismantleCampfire, submitDismantleTotem, submitDouseCampfire, submitFollowIntent, submitLightCampfire, submitPickupCommand, submitPutItem, submitSay, submitTrack, submitTravelGroupCommand, submitUnfollow, submitYell } from "./aliases";
+import { requestScribeReturnAssistance, submitAttackCommand, submitBrewTincture, submitBuildCampfire, submitDismantleCampfire, submitDismantleTotem, submitDouseCampfire, submitFollowAssist, submitFollowIntent, submitLightCampfire, submitPickupCommand, submitPutItem, submitSay, submitTrack, submitTravelGroupCommand, submitUnfollow, submitYell } from "./aliases";
 import { sendHelp } from "./help";
 import { sendNews } from "./news";
 import { resolveStartActionPayload, type StartActionPayload } from "../input/startPayloads";
@@ -720,6 +720,11 @@ async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayl
     return true;
   }
 
+  if (action === "sleepTutorial") {
+    await submitSleepCommand(bot, ctx, true);
+    return true;
+  }
+
   if (action === "lie") {
     await submitPosture(bot, ctx, "lie");
     return true;
@@ -743,6 +748,11 @@ async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayl
 
   if (action === "follow") {
     await submitFollowIntent(ctx, "");
+    return true;
+  }
+
+  if (action === "followAssistOn") {
+    await submitFollowAssist(ctx, "on");
     return true;
   }
 
@@ -858,6 +868,11 @@ async function runStartPayloadAction(bot: Bot, ctx: any, action: StartActionPayl
 
   if (action === "gatherBeeswax") {
     await submitGather(bot, ctx, "beeswax", false);
+    return true;
+  }
+
+  if (action === "brewTincture") {
+    await submitBrewTincture(bot, ctx);
     return true;
   }
 

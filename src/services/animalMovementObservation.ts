@@ -5,7 +5,7 @@ import {
   TRACKING_ANIMAL_MOVEMENT_OBSERVATION_TEXT,
   recordTrackingAnimalMovementObservation,
 } from "./trackingLearning";
-import { visibilityRulesForLocation } from "./visibility";
+import { canLearnFromVisibleObservation, visibilityRulesForLocation } from "./visibility";
 
 export const TRACKING_ANIMAL_MOVEMENT_OBSERVATION_SPECIES_KEY = "rabbit";
 
@@ -21,8 +21,7 @@ export function canObserveAnimalMovementForTracking(input: {
     && Number.isFinite(input.sourceLocationId)
     && Number.isFinite(input.destinationLocationId)
     && input.sourceLocationId !== input.destinationLocationId
-    && input.visibility?.showNearbyDetails === true
-    && input.visibility?.showTracks === true;
+    && Boolean(input.visibility && canLearnFromVisibleObservation(input.visibility, "animal_movement"));
 }
 
 async function notifyTrackingObserversAtLocation(bot: Bot, input: {

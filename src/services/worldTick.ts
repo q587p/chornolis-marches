@@ -4,6 +4,18 @@ import { prisma } from "../db";
 import { notifyLocationAll, notifyRegion, notifyRegionTechnicalScribes } from "./notifications";
 import { actionDurationMs, enqueueCreatureAction, movementDurationMs, restartActionQueueLoop } from "./actionQueue";
 import { BASE_STAMINA, TICK_MS, VERY_TIRED_STAMINA, getRuntimeTimingConfig, setRuntimeTickMs } from "../gameConfig";
+import {
+  getWorldTickRuntimeSnapshot,
+  markWorldTickError,
+  markWorldTickFinished,
+  markWorldTickPhaseFinished,
+  markWorldTickPhaseStarted,
+  markWorldTickSkippedBecauseRunning,
+  markWorldTickStarted,
+  worldTickStaleThresholdMs,
+  type WorldTickPhaseDurations,
+  type WorldTickRuntimeSnapshot,
+} from "../runtimeState";
 import { restartPlayerAutoTimers } from "../handlers/auto";
 import { carriedCorpseAction, carriedCorpseOwnerId, removeDecayedCorpseFromInventory } from "./corpses";
 import { requireScribeAdmin } from "./adminAccess";
@@ -21,7 +33,7 @@ import { slashlessCommandPattern } from "../utils/slashlessCommands";
 import { advanceWorldClock } from "./worldTime";
 import { notifyWorldDaypartChangeIfNeeded } from "./worldDaypartNotices";
 import { creatureUsableExits } from "./creatureMovement";
-import { worldTimeSnapshotFromAbsoluteMinute, type WorldDaypart } from "../data/worldClock";
+import { worldTimeSnapshotFromAbsoluteMinute, type WorldDaypart, type WorldTimeSnapshot } from "../data/worldClock";
 import { CAMP_SPIRIT_CAT_START_LOCATION_KEY, campSpiritCatMouseBehaviorPlan, campSpiritCatShouldPrioritizeLocalMice, campSpiritCatWatchPosture, isCampSpiritCatAllowedExit, isCampSpiritCatCreature, isCampSpiritCatLocationKey } from "./campSpiritCat";
 import { isStarterCampOwlSafeLocationKey } from "./owlSigns";
 import { advancePassivePlayerHunger } from "./playerHunger";
@@ -92,6 +104,20 @@ let tickTimer: NodeJS.Timeout | null = null;
 let running = false;
 let botInstance: Bot | null = null;
 let tickNumber = 0;
+
+export type WorldTickResult =
+  | { ran: true; tickNumber: number; snapshot: WorldTickRuntimeSnapshot }
+  | { ran: false; reason: "already-running"; snapshot: WorldTickRuntimeSnapshot };
+
+async function runWorldTickPhase<T>(phase: string, work: () => Promise<T>): Promise<T> {
+  const startedAt = Date.now();
+  markWorldTickPhaseStarted(phase);
+  try {
+    return await work();
+  } finally {
+    markWorldTickPhaseFinished(phase, Date.now() - startedAt);
+  }
+}
 
 export function isOwlActiveDaypart(daypart: WorldDaypart) {
   return daypart === "dawn" || daypart === "dusk" || daypart === "night";
@@ -1659,9 +1685,14 @@ async function regenerateNaturalTwigsIfNeeded() {
   return regenerated;
 }
 
-export async function worldTick() {
-  if (running) return;
+export async function worldTick(): Promise<WorldTickResult> {
+  if (running) {
+    const snapshot = markWorldTickSkippedBecauseRunning();
+    return { ran: false, reason: "already-running", snapshot };
+  }
   running = true;
+  tickNumber++;
+  markWorldTickStarted(tickNumber);
   let queuedMove = 0, queuedGather = 0, queuedEat = 0, queuedLook = 0, queuedSay = 0, queuedRest = 0, queuedAttack = 0, stoodDown = 0, skippedBusy = 0, errors = 0, regenerated = 0;
   let creatureCandidates = 0, creatureProcessed = 0, creatureDeferred = 0, creatureProtected = 0;
   let aged = 0, oldAgeDeaths = 0, starvationDeaths = 0, corpsesDecaying = 0, corpsesGone = 0;
@@ -1680,204 +1711,252 @@ export async function worldTick() {
   let strangeTotemSpawned = false;
   try {
     if (DEBUG) console.log(`[WORLD TICK] start ${new Date().toISOString()}`);
-    tickNumber++;
-    const worldClock = await advanceWorldClock();
-    worldMinutesAdvanced = worldClock.advancedMinutes;
-    const worldTime = worldTimeSnapshotFromAbsoluteMinute(
-      worldClock.state.absoluteMinute,
-      worldClock.state.weatherKey,
-      worldClock.state.weatherIntensity,
-    );
-    await syncOwlNocturnalActivity(worldTime.daypart);
-    await syncHawkDaytimeActivity(worldTime.daypart);
-    const strangeTotemAging = await ageStrangeTotemsIfNeeded(botInstance, worldTime.absoluteMinute);
-    strangeTotemsScheduled = strangeTotemAging.scheduled;
-    strangeTotemsDropped = strangeTotemAging.dropped;
-    strangeTotemsExpired = strangeTotemAging.expired;
-    strangeTotemSpawned = (await maybeSpawnDailyStrangeTotem(botInstance, worldTime.absoluteMinute)).spawned;
-    if (botInstance) daypartNoticeSent = await notifyWorldDaypartChangeIfNeeded(botInstance);
-    const passiveHunger = await advancePassivePlayerHunger(worldTime.absoluteMinute);
-    playerHungerIncreased = passiveHunger.totalIncrease;
-    playerHungerInitialized = passiveHunger.initialized;
-    playerHungerResetBackwards = passiveHunger.resetBackwards;
-    dreamGatesClosed = await closeExpiredDreamGates(botInstance);
-    const lifecycle = await processAnimalLifecycle();
-    aged = lifecycle.aged;
-    oldAgeDeaths = lifecycle.died;
-    starvationDeaths = lifecycle.starved;
-    corpsesDecaying = lifecycle.decayed;
-    corpsesGone = lifecycle.gone;
-
-    const ecology = await processSmallHerbivoreEcology();
-    rabbitBirths = ecology.rabbitBirths;
-    mouseBirths = ecology.mouseBirths;
-    rabbitsSpread = ecology.rabbitsSpread;
-    miceSpread = ecology.miceSpread;
-    overgrazedLocations = ecology.overgrazedLocations;
-    overgrazedResources = ecology.overgrazedResources;
-    depletedByOvergrazing = ecology.depletedByOvergrazing;
-
-    const predatorEcology = await processPredatorReproduction();
-    foxBirths = predatorEcology.foxBirths;
-    wolfBirths = predatorEcology.wolfBirths;
-    foxPreyUnits = predatorEcology.foxPreyUnits;
-    wolfPreyUnits = predatorEcology.wolfPreyUnits;
-
-    lisovykAwakened = await wakeLisovykIfNeeded();
-    const lisovykRestorationReserved = lisovykAwakened ? false : await wakeLisovykForStarterAnimalRestorationIfNeeded();
-    const lisovykRestorationActive = lisovykRestorationReserved || await hasActiveLisovykRestorationWalk();
-    if (!lisovykAwakened && !lisovykRestorationActive) {
-      const populationFloor = await restorePopulationFloors();
-      populationFloorRestored = populationFloor.restored;
-    }
-    regenerated = await regenerateResourcesIfNeeded();
-    regenerated += await regenerateNaturalTwigsIfNeeded();
-    if (!lisovykAwakened && !lisovykRestorationActive) lisovykSlept = await putLisovykToSleepIfForestRecovered();
-
-    const [playerLocationCounts, activeCreatureActions, creatureLocationCountRows, sleepingCreatureCount] = await Promise.all([
-      prisma.player.groupBy({
-        by: ["currentLocationId"],
-        where: { currentLocationId: { not: null } },
-        _count: { _all: true },
-      }),
-      prisma.worldAction.findMany({
-        where: { actorType: "CREATURE", status: { in: ["QUEUED", "RUNNING"] }, creatureId: { not: null } },
-        select: { creatureId: true },
-      }),
-      prisma.creature.groupBy({
-        by: ["locationId"],
-        where: { isAlive: true, isGone: false },
-        _count: { _all: true },
-      }),
-      prisma.creature.count({ where: { isAlive: true, isGone: false, activity: "SLEEPING" } }),
-    ]);
-    const activeCreatureActionIds = new Set(activeCreatureActions.map((action) => action.creatureId).filter((id): id is number => Boolean(id)));
-    const activeCreatureIds = [...activeCreatureActionIds];
-    const creatureTickCandidates = await prisma.creature.findMany({
-      where: {
-        isAlive: true,
-        isGone: false,
-        activity: { not: "SLEEPING" },
-        ...(activeCreatureIds.length ? { id: { notIn: activeCreatureIds } } : {}),
-      },
-      select: {
-        id: true,
-        locationId: true,
-        species: { select: { kind: true, key: true, diet: true } },
-      },
+    const worldTime: WorldTimeSnapshot = await runWorldTickPhase("clock/daypart", async () => {
+      const worldClock = await advanceWorldClock();
+      worldMinutesAdvanced = worldClock.advancedMinutes;
+      return worldTimeSnapshotFromAbsoluteMinute(
+        worldClock.state.absoluteMinute,
+        worldClock.state.weatherKey,
+        worldClock.state.weatherIntensity,
+      );
     });
-    const creatureLocationCounts = new Map<number, number>();
-    const playerCountsByLocationId = new Map<number, number>();
-    for (const row of creatureLocationCountRows) creatureLocationCounts.set(row.locationId, row._count._all);
-    for (const row of playerLocationCounts) {
-      if (row.currentLocationId) playerCountsByLocationId.set(row.currentLocationId, row._count._all);
-    }
-    const creatureSelection = selectCreaturesForTick(creatureTickCandidates, playerCountsByLocationId, tickNumber, CREATURE_TICK_BUDGET);
-    creatureCandidates = creatureTickCandidates.length;
-    creatureDeferred = creatureSelection.deferred;
-    creatureProtected = creatureSelection.protectedCount;
-    const selectedCreatureIds = creatureSelection.selectedIds;
-    const selectedCreatureOrder = new Map(selectedCreatureIds.map((id, index) => [id, index]));
-    const creatures = selectedCreatureIds.length ? await prisma.creature.findMany({
-      where: {
-        id: { in: selectedCreatureIds },
-      },
-      include: {
-        species: true,
-        location: {
-          include: {
-            exitsFrom: {
-              include: {
-                toLocation: {
-                  include: {
-                    region: true,
-                    features: { where: { isActive: true, type: "MAGIC_CAMPFIRE" } },
+
+    await runWorldTickPhase("activity-sync", async () => {
+      await syncOwlNocturnalActivity(worldTime.daypart);
+      await syncHawkDaytimeActivity(worldTime.daypart);
+    });
+
+    await runWorldTickPhase("totems", async () => {
+      const strangeTotemAging = await ageStrangeTotemsIfNeeded(botInstance, worldTime.absoluteMinute);
+      strangeTotemsScheduled = strangeTotemAging.scheduled;
+      strangeTotemsDropped = strangeTotemAging.dropped;
+      strangeTotemsExpired = strangeTotemAging.expired;
+      strangeTotemSpawned = (await maybeSpawnDailyStrangeTotem(botInstance, worldTime.absoluteMinute)).spawned;
+    });
+
+    await runWorldTickPhase("daypart-notices", async () => {
+      if (botInstance) daypartNoticeSent = await notifyWorldDaypartChangeIfNeeded(botInstance);
+    });
+
+    await runWorldTickPhase("passive-hunger", async () => {
+      const passiveHunger = await advancePassivePlayerHunger(worldTime.absoluteMinute);
+      playerHungerIncreased = passiveHunger.totalIncrease;
+      playerHungerInitialized = passiveHunger.initialized;
+      playerHungerResetBackwards = passiveHunger.resetBackwards;
+    });
+
+    await runWorldTickPhase("dream-gates", async () => {
+      dreamGatesClosed = await closeExpiredDreamGates(botInstance);
+    });
+
+    await runWorldTickPhase("animal-lifecycle", async () => {
+      const lifecycle = await processAnimalLifecycle();
+      aged = lifecycle.aged;
+      oldAgeDeaths = lifecycle.died;
+      starvationDeaths = lifecycle.starved;
+      corpsesDecaying = lifecycle.decayed;
+      corpsesGone = lifecycle.gone;
+    });
+
+    await runWorldTickPhase("herbivore-ecology", async () => {
+      const ecology = await processSmallHerbivoreEcology();
+      rabbitBirths = ecology.rabbitBirths;
+      mouseBirths = ecology.mouseBirths;
+      rabbitsSpread = ecology.rabbitsSpread;
+      miceSpread = ecology.miceSpread;
+      overgrazedLocations = ecology.overgrazedLocations;
+      overgrazedResources = ecology.overgrazedResources;
+      depletedByOvergrazing = ecology.depletedByOvergrazing;
+    });
+
+    await runWorldTickPhase("predator-reproduction", async () => {
+      const predatorEcology = await processPredatorReproduction();
+      foxBirths = predatorEcology.foxBirths;
+      wolfBirths = predatorEcology.wolfBirths;
+      foxPreyUnits = predatorEcology.foxPreyUnits;
+      wolfPreyUnits = predatorEcology.wolfPreyUnits;
+    });
+
+    const lisovykRestorationActive = await runWorldTickPhase("lisovyk-population-restoration", async () => {
+      lisovykAwakened = await wakeLisovykIfNeeded();
+      const lisovykRestorationReserved = lisovykAwakened ? false : await wakeLisovykForStarterAnimalRestorationIfNeeded();
+      const lisovykRestorationActive = lisovykRestorationReserved || await hasActiveLisovykRestorationWalk();
+      if (!lisovykAwakened && !lisovykRestorationActive) {
+        const populationFloor = await restorePopulationFloors();
+        populationFloorRestored = populationFloor.restored;
+      }
+      return lisovykRestorationActive;
+    });
+
+    await runWorldTickPhase("resource-regen", async () => {
+      regenerated = await regenerateResourcesIfNeeded();
+      regenerated += await regenerateNaturalTwigsIfNeeded();
+      if (!lisovykAwakened && !lisovykRestorationActive) lisovykSlept = await putLisovykToSleepIfForestRecovered();
+    });
+
+    const creatureTickData = await runWorldTickPhase("creature-candidate-selection", async () => {
+      const [playerLocationCounts, activeCreatureActions, creatureLocationCountRows, sleepingCreatureCount] = await Promise.all([
+        prisma.player.groupBy({
+          by: ["currentLocationId"],
+          where: { currentLocationId: { not: null } },
+          _count: { _all: true },
+        }),
+        prisma.worldAction.findMany({
+          where: { actorType: "CREATURE", status: { in: ["QUEUED", "RUNNING"] }, creatureId: { not: null } },
+          select: { creatureId: true },
+        }),
+        prisma.creature.groupBy({
+          by: ["locationId"],
+          where: { isAlive: true, isGone: false },
+          _count: { _all: true },
+        }),
+        prisma.creature.count({ where: { isAlive: true, isGone: false, activity: "SLEEPING" } }),
+      ]);
+      const activeCreatureActionIds = new Set(activeCreatureActions.map((action) => action.creatureId).filter((id): id is number => Boolean(id)));
+      const activeCreatureIds = [...activeCreatureActionIds];
+      const creatureTickCandidates = await prisma.creature.findMany({
+        where: {
+          isAlive: true,
+          isGone: false,
+          activity: { not: "SLEEPING" },
+          ...(activeCreatureIds.length ? { id: { notIn: activeCreatureIds } } : {}),
+        },
+        select: {
+          id: true,
+          locationId: true,
+          species: { select: { kind: true, key: true, diet: true } },
+        },
+      });
+      const creatureLocationCounts = new Map<number, number>();
+      const playerCountsByLocationId = new Map<number, number>();
+      for (const row of creatureLocationCountRows) creatureLocationCounts.set(row.locationId, row._count._all);
+      for (const row of playerLocationCounts) {
+        if (row.currentLocationId) playerCountsByLocationId.set(row.currentLocationId, row._count._all);
+      }
+      const creatureSelection = selectCreaturesForTick(creatureTickCandidates, playerCountsByLocationId, tickNumber, CREATURE_TICK_BUDGET);
+      creatureCandidates = creatureTickCandidates.length;
+      creatureDeferred = creatureSelection.deferred;
+      creatureProtected = creatureSelection.protectedCount;
+      const selectedCreatureIds = creatureSelection.selectedIds;
+      const selectedCreatureOrder = new Map(selectedCreatureIds.map((id, index) => [id, index]));
+      const creatures = selectedCreatureIds.length ? await prisma.creature.findMany({
+        where: {
+          id: { in: selectedCreatureIds },
+        },
+        include: {
+          species: true,
+          location: {
+            include: {
+              exitsFrom: {
+                include: {
+                  toLocation: {
+                    include: {
+                      region: true,
+                      features: { where: { isActive: true, type: "MAGIC_CAMPFIRE" } },
+                    },
                   },
                 },
               },
+              features: { where: { isActive: true } },
+              resources: { include: { resourceType: true } },
             },
-            features: { where: { isActive: true } },
-            resources: { include: { resourceType: true } },
           },
         },
-      },
-    }) : [];
-    creatures.sort((a, b) => (selectedCreatureOrder.get(a.id) ?? 0) - (selectedCreatureOrder.get(b.id) ?? 0));
-    creatureProcessed = creatures.length;
-    skippedBusy += activeCreatureActionIds.size + sleepingCreatureCount + creatureDeferred;
+      }) : [];
+      creatures.sort((a, b) => (selectedCreatureOrder.get(a.id) ?? 0) - (selectedCreatureOrder.get(b.id) ?? 0));
+      creatureProcessed = creatures.length;
+      skippedBusy += activeCreatureActionIds.size + sleepingCreatureCount + creatureDeferred;
+      return { activeCreatureActionIds, creatureLocationCounts, creatures, playerCountsByLocationId };
+    });
 
-    for (const c of creatures) {
-      try {
-        const localPresenceCount = (creatureLocationCounts.get(c.locationId) ?? 0) + (playerCountsByLocationId.get(c.locationId) ?? 0);
-        (c.location as any).effectiveDangerLevel = effectiveLocationDanger(c.location.dangerLevel, localPresenceCount, c.location.features);
+    await runWorldTickPhase("creature-ai-loop", async () => {
+      for (const c of creatureTickData.creatures) {
+        try {
+          const localPresenceCount = (creatureTickData.creatureLocationCounts.get(c.locationId) ?? 0) + (creatureTickData.playerCountsByLocationId.get(c.locationId) ?? 0);
+          (c.location as any).effectiveDangerLevel = effectiveLocationDanger(c.location.dangerLevel, localPresenceCount, c.location.features);
 
-        if (c.activity === "SLEEPING") {
-          skippedBusy++;
-          continue;
-        }
+          if (c.activity === "SLEEPING") {
+            skippedBusy++;
+            continue;
+          }
 
-        if (activeCreatureActionIds.has(c.id)) {
-          skippedBusy++;
-          continue;
-        }
+          if (creatureTickData.activeCreatureActionIds.has(c.id)) {
+            skippedBusy++;
+            continue;
+          }
 
-        let result = "queuedRest";
-        if (isCampSpiritCatCreature(c)) result = await tickCampSpiritCat(c, worldTime.daypart);
-        else if (await maybeQueueCreatureRest(c)) {
-          queuedRest++;
-          continue;
-        }
-        else {
-          const learnerResult = await tickNpcLearner(c);
-          if (learnerResult) result = learnerResult;
-          else if (isHunterCreature(c)) result = await tickNpcHunter(botInstance, c);
-          else if (isHerbalistCreature(c)) result = await tickNpcHerbalist(botInstance, c, worldTime.absoluteMinute);
-          else if (c.species.key === "lisovyk") {
-            const restorationResult = await tickLisovykRestoration(botInstance, c);
-            if (restorationResult) result = restorationResult;
-            else {
-              const exit = pick(c.location.exitsFrom.filter((candidate: any) => isExit(candidate) && !isLisovykForbiddenLocation((candidate as any).toLocation)));
-              if (isExit(exit) && chance(50)) {
-                result = await queueMove(c, exit, "нишпорить між деревами");
-              } else {
-                await enqueueCreatureAction({
-                  creatureId: c.id,
-                  type: "LOOK",
-                  payload: { reason: "полює й дослухається до лісу" },
-                  durationMs: actionDurationMs("LOOK", c.stamina),
-                });
-                result = "queuedLook";
+          let result = "queuedRest";
+          if (isCampSpiritCatCreature(c)) result = await tickCampSpiritCat(c, worldTime.daypart);
+          else if (await maybeQueueCreatureRest(c)) {
+            queuedRest++;
+            continue;
+          }
+          else {
+            const learnerResult = await tickNpcLearner(c);
+            if (learnerResult) result = learnerResult;
+            else if (isHunterCreature(c)) result = await tickNpcHunter(botInstance, c);
+            else if (isHerbalistCreature(c)) result = await tickNpcHerbalist(botInstance, c, worldTime.absoluteMinute);
+            else if (c.species.key === "lisovyk") {
+              const restorationResult = await tickLisovykRestoration(botInstance, c);
+              if (restorationResult) result = restorationResult;
+              else {
+                const exit = pick(c.location.exitsFrom.filter((candidate: any) => isExit(candidate) && !isLisovykForbiddenLocation((candidate as any).toLocation)));
+                if (isExit(exit) && chance(50)) {
+                  result = await queueMove(c, exit, "нишпорить між деревами");
+                } else {
+                  await enqueueCreatureAction({
+                    creatureId: c.id,
+                    type: "LOOK",
+                    payload: { reason: "полює й дослухається до лісу" },
+                    durationMs: actionDurationMs("LOOK", c.stamina),
+                  });
+                  result = "queuedLook";
+                }
               }
             }
+            else if (c.species.diet === "HERBIVORE") result = await tickHerbivore(c, localPresenceCount);
+            else if (c.species.diet === "CARNIVORE") result = await tickCarnivore(c);
+            else {
+              await enqueueCreatureAction({ creatureId: c.id, type: "REST", payload: {}, durationMs: actionDurationMs("REST", c.stamina) });
+              result = "queuedRest";
+            }
           }
-          else if (c.species.diet === "HERBIVORE") result = await tickHerbivore(c, localPresenceCount);
-          else if (c.species.diet === "CARNIVORE") result = await tickCarnivore(c);
-          else {
-            await enqueueCreatureAction({ creatureId: c.id, type: "REST", payload: {}, durationMs: actionDurationMs("REST", c.stamina) });
-            result = "queuedRest";
-          }
+          if (result === "queuedMove") queuedMove++;
+          else if (result === "queuedGather") queuedGather++;
+          else if (result === "queuedEat") queuedEat++;
+          else if (result === "queuedLook") queuedLook++;
+          else if (result === "queuedSay") queuedSay++;
+          else if (result === "queuedAttack") queuedAttack++;
+          else if (result === "stoodDown") stoodDown++;
+          else queuedRest++;
+        } catch (error) {
+          errors++;
+          if (DEBUG) console.warn("Creature tick failed:", error);
         }
-        if (result === "queuedMove") queuedMove++;
-        else if (result === "queuedGather") queuedGather++;
-        else if (result === "queuedEat") queuedEat++;
-        else if (result === "queuedLook") queuedLook++;
-        else if (result === "queuedSay") queuedSay++;
-        else if (result === "queuedAttack") queuedAttack++;
-        else if (result === "stoodDown") stoodDown++;
-        else queuedRest++;
-      } catch (error) {
-        errors++;
-        if (DEBUG) console.warn("Creature tick failed:", error);
       }
-    }
+    });
 
     if (DEBUG) console.log(`[WORLD TICK] done: worldMinutesAdvanced=${worldMinutesAdvanced}, daypartNoticeSent=${daypartNoticeSent ? 1 : 0}, playerHungerIncreased=${playerHungerIncreased}, playerHungerInitialized=${playerHungerInitialized}, playerHungerResetBackwards=${playerHungerResetBackwards}, strangeTotemsScheduled=${strangeTotemsScheduled}, strangeTotemsDropped=${strangeTotemsDropped}, strangeTotemsExpired=${strangeTotemsExpired}, strangeTotemSpawned=${strangeTotemSpawned ? 1 : 0}, queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, stoodDown=${stoodDown}, skippedBusy=${skippedBusy}, creatureBudget=${CREATURE_TICK_BUDGET}, creatureCandidates=${creatureCandidates}, creatureProcessed=${creatureProcessed}, creatureDeferred=${creatureDeferred}, creatureProtected=${creatureProtected}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, starvationDeaths=${starvationDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, populationFloorRestored=${populationFloorRestored}, rabbitBirths=${rabbitBirths}, mouseBirths=${mouseBirths}, rabbitsSpread=${rabbitsSpread}, miceSpread=${miceSpread}, foxBirths=${foxBirths}, wolfBirths=${wolfBirths}, foxPreyUnits=${foxPreyUnits}, wolfPreyUnits=${wolfPreyUnits}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, dreamGatesClosed=${dreamGatesClosed}, errors=${errors}`);
-    await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "World Tick", description: `Tick #${tickNumber}: worldMinutesAdvanced=${worldMinutesAdvanced}, daypartNoticeSent=${daypartNoticeSent ? 1 : 0}, playerHungerIncreased=${playerHungerIncreased}, playerHungerInitialized=${playerHungerInitialized}, playerHungerResetBackwards=${playerHungerResetBackwards}, strangeTotemsScheduled=${strangeTotemsScheduled}, strangeTotemsDropped=${strangeTotemsDropped}, strangeTotemsExpired=${strangeTotemsExpired}, strangeTotemSpawned=${strangeTotemSpawned ? 1 : 0}, queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, stoodDown=${stoodDown}, skippedBusy=${skippedBusy}, creatureBudget=${CREATURE_TICK_BUDGET}, creatureCandidates=${creatureCandidates}, creatureProcessed=${creatureProcessed}, creatureDeferred=${creatureDeferred}, creatureProtected=${creatureProtected}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, starvationDeaths=${starvationDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, populationFloorRestored=${populationFloorRestored}, rabbitBirths=${rabbitBirths}, mouseBirths=${mouseBirths}, rabbitsSpread=${rabbitsSpread}, miceSpread=${miceSpread}, foxBirths=${foxBirths}, wolfBirths=${wolfBirths}, foxPreyUnits=${foxPreyUnits}, wolfPreyUnits=${wolfPreyUnits}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, dreamGatesClosed=${dreamGatesClosed}, errors=${errors}` } });
-    if (botInstance && tickNumber % 5 === 0) {
-      const region = await prisma.region.findFirst();
-      if (region) await notifyRegionTechnicalScribes(botInstance, region.id, `🌿 Світ ворухнувся.\n\nТехнічний звіт раз на 5 тіків. Поточний тік #${tickNumber}: заплановано рухів — ${queuedMove}, збору — ${queuedGather}, їжі — ${queuedEat}, оглядів — ${queuedLook}, атак — ${queuedAttack}, зайнятих/відкладених істот — ${skippedBusy}, creature tick — ${creatureProcessed}/${creatureCandidates}, відкладено — ${creatureDeferred}, старість — ${aged}, смертей від старості — ${oldAgeDeaths}, смертей від голоду — ${starvationDeaths}, зниклих трупів — ${corpsesGone}, відновлено стартових тварин — ${populationFloorRestored}, народилося зайченят — ${rabbitBirths}, мишенят — ${mouseBirths}, лисенят — ${foxBirths}, вовченят — ${wolfBirths}, зайців розбіглося — ${rabbitsSpread}, мишей — ${miceSpread}, об'їдено ресурсів — ${overgrazedResources}, відновлено вузлів — ${regenerated}.`);
+    await runWorldTickPhase("world-tick-event-write", async () => {
+      await prisma.worldEvent.create({ data: { type: "SYSTEM", title: "World Tick", description: `Tick #${tickNumber}: worldMinutesAdvanced=${worldMinutesAdvanced}, daypartNoticeSent=${daypartNoticeSent ? 1 : 0}, playerHungerIncreased=${playerHungerIncreased}, playerHungerInitialized=${playerHungerInitialized}, playerHungerResetBackwards=${playerHungerResetBackwards}, strangeTotemsScheduled=${strangeTotemsScheduled}, strangeTotemsDropped=${strangeTotemsDropped}, strangeTotemsExpired=${strangeTotemsExpired}, strangeTotemSpawned=${strangeTotemSpawned ? 1 : 0}, queuedMove=${queuedMove}, queuedGather=${queuedGather}, queuedEat=${queuedEat}, queuedLook=${queuedLook}, queuedSay=${queuedSay}, queuedRest=${queuedRest}, queuedAttack=${queuedAttack}, stoodDown=${stoodDown}, skippedBusy=${skippedBusy}, creatureBudget=${CREATURE_TICK_BUDGET}, creatureCandidates=${creatureCandidates}, creatureProcessed=${creatureProcessed}, creatureDeferred=${creatureDeferred}, creatureProtected=${creatureProtected}, aged=${aged}, oldAgeDeaths=${oldAgeDeaths}, starvationDeaths=${starvationDeaths}, corpsesDecaying=${corpsesDecaying}, corpsesGone=${corpsesGone}, populationFloorRestored=${populationFloorRestored}, rabbitBirths=${rabbitBirths}, mouseBirths=${mouseBirths}, rabbitsSpread=${rabbitsSpread}, miceSpread=${miceSpread}, foxBirths=${foxBirths}, wolfBirths=${wolfBirths}, foxPreyUnits=${foxPreyUnits}, wolfPreyUnits=${wolfPreyUnits}, overgrazedLocations=${overgrazedLocations}, overgrazedResources=${overgrazedResources}, depletedByOvergrazing=${depletedByOvergrazing}, regenerated=${regenerated}, lisovykAwakened=${lisovykAwakened ? 1 : 0}, lisovykSlept=${lisovykSlept ? 1 : 0}, dreamGatesClosed=${dreamGatesClosed}, errors=${errors}` } });
+    });
+
+    await runWorldTickPhase("post-tick-notifications", async () => {
+      if (botInstance && tickNumber % 5 === 0) {
+        const region = await prisma.region.findFirst();
+        if (region) await notifyRegionTechnicalScribes(botInstance, region.id, `🌿 Світ ворухнувся.\n\nТехнічний звіт раз на 5 тіків. Поточний тік #${tickNumber}: заплановано рухів — ${queuedMove}, збору — ${queuedGather}, їжі — ${queuedEat}, оглядів — ${queuedLook}, атак — ${queuedAttack}, зайнятих/відкладених істот — ${skippedBusy}, creature tick — ${creatureProcessed}/${creatureCandidates}, відкладено — ${creatureDeferred}, старість — ${aged}, смертей від старості — ${oldAgeDeaths}, смертей від голоду — ${starvationDeaths}, зниклих трупів — ${corpsesGone}, відновлено стартових тварин — ${populationFloorRestored}, народилося зайченят — ${rabbitBirths}, мишенят — ${mouseBirths}, лисенят — ${foxBirths}, вовченят — ${wolfBirths}, зайців розбіглося — ${rabbitsSpread}, мишей — ${miceSpread}, об'їдено ресурсів — ${overgrazedResources}, відновлено вузлів — ${regenerated}.`);
+      }
+      if (botInstance) await notifyFadingFireTimers(botInstance);
+    });
+    const snapshot = markWorldTickFinished(tickNumber);
+    const staleMs = worldTickStaleThresholdMs();
+    if (staleMs > 0 && snapshot.lastRunDurationMs !== null && snapshot.lastRunDurationMs >= staleMs) {
+      console.warn(`[WORLD TICK] slow pass tick=${tickNumber} durationMs=${snapshot.lastRunDurationMs} thresholdMs=${staleMs} lastPhase=${snapshot.lastPhase ?? "none"}`);
     }
-    if (botInstance) await notifyFadingFireTimers(botInstance);
+    return { ran: true, tickNumber, snapshot };
+  } catch (error) {
+    markWorldTickError(error);
+    throw error;
   } finally {
     running = false;
   }
@@ -1898,8 +1977,70 @@ function formatDuration(ms: number) {
   return `${Math.ceil(ms / 60_000)} хв`;
 }
 
+function formatRuntimeAgo(value: Date | null | undefined, now: Date) {
+  if (!value) return "немає";
+  return `${formatDuration(now.getTime() - value.getTime())} тому`;
+}
+
+function formatRunningWorldTick(snapshot: WorldTickRuntimeSnapshot, now: Date) {
+  if (!snapshot.running) return "ні";
+  return snapshot.runningSince ? `так, ${formatDuration(now.getTime() - snapshot.runningSince.getTime())}` : "так";
+}
+
+export function formatWorldTickPhaseDurations(durations: WorldTickPhaseDurations | null | undefined) {
+  if (!durations || Object.keys(durations).length === 0) return "немає завершеного проходу";
+  return Object.entries(durations)
+    .map(([phase, ms]) => `${phase}=${formatDuration(ms)}`)
+    .join("; ");
+}
+
+function worldTickStaleWarning(snapshot: WorldTickRuntimeSnapshot, now: Date, thresholdMs = worldTickStaleThresholdMs()) {
+  if (!snapshot.running || !snapshot.runningSince || thresholdMs <= 0) return null;
+  const runningMs = now.getTime() - snapshot.runningSince.getTime();
+  if (runningMs < thresholdMs) return null;
+  return `⚠️ Увага: worldTick триває ${formatDuration(runningMs)} понад поріг ${formatDuration(thresholdMs)}.`;
+}
+
+export function formatWorldTickRuntimeStatus(
+  snapshot: WorldTickRuntimeSnapshot = getWorldTickRuntimeSnapshot(),
+  now = new Date(),
+  thresholdMs = worldTickStaleThresholdMs(),
+) {
+  const warning = worldTickStaleWarning(snapshot, now, thresholdMs);
+  return [
+    "World tick runtime:",
+    warning,
+    `- running: ${formatRunningWorldTick(snapshot, now)}`,
+    `- current/last phase: ${snapshot.lastPhase ?? "немає"}`,
+    `- phase started: ${formatRuntimeAgo(snapshot.lastPhaseStartedAt, now)}`,
+    `- last started: ${formatRuntimeAgo(snapshot.lastStartedAt, now)}`,
+    `- last finished: ${formatRuntimeAgo(snapshot.lastFinishedAt, now)}`,
+    `- last duration: ${snapshot.lastRunDurationMs === null ? "немає" : formatDuration(snapshot.lastRunDurationMs)}`,
+    `- last error: ${snapshot.lastError ?? "немає"}`,
+    `- skipped because running: ${snapshot.skippedBecauseRunning}`,
+    `- phaseMs: ${formatWorldTickPhaseDurations(snapshot.lastPhaseDurations)}`,
+  ].filter((line): line is string => Boolean(line)).join("\n");
+}
+
+export function formatWorldTickAlreadyRunningText(
+  snapshot: WorldTickRuntimeSnapshot,
+  now = new Date(),
+  thresholdMs = worldTickStaleThresholdMs(),
+) {
+  const warning = worldTickStaleWarning(snapshot, now, thresholdMs);
+  const runningSince = snapshot.runningSince ? formatDuration(now.getTime() - snapshot.runningSince.getTime()) : "невідомо скільки";
+  return [
+    "⚠️ World tick уже триває; новий ручний тік не запущено.",
+    `Триває: ${runningSince}.`,
+    `Поточна фаза: ${snapshot.lastPhase ?? "немає"}.`,
+    warning,
+  ].filter((line): line is string => Boolean(line)).join("\n");
+}
+
 function runtimeTickStatusText() {
   const timing = getRuntimeTimingConfig();
+  const worldTickSnapshot = getWorldTickRuntimeSnapshot();
+  const now = new Date();
   return [
     "🌲 Час світу",
     "",
@@ -1910,6 +2051,8 @@ function runtimeTickStatusText() {
     `Авто-режим: кожні ${timing.autoIntervalTicks} тіків ≈ ${formatDuration(timing.autoIntervalMs)}`,
     `Tick #: ${tickNumber}`,
     `Creature tick budget: ${CREATURE_TICK_BUDGET > 0 ? CREATURE_TICK_BUDGET : "disabled"} per world tick; player-visible locations, NPCs and predators are protected first.`,
+    "",
+    formatWorldTickRuntimeStatus(worldTickSnapshot, now),
     "",
     "Дії під час втоми або для істот без quick-режиму:",
     `- quick-дії гравця зі снагою > 0: ${formatDuration(timing.actions.quickMs)}`,
@@ -1945,8 +2088,12 @@ function runtimeTickStatusText() {
 function registerTickCommands(bot: Bot) {
   async function runTickCommand(ctx: any) {
     if (!(await requireScribeAdmin(ctx))) return;
-    await worldTick();
-    await ctx.reply("✅ World tick запущено вручну.");
+    const result = await worldTick();
+    if (!result.ran) {
+      await ctx.reply(formatWorldTickAlreadyRunningText(result.snapshot));
+      return;
+    }
+    await ctx.reply(`✅ World tick #${result.tickNumber} завершено вручну.`);
   }
 
   async function runTickGetCommand(ctx: any) {

@@ -7,6 +7,7 @@ const {
   crowdDangerBonus,
   effectiveLocationDanger,
   locationDangerExamineCue,
+  locationDangerTechnicalSummary,
   recentAttackDangerBonus,
 } = require("../../src/services/locationDanger");
 const { emptySmallFindExamineCue } = require("../../src/services/locationExamineCues");
@@ -32,6 +33,15 @@ assert.equal(activeRecentAttackFeature(pastAttack), false);
 assert.equal(recentAttackDangerBonus([pastAttack]), 0);
 assert.equal(recentAttackDangerBonus([futureAttack]), 5);
 assert.equal(effectiveLocationDanger(1, 14, [futureAttack]), 11);
+assert.equal(locationDangerTechnicalSummary(1, 0, []), "Небезпека: 1");
+assert.equal(
+  locationDangerTechnicalSummary(1, 0, [futureAttack]),
+  "Небезпека: 1; напруга зараз: +5 (+5 від недавнього нападу); відчувається як 6",
+);
+assert.equal(
+  locationDangerTechnicalSummary(1, 14, [futureAttack]),
+  "Небезпека: 1; напруга зараз: +10 (+5 від скупчення живих, +5 від недавнього нападу); відчувається як 11",
+);
 
 assert.equal(locationDangerExamineCue(1), null);
 assert.match(locationDangerExamineCue(2), /уважна/u);
