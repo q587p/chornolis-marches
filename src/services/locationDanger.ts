@@ -32,10 +32,12 @@ export function recentAttackDangerBonus(features: readonly DangerFeatureLike[] |
   return features?.some(activeRecentAttackFeature) ? 5 : 0;
 }
 
+// Canonical current-danger helper: base location danger plus temporary local pressure.
 export function effectiveLocationDanger(baseDangerLevel: number, presenceCount: number, features?: readonly DangerFeatureLike[]) {
   return Math.max(0, Math.floor(baseDangerLevel)) + crowdDangerBonus(presenceCount) + recentAttackDangerBonus(features);
 }
 
+// Canonical technical display for scribe/admin surfaces; ordinary player copy stays qualitative.
 export function locationDangerTechnicalSummary(baseDangerLevel: number, presenceCount: number, features?: readonly DangerFeatureLike[]) {
   const baseDanger = Math.max(0, Math.floor(baseDangerLevel));
   const crowdBonus = crowdDangerBonus(presenceCount);

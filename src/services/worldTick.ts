@@ -34,6 +34,7 @@ import { advanceWorldClock } from "./worldTime";
 import { notifyWorldDaypartChangeIfNeeded } from "./worldDaypartNotices";
 import { creatureUsableExits } from "./creatureMovement";
 import { worldTimeSnapshotFromAbsoluteMinute, type WorldDaypart, type WorldTimeSnapshot } from "../data/worldClock";
+import { activeRecentAttackFeature, effectiveLocationDanger } from "./locationDanger";
 import { CAMP_SPIRIT_CAT_START_LOCATION_KEY, campSpiritCatMouseBehaviorPlan, campSpiritCatShouldPrioritizeLocalMice, campSpiritCatWatchPosture, isCampSpiritCatAllowedExit, isCampSpiritCatCreature, isCampSpiritCatLocationKey } from "./campSpiritCat";
 import { isStarterCampOwlSafeLocationKey } from "./owlSigns";
 import { advancePassivePlayerHunger } from "./playerHunger";
@@ -80,9 +81,6 @@ const WOLF_MAX_LITTER_SIZE = Number(process.env.WORLD_WOLF_MAX_LITTER_SIZE || 4)
 const WOLF_PREY_UNITS_REQUIRED_BASE = Number(process.env.WORLD_WOLF_PREY_UNITS_REQUIRED_BASE || 60);
 const WOLF_PREY_UNITS_REQUIRED_PER_WOLF = Number(process.env.WORLD_WOLF_PREY_UNITS_REQUIRED_PER_WOLF || 20);
 const CROWD_DANGER_THRESHOLD = Number(process.env.WORLD_CROWD_DANGER_THRESHOLD || 13);
-const CROWD_DANGER_INITIAL_BONUS = Number(process.env.WORLD_CROWD_DANGER_INITIAL_BONUS || 4);
-const CROWD_DANGER_STEP = Number(process.env.WORLD_CROWD_DANGER_STEP || 4);
-const CROWD_DANGER_STEP_BONUS = Number(process.env.WORLD_CROWD_DANGER_STEP_BONUS || 1);
 const CROWD_HERBIVORE_MOVE_BASE_CHANCE = Number(process.env.WORLD_CROWD_HERBIVORE_MOVE_BASE_CHANCE || 12);
 const CROWD_HERBIVORE_MOVE_PER_EXTRA_CHANCE = Number(process.env.WORLD_CROWD_HERBIVORE_MOVE_PER_EXTRA_CHANCE || 4);
 const CROWD_HERBIVORE_MOVE_MAX_CHANCE = Number(process.env.WORLD_CROWD_HERBIVORE_MOVE_MAX_CHANCE || 55);
@@ -90,7 +88,6 @@ const CREATURE_STARVATION_HUNGER_THRESHOLD = Number(process.env.WORLD_CREATURE_S
 const CREATURE_STARVATION_BASE_CHANCE_PERMILLE = Number(process.env.WORLD_CREATURE_STARVATION_BASE_CHANCE_PERMILLE || 80);
 const CREATURE_STARVATION_EXTRA_CHANCE_PER_HUNGER_PERMILLE = Number(process.env.WORLD_CREATURE_STARVATION_EXTRA_CHANCE_PER_HUNGER_PERMILLE || 25);
 const CREATURE_TICK_BUDGET = Math.max(0, Number(process.env.WORLD_CREATURE_TICK_BUDGET || 180));
-const RECENT_ATTACK_FEATURE_PREFIX = "recent_attack_";
 const EDIBLE_RESOURCE_KEYS = ["grass", "berries", "herbs", "mushrooms"] as const;
 const NATURAL_TWIGS_RESOURCE_KEY = "twigs";
 const LISOVYK_IGNORED_DEPLETION_RESOURCE_KEYS = new Set(["torch", "lit_torch", "twigs"]);
@@ -277,28 +274,8 @@ const STAGE_HP_MULTIPLIER: Record<CreatureAge, number> = {
   CORPSE: 0,
 };
 
-function crowdDangerBonus(presenceCount: number) {
-  if (presenceCount <= CROWD_DANGER_THRESHOLD) return 0;
-  const extra = presenceCount - CROWD_DANGER_THRESHOLD;
-  return CROWD_DANGER_INITIAL_BONUS + Math.ceil(extra / Math.max(1, CROWD_DANGER_STEP)) * CROWD_DANGER_STEP_BONUS;
-}
-
-function activeRecentAttackFeature(feature: any) {
-  if (!feature?.isActive || !String(feature.key).startsWith(RECENT_ATTACK_FEATURE_PREFIX)) return false;
-  const expiresAt = typeof feature.data === "object" && feature.data ? (feature.data as any).expiresAt : null;
-  return !expiresAt || new Date(String(expiresAt)).getTime() > Date.now();
-}
-
-function recentAttackDangerBonus(features: any[] | undefined) {
-  return features?.some(activeRecentAttackFeature) ? 5 : 0;
-}
-
 function recentAttackHerbivoreMoveBonus(features: any[] | undefined) {
   return features?.some(activeRecentAttackFeature) ? 25 : 0;
-}
-
-function effectiveLocationDanger(baseDangerLevel: number, presenceCount: number, features?: any[]) {
-  return baseDangerLevel + crowdDangerBonus(presenceCount) + recentAttackDangerBonus(features);
 }
 
 function herbivorePressureMoveChance(presenceCount: number, features?: any[]) {
@@ -672,6 +649,7 @@ async function processSmallHerbivoreEcology() {
           localCount: rabbits.length,
           food,
           predatorsInRegion,
+          // Herbivore reproduction reacts to current local pressure, not only the location baseline.
           dangerLevel: effectiveLocationDanger(location.dangerLevel, location.creatures.length + (location._count?.players ?? 0), location.features),
           localSoftCap: RABBIT_LOCAL_SOFT_CAP,
           baseChance: 25,
@@ -696,6 +674,7 @@ async function processSmallHerbivoreEcology() {
           localCount: mice.length,
           food,
           predatorsInRegion,
+          // Herbivore reproduction reacts to current local pressure, not only the location baseline.
           dangerLevel: effectiveLocationDanger(location.dangerLevel, location.creatures.length + (location._count?.players ?? 0), location.features),
           localSoftCap: MOUSE_LOCAL_SOFT_CAP,
           baseChance: 60,
@@ -1873,6 +1852,7 @@ export async function worldTick(): Promise<WorldTickResult> {
       for (const c of creatureTickData.creatures) {
         try {
           const localPresenceCount = (creatureTickData.creatureLocationCounts.get(c.locationId) ?? 0) + (creatureTickData.playerCountsByLocationId.get(c.locationId) ?? 0);
+          // Creature AI uses current/effective danger so recent attacks and crowding can make animals more cautious.
           (c.location as any).effectiveDangerLevel = effectiveLocationDanger(c.location.dangerLevel, localPresenceCount, c.location.features);
 
           if (c.activity === "SLEEPING") {

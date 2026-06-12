@@ -16,13 +16,11 @@ Do not replace or derail it with a broad scheduler rewrite, combat system, econo
 
 Keep the next patches narrow and reviewable:
 
-1. `TRACK-LEARN-001-C` learning visibility guardrails - in testing for `0.16.34`; keep it to existing observation/tracking learning paths and shared visibility/light rules.
-2. `OBS-004` / Danger and tension model review - clarify base danger vs temporary local tension before tuning animal nervousness or danger feedback further.
-3. `TRACK-LEARN-001` / Following skill - design or implement only after current follow-assist copy and blockers stay clear in live play.
-4. `STAT-003` / Deferred heavy diagnostics replies - consider only if `/stat`, `/stat_species`, `/world`, `/all` or `/queueDebug` keep blocking ordinary play under evidence.
-5. Mentor guided tracking prompt - add only after gathering prompts and marker cooldowns feel stable.
-6. Mentor route polish - tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
-7. `MAP-004` follow-up - decide the next gated place after light/examine and track/follow-memory proofs.
+1. `TRACK-LEARN-001` / Following skill - design or implement only after current follow-assist copy and blockers stay clear in live play.
+2. `STAT-003` / Deferred heavy diagnostics replies - consider only if `/stat`, `/stat_species`, `/world`, `/all` or `/queueDebug` keep blocking ordinary play under evidence.
+3. Mentor guided tracking prompt - add only after gathering prompts and marker cooldowns feel stable.
+4. Mentor route polish - tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
+5. `MAP-004` follow-up - decide the next gated place after light/examine and track/follow-memory proofs.
 
 The post-`0.16.28` performance evidence report is complete with outcome `no-code`: telemetry did not justify runtime tuning in this lane. Keep collecting guarded snapshots if responsiveness worsens, but do not start queue/recovery/Telegram/Prisma tuning without a new narrow evidence category.
 

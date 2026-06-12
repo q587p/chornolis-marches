@@ -1196,6 +1196,7 @@ export async function renderLocationDetails(locationId: number, viewerPlayerId?:
   addPickUpEverythingButton(keyboard, groundItems, corpses);
 
   const localPresenceCount = location.players.length + visibleLivingCreatureCount;
+  // Ordinary examine text uses current/effective danger qualitatively; raw breakdown stays technical-only.
   const effectiveDangerLevel = effectiveLocationDanger(location.dangerLevel, localPresenceCount, location.features);
   const technicalLocationText = showTechnicalDetails
     ? `\n\nКоординати: ${location.x}, ${location.y}, ${location.z}\n${locationDangerTechnicalSummary(location.dangerLevel, localPresenceCount, location.features)}`
