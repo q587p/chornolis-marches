@@ -7,6 +7,24 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.35 - Danger and tension model review - 12026-06-12
+
+### Added
+
+- Added `docs/systems/danger-and-tension.md` to define base location danger, temporary tension/local pressure, recent-attack pressure, crowd pressure and effective/current danger.
+- Added source-facing audit notes for current base-danger and effective-danger call sites, including ordinary `/examine`, technical location details, world tick creature pressure, recent-attack features, admin/status rows and seed/map tests.
+- Added focused display coverage for crowd-only technical tension output alongside base-only, recent-attack and mixed-source danger summaries.
+- Added `docs/release_notes/0.16.35.md`.
+
+### Changed
+
+- `worldTick` now imports the canonical `effectiveLocationDanger(...)` and recent-attack feature helper from `locationDanger.ts` instead of carrying a duplicate effective-danger implementation.
+- Planning now marks `OBS-004` as `testing` and removes the merged `TRACK-LEARN-001-C` / `0.16.34` item from the first immediate-candidate slot.
+
+### Risks
+
+- This is design/audit/terminology only. It does not retune animal behavior, change danger formulas, add combat/fear/scent systems, alter ecology or creature AI, change action queue/recovery/Telegram/runtime scheduler behavior, or add schema/migrations.
+
 ## 0.16.34 - Learning visibility guardrails - 12026-06-11
 
 ### Added

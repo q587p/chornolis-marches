@@ -1,7 +1,7 @@
 ---
 id: OBS-004
 title: Danger and tension model review
-status: backlog
+status: testing
 type: tuning
 area: observation
 priority: high
@@ -61,6 +61,21 @@ model needs clearer naming, boundaries and player/admin feedback.
   tension and mixed-source effective danger.
 - Any tuning changes include rollback notes and do not silently widen combat,
   group movement or scheduler behavior.
+
+## 0.16.35 Review
+
+- Added `docs/systems/danger-and-tension.md` as the short system note for base
+  danger, temporary tension/local pressure, recent-attack pressure, crowd
+  pressure and effective/current danger.
+- Kept `effectiveLocationDanger(...)` and `locationDangerTechnicalSummary(...)`
+  in `src/services/locationDanger.ts` as the canonical helper/API and technical
+  display format.
+- Audited current call sites: `/examine` uses effective danger qualitatively and
+  technical details use the canonical summary; world tick creature pressure uses
+  effective danger intentionally; admin/status and seed/map checks use base
+  `dangerLevel` intentionally.
+- Added source-boundary comments and one focused crowd-only technical-summary
+  assertion without changing formulas or animal behavior.
 
 ## Notes
 

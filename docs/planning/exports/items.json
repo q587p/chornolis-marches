@@ -2853,7 +2853,7 @@
   {
     "id": "OBS-004",
     "title": "Danger and tension model review",
-    "status": "backlog",
+    "status": "testing",
     "type": "tuning",
     "area": "observation",
     "priority": "high",

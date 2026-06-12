@@ -143,7 +143,7 @@ OBS-001-C,Gathering progress from attentive presence,testing,feature,learning,hi
 OBS-001-D,Observation anti-farming cooldown,testing,feature,learning,medium,"observe,cooldown,anti-grind",docs/planning/items/OBS-001-D.md
 OBS-002,Visible herbalist observation moment,testing,feature,learning,high,"observe,npc,herbalism,progression",docs/planning/items/OBS-002-visible-herbalist-observation-moment.md
 OBS-003,Danger-aware examine cues,done,feature,learning,high,"observe,examine,danger,ecology,atmosphere",docs/planning/items/OBS-003-danger-aware-examine-cues.md
-OBS-004,Danger and tension model review,backlog,tuning,observation,high,"observe,danger,ecology,technical-details,tuning",docs/planning/items/OBS-004-danger-and-tension-model-review.md
+OBS-004,Danger and tension model review,testing,tuning,observation,high,"observe,danger,ecology,technical-details,tuning",docs/planning/items/OBS-004-danger-and-tension-model-review.md
 OBS-PREP-001,Look/examine content audit before observation MVP,testing,design,learning,high,"look,examine,observation,content-audit",docs/planning/items/OBS-PREP-001-look-examine-content-audit.md
 OMEN-001-A,Choose one living-world omen,next,design,world,medium,"omen,ambient,living-world",docs/planning/items/OMEN-001-A.md
 OMEN-001-B,Omen trigger and rate limit,next,feature,world,medium,"omen,ambient,cooldown",docs/planning/items/OMEN-001-B.md
