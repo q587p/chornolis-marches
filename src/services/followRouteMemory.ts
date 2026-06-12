@@ -14,7 +14,7 @@ import { FOLLOW_TARGET_CREATURE, FOLLOW_TARGET_PLAYER, type FollowTargetType } f
 import { movementDurationMs } from "./actionRules";
 import { performOrQueuePlayerAction } from "./actionLifecycle";
 import { locationLockedExitMessageForPlayer } from "./tutorial";
-import { maybeRecordMentorshipLessonFeedback, mentorshipTrackingObservationLearningInput } from "./mentorship";
+import { maybeCreateMentorshipPracticePrompt, maybeRecordMentorshipLessonFeedback, mentorshipTrackingObservationLearningInput } from "./mentorship";
 import { createWorldEventMarker, hasRecentWorldEventMarker, recordWorldEventMarkerIfAbsent } from "./worldEventMarkers";
 import { hasActiveLitTorchForPlayer } from "./fire";
 
@@ -1056,6 +1056,18 @@ async function rememberFollowedTargetVisibleMoveInner(bot: Bot, input: {
               });
               if (lesson.ok && present) {
                 await sendFollowRouteMemoryMessage(bot, intent.player, lesson.text);
+                const prompt = await maybeCreateMentorshipPracticePrompt({
+                  playerId: intent.playerId,
+                  mentorCreatureId: input.target.id,
+                  skillKey: "tracking",
+                  contextKey: mentorshipLearningInput.contextKey,
+                  locationId: input.sourceLocationId,
+                });
+                if (prompt.text) {
+                  await sendFollowRouteMemoryMessage(bot, intent.player, prompt.text, {
+                    replyMarkup: prompt.ok ? prompt.keyboard : undefined,
+                  });
+                }
               }
             }
           }

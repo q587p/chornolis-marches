@@ -7,6 +7,23 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.36 - Mentor guided tracking prompt - 12026-06-12
+
+### Added
+
+- Added one bounded mentorship practice prompt for tracking lessons that already come from clear followed-movement route-memory learning.
+- Added focused mentorship coverage for active tracking mentorship prompt creation, unsupported-context rejection, inactive mentorship rejection, cooldown/dedupe and text-boundary guardrails.
+- Added `TRACK-LEARN-001-D` as a testing planning item and `docs/release_notes/0.16.36.md`.
+
+### Changed
+
+- Existing mentored tracking lesson feedback can now follow with a compact `Сліди` action affordance through the same `Mentorship practice prompt` marker/cooldown path used by gathering prompts.
+- `docs/planning/next.md` now marks the guided tracking prompt slice as testing while keeping the full `TRACK-LEARN-001` following skill in future scope.
+
+### Risks
+
+- Prompt noise is the main risk. This PR keeps the trigger tied to active mentorship plus the existing clear followed-movement context and does not change follow-assist behavior, tracking formulas, creature AI, scheduler/runtime behavior, action queue/recovery/Telegram/Prisma tuning, schema or migrations.
+
 ## 0.16.35 - Danger and tension model review - 12026-06-12
 
 ### Added

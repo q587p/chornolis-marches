@@ -57,7 +57,10 @@ type MentorshipLessonInput = {
 };
 
 type MentorshipPracticePromptInput = Pick<MentorshipLessonInput, "playerId" | "mentorCreatureId" | "skillKey" | "contextKey" | "locationId" | "now">;
-type MentorshipPracticePromptAction = { action: "gather"; resourceKey: "herbs" | "berries" | "mushrooms" };
+type MentorshipPracticePromptAction =
+  | { action: "gather"; resourceKey: "herbs" | "berries" | "mushrooms" }
+  | { action: "track" };
+type MentorshipPracticePromptGatherResource = Extract<MentorshipPracticePromptAction, { action: "gather" }>["resourceKey"];
 
 const MENTORSHIP_GATHER_PROMPT_RESOURCES = new Set(["herbs", "berries", "mushrooms"]);
 
@@ -316,11 +319,19 @@ export function mentorshipLessonFeedbackMarkerContext(input: Pick<MentorshipLess
   return `${input.skillKey}:${input.contextKey}`;
 }
 
-export function mentorshipPracticePromptAction(input: Pick<MentorshipPracticePromptInput, "skillKey" | "contextKey">) {
+export function mentorshipPracticePromptAction(input: Pick<MentorshipPracticePromptInput, "skillKey" | "contextKey">): MentorshipPracticePromptAction | null {
+  if (input.skillKey === "tracking" && input.contextKey === TRACKING_MENTORSHIP_FOLLOWED_MOVEMENT_CONTEXT) {
+    return { action: "track" };
+  }
   if (input.skillKey !== "gathering") return null;
-  const resourceKey = input.contextKey.match(/^resource:(herbs|berries|mushrooms)$/u)?.[1] as MentorshipPracticePromptAction["resourceKey"] | undefined;
+  const resourceKey = input.contextKey.match(/^resource:(herbs|berries|mushrooms)$/u)?.[1] as MentorshipPracticePromptGatherResource | undefined;
   if (!resourceKey || !MENTORSHIP_GATHER_PROMPT_RESOURCES.has(resourceKey)) return null;
   return { action: "gather" as const, resourceKey };
+}
+
+function mentorshipPracticePromptActionKey(action: MentorshipPracticePromptAction) {
+  if (action.action === "gather") return `${action.action}:${action.resourceKey}`;
+  return "track:search";
 }
 
 export function mentorshipPracticePromptDescription(input: Pick<MentorshipPracticePromptInput, "playerId" | "mentorCreatureId" | "skillKey" | "contextKey"> & { action: string }) {
@@ -340,12 +351,18 @@ export function mentorshipPracticePromptText(input: { mentorName?: string | null
   if (input.skillKey === "gathering") {
     return `${safeMentorName} відступає від стебел:\n${quoteBlock("Тепер ти. Не поспішай — земля сама покаже, де відпустити.")}`;
   }
+  if (input.skillKey === "tracking" && input.contextKey === TRACKING_MENTORSHIP_FOLLOWED_MOVEMENT_CONTEXT) {
+    return `${safeMentorName} стишує ходу біля прим'ятої трави:\n${quoteBlock("Не поспішай. Звіряй напрям, свіжість і зламані стебла — тоді ще раз прочитай слід.")}`;
+  }
   return `${safeMentorName} відступає на крок:\n${quoteBlock("Тепер спробуй сам.")}`;
 }
 
 export function mentorshipPracticePromptKeyboard(input: MentorshipPracticePromptAction) {
   if (input.action === "gather") {
     return new InlineKeyboard().text("Спробувати зібрати", `mentorship:practice:gather:${input.resourceKey}`);
+  }
+  if (input.action === "track") {
+    return new InlineKeyboard().text("Сліди", "track");
   }
   return undefined;
 }
@@ -520,8 +537,9 @@ export async function maybeCreateMentorshipPracticePrompt(input: MentorshipPract
       };
     }
   }
-  const description = mentorshipPracticePromptDescription({ ...input, action: `${action.action}:${action.resourceKey}` });
-  const recent = await recentMentorshipPracticePrompt({ ...input, action: `${action.action}:${action.resourceKey}` }, db);
+  const actionKey = mentorshipPracticePromptActionKey(action);
+  const description = mentorshipPracticePromptDescription({ ...input, action: actionKey });
+  const recent = await recentMentorshipPracticePrompt({ ...input, action: actionKey }, db);
   if (recent) return { ok: false as const, reason: "cooldown" as const, event: recent };
   const event = await db.worldEvent.create({
     data: {
@@ -540,7 +558,7 @@ export async function maybeCreateMentorshipPracticePrompt(input: MentorshipPract
       playerId: input.playerId,
       creatureId: input.mentorCreatureId,
       locationId: input.locationId,
-      contextKey: mentorshipPracticePromptMarkerContext({ ...input, action: `${action.action}:${action.resourceKey}` }),
+      contextKey: mentorshipPracticePromptMarkerContext({ ...input, action: actionKey }),
       worldEventId: event.id,
       ttlMs: MENTORSHIP_PRACTICE_PROMPT_COOLDOWN_MS,
       now: input.now,
@@ -548,7 +566,7 @@ export async function maybeCreateMentorshipPracticePrompt(input: MentorshipPract
         skillKey: input.skillKey,
         contextKey: input.contextKey,
         action: action.action,
-        resourceKey: action.resourceKey,
+        ...(action.action === "gather" ? { resourceKey: action.resourceKey } : { practice: "track_search" }),
       },
     }, db as any);
   }

@@ -12,6 +12,7 @@ Current cautions and live-watch notes that should inform near-term work without 
 - Watch the `amount=2` gathering observation bonus in live play. If following one herbalist grows gathering too quickly, add a cooldown or separate `mentorship_observation` context.
 - Tracking mentorship lesson feedback should stay tied to route-memory learning until a separate explicit hunter-teaches event is worth the extra machinery.
 - The first guided practice prompt appears only when a new lesson feedback marker is created. If live play makes it feel too rare, split lesson feedback cooldown from practice-prompt cooldown instead of making every observation generate copy.
+- The guided tracking-practice prompt is intentionally tied to clear followed-movement mentorship. If it feels noisy, tune prompt cooldown or gating separately instead of making follow-assist or `/track` behavior broader.
 - Lesson/practice cooldowns now use structured `WorldEventMarker` rows. If slow logs heat up again, tune indexed marker fields or retention rather than returning to `WorldEvent.description` parsing.
 - Route-memory remains `WorldEvent`-backed for now. Repeated route-memory hotspots should become a structured route-memory/marker follow-up rather than broader event scans.
 
