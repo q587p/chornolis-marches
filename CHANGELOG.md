@@ -7,6 +7,24 @@ The format is loosely based on Keep a Changelog and this project follows semanti
 
 ## [Unreleased]
 
+## 0.16.37 - Mentorship learning live-watch closeout - 12026-06-12
+
+### Added
+
+- Added `docs/ops/0.16-mentorship-learning-live-watch.md`, a short live verification checklist for guided tracking prompts, rabbit movement observation, visibility guardrails, follow-assist arrival, world tick watchdog output, lightweight health readiness and public learning/news links.
+- Added `docs/release_notes/0.16.37.md`.
+
+### Changed
+
+- Cleaned `docs/planning/next.md` so `TRACK-LEARN-001-D` is treated as testing/live-watch instead of the first immediate candidate.
+- Clarified the next decision point: either one tiny mentor route polish, the post-`0.16` content lane, or `0.17` runtime heartbeat work only if telemetry/world tick evidence demands it.
+- Added concrete watchpoints for tracking prompt noise, world tick watchdog deploy checks and keeping the full following skill blocked until live follow-assist/prompt behavior is stable.
+- Updated `docs/planning/history/0.16-mentorship-history.md` with the late-`0.16` learning spine from learning surface hints through mentor guided tracking prompts.
+
+### Risks
+
+- This is docs/planning/ops checklist only. It does not change runtime behavior, learning mechanics, follow assist, prompts, scheduler/runtime behavior, action queue/recovery/Telegram/Prisma tuning, combat, animal AI, schema or migrations.
+
 ## 0.16.36 - Mentor guided tracking prompt - 12026-06-12
 
 ### Added

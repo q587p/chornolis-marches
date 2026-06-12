@@ -13,6 +13,8 @@ Current cautions and live-watch notes that should inform near-term work without 
 - Tracking mentorship lesson feedback should stay tied to route-memory learning until a separate explicit hunter-teaches event is worth the extra machinery.
 - The first guided practice prompt appears only when a new lesson feedback marker is created. If live play makes it feel too rare, split lesson feedback cooldown from practice-prompt cooldown instead of making every observation generate copy.
 - The guided tracking-practice prompt is intentionally tied to clear followed-movement mentorship. If it feels noisy, tune prompt cooldown or gating separately instead of making follow-assist or `/track` behavior broader.
+- Watch tracking prompt noise after `0.16.36`: one mentor-follow route should not produce repeated practice nudges, and prompt copy should feel like mentor guidance rather than a tutorial popup.
+- Keep the full `TRACK-LEARN-001` following skill blocked until follow-assist arrival behavior, posture/darkness blocker copy and guided tracking prompt cadence stay stable in live play.
 - Lesson/practice cooldowns now use structured `WorldEventMarker` rows. If slow logs heat up again, tune indexed marker fields or retention rather than returning to `WorldEvent.description` parsing.
 - Route-memory remains `WorldEvent`-backed for now. Repeated route-memory hotspots should become a structured route-memory/marker follow-up rather than broader event scans.
 
@@ -48,6 +50,7 @@ Current cautions and live-watch notes that should inform near-term work without 
 
 - After `0.16.27`, collect at least three guarded queue snapshots under load before changing queue/backpressure/recovery/query behavior: idle baseline, active repeated-action sample and after-drain sample. Treat the next implementation PR as exactly one of database/index/query tuning, recovery pruning, Telegram delivery/deferred tuning, creature backpressure threshold tuning or action-specific optimization. Do not implement several categories at once unless the telemetry strongly points to the same bottleneck.
 - If event marker lookups keep growing, move hot cooldown/dedupe keys out of `description contains` scans and into structured storage.
+- After deploys with world tick diagnostics, watch `/tickGet` for last-finished time, current/last phase, skipped-because-running count and stale warnings before proposing runtime heartbeat work.
 - Keep planning status changes conservative. Retag only when the item itself clearly changed state, not just because the surrounding roadmap moved.
 - Action dedupe DB atomicity: current dedupe is pre-create best-effort and good enough for rapid Telegram clicks, but not a strict DB-level guarantee. A later hardening PR can add transactional or unique-key protection if duplicate active actions still appear in production.
 - Repeated callback chat noise: repeated clicks may still produce a "вже триває" reply after the early accepted response. This is acceptable now because it prevents queue spam; later UX polish can make repeated callback feedback quieter.

@@ -14,15 +14,17 @@ Do not replace or derail it with a broad scheduler rewrite, combat system, econo
 
 ## Immediate Candidates
 
-Keep the next patches narrow and reviewable:
+Keep the next patches narrow and reviewable. The next decision is a live-watch gate, not automatic promotion of another feature:
 
-1. `TRACK-LEARN-001-D` / Mentor guided tracking prompt - in testing for one bounded route-memory mentorship prompt; watch noise before widening.
-2. `STAT-003` / Deferred heavy diagnostics replies - consider only if `/stat`, `/stat_species`, `/world`, `/all` or `/queueDebug` keep blocking ordinary play under evidence.
-3. `TRACK-LEARN-001` / Following skill - design or implement only after current follow-assist copy, tracking prompt noise and blockers stay clear in live play.
-4. Mentor route polish - tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
-5. `MAP-004` follow-up - decide the next gated place after light/examine and track/follow-memory proofs.
+1. Live-watch review after `0.16.37` - use `docs/ops/0.16-mentorship-learning-live-watch.md` to decide whether the late-`0.16` learning spine is quiet and readable enough to leave alone.
+2. Mentor route polish - one tiny mentor-specific route/copy lesson only if live-watch shows a concrete unclear prompt or route moment.
+3. `STAT-003` / Deferred heavy diagnostics replies - consider only if `/stat`, `/stat_species`, `/world`, `/all` or `/queueDebug` keep blocking ordinary play under evidence.
+4. Post-`0.16` content lane - resume bottles, herbalism and first prepared remedies if responsiveness and learning prompts look acceptable.
+5. `0.17` runtime heartbeat skeleton - start only if telemetry/world tick evidence demands scheduler ownership work.
 
 The post-`0.16.28` performance evidence report is complete with outcome `no-code`: telemetry did not justify runtime tuning in this lane. Keep collecting guarded snapshots if responsiveness worsens, but do not start queue/recovery/Telegram/Prisma tuning without a new narrow evidence category.
+
+`TRACK-LEARN-001-D` is now testing/live-watch, not the first immediate candidate. Keep full `TRACK-LEARN-001` as future-only unless live follow-assist, tracking prompt noise and blocker copy stay stable in real play.
 
 ## Post-0.16 Candidate Lane
 
@@ -36,6 +38,7 @@ The practical content lane remains `ALC-002` bottle source, `RECIPE-001` minimal
 ## Boundaries
 
 - `0.16.x` may document runtime architecture and collect guarded evidence; it should not hide a central heartbeat/scheduler rewrite inside a small release.
+- Full `Слідування` stays blocked until the existing follow-assist and mentorship prompt behavior has been watched live and stays understandable without spam.
 - Attack practice and observation already exist as a minimal bridge. Do not turn remaining `0.16.x` work into training arenas, sparring, PvP, armor/round/wound rules, broad weapon modifiers or a public skill sheet.
 - Keep mentorship separate from `TravelGroup`: mentorship is teacher/student attention and learning context; travel groups remain player-player road groups.
 - Do not add public skill sheets or broad modifiers before bounded learning moments stay readable in play.
