@@ -242,6 +242,7 @@ TRACK-LEARN-001,Following as a learned skill,backlog,feature,progression,medium,
 TRACK-LEARN-001-A,Track-examine progress hint,testing,feature,learning,high,"tracking,tracks,progression",docs/planning/items/TRACK-LEARN-001-A.md
 TRACK-LEARN-001-B,Animal movement observation,testing,feature,learning,medium,"tracking,animals,observe",docs/planning/items/TRACK-LEARN-001-B.md
 TRACK-LEARN-001-C,Learning respects visibility and light,testing,feature,learning,high,"learning,visibility,light",docs/planning/items/TRACK-LEARN-001-C.md
+TRACK-LEARN-001-D,Mentor guided tracking prompt,testing,feature,mentorship,medium,"mentorship,tracking,following,learning",docs/planning/items/TRACK-LEARN-001-D-mentor-guided-tracking-prompt.md
 TRAVEL-001,Horses and mounted travel,icebox,feature,travel,low,"travel,mounts,animals,distance",docs/planning/items/TRAVEL-001-horses-and-mounted-travel.md
 UX-001,Command and feature icon collision audit,backlog,chore,ux,low,"ux,icons,keyboard,features",docs/planning/items/UX-001-command-feature-icon-collision.md
 UX-002,Target pagination return context,testing,chore,ux,medium,"ux,pagination,corpses,telegram",docs/planning/items/UX-002-target-pagination-return-context.md

@@ -174,7 +174,8 @@ assert.equal(
 );
 assert.deepEqual(mentorshipPracticePromptAction({ skillKey: "gathering", contextKey: "resource:herbs" }), { action: "gather", resourceKey: "herbs" });
 assert.equal(mentorshipPracticePromptAction({ skillKey: "gathering", contextKey: "resource:honey" }), null);
-assert.equal(mentorshipPracticePromptAction({ skillKey: "tracking", contextKey: "mentorship_followed_movement" }), null);
+assert.deepEqual(mentorshipPracticePromptAction({ skillKey: "tracking", contextKey: "mentorship_followed_movement" }), { action: "track" });
+assert.equal(mentorshipPracticePromptAction({ skillKey: "tracking", contextKey: "nearby" }), null);
 assert.equal(
   mentorshipPracticePromptDescription({ playerId: 7, mentorCreatureId: 9, skillKey: "gathering", contextKey: "resource:herbs", action: "gather:herbs" }),
   "player=7; mentorCreature=9; skillKey=gathering; contextKey=resource:herbs; action=gather:herbs",
@@ -191,11 +192,15 @@ const blockedPracticePrompt = mentorshipPracticePromptText({ mentorName: "Ори
 assert.match(blockedPracticePrompt, /Орина дивиться на порожнє місце:\n<blockquote>Тут уже нічого вчити рукою\. Ходімо далі\.<\/blockquote>/);
 assert.doesNotMatch(blockedPracticePrompt, /: “/u);
 const fallbackPracticePrompt = mentorshipPracticePromptText({ mentorName: "Орина", skillKey: "tracking", contextKey: "mentorship_followed_movement" });
-assert.match(fallbackPracticePrompt, /Орина відступає на крок:\n<blockquote>Тепер спробуй сам\.<\/blockquote>/);
+assert.match(fallbackPracticePrompt, /Орина стишує ходу біля прим'ятої трави:\n<blockquote>Не поспішай\. Звіряй напрям, свіжість і зламані стебла — тоді ще раз прочитай слід\.<\/blockquote>/);
 assert.doesNotMatch(fallbackPracticePrompt, /: “/u);
+assert.doesNotMatch(fallbackPracticePrompt, /\/skills|XP|level|progress|amount|hidden|route|group|TravelGroup|гурт|прихован/u);
 const practiceKeyboard = mentorshipPracticePromptKeyboard({ action: "gather", resourceKey: "herbs" });
 assert.equal(practiceKeyboard.inline_keyboard[0][0].text, "Спробувати зібрати");
 assert.equal(practiceKeyboard.inline_keyboard[0][0].callback_data, "mentorship:practice:gather:herbs");
+const trackingPracticeKeyboard = mentorshipPracticePromptKeyboard({ action: "track" });
+assert.equal(trackingPracticeKeyboard.inline_keyboard[0][0].text, "Сліди");
+assert.equal(trackingPracticeKeyboard.inline_keyboard[0][0].callback_data, "track");
 
 const keyboard = mentorshipOfferKeyboard(42);
 assert.deepEqual(keyboard.inline_keyboard[0].map((button) => button.text), ["Так, хочу", "Не зараз"]);
@@ -583,6 +588,73 @@ async function runAsyncAssertions() {
   assert.equal(emptyPrompt.ok, false);
   assert.equal(emptyPrompt.reason, "no-resource");
   assert.match(emptyPrompt.text, /нічого вчити рукою/);
+
+  const trackingMentorCreature = { id: 11, name: "Лукан", species: { name: "людина", key: "human" } };
+  const trackingPromptDb = fakeMentorshipPracticePromptDb({
+    rows: [{ id: 4, playerId: 7, mentorCreatureId: 11, skillKey: "tracking", status: "ACTIVE", mentorCreature: trackingMentorCreature }],
+  });
+  const trackingPrompt = await maybeCreateMentorshipPracticePrompt({
+    playerId: 7,
+    mentorCreatureId: 11,
+    skillKey: "tracking",
+    contextKey: "mentorship_followed_movement",
+    locationId: 21,
+    now: new Date("2026-06-07T10:04:00Z"),
+  }, trackingPromptDb);
+  assert.equal(trackingPrompt.ok, true);
+  assert.match(trackingPrompt.text, /Лукан/);
+  assert.match(trackingPrompt.text, /прочитай слід/);
+  assert.doesNotMatch(trackingPrompt.text, /\/skills|XP|level|progress|amount|hidden|route|group|TravelGroup|гурт|прихован/u);
+  assert.equal(trackingPrompt.keyboard.inline_keyboard[0][0].callback_data, "track");
+  assert.equal(trackingPromptDb.events.length, 1);
+  assert.match(trackingPromptDb.events[0].description, /skillKey=tracking/);
+  assert.match(trackingPromptDb.events[0].description, /contextKey=mentorship_followed_movement/);
+  assert.match(trackingPromptDb.events[0].description, /action=track:search/);
+  assert.equal(trackingPromptDb.markers.length, 1);
+  assert.equal(trackingPromptDb.markers[0].markerKey, MENTORSHIP_PRACTICE_PROMPT_MARKER_KEY);
+  assert.equal(trackingPromptDb.markers[0].contextKey, "tracking:mentorship_followed_movement:track:search");
+  assert.deepEqual(trackingPromptDb.markers[0].metadata, {
+    skillKey: "tracking",
+    contextKey: "mentorship_followed_movement",
+    action: "track",
+    practice: "track_search",
+  });
+
+  const duplicateTrackingPrompt = await maybeCreateMentorshipPracticePrompt({
+    playerId: 7,
+    mentorCreatureId: 11,
+    skillKey: "tracking",
+    contextKey: "mentorship_followed_movement",
+    locationId: 21,
+    now: new Date("2026-06-07T10:05:00Z"),
+  }, trackingPromptDb);
+  assert.equal(duplicateTrackingPrompt.ok, false);
+  assert.equal(duplicateTrackingPrompt.reason, "cooldown");
+  assert.equal(trackingPromptDb.events.length, 1);
+  assert.equal(trackingPromptDb.markers.length, 1);
+
+  const inactiveTrackingPromptDb = fakeMentorshipPracticePromptDb({
+    rows: [{ id: 5, playerId: 7, mentorCreatureId: 11, skillKey: "tracking", status: "OFFERED", mentorCreature: trackingMentorCreature }],
+  });
+  const inactiveTrackingPrompt = await maybeCreateMentorshipPracticePrompt({
+    playerId: 7,
+    mentorCreatureId: 11,
+    skillKey: "tracking",
+    contextKey: "mentorship_followed_movement",
+    locationId: 21,
+  }, inactiveTrackingPromptDb);
+  assert.equal(inactiveTrackingPrompt.ok, false);
+  assert.equal(inactiveTrackingPrompt.reason, "inactive-mentorship");
+
+  const noRouteContextTrackingPrompt = await maybeCreateMentorshipPracticePrompt({
+    playerId: 7,
+    mentorCreatureId: 11,
+    skillKey: "tracking",
+    contextKey: "nearby",
+    locationId: 21,
+  }, trackingPromptDb);
+  assert.equal(noRouteContextTrackingPrompt.ok, false);
+  assert.equal(noRouteContextTrackingPrompt.reason, "unsupported-context");
 }
 
 assert.ok(

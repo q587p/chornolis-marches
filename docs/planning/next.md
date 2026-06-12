@@ -16,9 +16,9 @@ Do not replace or derail it with a broad scheduler rewrite, combat system, econo
 
 Keep the next patches narrow and reviewable:
 
-1. `TRACK-LEARN-001` / Following skill - design or implement only after current follow-assist copy and blockers stay clear in live play.
+1. `TRACK-LEARN-001-D` / Mentor guided tracking prompt - in testing for one bounded route-memory mentorship prompt; watch noise before widening.
 2. `STAT-003` / Deferred heavy diagnostics replies - consider only if `/stat`, `/stat_species`, `/world`, `/all` or `/queueDebug` keep blocking ordinary play under evidence.
-3. Mentor guided tracking prompt - add only after gathering prompts and marker cooldowns feel stable.
+3. `TRACK-LEARN-001` / Following skill - design or implement only after current follow-assist copy, tracking prompt noise and blockers stay clear in live play.
 4. Mentor route polish - tiny mentor-specific route/lesson only after guided prompts feel stable in live play.
 5. `MAP-004` follow-up - decide the next gated place after light/examine and track/follow-memory proofs.
 

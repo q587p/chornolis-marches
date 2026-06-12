@@ -294,6 +294,12 @@ const repoRoot = path.join(__dirname, "..", "..");
 const followRouteMemorySource = fs.readFileSync(path.join(repoRoot, "src/services/followRouteMemory.ts"), "utf8");
 assert.match(followRouteMemorySource, /mentorshipTrackingObservationLearningInput/);
 assert.match(followRouteMemorySource, /contextKey: "followed_movement"[\s\S]*mentorshipTrackingObservationLearningInput/);
+assert.match(followRouteMemorySource, /maybeCreateMentorshipPracticePrompt/);
+assert.match(
+  followRouteMemorySource,
+  /if \(lesson\.ok && present\) \{[\s\S]*maybeCreateMentorshipPracticePrompt\(\{[\s\S]*skillKey: "tracking"[\s\S]*contextKey: mentorshipLearningInput\.contextKey/,
+  "Tracking practice prompt should stay tied to a real present followed-movement mentorship lesson",
+);
 assert.match(followRouteMemorySource, /hasActiveLitTorchForPlayer/);
 assert.match(followRouteMemorySource, /playerHasLight/);
 const news = fs.readFileSync(path.join(repoRoot, "news.md"), "utf8");

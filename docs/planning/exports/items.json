@@ -4787,6 +4787,25 @@
     "file": "docs/planning/items/TRACK-LEARN-001-C.md"
   },
   {
+    "id": "TRACK-LEARN-001-D",
+    "title": "Mentor guided tracking prompt",
+    "status": "testing",
+    "type": "feature",
+    "area": "mentorship",
+    "priority": "medium",
+    "tags": [
+      "mentorship",
+      "tracking",
+      "following",
+      "learning"
+    ],
+    "depends_on": [
+      "TRACK-LEARN-001-C"
+    ],
+    "exports": {},
+    "file": "docs/planning/items/TRACK-LEARN-001-D-mentor-guided-tracking-prompt.md"
+  },
+  {
     "id": "TRAVEL-001",
     "title": "Horses and mounted travel",
     "status": "icebox",
